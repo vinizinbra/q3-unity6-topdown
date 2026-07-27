@@ -1,0 +1,9 @@
+// Tag - pulls enemy targeting away from real players (see EnemyMovementUtility.TryFindAggroTarget
+// and EnemySystem's Idle/Chasing target-acquisition). Sits on the same physics layer as a real
+// player (baked on the prefab) so an enemy's attack hit-connect checks, which re-query "nearest
+// thing on the Player layer" independently of Enemy.Target, actually land on it once in range.
+//
+// Lifespan is DestroyAfterTime's job, not this one's.
+component Decoy
+{
+}

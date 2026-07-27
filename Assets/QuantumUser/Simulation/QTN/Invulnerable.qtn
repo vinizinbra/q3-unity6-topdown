@@ -1,0 +1,5 @@
+// Tag - present means DamageUtility ignores every hit. Knockback is deliberately not gated by this.
+// Nothing currently adds it.
+component Invulnerable
+{
+}

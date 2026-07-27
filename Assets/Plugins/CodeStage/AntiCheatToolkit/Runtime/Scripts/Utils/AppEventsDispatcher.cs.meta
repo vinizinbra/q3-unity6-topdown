@@ -1,0 +1,10 @@
+﻿fileFormatVersion: 2
+guid: 80ad1116523d402784d923a4c7b71cdd
+timeCreated: 1649619416
+AssetOrigin:
+  serializedVersion: 1
+  productId: 202695
+  packageName: Anti-Cheat Toolkit
+  packageVersion: 6.9.1
+  assetPath: Assets/Plugins/CodeStage/AntiCheatToolkit/Runtime/Scripts/Utils/AppEventsDispatcher.cs
+  uploadId: 943640

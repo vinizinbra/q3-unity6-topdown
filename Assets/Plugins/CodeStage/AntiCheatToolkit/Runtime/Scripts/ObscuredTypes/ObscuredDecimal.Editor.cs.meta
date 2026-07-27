@@ -1,0 +1,10 @@
+﻿fileFormatVersion: 2
+guid: 825ba42c6957452aa173153134e38e08
+timeCreated: 1684488866
+AssetOrigin:
+  serializedVersion: 1
+  productId: 202695
+  packageName: Anti-Cheat Toolkit
+  packageVersion: 6.9.1
+  assetPath: Assets/Plugins/CodeStage/AntiCheatToolkit/Runtime/Scripts/ObscuredTypes/ObscuredDecimal.Editor.cs
+  uploadId: 943640

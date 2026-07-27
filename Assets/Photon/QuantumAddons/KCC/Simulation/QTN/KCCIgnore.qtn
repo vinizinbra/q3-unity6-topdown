@@ -1,0 +1,12 @@
+struct KCCIgnore
+{
+    EKCCIgnoreSource Source;
+    EntityRef        Reference;
+}
+
+enum EKCCIgnoreSource : Byte
+{
+    None     = 0,
+    Entity   = 1,
+    Collider = 2
+}

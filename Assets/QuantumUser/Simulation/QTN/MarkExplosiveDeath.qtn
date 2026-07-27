@@ -1,0 +1,10 @@
+// Granted/revoked by an upgrade (see Skills/MarkExplosiveDeathSkillAction - shared by Max's Berserk
+// and Pixie's bomb, or anything else that wants it) - while present, DamageUtility.ApplyDamage marks
+// every enemy the owner lands a hit on with its own ExplodeOnDeath, so each one explodes in turn
+// whenever it eventually dies. No DamagePercent here anymore - that's centralized on
+// ExplodeOnDeathConfig (RuntimeConfig.ExplodeOnDeathConfig) as one shared balance knob instead of
+// being authored per upgrade.
+component MarkExplosiveDeath
+{
+    Byte Stacks;
+}

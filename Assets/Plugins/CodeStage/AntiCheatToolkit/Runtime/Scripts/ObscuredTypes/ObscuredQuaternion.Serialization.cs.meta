@@ -1,0 +1,10 @@
+﻿fileFormatVersion: 2
+guid: 9029f553a54d4a93978a6f8e879d3d42
+timeCreated: 1734376364
+AssetOrigin:
+  serializedVersion: 1
+  productId: 202695
+  packageName: Anti-Cheat Toolkit
+  packageVersion: 6.9.1
+  assetPath: Assets/Plugins/CodeStage/AntiCheatToolkit/Runtime/Scripts/ObscuredTypes/ObscuredQuaternion.Serialization.cs
+  uploadId: 943640

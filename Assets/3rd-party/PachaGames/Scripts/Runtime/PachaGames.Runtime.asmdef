@@ -1,0 +1,25 @@
+{
+    "name": "PachaGames.Runtime",
+    "rootNamespace": "",
+    "references": [
+        "ACTk.Runtime",
+        "PrimeTween.Runtime",
+        "Unity.TextMeshPro",
+        "AudioToolkit.Runtim",
+        "AudioToolkit.Shared",
+        "NaughtyAttributes.Core",
+        "CrazyGames",
+        "Photon.Realtime",
+        "ParticleImage",
+        "PrimeTween.Debug"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

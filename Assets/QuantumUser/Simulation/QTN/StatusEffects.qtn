@@ -1,0 +1,67 @@
+// Timed debuffs applied to a target, refreshed via StatusEffectUtility and ticked by
+// StatusEffectSystem. Optional - like Armor/Shield, only added in the Editor to prototypes that
+// should be affectable.
+component StatusEffects
+{
+    // Refresh-only: reapplying always extends BurnRemaining to the new duration, but only
+    // overwrites BurnDamagePerTick/BurnOwner/BurnSource when the incoming tick damage is >= the
+    // current one - see StatusEffectUtility.ApplyBurn. A weak follow-up hit can't downgrade an
+    // already-strong burn, only extend it.
+    FP BurnRemaining;
+    FP BurnTickTimer;
+    FP BurnDamagePerTick;
+    EntityRef BurnOwner;
+    DamageSource BurnSource;
+
+    // Stacks, unlike Burn - each slot is an independent instance with its own duration/expiry, so
+    // reapplying doesn't refresh one shared instance. Capped at 5 (matches Weapon.Perks' fixed
+    // roster size); ApplyPoison evicts the soonest-to-expire slot once all 5 are occupied - see
+    // StatusEffectUtility.ApplyPoison. Unlike duration, ticking is NOT independent - every active
+    // slot shares this one timer, so stacks (however/whenever applied) all deal damage on the same
+    // beat instead of drifting out of phase into a stream of separate tiny hits; only the first
+    // stack seeds it, see StatusEffectUtility.ApplyPoison/StatusEffectSystem.TickPoison.
+    array<FP>[5] PoisonRemaining;
+    FP PoisonTickTimer;
+    array<FP>[5] PoisonDamagePerTick;
+    array<EntityRef>[5] PoisonOwner;
+    array<DamageSource>[5] PoisonSource;
+
+    // Slows movement - see StatusEffectUtility.GetSpeedMultiplier, read by PlayerMovementProcessor
+    // and EnemySystem's chase movement. Plain overwrite-on-reapply.
+    FP IceRemaining;
+    FP IceSpeedMultiplier;
+
+    // Freezes the state machine/movement/firing entirely - see StatusEffectUtility.IsStunned, read
+    // by EnemySystem, PlayerMovementProcessor and WeaponSystem. Plain overwrite-on-reapply.
+    FP StunRemaining;
+
+    // Pins movement only - unlike Stun, attacking/skills/firing are untouched. See
+    // StatusEffectUtility.IsRooted, read by PlayerMovementProcessor and EnemySystem. Plain
+    // overwrite-on-reapply.
+    FP RootRemaining;
+
+    // Multiplies incoming damage - see StatusEffectUtility.GetIncomingDamageMultiplier, applied
+    // once inside DamageUtility.ApplyDamage so every damage source respects it identically. Plain
+    // overwrite-on-reapply.
+    FP MarkRemaining;
+    FP MarkDamageMultiplier;
+
+    // Temporary attack-speed buff - see StatusEffectUtility.GetAttackSpeedMultiplier, folded into
+    // StatUtility.GetFireCooldown alongside CharacterStats.AttackSpeedMultiplier. Stacks by source
+    // (unlike Ice/Stun/Root/Mark) - each slot is one HasteSource's own application, refreshed in
+    // place if that same source re-applies (e.g. SentryAuraSystem re-triggering every tick it's in
+    // range) rather than consuming a new slot every time, so a continuous aura and a pulsed source
+    // like Zara's Speaker can both hold their own slot simultaneously. GetAttackSpeedMultiplier
+    // multiplies every active slot together. Capped at 4 - only two sources exist today (a Sentry's
+    // Fire Rate aura, Zara's HasteOnHealUpgrade), with headroom for more; ApplyHaste evicts the
+    // soonest-to-expire slot once all 4 are occupied, same shape as Poison.
+    array<FP>[4] HasteRemaining;
+    array<FP>[4] HasteAttackSpeedMultiplier;
+    array<EntityRef>[4] HasteSource;
+
+    // Temporary shield-recharge-rate buff - see StatusEffectUtility.GetShieldRegenMultiplier, folded
+    // into ShieldSystem's own RechargeRate. Plain overwrite-on-reapply, same as Haste - a buff has no
+    // "downgrade feels bad" concern the way Burn's tick damage does.
+    FP ShieldRegenRemaining;
+    FP ShieldRegenMultiplier;
+}

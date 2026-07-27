@@ -1,0 +1,35 @@
+// Marks the "chassis" entity of an autonomous sentry (e.g. Lux's sentry gun) - doesn't shoot or aim
+// itself. Up to 4 separate SentryBarrel child entities (one per equipped SentryWeaponUpgrade slot)
+// each carry their own Weapon/Aim/InputSource and independently find their own nearest enemy every
+// tick (SentryBarrelSystem, searching from that barrel's own position - so different barrels can
+// end up aiming at different enemies), so they can all fire simultaneously through WeaponSystem
+// completely unchanged. Splitting weapons into their own entities (rather than 4 fields on one
+// Weapon-like component) is what actually lets 4 guns fire at once - a single entity can only ever
+// carry one Weapon component. The chassis itself just holds shared, sentry-wide properties: Range
+// (read by every barrel and by SentryAuraSystem), Health/Shield, and the aura upgrades.
+component Sentry
+{
+    // Targeting/aura range - deliberately its own field rather than reading any one equipped
+    // WeaponDataAsset.Range, since a sentry can have zero, one, or several barrels (each with a
+    // potentially different Range) and detection is a property of the sentry itself, not of any one
+    // gun bolted onto it.
+    FP Range;
+
+    // The player who deployed this sentry (SpawnSentrySkillAction) - WeaponSystem/DamageUtility
+    // otherwise treat a barrel as its own independent shooter/target, which is exactly what lets 4 of
+    // them fire at once, so nothing else derives this on its own. Read by SentryDecaySystem as the
+    // owner of its own self-decay hit, and by view-only code (e.g. DamageFeedbackManager, resolving
+    // "is this hit mine" for a barrel via SentryBarrel.Sentry -> Sentry.Owner) to trace a chassis or
+    // its barrels back to the player who owns them, since neither carries a PlayerLink of its own.
+    EntityRef Owner;
+
+    // Health drained per second while alive (DamageUtility.ApplyDamage, via SentryDecaySystem) -
+    // computed once at spawn as MaxHealth / (this sentry's own resolved Duration), replacing the
+    // plain DestroyAfterTime countdown every other SpawnedEntitySpawner.Spawn call gets. This makes
+    // "ran out of time" and "killed by combat damage" the exact same death path - Health hitting 0 -
+    // so any on-death upgrade (SentryAddOverloadSkillAction) fires either way, and the sentry's own
+    // health bar doubles as a time-remaining readout. Routed through the normal damage pipeline
+    // rather than a direct Health write, so an equipped Shield absorbs/soaks it exactly like any
+    // other hit - a sentry with no Shield (the base skill) just drains straight through.
+    FP DecayRate;
+}

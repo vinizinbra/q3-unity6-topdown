@@ -1,0 +1,9 @@
+input {
+    FPVector2 Direction;
+    button Run;
+    button Jump;
+    button Fire;
+    button SwitchTarget;
+    button DashSkill;
+    button HeroSkill;
+}

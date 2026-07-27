@@ -1,0 +1,8 @@
+// Granted/revoked by an upgrade (e.g. Heroes/Pixie/MegaBombSkillAction) - read at the point a
+// ProjectileSkillData actually fires (see ProjectileSkillData.ResolveDamageMultiplier), not the
+// shared ProjectileSpawner, so it only multiplies the one skill's own throw - not every projectile
+// the owner happens to fire while it's granted (a weapon shot mid-throw, say).
+component ProjectileDamageUpgrade
+{
+    FP Multiplier;
+}

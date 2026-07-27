@@ -1,0 +1,26 @@
+// Granted by Heroes/Brute's JuggernautEndExplosionSkillAction - while equipped,
+// JuggernautSkillData.End deals Damage in Radius around Brutus's own position the instant the
+// channel finishes (Duration running out, not a discharge - see JuggernautSkillData.Discharge for
+// the separate knockback-only pulse). Damage applied directly via HitEffectUtility.ApplyDamageInRadius,
+// no spawned entity, same shape as VortexExplodeOnDestroy.
+//
+// Begin-only, deliberately not paired with End - same reasoning as every other "configures what the
+// skill does" upgrade this session: re-granting fresh (idempotent) every activation and never
+// removing it means it's simply always there once picked, with nothing to race against. No runtime
+// state to reset between activations either, unlike JuggernautCharge.
+component JuggernautEndExplosionUpgrade
+{
+    FP Damage;
+    FP Radius;
+
+    // How long JuggernautExplosionPushSystem takes to kinematically walk a caught enemy from its
+    // current spot out to the exact edge of Radius (XZ only, Y untouched) - see
+    // JuggernautSkillData.ApplyEndExplosionPush. A positional move, not a physics impulse, since
+    // impulses can't guarantee where friction/mass make something actually stop.
+    FP PushDuration;
+
+    // Carried through to the fired event so the view can resolve BlastEffectPrefab
+    // (JuggernautEndExplosionSkillAction.View.cs) off the exact asset that granted this - same
+    // "AssetRef travels with the event" shape as every other asset-authored VFX this session.
+    AssetRef<JuggernautEndExplosionSkillAction> Source;
+}

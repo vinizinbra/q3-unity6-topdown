@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 14b37ac26a6bb4ed0ad76ecfaf902300, type: 3}
+  m_Name: FrozenShoppingMegaplexTheme
+  m_EditorClassIdentifier: Assembly-CSharp::Quantum.WorldTheme
+  worldName: 3
+  enemy:
+    BloodColor: {r: 0.92, g: 0.11, b: 0.178, a: 1}
+  environment:
+    Surface: {r: 0.523, g: 0.843, b: 0.95, a: 1}
+    Walls: {r: 0.9, g: 0.18, b: 0.3, a: 1}
+    Sky: {r: 0.92, g: 0.69, b: 0.805, a: 1}
+  obstacles:
+    Size1x1: []
+    Size1x2: []
+    Size2x2: []

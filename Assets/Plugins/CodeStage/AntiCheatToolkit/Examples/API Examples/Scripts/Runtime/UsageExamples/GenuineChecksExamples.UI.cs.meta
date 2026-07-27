@@ -1,0 +1,10 @@
+﻿fileFormatVersion: 2
+guid: 655861a67e654fb48156fb32279bdf2c
+timeCreated: 1623255861
+AssetOrigin:
+  serializedVersion: 1
+  productId: 202695
+  packageName: Anti-Cheat Toolkit
+  packageVersion: 6.9.1
+  assetPath: Assets/Plugins/CodeStage/AntiCheatToolkit/Examples/API Examples/Scripts/Runtime/UsageExamples/GenuineChecksExamples.UI.cs
+  uploadId: 943640

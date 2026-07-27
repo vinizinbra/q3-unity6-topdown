@@ -1,0 +1,10 @@
+// Granted/revoked by an upgrade (e.g. Heroes/Pixie/ClusterBombSkillAction) - read on detonation by
+// AreaHitData.TrySpawnClusterBomblets (gated by AreaHitData.TriggersSpawnUpgrades - Projectile's
+// own AreaHitData needs that set false, or each bomblet would cluster-bomb again on its own
+// detonation, cascading forever).
+component ClusterBombUpgrade
+{
+    Byte Count;
+    FP Damage;
+    AssetRef<ProjectileDataAsset> Projectile;
+}

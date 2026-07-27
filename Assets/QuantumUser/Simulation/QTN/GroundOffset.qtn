@@ -1,0 +1,25 @@
+// Optional - only entities that need to settle into a resting height when spawned carry this
+// (Sentry, Vortex, ...). SpawnedEntitySpawner.Spawn resolves the ground once, right after placing
+// Position (EnemyMovementUtility.TryFindGroundHeight), then either snaps straight to
+// groundY + Offset or, if the relevant approach rate below is authored, tags the entity with
+// SettlingToGround so GroundSettleSystem eases it there over subsequent ticks instead of
+// teleporting into place. 0 sits flush on the ground (Sentry); a positive Offset hovers above it
+// (Vortex).
+component GroundOffset
+{
+    FP Offset;
+
+    // Descending approach only (spawn Y above the resting height) - accelerates like real gravity
+    // (SettlingToGround.FallVelocity builds up each tick) rather than moving at a flat speed, so a
+    // drop reads as an actual fall instead of a lift descending on a cable. A multiplier against
+    // f.SimulationConfig.Physics.Gravity (the same shared value PhysicsBody3D.GravityScale scales
+    // for real dynamic bodies), not a standalone acceleration - 1 falls at the project's normal
+    // gravity, 2 falls twice as fast, 0.5 drifts down softly. 0 = snap straight down instead of
+    // easing.
+    FP FallGravityMultiplier;
+
+    // Ascending approach only (spawn Y below the resting height, e.g. Vortex's hover Offset) - a
+    // flat speed, not gravity-accelerated, since floating up should read as a controlled levitation
+    // rather than a launch. 0 = snap straight up instead of easing.
+    FP FloatSpeed;
+}

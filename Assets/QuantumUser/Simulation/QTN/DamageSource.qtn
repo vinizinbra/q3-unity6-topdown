@@ -1,0 +1,13 @@
+// What fired a hit, so DamageUtility knows which of the attacker's source-specific multipliers
+// applies. The owner can't answer this - it holds a weapon and skills at once, so only the shot
+// itself knows. That's why Projectile and AreaOwner each carry one.
+//
+// There's deliberately no Area: a lingering area inherits the source that spawned it, so a dash's
+// fire trail is Skill damage and a grenade's is Weapon damage.
+enum DamageSource : Byte
+{
+    // No source-specific multiplier - enemy attacks, environment.
+    None,
+    Weapon,
+    Skill
+}

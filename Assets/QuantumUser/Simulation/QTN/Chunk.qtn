@@ -1,0 +1,44 @@
+enum ChunkType : Byte
+{
+    Start,
+    Enemy,
+    Boss,
+    Merchant,
+    Traversal
+}
+
+// Yaw around Y, in 90-degree steps only - matches CubeVisualBuilder's convention (0 deg = North
+// / +Z, Unity's +Y rotation cycles North->East->South->West, so each step is +90).
+enum ChunkRotation : Byte
+{
+    Degrees0,
+    Degrees90,
+    Degrees180,
+    Degrees270
+}
+
+component Chunk
+{
+    ChunkType Type;
+    // Raw authored size, not a cell count directly - LevelGenerationSystem divides by
+    // LevelConfig.CellSize to get the actual footprint in grid cells.
+    Int32 ChunkSizeWidth;
+    Int32 ChunkSizeDepth;
+    Int32 OriginCellX;
+    Int32 OriginCellZ;
+    // Authored directly (like ChunkSizeWidth/Depth), not inferred from Transform3D.Rotation - a
+    // hand-placed chunk (e.g. BossArena) must have this set to match however it's actually
+    // rotated in the scene, since LevelGenerationSystem trusts this field, not the raw quaternion.
+    ChunkRotation Rotation;
+}
+
+global
+{
+    bool LevelGenerated;
+    FPVector3 PlayerSpawnPosition;
+
+    // Elapsed simulated time since LevelGenerated flipped true - PlayerSpawnUtility.IsReadyToSpawn
+    // holds players back until this passes a delay, giving newly-created chunk colliders a moment
+    // to register in the physics broadphase before anyone with gravity/KCC active drops in.
+    FP TimeSinceLevelGenerated;
+}

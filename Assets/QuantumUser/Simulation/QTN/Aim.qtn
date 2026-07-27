@@ -1,0 +1,15 @@
+component Aim
+{
+    FP Angle;
+    EntityRef Target;
+    EntityRef LockedTarget;
+    FP TargetSwitchTimer;
+
+    // +1 facing right, -1 facing left - the single authoritative source for every left/right
+    // sprite flip (body, weapon) and for mirroring CharacterData.WeaponPosition.X onto the
+    // muzzle. Computed once in AimSystem with a deadzone/hysteresis so it doesn't flicker while
+    // aiming near straight up/down; both Simulation (StatUtility.GetWeaponHoldOffset) and View
+    // (BlobAnimationView) read this instead of each re-deriving their own facing from Angle, so
+    // they can't drift out of sync with each other.
+    FP FacingSign;
+}

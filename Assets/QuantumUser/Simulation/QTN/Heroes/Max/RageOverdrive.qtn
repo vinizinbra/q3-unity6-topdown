@@ -1,0 +1,24 @@
+// Granted/revoked by RageOverdriveSkillAction, added fresh at Begin and removed at End (unlike
+// BurnOnHitStacks/MarkExplosiveDeath, this isn't stack-counted for overlapping grants - Rage is scoped
+// to a single Berserk activation, and only one activation can be Active at a time, so there's
+// nothing to overlap). Stacks builds from landed weapon hits (see DamageUtility.ApplyDamage /
+// RageOverdriveUtility) up to MaxStacks; crossing it flips Overdriven once and applies the stat
+// correction described below - further hits land no-ops.
+component RageOverdrive
+{
+    Byte Stacks;
+    Byte MaxStacks;
+
+    // Doubles (by default) the granting skill's own bonus percentages rather than its multiplier -
+    // going from +50% to +100%, not from 1.5x to 3x. See RageOverdriveUtility.Correction.
+    FP OverdriveMultiplier;
+    Boolean Overdriven;
+
+    // Captured from the granting skill's own bonuses at Begin (see RageOverdriveSkillAction, which
+    // reads them off BerserkSkillData specifically) - the correction applied at Overdrive needs to
+    // know exactly how much of CharacterStats' current multiplier came from Berserk's own Begin, so
+    // it can replace that contribution instead of stacking blindly on top of it.
+    FP FireRateBonus;
+    FP MoveSpeedBonus;
+    FP ReloadSpeedBonus;
+}

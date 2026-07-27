@@ -1,0 +1,10 @@
+// Granted by Heroes/Kai's VortexPowerPulseSkillAction - read by SpawnVortexEffectData at spawn time,
+// which copies Power/TickInterval onto the spawned Vortex's Force/TickInterval directly (an absolute
+// override, replacing the default "Force = the hit's own context.Damage" and whatever TickInterval
+// is authored on the prototype) - the pull's own strength and cadence, independent of
+// VortexDamageUpgrade's separate AreaDamage cadence.
+component VortexPowerPulseUpgrade
+{
+    FP Power;
+    FP TickInterval;
+}

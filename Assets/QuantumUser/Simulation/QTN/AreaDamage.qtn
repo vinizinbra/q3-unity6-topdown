@@ -1,0 +1,57 @@
+// A patch of ground that keeps applying its effects to whoever stands in it - fire trails,
+// lingering AoE, hazards. Authored straight onto the prototype, so a prefab owns what it does to
+// people with no config asset in between: spawning a trail, a decoy or a blast is the same spawn of
+// a different prefab. What hurts is the prototype's own PhysicsCollider3D, so the shape that hurts
+// is exactly the one authored and rendered.
+//
+// Lifespan is DestroyAfterTime's job, which is also the only thing separating a lingering area from
+// an explosion - one short enough to tick a single time is a blast. DestroyAfterTimeSystem runs
+// last on purpose so that closing tick still lands (see SystemSetup.User).
+component AreaDamage
+{
+    // Total damage scales with the entity's lifetime / TickInterval, so halving this doubles what
+    // standing in the area costs - retune Damage alongside it.
+    FP TickInterval;
+
+    // Seeds HitEffectContext.Damage once per tick; the Effects scale off it.
+    FP Damage;
+
+    // False: PushDirection is radial, away from this entity's own Position (HitEffectUtility's
+    // default) - what a blast wants. True: every target caught gets pushed the same way instead,
+    // along PushDirection rotated by this entity's own facing - what a directional shove (a
+    // shockwave fired forward) wants. See AreaDamageSystem.
+    Boolean OverridePushDirection;
+
+    // Local space, e.g. Forward - rotated by Transform3D->Rotation at apply time so a blast spawned
+    // with SpawnAlignment.Facing pushes wherever the caster aimed it, with no per-skill world-space
+    // math. Ignored unless OverridePushDirection is true.
+    FPVector3 PushDirection;
+
+    array<AssetRef<HitEffectData>>[4] Effects;
+
+    FP TickTimer;
+
+    // Who this area is allowed to hit - Both (default) hits anyone the collider overlaps, same as
+    // before this field existed. Set Enemies for a player-spawned hazard (a fire trail shouldn't
+    // burn allies in co-op) or Players for an enemy-spawned one - see HitEffectUtility.ApplyInCollider.
+    DamageTargetMask TargetMask;
+}
+
+// Split out of AreaDamage purely so that Effects array stays authorable: an EntityRef in a
+// component makes Unity's prototype adapter silently drop array fields from the Inspector, with no
+// error. Stamped by SpawnedEntitySpawner at spawn time, never authored - an area with no owner
+// (a hand-placed level hazard) simply omits this.
+component AreaOwner
+{
+    // Credited with the damage, and skipped by it - see HitEffectUtility.
+    EntityRef Owner;
+
+    // Inherited from whatever spawned the area, so a dash's fire trail keeps counting as Skill
+    // damage long after the dash ended.
+    DamageSource Source;
+
+    // Inherited from the WeaponDataAsset.Element of whatever spawned the area (Neutral for a
+    // skill-spawned or hand-placed area) - lets StatusEffectUtility.TryApplyElementalStatus proc off
+    // an exploding grenade the same way it already does off a direct weapon hit.
+    ElementType Element;
+}

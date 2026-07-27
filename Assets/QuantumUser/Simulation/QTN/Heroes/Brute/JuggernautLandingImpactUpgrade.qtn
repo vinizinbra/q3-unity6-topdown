@@ -1,0 +1,16 @@
+// Granted by Heroes/Brute's JuggernautLandingImpactSkillAction onto the owner - while present,
+// JuggernautSkillData.Discharge bakes a copy of Damage/StunChance/StunDuration/Source directly onto
+// every enemy it successfully launches (see JuggernautLaunched), so
+// JuggernautLandingImpactSystem can resolve everything it needs off the enemy itself once it lands,
+// without needing Brutus (or this upgrade) to still exist by then.
+//
+// Begin-only, deliberately not paired with End - same reasoning as every other "configures what the
+// skill does" upgrade this session: re-granting fresh (idempotent) every activation and never
+// removing it means it's simply always there once picked, with nothing to race against.
+component JuggernautLandingImpactUpgrade
+{
+    FP Damage;
+    FP StunChance;
+    FP StunDuration;
+    AssetRef<JuggernautLandingImpactSkillAction> Source;
+}

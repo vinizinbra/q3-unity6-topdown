@@ -1,0 +1,14 @@
+// Granted onto a target by DamageUtility.TryMarkExplodeOnDeath whenever it's hit by an owner holding
+// MarkExplosiveDeath (Max's Berserk upgrade, Pixie's bomb upgrade - same shared grant, doesn't matter
+// which one marked it). Presence means "explode when this thing dies" - see
+// DamageUtility.TryExplodeOnDeath, checked in the enemy-death branch of ApplyDamage.
+//
+// Not permanent - Remaining is (re)set to ExplodeOnDeathConfig.Duration on every fresh mark, ticked
+// down and the component removed by ExplodeOnDeathTimerSystem once it hits zero, same shape as
+// JuggernautDischargeCooldown. Landing another marked hit refreshes it back to the full duration
+// (see TryMarkExplodeOnDeath), so an enemy that's kept under fire stays marked, but one left alone
+// eventually "cures" instead of carrying the tag forever until it happens to die some other way.
+component ExplodeOnDeath
+{
+    FP Remaining;
+}

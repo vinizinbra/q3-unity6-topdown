@@ -1,0 +1,43 @@
+struct KCCData
+{
+    Boolean   IsActive;
+    FP        LookPitch;
+    FP        LookYaw;
+
+    FPVector3 BasePosition;
+    FPVector3 DesiredPosition;
+    FPVector3 TargetPosition;
+
+    FP        DeltaTime;
+    FPVector3 InputDirection;
+    FPVector3 JumpImpulse;
+    FPVector3 Gravity;
+    FP        MaxGroundAngle;
+    FP        MaxWallAngle;
+    FP        MaxHangAngle;
+    FPVector3 ExternalImpulse;
+    FPVector3 ExternalForce;
+    FPVector3 ExternalDelta;
+
+    FP        KinematicSpeed;
+    FPVector3 KinematicTangent;
+    FPVector3 KinematicDirection;
+    FPVector3 KinematicVelocity;
+    FPVector3 DynamicVelocity;
+
+    FP        RealSpeed;
+    FPVector3 RealVelocity;
+    bool      HasJumped;
+    bool      HasTeleported;
+    bool      IsGrounded;
+    bool      WasGrounded;
+    bool      IsSteppingUp;
+    bool      WasSteppingUp;
+    bool      IsSnappingToGround;
+    bool      WasSnappingToGround;
+    FPVector3 GroundNormal;
+    FPVector3 GroundTangent;
+    FPVector3 GroundPosition;
+    FP        GroundDistance;
+    FP        GroundAngle;
+}

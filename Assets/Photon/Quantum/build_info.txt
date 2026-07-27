@@ -1,0 +1,3 @@
+build: 3.0.12 Stable 2123
+date: 2026-06-30 09:07:29
+git: 3.0/main (1aeb1d055)

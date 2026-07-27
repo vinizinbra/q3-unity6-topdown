@@ -1,0 +1,30 @@
+// Granted by Heroes/Lux's SentryAddOverloadSkillAction, copied onto the spawned sentry itself by
+// SpawnSentrySkillAction.ApplyOverloadUpgrade (same copy-onto-spawned shape as
+// SentryFireRateAuraUpgrade) - fully independent from the enemy MarkExplosiveDeath/ExplodeOnDeath
+// kill-chain mechanic despite doing something similar; its own Radius/Damage, no shared
+// RuntimeConfig, so tuning one doesn't silently affect the other (see DamageUtility.TrySentryOverload).
+// Fires only from Sentry.DecayRate/combat damage actually draining Health to 0
+// (DamageUtility.ApplyDamage) - never a bespoke "on expire" hook, since decay IS how a sentry now
+// dies (see Sentry.qtn's own DecayRate comment).
+//
+// Begin-only, deliberately not paired with End - same reasoning as every other "configures what the
+// skill does" upgrade this session: re-granting fresh (idempotent) every activation and never
+// removing it means it's simply always there once picked, with nothing to race against.
+component SentryOverloadUpgrade
+{
+    // Flat, author-controlled - same "real number, not a percent" shape as the other explosion
+    // upgrades (e.g. VortexExplodeOnDestroy.Damage), so it's tunable independent of the sentry's own
+    // MaxHealth.
+    FP Damage;
+
+    // Flat, author-controlled - deliberately NOT derived from the chassis's own collider size (unlike
+    // the enemy kill-chain mechanic's real-collider-based scaling, see
+    // EnemyMovementUtility.ResolveEntityRadius), so this is tunable independent of whatever the
+    // chassis happens to look like.
+    FP Radius;
+
+    // Carried through to SentryOverloadDetonated so the view can resolve BlastEffectPrefab
+    // (SentryAddOverloadSkillAction.View.cs) off the exact asset that granted this - same "AssetRef
+    // travels with the event" shape VortexExplodeOnDestroy.Source uses for VortexExploded.
+    AssetRef<SentryAddOverloadSkillAction> Source;
+}

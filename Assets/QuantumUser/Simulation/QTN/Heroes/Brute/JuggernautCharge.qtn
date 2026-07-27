@@ -1,0 +1,30 @@
+// Brutus's Juggernaut charge state - added fresh at Begin, removed at End (see JuggernautSkillData).
+// Builds ChargePoints from ground covered during the activation (SkillSlot.LastStepDistance, the
+// same per-tick distance SkillSystem already measures generically for every skill), one point every
+// DistancePerCharge units - holds at MaxCharge rather than continuing to accumulate once reached.
+// JuggernautSkillData.Tick discharges (an area knockback) the moment Brutus touches an enemy while
+// Charged, then resets ChargePoints back to 0 so the cycle repeats for the rest of Duration.
+component JuggernautCharge
+{
+    FP DistanceSinceLastPoint;
+    Byte ChargePoints;
+
+    // Tracks whether ChargedMoveSpeedBonus is currently folded into CharacterStats.MoveSpeedMultiplier
+    // - a plain reached-Charged/no-longer-Charged transition (see JuggernautSkillData.UpdateSpeedBoost)
+    // rather than reapplying every tick, which would compound the multiplier instead of just toggling
+    // it. Also let JuggernautSkillData.End clean it up if Duration runs out while still boosted.
+    Boolean SpeedBoosted;
+
+    // Gates how often TryDischarge's own contact check actually runs (DischargeCheckInterval) -
+    // without this, a sustained-Charge Brutus standing next to an enemy would re-discharge every
+    // single tick. Separate from the per-enemy JuggernautDischargeCooldown, which additionally keeps
+    // a specific enemy immune to being re-hit even across multiple checks.
+    FP DischargeCheckTimer;
+
+    // Cumulative count of enemies actually knocked back by a discharge over the WHOLE activation
+    // (not per-discharge, not deduped across repeat hits on the same enemy once its own
+    // JuggernautDischargeCooldown expires) - read by JuggernautSkillData.End to scale the End
+    // Explosion's damage via JuggernautStackDamageUpgrade. Distinct from ChargePoints (which tracks
+    // ground covered, not enemies hit).
+    Int32 UnitsHit;
+}

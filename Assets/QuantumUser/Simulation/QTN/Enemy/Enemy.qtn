@@ -1,0 +1,111 @@
+component Enemy
+{
+    AssetRef<EnemyDataAsset> EnemyData;
+
+    EntityRef  Target;
+    EnemyActionPhase Phase;
+    FP         StateTimer;
+
+    // Time before EnemyDataAsset.BasicAction is usable again - ticked every tick regardless of
+    // Phase (EnemySystem.TickAttackCooldown), independent of DownTime/StateTimer, so the enemy
+    // could resume chasing before this action specifically comes back off cooldown. SkillActions
+    // get their own cooldowns on the optional EnemyActionSlots component instead - this field is
+    // always BasicAction's (slot 0), never repurposed for a skill slot.
+    FP AttackCooldownRemaining;
+
+    // 0 = BasicAction is the action currently in Preparation/Telegraph/Active/Recovery; 1-7 =
+    // EnemyDataAsset.SkillActions[slot-1]. Set once by EnemyDecisionUtility.TrySelectAction on
+    // committing to an action (Chasing -> Preparation) and read by every phase handler afterward
+    // so they all agree on which EnemyActionData/EnemyDeliveryData is currently running. Lives here
+    // (not on the optional EnemyActionSlots component) since every enemy needs to track this
+    // regardless of whether it has any SkillActions at all.
+    Byte CurrentActionSlot;
+
+    // Captured once by EnemyDeliveryData.Begin() for a delivery that needs a locked point to move
+    // toward (e.g. ChargeDeliveryData's dash target, LeapDeliveryData's landing spot) - never
+    // re-homed mid-delivery.
+    FPVector3 SkillTargetPosition;
+
+    // Captured once by EnemyDeliveryData.Begin() for a delivery that needs to interpolate from its
+    // own starting position rather than just move toward SkillTargetPosition at a constant speed
+    // (e.g. LeapDeliveryData's jump arc, lerped between this and SkillTargetPosition over time).
+    FPVector3 SkillStartPosition;
+
+    // Captured once by EnemyMovementUtility.MoveInDirection the instant a ledge-hop jump triggers
+    // (EnemyHeightData.CanJump/JumpVelocity) and reapplied every tick until landing - actively
+    // reasserted rather than just left alone, since PhysicsBody3D.Drag would otherwise decay it
+    // over the arc (grounded movement never feels that drag, since MoveInDirection overwrites
+    // velocity every tick while grounded). Also keeps the AI from re-steering the jump mid-air.
+    FPVector3 JumpHorizontalVelocity;
+
+    // Counts down while EnemySystem deliberately writes no velocity at all, so a knockback impulse
+    // survives long enough to actually move the enemy - every other phase drives
+    // PhysicsBody3D.Velocity every tick (StopMovement/MoveInDirection) and would otherwise erase
+    // the push before it went anywhere. Opened by OnEnemyKnockedBack, sized by
+    // EnemyDataAsset.KnockbackRecoveryTime.
+    FP KnockbackTimer;
+
+    // Set by EnemyDeliveryData.Begin() for a delivery that hands off to a separately-ticking
+    // spawned entity instead of finishing on the spot (e.g. a future lobbed-shell delivery) -
+    // Tick() watches f.Exists(SkillProjectile) to know when that entity is actually done (hit
+    // something or expired via ProjectileSystem), so EnemyActionPhase.Active - and therefore the
+    // delivery's Telegraph - stays alive for the spawned entity's whole lifetime instead of ending
+    // the instant it's launched.
+    EntityRef SkillProjectile;
+
+    // EnemyHeightState.Flying-only - unused (stays at 0) for every other enemy. Counts down to the
+    // next periodic ground re-check (EnemyMovementUtility.ComputeFlyingHoverVelocity), and
+    // remembers the last-found target height (groundY + EnemyHeightData.FlightHeight) to spring
+    // toward in between checks - re-sampling the ground every tick would fight the spring's own
+    // easing instead of giving it a stable point to settle on. Lives on the shared Enemy component
+    // rather than a separate optional one (unlike e.g. EnemySequenceState) since it's a single pair
+    // of FPs and this way a Flying enemy just works the moment EnemyDataAsset.Height.InitialState
+    // is set, with no separate per-prototype component to remember to add.
+    FP FlyingHoverCheckTimer;
+    FP FlyingHoverTargetHeight;
+}
+
+// Fired once by DamageUtility when an Enemy's health hits zero, right after Phase is set to
+// Dead - lets other systems react to the death (e.g. EnemySystem parking the corpse) without
+// DamageUtility needing to know about them directly.
+signal OnEnemyDied(EntityRef entity);
+
+// Fired by DamageUtility right after a knockback impulse actually lands on an Enemy - lets
+// EnemySystem open its stagger window and cancel the current action on its own terms, same split
+// as OnEnemyDied. Not fired when the impulse was dropped (kinematic body), so an enemy mid-charge
+// isn't staggered by a push it never felt.
+signal OnEnemyKnockedBack(EntityRef entity);
+
+// Merges what used to be two separate concepts - the coarse Idle/Chasing/.../Dead AI state and a
+// finer-grained windup/telegraph/active-delivery phase - into one state machine at a single
+// resolution, since they were never orthogonal (Anticipating was always "Preparation, plus
+// Telegraph once it's visible"; Executing was always "Active"). Running them as two independently
+// advancing trackers would double the ways EnterRecovering's single IsKinematic-reset-point
+// discipline could be violated. Cooldown is deliberately NOT a phase here - it already ticks
+// independently of Phase (EnemySystem.TickAttackCooldown runs every tick regardless), which
+// matters more, not less, once an enemy can have multiple actions each with their own cooldown.
+enum EnemyActionPhase : Byte
+{
+    Idle        = 0,
+    Chasing     = 1,
+
+    // Windup before an action commits - EnemyDeliveryData.OnAnticipating() runs every tick here.
+    // Preparation is the not-yet-telegraphed portion; the phase flips to Telegraph once elapsed
+    // windup crosses EnemyActionData.TelegraphStartPercent (both driven by the same StateTimer,
+    // not a second timer).
+    Preparation = 2,
+    Telegraph   = 3,
+
+    // The instant EnemyDeliveryData.Begin() is called, once the windup timer expires - resolves
+    // within the same tick to either Recovery (Begin() returned true) or Active (returned false),
+    // so this value is never itself persisted/observed; it exists as a named point in the
+    // lifecycle for future systems (e.g. presentation) that may want to react to it directly.
+    Execute     = 4,
+
+    // A delivery whose Begin() returned false is still resolving (e.g. ChargeDeliveryData's dash) -
+    // ticked via EnemyDeliveryData.Tick() until it reports done.
+    Active      = 5,
+
+    Recovery    = 6,
+    Dead        = 7
+}

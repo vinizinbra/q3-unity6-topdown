@@ -1,0 +1,14 @@
+// Granted by Heroes/Brute's JuggernautActiveSpeedSkillAction - while present, JuggernautSkillData's
+// own ResolveActiveMoveSpeedBonus adds SpeedBonusIncrease to the baseline Active speed tier only, not
+// the Charged tier (see JuggernautChargedSpeedUpgrade for that one, a separate, independently
+// pickable upgrade rather than one combined "increase both" card). Read live each time the resolver
+// runs rather than baked in once at Begin - safe since this is Begin-only, never revoked, so it can't
+// change mid-activation.
+//
+// Begin-only, deliberately not paired with End - same reasoning as every other "configures what the
+// skill does" upgrade this session: re-granting fresh (idempotent) every activation and never
+// removing it means it's simply always there once picked, with nothing to race against.
+component JuggernautActiveSpeedUpgrade
+{
+    FP SpeedBonusIncrease;
+}

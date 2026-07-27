@@ -1,0 +1,12 @@
+// Granted by Heroes/Brute's JuggernautKnockbackSkillAction - while present, JuggernautSkillData's own
+// ResolveKnockbackMultiplier scales BOTH KnockbackForce and KnockbackUpwardForce by (1 + ForceBonus)
+// when a discharge fires - a stronger push and a higher pop, not a bigger radius (KnockbackRadius is
+// untouched by this).
+//
+// Begin-only, deliberately not paired with End - same reasoning as every other "configures what the
+// skill does" upgrade this session: re-granting fresh (idempotent) every activation and never
+// removing it means it's simply always there once picked, with nothing to race against.
+component JuggernautKnockbackUpgrade
+{
+    FP ForceBonus;
+}

@@ -1,0 +1,37 @@
+// A continuous pull toward this entity's own position - see VortexSystem. The pull radius comes
+// from this entity's own PhysicsCollider3D (must be a Sphere) rather than a field here - same
+// reasoning AreaDamageSystem's pulse area comes from its own collider, not an authored radius. That
+// also means the existing generic SpawnRadiusUpgrade (which already scales whatever collider a
+// spawned entity has) works on a vortex for free, with no vortex-specific radius plumbing needed.
+//
+// No Damage field here on purpose - a vortex is pure crowd control by default. VortexDamageUpgrade
+// adds actual damage by attaching a real AreaDamage component instead (see SpawnVortexEffectData),
+// reusing AreaDamageSystem's own independent pulsing rather than hand-rolling a second damage-tick
+// system on Vortex itself.
+//
+// Force is set at spawn by SpawnVortexEffectData off the triggering hit's own Damage (the same
+// Damage a normal HitEffectData would deal, already boosted by IncreaseProjectileDamageSkillAction
+// if equipped) - so "the skill's Damage" is what drives pull strength, unless overridden by
+// VortexPowerPulseUpgrade.
+component Vortex
+{
+    // Applied as one impulse per pulse (TickInterval/TickTimer below), not scaled by DeltaTime - a
+    // continuous DeltaTime-scaled push turned out too small to read against ground friction (see
+    // DamageUtility.PushPhysicsBody) and against the enemy's own chase velocity, which EnemySystem
+    // reassigns every tick regardless. A periodic, full-sized pop is what actually visibly drags an
+    // enemy off its chase line.
+    FP Force;
+
+    // Seconds between pull pulses - authored directly on the prototype by default, overridden at
+    // spawn time if the owner has VortexPowerPulseUpgrade equipped (see SpawnVortexEffectData).
+    FP TickInterval;
+
+    FP TickTimer;
+
+    // How many enemies the last pull pulse actually found in radius - refreshed once per pulse (not
+    // every tick, to avoid an extra OverlapShape query), reusing the same overlap the pull itself
+    // already runs. Read by VortexSystem.ResolveCrowdMultiplier (VortexCrowdDamageUpgrade) to scale
+    // the constant AreaDamage, mini explosions and the final blast all off the same live count - see
+    // VortexSystem.Update.
+    Byte CaughtCount;
+}

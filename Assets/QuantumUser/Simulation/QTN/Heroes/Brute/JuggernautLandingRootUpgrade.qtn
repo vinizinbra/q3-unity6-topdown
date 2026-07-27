@@ -1,0 +1,16 @@
+// Granted by Heroes/Brute's JuggernautLandingRootSkillAction onto the owner - a parallel
+// alternative to JuggernautLandingImpactUpgrade (Stun): while present, JuggernautSkillData.Discharge
+// bakes a copy of Damage/RootChance/RootDuration directly onto every enemy it successfully launches
+// (see JuggernautLaunched's RootDamage/RootChance/RootDuration fields), so
+// JuggernautLandingImpactSystem can roll Root the same way it already rolls Stun. Independent of
+// JuggernautLandingImpactUpgrade - both can be equipped at once, or just one, whichever is picked.
+//
+// Begin-only, deliberately not paired with End - same reasoning as every other "configures what the
+// skill does" upgrade this session: re-granting fresh (idempotent) every activation and never
+// removing it means it's simply always there once picked, with nothing to race against.
+component JuggernautLandingRootUpgrade
+{
+    FP Damage;
+    FP RootChance;
+    FP RootDuration;
+}

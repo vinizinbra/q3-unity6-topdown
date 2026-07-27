@@ -1,0 +1,13 @@
+// Baked onto an enemy by JuggernautSkillData.ApplyEndExplosionPush the instant the End Explosion
+// catches it - JuggernautExplosionPushSystem kinematically walks Transform3D's X/Z from
+// StartPosition to TargetPosition over Duration (Y left untouched throughout), then restores normal
+// physics and removes this component. A positional move, not a physics impulse - TargetPosition is
+// already resolved (including knockback-resistance scaling) at bake time, so this system just has to
+// interpolate toward it, not resolve any forces itself.
+component JuggernautExplosionPush
+{
+    FPVector3 StartPosition;
+    FPVector3 TargetPosition;
+    FP Duration;
+    FP Elapsed;
+}

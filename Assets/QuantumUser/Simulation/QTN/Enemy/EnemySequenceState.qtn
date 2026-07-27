@@ -1,0 +1,7 @@
+// Optional, opt-in component - only add to an enemy prototype that has an action whose Delivery is
+// SequenceDeliveryData (see that class). Tracks which ordered sub-step is currently running, the
+// same "only enemies that actually need this pay for it" reasoning as EnemyActionSlots.
+component EnemySequenceState
+{
+    Byte CurrentStepIndex;
+}

@@ -1,0 +1,29 @@
+// Drives AreaDamage through two alternating pulse configs instead of one fixed one - see
+// AlternatingAreaSystem, which runs right before AreaDamageSystem and swaps AreaDamage's
+// Damage/TargetMask/Effects into whichever phase is about to fire. One shared
+// AreaDamage.TickInterval drives both the pulse rate and the swap: pulse 1 heals, pulse 2 damages,
+// pulse 3 heals, and so on - no separate phase-duration to keep in sync.
+//
+// Every field below (and AreaDamage.TickInterval) is overwritten at spawn by
+// SpawnAlternatingAreaEffectData - see its own comment for why the numbers live there, on the
+// skill's own asset chain, instead of authored here. Whatever's set on the prototype in the
+// Inspector is inert placeholder, never actually read.
+component AlternatingArea
+{
+    Boolean CurrentlyHealing;
+
+    // No HealAmount - HealEffectData computes its heal off the target's own MaxHealth (see
+    // HealUtility.ApplyHeal), not off AreaDamage.Damage, so there's nothing to seed here.
+    DamageTargetMask HealTargetMask;
+    array<AssetRef<HitEffectData>>[4] HealEffects;
+
+    FP DamageAmount;
+    DamageTargetMask DamageMask;
+    array<AssetRef<HitEffectData>>[4] DamageEffects;
+
+    // Counts damage pulses only (heal pulses don't touch this) - see
+    // AlternatingAreaSystem.TryApplyStunUpgrade, which checks this against
+    // StunEveryWavesUpgrade.Interval every damage pulse. Never resets; "every Nth" just reads off
+    // the running total modulo Interval.
+    Byte DamagePulseCount;
+}

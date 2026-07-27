@@ -1,0 +1,10 @@
+﻿fileFormatVersion: 2
+guid: 9f22da4768ea44e2b55af0ead88a0f36
+timeCreated: 1682126773
+AssetOrigin:
+  serializedVersion: 1
+  productId: 202695
+  packageName: Anti-Cheat Toolkit
+  packageVersion: 6.9.1
+  assetPath: Assets/Plugins/CodeStage/AntiCheatToolkit/Runtime/Scripts/Genuine/Android/AndroidAppSource.cs
+  uploadId: 943640

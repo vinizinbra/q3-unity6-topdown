@@ -1,0 +1,13 @@
+// Granted by Heroes/Brute's JuggernautMarkSkillAction - while present, JuggernautSkillData.Discharge
+// applies MarkEffect (typically a MarkEffectData asset - the existing generic target-side
+// incoming-damage-multiplier status) to every enemy actually launched by the area knockback, same
+// reuse of the generic Mark mechanic Kai's VortexMarkUpgrade already established - no new status
+// effect needed.
+//
+// Begin-only, deliberately not paired with End - same reasoning as every other "configures what the
+// skill does" upgrade this session: re-granting fresh (idempotent) every activation and never
+// removing it means it's simply always there once picked, with nothing to race against.
+component JuggernautMarkUpgrade
+{
+    AssetRef<HitEffectData> MarkEffect;
+}

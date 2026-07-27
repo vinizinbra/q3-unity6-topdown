@@ -1,0 +1,50 @@
+component Projectile
+{
+    FPVector3 Velocity;
+    FP        Damage;
+    FP        RemainingLifetime;
+    EntityRef Owner;
+
+    AssetRef<ProjectileDataAsset> ProjectileData;
+    Int32 RemainingPierces;
+
+    // Captured at fire time and carried to impact - the shooter holds both a weapon and skills, so
+    // it can't be asked which one launched this.
+    DamageSource Source;
+
+    // Captured at fire time from WeaponDataAsset.Element, carried to impact for
+    // StatusEffectUtility.TryApplyElementalStatus to roll against - enemy attacks have no Element
+    // concept, so this stays Neutral for anything not fired by WeaponSystem.
+    ElementType Element;
+
+    // None unless a skill fired this (weapons/enemy attacks leave it None) - lets ProjectileSystem
+    // clear the firing SkillSlot's ProjectilePending on termination without an EntityRef back to it.
+    SkillSlotId SourceSlot;
+
+    // Locked at fire time, re-read every tick rather than a one-shot aim point - only meaningful to
+    // a movement that re-aims over time (HomingProjectileMovementData); anything else ignores it.
+    // None for a free-aimed shot with nothing locked.
+    EntityRef Target;
+
+    // Counts down from ProjectileDataAsset.SpawnDelay before ProjectileSystem starts moving/aging
+    // this projectile - a windup/telegraph where it exists but sits inert first.
+    FP RemainingSpawnDelay;
+
+    // Set once a hit settles this instead of detonating it - see AreaHitData.DetonateOnLevelGeometry.
+    // ThrownProjectileMovementData stops re-applying gravity once this is true, so a grounded bomb
+    // sits still while it waits out its fuse instead of sinking through the floor.
+    Boolean Grounded;
+
+    // 0 for anything fired directly (a throw, a weapon shot); N+1 for whatever a depth-N
+    // detonation's own spawn-upgrades (Fireworks/ClusterBomb) spawned - see
+    // AreaHitData.MaxSpawnUpgradeDepth. A hard ceiling independent of any one asset's
+    // TriggersSpawnUpgrades authoring, so a misconfigured or self-referencing cluster bomblet
+    // prototype still can't cascade more than one generation deep.
+    Byte SpawnDepth;
+
+    // Running total of ground actually covered, summed from each tick's real moveDelta - checked
+    // against ProjectileDataAsset.MaxDistance in ProjectileSystem.TryExpire. Explicit rather than
+    // inferring "distance" from Lifetime and an assumed constant speed, so it stays correct even if
+    // something changes a projectile's speed mid-flight.
+    FP TraveledDistance;
+}

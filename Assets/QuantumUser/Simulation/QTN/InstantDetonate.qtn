@@ -1,0 +1,6 @@
+// Tag component granted/revoked by an upgrade (Heroes/Pixie's BombInstantDetonateSkillAction) -
+// while present on a projectile's owner, AreaHitData.ApplyHit detonates on any contact regardless
+// of its authored DetonateOnLevelGeometry/DetonateOnEnemyHit. No fields: presence is the signal.
+component InstantDetonate
+{
+}

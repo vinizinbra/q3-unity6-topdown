@@ -1,0 +1,14 @@
+// Granted by Heroes/Lux's SentryAddShieldSkillAction - without this, a deployed sentry has no
+// Shield at all (ShieldSystem only processes entities that carry one, same optional-component
+// pattern every other shielded entity in the game already follows). Read by SpawnSentrySkillAction
+// at spawn time and baked directly onto the spawned sentry's own Shield - never re-read afterward.
+//
+// Begin-only, deliberately not paired with End - same reasoning as every other "configures what the
+// skill does" upgrade this session: re-granting fresh (idempotent) every activation and never
+// removing it means it's simply always there once picked, with nothing to race against.
+component SentryShieldUpgrade
+{
+    FP Max;
+    FP RechargeDelay;
+    FP RechargeRate;
+}

@@ -1,0 +1,79 @@
+// Two fixed, named skill slots per player (DashSkill -> Input.DashSkill/Shift, HeroSkill -> Input.HeroSkill/E)
+// rather than an array - which slot is which is a hardcoded design constant, not open-ended data,
+// so every call site (input, SkillSystem) can read it directly instead of through an index.
+component CharacterSkills
+{
+    SkillSlot DashSkill;
+    SkillSlot HeroSkill;
+
+}
+
+// A slot can bank up to MaxStacks uses; each spent stack recovers independently on its own
+// CooldownTimer (see SkillSystem) - not a single whole-skill lock.
+struct SkillSlot
+{
+    AssetRef<SkillData> Skill;
+    array<AssetRef<SkillActionData>>[5] Upgrades;
+
+    SkillState State;
+
+    FP StateTimer;
+    Byte MaxStacks;
+    Byte CurrentStacks;
+    FP CooldownTimer;
+
+    FPVector3 StartPosition;
+    FPVector3 TargetPosition;
+
+    // Time since the slot went Active, advanced by SkillSystem itself rather than by whichever
+    // SkillData is equipped (unlike StateTimer, which is the skill's own scratch) - it's what lets
+    // a phase-driven action pace itself, e.g. SpawnEntitySkillAction's Interval, without storing a
+    // countdown on the shared action asset.
+    FP ActiveTime;
+
+    // Path length the slot has covered since going Active, summed from each tick's real move by
+    // SkillSystem (like ActiveTime, and for the same pace-an-action reason) rather than measured
+    // straight from StartPosition - so a bent or wall-stopped path reports ground covered, not a
+    // straight line, and never runs backwards. Paces SpawnEntitySkillAction's Spacing.
+    FP TravelledDistance;
+
+    // The last tick's slice of that sum. Distance has no fixed step the way time has f.DeltaTime,
+    // so the boundary-crossing test that paces a Spacing action reads this instead - see
+    // SpawnEntitySkillAction.IsDueThisTick.
+    FP LastStepDistance;
+
+    // Previous tick's position, held so SkillSystem can measure the next step. Not a segment for an
+    // action to read - by the time an OnGoing action runs, this already equals the current position.
+    FPVector3 LastPosition;
+
+    // Multiplies HitPathSkillAction's Radius/Width/Height and SpawnEntitySkillAction's Scale when
+    // they execute - see IncreaseAreaSkillAction. Reset to 1 at TryBegin, then whatever
+    // IncreaseAreaSkillAction entries fire (usually Begin) multiply it up; a later phase's action
+    // still sees the raised value since this is slot state, not a same-phase-only handoff. Within
+    // one phase, SkillActionData.Priority (not Actions/Upgrades list position) decides whether the
+    // multiplier action runs before whatever reads it - see SkillSystem.InvokeActions.
+    FP AreaMultiplier;
+
+    // Set by a skill that fired a projectile it isn't done with yet (see ProjectileSkillData) -
+    // Tick() reports finished once this clears, instead of the default instant-Begin finish. Plain
+    // bool rather than the projectile's own EntityRef: an EntityRef here would make Quantum generate
+    // a Unity prototype adapter for CharacterSkills, which silently drops the Upgrades array above
+    // from the Inspector (this exact field used to be EntityRef SpawnedEntity - removed for that
+    // reason).
+    Boolean ProjectilePending;
+}
+
+enum SkillState : Byte
+{
+    Ready  = 0,
+    Active = 1
+}
+
+// Identifies which of CharacterSkills' two fixed slots fired a given projectile, so its lifecycle
+// can report back to the right one - see Projectile.SourceSlot and SkillSlot.ProjectilePending.
+enum SkillSlotId : Byte
+{
+    None      = 0,
+    DashSkill = 1,
+    HeroSkill = 2
+}

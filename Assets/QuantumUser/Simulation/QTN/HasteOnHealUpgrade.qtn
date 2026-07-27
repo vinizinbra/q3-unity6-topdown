@@ -1,0 +1,9 @@
+// Granted by Heroes/Zara/HasteOnHealSkillAction - read by
+// SpawnAlternatingAreaEffectData.ApplyHasteUpgrade off the throw's own owner at spawn time,
+// appending HasteEffect into the first open slot of the spawned speaker's HealEffects. Same
+// bake-once-at-spawn shape as PoisonDamageWavesUpgrade/DamageEffects, just the Heal side instead of
+// the Damage side.
+component HasteOnHealUpgrade
+{
+    AssetRef<HitEffectData> HasteEffect;
+}

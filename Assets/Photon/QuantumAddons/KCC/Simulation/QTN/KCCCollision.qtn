@@ -1,0 +1,13 @@
+struct KCCCollision
+{
+    EKCCCollisionSource Source;
+    EntityRef           Reference;
+    AssetRef            Processor;
+}
+
+enum EKCCCollisionSource : Byte
+{
+    None     = 0,
+    Entity   = 1,
+    Collider = 2
+}

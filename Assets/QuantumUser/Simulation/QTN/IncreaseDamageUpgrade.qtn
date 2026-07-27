@@ -1,0 +1,8 @@
+// Granted by an upgrade (e.g. Heroes/Zara/IncreaseDamageSkillAction) - read by
+// SpawnAlternatingAreaEffectData.ResolveDamageAmount at spawn time, boosting DamageAmount by
+// (1 + DamageBonus). Baked in once, same as TickRateUpgrade - the amount doesn't change over the
+// speaker's lifetime, so there's nothing to re-check per pulse the way StunEveryWavesUpgrade needs.
+component IncreaseDamageUpgrade
+{
+    FP DamageBonus;
+}

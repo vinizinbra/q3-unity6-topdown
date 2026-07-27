@@ -1,0 +1,14 @@
+// Granted/revoked by an upgrade (e.g. Heroes/Pixie/FireworksSkillAction) - read on detonation by
+// AreaHitData.TrySpawnFireworks (gated by AreaHitData.TriggersSpawnUpgrades, so a firework's own
+// blast doesn't launch more fireworks). No SearchRadius here - fireworks search the exact same area
+// the bomb's own blast just used (base Radius plus any BlastRadiusUpgrade bonus), so the two never
+// drift out of sync. LaunchForce is the initial straight-up kick every firework leaves the blast
+// center with - HomingProjectileMovementData.UpdateVelocity is what actually turns it toward its
+// target afterward, not this.
+component FireworksUpgrade
+{
+    Byte Count;
+    FP Damage;
+    FP LaunchForce;
+    AssetRef<ProjectileDataAsset> Projectile;
+}

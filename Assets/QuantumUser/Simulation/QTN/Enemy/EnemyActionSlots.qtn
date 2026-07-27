@@ -1,0 +1,11 @@
+// Optional, opt-in component - only add to an enemy prototype whose EnemyDataAsset.SkillActions
+// is actually non-empty (see EnemyDecisionUtility). A filler enemy with only BasicAction never
+// needs this; its one cooldown lives directly on Enemy.AttackCooldownRemaining, so it pays zero
+// extra memory for a multi-action feature it doesn't use - the entire reason this is a separate
+// component instead of a fixed-size array living on Enemy itself, which every enemy would pay for.
+component EnemyActionSlots
+{
+    // Index i tracks EnemyDataAsset.SkillActions[i]'s cooldown. BasicAction's own cooldown is
+    // never stored here - see Enemy.AttackCooldownRemaining.
+    array<FP>[7] SkillCooldowns;
+}

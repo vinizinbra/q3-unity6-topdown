@@ -1,0 +1,17 @@
+// Granted by Heroes/Kai's VortexExplodeOnDestroySkillAction onto the owner, then baked as a copy of
+// itself directly onto the spawned Vortex entity by SpawnVortexEffectData - so VortexSystem can
+// detonate at the vortex's own position the tick it expires, without needing the owner to still
+// exist by then. Radius isn't authored here - same convention as the pull itself, it comes from the
+// vortex's own PhysicsCollider3D (still present the tick this fires, right before destruction).
+// Damage applied directly via HitEffectUtility.ApplyDamageInRadius, no spawned entity - see
+// VortexExploded, not the enemy ExplodeOnDeath/ExplodeOnDeathConfig mark (a different,
+// enemy-death-specific blast).
+component VortexExplodeOnDestroy
+{
+    FP Damage;
+
+    // Carried through to VortexExploded so the view can resolve BlastEffectPrefab
+    // (VortexExplodeOnDestroySkillAction.View.cs) off the exact asset that granted this - same
+    // "AssetRef travels with the event" shape AreaDetonated uses for AreaHitData.BlastEffectPrefab.
+    AssetRef<VortexExplodeOnDestroySkillAction> Source;
+}

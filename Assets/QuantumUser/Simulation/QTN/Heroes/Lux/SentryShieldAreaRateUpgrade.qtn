@@ -1,0 +1,13 @@
+// Granted by Heroes/Lux's SentryAddShieldAreaRateSkillAction onto the caster - while present,
+// SpawnSentrySkillAction copies this straight onto the spawned sentry itself, same
+// copy-onto-spawned reasoning as SentryFireRateAuraUpgrade, so SentryAuraSystem can keep boosting
+// nearby allies' shield recharge rate (StatusEffectUtility.ApplyShieldRegen) independent of the
+// caster afterward.
+//
+// Begin-only, deliberately not paired with End - same reasoning as every other "configures what the
+// skill does" upgrade this session: re-granting fresh (idempotent) every activation and never
+// removing it means it's simply always there once picked, with nothing to race against.
+component SentryShieldAreaRateUpgrade
+{
+    FP ShieldRegenMultiplier;
+}

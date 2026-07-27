@@ -1,0 +1,9 @@
+// Added to a specific enemy by JuggernautSkillData.Discharge (DischargeCooldownPerEnemy) - keeps
+// that exact enemy immune to being knocked back again by another discharge until it expires, ticked
+// down and removed by JuggernautDischargeCooldownSystem regardless of whether Brutus is still nearby
+// or even still using the skill. Lives on the enemy, not on Brutus - a single discharge can hit many
+// enemies at once, each starting its own independent cooldown.
+component JuggernautDischargeCooldown
+{
+    FP Remaining;
+}

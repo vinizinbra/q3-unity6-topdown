@@ -1,0 +1,14 @@
+// Runtime-only marker added by SpawnedEntitySpawner (never authored on a prototype) when a
+// GroundOffset's approach isn't an instant snap - GroundSettleSystem eases Transform3D.Position.Y
+// toward TargetY every tick and removes this the instant it arrives, so a settled entity costs
+// nothing to iterate afterward.
+component SettlingToGround
+{
+    FP TargetY;
+
+    // Falling speed accumulated so far (FP._0 when this is added) - only meaningful while
+    // descending (TargetY below spawn Y); GroundSettleSystem builds this up each tick by
+    // f.SimulationConfig.Physics.Gravity * GroundOffset.FallGravityMultiplier. Ascending instead
+    // moves at a flat GroundOffset.FloatSpeed and never touches this field.
+    FP FallVelocity;
+}

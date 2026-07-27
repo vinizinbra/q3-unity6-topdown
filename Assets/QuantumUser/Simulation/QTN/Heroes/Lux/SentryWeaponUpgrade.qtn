@@ -1,0 +1,27 @@
+// Granted by Heroes/Lux's SentryAddWeaponSkillAction - without this, a deployed sentry has no
+// barrels/weapons at all (SpawnSentrySkillAction.ApplyWeaponUpgrade only spawns a SentryBarrel for a
+// slot with a valid WeaponData here). 4 slots so up to 4 weapons can be equipped and fire
+// simultaneously - each SentryAddWeaponSkillAction asset instance targets one slot (its own
+// SlotIndex), so 4 separate upgrade picks fill the 4 slots independently. Read by
+// SpawnSentrySkillAction at spawn time and baked directly onto each spawned SentryBarrel's own
+// Weapon/Transform3D - never re-read afterward.
+//
+// Begin-only, deliberately not paired with End - same reasoning as every other "configures what the
+// skill does" upgrade this session: re-granting fresh (idempotent) every activation and never
+// removing it means it's simply always there once picked, with nothing to race against.
+component SentryWeaponUpgrade
+{
+    array<AssetRef<WeaponDataAsset>>[4] WeaponData;
+
+    // Local-space muzzle position (X=right, Y=up, Z=forward) per slot, rotated by the sentry's own
+    // facing at spawn time and baked into that slot's SentryBarrel.Transform3D.Position directly
+    // (not re-resolved every shot) - see SpawnSentrySkillAction.ApplyWeaponUpgrade.
+    array<FPVector3>[4] WeaponOffset;
+
+    // Which SentryAddWeaponSkillAction instance armed this slot - carried through to the spawned
+    // SentryBarrel's own Source field so SentryGunView can resolve that asset's View-only
+    // WeaponSprite (SentryAddWeaponSkillAction.View.cs) and show the right gun art for whichever
+    // weapon actually got equipped, same "AssetRef travels with the spawn" shape as every other
+    // asset-authored VFX/visual this session.
+    array<AssetRef<SentryAddWeaponSkillAction>>[4] Source;
+}

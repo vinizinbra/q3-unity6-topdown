@@ -1,0 +1,19 @@
+// Boss-only runtime state - only added to boss entities (those using a BossDataAsset), not every
+// enemy, the same opt-in pattern as EnemyActionSlots/EnemySequenceState. Driven by BossSystem.
+component BossRuntimeState
+{
+    // Builds from damage taken (BossSystem diffs Health.CurrentHealth against LastObservedHealth
+    // each tick - no dedicated "on damaged" signal exists to hook instead, so this avoids touching
+    // DamageUtility's shared pipeline), drains at StaggerProfileData.RegenRate while untouched.
+    // Triggers StaggerProfileData.OnBreakForcedAction once it crosses Threshold.
+    FP StaggerMeter;
+    FP LastObservedHealth;
+
+    // Index into BossDataAsset.Phases - 0 is the first (base) phase. Advanced by BossSystem once a
+    // later phase's BossPhaseData.EntryTrigger condition is met; never decreases.
+    Int32 CurrentPhaseIndex;
+
+    // Seconds spent in CurrentPhaseIndex - only meaningful for the next phase's EntryTrigger ==
+    // Timer; reset whenever CurrentPhaseIndex advances.
+    FP PhaseTimer;
+}

@@ -1,0 +1,10 @@
+﻿fileFormatVersion: 2
+guid: 4ed4f862c6dc42a49c1f47d1e9ee2fb5
+timeCreated: 1552945114
+AssetOrigin:
+  serializedVersion: 1
+  productId: 202695
+  packageName: Anti-Cheat Toolkit
+  packageVersion: 6.9.1
+  assetPath: Assets/Plugins/CodeStage/AntiCheatToolkit/Editor/Scripts/Injection/InjectionWhitelistBuilder.cs
+  uploadId: 943640

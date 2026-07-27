@@ -1,0 +1,10 @@
+// Granted by Heroes/Kai's VortexMarkSkillAction onto the owner, then baked as a copy of itself
+// directly onto the spawned Vortex entity by SpawnVortexEffectData - applied to every enemy caught by
+// the pull each pulse (see VortexSystem.TryApplyMark), refreshing its Duration continuously for as
+// long as the enemy keeps getting pulled. MarkEffect is typically a MarkEffectData asset (the
+// existing generic target-side incoming-damage-multiplier status) - "Void Mark" is just Kai's own
+// flavor of that already-built mechanic, no new status effect needed.
+component VortexMarkUpgrade
+{
+    AssetRef<HitEffectData> MarkEffect;
+}

@@ -1,0 +1,102 @@
+namespace Quantum
+{
+    using Photon.Deterministic;
+
+    // Fires a single projectile at the player's locked target, the same way WeaponSystem's
+    // Projectile fire type does - see ProjectileAimUtility. A skill's own gun: no ammo/reload, since
+    // SkillSlot's stacks/Cooldown already gate reuse. Doesn't resolve on the casting tick - the
+    // slot stays Active (blocking a stacked refire) until the fired projectile explodes or expires,
+    // so End()/End-phase actions represent the shot actually landing, not just leaving the muzzle.
+    public unsafe partial class ProjectileSkillData : SkillData
+    {
+        [ExpandableAsset] public AssetRef<ProjectileDataAsset> ProjectileData;
+
+        // Seeds the projectile's Damage; DamageSource.Skill makes CharacterStats.SkillDamageMultiplier
+        // apply on top - see DamageUtility.ResolveOutgoingDamage. What it hits for beyond that (and
+        // whether it knocks back) is the projectile's own ProjectileHitData.Effects, not this.
+        public FP Damage = 10;
+
+        public ProjectileSpawnAnchor SpawnAnchor = ProjectileSpawnAnchor.OnSelf;
+        public FPVector3 SpawnOffset;
+
+        // Only matters for SpawnAnchor.OnTarget: ResolveSpawnOrigin needs a real point to anchor
+        // onto, and a free-aimed cast (no locked filter.Aim->Target) has none - see
+        // ProjectileSpawnAnchor's own doc comment. Same "caster position + aim direction * distance"
+        // synthetic-destination construction DashSkillData uses for its own TargetPosition, so an
+        // OnTarget spawn still lands somewhere sensible down the aim ray instead of collapsing onto
+        // the caster (same as OnSelf).
+        public FP Range = 10;
+
+        public override bool Begin(Frame f, ref SkillSystem.Filter filter, Input* input, SkillSlot* slot)
+        {
+            FPVector3 casterPosition = filter.Transform3D->Position;
+            FP aimAngle = filter.Aim->Angle;
+            FPVector3 flatDirection = FPQuaternion.Euler(0, aimAngle, 0) * FPVector3.Forward;
+            bool aimAtCenter = ProjectileAimUtility.ResolveAimsAtCenter(f, ProjectileData);
+            FPVector3 fallbackTarget = casterPosition + flatDirection * Range;
+            FPVector3 spawnPosition = ProjectileSpawner.ResolveSpawnOrigin(casterPosition, fallbackTarget, aimAngle, SpawnAnchor, SpawnOffset);
+
+            // From the real spawn point, not the caster's own position - they can differ (see
+            // SpawnOffset), and a lob needs the correct elevation to compute a believable arc.
+            FPVector3 aimDirection = ProjectileAimUtility.ResolveAimDirection(f, filter.Aim->Target, spawnPosition, flatDirection, aimAtCenter);
+
+            bool fired = Fire(f, ref filter, slot, casterPosition, aimAngle, spawnPosition, aimDirection, aimAtCenter);
+
+            return fired == false; // nothing fired -> finish now; otherwise wait for it, see Tick()
+        }
+
+        public override bool Tick(Frame f, ref SkillSystem.Filter filter, SkillSlot* slot)
+        {
+            return slot->ProjectilePending == false;
+        }
+
+        private bool Fire(Frame f, ref SkillSystem.Filter filter, SkillSlot* slot, FPVector3 casterPosition,
+            FP aimAngle, FPVector3 spawnPosition, FPVector3 aimDirection, bool aimAtCenter)
+        {
+            ProjectileDataAsset projectileData = f.FindAsset(ProjectileData);
+            ProjectileMovementData movement = f.FindAsset(projectileData.Movement);
+
+            // A locked target is solved toward as a point rather than a direction - a lob needs the
+            // real distance to land on the target instead of a fixed TargetDistance down the aim ray.
+            ProjectileLaunch launch = ProjectileAimUtility.TryGetAimPoint(f, filter.Aim->Target, aimAtCenter, out FPVector3 aimPoint)
+                ? movement.GetLaunchToTarget(ProjectileSpawner.ResolveSpawnOrigin(casterPosition, aimPoint, aimAngle, SpawnAnchor, SpawnOffset), aimPoint)
+                : movement.GetLaunch(spawnPosition, aimDirection);
+
+            if (launch.IsValid == false)
+            {
+                Log.Error($"[Skill] {filter.Entity} resolved no valid launch - nothing fired");
+                return false;
+            }
+
+            SkillSlotId sourceSlot = slot == &filter.CharacterSkills->DashSkill ? SkillSlotId.DashSkill : SkillSlotId.HeroSkill;
+            FP damage = Damage * ResolveDamageMultiplier(f, filter.Entity);
+            EntityRef spawned = ProjectileSpawner.Spawn(f, filter.Entity, ProjectileData, launch, damage, DamageSource.Skill, sourceSlot, filter.Aim->Target);
+            slot->ProjectilePending = true;
+
+            ApplyDecoyUpgrade(f, filter.Entity, spawned);
+
+            Log.Debug($"[Skill] {filter.Entity} fired a projectile skill from {spawnPosition} with velocity {launch.Velocity}");
+
+            return true;
+        }
+
+        // ProjectileDamageUpgrade (see Heroes/Pixie/IncreaseProjectileDamageSkillAction) - read here
+        // rather than in the shared ProjectileSpawner, so it only multiplies this skill's own throw,
+        // not every projectile the owner happens to fire while it's granted.
+        private static FP ResolveDamageMultiplier(Frame f, EntityRef owner)
+        {
+            return f.Unsafe.TryGetPointer<ProjectileDamageUpgrade>(owner, out var upgrade) == true ? upgrade->Multiplier : FP._1;
+        }
+
+        // DecoyOnThrowUpgrade (see Heroes/Pixie/BirthdayCakeSkillAction) - reuses the existing Decoy
+        // tag rather than a bespoke attraction mechanic, so the projectile pulls enemy aggro exactly
+        // the way any other decoy already does.
+        private static void ApplyDecoyUpgrade(Frame f, EntityRef owner, EntityRef spawned)
+        {
+            if (f.Has<DecoyOnThrowUpgrade>(owner) == true)
+            {
+                f.AddOrGet<Decoy>(spawned, out _);
+            }
+        }
+    }
+}

@@ -1,0 +1,9 @@
+// Granted/revoked by an upgrade (IncreaseDurationSkillAction, one .asset instance per hero) - read by
+// SpawnedEntitySpawner.ResolveDuration right after resolving SkillDurationMultiplier, stretching a
+// skill spawn's lifetime by this bonus on top. Generic rather than tied to any one hero - anything
+// spawned through SpawnedEntitySpawner (SpawnEntitySkillAction's own spawns, or a projectile's
+// SpawnEntityEffectData like Kai's vortex or Zara's speaker) benefits the same way.
+component IncreaseDurationUpgrade
+{
+    FP DurationBonus;
+}

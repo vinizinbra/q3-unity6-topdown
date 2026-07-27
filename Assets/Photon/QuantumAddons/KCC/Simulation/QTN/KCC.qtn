@@ -1,0 +1,18 @@
+[CodeGen(UnityWrapperFolder, "Assets/Photon/QuantumAddons/KCC/View/Generated")]
+component KCC
+{
+    AssetRef<KCCSettings> Settings;
+
+    [ExcludeFromPrototype]
+    Boolean IsInitialized;
+    [ExcludeFromPrototype]
+    EntityRef Entity;
+    [ExcludeFromPrototype]
+    KCCData Data;
+    [ExcludeFromPrototype]
+    hash_set<KCCIgnore> Ignores;
+    [ExcludeFromPrototype]
+    list<KCCModifier> Modifiers;
+    [ExcludeFromPrototype]
+    list<KCCCollision> Collisions;
+}

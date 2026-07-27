@@ -1,0 +1,8 @@
+// Granted by an upgrade (e.g. Heroes/Zara/IncreaseWavesTickRateSkillAction) - read by
+// SpawnAlternatingAreaEffectData.ResolveTickInterval at spawn time. Higher rate shrinks the
+// interval rather than the reverse, same reasoning StatUtility.GetFireCooldown divides instead of
+// multiplying (a rate expresses "how often", not "how long").
+component TickRateUpgrade
+{
+    FP RateBonus;
+}

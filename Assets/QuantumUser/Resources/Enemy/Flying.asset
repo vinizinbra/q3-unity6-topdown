@@ -1,0 +1,359 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04c8957753d4c417e81337f7a383dcc6, type: 3}
+  m_Name: Flying
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.EnemyDataAsset
+  Identifier:
+    Path: QuantumUser/Resources/Enemy/Flying
+    Guid:
+      Value: 427798159866227231
+  MoveSpeed:
+    RawValue: 327680
+  Tier: 0
+  EnemyName: 
+  Radius:
+    RawValue: 131072
+  MaxHealth:
+    RawValue: 3276800
+  MaxShield:
+    RawValue: 0
+  ShieldRechargeDelay:
+    RawValue: 131072
+  ShieldRechargeRate:
+    RawValue: 327680
+  Traits: 
+  FrontalDamageReductionAmount:
+    RawValue: 32768
+  FrontalDamageReductionArcDegrees:
+    RawValue: 7864320
+  Height:
+    InitialState: 2
+    FlightHeight:
+      RawValue: 131072
+    HoverCheckInterval:
+      RawValue: 65536
+    HoverSpringFrequency:
+      RawValue: 65536
+    HoverSpringDamping:
+      RawValue: 6554
+    CanJump: 0
+    CanFly: 1
+    CanBeLaunched: 0
+    CanBeGrounded: 0
+    CanCrossObstacles: 1
+    AnkleProbeHeight:
+      RawValue: 16384
+    MaxLedgeHeight:
+      RawValue: 65536
+    MantleProbeDistance:
+      RawValue: 49152
+    JumpVelocity:
+      RawValue: 524288
+    AffectedByGroundHazards: 0
+    AffectedByShockwaves: 0
+    TargetableByMelee: 1
+    TargetableByProjectiles: 1
+    AvoidLedges: 1
+    EdgeProbeDistance:
+      RawValue: 32768
+    EdgeCheckDistance:
+      RawValue: 327680
+  Movement:
+    Id:
+      Value: 420396879053561166
+  Targeting:
+    Id:
+      Value: 518346567158881603
+  DetectionRange:
+    RawValue: 655360
+  LeashRange:
+    RawValue: 983040
+  DeathLingerTime:
+    RawValue: 32768
+  CanBeInterruptedByKnockback: 1
+  KnockbackRecoveryTime:
+    RawValue: 16384
+  BasicAction:
+    Id:
+      Value: 3147549941737582284
+  SkillActions: []
+  ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
+  ViewPrefab: {fileID: 8701842571750137325, guid: 3b6c0e2e243a3476a85f78e88b1195eb, type: 3}
+--- !u!114 &3365986028218841707
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b3ffe095a046457f99f64ffca9d87e9, type: 3}
+  m_Name: EnemyActionData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.EnemyActionData
+  Identifier:
+    Path: QuantumUser/Resources/Enemy/Flying|EnemyActionData
+    Guid:
+      Value: 3147549941737582284
+  Name: 
+  EngageRange:
+    RawValue: 327680
+  DamageRange:
+    RawValue: 65536
+  Damage:
+    RawValue: 1310720
+  Knockback:
+    X:
+      RawValue: 0
+    Y:
+      RawValue: 262144
+  AnticipationTime:
+    RawValue: 65536
+  DirectionTracking: 1
+  IgnoreY: 0
+  Origin: 0
+  DownTime:
+    RawValue: 65536
+  CooldownTime:
+    RawValue: 65536
+  TelegraphStartPercent:
+    RawValue: 32768
+  AimLock: 0
+  Effects:
+  - Id:
+      Value: 440091783757558214
+  SelectionWeight: 1
+  InterruptibleDuringTelegraph: 1
+  InterruptibleDuringActive: 0
+  Delivery:
+    Id:
+      Value: 2851957278241856409
+  AnticipationStep:
+    AnimationType: 3
+    Duration: 1
+    Shake:
+      Frequency: 10
+      RockDegrees: 3
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 10
+      MaxSquash: 0.1
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+      Depth: 0.1
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+      Depth: 0.1
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+    ParticlePrefab: {fileID: 57709040112497816, guid: 4ab7bcf6043e9411184dcafbd4484941, type: 3}
+    Anchor: 0
+    Offset: {x: 0, y: 0.5, z: 0}
+    Parented: 1
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+  BeginStep:
+    AnimationType: 2
+    Duration: 0.5
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+      Depth: 0.1
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+      Depth: 0.1
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1.5
+  OnGoingStep:
+    AnimationType: 0
+    Duration: 0.3
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+      Depth: 0.1
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+      Depth: 0.1
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+    ParticlePrefab: {fileID: 19882602, guid: 36c40fe19a4447d468678ecd395846df, type: 3}
+    Anchor: 0
+    Offset: {x: 0, y: 0.5, z: 0}
+    Parented: 1
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 0.5
+  EndStep:
+    AnimationType: 0
+    Duration: 0.3
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+      Depth: 0.1
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+      Depth: 0.1
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+  Telegraph:
+    Id:
+      Value: 2577279337249871980
+--- !u!114 &4450936109103896128
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8cb6b77a29a0943a090e93b27454efb8, type: 3}
+  m_Name: OrbitMovementData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.OrbitMovementData
+  Identifier:
+    Path: QuantumUser/Resources/Enemy/Flying|OrbitMovementData
+    Guid:
+      Value: 3224981830796474143
+  ApplySeparation: 0
+  OrbitRadius:
+    RawValue: 327680
+  OrbitClockwise: 1
+--- !u!114 &5121676237388572382
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb8893fd93b4b49d9bcd3ed80e399ed6, type: 3}
+  m_Name: LeapDeliveryData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.LeapDeliveryData
+  Identifier:
+    Path: QuantumUser/Resources/Enemy/Flying|LeapDeliveryData
+    Guid:
+      Value: 2851957278241856409
+  MinRandomOffset:
+    RawValue: 0
+  MaxRandomOffset:
+    RawValue: 0
+  HitImpactPrefab: {fileID: 0}
+  JumpDuration:
+    RawValue: 13107
+  JumpHeight:
+    RawValue: 0

@@ -1,0 +1,16 @@
+// Optional - only entities that actually have a shield carry this, so an unshielded enemy costs
+// nothing. Absorbed before Health, and unlike Health it recharges itself back to full once the
+// entity has gone RechargeDelay without being hit.
+component Shield
+{
+    FP Current;
+    FP Max;
+
+    // Reset to RechargeDelay by every hit that lands, including one the shield fully soaks, so
+    // sustained fire keeps it suppressed. ShieldSystem recharges only once this reaches zero.
+    FP RechargeTimer;
+    FP RechargeDelay;
+
+    // Points per second once recharging starts.
+    FP RechargeRate;
+}

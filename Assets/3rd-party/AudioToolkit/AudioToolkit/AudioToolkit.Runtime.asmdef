@@ -1,0 +1,16 @@
+{
+    "name": "AudioToolkit.Runtim",
+    "rootNamespace": "",
+    "references": [
+        "GUID:f8502dcbee5224e8dac197fa19677230"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

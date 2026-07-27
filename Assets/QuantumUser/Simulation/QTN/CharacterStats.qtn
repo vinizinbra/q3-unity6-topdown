@@ -1,0 +1,60 @@
+// Seeded from CharacterData when the component is added, then mutated in place by passives and
+// upgrades - same shape as Weapon. Crit is rolled in DamageUtility.ApplyDamage, so it applies to
+// every damage path (weapon, projectile, explosion, skill).
+component CharacterStats
+{
+    AssetRef<CharacterData> CharacterData;
+
+    // Offense. DamageMultiplier scales every hit; the two below stack on top of it and apply only
+    // to their own DamageSource, which is what lets a gun build and a skill build diverge.
+    FP DamageMultiplier;
+    FP WeaponDamageMultiplier;
+    FP SkillDamageMultiplier;
+
+    // Scales MovementDataAsset's WalkSpeed/RunSpeed in PlayerMovementProcessor - the base speeds
+    // are shared across all characters, this is what lets individual heroes diverge.
+    FP MoveSpeedMultiplier;
+
+    FP CriticalChance;
+    FP CriticalDamageMultiplier;
+
+    FP ElementalChance;
+
+    FP AttackSpeedMultiplier;
+    FP ReloadSpeedMultiplier;
+
+    FP ProjectileSpeedMultiplier;
+    FP AreaRadiusMultiplier;
+
+    FP CooldownMultiplier;
+
+    // Scales how long a skill's spawned effects last - a decoy, a fire trail. Only applies to
+    // DamageSource.Skill, so a weapon-spawned area keeps its authored lifetime.
+    FP SkillDurationMultiplier;
+
+    FP KnockbackMultiplier;
+
+    FP LifeSteal;
+    FP OutgoingStatusDurationMultiplier;
+
+    // Defense. The two multipliers scale CharacterData's BaseMaxHealth/BaseMaxShield rather than
+    // Health/Shield directly - changing one mid-run needs CharacterSystem.RefreshMaxHealth/
+    // RefreshMaxShield, since Max is stored on the component, not derived on read.
+    FP MaxHealthMultiplier;
+    FP MaxShieldMultiplier;
+
+    FP DamageReduction;
+    FP KnockbackTakenMultiplier;
+    FP HealingReceivedMultiplier;
+
+    // Utility
+    FP PickupRangeMultiplier;
+    FP Luck;
+
+    // Incremented/decremented by any active effect (e.g. BerserkSkillData) that guarantees Burn
+    // on every weapon hit for as long as it's up - a counter rather than a bool so two overlapping
+    // grants can't have one's End wipe out the other's still-active one. Checked in
+    // StatusEffectUtility.TryApplyElementalStatus, independent of the weapon's own Element and
+    // ElementalChance roll - a flat guarantee, not a proc chance.
+    Byte BurnOnHitStacks;
+}

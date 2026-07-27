@@ -1,0 +1,9 @@
+// Which side an AreaDamage (or anything else that overlaps a radius/collider looking for targets)
+// is allowed to hit - see AreaDamage.TargetMask and HitEffectUtility.MatchesTargetMask. Both = 0 so
+// every prototype authored before this field existed keeps hitting everyone, unchanged.
+enum DamageTargetMask : Byte
+{
+    Both,
+    Players,
+    Enemies
+}

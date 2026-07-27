@@ -1,0 +1,7 @@
+// Tag component granted by Heroes/Brute's JuggernautSustainedChargeSkillAction - while present,
+// JuggernautSkillData.TryDischarge skips resetting ChargePoints back to 0 after a discharge, so
+// Brutus stays Charged and knocks up every enemy he touches for the rest of the activation instead
+// of needing to re-charge between each one. No fields: presence is the signal.
+component JuggernautSustainedChargeUpgrade
+{
+}

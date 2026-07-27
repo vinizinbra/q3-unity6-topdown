@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: 0f2616f83195a42a0b9dad9be1f9b130
+labels:
+- pool
+- pooling
+- object
+- singleton
+- audio
+- clockstone
+- toolkit
+- framework
+- scripts
+- sound
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

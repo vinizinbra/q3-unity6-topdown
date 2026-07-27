@@ -1,0 +1,10 @@
+component PlayerMovement
+{
+    AssetRef<MovementDataAsset> MovementData;
+
+    Boolean HasAirJumped;
+    FP      JumpCooldownTimer;
+
+    // Updated by AutoJumpSystem whenever grounded; PlayerFallSystem respawns here on a fall.
+    FPVector3 LastGroundedPosition;
+}

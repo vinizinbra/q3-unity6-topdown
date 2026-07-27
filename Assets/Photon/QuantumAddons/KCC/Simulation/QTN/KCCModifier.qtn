@@ -1,0 +1,5 @@
+struct KCCModifier
+{
+    AssetRef  Processor;
+    EntityRef Entity;
+}

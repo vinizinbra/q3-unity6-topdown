@@ -1,0 +1,306 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8182681687420792901
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8fd19877d504434fb00dcdd91b6d396, type: 3}
+  m_Name: JuggernautKnockbackSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.JuggernautKnockbackSkillAction
+  Identifier:
+    Path: QuantumUser/Resources/QuantumDataAssets/Skills/Brute/BruteSkill|JuggernautKnockbackSkillAction
+    Guid:
+      Value: 2235237605881692239
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 1
+  ForceBonus:
+    RawValue: 65536
+--- !u!114 &-5346908525645637807
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e809b818d6b374c1a8a022f7f0aad404, type: 3}
+  m_Name: JuggernautDischargeDamageSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.JuggernautDischargeDamageSkillAction
+  Identifier:
+    Path: QuantumUser/Resources/QuantumDataAssets/Skills/Brute/BruteSkill|JuggernautDischargeDamageSkillAction
+    Guid:
+      Value: 2587496720733946005
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 1
+  Damage:
+    RawValue: 327680
+--- !u!114 &-4788411845838500188
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6345a2b7fb654659864076533bc969c, type: 3}
+  m_Name: JuggernautSustainedChargeSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.JuggernautSustainedChargeSkillAction
+  Identifier:
+    Path: QuantumUser/Resources/QuantumDataAssets/Skills/Brute/BruteSkill|JuggernautSustainedChargeSkillAction
+    Guid:
+      Value: 2139822815602952008
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 1
+--- !u!114 &-3917554885097519893
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9aa02703a33434749a95845f02e33517, type: 3}
+  m_Name: JuggernautMarkEffectData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.MarkEffectData
+  Identifier:
+    Path: QuantumUser/Resources/QuantumDataAssets/Skills/Brute/BruteSkill|JuggernautMarkEffectData
+    Guid:
+      Value: 1054200891509607967
+  Duration:
+    RawValue: 327680
+  DamageTakenMultiplier:
+    RawValue: 78643
+--- !u!114 &-3588376554002902858
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 072dde81930864a59bd2fe8873cb4b77, type: 3}
+  m_Name: JuggernautEndExplosionSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.JuggernautEndExplosionSkillAction
+  Identifier:
+    Path: QuantumUser/Resources/QuantumDataAssets/Skills/Brute/BruteSkill|JuggernautEndExplosionSkillAction
+    Guid:
+      Value: 155011977438708122
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 1
+  Damage:
+    RawValue: 655360
+  Radius:
+    RawValue: 196608
+  BlastEffectPrefab: {fileID: 6350743763286976369, guid: a30f1210099a64568be0c5208dba7df3, type: 3}
+--- !u!114 &-2061636930583818308
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f922bc2ccb673448cb487e359cc6d2a1, type: 3}
+  m_Name: JuggernautChargedSpeedSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.JuggernautChargedSpeedSkillAction
+  Identifier:
+    Path: QuantumUser/Resources/QuantumDataAssets/Skills/Brute/BruteSkill|JuggernautChargedSpeedSkillAction
+    Guid:
+      Value: 934843146787475376
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 1
+  SpeedBonusIncrease:
+    RawValue: 26214
+--- !u!114 &-663704747082232991
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6951e8e3985e345aab99d31f17dbfc55, type: 3}
+  m_Name: JuggernautMarkSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.JuggernautMarkSkillAction
+  Identifier:
+    Path: QuantumUser/Resources/QuantumDataAssets/Skills/Brute/BruteSkill|JuggernautMarkSkillAction
+    Guid:
+      Value: 3650697122935031621
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 1
+  MarkEffect:
+    Id:
+      Value: 1054200891509607967
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69927aa91e70d4f23800a48737a9c1c1, type: 3}
+  m_Name: BruteSkill
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.JuggernautSkillData
+  Identifier:
+    Path: QuantumUser/Resources/QuantumDataAssets/Skills/Brute/BruteSkill
+    Guid:
+      Value: 482161481420071884
+  Name: 
+  InitStacks: 1
+  Cooldown:
+    RawValue: 530842
+  Actions:
+  - Id:
+      Value: 2139822815602952008
+  - Id:
+      Value: 3650697122935031621
+  - Id:
+      Value: 155011977438708122
+  - Id:
+      Value: 934843146787475376
+  - Id:
+      Value: 2235237605881692239
+  - Id:
+      Value: 2217608214105245142
+  - Id:
+      Value: 2587496720733946005
+  - Id:
+      Value: 3404545977982078235
+  - Id:
+      Value: 2801241872569183443
+  Icon: {fileID: 0}
+  Description: 
+  Duration:
+    RawValue: 524288
+  DamageReductionBonus:
+    RawValue: 32768
+  DistancePerCharge:
+    RawValue: 65536
+  MaxCharge: 20
+  ActiveMoveSpeedBonus:
+    RawValue: 3277
+  ChargedMoveSpeedBonus:
+    RawValue: 13107
+  KnockbackRadius:
+    RawValue: 32768
+  KnockbackForce:
+    RawValue: 65536
+  KnockbackUpwardForce:
+    RawValue: 262144
+  BruteDirectionForce:
+    RawValue: 0
+  DischargeCheckInterval:
+    RawValue: 3277
+  DischargeCooldownPerEnemy:
+    RawValue: 65536
+  DischargeEffectPrefab: {fileID: 6350743763286976369, guid: 392694d57373342d59590b969ae8b17d, type: 3}
+--- !u!114 &2663259329033211599
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 58cb981370e724692a7ea3df9ca2699f, type: 3}
+  m_Name: JuggernautStackDamageSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.JuggernautStackDamageSkillAction
+  Identifier:
+    Path: QuantumUser/Resources/QuantumDataAssets/Skills/Brute/BruteSkill|JuggernautStackDamageSkillAction
+    Guid:
+      Value: 3404545977982078235
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 1
+  DamagePerUnit:
+    RawValue: 6554
+--- !u!114 &6140177140454358586
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e920b0f6950cd4ce290abadab4385efc, type: 3}
+  m_Name: JuggernautLandingImpactSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.JuggernautLandingImpactSkillAction
+  Identifier:
+    Path: QuantumUser/Resources/QuantumDataAssets/Skills/Brute/BruteSkill|JuggernautLandingImpactSkillAction
+    Guid:
+      Value: 2217608214105245142
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 0
+  Damage:
+    RawValue: 655360
+  StunChance:
+    RawValue: 32768
+  StunDuration:
+    RawValue: 196608
+  ImpactEffectPrefab: {fileID: 19820956, guid: 56c3274d2f9ec214ab584a80b5ce2d6d, type: 3}
+--- !u!114 &6608182270547935991
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fbde616313d3749879ed4228b54a9723, type: 3}
+  m_Name: JuggernautLandingRootSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.JuggernautLandingRootSkillAction
+  Identifier:
+    Path: QuantumUser/Resources/QuantumDataAssets/Skills/Brute/BruteSkill|JuggernautLandingRootSkillAction
+    Guid:
+      Value: 2801241872569183443
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 1
+  Damage:
+    RawValue: 196608
+  RootChance:
+    RawValue: 65536
+  RootDuration:
+    RawValue: 196608
+  RootEffectPrefab: {fileID: 2712700381257934115, guid: 30538aa757d5768459b127b9b70d4362, type: 3}

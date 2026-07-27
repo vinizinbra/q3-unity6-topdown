@@ -1,0 +1,21 @@
+// Granted by Heroes/Kai's VortexHomingProjectileSkillAction onto the owner, then baked as a copy of
+// itself directly onto the spawned Vortex entity by SpawnVortexEffectData - periodically fires a
+// homing projectile at the nearest enemy within (vortex's own pull radius * SearchRadiusMultiplier) -
+// see VortexSystem.TryHomingProjectile. A multiplier of the vortex's own PhysicsCollider3D radius
+// rather than an absolute value, same "scales with SpawnRadiusUpgrade automatically" reasoning as the
+// pull itself - a multiplier > 1 reaches slightly past the pull's own catch zone, so this hits
+// enemies the pull/mark/damage never touch, not just whatever's already caught. Projectile is
+// authored with its own Movement (a HomingProjectileMovementData) and Hit - both live entirely on
+// that ProjectileDataAsset, nothing about them is hardcoded here.
+component VortexHomingProjectileUpgrade
+{
+    AssetRef<ProjectileDataAsset> Projectile;
+    FP Damage;
+    FP SearchRadiusMultiplier;
+    FP TickInterval;
+
+    // Unused on the owner's copy (only ever 0 there) - only the copy baked onto the spawned vortex
+    // actually counts down, same "owner-side grant carries dead fields the baked copy uses" shape as
+    // VortexRandomExplosionUpgrade's own TickTimer.
+    FP TickTimer;
+}

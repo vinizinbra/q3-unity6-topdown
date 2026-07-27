@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 0eec14034516ba7ddc9bbede72dc7003
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 202695
+  packageName: Anti-Cheat Toolkit
+  packageVersion: 6.9.1
+  assetPath: Assets/Plugins/CodeStage/AntiCheatToolkit/Editor/Scripts/Common/Tools/CSEntityIdTools.cs
+  uploadId: 943640

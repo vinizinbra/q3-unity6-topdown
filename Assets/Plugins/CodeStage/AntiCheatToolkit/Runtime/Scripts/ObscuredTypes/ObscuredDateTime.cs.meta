@@ -1,0 +1,10 @@
+﻿fileFormatVersion: 2
+guid: ff6e0af66f3240eb97476c4a4cbebec0
+timeCreated: 1684488530
+AssetOrigin:
+  serializedVersion: 1
+  productId: 202695
+  packageName: Anti-Cheat Toolkit
+  packageVersion: 6.9.1
+  assetPath: Assets/Plugins/CodeStage/AntiCheatToolkit/Runtime/Scripts/ObscuredTypes/ObscuredDateTime.cs
+  uploadId: 943640

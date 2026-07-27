@@ -1,0 +1,639 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-7542833619505729626
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb8893fd93b4b49d9bcd3ed80e399ed6, type: 3}
+  m_Name: LeapDeliveryData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.LeapDeliveryData
+  Identifier:
+    Path: QuantumUser/Resources/Enemy/Jumper|LeapDeliveryData
+    Guid:
+      Value: 4034251939805383170
+  JumpDuration:
+    RawValue: 32768
+  JumpHeight:
+    RawValue: 196608
+--- !u!114 &-4892788861746614813
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b3ffe095a046457f99f64ffca9d87e9, type: 3}
+  m_Name: EnemyActionData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.EnemyActionData
+  Identifier:
+    Path: QuantumUser/Resources/Enemy/Jumper|EnemyActionData
+    Guid:
+      Value: 1768220796416970999
+  Name: 
+  EngageRange:
+    RawValue: 655360
+  DamageRange:
+    RawValue: 327680
+  Damage:
+    RawValue: 655360
+  Knockback:
+    X:
+      RawValue: 0
+    Y:
+      RawValue: 262144
+  AnticipationTime:
+    RawValue: 32768
+  DirectionTracking: 1
+  IgnoreY: 1
+  Origin: 0
+  DownTime:
+    RawValue: 65536
+  CooldownTime:
+    RawValue: 65536
+  TelegraphStartPercent:
+    RawValue: 32768
+  AimLock: 0
+  Effects:
+  - Id:
+      Value: 419837758792568923
+  SelectionWeight: 1
+  InterruptibleDuringTelegraph: 1
+  InterruptibleDuringActive: 0
+  Delivery:
+    Id:
+      Value: 4034251939805383170
+  AnticipationStep:
+    AnimationType: 4
+    Duration: 0.5
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+      Depth: 0.1
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+      Depth: 0.1
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+  BeginStep:
+    AnimationType: 0
+    Duration: 0.3
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+      Depth: 0.1
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+      Depth: 0.1
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+  OnGoingStep:
+    AnimationType: 0
+    Duration: 0.3
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+      Depth: 0.1
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+      Depth: 0.1
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+  EndStep:
+    AnimationType: 4
+    Duration: 0.1
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.3
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+      Depth: 0.1
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+      Depth: 0.1
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+    ParticlePrefab: {fileID: 19865610, guid: a07608802ac497743a7f19f6633fdd70, type: 3}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 1
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+  Telegraph:
+    Id:
+      Value: 2577279337249871980
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04c8957753d4c417e81337f7a383dcc6, type: 3}
+  m_Name: Jumper
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.EnemyDataAsset
+  Identifier:
+    Path: QuantumUser/Resources/Enemy/Jumper
+    Guid:
+      Value: 383714406272260804
+  MoveSpeed:
+    RawValue: 196608
+  Tier: 0
+  Traits: 04000000
+  FrontalDamageReductionAmount:
+    RawValue: 65536
+  FrontalDamageReductionArcDegrees:
+    RawValue: 11796480
+  Height:
+    InitialState: 0
+    FlightHeight:
+      RawValue: 131072
+    HoverCheckInterval:
+      RawValue: 65536
+    HoverSpringFrequency:
+      RawValue: 65536
+    HoverSpringDamping:
+      RawValue: 32768
+    CanJump: 1
+    CanFly: 0
+    CanBeLaunched: 0
+    CanBeGrounded: 1
+    CanCrossObstacles: 0
+    AnkleProbeHeight:
+      RawValue: 16384
+    MaxLedgeHeight:
+      RawValue: 65536
+    MantleProbeDistance:
+      RawValue: 49152
+    JumpVelocity:
+      RawValue: 524288
+    AffectedByGroundHazards: 0
+    AffectedByShockwaves: 0
+    TargetableByMelee: 1
+    TargetableByProjectiles: 1
+    AvoidLedges: 1
+    EdgeProbeDistance:
+      RawValue: 32768
+    EdgeCheckDistance:
+      RawValue: 131072
+  Movement:
+    Id:
+      Value: 377351616454514288
+  Targeting:
+    Id:
+      Value: 288029090649948585
+  DetectionRange:
+    RawValue: 655360
+  LeashRange:
+    RawValue: 983040
+  DeathLingerTime:
+    RawValue: 196608
+  BodyRadius:
+    RawValue: 0
+  CanBeInterruptedByKnockback: 1
+  KnockbackRecoveryTime:
+    RawValue: 16384
+  BasicAction:
+    Id:
+      Value: 1768220796416970999
+  SkillActions: []
+  ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &159413032849582488
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52edb4eefc1db48109cc7d1ac53b2f13, type: 3}
+  m_Name: JumpTelegraph
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.TelegraphData
+  Identifier:
+    Path: QuantumUser/Resources/Enemy/Jumper|JumpTelegraph
+    Guid:
+      Value: 2577279337249871980
+  Shape: 5
+  StartPhase: 0
+  EndPhase: 3
+  LiveTracking: 1
+  LiveTrackingSmoothing: 15
+  TelegraphPrefab: {fileID: 2468440791896092637, guid: 4f8787fca955742b995eeedd8d55d28c, type: 3}
+  SnapToGround: 1
+  LineLength: 0
+  FixedDistanceValue: 5
+  FromOffset: 0
+  ToOffset: 0
+  Width: 1
+  RadiusMultiplier: 1
+  GrowthDuration: 2
+  FadeInDuration: 0.15
+  FadeOutDuration: 0.15
+--- !u!114 &7219781358957523546
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52edb4eefc1db48109cc7d1ac53b2f13, type: 3}
+  m_Name: ChargerTelegraphData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.TelegraphData
+  Identifier:
+    Path: QuantumUser/Resources/Enemy/Jumper|ChargerTelegraphData
+    Guid:
+      Value: 1558817502334522014
+  Shape: 5
+  StartPhase: 0
+  EndPhase: 3
+  LiveTracking: 1
+  LiveTrackingSmoothing: 15
+  TelegraphPrefab: {fileID: 2468440791896092637, guid: 4f8787fca955742b995eeedd8d55d28c, type: 3}
+  SnapToGround: 1
+  LineLength: 0
+  FixedDistanceValue: 5
+  FromOffset: 0
+  ToOffset: 0
+  Width: 1
+  RadiusMultiplier: 1
+  GrowthDuration: 1
+  FadeInDuration: 0.15
+  FadeOutDuration: 0.15
+--- !u!114 &7822570454573965327
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e42b1630280fe433ba56b6883bb17e5b, type: 3}
+  m_Name: ChargeDeliveryData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ChargeDeliveryData
+  Identifier:
+    Path: QuantumUser/Resources/Enemy/Jumper|ChargeDeliveryData
+    Guid:
+      Value: 1449790031096099531
+  DashSpeed:
+    RawValue: 983040
+  DashDistance:
+    RawValue: 524288
+  DashDuration:
+    RawValue: 65536
+  StopOnHit: 1
+  WallCheckHeight:
+    RawValue: 32768
+  WallCheckDistance:
+    RawValue: 49152
+--- !u!114 &8866861350366814621
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b3ffe095a046457f99f64ffca9d87e9, type: 3}
+  m_Name: ChargerDelivery
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.EnemyActionData
+  Identifier:
+    Path: QuantumUser/Resources/Enemy/Jumper|ChargerDelivery
+    Guid:
+      Value: 3241645842144212745
+  Name: 
+  EngageRange:
+    RawValue: 327680
+  DamageRange:
+    RawValue: 131072
+  Damage:
+    RawValue: 655360
+  Knockback:
+    X:
+      RawValue: 0
+    Y:
+      RawValue: 262144
+  AnticipationTime:
+    RawValue: 32768
+  DirectionTracking: 1
+  IgnoreY: 1
+  Origin: 0
+  DownTime:
+    RawValue: 65536
+  CooldownTime:
+    RawValue: 65536
+  TelegraphStartPercent:
+    RawValue: 32768
+  AimLock: 0
+  Effects:
+  - Id:
+      Value: 413734310215813295
+  SelectionWeight: 1
+  InterruptibleDuringTelegraph: 1
+  InterruptibleDuringActive: 0
+  Delivery:
+    Id:
+      Value: 1449790031096099531
+  AnticipationStep:
+    AnimationType: 2
+    Duration: 0.5
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+      Depth: 0.1
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+      Depth: 0.1
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+  BeginStep:
+    AnimationType: 0
+    Duration: 0.3
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+      Depth: 0.1
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+      Depth: 0.1
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+  OnGoingStep:
+    AnimationType: 0
+    Duration: 0.3
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+      Depth: 0.1
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+      Depth: 0.1
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+    ParticlePrefab: {fileID: 8765850725447267625, guid: 6b5e35f757ba04289a1f3a93c90616a6, type: 3}
+    Anchor: 0
+    Offset: {x: 0, y: 0.5, z: 0}
+    Parented: 1
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+  EndStep:
+    AnimationType: 0
+    Duration: 0.3
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+      Depth: 0.1
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+      Depth: 0.1
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+    ParticlePrefab: {fileID: 19865610, guid: a07608802ac497743a7f19f6633fdd70, type: 3}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 1
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+  Telegraph:
+    Id:
+      Value: 1558817502334522014

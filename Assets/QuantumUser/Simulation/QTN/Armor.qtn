@@ -1,0 +1,5 @@
+// Optional - flat reduction taken off a hit before Shield and Health see it.
+component Armor
+{
+    FP Amount;
+}

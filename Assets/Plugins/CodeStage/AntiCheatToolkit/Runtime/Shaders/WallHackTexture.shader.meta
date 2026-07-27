@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: daa473204a35ad242922f896f206d931
+ShaderImporter:
+  defaultTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 202695
+  packageName: Anti-Cheat Toolkit
+  packageVersion: 6.9.1
+  assetPath: Assets/Plugins/CodeStage/AntiCheatToolkit/Runtime/Shaders/WallHackTexture.shader
+  uploadId: 943640

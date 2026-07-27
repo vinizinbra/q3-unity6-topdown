@@ -1,0 +1,140 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bb51f48d451e4d148d492421a410eb0, type: 3}
+  m_Name: BasicWeapon
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.WeaponDataAsset
+  Identifier:
+    Path: QuantumUser/Resources/QuantumDataAssets/Weapon/BasicWeapon
+    Guid:
+      Value: 486587533721559972
+  FireType: 1
+  Damage:
+    RawValue: 262144
+  Element: 0
+  CriticalChance:
+    RawValue: 0
+  CriticalDamageBonus:
+    RawValue: 0
+  FireCooldownTime:
+    RawValue: 16384
+  MagazineSize: 30
+  ReloadDuration:
+    RawValue: 65536
+  Range:
+    RawValue: 524288
+  SpawnAnchor: 0
+  SpawnOffset:
+    X:
+      RawValue: 0
+    Y:
+      RawValue: 0
+    Z:
+      RawValue: 0
+  ProjectileData:
+    Id:
+      Value: 2052039704194794421
+  ViewPrefab: {fileID: 8089491252618662435, guid: b98c7f425f94340238641d20e1057c84, type: 3}
+--- !u!114 &682245442823968950
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57398bce76f7541a8ac244dae3dc21af, type: 3}
+  m_Name: DirectHitData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.DirectHitData
+  Identifier:
+    Path: QuantumUser/Resources/QuantumDataAssets/Weapon/BasicWeapon|DirectHitData
+    Guid:
+      Value: 1400531175405012114
+  Effects:
+  - Id:
+      Value: 3484874747280003516
+  - Id:
+      Value: 4085520833473267186
+  RestOffset:
+    RawValue: 0
+  DetonateOnLevelGeometry: 1
+  DetonateOnEnemyHit: 1
+  PierceCount: 1
+--- !u!114 &2309150341878871128
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d393f71ec5fbd43df9a0fa545b364020, type: 3}
+  m_Name: DamageEffectData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.DamageEffectData
+  Identifier:
+    Path: QuantumUser/Resources/QuantumDataAssets/Weapon/BasicWeapon|DamageEffectData
+    Guid:
+      Value: 3484874747280003516
+  DamageMultiplier:
+    RawValue: 65536
+--- !u!114 &7337125680438525585
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e4466fb33c0b49d18f49f2ba3307d49, type: 3}
+  m_Name: ProjectileDataAsset
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ProjectileDataAsset
+  Identifier:
+    Path: QuantumUser/Resources/QuantumDataAssets/Weapon/BasicWeapon|ProjectileDataAsset
+    Guid:
+      Value: 2052039704194794421
+  Prototype:
+    Id:
+      Value: 1455361847502541940
+  Movement:
+    Id:
+      Value: 410563266870546275
+  Hit:
+    Id:
+      Value: 1400531175405012114
+  Lifetime:
+    RawValue: 196608
+  SpawnDelay:
+    RawValue: 0
+  MaxDistance:
+    RawValue: 0
+--- !u!114 &8342326653503072918
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e2f3b717074b4588acaa6660da3439a, type: 3}
+  m_Name: KnockbackEffectData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.KnockbackEffectData
+  Identifier:
+    Path: QuantumUser/Resources/QuantumDataAssets/Weapon/BasicWeapon|KnockbackEffectData
+    Guid:
+      Value: 4085520833473267186
+  Force:
+    RawValue: 262144
+  UpwardForce:
+    RawValue: 65536

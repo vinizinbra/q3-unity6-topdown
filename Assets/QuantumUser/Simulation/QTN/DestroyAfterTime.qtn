@@ -1,0 +1,11 @@
+// Destroys the entity once RemainingTime reaches zero. Anything with a plain fixed lifespan uses
+// this instead of carrying its own timer - see DestroyAfterTimeSystem, which runs last so a dying
+// entity still gets its final tick from every other system first.
+//
+// Not for anything that must *act* on expiry rather than just vanish: Projectile keeps its own
+// RemainingLifetime because running out triggers ProjectileHitData.ApplyExpire (an area shot
+// detonates where it landed) before it dies.
+component DestroyAfterTime
+{
+    FP RemainingTime;
+}

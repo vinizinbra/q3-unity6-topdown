@@ -1,0 +1,9 @@
+// Granted/revoked by an upgrade (SpawnRadiusUpSkillAction, one .asset instance per hero) - read by
+// SpawnedEntitySpawner.Spawn right after creating the entity, growing its own PhysicsCollider3D by
+// this bonus. Generic rather than tied to any one hero - anything spawned through
+// SpawnedEntitySpawner (SpawnEntitySkillAction's own spawns, or a projectile's SpawnEntityEffectData
+// like Zara's speaker) benefits the same way.
+component SpawnRadiusUpgrade
+{
+    FP ScaleBonus;
+}

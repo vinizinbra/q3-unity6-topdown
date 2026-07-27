@@ -1,0 +1,9 @@
+// Lets a non-player entity (e.g. Lux's sentry gun) drive Input-consuming systems (WeaponSystem) the
+// same way a real player does, without an actual PlayerLink/PlayerRef behind it - some other system
+// (the entity's own "brain", e.g. a future SentryInputSystem) writes into Data every tick to express
+// intent (Fire.IsDown = true when it wants to shoot, Direction, etc.), and WeaponSystem reads it
+// through the exact same Input shape a real player's input uses - see WeaponSystem.TryResolveInput.
+component InputSource
+{
+    Input Data;
+}

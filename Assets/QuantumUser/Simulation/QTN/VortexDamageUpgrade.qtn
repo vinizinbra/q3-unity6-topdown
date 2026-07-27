@@ -1,0 +1,11 @@
+// Granted by Heroes/Kai's VortexDamagePulseSkillAction - read by SpawnVortexEffectData at spawn
+// time, which attaches a real AreaDamage component onto the spawned Vortex entity (same
+// component/system as Zara's speaker, Pixie's blast, any lingering hazard) instead of hand-rolling a
+// separate damage-tick system on Vortex itself. The vortex's own PhysicsCollider3D (already required
+// for the pull) doubles as AreaDamage's hit-radius for free, same as every other area.
+component VortexDamageUpgrade
+{
+    FP Damage;
+    FP TickInterval;
+    AssetRef<HitEffectData> DamageEffect;
+}

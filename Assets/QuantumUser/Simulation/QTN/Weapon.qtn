@@ -1,0 +1,32 @@
+component Weapon
+{
+    AssetRef<WeaponDataAsset> WeaponData;
+
+    // What this roll actually is - kept so UI can name the perks and two drops can be compared.
+    // Never re-resolved into the stats below; WeaponSystem.Equip bakes them once. Fixed ceiling; a
+    // roll asks for however many it wants up to this (see WeaponGenerator.Roll).
+    array<AssetRef<WeaponPerkData>>[5] Perks;
+
+    // Seeded from WeaponDataAsset at equip, then mutated in place by each perk. A perk is never
+    // removed, so none of this is re-derived per tick.
+    Int32 MagazineSize;
+    FP    ReloadDuration;
+    FP    CriticalChance;
+    FP    CriticalDamageBonus;
+
+    // Damage/FireCooldown are NOT baked absolutes like the stats above - WeaponSystem reads
+    // WeaponDataAsset.Damage/FireCooldownTime fresh every fire and scales it by these, so tuning
+    // the asset's base value in the Inspector takes effect immediately on already-equipped weapons
+    // instead of only on the next Equip. Perks (DamageMultiplierWeaponPerkData,
+    // CooldownMultiplierWeaponPerkData, FireRateWeaponPerkData) and the sentry-only
+    // SentryFireRateUpgrade compound into these in place instead of mutating an absolute stat -
+    // same reasoning CharacterStats keeps a standing multiplier rather than baking. Seeded to 1 at
+    // equip (see WeaponSystem.SeedStats).
+    FP    DamageMultiplier;
+    FP    FireCooldownMultiplier;
+
+    FP    FireCooldownTimer;
+    Int32 Ammo;
+    FP    ReloadTimer;
+    FP    TimeSinceFireReleased;
+}

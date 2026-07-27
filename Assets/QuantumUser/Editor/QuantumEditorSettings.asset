@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e31f72e4c99a364189783be71ef7a2e, type: 3}
+  m_Name: QuantumEditorSettings
+  m_EditorClassIdentifier: 
+  AssetSearchPaths:
+  - Assets
+  DefaultNewAssetsLocation: Assets/QuantumUser/Resources
+  UseQuantumUnityDBAssetPostprocessor: 1
+  UseQuantumToolbarUtilities: 0
+  QuantumToolbarZone: 0
+  UsePhotonAppVersionsPostprocessor: 1
+  EntityComponentInspectorMode: 2
+  AutoBuildOnSceneSave: 96
+  AutoBuildOnPlaymodeChanged: 96
+  AutoBuildOnBuild: 96
+  AssetGuidOverrides:
+  - Asset: {fileID: 11400000, guid: 0fdde3fc54cf4a04b6f92f7c4c11e005, type: 2}
+    Guid:
+      Value: 6100005
+  - Asset: {fileID: 11400000, guid: 0fdde3fc54cf4a04b6f92f7c4c11e004, type: 2}
+    Guid:
+      Value: 6100004
+  - Asset: {fileID: 11400000, guid: 0fdde3fc54cf4a04b6f92f7c4c11e001, type: 2}
+    Guid:
+      Value: 6100001
+  - Asset: {fileID: 11400000, guid: 0fdde3fc54cf4a04b6f92f7c4c11e003, type: 2}
+    Guid:
+      Value: 6100003
+  - Asset: {fileID: 11400000, guid: 0fdde3fc54cf4a04b6f92f7c4c11e002, type: 2}
+    Guid:
+      Value: 6100002
+  - Asset: {fileID: 11400000, guid: ef26ad83fbb134e10bef3d9296df0768, type: 2}
+    Guid:
+      Value: 3283391172210422552
+  - Asset: {fileID: 11400000, guid: b6cb4053ebcda42b8ab9b04034e8348b, type: 2}
+    Guid:
+      Value: 2227200805678239736

@@ -1,0 +1,36 @@
+// Marks a child weapon-slot entity spawned alongside a Sentry "chassis" (see
+// SpawnSentrySkillAction.ApplyWeaponUpgrade) - one entity per equipped SentryWeaponUpgrade slot, so
+// up to 4 can fire simultaneously (a single entity can only ever carry one Weapon component).
+// SentryBarrelSystem re-anchors this entity to the chassis's own current Position/Rotation +
+// WeaponOffset every tick (not just once at spawn) - so if the chassis itself is ever moved after
+// barrels are already attached (e.g. knocked back), they keep following it rather than staying
+// pinned to wherever they first spawned. It also independently finds this barrel's own nearest
+// enemy every tick (searching from its own, just-updated Transform3D.Position) and drives its own
+// Aim/InputSource.Fire, so WeaponSystem fires it completely unchanged - same as any other
+// Weapon-carrying entity.
+component SentryBarrel
+{
+    // The parent chassis entity - read every tick for its own current Position/Rotation (to
+    // re-anchor this barrel) and Range (detection radius is a property of the sentry, not of any
+    // one gun), and to know whether the chassis still exists at all. Not the other way around
+    // (Sentry doesn't track its own barrels) since a barrel needs its parent to function at all,
+    // but the parent's own logic (Health/Shield, auras) doesn't depend on how many barrels it
+    // currently has.
+    EntityRef Sentry;
+
+    // Local-space muzzle position (X=right, Y=up, Z=forward) baked in once at spawn from
+    // SentryWeaponUpgrade.WeaponOffset - kept here (not just applied once and discarded) so
+    // SentryBarrelSystem can keep re-deriving this barrel's world position from the chassis's
+    // current Position/Rotation every tick instead of only at spawn time.
+    FPVector3 WeaponOffset;
+
+    // Which of the 4 SentryWeaponUpgrade slots this barrel was armed from - carried through
+    // EventSentryBarrelSpawned so the chassis's own view (SentryView) knows which of its 4 gun
+    // sprites to activate, purely cosmetic (SentryBarrelSystem/WeaponSystem don't read this).
+    Byte SlotIndex;
+
+    // Which SentryAddWeaponSkillAction granted this specific weapon - resolved by SentryGunView to
+    // find that asset's View-only WeaponSprite (SentryAddWeaponSkillAction.View.cs) and show the
+    // right gun art. Purely cosmetic, same as SlotIndex - nothing in simulation reads this.
+    AssetRef<SentryAddWeaponSkillAction> Source;
+}
