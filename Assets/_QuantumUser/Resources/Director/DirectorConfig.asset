@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 574fcd48372034e08bf490a7674491f0, type: 3}
+  m_Name: DirectorConfig
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.DirectorConfig
+  Identifier:
+    Path: _QuantumUser/Resources/Director/DirectorConfig
+    Guid:
+      Value: 416415362832844946
+  EnemyPrototype:
+    Id:
+      Value: 1528835202421246254
+  PredictionTime:
+    RawValue: 131072
+  SpawnRingRadiusMin:
+    RawValue: 786432
+  SpawnRingRadiusMax:
+    RawValue: 1048576
+  MaxPurchasesPerPulse: 3
+  MaxGroupSpawnAttempts: 8

@@ -31,7 +31,7 @@ MonoBehaviour:
   - usw
   _availableScenes:
   - Name: 
-    ScenePath: Assets/QuantumUser/Scenes/QuantumGameScene.unity
+    ScenePath: Assets/_QuantumUser/Scenes/QuantumGameScene.unity
     Preview: {fileID: -1855909297, guid: f664891c957894bd1ba05f39cf427393, type: 3}
     RuntimeConfig:
       Seed: 0
@@ -56,5 +56,11 @@ MonoBehaviour:
       EnemyTierResistanceConfig:
         Id:
           Value: 411343015007468473
+      EnemyTierStatsConfig:
+        Id:
+          Value: 785124012434522664
+      ExperienceConfig:
+        Id:
+          Value: 431439649865532567
   _machineId: {fileID: -755480892457977500, guid: fbd1d0c57fd428c44b08e505acb8d851, type: 3}
   _codeGenerator: {fileID: 11400000, guid: e38f1fac5a1a5c94da2b4ef21bd48419, type: 2}

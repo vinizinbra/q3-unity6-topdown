@@ -1,0 +1,19 @@
+// Match-wide Survival Director state - merged by the DSL compiler into the same Frame.Global
+// struct as Chunk.qtn's global block (kept in its own file since it's conceptually unrelated to
+// level generation). Driven entirely by CombatDirectorSystem (SurvivalProgressionUtility.Tick +
+// CombatDirectorUtility.TryPulse). RelevantPressure/alive-enemy-count are deliberately NOT cached
+// here - both are recomputed each pulse from a plain f.Filter<Enemy, EnemyLifecycle>() pass
+// (bounded by MaxAliveEnemies, so tens of entities at most), avoiding a stale-value bug for no
+// real performance win at this scale.
+global
+{
+    FP SurvivalTime;
+    Int32 CurrentPhaseIndex;
+    FP PhaseTimer;
+
+    // Credited by SurvivalPhase.BudgetPerPulse each pulse AND by EnemyLifecycleSystem's refunds on
+    // retirement; spent only by CombatDirectorUtility's purchase loop. One shared field, two
+    // writers, one reader/spender - no separate refund queue.
+    FP DirectorBudget;
+    FP DirectorPulseTimer;
+}

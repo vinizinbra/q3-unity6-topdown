@@ -20,4 +20,24 @@ public static class UIHelper
 
         return RectTransformUtility.ScreenPointToLocalPointInRectangle(parentRect, screenPoint, eventCamera, out anchoredPosition);
     }
+
+    // Same idea as TryWorldToAnchoredPosition, but the source is another UI element rather than a
+    // 3D world position - e.g. targeting a fixed HUD element (a bar, a slot icon) from a widget
+    // living under a different parent, where anchoredPosition alone isn't comparable across
+    // parents. RectTransformUtility.WorldToScreenPoint handles source.position correctly whether
+    // source sits under a Screen Space - Overlay or Camera canvas (unlike a raw
+    // Camera.WorldToScreenPoint call, which would be wrong for Overlay).
+    public static bool TryRectTransformToAnchoredPosition(RectTransform target, Canvas canvas, RectTransform source, out Vector2 anchoredPosition)
+    {
+        anchoredPosition = default;
+
+        var parentRect = target.parent as RectTransform;
+        if (parentRect == null || canvas == null || source == null)
+            return false;
+
+        Camera eventCamera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+        Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(eventCamera, source.position);
+
+        return RectTransformUtility.ScreenPointToLocalPointInRectangle(parentRect, screenPoint, eventCamera, out anchoredPosition);
+    }
 }

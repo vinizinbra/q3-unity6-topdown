@@ -1,0 +1,42 @@
+// Level-up upgrade-choice screen - see docs/level-up-upgrades.md for the full runtime flow
+// (ExperienceUtility.Grant -> LevelUpUtility.BeginLevelUpScreen -> LevelUpSystem countdown ->
+// LevelUpUtility.Resolve). GlobalUpgrade/PassiveUpgrade are reserved kinds with no gameplay effect
+// yet - plumbing only, see GlobalUpgradeUtility/PassiveUpgradeUtility.
+enum LevelUpPoolKind : Byte
+{
+    None           = 0,
+    SkillUpgrade   = 1,
+    WeaponPerk     = 2,
+    GlobalUpgrade  = 3,
+    PassiveUpgrade = 4
+}
+
+// One rolled, grantable option. WeaponPerkData/SkillActionData/GlobalUpgradeData/PassiveUpgradeData
+// all derive from the shared UpgradeData base (see UpgradeData.cs), so a single AssetRef<UpgradeData>
+// covers every kind - resolved generically for display (Icon/DisplayName/GetDescription/Rarity) via
+// UpgradeCardWidget, and reinterpreted to the concrete AssetRef<T> a grant path needs (via its raw
+// Id - see LevelUpUtility.GrantOption) since Kind is what says which concrete type Upgrade actually
+// points at. SkillUpgradeSlot is the one piece Upgrade alone can't carry - which CharacterSkills
+// slot a SkillUpgrade targets (mirrors GrantSkillUpgradeCommand's own Slot field).
+struct LevelUpOption
+{
+    LevelUpPoolKind Kind;
+    AssetRef<UpgradeData> Upgrade;
+    SkillSlotId SkillUpgradeSlot;  // valid only when Kind == SkillUpgrade
+}
+
+// Attached to a player's own character entity (found via PlayerLink) the instant a level-up screen
+// opens for them - see LevelUpUtility.BeginLevelUpScreen. Its mere presence on an entity IS the
+// "this player still has an unresolved pick" signal; LevelUpUtility.Resolve removes it once granted.
+// Lives per-entity rather than in a Frame.Global array indexed by PlayerRef - SessionConfig's
+// PlayerCount isn't configured yet, so there's no real fixed ceiling to size a Global array against,
+// and every other per-player runtime value in this codebase (CharacterSkills, Weapon) already lives
+// on the character entity the same way.
+component LevelUpChoice
+{
+    array<LevelUpOption>[3] Options;
+    Byte OptionCount;   // how many of Options[0..3) were actually rolled - a pool can hold fewer
+                         // candidates than ChoiceCount, leaving trailing slots at Kind == None
+    Boolean Confirmed;
+    Byte SelectedIndex;
+}

@@ -44,7 +44,7 @@ public class CreateAssetButtonPropertyDrawer : PropertyDrawer
 
         var createAssetButton = (CreateAssetButtonAttribute)attribute;
         string folder = string.IsNullOrEmpty(createAssetButton.Folder)
-            ? $"Assets/QuantumUser/Resources/{fieldType.Name}"
+            ? $"Assets/_QuantumUser/Resources/{fieldType.Name}"
             : createAssetButton.Folder;
 
         EnsureFolderExists(folder);

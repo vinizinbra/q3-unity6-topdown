@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a51db468d4749415b842b351d3d51394, type: 3}
+  m_Name: Dash
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.DashSkillData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Dash
+    Guid:
+      Value: 533523231288344056
+  Name: Dash
+  InitStacks: 1
+  Cooldown:
+    RawValue: 65536
+  Actions: []
+  Icon: {fileID: 0}
+  Description: Dash quickly in the direction you're moving, passing harmlessly through enemy projectiles until you arrive or hit a wall.
+  DashSpeed:
+    RawValue: 1310720
+  DashDistance:
+    RawValue: 262144
+  DashDuration:
+    RawValue: 327680
+  WallCheckDistance:
+    RawValue: 49152

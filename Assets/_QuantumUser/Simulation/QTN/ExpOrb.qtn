@@ -1,0 +1,8 @@
+// A physical exp pickup dropped by ExperienceUtility.TrySpawnDrop when a player-owned kill lands
+// on an Enemy (see DamageUtility.ApplyDamage) - an environment/hazard kill (Owner == EntityRef.
+// None) drops nothing. Value travels with the orb rather than being re-derived from
+// EnemyDataAsset at pickup time, since the source enemy entity is already destroyed by then.
+component ExpOrb
+{
+    FP Value;
+}

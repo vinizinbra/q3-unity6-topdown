@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 753550d2c4e5c490b97443448e687e99, type: 3}
+  m_Name: EnemyTierStatsConfig
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.EnemyTierStatsConfig
+  Identifier:
+    Path: _QuantumUser/Resources/Configs/EnemyTierStatsConfig
+    Guid:
+      Value: 785124012434522664
+  Filler:
+    MaxHealth:
+      RawValue: 1310720
+    Cost:
+      RawValue: 65536
+    ExpValue:
+      RawValue: 65536
+    ScaleMultiplier:
+      RawValue: 26214
+  Normal:
+    MaxHealth:
+      RawValue: 3276800
+    Cost:
+      RawValue: 131072
+    ExpValue:
+      RawValue: 131072
+    ScaleMultiplier:
+      RawValue: 32768
+  Specialist:
+    MaxHealth:
+      RawValue: 7864320
+    Cost:
+      RawValue: 262144
+    ExpValue:
+      RawValue: 327680
+    ScaleMultiplier:
+      RawValue: 39322
+  Elite:
+    MaxHealth:
+      RawValue: 19660800
+    Cost:
+      RawValue: 524288
+    ExpValue:
+      RawValue: 983040
+    ScaleMultiplier:
+      RawValue: 52429
+  Boss:
+    MaxHealth:
+      RawValue: 131072000
+    Cost:
+      RawValue: 1966080
+    ExpValue:
+      RawValue: 6553600
+    ScaleMultiplier:
+      RawValue: 65536

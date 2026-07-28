@@ -4,7 +4,7 @@ using UnityEngine;
 
 public static class IslandPrototypeMeshGenerator
 {
-    private const string OutputFolder = "Assets/QuantumUser/View/World/Prototypes";
+    private const string OutputFolder = "Assets/_QuantumUser/View/World/Prototypes";
 
     private const float CellSize = 2f;
     private const float CellHeight = 1f;

@@ -1,12 +1,12 @@
 # Run Progression (not yet built)
 
 This is a game-design doc (run/level progression); the implementation docs it references live
-separately under `Assets/QuantumUser/Docs/` since they're code/architecture references, not design.
+separately under `Assets/_QuantumUser/Docs/` since they're code/architecture references, not design.
 
-See [skills.md](../../QuantumUser/Docs/skills.md) for `SkillData`/`SkillActionData` (the
+See [skills.md](../../_QuantumUser/Docs/skills.md) for `SkillData`/`SkillActionData` (the
 polymorphic-asset idiom this doc extends a third way),
-[weapons.md](../../QuantumUser/Docs/weapons.md) for weapon data/view resolution, and
-[architecture.md](../../QuantumUser/Docs/architecture.md) for the Simulation/View split.
+[weapons.md](../../_QuantumUser/Docs/weapons.md) for weapon data/view resolution, and
+[architecture.md](../../_QuantumUser/Docs/architecture.md) for the Simulation/View split.
 
 Survivors.io/Gunfire Reborn-style run progression: on level-up, the player picks one of a few
 rolled options; every pick is **permanent for the rest of the run** (no timed buffs, no expiry —
@@ -19,7 +19,7 @@ mechanism either bloats the simple case or under-powers the complex one.
 
 | Shape | Examples | Mechanism |
 |---|---|---|
-| **Stat delta** | Damage %, fire rate %, move speed %, max HP %, armor, health regen, dash charges +1, dash recharge speed %, pickup radius, XP gain % | Applied once on pick: a single mutation to a `CharacterStats` component (or, for dash charges specifically, `SkillSlot.MaxStacks` — see [skills.md's "Charges, not a cooldown lock"](../../QuantumUser/Docs/skills.md#charges-not-a-cooldown-lock), which already documents this field as upgrade-mutable). No hook, no per-tick cost, nothing to register. |
+| **Stat delta** | Damage %, fire rate %, move speed %, max HP %, armor, health regen, dash charges +1, dash recharge speed %, pickup radius, XP gain % | Applied once on pick: a single mutation to a `CharacterStats` component (or, for dash charges specifically, `SkillSlot.MaxStacks` — see [skills.md's "Charges, not a cooldown lock"](../../_QuantumUser/Docs/skills.md#charges-not-a-cooldown-lock), which already documents this field as upgrade-mutable). No hook, no per-tick cost, nothing to register. |
 | **Autonomous passive** | Slow aura, periodic area damage, random bomb throw, orbiting blades, life-on-kill, thorns/retaliation | Needs actual runtime behavior with no player input and no AI state machine driving it — the gap neither `AttackData` (AI-driven) nor `SkillData` (input-driven) covers. New `PassiveAbilityData` polymorphic asset, third sibling in the same idiom. |
 
 Don't route a pure stat delta through the passive-hook machinery below — it's needless indirection

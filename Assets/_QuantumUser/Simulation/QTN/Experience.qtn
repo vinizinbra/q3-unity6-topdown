@@ -1,0 +1,18 @@
+// Run-wide experience state - merged by the DSL compiler into the same Frame.Global struct as
+// Chunk.qtn's/SurvivalDirector.qtn's global blocks. This is co-op: one shared total for the whole
+// run rather than a separate total per player, credited by ExperienceUtility.Grant whenever any
+// player collects an ExpOrb (see ExpOrbSystem). Both start at their zero default - no explicit
+// seed exists for Director's own globals either, so Level begins at 0 rather than 1; a future HUD
+// can display Level + 1 if a 1-based number reads better.
+global
+{
+    FP TotalExperience;
+    Int32 Level;
+
+    // Level-up upgrade-choice screen state - see docs/level-up-upgrades.md. Set by
+    // LevelUpUtility.BeginLevelUpScreen the instant Grant raises Level, cleared by
+    // LevelUpUtility.Resolve. While true, GameplaySystemGroup is disabled (see SystemSetup.User.cs)
+    // and LevelUpSystem counts LevelUpTimeRemaining down each tick via f.DeltaTime.
+    Boolean LevelUpScreenOpen;
+    FP LevelUpTimeRemaining;
+}

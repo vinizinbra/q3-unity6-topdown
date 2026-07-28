@@ -1,0 +1,266 @@
+event PlayerJumped
+{
+    EntityRef Entity;
+}
+
+event PlayerFired
+{
+    EntityRef Entity;
+}
+
+event WeaponReloaded
+{
+    EntityRef Entity;
+}
+
+event EntityDamaged
+{
+    EntityRef Target;
+    EntityRef Owner;
+    FP        Damage;
+    Boolean   IsCritical;
+
+    // Neutral for a normal hit - StatusEffectSystem passes Fire/Poison for a Burn/Poison tick (see
+    // DamageUtility.ApplyDamage), so the View (DamageFeedbackManager) can style a DoT number
+    // differently from a direct hit without guessing from DamageSource alone.
+    ElementType Element;
+
+    // True for a passive/self-inflicted tick that shouldn't read as "something hit me" - e.g.
+    // SentryDecaySystem draining a sentry's own Health toward 0 over its lifetime. HitFeedback skips
+    // its flash when this is set; DamageFeedbackManager still shows a number either way (seeing your
+    // sentry's own HP tick down is useful info, unlike a flash that would look like it's under attack
+    // every tick even when nothing is actually hitting it).
+    Boolean Silent;
+
+    // True when DamageUtility.ResolveFrontalDamageMultiplier actually reduced this hit (a
+    // FrontalDamageReduction enemy, hit inside its facing arc) - lets HitFeedback flash a distinct
+    // color instead of the normal per-element one.
+    Boolean FrontalReduced;
+}
+
+// Mirrors EntityDamaged for the heal path - see HealUtility.ApplyHeal. Amount is what was actually
+// applied after MaxHealth capped it, not the raw requested heal, so a number popping over an
+// already-near-full ally reads correctly instead of overstating it.
+event EntityHealed
+{
+    EntityRef Target;
+    EntityRef Owner;
+    FP        Amount;
+}
+
+// Fired once per HitEffectUtility.ApplyToTarget call that actually connects (see that method) -
+// generic across every delivery/skill/projectile that funnels through it, unlike EntityDamaged/
+// EntityHealed which only cover their own specific effect. Owner lets each attacking enemy's own
+// EnemyAttackVisualsView filter to hits IT caused and resolve the hit-impact particle off whichever
+// delivery it's currently running (EnemyDeliveryData.HitImpactPrefab, see EnemyDeliveryData.View.cs)
+// - the visual belongs to what triggered the hit (a ground slam vs. a melee swing), not to the
+// HitEffectData describing what the hit numerically does, since the same DamageEffectData can be
+// reused by deliveries that should look completely different on impact.
+event HitEffectApplied
+{
+    EntityRef Owner;
+    EntityRef Target;
+    FPVector3 Position;
+}
+
+event EntityDied
+{
+    EntityRef Target;
+    EntityRef Owner;
+}
+
+// Fired by AlternatingAreaSystem every time it flips phase - i.e. every pulse, whether it catches
+// anyone or not. View-side hook for the pulsing entity's own animation (e.g. ZaraSpeakerView), not
+// per-target damage/heal-number feedback - see EntityDamaged/EntityHealed for those.
+event AlternatingAreaPulsed
+{
+    EntityRef Entity;
+    Boolean   IsHealing;
+}
+
+event PlayerRespawned
+{
+    EntityRef Entity;
+    FPVector3 Position;
+}
+
+event ProjectileDestroyed
+{
+    EntityRef  Entity;
+    EntityRef  Owner;
+    FPVector3  Position;
+    AssetRef<ProjectileDataAsset> ProjectileData;
+}
+
+// Radius is supplied explicitly rather than left to the view to read off HitData.Radius - an
+// upgrade (BlastRadiusUpgrade) can boost the radius Detonate() actually used for the damage
+// overlap past what's authored on the asset, same reason ExplodeOnDeathDetonated below carries its
+// own Radius instead of pointing at an asset for it.
+event AreaDetonated
+{
+    EntityRef              Owner;
+    FPVector3              Position;
+    AssetRef<AreaHitData>  HitData;
+    FP                     Radius;
+}
+
+// Fired by DamageUtility's ExplodeOnDeath chain (see ExplodeOnDeath/MarkExplosiveDeath) - kept
+// separate from AreaDetonated rather than reusing it, since that event's HitData is specifically an
+// AreaHitData (a spawned-area/projectile-impact asset this feature doesn't use at all - no spawned
+// entity, no Effects list, damage applied directly via HitEffectUtility.ApplyDamageInRadius). Radius
+// is supplied directly since it's derived from the dying enemy's real collider radius, not
+// authored on any asset. No Upgrade asset ref - the mark can come from any hero's upgrade, so
+// there's no single upgrade asset to resolve a bespoke blast prefab from; EffectsManager always
+// plays its shared default blast effect. EnemyData DOES travel with the event though - the dying
+// target is always an Enemy (see DamageUtility.TryExplodeOnDeath's only call sites), so the view
+// can still tint that shared prefab with the same EnemyDataAsset.ExplosionColor EnemyExploded
+// already uses, instead of leaving it a flat white that clashes next to a tinted death VFX.
+event ExplodeOnDeathDetonated
+{
+    EntityRef  Owner;
+    FPVector3  Position;
+    FP         Radius;
+    AssetRef<EnemyDataAsset> EnemyData;
+}
+
+// Fired by DamageUtility.TrySentryOverload - fully independent from ExplodeOnDeathDetonated above
+// despite the similar shape, since Overload is its own mechanic (SentryOverloadUpgrade's own
+// Radius/Damage, not RuntimeConfig.ExplodeOnDeathConfig). DOES carry an asset ref, unlike
+// ExplodeOnDeathDetonated - Overload always comes from exactly one SentryAddOverloadSkillAction
+// asset, which is where the view resolves BlastEffectPrefab from
+// (SentryAddOverloadSkillAction.View.cs) - same "AssetRef travels with the event" shape
+// VortexExploded uses for VortexExplodeOnDestroySkillAction.
+event SentryOverloadDetonated
+{
+    EntityRef  Owner;
+    FPVector3  Position;
+    FP         Radius;
+    AssetRef<SentryAddOverloadSkillAction> Source;
+}
+
+// Fired by VortexSystem.TryExplodeOnDestroy (see VortexExplodeOnDestroy) - same shape as
+// ExplodeOnDeathDetonated except this DOES carry an asset ref: unlike the enemy-death mark (which
+// can come from any hero's upgrade), this always comes from exactly one
+// VortexExplodeOnDestroySkillAction asset, which is where the view resolves BlastEffectPrefab from
+// (VortexExplodeOnDestroySkillAction.View.cs) - same "AssetRef travels with the event" shape
+// AreaDetonated uses for AreaHitData.BlastEffectPrefab. Position/Radius are still supplied directly
+// since damage is applied via HitEffectUtility.ApplyDamageInRadius, no spawned entity.
+event VortexExploded
+{
+    EntityRef  Entity;
+    EntityRef  Owner;
+    FPVector3  Position;
+    FP         Radius;
+    AssetRef<VortexExplodeOnDestroySkillAction> Source;
+}
+
+// Fired by VortexSystem.TryRandomExplosion (see VortexRandomExplosionUpgrade) - one of many small
+// blasts at a random point inside the vortex's own pull radius, repeating on its own TickInterval for
+// as long as the vortex is alive. Kept separate from VortexExploded (the single big blast on expiry)
+// since the view will likely want a smaller/different VFX for these - Source resolves
+// VortexRandomExplosionSkillAction.BlastEffectPrefab, same AssetRef-travels-with-the-event shape as
+// VortexExploded's own Source.
+event VortexMiniExploded
+{
+    EntityRef  Entity;
+    EntityRef  Owner;
+    FPVector3  Position;
+    FP         Radius;
+    AssetRef<VortexRandomExplosionSkillAction> Source;
+}
+
+// Fired by JuggernautSkillData.Tick whenever a discharge fires - Brutus reached Charged and touched
+// an enemy, triggering the area knockback (DamageUtility.ApplyKnockback, no damage of its own - pure
+// knockback, same as the design calls for). No spawned entity, so the view needs Position/Radius
+// handed to it explicitly - Source resolves JuggernautSkillData.DischargeEffectPrefab, same
+// AssetRef-travels-with-the-event shape as VortexExploded/VortexMiniExploded's own Source.
+event JuggernautDischarged
+{
+    EntityRef  Entity;
+    FPVector3  Position;
+    FP         Radius;
+    AssetRef<JuggernautSkillData> Source;
+}
+
+// Fired by JuggernautSkillData.End when JuggernautEndExplosionUpgrade is equipped - the channel
+// finishing (Duration running out) triggers a damage blast around Brutus's own position, separate
+// from the discharge pulse above (knockback only, triggered by touching an enemy while Charged, not
+// by expiry). Damage applied directly via HitEffectUtility.ApplyDamageInRadius, no spawned entity -
+// Source resolves JuggernautEndExplosionSkillAction.BlastEffectPrefab, same
+// AssetRef-travels-with-the-event shape as the rest of this session's asset-authored VFX.
+event JuggernautEndExploded
+{
+    EntityRef  Entity;
+    FPVector3  Position;
+    FP         Radius;
+    FP         Damage;
+    AssetRef<JuggernautEndExplosionSkillAction> Source;
+}
+
+// Fired by JuggernautLandingImpactSystem the moment an enemy marked by JuggernautLaunched touches
+// ground again - Radius is the LANDED ENEMY's own real collider radius
+// (EnemyMovementUtility.ResolveShapeRadius), so a bigger enemy's impact VFX reads bigger too. Source resolves
+// JuggernautLandingImpactSkillAction.ImpactEffectPrefab, same AssetRef-travels-with-the-event shape
+// as the rest of this session's asset-authored VFX.
+event JuggernautLanded
+{
+    EntityRef  Entity;
+    EntityRef  Owner;
+    FPVector3  Position;
+    FP         Radius;
+    AssetRef<JuggernautLandingImpactSkillAction> Source;
+}
+
+// Generic - fired directly from StatusEffectUtility.ApplyRoot, so every Root source (not just
+// Juggernaut's landing proc) gets this for free rather than each caller re-deriving its own
+// position/radius and firing a bespoke event. Position/Radius are read off the target itself right
+// as Root lands (Transform3D.Position, PhysicsCollider3D.Shape via
+// EnemyMovementUtility.ResolveShapeRadius) - not authored on any asset, since there's no longer a
+// per-source prefab to resolve (EffectsManager.rootEffectPrefab is a single shared VFX for every
+// Root proc, not per-asset like JuggernautLanded's ImpactEffectPrefab).
+event EntityRooted
+{
+    EntityRef  Entity;
+    FPVector3  Position;
+    FP         Radius;
+}
+
+// Fired once by SpawnSentrySkillAction.SpawnBarrel the instant a SentryBarrel is created for a given
+// slot - the chassis's own view (SentryView) listens for its own Sentry entity, activates the
+// matching gun sprite out of its authored list, and resolves Barrel's own View instance
+// (QuantumEntityViewUpdater.GetView) to keep a direct Transform reference to that specific barrel.
+// Purely cosmetic; the sim itself never re-reads this.
+event SentryBarrelSpawned
+{
+    EntityRef Sentry;
+    EntityRef Barrel;
+    Byte      SlotIndex;
+}
+
+// Fired by DamageUtility.ApplyDamage instead of the usual Dead/DeathLingerTime path when a Filler-
+// tier enemy dies (see EnemyDataAsset.Tier) - the entity is destroyed immediately with no lingering
+// die animation, replaced by this explosion instead. Radius is the dying enemy's real collider
+// radius (EnemyMovementUtility.ResolveShapeRadius, same resolution StatusEffectUtility.ApplyRoot
+// uses). Source resolves EnemyDataAsset.ExplosionColor (EnemyDataAsset.View.cs) so each enemy
+// type can tint the blast differently - the VFX prefab itself is shared across all enemy types
+// (EffectsManager.deathEffect), unlike AreaHitData/JuggernautX's per-asset BlastEffectPrefab.
+event EnemyExploded
+{
+    EntityRef              Entity;
+    FPVector3              Position;
+    FP                     Radius;
+    AssetRef<EnemyDataAsset> Source;
+}
+
+// Fired by ExpOrbSystem the instant a player reaches an ExpOrb - a View hook for both the flying
+// pickup-to-HUD-bar effect (FlyingXpManager, every client plays this identically since the shared
+// Frame.Global.TotalExperience/Level update it accompanies is already deterministic/synced on its
+// own) AND a per-character pickup glow (HitFeedback) on whichever character actually touched the
+// orb - Collector is only used for that second, entity-scoped reaction, not for gating the shared
+// bar/flying effect.
+event ExpOrbCollected
+{
+    EntityRef Collector;
+    FPVector3 Position;
+    FP        Amount;
+}

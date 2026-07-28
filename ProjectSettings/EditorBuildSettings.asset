@@ -9,7 +9,7 @@ EditorBuildSettings:
     path: Assets/_Project/Scenes/MenuScene.unity
     guid: d341bddf3263c4ca8b8ebd6b283badde
   - enabled: 1
-    path: Assets/QuantumUser/Scenes/QuantumGameScene.unity
+    path: Assets/_QuantumUser/Scenes/QuantumGameScene.unity
     guid: 7009b54c68fd54635bf7b8bbf432686b
   - enabled: 0
     path: Assets/Photon/QuantumMenu/QuantumSampleMenu.unity

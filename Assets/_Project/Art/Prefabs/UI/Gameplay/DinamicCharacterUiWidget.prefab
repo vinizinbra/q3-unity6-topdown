@@ -403,7 +403,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.07132578, g: 1, b: 0, a: 1}
+  m_Color: {r: 0.3882353, g: 0.84705883, b: 0.23137255, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -553,7 +553,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0.8446779, b: 1, a: 1}
+  m_Color: {r: 0.19607843, g: 0.54901963, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -637,8 +637,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: TesteEnemy
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: dfc46268eee2a4327860b62c3de1a1ed, type: 2}
-  m_sharedMaterial: {fileID: -8320605309260190685, guid: dfc46268eee2a4327860b62c3de1a1ed, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 7137805b022d44869b12d93cb388c588, type: 2}
+  m_sharedMaterial: {fileID: 8527393934874279224, guid: 7137805b022d44869b12d93cb388c588, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -673,6 +673,7 @@ MonoBehaviour:
   m_VerticalAlignment: 1024
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -772,7 +773,7 @@ MonoBehaviour:
   healthText: {fileID: 6300055425397026155}
   shieldSlider: {fileID: 4383217480492034175}
   shieldText: {fileID: 388985746260587110}
-  shieldFillImage: {fileID: 0}
+  shieldFillImage: {fileID: 6391512920297060712}
   shieldShineColor: {r: 1, g: 1, b: 1, a: 1}
   shieldShineDuration: 0.4
   ammoSlider: {fileID: 3984403169306300072}
@@ -1590,6 +1591,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -2108,6 +2110,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -2244,6 +2247,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0

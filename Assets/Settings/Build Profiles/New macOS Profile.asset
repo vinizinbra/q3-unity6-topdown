@@ -23,7 +23,7 @@ MonoBehaviour:
   - m_enabled: 1
     m_path: Assets/_Project/Scenes/MenuScene.unity
   - m_enabled: 1
-    m_path: Assets/QuantumUser/Scenes/QuantumGameScene.unity
+    m_path: Assets/_QuantumUser/Scenes/QuantumGameScene.unity
   - m_enabled: 1
     m_path: Assets/Photon/QuantumMenu/QuantumSampleMenu.unity
   m_ScriptingDefines: []

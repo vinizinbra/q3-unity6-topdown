@@ -1,0 +1,34 @@
+enum EnemyLifecycleState : Byte
+{
+    Active,
+    Irrelevant,
+    Retired
+}
+
+// Opt-in, added dynamically by CombatDirectorUtility at spawn time - not hand-authored on
+// prototypes, same "opt-in meta component" pattern as EnemyActionSlots/BossRuntimeState. Only
+// enemies actually purchased by the Director carry this, so a hand-placed boss or scripted enemy
+// is automatically exempt from relevance/retirement bookkeeping just by never having it. Driven
+// by EnemyLifecycleSystem.
+component EnemyLifecycle
+{
+    EnemyLifecycleState State;
+
+    // Continuous seconds spent in Irrelevant - reset to 0 the instant Relevant flips true again.
+    // Reaching LifecycleConfig.RetireDelay flips State to Retired.
+    FP IrrelevantTimer;
+
+    // "Recently in combat" bookkeeping - set to LifecycleConfig.RecentCombatWindow whenever this
+    // enemy is observed taking damage (via the LastObservedHealth diff below) or is mid-action
+    // this tick, ticks down by DeltaTime otherwise. > 0 counts as Relevant.
+    FP RecentCombatTimer;
+
+    // Diffed against Health.CurrentHealth each tick to detect "took damage this tick" - same
+    // no-dedicated-signal trick BossRuntimeState.LastObservedHealth already uses.
+    FP LastObservedHealth;
+
+    // Which group purchased this entity - recounted (not incrementally maintained) each pulse to
+    // enforce EnemyGroupConfig.MaxConcurrent. Left invalid for any EnemyLifecycle not created
+    // through the Director's own spawn path.
+    AssetRef<EnemyGroupConfig> SourceGroup;
+}

@@ -233,7 +233,7 @@ TextureImporter:
         height: 60
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      border: {x: 29, y: 29, z: 29, w: 29}
       customData: 
       outline: []
       physicsShape: []
@@ -497,7 +497,7 @@ TextureImporter:
         height: 45
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      border: {x: 22, y: 22, z: 22, w: 22}
       customData: 
       outline: []
       physicsShape: []
@@ -513,13 +513,13 @@ TextureImporter:
       name: RR_Hex16_Border
       rect:
         serializedVersion: 2
-        x: 30
-        y: 429
+        x: 32
+        y: 427
         width: 31
         height: 30
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      border: {x: 14, y: 14, z: 14, w: 14}
       customData: 
       outline: []
       physicsShape: []
@@ -541,7 +541,7 @@ TextureImporter:
         height: 30
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      border: {x: 14, y: 14, z: 14, w: 14}
       customData: 
       outline: []
       physicsShape: []
@@ -563,7 +563,7 @@ TextureImporter:
         height: 45
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      border: {x: 22, y: 22, z: 22, w: 22}
       customData: 
       outline: []
       physicsShape: []
@@ -761,7 +761,7 @@ TextureImporter:
         height: 64
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      border: {x: 26, y: 26, z: 26, w: 26}
       customData: 
       outline: []
       physicsShape: []
