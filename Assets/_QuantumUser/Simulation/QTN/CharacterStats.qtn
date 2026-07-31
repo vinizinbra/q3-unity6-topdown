@@ -26,7 +26,10 @@ component CharacterStats
     FP ProjectileSpeedMultiplier;
     FP AreaRadiusMultiplier;
 
-    FP CooldownMultiplier;
+    // Split rather than one shared CooldownMultiplier (that field never had a real consumer) since
+    // Dash and Hero Skill are picked independently at level-up - see StatUtility.GetSkillCooldown.
+    FP DashCooldownMultiplier;
+    FP SkillCooldownMultiplier;
 
     // Scales how long a skill's spawned effects last - a decoy, a fire trail. Only applies to
     // DamageSource.Skill, so a weapon-spawned area keeps its authored lifetime.
@@ -50,6 +53,7 @@ component CharacterStats
     // Utility
     FP PickupRangeMultiplier;
     FP Luck;
+    FP ExperienceGainMultiplier;
 
     // Incremented/decremented by any active effect (e.g. BerserkSkillData) that guarantees Burn
     // on every weapon hit for as long as it's up - a counter rather than a bool so two overlapping

@@ -13,18 +13,24 @@ component StatusEffects
     EntityRef BurnOwner;
     DamageSource BurnSource;
 
-    // Stacks, unlike Burn - each slot is an independent instance with its own duration/expiry, so
-    // reapplying doesn't refresh one shared instance. Capped at 5 (matches Weapon.Perks' fixed
-    // roster size); ApplyPoison evicts the soonest-to-expire slot once all 5 are occupied - see
-    // StatusEffectUtility.ApplyPoison. Unlike duration, ticking is NOT independent - every active
-    // slot shares this one timer, so stacks (however/whenever applied) all deal damage on the same
-    // beat instead of drifting out of phase into a stream of separate tiny hits; only the first
-    // stack seeds it, see StatusEffectUtility.ApplyPoison/StatusEffectSystem.TickPoison.
-    array<FP>[5] PoisonRemaining;
-    FP PoisonTickTimer;
-    array<FP>[5] PoisonDamagePerTick;
-    array<EntityRef>[5] PoisonOwner;
-    array<DamageSource>[5] PoisonSource;
+    // Void's own baseline - no magnitude, no DoT, nothing else reads this directly. Its only job is
+    // to exist so StatusEffectUtility's reaction scan can find it (or find Fire/Ice/Rock already
+    // active when Void lands). Plain overwrite-on-reapply, same as Ice/Break/Intimidate - not
+    // consumed when it backs a reaction, so one application can back several reactions over its
+    // lifetime. See docs/elemental-reactions.md.
+    FP VoidRemaining;
+
+    // One independent cooldown per elemental reaction (see docs/elemental-reactions.md) - stops a
+    // fast-firing weapon from re-triggering the same reaction every single elemental-proc tick.
+    // Plain countdowns, ticked in StatusEffectSystem alongside everything else; each reaction's own
+    // TryTrigger* in StatusEffectUtility checks and resets its own field independently, so triggering
+    // one reaction never gates any other.
+    FP ExplosionCooldownRemaining;
+    FP FreezeCooldownRemaining;
+    FP KnockbackCooldownRemaining;
+    FP MagmaPrisonCooldownRemaining;
+    FP StunCooldownRemaining;
+    FP BreakCooldownRemaining;
 
     // Slows movement - see StatusEffectUtility.GetSpeedMultiplier, read by PlayerMovementProcessor
     // and EnemySystem's chase movement. Plain overwrite-on-reapply.
@@ -35,20 +41,30 @@ component StatusEffects
     // by EnemySystem, PlayerMovementProcessor and WeaponSystem. Plain overwrite-on-reapply.
     FP StunRemaining;
 
+    // Void+Ice's Freeze reaction - stretches an enemy's own AttackPhase.Preparation/Telegraph windup
+    // (read only where EnemySystem.UpdatePreparation decrements StateTimer), not a lockout. Mirrors
+    // TimeDilationRemaining's shape (a duration + a multiplier, read at one specific timer) but
+    // targets the opposite phase - TimeDilationMultiplier is explicitly scoped to the Active-phase
+    // timer only (see that field's own comment), so this needs its own dedicated fields rather than
+    // widening TimeDilation's scope. Plain overwrite-on-reapply. See docs/elemental-reactions.md.
+    FP AnticipationSlowRemaining;
+    FP AnticipationSlowMultiplier;
+
     // Pins movement only - unlike Stun, attacking/skills/firing are untouched. See
     // StatusEffectUtility.IsRooted, read by PlayerMovementProcessor and EnemySystem. Plain
     // overwrite-on-reapply.
     FP RootRemaining;
 
     // Multiplies incoming damage - see StatusEffectUtility.GetIncomingDamageMultiplier, applied
-    // once inside DamageUtility.ApplyDamage so every damage source respects it identically. Plain
+    // once inside DamageUtility.ApplyDamage so every damage source respects it identically. Only
+    // ever granted by the Ice+Rock Break reaction now - see docs/elemental-reactions.md. Plain
     // overwrite-on-reapply.
-    FP MarkRemaining;
-    FP MarkDamageMultiplier;
+    FP BreakRemaining;
+    FP BreakDamageMultiplier;
 
     // Temporary attack-speed buff - see StatusEffectUtility.GetAttackSpeedMultiplier, folded into
     // StatUtility.GetFireCooldown alongside CharacterStats.AttackSpeedMultiplier. Stacks by source
-    // (unlike Ice/Stun/Root/Mark) - each slot is one HasteSource's own application, refreshed in
+    // (unlike Ice/Stun/Root/Break) - each slot is one HasteSource's own application, refreshed in
     // place if that same source re-applies (e.g. SentryAuraSystem re-triggering every tick it's in
     // range) rather than consuming a new slot every time, so a continuous aura and a pulsed source
     // like Zara's Speaker can both hold their own slot simultaneously. GetAttackSpeedMultiplier
@@ -64,4 +80,39 @@ component StatusEffects
     // "downgrade feels bad" concern the way Burn's tick damage does.
     FP ShieldRegenRemaining;
     FP ShieldRegenMultiplier;
+
+    // Slows this entity's own attack-execution timers (Kai's Void Pressure passive ascension) - a
+    // true time dilation on the entity's own clock, independent of Ice (which only ever affects
+    // movement speed). See StatusEffectUtility.ApplyTimeDilation/GetLocalTimeMultiplier, read only by
+    // each EnemyDeliveryData's own Active-phase timer - never the Preparation/Telegraph windup or
+    // Recovery, and never attack cooldowns, so a slowed enemy's tell still reads at normal speed and
+    // it doesn't attack less often, just slower while actually mid-attack. Plain overwrite-on-reapply,
+    // same as Ice/Break.
+    FP TimeDilationRemaining;
+    FP TimeDilationMultiplier;
+
+    // Temporary incoming-damage reduction (Max's Too Angry to Die passive ascension) - a timed
+    // counterpart to CharacterStats.DamageReduction's permanent fraction, same 0-1 convention (0 =
+    // no reduction, 1 = fully immune). See StatusEffectUtility.ApplyDamageReduction/
+    // GetDamageReductionMultiplier, folded into DamageUtility.ResolveDamageReduction alongside the
+    // permanent stat - the two stack rather than one replacing the other. Plain overwrite-on-reapply,
+    // same as Ice/Break/TimeDilation.
+    FP DamageReductionRemaining;
+    FP DamageReductionAmount;
+
+    // Reduces the AFFECTED entity's own OUTGOING damage (Brute's Protector Aura Intimidate debuff) -
+    // the mirror of Break, which reduces INCOMING damage instead. Read via
+    // StatusEffectUtility.GetOutgoingDamageMultiplier, folded into
+    // DamageUtility.ResolveOutgoingDamage BEFORE that method's CharacterStats gate, since this has
+    // to affect enemies too and enemies never carry CharacterStats. Plain overwrite-on-reapply.
+    FP IntimidateRemaining;
+    FP IntimidateDamageMultiplier;
+
+    // Multiplies incoming knockback (values > 1 = more knockback taken) - Brute's Iron Presence
+    // ascension applies this to Intimidated enemies alongside Ice's own slow. Folded into
+    // DamageUtility.ResolveKnockbackScale alongside CharacterStats.KnockbackTakenMultiplier and the
+    // enemy-tier resistance multiplier - all three stack rather than one replacing another. Plain
+    // overwrite-on-reapply.
+    FP KnockbackTakenRemaining;
+    FP KnockbackTakenMultiplier;
 }

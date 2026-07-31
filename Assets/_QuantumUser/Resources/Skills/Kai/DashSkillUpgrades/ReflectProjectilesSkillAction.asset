@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c359f90d02d9469c8e9f1063f6d1aa9, type: 3}
+  m_Name: ReflectProjectilesSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ReflectProjectilesSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Kai/DashSkillUpgrades/ReflectProjectilesSkillAction
+    Guid:
+      Value: 308772543210509829
+  Icon: {fileID: 0}
+  DisplayName: Reflect
+  Rarity: 2
+  Priority: 0
+  Phase: 2
+  Interval:
+    RawValue: 0
+  Activated: 1
+  Description: While dashing, reflect enemy projectiles within {0} units back at
+    their owner.
+  Radius:
+    RawValue: 65536

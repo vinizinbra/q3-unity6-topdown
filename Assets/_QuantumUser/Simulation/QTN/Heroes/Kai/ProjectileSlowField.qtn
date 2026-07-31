@@ -1,0 +1,19 @@
+// A continuous field that slows enemy-owned projectiles passing through it, and (if
+// EnemyTimeDilationMultiplier > 0) also slows nearby enemies' own attack-execution timers - see
+// VoidFieldSystem, the one driver for both halves. Added directly onto Kai's own entity by
+// VoidFieldPassiveData (so the field follows him via his own Transform3D, no separate tracking
+// entity needed), or onto a standalone spawned entity for his SlowArea dash ascension.
+component ProjectileSlowField
+{
+    FP Radius;
+
+    // Multiplies a caught projectile's per-tick displacement (see Projectile.SpeedMultiplier) - e.g.
+    // 0.5 = half speed while inside. Never baked into the projectile's own Velocity.
+    FP SpeedMultiplier;
+
+    // 0 (the default - "off") unless the Void Pressure Passive Ascension has been taken, which sets
+    // this on Kai's own field only (not a dropped SlowArea instance - see
+    // VoidPressurePassiveUpgradeData). Read by VoidFieldSystem.ApplyFieldsToEnemies, which also
+    // tier-gates to Filler/Normal/Specialist - never Elite/Boss.
+    FP EnemyTimeDilationMultiplier;
+}

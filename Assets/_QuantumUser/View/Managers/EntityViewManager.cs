@@ -28,6 +28,13 @@ namespace QuantumUser.View.Managers
         public Action onAllPlayersConnected;
         public List<CharView> AllChars => AllCharViews;
 
+        // Fires for every player CharView (local or remote) as it's added/removed - unlike
+        // MyLocalPlayer's onLocalPlayerRegistered/Unregistered, which only ever fires for this
+        // client's own local players. Used by party HUD UI (e.g. PartyHudManager)
+        // that needs to track every player currently in the match.
+        public Action<CharView> onPlayerAdded;
+        public Action<EntityRef> onPlayerRemoved;
+
         private void Awake()
         {
             Instance = this;
@@ -51,6 +58,8 @@ namespace QuantumUser.View.Managers
                     onAllPlayersConnected?.Invoke();
                 }
             }
+
+            onPlayerAdded?.Invoke(charView);
         }
         public int GetPlayerCount()
         {
@@ -75,6 +84,7 @@ namespace QuantumUser.View.Managers
         {
             await Task.Delay(TimeSpan.FromSeconds(0.5f));
             _charsInGame.Remove(entityRef);
+            onPlayerRemoved?.Invoke(entityRef);
         }
 
         // Generic cache (any entity, not just CharViews) - populated by EntityViewCacheInit.

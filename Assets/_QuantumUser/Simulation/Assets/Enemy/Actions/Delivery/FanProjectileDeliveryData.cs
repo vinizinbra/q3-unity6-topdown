@@ -56,6 +56,16 @@ namespace Quantum
             ProjectileDataAsset projectileData = f.FindAsset(ProjectileData);
             ProjectileMovementData movement = f.FindAsset(projectileData.Movement);
 
+            // Same AimsAtTargetCenter reasoning as ProjectileDeliveryData - the cone should
+            // converge on the target's body, not its feet. Skipped for Radial (there's no
+            // target point at all, see class comment) and UseArc (a lobbed spread still wants
+            // to land on the ground around the target, like a single-shot mortar would).
+            if (Radial == false && UseArc == false && movement.AimsAtTargetCenter == true &&
+                ProjectileAimUtility.TryGetCenterOffset(f, target, out FPVector3 centerOffset) == true)
+            {
+                targetPosition += centerOffset;
+            }
+
             int pelletCount = PelletCount > 0 ? PelletCount : 1;
 
             // Radial covers the full requested arc with no double-cover at the seam (step =

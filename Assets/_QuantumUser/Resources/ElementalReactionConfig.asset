@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7d781806bc804e9c8e27c4bf58ed848, type: 3}
+  m_Name: ElementalReactionConfig
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ElementalReactionConfig
+  Identifier:
+    Path: _QuantumUser/Resources/ElementalReactionConfig
+    Guid:
+      Value: 491478871009097374
+  ExplosionTriggerCooldown:
+    RawValue: 32768
+  ExplosionDamagePercent:
+    RawValue: 32768
+  ExplosionRadius:
+    RawValue: 65536
+  FreezeTriggerCooldown:
+    RawValue: 262144
+  FreezeDuration:
+    RawValue: 196608
+  FreezeAnticipationMultiplier:
+    RawValue: 32768
+  KnockbackTriggerCooldown:
+    RawValue: 131072
+  MagmaPrisonTriggerCooldown:
+    RawValue: 196608
+  MagmaPrisonRootDuration:
+    RawValue: 65536
+  StunTriggerCooldown:
+    RawValue: 262144
+  StunEffectDuration:
+    RawValue: 32768
+  BreakTriggerCooldown:
+    RawValue: 196608
+  BreakDuration:
+    RawValue: 196608
+  BreakDamageTakenMultiplier:
+    RawValue: 85197

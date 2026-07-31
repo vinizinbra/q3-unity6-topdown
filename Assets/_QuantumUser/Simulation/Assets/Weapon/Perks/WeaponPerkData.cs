@@ -11,6 +11,6 @@ namespace Quantum
     {
         public abstract void Apply(Frame f, Weapon* weapon);
 
-        public override string GetDescription() => Description;
+        public override string GetDescription() => GetFormattedDescription();
     }
 }

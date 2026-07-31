@@ -47,6 +47,13 @@ namespace Quantum
         // the list (and losing whatever else referenced this same asset instance).
         public bool Activated = true;
 
+        // Read by SkillFxStep (see SkillActionData.View.cs) when a step's ScaleByRadius is on - lets
+        // BeginFx/OnGoingFx/EndFx scale to match this action's own area without duplicating a Radius
+        // field here for every action, most of which have no area at all. FP._1 (unscaled) by
+        // default; override in a concrete subclass that already has its own Radius field, e.g.
+        // `public override FP EffectRadius => Radius;`.
+        public virtual FP EffectRadius => FP._1;
+
         public abstract void Execute(Frame f, ref SkillSystem.Filter filter, SkillSlot* slot, SkillData skill, SkillActionPhase firedPhase);
 
         public bool ShouldExecute(Frame f, SkillSlot* slot, SkillActionPhase firedPhase)

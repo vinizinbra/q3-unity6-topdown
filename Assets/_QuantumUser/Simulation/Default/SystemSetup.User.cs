@@ -49,9 +49,24 @@
                 // chassis target), so WeaponSystem (right after) fires off fresh values, not last tick's.
                 new SentryBarrelSystem(),
                 new WeaponSystem(),
+                // Reacts to Combat.qtn's OnEntityKilled/OnCriticalHit/OnWeaponHitLanded signals
+                // WeaponSystem's own fire path can dispatch via DamageUtility - the on-kill/on-crit/
+                // ramp side of the weapon-perk roster (Killer Instinct, Predator Magazine,
+                // Bottomless Momentum, Critical Rebound, the shared ramp pool). See
+                // docs/weapon-perks.md.
+                new WeaponPerkReactionSystem(),
                 // Must run after KCCSystem (KCC.SetActive/Teleport need this tick's movement already
                 // resolved) and after AimSystem (DashSkillData reads Aim.Angle as a facing fallback).
                 new SkillSystem(),
+                // Debug-only command processor for LevelUpPoolKind.PassiveUpgrade (see
+                // PassiveUpgradeSystem's own comment) - before VoidFieldSystem so a same-tick-granted
+                // Void Pressure ascension is already reflected when that system runs this same tick.
+                new PassiveUpgradeSystem(),
+                // After SkillSystem (so a SlowArea entity spawned this same tick already exists here)
+                // and before both EnemySystem and ProjectileSystem (so a same-tick-fresh
+                // TimeDilation/SpeedMultiplier is what their own Tick/Update calls read this tick, not
+                // last tick's stale value) - see VoidFieldSystem's own comment.
+                new VoidFieldSystem(),
                 new EnemySystem(),
                 // After EnemySystem so a forced stagger-break action (BossSystem.ForceBreakAction)
                 // overrides this tick's Phase/CurrentActionSlot after EnemySystem has already resolved
@@ -84,6 +99,15 @@
                 new JuggernautExplosionPushSystem(),
                 // Applies Haste/ShieldRegen to nearby allies - before StatusEffectSystem, same "applied
                 // this tick starts ticking next tick" reasoning as every other status-applying system.
+                // Max's Adrenaline Rush decay - no ordering dependency on anything else, same
+                // reasoning as JuggernautDischargeCooldownSystem's own placement comment.
+                new AdrenalineSystem(),
+                // Brute's Protector Aura - same continuous-refresh shape as SentryAuraSystem just
+                // below, placed alongside it for the same reason.
+                new ProtectorAuraSystem(),
+                // Zara's Afterbeat dash ascension - no ordering dependency on anything else, same
+                // reasoning as JuggernautDischargeCooldownSystem's own placement comment.
+                new ZaraAfterbeatSystem(),
                 new SentryAuraSystem(),
                 // Drains a sentry's own Health toward 0 over its lifetime - a real hit as far as
                 // DamageUtility is concerned (resets Shield's RechargeTimer like any other), so it must
@@ -97,6 +121,9 @@
                 // Late so a shield never recharges on the same tick a hit landed - DamageUtility has
                 // already reset RechargeTimer by the time this runs.
                 new ShieldSystem(),
+                // Same "after every hit-resolving system" placement as ShieldSystem just above, though
+                // regen itself has no on-hit delay to protect - see HealthRegenSystem.
+                new HealthRegenSystem(),
                 // Independent of everything else - just needs to run before DestroyAfterTimeSystem,
                 // preserving that system's own "must be last" invariant since this also calls
                 // f.Destroy. Also must stay inside this group: ExpOrbSystem is the only caller of
@@ -104,6 +131,11 @@
                 // paused while one is already open is what makes re-entrancy structurally impossible
                 // (see docs/level-up-upgrades.md).
                 new ExpOrbSystem(),
+                // Same reasoning as ExpOrbSystem just above (must stay inside this group, must run
+                // before DestroyAfterTimeSystem since it also calls f.Destroy) - Scrap has no
+                // re-entrancy concern of its own (unlike Grant/BeginLevelUpScreen), but there's no
+                // reason to place it anywhere else either.
+                new ScrapOrbSystem(),
                 // After every hit-resolving system above (this tick's Enemy.Phase is fully settled, so
                 // a same-tick combat death is correctly excluded from retirement/refund) and before
                 // DestroyAfterTimeSystem, preserving that system's own "must be last" invariant since

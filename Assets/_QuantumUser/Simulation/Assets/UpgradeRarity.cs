@@ -6,7 +6,6 @@ namespace Quantum
     public enum UpgradeRarity : byte
     {
         Common,
-        Uncommon,
         Rare,
         Epic,
         Legendary

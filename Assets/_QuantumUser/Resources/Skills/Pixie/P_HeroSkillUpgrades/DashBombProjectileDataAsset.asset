@@ -1,0 +1,87 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-6884540611072593360
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bd27c6472ddf4108a0a905dc9d8a1c1, type: 3}
+  m_Name: DashBombAreaHit
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.AreaHitData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Pixie/P_HeroSkillUpgrades/DashBombProjectileDataAsset|DashBombAreaHit
+    Guid:
+      Value: 280410021018812087
+  Effects:
+  - Id:
+      Value: 3484874747280003516
+  - Id:
+      Value: 400869309667061698
+  RestOffset:
+    RawValue: 0
+  DetonateOnLevelGeometry: 0
+  DetonateOnEnemyHit: 0
+  BlastRadius:
+    RawValue: 131072
+  TargetMask: 0
+  TriggersSpawnUpgrades: 1
+  BlastEffectPrefab: {fileID: 6350743763286976369, guid: 2dcb44456e58b4eb3823d152a70d114f, type: 3}
+--- !u!114 &-2419488696322937188
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64842e4d2096b459d815e516b95b3b68, type: 3}
+  m_Name: DashBomb
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ThrownProjectileMovementData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Pixie/P_HeroSkillUpgrades/DashBombProjectileDataAsset|DashBomb
+    Guid:
+      Value: 527354001830142595
+  Speed:
+    RawValue: 0
+  LaunchVelocityY:
+    RawValue: 655360
+  Gravity:
+    RawValue: 2621440
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e4466fb33c0b49d18f49f2ba3307d49, type: 3}
+  m_Name: DashBombProjectileDataAsset
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ProjectileDataAsset
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Pixie/P_HeroSkillUpgrades/DashBombProjectileDataAsset
+    Guid:
+      Value: 286993546770822087
+  Prototype:
+    Id:
+      Value: 1349088406501725067
+  Movement:
+    Id:
+      Value: 527354001830142595
+  Hit:
+    Id:
+      Value: 280410021018812087
+  Lifetime:
+    RawValue: 65536
+  HitRadius:
+    RawValue: 655
+  SpawnDelay:
+    RawValue: 0
+  MaxDistance:
+    RawValue: 0

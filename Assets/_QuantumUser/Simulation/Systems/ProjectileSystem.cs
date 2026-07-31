@@ -21,7 +21,10 @@ namespace Quantum
 
             movement.UpdateVelocity(f, filter.Transform3D->Position, filter.Projectile);
 
-            FPVector3 moveDelta = filter.Projectile->Velocity * f.DeltaTime;
+            // SpeedMultiplier (see Projectile.qtn) only ever scales this tick's actual displacement,
+            // never the stored Velocity itself - VoidFieldSystem recomputes it fresh every tick, so
+            // leaving every ProjectileSlowField instantly restores normal speed with nothing to revert.
+            FPVector3 moveDelta = filter.Projectile->Velocity * filter.Projectile->SpeedMultiplier * f.DeltaTime;
             FP travelDistance = moveDelta.Magnitude;
 
             if (travelDistance > FP._0)
@@ -111,9 +114,14 @@ namespace Quantum
 
             ProjectileDataAsset projectileData = f.FindAsset(filter.Projectile->ProjectileData);
 
+            // MaxDistanceMultiplier <= 0 is read as 1 (no change) rather than the literal value -
+            // a component defaults to 0, but "no Long Barrel perk" has to mean "no range change",
+            // not "always expires at distance 0" (see Projectile.qtn's own comment on this field).
+            FP maxDistanceMultiplier = filter.Projectile->MaxDistanceMultiplier <= FP._0 ? FP._1 : filter.Projectile->MaxDistanceMultiplier;
+
             bool lifetimeExpired = filter.Projectile->RemainingLifetime <= FP._0;
             bool distanceReached = projectileData.MaxDistance > FP._0
-                && filter.Projectile->TraveledDistance >= projectileData.MaxDistance;
+                && filter.Projectile->TraveledDistance >= projectileData.MaxDistance * maxDistanceMultiplier;
 
             if (lifetimeExpired == false && distanceReached == false)
                 return;

@@ -1,0 +1,42 @@
+// Max's Adrenaline Rush passive - a persistent, always-on stack meter (unlike his existing
+// RageOverdrive, which only exists for the duration of one Berserk activation). Builds from dealing
+// OR receiving damage (see AdrenalineUtility.OnDamageDealt/OnDamageTaken, called from
+// DamageUtility.ApplyDamage) and decays back down out of combat (see AdrenalineSystem). Fire Rate/
+// Move Speed are never baked into CharacterStats - they're read live off current Stacks every time
+// they're needed (AdrenalineUtility.GetFireRateMultiplier/GetMoveSpeedMultiplier, folded into
+// StatUtility.GetFireCooldown/PlayerMovementProcessor the same way Haste/Ice already are), so
+// there's nothing to undo as Stacks rises and falls tick to tick.
+component Adrenaline
+{
+    Byte Stacks;
+    Byte MaxStacks;
+
+    // How many Stacks one damage-dealt-or-taken event adds, capped at MaxStacks. The Hot Blooded
+    // ascension raises this.
+    Byte GainPerHit;
+
+    FP FireRatePerStack;
+    FP MoveSpeedPerStack;
+
+    // Seconds since the last stack gain before decay starts, and seconds per stack lost once it
+    // does - see AdrenalineSystem. TimeSinceLastGain/DecayTimer are the two running clocks; the
+    // fields above are the tuning.
+    FP DecayDelay;
+    FP DecayInterval;
+    FP TimeSinceLastGain;
+    FP DecayTimer;
+
+    // Ascension-controlled, all off (0/false) until picked:
+    // Battle High - bonus Weapon Damage while Stacks == MaxStacks (see
+    // AdrenalineUtility.GetWeaponDamageMultiplier, folded into DamageUtility.ResolveOutgoingDamage).
+    FP WeaponDamageBonusAtMax;
+
+    // Too Angry to Die - taking damage while Stacks == MaxStacks grants a timed Damage Reduction
+    // status (see AdrenalineUtility.OnDamageTaken/StatusEffectUtility.ApplyDamageReduction).
+    FP DamageReductionAtMax;
+    FP DamageReductionDuration;
+
+    // No Time to Breathe - AdrenalineSystem skips decay entirely while true and an enemy is within
+    // the wielded weapon's own Range (see AdrenalineSystem.IsEnemyInWeaponRange).
+    Boolean NoDecayNearWeaponRange;
+}

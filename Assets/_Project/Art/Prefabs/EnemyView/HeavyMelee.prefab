@@ -34,6 +34,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: -13.736}
 --- !u!212 &7358714316610497303
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -79,6 +80,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_Sprite: {fileID: -1520949853, guid: d5bc0dcab7a8349319094a125360da5a, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 0}
   m_FlipX: 0
@@ -88,7 +90,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &8476845490732343577
 GameObject:
@@ -100,7 +101,6 @@ GameObject:
   m_Component:
   - component: {fileID: 992325718291592200}
   - component: {fileID: 736891227221864247}
-  - component: {fileID: 7213704155496264850}
   - component: {fileID: 5255816638469716008}
   m_Layer: 8
   m_Name: HeavyMelee
@@ -127,6 +127,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &736891227221864247
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -172,6 +173,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 464488426, guid: d5bc0dcab7a8349319094a125360da5a, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 0}
   m_FlipX: 0
@@ -181,36 +183,7 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &7213704155496264850
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8476845490732343577}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 17edc47547113402989931086b70eb02, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::QuantumUser.View.Util.HitFeedback
-  _playerRef:
-    _index: 0
-  initialized: 0
-  executeOnlyOnLocal: 0
-  isLocal: 0
-  sprites:
-  - {fileID: 736891227221864247}
-  - {fileID: 7358714316610497303}
-  flashColor: {r: 1, g: 1, b: 1, a: 1}
-  burnFlashColor: {r: 1, g: 0.45, b: 0.1, a: 1}
-  poisonFlashColor: {r: 1, g: 0.4, b: 0.7, a: 1}
-  frontalReducedFlashColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
-  restColor: {r: 1, g: 1, b: 1, a: 0}
-  duration: 0.3
-  healFlashColor: {r: 0.4, g: 1, b: 0.4, a: 1}
-  deathColor: {r: 0, g: 0, b: 0, a: 0.5}
 --- !u!114 &5255816638469716008
 MonoBehaviour:
   m_ObjectHideFlags: 0

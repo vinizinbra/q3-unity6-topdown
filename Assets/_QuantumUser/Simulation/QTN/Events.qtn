@@ -48,6 +48,20 @@ event EntityHealed
     FP        Amount;
 }
 
+// Shield counterpart to EntityHealed - see ShieldUtility.ApplyFlatShield. Amount is what was
+// actually applied after Max capped it, same reasoning EntityHealed's own comment gives. Fired for
+// a genuine grant only (Bodyguard, Portable Cover, ShieldEffectData) - passive recharge
+// (ShieldSystem), initial seeding (CharacterSystem/EnemySystem), and damage absorption
+// (DamageUtility) all still write Shield.Current directly and deliberately don't go through
+// ShieldUtility/fire this, the same way plain Health seeding never goes through
+// HealUtility/fires EntityHealed either.
+event EntityShielded
+{
+    EntityRef Target;
+    EntityRef Owner;
+    FP        Amount;
+}
+
 // Fired once per HitEffectUtility.ApplyToTarget call that actually connects (see that method) -
 // generic across every delivery/skill/projectile that funnels through it, unlike EntityDamaged/
 // EntityHealed which only cover their own specific effect. Owner lets each attacking enemy's own
@@ -56,11 +70,24 @@ event EntityHealed
 // - the visual belongs to what triggered the hit (a ground slam vs. a melee swing), not to the
 // HitEffectData describing what the hit numerically does, since the same DamageEffectData can be
 // reused by deliveries that should look completely different on impact.
+//
+// MultiTarget is true whenever this connect came from an overlap query that can catch more than
+// one entity in one action (ApplyInRadius/ApplyInShape/ApplyInCollider, plus a couple of manual
+// per-target loops - ResonanceUtility.FirePulse, IronShoulderSkillAction), false for a guaranteed
+// single-connect hit (a projectile striking its one target). Lets a generic per-hit VIEW reaction
+// (EffectsManager.OnHitEffectApplied's meleeHitEffectPrefab) skip itself for a multi-target action -
+// that already gets (or should get) its own single dedicated blast VFX
+// (AreaDetonated/ShockwaveReleased/...), so playing this generic spark once per target hit as well
+// stacks N redundant particles on top of it. Deliberately NOT the same thing as
+// HitEffectContext.IsExplosion (a narrower gameplay flag - only Pixie's own bombs opt in, feeds
+// Chain Reaction's Instability marking) - this is a broader "could this be more than one target"
+// signal for VIEW dedup, not a gameplay concept.
 event HitEffectApplied
 {
     EntityRef Owner;
     EntityRef Target;
     FPVector3 Position;
+    Boolean   MultiTarget;
 }
 
 event EntityDied
@@ -78,6 +105,18 @@ event AlternatingAreaPulsed
     Boolean   IsHealing;
 }
 
+// Fired by ResonanceUtility.FirePulse - Zara's Resonance passive reaching max simultaneously heals
+// nearby allies and damages nearby enemies, unlike AlternatingAreaPulsed above (her Hero Skill
+// speaker's own heal-OR-damage alternation) - kept as its own event rather than reused, since this
+// fires on Zara's own player entity, not a speaker entity, and view code keyed off one shouldn't
+// have to guess which shape of pulse it's looking at.
+event ResonancePulseReleased
+{
+    EntityRef Owner;
+    FPVector3 Position;
+    FP        Radius;
+}
+
 event PlayerRespawned
 {
     EntityRef Entity;
@@ -90,6 +129,18 @@ event ProjectileDestroyed
     EntityRef  Owner;
     FPVector3  Position;
     AssetRef<ProjectileDataAsset> ProjectileData;
+}
+
+// Fired once per pellet from WeaponSystem.FireHitscan - a Hitscan weapon never spawns an entity
+// (unlike Projectile, which gets ProjectileDestroyed above), so this is the only view hook for a
+// hitscan shot's path/endpoint. EndPoint is the resolved hit point on a hit, or the max-range
+// point along the ray on a miss, so a tracer always has somewhere to draw to either way.
+event HitscanFired
+{
+    EntityRef  Owner;
+    FPVector3  Origin;
+    FPVector3  EndPoint;
+    Boolean    DidHit;
 }
 
 // Radius is supplied explicitly rather than left to the view to read off HitData.Radius - an
@@ -225,6 +276,89 @@ event EntityRooted
     FP         Radius;
 }
 
+// Fired by HitEffectUtility.ApplyShockwave - a knockback-only radial push around a point, deliberately
+// generic (unlike AreaDetonated/JuggernautDischarged etc.) so ANY caller (Empty Chamber weapon perk,
+// Kai's Dash Shockwave, Zara's Resonance pulse) can fire this same event/VFX instead of each needing
+// its own bespoke hookup - same "no single upgrade asset to resolve a bespoke prefab from" reasoning
+// ExplodeOnDeathDetonated already uses, see EffectsManager. Effect is invalid/default for every
+// caller except Zara's Remix ascension (see ResonanceUtility.ResolveRemixEffect) - EffectsManager's
+// own generic handler skips playing entirely whenever this is valid, deferring the (colored) shockwave
+// visual to ResonanceFxView instead, so a Remix pulse never plays two overlapping shockwave particles.
+event ShockwaveReleased
+{
+    EntityRef                Entity;
+    FPVector3                Position;
+    FP                       Radius;
+    AssetRef<HitEffectData>  Effect;
+}
+
+// Fired by HitEffectUtility.ApplyExplosion - a damage-only radial blast (no knockback), same
+// "generic, no AssetRef/Source" reasoning as ShockwaveReleased above. Currently fired by Cataclysm
+// Round and Explosive Sequence (see DirectHitData.ApplyTerminalWeaponPerks/
+// WeaponSystem.ApplyHitscanWeaponPerks) - EffectsManager always plays defaultAreaBlastEffect for
+// this one, deliberately with no dedicated prefab field, since neither perk has (or needs) its own
+// bespoke VFX.
+event WeaponExplosionReleased
+{
+    EntityRef  Entity;
+    FPVector3  Position;
+    FP         Radius;
+}
+
+// Fired by StatusEffectUtility.TryTriggerExplosion (Void+Fire reaction - see
+// docs/elemental-reactions.md), NOT WeaponExplosionReleased above - unlike Cataclysm Round/
+// Explosive Sequence, this reaction wants its own distinct visual, so EffectsManager gives it a
+// dedicated prefab field (voidExplosionEffectPrefab) instead of always falling through to the
+// shared defaultAreaBlastEffect.
+event VoidExplosionReleased
+{
+    EntityRef  Entity;
+    FPVector3  Position;
+    FP         Radius;
+}
+
+// Fired once per Projectile actually reversed by Kai's Reflect dash ascension
+// (ReflectProjectilesSkillAction) - a point-in-space "parry" moment, not radius-scaled like the
+// pulses above, since it marks a single deflected shot rather than an area effect. Position is the
+// projectile's own position at the instant it's reflected, not Kai's, so the spark reads at the
+// parry point even if Kai is still mid-dash toward/past it.
+event ProjectileReflected
+{
+    EntityRef  Entity;
+    FPVector3  Position;
+}
+
+// Fired by SkillSystem.Invoke immediately after a SkillActionData's Execute() call, one event per
+// lifecycle phase, but only when that action actually has a particle configured for it (see
+// SkillActionData.HasFx) - unlike every other generic event in this file, this one is gated at the
+// fire site rather than firing unconditionally, since it fires from the same place EVERY skill
+// action of EVERY equipped upgrade runs through, not a single specific perk. Action travels with
+// the event (not just Entity/Position) so SkillActionFxView can resolve BeginFx/OnGoingFx/EndFx and
+// EffectRadius directly off the asset - same "AssetRef travels with the event" shape
+// VortexExploded/JuggernautDischarged already use. Kept as three separate events rather than one
+// event carrying a SkillActionPhase, since that enum is plain C# (SkillActionData.cs), not
+// DSL-declared, so it can't be a Quantum event field type.
+event SkillActionBeginExecuted
+{
+    EntityRef  Entity;
+    AssetRef<SkillActionData> Action;
+    FPVector3  Position;
+}
+
+event SkillActionOnGoingExecuted
+{
+    EntityRef  Entity;
+    AssetRef<SkillActionData> Action;
+    FPVector3  Position;
+}
+
+event SkillActionEndExecuted
+{
+    EntityRef  Entity;
+    AssetRef<SkillActionData> Action;
+    FPVector3  Position;
+}
+
 // Fired once by SpawnSentrySkillAction.SpawnBarrel the instant a SentryBarrel is created for a given
 // slot - the chassis's own view (SentryView) listens for its own Sentry entity, activates the
 // matching gun sprite out of its authored list, and resolves Barrel's own View instance
@@ -263,4 +397,14 @@ event ExpOrbCollected
     EntityRef Collector;
     FPVector3 Position;
     FP        Amount;
+}
+
+// Fired by ScrapOrbSystem the instant the owning Lux reaches a ScrapOrb - a View-only pickup-glow
+// hook (see HitFeedback's own ExpOrbCollected subscription for the same shape), no simulation
+// consumer. Unlike ExpOrbCollected, Collector is always the only entity Scrap ever means anything
+// to (see ScrapOrbSystem), not one of several onlookers.
+event ScrapOrbCollected
+{
+    EntityRef Collector;
+    FPVector3 Position;
 }

@@ -95,7 +95,7 @@ MonoBehaviour:
     Guid:
       Value: 290773469196678404
   EnemyName: 
-  Tier: 0
+  Tier: 1
   Economy:
     Persistent: 0
     SpawnProfile:
@@ -152,6 +152,9 @@ MonoBehaviour:
       RawValue: 32768
     FrontalDamageReductionArcDegrees:
       RawValue: 7864320
+    AvoidWalls: 1
+    WallAvoidProbeDistance:
+      RawValue: 131072
   AI:
     Targeting:
       Id:
@@ -167,7 +170,7 @@ MonoBehaviour:
   Actions:
     BasicAction:
       Id:
-        Value: 3203284544881717134
+        Value: 578470124590582232
     SkillActions: []
   DeathLingerTime:
     RawValue: 196608
@@ -287,9 +290,9 @@ MonoBehaviour:
   AimLock: 1
   Effects:
   - Id:
-      Value: 381384508193522341
+      Value: 440091783757558214
   - Id:
-      Value: 334086529724003502
+      Value: 0
   SelectionWeight: 1
   InterruptibleDuringTelegraph: 1
   InterruptibleDuringActive: 0

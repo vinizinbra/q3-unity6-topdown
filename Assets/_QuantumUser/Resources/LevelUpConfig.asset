@@ -22,9 +22,50 @@ MonoBehaviour:
   WeaponPerkPool:
     Id:
       Value: 274665352178253875
-  GlobalUpgrades: []
+  GlobalUpgrades:
+  - Id:
+      Value: 403816575297165012
+  - Id:
+      Value: 348464417275673341
+  - Id:
+      Value: 522814388069534076
+  - Id:
+      Value: 351819223430686945
+  - Id:
+      Value: 320361396188178750
+  - Id:
+      Value: 408436436096618404
+  - Id:
+      Value: 318742377411220703
+  - Id:
+      Value: 395994771215721936
+  - Id:
+      Value: 465459675167579920
+  - Id:
+      Value: 461468297172547822
+  - Id:
+      Value: 410997976481653038
+  - Id:
+      Value: 517186894152947932
+  - Id:
+      Value: 375594071662370515
+  - Id:
+      Value: 530489933555938362
+  - Id:
+      Value: 335586871794483094
+  - Id:
+      Value: 428258390261410246
+  - Id:
+      Value: 468352616526183711
+  - Id:
+      Value: 445776835043754055
+  - Id:
+      Value: 393583907183411523
+  - Id:
+      Value: 413323579687518313
+  - Id:
+      Value: 387762313514897616
   CommonWeight: 100
-  UncommonWeight: 50
   RareWeight: 20
   EpicWeight: 5
   LegendaryWeight: 1

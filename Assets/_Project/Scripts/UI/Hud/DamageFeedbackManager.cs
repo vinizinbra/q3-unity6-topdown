@@ -34,12 +34,15 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
         },
         new DamageNumberStyle { Kind = DamageNumberKind.BurnTakenByMe, Color = new Color(1f, 0.35f, 0.1f) },
         new DamageNumberStyle { Kind = DamageNumberKind.BurnDealtByMe, Color = new Color(1f, 0.6f, 0.2f) },
-        new DamageNumberStyle { Kind = DamageNumberKind.PoisonTakenByMe, Color = new Color(0.5f, 0.9f, 0.2f) },
-        new DamageNumberStyle { Kind = DamageNumberKind.PoisonDealtByMe, Color = new Color(0.7f, 1f, 0.4f) },
         new DamageNumberStyle { Kind = DamageNumberKind.HealedTakenByMe, Color = new Color(0.4f, 1f, 0.4f), Prefix = "+" },
         new DamageNumberStyle { Kind = DamageNumberKind.HealedDealtByMe, Color = new Color(0.6f, 1f, 0.6f), Prefix = "+" },
         new DamageNumberStyle { Kind = DamageNumberKind.FrontalReducedDealtByMe, Color = Color.gray },
         new DamageNumberStyle { Kind = DamageNumberKind.HealedEnemy, Color = new Color(0.5f, 1f, 0.8f), Prefix = "+" },
+        new DamageNumberStyle { Kind = DamageNumberKind.ShieldedTakenByMe, Color = new Color(0.4f, 0.75f, 1f), Prefix = "+" },
+        new DamageNumberStyle { Kind = DamageNumberKind.ShieldedDealtByMe, Color = new Color(0.6f, 0.85f, 1f), Prefix = "+" },
+        new DamageNumberStyle { Kind = DamageNumberKind.ShieldedEnemy, Color = new Color(0.6f, 0.8f, 1f), Prefix = "+" },
+        new DamageNumberStyle { Kind = DamageNumberKind.HealedAlly, Color = new Color(0.55f, 0.95f, 0.55f), Prefix = "+" },
+        new DamageNumberStyle { Kind = DamageNumberKind.ShieldedAlly, Color = new Color(0.5f, 0.8f, 1f), Prefix = "+" },
     };
 
     private Canvas _canvas;
@@ -68,6 +71,7 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
 
         QuantumEvent.Subscribe<EventEntityDamaged>(this, OnEntityDamaged);
         QuantumEvent.Subscribe<EventEntityHealed>(this, OnEntityHealed);
+        QuantumEvent.Subscribe<EventEntityShielded>(this, OnEntityShielded);
     }
 
     private void OnDestroy()
@@ -105,19 +109,18 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
     {
         kind = default;
 
-        if (MyLocalPlayer.Instance == null || MyLocalPlayer.Instance.IsLocalPlayerSetup == false)
+        if (MyLocalPlayer.Instance == null || MyLocalPlayer.Instance.AnyLocalPlayerSetup == false)
             return false;
 
-        EntityRef localPlayer = MyLocalPlayer.Instance.EntityRef;
         Frame frame = e.Game.Frames.Predicted;
 
-        if (ResolveOwningPlayer(frame, e.Target) == localPlayer)
+        if (IsLocalEntity(ResolveOwningPlayer(frame, e.Target)))
         {
             kind = ResolveElementalKind(e.Element, taken: true);
             return true;
         }
 
-        if (ResolveOwningPlayer(frame, e.Owner) != localPlayer)
+        if (IsLocalEntity(ResolveOwningPlayer(frame, e.Owner)) == false)
             return false;
 
         // Takes priority over Critical/elemental below - same precedence HitFeedback gives this
@@ -130,7 +133,7 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
             return true;
         }
 
-        // No Critical variant of Burn/Poison - a DoT tick always bypasses crit resolution (see
+        // No Critical variant of Burn - a DoT tick always bypasses crit resolution (see
         // DamageUtility.ApplyDamage), so e.IsCritical is never true alongside a non-Neutral Element.
         kind = e.IsCritical ? DamageNumberKind.CriticalDealtByMe : ResolveElementalKind(e.Element, taken: false);
         return true;
@@ -160,7 +163,6 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
         switch (element)
         {
             case ElementType.Fire: return taken ? DamageNumberKind.BurnTakenByMe : DamageNumberKind.BurnDealtByMe;
-            case ElementType.Poison: return taken ? DamageNumberKind.PoisonTakenByMe : DamageNumberKind.PoisonDealtByMe;
             default: return taken ? DamageNumberKind.TakenByMe : DamageNumberKind.DealtByMe;
         }
     }
@@ -192,13 +194,14 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
     }
 
     // Being healed is checked before dealing one, same reasoning as TryResolveKind - a self-heal
-    // reads as healing on me rather than healing I dealt.
+    // reads as healing on me rather than healing I dealt. Unlike TryResolveKind (damage), this
+    // never actually returns false - a heal is worth seeing for every nearby player, not just one
+    // the local player was a party to (see HealedAlly's own comment). Keeps the bool-out-param
+    // shape anyway, for symmetry with every other resolver here.
     private bool TryResolveHealKind(EventEntityHealed e, out DamageNumberKind kind)
     {
-        kind = default;
-
-        // Enemy heals (e.g. FlyingShielder topping up an ally) show for everyone regardless of
-        // local-player involvement - see HealedEnemy's own comment for why this is the exception.
+        // Enemy heals (e.g. FlyingShielder topping up an ally) get their own dedicated kind rather
+        // than falling through to HealedAlly below - same event, different flavor/color.
         Frame frame = e.Game.Frames.Predicted;
         if (frame != null && frame.Has<Enemy>(e.Target) == true)
         {
@@ -206,25 +209,81 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
             return true;
         }
 
-        if (MyLocalPlayer.Instance == null || MyLocalPlayer.Instance.IsLocalPlayerSetup == false)
-            return false;
-
-        EntityRef localPlayer = MyLocalPlayer.Instance.EntityRef;
-
-        if (e.Target == localPlayer)
+        if (IsLocalEntity(e.Target))
         {
             kind = DamageNumberKind.HealedTakenByMe;
             return true;
         }
 
-        if (e.Owner != localPlayer)
-            return false;
+        if (IsLocalEntity(e.Owner))
+        {
+            kind = DamageNumberKind.HealedDealtByMe;
+            return true;
+        }
 
-        kind = DamageNumberKind.HealedDealtByMe;
+        kind = DamageNumberKind.HealedAlly;
         return true;
     }
 
+    // Membership check across every registered local slot (not equality with a single EntityRef),
+    // so couch co-op's second local player also reads their own heals/shields/damage as "me".
+    private static bool IsLocalEntity(EntityRef entity)
+    {
+        return MyLocalPlayer.Instance != null && MyLocalPlayer.Instance.IsLocalEntity(entity);
+    }
+
     private bool TryResolveHealPosition(EventEntityHealed e, out Vector3 worldPosition)
+    {
+        worldPosition = default;
+
+        var frame = e.Game.Frames.Predicted;
+        if (frame == null || frame.Has<Transform3D>(e.Target) == false)
+            return false;
+
+        worldPosition = frame.Get<Transform3D>(e.Target).Position.ToUnityVector3() + worldOffset;
+        return true;
+    }
+
+    // Shield counterpart to OnEntityHealed/TryResolveHealKind/TryResolveHealPosition above - same
+    // shape, same Taken/Dealt/Enemy precedence, just off EventEntityShielded.
+    private void OnEntityShielded(EventEntityShielded e)
+    {
+        if (TryResolveShieldKind(e, out var kind) == false)
+            return;
+
+        if (TryResolveShieldPosition(e, out var worldPosition) == false)
+            return;
+
+        Spawn(kind, e.Amount.AsFloat, worldPosition);
+    }
+
+    // Same "never actually returns false" shape as TryResolveHealKind - see that method's comment.
+    private bool TryResolveShieldKind(EventEntityShielded e, out DamageNumberKind kind)
+    {
+        Frame frame = e.Game.Frames.Predicted;
+        if (frame != null && frame.Has<Enemy>(e.Target) == true)
+        {
+            kind = DamageNumberKind.ShieldedEnemy;
+            return true;
+        }
+
+        if (IsLocalEntity(e.Target))
+        {
+            kind = DamageNumberKind.ShieldedTakenByMe;
+            return true;
+        }
+
+        if (IsLocalEntity(e.Owner))
+        {
+            kind = DamageNumberKind.ShieldedDealtByMe;
+            return true;
+        }
+
+        kind = DamageNumberKind.ShieldedAlly;
+        return true;
+    }
+
+    private bool TryResolveShieldPosition(EventEntityShielded e, out Vector3 worldPosition)
     {
         worldPosition = default;
 

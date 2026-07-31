@@ -34,7 +34,6 @@ namespace Quantum
 
         [Header("Rarity weights")]
         public int CommonWeight = 100;
-        public int UncommonWeight = 50;
         public int RareWeight = 20;
         public int EpicWeight = 5;
         public int LegendaryWeight = 1;
@@ -47,7 +46,6 @@ namespace Quantum
             switch (rarity)
             {
                 case UpgradeRarity.Common: return CommonWeight;
-                case UpgradeRarity.Uncommon: return UncommonWeight;
                 case UpgradeRarity.Rare: return RareWeight;
                 case UpgradeRarity.Epic: return EpicWeight;
                 case UpgradeRarity.Legendary: return LegendaryWeight;

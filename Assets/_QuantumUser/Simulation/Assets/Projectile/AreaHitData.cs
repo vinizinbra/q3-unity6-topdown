@@ -3,10 +3,11 @@ namespace Quantum
     using System.Collections.Generic;
     using Photon.Deterministic;
     using Quantum.Physics3D;
+    using UnityEngine.Serialization;
 
     public unsafe partial class AreaHitData : ProjectileHitData
     {
-        public FP Radius = 3;
+        [FormerlySerializedAs("Radius")] public FP BlastRadius = 3;
 
         // Both preserves the old behavior (every existing AreaHitData asset keeps hitting whatever
         // it always hit) - a player-thrown bomb should be switched to Enemies so its own blast
@@ -57,14 +58,28 @@ namespace Quantum
         // picks it up and it takes the effects exactly once, same as everyone else caught.
         private void Detonate(Frame f, Projectile* projectile, FPVector3 center)
         {
-            FP radius = Radius + ResolveRadiusBonus(f, projectile->Owner);
+            // Bigger Boom (Pixie passive ascension) - scales her bomb's own blast radius the same
+            // way it scales her weapon's explosive procs - see DamageUtility.
+            // ResolvePixieExplosionRadiusMultiplier. No-op (multiplier 1) for every other owner.
+            FP radius = (BlastRadius + ResolveRadiusBonus(f, projectile->Owner))
+                * DamageUtility.ResolvePixieExplosionRadiusMultiplier(f, projectile->Owner);
 
+            // isExplosion: true - a bomb detonation is a genuine area/explosive blast, read by
+            // Pixie's Chain Reaction passive (see MarkExplosiveDeath.RequiresExplosion) to decide
+            // whether this hit is allowed to mark anyone at all.
             HitEffectUtility.ApplyInRadius(f, Effects, center, radius, projectile->Owner,
-                projectile->Damage, projectile->Source, targetMask: TargetMask);
+                projectile->Damage, projectile->Source, targetMask: TargetMask, isExplosion: true);
 
             f.Events.AreaDetonated(projectile->Owner, center, this, radius);
 
-            if (TriggersSpawnUpgrades == true && projectile->SpawnDepth < MaxSpawnUpgradeDepth)
+            // Source == Skill only - ClusterBombUpgrade/FireworksUpgrade are granted Begin-only and
+            // never revoked (see ClusterBombSkillAction/FireworksSkillAction), so they sit on a
+            // Pixie's entity for the rest of the run. Without this gate, any later AreaHitData blast
+            // owned by that same entity - a weapon perk, another hero's AoE, anything - would read
+            // the stale tag and spawn bomblets/fireworks off a hit that has nothing to do with the
+            // bomb that granted it.
+            if (TriggersSpawnUpgrades == true && projectile->Source == DamageSource.Skill
+                && projectile->SpawnDepth < MaxSpawnUpgradeDepth)
             {
                 int childDepth = projectile->SpawnDepth + 1;
                 TrySpawnFireworks(f, projectile->Owner, center, radius, childDepth);
@@ -73,7 +88,7 @@ namespace Quantum
         }
 
         // BlastRadiusUpgrade (see Heroes/Pixie/BombRadiusUpSkillAction) - zero for anyone who
-        // doesn't hold it, so an unmodified bomb detonates at exactly its authored Radius.
+        // doesn't hold it, so an unmodified bomb detonates at exactly its authored BlastRadius.
         private static FP ResolveRadiusBonus(Frame f, EntityRef owner)
         {
             return f.Unsafe.TryGetPointer<BlastRadiusUpgrade>(owner, out var upgrade) == true ? upgrade->RadiusBonus : FP._0;

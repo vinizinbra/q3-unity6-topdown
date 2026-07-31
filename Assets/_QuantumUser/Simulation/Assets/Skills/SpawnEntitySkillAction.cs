@@ -99,7 +99,7 @@ namespace Quantum
             EntityRef spawned = SpawnAt(f, filter.Entity, position);
 
             Align(f, ref filter, slot, spawned);
-            ApplyScale(f, spawned, slot);
+            ApplyScale(f, filter.Entity, spawned, slot);
 
             Log.Debug($"[Skill] {filter.Entity} spawned {spawned} at {position} on {firedPhase}");
         }
@@ -179,9 +179,9 @@ namespace Quantum
         // Folds in slot->AreaMultiplier (see IncreaseAreaSkillAction) on top of the authored Scale,
         // so the zero-component early-out below has to test the combined value, not just Scale - an
         // unscaled (One) spawn still has to grow when a multiplier is active.
-        private void ApplyScale(Frame f, EntityRef spawned, SkillSlot* slot)
+        private void ApplyScale(Frame f, EntityRef owner, EntityRef spawned, SkillSlot* slot)
         {
-            FPVector3 scale = Scale * slot->AreaMultiplier;
+            FPVector3 scale = Scale * slot->AreaMultiplier * StatUtility.GetAreaMultiplier(f, owner);
 
             // A zero component would collapse the collider to nothing, which is never what an author
             // meant - treat an unscaled result as unscaled rather than silently deleting what hurts.

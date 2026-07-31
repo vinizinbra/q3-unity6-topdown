@@ -19,5 +19,7 @@ namespace Quantum
 
             weapon->FireCooldownMultiplier = FPMath.Max(FP._0, weapon->FireCooldownMultiplier / Multiplier);
         }
+
+        protected override object[] DescriptionArgs => new object[] { (Multiplier.AsFloat - 1f) * 100f };
     }
 }

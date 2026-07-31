@@ -44,7 +44,7 @@ namespace Quantum
             alternating->DamageMask = DamageMask;
             CopyEffects(DamageEffects, alternating->DamageEffects);
 
-            ApplyPoisonUpgrade(f, owner, alternating);
+            ApplyVoidUpgrade(f, owner, alternating);
             ApplyHasteUpgrade(f, owner, alternating);
             ApplyKnockbackUpgrade(f, owner, alternating);
         }
@@ -67,17 +67,18 @@ namespace Quantum
             return DamageAmount * (FP._1 + bonus);
         }
 
-        // PoisonDamageWavesUpgrade (see Heroes/Zara/PoisonDamageWavesSkillAction) - baked into this
+        // VoidDamageWavesUpgrade (see Heroes/Zara/VoidDamageWavesSkillAction) - baked into this
         // specific speaker's own DamageEffects once, here at spawn, rather than checked live every
         // pulse. The upgrade's Begin/End only brackets the throw itself, which ends (End revokes it)
         // the instant this speaker is created - long before the speaker's own later pulses would
         // ever see it live. Reading it here, while the throw is still Active, is the only point
         // guaranteed to see it; AlternatingAreaSystem's own per-pulse CopyEffects then carries it
-        // forward automatically for the rest of this speaker's lifetime.
-        private static void ApplyPoisonUpgrade(Frame f, EntityRef owner, AlternatingArea* alternating)
+        // forward automatically for the rest of this speaker's lifetime. Migrated from
+        // ApplyPoisonUpgrade once Poison was removed - see docs/elemental-reactions.md.
+        private static void ApplyVoidUpgrade(Frame f, EntityRef owner, AlternatingArea* alternating)
         {
-            if (f.Unsafe.TryGetPointer<PoisonDamageWavesUpgrade>(owner, out var upgrade) == false
-                || upgrade->PoisonEffect.IsValid == false)
+            if (f.Unsafe.TryGetPointer<VoidDamageWavesUpgrade>(owner, out var upgrade) == false
+                || upgrade->VoidEffect.IsValid == false)
                 return;
 
             for (int i = 0; i < alternating->DamageEffects.Length; i++)
@@ -85,17 +86,17 @@ namespace Quantum
                 if (alternating->DamageEffects[i].IsValid == true)
                     continue;
 
-                alternating->DamageEffects[i] = upgrade->PoisonEffect;
+                alternating->DamageEffects[i] = upgrade->VoidEffect;
 
-                Log.Debug($"[Skill] {owner}'s PoisonDamageWavesUpgrade baked into the spawned speaker's DamageEffects slot {i}");
+                Log.Debug($"[Skill] {owner}'s VoidDamageWavesUpgrade baked into the spawned speaker's DamageEffects slot {i}");
                 return;
             }
 
-            Log.Error($"[Skill] {owner}'s PoisonDamageWavesUpgrade couldn't fit - the spawned speaker's DamageEffects already fills all 4 slots");
+            Log.Error($"[Skill] {owner}'s VoidDamageWavesUpgrade couldn't fit - the spawned speaker's DamageEffects already fills all 4 slots");
         }
 
         // HasteOnHealUpgrade (see Heroes/Zara/HasteOnHealSkillAction) - same bake-once-at-spawn
-        // shape as ApplyPoisonUpgrade above, just appending into HealEffects instead of DamageEffects.
+        // shape as ApplyVoidUpgrade above, just appending into HealEffects instead of DamageEffects.
         private static void ApplyHasteUpgrade(Frame f, EntityRef owner, AlternatingArea* alternating)
         {
             if (f.Unsafe.TryGetPointer<HasteOnHealUpgrade>(owner, out var upgrade) == false
@@ -117,7 +118,7 @@ namespace Quantum
         }
 
         // KnockbackOnDamageUpgrade (see Heroes/Zara/KnockbackOnDamageSkillAction) - same
-        // bake-once-at-spawn shape as ApplyPoisonUpgrade above, into DamageEffects as well - every
+        // bake-once-at-spawn shape as ApplyVoidUpgrade above, into DamageEffects as well - every
         // damage pulse should knock back, not just some of them, so there's nothing conditional to
         // check live the way StunEveryWavesUpgrade needs.
         private static void ApplyKnockbackUpgrade(Frame f, EntityRef owner, AlternatingArea* alternating)

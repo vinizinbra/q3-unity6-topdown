@@ -7,4 +7,50 @@
 component MarkExplosiveDeath
 {
     Byte Stacks;
+
+    // Pixie-only - gates marking to genuine explosive damage only (her bomb, a weapon perk that
+    // procs an explosion, a dash explosion, or a chained blast - see DamageUtility.
+    // TryMarkExplodeOnDeath's own isExplosion/isChainedExplosion/isDashExplosion handling). Defaults
+    // false, so Max's Berserk (the only other grantor, via MarkExplosiveDeathSkillAction, which never
+    // touches this field) still marks on any hit exactly as before this field existed. Pixie's own
+    // passive sets this true.
+    Boolean RequiresExplosion;
+
+    // Pixie-only tier gate for her own Chain Reaction passive. HasTierGate defaults false (the
+    // component's own zero-init), so Max's Berserk (the only other grantor, via
+    // MarkExplosiveDeathSkillAction, which never touches either field) marks every tier exactly as
+    // before this pair existed - Filler (enum value 0) would have silently become the gate otherwise,
+    // which is exactly the regression this boolean avoids. Pixie's own passive sets HasTierGate true
+    // and MaxAffectedTier to Normal (Filler/Normal only); her Heavy Payload ascension raises the
+    // latter to Specialist.
+    //
+    // MaxAffectedTier is a raw EnemyTier ordinal (Byte), not the enum itself - EnemyTier is a plain
+    // C# enum (EnemyDataAsset.cs), never declared through the qtn DSL the way every other enum used
+    // as a component field here is (see DamageSource.qtn/ElementType.qtn/etc.), so the codegen can't
+    // resolve it directly as a field type. Cast at every read/write site instead
+    // ((byte)EnemyTier.Whatever / (EnemyTier)mark->MaxAffectedTier) rather than duplicating/moving
+    // that enum's declaration into the DSL, which would risk the existing, widely-used C# enum.
+    Boolean HasTierGate;
+    Byte MaxAffectedTier;
+
+    // Pixie-only ascensions on the shared death-explosion math (DamageUtility.TryExplodeOnDeath) -
+    // all "no effect" by default (1/1/0/false) so Max's Berserk is completely unaffected by any of
+    // them:
+    FP BonusRadiusMultiplier;      // Bigger Boom
+    FP BonusDamageMultiplier;      // Unstable Mixture
+
+    // Chain Reaction ascension - 0 (off) means a secondary/chained blast (see
+    // DamageUtility.TryExplodeOnDeath's own isChainedExplosion flag) never re-marks anyone it also
+    // catches; above 0, it does, at this fraction of a direct hit's normal mark duration.
+    FP ChainReactionMultiplier;
+
+    // Heavy Payload ascension - multiplies a Specialist+ kill's own death-explosion radius/damage
+    // (on top of BonusRadiusMultiplier/BonusDamageMultiplier above), and also lets that same kill's
+    // death mark itself apply to Specialist+ targets via MaxAffectedTier above.
+    FP HeavyPayloadMultiplier;
+
+    // Volatile Escape ascension - a dash explosion (see isDashExplosion) always marks regardless of
+    // MaxAffectedTier's own gate once true; every other source (weapon, bomb, chained blast) still
+    // respects the gate normally.
+    Boolean VolatileEscapeEnabled;
 }

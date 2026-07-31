@@ -247,6 +247,7 @@ GameObject:
   - component: {fileID: 556848008843235335}
   - component: {fileID: 3019942830606893638}
   - component: {fileID: 6427262625012147780}
+  - component: {fileID: 6427262625012147781}
   - component: {fileID: 2402110534425197261}
   - component: {fileID: 3904531623531352766}
   - component: {fileID: 4444670265600866216}
@@ -477,6 +478,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.HasShadow
   baseScale: 1
+--- !u!114 &6427262625012147781
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3806287295607464640}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8695e93246bca4ab4bbbd94d1e84e678, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Quantum.ProtectorAuraView
+  _playerRef:
+    _index: 0
+  initialized: 0
+  executeOnlyOnLocal: 0
+  isLocal: 0
+  auraParticle: {fileID: 0}
 --- !u!114 &2402110534425197261
 MonoBehaviour:
   m_ObjectHideFlags: 0

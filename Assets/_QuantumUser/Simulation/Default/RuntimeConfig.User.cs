@@ -1,5 +1,7 @@
 ﻿namespace Quantum
 {
+    using Photon.Deterministic;
+
     public partial class RuntimeConfig
     {
         // Which level to generate for this match - like Map/Seed above, this can differ game to
@@ -11,12 +13,17 @@
         // upgrade) - see ExplodeOnDeathConfig and DamageUtility.TryExplodeOnDeath.
         public AssetRef<ExplodeOnDeathConfig> ExplodeOnDeathConfig;
 
-        // Shared balance tuning for every status effect (Burn/Poison/Stun/Slow/Mark/Haste) - see
+        // Shared balance tuning for every status effect (Burn/Stun/Slow/Haste/Intimidate) - see
         // EffectConfig, the matching EffectData classes, StatusEffectUtility.TryApplyElementalStatus
         // and SentryAuraSystem.
         public AssetRef<EffectConfig> EffectConfig;
 
-        // Per-EnemyTier resistance multipliers for stun/root/slow/burn/poison/mark/knockback - see
+        // Balance tuning for the 6 elemental reactions (Explosion/Freeze/Knockback/Magma
+        // Prison/Stun/Break) - see ElementalReactionConfig and
+        // StatusEffectUtility.TryApplyElementalStatus/docs/elemental-reactions.md.
+        public AssetRef<ElementalReactionConfig> ElementalReactionConfig;
+
+        // Per-EnemyTier resistance multipliers for stun/root/slow/burn/break/knockback - see
         // EnemyTierResistanceConfig, StatusEffectUtility.GetTierResistance and
         // DamageUtility.ResolveKnockbackScale.
         public AssetRef<EnemyTierResistanceConfig> EnemyTierResistanceConfig;
@@ -44,5 +51,20 @@
         // Tuning for the level-up upgrade-choice screen (decision time, choice count, the two
         // globally-pooled kinds) - see LevelUpConfig, LevelUpUtility and LevelUpSystem.
         public AssetRef<LevelUpConfig> LevelUpConfig;
+
+        // Balance tuning for Lux's Scrap pickup (Scrap Collector passive) - see ScrapConfig and
+        // ScrapUtility/ScrapOrbSystem.
+        public AssetRef<ScrapConfig> ScrapConfig;
+
+        // The pickup entity ScrapUtility.TrySpawnDrop spawns on an eligible enemy kill - see
+        // ScrapOrb.qtn.
+        public AssetRef<EntityPrototype> ScrapOrbPrototype;
+
+        // Debug-only knobs for testing low-health/no-shield scenarios without re-authoring
+        // CharacterData - scale only CurrentHealth/CurrentShield at initial spawn, leaving
+        // MaxHealth/MaxShield untouched, see CharacterSystem.SeedHealth/SeedShield.
+        // FP._1 is a no-op, matching normal behaviour.
+        public FP DebugInitialHealthMultiplier = FP._1;
+        public FP DebugInitialShieldMultiplier = FP._1;
     }
 }

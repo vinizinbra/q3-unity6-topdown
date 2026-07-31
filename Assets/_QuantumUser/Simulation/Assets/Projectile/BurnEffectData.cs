@@ -25,6 +25,10 @@ namespace Quantum
                 config.BurnDamagePercent, config.BurnFloorPercent, config.BurnDuration, config.TickInterval);
 
             StatusEffectUtility.ApplyBurn(f, context.Target, duration, damagePerTick, context.Owner, context.Source, config.TickInterval);
+
+            // Directly-authored Burn (not the weapon-elemental-proc path) still needs to participate
+            // in the elemental reaction scan - see StatusEffectUtility.TryTriggerReactions.
+            StatusEffectUtility.TryTriggerReactions(f, context.Target, context.Owner, context.Source, ElementType.Fire, context.Damage);
         }
     }
 }

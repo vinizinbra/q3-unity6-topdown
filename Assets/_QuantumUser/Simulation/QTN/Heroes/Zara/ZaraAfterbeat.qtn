@@ -1,0 +1,14 @@
+// Dash Ascension (Afterbeat) - added by AfterbeatSkillAction.Begin when Zara's dash starts, ticked
+// down by ZaraAfterbeatSystem. Stores the delayed pulse's own position/damage/radius directly on
+// Zara's own entity rather than spawning a separate marker entity - simpler than the other heroes'
+// "needs a standalone EntityPrototype authored by hand" dash ascensions (Kai's SlowArea, Lux's
+// Decoy Beacon, Brute's Barricade, Pixie's Bombs Away), since this needs no physical/visual
+// representation of its own, just a countdown. A second dash before the first Afterbeat fires
+// simply overwrites the pending one - only the most recent dash's Afterbeat ever lands.
+component ZaraAfterbeat
+{
+    FP Remaining;
+    FPVector3 Position;
+    FP Damage;
+    FP Radius;
+}

@@ -117,11 +117,23 @@ Shader "Sprites/SpriteColorise"
                 coloriseHsl.z = sourceLightness;
                 half3 colorised = HslToRgb(coloriseHsl);
 
-                // SpriteRenderer.color.a controls the complete effect:
-                // 0 = original sprite, 0.5 = colorized, 1 = fully lightened.
-                half3 outputColor = i.color.a <= 0.5h
-                    ? lerp(texColor.rgb, colorised, i.color.a * 2.0h)
-                    : lerp(colorised, half3(1.0h, 1.0h, 1.0h), (i.color.a - 0.5h) * 2.0h);
+                // SpriteRenderer.color.a moves through four intensity levels:
+                // 0 = original, 1/3 = tonal colorize, 2/3 = solid-color overlay, 1 = white.
+                half strength = saturate(i.color.a);
+                half3 outputColor;
+
+                if (strength <= 1.0h / 3.0h)
+                {
+                    outputColor = lerp(texColor.rgb, colorised, strength * 3.0h);
+                }
+                else if (strength <= 2.0h / 3.0h)
+                {
+                    outputColor = lerp(colorised, i.color.rgb, (strength - 1.0h / 3.0h) * 3.0h);
+                }
+                else
+                {
+                    outputColor = lerp(i.color.rgb, half3(1.0h, 1.0h, 1.0h), (strength - 2.0h / 3.0h) * 3.0h);
+                }
 
                 return half4(outputColor, texColor.a);
             }

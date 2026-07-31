@@ -16,9 +16,68 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapon/WeaponPerk/WeaponPerkPoolData
     Guid:
       Value: 274665352178253875
-  Perks: []
+  Perks:
+  - Id:
+      Value: 401600444918086180
+  - Id:
+      Value: 502682413085804085
+  - Id:
+      Value: 504272276944233190
+  - Id:
+      Value: 427983149550015854
+  - Id:
+      Value: 345316708933131668
+  - Id:
+      Value: 353269447177605751
+  - Id:
+      Value: 278805214816823798
+  - Id:
+      Value: 485799689735595026
+  - Id:
+      Value: 456316048361573836
+  - Id:
+      Value: 420829169343257683
+  - Id:
+      Value: 452779746857446377
+  - Id:
+      Value: 410077869205496657
+  - Id:
+      Value: 375097789155564651
+  - Id:
+      Value: 309906799217660589
+  - Id:
+      Value: 511442117593394302
+  - Id:
+      Value: 412418293922873780
+  - Id:
+      Value: 291189915456134934
+  - Id:
+      Value: 492307963213126171
+  - Id:
+      Value: 336917286344424812
+  - Id:
+      Value: 311199697939096361
+  - Id:
+      Value: 460045808380559555
+  - Id:
+      Value: 304155948433359418
+  - Id:
+      Value: 435382047734290004
+  - Id:
+      Value: 277574942251946638
+  - Id:
+      Value: 403673336391302759
+  - Id:
+      Value: 330234426950999633
+  - Id:
+      Value: 413249485350196850
+  - Id:
+      Value: 428002282059014817
+  - Id:
+      Value: 418014237698802465
+  - Id:
+      Value: 308062823772408145
   CommonWeight: 100
-  UncommonWeight: 50
   RareWeight: 20
   EpicWeight: 5
   LegendaryWeight: 1

@@ -12,6 +12,9 @@ namespace Quantum
         [Header("Core")]
         public FP BaseMaxHealth = 100;
 
+        [Tooltip("Flat HP/sec regenerated while below max. 0 for most heroes - raised by HealthRegenUpgradeData level-up grants, not meant as a large baseline.")]
+        public FP BaseHealthRegenRate = FP._0;
+
         [Tooltip("Scales MovementDataAsset's WalkSpeed/RunSpeed, which are shared across all characters.")]
         public FP MoveSpeedMultiplier = FP._1;
 
@@ -40,7 +43,8 @@ namespace Quantum
         public FP ProjectileSpeedMultiplier = FP._1;
         public FP AreaRadiusMultiplier = FP._1;
 
-        public FP CooldownMultiplier = FP._1;
+        public FP DashCooldownMultiplier = FP._1;
+        public FP SkillCooldownMultiplier = FP._1;
 
         [Tooltip("Scales how long a skill's spawned effects last - a decoy, a fire trail.")]
         public FP SkillDurationMultiplier = FP._1;
@@ -62,6 +66,7 @@ namespace Quantum
         [Header("Utility")]
         public FP PickupRangeMultiplier = FP._1;
         public FP Luck = FP._0;
+        public FP ExperienceGainMultiplier = FP._1;
 
         [Header("View")]
         [Tooltip("Tint for the local player's ground ring/glow/movement-arrow (see MovementRingView) - lets each hero's \"this is you\" marker read as their own color.")]

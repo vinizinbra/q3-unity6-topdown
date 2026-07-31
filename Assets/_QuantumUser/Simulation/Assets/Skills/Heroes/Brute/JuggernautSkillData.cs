@@ -372,7 +372,6 @@ namespace Quantum
 
             // Only looked up/resolved once per discharge, not per target - neither changes target to
             // target.
-            bool hasMarkEffect = f.Unsafe.TryGetPointer<JuggernautMarkUpgrade>(owner, out var mark) == true && mark->MarkEffect.IsValid == true;
             FP knockbackMultiplier = ResolveKnockbackMultiplier(f, owner);
             FP force = KnockbackForce * knockbackMultiplier;
             FP upwardForce = KnockbackUpwardForce * knockbackMultiplier;
@@ -393,7 +392,7 @@ namespace Quantum
                 if (f.Has<JuggernautDischargeCooldown>(target) == true)
                     continue;
 
-                if (f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == false)
+                if (f.Has<Transform3D>(target) == false)
                     continue;
 
                 DamageUtility.ApplyKnockbackImpulse(f, target, impulse, owner);
@@ -407,24 +406,6 @@ namespace Quantum
 
                 f.AddOrGet<JuggernautDischargeCooldown>(target, out var cooldown);
                 cooldown->Remaining = DischargeCooldownPerEnemy;
-
-                // JuggernautMarkUpgrade - only enemies actually launched by this discharge (not ones
-                // skipped above for being on cooldown) get marked.
-                if (hasMarkEffect == true)
-                {
-                    HitEffectContext markContext = new HitEffectContext
-                    {
-                        Owner = owner,
-                        Target = target,
-                        Position = targetTransform->Position,
-                        PushDirection = impulse,
-                        Damage = FP._0,
-                        Source = DamageSource.Skill,
-                        Element = ElementType.Neutral
-                    };
-
-                    f.FindAsset(mark->MarkEffect).Apply(f, ref markContext);
-                }
 
                 // JuggernautLandingImpactUpgrade/JuggernautLandingRootUpgrade - baked onto the target
                 // itself (not tracked on Brutus) so JuggernautLandingImpactSystem can resolve

@@ -48,14 +48,18 @@ namespace Quantum {
       float x = (UnityEngine.Input.GetKey(UnityEngine.KeyCode.RightArrow) ? 1f : 0f) - (UnityEngine.Input.GetKey(UnityEngine.KeyCode.LeftArrow) ? 1f : 0f);
       float y = (UnityEngine.Input.GetKey(UnityEngine.KeyCode.UpArrow) ? 1f : 0f) - (UnityEngine.Input.GetKey(UnityEngine.KeyCode.DownArrow) ? 1f : 0f);
       bool dash = UnityEngine.Input.GetKey(UnityEngine.KeyCode.Keypad0);
+      bool jump = UnityEngine.Input.GetKey(UnityEngine.KeyCode.RightControl);
       bool fire = UnityEngine.Input.GetKey(UnityEngine.KeyCode.Keypad1);
+      bool switchTarget = UnityEngine.Input.GetKey(UnityEngine.KeyCode.KeypadEnter);
       bool skill2 = UnityEngine.Input.GetKey(UnityEngine.KeyCode.Keypad2);
 
       i.Direction = new FPVector2(x.ToFP(), y.ToFP());
       // Same Run/DashSkill sharing as player one, mapped to the dash key instead of Shift.
       i.Run = dash;
       i.DashSkill = dash;
+      i.Jump = jump;
       i.Fire = fire;
+      i.SwitchTarget = switchTarget;
       i.HeroSkill = skill2;
 
       return i;

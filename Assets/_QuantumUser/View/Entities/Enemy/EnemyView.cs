@@ -6,7 +6,7 @@ namespace Quantum
 {
     public class EnemyView : CustomQuantumEntityViewComponent
     {
-        [SerializeField, Tooltip("Where EnemyDataAsset.ViewPrefab is instantiated as a child - just an anchor point on the generic entity's view. The prefab brings its own EnemyViewRig; EnemyBlobAnimationView/EnemyArmAimView/EnemyAttackVisualsView live here on the generic prototype instead and get that rig handed to them once it's instantiated (see SpawnSprite).")]
+        [SerializeField, Tooltip("Where EnemyDataAsset.ViewPrefab is instantiated as a child - just an anchor point on the generic entity's view. The prefab brings its own EnemyViewRig; EnemyBlobAnimationView/EnemyArmAimView/EnemyAttackVisualsView/HitFeedback live here on the generic prototype instead and get that rig handed to them once it's instantiated (see SpawnSprite).")]
         private Transform spriteRoot;
 
         // Tracked so DeInitialize can release the exact pooled instance/prefab pair back to
@@ -136,9 +136,9 @@ namespace Quantum
             return targetDiameter / unscaledWidth;
         }
 
-        // EnemyBlobAnimationView/EnemyArmAimView/EnemyAttackVisualsView live on this generic
-        // prototype (shared across enemy types), not on ViewPrefab itself - so unlike a normal
-        // sibling reference, their rig can't be wired in the Inspector; it only exists once
+        // EnemyBlobAnimationView/EnemyArmAimView/EnemyAttackVisualsView/HitFeedback live on this
+        // generic prototype (shared across enemy types), not on ViewPrefab itself - so unlike a
+        // normal sibling reference, their rig can't be wired in the Inspector; it only exists once
         // ViewPrefab is instantiated above, so it's handed to each sibling here instead.
         private void ConnectRig(EnemyViewRig rig)
         {
@@ -153,6 +153,10 @@ namespace Quantum
             EnemyAttackVisualsView attackVisualsView = GetComponent<EnemyAttackVisualsView>();
             if (attackVisualsView != null)
                 attackVisualsView.SetRig(rig);
+
+            HitFeedback hitFeedback = GetComponent<HitFeedback>();
+            if (hitFeedback != null)
+                hitFeedback.SetRig(rig);
         }
 
         public override void DeInitialize(QuantumGame game)

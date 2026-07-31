@@ -12,7 +12,9 @@ namespace QuantumUser.View.Managers
     // held/pooled instance (EffectsManager.GetHeldInstance/ReleaseHeldInstance) per (entity, status)
     // pair for as long as StatusEffectUtility reports that status active, repositioned/rescaled to
     // the entity's live collider every frame (see EnemyMovementUtility.ResolveEntityCenter/
-    // ResolveEntityRadius). An instance is released the instant it's no longer seen active in a
+    // ResolveEntityRadius), offset per status type by that status's own [x]Offset field so effects
+    // that would otherwise stack exactly on top of each other (e.g. stun above the head, burn at
+    // the feet) can be spread out. An instance is released the instant it's no longer seen active in a
     // frame's filter pass - that covers both a status naturally expiring/being healed AND the
     // entity itself disappearing from the filter entirely (death, disconnect), since both look
     // identical here: "not seen this frame". Works for any entity with StatusEffects, not just
@@ -23,29 +25,69 @@ namespace QuantumUser.View.Managers
 
         [SerializeField, Tooltip("StatusEffects.BurnRemaining - see StatusEffectUtility.IsBurning.")]
         private ParticleSystem burnParticlePrefab;
-        [SerializeField, Tooltip("StatusEffects.PoisonRemaining[] - see StatusEffectUtility.IsPoisoned. Active while any of the 5 stacks is running, regardless of stack count.")]
-        private ParticleSystem poisonParticlePrefab;
+        [SerializeField, Tooltip("Local offset from the entity center, in reference-diameter-1 units (scaled by the entity's own scale, same convention as the prefab itself).")]
+        private Vector3 burnOffset;
+
+        [SerializeField, Tooltip("StatusEffects.VoidRemaining - see StatusEffectUtility.IsVoided. Void's own visible tell - it does nothing by itself, but this shows a target has been primed for whichever elemental reaction lands next.")]
+        private ParticleSystem voidParticlePrefab;
+        [SerializeField, Tooltip("Local offset from the entity center, in reference-diameter-1 units (scaled by the entity's own scale, same convention as the prefab itself).")]
+        private Vector3 voidOffset;
+
         [SerializeField, Tooltip("StatusEffects.IceRemaining (slow) - see StatusEffectUtility.IsSlowed.")]
         private ParticleSystem slowParticlePrefab;
+        [SerializeField, Tooltip("Local offset from the entity center, in reference-diameter-1 units (scaled by the entity's own scale, same convention as the prefab itself).")]
+        private Vector3 slowOffset;
+
+        [SerializeField, Tooltip("StatusEffects.AnticipationSlowRemaining - see StatusEffectUtility.IsAnticipationSlowed. Void+Ice's Freeze reaction - stretches attack windups, not a lockout, so it's separate from Stun. See docs/elemental-reactions.md.")]
+        private ParticleSystem freezeParticlePrefab;
+        [SerializeField, Tooltip("Local offset from the entity center, in reference-diameter-1 units (scaled by the entity's own scale, same convention as the prefab itself).")]
+        private Vector3 freezeOffset;
+
         [SerializeField, Tooltip("StatusEffects.StunRemaining - see StatusEffectUtility.IsStunned.")]
         private ParticleSystem stunParticlePrefab;
-        [SerializeField, Tooltip("StatusEffects.RootRemaining - see StatusEffectUtility.IsRooted. EffectsManager already plays a one-shot burst on Root application (OnEntityRooted); this is an additional held effect for the rooted duration itself, leave unassigned to skip it.")]
+        [SerializeField, Tooltip("Local offset from the entity center, in reference-diameter-1 units (scaled by the entity's own scale, same convention as the prefab itself).")]
+        private Vector3 stunOffset;
+
+        [SerializeField, Tooltip("StatusEffects.RootRemaining - see StatusEffectUtility.IsRooted.")]
         private ParticleSystem rootParticlePrefab;
-        [SerializeField, Tooltip("StatusEffects.MarkRemaining - see StatusEffectUtility.HasMarkDebuff.")]
-        private ParticleSystem markParticlePrefab;
+        [SerializeField, Tooltip("Local offset from the entity center, in reference-diameter-1 units (scaled by the entity's own scale, same convention as the prefab itself).")]
+        private Vector3 rootOffset;
+
+        [SerializeField, Tooltip("StatusEffects.BreakRemaining - see StatusEffectUtility.HasBreakDebuff.")]
+        private ParticleSystem breakParticlePrefab;
+        [SerializeField, Tooltip("Local offset from the entity center, in reference-diameter-1 units (scaled by the entity's own scale, same convention as the prefab itself).")]
+        private Vector3 breakOffset;
+
+        [SerializeField, Tooltip("StatusEffects.IntimidateRemaining - see StatusEffectUtility.IsIntimidated. Applied to enemies by Brute's Protector Aura.")]
+        private ParticleSystem intimidateParticlePrefab;
+        [SerializeField, Tooltip("Local offset from the entity center, in reference-diameter-1 units (scaled by the entity's own scale, same convention as the prefab itself).")]
+        private Vector3 intimidateOffset;
+
         [SerializeField, Tooltip("StatusEffects.HasteRemaining[] - see StatusEffectUtility.HasHasteBuff. Active while any of the 4 source slots is running.")]
         private ParticleSystem hasteParticlePrefab;
+        [SerializeField, Tooltip("Local offset from the entity center, in reference-diameter-1 units (scaled by the entity's own scale, same convention as the prefab itself).")]
+        private Vector3 hasteOffset;
+
         [SerializeField, Tooltip("StatusEffects.ShieldRegenRemaining - see StatusEffectUtility.HasShieldRegenBuff.")]
         private ParticleSystem shieldRegenParticlePrefab;
+        [SerializeField, Tooltip("Local offset from the entity center, in reference-diameter-1 units (scaled by the entity's own scale, same convention as the prefab itself).")]
+        private Vector3 shieldRegenOffset;
+
+        [SerializeField, Tooltip("ExplodeOnDeath presence (see ExplodeOnDeath.qtn/DamageUtility.TryMarkExplodeOnDeath) - not a StatusEffects field, so it's driven by its own frame.Filter<ExplodeOnDeath>() pass below rather than the StatusEffects loop above. Shows on any enemy currently primed to blow up on death, regardless of which hero's upgrade (Max's Berserk or Pixie's bomb) marked it.")]
+        private ParticleSystem explodeMarkParticlePrefab;
+        [SerializeField, Tooltip("Local offset from the entity center, in reference-diameter-1 units (scaled by the entity's own scale, same convention as the prefab itself).")]
+        private Vector3 explodeMarkOffset;
 
         private readonly StatusSlotTracker _burn = new();
-        private readonly StatusSlotTracker _poison = new();
+        private readonly StatusSlotTracker _void = new();
         private readonly StatusSlotTracker _slow = new();
+        private readonly StatusSlotTracker _freeze = new();
         private readonly StatusSlotTracker _stun = new();
         private readonly StatusSlotTracker _root = new();
-        private readonly StatusSlotTracker _mark = new();
+        private readonly StatusSlotTracker _break = new();
         private readonly StatusSlotTracker _haste = new();
         private readonly StatusSlotTracker _shieldRegen = new();
+        private readonly StatusSlotTracker _explodeMark = new();
 
         private void Awake()
         {
@@ -70,40 +112,54 @@ namespace QuantumUser.View.Managers
             while (filtered.Next(out EntityRef entity, out StatusEffects _))
             {
                 Vector3 center = EnemyMovementUtility.ResolveEntityCenter(frame, entity).ToUnityVector3();
-                // Prefabs are authored at a reference diameter of 1 (radius 0.5), same convention as
-                // EffectsManager.OnEntityRooted, so this scales by the full diameter.
+                // Prefabs are authored at a reference diameter of 1 (radius 0.5), so this scales by
+                // the full diameter, not just the radius.
                 float scale = EnemyMovementUtility.ResolveEntityRadius(frame, entity).AsFloat * 2f;
 
-                _burn.Update(burnParticlePrefab, entity, StatusEffectUtility.IsBurning(frame, entity), center, scale);
-                _poison.Update(poisonParticlePrefab, entity, StatusEffectUtility.IsPoisoned(frame, entity), center, scale);
-                _slow.Update(slowParticlePrefab, entity, StatusEffectUtility.IsSlowed(frame, entity), center, scale);
-                _stun.Update(stunParticlePrefab, entity, StatusEffectUtility.IsStunned(frame, entity), center, scale);
-                _root.Update(rootParticlePrefab, entity, StatusEffectUtility.IsRooted(frame, entity), center, scale);
-                _mark.Update(markParticlePrefab, entity, StatusEffectUtility.HasMarkDebuff(frame, entity), center, scale);
-                _haste.Update(hasteParticlePrefab, entity, StatusEffectUtility.HasHasteBuff(frame, entity), center, scale);
-                _shieldRegen.Update(shieldRegenParticlePrefab, entity, StatusEffectUtility.HasShieldRegenBuff(frame, entity), center, scale);
+                _burn.Update(burnParticlePrefab, entity, StatusEffectUtility.IsBurning(frame, entity), center, scale, burnOffset);
+                _void.Update(voidParticlePrefab, entity, StatusEffectUtility.IsVoided(frame, entity), center, scale, voidOffset);
+                _slow.Update(slowParticlePrefab, entity, StatusEffectUtility.IsSlowed(frame, entity), center, scale, slowOffset);
+                _freeze.Update(freezeParticlePrefab, entity, StatusEffectUtility.IsAnticipationSlowed(frame, entity), center, scale, freezeOffset);
+                _stun.Update(stunParticlePrefab, entity, StatusEffectUtility.IsStunned(frame, entity), center, scale, stunOffset);
+                _root.Update(rootParticlePrefab, entity, StatusEffectUtility.IsRooted(frame, entity), center, scale, rootOffset);
+                _break.Update(breakParticlePrefab, entity, StatusEffectUtility.HasBreakDebuff(frame, entity), center, scale, breakOffset);
+                _haste.Update(hasteParticlePrefab, entity, StatusEffectUtility.HasHasteBuff(frame, entity), center, scale, hasteOffset);
+                _shieldRegen.Update(shieldRegenParticlePrefab, entity, StatusEffectUtility.HasShieldRegenBuff(frame, entity), center, scale, shieldRegenOffset);
+            }
+
+            // Separate pass - ExplodeOnDeath isn't a StatusEffects field, so it isn't caught by the
+            // filter above.
+            var explodeMarked = frame.Filter<ExplodeOnDeath>();
+            while (explodeMarked.Next(out EntityRef entity, out ExplodeOnDeath _))
+            {
+                Vector3 center = EnemyMovementUtility.ResolveEntityCenter(frame, entity).ToUnityVector3();
+                float scale = EnemyMovementUtility.ResolveEntityRadius(frame, entity).AsFloat * 2f;
+
+                _explodeMark.Update(explodeMarkParticlePrefab, entity, true, center, scale, explodeMarkOffset);
             }
 
             _burn.EndFrame(burnParticlePrefab);
-            _poison.EndFrame(poisonParticlePrefab);
+            _void.EndFrame(voidParticlePrefab);
             _slow.EndFrame(slowParticlePrefab);
+            _freeze.EndFrame(freezeParticlePrefab);
             _stun.EndFrame(stunParticlePrefab);
             _root.EndFrame(rootParticlePrefab);
-            _mark.EndFrame(markParticlePrefab);
+            _break.EndFrame(breakParticlePrefab);
             _haste.EndFrame(hasteParticlePrefab);
             _shieldRegen.EndFrame(shieldRegenParticlePrefab);
+            _explodeMark.EndFrame(explodeMarkParticlePrefab);
         }
 
         // One tracker per status type - owns the held/pooled instance for every entity currently
         // showing that status. Kept as a plain nested class (not a shared static helper) so each
-        // status's instances/bookkeeping stay independent even though all 8 share this exact shape.
+        // status's instances/bookkeeping stay independent even though all 9 share this exact shape.
         private class StatusSlotTracker
         {
             private readonly Dictionary<EntityRef, ParticleSystem> _instances = new();
             private readonly HashSet<EntityRef> _seenThisFrame = new();
             private List<EntityRef> _staleBuffer;
 
-            public void Update(ParticleSystem prefab, EntityRef entity, bool active, Vector3 center, float scale)
+            public void Update(ParticleSystem prefab, EntityRef entity, bool active, Vector3 center, float scale, Vector3 offset)
             {
                 if (active == false)
                     return;
@@ -119,7 +175,7 @@ namespace QuantumUser.View.Managers
 
                 if (instance != null)
                 {
-                    instance.transform.SetPositionAndRotation(center, Quaternion.identity);
+                    instance.transform.SetPositionAndRotation(center + offset * scale, Quaternion.identity);
                     instance.transform.localScale = Vector3.one * scale;
                 }
             }

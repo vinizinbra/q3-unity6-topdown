@@ -1,0 +1,14 @@
+// Generic combat signals consumed by weapon-perk reactions (WeaponPerkReactionSystem) - separate
+// from Enemy.qtn's own OnEnemyDied/OnEnemyKnockedBack since those are Enemy-specific and don't
+// carry an owner. Dispatched from DamageUtility.ApplyDamage; source lets a consumer ignore a
+// kill/crit/hit that didn't come from a weapon (a skill, an environment hazard) without a second
+// lookup.
+
+signal OnEntityKilled(EntityRef target, EntityRef owner, DamageSource source);
+
+signal OnCriticalHit(EntityRef target, EntityRef owner, FP damage, DamageSource source);
+
+// Fired on every landed hit (not just a kill or a crit) whose source is a weapon - what actually
+// advances Weapon's shared ramp pool (RampStacks, see Weapon.qtn) for Suppressive Cycle/Overcharge
+// Cycle/Relentless Fire.
+signal OnWeaponHitLanded(EntityRef owner);

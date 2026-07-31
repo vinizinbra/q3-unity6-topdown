@@ -5,30 +5,45 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// Fixed HUD element for the local player's cooldown on one CharacterSkills slot - which slot is
-// picked via the slot field below rather than a separate class per slot, since DashSkill and
-// HeroSkill need identical display logic. Unlike CharacterUiWidget there's only ever one local
-// player per client, so this binds itself once via MyLocalPlayer.AddOnLocalPlayerSetup instead of
-// being spawned per-entity by a manager.
+// Fixed HUD element for a player's cooldown on one CharacterSkills slot - which slot is picked via
+// the slot field below rather than a separate class per slot, since DashSkill and HeroSkill need
+// identical display logic. By default self-binds to local slot 0 (player 1) in Start(), same as
+// before couch co-op existed, so the player's own HUD cluster keeps working with zero scene wiring
+// even with a second local player joined. Set autoBindLocalPlayerOne off for instances that are
+// bound externally instead (e.g. one slot of the always-visible party HUD, pushed an
+// arbitrary match player's EntityRef by PartyHudManager).
 public class SkillCooldownUiWidget : QuantumGlobalMonoBehaviour
 {
     [SerializeField] private SkillSlotId slot = SkillSlotId.DashSkill;
 
-    [SerializeField] private Image fillImage;
-    [SerializeField] private TMP_Text stacksText;
+    [SerializeField, Tooltip("All driven identically - same shown state, same fillAmount every frame. Lets the cooldown wipe be built from more than one Image (e.g. layered/mirrored graphics) without any different-role logic.")]
+    private Image[] fillImages;
     [SerializeField, Tooltip("Optional - shows SkillData.Icon for whichever skill is currently equipped in this slot. Left unassigned, this feature is simply off.")]
     private Image iconImage;
+    [SerializeField, Tooltip("Optional - current charge count (SkillSlot.CurrentStacks). Left unassigned, this feature is simply off.")]
+    private TMP_Text chargeText;
+
+    [SerializeField, Tooltip("On: binds itself to local slot 0 (player 1) automatically. Off: stays unbound until something else calls Initialize (e.g. the party HUD).")]
+    private bool autoBindLocalPlayerOne = true;
 
     [SerializeField] private EntityRef _entityRef;
 
     private void Start()
     {
-        MyLocalPlayer.Instance.AddOnLocalPlayerSetup(OnLocalPlayerSetup);
+        if (autoBindLocalPlayerOne)
+            MyLocalPlayer.Instance.BindToSlot(0, Initialize);
     }
 
-    private void OnLocalPlayerSetup(EntityRef entityRef)
+    public void Initialize(EntityRef entityRef)
     {
         _entityRef = entityRef;
+    }
+
+    // Called by PartyHudWidget on every widget it owns, so an externally-driven slot
+    // never fights its own children's default self-binding - see the class comment above.
+    public void DisableAutoBind()
+    {
+        autoBindLocalPlayerOne = false;
     }
 
     public override void QStart(QuantumGame game)
@@ -59,14 +74,14 @@ public class SkillCooldownUiWidget : QuantumGlobalMonoBehaviour
     // ready - a fully-available skill has no cooldown left to show.
     private void UpdateFill(Frame frame, SkillSlot skillSlot)
     {
-        UpdateStacksText(skillSlot);
+        UpdateChargeText(skillSlot);
 
-        if (fillImage == null)
+        if (fillImages == null || fillImages.Length == 0)
             return;
 
         if (skillSlot.Skill == default || skillSlot.CurrentStacks >= skillSlot.MaxStacks)
         {
-            SetShown(fillImage, false);
+            SetShown(fillImages, false);
             return;
         }
 
@@ -74,18 +89,22 @@ public class SkillCooldownUiWidget : QuantumGlobalMonoBehaviour
 
         if (skillData.Cooldown <= FP._0)
         {
-            SetShown(fillImage, false);
+            SetShown(fillImages, false);
             return;
         }
 
-        SetShown(fillImage, true);
-        fillImage.fillAmount = (skillSlot.CooldownTimer / skillData.Cooldown).AsFloat;
+        SetShown(fillImages, true);
+
+        float fillAmount = (skillSlot.CooldownTimer / skillData.Cooldown).AsFloat;
+
+        foreach (Image fillImage in fillImages)
+            fillImage.fillAmount = fillAmount;
     }
 
-    private void UpdateStacksText(SkillSlot skillSlot)
+    private void UpdateChargeText(SkillSlot skillSlot)
     {
-        if (stacksText != null)
-            stacksText.text = $"{skillSlot.CurrentStacks}/{skillSlot.MaxStacks}";
+        if (chargeText != null)
+            chargeText.text = skillSlot.CurrentStacks.ToString();
     }
 
     private void UpdateIcon(Frame frame, SkillSlot skillSlot)
@@ -104,5 +123,11 @@ public class SkillCooldownUiWidget : QuantumGlobalMonoBehaviour
     {
         if (image.gameObject.activeSelf != shown)
             image.gameObject.SetActive(shown);
+    }
+
+    private static void SetShown(Image[] images, bool shown)
+    {
+        foreach (Image image in images)
+            SetShown(image, shown);
     }
 }

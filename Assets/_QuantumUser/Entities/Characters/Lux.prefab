@@ -1063,9 +1063,9 @@ MonoBehaviour:
       RawValue: 0
     RootRemaining:
       RawValue: 0
-    MarkRemaining:
+    BreakRemaining:
       RawValue: 0
-    MarkDamageMultiplier:
+    BreakDamageMultiplier:
       RawValue: 0
     HasteRemaining:
     - RawValue: 0

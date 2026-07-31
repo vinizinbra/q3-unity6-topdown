@@ -11,16 +11,15 @@ namespace Quantum
         public FP RootDurationMultiplier = FP._1;
         public FP SlowDurationMultiplier = FP._1;
         public FP BurnDamageMultiplier = FP._1;
-        public FP PoisonDamageMultiplier = FP._1;
-        public FP MarkDurationMultiplier = FP._1;
+        public FP BreakDurationMultiplier = FP._1;
     }
 
     // Global per-tier tuning for how much of each status effect actually lands on an enemy -
     // referenced via RuntimeConfig.EnemyTierResistanceConfig, read by
     // StatusEffectUtility.GetTierResistance/DamageUtility.ResolveKnockbackScale. Filler/Normal are
     // meant to stay all-1s (unresisted); Specialist/Elite/Boss taper hard CC (Knockback/Stun/Root/Slow)
-    // while Burn/Poison/Mark are expected to stay near 1 so DoT-based builds don't go dead against
-    // tougher enemies.
+    // while Burn/Break are expected to stay near 1 so DoT-based builds don't go dead against tougher
+    // enemies.
     public class EnemyTierResistanceConfig : AssetObject
     {
         public TierStatusResistance Filler = new TierStatusResistance();

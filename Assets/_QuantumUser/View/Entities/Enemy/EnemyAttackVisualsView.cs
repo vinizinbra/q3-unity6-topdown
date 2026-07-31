@@ -622,7 +622,7 @@ namespace Quantum
                 // LeapDeliveryData to their own dash/jump time) - TelegraphFade falls back to the
                 // hand-tuned GrowthDuration only if this comes back <= 0.
                 float growDuration = enemy.StateTimer.AsFloat > 0f ? enemy.StateTimer.AsFloat : telegraph.GrowthDuration;
-                fade.Initialize(prefab, telegraph.FadeInDuration, telegraph.FadeOutDuration, growDuration);
+                fade.Initialize(prefab, telegraph.FadeInDuration, telegraph.FadeOutDuration, growDuration, _entityRef);
             }
 
             _currentTelegraph = instance;

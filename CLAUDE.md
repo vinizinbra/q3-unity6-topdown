@@ -24,17 +24,24 @@ Short version: the code compiles and `LevelUpSystem` is registered, but no `Leve
 
 `WeaponPerkData` is the roguelite modifier a weapon drop (`WeaponGenerator`) or a level-up pick (see
 "Level-Up Upgrades" above) can grant - it bakes its effect once into `Weapon`'s own fields at equip
-time (`WeaponSystem.Equip`/`AddPerk`), never re-applied per tick. Full design, the current 5-perk
-roster vs. the larger ~35-perk target list under discussion, and a feasibility breakdown of what
-each tier needs to actually get built: **`docs/weapon-perks.md`**. Read it before adding or
-authoring anything perk-related.
+time (`WeaponSystem.Equip`/`AddPerk`), never re-applied per tick. The full ~35-perk roster is now
+implemented as code (a shared ramp pool for the 3 "keep firing" perks, two new combat signals for
+on-kill/on-crit reactions, and `DirectHitData` hooks for post-impact perks like Ricochet/Split
+Shot/Quantum Rounds). Full design, the complete roster-to-class mapping, and current status:
+**`docs/weapon-perks.md`**. Read it before adding or authoring anything perk-related.
 
-Short version: only 5 flat-multiplier perk classes exist (damage, fire rate, magazine size, reload
-cooldown, crit chance), and no `WeaponPerkPoolData` asset instance exists yet either, so no perk -
-including those 5 - can currently drop or be offered at level-up. Most of the larger designed roster
-(on-kill procs, magazine-position effects, pierce/ricochet/split-style post-impact behavior, ramping
-buffs) needs new simulation hooks that don't exist yet - see the doc for which ones are cheap
-extensions of the existing pattern vs. real new systems.
+Short version: every perk has a `WeaponPerkData` class and the code compiles;
+`Assets/_QuantumUser/Editor/WeaponPerkAssetGenerator.cs` (`Tools > RiftRaiders > Generate Weapon Perk
+Assets`, same menu group as `GlobalUpgradeAssetGenerator`) authors a tuned `.asset` per perk and wires them into the existing
+`WeaponPerkPoolData.asset` stub, so a fresh weapon drop can already offer perks once that's run. A
+level-up still can't, though - `LevelUpConfig.asset` doesn't exist yet (see "Level-Up Upgrades"
+above), so its own `WeaponPerkPool` reference has nothing to point at.
+
+## Enemy Burrow / Invulnerable Relocation
+
+A reusable `EnemyDeliveryData` (`BurrowDeliveryData`) lets an enemy dive underground - invulnerable and untargetable via a new `Burrowed` tag alongside the existing (previously-unused) `Invulnerable` tag - travel invisibly to a point near its target, then resurface and resume the normal telegraphed attack cycle. `AimSystem`/`VortexSystem`/`EnemyMovementUtility.TryFindNearestEnemy` were all patched to skip `Invulnerable` targets, and `EnemyBlobAnimationView` gained a reversible shrink/sink `Burrow` view state. Full design, file map, current status, and known simplifications: **`docs/enemy-burrow.md`**. Read it before touching anything burrow/invulnerability/targeting-exclusion related.
+
+Short version: the code compiles, but no `EnemyActionData`/`BurrowDeliveryData` asset instances exist yet and no enemy's `SkillActions` references one - those need to be authored in the Editor before any enemy actually burrows.
 
 ## Quantum `.qtn` codegen gotcha
 

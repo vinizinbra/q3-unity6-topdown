@@ -53,7 +53,12 @@ namespace Quantum
 
         public override bool Tick(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, EnemyActionData action, EntityRef target)
         {
-            filter.Enemy->StateTimer -= f.DeltaTime;
+            // Void Pressure (Kai) - the timer this jump's whole arc is derived from (see the lerp
+            // below) only ticks down at StatusEffectUtility.GetLocalTimeMultiplier's rate while it's
+            // in effect, stretching the entire leap through the air in real time rather than just
+            // delaying when it resolves - see that method's own comment for why only the Active phase
+            // (this Tick, not the windup/telegraph) is ever affected.
+            filter.Enemy->StateTimer -= f.DeltaTime * StatusEffectUtility.GetLocalTimeMultiplier(f, filter.Entity);
 
             FP t = JumpDuration > FP._0 ? FPMath.Clamp01(FP._1 - filter.Enemy->StateTimer / JumpDuration) : FP._1;
             FPVector3 flatPosition = FPVector3.Lerp(filter.Enemy->SkillStartPosition, filter.Enemy->SkillTargetPosition, t);

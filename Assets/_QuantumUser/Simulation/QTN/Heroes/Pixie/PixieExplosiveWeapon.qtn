@@ -1,0 +1,12 @@
+// Granted by Pixie's Explosive Rounds passive ascension (see ExplosiveRoundsPassiveUpgradeData) -
+// while present, WeaponSystem.Equip/ApplyPixieExplosiveWeapon forces every one of her weapon shots
+// to proc a small explosion, reusing Weapon.ExplosiveSequence* exactly like the Explosive Sequence
+// weapon perk, just forced to Interval=1 (every shot, not every Nth). As a side effect
+// (HitEffectUtility.ApplyExplosion always tags isExplosion=true), this is also what makes her base
+// Chain Reaction passive's Instability marking fire reliably, instead of depending on an explosive
+// weapon drop or perk roll (see DamageUtility.TryMarkExplodeOnDeath's own isExplosion gate).
+component PixieExplosiveWeapon
+{
+    FP Radius;
+    FP DamageMultiplier;
+}

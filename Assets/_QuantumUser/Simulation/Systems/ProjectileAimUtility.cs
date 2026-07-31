@@ -54,15 +54,34 @@ namespace Quantum
             if (aimAtCenter == false)
                 return true;
 
-            if (f.Unsafe.TryGetPointer<PhysicsCollider3D>(target, out var collider) == false)
+            if (TryGetCenterOffset(f, target, out FPVector3 offset) == false)
             {
                 Log.Debug($"[Aim] target {target} has no collider - aiming at its origin");
                 return true;
             }
 
+            aimPoint += offset;
+
+            return true;
+        }
+
+        // Pulled out of TryGetAimPoint so a caller already holding a separately-locked target
+        // position (e.g. an enemy delivery's Enemy.SkillTargetPosition, frozen mid-windup by
+        // AimLock - see ProjectileDeliveryData/FanProjectileDeliveryData) can add just the
+        // collider's centroid onto it without discarding that locked X/Z for a live re-read.
+        public static bool TryGetCenterOffset(Frame f, EntityRef target, out FPVector3 offset)
+        {
+            offset = default;
+
+            if (target == EntityRef.None || f.Unsafe.TryGetPointer<PhysicsCollider3D>(target, out var collider) == false)
+                return false;
+
+            offset = collider->Shape.Centroid;
+
             // Centroid is an offset in the target's local space, so it has to ride the target's
             // rotation to stay on the body of one that isn't axis-aligned.
-            aimPoint += targetTransform->Rotation * collider->Shape.Centroid;
+            if (f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == true)
+                offset = targetTransform->Rotation * offset;
 
             return true;
         }

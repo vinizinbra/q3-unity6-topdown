@@ -10,5 +10,7 @@ namespace Quantum
         {
             weapon->CriticalChance += Chance;
         }
+
+        protected override object[] DescriptionArgs => new object[] { Chance.AsFloat * 100f };
     }
 }

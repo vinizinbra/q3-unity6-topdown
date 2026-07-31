@@ -28,7 +28,6 @@ GameObject:
   - component: {fileID: 8215253040534427600}
   - component: {fileID: 4084801270582750977}
   - component: {fileID: 5356411822554301317}
-  - component: {fileID: 224164686570474384}
   m_Layer: 7
   m_Name: Max
   m_TagString: Untagged
@@ -547,6 +546,153 @@ MonoBehaviour:
       RawValue: 0
     TimeSinceFireReleased:
       RawValue: 0
+    RangeMultiplier:
+      RawValue: 0
+    OpeningBurstFireRateBonus:
+      RawValue: 0
+    OpeningBurstThreshold:
+      RawValue: 0
+    ExecutionRoundsDamageBonus:
+      RawValue: 0
+    ExecutionRoundsThreshold:
+      RawValue: 0
+    FinalRoundDamageBonus:
+      RawValue: 0
+    EscalatingRoundsMaxDamageBonus:
+      RawValue: 0
+    RampStacks: 0
+    RampMaxStacks: 0
+    RampDamageBonusPerStack:
+      RawValue: 0
+    RampFireRateBonusPerStack:
+      RawValue: 0
+    RampDecayGrace:
+      RawValue: 0
+    BonusPierce: 0
+    BonusBounces: 0
+    DoubleTapChance:
+      RawValue: 0
+    HasSplitShot:
+      Value: 0
+    SplitShotCount: 0
+    SplitShotDamageMultiplier:
+      RawValue: 0
+    HasQuantumRounds:
+      Value: 0
+    QuantumRoundsRadius:
+      RawValue: 0
+    QuantumRoundsDamageMultiplier:
+      RawValue: 0
+    ExplosiveSequenceInterval: 0
+    ExplosiveSequenceRadius:
+      RawValue: 0
+    ExplosiveSequenceDamageMultiplier:
+      RawValue: 0
+    ShotsSinceExplosiveProc: 0
+    HasCataclysmRound:
+      Value: 0
+    CataclysmRadius:
+      RawValue: 0
+    CataclysmDamageMultiplier:
+      RawValue: 0
+    HasEchoChamber:
+      Value: 0
+    HasInfiniteEcho:
+      Value: 0
+    EchoDelay:
+      RawValue: 0
+    PendingEchoes:
+    - Delay:
+        RawValue: 0
+      Position:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      Direction:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      Damage:
+        RawValue: 0
+    - Delay:
+        RawValue: 0
+      Position:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      Direction:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      Damage:
+        RawValue: 0
+    - Delay:
+        RawValue: 0
+      Position:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      Direction:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      Damage:
+        RawValue: 0
+    HasEmptyChamber:
+      Value: 0
+    EmptyChamberRadius:
+      RawValue: 0
+    EmptyChamberKnockback:
+      RawValue: 0
+    HasCombatReboot:
+      Value: 0
+    CombatRebootCooldownReduction:
+      RawValue: 0
+    HasPredatorMagazine:
+      Value: 0
+    PredatorMagazineRestoreFraction:
+      RawValue: 0
+    HasEmergencyReload:
+      Value: 0
+    EmergencyReloadMoveSpeedBonus:
+      RawValue: 0
+    EmergencyReloadDamageReduction:
+      RawValue: 0
+    EmergencyReloadApplied:
+      Value: 0
+    KillerInstinctFireRateBonus:
+      RawValue: 0
+    KillerInstinctDuration:
+      RawValue: 0
+    KillerInstinctTimer:
+      RawValue: 0
+    CritAmmoRestoreChance:
+      RawValue: 0
+    CritAmmoRestoreAmount: 0
+    HasCriticalRebound:
+      Value: 0
+    CriticalReboundRadius:
+      RawValue: 0
+    CriticalReboundDamageMultiplier:
+      RawValue: 0
 --- !u!114 &8550683189489077900
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -602,12 +748,14 @@ MonoBehaviour:
   - {fileID: 3433481889556221830}
   flashColor: {r: 1, g: 1, b: 1, a: 1}
   burnFlashColor: {r: 1, g: 0.45, b: 0.1, a: 1}
-  poisonFlashColor: {r: 1, g: 0.4, b: 0.7, a: 1}
   frontalReducedFlashColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   restColor: {r: 1, g: 1, b: 1, a: 0}
   duration: 0.2
   healFlashColor: {r: 0.4, g: 1, b: 0.4, a: 1}
+  shieldFlashColor: {r: 0.4, g: 0.75, b: 1, a: 1}
   deathColor: {r: 0, g: 0, b: 0, a: 0.5}
+  pickupGlowColor: {r: 1, g: 0.85, b: 0.3, a: 1}
+  pickupGlowDuration: 0.5
 --- !u!114 &8110188611109955938
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -675,6 +823,8 @@ MonoBehaviour:
         RawValue: 0
       ProjectilePending:
         Value: 0
+      FreeCastPending:
+        Value: 0
     HeroSkill:
       Skill:
         Id:
@@ -729,6 +879,8 @@ MonoBehaviour:
         RawValue: 0
       ProjectilePending:
         Value: 0
+      FreeCastPending:
+        Value: 0
 --- !u!114 &5758567550817711403
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -771,6 +923,8 @@ MonoBehaviour:
       RawValue: 0
     MaxHealth:
       RawValue: 0
+    RegenRate:
+      RawValue: 0
 --- !u!114 &6945579441375826571
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -809,7 +963,9 @@ MonoBehaviour:
       RawValue: 0
     AreaRadiusMultiplier:
       RawValue: 0
-    CooldownMultiplier:
+    DashCooldownMultiplier:
+      RawValue: 0
+    SkillCooldownMultiplier:
       RawValue: 0
     SkillDurationMultiplier:
       RawValue: 0
@@ -832,6 +988,8 @@ MonoBehaviour:
     PickupRangeMultiplier:
       RawValue: 0
     Luck:
+      RawValue: 0
+    ExperienceGainMultiplier:
       RawValue: 0
     BurnOnHitStacks: 0
 --- !u!114 &8215253040534427600
@@ -898,39 +1056,6 @@ MonoBehaviour:
           RawValue: 0
         Y:
           RawValue: 0
---- !u!114 &224164686570474384
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 506928541793919104}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6e7d034aa5688472285ce92d6d6ba610, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Quantum.MovementRingView
-  _playerRef:
-    _index: 0
-  initialized: 0
-  executeOnlyOnLocal: 0
-  isLocal: 0
-  ringSprite: {fileID: 8849705359328584265}
-  ringFadeDuration: 0.2
-  ringGlowSprite: {fileID: 2449773238165230959}
-  glowPulseMinAlpha: 0.6
-  glowPulseMaxAlpha: 1
-  glowPulseDuration: 1.5
-  glowPulseEase: 4
-  moveArrowSprite: {fileID: 5345196794602832033}
-  moveSpeedThreshold: 0.1
-  moveTurnSpeed: 720
-  moveArrowOffsetDistance: 0.5
-  moveArrowRotationOffset: -90
-  targetArrowSprite: {fileID: 2166614566063266189}
-  targetTurnSpeed: 720
-  targetArrowOffsetDistance: 0.5
-  targetArrowRotationOffset: -90
 --- !u!1 &1973933749131681354
 GameObject:
   m_ObjectHideFlags: 0
@@ -2202,28 +2327,8 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 95a3634ae517a460cb68deae3f0770d3, type: 3}
---- !u!212 &2166614566063266189 stripped
-SpriteRenderer:
-  m_CorrespondingSourceObject: {fileID: 7391909416705737931, guid: 95a3634ae517a460cb68deae3f0770d3, type: 3}
-  m_PrefabInstance: {fileID: 8684076996558265670}
-  m_PrefabAsset: {fileID: 0}
---- !u!212 &2449773238165230959 stripped
-SpriteRenderer:
-  m_CorrespondingSourceObject: {fileID: 6447850385706567721, guid: 95a3634ae517a460cb68deae3f0770d3, type: 3}
-  m_PrefabInstance: {fileID: 8684076996558265670}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &3600398931468591908 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5292615511809375842, guid: 95a3634ae517a460cb68deae3f0770d3, type: 3}
-  m_PrefabInstance: {fileID: 8684076996558265670}
-  m_PrefabAsset: {fileID: 0}
---- !u!212 &5345196794602832033 stripped
-SpriteRenderer:
-  m_CorrespondingSourceObject: {fileID: 3650728448649125351, guid: 95a3634ae517a460cb68deae3f0770d3, type: 3}
-  m_PrefabInstance: {fileID: 8684076996558265670}
-  m_PrefabAsset: {fileID: 0}
---- !u!212 &8849705359328584265 stripped
-SpriteRenderer:
-  m_CorrespondingSourceObject: {fileID: 167884595001933583, guid: 95a3634ae517a460cb68deae3f0770d3, type: 3}
   m_PrefabInstance: {fileID: 8684076996558265670}
   m_PrefabAsset: {fileID: 0}

@@ -22,33 +22,9 @@ MonoBehaviour:
     BudgetPerPulse:
       RawValue: 327680
     PulseInterval:
-      RawValue: 65536
-    TargetPressure:
-      RawValue: 65536
-    MaxAliveEnemies: 50
-    AllowedGroups:
-    - Id:
-        Value: 405496524248712724
-  - Duration:
-      RawValue: 1966080
-    BudgetPerPulse:
       RawValue: 327680
-    PulseInterval:
-      RawValue: 65536
     TargetPressure:
-      RawValue: 131072
-    MaxAliveEnemies: 50
-    AllowedGroups:
-    - Id:
-        Value: 405496524248712724
-  - Duration:
-      RawValue: 1966080
-    BudgetPerPulse:
       RawValue: 327680
-    PulseInterval:
-      RawValue: 65536
-    TargetPressure:
-      RawValue: 196608
     MaxAliveEnemies: 50
     AllowedGroups:
     - Id:

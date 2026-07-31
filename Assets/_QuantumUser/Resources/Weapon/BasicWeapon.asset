@@ -19,18 +19,21 @@ MonoBehaviour:
   FireType: 1
   Damage:
     RawValue: 262144
-  Element: 0
+  Element: 1
   CriticalChance:
     RawValue: 0
   CriticalDamageBonus:
     RawValue: 0
   FireCooldownTime:
-    RawValue: 16384
+    RawValue: 13107
   MagazineSize: 30
   ReloadDuration:
     RawValue: 65536
   Range:
     RawValue: 524288
+  PelletCount: 1
+  SpreadAngle:
+    RawValue: 0
   SpawnAnchor: 0
   SpawnOffset:
     X:
@@ -111,7 +114,7 @@ MonoBehaviour:
       Value: 410563266870546275
   Hit:
     Id:
-      Value: 1400531175405012114
+      Value: 486351176848829060
   Lifetime:
     RawValue: 196608
   HitRadius:
@@ -137,3 +140,4 @@ MonoBehaviour:
     Guid:
       Value: 4085520833473267186
   Tier: 1
+  ApplyMode: 0

@@ -26,8 +26,11 @@ namespace Quantum
             // dedicated TickTimer - this derives interval-boundary-crossing from the shared
             // StateTimer instead, robust to variable frame delta time (see BeamDeliveryData, same
             // reasoning).
+            //
+            // Void Pressure (Kai) - see BeamDeliveryData's identical comment on why this decrement is
+            // scaled, and why only this Active-phase Tick is ever affected.
             FP elapsedBefore = AuraDuration - filter.Enemy->StateTimer;
-            filter.Enemy->StateTimer -= f.DeltaTime;
+            filter.Enemy->StateTimer -= f.DeltaTime * StatusEffectUtility.GetLocalTimeMultiplier(f, filter.Entity);
             FP elapsedAfter = AuraDuration - filter.Enemy->StateTimer;
 
             if (TickInterval > FP._0 && FPMath.Floor(elapsedAfter / TickInterval) != FPMath.Floor(elapsedBefore / TickInterval))

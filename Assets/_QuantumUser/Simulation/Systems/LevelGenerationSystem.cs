@@ -30,6 +30,7 @@ namespace Quantum
         {
             public ChunkType Type;
             public AssetRef<EntityPrototype> Prototype;
+            public bool MustHave;
         }
 
         // A candidate attachment point - an empty cell adjacent to an already-placed chunk.
@@ -40,6 +41,11 @@ namespace Quantum
         }
 
         private const int MaxAttemptsPerRequest = 8;
+
+        // MustHave entries get far more tries before being given up on - an optional chunk failing
+        // to place is expected background noise (the frontier just didn't have room), but a
+        // required one failing is a real problem worth burning extra attempts to avoid.
+        private const int MaxAttemptsPerMustHaveRequest = 64;
 
         public override void Update(Frame f)
         {
@@ -217,6 +223,7 @@ namespace Quantum
                     {
                         Type = entry.Type,
                         Prototype = entry.Prototype,
+                        MustHave = entry.MustHave,
                     });
                 }
             }
@@ -280,7 +287,9 @@ namespace Quantum
             }
             else
             {
-                for (int attempt = 0; attempt < MaxAttemptsPerRequest; attempt++)
+                int maxAttempts = request.MustHave ? MaxAttemptsPerMustHaveRequest : MaxAttemptsPerRequest;
+
+                for (int attempt = 0; attempt < maxAttempts; attempt++)
                 {
                     if (!TryPickFrontierCell(f, occupied, frontier, out FrontierCell anchor))
                     {
@@ -310,7 +319,15 @@ namespace Quantum
                 }
             }
 
-            Log.Debug($"[LevelGen] {request.Type} ({width}x{depth}) found no valid spot - destroying entity {entity}");
+            if (request.MustHave)
+            {
+                Log.Error($"[LevelGen] MUST-HAVE {request.Type} ({width}x{depth}) found no valid spot after {MaxAttemptsPerMustHaveRequest} attempts - destroying entity {entity}. Level will generate without a required chunk.");
+            }
+            else
+            {
+                Log.Debug($"[LevelGen] {request.Type} ({width}x{depth}) found no valid spot - destroying entity {entity}");
+            }
+
             f.Destroy(entity);
             return false;
         }

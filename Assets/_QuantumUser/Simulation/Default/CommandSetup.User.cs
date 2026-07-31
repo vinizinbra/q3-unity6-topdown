@@ -11,6 +11,8 @@
             // (see DeterministicCommand.GetCommandInstance) - no separate factory class needed.
             factories.Add(new GrantSkillUpgradeCommand());
             factories.Add(new GrantWeaponPerkCommand());
+            factories.Add(new GrantPassiveUpgradeCommand());
+            factories.Add(new SelectLevelUpUpgradeCommand());
         }
     }
 }

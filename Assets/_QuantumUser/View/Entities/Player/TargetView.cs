@@ -80,6 +80,22 @@ namespace Quantum
             reticleSprite.gameObject.SetActive(QuantumHelper.IsLocalPlayer(_playerRef));
         }
 
+        // reticleSprite was unparented in Awake so it can move independently of the player -
+        // that also means it's no longer a child of this view's hierarchy, so destroying the
+        // view (e.g. on death/respawn) never cascades to it. Without this it leaks as an
+        // orphaned sprite frozen at its last position, and the next spawn's TargetView creates
+        // another one on top of it.
+        public override void OnDestroy()
+        {
+            base.OnDestroy();
+
+            if (reticleSprite != null)
+            {
+                Tween.StopAll(reticleSprite.transform);
+                Destroy(reticleSprite.gameObject);
+            }
+        }
+
         protected override void QUpdate(QuantumGame game)
         {
             if (reticleSprite == null)

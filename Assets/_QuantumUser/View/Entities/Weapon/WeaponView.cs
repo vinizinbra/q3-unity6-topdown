@@ -68,6 +68,10 @@ namespace Quantum
         [SerializeField, Tooltip("Particle system parented at the muzzle, restarted on every shot (e.g. an Epic Toon FX Muzzleflash prefab).")]
         private ParticleSystem muzzleParticle;
 
+        [Header("Hitscan Tracer")]
+        [SerializeField, Tooltip("WeaponTracerView prefab, instantiated fresh per hitscan pellet (see EventHitscanFired) - draws the line and plays its own begin/end particles (see WeaponTracerView). Leave empty for no tracer. Ignored for Projectile weapons - they never fire this event.")]
+        private WeaponTracerView tracerPrefab;
+
         [Header("Shoot Knockback")]
         [SerializeField, Tooltip("Distance the gun punches back along the camera's forward axis (away from the viewer) on each shot - a depth kick distinct from the screen-space position/rotation kick above.")]
         private float knockbackDistance = 0.1f;
@@ -96,6 +100,7 @@ namespace Quantum
             base.Awake();
             CacheRestPose();
             QuantumEvent.Subscribe<EventPlayerFired>(this, OnPlayerFired);
+            QuantumEvent.Subscribe<EventHitscanFired>(this, OnHitscanFired);
         }
 
         public override void OnDestroy()
@@ -114,6 +119,20 @@ namespace Quantum
         {
             if (e.Entity != _entityRef) return;
             Shoot();
+        }
+
+        // One event per hitscan pellet (see WeaponSystem.FireHitscan) - a Projectile weapon never
+        // fires this, so tracerPrefab simply goes unused on one of those.
+        private void OnHitscanFired(EventHitscanFired e)
+        {
+            if (e.Owner != _entityRef) return;
+            if (tracerPrefab == null) return;
+
+            Vector3 origin = e.Origin.ToUnityVector3();
+            Vector3 endPoint = e.EndPoint.ToUnityVector3();
+
+            WeaponTracerView tracer = Instantiate(tracerPrefab, origin, Quaternion.identity);
+            tracer.Play(origin, endPoint, e.DidHit);
         }
 
         // Three independent PunchCustom kicks (position, rotation, knockback), each punching its

@@ -10,5 +10,7 @@ namespace Quantum
         {
             weapon->DamageMultiplier = FPMath.Max(FP._0, weapon->DamageMultiplier * Multiplier);
         }
+
+        protected override object[] DescriptionArgs => new object[] { (Multiplier.AsFloat - 1f) * 100f };
     }
 }

@@ -24,17 +24,26 @@ namespace Quantum
         private float _duration = 1f;
         private float _t;
         private bool _active;
+        private EntityRef _enemyEntity;
 
         private void Awake()
         {
             _restingScale = transform.localScale;
         }
 
-        public void Initialize(float duration)
+        // duration comes from the enemy's own remaining EnemyActionData.AnticipationTime at spawn
+        // (see EnemyAttackVisualsView.SpawnTelegraph) - in the SAME abstract units as
+        // Enemy.StateTimer, not literal real seconds. Those units only equal real seconds when the
+        // enemy's own anticipation-slow multiplier is 1 (unfrozen); enemyEntity lets Update below
+        // read that multiplier live every frame (StatusEffectUtility.GetAnticipationMultiplier) so
+        // the growth rate itself stretches in lockstep with a Freeze applied before OR during this
+        // telegraph's growth, instead of only ever matching real time.
+        public void Initialize(float duration, EntityRef enemyEntity)
         {
             _duration = Mathf.Max(duration, 0.0001f);
             _t = 0f;
             _active = true;
+            _enemyEntity = enemyEntity;
             transform.localScale = ComputeScale(0f);
         }
 
@@ -43,8 +52,21 @@ namespace Quantum
             if (_active == false || _t >= 1f)
                 return;
 
-            _t = Mathf.Clamp01(_t + Time.deltaTime / _duration);
+            _t = Mathf.Clamp01(_t + (Time.deltaTime * ResolveAnticipationMultiplier()) / _duration);
             transform.localScale = ComputeScale(_t);
+        }
+
+        // Same live-read pattern as EnemyBlobAnimationView's own anticipation-slow scaling, just
+        // reached via QuantumRunner.Default directly (see PlayerManager/MyLocalPlayer for the same
+        // idiom) since this is a plain pooled MonoBehaviour, not a QuantumEntityViewComponent with
+        // its own per-frame Frame parameter to read instead. Defaults to no slowdown (1) if the
+        // runner/frame isn't available for any reason, rather than stalling growth entirely.
+        private float ResolveAnticipationMultiplier()
+        {
+            QuantumGame game = QuantumRunner.Default != null ? QuantumRunner.Default.Game : null;
+            Frame frame = game?.Frames.Predicted;
+
+            return frame != null ? StatusEffectUtility.GetAnticipationMultiplier(frame, _enemyEntity).AsFloat : 1f;
         }
 
         private Vector3 ComputeScale(float t)

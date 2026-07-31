@@ -3,6 +3,6 @@ enum ElementType : Byte
     Neutral,
     Fire,
     Ice,
-    Lightning,
-    Poison
+    Rock,
+    Void
 }

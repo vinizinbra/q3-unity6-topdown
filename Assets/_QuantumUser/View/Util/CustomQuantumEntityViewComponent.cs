@@ -13,6 +13,8 @@ public abstract class CustomQuantumEntityViewComponent : MonoBehaviour
     protected QuantumGame _game = null;
     public bool initialized = false;
     public bool executeOnlyOnLocal;
+    // True once this entity matches any of MyLocalPlayer's registered slots - not just the first
+    // local player, so couch co-op's second local player also gets its own local-only effects.
     public bool isLocal;
     protected bool _isQuittingApplication = false;
     public virtual void Awake()
@@ -39,15 +41,13 @@ public abstract class CustomQuantumEntityViewComponent : MonoBehaviour
 
     public virtual void Start()
     {
-        if (MyLocalPlayer.Instance.IsLocalPlayerSetup)
+        foreach (var slot in MyLocalPlayer.Instance.Slots)
         {
-            OnLocalPlayerSetup(MyLocalPlayer.Instance.EntityRef);
+            if (slot.IsSet)
+                OnLocalPlayerSetup(slot.EntityRef);
         }
-        else
-        {
-            MyLocalPlayer.Instance.onLocalPlayerSetup += OnLocalPlayerSetup;
-        }
-        
+
+        MyLocalPlayer.Instance.onLocalPlayerSetup += OnLocalPlayerSetup;
     }
 
     private void OnLocalPlayerSetup(EntityRef obj)
@@ -94,7 +94,7 @@ public abstract class CustomQuantumEntityViewComponent : MonoBehaviour
         if (executeOnlyOnLocal == false)
             return true;
 
-        return QuantumHelper.IsLocalPlayer(_playerRef);
+        return isLocal;
     }
     
     private void Update()

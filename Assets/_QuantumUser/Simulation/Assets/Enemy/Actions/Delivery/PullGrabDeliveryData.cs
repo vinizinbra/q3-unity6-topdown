@@ -19,7 +19,12 @@ namespace Quantum
 
         public override bool Tick(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, EnemyActionData action, EntityRef target)
         {
-            filter.Enemy->StateTimer -= f.DeltaTime;
+            // Void Pressure (Kai) - see LeapDeliveryData's identical comment on why this decrement is
+            // scaled and why only this Active-phase Tick is ever affected. The per-tick ApplyPull
+            // force below is deliberately left unscaled - a slowed grab still pulls at its authored
+            // strength each tick, it just takes longer in real time to finish, same as every other
+            // delivery here.
+            filter.Enemy->StateTimer -= f.DeltaTime * StatusEffectUtility.GetLocalTimeMultiplier(f, filter.Entity);
 
             if (EnemyMovementUtility.TryGetTargetPosition(f, target, out FPVector3 targetPosition) == true)
             {

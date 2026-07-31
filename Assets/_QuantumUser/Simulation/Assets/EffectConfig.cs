@@ -14,19 +14,20 @@ namespace Quantum
     }
 
     // Global balance tuning for every status effect - one shared knob per status instead of authored
-    // separately on every {Burn,Poison,Stun,Slow,Mark,Haste}EffectData asset and duplicated again as
+    // separately on every {Burn,Stun,Slow,Haste}EffectData asset and duplicated again as
     // private constants in StatusEffectUtility.TryApplyElementalStatus's elemental-proc path.
     // Referenced via RuntimeConfig.EffectConfig, read by StatusEffectUtility and the EffectData
-    // classes above.
+    // classes above. Elemental-reaction tuning (Explosion/Freeze/Knockback/Magma Prison/Stun/Break)
+    // lives on the separate ElementalReactionConfig instead - see docs/elemental-reactions.md.
     //
-    // Burn/Poison are DoT: total damage dealt over Duration is HitDamage * DamagePercent, spread
-    // evenly across TickInterval-spaced ticks - see StatusEffectUtility.ComputeDotDamagePerTick.
-    // Everything else just needs a Duration, plus a magnitude for Slow/Mark/Haste.
+    // Burn is DoT: total damage dealt over Duration is HitDamage * DamagePercent, spread evenly
+    // across TickInterval-spaced ticks - see StatusEffectUtility.ComputeDotDamagePerTick. Everything
+    // else just needs a Duration, plus a magnitude for Slow/Haste/Intimidate.
     public class EffectConfig : AssetObject
     {
-        // Shared DoT cadence for Burn and every Poison stack - not stored per-instance, since nothing
-        // here needs a different tick rate per proc. A status applied fresh ticks for the first time
-        // TickInterval seconds later, not immediately. See StatusEffectUtility.ApplyBurn/ApplyPoison
+        // Shared DoT cadence for Burn - not stored per-instance, since nothing here needs a
+        // different tick rate per proc. A status applied fresh ticks for the first time
+        // TickInterval seconds later, not immediately. See StatusEffectUtility.ApplyBurn
         // (timer seeding) and ComputeDotDamagePerTick (ticks = Duration / TickInterval).
         public FP TickInterval = FP._0_50;
 
@@ -40,33 +41,38 @@ namespace Quantum
         // be negligible. See StatusEffectUtility.ComputeDotDamagePerTickWithFloor.
         public FP BurnFloorPercent = FP._0_05;
 
-        public FP PoisonDuration = 3;
+        // Void's own baseline duration - no magnitude, it does nothing by itself. See
+        // docs/elemental-reactions.md - reaction-specific numbers (Explosion/Freeze/Knockback/Magma
+        // Prison/Stun/Break) live on ElementalReactionConfig instead, never here, so a reaction's
+        // tuning never doubles as some other effect's shared knob.
+        public FP VoidDuration = 3;
 
-        // Kept low relative to BurnDamagePercent on purpose - Poison stacks up to 5 independent
-        // slots (see StatusEffects.qtn/StatusEffectUtility.ApplyPoison), so its real ceiling is
-        // PoisonDamagePercent * 5, not this number alone. At 2%, max-stacked Poison (10%) just
-        // reaches single-instance Burn (10%); anything short of 5 simultaneous stacks - the common
-        // case - stays weaker than Burn.
-        public FP PoisonDamagePercent = FP.FromString("0.02");
-
-        // Minimum total Poison damage over PoisonDuration per stack, same "whichever is bigger wins"
-        // rule as BurnFloorPercent - half of PoisonDamagePercent, same ratio as Burn's own
-        // Floor:DamagePercent (5%:10%).
-        public FP PoisonFloorPercent = FP._0_01;
+        // Rock's baseline - reduces the TARGET's own outgoing damage (see
+        // StatusEffectUtility.ApplyIntimidate/GetOutgoingDamageMultiplier). Distinct from Brute's
+        // Protector Aura, which applies the same status via its own aura-authored values, not these.
+        public FP IntimidateDuration = 3;
+        public FP IntimidateOutgoingDamageMultiplier = FP._0_75;
 
         public FP StunDuration = 1;
 
-        // Root - currently only granted by JuggernautLandingRootSkillAction, baked through
+        // Root - granted by JuggernautLandingRootSkillAction (baked through
         // JuggernautLandingRootUpgrade/JuggernautLaunched at launch time; see that class for why
-        // Duration alone moves here while RootChance/Damage (skill-specific, not effect-generic)
-        // stay authored on the skill itself.
+        // Duration alone moves here while RootChance/Damage stay skill-specific) and by the generic
+        // RootEffectData, for any other source that wants to root on hit. NOT read by the Fire+Rock
+        // Magma Prison reaction, which uses its own dedicated
+        // ElementalReactionConfig.MagmaPrisonRootDuration instead - see docs/elemental-reactions.md.
         public FP RootDuration = 2;
 
         public FP SlowDuration = 3;
         public FP SlowSpeedMultiplier = FP._0_50;
 
-        public FP MarkDuration = 5;
-        public FP MarkDamageTakenMultiplier = FP.FromString("1.2");
+        // Generic FreezeEffectData's own knob - NOT ElementalReactionConfig's
+        // FreezeDuration/FreezeAnticipationMultiplier, which are dedicated to the Void+Ice reaction
+        // specifically. Named after the underlying StatusEffects field (AnticipationSlowRemaining/
+        // AnticipationSlowMultiplier) rather than "Freeze" so the two are never confused for the
+        // same knob at a glance. See docs/elemental-reactions.md.
+        public FP AnticipationSlowDuration = 3;
+        public FP AnticipationSlowMultiplier = FP._0_50;
 
         // Haste (buff) - also reused by SentryAuraSystem's Fire Rate aura as its lingering refresh
         // window, so "how long Haste lingers" stays tuned in one place regardless of source.

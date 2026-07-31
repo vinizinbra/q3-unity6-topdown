@@ -47,8 +47,9 @@ namespace Quantum
         }
 
         // ProjectileSystem excludes this layer from its hit raycast so a projectile passes through
-        // an entity on it instead of being consumed on contact for zero damage. DashSkillData moves
-        // the dasher onto it for the duration of a dash.
+        // an entity on it instead of being consumed on contact for zero damage; the physics layer
+        // matrix also excludes it from colliding with Enemy, so an entity on it physically passes
+        // through enemy bodies too. DashSkillData moves the dasher onto it for the duration of a dash.
         public static int GetIgnoreProjectileLayerMask(Frame f)
         {
             _ignoreProjectileLayerMask ??= f.Layers.GetLayerMask(IgnoreProjectileLayerName);
@@ -112,7 +113,8 @@ namespace Quantum
         // needs to find something on the Enemy layer to aim at. Mirrors AimSystem's own private
         // FindClosestTarget (used for player aim-assist): flat (XZ-only) distance so elevation
         // doesn't skew which one counts as closest, and skips a dying/lingering enemy
-        // (EnemyActionPhase.Dead lasts DeathLingerTime for its death animation) the same way.
+        // (EnemyActionPhase.Dead lasts DeathLingerTime for its death animation) or an Invulnerable
+        // one (e.g. burrowed - see BurrowDeliveryData) the same way.
         public static bool TryFindNearestEnemy(Frame f, FPVector3 origin, FP range, out EntityRef entity)
         {
             Shape3D sphere = Shape3D.CreateSphere(range);
@@ -129,6 +131,9 @@ namespace Quantum
                     continue;
 
                 if (f.Unsafe.TryGetPointer<Enemy>(candidate, out var enemy) == true && enemy->Phase == EnemyActionPhase.Dead)
+                    continue;
+
+                if (f.Has<Invulnerable>(candidate) == true)
                     continue;
 
                 FP flatSqrDistance = FlatSqrDistance(origin, transform->Position);
@@ -210,9 +215,16 @@ namespace Quantum
             }
 
             FPVector2 normalized = direction.Normalized;
-            FPVector3 flatDirection = new FPVector3(normalized.X, FP._0, normalized.Y);
             bool isGrounded = data.Stats.Height.InitialState == EnemyHeightState.Grounded;
             int groundLayerMask = GetGroundLayerMask(f);
+
+            if (data.Stats.AvoidWalls == true)
+            {
+                FP radius = ResolveEntityRadius(f, filter.Entity);
+                normalized = SteerAroundWalls(f, filter.Transform3D->Position, normalized, data.Stats.WallAvoidProbeDistance, radius, groundLayerMask);
+            }
+
+            FPVector3 flatDirection = new FPVector3(normalized.X, FP._0, normalized.Y);
 
             // Carried through untouched by default so PhysicsSystem3D's own gravity integration
             // isn't overwritten - only replaced below if this tick triggers a hop.
@@ -357,6 +369,53 @@ namespace Quantum
             // straight through level-chunk wall geometry undetected.
             Hit3D? hit = f.Physics3D.Raycast(origin, direction.Normalized, distance, layerMask, QueryOptions.HitStatics | QueryOptions.HitKinematics);
             return hit.HasValue;
+        }
+
+        // Opt-in via EnemyStatsData.AvoidWalls - steers a chosen move direction along a wall
+        // directly ahead instead of straight into it, resolved here a tick before
+        // PhysicsSystem3D's own collision response would otherwise settle on roughly the same
+        // result, so the enemy reads as routing around the obstacle rather than
+        // stalling/juddering against it first. Sphere-cast, not a bare raycast - a centerline
+        // ray can pass clean by a corner post that the enemy's own body (this same radius is
+        // literally what EnemySystem.SeedRadius sizes PhysicsCollider3D to) would still clip,
+        // which is exactly the "gets stuck in corners" failure a point probe has no way to
+        // catch. Same ComputeDetailedInfo requirement as any query that reads Hit3D.Normal -
+        // HitStatics|HitKinematics without it leaves Normal zeroed, which the SqrMagnitude
+        // guard below treats as "no usable hit" and passes the original direction through
+        // unchanged.
+        public static FPVector2 SteerAroundWalls(Frame f, FPVector3 origin, FPVector2 direction, FP probeDistance, FP radius, int layerMask)
+        {
+            if (direction.SqrMagnitude <= FP._0 || probeDistance <= FP._0)
+                return direction;
+
+            FPVector3 flatDirection = new FPVector3(direction.X, FP._0, direction.Y);
+            Shape3D probeShape = Shape3D.CreateSphere(radius);
+            Hit3D? hit = f.Physics3D.ShapeCast(origin, FPQuaternion.Identity, probeShape, flatDirection * probeDistance, layerMask,
+                QueryOptions.HitStatics | QueryOptions.HitKinematics | QueryOptions.ComputeDetailedInfo);
+
+            if (hit.HasValue == false)
+                return direction;
+
+            FPVector2 normal = new FPVector2(hit.Value.Normal.X, hit.Value.Normal.Z);
+
+            if (normal.SqrMagnitude <= FP._0)
+                return direction;
+
+            normal = normal.Normalized;
+
+            FP into = FPVector2.Dot(direction, normal);
+
+            // Already moving away from (or along) the wall - nothing to correct. Only a
+            // direction that's actually heading into the surface (negative dot with the
+            // outward normal) gets deflected.
+            if (into >= FP._0)
+                return direction;
+
+            // Strip the into-wall component, keep only the tangential slide - the direction
+            // that runs along the wall instead of through it.
+            FPVector2 tangent = direction - normal * into;
+
+            return tangent.SqrMagnitude > FP._0 ? tangent.Normalized : direction;
         }
 
         // Same ankle-blocked/ledge-clear dual-probe test PlayerMovementProcessor.TryDetectMantle

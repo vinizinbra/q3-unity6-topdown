@@ -66,6 +66,12 @@ namespace Quantum
         [SerializeField, Tooltip("Extra pause after the fall finishes before the shrink (below) begins, so the fallen corpse holds on screen for a beat first.")] private float dieShrinkDelay = 0.5f;
         [SerializeField, Tooltip("Once the fall above finishes (plus the delay above), the corpse shrinks to nothing over this many seconds. Keep dieDuration + dieShrinkDelay + this under EnemyDataAsset.DeathLingerTime or the entity/view gets torn down mid-shrink.")] private float dieShrinkDuration = 0.4f;
 
+        [Header("Burrow (shrinks/sinks away on dive, holds hidden while Burrowed, grows back on resurface)")]
+        [SerializeField] private float burrowSinkDuration = 0.35f;
+        [SerializeField] private float burrowRiseDuration = 0.35f;
+        [SerializeField, Tooltip("Squash pop played at the midpoint of the sink/rise transition.")] private float burrowSquash = 0.5f;
+        [SerializeField, Tooltip("How far the body visually sinks into the ground as it shrinks away.")] private float burrowSinkAmount = 0.3f;
+
         [Header("General")]
         [SerializeField] private float squashLerpSpeed = 14f;
         [SerializeField] private float volumePreservation = 0.6f;
@@ -75,11 +81,12 @@ namespace Quantum
         [SerializeField, Tooltip("Assign any AttackVisualStep here (e.g. copy one out of an EnemyActionData asset) to preview it with the button below, without a running simulation.")]
         private AttackVisualStep debugTestStep;
 
-        private enum State { Idle, Run, AttackStep, Die }
+        private enum State { Idle, Run, AttackStep, Die, Burrow }
         private State _state = State.Idle;
         private float _stateTimer;
         private float _horizontalSpeed;
         private EnemyActionPhase? _lastEnemyPhase;
+        private bool _lastBurrowed;
 
         // The step currently driving State.AttackStep's pose - set by PlayAttackStep, read by
         // UpdatePose. Owned externally (EnemyAttackVisualsView / the debug button below).
@@ -102,6 +109,13 @@ namespace Quantum
         // 0 = full size, 1 = fully shrunk - only advances once the fall (dieDuration) itself has
         // finished, so the shrink never overlaps/fights the topple.
         private float _dieShrinkT;
+
+        // 0 = fully visible, 1 = fully hidden - driven toward 1 while sinking (TriggerBurrowDown)
+        // and back toward 0 while rising (TriggerBurrowUp), unlike _dieShrinkT which only ever
+        // goes one way. Sits pinned at 1 in between (while Burrowed stays true and the enemy is
+        // actually traveling underground) since nothing drives it further until the falling edge.
+        private float _burrowT;
+        private bool _burrowSinking;
 
         public override void Awake()
         {
@@ -168,6 +182,22 @@ namespace Quantum
             PlayAttackStep(debugTestStep);
         }
 
+        [Button]
+        public void TriggerBurrowDown()
+        {
+            _state = State.Burrow;
+            _burrowSinking = true;
+            UpdatePose(0f);
+        }
+
+        [Button]
+        public void TriggerBurrowUp()
+        {
+            _state = State.Burrow;
+            _burrowSinking = false;
+            UpdatePose(0f);
+        }
+
         protected override void QUpdate(QuantumGame game)
         {
             if (root == null && head == null && torso == null)
@@ -184,12 +214,41 @@ namespace Quantum
                 _lastEnemyPhase = enemyPhase;
             }
 
+            // Burrowed is a plain tag (see BurrowDeliveryData/Burrowed.qtn), not part of
+            // EnemyActionPhase - watched the same edge-triggered way as Dead above, just off its
+            // own bool instead of a phase value.
+            bool isBurrowed = frame.Has<Burrowed>(_entityRef);
+
+            if (isBurrowed != _lastBurrowed)
+            {
+                if (isBurrowed == true)
+                    TriggerBurrowDown();
+                else
+                    TriggerBurrowUp();
+
+                _lastBurrowed = isBurrowed;
+            }
+
             Vector3 velocity = frame.Has<PhysicsBody3D>(_entityRef) == true
                 ? frame.Get<PhysicsBody3D>(_entityRef).Velocity.ToUnityVector3()
                 : Vector3.zero;
             _horizontalSpeed = new Vector2(velocity.x, velocity.z).magnitude;
 
             float dt = Time.deltaTime;
+
+            // Void+Ice's Freeze reaction stretches the enemy's own Preparation/Telegraph windup
+            // (StatusEffectUtility.GetAnticipationMultiplier - see EnemySystem.UpdatePreparation,
+            // which scales the simulation's own StateTimer the same way). Only while actually
+            // playing the windup step - Active/Recovery attack steps (Begin/OnGoing/End) are
+            // untouched, same scoping the simulation side already uses. Scaling dt itself here (not
+            // just the _stateTimer increment below) also slows every dt-driven lerp inside
+            // UpdatePose's AttackStep case, so the whole windup step evolves consistently, not just
+            // its Duration ramp.
+            if (_state == State.AttackStep
+                && (enemyPhase == EnemyActionPhase.Preparation || enemyPhase == EnemyActionPhase.Telegraph))
+            {
+                dt *= StatusEffectUtility.GetAnticipationMultiplier(frame, _entityRef).AsFloat;
+            }
 
             // Recovery is the attack's downtime - the enemy just stands there resting, so
             // re-aiming toward a target that keeps moving during this window would spin the sprite
@@ -204,7 +263,8 @@ namespace Quantum
             _stateTimer += dt;
 
             bool triggerStillPlaying = (_state == State.AttackStep && _currentStep != null && _stateTimer < _currentStep.Duration)
-                || _state == State.Die; // holds its final fallen pose once triggered - never reverts on its own
+                || _state == State.Die // holds its final fallen pose once triggered - never reverts on its own
+                || (_state == State.Burrow && (isBurrowed == true || _burrowT > 0f)); // holds hidden while still Burrowed, then plays out the rise
 
             if (triggerStillPlaying == false)
                 _state = DetermineGroundedState(_horizontalSpeed);
@@ -258,7 +318,10 @@ namespace Quantum
                     {
                         case AttackAnimationType.Shake:
                             // Constant coil, rapid rotational jitter for the whole step - aggression/rage tell.
-                            rockTarget = Mathf.Sin(Time.time * step.Shake.Frequency * Mathf.PI * 2f) * step.Shake.RockDegrees;
+                            // Driven by _stateTimer (time since this step began), not the absolute Time.time -
+                            // so the jitter frequency itself stretches along with an anticipation-slowed
+                            // windup instead of staying locked to real time while everything else slows down.
+                            rockTarget = Mathf.Sin(_stateTimer * step.Shake.Frequency * Mathf.PI * 2f) * step.Shake.RockDegrees;
                             break;
 
                         case AttackAnimationType.SwingBack:
@@ -272,7 +335,9 @@ namespace Quantum
                         case AttackAnimationType.Pulse:
                         {
                             // Rhythmic squash pulsing that grows in amplitude - charging-up tell.
-                            float pulseWave = Mathf.Sin(Time.time * step.Pulse.Frequency * Mathf.PI * 2f);
+                            // Same _stateTimer reasoning as Shake above - the pulse rate itself needs to
+                            // stretch under Freeze, not just the amplitude ramp.
+                            float pulseWave = Mathf.Sin(_stateTimer * step.Pulse.Frequency * Mathf.PI * 2f);
                             float pulseAmplitude = Mathf.Lerp(0f, step.Pulse.MaxSquash, t);
                             _squashT = pulseWave * pulseAmplitude;
                             break;
@@ -400,6 +465,22 @@ namespace Quantum
 
                     break;
                 }
+
+                case State.Burrow:
+                {
+                    // Driven toward 1 (hidden) while sinking, back toward 0 (visible) while rising -
+                    // pinned at whichever end it reaches until the next trigger flips direction, see
+                    // TriggerBurrowDown/TriggerBurrowUp.
+                    float duration = _burrowSinking ? burrowSinkDuration : burrowRiseDuration;
+                    float rate = duration > 0f ? dt / duration : 1f;
+                    _burrowT = Mathf.MoveTowards(_burrowT, _burrowSinking ? 1f : 0f, rate);
+
+                    // Peaks at the midpoint of the transition regardless of direction, so the same
+                    // curve reads as a "pop" both diving down and popping back up.
+                    _squashT = burrowSquash * Mathf.Sin(_burrowT * Mathf.PI);
+                    bobTarget = -burrowSinkAmount * _burrowT;
+                    break;
+                }
             }
 
             ApplyPose(leanTarget, rockTarget, bobTarget, depthTarget, armRotationTarget);
@@ -435,7 +516,11 @@ namespace Quantum
         {
             float verticalMult = Mathf.Clamp(1f - _squashT * volumePreservation, 0.15f, 3f);
             float horizontalMult = Mathf.Clamp(1f / verticalMult, 0.3f, 3f);
-            float shrinkMult = 1f - Easing.Evaluate(_dieShrinkT, Ease.InBack);
+
+            // Independent shrink sources, multiplied together rather than picking one - Die's is
+            // one-way (_dieShrinkT never comes back down), Burrow's is reversible (_burrowT), and
+            // in practice only one is ever non-zero at a time for a given enemy.
+            float shrinkMult = (1f - Easing.Evaluate(_dieShrinkT, Ease.InBack)) * (1f - Easing.Evaluate(_burrowT, Ease.InOutSine));
 
             // No torso to carry the squash - root is the whole visible body, so it takes the
             // squash directly instead of just facing/lean/bob.

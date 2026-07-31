@@ -1,0 +1,150 @@
+# Global Upgrades catalog
+
+Content for the `LevelUpPoolKind.GlobalUpgrade` pool (`LevelUpConfig.GlobalUpgrades`, see
+`docs/level-up-upgrades.md`). This doc is the design catalog; `docs/level-up-upgrades.md` is the
+mechanism (rolling, pausing, grant flow) and stays the source of truth for how any of this actually
+gets offered and picked.
+
+**Status: 21 of 25 rows are implemented in code.** `GlobalUpgradeData` is an abstract base with a
+real `Apply(Frame f, EntityRef entity)` (same shape as `WeaponPerkData`'s `Apply(Frame, Weapon*)`),
+and `GlobalUpgradeUtility.Grant` dispatches to it generically. Most concrete upgrades derive from
+`CharacterStatMultiplierUpgradeData` (`Assets/_QuantumUser/Simulation/Assets/LevelUp/
+CharacterStatMultiplierUpgradeData.cs`) - a shared base that multiplies one named `CharacterStats`
+field by its own `Multiplier`, floored at 0. `Multiplier` always defaults to `FP._1` on every
+subclass, same convention as `WeaponPerkData`'s own multiplier perks (`DamageMultiplierWeaponPerkData`
+etc.) - the real tuned number lives on the authored `.asset` instance, not the C# class.
+
+**Asset generation:** `Assets/_QuantumUser/Editor/GlobalUpgradeAssetGenerator.cs`
+(`Tools/RiftRaiders/Generate Global Upgrade Assets`) authors one `.asset` instance per class in the
+table below - tuned to this doc's own numbers - under
+`Assets/_QuantumUser/Resources/LevelUp/GlobalUpgrade/` (created automatically if missing), and wires
+all of them into `Assets/_QuantumUser/Resources/LevelUpConfig.asset`'s `GlobalUpgrades` list (that
+asset already exists and is already assigned to `RuntimeConfig` in `QuantumGameScene.unity` - see
+`docs/level-up-upgrades.md`). Mirrors `WeaponPerkAssetGenerator.cs` exactly: re-running is safe,
+existing assets are updated in place (not duplicated), and the list is rebuilt from scratch each
+run. `Icon` is left unset for every asset, same as the weapon-perk generator - still a manual
+per-upgrade Inspector step.
+
+**Still needed before ANY of this does anything at runtime:**
+1. Run the generator above (or author the 21 `.asset` instances by hand).
+2. Assign an `Icon` to each - the generator can't author sprites.
+3. `CharacterStats.qtn`/`Health.qtn` changed, so Quantum's DSL codegen must run before any of this
+   compiles - see the "Quantum `.qtn` codegen gotcha" note in `CLAUDE.md`.
+
+## Roster
+
+Legend: ✅ implemented and wired to a live consumer · ❌ not built (reason given)
+
+### Weapon
+
+Every entry here **intentionally overlaps** with an existing Weapon Perk of the same name (decided:
+keep both, accept the overlap - see "Design notes" #1). Where `CharacterStats` already has its own
+distinct multiplier field, that's a second independent scaling source (stacks with the Weapon Perk,
+doesn't replace it - same convention `DamageUtility.GetSourceMultiplier` already uses for
+Weapon/Skill damage). Where no such field exists (Magazine, Range), the upgrade targets the exact
+same `Weapon` field the equivalent perk does, so the two stack on that one field instead of needing
+a parallel do-nothing `CharacterStats` field.
+
+| Upgrade | Class | Target | Status |
+|---|---|---|---|
+| Weapon Damage | `WeaponDamageUpgradeData` | `CharacterStats.WeaponDamageMultiplier` | ✅ |
+| Fire Rate | `FireRateUpgradeData` | `CharacterStats.AttackSpeedMultiplier` | ✅ |
+| Reload Speed | `ReloadSpeedUpgradeData` | `CharacterStats.ReloadSpeedMultiplier` | ✅ |
+| Magazine Size | `MagazineSizeUpgradeData` | `Weapon.MagazineSize` (same field as `MagazineMultiplierWeaponPerkData`) | ✅ |
+| Critical Chance | `CriticalChanceUpgradeData` | `CharacterStats.CriticalChance` (flat add) | ✅ |
+| Critical Damage | `CriticalDamageUpgradeData` | `CharacterStats.CriticalDamageMultiplier` | ✅ |
+| Weapon Range | `WeaponRangeUpgradeData` | `Weapon.RangeMultiplier` (same field as `RangeMultiplierWeaponPerkData`) | ✅ |
+| Projectile Speed | `ProjectileSpeedUpgradeData` | `CharacterStats.ProjectileSpeedMultiplier` | ✅ (known limitation on homing projectiles - see "What changed" below) |
+
+### Hero
+
+| Upgrade | Class | Target | Status |
+|---|---|---|---|
+| Max Health | `MaxHealthUpgradeData` | `CharacterStats.MaxHealthMultiplier` + `CharacterSystem.RefreshMaxHealth` | ✅ |
+| Shield | `ShieldUpgradeData` | `CharacterStats.MaxShieldMultiplier` + `CharacterSystem.RefreshMaxShield` | ✅ |
+| Movement Speed | `MoveSpeedUpgradeData` | `CharacterStats.MoveSpeedMultiplier` | ✅ |
+| Health Regeneration | `HealthRegenUpgradeData` | `Health.RegenRate` (new field, ticked by new `HealthRegenSystem`) | ✅ |
+| Healing Received | `HealingReceivedUpgradeData` | `CharacterStats.HealingReceivedMultiplier` (now wired into `HealUtility.ResolveHealMultiplier`) | ✅ |
+| Pickup Radius | `PickupRadiusUpgradeData` | `CharacterStats.PickupRangeMultiplier` | ✅ |
+
+### Dash
+
+| Upgrade | Class | Target | Status |
+|---|---|---|---|
+| Dash Cooldown | `DashCooldownUpgradeData` | `CharacterStats.DashCooldownMultiplier` (new field, split from the old dead `CooldownMultiplier` - see `StatUtility.GetSkillCooldown`) | ✅ |
+| Dash Charge | `DashChargeUpgradeData` | `CharacterSkills.DashSkill.MaxStacks`/`CurrentStacks` (+1, usable immediately) | ✅ |
+| Dash Invulnerability | *(none)* | — | ❌ `DashSkillData` swaps to the `IgnoreProjectile` layer for the dash's *entire* active duration already - it's 100% immune for 100% of the dash. There is no partial i-frame window for "+20% duration" to extend unless the dash itself changes to a partial-invuln model. Not building a redesign of the dash mechanic to manufacture a slot for this upgrade. |
+
+### Hero Skill
+
+| Upgrade | Class | Target | Status |
+|---|---|---|---|
+| Skill Damage | `SkillDamageUpgradeData` | `CharacterStats.SkillDamageMultiplier` | ✅ |
+| Skill Cooldown | `SkillCooldownUpgradeData` | `CharacterStats.SkillCooldownMultiplier` (new field, HeroSkill's independent half of the old shared `CooldownMultiplier`) | ✅ |
+| Skill Duration | `SkillDurationUpgradeData` | `CharacterStats.SkillDurationMultiplier` | ✅ |
+| Skill Area | `SkillAreaUpgradeData` | `CharacterStats.AreaRadiusMultiplier` (now wired into `HitPathSkillAction`/`SpawnEntitySkillAction` via `StatUtility.GetAreaMultiplier`, stacking with `SkillSlot.AreaMultiplier`) | ✅ |
+
+### Economy
+
+| Upgrade | Class | Target | Status |
+|---|---|---|---|
+| Experience Gain | `ExperienceGainUpgradeData` | `CharacterStats.ExperienceGainMultiplier` (new field, wired into `ExpOrbSystem`'s pickup credit) | ✅ |
+| Luck | *(none)* | `CharacterStats.Luck` | ❌ field exists and is seeded, but nothing reads it anywhere - no rarity-roll/loot mechanic is designed for it to bias. Needs a design decision on what it actually does before it's worth wiring up (see "Design notes" #3). |
+| Gold Gain | *(none)* | — | ❌ no currency system exists in the simulation at all - this needs a whole new system, not a stat hookup. Deferred; not in scope for this pass. |
+| Rift Shards | *(none)* | — | ❌ same as Gold Gain - no persistent-currency system exists yet. Deferred. |
+
+## What changed to make the ✅ rows real
+
+Several `CharacterStats` fields were seeded but had **zero consumers anywhere** before this pass
+(confirmed by grep, not assumption) - each got a small, targeted wiring fix rather than staying dead:
+
+- **`CooldownMultiplier`` → split into `DashCooldownMultiplier`/`SkillCooldownMultiplier`.** The old
+  field had no consumer at all; `SkillSystem`'s two `slot->CooldownTimer = skill.Cooldown;` sites
+  (`TickCooldown`/`TryBegin`) now route through the new `StatUtility.GetSkillCooldown(f, owner,
+  slotId, baseCooldown)`, which picks the right field by `SkillSlotId` (`UpdateSlot` now threads
+  `SkillSlotId` down to both call sites).
+- **`AreaRadiusMultiplier`** had no consumer - `HitPathSkillAction`'s three radius/width/height
+  calcs and `SpawnEntitySkillAction.ApplyScale` now multiply in `StatUtility.GetAreaMultiplier(f,
+  owner)` alongside the existing `SkillSlot.AreaMultiplier` (which can't hold a permanent bonus
+  itself - it resets to 1 every activation, see `SkillSystem.TryBegin`).
+- **`ProjectileSpeedMultiplier`** had no consumer - `ProjectileSpawner.Spawn` now scales
+  `projectile->Velocity` by `StatUtility.GetProjectileSpeedMultiplier(f, owner)` once at spawn,
+  rather than threading it through every `ProjectileMovementData` subclass's own `Speed` field.
+  Known limitation: `HomingProjectileMovementData.UpdateVelocity` re-derives velocity magnitude from
+  its own `Speed` every tick once it starts turning, so the multiplier only reliably holds for a
+  homing projectile's initial launch, not its whole flight.
+- **`HealingReceivedMultiplier`** had no consumer - `HealUtility.ResolveHealMultiplier` now folds it
+  in alongside the existing `IncreaseHealUpgrade` bonus, so it applies to every heal path
+  (pickups, lifesteal, and `HealthRegenUpgradeData`'s own regen tick).
+- **`ExperienceGainMultiplier`** is a brand new field - `ExpOrbSystem` already resolves the
+  collecting player's own `CharacterStats*` right at the pickup point (same place
+  `PickupRangeMultiplier` is read), so scaling the granted amount there was a one-line addition.
+
+## Design notes
+
+1. **Pool overlap with Weapon Perks is intentional (decided).** `WeaponPerkPoolData` ships a full
+   ~30-perk roster (see `docs/weapon-perks.md`) including Damage/Fire Rate/Reload/Magazine/Crit
+   Chance/Crit Damage/Range - all of which also appear above. Both pools roll into the same 3-option
+   level-up screen (`LevelUpUtility.RollOptionsFor`), so a player can see near-identical-looking
+   cards from both pools in one screen. Kept on purpose as two independent stacking sources (Weapon
+   Perk = build-defining, less frequent; Global = small flat increments) rather than cut.
+2. **Skill Upgrade vs Skill-stat Global Upgrade.** `docs/level-up-upgrades.md` describes the
+   per-hero `SkillUpgrade` pool as living on `CharacterData` because "which skill/passive upgrades
+   make sense depends on which hero is rolling." The Hero Skill section above is generic
+   damage/cooldown/duration/area - fine as a hero-agnostic Global Upgrade as long as it's kept to
+   flat multipliers and doesn't start creeping into hero-specific mechanics that belong in the
+   per-hero pool instead.
+3. **Luck has no defined meaning yet.** The field exists (`CharacterStats.Luck`, `CharacterData.Luck`)
+   but was never wired to anything - unlike the other dead fields above, there's no obvious single
+   consumer to fold it into (does it bias weapon-perk rarity rolls? loot drops? enemy drop chance?
+   none of those mechanics read a per-player Luck value today). Needs a design decision before it's
+   worth wiring, not just a plumbing fix.
+4. **Economy tier weighting.** Once Gold Gain/Rift Shards exist as real systems, consider weighting
+   all four Economy entries lower than combat stats (e.g. a rarer rarity tier) via
+   `LevelUpConfig.GetWeight` - a struggling run shouldn't have "worse combat power this level" forced
+   by an economy pick landing in the roll.
+5. **Missing from the list, already free.** `CharacterStats` also has `DamageReduction`,
+   `KnockbackMultiplier`/`KnockbackTakenMultiplier`, `LifeSteal`, and
+   `OutgoingStatusDurationMultiplier` sitting unused by any upgrade today - cheap additions later if
+   the pool needs more Hero/Weapon variety without new plumbing (worth checking each still has a live
+   consumer of its own before assuming it's free, the same way this pass found several that didn't).

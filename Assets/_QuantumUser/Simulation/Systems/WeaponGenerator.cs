@@ -4,14 +4,14 @@ namespace Quantum
     // every client generates the same weapon on the same tick - never call this from view code.
     public static unsafe class WeaponGenerator
     {
-        public static void Roll(Frame f, Weapon* weapon, AssetRef<WeaponDataAsset> weaponDataRef,
+        public static void Roll(Frame f, EntityRef owner, Weapon* weapon, AssetRef<WeaponDataAsset> weaponDataRef,
             AssetRef<WeaponPerkPoolData> poolRef, int perkCount)
         {
             ClearPerks(weapon);
             DrawPerks(f, weapon, poolRef, perkCount);
 
             // Bakes the drawn perks into the stats - has to come after the draw, not before.
-            WeaponSystem.Equip(f, weapon, weaponDataRef);
+            WeaponSystem.Equip(f, owner, weapon, weaponDataRef);
         }
 
         private static void ClearPerks(Weapon* weapon)

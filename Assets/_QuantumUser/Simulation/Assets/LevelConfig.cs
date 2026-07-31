@@ -16,6 +16,11 @@ namespace Quantum
         public ChunkType Type;
         public AssetRef<EntityPrototype> Prototype;
         public Int32 Count;
+
+        // If true, LevelGenerationSystem treats every instance of this entry as required: it gets
+        // far more placement attempts than an optional entry, and a failure to place it after that
+        // is logged as an Error (not the usual Debug) so a broken layout can't slip by unnoticed.
+        public bool MustHave;
     }
 
     public class LevelConfig : AssetObject

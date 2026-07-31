@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 85c64b49932d7424793b4b14b9c23392, type: 3}
+  m_Name: IronShoulderSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.IronShoulderSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Brute/DashSkillUpgrades/IronShoulderSkillAction
+    Guid:
+      Value: 360341579882539830
+  Icon: {fileID: 0}
+  DisplayName: Iron Shoulder
+  Rarity: 1
+  Priority: 0
+  Phase: 6
+  Interval:
+    RawValue: 655
+  Activated: 1
+  Description: Enemies in front of you during your dash are knocked back with {0}
+    force; anyone shoved into a wall is stunned for 2s
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 0
+    Offset: {x: 0, y: 0.5, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 198294628958179560, guid: e66bddc96394d4a45b8c8fd1ed37a43d, type: 3}
+    SpawnMode: 2
+    Parent: 1
+    Offset: {x: 0, y: 0.5, z: -0.5}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 2
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 0
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  Width:
+    RawValue: 98304
+  Height:
+    RawValue: 98304
+  Length:
+    RawValue: 98304
+  KnockbackTier: 2
+  WallCheckDistance:
+    RawValue: 131072
+  StunDuration:
+    RawValue: 131072

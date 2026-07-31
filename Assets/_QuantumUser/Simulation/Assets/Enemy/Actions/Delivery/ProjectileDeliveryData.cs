@@ -61,6 +61,16 @@ namespace Quantum
                 ProjectileDataAsset projectileData = f.FindAsset(ProjectileData);
                 ProjectileMovementData movement = f.FindAsset(projectileData.Movement);
 
+                // Bullets fly into the target's body, not its feet - same AimsAtTargetCenter
+                // flag (ProjectileMovementData) the player's own weapon fire already respects
+                // via ProjectileAimUtility.ResolveAimDirection. A lobbed movement (Ballistic/
+                // Thrown) opts out and still lands on the ground the target stands on.
+                if (movement.AimsAtTargetCenter == true &&
+                    ProjectileAimUtility.TryGetCenterOffset(f, target, out FPVector3 centerOffset) == true)
+                {
+                    targetPosition += centerOffset;
+                }
+
                 // The whole target point goes to the movement, not a flattened direction - a
                 // lob needs the real distance to land on the target rather than a fixed
                 // TargetDistance.

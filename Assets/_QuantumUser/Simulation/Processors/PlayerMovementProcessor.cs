@@ -15,6 +15,10 @@ namespace Quantum
     [Preserve]
     public unsafe class PlayerMovementProcessor : KCCProcessor, IBeforeMove, IAfterMoveStep
     {
+        private const string NotJumpableLayerName = "GroundNotJumpable";
+
+        private static int? _notJumpableLayerMask;
+
         public void BeforeMove(KCCContext context, KCCProcessorInfo processorInfo)
         {
             Frame frame = context.Frame;
@@ -41,6 +45,10 @@ namespace Quantum
             // deliberately doesn't touch WeaponSystem/SkillSystem - only movement is pinned, unlike
             // Stun which also silences firing/skills in their own separate checks.
             targetSpeed *= StatusEffectUtility.GetSpeedMultiplier(frame, entity);
+
+            // Max's Adrenaline Rush - live-read off current Stacks, same shape as the Ice multiplier
+            // just above (an independent component, folded in rather than baked into CharacterStats).
+            targetSpeed *= AdrenalineUtility.GetMoveSpeedMultiplier(frame, entity);
 
             if (StatusEffectUtility.IsStunned(frame, entity) == true || StatusEffectUtility.IsRooted(frame, entity) == true)
             {
@@ -117,6 +125,14 @@ namespace Quantum
             if (ankleBlocked == false)
                 return false;
 
+            // GroundNotJumpable obstacles are solid (in KCCSettings.CollisionLayerMask so they block
+            // like a wall) but must never be mantled, regardless of height - checked directly against
+            // Physics3D rather than the ledge probe below, since a short GroundNotJumpable obstacle
+            // would otherwise still read as a climbable ledge.
+            bool ankleBlockedByNotJumpable = context.Frame.Physics3D.Raycast(ankleOrigin, direction, data.MantleProbeDistance, GetNotJumpableLayerMask(context.Frame), queryOptions).HasValue;
+            if (ankleBlockedByNotJumpable == true)
+                return false;
+
             FPVector3 ledgeOrigin = position + FPVector3.Up * data.MaxLedgeHeight;
 
             KCCShapeCastInfo ledgeCast = KCCShapeCastInfo.Get();
@@ -124,6 +140,12 @@ namespace Quantum
             KCCShapeCastInfo.Return(ledgeCast);
 
             return ledgeBlocked == false;
+        }
+
+        private static int GetNotJumpableLayerMask(Frame f)
+        {
+            _notJumpableLayerMask ??= f.Layers.GetLayerMask(NotJumpableLayerName);
+            return _notJumpableLayerMask.Value;
         }
     }
 }

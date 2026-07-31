@@ -25,5 +25,11 @@ namespace Quantum
         public Transform Torso => torso;
         public Transform Arm => arm;
         public Transform Gun => gun;
+
+        // Every SpriteRenderer under this rig, gathered fresh each call rather than serialized -
+        // HitFeedback.SetRig reads this to know what to flash without every ViewPrefab needing an
+        // extra Inspector-wired array kept in sync with whatever renderers that enemy type happens
+        // to have.
+        public SpriteRenderer[] Sprites => GetComponentsInChildren<SpriteRenderer>(true);
     }
 }

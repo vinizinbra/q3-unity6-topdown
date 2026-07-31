@@ -29,7 +29,7 @@ MonoBehaviour:
   PoisonDamagePercent:
     RawValue: 1311
   PoisonFloorPercent:
-    RawValue: 655
+    RawValue: 1311
   StunDuration:
     RawValue: 65536
   RootDuration:
@@ -38,10 +38,6 @@ MonoBehaviour:
     RawValue: 196608
   SlowSpeedMultiplier:
     RawValue: 32768
-  MarkDuration:
-    RawValue: 327680
-  MarkDamageTakenMultiplier:
-    RawValue: 78643
   HasteDuration:
     RawValue: 327680
   HasteAttackSpeedMultiplier:

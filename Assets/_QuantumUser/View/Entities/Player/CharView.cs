@@ -49,7 +49,7 @@ namespace Quantum
             if (QuantumHelper.IsLocalPlayer(_playerRef))
             {
                 isLocalPlayer = true;
-                MyLocalPlayer.Instance.Setup(_entityRef, _playerRef, this);
+                MyLocalPlayer.Instance.Register(_entityRef, _playerRef, this);
             }
         }
 

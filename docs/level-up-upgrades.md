@@ -40,7 +40,7 @@ LevelUpUtility.BeginLevelUpScreen
           already-granted skill upgrades" below) and CharacterData.PassiveUpgrades
        -> every candidate, regardless of kind, is weighted identically: AddCandidate resolves it
           generically as UpgradeData and looks up LevelUpConfig.GetWeight(data.Rarity) - independent
-          of WeaponPerkPoolData's own (differently-tuned) Common/Uncommon/Rare/Epic/Legendary
+          of WeaponPerkPoolData's own (differently-tuned) Common/Rare/Epic/Legendary
           weights, which stay reserved for the original drop-roll mechanic (WeaponGenerator)
        -> weighted draw without replacement (same pattern as WeaponGenerator.DrawPerks: draw via
           f.RNG->Next(0, totalWeight), subtract the drawn candidate's weight, remove it, repeat) up
@@ -134,7 +134,7 @@ checks each `DashSkillUpgrades`/`HeroSkillUpgrades` candidate against that slot'
   `FP LevelUpTimeRemaining`.
 
 **Data (`Assets/_QuantumUser/Simulation/Assets/`)**
-- `UpgradeRarity.cs` - **new**: `enum UpgradeRarity : Byte` (`Common`/`Uncommon`/`Rare`/`Epic`/
+- `UpgradeRarity.cs` - **new**: `enum UpgradeRarity : Byte` (`Common`/`Rare`/`Epic`/
   `Legendary`) - generalized from what used to be `WeaponPerkData`-only `WeaponPerkRarity`.
 - `UpgradeData.cs` - **new**: abstract base (`AssetObject`) with `Sprite Icon`, `string DisplayName`,
   `UpgradeRarity Rarity`, and an abstract `string GetDescription()` (a method, not a field, since
@@ -154,7 +154,7 @@ checks each `DashSkillUpgrades`/`HeroSkillUpgrades` candidate against that slot'
 - `LevelUp/LevelUpConfig.cs` - **edited**: `FP DecisionTimeSeconds` (30), `int ChoiceCount` (3),
   `AssetRef<WeaponPerkPoolData> WeaponPerkPool` (reuses the existing type - only its `Perks` list is
   read for level-up purposes), `List<AssetRef<GlobalUpgradeData>> GlobalUpgrades` (ships empty), plus
-  its own `CommonWeight`/`UncommonWeight`/`RareWeight`/`EpicWeight`/`LegendaryWeight` +
+  its own `CommonWeight`/`RareWeight`/`EpicWeight`/`LegendaryWeight` +
   `GetWeight(UpgradeRarity)` - the ONE weight table every level-up candidate uses regardless of kind
   (deliberately separate from `WeaponPerkPoolData`'s own weights - level-up pacing may want different
   tuning than raw drop rolls).
@@ -216,20 +216,22 @@ checks each `DashSkillUpgrades`/`HeroSkillUpgrades` candidate against that slot'
 
 ## Current status / known simplifications
 
-Code compiles and `LevelUpSystem` is registered, but **no level-up screen can actually open yet** -
-the following need Editor authoring, none of it done yet:
+**Update: point 1 below is resolved.** `Assets/_QuantumUser/Resources/LevelUpConfig.asset` now
+exists and is assigned to `RuntimeConfig` in `QuantumGameScene.unity` (confirmed by GUID match).
+Its `WeaponPerkPool` is also wired to a populated `WeaponPerkPoolData` (see `docs/weapon-perks.md`).
+Its `GlobalUpgrades` list is still empty - run `Tools/RiftRaiders/Generate Global Upgrade Assets`
+(`Assets/_QuantumUser/Editor/GlobalUpgradeAssetGenerator.cs`) to author and wire those (see
+`docs/global-upgrades.md`).
 
-1. **`LevelUpConfig.asset`** - no instance exists, and even once created, isn't assigned to
-   `RuntimeConfig`. Until it is, `LevelUpUtility.BeginLevelUpScreen` bails on its very first guard
-   every time - a level-up still happens (`Frame.Global.Level` still increments), it just never
-   pauses anything or shows a screen.
-2. **Every pool is empty** - `WeaponPerkPool`/`GlobalUpgrades` have no entries authored on
-   `LevelUpConfig` yet, and no hero's `CharacterData.DashSkillUpgrades`/`HeroSkillUpgrades`/
-   `PassiveUpgrades` lists have been extended for this specific screen (though `DashSkillUpgrades`/
-   `HeroSkillUpgrades` already existed and may already carry entries from before this feature - those
-   get picked up automatically, no extra wiring needed). Even with `LevelUpConfig` assigned, a
-   level-up with every pool empty still just logs and skips (no screen, no pause) - see
-   `BeginLevelUpScreen`'s `anyRolled` check.
+Code compiles and `LevelUpSystem` is registered. The following still need Editor authoring:
+
+1. ~~`LevelUpConfig.asset`~~ - done, see above.
+2. **`GlobalUpgrades` is still empty** (fixed by the generator above) - no hero's
+   `CharacterData.DashSkillUpgrades`/`HeroSkillUpgrades`/`PassiveUpgrades` lists have been extended
+   for this specific screen either (though `DashSkillUpgrades`/`HeroSkillUpgrades` already existed
+   and may already carry entries from before this feature - those get picked up automatically, no
+   extra wiring needed). A level-up with every pool empty still just logs and skips (no screen, no
+   pause) - see `BeginLevelUpScreen`'s `anyRolled` check.
 3. **`UpgradeWindow` scene/prefab wiring** - no `UpgradeWindow` GameObject exists under any
    `WindowManager` in `QuantumGameScene` yet, and `GameplayUiController`'s new `upgradeWindow` field
    is unassigned. The `ShowWindow<GameplayWindow>()` "close" transition in
@@ -248,10 +250,11 @@ the following need Editor authoring, none of it done yet:
    without a card.
 
 Beyond the missing assets/wiring:
-- **Global Upgrade and Passive Upgrade have no gameplay effect** - both `GlobalUpgradeUtility.Grant`
-  and `PassiveUpgradeUtility.Grant` just log; `GlobalUpgradeData`/`PassiveUpgradeData` only carry
-  display metadata. This is deliberate scope for this pass - only the plumbing (roll, offer, confirm,
-  grant-path dispatch) needed to exist end-to-end, not the mechanics themselves.
+- **Passive Upgrade still has no gameplay effect** - `PassiveUpgradeUtility.Grant` just logs;
+  `PassiveUpgradeData` only carries display metadata. Global Upgrade got a real `Apply(Frame,
+  EntityRef)` path (see `docs/global-upgrades.md`) with one concrete implementation so far
+  (`HealthRegenUpgradeData`) - every other Global Upgrade entry is still just a design row in that
+  doc, not code.
 - **Multiple levels from one `Grant` call collapse into one screen** - if a single big exp grant
   crosses more than one level threshold in the same `while` loop, the player still only sees
   `ChoiceCount` (3) options total, not `3 × levelsGained`. Chosen deliberately over queuing multiple

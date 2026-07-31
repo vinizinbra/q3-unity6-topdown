@@ -1,0 +1,29 @@
+// Brute's Protector Aura - added directly onto his own entity by ProtectorPassiveData (so it
+// follows him via his own Transform3D, same "field lives on the hero, no separate tracking entity"
+// shape Kai's ProjectileSlowField already uses). Driven every tick by ProtectorAuraSystem, which
+// continuously re-applies Intimidate to nearby enemies and Damage Reduction to nearby allies -
+// refresh-only, same idiom SentryAuraSystem already uses, so nothing needs removing when a target
+// leaves radius.
+component ProtectorAura
+{
+    FP Radius;
+
+    // Multiplies an Intimidated enemy's own outgoing damage - see StatusEffectUtility.ApplyIntimidate.
+    FP IntimidateDamageMultiplier;
+
+    // 0 (the base passive's default) means the Guardian ascension hasn't been taken - allies get no
+    // Damage Reduction from the aura until it is.
+    FP AllyDamageReductionAmount;
+
+    // 0 (off) until the Iron Presence ascension sets it - the movement-speed multiplier applied to
+    // Intimidated enemies via the existing, generic StatusEffectUtility.ApplyIce.
+    FP IntimidateSlowMultiplier;
+
+    // 1 (no effect) until Iron Presence raises it above 1 - reduced knockback resistance on
+    // Intimidated enemies, see StatusEffectUtility.ApplyKnockbackTaken.
+    FP IntimidateKnockbackTakenMultiplier;
+
+    // 0 (off) until the Fearless ascension sets it - bonus damage Brute himself deals against an
+    // Intimidated target, see ProtectorAuraUtility.GetFearlessBonusMultiplier.
+    FP FearlessBonusVsIntimidated;
+}

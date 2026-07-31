@@ -42,7 +42,7 @@ namespace Quantum
                 shield->Max += Amount;
             }
 
-            shield->Current = FPMath.Min(shield->Current + Amount, shield->Max);
+            ShieldUtility.ApplyFlatShield(f, context.Target, context.Owner, shield, Amount);
         }
     }
 }

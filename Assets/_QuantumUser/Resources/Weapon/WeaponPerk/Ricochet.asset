@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a546092a3b702412d825bf5de5a13e5e, type: 3}
+  m_Name: Ricochet
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.RicochetWeaponPerkData
+  Identifier:
+    Path: _QuantumUser/Resources/Weapon/WeaponPerk/Ricochet
+    Guid:
+      Value: 456316048361573836
+  Icon: {fileID: 0}
+  DisplayName: Ricochet
+  Rarity: 1
+  Description: +{0:0} Bounce
+  BonusBounces: 1

@@ -7,7 +7,7 @@ namespace Quantum
     using UnityEngine.Serialization;
 
     // Drives EnemyTierResistanceConfig lookups (StatusEffectUtility.GetTierResistance) - how much
-    // of an incoming stun/root/slow/burn/poison/mark/knockback actually lands scales with this,
+    // of an incoming stun/root/slow/burn/break/knockback actually lands scales with this,
     // not with any field on this asset itself.
     public enum EnemyTier
     {
@@ -181,6 +181,16 @@ namespace Quantum
         public FP FrontalDamageReductionAmount;
         public FP FrontalDamageReductionArcDegrees;
 
+        // Steers this enemy's chosen move direction away from a wall directly ahead (see
+        // EnemyMovementUtility.SteerAroundWalls) before PhysicsSystem3D ever has to resolve the
+        // collision, instead of it pushing straight into the wall and stalling/juddering
+        // against it every tick. Independent of Height.AvoidLedges (a vertical "don't walk off
+        // the edge" check) and orthogonal to InitialState - a Flying enemy at head height wants
+        // this just as much as a Grounded one. Off by default, same reasoning as every other
+        // opt-in traversal flag here - only enemies actually navigating tight corridors need it.
+        public bool AvoidWalls;
+        public FP WallAvoidProbeDistance;
+
         public readonly bool HasTrait(EnemyTrait trait) => Array.IndexOf(Traits, trait) >= 0;
     }
 
@@ -250,6 +260,7 @@ namespace Quantum
             Traits = new EnemyTrait[0],
             FrontalDamageReductionAmount = FP._0_50,
             FrontalDamageReductionArcDegrees = 120,
+            WallAvoidProbeDistance = 1,
             Height = new EnemyHeightData
             {
                 InitialState = EnemyHeightState.Grounded,

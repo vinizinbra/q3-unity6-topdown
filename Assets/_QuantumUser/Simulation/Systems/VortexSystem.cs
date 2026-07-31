@@ -57,11 +57,6 @@ namespace Quantum
             Shape3D sphere = Shape3D.CreateSphere(radius);
             var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
 
-            // Only resolved/looked-up once per pulse, not per target - neither changes target to
-            // target within the same pulse.
-            ResolveOwner(f, filter.Entity, out EntityRef owner, out DamageSource source, out ElementType element);
-            bool hasMarkEffect = f.Unsafe.TryGetPointer<VortexMarkUpgrade>(filter.Entity, out var mark) == true && mark->MarkEffect.IsValid == true;
-
             int caughtCount = 0;
 
             for (int i = 0; i < hits.Count; i++)
@@ -83,26 +78,6 @@ namespace Quantum
                 // every pulse regardless. ApplyPull, not ApplyKnockback - this must not stagger the
                 // enemy (see the class comment above for why).
                 DamageUtility.ApplyPull(f, target, pullDirection, filter.Vortex->Force);
-
-                // Zero unless VortexMarkUpgrade is equipped (see SpawnVortexEffectData) - a vanilla
-                // vortex marks nobody. Reapplied every pulse the target is still caught, which simply
-                // refreshes MarkEffectData's Duration (a plain overwrite-on-reapply status, same as
-                // Ice/Haste) rather than stacking.
-                if (hasMarkEffect == true)
-                {
-                    HitEffectContext markContext = new HitEffectContext
-                    {
-                        Owner = owner,
-                        Target = target,
-                        Position = targetTransform->Position,
-                        PushDirection = pullDirection,
-                        Damage = FP._0,
-                        Source = source,
-                        Element = element
-                    };
-
-                    f.FindAsset(mark->MarkEffect).Apply(f, ref markContext);
-                }
 
                 Log.Debug($"[Vortex] {filter.Entity} pulsed {target} with force {filter.Vortex->Force} (radius {radius})");
             }
@@ -281,7 +256,9 @@ namespace Quantum
 
         // Nearest rather than "first found" or random - a homing shot should go after whatever it'll
         // actually reach soonest. Enemies only, same DamageTargetMask.Enemies convention as the rest
-        // of Vortex's own damage.
+        // of Vortex's own damage. Skips a dying/lingering (EnemyActionPhase.Dead) or Invulnerable
+        // (e.g. burrowed - see BurrowDeliveryData) enemy, same as AimSystem.IsAliveTarget/
+        // EnemyMovementUtility.TryFindNearestEnemy.
         private static bool TryFindNearestEnemy(Frame f, FPVector3 center, FP radius, out EntityRef nearest, out FPVector3 nearestPosition)
         {
             nearest = EntityRef.None;
@@ -299,7 +276,10 @@ namespace Quantum
             {
                 EntityRef candidate = hits[i].Entity;
 
-                if (f.Has<Enemy>(candidate) == false)
+                if (f.Unsafe.TryGetPointer<Enemy>(candidate, out var enemy) == false || enemy->Phase == EnemyActionPhase.Dead)
+                    continue;
+
+                if (f.Has<Invulnerable>(candidate) == true)
                     continue;
 
                 if (f.Unsafe.TryGetPointer<Transform3D>(candidate, out var candidateTransform) == false)

@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: SpriteColorise
-  m_Shader: {fileID: 4800000, guid: a9a92797eb7348c4989d7d615bd46e45, type: 3}
+  m_Shader: {fileID: 4800000, guid: 8c245d0dc7ce45dab0450e65816ce417, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -61,6 +61,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _BlackThreshold: 0.02
     - _BumpScale: 1
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
@@ -75,6 +76,7 @@ Material:
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
+    - _ThresholdSoftness: 0.015
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:

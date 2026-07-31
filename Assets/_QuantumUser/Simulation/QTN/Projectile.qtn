@@ -8,6 +8,19 @@ component Projectile
     AssetRef<ProjectileDataAsset> ProjectileData;
     Int32 RemainingPierces;
 
+    // -- Weapon-perk fields (Ricochet/Long Barrel/Explosive Sequence/Cataclysm Round) --
+    // All seeded at spawn time from the firing Weapon's own baked stats (see
+    // WeaponSystem.FireProjectile) - zero/false for anything not fired by a weapon perk (enemy
+    // attacks, skills), so they never affect a projectile that didn't opt in. MaxDistanceMultiplier
+    // is the one exception: a component defaults to 0, but "no Long Barrel perk" has to read as "no
+    // range change" (x1), not "always expires at distance 0" - ProjectileSystem.TryExpire treats
+    // <= 0 as 1 rather than the literal value, same convention as Weapon.RangeMultiplier itself
+    // being seeded to 1 (not left at 0) in WeaponSystem.SeedStats.
+    Int32   RemainingBounces;
+    FP      MaxDistanceMultiplier;
+    Boolean IsExplosiveProc;
+    Boolean IsCataclysm;
+
     // Captured at fire time and carried to impact - the shooter holds both a weapon and skills, so
     // it can't be asked which one launched this.
     DamageSource Source;
@@ -47,4 +60,11 @@ component Projectile
     // inferring "distance" from Lifetime and an assumed constant speed, so it stays correct even if
     // something changes a projectile's speed mid-flight.
     FP TraveledDistance;
+
+    // Live multiplier on this tick's actual displacement (Velocity itself is never touched) - reset
+    // to 1 and recomputed every tick by VoidFieldSystem for an enemy-owned projectile currently
+    // inside a ProjectileSlowField, so leaving every field instantly restores normal speed with
+    // nothing to revert. 1 for anything not affected (every projectile not near a field, or any
+    // player-owned one - Kai's field only ever slows enemy fire).
+    FP SpeedMultiplier;
 }

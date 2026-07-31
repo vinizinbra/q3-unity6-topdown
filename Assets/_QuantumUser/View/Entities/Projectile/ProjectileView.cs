@@ -5,9 +5,10 @@ using UnityEngine;
 
 namespace Quantum
 {
-    // Rotates the projectile sprite to visually point along its current travel direction,
-    // billboarded to face the camera - same screen-space projection PlayerGunAimView uses for
-    // the gun's aim rotation, but driven by Projectile.Velocity instead of Aim.Angle.
+    // Rotates the projectile's transform to face its current travel direction in world space -
+    // same convention ProjectileSystem.Advance uses for Transform3D.Rotation (LookRotation
+    // toward Velocity, world up), so the view matches the mesh's actual 3D orientation instead
+    // of flattening it toward the camera.
     //
     // Also owns the projectile's death: a fast projectile can hit on its very first simulated
     // tick, so f.Destroy(entity) can land before this view was ever rendered even once - the
@@ -20,16 +21,14 @@ namespace Quantum
     // own view used to lose the race against its own teardown and could miss the event entirely.
     public class ProjectileView : CustomQuantumEntityViewComponent
     {
-        [SerializeField, Tooltip("Falls back to Camera.main if left empty.")]
-        private Transform cameraTransform;
-        [SerializeField, Tooltip("Degrees added so the sprite's own rest orientation lines up with its travel direction. -90 if the art is drawn pointing up.")]
-        private float angleOffset = -90f;
         [SerializeField, Tooltip("Hidden while the projectile is still counting down ProjectileDataAsset.SpawnDelay. Leave empty if this projectile has no delay/windup.")]
         private Renderer visualRenderer;
 
         [Header("Death")]
         [SerializeField, Tooltip("Pooled particle prefab played (via EffectsManager) once this projectile reaches its resolved hit position - hit or expired. Leave empty for no effect.")]
         private ParticleSystem destroyEffectPrefab;
+        [SerializeField, Tooltip("Trail particle child that should keep playing/fading out after this projectile is destroyed, instead of being cut off mid-emission by Destroy(gameObject). Must be a separate child object, not on this same GameObject. Leave empty if this projectile has no trail.")]
+        private ParticleSystem trailParticle;
         [SerializeField, Tooltip("Clamped bounds on how long the catch-up-to-hit-point tween can take, regardless of the projectile's actual last known speed - guards against a near-zero speed (e.g. an already-grounded/settled projectile) producing a near-infinite tween.")]
         private float minCatchUpDuration = 0.03f;
         [SerializeField]
@@ -45,9 +44,6 @@ namespace Quantum
         public override void Awake()
         {
             base.Awake();
-
-            if (cameraTransform == null && Camera.main != null)
-                cameraTransform = Camera.main.transform;
 
             if (entityView == null)
             {
@@ -87,17 +83,11 @@ namespace Quantum
             if (visualRenderer != null)
                 visualRenderer.enabled = projectile.RemainingSpawnDelay <= 0;
 
-            if (cameraTransform == null)
-                return;
-
             Vector3 velocity = projectile.Velocity.ToUnityVector3();
-            Vector2 screenDir = new Vector2(Vector3.Dot(velocity, cameraTransform.right), Vector3.Dot(velocity, cameraTransform.up));
-
-            if (screenDir.sqrMagnitude < 0.0001f)
+            if (velocity.sqrMagnitude < 0.0001f)
                 return;
 
-            float angle = Mathf.Atan2(screenDir.y, screenDir.x) * Mathf.Rad2Deg + angleOffset;
-            transform.rotation = Quaternion.LookRotation(cameraTransform.forward, Vector3.up) * Quaternion.Euler(0f, 0f, angle);
+            transform.rotation = Quaternion.LookRotation(velocity, Vector3.up);
         }
 
         private void OnProjectileDestroyed(EventProjectileDestroyed e)
@@ -125,6 +115,9 @@ namespace Quantum
 
             if (destroyEffectPrefab != null && EffectsManager.Instance != null)
                 EffectsManager.Instance.PlayEffect(destroyEffectPrefab, hitPoint, Quaternion.identity);
+
+            if (trailParticle != null)
+                trailParticle.gameObject.AddComponent<ParticleGracefulStop>().StopAndDestroyWhenFinished();
 
             Destroy(gameObject);
         }

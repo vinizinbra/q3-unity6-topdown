@@ -111,8 +111,8 @@ namespace Quantum
 
         // Applied via HitEffectUtility.ApplyToTarget by this action's EnemyDeliveryData, in place
         // of calling DamageUtility.ApplyDamage/ApplyKnockback directly - the same shared Hit Effect
-        // system weapon perks/projectiles already use, so enemy hits can proc Burn/Poison/Slow/
-        // Stun/Mark/shield-grant status the same way those do. A DamageEffectData (DamageMultiplier
+        // system weapon perks/projectiles already use, so enemy hits can proc Burn/Void/Slow/
+        // Stun/shield-grant status the same way those do. A DamageEffectData (DamageMultiplier
         // = 1) + KnockbackEffectData (picking whichever KnockbackTier this action's Knockback field
         // above roughly matches) pair reproduces the flat Damage/Knockback fields above exactly -
         // author both onto every action that deals damage/knockback.

@@ -1,0 +1,6 @@
+// A physical Scrap pickup dropped by ScrapUtility.TrySpawnDrop on an eligible enemy kill (see
+// LuxScrapCollector) - unlike ExpOrb, this carries no Value: every pickup grants the same flat
+// effect (see ScrapUtility.Grant), so there's nothing per-orb to stamp.
+component ScrapOrb
+{
+}

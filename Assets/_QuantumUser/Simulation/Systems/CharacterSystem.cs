@@ -64,7 +64,8 @@ namespace Quantum
             stats->ProjectileSpeedMultiplier = data.ProjectileSpeedMultiplier;
             stats->AreaRadiusMultiplier = data.AreaRadiusMultiplier;
 
-            stats->CooldownMultiplier = data.CooldownMultiplier;
+            stats->DashCooldownMultiplier = data.DashCooldownMultiplier;
+            stats->SkillCooldownMultiplier = data.SkillCooldownMultiplier;
             stats->SkillDurationMultiplier = data.SkillDurationMultiplier;
             stats->KnockbackMultiplier = data.KnockbackMultiplier;
 
@@ -77,6 +78,7 @@ namespace Quantum
 
             stats->PickupRangeMultiplier = data.PickupRangeMultiplier;
             stats->Luck = data.Luck;
+            stats->ExperienceGainMultiplier = data.ExperienceGainMultiplier;
         }
 
         // Health may legitimately be absent (a stats-only entity), so this is not an error case.
@@ -86,10 +88,11 @@ namespace Quantum
                 return;
 
             health->MaxHealth = data.BaseMaxHealth * stats->MaxHealthMultiplier;
-            health->CurrentHealth = health->MaxHealth;
+            health->CurrentHealth = health->MaxHealth * f.RuntimeConfig.DebugInitialHealthMultiplier;
+            health->RegenRate = data.BaseHealthRegenRate;
 
             Log.Debug($"[Character] {entity} health seeded -> {health->CurrentHealth}/{health->MaxHealth} " +
-                      $"(base {data.BaseMaxHealth} x mult {stats->MaxHealthMultiplier})");
+                      $"(base {data.BaseMaxHealth} x mult {stats->MaxHealthMultiplier}, debug current x{f.RuntimeConfig.DebugInitialHealthMultiplier})");
         }
 
         private static void SeedArmor(Frame f, EntityRef entity, CharacterData data)
@@ -108,7 +111,7 @@ namespace Quantum
                 return;
 
             shield->Max = data.BaseMaxShield * stats->MaxShieldMultiplier;
-            shield->Current = shield->Max;
+            shield->Current = shield->Max * f.RuntimeConfig.DebugInitialShieldMultiplier;
             shield->RechargeDelay = data.ShieldRechargeDelay;
             shield->RechargeRate = data.ShieldRechargeRate;
             shield->RechargeTimer = FP._0;
@@ -202,7 +205,7 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<Weapon>(entity, out var weapon) == false)
                 return;
 
-            WeaponSystem.Equip(f, weapon, data.StartingWeapon);
+            WeaponSystem.Equip(f, entity, weapon, data.StartingWeapon);
             Log.Debug($"[Character] {entity} starting weapon seeded -> {data.StartingWeapon}");
         }
 

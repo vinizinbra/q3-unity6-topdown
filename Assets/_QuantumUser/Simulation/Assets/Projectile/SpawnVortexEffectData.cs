@@ -26,7 +26,6 @@ namespace Quantum
             ApplyDamageUpgrade(f, context.Owner, spawned);
             ApplyExplodeOnDestroyUpgrade(f, context.Owner, spawned);
             ApplyRandomExplosionUpgrade(f, context.Owner, spawned);
-            ApplyMarkUpgrade(f, context.Owner, spawned);
             ApplyCrowdDamageUpgrade(f, context.Owner, spawned);
             ApplyHomingProjectileUpgrade(f, context.Owner, spawned);
 
@@ -94,17 +93,6 @@ namespace Quantum
             copy->TickInterval = upgrade->TickInterval;
             copy->TickTimer = FP._0;
             copy->Source = upgrade->Source;
-        }
-
-        // Begin-only upgrade (see VortexMarkUpgrade) - copied onto the spawned vortex itself, same
-        // reasoning as the other Apply*Upgrade methods here.
-        private static void ApplyMarkUpgrade(Frame f, EntityRef owner, EntityRef spawned)
-        {
-            if (f.Unsafe.TryGetPointer<VortexMarkUpgrade>(owner, out var upgrade) == false)
-                return;
-
-            f.AddOrGet<VortexMarkUpgrade>(spawned, out var copy);
-            copy->MarkEffect = upgrade->MarkEffect;
         }
 
         // Begin-only upgrade (see VortexCrowdDamageUpgrade) - copied onto the spawned vortex itself,

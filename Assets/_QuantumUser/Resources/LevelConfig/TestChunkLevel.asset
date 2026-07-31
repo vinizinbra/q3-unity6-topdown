@@ -34,8 +34,16 @@ MonoBehaviour:
       Id:
         Value: 1463002180470635866
     Count: 20
+    MustHave: 0
   - Type: 1
     Prototype:
       Id:
         Value: 1482437271914828619
     Count: 20
+    MustHave: 0
+  - Type: 3
+    Prototype:
+      Id:
+        Value: 1422661273244132242
+    Count: 1
+    MustHave: 1

@@ -41,7 +41,13 @@ namespace Quantum
 
             if (f.Unsafe.TryGetPointer<Projectile>(projectileEntity, out var projectile) == true)
             {
-                projectile->Velocity = launch.Velocity;
+                // Scales the whole spawn-time velocity by the owner's CharacterStats.
+                // ProjectileSpeedMultiplier (1 for anything without CharacterStats, e.g. every enemy
+                // today) rather than threading a multiplier through every ProjectileMovementData
+                // subclass's own Speed - a movement that re-homes velocity later
+                // (HomingProjectileMovementData.UpdateVelocity) re-derives its own magnitude, so this
+                // only guarantees the multiplier holds for the initial launch, not forever.
+                projectile->Velocity = launch.Velocity * StatUtility.GetProjectileSpeedMultiplier(f, owner);
                 projectile->Damage = damage;
                 projectile->RemainingLifetime = projectileData.Lifetime;
                 projectile->Owner = owner;

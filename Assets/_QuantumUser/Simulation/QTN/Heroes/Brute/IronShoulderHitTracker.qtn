@@ -1,0 +1,18 @@
+// Granted onto the CASTER by IronShoulderSkillAction's own Begin phase and reset to empty every
+// activation - remembers which enemies already got knocked back this dash so a target that keeps
+// pace inside the check box across OnGoing ticks only gets launched once, not once per tick. Damage
+// still repeats every tick it's caught (see IronShoulderSkillAction) - same "damage repeats, a
+// one-shot knockback doesn't" convention HitPathSkillAction.HitAroundCaster documents for its own
+// OnGoing mode, just enforced here instead of left to chance.
+//
+// Capacity is small since the box only ever catches a handful of enemies within one activation -
+// once full, any further new enemy simply isn't deduped (falls back to the pre-existing behavior),
+// an accepted limitation rather than a silent bug. Lives as its own component rather than growing
+// SkillSlot/CharacterSkills - see CharacterSkills.qtn's own ProjectilePending comment for why an
+// EntityRef field was deliberately kept off that struct (Quantum's Unity-prototype codegen silently
+// drops the Upgrades array from the Inspector once CharacterSkills holds any EntityRef).
+component IronShoulderHitTracker
+{
+    array<EntityRef>[8] HitEntities;
+    Byte HitCount;
+}

@@ -1,8 +1,0 @@
-// Granted/revoked by Heroes/Zara/PoisonDamageWavesSkillAction - read by
-// AlternatingAreaSystem.TryAppendPoisonUpgrade off the speaker's own AreaOwner.Owner, appending
-// PoisonEffect into the first open Effects slot after the authored DamageEffects are copied in for
-// the damage phase. Silently does nothing if DamageEffects already fills all 4 slots.
-component PoisonDamageWavesUpgrade
-{
-    AssetRef<HitEffectData> PoisonEffect;
-}

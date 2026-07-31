@@ -25,11 +25,33 @@ namespace QuantumUser.View.Managers
         [SerializeField, Tooltip("Fallback blast VFX used when the detonating AreaHitData doesn't author its own BlastEffectPrefab.")]
         private ParticleSystem defaultAreaBlastEffect;
 
-        [Header("Root")]
-        [SerializeField, Tooltip("Played whenever any entity gets Rooted, from any source (see StatusEffectUtility.ApplyRoot/OnEntityRooted). Falls back to defaultAreaBlastEffect if left empty.")]
-        private ParticleSystem rootEffectPrefab;
-        [SerializeField, Tooltip("Added to the ground-snapped spawn position, e.g. to lift the effect above the floor and avoid z-fighting.")]
-        private Vector3 rootEffectOffset = new(0f, 0.02f, 0f);
+        [Header("Shockwave")]
+        [SerializeField, Tooltip("Played whenever a ShockwaveReleased event fires (currently only Empty Chamber, see docs/weapon-perks.md) - generic and source-agnostic, not per-asset. Falls back to defaultAreaBlastEffect if left empty. Authored at a reference radius of 1, scaled by e.Radius (not diameter) - same convention as the other radius-scaled handlers below.")]
+        private ParticleSystem shockwaveEffectPrefab;
+
+        [Header("Void Explosion")]
+        [SerializeField, Tooltip("Played on VoidExplosionReleased (Void+Fire reaction - see docs/elemental-reactions.md and StatusEffectUtility.TryTriggerExplosion). Falls back to defaultAreaBlastEffect, tinted voidExplosionFallbackColor, if left empty - so it already reads distinctly purple even before a bespoke prefab is authored.")]
+        private ParticleSystem voidExplosionEffectPrefab;
+        [SerializeField, Tooltip("Tint applied only when falling back to defaultAreaBlastEffect (voidExplosionEffectPrefab left empty) - matches ResonanceFxView's own voidColor. Ignored once a dedicated prefab is authored, since that plays with its own authored color.")]
+        private Color voidExplosionFallbackColor = new Color(0.6f, 0.3f, 0.85f);
+
+        [Header("Melee Hit")]
+        [SerializeField, Tooltip("Played whenever a HitEffectApplied event fires from a non-enemy Owner (a player skill/weapon hitting something) - generic and source-agnostic, not per-asset. Falls back to defaultAreaBlastEffect if left empty. Enemy-caused hits are handled separately by EnemyAttackVisualsView (per-delivery HitImpactPrefab), so this only covers the previously-uncovered player-hit case.")]
+        private ParticleSystem meleeHitEffectPrefab;
+        [SerializeField, Tooltip("Uniform scale used for meleeHitEffectPrefab (or its fallback) - this event carries no radius of its own to derive a scale from.")]
+        private float meleeHitEffectScale = 1f;
+
+        [Header("Heal / Shield Grant")]
+        [SerializeField, Tooltip("Played at the target whenever EntityHealed fires, from any source (HealingStepSkillAction, HealEffectData, HealthRegenSystem, ...) - generic and source-agnostic, not per-asset. The floating heal number (DamageFeedbackManager) and hit-flash (HitFeedback) already cover this event too; this is just the particle. Leave empty to skip the particle - unlike the blast-style handlers above, this deliberately does NOT fall back to defaultAreaBlastEffect, since a combat blast reads wrong for a heal.")]
+        private ParticleSystem healGrantEffectPrefab;
+        [SerializeField, Tooltip("Played at the target whenever EntityShielded fires, from any source (BodyguardSkillAction, PortableCoverSkillAction, ShieldEffectData) - generic and source-agnostic, not per-asset. Leave empty to skip the particle, same no-fallback reasoning as healGrantEffectPrefab.")]
+        private ParticleSystem shieldGrantEffectPrefab;
+
+        [Header("Projectile Reflect")]
+        [SerializeField, Tooltip("Played whenever a ProjectileReflected event fires (Kai's Reflect dash ascension, see ReflectProjectilesSkillAction) - a single point 'parry' spark at the reflected projectile's position, not radius-scaled. Falls back to defaultAreaBlastEffect (at a small fixed scale) if left empty.")]
+        private ParticleSystem projectileReflectedEffectPrefab;
+        [SerializeField, Tooltip("Uniform scale used for projectileReflectedEffectPrefab (or its fallback) - this effect has no radius of its own to derive a scale from.")]
+        private float projectileReflectedEffectScale = 1f;
 
         [Header("Enemy Death")]
         [SerializeField, Tooltip("Played whenever a Filler-tier enemy explodes instead of playing its lingering die animation (see DamageUtility.ApplyDamage/EnemyExploded). Shared across every enemy type - tinted by bloodColor, set per-world via SetBloodColor (see EnvironmentManager). Falls back to defaultAreaBlastEffect if left empty.")]
@@ -81,9 +103,15 @@ namespace QuantumUser.View.Managers
             QuantumEvent.Subscribe<EventJuggernautDischarged>(this, OnJuggernautDischarged);
             QuantumEvent.Subscribe<EventJuggernautEndExploded>(this, OnJuggernautEndExploded);
             QuantumEvent.Subscribe<EventJuggernautLanded>(this, OnJuggernautLanded);
-            QuantumEvent.Subscribe<EventEntityRooted>(this, OnEntityRooted);
             QuantumEvent.Subscribe<EventEnemyExploded>(this, OnEnemyExploded);
             QuantumEvent.Subscribe<EventSentryOverloadDetonated>(this, OnSentryOverloadDetonated);
+            QuantumEvent.Subscribe<EventShockwaveReleased>(this, OnShockwaveReleased);
+            QuantumEvent.Subscribe<EventWeaponExplosionReleased>(this, OnWeaponExplosionReleased);
+            QuantumEvent.Subscribe<EventVoidExplosionReleased>(this, OnVoidExplosionReleased);
+            QuantumEvent.Subscribe<EventProjectileReflected>(this, OnProjectileReflected);
+            QuantumEvent.Subscribe<EventHitEffectApplied>(this, OnHitEffectApplied);
+            QuantumEvent.Subscribe<EventEntityHealed>(this, OnEntityHealed);
+            QuantumEvent.Subscribe<EventEntityShielded>(this, OnEntityShielded);
         }
 
         private void OnDestroy()
@@ -200,20 +228,123 @@ namespace QuantumUser.View.Managers
             PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
         }
 
-        // Generic - fires for every Root proc regardless of source (see StatusEffectUtility.ApplyRoot).
-        // The prefab isn't authored per-asset - Root always plays the same effect no matter which
-        // hero/upgrade triggered it - so it lives directly on this manager (rootEffectPrefab).
-        private void OnEntityRooted(EventEntityRooted e)
+        // Generic - fires for any radial-push moment regardless of source (Empty Chamber, Kai's Dash
+        // Shockwave, Zara's Resonance pulse - see HitEffectUtility.ApplyShockwave/
+        // WeaponSystem.ApplyMagazineEmptiedPerks). Same "no single asset to resolve a bespoke prefab
+        // from" reasoning as OnExplodeOnDeathDetonated - the prefab lives directly on
+        // this manager, not per-perk. Skips entirely when e.Effect is valid - that only happens on a
+        // Zara Remix trigger, and ResonanceFxView (attached to her own entity) is the one that plays
+        // a (tinted) shockwave for that, so this doesn't also play an untinted one on top of it.
+        private void OnShockwaveReleased(EventShockwaveReleased e)
         {
-            ParticleSystem prefab = rootEffectPrefab ?? defaultAreaBlastEffect;
-            Vector3 position = SnapRootPositionToGround(e.Position.ToUnityVector3()) + rootEffectOffset;
-            // rootEffectPrefab is authored at a reference diameter of 1 (radius 0.5), so it's
-            // scaled by the target's full diameter, not its radius.
-            float scale = e.Radius.AsFloat * 2f;
+            if (e.Effect.IsValid == true)
+                return;
 
-            Debug.Log($"[EffectsManager] OnEntityRooted entity={e.Entity} radius={e.Radius.AsFloat} scale={scale} rawPosition={e.Position.ToUnityVector3()} snappedPosition={position} prefab={(prefab != null ? prefab.name : "null")}");
+            ParticleSystem prefab = shockwaveEffectPrefab ?? defaultAreaBlastEffect;
 
-            PlayEffect(prefab, position, Quaternion.identity, Vector3.one * scale);
+            PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
+        }
+
+        // Generic - fires for any weapon-perk explosion that has no dedicated VFX of its own
+        // (currently Cataclysm Round and Explosive Sequence, see HitEffectUtility.ApplyExplosion).
+        // Always plays defaultAreaBlastEffect directly, unlike OnShockwaveReleased - neither perk
+        // has (or needs) its own bespoke prefab field, same reasoning OnExplodeOnDeathDetonated
+        // already uses.
+        private void OnWeaponExplosionReleased(EventWeaponExplosionReleased e)
+        {
+            PlayEffect(defaultAreaBlastEffect, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
+        }
+
+        // Void+Fire reaction (see docs/elemental-reactions.md and
+        // StatusEffectUtility.TryTriggerExplosion) - unlike OnWeaponExplosionReleased above, this one
+        // gets its own dedicated prefab slot rather than always falling through to the shared blast,
+        // since it's meant to read as a distinct effect. Until voidExplosionEffectPrefab is authored,
+        // falls back to defaultAreaBlastEffect tinted voidExplosionFallbackColor via the same tinted
+        // PlayEffect overload OnEnemyExploded uses, so it's still visually distinct in the meantime.
+        private void OnVoidExplosionReleased(EventVoidExplosionReleased e)
+        {
+            Vector3 position = e.Position.ToUnityVector3();
+            Vector3 scale = Vector3.one * e.Radius.AsFloat;
+
+            if (voidExplosionEffectPrefab != null)
+            {
+                PlayEffect(voidExplosionEffectPrefab, position, Quaternion.identity, scale);
+                return;
+            }
+
+            PlayEffect(defaultAreaBlastEffect, position, Quaternion.identity, scale, voidExplosionFallbackColor);
+        }
+
+        // Point spark for Kai's Reflect dash ascension (see ReflectProjectilesSkillAction) - no
+        // radius on the event itself, so this uses its own fixed authored scale instead of
+        // e.Radius-driven scaling like every other generic handler above.
+        private void OnProjectileReflected(EventProjectileReflected e)
+        {
+            ParticleSystem prefab = projectileReflectedEffectPrefab ?? defaultAreaBlastEffect;
+
+            PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * projectileReflectedEffectScale);
+        }
+
+        // Generic - fires for every HitEffectUtility.ApplyToTarget/DamageUtility hit, both enemy- and
+        // player-caused. Enemy-caused hits already get their own per-delivery impact via
+        // EnemyAttackVisualsView.OnHitEffectApplied (EnemyDeliveryData.HitImpactPrefab), which self-
+        // filters to hits it owns - this handler covers the other half (a player skill/weapon hitting
+        // something), which had no visual at all before. Skipping enemy owners here avoids playing
+        // this generic effect on top of that per-delivery one for the same hit.
+        //
+        // Also skips MultiTarget hits entirely - those come from an overlap query that can (and
+        // regularly does) catch several entities in one action, e.g. an AreaHitData bomb or Zara's
+        // Resonance pulse. Playing this generic spark once per target hit would stack N of them on
+        // top of the action's own single dedicated blast VFX (AreaDetonated/ShockwaveReleased/...)
+        // - the exact "several generic hit effects on one area hit" bug this guard exists to
+        // prevent. A multi-target action that wants its own per-target impact needs a dedicated
+        // hookup, same as everything else in this file already gets.
+        private void OnHitEffectApplied(EventHitEffectApplied e)
+        {
+            if (e.MultiTarget == true)
+                return;
+
+            Frame frame = e.Game.Frames.Predicted;
+            if (frame == null) return;
+
+            if (frame.Has<Enemy>(e.Owner) == true)
+                return;
+
+            ParticleSystem prefab = meleeHitEffectPrefab ?? defaultAreaBlastEffect;
+
+            PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * meleeHitEffectScale);
+        }
+
+        // Generic - fires for every EntityHealed regardless of source (regen tick, HealingStepSkillAction,
+        // HealEffectData, ...), same reasoning OnHitEffectApplied uses for player hits. Position is read
+        // from the TARGET's own live Transform3D, not off the event (EntityHealed carries no position of
+        // its own, unlike the hit/blast events above) - a heal always lands on an existing entity, unlike
+        // a hit which can connect against level geometry. No defaultAreaBlastEffect fallback, unlike
+        // every blast-style handler above - skips entirely if healGrantEffectPrefab is unset, since a
+        // combat blast reads wrong for a heal.
+        private void OnEntityHealed(EventEntityHealed e)
+        {
+            if (healGrantEffectPrefab == null)
+                return;
+
+            Frame frame = e.Game.Frames.Predicted;
+            if (frame == null || frame.Has<Transform3D>(e.Target) == false)
+                return;
+
+            PlayEffect(healGrantEffectPrefab, frame.Get<Transform3D>(e.Target).Position.ToUnityVector3(), Quaternion.identity);
+        }
+
+        // Shield counterpart to OnEntityHealed - same shape, same no-fallback reasoning.
+        private void OnEntityShielded(EventEntityShielded e)
+        {
+            if (shieldGrantEffectPrefab == null)
+                return;
+
+            Frame frame = e.Game.Frames.Predicted;
+            if (frame == null || frame.Has<Transform3D>(e.Target) == false)
+                return;
+
+            PlayEffect(shieldGrantEffectPrefab, frame.Get<Transform3D>(e.Target).Position.ToUnityVector3(), Quaternion.identity);
         }
 
         // Filler-tier enemy death replacement for the lingering die animation (EnemyBlobAnimationView
@@ -240,23 +371,8 @@ namespace QuantumUser.View.Managers
             bloodColor = color;
         }
 
-        // Final visual correction: e.Position comes from the sim's own ground-corrected
-        // Transform3D.Position (see JuggernautLandingImpactSystem.CorrectPosition), but a launched
-        // enemy rooted mid-air against a wall may still not be flush with the Unity-rendered floor.
-        // Real UnityEngine.Physics raycast, not Quantum's - purely a view-layer placement fix, no
-        // simulation involvement. Leaves position.y untouched if nothing on the Ground layer is
-        // found beneath/above it. Same shape as EnemyAttackVisualsView.SnapToGround.
-        private static Vector3 SnapRootPositionToGround(Vector3 position)
-        {
-            Vector3 rayOrigin = position + Vector3.up * RootGroundSnapRayHeight;
-
-            if (Physics.Raycast(rayOrigin, Vector3.down, out RaycastHit hit, RootGroundSnapRayHeight * 2f, GroundLayerMask))
-                position.y = hit.point.y;
-
-            return position;
-        }
-
-        // Same raycast-from-above shape as SnapRootPositionToGround, but reports whether the hit is
+        // Raycast-from-above ground probe (same shape a since-removed OnEntityRooted placement-fix
+        // used to share - see git history if that's needed again), but reports whether the hit is
         // close enough to count as "on the ground" instead of unconditionally snapping to it - an
         // enemy exploding mid-air (e.g. knocked off a ledge) shouldn't leave a scorch decal floating
         // at some distant floor below it.
@@ -330,20 +446,19 @@ namespace QuantumUser.View.Managers
         }
 
         // Pairs with GetHeldInstance - prefab must be the same reference passed there, since pools
-        // are keyed by prefab reference.
+        // are keyed by prefab reference. Stops emission only (not StopEmittingAndClear) and defers
+        // the actual pool release/deactivate until already-alive particles finish dying out on their
+        // own - same "wait for IsAlive() to go false" shape ReleaseWhenFinished uses for PlayEffect -
+        // so a status effect ending reads as a fade-out instead of the whole instance vanishing
+        // mid-particle.
         public void ReleaseHeldInstance(ParticleSystem prefab, ParticleSystem instance)
         {
             if (instance == null) return;
 
-            instance.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            instance.Stop(true, ParticleSystemStopBehavior.StopEmitting);
 
-            if (disablePooling || prefab == null)
-            {
-                Destroy(instance.gameObject);
-                return;
-            }
-
-            GetOrCreatePool(prefab).Release(instance);
+            ObjectPool<ParticleSystem> pool = (disablePooling || prefab == null) ? null : GetOrCreatePool(prefab);
+            StartCoroutine(ReleaseWhenFinished(instance, pool));
         }
 
         private ParticleSystem GetPooledInstance(ParticleSystem prefab, Vector3 position, Quaternion rotation, Vector3 scale, out ObjectPool<ParticleSystem> pool)

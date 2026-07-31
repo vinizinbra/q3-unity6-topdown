@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35485c261e20540ff92820354e15f839, type: 3}
+  m_Name: HeavyCaliber
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.HeavyCaliberWeaponPerkData
+  Identifier:
+    Path: _QuantumUser/Resources/Weapon/WeaponPerk/HeavyCaliber
+    Guid:
+      Value: 401600444918086180
+  Icon: {fileID: 0}
+  DisplayName: Heavy Caliber
+  Rarity: 0
+  Description: '{0:+0;-0}% Damage, {1:+0;-0}% Fire Rate'
+  DamageMultiplier:
+    RawValue: 78643
+  FireRateMultiplier:
+    RawValue: 58982

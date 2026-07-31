@@ -60,7 +60,7 @@ namespace Quantum
         // aura wants: shoved away from the caster, not along a path this query never measured.
         private void HitAroundCaster(Frame f, ref SkillSystem.Filter filter, SkillSlot* slot)
         {
-            FP radius = Radius * slot->AreaMultiplier;
+            FP radius = Radius * slot->AreaMultiplier * StatUtility.GetAreaMultiplier(f, filter.Entity);
             FPVector3 center = filter.Transform3D->Position + FPVector3.Up * radius;
 
             HitEffectUtility.ApplyInRadius(f, Effects, center, radius, filter.Entity, Damage,
@@ -79,8 +79,9 @@ namespace Quantum
                 return;
 
             FPVector3 direction = delta / length;
-            FP width = Width * slot->AreaMultiplier;
-            FP height = Height * slot->AreaMultiplier;
+            FP areaMultiplier = slot->AreaMultiplier * StatUtility.GetAreaMultiplier(f, filter.Entity);
+            FP width = Width * areaMultiplier;
+            FP height = Height * areaMultiplier;
 
             // Lifted to body height: the path runs along the caster's feet, so a box centered on it
             // sits half underground and catches the floor instead of what it swept past. Same lift

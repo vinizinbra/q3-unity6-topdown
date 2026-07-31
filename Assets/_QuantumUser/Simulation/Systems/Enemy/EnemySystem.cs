@@ -542,7 +542,8 @@ namespace Quantum
             EnemyDeliveryData delivery = f.FindAsset(action.Delivery);
             delivery.OnAnticipating(f, ref filter, data, action, filter.Enemy->Target);
 
-            filter.Enemy->StateTimer -= f.DeltaTime;
+            FP anticipationMultiplier = StatusEffectUtility.GetAnticipationMultiplier(f, filter.Entity);
+            filter.Enemy->StateTimer -= f.DeltaTime * anticipationMultiplier;
 
             if (filter.Enemy->StateTimer > FP._0)
             {

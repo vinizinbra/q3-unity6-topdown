@@ -1,0 +1,7 @@
+// Tag - present while an enemy is mid-BurrowDeliveryData (dive/travel/resurface), so the view can
+// hide/show the rig off this alone instead of reaching into which delivery is currently active.
+// Always added/removed together with Invulnerable by BurrowDeliveryData, but kept as its own
+// component so a future unrelated Invulnerable source doesn't also hide the enemy's sprite.
+component Burrowed
+{
+}

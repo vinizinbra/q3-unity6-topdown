@@ -1,0 +1,40 @@
+// Zara's Resonance passive - added directly onto her own entity by ResonancePassiveData (same
+// "field lives on the hero" shape Kai's ProjectileSlowField/Brute's ProtectorAura already use).
+// Builds purely from dealing damage (see ResonanceUtility.OnDamageDealt, hooked into
+// DamageUtility.ApplyDamage) - no decay, unlike Max's Adrenaline, since nothing in the design calls
+// for it to drain back down. Once Current reaches Max, ResonanceUtility.FirePulse heals nearby
+// allies and damages nearby enemies in one simultaneous burst, then Current wraps back down
+// (carrying any remainder rather than dropping it to 0).
+component Resonance
+{
+    FP Current;
+    FP Max;
+
+    // Resonance generated per point of damage dealt - the Faster Tempo ascension raises this.
+    FP GenerationPerDamage;
+
+    FP Radius;
+    FP HealPercent;
+    FP DamageAmount;
+
+    // Every pulse is a shockwave from the base passive onward (see ResonancePassiveData) - the
+    // Heavy Bass ascension raises this by one tier (capped at Strong) rather than being the only
+    // source of knockback. Raw KnockbackTier ordinal (Byte), not the enum itself - KnockbackTier is
+    // a plain C# enum (EffectConfig.cs), never declared through the qtn DSL the way every other enum
+    // used as a component field here is, so the codegen can't resolve it directly as a field type -
+    // same reasoning/cast-at-every-site fix as MarkExplosiveDeath.MaxAffectedTier. Force/UpwardForce
+    // for a given tier are read from the shared RuntimeConfig.EffectConfig (see
+    // EffectConfig.GetKnockback), the exact same table every KnockbackEffectData hit effect already
+    // reads, so Zara's shockwave pushes exactly as hard as everything else on a given tier.
+    Byte KnockbackTier;
+
+    // Counts pulses fired so far - never resets. The Remix ascension reads this modulo 3.
+    Byte PulseCount;
+
+    // Remix ascension's authored pool - every third pulse applies one randomly-chosen entry from
+    // here to every enemy the pulse damages (see ResonanceUtility.ResolveRemixEffect). Filled
+    // contiguously from index 0 by RemixPassiveUpgradeData.Apply; every slot empty (the base
+    // passive's default) means the ascension hasn't been taken, so every third pulse does nothing
+    // extra.
+    array<AssetRef<HitEffectData>>[5] RemixEffects;
+}

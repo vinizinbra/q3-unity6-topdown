@@ -269,7 +269,7 @@ MonoBehaviour:
     - 
     - 
     - 
-    LayerMatrix: ffefffffffefffffffefffffffffffffffefffffffefffffffffffffffebffffffefffffffefffff7fe3ffffffe3ffff48e0ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    LayerMatrix: ffefffffffefffffffefffffffffffffffefffffffefffffffffffffffebffffffcfffffffefffff7fe3ffffffe3ffff48e0fffffffeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
   Navigation:
     DefaultNavMeshAgent:
       Id:

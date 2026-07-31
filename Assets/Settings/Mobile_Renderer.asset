@@ -1,28 +1,5 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-8789888110176103853
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a891e0ccd0c0b4b939bd0f6fda246749, type: 3}
-  m_Name: CartoonOutlineFeature
-  m_EditorClassIdentifier: Assembly-CSharp::CartoonOutlineFeature
-  m_Active: 1
-  settings:
-    renderPassEvent: 550
-    outlineColor: {r: 0, g: 0, b: 0, a: 1}
-    depthThreshold: 0.0118
-    normalThreshold: 0.35
-    useNormalEdges: 1
-    edgeThickness: 1.95
-    grazingAngleBias: 0.468
-    grazingAngleBiasScale: 5.61
-  outlineShader: {fileID: 4800000, guid: 22ceae719e2264482ad0c10f9d703f52, type: 3}
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -47,9 +24,8 @@ MonoBehaviour:
     probeSamplingDebugMesh: {fileID: 0}
     probeSamplingDebugTexture: {fileID: 0}
     probeVolumeBlendStatesCS: {fileID: 0}
-  m_RendererFeatures:
-  - {fileID: -8789888110176103853}
-  m_RendererFeatureMap: 531286a9550b0486
+  m_RendererFeatures: []
+  m_RendererFeatureMap: 
   m_UseNativeRenderPass: 1
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
@@ -72,10 +48,10 @@ MonoBehaviour:
     zFailOperation: 0
   m_ShadowTransparentReceive: 0
   m_RenderingMode: 2
-  m_DepthPrimingMode: 0
+  m_DepthPrimingMode: 2
   m_CopyDepthMode: 0
   m_DepthAttachmentFormat: 0
-  m_DepthTextureFormat: 0
+  m_DepthTextureFormat: 90
   m_AccurateGbufferNormals: 0
   m_IntermediateTextureMode: 0
 --- !u!114 &1002035807535710140

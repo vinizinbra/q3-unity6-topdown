@@ -10,7 +10,12 @@ namespace Quantum
     // both run the same context through the same effects.
     public static unsafe class HitEffectUtility
     {
-        public static void ApplyToTarget(Frame f, List<AssetRef<HitEffectData>> effects, ref HitEffectContext context)
+        // multiTarget defaults false (a guaranteed single-connect hit, e.g. ProjectileHitData's own
+        // impact) - see HitEffectApplied's own comment. The three overlap-query methods below
+        // (ApplyInRadius/ApplyInShape/ApplyInCollider) always pass true, since an overlap query can
+        // always catch more than one entity even when this particular call happens to connect with
+        // just one.
+        public static void ApplyToTarget(Frame f, List<AssetRef<HitEffectData>> effects, ref HitEffectContext context, bool multiTarget = false)
         {
             StatusEffectUtility.TryApplyElementalStatus(f, context.Target, context.Owner, context.Source, context.Element, context.Damage);
 
@@ -22,10 +27,10 @@ namespace Quantum
                 f.FindAsset(effects[i]).Apply(f, ref context);
             }
 
-            f.Events.HitEffectApplied(context.Owner, context.Target, context.Position);
+            f.Events.HitEffectApplied(context.Owner, context.Target, context.Position, multiTarget);
         }
 
-        public static void ApplyToTarget(Frame f, FixedArray<AssetRef<HitEffectData>> effects, ref HitEffectContext context)
+        public static void ApplyToTarget(Frame f, FixedArray<AssetRef<HitEffectData>> effects, ref HitEffectContext context, bool multiTarget = false)
         {
             StatusEffectUtility.TryApplyElementalStatus(f, context.Target, context.Owner, context.Source, context.Element, context.Damage);
 
@@ -37,16 +42,19 @@ namespace Quantum
                 f.FindAsset(effects[i]).Apply(f, ref context);
             }
 
-            f.Events.HitEffectApplied(context.Owner, context.Target, context.Position);
+            f.Events.HitEffectApplied(context.Owner, context.Target, context.Position, multiTarget);
         }
 
         // For a blast with no entity behind it - the projectile that carried it is already gone, so
         // the radius has to come from data. targetMask defaults to Both to preserve every existing
         // caller's behavior - AreaHitData is the one that actually opts into Enemies so a player-
         // thrown bomb doesn't catch allies in its own blast.
+        // isExplosion flags this radius hit as a genuine area/explosive blast (see
+        // HitEffectContext.IsExplosion's own comment) - defaults false, so every existing caller is
+        // unaffected; AreaHitData.Detonate (Pixie's own bomb) is the one that passes true.
         public static void ApplyInRadius(Frame f, List<AssetRef<HitEffectData>> effects, FPVector3 center,
             FP radius, EntityRef owner, FP damage, DamageSource source, ElementType element = ElementType.Neutral,
-            DamageTargetMask targetMask = DamageTargetMask.Both)
+            DamageTargetMask targetMask = DamageTargetMask.Both, bool isExplosion = false)
         {
             Shape3D sphere = Shape3D.CreateSphere(radius);
             var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
@@ -58,10 +66,10 @@ namespace Quantum
                 if (MatchesTargetMask(f, hits[i].Entity, targetMask) == false)
                     continue;
 
-                if (TryBuildContext(f, hits[i].Entity, center, owner, damage, source, element, out var context) == false)
+                if (TryBuildContext(f, hits[i].Entity, center, owner, damage, source, element, out var context, isExplosion: isExplosion) == false)
                     continue;
 
-                ApplyToTarget(f, effects, ref context);
+                ApplyToTarget(f, effects, ref context, multiTarget: true);
             }
         }
 
@@ -83,7 +91,7 @@ namespace Quantum
                         pushDirection) == false)
                     continue;
 
-                ApplyToTarget(f, effects, ref context);
+                ApplyToTarget(f, effects, ref context, multiTarget: true);
             }
         }
 
@@ -113,7 +121,7 @@ namespace Quantum
                         pushDirection) == false)
                     continue;
 
-                ApplyToTarget(f, effects, ref context);
+                ApplyToTarget(f, effects, ref context, multiTarget: true);
             }
         }
 
@@ -136,8 +144,12 @@ namespace Quantum
         // context/Effects indirection above and calls DamageUtility.ApplyDamage directly. See
         // ApplyInRadius for the effects-driven version. targetMask defaults to Both to preserve
         // every existing caller's behavior.
+        // isChainedExplosion/isDashExplosion both feed DamageUtility.ApplyDamage's own
+        // TryMarkExplodeOnDeath call (Pixie's Chain Reaction/Volatile Escape ascensions) - see that
+        // method's own comment. Both default false, so every existing caller is unaffected.
         public static void ApplyDamageInRadius(Frame f, FPVector3 center, FP radius, EntityRef owner, FP damage,
-            DamageSource source, DamageTargetMask targetMask = DamageTargetMask.Both)
+            DamageSource source, DamageTargetMask targetMask = DamageTargetMask.Both,
+            bool isChainedExplosion = false, bool isDashExplosion = false, bool isExplosion = false)
         {
             Shape3D sphere = Shape3D.CreateSphere(radius);
             var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
@@ -154,8 +166,64 @@ namespace Quantum
                 if (MatchesTargetMask(f, target, targetMask) == false)
                     continue;
 
-                DamageUtility.ApplyDamage(f, target, damage, owner, source);
+                DamageUtility.ApplyDamage(f, target, damage, owner, source,
+                    isChainedExplosion: isChainedExplosion, isDashExplosion: isDashExplosion, isExplosion: isExplosion);
             }
+        }
+
+        // A radial knockback-only burst around a point - no damage, no Effects/HitEffectContext
+        // indirection, just DamageUtility.ApplyKnockback per target caught in radius (pushed
+        // straight away from center, no vertical lift) plus the ShockwaveReleased view hook. The
+        // generic entry point for any "empty magazine releases a shockwave"-style effect (currently
+        // only the Empty Chamber weapon perk, see WeaponSystem.ApplyMagazineEmptiedPerks) - callers
+        // don't need their own sphere-overlap-plus-knockback-loop, and share one VFX hookup
+        // (EffectsManager.OnShockwaveReleased) instead of each wiring up their own. Fires the event
+        // unconditionally, even if nothing was actually caught, so it still reads visually against
+        // an empty room - same convention AreaDetonated/ExplodeOnDeathDetonated already follow.
+        // effect is invalid/default for every caller except Zara's Remix ascension (see
+        // ResonanceUtility.ResolveRemixEffect) - passed straight through to the event so the View can
+        // tint this specific shockwave's particle by which HitEffectData was randomly chosen, without
+        // this utility needing to know or care about color itself.
+        public static void ApplyShockwave(Frame f, FPVector3 center, FP radius, EntityRef owner, FP knockbackForce,
+            DamageTargetMask targetMask = DamageTargetMask.Enemies, AssetRef<HitEffectData> effect = default)
+        {
+            Shape3D sphere = Shape3D.CreateSphere(radius);
+            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
+
+            for (int i = 0; i < hits.Count; i++)
+            {
+                EntityRef target = hits[i].Entity;
+
+                if (target == owner || MatchesTargetMask(f, target, targetMask) == false)
+                    continue;
+
+                if (f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == false)
+                    continue;
+
+                DamageUtility.ApplyKnockback(f, target, targetTransform->Position - center, knockbackForce, FP._0, owner);
+            }
+
+            f.Events.ShockwaveReleased(owner, center, radius, effect);
+        }
+
+        // A radial damage-only blast (no knockback) - ApplyDamageInRadius plus the
+        // WeaponExplosionReleased view hook, the generic entry point for any weapon-perk explosion
+        // that has no dedicated VFX of its own (currently Cataclysm Round and Explosive Sequence,
+        // see DirectHitData.ApplyTerminalWeaponPerks/WeaponSystem.ApplyHitscanWeaponPerks) - callers
+        // share one fallback prefab (EffectsManager.OnWeaponExplosionReleased always plays
+        // defaultAreaBlastEffect) instead of each needing their own. Fires the event unconditionally,
+        // even if nothing was actually caught, so it still reads visually against an empty room -
+        // same convention ApplyShockwave/AreaDetonated already follow.
+        // isDashExplosion feeds DamageUtility.ApplyDamage's own TryMarkExplodeOnDeath call (Pixie's
+        // Volatile Escape ascension) - see that method's own comment. Defaults false, so every
+        // existing caller is unaffected; Pixie's own Backblast dash action passes true.
+        public static void ApplyExplosion(Frame f, FPVector3 center, FP radius, EntityRef owner, FP damage,
+            DamageSource source, DamageTargetMask targetMask = DamageTargetMask.Enemies, bool isDashExplosion = false)
+        {
+            // Hardcoded true, not a caller param - anything calling ApplyExplosion at all (weapon-perk
+            // explosions, Pixie's own Backblast) is definitionally a genuine explosion.
+            ApplyDamageInRadius(f, center, radius, owner, damage, source, targetMask, isDashExplosion: isDashExplosion, isExplosion: true);
+            f.Events.WeaponExplosionReleased(owner, center, radius);
         }
 
         // pushDirection overrides the default radial-from-center push - see ApplyInShape.
@@ -168,7 +236,7 @@ namespace Quantum
         // themselves instead.
         private static bool TryBuildContext(Frame f, EntityRef target, FPVector3 center, EntityRef owner,
             FP damage, DamageSource source, ElementType element, out HitEffectContext context,
-            FPVector3? pushDirection = null)
+            FPVector3? pushDirection = null, bool isExplosion = false)
         {
             context = default;
 
@@ -186,7 +254,8 @@ namespace Quantum
                 PushDirection = pushDirection ?? targetTransform->Position - center,
                 Damage = damage,
                 Source = source,
-                Element = element
+                Element = element,
+                IsExplosion = isExplosion
             };
 
             return true;

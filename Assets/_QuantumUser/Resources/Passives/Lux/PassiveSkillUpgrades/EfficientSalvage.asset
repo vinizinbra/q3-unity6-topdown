@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 334c35643520645dc8b14940aae4adad, type: 3}
+  m_Name: EfficientSalvage
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.EfficientSalvagePassiveUpgradeData
+  Identifier:
+    Path: _QuantumUser/Resources/Passives/Lux/PassiveSkillUpgrades/EfficientSalvage
+    Guid:
+      Value: 279385305130049783
+  Icon: {fileID: 0}
+  DisplayName: Efficient Salvage
+  Rarity: 1
+  Description: Increases Scrap drop chance.
+  DropChanceBonus:
+    RawValue: 16384

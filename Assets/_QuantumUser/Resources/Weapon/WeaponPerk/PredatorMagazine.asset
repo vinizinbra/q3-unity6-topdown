@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c055cd820a974be8afa7af661bd9de3, type: 3}
+  m_Name: PredatorMagazine
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.PredatorMagazineWeaponPerkData
+  Identifier:
+    Path: _QuantumUser/Resources/Weapon/WeaponPerk/PredatorMagazine
+    Guid:
+      Value: 304155948433359418
+  Icon: {fileID: 0}
+  DisplayName: Predator Magazine
+  Rarity: 1
+  Description: Restore {0:0}% magazine on kill
+  RestoreFraction:
+    RawValue: 6554

@@ -536,7 +536,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 35
-        y: 318
+        y: 320
         width: 31
         height: 30
       alignment: 0
@@ -717,7 +717,7 @@ TextureImporter:
         height: 30
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      border: {x: 15, y: 15, z: 15, w: 15}
       customData: 
       outline: []
       physicsShape: []
@@ -796,15 +796,15 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: RR_CardRarity
+      name: RR_CardRarityCommon
       rect:
         serializedVersion: 2
-        x: 340
-        y: 925
+        x: 335
+        y: 938
         width: 191
         height: 60
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      alignment: 9
+      pivot: {x: 0.5000002, y: 0.87674767}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -927,6 +927,72 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: RR_CardRarityRare
+      rect:
+        serializedVersion: 2
+        x: 335
+        y: 868
+        width: 191
+        height: 60
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f015dc2564afd418ba0dab951b59145b
+      internalID: -167839533
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_CardRarityEpic
+      rect:
+        serializedVersion: 2
+        x: 335
+        y: 798
+        width: 191
+        height: 60
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1aaa4f777e49d49f9a83cd6d3aa69824
+      internalID: -568712116
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_CardRarityLegendary
+      rect:
+        serializedVersion: 2
+        x: 335
+        y: 728
+        width: 191
+        height: 60
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 496adc5a5c7eb4f2b9c54a198d9863a3
+      internalID: 1198964870
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
@@ -946,7 +1012,10 @@ TextureImporter:
       RR_32_PinkButton: 1150984480
       RR_64_PinkButton: 422311931
       RR_96_PinkButton: 376302237
-      RR_CardRarity: 25541216
+      RR_CardRarityCommon: 25541216
+      RR_CardRarityEpic: -568712116
+      RR_CardRarityLegendary: 1198964870
+      RR_CardRarityRare: -167839533
       RR_Circle: 1573605090
       RR_CircleOutline: -1046452649
       RR_Diamond32: -1132049541

@@ -27,5 +27,13 @@ namespace Quantum
         // additional marked hit. One shared knob, same reasoning as DamagePercent/RadiusMultiplier
         // above.
         public FP Duration = 5;
+
+        // A target that's currently Void-marked (StatusEffectUtility.IsVoided - see
+        // docs/elemental-reactions.md) detonates bigger and harder when its own ExplodeOnDeath mark
+        // goes off, regardless of which system granted that mark (Pixie's Chain Reaction or Max's
+        // Berserk). Independently tunable from RadiusMultiplier/DamagePercent since this is a
+        // separate bonus, not a replacement.
+        public FP VoidRadiusMultiplier = FP._2;
+        public FP VoidDamageMultiplier = FP._2;
     }
 }

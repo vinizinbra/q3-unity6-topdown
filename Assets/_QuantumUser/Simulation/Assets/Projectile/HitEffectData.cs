@@ -34,5 +34,13 @@ namespace Quantum
         // apply the matching status on a Weapon-sourced hit. Skill/enemy-attack sources leave this
         // Neutral, since they have no Element concept.
         public ElementType Element;
+
+        // True for a genuine area/explosive blast (currently only AreaHitData.Detonate - Pixie's own
+        // bomb - opts in) - read by DamageEffectData.Apply and passed through to
+        // DamageUtility.ApplyDamage's own isExplosion parameter, which Pixie's Chain Reaction passive
+        // gates its Instability marking on (see MarkExplosiveDeath.RequiresExplosion). False for a
+        // plain single-target hit (a bullet, a melee swing) - never set explicitly at most call
+        // sites, so it defaults false there for free.
+        public bool IsExplosion;
     }
 }

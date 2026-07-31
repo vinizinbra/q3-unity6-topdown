@@ -29,7 +29,7 @@ MonoBehaviour:
       RawValue: 65536
     PoisonDamageMultiplier:
       RawValue: 65536
-    MarkDurationMultiplier:
+    BreakDurationMultiplier:
       RawValue: 65536
   Normal:
     KnockbackMultiplier:
@@ -44,7 +44,7 @@ MonoBehaviour:
       RawValue: 65536
     PoisonDamageMultiplier:
       RawValue: 65536
-    MarkDurationMultiplier:
+    BreakDurationMultiplier:
       RawValue: 65536
   Specialist:
     KnockbackMultiplier:
@@ -59,7 +59,7 @@ MonoBehaviour:
       RawValue: 65536
     PoisonDamageMultiplier:
       RawValue: 65536
-    MarkDurationMultiplier:
+    BreakDurationMultiplier:
       RawValue: 65536
   Elite:
     KnockbackMultiplier:
@@ -74,7 +74,7 @@ MonoBehaviour:
       RawValue: 65536
     PoisonDamageMultiplier:
       RawValue: 65536
-    MarkDurationMultiplier:
+    BreakDurationMultiplier:
       RawValue: 65536
   Boss:
     KnockbackMultiplier:
@@ -89,5 +89,5 @@ MonoBehaviour:
       RawValue: 65536
     PoisonDamageMultiplier:
       RawValue: 65536
-    MarkDurationMultiplier:
+    BreakDurationMultiplier:
       RawValue: 65536

@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35164f4ebfd3949208912a64942f44df, type: 3}
+  m_Name: QuickTempoSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.QuickTempoSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Zara/DashSkillUpgrades/QuickTempoSkillAction
+    Guid:
+      Value: 483122415328966318
+  Icon: {fileID: 0}
+  DisplayName: Quick Tempo
+  Rarity: 1
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 1
+  Description: Dashing generates {0} Resonance.
+  ResonanceOnDash:
+    RawValue: 1310720

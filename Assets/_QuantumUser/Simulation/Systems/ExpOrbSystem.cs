@@ -5,10 +5,11 @@ namespace Quantum
 
     // Collects an ExpOrb once any player walks within pickup range - see ExperienceUtility.
     // TrySpawnDrop for how orbs are spawned. Whichever player actually reaches it determines the
-    // radius (their own CharacterStats.PickupRangeMultiplier), but the exp itself is credited to
-    // the whole co-op run, not that player specifically - see ExperienceUtility.Grant/
-    // Experience.qtn. No magnetism/homing today, an orb just sits where it dropped until a
-    // player's own collection radius reaches it or DestroyAfterTime expires it.
+    // radius (their own CharacterStats.PickupRangeMultiplier) AND scales the granted amount by
+    // their own CharacterStats.ExperienceGainMultiplier, but the exp itself is credited to the
+    // whole co-op run, not that player specifically - see ExperienceUtility.Grant/Experience.qtn.
+    // No magnetism/homing today, an orb just sits where it dropped until a player's own collection
+    // radius reaches it or DestroyAfterTime expires it.
     [Preserve]
     public unsafe class ExpOrbSystem : SystemMainThreadFilter<ExpOrbSystem.Filter>
     {
@@ -43,7 +44,7 @@ namespace Quantum
                 if (sqrDistance > pickupRadius * pickupRadius)
                     continue;
 
-                ExperienceUtility.Grant(f, filter.ExpOrb->Value);
+                ExperienceUtility.Grant(f, filter.ExpOrb->Value * stats->ExperienceGainMultiplier);
                 f.Events.ExpOrbCollected(player, filter.Transform3D->Position, filter.ExpOrb->Value);
                 f.Destroy(filter.Entity);
                 return;

@@ -19,7 +19,11 @@ namespace Quantum
     // collision resolution.
     //
     // Swaps the dasher's collider onto IgnoreProjectile for the duration so a shot passes through
-    // instead of being consumed on contact for zero damage; End restores it to Player.
+    // instead of being consumed on contact for zero damage, and so the dasher's own collider stops
+    // physically blocking/being blocked by Enemy bodies (QuantumDefaultConfigs' physics layer
+    // matrix excludes IgnoreProjectile from the Enemy layer - a code-level layer swap alone can't
+    // change that, the engine-level collision response is purely matrix-driven). End restores it
+    // to Player.
     public unsafe partial class DashSkillData : SkillData
     {
         public FP DashSpeed = 20;

@@ -1,0 +1,33 @@
+// Added by ScrapCollectorPassiveData.Apply at spawn (opt-in, same shape SeedShield/SeedArmor
+// already use) - carries every tunable ScrapUtility/ScrapOrbSystem read later. A Passive Ascension
+// mutates these fields directly (see the PassiveUpgradeData subclasses under LevelUp/Heroes/Lux),
+// not CharacterStats, since none of these tunables are generic hero stats - they only mean
+// anything to whoever has this component.
+component LuxScrapCollector
+{
+    // Chance (0-1) an eligible enemy kill drops a ScrapOrb - see ScrapUtility.TrySpawnDrop.
+    FP DropChance;
+
+    // False by default - the base passive only drops Scrap from Normal-tier enemies and up; the
+    // Scavenger ascension raises this to also include Filler-tier kills.
+    Boolean IncludeFillerTier;
+
+    // Additive per-pickup bonus to the Lux-owned Sentry's MaxHealth - see
+    // ScrapUtility.ApplyToOwnedSentry. Zero (the base passive's default) means no effect; only the
+    // Enhacement ascension raises this above zero.
+    FP MachineHealthBonusPerPickup;
+
+    // Flat cooldown reduction (seconds) applied to the Hero Skill on every Scrap pickup - see
+    // ScrapUtility.Grant/SkillSystem.ReduceCooldown. Zero (the base passive's default) means no
+    // effect; only the Rapid Recycling ascension raises this above zero. Not the base passive's own
+    // payoff - see ScrapStacks/StacksRequired below for that.
+    FP CooldownReductionPerPickup;
+
+    // The base passive's real payoff: every pickup increments this (held at StacksRequired, not
+    // overflowed, once reached). Reaching StacksRequired marks the Hero Skill's next cast free via
+    // SkillSystem.GrantFreeCast - but this only resets to 0 once that free cast is actually spent
+    // (ScrapUtility.OnFreeCastConsumed, fired off SkillSystem's OnFreeCastUsed signal), not the
+    // instant the threshold is reached.
+    Byte ScrapStacks;
+    Byte StacksRequired;
+}

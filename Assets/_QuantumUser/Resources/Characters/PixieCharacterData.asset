@@ -18,6 +18,8 @@ MonoBehaviour:
       Value: 420855215049923982
   BaseMaxHealth:
     RawValue: 6553600
+  BaseHealthRegenRate:
+    RawValue: 0
   MoveSpeedMultiplier:
     RawValue: 65536
   BaseArmor:
@@ -48,7 +50,9 @@ MonoBehaviour:
     RawValue: 65536
   AreaRadiusMultiplier:
     RawValue: 65536
-  CooldownMultiplier:
+  DashCooldownMultiplier:
+    RawValue: 65536
+  SkillCooldownMultiplier:
     RawValue: 65536
   SkillDurationMultiplier:
     RawValue: 65536
@@ -72,7 +76,9 @@ MonoBehaviour:
     RawValue: 65536
   Luck:
     RawValue: 0
-  RingColor: {r: 1, g: 1, b: 1, a: 1}
+  ExperienceGainMultiplier:
+    RawValue: 65536
+  RingColor: {r: 1, g: 0.3254717, b: 0.64922184, a: 1}
   WeaponPosition:
     X:
       RawValue: 0
@@ -91,9 +97,24 @@ MonoBehaviour:
       Value: 304904877930327027
   Passive:
     Id:
-      Value: 0
+      Value: 287025616798641966
   StartingWeapon:
     Id:
-      Value: 0
-  DashSkillUpgrades: []
+      Value: 486587533721559972
+  DashSkillUpgrades:
+  - Id:
+      Value: 340599251920562766
+  - Id:
+      Value: 532866955297254703
+  - Id:
+      Value: 158334551784724072
   HeroSkillUpgrades: []
+  PassiveUpgrades:
+  - Id:
+      Value: 347803182466822091
+  - Id:
+      Value: 309889134639544274
+  - Id:
+      Value: 385656384728332488
+  - Id:
+      Value: 323230195154970988

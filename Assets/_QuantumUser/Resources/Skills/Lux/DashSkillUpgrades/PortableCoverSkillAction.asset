@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2116980fcc068419a8e74166c1620f19, type: 3}
+  m_Name: PortableCoverSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.PortableCoverSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Lux/DashSkillUpgrades/PortableCoverSkillAction
+    Guid:
+      Value: 339282098208670876
+  Icon: {fileID: 0}
+  DisplayName: Portable Cover
+  Rarity: 2
+  Priority: 0
+  Phase: 4
+  Interval:
+    RawValue: 0
+  Activated: 1
+  Description: When your dash ends, restore {0} Shield to yourself and {1} Shield
+    to your Sentry if it's within 6 units.
+  ShieldRestoreAmount:
+    RawValue: 1310720
+  MachineShieldRestoreAmount:
+    RawValue: 655360
+  MachineRadius:
+    RawValue: 393216

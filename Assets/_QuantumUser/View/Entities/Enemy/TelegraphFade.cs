@@ -43,8 +43,9 @@ namespace Quantum
         // prefabKey is whatever TelegraphData.TelegraphPrefab the caller (EnemyAttackVisualsView)
         // originally requested from TelegraphManager - passed in rather than a self-referencing
         // SerializeField so there's nothing on the prefab itself to misconfigure/forget to update
-        // after duplicating it.
-        public void Initialize(GameObject prefabKey, float fadeInDuration, float fadeOutDuration, float growDuration)
+        // after duplicating it. enemyEntity is forwarded straight through to growthCircle - see its
+        // own Initialize for why the growth animation needs it (anticipation-slow scaling).
+        public void Initialize(GameObject prefabKey, float fadeInDuration, float fadeOutDuration, float growDuration, EntityRef enemyEntity)
         {
             _prefabKey = prefabKey;
             _fadeInDuration = Mathf.Max(fadeInDuration, 0.0001f);
@@ -55,7 +56,7 @@ namespace Quantum
             ApplyAlpha(0f);
 
             if (growthCircle != null)
-                growthCircle.Initialize(growDuration);
+                growthCircle.Initialize(growDuration, enemyEntity);
         }
 
         public void FadeOutAndRelease()

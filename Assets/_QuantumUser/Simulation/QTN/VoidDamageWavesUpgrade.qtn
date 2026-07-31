@@ -1,0 +1,11 @@
+// Granted/revoked by Heroes/Zara/VoidDamageWavesSkillAction - read by
+// SpawnAlternatingAreaEffectData.ApplyVoidUpgrade off the speaker's own owner, appending VoidEffect
+// into the first open DamageEffects slot at spawn. Silently does nothing if DamageEffects already
+// fills all 4 slots. Migrated from PoisonDamageWavesUpgrade once Poison was removed - see
+// docs/elemental-reactions.md. Void has no damage of its own (see ElementalReactionConfig), so this
+// no longer deals damage directly - it marks whatever it pulses over with Void, priming it for
+// whichever element (this Zara's own, or a teammate's) lands next.
+component VoidDamageWavesUpgrade
+{
+    AssetRef<HitEffectData> VoidEffect;
+}

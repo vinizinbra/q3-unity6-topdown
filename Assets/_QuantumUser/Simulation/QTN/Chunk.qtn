@@ -17,6 +17,18 @@ enum ChunkRotation : Byte
     Degrees270
 }
 
+// One waypoint of a chunk's baked AI navigation graph (see the Editor-side
+// ChunkWaypointBaker) - LocalPosition is relative to the chunk prototype's own pivot, not
+// world space, so it stays correct however the chunk ends up placed/rotated by
+// LevelGenerationSystem. ConnectionMask bit i set means this node has a raycast-clear line to
+// Chunk.Waypoints[i] - baked once in the Editor, never recomputed at runtime, since level
+// geometry inside an already-placed chunk never changes after LevelGenerationSystem finishes.
+struct WaypointNode
+{
+    FPVector3 LocalPosition;
+    UInt32 ConnectionMask;
+}
+
 component Chunk
 {
     ChunkType Type;
@@ -30,6 +42,12 @@ component Chunk
     // hand-placed chunk (e.g. BossArena) must have this set to match however it's actually
     // rotated in the scene, since LevelGenerationSystem trusts this field, not the raw quaternion.
     ChunkRotation Rotation;
+
+    // Baked AI navigation graph for this chunk - see WaypointNode. Fixed-size (16) regardless
+    // of how many a given chunk actually authors; only the first WaypointCount slots of
+    // Waypoints are meaningful, the rest are left default by the baker.
+    array<WaypointNode>[16] Waypoints;
+    Byte WaypointCount;
 }
 
 global

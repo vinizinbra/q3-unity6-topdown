@@ -59,14 +59,18 @@ public class CharacterUiWidget : MonoBehaviour
 
     [Header("Status Effects")]
     [SerializeField] private StatusIndicator burnIndicator;
-    [SerializeField, Tooltip("Shows the count and longest-remaining of the up-to-5 independent Poison stacks, not a single timer.")]
-    private StatusIndicator poisonIndicator;
+    [SerializeField, Tooltip("Void does nothing by itself - this just shows a target has been primed for whichever elemental reaction (Explosion/Freeze/Knockback) lands next. See docs/elemental-reactions.md.")]
+    private StatusIndicator voidIndicator;
     [SerializeField] private StatusIndicator iceIndicator;
+    [SerializeField, Tooltip("Void+Ice's Freeze reaction - stretches the entity's own attack anticipation/windup (StatusEffectUtility.GetAnticipationMultiplier), not a lockout, so it's shown separately from Stun. See docs/elemental-reactions.md.")]
+    private StatusIndicator freezeIndicator;
     [SerializeField] private StatusIndicator stunIndicator;
     [SerializeField, Tooltip("Root pins movement only (the entity can still attack), unlike Stun which freezes everything - shown separately so both can be visible at once if somehow both are active.")]
     private StatusIndicator rootIndicator;
-    [SerializeField] private StatusIndicator markIndicator;
-    [SerializeField, Tooltip("Shown while the entity carries ExplodeOnDeath (see DamageUtility.TryMarkExplodeOnDeath) - a separate component from StatusEffects, not the damage-multiplier Mark above despite the similar name.")]
+    [SerializeField] private StatusIndicator breakIndicator;
+    [SerializeField, Tooltip("Mirror of Break - reduces the entity's own outgoing damage instead of incoming. Applied to enemies by Brute's Protector Aura.")]
+    private StatusIndicator intimidateIndicator;
+    [SerializeField, Tooltip("Shown while the entity carries ExplodeOnDeath (see DamageUtility.TryMarkExplodeOnDeath) - a separate component from StatusEffects, not the damage-multiplier Break above despite the similar name.")]
     private StatusIndicator explodeOnDeathIndicator;
 
     private Canvas _canvas;
@@ -286,11 +290,13 @@ public class CharacterUiWidget : MonoBehaviour
         bool hasStatus = frame.TryGet<StatusEffects>(_entityRef, out var status);
 
         UpdateBurn(hasStatus, status);
-        UpdatePoison(hasStatus, status);
+        UpdateVoid(hasStatus, status);
         UpdateIce(hasStatus, status);
+        UpdateFreeze(hasStatus, status);
         UpdateStun(hasStatus, status);
         UpdateRoot(hasStatus, status);
-        UpdateMark(hasStatus, status);
+        UpdateBreak(hasStatus, status);
+        UpdateIntimidate(hasStatus, status);
     }
 
     private void UpdateBurn(bool hasStatus, StatusEffects status)
@@ -302,30 +308,13 @@ public class CharacterUiWidget : MonoBehaviour
             burnIndicator.SetTimer($"{status.BurnRemaining.AsFloat:F1}s");
     }
 
-    // Reports the stack count and the longest-remaining of the up-to-5 independent Poison slots -
-    // see StatusEffectUtility.ApplyPoison - rather than a single timer, since several stacks can be
-    // ticking down independently at once.
-    private void UpdatePoison(bool hasStatus, StatusEffects status)
+    private void UpdateVoid(bool hasStatus, StatusEffects status)
     {
-        int activeStacks = 0;
-        FP longestRemaining = FP._0;
+        bool shown = hasStatus && status.VoidRemaining > FP._0;
+        voidIndicator.SetShown(shown);
 
-        if (hasStatus)
-        {
-            for (int i = 0; i < 5; i++)
-            {
-                if (status.PoisonRemaining[i] <= FP._0)
-                    continue;
-
-                activeStacks++;
-                longestRemaining = FPMath.Max(longestRemaining, status.PoisonRemaining[i]);
-            }
-        }
-
-        poisonIndicator.SetShown(activeStacks > 0);
-
-        if (activeStacks > 0)
-            poisonIndicator.SetTimer($"x{activeStacks} {longestRemaining.AsFloat:F1}s");
+        if (shown)
+            voidIndicator.SetTimer($"{status.VoidRemaining.AsFloat:F1}s");
     }
 
     private void UpdateIce(bool hasStatus, StatusEffects status)
@@ -335,6 +324,15 @@ public class CharacterUiWidget : MonoBehaviour
 
         if (shown)
             iceIndicator.SetTimer($"{status.IceRemaining.AsFloat:F1}s");
+    }
+
+    private void UpdateFreeze(bool hasStatus, StatusEffects status)
+    {
+        bool shown = hasStatus && status.AnticipationSlowRemaining > FP._0;
+        freezeIndicator.SetShown(shown);
+
+        if (shown)
+            freezeIndicator.SetTimer($"{status.AnticipationSlowRemaining.AsFloat:F1}s");
     }
 
     private void UpdateStun(bool hasStatus, StatusEffects status)
@@ -355,13 +353,22 @@ public class CharacterUiWidget : MonoBehaviour
             rootIndicator.SetTimer($"{status.RootRemaining.AsFloat:F1}s");
     }
 
-    private void UpdateMark(bool hasStatus, StatusEffects status)
+    private void UpdateBreak(bool hasStatus, StatusEffects status)
     {
-        bool shown = hasStatus && status.MarkRemaining > FP._0;
-        markIndicator.SetShown(shown);
+        bool shown = hasStatus && status.BreakRemaining > FP._0;
+        breakIndicator.SetShown(shown);
 
         if (shown)
-            markIndicator.SetTimer($"{status.MarkRemaining.AsFloat:F1}s");
+            breakIndicator.SetTimer($"{status.BreakRemaining.AsFloat:F1}s");
+    }
+
+    private void UpdateIntimidate(bool hasStatus, StatusEffects status)
+    {
+        bool shown = hasStatus && status.IntimidateRemaining > FP._0;
+        intimidateIndicator.SetShown(shown);
+
+        if (shown)
+            intimidateIndicator.SetTimer($"{status.IntimidateRemaining.AsFloat:F1}s");
     }
 
     // Own component, not part of StatusEffects - see DamageUtility.TryMarkExplodeOnDeath/ExplodeOnDeath.
@@ -401,7 +408,7 @@ public class CharacterUiWidget : MonoBehaviour
         component.gameObject.SetActive(shown);
     }
 
-    // One per status type (Burn/Poison/Ice/Stun/Mark) - root is whatever the Inspector wires up as
+    // One per status type (Burn/Void/Ice/Freeze/Stun/Break/Intimidate) - root is whatever the Inspector wires up as
     // that status's visual (icon, background, whatever), shown only while the status is active;
     // timerText is optional, same as every TMP_Text elsewhere in this widget.
     [System.Serializable]

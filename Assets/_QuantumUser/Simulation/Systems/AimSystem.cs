@@ -156,12 +156,17 @@ namespace Quantum
 
         // Dead enemies linger (DamageUtility.ApplyDamage) for their death animation instead of
         // being destroyed immediately, so they'd otherwise still show up in the overlap query.
+        // Invulnerable (e.g. a burrowed enemy - see BurrowDeliveryData) is excluded too - nothing
+        // to gain by aiming/locking at a target every hit on it is already ignored by.
         private static bool IsAliveTarget(Frame f, EntityRef entity, out Transform3D* transform)
         {
             if (f.Unsafe.TryGetPointer<Transform3D>(entity, out transform) == false)
                 return false;
 
             if (f.Unsafe.TryGetPointer<Enemy>(entity, out var enemy) == true && enemy->Phase == EnemyActionPhase.Dead)
+                return false;
+
+            if (f.Has<Invulnerable>(entity) == true)
                 return false;
 
             return true;

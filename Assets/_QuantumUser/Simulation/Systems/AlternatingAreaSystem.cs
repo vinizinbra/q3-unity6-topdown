@@ -39,7 +39,7 @@ namespace Quantum
         }
 
         // AlternatingArea.DamageEffects (copied in above) already includes anything baked in at
-        // spawn time - see SpawnAlternatingAreaEffectData.ApplyPoisonUpgrade. That used to be
+        // spawn time - see SpawnAlternatingAreaEffectData.ApplyVoidUpgrade. That used to be
         // checked live here instead, off the speaker's owner, but the owning upgrade's Begin/End
         // only brackets the throw itself, which ends before this speaker's later pulses would ever
         // see it - baking it in once at spawn is what actually works for a speaker's whole lifetime.
@@ -52,7 +52,7 @@ namespace Quantum
         }
 
         // StunEveryWavesUpgrade (see Heroes/Zara/StunEveryWavesSkillAction) - unlike
-        // PoisonDamageWavesUpgrade/KnockbackOnDamageUpgrade, this can't be baked in once at spawn,
+        // VoidDamageWavesUpgrade/KnockbackOnDamageUpgrade, this can't be baked in once at spawn,
         // since it should only apply on every Interval-th pulse, not every one. Checking it live
         // here, every damage pulse, is safe specifically because the upgrade is Begin-only and
         // never revoked - there's no End racing against a live read that never stops happening.

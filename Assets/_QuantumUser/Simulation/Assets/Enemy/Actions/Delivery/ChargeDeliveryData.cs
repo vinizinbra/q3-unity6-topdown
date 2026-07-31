@@ -96,7 +96,14 @@ namespace Quantum
                     return true; // EnemySystem.EnterRecovering restores normal (non-kinematic) movement
             }
 
-            filter.Enemy->StateTimer -= f.DeltaTime;
+            // Void Pressure (Kai) - scales the whole rest of this Tick (timer, wall-check lookahead,
+            // and the actual kinematic move below), not just the timer, so a slowed Charge visibly
+            // covers less ground per real second instead of just timing out later - see
+            // StatusEffectUtility.GetLocalTimeMultiplier's own comment for why only this Active-phase
+            // Tick is ever affected, never the windup/telegraph.
+            FP deltaTime = f.DeltaTime * StatusEffectUtility.GetLocalTimeMultiplier(f, filter.Entity);
+
+            filter.Enemy->StateTimer -= deltaTime;
 
             FP sqrDistanceToTarget = EnemyMovementUtility.FlatSqrDistance(selfPosition, filter.Enemy->SkillTargetPosition);
             bool arrived = sqrDistanceToTarget <= effectiveRange * effectiveRange;
@@ -111,7 +118,7 @@ namespace Quantum
 
             // bodyRadius + a small epsilon rides on top of WallCheckDistance so a bigger enemy's
             // own collider extent is accounted for too, without needing to retune WallCheckDistance.
-            FP stepDistance = FPMath.Max(DashSpeed * f.DeltaTime, WallCheckDistance) + bodyRadius + FP._0_10;
+            FP stepDistance = FPMath.Max(DashSpeed * deltaTime, WallCheckDistance) + bodyRadius + FP._0_10;
             FPVector3 wallCheckOrigin = selfPosition + FPVector3.Up * WallCheckHeight;
 
             if (EnemyMovementUtility.IsBlockedByWall(f, wallCheckOrigin, moveDelta, stepDistance, EnemyMovementUtility.GetGroundLayerMask(f)) == true)
@@ -119,7 +126,7 @@ namespace Quantum
                 return true; // slammed into static geometry - stop here instead of clipping through it
             }
 
-            EnemyMovementUtility.MoveKinematicTowards(ref filter, data, selfPosition, filter.Enemy->SkillTargetPosition, DashSpeed, f.DeltaTime);
+            EnemyMovementUtility.MoveKinematicTowards(ref filter, data, selfPosition, filter.Enemy->SkillTargetPosition, DashSpeed, deltaTime);
             return false;
         }
     }

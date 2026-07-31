@@ -21,6 +21,10 @@ namespace Quantum
             FP duration = StatusEffectUtility.ScaleDuration(f, context.Owner, context.Source, config.SlowDuration);
 
             StatusEffectUtility.ApplyIce(f, context.Target, duration, config.SlowSpeedMultiplier);
+
+            // Directly-authored Slow (not the weapon-elemental-proc path) still needs to participate
+            // in the elemental reaction scan - see StatusEffectUtility.TryTriggerReactions.
+            StatusEffectUtility.TryTriggerReactions(f, context.Target, context.Owner, context.Source, ElementType.Ice, context.Damage);
         }
     }
 }

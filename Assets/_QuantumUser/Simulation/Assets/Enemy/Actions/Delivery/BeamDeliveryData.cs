@@ -28,8 +28,13 @@ namespace Quantum
             // No spare per-delivery countdown field exists on Enemy, unlike AreaDamageSystem's own
             // dedicated TickTimer - this derives interval-boundary-crossing from the shared
             // StateTimer instead, robust to variable frame delta time.
+            //
+            // Void Pressure (Kai) - scaling this same decrement is what makes a slowed beam's own
+            // pulses land less often in real time too, not just extend how long the channel lasts -
+            // see StatusEffectUtility.GetLocalTimeMultiplier's own comment for why only this
+            // Active-phase Tick is ever affected, never the windup/telegraph.
             FP elapsedBefore = BeamDuration - filter.Enemy->StateTimer;
-            filter.Enemy->StateTimer -= f.DeltaTime;
+            filter.Enemy->StateTimer -= f.DeltaTime * StatusEffectUtility.GetLocalTimeMultiplier(f, filter.Entity);
             FP elapsedAfter = BeamDuration - filter.Enemy->StateTimer;
 
             if (TickInterval > FP._0 && FPMath.Floor(elapsedAfter / TickInterval) != FPMath.Floor(elapsedBefore / TickInterval))

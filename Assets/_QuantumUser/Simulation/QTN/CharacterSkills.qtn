@@ -61,6 +61,14 @@ struct SkillSlot
     // from the Inspector (this exact field used to be EntityRef SpawnedEntity - removed for that
     // reason).
     Boolean ProjectilePending;
+
+    // Set by SkillSystem.GrantFreeCast (e.g. Lux's Scrap Collector reaching its threshold - see
+    // ScrapUtility.TryGrantFreeCharge) to make the slot's *next* activation cost neither a stack nor
+    // start its cooldown. Consumed - not granted - at TryBegin, which is the one place that matters:
+    // the earn moment (Scrap hitting 10) and the spend moment (actually pressing the Hero Skill) are
+    // deliberately different ticks, so whatever cares about "was it just spent" (OnFreeCastUsed
+    // below) fires only at the real spend.
+    Boolean FreeCastPending;
 }
 
 enum SkillState : Byte
@@ -77,3 +85,9 @@ enum SkillSlotId : Byte
     DashSkill = 1,
     HeroSkill = 2
 }
+
+// Fired by SkillSystem.TryBegin the moment a banked SkillSlot.FreeCastPending is actually spent -
+// not when it was granted. Generic (any future "next use is free" source could reuse
+// SkillSystem.GrantFreeCast), but today only ScrapUtility listens, to reset LuxScrapCollector's
+// own ScrapStacks exactly on spend rather than on threshold-reached.
+signal OnFreeCastUsed(EntityRef entity, SkillSlotId slotId);

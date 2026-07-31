@@ -16,8 +16,8 @@ namespace Quantum
         {
             var input = f.GetPlayerInput(filter.PlayerLink->Player);
 
-            UpdateSlot(f, ref filter, &filter.CharacterSkills->DashSkill, input, input->DashSkill);
-            UpdateSlot(f, ref filter, &filter.CharacterSkills->HeroSkill, input, input->HeroSkill);
+            UpdateSlot(f, ref filter, &filter.CharacterSkills->DashSkill, SkillSlotId.DashSkill, input, input->DashSkill);
+            UpdateSlot(f, ref filter, &filter.CharacterSkills->HeroSkill, SkillSlotId.HeroSkill, input, input->HeroSkill);
 
             ProcessGrantUpgradeCommand(f, ref filter);
         }
@@ -61,15 +61,45 @@ namespace Quantum
             }
         }
 
-        private static void UpdateSlot(Frame f, ref Filter filter, SkillSlot* slot, Input* input, Button inputButton)
+        // Nothing reduces a skill's cooldown as a side effect of anything else today - added for
+        // Combat Reboot (emptying the magazine reduces the Hero Skill's cooldown, see
+        // WeaponSystem.StartReload). Clamped at 0 rather than letting it go negative and "banking"
+        // toward the next cast.
+        public static void ReduceCooldown(Frame f, CharacterSkills* skills, SkillSlotId slotId, FP amount)
+        {
+            SkillSlot* slot = ResolveSlot(skills, slotId);
+
+            if (slot == null || amount <= FP._0)
+                return;
+
+            slot->CooldownTimer = FPMath.Max(FP._0, slot->CooldownTimer - amount);
+        }
+
+        // Marks a slot's *next* activation as free - added for Lux's Scrap Collector passive (10
+        // Scrap pickups makes the Hero Skill's next cast cost nothing, see
+        // ScrapUtility.TryGrantFreeCharge). Deliberately does not touch CurrentStacks/CooldownTimer
+        // here: this only takes effect once TryBegin is actually pressed, not the instant it's
+        // granted - see SkillSlot.FreeCastPending. A no-op if one is already pending, rather than
+        // stacking multiple free casts.
+        public static void GrantFreeCast(Frame f, CharacterSkills* skills, SkillSlotId slotId)
+        {
+            SkillSlot* slot = ResolveSlot(skills, slotId);
+
+            if (slot == null || slot->FreeCastPending == true)
+                return;
+
+            slot->FreeCastPending = true;
+        }
+
+        private static void UpdateSlot(Frame f, ref Filter filter, SkillSlot* slot, SkillSlotId slotId, Input* input, Button inputButton)
         {
             EnsureInitialized(f, slot);
-            TickCooldown(f, slot);
+            TickCooldown(f, filter.Entity, slotId, slot);
 
             switch (slot->State)
             {
                 case SkillState.Ready:
-                    TryBegin(f, ref filter, slot, input, inputButton);
+                    TryBegin(f, ref filter, slotId, slot, input, inputButton);
                     break;
 
                 case SkillState.Active:
@@ -101,7 +131,7 @@ namespace Quantum
         // at a time off a single CooldownTimer: spending a stack while another is already
         // mid-cooldown does not reset that timer's progress (see TryBegin) - it only (re)starts
         // fresh the instant the slot goes from full to not-full.
-        private static void TickCooldown(Frame f, SkillSlot* slot)
+        private static void TickCooldown(Frame f, EntityRef owner, SkillSlotId slotId, SkillSlot* slot)
         {
             if (slot->CurrentStacks >= slot->MaxStacks)
                 return;
@@ -116,11 +146,11 @@ namespace Quantum
             if (slot->Skill != default && slot->CurrentStacks < slot->MaxStacks)
             {
                 SkillData skill = f.FindAsset(slot->Skill);
-                slot->CooldownTimer = skill.Cooldown;
+                slot->CooldownTimer = StatUtility.GetSkillCooldown(f, owner, slotId, skill.Cooldown);
             }
         }
 
-        private static void TryBegin(Frame f, ref Filter filter, SkillSlot* slot, Input* input, Button inputButton)
+        private static void TryBegin(Frame f, ref Filter filter, SkillSlotId slotId, SkillSlot* slot, Input* input, Button inputButton)
         {
             if (inputButton.WasPressed == false)
                 return;
@@ -131,7 +161,9 @@ namespace Quantum
                 return;
             }
 
-            if (slot->CurrentStacks == 0)
+            bool freeCast = slot->FreeCastPending;
+
+            if (freeCast == false && slot->CurrentStacks == 0)
             {
                 Log.Debug($"[Skill] {filter.Entity} pressed a skill button with 0 stacks available");
                 return;
@@ -139,12 +171,24 @@ namespace Quantum
 
             SkillData skill = f.FindAsset(slot->Skill);
 
-            bool wasFull = slot->CurrentStacks >= slot->MaxStacks;
-            slot->CurrentStacks--;
-
-            if (wasFull == true)
+            // A pending free cast (see SkillSlot.FreeCastPending) spends itself instead of a stack -
+            // no CurrentStacks change, no cooldown start. OnFreeCastUsed fires here, at the moment
+            // it's actually spent, not when ScrapUtility.TryGrantFreeCharge granted it - that's what
+            // lets Lux's own Scrap counter reset on use instead of on threshold-reached.
+            if (freeCast == true)
             {
-                slot->CooldownTimer = skill.Cooldown;
+                slot->FreeCastPending = false;
+                f.Signals.OnFreeCastUsed(filter.Entity, slotId);
+            }
+            else
+            {
+                bool wasFull = slot->CurrentStacks >= slot->MaxStacks;
+                slot->CurrentStacks--;
+
+                if (wasFull == true)
+                {
+                    slot->CooldownTimer = StatUtility.GetSkillCooldown(f, filter.Entity, slotId, skill.Cooldown);
+                }
             }
 
             slot->StartPosition = filter.Transform3D->Position;
@@ -324,10 +368,48 @@ namespace Quantum
                 return;
 
             SkillActionData action = f.FindAsset(actionRef);
+            bool shouldExecute = action.ShouldExecute(f, slot, phase);
 
-            if (action.ShouldExecute(f, slot, phase) == true)
+            if (shouldExecute == true)
             {
                 action.Execute(f, ref filter, slot, skill, phase);
+            }
+
+            // Fired independent of shouldExecute for End specifically (still gated on Activated) -
+            // a BeginFx/OnGoingFx step spawned as SkillFxSpawnMode.HeldUntilEnd must be released once
+            // this activation ends even if the action's own Phase field never opted into End for its
+            // actual gameplay logic (e.g. Phase = OnGoing only, nothing to do on End besides letting
+            // the particle go). Every other phase still only fires alongside a genuine Execute call.
+            bool fireEndAnyway = phase == SkillActionPhase.End && action.Activated == true;
+
+            if (shouldExecute == true || fireEndAnyway == true)
+            {
+                FireFxEvent(f, filter.Entity, actionRef, action, phase, filter.Transform3D->Position);
+            }
+        }
+
+        // Lets any SkillActionData get a feedback particle just by filling in BeginFx/OnGoingFx/EndFx
+        // in the Editor (see SkillActionFxView) - no individual Execute() override needs to fire its
+        // own event. Gated by HasFx rather than firing unconditionally like this file's other events,
+        // since this runs from the one call site every equipped action of every active skill slot
+        // passes through every tick it fires, not a single specific perk.
+        private static void FireFxEvent(Frame f, EntityRef entity, AssetRef<SkillActionData> actionRef,
+            SkillActionData action, SkillActionPhase phase, FPVector3 position)
+        {
+            if (action.HasFx(phase) == false)
+                return;
+
+            switch (phase)
+            {
+                case SkillActionPhase.Begin:
+                    f.Events.SkillActionBeginExecuted(entity, actionRef, position);
+                    break;
+                case SkillActionPhase.OnGoing:
+                    f.Events.SkillActionOnGoingExecuted(entity, actionRef, position);
+                    break;
+                case SkillActionPhase.End:
+                    f.Events.SkillActionEndExecuted(entity, actionRef, position);
+                    break;
             }
         }
 

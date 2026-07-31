@@ -19,10 +19,17 @@ MonoBehaviour:
   Name: Dash
   InitStacks: 1
   Cooldown:
-    RawValue: 65536
-  Actions: []
+    RawValue: 393216
+  Actions:
+  - Id:
+      Value: 0
+  - Id:
+      Value: 0
+  - Id:
+      Value: 0
   Icon: {fileID: 0}
-  Description: Dash quickly in the direction you're moving, passing harmlessly through enemy projectiles until you arrive or hit a wall.
+  Description: Dash quickly in the direction you're moving, passing harmlessly through
+    enemy projectiles until you arrive or hit a wall.
   DashSpeed:
     RawValue: 1310720
   DashDistance:

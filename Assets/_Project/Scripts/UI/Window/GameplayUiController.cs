@@ -9,24 +9,41 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
     [SerializeField] private WindowManager windowManager;
     [SerializeField] private TMP_Text lives;
     [SerializeField] private TMP_Text rtt;
-    [SerializeField] private UpgradeWindow upgradeWindow;
+    [SerializeField, Tooltip("One per local player slot - upgradeWindows[0] for slot 0, upgradeWindows[1] for slot 1, etc. Unused slots (no 2nd local player) can be left null.")]
+    private UpgradeWindow[] upgradeWindows;
     public bool isDead = false;
     private int _placement;
     private Action<int> _onLeave;
     private bool _upgradeScreenWasOpen;
+    private Action<int>[] _cardClickedHandlers;
 
     private void Start()
     {
         windowManager.ShowWindow<LoadingWindow>();
 
-        if (upgradeWindow != null)
-            upgradeWindow.onCardClicked += OnUpgradeCardClicked;
+        _cardClickedHandlers = new Action<int>[upgradeWindows.Length];
+
+        for (int i = 0; i < upgradeWindows.Length; i++)
+        {
+            if (upgradeWindows[i] == null)
+                continue;
+
+            int slotIndex = i;
+            _cardClickedHandlers[i] = optionIndex => OnUpgradeCardClicked(slotIndex, optionIndex);
+            upgradeWindows[i].onCardClicked += _cardClickedHandlers[i];
+        }
     }
 
     private void OnDestroy()
     {
-        if (upgradeWindow != null)
-            upgradeWindow.onCardClicked -= OnUpgradeCardClicked;
+        if (_cardClickedHandlers == null)
+            return;
+
+        for (int i = 0; i < upgradeWindows.Length; i++)
+        {
+            if (upgradeWindows[i] != null && _cardClickedHandlers[i] != null)
+                upgradeWindows[i].onCardClicked -= _cardClickedHandlers[i];
+        }
     }
 
     void LoadWaitingWindow(EntityRef entityRef)
@@ -61,7 +78,7 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
     // View (unlike the sim) is never rolled back. See docs/level-up-upgrades.md.
     private unsafe void UpdateUpgradeScreen(QuantumGame game)
     {
-        if (upgradeWindow == null)
+        if (upgradeWindows.Length == 0 || MyLocalPlayer.Instance == null)
             return;
 
         Frame frame = game.Frames.Predicted;
@@ -85,21 +102,31 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
         if (isOpen == false)
             return;
 
-        if (MyLocalPlayer.Instance == null || MyLocalPlayer.Instance.IsLocalPlayerSetup == false)
-            return;
+        var slots = MyLocalPlayer.Instance.Slots;
 
-        if (frame.Unsafe.TryGetPointer<LevelUpChoice>(MyLocalPlayer.Instance.EntityRef, out var choice) == false)
-            return; // this client rolled nothing this screen (every pool empty) - stay blank
-
-        var cardData = new UpgradeCardWidget.CardData[choice->Options.Length];
-
-        for (int i = 0; i < choice->Options.Length; i++)
+        for (int i = 0; i < upgradeWindows.Length; i++)
         {
-            cardData[i] = i < choice->OptionCount ? BuildCardData(frame, choice->Options[i]) : default;
-        }
+            if (upgradeWindows[i] == null)
+                continue;
 
-        int? confirmedIndex = choice->Confirmed ? (int?)choice->SelectedIndex : null;
-        upgradeWindow.Refresh(frame.Global->LevelUpTimeRemaining.AsFloat, cardData, confirmedIndex);
+            // Every local slot's own LevelUpChoice is independent (see docs/level-up-upgrades.md),
+            // so each local player refreshes their own window from their own entity.
+            if (i >= slots.Count || slots[i].IsSet == false)
+                continue;
+
+            if (frame.Unsafe.TryGetPointer<LevelUpChoice>(slots[i].EntityRef, out var choice) == false)
+                continue; // this slot rolled nothing this screen (every pool empty) - stay blank
+
+            var cardData = new UpgradeCardWidget.CardData[choice->Options.Length];
+
+            for (int j = 0; j < choice->Options.Length; j++)
+            {
+                cardData[j] = j < choice->OptionCount ? BuildCardData(frame, choice->Options[j]) : default;
+            }
+
+            int? confirmedIndex = choice->Confirmed ? (int?)choice->SelectedIndex : null;
+            upgradeWindows[i].Refresh(frame.Global->LevelUpTimeRemaining.AsFloat, cardData, confirmedIndex);
+        }
     }
 
     // WeaponPerkData/SkillActionData/GlobalUpgradeData/PassiveUpgradeData all derive from the
@@ -115,25 +142,34 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
             Icon = data.Icon,
             DisplayName = data.DisplayName,
             Description = data.GetDescription(),
-            RarityColor = RarityColor(data.Rarity)
+            RarityIndex = (int)data.Rarity,
+            KindText = KindText(option)
         };
     }
 
-    private static Color RarityColor(UpgradeRarity rarity)
+    // SkillUpgrade is the one kind that isn't self-descriptive - it needs SkillUpgradeSlot to say
+    // whether it's the hero's Dash or their unique skill (see LevelUpOption/SkillSlotId).
+    private static string KindText(LevelUpOption option)
     {
-        switch (rarity)
+        switch (option.Kind)
         {
-            case UpgradeRarity.Uncommon: return new Color(0.31f, 0.78f, 0.47f);
-            case UpgradeRarity.Rare: return new Color(0.25f, 0.55f, 0.95f);
-            case UpgradeRarity.Epic: return new Color(0.65f, 0.35f, 0.95f);
-            case UpgradeRarity.Legendary: return new Color(0.95f, 0.65f, 0.15f);
-            default: return Color.white; // Common
+            case LevelUpPoolKind.WeaponPerk: return "Weapon Perk";
+            case LevelUpPoolKind.GlobalUpgrade: return "Global Upgrade";
+            case LevelUpPoolKind.PassiveUpgrade: return "Passive Upgrade";
+            case LevelUpPoolKind.SkillUpgrade:
+                switch (option.SkillUpgradeSlot)
+                {
+                    case SkillSlotId.DashSkill: return "Dash Skill";
+                    case SkillSlotId.HeroSkill: return "Hero Skill";
+                    default: return "Skill Upgrade";
+                }
+            default: return string.Empty;
         }
     }
 
-    private void OnUpgradeCardClicked(int index)
+    private void OnUpgradeCardClicked(int slotIndex, int optionIndex)
     {
-        _game.SendCommand(new SelectLevelUpUpgradeCommand { OptionIndex = (byte)index });
+        _game.SendCommand(slotIndex, new SelectLevelUpUpgradeCommand { OptionIndex = (byte)optionIndex });
     }
 
 }

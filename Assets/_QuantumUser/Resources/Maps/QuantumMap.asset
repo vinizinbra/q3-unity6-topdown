@@ -274,10 +274,86 @@ MonoBehaviour:
     - rid: 5343240515838017541
     - rid: 5343240515838017542
     - rid: 5343240515838017543
+  - Components:
+    - rid: 2870108936319533056
+    - rid: 2870108936319533057
+    - rid: 2870108936319533058
+    - rid: 2870108936319533059
   SerializedTriangleDataUncompressedSize: 8
   references:
     version: 2
     RefIds:
+    - rid: 2870108936319533056
+      type: {class: Transform3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        Position:
+          X:
+            RawValue: 0
+          Y:
+            RawValue: 65536
+          Z:
+            RawValue: -65536
+        Rotation:
+          X:
+            RawValue: 0
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 0
+    - rid: 2870108936319533057
+      type: {class: PhysicsCollider3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        ShapeConfig:
+          ShapeType: 2
+          SphereRadius:
+            RawValue: 32768
+          CapsuleRadius:
+            RawValue: 0
+          CapsuleHeight:
+            RawValue: 0
+          PositionOffset:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          BoxExtents:
+            X:
+              RawValue: 32768
+            Y:
+              RawValue: 32768
+            Z:
+              RawValue: 32768
+          RotationOffset:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          UserTag: 0
+          IsPersistent: 1
+          CompoundShapes: []
+        Layer: 6
+        IsTrigger: 1
+        PhysicsMaterial:
+          Id:
+            Value: 0
+    - rid: 2870108936319533058
+      type: {class: PhysicsCallbacks3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        CallbackFlags:
+          Value: 0
+    - rid: 2870108936319533059
+      type: {class: GroundOffsetPrototype, ns: Quantum.Prototypes, asm: Quantum.Simulation}
+      data:
+        Offset:
+          RawValue: 0
+        FallGravityMultiplier:
+          RawValue: 655360
+        FloatSpeed:
+          RawValue: 0
     - rid: 5148247624062599168
       type: {class: Transform3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
       data:
@@ -306,6 +382,136 @@ MonoBehaviour:
         OriginCellZ: 0
         Rotation:
           Value: 0
+        Waypoints:
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        WaypointCount: 0
     - rid: 5343240515838017536
       type: {class: Transform3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
       data:
@@ -500,6 +706,8 @@ MonoBehaviour:
           RawValue: 3276800
         MaxHealth:
           RawValue: 3276800
+        RegenRate:
+          RawValue: 0
     - rid: 5343240515838017543
       type: {class: StatusEffectsPrototype, ns: Quantum.Prototypes, asm: Quantum.Simulation}
       data:
@@ -513,43 +721,35 @@ MonoBehaviour:
           SceneIndexPlusOne: 0
         BurnSource:
           Value: 0
-        PoisonRemaining:
-        - RawValue: 0
-        - RawValue: 0
-        - RawValue: 0
-        - RawValue: 0
-        - RawValue: 0
-        PoisonTickTimer:
+        VoidRemaining:
           RawValue: 0
-        PoisonDamagePerTick:
-        - RawValue: 0
-        - RawValue: 0
-        - RawValue: 0
-        - RawValue: 0
-        - RawValue: 0
-        PoisonOwner:
-        - SceneIndexPlusOne: 0
-        - SceneIndexPlusOne: 0
-        - SceneIndexPlusOne: 0
-        - SceneIndexPlusOne: 0
-        - SceneIndexPlusOne: 0
-        PoisonSource:
-        - Value: 0
-        - Value: 0
-        - Value: 0
-        - Value: 0
-        - Value: 0
+        ExplosionCooldownRemaining:
+          RawValue: 0
+        FreezeCooldownRemaining:
+          RawValue: 0
+        KnockbackCooldownRemaining:
+          RawValue: 0
+        MagmaPrisonCooldownRemaining:
+          RawValue: 0
+        StunCooldownRemaining:
+          RawValue: 0
+        BreakCooldownRemaining:
+          RawValue: 0
         IceRemaining:
           RawValue: 0
         IceSpeedMultiplier:
           RawValue: 0
         StunRemaining:
           RawValue: 0
+        AnticipationSlowRemaining:
+          RawValue: 0
+        AnticipationSlowMultiplier:
+          RawValue: 0
         RootRemaining:
           RawValue: 0
-        MarkRemaining:
+        BreakRemaining:
           RawValue: 0
-        MarkDamageMultiplier:
+        BreakDamageMultiplier:
           RawValue: 0
         HasteRemaining:
         - RawValue: 0
@@ -563,4 +763,20 @@ MonoBehaviour:
         ShieldRegenRemaining:
           RawValue: 0
         ShieldRegenMultiplier:
+          RawValue: 0
+        TimeDilationRemaining:
+          RawValue: 0
+        TimeDilationMultiplier:
+          RawValue: 0
+        DamageReductionRemaining:
+          RawValue: 0
+        DamageReductionAmount:
+          RawValue: 0
+        IntimidateRemaining:
+          RawValue: 0
+        IntimidateDamageMultiplier:
+          RawValue: 0
+        KnockbackTakenRemaining:
+          RawValue: 0
+        KnockbackTakenMultiplier:
           RawValue: 0

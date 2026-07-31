@@ -30,6 +30,15 @@ namespace Quantum
 
         public FP Range = 50;
 
+        // Pellets fired per trigger pull, evenly cone-spread across SpreadAngle around the aim
+        // direction - see WeaponSystem.GetPelletAngle. 1 (default) is a no-op: every existing
+        // single-shot weapon behaves identically. Damage above is PER PELLET, not the volley
+        // total - same convention FanProjectileDeliveryData uses for its enemy-only equivalent.
+        public int PelletCount = 1;
+
+        // Full cone width in degrees, meaningless while PelletCount <= 1.
+        public FP SpreadAngle;
+
         public ProjectileSpawnAnchor SpawnAnchor = ProjectileSpawnAnchor.OnSelf;
         public FPVector3 SpawnOffset;
 

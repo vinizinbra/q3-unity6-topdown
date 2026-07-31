@@ -16,6 +16,13 @@ namespace Quantum
     {
         public KnockbackTier Tier = KnockbackTier.Medium;
 
+        // Additive (default): stacks with any other knockback landing the same tick - correct for a
+        // single hard-hitting hit. Override: replaces the target's existing push instead - set this
+        // on a source that can land several hits itself in one tick/quick succession (e.g. a
+        // multi-pellet shotgun's per-pellet KnockbackEffectData), so pellet count doesn't multiply
+        // how far the target flies.
+        public KnockbackApplyMode ApplyMode = KnockbackApplyMode.Additive;
+
         public override void Apply(Frame f, ref HitEffectContext context)
         {
             // Excluded here rather than upstream (see HitEffectUtility.TryBuildContext) - a blast
@@ -31,7 +38,8 @@ namespace Quantum
 
             config.GetKnockback(Tier, out FP force, out FP upwardForce);
 
-            DamageUtility.ApplyKnockback(f, context.Target, context.PushDirection, force, upwardForce, context.Owner);
+            DamageUtility.ApplyKnockback(f, context.Target, context.PushDirection, force, upwardForce, context.Owner,
+                ApplyMode);
         }
     }
 }

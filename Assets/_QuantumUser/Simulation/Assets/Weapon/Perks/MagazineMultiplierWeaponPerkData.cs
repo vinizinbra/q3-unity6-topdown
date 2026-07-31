@@ -11,5 +11,7 @@ namespace Quantum
             int magazineSize = FPMath.RoundToInt(weapon->MagazineSize * Multiplier);
             weapon->MagazineSize = magazineSize < 1 ? 1 : magazineSize;
         }
+
+        protected override object[] DescriptionArgs => new object[] { (Multiplier.AsFloat - 1f) * 100f };
     }
 }

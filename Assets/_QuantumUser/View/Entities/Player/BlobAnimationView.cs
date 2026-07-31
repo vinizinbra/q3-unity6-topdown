@@ -20,6 +20,11 @@ namespace Quantum
         [SerializeField, Tooltip("Separate prop transform (e.g. a skateboard) that only ever tilts while jumping - untouched by idle/run.")]
         private Transform skateboard;
 
+        // Read-only so outside code (PlayerPortraitUiWidget, pulling a UI icon straight off the
+        // rig's own head sprite rather than a separately-authored portrait asset) can find the head
+        // without being able to reassign the rig transform this component itself animates.
+        public Transform Head => head;
+
         [Header("Facing")]
         [SerializeField] private bool billboardToCamera = true;
         [SerializeField, Tooltip("Fallback only, used when Aim is missing: minimum |velocity.x| before the facing flip commits. The normal path reads Aim.FacingSign, which AimSystem already computes with its own deadzone.")]

@@ -2,6 +2,15 @@ namespace Quantum
 {
     using Photon.Deterministic;
 
+    // Additive: the default - stacks with whatever external impulse/velocity the target already
+    // has this tick, so multiple simultaneous sources (two players, a player plus an environmental
+    // push) combine as expected. Override: replaces the target's existing external
+    // impulse/velocity instead, for a knockback source that can itself land several hits in the
+    // same tick or in quick succession (e.g. multi-pellet weapons) - without this, each pellet's
+    // impulse would stack with the others and launch the target far past what any single pellet
+    // was tuned for.
+    public enum KnockbackApplyMode { Additive, Override }
+
     // Shared entry point for dealing damage - Armor reduces the hit flat, Shield absorbs what's
     // left before Health does, so every damage source (hitscan, projectiles, melee/skill attacks)
     // gets identical handling. Crit and elemental procs are rolled here too, which is why they
@@ -22,9 +31,13 @@ namespace Quantum
         // rolled once when the status was applied, instead of re-rolling crit every tick.
         // silent flags the fired EntityDamaged event so HitFeedback skips its flash - see
         // SentryDecaySystem, the only caller that passes true today.
+        // isChainedExplosion/isDashExplosion/isExplosion all feed TryMarkExplodeOnDeath (Pixie's
+        // Chain Reaction passive and its Volatile Escape ascension) - see that method's own comment.
+        // All three default false, so every existing caller is unaffected.
         public static void ApplyDamage(Frame f, EntityRef target, FP damage, EntityRef owner,
             DamageSource source = DamageSource.None, bool bypassOutgoingResolution = false,
-            ElementType element = ElementType.Neutral, bool silent = false)
+            ElementType element = ElementType.Neutral, bool silent = false,
+            bool isChainedExplosion = false, bool isDashExplosion = false, bool isExplosion = false)
         {
             if (f.Unsafe.TryGetPointer<Health>(target, out var health) == false)
             {
@@ -56,6 +69,7 @@ namespace Quantum
             if (source == DamageSource.Weapon && bypassOutgoingResolution == false)
             {
                 RageOverdriveUtility.TryAdvanceStack(f, owner);
+                f.Signals.OnWeaponHitLanded(owner);
             }
 
             FP totalDamage;
@@ -68,10 +82,15 @@ namespace Quantum
             }
             else
             {
-                totalDamage = ResolveOutgoingDamage(f, owner, damage, source, out isCritical);
+                totalDamage = ResolveOutgoingDamage(f, owner, target, damage, source, out isCritical);
             }
 
-            // Mark - target-side vulnerability, applied once here so every damage source (hitscan,
+            if (isCritical == true)
+            {
+                f.Signals.OnCriticalHit(target, owner, totalDamage, source);
+            }
+
+            // Break - target-side vulnerability, applied once here so every damage source (hitscan,
             // projectile, melee, DoT ticks) respects it identically. Multiplies the attacker's
             // already-resolved damage rather than replacing Armor/Shield mitigation below it.
             totalDamage *= StatusEffectUtility.GetIncomingDamageMultiplier(f, target);
@@ -85,18 +104,30 @@ namespace Quantum
             health->CurrentHealth = FPMath.Max(FP._0, health->CurrentHealth - remaining);
             f.Events.EntityDamaged(target, owner, totalDamage, isCritical, element, silent, frontalMultiplier < FP._1);
 
+            // Max's Adrenaline Rush - builds from dealing OR receiving damage, on every landed hit
+            // (not just a kill), regardless of source. No-ops on anything without Adrenaline (every
+            // hero but Max, and owner == EntityRef.None for an environment hit).
+            AdrenalineUtility.OnDamageDealt(f, owner);
+            AdrenalineUtility.OnDamageTaken(f, target);
+
+            // Zara's Resonance - builds from dealing damage only, scaled by the amount actually
+            // dealt. No-ops on anything without Resonance (every hero but Zara).
+            ResonanceUtility.OnDamageDealt(f, owner, totalDamage);
+
             Log.Debug($"[Damage] {target} took {remaining} to health (raw {damage}, after stats {totalDamage}) " +
                       $"-> {health->CurrentHealth}/{health->MaxHealth}");
 
             // A landed hit, not just a killing one - an enemy that survives this shot can still go
             // on to die from something else entirely and explode then, same as one that dies right
             // here.
-            TryMarkExplodeOnDeath(f, owner, target);
+            TryMarkExplodeOnDeath(f, owner, target, isChainedExplosion, isDashExplosion, isExplosion);
 
             if (health->CurrentHealth <= FP._0)
             {
                 f.Events.EntityDied(target, owner);
+                f.Signals.OnEntityKilled(target, owner, source);
                 ExperienceUtility.TrySpawnDrop(f, target, owner);
+                ScrapUtility.TrySpawnDrop(f, target, owner);
 
                 if (f.Unsafe.TryGetPointer<Enemy>(target, out var enemy) == true)
                 {
@@ -125,23 +156,83 @@ namespace Quantum
             }
         }
 
+        // Pixie's Bigger Boom ascension - the single resolution point for her explosion radius
+        // multiplier, reused by every one of her own explosion sources (weapon explosive procs via
+        // WeaponSystem.Equip, her bomb skill via AreaHitData.Detonate, Backblast/Bombs Away dash
+        // explosions) - not just the death-explosion mechanic below (TryExplodeOnDeath), which read
+        // the raw field directly before this existed. Gated on RequiresExplosion (true only for
+        // Pixie's own grant, see ChainReactionPassiveData.Apply) rather than merely "has
+        // MarkExplosiveDeath" - Max's Berserk grant carries the same component but was never seeded
+        // by Pixie's own passive, so gating on presence alone would read whatever value happens to
+        // sit in BonusRadiusMultiplier for him instead of a guaranteed no-op.
+        public static FP ResolvePixieExplosionRadiusMultiplier(Frame f, EntityRef owner)
+        {
+            if (f.Unsafe.TryGetPointer<MarkExplosiveDeath>(owner, out var mark) == false || mark->RequiresExplosion == false)
+                return FP._1;
+
+            return mark->BonusRadiusMultiplier;
+        }
+
         // Enemies only - a hit on the player or a non-Enemy prop has nothing here to mark. Owner is
         // whoever landed THIS hit (a bullet, a blast, a DoT tick), not necessarily who ends up
         // finishing the target off later - MarkExplosiveDeath is granted by an upgrade shared across
         // heroes (Skills/MarkExplosiveDeathSkillAction), so it doesn't matter whether it was Max's
         // gun or Pixie's bomb that landed this particular hit.
-        private static void TryMarkExplodeOnDeath(Frame f, EntityRef owner, EntityRef target)
+        // isChainedExplosion/isDashExplosion are both always false except when called from inside
+        // this same class's own explosion-resolution paths (TryExplodeOnDeath passes
+        // isChainedExplosion; Pixie's Backblast/Bombs Away dash actions pass isDashExplosion via
+        // HitEffectUtility.ApplyExplosion) - see MarkExplosiveDeath.qtn for what each ascension does
+        // with them.
+        private static void TryMarkExplodeOnDeath(Frame f, EntityRef owner, EntityRef target, bool isChainedExplosion, bool isDashExplosion, bool isExplosion)
         {
-            if (f.Has<Enemy>(target) == false)
+            if (f.Unsafe.TryGetPointer<Enemy>(target, out var enemy) == false)
                 return;
 
             if (f.Unsafe.TryGetPointer<MarkExplosiveDeath>(owner, out var mark) == false || mark->Stacks == 0)
                 return;
 
+            // Pixie's Chain Reaction only marks off an actual explosion (weapon explosive procs -
+            // Cataclysm Round/Explosive Sequence - or her own bomb skill/cluster bomblets/dash
+            // explosion, all of which detonate as DamageSource.Skill but still pass isExplosion/
+            // isDashExplosion), never a plain non-explosive hit. RequiresExplosion defaults false,
+            // so Max's Berserk (the only other grantor) is unaffected by any of this and still marks
+            // on any hit/source exactly as before.
+            if (mark->RequiresExplosion == true && isExplosion == false && isChainedExplosion == false && isDashExplosion == false)
+            {
+                return;
+            }
+
+            FP durationMultiplier = FP._1;
+
+            if (isChainedExplosion == true)
+            {
+                // Chain Reaction (Pixie ascension) - a chained/secondary blast only re-marks anyone
+                // it also catches once this has been taken (0 is the base passive's default, off),
+                // and then at reduced effectiveness - a direct hit always marks at full duration
+                // regardless of this ascension.
+                if (mark->ChainReactionMultiplier <= FP._0)
+                    return;
+
+                durationMultiplier = mark->ChainReactionMultiplier;
+            }
+
+            // Volatile Escape (Pixie ascension) - a dash explosion always marks regardless of tier,
+            // bypassing MaxAffectedTier's own gate below. Every other source (weapon, bomb, chained
+            // blast) still respects it normally.
+            bool bypassesTierGate = isDashExplosion == true && mark->VolatileEscapeEnabled == true;
+
+            if (mark->HasTierGate == true && bypassesTierGate == false)
+            {
+                EnemyDataAsset data = f.FindAsset(enemy->EnemyData);
+
+                if ((byte)data.Tier > mark->MaxAffectedTier)
+                    return;
+            }
+
             ExplodeOnDeathConfig config = f.FindAsset(f.RuntimeConfig.ExplodeOnDeathConfig);
 
             f.AddOrGet<ExplodeOnDeath>(target, out var explode);
-            explode->Remaining = config.Duration;
+            explode->Remaining = config.Duration * durationMultiplier;
         }
 
         // Filler-tier death replacement for the lingering die animation - fires the explosion event
@@ -185,10 +276,39 @@ namespace Quantum
             FP blastRadius = radius * config.RadiusMultiplier;
             FP damage = maxHealth * config.DamagePercent;
 
+            // Void-marked kills detonate bigger and harder - see docs/elemental-reactions.md for
+            // what applies Void; this stacks with every bonus below, it's not a replacement for any
+            // of them.
+            if (StatusEffectUtility.IsVoided(f, target) == true)
+            {
+                blastRadius *= config.VoidRadiusMultiplier;
+                damage *= config.VoidDamageMultiplier;
+            }
+
+            // Pixie-only ascensions - Bigger Boom/Unstable Mixture apply unconditionally
+            // (BonusRadiusMultiplier/BonusDamageMultiplier both default to 1, so Max's Berserk is
+            // unaffected); Heavy Payload only for a Specialist+ kill, on top of whatever that
+            // tougher enemy's own naturally bigger radius/health already contributed.
+            if (f.Unsafe.TryGetPointer<MarkExplosiveDeath>(owner, out var mark) == true)
+            {
+                blastRadius *= mark->BonusRadiusMultiplier;
+                damage *= mark->BonusDamageMultiplier;
+
+                EnemyDataAsset data = f.FindAsset(enemyData);
+
+                if (data.Tier >= EnemyTier.Specialist)
+                {
+                    blastRadius *= mark->HeavyPayloadMultiplier;
+                    damage *= mark->HeavyPayloadMultiplier;
+                }
+            }
+
             if (damage <= FP._0)
                 return;
 
-            HitEffectUtility.ApplyDamageInRadius(f, transform->Position, blastRadius, owner, damage, DamageSource.Skill, config.TargetMask);
+            // Flags this blast's own hits as chained, so TryMarkExplodeOnDeath only re-marks anyone
+            // it also catches if Chain Reaction has been taken (see that method's own comment).
+            HitEffectUtility.ApplyDamageInRadius(f, transform->Position, blastRadius, owner, damage, DamageSource.Skill, config.TargetMask, isChainedExplosion: true);
             f.Events.ExplodeOnDeathDetonated(owner, transform->Position, blastRadius, enemyData);
 
             Log.Debug($"[Damage] {target}'s marked death exploded at {transform->Position} radius {blastRadius} for {damage}");
@@ -220,14 +340,22 @@ namespace Quantum
         // CharacterSystem.cs) but never actually read anywhere - this is that missing wire-up. A
         // fraction (0 = no reduction, 1 = fully immune), same convention as every other
         // Multiplier-suffixed stat despite the name; clamped so a stacked bonus past 1 can't flip
-        // into negative (healing) damage. Target-side, same as Mark - stacks with it rather than
+        // into negative (healing) damage. Target-side, same as Break - stacks with it rather than
         // replacing it.
         private static FP ResolveDamageReduction(Frame f, EntityRef target)
         {
-            if (f.Unsafe.TryGetPointer<CharacterStats>(target, out var stats) == false)
-                return FP._1;
+            FP multiplier = FP._1;
 
-            return FPMath.Clamp(FP._1 - stats->DamageReduction, FP._0, FP._1);
+            if (f.Unsafe.TryGetPointer<CharacterStats>(target, out var stats) == true)
+            {
+                multiplier *= FPMath.Clamp(FP._1 - stats->DamageReduction, FP._0, FP._1);
+            }
+
+            // Max's Too Angry to Die - a timed buff, independent of (and stacking with) the permanent
+            // CharacterStats fraction above.
+            multiplier *= StatusEffectUtility.GetDamageReductionMultiplier(f, target);
+
+            return multiplier;
         }
 
         // Target-side, stacks with ResolveDamageReduction above rather than replacing it - an enemy
@@ -303,15 +431,30 @@ namespace Quantum
         // rather than captured when a shot was fired, so a projectile crits by the weapon its
         // shooter holds when it lands. An attacker without CharacterStats deals its damage flat -
         // no multiplier, and no crit, since there'd be nothing to multiply by.
-        private static FP ResolveOutgoingDamage(Frame f, EntityRef owner, FP damage, DamageSource source,
+        private static FP ResolveOutgoingDamage(Frame f, EntityRef owner, EntityRef target, FP damage, DamageSource source,
             out bool isCritical)
         {
             isCritical = false;
+
+            // Intimidate (Brute's Protector Aura) - reduces the ATTACKER's own outgoing damage,
+            // checked before the CharacterStats gate below since this has to affect enemies too, and
+            // enemies never carry CharacterStats. Fearless (Brute's own ascension) is the mirror
+            // case - a bonus Brute himself deals against an Intimidated target - so it also has to
+            // sit outside that gate rather than depend on it.
+            damage *= StatusEffectUtility.GetOutgoingDamageMultiplier(f, owner);
+            damage *= ProtectorAuraUtility.GetFearlessBonusMultiplier(f, owner, target);
 
             if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false)
                 return damage;
 
             damage *= stats->DamageMultiplier * GetSourceMultiplier(stats, source);
+
+            // Max's Battle High - bonus Weapon Damage while Adrenaline is at max stacks. Scoped to
+            // DamageSource.Weapon inside the helper itself, same convention GetSourceMultiplier uses.
+            if (source == DamageSource.Weapon)
+            {
+                damage *= AdrenalineUtility.GetWeaponDamageMultiplier(f, owner);
+            }
 
             FP chance = stats->CriticalChance;
             FP multiplier = stats->CriticalDamageMultiplier;
@@ -386,7 +529,7 @@ namespace Quantum
         // No-ops if both forces are <= 0, the resolved impulse is zero, the target resists the push
         // entirely, or the target has neither movement component (e.g. a static prop).
         public static void ApplyKnockback(Frame f, EntityRef target, FPVector3 horizontalDirection, FP force,
-            FP upwardForce, EntityRef owner)
+            FP upwardForce, EntityRef owner, KnockbackApplyMode mode = KnockbackApplyMode.Additive)
         {
             if (force <= FP._0 && upwardForce <= FP._0)
                 return;
@@ -399,7 +542,7 @@ namespace Quantum
                 return;
             }
 
-            ApplyResolvedImpulse(f, target, ResolveImpulse(horizontalDirection, force, upwardForce) * scale);
+            ApplyResolvedImpulse(f, target, ResolveImpulse(horizontalDirection, force, upwardForce) * scale, mode);
         }
 
         // Same scaling/stagger/PhysicsBody-or-KCC push as ApplyKnockback, but for a caller that
@@ -407,7 +550,8 @@ namespace Quantum
         // - e.g. JuggernautSkillData.Discharge, whose impulse is built from the caster's own
         // velocity (a magnitude that matters, so it can't be run through ResolveImpulse's
         // normalize-then-scale, which would throw the magnitude away and keep only the direction).
-        public static void ApplyKnockbackImpulse(Frame f, EntityRef target, FPVector3 impulse, EntityRef owner)
+        public static void ApplyKnockbackImpulse(Frame f, EntityRef target, FPVector3 impulse, EntityRef owner,
+            KnockbackApplyMode mode = KnockbackApplyMode.Additive)
         {
             FP scale = ResolveKnockbackScale(f, owner, target);
 
@@ -417,10 +561,11 @@ namespace Quantum
                 return;
             }
 
-            ApplyResolvedImpulse(f, target, impulse * scale);
+            ApplyResolvedImpulse(f, target, impulse * scale, mode);
         }
 
-        private static void ApplyResolvedImpulse(Frame f, EntityRef target, FPVector3 impulse)
+        private static void ApplyResolvedImpulse(Frame f, EntityRef target, FPVector3 impulse,
+            KnockbackApplyMode mode = KnockbackApplyMode.Additive)
         {
             if (impulse.SqrMagnitude <= FP._0)
                 return;
@@ -429,13 +574,21 @@ namespace Quantum
 
             if (f.Unsafe.TryGetPointer<KCC>(target, out var kcc) == true)
             {
-                kcc->AddExternalImpulse(impulse);
+                if (mode == KnockbackApplyMode.Override)
+                {
+                    kcc->SetExternalImpulse(impulse);
+                }
+                else
+                {
+                    kcc->AddExternalImpulse(impulse);
+                }
+
                 pushed = true;
             }
 
             if (f.Unsafe.TryGetPointer<PhysicsBody3D>(target, out var body) == true)
             {
-                pushed |= PushPhysicsBody(target, body, impulse);
+                pushed |= PushPhysicsBody(target, body, impulse, mode);
             }
 
             if (pushed == false)
@@ -527,6 +680,11 @@ namespace Quantum
                 scale *= resistance.KnockbackMultiplier;
             }
 
+            // Brute's Iron Presence - reduced knockback resistance on Intimidated enemies, stacking
+            // with the permanent stat and tier-resistance multipliers above rather than replacing
+            // either.
+            scale *= StatusEffectUtility.GetKnockbackTakenMultiplier(f, target);
+
             return scale;
         }
 
@@ -540,7 +698,14 @@ namespace Quantum
         // (PhysicsBody3D.ConfigFlags.IsKinematic), so there's nothing to push - enemies run
         // kinematic mid-charge/mid-jump (ChargeDeliveryData, LeapDeliveryData), which makes them
         // immovable for the duration.
-        private static bool PushPhysicsBody(EntityRef target, PhysicsBody3D* body, FPVector3 impulse)
+        //
+        // Override sets Velocity directly instead of adding an impulse for it to integrate next
+        // step - deliberately keeps the body's existing vertical speed (falling/jumping) rather
+        // than replacing it outright, same as EnemySystem's own ground-plant zeroing
+        // (new FPVector3(x, body->Velocity.Y, z)), so an override knockback only ever overrides the
+        // horizontal push it's actually meant to replace.
+        private static bool PushPhysicsBody(EntityRef target, PhysicsBody3D* body, FPVector3 impulse,
+            KnockbackApplyMode mode = KnockbackApplyMode.Additive)
         {
             if (body->IsKinematic == true)
             {
@@ -549,9 +714,18 @@ namespace Quantum
             }
 
             body->WakeUp();
-            body->AddLinearImpulse(impulse * body->Mass);
 
-            Log.Debug($"[Knockback] {target} pushed by {impulse} (PhysicsBody3D, Mass {body->Mass})");
+            if (mode == KnockbackApplyMode.Override)
+            {
+                FP y = impulse.Y != FP._0 ? impulse.Y : body->Velocity.Y;
+                body->Velocity = new FPVector3(impulse.X, y, impulse.Z);
+            }
+            else
+            {
+                body->AddLinearImpulse(impulse * body->Mass);
+            }
+
+            Log.Debug($"[Knockback] {target} pushed by {impulse} (PhysicsBody3D, Mass {body->Mass}, {mode})");
             return true;
         }
     }

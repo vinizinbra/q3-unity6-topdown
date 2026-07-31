@@ -51,6 +51,7 @@ GameObject:
   - component: {fileID: 382911034274762262}
   - component: {fileID: 8020308353297223607}
   - component: {fileID: 3804005094351733771}
+  - component: {fileID: 7213704155496264851}
   m_Layer: 8
   m_Name: GenericEnemyPrefab
   m_TagString: Untagged
@@ -501,9 +502,9 @@ MonoBehaviour:
       RawValue: 0
     RootRemaining:
       RawValue: 0
-    MarkRemaining:
+    BreakRemaining:
       RawValue: 0
-    MarkDamageMultiplier:
+    BreakDamageMultiplier:
       RawValue: 0
     HasteRemaining:
     - RawValue: 0
@@ -652,3 +653,31 @@ MonoBehaviour:
     AlignToEnemyDirection: 0
     RotationOffset: {x: 0, y: 0, z: 0}
     Scale: 1
+--- !u!114 &7213704155496264851
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4057597631457596921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17edc47547113402989931086b70eb02, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::QuantumUser.View.Util.HitFeedback
+  _playerRef:
+    _index: 0
+  initialized: 0
+  executeOnlyOnLocal: 0
+  isLocal: 0
+  sprites: []
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
+  burnFlashColor: {r: 1, g: 0.45, b: 0.1, a: 1}
+  frontalReducedFlashColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  restColor: {r: 1, g: 1, b: 1, a: 0}
+  duration: 0.3
+  healFlashColor: {r: 0.4, g: 1, b: 0.4, a: 1}
+  shieldFlashColor: {r: 0.4, g: 0.75, b: 1, a: 1}
+  deathColor: {r: 0, g: 0, b: 0, a: 0.5}
+  pickupGlowColor: {r: 1, g: 0.85, b: 0.3, a: 1}
+  pickupGlowDuration: 0.5
