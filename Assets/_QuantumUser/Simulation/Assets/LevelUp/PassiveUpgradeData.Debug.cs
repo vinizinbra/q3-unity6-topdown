@@ -16,5 +16,21 @@ namespace Quantum
         {
             PassiveUpgradeDataDebug.OnGrantRequested?.Invoke(this);
         }
+
+        // No revert path exists: PassiveUpgradeUtility.Grant -> Apply hand-mutates a component field
+        // in place (often additive-then-clamped) with no per-entity "currently granted" ledger to
+        // undo from. These buttons exist for interface consistency with SkillActionData's real
+        // Remove/Clear All, but can only log - restart play mode to actually reset a player.
+        [EditorButton("Remove From Local Player", EditorButtonVisibility.PlayMode)]
+        protected void DebugRemoveFromLocalPlayer()
+        {
+            Log.Error("[PassiveUpgradeData] Remove not supported - upgrades bake into live stats at grant time with no per-grant ledger to undo. Restart play mode to reset.");
+        }
+
+        [EditorButton("Clear All From Local Player", EditorButtonVisibility.PlayMode)]
+        protected void DebugClearAllFromLocalPlayer()
+        {
+            Log.Error("[PassiveUpgradeData] Clear All not supported - upgrades bake into live stats at grant time with no per-grant ledger to undo. Restart play mode to reset.");
+        }
     }
 }

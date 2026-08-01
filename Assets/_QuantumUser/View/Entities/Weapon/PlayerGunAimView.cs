@@ -201,6 +201,13 @@ namespace Quantum
             Quaternion facingCamera = Quaternion.LookRotation(cameraTransform.forward, Vector3.up);
             Vector2 extraOffset = new Vector2(swayOffset.x + followRight, swayOffset.y + followUp);
 
+            // Ground-plane projection of worldDir, not screenDir - screenDir already went through
+            // ProjectToScreen (camera right/up), which is the wrong basis for anything that needs
+            // to stay level with the ground rather than the screen (see AimPose.FlatWorldDirection).
+            Vector3 flatWorldDirection = new Vector3(worldDir.x, 0f, worldDir.z);
+            if (flatWorldDirection.sqrMagnitude < 0.0001f)
+                flatWorldDirection = Vector3.forward;
+
             var pose = new WeaponView.AimPose(
                 currentAngle + followRotation,
                 facingCamera,
@@ -208,7 +215,8 @@ namespace Quantum
                 isFlipped,
                 extraOffset,
                 cameraTransform.right,
-                cameraTransform.up);
+                cameraTransform.up,
+                flatWorldDirection.normalized);
 
             weaponView.ApplyAim(pose, smoothT);
         }

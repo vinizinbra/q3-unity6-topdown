@@ -14,6 +14,7 @@ namespace Quantum
         Filler,
         Normal,
         Specialist,
+        Heavy,
         Elite,
         Boss
     }
@@ -161,14 +162,15 @@ namespace Quantum
         // visual matches the actual collision size.
         public FP Radius;
 
-        // Seeded the same way as MaxHealth (now tier-driven, see EnemyTierStatsConfig), but only if
-        // greater than 0 - unlike the player's own
-        // Shield (which requires a Shield component already authored on the hero's prefab, see
-        // CharacterSystem.SeedShield), an enemy's Shield component is added dynamically here based
-        // purely on this value, so no per-prefab authoring is needed for a shielded enemy variant.
-        public FP MaxShield;
-        public FP ShieldRechargeDelay;
-        public FP ShieldRechargeRate;
+        // Multiplies this tier's EnemyTierStatsConfig.Shield baseline (EnemySystem.SeedShield),
+        // the same way EnemyTierStatsConfig.ScaleMultiplier multiplies Radius above - the tier sets
+        // the baseline shield amount, this just scales it per enemy. A Shield component is added
+        // dynamically only if the resulting amount is greater than 0, so 0 (the default) opts an
+        // enemy out entirely; unlike the player's own Shield (which requires one already authored
+        // on the hero's prefab, see CharacterSystem.SeedShield), no per-prefab authoring is needed
+        // for a shielded enemy variant. Recharge delay/rate are not authored here at all - purely
+        // tier-driven, see EnemyTierStatsConfig.ShieldRechargeDelay/Rate.
+        public FP ShieldMultiplier;
 
         // Inert today - no consumer reads this yet. Each trait gets wired into its own mechanic as
         // that mechanic is touched (e.g. KnockbackResistance into DamageUtility.ResolveKnockbackScale).
@@ -191,6 +193,20 @@ namespace Quantum
         public bool AvoidWalls;
         public FP WallAvoidProbeDistance;
 
+        // If the direct line to the target is wall-blocked (a corridor turn, not just a corner
+        // post AvoidWalls' own local steering can already route around), routes through this
+        // enemy's current chunk's baked waypoint graph instead of walking straight into the wall -
+        // see EnemyPathfindingUtility. Overrides whatever Stats.Movement would have computed only
+        // while blocked; the instant line-of-sight comes back (checked fresh every tick, not just
+        // once) the detour is dropped and normal movement resumes, even mid-detour. Flipping this
+        // on is the only authoring needed - EnemySystem.SeedWaypointPath dynamically adds the
+        // EnemyWaypointPath component this needs to cache the detour between ticks, the same way
+        // SeedShield adds Shield only for enemies that actually have one. Falls back to
+        // Stats.Movement's own direction (walking straight at the wall, today's behavior) if no
+        // chunk/route can be found for a detour.
+        public bool UseWaypointDetour;
+        public FP WaypointArrivalDistance;
+
         public readonly bool HasTrait(EnemyTrait trait) => Array.IndexOf(Traits, trait) >= 0;
     }
 
@@ -204,25 +220,6 @@ namespace Quantum
 
         public FP DetectionRange;
         public FP LeashRange;
-    }
-
-    // How this enemy reacts to being hit with knockback - see EnemySystem.OnEnemyKnockedBack/
-    // TickKnockbackRecovery.
-    [Serializable]
-    public struct EnemyKnockbackData
-    {
-        // False makes an enemy immovable under fire (heavy/boss types): no stagger window ever
-        // opens, so EnemySystem keeps writing its velocity every tick, which wipes any incoming
-        // push on contact - the action-level EnemyActionData.InterruptibleDuringTelegraph/
-        // InterruptibleDuringActive flags never even get checked. True lets a hit shove this enemy
-        // at all; whether it ALSO cancels whatever action is in progress is then up to that
-        // action's own interrupt flags.
-        public bool CanBeInterruptedByKnockback;
-
-        // How long EnemySystem holds off its own velocity writes after a knockback lands, letting
-        // the impulse carry the enemy before the AI takes the wheel back. At 0 the push is erased
-        // on the next tick, so knockback against this enemy does nothing visible.
-        public FP KnockbackRecoveryTime;
     }
 
     // The action(s) this enemy can perform - see EnemyDecisionUtility.
@@ -255,12 +252,11 @@ namespace Quantum
         {
             MoveSpeed = 3,
             Radius = 1,
-            ShieldRechargeDelay = 2,
-            ShieldRechargeRate = 5,
             Traits = new EnemyTrait[0],
             FrontalDamageReductionAmount = FP._0_50,
             FrontalDamageReductionArcDegrees = 120,
             WallAvoidProbeDistance = 1,
+            WaypointArrivalDistance = 1,
             Height = new EnemyHeightData
             {
                 InitialState = EnemyHeightState.Grounded,
@@ -282,8 +278,6 @@ namespace Quantum
         };
 
         public EnemyAIData AI = new EnemyAIData { DetectionRange = 10, LeashRange = 15 };
-
-        public EnemyKnockbackData Knockback = new EnemyKnockbackData { CanBeInterruptedByKnockback = true, KnockbackRecoveryTime = FP._0_25 };
 
         public EnemyActionsData Actions = new EnemyActionsData { SkillActions = new() };
 

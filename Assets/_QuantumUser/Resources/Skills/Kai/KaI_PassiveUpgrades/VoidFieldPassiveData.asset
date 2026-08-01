@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7fa981a25b5194faf92a408236d05c14, type: 3}
+  m_Name: VoidFieldPassiveData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.VoidFieldPassiveData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Kai/KaI_PassiveUpgrades/VoidFieldPassiveData
+    Guid:
+      Value: 411221715940256372
+  Description: Kai projects a field around himself that slows enemy projectiles passing
+    through it.
+  Radius:
+    RawValue: 131072
+  SpeedMultiplier:
+    RawValue: 32768

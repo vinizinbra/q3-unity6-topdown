@@ -36,6 +36,14 @@ event EntityDamaged
     // FrontalDamageReduction enemy, hit inside its facing arc) - lets HitFeedback flash a distinct
     // color instead of the normal per-element one.
     Boolean FrontalReduced;
+
+    // Target's Transform3D.Position at the moment of the hit, read by DamageUtility.ApplyDamage
+    // before it does anything that might destroy the target. A killing blow can destroy Target this
+    // same tick (Filler/Normal-tier enemies - see ApplyDamage's death branch), so a view can't
+    // safely re-resolve Transform3D off Target after the fact the way it can for a non-lethal hit -
+    // same "position travels with the event" shape every other position-carrying event in this file
+    // already uses (EnemyExploded, HitEffectApplied, ...).
+    FPVector3 Position;
 }
 
 // Mirrors EntityDamaged for the heal path - see HealUtility.ApplyHeal. Amount is what was actually
@@ -103,6 +111,14 @@ event AlternatingAreaPulsed
 {
     EntityRef Entity;
     Boolean   IsHealing;
+}
+
+// Fired by AreaDamageSystem every time an AreaDamage entity's TickTimer resets, whether or not the
+// tick actually caught a target - View-side hook for a plain (non-alternating) area's own tick
+// animation (e.g. AreaHitView), mirroring AlternatingAreaPulsed above for AlternatingArea entities.
+event AreaDamageTicked
+{
+    EntityRef Entity;
 }
 
 // Fired by ResonanceUtility.FirePulse - Zara's Resonance passive reaching max simultaneously heals
@@ -407,4 +423,23 @@ event ScrapOrbCollected
 {
     EntityRef Collector;
     FPVector3 Position;
+}
+
+// Fired by RiftShardOrbSystem the instant a player reaches a RiftShard - same View-hook shape as
+// ExpOrbCollected above (a pickup-to-HUD-bar effect plus a per-character pickup glow), mirroring
+// that currency's own event since Rift Shards follow the same shared/deterministic-total pattern.
+event RiftShardCollected
+{
+    EntityRef Collector;
+    FPVector3 Position;
+    FP        Amount;
+}
+
+// Fired by CoinOrbSystem the instant a player reaches a Coin - same View-hook shape as
+// ExpOrbCollected/RiftShardCollected above, mirroring those currencies' own events.
+event CoinCollected
+{
+    EntityRef Collector;
+    FPVector3 Position;
+    FP        Amount;
 }

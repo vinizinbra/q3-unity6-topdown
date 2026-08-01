@@ -3,7 +3,7 @@ namespace Quantum
     using System.Collections.Generic;
 
     // Ordered list of sub-action steps, run one after another - built last since it composes every
-    // other delivery type. Each step's own EnemyActionData supplies Damage/DamageRange/Knockback/
+    // other delivery type. Each step's own EnemyActionData supplies Damage/DamageRange/
     // Effects and points at whatever concrete Delivery actually executes it; a step's own
     // AnticipationTime/Telegraph/Trigger are NOT used here - the outer action's single windup
     // already telegraphed the whole sequence once, so a full re-windup per step would double up on

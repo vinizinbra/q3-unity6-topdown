@@ -60,6 +60,22 @@
         // ScrapOrb.qtn.
         public AssetRef<EntityPrototype> ScrapOrbPrototype;
 
+        // Balance tuning for the Rift Shard currency pickup (Greed Global Upgrade doubles its
+        // gain) - see RiftShardConfig and RiftShardUtility/RiftShardOrbSystem.
+        public AssetRef<RiftShardConfig> RiftShardConfig;
+
+        // The pickup entity RiftShardUtility.TrySpawnDrop spawns on an eligible enemy kill - see
+        // RiftShard.qtn.
+        public AssetRef<EntityPrototype> RiftShardPrototype;
+
+        // Balance tuning for the Coin currency pickup - a second, independent currency from Rift
+        // Shards, see CoinConfig and CoinUtility/CoinOrbSystem.
+        public AssetRef<CoinConfig> CoinConfig;
+
+        // The pickup entity CoinUtility.TrySpawnDrop spawns on an eligible enemy kill - see
+        // Coin.qtn.
+        public AssetRef<EntityPrototype> CoinPrototype;
+
         // Debug-only knobs for testing low-health/no-shield scenarios without re-authoring
         // CharacterData - scale only CurrentHealth/CurrentShield at initial spawn, leaving
         // MaxHealth/MaxShield untouched, see CharacterSystem.SeedHealth/SeedShield.

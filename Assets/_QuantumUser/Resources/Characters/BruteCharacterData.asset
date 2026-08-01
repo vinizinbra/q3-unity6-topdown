@@ -100,13 +100,14 @@ MonoBehaviour:
       Value: 393071073715498458
   StartingWeapon:
     Id:
-      Value: 486587533721559972
+      Value: 457249274052612936
   DashSkillUpgrades:
   - Id:
       Value: 360341579882539830
   - Id:
       Value: 518122874274750699
-  HeroSkillUpgrades: []
+  - Id:
+      Value: 397442759715409918
   PassiveUpgrades:
   - Id:
       Value: 378195394890065037

@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9a3bffacbe2f486b968ef79fc5f180b, type: 3}
+  m_Name: OneInTheChamber
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.OneInTheChamberMutationData
+  Identifier:
+    Path: _QuantumUser/Resources/LevelUp/RiftMutation/OneInTheChamber
+    Guid:
+      Value: 390042850462076770
+  Icon: {fileID: 0}
+  DisplayName: One in the Chamber
+  Rarity: 3
+  Description: Magazine becomes 1 round, +{0}% damage on it
+  FinalRoundDamageBonus:
+    RawValue: 262144

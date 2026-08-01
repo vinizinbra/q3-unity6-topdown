@@ -4,6 +4,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
+using QuantumUser.View.Util;
 
 namespace QuantumUser.Editor
 {
@@ -127,7 +128,7 @@ namespace QuantumUser.Editor
                 _source = previousSource;
                 _outputName = previousName;
             }
-            Debug.Log($"Exported {children.Count} active child mesh prefab(s) using pivot '{batchPivot.name}'.", this);
+            LogHelper.Log("PivotMeshExporter", $"Exported {children.Count} active child mesh prefab(s) using pivot '{batchPivot.name}'.", this);
         }
 
         private void Export()
@@ -184,7 +185,7 @@ namespace QuantumUser.Editor
                 Selection.activeObject = prefab;
                 EditorGUIUtility.PingObject(prefab);
             }
-            Debug.Log($"Exported '{safeName}' with pivot matching '{_pivot.name}' to '{prefabPath}'.", prefab);
+            LogHelper.Log("PivotMeshExporter", $"Exported '{safeName}' with pivot matching '{_pivot.name}' to '{prefabPath}'.", prefab);
         }
 
         private static Mesh BuildMesh(Mesh source, Matrix4x4 sourceToPivot, string meshName)

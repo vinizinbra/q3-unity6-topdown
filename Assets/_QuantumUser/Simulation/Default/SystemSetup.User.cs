@@ -55,6 +55,11 @@
                 // Bottomless Momentum, Critical Rebound, the shared ramp pool). See
                 // docs/weapon-perks.md.
                 new WeaponPerkReactionSystem(),
+                // Reacts to Combat.qtn's OnCriticalHit, CharacterSkills.qtn's OnSkillActivated, and
+                // Shield.qtn's OnShieldBroken - the crit/dash-activation/shield-break side of the
+                // Rift Mutation roster (Critical Focus, Infinite Momentum, Shield Breaker). See
+                // docs/rift-mutations.md.
+                new RiftMutationReactionSystem(),
                 // Must run after KCCSystem (KCC.SetActive/Teleport need this tick's movement already
                 // resolved) and after AimSystem (DashSkillData reads Aim.Angle as a facing fallback).
                 new SkillSystem(),
@@ -62,6 +67,12 @@
                 // PassiveUpgradeSystem's own comment) - before VoidFieldSystem so a same-tick-granted
                 // Void Pressure ascension is already reflected when that system runs this same tick.
                 new PassiveUpgradeSystem(),
+                // Debug-only command processor for LevelUpPoolKind.GlobalUpgrade - same reasoning and
+                // placement as PassiveUpgradeSystem just above (see GlobalUpgradeSystem's own comment).
+                new GlobalUpgradeSystem(),
+                // Debug-only command processor for LevelUpPoolKind.RiftMutation - same reasoning and
+                // placement as GlobalUpgradeSystem just above (see RiftMutationSystem's own comment).
+                new RiftMutationSystem(),
                 // After SkillSystem (so a SlowArea entity spawned this same tick already exists here)
                 // and before both EnemySystem and ProjectileSystem (so a same-tick-fresh
                 // TimeDilation/SpeedMultiplier is what their own Tick/Update calls read this tick, not

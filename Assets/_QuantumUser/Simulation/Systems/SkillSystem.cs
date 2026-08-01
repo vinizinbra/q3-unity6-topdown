@@ -19,18 +19,35 @@ namespace Quantum
             UpdateSlot(f, ref filter, &filter.CharacterSkills->DashSkill, SkillSlotId.DashSkill, input, input->DashSkill);
             UpdateSlot(f, ref filter, &filter.CharacterSkills->HeroSkill, SkillSlotId.HeroSkill, input, input->HeroSkill);
 
-            ProcessGrantUpgradeCommand(f, ref filter);
+            ProcessSkillUpgradeCommands(f, ref filter);
         }
 
         // GetPlayerCommand only returns non-null on the tick a sent command actually lands - unlike
-        // polled Input, this fires exactly once per SendCommand call, not every tick. See
-        // GrantSkillUpgradeCommand for why this has to be a command rather than a direct call from
-        // the View (SkillUpgradeDebugTrigger today; a level-up/pickup screen eventually).
-        private static void ProcessGrantUpgradeCommand(Frame f, ref Filter filter)
+        // polled Input, this fires exactly once per SendCommand call, not every tick, and a player
+        // can only have one command in flight per tick - hence the single dispatch below rather than
+        // three independent checks. See GrantSkillUpgradeCommand for why this has to be a command
+        // rather than a direct call from the View (SkillUpgradeDebugTrigger today; a
+        // level-up/pickup screen eventually for the Grant case - Remove/ClearAll are debug-only).
+        private static void ProcessSkillUpgradeCommands(Frame f, ref Filter filter)
         {
-            if (f.GetPlayerCommand(filter.PlayerLink->Player) is not GrantSkillUpgradeCommand command)
-                return;
+            switch (f.GetPlayerCommand(filter.PlayerLink->Player))
+            {
+                case GrantSkillUpgradeCommand grant:
+                    ProcessGrantUpgradeCommand(f, ref filter, grant);
+                    break;
 
+                case RemoveSkillUpgradeCommand remove:
+                    ProcessRemoveUpgradeCommand(f, ref filter, remove);
+                    break;
+
+                case ClearSkillUpgradesCommand clear:
+                    ProcessClearUpgradesCommand(f, ref filter, clear);
+                    break;
+            }
+        }
+
+        private static void ProcessGrantUpgradeCommand(Frame f, ref Filter filter, GrantSkillUpgradeCommand command)
+        {
             SkillSlot* slot = ResolveSlot(ref filter, command.Slot);
 
             if (slot == null)
@@ -42,6 +59,38 @@ namespace Quantum
             if (AddUpgrade(f, slot, command.Upgrade) == true)
             {
                 Log.Debug($"[Skill] {filter.Entity} was granted {command.Upgrade} on {command.Slot} via command");
+            }
+        }
+
+        private static void ProcessRemoveUpgradeCommand(Frame f, ref Filter filter, RemoveSkillUpgradeCommand command)
+        {
+            SkillSlot* slot = ResolveSlot(ref filter, command.Slot);
+
+            if (slot == null)
+            {
+                Log.Error($"[Skill] {filter.Entity} sent a RemoveSkillUpgradeCommand with no slot selected");
+                return;
+            }
+
+            if (RemoveUpgrade(f, slot, command.Upgrade) == true)
+            {
+                Log.Debug($"[Skill] {filter.Entity} had {command.Upgrade} removed from {command.Slot} via command");
+            }
+        }
+
+        private static void ProcessClearUpgradesCommand(Frame f, ref Filter filter, ClearSkillUpgradesCommand command)
+        {
+            SkillSlot* slot = ResolveSlot(ref filter, command.Slot);
+
+            if (slot == null)
+            {
+                Log.Error($"[Skill] {filter.Entity} sent a ClearSkillUpgradesCommand with no slot selected");
+                return;
+            }
+
+            if (ClearUpgrades(f, slot) == true)
+            {
+                Log.Debug($"[Skill] {filter.Entity} had all upgrades cleared from {command.Slot} via command");
             }
         }
 
@@ -103,9 +152,32 @@ namespace Quantum
                     break;
 
                 case SkillState.Active:
-                    UpdateActive(f, ref filter, slot);
+                    // A spare charge (or a pending free cast) lets a fresh press cut the current
+                    // activation short and immediately begin a new one, rather than blocking until
+                    // this one finishes on its own - same availability check TryBegin itself uses,
+                    // just evaluated while Active instead of Ready. FinishSkill runs the interrupted
+                    // activation's own End/cleanup first (e.g. DashSkillData restoring KCC.SetActive)
+                    // so the restart begins from a clean slate.
+                    if (CanCancelAndRecast(slot, inputButton) == true)
+                    {
+                        SkillData activeSkill = f.FindAsset(slot->Skill);
+                        FinishSkill(f, ref filter, slotId, slot, activeSkill);
+                        TryBegin(f, ref filter, slotId, slot, input, inputButton);
+                    }
+                    else
+                    {
+                        UpdateActive(f, ref filter, slotId, slot);
+                    }
                     break;
             }
+        }
+
+        private static bool CanCancelAndRecast(SkillSlot* slot, Button inputButton)
+        {
+            if (inputButton.WasPressed == false)
+                return false;
+
+            return slot->FreeCastPending == true || slot->CurrentStacks > 0;
         }
 
         // MaxStacks is component-owned (baked on the prototype, see CharacterSkills.qtn) - 0 means
@@ -126,13 +198,20 @@ namespace Quantum
             slot->CurrentStacks = skill.InitStacks < slot->MaxStacks ? skill.InitStacks : slot->MaxStacks;
         }
 
-        // Runs every tick regardless of State - a stack can regenerate while the slot is Active on
-        // a different banked charge, not just while sitting idle in Ready. Only one stack recovers
-        // at a time off a single CooldownTimer: spending a stack while another is already
-        // mid-cooldown does not reset that timer's progress (see TryBegin) - it only (re)starts
-        // fresh the instant the slot goes from full to not-full.
+        // Only progresses while Ready, not every tick regardless of State - a channel's own Duration
+        // must not also count as recovery time (see FinishSkill, which is what actually arms a fresh
+        // countdown once an activation finishes). Gating here rather than just skipping the arm is
+        // required, not optional: CooldownTimer sits at its default 0 for the entire time between a
+        // stack being spent and that activation finishing (unarmed), and ticking during that window
+        // would misread "not yet armed" as "recovery already complete", instantly restoring the
+        // stack mid-activation. Only one stack recovers at a time off a single CooldownTimer:
+        // spending a stack while another is already mid-cooldown does not reset that timer's
+        // progress - it only (re)starts fresh once a finishing activation finds nothing recovering.
         private static void TickCooldown(Frame f, EntityRef owner, SkillSlotId slotId, SkillSlot* slot)
         {
+            if (slot->State != SkillState.Ready)
+                return;
+
             if (slot->CurrentStacks >= slot->MaxStacks)
                 return;
 
@@ -182,14 +261,13 @@ namespace Quantum
             }
             else
             {
-                bool wasFull = slot->CurrentStacks >= slot->MaxStacks;
+                // Stack itself is spent right away, but the cooldown that recovers it doesn't start
+                // counting down until this activation actually finishes (FinishSkill) - a channel's
+                // Duration is still time spent on this charge, not time it should also be recovering.
                 slot->CurrentStacks--;
-
-                if (wasFull == true)
-                {
-                    slot->CooldownTimer = StatUtility.GetSkillCooldown(f, filter.Entity, slotId, skill.Cooldown);
-                }
             }
+
+            f.Signals.OnSkillActivated(filter.Entity, slotId);
 
             slot->StartPosition = filter.Transform3D->Position;
             slot->TargetPosition = filter.Transform3D->Position;
@@ -211,7 +289,7 @@ namespace Quantum
 
             if (finished == true)
             {
-                FinishSkill(f, ref filter, slot, skill);
+                FinishSkill(f, ref filter, slotId, slot, skill);
             }
             else
             {
@@ -221,7 +299,7 @@ namespace Quantum
             Log.Debug($"[Skill] {filter.Entity} began {skill.Name} (stacks remaining={slot->CurrentStacks}/{slot->MaxStacks})");
         }
 
-        private static void UpdateActive(Frame f, ref Filter filter, SkillSlot* slot)
+        private static void UpdateActive(Frame f, ref Filter filter, SkillSlotId slotId, SkillSlot* slot)
         {
             SkillData skill = f.FindAsset(slot->Skill);
 
@@ -248,19 +326,31 @@ namespace Quantum
 
             if (finished == true)
             {
-                FinishSkill(f, ref filter, slot, skill);
+                FinishSkill(f, ref filter, slotId, slot, skill);
             }
         }
 
-        // Single call site for every way a skill can finish (instant Begin(), or Tick() reporting
-        // done) - mirrors EnemySystem.EnterRecovering. Immediately re-usable from Ready if another
-        // stack is already banked, since availability is governed by CurrentStacks, not a timer.
-        private static void FinishSkill(Frame f, ref Filter filter, SkillSlot* slot, SkillData skill)
+        // Single call site for every way a skill can finish (instant Begin(), Tick() reporting
+        // done, or a cancel-and-recast in UpdateSlot) - mirrors EnemySystem.EnterRecovering.
+        // Immediately re-usable from Ready if another stack is already banked, since availability is
+        // governed by CurrentStacks, not a timer.
+        private static void FinishSkill(Frame f, ref Filter filter, SkillSlotId slotId, SkillSlot* slot, SkillData skill)
         {
             skill.End(f, ref filter, slot);
             InvokeActions(f, ref filter, slot, skill, SkillActionPhase.End);
 
             slot->State = SkillState.Ready;
+
+            // Cooldown for the stack just spent starts counting down only now that the activation
+            // has actually finished, not back when TryBegin cast it - see TryBegin's own comment.
+            // Only arms a fresh countdown if nothing is already recovering (CooldownTimer <= 0) -
+            // TickCooldown recovers one stack at a time off a single timer (see its own comment), so
+            // an activation finishing while an earlier spent charge is still mid-recovery must not
+            // reset that progress.
+            if (slot->CooldownTimer <= FP._0 && slot->CurrentStacks < slot->MaxStacks)
+            {
+                slot->CooldownTimer = StatUtility.GetSkillCooldown(f, filter.Entity, slotId, skill.Cooldown);
+            }
         }
 
         // The skill's authored baseline first, then whatever this run added on top - an upgrade can
@@ -269,9 +359,12 @@ namespace Quantum
         private static void InvokeActions(Frame f, ref Filter filter, SkillSlot* slot, SkillData skill, SkillActionPhase phase)
         {
             var upgrades = slot->Upgrades;
-            int actionCount = skill.Actions.Count;
+            int actionCount = skill.CheckActions == true ? skill.Actions.Count : 0;
             int upgradeCount = upgrades.Length;
             int total = actionCount + upgradeCount;
+
+            if (phase == SkillActionPhase.Begin)
+                Log.Debug($"[Skill] {filter.Entity} InvokeActions Begin for \"{skill.name}\" - CheckActions={skill.CheckActions}, skill.Actions.Count={skill.Actions.Count}, resolved actionCount={actionCount}, upgradeCount={upgradeCount}");
 
             // Executes in ascending SkillActionData.Priority order, not list/array position - an
             // upgrade granted into whichever Upgrades slot happened to be free (see AddUpgrade)
@@ -287,7 +380,7 @@ namespace Quantum
 
             for (int i = 0; i < actionCount; i++)
             {
-                if (TryGetPriority(f, skill.Actions[i], slot, phase, out int p) == false)
+                if (TryGetPriority(f, skill.Actions[i], slot, phase, isUpgrade: false, out int p) == false)
                     continue;
 
                 fromUpgrades[count] = false;
@@ -298,7 +391,7 @@ namespace Quantum
 
             for (int i = 0; i < upgradeCount; i++)
             {
-                if (TryGetPriority(f, upgrades[i], slot, phase, out int p) == false)
+                if (TryGetPriority(f, upgrades[i], slot, phase, isUpgrade: true, out int p) == false)
                     continue;
 
                 fromUpgrades[count] = true;
@@ -332,15 +425,18 @@ namespace Quantum
             for (int i = 0; i < count; i++)
             {
                 AssetRef<SkillActionData> actionRef = fromUpgrades[i] == true ? upgrades[index[i]] : skill.Actions[index[i]];
-                Invoke(f, ref filter, slot, skill, phase, actionRef);
+                Invoke(f, ref filter, slot, skill, phase, actionRef, isUpgrade: fromUpgrades[i]);
             }
         }
 
         // Resolves and phase-filters up front so InvokeActions can sort before executing anything -
         // false (and no Priority) for whatever Invoke would skip anyway: unassigned slot, wrong
         // phase, or an OnGoing/Spacing action not due this tick. Those never occupy a sort position.
+        // isUpgrade ignores Activated (see SkillActionData's own comment) - a granted slot->Upgrades
+        // entry always runs once granted, regardless of whatever the shared asset's baseline toggle
+        // says; a plain skill.Actions entry still respects it.
         private static bool TryGetPriority(Frame f, AssetRef<SkillActionData> actionRef, SkillSlot* slot,
-            SkillActionPhase phase, out int priority)
+            SkillActionPhase phase, bool isUpgrade, out int priority)
         {
             priority = 0;
 
@@ -349,7 +445,7 @@ namespace Quantum
 
             SkillActionData action = f.FindAsset(actionRef);
 
-            if (action.ShouldExecute(f, slot, phase) == false)
+            if (action.ShouldExecute(f, slot, phase, ignoreActivated: isUpgrade) == false)
                 return false;
 
             priority = action.Priority;
@@ -362,25 +458,27 @@ namespace Quantum
         // TryGetPriority above) rather than threading the resolved action through the sort - both
         // are cheap asset-DB lookups over a pure read, and this keeps Invoke usable on its own.
         private static void Invoke(Frame f, ref Filter filter, SkillSlot* slot, SkillData skill,
-            SkillActionPhase phase, AssetRef<SkillActionData> actionRef)
+            SkillActionPhase phase, AssetRef<SkillActionData> actionRef, bool isUpgrade)
         {
             if (actionRef.IsValid == false)
                 return;
 
             SkillActionData action = f.FindAsset(actionRef);
-            bool shouldExecute = action.ShouldExecute(f, slot, phase);
+            bool shouldExecute = action.ShouldExecute(f, slot, phase, ignoreActivated: isUpgrade);
 
             if (shouldExecute == true)
             {
+                Log.Debug($"[Skill] {filter.Entity} Executing \"{action.name}\" (isUpgrade={isUpgrade}, Activated={action.Activated}, phase={phase})");
                 action.Execute(f, ref filter, slot, skill, phase);
             }
 
-            // Fired independent of shouldExecute for End specifically (still gated on Activated) -
+            // Fired independent of shouldExecute for End specifically (still gated on Activated,
+            // ignored the same way for a granted upgrade - see ShouldExecute's own isUpgrade) -
             // a BeginFx/OnGoingFx step spawned as SkillFxSpawnMode.HeldUntilEnd must be released once
             // this activation ends even if the action's own Phase field never opted into End for its
             // actual gameplay logic (e.g. Phase = OnGoing only, nothing to do on End besides letting
             // the particle go). Every other phase still only fires alongside a genuine Execute call.
-            bool fireEndAnyway = phase == SkillActionPhase.End && action.Activated == true;
+            bool fireEndAnyway = phase == SkillActionPhase.End && (action.Activated == true || isUpgrade == true);
 
             if (shouldExecute == true || fireEndAnyway == true)
             {
@@ -460,6 +558,57 @@ namespace Quantum
             upgrades[free] = upgradeRef;
             Log.Debug($"[Skill] granted upgrade {upgradeRef} in slot {free}");
 
+            return true;
+        }
+
+        // Debug counterpart to AddUpgrade - removes one previously-granted upgrade from a slot.
+        // Same Ready-only guard and for the same reason: InvokeActions re-reads slot->Upgrades fresh
+        // at both Begin and End, so pulling an entry mid-activation would desync a paired action's
+        // Begin/End the same way a mid-activation grant would (see AddUpgrade's own comment).
+        public static bool RemoveUpgrade(Frame f, SkillSlot* slot, AssetRef<SkillActionData> upgradeRef)
+        {
+            if (upgradeRef.IsValid == false)
+                return false;
+
+            if (slot->State != SkillState.Ready)
+            {
+                Log.Error($"[Skill] {upgradeRef} not removed - slot is {slot->State}, not Ready (would desync this activation's Begin/End actions)");
+                return false;
+            }
+
+            var upgrades = slot->Upgrades;
+
+            for (int i = 0; i < upgrades.Length; i++)
+            {
+                if (upgrades[i] != upgradeRef)
+                    continue;
+
+                upgrades[i] = default;
+                Log.Debug($"[Skill] removed upgrade {upgradeRef} from slot {i}");
+                return true;
+            }
+
+            Log.Error($"[Skill] {upgradeRef} not removed - not present on this slot");
+            return false;
+        }
+
+        // Debug-only "remove everything at once" - same Ready-only guard as RemoveUpgrade/AddUpgrade.
+        public static bool ClearUpgrades(Frame f, SkillSlot* slot)
+        {
+            if (slot->State != SkillState.Ready)
+            {
+                Log.Error($"[Skill] upgrades not cleared - slot is {slot->State}, not Ready (would desync this activation's Begin/End actions)");
+                return false;
+            }
+
+            var upgrades = slot->Upgrades;
+
+            for (int i = 0; i < upgrades.Length; i++)
+            {
+                upgrades[i] = default;
+            }
+
+            Log.Debug("[Skill] cleared all upgrades from slot");
             return true;
         }
 

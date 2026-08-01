@@ -107,9 +107,11 @@ namespace Quantum
                 area->TargetMask = targetMaskOverride.Value;
             }
 
-            // Zero so the area bites the moment it lands rather than granting a free TickInterval of
-            // standing in it - and so a blast short enough to live a single tick fires at all.
-            area->TickTimer = FP._0;
+            // Seeded from InitialDelay (0 by default) so the area bites the moment it lands rather
+            // than granting a free TickInterval of standing in it - and so a blast short enough to
+            // live a single tick still fires at all. A telegraphed area can author a nonzero
+            // InitialDelay to wait out its own windup instead.
+            area->TickTimer = area->InitialDelay;
         }
 
         // SpawnRadiusUpgrade (see SpawnRadiusUpSkillAction, one .asset instance per hero) - grows

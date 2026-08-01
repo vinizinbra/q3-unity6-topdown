@@ -121,7 +121,7 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
 
             for (int j = 0; j < choice->Options.Length; j++)
             {
-                cardData[j] = j < choice->OptionCount ? BuildCardData(frame, choice->Options[j]) : default;
+                cardData[j] = j < choice->OptionCount ? BuildCardData(frame, slots[i].EntityRef, choice->Options[j]) : default;
             }
 
             int? confirmedIndex = choice->Confirmed ? (int?)choice->SelectedIndex : null;
@@ -131,10 +131,27 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
 
     // WeaponPerkData/SkillActionData/GlobalUpgradeData/PassiveUpgradeData all derive from the
     // shared UpgradeData base (Icon/DisplayName/Rarity/GetDescription), so this needs no switch on
-    // option.Kind at all - resolving the AssetRef<UpgradeData> generically is enough.
-    private static UpgradeCardWidget.CardData BuildCardData(Frame frame, LevelUpOption option)
+    // option.Kind at all - resolving the AssetRef<UpgradeData> generically is enough. Stack info is
+    // the one thing that IS kind-specific (only a capped GlobalUpgradeData has it - see
+    // GlobalUpgradeData.MaxPicks/LevelUpUtility.IsCappedOut, the same cap this reads back for
+    // display), so that part alone switches on Kind.
+    private static unsafe UpgradeCardWidget.CardData BuildCardData(Frame frame, EntityRef entity, LevelUpOption option)
     {
         UpgradeData data = frame.FindAsset(option.Upgrade);
+        int currentStacks = 0;
+        int maxStacks = 0;
+
+        if (option.Kind == LevelUpPoolKind.GlobalUpgrade)
+        {
+            var upgradeRef = new AssetRef<GlobalUpgradeData>(option.Upgrade.Id);
+            GlobalUpgradeData globalUpgrade = frame.FindAsset(upgradeRef);
+
+            if (globalUpgrade.MaxPicks > 0)
+            {
+                maxStacks = globalUpgrade.MaxPicks;
+                currentStacks = GlobalUpgradeUtility.GetPickCount(frame, entity, upgradeRef);
+            }
+        }
 
         return new UpgradeCardWidget.CardData
         {
@@ -143,7 +160,9 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
             DisplayName = data.DisplayName,
             Description = data.GetDescription(),
             RarityIndex = (int)data.Rarity,
-            KindText = KindText(option)
+            KindText = KindText(option),
+            CurrentStacks = currentStacks,
+            MaxStacks = maxStacks
         };
     }
 

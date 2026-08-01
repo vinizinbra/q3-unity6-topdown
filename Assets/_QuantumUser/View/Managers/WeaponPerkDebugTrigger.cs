@@ -1,4 +1,5 @@
 using Quantum;
+using QuantumUser.View.Util;
 using UnityEngine;
 
 namespace QuantumUser.View
@@ -29,7 +30,7 @@ namespace QuantumUser.View
         {
             if (MyLocalPlayer.Instance == null || MyLocalPlayer.Instance.IsLocalPlayerSetup == false)
             {
-                Debug.LogWarning("[WeaponPerkDebugTrigger] no local player set up yet");
+                LogHelper.Warn("WeaponPerkDebugTrigger", "no local player set up yet");
                 return;
             }
 

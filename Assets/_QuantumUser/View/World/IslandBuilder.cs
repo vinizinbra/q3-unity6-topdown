@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using NaughtyAttributes;
+using QuantumUser.View.Util;
 using UnityEngine;
 
 [System.Serializable]
@@ -215,7 +216,7 @@ public class IslandBuilder : MonoBehaviour
             }
         }
 
-        Debug.LogWarning($"[IslandBuilder] Could not fit a platform (radius {config.radius}) inside its parent footprint after {maxAttempts} attempts.");
+        LogHelper.Warn("IslandBuilder", $"Could not fit a platform (radius {config.radius}) inside its parent footprint after {maxAttempts} attempts.");
         return new HashSet<Vector2Int>();
     }
 

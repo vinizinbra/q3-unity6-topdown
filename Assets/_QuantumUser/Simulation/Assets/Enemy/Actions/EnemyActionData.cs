@@ -48,16 +48,18 @@ namespace Quantum
 
     // One enemy action's shared tuning + composition refs. No longer itself polymorphic - that
     // execution logic moved to EnemyDeliveryData (see Delivery/) so the same tuning
-    // (DamageRange/Damage/Knockback/...) can pair with any delivery type without re-authoring it
+    // (DamageRange/Damage/...) can pair with any delivery type without re-authoring it
     // per subclass. View-only fields live in the companion EnemyActionData.View.cs partial. An
     // EnemyDataAsset points at one or more of these (see EnemyDataAsset.BasicAction/SkillActions);
     // each one points at exactly one EnemyDeliveryData that owns the actual Begin/Tick logic.
     public unsafe partial class EnemyActionData : AssetObject
     {
+        [FoldoutGroup("Base")]
         public string Name;
 
         // Usually equals DamageRange; set larger for deliveries that need room to build up before
         // connecting (e.g. Charge).
+        [FoldoutGroup("Base")]
         public FP EngageRange = 2;
 
         // For an action whose EnemyActionData.View.cs Telegraph is a Circle/Cone, this drives the
@@ -65,16 +67,14 @@ namespace Quantum
         // EnemyAttackVisualsView.ComputeTelegraphPose) - so the decal shown to the player can never
         // silently drift out of sync with the real hit area the way an independently authored
         // telegraph radius could.
+        [FoldoutGroup("Base")]
         public FP DamageRange = 2;
 
+        [FoldoutGroup("Base")]
         public FP Damage = 10;
 
-        // X: horizontal push (direction chosen by the calling delivery, see DamageUtility.ApplyKnockback).
-        // Y: vertical pop - ground friction is ~20x air friction, so X alone gets eaten while grounded
-        // unless this briefly launches the target airborne - keep Y nonzero even when only tuning X.
-        public FPVector2 Knockback = new FPVector2(0, 4);
-
         // Time facing the target before Begin() is called.
+        [FoldoutGroup("Base")]
         public FP AnticipationTime = FP._0_50;
 
         // How long the windup keeps re-aiming at the target's live position before committing -
@@ -82,43 +82,43 @@ namespace Quantum
         // DoNotUpdateTargetDirection on the action asset (previously a constructor default when
         // those were AttackData subclasses directly - now just an authoring choice, since
         // EnemyDeliveryData subclasses no longer inherit these shared fields to default).
+        [FoldoutGroup("Base")]
         public DirectionUpdateMode DirectionTracking = DirectionUpdateMode.UpdateTargetDirectionWhileActive;
 
         // True: captured target/anchor points use the enemy's own ground Y instead of the target's
         // raw Y. Set false only for a Flying enemy that should track height.
+        [FoldoutGroup("Base")]
         public bool IgnoreY = true;
 
         // See EnemyActionOrigin's own comment. Only consumed by GroundAreaDeliveryData and its
         // paired Circle/Cone telegraph - harmless/unused for every other delivery type.
+        [FoldoutGroup("Base")]
         public EnemyActionOrigin Origin = EnemyActionOrigin.TargetAnchor;
 
         // Drives EnemyActionPhase.Recovery's StateTimer.
+        [FoldoutGroup("Base")]
         public FP DownTime = 1;
 
         // Tracked on Enemy.AttackCooldownRemaining.
+        [FoldoutGroup("Base")]
         public FP CooldownTime = 1;
 
         // Percent (0-1) through AnticipationTime at which the windup becomes Telegraph (visible/
         // committed) rather than Preparation - see EnemyActionPhase. Halfway by default; set to 1
         // to opt out (Telegraph never triggers, matching this system's pre-Stage-6 behavior).
+        [FoldoutGroup("Base")]
         public FP TelegraphStartPercent = FP._0_50;
 
         // Gate beyond "off cooldown" for choosing this action - inert until multi-action selection
         // exists (see EnemyTriggerType).
+        [FoldoutGroup("Base")]
         public EnemyTriggerData Trigger;
 
+        [FoldoutGroup("Base")]
         public EnemyAimLockTiming AimLock = EnemyAimLockTiming.LocksAtTelegraphEnd;
 
-        // Applied via HitEffectUtility.ApplyToTarget by this action's EnemyDeliveryData, in place
-        // of calling DamageUtility.ApplyDamage/ApplyKnockback directly - the same shared Hit Effect
-        // system weapon perks/projectiles already use, so enemy hits can proc Burn/Void/Slow/
-        // Stun/shield-grant status the same way those do. A DamageEffectData (DamageMultiplier
-        // = 1) + KnockbackEffectData (picking whichever KnockbackTier this action's Knockback field
-        // above roughly matches) pair reproduces the flat Damage/Knockback fields above exactly -
-        // author both onto every action that deals damage/knockback.
-        [ExpandableAsset] public List<AssetRef<HitEffectData>> Effects = new();
-
         // Feeds the BaseWeight term of the multi-action decision scorer - inert until that exists.
+        [FoldoutGroup("Base")]
         public int SelectionWeight = 1;
 
         // Whether a knockback interrupt (see EnemySystem.OnEnemyKnockedBack) cancels this specific
@@ -131,9 +131,20 @@ namespace Quantum
         // today's kinematic deliveries (Charge/Leap) can't receive a real impulse while Active
         // anyway (see DamageUtility.ApplyResolvedImpulse), so this only matters for a future
         // non-kinematic multi-tick delivery.
+        [FoldoutGroup("Base")]
         public bool InterruptibleDuringTelegraph = true;
+        [FoldoutGroup("Base")]
         public bool InterruptibleDuringActive;
 
         [ExpandableAsset] public AssetRef<EnemyDeliveryData> Delivery;
+
+        // Applied via HitEffectUtility.ApplyToTarget by this action's EnemyDeliveryData, in place
+        // of calling DamageUtility.ApplyDamage/ApplyKnockback directly - the same shared Hit Effect
+        // system weapon perks/projectiles already use, so enemy hits can proc Burn/Void/Slow/
+        // Stun/shield-grant status the same way those do. A DamageEffectData (DamageMultiplier
+        // = 1) + KnockbackEffectData (picking whichever KnockbackTier fits this action) pair
+        // reproduces a flat damage/knockback hit exactly - author both onto every action that
+        // deals damage/knockback.
+        [ExpandableAsset] public List<AssetRef<HitEffectData>> Effects = new();
     }
 }

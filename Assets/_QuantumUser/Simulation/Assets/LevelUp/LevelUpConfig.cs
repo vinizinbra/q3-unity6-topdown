@@ -8,8 +8,9 @@ namespace Quantum
     // LevelUpUtility and LevelUpSystem. Referenced via RuntimeConfig.LevelUpConfig.
     //
     // Only WeaponPerk and GlobalUpgrade are pooled globally here - SkillUpgrade and PassiveUpgrade
-    // are per-hero instead (see CharacterData.DashSkillUpgrades/HeroSkillUpgrades/PassiveUpgrades),
-    // since which skill/passive upgrades make sense depends on which hero is picking. Every
+    // are per-hero instead (see CharacterData.DashSkillUpgrades/PassiveUpgrades and HeroSkill's own
+    // Actions - LevelUpUtility.AddHeroSkillUpgradeCandidates), since which skill/passive upgrades
+    // make sense depends on which hero is picking. Every
     // candidate across all four kinds is weighted the same way, by its own UpgradeData.Rarity via
     // GetWeight below - independent of WeaponPerkPoolData's own (differently-tuned) weights, which
     // stay reserved for the original drop-roll mechanic (see WeaponGenerator).
@@ -31,6 +32,12 @@ namespace Quantum
         // Plumbing only for now - ships empty until Global Upgrades are actually designed. See
         // GlobalUpgradeData/GlobalUpgradeUtility.
         [ExpandableAsset] public List<AssetRef<GlobalUpgradeData>> GlobalUpgrades = new();
+
+        // Pooled globally same as GlobalUpgrades above, but a separate list/rarity axis - Rift
+        // Mutations are non-stackable (see RiftMutationData/RiftMutationPicks), so they need their
+        // own pick-history component rather than reusing GlobalUpgradePicks. See
+        // docs/rift-mutations.md.
+        [ExpandableAsset] public List<AssetRef<RiftMutationData>> RiftMutations = new();
 
         [Header("Rarity weights")]
         public int CommonWeight = 100;

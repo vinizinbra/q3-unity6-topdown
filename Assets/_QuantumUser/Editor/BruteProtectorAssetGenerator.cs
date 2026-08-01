@@ -4,6 +4,7 @@ namespace QuantumUser.Editor
     using System.Linq;
     using Photon.Deterministic;
     using Quantum;
+    using QuantumUser.View.Util;
     using UnityEditor;
     using UnityEngine;
 
@@ -92,7 +93,7 @@ namespace QuantumUser.Editor
             WireCharacterData(passive, new List<PassiveUpgradeData> { bulwark, guardian, ironPresence, fearless },
                 new List<SkillActionData> { ironShoulder, bodyguard });
 
-            Debug.Log("[BruteProtectorAssetGenerator] Passive + 4 ascensions + 2 dash ascensions authored and wired into BruteCharacterData. " +
+            LogHelper.Log("BruteProtectorAssetGenerator", "Passive + 4 ascensions + 2 dash ascensions authored and wired into BruteCharacterData. " +
                       "Barricade (the 3rd dash ascension) still needs a collider-only EntityPrototype authored by hand first " +
                       "(a wall prefab with just Transform3D + PhysicsCollider3D + DestroyAfterTime - no AreaDamage/Decoy, so it " +
                       "just sits there and blocks, same as any other SpawnEntitySkillAction prototype) - once that exists, add a " +
@@ -126,13 +127,13 @@ namespace QuantumUser.Editor
 
             if (characterData == null)
             {
-                Debug.LogError($"[BruteProtectorAssetGenerator] No CharacterData asset at {CharacterDataPath} - assets were created/updated, but nothing was wired.");
+                LogHelper.Error("BruteProtectorAssetGenerator", $"No CharacterData asset at {CharacterDataPath} - assets were created/updated, but nothing was wired.");
                 return;
             }
 
             if (characterData.Passive.IsValid == true && characterData.Passive.Id.Value != passive.Guid.Value)
             {
-                Debug.LogWarning($"[BruteProtectorAssetGenerator] BruteCharacterData.Passive was already set to {characterData.Passive} - overwriting with ProtectorPassiveData.");
+                LogHelper.Warn("BruteProtectorAssetGenerator", $"BruteCharacterData.Passive was already set to {characterData.Passive} - overwriting with ProtectorPassiveData.");
             }
 
             characterData.Passive = new AssetRef<PassiveData>(passive.Guid);

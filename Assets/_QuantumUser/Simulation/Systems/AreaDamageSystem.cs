@@ -18,6 +18,8 @@ namespace Quantum
 
             filter.AreaDamage->TickTimer = filter.AreaDamage->TickInterval;
 
+            f.Events.AreaDamageTicked(filter.Entity);
+
             ResolveOwner(f, filter.Entity, out EntityRef owner, out DamageSource source, out ElementType element);
 
             HitEffectUtility.ApplyInCollider(f, filter.AreaDamage->Effects, filter.Transform3D,

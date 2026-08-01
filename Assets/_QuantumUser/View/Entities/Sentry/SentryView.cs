@@ -248,7 +248,7 @@ namespace Quantum
 
             if (barrelView == null)
             {
-                Debug.LogWarning($"[Sentry] Barrel {e.Barrel} for slot {e.SlotIndex} has no View yet - GetView returned null the same tick it spawned.");
+                LogHelper.Warn("Sentry", $"Barrel {e.Barrel} for slot {e.SlotIndex} has no View yet - GetView returned null the same tick it spawned.");
                 return;
             }
 

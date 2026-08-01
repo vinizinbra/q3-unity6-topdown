@@ -50,6 +50,10 @@ MonoBehaviour:
     RawValue: 65536
   AreaRadiusMultiplier:
     RawValue: 65536
+  NearDamageMultiplier:
+    RawValue: 65536
+  FarDamageMultiplier:
+    RawValue: 65536
   DashCooldownMultiplier:
     RawValue: 65536
   SkillCooldownMultiplier:
@@ -78,6 +82,8 @@ MonoBehaviour:
     RawValue: 0
   ExperienceGainMultiplier:
     RawValue: 65536
+  RiftShardGainMultiplier:
+    RawValue: 65536
   RingColor: {r: 1, g: 0.3254717, b: 0.64922184, a: 1}
   WeaponPosition:
     X:
@@ -100,7 +106,7 @@ MonoBehaviour:
       Value: 287025616798641966
   StartingWeapon:
     Id:
-      Value: 486587533721559972
+      Value: 511120127865671028
   DashSkillUpgrades:
   - Id:
       Value: 340599251920562766
@@ -108,7 +114,6 @@ MonoBehaviour:
       Value: 532866955297254703
   - Id:
       Value: 158334551784724072
-  HeroSkillUpgrades: []
   PassiveUpgrades:
   - Id:
       Value: 347803182466822091

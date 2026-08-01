@@ -2,6 +2,7 @@ namespace QuantumUser.Editor
 {
     using System.Collections.Generic;
     using Quantum;
+    using QuantumUser.View.Util;
     using UnityEditor;
     using UnityEditor.Toolbars;
     using UnityEngine;
@@ -39,21 +40,21 @@ namespace QuantumUser.Editor
         {
             if (EditorApplication.isPlaying)
             {
-                Debug.LogWarning("Hero Quick Play: stop the current Play session before switching heroes.");
+                LogHelper.Warn("HeroQuickPlay", "stop the current Play session before switching heroes.");
                 return;
             }
 
             var debugRunner = Object.FindFirstObjectByType<QuantumRunnerLocalDebug>();
             if (debugRunner == null)
             {
-                Debug.LogWarning("Hero Quick Play: no QuantumRunnerLocalDebug found in the open scene(s) - open QuantumGameScene first.");
+                LogHelper.Warn("HeroQuickPlay", "no QuantumRunnerLocalDebug found in the open scene(s) - open QuantumGameScene first.");
                 return;
             }
 
             var prototype = AssetDatabase.LoadAssetAtPath<EntityPrototype>(prototypePath);
             if (prototype == null)
             {
-                Debug.LogError($"Hero Quick Play: couldn't load EntityPrototype at '{prototypePath}'.");
+                LogHelper.Error("HeroQuickPlay", $"couldn't load EntityPrototype at '{prototypePath}'.");
                 return;
             }
 

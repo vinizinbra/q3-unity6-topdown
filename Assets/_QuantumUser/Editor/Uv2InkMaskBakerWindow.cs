@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
+using QuantumUser.View.Util;
 
 namespace QuantumUser.Editor
 {
@@ -192,7 +193,7 @@ namespace QuantumUser.Editor
                 Selection.activeObject = surfaceMaterial;
                 EditorGUIUtility.PingObject(surfaceMaterial);
             }
-            Debug.Log($"Generated wall ink ({wallEdges} creases), surface fade ({sharedEdges} shared edges), " +
+            LogHelper.Log("Uv2InkBaker", $"Generated wall ink ({wallEdges} creases), surface fade ({sharedEdges} shared edges), " +
                       $"and two materials for '{_mesh.name}' in '{DefaultOutputFolder}'. " +
                       $"Wall slot: {_wallSubMesh}, surface slot: {_surfaceSubMesh}.", surfaceMaterial);
         }
@@ -233,7 +234,7 @@ namespace QuantumUser.Editor
                 AssetDatabase.SaveAssets();
             }
 
-            Debug.Log($"UV2 Ink Baker processed {targets.Count} selected renderer(s).", this);
+            LogHelper.Log("Uv2InkBaker", $"UV2 Ink Baker processed {targets.Count} selected renderer(s).", this);
         }
 
         private static List<RendererMeshPair> CollectSelectedMeshes()

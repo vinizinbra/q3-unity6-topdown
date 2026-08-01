@@ -14,6 +14,19 @@ namespace Quantum
 
         private static readonly FP RicochetSearchRadius = 8;
 
+        // Half the firing weapon's own engagement range (WeaponDataAsset.Range, the same distance
+        // AimSystem uses to acquire targets - see its own doc comment) - a split fragment traveling
+        // the full range would out-range the weapon that spawned it. Enforced via RemainingLifetime
+        // rather than ProjectileDataAsset.MaxDistance (that's authored once per shared asset and
+        // would cap the parent weapon's own un-split shots too), so it only ever shortens this one
+        // instance's clock, never lengthens it past whatever Lifetime it already spawned with.
+        private static readonly FP SplitShotRangeFraction = FP._0_50;
+
+        // Total arc the fragments fan across, centered on the parent shot's own heading at impact -
+        // narrower than a full circle so they read as a forward burst continuing the original shot's
+        // path, not an omnidirectional splatter.
+        private static readonly FP SplitShotArcDegrees = 90;
+
         public override void Initialize(Projectile* projectile)
         {
             projectile->RemainingPierces = PierceCount;
@@ -126,12 +139,13 @@ namespace Quantum
             return true;
         }
 
-        // Fans evenly around the impact point, starting from a randomized heading (same
-        // Fisher-Yates-adjacent "don't look identical every time" idiom AreaHitData's
-        // TrySpawnClusterBomblets uses) - children are spawned via ProjectileSpawner.Spawn directly
-        // rather than through WeaponSystem.FireProjectile, so they don't re-roll
-        // Bonus­Pierce/Bounces/Explosive Sequence/Cataclysm themselves (a bare, un-perked repeat of
-        // the base shot at reduced damage), only capped recursion (MaxSplitShotDepth) carries over.
+        // Fans evenly across SplitShotArcDegrees centered on the parent's travel direction, starting
+        // from a randomized offset within that arc (same Fisher-Yates-adjacent "don't look identical
+        // every time" idiom AreaHitData's TrySpawnClusterBomblets uses) - children are spawned via
+        // ProjectileSpawner.Spawn directly rather than through WeaponSystem.FireProjectile, so they
+        // don't re-roll Bonus­Pierce/Bounces/Explosive Sequence/Cataclysm themselves (a bare,
+        // un-perked repeat of the base shot at reduced damage), only capped recursion
+        // (MaxSplitShotDepth) carries over.
         private static void SpawnSplitProjectiles(Frame f, Projectile* projectile, FPVector3 point, Weapon* weapon)
         {
             int count = weapon->SplitShotCount;
@@ -139,14 +153,18 @@ namespace Quantum
             if (count <= 0)
                 return;
 
-            FP step = 360 / count;
-            FP startAngle = f.RNG->Next(0, 360);
+            FP step = count > 1 ? SplitShotArcDegrees / (count - 1) : FP._0;
+            FPVector3 heading = projectile->Velocity.Normalized;
+            FP headingAngle = FPMath.Atan2(heading.X, heading.Z) * FP.Rad2Deg;
+            FP baseAngle = headingAngle - SplitShotArcDegrees / 2 + f.RNG->Next(0, step);
             FP splitDamage = projectile->Damage * weapon->SplitShotDamageMultiplier;
             FP speed = projectile->Velocity.Magnitude;
+            FP maxDistance = ResolveWeaponRange(f, weapon) * SplitShotRangeFraction;
+            FP maxLifetime = speed > FP._0 ? maxDistance / speed : FP._0;
 
             for (int i = 0; i < count; i++)
             {
-                FP angle = startAngle + step * i;
+                FP angle = baseAngle + step * i;
                 FPVector3 direction = FPQuaternion.Euler(0, angle, 0) * FPVector3.Forward;
 
                 ProjectileLaunch launch = new ProjectileLaunch
@@ -156,9 +174,21 @@ namespace Quantum
                     IsValid = true
                 };
 
-                ProjectileSpawner.Spawn(f, projectile->Owner, projectile->ProjectileData, launch, splitDamage,
+                EntityRef child = ProjectileSpawner.Spawn(f, projectile->Owner, projectile->ProjectileData, launch, splitDamage,
                     DamageSource.Weapon, element: projectile->Element, spawnDepth: projectile->SpawnDepth + 1);
+
+                if (f.Unsafe.TryGetPointer<Projectile>(child, out var childProjectile) == true)
+                {
+                    childProjectile->RemainingLifetime = FPMath.Min(childProjectile->RemainingLifetime, maxLifetime);
+                }
             }
+        }
+
+        private static FP ResolveWeaponRange(Frame f, Weapon* weapon)
+        {
+            WeaponDataAsset weaponData = f.FindAsset(weapon->WeaponData);
+
+            return weaponData.Range * weapon->RangeMultiplier;
         }
     }
 }

@@ -102,7 +102,15 @@ namespace Quantum
             FP remaining = AbsorbWithShield(f, target, ReduceByArmor(f, target, totalDamage));
 
             health->CurrentHealth = FPMath.Max(FP._0, health->CurrentHealth - remaining);
-            f.Events.EntityDamaged(target, owner, totalDamage, isCritical, element, silent, frontalMultiplier < FP._1);
+
+            // Read now, not by the view re-resolving Target's Transform3D later - a killing blow can
+            // destroy Target before this tick is even done (see the death branch below), which would
+            // otherwise silently drop the hit's floating damage number.
+            FPVector3 hitPosition = f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform)
+                ? targetTransform->Position
+                : FPVector3.Zero;
+
+            f.Events.EntityDamaged(target, owner, totalDamage, isCritical, element, silent, frontalMultiplier < FP._1, hitPosition);
 
             // Max's Adrenaline Rush - builds from dealing OR receiving damage, on every landed hit
             // (not just a kill), regardless of source. No-ops on anything without Adrenaline (every
@@ -128,6 +136,8 @@ namespace Quantum
                 f.Signals.OnEntityKilled(target, owner, source);
                 ExperienceUtility.TrySpawnDrop(f, target, owner);
                 ScrapUtility.TrySpawnDrop(f, target, owner);
+                RiftShardUtility.TrySpawnDrop(f, target, owner);
+                CoinUtility.TrySpawnDrop(f, target, owner);
 
                 if (f.Unsafe.TryGetPointer<Enemy>(target, out var enemy) == true)
                 {
@@ -394,6 +404,36 @@ namespace Quantum
             return FPMath.Clamp(FP._1 - enemyData.Stats.FrontalDamageReductionAmount, FP._0, FP._1);
         }
 
+        // Attacker-side, unlike ResolveFrontalDamageMultiplier above (target-side) - Close
+        // Quarters/Longshot (Global Upgrades) lerp between the attacker's own
+        // NearDamageMultiplier/FarDamageMultiplier off the flat attacker-target distance at the
+        // moment the hit resolves. Fixed design-constant thresholds for now (not per-asset tunable)
+        // - a placeholder starting point for balance passes, same convention the asset generators
+        // already use for their own untuned proc magnitudes.
+        private static readonly FP RangeDamageNearThreshold = 5;
+        private static readonly FP RangeDamageFarThreshold = 12;
+
+        private static FP ResolveRangeDamageMultiplier(Frame f, EntityRef owner, EntityRef target, CharacterStats* stats)
+        {
+            if (stats->NearDamageMultiplier == FP._1 && stats->FarDamageMultiplier == FP._1)
+                return FP._1; // no Close Quarters/Longshot picked - skip the Transform3D lookups entirely
+
+            if (f.Unsafe.TryGetPointer<Transform3D>(owner, out var ownerTransform) == false
+                || f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == false)
+                return FP._1;
+
+            FP distance = FPVector3.Distance(ownerTransform->Position, targetTransform->Position);
+
+            if (distance <= RangeDamageNearThreshold)
+                return stats->NearDamageMultiplier;
+
+            if (distance >= RangeDamageFarThreshold)
+                return stats->FarDamageMultiplier;
+
+            FP t = (distance - RangeDamageNearThreshold) / (RangeDamageFarThreshold - RangeDamageNearThreshold);
+            return FPMath.Lerp(stats->NearDamageMultiplier, stats->FarDamageMultiplier, t);
+        }
+
         private static FP ReduceByArmor(Frame f, EntityRef target, FP damage)
         {
             if (f.Unsafe.TryGetPointer<Armor>(target, out var armor) == false)
@@ -424,6 +464,13 @@ namespace Quantum
             Log.Debug($"[Damage] {target} shield absorbed {absorbed} of {damage} -> {shield->Current}/{shield->Max}, " +
                       $"recharge held off for {shield->RechargeDelay}s at {shield->RechargeRate}/s");
 
+            // Current was > 0 to reach here (see the early-return above) - this is the exact tick
+            // it broke, not a hit landing while already broken.
+            if (shield->Current <= FP._0)
+            {
+                f.Signals.OnShieldBroken(target);
+            }
+
             return damage - absorbed;
         }
 
@@ -448,6 +495,7 @@ namespace Quantum
                 return damage;
 
             damage *= stats->DamageMultiplier * GetSourceMultiplier(stats, source);
+            damage *= ResolveRangeDamageMultiplier(f, owner, target, stats);
 
             // Max's Battle High - bonus Weapon Damage while Adrenaline is at max stacks. Scoped to
             // DamageSource.Weapon inside the helper itself, same convention GetSourceMultiplier uses.

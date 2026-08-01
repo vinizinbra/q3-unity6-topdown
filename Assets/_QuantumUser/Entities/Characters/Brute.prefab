@@ -752,14 +752,16 @@ MonoBehaviour:
   - {fileID: 2122246373314282177}
   flashColor: {r: 1, g: 1, b: 1, a: 1}
   burnFlashColor: {r: 1, g: 0.45, b: 0.1, a: 1}
-  poisonFlashColor: {r: 1, g: 0.4, b: 0.7, a: 1}
   frontalReducedFlashColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   restColor: {r: 1, g: 1, b: 1, a: 0}
   duration: 0.2
   healFlashColor: {r: 0.4, g: 1, b: 0.4, a: 1}
+  shieldFlashColor: {r: 0.4, g: 0.75, b: 1, a: 1}
   deathColor: {r: 0, g: 0, b: 0, a: 0.5}
   pickupGlowColor: {r: 1, g: 0.85, b: 0.3, a: 1}
   pickupGlowDuration: 0.5
+  riftMarkMaterial: {fileID: 0}
+  freezeMaterial: {fileID: 0}
 --- !u!114 &8110188611109955938
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1306,7 +1308,7 @@ GameObject:
   - component: {fileID: 3998293661932535228}
   - component: {fileID: 5340365731533499359}
   m_Layer: 13
-  m_Name: ShieldArea (2)
+  m_Name: Protector
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1517,7 +1519,7 @@ ParticleSystem:
       serializedVersion: 2
       minMaxState: 0
       minColor: {r: 1, g: 1, b: 1, a: 1}
-      maxColor: {r: 1, g: 0.6443302, b: 0, a: 0.21176471}
+      maxColor: {r: 0.4528302, g: 0.4528302, b: 0.4528302, a: 0.2784314}
       maxGradient:
         serializedVersion: 2
         key0: {r: 1, g: 1, b: 1, a: 1}
@@ -1581,7 +1583,7 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 3
+      scalar: 2
       minScalar: 1
       maxCurve:
         serializedVersion: 2
@@ -2272,15 +2274,15 @@ ParticleSystem:
         m_Curve:
         - serializedVersion: 3
           time: 0
-          value: 0.1
-          inSlope: 5.575393
-          outSlope: 5.575393
+          value: 0.5249939
+          inSlope: 2
+          outSlope: 2
           tangentMode: 0
           weightedMode: 0
           inWeight: 0
-          outWeight: 0.07540983
+          outWeight: 0
         - serializedVersion: 3
-          time: 0.622449
+          time: 1
           value: 1
           inSlope: 0
           outSlope: 0
@@ -2421,7 +2423,7 @@ ParticleSystem:
         m_PreInfinity: 2
         m_PostInfinity: 2
         m_RotationOrder: 4
-    separateAxes: 1
+    separateAxes: 0
   RotationModule:
     enabled: 0
     x:

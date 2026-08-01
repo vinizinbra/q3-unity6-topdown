@@ -5,6 +5,7 @@ namespace QuantumUser.Editor
     using System.Linq;
     using Photon.Deterministic;
     using Quantum;
+    using QuantumUser.View.Util;
     using UnityEditor;
     using UnityEngine;
 
@@ -343,7 +344,7 @@ namespace QuantumUser.Editor
         {
             if (AssetDatabase.IsValidFolder(FolderPath) == false)
             {
-                Debug.LogError($"[WeaponPerkAssetGenerator] {FolderPath} doesn't exist - create it (or the WeaponPerkPoolData.asset stub it should already hold) before running this.");
+                LogHelper.Error("WeaponPerkAssetGenerator", $"{FolderPath} doesn't exist - create it (or the WeaponPerkPoolData.asset stub it should already hold) before running this.");
                 return;
             }
 
@@ -384,7 +385,7 @@ namespace QuantumUser.Editor
 
             if (pool == null)
             {
-                Debug.LogError($"[WeaponPerkAssetGenerator] No WeaponPerkPoolData asset at {PoolAssetPath} - perk assets were created/updated, but the pool wasn't wired.");
+                LogHelper.Error("WeaponPerkAssetGenerator", $"No WeaponPerkPoolData asset at {PoolAssetPath} - perk assets were created/updated, but the pool wasn't wired.");
                 return;
             }
 
@@ -397,7 +398,7 @@ namespace QuantumUser.Editor
             EditorUtility.SetDirty(pool);
             AssetDatabase.SaveAssets();
 
-            Debug.Log($"[WeaponPerkAssetGenerator] {created} created, {updated} updated, {pool.Perks.Count} wired into {PoolAssetPath}.");
+            LogHelper.Log("WeaponPerkAssetGenerator", $"{created} created, {updated} updated, {pool.Perks.Count} wired into {PoolAssetPath}.");
         }
     }
 }

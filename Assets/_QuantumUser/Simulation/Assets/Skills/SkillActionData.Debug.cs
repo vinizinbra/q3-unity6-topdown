@@ -23,5 +23,36 @@ namespace Quantum
         {
             SkillActionDataDebug.OnGrantRequested?.Invoke(this, SkillSlotId.HeroSkill);
         }
+
+        // Removes this specific upgrade from the given slot if it's currently granted there - the
+        // debug counterpart to the two buttons above. No-ops (with a logged reason) if it isn't
+        // present, or the slot is mid-activation - see SkillSystem.RemoveUpgrade.
+        [EditorButton("Remove From Local Player (DashSkill)", EditorButtonVisibility.PlayMode)]
+        protected void DebugRemoveFromLocalPlayerDashSkill()
+        {
+            SkillActionDataDebug.OnRemoveRequested?.Invoke(this, SkillSlotId.DashSkill);
+        }
+
+        [EditorButton("Remove From Local Player (HeroSkill)", EditorButtonVisibility.PlayMode)]
+        protected void DebugRemoveFromLocalPlayerHeroSkill()
+        {
+            SkillActionDataDebug.OnRemoveRequested?.Invoke(this, SkillSlotId.HeroSkill);
+        }
+
+        // Clears every upgrade on the given slot at once, not just this asset - a bulk reset for
+        // iterating in play mode. Lives here (rather than only on the slot/CharacterData) so it's
+        // reachable from whichever SkillActionData asset is already open. See
+        // SkillSystem.ClearUpgrades.
+        [EditorButton("Clear All From Local Player (DashSkill)", EditorButtonVisibility.PlayMode)]
+        protected void DebugClearAllDashSkillUpgrades()
+        {
+            SkillActionDataDebug.OnClearAllRequested?.Invoke(SkillSlotId.DashSkill);
+        }
+
+        [EditorButton("Clear All From Local Player (HeroSkill)", EditorButtonVisibility.PlayMode)]
+        protected void DebugClearAllHeroSkillUpgrades()
+        {
+            SkillActionDataDebug.OnClearAllRequested?.Invoke(SkillSlotId.HeroSkill);
+        }
     }
 }

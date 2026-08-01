@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NaughtyAttributes;
+using QuantumUser.View.Util;
 using UnityEngine;
 
 namespace Quantum
@@ -75,7 +76,7 @@ namespace Quantum
             EnvironmentManager environmentManager = FindFirstObjectByType<EnvironmentManager>();
             if (environmentManager == null)
             {
-                Debug.LogWarning("[WorldTheme] No EnvironmentManager found in the open scene to apply to.");
+                LogHelper.Warn("WorldTheme", "No EnvironmentManager found in the open scene to apply to.");
                 return;
             }
 

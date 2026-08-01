@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using NaughtyAttributes;
+using QuantumUser.View.Util;
 using UnityEngine;
 
 // Assumes each cube's pivot sits at its bottom min corner (min X, min Y, min Z) - e.g. a
@@ -99,7 +100,7 @@ public class CubeVisualBuilder : MonoBehaviour
         UnityEditor.Undo.RecordObject(transform, "Snap CubeVisualBuilder To Grid");
         transform.position = Rounded(transform.position);
         transform.localScale = Rounded(transform.localScale);
-        Debug.Log($"[CubeVisualBuilder] Snapped to grid - position {transform.position}, scale {transform.localScale}.", this);
+        LogHelper.Log("CubeVisualBuilder", $"Snapped to grid - position {transform.position}, scale {transform.localScale}.", this);
     }
 
     private static Vector3 Rounded(Vector3 v)
@@ -124,7 +125,7 @@ public class CubeVisualBuilder : MonoBehaviour
 
         if (gridX < 2 || gridZ < 2)
         {
-            Debug.LogWarning($"[CubeVisualBuilder] Cube must be at least 2xNx2 in scale (got {gridX}x{gridZ}) - skipping.", this);
+            LogHelper.Warn("CubeVisualBuilder", $"Cube must be at least 2xNx2 in scale (got {gridX}x{gridZ}) - skipping.", this);
             return;
         }
 
@@ -896,7 +897,7 @@ public class CubeVisualBuilder : MonoBehaviour
         Vector3 scale = transform.localScale;
         if (Mathf.Abs(scale.x - gridX) > 0.01f || Mathf.Abs(scale.z - gridZ) > 0.01f)
         {
-            Debug.LogWarning($"[CubeVisualBuilder] Cube X/Z scale ({scale.x}, {scale.z}) isn't a whole number - rounded to {gridX}x{gridZ}.", this);
+            LogHelper.Warn("CubeVisualBuilder", $"Cube X/Z scale ({scale.x}, {scale.z}) isn't a whole number - rounded to {gridX}x{gridZ}.", this);
         }
     }
 

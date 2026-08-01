@@ -5,7 +5,15 @@ Content for the `LevelUpPoolKind.GlobalUpgrade` pool (`LevelUpConfig.GlobalUpgra
 mechanism (rolling, pausing, grant flow) and stays the source of truth for how any of this actually
 gets offered and picked.
 
-**Status: 21 of 25 rows are implemented in code.** `GlobalUpgradeData` is an abstract base with a
+**This is the "simple, hero-wide numerical growth, stacks" pool** - small flat increments picked
+over and over across a run. The game's other three level-up pools live elsewhere: **Weapon Perks**
+(`docs/weapon-perks.md`, attach to a weapon, lost on swap), the per-hero **Hero Ascension** pools
+(`LevelUpPoolKind.SkillUpgrade`/`PassiveUpgrade`, Dash/Hero Skill/Passive milestones, see
+`docs/level-up-upgrades.md`), and **Rift Mutations** (`docs/rift-mutations.md`, a separate
+`LevelUpPoolKind.RiftMutation` pool - rare, non-stackable, run-wide rule/synergy/tradeoff effects,
+which is where the more dramatic build-defining picks live).
+
+**Status: 22 of 26 rows are implemented in code.** `GlobalUpgradeData` is an abstract base with a
 real `Apply(Frame f, EntityRef entity)` (same shape as `WeaponPerkData`'s `Apply(Frame, Weapon*)`),
 and `GlobalUpgradeUtility.Grant` dispatches to it generically. Most concrete upgrades derive from
 `CharacterStatMultiplierUpgradeData` (`Assets/_QuantumUser/Simulation/Assets/LevelUp/
@@ -83,6 +91,7 @@ a parallel do-nothing `CharacterStats` field.
 | Skill Cooldown | `SkillCooldownUpgradeData` | `CharacterStats.SkillCooldownMultiplier` (new field, HeroSkill's independent half of the old shared `CooldownMultiplier`) | ✅ |
 | Skill Duration | `SkillDurationUpgradeData` | `CharacterStats.SkillDurationMultiplier` | ✅ |
 | Skill Area | `SkillAreaUpgradeData` | `CharacterStats.AreaRadiusMultiplier` (now wired into `HitPathSkillAction`/`SpawnEntitySkillAction` via `StatUtility.GetAreaMultiplier`, stacking with `SkillSlot.AreaMultiplier`) | ✅ |
+| Hero Skill Charge | `HeroSkillChargeUpgradeData` | `CharacterSkills.HeroSkill.MaxStacks`/`CurrentStacks` (+1, usable immediately - same shape as Dash Charge) | ✅ |
 
 ### Economy
 
@@ -90,8 +99,22 @@ a parallel do-nothing `CharacterStats` field.
 |---|---|---|---|
 | Experience Gain | `ExperienceGainUpgradeData` | `CharacterStats.ExperienceGainMultiplier` (new field, wired into `ExpOrbSystem`'s pickup credit) | ✅ |
 | Luck | *(none)* | `CharacterStats.Luck` | ❌ field exists and is seeded, but nothing reads it anywhere - no rarity-roll/loot mechanic is designed for it to bias. Needs a design decision on what it actually does before it's worth wiring up (see "Design notes" #3). |
-| Gold Gain | *(none)* | — | ❌ no currency system exists in the simulation at all - this needs a whole new system, not a stat hookup. Deferred; not in scope for this pass. |
-| Rift Shards | *(none)* | — | ❌ same as Gold Gain - no persistent-currency system exists yet. Deferred. |
+| Rift Shard Gain | *(none - see `docs/rift-mutations.md`)* | — | ❌ not a Global Upgrade. The Rift Shard currency system exists (`RiftShard.qtn`/`RiftShardUtility`/`RiftShardOrbSystem`), but its only gain multiplier today comes from Greed, a Rift Mutation - see `docs/rift-mutations.md`. |
+| Coin Gain | *(none)* | `CharacterStats.CoinGainMultiplier` | ❌ not a Global Upgrade yet - the Coin currency system exists (see below) with a real gain-multiplier field on `CharacterStats`, but no upgrade/mutation sources it today (same gap `RiftShardGainMultiplier` had before Greed). |
+
+**Coin** is a second, independent currency from Rift Shards (`docs/rift-mutations.md`'s own
+currency) - `Coin.qtn` (the pickup)/`Coins.qtn` (the run-wide `TotalCoins` global, co-op shared)/
+`CoinConfig`/`CoinUtility`/`CoinOrbSystem`, mirroring `RiftShardUtility`/`RiftShardOrbSystem`
+field-for-field. Both currencies now share the same drop shape: a per-tier `EnemyTierStatsConfig.
+TierStats` pair (`RiftShardValue`/`RiftShardDropChance` and `CoinValue`/`CoinDropChance`) gates
+*whether* a kill drops one at all - `Value > 0` is necessary but not sufficient, `TrySpawnDrop` also
+rolls `DropChance` (`DamageUtility.RollChance`, the same helper crit rolls use) before spawning -
+and the spawn position scatters away from the exact death point
+(`RiftShardConfig`/`CoinConfig`'s own `Min`/`MaxSpawnOffset`, `EnemyMovementUtility.
+RandomPositionInRing` - same pattern `ScrapConfig` already used) so multiple drops off one kill
+don't stack exactly on top of each other. `Tools/RiftRaiders/Generate Coin Assets` authors
+`CoinConfig.asset`; a `CoinOrb` `EntityPrototype` and `RuntimeConfig.CoinConfig`/`CoinPrototype`
+still need Editor authoring, same gap `RiftShardOrb` has (see `docs/rift-mutations.md`).
 
 ## What changed to make the ✅ rows real
 
@@ -148,3 +171,10 @@ Several `CharacterStats` fields were seeded but had **zero consumers anywhere** 
    `OutgoingStatusDurationMultiplier` sitting unused by any upgrade today - cheap additions later if
    the pool needs more Hero/Weapon variety without new plumbing (worth checking each still has a live
    consumer of its own before assuming it's free, the same way this pass found several that didn't).
+6. **More dramatic build-defining picks live in Rift Mutations, not here (decided).** An earlier pass
+   built Glass Core/Heavy Arsenal/Close Quarters/Greed/etc. directly in this pool as
+   `GlobalUpgradeData` subclasses; they were moved out into their own `RiftMutationData` hierarchy
+   and `LevelUpPoolKind.RiftMutation` pool (see `docs/rift-mutations.md`) since "non-stackable,
+   rare, build-defining" is a different shape from this pool's "small stacking increment" one. If a
+   future pick is a one-shot tradeoff or a new rule rather than a flat +X%, it belongs there, not
+   here.

@@ -5,6 +5,7 @@ Shader "Project/Mobile Toon Modular Level"
         [Header(Textures)]
         [MainTexture] _WallMap ("Wall Texture", 2D) = "white" {}
         _SurfaceMap ("Surface Texture", 2D) = "white" {}
+        [Toggle] _SurfaceUseWorldUV ("Surface World UV", Float) = 0
         [NoScaleOffset] _StyleMask ("Outline and Surface Fade Atlas", 2D) = "white" {}
 
         [Header(Global Noise Test)]
@@ -75,7 +76,7 @@ Shader "Project/Mobile Toon Modular Level"
             CBUFFER_START(UnityPerMaterial)
             float4 _WallMap_ST; float4 _SurfaceMap_ST;
             half4 _BaseColor, _WallColor, _SurfaceColor, _AOColor, _HeightFogColor, _InkColor, _SurfaceEdgeColor, _GradientBottomColor, _GradientTopColor, _ShadowTint, _GlobalNoiseDarkColor, _GlobalNoiseLightColor;
-            half _WallAOStrength, _SurfaceAOStrength, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength, _GlobalNoiseNeutral, _WallDisplacement, _WallDisplacementBottomOnly, _WallDisplacementBottomReach;
+            half _WallAOStrength, _SurfaceAOStrength, _SurfaceUseWorldUV, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength, _GlobalNoiseNeutral, _WallDisplacement, _WallDisplacementBottomOnly, _WallDisplacementBottomReach;
             float _GradientStartY, _GradientDistance, _HeightFogTopY, _HeightFogFalloff, _GlobalNoiseScale;
             float4 _GlobalNoiseOffset;
             CBUFFER_END
@@ -93,15 +94,24 @@ Shader "Project/Mobile Toon Modular Level"
             {
                 half surface=step(0.5h,i.roleAo.x);
                 half3 wall=SAMPLE_TEXTURE2D(_WallMap,sampler_WallMap,TRANSFORM_TEX(i.uv,_WallMap)).rgb;
-                half3 top=SAMPLE_TEXTURE2D(_SurfaceMap,sampler_SurfaceMap,TRANSFORM_TEX(i.uv,_SurfaceMap)).rgb;
+                // World mode makes the surface texture continuous across every modular piece.
+                // Its normal material Tiling and Offset fields control repeats per world unit
+                // and global placement respectively; local UV mode remains the default.
+                float2 surfaceLocalUv=TRANSFORM_TEX(i.uv,_SurfaceMap);
+                float2 surfaceWorldUv=i.positionWS.xz*_SurfaceMap_ST.xy+_SurfaceMap_ST.zw;
+                float2 surfaceUv=lerp(surfaceLocalUv,surfaceWorldUv,saturate(_SurfaceUseWorldUV));
+                half3 top=SAMPLE_TEXTURE2D(_SurfaceMap,sampler_SurfaceMap,surfaceUv).rgb;
                 half3 materialColor=lerp(_WallColor.rgb,_SurfaceColor.rgb,surface);
                 half3 baseColor=lerp(wall,top,surface)*materialColor*_BaseColor.rgb;
 
-                // GLOBAL NOISE TEST: one world-space sample shared by every modular piece.
-                // The skewed projection includes X, Y, and Z variation without triplanar cost.
+                // One continuous world-space noise sample is shared by every modular piece.
+                // Top surfaces use straight XZ so the texture is not diagonally skewed. Walls
+                // retain the cheap XYZ projection so vertical faces still receive variation.
                 float3 noisePosition=i.positionWS+_GlobalNoiseOffset.xyz;
-                float2 noiseUv=float2(noisePosition.x+noisePosition.z*0.371,
-                                      noisePosition.y+noisePosition.z*0.613)*_GlobalNoiseScale;
+                float2 wallNoiseUv=float2(noisePosition.x+noisePosition.z*0.371,
+                                          noisePosition.y+noisePosition.z*0.613)*_GlobalNoiseScale;
+                float2 surfaceNoiseUv=noisePosition.xz*_GlobalNoiseScale;
+                float2 noiseUv=lerp(wallNoiseUv,surfaceNoiseUv,surface);
                 half globalNoise=SampleGlobalNoiseFBM(noiseUv);
                 half3 noiseTint=lerp(_GlobalNoiseDarkColor.rgb,_GlobalNoiseLightColor.rgb,globalNoise);
                 baseColor*=lerp(half3(1,1,1),noiseTint,_GlobalNoiseStrength);
@@ -151,7 +161,7 @@ Shader "Project/Mobile Toon Modular Level"
             CBUFFER_START(UnityPerMaterial)
             float4 _WallMap_ST; float4 _SurfaceMap_ST;
             half4 _BaseColor, _WallColor, _SurfaceColor, _AOColor, _HeightFogColor, _InkColor, _SurfaceEdgeColor, _GradientBottomColor, _GradientTopColor, _ShadowTint, _GlobalNoiseDarkColor, _GlobalNoiseLightColor;
-            half _WallAOStrength, _SurfaceAOStrength, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength, _GlobalNoiseNeutral, _WallDisplacement, _WallDisplacementBottomOnly, _WallDisplacementBottomReach;
+            half _WallAOStrength, _SurfaceAOStrength, _SurfaceUseWorldUV, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength, _GlobalNoiseNeutral, _WallDisplacement, _WallDisplacementBottomOnly, _WallDisplacementBottomReach;
             float _GradientStartY, _GradientDistance, _HeightFogTopY, _HeightFogFalloff, _GlobalNoiseScale;
             float4 _GlobalNoiseOffset;
             CBUFFER_END
@@ -199,7 +209,7 @@ Shader "Project/Mobile Toon Modular Level"
             CBUFFER_START(UnityPerMaterial)
             float4 _WallMap_ST; float4 _SurfaceMap_ST;
             half4 _BaseColor, _WallColor, _SurfaceColor, _AOColor, _HeightFogColor, _InkColor, _SurfaceEdgeColor, _GradientBottomColor, _GradientTopColor, _ShadowTint, _GlobalNoiseDarkColor, _GlobalNoiseLightColor;
-            half _WallAOStrength, _SurfaceAOStrength, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength, _GlobalNoiseNeutral, _WallDisplacement, _WallDisplacementBottomOnly, _WallDisplacementBottomReach;
+            half _WallAOStrength, _SurfaceAOStrength, _SurfaceUseWorldUV, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength, _GlobalNoiseNeutral, _WallDisplacement, _WallDisplacementBottomOnly, _WallDisplacementBottomReach;
             float _GradientStartY, _GradientDistance, _HeightFogTopY, _HeightFogFalloff, _GlobalNoiseScale;
             float4 _GlobalNoiseOffset;
             CBUFFER_END
@@ -225,7 +235,7 @@ Shader "Project/Mobile Toon Modular Level"
             CBUFFER_START(UnityPerMaterial)
             float4 _WallMap_ST; float4 _SurfaceMap_ST;
             half4 _BaseColor, _WallColor, _SurfaceColor, _AOColor, _HeightFogColor, _InkColor, _SurfaceEdgeColor, _GradientBottomColor, _GradientTopColor, _ShadowTint, _GlobalNoiseDarkColor, _GlobalNoiseLightColor;
-            half _WallAOStrength, _SurfaceAOStrength, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength, _GlobalNoiseNeutral, _WallDisplacement, _WallDisplacementBottomOnly, _WallDisplacementBottomReach;
+            half _WallAOStrength, _SurfaceAOStrength, _SurfaceUseWorldUV, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength, _GlobalNoiseNeutral, _WallDisplacement, _WallDisplacementBottomOnly, _WallDisplacementBottomReach;
             float _GradientStartY, _GradientDistance, _HeightFogTopY, _HeightFogFalloff, _GlobalNoiseScale;
             float4 _GlobalNoiseOffset;
             CBUFFER_END

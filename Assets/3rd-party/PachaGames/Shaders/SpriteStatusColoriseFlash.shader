@@ -8,6 +8,15 @@ Shader "Sprites/Sprite Status Colorise Flash"
     {
         [PerRendererData] _MainTex ("Texture", 2D) = "white" {}
         _WhiteTolerance ("White Detection Tolerance", Range(0.0001, 0.2)) = 0.01
+
+        [Header(Material Colorize)]
+        _ColorizeColor ("Colorize Color (baked per-material, unlike SpriteRenderer.color's per-instance status colorize above)", Color) = (1, 1, 1, 1)
+        _ColorizeIntensity ("Colorize Intensity", Float) = 0
+
+        [Header(Inner Glow)]
+        [HDR] _GlowColor ("Glow Color (alpha = extra strength multiplier)", Color) = (1, 0.3, 0.85, 1)
+        _GlowIntensity ("Glow Intensity", Float) = 0
+        _GlowWidth ("Glow Width (texels)", Float) = 2
     }
 
     SubShader
@@ -31,7 +40,7 @@ Shader "Sprites/Sprite Status Colorise Flash"
             Tags { "LightMode" = "SRPDefaultUnlit" }
 
             HLSLPROGRAM
-            #pragma target 2.0
+            #pragma target 3.0
             #pragma vertex Vert
             #pragma fragment Frag
 
@@ -42,7 +51,13 @@ Shader "Sprites/Sprite Status Colorise Flash"
 
             CBUFFER_START(UnityPerMaterial)
                 float4 _MainTex_ST;
+                float4 _MainTex_TexelSize;
                 half _WhiteTolerance;
+                half4 _ColorizeColor;
+                half _ColorizeIntensity;
+                half4 _GlowColor;
+                half _GlowIntensity;
+                half _GlowWidth;
             CBUFFER_END
 
             struct Attributes
@@ -135,8 +150,46 @@ Shader "Sprites/Sprite Status Colorise Flash"
                 half statusEnabled = step(_WhiteTolerance, distanceFromWhite);
                 half3 statusResult = lerp(source.rgb, colorised, statusEnabled);
 
+                // Material colorize: same preserve-lightness hue replacement as the per-instance
+                // status colorize above, but sourced from a material property instead of
+                // SpriteRenderer.color - that channel is already spoken for by HitFeedback's hit-
+                // flash (see the file header contract), so a persistent baked-in tint (e.g.
+                // Freeze's icy colorize) needs its own knob that flashes can't stomp.
+                half3 materialHsl = RgbToHsl(_ColorizeColor.rgb);
+                materialHsl.z = sourceLightness;
+                half3 materialColorised = HslToRgb(materialHsl);
+                statusResult = lerp(statusResult, materialColorised, saturate(_ColorizeIntensity));
+
+                // Inner glow: brightest just inside the silhouette edge, softly fading toward
+                // the interior over _GlowWidth. Sprites have no usable normals for a fresnel rim
+                // (see MobileParticleAlphaRim's header comment on why that shader needs mesh
+                // curvature), so this detects the edge cheaply instead - sampling outward in
+                // GLOW_STEPS increments per cardinal direction and taking the closest hit's
+                // weight, so a pixel right at the edge reads near-full strength and one
+                // _GlowWidth texels in reads ~0, instead of a single fixed-distance tap (which
+                // reads as a hard ring rather than a soft gradient). Zero at _GlowIntensity's
+                // default so existing materials on this shader render unchanged.
+                #define GLOW_STEPS 4
+                half glowMask = 0;
+                [unroll]
+                for (int i = 1; i <= GLOW_STEPS; i++)
+                {
+                    half2 offset = _MainTex_TexelSize.xy * _GlowWidth * (i / (half) GLOW_STEPS);
+                    half weight = saturate(1.0h - (half) i / GLOW_STEPS);
+
+                    half hit = 0;
+                    hit += saturate(source.a - SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv + half2(offset.x, 0)).a);
+                    hit += saturate(source.a - SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv - half2(offset.x, 0)).a);
+                    hit += saturate(source.a - SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv + half2(0, offset.y)).a);
+                    hit += saturate(source.a - SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv - half2(0, offset.y)).a);
+
+                    glowMask = max(glowMask, saturate(hit) * weight);
+                }
+                glowMask *= source.a;
+                half3 glowResult = lerp(statusResult, _GlowColor.rgb, saturate(glowMask * _GlowIntensity * _GlowColor.a));
+
                 // Hit feedback always wins and can reach completely white.
-                half3 finalColor = lerp(statusResult, half3(1, 1, 1), saturate(input.color.a));
+                half3 finalColor = lerp(glowResult, half3(1, 1, 1), saturate(input.color.a));
                 return half4(finalColor, source.a);
             }
             ENDHLSL

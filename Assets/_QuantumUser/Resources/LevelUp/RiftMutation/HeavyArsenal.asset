@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c856593ba4dd64ce29abdbaf0715f2a7, type: 3}
+  m_Name: HeavyArsenal
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.HeavyArsenalMutationData
+  Identifier:
+    Path: _QuantumUser/Resources/LevelUp/RiftMutation/HeavyArsenal
+    Guid:
+      Value: 459194346184904757
+  Icon: {fileID: 0}
+  DisplayName: Heavy Arsenal
+  Rarity: 2
+  Description: '{0:+0;-0}% Weapon Damage, {1:+0;-0}% Fire Rate'
+  DamageMultiplier:
+    RawValue: 114688
+  FireRateMultiplier:
+    RawValue: 42598

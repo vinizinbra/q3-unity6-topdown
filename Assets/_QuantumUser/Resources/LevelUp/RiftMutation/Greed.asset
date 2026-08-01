@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59b20aa8751da46d9b49ba33517488dc, type: 3}
+  m_Name: Greed
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.GreedMutationData
+  Identifier:
+    Path: _QuantumUser/Resources/LevelUp/RiftMutation/Greed
+    Guid:
+      Value: 536002132847580972
+  Icon: {fileID: 0}
+  DisplayName: Greed
+  Rarity: 3
+  Description: +{0:0}% Rift Shards, enemies gain +{1}% Max Health
+  RiftShardMultiplier:
+    RawValue: 131072
+  EnemyHealthBonus:
+    RawValue: 32768

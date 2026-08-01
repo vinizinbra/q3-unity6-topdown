@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: SpriteColorise
-  m_Shader: {fileID: 4800000, guid: 8c245d0dc7ce45dab0450e65816ce417, type: 3}
+  m_Shader: {fileID: 4800000, guid: 901d7b9ce94c143479b3078dc9132830, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -78,6 +78,7 @@ Material:
     - _SrcBlend: 1
     - _ThresholdSoftness: 0.015
     - _UVSec: 0
+    - _WhiteTolerance: 0.01
     - _ZWrite: 1
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}

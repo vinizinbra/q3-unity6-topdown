@@ -1,0 +1,8 @@
+// A physical Rift Shard pickup dropped by RiftShardUtility.TrySpawnDrop when a player-owned kill
+// lands on an Enemy (see DamageUtility.ApplyDamage) - same "no owner, no drop" rule as ExpOrb.qtn.
+// Value travels with the orb rather than being re-derived from EnemyDataAsset at pickup time, since
+// the source enemy entity is already destroyed by then.
+component RiftShard
+{
+    FP Value;
+}

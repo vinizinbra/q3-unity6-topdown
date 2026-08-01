@@ -19,6 +19,7 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Movement Speed
   Rarity: 1
+  MaxPicks: 3
   Description: +{0}% Move Speed
   Multiplier:
     RawValue: 72090

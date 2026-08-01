@@ -202,7 +202,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: VoidMark
+      name: RiftMark
       rect:
         serializedVersion: 2
         x: 809
@@ -249,10 +249,10 @@ TextureImporter:
       name: Root
       rect:
         serializedVersion: 2
-        x: 814
-        y: 556
-        width: 198
-        height: 189
+        x: 785
+        y: 564
+        width: 236
+        height: 194
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -342,7 +342,7 @@ TextureImporter:
         width: 154
         height: 178
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -364,7 +364,7 @@ TextureImporter:
         width: 166
         height: 189
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -386,7 +386,7 @@ TextureImporter:
         width: 142
         height: 188
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -395,6 +395,28 @@ TextureImporter:
       bones: []
       spriteID: 0930818d79c2a44cbb578c8b1cf758a8
       internalID: -694253727
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: StatusIcons_3
+      rect:
+        serializedVersion: 2
+        x: 246
+        y: 300
+        width: 243
+        height: 170
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c3ee252cf652c47fc917f7b890289953
+      internalID: -502565418
       vertices: []
       indices: 
       edges: []
@@ -423,8 +445,9 @@ TextureImporter:
       StatusIcons_0: 1175331134
       StatusIcons_1: 716695680
       StatusIcons_2: -694253727
+      StatusIcons_3: -502565418
       Stun: -1016591031
-      VoidMark: 559310346
+      RiftMark: 559310346
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

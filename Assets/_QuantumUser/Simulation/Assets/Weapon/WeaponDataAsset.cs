@@ -23,7 +23,11 @@ namespace Quantum
         public FP CriticalChance;
         public FP CriticalDamageBonus;
 
-        public FP FireCooldownTime = FP._0_25;
+        // Shots per second (higher = faster) - same "rate" convention as every multiplier that
+        // scales it (AttackSpeedMultiplier, FireRateWeaponPerkData, Adrenaline, etc - see
+        // StatUtility.GetFireCooldown). WeaponSystem.ResolveLiveFireCooldown converts this to an
+        // actual time-between-shots (1 / FireRate) before applying those multipliers/bonuses.
+        public FP FireRate = 4;
 
         public int MagazineSize = 12;
         public FP ReloadDuration = 1;

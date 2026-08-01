@@ -97,10 +97,7 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
         if (TryResolveKind(e, out var kind) == false)
             return;
 
-        if (TryResolveHitPosition(e, out var worldPosition) == false)
-            return;
-
-        Spawn(kind, e.Damage.AsFloat, worldPosition);
+        Spawn(kind, e.Damage.AsFloat, e.Position.ToUnityVector3() + worldOffset);
     }
 
     // Taking a hit is checked before dealing one so self-damage (own explosion, decoy backfire)
@@ -165,21 +162,6 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
             case ElementType.Fire: return taken ? DamageNumberKind.BurnTakenByMe : DamageNumberKind.BurnDealtByMe;
             default: return taken ? DamageNumberKind.TakenByMe : DamageNumberKind.DealtByMe;
         }
-    }
-
-    // Read from the frame rather than EntityViewManager's transform cache: only some prefabs carry
-    // EntityViewCacheInit, and a killing blow fires this for a target whose view may already be on
-    // its way out.
-    private bool TryResolveHitPosition(EventEntityDamaged e, out Vector3 worldPosition)
-    {
-        worldPosition = default;
-
-        var frame = e.Game.Frames.Predicted;
-        if (frame == null || frame.Has<Transform3D>(e.Target) == false)
-            return false;
-
-        worldPosition = frame.Get<Transform3D>(e.Target).Position.ToUnityVector3() + worldOffset;
-        return true;
     }
 
     private void OnEntityHealed(EventEntityHealed e)

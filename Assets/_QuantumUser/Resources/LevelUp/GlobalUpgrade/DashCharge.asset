@@ -19,5 +19,6 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Dash Charge
   Rarity: 1
+  MaxPicks: 3
   Description: +{0} charge
   Charges: 1

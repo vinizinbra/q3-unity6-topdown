@@ -21,8 +21,9 @@ namespace Quantum
     public abstract unsafe partial class SkillActionData : UpgradeData
     {
         // Icon/DisplayName/Rarity come from UpgradeData - lets this be offered directly as a
-        // LevelUpPoolKind.SkillUpgrade card (see CharacterData.DashSkillUpgrades/HeroSkillUpgrades)
-        // without a separate wrapper type. GetDescription() below reuses the existing
+        // LevelUpPoolKind.SkillUpgrade card (see CharacterData.DashSkillUpgrades and HeroSkill's own
+        // Actions, LevelUpUtility.AddHeroSkillUpgradeCandidates) without a separate wrapper type.
+        // GetDescription() below reuses the existing
         // Description/DescriptionArgs machinery in SkillActionData.View.cs instead of a new field -
         // that machinery already supports live-templated values, which a plain static UpgradeData
         // field wouldn't.
@@ -42,9 +43,13 @@ namespace Quantum
         // the once-only phases ignore it.
         public FP Interval;
 
-        // Lets an action be switched off without pulling it out of Actions/Upgrades or deleting the
-        // asset - flip this to rule one in or out while testing/balancing instead of restructuring
-        // the list (and losing whatever else referenced this same asset instance).
+        // Lets a baseline SkillData.Actions entry be switched off without pulling it out of the list
+        // or deleting the asset - flip this to rule one in or out while testing/balancing instead of
+        // restructuring the list (and losing whatever else referenced this same asset instance).
+        // Ignored for a slot->Upgrades grant (see SkillSystem.InvokeActions' ignoreActivated) - once
+        // something explicitly grants this action to a player (e.g. a level-up pick), that grant is
+        // itself the activation decision, so a shared asset toggled off for baseline use elsewhere
+        // shouldn't silently no-op an upgrade a player was told they received.
         public bool Activated = true;
 
         // Read by SkillFxStep (see SkillActionData.View.cs) when a step's ScaleByRadius is on - lets
@@ -56,9 +61,9 @@ namespace Quantum
 
         public abstract void Execute(Frame f, ref SkillSystem.Filter filter, SkillSlot* slot, SkillData skill, SkillActionPhase firedPhase);
 
-        public bool ShouldExecute(Frame f, SkillSlot* slot, SkillActionPhase firedPhase)
+        public bool ShouldExecute(Frame f, SkillSlot* slot, SkillActionPhase firedPhase, bool ignoreActivated = false)
         {
-            if (Activated == false)
+            if (Activated == false && ignoreActivated == false)
                 return false;
 
             if ((Phase & firedPhase) == 0)

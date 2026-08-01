@@ -56,7 +56,7 @@ public class PlayerManager : MonoBehaviour
 
             if (PlayersInGame.Count == _quantumGame.Frames.Verified.PlayerCount)
             {
-                Debug.LogWarning("ON ALL PLAYERS CONNECTED");
+                LogHelper.Warn("PlayerManager", "ON ALL PLAYERS CONNECTED");
                 orderedPlayersInGame = PlayersInGame.Values.ToList();
                 onAllPlayersConnected?.Invoke();
             }

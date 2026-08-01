@@ -25,6 +25,7 @@ namespace Quantum
         public TierStatusResistance Filler = new TierStatusResistance();
         public TierStatusResistance Normal = new TierStatusResistance();
         public TierStatusResistance Specialist = new TierStatusResistance();
+        public TierStatusResistance Heavy = new TierStatusResistance();
         public TierStatusResistance Elite = new TierStatusResistance();
         public TierStatusResistance Boss = new TierStatusResistance();
 
@@ -32,6 +33,7 @@ namespace Quantum
         {
             EnemyTier.Normal => Normal,
             EnemyTier.Specialist => Specialist,
+            EnemyTier.Heavy => Heavy,
             EnemyTier.Elite => Elite,
             EnemyTier.Boss => Boss,
             _ => Filler,

@@ -24,7 +24,7 @@ component Weapon
     FP    CriticalDamageBonus;
 
     // Damage/FireCooldown are NOT baked absolutes like the stats above - WeaponSystem reads
-    // WeaponDataAsset.Damage/FireCooldownTime fresh every fire and scales it by these, so tuning
+    // WeaponDataAsset.Damage/FireRate fresh every fire and scales it by these, so tuning
     // the asset's base value in the Inspector takes effect immediately on already-equipped weapons
     // instead of only on the next Equip. Perks (DamageMultiplierWeaponPerkData,
     // CooldownMultiplierWeaponPerkData, FireRateWeaponPerkData) and the sentry-only

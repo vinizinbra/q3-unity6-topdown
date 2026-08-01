@@ -126,36 +126,67 @@ namespace Quantum
             List<FP> validWeights = new List<FP>();
             FP totalWeight = FP._0;
 
-            if (phase.AllowedGroups != null)
+            if (phase.AllowedGroups == null || phase.AllowedGroups.Count == 0)
+            {
+                Log.Debug("[Director] current phase has no AllowedGroups authored");
+            }
+            else
             {
                 for (int i = 0; i < phase.AllowedGroups.Count; i++)
                 {
                     AssetRef<EnemyGroupConfig> groupRef = phase.AllowedGroups[i];
 
                     if (groupRef.Id.IsValid == false)
+                    {
+                        Log.Debug($"[Director] AllowedGroups[{i}] rejected - AssetRef not assigned");
                         continue;
+                    }
 
                     EnemyGroupConfig candidate = f.FindAsset(groupRef);
 
+                    if (candidate == null)
+                    {
+                        Log.Error($"[Director] AllowedGroups[{i}] ({groupRef}) rejected - did not resolve to an asset (dangling reference)");
+                        continue;
+                    }
+
                     if (candidate.Weight <= FP._0)
+                    {
+                        Log.Debug($"[Director] {candidate.name} rejected - Weight <= 0 (soft-disabled)");
                         continue; // soft-disabled
+                    }
 
                     if (f.Global->SurvivalTime < candidate.MinimumSurvivalTime)
+                    {
+                        Log.Debug($"[Director] {candidate.name} rejected - not unlocked yet ({f.Global->SurvivalTime} < MinimumSurvivalTime {candidate.MinimumSurvivalTime})");
                         continue; // not unlocked yet
+                    }
 
                     if (candidate.MaximumSurvivalTime > FP._0 && f.Global->SurvivalTime > candidate.MaximumSurvivalTime)
+                    {
+                        Log.Debug($"[Director] {candidate.name} rejected - unlock window passed ({f.Global->SurvivalTime} > MaximumSurvivalTime {candidate.MaximumSurvivalTime})");
                         continue; // unlock window already passed
+                    }
 
                     FP cost = candidate.ComputeCost(f);
 
                     if (cost > f.Global->DirectorBudget)
+                    {
+                        Log.Debug($"[Director] {candidate.name} rejected - not affordable (cost {cost} > budget {f.Global->DirectorBudget})");
                         continue; // not affordable
+                    }
 
                     if (aliveCount + candidate.ComputeMemberCount() > phase.MaxAliveEnemies)
+                    {
+                        Log.Debug($"[Director] {candidate.name} rejected - would exceed alive cap ({aliveCount} + {candidate.ComputeMemberCount()} > {phase.MaxAliveEnemies})");
                         continue; // would exceed the alive cap
+                    }
 
                     if (candidate.MaxConcurrent > 0 && CountAliveForGroup(f, groupRef) >= candidate.MaxConcurrent)
+                    {
+                        Log.Debug($"[Director] {candidate.name} rejected - MaxConcurrent {candidate.MaxConcurrent} already reached");
                         continue; // concurrent copies already at MaxConcurrent
+                    }
 
                     validGroups.Add(groupRef);
                     validCosts.Add(cost);

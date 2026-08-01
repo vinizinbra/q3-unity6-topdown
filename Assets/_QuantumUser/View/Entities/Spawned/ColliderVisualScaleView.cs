@@ -49,13 +49,13 @@ namespace Quantum
 
             if (visual == null)
             {
-                Debug.LogError($"{nameof(ColliderVisualScaleView)} on '{name}' has no visual assigned.", this);
+                LogHelper.Error("ColliderVisualScaleView", $"'{name}' has no visual assigned.", this);
                 return;
             }
 
             if (TryGetWorldSize(collider.Shape, out Vector3 worldSize) == false)
             {
-                Debug.LogError($"{nameof(ColliderVisualScaleView)} on '{name}' has a {collider.Shape.Type} collider, which has no size to read.", this);
+                LogHelper.Error("ColliderVisualScaleView", $"'{name}' has a {collider.Shape.Type} collider, which has no size to read.", this);
                 return;
             }
 

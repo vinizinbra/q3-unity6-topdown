@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a98ba25be1584078b2c09330c88223f, type: 3}
+  m_Name: Guardian
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.GuardianPassiveUpgradeData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Brute/B_PassiveSkill/B_PassiveSkillUpgrades/Guardian
+    Guid:
+      Value: 299772149483885795
+  Icon: {fileID: 0}
+  DisplayName: Guardian
+  Rarity: 1
+  Description: Allies inside the aura gain Damage Reduction.
+  AllyDamageReductionAmount:
+    RawValue: 16384

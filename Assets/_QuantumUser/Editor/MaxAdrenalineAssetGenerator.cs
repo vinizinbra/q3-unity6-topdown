@@ -4,6 +4,7 @@ namespace QuantumUser.Editor
     using System.Linq;
     using Photon.Deterministic;
     using Quantum;
+    using QuantumUser.View.Util;
     using UnityEditor;
     using UnityEngine;
 
@@ -95,7 +96,7 @@ namespace QuantumUser.Editor
             WireCharacterData(passive, new List<PassiveUpgradeData> { hotBlooded, battleHigh, tooAngryToDie, noTimeToBreathe },
                 new List<SkillActionData> { reloadingSlide, adrenalineInjection });
 
-            Debug.Log("[MaxAdrenalineAssetGenerator] Passive + 4 ascensions + 2 dash ascensions authored and wired into MaxCharacterData. " +
+            LogHelper.Log("MaxAdrenalineAssetGenerator", "Passive + 4 ascensions + 2 dash ascensions authored and wired into MaxCharacterData. " +
                       "Blazing Trail (the 3rd dash ascension) still needs a fire-trail EntityPrototype authored by hand first " +
                       "(an AreaDamage-carrying prototype with a BurnEffectData asset in its Effects list - BurnEffectData already " +
                       "applies Burn independent of DamageSource, no new code needed) - once that exists, add a SpawnEntitySkillAction " +
@@ -129,13 +130,13 @@ namespace QuantumUser.Editor
 
             if (characterData == null)
             {
-                Debug.LogError($"[MaxAdrenalineAssetGenerator] No CharacterData asset at {CharacterDataPath} - assets were created/updated, but nothing was wired.");
+                LogHelper.Error("MaxAdrenalineAssetGenerator", $"No CharacterData asset at {CharacterDataPath} - assets were created/updated, but nothing was wired.");
                 return;
             }
 
             if (characterData.Passive.IsValid == true && characterData.Passive.Id.Value != passive.Guid.Value)
             {
-                Debug.LogWarning($"[MaxAdrenalineAssetGenerator] MaxCharacterData.Passive was already set to {characterData.Passive} - overwriting with AdrenalineRushPassiveData.");
+                LogHelper.Warn("MaxAdrenalineAssetGenerator", $"MaxCharacterData.Passive was already set to {characterData.Passive} - overwriting with AdrenalineRushPassiveData.");
             }
 
             characterData.Passive = new AssetRef<PassiveData>(passive.Guid);

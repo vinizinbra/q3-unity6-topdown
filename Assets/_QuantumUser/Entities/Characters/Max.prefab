@@ -28,6 +28,7 @@ GameObject:
   - component: {fileID: 8215253040534427600}
   - component: {fileID: 4084801270582750977}
   - component: {fileID: 5356411822554301317}
+  - component: {fileID: 3061145013519703360}
   m_Layer: 7
   m_Name: Max
   m_TagString: Untagged
@@ -754,8 +755,10 @@ MonoBehaviour:
   healFlashColor: {r: 0.4, g: 1, b: 0.4, a: 1}
   shieldFlashColor: {r: 0.4, g: 0.75, b: 1, a: 1}
   deathColor: {r: 0, g: 0, b: 0, a: 0.5}
-  pickupGlowColor: {r: 1, g: 0.85, b: 0.3, a: 1}
+  pickupGlowColor: {r: 0.2980392, g: 0.8922369, b: 1, a: 1}
   pickupGlowDuration: 0.5
+  riftMarkMaterial: {fileID: 0}
+  freezeMaterial: {fileID: 0}
 --- !u!114 &8110188611109955938
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1056,6 +1059,23 @@ MonoBehaviour:
           RawValue: 0
         Y:
           RawValue: 0
+--- !u!114 &3061145013519703360
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 506928541793919104}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79e869c26acba427ea2f7b7b05b875dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Quantum.SkillActionFxView
+  _playerRef:
+    _index: 0
+  initialized: 0
+  executeOnlyOnLocal: 0
+  isLocal: 0
 --- !u!1 &1973933749131681354
 GameObject:
   m_ObjectHideFlags: 0

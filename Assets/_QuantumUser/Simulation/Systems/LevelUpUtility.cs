@@ -61,10 +61,17 @@ namespace Quantum
             List<Candidate> candidates = new List<Candidate>();
             int totalWeight = 0;
 
-            CollectGlobalCandidates(f, config, candidates, ref totalWeight);
-            CollectPerHeroCandidates(f, entity, config, candidates, ref totalWeight);
+            // All or Nothing (Rift Mutation) forces this entity's roll down to a single,
+            // rarity-shifted option instead of the normal up-to-3 - see CharacterStats.
+            // AllOrNothingActive and AddCandidate's own rarityShift handling below.
+            bool allOrNothing = f.Unsafe.TryGetPointer<CharacterStats>(entity, out var rollingStats)
+                && rollingStats->AllOrNothingActive == true;
 
-            int choiceCount = config.ChoiceCount < 3 ? config.ChoiceCount : 3;
+            CollectGlobalCandidates(f, entity, config, allOrNothing, candidates, ref totalWeight);
+            CollectRiftMutationCandidates(f, entity, config, allOrNothing, candidates, ref totalWeight);
+            CollectPerHeroCandidates(f, entity, config, allOrNothing, candidates, ref totalWeight);
+
+            int choiceCount = allOrNothing ? 1 : (config.ChoiceCount < 3 ? config.ChoiceCount : 3);
             LevelUpOption[] rolled = new LevelUpOption[choiceCount];
             int drawn = 0;
 
@@ -120,13 +127,20 @@ namespace Quantum
         // logic needed since WeaponPerkData/SkillActionData/GlobalUpgradeData/PassiveUpgradeData all
         // share that one field.
         private static void AddCandidate(Frame f, LevelUpConfig config, LevelUpPoolKind kind,
-            AssetRef<UpgradeData> upgradeRef, SkillSlotId slot, List<Candidate> candidates, ref int totalWeight)
+            AssetRef<UpgradeData> upgradeRef, SkillSlotId slot, bool rarityShift, List<Candidate> candidates, ref int totalWeight)
         {
             if (upgradeRef.IsValid == false)
                 return;
 
             UpgradeData data = f.FindAsset(upgradeRef);
-            int weight = config.GetWeight(data.Rarity);
+
+            // All or Nothing shifts the weight table up one tier (Common->Rare, Rare->Epic,
+            // Epic->Legendary, Legendary stays) rather than filtering anything out outright - see
+            // RollOptionsFor.
+            UpgradeRarity effectiveRarity = rarityShift && data.Rarity < UpgradeRarity.Legendary
+                ? data.Rarity + 1
+                : data.Rarity;
+            int weight = config.GetWeight(effectiveRarity);
 
             if (weight <= 0)
                 return;
@@ -144,7 +158,7 @@ namespace Quantum
         // pools below. AssetRef<WeaponPerkData>/AssetRef<GlobalUpgradeData> convert to
         // AssetRef<UpgradeData> via their raw Id (same Guid, just reinterpreted as the base type -
         // see AssetRef<T>'s AssetGuid constructor).
-        private static void CollectGlobalCandidates(Frame f, LevelUpConfig config, List<Candidate> candidates, ref int totalWeight)
+        private static void CollectGlobalCandidates(Frame f, EntityRef entity, LevelUpConfig config, bool rarityShift, List<Candidate> candidates, ref int totalWeight)
         {
             if (config.WeaponPerkPool.IsValid == true)
             {
@@ -152,22 +166,60 @@ namespace Quantum
 
                 for (int i = 0; i < pool.Perks.Count; i++)
                 {
-                    AddCandidate(f, config, LevelUpPoolKind.WeaponPerk, new AssetRef<UpgradeData>(pool.Perks[i].Id), default, candidates, ref totalWeight);
+                    AddCandidate(f, config, LevelUpPoolKind.WeaponPerk, new AssetRef<UpgradeData>(pool.Perks[i].Id), default, rarityShift, candidates, ref totalWeight);
                 }
             }
 
             for (int i = 0; i < config.GlobalUpgrades.Count; i++)
             {
-                AddCandidate(f, config, LevelUpPoolKind.GlobalUpgrade, new AssetRef<UpgradeData>(config.GlobalUpgrades[i].Id), default, candidates, ref totalWeight);
+                AssetRef<GlobalUpgradeData> upgradeRef = config.GlobalUpgrades[i];
+
+                if (IsCappedOut(f, entity, upgradeRef) == true)
+                    continue;
+
+                AddCandidate(f, config, LevelUpPoolKind.GlobalUpgrade, new AssetRef<UpgradeData>(upgradeRef.Id), default, rarityShift, candidates, ref totalWeight);
             }
         }
 
-        // SkillUpgrade (CharacterData.DashSkillUpgrades/HeroSkillUpgrades) and PassiveUpgrade
+        // A GlobalUpgradeData authored with MaxPicks > 0 (e.g. Dash Charge) stops being offered to
+        // this entity once it's already been picked that many times - offering it again would just
+        // be a dead/wasted card, same reasoning as AlreadyGranted below for SkillUpgrade.
+        private static bool IsCappedOut(Frame f, EntityRef entity, AssetRef<GlobalUpgradeData> upgradeRef)
+        {
+            if (upgradeRef.IsValid == false)
+                return false;
+
+            GlobalUpgradeData upgrade = f.FindAsset(upgradeRef);
+
+            if (upgrade.MaxPicks <= 0)
+                return false;
+
+            return GlobalUpgradeUtility.GetPickCount(f, entity, upgradeRef) >= upgrade.MaxPicks;
+        }
+
+        // RiftMutation is a third globally-pooled kind alongside WeaponPerk/GlobalUpgrade above -
+        // own list (LevelUpConfig.RiftMutations), own exclusion check (RiftMutationUtility.
+        // IsAlreadyPicked rather than IsCappedOut, since non-stacking is pool-wide here, not a
+        // per-asset MaxPicks). See docs/rift-mutations.md.
+        private static void CollectRiftMutationCandidates(Frame f, EntityRef entity, LevelUpConfig config, bool rarityShift, List<Candidate> candidates, ref int totalWeight)
+        {
+            for (int i = 0; i < config.RiftMutations.Count; i++)
+            {
+                AssetRef<RiftMutationData> mutationRef = config.RiftMutations[i];
+
+                if (RiftMutationUtility.IsAlreadyPicked(f, entity, mutationRef) == true)
+                    continue;
+
+                AddCandidate(f, config, LevelUpPoolKind.RiftMutation, new AssetRef<UpgradeData>(mutationRef.Id), default, rarityShift, candidates, ref totalWeight);
+            }
+        }
+
+        // SkillUpgrade (CharacterData.DashSkillUpgrades, HeroSkill.Actions) and PassiveUpgrade
         // (CharacterData.PassiveUpgrades) are per-hero, not a shared config asset - which upgrades
         // make sense depends on which hero is rolling. Skill upgrades already present on the
         // matching slot are excluded - offering one that SkillSystem.AddUpgrade would just reject as
         // a duplicate is a dead card, not a real choice.
-        private static void CollectPerHeroCandidates(Frame f, EntityRef entity, LevelUpConfig config, List<Candidate> candidates, ref int totalWeight)
+        private static void CollectPerHeroCandidates(Frame f, EntityRef entity, LevelUpConfig config, bool rarityShift, List<Candidate> candidates, ref int totalWeight)
         {
             if (f.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats) == false || stats->CharacterData.IsValid == false)
                 return;
@@ -175,17 +227,17 @@ namespace Quantum
             CharacterData data = f.FindAsset(stats->CharacterData);
             f.Unsafe.TryGetPointer<CharacterSkills>(entity, out var skills);
 
-            AddSkillUpgradeCandidates(f, config, data.DashSkillUpgrades, SkillSlotId.DashSkill, skills, candidates, ref totalWeight);
-            AddSkillUpgradeCandidates(f, config, data.HeroSkillUpgrades, SkillSlotId.HeroSkill, skills, candidates, ref totalWeight);
+            AddSkillUpgradeCandidates(f, config, data.DashSkillUpgrades, SkillSlotId.DashSkill, skills, rarityShift, candidates, ref totalWeight);
+            AddHeroSkillUpgradeCandidates(f, config, data.HeroSkill, skills, rarityShift, candidates, ref totalWeight);
 
             for (int i = 0; i < data.PassiveUpgrades.Count; i++)
             {
-                AddCandidate(f, config, LevelUpPoolKind.PassiveUpgrade, new AssetRef<UpgradeData>(data.PassiveUpgrades[i].Id), default, candidates, ref totalWeight);
+                AddCandidate(f, config, LevelUpPoolKind.PassiveUpgrade, new AssetRef<UpgradeData>(data.PassiveUpgrades[i].Id), default, rarityShift, candidates, ref totalWeight);
             }
         }
 
         private static void AddSkillUpgradeCandidates(Frame f, LevelUpConfig config, List<AssetRef<SkillActionData>> upgrades, SkillSlotId slotId,
-            CharacterSkills* skills, List<Candidate> candidates, ref int totalWeight)
+            CharacterSkills* skills, bool rarityShift, List<Candidate> candidates, ref int totalWeight)
         {
             SkillSlot* slot = skills != null ? SkillSystem.ResolveSlot(skills, slotId) : null;
 
@@ -196,7 +248,38 @@ namespace Quantum
                 if (upgrade.IsValid == false || (slot != null && AlreadyGranted(slot, upgrade) == true))
                     continue;
 
-                AddCandidate(f, config, LevelUpPoolKind.SkillUpgrade, new AssetRef<UpgradeData>(upgrade.Id), slotId, candidates, ref totalWeight);
+                AddCandidate(f, config, LevelUpPoolKind.SkillUpgrade, new AssetRef<UpgradeData>(upgrade.Id), slotId, rarityShift, candidates, ref totalWeight);
+            }
+        }
+
+        // No separate CharacterData.HeroSkillUpgrades list - the pool is HeroSkill's own Actions.
+        // An entry authored there with Activated == false is exactly a "not running yet, offer it as
+        // a pick" candidate (see SkillActionData.Activated and SkillSystem.InvokeActions' isUpgrade
+        // bypass - granting it via AddUpgrade ignores Activated and turns it on for just this
+        // player). An Activated == true entry is already running for every player with this hero
+        // equipped, so it's excluded - there's nothing left to grant.
+        private static void AddHeroSkillUpgradeCandidates(Frame f, LevelUpConfig config, AssetRef<SkillData> heroSkillRef,
+            CharacterSkills* skills, bool rarityShift, List<Candidate> candidates, ref int totalWeight)
+        {
+            if (heroSkillRef.IsValid == false)
+                return;
+
+            SkillData heroSkill = f.FindAsset(heroSkillRef);
+            SkillSlot* slot = skills != null ? SkillSystem.ResolveSlot(skills, SkillSlotId.HeroSkill) : null;
+
+            for (int i = 0; i < heroSkill.Actions.Count; i++)
+            {
+                AssetRef<SkillActionData> actionRef = heroSkill.Actions[i];
+
+                if (actionRef.IsValid == false || (slot != null && AlreadyGranted(slot, actionRef) == true))
+                    continue;
+
+                SkillActionData action = f.FindAsset(actionRef);
+
+                if (action.Activated == true)
+                    continue;
+
+                AddCandidate(f, config, LevelUpPoolKind.SkillUpgrade, new AssetRef<UpgradeData>(actionRef.Id), SkillSlotId.HeroSkill, rarityShift, candidates, ref totalWeight);
             }
         }
 
@@ -301,6 +384,10 @@ namespace Quantum
 
                 case LevelUpPoolKind.GlobalUpgrade:
                     GlobalUpgradeUtility.Grant(f, entity, new AssetRef<GlobalUpgradeData>(option.Upgrade.Id));
+                    break;
+
+                case LevelUpPoolKind.RiftMutation:
+                    RiftMutationUtility.Grant(f, entity, new AssetRef<RiftMutationData>(option.Upgrade.Id));
                     break;
 
                 case LevelUpPoolKind.PassiveUpgrade:

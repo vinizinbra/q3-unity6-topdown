@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a7a21471e31bd4b31a73f379ebad00e6, type: 3}
+  m_Name: Bulwark
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.BulwarkPassiveUpgradeData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Brute/B_PassiveSkill/B_PassiveSkillUpgrades/Bulwark
+    Guid:
+      Value: 378195394890065037
+  Icon: {fileID: 0}
+  DisplayName: Bulwark
+  Rarity: 1
+  Description: Increases the Protector Aura's radius.
+  RadiusBonus:
+    RawValue: 196608

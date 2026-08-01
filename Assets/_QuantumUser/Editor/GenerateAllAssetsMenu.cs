@@ -1,5 +1,6 @@
 namespace QuantumUser.Editor
 {
+    using QuantumUser.View.Util;
     using UnityEditor;
     using UnityEngine;
 
@@ -13,7 +14,7 @@ namespace QuantumUser.Editor
         [MenuItem("Tools/RiftRaiders/Generate All Assets")]
         private static void GenerateAll()
         {
-            Debug.Log("[GenerateAllAssetsMenu] Regenerating all RiftRaiders assets...");
+            LogHelper.Log("GenerateAllAssetsMenu", "Regenerating all RiftRaiders assets...");
 
             WeaponPerkAssetGenerator.Generate();
             GlobalUpgradeAssetGenerator.Generate();
@@ -24,7 +25,7 @@ namespace QuantumUser.Editor
             ZaraResonanceAssetGenerator.Generate();
             BruteProtectorAssetGenerator.Generate();
 
-            Debug.Log("[GenerateAllAssetsMenu] Done - see individual generator log lines above for per-asset counts.");
+            LogHelper.Log("GenerateAllAssetsMenu", "Done - see individual generator log lines above for per-asset counts.");
         }
     }
 }

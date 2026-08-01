@@ -60,9 +60,31 @@ namespace Quantum
         // Enemy->EnemyData is set post-Create.
         public static void SeedFromEnemyData(Frame f, EntityRef entity, EnemyDataAsset data)
         {
+            if (data == null)
+            {
+                Log.Error($"[Enemy] {entity} EnemyData did not resolve to an asset (dangling/unassigned AssetRef) - skipping Health/Shield/Radius/WaypointPath seeding");
+                return;
+            }
+
             SeedHealth(f, entity, data);
             SeedShield(f, entity, data);
             SeedRadius(f, entity, data);
+            SeedWaypointPath(f, entity, data);
+        }
+
+        // UseWaypointDetour (EnemyPathfindingUtility.TryGetDetourDirection) needs somewhere to
+        // cache its resolved path between ticks - added dynamically here, the same way SeedShield
+        // adds Shield only when this enemy actually has one, rather than requiring every prototype
+        // that flips the checkbox to also remember to hand-author EnemyWaypointPath.
+        private static void SeedWaypointPath(Frame f, EntityRef entity, EnemyDataAsset data)
+        {
+            if (data.Stats.UseWaypointDetour == false)
+                return;
+
+            if (f.Unsafe.TryGetPointer<EnemyWaypointPath>(entity, out _) == true)
+                return;
+
+            f.Add<EnemyWaypointPath>(entity);
         }
 
         // Overrides whatever radius the generic prototype's collider was authored with, so one
@@ -91,19 +113,26 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<Health>(entity, out var health) == false)
                 return;
 
-            health->MaxHealth = EnemyTierStatsConfig.Resolve(f, data.Tier).MaxHealth;
+            // Greed's own difficulty-scaling side effect (see RiftShards.qtn) - 1 + the global bonus
+            // so an unseeded/never-picked run (bonus 0) reads as an exact no-op multiplier.
+            FP healthMultiplier = FP._1 + f.Global->EnemyHealthBonusMultiplier;
+
+            health->MaxHealth = EnemyTierStatsConfig.Resolve(f, data.Tier).MaxHealth * healthMultiplier;
             health->CurrentHealth = health->MaxHealth;
         }
 
         // Unlike the player's own Shield (CharacterSystem.SeedShield), which only seeds an
         // already-authored Shield component - a hero either has one on their prefab or doesn't -
-        // this drives it purely from data: MaxShield > 0 dynamically adds the Shield component
+        // this drives it purely from data: this tier's EnemyTierStatsConfig.Shield baseline times
+        // Stats.ShieldMultiplier, and only if that's > 0, dynamically adds the Shield component
         // instead of requiring every shielded enemy variant to remember to author one on its own
         // prefab. An enemy whose prefab already happens to have one (e.g. hand-authored for tuning)
         // is reseeded in place rather than double-added.
         private static void SeedShield(Frame f, EntityRef entity, EnemyDataAsset data)
         {
-            if (data.Stats.MaxShield <= FP._0)
+            TierStats tierStats = EnemyTierStatsConfig.Resolve(f, data.Tier);
+            FP maxShield = data.Stats.ShieldMultiplier * tierStats.Shield;
+            if (maxShield <= FP._0)
                 return;
 
             if (f.Unsafe.TryGetPointer<Shield>(entity, out var shield) == false)
@@ -112,14 +141,14 @@ namespace Quantum
                     return;
             }
 
-            shield->Max = data.Stats.MaxShield;
+            shield->Max = maxShield;
             shield->Current = shield->Max;
-            shield->RechargeDelay = data.Stats.ShieldRechargeDelay;
-            shield->RechargeRate = data.Stats.ShieldRechargeRate;
+            shield->RechargeDelay = tierStats.ShieldRechargeDelay;
+            shield->RechargeRate = tierStats.ShieldRechargeRate;
             shield->RechargeTimer = FP._0;
 
-            if (data.Stats.ShieldRechargeRate <= FP._0)
-                Log.Error($"[Enemy] {entity} has a shield but {data.name} authors ShieldRechargeRate 0 - it will never recharge");
+            if (tierStats.ShieldRechargeRate <= FP._0)
+                Log.Error($"[Enemy] {entity} has a shield but tier {data.Tier} authors ShieldRechargeRate 0 - it will never recharge");
         }
 
         public override void Update(Frame f, ref Filter filter)
@@ -352,14 +381,15 @@ namespace Quantum
                 return;
 
             EnemyDataAsset data = f.FindAsset(enemy->EnemyData);
+            TierStats tierStats = EnemyTierStatsConfig.Resolve(f, data.Tier);
 
-            if (data.Knockback.CanBeInterruptedByKnockback == false)
+            if (tierStats.CanBeInterruptedByKnockback == false)
             {
                 Log.Debug($"[Knockback] {entity} is not interruptible - AI keeps driving velocity, so the push dies on its next tick");
                 return;
             }
 
-            enemy->KnockbackTimer = data.Knockback.KnockbackRecoveryTime;
+            enemy->KnockbackTimer = tierStats.KnockbackRecoveryTime;
 
             EnemyActionData action = EnemyDecisionUtility.ResolveAction(f, data, enemy->CurrentActionSlot);
 
@@ -376,7 +406,7 @@ namespace Quantum
                 }
             }
 
-            Log.Debug($"[Knockback] {entity} staggered for {data.Knockback.KnockbackRecoveryTime}s, Phase {enemy->Phase}");
+            Log.Debug($"[Knockback] {entity} staggered for {tierStats.KnockbackRecoveryTime}s, Phase {enemy->Phase}");
         }
 
         // Drops a cancelled windup straight into Recovery, paying this action's full cooldown so a
@@ -519,9 +549,17 @@ namespace Quantum
 
             FP moveSpeed = data.Stats.MoveSpeed * StatusEffectUtility.GetSpeedMultiplier(f, filter.Entity);
 
-            FPVector2 direction = data.Stats.Movement.IsValid == true
-                ? f.FindAsset(data.Stats.Movement).ComputeMoveDirection(f, filter.Entity, filter.Enemy->Target)
-                : default;
+            // UseWaypointDetour overrides Stats.Movement's own direction only while the direct
+            // line to the target is wall-blocked - see EnemyPathfindingUtility.
+            // TryGetDetourDirection. Clear line-of-sight, no detour authored, or no route found
+            // all fall through to the normal Stats.Movement-computed direction below unchanged.
+            if (data.Stats.UseWaypointDetour == false ||
+                EnemyPathfindingUtility.TryGetDetourDirection(f, filter.Entity, data, selfPosition, targetPosition, out FPVector2 direction) == false)
+            {
+                direction = data.Stats.Movement.IsValid == true
+                    ? f.FindAsset(data.Stats.Movement).ComputeMoveDirection(f, filter.Entity, filter.Enemy->Target)
+                    : default;
+            }
 
             EnemyMovementUtility.MoveInDirection(f, ref filter, data, direction, moveSpeed);
         }

@@ -206,7 +206,7 @@ namespace Quantum
         // GetPlayerCommand only returns non-null on the tick a sent command actually lands - unlike
         // polled Input, this fires exactly once per SendCommand call, not every tick. PlayerLink
         // isn't part of Filter (a non-player shooter like Lux's sentry gun has no PlayerLink and
-        // therefore nothing sending it commands - see TryResolveInput), so it's looked up directly
+        // therefore nothing sending it commands - see HasFireDriver), so it's looked up directly
         // here instead. See GrantWeaponPerkCommand for why this has to be a command rather than a
         // direct call from the View (WeaponPerkDebugTrigger today; a level-up/pickup screen
         // eventually).
@@ -243,13 +243,18 @@ namespace Quantum
             if (StatusEffectUtility.IsStunned(f, filter.Entity) == true)
                 return;
 
-            if (TryResolveInput(f, filter.Entity, out Input* input) == false)
+            if (HasFireDriver(f, filter.Entity) == false)
                 return;
 
-            if (UpdateReload(f, filter.Entity, filter.Weapon, input->Fire.IsDown))
+            // Auto-attack: firing is gated on Aim.Target (already re-resolved every tick by
+            // AimSystem/SentryBarrelSystem) rather than a held Fire input - whoever's holding this
+            // weapon shoots on its own the moment a target is in range, no button needed.
+            bool hasTarget = filter.Aim->Target != EntityRef.None;
+
+            if (UpdateReload(f, filter.Entity, filter.Weapon, hasTarget))
                 return;
 
-            if (input->Fire.IsDown == false || filter.Weapon->FireCooldownTimer > FP._0)
+            if (hasTarget == false || filter.Weapon->FireCooldownTimer > FP._0)
                 return;
 
             WeaponDataAsset weaponData = f.FindAsset(filter.Weapon->WeaponData);
@@ -276,7 +281,7 @@ namespace Quantum
             bool isCataclysm = filter.Weapon->HasCataclysmRound == true && isLastBullet == true;
 
             // Read fresh off the asset every fire, not a baked stat - see Weapon.qtn - so tuning
-            // WeaponDataAsset.Damage/FireCooldownTime in the Inspector applies immediately to
+            // WeaponDataAsset.Damage/FireRate in the Inspector applies immediately to
             // already-equipped weapons instead of only the next Equip.
             FP damage = ResolveLiveDamage(filter.Weapon, weaponData.Damage * filter.Weapon->DamageMultiplier, magazineFraction, isLastBullet);
 
@@ -397,7 +402,7 @@ namespace Quantum
                 fireRateBonus += weapon->KillerInstinctFireRateBonus;
             }
 
-            FP baseCooldown = weaponData.FireCooldownTime * weapon->FireCooldownMultiplier / (FP._1 + fireRateBonus);
+            FP baseCooldown = FP._1 / weaponData.FireRate * weapon->FireCooldownMultiplier / (FP._1 + fireRateBonus);
 
             return StatUtility.GetFireCooldown(f, entity, baseCooldown);
         }
@@ -630,29 +635,13 @@ namespace Quantum
                 && rage->Overdriven == true;
         }
 
-        // Real players drive firing through their own networked Input (PlayerLink); a non-player
-        // shooter (e.g. Lux's sentry gun) instead carries an InputSource component that some other
-        // system (its own targeting/fire-intent logic) writes into every tick, in the exact same
-        // Input shape - so this is the one place that needs to know the difference; everything past
-        // this point reads the resolved Input identically either way. False (no PlayerLink and no
-        // InputSource) means the entity has a Weapon but nothing driving it - skip the tick entirely
-        // rather than fire on stale/default input.
-        private static bool TryResolveInput(Frame f, EntityRef entity, out Input* input)
+        // Firing itself is driven by Aim.Target now (auto-attack), not a held Fire input - but a
+        // Weapon still needs *something* attaching it to the world (a real player's PlayerLink, or
+        // a non-player shooter's InputSource, e.g. Lux's sentry gun) before it's allowed to fire at
+        // all. False means the entity has a Weapon but nothing driving it - skip the tick entirely.
+        private static bool HasFireDriver(Frame f, EntityRef entity)
         {
-            if (f.Unsafe.TryGetPointer<PlayerLink>(entity, out var playerLink) == true)
-            {
-                input = f.GetPlayerInput(playerLink->Player);
-                return true;
-            }
-
-            if (f.Unsafe.TryGetPointer<InputSource>(entity, out var inputSource) == true)
-            {
-                input = &inputSource->Data;
-                return true;
-            }
-
-            input = default;
-            return false;
+            return f.Has<PlayerLink>(entity) == true || f.Has<InputSource>(entity) == true;
         }
 
         // Hitscan has no movement asset to ask and travels in a straight line by definition, so it
@@ -826,7 +815,7 @@ namespace Quantum
 
         // PlayerLink deliberately isn't a required field here anymore - a real player has one, but a
         // non-player shooter (Lux's sentry gun) doesn't, and shouldn't need one just to be seen by
-        // this system. See TryResolveInput, which checks for PlayerLink/InputSource itself instead.
+        // this system. See HasFireDriver, which checks for PlayerLink/InputSource itself instead.
         public struct Filter
         {
             public EntityRef Entity;

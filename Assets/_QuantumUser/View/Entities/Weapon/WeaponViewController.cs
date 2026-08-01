@@ -86,7 +86,7 @@ namespace Quantum
 
             if (weaponData == null || weaponData.ViewPrefab == null)
             {
-                Debug.LogWarning($"WeaponViewController: {weaponData} has no ViewPrefab assigned.", this);
+                LogHelper.Warn("WeaponViewController", $"{weaponData} has no ViewPrefab assigned.", this);
                 return;
             }
 
@@ -95,7 +95,7 @@ namespace Quantum
 
             if (currentWeaponView == null)
             {
-                Debug.LogWarning($"WeaponViewController: {weaponData.ViewPrefab} has no WeaponView component.", this);
+                LogHelper.Warn("WeaponViewController", $"{weaponData.ViewPrefab} has no WeaponView component.", this);
             }
         }
 

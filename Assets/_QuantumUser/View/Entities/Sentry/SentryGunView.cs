@@ -86,7 +86,7 @@ namespace Quantum
                 // value every frame, visually freezing this barrel in place regardless of how
                 // correctly the simulation actually moves it (e.g. following a chassis that's
                 // settling to the ground). Assign a separate child transform in the Inspector.
-                Debug.LogWarning($"[Sentry] {name} has no visualRoot assigned - falling back to its own root transform, which will fight QuantumEntityView's own position sync. Assign a child transform instead.");
+                LogHelper.Warn("Sentry", $"{name} has no visualRoot assigned - falling back to its own root transform, which will fight QuantumEntityView's own position sync. Assign a child transform instead.");
                 visualRoot = transform;
             }
 

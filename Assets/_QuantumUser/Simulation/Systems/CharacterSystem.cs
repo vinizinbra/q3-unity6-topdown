@@ -64,6 +64,9 @@ namespace Quantum
             stats->ProjectileSpeedMultiplier = data.ProjectileSpeedMultiplier;
             stats->AreaRadiusMultiplier = data.AreaRadiusMultiplier;
 
+            stats->NearDamageMultiplier = data.NearDamageMultiplier;
+            stats->FarDamageMultiplier = data.FarDamageMultiplier;
+
             stats->DashCooldownMultiplier = data.DashCooldownMultiplier;
             stats->SkillCooldownMultiplier = data.SkillCooldownMultiplier;
             stats->SkillDurationMultiplier = data.SkillDurationMultiplier;
@@ -79,6 +82,8 @@ namespace Quantum
             stats->PickupRangeMultiplier = data.PickupRangeMultiplier;
             stats->Luck = data.Luck;
             stats->ExperienceGainMultiplier = data.ExperienceGainMultiplier;
+            stats->RiftShardGainMultiplier = data.RiftShardGainMultiplier;
+            stats->CoinGainMultiplier = data.CoinGainMultiplier;
         }
 
         // Health may legitimately be absent (a stats-only entity), so this is not an error case.

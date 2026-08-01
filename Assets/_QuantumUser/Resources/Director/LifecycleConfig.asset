@@ -17,7 +17,7 @@ MonoBehaviour:
     Guid:
       Value: 336734921985004182
   RelevantRange:
-    RawValue: 1048576
+    RawValue: 786432
   RecentCombatWindow:
     RawValue: 262144
   RetireDelay:

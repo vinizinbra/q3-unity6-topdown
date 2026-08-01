@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using QuantumUser.View.Util;
 
 namespace QuantumUser.Editor
 {
@@ -71,7 +72,7 @@ namespace QuantumUser.Editor
             }
 
             AssetDatabase.SaveAssets();
-            Debug.Log($"Baked vertex AO into color G for {meshes.Count} mesh asset(s).", this);
+            LogHelper.Log("VertexAOBaker", $"Baked vertex AO into color G for {meshes.Count} mesh asset(s).", this);
         }
 
         private void BakeMesh(Mesh mesh, MeshCollider collider)
@@ -85,14 +86,14 @@ namespace QuantumUser.Editor
             }
             catch (UnityException exception)
             {
-                Debug.LogWarning($"Skipping unreadable mesh '{mesh.name}': {exception.Message}", mesh);
+                LogHelper.Warn("VertexAOBaker", $"Skipping unreadable mesh '{mesh.name}': {exception.Message}", mesh);
                 return;
             }
             if (vertices.Length == 0)
                 return;
             if (normals.Length != vertices.Length)
             {
-                Debug.LogWarning($"Skipping '{mesh.name}' because it has no complete normal channel.", mesh);
+                LogHelper.Warn("VertexAOBaker", $"Skipping '{mesh.name}' because it has no complete normal channel.", mesh);
                 return;
             }
 

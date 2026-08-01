@@ -24,7 +24,7 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _GlobalNoiseMap:
-        m_Texture: {fileID: 2800000, guid: 5872a9b50be814faca28f0a50f30c410, type: 3}
+        m_Texture: {fileID: 2800000, guid: 0f08990f1cfcc472eb34c9710b6cbecd, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _StyleMask:
@@ -46,8 +46,8 @@ Material:
     - _FresnelPower: 8
     - _FresnelStrength: 0.45
     - _GlobalNoiseNeutral: 0.32
-    - _GlobalNoiseScale: 0.2
-    - _GlobalNoiseStrength: 0.414
+    - _GlobalNoiseScale: 0.07
+    - _GlobalNoiseStrength: 0.975
     - _GradientDistance: 4
     - _GradientStartY: -2
     - _GradientStrength: 1
@@ -61,6 +61,7 @@ Material:
     - _SurfaceFadeExpansion: 0
     - _SurfaceFadeStrength: 0.573
     - _SurfaceFresnelStrength: 1
+    - _SurfaceUseWorldUV: 0
     - _WallAOStrength: 0.389
     - _WallDisplacement: 0
     - _WallDisplacementBottomOnly: 0

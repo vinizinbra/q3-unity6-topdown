@@ -5,6 +5,7 @@ namespace Quantum.Editor
     using System.IO;
     using System.Linq;
     using System.Reflection;
+    using QuantumUser.View.Util;
     using UnityEditor;
     using UnityEditor.IMGUI.Controls;
     using UnityEngine;
@@ -23,6 +24,15 @@ namespace Quantum.Editor
         // Alpha-blended rather than opaque so nested expandables (box drawn inside a box) darken
         // with depth instead of all looking identical - a free visual cue for how deep you are.
         private static readonly Color ExpandedBackgroundColor = new Color(0.3f, 0.55f, 1f, 0.09f);
+
+        // Bold label so an [ExpandableAsset] field reads as its own composition slot at a glance,
+        // distinct from the plain tuning fields around it - built lazily since EditorStyles isn't
+        // safe to touch outside OnGUI/layout callbacks.
+        private static GUIStyle boldFoldoutStyle;
+        private static GUIStyle BoldFoldoutStyle => boldFoldoutStyle ??= new GUIStyle(EditorStyles.foldout) { fontStyle = FontStyle.Bold };
+
+        private static GUIStyle boldLabelStyle;
+        private static GUIStyle BoldLabelStyle => boldLabelStyle ??= new GUIStyle(EditorStyles.label) { fontStyle = FontStyle.Bold };
 
         private static readonly Dictionary<int, SerializedObject> NestedAssets = new Dictionary<int, SerializedObject>();
 
@@ -68,13 +78,13 @@ namespace Quantum.Editor
             if (asset != null)
             {
                 bool wasExpanded = property.isExpanded;
-                property.isExpanded = EditorGUI.Foldout(labelRect, property.isExpanded, label, true);
+                property.isExpanded = EditorGUI.Foldout(labelRect, property.isExpanded, label, true, BoldFoldoutStyle);
                 if (property.isExpanded && wasExpanded == false)
                     CollapseSiblingExpandables(property);
             }
             else
             {
-                EditorGUI.LabelField(labelRect, label);
+                EditorGUI.LabelField(labelRect, label, BoldLabelStyle);
             }
 
             Rect valueRect = new Rect(labelRect.xMax, rect.y, rect.width - labelRect.width, rect.height);
@@ -504,7 +514,7 @@ namespace Quantum.Editor
             {
                 string error = AssetDatabase.RenameAsset(AssetDatabase.GetAssetPath(asset), newName);
                 if (string.IsNullOrEmpty(error) == false)
-                    Debug.LogError($"Failed to rename asset: {error}");
+                    LogHelper.Error("ExpandableAssetDrawer", $"Failed to rename asset: {error}");
             }
 
             AssetDatabase.Refresh();

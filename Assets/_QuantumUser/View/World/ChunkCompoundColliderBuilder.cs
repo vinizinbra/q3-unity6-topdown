@@ -1,5 +1,6 @@
 using NaughtyAttributes;
 using Quantum;
+using QuantumUser.View.Util;
 using UnityEngine;
 
 // Bakes every ChunkWallCube under this chunk into the QuantumEntityPrototype's compound
@@ -14,7 +15,7 @@ public class ChunkCompoundColliderBuilder : MonoBehaviour
         ChunkWallCube[] wallCubes = GetComponentsInChildren<ChunkWallCube>();
         if (wallCubes.Length == 0)
         {
-            Debug.LogWarning($"[ChunkCompoundColliderBuilder] No ChunkWallCube found under {name} - leaving collider untouched.", this);
+            LogHelper.Warn("ChunkCompoundColliderBuilder", $"No ChunkWallCube found under {name} - leaving collider untouched.", this);
             return;
         }
 
@@ -33,7 +34,7 @@ public class ChunkCompoundColliderBuilder : MonoBehaviour
             CompoundShapes = shapes,
         };
 
-        Debug.Log($"[ChunkCompoundColliderBuilder] Rebuilt compound collider on {name} from {wallCubes.Length} cube(s).", this);
+        LogHelper.Log("ChunkCompoundColliderBuilder", $"Rebuilt compound collider on {name} from {wallCubes.Length} cube(s).", this);
     }
 
     private Shape3DConfig.CompoundShapeData3D BuildBoxShape(BoxCollider cube)

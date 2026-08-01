@@ -78,7 +78,7 @@ MonoBehaviour:
     RawValue: 0
   ExperienceGainMultiplier:
     RawValue: 65536
-  RingColor: {r: 1, g: 1, b: 1, a: 1}
+  RingColor: {r: 0.20784314, g: 0.9372549, b: 0.20392157, a: 1}
   WeaponPosition:
     X:
       RawValue: 0

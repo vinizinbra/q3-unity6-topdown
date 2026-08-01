@@ -10,8 +10,12 @@
             // A DeterministicCommand can register itself as its own IDeterministicCommandFactory
             // (see DeterministicCommand.GetCommandInstance) - no separate factory class needed.
             factories.Add(new GrantSkillUpgradeCommand());
+            factories.Add(new RemoveSkillUpgradeCommand());
+            factories.Add(new ClearSkillUpgradesCommand());
             factories.Add(new GrantWeaponPerkCommand());
             factories.Add(new GrantPassiveUpgradeCommand());
+            factories.Add(new GrantGlobalUpgradeCommand());
+            factories.Add(new GrantRiftMutationCommand());
             factories.Add(new SelectLevelUpUpgradeCommand());
         }
     }

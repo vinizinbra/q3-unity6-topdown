@@ -26,6 +26,14 @@ component CharacterStats
     FP ProjectileSpeedMultiplier;
     FP AreaRadiusMultiplier;
 
+    // Attacker-side range falloff - DamageUtility.ResolveRangeDamageMultiplier lerps between these
+    // two off the attacker-target distance (Close Quarters/Longshot Rift Mutations). Both default
+    // to 1 (no falloff) same as every other multiplier here; picking both Close Quarters and
+    // Longshot just partially cancels rather than being blocked outright - no exclusivity system
+    // between distinct Rift Mutations, only within one (see RiftMutationPicks).
+    FP NearDamageMultiplier;
+    FP FarDamageMultiplier;
+
     // Split rather than one shared CooldownMultiplier (that field never had a real consumer) since
     // Dash and Hero Skill are picked independently at level-up - see StatUtility.GetSkillCooldown.
     FP DashCooldownMultiplier;
@@ -54,6 +62,8 @@ component CharacterStats
     FP PickupRangeMultiplier;
     FP Luck;
     FP ExperienceGainMultiplier;
+    FP RiftShardGainMultiplier;
+    FP CoinGainMultiplier;
 
     // Incremented/decremented by any active effect (e.g. BerserkSkillData) that guarantees Burn
     // on every weapon hit for as long as it's up - a counter rather than a bool so two overlapping
@@ -61,4 +71,25 @@ component CharacterStats
     // StatusEffectUtility.TryApplyElementalStatus, independent of the weapon's own Element and
     // ElementalChance roll - a flat guarantee, not a proc chance.
     Byte BurnOnHitStacks;
+
+    // Rift Mutation reactive fields - all mutation-only (no CharacterData baseline, default to
+    // their natural zero/false, same category as BurnOnHitStacks above). See docs/rift-mutations.md.
+    //
+    // Infinite Momentum: flat Shield (spilling to Health, floored at 1) drained by
+    // RiftMutationReactionSystem.OnSkillActivated every time SkillSlotId.DashSkill fires.
+    FP DashShieldCost;
+
+    // Critical Focus: flat cooldown seconds refunded on BOTH Hero Skill and Dash by
+    // RiftMutationReactionSystem.OnCriticalHit - one merged mutation, not two independent ones
+    // (an earlier design split this per-slot; merged since Rift Mutations don't stack).
+    FP CritSkillCooldownReduction;
+
+    // Shield Breaker: grants an immediately-usable Dash charge (+1 CurrentStacks, capped at
+    // MaxStacks - not a permanent capacity increase) the instant Shield.OnShieldBroken fires - see
+    // RiftMutationReactionSystem.OnShieldBroken.
+    Boolean ShieldBreakGrantsDashCharge;
+
+    // All or Nothing: read by LevelUpUtility.RollOptionsFor to force a single, rarity-shifted
+    // option on this entity's next level-up roll instead of the normal 3.
+    Boolean AllOrNothingActive;
 }

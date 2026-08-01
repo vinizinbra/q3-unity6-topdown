@@ -6,6 +6,7 @@ namespace Quantum.Editor
     using System.Linq;
     using System.Reflection;
     using System.Text;
+    using QuantumUser.View.Util;
     using UnityEditor;
     using UnityEngine;
 
@@ -38,7 +39,7 @@ namespace Quantum.Editor
 
             if (issues.Count == 0)
             {
-                Debug.Log("[QuantumAssetValidator] No issues found - every AssetRef field is either assigned or resolves correctly.");
+                LogHelper.Log("QuantumAssetValidator", "No issues found - every AssetRef field is either assigned or resolves correctly.");
                 return;
             }
 
@@ -49,9 +50,9 @@ namespace Quantum.Editor
                 message.AppendLine($"{(issue.IsError ? "ERROR" : "warn ")}  {issue.AssetName} ({issue.AssetPath}) . {issue.FieldPath}: {issue.Message}");
 
             if (errorCount > 0)
-                Debug.LogError(message.ToString());
+                LogHelper.Error("QuantumAssetValidator", message.ToString());
             else
-                Debug.LogWarning(message.ToString());
+                LogHelper.Warn("QuantumAssetValidator", message.ToString());
         }
 
         private static IEnumerable<AssetObject> EnumerateAllQuantumAssets()

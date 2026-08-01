@@ -34,6 +34,8 @@ namespace Quantum
             }
 
             int groundLayerMask = EnemyMovementUtility.GetGroundLayerMask(f);
+            int noGroundCount = 0;
+            int invalidFormationCount = 0;
 
             // Each attempt is a fresh, independent anchor - no per-member retry/relaxation within
             // an attempt (see DirectorConfig.MaxGroupSpawnAttempts's own comment). A formation
@@ -43,19 +45,26 @@ namespace Quantum
                 FPVector3 candidateAnchor = EnemyMovementUtility.RandomPositionInRing(f, predictedCombatCenter, directorConfig.SpawnRingRadiusMin, directorConfig.SpawnRingRadiusMax);
 
                 if (EnemyMovementUtility.TryFindGroundHeight(f, candidateAnchor, groundLayerMask, out FP anchorGroundY) == false)
+                {
+                    noGroundCount++;
                     continue; // no floor under this ring position at all - try another anchor
+                }
 
                 FPVector3 anchor = new FPVector3(candidateAnchor.X, anchorGroundY, candidateAnchor.Z);
 
                 if (TryValidateFormation(f, group, memberCount, anchor, anchorGroundY, groundLayerMask, out FPVector3[] memberPositions, out AssetRef<EnemyDataAsset>[] memberData) == false)
+                {
+                    invalidFormationCount++;
                     continue; // one or more members didn't fit here - discard this whole anchor
+                }
 
+                Log.Debug($"[Spawner] {group.name} anchor found at attempt {attempt} ({anchor}) - spawning {memberCount} member(s)");
                 CreateGroup(f, groupRef, directorConfig, memberPositions, memberData);
                 spawnedCount = memberCount;
                 return true;
             }
 
-            Log.Debug($"[Spawner] {group.name} found no valid anchor after {directorConfig.MaxGroupSpawnAttempts} attempts near {predictedCombatCenter}");
+            Log.Debug($"[Spawner] {group.name} found no valid anchor after {directorConfig.MaxGroupSpawnAttempts} attempts near {predictedCombatCenter} - {noGroundCount} had no ground, {invalidFormationCount} had an invalid formation (see [Spawner] member-rejection logs above for why)");
             return false;
         }
 
@@ -100,7 +109,7 @@ namespace Quantum
                     FPVector3 worldOffset = rotation * new FPVector3(localOffset.X, FP._0, localOffset.Y);
                     FPVector3 horizontalCandidate = anchor + worldOffset;
 
-                    if (TryValidateMember(f, horizontalCandidate, anchorGroundY, profile, groundLayerMask, out FPVector3 groundedPosition) == false)
+                    if (TryValidateMember(f, data.name, slot, horizontalCandidate, anchorGroundY, profile, groundLayerMask, out FPVector3 groundedPosition) == false)
                         return false;
 
                     memberPositions[slot] = groundedPosition;
@@ -114,20 +123,30 @@ namespace Quantum
 
         // Ground detection + height rule + clearance, in that order (cheapest/most-likely-to-reject
         // check first) - a single failed member fails the whole formation, see TryValidateFormation.
-        private static bool TryValidateMember(Frame f, FPVector3 horizontalCandidate, FP anchorGroundY, EnemySpawnProfile profile, int groundLayerMask, out FPVector3 groundedPosition)
+        private static bool TryValidateMember(Frame f, string dataName, int slot, FPVector3 horizontalCandidate, FP anchorGroundY, EnemySpawnProfile profile, int groundLayerMask, out FPVector3 groundedPosition)
         {
             if (EnemyMovementUtility.TryFindGroundHeight(f, horizontalCandidate, groundLayerMask, out FP groundY) == false)
             {
                 groundedPosition = default;
+                Log.Debug($"[Spawner] {dataName} slot {slot} rejected - no ground under {horizontalCandidate}");
                 return false;
             }
 
             groundedPosition = new FPVector3(horizontalCandidate.X, groundY, horizontalCandidate.Z);
 
             if (ValidateHeightRule(profile, groundY, anchorGroundY) == false)
+            {
+                Log.Debug($"[Spawner] {dataName} slot {slot} rejected - height difference {groundY - anchorGroundY} outside [{profile.MinimumHeightDifference}, {profile.MaximumHeightDifference}] for {profile.SpawnCategory}");
                 return false;
+            }
 
-            return HasClearance(f, groundedPosition, profile);
+            if (HasClearance(f, groundedPosition, profile) == false)
+            {
+                Log.Debug($"[Spawner] {dataName} slot {slot} rejected - no clearance at {groundedPosition} (blocked by player/enemy/obstacle)");
+                return false;
+            }
+
+            return true;
         }
 
         // Only GroundMelee/GroundRanged are height-restricted today - Flying/HighGroundRanged/Boss
@@ -196,13 +215,16 @@ namespace Quantum
             enemy->EnemyData = enemyDataRef;
             f.Unsafe.GetPointer<Transform3D>(entity)->Position = position;
 
-            EnemySystem.SeedFromEnemyData(f, entity, f.FindAsset(enemyDataRef));
+            EnemyDataAsset data = f.FindAsset(enemyDataRef);
+            EnemySystem.SeedFromEnemyData(f, entity, data);
 
             if (f.Add(entity, out EnemyLifecycle* lifecycle) == AddResult.ComponentAdded)
             {
                 lifecycle->State = EnemyLifecycleState.Active;
                 lifecycle->SourceGroup = groupRef;
             }
+
+            Log.Debug($"[Spawner] spawned {entity} ({data?.name ?? "NULL EnemyDataAsset"}) at {position}");
         }
     }
 }

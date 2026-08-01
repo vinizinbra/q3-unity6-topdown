@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NaughtyAttributes;
 using PrimeTween;
 using QuantumUser.View.Util;
@@ -28,7 +29,15 @@ namespace Quantum
             public readonly Vector3 CameraRight;
             public readonly Vector3 CameraUp;
 
-            public AimPose(float rotationDegrees, Quaternion facingCamera, Vector2 aimDirection, bool flipped, Vector2 extraOffset, Vector3 cameraRight, Vector3 cameraUp)
+            // Ground-plane (XZ), camera-independent bearing - unlike AimDirection/CameraRight/
+            // CameraUp (which all live in the camera's billboard-facing plane, correct for
+            // positioning a 2D sprite), this is what a 3D effect that must stay level with the
+            // ground - see WeaponView.OrientBeamParticle - should build its rotation from. The two
+            // planes only coincide when the camera looks straight down; on any tilted top-down
+            // camera a billboard-plane rotation visibly dips into/out of the floor.
+            public readonly Vector3 FlatWorldDirection;
+
+            public AimPose(float rotationDegrees, Quaternion facingCamera, Vector2 aimDirection, bool flipped, Vector2 extraOffset, Vector3 cameraRight, Vector3 cameraUp, Vector3 flatWorldDirection)
             {
                 RotationDegrees = rotationDegrees;
                 FacingCamera = facingCamera;
@@ -37,53 +46,45 @@ namespace Quantum
                 ExtraOffset = extraOffset;
                 CameraRight = cameraRight;
                 CameraUp = cameraUp;
+                FlatWorldDirection = flatWorldDirection;
             }
         }
 
-        [Header("Position Offset")]
-        [SerializeField, Tooltip("Screen-space offset (right, up) blended in while aiming directly right. Mirrored automatically when flipped/aiming left.")]
-        private Vector2 rightOffset;
-        [SerializeField, Tooltip("Screen-space offset (right, up) blended in while aiming directly up.")]
-        private Vector2 upOffset;
-        [SerializeField, Tooltip("Screen-space offset (right, up) blended in while aiming directly down.")]
-        private Vector2 downOffset;
+        // All position/hand-grip/recoil/knockback tuning lives on this one field so it can be
+        // right-click Copy'd and Paste'd onto another weapon's WeaponView in the Inspector
+        // instead of copying the whole component.
+        [SerializeField]
+        private WeaponAnimationParams anim = new WeaponAnimationParams();
 
-        [Header("Hand Grips")]
-        [SerializeField, Tooltip("Local position (relative to this weapon) where the right hand blob should sit while held. Z defaults to -0.01 so the hand renders in front of the gun sprite instead of behind it - this object is billboarded to face the camera, so local Z tracks camera depth.")]
-        private Vector3 rightHandGrip = new Vector3(0f, 0f, -0.01f);
-        [SerializeField, Tooltip("Local position (relative to this weapon) where the left hand blob (off-hand support) should sit while held. Same Z convention as rightHandGrip.")]
-        private Vector3 leftHandGrip = new Vector3(0f, 0f, -0.01f);
-
-        [Header("Shoot Recoil")]
-        [SerializeField, Tooltip("Screen-space distance the gun snaps back on each shot, opposite the currently-held aim direction.")]
-        private float recoilKickDistance = 0.12f;
-        [SerializeField, Tooltip("Degrees the muzzle kicks up on each shot (auto-mirrored when the gun is flipped, so it always reads as 'up' on screen).")]
-        private float recoilRotationKick = 6f;
-        [SerializeField, Tooltip("How long each shot's kick takes to fully settle back to rest. Each shot starts its own independent punch (see Shoot()) rather than accumulating with any still-decaying kick from a previous shot, so keep this at or below the weapon's fire interval if rapid fire shouldn't visibly reset mid-decay.")]
-        private float recoilDuration = 0.15f;
-        [SerializeField, Tooltip("Oscillations per second as the kick settles.")]
-        private float recoilFrequency = 16f;
-        [SerializeField, Range(0f, 1f), Tooltip("0 = full recoil (kicks back, swings past rest, settles), 1 = no recoil (eases straight back to rest with no overshoot). Shared by the position, rotation, and knockback kicks below.")]
-        private float recoilAsymmetry = 0.3f;
+        [Header("Muzzle Flash")]
         [SerializeField, Tooltip("Particle system parented at the muzzle, restarted on every shot (e.g. an Epic Toon FX Muzzleflash prefab).")]
         private ParticleSystem muzzleParticle;
 
         [Header("Hitscan Tracer")]
-        [SerializeField, Tooltip("WeaponTracerView prefab, instantiated fresh per hitscan pellet (see EventHitscanFired) - draws the line and plays its own begin/end particles (see WeaponTracerView). Leave empty for no tracer. Ignored for Projectile weapons - they never fire this event.")]
+        [SerializeField, Tooltip("WeaponTracerView prefab - draws the line and plays its own begin/end particles (see WeaponTracerView). Pooled rather than instantiated fresh per shot (see tracerPool), so a rapid-fire weapon's overlapping fades read as one near-continuous beam instead of discrete flashes. Leave empty for no tracer. Ignored for Projectile weapons - they never fire EventHitscanFired.")]
         private WeaponTracerView tracerPrefab;
 
-        [Header("Shoot Knockback")]
-        [SerializeField, Tooltip("Distance the gun punches back along the camera's forward axis (away from the viewer) on each shot - a depth kick distinct from the screen-space position/rotation kick above.")]
-        private float knockbackDistance = 0.1f;
-        [SerializeField, Range(0f, 1f), Tooltip("Fraction the gun squashes down in scale at the peak of the knockback punch.")]
-        private float knockbackScalePunch = 0.1f;
+        // Reused across shots instead of Instantiate/Destroy per hitscan pellet - see
+        // GetPooledTracer. Grows to roughly this weapon's peak concurrent pellet count (shotgun
+        // PelletCount, or however many rapid shots overlap within one tracer's fade duration) and
+        // stays there.
+        private readonly List<WeaponTracerView> tracerPool = new List<WeaponTracerView>();
+
+        [Header("Continuous Fire Particle")]
+        [SerializeField, Tooltip("Particle system played continuously while this weapon keeps firing (e.g. a looping laser beam stream) - Play()'d on the first shot of a burst, Stop()'d once no new shot arrives within Beam Stop Grace. A start/stop toggle, not per-shot restarted like muzzleParticle. Leave empty to skip.")]
+        private ParticleSystem beamParticle;
+        [SerializeField, Tooltip("Seconds since the last shot before beamParticle is stopped. Keep at or above the weapon's fire interval (1/FireRate) so back-to-back shots don't visibly stop and restart it between hits.")]
+        private float beamStopGrace = 0.15f;
+
+        private float timeSinceLastShotForBeam;
+        private bool beamFiring;
 
         // Resolved through this weapon's own transform every call - TransformPoint applies its
         // current rotation (billboard + aim) and scale (the Y-axis flip in ApplyAim), so the
         // grip tracks correctly however the weapon is currently facing without WeaponHandGripView
         // needing to know anything about that.
-        public Vector3 RightHandGripPosition => transform.TransformPoint(rightHandGrip);
-        public Vector3 LeftHandGripPosition => transform.TransformPoint(leftHandGrip);
+        public Vector3 RightHandGripPosition => transform.TransformPoint(anim.rightHandGrip);
+        public Vector3 LeftHandGripPosition => transform.TransformPoint(anim.leftHandGrip);
 
         private Vector3 baseScale = Vector3.one;
         private Vector3 restLocalPosition;
@@ -107,6 +108,12 @@ namespace Quantum
         {
             base.OnDestroy();
             QuantumEvent.UnsubscribeListener(this);
+
+            for (int i = 0; i < tracerPool.Count; i++)
+            {
+                if (tracerPool[i] != null)
+                    Destroy(tracerPool[i].gameObject);
+            }
         }
 
         private void CacheRestPose()
@@ -119,6 +126,34 @@ namespace Quantum
         {
             if (e.Entity != _entityRef) return;
             Shoot();
+            NotifyBeamFired();
+        }
+
+        // Starts beamParticle once, on the first shot of a burst - Update() below is what stops it
+        // again once shots stop arriving, not this. Safe to call every shot regardless of fire type
+        // (hitscan or projectile); a no-op while beamParticle is already playing.
+        private void NotifyBeamFired()
+        {
+            if (beamParticle == null) return;
+
+            timeSinceLastShotForBeam = 0f;
+
+            if (beamFiring == true) return;
+
+            beamFiring = true;
+            beamParticle.Play(true);
+        }
+
+        private void Update()
+        {
+            if (beamFiring == false) return;
+
+            timeSinceLastShotForBeam += Time.deltaTime;
+
+            if (timeSinceLastShotForBeam < beamStopGrace) return;
+
+            beamFiring = false;
+            beamParticle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
         }
 
         // One event per hitscan pellet (see WeaponSystem.FireHitscan) - a Projectile weapon never
@@ -131,8 +166,25 @@ namespace Quantum
             Vector3 origin = e.Origin.ToUnityVector3();
             Vector3 endPoint = e.EndPoint.ToUnityVector3();
 
+            GetPooledTracer(origin).Play(origin, endPoint, e.DidHit);
+        }
+
+        // Reuses the first idle instance (its previous fade already finished - see
+        // WeaponTracerView.IsPlaying) rather than instantiating fresh every shot. A high-fire-rate
+        // weapon will keep finding every instance still mid-fade and grow the pool by one instead -
+        // that's expected and what makes overlapping pellets/rapid shots read as one continuous
+        // beam rather than a single flickering line.
+        private WeaponTracerView GetPooledTracer(Vector3 origin)
+        {
+            for (int i = 0; i < tracerPool.Count; i++)
+            {
+                if (tracerPool[i].IsPlaying == false)
+                    return tracerPool[i];
+            }
+
             WeaponTracerView tracer = Instantiate(tracerPrefab, origin, Quaternion.identity);
-            tracer.Play(origin, endPoint, e.DidHit);
+            tracerPool.Add(tracer);
+            return tracer;
         }
 
         // Three independent PunchCustom kicks (position, rotation, knockback), each punching its
@@ -144,17 +196,18 @@ namespace Quantum
         // enable) - same non-stacking behavior BlobAnimationView's own shoot-punch already uses
         // for the head kick, so a fast weapon should keep recoilDuration at or below its fire
         // interval to avoid overlapping kicks visibly resetting each other.
+        [Button("Test Shoot")]
         public void Shoot()
         {
-            Vector2 kickDir = -lastAimDir * recoilKickDistance;
-            Tween.PunchCustom(this, Vector3.zero, new ShakeSettings(new Vector3(kickDir.x, kickDir.y, 0f), recoilDuration, recoilFrequency, asymmetryFactor: recoilAsymmetry),
+            Vector2 kickDir = -lastAimDir * anim.recoilKickDistance;
+            Tween.PunchCustom(this, Vector3.zero, new ShakeSettings(new Vector3(kickDir.x, kickDir.y, 0f), anim.recoilDuration, anim.recoilFrequency, asymmetryFactor: anim.recoilAsymmetry),
                 (view, val) => view.recoilOffset = new Vector2(val.x, val.y));
 
-            float rotationKick = recoilRotationKick * (lastFlipped ? -1f : 1f);
-            Tween.PunchCustom(this, Vector3.zero, new ShakeSettings(new Vector3(rotationKick, 0f, 0f), recoilDuration, recoilFrequency, asymmetryFactor: recoilAsymmetry),
+            float rotationKick = anim.recoilRotationKick * (lastFlipped ? -1f : 1f);
+            Tween.PunchCustom(this, Vector3.zero, new ShakeSettings(new Vector3(rotationKick, 0f, 0f), anim.recoilDuration, anim.recoilFrequency, asymmetryFactor: anim.recoilAsymmetry),
                 (view, val) => view.recoilRotationCurrent = val.x);
 
-            Tween.PunchCustom(this, Vector3.zero, new ShakeSettings(new Vector3(1f, 0f, 0f), recoilDuration, recoilFrequency, asymmetryFactor: recoilAsymmetry),
+            Tween.PunchCustom(this, Vector3.zero, new ShakeSettings(new Vector3(1f, 0f, 0f), anim.recoilDuration, anim.recoilFrequency, asymmetryFactor: anim.recoilAsymmetry),
                 (view, val) => view.knockbackPunch = val.x);
 
             PlayMuzzleParticle();
@@ -179,18 +232,18 @@ namespace Quantum
             // Blend the three cardinal offsets by how closely the aim direction matches each one.
             // Right uses abs(x) rather than signed x, since flipping already mirrors left/right -
             // this way rightOffset covers both without a 4th field.
-            Vector2 targetOffset = rightOffset * rightWeight + upOffset * upWeight + downOffset * downWeight;
+            Vector2 targetOffset = anim.rightOffset * rightWeight + anim.upOffset * upWeight + anim.downOffset * downWeight;
             if (pose.Flipped) targetOffset.x = -targetOffset.x;
             currentOffset = Vector2.Lerp(currentOffset, targetOffset, smoothT);
 
             transform.rotation = pose.FacingCamera * Quaternion.Euler(0f, 0f, pose.RotationDegrees + recoilRotationCurrent);
 
-            Vector3 scale = baseScale * (1f - knockbackPunch * knockbackScalePunch);
+            Vector3 scale = baseScale * (1f - knockbackPunch * anim.knockbackScalePunch);
             scale.y *= pose.Flipped ? -1f : 1f;
             transform.localScale = scale;
 
             Vector2 totalOffset = currentOffset + pose.ExtraOffset + recoilOffset;
-            Vector3 worldOffset = pose.CameraRight * totalOffset.x + pose.CameraUp * totalOffset.y - transform.forward * (knockbackPunch * knockbackDistance);
+            Vector3 worldOffset = pose.CameraRight * totalOffset.x + pose.CameraUp * totalOffset.y - transform.forward * (knockbackPunch * anim.knockbackDistance);
 
             // World-space add rather than converting into the parent's local space: the parent rig
             // is billboard-rotated AND non-uniformly scaled every frame by squash/stretch/bob, which
@@ -210,6 +263,27 @@ namespace Quantum
             Vector3 localPosition = transform.localPosition;
             localPosition.z = restLocalPosition.z;
             transform.localPosition = localPosition;
+
+            OrientBeamParticle(pose);
+        }
+
+        // beamParticle can't just inherit this weapon's own transform.rotation - that's a billboard
+        // (pose.FacingCamera) composed with a screen-plane Z spin, so its local +Z (the default
+        // Cone shape's emission axis) points toward/away from the camera, not across the screen at
+        // whatever's being aimed at. Same class of bug the position offset above already has a
+        // comment about (parent rig shears under billboard + non-uniform scale) - solved the same
+        // way, by computing the aim direction explicitly instead of trusting anything inherited
+        // through the hierarchy. Built from FlatWorldDirection/Vector3.up (ground-plane, camera-
+        // independent), not CameraRight/CameraUp - those live in the camera's billboard-facing
+        // plane, which only coincides with the ground when the camera looks straight down. Using
+        // them here would keep the beam visually level with the SCREEN, not the ground, and it'd
+        // tip into/out of the floor on any tilted top-down camera.
+        private void OrientBeamParticle(in AimPose pose)
+        {
+            if (beamParticle == null) return;
+            if (pose.FlatWorldDirection.sqrMagnitude < 0.0001f) return;
+
+            beamParticle.transform.rotation = Quaternion.LookRotation(pose.FlatWorldDirection, Vector3.up);
         }
 
         // Nothing left to do per-frame here - recoilOffset/recoilRotationCurrent/knockbackPunch

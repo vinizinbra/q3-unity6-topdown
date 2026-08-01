@@ -35,9 +35,10 @@ LevelUpUtility.BeginLevelUpScreen
        -> collect candidates from WeaponPerkPool.Perks (global - only the eligible-perks list is
           read, not WeaponPerkPoolData's own weight fields, see below) and GlobalUpgrades (global,
           ships empty)
-       -> collect candidates from this entity's own CharacterData.DashSkillUpgrades/
-          HeroSkillUpgrades (excluding any upgrade already granted on that slot - see "Why exclude
-          already-granted skill upgrades" below) and CharacterData.PassiveUpgrades
+       -> collect candidates from this entity's own CharacterData.DashSkillUpgrades and, for
+          HeroSkill, straight from HeroSkill's own Actions (any entry with Activated == false -
+          excluding any upgrade already granted on that slot - see "Why exclude already-granted
+          skill upgrades" below) and CharacterData.PassiveUpgrades
        -> every candidate, regardless of kind, is weighted identically: AddCandidate resolves it
           generically as UpgradeData and looks up LevelUpConfig.GetWeight(data.Rarity) - independent
           of WeaponPerkPoolData's own (differently-tuned) Common/Rare/Epic/Legendary
@@ -69,8 +70,10 @@ LevelUpUtility.Resolve
        WeaponPerk     -> WeaponSystem.AddPerk (same method GrantWeaponPerkCommand already calls)
        SkillUpgrade   -> SkillSystem.ResolveSlot + SkillSystem.AddUpgrade (same as
                          GrantSkillUpgradeCommand)
-       GlobalUpgrade  -> GlobalUpgradeUtility.Grant (stub - just logs, no effect yet)
-       PassiveUpgrade -> PassiveUpgradeUtility.Grant (stub - just logs, no effect yet)
+       GlobalUpgrade  -> GlobalUpgradeUtility.Grant (dispatches to the picked asset's own Apply -
+                         same method a GrantGlobalUpgradeCommand debug grant now also calls)
+       PassiveUpgrade -> PassiveUpgradeUtility.Grant (dispatches to the picked asset's own Apply -
+                         same as GrantPassiveUpgradeCommand)
      then f.Remove<LevelUpChoice>(entity)
   -> Global.LevelUpScreenOpen = false, LevelUpTimeRemaining = 0, f.SystemEnable<GameplaySystemGroup>()
 ```
@@ -116,8 +119,9 @@ removed the moment `Resolve` grants it.
 `SkillSystem.AddUpgrade` already rejects a duplicate upgrade on the same slot (logs an error, returns
 `false`) - that's existing behavior, not new. Without filtering at roll time, a later level-up could
 re-offer a card that would silently fail to grant anything if picked. `CollectPerHeroCandidates`
-checks each `DashSkillUpgrades`/`HeroSkillUpgrades` candidate against that slot's own
-`SkillSlot.Upgrades` (same lookup `AddUpgrade` itself does) before adding it as a candidate.
+checks each `DashSkillUpgrades` candidate, and `AddHeroSkillUpgradeCandidates` checks each
+`HeroSkill.Actions` candidate, against that slot's own `SkillSlot.Upgrades` (same lookup `AddUpgrade`
+itself does) before adding it as a candidate.
 `PassiveUpgrade` has no equivalent check - see "Current status" below.
 
 ## Files
@@ -164,8 +168,9 @@ checks each `DashSkillUpgrades`/`HeroSkillUpgrades` candidate against that slot'
 - `LevelUp/PassiveUpgradeData.cs` - **new**: same minimal stub shape as `GlobalUpgradeData` -
   referenced directly from `CharacterData.PassiveUpgrades` (per-hero, see below).
 - `Character/CharacterData.cs` - **edited**, one new field: `List<AssetRef<PassiveUpgradeData>>
-  PassiveUpgrades`, alongside the existing `DashSkillUpgrades`/`HeroSkillUpgrades` (same per-hero
-  list shape).
+  PassiveUpgrades`, alongside the existing `DashSkillUpgrades` (same per-hero list shape). Later
+  removed the equivalent `HeroSkillUpgrades` list entirely - `AddHeroSkillUpgradeCandidates` now
+  pulls that pool straight from `HeroSkill`'s own `Actions` instead (see "Runtime flow" above).
 
 **Systems (`Assets/_QuantumUser/Simulation/Systems/`)**
 - `LevelUpUtility.cs` - **new**: `BeginLevelUpScreen`, `RollOptionsFor`/`CollectGlobalCandidates`/
@@ -175,11 +180,16 @@ checks each `DashSkillUpgrades`/`HeroSkillUpgrades` candidate against that slot'
 - `LevelUpSystem.cs` - **new**: always-on driver described above.
 - `GameplaySystemGroup.cs` - **new**: trivial named `SystemGroup` subclass, purely so
   `SystemDisable<T>()`/`SystemEnable<T>()` have an unambiguous type to key off.
-- `GlobalUpgradeUtility.cs` / `PassiveUpgradeUtility.cs` - **new**: one-method stubs, each just logs
-  `"... grant path not implemented yet"`.
+- `GlobalUpgradeUtility.cs` / `PassiveUpgradeUtility.cs` - one-method dispatchers: resolve the picked
+  asset and call its own `Apply(Frame, EntityRef)` - real grant paths, not stubs (this doc used to
+  describe them as logging-only placeholders; that's stale).
+- `GlobalUpgradeSystem.cs` - **new**: per-tick processor for `GrantGlobalUpgradeCommand`, mirrors
+  `PassiveUpgradeSystem` - debug-only today (see "Debug tooling" below), the real level-up path grants
+  through `LevelUpUtility.GrantOption` directly.
 - `SkillSystem.cs` - **edited**: `ResolveSlot` gained a `public static` overload taking
   `CharacterSkills*` directly (the existing one took `ref Filter`) - gives `LevelUpUtility.GrantOption`
-  a supported entry point without touching `SkillSystem`'s own filtered `Update`.
+  a supported entry point without touching `SkillSystem`'s own filtered `Update`. Also gained
+  `RemoveUpgrade`/`ClearUpgrades` (debug-only, see below) alongside the original `AddUpgrade`.
 - `ExperienceUtility.cs` - **edited**: `Grant` captures `Level` before its while-loop, calls
   `LevelUpUtility.BeginLevelUpScreen(f)` once afterward if it increased.
 
@@ -187,6 +197,104 @@ checks each `DashSkillUpgrades`/`HeroSkillUpgrades` candidate against that slot'
 - `SelectLevelUpUpgradeCommand.cs` - **new**: `Byte OptionIndex` only. The actual `Kind`/asset/slot is
   read back off the sender's own already-rolled `LevelUpChoice` (found via `PlayerLink`), so a client
   structurally cannot request an option it was never offered or touch another player's pick.
+- `GrantGlobalUpgradeCommand.cs` - **new**: `AssetRef<GlobalUpgradeData> Upgrade`, debug-only (see
+  below) - mirrors `GrantPassiveUpgradeCommand`.
+- `RemoveSkillUpgradeCommand.cs` / `ClearSkillUpgradesCommand.cs` - **new**: debug-only counterparts
+  to `GrantSkillUpgradeCommand` - remove one upgrade / clear an entire slot via
+  `SkillSystem.RemoveUpgrade`/`ClearUpgrades`. The only kind where this actually reverts the effect -
+  see the "no revert path" bullet below.
+
+**Debug tooling (`Assets/_QuantumUser/Simulation/Assets/**/*Debug.cs` + `View/Managers/*DebugTrigger.cs`)**
+
+Each of the four upgrade kinds gets a "Grant To Local Player" button directly on its own asset's
+Inspector, via Quantum's `[EditorButton(..., EditorButtonVisibility.PlayMode)]` (not NaughtyAttributes'
+`[Button]` - Simulation code can't see that asmdef, and it'd collide with Quantum's own `Button` input
+struct anyway). Since Simulation can't call `QuantumRunner`/`SendCommand` directly, the button just
+raises a static `Action` on a `<Kind>DataDebug` class; a matching `<Kind>DebugTrigger`
+`QuantumGlobalMonoBehaviour` (`View/Managers/`) subscribes and sends the real command for the local
+player. `SkillActionData` additionally gets "Remove From Local Player"/"Clear All From Local Player"
+buttons per slot (Dash/Hero) that actually work (see the no-revert-path bullet below); the other three
+kinds get the same two buttons for interface consistency, but they only log a warning instead of
+reverting anything.
+
+| Kind | Debug event class | Trigger (View/Managers/) | Command(s) |
+|---|---|---|---|
+| `WeaponPerkData` | `WeaponPerkDataDebug` | `WeaponPerkDebugTrigger` | `GrantWeaponPerkCommand` |
+| `SkillActionData` | `SkillActionDataDebug` | `SkillUpgradeDebugTrigger` | `GrantSkillUpgradeCommand`, `RemoveSkillUpgradeCommand`, `ClearSkillUpgradesCommand` |
+| `PassiveUpgradeData` | `PassiveUpgradeDataDebug` | `PassiveUpgradeDebugTrigger` | `GrantPassiveUpgradeCommand` |
+| `GlobalUpgradeData` | `GlobalUpgradeDataDebug` | `GlobalUpgradeDebugTrigger` | `GrantGlobalUpgradeCommand` |
+
+Additionally, `Assets/_Project/Scripts/UI/Window/DebugUpgradeMenuWindow.cs` +
+`DebugUpgradeButtonWidget.cs`/`DebugUpgradeSectionLabelWidget.cs`/`DebugUpgradeCategoryPanelWidget.cs`
+and `Assets/_QuantumUser/View/Managers/DebugUpgradeMenuTrigger.cs` give an in-game (not Editor-only)
+alternative that lists every upgrade currently reachable by the local player's own hero, opened/closed
+by `toggleButton` (starts closed - `panelRoot`, everything except `toggleButton` itself, is hidden at
+`Awake`; content still builds normally while closed, since `DebugUpgradeMenuTrigger.Rebuild` has no
+dependency on visibility, so it's already populated the first time the panel opens) and, once open,
+across 3 scrollview tabs - Hero/Global/Weapon Perk, one visible at a time, switched by `heroTabButton`/
+`globalTabButton`/`weaponPerkTabButton` on `DebugUpgradeMenuWindow` (Hero is the default open tab).
+There's only one hand-authored scrollview prefab (`panelPrefab`, a `DebugUpgradeCategoryPanelWidget` -
+owns its own `Content` transform the same way `DebugUpgradeButtonWidget` owns its row) -
+`DebugUpgradeMenuWindow.Awake` instantiates it 3 times into `panelsParent` rather than needing 3
+hand-duplicated scrollview hierarchies in the scene, exposing each instance's content via
+`HeroContent`/`GlobalContent`/`WeaponPerkContent`. Built automatically as soon as the local player is
+set up (`MyLocalPlayer.AddOnLocalPlayerSetup`, same idiom the couch-coop HUD widgets use).
+`HeroContent` is shared by all 3 per-hero pools, each under its own section header (`AddLabel`, spawns
+a `DebugUpgradeSectionLabelWidget` - "Dash"/"Hero Skill"/"Passive"); `GlobalContent`/`WeaponPerkContent`
+are one category each, no label needed. Each row (`DebugUpgradeButtonWidget`) shows
+name/category/icon/description (`UpgradeData.Icon`/`GetDescription()`, same fields `UpgradeCardWidget`
+reads for the real level-up cards), a checkmark shown while already granted, an optional
+`stackRoot`/`stackText` current/max readout (same "MaxStacks == 0 hides it" convention as
+`UpgradeCardWidget.CardData` - see "View / presentation" above), and one state-driven action button,
+not a separate Activate/Deactivate pair: green "Add" (sends the same command the table above lists)
+when not yet granted, red "Remove" (`RemoveSkillUpgradeCommand`) when granted AND revertible - Skill
+Upgrades (Dash/Hero) only. For the 3 kinds with no revert path (Weapon Perk/Passive/Global), once
+granted there's nothing left the button can do, so it's hidden entirely (the checkmark becomes the
+only "already added" signal) rather than shown disabled. Granted state is real for Skill Upgrades
+(checked against that slot's own `CharacterSkills.DashSkill/HeroSkill.Upgrades`), Weapon Perk (checked
+against `Weapon.Perks`), and a capped Global Upgrade (`MaxPicks > 0` - "granted" means fully maxed out,
+via the same `GlobalUpgradeUtility.GetPickCount` the real level-up screen's card reads; a
+partially-stacked one still shows its "Add" button, just with the current/max readout alongside it) -
+Passive and an uncapped Global Upgrade have no granted-tracking at all, so those rows always start
+ungranted (green "Add", no checkmark, no stack readout) at build time. On click, the row doesn't wait
+on a round trip back through the sim to learn its own new state - it fires its command, deactivates
+its own button, and flips its own checkmark locally (it lives on its own row's prefab instance, not
+shared state), same one-shot shape the existing per-asset Inspector buttons already have. The stack
+readout itself IS a round-trip value (read fresh from `GlobalUpgradeUtility.GetPickCount` each
+`Rebuild`), so it only updates the next time the menu rebuilds, not instantly on click like the
+checkmark does.
+
+It enumerates `CharacterData.DashSkillUpgrades`/`PassiveUpgrades` plus (for Hero Skill) EVERY entry in
+`HeroSkill`'s own `Actions` for whichever hero the local player's `CharacterStats.CharacterData`
+resolves to - deliberately not filtered by `Activated` the way `LevelUpUtility.
+AddHeroSkillUpgradeCandidates` filters the real level-up pool (an `Activated == true` entry is already
+running for everyone, so a real screen has nothing left to offer there); this debug menu shows every
+entry regardless, for full visibility/control while testing, even though granting an already-Activated
+one has no visible effect. Plus
+`LevelUpConfig.WeaponPerkPool.Perks`/`GlobalUpgrades` globally - the same five pools
+`LevelUpUtility.RollOptionsFor` draws from. No new Commands or `.qtn` - reuses every grant/remove path
+above directly rather than going through the `<Kind>DataDebug` static-event indirection (that
+indirection exists only so a Simulation-side Inspector button can reach the View; this menu already
+lives in the View layer). Like every other debug trigger, it targets local slot 0 only.
+
+**Needs Editor authoring before it shows anything**, same as everything else in this doc: a
+`DebugUpgradeButtonWidget` prefab (name/category/description text + icon Image + checkmark GameObject
++ one action button with its own background Image + label text + optional `stackRoot`/`stackText` for
+the current/max readout, same optional-and-unwired status as `UpgradeCardWidget`'s own
+`stackRoot`/`stackText` - see "Current status" below), a `DebugUpgradeSectionLabelWidget`
+prefab for `AddLabel`, ONE `DebugUpgradeCategoryPanelWidget` scrollview prefab (its `content` field
+pointing at its own ScrollRect content) wired to `DebugUpgradeMenuWindow`'s `panelPrefab` +
+`panelsParent`, 3 tab `Button`s wired to `heroTabButton`/`globalTabButton`/`weaponPerkTabButton`, a
+`panelRoot` GameObject wrapping everything above (toggled open/closed), a `toggleButton` placed
+*outside* `panelRoot` so it stays clickable while the panel is closed, plus a `DebugUpgradeMenuTrigger`
+in the scene (alongside the `DEBUGGER` GameObject the other 4 triggers live on) with its `menu` field
+pointing at that window - none of this exists in `QuantumGameScene.unity` yet. All 3 prefab fields (`panelPrefab`/`buttonPrefab`/`labelPrefab`) are
+expected to be live template objects placed directly in the scene rather than Project-window `.prefab`
+assets - `DebugUpgradeMenuWindow.Awake` hides each template right after cloning from it (an active
+template would otherwise render as one extra stray copy alongside its real clones), and every clone
+(the 3 panels, plus every row/label `AddButton`/`AddLabel` spawns later) force-activates itself right
+after spawning, since `Instantiate()` would otherwise copy the now-hidden template's inactive state
+onto it.
 
 **Edited existing files:**
 - `Default/RuntimeConfig.User.cs` - `AssetRef<LevelUpConfig>`.
@@ -200,7 +308,11 @@ checks each `DashSkillUpgrades`/`HeroSkillUpgrades` candidate against that slot'
 - `Assets/_Project/Scripts/UI/Window/UpgradeCardWidget.cs` - **new**, one card = one
   `MonoBehaviour` (icon/rarity-frame/name/description/button), fully Quantum-agnostic - takes a
   plain `CardData` struct via `Setup()` and raises `onClicked`. Reusable/prefab-friendly on its own,
-  independent of `UpgradeWindow`.
+  independent of `UpgradeWindow`. **Edited**: `CardData` also carries `CurrentStacks`/`MaxStacks` -
+  `MaxStacks` is 0 for every option except a capped `GlobalUpgradeData` (`MaxPicks > 0`, e.g. Dash
+  Charge/Hero Skill Charge), which `Setup` reads as "hide the stack readout"; otherwise it shows
+  `CurrentStacks/MaxStacks` (e.g. "2/3") via an optional `stackRoot`/`stackText`, so a player can see
+  how close a capped pick is to maxing out before choosing it.
 - `Assets/_Project/Scripts/UI/Window/UpgradeWindow.cs` - **new**, plain `UiWindow` (not a
   `QuantumGlobalMonoBehaviour` itself - matches `WaitingWindow`'s shape). Just orchestrates a fixed
   `UpgradeCardWidget[]` (one per `LevelUpChoice.Options` slot) plus a countdown readout;
@@ -212,58 +324,72 @@ checks each `DashSkillUpgrades`/`HeroSkillUpgrades` candidate against that slot'
   player's own `LevelUpChoice` (`MyLocalPlayer.Instance.EntityRef`) and builds each card's
   `UpgradeCardWidget.CardData` with ONE generic path (`frame.FindAsset(option.Upgrade)` resolved as
   `UpgradeData` - no switch on `Kind` needed for display), mapping `Rarity` to a card color locally
-  (`RarityColor`), and forwards card clicks as a `SelectLevelUpUpgradeCommand`.
+  (`RarityColor`), and forwards card clicks as a `SelectLevelUpUpgradeCommand`. **Edited**:
+  `BuildCardData` now also takes the rolling entity and, only for `Kind == GlobalUpgrade`, re-resolves
+  `option.Upgrade` as `AssetRef<GlobalUpgradeData>` (same raw-Id reinterpret `LevelUpUtility.GrantOption`
+  uses) to read `MaxPicks`/`GlobalUpgradeUtility.GetPickCount` for the card's stack readout - every
+  other kind leaves `CardData.MaxStacks` at 0.
 
 ## Current status / known simplifications
 
-**Update: point 1 below is resolved.** `Assets/_QuantumUser/Resources/LevelUpConfig.asset` now
-exists and is assigned to `RuntimeConfig` in `QuantumGameScene.unity` (confirmed by GUID match).
-Its `WeaponPerkPool` is also wired to a populated `WeaponPerkPoolData` (see `docs/weapon-perks.md`).
-Its `GlobalUpgrades` list is still empty - run `Tools/RiftRaiders/Generate Global Upgrade Assets`
-(`Assets/_QuantumUser/Editor/GlobalUpgradeAssetGenerator.cs`) to author and wire those (see
-`docs/global-upgrades.md`).
+**Update: all four points below are resolved.** `Assets/_QuantumUser/Resources/LevelUpConfig.asset`
+exists and is assigned to `RuntimeConfig` in `QuantumGameScene.unity` (confirmed by GUID match). Its
+`WeaponPerkPool` is wired to the populated `WeaponPerkPoolData` (see `docs/weapon-perks.md`), and its
+`GlobalUpgrades` list carries 21 entries. Every hero's `CharacterData` has `DashSkillUpgrades` and
+`PassiveUpgrades` populated. `GameplayUiController` now takes an `UpgradeWindow[] upgradeWindows`
+(one per local player slot, for couch co-op - see `docs/hud-couch-coop.md` if present) instead of a
+single window, and the scene has one wired (`upgradeWindows[0]`).
 
-Code compiles and `LevelUpSystem` is registered. The following still need Editor authoring:
+1. ~~`LevelUpConfig.asset`~~ - done.
+2. ~~`GlobalUpgrades` empty~~ - done, 21 entries.
+3. ~~`UpgradeWindow` scene/prefab wiring~~ - done; `GameplayUiController.upgradeWindows[0]` assigned
+   in `QuantumGameScene`.
+4. **Manual end-to-end test still not confirmed run** - the recipe below hasn't been verified
+   in-Editor yet as far as this doc knows: force a level-up (temporarily shrink
+   `ExperienceConfig.RequiredExperience`'s first keyframe, or grant a large `TotalExperience` via a
+   debug hook) and confirm every client's `UpgradeWindow` opens together, gameplay visibly freezes, a
+   card click locks only that client's own pick, the screen closes the instant everyone's confirmed
+   (not waiting for the timer), an intentionally-unconfirmed client auto-picks at 0s, a mid-screen
+   disconnect doesn't block the rest, and a player joining mid-screen spawns normally without a card.
 
-1. ~~`LevelUpConfig.asset`~~ - done, see above.
-2. **`GlobalUpgrades` is still empty** (fixed by the generator above) - no hero's
-   `CharacterData.DashSkillUpgrades`/`HeroSkillUpgrades`/`PassiveUpgrades` lists have been extended
-   for this specific screen either (though `DashSkillUpgrades`/`HeroSkillUpgrades` already existed
-   and may already carry entries from before this feature - those get picked up automatically, no
-   extra wiring needed). A level-up with every pool empty still just logs and skips (no screen, no
-   pause) - see `BeginLevelUpScreen`'s `anyRolled` check.
-3. **`UpgradeWindow` scene/prefab wiring** - no `UpgradeWindow` GameObject exists under any
-   `WindowManager` in `QuantumGameScene` yet, and `GameplayUiController`'s new `upgradeWindow` field
-   is unassigned. The `ShowWindow<GameplayWindow>()` "close" transition in
-   `GameplayUiController.UpdateUpgradeScreen` is a best guess at "back to normal HUD" - `GameplayWindow`
-   holds the per-player HUD widget parent and looks like the right target, but nothing in code shows
-   it explicitly today (it may just be the scene's default-active window), so verify this in-Editor
-   before relying on it.
-4. **Manual end-to-end test recipe** (once the above exists): author one throwaway
-   `WeaponPerkPoolData` wrapping one existing perk (e.g. `DamageMultiplierWeaponPerkData`), one
-   `LevelUpConfig` pointing at it, assign both to `RuntimeConfig`. Force a level-up (temporarily
-   shrink `ExperienceConfig.RequiredExperience`'s first keyframe, or grant a large `TotalExperience`
-   via a debug hook) and confirm every client's `UpgradeWindow` opens together, gameplay visibly
-   freezes, a card click locks only that client's own pick, the screen closes the instant everyone's
-   confirmed (not waiting for the timer), an intentionally-unconfirmed client auto-picks at 0s, a
-   mid-screen disconnect doesn't block the rest, and a player joining mid-screen spawns normally
-   without a card.
+**`CharacterData.HeroSkillUpgrades` was removed** - the Hero Skill slice of the Skill Upgrade pool no
+longer has its own authored list at all. `LevelUpUtility.AddHeroSkillUpgradeCandidates` now pulls it
+straight from `HeroSkill`'s own `Actions` list instead: any `SkillActionData` authored there with
+`Activated == false` is a candidate (see `SkillActionData.Activated` and `SkillSystem.InvokeActions`'
+`isUpgrade` bypass - granting it via `AddUpgrade` ignores `Activated` and turns it on for just that
+player, while it stays inert as a baseline action for everyone else). No more parallel list to keep
+in sync with the skill asset it upgrades. Authoring status per hero not audited here - check each
+`HeroSkill` asset's own `Actions` for `Activated == false` entries directly.
 
 Beyond the missing assets/wiring:
-- **Passive Upgrade still has no gameplay effect** - `PassiveUpgradeUtility.Grant` just logs;
-  `PassiveUpgradeData` only carries display metadata. Global Upgrade got a real `Apply(Frame,
-  EntityRef)` path (see `docs/global-upgrades.md`) with one concrete implementation so far
-  (`HealthRegenUpgradeData`) - every other Global Upgrade entry is still just a design row in that
-  doc, not code.
+- **Both Passive Upgrade and Global Upgrade grant a real `Apply(Frame, EntityRef)`** now (dispatched
+  via `PassiveUpgradeUtility.Grant`/`GlobalUpgradeUtility.Grant` - see `docs/global-upgrades.md` for
+  Global Upgrade's own roster), but neither kind tracks *which* upgrades an entity currently holds -
+  see the dedup bullet below.
 - **Multiple levels from one `Grant` call collapse into one screen** - if a single big exp grant
   crosses more than one level threshold in the same `while` loop, the player still only sees
   `ChoiceCount` (3) options total, not `3 × levelsGained`. Chosen deliberately over queuing multiple
   sequential screens, which would be a confusing wait for a co-op-wide pause.
-- **`PassiveUpgrade` candidates aren't deduplicated against past picks** - unlike `SkillUpgrade`
-  (checked against `SkillSlot.Upgrades`), there's no "already granted" list for passives yet (the
-  grant path itself is a stub), so the same passive upgrade could be re-offered on a later level-up.
-  Revisit once a real passive-upgrade mechanic (and its own granted-tracking) exists.
-- **Debug perk/skill triggers are inert while a screen is open** - `WeaponPerkDebugTrigger`/
-  `SkillUpgradeDebugTrigger` still send their commands, but `WeaponSystem`/`SkillSystem` are paused
-  (inside `GameplaySystemGroup`) so the commands are silently dropped that tick - resumes working the
-  instant the screen closes.
+- **`PassiveUpgrade`/`GlobalUpgrade` candidates aren't deduplicated against past picks** - unlike
+  `SkillUpgrade` (checked against `SkillSlot.Upgrades`), there's no "already granted" list for either
+  kind, so the same upgrade could be re-offered on a later level-up. Revisit once a real
+  granted-tracking ledger exists for both.
+- **No revert path for Weapon Perk / Passive Upgrade / Global Upgrade** - each bakes its effect
+  directly into a live component field at grant time (`WeaponPerkData`/`PassiveUpgradeData`/
+  `GlobalUpgradeData`'s own `Apply`), with no per-grant ledger to undo from and, in several cases, a
+  lossy transform (multiply-then-clamp, or additive-then-partially-consumed) that isn't even
+  mathematically invertible from current state alone. Their "Remove"/"Clear All" debug buttons (see
+  below) only log this instead of pretending to revert - restart play mode to actually reset a
+  player. `SkillActionData` upgrades are the one kind that's cheaply reversible (a slot re-reads
+  `SkillSlot.Upgrades` fresh every activation instead of baking it), so those two buttons work for
+  real - see `SkillSystem.RemoveUpgrade`/`ClearUpgrades`.
+- **`UpgradeCardWidget`'s and `DebugUpgradeButtonWidget`'s new `stackRoot`/`stackText` fields are
+  optional and unwired on their existing prefabs** - both are allowed to stay `null` (`Setup` no-ops
+  on either) on each widget, so nothing breaks today, but no card or debug row actually shows a stack
+  count until someone adds the readout (a small text + its container) to the respective prefab and
+  assigns those two fields in the Inspector.
+- **Debug perk/skill/passive/global triggers are inert while a screen is open** -
+  `WeaponPerkDebugTrigger`/`SkillUpgradeDebugTrigger`/`PassiveUpgradeDebugTrigger`/
+  `GlobalUpgradeDebugTrigger` still send their commands, but `WeaponSystem`/`SkillSystem`/
+  `PassiveUpgradeSystem`/`GlobalUpgradeSystem` are paused (inside `GameplaySystemGroup`) so the
+  commands are silently dropped that tick - resumes working the instant the screen closes.

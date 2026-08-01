@@ -25,24 +25,101 @@ MonoBehaviour:
       RawValue: 65536
     ScaleMultiplier:
       RawValue: 26214
+    RiftShardValue:
+      RawValue: 65536
+    RiftShardDropChance:
+      RawValue: 0
+    CoinValue:
+      RawValue: 65536
+    CoinDropChance:
+      RawValue: 13107
+    Shield:
+      RawValue: 0
+    ShieldRechargeDelay:
+      RawValue: 0
+    ShieldRechargeRate:
+      RawValue: 0
+    CanBeInterruptedByKnockback: 1
+    KnockbackRecoveryTime:
+      RawValue: 13107
   Normal:
     MaxHealth:
-      RawValue: 3276800
+      RawValue: 3932160
     Cost:
       RawValue: 131072
     ExpValue:
       RawValue: 131072
     ScaleMultiplier:
       RawValue: 32768
+    RiftShardValue:
+      RawValue: 65536
+    RiftShardDropChance:
+      RawValue: 6554
+    CoinValue:
+      RawValue: 327680
+    CoinDropChance:
+      RawValue: 13107
+    Shield:
+      RawValue: 1638400
+    ShieldRechargeDelay:
+      RawValue: 131072
+    ShieldRechargeRate:
+      RawValue: 327680
+    CanBeInterruptedByKnockback: 1
+    KnockbackRecoveryTime:
+      RawValue: 6554
   Specialist:
     MaxHealth:
-      RawValue: 7864320
+      RawValue: 9175040
     Cost:
       RawValue: 262144
     ExpValue:
       RawValue: 327680
     ScaleMultiplier:
       RawValue: 39322
+    RiftShardValue:
+      RawValue: 65536
+    RiftShardDropChance:
+      RawValue: 65536
+    CoinValue:
+      RawValue: 65536
+    CoinDropChance:
+      RawValue: 65536
+    Shield:
+      RawValue: 3932160
+    ShieldRechargeDelay:
+      RawValue: 131072
+    ShieldRechargeRate:
+      RawValue: 327680
+    CanBeInterruptedByKnockback: 1
+    KnockbackRecoveryTime:
+      RawValue: 3277
+  Heavy:
+    MaxHealth:
+      RawValue: 13107200
+    Cost:
+      RawValue: 393216
+    ExpValue:
+      RawValue: 589824
+    ScaleMultiplier:
+      RawValue: 45875
+    RiftShardValue:
+      RawValue: 65536
+    RiftShardDropChance:
+      RawValue: 65536
+    CoinValue:
+      RawValue: 65536
+    CoinDropChance:
+      RawValue: 65536
+    Shield:
+      RawValue: 6225920
+    ShieldRechargeDelay:
+      RawValue: 131072
+    ShieldRechargeRate:
+      RawValue: 327680
+    CanBeInterruptedByKnockback: 0
+    KnockbackRecoveryTime:
+      RawValue: 16384
   Elite:
     MaxHealth:
       RawValue: 19660800
@@ -52,6 +129,23 @@ MonoBehaviour:
       RawValue: 983040
     ScaleMultiplier:
       RawValue: 52429
+    RiftShardValue:
+      RawValue: 65536
+    RiftShardDropChance:
+      RawValue: 65536
+    CoinValue:
+      RawValue: 65536
+    CoinDropChance:
+      RawValue: 65536
+    Shield:
+      RawValue: 9830400
+    ShieldRechargeDelay:
+      RawValue: 131072
+    ShieldRechargeRate:
+      RawValue: 327680
+    CanBeInterruptedByKnockback: 0
+    KnockbackRecoveryTime:
+      RawValue: 16384
   Boss:
     MaxHealth:
       RawValue: 131072000
@@ -61,3 +155,20 @@ MonoBehaviour:
       RawValue: 6553600
     ScaleMultiplier:
       RawValue: 65536
+    RiftShardValue:
+      RawValue: 65536
+    RiftShardDropChance:
+      RawValue: 65536
+    CoinValue:
+      RawValue: 65536
+    CoinDropChance:
+      RawValue: 65536
+    Shield:
+      RawValue: 65536000
+    ShieldRechargeDelay:
+      RawValue: 131072
+    ShieldRechargeRate:
+      RawValue: 327680
+    CanBeInterruptedByKnockback: 0
+    KnockbackRecoveryTime:
+      RawValue: 16384

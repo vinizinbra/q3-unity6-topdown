@@ -151,6 +151,7 @@ namespace Quantum.Prototypes {
     public FPVector3 PushDirection;
     [ArrayLengthAttribute(4)]
     public AssetRef<HitEffectData>[] Effects = new AssetRef<HitEffectData>[4];
+    public FP InitialDelay;
     public FP TickTimer;
     public Quantum.QEnum8<DamageTargetMask> TargetMask;
     partial void MaterializeUser(Frame frame, ref Quantum.AreaDamage result, in PrototypeMaterializationContext context);
@@ -167,6 +168,7 @@ namespace Quantum.Prototypes {
         for (int i = 0, count = PrototypeValidator.CheckLength(Effects, 4, in context); i < count; ++i) {
           *result.Effects.GetPointer(i) = this.Effects[i];
         }
+        result.InitialDelay = this.InitialDelay;
         result.TickTimer = this.TickTimer;
         result.TargetMask = this.TargetMask;
         MaterializeUser(frame, ref result, in context);
@@ -287,6 +289,8 @@ namespace Quantum.Prototypes {
     public FP ReloadSpeedMultiplier;
     public FP ProjectileSpeedMultiplier;
     public FP AreaRadiusMultiplier;
+    public FP NearDamageMultiplier;
+    public FP FarDamageMultiplier;
     public FP DashCooldownMultiplier;
     public FP SkillCooldownMultiplier;
     public FP SkillDurationMultiplier;
@@ -301,7 +305,13 @@ namespace Quantum.Prototypes {
     public FP PickupRangeMultiplier;
     public FP Luck;
     public FP ExperienceGainMultiplier;
+    public FP RiftShardGainMultiplier;
+    public FP CoinGainMultiplier;
     public Byte BurnOnHitStacks;
+    public FP DashShieldCost;
+    public FP CritSkillCooldownReduction;
+    public QBoolean ShieldBreakGrantsDashCharge;
+    public QBoolean AllOrNothingActive;
     partial void MaterializeUser(Frame frame, ref Quantum.CharacterStats result, in PrototypeMaterializationContext context);
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.CharacterStats component = default;
@@ -321,6 +331,8 @@ namespace Quantum.Prototypes {
         result.ReloadSpeedMultiplier = this.ReloadSpeedMultiplier;
         result.ProjectileSpeedMultiplier = this.ProjectileSpeedMultiplier;
         result.AreaRadiusMultiplier = this.AreaRadiusMultiplier;
+        result.NearDamageMultiplier = this.NearDamageMultiplier;
+        result.FarDamageMultiplier = this.FarDamageMultiplier;
         result.DashCooldownMultiplier = this.DashCooldownMultiplier;
         result.SkillCooldownMultiplier = this.SkillCooldownMultiplier;
         result.SkillDurationMultiplier = this.SkillDurationMultiplier;
@@ -335,7 +347,13 @@ namespace Quantum.Prototypes {
         result.PickupRangeMultiplier = this.PickupRangeMultiplier;
         result.Luck = this.Luck;
         result.ExperienceGainMultiplier = this.ExperienceGainMultiplier;
+        result.RiftShardGainMultiplier = this.RiftShardGainMultiplier;
+        result.CoinGainMultiplier = this.CoinGainMultiplier;
         result.BurnOnHitStacks = this.BurnOnHitStacks;
+        result.DashShieldCost = this.DashShieldCost;
+        result.CritSkillCooldownReduction = this.CritSkillCooldownReduction;
+        result.ShieldBreakGrantsDashCharge = this.ShieldBreakGrantsDashCharge;
+        result.AllOrNothingActive = this.AllOrNothingActive;
         MaterializeUser(frame, ref result, in context);
     }
   }
@@ -387,6 +405,21 @@ namespace Quantum.Prototypes {
         result.Count = this.Count;
         result.Damage = this.Damage;
         result.Projectile = this.Projectile;
+        MaterializeUser(frame, ref result, in context);
+    }
+  }
+  [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.Coin))]
+  public unsafe partial class CoinPrototype : ComponentPrototype<Quantum.Coin> {
+    public FP Value;
+    partial void MaterializeUser(Frame frame, ref Quantum.Coin result, in PrototypeMaterializationContext context);
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.Coin component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.Coin result, in PrototypeMaterializationContext context = default) {
+        result.Value = this.Value;
         MaterializeUser(frame, ref result, in context);
     }
   }
@@ -529,6 +562,28 @@ namespace Quantum.Prototypes {
     }
   }
   [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.EnemyWaypointPath))]
+  public unsafe partial class EnemyWaypointPathPrototype : ComponentPrototype<Quantum.EnemyWaypointPath> {
+    [ArrayLengthAttribute(16)]
+    public FPVector3[] Waypoints = new FPVector3[16];
+    public Byte Count;
+    public Byte Cursor;
+    partial void MaterializeUser(Frame frame, ref Quantum.EnemyWaypointPath result, in PrototypeMaterializationContext context);
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.EnemyWaypointPath component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.EnemyWaypointPath result, in PrototypeMaterializationContext context = default) {
+        for (int i = 0, count = PrototypeValidator.CheckLength(Waypoints, 16, in context); i < count; ++i) {
+          *result.Waypoints.GetPointer(i) = this.Waypoints[i];
+        }
+        result.Count = this.Count;
+        result.Cursor = this.Cursor;
+        MaterializeUser(frame, ref result, in context);
+    }
+  }
+  [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.ExpOrb))]
   public unsafe partial class ExpOrbPrototype : ComponentPrototype<Quantum.ExpOrb> {
     public FP Value;
@@ -576,6 +631,36 @@ namespace Quantum.Prototypes {
         result.Damage = this.Damage;
         result.LaunchForce = this.LaunchForce;
         result.Projectile = this.Projectile;
+        MaterializeUser(frame, ref result, in context);
+    }
+  }
+  [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.GlobalUpgradePickEntry))]
+  public unsafe partial class GlobalUpgradePickEntryPrototype : StructPrototype {
+    public AssetRef<GlobalUpgradeData> Upgrade;
+    public Byte Count;
+    partial void MaterializeUser(Frame frame, ref Quantum.GlobalUpgradePickEntry result, in PrototypeMaterializationContext context);
+    public void Materialize(Frame frame, ref Quantum.GlobalUpgradePickEntry result, in PrototypeMaterializationContext context = default) {
+        result.Upgrade = this.Upgrade;
+        result.Count = this.Count;
+        MaterializeUser(frame, ref result, in context);
+    }
+  }
+  [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.GlobalUpgradePicks))]
+  public unsafe partial class GlobalUpgradePicksPrototype : ComponentPrototype<Quantum.GlobalUpgradePicks> {
+    [ArrayLengthAttribute(32)]
+    public Quantum.Prototypes.GlobalUpgradePickEntryPrototype[] Entries = new Quantum.Prototypes.GlobalUpgradePickEntryPrototype[32];
+    partial void MaterializeUser(Frame frame, ref Quantum.GlobalUpgradePicks result, in PrototypeMaterializationContext context);
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.GlobalUpgradePicks component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.GlobalUpgradePicks result, in PrototypeMaterializationContext context = default) {
+        for (int i = 0, count = PrototypeValidator.CheckLength(Entries, 32, in context); i < count; ++i) {
+          this.Entries[i].Materialize(frame, ref *result.Entries.GetPointer(i), in context);
+        }
         MaterializeUser(frame, ref result, in context);
     }
   }
@@ -1500,6 +1585,39 @@ namespace Quantum.Prototypes {
         for (int i = 0, count = PrototypeValidator.CheckLength(RemixEffects, 5, in context); i < count; ++i) {
           *result.RemixEffects.GetPointer(i) = this.RemixEffects[i];
         }
+        MaterializeUser(frame, ref result, in context);
+    }
+  }
+  [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.RiftMutationPicks))]
+  public unsafe partial class RiftMutationPicksPrototype : ComponentPrototype<Quantum.RiftMutationPicks> {
+    [ArrayLengthAttribute(16)]
+    public AssetRef<RiftMutationData>[] Picked = new AssetRef<RiftMutationData>[16];
+    partial void MaterializeUser(Frame frame, ref Quantum.RiftMutationPicks result, in PrototypeMaterializationContext context);
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.RiftMutationPicks component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.RiftMutationPicks result, in PrototypeMaterializationContext context = default) {
+        for (int i = 0, count = PrototypeValidator.CheckLength(Picked, 16, in context); i < count; ++i) {
+          *result.Picked.GetPointer(i) = this.Picked[i];
+        }
+        MaterializeUser(frame, ref result, in context);
+    }
+  }
+  [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.RiftShard))]
+  public unsafe partial class RiftShardPrototype : ComponentPrototype<Quantum.RiftShard> {
+    public FP Value;
+    partial void MaterializeUser(Frame frame, ref Quantum.RiftShard result, in PrototypeMaterializationContext context);
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.RiftShard component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.RiftShard result, in PrototypeMaterializationContext context = default) {
+        result.Value = this.Value;
         MaterializeUser(frame, ref result, in context);
     }
   }

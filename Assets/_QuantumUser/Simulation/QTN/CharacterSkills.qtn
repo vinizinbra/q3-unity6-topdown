@@ -91,3 +91,9 @@ enum SkillSlotId : Byte
 // SkillSystem.GrantFreeCast), but today only ScrapUtility listens, to reset LuxScrapCollector's
 // own ScrapStacks exactly on spend rather than on threshold-reached.
 signal OnFreeCastUsed(EntityRef entity, SkillSlotId slotId);
+
+// Fired by SkillSystem.TryBegin every time a slot actually activates (free cast or a real stack
+// spend alike), right after that spend resolves. Generic on purpose, same reasoning as
+// OnFreeCastUsed above - RiftMutationReactionSystem is today's only listener (Infinite Momentum's
+// dash-consumes-shield reaction, gated to SkillSlotId.DashSkill there).
+signal OnSkillActivated(EntityRef entity, SkillSlotId slotId);

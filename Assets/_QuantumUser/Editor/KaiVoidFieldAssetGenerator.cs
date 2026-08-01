@@ -4,6 +4,7 @@ namespace QuantumUser.Editor
     using System.Linq;
     using Photon.Deterministic;
     using Quantum;
+    using QuantumUser.View.Util;
     using UnityEditor;
     using UnityEngine;
 
@@ -81,7 +82,7 @@ namespace QuantumUser.Editor
             WireCharacterData(passive, new List<PassiveUpgradeData> { eventHorizon, timeDilation, voidPressure },
                 new List<SkillActionData> { reflect, shockwave });
 
-            Debug.Log("[KaiVoidFieldAssetGenerator] Passive + 3 ascensions + 2 dash ascensions authored and wired into KaiCharacterData. " +
+            LogHelper.Log("KaiVoidFieldAssetGenerator", "Passive + 3 ascensions + 2 dash ascensions authored and wired into KaiCharacterData. " +
                       "SlowArea (the 3rd dash ascension) still needs a ProjectileSlowField EntityPrototype authored by hand first " +
                       "(just a Transform3D + the ProjectileSlowField component + DestroyAfterTime - no physics collider needed, " +
                       "VoidFieldSystem reads it by component presence, not by overlap) - once that exists, add a " +
@@ -115,13 +116,13 @@ namespace QuantumUser.Editor
 
             if (characterData == null)
             {
-                Debug.LogError($"[KaiVoidFieldAssetGenerator] No CharacterData asset at {CharacterDataPath} - assets were created/updated, but nothing was wired.");
+                LogHelper.Error("KaiVoidFieldAssetGenerator", $"No CharacterData asset at {CharacterDataPath} - assets were created/updated, but nothing was wired.");
                 return;
             }
 
             if (characterData.Passive.IsValid == true && characterData.Passive.Id.Value != passive.Guid.Value)
             {
-                Debug.LogWarning($"[KaiVoidFieldAssetGenerator] KaiCharacterData.Passive was already set to {characterData.Passive} - overwriting with VoidFieldPassiveData.");
+                LogHelper.Warn("KaiVoidFieldAssetGenerator", $"KaiCharacterData.Passive was already set to {characterData.Passive} - overwriting with VoidFieldPassiveData.");
             }
 
             characterData.Passive = new AssetRef<PassiveData>(passive.Guid);

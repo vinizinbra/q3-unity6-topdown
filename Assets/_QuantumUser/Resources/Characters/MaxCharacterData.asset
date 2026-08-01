@@ -37,9 +37,9 @@ MonoBehaviour:
   SkillDamageMultiplier:
     RawValue: 65536
   CriticalChance:
-    RawValue: 3277
+    RawValue: 0
   CriticalDamageMultiplier:
-    RawValue: 98304
+    RawValue: 65536
   ElementalChance:
     RawValue: 32768
   AttackSpeedMultiplier:
@@ -49,6 +49,10 @@ MonoBehaviour:
   ProjectileSpeedMultiplier:
     RawValue: 65536
   AreaRadiusMultiplier:
+    RawValue: 65536
+  NearDamageMultiplier:
+    RawValue: 65536
+  FarDamageMultiplier:
     RawValue: 65536
   DashCooldownMultiplier:
     RawValue: 65536
@@ -78,6 +82,8 @@ MonoBehaviour:
     RawValue: 0
   ExperienceGainMultiplier:
     RawValue: 65536
+  RiftShardGainMultiplier:
+    RawValue: 65536
   RingColor: {r: 0.98039216, g: 0.47066006, b: 0.023529401, a: 1}
   WeaponPosition:
     X:
@@ -100,13 +106,14 @@ MonoBehaviour:
       Value: 435533906356792848
   StartingWeapon:
     Id:
-      Value: 0
+      Value: 485008723038709767
   DashSkillUpgrades:
   - Id:
       Value: 361757256106766314
   - Id:
       Value: 493327754483233832
-  HeroSkillUpgrades: []
+  - Id:
+      Value: 421846226953410185
   PassiveUpgrades:
   - Id:
       Value: 418568144071795919

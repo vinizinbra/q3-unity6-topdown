@@ -4927,6 +4927,7 @@ GameObject:
   - component: {fileID: -8007378593775083235}
   - component: {fileID: -749458880266477120}
   - component: {fileID: 8505268475853172060}
+  - component: {fileID: 3061145013519703360}
   m_Layer: 7
   m_Name: Zara
   m_TagString: Untagged
@@ -7219,3 +7220,20 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5292615511809375842, guid: 95a3634ae517a460cb68deae3f0770d3, type: 3}
   m_PrefabInstance: {fileID: 7376497701020692425}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &3061145013519703360
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 506928541793919104}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79e869c26acba427ea2f7b7b05b875dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Quantum.SkillActionFxView
+  _playerRef:
+    _index: 0
+  initialized: 0
+  executeOnlyOnLocal: 0
+  isLocal: 0

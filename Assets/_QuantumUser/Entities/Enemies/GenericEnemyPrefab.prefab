@@ -375,7 +375,7 @@ MonoBehaviour:
   Prototype:
     EnemyData:
       Id:
-        Value: 446792746913971505
+        Value: 0
     Target: {fileID: 0}
     Phase:
       Value: 0
@@ -429,6 +429,8 @@ MonoBehaviour:
       RawValue: 3276800
     MaxHealth:
       RawValue: 3276800
+    RegenRate:
+      RawValue: 0
 --- !u!114 &3319259241535440385
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -468,37 +470,29 @@ MonoBehaviour:
     BurnOwner: {fileID: 0}
     BurnSource:
       Value: 0
-    PoisonRemaining:
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    PoisonTickTimer:
+    VoidRemaining:
       RawValue: 0
-    PoisonDamagePerTick:
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    PoisonOwner:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    PoisonSource:
-    - Value: 0
-    - Value: 0
-    - Value: 0
-    - Value: 0
-    - Value: 0
+    ExplosionCooldownRemaining:
+      RawValue: 0
+    FreezeCooldownRemaining:
+      RawValue: 0
+    KnockbackCooldownRemaining:
+      RawValue: 0
+    MagmaPrisonCooldownRemaining:
+      RawValue: 0
+    StunCooldownRemaining:
+      RawValue: 0
+    BreakCooldownRemaining:
+      RawValue: 0
     IceRemaining:
       RawValue: 0
     IceSpeedMultiplier:
       RawValue: 0
     StunRemaining:
+      RawValue: 0
+    AnticipationSlowRemaining:
+      RawValue: 0
+    AnticipationSlowMultiplier:
       RawValue: 0
     RootRemaining:
       RawValue: 0
@@ -508,7 +502,13 @@ MonoBehaviour:
       RawValue: 0
     HasteRemaining:
     - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
     HasteAttackSpeedMultiplier:
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
     - RawValue: 0
     HasteSource:
     - {fileID: 0}
@@ -518,6 +518,22 @@ MonoBehaviour:
     ShieldRegenRemaining:
       RawValue: 0
     ShieldRegenMultiplier:
+      RawValue: 0
+    TimeDilationRemaining:
+      RawValue: 0
+    TimeDilationMultiplier:
+      RawValue: 0
+    DamageReductionRemaining:
+      RawValue: 0
+    DamageReductionAmount:
+      RawValue: 0
+    IntimidateRemaining:
+      RawValue: 0
+    IntimidateDamageMultiplier:
+      RawValue: 0
+    KnockbackTakenRemaining:
+      RawValue: 0
+    KnockbackTakenMultiplier:
       RawValue: 0
 --- !u!114 &612112432302174467
 MonoBehaviour:
@@ -607,6 +623,10 @@ MonoBehaviour:
   dieGroundOffsetZ: 0
   dieShrinkDelay: 1
   dieShrinkDuration: 0.1
+  burrowSinkDuration: 0.35
+  burrowRiseDuration: 0.35
+  burrowSquash: 0.5
+  burrowSinkAmount: 0.3
   squashLerpSpeed: 14
   volumePreservation: 0.6
   headSquashInfluence: 0.4
@@ -663,7 +683,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 17edc47547113402989931086b70eb02, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::QuantumUser.View.Util.HitFeedback
   _playerRef:
     _index: 0
@@ -681,3 +701,5 @@ MonoBehaviour:
   deathColor: {r: 0, g: 0, b: 0, a: 0.5}
   pickupGlowColor: {r: 1, g: 0.85, b: 0.3, a: 1}
   pickupGlowDuration: 0.5
+  riftMarkMaterial: {fileID: 2100000, guid: 7e404e068a4ff4625b9e9f6414fcfaa3, type: 2}
+  freezeMaterial: {fileID: 2100000, guid: b153b2878790f4feab0589455e95ac70, type: 2}

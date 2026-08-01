@@ -3,6 +3,7 @@ namespace QuantumUser.Editor
     using System.Collections.Generic;
     using Photon.Deterministic;
     using Quantum;
+    using QuantumUser.View.Util;
     using UnityEditor;
     using UnityEditor.Toolbars;
     using UnityEngine;
@@ -30,14 +31,14 @@ namespace QuantumUser.Editor
         {
             if (EditorApplication.isPlaying)
             {
-                Debug.LogWarning("Debug Health/Shield: stop the current Play session before changing the preset - RuntimeConfig is only read once, at session start.");
+                LogHelper.Warn("DebugHealthShield", "stop the current Play session before changing the preset - RuntimeConfig is only read once, at session start.");
                 return;
             }
 
             var debugRunner = Object.FindFirstObjectByType<QuantumRunnerLocalDebug>();
             if (debugRunner == null)
             {
-                Debug.LogWarning("Debug Health/Shield: no QuantumRunnerLocalDebug found in the open scene(s) - open QuantumGameScene first.");
+                LogHelper.Warn("DebugHealthShield", "no QuantumRunnerLocalDebug found in the open scene(s) - open QuantumGameScene first.");
                 return;
             }
 
@@ -45,7 +46,7 @@ namespace QuantumUser.Editor
             debugRunner.RuntimeConfig.DebugInitialHealthMultiplier = healthMultiplier;
             debugRunner.RuntimeConfig.DebugInitialShieldMultiplier = shieldMultiplier;
 
-            Debug.Log($"Debug Health/Shield: health x{healthMultiplier}, shield x{shieldMultiplier}");
+            LogHelper.Log("DebugHealthShield", $"health x{healthMultiplier}, shield x{shieldMultiplier}");
         }
     }
 }

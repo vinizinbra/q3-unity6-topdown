@@ -23,8 +23,6 @@ public class PartyHudManager : MonoBehaviour
 
     private void Awake()
     {
-        if (defaultLocalSlot != null && defaultLocalSlot == slotPrefab)
-            Debug.LogError("[PartyHudManager] defaultLocalSlot and slotPrefab point at the same object - assign two separate PartyHudWidget instances or player 1 and the instantiated players will fight over one slot.", this);
     }
 
     private void OnEnable()

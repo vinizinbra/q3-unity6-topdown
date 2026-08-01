@@ -43,6 +43,10 @@ namespace Quantum
         public FP ProjectileSpeedMultiplier = FP._1;
         public FP AreaRadiusMultiplier = FP._1;
 
+        [Tooltip("Attacker-side range falloff (Close Quarters/Longshot Global Upgrades) - lerped between off attacker-target distance, see DamageUtility.ResolveRangeDamageMultiplier.")]
+        public FP NearDamageMultiplier = FP._1;
+        public FP FarDamageMultiplier = FP._1;
+
         public FP DashCooldownMultiplier = FP._1;
         public FP SkillCooldownMultiplier = FP._1;
 
@@ -67,6 +71,8 @@ namespace Quantum
         public FP PickupRangeMultiplier = FP._1;
         public FP Luck = FP._0;
         public FP ExperienceGainMultiplier = FP._1;
+        public FP RiftShardGainMultiplier = FP._1;
+        public FP CoinGainMultiplier = FP._1;
 
         [Header("View")]
         [Tooltip("Tint for the local player's ground ring/glow/movement-arrow (see MovementRingView) - lets each hero's \"this is you\" marker read as their own color.")]
@@ -88,11 +94,9 @@ namespace Quantum
         [ExpandableAsset] public AssetRef<WeaponDataAsset> StartingWeapon;
 
         [Header("Upgrades")]
-        [Tooltip("What this hero may be offered mid-run for each slot, granted via SkillSystem.AddUpgrade. Every hero can share one DashSkillData - these lists are what make their dashes diverge, rather than a per-hero skill asset per upgrade combination.")]
+        [Tooltip("What this hero may be offered mid-run for the Dash slot, granted via SkillSystem.AddUpgrade. Every hero can share one DashSkillData - this list is what makes their dashes diverge, rather than a per-hero skill asset per upgrade combination. HeroSkill has no equivalent list - see LevelUpUtility.AddHeroSkillUpgradeCandidates, which pulls straight from HeroSkill's own Actions instead (any entry authored there with Activated == false is a level-up candidate).")]
         [FormerlySerializedAs("PrimarySkillUpgrades")]
         [ExpandableAsset] public List<AssetRef<SkillActionData>> DashSkillUpgrades = new();
-        [FormerlySerializedAs("MobilitySkillUpgrades")]
-        [ExpandableAsset] public List<AssetRef<SkillActionData>> HeroSkillUpgrades = new();
 
         [Tooltip("What this hero may be offered mid-run as a Passive Upgrade level-up choice - see LevelUpPoolKind.PassiveUpgrade. Per-hero same as DashSkillUpgrades/HeroSkillUpgrades above, since a hero's passive upgrades build on its own single Passive. No grant mechanism exists yet (see PassiveUpgradeUtility) - plumbing only.")]
         [ExpandableAsset] public List<AssetRef<PassiveUpgradeData>> PassiveUpgrades = new();

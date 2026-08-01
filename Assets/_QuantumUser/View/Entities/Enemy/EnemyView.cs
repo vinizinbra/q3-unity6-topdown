@@ -77,12 +77,12 @@ namespace Quantum
             EnemyDataAsset data = frame.FindAsset(frame.Get<Enemy>(_entityRef).EnemyData);
             if (data.ViewPrefab == null)
             {
-                Debug.LogError($"[Enemy] {_entityRef} EnemyDataAsset {data.name} has no ViewPrefab assigned");
+                LogHelper.Error("Enemy", $"{_entityRef} EnemyDataAsset {data.name} has no ViewPrefab assigned");
                 return;
             }
 
             float radius = EnemyMovementUtility.ResolveEntityRadius(frame, _entityRef).AsFloat;
-            Debug.Log($"[Enemy] {_entityRef} ({data.name}) SpawnSprite resolved radius {radius}");
+            LogHelper.Log("Enemy", $"{_entityRef} ({data.name}) SpawnSprite resolved radius {radius}");
 
             // HasShadow sits as a sibling on this same GameObject (see Enemy.prefab/
             // BasicEnemy.prefab) and already acquired its pooled blob in its own OnEnable, before
@@ -101,7 +101,7 @@ namespace Quantum
             EnemyViewRig rig = instance.GetComponentInChildren<EnemyViewRig>();
             if (rig == null)
             {
-                Debug.LogError($"[Enemy] {_entityRef} EnemyDataAsset {data.name}'s ViewPrefab has no EnemyViewRig");
+                LogHelper.Error("Enemy", $"{_entityRef} EnemyDataAsset {data.name}'s ViewPrefab has no EnemyViewRig");
                 return;
             }
 
@@ -127,7 +127,7 @@ namespace Quantum
         {
             if (rig.ReferenceSprite == null || rig.ReferenceSprite.sprite == null)
             {
-                Debug.LogError($"[Enemy] {_entityRef} EnemyDataAsset {data.name}'s ViewPrefab has no EnemyViewRig.ReferenceSprite assigned - falling back to Radius as a raw scale multiplier, which won't correct for the sprite's Pixels Per Unit.");
+                LogHelper.Error("Enemy", $"{_entityRef} EnemyDataAsset {data.name}'s ViewPrefab has no EnemyViewRig.ReferenceSprite assigned - falling back to Radius as a raw scale multiplier, which won't correct for the sprite's Pixels Per Unit.");
                 return radius;
             }
 

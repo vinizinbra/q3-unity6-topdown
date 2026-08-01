@@ -4,6 +4,7 @@ namespace QuantumUser.Editor
     using System.Linq;
     using Photon.Deterministic;
     using Quantum;
+    using QuantumUser.View.Util;
     using UnityEditor;
     using UnityEngine;
 
@@ -87,7 +88,7 @@ namespace QuantumUser.Editor
             WireCharacterData(passive, new List<PassiveUpgradeData> { biggerBoom, unstableMixture, explosiveRounds, heavyPayload },
                 new List<SkillActionData> { backblast, volatileEscape });
 
-            Debug.Log("[PixieChainReactionAssetGenerator] Passive + 4 ascensions + 2 dash ascensions authored and wired into PixieCharacterData. " +
+            LogHelper.Log("PixieChainReactionAssetGenerator", "Passive + 4 ascensions + 2 dash ascensions authored and wired into PixieCharacterData. " +
                       "Bombs Away (the 3rd dash ascension) still needs a standalone timed-bomb EntityPrototype authored by hand first - " +
                       "NOT the existing BunnyBombEntityPrototype (that one is wired for ProjectileSpawner.Spawn's own launch/velocity setup, " +
                       "not SpawnedEntitySpawner.Spawn's simpler create-and-place path, so reusing it directly risks an uninitialized " +
@@ -122,13 +123,13 @@ namespace QuantumUser.Editor
 
             if (characterData == null)
             {
-                Debug.LogError($"[PixieChainReactionAssetGenerator] No CharacterData asset at {CharacterDataPath} - assets were created/updated, but nothing was wired.");
+                LogHelper.Error("PixieChainReactionAssetGenerator", $"No CharacterData asset at {CharacterDataPath} - assets were created/updated, but nothing was wired.");
                 return;
             }
 
             if (characterData.Passive.IsValid == true && characterData.Passive.Id.Value != passive.Guid.Value)
             {
-                Debug.LogWarning($"[PixieChainReactionAssetGenerator] PixieCharacterData.Passive was already set to {characterData.Passive} - overwriting with ChainReactionPassiveData.");
+                LogHelper.Warn("PixieChainReactionAssetGenerator", $"PixieCharacterData.Passive was already set to {characterData.Passive} - overwriting with ChainReactionPassiveData.");
             }
 
             characterData.Passive = new AssetRef<PassiveData>(passive.Guid);

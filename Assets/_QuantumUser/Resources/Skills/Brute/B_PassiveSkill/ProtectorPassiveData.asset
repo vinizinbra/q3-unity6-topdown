@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a33fa2f871bd548b7910d1c813c3b481, type: 3}
+  m_Name: ProtectorPassiveData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ProtectorPassiveData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Brute/B_PassiveSkill/ProtectorPassiveData
+    Guid:
+      Value: 393071073715498458
+  Description: Brute radiates an aura that intimidates nearby enemies, weakening
+    their damage, while he stands within it.
+  Radius:
+    RawValue: 131072
+  IntimidateDamageMultiplier:
+    RawValue: 52429

@@ -1,5 +1,6 @@
 using NaughtyAttributes;
 using QuantumUser.View.Managers;
+using QuantumUser.View.Util;
 using UnityEngine;
 
 namespace Quantum
@@ -44,7 +45,7 @@ namespace Quantum
         {
             if (initialTheme == null)
             {
-                Debug.LogWarning("[EnvironmentManager] No initialTheme assigned to apply.");
+                LogHelper.Warn("EnvironmentManager", "No initialTheme assigned to apply.");
                 return;
             }
 
@@ -55,7 +56,7 @@ namespace Quantum
         {
             if (theme == null)
             {
-                Debug.LogError("[EnvironmentManager] Load called with a null WorldTheme.");
+                LogHelper.Error("EnvironmentManager", "Load called with a null WorldTheme.");
                 return;
             }
 

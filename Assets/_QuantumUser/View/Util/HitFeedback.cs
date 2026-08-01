@@ -38,6 +38,20 @@ namespace QuantumUser.View.Util
         [SerializeField, Tooltip("Longer than the snappy hit-flash duration - reads as a glow rather than a flash.")]
         private float pickupGlowDuration = 0.5f;
 
+        [Header("Rift Mark")]
+        [SerializeField, Tooltip("StatusEffects.VoidRemaining - see StatusEffectUtility.IsVoided. Sprites swap to this material (pink inner glow via Sprites/Sprite Status Colorise Flash's _GlowColor/_GlowIntensity) while active, and back to their own original material otherwise. Hit-flash is untouched by this - it still writes SpriteRenderer.color same as always, on top of whichever material is currently assigned.")]
+        private Material riftMarkMaterial;
+
+        [Header("Freeze Mark")]
+        [SerializeField, Tooltip("StatusEffects.AnticipationSlowRemaining - see StatusEffectUtility.IsAnticipationSlowed (Void+Ice's Freeze reaction, docs/elemental-reactions.md). Takes priority over riftMarkMaterial when both are active on the same target.")]
+        private Material freezeMaterial;
+
+        private enum MarkState { Normal, Rift, Freeze }
+
+        private Material[] _originalMaterials;
+        private MarkState _markState;
+        private bool _dead;
+
         private Tween[] _tweens;
 
         public override void Awake()
@@ -78,11 +92,41 @@ namespace QuantumUser.View.Util
         private void InitializeSprites()
         {
             _tweens = new Tween[sprites.Length];
+            _dead = false;
+            _markState = MarkState.Normal;
+
+            _originalMaterials = new Material[sprites.Length];
+            for (var i = 0; i < sprites.Length; i++)
+                _originalMaterials[i] = sprites[i].sharedMaterial;
+
             Flash();
         }
 
+        // Rift/Freeze are material swaps, not tweens - each status is either active or it isn't,
+        // so sprites just jump to the matching material and back rather than easing a color.
+        // Freeze (Void+Ice's reaction) takes priority over a plain Rift Mark when both are active.
         protected override void QUpdate(QuantumGame game)
         {
+            if (_dead || sprites == null)
+                return;
+
+            Frame frame = game.Frames.Predicted;
+            if (frame == null)
+                return;
+
+            MarkState state = MarkState.Normal;
+            if (freezeMaterial != null && StatusEffectUtility.IsAnticipationSlowed(frame, _entityRef))
+                state = MarkState.Freeze;
+            else if (riftMarkMaterial != null && StatusEffectUtility.IsVoided(frame, _entityRef))
+                state = MarkState.Rift;
+
+            if (state == _markState)
+                return;
+
+            _markState = state;
+            Material material = state == MarkState.Freeze ? freezeMaterial : state == MarkState.Rift ? riftMarkMaterial : null;
+            for (var i = 0; i < sprites.Length; i++)
+                sprites[i].sharedMaterial = material != null ? material : _originalMaterials[i];
         }
 
         private void OnEntityDamaged(EventEntityDamaged e)
@@ -184,6 +228,8 @@ namespace QuantumUser.View.Util
         {
             if (_tweens == null)
                 return;
+
+            _dead = true;
 
             foreach (var tween in _tweens)
                 tween.Stop();

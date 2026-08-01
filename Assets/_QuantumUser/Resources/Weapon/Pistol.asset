@@ -18,19 +18,22 @@ MonoBehaviour:
       Value: 532371987665164333
   FireType: 1
   Damage:
-    RawValue: 65536
+    RawValue: 1179648
   Element: 0
   CriticalChance:
-    RawValue: 65536
-  CriticalDamageBonus:
-    RawValue: 0
-  FireCooldownTime:
     RawValue: 13107
-  MagazineSize: 12
-  ReloadDuration:
-    RawValue: 65536
-  Range:
+  CriticalDamageBonus:
+    RawValue: 32768
+  FireRate:
     RawValue: 196608
+  MagazineSize: 6
+  ReloadDuration:
+    RawValue: 32768
+  Range:
+    RawValue: 458752
+  PelletCount: 1
+  SpreadAngle:
+    RawValue: 327680
   SpawnAnchor: 0
   SpawnOffset:
     X:
@@ -41,5 +44,11 @@ MonoBehaviour:
       RawValue: 0
   ProjectileData:
     Id:
-      Value: 501518674430704528
-  ViewPrefab: {fileID: 8089491252618662435, guid: b98c7f425f94340238641d20e1057c84, type: 3}
+      Value: 2052039704194794421
+  ViewPrefab: {fileID: 8089491252618662435, guid: 71e454c59b0bb4e6b949d1333a8bcb33, type: 3}
+  _dpsPreview: 'Burst DPS: 54
+
+    Sustained DPS (incl. reload): 43.2
+
+    Damage/min:
+    2592'

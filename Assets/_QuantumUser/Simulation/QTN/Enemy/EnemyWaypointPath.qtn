@@ -1,0 +1,19 @@
+// Optional, opt-in component - only needed by an enemy with EnemyDataAsset.Stats.UseWaypointDetour
+// set (see EnemyPathfindingUtility.TryGetDetourDirection). Holds the currently-resolved detour
+// around a wall blocking direct line-of-sight to the target: a short run of world-space points
+// through the enemy's current Chunk.Waypoints graph, walked in order until either the path runs
+// out or line-of-sight to the target is regained (whichever comes first - TryGetDetourDirection
+// checks line-of-sight fresh every tick, this component only ever caches the detour itself).
+component EnemyWaypointPath
+{
+    // Fixed-size to match Chunk.Waypoints (see Chunk.qtn) - a single-chunk A* route can never
+    // visit more nodes than the chunk actually has. Only the first Count entries are meaningful.
+    array<FPVector3>[16] Waypoints;
+    Byte Count;
+
+    // Index into Waypoints of the node currently being walked toward - advances once the enemy
+    // gets within EnemyDataAsset.Stats.WaypointArrivalDistance of it. Count == 0 means "no active
+    // detour", not Cursor == Count - Cursor reaching Count is handled by clearing Count to 0 the
+    // same tick, so callers only ever need to check Count.
+    Byte Cursor;
+}

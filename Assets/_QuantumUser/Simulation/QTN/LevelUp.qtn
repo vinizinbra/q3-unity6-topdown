@@ -1,23 +1,26 @@
 // Level-up upgrade-choice screen - see docs/level-up-upgrades.md for the full runtime flow
 // (ExperienceUtility.Grant -> LevelUpUtility.BeginLevelUpScreen -> LevelUpSystem countdown ->
-// LevelUpUtility.Resolve). GlobalUpgrade/PassiveUpgrade are reserved kinds with no gameplay effect
-// yet - plumbing only, see GlobalUpgradeUtility/PassiveUpgradeUtility.
+// LevelUpUtility.Resolve). RiftMutation is the newest pool - see docs/rift-mutations.md - a rare,
+// non-stackable, run-wide pool distinct from GlobalUpgrade's small stacking increments (see
+// RiftMutationPicks below for how "non-stackable" is enforced pool-wide rather than per-asset).
 enum LevelUpPoolKind : Byte
 {
     None           = 0,
     SkillUpgrade   = 1,
     WeaponPerk     = 2,
     GlobalUpgrade  = 3,
-    PassiveUpgrade = 4
+    PassiveUpgrade = 4,
+    RiftMutation   = 5
 }
 
-// One rolled, grantable option. WeaponPerkData/SkillActionData/GlobalUpgradeData/PassiveUpgradeData
-// all derive from the shared UpgradeData base (see UpgradeData.cs), so a single AssetRef<UpgradeData>
-// covers every kind - resolved generically for display (Icon/DisplayName/GetDescription/Rarity) via
-// UpgradeCardWidget, and reinterpreted to the concrete AssetRef<T> a grant path needs (via its raw
-// Id - see LevelUpUtility.GrantOption) since Kind is what says which concrete type Upgrade actually
-// points at. SkillUpgradeSlot is the one piece Upgrade alone can't carry - which CharacterSkills
-// slot a SkillUpgrade targets (mirrors GrantSkillUpgradeCommand's own Slot field).
+// One rolled, grantable option. WeaponPerkData/SkillActionData/GlobalUpgradeData/PassiveUpgradeData/
+// RiftMutationData all derive from the shared UpgradeData base (see UpgradeData.cs), so a single
+// AssetRef<UpgradeData> covers every kind - resolved generically for display (Icon/DisplayName/
+// GetDescription/Rarity) via UpgradeCardWidget, and reinterpreted to the concrete AssetRef<T> a
+// grant path needs (via its raw Id - see LevelUpUtility.GrantOption) since Kind is what says which
+// concrete type Upgrade actually points at. SkillUpgradeSlot is the one piece Upgrade alone can't
+// carry - which CharacterSkills slot a SkillUpgrade targets (mirrors GrantSkillUpgradeCommand's own
+// Slot field).
 struct LevelUpOption
 {
     LevelUpPoolKind Kind;
@@ -39,4 +42,30 @@ component LevelUpChoice
                          // candidates than ChoiceCount, leaving trailing slots at Kind == None
     Boolean Confirmed;
     Byte SelectedIndex;
+}
+
+// One entity's pick history for the GlobalUpgrade pool - only consulted for an upgrade authored
+// with GlobalUpgradeData.MaxPicks > 0 (e.g. Dash Charge); most Global Upgrades are meant to stack
+// indefinitely (see docs/global-upgrades.md) and never get an entry here. Fixed array with headroom
+// over the current ~21-upgrade catalog, same convention as SkillSlot.Upgrades - Quantum components
+// can't hold an actual dynamic list.
+component GlobalUpgradePicks
+{
+    array<GlobalUpgradePickEntry>[32] Entries;
+}
+
+struct GlobalUpgradePickEntry
+{
+    AssetRef<GlobalUpgradeData> Upgrade;
+    Byte Count;
+}
+
+// One entity's pick history for the RiftMutation pool - simpler than GlobalUpgradePicks above since
+// every Rift Mutation is non-stackable (a pool-wide rule, not an opt-in per-asset MaxPicks), so
+// there's nothing to count, only "has this already been granted" - see RiftMutationUtility.Grant/
+// IsAlreadyPicked and LevelUpUtility.CollectRiftMutationCandidates. Fixed array with headroom over
+// the current 14-mutation catalog, same convention as GlobalUpgradePicks/SkillSlot.Upgrades.
+component RiftMutationPicks
+{
+    array<AssetRef<RiftMutationData>>[16] Picked;
 }

@@ -290,6 +290,7 @@ MonoBehaviour:
   InitStacks: 1
   Cooldown:
     RawValue: 655360
+  CheckActions: 0
   Actions:
   - Id:
       Value: 1791250195247817229
@@ -390,7 +391,7 @@ MonoBehaviour:
   Phase: 1
   Interval:
     RawValue: 0
-  Activated: 1
+  Activated: 0
   Description: Turns the thrown bomb into a decoy that pulls enemy aggro toward it
     for the rest of its flight.
   BeginFx:
@@ -475,24 +476,6 @@ MonoBehaviour:
   Projectile:
     Id:
       Value: 1447787488863340302
---- !u!114 &6909982017689036129
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d393f71ec5fbd43df9a0fa545b364020, type: 3}
-  m_Name: DamageEffectData
-  m_EditorClassIdentifier: Quantum.Simulation::Quantum.DamageEffectData
-  Identifier:
-    Path: _QuantumUser/Resources/Skills/Pixie/P_HeroSkillUpgrades/PixieBaseSkill|DamageEffectData
-    Guid:
-      Value: 1287115544340622674
-  DamageMultiplier:
-    RawValue: 65536
 --- !u!114 &7845218658299696753
 MonoBehaviour:
   m_ObjectHideFlags: 0

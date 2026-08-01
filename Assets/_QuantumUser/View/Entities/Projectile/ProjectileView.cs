@@ -47,7 +47,7 @@ namespace Quantum
 
             if (entityView == null)
             {
-                Debug.LogError($"[ProjectileView] {name}: no QuantumEntityView found on itself or its parents, so ManualDisposal can't be set. " +
+                LogHelper.Error("ProjectileView", $"{name}: no QuantumEntityView found on itself or its parents, so ManualDisposal can't be set. " +
                     "This projectile will be destroyed the instant it dies in simulation instead of tweening to its resolved hit point first - " +
                     "on a fast projectile that can mean it's created and destroyed before ever rendering a single frame. Fix the prefab hierarchy.", this);
             }

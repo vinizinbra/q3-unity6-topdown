@@ -1,5 +1,6 @@
 using NaughtyAttributes;
 using Quantum;
+using QuantumUser.View.Util;
 using UnityEngine;
 
 namespace QuantumUser.View
@@ -19,24 +20,57 @@ namespace QuantumUser.View
         private void OnEnable()
         {
             SkillActionDataDebug.OnGrantRequested += SendGrant;
+            SkillActionDataDebug.OnRemoveRequested += SendRemove;
+            SkillActionDataDebug.OnClearAllRequested += SendClearAll;
         }
 
         private void OnDisable()
         {
             SkillActionDataDebug.OnGrantRequested -= SendGrant;
+            SkillActionDataDebug.OnRemoveRequested -= SendRemove;
+            SkillActionDataDebug.OnClearAllRequested -= SendClearAll;
         }
 
         public void SendGrant(AssetRef<SkillActionData> upgrade, SkillSlotId slot)
         {
             if (MyLocalPlayer.Instance == null || MyLocalPlayer.Instance.IsLocalPlayerSetup == false)
             {
-                Debug.LogWarning("[SkillUpgradeDebugTrigger] no local player set up yet");
+                LogHelper.Warn("SkillUpgradeDebugTrigger", "no local player set up yet");
                 return;
             }
 
             _game.SendCommand(new GrantSkillUpgradeCommand
             {
                 Upgrade = upgrade,
+                Slot = slot
+            });
+        }
+
+        public void SendRemove(AssetRef<SkillActionData> upgrade, SkillSlotId slot)
+        {
+            if (MyLocalPlayer.Instance == null || MyLocalPlayer.Instance.IsLocalPlayerSetup == false)
+            {
+                LogHelper.Warn("SkillUpgradeDebugTrigger", "no local player set up yet");
+                return;
+            }
+
+            _game.SendCommand(new RemoveSkillUpgradeCommand
+            {
+                Upgrade = upgrade,
+                Slot = slot
+            });
+        }
+
+        public void SendClearAll(SkillSlotId slot)
+        {
+            if (MyLocalPlayer.Instance == null || MyLocalPlayer.Instance.IsLocalPlayerSetup == false)
+            {
+                LogHelper.Warn("SkillUpgradeDebugTrigger", "no local player set up yet");
+                return;
+            }
+
+            _game.SendCommand(new ClearSkillUpgradesCommand
+            {
                 Slot = slot
             });
         }

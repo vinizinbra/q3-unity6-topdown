@@ -24,8 +24,8 @@ MonoBehaviour:
     RawValue: 65536
   CriticalDamageBonus:
     RawValue: 0
-  FireCooldownTime:
-    RawValue: 13107
+  FireRate:
+    RawValue: 327680
   MagazineSize: 999
   ReloadDuration:
     RawValue: 65536

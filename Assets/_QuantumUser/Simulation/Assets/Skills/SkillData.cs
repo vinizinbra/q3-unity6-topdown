@@ -25,6 +25,14 @@ namespace Quantum
         // equipped, and isn't reset by simply reassigning which skill/level a slot points at.
         public FP Cooldown = 1;
 
+
+        // Skill-level kill switch for this Actions list specifically - false (the default) skips
+        // resolving/checking every entry in SkillSystem.InvokeActions entirely, rather than relying
+        // on each one's own SkillActionData.Activated. Doesn't touch slot->Upgrades - a granted
+        // level-up pick still always runs regardless of this flag, since a player was explicitly
+        // told they received it. Flip true only for a skill that actually composes behavior through
+        // this list.
+        public bool CheckActions = false;
         // Composable behaviors mixed onto this skill with no new C# - see SkillActionData. Each
         // action's own Phase field (data, not which method it overrides) decides which SkillSystem
         // lifecycle point(s) fire it, so e.g. "spawn on Begin" vs "spawn on End" is the same

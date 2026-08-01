@@ -16,9 +16,39 @@ Short version: the code compiles and `ExpOrbSystem` is registered, but no `Exper
 
 ## Level-Up Upgrades
 
-On a level-up, the simulation now pauses (a new `GameplaySystemGroup` wrapping the per-tick gameplay systems in `SystemSetup.User.cs`, toggled via Quantum's built-in `SystemDisable`/`SystemEnable`) and opens an upgrade-choice screen: every connected player rolls 3 options from `LevelUpPoolKind`'s four pools (Weapon Perk / Global Upgrade are pooled globally via `LevelUpConfig`; Skill Upgrade / Passive Upgrade are per-hero, living directly on `CharacterData`) and picks one, via `SelectLevelUpUpgradeCommand`, before a 30s timer auto-picks randomly for anyone who hasn't. `WeaponPerkData`/`SkillActionData`/`GlobalUpgradeData`/`PassiveUpgradeData` all derive from a shared `UpgradeData` base (`Icon`/`DisplayName`/`Rarity`/`GetDescription()`), so `LevelUpOption` carries one `AssetRef<UpgradeData>` instead of a field per kind, every candidate is weighted the same way by `Rarity`, and the UI (`UpgradeCardWidget`) renders any of them with no switch statement. Full design, file map, current status, and known simplifications: **`docs/level-up-upgrades.md`**. Read it before touching anything level-up/pause/upgrade-choice related.
+On a level-up, the simulation now pauses (a new `GameplaySystemGroup` wrapping the per-tick gameplay systems in `SystemSetup.User.cs`, toggled via Quantum's built-in `SystemDisable`/`SystemEnable`) and opens an upgrade-choice screen: every connected player rolls 3 options from `LevelUpPoolKind`'s pools (Weapon Perk / Global Upgrade / Rift Mutation are pooled globally via `LevelUpConfig`; Skill Upgrade / Passive Upgrade - together nicknamed "Hero Ascensions" - are per-hero, living directly on `CharacterData`) and picks one, via `SelectLevelUpUpgradeCommand`, before a 30s timer auto-picks randomly for anyone who hasn't. `WeaponPerkData`/`SkillActionData`/`GlobalUpgradeData`/`PassiveUpgradeData`/`RiftMutationData` all derive from a shared `UpgradeData` base (`Icon`/`DisplayName`/`Rarity`/`GetDescription()`), so `LevelUpOption` carries one `AssetRef<UpgradeData>` instead of a field per kind, every candidate is weighted the same way by `Rarity`, and the UI (`UpgradeCardWidget`) renders any of them with no switch statement. Full design, file map, current status, and known simplifications: **`docs/level-up-upgrades.md`**. Read it before touching anything level-up/pause/upgrade-choice related.
 
-Short version: the code compiles and `LevelUpSystem` is registered, but no `LevelUpConfig` asset instance exists yet, none of the four upgrade pools have any entries authored, and no `UpgradeWindow` is wired into the scene - a level-up still happens, it just never pauses anything or shows a screen until that authoring is done.
+Short version: `LevelUpConfig.asset` is authored and assigned to `RuntimeConfig`, `GlobalUpgrades`/`WeaponPerkPool`/per-hero `DashSkillUpgrades`/`PassiveUpgrades` are all populated, and `UpgradeWindow` is wired into `QuantumGameScene` via `GameplayUiController.upgradeWindows[]` - a level-up now actually pauses and shows a screen. `CharacterData.HeroSkillUpgrades` no longer exists - the Hero Skill slice of the Skill Upgrade pool is pulled straight from `HeroSkill`'s own `Actions` list instead (any `SkillActionData` authored there with `Activated == false` is a candidate; granting it via `AddUpgrade` ignores `Activated` for that player only - see `SkillSystem.InvokeActions`' `isUpgrade` bypass). Remaining gap: the full end-to-end flow hasn't been manually verified in-Editor yet. See `docs/level-up-upgrades.md` for details.
+
+The `GlobalUpgrade` pool itself (22 upgrades, small permanent stat increments that stack
+indefinitely) has its own design catalog: **`docs/global-upgrades.md`**. That doc's "Economy"
+section also covers **Coin**, a second independent currency from Rift Shards
+(`Coin.qtn`/`Coins.qtn`/`CoinConfig`/`CoinUtility`/`CoinOrbSystem`) - both currencies now share a
+per-`EnemyTier` drop-chance gate (`EnemyTierStatsConfig.TierStats`'
+`RiftShardDropChance`/`CoinDropChance`, rolled via `DamageUtility.RollChance` before a kill actually
+drops one) and a scattered spawn position (`Min`/`MaxSpawnOffset`, same pattern `ScrapConfig`
+already used) so multiple drops off one kill don't stack exactly on top of each other.
+
+## Rift Mutations
+
+A fourth level-up pool alongside Global Upgrade/Weapon Perk/Hero Ascension - `LevelUpPoolKind.
+RiftMutation`, its own `RiftMutationData`/`RiftMutationUtility`/`RiftMutationPicks` hierarchy (see
+`Assets/_QuantumUser/Simulation/Assets/RiftMutation/`), and its own `LevelUpConfig.RiftMutations`
+list - for **rare, non-stackable, run-wide** effects: a one-shot build-defining tradeoff (Glass
+Core, Heavy Arsenal), a new reactive rule (Shield Breaker, Critical Focus), or both (Infinite
+Momentum). "Non-stackable" is enforced pool-wide (`RiftMutationPicks`), unlike Global Upgrade's
+opt-in per-asset `MaxPicks`. New `RiftMutationReactionSystem` reacts to crit/dash-activation/
+shield-break signals for the mutations that need more than a one-shot `CharacterStats` bake. Greed
+introduced a new **Rift Shard** currency system (`RiftShard.qtn`/`RiftShards.qtn`/
+`RiftShardConfig`/`RiftShardUtility`/`RiftShardOrbSystem`), mirroring `ExpOrb`'s drop-and-collect
+pattern. Full design, the complete 14-mutation roster, and current status: **`docs/rift-mutations.md`**.
+Read it before touching anything Rift-Mutation-related.
+
+Short version: the code compiles and is registered in `SystemSetup.User.cs`, but `Tools/RiftRaiders/
+Generate Rift Mutation Assets` hasn't been run yet (no `.asset` instances exist), and (same gap
+`ExpOrb` itself once had) no `RiftShardOrb` prototype prefab exists yet and
+`RuntimeConfig.RiftShardConfig`/`RiftShardPrototype` aren't assigned, so Greed's currency half won't
+drop or credit anything at runtime until that's authored in the Editor.
 
 ## Weapon Perks
 

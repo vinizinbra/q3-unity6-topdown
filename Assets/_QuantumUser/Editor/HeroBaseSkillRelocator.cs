@@ -1,5 +1,6 @@
 namespace QuantumUser.Editor
 {
+    using QuantumUser.View.Util;
     using UnityEditor;
     using UnityEngine;
 
@@ -27,7 +28,7 @@ namespace QuantumUser.Editor
             {
                 if (AssetDatabase.LoadAssetAtPath<Object>(from) == null)
                 {
-                    Debug.LogWarning($"[HeroBaseSkillRelocator] Skipping - not found at {from}.");
+                    LogHelper.Warn("HeroBaseSkillRelocator", $"Skipping - not found at {from}.");
                     continue;
                 }
 
@@ -37,11 +38,11 @@ namespace QuantumUser.Editor
 
                 if (string.IsNullOrEmpty(error))
                 {
-                    Debug.Log($"[HeroBaseSkillRelocator] Moved {from} -> {to}.");
+                    LogHelper.Log("HeroBaseSkillRelocator", $"Moved {from} -> {to}.");
                 }
                 else
                 {
-                    Debug.LogError($"[HeroBaseSkillRelocator] Failed to move {from} -> {to}: {error}");
+                    LogHelper.Error("HeroBaseSkillRelocator", $"Failed to move {from} -> {to}: {error}");
                 }
             }
 

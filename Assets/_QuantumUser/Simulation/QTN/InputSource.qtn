@@ -1,8 +1,9 @@
-// Lets a non-player entity (e.g. Lux's sentry gun) drive Input-consuming systems (WeaponSystem) the
-// same way a real player does, without an actual PlayerLink/PlayerRef behind it - some other system
-// (the entity's own "brain", e.g. a future SentryInputSystem) writes into Data every tick to express
-// intent (Fire.IsDown = true when it wants to shoot, Direction, etc.), and WeaponSystem reads it
-// through the exact same Input shape a real player's input uses - see WeaponSystem.TryResolveInput.
+// Lets a non-player entity (e.g. Lux's sentry gun) be seen by Input-consuming systems (WeaponSystem)
+// the same way a real player is, without an actual PlayerLink/PlayerRef behind it - some other
+// system (the entity's own "brain", e.g. SentryBarrelSystem) writes into Data every tick in the
+// same Input shape a real player's input uses. WeaponSystem itself no longer reads Fire.IsDown out
+// of Data (firing is auto-attack, gated on Aim.Target instead - see WeaponSystem.HasFireDriver) but
+// still requires either this component or PlayerLink to exist before a Weapon is allowed to fire.
 component InputSource
 {
     Input Data;

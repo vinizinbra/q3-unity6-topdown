@@ -4,6 +4,7 @@ namespace QuantumUser.Editor
     using System.Linq;
     using Photon.Deterministic;
     using Quantum;
+    using QuantumUser.View.Util;
     using UnityEditor;
     using UnityEngine;
 
@@ -103,7 +104,7 @@ namespace QuantumUser.Editor
             WireCharacterData(passive, new List<PassiveUpgradeData> { efficientSalvage, enhacement, rapidRecycling, scavenger },
                 new List<SkillActionData> { emergencyRepair, portableCover });
 
-            Debug.Log("[LuxScrapAssetGenerator] Passive + 4 ascensions + 2 dash ascensions authored and wired into LuxCharacterData. " +
+            LogHelper.Log("LuxScrapAssetGenerator", "Passive + 4 ascensions + 2 dash ascensions authored and wired into LuxCharacterData. " +
                       "Still needed by hand: (1) assign the new ScrapConfig.asset and a ScrapOrb EntityPrototype (a pickup prefab " +
                       "carrying the ScrapOrb component, same shape as ExpOrb's own prefab) to RuntimeConfig's ScrapConfig/ScrapOrbPrototype " +
                       "fields wherever ExperienceConfig/ExpOrbPrototype are already assigned (QuantumMenuConfig.asset); " +
@@ -139,13 +140,13 @@ namespace QuantumUser.Editor
 
             if (characterData == null)
             {
-                Debug.LogError($"[LuxScrapAssetGenerator] No CharacterData asset at {CharacterDataPath} - assets were created/updated, but nothing was wired.");
+                LogHelper.Error("LuxScrapAssetGenerator", $"No CharacterData asset at {CharacterDataPath} - assets were created/updated, but nothing was wired.");
                 return;
             }
 
             if (characterData.Passive.IsValid == true && characterData.Passive.Id.Value != passive.Guid.Value)
             {
-                Debug.LogWarning($"[LuxScrapAssetGenerator] LuxCharacterData.Passive was already set to {characterData.Passive} - overwriting with ScrapCollectorPassiveData.");
+                LogHelper.Warn("LuxScrapAssetGenerator", $"LuxCharacterData.Passive was already set to {characterData.Passive} - overwriting with ScrapCollectorPassiveData.");
             }
 
             characterData.Passive = new AssetRef<PassiveData>(passive.Guid);

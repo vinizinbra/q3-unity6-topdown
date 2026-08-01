@@ -32,7 +32,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: -3, z: 0}
-  m_LocalScale: {x: 6, y: 4, z: 6}
+  m_LocalScale: {x: 12, y: 4, z: 12}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8286577222371609028}
@@ -283,11 +283,11 @@ MonoBehaviour:
     Shape3D:
       ShapeType: 16
       SphereRadius:
-        RawValue: 0
+        RawValue: 32768
       CapsuleRadius:
-        RawValue: 0
+        RawValue: 32768
       CapsuleHeight:
-        RawValue: 0
+        RawValue: 131072
       PositionOffset:
         X:
           RawValue: 0
@@ -297,11 +297,11 @@ MonoBehaviour:
           RawValue: 0
       BoxExtents:
         X:
-          RawValue: 0
+          RawValue: 32768
         Y:
-          RawValue: 0
+          RawValue: 32768
         Z:
-          RawValue: 0
+          RawValue: 32768
       RotationOffset:
         X:
           RawValue: 0
@@ -314,25 +314,25 @@ MonoBehaviour:
       CompoundShapes:
       - ShapeType: 2
         SphereRadius:
-          RawValue: 0
+          RawValue: 32768
         CapsuleRadius:
-          RawValue: 0
+          RawValue: 32768
         CapsuleHeight:
-          RawValue: 0
+          RawValue: 131072
         PositionOffset:
           X:
-            RawValue: 196608
+            RawValue: 393216
           Y:
             RawValue: -65509
           Z:
-            RawValue: 196608
+            RawValue: 393216
         BoxExtents:
           X:
-            RawValue: 196608
+            RawValue: 393216
           Y:
             RawValue: 131072
           Z:
-            RawValue: 196608
+            RawValue: 393216
         RotationOffset:
           X:
             RawValue: 0
@@ -511,12 +511,142 @@ MonoBehaviour:
   Prototype:
     Type:
       Value: 0
-    ChunkSizeWidth: 6
-    ChunkSizeDepth: 6
+    ChunkSizeWidth: 12
+    ChunkSizeDepth: 12
     OriginCellX: 0
     OriginCellZ: 0
     Rotation:
       Value: 0
+    Waypoints:
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    WaypointCount: 0
 --- !u!114 &6992737075964169537
 MonoBehaviour:
   m_ObjectHideFlags: 0

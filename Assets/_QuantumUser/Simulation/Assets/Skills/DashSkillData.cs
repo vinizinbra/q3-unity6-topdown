@@ -32,8 +32,6 @@ namespace Quantum
         // Safety timeout in case the dash never arrives.
         public FP DashDuration = FP._0_50;
 
-        public FP WallCheckDistance = FP._0_75;
-
         // "Arrived" threshold - kept tight since a dash has no Range/connect-distance concept.
         private static readonly FP ArrivalDistance = FP._0_10;
 
@@ -69,7 +67,6 @@ namespace Quantum
             FPVector3 moveDelta = slot->TargetPosition - selfPosition;
             FPVector3 direction = moveDelta.Normalized;
             FP step = FPMath.Min(DashSpeed * f.DeltaTime, moveDelta.Magnitude);
-            FPVector3 candidatePosition = selfPosition + direction * step;
 
             // Sourced from the player's actual KCCSettings (not a separately hand-tuned constant)
             // so the wall check stays in sync with whatever collider size/height the character
@@ -79,43 +76,36 @@ namespace Quantum
             FP bodyRadius = kccSettings.Radius;
 
             // HitStatics | HitKinematics (not HitStatics alone) - same combination
-            // PlayerMovementProcessor already uses for its own ground/mantle checks. A single
-            // fixed-height raycast (the previous approach here) turned out to actually let the dash
-            // pass through level-chunk walls; a sphere overlap at the candidate position is robust
-            // to wall geometry/height instead of depending on guessing the right ray height.
-            // Offset up by wallCheckHeight (same height used below for the stop-point raycast) -
-            // GetGroundLayerMask covers the floor as well as walls, so a sphere centered at
-            // candidatePosition's own (ground-level) height would overlap the floor collider itself
-            // on every tick and register as a false "wall" hit.
+            // PlayerMovementProcessor already uses for its own ground/mantle checks. A single sphere
+            // sweep over the actual step distance, not a separate overlap-at-destination-then-raycast
+            // pair (the previous approach here) - the two could disagree, since the overlap sphere
+            // catches a corner/glancing wall that a zero-radius centerline raycast sails clean past,
+            // which cancelled the dash in place with zero movement even on a sweep that was otherwise
+            // clear. Offset up by wallCheckHeight so a sphere at ground level doesn't overlap the
+            // floor collider itself and register as a false "wall" hit - GetGroundLayerMask covers
+            // both.
             int wallLayerMask = EnemyMovementUtility.GetGroundLayerMask(f);
             const QueryOptions WallQueryOptions = QueryOptions.HitStatics | QueryOptions.HitKinematics;
             Shape3D bodyShape = Shape3D.CreateSphere(bodyRadius);
-            FPVector3 wallCheckPosition = candidatePosition + FPVector3.Up * wallCheckHeight;
-            var wallHits = f.Physics3D.OverlapShape(wallCheckPosition, FPQuaternion.Identity, bodyShape, wallLayerMask, WallQueryOptions);
+            FPVector3 wallCheckOrigin = selfPosition + FPVector3.Up * wallCheckHeight;
+            Hit3D? wallHit = f.Physics3D.ShapeCast(wallCheckOrigin, FPQuaternion.Identity, bodyShape, direction * step, wallLayerMask, WallQueryOptions);
 
-            if (wallHits.Count > 0)
+            if (wallHit.HasValue == true)
             {
-                // Best-effort tighter stop point via a raycast (same widened query) - falls back to
-                // just not moving this tick (stay at selfPosition, already confirmed clear) if the
-                // ray doesn't happen to connect, rather than risk clipping into the wall anyway.
-                FPVector3 wallCheckOrigin = selfPosition + FPVector3.Up * wallCheckHeight;
-                FP stepDistance = FPMath.Max(step, WallCheckDistance);
-                Hit3D? wallHit = f.Physics3D.Raycast(wallCheckOrigin, direction, stepDistance, wallLayerMask, WallQueryOptions);
-
-                FPVector3 stopPosition = selfPosition;
-
-                if (wallHit.HasValue == true)
-                {
-                    stopPosition = wallHit.Value.Point - direction * bodyRadius;
-                    stopPosition.Y = selfPosition.Y;
-                }
+                // CastDistanceNormalized (unlike Point/Normal) doesn't need ComputeDetailedInfo and
+                // already accounts for the sphere's own radius against the hit surface at any angle -
+                // unlike the old Point - direction * bodyRadius math, which only placed the stop point
+                // correctly for a dead-on hit and could leave the sphere still clipping the wall (or
+                // stopping short of it) on an angled one.
+                FPVector3 stopPosition = selfPosition + direction * step * wallHit.Value.CastDistanceNormalized;
+                stopPosition.Y = selfPosition.Y;
 
                 filter.Transform3D->Position = stopPosition;
                 Log.Debug($"[Skill] {filter.Entity}'s Dash stopped early at {stopPosition} - blocked by wall");
                 return true;
             }
 
-            filter.Transform3D->Position = candidatePosition;
+            filter.Transform3D->Position = selfPosition + direction * step;
             return false;
         }
 

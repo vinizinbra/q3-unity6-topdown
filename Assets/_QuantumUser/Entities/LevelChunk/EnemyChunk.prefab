@@ -31,7 +31,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: -3, z: 0}
-  m_LocalScale: {x: 8, y: 4, z: 8}
+  m_LocalScale: {x: 16, y: 4, z: 16}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8286577222371609028}
@@ -182,13 +182,13 @@ GameObject:
   - component: {fileID: 9157031011449988502}
   - component: {fileID: 5133081236287179253}
   - component: {fileID: 8155577512460365807}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &6176202536904852086
 Transform:
   m_ObjectHideFlags: 0
@@ -198,8 +198,8 @@ Transform:
   m_GameObject: {fileID: 4344012744512938263}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 3.5513592, y: 1.93, z: 3.51}
-  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_LocalPosition: {x: 6.6917, y: 1.2004001, z: 10.5}
+  m_LocalScale: {x: 0.4967, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8286577222371609028}
@@ -298,13 +298,13 @@ GameObject:
   - component: {fileID: 4753489564876005113}
   - component: {fileID: 2050308577065716459}
   - component: {fileID: 5779452985208058679}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Cube (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &7342688598681260388
 Transform:
   m_ObjectHideFlags: 0
@@ -314,8 +314,8 @@ Transform:
   m_GameObject: {fileID: 4410483133963442232}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2.06, y: 1.93, z: 1.97}
-  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_LocalPosition: {x: 3.3140984, y: 1.2004001, z: 10.67}
+  m_LocalScale: {x: 0.4967, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8286577222371609028}
@@ -414,13 +414,13 @@ GameObject:
   - component: {fileID: 2925333574436185201}
   - component: {fileID: 2699246984908272464}
   - component: {fileID: 1048718471853661992}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Cube (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &7372346587820670428
 Transform:
   m_ObjectHideFlags: 0
@@ -430,8 +430,8 @@ Transform:
   m_GameObject: {fileID: 4497673202048193478}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 3.78, y: 1.93, z: 0.58}
-  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_LocalPosition: {x: 3.1155014, y: 1.2004001, z: 3.6400003}
+  m_LocalScale: {x: 0.4967, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8286577222371609028}
@@ -548,8 +548,8 @@ Transform:
   m_GameObject: {fileID: 6115749516927412273}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 3, y: 1, z: 1}
-  m_LocalScale: {x: 2, y: 1, z: 2}
+  m_LocalPosition: {x: 4, y: 1, z: 4}
+  m_LocalScale: {x: 2, y: 1, z: 6}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8286577222371609028}
@@ -715,13 +715,13 @@ GameObject:
   - component: {fileID: 8713637314381535856}
   - component: {fileID: 1766207803416731121}
   - component: {fileID: 2460970365621886700}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Cube (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &6573791105550850942
 Transform:
   m_ObjectHideFlags: 0
@@ -731,8 +731,8 @@ Transform:
   m_GameObject: {fileID: 6408904834489573952}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 5.57, y: 1.93, z: 1.61}
-  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_LocalPosition: {x: 6.6419983, y: 1.2004001, z: 3.65}
+  m_LocalScale: {x: 0.4967, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8286577222371609028}
@@ -831,8 +831,8 @@ GameObject:
   - component: {fileID: 4163189865522279029}
   - component: {fileID: 8746784325062376044}
   - component: {fileID: -2848952897361901041}
-  - component: {fileID: 5839911722118152469}
-  m_Layer: 0
+  - component: {fileID: 8210870479245787991}
+  m_Layer: 6
   m_Name: EnemyChunk
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -848,7 +848,7 @@ Transform:
   m_GameObject: {fileID: 8161546120763317443}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 13, y: -1, z: 16}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -922,11 +922,11 @@ MonoBehaviour:
     Shape3D:
       ShapeType: 16
       SphereRadius:
-        RawValue: 0
+        RawValue: 32768
       CapsuleRadius:
-        RawValue: 0
+        RawValue: 32768
       CapsuleHeight:
-        RawValue: 0
+        RawValue: 131072
       PositionOffset:
         X:
           RawValue: 0
@@ -936,11 +936,11 @@ MonoBehaviour:
           RawValue: 0
       BoxExtents:
         X:
-          RawValue: 0
+          RawValue: 32768
         Y:
-          RawValue: 0
+          RawValue: 32768
         Z:
-          RawValue: 0
+          RawValue: 32768
       RotationOffset:
         X:
           RawValue: 0
@@ -953,25 +953,25 @@ MonoBehaviour:
       CompoundShapes:
       - ShapeType: 2
         SphereRadius:
-          RawValue: 0
+          RawValue: 32768
         CapsuleRadius:
-          RawValue: 0
+          RawValue: 32768
         CapsuleHeight:
-          RawValue: 0
+          RawValue: 131072
         PositionOffset:
           X:
-            RawValue: 262144
+            RawValue: 524288
           Y:
             RawValue: -65509
           Z:
-            RawValue: 262144
+            RawValue: 524288
         BoxExtents:
           X:
-            RawValue: 262144
+            RawValue: 524288
           Y:
             RawValue: 131072
           Z:
-            RawValue: 262144
+            RawValue: 524288
         RotationOffset:
           X:
             RawValue: 0
@@ -983,25 +983,25 @@ MonoBehaviour:
         IsSetFromSourceCollider: 0
       - ShapeType: 2
         SphereRadius:
-          RawValue: 0
+          RawValue: 32768
         CapsuleRadius:
-          RawValue: 0
+          RawValue: 32768
         CapsuleHeight:
-          RawValue: 0
+          RawValue: 131072
         PositionOffset:
           X:
-            RawValue: 262144
+            RawValue: 327680
           Y:
             RawValue: 98310
           Z:
-            RawValue: 131072
+            RawValue: 425984
         BoxExtents:
           X:
             RawValue: 65536
           Y:
             RawValue: 32768
           Z:
-            RawValue: 65536
+            RawValue: 163840
         RotationOffset:
           X:
             RawValue: 0
@@ -1180,8 +1180,8 @@ MonoBehaviour:
   Prototype:
     Type:
       Value: 1
-    ChunkSizeWidth: 8
-    ChunkSizeDepth: 8
+    ChunkSizeWidth: 16
+    ChunkSizeDepth: 16
     OriginCellX: 0
     OriginCellZ: 0
     Rotation:
@@ -1189,36 +1189,36 @@ MonoBehaviour:
     Waypoints:
     - LocalPosition:
         X:
-          RawValue: 232741
+          RawValue: 438547
         Y:
-          RawValue: 126484
+          RawValue: 78669
         Z:
-          RawValue: 230031
-      ConnectionMask: 14
+          RawValue: 688128
+      ConnectionMask: 10
     - LocalPosition:
         X:
-          RawValue: 135004
+          RawValue: 217192
         Y:
-          RawValue: 126484
+          RawValue: 78669
         Z:
-          RawValue: 129105
-      ConnectionMask: 13
+          RawValue: 699269
+      ConnectionMask: 5
     - LocalPosition:
         X:
-          RawValue: 247726
+          RawValue: 204177
         Y:
-          RawValue: 126484
+          RawValue: 78669
         Z:
-          RawValue: 38010
-      ConnectionMask: 11
+          RawValue: 238551
+      ConnectionMask: 10
     - LocalPosition:
         X:
-          RawValue: 365035
+          RawValue: 435290
         Y:
-          RawValue: 126484
+          RawValue: 78669
         Z:
-          RawValue: 105513
-      ConnectionMask: 7
+          RawValue: 239206
+      ConnectionMask: 5
     - LocalPosition:
         X:
           RawValue: 0
@@ -1347,7 +1347,7 @@ MonoBehaviour:
   OnEntityDestroyed:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &5839911722118152469
+--- !u!114 &8210870479245787991
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1359,3 +1359,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e058718c48c554a7a9a7a606b08ebda7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChunkWaypointBaker
+  BlockingLayerNames:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  TestPointA: {fileID: 6176202536904852086}
+  TestPointB: {fileID: 7372346587820670428}

@@ -4,6 +4,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
+using QuantumUser.View.Util;
 
 namespace QuantumUser.Editor
 {
@@ -129,7 +130,7 @@ namespace QuantumUser.Editor
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Selection.activeObject = sharedMaterial;
-            Debug.Log(rebuildMeshesAndPrefabs
+            LogHelper.Log("ModularLevelConverter", rebuildMeshesAndPrefabs
                 ? $"Converted {sources.Count} modular objects into '{Root}'."
                 : $"Regenerated the modular mask atlas from {sources.Count} source objects without changing meshes or prefabs.",
                 sharedMaterial);

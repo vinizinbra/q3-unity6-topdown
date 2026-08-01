@@ -1,4 +1,5 @@
 using Quantum;
+using QuantumUser.View.Util;
 using UnityEngine;
 
 /// <summary>
@@ -42,11 +43,11 @@ public class PlayerShadow : MonoBehaviour
             if (entityView != null) target = entityView.transform;
         }
         if (target == null)
-            Debug.LogWarning($"{nameof(PlayerShadow)} on '{name}' has no target and found no QuantumEntityView in its parents.", this);
+            LogHelper.Warn("PlayerShadow", $"'{name}' has no target and found no QuantumEntityView in its parents.", this);
 
         if (shadowRenderer == null) shadowRenderer = GetComponent<SpriteRenderer>();
         if (shadowRenderer == null)
-            Debug.LogWarning($"{nameof(PlayerShadow)} on '{name}' has no SpriteRenderer assigned or attached.", this);
+            LogHelper.Warn("PlayerShadow", $"'{name}' has no SpriteRenderer assigned or attached.", this);
 
         // Lie flat on the ground plane, facing up. If it renders upside-down/mirrored
         // for your sprite's default orientation, flip this to (-90, 0, 0).
@@ -60,8 +61,13 @@ public class PlayerShadow : MonoBehaviour
         Vector3 origin = target.position + Vector3.up * raycastHeight;
         bool hasGround = Physics.Raycast(origin, Vector3.down, out RaycastHit hit, raycastHeight + maxRaycastDistance, groundLayer);
 
+        // An overhang directly above the target (e.g. a roof/upper walkway on groundLayer)
+        // can be the first thing hit, landing above the target's own position - reject it,
+        // since a valid floor to project the shadow onto is always at or below the target.
+        if (hasGround && hit.point.y > target.position.y) hasGround = false;
+
         shadowRenderer.enabled = hasGround;
-        if (!hasGround) return; // e.g. falling past the edge of the level - no floor to project onto
+        if (!hasGround) return; // e.g. falling past the edge of the level, or only an overhang above - no floor to project onto
 
         // Re-flatten every frame: we're parented under the character, so its rotation
         // (e.g. turning to face aim direction) would otherwise tilt our world rotation too.

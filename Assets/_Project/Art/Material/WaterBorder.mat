@@ -156,12 +156,12 @@ Material:
     - _CameraFadeParams: {r: 0, g: Infinity, b: 0, a: 0}
     - _Color: {r: 0.39150938, g: 0.8821111, b: 1, a: 1}
     - _ColorAddSubDiff: {r: 0, g: 0, b: 0, a: 0}
-    - _DeepColor: {r: 0.025, g: 0.24999997, b: 0.41999996, a: 1}
+    - _DeepColor: {r: 0.050876297, g: 0.5188679, b: 0, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _FoamColor: {r: 0.85, g: 0.95, b: 1, a: 1}
-    - _HighlightColor: {r: 0.65, g: 0.95, b: 1, a: 1}
+    - _FoamColor: {r: 0.599466, g: 1, b: 0.5518868, a: 1}
+    - _HighlightColor: {r: 0.22037461, g: 0.509434, b: 0.093716644, a: 1}
     - _ShadowColor: {r: 0.91211283, g: 0.9319746, b: 0.9716981, a: 1}
-    - _ShallowColor: {r: 0.26779994, g: 0.84425056, b: 0.9622642, a: 1}
+    - _ShallowColor: {r: 0, g: 0.754717, b: 0.011468024, a: 1}
     - _SoftParticleFadeParams: {r: 0, g: 0, b: 0, a: 0}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
     - _WaterColor: {r: 1, g: 1, b: 1, a: 1}

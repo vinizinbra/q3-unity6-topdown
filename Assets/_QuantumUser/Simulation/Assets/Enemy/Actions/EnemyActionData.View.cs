@@ -6,21 +6,25 @@ namespace Quantum
     // circular assembly reference).
     public partial class EnemyActionData
     {
+        // Optional ground indicator spanning two phase edges (see TelegraphData). Unset, or a
+        // TelegraphData with no TelegraphPrefab, means no telegraph.
+        [ExpandableAsset] public AssetRef<TelegraphData> Telegraph;
+
         // Windup telegraph, matching AnticipationTime's duration.
+        [FoldoutGroup("Animation")]
         public AttackVisualStep AnticipationStep;
 
         // Fires the instant Begin() is called (Preparation/Telegraph -> Recovery or -> Active alike).
+        [FoldoutGroup("Animation")]
         public AttackVisualStep BeginStep;
 
         // EnemyActionPhase.Active only; skipped entirely by instant actions (no Active phase).
+        [FoldoutGroup("Animation")]
         public AttackVisualStep OnGoingStep;
 
         // Active -> Recovery, or the same tick as BeginStep for instant actions (swing and hit are
         // simultaneous there, so both correctly fire together).
+        [FoldoutGroup("Animation")]
         public AttackVisualStep EndStep;
-
-        // Optional ground indicator spanning two phase edges (see TelegraphData). Unset, or a
-        // TelegraphData with no TelegraphPrefab, means no telegraph.
-        [ExpandableAsset] public AssetRef<TelegraphData> Telegraph;
     }
 }

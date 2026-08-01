@@ -19,6 +19,7 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Weapon Damage
   Rarity: 0
+  MaxPicks: 3
   Description: +{0}% Weapon Damage
   Multiplier:
     RawValue: 72090

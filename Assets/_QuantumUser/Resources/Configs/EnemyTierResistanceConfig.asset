@@ -61,6 +61,21 @@ MonoBehaviour:
       RawValue: 65536
     BreakDurationMultiplier:
       RawValue: 65536
+  Heavy:
+    KnockbackMultiplier:
+      RawValue: 26214
+    StunDurationMultiplier:
+      RawValue: 26214
+    RootDurationMultiplier:
+      RawValue: 26214
+    SlowDurationMultiplier:
+      RawValue: 26214
+    BurnDamageMultiplier:
+      RawValue: 65536
+    PoisonDamageMultiplier:
+      RawValue: 65536
+    BreakDurationMultiplier:
+      RawValue: 65536
   Elite:
     KnockbackMultiplier:
       RawValue: 19661

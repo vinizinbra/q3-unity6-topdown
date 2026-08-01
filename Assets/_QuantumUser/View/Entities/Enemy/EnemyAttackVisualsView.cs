@@ -594,7 +594,7 @@ namespace Quantum
                     || telegraph.Shape == TelegraphShape.ChargeLane || telegraph.Shape == TelegraphShape.Rectangle;
 
                 if (isImplementedShape == false)
-                    Debug.Log($"[EnemyAttackVisualsView] TelegraphShape.{telegraph.Shape} has no rendering implementation yet - not spawning anything.");
+                    LogHelper.Log("EnemyAttackVisualsView", $"TelegraphShape.{telegraph.Shape} has no rendering implementation yet - not spawning anything.");
 
                 return;
             }

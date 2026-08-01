@@ -1,0 +1,79 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2c881d25255714de295cf3b2cdad7794, type: 3}
+  m_Name: PortableSpeaker
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.SpawnEntitySkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Zara/Z_DashSkillUpgrades/PortableSpeaker
+    Guid:
+      Value: 378206076203291459
+  Icon: {fileID: 0}
+  DisplayName: 
+  Rarity: 0
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 1
+  Description: 
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  Prototype:
+    Id:
+      Value: 1348063969185596241
+  Duration:
+    RawValue: 196608
+  Alignment: 1
+  Anchor: 0
+  Offset:
+    X:
+      RawValue: 0
+    Y:
+      RawValue: 0
+    Z:
+      RawValue: 0
+  Scale:
+    X:
+      RawValue: 65536
+    Y:
+      RawValue: 65536
+    Z:
+      RawValue: 65536
+  Spacing:
+    RawValue: 65536
+  OverrideDamage: 0
+  Damage:
+    RawValue: 655360
+  OverrideTargetMask: 0
+  TargetMask: 1

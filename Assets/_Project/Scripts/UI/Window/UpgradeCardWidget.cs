@@ -25,6 +25,14 @@ public class UpgradeCardWidget : MonoBehaviour
         // its Hero skill needs LevelUpOption.SkillUpgradeSlot alongside Kind - e.g. "Weapon Perk",
         // "Global Upgrade", "Dash Skill", "Hero Skill", "Passive Upgrade".
         public string KindText;
+
+        // Only meaningful for a capped GlobalUpgradeData (MaxPicks > 0, e.g. Dash Charge) - MaxStacks
+        // is 0 for every other option (uncapped Global Upgrades, and every non-Global kind), which
+        // Setup reads as "don't show a stack readout at all". CurrentStacks is this pick's count
+        // BEFORE this card is chosen (GlobalUpgradeUtility.GetPickCount), so e.g. "2/3" means picking
+        // this card would be the entity's 3rd pick.
+        public int CurrentStacks;
+        public int MaxStacks;
     }
 
     [SerializeField] private GameObject root;
@@ -41,6 +49,10 @@ public class UpgradeCardWidget : MonoBehaviour
     private TMP_Text rarityText;
     [SerializeField, Tooltip("Shows which pool the option came from, e.g. \"Weapon Perk\".")]
     private TMP_Text kindText;
+    [SerializeField, Tooltip("Shows current/max stacks for a capped Global Upgrade (e.g. \"2/3\"); hidden when MaxStacks is 0.")]
+    private GameObject stackRoot;
+    [SerializeField]
+    private TMP_Text stackText;
     [SerializeField] private Button button;
 
     public event Action<UpgradeCardWidget> onClicked;
@@ -80,6 +92,14 @@ public class UpgradeCardWidget : MonoBehaviour
 
         if (kindText != null)
             kindText.text = data.KindText;
+
+        bool showStacks = data.MaxStacks > 0;
+
+        if (stackRoot != null)
+            stackRoot.SetActive(showStacks);
+
+        if (stackText != null)
+            stackText.text = showStacks ? $"{data.CurrentStacks}/{data.MaxStacks}" : string.Empty;
 
         if (button != null)
             button.interactable = interactable;

@@ -83,9 +83,11 @@ per enemy (`EnemyActionSlots.SkillCooldowns`'s fixed size).
 fields on `EnemyActionData`. An action whose `CooldownTime` is longer than its `DownTime` lets the
 enemy resume chasing before that same action is available again.
 
-**Interrupt**: a knockback lands (`OnEnemyKnockedBack`) only if `EnemyDataAsset
-.CanBeInterruptedByKnockback` is true (else the enemy is fully immovable, no stagger window ever
-opens). Given that, whether it *also* cancels the in-progress action is a **per-action** choice -
+**Interrupt**: a knockback lands (`OnEnemyKnockedBack`) only if the enemy's tier's
+`EnemyTierStatsConfig.CanBeInterruptedByKnockback` is true (else the enemy is fully immovable, no
+stagger window ever opens) - purely tier-driven, no per-`EnemyDataAsset` override.
+`KnockbackRecoveryTime` (same config) is how long the stagger window stays open. Given that,
+whether a knockback *also* cancels the in-progress action is a **per-action** choice -
 `EnemyActionData.InterruptibleDuringTelegraph` (default true) for a mid-windup cancel,
 `InterruptibleDuringActive` (default false) for a mid-delivery one. A cancelled windup never called
 `Begin()`, so there's nothing to clean up; a cancelled Active delivery gets one call to

@@ -65,6 +65,35 @@ MonoBehaviour:
       Value: 413323579687518313
   - Id:
       Value: 387762313514897616
+  RiftMutations:
+  - Id:
+      Value: 325283577507392568
+  - Id:
+      Value: 281905491815589831
+  - Id:
+      Value: 459194346184904757
+  - Id:
+      Value: 287850747359276030
+  - Id:
+      Value: 390042850462076770
+  - Id:
+      Value: 514921480666595401
+  - Id:
+      Value: 533573372186029248
+  - Id:
+      Value: 455787944400972856
+  - Id:
+      Value: 411322840850662590
+  - Id:
+      Value: 536002132847580972
+  - Id:
+      Value: 481232238730376622
+  - Id:
+      Value: 534224374613054322
+  - Id:
+      Value: 504000970958733469
+  - Id:
+      Value: 335039749820039824
   CommonWeight: 100
   RareWeight: 20
   EpicWeight: 5

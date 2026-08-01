@@ -90,13 +90,13 @@ namespace QuantumUser.View.Managers
         // Generic cache (any entity, not just CharViews) - populated by EntityViewCacheInit.
         public void RegisterEntityTransform(EntityRef entityRef, Transform entityTransform)
         {
-            Debug.Log($"[EntityViewManager] Registering entity transform {entityRef} -> {entityTransform.name}");
+            LogHelper.Log("EntityViewManager", $"Registering entity transform {entityRef} -> {entityTransform.name}");
             _entityTransforms.Add(entityRef, entityTransform);
         }
 
         public void UnregisterEntityTransform(EntityRef entityRef)
         {
-            Debug.Log($"[EntityViewManager] Unregistering entity transform {entityRef}");
+            LogHelper.Log("EntityViewManager", $"Unregistering entity transform {entityRef}");
             _entityTransforms.Remove(entityRef);
         }
 

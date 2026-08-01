@@ -14,3 +14,9 @@ component Shield
     // Points per second once recharging starts.
     FP RechargeRate;
 }
+
+// Fired by DamageUtility.AbsorbWithShield the exact tick Current crosses from >0 to <=0 - not on
+// every hit taken while already broken, and not on a hit that only partially drains it. Today's
+// only consumer is Shield Breaker (Rift Mutation, see RiftMutationReactionSystem), but this is
+// generic enough for any future "on shield break" reaction to reuse.
+signal OnShieldBroken(EntityRef entity);

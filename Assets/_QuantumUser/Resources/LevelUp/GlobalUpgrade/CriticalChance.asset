@@ -19,6 +19,7 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Critical Chance
   Rarity: 1
+  MaxPicks: 3
   Description: +{0}% Crit Chance
   Chance:
     RawValue: 3277

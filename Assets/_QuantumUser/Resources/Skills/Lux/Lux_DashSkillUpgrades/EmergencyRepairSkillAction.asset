@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 376ef6f460caf493abb2b431e827f9f7, type: 3}
+  m_Name: EmergencyRepairSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.RepairNearbyMachinesSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Lux/Lux_DashSkillUpgrades/EmergencyRepairSkillAction
+    Guid:
+      Value: 420168397532520612
+  Icon: {fileID: 0}
+  DisplayName: Emergency Repair
+  Rarity: 1
+  Priority: 0
+  Phase: 4
+  Interval:
+    RawValue: 0
+  Activated: 1
+  Description: When your dash ends, repairs your Sentry for {1}% of its max health
+    if it's within {0} units.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  Radius:
+    RawValue: 393216
+  RepairFraction:
+    RawValue: 32768

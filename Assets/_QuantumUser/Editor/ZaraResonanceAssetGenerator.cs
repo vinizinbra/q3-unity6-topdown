@@ -4,6 +4,7 @@ namespace QuantumUser.Editor
     using System.Linq;
     using Photon.Deterministic;
     using Quantum;
+    using QuantumUser.View.Util;
     using UnityEditor;
     using UnityEngine;
 
@@ -114,7 +115,7 @@ namespace QuantumUser.Editor
             WireCharacterData(passive, new List<PassiveUpgradeData> { fasterTempo, restorativeBeat, heavyBass, remix },
                 new List<SkillActionData> { quickTempo, healingStep, afterbeat });
 
-            Debug.Log("[ZaraResonanceAssetGenerator] Passive + 4 ascensions + all 3 dash ascensions authored and wired into " +
+            LogHelper.Log("ZaraResonanceAssetGenerator", "Passive + 4 ascensions + all 3 dash ascensions authored and wired into " +
                       "ZaraCharacterData - unlike every other hero this pass, nothing further needs manual EntityPrototype authoring.");
         }
 
@@ -127,7 +128,7 @@ namespace QuantumUser.Editor
 
             if (asset == null)
             {
-                Debug.LogError($"[ZaraResonanceAssetGenerator] No HitEffectData asset at {HitEffectsFolderPath}/{name}.asset - Remix's pool is missing an entry.");
+                LogHelper.Error("ZaraResonanceAssetGenerator", $"No HitEffectData asset at {HitEffectsFolderPath}/{name}.asset - Remix's pool is missing an entry.");
                 return default;
             }
 
@@ -160,13 +161,13 @@ namespace QuantumUser.Editor
 
             if (characterData == null)
             {
-                Debug.LogError($"[ZaraResonanceAssetGenerator] No CharacterData asset at {CharacterDataPath} - assets were created/updated, but nothing was wired.");
+                LogHelper.Error("ZaraResonanceAssetGenerator", $"No CharacterData asset at {CharacterDataPath} - assets were created/updated, but nothing was wired.");
                 return;
             }
 
             if (characterData.Passive.IsValid == true && characterData.Passive.Id.Value != passive.Guid.Value)
             {
-                Debug.LogWarning($"[ZaraResonanceAssetGenerator] ZaraCharacterData.Passive was already set to {characterData.Passive} - overwriting with ResonancePassiveData.");
+                LogHelper.Warn("ZaraResonanceAssetGenerator", $"ZaraCharacterData.Passive was already set to {characterData.Passive} - overwriting with ResonancePassiveData.");
             }
 
             characterData.Passive = new AssetRef<PassiveData>(passive.Guid);

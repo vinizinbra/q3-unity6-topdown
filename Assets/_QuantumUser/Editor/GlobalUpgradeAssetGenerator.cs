@@ -5,6 +5,7 @@ namespace QuantumUser.Editor
     using System.Linq;
     using Photon.Deterministic;
     using Quantum;
+    using QuantumUser.View.Util;
     using UnityEditor;
     using UnityEngine;
 
@@ -185,6 +186,13 @@ namespace QuantumUser.Editor
                 Description = "+{0}% Radius",
                 Configure = p => Multiplier(p, "1.2")
             },
+            new UpgradeSpec
+            {
+                Type = typeof(HeroSkillChargeUpgradeData), FileName = "HeroSkillCharge",
+                DisplayName = "Hero Skill Charge", Rarity = UpgradeRarity.Rare,
+                Description = "+{0} charge",
+                Configure = p => ((HeroSkillChargeUpgradeData)p).Charges = 1
+            },
 
             // -- Economy --
             new UpgradeSpec
@@ -248,7 +256,7 @@ namespace QuantumUser.Editor
 
             if (config == null)
             {
-                Debug.LogError($"[GlobalUpgradeAssetGenerator] No LevelUpConfig asset at {ConfigAssetPath} - upgrade assets were created/updated, but GlobalUpgrades wasn't wired.");
+                LogHelper.Error("GlobalUpgradeAssetGenerator", $"No LevelUpConfig asset at {ConfigAssetPath} - upgrade assets were created/updated, but GlobalUpgrades wasn't wired.");
                 return;
             }
 
@@ -261,7 +269,7 @@ namespace QuantumUser.Editor
             EditorUtility.SetDirty(config);
             AssetDatabase.SaveAssets();
 
-            Debug.Log($"[GlobalUpgradeAssetGenerator] {created} created, {updated} updated, {config.GlobalUpgrades.Count} wired into {ConfigAssetPath}.");
+            LogHelper.Log("GlobalUpgradeAssetGenerator", $"{created} created, {updated} updated, {config.GlobalUpgrades.Count} wired into {ConfigAssetPath}.");
         }
 
         private static void CreateFolderRecursive(string folderPath)

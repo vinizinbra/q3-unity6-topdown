@@ -190,7 +190,10 @@ drop (`WeaponGenerator.Roll`) can, once something actually calls it with this po
    directly via `ProjectileSpawner.Spawn`, not through `WeaponSystem.FireProjectile`, so it doesn't
    re-apply Piercing Rounds/Ricochet/Explosive Sequence/Cataclysm Round to itself - only the
    recursion cap (`MaxSplitShotDepth`) carries over, so a split-shot weapon can't cascade into a
-   second full generation of splits.
+   second full generation of splits. Children fan across a 90° arc centered on the parent shot's own
+   heading at impact (not a full circle), and their `RemainingLifetime` is capped so they can't
+   travel past half the firing weapon's `WeaponDataAsset.Range * Weapon.RangeMultiplier` - see
+   `DirectHitData.SpawnSplitProjectiles`.
 5. **Explosive Sequence's shot counter free-runs on Double Tap's extra shot and split-shot
    children** - Double Tap's free shot mirrors the primary shot's already-resolved
    proc flags rather than re-rolling/advancing the counter itself; split children don't touch it at
