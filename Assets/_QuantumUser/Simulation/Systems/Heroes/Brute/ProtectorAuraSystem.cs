@@ -60,7 +60,7 @@ namespace Quantum
 
             for (int i = 0; i < allies.Count; i++)
             {
-                StatusEffectUtility.ApplyDamageReduction(f, allies[i].Entity, AuraRefreshDuration, aura->AllyDamageReductionAmount);
+                StatusEffectUtility.ApplyGuardianDamageReduction(f, allies[i].Entity, AuraRefreshDuration, aura->AllyDamageReductionAmount);
             }
         }
 

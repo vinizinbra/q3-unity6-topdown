@@ -1,0 +1,43 @@
+// Max's base Passive - see docs/max-vendetta-fire-mastery.md for the full design. When Max takes
+// Health damage (or, with the Unbroken Spirit upgrade, Shield damage), the attacker becomes his
+// Vendetta target for a limited time; killing that exact target heals Max for a fraction of the
+// damage it dealt him during the mark.
+
+// Vendetta's own base tunables - seeded once by VendettaPassiveData.Apply, permanently bumped by at
+// most one field each from future upgrades (Settled Score -> HealMultiplier, Blood Debt ->
+// MarkDuration), same "upgrades compose onto one shared component" idiom Weapon.qtn's shared ramp
+// pool already established. Cold/static - changes at most a few times ever, never per-tick - kept
+// separate from RevengeTarget/StoredRevengeDamage below, which change every tick/every qualifying
+// hit respectively.
+component RevengeConfig
+{
+    FP HealMultiplier;
+    FP MarkDuration;
+}
+
+// Unbroken Spirit upgrade - tag only, no fields. Presence means Shield damage from an active
+// RevengeMark also accumulates into RevengeMark.StoredDamage and can itself create/refresh a mark,
+// not just Health damage (see MaxVendettaSystem.OnShieldDamageApplied). No PassiveUpgradeData grants
+// this yet - added now purely so the base Vendetta system compiles against it; wiring the actual
+// upgrade is separate, tracked scope (see docs/max-vendetta-fire-mastery.md's implementation order).
+component ShieldDamageCountsForRevenge
+{
+}
+
+// Lives on the ENEMY that damaged a Vendetta holder, not on the holder itself - this is what lets
+// Max (or any future Vendetta holder) keep an arbitrary number of enemies marked simultaneously
+// instead of a single "current target": ECS already gives every enemy its own component instance for
+// free, so there's no fixed cap to author here (see RevengeMarkTimeoutSystem, which ticks every
+// instance of this independently). Lazily added the first time this enemy lands a qualifying hit,
+// removed the instant the mark is consumed (this enemy is killed by MarkedBy) or expires
+// (RemainingDuration reaches 0). MarkedBy switching to a different Vendetta holder (this enemy hit a
+// second holder) resets StoredDamage - a new holder's tally starts from zero, matching the old
+// single-target replacement rule but scoped per enemy instead of per holder. Also doubles as the
+// target-side display source for CharacterUiWidget's "marked" indicator, same pattern every other
+// indicator uses (see CharacterUiWidget.UpdateExplodeOnDeath for the closest precedent).
+component RevengeMark
+{
+    EntityRef MarkedBy;
+    FP RemainingDuration;
+    FP StoredDamage;
+}

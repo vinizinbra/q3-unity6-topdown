@@ -65,6 +65,8 @@ MonoBehaviour:
       Value: 413323579687518313
   - Id:
       Value: 387762313514897616
+  - Id:
+      Value: 502025948778833896
   RiftMutations:
   - Id:
       Value: 325283577507392568
@@ -94,6 +96,35 @@ MonoBehaviour:
       Value: 504000970958733469
   - Id:
       Value: 335039749820039824
+  - Id:
+      Value: 368502755868404442
+  - Id:
+      Value: 447082899834026227
+  - Id:
+      Value: 436220813378156689
+  - Id:
+      Value: 298522279084543542
+  - Id:
+      Value: 458560360156938353
+  - Id:
+      Value: 374078439829188407
+  - Id:
+      Value: 532072750547023600
+  - Id:
+      Value: 384250695999827635
+  - Id:
+      Value: 273823591783865772
+  - Id:
+      Value: 426847582342129630
+  - Id:
+      Value: 412775407445566150
+  LevelSequence: 000001
+  WeaponChoicePool:
+    Id:
+      Value: 489069850842438477
+  ChancePerLevelPerSlot:
+    RawValue: 13107
+  MaxRolledPerks: 3
   CommonWeight: 100
   RareWeight: 20
   EpicWeight: 5

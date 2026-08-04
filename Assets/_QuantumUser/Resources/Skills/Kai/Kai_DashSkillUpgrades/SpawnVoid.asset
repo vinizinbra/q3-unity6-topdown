@@ -17,14 +17,14 @@ MonoBehaviour:
     Guid:
       Value: 316266788136471138
   Icon: {fileID: 0}
-  DisplayName: 
+  DisplayName: Void Trail
   Rarity: 0
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 1
-  Description: 
+  Description: Dashing leaves behind a small void that pulls in nearby enemies.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

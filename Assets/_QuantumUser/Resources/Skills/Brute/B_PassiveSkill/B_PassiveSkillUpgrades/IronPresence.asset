@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/B_PassiveSkill/B_PassiveSkillUpgrades/IronPresence
     Guid:
       Value: 505319841889557397
-  Icon: {fileID: 0}
+  Icon: {fileID: -1422584567, guid: 1398529c57dc443e7a3096f4ad470a4c, type: 3}
   DisplayName: Iron Presence
   Rarity: 2
   Description: Intimidated enemies move slower and have reduced knockback resistance.

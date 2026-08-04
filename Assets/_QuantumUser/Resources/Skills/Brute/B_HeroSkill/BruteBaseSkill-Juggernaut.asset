@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/B_HeroSkill/BruteBaseSkill-Juggernaut|JuggernautKnockbackSkillAction
     Guid:
       Value: 2235237605881692239
-  Icon: {fileID: 0}
+  Icon: {fileID: 1604467854, guid: 1398529c57dc443e7a3096f4ad470a4c, type: 3}
   DisplayName: Heavy Impact
   Rarity: 0
   Priority: 0
@@ -50,7 +50,7 @@ MonoBehaviour:
     Scale: 1
     Alignment: 0
   ForceBonus:
-    RawValue: 65536
+    RawValue: 32768
 --- !u!114 &-5346908525645637807
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -67,8 +67,8 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/B_HeroSkill/BruteBaseSkill-Juggernaut|JuggernautDischargeDamageSkillAction
     Guid:
       Value: 2587496720733946005
-  Icon: {fileID: 0}
-  DisplayName: Crushing Blow
+  Icon: {fileID: -880172757, guid: 1398529c57dc443e7a3096f4ad470a4c, type: 3}
+  DisplayName: Bone Breaker
   Rarity: 0
   Priority: 0
   Phase: 1
@@ -119,7 +119,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/B_HeroSkill/BruteBaseSkill-Juggernaut|JuggernautSustainedChargeSkillAction
     Guid:
       Value: 2139822815602952008
-  Icon: {fileID: 0}
+  Icon: {fileID: 1310321074, guid: 1398529c57dc443e7a3096f4ad470a4c, type: 3}
   DisplayName: Unstoppable
   Rarity: 0
   Priority: 0
@@ -169,7 +169,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/B_HeroSkill/BruteBaseSkill-Juggernaut|JuggernautEndExplosionSkillAction
     Guid:
       Value: 155011977438708122
-  Icon: {fileID: 0}
+  Icon: {fileID: 1534874876, guid: 1398529c57dc443e7a3096f4ad470a4c, type: 3}
   DisplayName: Aftershock
   Rarity: 0
   Priority: 0
@@ -226,7 +226,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/B_HeroSkill/BruteBaseSkill-Juggernaut|JuggernautChargedSpeedSkillAction
     Guid:
       Value: 934843146787475376
-  Icon: {fileID: 0}
+  Icon: {fileID: -1302274578, guid: 1398529c57dc443e7a3096f4ad470a4c, type: 3}
   DisplayName: Momentum
   Rarity: 0
   Priority: 0
@@ -281,6 +281,7 @@ MonoBehaviour:
   InitStacks: 1
   Cooldown:
     RawValue: 983040
+  CheckActions: 0
   Actions:
   - Id:
       Value: 934843146787475376
@@ -298,7 +299,6 @@ MonoBehaviour:
       Value: 2801241872569183443
   - Id:
       Value: 3404545977982078235
-  CheckActions: 0
   Icon: {fileID: 99700747, guid: 09ab27b92d44c4a54a95d6d0d0b9c281, type: 3}
   Description: Channel as Juggernaut for {0}s, reducing damage taken by {1}% and
     building Charge as you move. Once fully Charged, every enemy you touch triggers
@@ -318,9 +318,9 @@ MonoBehaviour:
   KnockbackRadius:
     RawValue: 65536
   KnockbackForce:
-    RawValue: 196608
+    RawValue: 262144
   KnockbackUpwardForce:
-    RawValue: 196608
+    RawValue: 262144
   BruteDirectionForce:
     RawValue: 0
   DischargeCheckInterval:
@@ -344,7 +344,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/B_HeroSkill/BruteBaseSkill-Juggernaut|JuggernautStackDamageSkillAction
     Guid:
       Value: 3404545977982078235
-  Icon: {fileID: 0}
+  Icon: {fileID: 1553153578, guid: 1398529c57dc443e7a3096f4ad470a4c, type: 3}
   DisplayName: Building Pressure
   Rarity: 0
   Priority: 0
@@ -396,8 +396,8 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/B_HeroSkill/BruteBaseSkill-Juggernaut|JuggernautLandingImpactSkillAction
     Guid:
       Value: 2217608214105245142
-  Icon: {fileID: 0}
-  DisplayName: Ground Pound
+  Icon: {fileID: -310036982, guid: 1398529c57dc443e7a3096f4ad470a4c, type: 3}
+  DisplayName: Concussive Impact
   Rarity: 0
   Priority: 0
   Phase: 1
@@ -433,7 +433,7 @@ MonoBehaviour:
   Damage:
     RawValue: 655360
   StunChance:
-    RawValue: 32768
+    RawValue: 65536
   ImpactEffectPrefab: {fileID: 19820956, guid: 56c3274d2f9ec214ab584a80b5ce2d6d, type: 3}
 --- !u!114 &6608182270547935991
 MonoBehaviour:
@@ -451,7 +451,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/B_HeroSkill/BruteBaseSkill-Juggernaut|JuggernautLandingRootSkillAction
     Guid:
       Value: 2801241872569183443
-  Icon: {fileID: 0}
+  Icon: {fileID: -1872768098, guid: 1398529c57dc443e7a3096f4ad470a4c, type: 3}
   DisplayName: Pinning Impact
   Rarity: 0
   Priority: 0

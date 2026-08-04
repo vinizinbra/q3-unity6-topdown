@@ -14,11 +14,12 @@ namespace Quantum
         public FP DamageBonusPerStack;
         public FP DecayGrace = 1;
 
-        public override void Apply(Frame f, Weapon* weapon)
+        public override void Apply(Frame f, EntityRef owner, Weapon* weapon)
         {
-            weapon->RampMaxStacks = weapon->RampMaxStacks > MaxStacks ? weapon->RampMaxStacks : MaxStacks;
-            weapon->RampDamageBonusPerStack += DamageBonusPerStack;
-            weapon->RampDecayGrace = FPMath.Max(weapon->RampDecayGrace, DecayGrace);
+            f.AddOrGet<WeaponRampState>(owner, out var ramp);
+            ramp->RampMaxStacks = ramp->RampMaxStacks > MaxStacks ? ramp->RampMaxStacks : MaxStacks;
+            ramp->RampDamageBonusPerStack += DamageBonusPerStack;
+            ramp->RampDecayGrace = FPMath.Max(ramp->RampDecayGrace, DecayGrace);
         }
 
         protected override object[] DescriptionArgs => new object[] { DamageBonusPerStack.AsFloat * 100f, MaxStacks };

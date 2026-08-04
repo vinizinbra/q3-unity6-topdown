@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/InfiniteMomentum
     Guid:
       Value: 455787944400972856
-  Icon: {fileID: 0}
+  Icon: {fileID: 870082225, guid: 9dcd69f213ec845fa868b0a3699cf683, type: 3}
   DisplayName: Infinite Momentum
   Rarity: 2
   Description: '{0:+0;-0}% Dash Cooldown, Dash now costs {1:0.#} Shield'

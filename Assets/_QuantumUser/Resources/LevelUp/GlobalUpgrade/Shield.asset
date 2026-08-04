@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/GlobalUpgrade/Shield
     Guid:
       Value: 461468297172547822
-  Icon: {fileID: 0}
+  Icon: {fileID: 1938730749, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
   DisplayName: Shield
   Rarity: 0
   MaxPicks: 3

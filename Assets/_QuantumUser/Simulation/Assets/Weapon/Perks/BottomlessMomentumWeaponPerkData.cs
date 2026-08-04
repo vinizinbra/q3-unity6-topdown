@@ -9,10 +9,11 @@ namespace Quantum
         public FP Chance = FP._0_50;
         public int Amount = 1;
 
-        public override void Apply(Frame f, Weapon* weapon)
+        public override void Apply(Frame f, EntityRef owner, Weapon* weapon)
         {
-            weapon->CritAmmoRestoreChance += Chance;
-            weapon->CritAmmoRestoreAmount += Amount;
+            f.AddOrGet<WeaponOnCritReactions>(owner, out var reactions);
+            reactions->CritAmmoRestoreChance += Chance;
+            reactions->CritAmmoRestoreAmount += Amount;
         }
 
         protected override object[] DescriptionArgs => new object[] { Chance.AsFloat * 100f, Amount };

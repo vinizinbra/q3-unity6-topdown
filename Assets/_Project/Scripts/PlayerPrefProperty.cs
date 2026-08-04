@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using CodeStage.AntiCheat.ObscuredTypes;
 using CodeStage.AntiCheat.Storage;
+using QuantumUser.View.Util;
 
 namespace Playtime.Core
 {
@@ -63,7 +64,7 @@ namespace Playtime.Core
 
         public void SaveValue(T newValue)
         {
-            Debug.Log("saving value");
+            LogHelper.Log("PlayerPref", "saving value");
             value = newValue;
             OnSaveValue(value);
         }

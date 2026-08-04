@@ -60,5 +60,15 @@ namespace Quantum
         public virtual void End(Frame f, ref SkillSystem.Filter filter, SkillSlot* slot)
         {
         }
+
+        // How long this skill's own channel runs once SkillSlot.State == Active, in seconds - 0 (the
+        // default) for a skill with no timed channel to show. Overridden by duration-based skills
+        // (JuggernautSkillData, BerserkSkillData) to expose their own Duration field generically, so
+        // UI can drive a "time remaining while active" fill off SkillSlot.StateTimer / this, the same
+        // way SkillCooldownUiWidget's cooldown fill already reads SkillSlot.CooldownTimer / Cooldown.
+        public virtual FP GetActiveDuration()
+        {
+            return FP._0;
+        }
     }
 }

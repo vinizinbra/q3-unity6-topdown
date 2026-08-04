@@ -37,9 +37,9 @@ MonoBehaviour:
   SkillDamageMultiplier:
     RawValue: 65536
   CriticalChance:
-    RawValue: 3277
+    RawValue: 0
   CriticalDamageMultiplier:
-    RawValue: 98304
+    RawValue: 65536
   ElementalChance:
     RawValue: 0
   AttackSpeedMultiplier:
@@ -84,6 +84,8 @@ MonoBehaviour:
     RawValue: 65536
   RiftShardGainMultiplier:
     RawValue: 65536
+  CoinGainMultiplier:
+    RawValue: 65536
   RingColor: {r: 1, g: 0.3254717, b: 0.64922184, a: 1}
   WeaponPosition:
     X:
@@ -103,7 +105,7 @@ MonoBehaviour:
       Value: 304904877930327027
   Passive:
     Id:
-      Value: 287025616798641966
+      Value: 307784346442998099
   StartingWeapon:
     Id:
       Value: 511120127865671028
@@ -111,15 +113,23 @@ MonoBehaviour:
   - Id:
       Value: 340599251920562766
   - Id:
-      Value: 532866955297254703
+      Value: 438813446046761577
   - Id:
       Value: 158334551784724072
   PassiveUpgrades:
   - Id:
-      Value: 347803182466822091
+      Value: 334927359318853692
   - Id:
-      Value: 309889134639544274
+      Value: 361478584056376078
   - Id:
-      Value: 385656384728332488
+      Value: 271843238532602476
   - Id:
-      Value: 323230195154970988
+      Value: 447509722474836559
+  - Id:
+      Value: 452474009302283869
+  - Id:
+      Value: 489690750494477988
+  - Id:
+      Value: 431253757527043610
+  - Id:
+      Value: 467039237380297823

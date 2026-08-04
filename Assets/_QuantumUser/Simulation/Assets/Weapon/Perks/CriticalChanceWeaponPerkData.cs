@@ -6,7 +6,7 @@ namespace Quantum
     {
         public FP Chance;
 
-        public override void Apply(Frame f, Weapon* weapon)
+        public override void Apply(Frame f, EntityRef owner, Weapon* weapon)
         {
             weapon->CriticalChance += Chance;
         }

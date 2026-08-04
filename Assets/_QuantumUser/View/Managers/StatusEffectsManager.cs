@@ -28,17 +28,17 @@ namespace QuantumUser.View.Managers
         [SerializeField, Tooltip("Local offset from the entity center, in reference-diameter-1 units (scaled by the entity's own scale, same convention as the prefab itself).")]
         private Vector3 burnOffset;
 
-        [SerializeField, Tooltip("StatusEffects.VoidRemaining - see StatusEffectUtility.IsVoided. Void's own visible tell - it does nothing by itself, but this shows a target has been primed for whichever elemental reaction lands next.")]
-        private ParticleSystem voidParticlePrefab;
+        [SerializeField, Tooltip("StatusEffects.RiftMarkStacks - see StatusEffectUtility.IsRiftMarked. Rift Mark's own visible tell - it does nothing by itself, but this shows a target has been primed for whichever elemental reaction lands next.")]
+        private ParticleSystem riftMarkParticlePrefab;
         [SerializeField, Tooltip("Local offset from the entity center, in reference-diameter-1 units (scaled by the entity's own scale, same convention as the prefab itself).")]
-        private Vector3 voidOffset;
+        private Vector3 riftMarkOffset;
 
         [SerializeField, Tooltip("StatusEffects.IceRemaining (slow) - see StatusEffectUtility.IsSlowed.")]
         private ParticleSystem slowParticlePrefab;
         [SerializeField, Tooltip("Local offset from the entity center, in reference-diameter-1 units (scaled by the entity's own scale, same convention as the prefab itself).")]
         private Vector3 slowOffset;
 
-        [SerializeField, Tooltip("StatusEffects.AnticipationSlowRemaining - see StatusEffectUtility.IsAnticipationSlowed. Void+Ice's Freeze reaction - stretches attack windups, not a lockout, so it's separate from Stun. See docs/elemental-reactions.md.")]
+        [SerializeField, Tooltip("StatusEffects.AnticipationSlowRemaining - see StatusEffectUtility.IsAnticipationSlowed. Ice+RiftMark's Deep Freeze reaction - stretches attack windups, not a lockout, so it's separate from Stun. See docs/elemental-reactions.md.")]
         private ParticleSystem freezeParticlePrefab;
         [SerializeField, Tooltip("Local offset from the entity center, in reference-diameter-1 units (scaled by the entity's own scale, same convention as the prefab itself).")]
         private Vector3 freezeOffset;
@@ -53,10 +53,10 @@ namespace QuantumUser.View.Managers
         [SerializeField, Tooltip("Local offset from the entity center, in reference-diameter-1 units (scaled by the entity's own scale, same convention as the prefab itself).")]
         private Vector3 rootOffset;
 
-        [SerializeField, Tooltip("StatusEffects.BreakRemaining - see StatusEffectUtility.HasBreakDebuff.")]
-        private ParticleSystem breakParticlePrefab;
+        [SerializeField, Tooltip("StatusEffects.RuptureRemaining - see StatusEffectUtility.HasRuptureDebuff.")]
+        private ParticleSystem ruptureParticlePrefab;
         [SerializeField, Tooltip("Local offset from the entity center, in reference-diameter-1 units (scaled by the entity's own scale, same convention as the prefab itself).")]
-        private Vector3 breakOffset;
+        private Vector3 ruptureOffset;
 
         [SerializeField, Tooltip("StatusEffects.IntimidateRemaining - see StatusEffectUtility.IsIntimidated. Applied to enemies by Brute's Protector Aura.")]
         private ParticleSystem intimidateParticlePrefab;
@@ -79,12 +79,12 @@ namespace QuantumUser.View.Managers
         private Vector3 explodeMarkOffset;
 
         private readonly StatusSlotTracker _burn = new();
-        private readonly StatusSlotTracker _void = new();
+        private readonly StatusSlotTracker _riftMark = new();
         private readonly StatusSlotTracker _slow = new();
         private readonly StatusSlotTracker _freeze = new();
         private readonly StatusSlotTracker _stun = new();
         private readonly StatusSlotTracker _root = new();
-        private readonly StatusSlotTracker _break = new();
+        private readonly StatusSlotTracker _rupture = new();
         private readonly StatusSlotTracker _haste = new();
         private readonly StatusSlotTracker _shieldRegen = new();
         private readonly StatusSlotTracker _explodeMark = new();
@@ -117,12 +117,12 @@ namespace QuantumUser.View.Managers
                 float scale = EnemyMovementUtility.ResolveEntityRadius(frame, entity).AsFloat * 2f;
 
                 _burn.Update(burnParticlePrefab, entity, StatusEffectUtility.IsBurning(frame, entity), center, scale, burnOffset);
-                _void.Update(voidParticlePrefab, entity, StatusEffectUtility.IsVoided(frame, entity), center, scale, voidOffset);
+                _riftMark.Update(riftMarkParticlePrefab, entity, StatusEffectUtility.IsRiftMarked(frame, entity), center, scale, riftMarkOffset);
                 _slow.Update(slowParticlePrefab, entity, StatusEffectUtility.IsSlowed(frame, entity), center, scale, slowOffset);
                 _freeze.Update(freezeParticlePrefab, entity, StatusEffectUtility.IsAnticipationSlowed(frame, entity), center, scale, freezeOffset);
                 _stun.Update(stunParticlePrefab, entity, StatusEffectUtility.IsStunned(frame, entity), center, scale, stunOffset);
                 _root.Update(rootParticlePrefab, entity, StatusEffectUtility.IsRooted(frame, entity), center, scale, rootOffset);
-                _break.Update(breakParticlePrefab, entity, StatusEffectUtility.HasBreakDebuff(frame, entity), center, scale, breakOffset);
+                _rupture.Update(ruptureParticlePrefab, entity, StatusEffectUtility.HasRuptureDebuff(frame, entity), center, scale, ruptureOffset);
                 _haste.Update(hasteParticlePrefab, entity, StatusEffectUtility.HasHasteBuff(frame, entity), center, scale, hasteOffset);
                 _shieldRegen.Update(shieldRegenParticlePrefab, entity, StatusEffectUtility.HasShieldRegenBuff(frame, entity), center, scale, shieldRegenOffset);
             }
@@ -139,12 +139,12 @@ namespace QuantumUser.View.Managers
             }
 
             _burn.EndFrame(burnParticlePrefab);
-            _void.EndFrame(voidParticlePrefab);
+            _riftMark.EndFrame(riftMarkParticlePrefab);
             _slow.EndFrame(slowParticlePrefab);
             _freeze.EndFrame(freezeParticlePrefab);
             _stun.EndFrame(stunParticlePrefab);
             _root.EndFrame(rootParticlePrefab);
-            _break.EndFrame(breakParticlePrefab);
+            _rupture.EndFrame(ruptureParticlePrefab);
             _haste.EndFrame(hasteParticlePrefab);
             _shieldRegen.EndFrame(shieldRegenParticlePrefab);
             _explodeMark.EndFrame(explodeMarkParticlePrefab);

@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0bef98ddc42ff424c93ad45fa02c9241, type: 3}
+  m_Name: BloodDebt
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.BloodDebtPassiveUpgradeData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Max/M_PassiveSkill/M_PassiveSkillUpgrades/Vendetta/BloodDebt
+    Guid:
+      Value: 514137246864066863
+  Icon: {fileID: -734267089, guid: 9a944adac56bb4e8dbce2f7bab4127e3, type: 3}
+  DisplayName: Blood Debt
+  Rarity: 1
+  Description: Vendetta marks last longer.
+  AdditionalDuration:
+    RawValue: 983040

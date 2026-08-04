@@ -52,18 +52,30 @@ namespace Quantum
             _isDecoy = null;
         }
 
+        // Shake() is timed to still be running right up to detonation - the projectile (and this
+        // view's GameObject) is destroyed the same tick, which without this orphans the shake tween
+        // on visualRoot and makes PrimeTween log a stack-trace-capturing error every detonation.
+        public override void OnDestroy()
+        {
+            base.OnDestroy();
+
+            if (visualRoot != null)
+                Tween.StopAll(visualRoot);
+        }
+
         protected override void QUpdate(QuantumGame game)
         {
             var frame = game.Frames.Predicted;
-            if (frame.Has<Projectile>(_entityRef) == false)
+            TickDecoySprite(frame);
+
+            if (frame.Has<DestroyAfterTime>(_entityRef) == false)
                 return;
 
-            TickDecoySprite(frame);
 
             if (visualRoot == null)
                 return;
 
-            float remaining = frame.Get<Projectile>(_entityRef).RemainingLifetime.AsFloat;
+            float remaining = frame.Get<DestroyAfterTime>(_entityRef).RemainingTime.AsFloat;
 
             TickPunch(remaining);
             TickShake(remaining);

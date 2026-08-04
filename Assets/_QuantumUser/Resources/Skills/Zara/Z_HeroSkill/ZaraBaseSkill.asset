@@ -17,7 +17,7 @@ MonoBehaviour:
     Guid:
       Value: 4433866011430386987
   Icon: {fileID: 0}
-  DisplayName: 
+  DisplayName: Amplified Damage
   Rarity: 0
   Priority: 0
   Phase: 1
@@ -104,7 +104,7 @@ MonoBehaviour:
     Guid:
       Value: 1407033621909222470
   Icon: {fileID: 0}
-  DisplayName: 
+  DisplayName: Knockback Pulse
   Rarity: 0
   Priority: 0
   Phase: 1
@@ -211,7 +211,7 @@ MonoBehaviour:
     Guid:
       Value: 631515141133071001
   Icon: {fileID: 0}
-  DisplayName: 
+  DisplayName: Stunning Pulse
   Rarity: 0
   Priority: 0
   Phase: 1
@@ -243,7 +243,7 @@ MonoBehaviour:
     ScaleByRadius: 0
     Scale: 1
     Alignment: 0
-  Interval: 3
+  WaveInterval: 3
   StunEffect:
     Id:
       Value: 502467422444154315
@@ -264,7 +264,7 @@ MonoBehaviour:
     Guid:
       Value: 898541485777166504
   Icon: {fileID: 0}
-  DisplayName: 
+  DisplayName: Amplified Healing
   Rarity: 0
   Priority: 0
   Phase: 1
@@ -347,7 +347,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Zara/Z_HeroSkill/ZaraBaseSkill
     Guid:
       Value: 333637161281502097
-  Name: 
+  Name: Totem
   InitStacks: 1
   Cooldown:
     RawValue: 983040
@@ -427,7 +427,7 @@ MonoBehaviour:
     Guid:
       Value: 2478780052664270560
   Icon: {fileID: 0}
-  DisplayName: 
+  DisplayName: Rapid Pulse
   Rarity: 0
   Priority: 0
   Phase: 1
@@ -479,7 +479,7 @@ MonoBehaviour:
     Guid:
       Value: 1757614573061435001
   Icon: {fileID: 0}
-  DisplayName: 
+  DisplayName: Haste Pulse
   Rarity: 0
   Priority: 0
   Phase: 1
@@ -555,7 +555,7 @@ MonoBehaviour:
     Guid:
       Value: 3946781126483960726
   Icon: {fileID: 0}
-  DisplayName: 
+  DisplayName: Bigger Totem
   Rarity: 0
   Priority: 0
   Phase: 1
@@ -622,14 +622,14 @@ MonoBehaviour:
     Guid:
       Value: 1414869971886765238
   Icon: {fileID: 0}
-  DisplayName: 
+  DisplayName: Void Pulse
   Rarity: 0
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Adds a Void mark to the speaker's damage pulse while equipped.
+  Description: Adds a Rift Mark to the speaker's damage pulse while equipped.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -654,6 +654,6 @@ MonoBehaviour:
     ScaleByRadius: 0
     Scale: 1
     Alignment: 0
-  VoidEffect:
+  RiftMarkEffect:
     Id:
       Value: 319612216255599566

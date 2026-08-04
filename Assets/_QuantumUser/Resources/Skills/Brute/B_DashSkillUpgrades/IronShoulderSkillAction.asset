@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/B_DashSkillUpgrades/IronShoulderSkillAction
     Guid:
       Value: 360341579882539830
-  Icon: {fileID: 0}
+  Icon: {fileID: 2052678921, guid: 1398529c57dc443e7a3096f4ad470a4c, type: 3}
   DisplayName: Iron Shoulder
   Rarity: 1
   Priority: 0

@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17b1d76c42fa649e3a6015e7199b4c06, type: 3}
+  m_Name: RiftMarkEffectData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.RiftMarkEffectData
+  Identifier:
+    Path: _QuantumUser/Resources/HitEffects/RiftMarkEffectData
+    Guid:
+      Value: 319612216255599566

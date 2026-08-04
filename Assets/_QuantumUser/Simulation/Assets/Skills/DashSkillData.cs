@@ -45,6 +45,8 @@ namespace Quantum
             filter.KCC->SetActive(false);
             SetLayer(f, filter.Entity, EnemyMovementUtility.GetIgnoreProjectileLayerIndex(f));
 
+            TryBeginRiftDash(f, filter.Entity);
+
             Log.Debug($"[Skill] {filter.Entity} began Dash from {slot->StartPosition} toward {slot->TargetPosition}");
             return false; // a dash is never instant
         }
@@ -101,11 +103,14 @@ namespace Quantum
                 stopPosition.Y = selfPosition.Y;
 
                 filter.Transform3D->Position = stopPosition;
+                TryApplyRiftDashMarks(f, filter.Entity, stopPosition, bodyRadius);
                 Log.Debug($"[Skill] {filter.Entity}'s Dash stopped early at {stopPosition} - blocked by wall");
                 return true;
             }
 
-            filter.Transform3D->Position = selfPosition + direction * step;
+            FPVector3 newPosition = selfPosition + direction * step;
+            filter.Transform3D->Position = newPosition;
+            TryApplyRiftDashMarks(f, filter.Entity, newPosition, bodyRadius);
             return false;
         }
 
@@ -133,6 +138,74 @@ namespace Quantum
             }
 
             return FPQuaternion.Euler(0, filter.Aim->Angle, 0) * FPVector3.Forward;
+        }
+
+        // Rift Dash mutation (see docs/rift-mutations.md) - resets this dash activation's own dedupe
+        // tracker. A no-op AddOrGet on every dash for anyone without the mutation is cheap enough not
+        // to bother gating the component's own presence separately.
+        private static void TryBeginRiftDash(Frame f, EntityRef entity)
+        {
+            if (f.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats) == false || stats->HasRiftDashMutation == false)
+                return;
+
+            f.AddOrGet<RiftDashMarkTracker>(entity, out var tracker);
+            tracker->MarkedCount = 0;
+        }
+
+        // Rift Dash mutation - checked every Tick at the character's current position with a small
+        // radius, not a continuous sweep along the step - same "tunnels past anyone stepped clean
+        // over between two ticks" caveat HitPathSkillAction's own OnGoing pulse already accepts for
+        // this codebase's fast, small-per-tick-step movement.
+        private static void TryApplyRiftDashMarks(Frame f, EntityRef entity, FPVector3 position, FP radius)
+        {
+            if (f.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats) == false || stats->HasRiftDashMutation == false)
+                return;
+
+            if (f.Unsafe.TryGetPointer<RiftDashMarkTracker>(entity, out var tracker) == false)
+                return;
+
+            ElementalReactionConfig config = StatusEffectUtility.GetElementalReactionConfig(f);
+
+            if (config == null)
+                return;
+
+            Shape3D sphere = Shape3D.CreateSphere(radius);
+            var hits = f.Physics3D.OverlapShape(position, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
+
+            for (int i = 0; i < hits.Count; i++)
+            {
+                EntityRef candidate = hits[i].Entity;
+
+                if (f.Has<Enemy>(candidate) == false || ContainsRiftDashMark(tracker, candidate) || tracker->MarkedCount >= 8)
+                    continue;
+
+                tracker->MarkedEntities[tracker->MarkedCount] = candidate;
+                tracker->MarkedCount++;
+
+                var request = new RiftMarkApplicationRequest
+                {
+                    Source = entity,
+                    Target = candidate,
+                    HitSequence = f.Number,
+                    ApplicationSource = RiftMarkApplicationSource.MutationRiftDash,
+                    RequestedStacks = config.StacksAppliedPerApplication,
+                    Owner = entity,
+                    CooldownKey = RiftMarkCooldownKey.None,
+                };
+
+                RiftMarkApplicationUtility.ApplyRequest(f, request, config);
+            }
+        }
+
+        private static bool ContainsRiftDashMark(RiftDashMarkTracker* tracker, EntityRef candidate)
+        {
+            for (int i = 0; i < tracker->MarkedCount; i++)
+            {
+                if (tracker->MarkedEntities[i] == candidate)
+                    return true;
+            }
+
+            return false;
         }
     }
 }

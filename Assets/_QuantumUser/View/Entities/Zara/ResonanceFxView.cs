@@ -13,7 +13,7 @@ namespace Quantum
     //
     // Tinted by remixColors when e.Effect is valid - i.e. only on a pulse where the Remix ascension
     // actually triggered (see ResonanceUtility.ResolveRemixEffect) - so the pulse visibly matches
-    // whichever status it just applied (Burn/Void/Slow/Stun); defaultColor otherwise. Actual
+    // whichever status it just applied (Burn/RiftMark/Slow/Stun); defaultColor otherwise. Actual
     // playback is delegated to EffectsManager.Instance.PlayEffect so this reuses the same pooling
     // instead of duplicating it - EffectsManager's own generic OnShockwaveReleased skips playing
     // entirely whenever e.Effect is valid (see that method's own comment), so a Remix pulse never
@@ -25,7 +25,8 @@ namespace Quantum
 
         [Header("Remix colors - keyed by which HitEffectData was randomly chosen")]
         [SerializeField] private Color burnColor = new Color(1f, 0.45f, 0.1f);
-        [SerializeField] private Color voidColor = new Color(0.6f, 0.3f, 0.85f);
+        [SerializeField, Tooltip("Rift Mark's own hot-pink #FD3971 - purple is reserved for Void, see docs/elemental-reactions.md's presentation rules.")]
+        private Color riftMarkColor = new Color32(0xFD, 0x39, 0x71, 0xFF);
         [SerializeField] private Color slowColor = new Color(0.4f, 0.75f, 1f);
         [SerializeField] private Color stunColor = new Color(1f, 0.9f, 0.2f);
         [SerializeField, Tooltip("Used for a plain (non-Remix) pulse, and for any HitEffectData type not listed above.")]
@@ -73,7 +74,7 @@ namespace Quantum
             switch (effect)
             {
                 case BurnEffectData: return burnColor;
-                case VoidEffectData: return voidColor;
+                case RiftMarkEffectData: return riftMarkColor;
                 case SlowEffectData: return slowColor;
                 case StunEffectData: return stunColor;
                 default: return defaultColor;

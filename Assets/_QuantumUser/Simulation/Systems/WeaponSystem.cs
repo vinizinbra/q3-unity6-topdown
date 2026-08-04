@@ -36,14 +36,18 @@ namespace Quantum
 
             weapon->WeaponData = weaponDataRef;
 
-            SeedStats(f, weapon);
-            ApplyPerks(f, weapon);
+            SeedStats(f, owner, weapon);
+            ApplyPerks(f, owner, weapon);
             ApplyPixieExplosiveWeapon(f, owner, weapon);
 
             weapon->Ammo = weapon->MagazineSize;
             weapon->FireCooldownTimer = FP._0;
             weapon->ReloadTimer = FP._0;
             weapon->TimeSinceFireReleased = FP._0;
+
+            // Generic View hook - see Events.qtn's own comment on why this fires unconditionally
+            // for every equip path rather than each caller raising its own event.
+            f.Events.WeaponEquipped(owner, weaponDataRef);
         }
 
         // Pixie's Explosive Rounds passive ascension (see ExplosiveRoundsPassiveUpgradeData/
@@ -60,15 +64,16 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<PixieExplosiveWeapon>(owner, out var explosive) == false)
                 return;
 
-            weapon->ExplosiveSequenceInterval = 1;
-            weapon->ExplosiveSequenceRadius = FPMath.Max(weapon->ExplosiveSequenceRadius, explosive->Radius);
-            weapon->ExplosiveSequenceDamageMultiplier = FPMath.Max(weapon->ExplosiveSequenceDamageMultiplier, explosive->DamageMultiplier);
+            f.AddOrGet<WeaponPostImpactProcs>(owner, out var procs);
+            procs->ExplosiveSequenceInterval = 1;
+            procs->ExplosiveSequenceRadius = FPMath.Max(procs->ExplosiveSequenceRadius, explosive->Radius);
+            procs->ExplosiveSequenceDamageMultiplier = FPMath.Max(procs->ExplosiveSequenceDamageMultiplier, explosive->DamageMultiplier);
         }
 
         // Every perk-mutable stat starts life as its authored value; perks then edit these in place.
         // Damage/FireCooldown are the exception - see Weapon.qtn - so their multipliers reset to 1
         // here instead of copying an asset value.
-        private static void SeedStats(Frame f, Weapon* weapon)
+        private static void SeedStats(Frame f, EntityRef owner, Weapon* weapon)
         {
             WeaponDataAsset weaponData = f.FindAsset(weapon->WeaponData);
 
@@ -80,89 +85,35 @@ namespace Quantum
             weapon->CriticalChance = weaponData.CriticalChance;
             weapon->CriticalDamageBonus = weaponData.CriticalDamageBonus;
 
-            SeedPerkRoster(weapon);
+            SeedPerkRoster(f, owner);
         }
 
         // None of these have an authored value on WeaponDataAsset to seed from - they only ever
-        // come from a perk's own Apply - so they're reset to their "no effect" default here instead,
-        // extending the same "SeedStats resets everything before ApplyPerks re-bakes it" invariant
-        // Equip's own doc comment already promises to the wider perk roster (see
-        // docs/weapon-perks.md), so a weapon swap can't carry over a previous roll's perk state.
-        private static void SeedPerkRoster(Weapon* weapon)
+        // come from a perk's own Apply - so every optional perk component is unconditionally
+        // removed here before ApplyPerks re-adds only what the new roll actually grants, extending
+        // the same "SeedStats resets everything before ApplyPerks re-bakes it" invariant Equip's own
+        // doc comment already promises to the wider perk roster (see docs/weapon-perks.md), so a
+        // weapon swap can't carry over a previous roll's perk state. Emergency Reload's
+        // CharacterStats bonus must be unwound with the OLD weapon's WeaponReloadHooks values before
+        // that component disappears - RevertEmergencyReload already self-guards on
+        // EmergencyReloadApplied, so it's always safe to call unconditionally first, same
+        // revert-then-remove idiom OverdriveDamageSkillAction.End() uses.
+        private static void SeedPerkRoster(Frame f, EntityRef owner)
         {
-            weapon->OpeningBurstFireRateBonus = FP._0;
-            weapon->OpeningBurstThreshold = FP._0;
-            weapon->ExecutionRoundsDamageBonus = FP._0;
-            weapon->ExecutionRoundsThreshold = FP._0;
-            weapon->FinalRoundDamageBonus = FP._0;
-            weapon->EscalatingRoundsMaxDamageBonus = FP._0;
+            RevertEmergencyReload(f, owner);
 
-            weapon->RampStacks = 0;
-            weapon->RampMaxStacks = 0;
-            weapon->RampDamageBonusPerStack = FP._0;
-            weapon->RampFireRateBonusPerStack = FP._0;
-            weapon->RampDecayGrace = FP._0;
-
-            weapon->BonusPierce = 0;
-            weapon->BonusBounces = 0;
-            weapon->DoubleTapChance = FP._0;
-
-            weapon->HasSplitShot = false;
-            weapon->SplitShotCount = 0;
-            weapon->SplitShotDamageMultiplier = FP._0;
-
-            weapon->HasQuantumRounds = false;
-            weapon->QuantumRoundsRadius = FP._0;
-            weapon->QuantumRoundsDamageMultiplier = FP._0;
-
-            weapon->ExplosiveSequenceInterval = 0;
-            weapon->ExplosiveSequenceRadius = FP._0;
-            weapon->ExplosiveSequenceDamageMultiplier = FP._0;
-            weapon->ShotsSinceExplosiveProc = 0;
-
-            weapon->HasCataclysmRound = false;
-            weapon->CataclysmRadius = FP._0;
-            weapon->CataclysmDamageMultiplier = FP._0;
-
-            weapon->HasEchoChamber = false;
-            weapon->HasInfiniteEcho = false;
-            weapon->EchoDelay = FP._0;
-
-            var echoes = weapon->PendingEchoes;
-
-            for (int i = 0; i < echoes.Length; i++)
-            {
-                echoes[i] = default;
-            }
-
-            weapon->HasEmptyChamber = false;
-            weapon->EmptyChamberRadius = FP._0;
-            weapon->EmptyChamberKnockback = FP._0;
-
-            weapon->HasCombatReboot = false;
-            weapon->CombatRebootCooldownReduction = FP._0;
-
-            weapon->HasPredatorMagazine = false;
-            weapon->PredatorMagazineRestoreFraction = FP._0;
-
-            weapon->HasEmergencyReload = false;
-            weapon->EmergencyReloadMoveSpeedBonus = FP._0;
-            weapon->EmergencyReloadDamageReduction = FP._0;
-            weapon->EmergencyReloadApplied = false;
-
-            weapon->KillerInstinctFireRateBonus = FP._0;
-            weapon->KillerInstinctDuration = FP._0;
-            weapon->KillerInstinctTimer = FP._0;
-
-            weapon->CritAmmoRestoreChance = FP._0;
-            weapon->CritAmmoRestoreAmount = 0;
-
-            weapon->HasCriticalRebound = false;
-            weapon->CriticalReboundRadius = FP._0;
-            weapon->CriticalReboundDamageMultiplier = FP._0;
+            f.Remove<WeaponMagazinePositionPerks>(owner);
+            f.Remove<WeaponRampState>(owner);
+            f.Remove<WeaponEchoState>(owner);
+            f.Remove<WeaponFireTimeMods>(owner);
+            f.Remove<WeaponPostImpactProcs>(owner);
+            f.Remove<WeaponReloadHooks>(owner);
+            f.Remove<WeaponOnKillReactions>(owner);
+            f.Remove<WeaponOnCritReactions>(owner);
+            f.Remove<WeaponHitTrackingPerks>(owner);
         }
 
-        private static void ApplyPerks(Frame f, Weapon* weapon)
+        private static void ApplyPerks(Frame f, EntityRef owner, Weapon* weapon)
         {
             var perks = weapon->Perks;
 
@@ -171,7 +122,7 @@ namespace Quantum
                 if (perks[i].IsValid == false)
                     continue;
 
-                f.FindAsset(perks[i]).Apply(f, weapon);
+                f.FindAsset(perks[i]).Apply(f, owner, weapon);
             }
 
             Log.Debug($"[Weapon] equipped - damageMultiplier={weapon->DamageMultiplier}, " +
@@ -180,7 +131,7 @@ namespace Quantum
 
         // Grants a perk after the fact (a level-up, not a drop roll) - records it so UI can read the
         // roll back, then bakes it. False when every slot is already taken.
-        public static bool AddPerk(Frame f, Weapon* weapon, AssetRef<WeaponPerkData> perkRef)
+        public static bool AddPerk(Frame f, EntityRef owner, Weapon* weapon, AssetRef<WeaponPerkData> perkRef)
         {
             if (perkRef.IsValid == false)
                 return false;
@@ -193,7 +144,7 @@ namespace Quantum
                     continue;
 
                 perks[i] = perkRef;
-                f.FindAsset(perkRef).Apply(f, weapon);
+                f.FindAsset(perkRef).Apply(f, owner, weapon);
 
                 return true;
             }
@@ -218,7 +169,7 @@ namespace Quantum
             if (f.GetPlayerCommand(playerLink->Player) is not GrantWeaponPerkCommand command)
                 return;
 
-            if (AddPerk(f, filter.Weapon, command.Perk) == true)
+            if (AddPerk(f, filter.Entity, filter.Weapon, command.Perk) == true)
             {
                 Log.Debug($"[Weapon] {filter.Entity} was granted {command.Perk} via command");
             }
@@ -236,8 +187,8 @@ namespace Quantum
             // ramp decay/Killer Instinct timer/pending echoes below - none of them should freeze
             // just because the wielder is stunned or holding no input this tick.
             ProcessGrantPerkCommand(f, ref filter);
-            TickRamp(filter.Weapon);
-            TickKillerInstinct(filter.Weapon, f.DeltaTime);
+            TickRamp(f, filter.Entity, filter.Weapon);
+            TickKillerInstinct(f, filter.Entity, f.DeltaTime);
             TickPendingEchoes(f, filter.Entity, filter.Weapon, f.DeltaTime);
 
             if (StatusEffectUtility.IsStunned(f, filter.Entity) == true)
@@ -246,15 +197,30 @@ namespace Quantum
             if (HasFireDriver(f, filter.Entity) == false)
                 return;
 
-            // Auto-attack: firing is gated on Aim.Target (already re-resolved every tick by
-            // AimSystem/SentryBarrelSystem) rather than a held Fire input - whoever's holding this
-            // weapon shoots on its own the moment a target is in range, no button needed.
-            bool hasTarget = filter.Aim->Target != EntityRef.None;
+            bool canFire;
 
-            if (UpdateReload(f, filter.Entity, filter.Weapon, hasTarget))
+            if (f.RuntimeConfig.DebugManualFireInput == true
+                && f.Unsafe.TryGetPointer<PlayerLink>(filter.Entity, out var playerLink) == true)
+            {
+                // Debug override: replaces auto-attack entirely for a real player - firing follows
+                // the Fire input only, target locked or not, instead of Aim.Target.
+                // FireShot/ResolveAimDirection already fall back to facing direction when target is
+                // None, so firing untargeted is safe as-is. Non-player shooters (Lux's sentry gun)
+                // have no PlayerLink and stay purely target-driven regardless of this flag.
+                canFire = f.GetPlayerInput(playerLink->Player)->Fire.IsDown == true;
+            }
+            else
+            {
+                // Auto-attack: firing is gated on Aim.Target (already re-resolved every tick by
+                // AimSystem/SentryBarrelSystem) rather than a held Fire input - whoever's holding
+                // this weapon shoots on its own the moment a target is in range, no button needed.
+                canFire = filter.Aim->Target != EntityRef.None;
+            }
+
+            if (UpdateReload(f, filter.Entity, filter.Weapon, canFire))
                 return;
 
-            if (hasTarget == false || filter.Weapon->FireCooldownTimer > FP._0)
+            if (canFire == false || filter.Weapon->FireCooldownTimer > FP._0)
                 return;
 
             WeaponDataAsset weaponData = f.FindAsset(filter.Weapon->WeaponData);
@@ -277,26 +243,30 @@ namespace Quantum
             FP magazineFraction = ResolveMagazineFraction(filter.Weapon);
             bool isLastBullet = filter.Weapon->Ammo == 1;
             bool isEchoEligibleShot = filter.Weapon->MagazineSize - filter.Weapon->Ammo + 1 <= 3;
-            bool isExplosiveProc = ResolveExplosiveProc(filter.Weapon);
-            bool isCataclysm = filter.Weapon->HasCataclysmRound == true && isLastBullet == true;
+
+            f.Unsafe.TryGetPointer<WeaponPostImpactProcs>(filter.Entity, out var postImpactProcs);
+            bool isExplosiveProc = ResolveExplosiveProc(postImpactProcs);
+            bool isCataclysm = postImpactProcs != null && postImpactProcs->HasCataclysmRound == true && isLastBullet == true;
 
             // Read fresh off the asset every fire, not a baked stat - see Weapon.qtn - so tuning
             // WeaponDataAsset.Damage/FireRate in the Inspector applies immediately to
             // already-equipped weapons instead of only the next Equip.
-            FP damage = ResolveLiveDamage(filter.Weapon, weaponData.Damage * filter.Weapon->DamageMultiplier, magazineFraction, isLastBullet);
+            FP damage = ResolveLiveDamage(f, filter.Entity, weaponData.Damage * filter.Weapon->DamageMultiplier, magazineFraction, isLastBullet);
 
             FireShot(f, filter.Entity, filter.Weapon, weaponData, damage, casterPosition, aimAngle, holdOffset,
                 spawnPosition, aimDirection, filter.Aim->Target, aimAtCenter, isExplosiveProc, isCataclysm);
 
-            if (filter.Weapon->DoubleTapChance > FP._0 && DamageUtility.RollChance(f, filter.Weapon->DoubleTapChance) == true)
+            if (f.Unsafe.TryGetPointer<WeaponFireTimeMods>(filter.Entity, out var fireMods) == true
+                && fireMods->DoubleTapChance > FP._0 && DamageUtility.RollChance(f, fireMods->DoubleTapChance) == true)
             {
                 FireShot(f, filter.Entity, filter.Weapon, weaponData, damage, casterPosition, aimAngle, holdOffset,
                     spawnPosition, aimDirection, filter.Aim->Target, aimAtCenter, isExplosiveProc, isCataclysm);
             }
 
-            if (filter.Weapon->HasInfiniteEcho == true || (filter.Weapon->HasEchoChamber == true && isEchoEligibleShot == true))
+            if (f.Unsafe.TryGetPointer<WeaponEchoState>(filter.Entity, out var echoState) == true
+                && (echoState->HasInfiniteEcho == true || (echoState->HasEchoChamber == true && isEchoEligibleShot == true)))
             {
-                EnqueueEcho(filter.Weapon, spawnPosition, aimDirection, damage);
+                EnqueueEcho(echoState, spawnPosition, aimDirection, damage);
             }
 
             filter.Weapon->FireCooldownTimer = ResolveLiveFireCooldown(f, filter.Entity, filter.Weapon, weaponData, magazineFraction);
@@ -336,19 +306,25 @@ namespace Quantum
         // 0 once the wielder has held fire released past RampDecayGrace - a snap reset rather than
         // a gradual per-tick drain, same "read live every shot, nothing to revert" idiom the pool
         // already uses for its bonus math (see ResolveLiveDamage/ResolveLiveFireCooldown).
-        private static void TickRamp(Weapon* weapon)
+        private static void TickRamp(Frame f, EntityRef owner, Weapon* weapon)
         {
-            if (weapon->RampStacks > 0 && weapon->TimeSinceFireReleased > weapon->RampDecayGrace)
+            if (f.Unsafe.TryGetPointer<WeaponRampState>(owner, out var ramp) == false)
+                return;
+
+            if (ramp->RampStacks > 0 && weapon->TimeSinceFireReleased > ramp->RampDecayGrace)
             {
-                weapon->RampStacks = 0;
+                ramp->RampStacks = 0;
             }
         }
 
-        private static void TickKillerInstinct(Weapon* weapon, FP deltaTime)
+        private static void TickKillerInstinct(Frame f, EntityRef owner, FP deltaTime)
         {
-            if (weapon->KillerInstinctTimer > FP._0)
+            if (f.Unsafe.TryGetPointer<WeaponOnKillReactions>(owner, out var reactions) == false)
+                return;
+
+            if (reactions->KillerInstinctTimer > FP._0)
             {
-                weapon->KillerInstinctTimer = FPMath.Max(FP._0, weapon->KillerInstinctTimer - deltaTime);
+                reactions->KillerInstinctTimer = FPMath.Max(FP._0, reactions->KillerInstinctTimer - deltaTime);
             }
         }
 
@@ -366,22 +342,29 @@ namespace Quantum
             return (FP)shotsFiredIncludingThis / (FP)weapon->MagazineSize;
         }
 
-        private static FP ResolveLiveDamage(Weapon* weapon, FP baseDamage, FP magazineFraction, bool isLastBullet)
+        private static FP ResolveLiveDamage(Frame f, EntityRef owner, FP baseDamage, FP magazineFraction, bool isLastBullet)
         {
             FP bonus = FP._0;
 
-            if (weapon->ExecutionRoundsThreshold > FP._0 && magazineFraction >= FP._1 - weapon->ExecutionRoundsThreshold)
+            if (f.Unsafe.TryGetPointer<WeaponMagazinePositionPerks>(owner, out var magPerks) == true)
             {
-                bonus += weapon->ExecutionRoundsDamageBonus;
+                if (magPerks->ExecutionRoundsThreshold > FP._0 && magazineFraction >= FP._1 - magPerks->ExecutionRoundsThreshold)
+                {
+                    bonus += magPerks->ExecutionRoundsDamageBonus;
+                }
+
+                if (isLastBullet == true)
+                {
+                    bonus += magPerks->FinalRoundDamageBonus;
+                }
+
+                bonus += magPerks->EscalatingRoundsMaxDamageBonus * magazineFraction;
             }
 
-            if (isLastBullet == true)
+            if (f.Unsafe.TryGetPointer<WeaponRampState>(owner, out var ramp) == true)
             {
-                bonus += weapon->FinalRoundDamageBonus;
+                bonus += ramp->RampStacks * ramp->RampDamageBonusPerStack;
             }
-
-            bonus += weapon->EscalatingRoundsMaxDamageBonus * magazineFraction;
-            bonus += weapon->RampStacks * weapon->RampDamageBonusPerStack;
 
             return baseDamage * (FP._1 + bonus);
         }
@@ -390,16 +373,20 @@ namespace Quantum
         {
             FP fireRateBonus = FP._0;
 
-            if (weapon->OpeningBurstThreshold > FP._0 && magazineFraction <= weapon->OpeningBurstThreshold)
+            if (f.Unsafe.TryGetPointer<WeaponMagazinePositionPerks>(entity, out var magPerks) == true
+                && magPerks->OpeningBurstThreshold > FP._0 && magazineFraction <= magPerks->OpeningBurstThreshold)
             {
-                fireRateBonus += weapon->OpeningBurstFireRateBonus;
+                fireRateBonus += magPerks->OpeningBurstFireRateBonus;
             }
 
-            fireRateBonus += weapon->RampStacks * weapon->RampFireRateBonusPerStack;
-
-            if (weapon->KillerInstinctTimer > FP._0)
+            if (f.Unsafe.TryGetPointer<WeaponRampState>(entity, out var ramp) == true)
             {
-                fireRateBonus += weapon->KillerInstinctFireRateBonus;
+                fireRateBonus += ramp->RampStacks * ramp->RampFireRateBonusPerStack;
+            }
+
+            if (f.Unsafe.TryGetPointer<WeaponOnKillReactions>(entity, out var onKill) == true && onKill->KillerInstinctTimer > FP._0)
+            {
+                fireRateBonus += onKill->KillerInstinctFireRateBonus;
             }
 
             FP baseCooldown = FP._1 / weaponData.FireRate * weapon->FireCooldownMultiplier / (FP._1 + fireRateBonus);
@@ -410,18 +397,20 @@ namespace Quantum
         // Explosive Sequence's own shot counter - every shot fired (hitscan or projectile) advances
         // it, wrapping back to 0 once it reaches Interval, regardless of whether that particular
         // shot actually connects with anything (mirrors AreaHitData's own "detonates on hit OR
-        // expiry" - a proc'd shot that misses still consumed its place in the sequence).
-        private static bool ResolveExplosiveProc(Weapon* weapon)
+        // expiry" - a proc'd shot that misses still consumed its place in the sequence). procs may
+        // be null (no post-impact perk rolled) - a no-op, same as ExplosiveSequenceInterval == 0
+        // used to mean before the split.
+        private static bool ResolveExplosiveProc(WeaponPostImpactProcs* procs)
         {
-            if (weapon->ExplosiveSequenceInterval <= 0)
+            if (procs == null || procs->ExplosiveSequenceInterval <= 0)
                 return false;
 
-            weapon->ShotsSinceExplosiveProc++;
+            procs->ShotsSinceExplosiveProc++;
 
-            if (weapon->ShotsSinceExplosiveProc < weapon->ExplosiveSequenceInterval)
+            if (procs->ShotsSinceExplosiveProc < procs->ExplosiveSequenceInterval)
                 return false;
 
-            weapon->ShotsSinceExplosiveProc = 0;
+            procs->ShotsSinceExplosiveProc = 0;
             return true;
         }
 
@@ -431,9 +420,9 @@ namespace Quantum
         // both just decide whether to call this, not how it plays out. Silently drops the echo if
         // every slot is already pending (a rapid-fire weapon outrunning EchoDelay) rather than
         // stalling the newest shot waiting for room.
-        private static void EnqueueEcho(Weapon* weapon, FPVector3 position, FPVector3 direction, FP damage)
+        private static void EnqueueEcho(WeaponEchoState* echoState, FPVector3 position, FPVector3 direction, FP damage)
         {
-            var echoes = weapon->PendingEchoes;
+            var echoes = echoState->PendingEchoes;
 
             for (int i = 0; i < echoes.Length; i++)
             {
@@ -442,7 +431,7 @@ namespace Quantum
 
                 echoes[i] = new PendingEcho
                 {
-                    Delay = weapon->EchoDelay,
+                    Delay = echoState->EchoDelay,
                     Position = position,
                     Direction = direction,
                     Damage = damage
@@ -454,7 +443,10 @@ namespace Quantum
 
         private static void TickPendingEchoes(Frame f, EntityRef owner, Weapon* weapon, FP deltaTime)
         {
-            var echoes = weapon->PendingEchoes;
+            if (f.Unsafe.TryGetPointer<WeaponEchoState>(owner, out var echoState) == false)
+                return;
+
+            var echoes = echoState->PendingEchoes;
 
             for (int i = 0; i < echoes.Length; i++)
             {
@@ -502,13 +494,13 @@ namespace Quantum
             for (int i = 0; i < pelletCount; i++)
             {
                 FPVector3 pelletDirection = FPQuaternion.Euler(0, GetPelletAngle(i, pelletCount, weaponData.SpreadAngle), 0) * echo.Direction;
-                ProjectileLaunch launch = movement.GetLaunch(echo.Position, pelletDirection);
+                ProjectileLaunch launch = movement.GetLaunch(f, echo.Position, pelletDirection);
 
                 if (launch.IsValid == false)
                     continue;
 
                 EntityRef entity = ProjectileSpawner.Spawn(f, owner, weaponData.ProjectileData, launch, echo.Damage, DamageSource.Weapon, element: weaponData.Element);
-                ApplyProjectilePerks(f, entity, weapon, false, false);
+                ApplyProjectilePerks(f, owner, entity, weapon, false, false);
             }
         }
 
@@ -524,7 +516,7 @@ namespace Quantum
                     weapon->ReloadTimer = FP._0;
                     weapon->Ammo = weapon->MagazineSize;
                     f.Events.WeaponReloaded(entity);
-                    RevertEmergencyReload(f, entity, weapon);
+                    RevertEmergencyReload(f, entity);
                 }
 
                 return true;
@@ -566,12 +558,12 @@ namespace Quantum
         {
             weapon->TimeSinceFireReleased = FP._0;
 
-            ApplyMagazineEmptiedPerks(f, entity, weapon);
+            ApplyMagazineEmptiedPerks(f, entity);
 
             if (weapon->ReloadDuration > FP._0 && IsInstantReloadOverdriven(f, entity) == false)
             {
                 weapon->ReloadTimer = StatUtility.GetReloadDuration(f, entity, weapon->ReloadDuration);
-                TryApplyEmergencyReload(f, entity, weapon);
+                TryApplyEmergencyReload(f, entity);
             }
             else
             {
@@ -584,16 +576,19 @@ namespace Quantum
         // Empty Chamber/Combat Reboot - both react to the magazine emptying, not to the reload
         // itself finishing, so they trigger here regardless of which branch below actually reloads
         // (a timed ReloadTimer or an instant top-up) rather than in UpdateReload's completion path.
-        private static void ApplyMagazineEmptiedPerks(Frame f, EntityRef entity, Weapon* weapon)
+        private static void ApplyMagazineEmptiedPerks(Frame f, EntityRef entity)
         {
-            if (weapon->HasEmptyChamber == true && f.Unsafe.TryGetPointer<Transform3D>(entity, out var transform) == true)
+            if (f.Unsafe.TryGetPointer<WeaponReloadHooks>(entity, out var hooks) == false)
+                return;
+
+            if (hooks->HasEmptyChamber == true && f.Unsafe.TryGetPointer<Transform3D>(entity, out var transform) == true)
             {
-                HitEffectUtility.ApplyShockwave(f, transform->Position, weapon->EmptyChamberRadius, entity, weapon->EmptyChamberKnockback);
+                HitEffectUtility.ApplyShockwave(f, transform->Position, hooks->EmptyChamberRadius, entity, hooks->EmptyChamberKnockback);
             }
 
-            if (weapon->HasCombatReboot == true && f.Unsafe.TryGetPointer<CharacterSkills>(entity, out var skills) == true)
+            if (hooks->HasCombatReboot == true && f.Unsafe.TryGetPointer<CharacterSkills>(entity, out var skills) == true)
             {
-                SkillSystem.ReduceCooldown(f, skills, SkillSlotId.HeroSkill, weapon->CombatRebootCooldownReduction);
+                SkillSystem.ReduceCooldown(f, skills, SkillSlotId.HeroSkill, hooks->CombatRebootCooldownReduction);
             }
         }
 
@@ -601,31 +596,32 @@ namespace Quantum
         // case just below (nothing to be mid-reload during) or the idle auto-top-up in
         // UpdateReload (that's not fictionally "reloading" at all). Reverted the moment the real
         // reload actually finishes - see UpdateReload's timer-complete branch.
-        private static void TryApplyEmergencyReload(Frame f, EntityRef entity, Weapon* weapon)
+        private static void TryApplyEmergencyReload(Frame f, EntityRef entity)
         {
-            if (weapon->HasEmergencyReload == false || weapon->EmergencyReloadApplied == true)
+            if (f.Unsafe.TryGetPointer<WeaponReloadHooks>(entity, out var hooks) == false
+                || hooks->HasEmergencyReload == false || hooks->EmergencyReloadApplied == true)
                 return;
 
             if (f.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats) == false)
                 return;
 
-            stats->MoveSpeedMultiplier += weapon->EmergencyReloadMoveSpeedBonus;
-            stats->DamageReduction += weapon->EmergencyReloadDamageReduction;
-            weapon->EmergencyReloadApplied = true;
+            stats->MoveSpeedMultiplier += hooks->EmergencyReloadMoveSpeedBonus;
+            stats->DamageReduction += hooks->EmergencyReloadDamageReduction;
+            hooks->EmergencyReloadApplied = true;
         }
 
-        private static void RevertEmergencyReload(Frame f, EntityRef entity, Weapon* weapon)
+        private static void RevertEmergencyReload(Frame f, EntityRef entity)
         {
-            if (weapon->EmergencyReloadApplied == false)
+            if (f.Unsafe.TryGetPointer<WeaponReloadHooks>(entity, out var hooks) == false || hooks->EmergencyReloadApplied == false)
                 return;
 
             if (f.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats) == true)
             {
-                stats->MoveSpeedMultiplier -= weapon->EmergencyReloadMoveSpeedBonus;
-                stats->DamageReduction -= weapon->EmergencyReloadDamageReduction;
+                stats->MoveSpeedMultiplier -= hooks->EmergencyReloadMoveSpeedBonus;
+                stats->DamageReduction -= hooks->EmergencyReloadDamageReduction;
             }
 
-            weapon->EmergencyReloadApplied = false;
+            hooks->EmergencyReloadApplied = false;
         }
 
         private static bool IsInstantReloadOverdriven(Frame f, EntityRef entity)
@@ -670,13 +666,19 @@ namespace Quantum
 
                 if (didHit == true)
                 {
-                    DamageUtility.ApplyDamage(f, hit.Value.Entity, damage, owner, DamageSource.Weapon);
+                    // hitIndex: pellets sharing a target/damage/tick would otherwise hash-collide and
+                    // get silently collapsed by Quantum's event dedup - see Events.qtn's comment on
+                    // EntityDamaged.HitIndex.
+                    DamageUtility.ApplyDamage(f, hit.Value.Entity, damage, owner, DamageSource.Weapon, hitIndex: (byte)i);
                     Log.Debug($"[Weapon] Hitscan from {owner} hit {hit.Value.Entity} for {damage} base damage");
 
                     // Hitscan has no Effects list to run through HitEffectUtility (unlike
-                    // ProjectileHitData/AreaDamage), so this is called directly here instead.
+                    // ProjectileHitData/AreaDamage), so this is called directly here instead. Snapshot
+                    // pre-hit Rift Mark stacks the same way HitEffectUtility.ApplyToTarget does - see
+                    // HitEffectContext.PreHitRiftMarkStacks' own comment.
+                    byte preHitRiftMarkStacks = StatusEffectUtility.GetRiftMarkStacks(f, hit.Value.Entity);
                     StatusEffectUtility.TryApplyElementalStatus(f, hit.Value.Entity, owner, DamageSource.Weapon,
-                        weaponData.Element, damage);
+                        weaponData.Element, damage, preHitRiftMarkStacks);
 
                     // Hit3D.Point only reads real data when the query passes
                     // QueryOptions.ComputeDetailedInfo (see ProjectileSystem.ResolveHitPoint's own
@@ -695,11 +697,21 @@ namespace Quantum
                     // effect, not a per-shot one.
                     ApplyHitscanWeaponPerks(f, owner, weapon, hit.Value.Entity, hitPosition, damage,
                         isExplosiveProc && i == 0, isCataclysm && i == 0);
+
+                    if (i == 0)
+                    {
+                        TryApplyFocusedBreach(f, owner, hit.Value.Entity);
+                    }
                 }
                 else
                 {
                     Log.Debug($"[Weapon] Hitscan from {owner} missed");
                     endPoint = origin + pelletDirection * range;
+
+                    if (i == 0)
+                    {
+                        ResetFocusedBreach(f, owner);
+                    }
                 }
 
                 // Hitscan never spawns an entity (unlike Projectile, which the view tracks via
@@ -729,10 +741,19 @@ namespace Quantum
         private static void ApplyHitscanWeaponPerks(Frame f, EntityRef owner, Weapon* weapon, EntityRef hitEntity,
             FPVector3 point, FP damage, bool isExplosiveProc, bool isCataclysm)
         {
-            if (weapon->HasQuantumRounds == true
-                && WeaponPerkUtility.TryFindNearestEnemy(f, point, weapon->QuantumRoundsRadius, hitEntity, out var nearby) == true)
+            if (f.Unsafe.TryGetPointer<WeaponPostImpactProcs>(owner, out var procs) == false)
+                return;
+
+            if (procs->HasQuantumRounds == true
+                && WeaponPerkUtility.TryFindNearestEnemy(f, point, procs->QuantumRoundsRadius, hitEntity, out var nearby) == true)
             {
-                DamageUtility.ApplyDamage(f, nearby, damage * weapon->QuantumRoundsDamageMultiplier, owner, DamageSource.Weapon);
+                DamageUtility.ApplyDamage(f, nearby, damage * procs->QuantumRoundsDamageMultiplier, owner, DamageSource.Weapon);
+
+                FPVector3 targetPosition = f.Unsafe.TryGetPointer<Transform3D>(nearby, out var nearbyTransform) == true
+                    ? nearbyTransform->Position
+                    : point;
+
+                f.Events.QuantumRoundsTriggered(nearby, targetPosition, procs->QuantumRoundsSource);
             }
 
             // Bigger Boom (Pixie passive ascension) - read live rather than baked into the weapon at
@@ -744,14 +765,75 @@ namespace Quantum
 
             if (isCataclysm == true)
             {
-                HitEffectUtility.ApplyExplosion(f, point, weapon->CataclysmRadius * radiusMultiplier, owner,
-                    damage * weapon->CataclysmDamageMultiplier, DamageSource.Weapon);
+                FP radius = procs->CataclysmRadius * radiusMultiplier;
+                HitEffectUtility.ApplyExplosion(f, point, radius, owner,
+                    damage * procs->CataclysmDamageMultiplier, DamageSource.Weapon);
+                WeaponPerkUtility.TryApplyUnstablePayloadMarks(f, point, radius, owner);
             }
             else if (isExplosiveProc == true)
             {
-                HitEffectUtility.ApplyExplosion(f, point, weapon->ExplosiveSequenceRadius * radiusMultiplier, owner,
-                    damage * weapon->ExplosiveSequenceDamageMultiplier, DamageSource.Weapon);
+                FP radius = procs->ExplosiveSequenceRadius * radiusMultiplier;
+                HitEffectUtility.ApplyExplosion(f, point, radius, owner,
+                    damage * procs->ExplosiveSequenceDamageMultiplier, DamageSource.Weapon);
+                WeaponPerkUtility.TryApplyUnstablePayloadMarks(f, point, radius, owner);
             }
+        }
+
+        // Focused Breach (see docs/weapon-perks.md) - simulates "beam contact" as continuous same-
+        // target Hitscan hits, since this project has no dedicated Beam fire type. Losing contact (a
+        // miss, or the hit entity changing) resets progress via ResetFocusedBreach below; only pellet
+        // 0 of a volley tracks it, same "one beam, not N" reasoning ApplyHitscanWeaponPerks's own
+        // Explosive Sequence/Cataclysm Round gating uses.
+        private static void TryApplyFocusedBreach(Frame f, EntityRef owner, EntityRef hitEntity)
+        {
+            if (f.Unsafe.TryGetPointer<WeaponHitTrackingPerks>(owner, out var tracking) == false || tracking->HasFocusedBreach == false)
+                return;
+
+            if (tracking->FocusedBreachTarget != hitEntity)
+            {
+                tracking->FocusedBreachTarget = hitEntity;
+                tracking->FocusedBreachContactTime = FP._0;
+            }
+
+            tracking->FocusedBreachContactTime += f.DeltaTime;
+
+            if (tracking->FocusedBreachContactTime < tracking->FocusedBreachThreshold)
+                return;
+
+            tracking->FocusedBreachContactTime = FP._0;
+
+            ElementalReactionConfig config = StatusEffectUtility.GetElementalReactionConfig(f);
+
+            if (config == null || hitEntity == EntityRef.None || f.Has<Enemy>(hitEntity) == false)
+                return;
+
+            if (f.Unsafe.TryGetPointer<StatusEffects>(hitEntity, out var status) == false)
+                return;
+
+            if (RiftMarkApplicationUtility.TryConsumeCooldown(status, RiftMarkCooldownKey.FocusedBreach, config.StandardMarkApplicationCooldown) == false)
+                return;
+
+            var request = new RiftMarkApplicationRequest
+            {
+                Source = owner,
+                Target = hitEntity,
+                HitSequence = f.Number,
+                ApplicationSource = RiftMarkApplicationSource.WeaponPerkFocusedBreach,
+                RequestedStacks = config.StacksAppliedPerApplication,
+                Owner = owner,
+                CooldownKey = RiftMarkCooldownKey.FocusedBreach,
+            };
+
+            RiftMarkApplicationUtility.ApplyRequest(f, request, config);
+        }
+
+        private static void ResetFocusedBreach(Frame f, EntityRef owner)
+        {
+            if (f.Unsafe.TryGetPointer<WeaponHitTrackingPerks>(owner, out var tracking) == false || tracking->HasFocusedBreach == false)
+                return;
+
+            tracking->FocusedBreachTarget = EntityRef.None;
+            tracking->FocusedBreachContactTime = FP._0;
         }
 
         private static void FireProjectile(Frame f, EntityRef owner, Weapon* weapon, WeaponDataAsset weaponData,
@@ -778,8 +860,8 @@ namespace Quantum
                 FPQuaternion pelletRotation = FPQuaternion.Euler(0, GetPelletAngle(i, pelletCount, weaponData.SpreadAngle), 0);
 
                 ProjectileLaunch launch = hasAimPoint
-                    ? movement.GetLaunchToTarget(resolvedOrigin, resolvedOrigin + pelletRotation * delta)
-                    : movement.GetLaunch(spawnPosition, pelletRotation * aimDirection);
+                    ? movement.GetLaunchToTarget(f, resolvedOrigin, resolvedOrigin + pelletRotation * delta, target)
+                    : movement.GetLaunch(f, spawnPosition, pelletRotation * aimDirection);
 
                 if (launch.IsValid == false)
                 {
@@ -788,10 +870,10 @@ namespace Quantum
                 }
 
                 EntityRef entity = ProjectileSpawner.Spawn(f, owner, weaponData.ProjectileData, launch, damage, DamageSource.Weapon,
-                    target: target, element: weaponData.Element);
+                    target: target, element: weaponData.Element, pelletIndex: i);
 
                 // Only pellet 0 of a volley procs Explosive Sequence/Cataclysm Round - see FireHitscan.
-                ApplyProjectilePerks(f, entity, weapon, isExplosiveProc && i == 0, isCataclysm && i == 0);
+                ApplyProjectilePerks(f, owner, entity, weapon, isExplosiveProc && i == 0, isCataclysm && i == 0);
 
                 Log.Debug($"[Weapon] Spawned pellet {i}/{pelletCount} from {owner} with velocity {launch.Velocity}");
             }
@@ -801,13 +883,17 @@ namespace Quantum
         // Rounds/Ricochet (RemainingPierces/RemainingBounces), Long Barrel
         // (MaxDistanceMultiplier), and this specific shot's Explosive Sequence/Cataclysm Round
         // flags (see DirectHitData for how the latter two are consumed on impact).
-        private static void ApplyProjectilePerks(Frame f, EntityRef entity, Weapon* weapon, bool isExplosiveProc, bool isCataclysm)
+        private static void ApplyProjectilePerks(Frame f, EntityRef owner, EntityRef entity, Weapon* weapon, bool isExplosiveProc, bool isCataclysm)
         {
             if (f.Unsafe.TryGetPointer<Projectile>(entity, out var projectile) == false)
                 return;
 
-            projectile->RemainingPierces += weapon->BonusPierce;
-            projectile->RemainingBounces += weapon->BonusBounces;
+            if (f.Unsafe.TryGetPointer<WeaponFireTimeMods>(owner, out var mods) == true)
+            {
+                projectile->RemainingPierces += mods->BonusPierce;
+                projectile->RemainingBounces += mods->BonusBounces;
+            }
+
             projectile->MaxDistanceMultiplier = weapon->RangeMultiplier;
             projectile->IsExplosiveProc = isExplosiveProc;
             projectile->IsCataclysm = isCataclysm;

@@ -74,7 +74,7 @@ namespace Quantum
                 // The whole target point goes to the movement, not a flattened direction - a
                 // lob needs the real distance to land on the target rather than a fixed
                 // TargetDistance.
-                launch = movement.GetLaunchToTarget(resolvedOrigin, targetPosition);
+                launch = movement.GetLaunchToTarget(f, resolvedOrigin, targetPosition, target);
             }
 
             if (launch.IsValid == true)

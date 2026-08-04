@@ -16,31 +16,69 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/ElementalReactionConfig
     Guid:
       Value: 491478871009097374
-  ExplosionTriggerCooldown:
+  MaxStacks: 2
+  BaseDuration:
+    RawValue: 655360
+  RefreshDurationOnApply: 1
+  StacksAppliedPerApplication: 1
+  StacksConsumedPerReaction: 1
+  ReactionLockoutDuration:
+    RawValue: 49152
+  DetonationTriggerCooldown:
     RawValue: 32768
-  ExplosionDamagePercent:
-    RawValue: 32768
-  ExplosionRadius:
+  DetonationDamagePercent:
     RawValue: 65536
-  FreezeTriggerCooldown:
+  DetonationRadius:
+    RawValue: 65536
+  DeepFreezeTriggerCooldown:
     RawValue: 262144
-  FreezeDuration:
-    RawValue: 196608
-  FreezeAnticipationMultiplier:
+  DeepFreezeDuration:
+    RawValue: 327680
+  DeepFreezeAnticipationMultiplier:
     RawValue: 32768
-  KnockbackTriggerCooldown:
+  OverloadTriggerCooldown:
+    RawValue: 262144
+  OverloadStunDuration:
     RawValue: 131072
-  MagmaPrisonTriggerCooldown:
+  RuptureTriggerCooldown:
     RawValue: 196608
-  MagmaPrisonRootDuration:
-    RawValue: 65536
-  StunTriggerCooldown:
-    RawValue: 262144
-  StunEffectDuration:
-    RawValue: 32768
-  BreakTriggerCooldown:
+  RuptureDuration:
     RawValue: 196608
-  BreakDuration:
-    RawValue: 196608
-  BreakDamageTakenMultiplier:
+  RuptureDamageTakenMultiplier:
     RawValue: 85197
+  SingularityTriggerCooldown:
+    RawValue: 262144
+  SingularityRadius:
+    RawValue: 262144
+  SingularityPullForce:
+    RawValue: 655360
+  StandardMarkApplicationCooldown:
+    RawValue: 131072
+  RiftAftershockRadius:
+    RawValue: 393216
+  HeavyHitDamageThreshold:
+    RawValue: 2621440
+  HeavyHitHealthPercentThreshold:
+    RawValue: 16384
+  CloseRangeThreshold:
+    RawValue: 262144
+  LongRangeThreshold:
+    RawValue: 786432
+  ExecutionHealthThreshold:
+    RawValue: 16384
+  FracturedPresenceRadius:
+    RawValue: 196608
+  FracturedPresenceExposureTime:
+    RawValue: 327680
+  LastStandThreshold:
+    RawValue: 3276800
+  LastStandCooldown:
+    RawValue: 524288
+  LastStandPulseRadius:
+    RawValue: 327680
+  OverflowingRiftCooldown:
+    RawValue: 65536
+  OverflowingRiftPulseDamage:
+    RawValue: 327680
+  OverflowingRiftPulseRadius:
+    RawValue: 131072

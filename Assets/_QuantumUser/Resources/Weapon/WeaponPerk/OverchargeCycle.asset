@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapon/WeaponPerk/OverchargeCycle
     Guid:
       Value: 277574942251946638
-  Icon: {fileID: 0}
+  Icon: {fileID: 301000162, guid: c6be27ae176d44f3594332e40fa484ed, type: 3}
   DisplayName: Overcharge Cycle
   Rarity: 2
   Description: Continuous fire builds {0:0}% Damage and {1:0}% Fire Rate per stack

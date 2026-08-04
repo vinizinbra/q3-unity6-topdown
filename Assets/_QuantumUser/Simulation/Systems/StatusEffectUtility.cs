@@ -1,6 +1,7 @@
 namespace Quantum
 {
     using Photon.Deterministic;
+    using Quantum.Physics3D;
 
     // Single entry point for applying/reading status effects - StatusEffectSystem ticks whatever
     // gets applied here, and DamageUtility/PlayerMovementProcessor/EnemySystem/WeaponSystem read the
@@ -45,21 +46,66 @@ namespace Quantum
             Log.Debug($"[Status] {target} Burn refreshed to {duration}s at {status->BurnDamagePerTick}/tick (incoming {damagePerTick})");
         }
 
-        // No magnitude, no DoT - Void's entire job is to exist so TryTriggerReactions can find it
-        // (or find it already present when Fire/Ice/Rock lands). Plain overwrite-on-reapply, not
-        // consumed when it backs a reaction - one application can back several reactions over its
-        // lifetime. See docs/elemental-reactions.md.
-        public static void ApplyVoid(Frame f, EntityRef target, FP duration)
+        // Rift Mark - stacks 0..config.MaxStacks, clamped. Only ever called from RiftMarkEffectData
+        // (a dedicated skill/perk effect), never from the weapon-elemental-proc path - a landing
+        // element consumes a mark, it never applies one. All stacks share one duration; reapplying
+        // refreshes it (even at max stacks) whenever config.RefreshDurationOnApply is true. duration
+        // is threaded in (rather than read off config.BaseDuration directly) so callers can scale it
+        // first via ScaleDuration, same shape as every other Apply* here. See docs/elemental-reactions.md.
+        public static void ApplyRiftMark(Frame f, EntityRef target, ElementalReactionConfig config, FP duration, byte stacksToAdd)
         {
             if (f.Unsafe.TryGetPointer<StatusEffects>(target, out var status) == false)
                 return;
 
-            status->VoidRemaining = duration;
+            status->RiftMarkStacks = ClampStacks(status->RiftMarkStacks, stacksToAdd, config.MaxStacks);
+
+            if (config.RefreshDurationOnApply == true)
+                status->RiftMarkRemaining = duration;
+
+            Log.Debug($"[Status] {target} Rift Mark now at {status->RiftMarkStacks}/{config.MaxStacks} stacks, {status->RiftMarkRemaining}s remaining");
         }
 
-        public static bool IsVoided(Frame f, EntityRef entity)
+        public static byte GetRiftMarkStacks(Frame f, EntityRef entity)
         {
-            return f.Unsafe.TryGetPointer<StatusEffects>(entity, out var status) == true && status->VoidRemaining > FP._0;
+            return f.Unsafe.TryGetPointer<StatusEffects>(entity, out var status) == true ? status->RiftMarkStacks : (byte)0;
+        }
+
+        public static bool IsRiftMarked(Frame f, EntityRef entity)
+        {
+            return GetRiftMarkStacks(f, entity) > 0;
+        }
+
+        // Consumed only by TryConsumeRiftMarkReaction, once a reaction has actually committed to
+        // firing - never independently. Dropping to 0 stacks removes the status outright (also
+        // zeroing RiftMarkRemaining) rather than leaving a 0-stack mark to silently expire later.
+        private static void ConsumeRiftMarkStack(Frame f, StatusEffects* status, byte stacksToConsume)
+        {
+            status->RiftMarkStacks = ClampStacks(status->RiftMarkStacks, -stacksToConsume, status->RiftMarkStacks);
+
+            if (status->RiftMarkStacks == 0)
+                status->RiftMarkRemaining = FP._0;
+        }
+
+        // Pure stack-count math, no Frame/StatusEffects access needed - factored out of
+        // ApplyRiftMark/ConsumeRiftMarkStack above so it's covered by plain EditMode tests
+        // (Assets/_QuantumUser/Tests/RiftMark) without needing a live Quantum simulation. Clamps to
+        // [0, maxStacks] regardless of sign of delta, so the same helper backs both "add stacks up to
+        // the cap" and "remove stacks down to zero".
+        public static byte ClampStacks(int current, int delta, byte maxStacks)
+        {
+            int result = current + delta;
+            if (result < 0) result = 0;
+            if (result > maxStacks) result = maxStacks;
+            return (byte)result;
+        }
+
+        // Whether preHitStacks/lockout state make this hit a valid Affinity Proc - see
+        // TryConsumeRiftMarkReaction's own comment for what "valid" means (a pre-existing mark, and
+        // the shared lockout not currently active). Pure so it's covered by EditMode tests
+        // independent of TryConsumeRiftMarkReaction's Frame-dependent dispatch/consumption.
+        public static bool IsValidAffinityProc(byte preHitStacks, FP reactionLockoutRemaining)
+        {
+            return preHitStacks > 0 && reactionLockoutRemaining <= FP._0;
         }
 
         // Plain overwrite-on-reapply - no equivalent "downgrade feels bad" concern for a speed
@@ -78,10 +124,20 @@ namespace Quantum
             status->IceSpeedMultiplier = speedMultiplier;
         }
 
-        public static void ApplyStun(Frame f, EntityRef target, FP duration)
+        // owner defaults to None for any caller that genuinely has no attacker to attribute this to
+        // (there isn't one today, but every call site should still prefer passing its own real owner
+        // over leaving this default). Brute's Lasting Impact reads a live duration bonus off owner
+        // before the target's own tier resistance - own-side bonus first, then target-side
+        // resistance, same order ResolveKnockbackScale already uses for its own owner/target split.
+        public static void ApplyStun(Frame f, EntityRef target, FP duration, EntityRef owner = default)
         {
             if (f.Unsafe.TryGetPointer<StatusEffects>(target, out var status) == false)
                 return;
+
+            if (owner != EntityRef.None && f.Unsafe.TryGetPointer<LastingImpactUpgrade>(owner, out var lastingImpact) == true)
+            {
+                duration *= FP._1 + lastingImpact->DurationMultiplierBonus;
+            }
 
             if (GetTierResistance(f, target) is { } resistance)
             {
@@ -119,18 +175,18 @@ namespace Quantum
             }
         }
 
-        public static void ApplyBreak(Frame f, EntityRef target, FP duration, FP damageMultiplier)
+        public static void ApplyRupture(Frame f, EntityRef target, FP duration, FP damageMultiplier)
         {
             if (f.Unsafe.TryGetPointer<StatusEffects>(target, out var status) == false)
                 return;
 
             if (GetTierResistance(f, target) is { } resistance)
             {
-                duration *= resistance.BreakDurationMultiplier;
+                duration *= resistance.RuptureDurationMultiplier;
             }
 
-            status->BreakRemaining = duration;
-            status->BreakDamageMultiplier = damageMultiplier;
+            status->RuptureRemaining = duration;
+            status->RuptureDamageMultiplier = damageMultiplier;
         }
 
         // Enemy-only - a target with no Enemy component (the player) has no tier to resist with,
@@ -192,8 +248,8 @@ namespace Quantum
             return status->TimeDilationMultiplier;
         }
 
-        // Void+Ice's Freeze reaction - mirrors ApplyTimeDilation's shape exactly, but targets the
-        // opposite phase (see GetAnticipationMultiplier below). Plain overwrite-on-reapply, same
+        // Ice+RiftMark's Deep Freeze reaction - mirrors ApplyTimeDilation's shape exactly, but targets
+        // the opposite phase (see GetAnticipationMultiplier below). Plain overwrite-on-reapply, same
         // resistance fold-in as TimeDilation/Ice since it's the same slow archetype.
         public static void ApplyAnticipationSlow(Frame f, EntityRef target, FP duration, FP multiplier)
         {
@@ -229,7 +285,7 @@ namespace Quantum
             return f.Unsafe.TryGetPointer<StatusEffects>(entity, out var status) == true && status->AnticipationSlowRemaining > FP._0;
         }
 
-        // Plain overwrite-on-reapply, same as Ice/Break - no "downgrade feels bad" concern for a
+        // Plain overwrite-on-reapply, same as Ice/Rupture - no "downgrade feels bad" concern for a
         // damage-reduction fraction the way Burn's tick damage has.
         public static void ApplyDamageReduction(Frame f, EntityRef target, FP duration, FP amount)
         {
@@ -251,7 +307,30 @@ namespace Quantum
             return FPMath.Clamp(FP._1 - status->DamageReductionAmount, FP._0, FP._1);
         }
 
-        // Plain overwrite-on-reapply, same as Break - no "downgrade feels bad" concern for a debuff
+        // Guardian ascension's own dedicated pair - same shape as ApplyDamageReduction/
+        // GetDamageReductionMultiplier above, kept separate rather than sharing those fields so
+        // Guardian's aura (refreshed every tick an ally stays in range - see
+        // ProtectorAuraSystem.ApplyToAllies) can never silently overwrite Max's Too Angry to Die (or
+        // vice versa) if both land on the same entity in the same tick. See StatusEffects.qtn's own
+        // comment on the field pair.
+        public static void ApplyGuardianDamageReduction(Frame f, EntityRef target, FP duration, FP amount)
+        {
+            if (f.Unsafe.TryGetPointer<StatusEffects>(target, out var status) == false)
+                return;
+
+            status->GuardianDamageReductionRemaining = duration;
+            status->GuardianDamageReductionAmount = amount;
+        }
+
+        public static FP GetGuardianDamageReductionMultiplier(Frame f, EntityRef entity)
+        {
+            if (f.Unsafe.TryGetPointer<StatusEffects>(entity, out var status) == false || status->GuardianDamageReductionRemaining <= FP._0)
+                return FP._1;
+
+            return FPMath.Clamp(FP._1 - status->GuardianDamageReductionAmount, FP._0, FP._1);
+        }
+
+        // Plain overwrite-on-reapply, same as Rupture - no "downgrade feels bad" concern for a debuff
         // multiplier the way Burn's tick damage has.
         public static void ApplyIntimidate(Frame f, EntityRef target, FP duration, FP damageMultiplier)
         {
@@ -416,10 +495,10 @@ namespace Quantum
 
         public static FP GetIncomingDamageMultiplier(Frame f, EntityRef entity)
         {
-            if (f.Unsafe.TryGetPointer<StatusEffects>(entity, out var status) == false || status->BreakRemaining <= FP._0)
+            if (f.Unsafe.TryGetPointer<StatusEffects>(entity, out var status) == false || status->RuptureRemaining <= FP._0)
                 return FP._1;
 
-            return status->BreakDamageMultiplier;
+            return status->RuptureDamageMultiplier;
         }
 
         public static bool IsStunned(Frame f, EntityRef entity)
@@ -453,9 +532,9 @@ namespace Quantum
             return f.Unsafe.TryGetPointer<StatusEffects>(entity, out var status) == true && status->IceRemaining > FP._0;
         }
 
-        public static bool HasBreakDebuff(Frame f, EntityRef entity)
+        public static bool HasRuptureDebuff(Frame f, EntityRef entity)
         {
-            return f.Unsafe.TryGetPointer<StatusEffects>(entity, out var status) == true && status->BreakRemaining > FP._0;
+            return f.Unsafe.TryGetPointer<StatusEffects>(entity, out var status) == true && status->RuptureRemaining > FP._0;
         }
 
         // Shared "X% of the triggering hit, spread across tickInterval-spaced ticks over duration"
@@ -514,19 +593,25 @@ namespace Quantum
             return config;
         }
 
-        // Fire->Burn/Ice->Slow/Rock->Intimidate/Void->nothing mapping, gated by the owner's
-        // CharacterStats.ElementalChance (same roll crit uses) - unlike the old
+        // Fire->Burn/Ice->Slow/Rock->Intimidate/Lightning->nothing/Void->nothing mapping, gated by the
+        // owner's CharacterStats.ElementalChance (same roll crit uses) - unlike the old
         // ElementalProcEffectData there's no separate authorable asset, just this one function.
         // Applies whenever a Weapon-sourced hit carries a non-Neutral element and the roll succeeds;
         // called directly from WeaponSystem.FireHitscan (hitscan has no Effects list to run this
         // through) and from inside HitEffectUtility.ApplyToTarget, which covers both Projectile hits
         // and AreaDamage hits (e.g. a grenade's blast) since both funnel through it already.
         //
-        // After the landing element's own baseline is applied, TryTriggerReactions scans the target
-        // for every OTHER element's active marker and fires whichever of the 6 elemental reactions
-        // match - see docs/elemental-reactions.md for the full design.
+        // preHitRiftMarkStacks is captured by the caller (HitEffectUtility.ApplyToTarget/WeaponSystem.
+        // FireHitscan) BEFORE this hit's own Effects list runs, so a Rift Mark this same hit applies
+        // (via RiftMarkEffectData, later in that Effects list) can never be the one consumed below -
+        // see docs/elemental-reactions.md's "event order" section.
+        //
+        // After the landing element's own baseline is applied (Lightning/Void have none - their
+        // identity is hand-authored WeaponDataAsset traits, not status code), TryConsumeRiftMarkReaction
+        // checks whether this is a valid Affinity Proc against an existing Rift Mark and fires the one
+        // matching reaction - see docs/elemental-reactions.md for the full design.
         public static void TryApplyElementalStatus(Frame f, EntityRef target, EntityRef owner,
-            DamageSource source, ElementType element, FP hitDamage)
+            DamageSource source, ElementType element, FP hitDamage, byte preHitRiftMarkStacks)
         {
             EffectConfig config = GetEffectConfig(f);
 
@@ -534,7 +619,7 @@ namespace Quantum
                 return;
 
             if (TryApplyGuaranteedBurn(f, target, owner, source, hitDamage, config))
-                TryTriggerReactions(f, target, owner, source, ElementType.Fire, hitDamage);
+                TryConsumeRiftMarkReaction(f, target, owner, source, ElementType.Fire, hitDamage, preHitRiftMarkStacks);
 
             if (source != DamageSource.Weapon || element == ElementType.Neutral || target == EntityRef.None)
                 return;
@@ -561,70 +646,35 @@ namespace Quantum
                     ApplyIntimidate(f, target, config.IntimidateDuration, config.IntimidateOutgoingDamageMultiplier);
                     break;
 
-                case ElementType.Void:
-                    ApplyVoid(f, target, config.VoidDuration);
-                    break;
+                // Lightning/Void: no baseline - falls straight through to the consume-check below.
             }
 
-            TryTriggerReactions(f, target, owner, source, element, hitDamage);
+            TryConsumeRiftMarkReaction(f, target, owner, source, element, hitDamage, preHitRiftMarkStacks);
 
             Log.Debug($"[Status] {owner}'s {element} weapon hit applied its status to {target}");
         }
 
-        // Checks every OTHER element's active marker against the one that just landed and fires
-        // whichever of the 6 reactions match - order-independent (Fire-then-Ice and Ice-then-Fire
-        // both reach the same pair check), no extra chance roll (ElementalChance already gated
-        // whether `element` landed at all), and no cap on how many fire off one hit - a target
-        // juggling several active elements at once can trigger more than one reaction from a single
-        // proc. See docs/elemental-reactions.md.
+        // A valid Affinity Proc: one of the 5 elements landed on a target that already carried at
+        // least one Rift Mark stack BEFORE this hit (preHitRiftMarkStacks, not a live re-read - see
+        // TryApplyElementalStatus's own comment), and the shared reaction lockout isn't active.
+        // Consumes exactly StacksConsumedPerReaction and fires exactly the one matching reaction -
+        // never more than one reaction, and never a bare consume with nothing firing (they're
+        // coupled: consumption only happens once a reaction has actually committed to firing, gated
+        // by that reaction's own TriggerCooldown same as always). See docs/elemental-reactions.md.
         //
-        // Internal (not private) so BurnEffectData/SlowEffectData/VoidEffectData can call this too -
-        // the weapon-elemental-proc path (TryApplyElementalStatus, below) isn't the only way Fire/Ice/
-        // Void ever lands on a target; any directly-authored HitEffectData that applies one of these
-        // needs to participate in the reaction scan the same way, or a target primed by e.g. Zara's
-        // Void Damage Waves would never actually react to anything.
-        internal static void TryTriggerReactions(Frame f, EntityRef target, EntityRef owner,
-            DamageSource source, ElementType element, FP hitDamage)
+        // Internal (not private) so BurnEffectData/SlowEffectData (freely-authored, guaranteed-element
+        // effects) can call this too for their own element - the weapon-elemental-proc path above
+        // isn't the only way Fire/Ice ever lands on a target.
+        internal static void TryConsumeRiftMarkReaction(Frame f, EntityRef target, EntityRef owner,
+            DamageSource source, ElementType element, FP hitDamage, byte preHitRiftMarkStacks)
         {
+            if (preHitRiftMarkStacks == 0)
+                return;
+
             if (f.Unsafe.TryGetPointer<StatusEffects>(target, out var status) == false)
                 return;
 
-            bool hasFire = status->BurnRemaining > FP._0;
-            bool hasIce = status->IceRemaining > FP._0;
-            bool hasRock = status->IntimidateRemaining > FP._0;
-            bool hasVoid = status->VoidRemaining > FP._0;
-
-            // Void's 3 reactions - Void just landed on an already-elemented target, or an already-
-            // Voided target just got hit by Fire/Ice/Rock. Either way the pair is symmetric.
-            if ((element == ElementType.Void && hasFire) || (element == ElementType.Fire && hasVoid))
-                TryTriggerExplosion(f, status, target, owner, source, hitDamage);
-
-            if ((element == ElementType.Void && hasIce) || (element == ElementType.Ice && hasVoid))
-                TryTriggerFreeze(f, status, target);
-
-            if ((element == ElementType.Void && hasRock) || (element == ElementType.Rock && hasVoid))
-                TryTriggerKnockback(f, status, target, owner);
-
-            // Fire/Ice/Rock's own pairwise reactions with each other.
-            if ((element == ElementType.Fire && hasRock) || (element == ElementType.Rock && hasFire))
-                TryTriggerMagmaPrison(f, status, target);
-
-            if ((element == ElementType.Ice && hasFire) || (element == ElementType.Fire && hasIce))
-                TryTriggerStun(f, status, target);
-
-            if ((element == ElementType.Ice && hasRock) || (element == ElementType.Rock && hasIce))
-                TryTriggerBreak(f, status, target);
-        }
-
-        // Void + Fire - AoE burst, additional to whichever Burn is already active. Damage scales off
-        // the triggering hit's own damage, same DamagePercent convention as Burn/Break. Fires its own
-        // VoidExplosionReleased rather than going through HitEffectUtility.ApplyExplosion's generic
-        // WeaponExplosionReleased - this reaction gets a distinct visual (EffectsManager's dedicated
-        // voidExplosionEffectPrefab), unlike the weapon-perk explosions that event is shared by.
-        private static void TryTriggerExplosion(Frame f, StatusEffects* status, EntityRef target,
-            EntityRef owner, DamageSource source, FP hitDamage)
-        {
-            if (status->ExplosionCooldownRemaining > FP._0)
+            if (IsValidAffinityProc(preHitRiftMarkStacks, status->RiftMarkReactionLockoutRemaining) == false)
                 return;
 
             ElementalReactionConfig config = GetElementalReactionConfig(f);
@@ -632,130 +682,166 @@ namespace Quantum
             if (config == null)
                 return;
 
-            status->ExplosionCooldownRemaining = config.ExplosionTriggerCooldown;
+            bool triggered;
 
-            if (f.Unsafe.TryGetPointer<Transform3D>(target, out var transform) == false)
+            switch (element)
+            {
+                case ElementType.Fire:
+                    triggered = TryTriggerDetonation(f, status, config, target, owner, source, hitDamage);
+                    break;
+                case ElementType.Ice:
+                    triggered = TryTriggerDeepFreeze(f, status, config, target);
+                    break;
+                case ElementType.Rock:
+                    triggered = TryTriggerRupture(f, status, config, target, owner);
+                    break;
+                case ElementType.Lightning:
+                    triggered = TryTriggerOverload(f, status, config, target, owner);
+                    break;
+                case ElementType.Void:
+                    triggered = TryTriggerSingularity(f, status, config, target, owner);
+                    break;
+                default:
+                    triggered = false;
+                    break;
+            }
+
+            if (triggered == false)
                 return;
 
-            HitEffectUtility.ApplyDamageInRadius(f, transform->Position, config.ExplosionRadius, owner,
-                hitDamage * config.ExplosionDamagePercent, source, DamageTargetMask.Enemies, isExplosion: true);
-
-            f.Events.VoidExplosionReleased(owner, transform->Position, config.ExplosionRadius);
-
-            Log.Debug($"[Status] {target} Void+Fire triggered Explosion");
+            ConsumeRiftMarkStack(f, status, config.StacksConsumedPerReaction);
+            status->RiftMarkReactionLockoutRemaining = config.ReactionLockoutDuration;
         }
 
-        // Void + Ice - stretches the target's own attack anticipation/windup (see
+        // Fire + RiftMark -> Detonation. AoE burst, additional to whichever Burn is already active.
+        // Damage scales off the triggering hit's own damage, same DamagePercent convention as
+        // Burn/Rupture. Fires its own DetonationReleased rather than going through
+        // HitEffectUtility.ApplyExplosion's generic WeaponExplosionReleased - this reaction gets a
+        // distinct visual (EffectsManager's dedicated detonationEffectPrefab), unlike the weapon-perk
+        // explosions that event is shared by.
+        private static bool TryTriggerDetonation(Frame f, StatusEffects* status, ElementalReactionConfig config,
+            EntityRef target, EntityRef owner, DamageSource source, FP hitDamage)
+        {
+            if (status->DetonationCooldownRemaining > FP._0)
+                return false;
+
+            if (f.Unsafe.TryGetPointer<Transform3D>(target, out var transform) == false)
+                return false;
+
+            status->DetonationCooldownRemaining = config.DetonationTriggerCooldown;
+
+            HitEffectUtility.ApplyDamageInRadius(f, transform->Position, config.DetonationRadius, owner,
+                hitDamage * config.DetonationDamagePercent, source, DamageTargetMask.Enemies, isExplosion: true);
+
+            f.Events.DetonationReleased(owner, transform->Position, config.DetonationRadius);
+
+            Log.Debug($"[Status] {target} Fire+RiftMark triggered Detonation");
+            return true;
+        }
+
+        // Ice + RiftMark -> Deep Freeze. Stretches the target's own attack anticipation/windup (see
         // ApplyAnticipationSlow), additional to whichever Slow is already active. Deliberately not a
         // hard lockout - see docs/elemental-reactions.md's "Freeze: stretching anticipation, not
         // stopping the target".
-        private static void TryTriggerFreeze(Frame f, StatusEffects* status, EntityRef target)
+        private static bool TryTriggerDeepFreeze(Frame f, StatusEffects* status, ElementalReactionConfig config, EntityRef target)
         {
-            if (status->FreezeCooldownRemaining > FP._0)
-                return;
+            if (status->DeepFreezeCooldownRemaining > FP._0)
+                return false;
 
-            ElementalReactionConfig config = GetElementalReactionConfig(f);
+            status->DeepFreezeCooldownRemaining = config.DeepFreezeTriggerCooldown;
+            ApplyAnticipationSlow(f, target, config.DeepFreezeDuration, config.DeepFreezeAnticipationMultiplier);
 
-            if (config == null)
-                return;
-
-            status->FreezeCooldownRemaining = config.FreezeTriggerCooldown;
-            ApplyAnticipationSlow(f, target, config.FreezeDuration, config.FreezeAnticipationMultiplier);
-
-            Log.Debug($"[Status] {target} Void+Ice triggered Freeze");
+            Log.Debug($"[Status] {target} Ice+RiftMark triggered Deep Freeze");
+            return true;
         }
 
-        // Void + Rock - a physical push, additional to whichever Intimidate is already active.
-        // Reuses EffectConfig's own KnockbackTier bucket (see ElementalReactionConfig's own comment
-        // for why that's the one field this system deliberately shares rather than dedicating).
-        private static void TryTriggerKnockback(Frame f, StatusEffects* status, EntityRef target, EntityRef owner)
+        // Rock + RiftMark -> Rupture. Increased incoming damage on top of whichever Intimidate is
+        // already active, bundled with a knockback impulse (folded in from the old standalone
+        // Knockback reaction - see ElementalReactionConfig's own comment). Reuses EffectConfig's own
+        // KnockbackTier bucket, same as the old Knockback reaction did.
+        private static bool TryTriggerRupture(Frame f, StatusEffects* status, ElementalReactionConfig config,
+            EntityRef target, EntityRef owner)
         {
-            if (status->KnockbackCooldownRemaining > FP._0)
-                return;
-
-            ElementalReactionConfig reactionConfig = GetElementalReactionConfig(f);
-
-            if (reactionConfig == null)
-                return;
+            if (status->RuptureCooldownRemaining > FP._0)
+                return false;
 
             if (f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == false ||
                 f.Unsafe.TryGetPointer<Transform3D>(owner, out var ownerTransform) == false)
-                return;
+                return false;
 
             EffectConfig effectConfig = GetEffectConfig(f);
 
             if (effectConfig == null)
-                return;
+                return false;
 
-            status->KnockbackCooldownRemaining = reactionConfig.KnockbackTriggerCooldown;
+            status->RuptureCooldownRemaining = config.RuptureTriggerCooldown;
+            ApplyRupture(f, target, config.RuptureDuration, config.RuptureDamageTakenMultiplier);
 
             effectConfig.GetKnockback(KnockbackTier.Strong, out FP force, out FP upwardForce);
             FPVector3 direction = targetTransform->Position - ownerTransform->Position;
             DamageUtility.ApplyKnockback(f, target, direction, force, upwardForce, owner);
 
-            Log.Debug($"[Status] {target} Void+Rock triggered Knockback");
+            Log.Debug($"[Status] {target} Rock+RiftMark triggered Rupture");
+            return true;
         }
 
-        // Fire + Rock - Root on top of whichever Burn is already active (that's what makes it a
-        // "prison" rather than just a slow) - own dedicated duration, not EffectConfig.RootDuration
-        // (Juggernaut's own knob).
-        private static void TryTriggerMagmaPrison(Frame f, StatusEffects* status, EntityRef target)
-        {
-            if (status->MagmaPrisonCooldownRemaining > FP._0)
-                return;
-
-            ElementalReactionConfig config = GetElementalReactionConfig(f);
-
-            if (config == null)
-                return;
-
-            status->MagmaPrisonCooldownRemaining = config.MagmaPrisonTriggerCooldown;
-            ApplyRoot(f, target, config.MagmaPrisonRootDuration);
-
-            Log.Debug($"[Status] {target} Fire+Rock triggered Magma Prison");
-        }
-
-        // Ice + Fire - full incapacitation via Stun, own dedicated duration (not
+        // Lightning + RiftMark -> Overload. Full incapacitation via Stun, own dedicated duration (not
         // EffectConfig.StunDuration, which backs the freely-authorable StunEffectData elsewhere).
-        private static void TryTriggerStun(Frame f, StatusEffects* status, EntityRef target)
+        private static bool TryTriggerOverload(Frame f, StatusEffects* status, ElementalReactionConfig config, EntityRef target, EntityRef owner)
         {
-            if (status->StunCooldownRemaining > FP._0)
-                return;
+            if (status->OverloadCooldownRemaining > FP._0)
+                return false;
 
-            ElementalReactionConfig config = GetElementalReactionConfig(f);
+            status->OverloadCooldownRemaining = config.OverloadTriggerCooldown;
+            ApplyStun(f, target, config.OverloadStunDuration, owner);
 
-            if (config == null)
-                return;
-
-            status->StunCooldownRemaining = config.StunTriggerCooldown;
-            ApplyStun(f, target, config.StunEffectDuration);
-
-            Log.Debug($"[Status] {target} Ice+Fire triggered Stun");
+            Log.Debug($"[Status] {target} Lightning+RiftMark triggered Overload");
+            return true;
         }
 
-        // Ice + Rock - increased incoming damage, own dedicated duration/multiplier
-        // (BreakDuration/BreakDamageTakenMultiplier on ElementalReactionConfig).
-        private static void TryTriggerBreak(Frame f, StatusEffects* status, EntityRef target)
+        // Void + RiftMark -> Singularity. Pulls every enemy within SingularityRadius toward the
+        // reaction's own target - a new mechanic, no existing StatusEffects field to reuse. Reuses
+        // DamageUtility.ApplyKnockback with the direction inverted (toward target instead of away)
+        // for the actual pull, same resistance/scale handling every other push in this system gets.
+        private static bool TryTriggerSingularity(Frame f, StatusEffects* status, ElementalReactionConfig config,
+            EntityRef target, EntityRef owner)
         {
-            if (status->BreakCooldownRemaining > FP._0)
-                return;
+            if (status->SingularityCooldownRemaining > FP._0)
+                return false;
 
-            ElementalReactionConfig config = GetElementalReactionConfig(f);
+            if (f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == false)
+                return false;
 
-            if (config == null)
-                return;
+            status->SingularityCooldownRemaining = config.SingularityTriggerCooldown;
 
-            status->BreakCooldownRemaining = config.BreakTriggerCooldown;
-            ApplyBreak(f, target, config.BreakDuration, config.BreakDamageTakenMultiplier);
+            Shape3D sphere = Shape3D.CreateSphere(config.SingularityRadius);
+            var hits = f.Physics3D.OverlapShape(targetTransform->Position, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
 
-            Log.Debug($"[Status] {target} Ice+Rock triggered Break");
+            for (int i = 0; i < hits.Count; i++)
+            {
+                EntityRef hitEntity = hits[i].Entity;
+
+                if (hitEntity == EntityRef.None || hitEntity == target || f.Has<Enemy>(hitEntity) == false)
+                    continue;
+
+                if (f.Unsafe.TryGetPointer<Transform3D>(hitEntity, out var hitTransform) == false)
+                    continue;
+
+                FPVector3 pullDirection = targetTransform->Position - hitTransform->Position;
+                DamageUtility.ApplyKnockback(f, hitEntity, pullDirection, config.SingularityPullForce, FP._0, owner);
+            }
+
+            f.Events.SingularityTriggered(owner, targetTransform->Position, config.SingularityRadius);
+
+            Log.Debug($"[Status] {target} Void+RiftMark triggered Singularity");
+            return true;
         }
 
         // Independent of the weapon's own Element/ElementalChance roll above - BurnOnHitStacks is a
         // flat guarantee for as long as the granting effect is active, not a proc chance, and fires
         // even on a Neutral weapon. Returns whether it actually applied, so the caller can still fire
         // the reaction scan for this Burn even when the weapon's own Element is Neutral (which
-        // otherwise short-circuits before ever reaching TryTriggerReactions).
+        // otherwise short-circuits before ever reaching TryConsumeRiftMarkReaction).
         private static bool TryApplyGuaranteedBurn(Frame f, EntityRef target, EntityRef owner, DamageSource source, FP hitDamage, EffectConfig config)
         {
             if (source != DamageSource.Weapon || target == EntityRef.None)

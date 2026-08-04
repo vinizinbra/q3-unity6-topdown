@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/M_DashSkillUpgrades/ReloadingSlideSkillAction
     Guid:
       Value: 361757256106766314
-  Icon: {fileID: 0}
+  Icon: {fileID: -664035112, guid: 9a944adac56bb4e8dbce2f7bab4127e3, type: 3}
   DisplayName: Reloading Slide
   Rarity: 1
   Priority: 0

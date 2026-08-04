@@ -27,9 +27,7 @@ MonoBehaviour:
       RawValue: 65536
     BurnDamageMultiplier:
       RawValue: 65536
-    PoisonDamageMultiplier:
-      RawValue: 65536
-    BreakDurationMultiplier:
+    RuptureDurationMultiplier:
       RawValue: 65536
   Normal:
     KnockbackMultiplier:
@@ -42,13 +40,11 @@ MonoBehaviour:
       RawValue: 65536
     BurnDamageMultiplier:
       RawValue: 65536
-    PoisonDamageMultiplier:
-      RawValue: 65536
-    BreakDurationMultiplier:
+    RuptureDurationMultiplier:
       RawValue: 65536
   Specialist:
     KnockbackMultiplier:
-      RawValue: 32768
+      RawValue: 52429
     StunDurationMultiplier:
       RawValue: 32768
     RootDurationMultiplier:
@@ -57,13 +53,11 @@ MonoBehaviour:
       RawValue: 32768
     BurnDamageMultiplier:
       RawValue: 65536
-    PoisonDamageMultiplier:
-      RawValue: 65536
-    BreakDurationMultiplier:
+    RuptureDurationMultiplier:
       RawValue: 65536
   Heavy:
     KnockbackMultiplier:
-      RawValue: 26214
+      RawValue: 39322
     StunDurationMultiplier:
       RawValue: 26214
     RootDurationMultiplier:
@@ -72,9 +66,7 @@ MonoBehaviour:
       RawValue: 26214
     BurnDamageMultiplier:
       RawValue: 65536
-    PoisonDamageMultiplier:
-      RawValue: 65536
-    BreakDurationMultiplier:
+    RuptureDurationMultiplier:
       RawValue: 65536
   Elite:
     KnockbackMultiplier:
@@ -87,9 +79,7 @@ MonoBehaviour:
       RawValue: 19661
     BurnDamageMultiplier:
       RawValue: 65536
-    PoisonDamageMultiplier:
-      RawValue: 65536
-    BreakDurationMultiplier:
+    RuptureDurationMultiplier:
       RawValue: 65536
   Boss:
     KnockbackMultiplier:
@@ -102,7 +92,5 @@ MonoBehaviour:
       RawValue: 0
     BurnDamageMultiplier:
       RawValue: 65536
-    PoisonDamageMultiplier:
-      RawValue: 65536
-    BreakDurationMultiplier:
+    RuptureDurationMultiplier:
       RawValue: 65536

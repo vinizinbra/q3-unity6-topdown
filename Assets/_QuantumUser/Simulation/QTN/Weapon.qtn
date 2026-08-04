@@ -1,12 +1,3 @@
-// A pending repeat-shot queued by Echo Chamber/Infinite Echo - see Weapon.PendingEchoes.
-struct PendingEcho
-{
-    FP        Delay;
-    FPVector3 Position;
-    FPVector3 Direction;
-    FP        Damage;
-}
-
 component Weapon
 {
     AssetRef<WeaponDataAsset> WeaponData;
@@ -45,119 +36,11 @@ component Weapon
     // see ProjectileSystem.TryExpire. Seeded to 1 at equip, same as DamageMultiplier.
     FP RangeMultiplier;
 
-    // -- Magazine-position perks (Opening Burst/Execution Rounds/Final Round/Escalating Rounds) --
-    // Read live off the existing Ammo/MagazineSize ratio every shot in WeaponSystem.Update - no
-    // separate shot-index tracking needed. Threshold fields are a fraction of the magazine (e.g.
-    // 0.2 = "first/last 20%"). Zero/unset (every field defaults to 0) means "no bonus", so an
-    // un-rolled weapon behaves exactly as it does today.
-    FP OpeningBurstFireRateBonus;
-    FP OpeningBurstThreshold;
-    FP ExecutionRoundsDamageBonus;
-    FP ExecutionRoundsThreshold;
-    FP FinalRoundDamageBonus;
-    FP EscalatingRoundsMaxDamageBonus;
-
-    // -- Shared ramp pool (Relentless Fire/Suppressive Cycle/Overcharge Cycle) --
-    // One counter every equipped ramp perk feeds - each perk's own Apply adds its own contribution
-    // into the bonus-per-stack fields and raises RampMaxStacks, rather than each tracking its own
-    // stack. Advances by 1 on every ISignalOnWeaponHitLanded this weapon's owner receives (see
-    // WeaponPerkReactionSystem), decays back down once TimeSinceFireReleased (already tracked,
-    // reset every shot) exceeds RampDecayGrace - ticked in WeaponSystem.Update. Never baked into
-    // DamageMultiplier/FireCooldownMultiplier; folded in live every shot instead, so there's
-    // nothing to revert.
-    Byte RampStacks;
-    Byte RampMaxStacks;
-    FP   RampDamageBonusPerStack;
-    FP   RampFireRateBonusPerStack;
-    FP   RampDecayGrace;
-
-    // -- Piercing Rounds / Ricochet --
-    // Added onto Projectile.RemainingPierces/RemainingBounces right after ProjectileSpawner.Spawn
-    // inside WeaponSystem.FireProjectile - only the weapon-fire path adds these, not every
-    // ProjectileSpawner.Spawn caller (enemy attacks, skills).
-    Int32 BonusPierce;
-    Int32 BonusBounces;
-
-    // -- Double Tap --
-    FP DoubleTapChance;
-
-    // -- Split Shot --
-    Boolean HasSplitShot;
-    Int32   SplitShotCount;
-    FP      SplitShotDamageMultiplier;
-
-    // -- Quantum Rounds --
-    Boolean HasQuantumRounds;
-    FP      QuantumRoundsRadius;
-    FP      QuantumRoundsDamageMultiplier;
-
-    // -- Explosive Sequence --
-    // ShotsSinceExplosiveProc is runtime state (incremented every shot in WeaponSystem, reset when
-    // it reaches Interval), not perk-authored - the perk only bakes Interval/Radius/DamageMultiplier.
-    Int32 ExplosiveSequenceInterval;
-    FP    ExplosiveSequenceRadius;
-    FP    ExplosiveSequenceDamageMultiplier;
-    Int32 ShotsSinceExplosiveProc;
-
-    // -- Cataclysm Round --
-    // Triggers on the shot fired when Ammo == 1 (the last bullet), same moment Final Round reads -
-    // HasCataclysmRound gates it since a bare Radius/DamageMultiplier of 0 is indistinguishable
-    // from "not equipped" once EscalatingRounds-style zero-effect weapons exist.
-    Boolean HasCataclysmRound;
-    FP      CataclysmRadius;
-    FP      CataclysmDamageMultiplier;
-
-    // -- Echo Chamber / Infinite Echo --
-    // HasEchoChamber only queues an echo for the first 3 shots of every magazine (checked against
-    // MagazineSize - Ammo at fire time, resets naturally every reload); HasInfiniteEcho queues one
-    // for every shot, no magazine-position check. Ticked/re-fired in WeaponSystem.Update.
-    Boolean HasEchoChamber;
-    Boolean HasInfiniteEcho;
-    FP      EchoDelay;
-    array<PendingEcho>[3] PendingEchoes;
-
-    // -- Empty Chamber --
-    Boolean HasEmptyChamber;
-    FP      EmptyChamberRadius;
-    FP      EmptyChamberKnockback;
-
-    // -- Combat Reboot --
-    Boolean HasCombatReboot;
-    FP      CombatRebootCooldownReduction;
-
-    // -- Predator Magazine --
-    // Reacts on kill (WeaponPerkReactionSystem.OnEntityKilled), not on the magazine-empty hook -
-    // restores ammo, doesn't care whether the magazine happens to be empty.
-    Boolean HasPredatorMagazine;
-    FP      PredatorMagazineRestoreFraction;
-
-    // -- Emergency Reload --
-    // EmergencyReloadApplied is a runtime latch (mirrors WeaponDamageOverdrive.Applied) so
-    // WeaponSystem.StartReload/UpdateReload add/remove the CharacterStats bonuses exactly once per
-    // reload, not every tick the timer is running.
-    Boolean HasEmergencyReload;
-    FP      EmergencyReloadMoveSpeedBonus;
-    FP      EmergencyReloadDamageReduction;
-    Boolean EmergencyReloadApplied;
-
-    // -- Killer Instinct --
-    // KillerInstinctTimer is runtime state, ticked down in WeaponSystem.Update; the fire-rate bonus
-    // folds into the live fire-cooldown read while it's > 0, same "read live, never baked" idiom as
-    // the ramp pool above - restarted to KillerInstinctDuration on every kill
-    // (WeaponPerkReactionSystem.OnEntityKilled).
-    FP KillerInstinctFireRateBonus;
-    FP KillerInstinctDuration;
-    FP KillerInstinctTimer;
-
-    // -- Bottomless Momentum --
-    FP    CritAmmoRestoreChance;
-    Int32 CritAmmoRestoreAmount;
-
-    // -- Critical Rebound --
-    // Fires a secondary projectile toward the nearest other enemy from the crit's target position
-    // (WeaponPerkReactionSystem.OnCriticalHit) - no-op for a Hitscan weapon (nothing to aim a
-    // secondary projectile off of), documented simplification.
-    Boolean HasCriticalRebound;
-    FP      CriticalReboundRadius;
-    FP      CriticalReboundDamageMultiplier;
+    // Every other weapon-perk field (magazine-position perks, the shared ramp pool, post-impact
+    // procs, reload hooks, on-kill/on-crit reactions, hit-tracking perks, etc.) now lives on
+    // optional components in WeaponPerks.qtn instead of directly on this component - see that
+    // file's own header comment. Split out because this component's auto-generated
+    // GetHashCode()/serializer nested one call per field, and 73 flat fields (most unused on any
+    // given weapon, since Perks caps at 5 of ~18 perks that touch those fields) blew past clang's
+    // bracket-nesting limit compiling Quantum.Simulation for IL2CPP/Android.
 }

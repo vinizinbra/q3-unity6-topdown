@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/GlobalUpgrade/CriticalDamage
     Guid:
       Value: 408436436096618404
-  Icon: {fileID: 0}
+  Icon: {fileID: 1480749247, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
   DisplayName: Critical Damage
   Rarity: 0
   MaxPicks: 3

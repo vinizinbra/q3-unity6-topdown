@@ -8,10 +8,11 @@ namespace Quantum
     {
         public FP RestoreFraction = FP._0_10;
 
-        public override void Apply(Frame f, Weapon* weapon)
+        public override void Apply(Frame f, EntityRef owner, Weapon* weapon)
         {
-            weapon->HasPredatorMagazine = true;
-            weapon->PredatorMagazineRestoreFraction += RestoreFraction;
+            f.AddOrGet<WeaponOnKillReactions>(owner, out var reactions);
+            reactions->HasPredatorMagazine = true;
+            reactions->PredatorMagazineRestoreFraction += RestoreFraction;
         }
 
         protected override object[] DescriptionArgs => new object[] { RestoreFraction.AsFloat * 100f };

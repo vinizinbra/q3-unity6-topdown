@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aeeefbc5808c84ef8b609157b280da92, type: 3}
+  m_Name: ExecutionFracture
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ExecutionFractureMutationData
+  Identifier:
+    Path: _QuantumUser/Resources/LevelUp/RiftMutation/ExecutionFracture
+    Guid:
+      Value: 532072750547023600
+  Icon: {fileID: 2045584798, guid: 9dcd69f213ec845fa868b0a3699cf683, type: 3}
+  DisplayName: Execution Fracture
+  Rarity: 1
+  Description: Hitting enemies below 25% health applies Rift Mark

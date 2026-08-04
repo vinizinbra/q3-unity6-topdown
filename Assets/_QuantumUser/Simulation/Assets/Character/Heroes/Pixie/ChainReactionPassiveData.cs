@@ -26,6 +26,7 @@ namespace Quantum
             mark->ChainReactionMultiplier = FP._0;
             mark->HeavyPayloadMultiplier = FP._1;
             mark->VolatileEscapeEnabled = false;
+            mark->DamageBonusVsUnstable = FP._1;
         }
     }
 }

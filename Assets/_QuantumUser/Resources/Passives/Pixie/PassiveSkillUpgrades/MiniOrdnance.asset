@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e089aea2dc919412b8ee42a3077a78da, type: 3}
+  m_Name: MiniOrdnance
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.MiniOrdnancePassiveUpgradeData
+  Identifier:
+    Path: _QuantumUser/Resources/Passives/Pixie/PassiveSkillUpgrades/MiniOrdnance
+    Guid:
+      Value: 467039237380297823
+  Icon: {fileID: 1236816446, guid: b217254d41b6945b1873986186a25786, type: 3}
+  DisplayName: Cluster Charges
+  Rarity: 2
+  Description: Your explosions have a chance to leave behind a Mini Bomb that explodes
+    after a short delay.
+  Chance:
+    RawValue: 16384
+  Damage:
+    RawValue: 655360
+  Fuse:
+    RawValue: 26214
+  MiniBombPrototype:
+    Id:
+      Value: 1426136421097420405
+  Explosion:
+    Id:
+      Value: 2772312662868344886

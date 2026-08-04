@@ -6,7 +6,7 @@ namespace Quantum
     {
         public FP Multiplier = FP._1;
 
-        public override void Apply(Frame f, Weapon* weapon)
+        public override void Apply(Frame f, EntityRef owner, Weapon* weapon)
         {
             int magazineSize = FPMath.RoundToInt(weapon->MagazineSize * Multiplier);
             weapon->MagazineSize = magazineSize < 1 ? 1 : magazineSize;

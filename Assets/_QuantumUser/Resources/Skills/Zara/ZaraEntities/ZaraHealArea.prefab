@@ -5232,7 +5232,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Quantum.Unity::Quantum.QPrototypeGroundOffset
   Prototype:
     Offset:
-      RawValue: 6554
+      RawValue: -124518
     FallGravityMultiplier:
       RawValue: 65536
     FloatSpeed:

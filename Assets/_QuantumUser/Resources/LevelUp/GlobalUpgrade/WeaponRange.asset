@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/GlobalUpgrade/WeaponRange
     Guid:
       Value: 318742377411220703
-  Icon: {fileID: 0}
+  Icon: {fileID: 2079421101, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
   DisplayName: Weapon Range
   Rarity: 0
   MaxPicks: 3

@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Pixie/P_DashSkillUpgrades/SlowFuseSkillAction
     Guid:
       Value: 158334551784724072
-  Icon: {fileID: 0}
+  Icon: {fileID: -369168559, guid: b217254d41b6945b1873986186a25786, type: 3}
   DisplayName: Slow Fuse
   Rarity: 1
   Priority: 0

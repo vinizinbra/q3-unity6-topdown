@@ -1,5 +1,6 @@
 using Quantum;
 using QuantumUser.View;
+using QuantumUser.View.Util;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -64,7 +65,7 @@ public class FlyingXpManager : QuantumGlobalMonoBehaviour
     {
         if (ExpBarUiWidget.Instance == null || ExpBarUiWidget.Instance.LandingPoint == null)
         {
-            Debug.LogWarning("[FlyingXp] No ExpBarUiWidget in the scene - pickup effect skipped.");
+            LogHelper.Warn("FlyingXp", "No ExpBarUiWidget in the scene - pickup effect skipped.");
             return;
         }
 

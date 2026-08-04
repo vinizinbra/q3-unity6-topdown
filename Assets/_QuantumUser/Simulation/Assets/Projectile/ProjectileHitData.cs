@@ -55,7 +55,8 @@ namespace Quantum
                 PushDirection = pushDirection,
                 Damage = projectile->Damage,
                 Source = projectile->Source,
-                Element = projectile->Element
+                Element = projectile->Element,
+                HitIndex = projectile->PelletIndex
             };
 
             HitEffectUtility.ApplyToTarget(f, Effects, ref context);

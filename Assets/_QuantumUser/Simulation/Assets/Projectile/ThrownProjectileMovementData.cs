@@ -18,7 +18,7 @@ namespace Quantum
 
         // Pitch in the aim ray would fight the authored lift and reshape the toss per shot, so only
         // the heading is taken from it.
-        protected override ProjectileLaunch SolveLaunch(FPVector3 spawnPosition, FPVector3 target)
+        protected override ProjectileLaunch SolveLaunch(Frame f, FPVector3 spawnPosition, FPVector3 target, EntityRef targetEntity)
         {
             FPVector3 delta = target - spawnPosition;
             FPVector3 flatDelta = new FPVector3(delta.X, FP._0, delta.Z);

@@ -25,7 +25,15 @@ namespace Quantum
             {
                 EntityRef candidate = hits[i].Entity;
 
-                if (candidate == exclude || f.Has<Enemy>(candidate) == false)
+                if (candidate == exclude || f.Unsafe.TryGetPointer<Enemy>(candidate, out var enemy) == false)
+                    continue;
+
+                // A Specialist+/Boss lingers in Dead phase for DeathLingerTime before actually being
+                // destroyed (see DamageUtility.ApplyDamage) - skip it, same as Invulnerable, so a
+                // perk reaction never re-marks/re-targets a corpse still mid-death-animation. See
+                // EnemyMovementUtility.TryFindNearestEnemy for the AI-side utility that already
+                // excludes both; this is the weapon-perk-side equivalent.
+                if (enemy->Phase == EnemyActionPhase.Dead || f.Has<Invulnerable>(candidate) == true)
                     continue;
 
                 if (f.Unsafe.TryGetPointer<Transform3D>(candidate, out var transform) == false)
@@ -41,6 +49,47 @@ namespace Quantum
             }
 
             return result != EntityRef.None;
+        }
+
+        // Unstable Payload (see docs/weapon-perks.md) - marks every enemy caught by a valid weapon-
+        // proc explosion (Cataclysm Round/Explosive Sequence), once each, since this overlap query
+        // only ever runs once per explosion event by construction - no cooldown needed. Runs its own
+        // overlap over the same center/radius HitEffectUtility.ApplyExplosion already used for
+        // damage, rather than threading the caught-entity list back out of that call.
+        public static void TryApplyUnstablePayloadMarks(Frame f, FPVector3 center, FP radius, EntityRef owner)
+        {
+            if (f.Unsafe.TryGetPointer<WeaponHitTrackingPerks>(owner, out var tracking) == false
+                || tracking->HasUnstablePayload == false || radius <= FP._0)
+                return;
+
+            ElementalReactionConfig config = StatusEffectUtility.GetElementalReactionConfig(f);
+
+            if (config == null)
+                return;
+
+            Shape3D sphere = Shape3D.CreateSphere(radius);
+            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
+
+            for (int i = 0; i < hits.Count; i++)
+            {
+                EntityRef candidate = hits[i].Entity;
+
+                if (f.Has<Enemy>(candidate) == false)
+                    continue;
+
+                var request = new RiftMarkApplicationRequest
+                {
+                    Source = owner,
+                    Target = candidate,
+                    HitSequence = f.Number,
+                    ApplicationSource = RiftMarkApplicationSource.WeaponPerkUnstablePayload,
+                    RequestedStacks = config.StacksAppliedPerApplication,
+                    Owner = owner,
+                    CooldownKey = RiftMarkCooldownKey.None,
+                };
+
+                RiftMarkApplicationUtility.ApplyRequest(f, request, config);
+            }
         }
     }
 }

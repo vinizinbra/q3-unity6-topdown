@@ -17,7 +17,7 @@ namespace Quantum
                 return;
 
             DamageUtility.ApplyDamage(f, context.Target, context.Damage * DamageMultiplier,
-                context.Owner, context.Source, isExplosion: context.IsExplosion);
+                context.Owner, context.Source, isExplosion: context.IsExplosion, hitIndex: context.HitIndex);
         }
     }
 }

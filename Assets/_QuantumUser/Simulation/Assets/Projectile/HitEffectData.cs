@@ -42,5 +42,19 @@ namespace Quantum
         // plain single-target hit (a bullet, a melee swing) - never set explicitly at most call
         // sites, so it defaults false there for free.
         public bool IsExplosion;
+
+        // Target's Rift Mark stack count as of the moment this hit started processing, captured by
+        // HitEffectUtility.ApplyToTarget/WeaponSystem.FireHitscan BEFORE anything about this hit runs
+        // (including this same hit's own Effects list). Every Rift Mark reaction-consumption check
+        // (StatusEffectUtility.TryConsumeRiftMarkReaction, called from TryApplyElementalStatus and
+        // from BurnEffectData/SlowEffectData's own guaranteed-element hooks) reads THIS instead of a
+        // live re-read, so a mark this same hit applies (via RiftMarkEffectData, elsewhere in the
+        // Effects list) can never be the one it consumes - see docs/elemental-reactions.md.
+        public byte PreHitRiftMarkStacks;
+
+        // Carried from Projectile.PelletIndex - see that field's own comment for why this exists
+        // (Quantum's per-tick event dedup swallowing a multi-pellet weapon's overlapping hits).
+        // 0 for anything that isn't a fanned pellet (a single-shot weapon, a skill, an AoE tick).
+        public byte HitIndex;
     }
 }

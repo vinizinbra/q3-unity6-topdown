@@ -16,11 +16,13 @@ public class SkillCooldownUiWidget : QuantumGlobalMonoBehaviour
 {
     [SerializeField] private SkillSlotId slot = SkillSlotId.DashSkill;
 
-    [SerializeField, Tooltip("All driven identically - same shown state, same fillAmount every frame. Lets the cooldown wipe be built from more than one Image (e.g. layered/mirrored graphics) without any different-role logic.")]
-    private Image[] fillImages;
+    [SerializeField, Tooltip("Shown while the slot is recovering (State == Ready, CooldownTimer > 0) - drains from 1 (just used) down to 0 (ready). All driven identically - same shown state, same fillAmount every frame - so this can be built from more than one Image (e.g. layered/mirrored graphics) without any different-role logic.")]
+    private Image[] cooldownFillImages;
+    [SerializeField, Tooltip("Optional - toggled on while the slot is actively channeling a duration skill (State == Active, SkillData.GetActiveDuration() > 0 - e.g. Juggernaut, Berserk/Overdrive), toggled off otherwise. A plain active-state indicator (border/glow/badge, whatever) rather than a fill - the countdown itself is chargeText, see UpdateDurationText. Left unassigned, this feature is simply off.")]
+    private GameObject skillActiveObject;
     [SerializeField, Tooltip("Optional - shows SkillData.Icon for whichever skill is currently equipped in this slot. Left unassigned, this feature is simply off.")]
     private Image iconImage;
-    [SerializeField, Tooltip("Optional - current charge count (SkillSlot.CurrentStacks). Left unassigned, this feature is simply off.")]
+    [SerializeField, Tooltip("Optional - current charge count (SkillSlot.CurrentStacks), or the seconds remaining while actively channeling a duration skill (see UpdateDurationText). Left unassigned, this feature is simply off.")]
     private TMP_Text chargeText;
 
     [SerializeField, Tooltip("On: binds itself to local slot 0 (player 1) automatically. Off: stays unbound until something else calls Initialize (e.g. the party HUD).")]
@@ -70,41 +72,70 @@ public class SkillCooldownUiWidget : QuantumGlobalMonoBehaviour
         return slot == SkillSlotId.HeroSkill ? skills.HeroSkill : skills.DashSkill;
     }
 
-    // Drains from 1 (just used) down to 0 (ready) rather than filling up, and hides entirely once
-    // ready - a fully-available skill has no cooldown left to show.
+    // While State == Active on a duration skill (Juggernaut, Berserk/Overdrive), skillActiveObject
+    // is toggled on and chargeText switches to a seconds-remaining countdown (UpdateDurationText) -
+    // no fill ring for this state, just a plain active-state indicator, since CooldownTimer doesn't
+    // even start counting until the activation ends (see SkillSystem.TickCooldown), so there'd be
+    // nothing to fill anyway. Once back to Ready, it falls through to the original behavior:
+    // cooldownFillImages drains from 1 (just used) down to 0 (ready) as CooldownTimer recovers, and
+    // hides entirely once ready - a fully-available skill has no cooldown left to show.
     private void UpdateFill(Frame frame, SkillSlot skillSlot)
     {
-        UpdateChargeText(skillSlot);
-
-        if (fillImages == null || fillImages.Length == 0)
-            return;
-
-        if (skillSlot.Skill == default || skillSlot.CurrentStacks >= skillSlot.MaxStacks)
+        if (skillSlot.Skill == default)
         {
-            SetShown(fillImages, false);
+            SetShown(cooldownFillImages, false);
+            SetShown(skillActiveObject, false);
+            UpdateChargeText(skillSlot);
             return;
         }
 
         var skillData = frame.FindAsset(skillSlot.Skill);
 
-        if (skillData.Cooldown <= FP._0)
+        if (skillSlot.State == SkillState.Active)
         {
-            SetShown(fillImages, false);
+            FP activeDuration = skillData.GetActiveDuration();
+
+            if (activeDuration > FP._0)
+            {
+                SetShown(cooldownFillImages, false);
+                SetShown(skillActiveObject, true);
+                UpdateDurationText(skillSlot.StateTimer);
+                return;
+            }
+        }
+
+        SetShown(skillActiveObject, false);
+        UpdateChargeText(skillSlot);
+
+        if (skillSlot.CurrentStacks >= skillSlot.MaxStacks || skillData.Cooldown <= FP._0)
+        {
+            SetShown(cooldownFillImages, false);
             return;
         }
 
-        SetShown(fillImages, true);
+        SetShown(cooldownFillImages, true);
+        SetFillAmount(cooldownFillImages, (skillSlot.CooldownTimer / skillData.Cooldown).AsFloat);
+    }
 
-        float fillAmount = (skillSlot.CooldownTimer / skillData.Cooldown).AsFloat;
+    private static void SetFillAmount(Image[] images, float fillAmount)
+    {
+        if (images == null)
+            return;
 
-        foreach (Image fillImage in fillImages)
-            fillImage.fillAmount = fillAmount;
+        foreach (Image image in images)
+            image.fillAmount = fillAmount;
     }
 
     private void UpdateChargeText(SkillSlot skillSlot)
     {
         if (chargeText != null)
             chargeText.text = skillSlot.CurrentStacks.ToString();
+    }
+
+    private void UpdateDurationText(FP remaining)
+    {
+        if (chargeText != null)
+            chargeText.text = $"{remaining.AsFloat:F1}s";
     }
 
     private void UpdateIcon(Frame frame, SkillSlot skillSlot)
@@ -121,12 +152,23 @@ public class SkillCooldownUiWidget : QuantumGlobalMonoBehaviour
 
     private static void SetShown(Image image, bool shown)
     {
-        if (image.gameObject.activeSelf != shown)
-            image.gameObject.SetActive(shown);
+        SetShown(image.gameObject, shown);
+    }
+
+    private static void SetShown(GameObject go, bool shown)
+    {
+        if (go == null)
+            return;
+
+        if (go.activeSelf != shown)
+            go.SetActive(shown);
     }
 
     private static void SetShown(Image[] images, bool shown)
     {
+        if (images == null)
+            return;
+
         foreach (Image image in images)
             SetShown(image, shown);
     }

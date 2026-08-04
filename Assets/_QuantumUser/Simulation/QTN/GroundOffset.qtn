@@ -1,10 +1,14 @@
-// Optional - only entities that need to settle into a resting height when spawned carry this
-// (Sentry, Vortex, ...). SpawnedEntitySpawner.Spawn resolves the ground once, right after placing
-// Position (EnemyMovementUtility.TryFindGroundHeight), then either snaps straight to
-// groundY + Offset or, if the relevant approach rate below is authored, tags the entity with
-// SettlingToGround so GroundSettleSystem eases it there over subsequent ticks instead of
-// teleporting into place. 0 sits flush on the ground (Sentry); a positive Offset hovers above it
-// (Vortex).
+// Optional - only entities that need to settle into a resting height carry this (Sentry, Vortex,
+// Chest, ...). GroundOffsetUtility.Apply resolves the ground once - right after
+// SpawnedEntitySpawner.Spawn places a skill/projectile-spawned entity's Position, or right when a
+// map-baked entity materializes (see MapGroundSettleSystem) - then either snaps straight to
+// groundY + <collider bottom clearance> + Offset or, if the relevant approach rate below is
+// authored, tags the entity with SettlingToGround so GroundSettleSystem eases it there over
+// subsequent ticks instead of teleporting into place. The clearance term
+// (GroundOffsetUtility.ResolveGroundClearance) already accounts for the entity's own collider
+// sitting centered on its pivot, so Offset itself is a pure adjustment from true-flush: 0 sits
+// flush on the ground (Sentry); a positive Offset hovers above that (Vortex); a negative Offset
+// embeds it into the ground on purpose (a bomb lodged in the dirt).
 component GroundOffset
 {
     FP Offset;

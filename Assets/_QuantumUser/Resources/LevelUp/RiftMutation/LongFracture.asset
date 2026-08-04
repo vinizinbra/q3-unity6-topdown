@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ead8cb426b4b498590cd2d4d95f8669, type: 3}
+  m_Name: LongFracture
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.LongFractureMutationData
+  Identifier:
+    Path: _QuantumUser/Resources/LevelUp/RiftMutation/LongFracture
+    Guid:
+      Value: 374078439829188407
+  Icon: {fileID: 2087602725, guid: 9dcd69f213ec845fa868b0a3699cf683, type: 3}
+  DisplayName: Long Fracture
+  Rarity: 1
+  Description: Hits against distant enemies periodically apply Rift Mark

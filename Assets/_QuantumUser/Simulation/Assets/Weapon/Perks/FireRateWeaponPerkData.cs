@@ -9,7 +9,7 @@ namespace Quantum
     {
         public FP Multiplier = FP._1;
 
-        public override void Apply(Frame f, Weapon* weapon)
+        public override void Apply(Frame f, EntityRef owner, Weapon* weapon)
         {
             if (Multiplier <= FP._0)
             {

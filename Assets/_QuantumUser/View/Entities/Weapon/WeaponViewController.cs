@@ -12,6 +12,12 @@ namespace Quantum
     // automatically. WeaponView itself is a CustomQuantumEntityViewComponent too, so it
     // initializes off the same post-spawn catch-up path once parented under weaponSocket.
     //
+    // Also re-spawns on a later WeaponEquipped event (e.g. a LevelUpCategory.ChooseWeapon pick
+    // mid-match, see WeaponChoiceUtility.Grant) - Initialize's own cold read above already covers
+    // a reconnecting client for free (it re-runs from scratch the moment this view is
+    // (re)instantiated, picking up whatever the CURRENT Weapon.WeaponData is), so the event
+    // subscription only needs to handle an ALREADY-connected client watching a live re-equip.
+    //
     // Also drives weaponSocket's own local position from CharacterData.WeaponPosition - X is
     // authored as a positive "facing right" magnitude and mirrored to negative while facing left,
     // matching the same binary flip BlobAnimationView/WeaponView use for the sprite (rather than
@@ -38,6 +44,27 @@ namespace Quantum
         public WeaponView CurrentWeaponView => currentWeaponView;
 
         private Transform Socket => weaponSocket != null ? weaponSocket : transform;
+
+        public override void Awake()
+        {
+            base.Awake();
+            QuantumEvent.Subscribe<EventWeaponEquipped>(this, OnWeaponEquipped);
+        }
+
+        public override void OnDestroy()
+        {
+            base.OnDestroy();
+            QuantumEvent.UnsubscribeListener(this);
+        }
+
+        private void OnWeaponEquipped(EventWeaponEquipped e)
+        {
+            if (e.Owner != _entityRef)
+                return;
+
+            WeaponDataAsset weaponData = _game.Frames.Verified.FindAsset(e.WeaponData);
+            SpawnWeaponView(weaponData);
+        }
 
         public override void Initialize(QuantumGame game)
         {
@@ -74,8 +101,8 @@ namespace Quantum
             }
         }
 
-        // Public so a future weapon-switch flow can call this again on pickup/swap - not wired to
-        // any event yet since this game only has one weapon per player today.
+        // Public so both Initialize (cold read) and OnWeaponEquipped (live re-equip) can call this -
+        // see the class comment above.
         public void SpawnWeaponView(WeaponDataAsset weaponData)
         {
             if (currentWeaponView != null)

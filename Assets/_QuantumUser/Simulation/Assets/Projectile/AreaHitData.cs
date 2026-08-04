@@ -20,6 +20,16 @@ namespace Quantum
         // is right for anything a player directly throws.
         public bool TriggersSpawnUpgrades = true;
 
+        // 0 (the default) keeps every existing asset's behavior exactly as before this field
+        // existed - ApplyExpire/ApplyHit detonate immediately. Above zero, a hit that would
+        // otherwise just Settle (see ApplyHit) instead plants: ProjectileSystem swaps the entity
+        // from Projectile-driven flight onto DestroyAfterTime/ExplodeOnDestroy/AreaOwner with a
+        // FRESH countdown starting the moment it lands, so "how long the bomb sits before exploding"
+        // stops depending on how much of the original throw's RemainingLifetime happened to survive
+        // the arc (a bomb lobbed a short distance used to sit far longer than one that landed near
+        // the end of its lifetime). See ProjectileSystem.Update's justGrounded branch.
+        public FP PlantedFuseTime = FP._0;
+
         // DetonateOnLevelGeometry/DetonateOnEnemyHit/ShouldDetonate/IsCombatant/Settle all live on
         // ProjectileHitData now - shared with any other hit data that wants the same fuse/pass-
         // through behavior, not just this one.
@@ -54,23 +64,43 @@ namespace Quantum
         // more than one generation deep, no matter how many bombs are thrown or by whom.
         private const int MaxSpawnUpgradeDepth = 1;
 
-        // The directly-struck entity needs no special case - it's inside the radius, so the overlap
-        // picks it up and it takes the effects exactly once, same as everyone else caught.
         private void Detonate(Frame f, Projectile* projectile, FPVector3 center)
+        {
+            Detonate(f, projectile->Owner, projectile->Source, projectile->Element, projectile->Damage,
+                projectile->SpawnDepth, center);
+        }
+
+        // The directly-struck entity needs no special case - it's inside the radius, so the overlap
+        // picks it up and it takes the effects exactly once, same as everyone else caught. Public
+        // and Projectile-agnostic so ExplodeOnDestroyUtility.TryDetonate can reach the exact same
+        // logic (radius bonus, AreaDetonated, Mini Ordnance signal, Fireworks/ClusterBomb cascade)
+        // for a planted bomb (see PlantedFuseTime) that no longer carries a live Projectile* -
+        // opt-in per ExplodeOnDestroy.TriggersSpawnUpgrades, so Mini Bomb/DashBomb's existing
+        // no-cascade guarantee is untouched (they never set that field, so it defaults false).
+        public void Detonate(Frame f, EntityRef owner, DamageSource source, ElementType element, FP damage, int spawnDepth, FPVector3 center)
         {
             // Bigger Boom (Pixie passive ascension) - scales her bomb's own blast radius the same
             // way it scales her weapon's explosive procs - see DamageUtility.
             // ResolvePixieExplosionRadiusMultiplier. No-op (multiplier 1) for every other owner.
-            FP radius = (BlastRadius + ResolveRadiusBonus(f, projectile->Owner))
-                * DamageUtility.ResolvePixieExplosionRadiusMultiplier(f, projectile->Owner);
+            FP radius = (BlastRadius + ResolveRadiusBonus(f, owner))
+                * DamageUtility.ResolvePixieExplosionRadiusMultiplier(f, owner);
 
             // isExplosion: true - a bomb detonation is a genuine area/explosive blast, read by
             // Pixie's Chain Reaction passive (see MarkExplosiveDeath.RequiresExplosion) to decide
             // whether this hit is allowed to mark anyone at all.
-            HitEffectUtility.ApplyInRadius(f, Effects, center, radius, projectile->Owner,
-                projectile->Damage, projectile->Source, targetMask: TargetMask, isExplosion: true);
+            HitEffectUtility.ApplyInRadius(f, Effects, center, radius, owner,
+                damage, source, targetMask: TargetMask, isExplosion: true);
 
-            f.Events.AreaDetonated(projectile->Owner, center, this, radius);
+            f.Events.AreaDetonated(owner, center, this, radius);
+
+            // Demolition Mastery's Mini Ordnance (Pixie's own Hero Trait pool, see
+            // Heroes/Pixie/DemolitionMastery.qtn) reacts to this - reached from here, from
+            // HitEffectUtility.ApplyExplosion, and from ExplodeOnDestroyUtility.TryDetonate ONLY when
+            // that entity opted in via ExplodeOnDestroy.TriggersSpawnUpgrades (a planted bomb
+            // continuing a real throw). Every other ExplodeOnDestroy user (Mini Bomb, DashBomb) never
+            // sets that flag, so this stays unreachable from their own detonation, same guarantee as
+            // before - a dropped Mini Bomb still can never generate another.
+            f.Signals.OnAreaExplosionDetonated(owner, center, radius, source);
 
             // Source == Skill only - ClusterBombUpgrade/FireworksUpgrade are granted Begin-only and
             // never revoked (see ClusterBombSkillAction/FireworksSkillAction), so they sit on a
@@ -78,12 +108,12 @@ namespace Quantum
             // owned by that same entity - a weapon perk, another hero's AoE, anything - would read
             // the stale tag and spawn bomblets/fireworks off a hit that has nothing to do with the
             // bomb that granted it.
-            if (TriggersSpawnUpgrades == true && projectile->Source == DamageSource.Skill
-                && projectile->SpawnDepth < MaxSpawnUpgradeDepth)
+            if (TriggersSpawnUpgrades == true && source == DamageSource.Skill
+                && spawnDepth < MaxSpawnUpgradeDepth)
             {
-                int childDepth = projectile->SpawnDepth + 1;
-                TrySpawnFireworks(f, projectile->Owner, center, radius, childDepth);
-                TrySpawnClusterBomblets(f, projectile->Owner, center, childDepth);
+                int childDepth = spawnDepth + 1;
+                TrySpawnFireworks(f, owner, center, radius, childDepth);
+                TrySpawnClusterBomblets(f, owner, center, childDepth);
             }
         }
 
@@ -175,7 +205,7 @@ namespace Quantum
                 FP angle = startAngle + step * i;
                 FPVector3 direction = FPQuaternion.Euler(0, angle, 0) * FPVector3.Forward;
 
-                ProjectileLaunch launch = movement.GetLaunchToTarget(center, center + direction);
+                ProjectileLaunch launch = movement.GetLaunchToTarget(f, center, center + direction, EntityRef.None);
 
                 if (launch.IsValid == false)
                     continue;

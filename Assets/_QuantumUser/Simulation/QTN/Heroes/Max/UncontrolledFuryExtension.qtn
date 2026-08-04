@@ -1,0 +1,12 @@
+// Granted/revoked by UncontrolledFurySkillAction (Begin/End paired to Berserk/Overdrive itself) -
+// every kill landed while active extends the current Overdrive activation by PerKillExtension (see
+// OverdriveUtility.TryExtend), up to a total of MaxExtension per activation. AccumulatedExtension
+// is reset to 0 at every Begin (see UncontrolledFurySkillAction) - the cap applies per activation,
+// not for the character's lifetime - and is the one field here that actually changes per-kill,
+// unlike PerKillExtension/MaxExtension which are cold config seeded once at Begin.
+component UncontrolledFuryExtension
+{
+    FP PerKillExtension;
+    FP MaxExtension;
+    FP AccumulatedExtension;
+}

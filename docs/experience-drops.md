@@ -19,7 +19,7 @@ DamageUtility.ApplyDamage - the moment health hits zero, before branching on ene
        hazard)                                  -> drop nothing
        target has no Enemy component             -> drop nothing (player/sentry deaths never drop)
        EnemyTierStatsConfig.Get(data.Tier).ExpValue <= 0 -> drop nothing
-       RuntimeConfig.ExpOrbPrototype not assigned -> drop nothing (logged)
+       RuntimeConfig.Prefabs.ExpOrbPrototype not assigned -> drop nothing (logged)
        otherwise: f.Create the orb prototype at the dying enemy's position, stamp ExpOrb.Value,
        add DestroyAfterTime seeded from ExperienceConfig.OrbLifetime
 

@@ -18,26 +18,86 @@ namespace Quantum
             StatusEffects* status = filter.StatusEffects;
 
             TickBurn(f, filter.Entity, status);
+            TickRiftMark(f, status);
 
             status->IceRemaining -= f.DeltaTime;
             status->StunRemaining -= f.DeltaTime;
             status->RootRemaining -= f.DeltaTime;
-            status->BreakRemaining -= f.DeltaTime;
+            status->RuptureRemaining -= f.DeltaTime;
             status->ShieldRegenRemaining -= f.DeltaTime;
             status->TimeDilationRemaining -= f.DeltaTime;
             status->DamageReductionRemaining -= f.DeltaTime;
+            status->GuardianDamageReductionRemaining -= f.DeltaTime;
             status->IntimidateRemaining -= f.DeltaTime;
             status->KnockbackTakenRemaining -= f.DeltaTime;
-            status->VoidRemaining -= f.DeltaTime;
+            status->RiftMarkReactionLockoutRemaining -= f.DeltaTime;
             status->AnticipationSlowRemaining -= f.DeltaTime;
-            status->ExplosionCooldownRemaining -= f.DeltaTime;
-            status->FreezeCooldownRemaining -= f.DeltaTime;
-            status->KnockbackCooldownRemaining -= f.DeltaTime;
-            status->MagmaPrisonCooldownRemaining -= f.DeltaTime;
-            status->StunCooldownRemaining -= f.DeltaTime;
-            status->BreakCooldownRemaining -= f.DeltaTime;
+            status->DetonationCooldownRemaining -= f.DeltaTime;
+            status->DeepFreezeCooldownRemaining -= f.DeltaTime;
+            status->OverloadCooldownRemaining -= f.DeltaTime;
+            status->RuptureCooldownRemaining -= f.DeltaTime;
+            status->SingularityCooldownRemaining -= f.DeltaTime;
+            status->OverflowingRiftCooldownRemaining -= f.DeltaTime;
 
+            TickMarkApplicationCooldowns(f, status);
             TickHaste(f, status);
+            TickCheatDeathImmunity(f, filter.Entity, status);
+
+            // Last Stand's cooldown is per-PLAYER, not per-target, so it lives on CharacterStats
+            // instead of this component - only players carry CharacterStats, everything else is a
+            // no-op TryGetPointer. Reusing this filter's own per-entity iteration (rather than a
+            // second dedicated system) since every player already has StatusEffects too.
+            if (f.Unsafe.TryGetPointer<CharacterStats>(filter.Entity, out var stats) == true)
+                stats->LastStandCooldownRemaining -= f.DeltaTime;
+
+            RiftMutationMarkUtility.TickFracturedPresence(f, filter.Entity, status);
+        }
+
+        // Rift Mark application cooldowns (Weapon Perks/Rift Mutations - see
+        // RiftMarkApplicationUtility) - 8 independent slots, same per-slot decay shape TickHaste
+        // already uses below, just without an active-check guard since a cooldown at/below 0 doesn't
+        // need skipping (subtracting past 0 is harmless, same as every other *CooldownRemaining field).
+        private static void TickMarkApplicationCooldowns(Frame f, StatusEffects* status)
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                if (status->MarkApplicationCooldowns[i] > FP._0)
+                    status->MarkApplicationCooldowns[i] -= f.DeltaTime;
+            }
+        }
+
+        // Too Angry to Die's brief post-save immunity (see CheatDeathUtility.TryPreventLethal) -
+        // unlike the other Remaining fields above (which just gate their own getters once <= 0),
+        // this one guards an actual added component (Invulnerable), so lapsing has to explicitly
+        // remove it rather than leaving a stale tag sitting behind an expired timer. Same
+        // guarded-decrement-then-cleanup shape as TickRiftMark below.
+        private static void TickCheatDeathImmunity(Frame f, EntityRef entity, StatusEffects* status)
+        {
+            if (status->CheatDeathImmunityRemaining <= FP._0)
+                return;
+
+            status->CheatDeathImmunityRemaining -= f.DeltaTime;
+
+            if (status->CheatDeathImmunityRemaining <= FP._0)
+            {
+                f.Remove<Invulnerable>(entity);
+            }
+        }
+
+        // Rift Mark's shared duration - unlike the other Remaining fields above (which just gate
+        // their own getters once <= 0, nothing else to clean up), stacks need to be explicitly
+        // cleared to 0 the instant the duration lapses, satisfying "expiration removes all
+        // remaining stacks" (see docs/elemental-reactions.md) rather than leaving a stale stack
+        // count sitting behind a lapsed timer.
+        private static void TickRiftMark(Frame f, StatusEffects* status)
+        {
+            if (status->RiftMarkStacks == 0)
+                return;
+
+            status->RiftMarkRemaining -= f.DeltaTime;
+
+            if (status->RiftMarkRemaining <= FP._0)
+                status->RiftMarkStacks = 0;
         }
 
         // Each of the 4 slots expires independently - unlike Burn, Haste has no periodic damage

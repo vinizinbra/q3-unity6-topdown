@@ -1,5 +1,6 @@
 using System.Collections;
 using NaughtyAttributes;
+using QuantumUser.View.Util;
 using UnityEngine;
 
 // Marker + request point for a pooled building shadow: acquires one from BuildingShadowManager on
@@ -54,14 +55,14 @@ public class HasBuildingShadow : MonoBehaviour
     {
         if (BuildingShadowManager.Instance == null)
         {
-            Debug.LogWarning($"{nameof(HasBuildingShadow)}: no BuildingShadowManager.Instance in the scene (Play mode only).", this);
+            LogHelper.Warn("BuildingShadow", "no BuildingShadowManager.Instance in the scene (Play mode only).", this);
             return;
         }
 
         BuildingShadowHandle result = BuildingShadowManager.Instance.Acquire(footprintRenderer);
         if (result == null)
         {
-            Debug.Log($"{nameof(HasBuildingShadow)}: acquire attempt failed for {name} - see the BuildingShadowManager log above for the reason.", this);
+            LogHelper.Log("BuildingShadow", $"acquire attempt failed for {name} - see the BuildingShadowManager log above for the reason.", this);
             return;
         }
 
@@ -69,7 +70,7 @@ public class HasBuildingShadow : MonoBehaviour
             BuildingShadowManager.Instance.Release(handle);
 
         handle = result;
-        Debug.Log($"{nameof(HasBuildingShadow)}: shadow acquired for {name}.", this);
+        LogHelper.Log("BuildingShadow", $"shadow acquired for {name}.", this);
     }
 
     private IEnumerator AcquireWithRetries()

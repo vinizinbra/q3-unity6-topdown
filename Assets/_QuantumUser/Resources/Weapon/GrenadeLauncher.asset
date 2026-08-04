@@ -21,9 +21,9 @@ MonoBehaviour:
     RawValue: 2621440
   Element: 0
   CriticalChance:
-    RawValue: 13107
+    RawValue: 6554
   CriticalDamageBonus:
-    RawValue: 98304
+    RawValue: 32768
   FireRate:
     RawValue: 65536
   MagazineSize: 8
@@ -46,6 +46,7 @@ MonoBehaviour:
     Id:
       Value: 268986146537756646
   ViewPrefab: {fileID: 8089491252618662435, guid: 76663fba1fb8145d0802358c5a0b27ec, type: 3}
+  ShakeTier: 0
   _dpsPreview: 'Burst DPS: 40
 
     Sustained DPS (incl. reload): 36.8

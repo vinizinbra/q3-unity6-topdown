@@ -14,7 +14,7 @@ namespace Quantum
         public bool OverrideDirection;
         public FPVector3 Direction = FPVector3.Forward;
 
-        protected override ProjectileLaunch SolveLaunch(FPVector3 spawnPosition, FPVector3 target)
+        protected override ProjectileLaunch SolveLaunch(Frame f, FPVector3 spawnPosition, FPVector3 target, EntityRef targetEntity)
         {
             FPVector3 delta = target - spawnPosition;
 

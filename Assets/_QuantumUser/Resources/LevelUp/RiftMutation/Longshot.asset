@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/Longshot
     Guid:
       Value: 534224374613054322
-  Icon: {fileID: 0}
+  Icon: {fileID: -1103205774, guid: 9dcd69f213ec845fa868b0a3699cf683, type: 3}
   DisplayName: Longshot
   Rarity: 1
   Description: '{0:+0;-0}% Damage at range, {1:+0;-0}% Damage up close'

@@ -15,6 +15,11 @@ namespace Quantum
     {
         public FP Duration = 8;
 
+        public override FP GetActiveDuration()
+        {
+            return Duration;
+        }
+
         // Additive, not multiplicative like Berserk's stat bonuses - DamageReduction is itself a
         // fraction (0 = none, 1 = fully immune, see DamageUtility.ResolveDamageReduction), so this
         // adds/subtracts a slice of it rather than scaling an already-multiplicative stat.

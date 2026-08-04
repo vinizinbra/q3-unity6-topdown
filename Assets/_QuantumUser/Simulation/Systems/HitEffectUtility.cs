@@ -17,7 +17,8 @@ namespace Quantum
         // just one.
         public static void ApplyToTarget(Frame f, List<AssetRef<HitEffectData>> effects, ref HitEffectContext context, bool multiTarget = false)
         {
-            StatusEffectUtility.TryApplyElementalStatus(f, context.Target, context.Owner, context.Source, context.Element, context.Damage);
+            context.PreHitRiftMarkStacks = StatusEffectUtility.GetRiftMarkStacks(f, context.Target);
+            StatusEffectUtility.TryApplyElementalStatus(f, context.Target, context.Owner, context.Source, context.Element, context.Damage, context.PreHitRiftMarkStacks);
 
             for (int i = 0; i < effects.Count; i++)
             {
@@ -32,7 +33,8 @@ namespace Quantum
 
         public static void ApplyToTarget(Frame f, FixedArray<AssetRef<HitEffectData>> effects, ref HitEffectContext context, bool multiTarget = false)
         {
-            StatusEffectUtility.TryApplyElementalStatus(f, context.Target, context.Owner, context.Source, context.Element, context.Damage);
+            context.PreHitRiftMarkStacks = StatusEffectUtility.GetRiftMarkStacks(f, context.Target);
+            StatusEffectUtility.TryApplyElementalStatus(f, context.Target, context.Owner, context.Source, context.Element, context.Damage, context.PreHitRiftMarkStacks);
 
             for (int i = 0; i < effects.Length; i++)
             {
@@ -68,6 +70,15 @@ namespace Quantum
 
                 if (TryBuildContext(f, hits[i].Entity, center, owner, damage, source, element, out var context, isExplosion: isExplosion) == false)
                     continue;
+
+                // Pixie's Demolition Mastery (Direct Hit/Concussive Force) - only ever does anything
+                // for an owner holding one of those traits, see DemolitionMasteryUtility's own
+                // comment. Mutates context.Damage before the Effects list (e.g. DamageEffectData)
+                // ever reads it.
+                if (isExplosion == true)
+                {
+                    DemolitionMasteryUtility.ApplyProximityEffects(f, owner, context.Target, center, radius, context.Position, ref context.Damage);
+                }
 
                 ApplyToTarget(f, effects, ref context, multiTarget: true);
             }
@@ -166,7 +177,18 @@ namespace Quantum
                 if (MatchesTargetMask(f, target, targetMask) == false)
                     continue;
 
-                DamageUtility.ApplyDamage(f, target, damage, owner, source,
+                FP resolvedDamage = damage;
+
+                // Pixie's Demolition Mastery (Direct Hit/Concussive Force) - the weapon-perk-
+                // explosion counterpart of ApplyInRadius's own identical hook. Gated on isExplosion
+                // (every ApplyExplosion caller passes true) so a non-explosion caller of this method
+                // never pays the extra Transform3D lookup.
+                if (isExplosion == true && f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == true)
+                {
+                    DemolitionMasteryUtility.ApplyProximityEffects(f, owner, target, center, radius, targetTransform->Position, ref resolvedDamage);
+                }
+
+                DamageUtility.ApplyDamage(f, target, resolvedDamage, owner, source,
                     isChainedExplosion: isChainedExplosion, isDashExplosion: isDashExplosion, isExplosion: isExplosion);
             }
         }
@@ -224,6 +246,11 @@ namespace Quantum
             // explosions, Pixie's own Backblast) is definitionally a genuine explosion.
             ApplyDamageInRadius(f, center, radius, owner, damage, source, targetMask, isDashExplosion: isDashExplosion, isExplosion: true);
             f.Events.WeaponExplosionReleased(owner, center, radius);
+
+            // Demolition Mastery's Mini Ordnance (Pixie's own Hero Trait pool) reacts to this - see
+            // AreaHitData.Detonate's own identical call for why this is the other of exactly two
+            // sites this fires from.
+            f.Signals.OnAreaExplosionDetonated(owner, center, radius, source);
         }
 
         // pushDirection overrides the default radial-from-center push - see ApplyInShape.

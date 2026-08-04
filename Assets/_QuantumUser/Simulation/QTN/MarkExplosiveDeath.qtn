@@ -53,4 +53,14 @@ component MarkExplosiveDeath
     // MaxAffectedTier's own gate once true; every other source (weapon, bomb, chained blast) still
     // respects the gate normally.
     Boolean VolatileEscapeEnabled;
+
+    // Unstable Targeting ascension - a live outgoing-damage multiplier read in DamageUtility.
+    // ResolveOutgoingDamage whenever the target currently carries ExplodeOnDeath ("Unstable" - i.e.
+    // marked to explode on death, from this or any other source), same "read live, never baked into
+    // CharacterStats" idiom Max's Hot Target already uses for its own conditional bonus. Distinct
+    // from BonusDamageMultiplier above, which only scales a marked enemy's own death-explosion
+    // payout (TryExplodeOnDeath) - this instead rewards hitting an already-marked enemy while it's
+    // still alive, encouraging focus-firing a target Chain Reaction (or anything else) has primed.
+    // Defaults to 1 (no effect), same as every other Pixie-only multiplier here.
+    FP DamageBonusVsUnstable;
 }

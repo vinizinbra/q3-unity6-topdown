@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 206e83cafdc504e528e51a1129f785e7, type: 3}
+  m_Name: ExplosiveRounds
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ExplosiveRoundsPassiveUpgradeData
+  Identifier:
+    Path: _QuantumUser/Resources/Passives/Pixie/PassiveSkillUpgrades/ExplosiveRounds
+    Guid:
+      Value: 271843238532602476
+  Icon: {fileID: -1426688026, guid: b217254d41b6945b1873986186a25786, type: 3}
+  DisplayName: Explosive Rounds
+  Rarity: 1
+  Description: Every shot also detonates a small explosion.
+  Radius:
+    RawValue: 131072
+  DamageMultiplier:
+    RawValue: 32768

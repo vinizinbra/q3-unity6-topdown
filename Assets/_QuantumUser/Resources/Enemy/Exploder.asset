@@ -48,11 +48,6 @@ MonoBehaviour:
     RawValue: 196608
   Damage:
     RawValue: 3276800
-  Knockback:
-    X:
-      RawValue: 0
-    Y:
-      RawValue: 262144
   AnticipationTime:
     RawValue: 65536
   DirectionTracking: 2
@@ -65,15 +60,18 @@ MonoBehaviour:
   TelegraphStartPercent:
     RawValue: 32768
   AimLock: 0
-  Effects:
-  - Id:
-      Value: 365362456246651497
   SelectionWeight: 1
   InterruptibleDuringTelegraph: 1
   InterruptibleDuringActive: 0
   Delivery:
     Id:
       Value: 699124596952577915
+  Effects:
+  - Id:
+      Value: 365362456246651497
+  Telegraph:
+    Id:
+      Value: 1239425989923852943
   AnticipationStep:
     AnimationType: 3
     Duration: 1
@@ -246,9 +244,6 @@ MonoBehaviour:
     AlignToEnemyDirection: 0
     RotationOffset: {x: 0, y: 0, z: 0}
     Scale: 1
-  Telegraph:
-    Id:
-      Value: 1239425989923852943
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -265,13 +260,89 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Enemy/Exploder
     Guid:
       Value: 282454126533877499
-  MoveSpeed:
-    RawValue: 327680
+  EnemyName: 
   Tier: 1
+  Economy:
+    Persistent: 0
+    SpawnProfile:
+      Id:
+        Value: 0
+  Stats:
+    MoveSpeed:
+      RawValue: 196608
+    Height:
+      InitialState: 0
+      FlightHeight:
+        RawValue: 131072
+      HoverCheckInterval:
+        RawValue: 65536
+      HoverSpringFrequency:
+        RawValue: 65536
+      HoverSpringDamping:
+        RawValue: 32768
+      CanJump: 0
+      CanFly: 0
+      CanBeLaunched: 0
+      CanBeGrounded: 1
+      CanCrossObstacles: 0
+      AnkleProbeHeight:
+        RawValue: 16384
+      MaxLedgeHeight:
+        RawValue: 65536
+      MantleProbeDistance:
+        RawValue: 49152
+      JumpVelocity:
+        RawValue: 524288
+      AffectedByGroundHazards: 0
+      AffectedByShockwaves: 0
+      TargetableByMelee: 1
+      TargetableByProjectiles: 1
+      AvoidLedges: 1
+      EdgeProbeDistance:
+        RawValue: 32768
+      EdgeCheckDistance:
+        RawValue: 65536
+    Movement:
+      Id:
+        Value: 0
+    Radius:
+      RawValue: 65536
+    ShieldMultiplier:
+      RawValue: 0
+    Traits: 
+    FrontalDamageReductionAmount:
+      RawValue: 32768
+    FrontalDamageReductionArcDegrees:
+      RawValue: 7864320
+    AvoidWalls: 0
+    WallAvoidProbeDistance:
+      RawValue: 65536
+    UseWaypointDetour: 0
+    WaypointArrivalDistance:
+      RawValue: 65536
+  AI:
+    Targeting:
+      Id:
+        Value: 0
+    DetectionRange:
+      RawValue: 655360
+    LeashRange:
+      RawValue: 983040
+  Actions:
+    BasicAction:
+      Id:
+        Value: 0
+    SkillActions: []
+  DeathLingerTime:
+    RawValue: 32768
   Cost:
     RawValue: 65536
   Persistent: 0
-  EnemyName: 
+  SpawnProfile:
+    Id:
+      Value: 0
+  MoveSpeed:
+    RawValue: 327680
   Radius:
     RawValue: 65536
   MaxHealth:
@@ -329,8 +400,6 @@ MonoBehaviour:
     RawValue: 655360
   LeashRange:
     RawValue: 983040
-  DeathLingerTime:
-    RawValue: 32768
   CanBeInterruptedByKnockback: 1
   KnockbackRecoveryTime:
     RawValue: 16384
@@ -357,7 +426,7 @@ MonoBehaviour:
     Guid:
       Value: 1150281855766272623
   DamageMultiplier:
-    RawValue: 1310720
+    RawValue: 262144
 --- !u!114 &7988292194226830036
 MonoBehaviour:
   m_ObjectHideFlags: 0

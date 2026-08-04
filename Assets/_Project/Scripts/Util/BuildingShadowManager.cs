@@ -1,5 +1,6 @@
 using System;
 using NaughtyAttributes;
+using QuantumUser.View.Util;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -45,19 +46,19 @@ public class BuildingShadowManager : MonoBehaviour
     {
         if (shadowPrefab == null)
         {
-            Debug.LogWarning($"{nameof(BuildingShadowManager)}: shadowPrefab is not assigned.", this);
+            LogHelper.Warn("BuildingShadow", "shadowPrefab is not assigned.", this);
             return null;
         }
 
         if (config == null)
         {
-            Debug.LogWarning($"{nameof(BuildingShadowManager)}: config is not assigned.", this);
+            LogHelper.Warn("BuildingShadow", "config is not assigned.", this);
             return null;
         }
 
         if (footprintRenderer == null)
         {
-            Debug.LogWarning($"{nameof(BuildingShadowManager)}: Acquire called with a null footprintRenderer.", this);
+            LogHelper.Warn("BuildingShadow", "Acquire called with a null footprintRenderer.", this);
             return null;
         }
 
@@ -75,14 +76,14 @@ public class BuildingShadowManager : MonoBehaviour
 
         SpriteRenderer renderer = instance.GetComponent<SpriteRenderer>();
         if (renderer == null)
-            Debug.LogWarning($"{nameof(BuildingShadowManager)}: shadowPrefab has no SpriteRenderer.", this);
+            LogHelper.Warn("BuildingShadow", "shadowPrefab has no SpriteRenderer.", this);
         else
         {
             renderer.size = new Vector2(bounds.size.x + config.ShadowPadding, bounds.size.z + config.ShadowPadding);
             renderer.enabled = true;
         }
 
-        Debug.Log($"{nameof(BuildingShadowManager)}: shadow acquired for {footprintRenderer.name} at {instanceTransform.position}, size {renderer?.size}.", footprintRenderer);
+        LogHelper.Log("BuildingShadow", $"shadow acquired for {footprintRenderer.name} at {instanceTransform.position}, size {renderer?.size}.", footprintRenderer);
         return new BuildingShadowHandle { GameObject = instance };
     }
 
@@ -118,7 +119,7 @@ public class BuildingShadowManager : MonoBehaviour
             Vector3 origin = corners[i] + Vector3.up * config.RaycastHeight;
             if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, config.RaycastHeight + config.MaxRaycastDistance, config.GroundLayer) == false)
             {
-                Debug.Log($"{nameof(BuildingShadowManager)}: corner {i} raycast missed from {origin} (groundLayer={config.GroundLayer.value}, distance={config.RaycastHeight + config.MaxRaycastDistance}).", footprintRenderer);
+                LogHelper.Log("BuildingShadow", $"corner {i} raycast missed from {origin} (groundLayer={config.GroundLayer.value}, distance={config.RaycastHeight + config.MaxRaycastDistance}).", footprintRenderer);
                 return false;
             }
 
@@ -128,7 +129,7 @@ public class BuildingShadowManager : MonoBehaviour
 
         if (maxY - minY > config.FlatnessTolerance)
         {
-            Debug.Log($"{nameof(BuildingShadowManager)}: ground not flat for {footprintRenderer.name} - corner heights span {maxY - minY:F3} (tolerance {config.FlatnessTolerance}).", footprintRenderer);
+            LogHelper.Log("BuildingShadow", $"ground not flat for {footprintRenderer.name} - corner heights span {maxY - minY:F3} (tolerance {config.FlatnessTolerance}).", footprintRenderer);
             return false;
         }
 

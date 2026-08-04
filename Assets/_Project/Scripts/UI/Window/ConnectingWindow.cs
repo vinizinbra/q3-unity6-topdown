@@ -79,12 +79,8 @@ public class ConnectingWindow : UiWindow,IMatchmakingCallbacks
 
     public void OnJoinRandomFailed(short returnCode, string message) 
     {
-        if (returnCode == ErrorCode.NoRandomMatchFound) 
+        if (returnCode == ErrorCode.NoRandomMatchFound)
         {
-            /*
-            if (!MatchMakingConfig.Instance.Client.OpCreateRoom(matchMakingConfigOld.enterRoomParams)) {
-                AlertPopup.instance.Setup("Error", "Failed to send join or create room operation", () => MatchMakingConfig.Instance.Client?.Disconnect());
-            }*/
         }
         else {
             AlertPopup.instance.Setup("Error", $"Join random failed [{returnCode}]: '{message}'", () => MatchMakingConfig.Instance.Client?.Disconnect());

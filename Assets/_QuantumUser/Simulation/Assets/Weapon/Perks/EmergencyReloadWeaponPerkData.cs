@@ -11,11 +11,12 @@ namespace Quantum
         public FP MoveSpeedBonus;
         public FP DamageReduction;
 
-        public override void Apply(Frame f, Weapon* weapon)
+        public override void Apply(Frame f, EntityRef owner, Weapon* weapon)
         {
-            weapon->HasEmergencyReload = true;
-            weapon->EmergencyReloadMoveSpeedBonus += MoveSpeedBonus;
-            weapon->EmergencyReloadDamageReduction += DamageReduction;
+            f.AddOrGet<WeaponReloadHooks>(owner, out var hooks);
+            hooks->HasEmergencyReload = true;
+            hooks->EmergencyReloadMoveSpeedBonus += MoveSpeedBonus;
+            hooks->EmergencyReloadDamageReduction += DamageReduction;
         }
 
         protected override object[] DescriptionArgs => new object[] { MoveSpeedBonus.AsFloat * 100f, DamageReduction.AsFloat * 100f };

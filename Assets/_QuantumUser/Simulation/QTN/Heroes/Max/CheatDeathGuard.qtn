@@ -1,0 +1,11 @@
+// Granted/revoked by TooAngryToDieSkillAction (Begin/End paired to Berserk/Overdrive itself) -
+// presence means lethal Health damage right now should clamp to 1 and force-end the current
+// Overdrive activation instead of killing the owner (see CheatDeathUtility, hooked into
+// DamageUtility.ApplyDamage's own Health clamp). The trigger condition (would this hit be lethal)
+// is still evaluated live where the damage itself resolves - ImmunityDuration is the one thing
+// baked in at grant time, read once the save actually triggers to open a brief Invulnerable
+// window (see StatusEffects.CheatDeathImmunityRemaining/StatusEffectSystem).
+component CheatDeathGuard
+{
+    FP ImmunityDuration;
+}

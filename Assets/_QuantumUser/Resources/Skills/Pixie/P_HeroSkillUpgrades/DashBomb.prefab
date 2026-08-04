@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 437649276819890123}
   - component: {fileID: 3646571736936140597}
   - component: {fileID: 5680122525934177464}
-  m_Layer: 10
+  m_Layer: 7
   m_Name: Circle (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -119,7 +119,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9168c542245be475f8ee71bd6733ba7c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.HasShadow
-  baseScale: 1
+  baseScale: 0.5
 --- !u!114 &5680122525934177464
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -154,12 +154,13 @@ GameObject:
   - component: {fileID: 1339353469637889943}
   - component: {fileID: 4614641271880060144}
   - component: {fileID: 3514489261959626852}
-  - component: {fileID: 4340791370057295975}
   - component: {fileID: 467364414016486333}
   - component: {fileID: 7397296260118539258}
-  - component: {fileID: 100747973386282000}
-  - component: {fileID: 1036429638685831399}
-  m_Layer: 10
+  - component: {fileID: 8119646968482582279}
+  - component: {fileID: 9015188657588427656}
+  - component: {fileID: 1102851936091375669}
+  - component: {fileID: 4324837577801894095}
+  m_Layer: 7
   m_Name: DashBomb
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -331,7 +332,7 @@ MonoBehaviour:
       IsPersistent: 1
       CompoundShapes: []
     LayerSource: 0
-    Layer: 10
+    Layer: 7
     CallbackFlags:
       Value: 0
   PhysicsBody:
@@ -503,58 +504,6 @@ MonoBehaviour:
   OnEntityDestroyed:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &4340791370057295975
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8266524574099534883}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cb478bb6875404bb88dd353e8626dd55, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Quantum.Unity::Quantum.QPrototypeProjectile
-  Prototype:
-    Velocity:
-      X:
-        RawValue: 0
-      Y:
-        RawValue: 0
-      Z:
-        RawValue: 0
-    Damage:
-      RawValue: 0
-    RemainingLifetime:
-      RawValue: 196608
-    Owner: {fileID: 0}
-    ProjectileData:
-      Id:
-        Value: 1219546146873803145
-    RemainingPierces: 0
-    RemainingBounces: 0
-    MaxDistanceMultiplier:
-      RawValue: 0
-    IsExplosiveProc:
-      Value: 0
-    IsCataclysm:
-      Value: 0
-    Source:
-      Value: 2
-    Element:
-      Value: 0
-    SourceSlot:
-      Value: 1
-    Target: {fileID: 0}
-    RemainingSpawnDelay:
-      RawValue: 0
-    Grounded:
-      Value: 0
-    SpawnDepth: 0
-    TraveledDistance:
-      RawValue: 0
-    SpeedMultiplier:
-      RawValue: 0
 --- !u!114 &467364414016486333
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -602,7 +551,45 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 1
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &100747973386282000
+--- !u!114 &8119646968482582279
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8266524574099534883}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80f318d57a818436b9e4e87476dbe6b0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Quantum.Unity::Quantum.QPrototypeGroundOffset
+  Prototype:
+    Offset:
+      RawValue: 1311
+    FallGravityMultiplier:
+      RawValue: 655360
+    FloatSpeed:
+      RawValue: 0
+--- !u!114 &9015188657588427656
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8266524574099534883}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a4baf2133a9942b8932b965bb468be9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Quantum.Unity::Quantum.QPrototypeExplodeOnDestroy
+  Prototype:
+    Damage:
+      RawValue: 65536
+    SpawnDepth: 0
+    Explosion:
+      Id:
+        Value: 280410021018812087
+--- !u!114 &1102851936091375669
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -616,7 +603,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Quantum.Unity::Quantum.QPrototypeDecoy
   Prototype:
     _empty_prototype_dummy_field_: 0
---- !u!114 &1036429638685831399
+--- !u!114 &4324837577801894095
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -634,7 +621,7 @@ MonoBehaviour:
     MaxHealth:
       RawValue: 65536
     RegenRate:
-      RawValue: 0
+      RawValue: 65536
 --- !u!1001 &2384519499288845262
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -645,15 +632,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 108192, guid: 0b4ea991852d6984aab98759fa8d4ebb, type: 3}
       propertyPath: m_Layer
-      value: 10
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 170852, guid: 0b4ea991852d6984aab98759fa8d4ebb, type: 3}
       propertyPath: m_Layer
-      value: 10
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 188520, guid: 0b4ea991852d6984aab98759fa8d4ebb, type: 3}
       propertyPath: m_Layer
-      value: 10
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 196072, guid: 0b4ea991852d6984aab98759fa8d4ebb, type: 3}
       propertyPath: m_Name
@@ -661,7 +648,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 196072, guid: 0b4ea991852d6984aab98759fa8d4ebb, type: 3}
       propertyPath: m_Layer
-      value: 10
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 425634, guid: 0b4ea991852d6984aab98759fa8d4ebb, type: 3}
       propertyPath: m_LocalScale.x

@@ -29,11 +29,23 @@ namespace QuantumUser.View.Managers
         [SerializeField, Tooltip("Played whenever a ShockwaveReleased event fires (currently only Empty Chamber, see docs/weapon-perks.md) - generic and source-agnostic, not per-asset. Falls back to defaultAreaBlastEffect if left empty. Authored at a reference radius of 1, scaled by e.Radius (not diameter) - same convention as the other radius-scaled handlers below.")]
         private ParticleSystem shockwaveEffectPrefab;
 
-        [Header("Void Explosion")]
-        [SerializeField, Tooltip("Played on VoidExplosionReleased (Void+Fire reaction - see docs/elemental-reactions.md and StatusEffectUtility.TryTriggerExplosion). Falls back to defaultAreaBlastEffect, tinted voidExplosionFallbackColor, if left empty - so it already reads distinctly purple even before a bespoke prefab is authored.")]
-        private ParticleSystem voidExplosionEffectPrefab;
-        [SerializeField, Tooltip("Tint applied only when falling back to defaultAreaBlastEffect (voidExplosionEffectPrefab left empty) - matches ResonanceFxView's own voidColor. Ignored once a dedicated prefab is authored, since that plays with its own authored color.")]
-        private Color voidExplosionFallbackColor = new Color(0.6f, 0.3f, 0.85f);
+        [Header("Detonation")]
+        [SerializeField, Tooltip("Played on DetonationReleased (Fire+RiftMark reaction - see docs/elemental-reactions.md and StatusEffectUtility.TryTriggerDetonation). Falls back to defaultAreaBlastEffect, tinted detonationFallbackColor, if left empty - so it already reads distinctly hot-pink even before a bespoke prefab is authored.")]
+        private ParticleSystem detonationEffectPrefab;
+        [SerializeField, Tooltip("Tint applied only when falling back to defaultAreaBlastEffect (detonationEffectPrefab left empty) - matches ResonanceFxView's own riftMarkColor and the Rift Mark hot-pink #FD3971 presentation rule (purple is reserved for Void). Ignored once a dedicated prefab is authored, since that plays with its own authored color.")]
+        private Color detonationFallbackColor = new Color32(0xFD, 0x39, 0x71, 0xFF);
+
+        [Header("Singularity")]
+        [SerializeField, Tooltip("Played on SingularityTriggered (Void+RiftMark reaction - see docs/elemental-reactions.md and StatusEffectUtility.TryTriggerSingularity). Falls back to defaultAreaBlastEffect, tinted singularityFallbackColor, if left empty - same pattern as detonationEffectPrefab above.")]
+        private ParticleSystem singularityEffectPrefab;
+        [SerializeField, Tooltip("Tint applied only when falling back to defaultAreaBlastEffect (singularityEffectPrefab left empty) - stays Void's own purple/dark tone rather than Rift Mark's hot-pink, since this reaction's whole identity is Void reacting, not the mark itself. Ignored once a dedicated prefab is authored.")]
+        private Color singularityFallbackColor = new Color(0.35f, 0.15f, 0.5f);
+
+        [Header("Overflowing Rift")]
+        [SerializeField, Tooltip("Played on OverflowingRiftTriggered (Overflowing Rift mutation - see docs/rift-mutations.md) - a small, restrained pulse when a Rift Mark application lands against an already-2-stack target, deliberately NOT comparable in strength to a full reaction VFX. Falls back to defaultAreaBlastEffect, tinted overflowingRiftFallbackColor, if left empty.")]
+        private ParticleSystem overflowingRiftPulsePrefab;
+        [SerializeField, Tooltip("Tint applied only when falling back to defaultAreaBlastEffect (overflowingRiftPulsePrefab left empty) - hot-pink, same Rift Mark color rule as detonationFallbackColor/riftMarkColor.")]
+        private Color overflowingRiftFallbackColor = new Color32(0xFD, 0x39, 0x71, 0xFF);
 
         [Header("Melee Hit")]
         [SerializeField, Tooltip("Played whenever a HitEffectApplied event fires from a non-enemy Owner (a player skill/weapon hitting something) - generic and source-agnostic, not per-asset. Falls back to defaultAreaBlastEffect if left empty. Enemy-caused hits are handled separately by EnemyAttackVisualsView (per-delivery HitImpactPrefab), so this only covers the previously-uncovered player-hit case.")]
@@ -46,6 +58,10 @@ namespace QuantumUser.View.Managers
         private ParticleSystem healGrantEffectPrefab;
         [SerializeField, Tooltip("Played at the target whenever EntityShielded fires, from any source (BodyguardSkillAction, PortableCoverSkillAction, ShieldEffectData) - generic and source-agnostic, not per-asset. Leave empty to skip the particle, same no-fallback reasoning as healGrantEffectPrefab.")]
         private ParticleSystem shieldGrantEffectPrefab;
+
+        [Header("Quantum Rounds")]
+        [SerializeField, Tooltip("Uniform scale used for QuantumRoundsTriggered's impact spark - the prefab itself is resolved per-asset off Source.ImpactEffectPrefab (see QuantumRoundsWeaponPerkData.View.cs/OnQuantumRoundsTriggered below), falling back to defaultAreaBlastEffect if that's left empty. This event carries no radius of its own to derive a scale from, same reasoning as meleeHitEffectScale/projectileReflectedEffectScale.")]
+        private float quantumRoundsEffectScale = 1f;
 
         [Header("Projectile Reflect")]
         [SerializeField, Tooltip("Played whenever a ProjectileReflected event fires (Kai's Reflect dash ascension, see ReflectProjectilesSkillAction) - a single point 'parry' spark at the reflected projectile's position, not radius-scaled. Falls back to defaultAreaBlastEffect (at a small fixed scale) if left empty.")]
@@ -106,8 +122,12 @@ namespace QuantumUser.View.Managers
             QuantumEvent.Subscribe<EventEnemyExploded>(this, OnEnemyExploded);
             QuantumEvent.Subscribe<EventSentryOverloadDetonated>(this, OnSentryOverloadDetonated);
             QuantumEvent.Subscribe<EventShockwaveReleased>(this, OnShockwaveReleased);
+            QuantumEvent.Subscribe<EventGroundPoundTriggered>(this, OnGroundPoundTriggered);
             QuantumEvent.Subscribe<EventWeaponExplosionReleased>(this, OnWeaponExplosionReleased);
-            QuantumEvent.Subscribe<EventVoidExplosionReleased>(this, OnVoidExplosionReleased);
+            QuantumEvent.Subscribe<EventDetonationReleased>(this, OnDetonationReleased);
+            QuantumEvent.Subscribe<EventSingularityTriggered>(this, OnSingularityTriggered);
+            QuantumEvent.Subscribe<EventOverflowingRiftTriggered>(this, OnOverflowingRiftTriggered);
+            QuantumEvent.Subscribe<EventQuantumRoundsTriggered>(this, OnQuantumRoundsTriggered);
             QuantumEvent.Subscribe<EventProjectileReflected>(this, OnProjectileReflected);
             QuantumEvent.Subscribe<EventHitEffectApplied>(this, OnHitEffectApplied);
             QuantumEvent.Subscribe<EventEntityHealed>(this, OnEntityHealed);
@@ -245,6 +265,21 @@ namespace QuantumUser.View.Managers
             PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
         }
 
+        // Same resolution as OnVortexExploded - Source always comes from exactly one
+        // GroundPoundPassiveUpgradeData asset, which is where BlastEffectPrefab lives (see
+        // GroundPoundPassiveUpgradeData.View.cs). Deliberately not routed through OnShockwaveReleased
+        // above - see BruteKnockbackMasterySystem's own comment for why Ground Pound needed its own event.
+        private void OnGroundPoundTriggered(EventGroundPoundTriggered e)
+        {
+            Frame frame = e.Game.Frames.Predicted;
+            if (frame == null) return;
+
+            GroundPoundPassiveUpgradeData action = frame.FindAsset(e.Source);
+            ParticleSystem prefab = action.BlastEffectPrefab ?? defaultAreaBlastEffect;
+
+            PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
+        }
+
         // Generic - fires for any weapon-perk explosion that has no dedicated VFX of its own
         // (currently Cataclysm Round and Explosive Sequence, see HitEffectUtility.ApplyExplosion).
         // Always plays defaultAreaBlastEffect directly, unlike OnShockwaveReleased - neither perk
@@ -255,24 +290,77 @@ namespace QuantumUser.View.Managers
             PlayEffect(defaultAreaBlastEffect, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
         }
 
-        // Void+Fire reaction (see docs/elemental-reactions.md and
-        // StatusEffectUtility.TryTriggerExplosion) - unlike OnWeaponExplosionReleased above, this one
+        // Fire+RiftMark reaction (see docs/elemental-reactions.md and
+        // StatusEffectUtility.TryTriggerDetonation) - unlike OnWeaponExplosionReleased above, this one
         // gets its own dedicated prefab slot rather than always falling through to the shared blast,
-        // since it's meant to read as a distinct effect. Until voidExplosionEffectPrefab is authored,
-        // falls back to defaultAreaBlastEffect tinted voidExplosionFallbackColor via the same tinted
+        // since it's meant to read as a distinct effect. Until detonationEffectPrefab is authored,
+        // falls back to defaultAreaBlastEffect tinted detonationFallbackColor via the same tinted
         // PlayEffect overload OnEnemyExploded uses, so it's still visually distinct in the meantime.
-        private void OnVoidExplosionReleased(EventVoidExplosionReleased e)
+        private void OnDetonationReleased(EventDetonationReleased e)
         {
             Vector3 position = e.Position.ToUnityVector3();
             Vector3 scale = Vector3.one * e.Radius.AsFloat;
 
-            if (voidExplosionEffectPrefab != null)
+            if (detonationEffectPrefab != null)
             {
-                PlayEffect(voidExplosionEffectPrefab, position, Quaternion.identity, scale);
+                PlayEffect(detonationEffectPrefab, position, Quaternion.identity, scale);
                 return;
             }
 
-            PlayEffect(defaultAreaBlastEffect, position, Quaternion.identity, scale, voidExplosionFallbackColor);
+            PlayEffect(defaultAreaBlastEffect, position, Quaternion.identity, scale, detonationFallbackColor);
+        }
+
+        // Void+RiftMark reaction (see docs/elemental-reactions.md and
+        // StatusEffectUtility.TryTriggerSingularity) - pulls every enemy in range toward the
+        // reaction's target; this is purely the visual, the actual pull impulse already happened in
+        // simulation. Same dedicated-slot-with-tinted-fallback pattern as OnDetonationReleased above.
+        private void OnSingularityTriggered(EventSingularityTriggered e)
+        {
+            Vector3 position = e.Position.ToUnityVector3();
+            Vector3 scale = Vector3.one * e.Radius.AsFloat;
+
+            if (singularityEffectPrefab != null)
+            {
+                PlayEffect(singularityEffectPrefab, position, Quaternion.identity, scale);
+                return;
+            }
+
+            PlayEffect(defaultAreaBlastEffect, position, Quaternion.identity, scale, singularityFallbackColor);
+        }
+
+        // Overflowing Rift mutation (see docs/rift-mutations.md and
+        // RiftMarkApplicationUtility.ApplyRequest) - fires when an application lands against a target
+        // already at max Rift Mark stacks instead of being wasted. Deliberately restrained: same
+        // dedicated-slot-with-tinted-fallback pattern as every other reaction VFX here, but callers
+        // are expected to author a small, low-key prefab, not a full reaction-strength blast.
+        private void OnOverflowingRiftTriggered(EventOverflowingRiftTriggered e)
+        {
+            Vector3 position = e.Position.ToUnityVector3();
+            Vector3 scale = Vector3.one * e.Radius.AsFloat;
+
+            if (overflowingRiftPulsePrefab != null)
+            {
+                PlayEffect(overflowingRiftPulsePrefab, position, Quaternion.identity, scale);
+                return;
+            }
+
+            PlayEffect(defaultAreaBlastEffect, position, Quaternion.identity, scale, overflowingRiftFallbackColor);
+        }
+
+        // Same resolution as OnGroundPoundTriggered - Source always comes from exactly one
+        // QuantumRoundsWeaponPerkData asset (baked unconditionally alongside HasQuantumRounds in
+        // QuantumRoundsWeaponPerkData.Apply), which is where ImpactEffectPrefab lives (see
+        // QuantumRoundsWeaponPerkData.View.cs). Point spark, not radius-scaled - uses
+        // quantumRoundsEffectScale instead, same reasoning as OnProjectileReflected below.
+        private void OnQuantumRoundsTriggered(EventQuantumRoundsTriggered e)
+        {
+            Frame frame = e.Game.Frames.Predicted;
+            if (frame == null) return;
+
+            QuantumRoundsWeaponPerkData perk = frame.FindAsset(e.Source);
+            ParticleSystem prefab = perk.ImpactEffectPrefab ?? defaultAreaBlastEffect;
+
+            PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * quantumRoundsEffectScale);
         }
 
         // Point spark for Kai's Reflect dash ascension (see ReflectProjectilesSkillAction) - no

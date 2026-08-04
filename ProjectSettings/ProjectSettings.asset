@@ -145,7 +145,7 @@ PlayerSettings:
   tvOSBundleVersion: 1.0
   bundleVersion: 0.1.0
   preloadedAssets:
-  - {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  - {fileID: 11400000, guid: 57c7470fccbe94dfc8880333de9f5a0f, type: 2}
   metroInputSource: 0
   wsaTransparentSwapchain: 0
   m_HolographicPauseOnTrackingLoss: 1
@@ -529,6 +529,9 @@ PlayerSettings:
   - m_BuildTarget: WebGL
     m_StaticBatching: 1
     m_DynamicBatching: 0
+  - m_BuildTarget: Android
+    m_StaticBatching: 1
+    m_DynamicBatching: 0
   m_BuildTargetShaderSettings: []
   m_BuildTargetGraphicsJobs: []
   m_BuildTargetGraphicsJobMode: []
@@ -834,13 +837,14 @@ PlayerSettings:
   webWasm2023: 0
   webEnableSubmoduleStrippingCompatibility: 0
   scriptingDefineSymbols:
-    Android: QUANTUM_LOGLEVEL_DEBUG;CF_FORCE_MOBILE_MODE
+    Android: CF_FORCE_MOBILE_MODE;QUANTUM_LOGLEVEL_DEBUG
     EmbeddedLinux: QUANTUM_LOGLEVEL_DEBUG
     GameCoreScarlett: QUANTUM_LOGLEVEL_DEBUG
     GameCoreXboxOne: QUANTUM_LOGLEVEL_DEBUG
     Kepler: QUANTUM_LOGLEVEL_DEBUG
     LinuxHeadlessSimulation: QUANTUM_LOGLEVEL_DEBUG
     Nintendo Switch: QUANTUM_LOGLEVEL_DEBUG
+    Nintendo Switch 2: QUANTUM_LOGLEVEL_DEBUG
     PS4: QUANTUM_LOGLEVEL_DEBUG
     PS5: QUANTUM_LOGLEVEL_DEBUG
     QNX: QUANTUM_LOGLEVEL_DEBUG
@@ -848,11 +852,12 @@ PlayerSettings:
     Standalone: DREAMTECK_SPLINES;QUANTUM_LOGLEVEL_DEBUG
     VisionOS: QUANTUM_LOGLEVEL_DEBUG
     WebGL: QUANTUM_LOGLEVEL_DEBUG
-    Windows Store Apps: QUANTUM_LOGLEVEL_DEBUG;CF_FORCE_MOBILE_MODE
+    Windows Store Apps: CF_FORCE_MOBILE_MODE;QUANTUM_LOGLEVEL_DEBUG
     XboxOne: QUANTUM_LOGLEVEL_DEBUG
-    iPhone: QUANTUM_LOGLEVEL_DEBUG;CF_FORCE_MOBILE_MODE
+    iPhone: CF_FORCE_MOBILE_MODE;QUANTUM_LOGLEVEL_DEBUG
     tvOS: QUANTUM_LOGLEVEL_DEBUG
-  additionalCompilerArguments: {}
+  additionalCompilerArguments:
+    Android: []
   platformArchitecture: {}
   scriptingBackend:
     Android: 1
@@ -964,7 +969,7 @@ PlayerSettings:
   qnxGraphicConfPath: 
   apiCompatibilityLevel: 6
   captureStartupLogs: {}
-  activeInputHandler: 2
+  activeInputHandler: 0
   windowsGamepadBackendHint: 0
   cloudProjectId: 
   framebufferDepthMemorylessMode: 0

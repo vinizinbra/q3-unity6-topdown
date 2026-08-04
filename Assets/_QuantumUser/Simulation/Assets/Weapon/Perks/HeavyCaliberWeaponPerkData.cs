@@ -10,7 +10,7 @@ namespace Quantum
         public FP DamageMultiplier = FP._1;
         public FP FireRateMultiplier = FP._1;
 
-        public override void Apply(Frame f, Weapon* weapon)
+        public override void Apply(Frame f, EntityRef owner, Weapon* weapon)
         {
             if (FireRateMultiplier <= FP._0)
             {

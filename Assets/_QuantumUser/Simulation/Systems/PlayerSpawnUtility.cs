@@ -40,6 +40,18 @@ namespace Quantum
                 Log.Debug($"[LevelGen] spawned player {player} at {transform->Position}");
             }
 
+            // Meta-progression, carried in from outside this match (see RuntimePlayer.WeaponLevel's
+            // own comment / MatchMakingConfig.StartRunner) - overrides the fresh 0
+            // CharacterSystem.OnEntityPrototypeMaterialized already seeded a moment ago inside
+            // f.Create above, same "override right after creation" idiom the Transform3D write
+            // above uses for spawn position. Read here (not from CharacterSystem itself) because
+            // PlayerLink.Player - and therefore which RuntimePlayer this entity even belongs to -
+            // isn't set until the block above, after f.Create already returned.
+            if (f.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats))
+            {
+                stats->WeaponTalentLevel = runtimePlayer.WeaponLevel;
+            }
+
             // Skill stacks are NOT initialized here - SkillSystem.EnsureInitialized does it lazily
             // on first Update instead, so it's correct regardless of how the entity came to exist
             // (this dynamic spawn path, or a player placed directly in a scene for testing, which

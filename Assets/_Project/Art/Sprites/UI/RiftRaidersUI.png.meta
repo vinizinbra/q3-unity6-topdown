@@ -255,7 +255,7 @@ TextureImporter:
         height: 60
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      border: {x: 29, y: 29, z: 29, w: 29}
       customData: 
       outline: []
       physicsShape: []
@@ -277,7 +277,7 @@ TextureImporter:
         height: 90
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      border: {x: 44, y: 44, z: 44, w: 44}
       customData: 
       outline: []
       physicsShape: []
@@ -673,7 +673,7 @@ TextureImporter:
         height: 60
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      border: {x: 29, y: 29, z: 29, w: 29}
       customData: 
       outline: []
       physicsShape: []
@@ -695,7 +695,7 @@ TextureImporter:
         height: 45
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      border: {x: 22, y: 22, z: 22, w: 22}
       customData: 
       outline: []
       physicsShape: []
@@ -769,28 +769,6 @@ TextureImporter:
       bones: []
       spriteID: 383f962a0216f4dd0867508f5f31a521
       internalID: -773096470
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: RR_HexInGameTop
-      rect:
-        serializedVersion: 2
-        x: 25
-        y: 871
-        width: 286
-        height: 120
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 202, y: 0, z: 40, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 9c918fe0d96c44c8093dbd39bf244421
-      internalID: 1778298947
       vertices: []
       indices: 
       edges: []
@@ -936,7 +914,7 @@ TextureImporter:
         width: 191
         height: 60
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -958,7 +936,7 @@ TextureImporter:
         width: 191
         height: 60
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -980,7 +958,7 @@ TextureImporter:
         width: 191
         height: 60
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -989,6 +967,314 @@ TextureImporter:
       bones: []
       spriteID: 496adc5a5c7eb4f2b9c54a198d9863a3
       internalID: 1198964870
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_UpgradeTitle3
+      rect:
+        serializedVersion: 2
+        x: 664
+        y: 439
+        width: 333
+        height: 143
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 142, y: 0, z: 129, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b9df526b5ee294954bf9105d19a8347b
+      internalID: -1495585377
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Hex64Green
+      rect:
+        serializedVersion: 2
+        x: 759
+        y: 723
+        width: 90
+        height: 90
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 44, y: 44, z: 44, w: 44}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5a50343aa360448f8a8537ab84215612
+      internalID: 1649256451
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Hex32Green
+      rect:
+        serializedVersion: 2
+        x: 678
+        y: 745
+        width: 60
+        height: 60
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 29, y: 29, z: 29, w: 29}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7cbc0fa1efabf4d7f9e8b67025f53fac
+      internalID: 548666484
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_PlayButton
+      rect:
+        serializedVersion: 2
+        x: 876
+        y: 718
+        width: 90
+        height: 116
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a4a45cc54f3c5488d9b1551716632a96
+      internalID: 2116157734
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_UpgradeTitle2
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 858
+        width: 333
+        height: 166
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 159, y: 0, z: 155, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0f0ff103ea4d7499983548cb00a34656
+      internalID: 1372283331
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Corner
+      rect:
+        serializedVersion: 2
+        x: 476
+        y: 565
+        width: 30
+        height: 30
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 220cd8d2c733142cb9355153ba9b759b
+      internalID: -32581190
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_UpgradeTitle1
+      rect:
+        serializedVersion: 2
+        x: 814
+        y: 311
+        width: 192
+        height: 115
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 94, y: 0, z: 94, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 13010eccd8ff74fe0892ac3813798a72
+      internalID: -548207295
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Subtitle
+      rect:
+        serializedVersion: 2
+        x: 566
+        y: 476
+        width: 73
+        height: 47
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 011a156e7c8c04393a8002f868592b8b
+      internalID: -1147070994
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Hex32GreenDark
+      rect:
+        serializedVersion: 2
+        x: 881
+        y: 641
+        width: 60
+        height: 60
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 29, y: 29, z: 29, w: 29}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5ce335759afef4ec191939109bc92ecb
+      internalID: -343386884
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_GameTitle
+      rect:
+        serializedVersion: 2
+        x: 358
+        y: 303
+        width: 308
+        height: 130
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: eb759e808581e4ef9829de8404b67052
+      internalID: 366658403
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_MenuButton
+      rect:
+        serializedVersion: 2
+        x: 359
+        y: 220
+        width: 55
+        height: 58
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 25, y: 25, z: 25, w: 25}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4fe46edaad49e4320bc7f40c3b6c31ea
+      internalID: -317327699
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_CornerBottomRight
+      rect:
+        serializedVersion: 2
+        x: 429
+        y: 229
+        width: 34
+        height: 38
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e0f094bbf282248ff9b614cabb401821
+      internalID: 1985926313
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_MenuButtonBottom
+      rect:
+        serializedVersion: 2
+        x: 359
+        y: 153
+        width: 55
+        height: 57
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 25, y: 25, z: 25, w: 25}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c1b19e2ba3e4b44c0a470cbf142b9705
+      internalID: 700219559
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Square
+      rect:
+        serializedVersion: 2
+        x: 924
+        y: 922
+        width: 1
+        height: 1
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 73ee143e98d7c4318b122939ba54e649
+      internalID: -1829256367
       vertices: []
       indices: 
       edges: []
@@ -1018,13 +1304,18 @@ TextureImporter:
       RR_CardRarityRare: -167839533
       RR_Circle: 1573605090
       RR_CircleOutline: -1046452649
+      RR_Corner: -32581190
+      RR_CornerBottomRight: 1985926313
       RR_Diamond32: -1132049541
+      RR_GameTitle: 366658403
       RR_Hex16_Border: -1340261885
       RR_Hex16_BorderThick: -1160351950
       RR_Hex16_Outline: -144143314
       RR_Hex16_OutlineShadowIn: -80275614
       RR_Hex16_OutlineShadowInOut: -645992890
       RR_Hex16_Top: -1871847198
+      RR_Hex32Green: 548666484
+      RR_Hex32GreenDark: -343386884
       RR_Hex32_Border: -1394234966
       RR_Hex32_BorderThick: 1473629062
       RR_Hex32_Outline: -878071093
@@ -1032,6 +1323,7 @@ TextureImporter:
       RR_Hex32_OutlineShadowInOut: -1013606453
       RR_Hex32_Top: 854013766
       RR_Hex3_OutlineShadowIn: -773096470
+      RR_Hex64Green: 1649256451
       RR_Hex64Outline: 214049660
       RR_Hex64_Border: -942499650
       RR_Hex64_BorderThick: -719957319
@@ -1045,7 +1337,15 @@ TextureImporter:
       RR_Hex96_OutlineShadowInOut: 763845069
       RR_Hex96_Top: 1822548951
       RR_HexInGameTop: 1778298947
+      RR_MenuButton: -317327699
+      RR_MenuButtonBottom: 700219559
+      RR_PlayButton: 2116157734
       RR_PlayerCard: -991539854
+      RR_Square: -1829256367
+      RR_Subtitle: -1147070994
+      RR_UpgradeTitle1: -548207295
+      RR_UpgradeTitle2: 1372283331
+      RR_UpgradeTitle3: -1495585377
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

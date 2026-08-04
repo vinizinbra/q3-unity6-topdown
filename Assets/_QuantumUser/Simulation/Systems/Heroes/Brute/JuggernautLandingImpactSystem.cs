@@ -54,7 +54,7 @@ namespace Quantum
 
             if (DamageUtility.RollChance(f, stunChance) == true)
             {
-                StatusEffectUtility.ApplyStun(f, filter.Entity, stunDuration);
+                StatusEffectUtility.ApplyStun(f, filter.Entity, stunDuration, owner);
             }
 
             // JuggernautLandingRootUpgrade - independent of the Stun upgrade above, own Damage/roll.

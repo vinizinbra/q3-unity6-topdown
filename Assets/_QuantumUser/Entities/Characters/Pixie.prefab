@@ -764,6 +764,8 @@ MonoBehaviour:
       RawValue: 0
     TimeSinceFireReleased:
       RawValue: 0
+    RangeMultiplier:
+      RawValue: 0
 --- !u!114 &8550683189489077900
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -823,12 +825,18 @@ MonoBehaviour:
   - {fileID: 7766896104125419243}
   flashColor: {r: 1, g: 1, b: 1, a: 1}
   burnFlashColor: {r: 1, g: 0.45, b: 0.1, a: 1}
-  poisonFlashColor: {r: 1, g: 0.4, b: 0.7, a: 1}
   frontalReducedFlashColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   restColor: {r: 1, g: 1, b: 1, a: 0}
   duration: 0.2
   healFlashColor: {r: 0.4, g: 1, b: 0.4, a: 1}
+  shieldFlashColor: {r: 0.4, g: 0.75, b: 1, a: 1}
   deathColor: {r: 0, g: 0, b: 0, a: 0.5}
+  pickupGlowColor: {r: 1, g: 0.85, b: 0.3, a: 1}
+  pickupGlowDuration: 0.5
+  riftMarkMaterial: {fileID: 0}
+  riftMarkApplicationFlashColor: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
+  riftMarkApplicationFlashDuration: 0.08
+  freezeMaterial: {fileID: 0}
 --- !u!114 &8110188611109955938
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -896,6 +904,8 @@ MonoBehaviour:
         RawValue: 0
       ProjectilePending:
         Value: 0
+      FreeCastPending:
+        Value: 0
     HeroSkill:
       Skill:
         Id:
@@ -950,6 +960,8 @@ MonoBehaviour:
         RawValue: 0
       ProjectilePending:
         Value: 0
+      FreeCastPending:
+        Value: 0
 --- !u!114 &5758567550817711403
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -992,6 +1004,8 @@ MonoBehaviour:
       RawValue: 0
     MaxHealth:
       RawValue: 0
+    RegenRate:
+      RawValue: 0
 --- !u!114 &6945579441375826571
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1030,7 +1044,13 @@ MonoBehaviour:
       RawValue: 0
     AreaRadiusMultiplier:
       RawValue: 0
-    CooldownMultiplier:
+    NearDamageMultiplier:
+      RawValue: 0
+    FarDamageMultiplier:
+      RawValue: 0
+    DashCooldownMultiplier:
+      RawValue: 0
+    SkillCooldownMultiplier:
       RawValue: 0
     SkillDurationMultiplier:
       RawValue: 0
@@ -1054,7 +1074,45 @@ MonoBehaviour:
       RawValue: 0
     Luck:
       RawValue: 0
+    ExperienceGainMultiplier:
+      RawValue: 0
+    RiftShardGainMultiplier:
+      RawValue: 0
+    CoinGainMultiplier:
+      RawValue: 0
     BurnOnHitStacks: 0
+    DashShieldCost:
+      RawValue: 0
+    CritSkillCooldownReduction:
+      RawValue: 0
+    ShieldBreakGrantsDashCharge:
+      Value: 0
+    AllOrNothingActive:
+      Value: 0
+    HasCriticalFractureMutation:
+      Value: 0
+    HasSkillFractureMutation:
+      Value: 0
+    HasRiftDashMutation:
+      Value: 0
+    HasHeavyFractureMutation:
+      Value: 0
+    HasCloseFractureMutation:
+      Value: 0
+    HasLongFractureMutation:
+      Value: 0
+    HasExecutionFractureMutation:
+      Value: 0
+    HasFirstContactMutation:
+      Value: 0
+    HasFracturedPresenceMutation:
+      Value: 0
+    HasOverflowingRiftMutation:
+      Value: 0
+    HasLastStandMutation:
+      Value: 0
+    LastStandCooldownRemaining:
+      RawValue: 0
 --- !u!114 &8215253040534427600
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1097,6 +1155,23 @@ MonoBehaviour:
           RawValue: 0
         Y:
           RawValue: 0
+--- !u!114 &3061145013519703360
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 506928541793919104}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79e869c26acba427ea2f7b7b05b875dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Quantum.SkillActionFxView
+  _playerRef:
+    _index: 0
+  initialized: 0
+  executeOnlyOnLocal: 0
+  isLocal: 0
 --- !u!1 &1545853343455048392
 GameObject:
   m_ObjectHideFlags: 0
@@ -2327,20 +2402,3 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5292615511809375842, guid: 95a3634ae517a460cb68deae3f0770d3, type: 3}
   m_PrefabInstance: {fileID: 2127705868109635390}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &3061145013519703360
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 506928541793919104}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 79e869c26acba427ea2f7b7b05b875dc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Quantum.SkillActionFxView
-  _playerRef:
-    _index: 0
-  initialized: 0
-  executeOnlyOnLocal: 0
-  isLocal: 0

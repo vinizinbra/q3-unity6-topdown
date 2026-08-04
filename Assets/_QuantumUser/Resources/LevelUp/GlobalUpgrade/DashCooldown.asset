@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/GlobalUpgrade/DashCooldown
     Guid:
       Value: 335586871794483094
-  Icon: {fileID: 0}
+  Icon: {fileID: 984604686, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
   DisplayName: Dash Cooldown
   Rarity: 1
   MaxPicks: 3

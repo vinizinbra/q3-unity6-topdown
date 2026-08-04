@@ -35,6 +35,12 @@ public class JuicyEffects : MonoBehaviour
     [SerializeField] private float idleWobbleDuration = 1.4f;
     [SerializeField] private Ease idleWobbleEase = Ease.InOutSine;
 
+    [Header("Timing")]
+    [SerializeField, Tooltip("If true, PlayScaleIn/PlayPunchScale/StartIdleWobble ignore Time.timeScale (run on real/unscaled time) - turn on for scale juice that must still play at full speed while the game is paused or slowed, e.g. a Chest's open punch during the upgrade-screen time-scale ease (see GameplayUiController).")]
+    private bool scaleUseUnscaledTime = false;
+    [SerializeField, Tooltip("Same as above but for PlayPunchRotation/PlayShake - kept independent since a given effect might want e.g. its shake to freeze with the pause while its scale punch still plays.")]
+    private bool useUnscaledTime = false;
+
     private Vector3 _baseScale;
     private Vector3 _baseLocalPosition;
     private Quaternion _baseRotation;
@@ -76,8 +82,8 @@ public class JuicyEffects : MonoBehaviour
     {
         _scaleTween.Stop();
         transform.localScale = Vector3.zero;
-        _scaleTween = Tween.Delay(gameObject, scaleInDelay).OnComplete(() =>
-            _scaleTween = Tween.Scale(transform, _baseScale, scaleInDuration, scaleInEase));
+        _scaleTween = Tween.Delay(gameObject, scaleInDelay, useUnscaledTime: scaleUseUnscaledTime).OnComplete(() =>
+            _scaleTween = Tween.Scale(transform, _baseScale, scaleInDuration, scaleInEase, useUnscaledTime: scaleUseUnscaledTime));
     }
 
     [Button]
@@ -85,7 +91,7 @@ public class JuicyEffects : MonoBehaviour
     {
         _scaleTween.Stop();
         transform.localScale = _baseScale;
-        _scaleTween = Tween.PunchScale(transform, punchScaleStrength, punchScaleDuration, punchScaleFrequency);
+        _scaleTween = Tween.PunchScale(transform, punchScaleStrength, punchScaleDuration, punchScaleFrequency, useUnscaledTime: scaleUseUnscaledTime);
     }
 
     [Button]
@@ -93,7 +99,7 @@ public class JuicyEffects : MonoBehaviour
     {
         _rotationTween.Stop();
         transform.localRotation = _baseRotation;
-        _rotationTween = Tween.PunchLocalRotation(transform, punchRotationStrength, punchRotationDuration, punchRotationFrequency);
+        _rotationTween = Tween.PunchLocalRotation(transform, punchRotationStrength, punchRotationDuration, punchRotationFrequency, useUnscaledTime: useUnscaledTime);
     }
 
     [Button]
@@ -101,7 +107,7 @@ public class JuicyEffects : MonoBehaviour
     {
         _positionTween.Stop();
         transform.localPosition = _baseLocalPosition;
-        _positionTween = Tween.ShakeLocalPosition(transform, shakeStrength, shakeDuration, shakeFrequency);
+        _positionTween = Tween.ShakeLocalPosition(transform, shakeStrength, shakeDuration, shakeFrequency, useUnscaledTime: useUnscaledTime);
     }
 
     [Button]
@@ -110,7 +116,7 @@ public class JuicyEffects : MonoBehaviour
         _scaleTween.Stop();
         Vector3 squashed = new Vector3(_baseScale.x * (1f + idleWobbleSquashAmount), _baseScale.y * (1f - idleWobbleSquashAmount), _baseScale.z);
         Vector3 stretched = new Vector3(_baseScale.x * (1f - idleWobbleSquashAmount), _baseScale.y * (1f + idleWobbleSquashAmount), _baseScale.z);
-        _scaleTween = Tween.Scale(transform, squashed, stretched, idleWobbleDuration, idleWobbleEase, cycles: -1, cycleMode: CycleMode.Yoyo);
+        _scaleTween = Tween.Scale(transform, squashed, stretched, idleWobbleDuration, idleWobbleEase, cycles: -1, cycleMode: CycleMode.Yoyo, useUnscaledTime: scaleUseUnscaledTime);
     }
 
     [Button]

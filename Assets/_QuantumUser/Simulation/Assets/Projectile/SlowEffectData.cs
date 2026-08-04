@@ -23,8 +23,9 @@ namespace Quantum
             StatusEffectUtility.ApplyIce(f, context.Target, duration, config.SlowSpeedMultiplier);
 
             // Directly-authored Slow (not the weapon-elemental-proc path) still needs to participate
-            // in the elemental reaction scan - see StatusEffectUtility.TryTriggerReactions.
-            StatusEffectUtility.TryTriggerReactions(f, context.Target, context.Owner, context.Source, ElementType.Ice, context.Damage);
+            // in the Rift Mark reaction check, using the same pre-hit snapshot the weapon-proc path
+            // uses - see HitEffectContext.PreHitRiftMarkStacks' own comment.
+            StatusEffectUtility.TryConsumeRiftMarkReaction(f, context.Target, context.Owner, context.Source, ElementType.Ice, context.Damage, context.PreHitRiftMarkStacks);
         }
     }
 }

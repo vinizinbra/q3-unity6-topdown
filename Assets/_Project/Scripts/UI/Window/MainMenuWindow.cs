@@ -10,7 +10,6 @@ using Button = UnityEngine.UI.Button;
 public class MainMenuWindow : UiWindow
 {
     [FormerlySerializedAs("matchMakingConfigNew")] public MatchMakingConfig matchMakingConfig;
-    [FormerlySerializedAs("matchMakingConfig")] public MatchMakingConfigOld matchMakingConfigOld;
     public Button reconnectButton;
     public void OpenParty()
     {
@@ -21,7 +20,7 @@ public class MainMenuWindow : UiWindow
     public override void Show()
     {
         base.Show();
-
+        Application.targetFrameRate = 60;
     }
 
     void Update()

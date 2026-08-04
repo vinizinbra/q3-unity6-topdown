@@ -96,15 +96,12 @@ namespace QuantumUser.View.Util
 
         private void IntegrateSpring(float dt, Vector2 targetOffset, float targetRot)
         {
-            float omega = springFrequency * Mathf.PI * 2f;
-
-            Vector2 posForce = -omega * omega * (_posOffset - targetOffset) - 2f * springDamping * omega * _posVelocity;
-            _posVelocity += posForce * dt;
-            _posOffset += _posVelocity * dt;
-
-            float rotForce = -omega * omega * (_rotOffset - targetRot) - 2f * springDamping * omega * _rotVelocity;
-            _rotVelocity += rotForce * dt;
-            _rotOffset += _rotVelocity * dt;
+            // Bounded overshoot (2x the max* tunables) is the fail-safe against a low/variable-
+            // framerate spike reading as the bone flying off the rig - see DampedSpring's own
+            // comment for why the naive per-frame integration can't be trusted to stay finite on
+            // its own.
+            DampedSpring.Integrate(ref _posOffset, ref _posVelocity, targetOffset, new Vector2(springFrequency, springFrequency), springDamping, dt, maxOffsetDistance * 2f);
+            DampedSpring.Integrate(ref _rotOffset, ref _rotVelocity, targetRot, springFrequency, springDamping, dt, maxRotationDegrees * 2f);
         }
 
         // Snaps a locked axis straight back to rest rather than feeding it a zeroed target -

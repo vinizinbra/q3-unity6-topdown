@@ -109,6 +109,11 @@ namespace Quantum
             base.OnDestroy();
             QuantumEvent.UnsubscribeListener(this);
 
+            // Shoot()'s recoil kicks (Tween.PunchCustom(this, ...)) are frequently still decaying
+            // when the owner dies mid-shot - without this, PrimeTween logs a stack-trace-capturing
+            // error per orphaned tween every time that happens.
+            Tween.StopAll(this);
+
             for (int i = 0; i < tracerPool.Count; i++)
             {
                 if (tracerPool[i] != null)

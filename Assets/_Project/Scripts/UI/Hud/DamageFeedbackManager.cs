@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using NaughtyAttributes;
 using Quantum;
 using QuantumUser.View;
+using QuantumUser.View.Util;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -21,6 +22,14 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
 
     [SerializeField, Tooltip("Offset from the hit entity's origin, so the number starts around its body instead of at its feet.")]
     private Vector3 worldOffset = new Vector3(0f, 1.5f, 0f);
+
+    [SerializeField, Tooltip("Extra Play() start delay added per number spawned on the same Unity frame (e.g. every shotgun pellet hitting one target in the same tick), so they pop in one after another instead of all animating from t=0.")]
+    private float burstStaggerStep = 0.03f;
+    [SerializeField, Tooltip("Caps how much delay a single dense burst can accumulate, so a big pellet count doesn't leave the last few numbers reading noticeably late.")]
+    private float maxBurstStaggerDelay = 0.15f;
+
+    private int _burstFrame = -1;
+    private int _burstIndex;
 
     [SerializeField]
     private List<DamageNumberStyle> styles = new List<DamageNumberStyle>
@@ -284,7 +293,22 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
             return;
 
         DamageNumberUiWidget widget = _pool.Get();
-        widget.Play(style, damage, worldPosition, _pool.Release);
+        widget.Play(style, damage, worldPosition, ResolveBurstStaggerDelay(), _pool.Release);
+    }
+
+    // Numbers landing in the same Unity frame get an increasing spawn delay instead of all
+    // animating from t=0 - resets as soon as a frame passes with no spawns.
+    private float ResolveBurstStaggerDelay()
+    {
+        if (Time.frameCount != _burstFrame)
+        {
+            _burstFrame = Time.frameCount;
+            _burstIndex = 0;
+        }
+
+        float delay = Mathf.Min(_burstIndex * burstStaggerStep, maxBurstStaggerDelay);
+        _burstIndex++;
+        return delay;
     }
 
     private DamageNumberStyle FindStyle(DamageNumberKind kind)
@@ -295,7 +319,7 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
                 return style;
         }
 
-        Debug.LogError($"[DamageFeedback] No style configured for {kind} - add a row to {name}'s styles list.");
+        LogHelper.Error("DamageFeedback", $"No style configured for {kind} - add a row to {name}'s styles list.");
         return null;
     }
 

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Photon.Client;
 using Photon.Realtime;
+using QuantumUser.View.Util;
 using TMPro;
 using UnityEngine;
 using UnityEngine.PlayerLoop;
@@ -104,7 +105,7 @@ public class RoomWindow : UiWindow, IInRoomCallbacks,IOnEventCallback
       {
           playerWidget.Setup("");
       }
-      Debug.Log(MatchMakingConfig.Instance.Client.CurrentRoom.Players.Count);
+      LogHelper.Log("RoomWindow", MatchMakingConfig.Instance.Client.CurrentRoom.Players.Count.ToString());
       int i = 0;
       foreach (var player in MatchMakingConfig.Instance.Client.CurrentRoom.Players) 
       {
@@ -119,7 +120,7 @@ public class RoomWindow : UiWindow, IInRoomCallbacks,IOnEventCallback
         GameManager.Instance.MainMenuTab.windowManager.ShowWindow<WaitingForPlayersWindow>();
         
         if (!MatchMakingConfig.Instance.Client.OpRaiseEvent((byte)PhotonMain.PhotonEventCode.WaitingForPlayers, null, new RaiseEventArgs() {Receivers = ReceiverGroup.All, CachingOption = EventCaching.AddToRoomCache}, SendOptions.SendReliable)) {
-            Debug.LogError($"Failed to send start game event");
+            LogHelper.Error("RoomWindow", "Failed to send start game event");
         }
     }
     

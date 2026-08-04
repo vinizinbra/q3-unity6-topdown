@@ -44,6 +44,13 @@ event EntityDamaged
     // same "position travels with the event" shape every other position-carrying event in this file
     // already uses (EnemyExploded, HitEffectApplied, ...).
     FPVector3 Position;
+
+    // Quantum silently collapses multiple events raised in the same tick if every field matches
+    // byte-for-byte (its own dedup, not a bug here) - a multi-pellet weapon (shotgun) firing several
+    // identical-damage pellets at one stationary target in one tick would otherwise only ever
+    // deliver 1-2 of them, reading as "some pellets did nothing". HitIndex just needs to differ per
+    // pellet within that same shot to keep every one of them distinct - see WeaponSystem.FireHitscan.
+    Byte HitIndex;
 }
 
 // Mirrors EntityDamaged for the heal path - see HealUtility.ApplyHeal. Amount is what was actually
@@ -53,6 +60,25 @@ event EntityHealed
 {
     EntityRef Target;
     EntityRef Owner;
+    FP        Amount;
+}
+
+// Fired alongside EntityHealed specifically when Max's Vendetta passive heals its wielder from
+// consuming a mark (killing one of its RevengeMark-marked enemies) - a dedicated event so a view VFX
+// can react to this exact heal source without inferring it from EntityHealed's Target==Owner shape
+// (HealthRegenSystem/other self-heals could look the same otherwise). See MaxVendettaSystem.cs and
+// docs/max-vendetta-fire-mastery.md.
+// Fired whenever CheatDeathUtility.TryPreventLethal actually saves its owner (Too Angry to Die) -
+// a dedicated event, same reasoning as VendettaRevengeHealed below, so a view VFX/screen effect can
+// react to this exact moment without inferring it from Health snapping to 1.
+event CheatDeathTriggered
+{
+    EntityRef Entity;
+}
+
+event VendettaRevengeHealed
+{
+    EntityRef Entity;
     FP        Amount;
 }
 
@@ -308,6 +334,32 @@ event ShockwaveReleased
     AssetRef<HitEffectData>  Effect;
 }
 
+// Fired by BruteKnockbackMasterySystem.OnPlayerLanded when Ground Pound actually triggers - deliberately
+// its own event rather than reusing ShockwaveReleased above: that one's Effect field means "skip,
+// a dedicated view already handles this," not a prefab to resolve, and Ground Pound's whole point is
+// a per-asset prefab. Source always comes from exactly one GroundPoundPassiveUpgradeData asset, which
+// is where the view resolves BlastEffectPrefab from (GroundPoundPassiveUpgradeData.View.cs) - same
+// "AssetRef travels with the event" shape VortexExploded uses for VortexExplodeOnDestroySkillAction.
+event GroundPoundTriggered
+{
+    EntityRef                                Entity;
+    FPVector3                                Position;
+    FP                                       Radius;
+    AssetRef<GroundPoundPassiveUpgradeData>  Source;
+}
+
+// Fired by DirectHitData.ApplyQuantumRounds whenever the perk actually chains a hit onto a second
+// enemy - lets a per-asset ImpactEffectPrefab (see QuantumRoundsWeaponPerkData.View.cs) flash on
+// the entity that took the chained hit, same Source-travels-with-the-event shape GroundPoundTriggered
+// uses above. Position is the CHAINED TARGET's own live Transform3D, not the original shot's impact
+// point, so the spark reads as landing on the second enemy rather than lingering at the first.
+event QuantumRoundsTriggered
+{
+    EntityRef                                Entity;
+    FPVector3                                Position;
+    AssetRef<QuantumRoundsWeaponPerkData>    Source;
+}
+
 // Fired by HitEffectUtility.ApplyExplosion - a damage-only radial blast (no knockback), same
 // "generic, no AssetRef/Source" reasoning as ShockwaveReleased above. Currently fired by Cataclysm
 // Round and Explosive Sequence (see DirectHitData.ApplyTerminalWeaponPerks/
@@ -321,12 +373,34 @@ event WeaponExplosionReleased
     FP         Radius;
 }
 
-// Fired by StatusEffectUtility.TryTriggerExplosion (Void+Fire reaction - see
+// Fired by StatusEffectUtility.TryTriggerDetonation (Fire+RiftMark reaction - see
 // docs/elemental-reactions.md), NOT WeaponExplosionReleased above - unlike Cataclysm Round/
 // Explosive Sequence, this reaction wants its own distinct visual, so EffectsManager gives it a
-// dedicated prefab field (voidExplosionEffectPrefab) instead of always falling through to the
+// dedicated prefab field (detonationEffectPrefab) instead of always falling through to the
 // shared defaultAreaBlastEffect.
-event VoidExplosionReleased
+event DetonationReleased
+{
+    EntityRef  Entity;
+    FPVector3  Position;
+    FP         Radius;
+}
+
+// Fired by StatusEffectUtility.TryTriggerSingularity (Void+RiftMark reaction - see
+// docs/elemental-reactions.md) - pulls every enemy within Radius toward Position. Own dedicated
+// visual (EffectsManager.singularityEffectPrefab), same pattern as DetonationReleased above.
+event SingularityTriggered
+{
+    EntityRef  Entity;
+    FPVector3  Position;
+    FP         Radius;
+}
+
+// Fired by RiftMarkApplicationUtility.ApplyRequest (Overflowing Rift mutation - see
+// docs/rift-mutations.md) when a Rift Mark application lands against a target already at
+// ElementalReactionConfig.MaxStacks - a small pulse instead of wasting the application. Own
+// dedicated visual (EffectsManager.overflowingRiftPulsePrefab), same pattern as
+// DetonationReleased/SingularityTriggered above, but authored deliberately restrained/low-key.
+event OverflowingRiftTriggered
 {
     EntityRef  Entity;
     FPVector3  Position;
@@ -442,4 +516,32 @@ event CoinCollected
     EntityRef Collector;
     FPVector3 Position;
     FP        Amount;
+}
+
+// Fired by WeaponSystem.Equip every time an entity's Weapon.WeaponData changes - including the
+// very first spawn-time equip (CharacterSystem.SeedWeapon) and any later mid-match re-equip (e.g.
+// LevelUpCategory.ChooseWeapon via WeaponChoiceUtility.Grant) - a single generic View hook so
+// WeaponViewController doesn't need one bespoke call site per equip path. NOT needed for a
+// reconnecting client to see the right weapon - WeaponViewController.Initialize already does its
+// own cold read of the CURRENT Weapon.WeaponData the moment its view is (re)instantiated (see
+// CustomQuantumEntityViewComponent's OnEntityInstantiated -> Initialize chain); this event is only
+// for an ALREADY-connected client watching a later equip happen live.
+event WeaponEquipped
+{
+    EntityRef Owner;
+    AssetRef<WeaponDataAsset> WeaponData;
+}
+
+// Fired by ChestSystem the instant a player opens a Chest (see Chest.qtn/docs/chests.md) - a
+// View-only hook for VFX/SFX/animation, no simulation consumer. Chest is the opened entity itself -
+// lets a per-Chest view component (ChestView) filter to itself the same way e.g. SentryView filters
+// EventSentryBarrelSpawned.Sentry against its own _entityRef. Kind is the Chest's own configured
+// LevelUpCategory, in case the View wants a distinct effect per category (e.g. a weapon-chest pop
+// vs. a rift-mutation-chest pop).
+event ChestOpened
+{
+    EntityRef     Chest;
+    EntityRef     Player;
+    FPVector3     Position;
+    LevelUpCategory Kind;
 }

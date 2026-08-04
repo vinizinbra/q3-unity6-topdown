@@ -1,0 +1,195 @@
+// Optional per-weapon-owner components holding perk-specific state that used to live as flat
+// fields directly on Weapon (see docs/weapon-perks.md). Split out because Weapon.qtn's
+// auto-generated GetHashCode()/serializer nested one call per field, and 73 flat fields (most of
+// them unused on any given weapon, since Weapon.Perks caps at 5 of ~18 perks that touch these)
+// blew past clang's bracket-nesting limit compiling Quantum.Simulation for IL2CPP/Android.
+// Added via f.AddOrGet<T> only when a perk that needs them is actually granted, removed
+// unconditionally in WeaponSystem.SeedPerkRoster on every re-equip (same "reset before re-baking"
+// invariant Weapon's core fields still follow) - so a missing component means exactly what a
+// zeroed field used to mean: "this perk cluster wasn't rolled."
+
+// A pending repeat-shot queued by Echo Chamber/Infinite Echo - see WeaponEchoState.PendingEchoes.
+struct PendingEcho
+{
+    FP        Delay;
+    FPVector3 Position;
+    FPVector3 Direction;
+    FP        Damage;
+}
+
+// -- Magazine-position perks (Opening Burst/Execution Rounds/Final Round/Escalating Rounds) --
+// Read live off the existing Weapon.Ammo/MagazineSize ratio every shot in WeaponSystem.Update - no
+// separate shot-index tracking needed. Threshold fields are a fraction of the magazine (e.g. 0.2 =
+// "first/last 20%"). Absence of this component (or any zero field within it) means "no bonus", so
+// an un-rolled weapon behaves exactly as it does with none of these perks equipped.
+component WeaponMagazinePositionPerks
+{
+    FP OpeningBurstFireRateBonus;
+    FP OpeningBurstThreshold;
+    FP ExecutionRoundsDamageBonus;
+    FP ExecutionRoundsThreshold;
+    FP FinalRoundDamageBonus;
+    FP EscalatingRoundsMaxDamageBonus;
+}
+
+// -- Shared ramp pool (Relentless Fire/Suppressive Cycle/Overcharge Cycle) --
+// One counter every equipped ramp perk feeds - each perk's own Apply adds its own contribution
+// into the bonus-per-stack fields and raises RampMaxStacks, rather than each tracking its own
+// stack. Advances by 1 on every ISignalOnWeaponHitLanded this weapon's owner receives (see
+// WeaponPerkReactionSystem), decays back down once Weapon.TimeSinceFireReleased (already tracked,
+// reset every shot) exceeds RampDecayGrace - ticked in WeaponSystem.Update. Never baked into
+// Weapon.DamageMultiplier/FireCooldownMultiplier; folded in live every shot instead, so there's
+// nothing to revert.
+component WeaponRampState
+{
+    Byte RampStacks;
+    Byte RampMaxStacks;
+    FP   RampDamageBonusPerStack;
+    FP   RampFireRateBonusPerStack;
+    FP   RampDecayGrace;
+}
+
+// -- Echo Chamber / Infinite Echo --
+// HasEchoChamber only queues an echo for the first 3 shots of every magazine (checked against
+// MagazineSize - Ammo at fire time, resets naturally every reload); HasInfiniteEcho queues one for
+// every shot, no magazine-position check. EchoDelay is shared - whichever equipped perk asks for
+// the longer delay wins, so combining them can't make echoes fire faster than either alone
+// intends. Ticked/re-fired in WeaponSystem.Update/TickPendingEchoes.
+component WeaponEchoState
+{
+    Boolean HasEchoChamber;
+    Boolean HasInfiniteEcho;
+    FP      EchoDelay;
+    array<PendingEcho>[3] PendingEchoes;
+}
+
+// -- Piercing Rounds / Ricochet / Double Tap --
+// Piercing/Ricochet bonuses are added onto Projectile.RemainingPierces/RemainingBounces right
+// after ProjectileSpawner.Spawn inside WeaponSystem.FireProjectile - only the weapon-fire path
+// adds these, not every ProjectileSpawner.Spawn caller (enemy attacks, skills). Double Tap is
+// rolled per shot in WeaponSystem.Update. All three are single-shot bakes read once at fire time,
+// nothing else touches this component.
+component WeaponFireTimeMods
+{
+    Int32 BonusPierce;
+    Int32 BonusBounces;
+    FP    DoubleTapChance;
+}
+
+// -- Split Shot / Quantum Rounds / Explosive Sequence / Cataclysm Round --
+// docs/weapon-perks.md's own "Post-impact perks" grouping (minus Ricochet, which is a fire-time
+// bake, not a post-impact proc) - all four are read from the same two call sites
+// (WeaponSystem.ApplyHitscanWeaponPerks / DirectHitData.ApplyTerminalWeaponPerks), so one lookup
+// serves all of them instead of four. ShotsSinceExplosiveProc is runtime state (incremented every
+// shot in WeaponSystem, reset when it reaches Interval), not perk-authored - the perk only bakes
+// Interval/Radius/DamageMultiplier. HasCataclysmRound gates it since a bare Radius/DamageMultiplier
+// of 0 is indistinguishable from "not equipped" once EscalatingRounds-style zero-effect weapons
+// exist. Also written unconditionally (via f.AddOrGet) by WeaponSystem.ApplyPixieExplosiveWeapon
+// for Pixie's Explosive Rounds passive ascension, independent of whether any Explosive
+// Sequence/Cataclysm perk was ever rolled - see that method's own comment.
+// QuantumRoundsSource is baked by QuantumRoundsWeaponPerkData.Apply ("procs->QuantumRoundsSource =
+// this;", same self-referencing AssetRef pattern GroundPoundUpgrade.Source uses) purely so the view
+// can resolve ImpactEffectPrefab (see QuantumRoundsWeaponPerkData.View.cs) off the exact asset that
+// granted this, once DirectHitData.ApplyQuantumRounds actually chains a hit onto a second enemy.
+component WeaponPostImpactProcs
+{
+    Boolean HasSplitShot;
+    Int32   SplitShotCount;
+    FP      SplitShotDamageMultiplier;
+
+    Boolean HasQuantumRounds;
+    FP      QuantumRoundsRadius;
+    FP      QuantumRoundsDamageMultiplier;
+    AssetRef<QuantumRoundsWeaponPerkData> QuantumRoundsSource;
+
+    Int32 ExplosiveSequenceInterval;
+    FP    ExplosiveSequenceRadius;
+    FP    ExplosiveSequenceDamageMultiplier;
+    Int32 ShotsSinceExplosiveProc;
+
+    Boolean HasCataclysmRound;
+    FP      CataclysmRadius;
+    FP      CataclysmDamageMultiplier;
+}
+
+// -- Empty Chamber / Combat Reboot / Emergency Reload --
+// All three are magazine-empty/reload-lifecycle hooks triggered from WeaponSystem.StartReload
+// (Empty Chamber/Combat Reboot via ApplyMagazineEmptiedPerks) or the reload-window itself
+// (Emergency Reload). EmergencyReloadApplied is a runtime latch (mirrors
+// WeaponDamageOverdrive.Applied) so WeaponSystem.TryApplyEmergencyReload/RevertEmergencyReload
+// add/remove the CharacterStats bonuses exactly once per reload, not every tick the timer is
+// running - WeaponSystem.SeedPerkRoster must revert this latch (if set) before removing this
+// component on a weapon swap, or the CharacterStats bonus permanently leaks.
+component WeaponReloadHooks
+{
+    Boolean HasEmptyChamber;
+    FP      EmptyChamberRadius;
+    FP      EmptyChamberKnockback;
+
+    Boolean HasCombatReboot;
+    FP      CombatRebootCooldownReduction;
+
+    Boolean HasEmergencyReload;
+    FP      EmergencyReloadMoveSpeedBonus;
+    FP      EmergencyReloadDamageReduction;
+    Boolean EmergencyReloadApplied;
+}
+
+// -- Predator Magazine / Killer Instinct / Rift Aftershock --
+// All three react to WeaponPerkReactionSystem.OnEntityKilled. KillerInstinctTimer is runtime
+// state, ticked down in WeaponSystem.Update; the fire-rate bonus folds into the live
+// fire-cooldown read while it's > 0, same "read live, never baked" idiom the ramp pool uses -
+// restarted to KillerInstinctDuration on every kill. Rift Aftershock has no cooldown - one kill
+// transfers exactly one mark, already exactly-once by construction (OnEntityKilled fires once per
+// kill).
+component WeaponOnKillReactions
+{
+    Boolean HasPredatorMagazine;
+    FP      PredatorMagazineRestoreFraction;
+
+    FP KillerInstinctFireRateBonus;
+    FP KillerInstinctDuration;
+    FP KillerInstinctTimer;
+
+    Boolean HasRiftAftershock;
+}
+
+// -- Bottomless Momentum / Critical Rebound / Critical Fracture --
+// All three react to WeaponPerkReactionSystem.OnCriticalHit. Critical Rebound fires a secondary
+// projectile toward the nearest other enemy from the crit's target position - no-op for a Hitscan
+// weapon (nothing to aim a secondary projectile off of), documented simplification. Critical
+// Fracture has no per-weapon cooldown field - the cooldown is target-side
+// (StatusEffects.MarkApplicationCooldowns, RiftMarkCooldownKey.CriticalFracture), shared with the
+// Rift Mutation of the same name so the two can never both stack from one crit.
+component WeaponOnCritReactions
+{
+    FP    CritAmmoRestoreChance;
+    Int32 CritAmmoRestoreAmount;
+
+    Boolean HasCriticalRebound;
+    FP      CriticalReboundRadius;
+    FP      CriticalReboundDamageMultiplier;
+
+    Boolean HasCriticalFracturePerk;
+}
+
+// -- Fracture Rounds / Unstable Payload / Focused Breach -- (see docs/weapon-perks.md)
+// The remaining Rift Mark content-pool perks. FractureHitCounter counts confirmed weapon hits
+// (WeaponPerkReactionSystem.OnWeaponHitLanded - already excludes DoT-tick replays/non-weapon
+// sources), not shots fired, unlike ShotsSinceExplosiveProc above - reset when this component is
+// removed on Equip, same convention. FocusedBreachTarget/ContactTime are runtime state - tracked
+// per-weapon since only one target can be "the beam's current target" at a time; reset whenever
+// the hit entity changes or a shot misses (WeaponSystem.FireHitscan).
+component WeaponHitTrackingPerks
+{
+    Boolean HasFractureRounds;
+    Byte    FractureRoundsInterval;
+    Byte    FractureHitCounter;
+
+    Boolean HasUnstablePayload;
+
+    Boolean   HasFocusedBreach;
+    FP        FocusedBreachThreshold;
+    EntityRef FocusedBreachTarget;
+    FP        FocusedBreachContactTime;
+}

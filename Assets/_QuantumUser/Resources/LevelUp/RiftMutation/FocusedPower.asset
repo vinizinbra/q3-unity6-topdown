@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/FocusedPower
     Guid:
       Value: 533573372186029248
-  Icon: {fileID: 0}
+  Icon: {fileID: 731441001, guid: 9dcd69f213ec845fa868b0a3699cf683, type: 3}
   DisplayName: Focused Power
   Rarity: 2
   Description: '{0:+0;-0}% Skill Area, {1:+0;-0}% Skill Damage'

@@ -13,24 +13,58 @@ component StatusEffects
     EntityRef BurnOwner;
     DamageSource BurnSource;
 
-    // Void's own baseline - no magnitude, no DoT, nothing else reads this directly. Its only job is
-    // to exist so StatusEffectUtility's reaction scan can find it (or find Fire/Ice/Rock already
-    // active when Void lands). Plain overwrite-on-reapply, same as Ice/Break/Intimidate - not
-    // consumed when it backs a reaction, so one application can back several reactions over its
-    // lifetime. See docs/elemental-reactions.md.
-    FP VoidRemaining;
+    // Rift Mark - a stackable status (0..ElementalReactionConfig.MaxStacks) only a dedicated skill/
+    // perk effect applies (RiftMarkEffectData), never a weapon's own Element roll. Landing Fire/Ice/
+    // Rock/Lightning/Void on a target with at least one stack consumes StacksConsumedPerReaction and
+    // fires that element's own reaction (see StatusEffectUtility.TryConsumeRiftMarkReaction) - the
+    // mark itself is never what triggers a reaction, only what backs one. All stacks share one
+    // duration (RiftMarkRemaining), refreshed on every reapply per RefreshDurationOnApply. See
+    // docs/elemental-reactions.md.
+    Byte RiftMarkStacks;
+    FP RiftMarkRemaining;
+
+    // Global lockout after any Rift Mark reaction consumes a stack (ElementalReactionConfig.
+    // ReactionLockoutDuration) - stops a single proc event (or several damage callbacks from one)
+    // from consuming more than one stack, independent of each reaction's own *CooldownRemaining
+    // below. Checked-then-set atomically inside TryConsumeRiftMarkReaction.
+    FP RiftMarkReactionLockoutRemaining;
 
     // One independent cooldown per elemental reaction (see docs/elemental-reactions.md) - stops a
     // fast-firing weapon from re-triggering the same reaction every single elemental-proc tick.
     // Plain countdowns, ticked in StatusEffectSystem alongside everything else; each reaction's own
     // TryTrigger* in StatusEffectUtility checks and resets its own field independently, so triggering
-    // one reaction never gates any other.
-    FP ExplosionCooldownRemaining;
-    FP FreezeCooldownRemaining;
-    FP KnockbackCooldownRemaining;
-    FP MagmaPrisonCooldownRemaining;
-    FP StunCooldownRemaining;
-    FP BreakCooldownRemaining;
+    // one reaction never gates any other. Fire->Detonation, Ice->Deep Freeze, Rock->Rupture,
+    // Lightning->Overload, Void->Singularity.
+    FP DetonationCooldownRemaining;
+    FP DeepFreezeCooldownRemaining;
+    FP OverloadCooldownRemaining;
+    FP RuptureCooldownRemaining;
+    FP SingularityCooldownRemaining;
+
+    // Shared per-mechanic cooldown slots for Rift Mark *applications* (Weapon Perks + Rift Mutations -
+    // see docs/rift-mutations.md/docs/weapon-perks.md), as opposed to the reaction cooldowns above -
+    // indexed by RiftMarkCooldownKey (plain C# enum, Simulation-side only, never persisted itself).
+    // Checked-then-set atomically inside RiftMarkApplicationUtility.TryConsumeCooldown, same shape as
+    // every *CooldownRemaining field on this component.
+    array<FP>[8] MarkApplicationCooldowns;
+
+    // First Contact mutation - one-time-ever flag, not a cooldown (see docs/rift-mutations.md). Once
+    // true it never resets - a fresh enemy spawn gets a fresh StatusEffects component regardless.
+    Boolean FirstContactTriggered;
+
+    // Overflowing Rift mutation's own pulse cooldown - separate from MarkApplicationCooldowns above
+    // since it's triggered from inside the core apply path itself (RiftMarkApplicationUtility.
+    // ApplyRequest, when a request resolves against an already-maxed target), not by an external
+    // mechanic requesting a mark. See docs/rift-mutations.md.
+    FP OverflowingRiftCooldownRemaining;
+
+    // Fractured Presence mutation - per (player, this entity) exposure-time accumulator, same
+    // find-or-evict-soonest shape as HasteRemaining/HasteSource above but counting UP while a player
+    // stays within ElementalReactionConfig.FracturedPresenceRadius instead of counting down. Sized to
+    // 4 - one slot per concurrently-exposing player, this project's established co-op cap (matches
+    // Haste's own array size). See docs/rift-mutations.md.
+    array<EntityRef>[4] FracturedPresenceExposedBy;
+    array<FP>[4] FracturedPresenceExposureTime;
 
     // Slows movement - see StatusEffectUtility.GetSpeedMultiplier, read by PlayerMovementProcessor
     // and EnemySystem's chase movement. Plain overwrite-on-reapply.
@@ -41,7 +75,7 @@ component StatusEffects
     // by EnemySystem, PlayerMovementProcessor and WeaponSystem. Plain overwrite-on-reapply.
     FP StunRemaining;
 
-    // Void+Ice's Freeze reaction - stretches an enemy's own AttackPhase.Preparation/Telegraph windup
+    // Ice+RiftMark's Deep Freeze reaction - stretches an enemy's own AttackPhase.Preparation/Telegraph windup
     // (read only where EnemySystem.UpdatePreparation decrements StateTimer), not a lockout. Mirrors
     // TimeDilationRemaining's shape (a duration + a multiplier, read at one specific timer) but
     // targets the opposite phase - TimeDilationMultiplier is explicitly scoped to the Active-phase
@@ -57,10 +91,10 @@ component StatusEffects
 
     // Multiplies incoming damage - see StatusEffectUtility.GetIncomingDamageMultiplier, applied
     // once inside DamageUtility.ApplyDamage so every damage source respects it identically. Only
-    // ever granted by the Ice+Rock Break reaction now - see docs/elemental-reactions.md. Plain
+    // ever granted by the Rock+RiftMark Rupture reaction - see docs/elemental-reactions.md. Plain
     // overwrite-on-reapply.
-    FP BreakRemaining;
-    FP BreakDamageMultiplier;
+    FP RuptureRemaining;
+    FP RuptureDamageMultiplier;
 
     // Temporary attack-speed buff - see StatusEffectUtility.GetAttackSpeedMultiplier, folded into
     // StatUtility.GetFireCooldown alongside CharacterStats.AttackSpeedMultiplier. Stacks by source
@@ -100,6 +134,18 @@ component StatusEffects
     FP DamageReductionRemaining;
     FP DamageReductionAmount;
 
+    // Guardian ascension's own dedicated pair (Brute's Protector Aura, ally-targeted - see
+    // ProtectorAuraSystem.ApplyToAllies) - deliberately NOT folded into the generic
+    // DamageReductionRemaining/DamageReductionAmount pair above, even though the effect (a timed
+    // incoming-damage reduction) is identical - Guardian's aura refreshes every tick an ally stays
+    // in range, so sharing the generic slot with Max's Too Angry to Die would let either one
+    // silently overwrite the other's duration/amount if both ever land on the same entity in the
+    // same tick. Same 0-1 convention, same StatusEffectUtility.ApplyGuardianDamageReduction/
+    // GetGuardianDamageReductionMultiplier shape, folded into DamageUtility.ResolveDamageReduction
+    // alongside the other two (all three stack multiplicatively).
+    FP GuardianDamageReductionRemaining;
+    FP GuardianDamageReductionAmount;
+
     // Reduces the AFFECTED entity's own OUTGOING damage (Brute's Protector Aura Intimidate debuff) -
     // the mirror of Break, which reduces INCOMING damage instead. Read via
     // StatusEffectUtility.GetOutgoingDamageMultiplier, folded into
@@ -115,4 +161,11 @@ component StatusEffects
     // overwrite-on-reapply.
     FP KnockbackTakenRemaining;
     FP KnockbackTakenMultiplier;
+
+    // Brief full-immunity window opened by Max's Too Angry to Die Hero Skill Upgrade the instant a
+    // cheat-death save actually triggers (see CheatDeathUtility.TryPreventLethal) - NOT the same
+    // mechanism as DamageReductionRemaining above, which belongs to a separate, unrelated Adrenaline-
+    // based "Too Angry to Die" passive ascension. This one just gates when the Invulnerable tag
+    // CheatDeathUtility adds gets removed again - see StatusEffectSystem's own tick.
+    FP CheatDeathImmunityRemaining;
 }

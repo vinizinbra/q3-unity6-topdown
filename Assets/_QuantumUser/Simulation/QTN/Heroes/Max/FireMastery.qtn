@@ -1,0 +1,57 @@
+// Max's "Fire Mastery" Hero Traits - a themed batch of 4 ordinary Passive Upgrades (Hot Target/
+// Cremation/Wildfire/Flashpoint), independent of Vendetta itself (see Vendetta.qtn) even though
+// Wildfire composes onto the same StatusSpreadOnDeath component Burning Vengeance uses. See
+// docs/max-vendetta-fire-mastery.md.
+
+// Hot Target - bonus Critical Chance vs a currently-Burning target. Never baked into
+// CharacterStats.CriticalChance (Max's base Critical Chance must not be permanently modified) -
+// read live every crit roll instead, see DamageUtility.ResolveOutgoingDamage.
+component ConditionalCriticalModifier
+{
+    FP CriticalChanceBonusVsBurning;
+}
+
+// Shared by Burning Vengeance (Vendetta.qtn's own Vendetta-kill trigger) and Wildfire (this file's
+// any-burning-death trigger) - up to two different PassiveUpgradeData assets compose onto the same
+// instance via FPMath.Max, same "upgrades compose onto one shared component" idiom RevengeConfig
+// itself uses. TriggerOnVendettaKill is read by MaxVendettaSystem.OnEntityKilled;
+// TriggerOnAnyBurningDeath is read by MaxFireMasteryReactionSystem.OnEntityKilled - both flags can
+// be true at once if a build picks both upgrades, and each trigger path is independent.
+component StatusSpreadOnDeath
+{
+    Boolean TriggerOnVendettaKill;
+    Boolean TriggerOnAnyBurningDeath;
+    FP Radius;
+    FP BurnDuration;
+    FP BurnIntensity;
+    Int32 MaxTargets;
+}
+
+// Cremation - forces a Burning target's Health the rest of the way to 0 once it's already below
+// its own tier's threshold, letting the existing death branch in DamageUtility.ApplyDamage handle
+// the rest unmodified. Filler/Normal/Specialist/Heavy enemies all read off NormalHealthThreshold
+// (see MaxFireMasteryReactionSystem.ResolveExecuteThreshold) - only Elite and Boss get their own
+// dedicated threshold, Boss additionally gated by BossExecutionEnabled so a lower-rank pick can't
+// accidentally execute a Boss.
+component ExecuteAgainstStatus
+{
+    FP NormalHealthThreshold;
+    FP EliteHealthThreshold;
+    FP BossHealthThreshold;
+    Boolean BossExecutionEnabled;
+}
+
+// Flashpoint - a crit against an already-Burning target detonates a capped-radius explosion
+// centered on it. CooldownRemaining is a live per-tick timer (see
+// MaxFireMasteryReactionSystem.Update), not a config value - ticked down independent of whether
+// Flashpoint is actually proccing this frame, same shape WeaponOnKillReactions.
+// KillerInstinctTimer already uses.
+component ExplosionOnConditionalHit
+{
+    FP Radius;
+    FP DamageCoefficient;
+    FP ProcCooldown;
+    FP CooldownRemaining;
+    Int32 MaxTargets;
+    Boolean AllowRecursiveProc;
+}

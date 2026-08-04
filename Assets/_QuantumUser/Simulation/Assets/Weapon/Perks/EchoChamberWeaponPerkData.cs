@@ -10,10 +10,11 @@ namespace Quantum
     {
         public FP Delay = FP._0_50;
 
-        public override void Apply(Frame f, Weapon* weapon)
+        public override void Apply(Frame f, EntityRef owner, Weapon* weapon)
         {
-            weapon->HasEchoChamber = true;
-            weapon->EchoDelay = FPMath.Max(weapon->EchoDelay, Delay);
+            f.AddOrGet<WeaponEchoState>(owner, out var echo);
+            echo->HasEchoChamber = true;
+            echo->EchoDelay = FPMath.Max(echo->EchoDelay, Delay);
         }
 
         protected override object[] DescriptionArgs => new object[] { Delay.AsFloat };

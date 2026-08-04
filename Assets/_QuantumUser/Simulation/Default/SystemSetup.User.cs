@@ -19,9 +19,22 @@
             systems.Add(new CharacterSystem());
             systems.Add(new PlayerInitSystem());
 
+            // Same "must react even while an upgrade screen is open" reasoning as CharacterSystem
+            // just above - a map-baked Chest materializes at whatever raw Y it was hand-placed in the
+            // editor, and needs GroundOffset applied (adding SettlingToGround so GroundSettleSystem,
+            // inside the pausable group below, eases it onto the ground) the instant it appears,
+            // regardless of pause state. See docs/chests.md.
+            systems.Add(new MapGroundSettleSystem());
+
             // Always-on driver for the level-up upgrade-choice screen's pause/countdown/resolve -
             // can't live inside the group it disables. See docs/level-up-upgrades.md.
             systems.Add(new LevelUpSystem());
+
+            // Always-on for the same reason as LevelUpSystem just above - a second, independent
+            // trigger of Global.LevelUpScreenOpen (via LevelUpUtility.BeginChestScreen) that must
+            // keep reacting to its own Chest.Opened flag even while a screen (its own or an
+            // Exp-driven one) has GameplaySystemGroup disabled. See docs/chests.md.
+            systems.Add(new ChestSystem());
 
             // Everything below pauses as one unit for the duration of an open level-up screen (see
             // LevelUpUtility.BeginLevelUpScreen/Resolve) - relative order/comments between these
@@ -60,6 +73,39 @@
                 // Rift Mutation roster (Critical Focus, Infinite Momentum, Shield Breaker). See
                 // docs/rift-mutations.md.
                 new RiftMutationReactionSystem(),
+                // Max's Vendetta passive - reacts to Combat.qtn's OnHealthDamageApplied/
+                // OnShieldDamageApplied/OnEntityKilled (mark creation/accumulation/consumption+heal).
+                // See docs/max-vendetta-fire-mastery.md.
+                new MaxVendettaSystem(),
+                // Independent per-tick ticker for every active RevengeMark's own countdown, same
+                // "needs to keep counting down regardless of anything else" reasoning
+                // ExplodeOnDeathTimerSystem's own comment gives.
+                new RevengeMarkTimeoutSystem(),
+                // Max's Fire Mastery traits - reacts to Combat.qtn's OnCriticalHit/
+                // OnHealthDamageApplied/OnEntityKilled (Flashpoint/Cremation/Wildfire), plus its own
+                // per-tick ExplosionOnConditionalHit.CooldownRemaining ticking. Independent of
+                // MaxVendettaSystem above - see docs/max-vendetta-fire-mastery.md.
+                new MaxFireMasteryReactionSystem(),
+                // Uncontrolled Fury - reacts to Combat.qtn's OnEntityKilled, extending the current
+                // Overdrive activation per kill up to a per-activation cap. Independent of
+                // MaxVendettaSystem (Vendetta Rush's own extension lives there instead, scoped to a
+                // Vendetta-consuming kill specifically) - see docs/max-vendetta-fire-mastery.md.
+                new MaxOverdriveReactionSystem(),
+                // Pixie's Demolition Mastery traits - reacts to Combat.qtn's
+                // OnExplosionCriticalHit/OnAreaExplosionDetonated (Volatile Payload/Mini Ordnance).
+                // Direct Hit/Concussive Force are NOT here - they hook directly into
+                // HitEffectUtility.ApplyInRadius/ApplyDamageInRadius instead (see
+                // DemolitionMasteryUtility), since they need the blast's center/radius, not just a
+                // signal payload.
+                new PixieDemolitionMasterySystem(),
+                // Brute's Knockback Mastery traits - reacts to PlayerMovement.qtn's OnPlayerLanded
+                // (Ground Pound). Crushing Blow/Lasting Impact/Overwhelming Force are NOT here - they
+                // hook directly into DamageUtility.ResolveOutgoingDamage/StatusEffectUtility.
+                // ApplyStun/CharacterStats.KnockbackMultiplier instead, same reasoning
+                // PixieDemolitionMasterySystem's own comment gives for its non-signal traits. No
+                // ordering dependency on AutoJumpSystem - signals dispatch synchronously wherever
+                // they're raised, regardless of either system's registration order.
+                new BruteKnockbackMasterySystem(),
                 // Must run after KCCSystem (KCC.SetActive/Teleport need this tick's movement already
                 // resolved) and after AimSystem (DashSkillData reads Aim.Angle as a facing fallback).
                 new SkillSystem(),
@@ -153,7 +199,10 @@
                 // this also calls f.Destroy.
                 new EnemyLifecycleSystem(),
                 // Must be last: an entity on its final tick still gets to act (a lingering area deals
-                // its closing damage) before this destroys it.
+                // its closing damage) before this destroys it - and, for anything carrying
+                // ExplodeOnDestroy (Pixie's Dash Ascension "Leave Explosive Bomb", so far), detonates
+                // the instant before being destroyed (see DestroyAfterTimeSystem's own optional
+                // check, ExplodeOnDestroy.qtn).
                 new DestroyAfterTimeSystem()
             ));
     }

@@ -1,0 +1,15 @@
+// A world-placed pickup that offers the level-up upgrade-choice screen forced to ONE
+// Editor-authored category, instead of the level-driven sequence a real level-up follows - see
+// docs/chests.md. Collected the same walk-into-radius auto-collect way as ExpOrb/ScrapOrb/
+// RiftShardOrb/CoinOrb (see ChestSystem) rather than through a new interact button - this project
+// has no interact-button/prompt pattern anywhere today, and every existing pickup is pure
+// auto-collect. Kind is set once in the Editor per chest prototype/instance (e.g. a "Weapon Chest"
+// vs. a "Global Upgrade Chest") - NOT randomized at runtime, unlike a level-up's own per-level
+// sequence lookup (see LevelUpConfig.LevelSequence).
+component Chest
+{
+    LevelUpCategory Kind;
+    FP PickupRadius;
+    Boolean Opened;   // guards against being collected twice while the screen it opened is still
+                       // resolving - ChestSystem destroys the entity once this is true.
+}

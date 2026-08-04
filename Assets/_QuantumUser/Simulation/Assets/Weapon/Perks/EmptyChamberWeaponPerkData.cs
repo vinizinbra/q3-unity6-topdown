@@ -10,11 +10,12 @@ namespace Quantum
         public FP Radius = 4;
         public FP Knockback = 10;
 
-        public override void Apply(Frame f, Weapon* weapon)
+        public override void Apply(Frame f, EntityRef owner, Weapon* weapon)
         {
-            weapon->HasEmptyChamber = true;
-            weapon->EmptyChamberRadius = FPMath.Max(weapon->EmptyChamberRadius, Radius);
-            weapon->EmptyChamberKnockback = FPMath.Max(weapon->EmptyChamberKnockback, Knockback);
+            f.AddOrGet<WeaponReloadHooks>(owner, out var hooks);
+            hooks->HasEmptyChamber = true;
+            hooks->EmptyChamberRadius = FPMath.Max(hooks->EmptyChamberRadius, Radius);
+            hooks->EmptyChamberKnockback = FPMath.Max(hooks->EmptyChamberKnockback, Knockback);
         }
 
         protected override object[] DescriptionArgs => new object[] { Radius.AsFloat };

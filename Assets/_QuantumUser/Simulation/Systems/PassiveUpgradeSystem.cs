@@ -17,6 +17,7 @@ namespace Quantum
                 return;
 
             PassiveUpgradeUtility.Grant(f, filter.Entity, command.Upgrade);
+            LevelUpUtility.RecordHistory(f, filter.Entity, LevelUpPoolKind.PassiveUpgrade, new AssetRef<UpgradeData>(command.Upgrade.Id));
             Log.Debug($"[Passive] {filter.Entity} was granted Passive Upgrade {command.Upgrade} via command");
         }
 

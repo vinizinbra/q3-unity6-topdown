@@ -10,11 +10,12 @@ namespace Quantum
         public FP Radius = 8;
         public FP DamageMultiplier = FP._1;
 
-        public override void Apply(Frame f, Weapon* weapon)
+        public override void Apply(Frame f, EntityRef owner, Weapon* weapon)
         {
-            weapon->HasCriticalRebound = true;
-            weapon->CriticalReboundRadius = FPMath.Max(weapon->CriticalReboundRadius, Radius);
-            weapon->CriticalReboundDamageMultiplier = FPMath.Max(weapon->CriticalReboundDamageMultiplier, DamageMultiplier);
+            f.AddOrGet<WeaponOnCritReactions>(owner, out var reactions);
+            reactions->HasCriticalRebound = true;
+            reactions->CriticalReboundRadius = FPMath.Max(reactions->CriticalReboundRadius, Radius);
+            reactions->CriticalReboundDamageMultiplier = FPMath.Max(reactions->CriticalReboundDamageMultiplier, DamageMultiplier);
         }
 
         protected override object[] DescriptionArgs => new object[] { DamageMultiplier.AsFloat * 100f, Radius.AsFloat };

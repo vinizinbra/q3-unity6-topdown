@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7afd1457b67244c8a818469f3871d7e3, type: 3}
+  m_Name: TooAngryToDie
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.TooAngryToDieSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Max/M_HeroSkill/M_HeroSkillUpgrades/Overdrive/TooAngryToDie
+    Guid:
+      Value: 476868000656894363
+  Icon: {fileID: -724751891, guid: 9a944adac56bb4e8dbce2f7bab4127e3, type: 3}
+  DisplayName: Too Angry to Die
+  Rarity: 2
+  Priority: 0
+  Phase: 5
+  Interval:
+    RawValue: 0
+  Activated: 0
+  Description: Lethal damage during Overdrive leaves you at 1 Health and immediately
+    ends Overdrive.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0

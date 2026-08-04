@@ -2,17 +2,16 @@ namespace Quantum
 {
     using Photon.Deterministic;
 
-    // Applies Root + Burn together - the same compound Fire+Rock produces via the Magma Prison
-    // reaction (see docs/elemental-reactions.md), but as a single freely-authorable HitEffectData
-    // any skill/weapon perk can drop onto its own Effects list, independent of actually landing both
-    // elements. Unlike RootEffectData/FreezeEffectData, this needs no new EffectConfig fields of its
-    // own: RootDuration and BurnDuration/BurnDamagePercent/BurnFloorPercent are already established
-    // as freely-shared generic knobs (RootDuration was scoped generic from the start; Burn's fields
-    // already back BurnEffectData/the Fire weapon-proc/TryApplyGuaranteedBurn), so this is just
-    // RootEffectData and BurnEffectData bundled into one authoring convenience - NOT
-    // ElementalReactionConfig.MagmaPrisonRootDuration, which stays dedicated to the actual reaction
-    // (that field has a live consumer - the reaction itself - so sharing it here would silently
-    // couple this effect's tuning to Fire+Rock's own balance).
+    // Applies Root + Burn together - the same compound effect the old Fire+Rock "Magma Prison"
+    // elemental reaction used to produce, before that reaction was retired when Rift Mark replaced
+    // the pairwise reaction scan (see docs/elemental-reactions.md's "What was retired") - this
+    // freely-authorable HitEffectData is now the only way to get it, any skill/weapon perk can drop
+    // it onto its own Effects list independent of landing any particular element. Needs no dedicated
+    // EffectConfig fields of its own: RootDuration and BurnDuration/BurnDamagePercent/BurnFloorPercent
+    // are already established as freely-shared generic knobs (RootDuration was scoped generic from
+    // the start; Burn's fields already back BurnEffectData/the Fire weapon-proc/
+    // TryApplyGuaranteedBurn), so this is just RootEffectData and BurnEffectData bundled into one
+    // authoring convenience.
     public unsafe class MagmaPrisonEffectData : HitEffectData
     {
         public override void Apply(Frame f, ref HitEffectContext context)

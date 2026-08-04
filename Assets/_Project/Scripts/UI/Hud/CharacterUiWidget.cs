@@ -59,19 +59,27 @@ public class CharacterUiWidget : MonoBehaviour
 
     [Header("Status Effects")]
     [SerializeField] private StatusIndicator burnIndicator;
-    [SerializeField, Tooltip("Void does nothing by itself - this just shows a target has been primed for whichever elemental reaction (Explosion/Freeze/Knockback) lands next. See docs/elemental-reactions.md.")]
-    private StatusIndicator voidIndicator;
+    [SerializeField, Tooltip("Rift Mark does nothing by itself - timerText shows the target's current stack count as \"xN\" (not a countdown), priming it for whichever elemental reaction (Detonation/Deep Freeze/Rupture/Overload/Singularity) lands next. See docs/elemental-reactions.md.")]
+    private StatusIndicator riftMarkIndicator;
     [SerializeField] private StatusIndicator iceIndicator;
-    [SerializeField, Tooltip("Void+Ice's Freeze reaction - stretches the entity's own attack anticipation/windup (StatusEffectUtility.GetAnticipationMultiplier), not a lockout, so it's shown separately from Stun. See docs/elemental-reactions.md.")]
-    private StatusIndicator freezeIndicator;
+    [SerializeField, Tooltip("Ice+RiftMark's Deep Freeze reaction - stretches the entity's own attack anticipation/windup (StatusEffectUtility.GetAnticipationMultiplier), not a lockout, so it's shown separately from Stun. See docs/elemental-reactions.md.")]
+    private StatusIndicator deepFreezeIndicator;
     [SerializeField] private StatusIndicator stunIndicator;
     [SerializeField, Tooltip("Root pins movement only (the entity can still attack), unlike Stun which freezes everything - shown separately so both can be visible at once if somehow both are active.")]
     private StatusIndicator rootIndicator;
-    [SerializeField] private StatusIndicator breakIndicator;
-    [SerializeField, Tooltip("Mirror of Break - reduces the entity's own outgoing damage instead of incoming. Applied to enemies by Brute's Protector Aura.")]
+    [SerializeField] private StatusIndicator ruptureIndicator;
+    [SerializeField, Tooltip("Mirror of Rupture - reduces the entity's own outgoing damage instead of incoming. Applied to enemies by Brute's Protector Aura.")]
     private StatusIndicator intimidateIndicator;
-    [SerializeField, Tooltip("Shown while the entity carries ExplodeOnDeath (see DamageUtility.TryMarkExplodeOnDeath) - a separate component from StatusEffects, not the damage-multiplier Break above despite the similar name.")]
+    [SerializeField, Tooltip("Shown while the entity carries ExplodeOnDeath (see DamageUtility.TryMarkExplodeOnDeath) - a separate component from StatusEffects, not the damage-multiplier Rupture above despite the similar name.")]
     private StatusIndicator explodeOnDeathIndicator;
+    [SerializeField, Tooltip("Shown on this entity while it is marked by a Vendetta holder's RevengeMark (any number of enemies can carry one simultaneously) - a separate component from StatusEffects, same shape as explodeOnDeathIndicator above. See docs/max-vendetta-fire-mastery.md.")]
+    private StatusIndicator revengeMarkIndicator;
+
+    [Header("Defense States (Brute)")]
+    [SerializeField, Tooltip("Shown on whoever is CURRENTLY benefiting from a Guardian-ascended Brute's Protector Aura (any player, not just Brute himself) - StatusEffects.GuardianDamageReductionRemaining, its own dedicated field so it can't collide with Max's Too Angry to Die.")]
+    private StatusIndicator guardianAuraIndicator;
+    [SerializeField, Tooltip("Shown on Brute himself while his Juggernaut Hero Skill is actively channeling (JuggernautCharge component present) - that's when CharacterStats.DamageReduction is temporarily boosted, see JuggernautSkillData.Begin/End.")]
+    private StatusIndicator juggernautChannelIndicator;
 
     private Canvas _canvas;
     private Camera _worldCamera;
@@ -170,6 +178,7 @@ public class CharacterUiWidget : MonoBehaviour
         UpdateWeapon(frame);
         UpdateStatusEffects(frame);
         UpdateExplodeOnDeath(frame);
+        UpdateRevengeMark(frame);
     }
 
     private void FollowTarget()
@@ -290,13 +299,15 @@ public class CharacterUiWidget : MonoBehaviour
         bool hasStatus = frame.TryGet<StatusEffects>(_entityRef, out var status);
 
         UpdateBurn(hasStatus, status);
-        UpdateVoid(hasStatus, status);
+        UpdateRiftMark(hasStatus, status);
         UpdateIce(hasStatus, status);
-        UpdateFreeze(hasStatus, status);
+        UpdateDeepFreeze(hasStatus, status);
         UpdateStun(hasStatus, status);
         UpdateRoot(hasStatus, status);
-        UpdateBreak(hasStatus, status);
+        UpdateRupture(hasStatus, status);
         UpdateIntimidate(hasStatus, status);
+        UpdateGuardianAura(hasStatus, status);
+        UpdateJuggernautChannel(frame);
     }
 
     private void UpdateBurn(bool hasStatus, StatusEffects status)
@@ -308,13 +319,15 @@ public class CharacterUiWidget : MonoBehaviour
             burnIndicator.SetTimer($"{status.BurnRemaining.AsFloat:F1}s");
     }
 
-    private void UpdateVoid(bool hasStatus, StatusEffects status)
+    private void UpdateRiftMark(bool hasStatus, StatusEffects status)
     {
-        bool shown = hasStatus && status.VoidRemaining > FP._0;
-        voidIndicator.SetShown(shown);
+        bool shown = hasStatus && status.RiftMarkStacks > 0;
+        riftMarkIndicator.SetShown(shown);
 
-        if (shown)
-            voidIndicator.SetTimer($"{status.VoidRemaining.AsFloat:F1}s");
+        if (shown == false)
+            return;
+
+        riftMarkIndicator.SetTimer($"x{status.RiftMarkStacks}");
     }
 
     private void UpdateIce(bool hasStatus, StatusEffects status)
@@ -326,13 +339,13 @@ public class CharacterUiWidget : MonoBehaviour
             iceIndicator.SetTimer($"{status.IceRemaining.AsFloat:F1}s");
     }
 
-    private void UpdateFreeze(bool hasStatus, StatusEffects status)
+    private void UpdateDeepFreeze(bool hasStatus, StatusEffects status)
     {
         bool shown = hasStatus && status.AnticipationSlowRemaining > FP._0;
-        freezeIndicator.SetShown(shown);
+        deepFreezeIndicator.SetShown(shown);
 
         if (shown)
-            freezeIndicator.SetTimer($"{status.AnticipationSlowRemaining.AsFloat:F1}s");
+            deepFreezeIndicator.SetTimer($"{status.AnticipationSlowRemaining.AsFloat:F1}s");
     }
 
     private void UpdateStun(bool hasStatus, StatusEffects status)
@@ -353,13 +366,13 @@ public class CharacterUiWidget : MonoBehaviour
             rootIndicator.SetTimer($"{status.RootRemaining.AsFloat:F1}s");
     }
 
-    private void UpdateBreak(bool hasStatus, StatusEffects status)
+    private void UpdateRupture(bool hasStatus, StatusEffects status)
     {
-        bool shown = hasStatus && status.BreakRemaining > FP._0;
-        breakIndicator.SetShown(shown);
+        bool shown = hasStatus && status.RuptureRemaining > FP._0;
+        ruptureIndicator.SetShown(shown);
 
         if (shown)
-            breakIndicator.SetTimer($"{status.BreakRemaining.AsFloat:F1}s");
+            ruptureIndicator.SetTimer($"{status.RuptureRemaining.AsFloat:F1}s");
     }
 
     private void UpdateIntimidate(bool hasStatus, StatusEffects status)
@@ -369,6 +382,23 @@ public class CharacterUiWidget : MonoBehaviour
 
         if (shown)
             intimidateIndicator.SetTimer($"{status.IntimidateRemaining.AsFloat:F1}s");
+    }
+
+    private void UpdateGuardianAura(bool hasStatus, StatusEffects status)
+    {
+        bool shown = hasStatus && status.GuardianDamageReductionRemaining > FP._0;
+        guardianAuraIndicator.SetShown(shown);
+
+        if (shown)
+            guardianAuraIndicator.SetTimer($"{status.GuardianDamageReductionRemaining.AsFloat:F1}s");
+    }
+
+    // Not part of StatusEffects - JuggernautCharge is added at Begin/removed at End (see
+    // JuggernautSkillData), so its mere presence already IS the "is this active right now" check, no
+    // separate Remaining timer to read.
+    private void UpdateJuggernautChannel(Frame frame)
+    {
+        juggernautChannelIndicator.SetShown(frame.Has<JuggernautCharge>(_entityRef));
     }
 
     // Own component, not part of StatusEffects - see DamageUtility.TryMarkExplodeOnDeath/ExplodeOnDeath.
@@ -381,6 +411,19 @@ public class CharacterUiWidget : MonoBehaviour
 
         if (shown)
             explodeOnDeathIndicator.SetTimer($"{explode.Remaining.AsFloat:F1}s");
+    }
+
+    // Own component, not part of StatusEffects - see Vendetta.qtn/MaxVendettaSystem. RevengeMark is
+    // the target-side mirror of whichever Max entity currently has this entity marked (RemainingDuration
+    // kept in lockstep by MaxVendettaSystem/RevengeMarkTimeoutSystem), so this entity's widget can
+    // show "you are marked" without any cross-entity lookup.
+    private void UpdateRevengeMark(Frame frame)
+    {
+        bool shown = frame.TryGet<RevengeMark>(_entityRef, out var mark) && mark.RemainingDuration > FP._0;
+        revengeMarkIndicator.SetShown(shown);
+
+        if (shown)
+            revengeMarkIndicator.SetTimer($"{mark.RemainingDuration.AsFloat:F1}s");
     }
 
     // Ceil rather than round, so a surviving sliver of health never reads as a dead "0".
@@ -408,9 +451,10 @@ public class CharacterUiWidget : MonoBehaviour
         component.gameObject.SetActive(shown);
     }
 
-    // One per status type (Burn/Void/Ice/Freeze/Stun/Break/Intimidate) - root is whatever the Inspector wires up as
+    // One per status type (Burn/RiftMark/Ice/DeepFreeze/Stun/Rupture/Intimidate) - root is whatever the Inspector wires up as
     // that status's visual (icon, background, whatever), shown only while the status is active;
-    // timerText is optional, same as every TMP_Text elsewhere in this widget.
+    // timerText is optional, same as every TMP_Text elsewhere in this widget. riftMarkIndicator
+    // repurposes timerText to show stack count ("xN") instead of a countdown.
     [System.Serializable]
     private class StatusIndicator
     {

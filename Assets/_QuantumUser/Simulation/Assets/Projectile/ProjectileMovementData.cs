@@ -9,18 +9,21 @@ namespace Quantum
         // lob instead falls onto the ground the target stands on - see BallisticProjectileMovementData.
         public virtual bool AimsAtTargetCenter => true;
 
-        // Free-aimed shots have only a direction, so the movement invents a point to aim at.
-        public ProjectileLaunch GetLaunch(FPVector3 origin, FPVector3 direction)
+        // Free-aimed shots have only a direction and no real target entity to lead, so the movement
+        // invents a point to aim at and solves onto it exactly as given.
+        public ProjectileLaunch GetLaunch(Frame f, FPVector3 origin, FPVector3 direction)
         {
-            return GetLaunchToTarget(origin, GetTargetPoint(origin, direction));
+            return GetLaunchToTarget(f, origin, GetTargetPoint(origin, direction), EntityRef.None);
         }
 
         // Callers holding the exact point to hit (a weapon's locked target, an enemy attack's
         // ground-corrected spot) skip GetTargetPoint so the shot is solved onto that point.
-        public ProjectileLaunch GetLaunchToTarget(FPVector3 origin, FPVector3 target)
+        // targetEntity is the entity that point came from, if any - only BallisticProjectileMovementData's
+        // PredictionTime lead currently reads it (see that class); every other movement ignores it.
+        public ProjectileLaunch GetLaunchToTarget(Frame f, FPVector3 origin, FPVector3 target, EntityRef targetEntity)
         {
             FPVector3 spawnPosition = GetSpawnPosition(origin, target);
-            ProjectileLaunch launch = SolveLaunch(spawnPosition, target);
+            ProjectileLaunch launch = SolveLaunch(f, spawnPosition, target, targetEntity);
 
             launch.SpawnPosition = spawnPosition;
 
@@ -41,7 +44,7 @@ namespace Quantum
             return origin + direction;
         }
 
-        protected abstract ProjectileLaunch SolveLaunch(FPVector3 spawnPosition, FPVector3 target);
+        protected abstract ProjectileLaunch SolveLaunch(Frame f, FPVector3 spawnPosition, FPVector3 target, EntityRef targetEntity);
 
         // position is the projectile's current world position - only a movement that re-aims over
         // time (HomingProjectileMovementData) needs it; anything else ignores the parameter.

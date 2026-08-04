@@ -231,6 +231,7 @@ namespace Quantum.Prototypes.Unity {
     public QBoolean Grounded;
     public Byte SpawnDepth;
     public FP TraveledDistance;
+    public Byte PelletIndex;
     public FP SpeedMultiplier;
     partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.ProjectilePrototype prototype);
     public override Quantum.Prototypes.ProjectilePrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
@@ -253,7 +254,37 @@ namespace Quantum.Prototypes.Unity {
       converter.Convert(this.Grounded, out result.Grounded);
       converter.Convert(this.SpawnDepth, out result.SpawnDepth);
       converter.Convert(this.TraveledDistance, out result.TraveledDistance);
+      converter.Convert(this.PelletIndex, out result.PelletIndex);
       converter.Convert(this.SpeedMultiplier, out result.SpeedMultiplier);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
+  public unsafe partial class RevengeMarkPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.RevengeMarkPrototype> {
+    public Quantum.QuantumEntityPrototype MarkedBy;
+    public FP RemainingDuration;
+    public FP StoredDamage;
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.RevengeMarkPrototype prototype);
+    public override Quantum.Prototypes.RevengeMarkPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.RevengeMarkPrototype();
+      converter.Convert(this.MarkedBy, out result.MarkedBy);
+      converter.Convert(this.RemainingDuration, out result.RemainingDuration);
+      converter.Convert(this.StoredDamage, out result.StoredDamage);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
+  public unsafe partial class RiftDashMarkTrackerPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.RiftDashMarkTrackerPrototype> {
+    [ArrayLengthAttribute(8)]
+    public Quantum.QuantumEntityPrototype[] MarkedEntities = new Quantum.QuantumEntityPrototype[8];
+    public Byte MarkedCount;
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.RiftDashMarkTrackerPrototype prototype);
+    public override Quantum.Prototypes.RiftDashMarkTrackerPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.RiftDashMarkTrackerPrototype();
+      converter.Convert(this.MarkedEntities, out result.MarkedEntities);
+      converter.Convert(this.MarkedCount, out result.MarkedCount);
       ConvertUser(converter, ref result);
       return result;
     }
@@ -297,21 +328,30 @@ namespace Quantum.Prototypes.Unity {
     public FP BurnDamagePerTick;
     public Quantum.QuantumEntityPrototype BurnOwner;
     public Quantum.QEnum8<DamageSource> BurnSource;
-    public FP VoidRemaining;
-    public FP ExplosionCooldownRemaining;
-    public FP FreezeCooldownRemaining;
-    public FP KnockbackCooldownRemaining;
-    public FP MagmaPrisonCooldownRemaining;
-    public FP StunCooldownRemaining;
-    public FP BreakCooldownRemaining;
+    public Byte RiftMarkStacks;
+    public FP RiftMarkRemaining;
+    public FP RiftMarkReactionLockoutRemaining;
+    public FP DetonationCooldownRemaining;
+    public FP DeepFreezeCooldownRemaining;
+    public FP OverloadCooldownRemaining;
+    public FP RuptureCooldownRemaining;
+    public FP SingularityCooldownRemaining;
+    [ArrayLengthAttribute(8)]
+    public FP[] MarkApplicationCooldowns = new FP[8];
+    public QBoolean FirstContactTriggered;
+    public FP OverflowingRiftCooldownRemaining;
+    [ArrayLengthAttribute(4)]
+    public Quantum.QuantumEntityPrototype[] FracturedPresenceExposedBy = new Quantum.QuantumEntityPrototype[4];
+    [ArrayLengthAttribute(4)]
+    public FP[] FracturedPresenceExposureTime = new FP[4];
     public FP IceRemaining;
     public FP IceSpeedMultiplier;
     public FP StunRemaining;
     public FP AnticipationSlowRemaining;
     public FP AnticipationSlowMultiplier;
     public FP RootRemaining;
-    public FP BreakRemaining;
-    public FP BreakDamageMultiplier;
+    public FP RuptureRemaining;
+    public FP RuptureDamageMultiplier;
     [ArrayLengthAttribute(4)]
     public FP[] HasteRemaining = new FP[4];
     [ArrayLengthAttribute(4)]
@@ -324,10 +364,13 @@ namespace Quantum.Prototypes.Unity {
     public FP TimeDilationMultiplier;
     public FP DamageReductionRemaining;
     public FP DamageReductionAmount;
+    public FP GuardianDamageReductionRemaining;
+    public FP GuardianDamageReductionAmount;
     public FP IntimidateRemaining;
     public FP IntimidateDamageMultiplier;
     public FP KnockbackTakenRemaining;
     public FP KnockbackTakenMultiplier;
+    public FP CheatDeathImmunityRemaining;
     partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.StatusEffectsPrototype prototype);
     public override Quantum.Prototypes.StatusEffectsPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
       var result = new Quantum.Prototypes.StatusEffectsPrototype();
@@ -336,21 +379,27 @@ namespace Quantum.Prototypes.Unity {
       converter.Convert(this.BurnDamagePerTick, out result.BurnDamagePerTick);
       converter.Convert(this.BurnOwner, out result.BurnOwner);
       converter.Convert(this.BurnSource, out result.BurnSource);
-      converter.Convert(this.VoidRemaining, out result.VoidRemaining);
-      converter.Convert(this.ExplosionCooldownRemaining, out result.ExplosionCooldownRemaining);
-      converter.Convert(this.FreezeCooldownRemaining, out result.FreezeCooldownRemaining);
-      converter.Convert(this.KnockbackCooldownRemaining, out result.KnockbackCooldownRemaining);
-      converter.Convert(this.MagmaPrisonCooldownRemaining, out result.MagmaPrisonCooldownRemaining);
-      converter.Convert(this.StunCooldownRemaining, out result.StunCooldownRemaining);
-      converter.Convert(this.BreakCooldownRemaining, out result.BreakCooldownRemaining);
+      converter.Convert(this.RiftMarkStacks, out result.RiftMarkStacks);
+      converter.Convert(this.RiftMarkRemaining, out result.RiftMarkRemaining);
+      converter.Convert(this.RiftMarkReactionLockoutRemaining, out result.RiftMarkReactionLockoutRemaining);
+      converter.Convert(this.DetonationCooldownRemaining, out result.DetonationCooldownRemaining);
+      converter.Convert(this.DeepFreezeCooldownRemaining, out result.DeepFreezeCooldownRemaining);
+      converter.Convert(this.OverloadCooldownRemaining, out result.OverloadCooldownRemaining);
+      converter.Convert(this.RuptureCooldownRemaining, out result.RuptureCooldownRemaining);
+      converter.Convert(this.SingularityCooldownRemaining, out result.SingularityCooldownRemaining);
+      converter.Convert(this.MarkApplicationCooldowns, out result.MarkApplicationCooldowns);
+      converter.Convert(this.FirstContactTriggered, out result.FirstContactTriggered);
+      converter.Convert(this.OverflowingRiftCooldownRemaining, out result.OverflowingRiftCooldownRemaining);
+      converter.Convert(this.FracturedPresenceExposedBy, out result.FracturedPresenceExposedBy);
+      converter.Convert(this.FracturedPresenceExposureTime, out result.FracturedPresenceExposureTime);
       converter.Convert(this.IceRemaining, out result.IceRemaining);
       converter.Convert(this.IceSpeedMultiplier, out result.IceSpeedMultiplier);
       converter.Convert(this.StunRemaining, out result.StunRemaining);
       converter.Convert(this.AnticipationSlowRemaining, out result.AnticipationSlowRemaining);
       converter.Convert(this.AnticipationSlowMultiplier, out result.AnticipationSlowMultiplier);
       converter.Convert(this.RootRemaining, out result.RootRemaining);
-      converter.Convert(this.BreakRemaining, out result.BreakRemaining);
-      converter.Convert(this.BreakDamageMultiplier, out result.BreakDamageMultiplier);
+      converter.Convert(this.RuptureRemaining, out result.RuptureRemaining);
+      converter.Convert(this.RuptureDamageMultiplier, out result.RuptureDamageMultiplier);
       converter.Convert(this.HasteRemaining, out result.HasteRemaining);
       converter.Convert(this.HasteAttackSpeedMultiplier, out result.HasteAttackSpeedMultiplier);
       converter.Convert(this.HasteSource, out result.HasteSource);
@@ -360,10 +409,38 @@ namespace Quantum.Prototypes.Unity {
       converter.Convert(this.TimeDilationMultiplier, out result.TimeDilationMultiplier);
       converter.Convert(this.DamageReductionRemaining, out result.DamageReductionRemaining);
       converter.Convert(this.DamageReductionAmount, out result.DamageReductionAmount);
+      converter.Convert(this.GuardianDamageReductionRemaining, out result.GuardianDamageReductionRemaining);
+      converter.Convert(this.GuardianDamageReductionAmount, out result.GuardianDamageReductionAmount);
       converter.Convert(this.IntimidateRemaining, out result.IntimidateRemaining);
       converter.Convert(this.IntimidateDamageMultiplier, out result.IntimidateDamageMultiplier);
       converter.Convert(this.KnockbackTakenRemaining, out result.KnockbackTakenRemaining);
       converter.Convert(this.KnockbackTakenMultiplier, out result.KnockbackTakenMultiplier);
+      converter.Convert(this.CheatDeathImmunityRemaining, out result.CheatDeathImmunityRemaining);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
+  public unsafe partial class WeaponHitTrackingPerksPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.WeaponHitTrackingPerksPrototype> {
+    public QBoolean HasFractureRounds;
+    public Byte FractureRoundsInterval;
+    public Byte FractureHitCounter;
+    public QBoolean HasUnstablePayload;
+    public QBoolean HasFocusedBreach;
+    public FP FocusedBreachThreshold;
+    public Quantum.QuantumEntityPrototype FocusedBreachTarget;
+    public FP FocusedBreachContactTime;
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.WeaponHitTrackingPerksPrototype prototype);
+    public override Quantum.Prototypes.WeaponHitTrackingPerksPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.WeaponHitTrackingPerksPrototype();
+      converter.Convert(this.HasFractureRounds, out result.HasFractureRounds);
+      converter.Convert(this.FractureRoundsInterval, out result.FractureRoundsInterval);
+      converter.Convert(this.FractureHitCounter, out result.FractureHitCounter);
+      converter.Convert(this.HasUnstablePayload, out result.HasUnstablePayload);
+      converter.Convert(this.HasFocusedBreach, out result.HasFocusedBreach);
+      converter.Convert(this.FocusedBreachThreshold, out result.FocusedBreachThreshold);
+      converter.Convert(this.FocusedBreachTarget, out result.FocusedBreachTarget);
+      converter.Convert(this.FocusedBreachContactTime, out result.FocusedBreachContactTime);
       ConvertUser(converter, ref result);
       return result;
     }

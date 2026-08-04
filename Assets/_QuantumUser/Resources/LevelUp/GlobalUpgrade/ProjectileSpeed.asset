@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/GlobalUpgrade/ProjectileSpeed
     Guid:
       Value: 395994771215721936
-  Icon: {fileID: 0}
+  Icon: {fileID: 2061635622, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
   DisplayName: Projectile Speed
   Rarity: 0
   MaxPicks: 3

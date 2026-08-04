@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapon/WeaponPerk/InfiniteEcho
     Guid:
       Value: 418014237698802465
-  Icon: {fileID: 0}
+  Icon: {fileID: 301000197, guid: c6be27ae176d44f3594332e40fa484ed, type: 3}
   DisplayName: Infinite Echo
   Rarity: 3
   Description: Every projectile repeats once after {0:0.0}s

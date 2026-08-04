@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/GlobalUpgrade/MagazineSize
     Guid:
       Value: 351819223430686945
-  Icon: {fileID: 0}
+  Icon: {fileID: 1544372281, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
   DisplayName: Magazine Size
   Rarity: 0
   MaxPicks: 3

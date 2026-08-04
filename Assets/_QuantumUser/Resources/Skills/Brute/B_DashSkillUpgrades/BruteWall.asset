@@ -16,15 +16,16 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/B_DashSkillUpgrades/BruteWall
     Guid:
       Value: 397442759715409918
-  Icon: {fileID: 0}
-  DisplayName: 
+  Icon: {fileID: -1369417621, guid: 1398529c57dc443e7a3096f4ad470a4c, type: 3}
+  DisplayName: Wall Prototype
   Rarity: 0
   Priority: 0
   Phase: 2
   Interval:
     RawValue: 6554
   Activated: 1
-  Description: 
+  Description: Dashing leaves behind a temporary wall that blocks enemies and deals
+    {0} damage to any caught in it.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

@@ -62,6 +62,13 @@ namespace Quantum
                             : origin + moveDelta;
 
                         Advance(filter.Transform3D, destination, direction);
+
+                        // A fused area bomb (AreaHitData.PlantedFuseTime > 0) doesn't detonate off
+                        // whatever's left of its own flight-time budget - it plants here with a
+                        // fresh, fixed fuse. See TryPlant.
+                        if (justGrounded == true && TryPlant(f, ref filter, projectileData, hitData as AreaHitData, destination))
+                            return;
+
                         TryExpire(f, ref filter);
                         return;
                     }
@@ -129,6 +136,43 @@ namespace Quantum
             f.FindAsset(projectileData.Hit).ApplyExpire(f, filter.Projectile, filter.Transform3D->Position);
 
             Destroy(f, filter.Entity, filter.Projectile, filter.Transform3D->Position);
+        }
+
+        // Swaps a just-landed AreaHitData projectile off Projectile-driven flight and onto
+        // DestroyAfterTime/ExplodeOnDestroy/AreaOwner with a fresh countdown, instead of letting it
+        // sit out whatever's left of its own RemainingLifetime (see AreaHitData.PlantedFuseTime's own
+        // comment for why that was inconsistent). No-op (returns false, entity stays a normal settled
+        // Projectile) when areaHit is null or PlantedFuseTime <= 0 - every existing AreaHitData asset
+        // defaults to 0, so nothing already in the game is affected.
+        private static bool TryPlant(Frame f, ref Filter filter, ProjectileDataAsset projectileData, AreaHitData areaHit, FPVector3 position)
+        {
+            if (areaHit == null || areaHit.PlantedFuseTime <= FP._0)
+                return false;
+
+            Projectile* projectile = filter.Projectile;
+
+            // Same "report back to the firing SkillSlot" contract Destroy() honors below - this
+            // entity is about to stop being a Projectile, so nothing else will ever clear
+            // ProjectilePending for it otherwise, permanently blocking that slot.
+            ClearSourceSlot(f, projectile, position);
+
+            f.AddOrGet<AreaOwner>(filter.Entity, out var areaOwner);
+            areaOwner->Owner = projectile->Owner;
+            areaOwner->Source = projectile->Source;
+            areaOwner->Element = projectile->Element;
+
+            f.AddOrGet<ExplodeOnDestroy>(filter.Entity, out var explode);
+            explode->Damage = projectile->Damage;
+            explode->SpawnDepth = projectile->SpawnDepth;
+            explode->Explosion = new AssetRef<AreaHitData>(projectileData.Hit.Id);
+            explode->TriggersSpawnUpgrades = areaHit.TriggersSpawnUpgrades;
+
+            f.AddOrGet<DestroyAfterTime>(filter.Entity, out var fuse);
+            fuse->RemainingTime = areaHit.PlantedFuseTime;
+
+            f.Remove<Projectile>(filter.Entity);
+
+            return true;
         }
 
         // Hit3D.Point is only filled when a query passes QueryOptions.ComputeDetailedInfo, so it

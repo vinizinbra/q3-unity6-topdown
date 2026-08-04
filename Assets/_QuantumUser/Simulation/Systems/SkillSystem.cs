@@ -58,6 +58,7 @@ namespace Quantum
 
             if (AddUpgrade(f, slot, command.Upgrade) == true)
             {
+                LevelUpUtility.RecordHistory(f, filter.Entity, LevelUpPoolKind.SkillUpgrade, new AssetRef<UpgradeData>(command.Upgrade.Id));
                 Log.Debug($"[Skill] {filter.Entity} was granted {command.Upgrade} on {command.Slot} via command");
             }
         }

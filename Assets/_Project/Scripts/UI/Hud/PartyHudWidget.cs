@@ -19,6 +19,8 @@ public class PartyHudWidget : MonoBehaviour
     private HealthUiWidget healthWidget;
     [SerializeField, Tooltip("Left empty, auto-populated via GetComponentInChildren.")]
     private ShieldUiWidget shieldWidget;
+    [SerializeField, Tooltip("Current combined damage reduction % (any source - Juggernaut's own channel, an ally's Guardian aura, etc.). Left empty, auto-populated via GetComponentInChildren.")]
+    private DamageReductionUiWidget damageReductionWidget;
 
     [Header("Skills")]
     [SerializeField, Tooltip("Left empty, auto-populated via GetComponentsInChildren (Awake, or the Populate Children button below) - only set these manually to override which widgets belong to this slot (e.g. excluding one).")]
@@ -33,6 +35,12 @@ public class PartyHudWidget : MonoBehaviour
     private RemixUiWidget remixWidget;
     [SerializeField, Tooltip("Lux's Scrap stacks. Left empty, auto-populated via GetComponentInChildren.")]
     private ScrapUiWidget scrapWidget;
+    [SerializeField, Tooltip("Brute's Juggernaut Stack Damage counter. Left empty, auto-populated via GetComponentInChildren.")]
+    private JuggernautStackDamageUiWidget juggernautStackDamageWidget;
+
+    [Header("Upgrade History")]
+    [SerializeField, Tooltip("Grid of icons for every upgrade this slot's player has ever picked (see UpgradeHistory in LevelUp.qtn) - Skill Upgrade/Global Upgrade/Passive Upgrade/Rift Mutation alike; Weapon Perk excluded. Left empty, auto-populated via GetComponentInChildren.")]
+    private PartyHistoryUpgradeContainer upgradeHistoryContainer;
 
     public EntityRef BoundEntityRef { get; private set; }
 
@@ -56,6 +64,9 @@ public class PartyHudWidget : MonoBehaviour
         if (shieldWidget == null)
             shieldWidget = GetComponentInChildren<ShieldUiWidget>(true);
 
+        if (damageReductionWidget == null)
+            damageReductionWidget = GetComponentInChildren<DamageReductionUiWidget>(true);
+
         if (skillCooldownWidgets == null || skillCooldownWidgets.Length == 0)
             skillCooldownWidgets = GetComponentsInChildren<SkillCooldownUiWidget>(true);
 
@@ -70,6 +81,12 @@ public class PartyHudWidget : MonoBehaviour
 
         if (scrapWidget == null)
             scrapWidget = GetComponentInChildren<ScrapUiWidget>(true);
+
+        if (juggernautStackDamageWidget == null)
+            juggernautStackDamageWidget = GetComponentInChildren<JuggernautStackDamageUiWidget>(true);
+
+        if (upgradeHistoryContainer == null)
+            upgradeHistoryContainer = GetComponentInChildren<PartyHistoryUpgradeContainer>(true);
 
         DisableChildAutoBind();
     }
@@ -93,6 +110,15 @@ public class PartyHudWidget : MonoBehaviour
 
         if (scrapWidget != null)
             scrapWidget.DisableAutoBind();
+
+        if (juggernautStackDamageWidget != null)
+            juggernautStackDamageWidget.DisableAutoBind();
+
+        if (damageReductionWidget != null)
+            damageReductionWidget.DisableAutoBind();
+
+        if (upgradeHistoryContainer != null)
+            upgradeHistoryContainer.DisableAutoBind();
     }
 
     public void Initialize(EntityRef entityRef)
@@ -111,6 +137,9 @@ public class PartyHudWidget : MonoBehaviour
         if (shieldWidget != null)
             shieldWidget.Initialize(entityRef);
 
+        if (damageReductionWidget != null)
+            damageReductionWidget.Initialize(entityRef);
+
         foreach (var widget in skillCooldownWidgets)
             widget.Initialize(entityRef);
 
@@ -125,6 +154,12 @@ public class PartyHudWidget : MonoBehaviour
 
         if (scrapWidget != null)
             scrapWidget.Initialize(entityRef);
+
+        if (juggernautStackDamageWidget != null)
+            juggernautStackDamageWidget.Initialize(entityRef);
+
+        if (upgradeHistoryContainer != null)
+            upgradeHistoryContainer.Initialize(entityRef);
     }
 
     public void Clear()

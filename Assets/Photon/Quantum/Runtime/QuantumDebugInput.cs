@@ -1,4 +1,5 @@
 namespace Quantum {
+  using ControlFreak2;
   using Photon.Deterministic;
   using UnityEngine;
 
@@ -22,15 +23,16 @@ namespace Quantum {
 
     private Quantum.Input PollPlayerOneInput() {
       Quantum.Input i = new Quantum.Input();
-      float x = UnityEngine.Input.GetAxis("Horizontal");
-      float y = UnityEngine.Input.GetAxis("Vertical");
-      bool shiftHeld = UnityEngine.Input.GetKey(UnityEngine.KeyCode.LeftShift) || UnityEngine.Input.GetKey(UnityEngine.KeyCode.RightShift);
-      bool jump = UnityEngine.Input.GetKey(UnityEngine.KeyCode.Space);
-      bool fire = UnityEngine.Input.GetKey(UnityEngine.KeyCode.Mouse0);
-      bool switchTarget = UnityEngine.Input.GetKey(UnityEngine.KeyCode.Tab);
-      bool skill2 = UnityEngine.Input.GetKey(UnityEngine.KeyCode.E);
+      float x = CF2Input.GetAxis("Horizontal");
+      float y = CF2Input.GetAxis("Vertical");
+      bool shiftHeld = CF2Input.GetButton("Dash") || CF2Input.GetKey(UnityEngine.KeyCode.LeftShift) || CF2Input.GetKey(UnityEngine.KeyCode.RightShift);
+      bool jump = CF2Input.GetKey(UnityEngine.KeyCode.Space);
+      bool fire = UnityEngine.Input.GetMouseButton(0);
+      bool switchTarget = CF2Input.GetKey(UnityEngine.KeyCode.Tab);
+      bool skill2 = CF2Input.GetButton("Skill")|| CF2Input.GetKey(UnityEngine.KeyCode.E);
 
-      i.Direction = new FPVector2(x.ToFP(), y.ToFP());
+      Vector2 worldDirection = ApplyCameraYaw(x, y);
+      i.Direction = new FPVector2(worldDirection.x.ToFP(), worldDirection.y.ToFP());
       // Run and DashSkill intentionally share Shift: Run.IsDown keeps driving sprint continuously,
       // DashSkill.WasPressed triggers the dash on the tap edge - both read off the same held key.
       i.Run = shiftHeld;
@@ -53,7 +55,8 @@ namespace Quantum {
       bool switchTarget = UnityEngine.Input.GetKey(UnityEngine.KeyCode.KeypadEnter);
       bool skill2 = UnityEngine.Input.GetKey(UnityEngine.KeyCode.Keypad2);
 
-      i.Direction = new FPVector2(x.ToFP(), y.ToFP());
+      Vector2 worldDirection = ApplyCameraYaw(x, y);
+      i.Direction = new FPVector2(worldDirection.x.ToFP(), worldDirection.y.ToFP());
       // Same Run/DashSkill sharing as player one, mapped to the dash key instead of Shift.
       i.Run = dash;
       i.DashSkill = dash;
@@ -63,6 +66,42 @@ namespace Quantum {
       i.HeroSkill = skill2;
 
       return i;
+    }
+
+    // Rotates the raw (Horizontal, Vertical) axis pair by the gameplay camera's current yaw before
+    // it becomes Quantum.Input.Direction, so "up" always moves toward the top of the screen from
+    // the camera's point of view instead of always meaning world +Z. Done here (Unity/view side,
+    // per client) rather than in simulation code because only the resulting world-space vector is
+    // what actually needs to be deterministic/replicated - each client reads its own local camera.
+    // Uses Camera.main (tagged MainCamera on the gameplay Camera, see QuantumGameScene.unity)
+    // rather than the project's own FollowCamera type - this file compiles in the Quantum.Unity
+    // asmdef, which can't reference FollowCamera.cs (no asmdef of its own, so it's part of the
+    // default Assembly-CSharp, which always builds after named assemblies like this one).
+    // FollowCamera has no yaw today (fixed 45 deg pitch, see FollowCamera.cs), so this is a no-op
+    // until the camera actually rotates - it's here so movement keeps feeling right once it does.
+    private static Vector2 ApplyCameraYaw(float x, float y) {
+      Camera mainCamera = Camera.main;
+      Transform cameraTransform = mainCamera != null ? mainCamera.transform : null;
+      if (cameraTransform == null) {
+        return new Vector2(x, y);
+      }
+
+      Vector3 forward = cameraTransform.forward;
+      forward.y = 0f;
+
+      Vector3 right = cameraTransform.right;
+      right.y = 0f;
+
+      if (forward.sqrMagnitude < 0.0001f || right.sqrMagnitude < 0.0001f) {
+        // Camera looking straight down (or up) - no meaningful yaw to project onto the ground plane.
+        return new Vector2(x, y);
+      }
+
+      forward.Normalize();
+      right.Normalize();
+
+      Vector3 worldDirection = right * x + forward * y;
+      return new Vector2(worldDirection.x, worldDirection.z);
     }
   }
 }

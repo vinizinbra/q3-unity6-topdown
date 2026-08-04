@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df967c629b354426c8cb583867f0dc9f, type: 3}
+  m_Name: WeaponChoicePoolData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.WeaponChoicePoolData
+  Identifier:
+    Path: _QuantumUser/Resources/WeaponChoicePoolData
+    Guid:
+      Value: 489069850842438477
+  Weapons:
+  - Id:
+      Value: 530648557105192714
+  - Id:
+      Value: 485008723038709767
+  - Id:
+      Value: 303582807116665979
+  - Id:
+      Value: 457249274052612936
+  - Id:
+      Value: 532371987665164333
+  - Id:
+      Value: 511120127865671028
+  - Id:
+      Value: 451390241555621436
+  - Id:
+      Value: 405919671996400745

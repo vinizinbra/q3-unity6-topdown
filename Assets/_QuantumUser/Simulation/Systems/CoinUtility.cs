@@ -27,7 +27,7 @@ namespace Quantum
             if (DamageUtility.RollChance(f, tierStats.CoinDropChance) == false)
                 return;
 
-            if (f.RuntimeConfig.CoinPrototype.IsValid == false)
+            if (f.RuntimeConfig.Prefabs.CoinPrototype.IsValid == false)
             {
                 Log.Debug($"[Coin] {target} died with CoinValue {tierStats.CoinValue} but RuntimeConfig has no CoinPrototype assigned - drop skipped");
                 return;
@@ -50,7 +50,7 @@ namespace Quantum
                 }
             }
 
-            EntityRef orb = f.Create(f.RuntimeConfig.CoinPrototype);
+            EntityRef orb = f.Create(f.RuntimeConfig.Prefabs.CoinPrototype);
 
             if (f.Unsafe.TryGetPointer<Transform3D>(orb, out var orbTransform) == true)
             {

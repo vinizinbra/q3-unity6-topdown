@@ -8,3 +8,11 @@ component PlayerMovement
     // Updated by AutoJumpSystem whenever grounded; PlayerFallSystem respawns here on a fall.
     FPVector3 LastGroundedPosition;
 }
+
+// Fired from AutoJumpSystem's own wasGrounded->isGrounded edge (auto-hop/mantle or the manual jump
+// button) - hero-agnostic, no effect for anyone without a reaction gated on it. fallDistance is the
+// drop in LastGroundedPosition.Y between takeoff and landing (0 for a flat hop/mantle, positive for
+// a genuine fall off high ground) - AutoJumpSystem just reports it, leaving "how much counts as a
+// real fall" to whoever reacts. See Brute's Ground Pound (Heroes/Brute/KnockbackMastery.qtn), its
+// first consumer, which gates on GroundPoundUpgrade.MinFallDistance.
+signal OnPlayerLanded(EntityRef entity, FP fallDistance);

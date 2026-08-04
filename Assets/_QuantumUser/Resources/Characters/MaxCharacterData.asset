@@ -84,6 +84,8 @@ MonoBehaviour:
     RawValue: 65536
   RiftShardGainMultiplier:
     RawValue: 65536
+  CoinGainMultiplier:
+    RawValue: 65536
   RingColor: {r: 0.98039216, g: 0.47066006, b: 0.023529401, a: 1}
   WeaponPosition:
     X:
@@ -103,23 +105,31 @@ MonoBehaviour:
       Value: 457031510518561208
   Passive:
     Id:
-      Value: 435533906356792848
+      Value: 294791046206285621
   StartingWeapon:
     Id:
-      Value: 485008723038709767
+      Value: 530648557105192714
   DashSkillUpgrades:
   - Id:
       Value: 361757256106766314
   - Id:
-      Value: 493327754483233832
+      Value: 316536704450074610
   - Id:
       Value: 421846226953410185
   PassiveUpgrades:
   - Id:
-      Value: 418568144071795919
+      Value: 455632637428084137
   - Id:
-      Value: 531709112965289219
+      Value: 513498353707284049
   - Id:
-      Value: 332845259268204424
+      Value: 514137246864066863
   - Id:
-      Value: 493261303952077729
+      Value: 423077782144865530
+  - Id:
+      Value: 287829558526403937
+  - Id:
+      Value: 281848167375705328
+  - Id:
+      Value: 532309429254581296
+  - Id:
+      Value: 317035501367371776

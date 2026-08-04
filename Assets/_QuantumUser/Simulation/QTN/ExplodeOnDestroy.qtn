@@ -1,0 +1,56 @@
+// Generic "detonate the instant this entity is destroyed" primitive - checked from two independent
+// trigger points, both optional (a TryGetPointer, never a Filter requirement), so nothing that
+// doesn't carry this is affected:
+// - DestroyAfterTimeSystem, when a timed lifetime runs out (a stationary bomb's fuse).
+// - DamageUtility.ApplyDamage's non-Enemy death branch, when Health reaches 0 from taking damage (a
+//   decoy-trap variant: Health seeded to 1 on the prototype, a Decoy tag to draw enemy aggro, and a
+//   real PhysicsCollider3D so attacks can actually land on it - "explodes when destroyed" is this
+//   component either way, the trap is just which trigger reaches it first).
+// Both call the same shared ExplodeOnDestroyUtility.TryDetonate, not two copies of the same logic.
+// Used today by Pixie's Dash Ascension "Leave Explosive Bomb" (DashBomb.prefab - a stationary
+// prototype with a real collider, dropped via a generic Spawn*SkillAction, not a Mini-Bomb-specific
+// spawner). Cluster Charge's own bomblets (ClusterBombUpgrade/ClusterBombSkillAction) intentionally
+// stayed Projectile-based - carries no identity tied to either feature, so any future "spawn
+// something that explodes when it's destroyed" reuses this exact same component for free.
+//
+// Not to be confused with VortexExplodeOnDestroy (Heroes/Kai) - a similarly-named but unrelated,
+// Vortex-specific mechanic: damage applied directly via HitEffectUtility.ApplyDamageInRadius off the
+// vortex's own live collider radius, no AreaHitData/Explosion asset, no spawned entity, and its own
+// VortexExploded event rather than AreaDetonated. Predates this component; the naming overlap is
+// coincidental, not a shared implementation.
+//
+// Reuses two other generic components instead of declaring its own copies of what they already
+// carry:
+// - AreaOwner carries Owner/Source/Element - the same component Vortex already reuses for "who
+//   spawned this and what damage source/element does it count as".
+// - Explosion (AreaHitData) is reused purely as data (BlastRadius/Effects/TargetMask/
+//   BlastEffectPrefab) - detonating calls the same underlying HitEffectUtility.ApplyInRadius + fires
+//   AreaDetonated that AreaHitData.Detonate uses (just without needing a Projectile*, which this
+//   never has), so the view layer (EffectsManager) already knows how to render this identically to
+//   any other AreaHitData-driven explosion with zero new view code.
+component ExplodeOnDestroy
+{
+    // A flat damage value applied directly at detonation (see ExplodeOnDestroyUtility.TryDetonate's
+    // HitEffectUtility.ApplyInRadius call) - not a multiplier of anything, same convention as
+    // Projectile.Damage/AreaDamage.Damage. Whatever spawned/authored this is expected to already
+    // carry the real, final number.
+    FP Damage;
+
+    // Mirrors Projectile.SpawnDepth - how many spawn-generations deep this is, so a future "this
+    // explosion spawns more of itself" mode can cap itself the same way AreaHitData.
+    // MaxSpawnUpgradeDepth already caps other cascades. Read only when TriggersSpawnUpgrades below
+    // is true - see that field's own comment.
+    Int32 SpawnDepth;
+
+    AssetRef<AreaHitData> Explosion;
+
+    // False (the default - every existing prototype, Mini Bomb/DashBomb included, never sets this)
+    // keeps ExplodeOnDestroyUtility.TryDetonate's own lighter, non-cascading explosion exactly as
+    // before this field existed - no Mini Ordnance signal, no Fireworks/ClusterBomb spawn, so a
+    // dropped Mini Bomb still can never generate another (see AreaHitData.Detonate's own comment on
+    // this same guarantee). True opts into calling Explosion's full AreaHitData.Detonate instead -
+    // for an entity whose detonation is a delayed continuation of a real player throw (see a planted
+    // bomb, AreaHitData.PlantedFuseTime) rather than a fire-and-forget trap, where losing that
+    // cascade/signal eligibility would be a real regression, not a safety guard.
+    Boolean TriggersSpawnUpgrades;
+}

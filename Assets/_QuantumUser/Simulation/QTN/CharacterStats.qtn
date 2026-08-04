@@ -65,6 +65,12 @@ component CharacterStats
     FP RiftShardGainMultiplier;
     FP CoinGainMultiplier;
 
+    // Choose-Weapon talent level - increments once each time this entity actually picks a
+    // LevelUpCategory.ChooseWeapon option (see WeaponChoiceUtility.Grant), independent of overall
+    // player level. Drives LevelUpUtility.RollWeaponOption's per-slot perk-count roll - see
+    // LevelUpConfig.ChancePerLevelPerSlot/MaxRolledPerks.
+    Byte WeaponTalentLevel;
+
     // Incremented/decremented by any active effect (e.g. BerserkSkillData) that guarantees Burn
     // on every weapon hit for as long as it's up - a counter rather than a bool so two overlapping
     // grants can't have one's End wipe out the other's still-active one. Checked in
@@ -92,4 +98,25 @@ component CharacterStats
     // All or Nothing: read by LevelUpUtility.RollOptionsFor to force a single, rarity-shifted
     // option on this entity's next level-up roll instead of the normal 3.
     Boolean AllOrNothingActive;
+
+    // -- Rift Mark content pool (Weapon Perks live on Weapon, not here - see Weapon.qtn) --
+    // All mutation-only flags, same category as the Rift Mutation fields above - see
+    // docs/rift-mutations.md for the full roster. Evaluated by RiftMutationMarkUtility (damage-hook
+    // mutations), DashSkillData (Rift Dash), and StatusEffectSystem (Fractured Presence).
+    Boolean HasCriticalFractureMutation;
+    Boolean HasSkillFractureMutation;
+    Boolean HasRiftDashMutation;
+    Boolean HasHeavyFractureMutation;
+    Boolean HasCloseFractureMutation;
+    Boolean HasLongFractureMutation;
+    Boolean HasExecutionFractureMutation;
+    Boolean HasFirstContactMutation;
+    Boolean HasFracturedPresenceMutation;
+    Boolean HasOverflowingRiftMutation;
+    Boolean HasLastStandMutation;
+
+    // Last Stand - per-PLAYER cooldown (not per-target, so it doesn't fit
+    // StatusEffects.MarkApplicationCooldowns), ticked in StatusEffectSystem alongside everything
+    // else CharacterStats-adjacent.
+    FP LastStandCooldownRemaining;
 }

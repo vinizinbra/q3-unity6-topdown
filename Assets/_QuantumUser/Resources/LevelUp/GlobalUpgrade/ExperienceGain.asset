@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/GlobalUpgrade/ExperienceGain
     Guid:
       Value: 387762313514897616
-  Icon: {fileID: 0}
+  Icon: {fileID: 873863531, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
   DisplayName: Experience Gain
   Rarity: 0
   MaxPicks: 3

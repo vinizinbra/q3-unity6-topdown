@@ -10,7 +10,7 @@ using UnityEngine;
 public class InGameWindow : UiWindow
 {
     public static InGameWindow instance;
-
+    public Canvas canvas;
     private void Awake()
     {
       instance = this;
@@ -52,7 +52,7 @@ public class InGameWindow : UiWindow
       _frameSnapshot = null;
       _frameSnapshotNumber = 0;
       _frameSnapshotTimeout = 0.0f;
-
+      canvas.enabled = false;
       MatchMakingConfig.Instance.Client?.AddCallbackTarget(this);
       QuantumCallback.Subscribe(this, (CallbackPluginDisconnect c) => OnCallbackPluginDisconnect(c.Reason));
 
@@ -61,7 +61,7 @@ public class InGameWindow : UiWindow
 
     public override void Hide() {
       base.Hide();
-      
+      canvas.enabled = true;
       QuantumCallback.UnsubscribeListener(this);
       MatchMakingConfig.Instance.Client?.RemoveCallbackTarget(this);
       

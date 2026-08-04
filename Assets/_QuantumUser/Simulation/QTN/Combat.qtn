@@ -8,7 +8,36 @@ signal OnEntityKilled(EntityRef target, EntityRef owner, DamageSource source);
 
 signal OnCriticalHit(EntityRef target, EntityRef owner, FP damage, DamageSource source);
 
+// Narrower sibling of OnCriticalHit - fired additionally (not instead) only when this same crit was
+// also flagged isExplosion:true in DamageUtility.ApplyDamage. Doesn't extend OnCriticalHit's own
+// signature (that would ripple into every existing subscriber - Flashpoint, weapon perks, Rift
+// Mutations) - a dedicated signal is purely additive instead. See Pixie's Volatile Payload
+// (docs: Heroes/Pixie/DemolitionMastery.qtn).
+signal OnExplosionCriticalHit(EntityRef target, EntityRef owner, FP damage, DamageSource source);
+
+// Fired once per genuine radius explosion - not per target caught in it, see OnHealthDamageApplied
+// above for that shape instead. Only from the two real explosion sources, AreaHitData.Detonate
+// (bomb-type) and HitEffectUtility.ApplyExplosion (weapon-perk-type) - deliberately never fired from
+// ExplodeOnDestroyUtility.TryDetonate (a Mini Bomb's own detonation), so a Mini Bomb dropped by
+// Pixie's Mini Ordnance trait can never generate another one - see that trait's own comment.
+signal OnAreaExplosionDetonated(EntityRef owner, FPVector3 center, FP radius, DamageSource source);
+
+// Fired from DamageUtility.ApplyDamage whenever damage actually lands on Health/Shield (i.e. the
+// post-Armor/Shield-split amount is > 0) - unlike OnWeaponHitLanded below, NOT gated to
+// DamageSource.Weapon, so it fires for every source including None (environmental). owner may be
+// EntityRef.None - a consumer that needs a valid attacker (e.g. Max's Vendetta) must check that
+// itself, same as every other owner-carrying signal in this file. directHit is false when this call
+// is a DoT/status-tick replay (ApplyDamage's own bypassOutgoingResolution) - lets a consumer
+// distinguish a live hit from a burn/poison tick reusing an already-resolved magnitude. See
+// docs/max-vendetta-fire-mastery.md's "Health-vs-Shield damage reporting" section.
+signal OnHealthDamageApplied(EntityRef target, EntityRef owner, FP amount, DamageSource source, Boolean directHit);
+
+// Shield counterpart to OnHealthDamageApplied - fired for the portion Shield actually absorbed,
+// before Health is touched. Same directHit semantics.
+signal OnShieldDamageApplied(EntityRef target, EntityRef owner, FP amount, DamageSource source, Boolean directHit);
+
 // Fired on every landed hit (not just a kill or a crit) whose source is a weapon - what actually
 // advances Weapon's shared ramp pool (RampStacks, see Weapon.qtn) for Suppressive Cycle/Overcharge
-// Cycle/Relentless Fire.
-signal OnWeaponHitLanded(EntityRef owner);
+// Cycle/Relentless Fire. target added for Fracture Rounds (WeaponPerkReactionSystem.
+// OnWeaponHitLanded) - the ramp pool itself still only reads owner.
+signal OnWeaponHitLanded(EntityRef target, EntityRef owner);

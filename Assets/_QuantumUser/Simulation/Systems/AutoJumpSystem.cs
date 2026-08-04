@@ -19,6 +19,10 @@ namespace Quantum
             bool isGrounded = filter.KCC->Data.IsGrounded;
             bool isOnEdge = filter.KCC->Data.IsOnEdge;
 
+            // Captured before LastGroundedPosition gets overwritten below - this tick's landing
+            // branch needs the pre-jump takeoff height to compute fallDistance.
+            FP previousGroundedY = filter.PlayerMovement->LastGroundedPosition.Y;
+
             // Tracked here rather than a dedicated system since this already reads IsGrounded
             // every tick right after KCCSystem resolves it. PlayerFallSystem respawns here.
             if (isGrounded == true)
@@ -34,6 +38,11 @@ namespace Quantum
                 // exceed JumpCooldownTime, which would otherwise leave zero grace period against
                 // an immediate re-trigger the instant the character touches down.
                 filter.PlayerMovement->JumpCooldownTimer = data.JumpCooldownTime;
+
+                // Generic landing hook (see PlayerMovement.qtn) - Brute's Ground Pound is the first
+                // reaction gated on this, everyone else is unaffected.
+                FP fallDistance = FPMath.Max(FP._0, previousGroundedY - filter.KCC->Position.Y);
+                f.Signals.OnPlayerLanded(filter.Entity, fallDistance);
             }
 
             if (filter.PlayerMovement->JumpCooldownTimer > FP._0)

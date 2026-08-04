@@ -11,6 +11,9 @@ public class GameManager : MonoBehaviour
     public bool isPlayingOffline = false;
     public MainMenuTab MainMenuTab;
 
+    [SerializeField, Tooltip("MenuScene's root Canvas - stays loaded (additive gameplay scene load) for the whole session otherwise, so it has to be explicitly disabled once gameplay starts or it keeps rendering/batching underneath the gameplay HUD canvas for nothing.")]
+    private Canvas menuCanvas;
+
     private void Awake()
     {
         Instance = this;
@@ -57,7 +60,8 @@ public class GameManager : MonoBehaviour
 
     void SetInGameTab()
     {
-
+        if (menuCanvas != null)
+            menuCanvas.enabled = false;
     }
 
     [Button]
@@ -83,5 +87,7 @@ public class GameManager : MonoBehaviour
 
     private void SetMenu()
     {
+        if (menuCanvas != null)
+            menuCanvas.enabled = true;
     }
 }

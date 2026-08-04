@@ -9,9 +9,10 @@ namespace Quantum
     {
         public FP MaxDamageBonus;
 
-        public override void Apply(Frame f, Weapon* weapon)
+        public override void Apply(Frame f, EntityRef owner, Weapon* weapon)
         {
-            weapon->EscalatingRoundsMaxDamageBonus += MaxDamageBonus;
+            f.AddOrGet<WeaponMagazinePositionPerks>(owner, out var perks);
+            perks->EscalatingRoundsMaxDamageBonus += MaxDamageBonus;
         }
 
         protected override object[] DescriptionArgs => new object[] { MaxDamageBonus.AsFloat * 100f };

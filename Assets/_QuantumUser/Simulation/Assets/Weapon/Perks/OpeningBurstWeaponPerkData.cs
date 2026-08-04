@@ -9,10 +9,11 @@ namespace Quantum
         public FP FireRateBonus;
         public FP Threshold;
 
-        public override void Apply(Frame f, Weapon* weapon)
+        public override void Apply(Frame f, EntityRef owner, Weapon* weapon)
         {
-            weapon->OpeningBurstFireRateBonus += FireRateBonus;
-            weapon->OpeningBurstThreshold = FPMath.Max(weapon->OpeningBurstThreshold, Threshold);
+            f.AddOrGet<WeaponMagazinePositionPerks>(owner, out var perks);
+            perks->OpeningBurstFireRateBonus += FireRateBonus;
+            perks->OpeningBurstThreshold = FPMath.Max(perks->OpeningBurstThreshold, Threshold);
         }
 
         protected override object[] DescriptionArgs => new object[] { Threshold.AsFloat * 100f, FireRateBonus.AsFloat * 100f };

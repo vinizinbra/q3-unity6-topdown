@@ -1,0 +1,44 @@
+// Brute's "Knockback Mastery" Hero Traits - a themed batch of 4 ordinary Passive Upgrades (Ground
+// Pound/Crushing Blow/Lasting Impact/Overwhelming Force), independent of Protector Aura/Juggernaut
+// itself, built on generic hooks (a player-wide landing signal, the shared Stun/knockback pipeline)
+// rather than anything Juggernaut- or Protector-Aura-specific. See
+// BruteKnockbackMasterySystem.cs/docs/brute-knockback-mastery.md.
+
+// Ground Pound - on landing (see PlayerMovement.qtn's OnPlayerLanded, fired from AutoJumpSystem)
+// from at least MinFallDistance of net drop, pulses a pure knockback burst (BruteKnockbackMasterySystem
+// applies it directly rather than going through HitEffectUtility.ApplyShockwave - see that system's
+// own comment for why: this needed its own dedicated view event to resolve Source's BlastEffectPrefab,
+// and ApplyShockwave always fires the generic ShockwaveReleased alongside it, which would double up
+// the VFX). Force/UpwardForce are baked here (not KnockbackTier itself - that's a plain C# enum,
+// never declared through qtn, so it can't live on an unmanaged component) at Apply time via the
+// shared RuntimeConfig.EffectConfig.GetKnockback (same Small/Medium/Strong bucket every
+// KnockbackEffectData in the game already pulls from - see GroundPoundPassiveUpgradeData.Apply),
+// so Ground Pound pushes exactly as hard as any other Tier-matched source instead of authoring its
+// own bespoke number. Source is baked by GroundPoundPassiveUpgradeData.Apply
+// ("upgrade->Source = this;", same self-referencing AssetRef pattern VortexExplodeOnDestroy.Source
+// uses) purely so the view can resolve BlastEffectPrefab off the exact asset that granted this.
+component GroundPoundUpgrade
+{
+    FP Radius;
+    FP Force;
+    FP UpwardForce;
+    FP MinFallDistance;
+    AssetRef<GroundPoundPassiveUpgradeData> Source;
+}
+
+// Crushing Blow - bonus damage vs a currently-Stunned target, read live in DamageUtility.
+// ResolveOutgoingDamage via StatusEffectUtility.IsStunned - same shape Max's Hot Target/Pixie's
+// Unstable Targeting already use for their own conditional bonuses.
+component CrushingBlowUpgrade
+{
+    FP DamageMultiplierBonus;
+}
+
+// Lasting Impact - a Stun Brute himself causes lasts longer, read live inside StatusEffectUtility.
+// ApplyStun once it knows the stunning owner - see that method's own comment for why every other
+// existing Stun source (Iron Shoulder, Juggernaut landing impact, StunEffectData, Overload) is
+// unaffected without this component.
+component LastingImpactUpgrade
+{
+    FP DurationMultiplierBonus;
+}

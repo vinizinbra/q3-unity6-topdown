@@ -337,6 +337,45 @@ namespace QuantumUser.Editor
                     d.DamageMultiplier = FP._1;
                 }
             },
+
+            // -- Rift Mark content pool (see docs/weapon-perks.md) - thresholds/radii/cooldowns
+            // beyond each perk's own headline number are shared ElementalReactionConfig values, not
+            // baked per-asset.
+            new PerkSpec
+            {
+                Type = typeof(FractureRoundsWeaponPerkData), FileName = "FractureRounds",
+                DisplayName = "Fracture Rounds", Rarity = UpgradeRarity.Rare,
+                Description = "Every {0:0}th confirmed hit from this weapon applies Rift Mark",
+                Configure = p => ((FractureRoundsWeaponPerkData)p).Interval = 6
+            },
+            new PerkSpec
+            {
+                Type = typeof(CriticalFractureWeaponPerkData), FileName = "CriticalFracturePerk",
+                DisplayName = "Critical Fracture", Rarity = UpgradeRarity.Rare,
+                Description = "Critical hits from this weapon apply Rift Mark",
+                Configure = p => { }
+            },
+            new PerkSpec
+            {
+                Type = typeof(UnstablePayloadWeaponPerkData), FileName = "UnstablePayload",
+                DisplayName = "Unstable Payload", Rarity = UpgradeRarity.Rare,
+                Description = "Valid explosion hits from this weapon apply Rift Mark",
+                Configure = p => { }
+            },
+            new PerkSpec
+            {
+                Type = typeof(FocusedBreachWeaponPerkData), FileName = "FocusedBreach",
+                DisplayName = "Focused Breach", Rarity = UpgradeRarity.Rare,
+                Description = "Maintaining fire on the same enemy for {0:0.0}s applies Rift Mark",
+                Configure = p => ((FocusedBreachWeaponPerkData)p).Threshold = FP.FromString("1.5")
+            },
+            new PerkSpec
+            {
+                Type = typeof(RiftAftershockWeaponPerkData), FileName = "RiftAftershock",
+                DisplayName = "Rift Aftershock", Rarity = UpgradeRarity.Rare,
+                Description = "Killing an enemy with this weapon applies Rift Mark to a nearby enemy",
+                Configure = p => { }
+            },
         };
 
         [MenuItem("Tools/RiftRaiders/Generate Weapon Perk Assets")]

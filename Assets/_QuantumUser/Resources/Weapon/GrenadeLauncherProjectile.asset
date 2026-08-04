@@ -22,6 +22,8 @@ MonoBehaviour:
     RawValue: 1310720
   TargetDistance:
     RawValue: 655360
+  PredictionTime:
+    RawValue: 13107
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0

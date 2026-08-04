@@ -1,4 +1,5 @@
 using System;
+using QuantumUser.View.Util;
 using UnityEngine;
 
 public class WindowManager : MonoBehaviour
@@ -17,8 +18,7 @@ public class WindowManager : MonoBehaviour
     {
         Type typeOfAction = typeof(T);
 
-        Debug.Log("Show windows =>"
-                  +typeOfAction.Name);
+        LogHelper.Log("WindowManager", "Show windows =>" + typeOfAction.Name);
         UiWindow window = null;
         
         foreach (var uiWindow in uiWindows)

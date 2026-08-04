@@ -82,6 +82,9 @@ namespace Quantum
                 || f.Unsafe.TryGetPointer<Weapon>(projectile->Owner, out var weapon) == false)
                 return;
 
+            if (f.Unsafe.TryGetPointer<WeaponPostImpactProcs>(projectile->Owner, out var procs) == false)
+                return;
+
             // Bigger Boom (Pixie passive ascension) - read live, same reasoning as
             // WeaponSystem.ApplyHitscanWeaponPerks' own copy of this line: mid-run rank-ups scale
             // immediately and compound off the same unscaled base radius every time.
@@ -89,18 +92,22 @@ namespace Quantum
 
             if (projectile->IsCataclysm == true)
             {
-                HitEffectUtility.ApplyExplosion(f, point, weapon->CataclysmRadius * radiusMultiplier, projectile->Owner,
-                    projectile->Damage * weapon->CataclysmDamageMultiplier, DamageSource.Weapon);
+                FP radius = procs->CataclysmRadius * radiusMultiplier;
+                HitEffectUtility.ApplyExplosion(f, point, radius, projectile->Owner,
+                    projectile->Damage * procs->CataclysmDamageMultiplier, DamageSource.Weapon);
+                WeaponPerkUtility.TryApplyUnstablePayloadMarks(f, point, radius, projectile->Owner);
             }
             else if (projectile->IsExplosiveProc == true)
             {
-                HitEffectUtility.ApplyExplosion(f, point, weapon->ExplosiveSequenceRadius * radiusMultiplier, projectile->Owner,
-                    projectile->Damage * weapon->ExplosiveSequenceDamageMultiplier, DamageSource.Weapon);
+                FP radius = procs->ExplosiveSequenceRadius * radiusMultiplier;
+                HitEffectUtility.ApplyExplosion(f, point, radius, projectile->Owner,
+                    projectile->Damage * procs->ExplosiveSequenceDamageMultiplier, DamageSource.Weapon);
+                WeaponPerkUtility.TryApplyUnstablePayloadMarks(f, point, radius, projectile->Owner);
             }
 
-            if (weapon->HasSplitShot == true && projectile->SpawnDepth < MaxSplitShotDepth)
+            if (procs->HasSplitShot == true && projectile->SpawnDepth < MaxSplitShotDepth)
             {
-                SpawnSplitProjectiles(f, projectile, point, weapon);
+                SpawnSplitProjectiles(f, projectile, point, weapon, procs);
             }
         }
 
@@ -108,13 +115,19 @@ namespace Quantum
         // damage an additional nearby enemy" reads as a per-hit effect, not a per-shot one.
         private static void ApplyQuantumRounds(Frame f, Projectile* projectile, EntityRef hitEntity, FPVector3 point)
         {
-            if (f.Unsafe.TryGetPointer<Weapon>(projectile->Owner, out var weapon) == false || weapon->HasQuantumRounds == false)
+            if (f.Unsafe.TryGetPointer<WeaponPostImpactProcs>(projectile->Owner, out var procs) == false || procs->HasQuantumRounds == false)
                 return;
 
-            if (WeaponPerkUtility.TryFindNearestEnemy(f, point, weapon->QuantumRoundsRadius, hitEntity, out var other) == false)
+            if (WeaponPerkUtility.TryFindNearestEnemy(f, point, procs->QuantumRoundsRadius, hitEntity, out var other) == false)
                 return;
 
-            DamageUtility.ApplyDamage(f, other, projectile->Damage * weapon->QuantumRoundsDamageMultiplier, projectile->Owner, DamageSource.Weapon);
+            DamageUtility.ApplyDamage(f, other, projectile->Damage * procs->QuantumRoundsDamageMultiplier, projectile->Owner, DamageSource.Weapon);
+
+            FPVector3 targetPosition = f.Unsafe.TryGetPointer<Transform3D>(other, out var otherTransform) == true
+                ? otherTransform->Position
+                : point;
+
+            f.Events.QuantumRoundsTriggered(other, targetPosition, procs->QuantumRoundsSource);
         }
 
         // Redirects toward the nearest other enemy instead of terminating - no-ops (falls through
@@ -146,9 +159,9 @@ namespace Quantum
         // don't re-roll Bonus­Pierce/Bounces/Explosive Sequence/Cataclysm themselves (a bare,
         // un-perked repeat of the base shot at reduced damage), only capped recursion
         // (MaxSplitShotDepth) carries over.
-        private static void SpawnSplitProjectiles(Frame f, Projectile* projectile, FPVector3 point, Weapon* weapon)
+        private static void SpawnSplitProjectiles(Frame f, Projectile* projectile, FPVector3 point, Weapon* weapon, WeaponPostImpactProcs* procs)
         {
-            int count = weapon->SplitShotCount;
+            int count = procs->SplitShotCount;
 
             if (count <= 0)
                 return;
@@ -157,7 +170,7 @@ namespace Quantum
             FPVector3 heading = projectile->Velocity.Normalized;
             FP headingAngle = FPMath.Atan2(heading.X, heading.Z) * FP.Rad2Deg;
             FP baseAngle = headingAngle - SplitShotArcDegrees / 2 + f.RNG->Next(0, step);
-            FP splitDamage = projectile->Damage * weapon->SplitShotDamageMultiplier;
+            FP splitDamage = projectile->Damage * procs->SplitShotDamageMultiplier;
             FP speed = projectile->Velocity.Magnitude;
             FP maxDistance = ResolveWeaponRange(f, weapon) * SplitShotRangeFraction;
             FP maxLifetime = speed > FP._0 ? maxDistance / speed : FP._0;

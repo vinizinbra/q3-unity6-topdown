@@ -240,7 +240,7 @@ MonoBehaviour:
   DamageRange:
     RawValue: 327680
   Damage:
-    RawValue: 65536
+    RawValue: 655360
   AnticipationTime:
     RawValue: 32768
   DirectionTracking: 2

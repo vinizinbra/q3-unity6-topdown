@@ -11,7 +11,7 @@ namespace Quantum
         public FP Speed = 20;
         public FP TurnRateDegrees = 180;
 
-        protected override ProjectileLaunch SolveLaunch(FPVector3 spawnPosition, FPVector3 target)
+        protected override ProjectileLaunch SolveLaunch(Frame f, FPVector3 spawnPosition, FPVector3 target, EntityRef targetEntity)
         {
             FPVector3 delta = target - spawnPosition;
 

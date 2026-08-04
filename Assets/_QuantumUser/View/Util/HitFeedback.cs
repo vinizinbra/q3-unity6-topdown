@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NaughtyAttributes;
 using PrimeTween;
 using Quantum;
@@ -39,17 +40,29 @@ namespace QuantumUser.View.Util
         private float pickupGlowDuration = 0.5f;
 
         [Header("Rift Mark")]
-        [SerializeField, Tooltip("StatusEffects.VoidRemaining - see StatusEffectUtility.IsVoided. Sprites swap to this material (pink inner glow via Sprites/Sprite Status Colorise Flash's _GlowColor/_GlowIntensity) while active, and back to their own original material otherwise. Hit-flash is untouched by this - it still writes SpriteRenderer.color same as always, on top of whichever material is currently assigned.")]
+        [SerializeField, Tooltip("StatusEffects.RiftMarkStacks - see StatusEffectUtility.IsRiftMarked. Sprites swap to this material (pink inner glow via Sprites/Sprite Status Colorise Flash's _GlowColor/_GlowIntensity) while active, and back to their own original material otherwise. Hit-flash is untouched by this - it still writes SpriteRenderer.color same as always, on top of whichever material is currently assigned.")]
         private Material riftMarkMaterial;
+        [SerializeField, Tooltip("Brief, subtle tint played only when RiftMarkStacks actually increases (never on a refresh-only reapply at max stacks, and never a full material swap) - deliberately quiet, distinct from the stronger per-reaction flash colors below. Hot-pink #FD3971 per this project's Rift Mark color rule (see docs/elemental-reactions.md) - purple stays reserved for Void.")]
+        private Color riftMarkApplicationFlashColor = new Color32(0xFD, 0x39, 0x71, 0xFF);
+        [SerializeField] private float riftMarkApplicationFlashDuration = 0.08f;
 
         [Header("Freeze Mark")]
-        [SerializeField, Tooltip("StatusEffects.AnticipationSlowRemaining - see StatusEffectUtility.IsAnticipationSlowed (Void+Ice's Freeze reaction, docs/elemental-reactions.md). Takes priority over riftMarkMaterial when both are active on the same target.")]
+        [SerializeField, Tooltip("StatusEffects.AnticipationSlowRemaining - see StatusEffectUtility.IsAnticipationSlowed (Ice+RiftMark's Deep Freeze reaction, docs/elemental-reactions.md). Takes priority over riftMarkMaterial when both are active on the same target.")]
         private Material freezeMaterial;
 
         private enum MarkState { Normal, Rift, Freeze }
 
+        // Keyed by SpriteRenderer instance (not by this component) because the renderers live on
+        // the pooled ViewPrefab (see ViewPrefabPool) while HitFeedback itself is a fresh instance
+        // per enemy spawn - a plain instance field would just re-trust whatever material the
+        // previous pool occupant happened to leave assigned. Baking each renderer's true original
+        // once, the first time it's ever seen, means InitializeSprites can always force-restore to
+        // it below instead of reading (possibly leaked) current state.
+        private static readonly Dictionary<SpriteRenderer, Material> _bakedOriginalMaterials = new Dictionary<SpriteRenderer, Material>();
+
         private Material[] _originalMaterials;
         private MarkState _markState;
+        private byte _lastRiftMarkStacks;
         private bool _dead;
 
         private Tween[] _tweens;
@@ -94,17 +107,31 @@ namespace QuantumUser.View.Util
             _tweens = new Tween[sprites.Length];
             _dead = false;
             _markState = MarkState.Normal;
+            _lastRiftMarkStacks = 0;
 
+            // Force-restores every sprite to its baked-original material on spawn - not just a
+            // read, a write - so a pooled ViewPrefab that got recycled while still Rift-Marked/
+            // Frozen (see Die() below) never shows the leftover material on the enemy now
+            // occupying it.
             _originalMaterials = new Material[sprites.Length];
             for (var i = 0; i < sprites.Length; i++)
-                _originalMaterials[i] = sprites[i].sharedMaterial;
+            {
+                if (_bakedOriginalMaterials.TryGetValue(sprites[i], out Material original) == false)
+                {
+                    original = sprites[i].sharedMaterial;
+                    _bakedOriginalMaterials[sprites[i]] = original;
+                }
+
+                _originalMaterials[i] = original;
+                sprites[i].sharedMaterial = original;
+            }
 
             Flash();
         }
 
         // Rift/Freeze are material swaps, not tweens - each status is either active or it isn't,
         // so sprites just jump to the matching material and back rather than easing a color.
-        // Freeze (Void+Ice's reaction) takes priority over a plain Rift Mark when both are active.
+        // Deep Freeze (Ice+RiftMark's reaction) takes priority over a plain Rift Mark when both are active.
         protected override void QUpdate(QuantumGame game)
         {
             if (_dead || sprites == null)
@@ -114,10 +141,19 @@ namespace QuantumUser.View.Util
             if (frame == null)
                 return;
 
+            // Subtle application flash - fires only on an actual stack-count increase (0->1, 1->2),
+            // never on a refresh-only reapply at max stacks and never as a full material swap. Reads
+            // before the MarkState swap below so it can compare against the previous frame's stacks
+            // independent of whichever material state currently applies.
+            byte stacks = StatusEffectUtility.GetRiftMarkStacks(frame, _entityRef);
+            if (stacks > _lastRiftMarkStacks)
+                Flash(riftMarkApplicationFlashColor, riftMarkApplicationFlashDuration);
+            _lastRiftMarkStacks = stacks;
+
             MarkState state = MarkState.Normal;
             if (freezeMaterial != null && StatusEffectUtility.IsAnticipationSlowed(frame, _entityRef))
                 state = MarkState.Freeze;
-            else if (riftMarkMaterial != null && StatusEffectUtility.IsVoided(frame, _entityRef))
+            else if (riftMarkMaterial != null && StatusEffectUtility.IsRiftMarked(frame, _entityRef))
                 state = MarkState.Rift;
 
             if (state == _markState)
@@ -222,7 +258,12 @@ namespace QuantumUser.View.Util
         }
 
         // Stops flashing so it can't blink deathColor back to restColor for the rest of the
-        // corpse's lingering duration.
+        // corpse's lingering duration. Also force-restores the original material immediately -
+        // without this a corpse that died while Rift-Marked/Frozen would linger showing that
+        // material under the death tint, and (since QUpdate bails out once _dead is true, so
+        // nothing else would ever swap it back) the pooled ViewPrefab would still have it assigned
+        // when released back to ViewPrefabPool for the next enemy to inherit - see
+        // InitializeSprites' _bakedOriginalMaterials for the other half of that fix.
         [Button]
         public void Die()
         {
@@ -230,12 +271,16 @@ namespace QuantumUser.View.Util
                 return;
 
             _dead = true;
+            _markState = MarkState.Normal;
 
             foreach (var tween in _tweens)
                 tween.Stop();
 
-            foreach (var sprite in sprites)
-                sprite.color = deathColor;
+            for (var i = 0; i < sprites.Length; i++)
+            {
+                sprites[i].color = deathColor;
+                sprites[i].sharedMaterial = _originalMaterials[i];
+            }
         }
     }
 }

@@ -4,6 +4,7 @@ using Photon.Client;
 using Photon.Realtime;
 using Quantum;
 using Quantum.Demo;
+using QuantumUser.View.Util;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -31,12 +32,12 @@ public class WaitingForPlayersWindow : UiWindow, IInRoomCallbacks,IOnEventCallba
             MatchMakingConfig.Instance.Client.CurrentRoom.CustomProperties.TryGetValue("STARTED",  out var started)) 
         {
             // The game is already running as indicated by the room property. Run the start game procedure.
-            Debug.Log("Game already running");
+            LogHelper.Log("WaitingForPlayers", "Game already running");
             var mapGuid = (AssetGuid)(long)mapGuidValue;
             MatchMakingConfig.Instance.StartQuantumGame();
-            
+
             ((MainMenuTab)MainMenuTab.Instance).windowManager.ShowWindow<InGameWindow>();
-            Debug.Log("Ingamewindow");
+            LogHelper.Log("WaitingForPlayers", "Ingamewindow");
         }
         
     }
@@ -126,7 +127,7 @@ public class WaitingForPlayersWindow : UiWindow, IInRoomCallbacks,IOnEventCallba
         if (MatchMakingConfig.Instance.Client != null && MatchMakingConfig.Instance.Client.InRoom && MatchMakingConfig.Instance.Client.LocalPlayer.IsMasterClient && MatchMakingConfig.Instance.Client.CurrentRoom.IsOpen) 
         {
             if (!MatchMakingConfig.Instance.Client.OpRaiseEvent((byte)MatchMakingConfig.PhotonEventCode.StartGame, null, new RaiseEventArgs() {Receivers = ReceiverGroup.All,CachingOption = EventCaching.AddToRoomCacheGlobal}, SendOptions.SendReliable)) {
-                Debug.LogError($"Failed to send start game event");
+                LogHelper.Error("WaitingForPlayers", "Failed to send start game event");
             }
         }
     }

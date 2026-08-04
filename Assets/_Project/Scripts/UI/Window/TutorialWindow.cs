@@ -1,6 +1,7 @@
 using System;
 using Quantum;
 using Quantum.Demo;
+using QuantumUser.View.Util;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -27,17 +28,17 @@ public class TutorialWindow : MonoBehaviour
 
     private void OnSceneLoaded(Scene arg0, LoadSceneMode arg1)
     { 
-        Debug.Log($"Loaded scene {arg0.name}");
+        LogHelper.Log("Tutorial", $"Loaded scene {arg0.name}");
     }
 
     public void LoadMenu()
     {
-        Debug.Log("LOAD MENU");
-        Debug.Log("SCENES LOADED BEFORE MENU");
+        LogHelper.Log("Tutorial", "LOAD MENU");
+        LogHelper.Log("Tutorial", "SCENES LOADED BEFORE MENU");
 
-        Debug.Log(SceneManager.sceneCount);
+        LogHelper.Log("Tutorial", SceneManager.sceneCount.ToString());
         for(int i =0; i < SceneManager.sceneCount; i++)
-            Debug.Log(SceneManager.GetSceneAt(i).name);
+            LogHelper.Log("Tutorial", SceneManager.GetSceneAt(i).name);
         
         SceneManager.UnloadSceneAsync("Tutorial");
         SceneManager.LoadScene("RunRaceMenu");

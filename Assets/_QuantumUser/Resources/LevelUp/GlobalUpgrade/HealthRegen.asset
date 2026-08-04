@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/GlobalUpgrade/HealthRegen
     Guid:
       Value: 517186894152947932
-  Icon: {fileID: 0}
+  Icon: {fileID: 1406246131, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
   DisplayName: Health Regeneration
   Rarity: 1
   MaxPicks: 3

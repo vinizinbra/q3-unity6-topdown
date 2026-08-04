@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b088d432be32c40b39db71470949a2e8, type: 3}
+  m_Name: SeeingRed
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.SeeingRedSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Max/M_HeroSkill/M_HeroSkillUpgrades/Overdrive/SeeingRed
+    Guid:
+      Value: 355909590697180511
+  Icon: {fileID: 66671153, guid: 9a944adac56bb4e8dbce2f7bab4127e3, type: 3}
+  DisplayName: Seeing Red
+  Rarity: 1
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 0
+  Description: Activating Overdrive releases a shockwave in a {0}m radius, dealing
+    {1} damage and igniting nearby enemies.
+  BeginFx:
+    ParticlePrefab: {fileID: 8879468892550095982, guid: a02204419861743789e36e9a506c0d45, type: 3}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  Radius:
+    RawValue: 262144
+  Damage:
+    RawValue: 1310720
+  BurnDuration:
+    RawValue: 196608
+  BurnIntensity:
+    RawValue: 6554
+  MaxTargets: 8

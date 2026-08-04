@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/HeavyArsenal
     Guid:
       Value: 459194346184904757
-  Icon: {fileID: 0}
+  Icon: {fileID: -371872225, guid: 9dcd69f213ec845fa868b0a3699cf683, type: 3}
   DisplayName: Heavy Arsenal
   Rarity: 2
   Description: '{0:+0;-0}% Weapon Damage, {1:+0;-0}% Fire Rate'

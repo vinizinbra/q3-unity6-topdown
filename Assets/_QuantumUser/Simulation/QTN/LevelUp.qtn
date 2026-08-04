@@ -3,6 +3,8 @@
 // LevelUpUtility.Resolve). RiftMutation is the newest pool - see docs/rift-mutations.md - a rare,
 // non-stackable, run-wide pool distinct from GlobalUpgrade's small stacking increments (see
 // RiftMutationPicks below for how "non-stackable" is enforced pool-wide rather than per-asset).
+// ChooseWeapon is the newest - see LevelUpOption's own WeaponData/RolledPerks fields below and
+// docs/level-up-upgrades.md's "Category sequencing / Choose Weapon" section.
 enum LevelUpPoolKind : Byte
 {
     None           = 0,
@@ -10,7 +12,23 @@ enum LevelUpPoolKind : Byte
     WeaponPerk     = 2,
     GlobalUpgrade  = 3,
     PassiveUpgrade = 4,
-    RiftMutation   = 5
+    RiftMutation   = 5,
+    ChooseWeapon   = 6
+}
+
+// The 5 player-facing upgrade categories a level-up (or a Chest) can be locked to - distinct from
+// LevelUpPoolKind above, which is the actual GRANT-path discriminator on a rolled LevelUpOption.
+// HeroSkill here covers what LevelUpPoolKind splits into SkillUpgrade + PassiveUpgrade (see
+// LevelUpUtility.CollectPerHeroCandidates, which already always offers both together) - merged
+// because this enum only exists to say WHICH single category a level/Chest draws from, not what
+// gets granted once something's picked. Used by LevelUpConfig.LevelSequence and Chest.Kind.
+enum LevelUpCategory : Byte
+{
+    HeroSkill     = 0,
+    GlobalUpgrade = 1,
+    RiftMutation  = 2,
+    WeaponPerk    = 3,
+    ChooseWeapon  = 4
 }
 
 // One rolled, grantable option. WeaponPerkData/SkillActionData/GlobalUpgradeData/PassiveUpgradeData/
@@ -26,6 +44,14 @@ struct LevelUpOption
     LevelUpPoolKind Kind;
     AssetRef<UpgradeData> Upgrade;
     SkillSlotId SkillUpgradeSlot;  // valid only when Kind == SkillUpgrade
+
+    // Valid only when Kind == ChooseWeapon - a freshly-rolled weapon+perks combo has no single
+    // UpgradeData/Rarity to hang off Upgrade above (the rarity lives on each individual rolled perk
+    // instead - see WeaponDataAsset's own Icon/DisplayName fields). Rendered via a dedicated
+    // WeaponCardWidget, not UpgradeCardWidget - see GameplayUiController.BuildWeaponCardData.
+    AssetRef<WeaponDataAsset> WeaponData;
+    array<AssetRef<WeaponPerkData>>[5] RolledPerks;  // mirrors Weapon.Perks[5]'s own ceiling
+    Byte RolledPerkCount;
 }
 
 // Attached to a player's own character entity (found via PlayerLink) the instant a level-up screen
@@ -42,6 +68,15 @@ component LevelUpChoice
                          // candidates than ChoiceCount, leaving trailing slots at Kind == None
     Boolean Confirmed;
     Byte SelectedIndex;
+
+    // Screen-title info, populated once at roll time (LevelUpUtility.RollOptionsFor/
+    // RollChooseWeaponOptionsFor) so the view doesn't need to re-derive origin/category itself.
+    // FromChest mirrors "was BeginChestScreen the caller" (see OpenUpgradeScreen) - a plain
+    // level-up screen always shows a generic title regardless of any LevelUpConfig.LevelSequence
+    // category, so this is NOT the same as "category != null". Category is only meaningful when
+    // FromChest is true.
+    Boolean FromChest;
+    LevelUpCategory Category;
 }
 
 // One entity's pick history for the GlobalUpgrade pool - only consulted for an upgrade authored
@@ -64,8 +99,44 @@ struct GlobalUpgradePickEntry
 // every Rift Mutation is non-stackable (a pool-wide rule, not an opt-in per-asset MaxPicks), so
 // there's nothing to count, only "has this already been granted" - see RiftMutationUtility.Grant/
 // IsAlreadyPicked and LevelUpUtility.CollectRiftMutationCandidates. Fixed array with headroom over
-// the current 14-mutation catalog, same convention as GlobalUpgradePicks/SkillSlot.Upgrades.
+// the current 25-mutation catalog (14 original + 11 Rift Mark content pool additions - see
+// docs/rift-mutations.md), same convention as GlobalUpgradePicks/SkillSlot.Upgrades. Grown from [16]
+// in the same pass that added those 11, since 14+11 already exceeded the old headroom.
 component RiftMutationPicks
 {
-    array<AssetRef<RiftMutationData>>[16] Picked;
+    array<AssetRef<RiftMutationData>>[32] Picked;
+}
+
+// One entity's pick history for the PassiveUpgrade pool - same "has this already been granted"
+// shape as RiftMutationPicks above (Passive Upgrade is per-hero rather than pool-wide non-stackable,
+// but every Passive Upgrade is still single-pick, unlike GlobalUpgrade's opt-in stacking) - see
+// PassiveUpgradeUtility.Grant/IsAlreadyPicked and LevelUpUtility.CollectPerHeroCandidates. Fixed
+// array with headroom over the largest per-hero passive catalog.
+component PassiveUpgradePicks
+{
+    array<AssetRef<PassiveUpgradeData>>[32] Picked;
+}
+
+// Flat run-wide record of every upgrade an entity has ever been granted, covering Skill Upgrade/
+// Global Upgrade/Passive Upgrade/Rift Mutation - unlike GlobalUpgradePicks/RiftMutationPicks/
+// SkillSlot.Upgrades above (each scoped to one kind, kept for their own gameplay checks), this one
+// exists purely for display: the party HUD's PartyHistoryUpgradeContainer reads it to show an icon
+// per pick. Weapon Perk is deliberately excluded (see LevelUpUtility.RecordHistory) - already
+// visible on the weapon itself, and rolls too often to be worth a HUD icon. Written by
+// LevelUpUtility.RecordHistory, one call site covering every included kind generically via the
+// same AssetRef<UpgradeData> reinterpret LevelUpOption already uses. A repeat pick of the same
+// stacking upgrade (e.g. an uncapped GlobalUpgrade) bumps Count on its existing entry instead of
+// adding a duplicate row. Fixed array with headroom over the largest covered catalog (~25 Rift
+// Mutations), same convention as GlobalUpgradePicks/RiftMutationPicks - Quantum components can't
+// hold an actual dynamic list.
+component UpgradeHistory
+{
+    array<UpgradeHistoryEntry>[32] Entries;
+}
+
+struct UpgradeHistoryEntry
+{
+    LevelUpPoolKind Kind;
+    AssetRef<UpgradeData> Upgrade;
+    Byte Count;
 }

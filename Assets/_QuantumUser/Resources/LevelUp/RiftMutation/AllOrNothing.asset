@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/AllOrNothing
     Guid:
       Value: 411322840850662590
-  Icon: {fileID: 0}
+  Icon: {fileID: -1517970103, guid: 9dcd69f213ec845fa868b0a3699cf683, type: 3}
   DisplayName: All or Nothing
   Rarity: 2
   Description: Your next level-up (and every one after) offers a single, higher-rarity

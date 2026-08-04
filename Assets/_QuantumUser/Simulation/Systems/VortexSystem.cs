@@ -242,7 +242,7 @@ namespace Quantum
 
             ProjectileDataAsset projectileData = f.FindAsset(upgrade->Projectile);
             ProjectileMovementData movement = f.FindAsset(projectileData.Movement);
-            ProjectileLaunch launch = movement.GetLaunchToTarget(center, targetPosition);
+            ProjectileLaunch launch = movement.GetLaunchToTarget(f, center, targetPosition, target);
 
             if (launch.IsValid == false)
                 return;

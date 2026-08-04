@@ -8,7 +8,7 @@ namespace Quantum
     // Plain overwrite-on-reapply. Duration/Multiplier are read from
     // RuntimeConfig.EffectConfig.AnticipationSlowDuration/AnticipationSlowMultiplier - deliberately
     // NOT ElementalReactionConfig's FreezeDuration/FreezeAnticipationMultiplier, which are dedicated
-    // to the Void+Ice reaction and would otherwise get silently retuned by any other source using
+    // to the Ice+RiftMark Deep Freeze reaction and would otherwise get silently retuned by any other source using
     // this class. Gives Freeze a freely-authorable HitEffectData the same way Stun/Root already
     // have one, independent of the elemental reaction that normally grants it.
     public unsafe class FreezeEffectData : HitEffectData

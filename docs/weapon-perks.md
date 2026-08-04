@@ -11,7 +11,7 @@ Editor authoring is still needed before any of this can drop or be offered at ru
 
 - `UpgradeData` (see `docs/level-up-upgrades.md`) supplies `Icon`/`DisplayName`/`Rarity`;
   `WeaponPerkData` (`Assets/_QuantumUser/Simulation/Assets/Weapon/Perks/WeaponPerkData.cs`) adds one
-  abstract method: `Apply(Frame f, Weapon* weapon)`.
+  abstract method: `Apply(Frame f, EntityRef owner, Weapon* weapon)`.
 - **`Description` is a live-formatted template, not static text** - same
   `Description`/`DescriptionArgs`/`GetFormattedDescription()`/`DescriptionUtility.Format` shape
   `SkillActionData` already uses (`WeaponPerkData.View.cs`). Each concrete perk class overrides
@@ -22,12 +22,13 @@ Editor authoring is still needed before any of this can drop or be offered at ru
   the card describing the wrong number, since `GetDescription()` (what `UpgradeCardWidget` actually
   reads) recomputes the sentence from those same live fields every time instead of returning a
   hand-typed string.
-- A perk **bakes its effect once into `Weapon`'s own fields** at equip/grant time - it's never
-  removed and never re-applied. Two roll paths reach it: `WeaponGenerator.Roll` (a fresh drop,
-  weighted by `WeaponPerkPoolData`) and `WeaponSystem.AddPerk` (a level-up pick or the debug
-  `GrantWeaponPerkCommand`, weighted separately by `LevelUpConfig` - see `docs/level-up-upgrades.md`).
-  `Weapon.Perks` (a fixed `[5]` array) only records *what* was granted for the UI; the baked fields
-  below are the runtime source of truth.
+- A perk **bakes its effect once into `Weapon` (or one of its optional sub-components, see "Weapon
+  Perk component split" below)** at equip/grant time - it's never removed and never re-applied on
+  its own (only wiped wholesale by a weapon swap, see `WeaponSystem.SeedPerkRoster`). Two roll paths
+  reach it: `WeaponGenerator.Roll` (a fresh drop, weighted by `WeaponPerkPoolData`) and
+  `WeaponSystem.AddPerk` (a level-up pick or the debug `GrantWeaponPerkCommand`, weighted separately
+  by `LevelUpConfig` - see `docs/level-up-upgrades.md`). `Weapon.Perks` (a fixed `[5]` array) only
+  records *what* was granted for the UI; the baked fields are the runtime source of truth.
 - Several perks need more than a one-shot bake, so three supporting mechanisms exist purely to let
   `Apply` stay that simple:
   1. **Live-read math, not baked absolutes.** Magazine-position perks (Opening Burst/Execution
@@ -92,9 +93,53 @@ Editor authoring is still needed before any of this can drop or be offered at ru
 | Epic | Combat Reboot | `CombatRebootWeaponPerkData` | Magazine-empty hook (`SkillSystem.ReduceCooldown`) |
 | Legendary | Infinite Echo | `InfiniteEchoWeaponPerkData` | Pending-echo queue (every shot) |
 | Legendary | Quantum Rounds | `QuantumRoundsWeaponPerkData` | Every-hit nearby-enemy damage |
+| Rare | Fracture Rounds | `FractureRoundsWeaponPerkData` | `OnWeaponHitLanded` + hit counter (Rift Mark) |
+| Rare | Critical Fracture | `CriticalFractureWeaponPerkData` | `OnCriticalHit` reaction (Rift Mark) |
+| Rare | Unstable Payload | `UnstablePayloadWeaponPerkData` | Explosion-radius overlap (Rift Mark) |
+| Rare | Focused Breach | `FocusedBreachWeaponPerkData` | Same-target contact-time tracking (Rift Mark) |
+| Rare | Rift Aftershock | `RiftAftershockWeaponPerkData` | `OnEntityKilled` + nearest-enemy transfer (Rift Mark) |
 
 `Min Kill Tier` (the original table's last column) was dropped entirely per design direction - every
 on-kill perk (Killer Instinct, Predator Magazine) triggers on any kill, no tier gate.
+
+## Rift Mark content pool
+
+5 perks added in the same pass that built the Rift Mutation half (`docs/rift-mutations.md`) of the
+Rift Mark application content pool - see `docs/elemental-reactions.md` for what Rift Mark itself is.
+None of these fit the `HitEffectData`-list pattern `BurnEffectData`/`SlowEffectData`/
+`RiftMarkEffectData` use (`Weapon` has no such list, and every one of these needs a *conditional*
+per-hit check, not an unconditional per-asset effect) - each calls
+`StatusEffectUtility.ApplyRiftMark`/`RiftMarkApplicationUtility.ApplyRequest` directly from
+perk-reaction code instead, gated by its own baked flag (now on `WeaponHitTrackingPerks`/
+`WeaponOnCritReactions`/`WeaponOnKillReactions`, see "Weapon Perk component split" below), the same
+shape `DirectHitData.ApplyQuantumRounds`/`WeaponSystem.ApplyHitscanWeaponPerks`'s own Quantum Rounds
+branch already uses for "conditionally call a status/damage utility from perk-consuming code."
+
+- **Fracture Rounds** - `WeaponHitTrackingPerks.FractureHitCounter` increments in
+  `WeaponPerkReactionSystem.OnWeaponHitLanded` (the same signal the shared ramp pool advances on -
+  already excludes DoT-tick replays/non-weapon sources), a genuine confirmed-hit counter, not a
+  shots-fired one like `ShotsSinceExplosiveProc`. `OnWeaponHitLanded` gained a `target` parameter
+  (`Combat.qtn`) to support this - the ramp pool itself still only reads `owner`.
+- **Critical Fracture** - `WeaponPerkReactionSystem.OnCriticalHit`, shares
+  `RiftMarkCooldownKey.CriticalFracture` with the Rift Mutation of the same name so the two can never
+  both stack from one crit (see `docs/rift-mutations.md`'s "Application/dedup architecture").
+- **Unstable Payload** - hooks the two existing weapon-proc `HitEffectUtility.ApplyExplosion` call
+  sites (`DirectHitData.ApplyTerminalWeaponPerks`, `WeaponSystem.ApplyHitscanWeaponPerks`) via a new
+  `WeaponPerkUtility.TryApplyUnstablePayloadMarks` - runs its own overlap query over the same
+  center/radius the explosion's own damage already used, marking every enemy caught once each (no
+  cooldown needed - one explosion's blast loop only visits each target once by construction).
+- **Focused Breach** - simulates "beam contact" as continuous same-target Hitscan hits, since this
+  project has no dedicated Beam fire type. `WeaponHitTrackingPerks.FocusedBreachTarget`/
+  `FocusedBreachContactTime` are runtime state tracked in `WeaponSystem.FireHitscan`'s
+  hit-confirmed/missed branches (only pellet 0 of a volley tracks it, same "one beam, not N"
+  reasoning Explosive Sequence/Cataclysm Round's own pellet gating uses) - losing contact (a miss, or
+  the hit entity changing) resets progress.
+- **Rift Aftershock** - `WeaponPerkReactionSystem.OnEntityKilled`, transfers to the nearest other
+  valid enemy via `WeaponPerkUtility.TryFindNearestEnemy` within a new dedicated
+  `ElementalReactionConfig.RiftAftershockRadius` (deliberately not reusing `SingularityRadius`, which
+  has its own live reaction consumer). That utility gained a `Phase != Dead`/non-`Invulnerable` guard
+  in the same pass - it could previously select a lingering-dead or invulnerable enemy, a real edge
+  case a kill-reaction perk hits constantly.
 
 ## Design decisions made while implementing
 
@@ -107,21 +152,75 @@ on-kill perk (Killer Instinct, Predator Magazine) triggers on any kill, no tier 
   value any equipped contributor asks for via `FPMath.Max`, not a sum - so combining perks can't
   accidentally make a shared timing constant faster/slower than any single perk intends.
 
+## Weapon Perk component split
+
+`component Weapon` originally held every perk's baked fields directly - it grew to 73 flat fields as
+the roster filled out, which was enough for its auto-generated `GetHashCode()`/serializer to blow
+past clang's bracket-nesting limit compiling `Quantum.Simulation` for IL2CPP/Android. Since a weapon
+can equip at most 5 of ~18 perks that touch these fields at once (`Weapon.Perks` is `array[5]`), most
+of those fields sat unused/zeroed on every weapon anyway - wasted per-entity memory and wasted bytes
+in every network/replay/checksum snapshot (Quantum serializes the whole component every tick).
+
+The fix: perk-specific state now lives on 8 small **optional** components in `WeaponPerks.qtn`,
+added via `f.AddOrGet<T>` only when a perk that needs them is actually granted, removed
+unconditionally in `WeaponSystem.SeedPerkRoster` on every re-equip - a missing component means
+exactly what a zeroed field used to mean ("this perk cluster wasn't rolled"). Only 13 always-present
+fields (`WeaponData`/`Perks`/`MagazineSize`/`ReloadDuration`/`CriticalChance`/
+`CriticalDamageBonus`/`DamageMultiplier`/`FireCooldownMultiplier`/`FireCooldownTimer`/`Ammo`/
+`ReloadTimer`/`TimeSinceFireReleased`/`RangeMultiplier`) remain on `Weapon` itself.
+
+| Component | Perks it serves |
+|---|---|
+| `WeaponMagazinePositionPerks` | Opening Burst, Execution Rounds, Final Round, Escalating Rounds |
+| `WeaponRampState` | Relentless Fire, Suppressive Cycle, Overcharge Cycle (the shared ramp pool - mandatory single component, all 3 feed it via `FPMath.Max`/SUM) |
+| `WeaponEchoState` | Echo Chamber, Infinite Echo (mandatory single component - both drive the same shared `EchoDelay`/`PendingEchoes` queue) |
+| `WeaponFireTimeMods` | Piercing Rounds, Ricochet, Double Tap |
+| `WeaponPostImpactProcs` | Split Shot, Quantum Rounds, Explosive Sequence, Cataclysm Round |
+| `WeaponReloadHooks` | Empty Chamber, Combat Reboot, Emergency Reload |
+| `WeaponOnKillReactions` | Predator Magazine, Killer Instinct, Rift Aftershock |
+| `WeaponOnCritReactions` | Bottomless Momentum, Critical Rebound, Critical Fracture |
+| `WeaponHitTrackingPerks` | Fracture Rounds, Unstable Payload, Focused Breach |
+
+`WeaponPerkData.Apply` gained an `EntityRef owner` parameter so a perk can `f.AddOrGet<T>(owner, out
+var ptr)` for its own component - 9 perk classes that only ever touch `Weapon`'s core fields
+(Heavy Caliber, Rapid Mechanism, Extended Magazine, Fast Loader, Long Barrel, Precision Barrel,
+Hollow Point, and the two unnamed original Damage/Cooldown multiplier perks) needed no logic change
+beyond the signature. Every consumer site that used to read a field unconditionally (no `Has*` gate -
+a value of exactly 0 was what meant "not rolled") now reads through `f.Unsafe.TryGetPointer<T>`
+instead, with absence meaning the same "no bonus" as before. `WeaponSystem.ApplyPixieExplosiveWeapon`
+(Pixie's Explosive Rounds passive, unrelated to the perk roster but writes into
+`WeaponPostImpactProcs`) had to switch to `f.AddOrGet` too, since it runs unconditionally on every
+`Equip` regardless of whether an Explosive Sequence/Cataclysm perk was ever rolled.
+
+**Emergency Reload's latch is the one genuinely fragile spot**: `WeaponReloadHooks.
+EmergencyReloadApplied` gates a temporary `CharacterStats` bonus add/subtract - `SeedPerkRoster`
+calls `RevertEmergencyReload` (already self-guarded on the latch) unconditionally *before* removing
+`WeaponReloadHooks` on a weapon swap, same revert-then-remove idiom
+`OverdriveDamageSkillAction.End()` already uses, so the bonus can't leak onto a `CharacterStats` that
+survives the swap.
+
 ## Files
 
-**New QTN**: `Combat.qtn` (`OnEntityKilled`/`OnCriticalHit`/`OnWeaponHitLanded` signals).
-**Edited QTN**: `Weapon.qtn` (every new bake/runtime field above, plus the `PendingEcho` struct),
-`Projectile.qtn` (`RemainingBounces`/`MaxDistanceMultiplier`/`IsExplosiveProc`/`IsCataclysm`).
+**New QTN**: `Combat.qtn` (`OnEntityKilled`/`OnCriticalHit`/`OnWeaponHitLanded` signals -
+`OnWeaponHitLanded` later gained a `target` parameter for Fracture Rounds, see "Rift Mark content
+pool" above), `WeaponPerks.qtn` (the 8 optional perk components above, plus the `PendingEcho` struct
+- see "Weapon Perk component split").
+**Edited QTN**: `Weapon.qtn` (trimmed down to its 13 core fields - every perk-specific field moved to
+`WeaponPerks.qtn`), `Projectile.qtn`
+(`RemainingBounces`/`MaxDistanceMultiplier`/`IsExplosiveProc`/`IsCataclysm`).
 **New systems**: `WeaponPerkReactionSystem.cs` (on-kill/on-crit/ramp-advance reactions, registered in
 `SystemSetup.User.cs` next to `WeaponSystem`), `WeaponPerkUtility.cs` (shared nearest-enemy query
-used by Ricochet/Quantum Rounds/Critical Rebound).
+used by Ricochet/Quantum Rounds/Critical Rebound/Rift Aftershock, plus Unstable Payload's own overlap
+helper), `RiftMarkApplicationUtility.cs`/`RiftMutationMarkUtility.cs` (shared with
+`docs/rift-mutations.md` - the cooldown-key dedup layer every Rift Mark perk/mutation goes through).
 **Edited systems**: `WeaponSystem.cs` (fire-branch live math, Double Tap, echo queue, reload hooks for
-Emergency Reload/Empty Chamber/Combat Reboot, Hitscan perk application), `DirectHitData.cs`
-(Ricochet/Split Shot/Quantum Rounds/Explosive Sequence/Cataclysm Round), `ProjectileSystem.cs`
-(`MaxDistanceMultiplier` in `TryExpire`), `DamageUtility.cs` (the 3 new signal dispatches),
-`SkillSystem.cs` (`ReduceCooldown`).
-**New perk assets**: ~27 new `WeaponPerkData` subclasses under `Assets/Weapon/Perks/`, alongside the
-original 5.
+Emergency Reload/Empty Chamber/Combat Reboot, Hitscan perk application, Focused Breach contact
+tracking, plus the whole component-split cutover - `SeedPerkRoster`, `ApplyPixieExplosiveWeapon`,
+every perk-field read site), `DirectHitData.cs` (Ricochet/Split Shot/Quantum Rounds/Explosive
+Sequence/Cataclysm Round/Unstable Payload), `ProjectileSystem.cs` (`MaxDistanceMultiplier` in
+`TryExpire`), `DamageUtility.cs` (the 3 signal dispatches), `SkillSystem.cs` (`ReduceCooldown`).
+**New perk assets**: ~32 new `WeaponPerkData` subclasses under `Assets/Weapon/Perks/`, alongside the
+original 5 (27 from the original roster + 5 from the Rift Mark content pool).
 
 ## View / presentation
 
@@ -151,6 +250,17 @@ bespoke prefab of its own) can reuse them instead of each wiring up a new event:
   directly - no dedicated field, same "no single asset to resolve a bespoke prefab from" reasoning
   `ExplodeOnDeathDetonated` already uses - so both procs get real VFX with zero additional Editor
   authoring needed.
+- **`QuantumRoundsTriggered`** (`Events.qtn`) - unlike the two generic events above, this one carries
+  a `Source: AssetRef<QuantumRoundsWeaponPerkData>` (baked into a new `WeaponPostImpactProcs.
+  QuantumRoundsSource` field by `QuantumRoundsWeaponPerkData.Apply`, same self-referencing-AssetRef
+  pattern `GroundPoundUpgrade.Source` uses), so the view resolves a **per-asset** prefab instead of a
+  shared one. Fired by both `DirectHitData.ApplyQuantumRounds` (Projectile) and
+  `WeaponSystem.ApplyHitscanWeaponPerks` (Hitscan) at the chained-onto enemy's own live position, not
+  the original shot's impact point. `EffectsManager.OnQuantumRoundsTriggered` plays
+  `QuantumRoundsWeaponPerkData.ImpactEffectPrefab` (see its `.View.cs` partial) at
+  `quantumRoundsEffectScale`, falling back to `defaultAreaBlastEffect` if that field is left empty on
+  the generated `.asset` - same authoring gap the shockwave bullet above documents, not yet fixed here
+  either.
 
 ## Asset generation
 
@@ -198,7 +308,10 @@ drop (`WeaponGenerator.Roll`) can, once something actually calls it with this po
    children** - Double Tap's free shot mirrors the primary shot's already-resolved
    proc flags rather than re-rolling/advancing the counter itself; split children don't touch it at
    all (see #4).
-6. **Pellet weapons (shotguns)** - `WeaponDataAsset.PelletCount`/`SpreadAngle` fire a cone-spread
+6. **Rift Mark content pool** - see `docs/rift-mutations.md`'s own "Current status" for the shared
+   caveats (no automated coverage for the Frame-dependent half, cross-mechanic dedup scoped to within
+   each evaluation point not globally, Focused Breach's contact-time reset-on-miss-only behavior).
+7. **Pellet weapons (shotguns)** - `WeaponDataAsset.PelletCount`/`SpreadAngle` fire a cone-spread
    volley from one trigger pull (both `FireHitscan` and `FireProjectile` loop over
    `WeaponSystem.GetPelletAngle`), same convention as the enemy-only `FanProjectileDeliveryData`.
    `Damage` is read PER PELLET, not as the volley's total. Piercing Rounds/Ricochet/Split
@@ -208,3 +321,11 @@ drop (`WeaponGenerator.Roll`) can, once something actually calls it with this po
    N-pellet shotgun detonates once per trigger pull instead of N times. `PelletCount` of 1 (the
    default) is a no-op for every existing weapon. No `Shotgun.asset` exists yet - author one in the
    Editor by duplicating an existing `WeaponDataAsset` and tuning `PelletCount`/`SpreadAngle`/`Damage`.
+8. **Quantum Rounds has a VFX hook, unauthored** - `QuantumRoundsWeaponPerkData.ImpactEffectPrefab`
+   (its own `.View.cs` partial) is played on the chained-onto enemy via a new `QuantumRoundsTriggered`
+   event/`EffectsManager.OnQuantumRoundsTriggered`, baked through a new `WeaponPostImpactProcs.
+   QuantumRoundsSource` self-reference (same pattern `GroundPoundUpgrade.Source` uses) so the view can
+   resolve the asset that granted the perk - both the Projectile path (`DirectHitData.
+   ApplyQuantumRounds`) and the Hitscan path (`WeaponSystem.ApplyHitscanWeaponPerks`) fire it. Falls
+   back to `EffectsManager.defaultAreaBlastEffect` at `quantumRoundsEffectScale` until a bespoke
+   particle is assigned to the generated `QuantumRoundsWeaponPerkData.asset`.

@@ -34,10 +34,15 @@ namespace Quantum
         // isChainedExplosion/isDashExplosion/isExplosion all feed TryMarkExplodeOnDeath (Pixie's
         // Chain Reaction passive and its Volatile Escape ascension) - see that method's own comment.
         // All three default false, so every existing caller is unaffected.
+        // hitIndex only matters to EntityDamaged's own dedup-avoidance (see Events.qtn's comment on
+        // EntityDamaged.HitIndex) - defaults to 0 for every caller except WeaponSystem.FireHitscan's
+        // pellet loop, the only place multiple identical-damage hits can land on one stationary
+        // target within a single tick.
         public static void ApplyDamage(Frame f, EntityRef target, FP damage, EntityRef owner,
             DamageSource source = DamageSource.None, bool bypassOutgoingResolution = false,
             ElementType element = ElementType.Neutral, bool silent = false,
-            bool isChainedExplosion = false, bool isDashExplosion = false, bool isExplosion = false)
+            bool isChainedExplosion = false, bool isDashExplosion = false, bool isExplosion = false,
+            byte hitIndex = 0)
         {
             if (f.Unsafe.TryGetPointer<Health>(target, out var health) == false)
             {
@@ -69,7 +74,7 @@ namespace Quantum
             if (source == DamageSource.Weapon && bypassOutgoingResolution == false)
             {
                 RageOverdriveUtility.TryAdvanceStack(f, owner);
-                f.Signals.OnWeaponHitLanded(owner);
+                f.Signals.OnWeaponHitLanded(target, owner);
             }
 
             FP totalDamage;
@@ -88,9 +93,18 @@ namespace Quantum
             if (isCritical == true)
             {
                 f.Signals.OnCriticalHit(target, owner, totalDamage, source);
+
+                // Pixie's Volatile Payload - a narrower sibling fire, not a replacement, so every
+                // existing OnCriticalHit subscriber (Flashpoint, weapon perks, Rift Mutations) is
+                // unaffected. See Combat.qtn's own comment on why this isn't just an extra parameter
+                // on OnCriticalHit itself.
+                if (isExplosion == true)
+                {
+                    f.Signals.OnExplosionCriticalHit(target, owner, totalDamage, source);
+                }
             }
 
-            // Break - target-side vulnerability, applied once here so every damage source (hitscan,
+            // Rupture - target-side vulnerability, applied once here so every damage source (hitscan,
             // projectile, melee, DoT ticks) respects it identically. Multiplies the attacker's
             // already-resolved damage rather than replacing Armor/Shield mitigation below it.
             totalDamage *= StatusEffectUtility.GetIncomingDamageMultiplier(f, target);
@@ -99,9 +113,47 @@ namespace Quantum
             FP frontalMultiplier = ResolveFrontalDamageMultiplier(f, target, owner);
             totalDamage *= frontalMultiplier;
 
-            FP remaining = AbsorbWithShield(f, target, ReduceByArmor(f, target, totalDamage));
+            FP mitigatedDamage = ReduceByArmor(f, target, totalDamage);
+            FP remaining = AbsorbWithShield(f, target, mitigatedDamage);
+            FP shieldAbsorbed = mitigatedDamage - remaining;
+            bool directHit = bypassOutgoingResolution == false;
 
-            health->CurrentHealth = FPMath.Max(FP._0, health->CurrentHealth - remaining);
+            // Health/Shield damage reporting - generic, fired for every source including None
+            // (environmental), unlike OnWeaponHitLanded above which is weapon-only. See Combat.qtn's
+            // own comment; consumed today by Max's Vendetta (docs/max-vendetta-fire-mastery.md).
+            if (shieldAbsorbed > FP._0)
+            {
+                f.Signals.OnShieldDamageApplied(target, owner, shieldAbsorbed, source, directHit);
+            }
+
+            // Rift Mutation mark-application content (Heavy/Close/Long/Execution/First Contact/Skill/
+            // Critical Fracture) - evaluated here, not via a signal, so pre-damage health/distance are
+            // both still live and every mechanic shares one deterministic priority order (see
+            // docs/rift-mutations.md's "Event resolution order"). Same bypassOutgoingResolution gate
+            // OnWeaponHitLanded above already uses to exclude DoT-tick replays.
+            if (bypassOutgoingResolution == false)
+            {
+                RiftMutationMarkUtility.EvaluateOnDamage(f, target, owner, source, remaining,
+                    health->CurrentHealth, health->MaxHealth, isCritical);
+                RiftMutationMarkUtility.EvaluateLastStand(f, target, remaining);
+            }
+
+            FP healthAfter = health->CurrentHealth - remaining;
+
+            // Too Angry to Die - a hit that would otherwise be lethal instead leaves the owner at 1
+            // Health and force-ends their current Overdrive activation (see CheatDeathUtility). Only
+            // ever intervenes on an actually-lethal hit, never a survivable one.
+            if (healthAfter <= FP._0 && CheatDeathUtility.TryPreventLethal(f, target) == true)
+            {
+                healthAfter = FP._1;
+            }
+
+            health->CurrentHealth = FPMath.Max(FP._0, healthAfter);
+
+            if (remaining > FP._0)
+            {
+                f.Signals.OnHealthDamageApplied(target, owner, remaining, source, directHit);
+            }
 
             // Read now, not by the view re-resolving Target's Transform3D later - a killing blow can
             // destroy Target before this tick is even done (see the death branch below), which would
@@ -110,7 +162,7 @@ namespace Quantum
                 ? targetTransform->Position
                 : FPVector3.Zero;
 
-            f.Events.EntityDamaged(target, owner, totalDamage, isCritical, element, silent, frontalMultiplier < FP._1, hitPosition);
+            f.Events.EntityDamaged(target, owner, totalDamage, isCritical, element, silent, frontalMultiplier < FP._1, hitPosition, hitIndex);
 
             // Max's Adrenaline Rush - builds from dealing OR receiving damage, on every landed hit
             // (not just a kill), regardless of source. No-ops on anything without Adrenaline (every
@@ -161,6 +213,14 @@ namespace Quantum
                 else
                 {
                     TrySentryOverload(f, owner, target);
+
+                    // ExplodeOnDestroy (see ExplodeOnDestroy.qtn) - the damage-death counterpart to
+                    // DestroyAfterTimeSystem's own trigger, so a damageable Mini Bomb (Health seeded
+                    // to 1, a Decoy tag drawing enemy aggro, a real trap) detonates the instant an
+                    // enemy actually kills it, not just when its fuse times out. No-op for anything
+                    // without the component, same as every other optional check in this branch.
+                    ExplodeOnDestroyUtility.TryDetonate(f, target);
+
                     f.Destroy(target);
                 }
             }
@@ -286,13 +346,13 @@ namespace Quantum
             FP blastRadius = radius * config.RadiusMultiplier;
             FP damage = maxHealth * config.DamagePercent;
 
-            // Void-marked kills detonate bigger and harder - see docs/elemental-reactions.md for
-            // what applies Void; this stacks with every bonus below, it's not a replacement for any
-            // of them.
-            if (StatusEffectUtility.IsVoided(f, target) == true)
+            // Rift-Marked kills detonate bigger and harder - see docs/elemental-reactions.md for
+            // what applies a Rift Mark; this stacks with every bonus below, it's not a replacement
+            // for any of them.
+            if (StatusEffectUtility.IsRiftMarked(f, target) == true)
             {
-                blastRadius *= config.VoidRadiusMultiplier;
-                damage *= config.VoidDamageMultiplier;
+                blastRadius *= config.RiftMarkRadiusMultiplier;
+                damage *= config.RiftMarkDamageMultiplier;
             }
 
             // Pixie-only ascensions - Bigger Boom/Unstable Mixture apply unconditionally
@@ -350,9 +410,13 @@ namespace Quantum
         // CharacterSystem.cs) but never actually read anywhere - this is that missing wire-up. A
         // fraction (0 = no reduction, 1 = fully immune), same convention as every other
         // Multiplier-suffixed stat despite the name; clamped so a stacked bonus past 1 can't flip
-        // into negative (healing) damage. Target-side, same as Break - stacks with it rather than
+        // into negative (healing) damage. Target-side, same as Rupture - stacks with it rather than
         // replacing it.
-        private static FP ResolveDamageReduction(Frame f, EntityRef target)
+        //
+        // Public so DamageReductionUiWidget (View) can read the exact same combined multiplier
+        // instead of re-deriving it from CharacterStats/StatusEffects separately - a hand-duplicated
+        // copy of this math would silently drift the instant a third source gets added here.
+        public static FP ResolveDamageReduction(Frame f, EntityRef target)
         {
             FP multiplier = FP._1;
 
@@ -364,6 +428,11 @@ namespace Quantum
             // Max's Too Angry to Die - a timed buff, independent of (and stacking with) the permanent
             // CharacterStats fraction above.
             multiplier *= StatusEffectUtility.GetDamageReductionMultiplier(f, target);
+
+            // Brute's Guardian ascension (Protector Aura, ally-targeted) - its own dedicated pair,
+            // not the generic one above, so it can never collide with Too Angry to Die - see
+            // StatusEffects.qtn's own comment on GuardianDamageReductionRemaining/Amount.
+            multiplier *= StatusEffectUtility.GetGuardianDamageReductionMultiplier(f, target);
 
             return multiplier;
         }
@@ -504,6 +573,26 @@ namespace Quantum
                 damage *= AdrenalineUtility.GetWeaponDamageMultiplier(f, owner);
             }
 
+            // Pixie's Unstable Targeting - bonus damage against a target currently marked
+            // ExplodeOnDeath ("Unstable"), read live rather than baked into CharacterStats.
+            // DamageMultiplier, same idiom Hot Target uses below for its own conditional bonus.
+            // Gated on MarkExplosiveDeath's presence purely as "does this owner hold the upgrade" -
+            // the mark being read is the TARGET's own, regardless of who applied it.
+            if (f.Unsafe.TryGetPointer<MarkExplosiveDeath>(owner, out var mark) == true
+                && f.Has<ExplodeOnDeath>(target) == true)
+            {
+                damage *= mark->DamageBonusVsUnstable;
+            }
+
+            // Brute's Crushing Blow - bonus damage against a currently-Stunned target, read live
+            // rather than baked into CharacterStats.DamageMultiplier, same idiom as Unstable
+            // Targeting above.
+            if (f.Unsafe.TryGetPointer<CrushingBlowUpgrade>(owner, out var crushingBlow) == true
+                && StatusEffectUtility.IsStunned(f, target) == true)
+            {
+                damage *= FP._1 + crushingBlow->DamageMultiplierBonus;
+            }
+
             FP chance = stats->CriticalChance;
             FP multiplier = stats->CriticalDamageMultiplier;
 
@@ -515,6 +604,15 @@ namespace Quantum
             {
                 chance += weapon->CriticalChance;
                 multiplier += weapon->CriticalDamageBonus;
+            }
+
+            // Max's Hot Target (Fire Mastery) - bonus Critical Chance vs a currently-Burning
+            // target, read live rather than baked into CharacterStats.CriticalChance. See
+            // docs/max-vendetta-fire-mastery.md.
+            if (f.Unsafe.TryGetPointer<ConditionalCriticalModifier>(owner, out var critMod) == true
+                && StatusEffectUtility.IsBurning(f, target) == true)
+            {
+                chance += critMod->CriticalChanceBonusVsBurning;
             }
 
             if (RollChance(f, chance) == false)

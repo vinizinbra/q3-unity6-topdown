@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/GlobalUpgrade/SkillDamage
     Guid:
       Value: 468352616526183711
-  Icon: {fileID: 0}
+  Icon: {fileID: -592327179, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
   DisplayName: Skill Damage
   Rarity: 0
   MaxPicks: 3

@@ -58,17 +58,18 @@ namespace Quantum
         // Root - granted by JuggernautLandingRootSkillAction (baked through
         // JuggernautLandingRootUpgrade/JuggernautLaunched at launch time; see that class for why
         // Duration alone moves here while RootChance/Damage stay skill-specific) and by the generic
-        // RootEffectData, for any other source that wants to root on hit. NOT read by the Fire+Rock
-        // Magma Prison reaction, which uses its own dedicated
-        // ElementalReactionConfig.MagmaPrisonRootDuration instead - see docs/elemental-reactions.md.
+        // RootEffectData/MagmaPrisonEffectData, for any other source that wants to root on hit. The
+        // Fire+Rock Magma Prison elemental reaction that used to also grant Root (via its own
+        // dedicated ElementalReactionConfig.MagmaPrisonRootDuration) was retired when Rift Mark
+        // replaced the pairwise reaction scan - see docs/elemental-reactions.md.
         public FP RootDuration = 2;
 
         public FP SlowDuration = 3;
         public FP SlowSpeedMultiplier = FP._0_50;
 
         // Generic FreezeEffectData's own knob - NOT ElementalReactionConfig's
-        // FreezeDuration/FreezeAnticipationMultiplier, which are dedicated to the Void+Ice reaction
-        // specifically. Named after the underlying StatusEffects field (AnticipationSlowRemaining/
+        // DeepFreezeDuration/DeepFreezeAnticipationMultiplier, which are dedicated to the Ice+RiftMark Deep Freeze
+        // reaction specifically. Named after the underlying StatusEffects field (AnticipationSlowRemaining/
         // AnticipationSlowMultiplier) rather than "Freeze" so the two are never confused for the
         // same knob at a glance. See docs/elemental-reactions.md.
         public FP AnticipationSlowDuration = 3;

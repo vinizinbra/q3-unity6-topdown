@@ -91,6 +91,15 @@ namespace Quantum
                 _armBaseLocalPosition = arm.localPosition;
         }
 
+        // Fire()'s recoil kicks (Tween.PunchCustom(this, ...)) are frequently still decaying when
+        // the enemy dies mid-shot - without this, PrimeTween logs a stack-trace-capturing error
+        // per orphaned tween every time that happens (see Constants.onCompleteCallbackIgnored).
+        public override void OnDestroy()
+        {
+            base.OnDestroy();
+            Tween.StopAll(this);
+        }
+
         [Button, Tooltip("Preview debugTestAngle above without a running simulation.")]
         private void PreviewDebugAngle()
         {

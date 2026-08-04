@@ -10,14 +10,26 @@ namespace Quantum
 
     public partial class WeaponDataAsset : AssetObject
     {
+        // Display-only, for a Choose-Weapon level-up/Chest card (see WeaponCardWidget) - not made
+        // to derive UpgradeData like WeaponPerkData/SkillActionData/etc, since a rolled weapon has
+        // no single Rarity of its own (that lives on each individually-rolled perk instead). No
+        // separate Icon field here - see GetIcon() in WeaponDataAsset.View.cs, which reuses the
+        // sprite already authored on ViewPrefab's own SpriteRenderer instead of a second
+        // hand-authored sprite per weapon.
+        public string DisplayName;
+
         public WeaponFireType FireType = WeaponFireType.Projectile;
 
         public FP Damage = 10;
 
-        // Deterministic, not chance-based - every Weapon-sourced hit with a non-Neutral Element
-        // applies its matching status (Fire->Burn, Ice->Slow, Poison->Poison, Lightning->Stun), see
-        // StatusEffectUtility.TryApplyElementalStatus. Carried through Projectile/AreaOwner so a
-        // weapon's projectile hits and its spawned areas (e.g. a grenade's blast) both proc it.
+        // ElementalChance-gated (CharacterStats.ElementalChance, same roll crit uses) - a Weapon-
+        // sourced hit with a non-Neutral Element that rolls a hit applies its matching baseline
+        // status (Fire->Burn, Ice->Slow, Rock->Intimidate; Electric/Void have none of their own -
+        // their identity lives in hand-authored weapon traits like Pierce/Ricochet instead) and, if
+        // the target already carries a Rift Mark, consumes a stack to trigger that element's own
+        // reaction - see StatusEffectUtility.TryApplyElementalStatus and docs/elemental-reactions.md.
+        // Carried through Projectile/AreaOwner so a weapon's projectile hits and its spawned areas
+        // (e.g. a grenade's blast) both proc it.
         public ElementType Element = ElementType.Neutral;
 
         public FP CriticalChance;

@@ -35,8 +35,8 @@ namespace Quantum
             ProjectileMovementData movement = f.FindAsset(projectileData.Movement);
 
             ProjectileLaunch launch = ProjectileAimUtility.TryGetAimPoint(f, filter.Aim->Target, aimAtCenter, out FPVector3 aimPoint)
-                ? movement.GetLaunchToTarget(ProjectileSpawner.ResolveSpawnOrigin(casterPosition, aimPoint, aimAngle, SpawnAnchor, SpawnOffset), aimPoint)
-                : movement.GetLaunch(spawnPosition, aimDirection);
+                ? movement.GetLaunchToTarget(f, ProjectileSpawner.ResolveSpawnOrigin(casterPosition, aimPoint, aimAngle, SpawnAnchor, SpawnOffset), aimPoint, filter.Aim->Target)
+                : movement.GetLaunch(f, spawnPosition, aimDirection);
 
             if (launch.IsValid == false)
             {

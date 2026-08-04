@@ -79,7 +79,7 @@ namespace QuantumUser.Editor
                 asset.Effects = new List<AssetRef<HitEffectData>>
                 {
                     LoadHitEffect("BurnEffectData"),
-                    LoadHitEffect("VoidEffectData"),
+                    LoadHitEffect("RiftMarkEffectData"),
                     LoadHitEffect("SlowEffectData"),
                     LoadHitEffect("StunEffectData"),
                 };
@@ -120,7 +120,7 @@ namespace QuantumUser.Editor
         }
 
         // Looks up an already-authored, shared HitEffectData instance under Resources/HitEffects
-        // (BurnEffectData.asset, VoidEffectData.asset, etc. - all zero-config, reading their own
+        // (BurnEffectData.asset, RiftMarkEffectData.asset, etc. - all zero-config, reading their own
         // magnitudes from RuntimeConfig.EffectConfig) rather than creating a Remix-specific copy.
         private static AssetRef<HitEffectData> LoadHitEffect(string name)
         {

@@ -27,7 +27,7 @@ namespace Quantum
             if (tierStats.ExpValue <= FP._0)
                 return;
 
-            if (f.RuntimeConfig.ExpOrbPrototype.IsValid == false)
+            if (f.RuntimeConfig.Prefabs.ExpOrbPrototype.IsValid == false)
             {
                 Log.Debug($"[Experience] {target} died with ExpValue {tierStats.ExpValue} but RuntimeConfig has no ExpOrbPrototype assigned - drop skipped");
                 return;
@@ -36,7 +36,7 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == false)
                 return;
 
-            EntityRef orb = f.Create(f.RuntimeConfig.ExpOrbPrototype);
+            EntityRef orb = f.Create(f.RuntimeConfig.Prefabs.ExpOrbPrototype);
 
             if (f.Unsafe.TryGetPointer<Transform3D>(orb, out var orbTransform) == true)
             {

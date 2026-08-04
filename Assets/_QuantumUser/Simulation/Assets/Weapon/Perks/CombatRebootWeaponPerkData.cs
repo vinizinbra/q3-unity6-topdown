@@ -8,10 +8,11 @@ namespace Quantum
     {
         public FP CooldownReduction = 2;
 
-        public override void Apply(Frame f, Weapon* weapon)
+        public override void Apply(Frame f, EntityRef owner, Weapon* weapon)
         {
-            weapon->HasCombatReboot = true;
-            weapon->CombatRebootCooldownReduction += CooldownReduction;
+            f.AddOrGet<WeaponReloadHooks>(owner, out var hooks);
+            hooks->HasCombatReboot = true;
+            hooks->CombatRebootCooldownReduction += CooldownReduction;
         }
 
         protected override object[] DescriptionArgs => new object[] { CooldownReduction.AsFloat };

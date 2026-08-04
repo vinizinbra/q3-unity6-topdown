@@ -2,11 +2,36 @@ namespace Quantum
 {
     using UnityEngine;
 
+    // Magnitude bucket for the camera shake fired on PlayerFired - same "one shared enum, several
+    // tiers of values" idea as EffectConfig.KnockbackTier. Lives here (not WeaponDataAsset.cs) since
+    // shake is purely presentational - the actual amplitude/duration numbers live on the Unity-only
+    // CameraShakeConfig, resolved by WeaponCameraShakeListener.
+    public enum WeaponShakeTier
+    {
+        Small,
+        Medium,
+        Strong
+    }
+
     // View-only half of WeaponDataAsset (see the partial declaration in WeaponDataAsset.cs).
     public partial class WeaponDataAsset
     {
         [Tooltip("Prefab instantiated under the player's weapon socket to represent this weapon - must have a WeaponView component. WeaponViewController resolves this directly, no separate catalog/lookup needed.")]
         public GameObject ViewPrefab;
+
+        // A Choose-Weapon level-up/Chest card (WeaponCardWidget) needs an icon, but every weapon
+        // already has a real world sprite authored on ViewPrefab's own root SpriteRenderer (see
+        // e.g. BasicWeapon.prefab) - reusing that instead of a second hand-authored Icon field
+        // means zero extra per-weapon authoring. Safe to read directly off the prefab ASSET (no
+        // Instantiate needed) since the SpriteRenderer is a plain sibling component wired in the
+        // Inspector, not something WeaponView itself builds up at runtime.
+        public Sprite GetIcon()
+        {
+            return ViewPrefab != null ? ViewPrefab.GetComponent<SpriteRenderer>()?.sprite : null;
+        }
+
+        [Tooltip("Camera shake tier applied (to the local player only) each time this weapon fires - see WeaponCameraShakeListener/CameraShakeConfig.")]
+        public WeaponShakeTier ShakeTier = WeaponShakeTier.Small;
 
         // Editor-only preview, not read by simulation or any other View code - just a quick sanity
         // check while tuning Damage/FireRate/MagazineSize/ReloadDuration together in the Inspector.

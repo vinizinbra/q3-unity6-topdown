@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b430b8c709b2f4628b55da377f83cdcb, type: 3}
+  m_Name: UncontrolledFury
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.UncontrolledFurySkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Max/M_HeroSkill/M_HeroSkillUpgrades/Overdrive/UncontrolledFury
+    Guid:
+      Value: 494729910843289045
+  Icon: {fileID: 790092191, guid: 9a944adac56bb4e8dbce2f7bab4127e3, type: 3}
+  DisplayName: Uncontrolled Fury
+  Rarity: 1
+  Priority: 0
+  Phase: 5
+  Interval:
+    RawValue: 0
+  Activated: 0
+  Description: Each kill during Overdrive extends it by {0}s, up to {1}s per activation.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  PerKillExtension:
+    RawValue: 65536
+  MaxExtension:
+    RawValue: 327680

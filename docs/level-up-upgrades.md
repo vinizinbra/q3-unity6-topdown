@@ -7,12 +7,24 @@ an unconfirmed player gets a random one of their own rolled options). Once every
 gameplay resumes. This is the "later piece of work" `docs/experience-drops.md` flagged - nothing
 consumed a level-up before this.
 
-Upgrades come from four pools (`LevelUpPoolKind`): **Weapon Perk** and **Global Upgrade** are pooled
+Upgrades come from five pools (`LevelUpPoolKind`): **Weapon Perk** and **Global Upgrade** are pooled
 globally (one shared config for every player); **Skill Upgrade** and **Passive Upgrade** are
 per-hero instead - which skill/passive upgrades make sense depends on which hero is rolling, so they
-live directly on that hero's own `CharacterData` asset, not a separate shared pool asset. Global
-Upgrade and Passive Upgrade have no gameplay effect designed yet - both are plumbing-only stubs (see
-"Current status" below).
+live directly on that hero's own `CharacterData` asset, not a separate shared pool asset. **Choose
+Weapon** is the newest - see "Category sequencing / Choose Weapon" below, it doesn't fit this
+shared-`UpgradeData` shape at all. Global Upgrade and Passive Upgrade have no gameplay effect
+designed yet - both are plumbing-only stubs (see "Current status" below).
+
+By default every level-up still mixes all four `UpgradeData`-shaped pools together (Choose Weapon is
+never part of this mix - see below). `LevelUpConfig.LevelSequence` can instead lock a given level to
+exactly ONE of 5 player-facing categories (`LevelUpCategory` - HeroSkill/GlobalUpgrade/RiftMutation/
+WeaponPerk/ChooseWeapon), so e.g. level 1/2/4 could roll Hero Skill only while level 3 rolls Global
+Upgrade only. `LevelUpCategory.HeroSkill` merges `LevelUpPoolKind.SkillUpgrade` + `PassiveUpgrade` -
+both are already collected together by `CollectPerHeroCandidates`, so this is purely a
+category-selection grouping, not a new grant path. An empty `LevelSequence` (the default) reproduces
+today's original mixed-all-pools roll exactly, so an unedited `LevelUpConfig.asset` needs zero
+re-authoring to keep working. A `Chest` entity (see `docs/chests.md`) reuses this same category
+concept, but locked once in the Editor per chest instead of per level.
 
 All four kinds share one asset base, `UpgradeData` (`Icon`/`DisplayName`/`Rarity`/abstract
 `GetDescription()`) - `WeaponPerkData`, `SkillActionData`, `GlobalUpgradeData` and
@@ -74,9 +86,51 @@ LevelUpUtility.Resolve
                          same method a GrantGlobalUpgradeCommand debug grant now also calls)
        PassiveUpgrade -> PassiveUpgradeUtility.Grant (dispatches to the picked asset's own Apply -
                          same as GrantPassiveUpgradeCommand)
+       ChooseWeapon   -> WeaponChoiceUtility.Grant (bakes option.RolledPerks into Weapon.Perks,
+                         WeaponSystem.Equip(option.WeaponData), then CharacterStats.
+                         WeaponTalentLevel++ - see "Category sequencing / Choose Weapon" below)
      then f.Remove<LevelUpChoice>(entity)
   -> Global.LevelUpScreenOpen = false, LevelUpTimeRemaining = 0, f.SystemEnable<GameplaySystemGroup>()
 ```
+
+## Category sequencing / Choose Weapon
+
+`LevelUpConfig.LevelSequence` (`List<LevelUpCategory>`) locks a given level to exactly one of 5
+categories, indexed cyclically by `LevelUpUtility.GetCategoryForLevel` as
+`sequence[(level - 1) % sequence.Count]` (`level` is 1-based - the level a player is currently
+choosing an upgrade FOR). `RollOptionsFor` resolves this once per roll, then:
+
+- **HeroSkill/GlobalUpgrade/RiftMutation/WeaponPerk** all still go through the same weighted-
+  candidate-list draw as before (`CollectCandidatesForCategory` now dispatches to exactly one of
+  `CollectPerHeroCandidates`/`CollectGlobalUpgradeCandidates`/`CollectRiftMutationCandidates`/
+  `CollectWeaponPerkCandidates` instead of always calling all four) - `CollectGlobalCandidates`
+  from the original implementation is gone, split into the last two of those.
+- **If the configured category rolls dry** (e.g. Hero Skill exhausted for that hero), `RollOptionsFor`
+  falls back to the original mixed-all-categories roll for that player only, rather than wasting
+  their level-up on an empty screen.
+- **ChooseWeapon bypasses the weighted-candidate machinery entirely** (`RollChooseWeaponOptionsFor`)
+  - a rolled weapon+perks combo has no single `Rarity` to weight against an ordinary `UpgradeData`
+    pick, so it's also never included in the mixed-all-categories roll above (an unedited
+    `LevelUpConfig.asset`, empty `LevelSequence`, behaves exactly as it always has). It draws
+    `min(ChoiceCount, WeaponChoicePool.Weapons.Count)` **distinct** weapons uniformly (no per-weapon
+    weight - `WeaponDataAsset` carries no `Rarity`), then for each rolls a perk count via
+    `RollWeaponOption`: slot `i` (0-based, up to `MaxRolledPerks`) independently succeeds with
+    probability `clamp01((WeaponTalentLevel - i) * ChancePerLevelPerSlot)` (`DamageUtility.
+    RollChance`), successes counted = that weapon's perk count, then
+    `WeaponGenerator.DrawDistinctPerks` (shared with `WeaponGenerator.Roll`'s own equip-time draw)
+    picks that many perks from `WeaponPerkPool`. At the shipped defaults
+    (`ChancePerLevelPerSlot = 0.2`, `MaxRolledPerks = 3`): `WeaponTalentLevel` 1 -> 20% chance of a
+    1st perk, 0% for a 2nd; level 2 -> 40%/20%; level 5 -> 100%/80%/60%. `WeaponTalentLevel` is a new
+    persistent `Byte` on `CharacterStats`, incremented by `WeaponChoiceUtility.Grant` each time this
+    entity actually picks a ChooseWeapon option - independent of overall character level.
+- A `LevelUpOption` with `Kind == ChooseWeapon` carries `WeaponData`/`RolledPerks[5]`/
+  `RolledPerkCount` instead of `Upgrade` - rendered by a dedicated `WeaponCardWidget`, never
+  `UpgradeCardWidget` (see "View / presentation" below). `RecordHistory` excludes it from
+  `UpgradeHistory`, same as `WeaponPerk` (a whole re-equipped weapon is even more visible on its own
+  than a single perk).
+- A `Chest` entity (see `docs/chests.md`) reuses this whole roll/grant pipeline via
+  `LevelUpUtility.BeginChestScreen(f, player, forcedCategory)` - same `OpenUpgradeScreen` plumbing as
+  a real level-up, just for one recipient and with the category forced rather than sequence-driven.
 
 ## Why pause via `GameplaySystemGroup`, not a hand-rolled flag
 
@@ -122,20 +176,31 @@ re-offer a card that would silently fail to grant anything if picked. `CollectPe
 checks each `DashSkillUpgrades` candidate, and `AddHeroSkillUpgradeCandidates` checks each
 `HeroSkill.Actions` candidate, against that slot's own `SkillSlot.Upgrades` (same lookup `AddUpgrade`
 itself does) before adding it as a candidate.
-`PassiveUpgrade` has no equivalent check - see "Current status" below.
+`PassiveUpgrade` checks each `CharacterData.PassiveUpgrades` candidate against `PassiveUpgradePicks`
+(`PassiveUpgradeUtility.IsAlreadyPicked`) the same way - every Passive Upgrade is single-pick, unlike
+GlobalUpgrade's opt-in stacking. `WeaponPerk` similarly excludes any perk already sitting in one of
+this entity's own `Weapon.Perks` slots (`CollectWeaponPerkCandidates`/`AlreadyEquipped`).
 
 ## Files
 
 **Simulation (`Assets/_QuantumUser/Simulation/QTN/`)**
 - `LevelUp.qtn` - **new**: `enum LevelUpPoolKind` (`None`/`SkillUpgrade`/`WeaponPerk`/
-  `GlobalUpgrade`/`PassiveUpgrade`), `struct LevelUpOption` (`Kind` + a single
+  `GlobalUpgrade`/`PassiveUpgrade`/`RiftMutation`/`ChooseWeapon` - the grant-path axis), `enum
+  LevelUpCategory` (`HeroSkill`/`GlobalUpgrade`/`RiftMutation`/`WeaponPerk`/`ChooseWeapon` - the
+  distinct player-facing category axis used by `LevelUpConfig.LevelSequence`/`Chest.Kind`, see
+  "Category sequencing / Choose Weapon" above), `struct LevelUpOption` (`Kind` + a single
   `AssetRef<UpgradeData> Upgrade` + `SkillSlotId SkillUpgradeSlot` - one shared field works for every
-  kind precisely because `UpgradeData` is a common base every concrete upgrade type derives from;
-  `Kind` says which grant path to reinterpret `Upgrade`'s raw `Id` into, see `LevelUpUtility.GrantOption`),
-  `component LevelUpChoice` (`array<LevelUpOption>[3] Options`, `Byte OptionCount`,
-  `Boolean Confirmed`, `Byte SelectedIndex`).
+  `UpgradeData`-derived kind precisely because `UpgradeData` is a common base every concrete upgrade
+  type derives from; `Kind` says which grant path to reinterpret `Upgrade`'s raw `Id` into, see
+  `LevelUpUtility.GrantOption` - plus, valid only when `Kind == ChooseWeapon`:
+  `AssetRef<WeaponDataAsset> WeaponData`, `array<AssetRef<WeaponPerkData>>[5] RolledPerks`,
+  `Byte RolledPerkCount`), `component LevelUpChoice` (`array<LevelUpOption>[3] Options`,
+  `Byte OptionCount`, `Boolean Confirmed`, `Byte SelectedIndex`).
 - `Experience.qtn` - **edited**, two new global fields: `Boolean LevelUpScreenOpen`,
   `FP LevelUpTimeRemaining`.
+- `CharacterStats.qtn` - **edited**, one new field: `Byte WeaponTalentLevel` (see "Category
+  sequencing / Choose Weapon" above).
+- `Chest.qtn` / `Events.qtn`'s `ChestOpened` - see `docs/chests.md`.
 
 **Data (`Assets/_QuantumUser/Simulation/Assets/`)**
 - `UpgradeRarity.cs` - **new**: `enum UpgradeRarity : Byte` (`Common`/`Rare`/`Epic`/
@@ -161,12 +226,64 @@ itself does) before adding it as a candidate.
   its own `CommonWeight`/`RareWeight`/`EpicWeight`/`LegendaryWeight` +
   `GetWeight(UpgradeRarity)` - the ONE weight table every level-up candidate uses regardless of kind
   (deliberately separate from `WeaponPerkPoolData`'s own weights - level-up pacing may want different
-  tuning than raw drop rolls).
+  tuning than raw drop rolls). **Further edited**: `List<LevelUpCategory> LevelSequence` (empty by
+  default), `AssetRef<WeaponChoicePoolData> WeaponChoicePool`, `FP ChancePerLevelPerSlot` (0.2),
+  `int MaxRolledPerks` (3) - see "Category sequencing / Choose Weapon" above.
+- `Weapon/WeaponChoicePoolData.cs` - **new**: `List<AssetRef<WeaponDataAsset>> Weapons` - mirrors
+  `WeaponPerkPoolData`'s shape, no weight table (a `WeaponDataAsset` has no `Rarity` of its own, so
+  every listed weapon is equally likely to be drawn).
+- `Weapon/WeaponDataAsset.cs` - **edited**: one new display-only field, `string DisplayName` - not
+  made to derive `UpgradeData` (a rolled weapon has no single `Rarity`, that lives on each
+  individually-rolled perk instead). Read by `GameplayUiController.BuildWeaponCardData` for a
+  Choose-Weapon card's header. No separate `Icon` field - `WeaponDataAsset.View.cs`'s new
+  `GetIcon()` reuses the sprite already authored on `ViewPrefab`'s own root `SpriteRenderer` (every
+  weapon already has one for its in-world visual), so a Choose-Weapon card needs zero additional
+  per-weapon icon authoring.
+- `Systems/WeaponSystem.cs` - **edited**: `Equip` fires a new `Events.qtn` event, `WeaponEquipped
+  (EntityRef Owner, AssetRef<WeaponDataAsset> WeaponData)`, unconditionally at the end of every
+  call - a single generic View hook covering every equip path (initial spawn AND a later
+  Choose-Weapon pick) rather than one bespoke call site per path.
+- `View/Entities/Weapon/WeaponViewController.cs` - **edited**: subscribes to `WeaponEquipped`
+  (filtered to its own `_entityRef`) and calls its own `SpawnWeaponView` again on a live re-equip -
+  previously that method only ever ran once, at `Initialize`. Reconnect was already safe before
+  this change and stays that way: `Initialize` does its own cold read of the CURRENT
+  `Weapon.WeaponData` the moment the view is (re)instantiated (see `CustomQuantumEntityViewComponent`'s
+  `OnEntityInstantiated` -> `Initialize` chain), independent of how many times `Equip` fired in the
+  past - the event subscription only covers an ALREADY-connected client watching a later pick happen
+  live.
+- `Systems/WeaponGenerator.cs` - **edited**: its private weighted-draw-without-replacement `DrawPerks`
+  body is now the public `DrawDistinctPerks(Frame, AssetRef<WeaponPerkPoolData>, int count,
+  FixedArray<AssetRef<WeaponPerkData>> perks)`, shared by `WeaponGenerator.Roll` (an equipped
+  weapon's own perk roster) and `LevelUpUtility.RollWeaponOption` (a not-yet-equipped Choose-Weapon
+  candidate's rolled perks) - same shape, different destination buffer.
+- `Systems/WeaponChoiceUtility.cs` - **new**: `Grant(Frame, EntityRef, LevelUpOption)` - the
+  `ChooseWeapon` grant path (see `LevelUpUtility.GrantOption`), following the same one-method-
+  dispatcher convention as `GlobalUpgradeUtility`/`RiftMutationUtility`. Bakes `option.RolledPerks`
+  into `Weapon.Perks` BEFORE calling `WeaponSystem.Equip(option.WeaponData)` (`Equip`'s own
+  `ApplyPerks` reads `Weapon.Perks`, same ordering `WeaponGenerator.Roll` already relies on), then
+  increments `CharacterStats.WeaponTalentLevel`.
 - `LevelUp/GlobalUpgradeData.cs` - **new**: minimal stub asset (`Description` field, no `Apply()`) -
   `Icon`/`DisplayName`/`Rarity` come from `UpgradeData`. No separate pool wrapper type - see
   `LevelUpConfig.GlobalUpgrades` above.
 - `LevelUp/PassiveUpgradeData.cs` - **new**: same minimal stub shape as `GlobalUpgradeData` -
   referenced directly from `CharacterData.PassiveUpgrades` (per-hero, see below).
+- `LevelUp.qtn` - **edited**, new `component UpgradeHistory` (`array<UpgradeHistoryEntry>[32]
+  Entries`) + `struct UpgradeHistoryEntry` (`Kind`, `AssetRef<UpgradeData> Upgrade`, `Byte Count`) -
+  a flat "everything this entity has ever picked" ledger covering Skill Upgrade/Global Upgrade/
+  Passive Upgrade/Rift Mutation, purely for display (see "Upgrade history / party HUD icons"
+  below). Independent of each covered kind's own gameplay-facing tracking (`SkillSlot.Upgrades`,
+  `GlobalUpgradePicks`, `RiftMutationPicks`, `PassiveUpgradePicks`) - none are kind-agnostic enough
+  for a single icon row. **Further edited**: new `component PassiveUpgradePicks`
+  (`array<AssetRef<PassiveUpgradeData>>[32] Picked`) - same "has this already been granted" shape as
+  `RiftMutationPicks`, read by `PassiveUpgradeUtility.IsAlreadyPicked`/written by its `RecordPick`.
+- `LevelUpUtility.cs` - **edited**: `GrantOption` now calls a new `public static RecordHistory` at the
+  top (before the per-kind switch), find-or-add-slot into `UpgradeHistory` keyed by `AssetRef<UpgradeData>`
+  equality alone (a repeat pick of the same asset bumps `Count` rather than adding a duplicate
+  entry) - same idiom as `GlobalUpgradeUtility.RecordPick`. `RecordHistory` early-returns on
+  `Kind == WeaponPerk`/`ChooseWeapon` - deliberately excluded, since a weapon's own perks/identity are
+  already visible on the weapon itself and roll too often to be worth a HUD icon. `RecordHistory` is
+  `public` (not `private`) specifically so the four debug-grant systems below can call it too - see
+  the "Debug tooling" section for why that matters.
 - `Character/CharacterData.cs` - **edited**, one new field: `List<AssetRef<PassiveUpgradeData>>
   PassiveUpgrades`, alongside the existing `DashSkillUpgrades` (same per-hero list shape). Later
   removed the equivalent `HeroSkillUpgrades` list entirely - `AddHeroSkillUpgradeCandidates` now
@@ -185,7 +302,10 @@ itself does) before adding it as a candidate.
   describe them as logging-only placeholders; that's stale).
 - `GlobalUpgradeSystem.cs` - **new**: per-tick processor for `GrantGlobalUpgradeCommand`, mirrors
   `PassiveUpgradeSystem` - debug-only today (see "Debug tooling" below), the real level-up path grants
-  through `LevelUpUtility.GrantOption` directly.
+  through `LevelUpUtility.GrantOption` directly. Also calls `LevelUpUtility.RecordHistory` itself right
+  after the grant, since it bypasses `GrantOption` entirely and would otherwise never touch
+  `UpgradeHistory` - same pattern in `PassiveUpgradeSystem`/`RiftMutationSystem`/
+  `SkillSystem.ProcessGrantUpgradeCommand`.
 - `SkillSystem.cs` - **edited**: `ResolveSlot` gained a `public static` overload taking
   `CharacterSkills*` directly (the existing one took `ref Filter`) - gives `LevelUpUtility.GrantOption`
   a supported entry point without touching `SkillSystem`'s own filtered `Update`. Also gained
@@ -313,10 +433,22 @@ onto it.
   Charge/Hero Skill Charge), which `Setup` reads as "hide the stack readout"; otherwise it shows
   `CurrentStacks/MaxStacks` (e.g. "2/3") via an optional `stackRoot`/`stackText`, so a player can see
   how close a capped pick is to maxing out before choosing it.
+- `Assets/_Project/Scripts/UI/Window/WeaponCardWidget.cs` - **new**, same one-card-one-
+  `MonoBehaviour`/Quantum-agnostic shape as `UpgradeCardWidget`, but for a `ChooseWeapon` option -
+  `CardData` carries `WeaponIcon`/`WeaponName` plus a `PerkRowData[]` (length ==
+  `RolledPerkCount`), each rendered by a small `WeaponCardPerkRowWidget` sub-row
+  (`Assets/_Project/Scripts/UI/Window/WeaponCardPerkRowWidget.cs`, icon + name optionally tinted by
+  rarity). A dedicated widget rather than a reinterpreted `UpgradeCardWidget.CardData` - confirmed
+  with the user - since a rolled weapon has no single description/`Rarity`, it has a name/icon plus a
+  variable-length list of individually-rarity'd rolled perks.
 - `Assets/_Project/Scripts/UI/Window/UpgradeWindow.cs` - **new**, plain `UiWindow` (not a
   `QuantumGlobalMonoBehaviour` itself - matches `WaitingWindow`'s shape). Just orchestrates a fixed
   `UpgradeCardWidget[]` (one per `LevelUpChoice.Options` slot) plus a countdown readout;
-  `onCardClicked` bubbles a card index up to whoever wired it.
+  `onCardClicked` bubbles a card index up to whoever wired it. **Edited**: also owns a parallel
+  `WeaponCardWidget[]` (same clone-from-template shape) and a second entry point,
+  `RefreshWeaponChoice`, alongside the original `Refresh` - only one of the two card families is ever
+  active at a time (`SetCardFamilyActive`), since a `LevelUpChoice` is always homogeneous (every
+  rolled option is `ChooseWeapon`, or none are).
 - `Assets/_Project/Scripts/UI/Window/GameplayUiController.cs` - **edited**: `QUpdate` now polls
   `Frame.Global.LevelUpScreenOpen` each frame (same polling idiom `ExpBarUiWidget` already uses -
   diffed against a cached previous value to detect the open/close edge, since the View is never
@@ -328,7 +460,42 @@ onto it.
   `BuildCardData` now also takes the rolling entity and, only for `Kind == GlobalUpgrade`, re-resolves
   `option.Upgrade` as `AssetRef<GlobalUpgradeData>` (same raw-Id reinterpret `LevelUpUtility.GrantOption`
   uses) to read `MaxPicks`/`GlobalUpgradeUtility.GetPickCount` for the card's stack readout - every
-  other kind leaves `CardData.MaxStacks` at 0.
+  other kind leaves `CardData.MaxStacks` at 0. **Further edited**: `UpdateUpgradeScreen` checks
+  `choice->Options[0].Kind == ChooseWeapon` once per player slot (never mixed within one screen) and
+  routes to a new `BuildWeaponCardData`/`upgradeWindows[i].RefreshWeaponChoice` path instead -
+  `BuildCardData`/`KindText` are unchanged and never see a `ChooseWeapon` option.
+
+## Upgrade history / party HUD icons
+
+`PartyHudWidget` (see `docs/hud-couch-coop.md` if present) gains a fifth "hero resource gauge"
+sibling alongside Adrenaline/Remix/Scrap/Juggernaut Stack Damage:
+
+- `Assets/_Project/Scripts/UI/Hud/PartyHistoryUpgradeContainer.cs` - **new**, same shape as
+  `ScrapUiWidget` (`QuantumGlobalMonoBehaviour`, `autoBindLocalPlayerOne`, `Initialize(EntityRef)`/
+  `DisableAutoBind()` called externally by `PartyHudWidget`, self-hides its own `root` rather than
+  assuming every entity has one) - no shared base class exists among these sibling widgets, so this
+  one doesn't introduce one either. Shows Skill Upgrade/Global Upgrade/Passive Upgrade/Rift
+  Mutation picks only - `UpgradeHistory` itself never contains a Weapon Perk entry (see
+  `LevelUpUtility.RecordHistory` above), so there's no filtering to do here. Reads `UpgradeHistory`
+  off the bound entity every `QUpdate`,
+  but only rebuilds its `grid` (`Destroy` every child, `Instantiate` one `PartyHistoryUpgradeWidget`
+  per valid `Entries` slot) when a cheap folded signature (`Upgrade.GetHashCode()`/`Count` per entry)
+  changes - Destroy+Instantiate-per-icon every frame would be wasted work for state that only
+  changes on a level-up. `iconPrefab` is a live template, NOT a child of `grid` (same "hidden at
+  Start, cloned on rebuild" convention as `DebugUpgradeMenuWindow`'s row prefabs).
+- `Assets/_Project/Scripts/UI/Hud/PartyHistoryUpgradeWidget.cs` - **new**, one icon = one
+  `MonoBehaviour` (`Image` + optional `TMP_Text`), fully Quantum-agnostic - `Setup(Sprite, int)`
+  only shows the count label once `count > 1`, so a single pick reads as a bare icon and a repeat
+  pick (e.g. an uncapped Global Upgrade taken 3 times) reads as one icon with "3" on it rather than
+  3 duplicate icons.
+- `PartyHudWidget.cs` - **edited**: new `upgradeHistoryContainer` field, wired into
+  `PopulateChildren`/`DisableChildAutoBind`/`Initialize` exactly like every other sibling gauge.
+
+**Needs Editor authoring before it shows anything**, same as everything else in this doc: a
+`PartyHistoryUpgradeWidget` prefab (icon `Image` + optional count `TMP_Text`) and a `grid` container
+(typically a `GridLayoutGroup`) added under each `PartyHudWidget` instance in the scene, with
+`iconPrefab`/`grid`/`root` wired in the Inspector - none of this exists in `QuantumGameScene.unity`
+yet.
 
 ## Current status / known simplifications
 
@@ -361,19 +528,57 @@ player, while it stays inert as a baseline action for everyone else). No more pa
 in sync with the skill asset it upgrades. Authoring status per hero not audited here - check each
 `HeroSkill` asset's own `Actions` for `Activated == false` entries directly.
 
+**Category sequencing / Choose Weapon (newest addition) - code compiles, mostly authored**:
+- `LevelUpConfig.LevelSequence` ships empty (legacy mixed-all-categories behavior, unchanged) -
+  needs actually populating to use per-level category locking at all.
+- `LevelUpConfig.WeaponChoicePool` **is now assigned** to a real `WeaponChoicePoolData.asset` (8
+  weapons listed) - `RollChooseWeaponOptionsFor` has something to draw from.
+- Every existing `WeaponDataAsset`'s `DisplayName` is still unset - a Choose-Weapon card shows a
+  blank name until authored per weapon. Its icon is no longer a separate authoring step - `GetIcon()`
+  (`WeaponDataAsset.View.cs`) reuses the sprite already on `ViewPrefab`'s own `SpriteRenderer`, which
+  every weapon asset already has.
+- `ChancePerLevelPerSlot`/`MaxRolledPerks` ship at reasonable starting defaults (0.2, 3 - see
+  "Category sequencing / Choose Weapon" above for the worked example), not a tuned/playtested value.
+- `WeaponCardWidget`/`WeaponCardPerkRowWidget` prefabs and `UpgradeWindow`'s new `weaponCardPrefab`/
+  `weaponCardCount` fields need Editor authoring/wiring on every `UpgradeWindow` instance in the
+  scene, same "needs Editor authoring before it shows anything" gap as `UpgradeCardWidget` itself.
+- `LevelUpCategory.ChooseWeapon` has no placed Chest instance yet either - see `docs/chests.md`'s own
+  authoring checklist for the "Weapon Chest" gap specifically.
+- **`WeaponTalentLevel` meta-progression is now split across two layers**: `RuntimePlayer.WeaponLevel`
+  (`Assets/_QuantumUser/Simulation/Default/RuntimePlayer.User.cs`) is the durable, outside-this-match
+  value - `MatchMakingConfig.StartRunner` reads it from a local `PlayerPrefInt("weapon_talent_level")`
+  right before `AddPlayer`, and `PlayerSpawnUtility.Spawn` copies it onto the freshly-created
+  entity's `CharacterStats.WeaponTalentLevel` once at spawn (after `CharacterSystem`'s own zero-seed,
+  since `PlayerLink.Player` - and therefore which `RuntimePlayer` an entity even belongs to - isn't
+  set until `Spawn` itself, too late for `CharacterSystem`'s materialization signal to resolve it
+  directly). `CharacterStats.WeaponTalentLevel` then keeps incrementing live for the rest of that
+  match exactly as before. **Nothing writes the final value back out to `PlayerPrefInt` when a match
+  ends** - today a player's meta-progression never actually advances past whatever
+  `"weapon_talent_level"` was already saved; wiring that save-back (and whatever UI/system actually
+  raises this value between matches) is a separate follow-up, out of scope here.
+- Manual end-to-end test not yet run: a `LevelSequence` with a `ChooseWeapon` slot should roll 3
+  distinct weapons with sane perk counts across a few `WeaponTalentLevel`s, render via
+  `WeaponCardWidget` (not `UpgradeCardWidget`), and picking one should re-equip the weapon with that
+  many perks baked in and increment `CharacterStats.WeaponTalentLevel`; a category configured to one
+  with zero eligible candidates for the test hero should fall back to a mixed roll instead of an
+  empty screen. See also `docs/chests.md` for the Chest-side half of this test.
+
 Beyond the missing assets/wiring:
 - **Both Passive Upgrade and Global Upgrade grant a real `Apply(Frame, EntityRef)`** now (dispatched
   via `PassiveUpgradeUtility.Grant`/`GlobalUpgradeUtility.Grant` - see `docs/global-upgrades.md` for
-  Global Upgrade's own roster), but neither kind tracks *which* upgrades an entity currently holds -
-  see the dedup bullet below.
+  Global Upgrade's own roster). `UpgradeHistory` (see "Upgrade history / party HUD icons" above) also
+  records every pick across all 5 kinds, but it's write-only for display - it's `PassiveUpgradePicks`/
+  `GlobalUpgradePicks` (not `UpgradeHistory`) that candidate filtering actually reads back.
 - **Multiple levels from one `Grant` call collapse into one screen** - if a single big exp grant
   crosses more than one level threshold in the same `while` loop, the player still only sees
   `ChoiceCount` (3) options total, not `3 × levelsGained`. Chosen deliberately over queuing multiple
   sequential screens, which would be a confusing wait for a co-op-wide pause.
-- **`PassiveUpgrade`/`GlobalUpgrade` candidates aren't deduplicated against past picks** - unlike
-  `SkillUpgrade` (checked against `SkillSlot.Upgrades`), there's no "already granted" list for either
-  kind, so the same upgrade could be re-offered on a later level-up. Revisit once a real
-  granted-tracking ledger exists for both.
+- **`PassiveUpgrade`/`GlobalUpgrade`/`WeaponPerk` candidates are now deduplicated against past picks**,
+  same as `SkillUpgrade`/`RiftMutation` always were - `PassiveUpgrade` via `PassiveUpgradePicks`
+  (single-pick, mirrors `RiftMutationPicks`), `GlobalUpgrade` via `GlobalUpgradePicks`/`MaxPicks`
+  (opt-in stacking, most upgrades leave `MaxPicks` at 0 and stack indefinitely), `WeaponPerk` via a
+  direct check against the entity's own live `Weapon.Perks` (no separate ledger needed - the weapon
+  component already IS the "what does this entity currently have" source of truth).
 - **No revert path for Weapon Perk / Passive Upgrade / Global Upgrade** - each bakes its effect
   directly into a live component field at grant time (`WeaponPerkData`/`PassiveUpgradeData`/
   `GlobalUpgradeData`'s own `Apply`), with no per-grant ledger to undo from and, in several cases, a
@@ -382,7 +587,16 @@ Beyond the missing assets/wiring:
   below) only log this instead of pretending to revert - restart play mode to actually reset a
   player. `SkillActionData` upgrades are the one kind that's cheaply reversible (a slot re-reads
   `SkillSlot.Upgrades` fresh every activation instead of baking it), so those two buttons work for
-  real - see `SkillSystem.RemoveUpgrade`/`ClearUpgrades`.
+  real - see `SkillSystem.RemoveUpgrade`/`ClearUpgrades`. Note this revert path does NOT touch
+  `UpgradeHistory` - `RemoveSkillUpgradeCommand`/`ClearSkillUpgradesCommand` only ever call
+  `SkillSystem.RemoveUpgrade`/`ClearUpgrades`, never `LevelUpUtility.RecordHistory` - so a
+  debug-removed skill upgrade stays visible in the party HUD icon row until the entity is destroyed.
+  Real (non-debug) play never removes an upgrade once granted, so this is debug-tooling-only. (The
+  four debug *grant* commands - `GrantGlobalUpgradeCommand`/`GrantPassiveUpgradeCommand`/
+  `GrantRiftMutationCommand`/`GrantSkillUpgradeCommand` - used to have the mirror-image gap on the add
+  side, silently skipping `RecordHistory` since they bypass `LevelUpUtility.GrantOption` entirely; each
+  now calls `RecordHistory` itself right after its own grant, so debug-granted upgrades do show up in
+  the party HUD icon row.)
 - **`UpgradeCardWidget`'s and `DebugUpgradeButtonWidget`'s new `stackRoot`/`stackText` fields are
   optional and unwired on their existing prefabs** - both are allowed to stay `null` (`Setup` no-ops
   on either) on each widget, so nothing breaks today, but no card or debug row actually shows a stack

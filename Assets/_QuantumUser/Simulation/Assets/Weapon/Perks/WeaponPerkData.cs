@@ -9,7 +9,7 @@ namespace Quantum
     // rolls). View-only Description lives in the companion WeaponPerkData.View.cs partial.
     public abstract unsafe partial class WeaponPerkData : UpgradeData
     {
-        public abstract void Apply(Frame f, Weapon* weapon);
+        public abstract void Apply(Frame f, EntityRef owner, Weapon* weapon);
 
         public override string GetDescription() => GetFormattedDescription();
     }

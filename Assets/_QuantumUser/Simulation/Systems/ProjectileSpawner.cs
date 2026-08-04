@@ -28,7 +28,7 @@ namespace Quantum
         public static EntityRef Spawn(Frame f, EntityRef owner, AssetRef<ProjectileDataAsset> projectileDataRef,
             ProjectileLaunch launch, FP damage, DamageSource source = DamageSource.None,
             SkillSlotId sourceSlot = SkillSlotId.None, EntityRef target = default,
-            ElementType element = ElementType.Neutral, int spawnDepth = 0)
+            ElementType element = ElementType.Neutral, int spawnDepth = 0, int pelletIndex = 0)
         {
             ProjectileDataAsset projectileData = f.FindAsset(projectileDataRef);
             EntityRef projectileEntity = f.Create(projectileData.Prototype);
@@ -58,6 +58,7 @@ namespace Quantum
                 projectile->Target = target;
                 projectile->RemainingSpawnDelay = projectileData.SpawnDelay;
                 projectile->SpawnDepth = (byte)spawnDepth;
+                projectile->PelletIndex = (byte)pelletIndex;
 
                 f.FindAsset(projectileData.Hit).Initialize(projectile);
             }

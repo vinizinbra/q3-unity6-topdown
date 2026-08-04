@@ -26,17 +26,20 @@ The game's level-up pools now split into four categories:
 `GlobalUpgradeData.MaxPicks` is - every `RiftMutationData` is implicitly picked at most once per
 entity, enforced by `RiftMutationPicks`/`RiftMutationUtility` below.
 
-**Status: all 14 designed mutations are implemented in code** (`RiftMutationData` is an abstract
-base with a real `Apply(Frame f, EntityRef entity)`, same shape as `GlobalUpgradeData`, dispatched
-generically by `RiftMutationUtility.Grant`).
+**Status: all 25 designed mutations are implemented in code** - the original 14 (`RiftMutationData`
+is an abstract base with a real `Apply(Frame f, EntityRef entity)`, same shape as `GlobalUpgradeData`,
+dispatched generically by `RiftMutationUtility.Grant`) plus 11 more added in the same pass that built
+the **Rift Mark content pool** - see "Rift Mark content pool" below for those 11 and the Weapon Perk
+half of that same pool (`docs/weapon-perks.md`).
 
 ## Mechanism
 
 - **`RiftMutationData : UpgradeData`** (`Assets/_QuantumUser/Simulation/Assets/RiftMutation/
   RiftMutationData.cs` + `.View.cs`) - same `Apply`/`Description`/`DescriptionArgs`/
   `GetFormattedDescription()` shape as `GlobalUpgradeData`, but **no `MaxPicks` field** - see above.
-- **`RiftMutationPicks` component** (`LevelUp.qtn`) - `array<AssetRef<RiftMutationData>>[16]
-  Picked`, this entity's full pick history for the pool. Mirrors `GlobalUpgradePicks` but simpler
+- **`RiftMutationPicks` component** (`LevelUp.qtn`) - `array<AssetRef<RiftMutationData>>[32]
+  Picked` (grown from `[16]` when the Rift Mark content pool's 11 mutations pushed the catalog to
+  25), this entity's full pick history for the pool. Mirrors `GlobalUpgradePicks` but simpler
   (no per-entry `Count`, since every mutation caps at 1).
 - **`RiftMutationUtility.cs`** - `Grant(f, entity, mutationRef)` calls `Apply` then always records
   the pick (no `MaxPicks > 0` gate to check first, unlike `GlobalUpgradeUtility.Grant`);
@@ -94,7 +97,7 @@ generically by `RiftMutationUtility.Grant`).
 | Last Bastion | `LastBastionMutationData` | Legendary | `MaxHealthMultiplier` ×2 + `Shield.Max`/`Current` zeroed directly (bypasses `CharacterSystem.RefreshMaxShield`'s `newMax <= 0` guard on purpose - that guard protects an *unintentional* zero, this one is deliberate). |
 | Heavy Arsenal | `HeavyArsenalMutationData` | Epic | `WeaponDamageMultiplier` +75% / `AttackSpeedMultiplier` -35% - character-level mirror of `HeavyCaliberWeaponPerkData`'s tradeoff shape, stacks with that perk. |
 | Bullet Storm | `BulletStormMutationData` | Epic | Same two fields as Heavy Arsenal, opposite tuning (+Fire Rate, -Damage). |
-| One in the Chamber | `OneInTheChamberMutationData` | Legendary | `Weapon.MagazineSize` = 1 + `Weapon.FinalRoundDamageBonus` - reuses the exact field `FinalRoundWeaponPerkData`/`WeaponSystem.ResolveLiveDamage` already read live off `Ammo == 1`, so every shot at magazine size 1 qualifies for free. Known limitation shared with `MagazineSizeUpgradeData`: a later weapon pickup resets `Weapon.MagazineSize`/`FinalRoundDamageBonus` from that weapon's own data - nothing re-applies Rift Mutations on equip. |
+| One in the Chamber | `OneInTheChamberMutationData` | Legendary | `Weapon.MagazineSize` = 1 + `WeaponMagazinePositionPerks.FinalRoundDamageBonus` (see `docs/weapon-perks.md`'s component split) - reuses the exact field `FinalRoundWeaponPerkData`/`WeaponSystem.ResolveLiveDamage` already read live off `Ammo == 1`, so every shot at magazine size 1 qualifies for free. Known limitation shared with `MagazineSizeUpgradeData`: a later weapon pickup resets `Weapon.MagazineSize` and removes `WeaponMagazinePositionPerks` entirely (see `WeaponSystem.SeedPerkRoster`) - nothing re-applies Rift Mutations on equip. |
 | Close Quarters | `CloseQuartersMutationData` | Rare | `NearDamageMultiplier` +50% / `FarDamageMultiplier` -30% - see `DamageUtility.ResolveRangeDamageMultiplier` above. Longshot is the mirror opposite. |
 | Longshot | `LongshotMutationData` | Rare | Same two fields as Close Quarters, opposite tuning (+Far, -Near). |
 | Ultimate Commitment | `UltimateCommitmentMutationData` | Epic | `SkillDamageMultiplier` ×2 / `SkillCooldownMultiplier` ×0.5 - that field is a *rate* (higher = faster, see `StatUtility.GetSkillCooldown`'s `baseCooldown / multiplier`), so halving it doubles the effective cooldown duration even though the field itself shrinks. |
@@ -108,6 +111,59 @@ generically by `RiftMutationUtility.Grant`).
 No exclusivity system exists *between* distinct mutations (only within one, via `RiftMutationPicks`)
 - nothing stops a build from picking directly opposing tradeoffs (Heavy Arsenal + Bullet Storm,
 Close Quarters + Longshot); they just partially cancel.
+
+## Rift Mark content pool
+
+11 mutations added in the same pass that built the Weapon Perk half (`docs/weapon-perks.md`) of the
+Rift Mark application content pool - see `docs/elemental-reactions.md` for what Rift Mark itself is.
+Every one of these bakes a plain `Boolean Has<X>Mutation` flag onto `CharacterStats` at pick time,
+same convention every other mutation here already uses - none of them add a tag/marker component.
+
+| Mutation | Class | Rarity | Effect |
+|---|---|---|---|
+| Critical Fracture | `CriticalFractureMutationData` | Rare | Critical hits from any source (weapon or skill) apply 1 Rift Mark - `RiftMutationMarkUtility.TryCriticalFracture`, per-target cooldown (`RiftMarkCooldownKey.CriticalFracture`, shared with the Weapon Perk of the same name so the two can never both stack from one crit). |
+| Skill Fracture | `SkillFractureMutationData` | Rare | Hero Skill hits apply 1 Rift Mark - `RiftMutationMarkUtility.TrySkillFracture`, per-target cooldown so a persistent field/DoT/pulse can't reapply every tick. |
+| Rift Dash | `RiftDashMutationData` | Rare | Dashing through an enemy applies 1 Rift Mark, once per enemy per dash - the universal `DashSkillData.Tick` itself gained an overlap-sweep check (gated on the mutation flag), deduped via a fresh-per-`Begin` `RiftDashMarkTracker` component (`array<EntityRef>[8]`+count, same shape Brute's own `IronShoulderHitTracker` uses for its dash ascension). |
+| Heavy Fracture | `HeavyFractureMutationData` | Rare | Large hits apply 1 Rift Mark - `RiftMutationMarkUtility.TryHeavyFracture`/`IsHeavyHit` (pure), qualifies on either a flat damage threshold or a percent-of-target's-own-MaxHealth threshold, evaluated per resolved hit only (never aggregated), per-target cooldown. |
+| Close Fracture | `CloseFractureMutationData` | Rare | Hits against nearby enemies periodically apply Rift Mark - `RiftMutationMarkUtility.TryCloseOrLongFracture`, plain `FPVector3.Distance` (not squared) against `ElementalReactionConfig.CloseRangeThreshold`, matching `DamageUtility.ResolveRangeDamageMultiplier`'s own convention. |
+| Long Fracture | `LongFractureMutationData` | Rare | Mirror of Close Fracture, `LongRangeThreshold` instead. |
+| Execution Fracture | `ExecutionFractureMutationData` | Rare | Hitting enemies already below `ExecutionHealthThreshold` (25% MVP default) applies Rift Mark - `RiftMutationMarkUtility.TryExecutionFracture`/`IsBelowExecutionThreshold` (pure), checked against health **before** this hit's own damage, per-target cooldown. |
+| First Contact | `FirstContactMutationData` | Rare | The first valid damaging hit against a full-health enemy applies Rift Mark - `RiftMutationMarkUtility.TryFirstContact`, one-time flag (`StatusEffects.FirstContactTriggered`), not a cooldown; only ever fires if the specific hit that happens to land first against a full-health target also comes from a mutation-holding player. |
+| Last Stand | `LastStandMutationData` | Epic | Taking a large hit (`LastStandThreshold`, flat damage) releases a Rift pulse marking every nearby enemy, never the player - `RiftMutationMarkUtility.EvaluateLastStand`, called separately from the other 7 (this is the *player's own received* hit, not an enemy's), per-player cooldown (`CharacterStats.LastStandCooldownRemaining`), not per-target. |
+| Fractured Presence | `FracturedPresenceMutationData` | Rare | Enemies that remain within `FracturedPresenceRadius` of this player for `FracturedPresenceExposureTime` become Rift-marked - `RiftMutationMarkUtility.TickFracturedPresence`, called once per `StatusEffects`-bearing entity per tick from `StatusEffectSystem.Update` (not damage-hooked). Tracked per (player, enemy) pair on the enemy's own `StatusEffects.FracturedPresenceExposedBy`/`ExposureTime` 4-slot array (same find-or-evict-soonest shape `HasteRemaining`/`HasteSource` already use), per-target cooldown after applying. |
+| Overflowing Rift | `OverflowingRiftMutationData` | Epic | Applying Rift Mark to a target already at `MaxStacks` releases a small Rift pulse instead of wasting the application - `RiftMarkApplicationUtility.TryTriggerOverflowingRift`, called from *inside* `ApplyRequest` itself (not a mark-requesting mechanic like the other 10), gated by its own dedicated `StatusEffects.OverflowingRiftCooldownRemaining` (separate from the shared per-mechanic array). Stacks stay clamped, duration still refreshes, deliberately restrained (own `OverflowingRiftPulseDamage`/`Radius` fields, own `OverflowingRiftTriggered` VFX event) - never comparable in strength to a full Rift Reaction, and can't recursively re-trigger since it never calls back into `ApplyRiftMark`/`ApplyRequest`. |
+
+### Application/dedup architecture
+
+- **`RiftMarkApplicationRequest`** (`Assets/_QuantumUser/Simulation/Systems/RiftMarkApplicationUtility.cs`) -
+  a plain C# struct (Source/Target/HitSequence/ApplicationSource/RequestedStacks/Owner/CooldownKey),
+  not a persisted Quantum component - every request is collected and resolved entirely within one
+  hit's synchronous call chain (never crosses a frame boundary), same reasoning `HitEffectContext`
+  already uses for its own transient per-hit state.
+- **`RiftMarkCooldownKey`** indexes `StatusEffects.MarkApplicationCooldowns[8]` - one shared array of
+  per-target cooldown slots for CriticalFracture/SkillFracture/HeavyFracture/CloseFracture/
+  LongFracture/ExecutionFracture/FocusedBreach/FracturedPresence, all defaulting to
+  `ElementalReactionConfig.StandardMarkApplicationCooldown` (2s MVP) unless a mechanic overrides.
+  Mechanics with their own dedupe shape (Fracture Rounds' hit counter, Unstable Payload's
+  once-per-explosion-by-construction, Rift Dash's per-dash tracker, First Contact's one-time flag,
+  Last Stand's per-player cooldown, Overflowing Rift's own field) pass `RiftMarkCooldownKey.None`
+  instead.
+- **`RiftMarkApplicationUtility.TryConsumeCooldown`/`ApplyRequest`** - the shared checked-then-set
+  atomic gate (identical shape to every `*CooldownRemaining` check in `StatusEffectUtility`) plus the
+  actual `ApplyRiftMark` call + Overflowing Rift branch. This single mechanism is what makes "Weapon
+  Critical Fracture and global Critical Fracture never both stack from one crit" fall out for free -
+  both request through the same `RiftMarkCooldownKey.CriticalFracture` slot, so whichever runs first
+  within a hit wins it and the other sees it already consumed.
+- **`RiftMutationMarkUtility.EvaluateOnDamage`** - the single per-hit orchestrator for
+  First Contact/Execution/Skill/Critical(mutation)/Heavy/Close/Long Fracture, called once from
+  `DamageUtility.ApplyDamage` (after damage/crit resolve, before health is subtracted, so pre-hit
+  health/distance are both still live), gated to real combat hits (`Weapon`/`Skill` source, excluding
+  DoT-tick replays). Evaluates every qualifying mutation in a fixed, most-narrow-first priority order
+  and requests **at most one** application - "prefer one Rift Mark application per hit event" (see
+  the original design brief). A coincidental overlap between this evaluation and a *separate* Weapon
+  Perk on the same physical hit (e.g. Fracture Rounds' 6th shot also happening to be a Heavy hit) is
+  a known MVP simplification, not deduped - only Critical Fracture's perk/mutation pair is
+  guaranteed not to double-fire, via the shared cooldown key above.
 
 ## Rift Shard currency (Greed's prerequisite)
 
@@ -162,7 +218,8 @@ every asset - manual per-mutation Inspector step, same as every other pool's gen
 
 ## Current status / known simplifications
 
-The code compiles and every mutation has a class + `RiftMutationAssetGenerator` spec, but:
+The code compiles and every mutation (25, including the 11-strong Rift Mark content pool) has a
+class + `RiftMutationAssetGenerator` spec, but:
 
 1. **Run the generator** (`Tools/RiftRaiders/Generate Rift Mutation Assets`) - no `.asset` instances
    exist until it (or hand-authoring) is done, same gap every other pool's catalog doc describes.
@@ -175,3 +232,24 @@ The code compiles and every mutation has a class + `RiftMutationAssetGenerator` 
    tuned design number - same category as several proc magnitudes across the Weapon Perk roster.
 5. **No mutual-exclusion between distinct mutations** - see "Roster" above. Only picking the *same*
    mutation twice is blocked (`RiftMutationPicks`).
+6. **Rift Mark content pool - no automated coverage for the Frame-dependent half** - cooldown-key
+   gating, the priority-ordered dispatch, Rift Dash's overlap sweep, and Fractured Presence's
+   exposure accumulator all need a live `StatusEffects*`/`Frame` this project has no simulation test
+   harness for; only the two genuinely pure pieces (`RiftMutationMarkUtility.IsHeavyHit`/
+   `IsBelowExecutionThreshold`) have EditMode tests
+   (`Assets/_QuantumUser/Editor/Tests/RiftMarkApplicationTests.cs`) - verify the rest manually
+   in-Editor, same gap `docs/elemental-reactions.md`'s own "Current status" already documents for the
+   core mechanic.
+7. **Cross-mechanic mark-application dedup is scoped to within each evaluation point, not global** -
+   `RiftMutationMarkUtility.EvaluateOnDamage`'s own 7 damage-hook mutations are fully deduped against
+   each other (one priority-ordered pass, at most one application), and Critical Fracture's Weapon
+   Perk/Mutation pair is deduped via a shared cooldown key, but a coincidental overlap between a
+   Weapon Perk and an *unrelated* mutation on the same physical hit isn't - see "Application/dedup
+   architecture" above.
+8. **Fractured Presence's per-tick proximity scan is O(enemies × players)**, not spatially
+   partitioned - acceptable at this project's co-op player count, would need revisiting before a
+   much larger concurrent-entity count.
+9. **`Weapon.FocusedBreachContactTime` only resets on an explicit miss or a target change**, not on a
+   continuous per-tick decay while simply not firing - a reasonable MVP reading of "losing contact
+   resets or rapidly decays progress" given Hitscan firing is already discrete, not a true
+   continuous-beam decay.

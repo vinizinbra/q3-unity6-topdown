@@ -3,6 +3,8 @@ using PrimeTween;
 
 public class ScaleTween : UiTween
 {
+    public bool useUnscaledTime = false;
+
     private void Reset()
     {
         from = transform.localScale;
@@ -23,7 +25,7 @@ public class ScaleTween : UiTween
     {
         IsPlaying = true;
         transform.localScale = from;
-        Tween.Scale(transform,from, to, duration,ease,1,CycleMode.Restart,delay).OnComplete(PlayAgainLogic,false);
+        Tween.Scale(transform,from, to, duration,ease,1,CycleMode.Restart,delay,useUnscaledTime:useUnscaledTime).OnComplete(PlayAgainLogic,false);
     }
 
     public override void PlayBackward(bool playFrom = false)
@@ -31,6 +33,6 @@ public class ScaleTween : UiTween
         if(playType != UiPlayType.ONCE) return;
         IsPlaying = true;
         transform.localScale = to;
-        Tween.Scale(transform,to, from, duration*backwardMultiplier,ReverseEase(),1,CycleMode.Restart,startDelay).OnComplete(PlayAgainLogic,false);
+        Tween.Scale(transform,to, from, duration*backwardMultiplier,ReverseEase(),1,CycleMode.Restart,startDelay,useUnscaledTime:useUnscaledTime).OnComplete(PlayAgainLogic,false);
     }
 }

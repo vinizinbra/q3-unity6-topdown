@@ -41,7 +41,7 @@ MonoBehaviour:
   CriticalDamageMultiplier:
     RawValue: 98304
   ElementalChance:
-    RawValue: 0
+    RawValue: 6554
   AttackSpeedMultiplier:
     RawValue: 65536
   ReloadSpeedMultiplier:
@@ -49,6 +49,10 @@ MonoBehaviour:
   ProjectileSpeedMultiplier:
     RawValue: 65536
   AreaRadiusMultiplier:
+    RawValue: 65536
+  NearDamageMultiplier:
+    RawValue: 65536
+  FarDamageMultiplier:
     RawValue: 65536
   DashCooldownMultiplier:
     RawValue: 65536
@@ -77,6 +81,10 @@ MonoBehaviour:
   Luck:
     RawValue: 0
   ExperienceGainMultiplier:
+    RawValue: 65536
+  RiftShardGainMultiplier:
+    RawValue: 65536
+  CoinGainMultiplier:
     RawValue: 65536
   RingColor: {r: 0.25943398, g: 0.7713515, b: 1, a: 1}
   WeaponPosition:
@@ -117,3 +125,11 @@ MonoBehaviour:
       Value: 505319841889557397
   - Id:
       Value: 306557420301808203
+  - Id:
+      Value: 535367372471490503
+  - Id:
+      Value: 326827407779709135
+  - Id:
+      Value: 288810180448915716
+  - Id:
+      Value: 303587499606340447

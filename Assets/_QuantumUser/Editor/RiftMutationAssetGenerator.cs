@@ -179,6 +179,89 @@ namespace QuantumUser.Editor
                 Description = "Breaking your Shield grants an immediately-usable Dash charge",
                 Configure = p => { }
             },
+
+            // -- Rift Mark content pool (see docs/rift-mutations.md) - every threshold/cooldown/
+            // radius below is a shared, global ElementalReactionConfig value, not baked per-asset
+            // (unlike the mutations above), so every Configure here is a no-op and every Description
+            // is a plain string with no {0}/{1} template args - same shape All or Nothing/Shield
+            // Breaker already use for a mutation with nothing live to template in.
+            new MutationSpec
+            {
+                Type = typeof(CriticalFractureMutationData), FileName = "CriticalFracture",
+                DisplayName = "Critical Fracture", Rarity = UpgradeRarity.Rare,
+                Description = "Critical hits apply Rift Mark",
+                Configure = p => { }
+            },
+            new MutationSpec
+            {
+                Type = typeof(SkillFractureMutationData), FileName = "SkillFracture",
+                DisplayName = "Skill Fracture", Rarity = UpgradeRarity.Rare,
+                Description = "Hero Skill hits apply Rift Mark",
+                Configure = p => { }
+            },
+            new MutationSpec
+            {
+                Type = typeof(RiftDashMutationData), FileName = "RiftDash",
+                DisplayName = "Rift Dash", Rarity = UpgradeRarity.Rare,
+                Description = "Dashing through an enemy applies Rift Mark",
+                Configure = p => { }
+            },
+            new MutationSpec
+            {
+                Type = typeof(HeavyFractureMutationData), FileName = "HeavyFracture",
+                DisplayName = "Heavy Fracture", Rarity = UpgradeRarity.Rare,
+                Description = "Large hits apply Rift Mark",
+                Configure = p => { }
+            },
+            new MutationSpec
+            {
+                Type = typeof(CloseFractureMutationData), FileName = "CloseFracture",
+                DisplayName = "Close Fracture", Rarity = UpgradeRarity.Rare,
+                Description = "Hits against nearby enemies periodically apply Rift Mark",
+                Configure = p => { }
+            },
+            new MutationSpec
+            {
+                Type = typeof(LongFractureMutationData), FileName = "LongFracture",
+                DisplayName = "Long Fracture", Rarity = UpgradeRarity.Rare,
+                Description = "Hits against distant enemies periodically apply Rift Mark",
+                Configure = p => { }
+            },
+            new MutationSpec
+            {
+                Type = typeof(ExecutionFractureMutationData), FileName = "ExecutionFracture",
+                DisplayName = "Execution Fracture", Rarity = UpgradeRarity.Rare,
+                Description = "Hitting enemies below 25% health applies Rift Mark",
+                Configure = p => { }
+            },
+            new MutationSpec
+            {
+                Type = typeof(FirstContactMutationData), FileName = "FirstContact",
+                DisplayName = "First Contact", Rarity = UpgradeRarity.Rare,
+                Description = "The first hit against a full-health enemy applies Rift Mark",
+                Configure = p => { }
+            },
+            new MutationSpec
+            {
+                Type = typeof(LastStandMutationData), FileName = "LastStand",
+                DisplayName = "Last Stand", Rarity = UpgradeRarity.Epic,
+                Description = "Taking a large hit marks nearby enemies",
+                Configure = p => { }
+            },
+            new MutationSpec
+            {
+                Type = typeof(FracturedPresenceMutationData), FileName = "FracturedPresence",
+                DisplayName = "Fractured Presence", Rarity = UpgradeRarity.Rare,
+                Description = "Enemies that remain near you become Rift-marked",
+                Configure = p => { }
+            },
+            new MutationSpec
+            {
+                Type = typeof(OverflowingRiftMutationData), FileName = "OverflowingRift",
+                DisplayName = "Overflowing Rift", Rarity = UpgradeRarity.Epic,
+                Description = "Marking an already-maxed target releases a small Rift pulse instead",
+                Configure = p => { }
+            },
         };
 
         [MenuItem("Tools/RiftRaiders/Generate Rift Mutation Assets")]

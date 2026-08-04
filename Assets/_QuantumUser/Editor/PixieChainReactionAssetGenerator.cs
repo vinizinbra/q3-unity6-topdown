@@ -8,13 +8,16 @@ namespace QuantumUser.Editor
     using UnityEditor;
     using UnityEngine;
 
-    // Authors Pixie's Chain Reaction passive + its 4 Passive Ascensions + 2 of her 3 Dash Ascensions
-    // (Backblast, Volatile Escape - Bombs Away still needs a standalone (non-projectile) timed-bomb
-    // EntityPrototype authored by hand first, see the log this prints), then wires all of it into
-    // PixieCharacterData.asset. Mirrors LuxScrapAssetGenerator.cs/KaiVoidFieldAssetGenerator.cs/
-    // MaxAdrenalineAssetGenerator.cs/BruteProtectorAssetGenerator.cs exactly (same folder-creation/
-    // update-in-place/rebuild-the-list-from-scratch behavior); re-running this is safe for the same
-    // reasons those are.
+    // Authors Pixie's Chain Reaction passive + its 5 Passive Ascensions (the original 4 plus
+    // Unstable Targeting, added later - all 5 compose onto the same MarkExplosiveDeath component,
+    // see that file's own comments) + 2 of her 3 Dash Ascensions (Backblast, Volatile Escape - Bombs
+    // Away still needs a standalone (non-projectile) timed-bomb EntityPrototype authored by hand
+    // first, see the log this prints), then wires all of it into PixieCharacterData.asset. Mirrors
+    // LuxScrapAssetGenerator.cs/KaiVoidFieldAssetGenerator.cs/MaxAdrenalineAssetGenerator.cs/
+    // BruteProtectorAssetGenerator.cs exactly (same folder-creation/update-in-place/rebuild-the-
+    // list-from-scratch behavior); re-running this is safe for the same reasons those are. Distinct
+    // from PixieDemolitionMasteryAssetGenerator.cs, which append-only adds its own 4 traits to this
+    // same PassiveUpgrades list instead of owning/rebuilding it - safe to run either in any order.
     public static class PixieChainReactionAssetGenerator
     {
         private const string PassivesFolderPath = "Assets/_QuantumUser/Resources/Passives/Pixie";
@@ -47,7 +50,7 @@ namespace QuantumUser.Editor
             {
                 asset.DisplayName = "Unstable Mixture";
                 asset.Rarity = UpgradeRarity.Rare;
-                asset.Description = "Increases explosion damage.";
+                asset.Description = "Increases the damage of a marked enemy's death explosion.";
                 asset.DamageMultiplierBonus = FP.FromString("0.25");
             });
 
@@ -68,6 +71,14 @@ namespace QuantumUser.Editor
                 asset.ExplosionMultiplier = FP._2;
             });
 
+            UnstableTargetingPassiveUpgradeData unstableTargeting = CreateOrUpdate<UnstableTargetingPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/UnstableTargeting.asset", asset =>
+            {
+                asset.DisplayName = "Unstable Targeting";
+                asset.Rarity = UpgradeRarity.Rare;
+                asset.Description = "Deal bonus damage to enemies marked to explode on death.";
+                asset.DamageMultiplierBonus = FP.FromString("0.3");
+            });
+
             BackblastSkillAction backblast = CreateOrUpdate<BackblastSkillAction>($"{DashUpgradesFolderPath}/BackblastSkillAction.asset", asset =>
             {
                 asset.DisplayName = "Backblast";
@@ -85,10 +96,10 @@ namespace QuantumUser.Editor
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh(); // lets QuantumAssetObjectPostprocessor stamp Guid/Identifier on anything just created
 
-            WireCharacterData(passive, new List<PassiveUpgradeData> { biggerBoom, unstableMixture, explosiveRounds, heavyPayload },
+            WireCharacterData(passive, new List<PassiveUpgradeData> { biggerBoom, unstableMixture, explosiveRounds, heavyPayload, unstableTargeting },
                 new List<SkillActionData> { backblast, volatileEscape });
 
-            LogHelper.Log("PixieChainReactionAssetGenerator", "Passive + 4 ascensions + 2 dash ascensions authored and wired into PixieCharacterData. " +
+            LogHelper.Log("PixieChainReactionAssetGenerator", "Passive + 5 ascensions + 2 dash ascensions authored and wired into PixieCharacterData. " +
                       "Bombs Away (the 3rd dash ascension) still needs a standalone timed-bomb EntityPrototype authored by hand first - " +
                       "NOT the existing BunnyBombEntityPrototype (that one is wired for ProjectileSpawner.Spawn's own launch/velocity setup, " +
                       "not SpawnedEntitySpawner.Spawn's simpler create-and-place path, so reusing it directly risks an uninitialized " +

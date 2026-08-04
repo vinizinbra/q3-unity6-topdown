@@ -1,4 +1,5 @@
 using System;
+using QuantumUser.View.Util;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -77,7 +78,7 @@ public class DebugUpgradeMenuWindow : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("[DebugUpgradeMenuWindow] riftTabButton not assigned - Rift Mutation tab is unreachable until it's wired in the Inspector.");
+            LogHelper.Warn("DebugUpgradeMenu", "riftTabButton not assigned - Rift Mutation tab is unreachable until it's wired in the Inspector.");
         }
 
         ShowPanel(_heroPanel);

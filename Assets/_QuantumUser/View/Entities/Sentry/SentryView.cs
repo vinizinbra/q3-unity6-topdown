@@ -110,6 +110,14 @@ namespace Quantum
         {
             base.OnDestroy();
             QuantumEvent.UnsubscribeListener(this);
+
+            // Both the one-shot shakeOnceStrength burst and the continuous mild/harsh shake target
+            // shakeTarget directly (not this) and can still be running when the sentry dies - without
+            // this, PrimeTween logs a stack-trace-capturing error per orphaned tween every time that
+            // happens. continuousShake.Stop() alone (used on tier change above) isn't enough here
+            // since it doesn't cover the untracked one-shot burst.
+            if (shakeTarget != null)
+                Tween.StopAll(shakeTarget);
         }
 
         public override void Initialize(QuantumGame game)

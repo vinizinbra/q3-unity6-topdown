@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ec534eda89344d33b606e8e6429b7f9, type: 3}
+  m_Name: UnbrokenSpirit
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.UnbrokenSpiritPassiveUpgradeData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Max/M_PassiveSkill/M_PassiveSkillUpgrades/Vendetta/UnbrokenSpirit
+    Guid:
+      Value: 455632637428084137
+  Icon: {fileID: 1632341738, guid: 9a944adac56bb4e8dbce2f7bab4127e3, type: 3}
+  DisplayName: Unbroken Spirit
+  Rarity: 2
+  Description: Shield damage now also marks your Vendetta target.

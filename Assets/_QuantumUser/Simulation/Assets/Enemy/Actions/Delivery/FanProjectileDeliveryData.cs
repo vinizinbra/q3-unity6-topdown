@@ -94,7 +94,7 @@ namespace Quantum
 
                     launch = UseArc == true
                         ? ProjectileSpawner.SolveArcLaunch(resolvedOrigin, resolvedOrigin + pelletDirection, LaunchAngle, Gravity)
-                        : movement.GetLaunch(resolvedOrigin, pelletDirection);
+                        : movement.GetLaunch(f, resolvedOrigin, pelletDirection);
                 }
                 else
                 {
@@ -105,7 +105,7 @@ namespace Quantum
 
                     launch = UseArc == true
                         ? ProjectileSpawner.SolveArcLaunch(resolvedOrigin, pelletTarget, LaunchAngle, Gravity)
-                        : movement.GetLaunchToTarget(resolvedOrigin, pelletTarget);
+                        : movement.GetLaunchToTarget(f, resolvedOrigin, pelletTarget, target);
                 }
 
                 if (launch.IsValid == false)

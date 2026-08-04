@@ -32,8 +32,8 @@ component AreaDamage
     // Delay before the area's first tick after spawning - lets a telegraphed blast wait out its own
     // windup before it starts hurting anyone, instead of always biting the instant it lands. Only
     // applies to areas spawned through SpawnedEntitySpawner, which seeds TickTimer from this at
-    // spawn (see ConfigureArea) - a hand-placed level hazard with no spawner in the loop can still
-    // just author TickTimer directly instead.
+    // spawn (see ConfigureOwnerAndArea) - a hand-placed level hazard with no spawner in the loop can
+    // still just author TickTimer directly instead.
     FP InitialDelay;
 
     FP TickTimer;

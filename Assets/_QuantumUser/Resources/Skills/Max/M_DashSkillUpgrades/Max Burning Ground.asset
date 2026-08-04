@@ -16,15 +16,16 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/M_DashSkillUpgrades/Max Burning Ground
     Guid:
       Value: 421846226953410185
-  Icon: {fileID: 0}
-  DisplayName: 
+  Icon: {fileID: 171746282, guid: 9a944adac56bb4e8dbce2f7bab4127e3, type: 3}
+  DisplayName: Burning Ground
   Rarity: 0
   Priority: 0
   Phase: 2
   Interval:
     RawValue: 0
   Activated: 1
-  Description: 
+  Description: Dashing leaves behind a patch of burning ground that ignites enemies
+    standing in it.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

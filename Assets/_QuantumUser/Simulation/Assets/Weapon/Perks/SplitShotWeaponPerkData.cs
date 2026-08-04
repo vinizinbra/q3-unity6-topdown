@@ -10,11 +10,12 @@ namespace Quantum
         public int Count = 2;
         public FP DamageMultiplier = FP._0_50;
 
-        public override void Apply(Frame f, Weapon* weapon)
+        public override void Apply(Frame f, EntityRef owner, Weapon* weapon)
         {
-            weapon->HasSplitShot = true;
-            weapon->SplitShotCount = weapon->SplitShotCount > Count ? weapon->SplitShotCount : Count;
-            weapon->SplitShotDamageMultiplier = FPMath.Max(weapon->SplitShotDamageMultiplier, DamageMultiplier);
+            f.AddOrGet<WeaponPostImpactProcs>(owner, out var procs);
+            procs->HasSplitShot = true;
+            procs->SplitShotCount = procs->SplitShotCount > Count ? procs->SplitShotCount : Count;
+            procs->SplitShotDamageMultiplier = FPMath.Max(procs->SplitShotDamageMultiplier, DamageMultiplier);
         }
 
         protected override object[] DescriptionArgs => new object[] { Count, DamageMultiplier.AsFloat * 100f };

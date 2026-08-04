@@ -17,7 +17,7 @@ MonoBehaviour:
     Guid:
       Value: 2744247192482565106
   Icon: {fileID: 0}
-  DisplayName: 
+  DisplayName: Extended Range
   Rarity: 0
   Priority: 0
   Phase: 1
@@ -68,7 +68,7 @@ MonoBehaviour:
     Guid:
       Value: 905484235574983035
   Icon: {fileID: 0}
-  DisplayName: 
+  DisplayName: Cannon
   Rarity: 0
   Priority: 0
   Phase: 1
@@ -130,7 +130,7 @@ MonoBehaviour:
     Guid:
       Value: 422702433047713982
   Icon: {fileID: 0}
-  DisplayName: 
+  DisplayName: Shield Battery
   Rarity: 0
   Priority: 0
   Phase: 1
@@ -182,7 +182,7 @@ MonoBehaviour:
     Guid:
       Value: 3435789117373323794
   Icon: {fileID: 0}
-  DisplayName: 
+  DisplayName: Deploy Sentry
   Rarity: 0
   Priority: 100
   Phase: 1
@@ -249,7 +249,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Lux/Lux_HeroSkill/LuxSkill
     Guid:
       Value: 343253858491687803
-  Name: 
+  Name: Sentry
   InitStacks: 1
   Cooldown:
     RawValue: 1310720
@@ -295,7 +295,7 @@ MonoBehaviour:
     Guid:
       Value: 753955061593946555
   Icon: {fileID: 0}
-  DisplayName: 
+  DisplayName: Fire Support
   Rarity: 0
   Priority: 0
   Phase: 1
@@ -347,7 +347,7 @@ MonoBehaviour:
     Guid:
       Value: 3492794733492268349
   Icon: {fileID: 0}
-  DisplayName: 
+  DisplayName: Minigun
   Rarity: 0
   Priority: 0
   Phase: 1
@@ -409,7 +409,7 @@ MonoBehaviour:
     Guid:
       Value: 4599612503724607643
   Icon: {fileID: 0}
-  DisplayName: 
+  DisplayName: Overclock
   Rarity: 0
   Priority: 0
   Phase: 1
@@ -460,7 +460,7 @@ MonoBehaviour:
     Guid:
       Value: 2542790117256456073
   Icon: {fileID: 0}
-  DisplayName: 
+  DisplayName: Rocket Launcher
   Rarity: 0
   Priority: 0
   Phase: 1
@@ -522,7 +522,7 @@ MonoBehaviour:
     Guid:
       Value: 1888623492355216042
   Icon: {fileID: 0}
-  DisplayName: 
+  DisplayName: Laser
   Rarity: 0
   Priority: 0
   Phase: 1
@@ -584,7 +584,7 @@ MonoBehaviour:
     Guid:
       Value: 1587832588088237092
   Icon: {fileID: 0}
-  DisplayName: 
+  DisplayName: Overload Core
   Rarity: 0
   Priority: 0
   Phase: 1

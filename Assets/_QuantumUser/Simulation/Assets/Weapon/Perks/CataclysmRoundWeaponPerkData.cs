@@ -9,11 +9,12 @@ namespace Quantum
         public FP Radius = 5;
         public FP DamageMultiplier = FP._1;
 
-        public override void Apply(Frame f, Weapon* weapon)
+        public override void Apply(Frame f, EntityRef owner, Weapon* weapon)
         {
-            weapon->HasCataclysmRound = true;
-            weapon->CataclysmRadius = FPMath.Max(weapon->CataclysmRadius, Radius);
-            weapon->CataclysmDamageMultiplier = FPMath.Max(weapon->CataclysmDamageMultiplier, DamageMultiplier);
+            f.AddOrGet<WeaponPostImpactProcs>(owner, out var procs);
+            procs->HasCataclysmRound = true;
+            procs->CataclysmRadius = FPMath.Max(procs->CataclysmRadius, Radius);
+            procs->CataclysmDamageMultiplier = FPMath.Max(procs->CataclysmDamageMultiplier, DamageMultiplier);
         }
 
         protected override object[] DescriptionArgs => new object[] { DamageMultiplier.AsFloat * 100f, Radius.AsFloat };

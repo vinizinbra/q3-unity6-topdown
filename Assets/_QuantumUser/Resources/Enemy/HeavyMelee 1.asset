@@ -70,7 +70,7 @@ MonoBehaviour:
     Guid:
       Value: 368882078469044815
   EnemyName: 
-  Tier: 0
+  Tier: 1
   Economy:
     Persistent: 0
     SpawnProfile:

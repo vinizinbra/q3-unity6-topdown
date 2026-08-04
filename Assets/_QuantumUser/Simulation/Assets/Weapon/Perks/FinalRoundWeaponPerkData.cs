@@ -7,9 +7,10 @@ namespace Quantum
     {
         public FP DamageBonus;
 
-        public override void Apply(Frame f, Weapon* weapon)
+        public override void Apply(Frame f, EntityRef owner, Weapon* weapon)
         {
-            weapon->FinalRoundDamageBonus += DamageBonus;
+            f.AddOrGet<WeaponMagazinePositionPerks>(owner, out var perks);
+            perks->FinalRoundDamageBonus += DamageBonus;
         }
 
         protected override object[] DescriptionArgs => new object[] { DamageBonus.AsFloat * 100f };

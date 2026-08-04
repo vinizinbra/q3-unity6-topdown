@@ -8,9 +8,10 @@ namespace Quantum
     {
         public FP Chance;
 
-        public override void Apply(Frame f, Weapon* weapon)
+        public override void Apply(Frame f, EntityRef owner, Weapon* weapon)
         {
-            weapon->DoubleTapChance += Chance;
+            f.AddOrGet<WeaponFireTimeMods>(owner, out var mods);
+            mods->DoubleTapChance += Chance;
         }
 
         protected override object[] DescriptionArgs => new object[] { Chance.AsFloat * 100f };

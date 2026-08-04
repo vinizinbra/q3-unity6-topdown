@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/GlobalUpgrade/CriticalChance
     Guid:
       Value: 320361396188178750
-  Icon: {fileID: 0}
+  Icon: {fileID: 1698213784, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
   DisplayName: Critical Chance
   Rarity: 1
   MaxPicks: 3

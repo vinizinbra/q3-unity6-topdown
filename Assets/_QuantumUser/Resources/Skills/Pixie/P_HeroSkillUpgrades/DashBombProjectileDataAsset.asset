@@ -18,7 +18,7 @@ MonoBehaviour:
       Value: 280410021018812087
   Effects:
   - Id:
-      Value: 3484874747280003516
+      Value: 440091783757558214
   - Id:
       Value: 400869309667061698
   RestOffset:
@@ -27,7 +27,7 @@ MonoBehaviour:
   DetonateOnEnemyHit: 0
   BlastRadius:
     RawValue: 131072
-  TargetMask: 0
+  TargetMask: 2
   TriggersSpawnUpgrades: 1
   BlastEffectPrefab: {fileID: 6350743763286976369, guid: 2dcb44456e58b4eb3823d152a70d114f, type: 3}
 --- !u!114 &-2419488696322937188

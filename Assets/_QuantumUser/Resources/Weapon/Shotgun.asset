@@ -46,6 +46,7 @@ MonoBehaviour:
     Id:
       Value: 2052039704194794421
   ViewPrefab: {fileID: 8089491252618662435, guid: 0f7481ececfe745c383ff250af802c65, type: 3}
+  ShakeTier: 0
   _dpsPreview: 'Burst DPS: 60
 
     Sustained DPS (incl. reload): 48.6

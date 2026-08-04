@@ -166,7 +166,7 @@ public class ExpBarUiWidget : QuantumGlobalMonoBehaviour
 
         while (elapsed < duration)
         {
-            elapsed += Time.deltaTime;
+            elapsed += Time.unscaledDeltaTime;
             image.color = Color.Lerp(from, to, elapsed / duration);
             yield return null;
         }
@@ -185,7 +185,7 @@ public class ExpBarUiWidget : QuantumGlobalMonoBehaviour
 
         while (elapsed < sliderLerpDuration)
         {
-            elapsed += Time.deltaTime;
+            elapsed += Time.unscaledDeltaTime;
             expSlider.value = Mathf.Lerp(startValue, _targetSliderValue, elapsed / sliderLerpDuration);
             yield return null;
         }

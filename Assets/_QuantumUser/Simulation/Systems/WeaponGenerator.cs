@@ -24,24 +24,32 @@ namespace Quantum
             }
         }
 
-        // Weighted draw without replacement: a drawn perk has its weight taken out of the running
-        // total, so one roll can't contain the same perk twice. Stops early rather than repeating
-        // itself when the pool holds fewer drawable perks than were asked for.
         private static void DrawPerks(Frame f, Weapon* weapon, AssetRef<WeaponPerkPoolData> poolRef, int perkCount)
         {
+            DrawDistinctPerks(f, poolRef, perkCount, weapon->Perks);
+        }
+
+        // Weighted draw without replacement into `perks[0..slots)`, where slots = min(perkCount,
+        // perks.Length): a drawn perk has its weight taken out of the running total, so one roll
+        // can't contain the same perk twice. Stops early rather than repeating itself when the pool
+        // holds fewer drawable perks than were asked for. Shared by WeaponGenerator.Roll (an
+        // equipped weapon's own perk roster, above) and LevelUpUtility.RollWeaponOption (a
+        // not-yet-equipped Choose-Weapon candidate's rolled perks) - same shape, different
+        // destination buffer.
+        public static int DrawDistinctPerks(Frame f, AssetRef<WeaponPerkPoolData> poolRef, int perkCount, FixedArray<AssetRef<WeaponPerkData>> perks)
+        {
             if (poolRef.IsValid == false)
-                return;
+                return 0;
 
             WeaponPerkPoolData pool = f.FindAsset(poolRef);
-            var perks = weapon->Perks;
 
             int slots = perkCount < perks.Length ? perkCount : perks.Length;
 
             if (perkCount > perks.Length)
-                Log.Error($"[Weapon] asked for {perkCount} perks but Weapon.Perks only holds {perks.Length}");
+                Log.Error($"[Weapon] asked for {perkCount} perks but the destination buffer only holds {perks.Length}");
 
             if (slots <= 0 || pool.Perks.Count == 0)
-                return;
+                return 0;
 
             bool* taken = stackalloc bool[pool.Perks.Count];
             int totalWeight = 0;
@@ -85,6 +93,7 @@ namespace Quantum
             }
 
             Log.Debug($"[Weapon] rolled {drawn}/{slots} perks from {poolRef}");
+            return drawn;
         }
 
         private static int GetWeight(Frame f, WeaponPerkPoolData pool, int index)

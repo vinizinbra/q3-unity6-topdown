@@ -30,7 +30,7 @@ namespace Quantum
             if (DamageUtility.RollChance(f, tierStats.RiftShardDropChance) == false)
                 return;
 
-            if (f.RuntimeConfig.RiftShardPrototype.IsValid == false)
+            if (f.RuntimeConfig.Prefabs.RiftShardPrototype.IsValid == false)
             {
                 Log.Debug($"[RiftShard] {target} died with RiftShardValue {tierStats.RiftShardValue} but RuntimeConfig has no RiftShardPrototype assigned - drop skipped");
                 return;
@@ -56,7 +56,7 @@ namespace Quantum
                 }
             }
 
-            EntityRef orb = f.Create(f.RuntimeConfig.RiftShardPrototype);
+            EntityRef orb = f.Create(f.RuntimeConfig.Prefabs.RiftShardPrototype);
 
             if (f.Unsafe.TryGetPointer<Transform3D>(orb, out var orbTransform) == true)
             {

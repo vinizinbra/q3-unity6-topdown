@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/B_PassiveSkill/B_PassiveSkillUpgrades/Fearless
     Guid:
       Value: 306557420301808203
-  Icon: {fileID: 0}
+  Icon: {fileID: 1404848919, guid: 1398529c57dc443e7a3096f4ad470a4c, type: 3}
   DisplayName: Fearless
   Rarity: 1
   Description: Brute deals increased damage to Intimidated enemies.

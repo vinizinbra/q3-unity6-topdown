@@ -61,6 +61,13 @@ component Projectile
     // something changes a projectile's speed mid-flight.
     FP TraveledDistance;
 
+    // Which pellet of a fanned volley this is (0 for anything not fanned - a single-shot weapon, a
+    // skill, an enemy attack) - carried through HitEffectContext.HitIndex to DamageUtility.
+    // ApplyDamage so pellets landing on one stationary target in the same tick stay distinct events
+    // instead of hash-colliding and getting silently dropped by Quantum's per-tick event dedup. See
+    // WeaponSystem.FireProjectile/ProjectileSpawner.Spawn and Events.qtn's EntityDamaged.HitIndex.
+    Byte PelletIndex;
+
     // Live multiplier on this tick's actual displacement (Velocity itself is never touched) - reset
     // to 1 and recomputed every tick by VoidFieldSystem for an enemy-owned projectile currently
     // inside a ProjectileSlowField, so leaving every field instantly restores normal speed with

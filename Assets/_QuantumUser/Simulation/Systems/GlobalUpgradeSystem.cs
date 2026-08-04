@@ -16,6 +16,7 @@ namespace Quantum
                 return;
 
             GlobalUpgradeUtility.Grant(f, filter.Entity, command.Upgrade);
+            LevelUpUtility.RecordHistory(f, filter.Entity, LevelUpPoolKind.GlobalUpgrade, new AssetRef<UpgradeData>(command.Upgrade.Id));
             Log.Debug($"[GlobalUpgrade] {filter.Entity} was granted Global Upgrade {command.Upgrade} via command");
         }
 

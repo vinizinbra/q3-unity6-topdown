@@ -177,6 +177,11 @@ namespace Quantum
         {
             base.OnDestroy();
             QuantumEvent.UnsubscribeListener(this);
+
+            // OnPlayerFired's shoot-punch (Tween.PunchCustom(this, ...)) can still be decaying when
+            // this view is destroyed - without this, PrimeTween logs a stack-trace-capturing error
+            // per orphaned tween every time that happens.
+            Tween.StopAll(this);
         }
 
         // Editor workflow: snaps the rig back to its current baseline, pauses so the pose can be
@@ -424,10 +429,10 @@ namespace Quantum
         private void IntegrateLandingSpring(float dt)
         {
             // Damped harmonic oscillator pulling _jumpSquashT back to 0, with overshoot/bounce.
-            float omega = landingSpringFrequency * Mathf.PI * 2f;
-            float force = -omega * omega * _jumpSquashT - 2f * landingSpringDamping * omega * _springVelocity;
-            _springVelocity += force * dt;
-            _jumpSquashT += _springVelocity * dt;
+            // Bounded overshoot (2x maxLandingSquash) keeps a bad-frame spike from reading as the
+            // rig flying apart - see DampedSpring's own comment for why the naive form can't be
+            // trusted to stay finite on its own at low/variable framerate.
+            DampedSpring.Integrate(ref _jumpSquashT, ref _springVelocity, 0f, landingSpringFrequency, landingSpringDamping, dt, maxLandingSquash * 2f);
 
             if (Mathf.Abs(_jumpSquashT) < 0.01f && Mathf.Abs(_springVelocity) < 0.05f)
             {

@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Pixie/P_DashSkillUpgrades/BackblastSkillAction
     Guid:
       Value: 340599251920562766
-  Icon: {fileID: 0}
+  Icon: {fileID: 1133475158, guid: b217254d41b6945b1873986186a25786, type: 3}
   DisplayName: Backblast
   Rarity: 1
   Priority: 0

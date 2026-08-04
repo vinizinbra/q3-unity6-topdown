@@ -43,13 +43,13 @@ public class PartyHudManager : MonoBehaviour
     private void OnPlayerAdded(CharView charView)
     {
         bool isFirstLocal = IsFirstLocalPlayer(charView);
-        Debug.Log($"[PartyHudManager] Player added: entity={charView.EntityRef}, playerRef={charView.PlayerRef}, isFirstLocalPlayer={isFirstLocal}", this);
+        LogHelper.Log("PartyHud", $"Player added: entity={charView.EntityRef}, playerRef={charView.PlayerRef}, isFirstLocalPlayer={isFirstLocal}", this);
 
         if (isFirstLocal)
         {
             if (defaultLocalSlot == null)
             {
-                Debug.LogWarning("[PartyHudManager] defaultLocalSlot is unassigned - player 1 won't show in the strip.", this);
+                LogHelper.Warn("PartyHud", "defaultLocalSlot is unassigned - player 1 won't show in the strip.", this);
                 return;
             }
 
@@ -60,7 +60,7 @@ public class PartyHudManager : MonoBehaviour
 
         if (slotPrefab == null || slotContainer == null)
         {
-            Debug.LogWarning("[PartyHudManager] slotPrefab or slotContainer is unassigned - this player won't show in the strip.", this);
+            LogHelper.Warn("PartyHud", "slotPrefab or slotContainer is unassigned - this player won't show in the strip.", this);
             return;
         }
 

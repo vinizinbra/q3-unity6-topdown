@@ -35,7 +35,7 @@ namespace Quantum
             if (DamageUtility.RollChance(f, collector->DropChance) == false)
                 return;
 
-            if (f.RuntimeConfig.ScrapOrbPrototype.IsValid == false)
+            if (f.RuntimeConfig.Prefabs.ScrapOrbPrototype.IsValid == false)
             {
                 Log.Debug($"[Scrap] {target} died eligible for Scrap but RuntimeConfig has no ScrapOrbPrototype assigned - drop skipped");
                 return;
@@ -44,7 +44,7 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == false)
                 return;
 
-            EntityRef orb = f.Create(f.RuntimeConfig.ScrapOrbPrototype);
+            EntityRef orb = f.Create(f.RuntimeConfig.Prefabs.ScrapOrbPrototype);
 
             FP lifetime = 30;
             FPVector3 spawnPosition = targetTransform->Position;

@@ -26,7 +26,9 @@ MonoBehaviour:
   DetonateOnLevelGeometry: 1
   DetonateOnEnemyHit: 1
   BlastRadius:
-    RawValue: 98304
+    RawValue: 65536
   TargetMask: 0
   TriggersSpawnUpgrades: 1
+  PlantedFuseTime:
+    RawValue: 0
   BlastEffectPrefab: {fileID: 810256625517152139, guid: d3a4baf9e60ac418bad2df0df57456d0, type: 3}

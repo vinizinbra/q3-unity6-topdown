@@ -8,17 +8,13 @@ Shader "Project/Mobile Toon Modular Level"
         [Toggle] _SurfaceUseWorldUV ("Surface World UV", Float) = 0
         [NoScaleOffset] _StyleMask ("Outline and Surface Fade Atlas", 2D) = "white" {}
 
-        [Header(Global Noise Test)]
-        [NoScaleOffset] _GlobalNoiseMap ("Global Noise Texture", 2D) = "gray" {}
+        [Header(Surface World Noise)]
+        [NoScaleOffset] _GlobalNoiseMap ("Surface Noise Texture", 2D) = "gray" {}
         _GlobalNoiseScale ("Noise Scale", Float) = 0.2
         _GlobalNoiseStrength ("Noise Strength", Range(0,1)) = 0.15
         _GlobalNoiseDarkColor ("Noise Dark Color", Color) = (0.72,0.75,0.78,1)
         _GlobalNoiseLightColor ("Noise Light Color", Color) = (1,1,1,1)
         _GlobalNoiseOffset ("Noise World Offset", Vector) = (0,0,0,0)
-        _GlobalNoiseNeutral ("Displacement Neutral Level", Range(0.01,0.99)) = 0.5
-        _WallDisplacement ("Global XZ Displacement", Range(0,1)) = 0
-        [Toggle] _WallDisplacementBottomOnly ("Displacement Bottom Only", Float) = 0
-        _WallDisplacementBottomReach ("Bottom Displacement Reach", Range(0.01,1)) = 0.35
 
         [Header(Wall)]
         _WallColor ("Wall Color", Color) = (1,1,1,1)
@@ -76,7 +72,7 @@ Shader "Project/Mobile Toon Modular Level"
             CBUFFER_START(UnityPerMaterial)
             float4 _WallMap_ST; float4 _SurfaceMap_ST;
             half4 _BaseColor, _WallColor, _SurfaceColor, _AOColor, _HeightFogColor, _InkColor, _SurfaceEdgeColor, _GradientBottomColor, _GradientTopColor, _ShadowTint, _GlobalNoiseDarkColor, _GlobalNoiseLightColor;
-            half _WallAOStrength, _SurfaceAOStrength, _SurfaceUseWorldUV, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength, _GlobalNoiseNeutral, _WallDisplacement, _WallDisplacementBottomOnly, _WallDisplacementBottomReach;
+            half _WallAOStrength, _SurfaceAOStrength, _SurfaceUseWorldUV, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength;
             float _GradientStartY, _GradientDistance, _HeightFogTopY, _HeightFogFalloff, _GlobalNoiseScale;
             float4 _GlobalNoiseOffset;
             CBUFFER_END
@@ -84,12 +80,11 @@ Shader "Project/Mobile Toon Modular Level"
             {
                 half n = SAMPLE_TEXTURE2D(_GlobalNoiseMap, sampler_LinearRepeat, baseUv).r;
                 n += SAMPLE_TEXTURE2D(_GlobalNoiseMap, sampler_LinearRepeat, baseUv * 2.63 + 0.37).r * 0.5;
-                n += SAMPLE_TEXTURE2D(_GlobalNoiseMap, sampler_LinearRepeat, baseUv * 5.17 + 0.71).r * 0.25;
-                return n / 1.75;
+                return n / 1.5;
             }
             struct A { float4 positionOS:POSITION; half3 normalOS:NORMAL; float2 uv:TEXCOORD0; float2 uv2:TEXCOORD1; float2 uv3:TEXCOORD2; half4 color:COLOR; UNITY_VERTEX_INPUT_INSTANCE_ID };
             struct V { float4 positionCS:SV_POSITION; float3 positionWS:TEXCOORD0; half3 normalWS:TEXCOORD1; float2 uv:TEXCOORD2; float2 uv3:TEXCOORD3; half2 roleAo:TEXCOORD4; DECLARE_LIGHTMAP_OR_SH(lightmapUV,vertexSH,5); half fog:TEXCOORD6; };
-            V Vert(A i) { V o=(V)0; UNITY_SETUP_INSTANCE_ID(i); o.normalWS=TransformObjectToWorldNormal(i.normalOS); o.positionWS=TransformObjectToWorld(i.positionOS.xyz); float3 noisePosition=o.positionWS+_GlobalNoiseOffset.xyz; float2 noiseUv=float2(noisePosition.x+noisePosition.z*0.371,noisePosition.y+noisePosition.z*0.613)*_GlobalNoiseScale; half2 displacementNoise=half2(SAMPLE_TEXTURE2D_LOD(_GlobalNoiseMap,sampler_LinearRepeat,noiseUv,0).r,SAMPLE_TEXTURE2D_LOD(_GlobalNoiseMap,sampler_LinearRepeat,noiseUv+float2(0.371,0.613),0).r); half bottomMask=1-smoothstep(0,_WallDisplacementBottomReach,i.color.b); bottomMask=lerp(1,bottomMask,saturate(_WallDisplacementBottomOnly)); half neutralDenominator=max(_GlobalNoiseNeutral,1-_GlobalNoiseNeutral); float3 globalOffset=float3((displacementNoise.x-_GlobalNoiseNeutral)/neutralDenominator,0,(displacementNoise.y-_GlobalNoiseNeutral)/neutralDenominator); o.positionWS+=globalOffset*(_WallDisplacement*bottomMask); o.positionCS=TransformWorldToHClip(o.positionWS); o.uv=i.uv; o.uv3=i.uv3; o.roleAo=i.color.rg; OUTPUT_LIGHTMAP_UV(i.uv2,unity_LightmapST,o.lightmapUV); OUTPUT_SH(o.normalWS,o.vertexSH); o.fog=ComputeFogFactor(o.positionCS.z); return o; }
+            V Vert(A i) { V o=(V)0; UNITY_SETUP_INSTANCE_ID(i); o.normalWS=TransformObjectToWorldNormal(i.normalOS); o.positionWS=TransformObjectToWorld(i.positionOS.xyz); o.positionCS=TransformWorldToHClip(o.positionWS); o.uv=i.uv; o.uv3=i.uv3; o.roleAo=i.color.rg; OUTPUT_LIGHTMAP_UV(i.uv2,unity_LightmapST,o.lightmapUV); OUTPUT_SH(o.normalWS,o.vertexSH); o.fog=ComputeFogFactor(o.positionCS.z); return o; }
             half4 Frag(V i):SV_Target
             {
                 half surface=step(0.5h,i.roleAo.x);
@@ -104,17 +99,17 @@ Shader "Project/Mobile Toon Modular Level"
                 half3 materialColor=lerp(_WallColor.rgb,_SurfaceColor.rgb,surface);
                 half3 baseColor=lerp(wall,top,surface)*materialColor*_BaseColor.rgb;
 
-                // One continuous world-space noise sample is shared by every modular piece.
-                // Top surfaces use straight XZ so the texture is not diagonally skewed. Walls
-                // retain the cheap XYZ projection so vertical faces still receive variation.
-                float3 noisePosition=i.positionWS+_GlobalNoiseOffset.xyz;
-                float2 wallNoiseUv=float2(noisePosition.x+noisePosition.z*0.371,
-                                          noisePosition.y+noisePosition.z*0.613)*_GlobalNoiseScale;
-                float2 surfaceNoiseUv=noisePosition.xz*_GlobalNoiseScale;
-                float2 noiseUv=lerp(wallNoiseUv,surfaceNoiseUv,surface);
-                half globalNoise=SampleGlobalNoiseFBM(noiseUv);
-                half3 noiseTint=lerp(_GlobalNoiseDarkColor.rgb,_GlobalNoiseLightColor.rgb,globalNoise);
-                baseColor*=lerp(half3(1,1,1),noiseTint,_GlobalNoiseStrength);
+                // One continuous XZ noise sample is shared by every modular surface piece.
+                // surface is a hard 0/1 (step()), so walls never see this tint - skip the
+                // sampling there entirely instead of paying for it and discarding the result.
+                [branch] if (surface > 0.5h)
+                {
+                    float3 noisePosition=i.positionWS+_GlobalNoiseOffset.xyz;
+                    float2 noiseUv=noisePosition.xz*_GlobalNoiseScale;
+                    half globalNoise=SampleGlobalNoiseFBM(noiseUv);
+                    half3 noiseTint=lerp(_GlobalNoiseDarkColor.rgb,_GlobalNoiseLightColor.rgb,globalNoise);
+                    baseColor*=lerp(half3(1,1,1),noiseTint,_GlobalNoiseStrength);
+                }
 
                 half vertexAO=pow(saturate(i.roleAo.y),max(_AOContrast,0.01h));
                 half3 aoTint=lerp(_AOColor.rgb,half3(1,1,1),vertexAO);
@@ -157,16 +152,15 @@ Shader "Project/Mobile Toon Modular Level"
             #pragma multi_compile_instancing
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
-            TEXTURE2D(_GlobalNoiseMap); SAMPLER(sampler_GlobalNoiseMap);
             CBUFFER_START(UnityPerMaterial)
             float4 _WallMap_ST; float4 _SurfaceMap_ST;
             half4 _BaseColor, _WallColor, _SurfaceColor, _AOColor, _HeightFogColor, _InkColor, _SurfaceEdgeColor, _GradientBottomColor, _GradientTopColor, _ShadowTint, _GlobalNoiseDarkColor, _GlobalNoiseLightColor;
-            half _WallAOStrength, _SurfaceAOStrength, _SurfaceUseWorldUV, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength, _GlobalNoiseNeutral, _WallDisplacement, _WallDisplacementBottomOnly, _WallDisplacementBottomReach;
+            half _WallAOStrength, _SurfaceAOStrength, _SurfaceUseWorldUV, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength;
             float _GradientStartY, _GradientDistance, _HeightFogTopY, _HeightFogFalloff, _GlobalNoiseScale;
             float4 _GlobalNoiseOffset;
             CBUFFER_END
             float3 _LightDirection;
-            struct ShadowAttributes { float4 positionOS:POSITION; float3 normalOS:NORMAL; half4 color:COLOR; UNITY_VERTEX_INPUT_INSTANCE_ID };
+            struct ShadowAttributes { float4 positionOS:POSITION; float3 normalOS:NORMAL; UNITY_VERTEX_INPUT_INSTANCE_ID };
             struct ShadowVaryings { float4 positionCS:SV_POSITION; };
             ShadowVaryings ShadowVertex(ShadowAttributes i)
             {
@@ -174,14 +168,6 @@ Shader "Project/Mobile Toon Modular Level"
                 ShadowVaryings o;
                 float3 positionWS=TransformObjectToWorld(i.positionOS.xyz);
                 float3 normalWS=TransformObjectToWorldNormal(i.normalOS);
-                float3 noisePosition=positionWS+_GlobalNoiseOffset.xyz;
-                float2 noiseUv=float2(noisePosition.x+noisePosition.z*0.371,noisePosition.y+noisePosition.z*0.613)*_GlobalNoiseScale;
-                half2 noise=half2(SAMPLE_TEXTURE2D_LOD(_GlobalNoiseMap,sampler_LinearRepeat,noiseUv,0).r,SAMPLE_TEXTURE2D_LOD(_GlobalNoiseMap,sampler_LinearRepeat,noiseUv+float2(0.371,0.613),0).r);
-                half bottomMask=1-smoothstep(0,_WallDisplacementBottomReach,i.color.b);
-                bottomMask=lerp(1,bottomMask,saturate(_WallDisplacementBottomOnly));
-                half neutralDenominator=max(_GlobalNoiseNeutral,1-_GlobalNoiseNeutral);
-                float3 globalOffset=float3((noise.x-_GlobalNoiseNeutral)/neutralDenominator,0,(noise.y-_GlobalNoiseNeutral)/neutralDenominator);
-                positionWS+=globalOffset*(_WallDisplacement*bottomMask);
                 o.positionCS=TransformWorldToHClip(ApplyShadowBias(positionWS,normalWS,_LightDirection));
                 #if UNITY_REVERSED_Z
                     o.positionCS.z=min(o.positionCS.z,o.positionCS.w*UNITY_NEAR_CLIP_VALUE);
@@ -205,17 +191,16 @@ Shader "Project/Mobile Toon Modular Level"
             #pragma fragment DepthFragment
             #pragma multi_compile_instancing
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-            TEXTURE2D(_GlobalNoiseMap); SAMPLER(sampler_GlobalNoiseMap);
             CBUFFER_START(UnityPerMaterial)
             float4 _WallMap_ST; float4 _SurfaceMap_ST;
             half4 _BaseColor, _WallColor, _SurfaceColor, _AOColor, _HeightFogColor, _InkColor, _SurfaceEdgeColor, _GradientBottomColor, _GradientTopColor, _ShadowTint, _GlobalNoiseDarkColor, _GlobalNoiseLightColor;
-            half _WallAOStrength, _SurfaceAOStrength, _SurfaceUseWorldUV, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength, _GlobalNoiseNeutral, _WallDisplacement, _WallDisplacementBottomOnly, _WallDisplacementBottomReach;
+            half _WallAOStrength, _SurfaceAOStrength, _SurfaceUseWorldUV, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength;
             float _GradientStartY, _GradientDistance, _HeightFogTopY, _HeightFogFalloff, _GlobalNoiseScale;
             float4 _GlobalNoiseOffset;
             CBUFFER_END
-            struct DepthAttributes { float4 positionOS:POSITION; float3 normalOS:NORMAL; half4 color:COLOR; UNITY_VERTEX_INPUT_INSTANCE_ID };
+            struct DepthAttributes { float4 positionOS:POSITION; float3 normalOS:NORMAL; UNITY_VERTEX_INPUT_INSTANCE_ID };
             struct DepthVaryings { float4 positionCS:SV_POSITION; };
-            DepthVaryings DepthVertex(DepthAttributes i) { UNITY_SETUP_INSTANCE_ID(i); DepthVaryings o; float3 positionWS=TransformObjectToWorld(i.positionOS.xyz); float3 noisePosition=positionWS+_GlobalNoiseOffset.xyz; float2 noiseUv=float2(noisePosition.x+noisePosition.z*0.371,noisePosition.y+noisePosition.z*0.613)*_GlobalNoiseScale; half2 noise=half2(SAMPLE_TEXTURE2D_LOD(_GlobalNoiseMap,sampler_LinearRepeat,noiseUv,0).r,SAMPLE_TEXTURE2D_LOD(_GlobalNoiseMap,sampler_LinearRepeat,noiseUv+float2(0.371,0.613),0).r); half bottomMask=1-smoothstep(0,_WallDisplacementBottomReach,i.color.b); bottomMask=lerp(1,bottomMask,saturate(_WallDisplacementBottomOnly)); half neutralDenominator=max(_GlobalNoiseNeutral,1-_GlobalNoiseNeutral); float3 globalOffset=float3((noise.x-_GlobalNoiseNeutral)/neutralDenominator,0,(noise.y-_GlobalNoiseNeutral)/neutralDenominator); positionWS+=globalOffset*(_WallDisplacement*bottomMask); o.positionCS=TransformWorldToHClip(positionWS); return o; }
+            DepthVaryings DepthVertex(DepthAttributes i) { UNITY_SETUP_INSTANCE_ID(i); DepthVaryings o; float3 positionWS=TransformObjectToWorld(i.positionOS.xyz); o.positionCS=TransformWorldToHClip(positionWS); return o; }
             half4 DepthFragment(DepthVaryings i):SV_Target { return 0; }
             ENDHLSL
         }
@@ -231,17 +216,16 @@ Shader "Project/Mobile Toon Modular Level"
             #pragma fragment DepthNormalsFragment
             #pragma multi_compile_instancing
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-            TEXTURE2D(_GlobalNoiseMap); SAMPLER(sampler_GlobalNoiseMap);
             CBUFFER_START(UnityPerMaterial)
             float4 _WallMap_ST; float4 _SurfaceMap_ST;
             half4 _BaseColor, _WallColor, _SurfaceColor, _AOColor, _HeightFogColor, _InkColor, _SurfaceEdgeColor, _GradientBottomColor, _GradientTopColor, _ShadowTint, _GlobalNoiseDarkColor, _GlobalNoiseLightColor;
-            half _WallAOStrength, _SurfaceAOStrength, _SurfaceUseWorldUV, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength, _GlobalNoiseNeutral, _WallDisplacement, _WallDisplacementBottomOnly, _WallDisplacementBottomReach;
+            half _WallAOStrength, _SurfaceAOStrength, _SurfaceUseWorldUV, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength;
             float _GradientStartY, _GradientDistance, _HeightFogTopY, _HeightFogFalloff, _GlobalNoiseScale;
             float4 _GlobalNoiseOffset;
             CBUFFER_END
-            struct NormalAttributes { float4 positionOS:POSITION; float3 normalOS:NORMAL; half4 color:COLOR; UNITY_VERTEX_INPUT_INSTANCE_ID };
+            struct NormalAttributes { float4 positionOS:POSITION; float3 normalOS:NORMAL; UNITY_VERTEX_INPUT_INSTANCE_ID };
             struct NormalVaryings { float4 positionCS:SV_POSITION; half3 normalWS:TEXCOORD0; };
-            NormalVaryings DepthNormalsVertex(NormalAttributes i) { UNITY_SETUP_INSTANCE_ID(i); NormalVaryings o; float3 positionWS=TransformObjectToWorld(i.positionOS.xyz); o.normalWS=TransformObjectToWorldNormal(i.normalOS); float3 noisePosition=positionWS+_GlobalNoiseOffset.xyz; float2 noiseUv=float2(noisePosition.x+noisePosition.z*0.371,noisePosition.y+noisePosition.z*0.613)*_GlobalNoiseScale; half2 noise=half2(SAMPLE_TEXTURE2D_LOD(_GlobalNoiseMap,sampler_LinearRepeat,noiseUv,0).r,SAMPLE_TEXTURE2D_LOD(_GlobalNoiseMap,sampler_LinearRepeat,noiseUv+float2(0.371,0.613),0).r); half bottomMask=1-smoothstep(0,_WallDisplacementBottomReach,i.color.b); bottomMask=lerp(1,bottomMask,saturate(_WallDisplacementBottomOnly)); half neutralDenominator=max(_GlobalNoiseNeutral,1-_GlobalNoiseNeutral); float3 globalOffset=float3((noise.x-_GlobalNoiseNeutral)/neutralDenominator,0,(noise.y-_GlobalNoiseNeutral)/neutralDenominator); positionWS+=globalOffset*(_WallDisplacement*bottomMask); o.positionCS=TransformWorldToHClip(positionWS); return o; }
+            NormalVaryings DepthNormalsVertex(NormalAttributes i) { UNITY_SETUP_INSTANCE_ID(i); NormalVaryings o; float3 positionWS=TransformObjectToWorld(i.positionOS.xyz); o.normalWS=TransformObjectToWorldNormal(i.normalOS); o.positionCS=TransformWorldToHClip(positionWS); return o; }
             half4 DepthNormalsFragment(NormalVaryings i):SV_Target { return half4(normalize(i.normalWS)*0.5h+0.5h,0); }
             ENDHLSL
         }

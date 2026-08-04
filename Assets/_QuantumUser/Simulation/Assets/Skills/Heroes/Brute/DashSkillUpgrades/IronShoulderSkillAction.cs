@@ -92,7 +92,7 @@ namespace Quantum
                 if (f.Unsafe.TryGetPointer<Transform3D>(hitEntity, out var hitTransform))
                     f.Events.HitEffectApplied(filter.Entity, hitEntity, hitTransform->Position, true);
 
-                TryStunIfPushedIntoWall(f, hitEntity, direction);
+                TryStunIfPushedIntoWall(f, filter.Entity, hitEntity, direction);
             }
         }
 
@@ -132,7 +132,7 @@ namespace Quantum
             return true;
         }
 
-        private void TryStunIfPushedIntoWall(Frame f, EntityRef hitEntity, FPVector3 direction)
+        private void TryStunIfPushedIntoWall(Frame f, EntityRef owner, EntityRef hitEntity, FPVector3 direction)
         {
             if (f.Unsafe.TryGetPointer<Transform3D>(hitEntity, out var transform) == false)
                 return;
@@ -143,7 +143,7 @@ namespace Quantum
 
             if (wallHit.HasValue == true)
             {
-                StatusEffectUtility.ApplyStun(f, hitEntity, StunDuration);
+                StatusEffectUtility.ApplyStun(f, hitEntity, StunDuration, owner);
             }
         }
     }

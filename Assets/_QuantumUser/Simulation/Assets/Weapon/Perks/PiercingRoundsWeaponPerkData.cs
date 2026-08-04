@@ -6,9 +6,10 @@ namespace Quantum
     {
         public int BonusPierce = 1;
 
-        public override void Apply(Frame f, Weapon* weapon)
+        public override void Apply(Frame f, EntityRef owner, Weapon* weapon)
         {
-            weapon->BonusPierce += BonusPierce;
+            f.AddOrGet<WeaponFireTimeMods>(owner, out var mods);
+            mods->BonusPierce += BonusPierce;
         }
 
         protected override object[] DescriptionArgs => new object[] { BonusPierce };

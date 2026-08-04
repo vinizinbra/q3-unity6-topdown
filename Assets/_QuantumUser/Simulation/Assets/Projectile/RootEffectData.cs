@@ -9,8 +9,9 @@ namespace Quantum
     // that field was already scoped as a generic shared value even before this class existed (see
     // its own comment on EffectConfig), previously only reached via JuggernautLandingRootSkillAction.
     // This gives Root a freely-authorable HitEffectData the same way Stun already has one,
-    // independent of both Juggernaut's own skill and the Fire+Rock Magma Prison reaction (which uses
-    // its own dedicated ElementalReactionConfig.MagmaPrisonRootDuration instead of this field).
+    // independent of Juggernaut's own skill (the old Fire+Rock Magma Prison elemental reaction that
+    // once used its own dedicated ElementalReactionConfig.MagmaPrisonRootDuration was retired when
+    // Rift Mark replaced the pairwise reaction scan - see docs/elemental-reactions.md).
     public unsafe class RootEffectData : HitEffectData
     {
         public override void Apply(Frame f, ref HitEffectContext context)

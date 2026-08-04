@@ -11,6 +11,11 @@ namespace Quantum
     {
         public FP Duration = 10;
 
+        public override FP GetActiveDuration()
+        {
+            return Duration;
+        }
+
         public FP FireRateBonus = FP._0_50;
         public FP MoveSpeedBonus = FP._0_25;
         public FP ReloadSpeedBonus = FP.FromString("0.3");

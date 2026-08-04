@@ -40,7 +40,8 @@ public class FlyingXpWidget : MonoBehaviour
             _tween.Stop();
 
         _tween = Tween.Custom(this, startAnchoredPosition, targetAnchoredPosition, flightDuration,
-            (widget, position) => widget.selfRect.anchoredPosition = position, flightEase)
+            (widget, position) => widget.selfRect.anchoredPosition = position, flightEase,
+            useUnscaledTime: true)
             .OnComplete(this, widget =>
             {
                 ExpBarUiWidget.Instance?.Flash();

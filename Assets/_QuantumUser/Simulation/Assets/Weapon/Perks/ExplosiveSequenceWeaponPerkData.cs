@@ -10,14 +10,15 @@ namespace Quantum
         public FP Radius = 3;
         public FP DamageMultiplier = FP._1;
 
-        public override void Apply(Frame f, Weapon* weapon)
+        public override void Apply(Frame f, EntityRef owner, Weapon* weapon)
         {
-            weapon->ExplosiveSequenceInterval = weapon->ExplosiveSequenceInterval <= 0
+            f.AddOrGet<WeaponPostImpactProcs>(owner, out var procs);
+            procs->ExplosiveSequenceInterval = procs->ExplosiveSequenceInterval <= 0
                 ? Interval
-                : (weapon->ExplosiveSequenceInterval < Interval ? weapon->ExplosiveSequenceInterval : Interval);
+                : (procs->ExplosiveSequenceInterval < Interval ? procs->ExplosiveSequenceInterval : Interval);
 
-            weapon->ExplosiveSequenceRadius = FPMath.Max(weapon->ExplosiveSequenceRadius, Radius);
-            weapon->ExplosiveSequenceDamageMultiplier = FPMath.Max(weapon->ExplosiveSequenceDamageMultiplier, DamageMultiplier);
+            procs->ExplosiveSequenceRadius = FPMath.Max(procs->ExplosiveSequenceRadius, Radius);
+            procs->ExplosiveSequenceDamageMultiplier = FPMath.Max(procs->ExplosiveSequenceDamageMultiplier, DamageMultiplier);
         }
 
         protected override object[] DescriptionArgs => new object[] { Interval, DamageMultiplier.AsFloat * 100f, Radius.AsFloat };

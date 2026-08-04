@@ -22,7 +22,7 @@ namespace Quantum
 
             FP duration = StatusEffectUtility.ScaleDuration(f, context.Owner, context.Source, config.StunDuration);
 
-            StatusEffectUtility.ApplyStun(f, context.Target, duration);
+            StatusEffectUtility.ApplyStun(f, context.Target, duration, context.Owner);
 
             Log.Debug($"[Effect] StunEffectData applied to {context.Target} for {duration}s");
         }

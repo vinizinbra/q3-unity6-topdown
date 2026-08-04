@@ -74,8 +74,23 @@ namespace Quantum
         protected override void QUpdate(QuantumGame game)
         {
             var frame = game.Frames.Predicted;
+
             if (frame.Has<Projectile>(_entityRef) == false)
+            {
+                // A planted AreaHitData bomb (see ProjectileSystem.TryPlant/AreaHitData.
+                // PlantedFuseTime) swaps off Projectile onto DestroyAfterTime while staying alive -
+                // EventProjectileDestroyed will never fire for it afterward (DestroyAfterTimeSystem
+                // knows nothing about Projectile), so the ManualDisposal tween-to-hit-point path this
+                // class exists for would otherwise leak this GameObject forever once it's eventually
+                // destroyed. Hand cleanup back to QuantumEntityViewUpdater's normal auto-destroy,
+                // which is all a stationary, already-rendered bomb needs - frame.Exists guards this
+                // against the entity's own genuine destruction (handled by OnProjectileDestroyed
+                // below, unaffected by this flag either way) rather than a live transition.
+                if (entityView != null && frame.Exists(_entityRef) == true)
+                    entityView.ManualDisposal = false;
+
                 return;
+            }
 
             Projectile projectile = frame.Get<Projectile>(_entityRef);
             _lastSpeed = projectile.Velocity.Magnitude.AsFloat;

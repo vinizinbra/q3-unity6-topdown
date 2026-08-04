@@ -1,5 +1,7 @@
 // Tag - present means DamageUtility ignores every hit. Knockback is deliberately not gated by this.
-// Nothing currently adds it.
+// Added/removed by BurrowDeliveryData for the whole Active phase of a burrow (see that class), and
+// by CheatDeathUtility.TryPreventLethal for a brief post-save window (see
+// StatusEffects.CheatDeathImmunityRemaining/StatusEffectSystem).
 component Invulnerable
 {
 }

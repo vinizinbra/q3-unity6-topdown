@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/GlobalUpgrade/WeaponDamage
     Guid:
       Value: 403816575297165012
-  Icon: {fileID: 0}
+  Icon: {fileID: 1389070835, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
   DisplayName: Weapon Damage
   Rarity: 0
   MaxPicks: 3

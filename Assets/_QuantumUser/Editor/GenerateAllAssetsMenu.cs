@@ -21,9 +21,12 @@ namespace QuantumUser.Editor
             KaiVoidFieldAssetGenerator.Generate();
             LuxScrapAssetGenerator.Generate();
             PixieChainReactionAssetGenerator.Generate();
+            PixieDemolitionMasteryAssetGenerator.Generate();
             MaxAdrenalineAssetGenerator.Generate();
+            MaxOverdriveAssetGenerator.Generate();
             ZaraResonanceAssetGenerator.Generate();
             BruteProtectorAssetGenerator.Generate();
+            BruteKnockbackMasteryAssetGenerator.Generate();
 
             LogHelper.Log("GenerateAllAssetsMenu", "Done - see individual generator log lines above for per-asset counts.");
         }

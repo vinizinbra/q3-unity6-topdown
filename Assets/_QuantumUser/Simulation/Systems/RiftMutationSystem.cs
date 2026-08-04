@@ -16,6 +16,7 @@ namespace Quantum
                 return;
 
             RiftMutationUtility.Grant(f, filter.Entity, command.Mutation);
+            LevelUpUtility.RecordHistory(f, filter.Entity, LevelUpPoolKind.RiftMutation, new AssetRef<UpgradeData>(command.Mutation.Id));
             Log.Debug($"[RiftMutation] {filter.Entity} was granted Rift Mutation {command.Mutation} via command");
         }
 

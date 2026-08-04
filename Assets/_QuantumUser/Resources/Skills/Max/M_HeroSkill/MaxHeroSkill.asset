@@ -16,16 +16,16 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/M_HeroSkill/MaxHeroSkill|MarkExplosiveDeathSkillAction
     Guid:
       Value: 1176783751652312977
-  Icon: {fileID: 0}
-  DisplayName: 
+  Icon: {fileID: 1463432514, guid: 9a944adac56bb4e8dbce2f7bab4127e3, type: 3}
+  DisplayName: Explosive Death
   Rarity: 0
   Priority: 0
   Phase: 5
   Interval:
     RawValue: 0
   Activated: 1
-  Description: While active, marks every enemy the owner hits so it explodes when
-    it eventually dies.
+  Description: While active, marks every enemy the owner damages so it explodes
+    when it eventually dies.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -107,6 +107,14 @@ MonoBehaviour:
       Value: 3582277719887254073
   - Id:
       Value: 2777186078971014860
+  - Id:
+      Value: 476868000656894363
+  - Id:
+      Value: 409013838586051645
+  - Id:
+      Value: 355909590697180511
+  - Id:
+      Value: 494729910843289045
   Icon: {fileID: 1263592270, guid: 09ab27b92d44c4a54a95d6d0d0b9c281, type: 3}
   Description: Unleash a berserk rage that boosts your fire rate, move speed, and
     reload speed while marking every enemy you hit to explode on death, building
@@ -135,8 +143,8 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/M_HeroSkill/MaxHeroSkill|SpawnEntitySkillAction
     Guid:
       Value: 2777186078971014860
-  Icon: {fileID: 0}
-  DisplayName: 
+  Icon: {fileID: 471820595, guid: 9a944adac56bb4e8dbce2f7bab4127e3, type: 3}
+  DisplayName: Burning Ground
   Rarity: 0
   Priority: 0
   Phase: 3
@@ -214,8 +222,8 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/M_HeroSkill/MaxHeroSkill|OverdriveInstantReloadSkillAction
     Guid:
       Value: 4398259440442141233
-  Icon: {fileID: 0}
-  DisplayName: 
+  Icon: {fileID: -1073611266, guid: 9a944adac56bb4e8dbce2f7bab4127e3, type: 3}
+  DisplayName: Instant Reload
   Rarity: 0
   Priority: 0
   Phase: 5
@@ -263,8 +271,8 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/M_HeroSkill/MaxHeroSkill|BurnOnHitSkillAction
     Guid:
       Value: 1975669110871345431
-  Icon: {fileID: 0}
-  DisplayName: 
+  Icon: {fileID: 302882169, guid: 9a944adac56bb4e8dbce2f7bab4127e3, type: 3}
+  DisplayName: Burn On Hit
   Rarity: 0
   Priority: 0
   Phase: 5
@@ -312,8 +320,8 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/M_HeroSkill/MaxHeroSkill|OverdriveDamageSkillAction
     Guid:
       Value: 3582277719887254073
-  Icon: {fileID: 0}
-  DisplayName: 
+  Icon: {fileID: -1648523669, guid: 9a944adac56bb4e8dbce2f7bab4127e3, type: 3}
+  DisplayName: Overdrive Damage
   Rarity: 0
   Priority: 0
   Phase: 7
@@ -364,8 +372,8 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/M_HeroSkill/MaxHeroSkill|RageOverdriveSkillAction
     Guid:
       Value: 242789262250271755
-  Icon: {fileID: 0}
-  DisplayName: 
+  Icon: {fileID: 1568783736, guid: 9a944adac56bb4e8dbce2f7bab4127e3, type: 3}
+  DisplayName: Rage Overdrive
   Rarity: 0
   Priority: 0
   Phase: 5

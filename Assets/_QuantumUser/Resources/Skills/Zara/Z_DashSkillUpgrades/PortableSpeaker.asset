@@ -17,14 +17,15 @@ MonoBehaviour:
     Guid:
       Value: 378206076203291459
   Icon: {fileID: 0}
-  DisplayName: 
+  DisplayName: Portable Speaker
   Rarity: 0
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 1
-  Description: 
+  Description: Dashing leaves behind a speaker that pulses to heal allies and damage
+    enemies nearby.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

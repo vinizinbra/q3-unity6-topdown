@@ -4,9 +4,13 @@ namespace Quantum
     using Quantum.Physics3D;
 
     // Shared by skills (SpawnEntitySkillAction) and projectile impacts (SpawnEntityEffectData) so
-    // both drop things into the world the same way: a prefab plus how long it lives. What the
-    // spawned thing then does to people is the prototype's own business - a prefab carrying an
-    // AreaDamage hurts whoever stands in it, one without just sits there.
+    // both drop things into the world the same way: a prefab, an owner, and how long it lives. What
+    // the spawned thing then does to people is the prototype's own business - a prefab carrying an
+    // AreaDamage hurts whoever stands in it, one carrying ExplodeOnDestroy detonates once instead
+    // (e.g. Pixie's Dash Ascension "Leave Explosive Bomb" - a stationary, optionally damageable
+    // decoy-trap bomb, see ExplodeOnDestroy.qtn), one with neither just sits there - but every spawn
+    // gets its ownership (AreaOwner) and lifetime (DestroyAfterTime) stamped identically regardless
+    // of which.
     public static unsafe class SpawnedEntitySpawner
     {
         public static EntityRef Spawn(Frame f, EntityRef owner, AssetRef<EntityPrototype> prototype,
@@ -22,10 +26,10 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<Transform3D>(entity, out var transform) == true)
             {
                 transform->Position = position;
-                ApplyGroundOffset(f, entity, transform);
+                GroundOffsetUtility.Apply(f, entity, transform);
             }
 
-            ConfigureArea(f, entity, owner, source, element, damageOverride, targetMaskOverride);
+            ConfigureOwnerAndArea(f, entity, owner, source, element, damageOverride, targetMaskOverride);
             ApplyRadiusUpgrade(f, entity, owner);
 
             f.AddOrGet<DestroyAfterTime>(entity, out var lifetime);
@@ -34,67 +38,28 @@ namespace Quantum
             return entity;
         }
 
-        // GroundOffset (see GroundOffset.qtn) - optional, so a prototype without it (most projectile
-        // impacts, which already spawn at a resolved hit position) is untouched. Raycasts straight
-        // down from the just-set XZ rather than trusting the caller's Y, since spawn positions here
-        // are usually derived from a caster's own Transform3D (Sentry) or a hit point (Vortex), not
-        // an already-ground-checked one. Snaps immediately unless the relevant direction's approach
-        // rate is authored (descending reads FallGravityMultiplier, ascending reads FloatSpeed) -
-        // only then is this worth spreading across ticks via SettlingToGround/GroundSettleSystem
-        // instead of just placing the entity there once, up front.
-        private static void ApplyGroundOffset(Frame f, EntityRef entity, Transform3D* transform)
-        {
-            if (f.Unsafe.TryGetPointer<GroundOffset>(entity, out var groundOffset) == false)
-                return;
-
-            int groundLayerMask = EnemyMovementUtility.GetGroundLayerMask(f);
-
-            if (EnemyMovementUtility.TryFindGroundHeight(f, transform->Position, groundLayerMask, out FP groundY) == false)
-            {
-                Log.Error($"[Spawn] {entity} has a GroundOffset but no ground was found beneath {transform->Position} - left at spawn Y");
-                return;
-            }
-
-            FP targetY = groundY + groundOffset->Offset;
-            FP approachRate = targetY < transform->Position.Y ? groundOffset->FallGravityMultiplier : groundOffset->FloatSpeed;
-
-            if (approachRate <= FP._0)
-            {
-                transform->Position = new FPVector3(transform->Position.X, targetY, transform->Position.Z);
-                return;
-            }
-
-            SettlingToGround settling = default;
-            settling.TargetY = targetY;
-            f.Add(entity, settling);
-        }
-
-        // Everything the area does is authored on the prototype's AreaDamage by default - owner,
-        // source and element are the only things the spawn site knows that the prefab can't.
-        // damageOverride/targetMaskOverride are the exception: a caller that wants one prototype
-        // reused with a different Damage/TargetMask per spawner (e.g. SpawnEntitySkillAction) can
-        // supply one instead of needing a separate prototype per config. Null leaves the
-        // prototype's own authored value untouched, same as before either existed.
+        // AreaOwner is stamped unconditionally on every spawn, not gated behind AreaDamage/Vortex/
+        // ExplodeOnDestroy (or any other specific component) - "who owns this and what damage source/
+        // element does it count as" keeps growing new consumers (Vortex's crowd control,
+        // ExplodeOnDestroy's blast, ...), and an allowlist here would only ever keep growing to match.
+        // A decoy or anything else with nothing that reads AreaOwner simply carries an unused
+        // component, same cost as any other optional data nothing happens to consume yet.
         //
-        // AreaOwner is stamped for a Vortex too, not just AreaDamage - Kai's vortex has no damage of
-        // its own (pure crowd control), but VortexSystem still needs to resolve who owns it, same
-        // reason AreaDamageSystem does. The AreaDamage-specific overrides below only apply when
-        // AreaDamage is actually present.
-        private static void ConfigureArea(Frame f, EntityRef entity, EntityRef owner, DamageSource source,
+        // Everything the area does beyond that is authored on the prototype's own AreaDamage by
+        // default - damageOverride/targetMaskOverride are the exception: a caller that wants one
+        // prototype reused with a different Damage/TargetMask per spawn (e.g. SpawnEntitySkillAction)
+        // can supply one instead of needing a separate prototype per config. Null leaves the
+        // prototype's own authored value untouched, same as before either existed. All AreaDamage-
+        // specific handling below only runs when AreaDamage is actually present.
+        private static void ConfigureOwnerAndArea(Frame f, EntityRef entity, EntityRef owner, DamageSource source,
             ElementType element, FP? damageOverride, DamageTargetMask? targetMaskOverride)
         {
-            bool hasArea = f.Unsafe.TryGetPointer<AreaDamage>(entity, out var area) == true;
-            bool hasVortex = f.Has<Vortex>(entity) == true;
-
-            if (hasArea == false && hasVortex == false)
-                return;
-
             f.AddOrGet<AreaOwner>(entity, out var areaOwner);
             areaOwner->Owner = owner;
             areaOwner->Source = source;
             areaOwner->Element = element;
 
-            if (hasArea == false)
+            if (f.Unsafe.TryGetPointer<AreaDamage>(entity, out var area) == false)
                 return;
 
             if (damageOverride.HasValue == true)

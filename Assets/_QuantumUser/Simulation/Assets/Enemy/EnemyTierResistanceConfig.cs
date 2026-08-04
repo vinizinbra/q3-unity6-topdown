@@ -11,7 +11,7 @@ namespace Quantum
         public FP RootDurationMultiplier = FP._1;
         public FP SlowDurationMultiplier = FP._1;
         public FP BurnDamageMultiplier = FP._1;
-        public FP BreakDurationMultiplier = FP._1;
+        public FP RuptureDurationMultiplier = FP._1;
     }
 
     // Global per-tier tuning for how much of each status effect actually lands on an enemy -

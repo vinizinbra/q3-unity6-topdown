@@ -224,16 +224,13 @@ namespace Quantum
         // Damped harmonic oscillator pulling swayOffset toward a moving target, with overshoot/
         // bounce when damping < 1 - the same math BlobAnimationView uses for its landing spring,
         // just driven by an arbitrary target instead of a fixed 0, and with an independent
-        // frequency per axis so vertical (jump) can settle faster than horizontal (run).
+        // frequency per axis so vertical (jump) can settle faster than horizontal (run). Bounded
+        // overshoot (3x MaxSway) is the fail-safe against a low/variable-framerate spike reading
+        // as the gun flying off the character - see DampedSpring's own comment for why the naive
+        // per-frame integration can't be trusted to stay finite on its own.
         private void IntegrateSway(Vector2 target, Vector2 frequency, float damping, float dt)
         {
-            Vector2 omega = frequency * Mathf.PI * 2f;
-            Vector2 displacement = swayOffset - target;
-            Vector2 force = new Vector2(
-                -omega.x * omega.x * displacement.x - 2f * damping * omega.x * swayVelocity.x,
-                -omega.y * omega.y * displacement.y - 2f * damping * omega.y * swayVelocity.y);
-            swayVelocity += force * dt;
-            swayOffset += swayVelocity * dt;
+            DampedSpring.Integrate(ref swayOffset, ref swayVelocity, target, frequency, damping, dt, MaxSway * 3f);
         }
 
         private Vector2 ProjectToScreen(Vector3 worldDir)

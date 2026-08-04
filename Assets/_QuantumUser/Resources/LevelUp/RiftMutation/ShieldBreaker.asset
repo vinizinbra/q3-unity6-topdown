@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/ShieldBreaker
     Guid:
       Value: 335039749820039824
-  Icon: {fileID: 0}
+  Icon: {fileID: 2062684928, guid: 9dcd69f213ec845fa868b0a3699cf683, type: 3}
   DisplayName: Shield Breaker
   Rarity: 1
   Description: Breaking your Shield grants an immediately-usable Dash charge

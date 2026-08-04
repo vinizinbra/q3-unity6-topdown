@@ -78,7 +78,7 @@ namespace Quantum
         private static void ApplyVoidUpgrade(Frame f, EntityRef owner, AlternatingArea* alternating)
         {
             if (f.Unsafe.TryGetPointer<VoidDamageWavesUpgrade>(owner, out var upgrade) == false
-                || upgrade->VoidEffect.IsValid == false)
+                || upgrade->RiftMarkEffect.IsValid == false)
                 return;
 
             for (int i = 0; i < alternating->DamageEffects.Length; i++)
@@ -86,7 +86,7 @@ namespace Quantum
                 if (alternating->DamageEffects[i].IsValid == true)
                     continue;
 
-                alternating->DamageEffects[i] = upgrade->VoidEffect;
+                alternating->DamageEffects[i] = upgrade->RiftMarkEffect;
 
                 Log.Debug($"[Skill] {owner}'s VoidDamageWavesUpgrade baked into the spawned speaker's DamageEffects slot {i}");
                 return;

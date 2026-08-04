@@ -552,151 +552,6 @@ MonoBehaviour:
       RawValue: 0
     RangeMultiplier:
       RawValue: 0
-    OpeningBurstFireRateBonus:
-      RawValue: 0
-    OpeningBurstThreshold:
-      RawValue: 0
-    ExecutionRoundsDamageBonus:
-      RawValue: 0
-    ExecutionRoundsThreshold:
-      RawValue: 0
-    FinalRoundDamageBonus:
-      RawValue: 0
-    EscalatingRoundsMaxDamageBonus:
-      RawValue: 0
-    RampStacks: 0
-    RampMaxStacks: 0
-    RampDamageBonusPerStack:
-      RawValue: 0
-    RampFireRateBonusPerStack:
-      RawValue: 0
-    RampDecayGrace:
-      RawValue: 0
-    BonusPierce: 0
-    BonusBounces: 0
-    DoubleTapChance:
-      RawValue: 0
-    HasSplitShot:
-      Value: 0
-    SplitShotCount: 0
-    SplitShotDamageMultiplier:
-      RawValue: 0
-    HasQuantumRounds:
-      Value: 0
-    QuantumRoundsRadius:
-      RawValue: 0
-    QuantumRoundsDamageMultiplier:
-      RawValue: 0
-    ExplosiveSequenceInterval: 0
-    ExplosiveSequenceRadius:
-      RawValue: 0
-    ExplosiveSequenceDamageMultiplier:
-      RawValue: 0
-    ShotsSinceExplosiveProc: 0
-    HasCataclysmRound:
-      Value: 0
-    CataclysmRadius:
-      RawValue: 0
-    CataclysmDamageMultiplier:
-      RawValue: 0
-    HasEchoChamber:
-      Value: 0
-    HasInfiniteEcho:
-      Value: 0
-    EchoDelay:
-      RawValue: 0
-    PendingEchoes:
-    - Delay:
-        RawValue: 0
-      Position:
-        X:
-          RawValue: 0
-        Y:
-          RawValue: 0
-        Z:
-          RawValue: 0
-      Direction:
-        X:
-          RawValue: 0
-        Y:
-          RawValue: 0
-        Z:
-          RawValue: 0
-      Damage:
-        RawValue: 0
-    - Delay:
-        RawValue: 0
-      Position:
-        X:
-          RawValue: 0
-        Y:
-          RawValue: 0
-        Z:
-          RawValue: 0
-      Direction:
-        X:
-          RawValue: 0
-        Y:
-          RawValue: 0
-        Z:
-          RawValue: 0
-      Damage:
-        RawValue: 0
-    - Delay:
-        RawValue: 0
-      Position:
-        X:
-          RawValue: 0
-        Y:
-          RawValue: 0
-        Z:
-          RawValue: 0
-      Direction:
-        X:
-          RawValue: 0
-        Y:
-          RawValue: 0
-        Z:
-          RawValue: 0
-      Damage:
-        RawValue: 0
-    HasEmptyChamber:
-      Value: 0
-    EmptyChamberRadius:
-      RawValue: 0
-    EmptyChamberKnockback:
-      RawValue: 0
-    HasCombatReboot:
-      Value: 0
-    CombatRebootCooldownReduction:
-      RawValue: 0
-    HasPredatorMagazine:
-      Value: 0
-    PredatorMagazineRestoreFraction:
-      RawValue: 0
-    HasEmergencyReload:
-      Value: 0
-    EmergencyReloadMoveSpeedBonus:
-      RawValue: 0
-    EmergencyReloadDamageReduction:
-      RawValue: 0
-    EmergencyReloadApplied:
-      Value: 0
-    KillerInstinctFireRateBonus:
-      RawValue: 0
-    KillerInstinctDuration:
-      RawValue: 0
-    KillerInstinctTimer:
-      RawValue: 0
-    CritAmmoRestoreChance:
-      RawValue: 0
-    CritAmmoRestoreAmount: 0
-    HasCriticalRebound:
-      Value: 0
-    CriticalReboundRadius:
-      RawValue: 0
-    CriticalReboundDamageMultiplier:
-      RawValue: 0
 --- !u!114 &8550683189489077900
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -761,6 +616,8 @@ MonoBehaviour:
   pickupGlowColor: {r: 1, g: 0.85, b: 0.3, a: 1}
   pickupGlowDuration: 0.5
   riftMarkMaterial: {fileID: 0}
+  riftMarkApplicationFlashColor: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
+  riftMarkApplicationFlashDuration: 0.08
   freezeMaterial: {fileID: 0}
 --- !u!114 &8110188611109955938
 MonoBehaviour:
@@ -969,6 +826,10 @@ MonoBehaviour:
       RawValue: 0
     AreaRadiusMultiplier:
       RawValue: 0
+    NearDamageMultiplier:
+      RawValue: 0
+    FarDamageMultiplier:
+      RawValue: 0
     DashCooldownMultiplier:
       RawValue: 0
     SkillCooldownMultiplier:
@@ -997,7 +858,43 @@ MonoBehaviour:
       RawValue: 0
     ExperienceGainMultiplier:
       RawValue: 0
+    RiftShardGainMultiplier:
+      RawValue: 0
+    CoinGainMultiplier:
+      RawValue: 0
     BurnOnHitStacks: 0
+    DashShieldCost:
+      RawValue: 0
+    CritSkillCooldownReduction:
+      RawValue: 0
+    ShieldBreakGrantsDashCharge:
+      Value: 0
+    AllOrNothingActive:
+      Value: 0
+    HasCriticalFractureMutation:
+      Value: 0
+    HasSkillFractureMutation:
+      Value: 0
+    HasRiftDashMutation:
+      Value: 0
+    HasHeavyFractureMutation:
+      Value: 0
+    HasCloseFractureMutation:
+      Value: 0
+    HasLongFractureMutation:
+      Value: 0
+    HasExecutionFractureMutation:
+      Value: 0
+    HasFirstContactMutation:
+      Value: 0
+    HasFracturedPresenceMutation:
+      Value: 0
+    HasOverflowingRiftMutation:
+      Value: 0
+    HasLastStandMutation:
+      Value: 0
+    LastStandCooldownRemaining:
+      RawValue: 0
 --- !u!114 &8215253040534427600
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1323,7 +1220,7 @@ Transform:
   m_GameObject: {fileID: 5408284719303675491}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.38073, y: 0, z: -0.60586}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

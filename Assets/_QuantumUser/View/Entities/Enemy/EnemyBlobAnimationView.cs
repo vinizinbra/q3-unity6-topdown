@@ -236,7 +236,7 @@ namespace Quantum
 
             float dt = Time.deltaTime;
 
-            // Void+Ice's Freeze reaction stretches the enemy's own Preparation/Telegraph windup
+            // Ice+RiftMark's Deep Freeze reaction stretches the enemy's own Preparation/Telegraph windup
             // (StatusEffectUtility.GetAnticipationMultiplier - see EnemySystem.UpdatePreparation,
             // which scales the simulation's own StateTimer the same way). Only while actually
             // playing the windup step - Active/Recovery attack steps (Begin/OnGoing/End) are

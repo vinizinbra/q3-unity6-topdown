@@ -17,7 +17,7 @@ MonoBehaviour:
     Guid:
       Value: 395336855097572998
   Icon: {fileID: 0}
-  DisplayName: 
+  DisplayName: Damage Pulse
   Rarity: 0
   Priority: 0
   Phase: 1
@@ -74,7 +74,7 @@ MonoBehaviour:
     Guid:
       Value: 2968001526568408769
   Icon: {fileID: 0}
-  DisplayName: 
+  DisplayName: Crowd Damage
   Rarity: 0
   Priority: 0
   Phase: 1
@@ -175,7 +175,7 @@ MonoBehaviour:
     Guid:
       Value: 3088897138262328118
   Icon: {fileID: 0}
-  DisplayName: 
+  DisplayName: Random Blast
   Rarity: 0
   Priority: 0
   Phase: 1
@@ -231,7 +231,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Kai/Kai_HeroSkill/KaiVortexSkill
     Guid:
       Value: 527298509968981600
-  Name: 
+  Name: Vortex
   InitStacks: 1
   Cooldown:
     RawValue: 983040
@@ -286,7 +286,7 @@ MonoBehaviour:
     Guid:
       Value: 2271183304778002656
   Icon: {fileID: 0}
-  DisplayName: 
+  DisplayName: Wider Pull
   Rarity: 0
   Priority: -100
   Phase: 1
@@ -337,7 +337,7 @@ MonoBehaviour:
     Guid:
       Value: 1205963219947337028
   Icon: {fileID: 0}
-  DisplayName: 
+  DisplayName: Power Pulse
   Rarity: 0
   Priority: 0
   Phase: 1
@@ -391,7 +391,7 @@ MonoBehaviour:
     Guid:
       Value: 2425024827326564216
   Icon: {fileID: 0}
-  DisplayName: 
+  DisplayName: Vortex Collapse
   Rarity: 0
   Priority: 0
   Phase: 1
@@ -444,7 +444,7 @@ MonoBehaviour:
     Guid:
       Value: 3867215114135464365
   Icon: {fileID: 0}
-  DisplayName: 
+  DisplayName: Bigger Vortex
   Rarity: 0
   Priority: 0
   Phase: 1
@@ -529,7 +529,7 @@ MonoBehaviour:
     Guid:
       Value: 1287073691532952724
   Icon: {fileID: 0}
-  DisplayName: 
+  DisplayName: Homing Shard
   Rarity: 0
   Priority: 0
   Phase: 1

@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/GlobalUpgrade/PickupRadius
     Guid:
       Value: 530489933555938362
-  Icon: {fileID: 0}
+  Icon: {fileID: 1519381753, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
   DisplayName: Pickup Radius
   Rarity: 0
   MaxPicks: 3

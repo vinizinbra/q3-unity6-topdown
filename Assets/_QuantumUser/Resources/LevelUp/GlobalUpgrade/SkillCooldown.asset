@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/GlobalUpgrade/SkillCooldown
     Guid:
       Value: 445776835043754055
-  Icon: {fileID: 0}
+  Icon: {fileID: 1774982024, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
   DisplayName: Skill Cooldown
   Rarity: 1
   MaxPicks: 3

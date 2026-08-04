@@ -25,7 +25,7 @@ MonoBehaviour:
       RawValue: 65536
     TargetPressure:
       RawValue: 32768000
-    MaxAliveEnemies: 50
+    MaxAliveEnemies: 2
     AllowedGroups:
     - Id:
         Value: 405496524248712724

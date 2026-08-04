@@ -1,8 +1,18 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FollowCamera : PgSingleton<FollowCamera>
+// Deliberately NOT a PgSingleton<T> - this lives on the Camera baked into QuantumGameScene, and
+// PgSingleton.Awake()/.I both call DontDestroyOnLoad on the GameObject they're attached to. That
+// would pull the gameplay Camera (+ its AudioListener) out of QuantumGameScene entirely, so it
+// survives the scene's unload at match end - the next match's freshly-loaded QuantumGameScene then
+// gets a second Camera+AudioListener, and this component's own duplicate-singleton guard only
+// destroys itself (Destroy(this)), not the new scene's Camera GameObject, leaving both active at
+// once. A plain scene-local static ties this camera's lifecycle to QuantumGameScene's own, exactly
+// like the equivalent FollowCamera in the Jelly Upgrade project.
+public class FollowCamera : MonoBehaviour
 {
+    public static FollowCamera I;
+
     public Vector3 offset;
     public float speed;
 
@@ -19,6 +29,27 @@ public class FollowCamera : PgSingleton<FollowCamera>
     private readonly List<Transform> _targets = new List<Transform>();
     private float _zoom = 1f;
 
+    // Shake state - additive offset on top of the framed position, decaying linearly over
+    // _shakeDuration. A later Shake() call only takes over if it's stronger than what's currently
+    // playing, so a weak shot can't cut off a strong one still ringing out.
+    private float _shakeElapsed;
+    private float _shakeDuration;
+    private float _shakeAmplitude;
+    private float _shakeFrequency;
+    private Vector2 _shakeSeed;
+
+    private void Awake()
+    {
+        I = this;
+        _shakeSeed = new Vector2(Random.value * 100f, Random.value * 100f);
+    }
+
+    private void OnDestroy()
+    {
+        if (I == this)
+            I = null;
+    }
+
     public void AddTarget(Transform target)
     {
         if (target != null && _targets.Contains(target) == false)
@@ -28,6 +59,18 @@ public class FollowCamera : PgSingleton<FollowCamera>
     public void RemoveTarget(Transform target)
     {
         _targets.Remove(target);
+    }
+
+    public void Shake(float amplitude, float duration, float frequency)
+    {
+        bool currentlyShaking = _shakeElapsed < _shakeDuration;
+        if (currentlyShaking && _shakeAmplitude >= amplitude)
+            return;
+
+        _shakeElapsed = 0f;
+        _shakeDuration = duration;
+        _shakeAmplitude = amplitude;
+        _shakeFrequency = frequency;
     }
 
     private void Update()
@@ -49,6 +92,21 @@ public class FollowCamera : PgSingleton<FollowCamera>
         _zoom = Mathf.Lerp(_zoom, desiredZoom, Time.deltaTime * zoomLerpSpeed);
 
         Vector3 desiredPosition = center + offset * _zoom;
-        transform.position = Vector3.Lerp(transform.position, desiredPosition, Time.deltaTime * speed);
+        transform.position = Vector3.Lerp(transform.position, desiredPosition, Time.deltaTime * speed) + ResolveShakeOffset();
+    }
+
+    private Vector3 ResolveShakeOffset()
+    {
+        if (_shakeElapsed >= _shakeDuration)
+            return Vector3.zero;
+
+        _shakeElapsed += Time.deltaTime;
+        float falloff = 1f - Mathf.Clamp01(_shakeElapsed / _shakeDuration);
+        float t = Time.time * _shakeFrequency;
+
+        float x = (Mathf.PerlinNoise(_shakeSeed.x, t) - 0.5f) * 2f;
+        float y = (Mathf.PerlinNoise(_shakeSeed.y, t) - 0.5f) * 2f;
+
+        return new Vector3(x, y, 0f) * _shakeAmplitude * falloff;
     }
 }
