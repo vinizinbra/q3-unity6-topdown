@@ -99,7 +99,7 @@ MonoBehaviour:
     Shape3D:
       ShapeType: 1
       SphereRadius:
-        RawValue: 32768
+        RawValue: 45875
       CapsuleRadius:
         RawValue: 0
       CapsuleHeight:
@@ -317,7 +317,7 @@ MonoBehaviour:
     Force:
       RawValue: 6553600
     TickInterval:
-      RawValue: 6554
+      RawValue: 3277
     TickTimer:
       RawValue: 0
     CaughtCount: 0
@@ -340,6 +340,9 @@ MonoBehaviour:
   isLocal: 0
   visual: {fileID: 4869600728082318466}
   visualUnitSize: {x: 2, y: 2, z: 2}
+  tweenScaleOnEnable: 1
+  tweenDuration: 0.3
+  tweenEase: 27
 --- !u!114 &1140670674273351851
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -358,11 +361,12 @@ MonoBehaviour:
   executeOnlyOnLocal: 0
   isLocal: 0
   visual: {fileID: 4067187554827813009}
-  scaleDownDuration: 0.3
-  scaleDownEase: 24
+  scaleDownDuration: 0.5
+  scaleDownEase: 4
   anticipationDuration: 1
-  shakeAmount: 0.08
-  shakeFrequency: 30
+  shakeAmount: 0.05
+  shakeFrequency: 15
+  shakeScaleAmount: 0.1
   idleScalePulseAmount: 0.03
   idleScalePulseFrequency: 1.5
   idleBobAmount: 0

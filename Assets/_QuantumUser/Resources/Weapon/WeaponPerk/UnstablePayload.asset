@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapon/WeaponPerk/UnstablePayload
     Guid:
       Value: 511482658906849683
-  Icon: {fileID: 301000225, guid: c6be27ae176d44f3594332e40fa484ed, type: 3}
+  Icon: {fileID: -1669506346, guid: 017cb6454ed9743478842fb02d741366, type: 3}
   DisplayName: Unstable Payload
   Rarity: 1
   Description: Valid explosion hits from this weapon apply Rift Mark

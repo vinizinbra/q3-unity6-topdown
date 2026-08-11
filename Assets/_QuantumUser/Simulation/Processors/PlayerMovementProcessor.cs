@@ -46,10 +46,6 @@ namespace Quantum
             // Stun which also silences firing/skills in their own separate checks.
             targetSpeed *= StatusEffectUtility.GetSpeedMultiplier(frame, entity);
 
-            // Max's Adrenaline Rush - live-read off current Stacks, same shape as the Ice multiplier
-            // just above (an independent component, folded in rather than baked into CharacterStats).
-            targetSpeed *= AdrenalineUtility.GetMoveSpeedMultiplier(frame, entity);
-
             if (StatusEffectUtility.IsStunned(frame, entity) == true || StatusEffectUtility.IsRooted(frame, entity) == true)
             {
                 targetSpeed = FP._0;
@@ -104,8 +100,11 @@ namespace Quantum
             QueryOptions queryOptions = QueryOptions.HitStatics | QueryOptions.HitKinematics;
             FPVector3 checkOrigin = position + direction * data.EdgeProbeDistance + FPVector3.Up * FP._0_10;
 
+            // SphereCast rather than a plain RayCast: a single-point ray can land exactly in a
+            // hairline seam between two adjacent chunk cube colliders and read as no ground ahead,
+            // firing a false auto-hop while walking over perfectly solid, contiguous floor.
             KCCShapeCastInfo groundCast = KCCShapeCastInfo.Get();
-            bool groundAhead = context.KCC->RayCast(context, groundCast, checkOrigin, FPVector3.Down, data.EdgeCheckDistance, queryOptions);
+            bool groundAhead = context.KCC->SphereCast(context, groundCast, checkOrigin, data.EdgeGroundProbeRadius, FPVector3.Down, data.EdgeCheckDistance, queryOptions);
             KCCShapeCastInfo.Return(groundCast);
 
             return groundAhead;

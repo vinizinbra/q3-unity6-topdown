@@ -1,0 +1,24 @@
+// Which run-wide currency an orb credits when collected - CurrencyOrbSystem dispatches to the
+// matching RuntimeConfig.<X>Config/CharacterStats gain multiplier/grant method/View event based on
+// this, one system instead of the three near-identical ones (ExpOrbSystem/CoinOrbSystem/
+// RiftShardOrbSystem) it replaces. Each currency's own EntityPrototype (RuntimeConfig.Prefabs.
+// ExpOrbPrototype/CoinPrototype/RiftShardPrototype - kept separate, since each still needs its own
+// distinct visual) bakes the matching value onto its own CurrencyOrb.Type in the Editor; the
+// spawning TrySpawnDrop (ExperienceUtility/CoinUtility/RiftShardUtility) also sets it explicitly in
+// code as a safety net, since each already knows exactly which currency it's spawning.
+enum CurrencyOrbType : Byte
+{
+    Experience = 0,
+    Coin = 1,
+    RiftShard = 2
+}
+
+// A physical currency pickup dropped when a player-owned kill lands on an Enemy (see
+// DamageUtility.ApplyDamage) - replaces the previously-separate ExpOrb/Coin/RiftShard components,
+// which differed only in name. Value travels with the orb rather than being re-derived from
+// EnemyDataAsset at pickup time, since the source enemy entity is already destroyed by then.
+component CurrencyOrb
+{
+    CurrencyOrbType Type;
+    FP Value;
+}

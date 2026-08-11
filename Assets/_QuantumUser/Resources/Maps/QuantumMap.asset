@@ -306,7 +306,7 @@ MonoBehaviour:
           X:
             RawValue: -392167
           Y:
-            RawValue: 442368
+            RawValue: 180879
           Z:
             RawValue: -186777
         Rotation:
@@ -352,7 +352,7 @@ MonoBehaviour:
           IsPersistent: 1
           CompoundShapes: []
         Layer: 0
-        IsTrigger: 0
+        IsTrigger: 1
         PhysicsMaterial:
           Id:
             Value: 0
@@ -367,7 +367,7 @@ MonoBehaviour:
         Kind:
           Value: 2
         PickupRadius:
-          RawValue: 131072
+          RawValue: 65536
         Opened:
           Value: 0
     - rid: 2452268073651011588
@@ -432,7 +432,7 @@ MonoBehaviour:
           IsPersistent: 1
           CompoundShapes: []
         Layer: 0
-        IsTrigger: 0
+        IsTrigger: 1
         PhysicsMaterial:
           Id:
             Value: 0
@@ -447,7 +447,7 @@ MonoBehaviour:
         Kind:
           Value: 0
         PickupRadius:
-          RawValue: 131072
+          RawValue: 65536
         Opened:
           Value: 0
     - rid: 4534742426643857412
@@ -512,7 +512,7 @@ MonoBehaviour:
           IsPersistent: 1
           CompoundShapes: []
         Layer: 0
-        IsTrigger: 0
+        IsTrigger: 1
         PhysicsMaterial:
           Id:
             Value: 0
@@ -527,7 +527,7 @@ MonoBehaviour:
         Kind:
           Value: 2
         PickupRadius:
-          RawValue: 131072
+          RawValue: 65536
         Opened:
           Value: 0
     - rid: 4676496611067559940
@@ -697,6 +697,9 @@ MonoBehaviour:
               RawValue: 0
           ConnectionMask: 0
         WaypointCount: 0
+        SpawnConfig:
+          Id:
+            Value: 0
     - rid: 5348043416703860736
       type: {class: Transform3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
       data:
@@ -750,7 +753,7 @@ MonoBehaviour:
           IsPersistent: 1
           CompoundShapes: []
         Layer: 0
-        IsTrigger: 0
+        IsTrigger: 1
         PhysicsMaterial:
           Id:
             Value: 0
@@ -765,7 +768,7 @@ MonoBehaviour:
         Kind:
           Value: 3
         PickupRadius:
-          RawValue: 131072
+          RawValue: 65536
         Opened:
           Value: 0
     - rid: 5348043416703860740
@@ -830,7 +833,7 @@ MonoBehaviour:
           IsPersistent: 1
           CompoundShapes: []
         Layer: 0
-        IsTrigger: 0
+        IsTrigger: 1
         PhysicsMaterial:
           Id:
             Value: 0
@@ -843,9 +846,9 @@ MonoBehaviour:
       type: {class: ChestPrototype, ns: Quantum.Prototypes, asm: Quantum.Simulation}
       data:
         Kind:
-          Value: 4
+          Value: 0
         PickupRadius:
-          RawValue: 131072
+          RawValue: 65536
         Opened:
           Value: 0
     - rid: 5848704153068503044

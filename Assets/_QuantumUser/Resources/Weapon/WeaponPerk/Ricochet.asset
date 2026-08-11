@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapon/WeaponPerk/Ricochet
     Guid:
       Value: 456316048361573836
-  Icon: {fileID: 301000057, guid: c6be27ae176d44f3594332e40fa484ed, type: 3}
+  Icon: {fileID: -1107615987, guid: 017cb6454ed9743478842fb02d741366, type: 3}
   DisplayName: Ricochet
   Rarity: 1
   Description: +{0:0} Bounce

@@ -33,12 +33,6 @@ namespace QuantumUser.View.Util
         [SerializeField, Tooltip("Applied the instant the entity dies, and held (hit flash stops overriding it) for the rest of the corpse's lingering duration.")]
         private Color deathColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
 
-        [Header("XP Pickup")]
-        [SerializeField, Tooltip("Used on EventExpOrbCollected, only for whichever character actually touched the orb (e.Collector == _entityRef) - the exp itself credits the whole co-op run regardless (see ExperienceUtility.Grant), this is purely 'it was me who grabbed it' feedback.")]
-        private Color pickupGlowColor = new Color(1f, 0.85f, 0.3f);
-        [SerializeField, Tooltip("Longer than the snappy hit-flash duration - reads as a glow rather than a flash.")]
-        private float pickupGlowDuration = 0.5f;
-
         [Header("Rift Mark")]
         [SerializeField, Tooltip("StatusEffects.RiftMarkStacks - see StatusEffectUtility.IsRiftMarked. Sprites swap to this material (pink inner glow via Sprites/Sprite Status Colorise Flash's _GlowColor/_GlowIntensity) while active, and back to their own original material otherwise. Hit-flash is untouched by this - it still writes SpriteRenderer.color same as always, on top of whichever material is currently assigned.")]
         private Material riftMarkMaterial;
@@ -67,6 +61,13 @@ namespace QuantumUser.View.Util
 
         private Tween[] _tweens;
 
+        // Timestamp (Time.time, matching Flash's own scaled-time Tween.Color duration) until which
+        // FlashPickup below refuses to apply - set by every "important" reaction that goes through
+        // the private Flash(Color, float) (hit/heal/shield/rift mark/spawn), so a lower-priority
+        // pickup glow (see FlyingCurrencyManager) can never visually stomp a more important flash
+        // already playing. No such priority concept existed before pickups needed to defer to hits.
+        private float _priorityFlashLockUntil;
+
         public override void Awake()
         {
             base.Awake();
@@ -74,7 +75,7 @@ namespace QuantumUser.View.Util
             QuantumEvent.Subscribe<EventEntityHealed>(this, OnEntityHealed);
             QuantumEvent.Subscribe<EventEntityShielded>(this, OnEntityShielded);
             QuantumEvent.Subscribe<EventEntityDied>(this, OnEntityDied);
-            QuantumEvent.Subscribe<EventExpOrbCollected>(this, OnExpOrbCollected);
+            QuantumEvent.Subscribe<EventPlayerRespawned>(this, OnPlayerRespawned);
 
             // Enemies leave sprites empty here and populate it later via SetRig instead - see that
             // method's comment for why.
@@ -206,12 +207,16 @@ namespace QuantumUser.View.Util
             Die();
         }
 
-        private void OnExpOrbCollected(EventExpOrbCollected e)
+        // Only ever fires for a player (DamageUtility.ApplyDamage's PlayerLink branch respawns
+        // instead of destroying the entity) - undoes Die()'s permanent gray tint/QUpdate lockout,
+        // since nothing else would (this entity/view is never recreated the way a fresh enemy
+        // spawn would re-run InitializeSprites).
+        private void OnPlayerRespawned(EventPlayerRespawned e)
         {
-            if (e.Collector != _entityRef)
+            if (e.Entity != _entityRef)
                 return;
 
-            Flash(pickupGlowColor, pickupGlowDuration);
+            Respawn();
         }
 
         [Button]
@@ -233,7 +238,31 @@ namespace QuantumUser.View.Util
 
         private void Flash(Color color) => Flash(color, duration);
 
+        // Every "important" reaction (hit/heal/shield/rift mark/spawn) funnels through here -
+        // extends the priority lock FlashPickup below respects, then applies immediately (a
+        // high-priority flash always wins outright, same "last caller overwrites" behavior this
+        // had before pickups existed).
         private void Flash(Color color, float flashDuration)
+        {
+            _priorityFlashLockUntil = Time.time + flashDuration;
+            ApplyFlash(color, flashDuration);
+        }
+
+        // Lower-priority flash for a currency pickup landing on this character (see
+        // FlyingCurrencyManager, called once its flying sprite actually arrives here - not on the
+        // collect event itself). Silently skipped if a higher-priority Flash is still within its
+        // own duration, so a pickup glow can never visually stomp a hit/heal/shield/rift-mark
+        // reaction happening at the same moment. Does NOT itself extend the lock - a pickup glow
+        // should never block a hit flash that lands right after it.
+        public void FlashPickup(Color color, float flashDuration)
+        {
+            if (Time.time < _priorityFlashLockUntil)
+                return;
+
+            ApplyFlash(color, flashDuration);
+        }
+
+        private void ApplyFlash(Color color, float flashDuration)
         {
             if (sprites == null)
                 return;
@@ -281,6 +310,20 @@ namespace QuantumUser.View.Util
                 sprites[i].color = deathColor;
                 sprites[i].sharedMaterial = _originalMaterials[i];
             }
+        }
+
+        // Inverse of Die() above - clears the death tint and un-blocks QUpdate, since a respawning
+        // player never goes through InitializeSprites again (that only runs once, from Awake).
+        [Button]
+        public void Respawn()
+        {
+            if (_dead == false || sprites == null)
+                return;
+
+            _dead = false;
+
+            for (var i = 0; i < sprites.Length; i++)
+                sprites[i].color = restColor;
         }
     }
 }

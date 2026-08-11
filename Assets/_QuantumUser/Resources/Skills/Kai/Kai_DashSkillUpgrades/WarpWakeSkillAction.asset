@@ -1,0 +1,90 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92353d3ad7637462b9f384c5c47fdd78, type: 3}
+  m_Name: WarpWakeSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.WarpWakeSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Kai/Kai_DashSkillUpgrades/WarpWakeSkillAction
+    Guid:
+      Value: 470554201058115475
+  Icon: {fileID: 0}
+  DisplayName: Warp Wake
+  Rarity: 2
+  RankDescriptions:
+  - Dashing leaves behind a temporary Void that pulls nearby enemies inward.
+  - Your Dash Void becomes larger, pulls harder, and damages enemies trapped inside.
+  - When your Dash Void collapses, it violently repels nearby enemies and deals damage.
+  <MaxRank>k__BackingField: 3
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 1
+  Description: Dashing leaves behind a temporary Void that pulls nearby enemies inward.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  Prototype:
+    Id:
+      Value: 1379210776351929349
+  Duration:
+  - RawValue: 65536
+  - RawValue: 65536
+  - RawValue: 65536
+  PullForce:
+  - RawValue: 655360
+  - RawValue: 983040
+  - RawValue: 1310720
+  BaseRadius:
+  - RawValue: 98304
+  - RawValue: 131072
+  - RawValue: 163840
+  PullTickInterval:
+    RawValue: 13107
+  PulseDamagePercent:
+  - RawValue: 0
+  - RawValue: 16384
+  - RawValue: 16384
+  PulseTickInterval:
+    RawValue: 32768
+  DamageEffect:
+    Id:
+      Value: 280329904200879658
+  RepulsionDamagePercent:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 49152
+  RepulsionKnockbackForce:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 1966080

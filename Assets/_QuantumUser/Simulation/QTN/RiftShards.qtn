@@ -1,7 +1,7 @@
 // Run-wide Rift Shard currency state - merged by the DSL compiler into the same Frame.Global struct
 // as Experience.qtn's/SurvivalDirector.qtn's global blocks. Co-op: one shared total for the whole
 // run, credited by RiftShardUtility.Grant whenever any player collects a RiftShard (see
-// RiftShardOrbSystem) - same "one shared total, not per-player" convention Experience.qtn uses.
+// CurrencyOrbSystem) - same "one shared total, not per-player" convention Experience.qtn uses.
 global
 {
     FP TotalRiftShards;

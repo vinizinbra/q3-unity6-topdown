@@ -17,7 +17,7 @@ MonoBehaviour:
     Guid:
       Value: 410563266870546275
   Speed:
-    RawValue: 983040
+    RawValue: 1310720
   OverrideDirection: 0
   Direction:
     X:
@@ -26,3 +26,5 @@ MonoBehaviour:
       RawValue: 0
     Z:
       RawValue: 65536
+  PredictionTime:
+    RawValue: 13107

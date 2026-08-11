@@ -70,9 +70,10 @@ namespace Quantum
             }
         }
 
-        // Void Pressure only - a field with EnemyTimeDilationMultiplier still at its 0 default (every
-        // field, until that ascension is taken) skips this entirely. Tier-gated to Filler/Normal/
-        // Specialist - never Elite/Boss.
+        // Event Horizon rank 3 ("Void Pressure") only - a field with EnemyTimeDilationMultiplier still
+        // at its 0 default (every field, until that rank is taken) skips this entirely. Tier-gated by
+        // MaxAffectedEnemyTierIndex (data, not a hardcoded tier comparison - see ProjectileSlowField.
+        // qtn's own comment) rather than a fixed Filler/Normal/Specialist cutoff.
         private static void ApplyFieldsToEnemies(Frame f)
         {
             var fields = f.Filter<ProjectileSlowField, Transform3D>();
@@ -88,7 +89,7 @@ namespace Quantum
                 {
                     EnemyDataAsset data = f.FindAsset(enemy.EnemyData);
 
-                    if (data.Tier > EnemyTier.Specialist)
+                    if ((byte)data.Tier > field.MaxAffectedEnemyTierIndex)
                         continue;
 
                     if ((enemyTransform.Position - fieldTransform.Position).SqrMagnitude > field.Radius * field.Radius)

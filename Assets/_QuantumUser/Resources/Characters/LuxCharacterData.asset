@@ -25,11 +25,11 @@ MonoBehaviour:
   BaseArmor:
     RawValue: 0
   BaseMaxShield:
-    RawValue: 6553600
+    RawValue: 3276800
   ShieldRechargeDelay:
-    RawValue: 196608
+    RawValue: 327680
   ShieldRechargeRate:
-    RawValue: 1310720
+    RawValue: 655360
   DamageMultiplier:
     RawValue: 65536
   WeaponDamageMultiplier:
@@ -49,6 +49,10 @@ MonoBehaviour:
   ProjectileSpeedMultiplier:
     RawValue: 65536
   AreaRadiusMultiplier:
+    RawValue: 65536
+  NearDamageMultiplier:
+    RawValue: 65536
+  FarDamageMultiplier:
     RawValue: 65536
   DashCooldownMultiplier:
     RawValue: 65536
@@ -78,6 +82,10 @@ MonoBehaviour:
     RawValue: 0
   ExperienceGainMultiplier:
     RawValue: 65536
+  RiftShardGainMultiplier:
+    RawValue: 65536
+  CoinGainMultiplier:
+    RawValue: 65536
   RingColor: {r: 1, g: 1, b: 1, a: 1}
   WeaponPosition:
     X:
@@ -106,7 +114,6 @@ MonoBehaviour:
       Value: 420168397532520612
   - Id:
       Value: 339282098208670876
-  HeroSkillUpgrades: []
   PassiveUpgrades:
   - Id:
       Value: 279385305130049783

@@ -1,0 +1,174 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 974948d66eaa64abcbcf328fb3fb6981, type: 3}
+  m_Name: BalanceConfig
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.BalanceConfig
+  Identifier:
+    Path: _QuantumUser/Resources/Configs/BalanceConfig
+    Guid:
+      Value: 503423254243386843
+  Curves:
+  - Minute: 0
+    EnemyHp:
+      RawValue: 65536
+    EnemyDmg:
+      RawValue: 65536
+    DirectorBudget:
+      RawValue: 65536
+    ExpectedPlayerDps:
+      RawValue: 65536
+  - Minute: 2
+    EnemyHp:
+      RawValue: 79835
+    EnemyDmg:
+      RawValue: 72090
+    DirectorBudget:
+      RawValue: 117965
+    ExpectedPlayerDps:
+      RawValue: 78643
+  - Minute: 4
+    EnemyHp:
+      RawValue: 101283
+    EnemyDmg:
+      RawValue: 78643
+    DirectorBudget:
+      RawValue: 183501
+    ExpectedPlayerDps:
+      RawValue: 91750
+  - Minute: 6
+    EnemyHp:
+      RawValue: 127497
+    EnemyDmg:
+      RawValue: 88474
+    DirectorBudget:
+      RawValue: 262144
+    ExpectedPlayerDps:
+      RawValue: 104858
+  - Minute: 8
+    EnemyHp:
+      RawValue: 160861
+    EnemyDmg:
+      RawValue: 98304
+    DirectorBudget:
+      RawValue: 360448
+    ExpectedPlayerDps:
+      RawValue: 117965
+  - Minute: 10
+    EnemyHp:
+      RawValue: 196608
+    EnemyDmg:
+      RawValue: 104858
+    DirectorBudget:
+      RawValue: 458752
+    ExpectedPlayerDps:
+      RawValue: 131072
+  - Minute: 12
+    EnemyHp:
+      RawValue: 196608
+    EnemyDmg:
+      RawValue: 104858
+    DirectorBudget:
+      RawValue: 458752
+    ExpectedPlayerDps:
+      RawValue: 131072
+  CoopGlobal:
+  - Key: 0
+    P1:
+      RawValue: 65536
+    P2:
+      RawValue: 65536
+    P3:
+      RawValue: 68813
+    P4:
+      RawValue: 72090
+  - Key: 1
+    P1:
+      RawValue: 65536
+    P2:
+      RawValue: 111411
+    P3:
+      RawValue: 157286
+    P4:
+      RawValue: 196608
+  - Key: 2
+    P1:
+      RawValue: 65536
+    P2:
+      RawValue: 104858
+    P3:
+      RawValue: 144179
+    P4:
+      RawValue: 183501
+  - Key: 3
+    P1:
+      RawValue: 65536
+    P2:
+      RawValue: 104858
+    P3:
+      RawValue: 144179
+    P4:
+      RawValue: 183501
+  CoopHp:
+  - Tier: 0
+    P1:
+      RawValue: 65536
+    P2:
+      RawValue: 75366
+    P3:
+      RawValue: 81920
+    P4:
+      RawValue: 88474
+  - Tier: 1
+    P1:
+      RawValue: 65536
+    P2:
+      RawValue: 75366
+    P3:
+      RawValue: 81920
+    P4:
+      RawValue: 88474
+  - Tier: 2
+    P1:
+      RawValue: 65536
+    P2:
+      RawValue: 75366
+    P3:
+      RawValue: 81920
+    P4:
+      RawValue: 88474
+  - Tier: 3
+    P1:
+      RawValue: 65536
+    P2:
+      RawValue: 88474
+    P3:
+      RawValue: 104858
+    P4:
+      RawValue: 121242
+  - Tier: 4
+    P1:
+      RawValue: 65536
+    P2:
+      RawValue: 98304
+    P3:
+      RawValue: 124518
+    P4:
+      RawValue: 150733
+  - Tier: 5
+    P1:
+      RawValue: 65536
+    P2:
+      RawValue: 111411
+    P3:
+      RawValue: 144179
+    P4:
+      RawValue: 170394

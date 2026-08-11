@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52edb4eefc1db48109cc7d1ac53b2f13, type: 3}
+  m_Name: ConeTelegraphData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.TelegraphData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/TelegraphData/ConeTelegraphData
+    Guid:
+      Value: 2853701215075585823
+  Shape: 1
+  StartPhase: 0
+  EndPhase: 1
+  LiveTracking: 1
+  LiveTrackingSmoothing: 15
+  TelegraphPrefab: {fileID: 3870463405479579449, guid: e66d48053909142348f8719729485fe7, type: 3}
+  SnapToGround: 1
+  LineLength: 0
+  FixedDistanceValue: 5
+  FromOffset: 0
+  ToOffset: 0
+  Width: 1
+  RadiusMultiplier: 1
+  GrowthDuration: 1
+  FadeInDuration: 0.15
+  FadeOutDuration: 0.15

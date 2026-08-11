@@ -1,8 +1,0 @@
-// Tag - granted/revoked by an upgrade (e.g. Heroes/Pixie/BirthdayCakeSkillAction). Read right after
-// ProjectileSkillData spawns its projectile (see ProjectileSkillData.Fire), adding the existing
-// Decoy tag onto the freshly spawned entity so it pulls enemy aggro for the rest of its flight
-// (see Decoy.qtn/EnemyMovementUtility.TryFindNearestDecoy) - no new attraction mechanic needed, just
-// reusing the one already there.
-component DecoyOnThrowUpgrade
-{
-}

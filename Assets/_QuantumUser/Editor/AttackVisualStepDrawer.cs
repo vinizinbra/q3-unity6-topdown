@@ -79,6 +79,19 @@ namespace Quantum.Editor
                         rect.y += paramsHeight + EditorGUIUtility.standardVerticalSpacing;
                     }
 
+                    if (UsesRotation((AttackAnimationType)animationType.enumValueIndex) == true)
+                    {
+                        SerializedProperty centerPivot = property.FindPropertyRelative("CenterPivot");
+                        EditorGUI.PropertyField(rect, centerPivot);
+                        rect.y += lineHeight;
+
+                        if (centerPivot.boolValue == true)
+                        {
+                            EditorGUI.PropertyField(rect, property.FindPropertyRelative("PivotHeightOverride"));
+                            rect.y += lineHeight;
+                        }
+                    }
+
                     EditorGUI.indentLevel--;
                 }
 
@@ -103,6 +116,7 @@ namespace Quantum.Editor
                         SerializedProperty alignToEnemyDirection = property.FindPropertyRelative("AlignToEnemyDirection");
                         SerializedProperty rotationOffset = property.FindPropertyRelative("RotationOffset");
                         SerializedProperty scale = property.FindPropertyRelative("Scale");
+                        SerializedProperty overrideSortingOrder = property.FindPropertyRelative("OverrideSortingOrder");
 
                         EditorGUI.PropertyField(rect, anchor);
                         rect.y += lineHeight;
@@ -120,6 +134,15 @@ namespace Quantum.Editor
                         rect.y += lineHeight;
 
                         EditorGUI.PropertyField(rect, scale);
+                        rect.y += lineHeight;
+
+                        EditorGUI.PropertyField(rect, overrideSortingOrder);
+                        rect.y += lineHeight;
+
+                        if (overrideSortingOrder.boolValue == true)
+                        {
+                            EditorGUI.PropertyField(rect, property.FindPropertyRelative("SortingOrder"));
+                        }
                     }
 
                     EditorGUI.indentLevel--;
@@ -148,11 +171,20 @@ namespace Quantum.Editor
                 height += lineHeight * 2; // AnimationType + Duration
 
                 SerializedProperty animationType = property.FindPropertyRelative("AnimationType");
-                string paramsFieldName = GetParamsFieldName((AttackAnimationType)animationType.enumValueIndex);
+                var type = (AttackAnimationType)animationType.enumValueIndex;
+                string paramsFieldName = GetParamsFieldName(type);
                 if (paramsFieldName != null)
                 {
                     SerializedProperty paramsProp = property.FindPropertyRelative(paramsFieldName);
                     height += EditorGUI.GetPropertyHeight(paramsProp, true) + EditorGUIUtility.standardVerticalSpacing;
+                }
+
+                if (UsesRotation(type) == true)
+                {
+                    height += lineHeight; // CenterPivot
+
+                    if (property.FindPropertyRelative("CenterPivot").boolValue == true)
+                        height += lineHeight; // PivotHeightOverride
                 }
             }
 
@@ -166,7 +198,10 @@ namespace Quantum.Editor
                 SerializedProperty particlePrefab = property.FindPropertyRelative("ParticlePrefab");
                 if (particlePrefab.objectReferenceValue != null)
                 {
-                    height += lineHeight * 6; // Anchor, Offset, Parented, AlignToEnemyDirection, RotationOffset, Scale
+                    height += lineHeight * 7; // Anchor, Offset, Parented, AlignToEnemyDirection, RotationOffset, Scale, OverrideSortingOrder
+
+                    if (property.FindPropertyRelative("OverrideSortingOrder").boolValue == true)
+                        height += lineHeight; // SortingOrder
                 }
             }
 
@@ -176,6 +211,26 @@ namespace Quantum.Editor
         private static bool GetFoldout(Dictionary<string, bool> foldouts, string key)
         {
             return foldouts.TryGetValue(key, out bool expanded) == false || expanded;
+        }
+
+        // Types whose case in EnemyBlobAnimationView.UpdatePose sets rockTarget (root's own
+        // rotation) - CenterPivot/PivotHeightOverride only mean anything for these; Pulse/Crouch/
+        // Inflate/Lunge/Slam/Chomp/PunchScale never rotate root at all.
+        private static bool UsesRotation(AttackAnimationType type)
+        {
+            switch (type)
+            {
+                case AttackAnimationType.Shake:
+                case AttackAnimationType.SwingBack:
+                case AttackAnimationType.Snap:
+                case AttackAnimationType.Spin:
+                case AttackAnimationType.ArmSwingBack:
+                case AttackAnimationType.ArmSnap:
+                case AttackAnimationType.ArmPunch:
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         private static string GetParamsFieldName(AttackAnimationType type)
@@ -194,6 +249,8 @@ namespace Quantum.Editor
                 case AttackAnimationType.Spin: return "Spin";
                 case AttackAnimationType.ArmSwingBack: return "ArmSwingBack";
                 case AttackAnimationType.ArmSnap: return "ArmSnap";
+                case AttackAnimationType.PunchScale: return "PunchScale";
+                case AttackAnimationType.ArmPunch: return "ArmPunch";
                 default: return null;
             }
         }

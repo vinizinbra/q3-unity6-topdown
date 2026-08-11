@@ -26,6 +26,14 @@
             // regardless of pause state. See docs/chests.md.
             systems.Add(new MapGroundSettleSystem());
 
+            // Talents (see docs/talents.md) - resolves the shared/coop talent aggregate once, as
+            // soon as every connected player has spawned, then spawns whichever Lobby chests were
+            // earned directly inside the LobbyStart chunk's own footprint. Must run before
+            // ChestSystem below so a chest spawned this tick is already visible to that system's
+            // own filter this same tick, and before the pausable group (it's one-shot world
+            // bookkeeping, not something that needs to keep reacting through a pause).
+            systems.Add(new TalentGateSystem());
+
             // Always-on driver for the level-up upgrade-choice screen's pause/countdown/resolve -
             // can't live inside the group it disables. See docs/level-up-upgrades.md.
             systems.Add(new LevelUpSystem());
@@ -35,6 +43,14 @@
             // keep reacting to its own Chest.Opened flag even while a screen (its own or an
             // Exp-driven one) has GameplaySystemGroup disabled. See docs/chests.md.
             systems.Add(new ChestSystem());
+
+            // Lobby Start (see docs/talents.md) - transitions Global.CurrentState from Lobby to
+            // Survival once every connected, spawned player has walked outside the LobbyStart
+            // chunk's own footprint (no separate boundary entity - the chunk IS the boundary).
+            // Must run before CombatDirectorSystem (inside the pausable group just below, later
+            // this same tick) so GameState.Survival is current when that system's own gate checks
+            // it.
+            systems.Add(new LobbyBoundarySystem());
 
             // Everything below pauses as one unit for the duration of an open level-up screen (see
             // LevelUpUtility.BeginLevelUpScreen/Resolve) - relative order/comments between these
@@ -73,39 +89,34 @@
                 // Rift Mutation roster (Critical Focus, Infinite Momentum, Shield Breaker). See
                 // docs/rift-mutations.md.
                 new RiftMutationReactionSystem(),
+                // Max's Overdrive Ascension reactions - Uncontrolled Fury's per-N-kills extension plus
+                // its own separate uncapped Vendetta-kill bonus, and Last Stand rank 2's Retaliation
+                // proc. MUST run BEFORE MaxVendettaSystem just below - Uncontrolled Fury rank 3's
+                // Vendetta-kill bonus reads RevengeMark.MarkedBy on the same OnEntityKilled dispatch
+                // MaxVendettaSystem's own handler then removes the mark on. See docs/max-ascensions.md.
+                new MaxOverdriveReactionSystem(),
                 // Max's Vendetta passive - reacts to Combat.qtn's OnHealthDamageApplied/
                 // OnShieldDamageApplied/OnEntityKilled (mark creation/accumulation/consumption+heal).
-                // See docs/max-vendetta-fire-mastery.md.
+                // See docs/max-ascensions.md.
                 new MaxVendettaSystem(),
                 // Independent per-tick ticker for every active RevengeMark's own countdown, same
                 // "needs to keep counting down regardless of anything else" reasoning
                 // ExplodeOnDeathTimerSystem's own comment gives.
                 new RevengeMarkTimeoutSystem(),
+                // Same "needs to keep counting down regardless of anything else" reasoning as
+                // RevengeMarkTimeoutSystem just above - ticks Kai's First Strike rank 3 refresh window.
+                new FirstStrikeMarkTimeoutSystem(),
                 // Max's Fire Mastery traits - reacts to Combat.qtn's OnCriticalHit/
                 // OnHealthDamageApplied/OnEntityKilled (Flashpoint/Cremation/Wildfire), plus its own
                 // per-tick ExplosionOnConditionalHit.CooldownRemaining ticking. Independent of
-                // MaxVendettaSystem above - see docs/max-vendetta-fire-mastery.md.
+                // MaxVendettaSystem above - see docs/max-ascensions.md.
                 new MaxFireMasteryReactionSystem(),
-                // Uncontrolled Fury - reacts to Combat.qtn's OnEntityKilled, extending the current
-                // Overdrive activation per kill up to a per-activation cap. Independent of
-                // MaxVendettaSystem (Vendetta Rush's own extension lives there instead, scoped to a
-                // Vendetta-consuming kill specifically) - see docs/max-vendetta-fire-mastery.md.
-                new MaxOverdriveReactionSystem(),
-                // Pixie's Demolition Mastery traits - reacts to Combat.qtn's
-                // OnExplosionCriticalHit/OnAreaExplosionDetonated (Volatile Payload/Mini Ordnance).
-                // Direct Hit/Concussive Force are NOT here - they hook directly into
+                // Pixie's Pocket Bombs Ascension - reacts to Combat.qtn's
+                // OnAreaExplosionDetonated. Direct Hit is NOT here - it hooks directly into
                 // HitEffectUtility.ApplyInRadius/ApplyDamageInRadius instead (see
-                // DemolitionMasteryUtility), since they need the blast's center/radius, not just a
+                // DemolitionMasteryUtility), since it needs the blast's center/radius, not just a
                 // signal payload.
                 new PixieDemolitionMasterySystem(),
-                // Brute's Knockback Mastery traits - reacts to PlayerMovement.qtn's OnPlayerLanded
-                // (Ground Pound). Crushing Blow/Lasting Impact/Overwhelming Force are NOT here - they
-                // hook directly into DamageUtility.ResolveOutgoingDamage/StatusEffectUtility.
-                // ApplyStun/CharacterStats.KnockbackMultiplier instead, same reasoning
-                // PixieDemolitionMasterySystem's own comment gives for its non-signal traits. No
-                // ordering dependency on AutoJumpSystem - signals dispatch synchronously wherever
-                // they're raised, regardless of either system's registration order.
-                new BruteKnockbackMasterySystem(),
                 // Must run after KCCSystem (KCC.SetActive/Teleport need this tick's movement already
                 // resolved) and after AimSystem (DashSkillData reads Aim.Angle as a facing fallback).
                 new SkillSystem(),
@@ -138,17 +149,30 @@
                 // Independent of the area/alternating systems above - no shared state, just needs to run
                 // after ProjectileSystem so a vortex spawned this tick can start pulling immediately.
                 new VortexSystem(),
+                // Kai's Undertow Ascension - its own pull (DamageUtility.ApplyPull) needs the exact
+                // same after-EnemySystem placement as VortexSystem just above, for the exact same
+                // reason: EnemySystem writes PhysicsBody3D.Velocity every tick regardless of phase,
+                // which would otherwise erase this impulse before it moved anything. See
+                // docs/kai-ascensions.md.
+                new KaiUndertowSystem(),
                 // Same reasoning as VortexSystem just above, but also needs to run after SkillSystem
                 // (Sentry spawns from there, not ProjectileSystem) - so a settling entity spawned by
                 // either path starts easing into position the same tick instead of popping into its
                 // final resting spot for one tick first.
                 new GroundSettleSystem(),
+                // No ordering dependency on anything else - a popped orb (OrbSpawnUtility.SpawnWithPop)
+                // just needs to keep integrating its own arc every tick regardless of what else ran.
+                new PopMotionSystem(),
                 // No ordering dependency on anything else - just needs to run each tick regardless of
                 // whether Brutus is still nearby or using the skill (see JuggernautDischargeCooldown).
                 new JuggernautDischargeCooldownSystem(),
                 // Same reasoning as JuggernautDischargeCooldownSystem just above - ticks independently of
                 // whoever applied the mark (see ExplodeOnDeath).
                 new ExplodeOnDeathTimerSystem(),
+                // Same shape as ExplodeOnDeathTimerSystem just above - ticks down Pixie's Hot Fuse
+                // charge regardless of anything else, so an unused charge expires instead of lingering
+                // forever (see PixieHotFuseCharge.qtn).
+                new PixieHotFuseTimerSystem(),
                 new JuggernautLandingImpactSystem(),
                 // Also independent - drives JuggernautExplosionPush's own short kinematic move
                 // regardless of anything else going on for the enemy (see EnemySystem's own
@@ -156,12 +180,13 @@
                 new JuggernautExplosionPushSystem(),
                 // Applies Haste/ShieldRegen to nearby allies - before StatusEffectSystem, same "applied
                 // this tick starts ticking next tick" reasoning as every other status-applying system.
-                // Max's Adrenaline Rush decay - no ordering dependency on anything else, same
-                // reasoning as JuggernautDischargeCooldownSystem's own placement comment.
-                new AdrenalineSystem(),
                 // Brute's Protector Aura - same continuous-refresh shape as SentryAuraSystem just
                 // below, placed alongside it for the same reason.
                 new ProtectorAuraSystem(),
+                // Guardian ascension rank 3's reactive DR proc - reacts to Combat.qtn's
+                // OnHealthDamageApplied/OnShieldDamageApplied, same signal-driven "no ordering
+                // dependency" shape as MaxVendettaSystem.
+                new BruteProtectorReactionSystem(),
                 // Zara's Afterbeat dash ascension - no ordering dependency on anything else, same
                 // reasoning as JuggernautDischargeCooldownSystem's own placement comment.
                 new ZaraAfterbeatSystem(),
@@ -183,13 +208,16 @@
                 new HealthRegenSystem(),
                 // Independent of everything else - just needs to run before DestroyAfterTimeSystem,
                 // preserving that system's own "must be last" invariant since this also calls
-                // f.Destroy. Also must stay inside this group: ExpOrbSystem is the only caller of
-                // ExperienceUtility.Grant, and Grant is what triggers a new screen - keeping it
-                // paused while one is already open is what makes re-entrancy structurally impossible
-                // (see docs/level-up-upgrades.md).
-                new ExpOrbSystem(),
-                // Same reasoning as ExpOrbSystem just above (must stay inside this group, must run
-                // before DestroyAfterTimeSystem since it also calls f.Destroy) - Scrap has no
+                // f.Destroy. Also must stay inside this group: for an Experience-type orb this is
+                // the only caller of ExperienceUtility.Grant, and Grant is what triggers a new
+                // screen - keeping it paused while one is already open is what makes re-entrancy
+                // structurally impossible (see docs/level-up-upgrades.md). Replaces what used to be
+                // 3 separate systems (ExpOrbSystem/CoinOrbSystem/RiftShardOrbSystem) - only
+                // ExpOrbSystem was actually registered here before this merge, so Coin/RiftShard
+                // pickups now actually collect for the first time.
+                new CurrencyOrbSystem(),
+                // Same reasoning as CurrencyOrbSystem just above (must stay inside this group, must
+                // run before DestroyAfterTimeSystem since it also calls f.Destroy) - Scrap has no
                 // re-entrancy concern of its own (unlike Grant/BeginLevelUpScreen), but there's no
                 // reason to place it anywhere else either.
                 new ScrapOrbSystem(),

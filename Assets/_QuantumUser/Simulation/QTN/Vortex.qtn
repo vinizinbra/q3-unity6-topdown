@@ -9,10 +9,11 @@
 // reusing AreaDamageSystem's own independent pulsing rather than hand-rolling a second damage-tick
 // system on Vortex itself.
 //
-// Force is set at spawn by SpawnVortexEffectData off the triggering hit's own Damage (the same
-// Damage a normal HitEffectData would deal, already boosted by IncreaseProjectileDamageSkillAction
-// if equipped) - so "the skill's Damage" is what drives pull strength, unless overridden by
-// VortexPowerPulseUpgrade.
+// Force is set at spawn by SpawnVortexEffectData.PullForce - its own baseline, decoupled from Kai's
+// Cast Damage (which is dealt directly on impact instead, then becomes "Vortex Skill Damage," the
+// percentage basis every Ascension line scales off - see KaiAscensionUtility.
+// ResolveVortexSkillDamage). Singularity (see Heroes/Kai/Singularity.qtn) MULTIPLIES this baseline
+// rather than overriding it.
 component Vortex
 {
     // Applied as one impulse per pulse (TickInterval/TickTimer below), not scaled by DeltaTime - a
@@ -22,8 +23,7 @@ component Vortex
     // enemy off its chase line.
     FP Force;
 
-    // Seconds between pull pulses - authored directly on the prototype by default, overridden at
-    // spawn time if the owner has VortexPowerPulseUpgrade equipped (see SpawnVortexEffectData).
+    // Seconds between pull pulses - authored directly on the prototype, never overridden at spawn.
     FP TickInterval;
 
     FP TickTimer;
@@ -31,7 +31,7 @@ component Vortex
     // How many enemies the last pull pulse actually found in radius - refreshed once per pulse (not
     // every tick, to avoid an extra OverlapShape query), reusing the same overlap the pull itself
     // already runs. Read by VortexSystem.ResolveCrowdMultiplier (VortexCrowdDamageUpgrade) to scale
-    // the constant AreaDamage, mini explosions and the final blast all off the same live count - see
+    // the constant AreaDamage, Implosion pulses and the final blast all off the same live count - see
     // VortexSystem.Update.
     Byte CaughtCount;
 }

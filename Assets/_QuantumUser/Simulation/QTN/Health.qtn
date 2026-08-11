@@ -3,9 +3,15 @@ component Health
     FP CurrentHealth;
     FP MaxHealth;
 
-    // Flat HP/sec added back every tick while below Max - seeded from CharacterData.
-    // BaseHealthRegenRate (0 for most heroes) and raised further by HealthRegenUpgradeData grants.
-    // No delay gate unlike Shield.RechargeRate - this is meant to be a small continuous trickle,
-    // not a big chunk worth suppressing while under fire.
+    // Flat HP/sec added back while below Max - seeded from CharacterData.BaseHealthRegenRate (0 for
+    // most heroes) and raised further by HealthRegenUpgradeData grants. No delay gate unlike
+    // Shield.RechargeRate - this is meant to be a small continuous trickle, not a big chunk worth
+    // suppressing while under fire. Applied as one batched heal per second (see RegenTimer), not
+    // every frame.
     FP RegenRate;
+
+    // Accumulates f.DeltaTime so HealthRegenSystem applies a whole second's worth of RegenRate in a
+    // single heal once per second, instead of a tiny heal every frame - one EntityHealed event (and
+    // thus one heal particle) per second rather than ~60. See HealthRegenSystem.
+    FP RegenTimer;
 }

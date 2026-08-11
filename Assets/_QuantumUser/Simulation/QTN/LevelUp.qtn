@@ -69,6 +69,14 @@ component LevelUpChoice
     Boolean Confirmed;
     Byte SelectedIndex;
 
+    // True when this entity confirmed via the separate "Keep Current" button rather than picking
+    // one of Options[0..OptionCount) - only meaningful/offered on a Choose-Weapon screen (see
+    // GameplayUiController's own isWeaponChoice check and UpgradeWindow.keepCurrentButton).
+    // SelectedIndex is meaningless when this is true. Resolve checks this before GrantOption so
+    // keeping the current weapon is a genuine no-op rather than re-granting Options[SelectedIndex]
+    // - see LevelUpUtility.ConfirmKeepCurrent.
+    Boolean KeptCurrent;
+
     // Screen-title info, populated once at roll time (LevelUpUtility.RollOptionsFor/
     // RollChooseWeaponOptionsFor) so the view doesn't need to re-derive origin/category itself.
     // FromChest mirrors "was BeginChestScreen the caller" (see OpenUpgradeScreen) - a plain
@@ -107,16 +115,6 @@ component RiftMutationPicks
     array<AssetRef<RiftMutationData>>[32] Picked;
 }
 
-// One entity's pick history for the PassiveUpgrade pool - same "has this already been granted"
-// shape as RiftMutationPicks above (Passive Upgrade is per-hero rather than pool-wide non-stackable,
-// but every Passive Upgrade is still single-pick, unlike GlobalUpgrade's opt-in stacking) - see
-// PassiveUpgradeUtility.Grant/IsAlreadyPicked and LevelUpUtility.CollectPerHeroCandidates. Fixed
-// array with headroom over the largest per-hero passive catalog.
-component PassiveUpgradePicks
-{
-    array<AssetRef<PassiveUpgradeData>>[32] Picked;
-}
-
 // Flat run-wide record of every upgrade an entity has ever been granted, covering Skill Upgrade/
 // Global Upgrade/Passive Upgrade/Rift Mutation - unlike GlobalUpgradePicks/RiftMutationPicks/
 // SkillSlot.Upgrades above (each scoped to one kind, kept for their own gameplay checks), this one
@@ -128,7 +126,12 @@ component PassiveUpgradePicks
 // stacking upgrade (e.g. an uncapped GlobalUpgrade) bumps Count on its existing entry instead of
 // adding a duplicate row. Fixed array with headroom over the largest covered catalog (~25 Rift
 // Mutations), same convention as GlobalUpgradePicks/RiftMutationPicks - Quantum components can't
-// hold an actual dynamic list.
+// hold an actual dynamic list. Also doubles as PassiveUpgrade's own "already granted" gameplay
+// check (PassiveUpgradeUtility.IsAlreadyPicked) - unlike Global Upgrade/Rift Mutation, Passive
+// Upgrade doesn't get a dedicated Picks component of its own; its catalog is small and per-hero
+// (a handful of entries each) and shares this same 32-slot budget with Skill/Global/Rift picks, so
+// it's judged unlikely to ever fill up across one run - revisit with a dedicated
+// PassiveUpgradePicks component (mirroring RiftMutationPicks) if that assumption stops holding.
 component UpgradeHistory
 {
     array<UpgradeHistoryEntry>[32] Entries;

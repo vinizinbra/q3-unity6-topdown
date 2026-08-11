@@ -1,0 +1,9 @@
+// Runtime-only marker added by OrbSpawnUtility.SpawnWithPop (never authored on a prototype) - a
+// dropped currency/scrap orb pops out on a short ballistic arc from the enemy's death position
+// instead of teleporting straight to a scattered landing spot at the enemy's own death Y.
+// PopMotionSystem integrates gravity each tick and removes this the instant the arc lands, same
+// "settled = free to iterate afterward" contract SettlingToGround/GroundSettleSystem already use.
+component PopVelocity
+{
+    FPVector3 Velocity;
+}

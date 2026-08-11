@@ -1,0 +1,36 @@
+// Structured top-level match-flow state machine. Lobby is deliberately enum value 0 (Global
+// starts zeroed, so a fresh match begins there with no explicit seeding needed).
+enum GameState : Byte
+{
+    Lobby,      // Pre-run: players spawn, walk out of the LobbyStart chunk's own footprint (see
+                // LobbyBoundarySystem). CombatDirectorSystem stays idle (SurvivalTime/enemy
+                // spawning paused) but GameplaySystemGroup itself is NOT paused - players must be
+                // able to move to ever leave the lobby.
+
+    Survival,   // Normal run: SurvivalTime counts, the Survival Director spawns enemies (see
+                // CombatDirectorSystem/docs/survival-director.md). The only state that gate runs in.
+
+    Upgrade,    // A level-up/Chest upgrade-choice screen is open (Global.LevelUpScreenOpen) -
+                // GameplaySystemGroup itself is disabled (LevelUpUtility.OpenUpgradeScreen/
+                // Resolve, unchanged mechanism), which also freezes CombatDirectorSystem for free
+                // since it lives inside that group. Always returns to whichever state it
+                // interrupted (Global.PreUpgradeState) - not hardcoded to Survival, since a
+                // talent-granted Chest can be opened while still in Lobby.
+
+    Event,      // Scaffolded only - mirrors RuntimePlayer.HasEvent (also scaffolded, see
+                // docs/talents.md). No Event system exists yet, so nothing transitions into or
+                // out of this today.
+
+    Boss        // Scaffolded only - no hook into the existing BossSystem's own encounter
+                // entry/exit exists yet, so nothing transitions into or out of this today.
+}
+
+global
+{
+    GameState CurrentState;
+
+    // Set by LevelUpUtility.OpenUpgradeScreen right before switching CurrentState to Upgrade,
+    // read back by Resolve to restore exactly the state that was interrupted - see GameState.
+    // Upgrade's own comment above for why this can't just hardcode Survival.
+    GameState PreUpgradeState;
+}

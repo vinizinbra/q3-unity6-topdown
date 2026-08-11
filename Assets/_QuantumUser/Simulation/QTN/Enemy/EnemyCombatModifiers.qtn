@@ -1,0 +1,9 @@
+// Snapshotted once at spawn by EnemySystem.SeedCombatModifiers (EnemyBalanceUtility.
+// ResolveEnemyStats) - never re-evaluated later, same "bake once" contract as Health seeding.
+// Hand-authored on the enemy EntityPrototype(s) (NOT dynamically f.Add-ed like Shield) - until
+// that's done in the Editor, SeedCombatModifiers silently no-ops. Nothing reads DamageMultiplier
+// yet - same inert-until-consumed precedent as EnemyDataAsset.Traits' ContactDamage flag.
+component EnemyCombatModifiers
+{
+    FP DamageMultiplier;
+}

@@ -1,12 +1,19 @@
-// Granted/revoked by UncontrolledFurySkillAction (Begin/End paired to Berserk/Overdrive itself) -
-// every kill landed while active extends the current Overdrive activation by PerKillExtension (see
-// OverdriveUtility.TryExtend), up to a total of MaxExtension per activation. AccumulatedExtension
-// is reset to 0 at every Begin (see UncontrolledFurySkillAction) - the cap applies per activation,
-// not for the character's lifetime - and is the one field here that actually changes per-kill,
-// unlike PerKillExtension/MaxExtension which are cold config seeded once at Begin.
+// Overdrive rank 3 ("Uncontrolled Fury") - granted once by UncontrolledFurySkillAction.Apply, which
+// SETs every field below to the picked rank's cumulative tuned values. KillCount/KillsPerExtension
+// gate the main per-N-kills extension (see MaxOverdriveReactionSystem.OnEntityKilled) instead of
+// firing on every single kill; PerKillExtension/MaxExtension/AccumulatedExtension are the same
+// per-activation-capped pool the original mechanism already used, reset fresh every Begin.
+// VendettaKillExtension is rank 3's own separate, UNCAPPED bonus - killing an enemy that still
+// carries this owner's own Vendetta mark grants this many extra seconds independent of the capped
+// pool above (0 for ranks 1-2, so the check is a natural no-op until rank 3 is actually picked).
 component UncontrolledFuryExtension
 {
     FP PerKillExtension;
     FP MaxExtension;
     FP AccumulatedExtension;
+
+    Byte KillCount;
+    Byte KillsPerExtension;
+
+    FP VendettaKillExtension;
 }

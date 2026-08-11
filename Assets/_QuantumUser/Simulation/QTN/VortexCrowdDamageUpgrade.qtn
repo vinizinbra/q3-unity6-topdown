@@ -1,9 +1,9 @@
-// Granted by Heroes/Kai's VortexCrowdDamageSkillAction onto the owner, then baked as a copy of itself
-// directly onto the spawned Vortex entity by SpawnVortexEffectData - scales VortexDamageUpgrade's
-// AreaDamage, VortexRandomExplosionUpgrade's mini-blasts and VortexExplodeOnDestroy's final blast all
-// off the same live count of enemies currently caught (Vortex.CaughtCount, refreshed once per pull
-// pulse) - see VortexSystem.ResolveCrowdMultiplier. MaxCount clamps how many enemies contribute, so a
-// big pull radius against a large swarm can't blow damage numbers up unboundedly.
+// Granted by Heroes/Kai's CompressionSkillAction (rank 2+) onto the owner, then baked as a copy of
+// itself directly onto the spawned Vortex entity by SpawnVortexEffectData - scales VortexDamageUpgrade's
+// AreaDamage, VortexImplosionUpgrade's own pulses and VortexExplodeOnDestroy's final blast all off the
+// same live count of enemies currently caught (Vortex.CaughtCount, refreshed once per pull pulse) -
+// see VortexSystem.ResolveCrowdMultiplier. MaxCount clamps how many enemies contribute, so a big pull
+// radius against a large swarm can't blow damage numbers up unboundedly.
 component VortexCrowdDamageUpgrade
 {
     FP PerEnemyBonus;

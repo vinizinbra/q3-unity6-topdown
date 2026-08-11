@@ -128,9 +128,62 @@ choosing an upgrade FOR). `RollOptionsFor` resolves this once per roll, then:
   `UpgradeCardWidget` (see "View / presentation" below). `RecordHistory` excludes it from
   `UpgradeHistory`, same as `WeaponPerk` (a whole re-equipped weapon is even more visible on its own
   than a single perk).
+- **"Keep Current" decline (2026-08-07) - a separate button, not a 4th/replacement card.**
+  `RollChooseWeaponOptionsFor` always rolls the full `slots` (up to 3) distinct real weapons -
+  identical to before this feature, nothing reserved. Declining is a dedicated
+  `UpgradeWindow.keepCurrentButton`, shown only on a Choose-Weapon screen
+  (`RefreshWeaponChoice`, hidden during `Refresh`), sending a new zero-payload
+  `KeepCurrentWeaponCommand` (mirrors `RerollLevelUpOptionsCommand`'s shape). `LevelUpSystem.
+  ProcessKeepCurrentCommands` -> `LevelUpUtility.ConfirmKeepCurrent` sets a new `LevelUpChoice.
+  KeptCurrent` flag (not on `LevelUpOption` - it isn't tied to any of the 3 rolled slots) alongside
+  `Confirmed`. `Resolve` checks `KeptCurrent` before calling `GrantOption` at all, so keeping the
+  current weapon is a genuine no-op - nothing re-equipped, `WeaponTalentLevel` untouched. A 30s
+  timeout/disconnect (`AutoConfirm`) never sets `KeptCurrent` - it only ever picks a random one of
+  the 3 rolled options, same as any other category, so "keep current" is only ever reachable by an
+  explicit button click, never a fallback.
 - A `Chest` entity (see `docs/chests.md`) reuses this whole roll/grant pipeline via
   `LevelUpUtility.BeginChestScreen(f, player, forcedCategory)` - same `OpenUpgradeScreen` plumbing as
   a real level-up, just for one recipient and with the category forced rather than sequence-driven.
+
+## Reroll (2026-08-07)
+
+A player can redraw their own current `LevelUpChoice.Options` in place, spending one charge from a
+new persistent per-character stat, `CharacterStats.RerollQuantity`. **Not a Global Upgrade** -
+sourced the same way as `WeaponTalentLevel`/Choose-Weapon's own meta-progression seed: a pre-run
+talent (`RuntimePlayer.Talents.RerollQuantity`, its own `PlayerPrefInt` in `MatchMakingConfig`, key
+`"reroll_quantity"`) copied 1:1 into `CharacterStats.RerollQuantity` once at spawn
+(`PlayerSpawnUtility.Spawn`). Starts at 0 for a fresh save, same as `WeaponLevel`. Deliberately kept
+out of `TalentUtility.ApplyPerPlayerTalents`'s `Player*Level` block (`docs/talents.md`) - those are
+all 0-5 percent-scaled multipliers, and a "percent bonus" of a flat charge count doesn't mean
+anything the way it does for e.g. `MoveSpeedMultiplier`. See `docs/talents.md`'s own `RuntimePlayer`
+fields section for the full meta-progression side; this section only covers the in-match spend.
+
+Flow, mirroring `SelectLevelUpUpgradeCommand`'s shape end to end:
+
+1. **UI**: a reroll button on `UpgradeWindow` (shared by both card families - `cards`/`weaponCards` -
+   since a reroll redraws whichever is currently showing), showing the player's own live
+   `RerollQuantity` and disabled at 0 charges or once `confirmedIndex` is set (`UpdateRerollButton`,
+   called every tick from `GameplayUiController.UpdateUpgradeScreen` alongside `Refresh`/
+   `RefreshWeaponChoice`). Click raises `onRerollClicked`, forwarded into a new zero-payload
+   `RerollLevelUpOptionsCommand` (`GameplayUiController.OnRerollClicked`) - unlike a card click, this
+   does NOT mark the local slot done, since the player still has to pick (or reroll again) afterward.
+2. **Simulation**: `LevelUpSystem.ProcessRerollCommands` (mirrors `ProcessSelectCommands`'s own
+   PlayerLink lookup - a client can only ever reroll its own `LevelUpChoice`) calls
+   `LevelUpUtility.RerollOptionsFor`, which no-ops if already `Confirmed` or `RerollQuantity <= 0`,
+   otherwise calls the existing private `RollOptionsFor` again with the exact same inputs the
+   original roll used - `level` is recomputed fresh (`f.Global->Level + 1`, unchanged since the
+   screen is still paused) and `forcedCategory` is `choice->Category` when `FromChest` (a Chest's
+   category is genuinely forced and must be reused exactly) or `null` otherwise (a plain level-up
+   re-derives the same category deterministically from `LevelSequence` given the same `level`, so
+   nothing needs to be stored for that case). `RollOptionsFor` already resets
+   `Confirmed`/`SelectedIndex` and overwrites `Options` in place via `f.AddOrGet` finding the
+   existing component - a reroll needs no separate "clear" step, and dispatches to
+   `RollChooseWeaponOptionsFor` internally exactly like the original roll did, so it works
+   identically for a Choose-Weapon screen - all 3 slots redraw as real weapons. `keepCurrentButton`
+   itself is untouched by a reroll (it isn't one of the rolled `Options`, see "Keep Current" above)
+   and stays available throughout.
+3. Only the charge itself gates frequency - no per-screen reroll limit beyond however many charges
+   the player has banked, and no cooldown between rerolls within the same screen.
 
 ## Why pause via `GameplaySystemGroup`, not a hand-rolled flag
 
@@ -170,16 +223,106 @@ removed the moment `Resolve` grants it.
 
 ## Why exclude already-granted skill upgrades from a re-roll
 
-`SkillSystem.AddUpgrade` already rejects a duplicate upgrade on the same slot (logs an error, returns
-`false`) - that's existing behavior, not new. Without filtering at roll time, a later level-up could
-re-offer a card that would silently fail to grant anything if picked. `CollectPerHeroCandidates`
-checks each `DashSkillUpgrades` candidate, and `AddHeroSkillUpgradeCandidates` checks each
-`HeroSkill.Actions` candidate, against that slot's own `SkillSlot.Upgrades` (same lookup `AddUpgrade`
-itself does) before adding it as a candidate.
-`PassiveUpgrade` checks each `CharacterData.PassiveUpgrades` candidate against `PassiveUpgradePicks`
-(`PassiveUpgradeUtility.IsAlreadyPicked`) the same way - every Passive Upgrade is single-pick, unlike
-GlobalUpgrade's opt-in stacking. `WeaponPerk` similarly excludes any perk already sitting in one of
-this entity's own `Weapon.Perks` slots (`CollectWeaponPerkCandidates`/`AlreadyEquipped`).
+`SkillSystem.AddUpgrade` already rejects a duplicate grant of a non-ranked (`MaxRank == 1`) upgrade on
+the same slot (logs an error, returns `false`) - that's existing behavior, not new; a ranked action
+instead treats the re-grant as a valid rank-up (see "Ranked Ascensions" above). Without filtering at
+roll time, a later level-up could re-offer a card that would silently fail to grant anything (or
+over-rank past `MaxRank`) if picked. `CollectPerHeroCandidates` checks each `DashSkillUpgrades`
+candidate, and `AddHeroSkillUpgradeCandidates` checks each `HeroSkill.Actions` candidate, via
+`AlreadyGranted` - plain slot presence for a non-ranked action, `SkillUpgradeUtility.IsCappedOut` for
+a ranked one.
+`PassiveUpgrade` checks each `CharacterData.PassiveUpgrades` candidate against `UpgradeHistory`
+(`PassiveUpgradeUtility.IsAlreadyPicked`) the same way - a rank comparison against `MaxRank` now,
+still a pure boolean "already picked" for every non-ranked passive (`MaxRank == 1`, unchanged
+behavior), unlike GlobalUpgrade's uncapped-by-default opt-in stacking. Reuses the same display
+ledger both grant paths already populate rather than a dedicated Picks component (see
+`UpgradeHistory`'s own comment in `LevelUp.qtn` for the shared-budget tradeoff that's judged
+acceptable here, unlike Global Upgrade/Rift Mutation which each get their own). `WeaponPerk`
+similarly excludes any perk already sitting in one of this entity's own `Weapon.Perks` slots
+(`CollectWeaponPerkCandidates`/`AlreadyEquipped`).
+
+## Ranked Ascensions (multi-rank Passive Upgrade / Skill Upgrade lines)
+
+A "Hero Ascension" (the `LevelUpCategory.HeroSkill` merge of `PassiveUpgrade` + `SkillUpgrade`) can now
+define more than one rank/level - added for Pixie's Ascension rework (`docs/pixie-ascensions.md`,
+2026-08-09), but built generic from the start since every other hero's Ascension pool is expected to
+go through the same treatment. Both pools already funneled pick bookkeeping through the same
+component, `UpgradeHistory.Entries[].Count` (`LevelUp.qtn`), which `RecordHistory` above already
+increments correctly on every repeat pick for any kind - it just wasn't read back as a count before,
+only as boolean presence. That's the entire foundation; no new component was needed anywhere.
+
+- **Shared primitives**: `UpgradeHistoryUtility.GetCount(f, entity, kind, upgrade)`
+  (`Systems/Progression/`) is the one place that reads `UpgradeHistory` as a count. `IRankedUpgrade`
+  (`Assets/_QuantumUser/Simulation/Assets/`) is a tiny marker interface (`byte MaxRank`,
+  `string GetDescription(int rank)`) implemented by both `PassiveUpgradeData` and `SkillActionData`,
+  so generic tooling (the card UI below) doesn't need to know which concrete kind it's looking at.
+- **`PassiveUpgradeData`**: `MaxRank` (byte, default 1 = classic single-pick, zero change for every
+  non-ranked passive across every hero). `Apply(Frame, EntityRef)` is now `virtual` (was `abstract`)
+  with an empty body; ranked ascensions instead override `Apply(Frame, EntityRef, int rank)` (`rank`
+  is 1-based, the rank being granted by THIS pick) - `PassiveUpgradeUtility.Grant`/`GetRank`/
+  `IsAlreadyPicked` are thin wrappers over `UpgradeHistoryUtility.GetCount` now. Every override should
+  **SET** its component's fields to that rank's total tuned values, not add to whatever the previous
+  rank left - every rank's numbers are cumulative totals (e.g. "+60% damage" at rank 2 is the total,
+  not +30% stacked on rank 1's own +30%).
+- **`SkillActionData`**: same `MaxRank`/rank-aware overload pattern, but does NOT change
+  `SkillSlot.Upgrades`' shape at all - a ranked action still occupies exactly one slot entry
+  regardless of rank; `Execute` instead gained a `selfRef`-carrying overload
+  (`Execute(..., AssetRef<SkillActionData> selfRef)`, defaulting to forwarding to the original
+  parameterless-rank `Execute`) so an implementation can look up its own live rank via
+  `SkillUpgradeUtility.GetRank(f, entity, selfRef)` and branch internally - "only available at rank
+  3" is just an `if` inside `Execute`, re-evaluated fresh every activation. `SkillSystem.AddUpgrade`
+  treats a re-grant of an already-present `MaxRank > 1` action as a valid rank-up (returns `true`,
+  bumping `UpgradeHistory.Count` via the normal `GrantOption` → `RecordHistory` path) without
+  inserting a second slot entry, which would double-`Execute` per phase per tick.
+  `LevelUpUtility.AlreadyGranted` (used by both `AddSkillUpgradeCandidates`/
+  `AddHeroSkillUpgradeCandidates`) checks `SkillUpgradeUtility.IsCappedOut` instead of plain slot
+  presence once `MaxRank > 1`.
+- **Never offering rank 2 before rank 1, or past `MaxRank`**: falls out for free from both pools
+  reusing the exact same `IsAlreadyPicked`/`AlreadyGranted` exclusion check that already ran before
+  ranking existed - rank only ever increments by 1 per grant, so there's no path to skip one.
+- **Card UI**: `UpgradeCardWidget.CardData`'s existing `CurrentStacks`/`MaxStacks` readout (previously
+  only populated for a capped `GlobalUpgradeData`) is now populated generically in
+  `GameplayUiController.BuildCardData` for any `IRankedUpgrade` with `MaxRank > 1`, and the
+  description shown is `ranked.GetDescription(currentRank + 1)` - the next rank's numbers, not the
+  current ones. No new widget/prefab work.
+- **`RankDescriptions` (data, not code)**: `GetDescription(int rank)`'s default implementation on both
+  `PassiveUpgradeData`/`SkillActionData` reads a `string[] RankDescriptions` field (rank 1 = index 0,
+  `[TextArea]`-authored, editable per-rank directly in the Inspector) instead of requiring every
+  ranked class to hand-write its own override that string-interpolates the tuned numbers. Falls back
+  to the plain `Description` field if empty/unauthored/out of range - a non-ranked upgrade
+  (`MaxRank == 1`) is unaffected. A ranked class can still override `GetDescription(int rank)` directly
+  if it genuinely needs live-computed text instead of authored data, but every current Pixie/Brute
+  Ascension line just authors `RankDescriptions` in its own Editor generator now (see
+  `PixieAscensionAssetGenerator.cs`/`BruteAscensionAssetGenerator.cs`) - no hand-written override
+  remains anywhere in the roster. This was a deliberate tradeoff: authored text can't auto-stay in
+  sync with a balance-pass number change the way a computed string could, but it's editable by a
+  writer without touching C#, which is what the ranked pool's original text-generation shape didn't
+  allow. Also fixed a real bug this surfaced: `UpgradePopupWidget.cs` (the Tab-hold ascension history
+  popup) called the plain, rank-unaware `GetDescription()` with no `IRankedUpgrade` check, so every
+  ranked `SkillActionData` Ascension (which never had `Description` authored, relying entirely on the
+  rank override) showed up there with a blank description - fixed to resolve the same
+  `ranked.GetDescription(count)` way `GameplayUiController`/the debug menu already did.
+- **`IsEligible` (generic prerequisite gate, added for Max's Ascension refactor)**: both
+  `PassiveUpgradeData`/`SkillActionData` gained `public virtual bool IsEligible(Frame f, EntityRef
+  entity) => true;`, checked by `LevelUpUtility`'s candidate-collection methods (`CollectPerHeroCandidates`'s PassiveUpgrades loop, `AddSkillUpgradeCandidates`, `AddHeroSkillUpgradeCandidates`)
+  alongside the existing rank/already-picked filters. Default `true` means every pre-existing upgrade
+  across every hero is offered exactly as before - a concrete override lets an Ascension require some
+  other upgrade/tag first without a hero-specific branch anywhere in `LevelUpUtility` itself. First
+  consumer: Max's Flashpoint checks `f.Has<CanApplyBurn>(entity)` so it doesn't draft until a real
+  Burn source (Ignition/Burning Vengeance/Vendetta Strike rank 1) has actually been picked - see
+  `docs/max-ascensions.md`'s "Burn Ascension Eligibility" note. Reusable by any future hero's own
+  prerequisite-gated pick the same way.
+- **Debug grant paths** pick up ranking for free (same `Grant`/`AddUpgrade` calls) but bypass the cap
+  check exactly like they already did for single-pick upgrades - pre-existing limitation, not new.
+- **Why not a bigger unification**: `GlobalUpgradeData.MaxPicks`/`GlobalUpgradePicks` (indefinite
+  generic-stat stacking) is untouched - a different, already-working pool this rework doesn't touch.
+  `MaxRank` is intentionally duplicated as a small field + a couple of virtual methods on both
+  `PassiveUpgradeData` and `SkillActionData` rather than hoisted onto the shared `UpgradeData` base,
+  since `WeaponPerkData`/`GlobalUpgradeData` have no need for it.
+
+**This is the pattern the next hero's Ascension rework should reuse, not rediscover** - see
+`docs/pixie-ascensions.md`'s per-line breakdown for worked examples of both a ranked `PassiveUpgradeData`
+(e.g. Unstable Mixture) and a ranked `SkillActionData` (e.g. Backblast/Hot Fuse).
 
 ## Files
 
@@ -195,7 +338,8 @@ this entity's own `Weapon.Perks` slots (`CollectWeaponPerkCandidates`/`AlreadyEq
   `LevelUpUtility.GrantOption` - plus, valid only when `Kind == ChooseWeapon`:
   `AssetRef<WeaponDataAsset> WeaponData`, `array<AssetRef<WeaponPerkData>>[5] RolledPerks`,
   `Byte RolledPerkCount`), `component LevelUpChoice` (`array<LevelUpOption>[3] Options`,
-  `Byte OptionCount`, `Boolean Confirmed`, `Byte SelectedIndex`).
+  `Byte OptionCount`, `Boolean Confirmed`, `Byte SelectedIndex`, plus **new** `Boolean KeptCurrent`
+  - see "Keep Current" above).
 - `Experience.qtn` - **edited**, two new global fields: `Boolean LevelUpScreenOpen`,
   `FP LevelUpTimeRemaining`.
 - `CharacterStats.qtn` - **edited**, one new field: `Byte WeaponTalentLevel` (see "Category
@@ -272,10 +416,12 @@ this entity's own `Weapon.Perks` slots (`CollectWeaponPerkCandidates`/`AlreadyEq
   a flat "everything this entity has ever picked" ledger covering Skill Upgrade/Global Upgrade/
   Passive Upgrade/Rift Mutation, purely for display (see "Upgrade history / party HUD icons"
   below). Independent of each covered kind's own gameplay-facing tracking (`SkillSlot.Upgrades`,
-  `GlobalUpgradePicks`, `RiftMutationPicks`, `PassiveUpgradePicks`) - none are kind-agnostic enough
-  for a single icon row. **Further edited**: new `component PassiveUpgradePicks`
-  (`array<AssetRef<PassiveUpgradeData>>[32] Picked`) - same "has this already been granted" shape as
-  `RiftMutationPicks`, read by `PassiveUpgradeUtility.IsAlreadyPicked`/written by its `RecordPick`.
+  `GlobalUpgradePicks`, `RiftMutationPicks`) for Skill/Global/Rift - **Passive Upgrade is the one
+  exception**: it has no dedicated Picks component of its own and reads this same display ledger
+  back for its "already granted" gameplay check (`PassiveUpgradeUtility.IsAlreadyPicked`, filtered
+  to `Kind == PassiveUpgrade`) instead, on the judgment call that Passive Upgrade's small per-hero
+  catalog won't realistically exhaust the shared 32-slot budget across one run - see this
+  component's own comment in `LevelUp.qtn`.
 - `LevelUpUtility.cs` - **edited**: `GrantOption` now calls a new `public static RecordHistory` at the
   top (before the per-kind switch), find-or-add-slot into `UpgradeHistory` keyed by `AssetRef<UpgradeData>`
   equality alone (a repeat pick of the same asset bumps `Count` rather than adding a duplicate
@@ -511,6 +657,20 @@ single window, and the scene has one wired (`upgradeWindows[0]`).
 2. ~~`GlobalUpgrades` empty~~ - done, 21 entries.
 3. ~~`UpgradeWindow` scene/prefab wiring~~ - done; `GameplayUiController.upgradeWindows[0]` assigned
    in `QuantumGameScene`.
+5. **Reroll (2026-08-07) - code compiles, not yet Editor-authored.** No asset authoring needed (it's
+   a code-level `RuntimePlayer`/`CharacterStats` field, not a pickable asset) - but
+   `UpgradeWindow`'s new `rerollButton`/`rerollChargesText` `SerializeField`s are unassigned on the
+   scene prefab, so the button won't appear/do anything until a Button + TMP_Text are added under
+   the prefab hierarchy and wired in the Inspector. Also, nothing in this codebase currently *writes*
+   to the new `"reroll_quantity"` PlayerPref (same pre-existing gap `WeaponTalentLevelPref`/
+   `TalentsPref` already have - see `docs/talents.md`'s own "Editor authoring needed" section), so
+   every player starts every match with 0 reroll charges until some settings/meta-progression screen
+   writes to it. See "Reroll" above.
+6. **Keep Current (2026-08-07) - code compiles, not yet Editor-authored.** Same gap as `rerollButton`
+   above - `UpgradeWindow.keepCurrentButton` is unassigned on the scene prefab, no Button exists
+   under the hierarchy for it yet. Unlike Reroll, no PlayerPref/meta-progression gap here - Keep
+   Current has no cost or charge, it's always available on a Choose-Weapon screen once the button
+   itself is wired.
 4. **Manual end-to-end test still not confirmed run** - the recipe below hasn't been verified
    in-Editor yet as far as this doc knows: force a level-up (temporarily shrink
    `ExperienceConfig.RequiredExperience`'s first keyframe, or grant a large `TotalExperience` via a
@@ -544,7 +704,7 @@ in sync with the skill asset it upgrades. Authoring status per hero not audited 
   scene, same "needs Editor authoring before it shows anything" gap as `UpgradeCardWidget` itself.
 - `LevelUpCategory.ChooseWeapon` has no placed Chest instance yet either - see `docs/chests.md`'s own
   authoring checklist for the "Weapon Chest" gap specifically.
-- **`WeaponTalentLevel` meta-progression is now split across two layers**: `RuntimePlayer.WeaponLevel`
+- **`WeaponTalentLevel` meta-progression is now split across two layers**: `RuntimePlayer.Talents.WeaponLevel`
   (`Assets/_QuantumUser/Simulation/Default/RuntimePlayer.User.cs`) is the durable, outside-this-match
   value - `MatchMakingConfig.StartRunner` reads it from a local `PlayerPrefInt("weapon_talent_level")`
   right before `AddPlayer`, and `PlayerSpawnUtility.Spawn` copies it onto the freshly-created
@@ -567,18 +727,21 @@ Beyond the missing assets/wiring:
 - **Both Passive Upgrade and Global Upgrade grant a real `Apply(Frame, EntityRef)`** now (dispatched
   via `PassiveUpgradeUtility.Grant`/`GlobalUpgradeUtility.Grant` - see `docs/global-upgrades.md` for
   Global Upgrade's own roster). `UpgradeHistory` (see "Upgrade history / party HUD icons" above) also
-  records every pick across all 5 kinds, but it's write-only for display - it's `PassiveUpgradePicks`/
-  `GlobalUpgradePicks` (not `UpgradeHistory`) that candidate filtering actually reads back.
+  records every pick across all 5 kinds; `GlobalUpgrade` still reads its own dedicated
+  `GlobalUpgradePicks` back for candidate filtering, but `PassiveUpgrade` now reads `UpgradeHistory`
+  itself (see the dedup bullet below) rather than getting its own Picks component.
 - **Multiple levels from one `Grant` call collapse into one screen** - if a single big exp grant
   crosses more than one level threshold in the same `while` loop, the player still only sees
   `ChoiceCount` (3) options total, not `3 × levelsGained`. Chosen deliberately over queuing multiple
   sequential screens, which would be a confusing wait for a co-op-wide pause.
 - **`PassiveUpgrade`/`GlobalUpgrade`/`WeaponPerk` candidates are now deduplicated against past picks**,
-  same as `SkillUpgrade`/`RiftMutation` always were - `PassiveUpgrade` via `PassiveUpgradePicks`
-  (single-pick, mirrors `RiftMutationPicks`), `GlobalUpgrade` via `GlobalUpgradePicks`/`MaxPicks`
-  (opt-in stacking, most upgrades leave `MaxPicks` at 0 and stack indefinitely), `WeaponPerk` via a
-  direct check against the entity's own live `Weapon.Perks` (no separate ledger needed - the weapon
-  component already IS the "what does this entity currently have" source of truth).
+  same as `SkillUpgrade`/`RiftMutation` always were - `PassiveUpgrade` via `UpgradeHistory`
+  (single-pick, filtered to `Kind == PassiveUpgrade`; judged safe to share that ledger's 32-slot
+  budget rather than get its own dedicated Picks component - see `UpgradeHistory`'s own comment in
+  `LevelUp.qtn`), `GlobalUpgrade` via `GlobalUpgradePicks`/`MaxPicks` (opt-in stacking, most upgrades
+  leave `MaxPicks` at 0 and stack indefinitely), `WeaponPerk` via a direct check against the entity's
+  own live `Weapon.Perks` (no separate ledger needed - the weapon component already IS the "what
+  does this entity currently have" source of truth).
 - **No revert path for Weapon Perk / Passive Upgrade / Global Upgrade** - each bakes its effect
   directly into a live component field at grant time (`WeaponPerkData`/`PassiveUpgradeData`/
   `GlobalUpgradeData`'s own `Apply`), with no per-grant ledger to undo from and, in several cases, a

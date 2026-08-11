@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 61714b3fa86004e5587717e107a07607, type: 3}
+  m_Name: CharacterCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterCatalog
+  characters:
+  - id: Max
+    displayName: Max
+    avatar:
+      Id:
+        Value: 1427283638148129588
+  - id: Brute
+    displayName: Brute
+    avatar:
+      Id:
+        Value: 1376154637061154524
+  - id: Pixie
+    displayName: Pixie
+    avatar:
+      Id:
+        Value: 1271619087951089254
+  - id: Kai
+    displayName: Kai
+    avatar:
+      Id:
+        Value: 1472908484413352043
+  - id: Zara
+    displayName: Zara
+    avatar:
+      Id:
+        Value: 1324160128536901815
+  - id: Lux
+    displayName: Lux
+    avatar:
+      Id:
+        Value: 1358955562811382291

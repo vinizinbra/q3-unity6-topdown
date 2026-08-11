@@ -139,12 +139,12 @@ TextureImporter:
       name: PixieSkills_0
       rect:
         serializedVersion: 2
-        x: 107
-        y: 511
-        width: 412
-        height: 500
+        x: 116
+        y: 497
+        width: 394
+        height: 453
       alignment: 9
-      pivot: {x: 0.50439364, y: 0.37265953}
+      pivot: {x: 0.5311675, y: 0.29614568}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []

@@ -1,0 +1,75 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1435cbe50211416ab7ccb6a86762f3b, type: 3}
+  m_Name: RunAndGunSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.RunAndGunSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Max/Max_DashSkillUpgrades/RunAndGunSkillAction
+    Guid:
+      Value: 377700293714812557
+  Icon: {fileID: 0}
+  DisplayName: Run & Gun
+  Rarity: 1
+  RankDescriptions:
+  - Dashing restores 50% of your magazine and grants +20% Fire Rate for 2s.
+  - Dashing fully reloads your magazine, grants +30% Fire Rate for 2s, and +15% Weapon
+    Damage for 2s.
+  - Dashing fully reloads your magazine, grants +40% Fire Rate for 2s, +15% Weapon
+    Damage for 2s, and 2s of unlimited ammo.
+  <MaxRank>k__BackingField: 3
+  Priority: 0
+  Phase: 4
+  Interval:
+    RawValue: 0
+  Activated: 1
+  Description: Dashing restores ammo and grants a brief Fire Rate window - eventually
+    adding bonus Weapon Damage and a window of unlimited ammo.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  AmmoRestoreFraction:
+  - RawValue: 32768
+  - RawValue: 65536
+  - RawValue: 65536
+  FireRateBonus:
+  - RawValue: 78643
+  - RawValue: 85197
+  - RawValue: 91750
+  HasteDuration:
+    RawValue: 131072
+  WeaponDamageBonusDuration:
+    RawValue: 131072
+  WeaponDamageBonus:
+    RawValue: 9830
+  NoAmmoConsumptionDuration:
+    RawValue: 131072

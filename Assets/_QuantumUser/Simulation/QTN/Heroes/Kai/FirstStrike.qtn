@@ -1,0 +1,27 @@
+// Kai's First Strike Ascension (Passive line 3/3) - see docs/kai-ascensions.md. Bonus damage on a
+// target's first-ever hit from an owner holding this upgrade, read live in
+// DamageUtility.ResolveOutgoingDamage - gated on the OWNER holding this trait (not "has anyone ever
+// hit this enemy"), so another hero's shot landing first in co-op doesn't silently deny Kai his own
+// bonus.
+component FirstStrikeUpgrade
+{
+    FP DamageMultiplierBonus;
+
+    // Rank 3 "Perfect Opening" only - 0 at ranks 1-2 (the mark then never ticks/expires, "never
+    // removed" preserved exactly). At 5 (rank 3), a mark left untouched for this long is freed by
+    // FirstStrikeMarkTimeoutSystem, letting the bonus re-trigger on the same enemy.
+    FP RefreshWindow;
+}
+
+// Lives on the TARGET, replacing the old bare KaiFirstStruck tag - same RevengeMark-shaped pattern
+// (see Heroes/Max/Vendetta.qtn) so this can genuinely track WHICH Kai most recently claimed the mark,
+// not just "has this enemy ever been hit." A second Kai's hit reclaims the mark (MarkedBy overwritten)
+// rather than tracking both simultaneously - matches RevengeMark's own precedent.
+component FirstStrikeMark
+{
+    EntityRef MarkedBy;
+
+    // 0 = permanent mark (rank 1-2 behavior, "never removed" - FirstStrikeMarkTimeoutSystem ignores
+    // it). >0 = counts down (rank 3's 5s refresh window); freed at 0.
+    FP RemainingGrace;
+}

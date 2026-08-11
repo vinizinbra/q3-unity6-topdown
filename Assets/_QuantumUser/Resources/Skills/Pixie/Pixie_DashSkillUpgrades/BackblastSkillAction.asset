@@ -1,0 +1,72 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d0147a8bea0d41199fb19f812e4d15a, type: 3}
+  m_Name: BackblastSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.BackblastSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Pixie/Pixie_DashSkillUpgrades/BackblastSkillAction
+    Guid:
+      Value: 340599251920562766
+  Icon: {fileID: 1133475158, guid: b217254d41b6945b1873986186a25786, type: 3}
+  DisplayName: Backblast
+  Rarity: 1
+  RankDescriptions:
+  - When Pixie dashes, she drops a bomb at the dash starting position - it explodes
+    after a short fuse for 50% of Bunny Bomb damage.
+  - Drop a bomb at both the start and end of the dash - each explodes after a short
+    fuse for 50% of Bunny Bomb damage.
+  - Drop a bomb at both the start and end of the dash - each explodes after a short
+    fuse for 75% of Bunny Bomb damage, and enemies hit are marked for Chain Reaction.
+  <MaxRank>k__BackingField: 3
+  Priority: 0
+  Phase: 5
+  Interval:
+    RawValue: 0
+  Activated: 1
+  Description: When Pixie dashes, she drops a bomb that explodes after a short fuse
+    for a percentage of Bunny Bomb damage.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 4
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  BombPrototype:
+    Id:
+      Value: 1349088406501725067
+  Explosion:
+    Id:
+      Value: 280410021018812087
+  Fuse:
+    RawValue: 65536
+  DamagePercent:
+  - RawValue: 32768
+  - RawValue: 32768
+  - RawValue: 49152

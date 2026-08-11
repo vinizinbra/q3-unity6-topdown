@@ -24,7 +24,7 @@ namespace Quantum
                 mark->Stacks++;
 
                 // Defensive seed for a brand-new component - BonusRadiusMultiplier/
-                // BonusDamageMultiplier/HeavyPayloadMultiplier all default to 0 on a fresh AddOrGet,
+                // BonusDamageMultiplier/TierRadiusMultiplier all default to 0 on a fresh AddOrGet,
                 // which would otherwise zero out TryExplodeOnDeath's own blastRadius/damage
                 // computation (see DamageUtility.TryExplodeOnDeath) the very first time Max's own
                 // Berserk grants this - he never goes through Pixie's ChainReactionPassiveData.Apply,
@@ -32,7 +32,7 @@ namespace Quantum
                 // here are always already >0 by the time any skill of hers could run.
                 if (mark->BonusRadiusMultiplier <= FP._0) mark->BonusRadiusMultiplier = FP._1;
                 if (mark->BonusDamageMultiplier <= FP._0) mark->BonusDamageMultiplier = FP._1;
-                if (mark->HeavyPayloadMultiplier <= FP._0) mark->HeavyPayloadMultiplier = FP._1;
+                if (mark->TierRadiusMultiplier <= FP._0) mark->TierRadiusMultiplier = FP._1;
             }
             // Guarded against underflow - Stacks is an unsigned Byte, so a spurious End with no
             // matching Begin (should no longer be reachable now that SkillSystem.AddUpgrade rejects

@@ -1,7 +1,0 @@
-// Granted/revoked by an upgrade (e.g. Heroes/Pixie/BombRadiusUpSkillAction) - AreaHitData.Detonate
-// adds RadiusBonus onto its authored Radius for whoever holds this. No Stacks: overlapping grants
-// aren't expected today, same assumption RageOverdrive/InstantReloadOverdrive make.
-component BlastRadiusUpgrade
-{
-    FP RadiusBonus;
-}

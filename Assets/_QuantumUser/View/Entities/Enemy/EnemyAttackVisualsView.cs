@@ -120,7 +120,8 @@ namespace Quantum
             if (delivery.HitImpactPrefab == null)
                 return;
 
-            EffectsManager.Instance.PlayEffect(delivery.HitImpactPrefab, e.Position.ToUnityVector3(), Quaternion.identity);
+            Vector3 worldPosition = e.Position.ToUnityVector3() + delivery.HitImpactOffset;
+            EffectsManager.Instance.PlayEffect(delivery.HitImpactPrefab, worldPosition, Quaternion.identity);
         }
 
         protected override void QUpdate(QuantumGame game)
@@ -167,6 +168,13 @@ namespace Quantum
 
             bool enteredAnticipating = isWindingUp == true && wasWindingUp == false;
 
+            // Fires exactly once, on whichever tick windup actually ends - covers both the normal
+            // path (windup -> Begin, the shot fires) AND every interrupted path (the enemy dies or
+            // its target is lost mid-windup, skipping Begin entirely) in one edge, rather than only
+            // stopping PlayPreShoot's particle alongside Fire() and leaking it forever whenever an
+            // attack gets cut short instead of actually firing.
+            bool exitedAnticipating = wasWindingUp == true && isWindingUp == false;
+
             // Includes Dead alongside Recovery/Active - a delivery can kill its own enemy while
             // resolving (e.g. GroundAreaDeliveryData.SelfDestructs), which skips Recovery/Active
             // entirely (Begin() sets Phase = Dead directly, and EnemySystem.EnterRecovering
@@ -192,7 +200,15 @@ namespace Quantum
             bool projectileDestroyed = firedEnd == true && enemy.SkillProjectile != EntityRef.None && frame.Exists(enemy.SkillProjectile) == false;
 
             if (enteredAnticipating == true)
+            {
                 PlayPhase(frame, enemy, enemyData, actionData.AnticipationStep, telegraph, actionData.IgnoreY, actionData.DamageRange.AsFloat, actionData.Origin == EnemyActionOrigin.Self, AttackPhase.Anticipation);
+
+                if (armAimView != null)
+                    armAimView.PlayPreShoot();
+            }
+
+            if (exitedAnticipating == true && armAimView != null)
+                armAimView.StopPreShoot();
 
             if (firedBegin == true)
             {
@@ -363,12 +379,29 @@ namespace Quantum
                 GameObject instance = Instantiate(step.ParticlePrefab.gameObject, parent);
                 instance.transform.SetLocalPositionAndRotation(step.Offset, rotation);
                 instance.transform.localScale = scale;
+                ApplySortingOrderOverride(instance, step);
                 _currentParentedParticle = instance;
                 return;
             }
 
             if (EffectsManager.Instance != null)
-                EffectsManager.Instance.PlayEffect(step.ParticlePrefab, worldPosition, rotation, scale);
+            {
+                int? sortingOrder = step.OverrideSortingOrder == true ? step.SortingOrder : (int?)null;
+                EffectsManager.Instance.PlayEffect(step.ParticlePrefab, worldPosition, rotation, scale, sortingOrder);
+            }
+        }
+
+        // Covers the root's own ParticleSystemRenderer AND every child's (GetComponentsInChildren
+        // includes inactive ones so a child that starts disabled still gets the override) - a
+        // multi-emitter prefab (e.g. a burst plus a trailing ring on a child GameObject) needs every
+        // sub-emitter forced to the same sorting order, not just the one on the root.
+        private static void ApplySortingOrderOverride(GameObject instance, AttackVisualStep step)
+        {
+            if (step.OverrideSortingOrder == false)
+                return;
+
+            foreach (var renderer in instance.GetComponentsInChildren<ParticleSystemRenderer>(true))
+                renderer.sortingOrder = step.SortingOrder;
         }
 
         // Same flat-direction formula as EnemyArmAimView.ResolveDefaultAimDirection's own Aim.Angle

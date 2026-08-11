@@ -1,14 +1,30 @@
-// Dash Ascension (Afterbeat) - added by AfterbeatSkillAction.Begin when Zara's dash starts, ticked
-// down by ZaraAfterbeatSystem. Stores the delayed pulse's own position/damage/radius directly on
-// Zara's own entity rather than spawning a separate marker entity - simpler than the other heroes'
-// "needs a standalone EntityPrototype authored by hand" dash ascensions (Kai's SlowArea, Lux's
-// Decoy Beacon, Brute's Barricade, Pixie's Bombs Away), since this needs no physical/visual
-// representation of its own, just a countdown. A second dash before the first Afterbeat fires
-// simply overwrites the pending one - only the most recent dash's Afterbeat ever lands.
+// Dash Ascension (Afterbeat, ranked) - added by AfterbeatSkillAction.Begin/End when Zara's dash
+// starts/ends, ticked down by ZaraAfterbeatSystem. Stores both delayed pulses' own position/damage/
+// radius/knockback directly on Zara's own entity rather than spawning marker entities - simpler than
+// the other heroes' "needs a standalone EntityPrototype authored by hand" dash ascensions (Kai's
+// SlowArea, Lux's Decoy Beacon, Brute's Barricade, Pixie's Bombs Away), since this needs no physical/
+// visual representation of its own, just two independent countdowns. Two named slots (Start/End)
+// rather than an array - rank 3 "Double Beat" needs exactly Start (from Begin) and End (from End)
+// live at once, never more, and a second dash before either fires simply overwrites the pending one
+// (only the most recent dash's own pulses ever land).
 component ZaraAfterbeat
 {
-    FP Remaining;
-    FPVector3 Position;
-    FP Damage;
-    FP Radius;
+    FP StartRemaining;
+    FPVector3 StartPosition;
+    FP StartDamage;
+    FP StartRadius;
+    FP StartKnockbackForce;
+
+    FP EndRemaining;
+    FPVector3 EndPosition;
+    FP EndDamage;
+    FP EndRadius;
+    FP EndKnockbackForce;
+
+    // Rank 3 "Double Beat" - enemies hit by either pulse generate extra Resonance, capped per dash
+    // (see ZaraAfterbeatSystem.Fire). 0 ResonancePerEnemyHit (rank<3/unpicked) grants nothing beyond
+    // the flat on-dash Resonance every rank already grants (see AfterbeatSkillAction).
+    FP ResonancePerEnemyHit;
+    FP MaxResonancePerDash;
+    FP ResonanceGrantedThisDash;
 }

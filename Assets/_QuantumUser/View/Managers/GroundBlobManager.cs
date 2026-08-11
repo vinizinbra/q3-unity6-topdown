@@ -49,14 +49,17 @@ namespace QuantumUser.View.Managers
             Prewarm(prewarmCount);
         }
 
-        public GroundBlobHandle AcquireShadow(Transform target, float baseScale)
+        // offset is a per-owner world X/Z nudge stacked on top of config.ShadowOffset - e.g. to slide
+        // a shadow under a character whose sprite pivot sits off to one side, when the global offset
+        // can't correct just that one character. Defaults to zero, so existing callers are unchanged.
+        public GroundBlobHandle AcquireShadow(Transform target, float baseScale, Vector2 offset = default)
         {
-            return Acquire(target, baseScale, config != null ? config.ShadowColor : Color.black, isLight: false);
+            return Acquire(target, baseScale, config != null ? config.ShadowColor : Color.black, isLight: false, offset);
         }
 
         public GroundBlobHandle AcquireLight(Transform target, float baseScale, Color color)
         {
-            return Acquire(target, baseScale, color, isLight: true);
+            return Acquire(target, baseScale, color, isLight: true, offset: default);
         }
 
         public void Release(GroundBlobHandle handle)
@@ -67,7 +70,7 @@ namespace QuantumUser.View.Managers
             pool.Release(handle.GameObject);
         }
 
-        private GroundBlobHandle Acquire(Transform target, float baseScale, Color tint, bool isLight)
+        private GroundBlobHandle Acquire(Transform target, float baseScale, Color tint, bool isLight, Vector2 offset)
         {
             if (blobPrefab == null) return null;
 
@@ -86,7 +89,8 @@ namespace QuantumUser.View.Managers
                 Renderer = renderer,
                 Target = target,
                 BaseScale = baseScale,
-                IsLight = isLight
+                IsLight = isLight,
+                Offset = offset
             };
             active.Add(handle);
             return handle;
@@ -108,14 +112,21 @@ namespace QuantumUser.View.Managers
             blob.Renderer.enabled = hasGround;
             if (!hasGround) return; // e.g. falling past the edge of the level - no floor to project onto
 
-            Vector3 offset = new Vector3(config.ShadowOffset.x, config.GroundOffset, config.ShadowOffset.y);
+            Vector3 offset = new Vector3(config.ShadowOffset.x + blob.Offset.x, config.GroundOffset, config.ShadowOffset.y + blob.Offset.y);
             blob.GameObject.transform.SetPositionAndRotation(hit.point + offset, FlatRotation);
 
             float height = Mathf.Max(0f, blob.Target.position.y - hit.point.y);
             float t = config.MaxHeightForFalloff > 0f ? Mathf.Clamp01(height / config.MaxHeightForFalloff) : 0f;
             float falloff = config.HeightFalloffCurve.Evaluate(t); // 1 = full size/alpha at ground, eases toward 0 with height
 
-            float scale = blob.BaseScale * Mathf.Lerp(config.MinScaleMultiplier, 1f, falloff);
+            // BaseScale alone only tracks the target's Quantum-side footprint (radius) - it never
+            // reflects any scale the target's own Transform ends up with (e.g. a future visual
+            // size-variance/boss-scale feature), so lossyScale.x is folded in too (uniform-scale
+            // assumption - same convention EnemyAllyLinkView/TelegraphGrow already use). Shadow-only
+            // ShadowScaleMultiplier is a global balance knob on top of that, skipped for lights.
+            float lossyScale = blob.Target.lossyScale.x;
+            float shadowMultiplier = blob.IsLight ? 1f : config.ShadowScaleMultiplier;
+            float scale = blob.BaseScale * lossyScale * shadowMultiplier * Mathf.Lerp(config.MinScaleMultiplier, 1f, falloff);
             blob.GameObject.transform.localScale = new Vector3(scale, scale, scale);
 
             float maxAlpha = blob.IsLight ? config.LightAlpha : config.GroundAlpha;
@@ -143,5 +154,6 @@ namespace QuantumUser.View.Managers
         internal Transform Target;
         internal float BaseScale;
         internal bool IsLight;
+        internal Vector2 Offset;
     }
 }

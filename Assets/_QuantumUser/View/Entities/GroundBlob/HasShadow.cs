@@ -12,12 +12,22 @@ namespace Quantum
         [SerializeField, Tooltip("Shadow size at ground level, before GroundBlobManager's height falloff is applied.")]
         private float baseScale = 1f;
 
+        [SerializeField, Tooltip("Per-character world X/Z nudge for this shadow, stacked on top of GroundBlobConfig's global ShadowOffset. Use it to slide the blob under a sprite whose feet/pivot sit off-center, when only this one character needs correcting. Leave at zero for centered sprites.")]
+        private Vector2 shadowOffset = Vector2.zero;
+
         private GroundBlobHandle handle;
+
+        // Read by EnemyBlobAnimationView.ApplyPose to rescale the shadow by the same shrinkMult
+        // (Die's _dieShrinkT / Burrow's _burrowT) already applied to the sprite itself - the
+        // ground blob (GroundBlobManager.UpdateBlob) sizes purely off BaseScale * height falloff,
+        // never off the target transform's own live scale, so without this the shadow would sit at
+        // full size while the sprite shrinks to nothing during a death/burrow animation.
+        public float BaseScale => baseScale;
 
         private void OnEnable()
         {
             if (GroundBlobManager.Instance != null)
-                handle = GroundBlobManager.Instance.AcquireShadow(transform, baseScale);
+                handle = GroundBlobManager.Instance.AcquireShadow(transform, baseScale, shadowOffset);
         }
 
         private void OnDisable()
@@ -39,6 +49,19 @@ namespace Quantum
 
             if (handle != null)
                 handle.BaseScale = scale;
+        }
+
+        // Catches a manual edit of baseScale in the Inspector while playing - the Inspector writes
+        // straight to the serialized field, bypassing SetBaseScale, so without this the live handle
+        // (already snapshotted into GroundBlobManager's pool) would keep whatever value it had at
+        // OnEnable/last SetBaseScale call until the shadow was released and reacquired.
+        private void OnValidate()
+        {
+            if (handle != null)
+            {
+                handle.BaseScale = baseScale;
+                handle.Offset = shadowOffset;
+            }
         }
     }
 }

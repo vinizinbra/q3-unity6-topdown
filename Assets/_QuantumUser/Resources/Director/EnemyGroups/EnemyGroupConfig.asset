@@ -19,7 +19,7 @@ MonoBehaviour:
   Members:
   - EnemyData:
       Id:
-        Value: 368882078469044815
+        Value: 375525024859964486
     Quantity: 1
   Weight:
     RawValue: 65536
@@ -27,8 +27,8 @@ MonoBehaviour:
     RawValue: 0
   MaximumSurvivalTime:
     RawValue: 39321600
-  MaxConcurrent: 200
+  MaxConcurrent: 3
   SpawnPattern: 0
   FormationRadius:
     RawValue: 196608
-  AllowsPartialSpawn: 0
+  AllowsPartialSpawn: 1

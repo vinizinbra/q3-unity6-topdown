@@ -1,20 +1,20 @@
-// Baked onto an enemy by JuggernautSkillData.Discharge (see JuggernautLandingImpactUpgrade and
-// JuggernautLandingRootUpgrade) the moment it's successfully launched - JuggernautLandingImpactSystem
-// watches for this entity to touch ground or a wall again (EnemyMovementUtility.IsGrounded/
-// IsBlockedByWall), then deals Damage, rolls StunChance for StunDuration and/or RootChance for
-// RootDuration (whichever upgrade(s) were baked - independent of each other, both optional), and
-// removes this component. GroundCheckDelay is a short grace period before the first check even runs,
-// so the system can't ever fire immediately off the same-tick position the knockback impulse hasn't
-// been integrated into yet.
+// Baked onto an enemy by JuggernautSkillData.Discharge when the Concussive Impact Ascension is
+// equipped, the moment it's successfully launched - JuggernautLandingImpactSystem watches for this
+// entity to touch ground or a wall again (EnemyMovementUtility.IsGrounded/IsBlockedByWall), then deals
+// Damage, applies StunDuration (StunChance is always 1 - Concussive Impact's landing stun is
+// unconditional, not a roll), and - rank 3 only, ShockwaveRadius > 0 - a further radial
+// damage+stun pulse via BruteAscensionUtility.ApplyRadialStunDamage, before removing this component.
+// GroundCheckDelay is a short grace period before the first check even runs, so the system can't ever
+// fire immediately off the same-tick position the knockback impulse hasn't been integrated into yet.
 component JuggernautLaunched
 {
     EntityRef Owner;
     FP Damage;
     FP StunChance;
     FP StunDuration;
-    FP RootDamage;
-    FP RootChance;
-    FP RootDuration;
+    FP ShockwaveRadius;
+    FP ShockwaveDamagePercent;
+    FP ShockwaveStunDuration;
     FP GroundCheckDelay;
-    AssetRef<JuggernautLandingImpactSkillAction> Source;
+    AssetRef<ConcussiveImpactSkillAction> Source;
 }

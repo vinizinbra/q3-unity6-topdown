@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 922d8a37e86e34f6dbd871a6166d72ce, type: 3}
+  m_Name: CompressionSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.CompressionSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Kai/Kai_HeroSkill/Kai_HeroSkillUpgrades/CompressionSkillAction
+    Guid:
+      Value: 383027106168017771
+  Icon: {fileID: 0}
+  DisplayName: Compression
+  Rarity: 1
+  RankDescriptions:
+  - Vortex damages trapped enemies every 0.5s.
+  - Vortex deals 8% more damage for each additional trapped enemy, up to +56%.
+  - Every third Vortex pulse creates a powerful implosion at its core.
+  <MaxRank>k__BackingField: 3
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 0
+  Description: Vortex damages trapped enemies, scaling up with how many are caught
+    at once.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  PulseDamagePercent:
+    RawValue: 13107
+  PulseTickInterval:
+    RawValue: 32768
+  DamageEffect:
+    Id:
+      Value: 280329904200879658
+  CrowdPerEnemyBonus:
+  - RawValue: 0
+  - RawValue: 5243
+  - RawValue: 5243
+  CrowdMaxCount: 000808
+  ImplosionDamagePercent:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 49152
+  ImplosionEveryNthPulse: 000003
+  ImplosionRadiusFraction:
+    RawValue: 32768
+  BlastEffectPrefab: {fileID: 6350743763286976369, guid: 3c8a89bd438a4415c853189dd54add06, type: 3}

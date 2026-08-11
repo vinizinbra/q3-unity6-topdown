@@ -90,7 +90,7 @@ a parallel do-nothing `CharacterStats` field.
 | Skill Damage | `SkillDamageUpgradeData` | `CharacterStats.SkillDamageMultiplier` | ✅ |
 | Skill Cooldown | `SkillCooldownUpgradeData` | `CharacterStats.SkillCooldownMultiplier` (new field, HeroSkill's independent half of the old shared `CooldownMultiplier`) | ✅ |
 | Skill Duration | `SkillDurationUpgradeData` | `CharacterStats.SkillDurationMultiplier` | ✅ |
-| Skill Area | `SkillAreaUpgradeData` | `CharacterStats.AreaRadiusMultiplier` (now wired into `HitPathSkillAction`/`SpawnEntitySkillAction` via `StatUtility.GetAreaMultiplier`, stacking with `SkillSlot.AreaMultiplier`) | ✅ |
+| Skill Area | `SkillAreaUpgradeData` | `CharacterStats.AreaRadiusMultiplier` (wired into `HitPathSkillAction`/`SpawnEntitySkillAction` via `StatUtility.GetAreaMultiplier`, stacking with `SkillSlot.AreaMultiplier`; also folded into `AreaHitData.Detonate`/`ExplodeOnDestroyUtility.ResolveBlastRadius`'s own radius calc, so a thrown bomb like Bunny Bomb scales too, alongside `BlastRadiusUpgrade`/Bigger Boom) | ✅ |
 | Hero Skill Charge | `HeroSkillChargeUpgradeData` | `CharacterSkills.HeroSkill.MaxStacks`/`CurrentStacks` (+1, usable immediately - same shape as Dash Charge) | ✅ |
 
 ### Economy

@@ -1,0 +1,21 @@
+enum SharedTalentRequirement : Byte
+{
+    None,               // unconditional - always satisfied
+    WeaponChest,
+    HeroChest,
+    GlobalUpgradeChest,
+    UnlockedRift,       // scaffolded - Global.SharedHasUnlockedRift is never set true yet
+    FindStones,         // scaffolded - Global.SharedCanFindStones is never set true yet
+    Event               // scaffolded - Global.SharedHasEvent is never set true yet
+}
+
+global
+{
+    Boolean TalentsResolved;
+    Boolean SharedHasWeaponChest;
+    Boolean SharedHasHeroChest;
+    Boolean SharedHasGlobalUpgradeChest;
+    Boolean SharedHasUnlockedRift;      // scaffolded only - not yet consumed anywhere
+    Boolean SharedCanFindStones;        // scaffolded only - not yet consumed anywhere
+    Boolean SharedHasEvent;             // scaffolded only - not yet consumed anywhere
+}

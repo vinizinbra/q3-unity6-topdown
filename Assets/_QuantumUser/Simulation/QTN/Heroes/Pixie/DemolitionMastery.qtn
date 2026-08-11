@@ -1,57 +1,44 @@
-// Pixie's "Demolition Mastery" Hero Traits - a themed batch of 4 ordinary Passive Upgrades (Direct
-// Hit/Concussive Force/Volatile Payload/Mini Ordnance), all reacting to ANY of Pixie's explosions
-// (Bunny Bomb, dash bombs, explosive weapons) rather than one specific mechanic - see
-// DemolitionMasteryUtility.cs/PixieDemolitionMasterySystem.cs and the new
-// OnExplosionCriticalHit/OnAreaExplosionDetonated signals in Combat.qtn.
+// Two of Pixie's Ascension lines that react to ANY of her explosions (Bunny Bomb, dash bombs,
+// explosive weapons) rather than one specific mechanic - see DemolitionMasteryUtility.cs/
+// PixieDemolitionMasterySystem.cs and the OnExplosionCriticalHit/OnAreaExplosionDetonated signals in
+// Combat.qtn. Concussive Force and Volatile Payload (the other two traits this batch used to hold)
+// were removed - Concussive Force's knockback was folded into Direct Hit's own rank 3 (see
+// DirectHitUpgrade below); Volatile Payload was dropped entirely, not merged anywhere.
 //
-// Mini Ordnance is deliberately NOT named/shaped like ClusterBombUpgrade (see Heroes/Pixie/
+// Pocket Bombs is deliberately NOT named/shaped like ClusterBombUpgrade (see Heroes/Pixie/
 // ClusterBombSkillAction.cs) - that's a different, pre-existing Hero Skill Upgrade (deterministic
 // Projectile-based bomblet count from Bunny Bomb specifically) and must not be confused with or
 // touched by this trait, which is a chance-based Mini Bomb drop from any qualifying explosion.
 
-// Direct Hit - a binary "inner zone" bonus: within InnerRadiusFraction of an explosion's own
-// radius, damage is multiplied by 1 + DamageMultiplierBonus. Read live in
-// DemolitionMasteryUtility.ApplyProximityEffects, never baked into CharacterStats.
+// Direct Hit - a binary "inner zone" bonus: within InnerRadiusFraction of an explosion's own radius,
+// damage is multiplied by 1 + DamageMultiplierBonus. Read live in DemolitionMasteryUtility.
+// ApplyProximityEffects, never baked into CharacterStats. At rank 3, HasKnockback additionally
+// applies an arcade-style knockback falloff to the same inner-zone hits (folded in from the old
+// standalone Concussive Force ascension) - full KnockbackForce out to InnerRadiusFraction, then a
+// linear taper to 0 at the blast edge; KnockbackEliteMultiplier further scales the result against
+// Elite-tier enemies (<1, reduced effect) - Bosses need no dedicated handling here at all,
+// TierStats.CanBeInterruptedByKnockback/KnockbackMultiplier already resist the displacement itself.
 component DirectHitUpgrade
 {
     FP InnerRadiusFraction;
     FP DamageMultiplierBonus;
+    Boolean HasKnockback;
+    FP KnockbackForce;
+    FP KnockbackUpwardForce;
+    FP KnockbackEliteMultiplier;
 }
 
-// Concussive Force - an arcade-style knockback falloff: full Force out to InnerRadiusFraction of
-// the blast radius (a generous sweet spot, not a pinpoint), then a linear taper to 0 at the edge -
-// see DemolitionMasteryUtility.ApplyProximityEffects. EliteMultiplier further scales the result
-// against Elite-tier enemies (<1, reduced effect); Bosses need no dedicated handling here at all -
-// TierStats.CanBeInterruptedByKnockback/KnockbackMultiplier already resist the displacement itself,
-// and BossRuntimeState.StaggerMeter already accumulates from any damage taken regardless of source.
-component ConcussiveForceUpgrade
-{
-    FP InnerRadiusFraction;
-    FP Force;
-    FP UpwardForce;
-    FP EliteMultiplier;
-}
-
-// Volatile Payload - a critical hit that is ALSO an explosion (see OnExplosionCriticalHit, fired
-// from DamageUtility.ApplyDamage only when both isCritical and isExplosion are true) applies Burn
-// to the target it crit. BurnIntensity is a flat damage-per-tick value, same convention
-// StatusSpreadOnDeath.BurnIntensity already uses - not a percent-of-hit scale.
-component VolatilePayloadUpgrade
-{
-    FP BurnDuration;
-    FP BurnIntensity;
-}
-
-// Mini Ordnance (the design's own "Cluster Charges" trait name - kept distinct here on purpose, see
+// Pocket Bombs (the design's own "Cluster Charges" trait name - kept distinct here on purpose, see
 // this file's own header comment) - any qualifying explosion (see OnAreaExplosionDetonated, fired
 // once per genuine radius blast, never from a Mini Bomb's own detonation) rolls Chance to drop a
-// stationary Mini Bomb at the blast center. Damage/Explosion are flat, authored values - not
-// multipliers of the parent blast - same convention ExplodeOnDestroy.Damage already established;
-// Explosion's own AreaHitData.BlastRadius is what actually makes this smaller than the parent.
-component MiniOrdnanceUpgrade
+// stationary Mini Bomb at the blast center dealing DamagePercent of Bunny Bomb's own base damage (see
+// PixieAscensionUtility.ResolveBunnyBombDamage) - not a flat value, so it scales with Pixie's skill
+// scaling. Explosion's own AreaHitData.BlastRadius is what actually makes this smaller than the
+// parent blast.
+component PocketBombsUpgrade
 {
     FP Chance;
-    FP Damage;
+    FP DamagePercent;
     FP Fuse;
     AssetRef<EntityPrototype> MiniBombPrototype;
     AssetRef<AreaHitData> Explosion;

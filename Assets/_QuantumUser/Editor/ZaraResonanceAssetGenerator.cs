@@ -11,15 +11,15 @@ namespace QuantumUser.Editor
     // Authors Zara's Resonance passive + its 4 Passive Ascensions + all 3 Dash Ascensions (Quick
     // Tempo, Healing Step, Afterbeat - all fully code-complete, unlike every other hero's remaining
     // dash ascension, which still needs a hand-authored EntityPrototype), then wires all of it into
-    // ZaraCharacterData.asset. Mirrors LuxScrapAssetGenerator.cs/KaiVoidFieldAssetGenerator.cs/
+    // ZaraCharacterData.asset. Mirrors LuxScrapAssetGenerator.cs/KaiAscensionAssetGenerator.cs/
     // MaxAdrenalineAssetGenerator.cs/BruteProtectorAssetGenerator.cs/
     // PixieChainReactionAssetGenerator.cs exactly (same folder-creation/update-in-place/rebuild-the-
     // list-from-scratch behavior); re-running this is safe for the same reasons those are.
     public static class ZaraResonanceAssetGenerator
     {
         private const string PassivesFolderPath = "Assets/_QuantumUser/Resources/Passives/Zara";
-        private const string PassiveUpgradesFolderPath = "Assets/_QuantumUser/Resources/Passives/Zara/PassiveSkillUpgrades";
-        private const string DashUpgradesFolderPath = "Assets/_QuantumUser/Resources/Skills/Zara/DashSkillUpgrades";
+        private const string PassiveUpgradesFolderPath = "Assets/_QuantumUser/Resources/Passives/Zara/Zara_PassiveSkillUpgrades";
+        private const string DashUpgradesFolderPath = "Assets/_QuantumUser/Resources/Skills/Zara/Zara_DashSkillUpgrades";
         private const string CharacterDataPath = "Assets/_QuantumUser/Resources/Characters/ZaraCharacterData.asset";
         private const string HitEffectsFolderPath = "Assets/_QuantumUser/Resources/HitEffects";
 

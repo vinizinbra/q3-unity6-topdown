@@ -1,0 +1,13 @@
+// Granted by Heroes/Kai's WarpWakeSkillAction at rank 3 directly onto the spawned Dash Void entity
+// (not copied from an owner-side grant like every other Vortex upgrade - a Dash Void is spawned fresh
+// per activation by WarpWakeSkillAction itself, so there's no separate "owner grant, then copy at
+// spawn" step needed). See VortexSystem.TryRepulseOnDestroy - kept as its own component rather than
+// folding into VortexExplodeOnDestroy, since "pull enemies in then explode" (Vortex Collapse) and
+// "push enemies away instead of exploding" (Warp Wake's Repulsion) are different enough shapes to
+// keep the per-asset Source typing clean and unambiguous for the view.
+component VortexRepulseOnDestroy
+{
+    FP Damage;
+    FP KnockbackForce;
+    AssetRef<WarpWakeSkillAction> Source;
+}

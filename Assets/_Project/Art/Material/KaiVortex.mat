@@ -124,14 +124,15 @@ Material:
     - _Metallic: 0
     - _Mode: 3
     - _OcclusionStrength: 1
+    - _OutlineWidth: 0.02
     - _Parallax: 0.005
     - _QueueOffset: 0
     - _ReceiveShadows: 0
-    - _RimIntensity: 1.17
+    - _RimIntensity: 10
     - _RimOpacity: 1
-    - _RimPower: 0.3
-    - _RimSoftness: 0.106
-    - _RimThreshold: 0.871
+    - _RimPower: 4.51
+    - _RimSoftness: 0.871
+    - _RimThreshold: 0.145
     - _Shininess: 0
     - _Smoothness: 0.5
     - _SmoothnessSource: 0
@@ -153,10 +154,11 @@ Material:
     - _Color: {r: 0.2662147, g: 0.0016909974, b: 0.35849047, a: 0.8666667}
     - _ColorAddSubDiff: {r: 0, g: 0, b: 0, a: 0}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _RimColor: {r: 0.13724482, g: 0, b: 0.46107572, a: 0.41960785}
+    - _OutlineColor: {r: 0.40820432, g: 0.1974458, b: 0.89060664, a: 1}
+    - _RimColor: {r: 0.07986355, g: 0, b: 0.5, a: 0.74509805}
     - _SoftParticleFadeParams: {r: 0, g: 0, b: 0, a: 0}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
-    - _TintColor: {r: 0, g: 0, b: 0, a: 0.6666667}
+    - _TintColor: {r: 0, g: 0, b: 0, a: 0.7647059}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!114 &528016708753330423

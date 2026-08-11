@@ -2,12 +2,12 @@ namespace Quantum
 {
     using Photon.Deterministic;
 
-    // Shared "extend the current Overdrive (Berserk) activation" mechanism - reused by Vendetta
-    // Rush (VendettaRushExtension, one flat extension per Vendetta-consuming kill) and Uncontrolled
-    // Fury (UncontrolledFuryExtension, a smaller per-kill extension capped per activation). Reads
-    // CharacterSkills.HeroSkill directly via SkillSystem.ResolveSlot rather than assuming any
-    // particular filter/system is calling in - both callers react to signals (OnEntityKilled), not a
-    // filtered Update.
+    // Shared "extend the current Overdrive (Berserk) activation" mechanism - Uncontrolled Fury's
+    // only consumer today, via two independent bonuses off the same OnEntityKilled dispatch: the
+    // capped per-N-kills pool (UncontrolledFuryExtension.PerKillExtension/MaxExtension) and rank 3's
+    // separate, uncapped Vendetta-kill bonus (VendettaKillExtension) - see
+    // MaxOverdriveReactionSystem.OnEntityKilled. Reads CharacterSkills.HeroSkill directly via
+    // SkillSystem.ResolveSlot rather than assuming any particular filter/system is calling in.
     public static unsafe class OverdriveUtility
     {
         // No-ops (returns false) if Overdrive isn't active right now - neither upgrade extends a

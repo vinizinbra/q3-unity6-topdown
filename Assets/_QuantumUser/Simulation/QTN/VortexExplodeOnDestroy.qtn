@@ -1,17 +1,26 @@
-// Granted by Heroes/Kai's VortexExplodeOnDestroySkillAction onto the owner, then baked as a copy of
+// Granted by Heroes/Kai's VortexCollapseSkillAction onto the owner, then baked as a copy of
 // itself directly onto the spawned Vortex entity by SpawnVortexEffectData - so VortexSystem can
 // detonate at the vortex's own position the tick it expires, without needing the owner to still
 // exist by then. Radius isn't authored here - same convention as the pull itself, it comes from the
-// vortex's own PhysicsCollider3D (still present the tick this fires, right before destruction).
-// Damage applied directly via HitEffectUtility.ApplyDamageInRadius, no spawned entity - see
-// VortexExploded, not the enemy ExplodeOnDeath/ExplodeOnDeathConfig mark (a different,
-// enemy-death-specific blast).
+// vortex's own PhysicsCollider3D (still present the tick this fires, right before destruction),
+// scaled by RadiusMultiplier. Damage applied directly via HitEffectUtility.ApplyDamageInRadius, no
+// spawned entity - see VortexExploded, not the enemy ExplodeOnDeath/ExplodeOnDeathConfig mark (a
+// different, enemy-death-specific blast).
 component VortexExplodeOnDestroy
 {
     FP Damage;
 
+    // Rank 2+ ("larger blast radius") - multiplies the vortex's own collider radius, same convention
+    // AftershockSkillAction's own RadiusMultiplier uses for Brute.
+    FP RadiusMultiplier;
+
+    // Rank 3 "Event Collapse" only (0 at ranks 1-2) - one strong ApplyPull sweep run immediately
+    // before the damage-in-radius call, so caught enemies get yanked to the center right before the
+    // blast lands instead of being caught wherever they already stood.
+    FP PreExplosionPullForce;
+
     // Carried through to VortexExploded so the view can resolve BlastEffectPrefab
-    // (VortexExplodeOnDestroySkillAction.View.cs) off the exact asset that granted this - same
+    // (VortexCollapseSkillAction.View.cs) off the exact asset that granted this - same
     // "AssetRef travels with the event" shape AreaDetonated uses for AreaHitData.BlastEffectPrefab.
-    AssetRef<VortexExplodeOnDestroySkillAction> Source;
+    AssetRef<VortexCollapseSkillAction> Source;
 }

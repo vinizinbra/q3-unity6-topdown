@@ -25,6 +25,8 @@ namespace Quantum
         [SerializeField, Tooltip("1 at ground level easing to 0 at maxHeightForFalloff - reshape to taste.")]
         private AnimationCurve heightFalloffCurve = AnimationCurve.EaseInOut(0f, 1f, 1f, 0f);
         [SerializeField, Range(0f, 1f)] private float minScaleMultiplier = 0.4f;
+        [SerializeField, Tooltip("Global multiplier on every HasShadow's BaseScale (applied on top of the target's own lossyScale), so shadow size across every enemy can be balanced from one place instead of re-authoring each Radius. Not applied to HasLight instances. A ScriptableObject field, so editing it in Play mode takes effect immediately (UpdateBlob reads it every frame) and the value persists once you exit Play mode.")]
+        private float shadowScaleMultiplier = 1f;
         [SerializeField, Range(0f, 1f), Tooltip("Max alpha for a blob acquired as a shadow, at ground level.")]
         private float groundAlpha = 0.5f;
         [SerializeField, Range(0f, 1f), Tooltip("Max alpha for a blob acquired as a light, at ground level. Separate from groundAlpha since lights usually want to read as more solid/opaque than shadows.")]
@@ -40,6 +42,7 @@ namespace Quantum
         public float MaxHeightForFalloff => maxHeightForFalloff;
         public AnimationCurve HeightFalloffCurve => heightFalloffCurve;
         public float MinScaleMultiplier => minScaleMultiplier;
+        public float ShadowScaleMultiplier => shadowScaleMultiplier;
         public float GroundAlpha => groundAlpha;
         public float LightAlpha => lightAlpha;
         public float MinAlphaMultiplier => minAlphaMultiplier;

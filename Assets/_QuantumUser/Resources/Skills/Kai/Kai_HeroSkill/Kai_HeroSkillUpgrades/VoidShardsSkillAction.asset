@@ -1,0 +1,125 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-3022655912017129836
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e4466fb33c0b49d18f49f2ba3307d49, type: 3}
+  m_Name: VoidShardsProjectile
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ProjectileDataAsset
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Kai/Kai_HeroSkill/Kai_HeroSkillUpgrades/VoidShardsSkillAction|VoidShardsProjectile
+    Guid:
+      Value: 3746254916086688166
+  Prototype:
+    Id:
+      Value: 1533943567602617867
+  Movement:
+    Id:
+      Value: 4034536647526538892
+  Hit:
+    Id:
+      Value: 486351176848829060
+  Lifetime:
+    RawValue: 196608
+  HitRadius:
+    RawValue: 0
+  SpawnDelay:
+    RawValue: 0
+  MaxDistance:
+    RawValue: 0
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 731f46655b2304cfbbfe8b4e586fc100, type: 3}
+  m_Name: VoidShardsSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.VoidShardsSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Kai/Kai_HeroSkill/Kai_HeroSkillUpgrades/VoidShardsSkillAction
+    Guid:
+      Value: 535698191436929106
+  Icon: {fileID: 0}
+  DisplayName: Void Shards
+  Rarity: 2
+  RankDescriptions:
+  - Vortex periodically fires a homing Void Shard at a nearby enemy.
+  - Void Shards fire faster, travel farther, and deal increased damage.
+  - Vortex launches two powerful Void Shards with every volley.
+  <MaxRank>k__BackingField: 3
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 0
+  Description: Vortex periodically fires homing Void Shards at nearby enemies.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  Projectile:
+    Id:
+      Value: 3746254916086688166
+  DamagePercent:
+  - RawValue: 32768
+  - RawValue: 65536
+  - RawValue: 131072
+  TickInterval:
+  - RawValue: 65536
+  - RawValue: 49152
+  - RawValue: 49152
+  SearchRadiusMultiplier:
+  - RawValue: 196608
+  - RawValue: 327680
+  - RawValue: 327680
+  ShardCount: 010102
+--- !u!114 &5618204155101859310
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b891f74c1f5da479fba9c791e1b261ff, type: 3}
+  m_Name: VoidShardHomingProjectileMovementData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.HomingProjectileMovementData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Kai/Kai_HeroSkill/Kai_HeroSkillUpgrades/VoidShardsSkillAction|VoidShardHomingProjectileMovementData
+    Guid:
+      Value: 4034536647526538892
+  Speed:
+    RawValue: 524288
+  TurnRateDegrees:
+    RawValue: 17694720

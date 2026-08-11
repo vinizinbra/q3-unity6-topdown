@@ -146,6 +146,26 @@ component StatusEffects
     FP GuardianDamageReductionRemaining;
     FP GuardianDamageReductionAmount;
 
+    // A second, independent timed DR pair, generic (not Guardian-named) since two different reactive
+    // procs both write to it: Brute's Guardian ascension rank 3 (an ally in the aura losing
+    // Shield/Health from an enemy hit) and Bodyguard rank 3 (allies near a completed Dash) - both are
+    // occasional reactive bonuses layered ON TOP of the continuous Guardian aura DR above, not a
+    // replacement for it, so they can't share that pair (which the aura rewrites every single tick -
+    // see ProtectorAuraSystem.ApplyToAllies - and would immediately stomp a longer/rarer reactive
+    // bonus). See StatusEffectUtility.ApplyTemporaryDamageReduction/GetTemporaryDamageReductionMultiplier,
+    // folded into DamageUtility.ResolveDamageReduction alongside the other two (all three stack
+    // multiplicatively). Take-the-stronger/longer semantics on reapply, unlike the plain
+    // overwrite-on-reapply every other timed multiplier here uses - a weak proc landing right after a
+    // strong one shouldn't cut the strong one's window short.
+    FP TemporaryDamageReductionRemaining;
+    FP TemporaryDamageReductionAmount;
+
+    // Guardian ascension rank 3's own per-ally cooldown, so a target getting hit repeatedly in quick
+    // succession doesn't refresh the reactive DR bonus above on every single hit - see
+    // BruteProtectorReactionSystem. Bodyguard's own proc needs no equivalent cooldown - it's already
+    // paced by the Dash's own cooldown.
+    FP GuardianReactiveCooldownRemaining;
+
     // Reduces the AFFECTED entity's own OUTGOING damage (Brute's Protector Aura Intimidate debuff) -
     // the mirror of Break, which reduces INCOMING damage instead. Read via
     // StatusEffectUtility.GetOutgoingDamageMultiplier, folded into
@@ -168,4 +188,30 @@ component StatusEffects
     // based "Too Angry to Die" passive ascension. This one just gates when the Invulnerable tag
     // CheatDeathUtility adds gets removed again - see StatusEffectSystem's own tick.
     FP CheatDeathImmunityRemaining;
+
+    // Temporary Weapon Damage buff (Max's Last Stand rank 2 retaliation proc, Run & Gun rank 2) -
+    // see StatusEffectUtility.ApplyTemporaryWeaponDamage/GetTemporaryWeaponDamageMultiplier, folded
+    // into DamageUtility.ResolveOutgoingDamage's existing DamageSource.Weapon block. Take-the-
+    // stronger/longer semantics on reapply, same shape as TemporaryDamageReductionRemaining/Amount -
+    // two independent reactive procs both write here, so a weak one landing right after a strong one
+    // can't cut the strong one's window short.
+    FP TemporaryWeaponDamageRemaining;
+    FP TemporaryWeaponDamageAmount;
+
+    // Last Stand rank 2's own per-owner proc cooldown, so getting hit repeatedly in quick succession
+    // doesn't refresh the retaliation buff above on every single hit - see MaxOverdriveReactionSystem,
+    // same shape as Brute's GuardianReactiveCooldownRemaining (read/written directly by the reacting
+    // system, not via a StatusEffectUtility getter).
+    FP RetaliationCooldownRemaining;
+
+    // Timed window where WeaponSystem skips consuming Ammo entirely (Max's Run & Gun rank 3) -
+    // checked directly via StatusEffectUtility.HasNoAmmoConsumption right before WeaponSystem's own
+    // unconditional Weapon.Ammo--.
+    FP NoAmmoConsumptionRemaining;
+
+    // Generic (not Kai-named) - marks this entity as a valid target for "bonus damage to Bound
+    // enemies" effects (Kai's Undertow rank 3 "Gravitational Bond" is the first consumer). See
+    // StatusEffectUtility.ApplyBound/IsBound, read in DamageUtility.ResolveOutgoingDamage. Plain
+    // overwrite-on-reapply, same as Ice/Stun/Root.
+    FP BoundRemaining;
 }

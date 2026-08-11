@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapon/WeaponPerk/SplitShot
     Guid:
       Value: 492307963213126171
-  Icon: {fileID: 301000120, guid: c6be27ae176d44f3594332e40fa484ed, type: 3}
+  Icon: {fileID: 1242883627, guid: 017cb6454ed9743478842fb02d741366, type: 3}
   DisplayName: Split Shot
   Rarity: 1
   Description: Projectile splits into {0:0} shots at {1:0}% damage after impact

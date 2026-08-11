@@ -1,0 +1,75 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 226427d16758f471bb9c51a2710cb3ae, type: 3}
+  m_Name: SingularitySkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.SingularitySkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Kai/Kai_HeroSkill/Kai_HeroSkillUpgrades/SingularitySkillAction
+    Guid:
+      Value: 530708352601032816
+  Icon: {fileID: 0}
+  DisplayName: Singularity
+  Rarity: 0
+  RankDescriptions:
+  - Vortex grows 30% larger and interrupts anticipated attacks from Filler and Normal
+    enemies.
+  - Vortex grows larger and pulls harder. It can now interrupt anticipated attacks
+    from Specialist and Heavy enemies.
+  - Vortex becomes a Singularity, periodically crushing enemies toward its core and
+    interrupting anticipated attacks from enemies up to Elite tier.
+  <MaxRank>k__BackingField: 3
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 0
+  Description: Vortex grows larger, pulls harder, and interrupts enemies' telegraphed
+    attacks.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  PullRadiusMultiplier:
+  - RawValue: 85197
+  - RawValue: 98304
+  - RawValue: 114688
+  PullForceMultiplier:
+  - RawValue: 65536
+  - RawValue: 85197
+  - RawValue: 98304
+  MaxEligibleTierIndex: 010304
+  UnlimitedBelowOrEqualTierIndex: 010101
+  HasGravityPulse: 000001
+  GravityPulseForceMultiplier:
+    RawValue: -65536
+  GravityPulseInterval:
+    RawValue: 65536

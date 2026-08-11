@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fbc42bb42d0cf41aaad7373df42beedd, type: 3}
+  m_Name: VortexCollapseSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.VortexCollapseSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Kai/Kai_HeroSkill/Kai_HeroSkillUpgrades/VortexCollapseSkillAction
+    Guid:
+      Value: 502058709761426382
+  Icon: {fileID: 0}
+  DisplayName: Vortex Collapse
+  Rarity: 1
+  RankDescriptions:
+  - When Vortex ends, it collapses and deals heavy damage around its center.
+  - Vortex Collapse deals 200% Skill Damage and has a larger blast radius.
+  - Before collapsing, Vortex violently pulls enemies into its core, then detonates
+    for massive damage.
+  <MaxRank>k__BackingField: 3
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 0
+  Description: When Vortex ends, it collapses in a heavy blast around its center.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  DamagePercent:
+  - RawValue: 98304
+  - RawValue: 131072
+  - RawValue: 163840
+  RadiusMultiplier:
+  - RawValue: 65536
+  - RawValue: 81920
+  - RawValue: 98304
+  PreExplosionPullForce:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 786432
+  BlastEffectPrefab: {fileID: 6350743763286976369, guid: 3c8a89bd438a4415c853189dd54add06, type: 3}

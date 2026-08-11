@@ -16,9 +16,10 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapon/Shotgun
     Guid:
       Value: 457249274052612936
+  DisplayName: 
   FireType: 1
   Damage:
-    RawValue: 327680
+    RawValue: 524288
   Element: 0
   CriticalChance:
     RawValue: 13107
@@ -47,9 +48,9 @@ MonoBehaviour:
       Value: 2052039704194794421
   ViewPrefab: {fileID: 8089491252618662435, guid: 0f7481ececfe745c383ff250af802c65, type: 3}
   ShakeTier: 0
-  _dpsPreview: 'Burst DPS: 60
+  _dpsPreview: 'Burst DPS: 96
 
-    Sustained DPS (incl. reload): 48.6
+    Sustained DPS (incl. reload): 77.8
 
     Damage/min:
-    2919'
+    4670'

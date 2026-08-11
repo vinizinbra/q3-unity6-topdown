@@ -1,3 +1,4 @@
+using System;
 using Quantum;
 using QuantumUser.View.Util;
 using UnityEngine;
@@ -41,7 +42,7 @@ namespace QuantumUser.View
 
             menu.AddLabel(menu.HeroContent, "Dash");
             foreach (AssetRef<SkillActionData> upgrade in hero.DashSkillUpgrades)
-                AddSkillUpgradeButton(frame, upgrade, SkillSlotId.DashSkill, "Dash Skill", skills.DashSkill);
+                AddSkillUpgradeButton(frame, entity, upgrade, SkillSlotId.DashSkill, "Dash Skill", skills.DashSkill);
 
             menu.AddLabel(menu.HeroContent, "Hero Skill");
             if (hero.HeroSkill.IsValid == true)
@@ -58,7 +59,7 @@ namespace QuantumUser.View
                     if (upgrade.IsValid == false)
                         continue;
 
-                    AddSkillUpgradeButton(frame, upgrade, SkillSlotId.HeroSkill, "Hero Skill", skills.HeroSkill);
+                    AddSkillUpgradeButton(frame, entity, upgrade, SkillSlotId.HeroSkill, "Hero Skill", skills.HeroSkill);
                 }
             }
 
@@ -66,8 +67,31 @@ namespace QuantumUser.View
             foreach (AssetRef<PassiveUpgradeData> upgrade in hero.PassiveUpgrades)
             {
                 PassiveUpgradeData data = frame.FindAsset(upgrade);
-                menu.AddButton(menu.HeroContent, "Passive", data.DisplayName, data.Icon, data.GetDescription(), false,
-                    () => SendGrantPassive(upgrade), null);
+                int currentStacks = 0;
+                int maxStacks = 0;
+                bool granted = false;
+                string description = data.GetDescription();
+                Func<int, string> descriptionForRank = null;
+
+                // Ranked Ascension (MaxRank > 1, see docs/level-up-upgrades.md "Ranked Ascensions") -
+                // same current/max readout the real level-up card shows, "granted" means fully
+                // ranked up (nothing left to add), description previews the NEXT rank.
+                // descriptionForRank lets the row advance its own preview text locally on repeat
+                // clicks (see DebugUpgradeButtonWidget.Setup) - GetDescription(int) is a pure function
+                // of the asset, no sim round trip needed. A non-ranked Passive Upgrade keeps its
+                // original always-ungranted/no-stacks behavior - it has no granted-tracking to read
+                // at all (see this file's own header comment).
+                if (data.MaxRank > 1)
+                {
+                    currentStacks = PassiveUpgradeUtility.GetRank(frame, entity, upgrade);
+                    maxStacks = data.MaxRank;
+                    granted = PassiveUpgradeUtility.IsAlreadyPicked(frame, entity, upgrade);
+                    description = data.GetDescription(currentStacks + 1);
+                    descriptionForRank = data.GetDescription;
+                }
+
+                menu.AddButton(menu.HeroContent, "Passive", data.DisplayName, data.Icon, description, granted,
+                    () => SendGrantPassive(upgrade), null, currentStacks, maxStacks, descriptionForRank);
             }
 
             if (frame.RuntimeConfig.LevelUpConfig.IsValid == false)
@@ -130,13 +154,43 @@ namespace QuantumUser.View
             }
         }
 
-        private void AddSkillUpgradeButton(Frame frame, AssetRef<SkillActionData> upgrade, SkillSlotId slot, string category, SkillSlot ownerSlot)
+        private void AddSkillUpgradeButton(Frame frame, EntityRef entity, AssetRef<SkillActionData> upgrade, SkillSlotId slot, string category, SkillSlot ownerSlot)
         {
             SkillActionData data = frame.FindAsset(upgrade);
-            bool granted = ContainsUpgrade(ownerSlot.Upgrades, upgrade);
-            menu.AddButton(menu.HeroContent, category, data.DisplayName, data.Icon, data.GetDescription(), granted,
-                () => SendGrantSkill(upgrade, slot),
-                () => SendRemoveSkill(upgrade, slot));
+            int currentStacks = 0;
+            int maxStacks = 0;
+            bool granted;
+            string description;
+            System.Action onDeactivate;
+            Func<int, string> descriptionForRank = null;
+
+            // Ranked Ascension (MaxRank > 1, see docs/level-up-upgrades.md "Ranked Ascensions") - same
+            // current/max readout the real level-up card shows, "granted" means fully ranked up,
+            // description previews the NEXT rank. descriptionForRank lets the row advance its own
+            // preview text locally on repeat clicks (see DebugUpgradeButtonWidget.Setup) -
+            // GetDescription(int) is a pure function of the asset, no sim round trip needed. No
+            // "Remove" for a ranked action - SkillSystem.RemoveUpgrade only clears the slot entry, it
+            // doesn't decrement UpgradeHistory.Count, so removing then re-adding would desync the rank
+            // readout from what's actually equipped; same "no real revert path" treatment Weapon
+            // Perk/Passive/Global already get.
+            if (data.MaxRank > 1)
+            {
+                currentStacks = SkillUpgradeUtility.GetRank(frame, entity, upgrade);
+                maxStacks = data.MaxRank;
+                granted = SkillUpgradeUtility.IsCappedOut(frame, entity, upgrade);
+                description = data.GetDescription(currentStacks + 1);
+                descriptionForRank = data.GetDescription;
+                onDeactivate = null;
+            }
+            else
+            {
+                granted = ContainsUpgrade(ownerSlot.Upgrades, upgrade);
+                description = data.GetDescription();
+                onDeactivate = () => SendRemoveSkill(upgrade, slot);
+            }
+
+            menu.AddButton(menu.HeroContent, category, data.DisplayName, data.Icon, description, granted,
+                () => SendGrantSkill(upgrade, slot), onDeactivate, currentStacks, maxStacks, descriptionForRank);
         }
 
         // Same lookup SkillSystem.AddUpgrade itself does before granting - see docs/level-up-upgrades.md

@@ -31,12 +31,28 @@ component Enemy
     // (e.g. LeapDeliveryData's jump arc, lerped between this and SkillTargetPosition over time).
     FPVector3 SkillStartPosition;
 
-    // Captured once by EnemyMovementUtility.MoveInDirection the instant a ledge-hop jump triggers
-    // (EnemyHeightData.CanJump/JumpVelocity) and reapplied every tick until landing - actively
-    // reasserted rather than just left alone, since PhysicsBody3D.Drag would otherwise decay it
-    // over the arc (grounded movement never feels that drag, since MoveInDirection overwrites
-    // velocity every tick while grounded). Also keeps the AI from re-steering the jump mid-air.
-    FPVector3 JumpHorizontalVelocity;
+    // A traversal hop in progress (EnemyHeightData.CanClimbCliffs/CanJumpGaps, started by
+    // EnemyMovementUtility.BeginTraversalJump) - kinematic and lerp-driven, the same
+    // SkillStartPosition/SkillTargetPosition/StateTimer arc shape LeapDeliveryData.Tick already
+    // uses for a leap attack, just kept as its own fields since a traversal hop runs during plain
+    // Chasing movement, not through the EnemyActionPhase/EnemyDeliveryData pipeline those belong
+    // to - a moving enemy that's also mid-Preparation for a real action would otherwise stomp
+    // whichever one claimed those fields first. TraversalJumpDuration <= 0 means no hop is active;
+    // MoveInDirection checks that before doing anything else.
+    FPVector3 TraversalJumpOrigin;
+    FPVector3 TraversalJumpDestination;
+    FP TraversalJumpTimer;
+    FP TraversalJumpDuration;
+
+    // A climb/gap landing found by TryFindClimbLanding/TryFindGapLanding but not launched yet -
+    // counts down from EnemyMovementUtility.TraversalJumpAnticipationTime first (QueueTraversalJump)
+    // so the view has a brief window to play a crouch tell before the kinematic hop itself begins,
+    // instead of the crouch and the launch overlapping. <= 0 means nothing queued.
+    // PendingDestination/Speed are captured once when the anticipation starts (not re-resolved when
+    // it actually launches), so a target moving during that brief window can't retarget it mid-air.
+    FP TraversalJumpAnticipationTimer;
+    FPVector3 TraversalJumpPendingDestination;
+    FP TraversalJumpPendingSpeed;
 
     // Counts down while EnemySystem deliberately writes no velocity at all, so a knockback impulse
     // survives long enough to actually move the enemy - every other phase drives
@@ -63,6 +79,13 @@ component Enemy
     // is set, with no separate per-prototype component to remember to add.
     FP FlyingHoverCheckTimer;
     FP FlyingHoverTargetHeight;
+
+    // Which world faction this enemy visually belongs to (EnemyDataAsset.FactionSkins picks its
+    // ViewPrefab off this) - purely cosmetic, no gameplay effect. Authored explicitly per-slot on
+    // the EnemyGroupConfig.GroupMemberEntry that spawned it (GroupSpawnerUtility.SpawnMember), not
+    // randomized, so the same group composition always reads the same way (e.g. a SecurityPatrol
+    // group's Ranged members are always Faction2 robots, never a random mix).
+    EnemyFaction Faction;
 }
 
 // Fired once by DamageUtility when an Enemy's health hits zero, right after Phase is set to
@@ -108,4 +131,16 @@ enum EnemyActionPhase : Byte
 
     Recovery    = 6,
     Dead        = 7
+}
+
+// Deliberately generic labels rather than named lore factions, since the actual visual identity
+// behind each slot is expected to vary per world/map (e.g. Faction1 might be cultists on one map,
+// corp goons on another) while the ROLE stays consistent: Faction1 = the world's main hostile
+// faction, Faction2 = local security/defense (often robotic), Faction3 = local wildlife. See
+// Enemy.Faction and EnemyDataAsset.FactionSkins.
+enum EnemyFaction : Byte
+{
+    Faction1 = 0,
+    Faction2 = 1,
+    Faction3 = 2
 }

@@ -18,15 +18,12 @@ namespace QuantumUser.Editor
 
             WeaponPerkAssetGenerator.Generate();
             GlobalUpgradeAssetGenerator.Generate();
-            KaiVoidFieldAssetGenerator.Generate();
+            KaiAscensionAssetGenerator.Generate();
             LuxScrapAssetGenerator.Generate();
-            PixieChainReactionAssetGenerator.Generate();
-            PixieDemolitionMasteryAssetGenerator.Generate();
-            MaxAdrenalineAssetGenerator.Generate();
-            MaxOverdriveAssetGenerator.Generate();
+            PixieAscensionAssetGenerator.Generate();
+            MaxAscensionAssetGenerator.Generate();
             ZaraResonanceAssetGenerator.Generate();
-            BruteProtectorAssetGenerator.Generate();
-            BruteKnockbackMasteryAssetGenerator.Generate();
+            BruteAscensionAssetGenerator.Generate();
 
             LogHelper.Log("GenerateAllAssetsMenu", "Done - see individual generator log lines above for per-asset counts.");
         }

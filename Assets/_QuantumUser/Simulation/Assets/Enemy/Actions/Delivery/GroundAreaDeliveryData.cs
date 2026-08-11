@@ -94,6 +94,20 @@ namespace Quantum
 
             if (SelfDestructs == true && f.Unsafe.TryGetPointer<Health>(filter.Entity, out var health) == true)
             {
+                // Filler/Normal tier enemies get destroyed the same tick by ApplyDamage's own
+                // death branch, with Phase never touched - EnemyAttackVisualsView's usual
+                // Phase-edge watching never gets a chance to observe this attack's Begin and its
+                // BeginStep particle (the explosion itself) silently never plays. Raised BEFORE
+                // ApplyDamage, while filter.Transform3D/Aim are still guaranteed valid, and gated
+                // on the exact same tier check ApplyDamage uses so a Heavy+ tier self-destruct
+                // (which DOES get a lingering Phase = Dead) doesn't also raise this and double-play
+                // the visual through both paths.
+                if (data.Tier == EnemyTier.Filler || data.Tier == EnemyTier.Normal)
+                {
+                    AssetRef<EnemyActionData> actionRef = EnemyDecisionUtility.ResolveActionRef(data, filter.Enemy->CurrentActionSlot);
+                    f.Events.EnemySelfDestructBeginVisual(filter.Entity, filter.Transform3D->Position, filter.Aim->Angle, actionRef);
+                }
+
                 DamageUtility.ApplyDamage(f, filter.Entity, health->MaxHealth * 1000, EntityRef.None, bypassOutgoingResolution: true);
             }
 

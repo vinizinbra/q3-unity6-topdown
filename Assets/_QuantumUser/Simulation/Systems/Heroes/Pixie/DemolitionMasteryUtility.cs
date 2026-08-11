@@ -2,16 +2,14 @@ namespace Quantum
 {
     using Photon.Deterministic;
 
-    // Direct Hit's damage bonus and Concussive Force's knockback (see Heroes/Pixie/
-    // DemolitionMastery.qtn) both react to "how close is this target to the explosion's own
-    // center" - a single shared entry point resolves the distance fraction once and applies both,
-    // rather than each caller/each trait recomputing it independently. Called from the only two
-    // places in the codebase where a radius, a center, and a per-target position are all known
-    // together for a genuine explosion: HitEffectUtility.ApplyInRadius (bomb-type blasts) and
-    // HitEffectUtility.ApplyDamageInRadius (weapon-perk-type blasts, reached via ApplyExplosion).
-    // Gated entirely by TryGetPointer on the owner's own upgrade components - an owner without
-    // either trait costs one failed pointer lookup each, zero behavior change, same idiom every
-    // other optional reaction in this codebase already follows.
+    // Direct Hit's damage bonus + rank 3 knockback (see Heroes/Pixie/DemolitionMastery.qtn) reacts
+    // to "how close is this target to the explosion's own center" - resolves the distance fraction
+    // once and applies both, rather than recomputing it twice. Called from the only two places in
+    // the codebase where a radius, a center, and a per-target position are all known together for a
+    // genuine explosion: HitEffectUtility.ApplyInRadius (bomb-type blasts) and HitEffectUtility.
+    // ApplyDamageInRadius (weapon-perk-type blasts, reached via ApplyExplosion). Gated entirely by
+    // TryGetPointer on the owner's own DirectHitUpgrade - an owner without the trait costs one failed
+    // pointer lookup, zero behavior change, same idiom every other optional reaction here follows.
     public static unsafe class DemolitionMasteryUtility
     {
         // damage is passed by ref so Direct Hit can scale it in place before the caller's own
@@ -25,14 +23,19 @@ namespace Quantum
 
             FP distanceFraction = FPVector3.Distance(center, targetPosition) / radius;
 
-            ApplyDirectHit(f, owner, distanceFraction, ref damage);
-            TryApplyConcussiveForce(f, owner, target, targetPosition - center, distanceFraction);
+            ApplyDirectHit(f, owner, target, distanceFraction, targetPosition - center, ref damage);
         }
 
         // Binary inner zone, matching Direct Hit's own "Inner 35%... multiplier" design - a target
         // right at the edge of that zone still counts as inside it (<=), so a bomb's own directly-
-        // struck target (distanceFraction 0) always qualifies.
-        private static void ApplyDirectHit(Frame f, EntityRef owner, FP distanceFraction, ref FP damage)
+        // struck target (distanceFraction 0) always qualifies. Rank 3's knockback (HasKnockback) uses
+        // the exact same inner-zone gate and the same arcade falloff the old standalone Concussive
+        // Force ascension used: full KnockbackForce out to InnerRadiusFraction, then a linear taper
+        // to 0 at the blast edge - Elite tier additionally scales the result down; Boss needs nothing
+        // here at all (TierStats/BossRuntimeState already resist/track displacement regardless of
+        // what triggered the damage).
+        private static void ApplyDirectHit(Frame f, EntityRef owner, EntityRef target, FP distanceFraction,
+            FPVector3 pushDirection, ref FP damage)
         {
             if (f.Unsafe.TryGetPointer<DirectHitUpgrade>(owner, out var directHit) == false)
                 return;
@@ -41,33 +44,21 @@ namespace Quantum
                 return;
 
             damage *= FP._1 + directHit->DamageMultiplierBonus;
-        }
 
-        // Arcade falloff, per explicit design direction: full Force out to InnerRadiusFraction (a
-        // generous sweet spot, not a pinpoint), then a linear taper to 0 at the blast edge. Elite
-        // tier additionally scales the result down; Boss needs nothing here at all - see this
-        // component's own qtn comment for why (TierStats/BossRuntimeState already do that work,
-        // regardless of what triggered the damage).
-        private static void TryApplyConcussiveForce(Frame f, EntityRef owner, EntityRef target,
-            FPVector3 pushDirection, FP distanceFraction)
-        {
-            if (f.Unsafe.TryGetPointer<ConcussiveForceUpgrade>(owner, out var concussive) == false)
+            if (directHit->HasKnockback == false || target == owner)
                 return;
 
-            if (target == owner)
-                return;
-
-            FP taperRange = FP._1 - concussive->InnerRadiusFraction;
+            FP taperRange = FP._1 - directHit->InnerRadiusFraction;
             FP falloff = taperRange > FP._0
                 ? FPMath.Clamp((FP._1 - distanceFraction) / taperRange, FP._0, FP._1)
                 : FP._1;
 
-            FP force = concussive->Force * falloff * ResolveEliteMultiplier(f, target, concussive->EliteMultiplier);
+            FP force = directHit->KnockbackForce * falloff * ResolveEliteMultiplier(f, target, directHit->KnockbackEliteMultiplier);
 
             if (force <= FP._0)
                 return;
 
-            DamageUtility.ApplyKnockback(f, target, pushDirection, force, concussive->UpwardForce, owner);
+            DamageUtility.ApplyKnockback(f, target, pushDirection, force, directHit->KnockbackUpwardForce, owner);
         }
 
         private static FP ResolveEliteMultiplier(Frame f, EntityRef target, FP eliteMultiplier)

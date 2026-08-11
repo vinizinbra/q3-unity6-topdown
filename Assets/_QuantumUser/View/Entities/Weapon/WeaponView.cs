@@ -56,6 +56,10 @@ namespace Quantum
         [SerializeField]
         private WeaponAnimationParams anim = new WeaponAnimationParams();
 
+        [Header("References")]
+        [SerializeField, Tooltip("Falls back to a BlobAnimationView anywhere under the rig root if left empty - same resolution PlayerGunAimView.torsoFollow uses. Shoot() kicks anim's Character Shoot Punch settings into this every shot.")]
+        private BlobAnimationView character;
+
         [Header("Muzzle Flash")]
         [SerializeField, Tooltip("Particle system parented at the muzzle, restarted on every shot (e.g. an Epic Toon FX Muzzleflash prefab).")]
         private ParticleSystem muzzleParticle;
@@ -100,6 +104,12 @@ namespace Quantum
         {
             base.Awake();
             CacheRestPose();
+
+            if (character == null)
+                character = GetComponentInParent<BlobAnimationView>();
+            if (character == null)
+                character = transform.root.GetComponentInChildren<BlobAnimationView>();
+
             QuantumEvent.Subscribe<EventPlayerFired>(this, OnPlayerFired);
             QuantumEvent.Subscribe<EventHitscanFired>(this, OnHitscanFired);
         }
@@ -215,7 +225,27 @@ namespace Quantum
             Tween.PunchCustom(this, Vector3.zero, new ShakeSettings(new Vector3(1f, 0f, 0f), anim.recoilDuration, anim.recoilFrequency, asymmetryFactor: anim.recoilAsymmetry),
                 (view, val) => view.knockbackPunch = val.x);
 
+            PunchCharacter();
             PlayMuzzleParticle();
+        }
+
+        // Kicks this weapon's own Character Shoot Punch tuning into the shooter's BlobAnimationView
+        // every shot - lives here (not on BlobAnimationView itself) since the right feel is
+        // per-weapon (a shotgun should knock the body around more than a pistol), and this is
+        // already the one place that owns everything weapon-specific about the recoil "animation".
+        // Rotation kicks flip by lastFlipped, same convention Shoot()'s own rotationKick above uses,
+        // so they always read as recoiling away from the muzzle regardless of facing.
+        private void PunchCharacter()
+        {
+            if (character == null) return;
+
+            float flip = lastFlipped ? -1f : 1f;
+
+            character.PunchHeadOffset(anim.shakePositionHead.Strength, anim.shakePositionHead.Duration, anim.shakePositionHead.Frequency);
+            character.PunchBodyRotation(anim.shakeRotationBody.Strength.x * flip, anim.shakeRotationBody.Duration, anim.shakeRotationBody.Frequency);
+            character.PunchHeadRotation(anim.shakeRotationHead.Strength.x * flip, anim.shakeRotationHead.Duration, anim.shakeRotationHead.Frequency);
+            character.PunchBodyScale(anim.shakeScaleBody.Strength, anim.shakeScaleBody.Duration, anim.shakeScaleBody.Frequency);
+            character.PunchHeadScale(anim.shakeScaleHead.Strength, anim.shakeScaleHead.Duration, anim.shakeScaleHead.Frequency);
         }
 
         [Button]

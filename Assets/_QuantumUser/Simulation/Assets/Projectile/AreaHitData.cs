@@ -1,6 +1,5 @@
 namespace Quantum
 {
-    using System.Collections.Generic;
     using Photon.Deterministic;
     using Quantum.Physics3D;
     using UnityEngine.Serialization;
@@ -14,10 +13,10 @@ namespace Quantum
         // doesn't catch allies standing nearby.
         public DamageTargetMask TargetMask = DamageTargetMask.Both;
 
-        // False stops this specific detonation from reading FireworksUpgrade/ClusterBombUpgrade at
-        // all - set this false on a cluster bomblet's or firework's own AreaHitData so its blast
-        // doesn't trigger another round of the same upgrade, cascading forever. True (the default)
-        // is right for anything a player directly throws.
+        // False stops this specific detonation from reading ClusterBombUpgrade at all - set this
+        // false on a cluster bomblet's own AreaHitData so its blast doesn't trigger another round of
+        // the same upgrade, cascading forever. True (the default) is right for anything a player
+        // directly throws.
         public bool TriggersSpawnUpgrades = true;
 
         // 0 (the default) keeps every existing asset's behavior exactly as before this field
@@ -73,17 +72,40 @@ namespace Quantum
         // The directly-struck entity needs no special case - it's inside the radius, so the overlap
         // picks it up and it takes the effects exactly once, same as everyone else caught. Public
         // and Projectile-agnostic so ExplodeOnDestroyUtility.TryDetonate can reach the exact same
-        // logic (radius bonus, AreaDetonated, Mini Ordnance signal, Fireworks/ClusterBomb cascade)
-        // for a planted bomb (see PlantedFuseTime) that no longer carries a live Projectile* -
-        // opt-in per ExplodeOnDestroy.TriggersSpawnUpgrades, so Mini Bomb/DashBomb's existing
-        // no-cascade guarantee is untouched (they never set that field, so it defaults false).
-        public void Detonate(Frame f, EntityRef owner, DamageSource source, ElementType element, FP damage, int spawnDepth, FPVector3 center)
+        // logic (radius bonus, AreaDetonated, Pocket Bombs signal, ClusterBomb cascade) for a planted
+        // bomb (see PlantedFuseTime) that no longer carries a live Projectile* - opt-in per
+        // ExplodeOnDestroy.TriggersSpawnUpgrades, so Mini Bomb/DashBomb's existing no-cascade
+        // guarantee is untouched (they never set that field, so it defaults false).
+        //
+        // radiusMultiplier defaults to 1 (no effect) - only ExplodeOnDestroyUtility.TryDetonate ever
+        // passes a real value, for Birthday Cake rank 2's blast-radius bonus on her own landed bomb
+        // (see BirthdayCakeUpgrade.qtn) - every other caller (a live Projectile hit, via the private
+        // overload below) is unaffected.
+        //
+        // Returns the final resolved radius - ExplodeOnDestroyUtility.TryDetonate needs it to run its
+        // own ForceMarkOnDetonate sweep (Backblast rank 3) over the exact same area this detonation
+        // just damaged, without duplicating this whole multiplier chain a second time. Every other
+        // caller is free to ignore the return value.
+        public FP Detonate(Frame f, EntityRef owner, DamageSource source, ElementType element, FP damage,
+            int spawnDepth, FPVector3 center, FP radiusMultiplier = default)
         {
-            // Bigger Boom (Pixie passive ascension) - scales her bomb's own blast radius the same
+            if (radiusMultiplier <= FP._0)
+                radiusMultiplier = FP._1;
+
+            // Unstable Mixture (Pixie passive ascension) - scales her bomb's own blast radius the same
             // way it scales her weapon's explosive procs - see DamageUtility.
             // ResolvePixieExplosionRadiusMultiplier. No-op (multiplier 1) for every other owner.
-            FP radius = (BlastRadius + ResolveRadiusBonus(f, owner))
-                * DamageUtility.ResolvePixieExplosionRadiusMultiplier(f, owner);
+            // StatUtility.GetAreaMultiplier folds in the generic "Skill Area" global upgrade
+            // (CharacterStats.AreaRadiusMultiplier) - without this, a thrown bomb (Bunny Bomb) never
+            // read it at all, unlike HitPathSkillAction/SpawnEntitySkillAction which already do.
+            // ResolveHotFuseRadiusMultiplier consumes (and clears) Pixie's Hot Fuse charge, if any -
+            // see PixieHotFuseCharge.qtn for why that consumption happens here rather than at throw
+            // time.
+            FP radius = BlastRadius
+                * DamageUtility.ResolvePixieExplosionRadiusMultiplier(f, owner)
+                * StatUtility.GetAreaMultiplier(f, owner)
+                * ResolveHotFuseRadiusMultiplier(f, owner)
+                * radiusMultiplier;
 
             // isExplosion: true - a bomb detonation is a genuine area/explosive blast, read by
             // Pixie's Chain Reaction passive (see MarkExplosiveDeath.RequiresExplosion) to decide
@@ -93,7 +115,7 @@ namespace Quantum
 
             f.Events.AreaDetonated(owner, center, this, radius);
 
-            // Demolition Mastery's Mini Ordnance (Pixie's own Hero Trait pool, see
+            // Demolition Mastery's Pocket Bombs (Pixie's own Hero Trait pool, see
             // Heroes/Pixie/DemolitionMastery.qtn) reacts to this - reached from here, from
             // HitEffectUtility.ApplyExplosion, and from ExplodeOnDestroyUtility.TryDetonate ONLY when
             // that entity opted in via ExplodeOnDestroy.TriggersSpawnUpgrades (a planted bomb
@@ -102,90 +124,43 @@ namespace Quantum
             // before - a dropped Mini Bomb still can never generate another.
             f.Signals.OnAreaExplosionDetonated(owner, center, radius, source);
 
-            // Source == Skill only - ClusterBombUpgrade/FireworksUpgrade are granted Begin-only and
-            // never revoked (see ClusterBombSkillAction/FireworksSkillAction), so they sit on a
-            // Pixie's entity for the rest of the run. Without this gate, any later AreaHitData blast
-            // owned by that same entity - a weapon perk, another hero's AoE, anything - would read
-            // the stale tag and spawn bomblets/fireworks off a hit that has nothing to do with the
-            // bomb that granted it.
+            // Source == Skill only - ClusterBombUpgrade is granted Begin-only and never revoked (see
+            // ClusterBombSkillAction), so it sits on a Pixie's entity for the rest of the run. Without
+            // this gate, any later AreaHitData blast owned by that same entity - a weapon perk,
+            // another hero's AoE, anything - would read the stale tag and spawn bomblets off a hit
+            // that has nothing to do with the bomb that granted it.
             if (TriggersSpawnUpgrades == true && source == DamageSource.Skill
                 && spawnDepth < MaxSpawnUpgradeDepth)
             {
-                int childDepth = spawnDepth + 1;
-                TrySpawnFireworks(f, owner, center, radius, childDepth);
-                TrySpawnClusterBomblets(f, owner, center, childDepth);
-            }
-        }
-
-        // BlastRadiusUpgrade (see Heroes/Pixie/BombRadiusUpSkillAction) - zero for anyone who
-        // doesn't hold it, so an unmodified bomb detonates at exactly its authored BlastRadius.
-        private static FP ResolveRadiusBonus(Frame f, EntityRef owner)
-        {
-            return f.Unsafe.TryGetPointer<BlastRadiusUpgrade>(owner, out var upgrade) == true ? upgrade->RadiusBonus : FP._0;
-        }
-
-        // FireworksUpgrade (see Heroes/Pixie/FireworksSkillAction) - launches Count homing shots at
-        // enemies found within the bomb's own blast radius (the same value Detonate() just used for
-        // damage, bonus included - no separate search radius to fall out of sync). Shuffled once,
-        // then indexed with wraparound (i % found.Count) so every enemy present gets one before any
-        // repeats - with only one enemy in range, every firework ends up aimed at it. Each shot
-        // launches up and away from its own assigned target (see ResolveLaunchVelocity) rather than
-        // toward it, so it arcs outward first, same as a real firework mortar -
-        // HomingProjectileMovementData.UpdateVelocity is what turns it back in afterward.
-        private static void TrySpawnFireworks(Frame f, EntityRef owner, FPVector3 center, FP radius, int childDepth)
-        {
-            if (f.Unsafe.TryGetPointer<FireworksUpgrade>(owner, out var fireworks) == false || fireworks->Count == 0)
-                return;
-
-            if (fireworks->Projectile.IsValid == false)
-                return;
-
-            List<EntityRef> found = FindNearbyEnemies(f, center, radius);
-
-            if (found.Count == 0)
-                return;
-
-            Shuffle(f, found);
-
-            for (int i = 0; i < fireworks->Count; i++)
-            {
-                EntityRef target = found[i % found.Count];
-
-                if (f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == false)
-                    continue;
-
-                ProjectileLaunch launch = new ProjectileLaunch
-                {
-                    SpawnPosition = center,
-                    Velocity = ResolveLaunchVelocity(center, targetTransform->Position, fireworks->LaunchForce),
-                    IsValid = true
-                };
-
-                ProjectileSpawner.Spawn(f, owner, fireworks->Projectile, launch, fireworks->Damage,
-                    DamageSource.Skill, target: target, spawnDepth: childDepth);
+                TrySpawnClusterBomblets(f, owner, center, damage, spawnDepth + 1);
             }
 
-            Log.Debug($"[Effect] {owner}'s blast at {center} launched {fireworks->Count} fireworks at {found.Count} nearby enemies");
+            return radius;
         }
 
-        // Away from the target's flat direction (e.g. a target to the right launches up-and-left)
-        // blended with straight up, rather than toward it - the sum's Y is always >= 1 (awayDirection
-        // is flat, Up contributes the rest), so this is never a zero vector to normalize. Falls back
-        // to straight up when the target sits exactly above/below the blast center (no flat direction
-        // to go away from).
-        private static FPVector3 ResolveLaunchVelocity(FPVector3 center, FPVector3 targetPosition, FP force)
+        // PixieHotFuseCharge (see Heroes/Pixie/HotFuseSkillAction) - this is this specific bomb's own
+        // detonation, so this is also where the charge (and the InstantDetonate tag it may have set
+        // at throw time - see ProjectileSkillData.ApplyHotFuseCharge) gets cleared, since both were
+        // only ever meant for this one throw. 1 (no effect) for every owner without an active charge.
+        private static FP ResolveHotFuseRadiusMultiplier(Frame f, EntityRef owner)
         {
-            FPVector3 delta = targetPosition - center;
-            FPVector3 flatDelta = new FPVector3(delta.X, FP._0, delta.Z);
-            FPVector3 awayDirection = flatDelta.SqrMagnitude > FP._0 ? -flatDelta.Normalized : FPVector3.Zero;
+            if (f.Unsafe.TryGetPointer<PixieHotFuseCharge>(owner, out var charge) == false)
+                return FP._1;
 
-            return (awayDirection + FPVector3.Up).Normalized * force;
+            FP multiplier = charge->RadiusMultiplier;
+
+            f.Remove<PixieHotFuseCharge>(owner);
+            f.Remove<InstantDetonate>(owner);
+
+            return multiplier;
         }
 
-        // ClusterBombUpgrade (see Heroes/Pixie/ClusterBombSkillAction) - launches Count smaller
-        // bombs in an even fan around the blast, starting from a randomized heading so the spread
-        // doesn't look identical every time.
-        private static void TrySpawnClusterBomblets(Frame f, EntityRef owner, FPVector3 center, int childDepth)
+        // ClusterBombUpgrade (see Heroes/Pixie/ClusterBombSkillAction) - launches Count smaller bombs
+        // in an even fan around the blast, starting from a randomized heading so the spread doesn't
+        // look identical every time. Each bomblet deals DamagePercent of the triggering explosion's
+        // own damage (the same `damage` Detonate() just applied), not a fixed value - so it scales
+        // with Bunny Bomb/Pixie's skill damage automatically.
+        private static void TrySpawnClusterBomblets(Frame f, EntityRef owner, FPVector3 center, FP damage, int childDepth)
         {
             if (f.Unsafe.TryGetPointer<ClusterBombUpgrade>(owner, out var cluster) == false || cluster->Count == 0)
                 return;
@@ -195,6 +170,7 @@ namespace Quantum
 
             ProjectileDataAsset projectileData = f.FindAsset(cluster->Projectile);
             ProjectileMovementData movement = f.FindAsset(projectileData.Movement);
+            FP bombletDamage = damage * cluster->DamagePercent;
 
             FP count = cluster->Count;
             FP step = 360 / count;
@@ -210,43 +186,11 @@ namespace Quantum
                 if (launch.IsValid == false)
                     continue;
 
-                ProjectileSpawner.Spawn(f, owner, cluster->Projectile, launch, cluster->Damage, DamageSource.Skill,
+                ProjectileSpawner.Spawn(f, owner, cluster->Projectile, launch, bombletDamage, DamageSource.Skill,
                     spawnDepth: childDepth);
             }
 
             Log.Debug($"[Effect] {owner}'s blast at {center} spawned {cluster->Count} cluster bomblets");
-        }
-
-        private static List<EntityRef> FindNearbyEnemies(Frame f, FPVector3 center, FP radius)
-        {
-            var result = new List<EntityRef>();
-
-            if (radius <= FP._0)
-                return result;
-
-            Shape3D sphere = Shape3D.CreateSphere(radius);
-            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
-
-            for (int i = 0; i < hits.Count; i++)
-            {
-                if (f.Has<Enemy>(hits[i].Entity) == true)
-                    result.Add(hits[i].Entity);
-            }
-
-            return result;
-        }
-
-        // Fisher-Yates using the deterministic RNG - System.Random/UnityEngine.Random would desync
-        // the simulation across clients.
-        private static void Shuffle(Frame f, List<EntityRef> list)
-        {
-            for (int i = list.Count - 1; i > 0; i--)
-            {
-                int j = f.RNG->Next(0, i + 1);
-                EntityRef temp = list[i];
-                list[i] = list[j];
-                list[j] = temp;
-            }
         }
     }
 }

@@ -56,21 +56,25 @@ namespace Quantum
                 Damage = projectile->Damage,
                 Source = projectile->Source,
                 Element = projectile->Element,
+                PerkElement = projectile->PerkElement,
+                PerkElementChance = projectile->PerkElementChance,
                 HitIndex = projectile->PelletIndex
             };
 
             HitEffectUtility.ApplyToTarget(f, Effects, ref context);
         }
 
-        // InstantDetonate (an upgrade) overrides DetonateOnLevelGeometry/DetonateOnEnemyHit below -
-        // once granted, any contact counts as a genuine hit regardless of either flag.
+        // InstantDetonate (an upgrade - see Heroes/Pixie/HotFuseSkillAction) overrides
+        // DetonateOnEnemyHit specifically - a direct enemy hit always counts as a genuine hit once
+        // granted, regardless of that flag's authored value. Deliberately does NOT override
+        // DetonateOnLevelGeometry/the planting path below - a ground/geometry contact is unaffected,
+        // so a planted bomb (see AreaHitData.PlantedFuseTime/ProjectileSystem.TryPlant) still lands
+        // and runs its own fuse/taunt behavior (e.g. Birthday Cake) exactly as it would without this
+        // upgrade. Only the enemy-hit path is meant to skip straight to detonation.
         protected bool ShouldDetonate(Frame f, Projectile* projectile, EntityRef hitEntity)
         {
-            if (f.Has<InstantDetonate>(projectile->Owner) == true)
-                return true;
-
             if (hitEntity != EntityRef.None && f.Has<Enemy>(hitEntity) == true)
-                return DetonateOnEnemyHit;
+                return DetonateOnEnemyHit || f.Has<InstantDetonate>(projectile->Owner) == true;
 
             if (IsCombatant(f, hitEntity) == true) // a player - no toggle requested yet, always counts
                 return true;

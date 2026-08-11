@@ -1,8 +1,0 @@
-// A physical Coin pickup dropped by CoinUtility.TrySpawnDrop when a player-owned kill lands on an
-// Enemy (see DamageUtility.ApplyDamage) - same "no owner, no drop" rule as ExpOrb.qtn/RiftShard.qtn.
-// Value travels with the coin rather than being re-derived from EnemyDataAsset at pickup time,
-// since the source enemy entity is already destroyed by then.
-component Coin
-{
-    FP Value;
-}

@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapon/WeaponPerk/ExecutionRounds
     Guid:
       Value: 410077869205496657
-  Icon: {fileID: 301000078, guid: c6be27ae176d44f3594332e40fa484ed, type: 3}
+  Icon: {fileID: 94785584, guid: 017cb6454ed9743478842fb02d741366, type: 3}
   DisplayName: Execution Rounds
   Rarity: 1
   Description: 'Last {0:0}% of magazine: {1:+0;-0}% Damage'

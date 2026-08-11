@@ -1,7 +1,11 @@
-// Max's base Passive - see docs/max-vendetta-fire-mastery.md for the full design. When Max takes
-// Health damage (or, with the Unbroken Spirit upgrade, Shield damage), the attacker becomes his
-// Vendetta target for a limited time; killing that exact target heals Max for a fraction of the
-// damage it dealt him during the mark.
+// Max's base Passive - see docs/max-ascensions.md for the full design. Purely reactive: when Max
+// takes Health damage (or, with the Unbroken Spirit upgrade tier of Blood Debt, Shield damage), the
+// attacker becomes marked, granting the live +DamageBonus below. Killing a marked target heals Max
+// for a fraction of whatever damage IT dealt him during the mark, floored at MinHealFraction of Max's
+// own max Health. Vendetta Strike (the Dash Ascension) is the one deliberate way to mark an enemy
+// proactively instead of waiting to get hit - a generic "any weapon hit also marks" hook was tried
+// and reverted, since it made every enemy near Max get marked (and bonus-damaged) automatically the
+// instant his auto-fire reached it, with zero player choice involved.
 
 // Vendetta's own base tunables - seeded once by VendettaPassiveData.Apply, permanently bumped by at
 // most one field each from future upgrades (Settled Score -> HealMultiplier, Blood Debt ->
@@ -13,6 +17,29 @@ component RevengeConfig
 {
     FP HealMultiplier;
     FP MarkDuration;
+
+    // Base Vendetta damage bonus (seeded to 0.15 by VendettaPassiveData.Apply) - bonus damage against
+    // whichever enemy currently carries this holder's own RevengeMark, read live in
+    // DamageUtility.ResolveOutgoingDamage rather than baked into CharacterStats.DamageMultiplier, same
+    // "read an optional owner-side component, multiply damage conditionally" idiom Unstable
+    // Targeting/Stun Damage Bonus already use. No DamageSource restriction, so it applies to weapon/
+    // skill/dash/Burn-tick damage alike.
+    FP DamageBonus;
+
+    // Guaranteed minimum on-kill heal, as a fraction of Max's own MaxHealth - read in
+    // MaxVendettaSystem.OnEntityKilled alongside StoredDamage * HealMultiplier and
+    // EnemyMaxHealthFraction below (the highest of all three wins), so a kill on a marked target that
+    // barely damaged Max before dying still heals something. Seeded to 0.01 (1%) by
+    // VendettaPassiveData.Apply.
+    FP MinHealFraction;
+
+    // Second heal floor, as a fraction of the KILLED ENEMY's own MaxHealth rather than Max's -
+    // read in MaxVendettaSystem.OnEntityKilled alongside the two fields above (the highest of all
+    // three wins), so a kill on a genuinely tough enemy still heals meaningfully even if it barely
+    // scratched Max or was only proactively marked (Vendetta Strike) with no banked StoredDamage at
+    // all. Seeded to 0.05 (5%) by VendettaPassiveData.Apply - a decisive placeholder, not yet
+    // balance-passed.
+    FP EnemyMaxHealthFraction;
 }
 
 // Unbroken Spirit upgrade - tag only, no fields. Presence means Shield damage from an active

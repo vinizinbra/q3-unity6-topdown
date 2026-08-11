@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 85dbdce52a58244799386352c36111f8, type: 3}
+  m_Name: Remix
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.RemixPassiveUpgradeData
+  Identifier:
+    Path: _QuantumUser/Resources/Passives/Zara/Zara_PassiveSkillUpgrades/Remix
+    Guid:
+      Value: 296911590756529144
+  Icon: {fileID: 0}
+  DisplayName: Remix
+  Rarity: 2
+  Description: Every third Resonance Pulse also applies a random effect to enemies
+    caught in it.
+  Effects:
+  - Id:
+      Value: 396022305314247005
+  - Id:
+      Value: 441562846163677937
+  - Id:
+      Value: 502467422444154315

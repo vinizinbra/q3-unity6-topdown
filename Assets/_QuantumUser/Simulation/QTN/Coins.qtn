@@ -1,6 +1,6 @@
 // Run-wide Coin currency state - merged by the DSL compiler into the same Frame.Global struct as
 // Experience.qtn's/RiftShards.qtn's own global blocks. Co-op: one shared total for the whole run,
-// credited by CoinUtility.Grant whenever any player collects a Coin (see CoinOrbSystem) - same
+// credited by CoinUtility.Grant whenever any player collects a Coin (see CurrencyOrbSystem) - same
 // "one shared total, not per-player" convention Experience.qtn/RiftShards.qtn both use. A second,
 // independent currency from Rift Shards - see docs/global-upgrades.md "Economy".
 global

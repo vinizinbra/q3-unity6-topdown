@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e4feab34d5054c8b90b9f52e0f2bcb7, type: 3}
+  m_Name: BurningVengeance
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.BurningVengeancePassiveUpgradeData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Max/Max_PassiveSkill/Max_PassiveSkillUpgrades/Vendetta/BurningVengeance
+    Guid:
+      Value: 423077782144865530
+  Icon: {fileID: -1765001774, guid: 9a944adac56bb4e8dbce2f7bab4127e3, type: 3}
+  DisplayName: Burning Vengeance
+  Rarity: 2
+  Description: Consuming a Vendetta mark spreads Burn to nearby enemies - eventually
+    detonating a fiery burst if the kill was already Burning.
+  <MaxRank>k__BackingField: 3
+  RankDescriptions:
+  - Consuming a Vendetta mark spreads Burn to 2 nearby enemies within 4m.
+  - Consuming a Vendetta mark spreads Burn to 4 nearby enemies within 5m, more intensely.
+  - Consuming a Vendetta mark spreads Burn to 4 nearby enemies within 5m - if the
+    kill was already Burning, also detonates a fiery burst (damage + Burn) around
+    it.
+  Radius:
+  - RawValue: 262144
+  - RawValue: 327680
+  - RawValue: 327680
+  BurnDuration:
+  - RawValue: 196608
+  - RawValue: 262144
+  - RawValue: 262144
+  BurnIntensity:
+  - RawValue: 6554
+  - RawValue: 9830
+  - RawValue: 9830
+  MaxTargets: 020000000400000004000000

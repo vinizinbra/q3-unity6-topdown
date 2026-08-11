@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapon/WeaponPerk/CataclysmRound
     Guid:
       Value: 413249485350196850
-  Icon: {fileID: 301000183, guid: c6be27ae176d44f3594332e40fa484ed, type: 3}
+  Icon: {fileID: -663504267, guid: 017cb6454ed9743478842fb02d741366, type: 3}
   DisplayName: Cataclysm Round
   Rarity: 2
   Description: Final shot becomes a massive explosive projectile ({0:0}% damage,

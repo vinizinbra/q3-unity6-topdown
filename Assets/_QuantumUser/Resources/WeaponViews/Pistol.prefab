@@ -110,20 +110,44 @@ MonoBehaviour:
   initialized: 0
   executeOnlyOnLocal: 0
   isLocal: 0
-  rightOffset: {x: 0.1, y: 0}
-  upOffset: {x: 0.15, y: 0.3}
-  downOffset: {x: 0.1, y: 0.3}
-  rightHandGrip: {x: 0.3, y: -0.1, z: -0.01}
-  leftHandGrip: {x: 0.35, y: -0.05, z: -0.01}
-  recoilKickDistance: 0.2
-  recoilRotationKick: 45
-  recoilDuration: 0.3
-  recoilFrequency: 8
-  recoilAsymmetry: 0.3
+  anim:
+    rightOffset: {x: 0, y: -0.1}
+    upOffset: {x: 0.2, y: 0}
+    downOffset: {x: 0.1, y: 0.2}
+    rightHandGrip: {x: 0.27, y: 0.13, z: -0.02}
+    leftHandGrip: {x: 0.47, y: 0, z: 0.02}
+    recoilKickDistance: 0.1
+    recoilRotationKick: 45
+    recoilDuration: 0.3
+    recoilFrequency: 10
+    recoilAsymmetry: 0.3
+    knockbackDistance: 0.1
+    knockbackScalePunch: 0.3
+    shakePositionHead:
+      Strength: {x: -0.1, y: 0.04, z: 0}
+      Duration: 0.2
+      Frequency: 20
+    shakeRotationBody:
+      Strength: {x: 5, y: 0, z: 0}
+      Duration: 0.2
+      Frequency: 10
+    shakeRotationHead:
+      Strength: {x: 10, y: 0, z: 0}
+      Duration: 0.2
+      Frequency: 10
+    shakeScaleBody:
+      Strength: {x: -0.1, y: 0, z: 0}
+      Duration: 0.2
+      Frequency: 10
+    shakeScaleHead:
+      Strength: {x: 0.01, y: 0, z: 0}
+      Duration: 0.1
+      Frequency: 20
+  character: {fileID: 0}
   muzzleParticle: {fileID: 1999947104554364320}
   tracerPrefab: {fileID: 0}
-  knockbackDistance: 0.2
-  knockbackScalePunch: 0.3
+  beamParticle: {fileID: 0}
+  beamStopGrace: 0.15
 --- !u!1001 &1999947104573112648
 PrefabInstance:
   m_ObjectHideFlags: 0

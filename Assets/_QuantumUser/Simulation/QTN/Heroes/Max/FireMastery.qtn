@@ -25,6 +25,21 @@ component StatusSpreadOnDeath
     FP BurnDuration;
     FP BurnIntensity;
     Int32 MaxTargets;
+
+    // Burning Vengeance rank 3 - a genuine radial Burn/damage burst (MaxAscensionUtility.
+    // ApplyRadialBurn) at the death position of a Vendetta-consumed kill that was already Burning,
+    // on top of (not instead of) the ordinary spread above. Reuses this same component's own
+    // Radius/BurnDuration/BurnIntensity rather than a second set of fields - see
+    // MaxVendettaSystem.OnEntityKilled.
+    Boolean HasFieryBurst;
+
+    // Wildfire rank 3 - when > 0, the any-Burning-death spread reads the dying enemy's OWN live Burn
+    // (StatusEffects.BurnRemaining/BurnDamagePerTick) scaled by this fraction instead of the flat
+    // authored BurnDuration/BurnIntensity above, so a fire that's already burning hot/long propagates
+    // that same intensity/duration onward (scaled down) rather than resetting every jump back to the
+    // base amount. 0 (the default) keeps every lower rank's flat-authored behavior unchanged. See
+    // MaxFireMasteryReactionSystem.OnEntityKilled.
+    FP WildfireRetainedFraction;
 }
 
 // Cremation - forces a Burning target's Health the rest of the way to 0 once it's already below

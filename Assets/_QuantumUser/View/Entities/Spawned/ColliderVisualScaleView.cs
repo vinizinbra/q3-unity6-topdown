@@ -1,3 +1,5 @@
+using NaughtyAttributes;
+using PrimeTween;
 using QuantumUser.View.Util;
 using UnityEngine;
 
@@ -16,6 +18,13 @@ namespace Quantum
 
         [SerializeField, Tooltip("What the visual measures across at localScale 1. A Unity cube is 1,1,1; a quad or custom mesh may not be.")]
         private Vector3 visualUnitSize = Vector3.one;
+
+        [SerializeField, Tooltip("Pop the visual in from zero to its resolved scale on spawn instead of snapping straight to it.")]
+        private bool tweenScaleOnEnable;
+        [SerializeField, ShowIf(nameof(tweenScaleOnEnable)), Tooltip("How long the pop-in takes.")]
+        private float tweenDuration = 0.2f;
+        [SerializeField, ShowIf(nameof(tweenScaleOnEnable)), Tooltip("Shapes the pop-in - OutBack overshoots past the resolved scale first, OutQuad/OutCubic decelerate into it.")]
+        private Ease tweenEase = Ease.OutBack;
 
         // The collider is sized once at spawn and never resized after, so this stops once it takes.
         // It also keeps an unsupported shape from logging every frame.
@@ -59,10 +68,20 @@ namespace Quantum
                 return;
             }
 
-            visual.localScale = new Vector3(
+            var resolvedScale = new Vector3(
                 Fit(worldSize.x, visualUnitSize.x),
                 Fit(worldSize.y, visualUnitSize.y),
                 Fit(worldSize.z, visualUnitSize.z));
+
+            if (tweenScaleOnEnable == true)
+            {
+                visual.localScale = Vector3.zero;
+                Tween.Scale(visual, resolvedScale, tweenDuration, tweenEase);
+            }
+            else
+            {
+                visual.localScale = resolvedScale;
+            }
         }
 
         private static bool TryGetWorldSize(Shape3D shape, out Vector3 size)

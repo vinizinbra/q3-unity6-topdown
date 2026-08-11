@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.WorldTheme
   worldName: 0
   enemy:
-    BloodColor: {r: 1, g: 0.3066038, b: 0.3066038, a: 1}
+    BloodColor: {r: 0.4811321, g: 0.052198302, b: 0.052198302, a: 1}
   environment:
     Surface: {r: 0.7630516, g: 0.8773585, b: 0.33521718, a: 1}
     Walls: {r: 0.47570974, g: 0.27661088, b: 0.5283019, a: 1}

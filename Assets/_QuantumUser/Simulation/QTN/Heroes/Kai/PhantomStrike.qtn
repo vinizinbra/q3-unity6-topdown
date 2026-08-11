@@ -1,0 +1,22 @@
+// Kai's Phantom Strike Ascension (Dash line 2/3) - see docs/kai-ascensions.md. Relocated from the old
+// VoidwalkerMastery.qtn (deleted) now that Phantom Strike is a genuine Dash-slot SkillActionData
+// (PhantomStrikeSkillAction) rather than a PassiveUpgradeData reacting to OnSkillActivated - granted
+// directly in that class's own Begin-phase Execute instead. Consumed on Kai's very next shot fired
+// (WeaponSystem, alongside the existing WeaponFireTimeMods.BonusPierce bake) rather than on hit
+// landing - "next weapon hit" reads naturally as "next shot", and this keeps the damage bonus and the
+// bonus pierce consuming the same charge at the same single resolution point.
+component PhantomStrikeUpgrade
+{
+    FP DamageMultiplierBonus;
+
+    // Flat Pierce granted on top of whatever Piercing Rounds/etc. already grants - 1/2/99 per rank
+    // ("massive Pierce" at rank 3, a large flat int rather than a dedicated infinite-pierce flag).
+    Int32 PierceBonus;
+}
+
+// One-shot consumable tag on Kai's own entity - added by PhantomStrikeSkillAction.Execute (Dash
+// Begin), removed by WeaponSystem the instant his next shot fires (hit or miss - "next shot", not
+// "next connecting hit").
+component PhantomStrikeCharge
+{
+}

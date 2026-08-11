@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bdf1716791ae746f3870b23abd31a3ae, type: 3}
+  m_Name: LastStandSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.LastStandSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Max/Max_HeroSkill/Max_HeroSkillUpgrades/Overdrive/LastStandSkillAction
+    Guid:
+      Value: 329573136349118667
+  Icon: {fileID: 0}
+  DisplayName: Last Stand
+  Rarity: 2
+  RankDescriptions:
+  - 'Unshaken: taking damage during Overdrive no longer resets your Rage.'
+  - 'Unshaken, plus Retaliation: taking damage during Overdrive grants +20% Weapon
+    Damage for 2s (short cooldown).'
+  - 'Unshaken, Retaliation, plus Too Angry to Die: lethal damage during Overdrive
+    instead leaves you at 1 Health, clears Rage, and immediately ends Overdrive.'
+  <MaxRank>k__BackingField: 3
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 0
+  Description: Overdrive grows harder to punish - keep your Rage on hit, retaliate
+    when struck, and cheat death outright.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  RetaliationDuration:
+    RawValue: 131072
+  RetaliationDamageBonus:
+    RawValue: 13107
+  CheatDeathImmunityDuration:
+    RawValue: 131072

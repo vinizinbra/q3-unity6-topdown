@@ -1,0 +1,24 @@
+// Overdrive rank 4 ("Ignition") - granted once by IgnitionSkillAction.Apply, which SETs every field
+// below to the picked rank's cumulative tuned values. All three ranks gate on being at max Rage
+// (RageOverdriveUtility.IsAtMaxRage), not just Overdrive being active at all:
+//  - Rank 1: BurnOnHitStacks toggles CharacterStats.BurnOnHitStacks on/off at the max-Rage threshold
+//    (MaxAscensionUtility.OnEnteredMaxRage/RevertIgnition, same enter/exit-threshold shape Full
+//    Throttle uses).
+//  - Rank 2: HasBurningGround gates IgnitionSkillAction's own OnGoing distance-accumulation spawn
+//    logic - Max-specific, not routed through this shared component.
+//  - Rank 3: HasInferno + InfernoRadius/InfernoBurnDuration/InfernoBurnIntensity back one
+//    MaxAscensionUtility.ApplyRadialBurn pulse the FIRST time max Rage is reached each Overdrive
+//    activation - InfernoTriggeredThisActivation latches that, reset by IgnitionSkillAction.Execute
+//    on Begin.
+component IgnitionUpgrade
+{
+    Byte BurnOnHitStacks;
+    Boolean HasBurningGround;
+    Boolean HasInferno;
+    FP InfernoRadius;
+    FP InfernoBurnDuration;
+    FP InfernoBurnIntensity;
+
+    Boolean Applied;
+    Boolean InfernoTriggeredThisActivation;
+}

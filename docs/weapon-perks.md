@@ -67,12 +67,12 @@ Editor authoring is still needed before any of this can drop or be offered at ru
 | Common | Rapid Mechanism | `FireRateWeaponPerkData` (existing) | Bake |
 | Common | Extended Magazine | `MagazineMultiplierWeaponPerkData` (existing) | Bake |
 | Common | Fast Loader | `ReloadSpeedWeaponPerkData` | Bake |
-| Common | Long Barrel | `RangeMultiplierWeaponPerkData` | Bake (+ `Projectile.MaxDistanceMultiplier`) |
+| Common | Long Barrel | `RangeMultiplierWeaponPerkData` | Bake (`Weapon.RangeMultiplier`, feeds `Projectile.MaxTravelDistance` - see "Dynamic projectile range") |
 | Common | Precision Barrel | `CriticalChanceWeaponPerkData` (existing) | Bake |
 | Common | Hollow Point | `CriticalDamageWeaponPerkData` | Bake |
 | Rare | Piercing Rounds | `PiercingRoundsWeaponPerkData` | Bake (`Projectile.RemainingPierces`) |
 | Rare | Ricochet | `RicochetWeaponPerkData` | `DirectHitData.TryRicochet` |
-| Rare | Double Tap | `DoubleTapWeaponPerkData` | Rolled per shot in `WeaponSystem.Update` |
+| Rare | Double Tap | `DoubleTapWeaponPerkData` | Rolled per shot in `WeaponSystem.Update`, extra shot delayed via `PendingDoubleTapShot` |
 | Rare | Opening Burst | `OpeningBurstWeaponPerkData` | Live magazine-position read |
 | Rare | Execution Rounds | `ExecutionRoundsWeaponPerkData` | Live magazine-position read |
 | Rare | Final Round | `FinalRoundWeaponPerkData` | Live magazine-position read |
@@ -141,6 +141,40 @@ branch already uses for "conditionally call a status/damage utility from perk-co
   in the same pass - it could previously select a lingering-dead or invulnerable enemy, a real edge
   case a kill-reaction perk hits constantly.
 
+## Element Infusion
+
+`ElementInfusionWeaponPerkData` grafts an **extra** on-hit element onto the weapon, on top of - never
+replacing - the weapon's own `WeaponDataAsset.Element`. The native element keeps flowing through
+`Projectile.Element` and rolls the owner's shared `CharacterStats.ElementalChance` exactly as before;
+the infused element carries its **own** authored `ProcChance` and rolls independently, so a Neutral
+weapon gains an element and an already-elemental weapon can land two statuses side by side on one hit.
+
+Storage/flow deliberately mirrors the native element one channel over:
+- Baked once by `Apply` into a new optional `WeaponElementInfusion` component (`Element` + `ProcChance`),
+  removed on every re-equip in `WeaponSystem.SeedPerkRoster` like every other perk cluster.
+- Carried to impact via two new `Projectile` fields (`PerkElement`/`PerkElementChance`), seeded in
+  `WeaponSystem.ApplyProjectilePerks` - the single post-spawn seeding point both projectile fire sites
+  already funnel through. Hitscan has no projectile, so `WeaponSystem.FireHitscan` reads the component
+  live instead.
+- Applied through a new `StatusEffectUtility.TryApplyInfusedElement` - same Fire→Burn/Ice→Slow/
+  Rock→Intimidate baseline (now extracted into a shared `ApplyElementBaseline` the native path also
+  calls) plus the same Rift Mark reaction, but rolled against the perk's `ProcChance` and with **no**
+  guaranteed-burn pass (that's owner-global and already ran on the native-element call - running it
+  twice would double it). Called right after the native-element application in
+  `HitEffectUtility.ApplyToTarget` (projectile/area hits) and `WeaponSystem.FireHitscan` (hitscan),
+  sharing the same `PreHitRiftMarkStacks` snapshot so at most one Rift Mark reaction still fires per
+  hit (the native call's, if it landed one - the infused call's consume then hits the live reaction
+  lockout it set).
+
+**Only one infused element per weapon**: a second Element Infusion perk last-wins, overwriting both
+fields (chosen over a multi-element array to avoid bloating the hot `Projectile` component). Area hits
+(`ApplyInRadius`/`Shape`/`Collider`) build their context with `PerkElement` defaulting to Neutral, so
+they no-op for free - the infused element reaches only the direct projectile/hitscan hit, same reach
+the native `WeaponDataAsset.Element` already had.
+
+`WeaponPerkAssetGenerator` authors one infusion `.asset` per real element (Incendiary/Cryo/Shatter/
+Void/Shock Rounds - Neutral excluded) and wires them into `WeaponPerkPoolData` alongside the rest.
+
 ## Design decisions made while implementing
 
 - **Ramp perks share one counter** rather than tracking 3 independent ramps (see above) - confirmed
@@ -151,6 +185,50 @@ branch already uses for "conditionally call a status/damage utility from perk-co
 - Fields contributed by more than one perk (e.g. `RampDecayGrace`, `EchoDelay`) take the largest
   value any equipped contributor asks for via `FPMath.Max`, not a sum - so combining perks can't
   accidentally make a shared timing constant faster/slower than any single perk intends.
+- **Double Tap's extra shot is offset by `DoubleTapDelay` (default 0.1s, `WeaponPerkAssetGenerator`)
+  instead of firing the same tick as the primary shot** - added so the two are audibly/visibly two
+  separate shots rather than one instantaneous double-damage burst. Queued into
+  `WeaponFireTimeMods.PendingDoubleTap` (a single slot, unlike `WeaponEchoState.PendingEchoes`' `[3]`
+  - Double Tap only ever queues one extra shot per primary shot) and ticked down/fired in
+  `WeaponSystem.Update`/`TickPendingDoubleTap`, same FP-seconds countdown `TickPendingEchoes` uses. A
+  second proc landing while one is already pending is silently dropped rather than replacing it -
+  same "don't stall/replace the older one" precedent `EnqueueEcho` already uses for its own queue -
+  acceptable since `DoubleTapDelay` is meant to stay well under the weapon's own fire cooldown.
+
+## Dynamic projectile range
+
+A `Projectile`-type weapon's shots now travel exactly as far as `WeaponDataAsset.Range *
+Weapon.RangeMultiplier` (`WeaponPerkUtility.ResolveWeaponRange`) - the same distance `FireHitscan`
+already limited its raycast to - instead of whatever `ProjectileDataAsset.MaxDistance` happened to be
+hand-authored on that projectile's shared asset (previously a completely separate, easy-to-forget-to-
+tune number; a Projectile weapon with an un-set `MaxDistance` had effectively infinite range until
+`RemainingLifetime` ran out). A new `Projectile.MaxTravelDistance` field carries this per-shot
+absolute cap; `ProjectileSystem.TryExpire` checks it first and only falls back to the old
+`MaxDistance * MaxDistanceMultiplier` math when it's `<= 0` - i.e. for anything not fired by a weapon
+(skills, enemy attacks), which are untouched by this change.
+
+Every weapon-fire spawn site bakes the same `ResolveWeaponRange` value onto the projectile it spawns,
+so a bullet spawned mid-flight by another perk can't outrun the weapon that ultimately fired it:
+
+- `WeaponSystem.ApplyProjectilePerks` - the primary shot, Double Tap's delayed replay, and every Echo
+  Chamber/Infinite Echo repeat all route through this one call site.
+- `WeaponPerkReactionSystem.TryFireCriticalRebound` - previously spawned with no
+  `MaxDistanceMultiplier`/pierce/bounce seeding at all (a pre-existing gap); now at least gets the
+  same range cap.
+- `DirectHitData.SpawnSplitProjectiles` - previously halved the parent weapon's range
+  (`SplitShotRangeFraction = 0.5`, enforced as an ad hoc `RemainingLifetime` clamp) specifically so a
+  fragment couldn't out-range its parent weapon. That halving is gone - a split child now gets the
+  *same* full-range cap as everything else, per explicit design direction (consistency over the old
+  "half range" balancing choice).
+- Ricochet doesn't spawn a new entity (`DirectHitData.TryRicochet` just redirects the existing
+  projectile's `Velocity`), so it already carries forward whatever `MaxTravelDistance`/
+  `TraveledDistance` that entity already had - nothing to change there.
+
+`Projectile.MaxDistanceMultiplier` still exists (read by the fallback branch above), but nothing sets
+it anymore - `ApplyProjectilePerks` used to bake `Weapon.RangeMultiplier` into it, now it bakes the
+fully-resolved `MaxTravelDistance` instead. Any `MaxDistanceMultiplier` value still authored on a
+weapon-projectile `EntityPrototype` from before this change is now inert (superseded, not read) - the
+field remains functional for the actual non-weapon projectiles that still fall back to it.
 
 ## Weapon Perk component split
 
@@ -174,7 +252,7 @@ fields (`WeaponData`/`Perks`/`MagazineSize`/`ReloadDuration`/`CriticalChance`/
 | `WeaponMagazinePositionPerks` | Opening Burst, Execution Rounds, Final Round, Escalating Rounds |
 | `WeaponRampState` | Relentless Fire, Suppressive Cycle, Overcharge Cycle (the shared ramp pool - mandatory single component, all 3 feed it via `FPMath.Max`/SUM) |
 | `WeaponEchoState` | Echo Chamber, Infinite Echo (mandatory single component - both drive the same shared `EchoDelay`/`PendingEchoes` queue) |
-| `WeaponFireTimeMods` | Piercing Rounds, Ricochet, Double Tap |
+| `WeaponFireTimeMods` | Piercing Rounds, Ricochet, Double Tap (also holds its own `PendingDoubleTap` single-slot queue, ticked alongside `WeaponEchoState`'s) |
 | `WeaponPostImpactProcs` | Split Shot, Quantum Rounds, Explosive Sequence, Cataclysm Round |
 | `WeaponReloadHooks` | Empty Chamber, Combat Reboot, Emergency Reload |
 | `WeaponOnKillReactions` | Predator Magazine, Killer Instinct, Rift Aftershock |
@@ -203,8 +281,8 @@ survives the swap.
 
 **New QTN**: `Combat.qtn` (`OnEntityKilled`/`OnCriticalHit`/`OnWeaponHitLanded` signals -
 `OnWeaponHitLanded` later gained a `target` parameter for Fracture Rounds, see "Rift Mark content
-pool" above), `WeaponPerks.qtn` (the 8 optional perk components above, plus the `PendingEcho` struct
-- see "Weapon Perk component split").
+pool" above), `WeaponPerks.qtn` (the 8 optional perk components above, plus the `PendingEcho`/
+`PendingDoubleTapShot` structs - see "Weapon Perk component split").
 **Edited QTN**: `Weapon.qtn` (trimmed down to its 13 core fields - every perk-specific field moved to
 `WeaponPerks.qtn`), `Projectile.qtn`
 (`RemainingBounces`/`MaxDistanceMultiplier`/`IsExplosiveProc`/`IsCataclysm`).
@@ -301,13 +379,17 @@ drop (`WeaponGenerator.Roll`) can, once something actually calls it with this po
    re-apply Piercing Rounds/Ricochet/Explosive Sequence/Cataclysm Round to itself - only the
    recursion cap (`MaxSplitShotDepth`) carries over, so a split-shot weapon can't cascade into a
    second full generation of splits. Children fan across a 90° arc centered on the parent shot's own
-   heading at impact (not a full circle), and their `RemainingLifetime` is capped so they can't
-   travel past half the firing weapon's `WeaponDataAsset.Range * Weapon.RangeMultiplier` - see
-   `DirectHitData.SpawnSplitProjectiles`.
+   heading at impact (not a full circle), and each gets the same `Projectile.MaxTravelDistance` cap
+   (the firing weapon's own `WeaponDataAsset.Range * Weapon.RangeMultiplier`, via
+   `WeaponPerkUtility.ResolveWeaponRange`) every other weapon-fired projectile does - see "Dynamic
+   projectile range" below and `DirectHitData.SpawnSplitProjectiles`.
 5. **Explosive Sequence's shot counter free-runs on Double Tap's extra shot and split-shot
    children** - Double Tap's free shot mirrors the primary shot's already-resolved
    proc flags rather than re-rolling/advancing the counter itself; split children don't touch it at
-   all (see #4).
+   all (see #4). It does lose the primary shot's target lock, though (see `FireDoubleTapShot`'s own
+   comment) - once delayed via `DoubleTapDelay`, it replays straight down the original
+   `SpawnPosition`/`AimDirection` rather than re-solving `Aim.Target`'s aim point, same simplification
+   `PendingEcho` already makes for echoed shots.
 6. **Rift Mark content pool** - see `docs/rift-mutations.md`'s own "Current status" for the shared
    caveats (no automated coverage for the Frame-dependent half, cross-mechanic dedup scoped to within
    each evaluation point not globally, Focused Breach's contact-time reset-on-miss-only behavior).

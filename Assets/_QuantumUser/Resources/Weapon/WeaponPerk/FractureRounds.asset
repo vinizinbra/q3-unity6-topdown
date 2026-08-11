@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapon/WeaponPerk/FractureRounds
     Guid:
       Value: 440353410511059787
-  Icon: {fileID: 301000211, guid: c6be27ae176d44f3594332e40fa484ed, type: 3}
+  Icon: {fileID: -1898032036, guid: 017cb6454ed9743478842fb02d741366, type: 3}
   DisplayName: Fracture Rounds
   Rarity: 1
   Description: Every {0:0}th confirmed hit from this weapon applies Rift Mark

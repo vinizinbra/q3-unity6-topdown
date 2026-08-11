@@ -9,16 +9,26 @@ namespace Quantum
     // a standalone dropped instance.
     public unsafe partial class VoidFieldPassiveData : PassiveData
     {
-        public FP Radius = 4;
-        public FP SpeedMultiplier = FP._0_50;
+        public FP Radius = FP.FromString("2.5");
+
+        // Baseline projectile speed while caught (60% - a 40% slow). Event Horizon's own ranked
+        // SpeedMultiplierBonus subtracts from THIS, not from whatever a previous rank left behind -
+        // see ProjectileSlowField.BaseSpeedMultiplier's own comment.
+        public FP SpeedMultiplier = FP.FromString("0.60");
 
         public override void Apply(Frame f, EntityRef entity, CharacterStats* stats)
         {
             f.Add(entity, new ProjectileSlowField
             {
+                BaseRadius = Radius,
                 Radius = Radius,
+                BaseSpeedMultiplier = SpeedMultiplier,
                 SpeedMultiplier = SpeedMultiplier,
                 EnemyTimeDilationMultiplier = FP._0,
+
+                // Filler/Normal/Specialist only, never Elite/Boss - preserves the pre-Event-Horizon-
+                // refactor default exactly (see that ascension's own rank 3 "Void Pressure").
+                MaxAffectedEnemyTierIndex = (byte)EnemyTier.Specialist,
             });
         }
     }

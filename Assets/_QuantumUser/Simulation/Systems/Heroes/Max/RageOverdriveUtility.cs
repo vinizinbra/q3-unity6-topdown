@@ -2,76 +2,95 @@ namespace Quantum
 {
     using Photon.Deterministic;
 
-    // Advance/revert logic for RageOverdrive, split out of RageOverdriveSkillAction because
-    // TryAdvanceStack is called from DamageUtility on every landed weapon hit, not from the skill
-    // lifecycle - only the grant/revoke (Begin/End) belongs on the action itself.
+    // Advance/reset logic for RageOverdrive, plus the max-Rage threshold transition itself - split
+    // out of BerserkSkillData/MaxOverdriveReactionSystem because TryAdvanceStack/ResetStacks are
+    // called from DamageUtility/combat reactions on every landed hit or hit taken, not from the skill
+    // lifecycle itself. Rage's own baseline has zero stat effect - reaching max Rage is purely a
+    // condition (IsAtMaxRage) that Ascensions react to on their own. Full Throttle's stat toggle and
+    // Ignition's Burn-on-hit toggle both hook the entering/leaving-max-Rage transition detected here
+    // directly (same "read optional upgrade components inline, no dispatcher" idiom
+    // JuggernautSkillData.Discharge already established for Brute) rather than each polling every
+    // tick.
     public static unsafe class RageOverdriveUtility
     {
+        public static bool IsAtMaxRage(Frame f, EntityRef owner)
+        {
+            return f.Unsafe.TryGetPointer<RageOverdrive>(owner, out var rage) == true && rage->Stacks >= rage->MaxStacks;
+        }
+
+        // Called from DamageUtility.ApplyDamage on every landed weapon hit - a no-op once already at
+        // max Rage (further hits land no-ops, matching the pre-refactor behavior).
         public static void TryAdvanceStack(Frame f, EntityRef owner)
         {
-            if (f.Unsafe.TryGetPointer<RageOverdrive>(owner, out var rage) == false || rage->Overdriven == true)
+            if (f.Unsafe.TryGetPointer<RageOverdrive>(owner, out var rage) == false)
                 return;
 
+            if (rage->Stacks >= rage->MaxStacks)
+                return;
+
+            rage->Stacks++;
+
             if (rage->Stacks < rage->MaxStacks)
+                return;
+
+            // Entering max Rage - Full Throttle/Ignition react here, not via a per-tick poll.
+            if (f.Unsafe.TryGetPointer<FullThrottleUpgrade>(owner, out var fullThrottle) == true)
             {
-                rage->Stacks++;
+                MaxAscensionUtility.ApplyFullThrottle(f, owner, fullThrottle);
             }
 
-            if (rage->Stacks < rage->MaxStacks)
-                return;
+            if (f.Unsafe.TryGetPointer<IgnitionUpgrade>(owner, out var ignition) == true)
+            {
+                MaxAscensionUtility.OnEnteredMaxRage(f, owner, ignition);
+            }
 
-            if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false)
-                return;
-
-            ApplyCorrection(stats, rage, apply: true);
-            rage->Overdriven = true;
-
-            Log.Debug($"[Skill] {owner} reached Rage Overdrive ({rage->Stacks}/{rage->MaxStacks})");
+            Log.Debug($"[Skill] {owner} reached max Rage ({rage->Stacks}/{rage->MaxStacks})");
         }
 
-        // No-ops if Overdrive never triggered this activation - nothing to undo.
+        // Called from MaxOverdriveReactionSystem when the owner takes damage while Overdrive is
+        // active - a no-op if they carry RageRetentionUpgrade (Last Stand rank 1) or already have 0
+        // stacks.
+        public static void ResetStacks(Frame f, EntityRef owner)
+        {
+            if (f.Unsafe.TryGetPointer<RageOverdrive>(owner, out var rage) == false || rage->Stacks == 0)
+                return;
+
+            if (f.Has<RageRetentionUpgrade>(owner) == true)
+                return;
+
+            bool wasAtMax = rage->Stacks >= rage->MaxStacks;
+            rage->Stacks = 0;
+
+            if (wasAtMax == true)
+            {
+                RevertMaxRageEffects(f, owner);
+            }
+
+            Log.Debug($"[Skill] {owner} took damage - Rage reset to 0");
+        }
+
+        // Called from BerserkSkillData.End - no-op if Rage never reached max this activation,
+        // otherwise reverts whatever max-Rage effects are still applied before RageOverdrive itself
+        // is removed.
         public static void Revert(Frame f, EntityRef owner, RageOverdrive* rage)
         {
-            if (rage->Overdriven == false)
+            if (rage->Stacks < rage->MaxStacks)
                 return;
 
-            if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false)
-                return;
-
-            ApplyCorrection(stats, rage, apply: false);
-
-            Log.Debug($"[Skill] {owner}'s Rage Overdrive correction reverted");
+            RevertMaxRageEffects(f, owner);
         }
 
-        // The doubled bonus replaces the granting skill's own contribution rather than stacking
-        // blindly on top of it - going from base factor (1+bonus) to (1+bonus*OverdriveMultiplier)
-        // is a single multiplicative correction, applied here and undone the same way in Revert.
-        private static void ApplyCorrection(CharacterStats* stats, RageOverdrive* rage, bool apply)
+        private static void RevertMaxRageEffects(Frame f, EntityRef owner)
         {
-            FP fireRate = Correction(rage->FireRateBonus, rage->OverdriveMultiplier);
-            FP moveSpeed = Correction(rage->MoveSpeedBonus, rage->OverdriveMultiplier);
-            FP reloadSpeed = Correction(rage->ReloadSpeedBonus, rage->OverdriveMultiplier);
-
-            if (apply == true)
+            if (f.Unsafe.TryGetPointer<FullThrottleUpgrade>(owner, out var fullThrottle) == true)
             {
-                stats->AttackSpeedMultiplier *= fireRate;
-                stats->MoveSpeedMultiplier *= moveSpeed;
-                stats->ReloadSpeedMultiplier *= reloadSpeed;
+                MaxAscensionUtility.RevertFullThrottle(f, owner, fullThrottle);
             }
-            else
+
+            if (f.Unsafe.TryGetPointer<IgnitionUpgrade>(owner, out var ignition) == true)
             {
-                stats->AttackSpeedMultiplier /= fireRate;
-                stats->MoveSpeedMultiplier /= moveSpeed;
-                stats->ReloadSpeedMultiplier /= reloadSpeed;
+                MaxAscensionUtility.RevertIgnition(f, owner, ignition);
             }
-        }
-
-        private static FP Correction(FP bonus, FP overdriveMultiplier)
-        {
-            FP baseFactor = FP._1 + bonus;
-            FP overdriveFactor = FP._1 + bonus * overdriveMultiplier;
-
-            return overdriveFactor / baseFactor;
         }
     }
 }

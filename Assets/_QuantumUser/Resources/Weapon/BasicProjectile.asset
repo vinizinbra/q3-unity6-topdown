@@ -28,7 +28,7 @@ MonoBehaviour:
   Lifetime:
     RawValue: 196608
   HitRadius:
-    RawValue: 0
+    RawValue: 6554
   SpawnDelay:
     RawValue: 0
   MaxDistance:

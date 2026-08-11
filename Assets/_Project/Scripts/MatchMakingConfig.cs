@@ -30,17 +30,59 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
 
    // Player's own meta-progression weapon-talent level, carried in from outside this match (e.g.
    // an account/profile screen elsewhere would be what actually raises this over time) - read here
-   // right before AddPlayer and copied onto RuntimePlayer.WeaponLevel, which
-   // PlayerSpawnUtility.Spawn seeds CharacterStats.WeaponTalentLevel from once at spawn. See that
-   // field's own comment.
+   // right before AddPlayer and copied onto RuntimePlayer.Talents.WeaponLevel, which
+   // PlayerSpawnUtility.Spawn seeds CharacterStats.WeaponTalentLevel from once at spawn. See
+   // PlayerTalents' own comment (RuntimePlayer.User.cs).
    private static readonly PlayerPrefInt WeaponTalentLevelPref = new PlayerPrefInt("weapon_talent_level", 0);
+
+   // Player's own meta-progression reroll-charge talent, same "carried in from outside this match"
+   // contract as WeaponTalentLevelPref above - read here right before AddPlayer and copied onto
+   // RuntimePlayer.Talents.RerollQuantity, which PlayerSpawnUtility.Spawn seeds CharacterStats.
+   // RerollQuantity from once at spawn. See PlayerTalents' own comment (RuntimePlayer.User.cs).
+   private static readonly PlayerPrefInt RerollQuantityPref = new PlayerPrefInt("reroll_quantity", 0);
+
+   // Player's own meta-progression Talents (see docs/talents.md), carried in from outside this
+   // match the same way as WeaponTalentLevelPref above - read here right before AddPlayer and
+   // copied onto RuntimePlayer's own Player*/Has*/Can* fields. One JSON-blob pref (PlayerPrefObject)
+   // rather than eighteen separate PlayerPrefInt/PlayerPrefBool fields, since this is now several
+   // heterogeneous fields instead of one scalar.
+   [Serializable]
+   private class TalentSaveData
+   {
+      public byte PlayerDamageLevel;
+      public byte PlayerCooldownLevel;
+      public byte PlayerFireRateLevel;
+      public byte PlayerReloadSpeedLevel;
+      public byte PlayerCriticalChanceLevel;
+      public byte PlayerCriticalDamageLevel;
+      public byte PlayerMaxHealthLevel;
+      public byte PlayerMaxShieldLevel;
+      public byte PlayerDamageReductionLevel;
+      public byte PlayerMoveSpeedLevel;
+      public byte PlayerPickupRangeLevel;
+      public byte PlayerExperienceLevel;
+      public bool HasWeaponChest;
+      public bool HasHeroChest;
+      public bool HasGlobalUpgradeChest;
+      public bool HasUnlockedRift;
+      public bool CanFindStones;
+      public bool HasEvent;
+   }
+
+   private static readonly PlayerPrefObject<TalentSaveData> TalentsPref =
+      new PlayerPrefObject<TalentSaveData>("player_talents", new TalentSaveData());
 
    public TMP_InputField NameField;
    public TMP_Text ConnectionState;
    public MatchMakingType matchMakingType = MatchMakingType.QUICKPLAY;
    public static MatchMakingConfig Instance;
 
-   public bool CanReconnect => matchmakingArguments.ReconnectInformation != null &&
+   // ReconnectInformation gets (re)populated by the SDK on every successful connect - joining/
+   // creating a party room included, not just an actual mid-match drop - so it alone doesn't mean
+   // there's anything to reconnect to. Only true while NOT currently connected to a room; once
+   // actually in a party or a match, there's nothing to reconnect to (you're already there).
+   public bool CanReconnect => !Client.InRoom &&
+                               matchmakingArguments.ReconnectInformation != null &&
                                !matchmakingArguments.ReconnectInformation.HasTimedOut;
 
    public enum MatchMakingType
@@ -58,7 +100,9 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
       {
          LogHelper.Error("MatchMaking", "Awake: NameField is not assigned.");
       }
-      Client.NickName = NameField != null ? NameField.text : string.Empty;
+
+      var nameFieldText = NameField != null ? NameField.text : string.Empty;
+      Client.NickName = string.IsNullOrWhiteSpace(nameFieldText) ? $"Player{Random.Range(1000, 9999)}" : nameFieldText;
 
       var globalSettings = PhotonServerSettings.Global;
 
@@ -153,8 +197,14 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
 
    async void Connect(MatchmakingArguments connectionArguments)
    {
-      var mainMenuTab = GameManager.Instance.MainMenuTab;
-      mainMenuTab.windowManager.ShowWindow<ConnectingWindow>();
+      // The party (CUSTOM) flow shows its own "connecting" feedback inline via PartyRoomWidget,
+      // staying on MainMenuWindow throughout - only quickplay/reconnect navigate away to the
+      // full-screen ConnectingWindow.
+      if (matchMakingType != MatchMakingType.CUSTOM)
+      {
+         var mainMenuTab = GameManager.Instance.MainMenuTab;
+         mainMenuTab.windowManager.ShowWindow<ConnectingWindow>();
+      }
       try
       {
          await Client.ConnectToRoomAsync(connectionArguments);
@@ -183,7 +233,7 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
    private void HandleConnectFailure(Exception e)
    {
       LogHelper.Error("MatchMaking", $"Connect failed: {e}");
-      AlertPopup.instance.Setup("Connection Failed", e.Message, () =>
+      AlertPopup.Show("Connection Failed", e.Message, () =>
       {
          GameManager.Instance.MainMenuTab.windowManager.ShowWindow<MainMenuWindow>();
       });
@@ -250,38 +300,97 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
       }
    }
 
+   // QuantumRunner.Shutdown() is deferred to that runner's next Service() tick, not synchronous -
+   // starting a new SessionRunner before the old one has actually deregistered leaves
+   // QuantumRunner.Default resolving to the dead runner, which breaks anything keyed off it
+   // (e.g. QuantumHelper.IsLocalPlayer, and therefore the camera never re-binding to the player).
+   private async Task WaitForPreviousRunnerToShutdownAsync()
+   {
+      if (QuantumRunner.Default == null)
+         return;
+
+      float startTime = Time.realtimeSinceStartup;
+      while (QuantumRunner.Default != null)
+      {
+         if (Time.realtimeSinceStartup - startTime > GameplaySceneUnloadTimeoutSeconds)
+         {
+            LogHelper.Error("MatchMaking", "Previous QuantumRunner did not shut down in time - starting new session anyway.");
+            return;
+         }
+         await Task.Yield();
+      }
+   }
+
    public async void StartRunner()
    {
-      await WaitForPreviousGameplaySceneToUnloadAsync();
+      GameManager.Instance.MainMenuTab.windowManager.ShowWindow<ConnectingWindow>();
 
-      var runtimeConfig = new QuantumUnityJsonSerializer().CloneConfig(RuntimeConfig);
+      try
+      {
+         await WaitForPreviousGameplaySceneToUnloadAsync();
+         await WaitForPreviousRunnerToShutdownAsync();
 
-      var sessionConfig = QuantumDeterministicSessionConfigAsset.DefaultConfig;
-      if (DisableChecksumsForRelease)
-         sessionConfig.ChecksumInterval = 0;
+         var runtimeConfig = new QuantumUnityJsonSerializer().CloneConfig(RuntimeConfig);
 
-      var sessionRunnerArguments = new SessionRunner.Arguments {
-         RunnerFactory = QuantumRunnerUnityFactory.DefaultFactory,
-         GameParameters = QuantumRunnerUnityFactory.CreateGameParameters,
-         ClientId = Client.UserId,
-         RuntimeConfig = runtimeConfig,
-         SessionConfig = sessionConfig,
-         GameMode = DeterministicGameMode.Multiplayer,
-         PlayerCount = OverwritePlayerCount > 0 ? Math.Min(OverwritePlayerCount, Quantum.Input.MAX_COUNT) : Quantum.Input.MAX_COUNT,
-         Communicator = new QuantumNetworkCommunicator(Client)
-      };
+         var sessionConfig = QuantumDeterministicSessionConfigAsset.DefaultConfig;
+         if (DisableChecksumsForRelease)
+            sessionConfig.ChecksumInterval = 0;
 
-      var runner = (QuantumRunner)await SessionRunner.StartAsync(sessionRunnerArguments);
+         var sessionRunnerArguments = new SessionRunner.Arguments {
+            RunnerFactory = QuantumRunnerUnityFactory.DefaultFactory,
+            GameParameters = QuantumRunnerUnityFactory.CreateGameParameters,
+            ClientId = Client.UserId,
+            RuntimeConfig = runtimeConfig,
+            SessionConfig = sessionConfig,
+            GameMode = DeterministicGameMode.Multiplayer,
+            PlayerCount = OverwritePlayerCount > 0 ? Math.Min(OverwritePlayerCount, Quantum.Input.MAX_COUNT) : Quantum.Input.MAX_COUNT,
+            Communicator = new QuantumNetworkCommunicator(Client)
+         };
 
-      // Clamp - PlayerPrefInt stores a plain int, RuntimePlayer.WeaponLevel is a byte.
-      byte weaponTalentLevel = (byte)Mathf.Clamp(WeaponTalentLevelPref.Value, 0, byte.MaxValue);
+         var runner = (QuantumRunner)await SessionRunner.StartAsync(sessionRunnerArguments);
 
-      for (int i = 0; i < RuntimePlayers.Count; i++) {
-         RuntimePlayers[i].WeaponLevel = weaponTalentLevel;
-         runner.Game.AddPlayer(i, RuntimePlayers[i]);
+         // Clamp - PlayerPrefInt stores a plain int, PlayerTalents.WeaponLevel is a byte.
+         byte weaponTalentLevel = (byte)Mathf.Clamp(WeaponTalentLevelPref.Value, 0, byte.MaxValue);
+         byte rerollQuantity = (byte)Mathf.Clamp(RerollQuantityPref.Value, 0, byte.MaxValue);
+         TalentSaveData talents = TalentsPref.Value;
+         AssetRef<EntityPrototype> localCharacterAvatar = PartyManager.Instance.ResolveLocalCharacterAvatar();
+
+         for (int i = 0; i < RuntimePlayers.Count; i++) {
+            RuntimePlayers[i].PlayerAvatar = localCharacterAvatar;
+            RuntimePlayers[i].Talents.WeaponLevel = weaponTalentLevel;
+            RuntimePlayers[i].Talents.RerollQuantity = rerollQuantity;
+            RuntimePlayers[i].Talents.PlayerDamageLevel = talents.PlayerDamageLevel;
+            RuntimePlayers[i].Talents.PlayerCooldownLevel = talents.PlayerCooldownLevel;
+            RuntimePlayers[i].Talents.PlayerFireRateLevel = talents.PlayerFireRateLevel;
+            RuntimePlayers[i].Talents.PlayerReloadSpeedLevel = talents.PlayerReloadSpeedLevel;
+            RuntimePlayers[i].Talents.PlayerCriticalChanceLevel = talents.PlayerCriticalChanceLevel;
+            RuntimePlayers[i].Talents.PlayerCriticalDamageLevel = talents.PlayerCriticalDamageLevel;
+            RuntimePlayers[i].Talents.PlayerMaxHealthLevel = talents.PlayerMaxHealthLevel;
+            RuntimePlayers[i].Talents.PlayerMaxShieldLevel = talents.PlayerMaxShieldLevel;
+            RuntimePlayers[i].Talents.PlayerDamageReductionLevel = talents.PlayerDamageReductionLevel;
+            RuntimePlayers[i].Talents.PlayerMoveSpeedLevel = talents.PlayerMoveSpeedLevel;
+            RuntimePlayers[i].Talents.PlayerPickupRangeLevel = talents.PlayerPickupRangeLevel;
+            RuntimePlayers[i].Talents.PlayerExperienceLevel = talents.PlayerExperienceLevel;
+            RuntimePlayers[i].Talents.HasWeaponChest = talents.HasWeaponChest;
+            RuntimePlayers[i].Talents.HasHeroChest = talents.HasHeroChest;
+            RuntimePlayers[i].Talents.HasGlobalUpgradeChest = talents.HasGlobalUpgradeChest;
+            RuntimePlayers[i].Talents.HasUnlockedRift = talents.HasUnlockedRift;
+            RuntimePlayers[i].Talents.CanFindStones = talents.CanFindStones;
+            RuntimePlayers[i].Talents.HasEvent = talents.HasEvent;
+            LogHelper.Log("CharacterSelect", $"AddPlayer(local slot {i}) - PlayerAvatar={RuntimePlayers[i].PlayerAvatar.Id.Value}");
+            runner.Game.AddPlayer(i, RuntimePlayers[i]);
+         }
+
+         GameManager.Instance.MainMenuTab.windowManager.ShowWindow<InMatchWindow>();
       }
-
-      GameManager.Instance.MainMenuTab.windowManager.ShowWindow<InGameWindow>();
+      catch (Exception e)
+      {
+         LogHelper.Error("MatchMaking", $"StartRunner failed: {e}");
+         AlertPopup.Show("Error", "Failed to start the game.", () =>
+         {
+            GameManager.Instance.MainMenuTab.windowManager.ShowWindow<MainMenuWindow>();
+         });
+      }
    }
 
    public void OnPlayerEnteredRoom(Player newPlayer)
@@ -339,7 +448,7 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
    public void OnDisconnected(DisconnectCause cause)
    {
       if (cause != DisconnectCause.DisconnectByClientLogic) {
-         AlertPopup.instance.Setup("Disconnected", cause.ToString(), () => 
+         AlertPopup.Show("Disconnected", cause.ToString(), () =>
          {
             var mainMenuTab = GameManager.Instance.MainMenuTab;
             mainMenuTab.windowManager.ShowWindow<MainMenuWindow>();
@@ -365,10 +474,5 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
 
    public void OnCustomAuthenticationFailed(string debugMessage)
    {
-   }
-   
-   public void CreateParty()
-   {
-      
    }
 }

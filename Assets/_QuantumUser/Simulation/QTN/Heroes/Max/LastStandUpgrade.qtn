@@ -1,0 +1,12 @@
+// Overdrive rank 1 ("Last Stand") - granted once by LastStandSkillAction.Apply, which SETs every
+// field below to the picked rank's cumulative tuned values. Rank 1 ("Unshaken") needs no field here
+// at all - it's carried entirely by the separate RageRetentionUpgrade tag (see RageOverdrive.qtn).
+// HasRetaliation/RetaliationDuration/RetaliationDamageBonus back rank 2's own reactive proc (see
+// MaxOverdriveReactionSystem.OnHealthDamageApplied/OnShieldDamageApplied). Rank 3 ("Too Angry to
+// Die") needs no field here either - it just grants the existing CheatDeathGuard component directly.
+component LastStandUpgrade
+{
+    Boolean HasRetaliation;
+    FP RetaliationDuration;
+    FP RetaliationDamageBonus;
+}

@@ -19,6 +19,12 @@ namespace Quantum
 
         public PlayerRef PlayerRef => _playerRef;
 
+        [Header("HUD Widget")]
+        [SerializeField, Tooltip("Per-hero offset added on top of CharacterUiWidget.worldOffset - nudge this hero's health/name widget up or down for a taller or shorter model.")]
+        private Vector3 widgetOffset;
+        [SerializeField, Tooltip("Per-hero world-space offset for the ammo/reload row (CharacterUiWidget.weaponRowRect), same units as widgetOffset above and added on top of it (not instead of it) - leave at zero to have the row simply follow widgetOffset, or nudge it further to line up with this hero's held weapon.")]
+        private Vector3 weaponRowOffset;
+
         [Header("Ground Check")]
         [SerializeField, Tooltip("Real Unity Physics raycast, checked once here so every view component that cares (e.g. RunDustFxView) can just read LocalIsGrounded instead of raycasting independently - works for any CharView, not just the local player, despite the name (see LocalIsGrounded).")]
         private UnityEngine.LayerMask groundLayer;
@@ -44,7 +50,7 @@ namespace Quantum
         {
             base.Initialize(game);
             EntityViewManager.Instance.AddView(_playerRef,_entityRef, this, "PlayerName");
-            CharacterUiWidgetManager.Instance?.SpawnWidget(_entityRef, game, transform, ResolveHeroName(game));
+            CharacterUiWidgetManager.Instance?.SpawnWidget(_entityRef, game, transform, ResolvePlayerName(game), widgetOffset, weaponRowOffset);
 
             if (QuantumHelper.IsLocalPlayer(_playerRef))
             {
@@ -67,16 +73,14 @@ namespace Quantum
             LocalIsGrounded = Physics.Raycast(origin, Vector3.down, groundCheckRaycastHeight + groundCheckDistance, groundLayer);
         }
 
-        // CharacterData asset names double as the hero's display name (Max, Lux, Zara, ...) - same
-        // convention EnemyView follows for enemy names, so neither side needs its own DisplayName field.
-        private string ResolveHeroName(QuantumGame game)
+        // The player widget shows the PLAYER's own name, not the hero's - RuntimePlayer.PlayerNickname
+        // (a Quantum built-in, set at connect from the Photon nickname; empty for a bot unless
+        // authored, e.g. HeroQuickPlayToolbar). Null/empty simply hides the name label (see
+        // CharacterUiWidget.Setup), so no hero-name fallback is applied.
+        private string ResolvePlayerName(QuantumGame game)
         {
-            Frame frame = game.Frames.Predicted;
-            if (frame.TryGet<CharacterStats>(_entityRef, out var stats) == false)
-                return null;
-
-            CharacterData data = frame.FindAsset(stats.CharacterData);
-            return data != null ? data.name : null;
+            RuntimePlayer playerData = game.Frames.Predicted.GetPlayerData(_playerRef);
+            return playerData != null ? playerData.PlayerNickname : null;
         }
     }
 }

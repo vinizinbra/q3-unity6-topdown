@@ -18,7 +18,7 @@ namespace Quantum
                 return;
 
             f.Global->DirectorPulseTimer = phase.PulseInterval;
-            f.Global->DirectorBudget += phase.BudgetPerPulse;
+            f.Global->DirectorBudget += phase.BudgetPerPulse * ResolveBudgetMultiplier(f);
 
             if (TryComputePredictedCombatCenter(f, directorConfig, out FPVector3 predictedCombatCenter) == false)
             {
@@ -64,6 +64,27 @@ namespace Quantum
             }
         }
 
+        // Run curve (ramps over the 12-minute run) * co-op multiplier (scales with live player
+        // count) - see BalanceConfig.CurveChannel.DirectorBudget/CoopGlobalKey.DirectorBudget,
+        // reserved for exactly this: docs/survival-director.md's "Milestone 7 (Co-op Scaling)".
+        // Missing BalanceConfig is a graceful no-op (1x) rather than halting the Director, same
+        // precedent as EnemyBalanceUtility.ResolveEnemyStats - BudgetPerPulse alone still applies.
+        private static FP ResolveBudgetMultiplier(Frame f)
+        {
+            BalanceConfig balance = f.FindAsset(f.RuntimeConfig.BalanceConfig);
+
+            if (balance == null)
+            {
+                Log.Error("[Director] RuntimeConfig.BalanceConfig did not resolve - DirectorBudget accumulating at its authored BudgetPerPulse only (1x), no run-curve/co-op scaling applied. Assign it on RuntimeConfig.");
+                return FP._1;
+            }
+
+            FP curveMultiplier = balance.Evaluate(CurveChannel.DirectorBudget, f.Global->SurvivalTime);
+            FP coopMultiplier = balance.GetCoopGlobal(CoopGlobalKey.DirectorBudget, f.PlayerCount);
+
+            return curveMultiplier * coopMultiplier;
+        }
+
         private static FP ComputeRelevantPressure(Frame f)
         {
             FP pressure = FP._0;
@@ -77,7 +98,7 @@ namespace Quantum
                     continue;
 
                 EnemyDataAsset data = f.FindAsset(enemy.EnemyData);
-                pressure += EnemyTierStatsConfig.Resolve(f, data.Tier).Cost;
+                pressure += data.ResolveCost(f);
             }
 
             return pressure;

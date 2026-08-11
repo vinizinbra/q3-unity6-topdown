@@ -1,10 +1,22 @@
 // Zara's Resonance passive - added directly onto her own entity by ResonancePassiveData (same
 // "field lives on the hero" shape Kai's ProjectileSlowField/Brute's ProtectorAura already use).
 // Builds purely from dealing damage (see ResonanceUtility.OnDamageDealt, hooked into
-// DamageUtility.ApplyDamage) - no decay, unlike Max's Adrenaline, since nothing in the design calls
-// for it to drain back down. Once Current reaches Max, ResonanceUtility.FirePulse heals nearby
+// DamageUtility.ApplyDamage) - no decay, since nothing in the design calls for it to drain back
+// down. Once Current reaches Max, ResonanceUtility.FirePulse heals nearby
 // allies and damages nearby enemies in one simultaneous burst, then Current wraps back down
 // (carrying any remainder rather than dropping it to 0).
+// One pool entry for the Remix ascension (see RemixPassiveUpgradeData/ZaraRemixUtility) - a status
+// effect plus its own rank-2 "strengthened" multipliers, so Remix's own code never needs to know
+// which concrete HitEffectData it drew; each effect's own 4-arg Apply(Frame, ref HitEffectContext,
+// FP, FP) override decides what duration/magnitude scaling means for its own kind (see
+// BurnEffectData/SlowEffectData/StunEffectData/RiftMarkEffectData).
+struct RemixPoolEntry
+{
+    AssetRef<HitEffectData> Effect;
+    FP Rank2DurationMultiplier;
+    FP Rank2MagnitudeMultiplier;
+}
+
 component Resonance
 {
     FP Current;
@@ -31,10 +43,39 @@ component Resonance
     // Counts pulses fired so far - never resets. The Remix ascension reads this modulo 3.
     Byte PulseCount;
 
-    // Remix ascension's authored pool - every third pulse applies one randomly-chosen entry from
-    // here to every enemy the pulse damages (see ResonanceUtility.ResolveRemixEffect). Filled
-    // contiguously from index 0 by RemixPassiveUpgradeData.Apply; every slot empty (the base
-    // passive's default) means the ascension hasn't been taken, so every third pulse does nothing
-    // extra.
-    array<AssetRef<HitEffectData>>[5] RemixEffects;
+    // Faster Tempo rank 3 "Never Stop" - fraction of Max retained instead of fully wrapping to 0
+    // when a pulse fires (see ResonanceUtility.AddResonance). 0 (every other rank/unpicked) fully
+    // wraps, same as before this field existed.
+    FP RetainFraction;
+
+    // Heavy Bass rank 3 "Subwoofer" - a second, smaller delayed shockwave after the main pulse (see
+    // ZaraSubwooferPulse.qtn/ZaraSubwooferPulseSystem). 0 SubwooferDamagePercent (every other rank/
+    // unpicked) means no second shockwave is ever scheduled.
+    FP SubwooferDamagePercent;
+    FP SubwooferDelay;
+    FP SubwooferRadiusMultiplier;
+
+    // Restorative Beat rank 2+ - allies healed by the Resonance Pulse gain a short Haste (see
+    // ResonanceUtility.FirePulse). 0 duration (rank 1/unpicked) grants nothing.
+    FP HasteOnHealDuration;
+    FP HasteOnHealMultiplier;
+
+    // Restorative Beat rank 3 - portion of a Resonance Pulse heal's own excess (requested minus
+    // actually-applied) that converts into Overshield (see ShieldUtility.ApplyOvershield). 0
+    // ShieldConversionPercent (rank 1-2/unpicked) converts nothing.
+    FP ShieldConversionPercent;
+    FP OvershieldCapMultiplier;
+
+    // Remix ascension's own rank, 0 = not picked. Separate from reading RemixPool's own occupancy so
+    // "picked but every pool slot happens to be empty" and "never picked" stay distinguishable if
+    // that ever matters, and so ZaraRemixUtility can gate rank-2/3 behavior with a plain number
+    // instead of re-deriving it from UpgradeHistory.
+    Byte RemixRank;
+
+    // Remix ascension's authored pool - every third pulse applies 1 (rank 1-2) or 2 distinct (rank
+    // 3) randomly-chosen entries from here to every enemy the pulse damages (see
+    // ResonanceUtility.FirePulse/ZaraRemixUtility). Filled contiguously from index 0 by
+    // RemixPassiveUpgradeData.Apply; every slot empty (the base passive's default) means the
+    // ascension hasn't been taken, so every third pulse does nothing extra.
+    array<RemixPoolEntry>[5] RemixPool;
 }

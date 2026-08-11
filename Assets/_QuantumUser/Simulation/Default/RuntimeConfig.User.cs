@@ -35,9 +35,22 @@ namespace Quantum
 
         // Per-EnemyTier baseline for MaxHealth/Cost/ExpValue/ScaleMultiplier, so authoring a new
         // enemy only requires picking a Tier for these - see EnemyTierStatsConfig,
-        // EnemySystem.SeedHealth/SeedRadius, CombatDirectorUtility, EnemyLifecycleSystem,
-        // EnemyGroupConfig.ComputeCost and ExperienceUtility.TrySpawnDrop.
+        // EnemySystem.SeedRadius, CombatDirectorUtility, EnemyLifecycleSystem,
+        // EnemyGroupConfig.ComputeCost and ExperienceUtility.TrySpawnDrop. MaxHealth specifically
+        // is also read by EnemyBalanceUtility.ResolveEnemyStats (below) as the baseline the run
+        // curves/co-op multipliers scale - single source of truth, not duplicated there.
         public AssetRef<EnemyTierStatsConfig> EnemyTierStatsConfig;
+
+        [Header("Balance - Run Curves & Co-op Scaling")]
+        // Time-based run curves + player-count co-op scaling (global multipliers, per-tier HP
+        // multipliers) applied on top of EnemyTierStatsConfig.MaxHealth - see BalanceConfig,
+        // EnemyBalanceUtility.ResolveEnemyStats and EnemySystem.SeedHealth/SeedCombatModifiers.
+        // Also read by CombatDirectorUtility.ResolveBudgetMultiplier to scale DirectorBudget
+        // (Survival Director "Milestone 7", docs/survival-director.md), and by
+        // ExperienceUtility.ResolveXpRequirementMultiplier to scale the XP needed to level up.
+        // ExpectedPlayerDps/EliteFrequency remain reserved, no consumer yet. See
+        // docs/run-curves-coop-scaling.md.
+        public AssetRef<BalanceConfig> BalanceConfig;
 
         [Header("Survival Director")]
         // Survival Director tuning - see SurvivalConfig/DirectorConfig/LifecycleConfig and
@@ -48,7 +61,9 @@ namespace Quantum
 
         [Header("Experience & Level-Up")]
         // Balance tuning for the experience-drop mechanic (leveling curve + pickup tunables) - see
-        // ExperienceConfig and ExperienceUtility/ExpOrbSystem.
+        // ExperienceConfig and ExperienceUtility/CurrencyOrbSystem. The per-level RequiredExperience
+        // curve is additionally scaled by live player count via BalanceConfig.CoopGlobalKey.
+        // XpRequirement (below) - see ExperienceUtility.ResolveXpRequirementMultiplier.
         public AssetRef<ExperienceConfig> ExperienceConfig;
 
         // Tuning for the level-up upgrade-choice screen (decision time, choice count, the two
@@ -61,12 +76,17 @@ namespace Quantum
         public AssetRef<ScrapConfig> ScrapConfig;
 
         // Balance tuning for the Rift Shard currency pickup (Greed Global Upgrade doubles its
-        // gain) - see RiftShardConfig and RiftShardUtility/RiftShardOrbSystem.
+        // gain) - see RiftShardConfig and RiftShardUtility/CurrencyOrbSystem.
         public AssetRef<RiftShardConfig> RiftShardConfig;
 
         // Balance tuning for the Coin currency pickup - a second, independent currency from Rift
-        // Shards, see CoinConfig and CoinUtility/CoinOrbSystem.
+        // Shards, see CoinConfig and CoinUtility/CurrencyOrbSystem.
         public AssetRef<CoinConfig> CoinConfig;
+
+        [Header("Talents")]
+        // Meta-progression talent tuning (flat per-level bonus shared by every leveling talent) -
+        // see TalentsConfig, TalentUtility and RuntimePlayer's own Player*/Has*/Can* fields.
+        public AssetRef<TalentsConfig> TalentsConfig;
 
         [Header("Prefabs")]
         // Every pickup entity spawned straight from RuntimeConfig rather than authored on a

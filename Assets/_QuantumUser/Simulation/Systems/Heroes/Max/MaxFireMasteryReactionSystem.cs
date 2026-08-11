@@ -135,7 +135,20 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<Transform3D>(target, out var transform) == false)
                 return;
 
-            FireMasterySpreadUtility.SpreadBurn(f, transform->Position, owner, target, spread->Radius, spread->BurnDuration, spread->BurnIntensity, spread->MaxTargets);
+            FP burnDuration = spread->BurnDuration;
+            FP burnIntensity = spread->BurnIntensity;
+
+            // Wildfire rank 3 - spread a retained fraction of the dying enemy's OWN live Burn instead
+            // of the flat authored values, so a fire that's already burning hot/long propagates that
+            // same intensity/duration onward (scaled down) rather than resetting every jump.
+            if (spread->WildfireRetainedFraction > FP._0
+                && f.Unsafe.TryGetPointer<StatusEffects>(target, out var status) == true)
+            {
+                burnDuration = FPMath.Max(burnDuration, status->BurnRemaining * spread->WildfireRetainedFraction);
+                burnIntensity = FPMath.Max(burnIntensity, status->BurnDamagePerTick * spread->WildfireRetainedFraction);
+            }
+
+            FireMasterySpreadUtility.SpreadBurn(f, transform->Position, owner, target, spread->Radius, burnDuration, burnIntensity, spread->MaxTargets);
         }
     }
 }

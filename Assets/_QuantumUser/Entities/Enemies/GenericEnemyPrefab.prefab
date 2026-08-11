@@ -25,7 +25,7 @@ Transform:
   m_GameObject: {fileID: 1517571339130029750}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: -0.25}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -47,11 +47,12 @@ GameObject:
   - component: {fileID: 904307809960737103}
   - component: {fileID: 3319259241535440385}
   - component: {fileID: 4628453549901500658}
-  - component: {fileID: 612112432302174467}
   - component: {fileID: 382911034274762262}
   - component: {fileID: 8020308353297223607}
   - component: {fileID: 3804005094351733771}
   - component: {fileID: 7213704155496264851}
+  - component: {fileID: 1460262746628902169}
+  - component: {fileID: 3275125383435110723}
   m_Layer: 8
   m_Name: GenericEnemyPrefab
   m_TagString: Untagged
@@ -205,7 +206,7 @@ MonoBehaviour:
     IsEnabled: 1
     Config2D: 116
     Config3D: 58
-    RotationFreeze: 5
+    RotationFreeze: 255
     InertiaMode: 0
     Mass:
       RawValue: 65536
@@ -398,13 +399,35 @@ MonoBehaviour:
         RawValue: 0
       Z:
         RawValue: 0
-    JumpHorizontalVelocity:
+    TraversalJumpOrigin:
       X:
         RawValue: 0
       Y:
         RawValue: 0
       Z:
         RawValue: 0
+    TraversalJumpDestination:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
+    TraversalJumpTimer:
+      RawValue: 0
+    TraversalJumpDuration:
+      RawValue: 0
+    TraversalJumpAnticipationTimer:
+      RawValue: 0
+    TraversalJumpPendingDestination:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
+    TraversalJumpPendingSpeed:
+      RawValue: 0
     KnockbackTimer:
       RawValue: 0
     SkillProjectile: {fileID: 0}
@@ -412,6 +435,8 @@ MonoBehaviour:
       RawValue: 0
     FlyingHoverTargetHeight:
       RawValue: 0
+    Faction:
+      Value: 0
 --- !u!114 &904307809960737103
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -430,6 +455,8 @@ MonoBehaviour:
     MaxHealth:
       RawValue: 3276800
     RegenRate:
+      RawValue: 0
+    RegenTimer:
       RawValue: 0
 --- !u!114 &3319259241535440385
 MonoBehaviour:
@@ -470,20 +497,44 @@ MonoBehaviour:
     BurnOwner: {fileID: 0}
     BurnSource:
       Value: 0
-    VoidRemaining:
+    RiftMarkStacks: 0
+    RiftMarkRemaining:
       RawValue: 0
-    ExplosionCooldownRemaining:
+    RiftMarkReactionLockoutRemaining:
       RawValue: 0
-    FreezeCooldownRemaining:
+    DetonationCooldownRemaining:
       RawValue: 0
-    KnockbackCooldownRemaining:
+    DeepFreezeCooldownRemaining:
       RawValue: 0
-    MagmaPrisonCooldownRemaining:
+    OverloadCooldownRemaining:
       RawValue: 0
-    StunCooldownRemaining:
+    RuptureCooldownRemaining:
       RawValue: 0
-    BreakCooldownRemaining:
+    SingularityCooldownRemaining:
       RawValue: 0
+    MarkApplicationCooldowns:
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    FirstContactTriggered:
+      Value: 0
+    OverflowingRiftCooldownRemaining:
+      RawValue: 0
+    FracturedPresenceExposedBy:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    FracturedPresenceExposureTime:
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
     IceRemaining:
       RawValue: 0
     IceSpeedMultiplier:
@@ -496,9 +547,9 @@ MonoBehaviour:
       RawValue: 0
     RootRemaining:
       RawValue: 0
-    BreakRemaining:
+    RuptureRemaining:
       RawValue: 0
-    BreakDamageMultiplier:
+    RuptureDamageMultiplier:
       RawValue: 0
     HasteRemaining:
     - RawValue: 0
@@ -527,6 +578,10 @@ MonoBehaviour:
       RawValue: 0
     DamageReductionAmount:
       RawValue: 0
+    GuardianDamageReductionRemaining:
+      RawValue: 0
+    GuardianDamageReductionAmount:
+      RawValue: 0
     IntimidateRemaining:
       RawValue: 0
     IntimidateDamageMultiplier:
@@ -535,19 +590,8 @@ MonoBehaviour:
       RawValue: 0
     KnockbackTakenMultiplier:
       RawValue: 0
---- !u!114 &612112432302174467
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4057597631457596921}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9168c542245be475f8ee71bd6733ba7c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Quantum.HasShadow
-  baseScale: 1
+    CheatDeathImmunityRemaining:
+      RawValue: 0
 --- !u!114 &382911034274762262
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -566,6 +610,8 @@ MonoBehaviour:
   executeOnlyOnLocal: 0
   isLocal: 0
   spriteRoot: {fileID: 5679338556948834654}
+  viewRadiusPadding: 0.15
+  widgetRadiusOffsetMultiplier: 1
 --- !u!114 &8020308353297223607
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -584,7 +630,7 @@ MonoBehaviour:
   executeOnlyOnLocal: 0
   isLocal: 0
   blobAnimationView: {fileID: 3804005094351733771}
-  armAimView: {fileID: 0}
+  armAimView: {fileID: 3275125383435110723}
 --- !u!114 &3804005094351733771
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -608,13 +654,13 @@ MonoBehaviour:
   idleBreatheAmount: 0.05
   idleWobbleDegrees: 2
   idleWobbleSpeed: 0.3
-  runReferenceSpeed: 4
+  runReferenceSpeed: 5
   moveSpeedEpsilon: 0.15
   runStrideFrequency: 2.2
-  runSquashAmount: 0.18
-  runBounceAmount: 0.08
-  runLeanDegrees: 12
-  runStepRockDegrees: 8
+  runSquashAmount: 0.1
+  runBounceAmount: 0.1
+  runLeanDegrees: -8
+  runStepRockDegrees: 4
   dieDuration: 0.4
   dieJumpHeight: 1
   dieToppleDegrees: 100
@@ -627,6 +673,10 @@ MonoBehaviour:
   burrowRiseDuration: 0.35
   burrowSquash: 0.5
   burrowSinkAmount: 0.3
+  jumpCrouchSquash: 0.3
+  jumpCrouchSinkAmount: 0.1
+  jumpPopStretch: 0.35
+  defaultCenterPivotHeight: 0
   squashLerpSpeed: 14
   volumePreservation: 0.6
   headSquashInfluence: 0.4
@@ -648,13 +698,11 @@ MonoBehaviour:
       Amount: 0.4
     Lunge:
       Stretch: 0.35
-      Depth: 0.1
     Slam:
       Squash: 0.4
       SinkAmount: 0.2
     Snap:
       Degrees: 35
-      Depth: 0.1
     Chomp:
       Pulses: 2
       Squash: 0.3
@@ -663,9 +711,23 @@ MonoBehaviour:
     ArmSwingBack:
       Degrees: 25
       BodyFollow: 0.3
+      ArmScale: 0
     ArmSnap:
       Degrees: 45
       BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    CenterPivot: 0
+    PivotHeightOverride: 0
     ParticlePrefab: {fileID: 0}
     Anchor: 0
     Offset: {x: 0, y: 0, z: 0}
@@ -673,6 +735,8 @@ MonoBehaviour:
     AlignToEnemyDirection: 0
     RotationOffset: {x: 0, y: 0, z: 0}
     Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0
 --- !u!114 &7213704155496264851
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -695,11 +759,47 @@ MonoBehaviour:
   burnFlashColor: {r: 1, g: 0.45, b: 0.1, a: 1}
   frontalReducedFlashColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   restColor: {r: 1, g: 1, b: 1, a: 0}
-  duration: 0.3
+  duration: 0.1
   healFlashColor: {r: 0.4, g: 1, b: 0.4, a: 1}
   shieldFlashColor: {r: 0.4, g: 0.75, b: 1, a: 1}
   deathColor: {r: 0, g: 0, b: 0, a: 0.5}
-  pickupGlowColor: {r: 1, g: 0.85, b: 0.3, a: 1}
-  pickupGlowDuration: 0.5
   riftMarkMaterial: {fileID: 2100000, guid: 7e404e068a4ff4625b9e9f6414fcfaa3, type: 2}
+  riftMarkApplicationFlashColor: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
+  riftMarkApplicationFlashDuration: 0.08
   freezeMaterial: {fileID: 2100000, guid: b153b2878790f4feab0589455e95ac70, type: 2}
+--- !u!114 &1460262746628902169
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4057597631457596921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ace9888105c6f4799b64a4cccceb286c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Quantum.Unity::Quantum.QPrototypeEnemyCombatModifiers
+  Prototype:
+    DamageMultiplier:
+      RawValue: 65536
+--- !u!114 &3275125383435110723
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4057597631457596921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f60f7f9e517f44c18dcd34e92cd32f9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Quantum.EnemyArmAimView
+  _playerRef:
+    _index: 0
+  initialized: 0
+  executeOnlyOnLocal: 0
+  isLocal: 0
+  cameraTransform: {fileID: 0}
+  blobAnimationView: {fileID: 3804005094351733771}
+  rotationSmoothing: 20
+  debugTestAngle: 0

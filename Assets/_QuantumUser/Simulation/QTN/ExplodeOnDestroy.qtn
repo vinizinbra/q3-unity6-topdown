@@ -46,7 +46,7 @@ component ExplodeOnDestroy
 
     // False (the default - every existing prototype, Mini Bomb/DashBomb included, never sets this)
     // keeps ExplodeOnDestroyUtility.TryDetonate's own lighter, non-cascading explosion exactly as
-    // before this field existed - no Mini Ordnance signal, no Fireworks/ClusterBomb spawn, so a
+    // before this field existed - no Pocket Bombs signal, no Fireworks/ClusterBomb spawn, so a
     // dropped Mini Bomb still can never generate another (see AreaHitData.Detonate's own comment on
     // this same guarantee). True opts into calling Explosion's full AreaHitData.Detonate instead -
     // for an entity whose detonation is a delayed continuation of a real player throw (see a planted

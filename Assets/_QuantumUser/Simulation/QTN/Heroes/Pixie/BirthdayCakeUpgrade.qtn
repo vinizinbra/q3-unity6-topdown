@@ -1,0 +1,18 @@
+// Granted/refreshed by HotFuseSkillAction's sibling BirthdayCakeSkillAction (Bunny Bomb Hero Skill
+// Ascension) - turns Bunny Bomb into a grouping tool: read at the bomb's own landing
+// (ProjectileSystem.TryPlant) to add the existing Decoy tag onto the LANDED bomb entity itself (not
+// the flying projectile - replaces the old DecoyOnThrowUpgrade flight-time taunt) and drive its fuse
+// timer from TauntDuration instead of the bomb's own authored PlantedFuseTime. Read again at
+// detonation (ExplodeOnDestroyUtility.TryDetonate/AreaHitData.Detonate) - TauntRadiusMultiplier scales
+// the blast radius itself (the generic decoy-pull mechanic has no radius knob of its own to scale
+// without hardcoding into shared enemy AI, so a bigger blast is this ascension's actual "wider taunt"
+// lever), and rank 3's HasBonusDamage scales the whole detonation's damage - both gated on the
+// detonating entity currently being a Decoy, so this only ever fires for Birthday Cake's own landed
+// bomb, never Pocket Bombs's Mini Bomb or a dropped DashBomb.
+component BirthdayCakeUpgrade
+{
+    FP TauntDuration;
+    FP TauntRadiusMultiplier;
+    Boolean HasBonusDamage;
+    FP BonusDamageMultiplier;
+}

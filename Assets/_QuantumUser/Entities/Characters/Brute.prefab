@@ -31,6 +31,7 @@ GameObject:
   - component: {fileID: -1163920483312850750}
   - component: {fileID: 3061145013519703360}
   - component: {fileID: 197914881498893170}
+  - component: {fileID: 6951943651422254127}
   m_Layer: 7
   m_Name: Brute
   m_TagString: Untagged
@@ -162,7 +163,7 @@ MonoBehaviour:
         X:
           RawValue: 0
         Y:
-          RawValue: 0
+          RawValue: 32768
         Z:
           RawValue: 0
       BoxExtents:
@@ -764,6 +765,7 @@ MonoBehaviour:
   isLocalPlayer: 0
   viewTransform: {fileID: 0}
   isBot: 0
+  weaponRowOffset: {x: 0, y: -1.5, z: 0}
   groundLayer:
     serializedVersion: 2
     m_Bits: 64
@@ -7089,3 +7091,20 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3444670846793607814, guid: 6b5e35f757ba04289a1f3a93c90616a6, type: 3}
   m_PrefabInstance: {fileID: 7426306066576144001}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &6951943651422254127
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 506928541793919104}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1564e64c052e94f26b57d5d0e562825e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuantumUser.View.Managers.EntityViewCacheInit
+  _playerRef:
+    _index: 0
+  initialized: 0
+  executeOnlyOnLocal: 0
+  isLocal: 0

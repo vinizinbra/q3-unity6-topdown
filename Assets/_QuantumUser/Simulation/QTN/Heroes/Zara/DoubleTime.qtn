@@ -1,0 +1,15 @@
+// Hero Skill Ascension (Double Time, ranked, line 3/4 on Totem) - see DoubleTimeSkillAction.
+// Replaces TickRateUpgrade with a direct interval override rather than a rate multiplier - the
+// spec pins exact seconds per rank (1.0 -> 0.85 -> 0.70 -> 0.50), not percentages, so back-solving a
+// multiplier to reproduce them would just be an indirection with no benefit. Granted onto Zara's own
+// entity, bake-once-at-Totem-spawn - see SpawnAlternatingAreaEffectData.ResolveTickInterval. Read as
+// the single shared AreaDamage.TickInterval that already drives both Damage/Healing Beat cadence AND
+// the Damage<->Healing alternation itself (AlternatingAreaSystem), so raising Double Time's rank for
+// free speeds up everything beat-driven: Amplifier's Bass Drop frequency, Healing Chorus's uptime,
+// Main Stage's opening/closing beats' relative timing, and Portable Speaker's own Mobile Stage
+// inheritance (half of this same interval shrink, see PortableSpeakerSkillAction).
+component DoubleTimeUpgrade
+{
+    // 0 (unpicked) falls back to the base 1.0s TickInterval - see ResolveTickInterval.
+    FP BeatInterval;
+}

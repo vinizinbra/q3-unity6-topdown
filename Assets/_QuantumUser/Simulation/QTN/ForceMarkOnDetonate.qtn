@@ -1,0 +1,15 @@
+// Tag component granted onto a spawned bomb entity itself (not its owner) - while present,
+// ExplodeOnDestroyUtility.TryDetonate force-marks every enemy caught in that specific detonation's
+// blast for Chain Reaction (see DamageUtility's MarkExplosiveDeath/ExplodeOnDeath), bypassing the
+// normal per-hit tier-gate/chance roll TryMarkExplodeOnDeath otherwise applies. Deliberately generic
+// and hero-agnostic (not a Pixie-specific check bolted into the shared detonation path) so any future
+// "this specific dropped bomb always marks what it hits" ascension for any hero can reuse it for
+// free by just adding this tag to its own spawned prototype - currently only granted by Pixie's
+// Backblast at rank 3 (see Heroes/Pixie/DashSkillUpgrades/BackblastSkillAction.cs).
+//
+// Scoped to the detonating entity, not the owner, specifically so it never leaks onto unrelated
+// explosions the same owner causes (e.g. Bunny Bomb itself, or a Pocket Bombs drop) - only the exact
+// bomb this was granted to force-marks on its own detonation.
+component ForceMarkOnDetonate
+{
+}

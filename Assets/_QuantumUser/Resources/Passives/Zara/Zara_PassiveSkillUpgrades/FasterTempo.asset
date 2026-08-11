@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cf7601a0f064343c1b7ebeae8fd744d5, type: 3}
+  m_Name: FasterTempo
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.FasterTempoPassiveUpgradeData
+  Identifier:
+    Path: _QuantumUser/Resources/Passives/Zara/Zara_PassiveSkillUpgrades/FasterTempo
+    Guid:
+      Value: 423069476414731352
+  Icon: {fileID: 0}
+  DisplayName: Faster Tempo
+  Rarity: 1
+  Description: Generate Resonance faster.
+  GenerationBonus:
+    RawValue: 65536

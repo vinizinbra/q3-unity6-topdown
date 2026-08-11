@@ -1,0 +1,21 @@
+// Granted by Heroes/Kai's CompressionSkillAction at rank 3 onto the owner, then baked as a copy of
+// itself directly onto the spawned Vortex entity by SpawnVortexEffectData - see
+// VortexSystem.Update's pulse block. Every EveryNthPulse-th pull pulse (counted via PulseCounter,
+// incremented once per pulse the same way the base pull's own TickTimer resets) additionally fires an
+// Implosion at the vortex's own center, scaled by ResolveCrowdMultiplier so it "benefits from Crowd
+// Compression" exactly as the design calls for.
+component VortexImplosionUpgrade
+{
+    FP DamagePercent;
+    FP RadiusFraction;
+    Byte EveryNthPulse;
+
+    // Unused on the owner's copy (only ever 0 there) - only the copy baked onto the spawned vortex
+    // actually counts, same "owner-side grant carries dead fields the baked copy uses" shape
+    // VortexHomingProjectileUpgrade's own TickTimer already uses.
+    Byte PulseCounter;
+
+    // Carried through to VortexImploded so the view can resolve an effect off the exact asset that
+    // granted this - same "AssetRef travels with the event" shape VortexExplodeOnDestroy.Source uses.
+    AssetRef<CompressionSkillAction> Source;
+}

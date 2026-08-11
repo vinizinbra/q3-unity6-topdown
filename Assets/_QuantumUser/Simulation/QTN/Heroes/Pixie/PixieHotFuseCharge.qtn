@@ -1,0 +1,27 @@
+// Granted/refreshed by HotFuseSkillAction on dash - empowers Pixie's NEXT Bunny Bomb throw only, not
+// a timed buff to every throw for the next few seconds. Remaining ticks down every frame
+// (PixieHotFuseTimerSystem, same shape ExplodeOnDeathTimerSystem uses for ExplodeOnDeath.Remaining)
+// and the component is removed once it hits zero, so an unused charge "cures" instead of lingering
+// forever waiting for a throw that never comes.
+//
+// Consumed across two points, since damage/instant-detonate need to be locked in at throw time but
+// radius is only resolved later, at the bomb's own detonation:
+// - ProjectileSkillData.Fire (throw time) - applies DamageMultiplier to this specific throw's damage,
+//   and if InstantDetonate is set, grants the existing InstantDetonate tag (see InstantDetonate.qtn)
+//   onto the owner so this bomb detonates on first contact instead of waiting out its fuse.
+// - AreaHitData.Detonate (this bomb's own detonation, whichever point actually resolves it - hit or
+//   planted-fuse expiry) - applies RadiusMultiplier, then removes both this component and the
+//   InstantDetonate tag, since both were only ever meant for this one throw.
+//
+// Only one Bunny Bomb can be in flight from one caster at a time (ProjectileSkillData.Tick blocks a
+// re-throw until the current one resolves), so reading/consuming this at Detonate time correctly
+// scopes to the throw that consumed it at Fire time in the overwhelming common case - a player
+// dashing again mid-flight to refresh the charge before the first bomb lands is a narrow, low-stakes
+// edge case, not specifically guarded against.
+component PixieHotFuseCharge
+{
+    FP Remaining;
+    FP DamageMultiplier;
+    FP RadiusMultiplier;
+    Boolean InstantDetonate;
+}

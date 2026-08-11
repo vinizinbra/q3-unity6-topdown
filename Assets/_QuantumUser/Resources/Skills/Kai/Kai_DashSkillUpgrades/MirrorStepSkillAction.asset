@@ -1,0 +1,71 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f45b9ded648c248efb63b1c50be9589c, type: 3}
+  m_Name: MirrorStepSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.MirrorStepSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Kai/Kai_DashSkillUpgrades/MirrorStepSkillAction
+    Guid:
+      Value: 426548535379839428
+  Icon: {fileID: 0}
+  DisplayName: Mirror Step
+  Rarity: 1
+  RankDescriptions:
+  - Dashing reflects nearby enemy projectiles back toward their attackers.
+  - Reflect projectiles from farther away and increase their reflected damage.
+  - Reflecting projectiles during Dash reduces Vortex cooldown by 0.5s each, up to
+    2s per Dash.
+  <MaxRank>k__BackingField: 3
+  Priority: 0
+  Phase: 3
+  Interval:
+    RawValue: 0
+  Activated: 1
+  Description: Dashing reflects nearby enemy projectiles back toward their attackers.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  Radius:
+  - RawValue: 196608
+  - RawValue: 294912
+  - RawValue: 294912
+  ReflectedDamageMultiplier:
+  - RawValue: 65536
+  - RawValue: 98304
+  - RawValue: 98304
+  CooldownReductionPerReflect:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 32768
+  MaxCooldownReductionPerDash:
+    RawValue: 131072

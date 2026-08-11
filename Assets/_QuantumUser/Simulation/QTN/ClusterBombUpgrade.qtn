@@ -1,10 +1,11 @@
 // Granted/revoked by an upgrade (e.g. Heroes/Pixie/ClusterBombSkillAction) - read on detonation by
 // AreaHitData.TrySpawnClusterBomblets (gated by AreaHitData.TriggersSpawnUpgrades - Projectile's
 // own AreaHitData needs that set false, or each bomblet would cluster-bomb again on its own
-// detonation, cascading forever).
+// detonation, cascading forever). DamagePercent is a fraction of the triggering explosion's own
+// damage, not a fixed value, so bomblet damage scales with Bunny Bomb/Pixie's skill damage.
 component ClusterBombUpgrade
 {
     Byte Count;
-    FP Damage;
+    FP DamagePercent;
     AssetRef<ProjectileDataAsset> Projectile;
 }

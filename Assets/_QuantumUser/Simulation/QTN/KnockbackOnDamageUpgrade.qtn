@@ -1,9 +1,0 @@
-// Granted by Heroes/Zara/KnockbackOnDamageSkillAction - read by
-// SpawnAlternatingAreaEffectData.ApplyKnockbackUpgrade at spawn time, appending KnockbackEffect
-// into the first open slot of the spawned speaker's DamageEffects. Same bake-once-at-spawn shape
-// as PoisonDamageWavesUpgrade - every damage pulse should knock back, not just some of them, so
-// there's nothing conditional to check live the way StunEveryWavesUpgrade needs.
-component KnockbackOnDamageUpgrade
-{
-    AssetRef<HitEffectData> KnockbackEffect;
-}

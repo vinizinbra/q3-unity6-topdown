@@ -19,6 +19,12 @@ namespace Quantum
 
         private bool _active;
 
+        public override void Initialize(QuantumGame game)
+        {
+            base.Initialize(game);
+            ApplyRingColorTint(game.Frames.Verified);
+        }
+
         public override void DeInitialize(QuantumGame game)
         {
             base.DeInitialize(game);
@@ -65,6 +71,32 @@ namespace Quantum
                 return false;
 
             return f.Get<CharacterSkills>(entity).DashSkill.State == SkillState.Active;
+        }
+
+        // Tints the trail to match MovementRingView's per-hero RingColor (see CharacterData.
+        // RingColor) instead of the flat white authored on the prefab - keeps the fade-in/out
+        // alpha keys as originally authored, only the RGB is swapped.
+        private void ApplyRingColorTint(Frame frame)
+        {
+            if (trail == null)
+                return;
+
+            if (frame.Has<CharacterStats>(_entityRef) == false)
+                return;
+
+            CharacterData data = frame.FindAsset(frame.Get<CharacterStats>(_entityRef).CharacterData);
+            if (data == null)
+                return;
+
+            Color ringColor = data.RingColor;
+
+            Gradient gradient = trail.colorGradient;
+            GradientColorKey[] colorKeys = gradient.colorKeys;
+            for (int i = 0; i < colorKeys.Length; i++)
+                colorKeys[i].color = ringColor;
+
+            gradient.SetKeys(colorKeys, gradient.alphaKeys);
+            trail.colorGradient = gradient;
         }
     }
 }

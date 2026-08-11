@@ -9,6 +9,15 @@ namespace Quantum
         [SerializeField, Tooltip("Where EnemyDataAsset.ViewPrefab is instantiated as a child - just an anchor point on the generic entity's view. The prefab brings its own EnemyViewRig; EnemyBlobAnimationView/EnemyArmAimView/EnemyAttackVisualsView/HitFeedback live here on the generic prototype instead and get that rig handed to them once it's instantiated (see SpawnSprite).")]
         private Transform spriteRoot;
 
+        [SerializeField, Tooltip("Extra radius (in world units) added ON TOP of the entity's collider radius purely for the visual sprite fit-scale, so the sprite renders slightly larger than the physics footprint (e.g. radius 2 fits as if it were 2.2). Only affects the sprite scale - the collider, shadow footprint, and feet-anchor offset all still use the raw radius.")]
+        private float viewRadiusPadding = 0.2f;
+
+        [SerializeField, Tooltip("Extra world-units clearance added ABOVE the measured sprite top when anchoring CharacterUiWidget (see ResolveWidgetOffset). The widget normally sits exactly at the rendered sprite's bounds top so it clears the visible body regardless of how tall/padded the art is relative to the collider; this just nudges it a little higher if needed. On top of CharacterUiWidget.worldOffset's own shared base clearance.")]
+        private float widgetSpriteTopPadding = 0f;
+
+        [SerializeField, Tooltip("FALLBACK ONLY - used when the ViewPrefab has no measurable EnemyViewRig.ReferenceSprite so the sprite top can't be read. Multiplies the entity's collider radius (EnemyMovementUtility.ResolveEntityRadius) into CharacterUiWidget's per-character offset, the pre-sprite-bounds behavior - same slot CharView.widgetOffset hand-authors per hero.")]
+        private float widgetRadiusOffsetMultiplier = 1f;
+
         // Tracked so DeInitialize can release the exact pooled instance/prefab pair back to
         // ViewPrefabPool - re-deriving ViewPrefab from frame data at DeInitialize time isn't safe
         // since the entity's components may already be gone by then.
@@ -30,8 +39,32 @@ namespace Quantum
         public override void Initialize(QuantumGame game)
         {
             base.Initialize(game);
-            EnemyUiWidgetManager.Instance?.SpawnWidget(_entityRef, game, transform, ResolveEnemyName(game));
-            SpawnSprite(game);
+
+            float radius = EnemyMovementUtility.ResolveEntityRadius(game.Frames.Predicted, _entityRef).AsFloat;
+
+            // Spawn the sprite FIRST so its rig is instantiated/scaled, then measure it - the widget's
+            // vertical offset is derived from the rendered sprite's actual top edge (ResolveWidgetOffset),
+            // not the raw collider radius, so it clears the visible body even when the art is taller than
+            // the physics footprint.
+            EnemyViewRig rig = SpawnSprite(game, radius);
+            EnemyUiWidgetManager.Instance?.SpawnWidget(_entityRef, game, transform, ResolveEnemyName(game), ResolveWidgetOffset(rig, radius));
+        }
+
+        // World-space vertical offset handed to CharacterUiWidget as its per-character nudge (added on
+        // top of the widget's shared worldOffset base clearance). SpriteRenderer.bounds is a world-space
+        // AABB that already reflects the position/scale SpawnSprite just applied, so bounds.max.y is the
+        // sprite's true top in world space; measured relative to transform.position (the collider center
+        // the widget follows) it becomes the local vertical raise, plus a small authored pad. Falls back
+        // to the pre-existing collider-radius offset when no sprite is measurable.
+        private Vector3 ResolveWidgetOffset(EnemyViewRig rig, float radius)
+        {
+            if (rig != null && rig.ReferenceSprite != null && rig.ReferenceSprite.sprite != null)
+            {
+                float spriteTopLocalY = rig.ReferenceSprite.bounds.max.y - transform.position.y;
+                return Vector3.up * (spriteTopLocalY + widgetSpriteTopPadding);
+            }
+
+            return Vector3.up * (radius * widgetRadiusOffsetMultiplier);
         }
 
         // Filler is the disposable/trash tier (destroyed instantly, no lingering die animation -
@@ -67,21 +100,23 @@ namespace Quantum
         // Instantiates EnemyDataAsset.ViewPrefab under spriteRoot and fits it to the entity's
         // actual radius (read back via ResolveEntityRadius, same helper EnemyAllyLinkView uses, so
         // this reflects whatever SeedRadius applied to the collider rather than re-reading
-        // data.Stats.Radius directly).
-        private void SpawnSprite(QuantumGame game)
+        // data.Stats.Radius directly). radius is resolved once by the caller (Initialize) and
+        // reused for the HUD widget's offset too, rather than re-resolved here.
+        private EnemyViewRig SpawnSprite(QuantumGame game, float radius)
         {
             Frame frame = game.Frames.Predicted;
             if (frame.Has<Enemy>(_entityRef) == false)
-                return;
+                return null;
 
-            EnemyDataAsset data = frame.FindAsset(frame.Get<Enemy>(_entityRef).EnemyData);
-            if (data.ViewPrefab == null)
+            Enemy enemy = frame.Get<Enemy>(_entityRef);
+            EnemyDataAsset data = frame.FindAsset(enemy.EnemyData);
+            GameObject viewPrefab = ResolveViewPrefab(data, enemy.Faction, out float skinScaleMultiplier);
+            if (viewPrefab == null)
             {
                 LogHelper.Error("Enemy", $"{_entityRef} EnemyDataAsset {data.name} has no ViewPrefab assigned");
-                return;
+                return null;
             }
 
-            float radius = EnemyMovementUtility.ResolveEntityRadius(frame, _entityRef).AsFloat;
             LogHelper.Log("Enemy", $"{_entityRef} ({data.name}) SpawnSprite resolved radius {radius}");
 
             // HasShadow sits as a sibling on this same GameObject (see Enemy.prefab/
@@ -94,15 +129,15 @@ namespace Quantum
             if (shadow != null)
                 shadow.SetBaseScale(radius * 2f);
 
-            GameObject instance = ViewPrefabPool.Instance.Get(data.ViewPrefab, spriteRoot);
+            GameObject instance = ViewPrefabPool.Instance.Get(viewPrefab, spriteRoot);
             _rigInstance = instance;
-            _rigPrefab = data.ViewPrefab;
+            _rigPrefab = viewPrefab;
 
             EnemyViewRig rig = instance.GetComponentInChildren<EnemyViewRig>();
             if (rig == null)
             {
                 LogHelper.Error("Enemy", $"{_entityRef} EnemyDataAsset {data.name}'s ViewPrefab has no EnemyViewRig");
-                return;
+                return null;
             }
 
             // Transform3D.Position (spriteRoot's world position) sits at the collider's center -
@@ -113,27 +148,61 @@ namespace Quantum
             // here directly - no separate unscaling needed.
             instance.transform.localPosition = Vector3.down * radius;
             instance.transform.localRotation = Quaternion.identity;
-            instance.transform.localScale = Vector3.one * ResolveFitScale(rig, radius, data);
+            instance.transform.localScale = Vector3.one * ResolveFitScale(rig, radius + viewRadiusPadding, data) * skinScaleMultiplier;
 
             ConnectRig(rig);
+            return rig;
+        }
+
+        // Faction is authored explicitly per-slot on whichever EnemyGroupConfig.GroupMemberEntry
+        // spawned this enemy (GroupSpawnerUtility.SpawnMember sets Enemy.Faction directly,
+        // deterministic/networked, not picked here) - this just looks up the matching skin.
+        // Archetypes with no FactionSkins authored (most of them, at least at first - "not every
+        // archetype needs a skin") always fall through to the default ViewPrefab, and so does a
+        // Faction with no matching entry in FactionSkins. scaleMultiplier comes along with the
+        // matched skin (EnemyFactionSkin.ScaleMultiplier) since a reskin's fit scale can want to
+        // differ from the default ViewPrefab's - 1 for the ViewPrefab fallback, which has no
+        // multiplier of its own.
+        private GameObject ResolveViewPrefab(EnemyDataAsset data, EnemyFaction faction, out float scaleMultiplier)
+        {
+            scaleMultiplier = 1f;
+
+            if (data.FactionSkins == null || data.FactionSkins.Count == 0)
+                return data.ViewPrefab;
+
+            foreach (EnemyFactionSkin skin in data.FactionSkins)
+            {
+                if (skin.Faction == faction)
+                {
+                    scaleMultiplier = skin.ScaleMultiplier > 0f ? skin.ScaleMultiplier : 1f;
+                    return skin.ViewPrefab;
+                }
+            }
+
+            return data.ViewPrefab;
         }
 
         // rig.ReferenceSprite.sprite.bounds is already Pixels-Per-Unit-corrected (bounds size =
-        // pixel size / PPU), so dividing the target diameter by its unscaled width self-corrects
-        // for whatever PPU the artist happened to import that sprite at - the rig always ends up
-        // the same apparent size for a given Radius, instead of relying on the artist hand-
-        // matching ViewPrefab's overall authored scale to the sprite's PPU.
-        private float ResolveFitScale(EnemyViewRig rig, float radius, EnemyDataAsset data)
+        // pixel size / PPU), so dividing the target diameter by its unscaled longest side
+        // self-corrects for whatever PPU the artist happened to import that sprite at - the rig
+        // always ends up the same apparent size for a given Radius, instead of relying on the
+        // artist hand-matching ViewPrefab's overall authored scale to the sprite's PPU. Takes the
+        // longer of width/height (not width alone) so a non-square sprite's longer axis is what
+        // ends up matching the target diameter - using width alone let a portrait sprite (taller
+        // than wide) visually overshoot the intended size, since its actual tallest extent was
+        // never checked against anything.
+        private float ResolveFitScale(EnemyViewRig rig, float fitRadius, EnemyDataAsset data)
         {
             if (rig.ReferenceSprite == null || rig.ReferenceSprite.sprite == null)
             {
                 LogHelper.Error("Enemy", $"{_entityRef} EnemyDataAsset {data.name}'s ViewPrefab has no EnemyViewRig.ReferenceSprite assigned - falling back to Radius as a raw scale multiplier, which won't correct for the sprite's Pixels Per Unit.");
-                return radius;
+                return fitRadius;
             }
 
-            float targetDiameter = radius * 2f;
-            float unscaledWidth = rig.ReferenceSprite.sprite.bounds.size.x;
-            return targetDiameter / unscaledWidth;
+            float targetDiameter = fitRadius * 2f;
+            Vector3 unscaledSize = rig.ReferenceSprite.sprite.bounds.size;
+            float unscaledLongestSide = Mathf.Max(unscaledSize.x, unscaledSize.y);
+            return targetDiameter / unscaledLongestSide;
         }
 
         // EnemyBlobAnimationView/EnemyArmAimView/EnemyAttackVisualsView/HitFeedback live on this
@@ -144,7 +213,18 @@ namespace Quantum
         {
             EnemyBlobAnimationView blobAnimationView = GetComponent<EnemyBlobAnimationView>();
             if (blobAnimationView != null)
+            {
                 blobAnimationView.SetRig(rig);
+
+                // HasShadow.SetBaseScale(radius * 2f) above already ran by this point, so
+                // BaseScale here reflects this entity's real footprint, not HasShadow's authored
+                // default - see EnemyBlobAnimationView.SetShadow's own comment for why this lets
+                // Die/Burrow shrink the ground shadow in step with the sprite instead of leaving it
+                // at full size while the sprite vanishes.
+                HasShadow shadow = GetComponent<HasShadow>();
+                if (shadow != null)
+                    blobAnimationView.SetShadow(shadow);
+            }
 
             EnemyArmAimView armAimView = GetComponent<EnemyArmAimView>();
             if (armAimView != null)

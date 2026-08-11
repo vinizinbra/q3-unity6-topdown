@@ -17,6 +17,27 @@ struct PendingEcho
     FP        Damage;
 }
 
+// A single free extra shot queued by Double Tap - see WeaponFireTimeMods.PendingDoubleTap. Delay
+// counts down the same FP-seconds way PendingEcho.Delay does; Delay <= 0 means "nothing pending".
+// Like an echo, it has no locked target once queued - replayed straight down
+// SpawnPosition/AimDirection rather than re-resolving wherever Aim.Target has moved to by the time
+// it fires. IsExplosiveProc/IsCataclysm/GrantPierceAmount are snapshotted from the primary shot so
+// the delayed shot still mirrors its already-resolved proc flags (see docs/weapon-perks.md's Double
+// Tap simplification) instead of losing them the way an echo does.
+struct PendingDoubleTapShot
+{
+    FP        Delay;
+    FPVector3 SpawnPosition;
+    FPVector3 AimDirection;
+    FP        Damage;
+    Boolean   IsExplosiveProc;
+    Boolean   IsCataclysm;
+
+    // Kai's Phantom Strike (see PhantomStrikeUpgrade.PierceBonus) - a flat pierce amount rather than
+    // a bool, so rank 2/3's higher bonus survives into a Double Tap's own free extra shot too.
+    Int32     GrantPierceAmount;
+}
+
 // -- Magazine-position perks (Opening Burst/Execution Rounds/Final Round/Escalating Rounds) --
 // Read live off the existing Weapon.Ammo/MagazineSize ratio every shot in WeaponSystem.Update - no
 // separate shot-index tracking needed. Threshold fields are a fraction of the magazine (e.g. 0.2 =
@@ -67,13 +88,16 @@ component WeaponEchoState
 // Piercing/Ricochet bonuses are added onto Projectile.RemainingPierces/RemainingBounces right
 // after ProjectileSpawner.Spawn inside WeaponSystem.FireProjectile - only the weapon-fire path
 // adds these, not every ProjectileSpawner.Spawn caller (enemy attacks, skills). Double Tap is
-// rolled per shot in WeaponSystem.Update. All three are single-shot bakes read once at fire time,
-// nothing else touches this component.
+// rolled per shot in WeaponSystem.Update; DoubleTapDelay > 0 queues the extra shot into
+// PendingDoubleTap instead of firing it the same tick, ticked down in
+// WeaponSystem.Update/TickPendingDoubleTap same as WeaponEchoState.PendingEchoes.
 component WeaponFireTimeMods
 {
     Int32 BonusPierce;
     Int32 BonusBounces;
     FP    DoubleTapChance;
+    FP    DoubleTapDelay;
+    PendingDoubleTapShot PendingDoubleTap;
 }
 
 // -- Split Shot / Quantum Rounds / Explosive Sequence / Cataclysm Round --
@@ -116,7 +140,7 @@ component WeaponPostImpactProcs
 // All three are magazine-empty/reload-lifecycle hooks triggered from WeaponSystem.StartReload
 // (Empty Chamber/Combat Reboot via ApplyMagazineEmptiedPerks) or the reload-window itself
 // (Emergency Reload). EmergencyReloadApplied is a runtime latch (mirrors
-// WeaponDamageOverdrive.Applied) so WeaponSystem.TryApplyEmergencyReload/RevertEmergencyReload
+// FullThrottleUpgrade.Applied) so WeaponSystem.TryApplyEmergencyReload/RevertEmergencyReload
 // add/remove the CharacterStats bonuses exactly once per reload, not every tick the timer is
 // running - WeaponSystem.SeedPerkRoster must revert this latch (if set) before removing this
 // component on a weapon swap, or the CharacterStats bonus permanently leaks.
@@ -192,4 +216,19 @@ component WeaponHitTrackingPerks
     FP        FocusedBreachThreshold;
     EntityRef FocusedBreachTarget;
     FP        FocusedBreachContactTime;
+}
+
+// -- Element Infusion (ElementInfusionWeaponPerkData) --
+// A perk that grafts an EXTRA on-hit element onto the weapon, independent of the weapon's own
+// WeaponDataAsset.Element (which keeps flowing via Projectile.Element and rolls CharacterStats.
+// ElementalChance as before) - this one carries its own ProcChance and never overrides the native
+// element, the two apply side by side per hit. Baked once by ElementInfusionWeaponPerkData.Apply,
+// carried to impact via Projectile.PerkElement/PerkElementChance (projectile shots) or read live off
+// this component (hitscan), and applied through StatusEffectUtility.TryApplyInfusedElement. Only one
+// extra element per weapon - a second element-infusion perk last-wins, overwriting both fields.
+// Removed on every re-equip in WeaponSystem.SeedPerkRoster, same as every other perk cluster here.
+component WeaponElementInfusion
+{
+    ElementType Element;
+    FP          ProcChance;
 }

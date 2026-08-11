@@ -647,6 +647,9 @@ MonoBehaviour:
           RawValue: 0
       ConnectionMask: 0
     WaypointCount: 0
+    SpawnConfig:
+      Id:
+        Value: 360584790597004371
 --- !u!114 &6992737075964169537
 MonoBehaviour:
   m_ObjectHideFlags: 0

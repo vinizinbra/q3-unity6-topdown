@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapon/WeaponPerk/RelentlessFire
     Guid:
       Value: 511442117593394302
-  Icon: {fileID: 301000099, guid: c6be27ae176d44f3594332e40fa484ed, type: 3}
+  Icon: {fileID: -1461962605, guid: 017cb6454ed9743478842fb02d741366, type: 3}
   DisplayName: Relentless Fire
   Rarity: 1
   Description: Consecutive hits increase damage by {0:0}% per stack (max {1:0} stacks)

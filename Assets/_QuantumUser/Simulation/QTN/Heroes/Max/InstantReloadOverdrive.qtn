@@ -1,8 +1,8 @@
-// Tag component granted/revoked by OverdriveInstantReloadSkillAction (Begin/End paired) - presence
-// means the owner has this upgrade equipped for the current Berserk activation. No fields:
-// WeaponSystem also checks RageOverdrive.Overdriven before actually zeroing the reload time, so
-// the benefit only kicks in once max Rage is actually reached, not for the whole Berserk window -
-// this component only needs to say "is the upgrade equipped at all".
+// Tag component granted (never revoked) by FullThrottleSkillAction rank 3 - presence means the
+// owner has that rank equipped. No fields: WeaponSystem also checks
+// RageOverdriveUtility.IsAtMaxRage before actually zeroing the reload time, so the benefit only
+// kicks in once Rage is genuinely maxed, not for the whole Overdrive window - this component only
+// needs to say "is the upgrade equipped at all".
 component InstantReloadOverdrive
 {
 }

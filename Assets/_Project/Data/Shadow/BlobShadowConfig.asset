@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 794c1937ba25b4ce48b4e83d88f8f2d4, type: 3}
   m_Name: BlobShadowConfig
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.BlobShadowConfig
-  raycastHeight: 2
+  raycastHeight: 0.5
   maxRaycastDistance: 10
   groundLayer:
     serializedVersion: 2
@@ -46,6 +46,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   minScaleMultiplier: 0.4
-  groundAlpha: 0.7
+  shadowScaleMultiplier: 1
+  groundAlpha: 0.5
   lightAlpha: 0.15
   minAlphaMultiplier: 0.25

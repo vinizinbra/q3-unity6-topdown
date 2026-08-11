@@ -1,0 +1,54 @@
+// Kai's Singularity Ascension (Vortex Hero Skill line 1/4) - see docs/kai-ascensions.md. Replaces
+// VortexPowerPulseUpgrade (deleted) - SingularitySkillAction grants this instead, MULTIPLYING the
+// vortex's own PullForce/collider radius rather than absolutely overriding them, so it composes with
+// Skill Area and any future baseline tuning instead of replacing it outright.
+component SingularityUpgrade
+{
+    FP PullRadiusMultiplier;
+    FP PullForceMultiplier;
+
+    // (byte)EnemyTier this rank can interrupt up to (inclusive) - tiers above are immune. Expresses
+    // "Filler/Normal at rank 1, +Specialist/Heavy at rank 2, +Elite at rank 3, Boss never" as data
+    // instead of hardcoded tier names anywhere in VortexSystem.
+    Byte MaxEligibleTierIndex;
+
+    // Tiers at/below this index are never capped per-cast (Filler/Normal) - tiers above it are capped
+    // at one successful interrupt per enemy per Vortex cast (see VortexInterruptTracker).
+    Byte UnlimitedBelowOrEqualTierIndex;
+
+    Boolean HasGravityPulse;
+    FP GravityPulseForceMultiplier;
+    FP GravityPulseInterval;
+}
+
+// Baked onto the SPAWNED vortex itself by SpawnVortexEffectData.ApplySingularityUpgrade, not read off
+// the owner - same "the vortex needs to act independently of a long-gone owner" reasoning every other
+// Vortex upgrade-copy already follows.
+component VortexInterruptConfig
+{
+    Byte MaxEligibleTierIndex;
+    Byte UnlimitedBelowOrEqualTierIndex;
+}
+
+// Lives on the vortex entity itself - discarded for free the instant the vortex is destroyed, no
+// separate cleanup system needed. Fixed-capacity array idiom, same shape Brute's own
+// IronShoulderHitTracker uses for "list of already-affected entities this activation" (Quantum's qtn
+// DSL has no map/dictionary type). Only tiers ABOVE SingularityUpgrade.UnlimitedBelowOrEqualTierIndex
+// ever get an entry here - Filler/Normal interrupt every pulse unconditionally and never consult this.
+component VortexInterruptTracker
+{
+    array<EntityRef>[8] InterruptedEntities;
+    array<Byte>[8] InterruptCounts;
+    Byte Count;
+}
+
+// Baked onto the spawned vortex by SpawnVortexEffectData.ApplySingularityUpgrade when
+// SingularityUpgrade.HasGravityPulse is true (rank 3 only) - an independent, stronger, slower-paced
+// pull on top of the base Vortex.Force pull pulse, own TickTimer so it doesn't disturb the base pull's
+// own cadence.
+component VortexGravityPulse
+{
+    FP Force;
+    FP Interval;
+    FP Timer;
+}

@@ -56,8 +56,13 @@ namespace Quantum
 
             if (hasWeaponAndKcc)
             {
-                WeaponDataAsset weaponData = frame.FindAsset(frame.Get<Weapon>(_entityRef).WeaponData);
-                DrawCircle(weaponData.Range.AsFloat);
+                Weapon weapon = frame.Get<Weapon>(_entityRef);
+                WeaponDataAsset weaponData = frame.FindAsset(weapon.WeaponData);
+                // Mirror the sim's own effective-range formula (WeaponSystem: Range * RangeMultiplier)
+                // so the circle reflects the Weapon Range global upgrade and the Long Barrel perk -
+                // reading weaponData.Range alone always drew the un-upgraded base range, which is why
+                // the indicator never moved when range was stacked.
+                DrawCircle((weaponData.Range * weapon.RangeMultiplier).AsFloat);
             }
         }
 

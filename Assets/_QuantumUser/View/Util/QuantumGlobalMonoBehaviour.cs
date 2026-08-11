@@ -26,10 +26,10 @@ public abstract class QuantumGlobalMonoBehaviour : MonoBehaviour
         _game = QuantumRunner.Default.Game;
         QLateUpdate(_game);
     }
-    public abstract void QStart(QuantumGame game);
+    public virtual void QStart(QuantumGame game) { }
     public abstract void QUpdate(QuantumGame game);
 
-    public abstract void QLateUpdate(QuantumGame game);
+    public virtual void QLateUpdate(QuantumGame game) { }
 
 
 }

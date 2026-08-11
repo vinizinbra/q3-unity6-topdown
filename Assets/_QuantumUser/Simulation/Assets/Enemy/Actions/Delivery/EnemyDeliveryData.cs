@@ -28,9 +28,11 @@ namespace Quantum
             return EnemyMovementUtility.RandomPositionInRing(f, anchor, MinRandomOffset, MaxRandomOffset);
         }
 
-        // Called before the windup timer is checked each Preparation/Telegraph tick. Override for
-        // non-track/lock windup behavior.
-        public virtual void OnAnticipating(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, EnemyActionData action, EntityRef target)
+        // Called before the windup timer is checked each Preparation/Telegraph tick. elapsed is the
+        // fraction (0-1) of action.AnticipationTime that has passed so far this tick (pre-decrement -
+        // see EnemySystem.UpdatePreparation), only meaningful when AimLock == LocksAtPercent. Override
+        // for non-track/lock windup behavior.
+        public virtual void OnAnticipating(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, EnemyActionData action, EntityRef target, FP elapsed)
         {
             if (action.DirectionTracking == DirectionUpdateMode.DoNotUpdateTargetDirection)
                 return; // never re-aims - locked at whatever was captured when Preparation began
@@ -44,6 +46,9 @@ namespace Quantum
             // reordering the caller for.
             if (action.AimLock == EnemyAimLockTiming.LocksAtTelegraphStart && filter.Enemy->Phase == EnemyActionPhase.Telegraph)
                 return; // froze the instant windup crossed into Telegraph - stop re-aiming from here on
+
+            if (action.AimLock == EnemyAimLockTiming.LocksAtPercent && elapsed >= action.AimLockPercent)
+                return; // froze once the windup crossed the authored AimLockPercent - independent of Telegraph
 
             if (EnemyMovementUtility.TryGetTargetPosition(f, target, out FPVector3 targetPosition) == false)
                 return;

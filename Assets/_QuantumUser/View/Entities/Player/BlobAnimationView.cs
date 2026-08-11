@@ -93,12 +93,6 @@ namespace Quantum
         [SerializeField, Range(0f, 1f), Tooltip("How much of root's jump squash/stretch (anticipation/takeoff/air/landing) the head also gets, after counter-scaling out the rest. 0 = head stays put no matter how hard root squashes; 1 = head follows root exactly like torso does.")]
         private float jumpHeadSquashInfluence = 0.25f;
 
-        [Header("Shoot Punch (small head kick on every shot, independent of WeaponView's own gun recoil)")]
-        [SerializeField, Tooltip("Local-space punch distance per axis (PrimeTween's Tween.PunchCustom).")]
-        private Vector3 shootPunchStrength = new Vector3(0f, 0.04f, 0f);
-        [SerializeField] private float shootPunchDuration = 0.12f;
-        [SerializeField] private float shootPunchFrequency = 20f;
-
         private enum RunStyle { Run, Rollerblade, Heavy }
 
         private enum State { Idle, Run, Anticipate, Air, Landing }
@@ -115,6 +109,9 @@ namespace Quantum
         private float _skateboardAngleT;
         private Vector3 _headBaseLocalPos, _torsoBaseLocalPos;
         private Vector3 _rootBaseLocalPos, _rootBaseScale;
+        // Nothing else writes head rotation (unlike legs/torso), so this is only ever the punch's
+        // own base to twist away from - see PunchHeadRotation/LateUpdate.
+        private Quaternion _headBaseRot;
 
         // Torso/head squash for idle breathing and run's stride wave. Positive = compressed, negative = stretched.
         private float _squashT;
@@ -131,9 +128,16 @@ namespace Quantum
         private float _wobbleSeed;
         private float _leanT;
 
-        // Local-space offset added onto head's position every frame - driven by a PrimeTween
-        // punch kicked from OnPlayerFired, decaying back to 0 on its own, independent of _state.
-        private Vector3 _shootPunchOffset;
+        // Shoot punch state - five independent PrimeTween punches, all kicked externally by
+        // WeaponView (see the public Punch* methods below) using that weapon's own
+        // WeaponAnimationParams tuning, since the right feel differs per weapon. Each decays back
+        // to 0 (rest) on its own; all five are applied additively in LateUpdate, strictly after
+        // this frame's locomotion pose - see LateUpdate's own comment for why.
+        private Vector3 _headPunchOffset;
+        private float _bodyPunchRotation;
+        private float _headPunchRotation;
+        private Vector3 _bodyPunchScale;
+        private Vector3 _headPunchScale;
 
         private bool _wasGrounded = true;
 
@@ -170,7 +174,6 @@ namespace Quantum
             CacheBaseline();
             _wobbleSeed = Random.value * 1000f;
             QuantumEvent.Subscribe<EventPlayerJumped>(this, OnPlayerJumped);
-            QuantumEvent.Subscribe<EventPlayerFired>(this, OnPlayerFired);
         }
 
         public override void OnDestroy()
@@ -178,7 +181,7 @@ namespace Quantum
             base.OnDestroy();
             QuantumEvent.UnsubscribeListener(this);
 
-            // OnPlayerFired's shoot-punch (Tween.PunchCustom(this, ...)) can still be decaying when
+            // The Punch* methods' tweens (Tween.PunchCustom(this, ...)) can still be decaying when
             // this view is destroyed - without this, PrimeTween logs a stack-trace-capturing error
             // per orphaned tween every time that happens.
             Tween.StopAll(this);
@@ -199,7 +202,7 @@ namespace Quantum
         private void ApplyBaselineTransforms()
         {
             if (root != null) { root.localPosition = _rootBaseLocalPos; root.localScale = _rootBaseScale; }
-            if (head != null) { head.localPosition = _headBaseLocalPos; head.localScale = _headBaseScale; }
+            if (head != null) { head.localPosition = _headBaseLocalPos; head.localScale = _headBaseScale; head.localRotation = _headBaseRot; }
             if (torso != null) { torso.localPosition = _torsoBaseLocalPos; torso.localScale = _torsoBaseScale; torso.localRotation = Quaternion.identity; }
             if (legLeft != null) { legLeft.localPosition = _legLeftBasePos; legLeft.localRotation = _legLeftBaseRot; legLeft.localScale = _legLeftBaseScale; }
             if (legRight != null) { legRight.localPosition = _legRightBasePos; legRight.localRotation = _legRightBaseRot; legRight.localScale = _legRightBaseScale; }
@@ -209,7 +212,7 @@ namespace Quantum
         private void CacheBaseline()
         {
             if (root != null) { _rootBaseLocalPos = root.localPosition; _rootBaseScale = root.localScale; }
-            if (head != null) { _headBaseScale = head.localScale; _headBaseLocalPos = head.localPosition; }
+            if (head != null) { _headBaseScale = head.localScale; _headBaseLocalPos = head.localPosition; _headBaseRot = head.localRotation; }
             if (torso != null) { _torsoBaseScale = torso.localScale; _torsoBaseLocalPos = torso.localPosition; }
             if (legLeft != null) { _legLeftBasePos = legLeft.localPosition; _legLeftBaseRot = legLeft.localRotation; _legLeftBaseScale = legLeft.localScale; }
             if (legRight != null) { _legRightBasePos = legRight.localPosition; _legRightBaseRot = legRight.localRotation; _legRightBaseScale = legRight.localScale; }
@@ -226,16 +229,42 @@ namespace Quantum
             _jumpSquashT = anticipationSquash; // instant, held - no easing into it
         }
 
-        // Additive on top of _state's pose (head only, not root) - independent of Idle/Run/Air/
-        // etc, so shooting mid-run or mid-air still kicks. Writes into _shootPunchOffset rather
-        // than head.localPosition directly - ApplyPose is the sole writer of the head transform
-        // every frame, so a tween touching it directly would just get stomped next QUpdate.
-        private void OnPlayerFired(EventPlayerFired e)
+        // Five independent punches, each called by WeaponView.Shoot() with that weapon's own
+        // WeaponAnimationParams tuning - kept as plain per-effect methods rather than one bundled
+        // call so a weapon can fire only the ones it wants (e.g. skip the rotation kicks by
+        // passing zero strength) without BlobAnimationView needing to know about
+        // CharacterPunchSettings at all. All independent of _state/ApplyPose - shooting mid-run or
+        // mid-air still kicks - and applied in LateUpdate, not written directly here, since
+        // ApplyPose (running inside QUpdate/Update) is the sole writer of these transforms every
+        // frame and would just stomp a direct write next frame.
+        public void PunchHeadOffset(Vector3 strength, float duration, float frequency)
         {
-            if (e.Entity != _entityRef) return;
+            Tween.PunchCustom(this, Vector3.zero, new ShakeSettings(strength, duration, frequency),
+                (view, val) => view._headPunchOffset = val);
+        }
 
-            Tween.PunchCustom(this, Vector3.zero, new ShakeSettings(shootPunchStrength, shootPunchDuration, shootPunchFrequency),
-                (view, val) => view._shootPunchOffset = val);
+        public void PunchBodyRotation(float degrees, float duration, float frequency)
+        {
+            Tween.PunchCustom(this, Vector3.zero, new ShakeSettings(new Vector3(degrees, 0f, 0f), duration, frequency),
+                (view, val) => view._bodyPunchRotation = val.x);
+        }
+
+        public void PunchHeadRotation(float degrees, float duration, float frequency)
+        {
+            Tween.PunchCustom(this, Vector3.zero, new ShakeSettings(new Vector3(degrees, 0f, 0f), duration, frequency),
+                (view, val) => view._headPunchRotation = val.x);
+        }
+
+        public void PunchBodyScale(Vector3 strength, float duration, float frequency)
+        {
+            Tween.PunchCustom(this, Vector3.zero, new ShakeSettings(strength, duration, frequency),
+                (view, val) => view._bodyPunchScale = val);
+        }
+
+        public void PunchHeadScale(Vector3 strength, float duration, float frequency)
+        {
+            Tween.PunchCustom(this, Vector3.zero, new ShakeSettings(strength, duration, frequency),
+                (view, val) => view._headPunchScale = val);
         }
 
         protected override void QUpdate(QuantumGame game)
@@ -421,6 +450,45 @@ namespace Quantum
             _wasGrounded = isGrounded;
         }
 
+        // All five shoot punches applied as their own pass, strictly after QUpdate's locomotion
+        // pose (Unity guarantees LateUpdate runs after Update on the same object, and
+        // CustomQuantumEntityViewComponent's own Update - which drives QUpdate - never touches
+        // LateUpdate, so this can't collide with it). Kept independent of _state/ApplyPose
+        // entirely so Idle/Run/Air's own per-frame pose writes can never bury the punch, no matter
+        // how those evolve later - it always lands on top of whatever pose was just set this frame.
+        private void LateUpdate()
+        {
+            if (head != null)
+            {
+                head.localPosition += _headPunchOffset;
+
+                // Multiplicative on top of ApplyPose's own head scale, same shape as root below.
+                var headScale = head.localScale;
+                headScale.x *= 1f + _headPunchScale.x;
+                headScale.y *= 1f + _headPunchScale.y;
+                headScale.z *= 1f + _headPunchScale.z;
+                head.localScale = headScale;
+
+                head.localRotation = _headBaseRot * Quaternion.Euler(0f, 0f, _headPunchRotation);
+            }
+
+            if (root != null)
+            {
+                var rootScale = root.localScale;
+                rootScale.x *= 1f + _bodyPunchScale.x;
+                rootScale.y *= 1f + _bodyPunchScale.y;
+                rootScale.z *= 1f + _bodyPunchScale.z;
+                root.localScale = rootScale;
+
+                // Right-multiplying twists around root's own current Z axis on top of whatever
+                // rotation QUpdate just set (world rotation in the billboard case, local
+                // otherwise - this reads correctly either way since it's relative to root's own
+                // orientation).
+                if (_bodyPunchRotation != 0f)
+                    root.rotation *= Quaternion.Euler(0f, 0f, _bodyPunchRotation);
+            }
+        }
+
         private State DetermineGroundedState(float horizontalSpeed)
         {
             return horizontalSpeed > moveSpeedEpsilon ? State.Run : State.Idle;
@@ -603,8 +671,9 @@ namespace Quantum
                 head.localScale = Vector3.Scale(_headBaseScale, new Vector3(headHorizontal * headJumpHorizontal, headVertical * headJumpVertical, headHorizontal * headJumpHorizontal));
                 var headPos = _headBaseLocalPos;
                 headPos.y += upperBodyBobOffset;
-                headPos += _shootPunchOffset;
                 head.localPosition = headPos;
+                // Shoot punch is layered on top in LateUpdate, strictly after this pose - see
+                // LateUpdate's own comment for why.
             }
 
             if (root != null)

@@ -1,3 +1,13 @@
+// Fired by GameStateUtility.SetState the instant Global.CurrentState actually changes (a
+// same-state call is a no-op, no event) - match-wide, not entity-scoped, unlike almost everything
+// else in this file, since GameState itself is a single Global value, not a per-entity concept.
+// See GameState.qtn/docs/talents.md.
+event GameStateChanged
+{
+    GameState PreviousState;
+    GameState NewState;
+}
+
 event PlayerJumped
 {
     EntityRef Entity;
@@ -96,6 +106,17 @@ event EntityShielded
     FP        Amount;
 }
 
+// Fired from the exact same spot as Shield.qtn's OnShieldBroken signal
+// (DamageUtility.AbsorbWithShield, the tick Current crosses from >0 to <=0) - that signal is a
+// simulation-only reaction hook (RiftMutationReactionSystem's Shield Breaker), this is the
+// view-facing counterpart so a break VFX can play. No Amount/Owner - unlike EntityShielded this
+// isn't a grant, just "this entity's shield just popped", so a view reaction only ever needs to
+// know where.
+event ShieldBroken
+{
+    EntityRef Target;
+}
+
 // Fired once per HitEffectUtility.ApplyToTarget call that actually connects (see that method) -
 // generic across every delivery/skill/projectile that funnels through it, unlike EntityDamaged/
 // EntityHealed which only cover their own specific effect. Owner lets each attacking enemy's own
@@ -130,6 +151,30 @@ event EntityDied
     EntityRef Owner;
 }
 
+// Fired by GroundAreaDeliveryData.Begin() right before it self-destructs its own owner
+// (SelfDestructs, a creeper-style suicide exploder) - EnemyAttackVisualsView's usual mechanism for
+// playing an action's BeginStep visual (blob animation + particle) is watching Enemy.Phase for an
+// edge across two render frames, which normally still catches a self-destruct fine since
+// DamageUtility.ApplyDamage sets Phase = Dead before the entity actually lingers/destroys - EXCEPT
+// for Filler/Normal tier enemies, whose death branch skips straight to f.Destroy() the same tick
+// with Phase never touched at all (see that method's own comment - deliberate, no lingering corpse
+// for disposable trash tiers). For those, the view never gets a Phase edge to observe before the
+// entity is simply gone, so BeginStep's explosion particle silently never plays. This event exists
+// so that specific case (and only that case - non-Filler/Normal self-destructs still go through
+// the normal Phase-Dead path and don't also raise this, avoiding a double-play) has a guaranteed
+// trigger. Position/FacingAngle are captured explicitly rather than left for the view to re-read
+// live entity state, since by the time Unity processes this event the entity may already be
+// destroyed - same reasoning EntityDamaged's own hitPosition capture already documents. Action is
+// looked up fresh via frame.FindAsset in the view instead (that's static asset data, safe
+// regardless of whether the raising entity still exists).
+event EnemySelfDestructBeginVisual
+{
+    EntityRef Entity;
+    FPVector3 Position;
+    FP        FacingAngle;
+    AssetRef<EnemyActionData> Action;
+}
+
 // Fired by AlternatingAreaSystem every time it flips phase - i.e. every pulse, whether it catches
 // anyone or not. View-side hook for the pulsing entity's own animation (e.g. ZaraSpeakerView), not
 // per-target damage/heal-number feedback - see EntityDamaged/EntityHealed for those.
@@ -159,6 +204,21 @@ event ResonancePulseReleased
     FP        Radius;
 }
 
+// Fired by ResonanceUtility.FirePulse alongside ResonancePulseReleased/ShockwaveReleased above,
+// only on a Remix pulse (Resonance.RemixRank > 0 and the pulse count is a multiple of 3) - carries
+// the deterministically-chosen effect(s) so the client only ever displays a result the simulation
+// already picked, never rolls its own (see docs/rift-mutations.md's "presentation only displays"
+// convention, reused here for the same reason). Effect2 is default/invalid unless Remix rank 3
+// ("Full Remix") rolled a second, distinct effect.
+event RemixPulseTriggered
+{
+    EntityRef                Entity;
+    FPVector3                Position;
+    FP                       Radius;
+    AssetRef<HitEffectData>  Effect1;
+    AssetRef<HitEffectData>  Effect2;
+}
+
 event PlayerRespawned
 {
     EntityRef Entity;
@@ -186,9 +246,9 @@ event HitscanFired
 }
 
 // Radius is supplied explicitly rather than left to the view to read off HitData.Radius - an
-// upgrade (BlastRadiusUpgrade) can boost the radius Detonate() actually used for the damage
-// overlap past what's authored on the asset, same reason ExplodeOnDeathDetonated below carries its
-// own Radius instead of pointing at an asset for it.
+// ascension (e.g. Unstable Mixture/Hot Fuse/Birthday Cake) can boost the radius Detonate() actually
+// used for the damage overlap past what's authored on the asset, same reason ExplodeOnDeathDetonated
+// below carries its own Radius instead of pointing at an asset for it.
 event AreaDetonated
 {
     EntityRef              Owner;
@@ -208,12 +268,18 @@ event AreaDetonated
 // target is always an Enemy (see DamageUtility.TryExplodeOnDeath's only call sites), so the view
 // can still tint that shared prefab with the same EnemyDataAsset.ExplosionColor EnemyExploded
 // already uses, instead of leaving it a flat white that clashes next to a tinted death VFX.
+// RiftMarked mirrors DamageUtility.TryExplodeOnDeath's own StatusEffectUtility.IsRiftMarked check
+// (captured before the mark is cleared by death) so EffectsManager can play a visually distinct
+// blast for the ExplodeOnDeathConfig.RiftMarkRadiusMultiplier/RiftMarkDamageMultiplier-boosted
+// case, same dedicated-prefab-with-tinted-fallback pattern DetonationReleased already uses - see
+// docs/elemental-reactions.md.
 event ExplodeOnDeathDetonated
 {
     EntityRef  Owner;
     FPVector3  Position;
     FP         Radius;
     AssetRef<EnemyDataAsset> EnemyData;
+    Boolean    RiftMarked;
 }
 
 // Fired by DamageUtility.TrySentryOverload - fully independent from ExplodeOnDeathDetonated above
@@ -234,8 +300,8 @@ event SentryOverloadDetonated
 // Fired by VortexSystem.TryExplodeOnDestroy (see VortexExplodeOnDestroy) - same shape as
 // ExplodeOnDeathDetonated except this DOES carry an asset ref: unlike the enemy-death mark (which
 // can come from any hero's upgrade), this always comes from exactly one
-// VortexExplodeOnDestroySkillAction asset, which is where the view resolves BlastEffectPrefab from
-// (VortexExplodeOnDestroySkillAction.View.cs) - same "AssetRef travels with the event" shape
+// VortexCollapseSkillAction asset, which is where the view resolves BlastEffectPrefab from
+// (VortexCollapseSkillAction.View.cs) - same "AssetRef travels with the event" shape
 // AreaDetonated uses for AreaHitData.BlastEffectPrefab. Position/Radius are still supplied directly
 // since damage is applied via HitEffectUtility.ApplyDamageInRadius, no spawned entity.
 event VortexExploded
@@ -244,29 +310,53 @@ event VortexExploded
     EntityRef  Owner;
     FPVector3  Position;
     FP         Radius;
-    AssetRef<VortexExplodeOnDestroySkillAction> Source;
+    AssetRef<VortexCollapseSkillAction> Source;
 }
 
-// Fired by VortexSystem.TryRandomExplosion (see VortexRandomExplosionUpgrade) - one of many small
-// blasts at a random point inside the vortex's own pull radius, repeating on its own TickInterval for
-// as long as the vortex is alive. Kept separate from VortexExploded (the single big blast on expiry)
-// since the view will likely want a smaller/different VFX for these - Source resolves
-// VortexRandomExplosionSkillAction.BlastEffectPrefab, same AssetRef-travels-with-the-event shape as
-// VortexExploded's own Source.
-event VortexMiniExploded
+// Fired by VortexSystem's Implosion pulse (see VortexImplosionUpgrade, Kai's Compression rank 3) -
+// every EveryNthPulse-th pull pulse, a smaller blast at the vortex's own center. Kept separate from
+// VortexExploded (the single big blast on expiry) since the view will likely want a smaller/different
+// VFX for these - Source resolves CompressionSkillAction.BlastEffectPrefab (if authored), same
+// AssetRef-travels-with-the-event shape as VortexExploded's own Source.
+event VortexImploded
 {
     EntityRef  Entity;
     EntityRef  Owner;
     FPVector3  Position;
     FP         Radius;
-    AssetRef<VortexRandomExplosionSkillAction> Source;
+    AssetRef<CompressionSkillAction> Source;
+}
+
+// Fired by VortexSystem.TryRepulseOnDestroy (see VortexRepulseOnDestroy, Kai's Warp Wake rank 3) - a
+// Dash Void collapsing into an outward shockwave instead of Vortex Collapse's own inward-pulling
+// blast. Same "AssetRef travels with the event" shape as VortexExploded/VortexImploded's own Source.
+event VortexRepulsed
+{
+    EntityRef  Entity;
+    EntityRef  Owner;
+    FPVector3  Position;
+    FP         Radius;
+    AssetRef<WarpWakeSkillAction> Source;
+}
+
+// Fired by KaiUndertowSystem.TickUndertowPulls whenever a struck enemy's pull target resolves to a
+// new enemy (fresh link, or the nearest enemy switches mid-pull) - NOT from OnWeaponHitLanded, since
+// the pull target isn't known yet at hit time. Both Source and Target are always genuine enemies -
+// never Kai/the owner - one-shot impact/mark feedback on both affected enemies, separate from the
+// ongoing tether line (which the view instead polls live off UndertowPull.LinkTarget every frame -
+// see KaiUndertowLinksView - rather than reacting to this event, so the line's own duration never
+// drifts from simulation state on rollback/resimulation).
+event UndertowTriggered
+{
+    EntityRef Source;
+    EntityRef Target;
 }
 
 // Fired by JuggernautSkillData.Tick whenever a discharge fires - Brutus reached Charged and touched
 // an enemy, triggering the area knockback (DamageUtility.ApplyKnockback, no damage of its own - pure
 // knockback, same as the design calls for). No spawned entity, so the view needs Position/Radius
 // handed to it explicitly - Source resolves JuggernautSkillData.DischargeEffectPrefab, same
-// AssetRef-travels-with-the-event shape as VortexExploded/VortexMiniExploded's own Source.
+// AssetRef-travels-with-the-event shape as VortexExploded/VortexImploded's own Source.
 event JuggernautDischarged
 {
     EntityRef  Entity;
@@ -275,25 +365,25 @@ event JuggernautDischarged
     AssetRef<JuggernautSkillData> Source;
 }
 
-// Fired by JuggernautSkillData.End when JuggernautEndExplosionUpgrade is equipped - the channel
+// Fired by JuggernautSkillData.End when the Aftershock Ascension is equipped - the channel
 // finishing (Duration running out) triggers a damage blast around Brutus's own position, separate
 // from the discharge pulse above (knockback only, triggered by touching an enemy while Charged, not
 // by expiry). Damage applied directly via HitEffectUtility.ApplyDamageInRadius, no spawned entity -
-// Source resolves JuggernautEndExplosionSkillAction.BlastEffectPrefab, same
-// AssetRef-travels-with-the-event shape as the rest of this session's asset-authored VFX.
+// Source resolves AftershockSkillAction.BlastEffectPrefab, same AssetRef-travels-with-the-event shape
+// as the rest of this session's asset-authored VFX.
 event JuggernautEndExploded
 {
     EntityRef  Entity;
     FPVector3  Position;
     FP         Radius;
     FP         Damage;
-    AssetRef<JuggernautEndExplosionSkillAction> Source;
+    AssetRef<AftershockSkillAction> Source;
 }
 
 // Fired by JuggernautLandingImpactSystem the moment an enemy marked by JuggernautLaunched touches
 // ground again - Radius is the LANDED ENEMY's own real collider radius
-// (EnemyMovementUtility.ResolveShapeRadius), so a bigger enemy's impact VFX reads bigger too. Source resolves
-// JuggernautLandingImpactSkillAction.ImpactEffectPrefab, same AssetRef-travels-with-the-event shape
+// (EnemyMovementUtility.ResolveShapeRadius), so a bigger enemy's impact VFX reads bigger too. Source
+// resolves ConcussiveImpactSkillAction.ImpactEffectPrefab, same AssetRef-travels-with-the-event shape
 // as the rest of this session's asset-authored VFX.
 event JuggernautLanded
 {
@@ -301,7 +391,7 @@ event JuggernautLanded
     EntityRef  Owner;
     FPVector3  Position;
     FP         Radius;
-    AssetRef<JuggernautLandingImpactSkillAction> Source;
+    AssetRef<ConcussiveImpactSkillAction> Source;
 }
 
 // Generic - fired directly from StatusEffectUtility.ApplyRoot, so every Root source (not just
@@ -320,32 +410,20 @@ event EntityRooted
 
 // Fired by HitEffectUtility.ApplyShockwave - a knockback-only radial push around a point, deliberately
 // generic (unlike AreaDetonated/JuggernautDischarged etc.) so ANY caller (Empty Chamber weapon perk,
-// Kai's Dash Shockwave, Zara's Resonance pulse) can fire this same event/VFX instead of each needing
-// its own bespoke hookup - same "no single upgrade asset to resolve a bespoke prefab from" reasoning
-// ExplodeOnDeathDetonated already uses, see EffectsManager. Effect is invalid/default for every
-// caller except Zara's Remix ascension (see ResonanceUtility.ResolveRemixEffect) - EffectsManager's
-// own generic handler skips playing entirely whenever this is valid, deferring the (colored) shockwave
-// visual to ResonanceFxView instead, so a Remix pulse never plays two overlapping shockwave particles.
+// Zara's Resonance pulse) can fire this same event/VFX instead of each needing its own bespoke hookup -
+// same "no single upgrade asset to resolve a bespoke prefab from" reasoning ExplodeOnDeathDetonated
+// already uses, see EffectsManager. Effect is invalid/default for every caller except Zara's Remix
+// ascension (see ResonanceUtility.ResolveRemixEffect) - EffectsManager's own generic handler skips
+// playing entirely whenever this is valid, deferring the (colored) shockwave visual to ResonanceFxView
+// instead, so a Remix pulse never plays two overlapping shockwave particles. Kai's old Dash Shockwave
+// ascension (DashShockwaveTriggered) is gone - absorbed into Warp Wake rank 3's Repulsion, which fires
+// VortexRepulsed instead (see Vortex.qtn/VortexRepulseOnDestroy).
 event ShockwaveReleased
 {
     EntityRef                Entity;
     FPVector3                Position;
     FP                       Radius;
     AssetRef<HitEffectData>  Effect;
-}
-
-// Fired by BruteKnockbackMasterySystem.OnPlayerLanded when Ground Pound actually triggers - deliberately
-// its own event rather than reusing ShockwaveReleased above: that one's Effect field means "skip,
-// a dedicated view already handles this," not a prefab to resolve, and Ground Pound's whole point is
-// a per-asset prefab. Source always comes from exactly one GroundPoundPassiveUpgradeData asset, which
-// is where the view resolves BlastEffectPrefab from (GroundPoundPassiveUpgradeData.View.cs) - same
-// "AssetRef travels with the event" shape VortexExploded uses for VortexExplodeOnDestroySkillAction.
-event GroundPoundTriggered
-{
-    EntityRef                                Entity;
-    FPVector3                                Position;
-    FP                                       Radius;
-    AssetRef<GroundPoundPassiveUpgradeData>  Source;
 }
 
 // Fired by DirectHitData.ApplyQuantumRounds whenever the perk actually chains a hit onto a second
@@ -408,7 +486,7 @@ event OverflowingRiftTriggered
 }
 
 // Fired once per Projectile actually reversed by Kai's Reflect dash ascension
-// (ReflectProjectilesSkillAction) - a point-in-space "parry" moment, not radius-scaled like the
+// (MirrorStepSkillAction) - a point-in-space "parry" moment, not radius-scaled like the
 // pulses above, since it marks a single deflected shot rather than an area effect. Position is the
 // projectile's own position at the instant it's reflected, not Kai's, so the spark reads at the
 // parry point even if Kai is still mid-dash toward/past it.
@@ -476,7 +554,7 @@ event EnemyExploded
     AssetRef<EnemyDataAsset> Source;
 }
 
-// Fired by ExpOrbSystem the instant a player reaches an ExpOrb - a View hook for both the flying
+// Fired by CurrencyOrbSystem the instant a player reaches an ExpOrb - a View hook for both the flying
 // pickup-to-HUD-bar effect (FlyingXpManager, every client plays this identically since the shared
 // Frame.Global.TotalExperience/Level update it accompanies is already deterministic/synced on its
 // own) AND a per-character pickup glow (HitFeedback) on whichever character actually touched the
@@ -499,7 +577,7 @@ event ScrapOrbCollected
     FPVector3 Position;
 }
 
-// Fired by RiftShardOrbSystem the instant a player reaches a RiftShard - same View-hook shape as
+// Fired by CurrencyOrbSystem the instant a player reaches a RiftShard - same View-hook shape as
 // ExpOrbCollected above (a pickup-to-HUD-bar effect plus a per-character pickup glow), mirroring
 // that currency's own event since Rift Shards follow the same shared/deterministic-total pattern.
 event RiftShardCollected
@@ -509,7 +587,7 @@ event RiftShardCollected
     FP        Amount;
 }
 
-// Fired by CoinOrbSystem the instant a player reaches a Coin - same View-hook shape as
+// Fired by CurrencyOrbSystem the instant a player reaches a Coin - same View-hook shape as
 // ExpOrbCollected/RiftShardCollected above, mirroring those currencies' own events.
 event CoinCollected
 {

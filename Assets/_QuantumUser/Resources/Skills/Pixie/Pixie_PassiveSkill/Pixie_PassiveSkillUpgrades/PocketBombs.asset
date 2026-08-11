@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e089aea2dc919412b8ee42a3077a78da, type: 3}
+  m_Name: PocketBombs
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.PocketBombsPassiveUpgradeData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Pixie/Pixie_PassiveSkill/Pixie_PassiveSkillUpgrades/PocketBombs
+    Guid:
+      Value: 425116734721973481
+  Icon: {fileID: 1236816446, guid: b217254d41b6945b1873986186a25786, type: 3}
+  DisplayName: Pocket Bombs
+  Rarity: 2
+  Description: Qualifying Pixie explosions have a chance to drop a stationary Mini
+    Bomb, dealing a percentage of Bunny Bomb damage.
+  <MaxRank>k__BackingField: 3
+  RankDescriptions:
+  - Qualifying explosions have a 15% chance to spawn a stationary Mini Bomb dealing
+    35% of Bunny Bomb damage.
+  - Qualifying explosions have a 25% chance to spawn a stationary Mini Bomb dealing
+    45% of Bunny Bomb damage.
+  - Qualifying explosions have a 35% chance to spawn a stationary Mini Bomb dealing
+    55% of Bunny Bomb damage.
+  Chance:
+  - RawValue: 9830
+  - RawValue: 16384
+  - RawValue: 22938
+  DamagePercent:
+  - RawValue: 22938
+  - RawValue: 29491
+  - RawValue: 36045
+  Fuse:
+    RawValue: 26214
+  MiniBombPrototype:
+    Id:
+      Value: 1349088406501725067
+  Explosion:
+    Id:
+      Value: 280410021018812087

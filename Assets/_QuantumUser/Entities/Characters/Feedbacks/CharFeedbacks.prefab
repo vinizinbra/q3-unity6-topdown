@@ -104,7 +104,7 @@ TrailRenderer:
     colorGradient:
       serializedVersion: 2
       key0: {r: 1, g: 1, b: 1, a: 0}
-      key1: {r: 1, g: 1, b: 1, a: 0.19607843}
+      key1: {r: 1, g: 1, b: 1, a: 0.47058824}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -478,6 +478,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.HasShadow
   baseScale: 1
+  shadowOffset: {x: 0, y: 0}
 --- !u!114 &6427262625012147781
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -556,7 +557,7 @@ MonoBehaviour:
   spinSpeed: 90
   groundOffset: 0.02
   depthOffset: 0
-  followLerpSpeed: 12
+  followLerpSpeed: 20
   scaleLerpSpeed: 10
   travelScaleMultiplier: 0.5
   arriveDistance: 0.15

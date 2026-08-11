@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapon/WeaponPerk/BottomlessMomentum
     Guid:
       Value: 330234426950999633
-  Icon: {fileID: 301000176, guid: c6be27ae176d44f3594332e40fa484ed, type: 3}
+  Icon: {fileID: -1308015637, guid: 017cb6454ed9743478842fb02d741366, type: 3}
   DisplayName: Bottomless Momentum
   Rarity: 2
   Description: '{0:0}% chance for crits to restore {1:0} ammo'

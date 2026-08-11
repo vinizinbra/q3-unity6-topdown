@@ -12,10 +12,14 @@ component AlternatingArea
 {
     Boolean CurrentlyHealing;
 
-    // No HealAmount - HealEffectData computes its heal off the target's own MaxHealth (see
-    // HealUtility.ApplyHeal), not off AreaDamage.Damage, so there's nothing to seed here.
     DamageTargetMask HealTargetMask;
     array<AssetRef<HitEffectData>>[4] HealEffects;
+
+    // Seeds AreaDamage.Damage during a heal pulse, mirroring DamageAmount below - a heal percent
+    // (of the target's own MaxHealth), read by ScaledHealEffectData via HitEffectContext.Damage. Was
+    // unused (heal pulses always got AreaDamage.Damage = 0) before Healing Chorus needed a baked,
+    // ranked heal magnitude the same shape Amplifier already has on the damage side.
+    FP HealAmount;
 
     FP DamageAmount;
     DamageTargetMask DamageMask;

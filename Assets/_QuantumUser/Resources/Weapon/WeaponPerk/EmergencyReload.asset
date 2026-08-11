@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapon/WeaponPerk/EmergencyReload
     Guid:
       Value: 435382047734290004
-  Icon: {fileID: 301000155, guid: c6be27ae176d44f3594332e40fa484ed, type: 3}
+  Icon: {fileID: -1231575849, guid: 017cb6454ed9743478842fb02d741366, type: 3}
   DisplayName: Emergency Reload
   Rarity: 1
   Description: Gain {0:+0;-0}% Move Speed and {1:+0;-0}% Damage Reduction while reloading

@@ -33,9 +33,9 @@ namespace Quantum
 
     // Replaces the old EnemyMovementType+FlightHeight pair. Answers "is this enemy targetable by/
     // affected by X", not "can this enemy physically climb over that ledge" - the latter is a
-    // separate, still-unbuilt shared traversal helper (see EnemyMovementUtility.CanCrossLedge),
-    // since they're different axes: an enemy can be untargetable by melee while still being able
-    // to cross every obstacle a Grounded enemy can.
+    // separate traversal question (see EnemyMovementUtility.TryFindClimbLanding), since they're
+    // different axes: an enemy can be untargetable by melee while still being able to cross every
+    // obstacle a Grounded enemy can.
     [Serializable]
     public struct EnemyHeightData
     {
@@ -58,35 +58,57 @@ namespace Quantum
         public FP HoverSpringFrequency;
         public FP HoverSpringDamping;
 
-        // Both checked together by EnemyMovementUtility.MoveInDirection (via CanCrossLedge) to
-        // decide whether this enemy hops over a low obstacle blocking its path instead of walking
-        // into it - mirrors the player's own auto-mantle
-        // (PlayerMovementProcessor.TryDetectMantle/DoJump), just applied directly to
-        // PhysicsBody3D.Velocity.Y since enemies integrate through PhysicsSystem3D, not KCC.
-        public bool CanJump;
-
         public bool CanFly;
         public bool CanBeLaunched;
         public bool CanBeGrounded;
 
-        // Whether this enemy can cross a ledge/obstacle the way the player can - see
-        // EnemyMovementUtility.CanCrossLedge, which mirrors the player's own mantle geometry check.
-        // Checked alongside CanJump (both must be true) - kept as two separate flags since a future
-        // non-jumping traversal method (e.g. phasing through, for a ghost-type enemy) could set
-        // this without CanJump.
-        public bool CanCrossObstacles;
+        // Extra clearance added on top of this enemy's own collider radius (EnemyMovementUtility.
+        // ResolveEntityRadius) for the climb probe (TryFindClimbLanding) specifically - cast from
+        // this enemy's own center pivot, so without this a wide enemy's own body could still be
+        // overlapping the ledge at the sampled point even though the ray from its center cleared it.
+        // Split from the old single ProbeThreshold (FormerlySerializedAs preserves every existing
+        // asset's tuned value here) since climb and gap/fall are different-enough geometry questions
+        // to want independent margins - a ledge worth climbing and a gap worth jumping aren't
+        // necessarily found at the same clearance distance.
+        [FormerlySerializedAs("ProbeThreshold")]
+        public FP ClimbProbeThreshold;
 
-        // Ankle-height-blocked + ledge-height-clear geometry probe, same three tunables as
-        // MovementDataAsset's own mantle fields (AnkleProbeHeight/MaxLedgeHeight/
-        // MantleProbeDistance) - only meaningful while CanJump && CanCrossObstacles.
-        public FP AnkleProbeHeight;
-        public FP MaxLedgeHeight;
-        public FP MantleProbeDistance;
+        // Same idea as ClimbProbeThreshold, for the "no ground ahead" family instead (HasGroundAhead/
+        // TryFindGapLanding/HasGroundWithinFallDistance - CanJumpGaps and CanFallFromCliff both
+        // branch off the same edge check). Not migrated from the old ProbeThreshold value (Unity's
+        // FormerlySerializedAs only ever targets one field) - re-author this on any enemy that had a
+        // hand-tuned ProbeThreshold and also uses CanJumpGaps/CanFallFromCliff, or it reverts to this
+        // field's own default.
+        public FP GapProbeThreshold;
 
-        // Upward velocity applied the instant a climbable obstacle is detected - only meaningful
-        // while CanJump && CanCrossObstacles. Gravity (already active on a Grounded enemy) arcs it
-        // back down on its own; no separate jump duration/height field needed.
-        public FP JumpVelocity;
+        // Peak height of the visual arc bump a traversal hop (CanClimbCliffs/CanJumpGaps) adds on
+        // top of its own straight lerp from takeoff to landing - see EnemyMovementUtility.
+        // TickTraversalJump. Purely cosmetic: the lerp itself already carries the entity to the
+        // exact landing point regardless of this value, so raising/lowering it only changes how
+        // high the hop looks, never where or when it lands.
+        public FP ArcHeight;
+
+        // Blanket speed scale for a climb/gap traversal hop (EnemyMovementUtility.
+        // BeginTraversalJump), applied on top of whatever distance/speed-derived pace it would
+        // otherwise pick - crank it up for a snappier-feeling hop, down for a slower, more
+        // deliberate one, independent of this enemy's own walking MoveSpeed. Unlike ArcHeight above,
+        // this DOES change timing (a shorter TraversalJumpDuration), not just how it looks. <= 0
+        // (every pre-existing asset authored before this field existed included) reads as 1 - no
+        // change - same "unset multiplier defaults safely" convention Projectile.qtn's own
+        // MaxDistanceMultiplier already uses, so nothing already in the game silently speeds up or
+        // stalls the instant this field exists.
+        public FP TraversalJumpSpeedMultiplier;
+
+        // Whether this enemy can climb a blocking obstacle up to CliffHeight tall instead of
+        // walking into it - see EnemyMovementUtility.TryFindClimbLanding, which mirrors the
+        // player's own mantle geometry check (ankle-height blocked + CliffHeight-high clear). No
+        // separate jump-VELOCITY field the way the old CanJump/JumpVelocity pair this replaces had:
+        // EnemyMovementUtility.BeginTraversalJump is a kinematic hop straight onto the landing point
+        // TryFindClimbLanding found, not a physics launch, so any authored CliffHeight is always
+        // reachable, never just attempted - TraversalJumpSpeedMultiplier above only paces how fast
+        // it gets there, never whether it does.
+        public bool CanClimbCliffs;
+        public FP CliffHeight;
 
         public bool AffectedByGroundHazards;
         public bool AffectedByShockwaves;
@@ -94,14 +116,18 @@ namespace Quantum
         public bool TargetableByProjectiles;
 
         // Only checked while InitialState == Grounded (Flying/Airborne enemies have nothing
-        // beneath them to check). True makes EnemyMovementUtility.MoveInDirection refuse to step
-        // toward a direction with no ground ahead (see HasGroundAhead) instead of walking off the
-        // edge - same probe shape as the player's own auto-hop trigger
-        // (PlayerMovementProcessor.HasGroundAhead/MovementDataAsset), just without the jump: this
-        // enemy simply stops at the edge rather than hopping across the gap.
-        public bool AvoidLedges;
-        public FP EdgeProbeDistance;
-        public FP EdgeCheckDistance;
+        // beneath them to check). When EnemyMovementUtility.HasGroundAhead finds no ground under
+        // this enemy's next step, MoveInDirection tries, in order: jump the gap (CanJumpGaps, up to
+        // GapDistance - same kinematic-hop reachability guarantee as CliffHeight above) or fall down
+        // it (CanFallFromCliff, up to FallHeight - a plain, unboosted step off the edge under normal
+        // gravity, not a hop). If neither applies, it stops rather than walking into open air - the
+        // old AvoidLedges flag this replaces is gone because that's now simply what happens when
+        // both of these are off.
+        public bool CanJumpGaps;
+        public FP GapDistance;
+
+        public bool CanFallFromCliff;
+        public FP FallHeight;
     }
 
     // Flat flags for cross-cutting behavior that doesn't warrant its own polymorphic profile -
@@ -133,6 +159,13 @@ namespace Quantum
         // same reasoning as Movement/Targeting below) - GroupSpawnerUtility logs an error and fails
         // that member's placement if a Director-spawned enemy has no profile assigned.
         [ExpandableAsset] public AssetRef<EnemySpawnProfile> SpawnProfile;
+
+        // Multiplies EnemyTierStatsConfig.Resolve(f, Tier).Cost (see EnemyDataAsset.ResolveCost) -
+        // Cost itself stays purely tier-driven (docs/survival-director.md), this just lets one
+        // archetype within a tier spend more/less Director budget than its tier's baseline without
+        // needing its own tier. 1 (default) leaves tier cost unchanged, same "unset multiplier
+        // defaults safely" convention EnemyHeightData.TraversalJumpSpeedMultiplier already uses.
+        public FP CostMultiplier;
     }
 
     // Core body/combat stats - movement speed/traversal, physical size, health, shield, and
@@ -186,10 +219,10 @@ namespace Quantum
         // Steers this enemy's chosen move direction away from a wall directly ahead (see
         // EnemyMovementUtility.SteerAroundWalls) before PhysicsSystem3D ever has to resolve the
         // collision, instead of it pushing straight into the wall and stalling/juddering
-        // against it every tick. Independent of Height.AvoidLedges (a vertical "don't walk off
-        // the edge" check) and orthogonal to InitialState - a Flying enemy at head height wants
-        // this just as much as a Grounded one. Off by default, same reasoning as every other
-        // opt-in traversal flag here - only enemies actually navigating tight corridors need it.
+        // against it every tick. Independent of Height's own gap/cliff handling (a vertical "what
+        // happens at the edge" question) and orthogonal to InitialState - a Flying enemy at head
+        // height wants this just as much as a Grounded one. Off by default, same reasoning as every
+        // other opt-in traversal flag here - only enemies actually navigating tight corridors need it.
         public bool AvoidWalls;
         public FP WallAvoidProbeDistance;
 
@@ -246,7 +279,7 @@ namespace Quantum
         public string EnemyName;
         public EnemyTier Tier = EnemyTier.Filler;
 
-        public EnemyEconomyData Economy = new EnemyEconomyData();
+        public EnemyEconomyData Economy = new EnemyEconomyData { CostMultiplier = FP._1 };
 
         public EnemyStatsData Stats = new EnemyStatsData
         {
@@ -265,15 +298,12 @@ namespace Quantum
                 HoverSpringFrequency = 1,
                 HoverSpringDamping = FP._0_50,
                 CanBeGrounded = true,
+                ClimbProbeThreshold = FP._0_50,
+                GapProbeThreshold = FP._0_50,
+                ArcHeight = FP._0_50,
+                TraversalJumpSpeedMultiplier = FP._1,
                 TargetableByMelee = true,
                 TargetableByProjectiles = true,
-                AnkleProbeHeight = FP._0_25,
-                MaxLedgeHeight = 1,
-                MantleProbeDistance = FP._0_75,
-                JumpVelocity = 8,
-                AvoidLedges = true,
-                EdgeProbeDistance = FP._0_50,
-                EdgeCheckDistance = 1,
             },
         };
 
@@ -282,6 +312,11 @@ namespace Quantum
         public EnemyActionsData Actions = new EnemyActionsData { SkillActions = new() };
 
         public FP DeathLingerTime = 3;
+
+        // Single place every Director budget site (EnemyGroupConfig.ComputeCost,
+        // CombatDirectorUtility.ComputeRelevantPressure, EnemyLifecycleSystem.Retire) reads this
+        // enemy's actual cost from, so Economy.CostMultiplier can't drift out of sync between them.
+        public FP ResolveCost(Frame f) => EnemyTierStatsConfig.Resolve(f, Tier).Cost * Economy.CostMultiplier;
 
         // --- MIGRATION BRIDGE - do not author against these ---
         // Unchanged old top-level fields (MoveSpeed/Radius/MaxHealth/Height/Movement were flat

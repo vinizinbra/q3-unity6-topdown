@@ -16,16 +16,16 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Passives/Zara/ResonancePassiveData
     Guid:
       Value: 362511977538535212
-  Description: Dealing damage builds Resonance. Once full, Zara releases a pulse
-    that heals nearby allies and damages nearby enemies.
+  Description: Dealing damage builds Resonance. When it fills, Zara unleashes a shockwave
+    that heals nearby allies and damages and knocks back the enemies around her.
   Max:
-    RawValue: 6553600
+    RawValue: 32768000
   GenerationPerDamage:
     RawValue: 65536
   Radius:
     RawValue: 196608
   HealPercent:
-    RawValue: 6554
+    RawValue: 3277
   DamageAmount:
-    RawValue: 327680
+    RawValue: 655360
   KnockbackTier: 0

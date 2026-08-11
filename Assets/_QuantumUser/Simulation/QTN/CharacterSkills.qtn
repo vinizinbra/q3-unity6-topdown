@@ -13,7 +13,12 @@ component CharacterSkills
 struct SkillSlot
 {
     AssetRef<SkillData> Skill;
-    array<AssetRef<SkillActionData>>[5] Upgrades;
+    array<AssetRef<SkillActionData>>[8] Upgrades;
+
+    // Holds an AddUpgrade grant that landed while the slot was Active, until FinishSkill flushes
+    // it into Upgrades - see AddUpgrade's own comment for why a mid-activation grant can't go
+    // straight into Upgrades.
+    array<AssetRef<SkillActionData>>[8] PendingUpgrades;
 
     SkillState State;
 

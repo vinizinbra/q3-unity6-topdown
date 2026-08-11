@@ -3,30 +3,44 @@ namespace Quantum
     using Photon.Deterministic;
     using Quantum.Physics3D;
 
-    // Dash Ascension (Iron Shoulder) - knockback-only by design, no damage of its own - pushes
-    // enemies in front of the player, checked every Interval while the dash is active (OnGoing) plus
-    // once more on End - a short box in front of the CURRENT position, oriented along the dash's own
-    // travel direction (not the character's aim/facing - see the direction comment in Execute
-    // below), same "aura dragged along" idea HitPathSkillAction.HitAroundCaster already uses for its
-    // own OnGoing mode. Replaces the old approach of sweeping one box over the whole dash path: that
-    // box grew every tick and was re-queried every tick, so anyone already hit near the dash's start
-    // kept getting re-shoved for the rest of the dash - the "looks lagged" symptom. Knockback (and
-    // the wall-stun that rides on it) only ever lands once per activation per enemy - see
-    // IronShoulderHitTracker, granted fresh on this action's own Begin phase. Elite/Boss enemies are
-    // excluded entirely - same EnemyTier gate idiom used elsewhere in this roster (Kai's Reflect
-    // Projectiles/Void Pressure) - a shoulder charge shouldn't be able to shove around something that
-    // heavy. The "pushed into a wall" check is a simplification: rather than tracking the knockback
-    // impulse across ticks to see where it actually lands, this raycasts a short distance in the push
-    // direction from the hit point the instant it lands - if a wall is right there, it counts. Reads
-    // as "shoved into the wall behind them" without needing multi-tick physics tracking.
+    // Ranked Dash Ascension (Iron Shoulder). Rank 1 is knockback-only by design, no damage of its
+    // own - exactly the pre-ranking behavior, zero regression for an existing rank-1 pick. Rank 2+
+    // adds direct-collision damage (DamagePercent of Juggernaut Skill Damage) plus a wall-slam damage
+    // bonus; rank 3 additionally fires a radial damage+stun shockwave on a successful wall-slam. Push
+    // is checked every Interval while the dash is active (OnGoing) plus once more on End - a short
+    // box in front of the CURRENT position, oriented along the dash's own travel direction (not the
+    // character's aim/facing - see the direction comment in Execute below), same "aura dragged along"
+    // idea HitPathSkillAction.HitAroundCaster already uses for its own OnGoing mode. Replaces the old
+    // approach of sweeping one box over the whole dash path: that box grew every tick and was
+    // re-queried every tick, so anyone already hit near the dash's start kept getting re-shoved for
+    // the rest of the dash - the "looks lagged" symptom. Knockback/damage (and the wall reaction that
+    // rides on it) only ever lands once per activation per enemy - see IronShoulderHitTracker,
+    // granted fresh on this action's own Begin phase. Elite/Boss enemies are no longer excluded - they
+    // go through the same DamageUtility.ApplyKnockback call as everyone else, which already scales (or
+    // fully resists) by the target's own tier resistance (StatusEffectUtility.GetTierResistance), so a
+    // heavy target naturally shrugs off more of the shove without a separate hard skip here. The "pushed into a
+    // wall" check is a simplification: rather than tracking the knockback impulse across ticks to see
+    // where it actually lands, this raycasts a short distance in the push direction from the hit
+    // point the instant it lands - if a wall is right there, it counts. Reads as "shoved into the
+    // wall behind them" without needing multi-tick physics tracking. Rank 3's shockwave deliberately
+    // calls BruteAscensionUtility.ApplyRadialStunDamage (a plain damage+stun sweep) rather than
+    // another knockback/wall-check, so it can never recursively re-trigger the wall reaction itself.
+    // Its damage naturally synergizes with Concussive Impact's own bonus vs Stunned targets (see
+    // StunDamageBonusUpgrade) since it flows through the normal DamageUtility.ApplyDamage pipeline -
+    // no extra code needed for that.
     public unsafe partial class IronShoulderSkillAction : SkillActionData
     {
         public FP Width = 2;
         public FP Height = 2;
         public FP Length = 1;
-        public KnockbackTier KnockbackTier = KnockbackTier.Medium;
+        public KnockbackTier KnockbackTier = KnockbackTier.Strong;
         public FP WallCheckDistance = 2;
         public FP StunDuration = 1;
+
+        public FP[] DamagePercent = { FP._0, FP.FromString("0.60"), FP.FromString("0.60") };
+        public FP[] WallSlamDamageBonus = { FP._0, FP._0_50, FP._0_50 };
+        public FP[] ShockwaveRadius = { FP._0, FP._0, FP._3 };
+        public FP[] ShockwaveDamagePercent = { FP._0, FP._0, FP.FromString("0.80") };
 
         // Must match IronShoulderHitTracker.HitEntities' own array size - the qtn side has no way to
         // reference this constant, so both have to be kept in sync by hand.
@@ -40,7 +54,8 @@ namespace Quantum
 
         protected override object[] DescriptionArgs => new object[] { KnockbackTier };
 
-        public override void Execute(Frame f, ref SkillSystem.Filter filter, SkillSlot* slot, SkillData skill, SkillActionPhase firedPhase)
+        public override void Execute(Frame f, ref SkillSystem.Filter filter, SkillSlot* slot, SkillData skill,
+            SkillActionPhase firedPhase, AssetRef<SkillActionData> selfRef)
         {
             if (firedPhase == SkillActionPhase.Begin)
             {
@@ -76,11 +91,15 @@ namespace Quantum
 
             var hits = f.Physics3D.OverlapShape(center, rotation, box, -1, QueryOptions.HitAll);
 
+            int rank = System.Math.Max(1, SkillUpgradeUtility.GetRank(f, filter.Entity, selfRef));
+            int index = System.Math.Clamp(rank, 1, (int)MaxRank) - 1;
+            FP damage = DamagePercent[index] * BruteAscensionUtility.ResolveJuggernautSkillDamage(f, filter.Entity);
+
             for (int i = 0; i < hits.Count; i++)
             {
                 EntityRef hitEntity = hits[i].Entity;
 
-                if (f.Has<Enemy>(hitEntity) == false || IsExcludedTier(f, hitEntity) == true)
+                if (f.Has<Enemy>(hitEntity) == false)
                     continue;
 
                 if (TryMarkKnockedBack(f, filter.Entity, hitEntity) == false)
@@ -92,19 +111,26 @@ namespace Quantum
                 if (f.Unsafe.TryGetPointer<Transform3D>(hitEntity, out var hitTransform))
                     f.Events.HitEffectApplied(filter.Entity, hitEntity, hitTransform->Position, true);
 
-                TryStunIfPushedIntoWall(f, filter.Entity, hitEntity, direction);
+                bool hitWall = TryStunIfPushedIntoWall(f, filter.Entity, hitEntity, direction);
+
+                if (damage > FP._0)
+                {
+                    FP finalDamage = hitWall == true ? damage * (FP._1 + WallSlamDamageBonus[index]) : damage;
+                    DamageUtility.ApplyDamage(f, hitEntity, finalDamage, filter.Entity, DamageSource.Skill);
+                }
+
+                if (hitWall == true && ShockwaveRadius[index] > FP._0 && hitTransform != null)
+                {
+                    FP shockwaveDamage = ShockwaveDamagePercent[index] * BruteAscensionUtility.ResolveJuggernautSkillDamage(f, filter.Entity);
+                    BruteAscensionUtility.ApplyRadialStunDamage(f, hitTransform->Position, ShockwaveRadius[index], filter.Entity, shockwaveDamage, FP._1);
+                }
             }
         }
 
-        // Excluded against Elite/Boss enemies - same EnemyTier gate idiom used elsewhere in this
-        // roster (Kai's Reflect Projectiles/Void Pressure).
-        private static bool IsExcludedTier(Frame f, EntityRef target)
+        public override void Execute(Frame f, ref SkillSystem.Filter filter, SkillSlot* slot, SkillData skill, SkillActionPhase firedPhase)
         {
-            if (f.Unsafe.TryGetPointer<Enemy>(target, out var enemy) == false)
-                return false;
-
-            EnemyDataAsset data = f.FindAsset(enemy->EnemyData);
-            return data.Tier >= EnemyTier.Elite;
+            // Unreachable - the selfRef overload above is always called by SkillSystem.Invoke. Kept
+            // only because SkillActionData.Execute is abstract.
         }
 
         // False if hitEntity was already knocked back earlier this activation (see
@@ -132,10 +158,12 @@ namespace Quantum
             return true;
         }
 
-        private void TryStunIfPushedIntoWall(Frame f, EntityRef owner, EntityRef hitEntity, FPVector3 direction)
+        // Returns whether hitEntity was pushed into a wall - callers use this to gate the wall-slam
+        // damage bonus/shockwave (rank 2+/3) alongside the Stun that already rode on it at rank 1.
+        private bool TryStunIfPushedIntoWall(Frame f, EntityRef owner, EntityRef hitEntity, FPVector3 direction)
         {
             if (f.Unsafe.TryGetPointer<Transform3D>(hitEntity, out var transform) == false)
-                return;
+                return false;
 
             int wallMask = EnemyMovementUtility.GetGroundLayerMask(f);
             const QueryOptions WallQueryOptions = QueryOptions.HitStatics | QueryOptions.HitKinematics;
@@ -145,6 +173,8 @@ namespace Quantum
             {
                 StatusEffectUtility.ApplyStun(f, hitEntity, StunDuration, owner);
             }
+
+            return wallHit.HasValue;
         }
     }
 }

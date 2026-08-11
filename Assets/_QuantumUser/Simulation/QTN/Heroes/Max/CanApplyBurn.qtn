@@ -1,0 +1,12 @@
+// Generic, hero-agnostic marker - presence means this entity has some real source of applying Burn
+// to enemies (an Ascension pick, not just the baseline weapon-elemental-proc roll). Granted once by
+// every Burn-granting Ascension (Max's Ignition rank 1, Burning Vengeance rank 1, Vendetta Strike
+// rank 1) and never removed - once true, permanently true, a simple no-un-grant-path tag. Read by
+// FlashpointPassiveUpgradeData.IsEligible so Flashpoint isn't offered in the draft until Max actually
+// has a Burn source to make it matter - see docs/max-ascensions.md's own "Burn Ascension Eligibility"
+// section. Deliberately a lightweight concrete tag rather than a fully generic status-keyed
+// eligibility registry this codebase has no other consumer for yet - reusable by any future hero's
+// own Burn (or other status) prerequisite the same way.
+component CanApplyBurn
+{
+}

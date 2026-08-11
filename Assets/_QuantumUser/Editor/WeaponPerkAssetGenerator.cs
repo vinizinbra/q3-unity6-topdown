@@ -116,7 +116,12 @@ namespace QuantumUser.Editor
                 Type = typeof(DoubleTapWeaponPerkData), FileName = "DoubleTap",
                 DisplayName = "Double Tap", Rarity = UpgradeRarity.Rare,
                 Description = "{0:0}% chance to fire an extra projectile",
-                Configure = p => ((DoubleTapWeaponPerkData)p).Chance = FP.FromString("0.15")
+                Configure = p =>
+                {
+                    var d = (DoubleTapWeaponPerkData)p;
+                    d.Chance = FP.FromString("0.15");
+                    d.Delay = FP._0_10;
+                }
             },
             new PerkSpec
             {
@@ -375,6 +380,71 @@ namespace QuantumUser.Editor
                 DisplayName = "Rift Aftershock", Rarity = UpgradeRarity.Rare,
                 Description = "Killing an enemy with this weapon applies Rift Mark to a nearby enemy",
                 Configure = p => { }
+            },
+
+            // -- Element Infusion (see docs/weapon-perks.md) - grafts an EXTRA on-hit element on top
+            // of the weapon's own WeaponDataAsset.Element, rolling its own ProcChance. One asset per
+            // real element (Neutral excluded). {1} is the chance; the element name is fixed per asset,
+            // so it's written into each Description rather than pulled from {0}.
+            new PerkSpec
+            {
+                Type = typeof(ElementInfusionWeaponPerkData), FileName = "IncendiaryRounds",
+                DisplayName = "Incendiary Rounds", Rarity = UpgradeRarity.Rare,
+                Description = "{1:0}% chance to Burn enemies on hit",
+                Configure = p =>
+                {
+                    var d = (ElementInfusionWeaponPerkData)p;
+                    d.Element = ElementType.Fire;
+                    d.ProcChance = FP.FromString("0.25");
+                }
+            },
+            new PerkSpec
+            {
+                Type = typeof(ElementInfusionWeaponPerkData), FileName = "CryoRounds",
+                DisplayName = "Cryo Rounds", Rarity = UpgradeRarity.Rare,
+                Description = "{1:0}% chance to Slow enemies on hit",
+                Configure = p =>
+                {
+                    var d = (ElementInfusionWeaponPerkData)p;
+                    d.Element = ElementType.Ice;
+                    d.ProcChance = FP.FromString("0.25");
+                }
+            },
+            new PerkSpec
+            {
+                Type = typeof(ElementInfusionWeaponPerkData), FileName = "ShatterRounds",
+                DisplayName = "Shatter Rounds", Rarity = UpgradeRarity.Rare,
+                Description = "{1:0}% chance to Intimidate enemies on hit",
+                Configure = p =>
+                {
+                    var d = (ElementInfusionWeaponPerkData)p;
+                    d.Element = ElementType.Rock;
+                    d.ProcChance = FP.FromString("0.25");
+                }
+            },
+            new PerkSpec
+            {
+                Type = typeof(ElementInfusionWeaponPerkData), FileName = "VoidRounds",
+                DisplayName = "Void Rounds", Rarity = UpgradeRarity.Epic,
+                Description = "{1:0}% chance to apply Void affinity on hit (triggers Singularity on Rift-Marked enemies)",
+                Configure = p =>
+                {
+                    var d = (ElementInfusionWeaponPerkData)p;
+                    d.Element = ElementType.Void;
+                    d.ProcChance = FP.FromString("0.2");
+                }
+            },
+            new PerkSpec
+            {
+                Type = typeof(ElementInfusionWeaponPerkData), FileName = "ShockRounds",
+                DisplayName = "Shock Rounds", Rarity = UpgradeRarity.Epic,
+                Description = "{1:0}% chance to apply Lightning affinity on hit (triggers Overload on Rift-Marked enemies)",
+                Configure = p =>
+                {
+                    var d = (ElementInfusionWeaponPerkData)p;
+                    d.Element = ElementType.Lightning;
+                    d.ProcChance = FP.FromString("0.2");
+                }
             },
         };
 

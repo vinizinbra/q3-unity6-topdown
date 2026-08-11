@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Quantum;
+using QuantumUser.View.Util;
 using UnityEngine;
 
 namespace QuantumUser.View
@@ -55,7 +56,10 @@ namespace QuantumUser.View
 
         public void Register(EntityRef entityRef, PlayerRef playerRef, CharView view)
         {
-            int slotIndex = playerRef._index - 1;
+            // playerRef._index is a GLOBAL, room-wide index (join order across every client), not
+            // this client's own local slot - only the first client to join a room would happen to
+            // have that line up. See QuantumHelper.GetLocalSlotIndex.
+            int slotIndex = QuantumHelper.GetLocalSlotIndex(playerRef);
             if (slotIndex < 0 || slotIndex >= MaxLocalPlayers)
                 return;
 

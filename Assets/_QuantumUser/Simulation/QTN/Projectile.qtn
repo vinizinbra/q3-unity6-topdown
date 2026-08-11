@@ -30,6 +30,13 @@ component Projectile
     // concept, so this stays Neutral for anything not fired by WeaponSystem.
     ElementType Element;
 
+    // The EXTRA element grafted on by an Element Infusion weapon perk (WeaponElementInfusion),
+    // seeded at spawn in WeaponSystem.ApplyProjectilePerks and applied at impact via
+    // StatusEffectUtility.TryApplyInfusedElement rolling PerkElementChance - independent of Element
+    // above (a weapon can land both). Neutral/0 for anything without the perk, so it no-ops for free.
+    ElementType PerkElement;
+    FP          PerkElementChance;
+
     // None unless a skill fired this (weapons/enemy attacks leave it None) - lets ProjectileSystem
     // clear the firing SkillSlot's ProjectilePending on termination without an EntityRef back to it.
     SkillSlotId SourceSlot;
@@ -56,10 +63,22 @@ component Projectile
     Byte SpawnDepth;
 
     // Running total of ground actually covered, summed from each tick's real moveDelta - checked
-    // against ProjectileDataAsset.MaxDistance in ProjectileSystem.TryExpire. Explicit rather than
-    // inferring "distance" from Lifetime and an assumed constant speed, so it stays correct even if
-    // something changes a projectile's speed mid-flight.
+    // against MaxTravelDistance (or, absent that, ProjectileDataAsset.MaxDistance) in
+    // ProjectileSystem.TryExpire. Explicit rather than inferring "distance" from Lifetime and an
+    // assumed constant speed, so it stays correct even if something changes a projectile's speed
+    // mid-flight.
     FP TraveledDistance;
+
+    // An absolute world-unit cap seeded from the firing Weapon's own engagement range
+    // (WeaponPerkUtility.ResolveWeaponRange - WeaponDataAsset.Range * Weapon.RangeMultiplier, the
+    // same distance FireHitscan already limits a raycast to) by every weapon-fire spawn site -
+    // WeaponSystem.ApplyProjectilePerks (primary shot, Double Tap's replay, Echo Chamber/Infinite
+    // Echo), WeaponPerkReactionSystem.TryFireCriticalRebound, and DirectHitData.
+    // SpawnSplitProjectiles - so a shotgun with Range 6 can't have any weapon-fired projectile,
+    // including one spawned mid-flight by another perk, outrun that same 6 units. <= 0 (the default -
+    // an enemy attack, a skill, anything not fired by a Weapon) means "no weapon-driven cap", falling
+    // back to ProjectileDataAsset.MaxDistance * MaxDistanceMultiplier exactly as before this existed.
+    FP MaxTravelDistance;
 
     // Which pellet of a fanned volley this is (0 for anything not fanned - a single-shot weapon, a
     // skill, an enemy attack) - carried through HitEffectContext.HitIndex to DamageUtility.

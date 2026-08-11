@@ -1,6 +1,6 @@
 enum ChunkType : Byte
 {
-    Start,
+    LobbyStart,
     Enemy,
     Boss,
     Merchant,
@@ -48,6 +48,11 @@ component Chunk
     // Waypoints are meaningful, the rest are left default by the baker.
     array<WaypointNode>[16] Waypoints;
     Byte WaypointCount;
+
+    // Optional - talent-gated entities to spawn at this chunk's own position once resolved (see
+    // ChunkSpawnConfig/TalentGateSystem, docs/talents.md). Typically only set on the LobbyStart
+    // chunk prototype, but not restricted to it - unassigned (default) means nothing spawns.
+    AssetRef<ChunkSpawnConfig> SpawnConfig;
 }
 
 global

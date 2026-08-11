@@ -27,6 +27,14 @@ namespace Quantum
             if (PlayerSpawnUtility.IsReadyToSpawn(f) == false)
                 return;
 
+            // Only the Survival state actually runs the Director - see GameState.qtn. Lobby
+            // (LobbyBoundarySystem hasn't resolved yet) and Upgrade (GameplaySystemGroup itself
+            // is disabled, so this wouldn't even tick, but this stays explicit rather than
+            // relying on that alone) both keep the timeline paused; Event/Boss will too once
+            // either is actually wired.
+            if (f.Global->CurrentState != GameState.Survival)
+                return;
+
             if (f.RuntimeConfig.SurvivalConfig.Id.IsValid == false ||
                 f.RuntimeConfig.DirectorConfig.Id.IsValid == false ||
                 f.RuntimeConfig.LifecycleConfig.Id.IsValid == false)

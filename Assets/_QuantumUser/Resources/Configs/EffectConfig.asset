@@ -24,12 +24,12 @@ MonoBehaviour:
     RawValue: 6554
   BurnFloorPercent:
     RawValue: 3277
-  PoisonDuration:
+  VoidDuration:
     RawValue: 196608
-  PoisonDamagePercent:
-    RawValue: 1311
-  PoisonFloorPercent:
-    RawValue: 1311
+  IntimidateDuration:
+    RawValue: 196608
+  IntimidateOutgoingDamageMultiplier:
+    RawValue: 49152
   StunDuration:
     RawValue: 65536
   RootDuration:
@@ -38,6 +38,10 @@ MonoBehaviour:
     RawValue: 196608
   SlowSpeedMultiplier:
     RawValue: 32768
+  AnticipationSlowDuration:
+    RawValue: 196608
+  AnticipationSlowMultiplier:
+    RawValue: 32768
   HasteDuration:
     RawValue: 327680
   HasteAttackSpeedMultiplier:
@@ -45,12 +49,12 @@ MonoBehaviour:
   SmallKnockbackForce:
     RawValue: 262144
   SmallKnockbackUpwardForce:
-    RawValue: 131072
+    RawValue: 13107
   MediumKnockbackForce:
     RawValue: 524288
   MediumKnockbackUpwardForce:
-    RawValue: 262144
+    RawValue: 32768
   StrongKnockbackForce:
-    RawValue: 1048576
+    RawValue: 1310720
   StrongKnockbackUpwardForce:
-    RawValue: 393216
+    RawValue: 65536

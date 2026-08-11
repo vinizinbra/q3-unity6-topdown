@@ -149,7 +149,7 @@ namespace Quantum
 
         private static void Retire(Frame f, ref Filter filter, EnemyDataAsset data, LifecycleConfig lifecycleConfig)
         {
-            FP refund = EnemyTierStatsConfig.Resolve(f, data.Tier).Cost * lifecycleConfig.RefundFraction;
+            FP refund = data.ResolveCost(f) * lifecycleConfig.RefundFraction;
             f.Global->DirectorBudget += refund;
 
             Log.Debug($"[Director] retiring {filter.Entity} ({data.name}) - refunding {refund}, DirectorBudget now {f.Global->DirectorBudget}");

@@ -19,7 +19,7 @@ signal OnExplosionCriticalHit(EntityRef target, EntityRef owner, FP damage, Dama
 // above for that shape instead. Only from the two real explosion sources, AreaHitData.Detonate
 // (bomb-type) and HitEffectUtility.ApplyExplosion (weapon-perk-type) - deliberately never fired from
 // ExplodeOnDestroyUtility.TryDetonate (a Mini Bomb's own detonation), so a Mini Bomb dropped by
-// Pixie's Mini Ordnance trait can never generate another one - see that trait's own comment.
+// Pixie's Pocket Bombs trait can never generate another one - see that trait's own comment.
 signal OnAreaExplosionDetonated(EntityRef owner, FPVector3 center, FP radius, DamageSource source);
 
 // Fired from DamageUtility.ApplyDamage whenever damage actually lands on Health/Shield (i.e. the

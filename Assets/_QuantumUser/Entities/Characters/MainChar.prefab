@@ -142,6 +142,7 @@ GameObject:
   - component: {fileID: 6945579441375826571}
   - component: {fileID: 8215253040534427600}
   - component: {fileID: 3061145013519703360}
+  - component: {fileID: 3544474932599326913}
   m_Layer: 7
   m_Name: MainChar
   m_TagString: Untagged
@@ -271,7 +272,7 @@ MonoBehaviour:
         X:
           RawValue: 0
         Y:
-          RawValue: 0
+          RawValue: 32768
         Z:
           RawValue: 0
       BoxExtents:
@@ -891,6 +892,7 @@ MonoBehaviour:
   isLocalPlayer: 0
   viewTransform: {fileID: 0}
   isBot: 0
+  weaponRowOffset: {x: 0, y: -1.5, z: 0}
   groundLayer:
     serializedVersion: 2
     m_Bits: 0
@@ -1857,6 +1859,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79e869c26acba427ea2f7b7b05b875dc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.SkillActionFxView
+  _playerRef:
+    _index: 0
+  initialized: 0
+  executeOnlyOnLocal: 0
+  isLocal: 0
+--- !u!114 &3544474932599326913
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 506928541793919104}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1564e64c052e94f26b57d5d0e562825e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuantumUser.View.Managers.EntityViewCacheInit
   _playerRef:
     _index: 0
   initialized: 0

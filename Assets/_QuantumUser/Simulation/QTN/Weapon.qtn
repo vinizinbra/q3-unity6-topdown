@@ -31,9 +31,10 @@ component Weapon
     FP    TimeSinceFireReleased;
 
     // -- Long Barrel (RangeMultiplierWeaponPerkData) --
-    // Scales WeaponDataAsset.Range (hitscan) directly in WeaponSystem.FireHitscan, and
-    // Projectile.MaxDistanceMultiplier (seeded from this at fire time) for a Projectile weapon -
-    // see ProjectileSystem.TryExpire. Seeded to 1 at equip, same as DamageMultiplier.
+    // Scales WeaponDataAsset.Range - directly in WeaponSystem.FireHitscan for a Hitscan weapon, and
+    // via WeaponPerkUtility.ResolveWeaponRange into Projectile.MaxTravelDistance (seeded at fire
+    // time, see WeaponSystem.ApplyProjectilePerks) for a Projectile one - see
+    // ProjectileSystem.TryExpire. Seeded to 1 at equip, same as DamageMultiplier.
     FP RangeMultiplier;
 
     // Every other weapon-perk field (magazine-position perks, the shared ramp pool, post-impact

@@ -1,0 +1,432 @@
+fileFormatVersion: 2
+guid: d7a4a6e9d205b485da8f4c0415a662fd
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 0
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: ZaraDanceMoves_0
+      rect:
+        serializedVersion: 2
+        x: 826
+        y: 723
+        width: 228
+        height: 237
+      alignment: 9
+      pivot: {x: 0.5, y: 0.029462984}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 240218c1955d94d7b9ae25e6c82fd790
+      internalID: 1116899456
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ZaraDanceMoves_1
+      rect:
+        serializedVersion: 2
+        x: 404
+        y: 726
+        width: 324
+        height: 228
+      alignment: 9
+      pivot: {x: 0.546512, y: 0.017498886}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 00e5101ce5c904032b9de03f53ddafb8
+      internalID: 97171665
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ZaraDanceMoves_2
+      rect:
+        serializedVersion: 2
+        x: 88
+        y: 731
+        width: 226
+        height: 265
+      alignment: 9
+      pivot: {x: 0.5200043, y: -0.00043438605}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: df4c133866b5345f3a4b506fca395254
+      internalID: -423300228
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ZaraDanceMoves_3
+      rect:
+        serializedVersion: 2
+        x: 91
+        y: 412
+        width: 223
+        height: 246
+      alignment: 9
+      pivot: {x: 0.49324214, y: 0.028299844}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4714f60e61ad34dccbfed705f196b35a
+      internalID: -1985461663
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ZaraDanceMoves_4
+      rect:
+        serializedVersion: 2
+        x: 93
+        y: 76
+        width: 221
+        height: 267
+      alignment: 9
+      pivot: {x: 0.52045685, y: 0.119394995}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e3052be6e9a8843038c78f1bd1b61571
+      internalID: -1889435262
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ZaraDanceMoves_5
+      rect:
+        serializedVersion: 2
+        x: 430
+        y: 78
+        width: 308
+        height: 261
+      alignment: 9
+      pivot: {x: 0.56360674, y: 0.026539506}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3346167d899ae44b79861aa9afbbb42c
+      internalID: 1657124542
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ZaraDanceMoves_6
+      rect:
+        serializedVersion: 2
+        x: 839
+        y: 76
+        width: 227
+        height: 242
+      alignment: 9
+      pivot: {x: 0.47344515, y: 0.026730403}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c6caaae6ac28d44ebafd6ba12647925d
+      internalID: 1151249267
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ZaraDanceMoves_7
+      rect:
+        serializedVersion: 2
+        x: 1221
+        y: 79
+        width: 227
+        height: 261
+      alignment: 9
+      pivot: {x: 0.5531097, y: 0.00921777}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c0b381a629a1e40f7b0254856f7eea2d
+      internalID: 1874023035
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ZaraDanceMoves_8
+      rect:
+        serializedVersion: 2
+        x: 1198
+        y: 408
+        width: 244
+        height: 241
+      alignment: 9
+      pivot: {x: 0.58029026, y: 0.024766598}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 586ec32cbf7a646b3a059f2b6c403540
+      internalID: -1041046565
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ZaraDanceMoves_9
+      rect:
+        serializedVersion: 2
+        x: 834
+        y: 412
+        width: 243
+        height: 204
+      alignment: 9
+      pivot: {x: 0.5186047, y: 0.034606036}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ba5569879b88445a88e9ebe8dc6292bc
+      internalID: -1367336749
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ZaraDanceMoves_10
+      rect:
+        serializedVersion: 2
+        x: 418
+        y: 408
+        width: 302
+        height: 204
+      alignment: 9
+      pivot: {x: 0.52495027, y: 0.041993234}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 91901678a39324b8dbf6578f6765716d
+      internalID: -313575680
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ZaraDanceMoves_11
+      rect:
+        serializedVersion: 2
+        x: 1172
+        y: 721
+        width: 286
+        height: 210
+      alignment: 9
+      pivot: {x: 0.5368844, y: 0.021528553}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d1a3d16c0e7c044fb8f27cb1e6ecf78c
+      internalID: 984801944
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: abc71c3c30a5c4d379c5f681527be4c0
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      ZaraDanceMoves_0: 1116899456
+      ZaraDanceMoves_1: 97171665
+      ZaraDanceMoves_10: -313575680
+      ZaraDanceMoves_11: 984801944
+      ZaraDanceMoves_2: -423300228
+      ZaraDanceMoves_3: -1985461663
+      ZaraDanceMoves_4: -1889435262
+      ZaraDanceMoves_5: 1657124542
+      ZaraDanceMoves_6: 1151249267
+      ZaraDanceMoves_7: 1874023035
+      ZaraDanceMoves_8: -1041046565
+      ZaraDanceMoves_9: -1367336749
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

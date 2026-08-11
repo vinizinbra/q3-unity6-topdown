@@ -1,0 +1,88 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a466f43e74dc47f7a7b800ceb1dd846, type: 3}
+  m_Name: ConcussiveImpactSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ConcussiveImpactSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Brute/Brute_HeroSkill/Brute_HeroSkillUpgrades/ConcussiveImpactSkillAction
+    Guid:
+      Value: 291462109882006022
+  Icon: {fileID: 0}
+  DisplayName: Concussive Impact
+  Rarity: 2
+  RankDescriptions:
+  - Launched enemies take 30% Juggernaut damage and are Stunned 0.75s on landing.
+  - Launched enemies take 50% Juggernaut damage and are Stunned 1s on landing, and
+    launch force is increased by +25%.
+  - Launched enemies take 75% Juggernaut damage and are Stunned 1.25s on landing,
+    +25% launch force, and create a 2.5m impact shockwave dealing 40% Juggernaut
+    damage that Stuns nearby enemies. You deal +40% damage to Stunned enemies.
+  <MaxRank>k__BackingField: 3
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 0
+  Description: Enemies launched by Discharge take real damage when they land and
+    hit harder walls - culminating in an impact shockwave and bonus damage against
+    Stunned enemies.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  LandingDamagePercent:
+  - RawValue: 19661
+  - RawValue: 32768
+  - RawValue: 49152
+  LandingStunDuration:
+  - RawValue: 49152
+  - RawValue: 65536
+  - RawValue: 81920
+  KnockbackForceBonus:
+  - RawValue: 0
+  - RawValue: 16384
+  - RawValue: 16384
+  ShockwaveRadius:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 163840
+  ShockwaveDamagePercent:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 26214
+  ShockwaveStunDuration:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 65536
+  StunDamageBonus:
+    RawValue: 26214
+  ImpactEffectPrefab: {fileID: 0}

@@ -27,6 +27,8 @@ namespace Quantum
         [Header("Anticipation Shake")]
         [SerializeField] private float shakeAmount = 0.08f;
         [SerializeField] private float shakeFrequency = 30f;
+        [SerializeField, Tooltip("Extra scale wobble layered on top of the positional shake, as a fraction of base scale. 0 leaves scale untouched (off by default).")]
+        private float shakeScaleAmount = 0f;
 
         [Header("Idle (minimal blob-scale breathing; positional bob off by default - skip it on Vortex, its own shader already wobbles the mesh)")]
         [SerializeField] private float idleScalePulseAmount = 0.03f;
@@ -36,7 +38,7 @@ namespace Quantum
 
         private Vector3 _baseLocalPosition;
         private Vector3 _baseLocalScale;
-        private float _shakeSeedX, _shakeSeedY, _shakeSeedZ;
+        private float _shakeSeedX, _shakeSeedY, _shakeSeedZ, _shakeSeedScale;
         private float? _previewRemaining;
 
         public override void Awake()
@@ -51,6 +53,7 @@ namespace Quantum
             _shakeSeedX = Random.value * 1000f;
             _shakeSeedY = Random.value * 1000f;
             _shakeSeedZ = Random.value * 1000f;
+            _shakeSeedScale = Random.value * 1000f;
         }
 
         public override void DeInitialize(QuantumGame game)
@@ -104,7 +107,6 @@ namespace Quantum
             }
             else if (remaining <= scaleDownDuration + anticipationDuration)
             {
-                visual.localScale = _baseLocalScale;
                 ApplyShake();
             }
             else
@@ -120,6 +122,9 @@ namespace Quantum
                 (Mathf.PerlinNoise(_shakeSeedX, t) - 0.5f) * 2f,
                 (Mathf.PerlinNoise(_shakeSeedY, t) - 0.5f) * 2f,
                 (Mathf.PerlinNoise(_shakeSeedZ, t) - 0.5f) * 2f) * shakeAmount;
+
+            float scaleWobble = 1f + (Mathf.PerlinNoise(_shakeSeedScale, t) - 0.5f) * 2f * shakeScaleAmount;
+            visual.localScale = _baseLocalScale * scaleWobble;
         }
 
         private void ApplyIdle()

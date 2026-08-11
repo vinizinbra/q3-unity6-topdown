@@ -29,6 +29,15 @@ namespace QuantumUser.View.Managers
         [SerializeField, Tooltip("Played whenever a ShockwaveReleased event fires (currently only Empty Chamber, see docs/weapon-perks.md) - generic and source-agnostic, not per-asset. Falls back to defaultAreaBlastEffect if left empty. Authored at a reference radius of 1, scaled by e.Radius (not diameter) - same convention as the other radius-scaled handlers below.")]
         private ParticleSystem shockwaveEffectPrefab;
 
+        [SerializeField, Tooltip("Played once at BOTH affected enemies' positions whenever Kai's Undertow ascension resolves a fresh pull target (UndertowTriggered) - a small, fixed-scale impact/mark flash, separate from the ongoing tether line itself (see KaiUndertowLinksView, which polls simulation state directly rather than reacting to this event). Falls back to defaultAreaBlastEffect (at a small fixed scale) if left empty.")]
+        private ParticleSystem undertowMarkEffectPrefab;
+
+        [Header("ExplodeOnDeath (Rift-Marked)")]
+        [SerializeField, Tooltip("Played on ExplodeOnDeathDetonated when e.RiftMarked is true (see docs/elemental-reactions.md and ExplodeOnDeathConfig.RiftMarkRadiusMultiplier/RiftMarkDamageMultiplier) instead of the flat defaultAreaBlastEffect every other ExplodeOnDeath kill uses, so the bigger/harder rift-boosted blast reads as visually distinct rather than just a scaled-up copy. Falls back to defaultAreaBlastEffect, tinted riftMarkedExplodeFallbackColor, if left empty - same dedicated-slot-with-tinted-fallback pattern as detonationEffectPrefab below.")]
+        private ParticleSystem riftMarkedExplodeEffectPrefab;
+        [SerializeField, Tooltip("Tint applied only when falling back to defaultAreaBlastEffect (riftMarkedExplodeEffectPrefab left empty) - matches detonationFallbackColor/ResonanceFxView's riftMarkColor and the Rift Mark hot-pink #FD3971 presentation rule. Ignored once a dedicated prefab is authored.")]
+        private Color riftMarkedExplodeFallbackColor = new Color32(0xFD, 0x39, 0x71, 0xFF);
+
         [Header("Detonation")]
         [SerializeField, Tooltip("Played on DetonationReleased (Fire+RiftMark reaction - see docs/elemental-reactions.md and StatusEffectUtility.TryTriggerDetonation). Falls back to defaultAreaBlastEffect, tinted detonationFallbackColor, if left empty - so it already reads distinctly hot-pink even before a bespoke prefab is authored.")]
         private ParticleSystem detonationEffectPrefab;
@@ -58,13 +67,15 @@ namespace QuantumUser.View.Managers
         private ParticleSystem healGrantEffectPrefab;
         [SerializeField, Tooltip("Played at the target whenever EntityShielded fires, from any source (BodyguardSkillAction, PortableCoverSkillAction, ShieldEffectData) - generic and source-agnostic, not per-asset. Leave empty to skip the particle, same no-fallback reasoning as healGrantEffectPrefab.")]
         private ParticleSystem shieldGrantEffectPrefab;
+        [SerializeField, Tooltip("Played at the target whenever ShieldBroken fires (Shield.Current hitting 0 - see DamageUtility.AbsorbWithShield), from any source (player or enemy). Leave empty to skip the particle, same no-fallback reasoning as healGrantEffectPrefab.")]
+        private ParticleSystem shieldBreakEffectPrefab;
 
         [Header("Quantum Rounds")]
         [SerializeField, Tooltip("Uniform scale used for QuantumRoundsTriggered's impact spark - the prefab itself is resolved per-asset off Source.ImpactEffectPrefab (see QuantumRoundsWeaponPerkData.View.cs/OnQuantumRoundsTriggered below), falling back to defaultAreaBlastEffect if that's left empty. This event carries no radius of its own to derive a scale from, same reasoning as meleeHitEffectScale/projectileReflectedEffectScale.")]
         private float quantumRoundsEffectScale = 1f;
 
         [Header("Projectile Reflect")]
-        [SerializeField, Tooltip("Played whenever a ProjectileReflected event fires (Kai's Reflect dash ascension, see ReflectProjectilesSkillAction) - a single point 'parry' spark at the reflected projectile's position, not radius-scaled. Falls back to defaultAreaBlastEffect (at a small fixed scale) if left empty.")]
+        [SerializeField, Tooltip("Played whenever a ProjectileReflected event fires (Kai's Reflect dash ascension, see MirrorStepSkillAction) - a single point 'parry' spark at the reflected projectile's position, not radius-scaled. Falls back to defaultAreaBlastEffect (at a small fixed scale) if left empty.")]
         private ParticleSystem projectileReflectedEffectPrefab;
         [SerializeField, Tooltip("Uniform scale used for projectileReflectedEffectPrefab (or its fallback) - this effect has no radius of its own to derive a scale from.")]
         private float projectileReflectedEffectScale = 1f;
@@ -115,14 +126,15 @@ namespace QuantumUser.View.Managers
             QuantumEvent.Subscribe<EventAreaDetonated>(this, OnAreaDetonated);
             QuantumEvent.Subscribe<EventExplodeOnDeathDetonated>(this, OnExplodeOnDeathDetonated);
             QuantumEvent.Subscribe<EventVortexExploded>(this, OnVortexExploded);
-            QuantumEvent.Subscribe<EventVortexMiniExploded>(this, OnVortexMiniExploded);
+            QuantumEvent.Subscribe<EventVortexImploded>(this, OnVortexImploded);
+            QuantumEvent.Subscribe<EventVortexRepulsed>(this, OnVortexRepulsed);
+            QuantumEvent.Subscribe<EventUndertowTriggered>(this, OnUndertowTriggered);
             QuantumEvent.Subscribe<EventJuggernautDischarged>(this, OnJuggernautDischarged);
             QuantumEvent.Subscribe<EventJuggernautEndExploded>(this, OnJuggernautEndExploded);
             QuantumEvent.Subscribe<EventJuggernautLanded>(this, OnJuggernautLanded);
             QuantumEvent.Subscribe<EventEnemyExploded>(this, OnEnemyExploded);
             QuantumEvent.Subscribe<EventSentryOverloadDetonated>(this, OnSentryOverloadDetonated);
             QuantumEvent.Subscribe<EventShockwaveReleased>(this, OnShockwaveReleased);
-            QuantumEvent.Subscribe<EventGroundPoundTriggered>(this, OnGroundPoundTriggered);
             QuantumEvent.Subscribe<EventWeaponExplosionReleased>(this, OnWeaponExplosionReleased);
             QuantumEvent.Subscribe<EventDetonationReleased>(this, OnDetonationReleased);
             QuantumEvent.Subscribe<EventSingularityTriggered>(this, OnSingularityTriggered);
@@ -132,6 +144,8 @@ namespace QuantumUser.View.Managers
             QuantumEvent.Subscribe<EventHitEffectApplied>(this, OnHitEffectApplied);
             QuantumEvent.Subscribe<EventEntityHealed>(this, OnEntityHealed);
             QuantumEvent.Subscribe<EventEntityShielded>(this, OnEntityShielded);
+            QuantumEvent.Subscribe<EventShieldBroken>(this, OnShieldBroken);
+            QuantumEvent.Subscribe<EventEnemySelfDestructBeginVisual>(this, OnEnemySelfDestructBeginVisual);
         }
 
         private void OnDestroy()
@@ -159,36 +173,85 @@ namespace QuantumUser.View.Managers
         // generic blast (see PlayEffect - only OnEnemyExploded's deathEffect/deathDecalEffect tint).
         private void OnExplodeOnDeathDetonated(EventExplodeOnDeathDetonated e)
         {
-            PlayEffect(defaultAreaBlastEffect, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
+            Vector3 position = e.Position.ToUnityVector3();
+            Vector3 scale = Vector3.one * e.Radius.AsFloat;
+
+            if (e.RiftMarked == true)
+            {
+                if (riftMarkedExplodeEffectPrefab != null)
+                {
+                    PlayEffect(riftMarkedExplodeEffectPrefab, position, Quaternion.identity, scale);
+                    return;
+                }
+
+                PlayEffect(defaultAreaBlastEffect, position, Quaternion.identity, scale, riftMarkedExplodeFallbackColor);
+                return;
+            }
+
+            PlayEffect(defaultAreaBlastEffect, position, Quaternion.identity, scale);
         }
 
         // Same reasoning as OnAreaDetonated - Source always comes from exactly one
-        // VortexExplodeOnDestroySkillAction asset (unlike ExplodeOnDeath, which any hero's upgrade
+        // VortexCollapseSkillAction asset (unlike ExplodeOnDeath, which any hero's upgrade
         // can trigger), which is where BlastEffectPrefab lives (see
-        // VortexExplodeOnDestroySkillAction.View.cs).
+        // VortexCollapseSkillAction.View.cs).
         private void OnVortexExploded(EventVortexExploded e)
         {
             Frame frame = e.Game.Frames.Predicted;
             if (frame == null) return;
 
-            VortexExplodeOnDestroySkillAction action = frame.FindAsset(e.Source);
+            VortexCollapseSkillAction action = frame.FindAsset(e.Source);
             ParticleSystem prefab = action.BlastEffectPrefab ?? defaultAreaBlastEffect;
 
             PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
         }
 
-        // One of many small blasts while the vortex is alive (see VortexRandomExplosionUpgrade) -
-        // same resolution as OnVortexExploded, off VortexRandomExplosionSkillAction.BlastEffectPrefab
-        // instead.
-        private void OnVortexMiniExploded(EventVortexMiniExploded e)
+        // Kai's Compression rank 3 "Implosion" - a smaller blast every third Vortex pulse, while the
+        // vortex is still alive. Same resolution as OnVortexExploded, off
+        // CompressionSkillAction.BlastEffectPrefab instead.
+        private void OnVortexImploded(EventVortexImploded e)
         {
             Frame frame = e.Game.Frames.Predicted;
             if (frame == null) return;
 
-            VortexRandomExplosionSkillAction action = frame.FindAsset(e.Source);
+            CompressionSkillAction action = frame.FindAsset(e.Source);
             ParticleSystem prefab = action.BlastEffectPrefab ?? defaultAreaBlastEffect;
 
             PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
+        }
+
+        // Kai's Warp Wake rank 3 "Repulsion" - a Dash Void collapsing into an outward shockwave.
+        // Generic, not per-asset (no dedicated prefab field on WarpWakeSkillAction) - same simpler
+        // shape OnExplodeOnDeathDetonated/OnWeaponExplosionReleased already use.
+        private void OnVortexRepulsed(EventVortexRepulsed e)
+        {
+            PlayEffect(defaultAreaBlastEffect, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
+        }
+
+        // Kai's Undertow ascension - a small, fixed-scale impact/mark flash on BOTH the struck enemy
+        // and its pull target (Source/Target here are always genuine enemies, never Kai/the owner -
+        // see UndertowTriggered's own comment in Events.qtn), separate from the ongoing tether line
+        // (which KaiUndertowLinksView polls live off simulation state - see that class - rather than
+        // reacting to this event).
+        private void OnUndertowTriggered(EventUndertowTriggered e)
+        {
+            Frame frame = e.Game.Frames.Predicted;
+            if (frame == null) return;
+
+            ParticleSystem prefab = undertowMarkEffectPrefab ?? defaultAreaBlastEffect;
+            Vector3 scale = Vector3.one * 0.5f;
+
+            if (frame.Exists(e.Source) == true)
+            {
+                Vector3 sourcePosition = EnemyMovementUtility.ResolveEntityCenter(frame, e.Source).ToUnityVector3();
+                PlayEffect(prefab, sourcePosition, Quaternion.identity, scale);
+            }
+
+            if (frame.Exists(e.Target) == true)
+            {
+                Vector3 targetPosition = EnemyMovementUtility.ResolveEntityCenter(frame, e.Target).ToUnityVector3();
+                PlayEffect(prefab, targetPosition, Quaternion.identity, scale);
+            }
         }
 
         // Same resolution as OnVortexExploded - Source always comes from exactly one
@@ -220,30 +283,30 @@ namespace QuantumUser.View.Managers
         }
 
         // Same resolution as OnJuggernautDischarged - Source always comes from exactly one
-        // JuggernautEndExplosionSkillAction asset, which is where BlastEffectPrefab lives (see
-        // JuggernautEndExplosionSkillAction.View.cs).
+        // AftershockSkillAction asset (the Ascension that grants this event), which is where
+        // BlastEffectPrefab lives (see AftershockSkillAction.View.cs).
         private void OnJuggernautEndExploded(EventJuggernautEndExploded e)
         {
             Frame frame = e.Game.Frames.Predicted;
             if (frame == null) return;
 
-            JuggernautEndExplosionSkillAction action = frame.FindAsset(e.Source);
-            ParticleSystem prefab = action.BlastEffectPrefab ?? defaultAreaBlastEffect;
+            AftershockSkillAction upgrade = frame.FindAsset(e.Source);
+            ParticleSystem prefab = upgrade.BlastEffectPrefab ?? defaultAreaBlastEffect;
 
             PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
         }
 
         // Same resolution as OnJuggernautEndExploded - Source always comes from exactly one
-        // JuggernautLandingImpactSkillAction asset, which is where ImpactEffectPrefab lives (see
-        // JuggernautLandingImpactSkillAction.View.cs). Radius is the LANDED ENEMY's own real collider
+        // ConcussiveImpactSkillAction asset, which is where ImpactEffectPrefab lives (see
+        // ConcussiveImpactSkillAction.View.cs). Radius is the LANDED ENEMY's own real collider
         // radius - see JuggernautLandingImpactSystem/Events.qtn.
         private void OnJuggernautLanded(EventJuggernautLanded e)
         {
             Frame frame = e.Game.Frames.Predicted;
             if (frame == null) return;
 
-            JuggernautLandingImpactSkillAction action = frame.FindAsset(e.Source);
-            ParticleSystem prefab = action.ImpactEffectPrefab ?? defaultAreaBlastEffect;
+            ConcussiveImpactSkillAction upgrade = frame.FindAsset(e.Source);
+            ParticleSystem prefab = upgrade.ImpactEffectPrefab ?? defaultAreaBlastEffect;
 
             PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
         }
@@ -251,31 +314,23 @@ namespace QuantumUser.View.Managers
         // Generic - fires for any radial-push moment regardless of source (Empty Chamber, Kai's Dash
         // Shockwave, Zara's Resonance pulse - see HitEffectUtility.ApplyShockwave/
         // WeaponSystem.ApplyMagazineEmptiedPerks). Same "no single asset to resolve a bespoke prefab
-        // from" reasoning as OnExplodeOnDeathDetonated - the prefab lives directly on
-        // this manager, not per-perk. Skips entirely when e.Effect is valid - that only happens on a
-        // Zara Remix trigger, and ResonanceFxView (attached to her own entity) is the one that plays
-        // a (tinted) shockwave for that, so this doesn't also play an untinted one on top of it.
+        // from" reasoning as OnExplodeOnDeathDetonated - the prefab lives directly on this manager,
+        // not per-perk.
+        //
+        // Skips entirely for EVERY Zara Resonance pulse (owner carries Resonance), not just her Remix
+        // ones: ResonanceFxView (attached to her own entity) already plays her dedicated pulse VFX on
+        // every pulse - tinted by the Remix status when e.Effect is valid, default-colored otherwise -
+        // so playing this generic one on top would double it. Empty Chamber carries no Resonance, so
+        // it still plays here as before. (e.Effect.IsValid alone used to only cover the Remix case,
+        // leaving normal pulses double-playing.)
         private void OnShockwaveReleased(EventShockwaveReleased e)
         {
-            if (e.Effect.IsValid == true)
+            Frame frame = e.Game.Frames.Predicted;
+
+            if (e.Effect.IsValid == true || (frame != null && frame.Has<Resonance>(e.Entity) == true))
                 return;
 
             ParticleSystem prefab = shockwaveEffectPrefab ?? defaultAreaBlastEffect;
-
-            PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
-        }
-
-        // Same resolution as OnVortexExploded - Source always comes from exactly one
-        // GroundPoundPassiveUpgradeData asset, which is where BlastEffectPrefab lives (see
-        // GroundPoundPassiveUpgradeData.View.cs). Deliberately not routed through OnShockwaveReleased
-        // above - see BruteKnockbackMasterySystem's own comment for why Ground Pound needed its own event.
-        private void OnGroundPoundTriggered(EventGroundPoundTriggered e)
-        {
-            Frame frame = e.Game.Frames.Predicted;
-            if (frame == null) return;
-
-            GroundPoundPassiveUpgradeData action = frame.FindAsset(e.Source);
-            ParticleSystem prefab = action.BlastEffectPrefab ?? defaultAreaBlastEffect;
 
             PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
         }
@@ -363,7 +418,7 @@ namespace QuantumUser.View.Managers
             PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * quantumRoundsEffectScale);
         }
 
-        // Point spark for Kai's Reflect dash ascension (see ReflectProjectilesSkillAction) - no
+        // Point spark for Kai's Reflect dash ascension (see MirrorStepSkillAction) - no
         // radius on the event itself, so this uses its own fixed authored scale instead of
         // e.Radius-driven scaling like every other generic handler above.
         private void OnProjectileReflected(EventProjectileReflected e)
@@ -435,6 +490,22 @@ namespace QuantumUser.View.Managers
             PlayEffect(shieldGrantEffectPrefab, frame.Get<Transform3D>(e.Target).Position.ToUnityVector3(), Quaternion.identity);
         }
 
+        // Fired the exact tick Shield.Current crosses from >0 to <=0 (see DamageUtility.
+        // AbsorbWithShield/Shield.qtn's OnShieldBroken signal) - a "pop" moment distinct from
+        // EntityShielded's own grant particle above, generic across every target (player or enemy).
+        // Same live-Transform3D/no-fallback shape as OnEntityHealed/OnEntityShielded.
+        private void OnShieldBroken(EventShieldBroken e)
+        {
+            if (shieldBreakEffectPrefab == null)
+                return;
+
+            Frame frame = e.Game.Frames.Predicted;
+            if (frame == null || frame.Has<Transform3D>(e.Target) == false)
+                return;
+
+            PlayEffect(shieldBreakEffectPrefab, frame.Get<Transform3D>(e.Target).Position.ToUnityVector3(), Quaternion.identity);
+        }
+
         // Filler-tier enemy death replacement for the lingering die animation (EnemyBlobAnimationView
         // never even sees EnemyActionPhase.Dead for these - DamageUtility destroys the entity the same
         // tick it fires this). Radius is the dying enemy's REAL collider radius, not an authored
@@ -457,6 +528,37 @@ namespace QuantumUser.View.Managers
         public void SetBloodColor(Color color)
         {
             bloodColor = color;
+        }
+
+        // Companion to OnEnemyExploded above, but for a specific enemy ACTION's own authored
+        // BeginStep particle (e.g. Suicider's explosion) rather than the generic per-tier death
+        // burst - see EnemySelfDestructBeginVisual's own qtn comment for the full reasoning. This
+        // deliberately lives on a scene-persistent manager, NOT the per-entity EnemyAttackVisualsView
+        // that owns BeginStep for every other (non-instant-death) case - a Filler/Normal tier
+        // self-destruct has its own view torn down (OnDestroy -> QuantumEvent.UnsubscribeListener)
+        // before Quantum ever dispatches this same-tick event, so subscribing on that per-entity
+        // component silently never receives its own event. Resolves everything from the event's own
+        // payload (frame.FindAsset(e.Action) is static asset data, safe regardless of whether the
+        // raising entity still exists) rather than re-reading any live entity state.
+        private void OnEnemySelfDestructBeginVisual(EventEnemySelfDestructBeginVisual e)
+        {
+            Frame frame = e.Game.Frames.Predicted;
+            if (frame == null || e.Action.IsValid == false)
+                return;
+
+            EnemyActionData actionData = frame.FindAsset(e.Action);
+            AttackVisualStep step = actionData?.BeginStep;
+
+            if (step == null || step.ParticlePrefab == null)
+                return;
+
+            Vector3 worldPosition = e.Position.ToUnityVector3() + step.Offset;
+            Quaternion rotation = step.AlignToEnemyDirection == true
+                ? Quaternion.Euler(0f, e.FacingAngle.AsFloat, 0f) * Quaternion.Euler(step.RotationOffset)
+                : Quaternion.Euler(step.RotationOffset);
+            Vector3 scale = step.ParticlePrefab.transform.localScale * step.Scale;
+
+            PlayEffect(step.ParticlePrefab, worldPosition, rotation, scale);
         }
 
         // Raycast-from-above ground probe (same shape a since-removed OnEntityRooted placement-fix
@@ -505,13 +607,36 @@ namespace QuantumUser.View.Managers
             ParticleSystem instance = GetPooledInstance(prefab, position, rotation, scale, out ObjectPool<ParticleSystem> pool);
             if (instance == null) return;
 
-            // GetComponentsInChildren includes instance's own ParticleSystem, so this single loop
-            // tints every sub-emitter in the hierarchy, not just the root - a pooled instance last
-            // played with a tint can't leak it onto a later untinted play otherwise.
-            foreach (var system in instance.GetComponentsInChildren<ParticleSystem>())
+            // GetComponentsInChildren(true) includes instance's own ParticleSystem AND every
+            // sub-emitter in the hierarchy - true = INACTIVE children too, so a child that starts
+            // disabled (e.g. Zara's pulse ring toggled on mid-play) still gets tinted instead of
+            // keeping its authored color. A pooled instance last played with a tint can't leak it
+            // onto a later untinted play otherwise.
+            foreach (var system in instance.GetComponentsInChildren<ParticleSystem>(true))
             {
                 var main = system.main;
                 main.startColor = color;
+            }
+
+            instance.Play(true);
+            StartCoroutine(ReleaseWhenFinished(instance, pool));
+        }
+
+        // Sorting-order variant used by AttackVisualStep.OverrideSortingOrder (see
+        // EnemyAttackVisualsView.SpawnStepParticle) - null leaves every renderer at whatever it was
+        // pooled/authored with, exactly like the untinted PlayEffect overload above.
+        public void PlayEffect(ParticleSystem prefab, Vector3 position, Quaternion rotation, Vector3 scale, int? sortingOrder)
+        {
+            ParticleSystem instance = GetPooledInstance(prefab, position, rotation, scale, out ObjectPool<ParticleSystem> pool);
+            if (instance == null) return;
+
+            if (sortingOrder.HasValue == true)
+            {
+                // GetComponentsInChildren(true) covers the root's own ParticleSystemRenderer AND
+                // every child's, inactive ones included - same "force every sub-emitter, not just
+                // the root" reasoning as the tinted overload's color loop below.
+                foreach (var renderer in instance.GetComponentsInChildren<ParticleSystemRenderer>(true))
+                    renderer.sortingOrder = sortingOrder.Value;
             }
 
             instance.Play(true);

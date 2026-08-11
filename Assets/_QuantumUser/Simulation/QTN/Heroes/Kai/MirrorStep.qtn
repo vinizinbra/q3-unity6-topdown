@@ -1,0 +1,11 @@
+// Kai's Mirror Step Ascension rank 3 (Dash line 1/3) - see docs/kai-ascensions.md. Granted (AddOrGet)
+// and reset every Dash Begin by MirrorStepSkillAction; each successful reflection during the OnGoing
+// scan reduces Vortex's cooldown by PerReflect, up to MaxPerDash total for the whole Dash. A running
+// total, not the one-shot boolean the old (deleted) EvasiveReflexUpgrade used - this needs to keep
+// accumulating across multiple reflections within the same Dash, not just fire once.
+component MirrorStepCooldownAccumulator
+{
+    FP AppliedThisDash;
+    FP MaxPerDash;
+    FP PerReflect;
+}

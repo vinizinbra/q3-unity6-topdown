@@ -25,10 +25,6 @@ namespace Quantum
     [Preserve]
     public unsafe class EnemySystem : SystemMainThreadFilter<EnemySystem.Filter>, ISignalOnEnemyDied, ISignalOnEnemyKnockedBack, ISignalOnEntityPrototypeMaterialized
     {
-        private const string DeadEnemyLayerName = "DeadEnemy";
-
-        private int? _deadEnemyLayerIndex;
-
         // Seeds Health/Shield from EnemyDataAsset once the whole prototype is materialized, not
         // from ISignalOnComponentAdded<Enemy> - mirrors CharacterSystem.OnEntityPrototypeMaterialized's
         // own reasoning (components land one at a time, so seeding off Enemy's own add could run
@@ -66,10 +62,14 @@ namespace Quantum
                 return;
             }
 
-            SeedHealth(f, entity, data);
+            EnemyRuntimeStats stats = EnemyBalanceUtility.ResolveEnemyStats(f, data.Tier);
+
+            SeedHealth(f, entity, data, stats);
+            SeedCombatModifiers(f, entity, stats);
             SeedShield(f, entity, data);
             SeedRadius(f, entity, data);
             SeedWaypointPath(f, entity, data);
+            SeedChargeHitTracking(f, entity, data);
         }
 
         // UseWaypointDetour (EnemyPathfindingUtility.TryGetDetourDirection) needs somewhere to
@@ -85,6 +85,53 @@ namespace Quantum
                 return;
 
             f.Add<EnemyWaypointPath>(entity);
+        }
+
+        // ChargeDeliveryData's own per-target hit cooldown (see its HitCooldown field) needs
+        // somewhere to store per-target state - added dynamically, only for an enemy whose
+        // BasicAction/SkillActions actually resolves to a ChargeDeliveryData with StopOnHit =
+        // false, same "only add what THIS enemy needs, driven by data" shape SeedShield/
+        // SeedWaypointPath already use above, rather than requiring ChargeHitTracking to be
+        // hand-authored onto the one shared generic prototype (which would make every enemy in
+        // the game - including ones with no charge at all - carry tracking data only a
+        // StopOnHit=false charger ever reads).
+        private static void SeedChargeHitTracking(Frame f, EntityRef entity, EnemyDataAsset data)
+        {
+            if (f.Unsafe.TryGetPointer<ChargeHitTracking>(entity, out _) == true)
+                return;
+
+            if (NeedsChargeHitTracking(f, data) == false)
+                return;
+
+            f.Add<ChargeHitTracking>(entity);
+        }
+
+        private static bool NeedsChargeHitTracking(Frame f, EnemyDataAsset data)
+        {
+            if (ActionNeedsChargeHitTracking(f, data.Actions.BasicAction) == true)
+                return true;
+
+            for (int i = 0; i < data.Actions.SkillActions.Count; i++)
+            {
+                if (ActionNeedsChargeHitTracking(f, data.Actions.SkillActions[i]) == true)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool ActionNeedsChargeHitTracking(Frame f, AssetRef<EnemyActionData> actionRef)
+        {
+            if (actionRef.IsValid == false)
+                return false;
+
+            EnemyActionData action = f.FindAsset(actionRef);
+
+            if (action == null || action.Delivery.IsValid == false)
+                return false;
+
+            EnemyDeliveryData delivery = f.FindAsset(action.Delivery);
+            return delivery is ChargeDeliveryData chargeDelivery && chargeDelivery.StopOnHit == false;
         }
 
         // Overrides whatever radius the generic prototype's collider was authored with, so one
@@ -108,7 +155,10 @@ namespace Quantum
 
         // Health may legitimately be absent (an enemy that can't be damaged the normal way, e.g. a
         // pure trigger/hazard entity also using the Enemy component), so this is not an error case.
-        private static void SeedHealth(Frame f, EntityRef entity, EnemyDataAsset data)
+        // MaxHealth comes from the once-per-spawn EnemyBalanceUtility.ResolveEnemyStats snapshot -
+        // EnemyTierStatsConfig.MaxHealth scaled by BalanceConfig's run curves/co-op multipliers,
+        // not read directly here - see docs/run-curves-coop-scaling.md.
+        private static void SeedHealth(Frame f, EntityRef entity, EnemyDataAsset data, EnemyRuntimeStats stats)
         {
             if (f.Unsafe.TryGetPointer<Health>(entity, out var health) == false)
                 return;
@@ -117,8 +167,18 @@ namespace Quantum
             // so an unseeded/never-picked run (bonus 0) reads as an exact no-op multiplier.
             FP healthMultiplier = FP._1 + f.Global->EnemyHealthBonusMultiplier;
 
-            health->MaxHealth = EnemyTierStatsConfig.Resolve(f, data.Tier).MaxHealth * healthMultiplier;
+            health->MaxHealth = stats.MaxHp * healthMultiplier;
             health->CurrentHealth = health->MaxHealth;
+        }
+
+        // EnemyCombatModifiers is hand-authored (not dynamically added, unlike Shield) - absent
+        // until every enemy prototype gets it added in the Editor; see the .qtn file's own comment.
+        private static void SeedCombatModifiers(Frame f, EntityRef entity, EnemyRuntimeStats stats)
+        {
+            if (f.Unsafe.TryGetPointer<EnemyCombatModifiers>(entity, out var modifiers) == false)
+                return;
+
+            modifiers->DamageMultiplier = stats.DamageMultiplier;
         }
 
         // Unlike the player's own Shield (CharacterSystem.SeedShield), which only seeds an
@@ -205,7 +265,13 @@ namespace Quantum
                 // respecting Root when the attack finishes) - and skipped while a
                 // JuggernautExplosionPush is in progress for the exact same reason (that system also
                 // drives the enemy kinematically for a short duration and restores this itself when done).
-                if (filter.Enemy->Phase != EnemyActionPhase.Active && f.Has<JuggernautExplosionPush>(filter.Entity) == false)
+                // Same reasoning for a traversal hop (EnemyMovementUtility.BeginTraversalJump) - it
+                // runs during plain Chasing (never Active), so without this exemption this line
+                // clobbered the hop's own kinematic flag back to false on the very next tick, every
+                // tick, fighting TickTraversalJump's own position writes for the hop's whole arc.
+                // TickTraversalJump restores this itself on landing, same as the other two.
+                if (filter.Enemy->Phase != EnemyActionPhase.Active && f.Has<JuggernautExplosionPush>(filter.Entity) == false &&
+                    filter.Enemy->TraversalJumpDuration <= FP._0)
                 {
                     filter.PhysicsBody3D->IsKinematic = false;
                 }
@@ -251,13 +317,11 @@ namespace Quantum
 
         private static void UpdateDead(Frame f, ref Filter filter)
         {
-            filter.PhysicsBody3D->GravityScale = FP._1;
-
-            // Re-zeroed every tick, not just once in OnEnemyDied - collision resolution against
-            // environment geometry (e.g. settling on a slope) can otherwise keep nudging the
-            // corpse in X/Z for the rest of its lingering duration. Y is left alone so it still
-            // falls/settles.
-            filter.PhysicsBody3D->Velocity = new FPVector3(FP._0, filter.PhysicsBody3D->Velocity.Y, FP._0);
+            // The collider is disabled outright the instant the enemy dies (see OnEnemyDied), so the
+            // corpse can no longer rest on ground geometry - kill gravity and freeze it completely so
+            // it plays its death animation exactly where it fell instead of dropping through the world.
+            filter.PhysicsBody3D->GravityScale = FP._0;
+            filter.PhysicsBody3D->Velocity = FPVector3.Zero;
 
             filter.Enemy->StateTimer -= f.DeltaTime;
 
@@ -267,22 +331,20 @@ namespace Quantum
             }
         }
 
-        // Stops the corpse dead in its tracks (Y velocity from the death blow is kept so it still
-        // falls/settles) and moves it onto the DeadEnemy physics layer, which the collision matrix
-        // (SimulationConfig) restricts to environment layers only - so players/enemies can no
-        // longer shove a corpse around, but it still rests on the ground and behind walls.
+        // Disables the corpse's collider outright the instant it dies so nothing - players, enemies,
+        // projectiles, or environment - collides with the lingering body during its DeathLingerTime.
+        // Velocity is zeroed here too, and UpdateDead then freezes it in place every tick (with no
+        // collider there's nothing left to rest on, so it can't be allowed to keep falling).
         public void OnEnemyDied(Frame f, EntityRef entity)
         {
             if (f.Unsafe.TryGetPointer<PhysicsBody3D>(entity, out var body) == true)
             {
-                body->Velocity = new FPVector3(FP._0, body->Velocity.Y, FP._0);
+                body->Velocity = FPVector3.Zero;
             }
 
-            _deadEnemyLayerIndex ??= f.Layers.GetLayerIndex(DeadEnemyLayerName);
-
-            if (_deadEnemyLayerIndex.Value >= 0 && f.Unsafe.TryGetPointer<PhysicsCollider3D>(entity, out var collider) == true)
+            if (f.Unsafe.TryGetPointer<PhysicsCollider3D>(entity, out var collider) == true)
             {
-                collider->Layer = (byte)_deadEnemyLayerIndex.Value;
+                collider->Enabled = false;
             }
         }
 
@@ -354,8 +416,15 @@ namespace Quantum
             // until Tick() itself snaps it down on landing - without this guard, the instant Leap
             // lifts off, IsGrounded goes false and this starts returning true every tick, which
             // makes the caller bail out before ever reaching UpdateActive/delivery.Tick() again -
-            // the leap freezes mid-air forever, StateTimer never decrementing.
+            // the leap freezes mid-air forever, StateTimer never decrementing. Same reasoning, same
+            // fix, for a traversal hop (EnemyMovementUtility.BeginTraversalJump) - it runs during
+            // Chasing (never Active) and is deliberately airborne mid-arc, so without this second
+            // exemption this gate started returning true the instant the hop left the ground,
+            // permanently skipping UpdateChasing/TickTraversalJump before it ever got a chance to
+            // land - the exact "stuck the moment it has no ground" freeze this comment already
+            // describes for Leap, just hitting a feature that runs outside Active instead.
             if (filter.Enemy->Phase != EnemyActionPhase.Active &&
+                filter.Enemy->TraversalJumpDuration <= FP._0 &&
                 data.Stats.Height.InitialState == EnemyHeightState.Grounded &&
                 EnemyMovementUtility.IsGrounded(f, filter.Entity, filter.Transform3D->Position, EnemyMovementUtility.GetGroundLayerMask(f)) == false)
             {
@@ -413,7 +482,9 @@ namespace Quantum
         // staggered enemy can't immediately re-wind the action it just lost. Deliberately not
         // EnterRecovering - that one calls StopMovement, which would zero the very impulse the
         // stagger exists to preserve. Begin() never ran, so there's no delivery-side cleanup to call.
-        private static void CancelWindup(Frame f, EntityRef entity, Enemy* enemy, EnemyActionData action)
+        // Internal (not private) - EnemyActionUtility.TryInterrupt calls this directly for a
+        // pure state-machine cancel with no physics impulse behind it (see that class's own comment).
+        internal static void CancelWindup(Frame f, EntityRef entity, Enemy* enemy, EnemyActionData action)
         {
             EnemyDecisionUtility.SetCooldownRemaining(f, entity, enemy, enemy->CurrentActionSlot, action.CooldownTime);
             enemy->StateTimer = action.DownTime;
@@ -422,8 +493,10 @@ namespace Quantum
 
         // Active-phase counterpart to CancelWindup - resolves the pointers this signal handler
         // doesn't already have (only Enemy* comes for free here, unlike Update's full Filter) so
-        // the interrupted delivery gets a real OnInterrupted call before losing the action.
-        private static void CancelActive(Frame f, EntityRef entity, Enemy* enemy, EnemyDataAsset data, EnemyActionData action)
+        // the interrupted delivery gets a real OnInterrupted call before losing the action. Internal
+        // (not private) - EnemyActionUtility.TryInterrupt calls this directly for a pure
+        // state-machine cancel with no physics impulse behind it (see that class's own comment).
+        internal static void CancelActive(Frame f, EntityRef entity, Enemy* enemy, EnemyDataAsset data, EnemyActionData action)
         {
             if (f.Unsafe.TryGetPointer<Transform3D>(entity, out var transform) == false)
                 return;
@@ -483,6 +556,19 @@ namespace Quantum
 
         private static void UpdateChasing(Frame f, ref Filter filter, EnemyDataAsset data)
         {
+            // A traversal hop in flight (EnemyMovementUtility.BeginTraversalJump) must always
+            // finish landing before anything below gets a chance to abandon Chasing - losing the
+            // target, exceeding LeashRange, or the target coming into attack range are all
+            // perfectly possible mid-hop (a hop closes distance, after all), and none of the other
+            // phases ever call MoveInDirection/TickTraversalJump again to complete it. Left
+            // unfinished, PhysicsBody3D.IsKinematic (set true by BeginTraversalJump) would never get
+            // reset back to false either - Update's own IsKinematic-reset exemption skips it
+            // specifically while a hop is in progress - permanently freezing the enemy in place.
+            // Ticking it here first, before any of the checks below, guarantees it always lands
+            // cleanly (which resets IsKinematic itself) no matter what happens to the target.
+            if (EnemyMovementUtility.TickTraversalJump(f, ref filter, data) == true)
+                return;
+
             if (EnemyMovementUtility.TryGetTargetPosition(f, filter.Enemy->Target, out FPVector3 targetPosition) == false)
             {
                 Log.Debug($"[Enemy] {filter.Entity} lost target {filter.Enemy->Target} (no longer exists), switching Chasing -> Idle");
@@ -578,7 +664,12 @@ namespace Quantum
 
             EnemyActionData action = EnemyDecisionUtility.ResolveAction(f, data, filter.Enemy->CurrentActionSlot);
             EnemyDeliveryData delivery = f.FindAsset(action.Delivery);
-            delivery.OnAnticipating(f, ref filter, data, action, filter.Enemy->Target);
+
+            FP windupElapsed = action.AnticipationTime > FP._0
+                ? FP._1 - filter.Enemy->StateTimer / action.AnticipationTime
+                : FP._1;
+
+            delivery.OnAnticipating(f, ref filter, data, action, filter.Enemy->Target, windupElapsed);
 
             FP anticipationMultiplier = StatusEffectUtility.GetAnticipationMultiplier(f, filter.Entity);
             filter.Enemy->StateTimer -= f.DeltaTime * anticipationMultiplier;

@@ -39,7 +39,7 @@ MonoBehaviour:
     Prototype:
       Id:
         Value: 1482437271914828619
-    Count: 20
+    Count: 40
     MustHave: 0
   - Type: 3
     Prototype:
@@ -47,3 +47,6 @@ MonoBehaviour:
         Value: 1422661273244132242
     Count: 1
     MustHave: 1
+  GapFillerPrototype:
+    Id:
+      Value: 1326923107156391042

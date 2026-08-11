@@ -2,18 +2,33 @@
 // EnemyTimeDilationMultiplier > 0) also slows nearby enemies' own attack-execution timers - see
 // VoidFieldSystem, the one driver for both halves. Added directly onto Kai's own entity by
 // VoidFieldPassiveData (so the field follows him via his own Transform3D, no separate tracking
-// entity needed), or onto a standalone spawned entity for his SlowArea dash ascension.
+// entity needed), or onto a standalone spawned entity for a future dropped-field ascension.
 component ProjectileSlowField
 {
+    // Set once at spawn by VoidFieldPassiveData.Apply, never touched again - Event Horizon's own
+    // ranked RadiusBonus is added on top of THIS, not accumulated onto Radius directly, so a re-pick
+    // (rank 1 -> rank 2) can SET a correct total (BaseRadius + RadiusBonus[rank]) rather than needing
+    // to know/undo whatever bonus a previous rank already added - same fix Brute's Guardian ascension
+    // already applied via ProtectorAura.BaseRadius.
+    FP BaseRadius;
     FP Radius;
+
+    // Set once at spawn by VoidFieldPassiveData.Apply, never touched again - same "SET a fresh total on
+    // re-pick" reasoning BaseRadius above uses, just for SpeedMultiplier instead of Radius.
+    FP BaseSpeedMultiplier;
 
     // Multiplies a caught projectile's per-tick displacement (see Projectile.SpeedMultiplier) - e.g.
     // 0.5 = half speed while inside. Never baked into the projectile's own Velocity.
     FP SpeedMultiplier;
 
-    // 0 (the default - "off") unless the Void Pressure Passive Ascension has been taken, which sets
-    // this on Kai's own field only (not a dropped SlowArea instance - see
-    // VoidPressurePassiveUpgradeData). Read by VoidFieldSystem.ApplyFieldsToEnemies, which also
-    // tier-gates to Filler/Normal/Specialist - never Elite/Boss.
+    // 0 (the default - "off") unless Event Horizon rank 3 ("Void Pressure") has been taken, which sets
+    // this on Kai's own field only. Read by VoidFieldSystem.ApplyFieldsToEnemies.
     FP EnemyTimeDilationMultiplier;
+
+    // (byte)EnemyTier an enemy standing in the field can be at or below to have
+    // EnemyTimeDilationMultiplier applied to it - VoidFieldSystem.ApplyFieldsToEnemies reads this
+    // instead of a hardcoded tier comparison, so which tiers are affected is data, not code. Seeded to
+    // (byte)EnemyTier.Specialist by VoidFieldPassiveData.Apply, preserving the pre-existing
+    // Filler/Normal/Specialist-only behavior exactly.
+    Byte MaxAffectedEnemyTierIndex;
 }

@@ -50,7 +50,12 @@ namespace Quantum
         // there's nothing that indirection would buy here.
         public static void FirePulse(Frame f, EntityRef owner, Resonance* resonance, FPVector3 position)
         {
-            var allies = EnemyMovementUtility.FindPlayersInRadius(f, position, resonance->Radius);
+            // Skill Area (CharacterStats.AreaRadiusMultiplier) - one effective radius for the whole
+            // pulse (heal allies, damage enemies, shockwave), so the healing/damage area grows with
+            // the upgrade. 1x for anyone without it.
+            FP radius = resonance->Radius * StatUtility.GetAreaMultiplier(f, owner);
+
+            var allies = EnemyMovementUtility.FindPlayersInRadius(f, position, radius);
 
             for (int i = 0; i < allies.Count; i++)
             {
@@ -68,7 +73,7 @@ namespace Quantum
 
             while (enemies.Next(out EntityRef enemyEntity, out Enemy _, out Transform3D enemyTransform))
             {
-                if ((enemyTransform.Position - position).SqrMagnitude > resonance->Radius * resonance->Radius)
+                if ((enemyTransform.Position - position).SqrMagnitude > radius * radius)
                     continue;
 
                 DamageUtility.ApplyDamage(f, enemyEntity, resonance->DamageAmount, owner, DamageSource.Skill);
@@ -91,7 +96,7 @@ namespace Quantum
                 }
             }
 
-            f.Events.ResonancePulseReleased(owner, position, resonance->Radius);
+            f.Events.ResonancePulseReleased(owner, position, radius);
 
             // Every pulse is a genuine shockwave, not a bespoke per-enemy knockback loop - reuses the
             // exact same generic push Kai's Dash Shockwave/Empty Chamber already use (including its
@@ -107,7 +112,7 @@ namespace Quantum
             if (effectConfig != null)
             {
                 effectConfig.GetKnockback((KnockbackTier)resonance->KnockbackTier, out FP force, out _);
-                HitEffectUtility.ApplyShockwave(f, position, resonance->Radius, owner, force, effect: remixEffect);
+                HitEffectUtility.ApplyShockwave(f, position, radius, owner, force, effect: remixEffect);
             }
         }
 

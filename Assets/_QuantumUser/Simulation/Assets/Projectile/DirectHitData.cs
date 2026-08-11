@@ -14,14 +14,6 @@ namespace Quantum
 
         private static readonly FP RicochetSearchRadius = 8;
 
-        // Half the firing weapon's own engagement range (WeaponDataAsset.Range, the same distance
-        // AimSystem uses to acquire targets - see its own doc comment) - a split fragment traveling
-        // the full range would out-range the weapon that spawned it. Enforced via RemainingLifetime
-        // rather than ProjectileDataAsset.MaxDistance (that's authored once per shared asset and
-        // would cap the parent weapon's own un-split shots too), so it only ever shortens this one
-        // instance's clock, never lengthens it past whatever Lifetime it already spawned with.
-        private static readonly FP SplitShotRangeFraction = FP._0_50;
-
         // Total arc the fragments fan across, centered on the parent shot's own heading at impact -
         // narrower than a full circle so they read as a forward burst continuing the original shot's
         // path, not an omnidirectional splatter.
@@ -34,6 +26,9 @@ namespace Quantum
 
         public override bool ApplyHit(Frame f, Projectile* projectile, EntityRef hitEntity, FPVector3 point)
         {
+            if (ShouldDetonate(f, projectile, hitEntity) == false)
+                return false;
+
             ApplyEffects(f, projectile, hitEntity, point, projectile->Velocity.Normalized);
 
             // Level geometry stops the shot however much pierce is left - weapon-perk procs that
@@ -88,7 +83,10 @@ namespace Quantum
             // Bigger Boom (Pixie passive ascension) - read live, same reasoning as
             // WeaponSystem.ApplyHitscanWeaponPerks' own copy of this line: mid-run rank-ups scale
             // immediately and compound off the same unscaled base radius every time.
-            FP radiusMultiplier = DamageUtility.ResolvePixieExplosionRadiusMultiplier(f, projectile->Owner);
+            // Skill Area (CharacterStats.AreaRadiusMultiplier) folded in alongside Bigger Boom so it
+            // scales these weapon explosions (Cataclysm Round / Explosive Sequence) too, matching the
+            // bomb/skill blasts - 1x for anyone without it.
+            FP radiusMultiplier = DamageUtility.ResolvePixieExplosionRadiusMultiplier(f, projectile->Owner) * StatUtility.GetAreaMultiplier(f, projectile->Owner);
 
             if (projectile->IsCataclysm == true)
             {
@@ -158,7 +156,8 @@ namespace Quantum
         // ProjectileSpawner.Spawn directly rather than through WeaponSystem.FireProjectile, so they
         // don't re-roll Bonus­Pierce/Bounces/Explosive Sequence/Cataclysm themselves (a bare,
         // un-perked repeat of the base shot at reduced damage), only capped recursion
-        // (MaxSplitShotDepth) carries over.
+        // (MaxSplitShotDepth) and MaxTravelDistance (WeaponPerkUtility.ResolveWeaponRange, same as
+        // every other weapon-fired projectile - see Projectile.qtn) carry over.
         private static void SpawnSplitProjectiles(Frame f, Projectile* projectile, FPVector3 point, Weapon* weapon, WeaponPostImpactProcs* procs)
         {
             int count = procs->SplitShotCount;
@@ -172,8 +171,7 @@ namespace Quantum
             FP baseAngle = headingAngle - SplitShotArcDegrees / 2 + f.RNG->Next(0, step);
             FP splitDamage = projectile->Damage * procs->SplitShotDamageMultiplier;
             FP speed = projectile->Velocity.Magnitude;
-            FP maxDistance = ResolveWeaponRange(f, weapon) * SplitShotRangeFraction;
-            FP maxLifetime = speed > FP._0 ? maxDistance / speed : FP._0;
+            FP maxTravelDistance = WeaponPerkUtility.ResolveWeaponRange(f, weapon);
 
             for (int i = 0; i < count; i++)
             {
@@ -192,16 +190,9 @@ namespace Quantum
 
                 if (f.Unsafe.TryGetPointer<Projectile>(child, out var childProjectile) == true)
                 {
-                    childProjectile->RemainingLifetime = FPMath.Min(childProjectile->RemainingLifetime, maxLifetime);
+                    childProjectile->MaxTravelDistance = maxTravelDistance;
                 }
             }
-        }
-
-        private static FP ResolveWeaponRange(Frame f, Weapon* weapon)
-        {
-            WeaponDataAsset weaponData = f.FindAsset(weapon->WeaponData);
-
-            return weaponData.Range * weapon->RangeMultiplier;
         }
     }
 }

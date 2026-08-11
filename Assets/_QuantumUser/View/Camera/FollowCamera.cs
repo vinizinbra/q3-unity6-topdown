@@ -28,6 +28,7 @@ public class FollowCamera : MonoBehaviour
 
     private readonly List<Transform> _targets = new List<Transform>();
     private float _zoom = 1f;
+    private Vector3 _smoothedPosition;
 
     // Shake state - additive offset on top of the framed position, decaying linearly over
     // _shakeDuration. A later Shake() call only takes over if it's stronger than what's currently
@@ -42,6 +43,7 @@ public class FollowCamera : MonoBehaviour
     {
         I = this;
         _shakeSeed = new Vector2(Random.value * 100f, Random.value * 100f);
+        _smoothedPosition = transform.position;
     }
 
     private void OnDestroy()
@@ -92,7 +94,8 @@ public class FollowCamera : MonoBehaviour
         _zoom = Mathf.Lerp(_zoom, desiredZoom, Time.deltaTime * zoomLerpSpeed);
 
         Vector3 desiredPosition = center + offset * _zoom;
-        transform.position = Vector3.Lerp(transform.position, desiredPosition, Time.deltaTime * speed) + ResolveShakeOffset();
+        _smoothedPosition = Vector3.Lerp(_smoothedPosition, desiredPosition, Time.deltaTime * speed);
+        transform.position = _smoothedPosition + ResolveShakeOffset();
     }
 
     private Vector3 ResolveShakeOffset()

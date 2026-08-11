@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a98ba25be1584078b2c09330c88223f, type: 3}
+  m_Name: Guardian
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.GuardianPassiveUpgradeData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Brute/Brute_PassiveSkill/Brute_PassiveSkillUpgrades/Guardian
+    Guid:
+      Value: 299772149483885795
+  Icon: {fileID: -842112799, guid: 1398529c57dc443e7a3096f4ad470a4c, type: 3}
+  DisplayName: Guardian
+  Rarity: 2
+  Description: Grows the Protector Aura and grants allies inside it Damage Reduction
+    - eventually reacting to protect them further the instant they're hit.
+  <MaxRank>k__BackingField: 3
+  RankDescriptions:
+  - Aura radius +2m, allies inside gain 10% Damage Reduction.
+  - Aura radius +3m, allies inside gain 20% Damage Reduction.
+  - Aura radius +3m, allies inside gain 25% Damage Reduction. When an ally in the
+    aura takes damage from an enemy, they gain +15% additional Damage Reduction for
+    1.5s (~4s cooldown per ally).
+  RadiusBonus:
+  - RawValue: 131072
+  - RawValue: 196608
+  - RawValue: 196608
+  AllyDamageReductionAmount:
+  - RawValue: 6554
+  - RawValue: 13107
+  - RawValue: 16384

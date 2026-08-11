@@ -1,0 +1,525 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-7099498142008102541
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b3ffe095a046457f99f64ffca9d87e9, type: 3}
+  m_Name: ChargerEnemyActionData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.EnemyActionData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/BaseEnemies/Charger|ChargerEnemyActionData
+    Guid:
+      Value: 3916397472487115310
+  Name: 
+  EngageRange:
+    RawValue: 327680
+  DamageRange:
+    RawValue: 32768
+  Damage:
+    RawValue: 1310720
+  AnticipationTime:
+    RawValue: 58982
+  DirectionTracking: 1
+  IgnoreY: 1
+  Origin: 0
+  DownTime:
+    RawValue: 65536
+  CooldownTime:
+    RawValue: 65536
+  TelegraphStartPercent:
+    RawValue: 32768
+  AimLock: 0
+  AimLockPercent:
+    RawValue: 65536
+  SelectionWeight: 1
+  InterruptibleDuringTelegraph: 0
+  InterruptibleDuringActive: 0
+  Delivery:
+    Id:
+      Value: 2760421197252130559
+  Effects:
+  - Id:
+      Value: 440091783757558214
+  - Id:
+      Value: 452814084348607209
+  Telegraph:
+    Id:
+      Value: 2235394048011183765
+  AnticipationStep:
+    AnimationType: 2
+    Duration: 0.9
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+  BeginStep:
+    AnimationType: 0
+    Duration: 0.3
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+  OnGoingStep:
+    AnimationType: 8
+    Duration: 1
+    Shake:
+      Frequency: 50
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: -20
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: -360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 2712700381257934115, guid: 1c2fa915827f14ee4807de4d637bc057, type: 3}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 1
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 2
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+  EndStep:
+    AnimationType: 0
+    Duration: 0.3
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+--- !u!114 &-2873203648994233672
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52edb4eefc1db48109cc7d1ac53b2f13, type: 3}
+  m_Name: ChargerTelegraphData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.TelegraphData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/BaseEnemies/Charger|ChargerTelegraphData
+    Guid:
+      Value: 2235394048011183765
+  Shape: 2
+  StartPhase: 0
+  EndPhase: 1
+  LiveTracking: 1
+  LiveTrackingSmoothing: 15
+  TelegraphPrefab: {fileID: 2468440791896092637, guid: 4f8787fca955742b995eeedd8d55d28c, type: 3}
+  SnapToGround: 1
+  LineLength: 1
+  FixedDistanceValue: 6
+  FromOffset: 0
+  ToOffset: 0
+  Width: 1
+  RadiusMultiplier: 1
+  GrowthDuration: 1
+  FadeInDuration: 0.15
+  FadeOutDuration: 0.3
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04c8957753d4c417e81337f7a383dcc6, type: 3}
+  m_Name: Charger
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.EnemyDataAsset
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/BaseEnemies/Charger
+    Guid:
+      Value: 477699094528449997
+  EnemyName: Charger
+  Tier: 1
+  Economy:
+    Persistent: 0
+    SpawnProfile:
+      Id:
+        Value: 443472774672561949
+    CostMultiplier:
+      RawValue: 131072
+  Stats:
+    MoveSpeed:
+      RawValue: 262144
+    Height:
+      InitialState: 0
+      FlightHeight:
+        RawValue: 131072
+      HoverCheckInterval:
+        RawValue: 65536
+      HoverSpringFrequency:
+        RawValue: 65536
+      HoverSpringDamping:
+        RawValue: 32768
+      CanFly: 0
+      CanBeLaunched: 0
+      CanBeGrounded: 1
+      ClimbProbeThreshold:
+        RawValue: 13107
+      GapProbeThreshold:
+        RawValue: 32768
+      ArcHeight:
+        RawValue: 65536
+      TraversalJumpSpeedMultiplier:
+        RawValue: 65536
+      CanClimbCliffs: 1
+      CliffHeight:
+        RawValue: 131072
+      AffectedByGroundHazards: 0
+      AffectedByShockwaves: 0
+      TargetableByMelee: 1
+      TargetableByProjectiles: 1
+      CanJumpGaps: 1
+      GapDistance:
+        RawValue: 262144
+      CanFallFromCliff: 1
+      FallHeight:
+        RawValue: 131072
+    Movement:
+      Id:
+        Value: 3283391172210422552
+    Radius:
+      RawValue: 98304
+    ShieldMultiplier:
+      RawValue: 0
+    Traits: 
+    FrontalDamageReductionAmount:
+      RawValue: 0
+    FrontalDamageReductionArcDegrees:
+      RawValue: 0
+    AvoidWalls: 0
+    WallAvoidProbeDistance:
+      RawValue: 131072
+    UseWaypointDetour: 0
+    WaypointArrivalDistance:
+      RawValue: 65536
+  AI:
+    Targeting:
+      Id:
+        Value: 2227200805678239736
+    DetectionRange:
+      RawValue: 655360
+    LeashRange:
+      RawValue: 983040
+  Actions:
+    BasicAction:
+      Id:
+        Value: 3916397472487115310
+    SkillActions: []
+  DeathLingerTime:
+    RawValue: 196608
+  Cost:
+    RawValue: 65536
+  Persistent: 0
+  SpawnProfile:
+    Id:
+      Value: 0
+  MoveSpeed:
+    RawValue: 262144
+  Radius:
+    RawValue: 65536
+  MaxHealth:
+    RawValue: 3276800
+  MaxShield:
+    RawValue: 1310720
+  ShieldRechargeDelay:
+    RawValue: 131072
+  ShieldRechargeRate:
+    RawValue: 327680
+  Traits: 
+  FrontalDamageReductionAmount:
+    RawValue: 32768
+  FrontalDamageReductionArcDegrees:
+    RawValue: 7864320
+  Height:
+    InitialState: 0
+    FlightHeight:
+      RawValue: 131072
+    HoverCheckInterval:
+      RawValue: 65536
+    HoverSpringFrequency:
+      RawValue: 65536
+    HoverSpringDamping:
+      RawValue: 32768
+    CanFly: 0
+    CanBeLaunched: 0
+    CanBeGrounded: 1
+    ClimbProbeThreshold:
+      RawValue: 0
+    GapProbeThreshold:
+      RawValue: 0
+    ArcHeight:
+      RawValue: 0
+    TraversalJumpSpeedMultiplier:
+      RawValue: 0
+    CanClimbCliffs: 0
+    CliffHeight:
+      RawValue: 0
+    AffectedByGroundHazards: 0
+    AffectedByShockwaves: 0
+    TargetableByMelee: 1
+    TargetableByProjectiles: 1
+    CanJumpGaps: 0
+    GapDistance:
+      RawValue: 0
+    CanFallFromCliff: 0
+    FallHeight:
+      RawValue: 0
+  Movement:
+    Id:
+      Value: 277519423795209272
+  Targeting:
+    Id:
+      Value: 406735746052846114
+  DetectionRange:
+    RawValue: 655360
+  LeashRange:
+    RawValue: 983040
+  CanBeInterruptedByKnockback: 1
+  KnockbackRecoveryTime:
+    RawValue: 16384
+  BasicAction:
+    Id:
+      Value: 578470124590582232
+  SkillActions: []
+  ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
+  ViewPrefab: {fileID: 8476845490732343577, guid: 3c2761d8ac252410a929c7fb71a1a880, type: 3}
+  FactionSkins:
+  - Faction: 2
+    ViewPrefab: {fileID: 8476845490732343577, guid: 319b3a4f416114624b53cb03df10a735, type: 3}
+    ScaleMultiplier: 0
+--- !u!114 &3966869393339546562
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e42b1630280fe433ba56b6883bb17e5b, type: 3}
+  m_Name: ChargerDeliveryData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ChargeDeliveryData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/BaseEnemies/Charger|ChargerDeliveryData
+    Guid:
+      Value: 2760421197252130559
+  MinRandomOffset:
+    RawValue: 0
+  MaxRandomOffset:
+    RawValue: 0
+  HitImpactPrefab: {fileID: 198073853076981922, guid: 7e8a0869a599e3b4b80673e467868254, type: 3}
+  HitImpactOffset: {x: 0, y: 0, z: 0}
+  DashSpeed:
+    RawValue: 983040
+  DashDistance:
+    RawValue: 393216
+  DashDuration:
+    RawValue: 65536
+  StopOnHit: 0
+  HitCooldown:
+    RawValue: 13107
+  WallCheckHeight:
+    RawValue: 32768
+  WallCheckDistance:
+    RawValue: 32768
+  WallStunDuration:
+    RawValue: 131072

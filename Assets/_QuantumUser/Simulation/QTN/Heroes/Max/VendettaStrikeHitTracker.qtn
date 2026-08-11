@@ -1,0 +1,10 @@
+// Granted onto the CASTER by VendettaStrikeSkillAction's own Begin phase and reset to empty every
+// dash - remembers which enemies already procced this dash's Vendetta effects (mark refresh/Burn/
+// bonus damage window/rank-3 reward) so a marked enemy that keeps pace inside the sweep across
+// OnGoing ticks only procs once per dash, not once per tick. Same shape/precedent as Brute's
+// IronShoulderHitTracker.
+component VendettaStrikeHitTracker
+{
+    array<EntityRef>[8] HitEntities;
+    Byte HitCount;
+}

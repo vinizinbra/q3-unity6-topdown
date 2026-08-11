@@ -41,15 +41,26 @@ component beyond one small addition; built on components that already existed:
   Both trigger points call the same shared `ExplodeOnDestroyUtility.TryDetonate` rather than two
   copies of the same logic - it mirrors `AreaHitData.Detonate`'s own explosion call
   (`HitEffectUtility.ApplyInRadius` + `AreaDetonated`) without needing a `Projectile*`, which nothing
-  carrying `ExplodeOnDestroy` ever has, including the same `BlastRadiusUpgrade`/Bigger Boom radius
-  scaling a directly-thrown bomb gets - so the view layer (`EffectsManager`) needs zero new code
-  either way.
+  carrying `ExplodeOnDestroy` ever has, including the same Unstable Mixture/Skill Area radius scaling
+  a directly-thrown bomb gets - so the view layer (`EffectsManager`) needs zero new code either way.
+  `AreaHitData.Detonate`'s public overload also takes an optional `radiusMultiplier` parameter
+  (default 1) and now returns the final resolved radius - `TryDetonate` is the only caller that ever
+  passes a real `radiusMultiplier`, for Birthday Cake's own rank 2 blast-radius bonus on her landed
+  bomb specifically, and reads the returned radius back to run its own `ForceMarkOnDetonate` sweep for
+  Backblast rank 3 (see `docs/pixie-ascensions.md`); every other `ExplodeOnDestroy` user (Mini Bomb) is
+  unaffected either way.
 
-**Current user:** Pixie's Dash Ascension "Leave Explosive Bomb" (`Resources/Skills/Pixie/
-P_HeroSkillUpgrades/DashBomb.prefab`) - a stationary prototype with a real collider, dropped via a
-generic `Spawn*SkillAction`, carrying `ExplodeOnDestroy` directly (hand-authored in the Editor, not
-via any Mini-Bomb-specific spawner - there isn't one anymore). Any future "spawn something that
-explodes when it's destroyed" feature reuses this same component/hook for free.
+**Current users:** Pixie's **Backblast** Ascension (reworked 2026-08-09 from an instant blast to a
+dropped, fused bomb - `docs/pixie-ascensions.md`) drops a bomb at the dash's start/end via
+`SpawnedEntitySpawner.Spawn` + `f.AddOrGet<ExplodeOnDestroy>{TriggersSpawnUpgrades: true}`, pointed at
+`BombPrototype`/`Explosion` fields still needing Editor authoring - `DashBomb.prefab`
+(`Resources/Skills/Pixie/Pixie_HeroSkillUpgrades/`), a stationary prototype with a real collider kept
+as a working reference `ExplodeOnDestroy` prototype since before Backblast existed in this shape, is an
+existing candidate to point those fields straight at. Pixie's **Pocket Bombs** Ascension
+(`docs/pixie-ascensions.md`) is the other user - any qualifying Pixie explosion has a chance to spawn a
+stationary Mini Bomb the same way, `MiniBombPrototype`/`Explosion` similarly still needing Editor
+authoring (see that doc's own "Current status"). Any future "spawn something that explodes when it's
+destroyed" feature reuses this same component/hook for free.
 
 ## Files
 

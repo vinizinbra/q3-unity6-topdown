@@ -39,6 +39,7 @@ namespace QuantumUser.View.Util
         [Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
         public static void Log(string tag, string message, Object context = null)
         {
+            return;
             if (Disabled) return;
             Debug.Log(Format(tag, message), context);
         }

@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16497903b904e4dd1bb80f6f317d19f7, type: 3}
+  m_Name: FirstStrike
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.FirstStrikePassiveUpgradeData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Kai/Kai_PassiveUpgrades/Kai_PassiveSkillUpgrades/FirstStrike
+    Guid:
+      Value: 318677384688188296
+  Icon: {fileID: 0}
+  DisplayName: First Strike
+  Rarity: 1
+  Description: Your first hit against an enemy deals bonus damage.
+  <MaxRank>k__BackingField: 3
+  RankDescriptions:
+  - Your first hit against an enemy deals 40% bonus damage.
+  - Your first hit against an enemy deals 70% bonus damage.
+  - First Strike deals 100% bonus damage and refreshes after an enemy avoids your
+    damage for 5s.
+  DamageMultiplierBonus:
+  - RawValue: 26214
+  - RawValue: 45875
+  - RawValue: 65536
+  RefreshWindow:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 327680

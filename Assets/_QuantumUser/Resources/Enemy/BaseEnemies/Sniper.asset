@@ -1,0 +1,600 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-7462157274454672309
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e43bc8092b084053aa02a595615b9e5, type: 3}
+  m_Name: SniperProjectile
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ProjectileDeliveryData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/BaseEnemies/Sniper|SniperProjectile
+    Guid:
+      Value: 2520953825289397829
+  MinRandomOffset:
+    RawValue: 0
+  MaxRandomOffset:
+    RawValue: 0
+  HitImpactPrefab: {fileID: 0}
+  HitImpactOffset: {x: 0, y: 0, z: 0}
+  ProjectileData:
+    Id:
+      Value: 3425743098092184891
+  SpawnAnchor: 0
+  SpawnOffset:
+    X:
+      RawValue: 0
+    Y:
+      RawValue: 0
+    Z:
+      RawValue: 0
+  UseArc: 0
+  LaunchAngle:
+    RawValue: 2949120
+  Gravity:
+    RawValue: 1310720
+  WaitForImpact: 0
+--- !u!114 &-6377447115556160875
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e4466fb33c0b49d18f49f2ba3307d49, type: 3}
+  m_Name: SniperProjectileDataAsset
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ProjectileDataAsset
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/BaseEnemies/Sniper|SniperProjectileDataAsset
+    Guid:
+      Value: 3425743098092184891
+  Prototype:
+    Id:
+      Value: 1331367315982856532
+  Movement:
+    Id:
+      Value: 2277807173634677300
+  Hit:
+    Id:
+      Value: 486351176848829060
+  Lifetime:
+    RawValue: 196608
+  HitRadius:
+    RawValue: 0
+  SpawnDelay:
+    RawValue: 0
+  MaxDistance:
+    RawValue: 655360
+--- !u!114 &-3409336907734128814
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9ab76bdf8b404b4993952d6e45e0a17, type: 3}
+  m_Name: SniperStraightProjectile
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.StraightProjectileMovementData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/BaseEnemies/Sniper|SniperStraightProjectile
+    Guid:
+      Value: 2277807173634677300
+  Speed:
+    RawValue: 4915200
+  OverrideDirection: 0
+  Direction:
+    X:
+      RawValue: 0
+    Y:
+      RawValue: 0
+    Z:
+      RawValue: 65536
+  PredictionTime:
+    RawValue: 0
+--- !u!114 &-2808265111315979498
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4621fd94f0164549a85290e2e549ee6, type: 3}
+  m_Name: SniperDistanceMovement
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.MaintainDistanceMovementData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/BaseEnemies/Sniper|SniperDistanceMovement
+    Guid:
+      Value: 1437533042719707456
+  ApplySeparation: 0
+  PreferredMin:
+    RawValue: 393216
+  PreferredMax:
+    RawValue: 589824
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04c8957753d4c417e81337f7a383dcc6, type: 3}
+  m_Name: Sniper
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.EnemyDataAsset
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/BaseEnemies/Sniper
+    Guid:
+      Value: 375525024859964486
+  EnemyName: 
+  Tier: 2
+  Economy:
+    Persistent: 0
+    SpawnProfile:
+      Id:
+        Value: 443472774672561949
+  Stats:
+    MoveSpeed:
+      RawValue: 229376
+    Height:
+      InitialState: 0
+      FlightHeight:
+        RawValue: 131072
+      HoverCheckInterval:
+        RawValue: 65536
+      HoverSpringFrequency:
+        RawValue: 65536
+      HoverSpringDamping:
+        RawValue: 32768
+      CanFly: 0
+      CanBeLaunched: 0
+      CanBeGrounded: 1
+      ClimbProbeThreshold:
+        RawValue: 32768
+      GapProbeThreshold:
+        RawValue: 32768
+      ArcHeight:
+        RawValue: 32768
+      TraversalJumpSpeedMultiplier:
+        RawValue: 65536
+      CanClimbCliffs: 1
+      CliffHeight:
+        RawValue: 262144
+      AffectedByGroundHazards: 0
+      AffectedByShockwaves: 0
+      TargetableByMelee: 1
+      TargetableByProjectiles: 1
+      CanJumpGaps: 1
+      GapDistance:
+        RawValue: 262144
+      CanFallFromCliff: 0
+      FallHeight:
+        RawValue: 0
+    Movement:
+      Id:
+        Value: 1437533042719707456
+    Radius:
+      RawValue: 65536
+    ShieldMultiplier:
+      RawValue: 0
+    Traits: 
+    FrontalDamageReductionAmount:
+      RawValue: 0
+    FrontalDamageReductionArcDegrees:
+      RawValue: 7864320
+    AvoidWalls: 0
+    WallAvoidProbeDistance:
+      RawValue: 65536
+    UseWaypointDetour: 0
+    WaypointArrivalDistance:
+      RawValue: 65536
+  AI:
+    Targeting:
+      Id:
+        Value: 2227200805678239736
+    DetectionRange:
+      RawValue: 655360
+    LeashRange:
+      RawValue: 983040
+  Actions:
+    BasicAction:
+      Id:
+        Value: 4260852017968714972
+    SkillActions: []
+  DeathLingerTime:
+    RawValue: 196608
+  Cost:
+    RawValue: 65536
+  Persistent: 0
+  SpawnProfile:
+    Id:
+      Value: 0
+  MoveSpeed:
+    RawValue: 196608
+  Radius:
+    RawValue: 65536
+  MaxHealth:
+    RawValue: 3276800
+  MaxShield:
+    RawValue: 0
+  ShieldRechargeDelay:
+    RawValue: 131072
+  ShieldRechargeRate:
+    RawValue: 327680
+  Traits: 
+  FrontalDamageReductionAmount:
+    RawValue: 32768
+  FrontalDamageReductionArcDegrees:
+    RawValue: 7864320
+  Height:
+    InitialState: 0
+    FlightHeight:
+      RawValue: 0
+    HoverCheckInterval:
+      RawValue: 0
+    HoverSpringFrequency:
+      RawValue: 0
+    HoverSpringDamping:
+      RawValue: 0
+    CanFly: 0
+    CanBeLaunched: 0
+    CanBeGrounded: 0
+    ClimbProbeThreshold:
+      RawValue: 0
+    GapProbeThreshold:
+      RawValue: 0
+    ArcHeight:
+      RawValue: 0
+    TraversalJumpSpeedMultiplier:
+      RawValue: 0
+    CanClimbCliffs: 0
+    CliffHeight:
+      RawValue: 0
+    AffectedByGroundHazards: 0
+    AffectedByShockwaves: 0
+    TargetableByMelee: 0
+    TargetableByProjectiles: 0
+    CanJumpGaps: 0
+    GapDistance:
+      RawValue: 0
+    CanFallFromCliff: 0
+    FallHeight:
+      RawValue: 0
+  Movement:
+    Id:
+      Value: 0
+  Targeting:
+    Id:
+      Value: 0
+  DetectionRange:
+    RawValue: 655360
+  LeashRange:
+    RawValue: 983040
+  CanBeInterruptedByKnockback: 1
+  KnockbackRecoveryTime:
+    RawValue: 16384
+  BasicAction:
+    Id:
+      Value: 0
+  SkillActions: []
+  ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
+  ViewPrefab: {fileID: 8476845490732343577, guid: 7058e9bfd7a22480aaafd4d81a019b2b, type: 3}
+  FactionSkins: []
+--- !u!114 &831560012838204346
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b3ffe095a046457f99f64ffca9d87e9, type: 3}
+  m_Name: SniperActionData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.EnemyActionData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/BaseEnemies/Sniper|SniperActionData
+    Guid:
+      Value: 4260852017968714972
+  Name: 
+  EngageRange:
+    RawValue: 589824
+  DamageRange:
+    RawValue: 131072
+  Damage:
+    RawValue: 3145728
+  AnticipationTime:
+    RawValue: 65536
+  DirectionTracking: 1
+  IgnoreY: 1
+  Origin: 0
+  DownTime:
+    RawValue: 65536
+  CooldownTime:
+    RawValue: 65536
+  TelegraphStartPercent:
+    RawValue: 65536
+  AimLock: 3
+  AimLockPercent:
+    RawValue: 49152
+  SelectionWeight: 1
+  InterruptibleDuringTelegraph: 1
+  InterruptibleDuringActive: 0
+  Delivery:
+    Id:
+      Value: 2520953825289397829
+  Effects: []
+  Telegraph:
+    Id:
+      Value: 1764423967562142910
+  AnticipationStep:
+    AnimationType: 0
+    Duration: 0.3
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+  BeginStep:
+    AnimationType: 0
+    Duration: 0.3
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+  OnGoingStep:
+    AnimationType: 0
+    Duration: 0.3
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+  EndStep:
+    AnimationType: 0
+    Duration: 0.3
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+--- !u!114 &3291539040604416600
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52edb4eefc1db48109cc7d1ac53b2f13, type: 3}
+  m_Name: SniperTelegraphData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.TelegraphData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/BaseEnemies/Sniper|SniperTelegraphData
+    Guid:
+      Value: 1764423967562142910
+  Shape: 5
+  StartPhase: 0
+  EndPhase: 5
+  LiveTracking: 1
+  LiveTrackingSmoothing: 15
+  TelegraphPrefab: {fileID: 2468440791896092637, guid: 4f8787fca955742b995eeedd8d55d28c, type: 3}
+  SnapToGround: 0
+  LineLength: 1
+  FixedDistanceValue: 9
+  FromOffset: 0
+  ToOffset: 0
+  Width: 0.5
+  RadiusMultiplier: 1
+  GrowthDuration: 1
+  FadeInDuration: 0.15
+  FadeOutDuration: 0.15

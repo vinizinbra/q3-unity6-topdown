@@ -1,0 +1,501 @@
+fileFormatVersion: 2
+guid: b122f64ac770a495c8eb0a902c85316e
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 0
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: ScavengerRaiders_Swarm
+      rect:
+        serializedVersion: 2
+        x: 29
+        y: 786
+        width: 125
+        height: 155
+      alignment: 9
+      pivot: {x: 0.51278615, y: 0.025685562}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ae64d007f106f41f7be34b8d68648e78
+      internalID: 1111134608
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ScavengerRaiders_Melee
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 786
+        width: 84
+        height: 156
+      alignment: 9
+      pivot: {x: 0.48097357, y: -0.002009074}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 43b33aa501fa24d899401eea5765f557
+      internalID: 111323756
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ScavengerRaiders_MeleeWeapon
+      rect:
+        serializedVersion: 2
+        x: 268
+        y: 800
+        width: 102
+        height: 114
+      alignment: 9
+      pivot: {x: -0.0014065013, y: 0.48598173}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e49b7961d7eb7462fb7f1a3fb7653fa5
+      internalID: 397707531
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ScavengerRaiders_Ranged
+      rect:
+        serializedVersion: 2
+        x: 939
+        y: 786
+        width: 85
+        height: 156
+      alignment: 9
+      pivot: {x: 0.4811983, y: -0.02249928}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 13f332dbc2b724895b2b03ac5696d85a
+      internalID: -1846663443
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ScavengerRaiders_RangedGun
+      rect:
+        serializedVersion: 2
+        x: 1044
+        y: 806
+        width: 103
+        height: 84
+      alignment: 9
+      pivot: {x: 0.2678685, y: 0.6141612}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ea3daace5edef44d9a3c5145d254ee7a
+      internalID: -878680949
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ScavengerRaiders_Hound
+      rect:
+        serializedVersion: 2
+        x: 1184
+        y: 786
+        width: 219
+        height: 161
+      alignment: 9
+      pivot: {x: 0.51459605, y: 0.043362256}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 808037ff77dc6424fbb5f6195050c85a
+      internalID: 579929529
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ScavengerRaiders_Bomb
+      rect:
+        serializedVersion: 2
+        x: 44
+        y: 422
+        width: 134
+        height: 168
+      alignment: 9
+      pivot: {x: 0.5596358, y: 0.0053089685}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d7dfce97b5ef5455994552f7b2ca8826
+      internalID: 123753868
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ScavengerRaiders_Mortar
+      rect:
+        serializedVersion: 2
+        x: 1228
+        y: 417
+        width: 86
+        height: 153
+      alignment: 9
+      pivot: {x: 0.5185859, y: -0.0118525885}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a974c1e75843d4da396f60260d977939
+      internalID: -1220643128
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ScavengerRaiders_MortarGun
+      rect:
+        serializedVersion: 2
+        x: 1330
+        y: 424
+        width: 84
+        height: 109
+      alignment: 9
+      pivot: {x: 0.15752302, y: 0.19208379}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9eb70d284e5694babae8dc5d87d89269
+      internalID: 864334246
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ScavengerRaiders_Slammer
+      rect:
+        serializedVersion: 2
+        x: 486
+        y: 414
+        width: 233
+        height: 188
+      alignment: 9
+      pivot: {x: 0.49314076, y: -0.0015734409}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 977ac48731339468c91545166371677a
+      internalID: 1862494732
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ScavengerRaiders_Charger
+      rect:
+        serializedVersion: 2
+        x: 230
+        y: 414
+        width: 218
+        height: 183
+      alignment: 9
+      pivot: {x: 0.5073315, y: 0.0021895946}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c84187aabfd524a22b94ea5496020ace
+      internalID: 1242437404
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ScavengerRaiders_Summoner
+      rect:
+        serializedVersion: 2
+        x: 547
+        y: 77
+        width: 111
+        height: 178
+      alignment: 9
+      pivot: {x: 0.48560175, y: -0.011794101}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a27c3ed6181a5487ead070e25cb7f77f
+      internalID: 1028514064
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ScavengerRaiders_SummonerWeapon
+      rect:
+        serializedVersion: 2
+        x: 846
+        y: 78
+        width: 96
+        height: 190
+      alignment: 9
+      pivot: {x: 0.16703542, y: 0.30652946}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2ee695b172a494e1aae6bb262f7e7abc
+      internalID: 808696837
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shielder
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 72
+        width: 164
+        height: 182
+      alignment: 9
+      pivot: {x: 0.4805095, y: -0.000545879}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1d08cc3e8ca634f8ca4b18e04d8f14fc
+      internalID: -1036192627
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ScavengerRaiders_ChargerElite
+      rect:
+        serializedVersion: 2
+        x: 1063
+        y: 75
+        width: 271
+        height: 183
+      alignment: 9
+      pivot: {x: 0.48230746, y: 0.0021895529}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 12ffded2f1ce24fb5b8dbd08838ffbf2
+      internalID: -1318046581
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 51f4de7ace4de433e9bac850da023338
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      ScavengerRaiders_Bomb: 123753868
+      ScavengerRaiders_Charger: 1242437404
+      ScavengerRaiders_ChargerElite: -1318046581
+      ScavengerRaiders_Hound: 579929529
+      ScavengerRaiders_Melee: 111323756
+      ScavengerRaiders_MeleeWeapon: 397707531
+      ScavengerRaiders_Mortar: -1220643128
+      ScavengerRaiders_MortarGun: 864334246
+      ScavengerRaiders_Ranged: -1846663443
+      ScavengerRaiders_RangedGun: -878680949
+      ScavengerRaiders_Slammer: 1862494732
+      ScavengerRaiders_Summoner: 1028514064
+      ScavengerRaiders_SummonerWeapon: 808696837
+      ScavengerRaiders_Swarm: 1111134608
+      Shielder: -1036192627
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -1,0 +1,71 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36894b1309559437e88946cb38c41d5c, type: 3}
+  m_Name: AftershockSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.AftershockSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Brute/Brute_HeroSkill/Brute_HeroSkillUpgrades/AftershockSkillAction
+    Guid:
+      Value: 533225152632302883
+  Icon: {fileID: 0}
+  DisplayName: Aftershock
+  Rarity: 2
+  RankDescriptions:
+  - When Juggernaut ends, release a shockwave dealing 100% of Juggernaut Skill Damage
+    around you.
+  - Juggernaut's end shockwave deals 100% of Juggernaut Skill Damage, +15% per enemy
+    struck by Discharge during the cast (max 6 stacks), +20% radius.
+  - Juggernaut's end shockwave deals 100% of Juggernaut Skill Damage, +20% per enemy
+    struck by Discharge during the cast (max 8 stacks), +20% radius - if you built
+    up 5+ stacks, it also Stuns affected enemies for 1s.
+  <MaxRank>k__BackingField: 3
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 0
+  Description: When Juggernaut ends, release a shockwave that grows stronger the
+    more enemies you struck with Discharge during the cast.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  RadiusMultiplier:
+  - RawValue: 65536
+  - RawValue: 78643
+  - RawValue: 78643
+  StackDamagePercent:
+  - RawValue: 0
+  - RawValue: 9830
+  - RawValue: 13107
+  MaxStacks: 000608
+  BlastEffectPrefab: {fileID: 6350743763286976369, guid: 2dcb44456e58b4eb3823d152a70d114f, type: 3}

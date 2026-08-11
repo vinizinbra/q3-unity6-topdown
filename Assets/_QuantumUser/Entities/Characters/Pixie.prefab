@@ -247,6 +247,7 @@ GameObject:
   - component: {fileID: 8215253040534427600}
   - component: {fileID: 1170755833417969864}
   - component: {fileID: 3061145013519703360}
+  - component: {fileID: 7802862760426973587}
   m_Layer: 7
   m_Name: Pixie
   m_TagString: Untagged
@@ -376,7 +377,7 @@ MonoBehaviour:
         X:
           RawValue: 0
         Y:
-          RawValue: 0
+          RawValue: 32768
         Z:
           RawValue: 0
       BoxExtents:
@@ -982,6 +983,7 @@ MonoBehaviour:
   isLocalPlayer: 0
   viewTransform: {fileID: 0}
   isBot: 0
+  weaponRowOffset: {x: 0, y: -1.5, z: 0}
   groundLayer:
     serializedVersion: 2
     m_Bits: 64
@@ -2402,3 +2404,20 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5292615511809375842, guid: 95a3634ae517a460cb68deae3f0770d3, type: 3}
   m_PrefabInstance: {fileID: 2127705868109635390}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &7802862760426973587
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 506928541793919104}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1564e64c052e94f26b57d5d0e562825e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuantumUser.View.Managers.EntityViewCacheInit
+  _playerRef:
+    _index: 0
+  initialized: 0
+  executeOnlyOnLocal: 0
+  isLocal: 0

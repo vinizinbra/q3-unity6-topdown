@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapon/WeaponPerk/FastLoader
     Guid:
       Value: 427983149550015854
-  Icon: {fileID: 301000022, guid: c6be27ae176d44f3594332e40fa484ed, type: 3}
+  Icon: {fileID: -803493184, guid: 017cb6454ed9743478842fb02d741366, type: 3}
   DisplayName: Fast Loader
   Rarity: 0
   Description: '{0:+0;-0}% Reload Speed'

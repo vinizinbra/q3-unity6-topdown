@@ -9,10 +9,10 @@ namespace Quantum
     // state (on for the whole buff window) rather than a one-shot occurrence. Checks both skill
     // slots and the resolved asset's own type rather than a fixed slot index, since which slot
     // ends up carrying BerserkSkillData is per-hero prototype config, not guaranteed.
-    // Rage Overdrive (RageOverdrive.Overdriven, set once Stacks hits MaxStacks - see
-    // RageOverdriveUtility.TryAdvanceStack) swaps to a second aura/sprite pair on top of the base
-    // Berserk ones, polled the same way for the same reason: it's a continuous state for the rest
-    // of the activation, not a one-shot.
+    // Max Rage (RageOverdrive.Stacks >= MaxStacks - same live condition
+    // RageOverdriveUtility.IsAtMaxRage checks Simulation-side) swaps to a second aura/sprite pair on
+    // top of the base Berserk ones, polled the same way for the same reason: it's a continuous state
+    // for as long as Rage stays maxed, not a one-shot.
     public class BerserkFxView : CustomQuantumEntityViewComponent
     {
         [SerializeField] private ParticleSystem berserkAura;
@@ -122,7 +122,11 @@ namespace Quantum
 
         private static bool IsOverdriven(Frame f, EntityRef entity)
         {
-            return f.Has<RageOverdrive>(entity) == true && f.Get<RageOverdrive>(entity).Overdriven == true;
+            if (f.Has<RageOverdrive>(entity) == false)
+                return false;
+
+            RageOverdrive rage = f.Get<RageOverdrive>(entity);
+            return rage.Stacks >= rage.MaxStacks;
         }
     }
 }

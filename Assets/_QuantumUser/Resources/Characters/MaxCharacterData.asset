@@ -25,11 +25,11 @@ MonoBehaviour:
   BaseArmor:
     RawValue: 0
   BaseMaxShield:
-    RawValue: 6553600
+    RawValue: 3276800
   ShieldRechargeDelay:
-    RawValue: 196608
+    RawValue: 327680
   ShieldRechargeRate:
-    RawValue: 1310720
+    RawValue: 655360
   DamageMultiplier:
     RawValue: 65536
   WeaponDamageMultiplier:
@@ -43,7 +43,7 @@ MonoBehaviour:
   ElementalChance:
     RawValue: 32768
   AttackSpeedMultiplier:
-    RawValue: 65536
+    RawValue: 78643
   ReloadSpeedMultiplier:
     RawValue: 65536
   ProjectileSpeedMultiplier:
@@ -108,27 +108,17 @@ MonoBehaviour:
       Value: 294791046206285621
   StartingWeapon:
     Id:
-      Value: 530648557105192714
+      Value: 532371987665164333
   DashSkillUpgrades:
   - Id:
-      Value: 361757256106766314
+      Value: 377700293714812557
   - Id:
       Value: 316536704450074610
-  - Id:
-      Value: 421846226953410185
   PassiveUpgrades:
-  - Id:
-      Value: 455632637428084137
-  - Id:
-      Value: 513498353707284049
   - Id:
       Value: 514137246864066863
   - Id:
       Value: 423077782144865530
-  - Id:
-      Value: 287829558526403937
-  - Id:
-      Value: 281848167375705328
   - Id:
       Value: 532309429254581296
   - Id:

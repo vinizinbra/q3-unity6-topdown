@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f1087dff631145eca1abcc8cddc9f0e, type: 3}
+  m_Name: FullThrottleSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.FullThrottleSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Max/Max_HeroSkill/Max_HeroSkillUpgrades/Overdrive/FullThrottleSkillAction
+    Guid:
+      Value: 503198828803139370
+  Icon: {fileID: 0}
+  DisplayName: Full Throttle
+  Rarity: 1
+  RankDescriptions:
+  - 'At max Rage: +20% Weapon Damage.'
+  - 'At max Rage: +30% Weapon Damage, +50% Reload Speed.'
+  - 'At max Rage: +40% Weapon Damage, instant reloads.'
+  <MaxRank>k__BackingField: 3
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 0
+  Description: At max Rage during Overdrive, gain bonus Weapon Damage - eventually
+    Reload Speed and instant reloads too.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  WeaponDamageBonus:
+  - RawValue: 13107
+  - RawValue: 19661
+  - RawValue: 26214
+  ReloadSpeedBonus:
+  - RawValue: 0
+  - RawValue: 32768
+  - RawValue: 32768

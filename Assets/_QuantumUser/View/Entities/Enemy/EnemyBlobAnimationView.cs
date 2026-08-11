@@ -72,6 +72,17 @@ namespace Quantum
         [SerializeField, Tooltip("Squash pop played at the midpoint of the sink/rise transition.")] private float burrowSquash = 0.5f;
         [SerializeField, Tooltip("How far the body visually sinks into the ground as it shrinks away.")] private float burrowSinkAmount = 0.3f;
 
+        [Header("Jump (cliff-climb/gap-jump traversal hop - EnemyMovementUtility.BeginTraversalJump - small crouch then a pop)")]
+        [SerializeField, Tooltip("Squash/sink strength of the crouch played during Enemy.TraversalJumpAnticipationTimer - the real windup EnemyMovementUtility.QueueTraversalJump opens before the hop launches (EnemyMovementUtility.TraversalJumpAnticipationTime), not a guessed fraction of the hop itself.")]
+        private float jumpCrouchSquash = 0.3f;
+        [SerializeField] private float jumpCrouchSinkAmount = 0.1f;
+        [SerializeField, Tooltip("Stretch pop played the instant the anticipation ends and the hop actually launches, decaying back to neutral by the time it lands (Enemy.TraversalJumpTimer/TraversalJumpDuration) - the vertical arc itself is already baked into Transform3D.Position by TickTraversalJump, so this is purely the squash/stretch tell layered on top.")]
+        private float jumpPopStretch = 0.35f;
+
+        [Header("Center Pivot (AttackVisualStep.CenterPivot)")]
+        [SerializeField, Tooltip("Default local-space height, in root's own unscaled units, from root's pivot (its base/ground-contact point - see dieToppleDegrees' tooltip) up to the point a CenterPivot-enabled step rotates around, used whenever that step's own PivotHeightOverride is left at 0. 0 here too = auto-detect from EnemyViewRig.ReferenceSprite's bounds at spawn, so it self-corrects per rig without hand-tuning; set explicitly only if a rig's sprite bounds don't line up with its actual visual center.")]
+        private float defaultCenterPivotHeight = 0f;
+
         [Header("General")]
         [SerializeField] private float squashLerpSpeed = 14f;
         [SerializeField] private float volumePreservation = 0.6f;
@@ -81,12 +92,26 @@ namespace Quantum
         [SerializeField, Tooltip("Assign any AttackVisualStep here (e.g. copy one out of an EnemyActionData asset) to preview it with the button below, without a running simulation.")]
         private AttackVisualStep debugTestStep;
 
-        private enum State { Idle, Run, AttackStep, Die, Burrow }
+        private enum State { Idle, Run, AttackStep, Die, Burrow, Jump }
         private State _state = State.Idle;
         private float _stateTimer;
         private float _horizontalSpeed;
         private EnemyActionPhase? _lastEnemyPhase;
         private bool _lastBurrowed;
+        private bool _lastJumping;
+
+        // True while Enemy.TraversalJumpAnticipationTimer is still counting down (crouch), false
+        // once the real hop has actually launched (TraversalJumpDuration - pop/flight). Sampled once
+        // per QUpdate and read by UpdatePose's Jump case alongside _jumpT below.
+        private bool _jumpAnticipating;
+
+        // 0-1 progress through whichever of the two phases above is currently active - the
+        // anticipation window (TraversalJumpAnticipationTimer counting down from
+        // EnemyMovementUtility.TraversalJumpAnticipationTime) or the hop itself (TraversalJumpTimer/
+        // TraversalJumpDuration) - driven by the simulation's own timers rather than a separately-
+        // ticking local one, so the crouch/pop animation always matches the real hop exactly,
+        // regardless of its actual duration (climb vs. gap, slow vs. fast enemy).
+        private float _jumpT;
 
         // The step currently driving State.AttackStep's pose - set by PlayAttackStep, read by
         // UpdatePose. Owned externally (EnemyAttackVisualsView / the debug button below).
@@ -96,6 +121,11 @@ namespace Quantum
         private Vector3 _headBaseLocalPos, _torsoBaseLocalPos;
         private Vector3 _rootBaseLocalPos, _rootBaseScale;
         private Quaternion _armBaseLocalRot = Quaternion.identity;
+        private Vector3 _armBaseScale = Vector3.one;
+        private Vector3 _armBaseLocalPos;
+
+        // Only used when defaultCenterPivotHeight is left at 0 - see CacheBaseline.
+        private float _autoCenterPivotHeight;
 
         // Positive = compressed, negative = stretched. Single value - unlike the player's blob,
         // there's no separate jump-squash to keep independent from the idle/run breathing squash.
@@ -117,6 +147,11 @@ namespace Quantum
         private float _burrowT;
         private bool _burrowSinking;
 
+        // Optional sibling on the same generic entity GameObject (not the rig) - see SetShadow.
+        // Null for any enemy view with no HasShadow component.
+        private HasShadow _shadow;
+        private float _shadowBaseScale;
+
         public override void Awake()
         {
             base.Awake();
@@ -133,12 +168,30 @@ namespace Quantum
             CacheBaseline();
         }
 
+        // Called by EnemyView.ConnectRig, AFTER EnemyView.SpawnSprite has already called
+        // shadow.SetBaseScale(radius * 2f) - so shadow.BaseScale here is already the entity's real
+        // radius-based footprint, not whatever flat value HasShadow was authored with. Cached once
+        // rather than read live every frame since nothing else ever changes it after spawn.
+        public void SetShadow(HasShadow shadow)
+        {
+            _shadow = shadow;
+            _shadowBaseScale = shadow != null ? shadow.BaseScale : 0f;
+        }
+
         private void CacheBaseline()
         {
             if (root != null) { _rootBaseLocalPos = root.localPosition; _rootBaseScale = root.localScale; }
             if (head != null) { _headBaseScale = head.localScale; _headBaseLocalPos = head.localPosition; }
             if (torso != null) { _torsoBaseScale = torso.localScale; _torsoBaseLocalPos = torso.localPosition; }
-            if (arm != null) { _armBaseLocalRot = arm.localRotation; }
+            if (arm != null) { _armBaseLocalRot = arm.localRotation; _armBaseScale = arm.localScale; _armBaseLocalPos = arm.localPosition; }
+
+            // rig.ReferenceSprite.bounds is world-space at this point (fit scale/position already
+            // applied by EnemyView.SpawnSprite before SetRig runs) - InverseTransformPoint converts
+            // that back into root's own unscaled local frame, the same units defaultCenterPivotHeight/
+            // PivotHeightOverride are authored in, so a 0 (unset) field transparently falls back to
+            // this per-rig estimate.
+            if (root != null && rig != null && rig.ReferenceSprite != null)
+                _autoCenterPivotHeight = root.InverseTransformPoint(rig.ReferenceSprite.bounds.center).y;
         }
 
         // FacingSign mirrors root's own scale.x sign (+1 = right, -1 = left) - exposed so
@@ -183,6 +236,13 @@ namespace Quantum
         }
 
         [Button]
+        public void TriggerJump()
+        {
+            _state = State.Jump;
+            UpdatePose(0f);
+        }
+
+        [Button]
         public void TriggerBurrowDown()
         {
             _state = State.Burrow;
@@ -204,7 +264,9 @@ namespace Quantum
                 return;
 
             var frame = game.Frames.Predicted;
-            EnemyActionPhase? enemyPhase = frame.Has<Enemy>(_entityRef) == true ? frame.Get<Enemy>(_entityRef).Phase : null;
+            bool hasEnemy = frame.Has<Enemy>(_entityRef);
+            Enemy enemy = hasEnemy == true ? frame.Get<Enemy>(_entityRef) : default;
+            EnemyActionPhase? enemyPhase = hasEnemy == true ? enemy.Phase : null;
 
             if (enemyPhase.HasValue == true)
             {
@@ -228,6 +290,32 @@ namespace Quantum
 
                 _lastBurrowed = isBurrowed;
             }
+
+            // Two back-to-back windows, both watched the same edge-triggered way as Burrowed above:
+            // TraversalJumpAnticipationTimer counting down (EnemyMovementUtility.QueueTraversalJump's
+            // brief crouch windup) then TraversalJumpDuration active (the real kinematic hop -
+            // BeginTraversalJump/TickTraversalJump). <= 0 on both means nothing going on.
+            bool isAnticipatingJump = hasEnemy == true && enemy.TraversalJumpAnticipationTimer > FP._0;
+            bool isJumpInFlight = hasEnemy == true && enemy.TraversalJumpDuration > FP._0;
+            bool isJumping = isAnticipatingJump == true || isJumpInFlight == true;
+
+            if (isJumping != _lastJumping)
+            {
+                if (isJumping == true)
+                    TriggerJump();
+
+                _lastJumping = isJumping;
+            }
+
+            // _jumpT rides whichever phase's own simulation timer is currently active rather than a
+            // separately-ticking local one, so the crouch/pop always matches the real windup/hop
+            // exactly, whether it's a short climb or a long, speed-scaled gap jump.
+            _jumpAnticipating = isAnticipatingJump;
+            _jumpT = isAnticipatingJump == true
+                ? Mathf.Clamp01(1f - (enemy.TraversalJumpAnticipationTimer / EnemyMovementUtility.TraversalJumpAnticipationTime).AsFloat)
+                : isJumpInFlight == true
+                    ? Mathf.Clamp01((enemy.TraversalJumpTimer / enemy.TraversalJumpDuration).AsFloat)
+                    : 0f;
 
             Vector3 velocity = frame.Has<PhysicsBody3D>(_entityRef) == true
                 ? frame.Get<PhysicsBody3D>(_entityRef).Velocity.ToUnityVector3()
@@ -264,7 +352,8 @@ namespace Quantum
 
             bool triggerStillPlaying = (_state == State.AttackStep && _currentStep != null && _stateTimer < _currentStep.Duration)
                 || _state == State.Die // holds its final fallen pose once triggered - never reverts on its own
-                || (_state == State.Burrow && (isBurrowed == true || _burrowT > 0f)); // holds hidden while still Burrowed, then plays out the rise
+                || (_state == State.Burrow && (isBurrowed == true || _burrowT > 0f)) // holds hidden while still Burrowed, then plays out the rise
+                || (_state == State.Jump && isJumping == true); // reverts to grounded the instant the real hop lands
 
             if (triggerStillPlaying == false)
                 _state = DetermineGroundedState(_horizontalSpeed);
@@ -279,6 +368,10 @@ namespace Quantum
             float bobTarget = 0f;
             float depthTarget = 0f;
             float armRotationTarget = 0f;
+            float armScaleTarget = 0f;
+            float punchScaleTarget = 0f;
+            bool centerPivot = false;
+            float pivotHeightOverride = 0f;
 
             switch (_state)
             {
@@ -313,6 +406,15 @@ namespace Quantum
                     float duration = step.Duration;
                     float t = duration > 0f ? Mathf.Clamp01(_stateTimer / duration) : 1f;
                     float decay = 1f - t; // ease-out toward neutral; styles that decay from an instant peak use this
+
+                    // Author-controlled per step (AttackVisualStepDrawer only shows these for the
+                    // rotation-producing types below) rather than hardcoded per AnimationType - a
+                    // whip-crack Snap might want the base pivot's arc just as much as a rocking
+                    // Shake, while a big Spin almost always wants to stay centered. Read once here
+                    // regardless of which case below actually sets rockTarget, since exactly one of
+                    // them can run per step.
+                    centerPivot = step.CenterPivot;
+                    pivotHeightOverride = step.PivotHeightOverride;
 
                     switch (step.AnimationType)
                     {
@@ -361,10 +463,9 @@ namespace Quantum
                         }
 
                         case AttackAnimationType.Lunge:
-                            // Instant stretch pop (set on trigger) that decays back to neutral, plus a quick
-                            // forward punch along Z - simple committed strike, no windup needed to read it.
+                            // Instant stretch pop (set on trigger) that decays back to neutral -
+                            // simple committed strike, no windup needed to read it.
                             _squashT = Mathf.Lerp(_squashT, 0f, 1f - Mathf.Exp(-squashLerpSpeed * dt));
-                            depthTarget = step.Lunge.Depth * decay * decay * _facingSign;
                             break;
 
                         case AttackAnimationType.Slam:
@@ -378,11 +479,9 @@ namespace Quantum
 
                         case AttackAnimationType.Snap:
                         {
-                            // Whip-crack rotation toward the facing direction that snaps back to neutral fast,
-                            // plus a forward punch along Z riding the same envelope.
+                            // Whip-crack rotation toward the facing direction that snaps back to neutral fast.
                             float snapT = decay * decay * decay;
                             rockTarget = step.Snap.Degrees * snapT * _facingSign;
-                            depthTarget = step.Snap.Depth * snapT * _facingSign;
                             _squashT = Mathf.Lerp(_squashT, 0f, 1f - Mathf.Exp(-squashLerpSpeed * dt));
                             break;
                         }
@@ -418,6 +517,12 @@ namespace Quantum
                             float armSwingBackDegrees = step.ArmSwingBack.Degrees * swingT;
                             armRotationTarget = armSwingBackDegrees;
 
+                            // Rides the exact same swingT envelope as the rotation above, so a
+                            // wind-up reads as one coiling motion (rotate+grow together) rather than
+                            // two tells racing at different rates. 0 (default) = no scale at all,
+                            // identical to this type's original rotation-only behavior.
+                            armScaleTarget = step.ArmSwingBack.ArmScale * swingT;
+
                             // BodyFollow lets a fraction of the same coil bleed into the body's own
                             // rock so the torso doesn't stay dead-still while only the arm moves -
                             // rockTarget drives root's OWN rotation directly (not a child), so this
@@ -434,9 +539,45 @@ namespace Quantum
                             float snapT = decay * decay * decay;
                             float armSnapDegrees = step.ArmSnap.Degrees * snapT;
                             armRotationTarget = armSnapDegrees;
+
+                            // Same snapT envelope as the rotation above - see ArmSwingBack's own
+                            // ArmScale comment. 0 (default) = no scale, original behavior.
+                            armScaleTarget = step.ArmSnap.ArmScale * snapT;
+
                             rockTarget = armSnapDegrees * step.ArmSnap.BodyFollow * _facingSign;
                             break;
                         }
+
+                        case AttackAnimationType.ArmPunch:
+                        {
+                            // Standalone punch (no paired windup step needed) combining ArmSnap's own
+                            // whip-crack rotation envelope, PunchScale's own ring formula retargeted
+                            // to the arm alone, and a short extra jitter that only shows up right at
+                            // the moment of impact - see ArmPunchParams' own class comment.
+                            float punchT = decay * decay * decay;
+                            float armPunchDegrees = step.ArmPunch.Degrees * punchT;
+
+                            // impactWindow decays much faster than punchT (decay^6 vs decay^3) so the
+                            // extra jitter only rattles through the first sliver of the step instead
+                            // of lingering through the whole whip-crack - a brief "impact" accent, not
+                            // a second sustained shake layered under the punch.
+                            float impactWindow = decay * decay * decay * decay * decay * decay;
+                            float impactShake = Mathf.Sin(_stateTimer * step.ArmPunch.ImpactShakeFrequency * Mathf.PI * 2f) * step.ArmPunch.ImpactShakeDegrees * impactWindow;
+                            armRotationTarget = armPunchDegrees + impactShake;
+
+                            armScaleTarget = Mathf.Sin(t * step.ArmPunch.ScaleFrequency * Mathf.PI * 2f) * decay * step.ArmPunch.ScaleStrength;
+
+                            rockTarget = armPunchDegrees * step.ArmPunch.BodyFollow * _facingSign;
+                            break;
+                        }
+
+                        case AttackAnimationType.PunchScale:
+                            // Elastic uniform scale punch - decaying ring from the moment the step
+                            // starts, applied on top of (not through) _squashT/volumePreservation so
+                            // it grows/shrinks the whole body together instead of squashing one axis
+                            // against another - see ApplyPose's punchScaleMult.
+                            punchScaleTarget = Mathf.Sin(t * step.PunchScale.Frequency * Mathf.PI * 2f) * decay * step.PunchScale.Strength;
+                            break;
                     }
                     break;
                 }
@@ -466,6 +607,31 @@ namespace Quantum
                     break;
                 }
 
+                case State.Jump:
+                {
+                    // Small crouch (compress + sink) through the real anticipation window
+                    // (Enemy.TraversalJumpAnticipationTimer, opened by
+                    // EnemyMovementUtility.QueueTraversalJump), then a stretch pop the instant the
+                    // hop actually launches that decays back to neutral by landing - same crouch/
+                    // decay shapes AttackAnimationType.Crouch/Slam already use for a windup/impact
+                    // tell, just driven by the hop's own two real timers (_jumpAnticipating/_jumpT)
+                    // instead of an attack step's. The vertical arc itself is already baked into
+                    // Transform3D.Position by TickTraversalJump - this is purely the squash character
+                    // animation layered on top, not a substitute for it.
+                    if (_jumpAnticipating == true)
+                    {
+                        float crouchT = Mathf.Sin(_jumpT * Mathf.PI * 0.5f);
+                        _squashT = Mathf.Lerp(_squashT, jumpCrouchSquash * crouchT, 1f - Mathf.Exp(-squashLerpSpeed * dt));
+                        bobTarget = -jumpCrouchSinkAmount * crouchT;
+                    }
+                    else
+                    {
+                        float decay = 1f - _jumpT;
+                        _squashT = Mathf.Lerp(_squashT, -jumpPopStretch * decay * decay, 1f - Mathf.Exp(-squashLerpSpeed * dt * 2f));
+                    }
+                    break;
+                }
+
                 case State.Burrow:
                 {
                     // Driven toward 1 (hidden) while sinking, back toward 0 (visible) while rising -
@@ -483,7 +649,7 @@ namespace Quantum
                 }
             }
 
-            ApplyPose(leanTarget, rockTarget, bobTarget, depthTarget, armRotationTarget);
+            ApplyPose(leanTarget, rockTarget, bobTarget, depthTarget, armRotationTarget, armScaleTarget, punchScaleTarget, centerPivot, pivotHeightOverride);
         }
 
         private State DetermineGroundedState(float horizontalSpeed)
@@ -512,7 +678,7 @@ namespace Quantum
             }
         }
 
-        private void ApplyPose(float leanDegrees, float rockDegrees, float bobOffset, float depthOffset = 0f, float armRotationDegrees = 0f)
+        private void ApplyPose(float leanDegrees, float rockDegrees, float bobOffset, float depthOffset = 0f, float armRotationDegrees = 0f, float armScaleOffset = 0f, float punchScaleOffset = 0f, bool centerPivot = false, float pivotHeightOverride = 0f)
         {
             float verticalMult = Mathf.Clamp(1f - _squashT * volumePreservation, 0.15f, 3f);
             float horizontalMult = Mathf.Clamp(1f / verticalMult, 0.3f, 3f);
@@ -522,13 +688,36 @@ namespace Quantum
             // in practice only one is ever non-zero at a time for a given enemy.
             float shrinkMult = (1f - Easing.Evaluate(_dieShrinkT, Ease.InBack)) * (1f - Easing.Evaluate(_burrowT, Ease.InOutSine));
 
+            // Ground shadow blob (GroundBlobManager) sizes itself purely off HasShadow.BaseScale -
+            // it never reads the sprite's own live scale - so without this it would sit at full
+            // size while the sprite above shrinks to nothing during a Die/Burrow animation. Clamped
+            // to 0 (not left raw) since Ease.InBack can briefly overshoot past 1/below 0 for its
+            // anticipation dip, and a negative localScale on the shadow's own quad would flip it
+            // rather than just shrinking it - a glitch the sprite's own back-ease overshoot doesn't
+            // have this same problem with, since a brief inverted flash there just reads as part of
+            // the squash.
+            if (_shadow != null)
+                _shadow.SetBaseScale(_shadowBaseScale * Mathf.Max(0f, shrinkMult));
+
+            // AttackAnimationType.PunchScale's own channel - applied uniformly across all axes, on
+            // top of (not blended with) the squash/stretch mults above, so it reads as the whole
+            // body growing/shrinking rather than one axis fighting another.
+            float punchScaleMult = 1f + punchScaleOffset;
+
             // No torso to carry the squash - root is the whole visible body, so it takes the
             // squash directly instead of just facing/lean/bob.
             bool rootCarriesSquash = torso == null;
 
+            // Z scale is left at each transform's own authored base below (never multiplied by
+            // horizontalMult/shrinkMult/punchScaleMult) - this is a 2D sprite game, a flat quad has
+            // no visible depth extent, so scaling Z has no visible effect regardless of what would
+            // have driven it.
+
             if (torso != null)
             {
-                torso.localScale = Vector3.Scale(_torsoBaseScale, new Vector3(horizontalMult, verticalMult, horizontalMult)) * shrinkMult;
+                Vector3 torsoScale = Vector3.Scale(_torsoBaseScale, new Vector3(horizontalMult, verticalMult, horizontalMult)) * shrinkMult * punchScaleMult;
+                torsoScale.z = _torsoBaseScale.z;
+                torso.localScale = torsoScale;
                 torso.localPosition = _torsoBaseLocalPos;
             }
 
@@ -536,7 +725,9 @@ namespace Quantum
             {
                 float headVertical = Mathf.Lerp(1f, verticalMult, headSquashInfluence);
                 float headHorizontal = Mathf.Lerp(1f, horizontalMult, headSquashInfluence);
-                head.localScale = Vector3.Scale(_headBaseScale, new Vector3(headHorizontal, headVertical, headHorizontal)) * shrinkMult;
+                Vector3 headScale = Vector3.Scale(_headBaseScale, new Vector3(headHorizontal, headVertical, headHorizontal)) * shrinkMult * punchScaleMult;
+                headScale.z = _headBaseScale.z;
+                head.localScale = headScale;
                 head.localPosition = _headBaseLocalPos;
             }
 
@@ -545,27 +736,46 @@ namespace Quantum
                 var localPos = _rootBaseLocalPos;
                 localPos.y += bobOffset;
                 localPos.z += depthOffset;
-                root.localPosition = localPos;
 
                 float rootVerticalMult = rootCarriesSquash == true ? verticalMult : 1f;
                 float rootHorizontalMult = rootCarriesSquash == true ? horizontalMult : 1f;
 
                 var scale = _rootBaseScale;
-                scale.x *= rootHorizontalMult * _facingSign * shrinkMult;
-                scale.y *= rootVerticalMult * shrinkMult;
-                scale.z *= rootHorizontalMult * shrinkMult;
+                scale.x *= rootHorizontalMult * _facingSign * shrinkMult * punchScaleMult;
+                scale.y *= rootVerticalMult * shrinkMult * punchScaleMult;
                 root.localScale = scale;
 
                 float totalTilt = leanDegrees + rockDegrees;
+                var tiltRotation = Quaternion.Euler(0f, 0f, totalTilt);
+
+                // AttackVisualStep.CenterPivot (only settable on the rotation-producing step types -
+                // see AttackVisualStepDrawer) would otherwise rock around root's own base/ground
+                // pivot like every other tilt source here - fine for those by default (idle
+                // wobble/run rock/die topple are meant to rock from the ground, and most rock/lean
+                // tells read fine that way too), but a step can opt into compensating position by
+                // the pivot-to-center offset rotated by this frame's tilt instead - the same trick
+                // as rotating/scaling around an arbitrary pivot: keeps the point pivotHeight up from
+                // root's origin visually fixed while root itself still rotates (and its base swings)
+                // around it. A big Spin almost always wants this; a whip-crack Snap usually doesn't.
+                if (centerPivot)
+                {
+                    float pivotHeight = pivotHeightOverride != 0f ? pivotHeightOverride
+                        : defaultCenterPivotHeight != 0f ? defaultCenterPivotHeight
+                        : _autoCenterPivotHeight;
+                    Vector3 pivotOffset = Vector3.Scale(scale, new Vector3(0f, pivotHeight, 0f));
+                    localPos += pivotOffset - tiltRotation * pivotOffset;
+                }
+
+                root.localPosition = localPos;
 
                 if (billboardToCamera && Camera.main != null)
                 {
                     var camForward = Camera.main.transform.forward;
-                    root.rotation = Quaternion.LookRotation(camForward, Vector3.up) * Quaternion.Euler(0f, 0f, totalTilt);
+                    root.rotation = Quaternion.LookRotation(camForward, Vector3.up) * tiltRotation;
                 }
                 else
                 {
-                    root.localRotation = Quaternion.Euler(0f, 0f, totalTilt);
+                    root.localRotation = tiltRotation;
                 }
             }
 
@@ -573,7 +783,25 @@ namespace Quantum
             // top of root's tilt/facing-flip above since arm is a child of root - no camera-facing
             // math needed here, root already handles that for the whole subtree.
             if (arm != null)
+            {
                 arm.localRotation = _armBaseLocalRot * Quaternion.Euler(0f, 0f, armRotationDegrees);
+
+                // X/Y only, on top of the arm's OWN authored base scale (not root's punchScaleMult) -
+                // arm is a child of root, so it already inherits root's own scale/facing-flip
+                // through the transform hierarchy; this only adds the arm-specific channel
+                // ArmSwingBack/ArmSnap/ArmPunch drive on top of that. Z is left at its authored base,
+                // never multiplied - this is a 2D sprite game, a flat quad's Z scale is never
+                // actually visible regardless of what drives it.
+                Vector2 armScaleMult = (Vector2)_armBaseScale * (1f + armScaleOffset);
+                arm.localScale = new Vector3(armScaleMult.x, armScaleMult.y, _armBaseScale.z);
+
+                // Reset to the arm's own rest local position every frame - no channel currently
+                // offsets it (a Z-depth punch offset isn't visible on a flat 2D sprite, so it was
+                // removed rather than kept as a dead field/channel), but this still guards against
+                // ViewPrefabPool reuse leaving a residual position from a previous enemy's rig, same
+                // reasoning as GunBaseLocalPosition's own comment.
+                arm.localPosition = _armBaseLocalPos;
+            }
         }
     }
 }

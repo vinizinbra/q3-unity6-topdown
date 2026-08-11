@@ -131,8 +131,8 @@ GameObject:
   - component: {fileID: 1280822153769131064}
   - component: {fileID: 2029515808838196738}
   - component: {fileID: 3536497076714000028}
-  - component: {fileID: 2469097921498833767}
   - component: {fileID: 629190468801714220}
+  - component: {fileID: 7328805956511106015}
   m_Layer: 0
   m_Name: RiftShard
   m_TagString: Untagged
@@ -429,21 +429,6 @@ MonoBehaviour:
   OnEntityDestroyed:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &2469097921498833767
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4796121196519982832}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 610e43b81b1784979bf65beb0194ad3f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Quantum.Unity::Quantum.QPrototypeExpOrb
-  Prototype:
-    Value:
-      RawValue: 0
 --- !u!114 &629190468801714220
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -463,6 +448,23 @@ MonoBehaviour:
       RawValue: 32768
     FloatSpeed:
       RawValue: 32768
+--- !u!114 &7328805956511106015
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4796121196519982832}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3998923eb19d749208051b069820bed8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Quantum.Unity::Quantum.QPrototypeCurrencyOrb
+  Prototype:
+    Type:
+      Value: 2
+    Value:
+      RawValue: 0
 --- !u!1 &7536201003123196668
 GameObject:
   m_ObjectHideFlags: 0
@@ -491,7 +493,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.8, y: 0.8, z: 0.1}
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 4389583454854229697}
@@ -546,7 +548,7 @@ SpriteRenderer:
   m_SortingOrder: -2
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 79ccc992bd3fb4d74a150f8141bb9949, type: 3}
-  m_Color: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
+  m_Color: {r: 0.6603774, g: 0.08410467, b: 0.24875394, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0

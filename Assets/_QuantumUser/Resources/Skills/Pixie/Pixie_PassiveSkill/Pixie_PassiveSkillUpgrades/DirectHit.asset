@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8e67057abbe6c4954a4a5617a012aaff, type: 3}
+  m_Name: DirectHit
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.DirectHitPassiveUpgradeData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Pixie/Pixie_PassiveSkill/Pixie_PassiveSkillUpgrades/DirectHit
+    Guid:
+      Value: 452474009302283869
+  Icon: {fileID: 23065039, guid: b217254d41b6945b1873986186a25786, type: 3}
+  DisplayName: Direct Hit
+  Rarity: 2
+  Description: Rewards accurate Bunny Bomb placement - enemies inside the inner blast
+    zone take bonus damage. At rank 3, they're also knocked back hard.
+  <MaxRank>k__BackingField: 3
+  RankDescriptions:
+  - Enemies inside the Direct Hit area take +30% explosion damage.
+  - Enemies inside the Direct Hit area take +50% explosion damage.
+  - Enemies inside the Direct Hit area take +75% explosion damage and receive strong
+    knockback.
+  InnerRadiusFraction:
+    RawValue: 22938
+  DamageMultiplierBonus:
+  - RawValue: 19661
+  - RawValue: 32768
+  - RawValue: 49152
+  KnockbackForce:
+    RawValue: 524288
+  KnockbackUpwardForce:
+    RawValue: 131072
+  KnockbackEliteMultiplier:
+    RawValue: 26214

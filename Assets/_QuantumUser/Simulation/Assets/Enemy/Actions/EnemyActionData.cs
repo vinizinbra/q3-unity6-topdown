@@ -32,6 +32,7 @@ namespace Quantum
         LocksAtTelegraphEnd = 0,      // tracks through the whole windup, freezing the instant Begin() is about to fire
         LocksAtTelegraphStart = 1,    // tracks during Preparation, freezes the instant the windup crosses into Telegraph
         LocksAtAnticipationStart = 2, // frozen from tick one - same effect as DirectionTracking.DoNotUpdateTargetDirection, expressed here instead
+        LocksAtPercent = 3,           // freezes once elapsed windup crosses EnemyActionData.AimLockPercent - independent of TelegraphStartPercent/Phase
     }
 
     // Where an area effect (GroundAreaDeliveryData) and its paired Circle/Cone telegraph are both
@@ -116,6 +117,14 @@ namespace Quantum
 
         [FoldoutGroup("Base")]
         public EnemyAimLockTiming AimLock = EnemyAimLockTiming.LocksAtTelegraphEnd;
+
+        // Only consulted when AimLock == LocksAtPercent: fraction (0-1) of AnticipationTime spent
+        // still tracking the target's live position before freezing for the rest of the windup -
+        // an arbitrary cutoff independent of TelegraphStartPercent/Phase, for an action that wants
+        // e.g. "keep tracking for the first 30% of the windup, then commit" without that also
+        // being when Telegraph shows.
+        [FoldoutGroup("Base")]
+        public FP AimLockPercent = FP._1;
 
         // Feeds the BaseWeight term of the multi-action decision scorer - inert until that exists.
         [FoldoutGroup("Base")]

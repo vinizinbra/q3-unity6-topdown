@@ -19,15 +19,15 @@ MonoBehaviour:
   DisplayName: Assault Rifle
   FireType: 1
   Damage:
-    RawValue: 655360
+    RawValue: 1179648
   Element: 0
   CriticalChance:
     RawValue: 13107
   CriticalDamageBonus:
     RawValue: 32768
   FireRate:
-    RawValue: 327680
-  MagazineSize: 20
+    RawValue: 360448
+  MagazineSize: 25
   ReloadDuration:
     RawValue: 32768
   Range:
@@ -48,9 +48,9 @@ MonoBehaviour:
       Value: 2052039704194794421
   ViewPrefab: {fileID: 8089491252618662435, guid: ccf62474dfed0407d8c8101bec7d3763, type: 3}
   ShakeTier: 0
-  _dpsPreview: 'Burst DPS: 50
+  _dpsPreview: 'Burst DPS: 99
 
-    Sustained DPS (incl. reload): 44.4
+    Sustained DPS (incl. reload): 89.2
 
     Damage/min:
-    2667'
+    5351'

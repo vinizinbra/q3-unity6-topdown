@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e4466fb33c0b49d18f49f2ba3307d49, type: 3}
+  m_Name: ClusterBombProjectile
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ProjectileDataAsset
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Pixie/Pixie_HeroSkillUpgrades/ClusterBombProjectile
+    Guid:
+      Value: 273268334537073420
+  Prototype:
+    Id:
+      Value: 1469578449429644187
+  Movement:
+    Id:
+      Value: 2670305215887081098
+  Hit:
+    Id:
+      Value: 1159145862924460411
+  Lifetime:
+    RawValue: 65536
+  HitRadius:
+    RawValue: 655
+  SpawnDelay:
+    RawValue: 0
+  MaxDistance:
+    RawValue: 0
+--- !u!114 &5912612615913498375
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bd27c6472ddf4108a0a905dc9d8a1c1, type: 3}
+  m_Name: ClusterBombAreaHitData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.AreaHitData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Pixie/Pixie_HeroSkillUpgrades/ClusterBombProjectile|ClusterBombAreaHitData
+    Guid:
+      Value: 1159145862924460411
+  Effects:
+  - Id:
+      Value: 469465133961930091
+  - Id:
+      Value: 400869309667061698
+  RestOffset:
+    RawValue: 0
+  DetonateOnLevelGeometry: 1
+  DetonateOnEnemyHit: 1
+  BlastRadius:
+    RawValue: 196608
+  TargetMask: 0
+  TriggersSpawnUpgrades: 1
+  PlantedFuseTime:
+    RawValue: 0
+  BlastEffectPrefab: {fileID: 6350743763286976369, guid: 2dcb44456e58b4eb3823d152a70d114f, type: 3}

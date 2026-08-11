@@ -1,0 +1,83 @@
+// Brute's 4 Juggernaut Ascension lines (Momentum/Bone Breaker/Aftershock/Concussive Impact) - see
+// docs/brute-ascensions.md. Each is a ranked SkillActionData living on JuggernautSkillData.Actions
+// (Activated = false, same "Hero Skill Ascension" shape Pixie's ClusterBombSkillAction/
+// BirthdayCakeSkillAction already use) that fires on every Juggernaut Begin, refreshing one of these
+// components' fields off the live rank; JuggernautSkillData's own hardcoded Tick/Discharge/End logic
+// reads them optionally (TryGetPointer), same "component absent = vanilla baseline behavior" idiom
+// the pool already used before this refactor - deliberately NOT PassiveUpgradeData, since these read
+// as generic "Passive Upgrade" in the level-up UI/debug menu otherwise, which is misleading for
+// something this thematically tied to Juggernaut specifically (see docs/brute-ascensions.md's own
+// "Hero Skill, not Passive Upgrade" section for the full reasoning). Replaces 9 old fragmented
+// single-pick components (JuggernautActiveSpeedUpgrade/JuggernautChargedSpeedUpgrade/
+// JuggernautDischargeDamageUpgrade/JuggernautEndExplosionUpgrade/JuggernautKnockbackUpgrade/
+// JuggernautLandingImpactUpgrade/JuggernautLandingRootUpgrade/JuggernautStackDamageUpgrade/
+// JuggernautSustainedChargeUpgrade), all deleted - none were ever reachable in practice
+// (BruteBaseSkill-Juggernaut.asset had CheckActions: 0, so their granting SkillActionData
+// sub-actions never executed - see docs/brute-ascensions.md).
+
+// Momentum - absorbs the old baseline Momentum + Unstoppable concepts. GenerationMultiplier scales
+// how much of SkillSlot.LastStepDistance counts per tick (see JuggernautSkillData.AdvanceCharge, NOT
+// DistancePerCharge itself). ChargedMoveSpeedBonus adds onto JuggernautSkillData.ChargedMoveSpeedBonus
+// (see ResolveChargedMoveSpeedBonus). DischargeRetentionFraction (rank 3 only) is the fraction of
+// current ChargePoints kept after a discharge instead of resetting fully to 0 (see TryDischarge) -
+// deliberately NOT 1 (full retention/"never resets") per design, so continued movement still matters.
+component MomentumUpgrade
+{
+    FP GenerationMultiplier;
+    FP ChargedMoveSpeedBonus;
+    FP DischargeRetentionFraction;
+}
+
+// Bone Breaker - "Discharge damage progression." Discharge deals JuggernautSkillData.Damage
+// unconditionally now (baseline, not gated behind any Ascension) - this scales that baseline up, plus
+// (rank 3) an additional bonus specifically against Specialist/Heavy tier targets. See
+// JuggernautSkillData.Discharge.
+component BoneBreakerUpgrade
+{
+    FP DamageMultiplierBonus;
+    FP TierDamageBonus;
+}
+
+// Aftershock - absorbs the old Aftershock + Building Pressure concepts; Building Pressure becomes
+// internal state rather than its own standalone mechanic, reusing the already-existing
+// JuggernautCharge.UnitsHit (cumulative enemies actually knocked back by Discharge this whole
+// activation) as its stack count directly - no separate tracking needed, and it resets for free every
+// activation since JuggernautCharge itself is removed at End regardless of this Ascension. See
+// JuggernautSkillData.TryEndExplosion. StunsAtHighPressure (rank 3 only) stuns everyone caught in the
+// blast if at least 5 stacks were built during the cast.
+component AftershockUpgrade
+{
+    FP RadiusMultiplier;
+    FP StackDamagePercent;
+    Byte MaxStacks;
+    Boolean StunsAtHighPressure;
+    AssetRef<AftershockSkillAction> Source;
+}
+
+// Concussive Impact - absorbs the old Heavy Impact/Concussive Impact/Lasting Impact/Overwhelming
+// Force/Crushing Blow concepts (Crushing Blow's own mechanism survives as the renamed
+// StunDamageBonusUpgrade, granted directly by rank 3 - see KnockbackMastery.qtn). Baked onto a
+// launched enemy via JuggernautLaunched (see that component's own Shockwave fields) rather than read
+// again at landing time, so JuggernautLandingImpactSystem can resolve everything purely off the
+// target even if Brutus's own Juggernaut has already ended.
+component ConcussiveImpactUpgrade
+{
+    FP LandingDamagePercent;
+    FP LandingStunDuration;
+    FP KnockbackForceBonus;
+    FP ShockwaveRadius;
+    FP ShockwaveDamagePercent;
+    FP ShockwaveStunDuration;
+    AssetRef<ConcussiveImpactSkillAction> Source;
+}
+
+// Bonus damage vs a currently-Stunned target, read live in DamageUtility.ResolveOutgoingDamage via
+// StatusEffectUtility.IsStunned - same shape Max's Hot Target/Pixie's Unstable Targeting already use
+// for their own conditional bonuses. Renamed from the old standalone Crushing Blow ascension's own
+// CrushingBlowUpgrade - that ascension no longer exists on its own, folded into Concussive Impact
+// rank 3 instead (see ConcussiveImpactSkillAction.Execute), so the old name would be actively
+// misleading now.
+component StunDamageBonusUpgrade
+{
+    FP DamageMultiplierBonus;
+}

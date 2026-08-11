@@ -1,0 +1,119 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7631bd6af4e3f4288a758efbdb476a0d, type: 3}
+  m_Name: LevelUpConfig
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.LevelUpConfig
+  Identifier:
+    Path: _QuantumUser/Resources/Configs/LevelUpConfig
+    Guid:
+      Value: 467002707681896236
+  DecisionTimeSeconds:
+    RawValue: 1966080
+  ChoiceCount: 3
+  WeaponPerkPool:
+    Id:
+      Value: 274665352178253875
+  GlobalUpgrades:
+  - Id:
+      Value: 403816575297165012
+  - Id:
+      Value: 348464417275673341
+  - Id:
+      Value: 522814388069534076
+  - Id:
+      Value: 351819223430686945
+  - Id:
+      Value: 320361396188178750
+  - Id:
+      Value: 408436436096618404
+  - Id:
+      Value: 465459675167579920
+  - Id:
+      Value: 461468297172547822
+  - Id:
+      Value: 410997976481653038
+  - Id:
+      Value: 335586871794483094
+  - Id:
+      Value: 428258390261410246
+  - Id:
+      Value: 468352616526183711
+  - Id:
+      Value: 445776835043754055
+  - Id:
+      Value: 413323579687518313
+  - Id:
+      Value: 387762313514897616
+  - Id:
+      Value: 502025948778833896
+  RiftMutations:
+  - Id:
+      Value: 325283577507392568
+  - Id:
+      Value: 281905491815589831
+  - Id:
+      Value: 459194346184904757
+  - Id:
+      Value: 287850747359276030
+  - Id:
+      Value: 390042850462076770
+  - Id:
+      Value: 514921480666595401
+  - Id:
+      Value: 533573372186029248
+  - Id:
+      Value: 455787944400972856
+  - Id:
+      Value: 411322840850662590
+  - Id:
+      Value: 536002132847580972
+  - Id:
+      Value: 481232238730376622
+  - Id:
+      Value: 534224374613054322
+  - Id:
+      Value: 504000970958733469
+  - Id:
+      Value: 335039749820039824
+  - Id:
+      Value: 368502755868404442
+  - Id:
+      Value: 447082899834026227
+  - Id:
+      Value: 436220813378156689
+  - Id:
+      Value: 298522279084543542
+  - Id:
+      Value: 458560360156938353
+  - Id:
+      Value: 374078439829188407
+  - Id:
+      Value: 532072750547023600
+  - Id:
+      Value: 384250695999827635
+  - Id:
+      Value: 273823591783865772
+  - Id:
+      Value: 426847582342129630
+  - Id:
+      Value: 412775407445566150
+  LevelSequence: 00010003
+  WeaponChoicePool:
+    Id:
+      Value: 489069850842438477
+  ChancePerLevelPerSlot:
+    RawValue: 13107
+  MaxRolledPerks: 3
+  CommonWeight: 100
+  RareWeight: 20
+  EpicWeight: 5
+  LegendaryWeight: 1

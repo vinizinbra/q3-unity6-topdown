@@ -1,0 +1,89 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 85c64b49932d7424793b4b14b9c23392, type: 3}
+  m_Name: IronShoulderSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.IronShoulderSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Brute/Brute_DashSkillUpgrades/IronShoulderSkillAction
+    Guid:
+      Value: 360341579882539830
+  Icon: {fileID: 2052678921, guid: 1398529c57dc443e7a3096f4ad470a4c, type: 3}
+  DisplayName: Iron Shoulder
+  Rarity: 1
+  RankDescriptions:
+  - Dash becomes an empowered shoulder charge - enemies hit take strong knockback
+    and are Stunned if pushed into a wall.
+  - Dash becomes an empowered shoulder charge dealing 60% Juggernaut damage on collision
+    (+50% if slammed into a wall) and Stunning enemies pushed into a wall.
+  - Dash becomes an empowered shoulder charge dealing 60% Juggernaut damage on collision
+    (+50% if slammed into a wall) and Stunning enemies pushed into a wall - a wall-slam
+    also creates a 3m impact shockwave dealing 80% Juggernaut damage that Stuns nearby
+    enemies.
+  <MaxRank>k__BackingField: 3
+  Priority: 0
+  Phase: 6
+  Interval:
+    RawValue: 655
+  Activated: 1
+  Description: Dash becomes an empowered shoulder charge - enemies hit take strong
+    knockback and are Stunned if pushed into a wall.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 0
+    Offset: {x: 0, y: 0.5, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 198294628958179560, guid: e66bddc96394d4a45b8c8fd1ed37a43d, type: 3}
+    SpawnMode: 2
+    Parent: 1
+    Offset: {x: 0, y: 0.5, z: -0.5}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 2
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 0
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  Width:
+    RawValue: 98304
+  Height:
+    RawValue: 98304
+  Length:
+    RawValue: 98304
+  KnockbackTier: 2
+  WallCheckDistance:
+    RawValue: 131072
+  StunDuration:
+    RawValue: 65536
+  DamagePercent:
+  - RawValue: 0
+  - RawValue: 39322
+  - RawValue: 39322
+  WallSlamDamageBonus:
+  - RawValue: 0
+  - RawValue: 32768
+  - RawValue: 32768
+  ShockwaveRadius:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 196608
+  ShockwaveDamagePercent:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 52429

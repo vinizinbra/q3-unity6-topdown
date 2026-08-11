@@ -1,0 +1,82 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 879d1cc10954a4a6f917121d677638ae, type: 3}
+  m_Name: IgnitionSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.IgnitionSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Max/Max_HeroSkill/Max_HeroSkillUpgrades/Overdrive/IgnitionSkillAction
+    Guid:
+      Value: 287946968249638524
+  Icon: {fileID: 0}
+  DisplayName: Ignition
+  Rarity: 2
+  RankDescriptions:
+  - At max Rage, weapon hits guarantee Burn.
+  - At max Rage, weapon hits guarantee Burn, and moving drops Burning Ground patches
+    behind you.
+  - At max Rage, weapon hits guarantee Burn and you drop Burning Ground while moving
+    - the first time you reach max Rage each activation, Inferno also detonates a
+    radial Burn pulse around you.
+  <MaxRank>k__BackingField: 3
+  Priority: 0
+  Phase: 3
+  Interval:
+    RawValue: 0
+  Activated: 0
+  Description: At max Rage during Overdrive, every hit guarantees Burn - eventually
+    leaving a trail of fire and igniting the battlefield outright.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  BurnOnHitStacks: 010101
+  HasBurningGround: 000101
+  HasInferno: 000001
+  InfernoRadius:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 262144
+  InfernoBurnDuration:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 262144
+  InfernoBurnIntensity:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 327680
+  BurningGroundPrototype:
+    Id:
+      Value: 1323926246826422929
+  BurningGroundDuration:
+    RawValue: 196608
+  BurningGroundSpacing:
+    RawValue: 131072

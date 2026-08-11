@@ -1,0 +1,107 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c27a42665b08c4be69500836aafe3379, type: 3}
+  m_Name: SurvivalConfig_MVP
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.SurvivalConfig
+  Identifier:
+    Path: _QuantumUser/Resources/Director/SurvivalConfig_MVP
+    Guid:
+      Value: 516156630782283822
+  Phases:
+  - Duration:
+      RawValue: 1966080
+    BudgetPerPulse:
+      RawValue: 196608
+    PulseInterval:
+      RawValue: 131072
+    TargetPressure:
+      RawValue: 327680
+    MaxAliveEnemies: 5
+    AllowedGroups:
+    - Id:
+        Value: 447917649156750950
+  - Duration:
+      RawValue: 7864320
+    BudgetPerPulse:
+      RawValue: 589824
+    PulseInterval:
+      RawValue: 163840
+    TargetPressure:
+      RawValue: 917504
+    MaxAliveEnemies: 10
+    AllowedGroups:
+    - Id:
+        Value: 378279685992977141
+    - Id:
+        Value: 292572693417129341
+    - Id:
+        Value: 388273217949830135
+  - Duration:
+      RawValue: 7864320
+    BudgetPerPulse:
+      RawValue: 786432
+    PulseInterval:
+      RawValue: 131072
+    TargetPressure:
+      RawValue: 1441792
+    MaxAliveEnemies: 16
+    AllowedGroups:
+    - Id:
+        Value: 292572693417129341
+    - Id:
+        Value: 388273217949830135
+    - Id:
+        Value: 280673942876300681
+    - Id:
+        Value: 470557080828787548
+  - Duration:
+      RawValue: 7864320
+    BudgetPerPulse:
+      RawValue: 983040
+    PulseInterval:
+      RawValue: 98304
+    TargetPressure:
+      RawValue: 2097152
+    MaxAliveEnemies: 22
+    AllowedGroups:
+    - Id:
+        Value: 292572693417129341
+    - Id:
+        Value: 388273217949830135
+    - Id:
+        Value: 280673942876300681
+    - Id:
+        Value: 470557080828787548
+    - Id:
+        Value: 382754528576043205
+  - Duration:
+      RawValue: 0
+    BudgetPerPulse:
+      RawValue: 1179648
+    PulseInterval:
+      RawValue: 65536
+    TargetPressure:
+      RawValue: 2883584
+    MaxAliveEnemies: 28
+    AllowedGroups:
+    - Id:
+        Value: 292572693417129341
+    - Id:
+        Value: 388273217949830135
+    - Id:
+        Value: 280673942876300681
+    - Id:
+        Value: 470557080828787548
+    - Id:
+        Value: 382754528576043205
+    - Id:
+        Value: 275582422662614925

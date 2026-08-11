@@ -45,6 +45,8 @@ namespace Quantum
         private float referenceRadius = 0.5f;
         [SerializeField, Tooltip("Upper bound on how much a huge target (e.g. a boss) can scale the reticle up.")]
         private float maxRadiusScale = 2.5f;
+        [SerializeField, Tooltip("Extra radius (world units) added on top of the target's collider radius before sizing the reticle, so it sits slightly outside the enemy's body rather than flush with it. Mirrors EnemyView's own viewRadiusPadding.")]
+        private float radiusPadding = 0.1f;
 
         private Vector3 _baseScale;
         private Vector3 _lockScale;
@@ -123,6 +125,19 @@ namespace Quantum
             float dt = Time.deltaTime;
 
             Vector3 desiredPosition = targetTransform.position;
+
+            // targetTransform.position is the target's live Transform3D.Position - for a Grounded
+            // enemy that's its collider CENTER, sitting a full radius above the ground (same
+            // reasoning EnemyMovementUtility.IsGrounded's own ResolveShapeHalfHeight use is built
+            // on), not its feet. Locked down to real ground level there so the reticle reads as
+            // resting under the target instead of floating at chest height. A Flying enemy or one
+            // currently mid climb/gap traversal hop (EnemyMovementUtility.BeginTraversalJump) keeps
+            // today's behavior instead - aims at the raw, genuinely-elevated position, same as
+            // always, since locking that to the ground would leave the reticle behind while the
+            // target is visibly airborne.
+            if (IsTargetAirborne(frame, target) == false)
+                desiredPosition.y = ResolveGroundedY(frame, target, desiredPosition.y);
+
             desiredPosition.y += groundOffset;
             desiredPosition.z += depthOffset;
 
@@ -157,8 +172,33 @@ namespace Quantum
             if (referenceRadius <= 0f || frame.TryGet<PhysicsCollider3D>(target, out var collider) == false)
                 return 1f;
 
-            float radius = EnemyMovementUtility.ResolveShapeRadius(collider.Shape).AsFloat;
+            float radius = EnemyMovementUtility.ResolveShapeRadius(collider.Shape).AsFloat + radiusPadding;
             return Mathf.Clamp(radius / referenceRadius, 1f, maxRadiusScale);
+        }
+
+        // No Enemy component at all (e.g. a Decoy) - nothing to ground-lock against, so this keeps
+        // today's raw-position behavior unchanged rather than guessing.
+        private static bool IsTargetAirborne(Frame frame, EntityRef target)
+        {
+            if (frame.TryGet<Enemy>(target, out Enemy enemy) == false)
+                return true;
+
+            EnemyDataAsset enemyData = frame.FindAsset(enemy.EnemyData);
+            return enemyData.Stats.Height.InitialState == EnemyHeightState.Flying
+                || enemy.TraversalJumpDuration > Photon.Deterministic.FP._0;
+        }
+
+        // Same per-shape half-height math EnemyMovementUtility.IsGrounded already uses to find how
+        // far below a Grounded entity's own collider-center pivot the real ground sits - reused here
+        // (already public for exactly this kind of outside caller) instead of a raycast, since every
+        // enemy's collider is seeded as a plain sphere at spawn (EnemySystem.SeedRadius) and a
+        // sphere's radius already IS its own half-height.
+        private static float ResolveGroundedY(Frame frame, EntityRef target, float rawY)
+        {
+            if (frame.TryGet<PhysicsCollider3D>(target, out var collider) == false)
+                return rawY;
+
+            return rawY - EnemyMovementUtility.ResolveShapeHalfHeight(collider.Shape).AsFloat;
         }
 
         private void UpdateApproach(Vector3 position, Vector3 desiredPosition, float dt)

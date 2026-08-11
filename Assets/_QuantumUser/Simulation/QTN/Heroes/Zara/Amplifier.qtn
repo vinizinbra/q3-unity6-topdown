@@ -1,0 +1,20 @@
+// Hero Skill Ascension (Amplifier, ranked, line 1/4 on Totem) - see AmplifierSkillAction. Replaces
+// IncreaseDamageUpgrade/KnockbackOnDamageUpgrade/StunEveryWavesUpgrade, folding "Damage Beats hit
+// harder," "Damage Beats knock back," and "every 3rd Damage Beat Stuns" (Bass Drop) into one line.
+// Granted onto Zara's own entity, bake-once-at-Totem-spawn for DamageBonus/KnockbackEffect (same
+// shape IncreaseDamageUpgrade/KnockbackOnDamageUpgrade already used) and read live per damage pulse
+// for the Bass Drop stun (same shape StunEveryWavesUpgrade already used) - see
+// SpawnAlternatingAreaEffectData.ResolveDamageAmount/ApplyAmplifierKnockback and
+// AlternatingAreaSystem.TryApplyBassDropStun.
+component AmplifierUpgrade
+{
+    FP DamageBonus;
+
+    AssetRef<HitEffectData> KnockbackEffect;
+
+    // Bass Drop (rank 3 only) - every StunInterval-th Damage Beat also Stuns. 0 (rank 1-2/unpicked)
+    // never stuns; counted off AlternatingArea.DamagePulseCount, which already only advances on
+    // Damage Beats, never Healing Beats.
+    Byte StunInterval;
+    AssetRef<HitEffectData> StunEffect;
+}

@@ -131,18 +131,22 @@ namespace Quantum
         // enemy with SkillActions.Count < 7, is entirely normal).
         public static EnemyActionData ResolveAction(Frame f, EnemyDataAsset data, int slot)
         {
+            AssetRef<EnemyActionData> actionRef = ResolveActionRef(data, slot);
+            return actionRef.IsValid == true ? f.FindAsset(actionRef) : null;
+        }
+
+        // Same slot resolution as ResolveAction above, but returns the AssetRef itself rather than
+        // the dereferenced asset - for a caller that needs to hand the reference off to something
+        // that resolves it independently later (e.g. GroundAreaDeliveryData.Begin() passing it
+        // through EnemySelfDestructBeginVisual so the view can frame.FindAsset it fresh itself,
+        // since the raising entity may already be destroyed by the time that event is processed).
+        public static AssetRef<EnemyActionData> ResolveActionRef(EnemyDataAsset data, int slot)
+        {
             if (slot <= 0)
-            {
-                return data.Actions.BasicAction.IsValid == true ? f.FindAsset(data.Actions.BasicAction) : null;
-            }
+                return data.Actions.BasicAction;
 
             int skillIndex = slot - 1;
-
-            if (skillIndex >= data.Actions.SkillActions.Count)
-                return null;
-
-            AssetRef<EnemyActionData> actionRef = data.Actions.SkillActions[skillIndex];
-            return actionRef.IsValid == true ? f.FindAsset(actionRef) : null;
+            return skillIndex < data.Actions.SkillActions.Count ? data.Actions.SkillActions[skillIndex] : default;
         }
 
         // BasicAction's cooldown lives directly on Enemy (every enemy has it, no extra component

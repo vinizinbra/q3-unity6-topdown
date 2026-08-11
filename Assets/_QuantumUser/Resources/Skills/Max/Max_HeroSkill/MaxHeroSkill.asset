@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-3715511553958691724
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc07b2dd6ef5a4d2c8a0835b6abf81d0, type: 3}
+  m_Name: ExplodeOnKillSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ExplodeOnKillSkillAction
+  Identifier:
+    Path: QuantumUser/Resources/QuantumDataAssets/Skills/Max/Max Berserk Skill Data|ExplodeOnKillSkillAction
+    Guid:
+      Value: 4171389864219210068
+  Priority: 0
+  Phase: 5
+  Interval:
+    RawValue: 0
+  DamagePercent:
+    RawValue: 65536
+  BlastEffectPrefab: {fileID: 6350743763286976369, guid: 2dcb44456e58b4eb3823d152a70d114f, type: 3}
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e7938cfde7444e1a84e6fd4b94ac407, type: 3}
+  m_Name: MaxHeroSkill
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.BerserkSkillData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Max/Max_HeroSkill/MaxHeroSkill
+    Guid:
+      Value: 457031510518561208
+  Name: Overdrive
+  InitStacks: 1
+  Cooldown:
+    RawValue: 1179648
+  CheckActions: 0
+  Actions:
+  - Id:
+      Value: 329573136349118667
+  - Id:
+      Value: 503198828803139370
+  - Id:
+      Value: 337766368886409189
+  - Id:
+      Value: 287946968249638524
+  Icon: {fileID: 1263592270, guid: 09ab27b92d44c4a54a95d6d0d0b9c281, type: 3}
+  Description: Unleash a berserk rage that boosts your fire rate, move speed, and
+    reload speed while marking every enemy you hit to explode on death. Landing hits
+    builds Rage - reach full Rage and those bonuses double, but taking damage resets
+    your Rage back to zero.
+  Duration:
+    RawValue: 655360
+  FireRateBonus:
+    RawValue: 32768
+  MoveSpeedBonus:
+    RawValue: 16384
+  ReloadSpeedBonus:
+    RawValue: 19661
+  MaxRageStacks: 10

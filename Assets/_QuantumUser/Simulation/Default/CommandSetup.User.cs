@@ -17,6 +17,8 @@
             factories.Add(new GrantGlobalUpgradeCommand());
             factories.Add(new GrantRiftMutationCommand());
             factories.Add(new SelectLevelUpUpgradeCommand());
+            factories.Add(new RerollLevelUpOptionsCommand());
+            factories.Add(new KeepCurrentWeaponCommand());
         }
     }
 }

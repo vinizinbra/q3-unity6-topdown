@@ -25,5 +25,5 @@ MonoBehaviour:
     RawValue: 786432
   SpawnRingRadiusMax:
     RawValue: 1048576
-  MaxPurchasesPerPulse: 3
+  MaxPurchasesPerPulse: 5
   MaxGroupSpawnAttempts: 8

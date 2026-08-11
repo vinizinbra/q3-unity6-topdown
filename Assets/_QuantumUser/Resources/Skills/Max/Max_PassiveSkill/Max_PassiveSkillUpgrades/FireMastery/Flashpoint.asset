@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9918fe24879974717bd13283f312acd8, type: 3}
+  m_Name: Flashpoint
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.FlashpointPassiveUpgradeData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Max/Max_PassiveSkill/Max_PassiveSkillUpgrades/FireMastery/Flashpoint
+    Guid:
+      Value: 317035501367371776
+  Icon: {fileID: -520350581, guid: 9a944adac56bb4e8dbce2f7bab4127e3, type: 3}
+  DisplayName: Flashpoint
+  Rarity: 3
+  Description: Burning enemies become far more dangerous to be near - bonus Critical
+    Chance, crits that detonate, and eventually outright execution.
+  <MaxRank>k__BackingField: 3
+  RankDescriptions:
+  - 'Hot Target: +10% Critical Chance against Burning enemies.'
+  - 'Hot Target, plus Flashpoint: critical hits against Burning enemies detonate
+    a fiery explosion (3m radius, 50% damage, capped at 5 targets).'
+  - 'Hot Target, Flashpoint, plus Cremation: Burning enemies already below a Health
+    threshold (15% Normal/Specialist, 10% Elite) are executed outright.'
+  CriticalChanceBonusVsBurning:
+    RawValue: 6554
+  ExplosionRadius:
+    RawValue: 196608
+  ExplosionDamageCoefficient:
+    RawValue: 32768
+  ExplosionProcCooldown:
+    RawValue: 131072
+  ExplosionMaxTargets: 5
+  NormalHealthThreshold:
+    RawValue: 9830
+  EliteHealthThreshold:
+    RawValue: 6554

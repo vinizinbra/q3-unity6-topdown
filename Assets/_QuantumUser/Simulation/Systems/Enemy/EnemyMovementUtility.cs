@@ -20,6 +20,7 @@ namespace Quantum
         private static int? _enemyLayerMask;
         private static int? _ignoreProjectileLayerMask;
         private static int? _obstacleLayerMask;
+        private static int? _pickupLayerMask;
         private static int? _playerLayerIndex;
         private static int? _ignoreProjectileLayerIndex;
 
@@ -63,6 +64,18 @@ namespace Quantum
         {
             _obstacleLayerMask ??= f.Layers.GetLayerMask(ObstacleLayerName);
             return _obstacleLayerMask.Value;
+        }
+
+        // Player | IgnoreProjectile - a dashing player sits on IgnoreProjectile for the dash's
+        // duration (see DashSkillData.Begin/End), so a plain GetPlayerLayerMask query (what every
+        // enemy-attack/targeting call site above deliberately relies on to give dash its i-frames)
+        // can't see them. Pickup-style queries (currency orbs, scrap, chests) want the opposite -
+        // collecting shouldn't be interrupted by dashing through a drop - so they OR the two masks
+        // together via this instead of GetPlayerLayerMask.
+        public static int GetPickupLayerMask(Frame f)
+        {
+            _pickupLayerMask ??= GetPlayerLayerMask(f) | GetIgnoreProjectileLayerMask(f);
+            return _pickupLayerMask.Value;
         }
 
         public static int GetIgnoreProjectileLayerIndex(Frame f)
@@ -157,6 +170,15 @@ namespace Quantum
             return f.Physics3D.OverlapShape(origin, FPQuaternion.Identity, sphere, GetPlayerLayerMask(f), QueryOptions.HitAll);
         }
 
+        // Same as FindPlayersInRadius but via GetPickupLayerMask, so a dashing player still shows
+        // up - see that mask's own comment for why pickups need the broader mask while everyone
+        // else (enemy attacks/targeting) keeps using the narrower GetPlayerLayerMask one.
+        public static Physics3D.HitCollection3D FindPlayersInRadiusForPickup(Frame f, FPVector3 origin, FP radius)
+        {
+            Shape3D sphere = Shape3D.CreateSphere(radius);
+            return f.Physics3D.OverlapShape(origin, FPQuaternion.Identity, sphere, GetPickupLayerMask(f), QueryOptions.HitAll);
+        }
+
         // "Max aggro": a Decoy always wins over the nearest player, regardless of distance. A
         // plain f.Filter<Decoy, Transform3D>() linear scan rather than a physics-layer query -
         // decoys are sparse (at most one per player, short-lived), and a layer-based query would
@@ -204,10 +226,21 @@ namespace Quantum
 
         // Drives PhysicsBody3D.Velocity from an EnemyMovementData-computed ground-plane direction
         // (see EnemyMovementData.ComputeMoveDirection) rather than an absolute destination point -
-        // the shared write-site every movement profile funnels through, so ledge-avoidance
+        // the shared write-site every movement profile funnels through, so gap/cliff handling
         // (below) applies uniformly regardless of which profile picked the direction.
         public static void MoveInDirection(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, FPVector2 direction, FP speed)
         {
+            // A queued climb/gap hop waiting out its brief anticipation window owns this tick too -
+            // checked before the in-flight hop below since a queued hop hasn't launched yet (see
+            // QueueTraversalJump/TraversalJumpAnticipationTime).
+            if (TickTraversalJumpAnticipation(f, ref filter, data) == true)
+                return;
+
+            // A traversal hop already in flight fully owns Transform3D.Position for its whole
+            // duration (kinematic, not physics-driven) - skip everything else below until it lands.
+            if (TickTraversalJump(f, ref filter, data) == true)
+                return;
+
             if (direction.SqrMagnitude <= FP._0)
             {
                 StopMovement(f, ref filter, data);
@@ -217,78 +250,89 @@ namespace Quantum
             FPVector2 normalized = direction.Normalized;
             bool isGrounded = data.Stats.Height.InitialState == EnemyHeightState.Grounded;
             int groundLayerMask = GetGroundLayerMask(f);
+            FP radius = ResolveEntityRadius(f, filter.Entity);
 
             if (data.Stats.AvoidWalls == true)
             {
-                FP radius = ResolveEntityRadius(f, filter.Entity);
                 normalized = SteerAroundWalls(f, filter.Transform3D->Position, normalized, data.Stats.WallAvoidProbeDistance, radius, groundLayerMask);
             }
 
             FPVector3 flatDirection = new FPVector3(normalized.X, FP._0, normalized.Y);
 
-            // Carried through untouched by default so PhysicsSystem3D's own gravity integration
-            // isn't overwritten - only replaced below if this tick triggers a hop.
-            FP verticalVelocity = filter.PhysicsBody3D->Velocity.Y;
+            // Transform3D.Position is this entity's collider CENTER, not its feet - a sphere resting
+            // on the floor has its center sitting a full radius above the ground (see IsGrounded's
+            // own ResolveShapeHalfHeight use just below). Every traversal probe below adds a small
+            // FIXED vertical offset (AnkleProbeHeight, cliffHeight, the edge-check's Up*0.1) meant to
+            // be measured from the ground, not from wherever the collider's center happens to float -
+            // groundPosition re-anchors X/Z at the same pivot but Y at the real ground surface
+            // (IsGrounded's own groundY, already resolved for currentlyGrounded below, at zero extra
+            // cost), so those offsets land where they're actually supposed to. Left un-corrected, a
+            // wider-radius enemy's ankle probe reads well above true ankle height (missing/misjudging
+            // short ledges) and its ground-ahead check starts high enough to sail clean over normal,
+            // unbroken flat ground - misread as "no ground ahead" and spuriously hopping a gap that
+            // was never actually there.
+            // Pre-assigned (not left to IsGrounded's own out param) since the && below short-circuits
+            // and never calls IsGrounded at all for a non-Grounded-type enemy - same harmless
+            // "current Y" fallback IsGrounded documents for its own not-grounded case.
+            FP groundY = filter.Transform3D->Position.Y;
+            bool currentlyGrounded = isGrounded == true && IsGrounded(f, filter.Entity, filter.Transform3D->Position, groundLayerMask, out groundY) == true;
+            FPVector3 groundPosition = new FPVector3(filter.Transform3D->Position.X, groundY, filter.Transform3D->Position.Z);
 
-            // Actual current contact state - distinct from the `isGrounded` category flag above
-            // (which just says this enemy TYPE is Grounded, not Flying/Airborne, and stays true for
-            // its whole lifetime including mid-jump). Both branches below need to know whether this
-            // entity is touching ground RIGHT NOW: the jump branch to avoid re-triggering/stacking
-            // hops before landing, and the AvoidLedges branch so it doesn't fire mid-air - without
-            // this gate, the ledge-ahead probe below ran every tick of a jump's arc too, and its
-            // origin (this entity's own, now-elevated, position) could easily miss the obstacle's
-            // top surface and read as "no ground ahead", freezing the jump mid-air via StopMovement.
-            bool currentlyGrounded = isGrounded == true && IsGrounded(f, filter.Entity, filter.Transform3D->Position, groundLayerMask) == true;
+            // Every probe below is measured from this entity's own center pivot (X/Z; see
+            // groundPosition above for why Y is re-anchored separately), so radius is added on top of
+            // each one (plus EnemyHeightData.Climb/GapProbeThreshold's own extra clearance) -
+            // otherwise a wide enemy's own body can still be overlapping the obstacle/edge at the
+            // sampled point even though the ray from its center cleared it. Two separate distances,
+            // not one shared value - a climbable ledge and a jumpable gap are different-enough
+            // geometry questions (a short step up right in front of the body vs. clearing the body's
+            // own edge to see past it) to want independently tuned margins.
+            FP climbProbeDistance = radius + data.Stats.Height.ClimbProbeThreshold;
+            FP gapProbeDistance = radius + data.Stats.Height.GapProbeThreshold;
 
-            FPVector3 desiredVelocity = flatDirection * speed;
-
-            if (currentlyGrounded == true && data.Stats.Height.CanJump == true && data.Stats.Height.CanCrossObstacles == true &&
-                CanCrossLedge(f, filter.Transform3D->Position, flatDirection, data.Stats.Height.AnkleProbeHeight, data.Stats.Height.MaxLedgeHeight, data.Stats.Height.MantleProbeDistance, groundLayerMask) == true)
+            if (currentlyGrounded == true && data.Stats.Height.CanClimbCliffs == true &&
+                TryFindClimbLanding(f, groundPosition, flatDirection, data.Stats.Height.CliffHeight, climbProbeDistance, radius, groundLayerMask, out FPVector3 climbLanding) == true)
             {
-                // Hops over a low obstacle instead of walking into it - mirrors the player's own
-                // auto-mantle (PlayerMovementProcessor.TryDetectMantle/DoJump). Gated on already
-                // being grounded so an enemy mid-hop (no longer grounded until it lands) can't
-                // re-trigger and stack jumps before gravity brings it back down. Captures this
-                // tick's horizontal velocity into Enemy.JumpHorizontalVelocity, reasserted below
-                // for the rest of the arc.
-                verticalVelocity = data.Stats.Height.JumpVelocity;
-                filter.Enemy->JumpHorizontalVelocity = desiredVelocity;
-            }
-            else if (currentlyGrounded == true && data.Stats.Height.AvoidLedges == true &&
-                HasGroundAhead(f, filter.Transform3D->Position, flatDirection, data.Stats.Height.EdgeProbeDistance, data.Stats.Height.EdgeCheckDistance, groundLayerMask) == false)
-            {
-                StopMovement(f, ref filter, data);
+                // Climbs a blocking obstacle up to CliffHeight tall instead of walking into it -
+                // mirrors the player's own auto-mantle (PlayerMovementProcessor.TryDetectMantle/
+                // DoJump), just as a scripted kinematic hop (BeginTraversalJump) rather than a
+                // physics launch - see that method's own comment for why. Queued rather than
+                // launched immediately - see QueueTraversalJump/TraversalJumpAnticipationTime.
+                QueueTraversalJump(f, ref filter, data, climbLanding, speed);
                 return;
             }
 
+            if (currentlyGrounded == true &&
+                HasGroundAhead(f, groundPosition, flatDirection, gapProbeDistance, EdgeCheckDistance, groundLayerMask) == false)
+            {
+                if (data.Stats.Height.CanJumpGaps == true &&
+                    TryFindGapLanding(f, groundPosition, flatDirection, gapProbeDistance, data.Stats.Height.GapDistance, GapScanStep, groundLayerMask, out FPVector3 gapLanding) == true)
+                {
+                    QueueTraversalJump(f, ref filter, data, gapLanding, speed);
+                    return;
+                }
+
+                // CanFallFromCliff just means "don't stop here" - falls through to the normal
+                // velocity assignment below with no special handling, so walking past the edge
+                // falls naturally under gravity instead of hopping like the branch above does.
+                bool canFall = data.Stats.Height.CanFallFromCliff == true &&
+                    HasGroundWithinFallDistance(f, groundPosition, flatDirection, gapProbeDistance, data.Stats.Height.FallHeight, groundLayerMask) == true;
+
+                if (canFall == false)
+                {
+                    StopMovement(f, ref filter, data);
+                    return;
+                }
+            }
+
+            FPVector3 desiredVelocity = flatDirection * speed;
             bool isFlying = data.Stats.Height.InitialState == EnemyHeightState.Flying;
 
-            // A Grounded enemy currently mid-air (e.g. still arcing through the hop triggered
-            // above) keeps reasserting the horizontal velocity it launched with
-            // (JumpHorizontalVelocity), actively overriding PhysicsBody3D.Drag - which grounded
-            // movement never feels, since this function overwrites velocity every tick while
-            // grounded - and ignoring the AI's own steering, instead of decelerating/re-steering
-            // mid-air as if it still had footing. Only .Y (gravity/the hop itself) changes until
-            // IsGrounded is true again. Doesn't apply to Airborne-state enemies - isGrounded is
-            // already false for them structurally, not because they're mid-jump (no real consumer
-            // yet, see EnemyHeightState's own comment) - or Flying, which both always steer
-            // horizontally same as before.
-            bool keepJumpVelocity = isFlying == false && isGrounded == true && currentlyGrounded == false;
-
-            if (keepJumpVelocity == true)
-            {
-                FPVector3 jumpVelocity = filter.Enemy->JumpHorizontalVelocity;
-                filter.PhysicsBody3D->Velocity = new FPVector3(jumpVelocity.X, verticalVelocity, jumpVelocity.Z);
-            }
-            else
-            {
-                // Grounded/Airborne enemies only steer horizontally - vertical velocity is whatever
-                // gravity/the hop above produced, not overwritten here. Flying enemies hold a
-                // spring-eased hover height instead - see ComputeFlyingHoverVelocity.
-                filter.PhysicsBody3D->Velocity = isFlying == true
-                    ? new FPVector3(desiredVelocity.X, ComputeFlyingHoverVelocity(f, ref filter, data), desiredVelocity.Z)
-                    : new FPVector3(desiredVelocity.X, verticalVelocity, desiredVelocity.Z);
-            }
+            // Grounded/Airborne enemies only steer horizontally - vertical velocity is whatever
+            // gravity already had it at, not overwritten here. Flying enemies hold a spring-eased
+            // hover height instead - see ComputeFlyingHoverVelocity.
+            filter.PhysicsBody3D->Velocity = isFlying == true
+                ? new FPVector3(desiredVelocity.X, ComputeFlyingHoverVelocity(f, ref filter, data), desiredVelocity.Z)
+                : new FPVector3(desiredVelocity.X, filter.PhysicsBody3D->Velocity.Y, desiredVelocity.Z);
 
             filter.Aim->Angle = FPMath.Atan2(normalized.X, normalized.Y) * FP.Rad2Deg;
         }
@@ -418,40 +462,73 @@ namespace Quantum
             return tangent.SqrMagnitude > FP._0 ? tangent.Normalized : direction;
         }
 
-        // Same ankle-blocked/ledge-clear dual-probe test PlayerMovementProcessor.TryDetectMantle
-        // uses for the player's own auto-mantle - enemies aren't KCC entities (no KCCContext/
-        // KCCShapeCastInfo available to them, only plain PhysicsBody3D), so this re-implements the
-        // same geometry check against f.Physics3D.Raycast instead of KCC's own wrapped raycast.
-        // The algorithm is what's shared between player and enemy traversal, not the literal call.
-        // EnemyHeightData.CanCrossObstacles gates whether a caller should even ask; this only
-        // answers "is there a climbable ledge right here". Called from
-        // EnemyMovementUtility.MoveInDirection when CanJump && CanCrossObstacles are both set.
-        public static bool CanCrossLedge(Frame f, FPVector3 position, FPVector3 direction, FP ankleProbeHeight, FP ledgeHeight, FP probeDistance, int layerMask)
+        // Fixed geometry constants for the traversal probes below - deliberately not authored
+        // per-enemy (see EnemyHeightData.CanClimbCliffs/CanJumpGaps/CanFallFromCliff's own
+        // comments): the only per-enemy levers left are those three booleans, their three companion
+        // heights/distances (CliffHeight/GapDistance/FallHeight), and Climb/GapProbeThreshold (the
+        // clearance added to this enemy's own radius for the climb probe vs. the gap/fall probes
+        // respectively) - BeginTraversalJump's kinematic lerp always reaches whichever landing point
+        // these probes find, so one shared probe setup here is enough for every enemy that opts in.
+        private static readonly FP AnkleProbeHeight = FP._0_25;
+        private static readonly FP EdgeCheckDistance = 1;
+        private static readonly FP GapScanStep = FP._0_25;
+
+        // Ankle-blocked/CliffHeight-clear dual-probe test, same shape as the player's own auto-mantle
+        // (PlayerMovementProcessor.TryDetectMantle) - enemies aren't KCC entities, so this
+        // re-implements the geometry check against f.Physics3D.Raycast instead of KCC's own wrapped
+        // raycast. probeDistance (radius + threshold, resolved once by the caller - see
+        // MoveInDirection) only sizes the ankle probe's own search reach - the ledge-height check and
+        // landing sample below aim at the REAL obstacle this found (hit point + bodyRadius), not a
+        // fixed distance from this enemy's own center, so the hop always lands a bit past the actual
+        // ledge edge regardless of how close/far within that search reach it happened to be detected.
+        // Returns the actual ground point on top of the obstacle (via TryFindGroundHeight), not just
+        // a yes/no, so BeginTraversalJump has an exact destination to hop onto.
+        public static bool TryFindClimbLanding(Frame f, FPVector3 position, FPVector3 direction, FP cliffHeight, FP probeDistance, FP bodyRadius, int groundLayerMask, out FPVector3 landingPoint)
         {
-            if (direction.SqrMagnitude <= FP._0 || probeDistance <= FP._0)
+            landingPoint = default;
+
+            if (direction.SqrMagnitude <= FP._0 || cliffHeight <= FP._0 || probeDistance <= FP._0)
                 return false;
 
             FPVector3 normalizedDirection = direction.Normalized;
             QueryOptions queryOptions = QueryOptions.HitStatics | QueryOptions.HitKinematics;
 
-            FPVector3 ankleOrigin = position + FPVector3.Up * ankleProbeHeight;
-            bool ankleBlocked = f.Physics3D.Raycast(ankleOrigin, normalizedDirection, probeDistance, layerMask, queryOptions).HasValue;
+            FPVector3 ankleOrigin = position + FPVector3.Up * AnkleProbeHeight;
+            Hit3D? ankleHit = f.Physics3D.Raycast(ankleOrigin, normalizedDirection, probeDistance, groundLayerMask, queryOptions);
 
-            if (ankleBlocked == false)
+            if (ankleHit.HasValue == false)
+                return false; // nothing ahead to climb - normal movement continues untouched
+
+            // Aim at the obstacle actually found, not a fixed distance from this enemy's own center -
+            // hit point + bodyRadius past it in the travel direction, so the hop clears the ledge's
+            // real edge by one body-width regardless of how deep into the search reach that edge
+            // happened to be. A wide enemy's own longer probeDistance no longer lets the ledge-height
+            // check below reach past a short, genuinely climbable ledge onto unrelated geometry
+            // further back the way a fixed-distance check would - it only ever probes/lands relative
+            // to where the obstacle actually is.
+            FP obstacleDepth = FPVector3.Distance(ankleOrigin, ankleHit.Value.Point);
+            FP clearDistance = obstacleDepth + bodyRadius;
+
+            FPVector3 ledgeOrigin = position + FPVector3.Up * cliffHeight;
+            bool ledgeBlocked = f.Physics3D.Raycast(ledgeOrigin, normalizedDirection, clearDistance, groundLayerMask, queryOptions).HasValue;
+
+            if (ledgeBlocked == true)
+                return false; // taller than CliffHeight - just a wall, same as any other blocked path
+
+            FPVector3 samplePosition = position + normalizedDirection * clearDistance;
+
+            if (TryFindGroundHeight(f, samplePosition, groundLayerMask, out FP groundY) == false)
                 return false;
 
-            FPVector3 ledgeOrigin = position + FPVector3.Up * ledgeHeight;
-            bool ledgeBlocked = f.Physics3D.Raycast(ledgeOrigin, normalizedDirection, probeDistance, layerMask, queryOptions).HasValue;
-
-            return ledgeBlocked == false;
+            landingPoint = new FPVector3(samplePosition.X, groundY, samplePosition.Z);
+            return true;
         }
 
         // Same "is there ground within reach ahead" check PlayerMovementProcessor.HasGroundAhead
         // uses to trigger the player's own auto-hop - enemies aren't KCC entities, so this
         // re-implements the same geometry test against f.Physics3D.Raycast instead of KCC's own
-        // wrapped raycast. Used by MoveInDirection to stop an EnemyHeightData.AvoidLedges enemy at
-        // the edge rather than walking off it - no jump-across behavior, just a refusal to step
-        // further in that direction.
+        // wrapped raycast. Used by MoveInDirection to detect a gap/cliff edge ahead - what happens
+        // next (jump/fall/stop) is decided by the three EnemyHeightData flags, not by this probe.
         public static bool HasGroundAhead(Frame f, FPVector3 position, FPVector3 direction, FP probeDistance, FP checkDistance, int groundLayerMask)
         {
             if (direction.SqrMagnitude <= FP._0)
@@ -460,6 +537,223 @@ namespace Quantum
             FPVector3 checkOrigin = position + direction.Normalized * probeDistance + FPVector3.Up * FP._0_10;
             Hit3D? hit = f.Physics3D.Raycast(checkOrigin, FPVector3.Down, checkDistance, groundLayerMask, QueryOptions.HitStatics | QueryOptions.HitKinematics);
             return hit.HasValue;
+        }
+
+        // Called only once HasGroundAhead has already failed at startDistance - scans further
+        // out (in GapScanStep increments, up to maxDistance) for ground reappearing beyond the gap,
+        // e.g. the far lip of a chasm/pit. Starts at startDistance (the near edge already confirmed
+        // empty), not 0, so it can't re-detect the ground this enemy is currently standing on.
+        // Returns the actual landing point (via TryFindGroundHeight) so BeginTraversalJump has an
+        // exact destination to hop onto, not just a yes/no.
+        public static bool TryFindGapLanding(Frame f, FPVector3 position, FPVector3 direction, FP startDistance, FP maxDistance, FP probeStep, int groundLayerMask, out FPVector3 landingPoint)
+        {
+            landingPoint = default;
+
+            if (direction.SqrMagnitude <= FP._0 || probeStep <= FP._0)
+                return false;
+
+            FPVector3 normalizedDirection = direction.Normalized;
+
+            for (FP distance = startDistance + probeStep; distance <= maxDistance; distance += probeStep)
+            {
+                FPVector3 samplePosition = position + normalizedDirection * distance;
+
+                if (TryFindGroundHeight(f, samplePosition, groundLayerMask, out FP groundY) == true)
+                {
+                    landingPoint = new FPVector3(samplePosition.X, groundY, samplePosition.Z);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // CanFallFromCliff only wants this enemy walking off an edge if the drop is short enough to
+        // matter (FallHeight), not into a bottomless pit or off the bottom of the level. Probes
+        // straight down from just past the edge HasGroundAhead already found empty, not from this
+        // enemy's own current Y, so the measured drop is the real one at the landing spot rather than
+        // wherever this enemy happens to already be standing.
+        public static bool HasGroundWithinFallDistance(Frame f, FPVector3 position, FPVector3 direction, FP edgeDistance, FP maxFallDistance, int groundLayerMask)
+        {
+            if (direction.SqrMagnitude <= FP._0 || maxFallDistance <= FP._0)
+                return false;
+
+            FPVector3 edgePosition = position + direction.Normalized * edgeDistance;
+            Hit3D? hit = f.Physics3D.Raycast(edgePosition, FPVector3.Down, maxFallDistance, groundLayerMask, QueryOptions.HitStatics | QueryOptions.HitKinematics);
+
+            return hit.HasValue;
+        }
+
+        // Small windup between finding a climb/gap landing (QueueTraversalJump) and actually
+        // launching the kinematic hop (BeginTraversalJump) - gives the view a real window to play a
+        // crouch tell (EnemyBlobAnimationView) before the hop's own launch pop, instead of the two
+        // overlapping on the same tick. Fixed/shared rather than authored per-enemy, same reasoning
+        // as AnkleProbeHeight/EdgeCheckDistance/GapScanStep above - every enemy that climbs/jumps
+        // gets the identical brief anticipation. Public so the view can read this same duration back
+        // to normalize its own crouch progress, with no separately-authored copy to drift out of sync.
+        public static readonly FP TraversalJumpAnticipationTime = FP._0_20;
+
+        // Advances the brief windup before a queued hop launches - returns true while still waiting
+        // (same "fully owns this tick" contract TickTraversalJump's own in-flight case uses) so the
+        // enemy stands frozen playing its crouch tell instead of still sliding forward on stale
+        // velocity. The instant the timer elapses, hands off to the real kinematic hop using
+        // whatever destination/speed QueueTraversalJump captured when the anticipation began -
+        // that same tick still counts as "handled" here, consistent with TickTraversalJump's own
+        // landing tick.
+        public static bool TickTraversalJumpAnticipation(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data)
+        {
+            if (filter.Enemy->TraversalJumpAnticipationTimer <= FP._0)
+                return false;
+
+            filter.Enemy->TraversalJumpAnticipationTimer -= f.DeltaTime;
+            StopMovement(f, ref filter, data);
+
+            if (filter.Enemy->TraversalJumpAnticipationTimer > FP._0)
+                return true;
+
+            BeginTraversalJump(f, ref filter, data, filter.Enemy->TraversalJumpPendingDestination, filter.Enemy->TraversalJumpPendingSpeed);
+            return true;
+        }
+
+        // Advances a traversal hop already in flight (started by BeginTraversalJump) and returns
+        // true while one is still running, so MoveInDirection can skip its own direction/speed
+        // logic for the tick - the hop fully owns Transform3D.Position until it lands. Same
+        // kinematic lerp-plus-parabola arc LeapDeliveryData.Tick already uses for a leap attack,
+        // just driven from here instead of the EnemyActionPhase/EnemyDeliveryData pipeline (a
+        // traversal hop happens mid-Chasing, not as its own action). TraversalJumpDuration <= 0 is
+        // the sentinel for "no hop active".
+        public static bool TickTraversalJump(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data)
+        {
+            if (filter.Enemy->TraversalJumpDuration <= FP._0)
+                return false;
+
+            filter.Enemy->TraversalJumpTimer += f.DeltaTime;
+            FP t = FPMath.Clamp01(filter.Enemy->TraversalJumpTimer / filter.Enemy->TraversalJumpDuration);
+
+            FPVector3 origin = filter.Enemy->TraversalJumpOrigin;
+            FPVector3 destination = filter.Enemy->TraversalJumpDestination;
+            FPVector3 flatPosition = FPVector3.Lerp(origin, destination, t);
+
+            // Purely a visual arc bump ON TOP OF the lerp's own already-linear rise from origin.Y
+            // to destination.Y - NOT the full climb height, which flatPosition.Y above already
+            // covers. Using the full rise here (an earlier bug) double-counted it: the enemy would
+            // rise by the climb height via the lerp AND by another full climb height via this
+            // parabola, peaking a full CliffHeight above the actual landing before diving back down
+            // to it - a lopsided, too-high-looking arc, worse the taller the climb. EnemyHeightData.
+            // ArcHeight is a flat bump added on top regardless of rise, so it reads as a hop for
+            // both a flat gap-jump and a climb alike - tune it per enemy, doesn't affect where or
+            // when this actually lands.
+            FP heightOffset = data.Stats.Height.ArcHeight * 4 * t * (FP._1 - t); // parabola, peaks at t=0.5, zero at t=0/1
+
+            filter.Transform3D->Position = new FPVector3(flatPosition.X, flatPosition.Y + heightOffset, flatPosition.Z);
+
+            // Editor-only visualization (Quantum's own deterministic Draw API, visible in the Scene
+            // view) - redrawn every tick the hop is in flight, since each Draw call only paints the
+            // current frame: the straight-line reference shows where flatPosition's lerp is headed,
+            // the green sphere marks the exact landing point, the red sphere traces this tick's real
+            // (arc-offset) position, so the whole hop's actual path is visible while it plays out.
+            Draw.Line(origin, destination, ColorRGBA.Yellow);
+            Draw.Sphere(destination, FP._0_25, ColorRGBA.Green);
+            Draw.Sphere(filter.Transform3D->Position, FP._0_20, ColorRGBA.Red);
+
+            FPVector3 delta = destination - origin;
+            if (delta.SqrMagnitude > FP._0)
+                filter.Aim->Angle = FPMath.Atan2(delta.X, delta.Z) * FP.Rad2Deg;
+
+            if (t < FP._1)
+                return true;
+
+            // Landed - snap exactly onto the captured spot (avoids any residual lerp drift) and
+            // hand control back to normal physics/gravity.
+            filter.Transform3D->Position = destination;
+            filter.PhysicsBody3D->IsKinematic = false;
+            filter.Enemy->TraversalJumpDuration = FP._0;
+
+            // Larger, distinct blue sphere marking exactly where this hop actually settled, so a
+            // landing that drifted from the green target sphere above is easy to spot at a glance.
+            Draw.Sphere(destination, FP._0_50, ColorRGBA.Blue);
+
+            Log.Info($"[TraversalJump] {filter.Entity} LANDED at={destination} elapsed={filter.Enemy->TraversalJumpTimer}");
+
+            return true; // this tick was still spent landing, not steering - resumes normally next tick
+        }
+
+        // Beyond plain walking speed, a hop's horizontal speed also grows with sqrt(distance) -
+        // see BeginTraversalJump's own comment for why.
+        private static readonly FP JumpSpeedScale = FP._2;
+
+        // Starts a kinematic hop from this enemy's current position onto destination (found by
+        // TryFindClimbLanding/TryFindGapLanding) - duration scales with distance/speed so a slower
+        // enemy takes proportionally longer to cross the same gap/cliff, same as it would walking
+        // that distance. Unlike a physics launch, a scripted position lerp always reaches its exact
+        // destination regardless of distance/speed, so CliffHeight/GapDistance stay the only levers
+        // that decide whether a hop is even attempted - EnemyHeightData.TraversalJumpSpeedMultiplier
+        // only paces how fast it plays out once it's already been found reachable. IsKinematic = true
+        // for the hop's duration so PhysicsSystem3D's own gravity/collision response doesn't fight
+        // the scripted position writes TickTraversalJump makes every tick - reset back to false
+        // once TickTraversalJump reports landed.
+        public static void BeginTraversalJump(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, FPVector3 destination, FP speed)
+        {
+            FPVector3 origin = filter.Transform3D->Position;
+
+            // destination.Y is the raw ground-SURFACE height at the landing spot (from
+            // TryFindClimbLanding/TryFindGapLanding's own TryFindGroundHeight call) - this entity's
+            // own Transform3D.Position is its pivot, not necessarily its collider's bottom (e.g. a
+            // capsule centered at chest height), so landing straight on that raw surface would
+            // sink/float the entity relative to how it's already correctly resting at takeoff.
+            // Measure that same pivot-to-ground offset here and reapply it at the landing spot -
+            // same fix LeapDeliveryData.Begin already needed for its own jump arc.
+            if (TryFindGroundHeight(f, origin, GetGroundLayerMask(f), out FP takeoffGroundY) == true)
+            {
+                destination.Y += origin.Y - takeoffGroundY;
+            }
+
+            FP distance = FPVector3.Distance(origin, destination);
+
+            // Plain distance/speed (walking pace) makes duration grow LINEARLY with distance - fine
+            // for a short climb hop, but a long gap-jump at the exact same walking speed drags out
+            // into an unnatural slow-motion float, especially sitting right next to a climb's own
+            // snappy short hop with the identical ArcHeight. Boosting speed by sqrt(distance) beyond
+            // whatever walking alone provides keeps duration growing sub-linearly instead (duration
+            // ~ distance/sqrt(distance) = sqrt(distance)): a short climb's own distance already sits
+            // under this curve, so it's completely unaffected (still exactly as snappy as before);
+            // only a longer gap gets progressively faster, so it reads as one energetic leap instead
+            // of a wide, floaty glide.
+            FP jumpSpeed = FPMath.Max(speed, FPMath.Sqrt(distance) * JumpSpeedScale);
+
+            // <= 0 (every asset authored before this field existed included) reads as 1 - no change -
+            // same convention Projectile.qtn's own MaxDistanceMultiplier already uses, so nothing
+            // already in the game silently speeds up or stalls the instant this field exists.
+            FP speedMultiplier = data.Stats.Height.TraversalJumpSpeedMultiplier <= FP._0 ? FP._1 : data.Stats.Height.TraversalJumpSpeedMultiplier;
+            jumpSpeed *= speedMultiplier;
+
+            FP duration = jumpSpeed > FP._0 ? FPMath.Max(FP._0_10, distance / jumpSpeed) : FP._0_50;
+
+            filter.Enemy->TraversalJumpOrigin = origin;
+            filter.Enemy->TraversalJumpDestination = destination;
+            filter.Enemy->TraversalJumpTimer = FP._0;
+            filter.Enemy->TraversalJumpDuration = duration;
+            filter.PhysicsBody3D->IsKinematic = true;
+
+            Log.Info($"[TraversalJump] {filter.Entity} BEGIN origin={origin} destination={destination} distance={distance} speed={speed} speedMultiplier={speedMultiplier} duration={duration}");
+        }
+
+        // Starts the brief TraversalJumpAnticipationTime windup instead of launching the hop on the
+        // spot - called by MoveInDirection the instant TryFindClimbLanding/TryFindGapLanding finds a
+        // landing, with TickTraversalJumpAnticipation handing off to the real BeginTraversalJump once
+        // it elapses. destination/speed are captured now (not re-resolved when the hop actually
+        // launches) so a target moving during the brief freeze below can't retarget an already-found
+        // landing. Faces the enemy toward it right away, since nothing else drives Aim.Angle while
+        // frozen (StopMovement doesn't touch it), so the crouch tell at least reads facing the right
+        // way instead of holding whatever direction it was last walking.
+        public static void QueueTraversalJump(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, FPVector3 destination, FP speed)
+        {
+            filter.Enemy->TraversalJumpAnticipationTimer = TraversalJumpAnticipationTime;
+            filter.Enemy->TraversalJumpPendingDestination = destination;
+            filter.Enemy->TraversalJumpPendingSpeed = speed;
+
+            FaceTarget(filter.Aim, filter.Transform3D->Position, destination);
+            StopMovement(f, ref filter, data);
         }
 
         // Downward raycast from well above the given XZ to find the actual ground height there -

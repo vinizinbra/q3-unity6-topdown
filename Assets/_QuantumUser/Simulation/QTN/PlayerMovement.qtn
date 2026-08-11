@@ -13,6 +13,7 @@ component PlayerMovement
 // button) - hero-agnostic, no effect for anyone without a reaction gated on it. fallDistance is the
 // drop in LastGroundedPosition.Y between takeoff and landing (0 for a flat hop/mantle, positive for
 // a genuine fall off high ground) - AutoJumpSystem just reports it, leaving "how much counts as a
-// real fall" to whoever reacts. See Brute's Ground Pound (Heroes/Brute/KnockbackMastery.qtn), its
-// first consumer, which gates on GroundPoundUpgrade.MinFallDistance.
+// real fall" to whoever reacts. No current consumer (Brute's old Ground Pound trait, its original
+// consumer, was removed in the Brute Ascension refactor - see docs/brute-ascensions.md) - kept as
+// generic, hero-agnostic infrastructure for whatever reacts to a real fall next.
 signal OnPlayerLanded(EntityRef entity, FP fallDistance);

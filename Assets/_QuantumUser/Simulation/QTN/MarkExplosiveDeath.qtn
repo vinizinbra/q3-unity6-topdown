@@ -9,11 +9,10 @@ component MarkExplosiveDeath
     Byte Stacks;
 
     // Pixie-only - gates marking to genuine explosive damage only (her bomb, a weapon perk that
-    // procs an explosion, a dash explosion, or a chained blast - see DamageUtility.
-    // TryMarkExplodeOnDeath's own isExplosion/isChainedExplosion/isDashExplosion handling). Defaults
-    // false, so Max's Berserk (the only other grantor, via MarkExplosiveDeathSkillAction, which never
-    // touches this field) still marks on any hit exactly as before this field existed. Pixie's own
-    // passive sets this true.
+    // procs an explosion, or a chained blast - see DamageUtility.TryMarkExplodeOnDeath's own
+    // isExplosion/isChainedExplosion handling). Defaults false, so Max's Berserk (the only other
+    // grantor, via MarkExplosiveDeathSkillAction, which never touches this field) still marks on any
+    // hit exactly as before this field existed. Pixie's own passive sets this true.
     Boolean RequiresExplosion;
 
     // Pixie-only tier gate for her own Chain Reaction passive. HasTierGate defaults false (the
@@ -22,7 +21,7 @@ component MarkExplosiveDeath
     // before this pair existed - Filler (enum value 0) would have silently become the gate otherwise,
     // which is exactly the regression this boolean avoids. Pixie's own passive sets HasTierGate true
     // and MaxAffectedTier to Normal (Filler/Normal only); her Heavy Payload ascension raises the
-    // latter to Specialist.
+    // latter to Elite (marks everything except Boss).
     //
     // MaxAffectedTier is a raw EnemyTier ordinal (Byte), not the enum itself - EnemyTier is a plain
     // C# enum (EnemyDataAsset.cs), never declared through the qtn DSL the way every other enum used
@@ -33,26 +32,32 @@ component MarkExplosiveDeath
     Boolean HasTierGate;
     Byte MaxAffectedTier;
 
+    // Pixie Chain Reaction only - probability [0,1] that a qualifying explosion hit actually applies
+    // the death mark, rolled per hit (DamageUtility.RollChance in TryMarkExplodeOnDeath). HasMarkChance
+    // gates it the same way HasTierGate gates MaxAffectedTier: default false (zero-init) means NO
+    // chance gate at all, so Max's Berserk grant (MarkExplosiveDeathSkillAction, which sets neither
+    // field) still marks on every single hit exactly as before. Pixie's base passive sets HasMarkChance
+    // true with a sub-1 MarkChance; her guaranteed-chain ascension raises MarkChance to 1.
+    Boolean HasMarkChance;
+    FP MarkChance;
+
     // Pixie-only ascensions on the shared death-explosion math (DamageUtility.TryExplodeOnDeath) -
     // all "no effect" by default (1/1/0/false) so Max's Berserk is completely unaffected by any of
-    // them:
-    FP BonusRadiusMultiplier;      // Bigger Boom
-    FP BonusDamageMultiplier;      // Unstable Mixture
+    // them. Both are Unstable Mixture's own fields now (Bigger Boom/Heavy Payload were folded into
+    // it - see UnstableMixturePassiveUpgradeData):
+    FP BonusRadiusMultiplier;
+    FP BonusDamageMultiplier;
 
     // Chain Reaction ascension - 0 (off) means a secondary/chained blast (see
     // DamageUtility.TryExplodeOnDeath's own isChainedExplosion flag) never re-marks anyone it also
     // catches; above 0, it does, at this fraction of a direct hit's normal mark duration.
     FP ChainReactionMultiplier;
 
-    // Heavy Payload ascension - multiplies a Specialist+ kill's own death-explosion radius/damage
-    // (on top of BonusRadiusMultiplier/BonusDamageMultiplier above), and also lets that same kill's
-    // death mark itself apply to Specialist+ targets via MaxAffectedTier above.
-    FP HeavyPayloadMultiplier;
-
-    // Volatile Escape ascension - a dash explosion (see isDashExplosion) always marks regardless of
-    // MaxAffectedTier's own gate once true; every other source (weapon, bomb, chained blast) still
-    // respects the gate normally.
-    Boolean VolatileEscapeEnabled;
+    // Unstable Mixture ascension - multiplies a Specialist+/Heavy+ kill's own death-explosion RADIUS
+    // only (not damage - see DamageUtility.TryExplodeOnDeath), on top of BonusRadiusMultiplier above.
+    // Unstable Mixture also raises MaxAffectedTier to Heavy so Specialist/Heavy kills actually become
+    // markable in the first place (this used to be Heavy Payload's own role, before it was folded in).
+    FP TierRadiusMultiplier;
 
     // Unstable Targeting ascension - a live outgoing-damage multiplier read in DamageUtility.
     // ResolveOutgoingDamage whenever the target currently carries ExplodeOnDeath ("Unstable" - i.e.

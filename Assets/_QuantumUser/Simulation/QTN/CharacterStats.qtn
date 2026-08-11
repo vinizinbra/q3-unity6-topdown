@@ -71,6 +71,14 @@ component CharacterStats
     // LevelUpConfig.ChancePerLevelPerSlot/MaxRolledPerks.
     Byte WeaponTalentLevel;
 
+    // How many times this entity can redraw its own current LevelUpChoice.Options in place - see
+    // LevelUpUtility.RerollOptionsFor (spends one, called from RerollLevelUpOptionsCommand). NOT a
+    // Global Upgrade - seeded once at spawn from RuntimePlayer.Talents.RerollQuantity, a pre-run
+    // meta-progression talent (PlayerSpawnUtility.Spawn), same "seeded once, never written by the
+    // simulation" shape as WeaponTalentLevel below. Only ever decreases for the rest of a match.
+    // Per-character (this component), not shared run-wide.
+    Byte RerollQuantity;
+
     // Incremented/decremented by any active effect (e.g. BerserkSkillData) that guarantees Burn
     // on every weapon hit for as long as it's up - a counter rather than a bool so two overlapping
     // grants can't have one's End wipe out the other's still-active one. Checked in

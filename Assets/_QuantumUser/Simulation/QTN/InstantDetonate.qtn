@@ -1,6 +1,10 @@
-// Tag component granted/revoked by an upgrade (Heroes/Pixie's BombInstantDetonateSkillAction) -
-// while present on a projectile's owner, AreaHitData.ApplyHit detonates on any contact regardless
-// of its authored DetonateOnLevelGeometry/DetonateOnEnemyHit. No fields: presence is the signal.
+// Tag component granted by an upgrade (Heroes/Pixie's HotFuseSkillAction, rank 3 - see
+// PixieHotFuseCharge.qtn) - while present on a projectile's owner, ProjectileHitData.ShouldDetonate
+// detonates on a direct enemy hit regardless of the authored DetonateOnEnemyHit value. Deliberately
+// scoped to enemy hits only - a ground/geometry contact is unaffected, so a fused bomb (see
+// AreaHitData.PlantedFuseTime) still lands and runs its own fuse/taunt behavior (e.g. Birthday Cake)
+// normally; this only ever short-circuits straight to detonation on hitting an enemy directly.
+// No fields: presence is the signal.
 component InstantDetonate
 {
 }

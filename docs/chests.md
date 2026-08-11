@@ -93,7 +93,10 @@ instead of snapping or staying frozen at its placed height.
 1. **Chest `EntityPrototype`(s)** - at minimum one per `LevelUpCategory` worth placing, each with its
    own `Kind`/`PickupRadius` set, hand-placed directly in a level. Nothing spawns a Chest at runtime
    from a `RuntimeConfig.Prefabs` ref (unlike Exp/Scrap/RiftShard/Coin) - it's baked into the scene/
-   level chunk like any other hand-placed prop.
+   level chunk like any other hand-placed prop. **Exception**: a talent-gated `SpawnEntityWithRequirement`
+   component (see `docs/talents.md`) can reference any Chest `EntityPrototype` and have
+   `TalentGateSystem` spawn it via `f.Create` at runtime instead - a Chest referenced this way
+   isn't hand-placed in any chunk at all.
 2. **`ChestOpened` view-side listener** (VFX/SFX/animation) - the event exists, nothing subscribes to
    it yet.
 3. Whatever visual/collider the chest needs on the View side (open/closed model swap, etc.) - not

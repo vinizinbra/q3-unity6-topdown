@@ -12,5 +12,8 @@ namespace Quantum
     {
         [Tooltip("Particle played at the position of a target this delivery actually hit. Leave empty for no hit-impact particle on this delivery.")]
         public ParticleSystem HitImpactPrefab;
+
+        [Tooltip("World-space offset added to the hit position before spawning HitImpactPrefab - e.g. raising a ground-slam's dust burst to roughly chest height instead of at the floor. Same plain-offset convention as AttackVisualStep.Offset (no rotation applied). Zero by default (no change).")]
+        public Vector3 HitImpactOffset;
     }
 }

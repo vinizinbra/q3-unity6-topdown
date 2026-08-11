@@ -70,10 +70,9 @@ namespace Quantum
 
             SkillSlotId sourceSlot = slot == &filter.CharacterSkills->DashSkill ? SkillSlotId.DashSkill : SkillSlotId.HeroSkill;
             FP damage = Damage * ResolveDamageMultiplier(f, filter.Entity);
-            EntityRef spawned = ProjectileSpawner.Spawn(f, filter.Entity, ProjectileData, launch, damage, DamageSource.Skill, sourceSlot, filter.Aim->Target);
+            damage *= ApplyHotFuseCharge(f, filter.Entity, sourceSlot);
+            ProjectileSpawner.Spawn(f, filter.Entity, ProjectileData, launch, damage, DamageSource.Skill, sourceSlot, filter.Aim->Target);
             slot->ProjectilePending = true;
-
-            ApplyDecoyUpgrade(f, filter.Entity, spawned);
 
             Log.Debug($"[Skill] {filter.Entity} fired a projectile skill from {spawnPosition} with velocity {launch.Velocity}");
 
@@ -88,15 +87,25 @@ namespace Quantum
             return f.Unsafe.TryGetPointer<ProjectileDamageUpgrade>(owner, out var upgrade) == true ? upgrade->Multiplier : FP._1;
         }
 
-        // DecoyOnThrowUpgrade (see Heroes/Pixie/BirthdayCakeSkillAction) - reuses the existing Decoy
-        // tag rather than a bespoke attraction mechanic, so the projectile pulls enemy aggro exactly
-        // the way any other decoy already does.
-        private static void ApplyDecoyUpgrade(Frame f, EntityRef owner, EntityRef spawned)
+        // PixieHotFuseCharge (see Heroes/Pixie/HotFuseSkillAction) - only ever meant to empower Bunny
+        // Bomb specifically (Pixie's HeroSkill), not any other projectile-type skill, so gated on
+        // sourceSlot rather than just component presence. Returns the damage multiplier for this
+        // throw; radius/instant-detonate are applied later, at this bomb's own detonation - see
+        // AreaHitData.Detonate and PixieHotFuseCharge.qtn's own comment for why the split.
+        private static FP ApplyHotFuseCharge(Frame f, EntityRef owner, SkillSlotId sourceSlot)
         {
-            if (f.Has<DecoyOnThrowUpgrade>(owner) == true)
+            if (sourceSlot != SkillSlotId.HeroSkill)
+                return FP._1;
+
+            if (f.Unsafe.TryGetPointer<PixieHotFuseCharge>(owner, out var charge) == false)
+                return FP._1;
+
+            if (charge->InstantDetonate == true)
             {
-                f.AddOrGet<Decoy>(spawned, out _);
+                f.AddOrGet<InstantDetonate>(owner, out _);
             }
+
+            return charge->DamageMultiplier;
         }
     }
 }

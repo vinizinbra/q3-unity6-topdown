@@ -445,6 +445,8 @@ MonoBehaviour:
         Value: 396022305314247005
     - Id:
         Value: 396022305314247005
+    InitialDelay:
+      RawValue: 0
     TickTimer:
       RawValue: 0
     TargetMask:
@@ -788,6 +790,7 @@ MonoBehaviour:
   playOnEnable: 1
   playType: 0
   backwardMultiplier: 0.7
+  useUnscaledTime: 0
 --- !u!4 &6604358928850899634 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 494686, guid: 7ef15b3b75916c044aa8aa197b362208, type: 3}

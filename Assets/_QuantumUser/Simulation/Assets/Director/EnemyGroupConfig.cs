@@ -32,6 +32,12 @@ namespace Quantum
         // slots before generating offsets, so e.g. {Fighter x3, Shooter x1} occupies 4 of the
         // pattern's slots, not 2.
         public Int32 Quantity;
+
+        // Which world faction this slot's copies visually belong to (see Enemy.Faction/
+        // EnemyDataAsset.FactionSkins) - purely cosmetic, authored per-slot here so encounter
+        // design controls the mix directly (e.g. a "SecurityPatrol" group's Ranged members are
+        // always Faction2 robots) instead of it being randomized at spawn time.
+        public EnemyFaction Faction;
     }
 
     // Where encounter design lives - CombatDirectorUtility only ever purchases one of these as a
@@ -79,7 +85,9 @@ namespace Quantum
         // Authored Cost was removed on purpose - see docs/survival-director.md "Group Spawner
         // (Domain 3)". Cost is tier-driven (EnemyTierStatsConfig), so summing here means a
         // balance change to one tier's Cost is instantly reflected in every group that uses an
-        // enemy of that tier, with no second number to keep in sync by convention.
+        // enemy of that tier, with no second number to keep in sync by convention. Per-archetype
+        // variance within a tier still goes through EnemyDataAsset.Economy.CostMultiplier (see
+        // EnemyDataAsset.ResolveCost), not a second authored number here.
         public FP ComputeCost(Frame f)
         {
             FP cost = FP._0;
@@ -95,7 +103,7 @@ namespace Quantum
                     continue;
 
                 EnemyDataAsset enemyData = f.FindAsset(enemyDataRef);
-                cost += EnemyTierStatsConfig.Resolve(f, enemyData.Tier).Cost * Members[i].Quantity;
+                cost += enemyData.ResolveCost(f) * Members[i].Quantity;
             }
 
             return cost;

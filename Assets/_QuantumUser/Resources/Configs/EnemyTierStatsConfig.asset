@@ -24,7 +24,7 @@ MonoBehaviour:
     ExpValue:
       RawValue: 65536
     ScaleMultiplier:
-      RawValue: 26214
+      RawValue: 22938
     RiftShardValue:
       RawValue: 65536
     RiftShardDropChance:
@@ -50,11 +50,11 @@ MonoBehaviour:
     ExpValue:
       RawValue: 131072
     ScaleMultiplier:
-      RawValue: 32768
+      RawValue: 26214
     RiftShardValue:
       RawValue: 65536
     RiftShardDropChance:
-      RawValue: 6554
+      RawValue: 0
     CoinValue:
       RawValue: 327680
     CoinDropChance:
@@ -76,7 +76,7 @@ MonoBehaviour:
     ExpValue:
       RawValue: 327680
     ScaleMultiplier:
-      RawValue: 39322
+      RawValue: 32768
     RiftShardValue:
       RawValue: 65536
     RiftShardDropChance:

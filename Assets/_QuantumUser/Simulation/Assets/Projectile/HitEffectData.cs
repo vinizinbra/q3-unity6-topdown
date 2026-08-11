@@ -35,6 +35,12 @@ namespace Quantum
         // Neutral, since they have no Element concept.
         public ElementType Element;
 
+        // The EXTRA element an Element Infusion weapon perk grafted on (Projectile.PerkElement),
+        // applied alongside Element above via StatusEffectUtility.TryApplyInfusedElement rolling
+        // PerkElementChance. Neutral/0 for anything without the perk, so it no-ops for free.
+        public ElementType PerkElement;
+        public FP PerkElementChance;
+
         // True for a genuine area/explosive blast (currently only AreaHitData.Detonate - Pixie's own
         // bomb - opts in) - read by DamageEffectData.Apply and passed through to
         // DamageUtility.ApplyDamage's own isExplosion parameter, which Pixie's Chain Reaction passive

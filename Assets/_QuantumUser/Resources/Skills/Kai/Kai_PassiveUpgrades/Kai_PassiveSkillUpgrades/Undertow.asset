@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e907e43ecf8f4086b76a4d1a961e6b9, type: 3}
+  m_Name: Undertow
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.UndertowPassiveUpgradeData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Kai/Kai_PassiveUpgrades/Kai_PassiveSkillUpgrades/Undertow
+    Guid:
+      Value: 320692999273507519
+  Icon: {fileID: 0}
+  DisplayName: Undertow
+  Rarity: 2
+  Description: Weapon hits pull enemies together, eventually Binding them for bonus
+    damage.
+  <MaxRank>k__BackingField: 3
+  RankDescriptions:
+  - Weapon hits pull enemies toward their nearest ally.
+  - Undertow pulls enemies together with much greater force.
+  - Enemies pulled by Undertow become Bound for 2s and take 20% increased damage
+    from Kai.
+  PullForce:
+  - RawValue: 196608
+  - RawValue: 393216
+  - RawValue: 393216
+  PullDuration:
+  - RawValue: 13107
+  - RawValue: 13107
+  - RawValue: 13107
+  HeavyTierMultiplier:
+  - RawValue: 65536
+  - RawValue: 98304
+  - RawValue: 98304
+  BoundDuration:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 131072
+  BoundDamageBonus:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 13107

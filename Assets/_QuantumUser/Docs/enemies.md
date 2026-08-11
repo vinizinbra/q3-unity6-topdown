@@ -53,10 +53,16 @@ action is still cooling down.
 
 Movement while `Chasing` is resolved by whichever `EnemyMovementData` the enemy's `EnemyDataAsset`
 points at (`ComputeMoveDirection`), then applied via `EnemyMovementUtility.MoveInDirection` — which
-also enforces `EnemyHeightData.AvoidLedges` (refuses to step off a ledge with no ground ahead,
-mirroring the player's own auto-hop ground check, just without the hop). Target acquisition (Idle →
-Chasing) checks decoy priority first, then falls back to whichever `EnemyTargetingData` is
-configured — see the table above.
+also handles what happens at a gap/cliff edge with no ground ahead (mirroring the player's own
+auto-hop ground check): `CanJumpGaps`/`GapDistance` jumps it, `CanFallFromCliff`/`FallHeight` walks
+off it, otherwise the enemy stops rather than walking into open air. Both jumps (this one and the
+separate `CanClimbCliffs`/`CliffHeight` climb-over-an-obstacle case) are kinematic hops
+(`EnemyMovementUtility.BeginTraversalJump`/`TickTraversalJump`, the same lerp-plus-parabola arc
+`LeapDeliveryData.Tick` already uses for a leap attack) straight onto the exact landing point found
+by `TryFindClimbLanding`/`TryFindGapLanding`, not a physics launch, so no authored jump-speed value
+is involved and any distance/height an enemy is allowed to attempt is always reachable. Target
+acquisition (Idle → Chasing) checks decoy priority first, then falls back to whichever
+`EnemyTargetingData` is configured — see the table above.
 
 Every enemy has a `BasicAction` (`EnemyDataAsset.BasicAction`) and optionally more `SkillActions` -
 `EnemyDecisionUtility.TrySelectAction` scores every eligible one (off cooldown, target within
@@ -98,8 +104,8 @@ so the signal never fires while they're Active).
 
 `EnemyHeightData.InitialState == Flying` enemies ignore gravity and chase at `FlightHeight` above
 the target (horizontal direction only today — no active altitude-seek yet, see
-`EnemyMovementUtility.MoveInDirection`); `Grounded` enemies only steer horizontally and fall
-off ledges like anything else on `PhysicsBody3D`, unless `AvoidLedges` stops them at the edge first.
+`EnemyMovementUtility.MoveInDirection`); `Grounded` enemies only steer horizontally and, at an edge,
+either jump it, fall off it, or stop - see `CanJumpGaps`/`CanFallFromCliff` above.
 
 ## Roster
 

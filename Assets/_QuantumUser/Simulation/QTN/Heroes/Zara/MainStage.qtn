@@ -1,0 +1,29 @@
+// Hero Skill Ascension (Main Stage, ranked, line 4/4 on Totem) - see MainStageSkillAction. Replaces
+// Zara's own SpawnRadiusUpSkillAction instance ("Bigger Totem") with a dedicated RadiusBonus field
+// rather than granting the shared, cross-hero SpawnRadiusUpgrade component - deliberately, so this
+// bonus is only ever read by SpawnAlternatingAreaEffectData's own Totem-spawn code (see
+// ApplyMainStageUpgrade), never by SpawnedEntitySpawner.Spawn's generic ApplyRadiusUpgrade step,
+// which runs for EVERY spawn this owner makes (Totem AND Portable Speaker alike, since both go
+// through the same spawner) - granting the shared component would silently leak Main Stage's radius
+// bonus onto Portable Speaker too, which Mobile Stage rank 3 explicitly does NOT want to inherit.
+component MainStageUpgrade
+{
+    FP RadiusBonus;
+
+    // Rank 2+ - added to the Totem's own base Duration at spawn.
+    FP DurationBonus;
+
+    // Baked alongside the two above so SpawnAlternatingAreaEffectData.Apply can gate the rank-3-only
+    // opening/closing bonus beats off a plain component field, without needing its own
+    // AssetRef<MainStageSkillAction> just to call SkillUpgradeUtility.GetRank.
+    Byte Rank;
+}
+
+// Marker tag stamped on a SPAWNED TOTEM ENTITY at spawn time (never on the owner) when Main Stage
+// rank 3 is held - the load-bearing guard that keeps the opening/closing bonus beats (see
+// AlternatingAreaSystem.FireBonusPulse/TryFireClosingBeat) scoped to entities Main Stage itself
+// explicitly spawned. A live per-owner rank check would also fire for Portable Speaker entities
+// (which carry the same AlternatingArea/AreaDamage/AreaOwner->Owner=Zara shape) purely because the
+// owner happens to hold Main Stage rank 3 - PortableSpeakerSkillAction never adds this tag to
+// anything it spawns, by construction, so a Speaker can never get bonus beats regardless of rank.
+component MainStageBonusBeats {}

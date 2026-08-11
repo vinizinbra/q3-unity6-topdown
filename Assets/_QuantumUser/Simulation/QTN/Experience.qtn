@@ -1,7 +1,7 @@
 // Run-wide experience state - merged by the DSL compiler into the same Frame.Global struct as
 // Chunk.qtn's/SurvivalDirector.qtn's global blocks. This is co-op: one shared total for the whole
 // run rather than a separate total per player, credited by ExperienceUtility.Grant whenever any
-// player collects an ExpOrb (see ExpOrbSystem). Both start at their zero default - no explicit
+// player collects an ExpOrb (see CurrencyOrbSystem). Both start at their zero default - no explicit
 // seed exists for Director's own globals either, so Level begins at 0 rather than 1; a future HUD
 // can display Level + 1 if a 1-based number reads better.
 global

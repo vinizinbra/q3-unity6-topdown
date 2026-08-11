@@ -16,6 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapon/GrenadeLauncher
     Guid:
       Value: 511120127865671028
+  DisplayName: 
   FireType: 1
   Damage:
     RawValue: 2621440
@@ -39,7 +40,7 @@ MonoBehaviour:
     X:
       RawValue: 32768
     Y:
-      RawValue: 32768
+      RawValue: 13107
     Z:
       RawValue: 0
   ProjectileData:

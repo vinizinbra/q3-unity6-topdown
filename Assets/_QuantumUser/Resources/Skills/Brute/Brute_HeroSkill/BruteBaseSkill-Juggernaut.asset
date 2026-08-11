@@ -1,0 +1,326 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8182681687420792901
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8fd19877d504434fb00dcdd91b6d396, type: 3}
+  m_Name: JuggernautKnockbackSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.JuggernautKnockbackSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Brute/Brute_HeroSkill/BruteBaseSkill-Juggernaut|JuggernautKnockbackSkillAction
+    Guid:
+      Value: 2235237605881692239
+  Icon: {fileID: 1604467854, guid: 1398529c57dc443e7a3096f4ad470a4c, type: 3}
+  DisplayName: Heavy Impact
+  Rarity: 0
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 1
+  Description: Increases the discharge's knockback force and upward force by {0}%.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  ForceBonus:
+    RawValue: 32768
+--- !u!114 &-5346908525645637807
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e809b818d6b374c1a8a022f7f0aad404, type: 3}
+  m_Name: JuggernautDischargeDamageSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.JuggernautDischargeDamageSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Brute/Brute_HeroSkill/BruteBaseSkill-Juggernaut|JuggernautDischargeDamageSkillAction
+    Guid:
+      Value: 2587496720733946005
+  Icon: {fileID: -880172757, guid: 1398529c57dc443e7a3096f4ad470a4c, type: 3}
+  DisplayName: Bone Breaker
+  Rarity: 0
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 1
+  Description: Each discharge also deals {0} damage to every enemy caught in it,
+    on top of the knockback.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  Damage:
+    RawValue: 327680
+--- !u!114 &-4788411845838500188
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6345a2b7fb654659864076533bc969c, type: 3}
+  m_Name: JuggernautSustainedChargeSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.JuggernautSustainedChargeSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Brute/Brute_HeroSkill/BruteBaseSkill-Juggernaut|JuggernautSustainedChargeSkillAction
+    Guid:
+      Value: 2139822815602952008
+  Icon: {fileID: 1310321074, guid: 1398529c57dc443e7a3096f4ad470a4c, type: 3}
+  DisplayName: Unstoppable
+  Rarity: 0
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 1
+  Description: Charge no longer resets after a discharge - stay fully Charged and
+    knock back every enemy you touch for the rest of the channel.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+--- !u!114 &-3588376554002902858
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 072dde81930864a59bd2fe8873cb4b77, type: 3}
+  m_Name: JuggernautEndExplosionSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.JuggernautEndExplosionSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Brute/Brute_HeroSkill/BruteBaseSkill-Juggernaut|JuggernautEndExplosionSkillAction
+    Guid:
+      Value: 155011977438708122
+  Icon: {fileID: 1534874876, guid: 1398529c57dc443e7a3096f4ad470a4c, type: 3}
+  DisplayName: Aftershock
+  Rarity: 0
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 1
+  Description: When the channel ends, deals {0} damage in a {1}-unit radius around
+    you and pushes caught enemies to the edge over {2}s.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  Damage:
+    RawValue: 655360
+  Radius:
+    RawValue: 196608
+  PushDuration:
+    RawValue: 16384
+  BlastEffectPrefab: {fileID: 6350743763286976369, guid: a30f1210099a64568be0c5208dba7df3, type: 3}
+--- !u!114 &-2061636930583818308
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f922bc2ccb673448cb487e359cc6d2a1, type: 3}
+  m_Name: JuggernautChargedSpeedSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.JuggernautChargedSpeedSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Brute/Brute_HeroSkill/BruteBaseSkill-Juggernaut|JuggernautChargedSpeedSkillAction
+    Guid:
+      Value: 934843146787475376
+  Icon: {fileID: -1302274578, guid: 1398529c57dc443e7a3096f4ad470a4c, type: 3}
+  DisplayName: Momentum
+  Rarity: 0
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 1
+  Description: Increases your move speed bonus while Charged by an additional {0}%.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  SpeedBonusIncrease:
+    RawValue: 26214
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69927aa91e70d4f23800a48737a9c1c1, type: 3}
+  m_Name: BruteBaseSkill-Juggernaut
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.JuggernautSkillData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Brute/Brute_HeroSkill/BruteBaseSkill-Juggernaut
+    Guid:
+      Value: 482161481420071884
+  Name: Juggernaut
+  InitStacks: 1
+  Cooldown:
+    RawValue: 983040
+  CheckActions: 0
+  Actions:
+  - Id:
+      Value: 322865589759255595
+  - Id:
+      Value: 506109649730992270
+  - Id:
+      Value: 533225152632302883
+  - Id:
+      Value: 291462109882006022
+  Icon: {fileID: 99700747, guid: 09ab27b92d44c4a54a95d6d0d0b9c281, type: 3}
+  Description: Channel as Juggernaut for {0}s, reducing damage taken by {1}% and
+    building Charge as you move. Once fully Charged, every enemy you touch triggers
+    a knockback discharge that launches them airborne, repeating for as long as the
+    channel lasts.
+  Duration:
+    RawValue: 524288
+  DamageReductionBonus:
+    RawValue: 32768
+  DistancePerCharge:
+    RawValue: 65536
+  MaxCharge: 10
+  ActiveMoveSpeedBonus:
+    RawValue: 3277
+  ChargedMoveSpeedBonus:
+    RawValue: 13107
+  KnockbackRadius:
+    RawValue: 98304
+  KnockbackForce:
+    RawValue: 262144
+  KnockbackUpwardForce:
+    RawValue: 262144
+  Damage:
+    RawValue: 1966080
+  AftershockRadius:
+    RawValue: 262144
+  AftershockPushDuration:
+    RawValue: 32768
+  BruteDirectionForce:
+    RawValue: 0
+  DischargeCooldownPerEnemy:
+    RawValue: 65536
+  DischargeEffectPrefab: {fileID: 6350743763286976369, guid: 2dcb44456e58b4eb3823d152a70d114f, type: 3}

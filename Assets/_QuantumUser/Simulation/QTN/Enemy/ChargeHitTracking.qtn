@@ -1,0 +1,27 @@
+// Optional - added dynamically (EnemySystem.SeedChargeHitTracking, not hand-authored anywhere)
+// for an enemy whose BasicAction/SkillActions resolves to a ChargeDeliveryData with StopOnHit =
+// false (see that field's own comment on why this exists: a target that stays inside DamageRange
+// across ticks would otherwise take damage every single tick for as long as the charge keeps
+// going, instead of once per HitCooldown window). Only every actually gets added for an enemy
+// that needs it, the same "seed from data" shape SeedShield/SeedWaypointPath already use - this
+// project has exactly one shared generic enemy prototype (GenericEnemyPrefab), not one per enemy
+// type, so a component like this can't be hand-authored "per type" the way EnemyActionSlots/
+// EnemyCombatModifiers currently (still) require; dynamic seeding sidesteps needing any Editor
+// step at all. A StopOnHit = true charge (or any enemy with no charge at all) never needs this -
+// it ends the instant it lands its one hit, so there's nothing to re-hit - the entire reason this
+// is a separate component instead of a fixed-size array living on Enemy itself, which every enemy
+// would pay for.
+//
+// Sized to the co-op player cap (4, same convention BalanceConfig's own P1-P4 lookups use) rather
+// than growing dynamically - a charge can only ever graze at most that many distinct players in
+// one continuous pass, so this is a hard ceiling, not a guess.
+component ChargeHitTracking
+{
+    // Parallel arrays rather than a single array of a nested struct - keeps this consistent with
+    // EnemyActionSlots' own flat-array convention, and Quantum's qtn tooling handles a pair of
+    // primitive arrays more simply than an authored sub-struct for a component this small.
+    // EntityRef.None at index i means that slot is free; ChargeDeliveryData.Tick claims the first
+    // free (or already-matching) slot each time it needs to record a hit.
+    array<EntityRef>[4] RecentTargets;
+    array<FP>[4] RecentTargetCooldowns;
+}

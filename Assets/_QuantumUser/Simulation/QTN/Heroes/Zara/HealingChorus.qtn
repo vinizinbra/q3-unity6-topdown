@@ -1,0 +1,21 @@
+// Hero Skill Ascension (Healing Chorus, ranked, line 2/4 on Totem) - see HealingChorusSkillAction.
+// Replaces IncreaseHealUpgrade/HasteOnHealUpgrade, folding "Healing Beats heal more," "Healing Beats
+// briefly Haste allies," and "Encore" (excess healing becomes Shield) into one line. Granted onto
+// Zara's own entity, bake-once-at-Totem-spawn (a behavior-shape change from the old Amplified
+// Healing, which read HealUtility.ResolveHealMultiplier live on every heal - needed so Portable
+// Speaker's Mobile Stage inheritance can read a plain numeric HealBonus off the owner at its own
+// spawn time) - see SpawnAlternatingAreaEffectData.ResolveHealAmount/ApplyHealingChorusUpgrade.
+component HealingChorusUpgrade
+{
+    FP HealBonus;
+
+    // Rank>=2 - baked into the spawned Totem/Speaker's first empty HealEffects slot, same
+    // bake-once-at-spawn shape HasteOnHealUpgrade already used.
+    AssetRef<HitEffectData> HasteEffect;
+
+    // WHICH heal-effect asset occupies HealEffects[0] - ScaledHealEffectData (rank 1-2, a plain
+    // percent-of-target's-MaxHealth heal) or OverhealToShieldEffectData (rank 3 "Encore", heals AND
+    // converts its own excess into Shield in one call). Overwrites slot 0 rather than appending, so
+    // Healing Chorus owns the base heal magnitude itself, not just a bonus layered on top of it.
+    AssetRef<HitEffectData> HealEffectAsset;
+}

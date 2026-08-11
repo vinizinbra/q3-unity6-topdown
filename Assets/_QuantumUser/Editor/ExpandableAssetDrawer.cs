@@ -115,7 +115,14 @@ namespace Quantum.Editor
                 }
                 else
                 {
+                    // A valid guid that still resolves to nothing usually means its script was
+                    // deleted - QuantumUnityDB can't construct the type, so it silently returns
+                    // null and the normal ⋮ context menu above (which needs a resolved AssetObject)
+                    // never has a chance to render. This is the only place left to clear it.
+                    valueRect.width -= MenuButtonWidth + 5f;
                     selected = AssetRefDrawer.DrawAsset(valueRect, guid, assetType);
+                    DrawBrokenReferenceButton(new Rect(valueRect.xMax + 5f, rect.y, MenuButtonWidth, rect.height),
+                        guidProperty);
                 }
             }
 
@@ -476,6 +483,28 @@ namespace Quantum.Editor
             }
         }
 
+        // Only clears the dangling reference in this field - if it pointed at a nested sub-asset,
+        // that sub-asset's serialized data can still be sitting in the owning file afterwards, since
+        // Unity never hands out a live object for something with a missing script (AssetDatabase.
+        // LoadAllAssetsAtPath just skips it as a real null - nothing to call RemoveObjectFromAsset
+        // on). "Assets > Delete Missing Scripts In Asset" on the owning file cleans that part up.
+        private static void DrawBrokenReferenceButton(Rect rect, SerializedProperty guidProperty)
+        {
+            GUIContent content = new GUIContent("✕", "Reference doesn't resolve to any asset (its script was likely deleted) - clear it");
+            if (GUI.Button(rect, content, EditorStyles.miniButton) == false)
+                return;
+
+            if (EditorUtility.DisplayDialog("Clear Broken Reference",
+                    "This reference doesn't resolve to any asset - its target's script was likely deleted.\n\n" +
+                    "Clear it from this field? If it pointed at a nested sub-asset, also run " +
+                    "Assets > Delete Missing Scripts In Asset on the owning file afterwards to remove " +
+                    "the orphaned data.",
+                    "Clear", "Cancel") == false)
+                return;
+
+            SetGuidValue(guidProperty, 0L);
+        }
+
         private static void DrawContextMenuButton(Rect rect, SerializedProperty guidProperty, AssetObject asset)
         {
             if (GUI.Button(rect, new GUIContent("⋮", "Rename, extract, or delete this asset"), EditorStyles.miniButton) == false)
@@ -572,6 +601,34 @@ namespace Quantum.Editor
         private static bool ValidateDeleteSubAssetMenuItem()
         {
             return Selection.activeObject is AssetObject asset && AssetDatabase.IsSubAsset(asset);
+        }
+
+        // Companion to DrawBrokenReferenceButton above: that only clears the dangling field
+        // reference, not the orphaned nested sub-asset data left behind in the owning file (there's
+        // no live object to remove once its script is missing). DeleteMissingNestedScriptableObjects
+        // is Photon's own SDK utility for exactly this - it diffs the sub-assets Unity can still load
+        // against the file's raw YAML and strips whatever's left over - it just wasn't wired to a
+        // menu item anywhere in this project yet.
+        [MenuItem("Assets/Delete Missing Scripts In Asset", false, 34)]
+        private static void DeleteMissingScriptsInAssetMenuItem()
+        {
+            HashSet<string> paths = new HashSet<string>(Selection.objects
+                .Select(AssetDatabase.GetAssetPath)
+                .Where(path => string.IsNullOrEmpty(path) == false));
+
+            int totalRemoved = paths.Sum(AssetDatabaseExt.DeleteMissingNestedScriptableObjects);
+
+            EditorUtility.DisplayDialog("Delete Missing Scripts In Asset",
+                totalRemoved > 0
+                    ? $"Removed {totalRemoved} orphaned sub-asset(s) with missing scripts."
+                    : "No orphaned sub-assets with missing scripts found in the selected asset(s).",
+                "OK");
+        }
+
+        [MenuItem("Assets/Delete Missing Scripts In Asset", true)]
+        private static bool ValidateDeleteMissingScriptsInAssetMenuItem()
+        {
+            return Selection.objects.Any(x => string.IsNullOrEmpty(AssetDatabase.GetAssetPath(x)) == false);
         }
 
         // Covers the same aliasing problem as the drawer's own "Duplicate (Deep)" context menu item,

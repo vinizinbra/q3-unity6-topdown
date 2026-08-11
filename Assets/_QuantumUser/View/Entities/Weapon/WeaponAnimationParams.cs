@@ -2,6 +2,18 @@ using UnityEngine;
 
 namespace Quantum
 {
+    // One (strength, duration, frequency) punch, shaped after PrimeTween's own ShakeSettings -
+    // WeaponView.Shoot() feeds these straight into a Tween.PunchCustom call. Strength is a Vector3
+    // even for the rotation punches below (only .x is used, same convention WeaponView.Shoot's
+    // own rotationKick/knockbackPunch already use for a scalar carried through a Vector3 punch).
+    [System.Serializable]
+    public class CharacterPunchSettings
+    {
+        public Vector3 Strength;
+        public float Duration = 0.1f;
+        public float Frequency = 20f;
+    }
+
     // Every weapon-specific animation tuning value WeaponView reads, grouped into one
     // serializable field so the whole set can be right-click Copy'd on one WeaponView and
     // Paste'd onto another's, instead of copying the whole component.
@@ -39,5 +51,17 @@ namespace Quantum
         public float knockbackDistance = 0.1f;
         [Range(0f, 1f), Tooltip("Fraction the gun squashes down in scale at the peak of the knockback punch.")]
         public float knockbackScalePunch = 0.1f;
+
+        [Header("Character Shoot Punch (kicked into the shooter's own BlobAnimationView, not this weapon's transform - tune per weapon since a shotgun should knock the body around more than a pistol)")]
+        [Tooltip("Head position kick, local space (e.g. (0, 0.04, 0) nods the head up).")]
+        public CharacterPunchSettings shakePositionHead = new CharacterPunchSettings { Strength = new Vector3(0f, 0.04f, 0f) };
+        [Tooltip("Whole-body Z-axis twist in degrees (only Strength.x is used). Auto-flipped by facing so it always kicks away from the muzzle.")]
+        public CharacterPunchSettings shakeRotationBody = new CharacterPunchSettings { Strength = new Vector3(-6f, 0f, 0f) };
+        [Tooltip("Head-only Z-axis twist in degrees (only Strength.x is used), layered independently from the body twist above. Also auto-flipped by facing.")]
+        public CharacterPunchSettings shakeRotationHead = new CharacterPunchSettings();
+        [Tooltip("Whole-body fractional scale punch per axis, e.g. (0.06, -0.06, 0.06) squashes horizontally/depth-wise while stretching taller. Unlike the rotation punch above, root's scale is untouched by Run's own lean/rock sway, so this is the channel that still reads clearly while moving.")]
+        public CharacterPunchSettings shakeScaleBody = new CharacterPunchSettings { Strength = new Vector3(0.06f, -0.08f, 0.06f), Duration = 0.08f };
+        [Tooltip("Head-only fractional scale punch per axis, layered independently from the body scale punch above.")]
+        public CharacterPunchSettings shakeScaleHead = new CharacterPunchSettings();
     }
 }

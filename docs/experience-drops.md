@@ -31,7 +31,8 @@ ExpOrbSystem (every tick, every ExpOrb entity)
 
 ExperienceUtility.Grant (credits the shared run total, not any one player)
   -> Frame.Global.TotalExperience += amount
-  -> while Level < ExperienceConfig.MaxLevel && TotalExperience >= RequiredExperience.Evaluate(Level + 1):
+  -> xpRequirementMultiplier = ResolveXpRequirementMultiplier(f)   // see docs/run-curves-coop-scaling.md
+  -> while Level < ExperienceConfig.MaxLevel && TotalExperience >= RequiredExperience.Evaluate(Level + 1) * xpRequirementMultiplier:
        Level++
 
 ExpOrbSystem also fires f.Events.ExpOrbCollected(collector, position, amount) right alongside
