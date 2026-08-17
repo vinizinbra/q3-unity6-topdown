@@ -21,8 +21,20 @@ enum GameState : Byte
                 // docs/talents.md). No Event system exists yet, so nothing transitions into or
                 // out of this today.
 
-    Boss        // Scaffolded only - no hook into the existing BossSystem's own encounter
-                // entry/exit exists yet, so nothing transitions into or out of this today.
+    Boss,       // Entered the instant a Kind == Boss SurvivalPhase begins (see
+                // CombatDirectorSystem.ApplyPhaseGameState) - RunPhaseUtility.BeginBossEncounter
+                // teleports players/seals the arena/spawns the boss(es), then briefly disables
+                // GameplaySystemGroup itself for Global.BossPauseTimer seconds (see below) so the
+                // Boss Window reveal plays with everything frozen, before play resumes.
+
+    Breathing   // A repeating Breathing Break between Survival segments (see docs/run-phase.md) -
+                // just another entry in SurvivalConfig.Phases[] (SurvivalPhase.Kind),
+                // detected by CombatDirectorSystem/SurvivalProgressionUtility, the same place
+                // that already walks that same Phases[] timeline for Survival. Enemy spawning
+                // stays paused for free via that system's own CurrentState != Survival &&
+                // != Breathing gate on the Director-pulse half only, same as Lobby, but
+                // GameplaySystemGroup itself is NOT disabled - players must stay fully
+                // controllable to explore/use Breathing-only POIs (Healing Shrine, Cursed Rift).
 }
 
 global
@@ -33,4 +45,45 @@ global
     // read back by Resolve to restore exactly the state that was interrupted - see GameState.
     // Upgrade's own comment above for why this can't just hardcode Survival.
     GameState PreUpgradeState;
+
+    // Seconds left in the current Breathing Break - only meaningful while CurrentState ==
+    // Breathing, maintained by CombatDirectorSystem as the current SurvivalPhase's own Duration
+    // minus PhaseTimer. See docs/run-phase.md.
+    FP BreathingTimeRemaining;
+
+    // How many Breathing Breaks have completed this run so far (0-based, incremented by
+    // CombatDirectorSystem the instant a Breathing phase ends) - the reset key
+    // PoiUsagePolicy.OncePerPlayerPerBreak compares against (see Poi.qtn).
+    Int32 BreathingIndex;
+
+    // True only while CurrentState == Breathing AND every currently-alive enemy is gone (killed or
+    // naturally expired via EnemyLifecycle) - maintained every tick by SurvivalProgressionUtility.
+    // Tick off the same IsEncounterCleared check Elite/Boss phases already use, just applied to
+    // Breathing too (see docs/run-phase.md). Spawning stops and SurvivalTime freezes the INSTANT
+    // Breathing begins regardless of this flag, but PhaseTimer - and therefore
+    // BreathingTimeRemaining/the Break actually ending - only starts advancing once this is true:
+    // the area isn't "secured" just because the phase boundary was crossed, only once nothing
+    // hostile is left. Read by BreathingCountdownWidget to gate the "AREA SECURED" banner/countdown/
+    // skip-vote UI the same way.
+    Boolean BreathingAreaSecured;
+
+    // Counts down to 0 while GameplaySystemGroup is deliberately disabled right after
+    // RunPhaseUtility.BeginBossEncounter spawns the boss(es) - ticked by the new always-on
+    // BossPauseSystem (must live OUTSIDE that group, same reasoning LevelUpSystem's own header
+    // comment already documents, since it's what re-enables the group once this hits 0). Seeded
+    // from the current SurvivalPhase's own PauseDuration - <= 0 means no pause is in progress.
+    FP BossPauseTimer;
+}
+
+// Per-player vote to end the CURRENT Breathing Break early (see docs/run-phase.md) - lazily added
+// the first time a player sends SkipBreathingCommand, never pre-seeded at spawn, so "has this
+// player voted" is checked via TryGetPointer (component presence), not just the field's own
+// value - a never-voted player has no component at all, avoiding a false-positive match against
+// BreathingIndex's own default-0 value on the very first Break of a run. VotedAtBreathingIndex is
+// compared against Global.BreathingIndex - same self-cleaning "which iteration did this happen"
+// convention PoiUsageEntry.UsedAtBreathingIndex already uses (Poi.qtn), so a stale vote from an
+// earlier Break never silently counts toward the next one; no explicit clear-all-votes step needed.
+component BreathingSkipVote
+{
+    Int32 VotedAtBreathingIndex;
 }

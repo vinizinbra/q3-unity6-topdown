@@ -58,7 +58,7 @@ namespace Quantum
     public class CrouchParams
     {
         [Tooltip("How compressed the body gets at the peak of the sink.")] public float Squash = 0.5f;
-        [Tooltip("How far the body sinks down at the peak.")] public float SinkAmount = 0.15f;
+        [Tooltip("How far the body sinks at the peak - applied along local Z (depth) by EnemyBlobAnimationView, not vertically, so it doesn't visually push the body below the real ground plane.")] public float SinkAmount = 0.15f;
     }
 
     [Serializable]
@@ -77,7 +77,7 @@ namespace Quantum
     public class SlamParams
     {
         [Tooltip("How compressed the body gets at the moment of impact.")] public float Squash = 0.4f;
-        [Tooltip("How far the body sinks down at the moment of impact.")] public float SinkAmount = 0.2f;
+        [Tooltip("How far the body sinks at the moment of impact - applied along local Z (depth) by EnemyBlobAnimationView, not vertically, so it doesn't visually push the body below the real ground plane.")] public float SinkAmount = 0.2f;
     }
 
     [Serializable]
@@ -151,6 +151,9 @@ namespace Quantum
         public AttackAnimationType AnimationType = AttackAnimationType.None;
         [Tooltip("How long this step's body animation plays before easing back to neutral / handing off to idle-run.")]
         public float Duration = 0.3f;
+
+        [Tooltip("Optional - swaps the enemy's body SpriteRenderer (EnemyViewRig.ReferenceSprite) to this sprite for this step, independent of AnimationType. Leave empty to leave whatever sprite is currently showing untouched. Reverts to the enemy's real spawn sprite once the attack fully ends (EnemyAttackVisualsView's attackNoLongerActive edge), regardless of which step last set it.")]
+        public Sprite BodySprite;
 
         public ShakeParams Shake = new ShakeParams();
         public SwingBackParams SwingBack = new SwingBackParams();

@@ -63,7 +63,7 @@ namespace QuantumUser.View.Managers
         private float meleeHitEffectScale = 1f;
 
         [Header("Heal / Shield Grant")]
-        [SerializeField, Tooltip("Played at the target whenever EntityHealed fires, from any source (HealingStepSkillAction, HealEffectData, HealthRegenSystem, ...) - generic and source-agnostic, not per-asset. The floating heal number (DamageFeedbackManager) and hit-flash (HitFeedback) already cover this event too; this is just the particle. Leave empty to skip the particle - unlike the blast-style handlers above, this deliberately does NOT fall back to defaultAreaBlastEffect, since a combat blast reads wrong for a heal.")]
+        [SerializeField, Tooltip("Played at the target whenever EntityHealed fires, from any source (PortableSpeakerSkillAction, HealEffectData, HealthRegenSystem, ...) - generic and source-agnostic, not per-asset. The floating heal number (DamageFeedbackManager) and hit-flash (HitFeedback) already cover this event too; this is just the particle. Leave empty to skip the particle - unlike the blast-style handlers above, this deliberately does NOT fall back to defaultAreaBlastEffect, since a combat blast reads wrong for a heal.")]
         private ParticleSystem healGrantEffectPrefab;
         [SerializeField, Tooltip("Played at the target whenever EntityShielded fires, from any source (BodyguardSkillAction, PortableCoverSkillAction, ShieldEffectData) - generic and source-agnostic, not per-asset. Leave empty to skip the particle, same no-fallback reasoning as healGrantEffectPrefab.")]
         private ParticleSystem shieldGrantEffectPrefab;
@@ -458,7 +458,7 @@ namespace QuantumUser.View.Managers
             PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * meleeHitEffectScale);
         }
 
-        // Generic - fires for every EntityHealed regardless of source (regen tick, HealingStepSkillAction,
+        // Generic - fires for every EntityHealed regardless of source (regen tick, PortableSpeakerSkillAction,
         // HealEffectData, ...), same reasoning OnHitEffectApplied uses for player hits. Position is read
         // from the TARGET's own live Transform3D, not off the event (EntityHealed carries no position of
         // its own, unlike the hit/blast events above) - a heal always lands on an existing entity, unlike

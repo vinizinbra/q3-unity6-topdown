@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f734f24458b8441aab5326a41257b423, type: 3}
+  m_Name: FoodOfferPool
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.FoodOfferPoolData
+  Identifier:
+    Path: _QuantumUser/Resources/Store/FoodOfferPool
+    Guid:
+      Value: 412821431523284470
+  Foods:
+  - Id:
+      Value: 479266893538303605
+  - Id:
+      Value: 392183461232130115
+  - Id:
+      Value: 512971078109476454
+  - Id:
+      Value: 328030449641679044

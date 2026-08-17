@@ -69,14 +69,52 @@ namespace Quantum
             destroy->RemainingTime = lifetime;
         }
 
-        // Called by CurrencyOrbSystem when ANY player walks over a shard - co-op, one shared run
-        // total (Frame.Global, see RiftShards.qtn), not tracked per-player. No leveling attached to
-        // this currency, unlike ExperienceUtility.Grant.
-        public static void Grant(Frame f, FP amount)
+        // Credits ONE player's own wallet (CharacterStats.RiftShards) directly - no gain-multiplier
+        // scaling here, that's already been applied by the caller (see GrantAll below).
+        public static void Grant(Frame f, EntityRef player, FP amount)
         {
-            f.Global->TotalRiftShards += amount;
+            if (f.Unsafe.TryGetPointer<CharacterStats>(player, out var stats) == false)
+                return;
 
-            Log.Debug($"[RiftShard] run gained {amount} -> {f.Global->TotalRiftShards} total");
+            stats->RiftShards += amount;
+
+            Log.Debug($"[RiftShard] {player} gained {amount} -> {stats->RiftShards}");
+        }
+
+        // Called by CurrencyOrbSystem when ANY player walks over a shard - broadcasts to EVERY
+        // connected player's own wallet (not just the one who physically collected it), each
+        // scaled by THEIR OWN CharacterStats.RiftShardGainMultiplier - same "everyone gets their
+        // own share, spends independently" model CoinUtility.GrantAll uses, see
+        // docs/breathing-poi.md.
+        public static void GrantAll(Frame f, FP baseAmount)
+        {
+            var filtered = f.Filter<PlayerLink>();
+
+            while (filtered.Next(out EntityRef entity, out PlayerLink _))
+            {
+                if (f.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats) == false)
+                    continue;
+
+                Grant(f, entity, baseAmount * stats->RiftShardGainMultiplier);
+            }
+        }
+
+        // Spends from ONE player's own wallet - used by Cursed Rift's Rift Shard Offering
+        // sacrifice (RiftShardOfferingSacrificeData). Guards insufficient funds rather than
+        // allowing a negative balance.
+        public static bool TrySpend(Frame f, EntityRef player, FP amount)
+        {
+            if (f.Unsafe.TryGetPointer<CharacterStats>(player, out var stats) == false)
+                return false;
+
+            if (stats->RiftShards < amount)
+                return false;
+
+            stats->RiftShards -= amount;
+
+            Log.Debug($"[RiftShard] {player} spent {amount} -> {stats->RiftShards}");
+
+            return true;
         }
     }
 }

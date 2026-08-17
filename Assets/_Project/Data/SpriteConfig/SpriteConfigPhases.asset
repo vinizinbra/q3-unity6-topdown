@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f55bc226f73b439eb41bb466adeaeaa, type: 3}
+  m_Name: SpriteConfigPhases
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteConfigCurrency
+  sprites:
+  - name: Breathing
+    sprite: {fileID: -1016452943, guid: d9bb3bd610ed442fe983639e2c3f95fb, type: 3}
+  - name: Elite
+    sprite: {fileID: -103353411, guid: d9bb3bd610ed442fe983639e2c3f95fb, type: 3}
+  - name: Boss
+    sprite: {fileID: -103353411, guid: d9bb3bd610ed442fe983639e2c3f95fb, type: 3}

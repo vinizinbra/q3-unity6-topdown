@@ -1,0 +1,39 @@
+// A world-placed destructible prop (barrel/crate/breakable wall) that the player can shoot. Unlike
+// every other damageable non-enemy in this codebase (Mini Bomb/Decoy/Sentry, which f.Destroy the
+// instant Health reaches 0), a Breakable is NOT destroyed on death - it persists so its View can
+// show a distinct "broken" state. Breaking is driven from DamageUtility.ApplyDamage's non-Enemy
+// death branch via BreakableUtility.TryBreak (a bolt-on TryGetPointer check, same shape as
+// ExplodeOnDestroy) which flips Broken, disables the PhysicsCollider3D (collider->Enabled = false,
+// the same idiom EnemySystem.OnEnemyDied uses) so the husk is walk-through and can't be hit again,
+// and fires the BreakableBroken event the View reacts to.
+//
+// Deliberately state-ONLY: what (if anything) it drops on break is a separate, optional SpawnOnBreak
+// component (see SpawnOnBreak.qtn) - a breakable WALL is just Breakable + Health + a collider and
+// spawns nothing, while a loot barrel adds SpawnOnBreak. Health itself is likewise a separate
+// authored component on the prototype (CurrentHealth == MaxHealth; 1 for a one-shot prop, higher for
+// multi-hit) - it's what makes the prop shootable and triggers the break at 0.
+//
+// The collider must sit on a NON-"Enemy" physics layer: auto-aim (AimSystem) overlaps only the
+// "Enemy" layer, so a Breakable is never an auto-target - it's only ever hit when a projectile
+// physically passes through it or an explosion overlaps it, keeping aim-assist unambiguous.
+component Breakable
+{
+    Boolean Broken;
+
+    // Seconds a player must CONTINUOUSLY auto-target this before it breaks - a deliberate "hold the
+    // reticle on the barrel for a moment" dwell rather than an instant pop the frame a shot lands.
+    // Driven by BreakableFocusSystem while this is a weapon-holder's Aim.Target (which only happens
+    // within AimSystem.BreakableTargetRange with no enemy competing). 0 disables the focus-break
+    // entirely: such a prop breaks ONLY via damage (Health -> 0, the DamageUtility path) - e.g. a
+    // breakable wall you shoot down. A prop can use either path or both (whichever triggers first).
+    FP BreakDelay;
+
+    // Accumulates DeltaTime while continuously auto-targeted; reset the moment targeting lapses (a
+    // tick nobody aims at it). Reaches BreakDelay -> break. See BreakableFocusSystem.
+    FP FocusTimer;
+
+    // Tick this was last auto-targeted. Detects a lapse in targeting (so FocusTimer restarts from 0
+    // rather than resuming) and dedups several players aiming at it in the same tick. See
+    // BreakableFocusSystem.
+    Int32 LastTargetedFrame;
+}

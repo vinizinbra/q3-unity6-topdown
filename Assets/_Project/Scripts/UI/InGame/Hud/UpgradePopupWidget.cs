@@ -4,13 +4,14 @@ using QuantumUser.View;
 using UnityEngine;
 
 // Tab-hold upgrade summary overlay - shows every upgrade the bound entity has picked, read off
-// UpgradeHistory (see LevelUp.qtn/LevelUpUtility.RecordHistory), split into 3 vertical-scroll lists
+// UpgradeHistory (see LevelUp.qtn/LevelUpUtility.RecordHistory), split into 4 vertical-scroll lists
 // by LevelUpPoolKind: hero (SkillUpgrade+PassiveUpgrade, the "Hero Ascension" nickname docs/level-up-
-// upgrades.md uses), global (GlobalUpgrade), and rift (RiftMutation). WeaponPerk/ChooseWeapon never
-// appear in UpgradeHistory (already visible on the weapon itself - see RecordHistory's own early-out),
-// so there's no weapon list here. Pure visual toggle - shown while Tab is held, hidden on release;
-// hardcoded for now, no window-manager/input-remapping wiring yet. Same self-bind-to-local-slot-0
-// shape as CurrentWeaponUiWidget/PartyHistoryUpgradeContainer.
+// upgrades.md uses), global (GlobalUpgrade), rift (RiftMutation), and rift mark (RiftMarkMutation -
+// its own list/tab, not merged into rift, mirroring how those two are separate pools everywhere else).
+// WeaponPerk/ChooseWeapon never appear in UpgradeHistory (already visible on the weapon itself - see
+// RecordHistory's own early-out), so there's no weapon list here. Pure visual toggle - shown while Tab
+// is held, hidden on release; hardcoded for now, no window-manager/input-remapping wiring yet. Same
+// self-bind-to-local-slot-0 shape as CurrentWeaponUiWidget/PartyHistoryUpgradeContainer.
 public class UpgradePopupWidget : QuantumGlobalMonoBehaviour
 {
     [SerializeField] private GameObject root;
@@ -24,6 +25,8 @@ public class UpgradePopupWidget : QuantumGlobalMonoBehaviour
     private Transform globalContent;
     [SerializeField, Tooltip("Parent for RiftMutation entries - typically a ScrollRect Content with a VerticalLayoutGroup.")]
     private Transform riftContent;
+    [SerializeField, Tooltip("Parent for RiftMarkMutation entries - typically a ScrollRect Content with a VerticalLayoutGroup.")]
+    private Transform riftMarkContent;
 
     [SerializeField, Tooltip("On: binds itself to local slot 0 (player 1) automatically. Off: stays unbound until something else calls Initialize (e.g. the party HUD).")]
     private bool autoBindLocalPlayerOne = true;
@@ -41,10 +44,12 @@ public class UpgradePopupWidget : QuantumGlobalMonoBehaviour
     private readonly List<UpgradeWidget> _heroPool = new List<UpgradeWidget>();
     private readonly List<UpgradeWidget> _globalPool = new List<UpgradeWidget>();
     private readonly List<UpgradeWidget> _riftPool = new List<UpgradeWidget>();
+    private readonly List<UpgradeWidget> _riftMarkPool = new List<UpgradeWidget>();
 
     private readonly List<UpgradeHistoryEntry> _heroEntries = new List<UpgradeHistoryEntry>();
     private readonly List<UpgradeHistoryEntry> _globalEntries = new List<UpgradeHistoryEntry>();
     private readonly List<UpgradeHistoryEntry> _riftEntries = new List<UpgradeHistoryEntry>();
+    private readonly List<UpgradeHistoryEntry> _riftMarkEntries = new List<UpgradeHistoryEntry>();
 
     private void Start()
     {
@@ -127,6 +132,7 @@ public class UpgradePopupWidget : QuantumGlobalMonoBehaviour
         _heroEntries.Clear();
         _globalEntries.Clear();
         _riftEntries.Clear();
+        _riftMarkEntries.Clear();
 
         var entries = history.Entries;
 
@@ -147,12 +153,16 @@ public class UpgradePopupWidget : QuantumGlobalMonoBehaviour
                 case LevelUpPoolKind.RiftMutation:
                     _riftEntries.Add(entries[i]);
                     break;
+                case LevelUpPoolKind.RiftMarkMutation:
+                    _riftMarkEntries.Add(entries[i]);
+                    break;
             }
         }
 
         RebuildList(frame, heroContent, _heroPool, _heroEntries);
         RebuildList(frame, globalContent, _globalPool, _globalEntries);
         RebuildList(frame, riftContent, _riftPool, _riftEntries);
+        RebuildList(frame, riftMarkContent, _riftMarkPool, _riftMarkEntries);
     }
 
     private void RebuildList(Frame frame, Transform content, List<UpgradeWidget> pool, List<UpgradeHistoryEntry> entries)

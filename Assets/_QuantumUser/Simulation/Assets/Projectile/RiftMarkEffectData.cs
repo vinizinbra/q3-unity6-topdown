@@ -12,7 +12,13 @@ namespace Quantum
     // hits identically (same reasoning as HasteEffectData).
     public unsafe class RiftMarkEffectData : HitEffectData
     {
-        public override void Apply(Frame f, ref HitEffectContext context)
+        public override void Apply(Frame f, ref HitEffectContext context) => Apply(f, ref context, FP._1, FP._1);
+
+        // Zara's Remix ascension rank 2+ scales duration/magnitude generically through this overload
+        // (see HitEffectData.Apply's own comment) - both default to FP._1 from the plain 2-arg Apply
+        // above, reproducing the exact pre-Remix behavior for every other caller. magnitudeMultiplier
+        // scales the stack count applied, rounded to the nearest whole stack.
+        public override void Apply(Frame f, ref HitEffectContext context, FP durationMultiplier, FP magnitudeMultiplier)
         {
             // Excluded here rather than upstream (see HitEffectUtility.TryBuildContext) - a mark
             // shouldn't mark whoever set it off, but a heal (HealEffectData) very much should be
@@ -28,11 +34,12 @@ namespace Quantum
             if (config == null)
                 return;
 
-            FP duration = StatusEffectUtility.ScaleDuration(f, context.Owner, context.Source, config.BaseDuration);
+            FP duration = StatusEffectUtility.ScaleDuration(f, context.Owner, context.Source, config.BaseDuration) * durationMultiplier;
+            byte stacks = (byte)FPMath.RoundToInt(config.StacksAppliedPerApplication * magnitudeMultiplier);
 
-            Log.Debug($"[Effect] RiftMarkEffectData applying {config.StacksAppliedPerApplication} stack(s) to {context.Target}: duration {duration}");
+            Log.Debug($"[Effect] RiftMarkEffectData applying {stacks} stack(s) to {context.Target}: duration {duration}");
 
-            StatusEffectUtility.ApplyRiftMark(f, context.Target, config, duration, config.StacksAppliedPerApplication);
+            StatusEffectUtility.ApplyRiftMark(f, context.Target, config, duration, stacks);
         }
     }
 }

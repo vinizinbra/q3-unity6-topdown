@@ -33,6 +33,7 @@ GameObject:
   - component: {fileID: 405287587707929312}
   - component: {fileID: -1234567890123456789}
   - component: {fileID: 5173192973490769808}
+  - component: {fileID: 8864329188575445046}
   m_Layer: 7
   m_Name: Max
   m_TagString: Untagged
@@ -899,6 +900,10 @@ MonoBehaviour:
       RawValue: 0
     CoinGainMultiplier:
       RawValue: 0
+    Coins:
+      RawValue: 0
+    RiftShards:
+      RawValue: 0
     WeaponTalentLevel: 0
     RerollQuantity: 0
     BurnOnHitStacks: 0
@@ -1181,6 +1186,8 @@ MonoBehaviour:
       RawValue: 0
     NoAmmoConsumptionRemaining:
       RawValue: 0
+    BoundRemaining:
+      RawValue: 0
 --- !u!114 &5173192973490769808
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1200,6 +1207,22 @@ MonoBehaviour:
   isLocal: 0
   triggerEffect: {fileID: 512761388867262480}
   immunityAura: {fileID: 1870496642591344856}
+--- !u!114 &8864329188575445046
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 506928541793919104}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a89a0d509d45b45aab025c57ebd645b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Quantum.Unity::Quantum.QPrototypeContextInteraction
+  Prototype:
+    ActiveTarget: {fileID: 0}
+    ActiveKind:
+      Value: 0
 --- !u!1 &1973933749131681354
 GameObject:
   m_ObjectHideFlags: 0

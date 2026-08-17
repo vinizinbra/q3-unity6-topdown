@@ -8,6 +8,17 @@ namespace Quantum
     public abstract unsafe class HitEffectData : AssetObject
     {
         public abstract void Apply(Frame f, ref HitEffectContext context);
+
+        // Rank-2-scaled counterpart to Apply above - Zara's Remix ascension (see ZaraRemixUtility)
+        // calls this instead of the plain 2-arg overload so its own "strengthened" rank 2 (+duration/
+        // magnitude) reads generically off whichever concrete effect got randomly picked, rather than
+        // Remix needing its own switch-on-type reimplementation of Burn/Slow/Stun/Rift Mark. Default
+        // just forwards to the plain Apply, ignoring both multipliers - every existing HitEffectData
+        // subclass across every hero/weapon-perk/other-system caller is completely unaffected; only
+        // the 4 concrete effects in Remix's own pool (BurnEffectData/SlowEffectData/StunEffectData/
+        // RiftMarkEffectData) override this.
+        public virtual void Apply(Frame f, ref HitEffectContext context, FP durationMultiplier, FP magnitudeMultiplier)
+            => Apply(f, ref context);
     }
 
     public struct HitEffectContext

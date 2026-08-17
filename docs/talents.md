@@ -147,6 +147,8 @@ public struct PlayerTalents
 {
     public byte WeaponLevel;                // not %-scaled - copied 1:1 -> CharacterStats.WeaponTalentLevel
     public byte RerollQuantity;             // not %-scaled - copied 1:1 -> CharacterStats.RerollQuantity
+    public byte ShopWeaponOfferCount;       // not %-scaled - copied as +1 -> StoreUtility.ResolveWeaponOfferCount (see docs/store-blacksmith.md)
+    public int StartingCoins;               // not %-scaled - copied 1:1 -> CharacterStats.Coins (a currency amount, not a 0-5 level, hence int not byte)
     public byte PlayerDamageLevel;          // +5%/level -> CharacterStats.DamageMultiplier
     public byte PlayerCooldownLevel;        // -5%/level -> DashCooldownMultiplier + SkillCooldownMultiplier
     public byte PlayerFireRateLevel;        // +5%/level -> AttackSpeedMultiplier

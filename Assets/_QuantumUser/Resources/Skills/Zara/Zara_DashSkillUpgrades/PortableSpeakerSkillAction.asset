@@ -1,0 +1,97 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b65bdc62bc41340489c6b3349c494830, type: 3}
+  m_Name: PortableSpeakerSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.PortableSpeakerSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Zara/Zara_DashSkillUpgrades/PortableSpeakerSkillAction
+    Guid:
+      Value: 349471251026126198
+  Icon: {fileID: 0}
+  DisplayName: Portable Speaker
+  Rarity: 2
+  RankDescriptions:
+  - Dashing leaves behind a Portable Speaker that alternates damaging and healing
+    Beats.
+  - Portable Speaker lasts longer and covers a larger area. Dash ending also heals
+    nearby allies.
+  - Portable Speaker inherits part of your Totem Ascensions, turning each Dash into
+    a mobile extension of your build.
+  <MaxRank>k__BackingField: 3
+  Priority: 0
+  Phase: 5
+  Interval:
+    RawValue: 0
+  Activated: 1
+  Description: Dashing leaves behind a Portable Speaker that alternates damaging
+    and healing Beats.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 6033865322108255657, guid: 23ae217ccb8ba4843a89edfb6812dac8, type: 3}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 0.8
+    Alignment: 0
+  Prototype:
+    Id:
+      Value: 1375662078652365648
+  Duration:
+  - RawValue: 196608
+  - RawValue: 262144
+  - RawValue: 262144
+  BaseRadius:
+    RawValue: 98304
+  RadiusMultiplier:
+  - RawValue: 65536
+  - RawValue: 85197
+  - RawValue: 85197
+  BeatInterval:
+    RawValue: 65536
+  TotemBaseDamage:
+    RawValue: 655360
+  TotemBaseHealPercent:
+    RawValue: 6554
+  DamagePercentOfTotem:
+    RawValue: 32768
+  HealPercentOfTotem:
+    RawValue: 32768
+  DamageEffect:
+    Id:
+      Value: 898240819200457878
+  HealEffect:
+    Id:
+      Value: 276820451133602943
+  DashEndHealPercent:
+  - RawValue: 0
+  - RawValue: 3277
+  - RawValue: 3277
+  DashEndHealRadius:
+    RawValue: 327680
+  MobileStageInheritanceFraction:
+    RawValue: 32768

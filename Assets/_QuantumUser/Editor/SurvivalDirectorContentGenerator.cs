@@ -151,6 +151,7 @@ namespace QuantumUser.Editor
 
         private class PhaseSpec
         {
+            public string Name;
             public FP Duration;
             public FP BudgetPerPulse;
             public FP PulseInterval;
@@ -172,7 +173,7 @@ namespace QuantumUser.Editor
             // self-destructing enemies (MaxConcurrent 3) is still too hot a way to open a run.
             new PhaseSpec
             {
-                Duration = 120, BudgetPerPulse = 9, PulseInterval = FP.FromString("2.5"),
+                Name = "Warm-up", Duration = 120, BudgetPerPulse = 9, PulseInterval = FP.FromString("2.5"),
                 TargetPressure = 14, MaxAliveEnemies = 10,
                 Groups = new[] { "FillerCreep", "SwarmRush", "MeleeSkirmish" }
             },
@@ -180,7 +181,7 @@ namespace QuantumUser.Editor
             // of dropping out after Phase 1 - see both groups' own comment above.
             new PhaseSpec
             {
-                Duration = 120, BudgetPerPulse = 12, PulseInterval = 2,
+                Name = "Ranged + Specialist", Duration = 120, BudgetPerPulse = 12, PulseInterval = 2,
                 TargetPressure = 22, MaxAliveEnemies = 16,
                 Groups = new[] { "FillerCreep", "SwarmRush", "SuicideSquad", "MeleeSkirmish", "RangedSkirmish", "ChargerDuo" }
             },
@@ -189,21 +190,21 @@ namespace QuantumUser.Editor
             // onward, so the "swarm" texture almost vanished right as Heavy-tier fights got serious.
             new PhaseSpec
             {
-                Duration = 120, BudgetPerPulse = 15, PulseInterval = FP.FromString("1.5"),
+                Name = "First Heavy Tier", Duration = 120, BudgetPerPulse = 15, PulseInterval = FP.FromString("1.5"),
                 TargetPressure = 32, MaxAliveEnemies = 22,
                 Groups = new[] { "FillerCreep", "SwarmRush", "MeleeSkirmish", "RangedSkirmish", "ChargerDuo", "ShieldWall", "SlammerPincer" }
             },
             // 6-8min: full Heavy roster + chaff still mixed in.
             new PhaseSpec
             {
-                Duration = 120, BudgetPerPulse = 18, PulseInterval = FP.FromString("1.5"),
+                Name = "Full Heavy Roster", Duration = 120, BudgetPerPulse = 18, PulseInterval = FP.FromString("1.5"),
                 TargetPressure = 44, MaxAliveEnemies = 28,
                 Groups = new[] { "FillerCreep", "SwarmRush", "RangedSkirmish", "ChargerDuo", "ShieldWall", "SlammerPincer", "GrenadierBarrage", "LeaperAmbush" }
             },
             // 8-10min: everything, including the FullAssault set piece.
             new PhaseSpec
             {
-                Duration = 120, BudgetPerPulse = 21, PulseInterval = 1,
+                Name = "Full Assault", Duration = 120, BudgetPerPulse = 21, PulseInterval = 1,
                 TargetPressure = 56, MaxAliveEnemies = 34,
                 Groups = new[] { "FillerCreep", "SwarmRush", "MeleeSkirmish", "RangedSkirmish", "ChargerDuo", "ShieldWall", "SlammerPincer", "GrenadierBarrage", "LeaperAmbush", "FullAssault" }
             },
@@ -211,7 +212,7 @@ namespace QuantumUser.Editor
             // own contract), holding the run at this ceiling through minute 15 and beyond.
             new PhaseSpec
             {
-                Duration = 0, BudgetPerPulse = 24, PulseInterval = 1,
+                Name = "Endless", Duration = 0, BudgetPerPulse = 24, PulseInterval = 1,
                 TargetPressure = 68, MaxAliveEnemies = 40,
                 Groups = new[] { "FillerCreep", "SwarmRush", "MeleeSkirmish", "RangedSkirmish", "ChargerDuo", "ShieldWall", "SlammerPincer", "GrenadierBarrage", "LeaperAmbush", "FullAssault" }
             },
@@ -276,6 +277,8 @@ namespace QuantumUser.Editor
 
             survivalConfig.Phases = PhaseSpecs.Select(p => new SurvivalPhase
             {
+                Name = p.Name,
+                Kind = SurvivalPhaseKind.Combat,
                 Duration = p.Duration,
                 BudgetPerPulse = p.BudgetPerPulse,
                 PulseInterval = p.PulseInterval,

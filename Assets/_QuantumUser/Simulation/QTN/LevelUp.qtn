@@ -1,22 +1,29 @@
 // Level-up upgrade-choice screen - see docs/level-up-upgrades.md for the full runtime flow
 // (ExperienceUtility.Grant -> LevelUpUtility.BeginLevelUpScreen -> LevelUpSystem countdown ->
-// LevelUpUtility.Resolve). RiftMutation is the newest pool - see docs/rift-mutations.md - a rare,
-// non-stackable, run-wide pool distinct from GlobalUpgrade's small stacking increments (see
-// RiftMutationPicks below for how "non-stackable" is enforced pool-wide rather than per-asset).
+// LevelUpUtility.Resolve). RiftMutation/RiftMarkMutation are two separate pools - see
+// docs/rift-mutations.md - both rare, non-stackable, run-wide, distinct from GlobalUpgrade's small
+// stacking increments (see RiftMutationPicks below for how "non-stackable" is enforced pool-wide
+// rather than per-asset, and shared across BOTH pools since they draw from the same underlying
+// RiftMutationData catalog). RiftMutation is the 14 "core" build-defining tradeoffs (Glass Core,
+// Heavy Arsenal, ...); RiftMarkMutation is the 11 "Rift Mark content pool" mutations (Critical
+// Fracture, Last Stand, ...) that apply Rift Mark on some trigger - split into their own pool so a
+// designer can pace/gate them independently in LevelUpConfig.LevelSequence. Cursed Rift's own
+// reward roll (LevelUpUtility.RollMutationOptions) deliberately still only draws from RiftMutation.
 // ChooseWeapon is the newest - see LevelUpOption's own WeaponData/RolledPerks fields below and
 // docs/level-up-upgrades.md's "Category sequencing / Choose Weapon" section.
 enum LevelUpPoolKind : Byte
 {
-    None           = 0,
-    SkillUpgrade   = 1,
-    WeaponPerk     = 2,
-    GlobalUpgrade  = 3,
-    PassiveUpgrade = 4,
-    RiftMutation   = 5,
-    ChooseWeapon   = 6
+    None            = 0,
+    SkillUpgrade    = 1,
+    WeaponPerk      = 2,
+    GlobalUpgrade   = 3,
+    PassiveUpgrade  = 4,
+    RiftMutation    = 5,
+    ChooseWeapon    = 6,
+    RiftMarkMutation = 7
 }
 
-// The 5 player-facing upgrade categories a level-up (or a Chest) can be locked to - distinct from
+// The 6 player-facing upgrade categories a level-up (or a Chest) can be locked to - distinct from
 // LevelUpPoolKind above, which is the actual GRANT-path discriminator on a rolled LevelUpOption.
 // HeroSkill here covers what LevelUpPoolKind splits into SkillUpgrade + PassiveUpgrade (see
 // LevelUpUtility.CollectPerHeroCandidates, which already always offers both together) - merged
@@ -24,11 +31,12 @@ enum LevelUpPoolKind : Byte
 // gets granted once something's picked. Used by LevelUpConfig.LevelSequence and Chest.Kind.
 enum LevelUpCategory : Byte
 {
-    HeroSkill     = 0,
-    GlobalUpgrade = 1,
-    RiftMutation  = 2,
-    WeaponPerk    = 3,
-    ChooseWeapon  = 4
+    HeroSkill        = 0,
+    GlobalUpgrade    = 1,
+    RiftMutation     = 2,
+    WeaponPerk       = 3,
+    ChooseWeapon     = 4,
+    RiftMarkMutation = 5
 }
 
 // One rolled, grantable option. WeaponPerkData/SkillActionData/GlobalUpgradeData/PassiveUpgradeData/
@@ -103,20 +111,22 @@ struct GlobalUpgradePickEntry
     Byte Count;
 }
 
-// One entity's pick history for the RiftMutation pool - simpler than GlobalUpgradePicks above since
-// every Rift Mutation is non-stackable (a pool-wide rule, not an opt-in per-asset MaxPicks), so
-// there's nothing to count, only "has this already been granted" - see RiftMutationUtility.Grant/
-// IsAlreadyPicked and LevelUpUtility.CollectRiftMutationCandidates. Fixed array with headroom over
-// the current 25-mutation catalog (14 original + 11 Rift Mark content pool additions - see
+// One entity's pick history for BOTH the RiftMutation and RiftMarkMutation pools (LevelUpPoolKind) -
+// shared rather than split, since every AssetRef<RiftMutationData> is non-stackable pool-wide (not
+// an opt-in per-asset MaxPicks) regardless of which of the two pools it's drawn from, and the two
+// pools' assets never overlap - see RiftMutationUtility.Grant/IsAlreadyPicked and
+// LevelUpUtility.CollectRiftMutationCandidates/CollectRiftMarkMutationCandidates. Fixed array with
+// headroom over the current 25-mutation catalog (14 RiftMutation + 11 RiftMarkMutation - see
 // docs/rift-mutations.md), same convention as GlobalUpgradePicks/SkillSlot.Upgrades. Grown from [16]
-// in the same pass that added those 11, since 14+11 already exceeded the old headroom.
+// in the same pass that added the 11 Rift Mark mutations, since 14+11 already exceeded the old
+// headroom.
 component RiftMutationPicks
 {
     array<AssetRef<RiftMutationData>>[32] Picked;
 }
 
 // Flat run-wide record of every upgrade an entity has ever been granted, covering Skill Upgrade/
-// Global Upgrade/Passive Upgrade/Rift Mutation - unlike GlobalUpgradePicks/RiftMutationPicks/
+// Global Upgrade/Passive Upgrade/Rift Mutation/Rift Mark Mutation - unlike GlobalUpgradePicks/RiftMutationPicks/
 // SkillSlot.Upgrades above (each scoped to one kind, kept for their own gameplay checks), this one
 // exists purely for display: the party HUD's PartyHistoryUpgradeContainer reads it to show an icon
 // per pick. Weapon Perk is deliberately excluded (see LevelUpUtility.RecordHistory) - already

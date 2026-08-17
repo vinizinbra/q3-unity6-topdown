@@ -19,6 +19,25 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Heavy Bass
   Rarity: 1
-  Description: Increases pulse damage and knockback.
-  DamageBonus:
+  Description: Resonance Pulse deals more damage.
+  <MaxRank>k__BackingField: 3
+  RankDescriptions:
+  - Resonance Pulse deals 50% more damage.
+  - Resonance Pulse deals 75% more damage and knocks enemies back much harder.
+  - Resonance Pulse deals double damage and releases a second damaging shockwave
+    shortly afterward.
+  BaseDamageAmount:
     RawValue: 655360
+  DamageBonus:
+  - RawValue: 32768
+  - RawValue: 49152
+  - RawValue: 65536
+  KnockbackTierByRank: 000000000100000002000000
+  SubwooferDamagePercent:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 32768
+  SubwooferDelay:
+    RawValue: 26214
+  SubwooferRadiusMultiplier:
+    RawValue: 65536

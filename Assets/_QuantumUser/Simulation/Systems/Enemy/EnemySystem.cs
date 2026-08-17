@@ -423,7 +423,18 @@ namespace Quantum
             // permanently skipping UpdateChasing/TickTraversalJump before it ever got a chance to
             // land - the exact "stuck the moment it has no ground" freeze this comment already
             // describes for Leap, just hitting a feature that runs outside Active instead.
+            //
+            // Also skipped during Preparation/Telegraph - unlike Chasing, neither phase drives
+            // movement (UpdatePreparation only counts StateTimer down and checks the phase
+            // transition; StopMovement already zeroed velocity when the windup began), so there's
+            // no AI-vs-gravity fight to protect against here. Without this exemption, an incidental
+            // knockback impulse landing mid-windup (or just a bit of physics jitter over uneven
+            // ground) that briefly lifts the enemy off IsGrounded would freeze StateTimer entirely -
+            // the attack silently stops charging until the enemy resettles, even though it never
+            // actually left its spot.
             if (filter.Enemy->Phase != EnemyActionPhase.Active &&
+                filter.Enemy->Phase != EnemyActionPhase.Preparation &&
+                filter.Enemy->Phase != EnemyActionPhase.Telegraph &&
                 filter.Enemy->TraversalJumpDuration <= FP._0 &&
                 data.Stats.Height.InitialState == EnemyHeightState.Grounded &&
                 EnemyMovementUtility.IsGrounded(f, filter.Entity, filter.Transform3D->Position, EnemyMovementUtility.GetGroundLayerMask(f)) == false)
@@ -601,7 +612,8 @@ namespace Quantum
                 return;
             }
 
-            if (EnemyDecisionUtility.TrySelectAction(f, filter.Entity, filter.Enemy, data, targetPosition, sqrDistance, out EnemyActionData action, out int slot) == true)
+            if (EnemyDecisionUtility.TrySelectAction(f, filter.Entity, filter.Enemy, data, targetPosition, sqrDistance, out EnemyActionData action, out int slot) == true &&
+                f.FindAsset(action.Delivery).CanBegin(f, ref filter, data, action, filter.Enemy->Target) == true)
             {
                 filter.Enemy->CurrentActionSlot = (byte)slot;
                 filter.Enemy->StateTimer = action.AnticipationTime;
@@ -622,6 +634,11 @@ namespace Quantum
                 return;
             }
 
+            // Either nothing was eligible, or CanBegin == false (e.g. Charge's dash path is wall/
+            // ledge-blocked from here, often a target on a different-height platform) - falls
+            // through to the normal chase movement below instead of committing to Preparation, so
+            // the enemy keeps closing distance/repositioning and this whole check re-runs next tick.
+
             // Unlike Stun (which short-circuits the whole state machine in Update, above), Root only
             // pins this one case - actually walking toward the target. The inRange branch above
             // (attacking) and every other state already either don't move or zero their own
@@ -633,7 +650,8 @@ namespace Quantum
                 return;
             }
 
-            FP moveSpeed = data.Stats.MoveSpeed * StatusEffectUtility.GetSpeedMultiplier(f, filter.Entity);
+            FP moveSpeed = data.Stats.MoveSpeed * StatusEffectUtility.GetSpeedMultiplier(f, filter.Entity)
+                * BossPhaseUtility.ResolveMoveSpeedMultiplier(f, filter.Entity, data);
 
             // UseWaypointDetour overrides Stats.Movement's own direction only while the direct
             // line to the target is wall-blocked - see EnemyPathfindingUtility.
@@ -671,7 +689,8 @@ namespace Quantum
 
             delivery.OnAnticipating(f, ref filter, data, action, filter.Enemy->Target, windupElapsed);
 
-            FP anticipationMultiplier = StatusEffectUtility.GetAnticipationMultiplier(f, filter.Entity);
+            FP anticipationMultiplier = StatusEffectUtility.GetAnticipationMultiplier(f, filter.Entity)
+                * BossPhaseUtility.ResolveAnticipationMultiplier(f, filter.Entity, data);
             filter.Enemy->StateTimer -= f.DeltaTime * anticipationMultiplier;
 
             if (filter.Enemy->StateTimer > FP._0)

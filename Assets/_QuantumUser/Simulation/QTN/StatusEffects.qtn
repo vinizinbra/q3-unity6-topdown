@@ -103,7 +103,7 @@ component StatusEffects
     // range) rather than consuming a new slot every time, so a continuous aura and a pulsed source
     // like Zara's Speaker can both hold their own slot simultaneously. GetAttackSpeedMultiplier
     // multiplies every active slot together. Capped at 4 - only two sources exist today (a Sentry's
-    // Fire Rate aura, Zara's HasteOnHealUpgrade), with headroom for more; ApplyHaste evicts the
+    // Fire Rate aura, Zara's Healing Chorus), with headroom for more; ApplyHaste evicts the
     // soonest-to-expire slot once all 4 are occupied, same shape as Poison.
     array<FP>[4] HasteRemaining;
     array<FP>[4] HasteAttackSpeedMultiplier;
@@ -214,4 +214,12 @@ component StatusEffects
     // StatusEffectUtility.ApplyBound/IsBound, read in DamageUtility.ResolveOutgoingDamage. Plain
     // overwrite-on-reapply, same as Ice/Stun/Root.
     FP BoundRemaining;
+
+    // Temporary move-speed buff (Store's Energy Drink food offer - see docs/store-blacksmith.md) -
+    // see StatusEffectUtility.ApplyTempMoveSpeed/GetTempMoveSpeedMultiplier, folded into
+    // PlayerMovementProcessor.BeforeMove alongside CharacterStats.MoveSpeedMultiplier/Ice's own
+    // slow. Plain overwrite-on-reapply, same as Ice/Haste - a buff has no "downgrade feels bad"
+    // concern the way Burn's tick damage does.
+    FP TempMoveSpeedRemaining;
+    FP TempMoveSpeedMultiplier;
 }

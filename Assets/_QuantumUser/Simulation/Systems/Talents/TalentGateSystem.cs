@@ -55,12 +55,12 @@ namespace Quantum
 
                 for (int i = 0; i < config.Spawns.Length; i++)
                 {
-                    ResolveSpawn(f, entity, transform.Position, config.Spawns[i], i);
+                    ResolveSpawn(f, entity, transform, config.Spawns[i], i);
                 }
             }
         }
 
-        private void ResolveSpawn(Frame f, EntityRef chunkEntity, FPVector3 chunkPosition, SpawnEntityWithRequirement spawner, int index)
+        private void ResolveSpawn(Frame f, EntityRef chunkEntity, Transform3D chunkTransform, SpawnEntityWithRequirement spawner, int index)
         {
             if (TalentUtility.IsSatisfied(f, spawner.Requirement) == false)
                 return;
@@ -80,7 +80,11 @@ namespace Quantum
 
             if (f.Unsafe.TryGetPointer<Transform3D>(spawned, out var spawnedTransform))
             {
-                spawnedTransform->Position = chunkPosition + spawner.Offset;
+                // Offset is authored chunk-local (see SpawnEntityWithRequirement's own comment) -
+                // has to be rotated by the chunk's own Transform3D.Rotation before adding it to a
+                // world position, same as every other chunk-relative offset in this codebase
+                // (EnemyPathfindingUtility.WaypointWorldPosition, ChunkCompoundColliderBuilder).
+                spawnedTransform->Position = chunkTransform.Position + chunkTransform.Rotation * spawner.Offset;
 
                 // Same "f.Create -> set Position -> GroundOffsetUtility.Apply" pattern every
                 // other runtime spawn path in this codebase follows (SpawnedEntitySpawner,

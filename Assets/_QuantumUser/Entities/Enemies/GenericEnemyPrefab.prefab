@@ -582,6 +582,12 @@ MonoBehaviour:
       RawValue: 0
     GuardianDamageReductionAmount:
       RawValue: 0
+    TemporaryDamageReductionRemaining:
+      RawValue: 0
+    TemporaryDamageReductionAmount:
+      RawValue: 0
+    GuardianReactiveCooldownRemaining:
+      RawValue: 0
     IntimidateRemaining:
       RawValue: 0
     IntimidateDamageMultiplier:
@@ -591,6 +597,20 @@ MonoBehaviour:
     KnockbackTakenMultiplier:
       RawValue: 0
     CheatDeathImmunityRemaining:
+      RawValue: 0
+    TemporaryWeaponDamageRemaining:
+      RawValue: 0
+    TemporaryWeaponDamageAmount:
+      RawValue: 0
+    RetaliationCooldownRemaining:
+      RawValue: 0
+    NoAmmoConsumptionRemaining:
+      RawValue: 0
+    BoundRemaining:
+      RawValue: 0
+    TempMoveSpeedRemaining:
+      RawValue: 0
+    TempMoveSpeedMultiplier:
       RawValue: 0
 --- !u!114 &382911034274762262
 MonoBehaviour:
@@ -611,6 +631,7 @@ MonoBehaviour:
   isLocal: 0
   spriteRoot: {fileID: 5679338556948834654}
   viewRadiusPadding: 0.15
+  widgetSpriteTopPadding: 0
   widgetRadiusOffsetMultiplier: 1
 --- !u!114 &8020308353297223607
 MonoBehaviour:
@@ -674,7 +695,7 @@ MonoBehaviour:
   burrowSquash: 0.5
   burrowSinkAmount: 0.3
   jumpCrouchSquash: 0.3
-  jumpCrouchSinkAmount: 0.1
+  jumpCrouchSinkAmount: 0
   jumpPopStretch: 0.35
   defaultCenterPivotHeight: 0
   squashLerpSpeed: 14
@@ -759,7 +780,7 @@ MonoBehaviour:
   burnFlashColor: {r: 1, g: 0.45, b: 0.1, a: 1}
   frontalReducedFlashColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   restColor: {r: 1, g: 1, b: 1, a: 0}
-  duration: 0.1
+  duration: 0.2
   healFlashColor: {r: 0.4, g: 1, b: 0.4, a: 1}
   shieldFlashColor: {r: 0.4, g: 0.75, b: 1, a: 1}
   deathColor: {r: 0, g: 0, b: 0, a: 0.5}

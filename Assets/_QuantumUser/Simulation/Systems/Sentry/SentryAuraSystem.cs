@@ -13,7 +13,7 @@ namespace Quantum
     //
     // Continuously refreshed rather than a persistent flag, so each buff naturally fades some time
     // after leaving the radius instead of needing its own explicit removal path. Fire Rate reuses
-    // RuntimeConfig.EffectConfig.HasteDuration - the same lingering window Zara's HasteOnHealUpgrade
+    // RuntimeConfig.EffectConfig.HasteDuration - the same lingering window Zara's Healing Chorus
     // grants via HasteEffectData - so "how long Haste lingers" is tuned in one place regardless of
     // source, rather than this aura fading near-instantly on a short local constant while the
     // Speaker's much sparser heal-pulse cadence leaves a multi-second tail. Shield Area Rate has no

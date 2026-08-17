@@ -32,12 +32,21 @@ namespace Quantum
             if (f.Exists(filter.Entity) == false)
                 return;
 
-            FPVector3 respawnPosition = filter.PlayerMovement->LastGroundedPosition + FPVector3.Up * config.FallRespawnHeightOffset;
+            FPVector3 respawnPosition = ResolveRespawnPosition(f, filter.PlayerMovement->LastGroundedPosition, config);
             filter.KCC->Teleport(f, respawnPosition);
 
             Log.Debug($"[Fall] {filter.Entity} respawned at {respawnPosition}");
 
             f.Events.PlayerRespawned(filter.Entity, respawnPosition);
+        }
+
+        // Thin wrapper over the shared FallRespawnUtility (also used by EnemyFallSystem for
+        // Boss/Elite falls) - "last grounded position" is by definition right at the edge a player
+        // walked off, so it's the right "fromPosition" to inset away from/find the nearest chunk
+        // around.
+        private static FPVector3 ResolveRespawnPosition(Frame f, FPVector3 lastGroundedPosition, LevelConfig config)
+        {
+            return FallRespawnUtility.ResolveNearestChunkRespawnPosition(f, lastGroundedPosition, config);
         }
 
         public struct Filter

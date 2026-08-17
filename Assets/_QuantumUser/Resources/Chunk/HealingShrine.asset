@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee8242cb69d344458aa9cd25a7c455b3, type: 3}
+  m_Name: HealingShrine
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ChunkSpawnConfig
+  Identifier:
+    Path: _QuantumUser/Resources/Chunk/HealingShrine
+    Guid:
+      Value: 413803737197829795
+  Spawns:
+  - Prototype:
+      Id:
+        Value: 1424514799254446805
+    Offset:
+      X:
+        RawValue: 262144
+      Y:
+        RawValue: 95027
+      Z:
+        RawValue: 262144
+    Requirement: 0
+    Chance:
+      RawValue: 0

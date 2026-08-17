@@ -76,6 +76,14 @@ namespace Quantum
             if (hitEntity != EntityRef.None && f.Has<Enemy>(hitEntity) == true)
                 return DetonateOnEnemyHit || f.Has<InstantDetonate>(projectile->Owner) == true;
 
+            // A shootable destructible prop always registers as a genuine hit so its Health takes the
+            // shot's damage (and breaks at 0 - see BreakableUtility) - even for a piercing or
+            // geometry-ignoring shot (DetonateOnLevelGeometry == false) that would otherwise fly
+            // straight through it via the fallback below. It still consumes a pierce like an enemy
+            // (see DirectHitData.ApplyHit), so it reads as solid, not free to shoot past.
+            if (hitEntity != EntityRef.None && f.Has<Breakable>(hitEntity) == true)
+                return true;
+
             if (IsCombatant(f, hitEntity) == true) // a player - no toggle requested yet, always counts
                 return true;
 

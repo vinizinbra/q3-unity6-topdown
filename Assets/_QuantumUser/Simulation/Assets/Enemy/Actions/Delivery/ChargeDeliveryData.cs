@@ -1,6 +1,7 @@
 namespace Quantum
 {
     using Photon.Deterministic;
+    using Quantum.Physics3D;
 
     // Locked-direction dash ("bull charge"): captures direction the instant the windup ends and
     // commits to a fixed-distance straight line - no re-homing mid-dash, so the player can dodge
@@ -12,8 +13,21 @@ namespace Quantum
     // PhysicsSystem3D's own collision response, Tick runs its own wall check
     // (EnemyMovementUtility.IsBlockedByWall) each step to avoid clipping through geometry - a mid-
     // dash hit also self-stuns the charger (WallStunDuration) rather than just stopping silently.
-    // Begin runs the same wall check once up front against the full DashDistance too, so a charge
-    // whose straight-line path is walled off from the start never commits to the windup at all.
+    //
+    // CanBegin (checked BEFORE Preparation/Telegraph even starts, back while still Chasing) runs the
+    // same wall check against the full DashDistance so a straight-line path that's walled/ledge-
+    // blocked from the current standing spot never gets telegraphed in the first place - the enemy
+    // just keeps chasing (closing distance / repositioning) and re-tries next tick instead. This
+    // also naturally covers a target on a different-height platform: the flat dash-direction ray
+    // catches the platform's own supporting wall the same as any other obstacle. Crucially, a wall
+    // hit alone doesn't fail the check - only a wall with no player standing in front of it (same
+    // line, at or before the wall) does. A player on the far side of that wall's own base - the
+    // ordinary "target standing at a platform's edge, its supporting wall just past them" case - is
+    // still a perfectly valid charge, since Tick's own Active-phase loop stops on contact with ANY
+    // player long before the dash ever reaches the wall behind them. Once CanBegin has passed and
+    // the telegraph actually plays, Begin() is a hard commit - a fair warning shown to the player
+    // must always be followed through, even if the target moved into a wall during the windup, so
+    // Begin never re-checks the wall and never aborts back to Recovery with zero movement.
     //
     // Pair with an EnemyActionData authored with EngageRange well beyond DamageRange (so the charge
     // has room to close the gap it triggered from) and DirectionTracking = DoNotUpdateTargetDirection
@@ -56,7 +70,56 @@ namespace Quantum
         // Stun applied to the charger itself the instant it slams into a wall mid-dash (Tick's own
         // wall check below) - dazed by its own impact, same StatusEffectUtility.ApplyStun every
         // other stun source uses. 0 opts out (no stun, just stop) with no separate bool needed.
+        // NOTE: no-ops on a Boss-tier charger - EnemyTierResistanceConfig's Boss row zeroes out
+        // StunDurationMultiplier (deliberately stunlock-immune) - see WallExposedDuration below for
+        // the Boss-safe equivalent.
         public FP WallStunDuration = FP._1;
+
+        // Bonus vulnerability window for baiting a wall collision specifically - applied via
+        // StatusEffectUtility.ApplyRupture (a plain incoming-damage multiplier, unaffected by the
+        // Stun-immunity above since Boss tier's RuptureDurationMultiplier is left at full strength)
+        // alongside the WallStunDuration self-stun above. 0 (default) opts out - zero behavior
+        // change for the existing Charger or any other charge user. Defaults
+        // WallExposedDamageMultiplier to FP._1_50 rather than C#'s own 0 default so that authoring
+        // only WallExposedDuration > 0 (an easy mistake) can't accidentally make the wall-hit
+        // charger briefly IMMUNE to damage instead of vulnerable - ApplyRupture is a straight
+        // multiply with no sanity clamp.
+        public FP WallExposedDuration;
+        public FP WallExposedDamageMultiplier = FP._1_50;
+
+        public override bool CanBegin(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, EnemyActionData action, EntityRef target)
+        {
+            FPVector3 origin = filter.Transform3D->Position;
+
+            // Not SkillTargetPosition - that's only established once Preparation actually begins
+            // (EnemySystem.UpdateChasing sets it the same tick this is called, right after, but
+            // CanBegin runs first - see the call site's own ordering) - resolve the live target
+            // position directly instead.
+            if (EnemyMovementUtility.TryGetTargetPosition(f, target, out FPVector3 targetPosition) == false)
+                return true; // no target to check against - let TrySelectAction's own gates handle it
+
+            if (TryResolveDirection(data, origin, targetPosition, out FPVector3 direction) == false)
+                return true; // already on top of the target - nothing blocking a (degenerate) charge
+
+            FPVector3 wallCheckOrigin = ResolveWallCheckOrigin(f, origin, WallCheckHeight);
+            int groundLayerMask = EnemyMovementUtility.GetGroundLayerMask(f);
+            Hit3D? wallHit = f.Physics3D.Raycast(wallCheckOrigin, direction, DashDistance, groundLayerMask, QueryOptions.HitStatics | QueryOptions.HitKinematics);
+
+            if (wallHit.HasValue == false)
+                return true; // clear straight line the whole DashDistance - nothing in the way at all
+
+            // A wall exists somewhere along the full DashDistance - but that alone doesn't make the
+            // charge un-executable. Tick's own Active-phase loop stops the instant it reaches ANY
+            // player (TryFindNearestPlayer), not specifically this target, so a wall standing PAST
+            // where a player would be hit is irrelevant - the charge connects and stops long before
+            // ever reaching it. This is exactly the "target on an elevated platform" case: the
+            // platform's own supporting wall sits just beyond the target, but the charge still lands
+            // on the target first. Only a wall with NO player standing in front of it (along this
+            // same line, at or before the wall) actually blocks the charge from being worth starting.
+            Hit3D? playerHit = f.Physics3D.Raycast(wallCheckOrigin, direction, DashDistance, EnemyMovementUtility.GetPlayerLayerMask(f), QueryOptions.HitAll);
+
+            return playerHit.HasValue == true && playerHit.Value.CastDistanceNormalized <= wallHit.Value.CastDistanceNormalized;
+        }
 
         public override bool Begin(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, EnemyActionData action, EntityRef target)
         {
@@ -65,24 +128,18 @@ namespace Quantum
             // telegraph by re-aiming right when the charge starts.
             FPVector3 origin = filter.Transform3D->Position;
             FPVector3 resolvedTarget = EnemyMovementUtility.ResolveDestination(data, filter.Enemy->SkillTargetPosition);
-            bool isFlying = data.Stats.Height.InitialState == EnemyHeightState.Flying;
 
-            FPVector3 delta = isFlying == true
-                ? resolvedTarget - origin
-                : new FPVector3(resolvedTarget.X - origin.X, FP._0, resolvedTarget.Z - origin.Z);
-
-            if (delta.SqrMagnitude <= FP._0)
-                return true; // already on top of the target - nothing to charge toward
-
-            FPVector3 direction = delta.Normalized;
-
-            // Same wall check Tick uses mid-dash (IsBlockedByWall/WallCheckHeight/GetGroundLayerMask),
-            // just run once up front against the full DashDistance - a charge whose straight-line
-            // path is walled off from the very first step should never commit to it at all, rather
-            // than starting the telegraphed windup and immediately face-planting one tick later.
-            FPVector3 wallCheckOrigin = ResolveWallCheckOrigin(f, origin, WallCheckHeight);
-            if (EnemyMovementUtility.IsBlockedByWall(f, wallCheckOrigin, direction, DashDistance, EnemyMovementUtility.GetGroundLayerMask(f)) == true)
-                return true; // wall blocks the whole dash path - abort straight to Recovery, never Active
+            // The telegraph already played and was shown to the player - CanBegin above is what
+            // decides whether this action gets picked at all, back while still Chasing. From here
+            // on this is a hard commit: no wall re-check, no abort back to Recovery with zero
+            // movement. If the resolved delta degenerated to zero (e.g. the target walked exactly
+            // on top of this enemy during the windup), fall back to the enemy's current facing
+            // direction so there's always somewhere to lunge rather than nowhere.
+            if (TryResolveDirection(data, origin, resolvedTarget, out FPVector3 direction) == false)
+            {
+                FP facingRad = filter.Aim->Angle * FP.Deg2Rad;
+                direction = new FPVector3(FPMath.Sin(facingRad), FP._0, FPMath.Cos(facingRad));
+            }
 
             filter.Enemy->SkillTargetPosition = origin + direction * DashDistance;
             filter.Enemy->StateTimer = DashDuration;
@@ -94,6 +151,28 @@ namespace Quantum
             filter.PhysicsBody3D->IsKinematic = true;
 
             return false;
+        }
+
+        // Shared by CanBegin (checked against the live target position, pre-telegraph) and Begin
+        // (checked against the locked SkillTargetPosition, post-telegraph) - false means the delta
+        // degenerated to zero (already on top of the target), the one case with no real direction to
+        // derive a charge/wall-check from.
+        private static bool TryResolveDirection(EnemyDataAsset data, FPVector3 origin, FPVector3 target, out FPVector3 direction)
+        {
+            bool isFlying = data.Stats.Height.InitialState == EnemyHeightState.Flying;
+
+            FPVector3 delta = isFlying == true
+                ? target - origin
+                : new FPVector3(target.X - origin.X, FP._0, target.Z - origin.Z);
+
+            if (delta.SqrMagnitude <= FP._0)
+            {
+                direction = default;
+                return false;
+            }
+
+            direction = delta.Normalized;
+            return true;
         }
 
         public override bool Tick(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, EnemyActionData action, EntityRef target)
@@ -160,6 +239,9 @@ namespace Quantum
             {
                 if (WallStunDuration > FP._0)
                     StatusEffectUtility.ApplyStun(f, filter.Entity, WallStunDuration, filter.Entity);
+
+                if (WallExposedDuration > FP._0)
+                    StatusEffectUtility.ApplyRupture(f, filter.Entity, WallExposedDuration, WallExposedDamageMultiplier);
 
                 return true; // slammed into static geometry - stop here (dazed) instead of clipping through it
             }

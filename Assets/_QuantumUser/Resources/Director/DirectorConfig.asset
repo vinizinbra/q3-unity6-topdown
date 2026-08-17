@@ -27,3 +27,4 @@ MonoBehaviour:
     RawValue: 1048576
   MaxPurchasesPerPulse: 5
   MaxGroupSpawnAttempts: 8
+  ForbiddenSpawnChunkTypes: 0400

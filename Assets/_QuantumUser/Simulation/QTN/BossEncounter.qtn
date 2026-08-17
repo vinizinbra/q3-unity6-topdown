@@ -1,0 +1,35 @@
+// Marker tag for a hand-placed collider entity meant to seal a Boss Arena's own corridor(s) once
+// the encounter begins - see RunPhaseUtility.BeginBossEncounter. BossArenaGateSystem forces its
+// own PhysicsCollider3D disabled the instant it's added (regardless of what IsEnabled was authored
+// as on the prototype - no reliance on remembering to uncheck it per gate); BeginBossEncounter
+// flips it back to Enabled = true on every entity carrying this tag the instant GameState becomes
+// Boss. No fields - presence alone is the whole contract, same shape as other pure marker tags in
+// this codebase (e.g. Decoy, Burrowed).
+component BossArenaGate {}
+
+// Optional hand-authored teleport/spawn points for the Boss phase trigger (see
+// BossArenaMarkerBaker/RunPhaseUtility.BeginBossEncounter, docs/run-phase.md), added ONLY to the
+// one Boss-type Chunk entity - deliberately its own component rather than fields on Chunk itself
+// (which every chunk in the level carries, dozens of them from procedural generation - these
+// arrays would otherwise sit wasted on every non-Boss chunk). Both are chunk-local (relative to
+// the Boss chunk's own Transform3D, same as Chunk.Waypoints/RespawnPoint), and both fall back to
+// the chunk's plain geometric footprint center (LevelGenerationSystem's pre-existing behavior)
+// when this whole component is absent, so nothing breaks if a level never places any marker.
+component BossArena
+{
+    // One point per player slot (up to 4, matching the max player count) so connected players land
+    // spread out instead of stacked on the same spot - RunPhaseUtility.TeleportPlayersToBossArena
+    // assigns player i to point[i % TeleportPointCount], wrapping if fewer points than players are
+    // authored. Only the first TeleportPointCount slots of TeleportPoints are meaningful, the rest
+    // are left default by the baker - same convention as Chunk.Waypoints/WaypointCount.
+    array<FPVector3>[4] TeleportPoints;
+    Byte TeleportPointCount;
+
+    // One entry per boss RunPhaseUtility.SpawnBoss should create - SurvivalPhase.BossPrototype is
+    // spawned once per authored point, so 2+ points spawn that many copies of the same boss (e.g.
+    // twin bosses), not different boss kinds. Fixed-size (4) regardless of how many are actually
+    // authored; only the first SpawnPointCount slots are meaningful, the rest are left default by
+    // the baker. 0 (unauthored) falls back to a single spawn at the geometric center.
+    array<FPVector3>[4] SpawnPoints;
+    Byte SpawnPointCount;
+}

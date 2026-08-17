@@ -84,6 +84,7 @@ MonoBehaviour:
       Value: 504000970958733469
   - Id:
       Value: 335039749820039824
+  RiftMarkMutations:
   - Id:
       Value: 368502755868404442
   - Id:
@@ -94,6 +95,8 @@ MonoBehaviour:
       Value: 298522279084543542
   - Id:
       Value: 458560360156938353
+  - Id:
+      Value: 298522279084543542
   - Id:
       Value: 374078439829188407
   - Id:
@@ -106,7 +109,7 @@ MonoBehaviour:
       Value: 426847582342129630
   - Id:
       Value: 412775407445566150
-  LevelSequence: 00010003
+  LevelSequence: 000001
   WeaponChoicePool:
     Id:
       Value: 489069850842438477

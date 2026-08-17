@@ -51,6 +51,8 @@ namespace Quantum
             {
                 stats->WeaponTalentLevel = runtimePlayer.Talents.WeaponLevel;
                 stats->RerollQuantity = runtimePlayer.Talents.RerollQuantity;
+                stats->ShopWeaponOfferCount = runtimePlayer.Talents.ShopWeaponOfferCount;
+                stats->Coins = (FP)runtimePlayer.Talents.StartingCoins;
                 TalentUtility.ApplyPerPlayerTalents(f, entity, runtimePlayer, stats);
             }
 

@@ -3,7 +3,8 @@ namespace Quantum
     using UnityEngine;
 
     // Base for the "Passive Upgrade" level-up pool kind - see docs/level-up-upgrades.md. Icon/
-    // DisplayName/Rarity come from UpgradeData; this adds a virtual Apply, same shape as
+    // DisplayName come from UpgradeData (no Rarity - see UpgradeData's own comment); this adds a
+    // virtual Apply, same shape as
     // GlobalUpgradeData.Apply(Frame, EntityRef) - each concrete effect (e.g. a hero's own passive
     // ascension) is its own subtype rather than a switch here, and reads whatever hero-specific
     // component it needs off the entity itself.

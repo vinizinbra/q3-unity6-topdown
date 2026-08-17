@@ -1,0 +1,81 @@
+// Store - a Breathing-only POI selling weapons and food/utility items for Coins (see
+// docs/store-blacksmith.md). Reuses the generic POI/Context-Interaction framework
+// (Poi.qtn/ContextInteraction.qtn) Healing Shrine/Cursed Rift already established. Unlike either of
+// those, Store deliberately has NO PoiUsagePolicy of its own - the whole-POI PoiUsage mechanism is
+// one-bit-per-player-per-POI, not enough to track "did I buy offer N" independently per offer, so
+// purchase state lives entirely on StorePurchases below instead. The POI itself is always
+// re-browsable while Available.
+component Store
+{
+    PoiAvailability Availability;
+
+    // Radius/Priority live on the sibling generic Interactable component (same entity, see
+    // ContextInteraction.qtn) - same convention CursedRift/HealingShrine already use.
+}
+
+struct StoreWeaponOffer
+{
+    AssetRef<WeaponDataAsset> WeaponData;
+
+    // Mirrors LevelUpOption.RolledPerks' own [5] ceiling - a purchased offer is granted via the
+    // exact same WeaponChoiceUtility.Grant a Choose-Weapon level-up option already uses (see
+    // StoreUtility.BuyWeapon), so the shape has to match.
+    array<AssetRef<WeaponPerkData>>[5] RolledPerks;
+    Byte RolledPerkCount;
+    FP Price;
+}
+
+struct StoreFoodOffer
+{
+    AssetRef<FoodOfferData> Food;
+    FP Price;
+}
+
+// Lives on the STORE ENTITY - shared, deterministic, rolled once per Breathing Break regardless of
+// which player triggers the roll (f.Filter enumeration order is deterministic across clients, same
+// guarantee every other f.RNG call site in this codebase already relies on). Re-rolled lazily the
+// first time any player interacts with the Store during a Break whose index doesn't match
+// RolledAtBreathingIndex yet - not proactively at Breathing-start, so a Store nobody ever visits
+// this Break costs nothing to "restock".
+component StoreInventory
+{
+    Int32 RolledAtBreathingIndex; // -1 initially - never matches a real Global.BreathingIndex
+
+    array<StoreWeaponOffer>[3] WeaponOffers;
+    Byte WeaponOfferCount; // may be < 3 if the weapon pool is thin
+
+    array<StoreFoodOffer>[2] FoodOffers;
+    Byte FoodOfferCount;
+}
+
+// Presence = this player's Store window is open. No inner state enum, unlike CursedRiftInteraction
+// - Store has exactly one real state ("Browsing"); any number of Buy commands can land while it's
+// present, ended only by an explicit Close or the unconditional Breathing-end sweep (see
+// RunPhaseUtility.CloseStoreInteractionsOnBreathingEnd). Lives on the player's own character
+// entity, same "per-player interaction state, found via PlayerLink" convention CursedRiftInteraction
+// already uses.
+component StoreInteraction
+{
+    EntityRef Store;
+}
+
+// One player's own record of which specific Store offers they've already bought - NOT PoiUsage
+// (that's POI-EntityRef-keyed only, one bit per whole POI, not per-offer - see Store's own comment).
+// Find-and-overwrite-in-place by (Store, OfferIndex, IsWeaponOffer), same idiom
+// PoiUsageUtility.MarkUsed already uses for its own array. [8] is headroom for the whole run (at
+// most 5 real entries: 3 weapon + 2 food offers from the one Store instance this pass) - the SAME
+// (Store, OfferIndex) slot's entry is simply overwritten with a fresh PurchasedAtBreathingIndex
+// once a NEW inventory roll reuses that index for a different item, so this never actually fills up
+// regardless of how many Breaks a run has.
+struct StorePurchaseEntry
+{
+    EntityRef Store;
+    Byte OfferIndex;
+    Boolean IsWeaponOffer;
+    Int32 PurchasedAtBreathingIndex;
+}
+
+component StorePurchases
+{
+    array<StorePurchaseEntry>[8] Entries;
+}

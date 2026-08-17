@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ecc940e07fcb14c9399ac5b8d00f7479, type: 3}
+  m_Name: CombatStims
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.TempDamageFoodOfferData
+  Identifier:
+    Path: _QuantumUser/Resources/Store/CombatStims
+    Guid:
+      Value: 328030449641679044
+  Icon: {fileID: 0}
+  DisplayName: Combat Stims
+  TopLabel: DAMAGE
+  Description: +50% Weapon Damage for 20 seconds.
+  ButtonLabel: BUY
+  Price:
+    RawValue: 3276800
+  Weight: 1
+  Duration:
+    RawValue: 65536
+  DamageBonus:
+    RawValue: 32768

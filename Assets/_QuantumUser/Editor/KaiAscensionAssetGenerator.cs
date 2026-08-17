@@ -69,7 +69,6 @@ namespace QuantumUser.Editor
             SingularitySkillAction singularity = CreateOrUpdate<SingularitySkillAction>($"{HeroSkillUpgradesFolderPath}/SingularitySkillAction.asset", asset =>
             {
                 asset.DisplayName = "Singularity";
-                asset.Rarity = UpgradeRarity.Epic;
                 asset.Activated = false;
                 asset.MaxRank = 3;
                 asset.Description = "Vortex grows larger, pulls harder, and interrupts enemies' telegraphed attacks.";
@@ -91,7 +90,6 @@ namespace QuantumUser.Editor
             CompressionSkillAction compression = CreateOrUpdate<CompressionSkillAction>($"{HeroSkillUpgradesFolderPath}/CompressionSkillAction.asset", asset =>
             {
                 asset.DisplayName = "Compression";
-                asset.Rarity = UpgradeRarity.Rare;
                 asset.Activated = false;
                 asset.MaxRank = 3;
                 asset.Description = "Vortex damages trapped enemies, scaling up with how many are caught at once.";
@@ -114,7 +112,6 @@ namespace QuantumUser.Editor
             VortexCollapseSkillAction vortexCollapse = CreateOrUpdate<VortexCollapseSkillAction>($"{HeroSkillUpgradesFolderPath}/VortexCollapseSkillAction.asset", asset =>
             {
                 asset.DisplayName = "Vortex Collapse";
-                asset.Rarity = UpgradeRarity.Rare;
                 asset.Activated = false;
                 asset.MaxRank = 3;
                 asset.Description = "When Vortex ends, it collapses in a heavy blast around its center.";
@@ -132,7 +129,6 @@ namespace QuantumUser.Editor
             VoidShardsSkillAction voidShards = CreateOrUpdate<VoidShardsSkillAction>($"{HeroSkillUpgradesFolderPath}/VoidShardsSkillAction.asset", asset =>
             {
                 asset.DisplayName = "Void Shards";
-                asset.Rarity = UpgradeRarity.Epic;
                 asset.Activated = false;
                 asset.MaxRank = 3;
                 asset.Description = "Vortex periodically fires homing Void Shards at nearby enemies.";
@@ -152,7 +148,6 @@ namespace QuantumUser.Editor
             EventHorizonPassiveUpgradeData eventHorizon = CreateOrUpdate<EventHorizonPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/EventHorizon.asset", asset =>
             {
                 asset.DisplayName = "Event Horizon";
-                asset.Rarity = UpgradeRarity.Rare;
                 asset.MaxRank = 3;
                 asset.Description = "Grows Kai's Void Field, slowing enemy projectiles further and eventually enemies themselves.";
                 asset.RankDescriptions = new[]
@@ -171,7 +166,6 @@ namespace QuantumUser.Editor
             UndertowPassiveUpgradeData undertow = CreateOrUpdate<UndertowPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/Undertow.asset", asset =>
             {
                 asset.DisplayName = "Undertow";
-                asset.Rarity = UpgradeRarity.Epic;
                 asset.MaxRank = 3;
                 asset.Description = "Weapon hits pull enemies together, eventually Binding them for bonus damage.";
                 asset.RankDescriptions = new[]
@@ -190,7 +184,6 @@ namespace QuantumUser.Editor
             FirstStrikePassiveUpgradeData firstStrike = CreateOrUpdate<FirstStrikePassiveUpgradeData>($"{PassiveUpgradesFolderPath}/FirstStrike.asset", asset =>
             {
                 asset.DisplayName = "First Strike";
-                asset.Rarity = UpgradeRarity.Rare;
                 asset.MaxRank = 3;
                 asset.Description = "Your first hit against an enemy deals bonus damage.";
                 asset.RankDescriptions = new[]
@@ -206,7 +199,6 @@ namespace QuantumUser.Editor
             MirrorStepSkillAction mirrorStep = CreateOrUpdate<MirrorStepSkillAction>($"{DashUpgradesFolderPath}/MirrorStepSkillAction.asset", asset =>
             {
                 asset.DisplayName = "Mirror Step";
-                asset.Rarity = UpgradeRarity.Rare;
                 asset.MaxRank = 3;
                 asset.Description = "Dashing reflects nearby enemy projectiles back toward their attackers.";
                 asset.RankDescriptions = new[]
@@ -224,7 +216,6 @@ namespace QuantumUser.Editor
             PhantomStrikeSkillAction phantomStrike = CreateOrUpdate<PhantomStrikeSkillAction>($"{DashUpgradesFolderPath}/PhantomStrikeSkillAction.asset", asset =>
             {
                 asset.DisplayName = "Phantom Strike";
-                asset.Rarity = UpgradeRarity.Epic;
                 asset.MaxRank = 3;
                 asset.Description = "After Dashing, your next weapon hit deals bonus damage and pierces extra enemies.";
                 asset.RankDescriptions = new[]
@@ -245,7 +236,6 @@ namespace QuantumUser.Editor
             WarpWakeSkillAction warpWake = CreateOrUpdate<WarpWakeSkillAction>($"{DashUpgradesFolderPath}/WarpWakeSkillAction.asset", asset =>
             {
                 asset.DisplayName = "Warp Wake";
-                asset.Rarity = UpgradeRarity.Epic;
                 asset.MaxRank = 3;
                 asset.Description = "Dashing leaves behind a temporary Void that pulls nearby enemies inward.";
                 asset.RankDescriptions = new[]

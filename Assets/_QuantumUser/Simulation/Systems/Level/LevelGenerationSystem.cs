@@ -22,6 +22,7 @@ namespace Quantum
             public int OriginZ;
             public int Width;
             public int Depth;
+            public ChunkConnectionSide AllowedConnectionSides;
         }
 
         // Footprint isn't stored here - it's read from the entity's own baked Chunk component
@@ -33,20 +34,6 @@ namespace Quantum
             public AssetRef<EntityPrototype> Prototype;
             public bool MustHave;
         }
-
-        // A candidate attachment point - an empty cell adjacent to an already-placed chunk.
-        private struct FrontierCell
-        {
-            public int X;
-            public int Z;
-        }
-
-        private const int MaxAttemptsPerRequest = 8;
-
-        // MustHave entries get far more tries before being given up on - an optional chunk failing
-        // to place is expected background noise (the frontier just didn't have room), but a
-        // required one failing is a real problem worth burning extra attempts to avoid.
-        private const int MaxAttemptsPerMustHaveRequest = 64;
 
         public override void Update(Frame f)
         {
@@ -90,16 +77,16 @@ namespace Quantum
             Log.Debug($"[LevelGen] grid origin (world cell units) = ({gridOriginX},{gridOriginZ})");
 
             bool[,] occupied = new bool[config.GridWidth, config.GridDepth];
+            ChunkConnectionSide[,] neighborAllowedSides = new ChunkConnectionSide[config.GridWidth, config.GridDepth];
             List<PlacedChunk> placed = new List<PlacedChunk>();
-            List<FrontierCell> frontier = new List<FrontierCell>();
 
-            SeedFromExistingChunks(f, config, gridOriginX, gridOriginZ, occupied, placed, frontier);
-            Log.Debug($"[LevelGen] seeded from existing chunks - placed={placed.Count}, frontier={frontier.Count}");
+            SeedFromExistingChunks(f, config, gridOriginX, gridOriginZ, occupied, neighborAllowedSides, placed);
+            Log.Debug($"[LevelGen] seeded from existing chunks - placed={placed.Count}");
 
             List<ChunkRequest> bag = BuildShuffledBag(f, config);
             Log.Debug($"[LevelGen] bag built - requests={bag.Count}");
 
-            GrowLevel(f, config, gridOriginX, gridOriginZ, occupied, placed, frontier, bag);
+            GrowLevel(f, config, gridOriginX, gridOriginZ, occupied, neighborAllowedSides, placed, bag);
             Log.Debug($"[LevelGen] grow complete - placed={placed.Count}");
 
             FillInnerGaps(f, config, gridOriginX, gridOriginZ, occupied);
@@ -127,14 +114,13 @@ namespace Quantum
                     continue;
                 }
 
-                FPVector3 position = f.Unsafe.GetPointer<Transform3D>(entity)->Position;
-                FPVector3 minCorner = position + MinCornerOffsetWorld(chunk.ChunkSizeWidth, chunk.ChunkSizeDepth, chunk.Rotation);
+                // Chunks are min-corner pivoted and never rotated, so Position IS the min corner and
+                // the footprint dimensions map straight to world X/Z.
+                FPVector3 minCorner = f.Unsafe.GetPointer<Transform3D>(entity)->Position;
                 int arenaWorldOriginX = FPMath.RoundToInt(minCorner.X / config.CellSize);
                 int arenaWorldOriginZ = FPMath.RoundToInt(minCorner.Z / config.CellSize);
-                int localWidth = ToCellCount(chunk.ChunkSizeWidth, config);
-                int localDepth = ToCellCount(chunk.ChunkSizeDepth, config);
-                int arenaWidth = EffectiveWidth(localWidth, localDepth, chunk.Rotation);
-                int arenaDepth = EffectiveDepth(localWidth, localDepth, chunk.Rotation);
+                int arenaWidth = ToCellCount(chunk.ChunkSizeWidth, config);
+                int arenaDepth = ToCellCount(chunk.ChunkSizeDepth, config);
 
                 int gridOriginX = arenaWorldOriginX - (config.GridWidth - arenaWidth) / 2;
                 int gridOriginZ = arenaWorldOriginZ - (config.GridDepth - arenaDepth) / 2;
@@ -146,17 +132,15 @@ namespace Quantum
             return (0, 0);
         }
 
-        private void SeedFromExistingChunks(Frame f, LevelConfig config, int gridOriginX, int gridOriginZ, bool[,] occupied, List<PlacedChunk> placed, List<FrontierCell> frontier)
+        private void SeedFromExistingChunks(Frame f, LevelConfig config, int gridOriginX, int gridOriginZ, bool[,] occupied, ChunkConnectionSide[,] neighborAllowedSides, List<PlacedChunk> placed)
         {
             var filtered = f.Filter<Chunk>();
             while (filtered.Next(out EntityRef entity, out Chunk chunk))
             {
-                FPVector3 position = f.Unsafe.GetPointer<Transform3D>(entity)->Position;
-                FPVector3 minCorner = position + MinCornerOffsetWorld(chunk.ChunkSizeWidth, chunk.ChunkSizeDepth, chunk.Rotation);
+                // Min-corner pivoted, never rotated - Position IS the min corner.
+                FPVector3 minCorner = f.Unsafe.GetPointer<Transform3D>(entity)->Position;
                 int worldOriginX = FPMath.RoundToInt(minCorner.X / config.CellSize);
                 int worldOriginZ = FPMath.RoundToInt(minCorner.Z / config.CellSize);
-                int localWidth = ToCellCount(chunk.ChunkSizeWidth, config);
-                int localDepth = ToCellCount(chunk.ChunkSizeDepth, config);
 
                 PlacedChunk placedChunk = new PlacedChunk
                 {
@@ -164,13 +148,13 @@ namespace Quantum
                     Type = chunk.Type,
                     OriginX = worldOriginX - gridOriginX,
                     OriginZ = worldOriginZ - gridOriginZ,
-                    Width = EffectiveWidth(localWidth, localDepth, chunk.Rotation),
-                    Depth = EffectiveDepth(localWidth, localDepth, chunk.Rotation),
+                    Width = ToCellCount(chunk.ChunkSizeWidth, config),
+                    Depth = ToCellCount(chunk.ChunkSizeDepth, config),
+                    AllowedConnectionSides = chunk.AllowedConnectionSides,
                 };
 
-                MarkOccupied(occupied, placedChunk);
+                MarkOccupied(occupied, neighborAllowedSides, placedChunk);
                 placed.Add(placedChunk);
-                AddFrontierCells(occupied, placedChunk, frontier);
 
                 Log.Debug($"[LevelGen] found pre-existing {chunk.Type} chunk {entity} at grid cell ({placedChunk.OriginX},{placedChunk.OriginZ}) (world cell {worldOriginX},{worldOriginZ}), footprint {placedChunk.Width}x{placedChunk.Depth}");
             }
@@ -190,14 +174,12 @@ namespace Quantum
                     continue;
                 }
 
-                FPVector3 position = f.Unsafe.GetPointer<Transform3D>(entity)->Position;
-                FPVector3 minCorner = position + MinCornerOffsetWorld(chunk.ChunkSizeWidth, chunk.ChunkSizeDepth, chunk.Rotation);
-                FP effectiveWidth = SwapsAxes(chunk.Rotation) ? chunk.ChunkSizeDepth : chunk.ChunkSizeWidth;
-                FP effectiveDepth = SwapsAxes(chunk.Rotation) ? chunk.ChunkSizeWidth : chunk.ChunkSizeDepth;
-                FPVector3 spawnPosition = minCorner + new FPVector3(effectiveWidth, 0, effectiveDepth) * FP._0_50;
+                // Min-corner pivoted, never rotated - Position IS the min corner, size maps to X/Z.
+                FPVector3 minCorner = f.Unsafe.GetPointer<Transform3D>(entity)->Position;
+                FPVector3 spawnPosition = minCorner + new FPVector3(chunk.ChunkSizeWidth, 0, chunk.ChunkSizeDepth) * FP._0_50;
 
                 f.Global->PlayerSpawnPosition = spawnPosition;
-                Log.Debug($"[LevelGen] PlayerSpawnPosition set to {spawnPosition} (Boss Arena at {position}, no LevelConfig)");
+                Log.Debug($"[LevelGen] PlayerSpawnPosition set to {spawnPosition} (Boss Arena at {minCorner}, no LevelConfig)");
                 return;
             }
 
@@ -206,21 +188,9 @@ namespace Quantum
 
         // Reads the already-placed LobbyStart chunk's own world-space footprint back out for
         // LobbyBoundarySystem (is every player outside this footprint yet) - see docs/talents.md.
-        // Deliberately built from Global.PlayerSpawnPosition (AssignPlayerSpawnPosition's own
-        // FootprintCenterToWorld result, pure grid-cell arithmetic) as the center, NOT from
-        // Transform3D.Position + MinCornerOffsetWorld like SpawnAtBossArenaDirectly/
-        // ComputeGridOrigin use for a hand-placed chunk. Those two are only consistent with each
-        // other when RotationYaw actually returns the chunk's real yaw - it currently has a
-        // `return 0;` short-circuit before its switch (pre-existing, not introduced by this
-        // feature) that makes every procedurally-PLACED chunk's Transform3D.Position get computed
-        // as if it were never rotated, regardless of the real Chunk.Rotation it was placed with.
-        // Reading the corner back out via Rotation-aware math while Position itself ignores
-        // Rotation produced a wrong AABB for any non-Degrees0 LobbyStart placement (3 in 4, since
-        // TryPlaceRequest rolls rotation via f.RNG->Next(0,4)) - flipping GameState to Survival
-        // almost immediately instead of waiting for a player to actually leave. PlayerSpawnPosition's own
-        // computation never goes through RotatedChunkPosition/a quaternion at all, so it's immune
-        // to that bug regardless of whether/when RotationYaw itself gets fixed. SwapsAxes (the
-        // cell-swap logic, not the yaw angle) is unaffected by the same bug and safe to reuse here.
+        // Built from Global.PlayerSpawnPosition (AssignPlayerSpawnPosition's own FootprintCenterToWorld
+        // result, pure grid-cell arithmetic) as the center, with the authored Width/Depth as the
+        // half-extent - chunks are never rotated, so those map straight to world X/Z.
         internal static bool TryGetLobbyStartBounds(Frame f, out FPVector3 min, out FPVector3 max)
         {
             var filtered = f.Filter<Chunk>();
@@ -232,9 +202,7 @@ namespace Quantum
                     continue;
                 }
 
-                FP width = SwapsAxes(chunk.Rotation) ? chunk.ChunkSizeDepth : chunk.ChunkSizeWidth;
-                FP depth = SwapsAxes(chunk.Rotation) ? chunk.ChunkSizeWidth : chunk.ChunkSizeDepth;
-                FPVector3 halfExtent = new FPVector3(width, FP._0, depth) * FP._0_50;
+                FPVector3 halfExtent = new FPVector3(chunk.ChunkSizeWidth, FP._0, chunk.ChunkSizeDepth) * FP._0_50;
                 FPVector3 center = f.Global->PlayerSpawnPosition;
 
                 min = center - halfExtent;
@@ -245,6 +213,88 @@ namespace Quantum
             min = default;
             max = default;
             return false;
+        }
+
+        // Reads the Boss Arena chunk's own footprint center back out for
+        // RunPhaseUtility.BeginBossEncounter (teleport destination + boss spawn position) - same
+        // "the chunk IS the boundary, read back from its own Transform3D/ChunkSize" idiom
+        // TryGetLobbyStartBounds above already uses, just a single center point rather than a
+        // min/max pair since nothing needs the Boss Arena's full bounds today. Min-corner pivoted,
+        // never rotated - Position IS the min corner, same math ComputeGridOrigin/
+        // SpawnAtBossArenaDirectly already use elsewhere in this file.
+        internal static bool TryFindBossArenaChunk(Frame f, out EntityRef chunkEntity)
+        {
+            var filtered = f.Filter<Chunk>();
+
+            while (filtered.Next(out EntityRef entity, out Chunk chunk))
+            {
+                if (chunk.Type == ChunkType.Boss)
+                {
+                    chunkEntity = entity;
+                    return true;
+                }
+            }
+
+            chunkEntity = EntityRef.None;
+            return false;
+        }
+
+        // Where connected players teleport to for the boss encounter (see
+        // RunPhaseUtility.TeleportPlayersToBossArena) - the Boss chunk's own hand-authored
+        // BossArena.TeleportPoints if baked (see BossArenaMarkerBaker; one per player slot, so
+        // players land spread out instead of stacked on the same spot), otherwise a single point
+        // at the chunk's plain geometric footprint center (the original, pre-marker behavior).
+        // BossArena is its own component, not fields on Chunk itself - every chunk in the level
+        // carries Chunk (dozens of them, from procedural generation), so these arrays would
+        // otherwise sit wasted on every non-Boss chunk. Appends into positions rather than
+        // returning a new list so callers reuse one buffer - same shape as
+        // ResolveBossSpawnPositions below.
+        internal static void ResolveBossTeleportPositions(Frame f, EntityRef chunkEntity, List<FPVector3> positions)
+        {
+            Chunk* chunk = f.Unsafe.GetPointer<Chunk>(chunkEntity);
+            Transform3D* transform = f.Unsafe.GetPointer<Transform3D>(chunkEntity);
+
+            if (f.Unsafe.TryGetPointer<BossArena>(chunkEntity, out var bossArena) == true && bossArena->TeleportPointCount > 0)
+            {
+                for (int i = 0; i < bossArena->TeleportPointCount; i++)
+                {
+                    positions.Add(transform->Position + transform->Rotation * bossArena->TeleportPoints[i]);
+                }
+
+                return;
+            }
+
+            positions.Add(FootprintCenter(chunk, transform));
+        }
+
+        // Where the boss(es) spawn (see RunPhaseUtility.SpawnBoss) - the Boss chunk's own
+        // hand-authored BossArena.SpawnPoints if baked (SurvivalPhase.BossPrototype is spawned once
+        // per point, so 2+ points spawn that many copies of the same boss, not different kinds),
+        // otherwise a single spawn at the chunk's plain geometric footprint center (the original,
+        // pre-marker behavior). Appends into positions rather than returning a new list so callers
+        // (including EnemyFallSystem, which only wants the first entry for a fallen boss's respawn
+        // point) can reuse one buffer.
+        internal static void ResolveBossSpawnPositions(Frame f, EntityRef chunkEntity, List<FPVector3> positions)
+        {
+            Chunk* chunk = f.Unsafe.GetPointer<Chunk>(chunkEntity);
+            Transform3D* transform = f.Unsafe.GetPointer<Transform3D>(chunkEntity);
+
+            if (f.Unsafe.TryGetPointer<BossArena>(chunkEntity, out var bossArena) == true && bossArena->SpawnPointCount > 0)
+            {
+                for (int i = 0; i < bossArena->SpawnPointCount; i++)
+                {
+                    positions.Add(transform->Position + transform->Rotation * bossArena->SpawnPoints[i]);
+                }
+
+                return;
+            }
+
+            positions.Add(FootprintCenter(chunk, transform));
+        }
+
+        private static FPVector3 FootprintCenter(Chunk* chunk, Transform3D* transform)
+        {
+            return transform->Position + new FPVector3(chunk->ChunkSizeWidth, 0, chunk->ChunkSizeDepth) * FP._0_50;
         }
 
         // LobbyStart is pinned to the end, not the front - right after a hand-placed BossArena,
@@ -288,11 +338,11 @@ namespace Quantum
             }
         }
 
-        private void GrowLevel(Frame f, LevelConfig config, int gridOriginX, int gridOriginZ, bool[,] occupied, List<PlacedChunk> placed, List<FrontierCell> frontier, List<ChunkRequest> bag)
+        private void GrowLevel(Frame f, LevelConfig config, int gridOriginX, int gridOriginZ, bool[,] occupied, ChunkConnectionSide[,] neighborAllowedSides, List<PlacedChunk> placed, List<ChunkRequest> bag)
         {
             foreach (ChunkRequest request in bag)
             {
-                TryPlaceRequest(f, config, gridOriginX, gridOriginZ, request, occupied, placed, frontier);
+                TryPlaceRequest(f, config, gridOriginX, gridOriginZ, request, occupied, neighborAllowedSides, placed);
             }
         }
 
@@ -496,9 +546,9 @@ namespace Quantum
         // Creates the entity first so the footprint can be read straight off its own baked Chunk
         // component (LevelConfig never duplicates a size that's already authored on the prefab) -
         // then searches for a valid spot for that exact footprint, destroying the entity if none
-        // of the attempts pan out. Safe to create-then-destroy within the same one-shot frame-0
+        // exists anywhere on the grid. Safe to create-then-destroy within the same one-shot frame-0
         // pass: the entity never exists in a frame the View layer would see.
-        private bool TryPlaceRequest(Frame f, LevelConfig config, int gridOriginX, int gridOriginZ, ChunkRequest request, bool[,] occupied, List<PlacedChunk> placed, List<FrontierCell> frontier)
+        private bool TryPlaceRequest(Frame f, LevelConfig config, int gridOriginX, int gridOriginZ, ChunkRequest request, bool[,] occupied, ChunkConnectionSide[,] neighborAllowedSides, List<PlacedChunk> placed)
         {
             if (request.Prototype.Id.IsValid == false)
             {
@@ -508,63 +558,49 @@ namespace Quantum
 
             EntityRef entity = f.Create(request.Prototype);
             Chunk* chunk = f.Unsafe.GetPointer<Chunk>(entity);
-            int localWidth = ToCellCount(chunk->ChunkSizeWidth, config);
-            int localDepth = ToCellCount(chunk->ChunkSizeDepth, config);
 
-            // Chosen once per chunk, before the footprint is used for any grid math - a quarter
-            // turn swaps which dimension acts as the grid width/depth (see EffectiveWidth/Depth).
-            ChunkRotation rotation = (ChunkRotation)f.RNG->Next(0, 4);
-            int width = EffectiveWidth(localWidth, localDepth, rotation);
-            int depth = EffectiveDepth(localWidth, localDepth, rotation);
+            // Chunks are always placed unrotated - the authored Width/Depth map straight onto the
+            // world grid's X/Z. (A random per-chunk rotation used to be rolled here, but the rotation
+            // pipeline never worked correctly and was removed entirely.)
+            int width = ToCellCount(chunk->ChunkSizeWidth, config);
+            int depth = ToCellCount(chunk->ChunkSizeDepth, config);
 
-            if (frontier.Count == 0)
+            if (placed.Count == 0)
             {
-                // Nothing placed yet and no pre-existing chunk in the scene - bootstrap at the grid center.
+                // Nothing placed yet and no pre-existing chunk in the scene - bootstrap at the grid
+                // center. Nothing to attach to yet, so this skips the "must touch an already-placed
+                // chunk" rule FindAllValidOrigins enforces for every request after this one.
                 int centerX = (config.GridWidth - width) / 2;
                 int centerZ = (config.GridDepth - depth) / 2;
 
-                if (CommitPlacement(f, config, gridOriginX, gridOriginZ, entity, chunk, request.Type, rotation, width, depth, centerX, centerZ, occupied, placed, frontier))
+                if (FitsInGrid(config, width, depth, centerX, centerZ) && IsFree(occupied, width, depth, centerX, centerZ))
                 {
+                    CommitPlacement(f, config, gridOriginX, gridOriginZ, entity, chunk, request.Type, width, depth, centerX, centerZ, occupied, neighborAllowedSides, placed);
                     return true;
                 }
             }
             else
             {
-                int maxAttempts = request.MustHave ? MaxAttemptsPerMustHaveRequest : MaxAttemptsPerRequest;
+                // Exhaustively scans every legal origin instead of gambling on a bounded number of
+                // random anchor+offset guesses - a big footprint (e.g. a 20x10 Traversal chunk) has
+                // very low odds of a uniformly-random offset landing on one of its few valid spots
+                // once the grid has partially filled in, which used to make a MUST-HAVE chunk fail
+                // and get destroyed even when plenty of room for it still existed elsewhere on the
+                // grid. This is exhaustive rather than probabilistic, so a MUST-HAVE request now only
+                // fails when there is genuinely nowhere left to put it.
+                List<(int X, int Z)> candidates = FindAllValidOrigins(config, request.Type, chunk, width, depth, occupied, neighborAllowedSides, placed);
 
-                for (int attempt = 0; attempt < maxAttempts; attempt++)
+                if (candidates.Count > 0)
                 {
-                    if (!TryPickFrontierCell(f, occupied, frontier, out FrontierCell anchor))
-                    {
-                        break;
-                    }
-
-                    (int originX, int originZ) = RandomOffsetAroundAnchor(f, width, depth, anchor.X, anchor.Z);
-
-                    // LobbyStart is meant to be a safe area away from the boss, not a room right
-                    // next to it - reject this specific placement and try another anchor rather
-                    // than aborting the whole request, since other frontier cells not bordering
-                    // the Boss Arena are still perfectly valid for a LobbyStart chunk. Checked
-                    // against the actual resulting footprint, not the anchor cell alone -
-                    // RandomOffsetAroundAnchor only guarantees the anchor falls somewhere inside
-                    // the footprint, so the footprint can still end up flush against the Boss
-                    // Arena on a side the anchor cell itself never bordered.
-                    if (request.Type == ChunkType.LobbyStart && WouldBeAdjacentToBoss(placed, originX, originZ, width, depth))
-                    {
-                        Log.Debug("[LevelGen] LobbyStart footprint would end up adjacent to the Boss Arena - trying a different anchor");
-                        continue;
-                    }
-
-                    if (CommitPlacement(f, config, gridOriginX, gridOriginZ, entity, chunk, request.Type, rotation, width, depth, originX, originZ, occupied, placed, frontier))
-                    {
-                        return true;
-                    }
+                    (int originX, int originZ) = candidates[f.RNG->Next(0, candidates.Count)];
+                    CommitPlacement(f, config, gridOriginX, gridOriginZ, entity, chunk, request.Type, width, depth, originX, originZ, occupied, neighborAllowedSides, placed);
+                    return true;
                 }
             }
 
             if (request.MustHave)
             {
-                Log.Error($"[LevelGen] MUST-HAVE {request.Type} ({width}x{depth}) found no valid spot after {MaxAttemptsPerMustHaveRequest} attempts - destroying entity {entity}. Level will generate without a required chunk.");
+                Log.Error($"[LevelGen] MUST-HAVE {request.Type} ({width}x{depth}) found no valid spot anywhere on the grid - destroying entity {entity}. Level will generate without a required chunk.");
             }
             else
             {
@@ -575,63 +611,79 @@ namespace Quantum
             return false;
         }
 
-        private bool TryPickFrontierCell(Frame f, bool[,] occupied, List<FrontierCell> frontier, out FrontierCell result)
+        // Every legal origin for this footprint, in scan order (not shuffled - GrowLevel's caller
+        // picks randomly among the results via f.RNG, so determinism only needs the CANDIDATE SET to
+        // be identical across clients, not the scan order). A candidate must touch at least one
+        // already-placed chunk (ComputeTouchedSides != 0) - not just fit in a free rectangle - so a
+        // MUST-HAVE chunk never lands as a disconnected island unreachable from the rest of the level
+        // graph; the touched side(s) must also be mutually allowed by both this chunk's own
+        // AllowedConnectionSides and every neighbor's, exactly as CommitPlacement used to check
+        // per-attempt.
+        private List<(int X, int Z)> FindAllValidOrigins(LevelConfig config, ChunkType type, Chunk* chunk, int width, int depth, bool[,] occupied, ChunkConnectionSide[,] neighborAllowedSides, List<PlacedChunk> placed)
         {
-            while (frontier.Count > 0)
-            {
-                int index = f.RNG->Next(0, frontier.Count);
-                FrontierCell candidate = frontier[index];
+            List<(int X, int Z)> candidates = new List<(int X, int Z)>();
+            int maxOriginX = config.GridWidth - width;
+            int maxOriginZ = config.GridDepth - depth;
 
-                if (occupied[candidate.X, candidate.Z])
+            for (int originX = 0; originX <= maxOriginX; originX++)
+            {
+                for (int originZ = 0; originZ <= maxOriginZ; originZ++)
                 {
-                    // Stale entry - this cell got occupied by a later placement since it was added.
-                    frontier.RemoveAt(index);
-                    continue;
+                    if (IsValidGrowthPlacement(type, chunk, width, depth, originX, originZ, occupied, neighborAllowedSides, placed))
+                    {
+                        candidates.Add((originX, originZ));
+                    }
                 }
-
-                result = candidate;
-                return true;
             }
 
-            result = default;
-            return false;
+            return candidates;
         }
 
-        // Picks a random footprint origin such that the anchor cell falls somewhere inside it -
-        // lets a big chunk and a small chunk connect at any valid offset along their shared edge
-        // instead of only lining up center-to-center.
-        private (int, int) RandomOffsetAroundAnchor(Frame f, int width, int depth, int anchorX, int anchorZ)
+        // originX/originZ are already guaranteed in-bounds by FindAllValidOrigins' loop range, so
+        // unlike the old per-attempt CommitPlacement this has no FitsInGrid check to make.
+        private bool IsValidGrowthPlacement(ChunkType type, Chunk* chunk, int width, int depth, int originX, int originZ, bool[,] occupied, ChunkConnectionSide[,] neighborAllowedSides, List<PlacedChunk> placed)
         {
-            int minOriginX = anchorX - width + 1;
-            int minOriginZ = anchorZ - depth + 1;
-
-            int originX = minOriginX + f.RNG->Next(0, width);
-            int originZ = minOriginZ + f.RNG->Next(0, depth);
-
-            return (originX, originZ);
-        }
-
-        private bool CommitPlacement(Frame f, LevelConfig config, int gridOriginX, int gridOriginZ, EntityRef entity, Chunk* chunk, ChunkType type, ChunkRotation rotation, int width, int depth, int originX, int originZ, bool[,] occupied, List<PlacedChunk> placed, List<FrontierCell> frontier)
-        {
-            if (!FitsInGrid(config, width, depth, originX, originZ))
-            {
-                Log.Debug($"[LevelGen] {type} at ({originX},{originZ}) size {width}x{depth} - out of grid bounds (grid {config.GridWidth}x{config.GridDepth})");
-                return false;
-            }
-
             if (!IsFree(occupied, width, depth, originX, originZ))
             {
-                Log.Debug($"[LevelGen] {type} at ({originX},{originZ}) size {width}x{depth} - overlaps an occupied cell");
                 return false;
             }
 
+            byte touchedSides = ComputeTouchedSides(occupied, originX, originZ, width, depth);
+
+            if (touchedSides == 0)
+            {
+                return false;
+            }
+
+            if (chunk->AllowedConnectionSides != default && (touchedSides & ~(byte)chunk->AllowedConnectionSides) != 0)
+            {
+                return false;
+            }
+
+            if (TouchesRestrictedNeighborSide(occupied, neighborAllowedSides, originX, originZ, width, depth))
+            {
+                return false;
+            }
+
+            // LobbyStart is meant to be a safe area away from the boss, not a room right next to it.
+            if (type == ChunkType.LobbyStart && WouldBeAdjacentToBoss(placed, originX, originZ, width, depth))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private void CommitPlacement(Frame f, LevelConfig config, int gridOriginX, int gridOriginZ, EntityRef entity, Chunk* chunk, ChunkType type, int width, int depth, int originX, int originZ, bool[,] occupied, ChunkConnectionSide[,] neighborAllowedSides, List<PlacedChunk> placed)
+        {
+            // Chunks are min-corner pivoted and never rotated, so Transform3D.Position IS the
+            // footprint's world min corner and the rotation is identity.
             FPVector3 worldMinCorner = CellToWorld(config, gridOriginX, gridOriginZ, originX, originZ);
             Transform3D* transform = f.Unsafe.GetPointer<Transform3D>(entity);
-            transform->Position = RotatedChunkPosition(worldMinCorner, width, depth, config.CellSize, rotation);
-            transform->Rotation = FPQuaternion.Euler(FP._0, RotationYaw(rotation), FP._0);
+            transform->Position = worldMinCorner;
+            transform->Rotation = FPQuaternion.Identity;
             chunk->OriginCellX = originX;
             chunk->OriginCellZ = originZ;
-            chunk->Rotation = rotation;
 
             PlacedChunk placedChunk = new PlacedChunk
             {
@@ -641,15 +693,13 @@ namespace Quantum
                 OriginZ = originZ,
                 Width = width,
                 Depth = depth,
+                AllowedConnectionSides = chunk->AllowedConnectionSides,
             };
 
-            MarkOccupied(occupied, placedChunk);
+            MarkOccupied(occupied, neighborAllowedSides, placedChunk);
             placed.Add(placedChunk);
-            AddFrontierCells(occupied, placedChunk, frontier);
 
-            Log.Debug($"[LevelGen] placed {type} at ({originX},{originZ}) size {width}x{depth} rotation {rotation} -> entity {entity}, world position {transform->Position}");
-
-            return true;
+            Log.Debug($"[LevelGen] placed {type} at ({originX},{originZ}) size {width}x{depth} -> entity {entity}, world position {transform->Position}");
         }
 
         private bool FitsInGrid(LevelConfig config, int width, int depth, int originX, int originZ)
@@ -675,43 +725,78 @@ namespace Quantum
             return true;
         }
 
-        private void MarkOccupied(bool[,] occupied, PlacedChunk chunk)
+        private void MarkOccupied(bool[,] occupied, ChunkConnectionSide[,] neighborAllowedSides, PlacedChunk chunk)
         {
             for (int x = chunk.OriginX; x < chunk.OriginX + chunk.Width; x++)
             {
                 for (int z = chunk.OriginZ; z < chunk.OriginZ + chunk.Depth; z++)
                 {
                     occupied[x, z] = true;
+                    neighborAllowedSides[x, z] = chunk.AllowedConnectionSides;
                 }
             }
         }
 
-        private void AddFrontierCells(bool[,] occupied, PlacedChunk chunk, List<FrontierCell> frontier)
+        // Symmetric counterpart to the self-check in CommitPlacement (which only rejects a
+        // candidate touching a side outside ITS OWN AllowedConnectionSides) - this instead rejects
+        // a placement that would touch an already-placed NEIGHBOR on a side that neighbor doesn't
+        // allow anything to attach to. Without this, a dead-end chunk (e.g. Top only) could still
+        // get new chunks attached on its other sides, since the self-check only ever gated the
+        // incoming chunk, never the one already sitting there.
+        private bool TouchesRestrictedNeighborSide(bool[,] occupied, ChunkConnectionSide[,] neighborAllowedSides, int originX, int originZ, int width, int depth)
         {
             int gridWidth = occupied.GetLength(0);
             int gridDepth = occupied.GetLength(1);
 
-            for (int x = chunk.OriginX; x < chunk.OriginX + chunk.Width; x++)
+            for (int x = originX; x < originX + width; x++)
             {
-                TryAddFrontierCell(occupied, gridWidth, gridDepth, x, chunk.OriginZ - 1, frontier);
-                TryAddFrontierCell(occupied, gridWidth, gridDepth, x, chunk.OriginZ + chunk.Depth, frontier);
+                if (NeighborRejectsConnection(occupied, neighborAllowedSides, gridWidth, gridDepth, x, originZ + depth, ChunkConnectionSide.Bottom))
+                {
+                    return true;
+                }
+
+                if (NeighborRejectsConnection(occupied, neighborAllowedSides, gridWidth, gridDepth, x, originZ - 1, ChunkConnectionSide.Top))
+                {
+                    return true;
+                }
             }
 
-            for (int z = chunk.OriginZ; z < chunk.OriginZ + chunk.Depth; z++)
+            for (int z = originZ; z < originZ + depth; z++)
             {
-                TryAddFrontierCell(occupied, gridWidth, gridDepth, chunk.OriginX - 1, z, frontier);
-                TryAddFrontierCell(occupied, gridWidth, gridDepth, chunk.OriginX + chunk.Width, z, frontier);
+                if (NeighborRejectsConnection(occupied, neighborAllowedSides, gridWidth, gridDepth, originX + width, z, ChunkConnectionSide.Left))
+                {
+                    return true;
+                }
+
+                if (NeighborRejectsConnection(occupied, neighborAllowedSides, gridWidth, gridDepth, originX - 1, z, ChunkConnectionSide.Right))
+                {
+                    return true;
+                }
             }
+
+            return false;
         }
 
-        private void TryAddFrontierCell(bool[,] occupied, int gridWidth, int gridDepth, int x, int z, List<FrontierCell> frontier)
+        // requiredSideOnNeighbor is the side of the NEIGHBOR cell (x,z) the candidate footprint is
+        // touching - e.g. a candidate touching a neighbor above it (its Top) is touching that
+        // neighbor's Bottom. Out-of-bounds/unoccupied cells and unrestricted (default) neighbors
+        // never reject, same "0 means unrestricted" convention AllowedConnectionSides already uses.
+        private bool NeighborRejectsConnection(bool[,] occupied, ChunkConnectionSide[,] neighborAllowedSides, int gridWidth, int gridDepth, int x, int z, ChunkConnectionSide requiredSideOnNeighbor)
         {
-            if (x < 0 || z < 0 || x >= gridWidth || z >= gridDepth || occupied[x, z])
+            if (x < 0 || z < 0 || x >= gridWidth || z >= gridDepth || occupied[x, z] == false)
             {
-                return;
+                return false;
+            }
+            
+
+            ChunkConnectionSide neighborAllowed = neighborAllowedSides[x, z];
+
+            if (neighborAllowed == default)
+            {
+                return false;
             }
 
-            frontier.Add(new FrontierCell { X = x, Z = z });
+            return ((byte)neighborAllowed & (byte)requiredSideOnNeighbor) == 0;
         }
 
         // Chunk.ChunkSizeWidth/ChunkSizeDepth are authored in the same raw units as CellSize, not
@@ -719,89 +804,6 @@ namespace Quantum
         private int ToCellCount(int chunkSize, LevelConfig config)
         {
             return chunkSize / (int)config.CellSize;
-        }
-
-        // Yaw in degrees for each rotation - matches CubeVisualBuilder's convention (0 deg = North
-        // / +Z, Unity's +Y rotation cycles North->East->South->West, so each step is +90).
-        private FP RotationYaw(ChunkRotation rotation)
-        {
-            return 0;
-            switch (rotation)
-            {
-                case ChunkRotation.Degrees90:
-                    return 90;
-                case ChunkRotation.Degrees180:
-                    return 180;
-                case ChunkRotation.Degrees270:
-                    return 270;
-                default:
-                    return 0;
-            }
-        }
-
-        // A quarter turn swaps which local axis (Width along local X, Depth along local Z) ends up
-        // along the world grid's X axis - a chunk authored 10 wide x 30 deep occupies a 30x10
-        // footprint in world grid cells once rotated 90 or 270 degrees.
-        // internal static (not private) - reused by LobbyBoundarySystem/TalentGateSystem via
-        // TryGetLobbyStartBounds below, same as this method's own callers already reuse it 3x
-        // within this class. Pure function of its parameters, no instance state, so static is a
-        // behavior-preserving change.
-        internal static bool SwapsAxes(ChunkRotation rotation)
-        {
-            return rotation == ChunkRotation.Degrees90 || rotation == ChunkRotation.Degrees270;
-        }
-
-        private int EffectiveWidth(int localWidth, int localDepth, ChunkRotation rotation)
-        {
-            return SwapsAxes(rotation) ? localDepth : localWidth;
-        }
-
-        private int EffectiveDepth(int localWidth, int localDepth, ChunkRotation rotation)
-        {
-            return SwapsAxes(rotation) ? localWidth : localDepth;
-        }
-
-        // Chunks are min-corner pivoted (their own local origin = their own min corner, unrotated),
-        // same convention CubeVisualBuilder.SpawnAt uses for individual pieces - so Transform3D.
-        // Position is NOT the rotated footprint's actual min corner once a rotation is applied
-        // (rotating in place around that local origin swings the footprint into a different world
-        // region). This is the vector (in world units, not cells) from Position to where the real
-        // min corner of the rotated bounding box ends up - used when READING an already-placed
-        // chunk's footprint (e.g. a hand-placed BossArena) back out. rawWidth/rawDepth are
-        // Chunk.ChunkSizeWidth/Depth (world units, unrotated).
-        // internal static for the same reason SwapsAxes above is - reused by TryGetLobbyStartBounds.
-        internal static FPVector3 MinCornerOffsetWorld(FP rawWidth, FP rawDepth, ChunkRotation rotation)
-        {
-            switch (rotation)
-            {
-                case ChunkRotation.Degrees90:
-                    return new FPVector3(0, 0, -rawWidth);
-                case ChunkRotation.Degrees180:
-                    return new FPVector3(-rawWidth, 0, -rawDepth);
-                case ChunkRotation.Degrees270:
-                    return new FPVector3(-rawDepth, 0, 0);
-                default:
-                    return FPVector3.Zero;
-            }
-        }
-
-        // Inverse of MinCornerOffsetWorld - used when PLACING a new chunk. Works from the
-        // footprint's center rather than its min corner (the center doesn't move under rotation),
-        // the same technique CubeVisualBuilder.SpawnAt uses: place the center where it needs to be,
-        // then rotate the fixed local-space vector from center to the prefab's own local origin to
-        // find where Transform3D.Position actually needs to sit for the rotated footprint to land
-        // exactly on the target cells. effectiveWidth/Depth are already rotation-swapped (the grid
-        // footprint being targeted); localWidth/Depth are un-swapped back out from them.
-        private FPVector3 RotatedChunkPosition(FPVector3 worldMinCorner, int effectiveWidth, int effectiveDepth, FP cellSize, ChunkRotation rotation)
-        {
-            int localWidth = SwapsAxes(rotation) ? effectiveDepth : effectiveWidth;
-            int localDepth = SwapsAxes(rotation) ? effectiveWidth : effectiveDepth;
-
-            FPVector3 footprintCenter = worldMinCorner + new FPVector3(effectiveWidth, 0, effectiveDepth) * FP._0_50 * cellSize;
-            FPVector3 centerToLocalOrigin = new FPVector3(-localWidth, 0, -localDepth) * FP._0_50 * cellSize;
-            FPQuaternion rotationQuaternion = FPQuaternion.Euler(FP._0, RotationYaw(rotation), FP._0);
-
-            return footprintCenter + rotationQuaternion * centerToLocalOrigin;
         }
 
         // Chunk prefabs are min-corner pivoted (same convention as CubeVisualBuilder's cubes), not
@@ -902,6 +904,55 @@ namespace Quantum
             }
 
             return false;
+        }
+
+        // Which world-space side(s) of a candidate footprint actually border an already-occupied
+        // cell - the level's own outer grid edge reads identically to empty space here (occupied
+        // is just `false` past the border), so a footprint placed against the map edge is never
+        // treated as "touching" that side.
+        private byte ComputeTouchedSides(bool[,] occupied, int originX, int originZ, int width, int depth)
+        {
+            int gridWidth = occupied.GetLength(0);
+            int gridDepth = occupied.GetLength(1);
+            byte touchedSides = 0;
+
+            for (int x = originX; x < originX + width; x++)
+            {
+                if (IsOccupiedAt(occupied, gridWidth, gridDepth, x, originZ + depth))
+                {
+                    touchedSides |= (byte)ChunkConnectionSide.Top;
+                }
+
+                if (IsOccupiedAt(occupied, gridWidth, gridDepth, x, originZ - 1))
+                {
+                    touchedSides |= (byte)ChunkConnectionSide.Bottom;
+                }
+            }
+
+            for (int z = originZ; z < originZ + depth; z++)
+            {
+                if (IsOccupiedAt(occupied, gridWidth, gridDepth, originX + width, z))
+                {
+                    touchedSides |= (byte)ChunkConnectionSide.Right;
+                }
+
+                if (IsOccupiedAt(occupied, gridWidth, gridDepth, originX - 1, z))
+                {
+                    touchedSides |= (byte)ChunkConnectionSide.Left;
+                }
+            }
+
+            return touchedSides;
+        }
+
+        private bool IsOccupiedAt(bool[,] occupied, int gridWidth, int gridDepth, int x, int z)
+        {
+            if (x < 0 || z < 0 || x >= gridWidth || z >= gridDepth)
+            {
+                return false;
+            }
+
+            return occupied[x, z];
         }
 
         // Only resolves PlayerSpawnPosition - actually spawning players is handled separately by

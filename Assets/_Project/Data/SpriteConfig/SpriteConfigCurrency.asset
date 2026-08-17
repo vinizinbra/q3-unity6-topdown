@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f55bc226f73b439eb41bb466adeaeaa, type: 3}
+  m_Name: SpriteConfigCurrency
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteConfigCurrency
+  sprites:
+  - name: Coin
+    sprite: {fileID: -803286303, guid: 77c2f44268eb44de198d4a86b48556ea, type: 3}
+  - name: RiftShard
+    sprite: {fileID: -2056722183, guid: 77c2f44268eb44de198d4a86b48556ea, type: 3}
+  - name: Experience
+    sprite: {fileID: 490990547, guid: 77c2f44268eb44de198d4a86b48556ea, type: 3}

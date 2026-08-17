@@ -1,11 +1,13 @@
-// Run-wide Rift Shard currency state - merged by the DSL compiler into the same Frame.Global struct
-// as Experience.qtn's/SurvivalDirector.qtn's global blocks. Co-op: one shared total for the whole
-// run, credited by RiftShardUtility.Grant whenever any player collects a RiftShard (see
-// CurrencyOrbSystem) - same "one shared total, not per-player" convention Experience.qtn uses.
+// Rift Shard currency - PER-PLAYER wallet (CharacterStats.RiftShards, see CharacterStats.qtn),
+// not a shared Frame.Global total. A pickup credits every connected player the same base amount,
+// each scaled by their own CharacterStats.RiftShardGainMultiplier (see
+// RiftShardUtility.Grant/GrantAll, CurrencyOrbSystem) - each player then spends their own balance
+// independently (see docs/breathing-poi.md). EnemyHealthBonusMultiplier below stays a genuinely
+// shared/run-wide global - it's Greed's own difficulty-scaling side effect (a flat authored
+// constant added once per pick, see GreedMutationData), fully decoupled from the shard total's
+// value, so it's untouched by the per-player conversion.
 global
 {
-    FP TotalRiftShards;
-
     // Greed's own difficulty-scaling side effect (enemies gain health), not currency-specific - it
     // just has no better-fitting existing global block to live in. Starts at its natural 0 (no
     // bonus) and is read as 1 + this wherever consumed (EnemySystem.SeedHealth), so an unseeded/

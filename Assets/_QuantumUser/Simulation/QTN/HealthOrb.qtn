@@ -1,0 +1,11 @@
+// A physical health pickup - dropped by a Breakable via SpawnOnBreak (see BreakLootData), collected
+// by walking over it exactly like a CurrencyOrb. Unlike CurrencyOrb it does NOT credit a run-wide
+// Frame.Global total - it heals the collecting player's own Health (via HealUtility.ApplyHeal), so
+// it's its own component/system rather than a fourth CurrencyOrbType. HealPercent is a FRACTION of
+// the collector's own MaxHealth (0.25 = restore 25% of their max), not a flat HP amount - so it's
+// equally useful to a squishy and a tank. Stamped at spawn from the BreakDrop.Value that spawned it.
+// See HealthOrbSystem.
+component HealthOrb
+{
+    FP HealPercent;
+}

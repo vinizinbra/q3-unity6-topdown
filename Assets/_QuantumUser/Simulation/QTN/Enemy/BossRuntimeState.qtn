@@ -16,4 +16,26 @@ component BossRuntimeState
     // Seconds spent in CurrentPhaseIndex - only meaningful for the next phase's EntryTrigger ==
     // Timer; reset whenever CurrentPhaseIndex advances.
     FP PhaseTimer;
+
+    // Edge-detector BossSystem.TickComboChain needs to catch the exact Recovery -> Chasing/Idle
+    // tick a chained action finished - written unconditionally every tick, same "watch the phase
+    // for an edge" idiom EnemyAttackVisualsView already uses view-side, just mirrored in sim state
+    // since BossSystem needs to react to it deterministically.
+    EnemyActionPhase LastObservedPhase;
+
+    // Which action a BossDataAsset.ComboChains entry is currently force-repeating - default/None
+    // when no chain is in progress. Compared by AssetRef equality against Enemy.CurrentActionSlot's
+    // resolved action each tick to tell "still repeating the same chain" apart from "a different
+    // action just finished, is it a NEW chain's trigger".
+    AssetRef<EnemyActionData> ActiveComboAction;
+
+    // Hops left in the active chain, including the one about to run - decremented by
+    // BossSystem.ForceComboHop each time it force-repeats. 0 with ActiveComboAction still set means
+    // the hop currently running is the last one.
+    Byte ComboRepeatsRemaining;
+
+    // Counts up toward BossDataAsset.RetargetInterval - see BossSystem.TickRetarget. Reset to 0
+    // every time a retarget actually fires, not on a fixed cadence, so tuning the interval later
+    // doesn't leave a stale partial count behind.
+    FP RetargetTimer;
 }

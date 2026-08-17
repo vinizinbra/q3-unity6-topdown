@@ -25,6 +25,12 @@ public class SkillCooldownUiWidget : QuantumGlobalMonoBehaviour
     [SerializeField, Tooltip("Optional - current charge count (SkillSlot.CurrentStacks), or the seconds remaining while actively channeling a duration skill (see UpdateDurationText). Left unassigned, this feature is simply off.")]
     private TMP_Text chargeText;
 
+    [Header("Context Interaction redirect (HeroSkill slot only)")]
+    [SerializeField, Tooltip("HeroSkill-slot instance only (see docs/breathing-poi.md) - shown INSTEAD of the normal skill icon/cooldown fill while this entity's own ContextInteraction.ActiveTarget is set (e.g. standing in a Cursed Rift's interaction radius during Breathing). Left unassigned, this feature is simply off - the DashSkill instance of this same widget never checks ContextInteraction at all.")]
+    private Sprite contextInteractionIcon;
+    [SerializeField, Tooltip("Optional - toggled on alongside contextInteractionIcon, e.g. a small \"INTERACT\" label under the icon.")]
+    private GameObject interactPromptRoot;
+
     [SerializeField, Tooltip("On: binds itself to local slot 0 (player 1) automatically. Off: stays unbound until something else calls Initialize (e.g. the party HUD).")]
     private bool autoBindLocalPlayerOne = true;
 
@@ -56,15 +62,53 @@ public class SkillCooldownUiWidget : QuantumGlobalMonoBehaviour
     {
     }
 
-    public override void QUpdate(QuantumGame game)
+    public override unsafe void QUpdate(QuantumGame game)
     {
         var frame = game.Frames.Predicted;
         if (frame.Has<CharacterSkills>(_entityRef) == false)
             return;
 
+        // Base-Skill-button redirect (see docs/breathing-poi.md) - only ever checked for the
+        // HeroSkill-slot instance (Dash never redirects) and only takes over the display when a
+        // real override icon is actually assigned, so an unconfigured/DashSkill instance behaves
+        // exactly as before with zero extra reads. Gated on State == Available (not just "a
+        // nearby POI exists") - the button should only visually swap to "interact mode" when
+        // pressing it would actually do something; a nearby-but-not-usable POI (Combat, already
+        // used) is the world-space prompt's job to explain, not this button's.
+        if (slot == SkillSlotId.HeroSkill && contextInteractionIcon != null
+            && frame.Unsafe.TryGetPointer<ContextInteraction>(_entityRef, out var context) == true
+            && context->State == ContextInteractionState.Available)
+        {
+            ShowContextInteraction();
+            return;
+        }
+
+        SetShown(interactPromptRoot, false);
+
         SkillSlot resolvedSlot = ResolveSlot(frame.Get<CharacterSkills>(_entityRef));
         UpdateFill(frame, resolvedSlot);
         UpdateIcon(frame, resolvedSlot);
+    }
+
+    // Swaps in the interaction icon/prompt in place of the normal cooldown fill/skill icon -
+    // leaving the button's own position/size untouched (same widget, same slot) so it reads as
+    // "my normal button is temporarily being used to interact with this object," not a separate
+    // control.
+    private void ShowContextInteraction()
+    {
+        SetShown(cooldownFillImages, false);
+        SetShown(skillActiveObject, false);
+
+        if (iconImage != null)
+        {
+            SetShown(iconImage, true);
+            iconImage.sprite = contextInteractionIcon;
+        }
+
+        if (chargeText != null)
+            chargeText.text = string.Empty;
+
+        SetShown(interactPromptRoot, true);
     }
 
     private SkillSlot ResolveSlot(CharacterSkills skills)

@@ -12,15 +12,27 @@ namespace Quantum
     // at state it can't see.
     public enum BossPhaseEntryTrigger { HealthThreshold, Timer, ArenaEvent, AddWaveCleared, Scripted }
 
-    // Flat multipliers a phase applies while active - authored data only; nothing reads these yet
-    // (see BossDataAsset's own class comment for why applying them is deferred). Each enemy's own
-    // MoveSpeed/action Damage stays the single source of truth once wired; these would need to
-    // scale reads at the point of use (EnemySystem's moveSpeed line, each delivery's Damage), not
-    // mutate the shared, non-per-instance EnemyDataAsset itself.
+    // Flat multipliers a phase applies while active. MoveSpeedMultiplier and AnticipationMultiplier
+    // are wired (BossPhaseUtility.ResolveMoveSpeedMultiplier/ResolveAnticipationMultiplier, read
+    // from EnemySystem's moveSpeed line and UpdatePreparation's StateTimer decrement respectively) -
+    // Damage/DamageTakenMultiplier are still authored-only, nothing reads them yet. Each enemy's own
+    // MoveSpeed/action Damage stays the single source of truth; these scale reads at the point of
+    // use (EnemySystem's moveSpeed line, each delivery's Damage), never mutate the shared,
+    // non-per-instance EnemyDataAsset itself. <= 0 on any field means "not authored for this phase",
+    // not "force to zero" - see BossPhaseUtility's own comment.
     [Serializable]
     public struct BossStatModifiers
     {
         public FP MoveSpeedMultiplier;
+
+        // Same funnel/semantics as StatusEffectUtility.GetAnticipationMultiplier (>1 shortens the
+        // windup, <1 stretches it) - multiplied together with it at EnemySystem.UpdatePreparation's
+        // single StateTimer decrement. Telegraph does NOT need its own separate multiply: its own
+        // elapsed% is computed as filter.Enemy->StateTimer / action.AnticipationTime, the same
+        // StateTimer this scales, against the same fixed action.AnticipationTime denominator either
+        // way - so a faster/slower windup already drags the Telegraph flip point with it for free.
+        public FP AnticipationMultiplier;
+
         public FP DamageMultiplier;
         public FP DamageTakenMultiplier;
     }
@@ -55,6 +67,38 @@ namespace Quantum
         public AssetRef<EnemyActionData> OnBreakForcedAction;
     }
 
+    // "Repeat this SAME action N times back to back" - e.g. a triple-charge combo. Deliberately NOT
+    // built on SequenceDeliveryData: a Sequence's steps share one locked target/telegraph captured
+    // at the outer windup's start and never re-telegraph individually (see that class's own
+    // comment), the opposite of what a repeated-hop combo wants (each hop gets its own real
+    // Preparation->Telegraph->Active->Recovery cycle, and optionally its own freshly-resolved
+    // target). BossSystem.TickComboChain force-re-enters Preparation on the exact same
+    // EnemyActionData/EnemyDeliveryData instead - zero new Delivery/telegraph code, since every hop
+    // is a completely normal action execution.
+    [Serializable]
+    public struct BossComboChainData
+    {
+        // Which SkillActions entry, once it finishes (Recovery -> Chasing/Idle), starts/continues
+        // this chain - see BossSystem.TickComboChain.
+        public AssetRef<EnemyActionData> TriggerAction;
+
+        // Total hops, including the one that just finished and triggered/continued this chain (3
+        // for a triple-charge - the natural cast is hop 1).
+        public int RepeatCount;
+
+        // True: re-resolves BossDataAsset.AI.Targeting fresh before each repeated hop (e.g. so each
+        // charge in a triple-charge can pick a different co-op player). False: keeps whatever
+        // Enemy.Target the chain started with for every hop.
+        public bool RetargetEachRepeat;
+
+        // Applied via StatusEffectUtility.ApplyRupture once the LAST hop finishes - Rupture, not
+        // Stun, since EnemyTierResistanceConfig's Boss row zeroes out StunDurationMultiplier (bosses
+        // are deliberately stunlock-immune) but leaves RuptureDurationMultiplier at full strength.
+        // <= 0 duration opts out (no exposure on this chain finishing).
+        public FP ExposedDurationOnFinish;
+        public FP ExposedDamageMultiplierOnFinish;
+    }
+
     // Boss-specific layer on top of EnemyDataAsset - BasicAction/SkillActions already support
     // multiple actions (see EnemyDataAsset), what this adds is phases (which SkillActions slots are
     // eligible, and movement/height/stat overrides, per phase) and an optional stagger-break
@@ -74,5 +118,16 @@ namespace Quantum
 
         // Default (Threshold <= 0) means no stagger mechanic.
         public StaggerProfileData Stagger;
+
+        // "Repeat this action N times" combos (e.g. triple-charge) - see BossComboChainData's own
+        // comment. Empty (default) means BossSystem.TickComboChain no-ops entirely.
+        public List<BossComboChainData> ComboChains = new();
+
+        // Periodically re-resolves AI.Targeting mid-fight instead of leaving Enemy.Target sticky
+        // for the whole engagement (EnemySystem only ever re-resolves it on the rare Idle ->
+        // Chasing edge - see BossSystem.TickRetarget's own comment) - so one player can't kite a
+        // boss forever while the rest of the party free-fires. <= 0 (default) disables this
+        // entirely, every existing/future boss unaffected unless authored.
+        public FP RetargetInterval;
     }
 }

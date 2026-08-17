@@ -5,17 +5,18 @@ namespace Quantum
 
     // Collects a CurrencyOrb once any player walks within pickup range - replaces what used to be
     // three near-identical systems (ExpOrbSystem/CoinOrbSystem/RiftShardOrbSystem), dispatching on
-    // CurrencyOrb.Type for whichever Config/CharacterStats gain multiplier/grant method/View event
-    // differs per currency. NOTE: CoinOrbSystem/RiftShardOrbSystem were never actually registered
-    // in SystemSetup.User.cs before this merge (only ExpOrbSystem was) - so this also fixes that
-    // gap, Coin/RiftShard collection now actually runs.
+    // CurrencyOrb.Type for whichever Config/grant method/View event differs per currency. NOTE:
+    // CoinOrbSystem/RiftShardOrbSystem were never actually registered in SystemSetup.User.cs
+    // before this merge (only ExpOrbSystem was) - so this also fixes that gap, Coin/RiftShard
+    // collection now actually runs.
     //
     // Whichever player actually reaches an orb determines the radius (their own CharacterStats.
-    // PickupRangeMultiplier) AND scales the granted amount by their own gain multiplier, but the
-    // total itself is credited to the whole co-op run, not that player specifically - see
-    // ExperienceUtility/CoinUtility/RiftShardUtility.Grant, all of which write to a shared
-    // Frame.Global field. No magnetism/homing today, an orb just sits where it dropped until a
-    // player's own collection radius reaches it or DestroyAfterTime expires it.
+    // PickupRangeMultiplier) and triggers the pickup (destroy + fly/flash event to that one
+    // collector), but the actual grant - for Coin/RiftShard - broadcasts to EVERY connected
+    // player's own wallet, each scaled by THEIR OWN gain multiplier (CoinUtility.GrantAll/
+    // RiftShardUtility.GrantAll - see docs/breathing-poi.md; Experience stays a single shared
+    // Frame.Global total, unaffected). No magnetism/homing today, an orb just sits where it
+    // dropped until a player's own collection radius reaches it or DestroyAfterTime expires it.
     [Preserve]
     public unsafe class CurrencyOrbSystem : SystemMainThreadFilter<CurrencyOrbSystem.Filter>
     {
@@ -51,7 +52,7 @@ namespace Quantum
                     continue;
 
                 FP value = filter.CurrencyOrb->Value;
-                Grant(f, filter.CurrencyOrb->Type, value * ResolveGainMultiplier(stats, filter.CurrencyOrb->Type));
+                Grant(f, filter.CurrencyOrb->Type, stats, value);
                 RaiseCollectedEvent(f, filter.CurrencyOrb->Type, player, filter.Transform3D->Position, value);
                 f.Destroy(filter.Entity);
                 return;
@@ -82,28 +83,19 @@ namespace Quantum
             }
         }
 
-        private static FP ResolveGainMultiplier(CharacterStats* stats, CurrencyOrbType type)
+        // Deliberately NOT unified into one shared Grant signature - Experience stays a single
+        // shared Frame.Global total credited only for the finder, scaled by THEIR OWN
+        // ExperienceGainMultiplier (unchanged from before); Coin/RiftShard now broadcast to every
+        // connected player's own wallet via GrantAll, which applies each recipient's OWN gain
+        // multiplier individually - so `amount` passed to GrantAll is deliberately the raw,
+        // unscaled orb value, not pre-multiplied by the finder's stats.
+        private static void Grant(Frame f, CurrencyOrbType type, CharacterStats* finderStats, FP amount)
         {
             switch (type)
             {
-                case CurrencyOrbType.Experience: return stats->ExperienceGainMultiplier;
-                case CurrencyOrbType.Coin: return stats->CoinGainMultiplier;
-                case CurrencyOrbType.RiftShard: return stats->RiftShardGainMultiplier;
-                default: return FP._1;
-            }
-        }
-
-        // Deliberately NOT unified into one shared Grant signature - ExperienceUtility.Grant does
-        // real extra work (level curve evaluation, LevelUpUtility.BeginLevelUpScreen) that Coin's/
-        // RiftShard's own Grant (a plain += with no side effects) don't share, so each keeps its
-        // own method and this just dispatches to the right one.
-        private static void Grant(Frame f, CurrencyOrbType type, FP amount)
-        {
-            switch (type)
-            {
-                case CurrencyOrbType.Experience: ExperienceUtility.Grant(f, amount); break;
-                case CurrencyOrbType.Coin: CoinUtility.Grant(f, amount); break;
-                case CurrencyOrbType.RiftShard: RiftShardUtility.Grant(f, amount); break;
+                case CurrencyOrbType.Experience: ExperienceUtility.Grant(f, amount * finderStats->ExperienceGainMultiplier); break;
+                case CurrencyOrbType.Coin: CoinUtility.GrantAll(f, amount); break;
+                case CurrencyOrbType.RiftShard: RiftShardUtility.GrantAll(f, amount); break;
             }
         }
 

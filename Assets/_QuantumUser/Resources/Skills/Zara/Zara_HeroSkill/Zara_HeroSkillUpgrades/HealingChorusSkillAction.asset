@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 46ccc37aabcaf44ea95a4b2965abe0d4, type: 3}
+  m_Name: HealingChorusSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.HealingChorusSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Zara/Zara_HeroSkill/Zara_HeroSkillUpgrades/HealingChorusSkillAction
+    Guid:
+      Value: 401519153522005829
+  Icon: {fileID: 0}
+  DisplayName: Healing Chorus
+  Rarity: 1
+  RankDescriptions:
+  - Totem Healing Beats restore 30% more Health.
+  - Healing Beats restore 60% more Health and briefly Haste allies they heal.
+  - Healing Beats restore double Health, and 50% of excess healing becomes Shield.
+  <MaxRank>k__BackingField: 3
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 0
+  Description: Totem Healing Beats restore more Health.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  HealBonus:
+  - RawValue: 19661
+  - RawValue: 39322
+  - RawValue: 65536
+  HasteEffect:
+    Id:
+      Value: 389440413959882764
+  HealEffectAsset:
+  - Id:
+      Value: 276820451133602943
+  - Id:
+      Value: 276820451133602943
+  - Id:
+      Value: 458180402054196998

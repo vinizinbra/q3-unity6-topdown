@@ -37,6 +37,17 @@ public class ChunkCompoundColliderBuilder : MonoBehaviour
         LogHelper.Log("ChunkCompoundColliderBuilder", $"Rebuilt compound collider on {name} from {wallCubes.Length} cube(s).", this);
     }
 
+    // ChunkWallCube itself only draws its gizmo when directly selected (see its own comment) -
+    // this redraws every cube at once when the chunk/builder is selected instead, so the whole
+    // compound shape is still visible in one glance while authoring it.
+    private void OnDrawGizmosSelected()
+    {
+        foreach (ChunkWallCube wallCube in GetComponentsInChildren<ChunkWallCube>())
+        {
+            wallCube.DrawGizmo();
+        }
+    }
+
     private Shape3DConfig.CompoundShapeData3D BuildBoxShape(BoxCollider cube)
     {
         Vector3 worldCenter = cube.transform.TransformPoint(cube.center);

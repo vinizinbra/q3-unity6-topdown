@@ -9,6 +9,13 @@ public static class IslandPrototypeMeshGenerator
     private const float CellSize = 2f;
     private const float CellHeight = 1f;
 
+    // Plain 1x1x1 beveled cube (no world-grid scale, no noise). Subdivisions=2 gives a single
+    // ring of vertices near each edge, so ChamferCubeVertex reads as one clean 45deg bevel per
+    // edge/corner rather than a rounded box. Pivot is lifted to the bottom-center (see below).
+    private const int ChamferedCubeSubdivisions = 2;
+    private const float ChamferedCubeChamferRadius = 0.1f;
+    private const float ChamferedCubeSize = 1.2f;
+
     // Faces whose normal points up at least this much (world Y) count as "top" (platform);
     // everything else (vertical walls, the ramp's slope, undersides) counts as "wall".
     private const float TopNormalThreshold = 0.5f;
@@ -78,6 +85,7 @@ public static class IslandPrototypeMeshGenerator
         Material wallMaterial = GetOrCreateSharedMaterial($"{OutputFolder}/WallMaterial.mat");
 
         CreatePrototype("Cube", BuildCubeMesh(), topMaterial, wallMaterial, useConvexMeshCollider: false);
+        CreatePrototype("CubeChamfered", BuildChamferedCubeMesh(), topMaterial, wallMaterial, useConvexMeshCollider: true);
         CreatePrototype("Corner", BuildCornerMesh(), topMaterial, wallMaterial, useConvexMeshCollider: true);
         CreatePrototype("Ramp", BuildRampMesh(), topMaterial, wallMaterial, useConvexMeshCollider: true);
         CreatePrototype("Rock", BuildRockMesh(), topMaterial, wallMaterial, useConvexMeshCollider: true);
@@ -85,6 +93,21 @@ public static class IslandPrototypeMeshGenerator
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
         Debug.Log($"[IslandPrototypeMeshGenerator] Generated prototype prefabs in {OutputFolder}");
+    }
+
+    [MenuItem("Tools/World/Generate Chamfered Cube Prototype")]
+    public static void GenerateChamferedCube()
+    {
+        EnsureFolderExists(OutputFolder);
+
+        Material topMaterial = GetOrCreateSharedMaterial($"{OutputFolder}/PlatformTopMaterial.mat");
+        Material wallMaterial = GetOrCreateSharedMaterial($"{OutputFolder}/WallMaterial.mat");
+
+        CreatePrototype("CubeChamfered", BuildChamferedCubeMesh(), topMaterial, wallMaterial, useConvexMeshCollider: true);
+
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+        Debug.Log($"[IslandPrototypeMeshGenerator] Generated CubeChamfered in {OutputFolder}");
     }
 
     [MenuItem("Tools/World/Generate Rock Prototype Prefabs")]
@@ -157,6 +180,29 @@ public static class IslandPrototypeMeshGenerator
         ScaleVertices(mesh, new Vector3(CellSize, CellHeight, CellSize));
         mesh.RecalculateNormals();
         mesh.name = "Cube";
+        SplitTopAndWallSubmeshes(mesh);
+        return mesh;
+    }
+
+    private static Mesh BuildChamferedCubeMesh()
+    {
+        // Beveled cube of ChamferedCubeSize units per axis. BuildSubdividedCubeMeshData is
+        // origin-centered (half-extent 0.5), so after chamfering we scale to the target size and
+        // lift every vertex by half that size in Y to put the pivot at the bottom-center: the base
+        // sits on Y=0 and the top on Y=ChamferedCubeSize. X/Z stay in [-size/2, size/2].
+        Mesh mesh = BuildSubdividedCubeMeshData(ChamferedCubeSubdivisions).Mesh;
+        Vector3[] vertices = mesh.vertices;
+
+        for (int i = 0; i < vertices.Length; i++)
+        {
+            Vector3 chamfered = ChamferCubeVertex(vertices[i], ChamferedCubeChamferRadius);
+            vertices[i] = chamfered * ChamferedCubeSize + Vector3.up * (ChamferedCubeSize * 0.5f);
+        }
+
+        mesh.vertices = vertices;
+        mesh.RecalculateNormals();
+        mesh.RecalculateBounds();
+        mesh.name = "CubeChamfered";
         SplitTopAndWallSubmeshes(mesh);
         return mesh;
     }
@@ -429,6 +475,7 @@ public static class IslandPrototypeMeshGenerator
     private static SubdividedCubeMeshData BuildSubdividedCubeMeshData(int subdivisions)
     {
         var vertices = new List<Vector3>();
+        var uvs = new List<Vector2>();
         var faceNormalsPerVertex = new List<Vector3>();
         var triangles = new List<int>();
         Vector3[] faceNormals = { Vector3.up, Vector3.down, Vector3.left, Vector3.right, Vector3.forward, Vector3.back };
@@ -436,7 +483,7 @@ public static class IslandPrototypeMeshGenerator
         foreach (Vector3 normal in faceNormals)
         {
             int startIndex = vertices.Count;
-            BuildSubdividedFace(normal, subdivisions, vertices, triangles);
+            BuildSubdividedFace(normal, subdivisions, vertices, uvs, triangles);
             for (int i = startIndex; i < vertices.Count; i++)
             {
                 faceNormalsPerVertex.Add(normal);
@@ -445,11 +492,12 @@ public static class IslandPrototypeMeshGenerator
 
         var mesh = new Mesh();
         mesh.SetVertices(vertices);
+        mesh.SetUVs(0, uvs);
         mesh.SetTriangles(triangles, 0);
         return new SubdividedCubeMeshData(mesh, faceNormalsPerVertex.ToArray());
     }
 
-    private static void BuildSubdividedFace(Vector3 normal, int subdivisions, List<Vector3> vertices, List<int> triangles)
+    private static void BuildSubdividedFace(Vector3 normal, int subdivisions, List<Vector3> vertices, List<Vector2> uvs, List<int> triangles)
     {
         // Cross products guarantee tangentU/tangentV/normal form a consistent right-handed
         // basis for every face, which is what keeps the (i0,i1,i2)/(i1,i3,i2) winding below
@@ -469,6 +517,11 @@ public static class IslandPrototypeMeshGenerator
                 float u = (float)col / subdivisions - 0.5f;
                 float v = (float)row / subdivisions - 0.5f;
                 vertices.Add(normal * 0.5f + tangentU * u + tangentV * v);
+                // Each face maps the full 0..1 texture square, like Unity's built-in cube - so
+                // (u,v) in [-0.5,0.5] shifts back to [0,1]. Edge/corner vertices sit at 0 or 1,
+                // so the chamfer geometry inherits the face's border UVs and the texture reads
+                // as one unbroken face wrapping slightly onto the bevel.
+                uvs.Add(new Vector2(u + 0.5f, v + 0.5f));
             }
         }
 

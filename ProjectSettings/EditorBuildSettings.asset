@@ -11,6 +11,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_QuantumUser/Scenes/QuantumGameScene.unity
     guid: 7009b54c68fd54635bf7b8bbf432686b
+  - enabled: 1
+    path: Assets/gamesceneBackup.unity
+    guid: 440a63b3a145a456a905c5e8e32a3475
   - enabled: 0
     path: Assets/Photon/QuantumMenu/QuantumSampleMenu.unity
     guid: f23d3edd333e1dc449a4688e04123759

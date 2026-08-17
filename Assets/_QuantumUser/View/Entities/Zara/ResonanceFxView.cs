@@ -69,6 +69,11 @@ namespace Quantum
             EffectsManager.Instance.PlayEffect(pulseEffectPrefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat, color);
         }
 
+        // Rank 3 "Full Remix" picks 2 distinct effects (see ResonanceUtility.FirePulse/
+        // ZaraRemixUtility), but this only ever tints by Effect1 (ShockwaveReleased carries a single
+        // Effect field) - deliberately simplified to a binary "was this pulse a Remix" read (colored
+        // = yes, white = no) via one shared particle, rather than a second dedicated cue/prefab to
+        // show both colors at once.
         private Color ResolveRemixColor(HitEffectData effect)
         {
             switch (effect)

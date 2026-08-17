@@ -52,7 +52,7 @@ namespace Quantum
 
                 FPVector3 anchor = new FPVector3(candidateAnchor.X, anchorGroundY, candidateAnchor.Z);
 
-                if (TryValidateFormation(f, group, memberCount, anchor, anchorGroundY, groundLayerMask, out FPVector3[] memberPositions, out AssetRef<EnemyDataAsset>[] memberData, out EnemyFaction[] memberFaction) == false)
+                if (TryValidateFormation(f, group, memberCount, anchor, anchorGroundY, groundLayerMask, directorConfig, out FPVector3[] memberPositions, out AssetRef<EnemyDataAsset>[] memberData, out EnemyFaction[] memberFaction) == false)
                 {
                     invalidFormationCount++;
                     continue; // one or more members didn't fit here - discard this whole anchor
@@ -71,7 +71,7 @@ namespace Quantum
         // Flattens every Member's Quantity into individual formation slots (slot 0..memberCount-1,
         // continuous across all Members, not restarted per Member) so GroupFormationUtility sees
         // one coherent shape across the whole group rather than one shape per enemy type.
-        private static bool TryValidateFormation(Frame f, EnemyGroupConfig group, int memberCount, FPVector3 anchor, FP anchorGroundY, int groundLayerMask, out FPVector3[] memberPositions, out AssetRef<EnemyDataAsset>[] memberData, out EnemyFaction[] memberFaction)
+        private static bool TryValidateFormation(Frame f, EnemyGroupConfig group, int memberCount, FPVector3 anchor, FP anchorGroundY, int groundLayerMask, DirectorConfig directorConfig, out FPVector3[] memberPositions, out AssetRef<EnemyDataAsset>[] memberData, out EnemyFaction[] memberFaction)
         {
             memberPositions = new FPVector3[memberCount];
             memberData = new AssetRef<EnemyDataAsset>[memberCount];
@@ -110,7 +110,7 @@ namespace Quantum
                     FPVector3 worldOffset = rotation * new FPVector3(localOffset.X, FP._0, localOffset.Y);
                     FPVector3 horizontalCandidate = anchor + worldOffset;
 
-                    if (TryValidateMember(f, data.name, slot, horizontalCandidate, anchorGroundY, profile, groundLayerMask, out FPVector3 groundedPosition) == false)
+                    if (TryValidateMember(f, data.name, slot, horizontalCandidate, anchorGroundY, profile, groundLayerMask, directorConfig, out FPVector3 groundedPosition) == false)
                         return false;
 
                     memberPositions[slot] = groundedPosition;
@@ -123,9 +123,10 @@ namespace Quantum
             return true;
         }
 
-        // Ground detection + height rule + clearance, in that order (cheapest/most-likely-to-reject
-        // check first) - a single failed member fails the whole formation, see TryValidateFormation.
-        private static bool TryValidateMember(Frame f, string dataName, int slot, FPVector3 horizontalCandidate, FP anchorGroundY, EnemySpawnProfile profile, int groundLayerMask, out FPVector3 groundedPosition)
+        // Ground detection + height rule + chunk-type + clearance, in that order (cheapest/
+        // most-likely-to-reject check first, physics overlap query last) - a single failed member
+        // fails the whole formation, see TryValidateFormation.
+        private static bool TryValidateMember(Frame f, string dataName, int slot, FPVector3 horizontalCandidate, FP anchorGroundY, EnemySpawnProfile profile, int groundLayerMask, DirectorConfig directorConfig, out FPVector3 groundedPosition)
         {
             if (EnemyMovementUtility.TryFindGroundHeight(f, horizontalCandidate, groundLayerMask, out FP groundY) == false)
             {
@@ -142,6 +143,12 @@ namespace Quantum
                 return false;
             }
 
+            if (IsInForbiddenChunk(f, groundedPosition, directorConfig, out ChunkType forbiddenType))
+            {
+                Log.Debug($"[Spawner] {dataName} slot {slot} rejected - {groundedPosition} falls inside a {forbiddenType} chunk (DirectorConfig.ForbiddenSpawnChunkTypes)");
+                return false;
+            }
+
             if (HasClearance(f, groundedPosition, profile) == false)
             {
                 Log.Debug($"[Spawner] {dataName} slot {slot} rejected - no clearance at {groundedPosition} (blocked by player/enemy/obstacle)");
@@ -149,6 +156,39 @@ namespace Quantum
             }
 
             return true;
+        }
+
+        // Rejects a candidate landing inside a chunk whose Type is listed in
+        // DirectorConfig.ForbiddenSpawnChunkTypes (e.g. Traversal, to keep connector corridors
+        // clear) - reuses EnemyPathfindingUtility's own point-in-chunk lookup rather than
+        // re-deriving chunk AABB math here. Never rejects if the list is empty/unassigned, or if
+        // the candidate doesn't land inside any Chunk entity at all (e.g. FillInnerGaps filler
+        // geometry has no Chunk component) - only an explicit Type match rejects.
+        private static bool IsInForbiddenChunk(Frame f, FPVector3 position, DirectorConfig directorConfig, out ChunkType chunkType)
+        {
+            chunkType = default;
+
+            if (directorConfig.ForbiddenSpawnChunkTypes == null || directorConfig.ForbiddenSpawnChunkTypes.Length == 0)
+            {
+                return false;
+            }
+
+            if (EnemyPathfindingUtility.TryFindContainingChunk(f, position, out EntityRef chunkEntity) == false)
+            {
+                return false;
+            }
+
+            chunkType = f.Unsafe.GetPointer<Chunk>(chunkEntity)->Type;
+
+            foreach (ChunkType forbidden in directorConfig.ForbiddenSpawnChunkTypes)
+            {
+                if (forbidden == chunkType)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         // Only GroundMelee/GroundRanged are height-restricted today - Flying/HighGroundRanged/Boss

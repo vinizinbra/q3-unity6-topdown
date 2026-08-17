@@ -41,6 +41,20 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
    // RerollQuantity from once at spawn. See PlayerTalents' own comment (RuntimePlayer.User.cs).
    private static readonly PlayerPrefInt RerollQuantityPref = new PlayerPrefInt("reroll_quantity", 0);
 
+   // Player's own meta-progression Store weapon-offer-count talent, same "carried in from outside
+   // this match" contract as WeaponTalentLevelPref/RerollQuantityPref above - read here right
+   // before AddPlayer and copied onto RuntimePlayer.Talents.ShopWeaponOfferCount, which
+   // PlayerSpawnUtility.Spawn seeds CharacterStats.ShopWeaponOfferCount from once at spawn. See
+   // docs/store-blacksmith.md.
+   private static readonly PlayerPrefInt ShopWeaponOfferCountPref = new PlayerPrefInt("shop_weapon_offer_count", 0);
+
+   // Player's own meta-progression Starting-Coins talent, same "carried in from outside this
+   // match" contract as the talent prefs above - read here right before AddPlayer and copied onto
+   // RuntimePlayer.Talents.StartingCoins, which PlayerSpawnUtility.Spawn seeds CharacterStats.Coins
+   // from once at spawn (a genuine currency amount, not a 0-5 level, so no byte clamp on the way in
+   // like the other talent prefs below get).
+   private static readonly PlayerPrefInt StartingCoinsPref = new PlayerPrefInt("starting_coins", 0);
+
    // Player's own meta-progression Talents (see docs/talents.md), carried in from outside this
    // match the same way as WeaponTalentLevelPref above - read here right before AddPlayer and
    // copied onto RuntimePlayer's own Player*/Has*/Can* fields. One JSON-blob pref (PlayerPrefObject)
@@ -352,13 +366,26 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
          // Clamp - PlayerPrefInt stores a plain int, PlayerTalents.WeaponLevel is a byte.
          byte weaponTalentLevel = (byte)Mathf.Clamp(WeaponTalentLevelPref.Value, 0, byte.MaxValue);
          byte rerollQuantity = (byte)Mathf.Clamp(RerollQuantityPref.Value, 0, byte.MaxValue);
+         byte shopWeaponOfferCount = (byte)Mathf.Clamp(ShopWeaponOfferCountPref.Value, 0, byte.MaxValue);
+         int startingCoins = Mathf.Max(StartingCoinsPref.Value, 0);
          TalentSaveData talents = TalentsPref.Value;
          AssetRef<EntityPrototype> localCharacterAvatar = PartyManager.Instance.ResolveLocalCharacterAvatar();
 
+         // PlayerPrefInt has no way to tell "never saved, returned its 0 default" apart from "an
+         // account screen genuinely saved 0" (see PlayerPrefProperty.cs - .Value always returns a
+         // value, existence isn't exposed). Since nothing writes any of these prefs yet (same
+         // pre-existing gap every talent pref here has - an account/profile screen elsewhere would
+         // be what actually raises them), a strict overwrite silently stomped whatever was hand-set
+         // directly on RuntimePlayers[i].Talents in the Inspector for local testing - exactly the
+         // "set Starting Coins in the Inspector, still spawned with 0" bug. Only overwriting when
+         // the pref is actually > 0 keeps a real future write taking effect while leaving
+         // Inspector-set test values alone until then.
          for (int i = 0; i < RuntimePlayers.Count; i++) {
             RuntimePlayers[i].PlayerAvatar = localCharacterAvatar;
-            RuntimePlayers[i].Talents.WeaponLevel = weaponTalentLevel;
-            RuntimePlayers[i].Talents.RerollQuantity = rerollQuantity;
+            if (weaponTalentLevel > 0) RuntimePlayers[i].Talents.WeaponLevel = weaponTalentLevel;
+            if (rerollQuantity > 0) RuntimePlayers[i].Talents.RerollQuantity = rerollQuantity;
+            if (shopWeaponOfferCount > 0) RuntimePlayers[i].Talents.ShopWeaponOfferCount = shopWeaponOfferCount;
+            if (startingCoins > 0) RuntimePlayers[i].Talents.StartingCoins = startingCoins;
             RuntimePlayers[i].Talents.PlayerDamageLevel = talents.PlayerDamageLevel;
             RuntimePlayers[i].Talents.PlayerCooldownLevel = talents.PlayerCooldownLevel;
             RuntimePlayers[i].Talents.PlayerFireRateLevel = talents.PlayerFireRateLevel;

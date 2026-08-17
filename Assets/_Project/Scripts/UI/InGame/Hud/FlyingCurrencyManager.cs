@@ -19,6 +19,9 @@ using UnityEngine.Pool;
 // world. On arrival, flashes that character in a currency-specific color via HitFeedback.
 // FlashPickup - deliberately LOWER priority than a hit-taken flash (see that method's own comment),
 // so a pickup glow can never visually stomp a more important reaction happening at the same moment.
+// The flash colors/duration themselves live on HitFeedback, not here - same place every other flash
+// color (hit/heal/shield/rift mark) is already authored, so a currency's pickup color isn't split
+// across two components.
 public class FlyingCurrencyManager : QuantumGlobalMonoBehaviour
 {
     public static FlyingCurrencyManager Instance;
@@ -28,17 +31,6 @@ public class FlyingCurrencyManager : QuantumGlobalMonoBehaviour
     private Transform widgetParent;
     [SerializeField, Tooltip("Instances built up front so the opening pickups of a fight don't pay an Instantiate cost.")]
     private int prewarmCount = 8;
-
-    [Header("Per-currency sprite")]
-    [SerializeField] private Sprite expSprite;
-    [SerializeField] private Sprite coinSprite;
-    [SerializeField] private Sprite riftShardSprite;
-
-    [Header("Per-currency flash color (on arrival)")]
-    [SerializeField] private Color expFlashColor = new Color(0.3f, 0.55f, 1f);
-    [SerializeField] private Color coinFlashColor = new Color(1f, 0.84f, 0.2f);
-    [SerializeField] private Color riftShardFlashColor = new Color(1f, 0.35f, 0.75f);
-    [SerializeField] private float flashDuration = 0.35f;
 
     private ObjectPool<FlyingCurrencyWidget> _pool;
 
@@ -84,7 +76,7 @@ public class FlyingCurrencyManager : QuantumGlobalMonoBehaviour
     {
         FlyingCurrencyWidget widget = _pool.Get();
 
-        widget.Play(ResolveSprite(type), worldPosition,
+        widget.Play(SpriteManager.GetSprite(type.ToString()), worldPosition,
             () => EntityViewManager.Instance.GetEntityTransform(collector),
             finishedWidget => OnArrived(type, collector, finishedWidget));
     }
@@ -95,35 +87,13 @@ public class FlyingCurrencyManager : QuantumGlobalMonoBehaviour
 
         Transform target = EntityViewManager.Instance.GetEntityTransform(collector);
         HitFeedback hitFeedback = target != null ? target.GetComponentInChildren<HitFeedback>() : null;
-        hitFeedback?.FlashPickup(ResolveFlashColor(type), flashDuration);
+        hitFeedback?.FlashPickup(type);
 
         // Exp keeps its existing "bar catches up + flashes" reaction, on top of the character
         // flash above - Coin/RiftShard have no equivalent bar to catch up (CurrencyUiWidget's own
         // punch-on-change already covers those independently of this arrival).
         if (type == CurrencyType.Experience)
             ExpBarUiWidget.Instance?.Flash();
-    }
-
-    private Sprite ResolveSprite(CurrencyType type)
-    {
-        switch (type)
-        {
-            case CurrencyType.Experience: return expSprite;
-            case CurrencyType.Coin: return coinSprite;
-            case CurrencyType.RiftShard: return riftShardSprite;
-            default: return null;
-        }
-    }
-
-    private Color ResolveFlashColor(CurrencyType type)
-    {
-        switch (type)
-        {
-            case CurrencyType.Experience: return expFlashColor;
-            case CurrencyType.Coin: return coinFlashColor;
-            case CurrencyType.RiftShard: return riftShardFlashColor;
-            default: return Color.white;
-        }
     }
 
     private ObjectPool<FlyingCurrencyWidget> CreatePool()

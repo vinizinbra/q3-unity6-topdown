@@ -1,0 +1,12 @@
+// A world POI, active only during Breathing - press-to-heal via the same generic Base-Skill-
+// button redirect Cursed Rift uses (Interactable/ContextInteraction, see ContextInteraction.qtn),
+// not a walk-in auto-heal. Radius lives on the sibling Interactable component (authored alongside
+// this one on the same entity/prototype), not duplicated here - same convention CursedRift.qtn
+// already uses. Authored per entity/prototype instance, same "fields live directly on the placed
+// component" convention Chest.qtn/CursedRift.qtn already use.
+component HealingShrine
+{
+    PoiAvailability Availability;
+    PoiUsagePolicy UsagePolicy;
+    FP HealPercent;
+}

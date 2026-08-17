@@ -76,6 +76,9 @@ namespace Quantum
         [Tooltip("Circle/Cone radius = the paired EnemyActionData.DamageRange * this multiplier. 1 = decal exactly matches the real hit area (the common case). Raise/lower only when the telegraph should deliberately read as larger/smaller than the actual range (e.g. drawn bigger for readability).")]
         public float RadiusMultiplier = 1f;
 
+        [Tooltip("Circle only. 0 (default, every existing telegraph): static. Nonzero: spins continuously around the up axis at this rate while shown, e.g. a rotating danger-sector pinwheel (ScrapstormDeliveryData). Must be authored to match the paired delivery's own rotation-speed field by hand - there's no single source of truth linking the two, unlike RadiusMultiplier above (always derived from the real DamageRange). Requires LiveTracking = true to actually animate (EnemyAttackVisualsView only re-poses a telegraph every frame while LiveTracking is on).")]
+        public float RotationDegreesPerSecond = 0f;
+
         [Tooltip("Fallback only, rarely needed: seconds for a TelegraphPrefab-authored TelegraphGrow child (see that class) to grow from 0 up to its resting scale. EnemyAttackVisualsView auto-derives this from Enemy.StateTimer at spawn time instead (the same field every action sets to its own real duration - AnticipationTime, DashDuration, JumpDuration, a lobbed projectile's flight time, etc.), so this is only used if that comes back <= 0.")]
         public float GrowthDuration = 1f;
 

@@ -32,8 +32,5 @@ namespace Quantum
         // Auto-hop (predictive edge check, done while still grounded)
         public FP EdgeProbeDistance = FP._0_50;
         public FP EdgeCheckDistance = 1;
-        // Sphere radius for the ground-ahead probe - a plain raycast can slip through a hairline
-        // seam between two adjacent chunk cube colliders and misread it as a cliff edge.
-        public FP EdgeGroundProbeRadius = FP._0_05;
     }
 }

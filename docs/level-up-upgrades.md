@@ -26,13 +26,16 @@ today's original mixed-all-pools roll exactly, so an unedited `LevelUpConfig.ass
 re-authoring to keep working. A `Chest` entity (see `docs/chests.md`) reuses this same category
 concept, but locked once in the Editor per chest instead of per level.
 
-All four kinds share one asset base, `UpgradeData` (`Icon`/`DisplayName`/`Rarity`/abstract
+All four kinds share one asset base, `UpgradeData` (`Icon`/`DisplayName`/abstract
 `GetDescription()`) - `WeaponPerkData`, `SkillActionData`, `GlobalUpgradeData` and
 `PassiveUpgradeData` all derive from it. This is what lets `LevelUpOption` carry a single
-`AssetRef<UpgradeData>` instead of one field per kind, lets every candidate be weighted the same way
-(by its own `Rarity`, via `LevelUpConfig.GetWeight`) regardless of which kind it is, and lets the
-card-building code (`GameplayUiController.BuildCardData`) resolve any option generically with no
-switch at all.
+`AssetRef<UpgradeData>` instead of one field per kind, and lets the card-building code
+(`GameplayUiController.BuildCardData`) resolve any option generically with no switch at all.
+**As of 2026-08-14, `Rarity` is no longer part of the shared base** - only `WeaponPerkData` and
+`RiftMutationData` still declare their own `Rarity` field and weight their level-up rolls by it
+(`LevelUpConfig.GetWeight`); `SkillActionData`/`GlobalUpgradeData`/`PassiveUpgradeData` draw at a
+flat `LevelUpConfig.CommonWeight` instead (`LevelUpUtility.ResolveWeight`), and their cards show no
+rarity badge at all (`UpgradeCardWidget` hides it when `CardData.RarityIndex < 0`).
 
 ## Runtime flow
 
@@ -51,10 +54,12 @@ LevelUpUtility.BeginLevelUpScreen
           HeroSkill, straight from HeroSkill's own Actions (any entry with Activated == false -
           excluding any upgrade already granted on that slot - see "Why exclude already-granted
           skill upgrades" below) and CharacterData.PassiveUpgrades
-       -> every candidate, regardless of kind, is weighted identically: AddCandidate resolves it
-          generically as UpgradeData and looks up LevelUpConfig.GetWeight(data.Rarity) - independent
-          of WeaponPerkPoolData's own (differently-tuned) Common/Rare/Epic/Legendary
-          weights, which stay reserved for the original drop-roll mechanic (WeaponGenerator)
+       -> AddCandidate resolves the weight via ResolveWeight: WeaponPerk/RiftMutation candidates look
+          up LevelUpConfig.GetWeight(data.Rarity) - independent of WeaponPerkPoolData's own
+          (differently-tuned) Common/Rare/Epic/Legendary weights, which stay reserved for the
+          original drop-roll mechanic (WeaponGenerator) - every other kind (SkillUpgrade/
+          GlobalUpgrade/PassiveUpgrade) draws at a flat LevelUpConfig.CommonWeight instead, since
+          those kinds have no Rarity of their own (see "Current status")
        -> weighted draw without replacement (same pattern as WeaponGenerator.DrawPerks: draw via
           f.RNG->Next(0, totalWeight), subtract the drawn candidate's weight, remove it, repeat) up
           to ChoiceCount times, stopping early if the combined pool runs dry
@@ -678,6 +683,19 @@ single window, and the scene has one wired (`upgradeWindows[0]`).
    card click locks only that client's own pick, the screen closes the instant everyone's confirmed
    (not waiting for the timer), an intentionally-unconfirmed client auto-picks at 0s, a mid-screen
    disconnect doesn't block the rest, and a player joining mid-screen spawns normally without a card.
+
+**`Rarity` removed from Skill Upgrade / Global Upgrade / Passive Upgrade (2026-08-14)** - per explicit
+user request, only `WeaponPerkData`/`RiftMutationData` still have a `Rarity` field now (their own,
+not shared - it moved off `UpgradeData` onto each of those two classes directly).
+`SkillActionData`/`GlobalUpgradeData`/`PassiveUpgradeData` no longer have any rarity concept at all:
+`LevelUpUtility.ResolveWeight` draws them at a flat `LevelUpConfig.CommonWeight`, and their level-up
+cards show no rarity frame/label (`UpgradeCardWidget.Setup` hides the badge entirely when
+`CardData.RarityIndex < 0`, which `GameplayUiController.BuildCardData` now sends for any kind that
+isn't `WeaponPerkData`/`RiftMutationData`). Every Global Upgrade `.asset` and every hero's ranked
+Skill/Passive Ascension `.asset` still has a stale `Rarity:` line in its on-disk YAML from before this
+change - harmless (Unity silently drops an unknown key on next save) but will linger until each asset
+is re-saved, e.g. by re-running its generator (`Generate Global Upgrade Assets` /
+`Brute|Kai|Max|Pixie|Zara Generate Ascension Assets` / `LuxScrapAssetGenerator`).
 
 **`CharacterData.HeroSkillUpgrades` was removed** - the Hero Skill slice of the Skill Upgrade pool no
 longer has its own authored list at all. `LevelUpUtility.AddHeroSkillUpgradeCandidates` now pulls it

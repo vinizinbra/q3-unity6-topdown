@@ -22,9 +22,15 @@ namespace Quantum
         // there's nothing to keep in sync by hand across worlds. HeightFogStrength/TopY/Falloff stay
         // at whatever the Material's own defaults are - only the color is world-specific.
         private static readonly int HeightFogColorId = Shader.PropertyToID("_HeightFogColor");
+        private static readonly int HeightFogTopYId = Shader.PropertyToID("_HeightFogTopY");
+        private static readonly int HeightFogFalloffId = Shader.PropertyToID("_HeightFogFalloff");
+        private static readonly int HeightFogStrengthId = Shader.PropertyToID("_HeightFogStrength");
 
         [SerializeField, Tooltip("Shared Material used by every procedurally-placed ground/wall piece (MobileToonModularLevel shader) - colored directly, not instanced, so edits are visible immediately but persist on the asset after Play Mode stops.")]
         private Material levelMaterial;
+
+        [SerializeField, Tooltip("Shared Material (Project/Detail Sprite Height Fog shader) for ChunkDetailScatter's procedural sprites - a SpriteRenderer-compatible reimplementation of just levelMaterial's Height Fog block (that shader is opaque/mesh-oriented and can't be assigned to a SpriteRenderer directly). Its own _HeightFogTopY/Falloff/Strength are overwritten from levelMaterial's current values every Load(), so there's nothing to keep in sync by hand - only assign the material/shader once.")]
+        private Material detailSpriteMaterial;
 
         [SerializeField, Tooltip("Sky isn't part of the level shader - this is just the camera's background color.")]
         private Camera targetCamera;
@@ -32,8 +38,17 @@ namespace Quantum
         [SerializeField, Tooltip("Applied on Awake if set, so a theme can be previewed without whatever will eventually call Load() for the current world.")]
         [Expandable]private WorldTheme initialTheme;
 
+        // Single source of truth for "which WorldTheme is currently active" - consumed by
+        // ChunkDetailScatter (and anything else that needs the live theme, e.g. the still-unused
+        // Obstacles pool) so nothing else has to independently track it.
+        public static EnvironmentManager Instance { get; private set; }
+        public WorldTheme CurrentTheme { get; private set; }
+        public Material DetailSpriteMaterial => detailSpriteMaterial;
+
         private void Awake()
         {
+            Instance = this;
+
             if (initialTheme != null)
                 Load(initialTheme);
         }
@@ -60,6 +75,7 @@ namespace Quantum
                 return;
             }
 
+            CurrentTheme = theme;
             ApplyEnvironment(theme.Environment);
             EffectsManager.Instance?.SetBloodColor(theme.Enemy.BloodColor);
         }
@@ -75,6 +91,24 @@ namespace Quantum
             levelMaterial.SetColor(SurfaceColorId, environment.Surface);
             levelMaterial.SetColor(WallColorId, environment.Walls);
             levelMaterial.SetColor(HeightFogColorId, environment.Sky);
+
+            ApplyDetailSpriteHeightFog();
+        }
+
+        // Keeps detailSpriteMaterial's own Height Fog block matching levelMaterial's - Color comes
+        // from environment.Sky like the level material's own, and TopY/Falloff/Strength (which
+        // ApplyEnvironment never sets on levelMaterial itself, only ever authored by hand on that
+        // Material asset) are copied straight from levelMaterial's current values, so there's
+        // nothing to keep in sync across two separate assets by hand.
+        private void ApplyDetailSpriteHeightFog()
+        {
+            if (detailSpriteMaterial == null || levelMaterial == null)
+                return;
+
+            detailSpriteMaterial.SetColor(HeightFogColorId, levelMaterial.GetColor(HeightFogColorId));
+            detailSpriteMaterial.SetFloat(HeightFogTopYId, levelMaterial.GetFloat(HeightFogTopYId));
+            detailSpriteMaterial.SetFloat(HeightFogFalloffId, levelMaterial.GetFloat(HeightFogFalloffId));
+            detailSpriteMaterial.SetFloat(HeightFogStrengthId, levelMaterial.GetFloat(HeightFogStrengthId));
         }
     }
 }

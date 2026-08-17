@@ -40,6 +40,15 @@ namespace QuantumUser.View.Util
         private Color riftMarkApplicationFlashColor = new Color32(0xFD, 0x39, 0x71, 0xFF);
         [SerializeField] private float riftMarkApplicationFlashDuration = 0.08f;
 
+        [Header("Pickup Flash")]
+        [SerializeField, Tooltip("Used on FlashPickup for CurrencyType.Experience - see FlyingCurrencyManager.OnArrived.")]
+        private Color expPickupFlashColor = new Color(0.3f, 0.55f, 1f);
+        [SerializeField, Tooltip("Used on FlashPickup for CurrencyType.Coin.")]
+        private Color coinPickupFlashColor = new Color(1f, 0.84f, 0.2f);
+        [SerializeField, Tooltip("Used on FlashPickup for CurrencyType.RiftShard.")]
+        private Color riftShardPickupFlashColor = new Color(1f, 0.35f, 0.75f);
+        [SerializeField] private float pickupFlashDuration = 0.35f;
+
         [Header("Freeze Mark")]
         [SerializeField, Tooltip("StatusEffects.AnticipationSlowRemaining - see StatusEffectUtility.IsAnticipationSlowed (Ice+RiftMark's Deep Freeze reaction, docs/elemental-reactions.md). Takes priority over riftMarkMaterial when both are active on the same target.")]
         private Material freezeMaterial;
@@ -63,10 +72,18 @@ namespace QuantumUser.View.Util
 
         // Timestamp (Time.time, matching Flash's own scaled-time Tween.Color duration) until which
         // FlashPickup below refuses to apply - set by every "important" reaction that goes through
-        // the private Flash(Color, float) (hit/heal/shield/rift mark/spawn), so a lower-priority
-        // pickup glow (see FlyingCurrencyManager) can never visually stomp a more important flash
-        // already playing. No such priority concept existed before pickups needed to defer to hits.
+        // the private Flash(Color, float) (hit/heal/shield/rift mark/spawn) OR FlashDamage, so a
+        // lower-priority pickup glow (see FlyingCurrencyManager) can never visually stomp a more
+        // important flash already playing. No such priority concept existed before pickups needed
+        // to defer to hits.
         private float _priorityFlashLockUntil;
+
+        // Timestamp until which every OTHER flash (heal/shield/rift-mark-application/spawn/pickup)
+        // refuses to apply - only FlashDamage sets this. Damage is the single highest-priority hit
+        // feedback: it always applies immediately regardless of what's currently playing, and
+        // nothing else can interrupt it back out while it's still active - unlike every other
+        // "important" flash below, which were previously all equal priority (last caller wins).
+        private float _damageFlashLockUntil;
 
         public override void Awake()
         {
@@ -174,13 +191,8 @@ namespace QuantumUser.View.Util
             if (e.Silent == true)
                 return;
 
-            if (e.FrontalReduced == true)
-            {
-                Flash(frontalReducedFlashColor);
-                return;
-            }
-
-            Flash(e.Element);
+            Color color = e.FrontalReduced == true ? frontalReducedFlashColor : ResolveFlashColor(e.Element);
+            FlashDamage(color);
         }
 
         private void OnEntityHealed(EventEntityHealed e)
@@ -238,14 +250,29 @@ namespace QuantumUser.View.Util
 
         private void Flash(Color color) => Flash(color, duration);
 
-        // Every "important" reaction (hit/heal/shield/rift mark/spawn) funnels through here -
-        // extends the priority lock FlashPickup below respects, then applies immediately (a
-        // high-priority flash always wins outright, same "last caller overwrites" behavior this
-        // had before pickups existed).
+        // Heal/shield/rift-mark-application/spawn funnel through here - extends the priority lock
+        // FlashPickup below respects, then applies, UNLESS a Damage flash is still active
+        // (_damageFlashLockUntil), in which case this is silently skipped - Damage always wins and
+        // can't be interrupted back out by anything lower. Among themselves these are still equal
+        // priority (last caller overwrites), same as before Damage became a distinct top tier.
         private void Flash(Color color, float flashDuration)
         {
+            if (Time.time < _damageFlashLockUntil)
+                return;
+
             _priorityFlashLockUntil = Time.time + flashDuration;
             ApplyFlash(color, flashDuration);
+        }
+
+        // Highest-priority flash - OnEntityDamaged's own path. Always applies immediately
+        // regardless of anything currently playing (heal/shield/rift-mark-application/spawn/
+        // pickup), and locks out every one of those for its own duration so a hit landing right
+        // after e.g. a heal always reads clearly instead of the heal visually winning.
+        private void FlashDamage(Color color)
+        {
+            _damageFlashLockUntil = Time.time + duration;
+            _priorityFlashLockUntil = Time.time + duration;
+            ApplyFlash(color, duration);
         }
 
         // Lower-priority flash for a currency pickup landing on this character (see
@@ -254,12 +281,23 @@ namespace QuantumUser.View.Util
         // own duration, so a pickup glow can never visually stomp a hit/heal/shield/rift-mark
         // reaction happening at the same moment. Does NOT itself extend the lock - a pickup glow
         // should never block a hit flash that lands right after it.
-        public void FlashPickup(Color color, float flashDuration)
+        public void FlashPickup(CurrencyType type)
         {
             if (Time.time < _priorityFlashLockUntil)
                 return;
 
-            ApplyFlash(color, flashDuration);
+            ApplyFlash(ResolvePickupFlashColor(type), pickupFlashDuration);
+        }
+
+        private Color ResolvePickupFlashColor(CurrencyType type)
+        {
+            switch (type)
+            {
+                case CurrencyType.Experience: return expPickupFlashColor;
+                case CurrencyType.Coin: return coinPickupFlashColor;
+                case CurrencyType.RiftShard: return riftShardPickupFlashColor;
+                default: return Color.white;
+            }
         }
 
         private void ApplyFlash(Color color, float flashDuration)

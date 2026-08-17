@@ -23,6 +23,8 @@ MonoBehaviour:
     SpawnProfile:
       Id:
         Value: 443472774672561949
+    CostMultiplier:
+      RawValue: 65536
   Stats:
     MoveSpeed:
       RawValue: 327680
@@ -44,9 +46,9 @@ MonoBehaviour:
       GapProbeThreshold:
         RawValue: 32768
       ArcHeight:
-        RawValue: 32768
-      TraversalJumpSpeedMultiplier:
         RawValue: 65536
+      TraversalJumpSpeedMultiplier:
+        RawValue: 131072
       CanClimbCliffs: 1
       CliffHeight:
         RawValue: 65536
@@ -77,7 +79,7 @@ MonoBehaviour:
       RawValue: 131072
     UseWaypointDetour: 1
     WaypointArrivalDistance:
-      RawValue: 65536
+      RawValue: 13107
   AI:
     Targeting:
       Id:
@@ -169,4 +171,7 @@ MonoBehaviour:
   SkillActions: []
   ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
   ViewPrefab: {fileID: 8476845490732343577, guid: f8e0e322414154c5a941e35c6dd113da, type: 3}
-  FactionSkins: []
+  FactionSkins:
+  - Faction: 2
+    ViewPrefab: {fileID: 8476845490732343577, guid: 2e4a8f2b5eaf44c0ba7cade36c968ed0, type: 3}
+    ScaleMultiplier: 1

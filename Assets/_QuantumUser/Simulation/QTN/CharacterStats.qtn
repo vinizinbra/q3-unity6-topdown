@@ -65,11 +65,29 @@ component CharacterStats
     FP RiftShardGainMultiplier;
     FP CoinGainMultiplier;
 
+    // Per-player wallets (unlike Experience, which stays a shared Frame.Global total - see
+    // Experience.qtn) - a pickup credits every connected player the same base amount, each scaled
+    // by their OWN gain multiplier above (CoinUtility.GrantAll/RiftShardUtility.GrantAll), so each
+    // player then spends independently (e.g. a Cursed Rift Coin/Rift Shard Offering only affects
+    // the interacting player - see docs/breathing-poi.md). Survive death/respawn for free, same as
+    // every other CharacterStats field (the entity itself is never destroyed on death).
+    FP Coins;
+    FP RiftShards;
+
     // Choose-Weapon talent level - increments once each time this entity actually picks a
     // LevelUpCategory.ChooseWeapon option (see WeaponChoiceUtility.Grant), independent of overall
     // player level. Drives LevelUpUtility.RollWeaponOption's per-slot perk-count roll - see
-    // LevelUpConfig.ChancePerLevelPerSlot/MaxRolledPerks.
+    // LevelUpConfig.ChancePerLevelPerSlot/MaxRolledPerks. ALSO drives StoreUtility's own weapon
+    // offer count (Store buys reuse this exact stat, same "picking a weapon" meaning either way -
+    // see docs/store-blacksmith.md), independent of ShopWeaponOfferCount below.
     Byte WeaponTalentLevel;
+
+    // Meta-progression Store talent, seeded once at spawn from RuntimePlayer.Talents (same
+    // "carried in from outside this match, never written by the simulation" shape as
+    // WeaponTalentLevel/RerollQuantity - see docs/talents.md). StoreUtility.ResolveWeaponOfferCount
+    // reads this as Clamp(ShopWeaponOfferCount + 1, 1, StoreConfig.MaxWeaponOfferSlots) - rank 0 ->
+    // 1 offer, rank 1 -> 2, rank 2 -> 3. See docs/store-blacksmith.md.
+    Byte ShopWeaponOfferCount;
 
     // How many times this entity can redraw its own current LevelUpChoice.Options in place - see
     // LevelUpUtility.RerollOptionsFor (spends one, called from RerollLevelUpOptionsCommand). NOT a

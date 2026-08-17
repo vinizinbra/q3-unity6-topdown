@@ -19,17 +19,23 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Afterbeat
   Rarity: 1
+  RankDescriptions:
+  - Dashing generates 20% of your Resonance threshold.
+  - 1s after Dashing, an Afterbeat erupts from your starting position, damaging and
+    knocking back nearby enemies.
+  - Dashing creates Afterbeats at both ends of the Dash. Enemies hit generate additional
+    Resonance.
+  <MaxRank>k__BackingField: 3
   Priority: 0
-  Phase: 0
+  Phase: 5
   Interval:
     RawValue: 0
   Activated: 1
-  Description: '{0}s after you dash, a damaging pulse erupts at your starting position,
-    dealing {1} damage to enemies within 4 units.'
+  Description: Dashing generates Resonance.
   BeginFx:
-    ParticlePrefab: {fileID: 1693692083661057262, guid: 141ff6d98c0b74409b6500fe60b1b69c, type: 3}
+    ParticlePrefab: {fileID: 0}
     SpawnMode: 0
-    Parent: 1
+    Parent: 0
     Offset: {x: 0, y: 0, z: 0}
     ScaleByRadius: 0
     Scale: 1
@@ -48,11 +54,25 @@ MonoBehaviour:
     Parent: 1
     Offset: {x: 0, y: 0, z: 0}
     ScaleByRadius: 0
-    Scale: 1
+    Scale: 4
     Alignment: 0
+  ResonancePercentOnDash:
+    RawValue: 32768
   Delay:
     RawValue: 65536
-  Damage:
-    RawValue: 1310720
+  DamagePercentOfSkill:
+  - RawValue: 0
+  - RawValue: 327680
+  - RawValue: 49152
   Radius:
-    RawValue: 262144
+  - RawValue: 0
+  - RawValue: 131072
+  - RawValue: 196608
+  KnockbackForce:
+  - RawValue: 0
+  - RawValue: 393216
+  - RawValue: 393216
+  ResonancePerEnemyHit:
+    RawValue: 327680
+  MaxResonancePerDash:
+    RawValue: 1966080

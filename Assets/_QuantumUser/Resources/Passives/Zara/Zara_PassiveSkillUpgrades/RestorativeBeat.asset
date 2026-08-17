@@ -19,6 +19,27 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Restorative Beat
   Rarity: 1
-  Description: Increases pulse healing.
-  HealPercentBonus:
-    RawValue: 6554
+  Description: Resonance Pulse heals nearby allies for more of their Max Health.
+  <MaxRank>k__BackingField: 3
+  RankDescriptions:
+  - Resonance Pulse heals nearby allies for 7.5% of their Max Health.
+  - Resonance Pulse heals 10% Max Health and briefly Hastes nearby allies.
+  - Resonance Pulse heals 12.5% Max Health and converts excess healing into Shield.
+  HealPercent:
+  - RawValue: 4915
+  - RawValue: 6554
+  - RawValue: 8192
+  HasteDuration:
+  - RawValue: 0
+  - RawValue: 131072
+  - RawValue: 131072
+  HasteMultiplier:
+  - RawValue: 0
+  - RawValue: 98304
+  - RawValue: 98304
+  ShieldConversionPercent:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 32768
+  OvershieldCapMultiplier:
+    RawValue: 98304

@@ -1,17 +1,35 @@
 using System;
+using Photon.Deterministic;
 using PrimeTween;
 using Quantum;
 using QuantumUser.View;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class GameplayUiController : QuantumGlobalMonoBehaviour
 {
+    // Which flow currently owns a given slot's choiceWindows[] instance - generalizes the old
+    // binary "Global.LevelUpScreenOpen ? LevelUp : CursedRift" check into real per-slot resolution
+    // now that Store/Blacksmith are a 3rd/4th flow sharing the same window (see ResolveOwner). Safe
+    // as a plain sequential presence check (not real arbitration) because
+    // PoiInteractionLockUtility's own Busy check already guarantees a player can never hold more
+    // than one of {CursedRiftInteraction, StoreInteraction, BlacksmithInteraction} at once - opening
+    // a 2nd is blocked at the source. See docs/store-blacksmith.md.
+    private enum ChoiceWindowOwner { None, LevelUp, CursedRift, Store, Blacksmith }
+
     [SerializeField] private WindowManager windowManager;
     [SerializeField] private TMP_Text lives;
     [SerializeField] private TMP_Text rtt;
-    [SerializeField, Tooltip("One per local player slot - upgradeWindows[0] for slot 0, upgradeWindows[1] for slot 1, etc. Unused slots (no 2nd local player) can be left null.")]
-    private UpgradeWindow[] upgradeWindows;
+
+    [SerializeField, FormerlySerializedAs("upgradeWindows"),
+     Tooltip("One per local player slot - choiceWindows[0] for slot 0, choiceWindows[1] for slot 1, etc. Unused slots (no 2nd local player) can be left null. " +
+        "Serves FIVE flows on the exact same instance: a real Level-Up/Weapon-Upgrade/Chest (driven by UpdateUpgradeScreen, routed through WindowManager + a " +
+        "Time.timeScale ramp - a whole-party pause), and Cursed Rift/Store/Blacksmith's own screens (driven by UpdatePoiWindow, shown/hidden directly per " +
+        "slot, no WindowManager/timescale involvement at all). See both methods' own comments for how they share one instance without permanently fighting " +
+        "each other - a real Level-Up for a DIFFERENT player can visually pre-empt this player's own in-progress POI screen (an accepted tradeoff, not a " +
+        "bug - their own interaction component is untouched, so it picks back up the moment the other player's Level-Up closes).")]
+    private ChooseWindow[] choiceWindows;
 
     [Header("Upgrade screen time-scale ease")]
     [SerializeField, Tooltip("How long Time.timeScale takes to ease down to upgradeTimeScale before the upgrade screen actually shows. Purely a client-side polish effect - the simulation itself is already paused deterministically via GameplaySystemGroup regardless of Time.timeScale (Quantum's own tick doesn't read it), see docs/level-up-upgrades.md.")]
@@ -31,32 +49,50 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
     // a second time once the simulation catches up and actually clears the flag a tick or two later.
     private bool _upgradeScreenClosedEarly;
     private Action<int>[] _cardClickedHandlers;
+    private Action<int>[] _weaponCardClickedHandlers;
     private Action[] _rerollClickedHandlers;
-    private Action[] _keepCurrentClickedHandlers;
+    private Action[] _secondaryButtonClickedHandlers;
     private Tween _timeScaleTween;
+
+    // Cached per slot every QUpdate tick (see UpdateWindowOwners) - every click handler needs to
+    // know which flow currently owns this slot's window without re-deriving it from a fresh Quantum
+    // read inside the click handler itself.
+    private ChoiceWindowOwner[] _windowOwner;
+
+    // Cached per slot every UpdatePoiWindow tick - OnCardClicked needs to know whether a card click
+    // (while ChoiceWindowOwner.CursedRift) means "pick a sacrifice" or "pick a mutation" (both
+    // stages reuse the same 3-card grid/onCardClicked event), without re-deriving it from a fresh
+    // Quantum read inside the click handler itself.
+    private CursedRiftInteractionState[] _poiWindowStage;
 
     private void Start()
     {
         windowManager.ShowWindow<LoadingWindow>();
 
-        _cardClickedHandlers = new Action<int>[upgradeWindows.Length];
-        _rerollClickedHandlers = new Action[upgradeWindows.Length];
-        _keepCurrentClickedHandlers = new Action[upgradeWindows.Length];
+        _cardClickedHandlers = new Action<int>[choiceWindows.Length];
+        _weaponCardClickedHandlers = new Action<int>[choiceWindows.Length];
+        _rerollClickedHandlers = new Action[choiceWindows.Length];
+        _secondaryButtonClickedHandlers = new Action[choiceWindows.Length];
+        _windowOwner = new ChoiceWindowOwner[choiceWindows.Length];
+        _poiWindowStage = new CursedRiftInteractionState[choiceWindows.Length];
 
-        for (int i = 0; i < upgradeWindows.Length; i++)
+        for (int i = 0; i < choiceWindows.Length; i++)
         {
-            if (upgradeWindows[i] == null)
+            if (choiceWindows[i] == null)
                 continue;
 
             int slotIndex = i;
-            _cardClickedHandlers[i] = optionIndex => OnUpgradeCardClicked(slotIndex, optionIndex);
-            upgradeWindows[i].onCardClicked += _cardClickedHandlers[i];
+            _cardClickedHandlers[i] = optionIndex => OnCardClicked(slotIndex, optionIndex);
+            choiceWindows[i].onCardClicked += _cardClickedHandlers[i];
+
+            _weaponCardClickedHandlers[i] = optionIndex => OnWeaponCardClicked(slotIndex, optionIndex);
+            choiceWindows[i].onWeaponCardClicked += _weaponCardClickedHandlers[i];
 
             _rerollClickedHandlers[i] = () => OnRerollClicked(slotIndex);
-            upgradeWindows[i].onRerollClicked += _rerollClickedHandlers[i];
+            choiceWindows[i].onRerollClicked += _rerollClickedHandlers[i];
 
-            _keepCurrentClickedHandlers[i] = () => OnKeepCurrentClicked(slotIndex);
-            upgradeWindows[i].onKeepCurrentClicked += _keepCurrentClickedHandlers[i];
+            _secondaryButtonClickedHandlers[i] = () => OnSecondaryButtonClicked(slotIndex);
+            choiceWindows[i].onSecondaryButtonClicked += _secondaryButtonClickedHandlers[i];
         }
     }
 
@@ -71,16 +107,22 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
         if (_cardClickedHandlers == null)
             return;
 
-        for (int i = 0; i < upgradeWindows.Length; i++)
+        for (int i = 0; i < choiceWindows.Length; i++)
         {
-            if (upgradeWindows[i] != null && _cardClickedHandlers[i] != null)
-                upgradeWindows[i].onCardClicked -= _cardClickedHandlers[i];
+            if (choiceWindows[i] == null)
+                continue;
 
-            if (upgradeWindows[i] != null && _rerollClickedHandlers[i] != null)
-                upgradeWindows[i].onRerollClicked -= _rerollClickedHandlers[i];
+            if (_cardClickedHandlers[i] != null)
+                choiceWindows[i].onCardClicked -= _cardClickedHandlers[i];
 
-            if (upgradeWindows[i] != null && _keepCurrentClickedHandlers[i] != null)
-                upgradeWindows[i].onKeepCurrentClicked -= _keepCurrentClickedHandlers[i];
+            if (_weaponCardClickedHandlers[i] != null)
+                choiceWindows[i].onWeaponCardClicked -= _weaponCardClickedHandlers[i];
+
+            if (_rerollClickedHandlers[i] != null)
+                choiceWindows[i].onRerollClicked -= _rerollClickedHandlers[i];
+
+            if (_secondaryButtonClickedHandlers[i] != null)
+                choiceWindows[i].onSecondaryButtonClicked -= _secondaryButtonClickedHandlers[i];
         }
     }
 
@@ -103,7 +145,38 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
 
     public override unsafe void QUpdate(QuantumGame game)
     {
+        UpdateWindowOwners(game);
         UpdateUpgradeScreen(game);
+        UpdatePoiWindow(game);
+    }
+
+    // Resolves _windowOwner[] for every slot ONCE per tick, before either UpdateUpgradeScreen or
+    // UpdatePoiWindow runs - both a real Level-Up and a POI interaction need it (click handlers can
+    // fire for either), and UpdateUpgradeScreen's own early-return (nothing to refresh while no
+    // screen is open) would otherwise leave a stale owner behind for whichever flow it skips this
+    // tick. See ResolveOwner's own comment on why a plain sequential presence check is safe here.
+    private unsafe void UpdateWindowOwners(QuantumGame game)
+    {
+        if (choiceWindows.Length == 0 || MyLocalPlayer.Instance == null)
+            return;
+
+        Frame frame = game.Frames.Predicted;
+        var slots = MyLocalPlayer.Instance.Slots;
+
+        for (int i = 0; i < choiceWindows.Length; i++)
+        {
+            bool slotValid = i < slots.Count && slots[i].IsSet == true;
+            _windowOwner[i] = slotValid ? ResolveOwner(frame, slots[i].EntityRef) : ChoiceWindowOwner.None;
+        }
+    }
+
+    private static unsafe ChoiceWindowOwner ResolveOwner(Frame frame, EntityRef entity)
+    {
+        if (frame.Global->LevelUpScreenOpen == true) return ChoiceWindowOwner.LevelUp;
+        if (frame.Has<CursedRiftInteraction>(entity) == true) return ChoiceWindowOwner.CursedRift;
+        if (frame.Has<StoreInteraction>(entity) == true) return ChoiceWindowOwner.Store;
+        if (frame.Has<BlacksmithInteraction>(entity) == true) return ChoiceWindowOwner.Blacksmith;
+        return ChoiceWindowOwner.None;
     }
 
     public override void QLateUpdate(QuantumGame game)
@@ -116,7 +189,7 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
     // View (unlike the sim) is never rolled back. See docs/level-up-upgrades.md.
     private unsafe void UpdateUpgradeScreen(QuantumGame game)
     {
-        if (upgradeWindows.Length == 0 || MyLocalPlayer.Instance == null)
+        if (choiceWindows.Length == 0 || MyLocalPlayer.Instance == null)
             return;
 
         Frame frame = game.Frames.Predicted;
@@ -131,7 +204,7 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
             _timeScaleTween.Stop();
             _timeScaleTween = Tween.Custom(Time.timeScale, upgradeTimeScale, upgradeTimeScaleRampInDuration,
                 onValueChange: v => Time.timeScale = (float)v, useUnscaledTime: true)
-                .OnComplete(() => windowManager.ShowWindow<UpgradeWindow>());
+                .OnComplete(() => windowManager.ShowWindow<ChooseWindow>());
         }
         else if (isOpen == false && _upgradeScreenWasOpen == true && _upgradeScreenClosedEarly == false)
         {
@@ -145,18 +218,18 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
 
         var slots = MyLocalPlayer.Instance.Slots;
 
-        for (int i = 0; i < upgradeWindows.Length; i++)
+        for (int i = 0; i < choiceWindows.Length; i++)
         {
-            if (upgradeWindows[i] == null)
+            if (choiceWindows[i] == null)
                 continue;
 
             // The window only actually SetActive(true)s once the Time.timeScale ramp above finishes
-            // (windowManager.ShowWindow<UpgradeWindow>() in the OnComplete callback) - until then its
+            // (windowManager.ShowWindow<ChooseWindow>() in the OnComplete callback) - until then its
             // GameObject is still inactive, so Awake() hasn't run and cards/weaponCards are still
             // null. Skip refreshing until it's really shown, or SetCardFamilyActive NREs on those
             // null arrays for the ~upgradeTimeScaleRampDuration window between isOpen flipping true
             // and the reveal actually happening.
-            if (upgradeWindows[i].gameObject.activeInHierarchy == false)
+            if (choiceWindows[i].gameObject.activeInHierarchy == false)
                 continue;
 
             // Every local slot's own LevelUpChoice is independent (see docs/level-up-upgrades.md),
@@ -176,7 +249,7 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
             int rerollCharges = frame.Unsafe.TryGetPointer<CharacterStats>(slots[i].EntityRef, out var stats) == true
                 ? stats->RerollQuantity
                 : 0;
-            upgradeWindows[i].UpdateRerollButton(rerollCharges, choice->Confirmed);
+            choiceWindows[i].UpdateRerollButton(rerollCharges, choice->Confirmed);
 
             // A LevelUpChoice is always homogeneous - either every rolled option is ChooseWeapon, or
             // none are (see LevelUpUtility.RollOptionsFor/RollChooseWeaponOptionsFor never mixing
@@ -190,10 +263,12 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
 
                 for (int j = 0; j < choice->Options.Length; j++)
                 {
-                    weaponCardData[j] = j < choice->OptionCount ? BuildWeaponCardData(frame, choice->Options[j]) : default;
+                    weaponCardData[j] = j < choice->OptionCount
+                        ? BuildWeaponCardData(frame, choice->Options[j].WeaponData, choice->Options[j].RolledPerks, choice->Options[j].RolledPerkCount)
+                        : default;
                 }
 
-                upgradeWindows[i].RefreshWeaponChoice(title, frame.Global->LevelUpTimeRemaining.AsFloat, weaponCardData, confirmedIndex);
+                choiceWindows[i].RefreshWeaponChoice(title, frame.Global->LevelUpTimeRemaining.AsFloat, weaponCardData, confirmedIndex);
             }
             else
             {
@@ -204,8 +279,369 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
                     cardData[j] = j < choice->OptionCount ? BuildCardData(frame, slots[i].EntityRef, choice->Options[j]) : default;
                 }
 
-                upgradeWindows[i].Refresh(title, frame.Global->LevelUpTimeRemaining.AsFloat, cardData, confirmedIndex);
+                choiceWindows[i].Refresh(title, frame.Global->LevelUpTimeRemaining.AsFloat, cardData, confirmedIndex);
             }
+        }
+    }
+
+    // Generalized POI Choice Window driver (was UpdateCursedRiftWindow - now also drives Store/
+    // Blacksmith, see docs/store-blacksmith.md) - independent of UpdateUpgradeScreen above (runs
+    // right after it every QUpdate), since none of these three flows ramp Time.timeScale or go
+    // through WindowManager.ShowWindow<T>() itself (only affects THIS interacting player's own
+    // slot, not every local slot together). Steps aside entirely whenever a real Level-Up is
+    // currently open (Global.LevelUpScreenOpen is a single SHARED flag, not per-player) -
+    // UpdateUpgradeScreen's own WindowManager sweep already owns every choiceWindows[] instance for
+    // that duration, so fighting it here would just cause visual flicker. See
+    // docs/choice-window-refactor.md.
+    private unsafe void UpdatePoiWindow(QuantumGame game)
+    {
+        if (choiceWindows.Length == 0 || MyLocalPlayer.Instance == null)
+            return;
+
+        Frame frame = game.Frames.Predicted;
+
+        if (frame.Global->LevelUpScreenOpen == true)
+            return;
+
+        var slots = MyLocalPlayer.Instance.Slots;
+
+        for (int i = 0; i < choiceWindows.Length; i++)
+        {
+            if (choiceWindows[i] == null)
+                continue;
+
+            bool slotValid = i < slots.Count && slots[i].IsSet == true;
+            EntityRef entity = slotValid ? slots[i].EntityRef : EntityRef.None;
+            ChoiceWindowOwner owner = _windowOwner[i];
+
+            if (slotValid == false || owner == ChoiceWindowOwner.None)
+            {
+                // Only hide a window that's actually still showing - a real Level-Up closing just
+                // hid every choiceWindows[] instance itself (see CloseUpgradeScreen), so there's
+                // nothing left to do here for a slot with no open POI interaction of its own.
+                if (choiceWindows[i].gameObject.activeSelf == true)
+                    choiceWindows[i].Hide();
+
+                continue;
+            }
+
+            // Checked against the window's own LIVE state (not a separately-tracked bool) so this
+            // self-heals regardless of what else touched it - a real Level-Up for a DIFFERENT
+            // player hides every choiceWindows[] instance via WindowManager's own sweep (see
+            // ChooseWindow's class comment), and this correctly re-shows (replaying the intro -
+            // an accepted minor visual hiccup) THIS slot's own screen the moment that stops being
+            // true, since the interaction itself was never touched.
+            if (choiceWindows[i].gameObject.activeSelf == false)
+                choiceWindows[i].Show();
+
+            switch (owner)
+            {
+                case ChoiceWindowOwner.CursedRift:
+                    if (frame.Unsafe.TryGetPointer<CursedRiftInteraction>(entity, out var cursedRift) == true)
+                    {
+                        _poiWindowStage[i] = cursedRift->State;
+                        RefreshCursedRiftWindow(frame, entity, cursedRift, choiceWindows[i]);
+                    }
+                    break;
+
+                case ChoiceWindowOwner.Store:
+                    if (frame.Unsafe.TryGetPointer<StoreInteraction>(entity, out var store) == true)
+                        RefreshStoreWindow(frame, entity, store, choiceWindows[i]);
+                    break;
+
+                case ChoiceWindowOwner.Blacksmith:
+                    if (frame.Unsafe.TryGetPointer<BlacksmithInteraction>(entity, out var blacksmith) == true)
+                        RefreshBlacksmithWindow(frame, entity, blacksmith, choiceWindows[i]);
+                    break;
+            }
+        }
+    }
+
+    // Store's own screen - food/utility offers listed first, weapon offers second (per the user's
+    // own layout decision), both live on the SAME ChooseWindow.RefreshStore call. Subtitle shows
+    // this player's own live Coin total, same "read live, never cached" idiom every other purchase
+    // affordance in this method uses.
+    private static unsafe void RefreshStoreWindow(Frame frame, EntityRef entity, StoreInteraction* interaction, ChooseWindow window)
+    {
+        EntityRef store = interaction->Store;
+
+        if (frame.RuntimeConfig.StoreConfig.IsValid == false || frame.Unsafe.TryGetPointer<StoreInventory>(store, out var inventory) == false)
+            return;
+
+        StoreConfig config = frame.FindAsset(frame.RuntimeConfig.StoreConfig);
+        int weaponOfferCount = StoreUtility.ResolveWeaponOfferCount(frame, entity, store, config);
+
+        var foodData = new UpgradeCardWidget.CardData[inventory->FoodOffers.Length];
+
+        for (int j = 0; j < inventory->FoodOffers.Length; j++)
+        {
+            foodData[j] = j < inventory->FoodOfferCount
+                ? BuildFoodOfferCardData(frame, entity, store, j, inventory->FoodOffers[j])
+                : default;
+        }
+
+        var weaponData = new WeaponCardWidget.CardData[inventory->WeaponOffers.Length];
+
+        for (int j = 0; j < inventory->WeaponOffers.Length; j++)
+        {
+            weaponData[j] = j < weaponOfferCount && j < inventory->WeaponOfferCount
+                ? BuildStoreWeaponCardData(frame, entity, store, j, inventory->WeaponOffers[j])
+                : default;
+        }
+
+        string subtitle = frame.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats) == true
+            ? $"YOUR COINS: {stats->Coins.AsFloat:0}"
+            : null;
+
+        window.RefreshStore("STORE", foodData, weaponData, subtitle);
+    }
+
+    // Blacksmith's own screen - a single homogeneous UpgradeCardWidget family, structurally
+    // identical to Cursed Rift's Mutation stage, so it reuses the existing plain Refresh() call
+    // (now with Purchase populated per-card, since perks cost Coins - see BuildPerkOfferCardData).
+    private static unsafe void RefreshBlacksmithWindow(Frame frame, EntityRef entity, BlacksmithInteraction* interaction, ChooseWindow window)
+    {
+        if (frame.RuntimeConfig.BlacksmithConfig.IsValid == false)
+            return;
+
+        BlacksmithConfig config = frame.FindAsset(frame.RuntimeConfig.BlacksmithConfig);
+        var cardData = new UpgradeCardWidget.CardData[interaction->PerkChoices.Length];
+
+        for (int j = 0; j < interaction->PerkChoices.Length; j++)
+        {
+            cardData[j] = j < interaction->PerkChoiceCount
+                ? BuildPerkOfferCardData(frame, entity, interaction->PerkChoices[j], config)
+                : default;
+        }
+
+        window.Refresh("BLACKSMITH", 0f, cardData, null, subtitle: "CHOOSE A PERK TO ADD", allowCancel: true, allowReroll: false);
+    }
+
+    // Store food/utility card - mirrors BuildSacrificeCardData's own shape (reads the offer asset's
+    // own fields + a live price/afford computation, never cached) but with a real purchase
+    // affordance instead of a cost preview - a food offer is a REWARD bought with Coins, not a
+    // sacrifice.
+    private static unsafe UpgradeCardWidget.CardData BuildFoodOfferCardData(Frame frame, EntityRef entity, EntityRef store, int offerIndex, StoreFoodOffer offer)
+    {
+        if (offer.Food.IsValid == false)
+            return default;
+
+        FoodOfferData data = frame.FindAsset(offer.Food);
+        bool purchased = StoreUtility.IsPurchased(frame, entity, store, offerIndex, isWeaponOffer: false);
+        FP coins = frame.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats) == true ? stats->Coins : FP._0;
+
+        return new UpgradeCardWidget.CardData
+        {
+            HasOption = true,
+            Icon = data.Icon,
+            DisplayName = data.DisplayName,
+            Description = data.Description,
+            KindText = "FOOD & UTILITY",
+            TopLabelOverride = string.IsNullOrEmpty(data.TopLabel) ? "FOOD" : data.TopLabel,
+            ButtonLabel = string.IsNullOrEmpty(data.ButtonLabel) ? "BUY" : data.ButtonLabel,
+            Purchase = new PurchasableCardState
+            {
+                ShowPurchaseUi = true,
+                Price = offer.Price.AsFloat,
+                Currency = CurrencyType.Coin,
+                CanAfford = coins >= offer.Price,
+                IsSoldOut = purchased
+            }
+        };
+    }
+
+    // Store weapon offer card - reuses BuildWeaponCardData (refactored to take raw fields, see its
+    // own comment) unchanged, then layers the purchase affordance on top.
+    private static unsafe WeaponCardWidget.CardData BuildStoreWeaponCardData(Frame frame, EntityRef entity, EntityRef store, int offerIndex, StoreWeaponOffer offer)
+    {
+        WeaponCardWidget.CardData data = BuildWeaponCardData(frame, offer.WeaponData, offer.RolledPerks, offer.RolledPerkCount);
+        bool purchased = StoreUtility.IsPurchased(frame, entity, store, offerIndex, isWeaponOffer: true);
+        FP coins = frame.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats) == true ? stats->Coins : FP._0;
+
+        data.Purchase = new PurchasableCardState
+        {
+            ShowPurchaseUi = true,
+            Price = offer.Price.AsFloat,
+            Currency = CurrencyType.Coin,
+            CanAfford = coins >= offer.Price,
+            IsSoldOut = purchased
+        };
+
+        return data;
+    }
+
+    // Blacksmith perk offer card - reads WeaponPerkData's own Icon/DisplayName/GetDescription()/
+    // Rarity directly (same fields BuildCardData would resolve generically for a rolled
+    // LevelUpOption), plus the purchase affordance. Price is resolved from THIS perk's own
+    // Rarity (BlacksmithConfig.ResolvePerkPrice) - a Legendary perk costs more than a Common one,
+    // not one flat price for every offer. IsSoldOut is always false here - Blacksmith allows
+    // exactly one successful pick per player per Break (PoiUsagePolicy.OncePerPlayerPerBreak), and
+    // the whole interaction/window closes the instant that happens, so a still-rendered card is
+    // never "sold out," only gone.
+    private static unsafe UpgradeCardWidget.CardData BuildPerkOfferCardData(Frame frame, EntityRef entity, AssetRef<WeaponPerkData> perkRef, BlacksmithConfig config)
+    {
+        if (perkRef.IsValid == false)
+            return default;
+
+        WeaponPerkData data = frame.FindAsset(perkRef);
+        FP price = config.ResolvePerkPrice(data.Rarity);
+        FP coins = frame.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats) == true ? stats->Coins : FP._0;
+
+        return new UpgradeCardWidget.CardData
+        {
+            HasOption = true,
+            Icon = data.Icon,
+            DisplayName = data.DisplayName,
+            Description = data.GetDescription(),
+            RarityIndex = (int)data.Rarity,
+            KindText = "Weapon Perk",
+            Purchase = new PurchasableCardState
+            {
+                ShowPurchaseUi = true,
+                Price = price.AsFloat,
+                Currency = CurrencyType.Coin,
+                CanAfford = coins >= price,
+                IsSoldOut = false
+            }
+        };
+    }
+
+    private static unsafe void RefreshCursedRiftWindow(Frame frame, EntityRef entity, CursedRiftInteraction* interaction, ChooseWindow window)
+    {
+        switch (interaction->State)
+        {
+            case CursedRiftInteractionState.SelectingSacrifice:
+            {
+                var cardData = new UpgradeCardWidget.CardData[interaction->SacrificeChoices.Length];
+
+                for (int j = 0; j < interaction->SacrificeChoices.Length; j++)
+                {
+                    cardData[j] = j < interaction->SacrificeChoiceCount
+                        ? BuildSacrificeCardData(frame, entity, interaction->SacrificeChoices[j])
+                        : default;
+                }
+
+                window.Refresh("CURSED RIFT", 0f, cardData, null, subtitle: "CHOOSE A SACRIFICE", allowCancel: true, allowReroll: false);
+                break;
+            }
+
+            case CursedRiftInteractionState.SelectingMutation:
+            {
+                var cardData = new UpgradeCardWidget.CardData[interaction->MutationChoices.Length];
+
+                for (int j = 0; j < interaction->MutationChoices.Length; j++)
+                {
+                    cardData[j] = j < interaction->MutationChoiceCount
+                        ? BuildCardData(frame, entity, interaction->MutationChoices[j])
+                        : default;
+                }
+
+                // Reuses BuildCardData unchanged (internal, see its own comment) - a
+                // CursedRiftInteraction.MutationChoices entry is the exact same LevelUpOption
+                // shape a normal level-up's RiftMutation category rolls.
+                window.Refresh("RIFT AWAKENED", 0f, cardData, null, subtitle: "CHOOSE 1 MUTATION", allowCancel: false, allowReroll: false);
+                break;
+            }
+        }
+    }
+
+    // Sacrifice cards are NOT UpgradeData (see SacrificeDefinition's own comment - a sacrifice
+    // isn't an upgrade) - built from the asset's own DisplayName/Icon/Description/TopLabel/
+    // ButtonLabel plus a live BuildValuePreview call (never cached, so it can't go stale between
+    // roll and pick). KindText is a flat constant, not a switch - every sacrifice is "RIFT
+    // SACRIFICE" (unlike a level-up option's KindText, which varies by Kind).
+    private static unsafe UpgradeCardWidget.CardData BuildSacrificeCardData(Frame frame, EntityRef entity, AssetRef<SacrificeDefinition> sacrificeRef)
+    {
+        if (sacrificeRef.IsValid == false)
+            return default;
+
+        SacrificeDefinition data = frame.FindAsset(sacrificeRef);
+
+        return new UpgradeCardWidget.CardData
+        {
+            HasOption = true,
+            Icon = data.Icon,
+            DisplayName = data.DisplayName,
+            Description = data.Description,
+            KindText = "RIFT SACRIFICE",
+            TopLabelOverride = string.IsNullOrEmpty(data.TopLabel) ? "SACRIFICE" : data.TopLabel,
+            ValuePreview = data.BuildValuePreview(frame, entity),
+            ButtonLabel = string.IsNullOrEmpty(data.ButtonLabel) ? "SACRIFICE" : data.ButtonLabel
+        };
+    }
+
+    // Card click from `cards[]` (UpgradeCardWidget family) - dispatches by _windowOwner[slotIndex]
+    // (cached fresh every tick by UpdateWindowOwners, see its own comment) rather than a separately
+    // tracked "mode" flag.
+    private void OnCardClicked(int slotIndex, int optionIndex)
+    {
+        switch (_windowOwner[slotIndex])
+        {
+            case ChoiceWindowOwner.LevelUp:
+                OnUpgradeCardClicked(slotIndex, optionIndex);
+                break;
+
+            case ChoiceWindowOwner.CursedRift:
+                if (_poiWindowStage[slotIndex] == CursedRiftInteractionState.SelectingMutation)
+                    _game.SendCommand(slotIndex, new SelectMutationCommand { OptionIndex = (byte)optionIndex });
+                else
+                    _game.SendCommand(slotIndex, new SelectSacrificeCommand { OptionIndex = (byte)optionIndex });
+                break;
+
+            case ChoiceWindowOwner.Store:
+                _game.SendCommand(slotIndex, new BuyStoreFoodCommand { OfferIndex = (byte)optionIndex });
+                break;
+
+            case ChoiceWindowOwner.Blacksmith:
+                _game.SendCommand(slotIndex, new SelectBlacksmithPerkCommand { OptionIndex = (byte)optionIndex });
+                break;
+        }
+    }
+
+    // Card click from `weaponCards[]` (WeaponCardWidget family) - split from OnCardClicked (see
+    // ChooseWindow.onWeaponCardClicked's own comment) since Store's own screen shows both families
+    // at once, mapping to different commands. A Choose-Weapon level-up option is granted the exact
+    // same way a plain Level-Up card is (SelectLevelUpUpgradeCommand{OptionIndex} - the sim doesn't
+    // care which card family the UI used, both index the same LevelUpChoice.Options array), so this
+    // reuses OnUpgradeCardClicked unchanged for that case.
+    private void OnWeaponCardClicked(int slotIndex, int optionIndex)
+    {
+        switch (_windowOwner[slotIndex])
+        {
+            case ChoiceWindowOwner.LevelUp:
+                OnUpgradeCardClicked(slotIndex, optionIndex);
+                break;
+
+            case ChoiceWindowOwner.Store:
+                _game.SendCommand(slotIndex, new BuyStoreWeaponCommand { OfferIndex = (byte)optionIndex });
+                break;
+        }
+    }
+
+    // ChooseWindow.secondaryButton is ONE button reused for four mutually-exclusive purposes -
+    // "KEEP CURRENT" on a Choose-Weapon screen, "CANCEL" on Cursed Rift's Sacrifice stage/a
+    // Blacksmith pick screen, "CLOSE" on the Store screen - dispatched the same way OnCardClicked
+    // is. A plain (non-weapon) Level-Up never shows this button at all (Refresh's allowCancel
+    // defaults false there), so LevelUp's own case here only ever means Choose-Weapon in practice.
+    private void OnSecondaryButtonClicked(int slotIndex)
+    {
+        switch (_windowOwner[slotIndex])
+        {
+            case ChoiceWindowOwner.LevelUp:
+                OnKeepCurrentClicked(slotIndex);
+                break;
+
+            case ChoiceWindowOwner.CursedRift:
+                _game.SendCommand(slotIndex, new CancelCursedRiftCommand());
+                break;
+
+            case ChoiceWindowOwner.Store:
+                _game.SendCommand(slotIndex, new CloseStoreCommand());
+                break;
+
+            case ChoiceWindowOwner.Blacksmith:
+                _game.SendCommand(slotIndex, new CancelBlacksmithCommand());
+                break;
         }
     }
 
@@ -226,17 +662,25 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
             case LevelUpCategory.RiftMutation: return "Rift Mutation";
             case LevelUpCategory.WeaponPerk: return "Weapon Perk";
             case LevelUpCategory.ChooseWeapon: return "Weapon";
+            case LevelUpCategory.RiftMarkMutation: return "Rift Mark Mutation";
             default: return "Chest";
         }
     }
 
-    // WeaponPerkData/SkillActionData/GlobalUpgradeData/PassiveUpgradeData all derive from the
-    // shared UpgradeData base (Icon/DisplayName/Rarity/GetDescription), so this needs no switch on
-    // option.Kind at all - resolving the AssetRef<UpgradeData> generically is enough. Stack info is
-    // the one thing that IS kind-specific (only a capped GlobalUpgradeData has it - see
-    // GlobalUpgradeData.MaxPicks/LevelUpUtility.IsCappedOut, the same cap this reads back for
-    // display), so that part alone switches on Kind.
-    private static unsafe UpgradeCardWidget.CardData BuildCardData(Frame frame, EntityRef entity, LevelUpOption option)
+    // WeaponPerkData/SkillActionData/GlobalUpgradeData/PassiveUpgradeData/RiftMutationData all
+    // derive from the shared UpgradeData base (Icon/DisplayName/GetDescription), so this needs no
+    // switch on option.Kind at all for those - resolving the AssetRef<UpgradeData> generically is
+    // enough. Rarity is the one field that ISN'T shared (only WeaponPerkData/RiftMutationData still
+    // have one - see UpgradeData's own comment), so RarityIndex below is resolved with its own type
+    // check rather than a plain data.Rarity read; -1 (no rarity) tells UpgradeCardWidget to hide the
+    // rarity badge entirely. Stack info is the other kind-specific thing (only a capped
+    // GlobalUpgradeData has it - see GlobalUpgradeData.MaxPicks/LevelUpUtility.IsCappedOut, the same
+    // cap this reads back for display), so that part alone switches on Kind.
+    // internal (not private) so CursedRift's mutation-reward stage (a LevelUpOption[3] stored on
+    // CursedRiftInteraction.MutationChoices, the exact same shape LevelUpChoice.Options already
+    // is) can reuse this unchanged instead of re-deriving equivalent card-building logic - see
+    // RefreshCursedRiftWindow/docs/choice-window-refactor.md.
+    internal static unsafe UpgradeCardWidget.CardData BuildCardData(Frame frame, EntityRef entity, LevelUpOption option)
     {
         UpgradeData data = frame.FindAsset(option.Upgrade);
         int currentStacks = 0;
@@ -265,13 +709,20 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
             }
         }
 
+        int rarityIndex = data switch
+        {
+            WeaponPerkData weaponPerk => (int)weaponPerk.Rarity,
+            RiftMutationData mutation => (int)mutation.Rarity,
+            _ => -1
+        };
+
         return new UpgradeCardWidget.CardData
         {
             HasOption = true,
             Icon = data.Icon,
             DisplayName = data.DisplayName,
             Description = description,
-            RarityIndex = (int)data.Rarity,
+            RarityIndex = rarityIndex,
             KindText = KindText(option),
             CurrentStacks = currentStacks,
             MaxStacks = maxStacks
@@ -284,14 +735,17 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
     // WeaponCardWidget.PerkRowData. Each row shows both the perk's own name (Title) and its
     // live-formatted GetDescription() (what it actually does, e.g. "+15% Damage, -10% Fire Rate").
     // Rendered via the dedicated WeaponCardWidget, never reaches BuildCardData/KindText below.
-    private static unsafe WeaponCardWidget.CardData BuildWeaponCardData(Frame frame, LevelUpOption option)
+    // Takes the 3 raw fields directly (not a whole LevelUpOption) so Store's own weapon-offer
+    // builder (BuildStoreWeaponCardData, StoreWeaponOffer carries the exact same 3 fields) reuses
+    // this unchanged alongside the existing Choose-Weapon caller.
+    private static unsafe WeaponCardWidget.CardData BuildWeaponCardData(Frame frame, AssetRef<WeaponDataAsset> weaponDataRef, FixedArray<AssetRef<WeaponPerkData>> rolledPerks, int rolledPerkCount)
     {
-        WeaponDataAsset weaponData = frame.FindAsset(option.WeaponData);
-        var perks = new WeaponCardWidget.PerkRowData[option.RolledPerkCount];
+        WeaponDataAsset weaponData = frame.FindAsset(weaponDataRef);
+        var perks = new WeaponCardWidget.PerkRowData[rolledPerkCount];
 
-        for (int i = 0; i < option.RolledPerkCount; i++)
+        for (int i = 0; i < rolledPerkCount; i++)
         {
-            UpgradeData perk = frame.FindAsset(option.RolledPerks[i]);
+            WeaponPerkData perk = frame.FindAsset(rolledPerks[i]);
 
             perks[i] = new WeaponCardWidget.PerkRowData
             {
@@ -323,13 +777,14 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
 
     // SkillUpgrade is the one kind that isn't self-descriptive - it needs SkillUpgradeSlot to say
     // whether it's the hero's Dash or their unique skill (see LevelUpOption/SkillSlotId).
-    private static string KindText(LevelUpOption option)
+    internal static string KindText(LevelUpOption option)
     {
         switch (option.Kind)
         {
             case LevelUpPoolKind.WeaponPerk: return "Weapon Perk";
             case LevelUpPoolKind.GlobalUpgrade: return "Global Upgrade";
             case LevelUpPoolKind.RiftMutation: return "Rift Mutation";
+            case LevelUpPoolKind.RiftMarkMutation: return "Rift Mark Mutation";
             case LevelUpPoolKind.PassiveUpgrade: return "Passive Upgrade";
             case LevelUpPoolKind.SkillUpgrade:
                 switch (option.SkillUpgradeSlot)
@@ -381,11 +836,17 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
         // intended "back to normal play" window, but nothing in code shows it explicitly today
         // (it may just be the scene's default-active window under this WindowManager) - adjust
         // this call if that's not the case.
+        //
+        // This ALSO hides every choiceWindows[] instance, this player's own included, regardless of
+        // whether IT was the one that triggered this Level-Up (WindowManager.ShowWindow<T>() hides
+        // every window not of type T) - if this player was mid-Cursed-Rift/Store/Blacksmith,
+        // UpdatePoiWindow re-shows their own screen again next tick (see its own comment) since
+        // their own interaction component was never touched by any of this.
         windowManager.ShowWindow<GameplayWindow>();
 
         // Stops the ramp-down above if it hadn't finished yet (e.g. a Chest closing right after
         // a level-up opened) - Stop() cancels its OnComplete too, so a stale ShowWindow<
-        // UpgradeWindow>() can never fire after this switches back.
+        // ChooseWindow>() can never fire after this switches back.
         _timeScaleTween.Stop();
         _timeScaleTween = Tween.Custom(Time.timeScale, 1f, upgradeTimeScaleRampOutDuration,
             onValueChange: v => Time.timeScale = (float)v, useUnscaledTime: true);

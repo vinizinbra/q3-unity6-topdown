@@ -32,7 +32,7 @@ MonoBehaviour:
       DisableFill:
         _value: 1
     CharacterController:
-      Enabled: 0
+      Enabled: 1
       Color: {r: 1, g: 0.92156863, b: 0.015686275, a: 0.5}
       Scale: 0
       OnlyDrawSelected:
@@ -72,7 +72,7 @@ MonoBehaviour:
       DisableFill:
         _value: 0
     AsleepColliders:
-      Enabled: 0
+      Enabled: 1
       Color: {r: 0.5192922, g: 0.4622621, b: 0.6985294, a: 0.5}
       Scale: 0
       OnlyDrawSelected:
@@ -80,7 +80,7 @@ MonoBehaviour:
       DisableFill:
         _value: 0
     DisabledColliders:
-      Enabled: 0
+      Enabled: 1
       Color: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
       Scale: 0
       OnlyDrawSelected:
@@ -88,7 +88,7 @@ MonoBehaviour:
       DisableFill:
         _value: 0
     CenterOfMass:
-      Enabled: 0
+      Enabled: 1
       Color: {r: 1, g: 0, b: 0.5, a: 0.5}
       Scale: 0.1
       OnlyDrawSelected:
@@ -96,7 +96,7 @@ MonoBehaviour:
       DisableFill:
         _value: 0
     PhysicsArea:
-      Enabled: 0
+      Enabled: 1
       Color: {r: 0, g: 0.75, b: 1, a: 1}
       Scale: 0
       OnlyDrawSelected:

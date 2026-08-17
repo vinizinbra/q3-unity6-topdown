@@ -23,3 +23,32 @@ MonoBehaviour:
     Size1x1: []
     Size1x2: []
     Size2x2: []
+  details:
+    GroundDetails:
+    - {fileID: 1477800214, guid: f0cf85e7ea0754ef3b00b37c97a4a4bd, type: 3}
+    - {fileID: 793268077, guid: f0cf85e7ea0754ef3b00b37c97a4a4bd, type: 3}
+    - {fileID: -2084300807, guid: f0cf85e7ea0754ef3b00b37c97a4a4bd, type: 3}
+    - {fileID: -1146803090, guid: f0cf85e7ea0754ef3b00b37c97a4a4bd, type: 3}
+    - {fileID: 366703034, guid: f0cf85e7ea0754ef3b00b37c97a4a4bd, type: 3}
+    - {fileID: -2106003476, guid: f0cf85e7ea0754ef3b00b37c97a4a4bd, type: 3}
+    - {fileID: 1525047514, guid: f0cf85e7ea0754ef3b00b37c97a4a4bd, type: 3}
+    - {fileID: 250385885, guid: f0cf85e7ea0754ef3b00b37c97a4a4bd, type: 3}
+    - {fileID: -1335354434, guid: f0cf85e7ea0754ef3b00b37c97a4a4bd, type: 3}
+    - {fileID: -1034163631, guid: f0cf85e7ea0754ef3b00b37c97a4a4bd, type: 3}
+    - {fileID: 163855547, guid: f0cf85e7ea0754ef3b00b37c97a4a4bd, type: 3}
+    - {fileID: 2060629697, guid: f0cf85e7ea0754ef3b00b37c97a4a4bd, type: 3}
+    GroundDetailChance: 0
+    WallTopDetails:
+    - {fileID: 479166836, guid: 83efd10758927447b95a765847b32c69, type: 3}
+    - {fileID: -1756110551, guid: 83efd10758927447b95a765847b32c69, type: 3}
+    - {fileID: -710994912, guid: 83efd10758927447b95a765847b32c69, type: 3}
+    - {fileID: 705297271, guid: 83efd10758927447b95a765847b32c69, type: 3}
+    WallTopDetailChance: 0.5
+    WallMidDetails:
+    - {fileID: -1116190566, guid: 83efd10758927447b95a765847b32c69, type: 3}
+    - {fileID: -552270935, guid: 83efd10758927447b95a765847b32c69, type: 3}
+    - {fileID: -1520521181, guid: 83efd10758927447b95a765847b32c69, type: 3}
+    - {fileID: 1707761672, guid: 83efd10758927447b95a765847b32c69, type: 3}
+    - {fileID: -1094044693, guid: 83efd10758927447b95a765847b32c69, type: 3}
+    - {fileID: 517390073, guid: 83efd10758927447b95a765847b32c69, type: 3}
+    WallMidDetailChance: 0.5

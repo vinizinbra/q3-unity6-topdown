@@ -22,39 +22,42 @@ namespace Quantum
         // rate rather than a percent of MaxHealth, so it shares this core instead of going through
         // ApplyHeal's percent-of-max conversion. Takes an already-resolved Health* since every
         // caller (ApplyHeal's own lookup, HealthRegenSystem's filter) already has one.
-        public static void ApplyFlatHeal(Frame f, EntityRef target, EntityRef owner, Health* health, FP amount)
+        // Returns the amount actually applied (post-multiplier, capped at however much headroom the
+        // target had left) - Zara's Healing Chorus/Restorative Beat rank 3 (Encore/"Restorative
+        // Beat") both need this to compute their own overheal-to-Shield conversion; every
+        // pre-existing caller simply ignores the return value, zero behavior change for them.
+        public static FP ApplyFlatHeal(Frame f, EntityRef target, EntityRef owner, Health* health, FP amount)
         {
             if (health->CurrentHealth <= FP._0)
-                return; // dead or never seeded - nothing to heal
+                return FP._0; // dead or never seeded - nothing to heal
 
             FP requested = amount * ResolveHealMultiplier(f, owner);
 
             if (requested <= FP._0)
-                return;
+                return FP._0;
 
             FP applied = FPMath.Min(requested, health->MaxHealth - health->CurrentHealth);
 
             if (applied <= FP._0)
-                return; // already at full health
+                return FP._0; // already at full health
 
             health->CurrentHealth += applied;
             f.Events.EntityHealed(target, owner, applied);
 
             Log.Debug($"[Heal] {target} healed for {applied} -> {health->CurrentHealth}/{health->MaxHealth}");
+
+            return applied;
         }
 
-        // IncreaseHealUpgrade (see Heroes/Zara/IncreaseHealSkillAction) - read live on every heal
-        // application rather than baked in anywhere. Unlike VoidDamageWavesUpgrade/
-        // HasteOnHealUpgrade, ApplyHeal already receives owner on every single call, so there's no
-        // spawn-time race to work around - this is simply re-checked fresh each heal. FP._1 for
-        // anyone who doesn't hold it, so an unmodified heal applies at exactly its authored
-        // HealPercent. Stacks with CharacterStats.HealingReceivedMultiplier (1 for anything without
+        // Read live on every heal application - ApplyHeal already receives owner on every single
+        // call, so there's no spawn-time race to work around, this is simply re-checked fresh each
+        // heal. Stacks with CharacterStats.HealingReceivedMultiplier (1 for anything without
         // CharacterStats, e.g. an enemy heal effect) rather than replacing it - the two are
         // independent sources, same "stack, don't replace" convention as GetSourceMultiplier in
         // DamageUtility.
         private static FP ResolveHealMultiplier(Frame f, EntityRef owner)
         {
-            FP multiplier = f.Unsafe.TryGetPointer<IncreaseHealUpgrade>(owner, out var upgrade) == true ? FP._1 + upgrade->HealBonus : FP._1;
+            FP multiplier = FP._1;
 
             if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == true)
             {

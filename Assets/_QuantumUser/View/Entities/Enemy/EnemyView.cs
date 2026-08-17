@@ -1,3 +1,4 @@
+using NaughtyAttributes;
 using QuantumUser.View.Managers;
 using QuantumUser.View.Util;
 using UnityEngine;
@@ -6,7 +7,7 @@ namespace Quantum
 {
     public class EnemyView : CustomQuantumEntityViewComponent
     {
-        [SerializeField, Tooltip("Where EnemyDataAsset.ViewPrefab is instantiated as a child - just an anchor point on the generic entity's view. The prefab brings its own EnemyViewRig; EnemyBlobAnimationView/EnemyArmAimView/EnemyAttackVisualsView/HitFeedback live here on the generic prototype instead and get that rig handed to them once it's instantiated (see SpawnSprite).")]
+        [SerializeField, Tooltip("Where EnemyDataAsset.ViewPrefab is instantiated as a child - just an anchor point on the generic entity's view. The prefab brings its own EnemyViewRig; EnemyBlobAnimationView/EnemyArmAimView/EnemyAttackVisualsView/HitFeedback live here on the generic prototype instead and get that rig handed to them once it's instantiated (see SpawnSprite). A one-off prototype (e.g. a boss) can instead author its own EnemyViewRig as a REAL CHILD of this transform directly in the Editor - SpawnSprite finds it and uses it as-is, skipping ViewPrefab entirely.")]
         private Transform spriteRoot;
 
         [SerializeField, Tooltip("Extra radius (in world units) added ON TOP of the entity's collider radius purely for the visual sprite fit-scale, so the sprite renders slightly larger than the physics footprint (e.g. radius 2 fits as if it were 2.2). Only affects the sprite scale - the collider, shadow footprint, and feet-anchor offset all still use the raw radius.")]
@@ -39,15 +40,57 @@ namespace Quantum
         public override void Initialize(QuantumGame game)
         {
             base.Initialize(game);
+            RefreshSprite(game);
+        }
+
+        // Spawn the sprite FIRST so its rig is instantiated/scaled, then measure it - the widget's
+        // vertical offset is derived from the rendered sprite's actual top edge (ResolveWidgetOffset),
+        // not the raw collider radius, so it clears the visible body even when the art is taller than
+        // the physics footprint. Pulled out of Initialize so the Resolve Scale button below can force
+        // a fresh pass without re-invoking base.Initialize (which the entity-view lifecycle should
+        // only ever call once). ReleaseSprite first so a repeated call (button re-click) doesn't leak
+        // a second pooled ViewPrefab instance under spriteRoot - a no-op the very first time
+        // (Initialize), since nothing's been spawned yet.
+        private void RefreshSprite(QuantumGame game)
+        {
+            ReleaseSprite();
 
             float radius = EnemyMovementUtility.ResolveEntityRadius(game.Frames.Predicted, _entityRef).AsFloat;
-
-            // Spawn the sprite FIRST so its rig is instantiated/scaled, then measure it - the widget's
-            // vertical offset is derived from the rendered sprite's actual top edge (ResolveWidgetOffset),
-            // not the raw collider radius, so it clears the visible body even when the art is taller than
-            // the physics footprint.
             EnemyViewRig rig = SpawnSprite(game, radius);
-            EnemyUiWidgetManager.Instance?.SpawnWidget(_entityRef, game, transform, ResolveEnemyName(game), ResolveWidgetOffset(rig, radius));
+
+            if (IsBoss(game) == false)
+                EnemyUiWidgetManager.Instance?.SpawnWidget(_entityRef, game, transform, ResolveEnemyName(game), ResolveWidgetOffset(rig, radius));
+        }
+
+        // Boss gets no floating widget at all - its name/HP/shield are shown on the dedicated
+        // top-screen BossWidget instead (see BossWidget.cs), gated on GameState.Boss.
+        private bool IsBoss(QuantumGame game)
+        {
+            Frame frame = game.Frames.Predicted;
+            if (frame.TryGet<Enemy>(_entityRef, out var enemy) == false)
+                return false;
+
+            EnemyDataAsset data = frame.FindAsset(enemy.EnemyData);
+            return data != null && data.Tier == EnemyTier.Boss;
+        }
+
+        // Forces a fresh RefreshSprite pass on this already-live entity - SpawnSprite itself now
+        // applies ResolveFitScale to a baked rig's scale exactly like it always did for a pooled
+        // one (see SpawnSprite's own comment), so this button is just a live-preview convenience:
+        // tweak viewRadiusPadding/a baked rig's ReferenceSprite/EnemyDataAsset.Stats.Radius in the
+        // Inspector during Play Mode and re-click to see the result immediately, without respawning
+        // the entity or restarting the session - same "in-Inspector test trigger" idiom every other
+        // [Button] in this codebase already uses (e.g. HitFeedback.Flash).
+        [Button("Resolve Scale")]
+        private void ResolveScaleButton()
+        {
+            if (QuantumRunner.Default == null || QuantumRunner.Default.Game == null)
+            {
+                Debug.LogWarning("[EnemyView] Resolve Scale requires a running Play Mode session with this entity already spawned.");
+                return;
+            }
+
+            RefreshSprite(QuantumRunner.Default.Game);
         }
 
         // World-space vertical offset handed to CharacterUiWidget as its per-character nudge (added on
@@ -100,8 +143,12 @@ namespace Quantum
         // Instantiates EnemyDataAsset.ViewPrefab under spriteRoot and fits it to the entity's
         // actual radius (read back via ResolveEntityRadius, same helper EnemyAllyLinkView uses, so
         // this reflects whatever SeedRadius applied to the collider rather than re-reading
-        // data.Stats.Radius directly). radius is resolved once by the caller (Initialize) and
-        // reused for the HUD widget's offset too, rather than re-resolved here.
+        // data.Stats.Radius directly) - unless a rig is already baked as a real child of spriteRoot
+        // (see the baked-rig check below), in which case ViewPrefab/ViewPrefabPool are skipped
+        // entirely, but the SAME radius-based fit-scale/shadow math below still applies to it, so a
+        // boss's own hand-placed rig tracks its collider exactly like every other enemy's pooled
+        // sprite does. radius is resolved once by the caller (Initialize) and reused for the HUD
+        // widget's offset too, rather than re-resolved here.
         private EnemyViewRig SpawnSprite(QuantumGame game, float radius)
         {
             Frame frame = game.Frames.Predicted;
@@ -110,6 +157,43 @@ namespace Quantum
 
             Enemy enemy = frame.Get<Enemy>(_entityRef);
             EnemyDataAsset data = frame.FindAsset(enemy.EnemyData);
+
+            // HasShadow sits as a sibling on this same GameObject (see Enemy.prefab/
+            // BasicEnemy.prefab) and already acquired its pooled blob in its own OnEnable, before
+            // radius was known - update it now so the shadow footprint matches the entity's actual
+            // collision size instead of staying at whatever flat baseScale the generic prototype
+            // was authored with. baseScale is a diameter (blobPrefab's authored width at scale 1),
+            // same convention as the rig's own fit scale, so radius needs doubling here too. Applies
+            // whether the rig below ends up baked or pooled - confirmed with the user, a boss's
+            // shadow should track its real collider size exactly like everything else does.
+            HasShadow shadow = GetComponent<HasShadow>();
+            if (shadow != null)
+                shadow.SetBaseScale(radius * 2f);
+
+            // A hand-baked visual already sitting under spriteRoot - e.g. a boss with its own
+            // dedicated, one-off EntityPrototype (see RunPhaseUtility.SpawnBoss/docs/run-phase.md's
+            // "Boss phase trigger"), authored with its rig as a real child in the Editor rather than
+            // referencing a separate ViewPrefab - skips ViewPrefab/ViewPrefabPool below entirely
+            // (there's nothing to instantiate or pool - the GameObject already exists), but still
+            // gets the exact same ResolveFitScale sprite-bounds math AND the same
+            // Vector3.down * radius bottom-pivot positioning the pooled path applies below,
+            // confirmed with the user: a boss's rig should sit at its collider's bottom center and
+            // dynamically match its radius exactly the same way a normal enemy's pooled sprite
+            // already does, not stay at a fixed hand-authored scale/position. Only rotation is left
+            // alone (the artist still controls the rig's own tilt/orientation). Never tracked in
+            // _rigInstance/_rigPrefab - there's nothing to release back to ViewPrefabPool since it
+            // was never pooled from it. Requires the baked rig's own EnemyViewRig to be parented
+            // under spriteRoot specifically, same anchor the pooled path instantiates into - not
+            // just anywhere else on the prototype.
+            EnemyViewRig bakedRig = spriteRoot.GetComponentInChildren<EnemyViewRig>();
+            if (bakedRig != null)
+            {
+                bakedRig.transform.localPosition = Vector3.down * radius;
+                bakedRig.transform.localScale = Vector3.one * ResolveFitScale(bakedRig, radius + viewRadiusPadding, data);
+                ConnectRig(bakedRig);
+                return bakedRig;
+            }
+
             GameObject viewPrefab = ResolveViewPrefab(data, enemy.Faction, out float skinScaleMultiplier);
             if (viewPrefab == null)
             {
@@ -118,16 +202,6 @@ namespace Quantum
             }
 
             LogHelper.Log("Enemy", $"{_entityRef} ({data.name}) SpawnSprite resolved radius {radius}");
-
-            // HasShadow sits as a sibling on this same GameObject (see Enemy.prefab/
-            // BasicEnemy.prefab) and already acquired its pooled blob in its own OnEnable, before
-            // radius was known - update it now so the shadow footprint matches the entity's actual
-            // collision size instead of staying at whatever flat baseScale the generic prototype
-            // was authored with. baseScale is a diameter (blobPrefab's authored width at scale 1),
-            // same convention as the rig's own fit scale, so radius needs doubling here too.
-            HasShadow shadow = GetComponent<HasShadow>();
-            if (shadow != null)
-                shadow.SetBaseScale(radius * 2f);
 
             GameObject instance = ViewPrefabPool.Instance.Get(viewPrefab, spriteRoot);
             _rigInstance = instance;

@@ -252,6 +252,7 @@ MonoBehaviour:
     - DeadEnemy
     - IgnoreProjectile
     - Obstacle
+    - Boss
     - 
     - 
     - 
@@ -268,8 +269,7 @@ MonoBehaviour:
     - 
     - 
     - 
-    - 
-    LayerMatrix: ffefffffffefffffffefffffffffffffffefffffffefffffffffffffffebffffffcfffffffefffff7fe3ffffffe3ffff48e0fffffffeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    LayerMatrix: ffefffffffefffffffefffffffffffffffefffffffefffffffffffffffebffffffcfffffffefffff7fe3ffffffe3ffff4860ffffff7effffffffffffff4fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
   Navigation:
     DefaultNavMeshAgent:
       Id:

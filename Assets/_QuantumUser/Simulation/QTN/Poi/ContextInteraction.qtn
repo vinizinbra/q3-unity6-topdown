@@ -1,0 +1,63 @@
+// Generic "redirect the Base Skill button to a nearby world interaction" infrastructure (see
+// docs/breathing-poi.md) - deliberately NOT a Cursed-Rift-specific hack. Store and Blacksmith (see
+// docs/store-blacksmith.md) reuse this exact redirect mechanism, same as Healing Shrine/Cursed
+// Rift before them.
+
+// NOT the same enum as Poi.qtn's PoiUsagePolicy/LevelUp.qtn's LevelUpPoolKind - this one
+// specifically discriminates "which kind of world interaction is this" for
+// ContextInteractionSystem's own per-kind eligibility dispatch AND SkillSystem's own per-kind
+// dispatch on press (see SkillSystem.Update - resolving State == Available alone isn't enough to
+// know WHICH utility's TryBeginInteraction/TryInteract to call once there's more than one kind).
+enum InteractableKind : Byte
+{
+    CursedRift,
+    HealingShrine,
+    Store,
+    Blacksmith
+}
+
+// WHY a nearby Interactable can or can't be used right now - richer than a plain found/not-found
+// bool so the world-space prompt (InteractionPromptWidget) can explain itself ("come back on
+// Break", "already used") instead of just silently hiding. Only SkillSystem's own redirect cares
+// about the Available/not-Available distinction; every other value is presentation-only context.
+enum ContextInteractionState : Byte
+{
+    None,               // nothing Interactable within range
+    Available,          // in range AND fully eligible - a Base Skill press actually interacts
+    PhaseUnavailable,   // in range, but the POI's own PoiAvailability says no right now (e.g. Combat)
+    AlreadyUsed,        // in range, phase OK, but THIS player already used it this Break/Run
+    NotNeeded,          // in range, phase/usage OK, but interacting would be pointless right now
+                        // (e.g. Healing Shrine at full Health) - generic, not Healing-Shrine-specific
+    Busy                // this player is already mid a different interaction (Base Skill fully claimed)
+}
+
+// Marks a POI entity as eligible for the Base-Skill-button redirect - authored alongside that
+// POI's own component (e.g. CursedRift.qtn) on the same entity/prototype. Radius/Priority live
+// here, not duplicated on the POI's own component, so there's one source of truth for "how close"
+// regardless of which POI kind it is.
+component Interactable
+{
+    InteractableKind Kind;
+    FP Radius;
+
+    // Tie-break only - ContextInteractionSystem resolves the CLOSEST Interactable first (found
+    // regardless of eligibility - see ContextInteractionState above); Priority (higher wins) only
+    // matters when two are equally close, and the natural filter enumeration order is the final
+    // tie-break beyond that (no explicit EntityRef compare needed - same "no dedicated tie-break,
+    // deterministic scan order is enough" convention EnemyMovementUtility's own nearest-target
+    // resolvers already use).
+    Int32 Priority;
+}
+
+// Per-player - which Interactable (if any) is nearest this player right now, and why they can or
+// can't use it, resolved FRESH every tick by ContextInteractionSystem (proximity is transient,
+// unlike a one-shot pickup) immediately before SkillSystem reads it. ActiveTarget is set to the
+// closest in-range Interactable regardless of State - only State == Available means the Base
+// Skill button actually redirects; every other State is for the world-space prompt to explain
+// itself with, not for SkillSystem to act on.
+component ContextInteraction
+{
+    EntityRef ActiveTarget;
+    InteractableKind ActiveKind;
+    ContextInteractionState State;
+}

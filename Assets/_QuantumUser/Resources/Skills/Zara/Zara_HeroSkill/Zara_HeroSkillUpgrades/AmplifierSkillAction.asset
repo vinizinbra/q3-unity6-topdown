@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6e8edb0114cef439a8f8ad16b7371230, type: 3}
+  m_Name: AmplifierSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.AmplifierSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Zara/Zara_HeroSkill/Zara_HeroSkillUpgrades/AmplifierSkillAction
+    Guid:
+      Value: 506336313018381212
+  Icon: {fileID: 0}
+  DisplayName: Amplifier
+  Rarity: 1
+  RankDescriptions:
+  - Totem Damage Beats deal 30% more damage.
+  - Damage Beats deal 60% more damage and knock enemies back.
+  - Damage Beats deal double damage, and every third Damage Beat Stuns enemies.
+  <MaxRank>k__BackingField: 3
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 0
+  Description: Totem Damage Beats deal more damage.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  DamageBonus:
+  - RawValue: 19661
+  - RawValue: 39322
+  - RawValue: 65536
+  KnockbackEffect:
+    Id:
+      Value: 329298018826816869
+  StunInterval: 000003
+  StunEffect:
+    Id:
+      Value: 502467422444154315

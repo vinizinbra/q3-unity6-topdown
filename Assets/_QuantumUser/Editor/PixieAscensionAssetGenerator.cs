@@ -73,7 +73,6 @@ namespace QuantumUser.Editor
             DirectHitPassiveUpgradeData directHit = CreateOrUpdate<DirectHitPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/DirectHit.asset", asset =>
             {
                 asset.DisplayName = "Direct Hit";
-                asset.Rarity = UpgradeRarity.Epic;
                 asset.Description = "Rewards accurate Bunny Bomb placement - enemies inside the inner blast zone take bonus damage. At rank 3, they're also knocked back hard.";
                 asset.RankDescriptions = new[]
                 {
@@ -92,7 +91,6 @@ namespace QuantumUser.Editor
             PocketBombsPassiveUpgradeData pocketBombs = CreateOrUpdate<PocketBombsPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/PocketBombs.asset", asset =>
             {
                 asset.DisplayName = "Pocket Bombs";
-                asset.Rarity = UpgradeRarity.Epic;
                 asset.Description = "Qualifying Pixie explosions have a chance to drop a stationary Mini Bomb, dealing a percentage of Bunny Bomb damage.";
                 asset.RankDescriptions = new[]
                 {
@@ -109,7 +107,6 @@ namespace QuantumUser.Editor
             UnstableMixturePassiveUpgradeData unstableMixture = CreateOrUpdate<UnstableMixturePassiveUpgradeData>($"{PassiveUpgradesFolderPath}/UnstableMixture.asset", asset =>
             {
                 asset.DisplayName = "Unstable Mixture";
-                asset.Rarity = UpgradeRarity.Epic;
                 asset.Description = "Marked-enemy death explosions deal more damage and cover more area. Specialist and Heavy enemies create especially large death explosions.";
                 asset.RankDescriptions = new[]
                 {
@@ -126,7 +123,6 @@ namespace QuantumUser.Editor
             UnstableTargetingPassiveUpgradeData unstableTargeting = CreateOrUpdate<UnstableTargetingPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/UnstableTargeting.asset", asset =>
             {
                 asset.DisplayName = "Unstable Targeting";
-                asset.Rarity = UpgradeRarity.Rare;
                 asset.Description = "Deal bonus damage against any enemy currently marked to explode on death.";
                 asset.RankDescriptions = new[]
                 {
@@ -141,7 +137,6 @@ namespace QuantumUser.Editor
             ExplosiveRoundsPassiveUpgradeData explosiveRounds = CreateOrUpdate<ExplosiveRoundsPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/ExplosiveRounds.asset", asset =>
             {
                 asset.DisplayName = "Explosive Rounds";
-                asset.Rarity = UpgradeRarity.Rare;
                 asset.Description = "Weapon hits also create a small explosion - a full qualifying Pixie explosion in its own right.";
                 asset.RankDescriptions = new[]
                 {
@@ -157,7 +152,6 @@ namespace QuantumUser.Editor
             ClusterBombSkillAction clusterBomb = CreateOrUpdate<ClusterBombSkillAction>($"{HeroSkillUpgradesFolderPath}/ClusterBombSkillAction.asset", asset =>
             {
                 asset.DisplayName = "Cluster Bomb";
-                asset.Rarity = UpgradeRarity.Rare;
                 asset.Activated = false;
                 asset.MaxRank = 3;
                 // Static fallback for surfaces that call the plain, rank-unaware GetDescription() -
@@ -177,7 +171,6 @@ namespace QuantumUser.Editor
             BirthdayCakeSkillAction birthdayCake = CreateOrUpdate<BirthdayCakeSkillAction>($"{HeroSkillUpgradesFolderPath}/BirthdayCakeSkillAction.asset", asset =>
             {
                 asset.DisplayName = "Birthday Cake";
-                asset.Rarity = UpgradeRarity.Rare;
                 asset.Activated = false;
                 asset.MaxRank = 3;
                 asset.Description = "A landed Bunny Bomb taunts nearby enemies before detonating.";
@@ -195,7 +188,6 @@ namespace QuantumUser.Editor
             BackblastSkillAction backblast = CreateOrUpdate<BackblastSkillAction>($"{DashUpgradesFolderPath}/BackblastSkillAction.asset", asset =>
             {
                 asset.DisplayName = "Backblast";
-                asset.Rarity = UpgradeRarity.Rare;
                 asset.MaxRank = 3;
                 asset.Description = "When Pixie dashes, she drops a bomb that explodes after a short fuse for a percentage of Bunny Bomb damage.";
                 asset.RankDescriptions = new[]
@@ -211,7 +203,6 @@ namespace QuantumUser.Editor
             HotFuseSkillAction hotFuse = CreateOrUpdate<HotFuseSkillAction>($"{DashUpgradesFolderPath}/HotFuseSkillAction.asset", asset =>
             {
                 asset.DisplayName = "Hot Fuse";
-                asset.Rarity = UpgradeRarity.Rare;
                 asset.MaxRank = 3;
                 asset.Description = "Dashing empowers your next Bunny Bomb throw.";
                 asset.RankDescriptions = new[]

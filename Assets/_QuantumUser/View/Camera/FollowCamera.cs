@@ -30,6 +30,12 @@ public class FollowCamera : MonoBehaviour
     private float _zoom = 1f;
     private Vector3 _smoothedPosition;
 
+    // While set, framing locks onto this single transform instead of averaging _targets - used for
+    // the boss encounter's camera-focus cutaway (see BossWidget). _targets themselves are left
+    // completely untouched (no AddTarget/RemoveTarget churn), so clearing this instantly resumes
+    // normal multi-player framing exactly where it would have been anyway.
+    private Transform _focusOverrideTarget;
+
     // Shake state - additive offset on top of the framed position, decaying linearly over
     // _shakeDuration. A later Shake() call only takes over if it's stronger than what's currently
     // playing, so a weak shot can't cut off a strong one still ringing out.
@@ -75,10 +81,25 @@ public class FollowCamera : MonoBehaviour
         _shakeFrequency = frequency;
     }
 
-    private void Update()
+    // Locks framing onto a single target (e.g. the boss) instead of the normal multi-player
+    // average - snap defaults true since this is meant to be called while the screen is hidden
+    // behind a fade (see ScreenFadeWidget/BossWidget), so the camera should already be exactly on
+    // target the instant the fade reveals it, not still easing toward it.
+    public void SetFocusOverride(Transform target, bool snap = true)
     {
-        _targets.RemoveAll(t => t == null);
-        if (_targets.Count == 0)
+        _focusOverrideTarget = target;
+
+        if (snap == true && target != null)
+            _smoothedPosition = target.position + offset * _zoom;
+    }
+
+    // Resumes normal multi-player framing - same snap-by-default reasoning as SetFocusOverride
+    // above, so the return cut is also hidden cleanly behind a fade rather than panning back.
+    public void ClearFocusOverride(bool snap = true)
+    {
+        _focusOverrideTarget = null;
+
+        if (snap == false || _targets.Count == 0)
             return;
 
         Vector3 center = Vector3.zero;
@@ -86,9 +107,34 @@ public class FollowCamera : MonoBehaviour
             center += t.position;
         center /= _targets.Count;
 
-        float spread = 0f;
-        foreach (var t in _targets)
-            spread = Mathf.Max(spread, Vector3.Distance(t.position, center));
+        _smoothedPosition = center + offset * _zoom;
+    }
+
+    private void Update()
+    {
+        Vector3 center;
+        float spread;
+
+        if (_focusOverrideTarget != null)
+        {
+            center = _focusOverrideTarget.position;
+            spread = 0f;
+        }
+        else
+        {
+            _targets.RemoveAll(t => t == null);
+            if (_targets.Count == 0)
+                return;
+
+            center = Vector3.zero;
+            foreach (var t in _targets)
+                center += t.position;
+            center /= _targets.Count;
+
+            spread = 0f;
+            foreach (var t in _targets)
+                spread = Mathf.Max(spread, Vector3.Distance(t.position, center));
+        }
 
         float desiredZoom = Mathf.Clamp(1f + spread / spreadReference, minZoom, maxZoom);
         _zoom = Mathf.Lerp(_zoom, desiredZoom, Time.deltaTime * zoomLerpSpeed);

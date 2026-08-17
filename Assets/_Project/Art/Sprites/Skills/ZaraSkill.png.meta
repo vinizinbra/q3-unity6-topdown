@@ -139,10 +139,10 @@ TextureImporter:
       name: CoreSpeakerGreen
       rect:
         serializedVersion: 2
-        x: 41
-        y: 479
-        width: 415
-        height: 544
+        x: 328
+        y: 492
+        width: 339
+        height: 307
       alignment: 9
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -161,10 +161,10 @@ TextureImporter:
       name: CoreSpeakerPurple
       rect:
         serializedVersion: 2
-        x: 522
-        y: 468
-        width: 412
-        height: 544
+        x: 578
+        y: 135
+        width: 346
+        height: 320
       alignment: 9
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -183,10 +183,10 @@ TextureImporter:
       name: ZaraSkill_0
       rect:
         serializedVersion: 2
-        x: 208
-        y: 97
-        width: 213
-        height: 187
+        x: 12
+        y: 70
+        width: 216
+        height: 190
       alignment: 9
       pivot: {x: 0.35142353, y: 0.01647382}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -197,6 +197,28 @@ TextureImporter:
       bones: []
       spriteID: 10ea26dfc7da245688ddebb95b8d1fd2
       internalID: 112942212
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ZaraSkill_1
+      rect:
+        serializedVersion: 2
+        x: 36
+        y: 263
+        width: 191
+        height: 146
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a1d4f1befdf544dd3bf4133cb64fcc4b
+      internalID: 1648873273
       vertices: []
       indices: 
       edges: []
@@ -218,6 +240,7 @@ TextureImporter:
       CoreSpeakerGreen: -687282088
       CoreSpeakerPurple: -1868112565
       ZaraSkill_0: 112942212
+      ZaraSkill_1: 1648873273
       ZaraSkill_2: -631641100
       ZaraSkill_3: 1476553388
       ZaraSkill_4: -1988063073

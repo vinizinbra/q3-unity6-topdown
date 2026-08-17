@@ -1,0 +1,26 @@
+// Blacksmith - a Breathing-only POI that, for Coins, adds one new Weapon Perk to the interacting
+// player's own currently-equipped weapon (see docs/store-blacksmith.md). Reuses the generic
+// POI/Context-Interaction framework (Poi.qtn/ContextInteraction.qtn) Healing Shrine/Cursed Rift
+// already established. Unlike Store, Blacksmith genuinely IS "used up" per player per Break - one
+// purchase per player per Break, exactly what the pre-existing generic PoiUsagePolicy.
+// OncePerPlayerPerBreak mechanism already models, so it's reused unchanged rather than needing its
+// own bespoke tracking the way Store's per-offer StorePurchases does.
+component Blacksmith
+{
+    PoiAvailability Availability;
+    PoiUsagePolicy UsagePolicy;
+}
+
+// One player's own in-progress Blacksmith visit - PerkChoices rolled PER-PLAYER (this player's own
+// equipped weapon decides which perks are eligible/excluded), unlike Store's shared
+// StoreInventory. Attached the instant TryBeginInteraction succeeds, removed on a successful pick
+// or an explicit Cancel - same "presence = this player's own Choice UI is open, and their input is
+// locked to it" convention CursedRiftInteraction/StoreInteraction already use (see
+// PoiInteractionLockUtility).
+component BlacksmithInteraction
+{
+    EntityRef Forge;
+
+    array<AssetRef<WeaponPerkData>>[3] PerkChoices;
+    Byte PerkChoiceCount; // may be < 3 if fewer than 3 perks were eligible
+}

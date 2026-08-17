@@ -1,0 +1,15 @@
+// Debug-only match-start cheats (see RuntimeConfig.User.cs' DebugStartSurvivalTimeSeconds/
+// DebugStartLevelUpCount and DebugCheatSystem) - kept in its own file/global block since it's
+// conceptually unrelated to any real gameplay system, same convention SurvivalDirector.qtn's own
+// comment establishes.
+global
+{
+    // Guards DebugCheatSystem's one-shot apply so it only runs once - same "run once at frame 0"
+    // idiom Chunk.qtn's LevelGenerated already uses.
+    Boolean DebugCheatsApplied;
+
+    // How many debug-queued level-up screens are still left to open, decremented by
+    // DebugCheatSystem each time the previous screen resolves. 0 = none pending, including the
+    // normal case where no debug cheat was configured at all.
+    Int32 DebugPendingLevelUps;
+}

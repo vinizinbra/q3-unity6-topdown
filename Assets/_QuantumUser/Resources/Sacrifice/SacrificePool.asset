@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 022f222c94c6043dbbeefc72946938da, type: 3}
+  m_Name: SacrificePool
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.SacrificePoolData
+  Identifier:
+    Path: _QuantumUser/Resources/Sacrifice/SacrificePool
+    Guid:
+      Value: 496780673626404914
+  Sacrifices:
+  - Id:
+      Value: 461960419357187633
+  - Id:
+      Value: 323194642415206961
+  - Id:
+      Value: 458075840865189454

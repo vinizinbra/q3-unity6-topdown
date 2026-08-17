@@ -1,0 +1,46 @@
+// Cursed Rift - the first complex Breathing POI (see docs/breathing-poi.md). Persistent world
+// entity, per-player usage, deliberate interaction (not automatic like Healing Shrine) via the
+// generic Context Interaction / Base-Skill redirect (see ContextInteraction.qtn). Contains a
+// two-step irreversible choice: sacrifice something now for a Rift Mutation reward.
+component CursedRift
+{
+    PoiAvailability Availability;
+    PoiUsagePolicy UsagePolicy;
+
+    // Radius/Priority live on the sibling generic Interactable component (same entity, see
+    // ContextInteraction.qtn) rather than duplicated here - one source of truth for "how close
+    // does a player need to be."
+}
+
+// SelectingSacrifice -> SelectingMutation -> (component removed on completion, no explicit
+// "Completed" value needed - its own absence IS completion, same convention LevelUpChoice's
+// presence/absence already uses). Clicking a sacrifice card commits immediately (applies its
+// cost) and rolls straight into SelectingMutation - same "one click = one irreversible pick" idiom
+// every other Choose Window screen (Level-Up, Choose Weapon) already uses; there's deliberately no
+// separate confirm step in between.
+enum CursedRiftInteractionState : Byte
+{
+    SelectingSacrifice,
+    SelectingMutation
+}
+
+// One player's own in-progress Cursed Rift transaction - attached the instant TryBeginInteraction
+// succeeds (CursedRiftUtility), removed on completion or on a pre-payment cancel. Lives on the
+// player's own character entity, same "per-player interaction state, found via PlayerLink"
+// convention LevelUpChoice already uses - but deliberately NOT LevelUpChoice itself, and never
+// touches Global.LevelUpScreenOpen/GameState.Upgrade/GameplaySystemGroup (see
+// CursedRiftSystem/docs/breathing-poi.md - Cursed Rift must not pause anything).
+component CursedRiftInteraction
+{
+    EntityRef Rift;
+    CursedRiftInteractionState State;
+
+    array<AssetRef<SacrificeDefinition>>[3] SacrificeChoices;
+    Byte SacrificeChoiceCount; // may be < 3 if fewer than 3 sacrifices were eligible
+
+    // Same array shape as LevelUpChoice.Options - deliberately, so GameplayUiController's own
+    // BuildCardData/KindText (internal, see docs/choice-window-refactor.md) can render these
+    // completely unchanged, no separate mutation-card-building logic needed.
+    array<LevelUpOption>[3] MutationChoices;
+    Byte MutationChoiceCount;
+}

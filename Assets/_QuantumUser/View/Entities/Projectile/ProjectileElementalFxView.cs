@@ -112,12 +112,17 @@ namespace Quantum
             _instance = null;
             _prefab = null;
 
-            Tween.Position(instance.transform, e.Position.ToUnityVector3(), catchUpDuration, Ease.Linear)
+            // useUnscaledTime on both legs - same reasoning as ProjectileView's own catch-up tween:
+            // a client-local Level-Up/Chest screen's Time.timeScale ramp is unrelated to the
+            // deterministic simulation pause, and a scaled-time tween starting right as it hits 0
+            // would stall (held particle instance never released back to EffectsManager's pool)
+            // for as long as the screen stays open.
+            Tween.Position(instance.transform, e.Position.ToUnityVector3(), catchUpDuration, Ease.Linear, useUnscaledTime: true)
                 .OnComplete(() => Tween.Delay(instance.gameObject, restGracePeriod, () =>
                 {
                     if (EffectsManager.Instance != null)
                         EffectsManager.Instance.ReleaseHeldInstance(prefab, instance);
-                }));
+                }, useUnscaledTime: true));
         }
 
         private ParticleSystem ResolveParticlePrefab(ElementType element)

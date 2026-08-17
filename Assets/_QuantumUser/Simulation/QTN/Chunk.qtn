@@ -1,25 +1,48 @@
+// Appended (not inserted) - MinimapWidget.chunkTypeSprites is a Sprite[] indexed positionally by
+// (int)ChunkType (see MinimapWidget.ResolveChunkTypeSprite), so inserting a new value before
+// Traversal would silently shift every already-authored sprite in both scenes to the wrong chunk
+// type. HealingShrine/CursedRift/Blacksmith are POI-flavored chunks (each holding one hand-placed
+// Breathing POI via Chunk.SpawnConfig, see docs/breathing-poi.md/docs/store-blacksmith.md) -
+// CursedRift, not CursedShrine, to match this codebase's own dominant naming for the feature
+// (CursedRiftSystem/CursedRiftUtility/InteractableKind.CursedRift etc. - "CursedShrine" only ever
+// appeared on prop/prefab filenames). Store has no ChunkType of its own - it reuses the
+// pre-existing Merchant value/MarketChunk.prefab scaffolding instead (see docs/store-blacksmith.md).
 enum ChunkType : Byte
 {
     LobbyStart,
     Enemy,
     Boss,
     Merchant,
-    Traversal
+    Traversal,
+    HealingShrine,
+    CursedRift,
+    Blacksmith
 }
 
-// Yaw around Y, in 90-degree steps only - matches CubeVisualBuilder's convention (0 deg = North
-// / +Z, Unity's +Y rotation cycles North->East->South->West, so each step is +90).
-enum ChunkRotation : Byte
+// Which side(s) a chunk is allowed to have another chunk attach to - see
+// Chunk.AllowedConnectionSides. Named for the top-down screen frame (Top = +Z, Right = +X,
+// Bottom = -Z, Left = -X) rather than cardinals, which read as confusing in-scene since the
+// camera's yaw doesn't line "North" up with screen-up. Chunks are never rotated (that logic was
+// removed), so these sides are both local AND world - Top always borders +Z, etc. `flags` (not a
+// plain enum) so LevelGenerationSystem can OR sides together AND so Quantum's own QEnum8 Inspector
+// drawer renders it as a real multi-select checklist instead of a single-value dropdown - see
+// Assets/Photon/Quantum/Editor/QuantumUnityEditor.cs' EnumWrappersDrawer, which special-cases any
+// enum carrying [Flags]. Each value here is a BIT POSITION, not the flag's actual value - codegen
+// turns "= N" into "1 << N" (Top=0 -> 1, Right=1 -> 2, Bottom=2 -> 4, Left=3 -> 8), confirmed
+// against the generated Quantum.CodeGen.Core.cs output. Bit positions are unchanged from the old
+// North/East/South/West names (Top==old North==+Z, etc.), so already-authored masks keep the same
+// physical meaning - this was a pure rename.
+flags ChunkConnectionSide : Byte
 {
-    Degrees0,
-    Degrees90,
-    Degrees180,
-    Degrees270
+    Top = 0,
+    Right = 1,
+    Bottom = 2,
+    Left = 3
 }
 
 // One waypoint of a chunk's baked AI navigation graph (see the Editor-side
 // ChunkWaypointBaker) - LocalPosition is relative to the chunk prototype's own pivot, not
-// world space, so it stays correct however the chunk ends up placed/rotated by
+// world space, so it stays correct wherever the chunk ends up placed by
 // LevelGenerationSystem. ConnectionMask bit i set means this node has a raycast-clear line to
 // Chunk.Waypoints[i] - baked once in the Editor, never recomputed at runtime, since level
 // geometry inside an already-placed chunk never changes after LevelGenerationSystem finishes.
@@ -38,10 +61,6 @@ component Chunk
     Int32 ChunkSizeDepth;
     Int32 OriginCellX;
     Int32 OriginCellZ;
-    // Authored directly (like ChunkSizeWidth/Depth), not inferred from Transform3D.Rotation - a
-    // hand-placed chunk (e.g. BossArena) must have this set to match however it's actually
-    // rotated in the scene, since LevelGenerationSystem trusts this field, not the raw quaternion.
-    ChunkRotation Rotation;
 
     // Baked AI navigation graph for this chunk - see WaypointNode. Fixed-size (16) regardless
     // of how many a given chunk actually authors; only the first WaypointCount slots of
@@ -53,6 +72,29 @@ component Chunk
     // ChunkSpawnConfig/TalentGateSystem, docs/talents.md). Typically only set on the LobbyStart
     // chunk prototype, but not restricted to it - unassigned (default) means nothing spawns.
     AssetRef<ChunkSpawnConfig> SpawnConfig;
+
+    // Which side(s) this chunk is allowed to have another chunk attach to - see ChunkConnectionSide.
+    // Enforced symmetrically in LevelGenerationSystem.CommitPlacement: a candidate placement touching
+    // any side NOT in ITS OWN mask is rejected (self-check, ComputeTouchedSides), AND a candidate
+    // placement touching an already-placed NEIGHBOR on a side NOT in THAT NEIGHBOR's own mask is also
+    // rejected (TouchesRestrictedNeighborSide) - so a chunk authored with only one side allowed (e.g.
+    // Top) is a real dead end: nothing can attach to its other sides either, not just the reverse.
+    // Chunks are never rotated, so no mask rotation is involved. Purely a generation-time layout rule,
+    // not tied to any wall/door geometry. 0/Nothing (the default) means unrestricted - every chunk
+    // prototype authored before this field existed keeps attaching on any side, unchanged.
+    ChunkConnectionSide AllowedConnectionSides;
+
+    // Set once by ChunkDiscoverySystem the first time any player physically enters this chunk's
+    // world footprint - shared/co-op, not per-player (same convention Experience/Talents already
+    // use). Drives the minimap's "?" -> real icon reveal. See docs/minimap.md.
+    bool Discovered;
+
+    // Optional hand-authored safe respawn point (see ChunkRespawnPointMarker/ChunkRespawnPointBaker),
+    // chunk-local like Waypoints. PlayerFallSystem uses this instead of its automatic edge-inset
+    // fallback whenever a fall's containing chunk has one baked - typically authored on Traversal
+    // chunks, whose open drops are often in the chunk's own interior, not just its outer boundary.
+    bool HasRespawnPoint;
+    FPVector3 RespawnPoint;
 }
 
 global

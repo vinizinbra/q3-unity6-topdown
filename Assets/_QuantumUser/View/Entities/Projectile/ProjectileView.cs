@@ -119,7 +119,15 @@ namespace Quantum
                 ? Mathf.Clamp(distance / _lastSpeed, minCatchUpDuration, maxCatchUpDuration)
                 : minCatchUpDuration;
 
-            Tween.Position(transform, hitPoint, duration, Ease.Linear)
+            // useUnscaledTime - a client-local Level-Up/Chest choice screen ramps Time.timeScale
+            // toward 0 for as long as it's open (see GameplayUiController's own comment on why
+            // its own tween opts into this), unrelated to the deterministic simulation pause. This
+            // GameObject has ManualDisposal set (see Awake), so nothing else will ever destroy it
+            // if this tween never completes - a scaled-time tween that starts right as/before that
+            // ramp hits 0 would stall for as long as the screen stays open, leaking the GameObject
+            // forever if it somehow never recovered. Real bug this fixed: exactly that race, visible
+            // as a projectile stuck motionless forever on whichever client happened to hit it.
+            Tween.Position(transform, hitPoint, duration, Ease.Linear, useUnscaledTime: true)
                 .OnComplete(() => PlayDestroyEffectAndDestroy(hitPoint));
         }
 

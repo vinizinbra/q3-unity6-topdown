@@ -31,11 +31,18 @@ namespace Quantum
         public Int32 MaxPurchasesPerPulse = 3;
 
         // How many candidate group anchors GroupSpawnerUtility.TrySpawnGroup tries (each a fresh
-        // ring position) before giving up on this purchase entirely - same role as
-        // LevelGenerationSystem.MaxAttemptsPerRequest. One anchor attempt validates every member of
-        // the group at once (see GroupSpawnerUtility) and either fully succeeds or is discarded
-        // whole - no per-member retry/relaxation yet (see the design doc's Milestone 3+ roadmap for
-        // AngleAttemptStep/DistanceRelaxationStep/FormationRadiusRelaxation-style escalation).
+        // ring position) before giving up on this purchase entirely. One anchor attempt validates
+        // every member of the group at once (see GroupSpawnerUtility) and either fully succeeds or
+        // is discarded whole - no per-member retry/relaxation yet (see the design doc's Milestone 3+
+        // roadmap for AngleAttemptStep/DistanceRelaxationStep/FormationRadiusRelaxation-style
+        // escalation).
         public Int32 MaxGroupSpawnAttempts = 8;
+
+        // Chunk types no group member is ever allowed to land inside (e.g. Traversal, so corridors
+        // stay clear) - checked in GroupSpawnerUtility.TryValidateMember via
+        // EnemyPathfindingUtility.TryFindContainingChunk. Empty/unassigned (the default) means
+        // unrestricted, same "empty means no rule" convention LevelConfig.ChunkPool-adjacent
+        // authoring already uses - every group spawns exactly as before this field existed.
+        public ChunkType[] ForbiddenSpawnChunkTypes;
     }
 }

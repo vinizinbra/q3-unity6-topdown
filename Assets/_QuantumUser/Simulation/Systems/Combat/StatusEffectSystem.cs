@@ -44,6 +44,7 @@ namespace Quantum
             status->RetaliationCooldownRemaining -= f.DeltaTime;
             status->NoAmmoConsumptionRemaining -= f.DeltaTime;
             status->BoundRemaining -= f.DeltaTime;
+            status->TempMoveSpeedRemaining -= f.DeltaTime;
 
             TickMarkApplicationCooldowns(f, status);
             TickHaste(f, status);

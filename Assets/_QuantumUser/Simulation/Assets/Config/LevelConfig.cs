@@ -48,6 +48,11 @@ namespace Quantum
         // Fraction of MaxHealth a player takes when they fall off the level.
         public FP FallDamagePercent = FP._0_10;
 
+        // Minimum distance PlayerFallSystem's automatic (non-baked) respawn fallback keeps from
+        // its chunk's own footprint boundary - only applies when that chunk has no hand-authored
+        // Chunk.RespawnPoint.
+        public FP FallRespawnEdgeMargin = 2;
+
         public ChunkPoolEntry[] ChunkPool;
 
         // Optional - GrowLevel's frontier-based placement has no way to guarantee full coverage,

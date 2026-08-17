@@ -1,5 +1,6 @@
 using Quantum;
 using QuantumUser.View;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -17,6 +18,8 @@ public abstract class SkillProgressUiWidget : QuantumGlobalMonoBehaviour
     private GameObject root;
 
     [SerializeField] private Slider fillSlider;
+    [SerializeField, Tooltip("Optional - shows Current/Max as text alongside the slider. Left unassigned, this feature is simply off (same 'off if empty' convention as ShieldUiWidget's own text field). Useful for progress that moves the slider by only a few percent per tick (e.g. Zara's Resonance, +20 of 500 per dash at Afterbeat rank 1) where the fill alone is easy to miss.")]
+    private TMP_Text progressText;
 
     [Header("Complete")]
     [SerializeField, Tooltip("Toggled on/off as progress crosses complete - author the shine itself (Animator/Particle System/etc.) on this object in the Editor rather than here in code.")]
@@ -72,6 +75,9 @@ public abstract class SkillProgressUiWidget : QuantumGlobalMonoBehaviour
     {
         if (fillSlider != null)
             fillSlider.value = max > 0 ? (float)current / max : 0f;
+
+        if (progressText != null)
+            progressText.text = $"{current}/{max}";
 
         if (shineEffect != null && shineEffect.activeSelf != complete)
             shineEffect.SetActive(complete);

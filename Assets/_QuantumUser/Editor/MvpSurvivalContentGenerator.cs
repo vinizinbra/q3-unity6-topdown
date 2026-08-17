@@ -94,6 +94,7 @@ namespace QuantumUser.Editor
 
         private class PhaseSpec
         {
+            public string Name;
             public FP Duration;
             public FP BudgetPerPulse;
             public FP PulseInterval;
@@ -112,7 +113,7 @@ namespace QuantumUser.Editor
             // keep it a genuine calm opening rather than a fast trickle of many at once.
             new PhaseSpec
             {
-                Duration = 30, BudgetPerPulse = 3, PulseInterval = 2,
+                Name = "Warm-up", Duration = 30, BudgetPerPulse = 3, PulseInterval = 2,
                 TargetPressure = 5, MaxAliveEnemies = 5,
                 Groups = new[] { "FillerSolo" }
             },
@@ -120,28 +121,28 @@ namespace QuantumUser.Editor
             // make this phase read as Filler-heavy against the two Weight-1 groups alongside it.
             new PhaseSpec
             {
-                Duration = 120, BudgetPerPulse = 9, PulseInterval = FP.FromString("2.5"),
+                Name = "Chaff + Melee", Duration = 120, BudgetPerPulse = 9, PulseInterval = FP.FromString("2.5"),
                 TargetPressure = 14, MaxAliveEnemies = 10,
                 Groups = new[] { "FillerCreepMvp", "SwarmRush", "MeleeOnly" }
             },
             // 2:30-4:30min: ranged + Charger enter.
             new PhaseSpec
             {
-                Duration = 120, BudgetPerPulse = 12, PulseInterval = 2,
+                Name = "Ranged + Charger", Duration = 120, BudgetPerPulse = 12, PulseInterval = 2,
                 TargetPressure = 22, MaxAliveEnemies = 16,
                 Groups = new[] { "SwarmRush", "MeleeOnly", "RangedOnly", "ChargerDuo" }
             },
             // 4:30-6:30min: first Heavy-tier group (SlammerPincer).
             new PhaseSpec
             {
-                Duration = 120, BudgetPerPulse = 15, PulseInterval = FP.FromString("1.5"),
+                Name = "First Heavy (Slammer)", Duration = 120, BudgetPerPulse = 15, PulseInterval = FP.FromString("1.5"),
                 TargetPressure = 32, MaxAliveEnemies = 22,
                 Groups = new[] { "SwarmRush", "MeleeOnly", "RangedOnly", "ChargerDuo", "SlammerPincer" }
             },
             // 6:30min+: endless - full 7-enemy roster in play (minus FillerCreep/FillerSolo, each kept to their own earlier phase).
             new PhaseSpec
             {
-                Duration = 0, BudgetPerPulse = 18, PulseInterval = 1,
+                Name = "Full Roster (Endless)", Duration = 0, BudgetPerPulse = 18, PulseInterval = 1,
                 TargetPressure = 44, MaxAliveEnemies = 28,
                 Groups = new[] { "SwarmRush", "MeleeOnly", "RangedOnly", "ChargerDuo", "SlammerPincer", "GrenadierBarrage" }
             },
@@ -227,6 +228,8 @@ namespace QuantumUser.Editor
 
             mvpConfig.Phases = PhaseSpecs.Select(p => new SurvivalPhase
             {
+                Name = p.Name,
+                Kind = SurvivalPhaseKind.Combat,
                 Duration = p.Duration,
                 BudgetPerPulse = p.BudgetPerPulse,
                 PulseInterval = p.PulseInterval,

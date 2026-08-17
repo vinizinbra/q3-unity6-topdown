@@ -1,0 +1,14 @@
+// Optional bolt-on for a Breakable (see Breakable.qtn) - "when this breaks, roll this loot table and
+// drop it". Kept separate from Breakable itself so the exact same Breakable state/collider-disable/
+// view-swap machinery is reused for props that drop nothing (a breakable wall carries Breakable but
+// NOT this). BreakableUtility.TryBreak resolves this via an optional TryGetPointer, same "no
+// component, no drop" shape ExplodeOnDestroy already uses.
+//
+// Loot points at a BreakLootData asset holding a talent-gated drop table (see BreakLootData.cs) - so
+// one barrel prototype can share a table with others, and a table entry can be gated behind a shared
+// Talent (e.g. only drop the HealthOrb once the run has unlocked it), evaluated the same
+// TalentUtility.IsSatisfied way ChunkSpawnConfig gates its own spawns.
+component SpawnOnBreak
+{
+    AssetRef<BreakLootData> Loot;
+}

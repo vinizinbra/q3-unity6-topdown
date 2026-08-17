@@ -70,12 +70,13 @@ namespace Quantum
         [SerializeField] private float burrowSinkDuration = 0.35f;
         [SerializeField] private float burrowRiseDuration = 0.35f;
         [SerializeField, Tooltip("Squash pop played at the midpoint of the sink/rise transition.")] private float burrowSquash = 0.5f;
-        [SerializeField, Tooltip("How far the body visually sinks into the ground as it shrinks away.")] private float burrowSinkAmount = 0.3f;
+        [SerializeField, Tooltip("How far the body visually sinks into the ground as it shrinks away. Local Z (depth), not Y - see jumpCrouchSinkAmount's own tooltip below for why.")] private float burrowSinkAmount = 0.3f;
 
         [Header("Jump (cliff-climb/gap-jump traversal hop - EnemyMovementUtility.BeginTraversalJump - small crouch then a pop)")]
         [SerializeField, Tooltip("Squash/sink strength of the crouch played during Enemy.TraversalJumpAnticipationTimer - the real windup EnemyMovementUtility.QueueTraversalJump opens before the hop launches (EnemyMovementUtility.TraversalJumpAnticipationTime), not a guessed fraction of the hop itself.")]
         private float jumpCrouchSquash = 0.3f;
-        [SerializeField] private float jumpCrouchSinkAmount = 0.1f;
+        [SerializeField, Tooltip("Local Z (depth), not Y - root's local Y is real world-up (the actual hop arc TickTraversalJump bakes into Transform3D.Position), so sinking the anticipation crouch on Y would visually push the sprite below the real ground plane it's standing on. Z has no such floor to clip through.")]
+        private float jumpCrouchSinkAmount = 0.1f;
         [SerializeField, Tooltip("Stretch pop played the instant the anticipation ends and the hop actually launches, decaying back to neutral by the time it lands (Enemy.TraversalJumpTimer/TraversalJumpDuration) - the vertical arc itself is already baked into Transform3D.Position by TickTraversalJump, so this is purely the squash/stretch tell layered on top.")]
         private float jumpPopStretch = 0.35f;
 
@@ -126,6 +127,18 @@ namespace Quantum
 
         // Only used when defaultCenterPivotHeight is left at 0 - see CacheBaseline.
         private float _autoCenterPivotHeight;
+
+        // Whatever ReferenceSprite's SpriteRenderer actually held at spawn (before any attack
+        // swap) - cached once in CacheBaseline so ResetBodySprite always has the
+        // real rest sprite to restore, regardless of what a previous pooled use of this same
+        // ViewPrefabPool instance left the renderer showing.
+        private Sprite _defaultBodySprite;
+
+        // Counts down whatever AttackVisualStep.Duration was passed to the most recent
+        // ApplyStepSprite call - once it reaches 0, QUpdate reverts to _defaultBodySprite, same
+        // "this step's own Duration, not the whole attack" scoping the transform-animation
+        // channel already gets from _stateTimer vs. _currentStep.Duration. <= 0 = no swap pending.
+        private float _bodySpriteTimeRemaining;
 
         // Positive = compressed, negative = stretched. Single value - unlike the player's blob,
         // there's no separate jump-squash to keep independent from the idle/run breathing squash.
@@ -192,6 +205,8 @@ namespace Quantum
             // this per-rig estimate.
             if (root != null && rig != null && rig.ReferenceSprite != null)
                 _autoCenterPivotHeight = root.InverseTransformPoint(rig.ReferenceSprite.bounds.center).y;
+
+            _defaultBodySprite = rig != null && rig.ReferenceSprite != null ? rig.ReferenceSprite.sprite : null;
         }
 
         // FacingSign mirrors root's own scale.x sign (+1 = right, -1 = left) - exposed so
@@ -217,6 +232,38 @@ namespace Quantum
                 _squashT = -step.Lunge.Stretch; // instant pop, eased back to neutral in UpdatePose
 
             UpdatePose(0f); // apply the t=0 pose immediately - don't wait for the next tick to render it
+        }
+
+        // Called by EnemyAttackVisualsView.PlayPhase for whichever AttackVisualStep just played
+        // (Anticipation/Begin/OnGoing/End) - a step with no BodySprite configured is a no-op, so
+        // the currently-showing sprite (whatever an earlier step in this same attack set, or
+        // still the rest sprite) is left untouched. Mirrors PlayAttackStep's own "some steps opt
+        // in, some don't" shape, just for the body's sprite instead of its transform animation.
+        // Only shows for this step's own duration - QUpdate counts _bodySpriteTimeRemaining down
+        // and reverts to the rest sprite once it runs out, rather than leaving the swap in place
+        // until some later step (or the whole attack ending) touches it.
+        public void ApplyStepSprite(Sprite sprite, float duration)
+        {
+            if (rig == null || rig.ReferenceSprite == null || sprite == null)
+                return;
+
+            rig.ReferenceSprite.sprite = sprite;
+            _bodySpriteTimeRemaining = duration;
+        }
+
+        // Called by EnemyAttackVisualsView on the attackNoLongerActive edge (Enemy.Phase leaving
+        // the Preparation/Telegraph/Active window) and from DeInitialize - unconditionally
+        // restores whatever sprite this rig actually spawned with, regardless of which step (if
+        // any) last swapped it via ApplyStepSprite, and cancels any pending duration countdown so
+        // QUpdate doesn't try to revert an already-reverted sprite next frame.
+        public void ResetBodySprite()
+        {
+            _bodySpriteTimeRemaining = 0f;
+
+            if (rig == null || rig.ReferenceSprite == null)
+                return;
+
+            rig.ReferenceSprite.sprite = _defaultBodySprite;
         }
 
         [Button]
@@ -350,6 +397,18 @@ namespace Quantum
 
             _stateTimer += dt;
 
+            // Independent of _state/_stateTimer above - a step can carry a BodySprite with
+            // AnimationType.None (sprite-only, no transform tell), which never touches _state at
+            // all (see PlayAttackStep's own early-out), so this needs its own timer rather than
+            // riding triggerStillPlaying below.
+            if (_bodySpriteTimeRemaining > 0f)
+            {
+                _bodySpriteTimeRemaining -= dt;
+
+                if (_bodySpriteTimeRemaining <= 0f)
+                    ResetBodySprite();
+            }
+
             bool triggerStillPlaying = (_state == State.AttackStep && _currentStep != null && _stateTimer < _currentStep.Duration)
                 || _state == State.Die // holds its final fallen pose once triggered - never reverts on its own
                 || (_state == State.Burrow && (isBurrowed == true || _burrowT > 0f)) // holds hidden while still Burrowed, then plays out the rise
@@ -448,9 +507,11 @@ namespace Quantum
                         case AttackAnimationType.Crouch:
                         {
                             // Progressively sinks and compresses, coiled tight right before release - pounce/leap tell.
+                            // Sink rides depthTarget (local Z), not bobTarget (local Y) - see jumpCrouchSinkAmount's
+                            // own tooltip above for why Y would visually push the body below the real ground plane.
                             float crouchT = Mathf.Sin(t * Mathf.PI * 0.5f);
                             _squashT = Mathf.Lerp(0f, step.Crouch.Squash, crouchT);
-                            bobTarget = -step.Crouch.SinkAmount * crouchT;
+                            depthTarget = -step.Crouch.SinkAmount * crouchT;
                             break;
                         }
 
@@ -471,9 +532,10 @@ namespace Quantum
                         case AttackAnimationType.Slam:
                         {
                             // Starts compressed and sunk from the impact, springs back up to neutral.
+                            // Sink rides depthTarget (local Z), not bobTarget (local Y) - same reasoning as Crouch above.
                             float slamT = decay * decay;
                             _squashT = Mathf.Lerp(_squashT, step.Slam.Squash * slamT, 1f - Mathf.Exp(-squashLerpSpeed * dt * 2f));
-                            bobTarget = -step.Slam.SinkAmount * slamT;
+                            depthTarget = -step.Slam.SinkAmount * slamT;
                             break;
                         }
 
@@ -622,7 +684,7 @@ namespace Quantum
                     {
                         float crouchT = Mathf.Sin(_jumpT * Mathf.PI * 0.5f);
                         _squashT = Mathf.Lerp(_squashT, jumpCrouchSquash * crouchT, 1f - Mathf.Exp(-squashLerpSpeed * dt));
-                        bobTarget = -jumpCrouchSinkAmount * crouchT;
+                        depthTarget = -jumpCrouchSinkAmount * crouchT;
                     }
                     else
                     {
@@ -642,9 +704,11 @@ namespace Quantum
                     _burrowT = Mathf.MoveTowards(_burrowT, _burrowSinking ? 1f : 0f, rate);
 
                     // Peaks at the midpoint of the transition regardless of direction, so the same
-                    // curve reads as a "pop" both diving down and popping back up.
+                    // curve reads as a "pop" both diving down and popping back up. Sink rides
+                    // depthTarget (local Z), not bobTarget (local Y) - see jumpCrouchSinkAmount's
+                    // own tooltip above for why.
                     _squashT = burrowSquash * Mathf.Sin(_burrowT * Mathf.PI);
-                    bobTarget = -burrowSinkAmount * _burrowT;
+                    depthTarget = -burrowSinkAmount * _burrowT;
                     break;
                 }
             }

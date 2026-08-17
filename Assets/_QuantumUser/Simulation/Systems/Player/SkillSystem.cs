@@ -16,8 +16,62 @@ namespace Quantum
         {
             var input = f.GetPlayerInput(filter.PlayerLink->Player);
 
-            UpdateSlot(f, ref filter, &filter.CharacterSkills->DashSkill, SkillSlotId.DashSkill, input, input->DashSkill);
-            UpdateSlot(f, ref filter, &filter.CharacterSkills->HeroSkill, SkillSlotId.HeroSkill, input, input->HeroSkill);
+            Button dashSkillButton = input->DashSkill;
+            Button heroSkillButton = input->HeroSkill;
+
+            // A Cursed Rift/Store/Blacksmith Choice Window open for this player (see
+            // docs/breathing-poi.md/docs/store-blacksmith.md) locks both slots - neutralized (not
+            // skipped) buttons still let UpdateSlot's own cooldown/stack-recovery ticking run
+            // normally, just block the press edge, same reasoning TickCooldown already runs
+            // regardless of State.
+            if (PoiInteractionLockUtility.IsInputLocked(f, filter.Entity) == true)
+            {
+                dashSkillButton = default;
+                heroSkillButton = default;
+            }
+            // Base-Skill-button redirect (see ContextInteraction.qtn) - State == Available OR
+            // NotNeeded (not just "something is nearby" - ContextInteraction.ActiveTarget is set
+            // for a nearby-but-not-usable POI too, e.g. PhaseUnavailable/AlreadyUsed, purely so the
+            // world-space prompt can explain itself; those still fall through to a normal Hero
+            // Skill cast). NotNeeded specifically DOES still claim the press - a player standing at
+            // a full-Health Healing Shrine pressing the button is clearly trying to interact, not
+            // cast their Hero Skill, even though the attempt itself does nothing (see
+            // HealingShrineUtility.TryInteract, which fires EventContextInteractionRejected for
+            // quick-feedback toast purposes instead of healing). Dispatched by ActiveKind to
+            // whichever POI's own utility actually owns that interaction (CursedRift/Store open a
+            // multi-step Choice Window; HealingShrine resolves immediately, same tick; Blacksmith
+            // rolls its 3 perk choices and opens a Choice Window, same shape as Cursed Rift's own
+            // Sacrifice stage), and the button is neutralized for UpdateSlot this tick only (a real
+            // cast never also fires on the same press). Re-validated fully in Quantum by each
+            // utility's own resolver - never trusted from ContextInteraction alone.
+            else if (heroSkillButton.WasPressed == true
+                && f.Unsafe.TryGetPointer<ContextInteraction>(filter.Entity, out var context) == true
+                && (context->State == ContextInteractionState.Available || context->State == ContextInteractionState.NotNeeded))
+            {
+                switch (context->ActiveKind)
+                {
+                    case InteractableKind.CursedRift:
+                        CursedRiftUtility.TryBeginInteraction(f, filter.Entity, context->ActiveTarget);
+                        break;
+
+                    case InteractableKind.HealingShrine:
+                        HealingShrineUtility.TryInteract(f, filter.Entity, context->ActiveTarget);
+                        break;
+
+                    case InteractableKind.Store:
+                        StoreUtility.TryBeginInteraction(f, filter.Entity, context->ActiveTarget);
+                        break;
+
+                    case InteractableKind.Blacksmith:
+                        BlacksmithUtility.TryBeginInteraction(f, filter.Entity, context->ActiveTarget);
+                        break;
+                }
+
+                heroSkillButton = default;
+            }
+
+            UpdateSlot(f, ref filter, &filter.CharacterSkills->DashSkill, SkillSlotId.DashSkill, input, dashSkillButton);
+            UpdateSlot(f, ref filter, &filter.CharacterSkills->HeroSkill, SkillSlotId.HeroSkill, input, heroSkillButton);
 
             ProcessSkillUpgradeCommands(f, ref filter);
         }

@@ -219,6 +219,18 @@ event RemixPulseTriggered
     AssetRef<HitEffectData>  Effect2;
 }
 
+// Fired by ZaraAfterbeatSystem.Fire (Dash Ascension "Afterbeat", ranked - the delayed dash pulse,
+// not the Resonance passive above). Kept as its own event rather than reusing
+// ResonancePulseReleased/ShockwaveReleased, which every OTHER Zara pulse (Resonance passive, Heavy
+// Bass Subwoofer, Remix) shares and which ResonanceFxView renders - so Afterbeat's own pulse can
+// play a visually distinct VFX (see ZaraAfterbeatFxView) instead of looking identical to those.
+event AfterbeatPulseReleased
+{
+    EntityRef Entity;
+    FPVector3 Position;
+    FP        Radius;
+}
+
 event PlayerRespawned
 {
     EntityRef Entity;
@@ -622,4 +634,28 @@ event ChestOpened
     EntityRef     Player;
     FPVector3     Position;
     LevelUpCategory Kind;
+}
+
+// Fired by BreakableUtility.TryBreak the instant a Breakable flips to Broken (see Breakable.qtn) - a
+// View-only hook (BreakableView swaps to the broken visual + plays the break particle), no
+// simulation consumer. Entity is the broken prop itself, so a per-entity view component can filter
+// to its own _entityRef; Position travels with the event for a pooled, external break particle that
+// outlives any view swap.
+event BreakableBroken
+{
+    EntityRef Entity;
+    FPVector3 Position;
+}
+
+// Fired when a player's Base Skill press redirects to an Interactable (see ContextInteraction.qtn)
+// but the target utility's own TryInteract/TryBeginInteraction rejects it as
+// ContextInteractionState.NotNeeded (e.g. HealingShrineUtility.TryInteract at full Health) -
+// View-only hook for a quick-feedback ToastManager popup (InteractionPromptWidget), since not
+// swapping the Base Skill icon alone is easy to miss on an actual button press. Generic across
+// InteractableKind, not Healing-Shrine-specific, even though Healing Shrine is the only caller
+// today - deliberately only fired on a REAL press, never from mere proximity to a NotNeeded POI.
+event ContextInteractionRejected
+{
+    EntityRef Player;
+    EntityRef Target;
 }

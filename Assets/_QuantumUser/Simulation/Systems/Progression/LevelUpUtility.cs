@@ -27,43 +27,18 @@ namespace Quantum
             }
 
             LevelUpConfig config = f.FindAsset(f.RuntimeConfig.LevelUpConfig);
-            List<EntityRef> recipients = new List<EntityRef>();
-
-            var filtered = f.Filter<PlayerLink>();
-            while (filtered.Next(out EntityRef entity, out PlayerLink _))
-            {
-                recipients.Add(entity);
-                RestoreHealthAndShield(f, entity);
-            }
-
-            OpenUpgradeScreen(f, recipients, config, null);
-        }
-
-        // Leveling up fully refills every connected player's Health/Shield - a direct restore, same
-        // "reposition without destroying" idiom DamageUtility.RespawnPlayer already uses for its own
-        // full-refill moment, not a percent-of-max HealUtility/ShieldUtility grant - a level-up
-        // shouldn't be reduced by a HealingReceivedMultiplier debuff, and this isn't a "number/
-        // particle worth celebrating" heal source (see ShieldUtility's own comment on that
-        // distinction). Fires unconditionally, even if every upgrade pool ends up empty below (see
-        // OpenUpgradeScreen's anyRolled check) - the level itself was still earned.
-        private static void RestoreHealthAndShield(Frame f, EntityRef entity)
-        {
-            if (f.Unsafe.TryGetPointer<Health>(entity, out var health) == true)
-            {
-                health->CurrentHealth = health->MaxHealth;
-            }
-
-            if (f.Unsafe.TryGetPointer<Shield>(entity, out var shield) == true)
-            {
-                shield->Current = shield->Max;
-                shield->RechargeTimer = FP._0;
-            }
+            OpenUpgradeScreen(f, GetConnectedPlayers(f), config, null);
         }
 
         // Called by ChestSystem the instant a player collects a Chest (see Chest.qtn/docs/chests.md)
-        // - same roll-and-pause plumbing as a real level-up above, except only `player` gets a
-        // LevelUpChoice, and the roll is forced to the Chest's own configured category instead of
-        // following LevelUpConfig.LevelSequence.
+        // - same roll-and-pause plumbing as a real level-up above, and now (confirmed with the user)
+        // the exact same recipient list too: EVERY connected player gets their own roll from the
+        // Chest's own forced category, not just whoever physically walked into it. Previously only
+        // `player` got a LevelUpChoice, which meant every OTHER connected player had nothing to
+        // confirm and was silently treated as already-done - the instant the one real recipient
+        // picked, the whole screen resolved and closed out from under everyone else before they'd
+        // gotten to choose anything. Rolling for everyone (same as BeginLevelUpScreen) makes the
+        // screen wait for every connected player to confirm, exactly like a real level-up.
         public static void BeginChestScreen(Frame f, EntityRef player, LevelUpCategory forcedCategory)
         {
             if (f.RuntimeConfig.LevelUpConfig.IsValid == false)
@@ -73,7 +48,23 @@ namespace Quantum
             }
 
             LevelUpConfig config = f.FindAsset(f.RuntimeConfig.LevelUpConfig);
-            OpenUpgradeScreen(f, new List<EntityRef> { player }, config, forcedCategory);
+            OpenUpgradeScreen(f, GetConnectedPlayers(f), config, forcedCategory);
+        }
+
+        // internal, not private - reused by RunPhaseUtility.BeginBossEncounter to teleport every
+        // connected player into the Boss Arena, same "every connected player" recipient list a real
+        // Level-Up/Chest already rolls for above.
+        internal static List<EntityRef> GetConnectedPlayers(Frame f)
+        {
+            List<EntityRef> players = new List<EntityRef>();
+            var filtered = f.Filter<PlayerLink>();
+
+            while (filtered.Next(out EntityRef entity, out PlayerLink _))
+            {
+                players.Add(entity);
+            }
+
+            return players;
         }
 
         // Shared by BeginLevelUpScreen (every connected player, sequence-driven category) and
@@ -169,6 +160,43 @@ namespace Quantum
             }
 
             int choiceCount = allOrNothing ? 1 : (config.ChoiceCount < 3 ? config.ChoiceCount : 3);
+            LevelUpOption[] rolled = DrawWeighted(f, candidates, totalWeight, choiceCount);
+            int drawn = rolled.Length;
+
+            if (drawn == 0)
+            {
+                f.Remove<LevelUpChoice>(entity);
+                return false;
+            }
+
+            f.AddOrGet<LevelUpChoice>(entity, out var choice);
+            var options = choice->Options;
+
+            for (int i = 0; i < options.Length; i++)
+            {
+                options[i] = i < drawn ? rolled[i] : default;
+            }
+
+            choice->OptionCount = (byte)drawn;
+            choice->Confirmed = false;
+            choice->SelectedIndex = 0;
+            choice->FromChest = fromChest;
+            choice->Category = category ?? default;
+
+            Log.Debug($"[LevelUp] rolled {drawn}/{choiceCount} option(s) for {entity}");
+            return true;
+        }
+
+        // Weighted draw without replacement, extracted out of RollOptionsFor so CursedRiftUtility
+        // can reuse the exact same mechanism for Cursed Rift's mutation-reward step (see
+        // RollMutationOptions below) without going through the whole-party-pausing
+        // OpenUpgradeScreen path RollOptionsFor itself is called from. Pure refactor - draws the
+        // same f.RNG->Next(0, totalWeight) sequence RollOptionsFor always has, zero behavior
+        // change for any existing category. Returns a right-sized array (drawn.Length <=
+        // choiceCount - fewer than choiceCount if the pool ran dry), never choiceCount padded
+        // with defaults.
+        private static LevelUpOption[] DrawWeighted(Frame f, List<Candidate> candidates, int totalWeight, int choiceCount)
+        {
             LevelUpOption[] rolled = new LevelUpOption[choiceCount];
             int drawn = 0;
 
@@ -197,34 +225,40 @@ namespace Quantum
                 candidates.RemoveAt(pick);
             }
 
-            if (drawn == 0)
-            {
-                f.Remove<LevelUpChoice>(entity);
-                return false;
-            }
+            if (drawn == rolled.Length)
+                return rolled;
 
-            f.AddOrGet<LevelUpChoice>(entity, out var choice);
-            var options = choice->Options;
-
-            for (int i = 0; i < options.Length; i++)
-            {
-                options[i] = i < drawn ? rolled[i] : default;
-            }
-
-            choice->OptionCount = (byte)drawn;
-            choice->Confirmed = false;
-            choice->SelectedIndex = 0;
-            choice->FromChest = fromChest;
-            choice->Category = category ?? default;
-
-            Log.Debug($"[LevelUp] rolled {drawn}/{choiceCount} option(s) for {entity}");
-            return true;
+            LevelUpOption[] trimmed = new LevelUpOption[drawn];
+            System.Array.Copy(rolled, trimmed, drawn);
+            return trimmed;
         }
 
-        // Every candidate, regardless of kind, is weighted the same way: resolve it generically as
-        // UpgradeData and read its own Rarity via LevelUpConfig.GetWeight - no per-kind weighting
-        // logic needed since WeaponPerkData/SkillActionData/GlobalUpgradeData/PassiveUpgradeData all
-        // share that one field.
+        // "Generate N valid Rift Mutation choices for Player" - the exact request Cursed Rift's
+        // mutation-reward stage needs (see CursedRiftUtility.ConfirmSacrifice/docs/
+        // breathing-poi.md), reusing CollectRiftMutationCandidates + DrawWeighted directly rather
+        // than duplicating the mutation roll. Deliberately bypasses OpenUpgradeScreen entirely -
+        // returns a plain array and touches no qtn component, so the caller decides where the
+        // result lives (CursedRiftInteraction.MutationChoices, not LevelUpChoice) and this stays
+        // fully independent of Global.LevelUpScreenOpen/GameState.Upgrade/GameplaySystemGroup.
+        // Respects CharacterStats.AllOrNothingActive the same way a normal level-up's own
+        // RiftMutation category roll does (rarity-shifted, collapsed to exactly 1 choice) - for
+        // consistency with "reuse the existing system," not a Cursed-Rift-specific rule.
+        // Deliberately calls CollectRiftMutationCandidates only, not CollectRiftMarkMutationCandidates
+        // - Cursed Rift's reward stays scoped to the 14 "core" build-defining mutations even though
+        // RiftMarkMutation is now a separately-rollable pool elsewhere.
+        public static LevelUpOption[] RollMutationOptions(Frame f, EntityRef entity, LevelUpConfig config, int choiceCount)
+        {
+            bool allOrNothing = f.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats) && stats->AllOrNothingActive == true;
+            int effectiveCount = allOrNothing ? 1 : choiceCount;
+
+            List<Candidate> candidates = new List<Candidate>();
+            int totalWeight = 0;
+
+            CollectRiftMutationCandidates(f, entity, config, allOrNothing, candidates, ref totalWeight);
+
+            return DrawWeighted(f, candidates, totalWeight, effectiveCount);
+        }
+
         private static void AddCandidate(Frame f, LevelUpConfig config, LevelUpPoolKind kind,
             AssetRef<UpgradeData> upgradeRef, SkillSlotId slot, bool rarityShift, List<Candidate> candidates, ref int totalWeight)
         {
@@ -232,14 +266,7 @@ namespace Quantum
                 return;
 
             UpgradeData data = f.FindAsset(upgradeRef);
-
-            // All or Nothing shifts the weight table up one tier (Common->Rare, Rare->Epic,
-            // Epic->Legendary, Legendary stays) rather than filtering anything out outright - see
-            // RollOptionsFor.
-            UpgradeRarity effectiveRarity = rarityShift && data.Rarity < UpgradeRarity.Legendary
-                ? data.Rarity + 1
-                : data.Rarity;
-            int weight = config.GetWeight(effectiveRarity);
+            int weight = ResolveWeight(config, data, rarityShift);
 
             if (weight <= 0)
                 return;
@@ -251,6 +278,32 @@ namespace Quantum
 
             candidates.Add(new Candidate { Option = option, Weight = weight });
             totalWeight += weight;
+        }
+
+        // Only WeaponPerkData/RiftMutationData still carry their own Rarity (see UpgradeData's own
+        // comment) - everything else (SkillActionData/GlobalUpgradeData/PassiveUpgradeData) draws at
+        // a flat LevelUpConfig.CommonWeight instead, so every card in those pools is equally likely.
+        private static int ResolveWeight(LevelUpConfig config, UpgradeData data, bool rarityShift)
+        {
+            UpgradeRarity? rarity = data switch
+            {
+                WeaponPerkData weaponPerk => weaponPerk.Rarity,
+                RiftMutationData mutation => mutation.Rarity,
+                _ => (UpgradeRarity?)null
+            };
+
+            if (rarity == null)
+                return config.CommonWeight;
+
+            // All or Nothing shifts the weight table up one tier (Common->Rare, Rare->Epic,
+            // Epic->Legendary, Legendary stays) rather than filtering anything out outright - see
+            // RollOptionsFor. Only meaningful for a rarity-bearing kind - a flat-weighted kind above
+            // has no tier to shift.
+            UpgradeRarity effectiveRarity = rarityShift && rarity.Value < UpgradeRarity.Legendary
+                ? rarity.Value + 1
+                : rarity.Value;
+
+            return config.GetWeight(effectiveRarity);
         }
 
         // Dispatches to exactly the collector(s) for `category`, or every collector except
@@ -269,6 +322,9 @@ namespace Quantum
 
             if (all || category == LevelUpCategory.RiftMutation)
                 CollectRiftMutationCandidates(f, entity, config, rarityShift, candidates, ref totalWeight);
+
+            if (all || category == LevelUpCategory.RiftMarkMutation)
+                CollectRiftMarkMutationCandidates(f, entity, config, rarityShift, candidates, ref totalWeight);
 
             if (all || category == LevelUpCategory.HeroSkill)
                 CollectPerHeroCandidates(f, entity, config, rarityShift, candidates, ref totalWeight);
@@ -297,7 +353,9 @@ namespace Quantum
             }
         }
 
-        private static bool AlreadyEquipped(Weapon* weapon, AssetRef<WeaponPerkData> perkRef)
+        // internal (not private) so BlacksmithUtility can reuse this exact "already on this weapon"
+        // exclusion check when rolling its own perk offers - see docs/store-blacksmith.md.
+        internal static bool AlreadyEquipped(Weapon* weapon, AssetRef<WeaponPerkData> perkRef)
         {
             var perks = weapon->Perks;
 
@@ -353,6 +411,23 @@ namespace Quantum
                     continue;
 
                 AddCandidate(f, config, LevelUpPoolKind.RiftMutation, new AssetRef<UpgradeData>(mutationRef.Id), default, rarityShift, candidates, ref totalWeight);
+            }
+        }
+
+        // RiftMarkMutation is the second, independently-rollable Rift Mutation pool (see
+        // LevelUpConfig.RiftMarkMutations) - identical shape to CollectRiftMutationCandidates above,
+        // just a different list/PoolKind. Still shares RiftMutationUtility.IsAlreadyPicked's single
+        // RiftMutationPicks component with the core pool (the two lists' assets never overlap).
+        private static void CollectRiftMarkMutationCandidates(Frame f, EntityRef entity, LevelUpConfig config, bool rarityShift, List<Candidate> candidates, ref int totalWeight)
+        {
+            for (int i = 0; i < config.RiftMarkMutations.Count; i++)
+            {
+                AssetRef<RiftMutationData> mutationRef = config.RiftMarkMutations[i];
+
+                if (RiftMutationUtility.IsAlreadyPicked(f, entity, mutationRef) == true)
+                    continue;
+
+                AddCandidate(f, config, LevelUpPoolKind.RiftMarkMutation, new AssetRef<UpgradeData>(mutationRef.Id), default, rarityShift, candidates, ref totalWeight);
             }
         }
 
@@ -533,7 +608,9 @@ namespace Quantum
         // clamp01((weaponTalentLevel - i) * ChancePerLevelPerSlot). The number of successes across
         // [0, MaxRolledPerks) is this weapon's rolled perk count - see LevelUpConfig's own comment
         // for the worked example this matches.
-        private static LevelUpOption RollWeaponOption(Frame f, LevelUpConfig config, AssetRef<WeaponDataAsset> weaponRef, byte weaponTalentLevel)
+        // internal (not private) so StoreUtility can reuse this exact per-slot perk-count roll for
+        // its own weapon offers - see docs/store-blacksmith.md.
+        internal static LevelUpOption RollWeaponOption(Frame f, LevelUpConfig config, AssetRef<WeaponDataAsset> weaponRef, byte weaponTalentLevel)
         {
             int perkCount = 0;
 
@@ -609,7 +686,7 @@ namespace Quantum
 
         // Called from LevelUpSystem when a KeepCurrentWeaponCommand lands for this entity - the
         // separate "Keep Current" button on a Choose-Weapon screen, distinct from picking one of the
-        // 3 rolled Options (see UpgradeWindow.keepCurrentButton). Doesn't check/require
+        // 3 rolled Options (see ChooseWindow.keepCurrentButton). Doesn't check/require
         // Category == ChooseWeapon - a stray click during any other screen just confirms with
         // nothing granted, which is harmless (worst case the player skips a free upgrade), not
         // exploitable.
@@ -715,6 +792,11 @@ namespace Quantum
                     break;
 
                 case LevelUpPoolKind.RiftMutation:
+                    RiftMutationUtility.Grant(f, entity, new AssetRef<RiftMutationData>(option.Upgrade.Id));
+                    RecordHistory(f, entity, option.Kind, option.Upgrade);
+                    break;
+
+                case LevelUpPoolKind.RiftMarkMutation:
                     RiftMutationUtility.Grant(f, entity, new AssetRef<RiftMutationData>(option.Upgrade.Id));
                     RecordHistory(f, entity, option.Kind, option.Upgrade);
                     break;

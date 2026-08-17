@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 947e3427378914dddbf1331a2bdc8e49, type: 3}
+  m_Name: ShieldCell
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.RestoreShieldFoodOfferData
+  Identifier:
+    Path: _QuantumUser/Resources/Store/ShieldCell
+    Guid:
+      Value: 392183461232130115
+  Icon: {fileID: 0}
+  DisplayName: Shield Cell
+  TopLabel: SHIELD
+  Description: Restore 50% of your Max Shield.
+  ButtonLabel: BUY
+  Price:
+    RawValue: 2621440
+  Weight: 1
+  ShieldPercent:
+    RawValue: 32768

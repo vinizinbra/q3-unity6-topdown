@@ -51,7 +51,11 @@ namespace Quantum.Editor
 
                 SerializedProperty animationType = property.FindPropertyRelative("AnimationType");
                 SerializedProperty duration = property.FindPropertyRelative("Duration");
+                SerializedProperty bodySprite = property.FindPropertyRelative("BodySprite");
                 SerializedProperty particlePrefab = property.FindPropertyRelative("ParticlePrefab");
+
+                EditorGUI.PropertyField(rect, bodySprite);
+                rect.y += lineHeight;
 
                 string animationKey = property.propertyPath + ".animation";
                 bool animationExpanded = GetFoldout(AnimationFoldouts, animationKey);
@@ -162,6 +166,8 @@ namespace Quantum.Editor
             string stepKey = property.propertyPath;
             if (GetFoldout(StepFoldouts, stepKey) == false)
                 return height;
+
+            height += lineHeight; // BodySprite
 
             height += lineHeight; // "Body Animation" foldout header
 

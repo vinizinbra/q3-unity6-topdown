@@ -10,10 +10,12 @@ namespace QuantumUser.Editor
     using UnityEngine;
 
     // Authors one .asset instance per implemented RiftMutationData class (see
-    // docs/rift-mutations.md), plus wiring all of them into the existing LevelUpConfig.asset's
-    // RiftMutations list. Mirrors GlobalUpgradeAssetGenerator.cs/WeaponPerkAssetGenerator.cs exactly
-    // (same folder-creation/update-in-place/rebuild-the-list-from-scratch behavior); re-running this
-    // is safe for the same reasons those are.
+    // docs/rift-mutations.md), plus wiring them into the existing LevelUpConfig.asset's two Rift
+    // Mutation lists - RiftMutations (the 14 "core" specs below) and RiftMarkMutations (the 11
+    // "Rift Mark content pool" specs, tagged MutationSpec.RiftMarkPool = true). Mirrors
+    // GlobalUpgradeAssetGenerator.cs/WeaponPerkAssetGenerator.cs exactly (same folder-creation/
+    // update-in-place/rebuild-the-list-from-scratch behavior); re-running this is safe for the same
+    // reasons those are.
     //
     // Every Description below is a template ({0}/{1} filled in from the asset's own live values via
     // DescriptionArgs - see RiftMutationData.View.cs), not a plain string - so retuning a Configure
@@ -32,6 +34,11 @@ namespace QuantumUser.Editor
             public UpgradeRarity Rarity;
             public string Description;
             public Action<RiftMutationData> Configure;
+
+            // False (default) = wired into LevelUpConfig.RiftMutations (the 14 "core" mutations).
+            // True = wired into LevelUpConfig.RiftMarkMutations (the 11 "Rift Mark content pool"
+            // mutations below) - see Generate()'s config-wiring block.
+            public bool RiftMarkPool;
         }
 
         private static readonly List<MutationSpec> Specs = new()
@@ -180,87 +187,99 @@ namespace QuantumUser.Editor
                 Configure = p => { }
             },
 
-            // -- Rift Mark content pool (see docs/rift-mutations.md) - every threshold/cooldown/
-            // radius below is a shared, global ElementalReactionConfig value, not baked per-asset
-            // (unlike the mutations above), so every Configure here is a no-op and every Description
-            // is a plain string with no {0}/{1} template args - same shape All or Nothing/Shield
-            // Breaker already use for a mutation with nothing live to template in.
+            // -- Rift Mark content pool (see docs/rift-mutations.md) - wired into LevelUpConfig.
+            // RiftMarkMutations, not RiftMutations, via RiftMarkPool = true below. Every threshold/
+            // cooldown/radius below is a shared, global ElementalReactionConfig value, not baked
+            // per-asset (unlike the mutations above), so every Configure here is a no-op and every
+            // Description is a plain string with no {0}/{1} template args - same shape All or
+            // Nothing/Shield Breaker already use for a mutation with nothing live to template in.
             new MutationSpec
             {
                 Type = typeof(CriticalFractureMutationData), FileName = "CriticalFracture",
                 DisplayName = "Critical Fracture", Rarity = UpgradeRarity.Rare,
                 Description = "Critical hits apply Rift Mark",
-                Configure = p => { }
+                Configure = p => { },
+                RiftMarkPool = true
             },
             new MutationSpec
             {
                 Type = typeof(SkillFractureMutationData), FileName = "SkillFracture",
                 DisplayName = "Skill Fracture", Rarity = UpgradeRarity.Rare,
                 Description = "Hero Skill hits apply Rift Mark",
-                Configure = p => { }
+                Configure = p => { },
+                RiftMarkPool = true
             },
             new MutationSpec
             {
                 Type = typeof(RiftDashMutationData), FileName = "RiftDash",
                 DisplayName = "Rift Dash", Rarity = UpgradeRarity.Rare,
                 Description = "Dashing through an enemy applies Rift Mark",
-                Configure = p => { }
+                Configure = p => { },
+                RiftMarkPool = true
             },
             new MutationSpec
             {
                 Type = typeof(HeavyFractureMutationData), FileName = "HeavyFracture",
                 DisplayName = "Heavy Fracture", Rarity = UpgradeRarity.Rare,
                 Description = "Large hits apply Rift Mark",
-                Configure = p => { }
+                Configure = p => { },
+                RiftMarkPool = true
             },
             new MutationSpec
             {
                 Type = typeof(CloseFractureMutationData), FileName = "CloseFracture",
                 DisplayName = "Close Fracture", Rarity = UpgradeRarity.Rare,
                 Description = "Hits against nearby enemies periodically apply Rift Mark",
-                Configure = p => { }
+                Configure = p => { },
+                RiftMarkPool = true
             },
             new MutationSpec
             {
                 Type = typeof(LongFractureMutationData), FileName = "LongFracture",
                 DisplayName = "Long Fracture", Rarity = UpgradeRarity.Rare,
                 Description = "Hits against distant enemies periodically apply Rift Mark",
-                Configure = p => { }
+                Configure = p => { },
+                RiftMarkPool = true
             },
             new MutationSpec
             {
                 Type = typeof(ExecutionFractureMutationData), FileName = "ExecutionFracture",
                 DisplayName = "Execution Fracture", Rarity = UpgradeRarity.Rare,
                 Description = "Hitting enemies below 25% health applies Rift Mark",
-                Configure = p => { }
+                Configure = p => { },
+                RiftMarkPool = true
             },
             new MutationSpec
             {
                 Type = typeof(FirstContactMutationData), FileName = "FirstContact",
                 DisplayName = "First Contact", Rarity = UpgradeRarity.Rare,
                 Description = "The first hit against a full-health enemy applies Rift Mark",
-                Configure = p => { }
+                Configure = p => { },
+                RiftMarkPool = true
             },
             new MutationSpec
             {
                 Type = typeof(LastStandMutationData), FileName = "LastStand",
                 DisplayName = "Last Stand", Rarity = UpgradeRarity.Epic,
                 Description = "Taking a large hit marks nearby enemies",
-                Configure = p => { }
+                Configure = p => { },
+                RiftMarkPool = true
             },
             new MutationSpec
             {
                 Type = typeof(FracturedPresenceMutationData), FileName = "FracturedPresence",
                 DisplayName = "Fractured Presence", Rarity = UpgradeRarity.Rare,
                 Description = "Enemies that remain near you become Rift-marked",
-                Configure = p => { }
+                Configure = p => { },
+                RiftMarkPool = true
             },
             new MutationSpec
             {
                 Type = typeof(OverflowingRiftMutationData), FileName = "OverflowingRift",
                 DisplayName = "Overflowing Rift", Rarity = UpgradeRarity.Epic,
                 Description = "Marking an already-maxed target releases a small Rift pulse instead",
-                Configure = p => { }
+                Configure = p => { },
+                RiftMarkPool = true
             },
         };
 
@@ -314,6 +333,14 @@ namespace QuantumUser.Editor
             }
 
             config.RiftMutations = Specs
+                .Where(spec => spec.RiftMarkPool == false)
+                .Select(spec => AssetDatabase.LoadAssetAtPath<RiftMutationData>($"{FolderPath}/{spec.FileName}.asset"))
+                .Where(asset => asset != null)
+                .Select(asset => new AssetRef<RiftMutationData>(asset.Guid))
+                .ToList();
+
+            config.RiftMarkMutations = Specs
+                .Where(spec => spec.RiftMarkPool)
                 .Select(spec => AssetDatabase.LoadAssetAtPath<RiftMutationData>($"{FolderPath}/{spec.FileName}.asset"))
                 .Where(asset => asset != null)
                 .Select(asset => new AssetRef<RiftMutationData>(asset.Guid))
@@ -322,7 +349,7 @@ namespace QuantumUser.Editor
             EditorUtility.SetDirty(config);
             AssetDatabase.SaveAssets();
 
-            LogHelper.Log("RiftMutationAssetGenerator", $"{created} created, {updated} updated, {config.RiftMutations.Count} wired into {ConfigAssetPath}.");
+            LogHelper.Log("RiftMutationAssetGenerator", $"{created} created, {updated} updated, {config.RiftMutations.Count} Rift Mutation + {config.RiftMarkMutations.Count} Rift Mark Mutation wired into {ConfigAssetPath}.");
         }
 
         private static void CreateFolderRecursive(string folderPath)

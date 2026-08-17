@@ -54,6 +54,15 @@ namespace Quantum
                 // now (it resets its own previous output first) rebuilds against the correct size
                 // instead of leaving the first, wrong-sized pass in the scene.
                 cubeVisualBuilder.Generate();
+
+                // One-shot: disable immediately after the single reparent+regenerate rather than
+                // waiting for a future frame's parent==scale-1 check to disable. The reparent is a
+                // terminal action - it only ever needs to happen once. Waiting (the old `return;`)
+                // could re-fire every frame forever: CubeVisualBuilder.DrawMergingNeighbors reparents
+                // merging cubes under each other's SCALED visual roots, so `parent.localScale != one`
+                // stays true, and this kept reparenting + calling Generate() every LateUpdate - the
+                // 99999-log regeneration loop, which also stacked duplicate/stale corner pieces.
+                enabled = false;
                 return;
             }
 

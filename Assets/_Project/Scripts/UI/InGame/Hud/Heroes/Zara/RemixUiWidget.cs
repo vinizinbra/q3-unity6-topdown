@@ -4,13 +4,13 @@ using TMPro;
 using UnityEngine;
 
 // Remix's progress display: how many pulses until the next randomly-chosen HitEffectData proc (see
-// ResonanceUtility.ResolveRemixEffect - every 3rd pulse). Same icon+text stack shape as
+// ResonanceUtility.ResolveRemixEntries - every 3rd pulse). Same icon+text stack shape as
 // AdrenalineUiWidget/ScrapUiWidget, not SkillProgressUiWidget's fill slider - that one's meant to
 // wrap HeroSkillUiWidget's own icon (charge-up toward a Hero Skill's bonus state), while Remix is a
 // Passive Ascension's own periodic counter. Whole widget self-hides via root when Remix hasn't been
 // taken - Resonance itself always exists once the base passive is applied, ascension or not, so
-// presence alone can't gate this the way LuxScrapCollector/Adrenaline's own components do; RemixEffects
-// being empty (its own "not taken" default, see RemixPassiveUpgradeData.Apply) is what's checked instead.
+// presence alone can't gate this the way LuxScrapCollector/Adrenaline's own components do; RemixRank
+// being 0 (its own "not taken" default, see RemixPassiveUpgradeData.Apply) is what's checked instead.
 // By default self-binds to local slot 0 (player 1), same as SkillCooldownUiWidget - see
 // autoBindLocalPlayerOne.
 public class RemixUiWidget : QuantumGlobalMonoBehaviour
@@ -63,7 +63,7 @@ public class RemixUiWidget : QuantumGlobalMonoBehaviour
 
         Resonance resonance = frame.Get<Resonance>(_entityRef);
 
-        if (resonance.RemixEffects[0].IsValid == false)
+        if (resonance.RemixRank == 0)
         {
             SetShown(false);
             return;

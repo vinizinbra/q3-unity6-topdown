@@ -39,8 +39,8 @@ SpriteAtlas:
       padding: 4
       blockOffset: 1
       allowAlphaSplitting: 0
-      enableRotation: 1
-      enableTightPacking: 1
+      enableRotation: 0
+      enableTightPacking: 0
       enableAlphaDilation: 0
     secondaryTextureSettings: {}
     variantMultiplier: 1
@@ -57,7 +57,6 @@ SpriteAtlas:
     - {fileID: 2800000, guid: cf771ed30918b4a09b4a8a55f32c3a5c, type: 3}
     - {fileID: 2800000, guid: babf8bf5c1b784e07bb668d455b33d8d, type: 3}
     - {fileID: 2800000, guid: cade071ca88544076a94e187555db62a, type: 3}
-    - {fileID: 2800000, guid: 4a26754fa6939418180dd42710ecb73f, type: 3}
     - {fileID: 2800000, guid: 880bd387938f44bbdafc175461537c46, type: 3}
     - {fileID: 2800000, guid: f664891c957894bd1ba05f39cf427393, type: 3}
     - {fileID: 2800000, guid: 9500f48424b214942acfffa7912cb6be, type: 3}
@@ -88,6 +87,7 @@ SpriteAtlas:
     - cf771ed30918b4a09b4a8a55f32c3a5c: 927683874
     - cf771ed30918b4a09b4a8a55f32c3a5c: 1374950880
     - cf771ed30918b4a09b4a8a55f32c3a5c: -2116705038
+    - dc60f814ea1354d7388fb7689c93d82a: 1648873273
     - dc60f814ea1354d7388fb7689c93d82a: 112942212
     - dc60f814ea1354d7388fb7689c93d82a: -687282088
     - dc60f814ea1354d7388fb7689c93d82a: -1868112565
@@ -208,26 +208,6 @@ SpriteAtlas:
     - 11e8fcaeceabe4b3c8220e6bfa161095: -247756672
     - 11e8fcaeceabe4b3c8220e6bfa161095: 296639792
     - 11e8fcaeceabe4b3c8220e6bfa161095: 1320015041
-    - 4a26754fa6939418180dd42710ecb73f: -2072276208
-    - 4a26754fa6939418180dd42710ecb73f: -643374543
-    - 4a26754fa6939418180dd42710ecb73f: 1832551713
-    - 4a26754fa6939418180dd42710ecb73f: 1509658712
-    - 4a26754fa6939418180dd42710ecb73f: -93435673
-    - 4a26754fa6939418180dd42710ecb73f: -1103206965
-    - 4a26754fa6939418180dd42710ecb73f: 2035883126
-    - 4a26754fa6939418180dd42710ecb73f: -548255595
-    - 4a26754fa6939418180dd42710ecb73f: 1950346129
-    - 4a26754fa6939418180dd42710ecb73f: -826977446
-    - 4a26754fa6939418180dd42710ecb73f: 736730074
-    - 4a26754fa6939418180dd42710ecb73f: -231804859
-    - 4a26754fa6939418180dd42710ecb73f: 1717783368
-    - 4a26754fa6939418180dd42710ecb73f: -545715387
-    - 4a26754fa6939418180dd42710ecb73f: 1124872396
-    - 4a26754fa6939418180dd42710ecb73f: 1348213851
-    - 4a26754fa6939418180dd42710ecb73f: 599830355
-    - 4a26754fa6939418180dd42710ecb73f: -1131494152
-    - 4a26754fa6939418180dd42710ecb73f: 318196169
-    - 4a26754fa6939418180dd42710ecb73f: 1979115872
   m_MasterAtlas: {fileID: 0}
   m_PackedSprites:
   - {fileID: 592532625, guid: 24b9e422c41ad48799d54a95d82cc8e7, type: 3}
@@ -241,6 +221,7 @@ SpriteAtlas:
   - {fileID: 927683874, guid: cf771ed30918b4a09b4a8a55f32c3a5c, type: 3}
   - {fileID: 1374950880, guid: cf771ed30918b4a09b4a8a55f32c3a5c, type: 3}
   - {fileID: -2116705038, guid: cf771ed30918b4a09b4a8a55f32c3a5c, type: 3}
+  - {fileID: 1648873273, guid: dc60f814ea1354d7388fb7689c93d82a, type: 3}
   - {fileID: 112942212, guid: dc60f814ea1354d7388fb7689c93d82a, type: 3}
   - {fileID: -687282088, guid: dc60f814ea1354d7388fb7689c93d82a, type: 3}
   - {fileID: -1868112565, guid: dc60f814ea1354d7388fb7689c93d82a, type: 3}
@@ -361,26 +342,6 @@ SpriteAtlas:
   - {fileID: -247756672, guid: 11e8fcaeceabe4b3c8220e6bfa161095, type: 3}
   - {fileID: 296639792, guid: 11e8fcaeceabe4b3c8220e6bfa161095, type: 3}
   - {fileID: 1320015041, guid: 11e8fcaeceabe4b3c8220e6bfa161095, type: 3}
-  - {fileID: -2072276208, guid: 4a26754fa6939418180dd42710ecb73f, type: 3}
-  - {fileID: -643374543, guid: 4a26754fa6939418180dd42710ecb73f, type: 3}
-  - {fileID: 1832551713, guid: 4a26754fa6939418180dd42710ecb73f, type: 3}
-  - {fileID: 1509658712, guid: 4a26754fa6939418180dd42710ecb73f, type: 3}
-  - {fileID: -93435673, guid: 4a26754fa6939418180dd42710ecb73f, type: 3}
-  - {fileID: -1103206965, guid: 4a26754fa6939418180dd42710ecb73f, type: 3}
-  - {fileID: 2035883126, guid: 4a26754fa6939418180dd42710ecb73f, type: 3}
-  - {fileID: -548255595, guid: 4a26754fa6939418180dd42710ecb73f, type: 3}
-  - {fileID: 1950346129, guid: 4a26754fa6939418180dd42710ecb73f, type: 3}
-  - {fileID: -826977446, guid: 4a26754fa6939418180dd42710ecb73f, type: 3}
-  - {fileID: 736730074, guid: 4a26754fa6939418180dd42710ecb73f, type: 3}
-  - {fileID: -231804859, guid: 4a26754fa6939418180dd42710ecb73f, type: 3}
-  - {fileID: 1717783368, guid: 4a26754fa6939418180dd42710ecb73f, type: 3}
-  - {fileID: -545715387, guid: 4a26754fa6939418180dd42710ecb73f, type: 3}
-  - {fileID: 1124872396, guid: 4a26754fa6939418180dd42710ecb73f, type: 3}
-  - {fileID: 1348213851, guid: 4a26754fa6939418180dd42710ecb73f, type: 3}
-  - {fileID: 599830355, guid: 4a26754fa6939418180dd42710ecb73f, type: 3}
-  - {fileID: -1131494152, guid: 4a26754fa6939418180dd42710ecb73f, type: 3}
-  - {fileID: 318196169, guid: 4a26754fa6939418180dd42710ecb73f, type: 3}
-  - {fileID: 1979115872, guid: 4a26754fa6939418180dd42710ecb73f, type: 3}
   m_PackedSpriteNamesToIndex:
   - HyenaFlanker
   - HyenaRoster_0
@@ -393,6 +354,7 @@ SpriteAtlas:
   - BrutusGeometric_3
   - BrutusGeometric_0
   - BrutusGeometric_1
+  - ZaraSkill_1
   - ZaraSkill_0
   - CoreSpeakerGreen
   - CoreSpeakerPurple
@@ -513,26 +475,6 @@ SpriteAtlas:
   - RocketGun
   - Sentry
   - LaserGun
-  - SeeingRed
-  - HotTarget
-  - UncontrolledFury
-  - HotStep
-  - VendettaRush
-  - Cremation
-  - Wildfire
-  - ExplosiveMark
-  - TooAngryToDie
-  - FireTrail
-  - Rage
-  - ReloadingSlide
-  - SettledScore
-  - UnbrokenSpirit
-  - BurnOnHit
-  - BurningVengeance
-  - InstantReload
-  - Flashpoint
-  - OverdriveDamage
-  - BloodDept
   m_RenderDataMap: {}
   m_Tag: GameplaySprites
   m_IsVariant: 0

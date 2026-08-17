@@ -57,6 +57,20 @@ namespace Quantum
             filter.Enemy->SkillTargetPosition = targetPosition;
         }
 
+        // Gate checked BEFORE the enemy commits to Preparation/Telegraph (EnemySystem.UpdateChasing,
+        // right after EnemyDecisionUtility.TrySelectAction picks this action) - default true (every
+        // existing delivery keeps its exact current behavior). Override when a delivery can be
+        // picked by distance/cooldown alone yet still be un-executable from here right now (e.g.
+        // ChargeDeliveryData's straight-line dash path being wall/ledge-blocked) - returning false
+        // skips Preparation entirely for this tick so the enemy falls through to its normal chase
+        // movement instead, re-evaluating next tick as it (or the target) repositions. Once this
+        // returns true and the telegraph actually plays, Begin() below must commit unconditionally -
+        // see ChargeDeliveryData.Begin's own comment for why.
+        public virtual bool CanBegin(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, EnemyActionData action, EntityRef target)
+        {
+            return true;
+        }
+
         // Return true if the action resolves this same tick (melee/projectile); false if it needs
         // Tick() first (e.g. a dash).
         public abstract bool Begin(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, EnemyActionData action, EntityRef target);

@@ -1,0 +1,66 @@
+// Generic "world POI" infrastructure - deliberately small, shared by Healing Shrine and Cursed
+// Rift (see docs/breathing-poi.md) and meant to be reused by future Breathing/Combat POIs
+// (Store, Upgrade Station, Artifact Pedestal, Rift Node) without any of them needing to be
+// special-cased anywhere central. A POI's own component carries its own PoiAvailability/
+// PoiUsagePolicy - nothing here (or in CombatDirectorSystem's own Breathing detection) ever
+// branches on "which POI is this."
+
+// Which RunPhase(s) a POI is available in - Combat maps to GameState.Survival, Breathing maps to
+// GameState.Breathing (see PoiAvailabilityUtility.IsAvailable). Every other GameState (Lobby,
+// Upgrade, Event, Boss) is always unavailable - e.g. a Healing Shrine correctly goes dormant the
+// instant an Upgrade screen opens mid-Breathing, not just on a Combat/Breathing transition.
+struct PoiAvailability
+{
+    Boolean AvailableInCombat;
+    Boolean AvailableInBreathing;
+}
+
+// How often one player may use one POI instance. OncePerWorld is declared but not implemented
+// this pass (see PoiUsageUtility.CanUse) - neither Healing Shrine nor Cursed Rift need it yet;
+// it would need a flag living on the POI's own component instead of PoiUsage below, since it
+// isn't per-player.
+enum PoiUsagePolicy : Byte
+{
+    Reusable,
+    OncePerPlayerPerBreak,
+    OncePerPlayerPerRun,
+    OncePerWorld
+}
+
+// One player's own record of having used a specific POI instance. UsedAtBreathingIndex == -1 is
+// the OncePerPlayerPerRun sentinel ("used forever" - never matches any real Global.BreathingIndex
+// again); any other value is the BreathingIndex the player used it during (OncePerPlayerPerBreak
+// compares this against the CURRENT Global.BreathingIndex, so it naturally resets every Break).
+struct PoiUsageEntry
+{
+    EntityRef Poi;
+    Int32 UsedAtBreathingIndex;
+}
+
+// Per-player. 8 slots is deliberately small - only 2 POI instances (one Healing Shrine, one
+// Cursed Rift) exist in the whole run as of this pass, so this gives 4x headroom, not a
+// speculative ceiling. Grow this (same pattern RiftMutationPicks already went [16]->[32]) once
+// Store/Upgrade Station/Artifact Pedestal/multiple Shrines actually need more concurrent entries.
+component PoiUsage
+{
+    array<PoiUsageEntry>[8] Entries;
+}
+
+// Shared, simulation-resolved View-facing state for any POI - deliberately a genuine component
+// (not something each View re-derives from PoiAvailability/PoiUsage independently), so
+// the single generic PoiView reads one already-correct enum instead of each POI duplicating
+// eligibility logic on the View side. See PoiActivationUtility.Refresh/PoiActivationSystem.
+enum PoiViewState : Byte
+{
+    Inactive, // not currently available (Combat, or any other non-Breathing state)
+    Active,   // available AND at least one CONNECTED player can still use it
+    Expired   // available, but every connected player has already used it up (e.g. mid-Breathing,
+              // but you personally already used this Shrine this Break)
+}
+
+// Added alongside a POI's own component (HealingShrine/CursedRift) on the same entity, refreshed
+// every tick by PoiActivationSystem via PoiActivationUtility.Refresh.
+component PoiActivation
+{
+    PoiViewState State;
+}

@@ -13,13 +13,13 @@ using UnityEngine.UI;
 // it open/closed. Content still builds normally while closed (DebugUpgradeMenuTrigger.Rebuild has no
 // dependency on visibility), so it's already populated the first time the panel opens.
 //
-// Four tabs (Hero/Global/Weapon Perk/Rift Mutation), only one visible at a time - each is a
-// DebugUpgradeCategoryPanelWidget instance, but there's only one hand-authored panelPrefab; Awake
-// instantiates it 4 times into panelsParent rather than needing 4 duplicated scrollview hierarchies
-// in the scene. heroTabButton/globalTabButton/weaponPerkTabButton/riftTabButton switch which
-// instance is active (Hero is the default open tab). Hero's content is shared by all 3 per-hero
-// pools, each under its own section header (AddLabel); Global/WeaponPerk/Rift are one category
-// each, no label needed.
+// Five tabs (Hero/Global/Weapon Perk/Rift Mutation/Rift Mark Mutation), only one visible at a time -
+// each is a DebugUpgradeCategoryPanelWidget instance, but there's only one hand-authored panelPrefab;
+// Awake instantiates it 5 times into panelsParent rather than needing 5 duplicated scrollview
+// hierarchies in the scene. heroTabButton/globalTabButton/weaponPerkTabButton/riftTabButton/
+// riftMarkTabButton switch which instance is active (Hero is the default open tab). Hero's content is
+// shared by all 3 per-hero pools, each under its own section header (AddLabel); Global/WeaponPerk/
+// Rift/RiftMark are one category each, no label needed.
 public class DebugUpgradeMenuWindow : MonoBehaviour
 {
     // Everything except toggleButton itself - toggleButton has to live outside this so it stays
@@ -36,6 +36,7 @@ public class DebugUpgradeMenuWindow : MonoBehaviour
     [SerializeField] private Button globalTabButton;
     [SerializeField] private Button weaponPerkTabButton;
     [SerializeField] private Button riftTabButton;
+    [SerializeField] private Button riftMarkTabButton;
 
     [SerializeField] private DebugUpgradeButtonWidget buttonPrefab;
     [SerializeField] private DebugUpgradeSectionLabelWidget labelPrefab;
@@ -44,11 +45,13 @@ public class DebugUpgradeMenuWindow : MonoBehaviour
     private DebugUpgradeCategoryPanelWidget _globalPanel;
     private DebugUpgradeCategoryPanelWidget _weaponPerkPanel;
     private DebugUpgradeCategoryPanelWidget _riftPanel;
+    private DebugUpgradeCategoryPanelWidget _riftMarkPanel;
 
     public Transform HeroContent => _heroPanel.Content;
     public Transform GlobalContent => _globalPanel.Content;
     public Transform WeaponPerkContent => _weaponPerkPanel.Content;
     public Transform RiftContent => _riftPanel.Content;
+    public Transform RiftMarkContent => _riftMarkPanel.Content;
 
     private void Awake()
     {
@@ -56,6 +59,7 @@ public class DebugUpgradeMenuWindow : MonoBehaviour
         _globalPanel = CreatePanel();
         _weaponPerkPanel = CreatePanel();
         _riftPanel = CreatePanel();
+        _riftMarkPanel = CreatePanel();
 
         // panelPrefab/buttonPrefab/labelPrefab are live template objects sitting in the scene, not
         // Project-window .prefab assets - left active, each would otherwise render as one extra
@@ -79,6 +83,17 @@ public class DebugUpgradeMenuWindow : MonoBehaviour
         else
         {
             LogHelper.Warn("DebugUpgradeMenu", "riftTabButton not assigned - Rift Mutation tab is unreachable until it's wired in the Inspector.");
+        }
+
+        // Not wired in the scene until the Rift Mark tab button is manually cloned - same
+        // null-guarded fallback as riftTabButton above.
+        if (riftMarkTabButton != null)
+        {
+            riftMarkTabButton.onClick.AddListener(() => ShowPanel(_riftMarkPanel));
+        }
+        else
+        {
+            LogHelper.Warn("DebugUpgradeMenu", "riftMarkTabButton not assigned - Rift Mark Mutation tab is unreachable until it's wired in the Inspector.");
         }
 
         ShowPanel(_heroPanel);
@@ -105,6 +120,7 @@ public class DebugUpgradeMenuWindow : MonoBehaviour
         _globalPanel.gameObject.SetActive(panel == _globalPanel);
         _weaponPerkPanel.gameObject.SetActive(panel == _weaponPerkPanel);
         _riftPanel.gameObject.SetActive(panel == _riftPanel);
+        _riftMarkPanel.gameObject.SetActive(panel == _riftMarkPanel);
     }
 
     public void Clear()
@@ -113,6 +129,7 @@ public class DebugUpgradeMenuWindow : MonoBehaviour
         ClearContent(_globalPanel.Content);
         ClearContent(_weaponPerkPanel.Content);
         ClearContent(_riftPanel.Content);
+        ClearContent(_riftMarkPanel.Content);
     }
 
     private static void ClearContent(Transform content)

@@ -62,13 +62,51 @@ namespace Quantum
             destroy->RemainingTime = lifetime;
         }
 
-        // Called by CurrencyOrbSystem when ANY player walks over a coin - co-op, one shared run total
-        // (Frame.Global, see Coins.qtn), not tracked per-player.
-        public static void Grant(Frame f, FP amount)
+        // Credits ONE player's own wallet (CharacterStats.Coins) directly - no gain-multiplier
+        // scaling here, that's already been applied by the caller (see GrantAll below).
+        public static void Grant(Frame f, EntityRef player, FP amount)
         {
-            f.Global->TotalCoins += amount;
+            if (f.Unsafe.TryGetPointer<CharacterStats>(player, out var stats) == false)
+                return;
 
-            Log.Debug($"[Coin] run gained {amount} -> {f.Global->TotalCoins} total");
+            stats->Coins += amount;
+
+            Log.Debug($"[Coin] {player} gained {amount} -> {stats->Coins}");
+        }
+
+        // Called by CurrencyOrbSystem when ANY player walks over a coin - broadcasts to EVERY
+        // connected player's own wallet (not just the one who physically collected it), each
+        // scaled by THEIR OWN CharacterStats.CoinGainMultiplier - "picking up 1 coin means everyone
+        // gets 1 coin, then each spends independently" per docs/breathing-poi.md.
+        public static void GrantAll(Frame f, FP baseAmount)
+        {
+            var filtered = f.Filter<PlayerLink>();
+
+            while (filtered.Next(out EntityRef entity, out PlayerLink _))
+            {
+                if (f.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats) == false)
+                    continue;
+
+                Grant(f, entity, baseAmount * stats->CoinGainMultiplier);
+            }
+        }
+
+        // Spends from ONE player's own wallet - used by Cursed Rift's Coin Offering sacrifice
+        // (CoinOfferingSacrificeData). Guards insufficient funds rather than allowing a negative
+        // balance.
+        public static bool TrySpend(Frame f, EntityRef player, FP amount)
+        {
+            if (f.Unsafe.TryGetPointer<CharacterStats>(player, out var stats) == false)
+                return false;
+
+            if (stats->Coins < amount)
+                return false;
+
+            stats->Coins -= amount;
+
+            Log.Debug($"[Coin] {player} spent {amount} -> {stats->Coins}");
+
+            return true;
         }
     }
 }

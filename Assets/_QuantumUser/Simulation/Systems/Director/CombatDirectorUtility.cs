@@ -104,6 +104,23 @@ namespace Quantum
             return pressure;
         }
 
+        // Refunds a fraction of the enemy's own cost into DirectorBudget, then destroys it. Called
+        // by EnemyLifecycleSystem's own natural Irrelevant->Retired timeout - "this Director-
+        // purchased enemy is going away without being killed" (see docs/survival-director.md).
+        // Breathing deliberately does NOT force-retire enemies of its own (see docs/run-phase.md) -
+        // it just stops spawning more and lets this same natural timeout (or a real player kill)
+        // clear whatever's left, which is also what SurvivalProgressionUtility.IsEncounterCleared
+        // waits on before the Break's own countdown starts.
+        public static void RetireEnemy(Frame f, EntityRef entity, EnemyDataAsset data, LifecycleConfig lifecycleConfig)
+        {
+            FP refund = data.ResolveCost(f) * lifecycleConfig.RefundFraction;
+            f.Global->DirectorBudget += refund;
+
+            Log.Debug($"[Director] retiring {entity} ({data.name}) - refunding {refund}, DirectorBudget now {f.Global->DirectorBudget}");
+
+            f.Destroy(entity);
+        }
+
         // Every entity with EnemyLifecycle is, by construction, a Director purchase - Retired
         // entities are destroyed the same tick they reach that state (see EnemyLifecycleSystem),
         // so anything still around counts as alive.

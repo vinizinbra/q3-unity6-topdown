@@ -19,7 +19,11 @@ MonoBehaviour:
   DamagePercent:
     RawValue: 6554
   RadiusMultiplier:
-    RawValue: 131072
+    RawValue: 98304
   TargetMask: 2
   Duration:
     RawValue: 327680
+  RiftMarkRadiusMultiplier:
+    RawValue: 131072
+  RiftMarkDamageMultiplier:
+    RawValue: 131072

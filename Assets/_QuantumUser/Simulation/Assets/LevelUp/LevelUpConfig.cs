@@ -10,10 +10,11 @@ namespace Quantum
     // Only WeaponPerk and GlobalUpgrade are pooled globally here - SkillUpgrade and PassiveUpgrade
     // are per-hero instead (see CharacterData.DashSkillUpgrades/PassiveUpgrades and HeroSkill's own
     // Actions - LevelUpUtility.AddHeroSkillUpgradeCandidates), since which skill/passive upgrades
-    // make sense depends on which hero is picking. Every
-    // candidate across all four kinds is weighted the same way, by its own UpgradeData.Rarity via
-    // GetWeight below - independent of WeaponPerkPoolData's own (differently-tuned) weights, which
-    // stay reserved for the original drop-roll mechanic (see WeaponGenerator).
+    // make sense depends on which hero is picking. Only WeaponPerk/RiftMutation candidates still
+    // carry a Rarity to weight by (via GetWeight below) - SkillUpgrade/GlobalUpgrade/PassiveUpgrade
+    // draw at a flat CommonWeight instead (see LevelUpUtility.ResolveWeight). GetWeight itself is
+    // independent of WeaponPerkPoolData's own (differently-tuned) weights, which stay reserved for
+    // the original drop-roll mechanic (see WeaponGenerator).
     //
     // LevelSequence/WeaponChoicePool/ChancePerLevelPerSlot/MaxRolledPerks below configure the newer
     // per-level category locking (LevelUpCategory) and the ChooseWeapon category specifically - see
@@ -41,8 +42,18 @@ namespace Quantum
         // Pooled globally same as GlobalUpgrades above, but a separate list/rarity axis - Rift
         // Mutations are non-stackable (see RiftMutationData/RiftMutationPicks), so they need their
         // own pick-history component rather than reusing GlobalUpgradePicks. See
-        // docs/rift-mutations.md.
+        // docs/rift-mutations.md. This is the "core" 14-mutation pool (Glass Core, Heavy Arsenal,
+        // ...) - Cursed Rift's own reward roll (LevelUpUtility.RollMutationOptions) deliberately
+        // only ever draws from this list, not RiftMarkMutations below.
         [ExpandableAsset] public List<AssetRef<RiftMutationData>> RiftMutations = new();
+
+        // A second, independently-rollable Rift Mutation pool (its own LevelUpPoolKind/
+        // LevelUpCategory) - the 11 "Rift Mark content pool" mutations that apply Rift Mark on some
+        // trigger (Critical Fracture, Last Stand, ...). Split from RiftMutations above so a designer
+        // can pace/gate the two groups independently via LevelSequence. Shares RiftMutationPicks'
+        // non-stack tracking with RiftMutations - both lists draw from the same RiftMutationData
+        // catalog and never overlap. See docs/rift-mutations.md.
+        [ExpandableAsset] public List<AssetRef<RiftMutationData>> RiftMarkMutations = new();
 
         [Header("Category sequence")]
         // Which single LevelUpCategory a given level is locked to - LevelUpUtility.

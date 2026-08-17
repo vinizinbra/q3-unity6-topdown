@@ -22,22 +22,22 @@ TagManager:
   - DeadEnemy
   - IgnoreProjectile
   - Obstacle
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Boss
+  -
+  -
+  -
+  -
+  -
+  -
+  -
+  -
+  -
+  -
+  -
+  -
+  -
+  -
+  -
   - 
   m_SortingLayers:
   - name: Default

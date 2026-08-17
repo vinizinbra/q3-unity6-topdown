@@ -103,18 +103,30 @@ a parallel do-nothing `CharacterStats` field.
 | Coin Gain | *(none)* | `CharacterStats.CoinGainMultiplier` | ❌ not a Global Upgrade yet - the Coin currency system exists (see below) with a real gain-multiplier field on `CharacterStats`, but no upgrade/mutation sources it today (same gap `RiftShardGainMultiplier` had before Greed). |
 
 **Coin** is a second, independent currency from Rift Shards (`docs/rift-mutations.md`'s own
-currency) - `Coin.qtn` (the pickup)/`Coins.qtn` (the run-wide `TotalCoins` global, co-op shared)/
-`CoinConfig`/`CoinUtility`/`CoinOrbSystem`, mirroring `RiftShardUtility`/`RiftShardOrbSystem`
-field-for-field. Both currencies now share the same drop shape: a per-tier `EnemyTierStatsConfig.
-TierStats` pair (`RiftShardValue`/`RiftShardDropChance` and `CoinValue`/`CoinDropChance`) gates
-*whether* a kill drops one at all - `Value > 0` is necessary but not sufficient, `TrySpawnDrop` also
-rolls `DropChance` (`DamageUtility.RollChance`, the same helper crit rolls use) before spawning -
-and the spawn position scatters away from the exact death point
-(`RiftShardConfig`/`CoinConfig`'s own `Min`/`MaxSpawnOffset`, `EnemyMovementUtility.
-RandomPositionInRing` - same pattern `ScrapConfig` already used) so multiple drops off one kill
-don't stack exactly on top of each other. `Tools/RiftRaiders/Generate Coin Assets` authors
-`CoinConfig.asset`; a `CoinOrb` `EntityPrototype` and `RuntimeConfig.CoinConfig`/`CoinPrototype`
-still need Editor authoring, same gap `RiftShardOrb` has (see `docs/rift-mutations.md`).
+currency) - `Coin.qtn` (the pickup)/`Coins.qtn`/`CoinConfig`/`CoinUtility`/`CoinOrbSystem`,
+mirroring `RiftShardUtility`/`RiftShardOrbSystem` field-for-field. Both currencies now share the
+same drop shape: a per-tier `EnemyTierStatsConfig.TierStats` pair (`RiftShardValue`/
+`RiftShardDropChance` and `CoinValue`/`CoinDropChance`) gates *whether* a kill drops one at all -
+`Value > 0` is necessary but not sufficient, `TrySpawnDrop` also rolls `DropChance`
+(`DamageUtility.RollChance`, the same helper crit rolls use) before spawning - and the spawn
+position scatters away from the exact death point (`RiftShardConfig`/`CoinConfig`'s own
+`Min`/`MaxSpawnOffset`, `EnemyMovementUtility.RandomPositionInRing` - same pattern `ScrapConfig`
+already used) so multiple drops off one kill don't stack exactly on top of each other. `Tools/
+RiftRaiders/Generate Coin Assets` authors `CoinConfig.asset`; a `CoinOrb` `EntityPrototype` and
+`RuntimeConfig.CoinConfig`/`CoinPrototype` still need Editor authoring, same gap `RiftShardOrb` has
+(see `docs/rift-mutations.md`).
+
+**As of the Cursed Rift pass (see `docs/breathing-poi.md`), both currencies moved from shared
+`Frame.Global` totals to PER-PLAYER wallets** (`CharacterStats.Coins`/`CharacterStats.RiftShards`),
+confirmed with the user - a Cursed Rift Coin/Rift Shard sacrifice needed to be a meaningful
+individual choice, not a party-wide tax. `CurrencyOrbSystem` still finds a pickup's radius/plays
+its collect event off whichever single player physically reached it, but the actual grant now
+broadcasts to every connected player's own wallet (`CoinUtility.GrantAll`/
+`RiftShardUtility.GrantAll`), each scaled by *their own* `CoinGainMultiplier`/
+`RiftShardGainMultiplier` - "picking up 1 coin means everyone gets 1 coin," then each player
+spends independently. `CoinUtility`/`RiftShardUtility` also gained a `TrySpend(f, player, amount)`
+(no spend method existed before this pass). Experience is unaffected - still a single shared
+`Frame.Global.TotalExperience` total, by design (co-op leveling stays shared).
 
 ## What changed to make the ✅ rows real
 

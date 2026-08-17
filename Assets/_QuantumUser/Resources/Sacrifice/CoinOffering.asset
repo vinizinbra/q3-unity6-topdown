@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 723b51dc150634ed4ae1c0bd2177502c, type: 3}
+  m_Name: CoinOffering
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.CoinOfferingSacrificeData
+  Identifier:
+    Path: _QuantumUser/Resources/Sacrifice/CoinOffering
+    Guid:
+      Value: 323194642415206961
+  Icon: {fileID: 0}
+  DisplayName: Coin Offering
+  TopLabel: WEALTH
+  Description: Pay 50% of your Coins.
+  ButtonLabel: PAY
+  Weight: 100
+  CoinPercent:
+    RawValue: 32768

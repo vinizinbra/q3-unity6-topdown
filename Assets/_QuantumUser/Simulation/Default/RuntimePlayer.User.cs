@@ -35,6 +35,21 @@ namespace Quantum
         // in-run-pickable Global Upgrade (see docs/level-up-upgrades.md's "Reroll" section).
         public byte RerollQuantity;
 
+        // Store weapon-offer-count talent - seeds CharacterStats.ShopWeaponOfferCount once at spawn
+        // (PlayerSpawnUtility.Spawn), same raw-flat-count shape as RerollQuantity above. Confirmed
+        // with the user: rank0 -> 1 offer, rank1 -> 2, rank2 -> 3 (StoreUtility.
+        // ResolveWeaponOfferCount reads it as +1, clamped to StoreConfig.MaxWeaponOfferSlots). See
+        // docs/store-blacksmith.md.
+        public byte ShopWeaponOfferCount;
+
+        // Starting-Coins talent - seeds CharacterStats.Coins once at spawn (PlayerSpawnUtility.
+        // Spawn), same raw-flat-value shape as RerollQuantity/ShopWeaponOfferCount above rather
+        // than a percent-scaled Player*Level multiplier - a head start on THIS run's own per-player
+        // Coin wallet (docs/breathing-poi.md's own currency-conversion section), not a permanent
+        // stat bonus. int (not byte) since this is a real currency amount, not a small 0-5 level -
+        // CharacterStats.Coins itself is FP, effectively unbounded.
+        public int StartingCoins;
+
         // Player* fields are baked into this player's own CharacterStats at spawn
         // (PlayerSpawnUtility.Spawn -> TalentUtility.ApplyPerPlayerTalents). Has*/Can* fields are
         // OR'd across every connected player (TalentUtility.ComputeSharedTalents) to decide what

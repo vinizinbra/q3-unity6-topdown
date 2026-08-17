@@ -328,7 +328,7 @@ MonoBehaviour:
     Guid:
       Value: 477699094528449997
   EnemyName: Charger
-  Tier: 1
+  Tier: 2
   Economy:
     Persistent: 0
     SpawnProfile:

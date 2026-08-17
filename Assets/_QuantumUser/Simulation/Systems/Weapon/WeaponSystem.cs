@@ -196,6 +196,12 @@ namespace Quantum
             if (StatusEffectUtility.IsStunned(f, filter.Entity) == true)
                 return;
 
+            // Same per-player input lock PlayerMovementProcessor/SkillSystem also gate on - a
+            // Cursed Rift/Store/Blacksmith Choice Window open for this player blocks firing without
+            // touching GameplaySystemGroup/Time.timeScale (see docs/breathing-poi.md).
+            if (PoiInteractionLockUtility.IsInputLocked(f, filter.Entity) == true)
+                return;
+
             if (HasFireDriver(f, filter.Entity) == false)
                 return;
 

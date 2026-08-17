@@ -38,11 +38,18 @@ namespace Quantum
         // EntityDamaged.HitIndex) - defaults to 0 for every caller except WeaponSystem.FireHitscan's
         // pellet loop, the only place multiple identical-damage hits can land on one stationary
         // target within a single tick.
+        // generatesResonance defaults true, so every existing caller (weapon fire, Totem/Speaker
+        // Damage Beats, any other hero) is unaffected. Zara's own already-Resonance-sourced effects
+        // (Resonance Pulse, Heavy Bass's Subwoofer, Afterbeat) pass false - see ResonanceUtility.
+        // OnDamageDealt's own call below - preventing a Resonance-fueled ability from recursively
+        // refunding the Resonance it just spent. A plain bool on this shared funnel rather than an
+        // owner-type check, so it composes with any future "this damage shouldn't build resource X"
+        // need without a hardcoded per-skill exception.
         public static void ApplyDamage(Frame f, EntityRef target, FP damage, EntityRef owner,
             DamageSource source = DamageSource.None, bool bypassOutgoingResolution = false,
             ElementType element = ElementType.Neutral, bool silent = false,
             bool isChainedExplosion = false, bool isExplosion = false,
-            byte hitIndex = 0)
+            byte hitIndex = 0, bool generatesResonance = true)
         {
             if (f.Unsafe.TryGetPointer<Health>(target, out var health) == false)
             {
@@ -165,8 +172,12 @@ namespace Quantum
             f.Events.EntityDamaged(target, owner, totalDamage, isCritical, element, silent, frontalMultiplier < FP._1, hitPosition, hitIndex);
 
             // Zara's Resonance - builds from dealing damage only, scaled by the amount actually
-            // dealt. No-ops on anything without Resonance (every hero but Zara).
-            ResonanceUtility.OnDamageDealt(f, owner, totalDamage);
+            // dealt. No-ops on anything without Resonance (every hero but Zara). Gated on
+            // generatesResonance so Zara's own Resonance-spending effects don't feed themselves.
+            if (generatesResonance == true)
+            {
+                ResonanceUtility.OnDamageDealt(f, owner, totalDamage);
+            }
 
             Log.Debug($"[Damage] {target} took {remaining} to health (raw {damage}, after stats {totalDamage}) " +
                       $"-> {health->CurrentHealth}/{health->MaxHealth}");
@@ -210,6 +221,15 @@ namespace Quantum
                 }
                 else
                 {
+                    // A Breakable prop (barrel/crate/breakable wall) is NOT destroyed on death - it
+                    // breaks in place (flips Broken, disables its collider, drops its loot table) so
+                    // its View can show a broken state. TryBreak returns true only for an unbroken
+                    // Breakable, in which case we leave the entity alive; anything else falls through
+                    // to the normal sentry/explode/destroy handling below unchanged. See
+                    // BreakableUtility.
+                    if (BreakableUtility.TryBreak(f, target, owner) == true)
+                        return;
+
                     TrySentryOverload(f, owner, target);
 
                     // ExplodeOnDestroy (see ExplodeOnDestroy.qtn) - the damage-death counterpart to
@@ -417,8 +437,10 @@ namespace Quantum
         // ride on that same entity, so destroying it silently wiped every upgrade earned this run.
         // Instead: refill Health/Shield and teleport back to the run's start position, same
         // "reposition without destroying" idiom PlayerFallSystem/PlayerSpawnUtility already use.
-        // Level/TotalExperience/TotalCoins/RiftShards are untouched either way since they already
-        // live on Frame.Global, not the player entity.
+        // Level/TotalExperience are untouched either way since they live on Frame.Global.
+        // CharacterStats.Coins/RiftShards (per-player wallets, see docs/breathing-poi.md) survive
+        // for the same reason every other CharacterStats field does here - the entity itself is
+        // never destroyed.
         private static void RespawnPlayer(Frame f, EntityRef target, Health* health)
         {
             health->CurrentHealth = health->MaxHealth;

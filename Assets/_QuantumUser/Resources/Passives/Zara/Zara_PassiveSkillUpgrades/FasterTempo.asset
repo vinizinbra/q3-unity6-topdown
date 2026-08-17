@@ -20,5 +20,18 @@ MonoBehaviour:
   DisplayName: Faster Tempo
   Rarity: 1
   Description: Generate Resonance faster.
-  GenerationBonus:
+  <MaxRank>k__BackingField: 3
+  RankDescriptions:
+  - Generate Resonance 25% faster.
+  - Generate Resonance 50% faster.
+  - Generate Resonance 75% faster and retain 20% Resonance after each Resonance Pulse.
+  BaseGenerationPerDamage:
     RawValue: 65536
+  GenerationBonus:
+  - RawValue: 16384
+  - RawValue: 32768
+  - RawValue: 49152
+  RetainFraction:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 13107

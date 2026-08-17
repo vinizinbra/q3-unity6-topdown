@@ -333,6 +333,50 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: RR_Food
+      rect:
+        serializedVersion: 2
+        x: 1057
+        y: 60
+        width: 226
+        height: 227
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 326cf4ac0fc3d4c35a7b0481f01a5ca6
+      internalID: 1241186201
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Burger
+      rect:
+        serializedVersion: 2
+        x: 756
+        y: 76
+        width: 207
+        height: 223
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0af2c356a3205453aab524760f8328a2
+      internalID: -436550040
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
@@ -347,8 +391,10 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
+      RR_Burger: -436550040
       RR_Coins: -803286303
       RR_Energy: -261064848
+      RR_Food: 1241186201
       RR_Gem: -76969221
       RR_Key: 111333015
       RR_Rift: -2056722183

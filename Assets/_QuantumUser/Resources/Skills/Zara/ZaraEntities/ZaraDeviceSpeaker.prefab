@@ -13,8 +13,7 @@ GameObject:
   - component: {fileID: 1429020409459626941}
   - component: {fileID: 479289808548400120}
   - component: {fileID: 3075379465504411015}
-  - component: {fileID: 6791935418692447420}
-  - component: {fileID: 3271377398794136904}
+  - component: {fileID: 1378695635191364677}
   m_Layer: 10
   m_Name: ZaraDeviceSpeaker
   m_TagString: Untagged
@@ -359,7 +358,7 @@ MonoBehaviour:
   OnEntityDestroyed:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &6791935418692447420
+--- !u!114 &1378695635191364677
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -418,34 +417,6 @@ MonoBehaviour:
     PelletIndex: 0
     SpeedMultiplier:
       RawValue: 0
---- !u!114 &3271377398794136904
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7346831472040157708}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f14d48f795ba0411ca36b0e49ec49d64, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Quantum.Unity::Quantum.QPrototypeAlternatingArea
-  Prototype:
-    CurrentlyHealing:
-      Value: 0
-    HealTargetMask:
-      Value: 0
-    HealEffects:
-    - Id:
-        Value: 898240819200457878
-    DamageAmount:
-      RawValue: 0
-    DamageMask:
-      Value: 0
-    DamageEffects:
-    - Id:
-        Value: 469090054098093962
-    DamagePulseCount: 0
 --- !u!1001 &7080865711105977369
 PrefabInstance:
   m_ObjectHideFlags: 0

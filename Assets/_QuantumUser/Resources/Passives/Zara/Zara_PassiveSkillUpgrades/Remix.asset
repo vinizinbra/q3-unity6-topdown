@@ -19,12 +19,11 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Remix
   Rarity: 2
-  Description: Every third Resonance Pulse also applies a random effect to enemies
-    caught in it.
-  Effects:
-  - Id:
-      Value: 396022305314247005
-  - Id:
-      Value: 441562846163677937
-  - Id:
-      Value: 502467422444154315
+  Description: Every third Resonance Pulse also applies a random status effect to
+    enemies caught in it.
+  <MaxRank>k__BackingField: 3
+  RankDescriptions:
+  - Every third Resonance Pulse applies a random status effect to enemies hit.
+  - Remix effects become stronger and last longer.
+  - Every third Resonance Pulse applies two different random status effects to enemies
+    hit.

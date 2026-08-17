@@ -7809,7 +7809,7 @@ MonoBehaviour:
         Value: 503423254243386843
     SurvivalConfig:
       Id:
-        Value: 322533958745177076
+        Value: 516156630782283822
     DirectorConfig:
       Id:
         Value: 416415362832844946
@@ -7831,6 +7831,18 @@ MonoBehaviour:
     CoinConfig:
       Id:
         Value: 308933191886885705
+    HealthOrbConfig:
+      Id:
+        Value: 312826867456356232
+    CursedRiftConfig:
+      Id:
+        Value: 493596684989510471
+    StoreConfig:
+      Id:
+        Value: 466436701424375694
+    BlacksmithConfig:
+      Id:
+        Value: 348202425962028469
     TalentsConfig:
       Id:
         Value: 344446873976981054
@@ -7856,12 +7868,14 @@ MonoBehaviour:
   - PlayerAvatar:
       Id:
         Value: 1271619087951089254
-    PlayerNickname: 
+    PlayerNickname: pixie
     test:
       RawValue: 0
     Talents:
-      WeaponLevel: 0
-      RerollQuantity: 0
+      WeaponLevel: 1
+      RerollQuantity: 2
+      ShopWeaponOfferCount: 1
+      StartingCoins: 500
       PlayerDamageLevel: 0
       PlayerCooldownLevel: 0
       PlayerFireRateLevel: 0

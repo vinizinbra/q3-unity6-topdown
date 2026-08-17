@@ -23,28 +23,69 @@ namespace Quantum
 
         public static void SpawnWithPop(Frame f, EntityRef orb, FPVector3 anchor, FP minOffset, FP maxOffset)
         {
+            SpawnWithPop(f, orb, anchor, minOffset, maxOffset, FP._0, FP._0);
+        }
+
+        // Same as above, plus an optional random "burst" velocity layered on top of the solved arc -
+        // each drop gets a random horizontal direction (speed 0..randomHorizontalSpeed) and a random
+        // upward kick (0..randomVerticalSpeed), so a pile of drops off one break scatters organically
+        // instead of every one tracing the identical 45-degree arc to its ring point. Both 0 (what the
+        // 5-arg overload passes) reproduces the original arc-only behavior exactly, so every existing
+        // caller (Coin/RiftShard/Scrap) is unchanged. PopMotionSystem re-resolves real ground under
+        // the orb every tick, so any launch velocity lands safely - a bigger random kick just travels
+        // further before settling, never underground.
+        public static void SpawnWithPop(Frame f, EntityRef orb, FPVector3 anchor, FP minOffset, FP maxOffset,
+            FP randomHorizontalSpeed, FP randomVerticalSpeed)
+        {
             if (f.Unsafe.TryGetPointer<Transform3D>(orb, out var orbTransform) == false)
                 return;
 
             orbTransform->Position = anchor;
 
-            if (maxOffset <= FP._0)
+            FPVector3 velocity = ResolveRandomPopVelocity(f, randomHorizontalSpeed, randomVerticalSpeed);
+
+            if (maxOffset > FP._0)
             {
+                FPVector3 landing = EnemyMovementUtility.RandomPositionInRing(f, anchor, minOffset, maxOffset);
+                FP gravity = FPMath.Abs(f.SimulationConfig.Physics.Gravity.Y);
+                ProjectileLaunch launch = ProjectileSpawner.SolveArcLaunch(anchor, landing, PopLaunchAngle, gravity);
+
+                if (launch.IsValid == true)
+                    velocity += launch.Velocity;
+            }
+
+            if (velocity.SqrMagnitude <= FP._0)
+            {
+                // Neither a ring scatter nor a random kick was requested (or the arc solve failed with
+                // no random component to fall back on) - just ground-snap in place, exactly as the
+                // arc-only path did before.
                 GroundOffsetUtility.Apply(f, orb, orbTransform);
                 return;
             }
 
-            FPVector3 landing = EnemyMovementUtility.RandomPositionInRing(f, anchor, minOffset, maxOffset);
-            FP gravity = FPMath.Abs(f.SimulationConfig.Physics.Gravity.Y);
-            ProjectileLaunch launch = ProjectileSpawner.SolveArcLaunch(anchor, landing, PopLaunchAngle, gravity);
+            f.Add(orb, new PopVelocity { Velocity = velocity });
+        }
 
-            if (launch.IsValid == false)
+        // Deterministic random burst - a random compass direction at a random speed in
+        // [0, horizontalSpeed], plus a random upward speed in [0, verticalSpeed]. Same f.RNG->Next
+        // idiom EnemyMovementUtility.RandomPositionInRing uses, so it stays lockstep across clients.
+        private static FPVector3 ResolveRandomPopVelocity(Frame f, FP horizontalSpeed, FP verticalSpeed)
+        {
+            FPVector3 velocity = FPVector3.Zero;
+
+            if (horizontalSpeed > FP._0)
             {
-                GroundOffsetUtility.Apply(f, orb, orbTransform);
-                return;
+                FP angle = f.RNG->Next(0, 360);
+                FP speed = f.RNG->Next(FP._0, horizontalSpeed);
+                velocity += FPQuaternion.Euler(0, angle, 0) * FPVector3.Forward * speed;
             }
 
-            f.Add(orb, new PopVelocity { Velocity = launch.Velocity });
+            if (verticalSpeed > FP._0)
+            {
+                velocity.Y += f.RNG->Next(FP._0, verticalSpeed);
+            }
+
+            return velocity;
         }
     }
 }

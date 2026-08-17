@@ -26,6 +26,19 @@
             // regardless of pause state. See docs/chests.md.
             systems.Add(new MapGroundSettleSystem());
 
+            // Same "must react the instant it materializes, regardless of pause state" shape as
+            // MapGroundSettleSystem just above - forces every hand-placed BossArenaGate's collider
+            // disabled on creation, so a level designer can't forget to uncheck IsEnabled on one and
+            // leave a corridor solid from the start of the run. See docs/run-phase.md's "Boss phase
+            // trigger".
+            systems.Add(new BossArenaGateSystem());
+
+            // Always-on driver for the Boss encounter's own brief hard pause (see
+            // RunPhaseUtility.BeginBossEncounter/GameState.qtn's own BossPauseTimer comment) - same
+            // "can't live inside the group it's the one responsible for re-enabling" reasoning
+            // LevelUpSystem/ChestSystem/DebugCheatSystem below already document for themselves.
+            systems.Add(new BossPauseSystem());
+
             // Talents (see docs/talents.md) - resolves the shared/coop talent aggregate once, as
             // soon as every connected player has spawned, then spawns whichever Lobby chests were
             // earned directly inside the LobbyStart chunk's own footprint. Must run before
@@ -43,6 +56,14 @@
             // keep reacting to its own Chest.Opened flag even while a screen (its own or an
             // Exp-driven one) has GameplaySystemGroup disabled. See docs/chests.md.
             systems.Add(new ChestSystem());
+
+            // Debug-only match-start cheats (see RuntimeConfig.User.cs' DebugStartSurvivalTimeSeconds/
+            // DebugStartLevelUpCount and DebugCheatSystem's own comment) - always-on for the same
+            // reason as LevelUpSystem/ChestSystem above, so it keeps reacting to a debug-queued level-up
+            // screen resolving even while GameplaySystemGroup is disabled for the previous one. Placed
+            // right before LobbyBoundarySystem so its one-shot Lobby-skip (if configured) is visible to
+            // that system's own gate this same tick.
+            systems.Add(new DebugCheatSystem());
 
             // Lobby Start (see docs/talents.md) - transitions Global.CurrentState from Lobby to
             // Survival once every connected, spawned player has walked outside the LobbyStart
@@ -64,6 +85,8 @@
                 // waiting a full tick. Reads player position/velocity as of last tick's resolved
                 // values (runs before KCCSystem) - fine, since the "moving combat bubble" prediction
                 // is only recomputed once per Director pulse, every few seconds.
+                // Also drives the Combat<->Breathing loop now (Breathing is just another entry in
+                // SurvivalConfig.Phases[], see docs/run-phase.md) - no separate system needed.
                 new CombatDirectorSystem(),
                 new KCCSystem(),
                 // Must run after KCCSystem so it reacts to this tick's freshly-resolved grounded state.
@@ -72,6 +95,11 @@
                 // state before checking whether the player has fallen off the level.
                 new PlayerFallSystem(),
                 new AimSystem(),
+                // Right after AimSystem so it reads this tick's fresh Aim.Target - advances the
+                // "hold the reticle on a barrel for BreakDelay seconds" dwell for any Breakable a
+                // player is auto-targeting, and breaks it once the dwell completes. See
+                // BreakableFocusSystem/Breakable.qtn.
+                new BreakableFocusSystem(),
                 // Before WeaponSystem, same reason AimSystem itself runs before it - resolves each
                 // SentryBarrel's own independent target/Aim/InputSource this tick (see
                 // SentryBarrelSystem - every barrel searches from its own position, not a shared
@@ -117,6 +145,11 @@
                 // DemolitionMasteryUtility), since it needs the blast's center/radius, not just a
                 // signal payload.
                 new PixieDemolitionMasterySystem(),
+                // Resolves each player's own ContextInteraction.ActiveTarget (Base-Skill-button
+                // redirect, see ContextInteraction.qtn/docs/breathing-poi.md) - must run before
+                // SkillSystem, which reads it the same tick to decide whether a Hero Skill press
+                // casts the real skill or opens a Cursed Rift interaction instead.
+                new ContextInteractionSystem(),
                 // Must run after KCCSystem (KCC.SetActive/Teleport need this tick's movement already
                 // resolved) and after AimSystem (DashSkillData reads Aim.Angle as a facing fallback).
                 new SkillSystem(),
@@ -130,6 +163,17 @@
                 // Debug-only command processor for LevelUpPoolKind.RiftMutation - same reasoning and
                 // placement as GlobalUpgradeSystem just above (see RiftMutationSystem's own comment).
                 new RiftMutationSystem(),
+                // Command-processing driver for Cursed Rift's own two-step sacrifice/mutation
+                // interaction (see CursedRiftUtility/docs/breathing-poi.md) - placed alongside
+                // RiftMutationSystem since it's the same "debug/command processor for a
+                // LevelUp-adjacent pool" shape, though CursedRiftSystem is player-triggered, not
+                // debug-only.
+                new CursedRiftSystem(),
+                // Command-processing drivers for Store/Blacksmith's own interactions (see
+                // StoreUtility/BlacksmithUtility/docs/store-blacksmith.md) - same "debug/command
+                // processor for a LevelUp-adjacent pool" shape as CursedRiftSystem just above.
+                new StoreSystem(),
+                new BlacksmithSystem(),
                 // After SkillSystem (so a SlowArea entity spawned this same tick already exists here)
                 // and before both EnemySystem and ProjectileSystem (so a same-tick-fresh
                 // TimeDilation/SpeedMultiplier is what their own Tick/Update calls read this tick, not
@@ -141,6 +185,10 @@
                 // its own decision, rather than being immediately overwritten by it. Only touches
                 // entities that actually have BossRuntimeState (see that component's own comment).
                 new BossSystem(),
+                // Boss/Elite-only equivalent of PlayerFallSystem (see its own header comment) -
+                // right after EnemySystem/BossSystem so it reads this tick's resolved
+                // Transform3D.Position before anything else acts on a freshly-respawned position.
+                new EnemyFallSystem(),
                 new ProjectileSystem(),
                 // Must run before AreaDamageSystem so the phase it swaps in for this tick's pulse is
                 // what actually gets applied, not last tick's - see AlternatingAreaSystem.
@@ -163,6 +211,10 @@
                 // No ordering dependency on anything else - a popped orb (OrbSpawnUtility.SpawnWithPop)
                 // just needs to keep integrating its own arc every tick regardless of what else ran.
                 new PopMotionSystem(),
+                // No ordering dependency on anything else - marks Chunk.Discovered as players walk
+                // into a chunk's footprint, feeding the minimap's "?" -> real icon reveal. See
+                // docs/minimap.md.
+                new ChunkDiscoverySystem(),
                 // No ordering dependency on anything else - just needs to run each tick regardless of
                 // whether Brutus is still nearby or using the skill (see JuggernautDischargeCooldown).
                 new JuggernautDischargeCooldownSystem(),
@@ -190,6 +242,9 @@
                 // Zara's Afterbeat dash ascension - no ordering dependency on anything else, same
                 // reasoning as JuggernautDischargeCooldownSystem's own placement comment.
                 new ZaraAfterbeatSystem(),
+                // Zara's Heavy Bass rank 3 "Subwoofer" - same independent-countdown shape as
+                // ZaraAfterbeatSystem just above, placed alongside it for the same reason.
+                new ZaraSubwooferPulseSystem(),
                 new SentryAuraSystem(),
                 // Drains a sentry's own Health toward 0 over its lifetime - a real hit as far as
                 // DamageUtility is concerned (resets Shield's RechargeTimer like any other), so it must
@@ -221,6 +276,17 @@
                 // re-entrancy concern of its own (unlike Grant/BeginLevelUpScreen), but there's no
                 // reason to place it anywhere else either.
                 new ScrapOrbSystem(),
+                // Same shape as CurrencyOrbSystem (walk-into-radius collect, runs before
+                // DestroyAfterTimeSystem since it also f.Destroys) - collects HealthOrbs dropped by a
+                // Breakable's loot table and heals the collecting player. See HealthOrbSystem.
+                new HealthOrbSystem(),
+                // Healing Shrine has no system of its own - it's press-to-heal via the same
+                // Base-Skill-button redirect Cursed Rift uses (HealingShrineUtility.TryInteract,
+                // called from SkillSystem), not a walk-into-radius system - see docs/breathing-poi.md.
+                // After SkillSystem AND CursedRiftSystem (both much earlier, near RiftMutationSystem/
+                // ContextInteractionSystem) so a usage marked by either this same tick is already
+                // reflected in PoiActivation.State this same tick, not one tick stale.
+                new PoiActivationSystem(),
                 // After every hit-resolving system above (this tick's Enemy.Phase is fully settled, so
                 // a same-tick combat death is correctly excluded from retirement/refund) and before
                 // DestroyAfterTimeSystem, preserving that system's own "must be last" invariant since

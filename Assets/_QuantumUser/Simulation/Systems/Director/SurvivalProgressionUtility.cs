@@ -9,15 +9,54 @@ namespace Quantum
         // Advances SurvivalTime/PhaseTimer and, once the current phase's Duration elapses,
         // CurrentPhaseIndex - holding forever once the last authored phase is reached (its
         // Duration is simply never checked again). Returns the phase now in effect this tick.
+        //
+        // SurvivalTime and PhaseTimer are deliberately INDEPENDENT clocks, not the same value
+        // read two ways: PhaseTimer tracks "how long has the CURRENT phase (combat OR Breathing)
+        // been running" - it resets to 0 on every phase transition and is what actually drives
+        // that transition, so it has to keep advancing through a Breathing phase too (otherwise
+        // the Break would never end). SurvivalTime tracks "how much COMBAT time has this run
+        // accumulated" (consumed by BalanceConfig's run curves/co-op scaling, and any HUD run
+        // timer) - it freezes entirely during a Breathing phase, so a phase authored with
+        // Duration=120 always starts its successor at SurvivalTime==120 REGARDLESS of how long
+        // (or whether) any Breathing Break in between actually ran - a designer's authored combat
+        // pacing in SurvivalConfig.Phases[] is never silently stretched by break time, and a
+        // player-voted early skip (see RunPhaseUtility.TryForceSkipBreathing) shortens the
+        // Breathing phase itself without needing any special-case math here - PhaseTimer simply
+        // reaches Duration sooner, SurvivalTime was never touched either way. PhaseTimer ALSO
+        // stops advancing while the current phase's own encounter isn't cleared yet - Elite/Boss
+        // hold on their own matching EnemyDataAsset.Tier, Breathing holds on ANY currently-alive
+        // enemy (see IsEncounterCleared below) - so a Break's own countdown doesn't even start
+        // until the area is actually clear, even though spawning stops and SurvivalTime freezes
+        // the instant the phase boundary is crossed either way.
         public static SurvivalPhase Tick(Frame f, SurvivalConfig config)
         {
-            f.Global->SurvivalTime += f.DeltaTime;
-            f.Global->PhaseTimer += f.DeltaTime;
-
             SurvivalPhase currentPhase = config.Phases[f.Global->CurrentPhaseIndex];
+
+            if (currentPhase.Kind != SurvivalPhaseKind.Breathing)
+                f.Global->SurvivalTime += f.DeltaTime;
+
+            // Elite/Boss phases hold open until every currently-alive enemy of the matching
+            // EnemyDataAsset.Tier is dead - "however many got spawned" (an Elite/Boss phase can
+            // spawn more than one), not a fixed Duration countdown. Breathing holds open until
+            // EVERY currently-alive enemy (any tier) is dead or naturally Retired - Breathing does
+            // NOT force-clear enemies (deliberately, see docs/run-phase.md - a force-clear would
+            // instantly empty the screen and defeat this hold entirely), it only stops spawning
+            // more; whatever's left has to actually be killed or fall Irrelevant long enough to
+            // auto-retire (EnemyLifecycleSystem, unchanged, still runs during Breathing). PhaseTimer
+            // itself genuinely stops advancing while blocked (same "freeze, don't just gate the
+            // transition" idiom SurvivalTime's own Breathing freeze above already uses) rather than
+            // being held just under Duration, so nudging Duration in the Editor can't accidentally
+            // let it slip past while an encounter is still live.
+            bool encounterCleared = IsEncounterCleared(f, currentPhase.Kind);
+
+            f.Global->BreathingAreaSecured = currentPhase.Kind == SurvivalPhaseKind.Breathing && encounterCleared;
+
+            if (encounterCleared == true)
+                f.Global->PhaseTimer += f.DeltaTime;
+
             bool isLastPhase = f.Global->CurrentPhaseIndex >= config.Phases.Length - 1;
 
-            if (isLastPhase == false && f.Global->PhaseTimer >= currentPhase.Duration)
+            if (isLastPhase == false && encounterCleared == true && f.Global->PhaseTimer >= currentPhase.Duration)
             {
                 f.Global->CurrentPhaseIndex++;
                 f.Global->PhaseTimer = FP._0;
@@ -26,6 +65,43 @@ namespace Quantum
             }
 
             return currentPhase;
+        }
+
+        // Combat has no encounter gate at all - always cleared. Elite/Boss hold on their own
+        // matching EnemyDataAsset.Tier; Breathing holds on ANY currently-alive enemy regardless of
+        // tier - "killed or expired" (see CombatDirectorUtility.RetireEnemy - the natural
+        // Irrelevant->Retired timeout, Breathing has no force-clear of its own), not just a
+        // specific kind. Checked live via a plain
+        // filter every tick (same "read live, never maintain a separate counter that could desync"
+        // idiom PoiActivationUtility.AnyConnectedPlayerCanUse already uses for its own per-tick
+        // liveness check) rather than tracking spawn/death counts, so there's no bookkeeping that
+        // could ever drift from what's actually alive. Enemies are still spawned by the normal
+        // CombatDirectorUtility.TryPulse pulse off the phase's own AllowedGroups, unchanged (never
+        // during Breathing either way, see CombatDirectorSystem) - this only gates the PHASE
+        // TRANSITION, not spawning itself.
+        private static bool IsEncounterCleared(Frame f, SurvivalPhaseKind kind)
+        {
+            if (kind == SurvivalPhaseKind.Combat)
+                return true;
+
+            var filtered = f.Filter<Enemy>();
+
+            while (filtered.Next(out EntityRef _, out Enemy enemy))
+            {
+                if (enemy.Phase == EnemyActionPhase.Dead)
+                    continue;
+
+                if (kind == SurvivalPhaseKind.Breathing)
+                    return false;
+
+                EnemyDataAsset data = f.FindAsset(enemy.EnemyData);
+                EnemyTier requiredTier = kind == SurvivalPhaseKind.Elite ? EnemyTier.Elite : EnemyTier.Boss;
+
+                if (data.Tier == requiredTier)
+                    return false;
+            }
+
+            return true;
         }
     }
 }

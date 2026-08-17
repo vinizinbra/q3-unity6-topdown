@@ -68,7 +68,6 @@ namespace QuantumUser.Editor
             LastStandSkillAction lastStand = CreateOrUpdate<LastStandSkillAction>($"{OverdriveUpgradesFolderPath}/LastStandSkillAction.asset", asset =>
             {
                 asset.DisplayName = "Last Stand";
-                asset.Rarity = UpgradeRarity.Epic;
                 asset.Activated = false;
                 asset.MaxRank = 3;
                 asset.Description = "Overdrive grows harder to punish - keep your Rage on hit, retaliate when struck, and cheat death outright.";
@@ -86,7 +85,6 @@ namespace QuantumUser.Editor
             FullThrottleSkillAction fullThrottle = CreateOrUpdate<FullThrottleSkillAction>($"{OverdriveUpgradesFolderPath}/FullThrottleSkillAction.asset", asset =>
             {
                 asset.DisplayName = "Full Throttle";
-                asset.Rarity = UpgradeRarity.Rare;
                 asset.Activated = false;
                 asset.MaxRank = 3;
                 asset.Description = "At max Rage during Overdrive, gain bonus Weapon Damage - eventually Reload Speed and instant reloads too.";
@@ -103,7 +101,6 @@ namespace QuantumUser.Editor
             UncontrolledFurySkillAction uncontrolledFury = CreateOrUpdate<UncontrolledFurySkillAction>($"{OverdriveUpgradesFolderPath}/UncontrolledFurySkillAction.asset", asset =>
             {
                 asset.DisplayName = "Uncontrolled Fury";
-                asset.Rarity = UpgradeRarity.Rare;
                 asset.Activated = false;
                 asset.MaxRank = 3;
                 asset.Description = "Kills during Overdrive extend the activation - killing your Vendetta target extends it further still.";
@@ -122,7 +119,6 @@ namespace QuantumUser.Editor
             IgnitionSkillAction ignition = CreateOrUpdate<IgnitionSkillAction>($"{OverdriveUpgradesFolderPath}/IgnitionSkillAction.asset", asset =>
             {
                 asset.DisplayName = "Ignition";
-                asset.Rarity = UpgradeRarity.Epic;
                 asset.Activated = false;
                 asset.MaxRank = 3;
                 asset.Description = "At max Rage during Overdrive, every hit guarantees Burn - eventually leaving a trail of fire and igniting the battlefield outright.";
@@ -151,7 +147,6 @@ namespace QuantumUser.Editor
             BloodDebtPassiveUpgradeData bloodDebt = CreateOrUpdate<BloodDebtPassiveUpgradeData>($"{VendettaUpgradesFolderPath}/BloodDebt.asset", asset =>
             {
                 asset.DisplayName = "Blood Debt";
-                asset.Rarity = UpgradeRarity.Rare;
                 asset.MaxRank = 3;
                 asset.Description = "Vendetta marks last longer, Shield damage counts toward them too, and eventually Vendetta heals for the full amount dealt.";
                 asset.RankDescriptions = new[]
@@ -167,7 +162,6 @@ namespace QuantumUser.Editor
             BurningVengeancePassiveUpgradeData burningVengeance = CreateOrUpdate<BurningVengeancePassiveUpgradeData>($"{VendettaUpgradesFolderPath}/BurningVengeance.asset", asset =>
             {
                 asset.DisplayName = "Burning Vengeance";
-                asset.Rarity = UpgradeRarity.Epic;
                 asset.MaxRank = 3;
                 asset.Description = "Consuming a Vendetta mark spreads Burn to nearby enemies - eventually detonating a fiery burst if the kill was already Burning.";
                 asset.RankDescriptions = new[]
@@ -185,7 +179,6 @@ namespace QuantumUser.Editor
             WildfirePassiveUpgradeData wildfire = CreateOrUpdate<WildfirePassiveUpgradeData>($"{FireMasteryUpgradesFolderPath}/Wildfire.asset", asset =>
             {
                 asset.DisplayName = "Wildfire";
-                asset.Rarity = UpgradeRarity.Epic;
                 asset.MaxRank = 3;
                 asset.Description = "Killing any Burning enemy spreads the fire to nearby enemies - eventually propagating the dying enemy's own live Burn instead of a flat amount.";
                 asset.RankDescriptions = new[]
@@ -204,7 +197,6 @@ namespace QuantumUser.Editor
             FlashpointPassiveUpgradeData flashpoint = CreateOrUpdate<FlashpointPassiveUpgradeData>($"{FireMasteryUpgradesFolderPath}/Flashpoint.asset", asset =>
             {
                 asset.DisplayName = "Flashpoint";
-                asset.Rarity = UpgradeRarity.Legendary;
                 asset.MaxRank = 3;
                 asset.Description = "Burning enemies become far more dangerous to be near - bonus Critical Chance, crits that detonate, and eventually outright execution.";
                 asset.RankDescriptions = new[]
@@ -225,7 +217,6 @@ namespace QuantumUser.Editor
             RunAndGunSkillAction runAndGun = CreateOrUpdate<RunAndGunSkillAction>($"{DashUpgradesFolderPath}/RunAndGunSkillAction.asset", asset =>
             {
                 asset.DisplayName = "Run & Gun";
-                asset.Rarity = UpgradeRarity.Rare;
                 asset.MaxRank = 3;
                 asset.Description = "Dashing restores ammo and grants a brief Fire Rate window - eventually adding bonus Weapon Damage and a window of unlimited ammo.";
                 asset.RankDescriptions = new[]
@@ -245,7 +236,6 @@ namespace QuantumUser.Editor
             VendettaStrikeSkillAction vendettaStrike = CreateOrUpdate<VendettaStrikeSkillAction>($"{DashUpgradesFolderPath}/VendettaStrikeSkillAction.asset", asset =>
             {
                 asset.DisplayName = "Vendetta Strike";
-                asset.Rarity = UpgradeRarity.Rare;
                 asset.MaxRank = 3;
                 asset.Description = "Dashing through an enemy guarantees Burn - eventually also marking it for Vendetta and rewarding Overdrive.";
                 asset.RankDescriptions = new[]

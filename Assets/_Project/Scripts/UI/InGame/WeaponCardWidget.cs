@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 // A single Choose-Weapon option card - one per LevelUpChoice.Options entry when that screen's
-// options are all LevelUpPoolKind.ChooseWeapon (see UpgradeWindow.RefreshWeaponChoice). Deliberately
+// options are all LevelUpPoolKind.ChooseWeapon (see ChooseWindow.RefreshWeaponChoice). Deliberately
 // a separate widget from UpgradeCardWidget rather than a reinterpreted CardData - a rolled weapon
 // has no single Rarity/description, it has a name/icon plus a variable-length list of individually-
 // rarity'd rolled perks, which needs its own small per-perk row (see WeaponCardPerkRowWidget). Pure
@@ -36,6 +36,10 @@ public class WeaponCardWidget : MonoBehaviour
         // Length == the option's own RolledPerkCount (0-3) - perkRows below hides any row past
         // this length.
         public PerkRowData[] Perks;
+
+        // Store weapon-offer purchase affordance (see docs/store-blacksmith.md) - ShowPurchaseUi
+        // defaults false, so the existing Choose-Weapon level-up call site is unaffected.
+        public PurchasableCardState Purchase;
     }
 
     [Serializable]
@@ -80,6 +84,17 @@ public class WeaponCardWidget : MonoBehaviour
     [SerializeField, Tooltip("Fixed rows, one per possible rolled perk (sized to LevelUpConfig.MaxRolledPerks) - rows past the option's own RolledPerkCount are hidden.")]
     private WeaponCardPerkRowWidget[] perkRows;
 
+    [Header("Purchase (Store weapon offer)")]
+    [SerializeField, Tooltip("Root of the price/currency-icon/Buy-affordance row - shown only when CardData.Purchase.ShowPurchaseUi is true. Optional - only Store cards use this.")]
+    private GameObject purchaseRoot;
+    [SerializeField] private TMP_Text priceText;
+    [SerializeField, Tooltip("Sprite resolved at runtime via SpriteManager.GetSprite(Purchase.Currency) - see PurchasableCardUi.Apply. No per-widget sprite list needed.")]
+    private Image currencyIcon;
+    [SerializeField, Tooltip("Overlay shown when CardData.Purchase.IsSoldOut is true - the card stays visible/de-emphasized rather than being removed.")]
+    private GameObject soldOutOverlay;
+    [SerializeField, Tooltip("Shown INSTEAD of the card's normal `button` (\"CHOOSE\") whenever CardData.Purchase.ShowPurchaseUi is true - the two are mutually exclusive. Fires the same onClicked event as `button`.")]
+    private Button buyButton;
+
     [SerializeField] private Button button;
 
     public event Action<WeaponCardWidget> onClicked;
@@ -88,6 +103,9 @@ public class WeaponCardWidget : MonoBehaviour
     {
         if (button != null)
             button.onClick.AddListener(() => onClicked?.Invoke(this));
+
+        if (buyButton != null)
+            buyButton.onClick.AddListener(() => onClicked?.Invoke(this));
     }
 
     public void Setup(CardData data, bool interactable)
@@ -140,7 +158,12 @@ public class WeaponCardWidget : MonoBehaviour
                 perkRows[i].Setup(data.Perks[i]);
         }
 
+        PurchasableCardUi.Apply(data.Purchase, purchaseRoot, priceText, currencyIcon, soldOutOverlay, button, buyButton, ref interactable);
+
         if (button != null)
             button.interactable = interactable;
+
+        if (buyButton != null)
+            buyButton.interactable = interactable;
     }
 }

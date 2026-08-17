@@ -117,6 +117,8 @@ MonoBehaviour:
   - {fileID: 73819991260933395, guid: 97aac4a0d469b48188820ea657ddd959, type: 3}
   edgeYaw: 270
   edgeScaleOverlap: 0.2
+  avoidNearWallDetails: 0
+  detailAvoidRadius: 1
   outerCornerPrefabs:
   - {fileID: 4366759823961815167, guid: a38e8ce5d76d2426e9b58f0ba065998e, type: 3}
   - {fileID: 8588932187785433069, guid: 285d34824f0944809a05eab4bbb808ca, type: 3}
@@ -302,6 +304,8 @@ MonoBehaviour:
   - {fileID: 73819991260933395, guid: 97aac4a0d469b48188820ea657ddd959, type: 3}
   edgeYaw: 270
   edgeScaleOverlap: 0.2
+  avoidNearWallDetails: 0
+  detailAvoidRadius: 1
   outerCornerPrefabs:
   - {fileID: 4366759823961815167, guid: a38e8ce5d76d2426e9b58f0ba065998e, type: 3}
   - {fileID: 8588932187785433069, guid: 285d34824f0944809a05eab4bbb808ca, type: 3}
@@ -487,6 +491,8 @@ MonoBehaviour:
   - {fileID: 73819991260933395, guid: 97aac4a0d469b48188820ea657ddd959, type: 3}
   edgeYaw: 270
   edgeScaleOverlap: 0.2
+  avoidNearWallDetails: 0
+  detailAvoidRadius: 1
   outerCornerPrefabs:
   - {fileID: 4366759823961815167, guid: a38e8ce5d76d2426e9b58f0ba065998e, type: 3}
   - {fileID: 8588932187785433069, guid: 285d34824f0944809a05eab4bbb808ca, type: 3}
@@ -949,6 +955,142 @@ MonoBehaviour:
     OriginCellX: 0
     OriginCellZ: 0
     Rotation:
+      Value: 0
+    Waypoints:
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    - LocalPosition:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      ConnectionMask: 0
+    WaypointCount: 0
+    SpawnConfig:
+      Id:
+        Value: 0
+    AllowedConnectionSides: 1
+    Discovered:
       Value: 0
 --- !u!114 &6992737075964169537
 MonoBehaviour:

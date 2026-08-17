@@ -1,5 +1,6 @@
 namespace Quantum
 {
+    using Photon.Deterministic;
     using UnityEngine.Scripting;
 
     // World-level Director logic (Domains 1+2 of the Survival Director design: Survival
@@ -9,6 +10,11 @@ namespace Quantum
     // would only add a second SystemSetup.User.cs entry for zero decoupling benefit. The
     // Domain 1/2 conceptual split still exists in code as two separate utility calls below, just
     // not as two system classes.
+    //
+    // Also owns the Combat<->Breathing transition (see docs/run-phase.md) - Breathing is just
+    // another entry in the same SurvivalConfig.Phases[] timeline (SurvivalPhase.Kind), so
+    // detecting it is a natural extension of the phase progression this system already drives,
+    // not a separate system watching the same state from outside.
     //
     // Unfiltered SystemMainThread, like LevelGenerationSystem - this is world/match-level logic,
     // not per-entity. Placed immediately after LevelGenerationSystem, before every other system:
@@ -27,12 +33,13 @@ namespace Quantum
             if (PlayerSpawnUtility.IsReadyToSpawn(f) == false)
                 return;
 
-            // Only the Survival state actually runs the Director - see GameState.qtn. Lobby
-            // (LobbyBoundarySystem hasn't resolved yet) and Upgrade (GameplaySystemGroup itself
-            // is disabled, so this wouldn't even tick, but this stays explicit rather than
-            // relying on that alone) both keep the timeline paused; Event/Boss will too once
-            // either is actually wired.
-            if (f.Global->CurrentState != GameState.Survival)
+            // Progression (and therefore Breathing) now runs through BOTH Survival and Breathing -
+            // Breathing is just a phase in the same timeline, so it can't be excluded by this gate
+            // the way it used to be. Lobby (LobbyBoundarySystem hasn't resolved yet) and Upgrade
+            // (GameplaySystemGroup itself is disabled, so this wouldn't even tick, but this stays
+            // explicit rather than relying on that alone) both keep the timeline paused; Event/Boss
+            // will too once either is actually wired. See GameState.qtn.
+            if (f.Global->CurrentState != GameState.Survival && f.Global->CurrentState != GameState.Breathing)
                 return;
 
             if (f.RuntimeConfig.SurvivalConfig.Id.IsValid == false ||
@@ -56,8 +63,82 @@ namespace Quantum
 
             ValidateOnce(directorConfig, lifecycleConfig);
 
+            // Processes any SkipBreathingCommand sent this tick and, if every connected player has
+            // now voted, force-ends the CURRENT Breathing phase THIS tick before Tick even runs -
+            // see RunPhaseUtility.TryForceSkipBreathing's own comment.
+            RunPhaseUtility.TryForceSkipBreathing(f, survivalConfig);
+
             SurvivalPhase currentPhase = SurvivalProgressionUtility.Tick(f, survivalConfig);
+
+            ApplyPhaseGameState(f, currentPhase);
+
+            if (currentPhase.Kind == SurvivalPhaseKind.Breathing)
+                return; // no Director spawning during a Breathing phase
+
             CombatDirectorUtility.TryPulse(f, currentPhase, directorConfig, lifecycleConfig);
+        }
+
+        // Keeps Global.CurrentState in sync with whichever phase is now in effect, and runs the
+        // one-shot transition side effects exactly once, on the tick the phase's own Kind actually
+        // changes (GameStateUtility.SetState itself already no-ops on an unchanged value, but the
+        // CursedRift/Store/Blacksmith sweep and BeginBossEncounter below must NOT re-run every
+        // tick, hence the explicit compare before either). Also maintains
+        // Global.BreathingTimeRemaining (the current phase's own Duration minus PhaseTimer) purely
+        // as a cheap client-facing convenience value - BreathingCountdownWidget reads it directly
+        // with no asset lookup.
+        //
+        // Entering Breathing deliberately has NO side effect here anymore - enemies are left alone
+        // (no force-clear) so SurvivalProgressionUtility.IsEncounterCleared's own Breathing hold
+        // has something real to wait on: killed by players, or naturally Retired via the existing
+        // EnemyLifecycle Irrelevant timeout (docs/survival-director.md), same as any other enemy
+        // that falls out of relevance mid-combat. A force-clear here would instantly empty the
+        // screen the moment Breathing begins, defeating that hold entirely - see docs/run-phase.md.
+        //
+        // Entering Boss DOES have a real one-shot side effect - RunPhaseUtility.BeginBossEncounter
+        // (teleport + seal the arena + spawn the boss, see docs/run-phase.md's "Boss phase
+        // trigger"). Boss also doesn't pause GameplaySystemGroup, same as Survival/Breathing - the
+        // whole point is an active, playable fight.
+        private static void ApplyPhaseGameState(Frame f, SurvivalPhase currentPhase)
+        {
+            GameState desiredState = ResolveDesiredState(currentPhase.Kind);
+
+            if (f.Global->CurrentState != desiredState)
+            {
+                if (desiredState != GameState.Breathing)
+                {
+                    RunPhaseUtility.CancelUncommittedCursedRiftInteractions(f);
+                    RunPhaseUtility.CloseStoreInteractionsOnBreathingEnd(f);
+                    RunPhaseUtility.CloseBlacksmithInteractionsOnBreathingEnd(f);
+                    f.Global->BreathingIndex++;
+                }
+
+                if (desiredState == GameState.Boss)
+                {
+                    RunPhaseUtility.BeginBossEncounter(f, currentPhase);
+                }
+
+                GameStateUtility.SetState(f, desiredState);
+
+                Log.Debug($"[RunPhase] entered {desiredState} (SurvivalPhase index {f.Global->CurrentPhaseIndex})");
+            }
+
+            f.Global->BreathingTimeRemaining = currentPhase.Kind == SurvivalPhaseKind.Breathing
+                ? FPMath.Max(FP._0, currentPhase.Duration - f.Global->PhaseTimer)
+                : FP._0;
+        }
+
+        // Combat/Elite both still map to Survival, unchanged from before - only Breathing/Boss get
+        // their own dedicated GameState. Elite doesn't get one: it only holds PhaseTimer via
+        // SurvivalProgressionUtility.IsEncounterCleared, no teleport/border/spawn trigger of its
+        // own like Boss has.
+        private static GameState ResolveDesiredState(SurvivalPhaseKind kind)
+        {
+            switch (kind)
+            {
+                case SurvivalPhaseKind.Breathing: return GameState.Breathing;
+                case SurvivalPhaseKind.Boss: return GameState.Boss;
+                default: return GameState.Survival;
+            }
         }
 
         // Authoring guardrail, not a blocking check - see LifecycleConfig.RelevantRange's own
@@ -73,7 +154,7 @@ namespace Quantum
 
             if (lifecycleConfig.RelevantRange < directorConfig.SpawnRingRadiusMax)
             {
-                Log.Error($"[Director] LifecycleConfig.RelevantRange ({lifecycleConfig.RelevantRange}) is smaller than DirectorConfig.SpawnRingRadiusMax ({directorConfig.SpawnRingRadiusMax}) - a freshly spawned enemy can land already Irrelevant and retire without ever engaging");
+                Log.Error($"[Director] LifecycleConfig.RelevantRange ({lifecycleConfig.RelevantRange}) is smaller than DirectorConfig.SpawnRingRadiusMax ({directorConfig.SpawnRingRadiusMax}) - a freshly purchased enemy can land already Irrelevant and retire without ever engaging");
             }
         }
     }

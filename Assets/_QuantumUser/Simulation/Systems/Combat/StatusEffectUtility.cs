@@ -168,6 +168,13 @@ namespace Quantum
             }
         }
 
+        // Take-the-stronger/longer semantics on reapply, same shape as
+        // ApplyTemporaryDamageReduction/ApplyTemporaryWeaponDamage below: a weaker/shorter Rupture
+        // landing while a stronger one is still active extends nothing and overwrites nothing, so
+        // it can never cut the stronger window short. Added once Scrapjaw became the first entity
+        // with multiple independent Rupture sources (wall-hit charge, Scrapstorm finish, combo-chain
+        // finish) that could plausibly land close together - every pre-existing single-source caller
+        // (the Rock+RiftMark reaction) is unaffected, since it never reapplies mid-window.
         public static void ApplyRupture(Frame f, EntityRef target, FP duration, FP damageMultiplier)
         {
             if (f.Unsafe.TryGetPointer<StatusEffects>(target, out var status) == false)
@@ -178,8 +185,17 @@ namespace Quantum
                 duration *= resistance.RuptureDurationMultiplier;
             }
 
-            status->RuptureRemaining = duration;
-            status->RuptureDamageMultiplier = damageMultiplier;
+            bool active = status->RuptureRemaining > FP._0;
+
+            if (active == false || damageMultiplier >= status->RuptureDamageMultiplier)
+            {
+                status->RuptureDamageMultiplier = damageMultiplier;
+                status->RuptureRemaining = duration;
+            }
+            else if (duration > status->RuptureRemaining)
+            {
+                status->RuptureRemaining = duration;
+            }
         }
 
         // Enemy-only - a target with no Enemy component (the player) has no tier to resist with,
@@ -978,6 +994,28 @@ namespace Quantum
 
             Log.Debug($"[Status] {owner}'s guaranteed Burn applied to {target}");
             return true;
+        }
+
+        // Temporary move-speed buff (Store's Energy Drink food offer, see docs/store-blacksmith.md)
+        // - plain overwrite-on-reapply, same as Ice/Haste - a buff has no "downgrade feels bad"
+        // concern the way Burn's tick damage does.
+        public static void ApplyTempMoveSpeed(Frame f, EntityRef target, FP duration, FP multiplier)
+        {
+            if (f.Unsafe.TryGetPointer<StatusEffects>(target, out var status) == false)
+                return;
+
+            status->TempMoveSpeedRemaining = duration;
+            status->TempMoveSpeedMultiplier = multiplier;
+        }
+
+        // Read by PlayerMovementProcessor alongside CharacterStats.MoveSpeedMultiplier/Ice's own
+        // GetSpeedMultiplier - all three compose multiplicatively.
+        public static FP GetTempMoveSpeedMultiplier(Frame f, EntityRef entity)
+        {
+            if (f.Unsafe.TryGetPointer<StatusEffects>(entity, out var status) == false || status->TempMoveSpeedRemaining <= FP._0)
+                return FP._1;
+
+            return status->TempMoveSpeedMultiplier;
         }
 
         // Scales a status's duration by the owner's CharacterStats.OutgoingStatusDurationMultiplier,

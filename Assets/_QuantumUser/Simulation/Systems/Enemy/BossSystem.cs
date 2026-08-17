@@ -26,6 +26,8 @@ namespace Quantum
 
             TickPhase(f, ref filter, bossData);
             TickStagger(f, ref filter, bossData);
+            TickComboChain(f, ref filter, bossData);
+            TickRetarget(f, ref filter, bossData);
         }
 
         // Advances at most one phase per tick (never skips ahead even if multiple thresholds would
@@ -147,6 +149,141 @@ namespace Quantum
             }
 
             return -1;
+        }
+
+        // Orchestrates BossDataAsset.ComboChains (e.g. a triple-charge) - detects the exact
+        // Recovery -> Chasing/Idle tick a chain-trigger action finished and, instead of letting
+        // normal EnemyDecisionUtility.TrySelectAction scoring pick the next move, force-re-enters
+        // Preparation on the SAME action (ForceComboHop below). Each hop therefore runs through the
+        // real Preparation -> Telegraph -> Active -> Recovery cycle - a genuine telegraph and an
+        // optional genuine retarget - with zero new Delivery/telegraph code, since it's just the
+        // existing action executing again. Mirrors ForceBreakAction's own "write Phase/StateTimer
+        // directly, bypass scoring" precedent, just re-running the SAME action instead of a
+        // different one. Known accepted gap: if TickStagger's ForceBreakAction fires while a combo
+        // still has hops remaining (both write Phase/CurrentActionSlot, TickStagger runs first),
+        // the in-progress combo is silently abandoned rather than resumed - not exercised by any
+        // boss yet, same "revisit if one needs it" acceptance ForceBreakAction's own OnInterrupted
+        // gap already uses.
+        private static void TickComboChain(Frame f, ref Filter filter, BossDataAsset bossData)
+        {
+            EnemyActionPhase previousPhase = filter.BossRuntimeState->LastObservedPhase;
+            EnemyActionPhase currentPhase = filter.Enemy->Phase;
+            filter.BossRuntimeState->LastObservedPhase = currentPhase; // unconditional, every tick
+
+            if (bossData.ComboChains.Count == 0)
+                return;
+
+            bool justLeftRecovery = previousPhase == EnemyActionPhase.Recovery
+                && (currentPhase == EnemyActionPhase.Chasing || currentPhase == EnemyActionPhase.Idle);
+
+            if (justLeftRecovery == false)
+                return;
+
+            AssetRef<EnemyActionData> finishedAction = EnemyDecisionUtility.ResolveActionRef(bossData, filter.Enemy->CurrentActionSlot);
+
+            if (finishedAction.IsValid == false || TryFindChain(bossData, finishedAction, out BossComboChainData chain) == false)
+                return; // nothing just finished, or it isn't a chain-trigger action
+
+            bool isContinuing = filter.BossRuntimeState->ActiveComboAction == finishedAction;
+
+            if (isContinuing == true)
+            {
+                filter.BossRuntimeState->ComboRepeatsRemaining--;
+            }
+            else
+            {
+                filter.BossRuntimeState->ActiveComboAction = finishedAction;
+                int remaining = chain.RepeatCount - 1;
+                filter.BossRuntimeState->ComboRepeatsRemaining = (byte)(remaining < 0 ? 0 : remaining);
+            }
+
+            if (filter.BossRuntimeState->ComboRepeatsRemaining > 0)
+            {
+                ForceComboHop(f, ref filter, bossData, chain.RetargetEachRepeat);
+                return;
+            }
+
+            // Last hop just finished.
+            filter.BossRuntimeState->ActiveComboAction = default;
+
+            if (chain.ExposedDurationOnFinish > FP._0)
+                StatusEffectUtility.ApplyRupture(f, filter.Entity, chain.ExposedDurationOnFinish, chain.ExposedDamageMultiplierOnFinish);
+        }
+
+        private static bool TryFindChain(BossDataAsset bossData, AssetRef<EnemyActionData> actionRef, out BossComboChainData chain)
+        {
+            for (int i = 0; i < bossData.ComboChains.Count; i++)
+            {
+                if (bossData.ComboChains[i].TriggerAction == actionRef)
+                {
+                    chain = bossData.ComboChains[i];
+                    return true;
+                }
+            }
+
+            chain = default;
+            return false;
+        }
+
+        // Re-triggers the same action that just finished, skipping normal TrySelectAction scoring
+        // entirely - unlike ForceBreakAction (which resolves a DIFFERENT action's own slot), this
+        // reuses Enemy.CurrentActionSlot as-is since it's the SAME action running again. Deliberately
+        // does NOT touch Enemy.SkillTargetPosition/SkillStartPosition itself - same as
+        // ForceBreakAction, entering Preparation is enough; the normal per-tick Preparation update
+        // (EnemySystem/EnemyDeliveryData.OnAnticipating) re-derives aim from Enemy.Target live every
+        // tick regardless of what those fields held before.
+        private static void ForceComboHop(Frame f, ref Filter filter, BossDataAsset bossData, bool retarget)
+        {
+            EnemyActionData action = EnemyDecisionUtility.ResolveAction(f, bossData, filter.Enemy->CurrentActionSlot);
+
+            if (action == null)
+                return;
+
+            if (retarget == true && bossData.AI.Targeting.IsValid == true)
+            {
+                EntityRef newTarget = f.FindAsset(bossData.AI.Targeting).SelectTarget(f, filter.Entity);
+
+                if (newTarget != EntityRef.None)
+                    filter.Enemy->Target = newTarget;
+            }
+
+            filter.Enemy->StateTimer = action.AnticipationTime;
+            filter.Enemy->Phase = EnemyActionPhase.Preparation;
+
+            Log.Debug($"[Boss] {filter.Entity} combo hop on slot {filter.Enemy->CurrentActionSlot}, {filter.BossRuntimeState->ComboRepeatsRemaining} repeat(s) left");
+        }
+
+        // Periodically re-resolves AI.Targeting mid-fight - EnemySystem only ever re-resolves
+        // Enemy.Target on the rare Idle -> Chasing edge (EnemySystem.UpdateIdle/
+        // ResolveInitialTarget), which a boss essentially never revisits once engaged (Enemy.Target
+        // stays sticky through Chasing -> Preparation -> ... -> Recovery -> Chasing indefinitely) -
+        // without this, a boss's first-ever target would stay locked for the whole fight, letting
+        // that one player kite forever while the rest of the party free-fires. Gated to
+        // Chasing/Recovery only - never mid-Preparation/Telegraph/Active, matching the existing "a
+        // committed windup never retargets" philosophy the decoy-priority carve-out in
+        // EnemySystem.UpdateChasing already follows.
+        private static void TickRetarget(Frame f, ref Filter filter, BossDataAsset bossData)
+        {
+            if (bossData.RetargetInterval <= FP._0)
+                return;
+
+            if (filter.Enemy->Phase != EnemyActionPhase.Chasing && filter.Enemy->Phase != EnemyActionPhase.Recovery)
+                return;
+
+            filter.BossRuntimeState->RetargetTimer += f.DeltaTime;
+
+            if (filter.BossRuntimeState->RetargetTimer < bossData.RetargetInterval)
+                return;
+
+            filter.BossRuntimeState->RetargetTimer = FP._0;
+
+            if (bossData.AI.Targeting.IsValid == false)
+                return;
+
+            EntityRef newTarget = f.FindAsset(bossData.AI.Targeting).SelectTarget(f, filter.Entity);
+
+            if (newTarget != EntityRef.None)
+                filter.Enemy->Target = newTarget;
         }
 
         public struct Filter

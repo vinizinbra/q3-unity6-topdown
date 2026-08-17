@@ -67,7 +67,6 @@ namespace QuantumUser.Editor
             MomentumSkillAction momentum = CreateOrUpdate<MomentumSkillAction>($"{HeroSkillUpgradesFolderPath}/MomentumSkillAction.asset", asset =>
             {
                 asset.DisplayName = "Momentum";
-                asset.Rarity = UpgradeRarity.Rare;
                 asset.Activated = false;
                 asset.MaxRank = 3;
                 // Static fallback for surfaces that call the plain, rank-unaware GetDescription() -
@@ -88,7 +87,6 @@ namespace QuantumUser.Editor
             BoneBreakerSkillAction boneBreaker = CreateOrUpdate<BoneBreakerSkillAction>($"{HeroSkillUpgradesFolderPath}/BoneBreakerSkillAction.asset", asset =>
             {
                 asset.DisplayName = "Bone Breaker";
-                asset.Rarity = UpgradeRarity.Rare;
                 asset.Activated = false;
                 asset.MaxRank = 3;
                 asset.Description = "Discharge deals significantly more damage, especially against Specialist and Heavy enemies.";
@@ -105,7 +103,6 @@ namespace QuantumUser.Editor
             AftershockSkillAction aftershock = CreateOrUpdate<AftershockSkillAction>($"{HeroSkillUpgradesFolderPath}/AftershockSkillAction.asset", asset =>
             {
                 asset.DisplayName = "Aftershock";
-                asset.Rarity = UpgradeRarity.Epic;
                 asset.Activated = false;
                 asset.MaxRank = 3;
                 asset.Description = "When Juggernaut ends, release a shockwave that grows stronger the more enemies you struck with Discharge during the cast.";
@@ -123,7 +120,6 @@ namespace QuantumUser.Editor
             ConcussiveImpactSkillAction concussiveImpact = CreateOrUpdate<ConcussiveImpactSkillAction>($"{HeroSkillUpgradesFolderPath}/ConcussiveImpactSkillAction.asset", asset =>
             {
                 asset.DisplayName = "Concussive Impact";
-                asset.Rarity = UpgradeRarity.Epic;
                 asset.Activated = false;
                 asset.MaxRank = 3;
                 asset.Description = "Enemies launched by Discharge take real damage when they land and hit harder walls - culminating in an impact shockwave and bonus damage against Stunned enemies.";
@@ -145,7 +141,6 @@ namespace QuantumUser.Editor
             IronPresencePassiveUpgradeData ironPresence = CreateOrUpdate<IronPresencePassiveUpgradeData>($"{PassiveUpgradesFolderPath}/IronPresence.asset", asset =>
             {
                 asset.DisplayName = "Iron Presence";
-                asset.Rarity = UpgradeRarity.Epic;
                 asset.Description = "Intimidated enemies in your Protector Aura move slower and take more knockback - eventually, you deal bonus damage to them too.";
                 asset.RankDescriptions = new[]
                 {
@@ -162,7 +157,6 @@ namespace QuantumUser.Editor
             GuardianPassiveUpgradeData guardian = CreateOrUpdate<GuardianPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/Guardian.asset", asset =>
             {
                 asset.DisplayName = "Guardian";
-                asset.Rarity = UpgradeRarity.Epic;
                 asset.Description = "Grows the Protector Aura and grants allies inside it Damage Reduction - eventually reacting to protect them further the instant they're hit.";
                 asset.RankDescriptions = new[]
                 {
@@ -178,7 +172,6 @@ namespace QuantumUser.Editor
             IronShoulderSkillAction ironShoulder = CreateOrUpdate<IronShoulderSkillAction>($"{DashUpgradesFolderPath}/IronShoulderSkillAction.asset", asset =>
             {
                 asset.DisplayName = "Iron Shoulder";
-                asset.Rarity = UpgradeRarity.Rare;
                 asset.MaxRank = 3;
                 asset.Description = "Dash becomes an empowered shoulder charge - enemies hit take strong knockback and are Stunned if pushed into a wall.";
                 asset.RankDescriptions = new[]
@@ -199,7 +192,6 @@ namespace QuantumUser.Editor
             BodyguardSkillAction bodyguard = CreateOrUpdate<BodyguardSkillAction>($"{DashUpgradesFolderPath}/BodyguardSkillAction.asset", asset =>
             {
                 asset.DisplayName = "Bodyguard";
-                asset.Rarity = UpgradeRarity.Rare;
                 asset.MaxRank = 3;
                 asset.Description = "On Dash complete, restore Shield to nearby allies.";
                 asset.RankDescriptions = new[]

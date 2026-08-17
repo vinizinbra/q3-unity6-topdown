@@ -15,21 +15,32 @@ introducing a second one - see "How it reuses the level-up pipeline" below. Read
 - **Each Chest instance/prototype is typed to exactly one category** (`Chest.Kind`, set once in the
   Editor) - not randomized at runtime. A level can place a "Weapon Chest," a "Global Upgrade Chest,"
   etc. as distinct prefabs/prototypes.
-- **Opening a Chest still pauses the WHOLE party's `GameplaySystemGroup`**, even though only the
-  player who walked into it gets a `LevelUpChoice` - everyone else just waits, exactly as they
-  already wait out each other's real level-ups today. A genuine per-player-only pause isn't
-  something Quantum's `SystemDisable` supports (it's whole-subtree-or-nothing per system group), so
-  building one would be materially bigger/riskier scope than reusing the existing pause. This is a
-  real co-op UX tradeoff, not an oversight - revisit if it feels bad in practice.
+- **Opening a Chest pauses the WHOLE party's `GameplaySystemGroup`**, exactly as a real level-up
+  already does. A genuine per-player-only pause isn't something Quantum's `SystemDisable` supports
+  (it's whole-subtree-or-nothing per system group), so this was always going to be a whole-party
+  pause regardless of who gets a pick.
+- **EVERY connected player gets their own `LevelUpChoice` rolled from the Chest's own forced
+  category**, not just whoever physically walked into it - reversed from the original design (which
+  gave only the finder a `LevelUpChoice`, everyone else just waited) after the user confirmed it felt
+  wrong in practice: with only one real recipient, every other connected player had nothing to
+  confirm and was silently treated as already-done, so the instant the one real recipient picked,
+  `LevelUpSystem.AllConfirmed` saw the whole screen as resolved and closed it out from under everyone
+  else before they'd gotten to choose anything. Rolling for every connected player (same recipient
+  list `BeginLevelUpScreen` already builds, see `LevelUpUtility.GetConnectedPlayers`) makes a Chest
+  behave exactly like a real level-up: the screen waits for every connected player to confirm (or the
+  countdown to expire) before resolving for anyone.
 
 ## How it reuses the level-up pipeline
 
-`LevelUpUtility.BeginLevelUpScreen` (every connected player, sequence-driven category) and the new
-`LevelUpUtility.BeginChestScreen(f, player, forcedCategory)` (one player, forced category) both call
-a shared private `OpenUpgradeScreen(f, recipients, config, forcedCategory)` - roll for each
-recipient, then pause if anyone actually got something. `RollOptionsFor` resolves
+`LevelUpUtility.BeginLevelUpScreen` (every connected player, sequence-driven category) and
+`LevelUpUtility.BeginChestScreen(f, player, forcedCategory)` (every connected player too, but a
+forced category instead of the sequence-driven one) both build their recipient list via the same
+shared `GetConnectedPlayers(f)` and then call a shared private
+`OpenUpgradeScreen(f, recipients, config, forcedCategory)` - roll for each recipient, then pause if
+anyone actually got something. `player` (the entity that physically collected the Chest) is now only
+used for the `ChestOpened` view event, not for who gets a `LevelUpChoice`. `RollOptionsFor` resolves
 `forcedCategory ?? GetCategoryForLevel(config, level)`, so a Chest's category always wins over
-whatever the current level's own sequence slot would have picked.
+whatever the current level's own sequence slot would have picked, for every recipient.
 
 The `f.Global->LevelUpScreenOpen == true` guard inside `OpenUpgradeScreen` is now load-bearing, not
 just defensive. Before Chests existed, `ExpOrbSystem` (the sole caller of `ExperienceUtility.Grant`,
@@ -102,8 +113,9 @@ instead of snapping or staying frozen at its placed height.
 3. Whatever visual/collider the chest needs on the View side (open/closed model swap, etc.) - not
    covered by this doc, purely simulation + event plumbing.
 4. **Manual end-to-end test not yet run**: walk one co-op player into a placed Chest and confirm the
-   whole party's gameplay freezes, only that player's `UpgradeWindow` shows a screen locked to the
-   Chest's own `Kind` (rendered via the right card family if `Kind == ChooseWeapon`, see
-   `docs/level-up-upgrades.md`), the Chest doesn't re-trigger for a second nearby player mid-screen,
-   and gameplay resumes cleanly for everyone the instant the picking player confirms (not waiting out
-   the full timer if they pick early).
+   whole party's gameplay freezes, EVERY connected player's own `ChooseWindow` shows a screen locked
+   to the Chest's own `Kind` (rendered via the right card family if `Kind == ChooseWeapon`, see
+   `docs/level-up-upgrades.md`) with their own independently-rolled options, the Chest doesn't
+   re-trigger for a second nearby player mid-screen, one player confirming does NOT close the screen
+   for anyone still picking, and gameplay only resumes once every connected player has confirmed (or
+   the countdown expires) - exactly like a real level-up.

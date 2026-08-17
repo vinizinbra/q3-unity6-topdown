@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Events;
 
 // Two-stage "pop open" entrance, driven purely by this object's own transform - attach directly to
-// whatever should play it (a card, the level-up title, ...) and have the owner (e.g. UpgradeWindow)
+// whatever should play it (a card, the level-up title, ...) and have the owner (e.g. ChooseWindow)
 // just call Play(extraDelay) with a computed stagger, instead of the owner building/owning the
 // tweens itself. Stage 1 (Open): grows from startScale (a fraction of this object's own authored
 // scale, typically flattened along one axis - e.g. (0.5, 0, 0.5) prying open like a lid on Y, or
@@ -16,7 +16,7 @@ using UnityEngine.Events;
 public class ShakeGrowImpactAnimation : MonoBehaviour
 {
     [Header("Timing")]
-    [SerializeField, Tooltip("Delay before this animation starts, always applied. Play(extraDelay) adds to this rather than replacing it - e.g. UpgradeWindow passes its own computed per-card stagger on top.")]
+    [SerializeField, Tooltip("Delay before this animation starts, always applied. Play(extraDelay) adds to this rather than replacing it - e.g. ChooseWindow passes its own computed per-card stagger on top.")]
     private float startDelay = 0f;
     [SerializeField, Tooltip("Ignore Time.timeScale - turn on for anything that must still play at full speed while the game is paused/slowed (e.g. GameplayUiController ramps Time.timeScale down for the level-up screen this plays in).")]
     private bool useUnscaledTime = true;

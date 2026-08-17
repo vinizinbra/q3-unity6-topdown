@@ -12,6 +12,12 @@ namespace Quantum
         private const string PlayerLayerName = "Player";
         private const string GroundLayerName = "Ground";
         private const string EnemyLayerName = "Enemy";
+        // The Boss entity lives on its own physics layer (not Enemy) so its collision matrix row
+        // can turn off Player collision without affecting every other enemy - see
+        // QuantumDefaultConfigs.asset's LayerMatrix. It still carries the plain Enemy ECS
+        // component, so component-filtered (-1 mask) queries elsewhere already find it
+        // automatically; only layer-mask-restricted queries need Boss added explicitly.
+        private const string BossLayerName = "Boss";
         private const string IgnoreProjectileLayerName = "IgnoreProjectile";
         private const string ObstacleLayerName = "Obstacle";
 
@@ -40,10 +46,12 @@ namespace Quantum
         }
 
         // Unrelated to decoy targeting, which uses a plain Decoy-component scan instead (see
-        // TryFindNearestDecoy).
+        // TryFindNearestDecoy). Includes Boss's own separate layer too (see BossLayerName above) -
+        // every layer-mask-restricted "find an enemy" query in this codebase routes through this
+        // one shared helper, so Boss only needed adding here once.
         public static int GetEnemyLayerMask(Frame f)
         {
-            _enemyLayerMask ??= f.Layers.GetLayerMask(EnemyLayerName);
+            _enemyLayerMask ??= f.Layers.GetLayerMask(EnemyLayerName) | f.Layers.GetLayerMask(BossLayerName);
             return _enemyLayerMask.Value;
         }
 

@@ -46,7 +46,17 @@ namespace Quantum
             // Stun which also silences firing/skills in their own separate checks.
             targetSpeed *= StatusEffectUtility.GetSpeedMultiplier(frame, entity);
 
-            if (StatusEffectUtility.IsStunned(frame, entity) == true || StatusEffectUtility.IsRooted(frame, entity) == true)
+            // Store's Energy Drink food offer (see docs/store-blacksmith.md) - composes
+            // multiplicatively alongside Ice's own slow, same pattern.
+            targetSpeed *= StatusEffectUtility.GetTempMoveSpeedMultiplier(frame, entity);
+
+            // PoiInteractionLockUtility.IsInputLocked - a player with their own Cursed Rift/Store/
+            // Blacksmith Choice Window open (see docs/breathing-poi.md/docs/store-blacksmith.md) is
+            // locked the same way a Stun/Root already blocks movement, but deliberately NOT via
+            // GameplaySystemGroup/Time.timeScale - only this one player's own input is gated,
+            // everyone else (and the simulation itself) keeps running normally.
+            if (StatusEffectUtility.IsStunned(frame, entity) == true || StatusEffectUtility.IsRooted(frame, entity) == true
+                || PoiInteractionLockUtility.IsInputLocked(frame, entity) == true)
             {
                 targetSpeed = FP._0;
             }
@@ -100,11 +110,8 @@ namespace Quantum
             QueryOptions queryOptions = QueryOptions.HitStatics | QueryOptions.HitKinematics;
             FPVector3 checkOrigin = position + direction * data.EdgeProbeDistance + FPVector3.Up * FP._0_10;
 
-            // SphereCast rather than a plain RayCast: a single-point ray can land exactly in a
-            // hairline seam between two adjacent chunk cube colliders and read as no ground ahead,
-            // firing a false auto-hop while walking over perfectly solid, contiguous floor.
             KCCShapeCastInfo groundCast = KCCShapeCastInfo.Get();
-            bool groundAhead = context.KCC->SphereCast(context, groundCast, checkOrigin, data.EdgeGroundProbeRadius, FPVector3.Down, data.EdgeCheckDistance, queryOptions);
+            bool groundAhead = context.KCC->RayCast(context, groundCast, checkOrigin, FPVector3.Down, data.EdgeCheckDistance, queryOptions);
             KCCShapeCastInfo.Return(groundCast);
 
             return groundAhead;

@@ -18,6 +18,23 @@ public class CubeVisualBuilder : MonoBehaviour
     [Tooltip("Extra length (world units) added on top of an edge piece's along-the-wall stretch, so a run of N cells scales to N + this instead of exactly N - closes small seams between neighboring pieces.")]
     [SerializeField] private float edgeScaleOverlap = 0.2f;
 
+    [Tooltip("If true, forces edgePrefabs[0]/outerCornerPrefabs[0] (instead of a random pick) for any edge run/outer corner within detailAvoidRadius of a WallTopDetailSlot/WallMidDetailSlot anywhere in this prefab (searched from transform.root, so slots don't need to be direct children of this specific cube) - keeps the wall plain there so its own baked texture/detail doesn't clash with a hand-placed decal. No separate prefab to assign - element 0 of each existing list is simply treated as 'the plain one'. Leave false to skip this check entirely (default: today's exact random-pick behavior, zero cost). Never affects the center slab.")]
+    [SerializeField] private bool avoidNearWallDetails;
+
+    [Tooltip("World-unit radius around a WallTopDetailSlot/WallMidDetailSlot within which an edge run/outer corner is forced to element 0. Only matters if avoidNearWallDetails is true.")]
+    [SerializeField] private float detailAvoidRadius = 1f;
+
+    // Whether a WallTopDetailSlot/WallMidDetailSlot GameObject exists is NOT enough to know whether
+    // it'll actually show a sprite - that's a runtime, seeded roll ChunkDetailScatter alone resolves
+    // (and on a lifecycle this class has no reliable ordering against - Start() here vs. Quantum's
+    // own OnEntityInstantiated timing there). So this cube never guesses: when HasDetailAvoidance is
+    // true, Start() below skips its own auto-Generate() entirely and waits to be told - set this
+    // list to the world positions that actually ended up shown, then call Generate() - which is
+    // exactly what ChunkDetailScatter.TryGenerate does, once, right after it finishes resolving every
+    // wall slot in this chunk.
+    public List<Vector3> ShownDetailPositions { get; set; } = new List<Vector3>();
+    public bool HasDetailAvoidance => avoidNearWallDetails;
+
     [SerializeField] private List<GameObject> outerCornerPrefabs;
     [SerializeField] private float outerCornerYaw;
 
@@ -34,8 +51,16 @@ public class CubeVisualBuilder : MonoBehaviour
     [Tooltip("Two same-height cubes whose facing sides are within this distance (world units) but don't actually overlap still read as one open space: the edge run facing the gap opens into a floor piece instead of a wall, though their outer corners stay as corners.")]
     [SerializeField] private float touchGapTolerance = 0.1f;
 
+    [Tooltip("Temporary diagnostic: logs every spawned piece's yaw/position math (local vs. world) - see docs/environment-details.md rotation investigation. Off by default to avoid log spam.")]
+    [SerializeField] private bool debugLogPlacement;
+
     [SerializeField, HideInInspector] private Transform colliderRoot;
     [SerializeField, HideInInspector] private Transform visualRoot;
+
+    // Roots created by CreateAdoptedVisualRoot when THIS cube hosts a merge (see its own comment
+    // for why they're deliberately not parented under visualRoot). Tracked here so ResetCube can
+    // still clean them up even though they live outside visualRoot's own child list.
+    private readonly List<Transform> adoptedVisualRoots = new List<Transform>();
 
     // Shared across every cube in the scene: a cube that gets absorbed as another cube's merging
     // neighbor has its whole grid drawn by that host (see DrawMergingNeighbors) and its own box
@@ -56,6 +81,22 @@ public class CubeVisualBuilder : MonoBehaviour
     // in there and does nothing.
     public void Start()
     {
+        // Waits for an explicit ChunkDetailScatter.Generate() call instead - see
+        // ShownDetailPositions/HasDetailAvoidance's own comment above for why.
+        //
+        // Known gap: if this cube is ALSO merged with a non-avoidance neighbor, that neighbor's own
+        // normal Start() still draws this cube's cells too (DrawMergingNeighbors calls
+        // neighbor.PlaceGrid on every cluster member, this one included) before ChunkDetailScatter
+        // ever gets a chance to set ShownDetailPositions - so the avoidance check would see an empty
+        // list and do nothing for that first pass, and the later explicit Generate() call would then
+        // redraw the whole cluster a second time. Not handled here - this game's actual usage is one
+        // room-spanning, non-merged box per room (see docs/environment-details.md), so it doesn't
+        // come up in practice; avoid combining detail avoidance with a merged cube elsewhere.
+        if (HasDetailAvoidance)
+        {
+            return;
+        }
+
         if (consumedByMerge.Contains(this))
         {
             return;
@@ -144,12 +185,26 @@ public class CubeVisualBuilder : MonoBehaviour
 
         ClearVisuals();
 
-        List<CubeVisualBuilder> mergingNeighbors = FindMergingNeighbors();
-        List<CubeVisualBuilder> mergeCluster = FindMergeCluster();
-        List<Vector3> consumedPositions = CollectConsumedPositions(mergeCluster);
+        // Occupancy checks (IsOccupied, via PlaceGrid below) need the WHOLE transitive cluster, not
+        // just this cube's own direct overlaps - a cell's cardinal neighbor might only be covered by
+        // a cube that overlaps a DIFFERENT cluster member, and reading it as unoccupied misclassifies
+        // an inner (concave) corner as an outer one (or drops it to an edge).
+        //
+        // FindMergeCluster returns the OTHER cubes only (never `this`), so build occupancyCluster =
+        // {this} + those and pass THAT as the mergingNeighbors argument everywhere. This is the
+        // crucial bit for DrawMergingNeighbors: when the host draws an adopted neighbor, that neighbor
+        // must be given a list that still includes the HOST - otherwise it can't see the host's
+        // footprint on the shared side, and its inner corner at the junction misreads as an edge and
+        // never spawns (the "only one of two inner corners drawn" bug). IsOccupied re-checks the
+        // caller's own bounds separately, so a cube appearing in its own list is a harmless no-op.
+        List<CubeVisualBuilder> mergingNeighbors = FindMergeCluster();
+        List<CubeVisualBuilder> occupancyCluster = new List<CubeVisualBuilder>(mergingNeighbors.Count + 1) { this };
+        occupancyCluster.AddRange(mergingNeighbors);
 
-        PlaceGrid(gridX, gridZ, visualRoot, mergingNeighbors, FindTouchingNeighbors(), claimedBounds: null, consumedPositions);
-        DrawMergingNeighbors(mergeCluster, consumedPositions);
+        List<Vector3> consumedPositions = CollectConsumedPositions(occupancyCluster);
+
+        PlaceGrid(gridX, gridZ, visualRoot, occupancyCluster, FindTouchingNeighbors(), claimedBounds: null, consumedPositions);
+        DrawMergingNeighbors(mergingNeighbors, occupancyCluster, consumedPositions);
     }
 
     // Every cube transitively connected to this one through direct overlaps (A overlaps B, B
@@ -180,15 +235,16 @@ public class CubeVisualBuilder : MonoBehaviour
     }
 
     // Merging neighbors don't get their own separate Generate() call - instead their grid is
-    // drawn as children of this cube's visualRoot, and their own box mesh/collider is hidden,
-    // so two merged cubes read as one continuous object instead of two overlapping ones.
-    // Cells inside bounds already claimed by an earlier cube (this one, or an earlier neighbor)
-    // are skipped so the overlapping region between two cubes isn't drawn twice.
-    private void DrawMergingNeighbors(List<CubeVisualBuilder> mergeCluster, List<Vector3> consumedPositions)
+    // drawn via an adopted root parented on the NEIGHBOR itself (see CreateAdoptedVisualRoot),
+    // and their own box mesh/collider is hidden, so two merged cubes read as one continuous
+    // object instead of two overlapping ones. Cells inside bounds already claimed by an earlier
+    // cube (this one, or an earlier neighbor) are skipped so the overlapping region between two
+    // cubes isn't drawn twice.
+    private void DrawMergingNeighbors(List<CubeVisualBuilder> neighborsToDraw, List<CubeVisualBuilder> occupancyCluster, List<Vector3> consumedPositions)
     {
         List<Bounds> claimedBounds = new List<Bounds> { GetWorldBounds() };
 
-        foreach (CubeVisualBuilder neighbor in mergeCluster)
+        foreach (CubeVisualBuilder neighbor in neighborsToDraw)
         {
             neighbor.HideOwnBoxVisuals();
 
@@ -200,7 +256,12 @@ public class CubeVisualBuilder : MonoBehaviour
             }
 
             Transform adoptedVisualRoot = CreateAdoptedVisualRoot(neighbor, neighborGridX, neighborGridZ);
-            neighbor.PlaceGrid(neighborGridX, neighborGridZ, adoptedVisualRoot, neighbor.FindMergingNeighbors(), neighbor.FindTouchingNeighbors(), claimedBounds, consumedPositions);
+            // occupancyCluster (NOT neighbor.FindMergingNeighbors(), and NOT neighborsToDraw) - the
+            // full cluster INCLUDING this host, so the neighbor being drawn can see the host's own
+            // footprint on their shared side. Handing it a list that excluded the host was exactly
+            // what dropped a merging neighbor's inner corner at the junction (only one of the two
+            // inner corners in a 2-cube L/offset ever spawned).
+            neighbor.PlaceGrid(neighborGridX, neighborGridZ, adoptedVisualRoot, occupancyCluster, neighbor.FindTouchingNeighbors(), claimedBounds, consumedPositions);
             claimedBounds.Add(neighbor.GetWorldBounds());
         }
     }
@@ -214,10 +275,15 @@ public class CubeVisualBuilder : MonoBehaviour
     {
         List<Vector3> consumed = new List<Vector3>();
 
-        CollectConsumedPositionsForCube(this, FindMergingNeighbors(), consumed);
+        // mergeCluster (not FindMergingNeighbors()/member.FindMergingNeighbors()) for every cube
+        // here, not just direct pairwise overlaps - same transitive-coverage reason as Generate()'s
+        // own PlaceGrid call, and it has to agree with PlaceCell's own notch detection or the two
+        // passes can disagree about which cells a notch consumes (see ResolveNotchDirection's own
+        // comment on staying in sync between the two).
+        CollectConsumedPositionsForCube(this, mergeCluster, consumed);
         foreach (CubeVisualBuilder member in mergeCluster)
         {
-            CollectConsumedPositionsForCube(member, member.FindMergingNeighbors(), consumed);
+            CollectConsumedPositionsForCube(member, mergeCluster, consumed);
         }
 
         return consumed;
@@ -317,15 +383,30 @@ public class CubeVisualBuilder : MonoBehaviour
     }
 
     // Builds a transform with the same world position/rotation/scale that neighbor's own
-    // visualRoot would have (see EnsureStructure), but parented under this cube's visualRoot
-    // instead of the neighbor's own transform.
+    // visualRoot would have (see EnsureStructure) - deliberately left parented under the
+    // NEIGHBOR's own transform, not reparented under this cube's visualRoot.
+    //
+    // An earlier version re-parented onto this cube's visualRoot via SetParent(visualRoot,
+    // worldPositionStays: true) for scene-hierarchy tidiness (so a merge cluster's generated
+    // pieces all nest under one host). That silently breaks for a non-square cube (visualRoot's
+    // own localScale is non-uniform, e.g. 1/2 x 1 x 1/6 - see Generate()) merging with a neighbor
+    // at a DIFFERENT world rotation (two adjacent cubes the artist hand-placed at different
+    // 90-degree yaws): sandwiching a non-uniform scale between two DIFFERENT
+    // rotations is a shear, which Transform can't represent as position/rotation/scale, so
+    // worldPositionStays:true's forced decomposition silently produced a wrong local
+    // rotation/scale for `adopted` - every piece the neighbor draws through it (PlaceGrid, right
+    // below) inherited that corruption. Staying a fresh child of neighbor.transform never
+    // triggers a decomposition (its local values are assigned directly, not derived from a
+    // preserved world transform), so it's immune regardless of any rotation mismatch. Tracked in
+    // adoptedVisualRoots for cleanup instead, since ClearVisuals()/ResetCube() only sweep
+    // visualRoot's own children.
     private Transform CreateAdoptedVisualRoot(CubeVisualBuilder neighbor, int neighborGridX, int neighborGridZ)
     {
         Transform adopted = new GameObject($"Visual_{neighbor.name}").transform;
         adopted.SetParent(neighbor.transform, worldPositionStays: false);
         adopted.localPosition = new Vector3(0.5f, 0f, 0.5f);
         adopted.localScale = new Vector3(1f / neighborGridX, 1f, 1f / neighborGridZ);
-        adopted.SetParent(visualRoot, worldPositionStays: true);
+        adoptedVisualRoots.Add(adopted);
         return adopted;
     }
 
@@ -346,12 +427,12 @@ public class CubeVisualBuilder : MonoBehaviour
         ResetCube(new HashSet<CubeVisualBuilder>());
     }
 
-    // A merging neighbor's own box mesh gets hidden and its grid gets drawn as children of the
-    // host's visualRoot instead of its own (see DrawMergingNeighbors) - so resetting only the
-    // clicked cube would destroy that shared visualRoot while leaving every merging neighbor with
-    // no box and no generated pieces. Resetting the whole merging cluster together (guarded against
-    // revisiting a cube twice, since merging is symmetric and would otherwise recurse forever)
-    // keeps them consistent.
+    // A merging neighbor's own box mesh gets hidden and its grid gets drawn via an adopted root
+    // parented on the NEIGHBOR itself (see CreateAdoptedVisualRoot) instead of its own visualRoot
+    // - so resetting only the clicked cube would destroy that host-drawn geometry (adoptedVisualRoots
+    // below) while leaving every merging neighbor with no box and no generated pieces. Resetting
+    // the whole merging cluster together (guarded against revisiting a cube twice, since merging
+    // is symmetric and would otherwise recurse forever) keeps them consistent.
     private void ResetCube(HashSet<CubeVisualBuilder> alreadyReset)
     {
         if (!alreadyReset.Add(this))
@@ -371,6 +452,12 @@ public class CubeVisualBuilder : MonoBehaviour
             SafeDestroy(visualRoot.gameObject);
             visualRoot = null;
         }
+
+        foreach (Transform adopted in adoptedVisualRoots)
+        {
+            SafeDestroy(adopted.gameObject);
+        }
+        adoptedVisualRoots.Clear();
 
         MeshRenderer meshRenderer = GetComponent<MeshRenderer>();
         if (meshRenderer != null)
@@ -503,9 +590,21 @@ public class CubeVisualBuilder : MonoBehaviour
         bool maxZ = !northOccupied;
         bool minZ = !southOccupied;
 
+        if (debugLogPlacement)
+        {
+            LogHelper.Log("CubeVisualBuilder",
+                $"PlaceCell '{name}' worldPos={worldPosition} - east={eastOccupied} west={westOccupied} north={northOccupied} south={southOccupied} " +
+                $"(maxX={maxX} minX={minX} maxZ={maxZ} minZ={minZ}) | mergingNeighbors={DescribeNeighbors(mergingNeighbors)}", this);
+        }
+
         if ((maxX || minX) && (maxZ || minZ))
         {
-            GameObject prefab = PickVariant(outerCornerPrefabs);
+            bool nearDetail = avoidNearWallDetails && outerCornerPrefabs.Count > 0 && IsNearShownDetail(worldPosition);
+            GameObject prefab = nearDetail ? outerCornerPrefabs[0] : PickVariant(outerCornerPrefabs);
+            if (debugLogPlacement)
+            {
+                LogHelper.Log("CubeVisualBuilder", $"  -> OUTER CORNER at {worldPosition} on '{name}' | east={eastOccupied} west={westOccupied} north={northOccupied} south={southOccupied} | mergingNeighbors={DescribeNeighbors(mergingNeighbors)}", this);
+            }
             SpawnAt(prefab, localPosition, targetVisualRoot, WorldYawToLocal(targetVisualRoot, CornerYaw(maxX, maxZ) + outerCornerYaw));
             return;
         }
@@ -517,10 +616,18 @@ public class CubeVisualBuilder : MonoBehaviour
             if (IsEdgeOpenToTouchingNeighbor(worldPosition, onXSide, maxX, maxZ, touchingNeighbors))
             {
                 GameObject openFiller = PickVariant(centerPrefabs);
+                if (debugLogPlacement)
+                {
+                    LogHelper.Log("CubeVisualBuilder", $"  -> EDGE-OPEN-TO-TOUCHING-NEIGHBOR (filler) at {worldPosition}", this);
+                }
                 SpawnAt(openFiller, localPosition, targetVisualRoot, centerYaw);
                 return;
             }
 
+            if (debugLogPlacement)
+            {
+                LogHelper.Log("CubeVisualBuilder", $"  -> EDGE (onXSide={onXSide}) at {worldPosition}", this);
+            }
             PlaceEdgeRun(localPosition, worldPosition, i, j, gridX, gridZ, onXSide, maxX, maxZ, targetVisualRoot, mergingNeighbors, touchingNeighbors, claimedBounds, consumedPositions);
             return;
         }
@@ -530,10 +637,21 @@ public class CubeVisualBuilder : MonoBehaviour
         bool seNotch = !IsOccupied(worldPosition + new Vector3(1f, 0f, -1f), mergingNeighbors);
         bool swNotch = !IsOccupied(worldPosition + new Vector3(-1f, 0f, -1f), mergingNeighbors);
 
+        if (debugLogPlacement)
+        {
+            LogHelper.Log("CubeVisualBuilder",
+                $"  all 4 cardinals occupied at {worldPosition} - checking diagonals: ne={neNotch} nw={nwNotch} se={seNotch} sw={swNotch} " +
+                $"hasInnerCornerPrefabs={HasInnerCornerPrefabs()}", this);
+        }
+
         if (HasInnerCornerPrefabs() && (neNotch || nwNotch || seNotch || swNotch))
         {
             ResolveNotchDirection(neNotch, seNotch, nwNotch, out bool notchMaxX, out bool notchMaxZ);
             GameObject prefab = PickVariant(innerCornerPrefabs);
+            if (debugLogPlacement)
+            {
+                LogHelper.Log("CubeVisualBuilder", $"  -> INNER CORNER at {worldPosition} on '{name}' | notch ne={neNotch} nw={nwNotch} se={seNotch} sw={swNotch} -> resolved notchMaxX={notchMaxX} notchMaxZ={notchMaxZ} (yaw {CornerYaw(notchMaxX, notchMaxZ)}) | mergingNeighbors={DescribeNeighbors(mergingNeighbors)}", this);
+            }
             SpawnAt(prefab, localPosition, targetVisualRoot, WorldYawToLocal(targetVisualRoot, CornerYaw(notchMaxX, notchMaxZ) + innerCornerYaw));
             return;
         }
@@ -596,8 +714,43 @@ public class CubeVisualBuilder : MonoBehaviour
         }
 
         Vector3 runCenter = localPosition + localStepDirection * ((width - 1) * 0.5f);
-        GameObject prefab = PickVariant(edgePrefabs);
+        // Checked against the run's own center (where SpawnAt below actually places it), not
+        // worldPosition (the run's starting cell) - a run up to MaxEdgeWidth cells wide can have its
+        // center sit up to 1 unit away from where it starts, which silently pushed detail checks
+        // outside a modest detailAvoidRadius for wider runs while single-cell corners (no such
+        // offset) still worked.
+        Vector3 runCenterWorld = targetVisualRoot.TransformPoint(runCenter);
+        bool nearDetail = avoidNearWallDetails && edgePrefabs.Count > 0 && IsNearShownDetail(runCenterWorld);
+        GameObject prefab = nearDetail ? edgePrefabs[0] : PickVariant(edgePrefabs);
         SpawnAt(prefab, runCenter, targetVisualRoot, WorldYawToLocal(targetVisualRoot, EdgeYaw(onXSide, maxX, maxZ) + edgeYaw), footprintZ: width + edgeScaleOverlap);
+    }
+
+    // XZ-only distance against ShownDetailPositions (only ever non-empty once ChunkDetailScatter has
+    // explicitly set it and called Generate() - see that field's own comment) - deliberately ignores
+    // Y. worldPosition here is always at this cube's own local Y origin (its bottom pivot, per this
+    // class's documented convention), while a hand-placed WallTopDetailSlot/WallMidDetailSlot sits
+    // wherever the artist actually put it on the wall surface, typically well above that - comparing
+    // full 3D distance would silently fail this check almost everywhere over a real height mismatch,
+    // even when a detail is perfectly aligned with a wall segment horizontally, which is really all
+    // "near this part of the wall" should mean here. Both call sites (PlaceEdgeRun/PlaceCell) share
+    // this same check and the same avoidNearWallDetails toggle - there's only one "is avoidance on"
+    // switch now, not a per-shape one.
+    private bool IsNearShownDetail(Vector3 worldPosition)
+    {
+        float radiusSq = detailAvoidRadius * detailAvoidRadius;
+
+        foreach (Vector3 detailPosition in ShownDetailPositions)
+        {
+            float dx = worldPosition.x - detailPosition.x;
+            float dz = worldPosition.z - detailPosition.z;
+
+            if (dx * dx + dz * dz <= radiusSq)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // Same classification as PlaceCell's edge check above, run against a cell further along the
@@ -640,12 +793,38 @@ public class CubeVisualBuilder : MonoBehaviour
     }
 
     // Two cubes only need to merge if they sit at the same height (same top face, so their
-    // floors/ceilings line up) and their footprints actually overlap in space.
+    // floors/ceilings line up) and their footprints actually overlap in space - INCLUDING two
+    // cubes that only share an exact wall boundary with zero overlap volume (e.g. two rooms
+    // touching edge-to-edge), which is the common case a T/L-junction inner corner needs. That
+    // relies on Bounds.Intersects' own >=/<= comparisons landing on exact equality at the shared
+    // boundary - fine for a translation-only placement, but once a cube's position comes from
+    // composing a rotation (FP->float conversion, quaternion math - see LevelGenerationSystem.
+    // RotationYaw), float rounding can push one side's boundary a hair past the other's, silently
+    // flipping an intended exact touch to "not intersecting" even though it looks identical at the
+    // log's own 2-decimal precision. MergeOverlapEpsilon absorbs that noise; it's far smaller than
+    // FindTouchingNeighbors' own touchGapTolerance (a real, intentional gap), so it can't cause two
+    // genuinely separate cubes to merge.
+    private const float MergeOverlapEpsilon = 0.01f;
+
+    // Debug-only: how far away (world units, XZ) a candidate can be from this cube's own bounds
+    // and still get logged by FindMergingNeighbors/FindTouchingNeighbors - keeps the log to
+    // plausible near-misses instead of every cube in the whole generated level (which floods past
+    // the console's own truncation limit long before reaching a real neighbor).
+    private const float DebugNeighborLogRadius = 30f;
+
     private List<CubeVisualBuilder> FindMergingNeighbors()
     {
         List<CubeVisualBuilder> mergingNeighbors = new List<CubeVisualBuilder>();
         float topY = GetTopY();
         Bounds bounds = GetWorldBounds();
+        Bounds overlapCheckBounds = InflateXZ(bounds, MergeOverlapEpsilon);
+        Bounds debugLogArea = InflateXZ(bounds, DebugNeighborLogRadius);
+        int skippedFar = 0;
+
+        if (debugLogPlacement)
+        {
+            LogHelper.Log("CubeVisualBuilder", $"FindMergingNeighbors for '{name}' (id={GetInstanceID()}) - ownBounds={bounds} ownTopY={topY}", this);
+        }
 
         foreach (CubeVisualBuilder other in FindObjectsByType<CubeVisualBuilder>(FindObjectsSortMode.None))
         {
@@ -654,10 +833,32 @@ public class CubeVisualBuilder : MonoBehaviour
                 continue;
             }
 
-            if (Mathf.Approximately(topY, other.GetTopY()) && bounds.Intersects(other.GetWorldBounds()))
+            bool sameHeight = Mathf.Approximately(topY, other.GetTopY());
+            bool overlaps = overlapCheckBounds.Intersects(other.GetWorldBounds());
+
+            if (debugLogPlacement)
+            {
+                if (debugLogArea.Intersects(other.GetWorldBounds()))
+                {
+                    LogHelper.Log("CubeVisualBuilder",
+                        $"  candidate '{other.name}' (id={other.GetInstanceID()}) otherBounds={other.GetWorldBounds()} otherTopY={other.GetTopY()} " +
+                        $"sameHeight={sameHeight} overlaps={overlaps} -> {(sameHeight && overlaps ? "MERGE" : "reject")}", this);
+                }
+                else
+                {
+                    skippedFar++;
+                }
+            }
+
+            if (sameHeight && overlaps)
             {
                 mergingNeighbors.Add(other);
             }
+        }
+
+        if (debugLogPlacement && skippedFar > 0)
+        {
+            LogHelper.Log("CubeVisualBuilder", $"  ({skippedFar} more candidate(s) skipped - further than {DebugNeighborLogRadius} units away)", this);
         }
 
         return mergingNeighbors;
@@ -731,6 +932,25 @@ public class CubeVisualBuilder : MonoBehaviour
         }
 
         return false;
+    }
+
+    // Debug-only: names + world bounds of a mergingNeighbors list, so a debugLogPlacement line can
+    // show exactly which cubes were actually considered for a given occupancy check - lets a
+    // missing/wrong neighbor show up directly in the log instead of having to infer it.
+    private static string DescribeNeighbors(List<CubeVisualBuilder> neighbors)
+    {
+        if (neighbors == null || neighbors.Count == 0)
+        {
+            return "[]";
+        }
+
+        var parts = new List<string>(neighbors.Count);
+        foreach (CubeVisualBuilder neighbor in neighbors)
+        {
+            parts.Add($"{neighbor.name}@{neighbor.GetWorldBounds()}");
+        }
+
+        return "[" + string.Join(", ", parts) + "]";
     }
 
     // Cells inside a bound already claimed by an earlier cube in the merge (the host, or an
@@ -868,6 +1088,15 @@ public class CubeVisualBuilder : MonoBehaviour
         instance.transform.localRotation = rotation;
         instance.transform.localScale = new Vector3(footprintX, 1f, footprintZ);
         instance.transform.localPosition = footprintCenter + rotation * centerToMinCorner;
+
+        if (debugLogPlacement)
+        {
+            LogHelper.Log("CubeVisualBuilder",
+                $"Spawned '{prefab.name}' under '{targetVisualRoot.name}' (cube '{name}') - " +
+                $"yaw(local)={yaw:0.#} yaw(world)={instance.transform.eulerAngles.y:0.#} parentYaw(world)={GetSnappedRotation(targetVisualRoot).eulerAngles.y:0.#} | " +
+                $"footprint={footprintX:0.##}x{footprintZ:0.##} footprintCenter(local)={footprintCenter} | " +
+                $"localPos={instance.transform.localPosition} worldPos={instance.transform.position}", this);
+        }
     }
 
     // EdgeYaw/CornerYaw compute a world-compass facing direction (0/90/180/270), independent of

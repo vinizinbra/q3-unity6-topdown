@@ -22,7 +22,7 @@ namespace QuantumUser.Editor
             LuxScrapAssetGenerator.Generate();
             PixieAscensionAssetGenerator.Generate();
             MaxAscensionAssetGenerator.Generate();
-            ZaraResonanceAssetGenerator.Generate();
+            ZaraAscensionAssetGenerator.Generate();
             BruteAscensionAssetGenerator.Generate();
 
             LogHelper.Log("GenerateAllAssetsMenu", "Done - see individual generator log lines above for per-asset counts.");

@@ -21,10 +21,10 @@ namespace Quantum
     // exactly one bit set in firedPhase (never a combination), so Execute can branch on it safely.
     public abstract unsafe partial class SkillActionData : UpgradeData, IRankedUpgrade
     {
-        // Icon/DisplayName/Rarity come from UpgradeData - lets this be offered directly as a
-        // LevelUpPoolKind.SkillUpgrade card (see CharacterData.DashSkillUpgrades and HeroSkill's own
-        // Actions, LevelUpUtility.AddHeroSkillUpgradeCandidates) without a separate wrapper type.
-        // GetDescription() below reuses the existing
+        // Icon/DisplayName come from UpgradeData (no Rarity - see UpgradeData's own comment) - lets
+        // this be offered directly as a LevelUpPoolKind.SkillUpgrade card (see CharacterData.
+        // DashSkillUpgrades and HeroSkill's own Actions, LevelUpUtility.AddHeroSkillUpgradeCandidates)
+        // without a separate wrapper type. GetDescription() below reuses the existing
         // Description/DescriptionArgs machinery in SkillActionData.View.cs instead of a new field -
         // that machinery already supports live-templated values, which a plain static UpgradeData
         // field wouldn't.

@@ -5,7 +5,7 @@ namespace Quantum
 
     // View-only half of SkillActionData (see the partial declaration in SkillActionData.cs) - lives
     // on the shared abstract base since every concrete action/upgrade (SpawnEntitySkillAction,
-    // JuggernautLandingRootSkillAction, IncreaseDamageSkillAction, ...) wants the same "what does
+    // JuggernautLandingRootSkillAction, AmplifierSkillAction, ...) wants the same "what does
     // this actually do" documentation slot, not a per-subclass field. Same shape as
     // SkillData.Description. Player-facing when offered as a LevelUpPoolKind.SkillUpgrade card, via
     // GetDescription() (see SkillActionData.cs) - not just a designer note, since the template

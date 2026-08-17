@@ -83,6 +83,27 @@ namespace Quantum
         // Shards, see CoinConfig and CoinUtility/CurrencyOrbSystem.
         public AssetRef<CoinConfig> CoinConfig;
 
+        // Pickup tunables for the HealthOrb (dropped by a Breakable's loot table, heals on collect) -
+        // see HealthOrbConfig and HealthOrbSystem.
+        public AssetRef<HealthOrbConfig> HealthOrbConfig;
+
+        [Header("Run Phase & Breathing POIs")]
+        // Breathing Break timing (Combat<->Breathing loop) lives directly in SurvivalConfig.Phases[]
+        // (SurvivalPhase.Kind == Breathing entries, above) - see CombatDirectorSystem and docs/run-phase.md.
+
+        // Cursed Rift's sacrifice pool + choice counts - see CursedRiftConfig, CursedRiftUtility
+        // and docs/breathing-poi.md. The Rift Mutation reward pool reuses LevelUpConfig.
+        // RiftMutations directly (below), no separate list.
+        public AssetRef<CursedRiftConfig> CursedRiftConfig;
+
+        // Store's weapon/food offer pools + pricing - see StoreConfig, StoreUtility and
+        // docs/store-blacksmith.md.
+        public AssetRef<StoreConfig> StoreConfig;
+
+        // Blacksmith's perk pool + per-Break rarity tuning + price - see BlacksmithConfig,
+        // BlacksmithUtility and docs/store-blacksmith.md.
+        public AssetRef<BlacksmithConfig> BlacksmithConfig;
+
         [Header("Talents")]
         // Meta-progression talent tuning (flat per-level bonus shared by every leveling talent) -
         // see TalentsConfig, TalentUtility and RuntimePlayer's own Player*/Has*/Can* fields.
@@ -106,6 +127,19 @@ namespace Quantum
         // an enemy in range - see WeaponSystem.Update. False is a no-op, matching normal auto-attack
         // behaviour.
         public bool DebugManualFireInput = false;
+
+        // Debug-only: skips Lobby and starts the match already this far into the Survival
+        // timeline, walking SurvivalConfig.Phases[] to land on the phase/PhaseTimer that time
+        // would naturally have reached - see DebugCheatSystem. FP._0 (default) is a no-op, normal
+        // Lobby walk-out.
+        public FP DebugStartSurvivalTimeSeconds = FP._0;
+
+        // Debug-only: queues this many level-up screens back-to-back the instant the match starts
+        // - each one increments Global.Level exactly like a real level-up would, so
+        // LevelUpConfig.LevelSequence category cycling and the next REAL level-up's XP curve
+        // threshold both stay consistent with actually having gotten here. See DebugCheatSystem.
+        // 0 (default) is a no-op.
+        public int DebugStartLevelUpCount = 0;
 
         // The pickup entity prototypes each currency/pickup utility spawns on an eligible enemy
         // kill - see ExpOrb.qtn/ScrapOrb.qtn/RiftShard.qtn/Coin.qtn and

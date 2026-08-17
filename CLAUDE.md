@@ -22,13 +22,13 @@ Short version: the code compiles and `ExpOrbSystem` is registered, but no `Exper
 
 ## Level-Up Upgrades
 
-On a level-up, the simulation now pauses (a new `GameplaySystemGroup` wrapping the per-tick gameplay systems in `SystemSetup.User.cs`, toggled via Quantum's built-in `SystemDisable`/`SystemEnable`) and opens an upgrade-choice screen: every connected player rolls 3 options from `LevelUpPoolKind`'s pools (Weapon Perk / Global Upgrade / Rift Mutation are pooled globally via `LevelUpConfig`; Skill Upgrade / Passive Upgrade - together nicknamed "Hero Ascensions" - are per-hero, living directly on `CharacterData`) and picks one, via `SelectLevelUpUpgradeCommand`, before a 30s timer auto-picks randomly for anyone who hasn't. `WeaponPerkData`/`SkillActionData`/`GlobalUpgradeData`/`PassiveUpgradeData`/`RiftMutationData` all derive from a shared `UpgradeData` base (`Icon`/`DisplayName`/`Rarity`/`GetDescription()`), so `LevelUpOption` carries one `AssetRef<UpgradeData>` instead of a field per kind, every candidate is weighted the same way by `Rarity`, and the UI (`UpgradeCardWidget`) renders any of them with no switch statement. Full design, file map, current status, and known simplifications: **`docs/level-up-upgrades.md`**. Read it before touching anything level-up/pause/upgrade-choice related.
+On a level-up, the simulation now pauses (a new `GameplaySystemGroup` wrapping the per-tick gameplay systems in `SystemSetup.User.cs`, toggled via Quantum's built-in `SystemDisable`/`SystemEnable`) and opens an upgrade-choice screen: every connected player rolls 3 options from `LevelUpPoolKind`'s pools (Weapon Perk / Global Upgrade / Rift Mutation are pooled globally via `LevelUpConfig`; Skill Upgrade / Passive Upgrade - together nicknamed "Hero Ascensions" - are per-hero, living directly on `CharacterData`) and picks one, via `SelectLevelUpUpgradeCommand`, before a 30s timer auto-picks randomly for anyone who hasn't. `WeaponPerkData`/`SkillActionData`/`GlobalUpgradeData`/`PassiveUpgradeData`/`RiftMutationData` all derive from a shared `UpgradeData` base (`Icon`/`DisplayName`/`GetDescription()`), so `LevelUpOption` carries one `AssetRef<UpgradeData>` instead of a field per kind, and the UI (`UpgradeCardWidget`) renders any of them with no switch statement. As of 2026-08-14, `Rarity` is no longer part of that shared base - only `WeaponPerkData`/`RiftMutationData` still have their own `Rarity` field and are weighted by it (`LevelUpConfig.GetWeight`); `SkillActionData`/`GlobalUpgradeData`/`PassiveUpgradeData` draw at a flat weight instead (`LevelUpUtility.ResolveWeight`) and show no rarity badge on their cards. Full design, file map, current status, and known simplifications: **`docs/level-up-upgrades.md`**. Read it before touching anything level-up/pause/upgrade-choice related.
 
-Short version: `LevelUpConfig.asset` is authored and assigned to `RuntimeConfig`, `GlobalUpgrades`/`WeaponPerkPool`/per-hero `DashSkillUpgrades`/`PassiveUpgrades` are all populated, and `UpgradeWindow` is wired into `QuantumGameScene` via `GameplayUiController.upgradeWindows[]` - a level-up now actually pauses and shows a screen. `CharacterData.HeroSkillUpgrades` no longer exists - the Hero Skill slice of the Skill Upgrade pool is pulled straight from `HeroSkill`'s own `Actions` list instead (any `SkillActionData` authored there with `Activated == false` is a candidate; granting it via `AddUpgrade` ignores `Activated` for that player only - see `SkillSystem.InvokeActions`' `isUpgrade` bypass). Remaining gap: the full end-to-end flow hasn't been manually verified in-Editor yet. See `docs/level-up-upgrades.md` for details.
+Short version: `LevelUpConfig.asset` is authored and assigned to `RuntimeConfig`, `GlobalUpgrades`/`WeaponPerkPool`/per-hero `DashSkillUpgrades`/`PassiveUpgrades` are all populated, and `ChooseWindow` is wired into `QuantumGameScene` via `GameplayUiController.choiceWindows[]` - a level-up now actually pauses and shows a screen. `CharacterData.HeroSkillUpgrades` no longer exists - the Hero Skill slice of the Skill Upgrade pool is pulled straight from `HeroSkill`'s own `Actions` list instead (any `SkillActionData` authored there with `Activated == false` is a candidate; granting it via `AddUpgrade` ignores `Activated` for that player only - see `SkillSystem.InvokeActions`' `isUpgrade` bypass). Remaining gap: the full end-to-end flow hasn't been manually verified in-Editor yet. See `docs/level-up-upgrades.md` for details.
 
-A given level-up can now be locked to exactly ONE of 5 player-facing categories (`LevelUpCategory`: HeroSkill merges SkillUpgrade+PassiveUpgrade, GlobalUpgrade, RiftMutation, WeaponPerk, and a new **Choose Weapon**) via `LevelUpConfig.LevelSequence`, a repeating per-level list - an empty list (the default) keeps the original mixed-all-pools roll unchanged. Choose Weapon rolls 3 distinct weapons from a new `WeaponChoicePoolData`, each with an independently-rolled perk count driven by a new persistent per-player `CharacterStats.WeaponTalentLevel` (increments on every Choose-Weapon pick) via `LevelUpConfig.ChancePerLevelPerSlot`/`MaxRolledPerks`, rendered by a dedicated `WeaponCardWidget` (not `UpgradeCardWidget`). As of 2026-08-07, a player can also decline every rolled weapon via a separate **"Keep Current"** button (`UpgradeWindow.keepCurrentButton`, shown only on a Choose-Weapon screen) - deliberately NOT a 4th/replacement card, all 3 `Options` stay real rolled weapons. Sends a new zero-payload `KeepCurrentWeaponCommand`; `LevelUpUtility.ConfirmKeepCurrent` sets a new `LevelUpChoice.KeptCurrent` flag (not on `LevelUpOption`, since it isn't tied to any rolled slot) that `Resolve` checks before calling `GrantOption` at all - see `docs/level-up-upgrades.md`'s "Category sequencing / Choose Weapon" section. A new `Chest` entity/`ChestSystem` reuses this whole pipeline, forced to one category set once in the Editor per chest instead of per level. Also as of 2026-08-07: a **Reroll** mechanic lets a player redraw their own current `LevelUpChoice.Options` in place, spending one charge from a new persistent per-character `CharacterStats.RerollQuantity` via a new zero-payload `RerollLevelUpOptionsCommand` - see `docs/level-up-upgrades.md`'s "Reroll" section. **Not a Global Upgrade** - sourced as a pre-run meta-progression talent, same shape as `WeaponTalentLevel`: `RuntimePlayer.Talents.RerollQuantity` (its own `PlayerPrefInt`, `"reroll_quantity"`, in `MatchMakingConfig`) seeds it once at spawn - as of 2026-08-07 this and every other meta-progression field (including `WeaponLevel`) live on one nested `RuntimePlayer.Talents : PlayerTalents` struct rather than flat on `RuntimePlayer` itself (see `docs/talents.md`). Code compiles but needs Editor work before it's playable: assign `UpgradeWindow`'s new `rerollButton`/`rerollChargesText` fields on the scene prefab (no reroll UI exists there yet), and nothing yet *writes* to the new PlayerPref (same pre-existing gap `WeaponTalentLevelPref` has) so every player starts at 0 charges until a settings/meta-progression screen sets it. Full design and current status: still **`docs/level-up-upgrades.md`** for the category/Choose-Weapon/Reroll half, and **`docs/chests.md`** for the Chest entity itself. Read both before touching anything category-sequencing/Choose-Weapon/Reroll/Chest related.
+A given level-up can now be locked to exactly ONE of 5 player-facing categories (`LevelUpCategory`: HeroSkill merges SkillUpgrade+PassiveUpgrade, GlobalUpgrade, RiftMutation, WeaponPerk, and a new **Choose Weapon**) via `LevelUpConfig.LevelSequence`, a repeating per-level list - an empty list (the default) keeps the original mixed-all-pools roll unchanged. Choose Weapon rolls 3 distinct weapons from a new `WeaponChoicePoolData`, each with an independently-rolled perk count driven by a new persistent per-player `CharacterStats.WeaponTalentLevel` (increments on every Choose-Weapon pick) via `LevelUpConfig.ChancePerLevelPerSlot`/`MaxRolledPerks`, rendered by a dedicated `WeaponCardWidget` (not `UpgradeCardWidget`). As of 2026-08-07, a player can also decline every rolled weapon via a separate **"Keep Current"** button (`ChooseWindow.secondaryButton`, labeled "KEEP CURRENT" - shown only on a Choose-Weapon screen; the same button is later reused for Cursed Rift's own "CANCEL" - see the Breathing Phase section below) - deliberately NOT a 4th/replacement card, all 3 `Options` stay real rolled weapons. Sends a new zero-payload `KeepCurrentWeaponCommand`; `LevelUpUtility.ConfirmKeepCurrent` sets a new `LevelUpChoice.KeptCurrent` flag (not on `LevelUpOption`, since it isn't tied to any rolled slot) that `Resolve` checks before calling `GrantOption` at all - see `docs/level-up-upgrades.md`'s "Category sequencing / Choose Weapon" section. A new `Chest` entity/`ChestSystem` reuses this whole pipeline, forced to one category set once in the Editor per chest instead of per level. Also as of 2026-08-07: a **Reroll** mechanic lets a player redraw their own current `LevelUpChoice.Options` in place, spending one charge from a new persistent per-character `CharacterStats.RerollQuantity` via a new zero-payload `RerollLevelUpOptionsCommand` - see `docs/level-up-upgrades.md`'s "Reroll" section. **Not a Global Upgrade** - sourced as a pre-run meta-progression talent, same shape as `WeaponTalentLevel`: `RuntimePlayer.Talents.RerollQuantity` (its own `PlayerPrefInt`, `"reroll_quantity"`, in `MatchMakingConfig`) seeds it once at spawn - as of 2026-08-07 this and every other meta-progression field (including `WeaponLevel`) live on one nested `RuntimePlayer.Talents : PlayerTalents` struct rather than flat on `RuntimePlayer` itself (see `docs/talents.md`). Code compiles but needs Editor work before it's playable: assign `ChooseWindow`'s new `rerollButton`/`rerollChargesText` fields on the scene prefab (no reroll UI exists there yet), and nothing yet *writes* to the new PlayerPref (same pre-existing gap `WeaponTalentLevelPref` has) so every player starts at 0 charges until a settings/meta-progression screen sets it. Full design and current status: still **`docs/level-up-upgrades.md`** for the category/Choose-Weapon/Reroll half, and **`docs/chests.md`** for the Chest entity itself. Read both before touching anything category-sequencing/Choose-Weapon/Reroll/Chest related.
 
-Short version: the code compiles, but `LevelUpConfig.LevelSequence`/`WeaponChoicePool` ship empty/unassigned (so nothing changes at runtime until authored), every `WeaponDataAsset`'s new `Icon`/`DisplayName` are unset, and no `Chest` `EntityPrototype`, `WeaponCardWidget`/`WeaponCardPerkRowWidget` prefab, or `UpgradeWindow.weaponCardPrefab` wiring exist yet - see each doc's own "Current status"/"Editor authoring needed" section for the full list.
+Short version: the code compiles, but `LevelUpConfig.LevelSequence`/`WeaponChoicePool` ship empty/unassigned (so nothing changes at runtime until authored), every `WeaponDataAsset`'s new `Icon`/`DisplayName` are unset, and no `Chest` `EntityPrototype`, `WeaponCardWidget`/`WeaponCardPerkRowWidget` prefab, or `ChooseWindow.weaponCardPrefab` wiring exist yet - see each doc's own "Current status"/"Editor authoring needed" section for the full list.
 
 The `GlobalUpgrade` pool itself (22 upgrades, small permanent stat increments that stack
 indefinitely) has its own design catalog: **`docs/global-upgrades.md`**. That doc's "Economy"
@@ -41,22 +41,36 @@ already used) so multiple drops off one kill don't stack exactly on top of each 
 
 ## Rift Mutations
 
-A fourth level-up pool alongside Global Upgrade/Weapon Perk/Hero Ascension - `LevelUpPoolKind.
-RiftMutation`, its own `RiftMutationData`/`RiftMutationUtility`/`RiftMutationPicks` hierarchy (see
-`Assets/_QuantumUser/Simulation/Assets/RiftMutation/`), and its own `LevelUpConfig.RiftMutations`
-list - for **rare, non-stackable, run-wide** effects: a one-shot build-defining tradeoff (Glass
-Core, Heavy Arsenal), a new reactive rule (Shield Breaker, Critical Focus), or both (Infinite
-Momentum). "Non-stackable" is enforced pool-wide (`RiftMutationPicks`), unlike Global Upgrade's
-opt-in per-asset `MaxPicks`. New `RiftMutationReactionSystem` reacts to crit/dash-activation/
-shield-break signals for the mutations that need more than a one-shot `CharacterStats` bake. Greed
-introduced a new **Rift Shard** currency system (`RiftShard.qtn`/`RiftShards.qtn`/
-`RiftShardConfig`/`RiftShardUtility`/`RiftShardOrbSystem`), mirroring `ExpOrb`'s drop-and-collect
-pattern. Full design, the complete 14-mutation roster, and current status: **`docs/rift-mutations.md`**.
-Read it before touching anything Rift-Mutation-related.
+Two level-up pools alongside Global Upgrade/Weapon Perk/Hero Ascension - **Rift Mutation**
+(`LevelUpPoolKind.RiftMutation`/`LevelUpCategory.RiftMutation`, `LevelUpConfig.RiftMutations`, 14
+entries) and, as of 2026-08-14, a second independently-rollable **Rift Mark Mutation** pool
+(`LevelUpPoolKind.RiftMarkMutation`/`LevelUpCategory.RiftMarkMutation`,
+`LevelUpConfig.RiftMarkMutations`, 11 entries - previously folded into the same pool as Rift
+Mutation, split out so a designer can pace/gate the two independently via
+`LevelUpConfig.LevelSequence`). Both share one `RiftMutationData`/`RiftMutationUtility`/
+`RiftMutationPicks` hierarchy (see `Assets/_QuantumUser/Simulation/Assets/RiftMutation/`) - a single
+shared pick-history component, since both pools draw from the same catalog and their assets never
+overlap - for **rare, non-stackable, run-wide** effects: a one-shot build-defining tradeoff (Glass
+Core, Heavy Arsenal - Rift Mutation), a new reactive rule (Shield Breaker, Critical Focus - Rift
+Mutation) or Rift-Mark-on-trigger effect (Critical Fracture, Last Stand - Rift Mark Mutation), or
+both (Infinite Momentum). "Non-stackable" is enforced pool-wide (`RiftMutationPicks`) across BOTH
+pools, unlike Global Upgrade's opt-in per-asset `MaxPicks`. Cursed Rift's own reward roll
+(`LevelUpUtility.RollMutationOptions`, see the Breathing Phase section below) deliberately keeps
+drawing only from Rift Mutation, never Rift Mark Mutation. New `RiftMutationReactionSystem` reacts to
+crit/dash-activation/shield-break signals for the mutations that need more than a one-shot
+`CharacterStats` bake. Greed introduced a new **Rift Shard** currency system (`RiftShard.qtn`/
+`RiftShards.qtn`/`RiftShardConfig`/`RiftShardUtility`/`RiftShardOrbSystem`), mirroring `ExpOrb`'s
+drop-and-collect pattern. Full design, the complete 25-mutation roster split across both pools, and
+current status: **`docs/rift-mutations.md`**. Read it before touching anything
+Rift-Mutation/Rift-Mark-Mutation-related.
 
-Short version: the code compiles and is registered in `SystemSetup.User.cs`, but `Tools/RiftRaiders/
-Generate Rift Mutation Assets` hasn't been run yet (no `.asset` instances exist), and (same gap
-`ExpOrb` itself once had) no `RiftShardOrb` prototype prefab exists yet and
+Short version: the code compiles and is registered in `SystemSetup.User.cs`. `Tools/RiftRaiders/
+Generate Rift Mutation Assets` needs re-running after the two-pool split - it already ran once
+against the old single-list design, so `LevelUpConfig.asset`'s `RiftMutations` list still holds all
+25 GUIDs (11 of which now belong in `RiftMarkMutations`) until it's run again.
+`UpgradePopupWidget.riftMarkContent` (the tab-hold party summary popup's new 4th list) still needs a
+scene Transform assigned - no null guard, so it must be wired before a Rift Mark Mutation pick is
+ever recorded. Same gap `ExpOrb` itself once had: no `RiftShardOrb` prototype prefab exists yet and
 `RuntimeConfig.RiftShardConfig`/`RiftShardPrototype` aren't assigned, so Greed's currency half won't
 drop or credit anything at runtime until that's authored in the Editor.
 
@@ -169,17 +183,396 @@ currently reuses Kai's own Hero Skill vortex prefab rather than a dedicated one 
 not a functional gap). Not yet manually verified end-to-end in-Editor - see the doc's own "Current
 status" for the full checklist.
 
+## Zara — Ascensions
+
+Zara's Hero Ascension pool was consolidated (2026-08-11) from 8 one-off Totem sub-actions (her
+`ZaraBaseSkill.asset` had the same `CheckActions: 0` dead-baseline shape already found/fixed for
+Brute/Kai), 4 single-pick Resonance passives, and 4 overlapping Dash picks into exactly 10 three-rank
+Ascension lines: Totem (Amplifier/Healing Chorus/Double Time/Main Stage), Resonance (Faster Tempo/
+Heavy Bass/Restorative Beat/Remix), Dash (Afterbeat/Portable Speaker) - reusing the same generic
+rank/draft/UI architecture Pixie/Brute/Max/Kai already established (`docs/level-up-upgrades.md`'s
+"Ranked Ascensions" section), zero Zara-specific rank code needed. Her Totem's pre-existing generic
+`AlternatingArea`/`AlternatingAreaSystem` (Damage-Beat/Healing-Beat alternation, shared with a new
+generic `HealAmount` field mirroring the pre-existing `DamageAmount`) turned out to already implement
+exactly the "Combat DJ" rhythm mechanic the redesign needed, extended rather than reinvented - Main
+Stage rank 3's opening/closing bonus beats are the one genuinely new mechanism
+(`AlternatingAreaSystem.FireBonusPulse`/`TryFireClosingBeat`, gated by a `MainStageBonusBeats` marker
+tag stamped only on entities Main Stage itself spawns, guaranteeing a Portable Speaker - built through
+the exact same `SpawnedEntitySpawner.Spawn` call - can never inherit them). Two real pre-existing bugs
+were found and fixed as part of this refactor: `AlternatingAreaSystem`'s alternation defaulted to a
+Healing-first pulse order rather than the spec-required Damage-first (fixed by seeding
+`CurrentlyHealing = true` at spawn, so the first flip resolves to Damage), and `ResonanceUtility.
+FirePulse`'s own enemy-damage call re-entered `DamageUtility.ApplyDamage`'s shared funnel, silently
+regenerating Resonance from its own Pulse - fixed via a new generic `bool generatesResonance = true`
+parameter on `ApplyDamage`, gating `ResonanceUtility.OnDamageDealt`, passed `false` by Zara's own
+already-Resonance-sourced effects (the Pulse itself, Heavy Bass's Subwoofer, Afterbeat) only. Remix's
+rank-2 "strengthened effect"/rank-3 "2 distinct effects" needed one new generic (not Zara-specific)
+mechanism: a virtual 4-arg `HitEffectData.Apply(f, ref context, durationMultiplier, magnitudeMultiplier)`
+overload (default forwards to the existing 2-arg `Apply`, so every other `HitEffectData` subclass
+across every hero/weapon-perk is unaffected) that only `BurnEffectData`/`SlowEffectData`/
+`StunEffectData`/`RiftMarkEffectData` override. Full design, the complete per-line rank breakdown, and
+current status: **`docs/zara-ascensions.md`**. Read it before touching anything Zara-Ascension/Totem/
+Resonance/Remix/Afterbeat/Portable-Speaker/`AlternatingArea` related.
+
+Short version: the code compiles once codegen picks up every changed/new `.qtn` file, and
+`SystemSetup.User.cs` registers a new `ZaraSubwooferPulseSystem` alongside the pre-existing
+`ZaraAfterbeatSystem`. `Tools/RiftRaiders/Zara/Generate Ascension Assets` (replaces the old
+`ZaraResonanceAssetGenerator.cs`, whose own `WireCharacterData` only append-and-deduped
+`DashSkillUpgrades` - the exact drift bug that let the old, broken `PortableSpeaker.asset` survive
+every prior regeneration) authors and wires all 10 lines, fully replacing every list it touches. Two
+bugs found via live in-Editor testing were fixed: `ZaraThrowProjectileSpeaker.MaxDistance` had ended up
+at `5.0` instead of `0` ("unlimited"), making the Totem's lobbed throw hit its own distance cap
+mid-arc and plant the Totem in mid-air instead of on the ground; and `ZaraDeviceSpeaker.prefab` was
+misidentified as Portable Speaker's spawn prototype when it's actually the THROWN PROJECTILE visual
+(`ZaraThrowProjectileSpeaker.Prototype`) - Portable Speaker now correctly reuses `ZaraSpeaker.prefab`
+(the Totem's own placed entity) instead, same "Dash mini-version reuses the Hero Skill's own entity"
+precedent Kai's Warp Wake already established. Every numeric value not explicitly pinned by the brief
+is a decisive placeholder pending a real balance pass. Not yet manually verified end-to-end in-Editor -
+see the doc's own "Current status" for the full checklist.
+
 ## Talents (meta-progression) + Lobby Start
 
 Talents are small, permanent unlocks earned OUTSIDE a match - flat named fields (`PlayerDamageLevel`...`PlayerExperienceLevel`, twelve 0-5 per-player leveling stats each worth +5%/level; `HasWeaponChest`/`HasHeroChest`/`HasGlobalUpgradeChest`/`HasUnlockedRift`/`CanFindStones`/`HasEvent`, six shared/coop bools OR'd across every connected player) living on `RuntimePlayer.Talents` - as of 2026-08-07 a single nested `PlayerTalents` struct field (grouped together with `WeaponLevel`/`RerollQuantity`, see "Level-Up Upgrades" above) rather than flat on `RuntimePlayer` itself. Same "seeded once from outside the match" contract `WeaponLevel` already had, persisted via one new `PlayerPrefObject` JSON pref (`MatchMakingConfig.TalentsPref`) mirroring `WeaponTalentLevelPref`. No hand-placed boundary entity - `ChunkType.Start` was renamed to `ChunkType.LobbyStart` in place, and `LevelGenerationSystem.TryGetLobbyStartBounds` reads that chunk's own world-space footprint straight off its existing `Transform3D`/`Chunk` fields (the same way it already reads the Boss Arena's footprint back out for its own grid-origin math); `LobbyBoundarySystem` polls that footprint each tick and transitions `Global.CurrentState` from `GameState.Lobby` to `GameState.Survival` (see "Game State" below) once every connected, spawned player has physically walked outside it - `CombatDirectorSystem` (and therefore all enemy spawning/`Global.SurvivalTime` counting) only runs during `GameState.Survival`. Talent-gated spawning is a `ChunkSpawnConfig` DataAsset (`Assets/_QuantumUser/Simulation/Assets/Config/ChunkSpawnConfig.cs`), holding a `SpawnEntityWithRequirement[] Spawns` array (`AssetRef<EntityPrototype> Prototype`, `FPVector3 Offset`, `SharedTalentRequirement Requirement`, `FP Chance` per entry) - referenced via one new `AssetRef<ChunkSpawnConfig> SpawnConfig` field on `Chunk` itself (`Chunk.qtn`), typically assigned on the `LobbyStart` chunk prototype. Was originally a qtn *component* of the same shape, one instance per entity - reworked into an `AssetObject` array (same "array field on an `AssetObject`, not a component" shape `LevelConfig.ChunkPool`/`ChunkPoolEntry[]` already uses) once a single chunk needed more than one independent conditional spawn at once (e.g. Weapon+Hero+GlobalUpgrade chests together), which the old component shape couldn't do - Quantum entities can only carry one instance of a given component type. `TalentGateSystem` resolves every `Chunk` entity's own `SpawnConfig` (if assigned) exactly once (`f.Create` per satisfied/chance-rolled entry, the first entity-spawn-at-runtime pattern this codebase has used for something otherwise normally hand-placed, like a Chest). Nested/child `EntityPrototype`s were explicitly ruled out as a way to co-locate spawns with the chunk - Quantum's prefab importer only reads a prefab's root GameObject, silently ignoring nested `QuantumEntityPrototype`s. Full design, file map, current status, and known simplifications: **`docs/talents.md`**. Read it before touching anything Talents/meta-progression/LobbyStart/ChunkSpawnConfig related.
 
 Short version: the code compiles once codegen picks up the new `Talents.qtn`/`Chunk.qtn` fields, and is registered in `SystemSetup.User.cs`, but no `TalentsConfig.asset` or `ChunkSpawnConfig.asset` exists yet (so `RuntimeConfig.TalentsConfig` and every chunk's `SpawnConfig` are unassigned) - nothing talent-gated spawns without both authored. `Assets/_QuantumUser/Entities/LevelChunk/LevelChunk.prefab` also still has the OLD component-based `SpawnEntityWithRequirement` added from before this rework - needs manual removal/replacement with a `SpawnConfig` assignment once codegen regenerates (see `docs/talents.md`'s own authoring checklist). On top of the pre-existing general "no Chest prototypes authored" gap `docs/chests.md` already tracks. Nothing currently *writes* to the new `player_talents` pref - same gap `weapon_talent_level` already had (an account/profile screen elsewhere would be what actually raises these over time). Not yet manually verified end-to-end in-Editor.
 
+## Minimap
+
+A node-based minimap - the static layout (one filled square per placed `Chunk` entity, at that chunk's true relative grid position/size) plus a level outline are baked into a single procedurally-painted `Texture2D`/`RawImage` (`FilterMode.Point`, flat pixel-art look) rather than one UI element per chunk, so adjacent chunks' real footprints tile together into a connected blueprint with no adjacency/edge data needed, and repainting only touches the specific chunk(s) that actually changed, not every frame. Deliberately the first, decoupled slice of a much bigger future "Run Pacing + Exploration System" idea (assault/breathing rhythm, local aggro/leashing, POIs, world events) - only the minimap itself was built, since it needed almost nothing that didn't already exist in the simulation. A new shared/co-op `Chunk.Discovered` bool (`Chunk.qtn`) flips true via a new `ChunkDiscoverySystem` the first time any player physically enters that chunk's own world footprint - same X/Z-only containment-check idea `LobbyBoundarySystem` already uses for the LobbyStart chunk. View-side, `MinimapWidget` (`Assets/_Project/Scripts/UI/InGame/Hud/Minimap/`) reads `game.Frames.Predicted` every `QUpdate`: paints each chunk's fill on a `Discovered`/current-chunk change; computes the level's outline exactly once (gated on `Global.LevelGenerated`, not "first chunk seen" - a partial-snapshot timing bug that briefly made the outline lock onto just one chunk) via rasterize-then-edge-detect on a pixel occupancy grid (not per-chunk-pair edge matching, which gets partially-covered edges wrong), then only stamps that outline onto chunks that are actually `Discovered`; pans `mapRect` every frame to keep this instance's own local player centered inside a separately-authored mask container; plus a handful of small icon overlays for chunk types that opt in (Boss/Merchant/LobbyStart, not the generic Enemy/Traversal chunks the texture alone represents) and a marker per match player (local and remote alike). "Current chunk" and the centering both resolve per instance via `MyLocalPlayer.Slots[localSlotIndex]` - the one place this needs local-player awareness; otherwise every instance runs the identical frame query regardless of which split-screen slot it lives under, so it's deliberately *not* routed through `GameplayUiController` the way `choiceWindows[]` is - "one per split-screen local player" is purely a scene-hierarchy placement concern. A chunk rotated 90/270 has its authored Width/Depth swapped in world space (`LevelGenerationSystem.SwapsAxes`, reimplemented locally since it's `internal` to the Simulation assembly) - missing this was the actual root cause of the outline looking wrong/incomplete early on, since 3-in-4 chunks land rotated. Full design, file map, current status, and known simplifications: **`docs/minimap.md`**. Read it before touching anything minimap/chunk-discovery related.
+
+Short version: the code compiles once codegen picks up the new `Chunk.Discovered` field, and `ChunkDiscoverySystem` is registered in `SystemSetup.User.cs` - chunks will actually start flipping `Discovered` at runtime. Nothing renders yet, though: no `MinimapWidget` scene instance, mask container, icon/player-marker template, or `chunkTypeSprites[]` exist yet - see `docs/minimap.md`'s own authoring checklist. Not yet manually verified end-to-end in-Editor.
+
+## Environment Details
+
+A View-only companion to the hand-authored "cube generator" (`CubeVisualBuilder`) - **reworked
+2026-08-12 from a fully-procedural design into hand-placed slots**, after the procedural version
+(computed positions from `ChunkWallCube` bounds + per-cell density rolls) hit real friction in
+testing: `ChunkWallCube` boxes turned out to be room-spanning rather than thin wall strips, floor
+height had to come from a box's `max.y` not `min.y`, and correct orientation needed non-uniform
+scale hacks to counteract the camera's tilt. Now the artist hand-places `GroundDetailSlot`/
+`WallTopDetailSlot`/`WallMidDetailSlot` GameObjects (`Assets/_QuantumUser/View/World/`, global
+namespace like `ChunkWallCube` - wall is split into Top/Mid, not one generic wall type, since a prop
+suited to a wall's upper portion usually doesn't suit its middle/base and vice versa) directly in
+each chunk prefab - `[RequireComponent(typeof(SpriteRenderer))]`, a placeholder `Sprite` for Editor
+preview, an authored `WorldSize`, and whatever position/rotation the artist wants - and
+`ChunkDetailScatter`'s job shrinks to just: per slot, deterministically decide *whether* it shows
+anything at all (`WorldTheme.Details.GroundDetailChance`/`WallTopDetailChance`/`WallMidDetailChance`,
+one `[Range(0,1)]` per slot type) and, if so, *which* themed sprite
+(`GroundDetails`/`WallTopDetails`/`WallMidDetails`, equal-probability `List<Sprite>`, no per-sprite
+weight, no scale-variance range), then rescale to
+`worldSize * ResolveUnitScale(sprite)` - `ResolveUnitScale` normalizes away the picked sprite's own
+pixel size/PPU so swapping sprites never changes how big a slot reads on screen. It
+**never touches position or rotation** - those stay exactly as authored, so a misplaced/misoriented
+prop is now purely an Editor fix, not a script bug. Deliberately simulation-free (no `.qtn`
+component, no codegen dependency), but the sprite pick still needs to agree across every
+client/split-screen instance and not reshuffle on rebuild, so it's seeded from `RuntimeConfig.Seed`
+combined with each chunk's own `OriginCellX`/`OriginCellZ` via a manual deterministic hash (not
+.NET's `HashCode.Combine`, which is randomized per-process). Wall slots also get
+`EnvironmentManager.DetailSpriteMaterial` - a dedicated `Project/Detail Sprite Height Fog` shader
+(`Assets/_QuantumUser/View/Rendering/Shaders/DetailSpriteHeightFog.shader`) reimplementing just the
+Height Fog block from the real level shader (`Project/Mobile Toon Modular Level`, which is opaque/
+mesh-oriented and would render broken garbage on a `SpriteRenderer`), kept in sync with
+`levelMaterial`'s own Height Fog properties every `EnvironmentManager.Load()`. `ChunkDetailScatter`
+still has a public `Regenerate` `[Button]` for live Play Mode iteration on one chunk, and `WorldTheme`
+still has `Apply To Scene (Debug)` and `Regenerate All Chunk Details (Debug)`
+(`FindObjectsByType<ChunkDetailScatter>` + call `Regenerate` on each). `CubeVisualBuilder` also
+gained optional, opt-in **detail avoidance** - one bool, `avoidNearWallDetails`, forces
+`edgePrefabs[0]`/`outerCornerPrefabs[0]` (no separate prefab to assign) instead of the usual random
+pick within `detailAvoidRadius` of an *actually-shown* wall detail. Since whether a slot actually
+shows anything is a runtime roll only `ChunkDetailScatter` resolves (and `CubeVisualBuilder` has no
+reliable lifecycle ordering against that), a cube with it on skips its own auto-`Generate()`
+at `Start()` entirely and waits - `ChunkDetailScatter`, right after resolving every wall slot, sets
+`ShownDetailPositions` (only the ones that actually passed their chance roll - an unset/empty list
+if none did) on every such cube and calls `Generate()` explicitly, once. Full design, file map,
+current status, and the old procedural design's own history: **`docs/environment-details.md`**. Read
+it before touching anything ground/wall-detail-slot related.
+
+Short version: the code compiles, no codegen dependency. Nothing shows yet under this new design:
+no `GroundDetailSlot`/`WallTopDetailSlot`/`WallMidDetailSlot` has been hand-placed in any chunk
+prefab, no `ChunkDetailScatter` added to a chunk root, no `WorldTheme.Details` sprite lists or
+`*DetailChance` values authored (both default to `0`/empty, leaving every slot disabled), nothing calls
+`EnvironmentManager.Load()` for a level's real "current theme" outside the debug-button/
+`initialTheme` path, and no `Material` asset exists yet for the Height Fog shader (needs creating
+in-Editor and assigning to `EnvironmentManager.detailSpriteMaterial` - not hand-authored here since
+it needs the shader's own Unity-generated GUID) - see `docs/environment-details.md`'s own "Current
+status" for the full checklist. The prior procedural design was manually verified working
+end-to-end before being replaced.
+
 ## Game State
 
 A structured top-level match-flow state machine - `Global.CurrentState`, a `GameState` enum (`Lobby, Survival, Upgrade, Event, Boss`) - replacing the independent ad hoc `Global` booleans each phase used to gate itself with (e.g. Talents/Lobby Start's own `LobbyExited`, now removed). `GameStateUtility.SetState` is the single place the value changes and fires a new match-wide `GameStateChanged` event (`Events.qtn`); it's deliberately thin (set + fire only) - each transition's own pause behavior is owned by whichever system drives it, since "does this also pause `GameplaySystemGroup`" genuinely differs per state (`Lobby` must NOT freeze player movement - they have to walk out of it; `Upgrade` does, via the pre-existing `SystemDisable<GameplaySystemGroup>` mechanism, unchanged). `LevelUpUtility.OpenUpgradeScreen`/`Resolve` now also drive `Upgrade` transitions, capturing `Global.PreUpgradeState` before switching so `Resolve` restores whichever state was actually interrupted (`Lobby` or `Survival`) rather than hardcoding `Survival` - a talent-granted Chest can be opened while still in `Lobby`. Full design, current status, and open questions: **`docs/game-state.md`**. Read it before touching anything GameState/match-flow/pause-time related.
 
-Short version: the code compiles once codegen picks up the new `GameState.qtn`/`Events.qtn` fields. `Lobby`->`Survival` (via `LobbyBoundarySystem`) and `Survival`/`Lobby`<->`Upgrade` (via `LevelUpUtility`) are both fully wired. `Event`/`Boss` are pure vocabulary only - no system transitions into or out of either yet (`Event` mirrors the already-scaffolded `RuntimePlayer.HasEvent`; `Boss` would need a hook into the existing `BossSystem`'s own encounter entry/exit, not investigated). Whether `Event`/`Boss` should pause the whole `GameplaySystemGroup` (like `Upgrade`) or just the Director (like `Lobby`) is still undecided. Simulation-side only so far - no View/UI code reacts to `GameStateChanged` yet, by explicit request.
+Short version: the code compiles once codegen picks up the new `GameState.qtn`/`Events.qtn` fields. `Lobby`->`Survival` (via `LobbyBoundarySystem`) and `Survival`/`Lobby`<->`Upgrade` (via `LevelUpUtility`) are both fully wired. `Event` is still pure vocabulary only (mirrors the already-scaffolded `RuntimePlayer.HasEvent`, no system transitions into or out of it). `Boss` is no longer vocabulary-only, as of 2026-08-17: `CombatDirectorSystem.ApplyPhaseGameState` now routes `SurvivalPhaseKind.Boss` to `GameState.Boss` and triggers a one-shot `RunPhaseUtility.BeginBossEncounter` (teleport every player to the Boss Arena chunk, enable hand-placed `BossArenaGate`-tagged colliders sealing it, spawn `SurvivalPhase.BossPrototype`) - see "Boss Phase Trigger" below and `docs/run-phase.md`'s own "Boss phase trigger" section. The once-open pause question is resolved: `Boss` does **not** pause `GameplaySystemGroup`, same as `Survival`/`Breathing` - it's an active fight, not a menu. Simulation-side only so far - no View/UI code reacts to `GameStateChanged` yet, by explicit request.
+
+## Boss Phase Trigger
+
+The moment `SurvivalConfig`'s phase timeline (see "Survival Director" above) reaches a `Kind = Boss` entry, `RunPhaseUtility.BeginBossEncounter` fires once. Both the teleport destination(s) and the boss spawn position(s) come from two new hand-authored marker fields on a new `BossArena` component (`BossEncounter.qtn`, both `[4]`-capped arrays) rather than a single computed center - deliberately its own component, not fields on `Chunk` itself (every chunk in the level carries `Chunk`, dozens of them from procedural generation, so these arrays would otherwise sit wasted on every non-Boss chunk). A level designer places real marker GameObjects in the Boss Arena (`BossTeleportPointMarker`/`BossSpawnPointMarker`, `Assets/_QuantumUser/View/World/`) and a new `BossArenaMarkerBaker` `[Button]` (mirrors `ChunkRespawnPointBaker`, requiring both `QPrototypeChunk` and the new `QPrototypeBossArena` on the same prototype) bakes them in; unauthored (or no `BossArena` component at all) falls back to a single point at the chunk's own plain geometric center, so nothing breaks if a level never places either marker. Whatever position is resolved gets re-grounded via `EnemyMovementUtility.TryFindGroundHeight`/`GetGroundLayerMask` (same top-down ground raycast every normal Director spawn already uses), so nothing lands inside floor/prop geometry even off a slightly-off marker. Then: teleports every connected player, one marker per player slot (wraps around if fewer points than players) so they land spread out instead of stacked (`KCC.Teleport`, same idiom `DamageUtility.RespawnPlayer` already uses), enables every hand-placed `BossArenaGate`-tagged collider entity (an empty marker tag, `BossEncounter.qtn` - the level designer places the actual sealing colliders in the Editor; a new signal-only `BossArenaGateSystem` forces each one's `PhysicsCollider3D` disabled the instant it's created, regardless of what `IsEnabled` was authored on the prototype, so there's no "forgot to uncheck it" footgun; this whole mechanism does no adjacency computation of its own), and spawns `SurvivalPhase.BossPrototype` (a new `AssetRef<EntityPrototype>` field, read only for a Boss entry) once per resolved `BossSpawnPoints` entry via `EnemySystem.SeedFromEnemyData` - so 2+ authored spawn points spawn that many copies of the same boss (e.g. twin bosses), not different kinds - deliberately without `EnemyLifecycle` (same "shouldn't auto-retire, doesn't need Director pressure accounting" reasoning already established for the Scrapjaw boss-combat plan's own `SpawnPackDeliveryData` pack adds). `CombatDirectorSystem`'s own gate already stops normal Director spawning entirely once `GameState` becomes `Boss` - confirmed with the user, only the boss itself (and whatever its own abilities spawn) should be active during the fight. Right after spawning, if `SurvivalPhase.PauseDuration > 0` (a new `FP` field, 5s authored by the MVP generator - only takes effect once the generator is re-run, since editing the generator's own source doesn't retroactively update an already-authored `SurvivalConfig_MVP.asset`), `BeginBossEncounter` also `f.SystemDisable<GameplaySystemGroup>()`s - the exact same mechanism `LevelUpUtility.OpenUpgradeScreen` uses to pause a Level-Up screen, just auto-timed via a new always-on `BossPauseSystem` (counts `Global.BossPauseTimer` down, re-enables the group at 0) instead of player-choice-driven - confirmed with the user: a genuine hard freeze (player movement/weapons/skills, KCC, `EnemySystem`/`BossSystem` AI including the boss itself, the fall systems - everything inside the group), not just a visual overlay, so nothing can act while the Boss Window reveal (below) plays. This is purely the trigger/plumbing - a boss's own in-combat behavior (phases, stagger, combos) is the pre-existing, separate `BossDataAsset`/`BossSystem`/`BossRuntimeState` framework (see the Scrapjaw boss-combat plan, `.claude/plans/clever-herding-metcalfe.md`, for that framework's own design and the one boss built on it so far).
+
+`EnemyView` (`Assets/_QuantumUser/View/Entities/Enemy/`) also gained a second, opt-in way to author a spawned enemy's visual - unblocks a boss's own one-off `EntityPrototype` specifically, since the normal path (`EnemyDataAsset.ViewPrefab`, pooled and fit-scaled to the collider radius at runtime) exists only because the SHARED generic Director prototype has to visually represent many different `EnemyData`. `SpawnSprite` now checks for an `EnemyViewRig` already baked as a real child of `spriteRoot` first; if found, it skips `ViewPrefab`/`ViewPrefabPool` entirely (nothing to instantiate, the GameObject already exists) but still applies the exact same `ResolveFitScale` sprite-bounds math, `Vector3.down * radius` bottom-pivot positioning, and `HasShadow` radius-based auto-scale to it - confirmed with the user, a boss's rig should sit at its collider's bottom center and dynamically track its own radius exactly like a normal enemy's pooled sprite does. Only rotation stays manual. A new `Resolve Scale` `[Button]` on `EnemyView` re-runs the whole resolve pass on a live entity in Play Mode for quick iteration (tweak `viewRadiusPadding`/`Stats.Radius`/the sprite, re-click, no respawn needed). No other enemy is affected.
+
+A new `EnemyFallSystem` (`Assets/_QuantumUser/Simulation/Systems/Enemy/`) gives Boss/Elite-tier enemies the same "fall off the level → take fall damage → respawn to safety" treatment `PlayerFallSystem` already gives players - confirmed with the user, so a Boss or Elite pushed off a ledge (physics/knockback) can't end up lost/stuck instead of just dying normally like every other tier still does. The shared nearest-chunk/inset-into-bounds respawn math was extracted out of `PlayerFallSystem` into a new `FallRespawnUtility` so both systems use the exact same logic; Elite reuses it directly off its own current position (it has no tracked "last grounded" position the way `PlayerMovement` does), while Boss respawns specifically at its own sealed Boss Arena's `BossSpawnPoints[0]` (`LevelGenerationSystem.ResolveBossSpawnPositions`, ground-corrected the same way `RunPhaseUtility.BeginBossEncounter` already is) rather than the generic nearest-chunk fallback, since respawning it into some nearby chunk would strand it outside its own `BossArenaGate`-sealed boundary mid-fight.
+
+View-side, as of 2026-08-17, the boss also gets its own dedicated HUD instead of sharing the normal enemy UI: `EnemyView.RefreshSprite` now skips `EnemyUiWidgetManager.SpawnWidget` entirely for `EnemyTier.Boss` (a new `EnemyView.IsBoss` gate) - no floating `CharacterUiWidget` above the boss at all - and a new single-instance `BossWidget` (`Assets/_Project/Scripts/UI/InGame/Hud/BossWidget.cs`) shows a top-screen name + HP bar + shield bar for whichever entity `frame.Filter<BossRuntimeState, Health>()` finds, while `DirectorTimelineUiWidget` hides its own `visualRoot` for the same condition - the two are mutually exclusive across the match. Shield turned out to already be enemy-agnostic (`EnemySystem.SeedShield` seeds it off `EnemyDataAsset.Stats.ShieldMultiplier` for any enemy, boss included - `GrasslandOutpostBoss.asset` already has `ShieldMultiplier = 1` authored), so `BossWidget`'s shield bar needed no new simulation-side work. Both widgets poll `Global.CurrentState` directly every `QUpdate`, same idiom `BreathingCountdownWidget` already uses - deliberately still not the `GameStateChanged` event, so this section's own "Simulation-side only so far" line above stays accurate.
+
+Two more View-only pieces, no simulation changes: a new `BossWarningWidget` (`Assets/_Project/Scripts/UI/InGame/Hud/BossWarningWidget.cs`) shows a "BOSS APPROACHING" HUD banner + countdown - but only during the LAST `Breathing` phase before `Boss` (peeked via `SurvivalConfig.Phases[CurrentPhaseIndex + 1].Kind == Boss`, same idiom `DirectorTimelineUiWidget`'s own marker-skip logic already uses) and only once `Global.BreathingTimeRemaining` drops to its own `warningThreshold` (10s default) - confirmed with the user, the boss encounter itself stays fully automatic (SurvivalConfig-driven), this is purely a heads-up layered on the pre-existing countdown, not a new pause/trigger stage. Separately, `BossWidget` now also triggers the `BossWindow` reveal (see "Boss Window" below) the instant it finds the boss entity for the first time each encounter (edge-detected via a new `_wasBoss` field) - reuses `BossWidget`'s own already-running "find the boss, resolve its `EnemyDataAsset`" lookup rather than a separate trigger component, and casts to `BossDataAsset` to pull `Title`/`Subtitle`/`UiSprite` for the window if it resolves.
+
+## Boss Window
+
+A full-screen reveal card (`Assets/_Project/Scripts/UI/InGame/BossWindow.cs`, `UiWindow` subclass) shown once per encounter, right as the boss spawns (triggered from `BossWidget`, see above) - similar in spirit to `ChooseWindow`'s own intro animation (same `ShakeGrowImpactAnimation` reveal building block, `useUnscaledTime: true` throughout) but with its own content and sequence: icon background → boss icon → title background → title text → subtitle text, each staggered via its own `ShakeGrowImpactAnimation`, then a hold, then the whole thing fades away via a `disappearCanvasGroup` (`Tween.Alpha`, 0.3s default). Not wired into `WindowManager` - called directly (`.Show()`), so it doesn't hide the HUD underneath, same "bypass WindowManager to keep the HUD visible" choice Cursed Rift/Store/Blacksmith already made. `Title`/`Subtitle`/`UiSprite` are three new fields on `BossDataAsset` (`BossDataAsset.View.cs`, a new partial file mirroring `EnemyDataAsset.View.cs`'s own simulation/view split) - deliberately separate from the base `EnemyDataAsset.EnemyName` already used by `BossWidget`'s in-combat HUD name, since the reveal card's own text doesn't need to match that 1:1. A `[Button] TestIntroAnimation()` (with an optional `testBossData` field to preview real content) lets it be tuned standalone in Play Mode without a live boss encounter.
+
+The reveal is bracketed by a one-way camera-focus cutaway (confirmed with the user), also driven from `BossWidget`: a new `ScreenFadeWidget` (`Assets/_Project/Scripts/UI/InGame/Hud/ScreenFadeWidget.cs`, single shared instance, `Tween.Alpha` on a full-screen `CanvasGroup`) fades to black, `FollowCamera` (`Assets/_QuantumUser/View/Camera/FollowCamera.cs`) gets a new `SetFocusOverride(Transform, snap: true)`/`ClearFocusOverride(snap: true)` pair that locks its framing onto a single transform instead of averaging its normal multi-player `_targets` list (the `snap` default instantly repositions `_smoothedPosition` rather than easing, since the whole point is to already be exactly on target the instant the fade reveals it - no visible pan), then `ScreenFadeWidget` fades back in showing the boss in focus while `BossWindow` plays over it. The boss's own Unity `Transform` is resolved via `QuantumEntityViewUpdater.GetView(bossEntity)` (found once via `FindFirstObjectByType` in `BossWidget.Awake`) - same idiom `SentryView` already uses for resolving another entity's view from outside its own `CustomQuantumEntityViewComponent`. Returning to normal framing once `Global.BossPauseTimer` counts down to 0 (edge-detected each `QUpdate`, same shape as the `_wasBoss` edge-detect) is deliberately NOT a mirrored fade-out/fade-in - confirmed with the user, just `ClearFocusOverride(snap: false)` directly, letting `FollowCamera`'s own existing `Update()` lerp ease it back to the players naturally (nothing jarring to hide - the camera's already framing the arena, players and boss both right there). The enter cut degrades gracefully to a plain instant camera snap (no fade) if `ScreenFadeWidget.Instance` isn't found in the scene.
+
+Short version: the code compiles once codegen picks up `BossEncounter.qtn`'s new `BossArena` component (`TeleportPoints`/`SpawnPoints`, moved off `Chunk` itself for the performance reason above). Nothing is authored yet: no `BossArenaGate`-tagged colliders exist in `QuantumGameScene.unity` around the Boss Arena's own corridor(s); the Boss chunk's own prototype doesn't have a `QPrototypeBossArena` added yet, and no `BossTeleportPointMarker`/`BossSpawnPointMarker`s have been placed under it either (both fall back to the chunk's plain geometric center until baked via `BossArenaMarkerBaker`'s `[Button]`, so this doesn't block testing, just leaves it unrefined); and `SurvivalConfig_MVP.asset`'s `Boss` phase's `BossPrototype` is unassigned (no real boss `EntityPrototype` exists yet). The new `BossWidget` also needs Editor wiring before it shows anything: a scene panel (name text/HP slider/shield slider) doesn't exist yet, and `DirectorTimelineUiWidget`'s new `visualRoot` field needs its existing slider/text/marker children wrapped under one new child container and assigned to it (its script currently sits directly on `DirectorTimelineWidget`, so `visualRoot` can't just be that same GameObject - see the field's own tooltip). `BossWarningWidget`/`BossWindow` are both entirely unauthored in-scene yet either (no prefab/hierarchy built, `BossWidget.bossWindow` unassigned, no `Title`/`Subtitle`/`UiSprite` authored on `GrasslandOutpostBoss.asset`). `ScreenFadeWidget` also has no scene instance yet (a full-screen black `Image`/`CanvasGroup` under the HUD Canvas) - until one exists, the camera-focus cutaway silently degrades to an instant, unhidden camera snap (no fade) rather than failing outright. Not yet manually verified end-to-end in-Editor.
+
+## Breathing Phase, Healing Shrine, Cursed Rift & Choice Window Refactor
+
+A repeating **Breathing Break** (~30s, ~4 per run, both configurable) now alternates with continuous
+combat: `GameState` gained a `Breathing` value (not a parallel "RunPhase" enum - the existing
+`GameState`/`GameStateUtility.SetState` already *is* the Run Phase concept). Breathing is
+implemented as a genuine entry in `SurvivalConfig.Phases[]` (`SurvivalPhase` gained a `Boolean
+IsBreathing` field - confirmed with the user, after two earlier iterations: first a standalone
+`RunPhaseConfig` asset, then a flat `BreathingBreakStartTimes` list bolted onto `SurvivalConfig` -
+both were superseded once Breathing became a first-class phase, since `SurvivalConfig.Phases[]`
+already *is* the run's own pacing timeline and a designer just interleaves `IsBreathing = true`
+entries between the Director's own combat-phase entries). `CombatDirectorSystem` (no separate
+system) detects the transition as a natural extension of the same `SurvivalProgressionUtility.Tick`
+phase-walk it already drives - its own gate widened from `CurrentState != Survival` to also allow
+`Breathing` (so `PhaseTimer` keeps advancing *through* a Break), and it skips
+`CombatDirectorUtility.TryPulse` entirely whenever the current phase `IsBreathing == true`. As of
+2026-08-14, `SurvivalTime` and `PhaseTimer` are explicitly INDEPENDENT clocks (fixing a real
+regression this phase-based rework had silently introduced): `PhaseTimer` still advances through
+Breathing (it's what ends the Break), but `Global.SurvivalTime` - cumulative COMBAT time, consumed
+by `BalanceConfig`'s run curves/co-op scaling - now freezes entirely while `IsBreathing == true`,
+so a phase authored `Duration=120` always hands its successor `SurvivalTime==120` regardless of how
+long any Breathing Break in between actually ran (previously it silently summed to 150 after a
+30s Break). A new **Skip vote** lets any connected player send a zero-payload
+`SkipBreathingCommand`; once every connected player has voted for the SAME Break (a per-player,
+lazily-added `BreathingSkipVote.VotedAtBreathingIndex`, compared against `Global.BreathingIndex` -
+same self-cleaning convention `PoiUsageEntry` already uses), `RunPhaseUtility
+.TryForceSkipBreathing` (called from `CombatDirectorSystem` right before `Tick`) force-sets
+`PhaseTimer` to the phase's own `Duration`, ending it exactly as if it had run out naturally -
+`SurvivalTime` is untouched either way, so a skipped Break costs the run's own pacing nothing. See
+`docs/run-phase.md`'s "Independent timers"/"Skip vote" sections. Leaving Breathing sweeps uncommitted
+Cursed Rift/Store/Blacksmith interactions (`RunPhaseUtility`, called only on the tick `IsBreathing`
+actually changes) - entering Breathing has NO enemy-clearing side effect: an earlier iteration
+force-retired every non-`Economy.Persistent` enemy the instant a Break began, but that was removed
+(2026-08-17, after it was reported as still wiping the screen on entry) once `Global.
+BreathingAreaSecured` needed something real to hold on - `PhaseTimer` (and therefore the Break's own
+countdown, and every Breathing-only POI's own availability) now stays frozen until every alive
+enemy is actually killed or naturally `Retired` via the pre-existing `EnemyLifecycle` Irrelevant
+timeout, same mechanism an Elite/Boss phase already used to hold its own encounter open - see
+`docs/run-phase.md`'s "Elite / Boss phases" section. Breathing behaves like
+`Lobby` - `GameplaySystemGroup` stays enabled, players remain fully controllable. Two new
+Breathing-only world POIs share a small,
+deliberately generic **POI availability/usage/view-state** layer (`Poi.qtn` -
+`PoiAvailability{AvailableInCombat,AvailableInBreathing}` + a
+`PoiUsagePolicy{Reusable,OncePerPlayerPerBreak,OncePerPlayerPerRun,OncePerWorld}` + a per-player
+`PoiUsage` fixed-array component, same "keyed entries on the player entity" convention
+`RiftMutationPicks`/`GlobalUpgradePicks` already use, PLUS a shared `PoiActivation` component -
+`PoiViewState{Inactive,Active,Expired}`, refreshed every tick by a new `PoiActivationSystem` so
+View code reads one already-resolved enum instead of re-deriving eligibility itself - `Expired`
+means the POI is available but every CONNECTED player, not just the local one(s), has already used
+it up this Break) - and, on the View side, a single generic `PoiView` component (reads only
+`PoiActivation.State`, has no idea which POI kind it's on) instead of one near-identical View class
+per POI type. The Context-Interaction prompt (below) is deliberately NOT part of `PoiView`'s own
+3D view hierarchy - confirmed with the user, matching this codebase's existing
+`CharacterUiWidget`/`EnemyUiWidgetManager`/`SentryUiWidgetManager` pattern for any HUD element that
+tracks a specific entity: a HUD-Canvas-side `InteractionPromptWidget`/`InteractionPromptWidgetManager`
+pair (plain `MonoBehaviour`s, not `CustomQuantumEntityViewComponent`s), spawned/despawned once for
+the entity's whole lifetime from `PoiView.Initialize`/`DeInitialize` (only for entities carrying an
+`Interactable` component) rather than living in the entity's own view prefab: **Healing Shrine**
+(press-to-heal via `HealUtility.ApplyHeal`, resolved in the same tick as the press - originally a
+pure walk-into-radius auto-heal with no UI at all, reworked (2026-08-14) to share the exact same
+Base-Skill-button redirect Cursed Rift uses instead of two different interaction models, via a new
+`HealingShrineUtility.ResolveInteractionState`/`TryInteract` pair mirroring `CursedRiftUtility`'s
+own shape one-for-one - no persistent per-player component needed since there's no multi-step
+choice to track between press and resolution, so the old per-tick `HealingShrineSystem` was deleted
+entirely) and **Cursed Rift** (a deliberate, two-step irreversible choice - sacrifice something now
+for a Rift Mutation reward - that explicitly must NOT pause the simulation, `Time.timeScale`, the
+Breathing timer, or any other player; only the interacting player's own movement/weapon/skill input
+is locked, via the same per-entity gate pattern `StatusEffectUtility.IsStunned`/`IsRooted` already
+use, checked from `PlayerMovementProcessor`/`WeaponSystem`/`SkillSystem`). Both are opened via the
+same generic **Context Interaction / Base-Skill-button redirect** (`ContextInteraction.qtn` -
+`InteractableKind{CursedRift,HealingShrine}`, `Interactable{Kind,Radius,Priority}` on POI entities +
+a per-player `ContextInteraction{ActiveTarget,ActiveKind,State}` resolved fresh every tick by a new
+`ContextInteractionSystem`, registered right before `SkillSystem`, which now dispatches by
+`ActiveKind` to whichever utility owns that interaction) - the first interact-button/prompt mechanic
+in this codebase
+(previously none; every pickup was pure auto-collect, see `docs/chests.md`). Target RESOLUTION is
+purely geometric (closest in radius, ignores eligibility) so the world-space prompt can explain a
+nearby-but-unusable POI instead of hiding silently; a `ContextInteractionState`
+(`None/Available/PhaseUnavailable/AlreadyUsed/NotNeeded/Busy` - `NotNeeded` added 2026-08-14 for
+Healing Shrine at full Health, generic rather than Healing-Shrine-specific so any future POI with
+its own "technically available but pointless right now" case reuses it - unlike every other
+non-Available state, `SkillSystem`'s own redirect gate still claims the press on `NotNeeded`
+rather than falling through to a normal Hero Skill cast, since a deliberate press there should
+fail loudly (a new `EventContextInteractionRejected`, fired by `HealingShrineUtility.TryInteract`,
+drives a `ToastManager` "FULL HEALTH" popup via `InteractionPromptWidget` - press-triggered only,
+never from mere proximity) rather than silently do something else) resolved separately for
+whichever candidate
+wins that scan is what actually distinguishes "usable" - `SkillSystem`'s own redirect only fires on
+`State == Available`. `SkillSystem` intercepts a Hero Skill press when `State == Available` and
+switches on `ActiveKind` to call `CursedRiftUtility.TryBeginInteraction` (opens the Choice Window)
+or `HealingShrineUtility.TryInteract` (heals immediately, same tick) instead of sending a new
+`DeterministicCommand` - deliberate, since it reuses the exact same polled-input-plus-`WasPressed` mechanism every other
+skill activation already uses, not a menu-confirmation
+action. The two-step choice itself (Sacrifice -> Apply Cost -> Rift Mutation Choice -> Apply
+Mutation) lives in a new per-player `CursedRiftInteraction` component/`CursedRiftUtility`, processed
+by a new `CursedRiftSystem` registered *inside* `GameplaySystemGroup` (unlike `LevelUpSystem`, which
+lives outside it specifically because it disables that group - `CursedRiftSystem` never does, so it
+has no re-entrancy hazard to guard against and keeps processing a player's commands regardless of
+`GameState`, which is what lets a Breathing Break ending mid-mutation-selection - after a sacrifice
+is already picked and its cost applied - leave that player's screen open until they finish, per the
+design brief's own "Situation B"; `RunPhaseUtility`'s own end-of-Break sweep only cancels interactions
+still in `SelectingSacrifice`, i.e. nothing paid yet). There is deliberately no separate confirm step
+between picking a sacrifice and paying for it - clicking a sacrifice card applies its cost
+immediately (`CursedRiftUtility.SelectSacrifice`), same "one click = one irreversible pick" idiom
+every other Choice Window screen already uses (an earlier design had a `ConfirmingSacrifice` state +
+a bespoke 2-button confirm sub-panel; both were removed once the user flagged the confirm step as
+unnecessary new UI - see the Choice Window paragraph below). Sacrifices are their own small asset hierarchy
+(`SacrificeDefinition` abstract base + `BloodOfferingSacrificeData`/`CoinOfferingSacrificeData`/
+`RiftShardOfferingSacrificeData`, deliberately NOT `UpgradeData` subclasses - a sacrifice isn't an
+upgrade) rather than a flat class with a `CostType` switch, matching this codebase's own established
+`GlobalUpgradeData`/`RiftMutationData`/`PassiveUpgradeData` pattern. The Rift Mutation reward reuses
+the *exact* existing pipeline - `LevelUpUtility.RollOptionsFor`'s weighted-draw-without-replacement
+loop was extracted into a shared `DrawWeighted` helper (zero behavior change for existing categories)
+behind a new public `LevelUpUtility.RollMutationOptions`, and `RiftMutationUtility.Grant` applies the
+pick unchanged - no mutation logic duplicated anywhere.
+
+The existing Level-Up/Weapon-Upgrade/Chest 3-card window was generalized, not replaced, so Cursed
+Rift's Sacrifice/Mutation screens reuse the same card layout/navigation/rarity/animations -
+**and, since 2026-08-14, the same window INSTANCE, not a copy of it.** The class itself was renamed
+`UpgradeWindow` -> `ChooseWindow` (GUID-preserving rename, same Inspector-assigned values) after an
+intermediate design (a second, hand-cloned `ChooseWindow` instance per local slot,
+`GameplayUiController.poiChoiceWindows[]`, living outside `WindowManager`'s Canvas subtree, plus a
+bespoke 2-button "CONFIRM SACRIFICE?" sub-panel) was explicitly rejected by the user once built - a
+second, drifting-prone hand-glued window is exactly the "two near-identical things kept in sync by
+hand" anti-pattern this codebase has already hit and fixed more than once (Zara's `PortableSpeaker`
+drift, Pixie's dual-generator drift). `UpgradeCardWidget.CardData` still gained three empty-default
+fields (`TopLabelOverride`/`ValuePreview`/`ButtonLabel`) and `ChooseWindow` still gained an optional
+subtitle + an optional Cancel button - every addition defaults to reproducing the exact current
+Level-Up visuals, so every existing call site is unaffected - but the confirm sub-panel
+(`confirmPanel`/`confirmButton`/`backButton`/`confirmRecapText`/`onConfirmClicked`/`onBackClicked`)
+is gone entirely: clicking a sacrifice card now applies its cost and rolls the mutation reward in
+one simulation call, so there's nothing left for a confirm step to gate.
+`GameplayUiController.BuildCardData`/`KindText` were loosened from `private` to `internal` (zero
+logic change) so Cursed Rift's mutation stage reuses them directly. Cursed Rift's screen is driven
+by a second method, `UpdateCursedRiftWindow` (called right after `UpdateUpgradeScreen` every
+`QUpdate`), reading the exact SAME `GameplayUiController.choiceWindows[]` array (renamed from
+`upgradeWindows[]`, `[FormerlySerializedAs]` preserves the scene's existing assignment) a real
+Level-Up uses - it steps aside entirely whenever `Global.LevelUpScreenOpen` is true (a real Level-Up
+always wins) and otherwise shows/hides each slot's window directly, checking the window's own LIVE
+`activeSelf` rather than a separately-tracked bool so it self-heals regardless of what
+`WindowManager` did to it. This is a genuine, confirmed-with-the-user tradeoff: because both flows
+now share one instance still living under `WindowManager`'s own Canvas, a real Level-Up for a
+DIFFERENT player can visually pre-empt a player's own in-progress Cursed Rift screen
+(`WindowManager.ShowWindow<T>()` hides every registered window regardless of who triggered it) -
+their own `CursedRiftInteraction` is untouched by this, so `UpdateCursedRiftWindow` re-shows their
+screen (replaying its intro - a minor accepted visual hiccup) the instant the other player's Level-Up
+closes. The always-visible `BreathingCountdownWidget` ("AREA SECURED" then "NEXT ASSAULT 00:30")
+still never gets caught in this, since it lives on `GameplayWindow`, not `ChooseWindow`.
+
+Also as part of this pass, confirmed explicitly with the user: **Coins and Rift Shards moved from
+shared `Frame.Global` totals to PER-PLAYER wallets** (`CharacterStats.Coins`/`RiftShards`) - a
+Cursed Rift Coin/Rift Shard sacrifice needed to be a real individual choice, not a party-wide tax.
+`CurrencyOrbSystem` still finds a pickup off whichever single player physically reached it, but the
+grant itself now broadcasts to every connected player's own wallet
+(`CoinUtility.GrantAll`/`RiftShardUtility.GrantAll`), each scaled by *their own* gain multiplier -
+"picking up 1 coin means everyone gets 1 coin," then each spends independently.
+`CurrencyUiWidget` now self-binds per local slot for Coin/RiftShard (same `MyLocalPlayer.Instance
+.BindToSlot` pattern `SkillCooldownUiWidget` already uses); Experience is untouched, still one
+shared `Frame.Global` total. Full design, file maps, and current status: **`docs/run-phase.md`**
+(Combat/Breathing state machine), **`docs/breathing-poi.md`** (Healing Shrine, Cursed Rift, Context
+Interaction/Base-Skill redirect, per-player input lock), and **`docs/choice-window-refactor.md`**
+(the `ChooseWindow`/`UpgradeCardWidget` generalization + the currency change). Read all three
+before touching anything Breathing/Healing-Shrine/Cursed-Rift/Context-Interaction/Choice-Window/
+per-player-currency related.
+
+Short version: the code compiles once codegen picks up every new/changed `.qtn` file
+(`GameState.qtn` - now also `BreathingSkipVote`, `CharacterStats.qtn`, `Poi.qtn`,
+`HealingShrine.qtn`, `CursedRift.qtn`, `ContextInteraction.qtn`, `Coins.qtn`/`RiftShards.qtn`),
+`CommandSetup.User.cs` registers the new `SkipBreathingCommand`, and `SystemSetup.User.cs` registers
+`PoiActivationSystem`/`ContextInteractionSystem`/`CursedRiftSystem` at their documented positions
+(no separate Run-Phase system - that's folded into `CombatDirectorSystem`; Healing Shrine has no
+system of its own either, post-2026-08-14 rework - see above). `Tools/RiftRaiders/Generate
+Breathing POI Content` (`BreathingPoiContentGenerator.cs`) authors `CursedRiftConfig`/
+`SacrificePoolData`/the 3 `SacrificeDefinition` instances - not yet run; it deliberately does NOT
+touch `SurvivalConfig.Phases[]` (see `docs/run-phase.md` for why). There is no separate generator
+for the Choice Window anymore (the earlier `CursedRiftChoiceWindowGenerator.cs`, which built a whole
+second cloned window + Canvas, was deleted along with the design it supported - see the paragraph
+above) - Cursed Rift now reuses `GameplayUiController.choiceWindows[0]` directly. Still needed by
+hand before anything shows up at runtime: interleave `IsBreathing = true` entries into
+`SurvivalConfig.Phases[]`; assign `RuntimeConfig.CursedRiftConfig` (`QuantumMenuConfig.asset`);
+hand-place `HealingShrine`/`CursedRift` `EntityPrototype`s in a level, both now needing a real
+`Interactable` component (`HealingShrine.prefab` already has one authored with a matching Radius,
+but `Kind` still needs flipping from its stale default to `HealingShrine`) - a rough
+`HealingShrine.prefab` and an in-progress `CursedShrine.prefab` (still on the wrong
+`QPrototypeHealingShrine` component, mid-transition) already exist under
+`Assets/_QuantumUser/Entities/LevelProps/`; on `choiceWindows[0]` (the existing Level-Up instance),
+build and wire a `subtitleText` (`TMP_Text`) - `secondaryButton` (formerly `keepCurrentButton`,
+already wired) is reused as-is, no new button needed - and on its own `cardPrefab` wire
+`valuePreviewText` (`TMP_Text`, new) and `buttonLabelText` (`TMP_Text`, can just point at the
+card's own existing baked button label) - none of these 3 fields exist in the scene yet; wire
+`BreathingCountdownWidget` on the scene HUD prefab, including its new Skip Vote UI fields
+(`skipButton`/`waitingRoot`/`waitingText` - code-complete, sends `SkipBreathingCommand` and shows
+"WAITING FOR OTHER PLAYERS..." once this client's own local slot(s) have voted, but no actual
+GameObjects built/assigned in the scene yet - see `docs/run-phase.md`); wire
+`SkillCooldownUiWidget`'s new `contextInteractionIcon`/`interactPromptRoot` fields on the
+HeroSkill-slot HUD instance; build out
+`PoiView`'s Inactive/Active/Expired child visuals (already wired on `HealingShrine.prefab`) plus the
+HUD-side `InteractionPromptWidgetManager` scene setup (neither exists yet); author real `Icon`
+sprites for the 3 sacrifices. Not yet manually verified end-to-end in-Editor, solo or co-op - see
+each doc's own "Editor authoring needed" section for the full checklist.
+
+## Store & Blacksmith
+
+Two more Breathing-only POIs on top of the same generic POI framework Healing Shrine/Cursed Rift
+already established (`Poi.qtn`/`ContextInteraction.qtn`, see "Breathing Phase, Healing Shrine,
+Cursed Rift & Choice Window Refactor" above) - a **Store** (buy weapons and food/utility items with
+Coins) and a **Blacksmith** (pay Coins to add a new Weapon Perk to your currently-equipped weapon).
+Both explicitly reuse the existing `ChooseWindow`/`UpgradeCardWidget`/`WeaponCardWidget` UI rather
+than new parallel screens, via a new opt-in `PurchasableCardState`/`PurchasableCardUi` (price/
+afford/sold-out affordance, defaults off so every existing Level-Up/Cursed-Rift call site is
+unaffected) - and both reuse the existing weapon-generation/weapon-perk/currency systems rather
+than duplicating them: Store's weapon offers roll via the exact same `LevelUpUtility.RollWeaponOption`
+formula a Choose-Weapon level-up uses and grant via the same `WeaponChoiceUtility.Grant`; Blacksmith
+adds a perk via the same `WeaponSystem.AddPerk` a level-up Weapon Perk pick uses. `GameplayUiController`'s
+old binary `Global.LevelUpScreenOpen ? LevelUp : CursedRift` dispatch is now a real per-slot
+`ChoiceWindowOwner` resolution (`None/LevelUp/CursedRift/Store/Blacksmith`) now that a 3rd/4th flow
+shares the same window, and `CursedRiftUtility.IsInputLocked`'s old single check is now a shared
+`PoiInteractionLockUtility.IsInputLocked` (OR across all three POI interaction components) read by
+the same 4 call sites (`PlayerMovementProcessor`/`WeaponSystem`/`SkillSystem`/`ContextInteractionSystem`)
+it used to serve alone. The one genuinely new mechanism: Store's shared inventory needed **per-player,
+per-offer purchase tracking** (`StorePurchases`) since the existing `PoiUsage` is only one bit per
+whole POI per player, not enough to track "did I buy offer N" independently - Blacksmith, by
+contrast, reuses the existing generic `PoiUsagePolicy.OncePerPlayerPerBreak` unchanged, since it
+really is "used up" per player per Break. Confirmed with the user: Blacksmith perk picks cost Coins
+(same purchase UI/flow as Store, never offers an already-owned perk, no rank-upgrade mechanic);
+`ShopWeaponOfferCount` (a meta-progression talent, same "seeded once at spawn" shape as
+`WeaponTalentLevel`/`RerollQuantity`) maps rank 0 -> 1 Store weapon offer, rank 1 -> 2, rank 2 -> 3;
+Store's screen shows both card families at once, food/utility row first, weapons row second. Full
+design, file map, edge cases, and current status: **`docs/store-blacksmith.md`**. Read it before
+touching anything Store/Blacksmith/`PurchasableCardState`/`ChoiceWindowOwner`/
+`PoiInteractionLockUtility` related.
+
+Short version: the code compiles once codegen picks up every new/changed `.qtn` file (`Store.qtn`,
+`Blacksmith.qtn`, `ContextInteraction.qtn`'s new `InteractableKind.Store`/`Blacksmith` values,
+`Chunk.qtn`'s new `ChunkType.Blacksmith` value - Store itself reuses the pre-existing `Merchant`
+value/`MarketChunk.prefab`, no new ChunkType needed, `CharacterStats.qtn`'s
+`ShopWeaponOfferCount`, `StatusEffects.qtn`'s new `TempMoveSpeedRemaining`/`Multiplier` pair backing
+the Energy Drink food offer - the temp-damage food offer instead reuses the pre-existing
+`TemporaryWeaponDamageRemaining`/`Amount` unchanged, see "Max — Ascensions" above), and
+`SystemSetup.User.cs`/`CommandSetup.User.cs` register `StoreSystem`/`BlacksmithSystem` and the 5 new
+commands. `Tools/RiftRaiders/Generate Store & Blacksmith Content` (authors 4 `FoodOfferData`
+instances, `FoodOfferPoolData`, `StoreConfig`, `BlacksmithConfig` - deliberately leaves
+`WeaponPool`/`PerkPool` unassigned, same "no safe way to locate the right asset" gap every other
+generator here has) has not been run yet, so nothing is authored: no `RuntimeConfig.StoreConfig`/
+`BlacksmithConfig` assignment, no `Store`/`Blacksmith` `EntityPrototype` placed in a level, no
+purchase-row UI (`purchaseRoot`/`priceText`/`currencyIcon`/`currencySprites`/`soldOutOverlay`) wired
+on either card prefab, and `ChooseWindow`'s food row (`cards[]`) and weapon row (`weaponCards[]`)
+still occupy the same overlapping rect (needs splitting into two visible sections for Store's own
+screen to read correctly). Not yet manually verified end-to-end in-Editor, solo or co-op - see
+`docs/store-blacksmith.md`'s own "Current status" for the full checklist.
 
 ## Quantum `.qtn` codegen gotcha
 

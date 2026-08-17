@@ -1,0 +1,965 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1517571339130029750
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5679338556948834654}
+  m_Layer: 8
+  m_Name: Body
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5679338556948834654
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1517571339130029750}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -0.25}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 5497340312068114675}
+  m_Father: {fileID: 6871669133342737575}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &4057597631457596921
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6871669133342737575}
+  - component: {fileID: 700737921466603902}
+  - component: {fileID: 9103484220220173819}
+  - component: {fileID: 4129693004089299414}
+  - component: {fileID: 8225006387620072241}
+  - component: {fileID: 904307809960737103}
+  - component: {fileID: 3319259241535440385}
+  - component: {fileID: 4628453549901500658}
+  - component: {fileID: 382911034274762262}
+  - component: {fileID: 8020308353297223607}
+  - component: {fileID: 3804005094351733771}
+  - component: {fileID: 7213704155496264851}
+  - component: {fileID: 1460262746628902169}
+  - component: {fileID: 3275125383435110723}
+  - component: {fileID: 8664933306770135768}
+  - component: {fileID: 1581274295084455462}
+  m_Layer: 15
+  m_Name: ScrapyardJawBoss
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6871669133342737575
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4057597631457596921}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.257, y: 3, z: -0.24}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 5679338556948834654}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &700737921466603902
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4057597631457596921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0008c51fe3af00b4da5d44f02d9b3dff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  BindBehaviour: 1
+  ManualDisposal: 0
+  ViewFlags: 0
+  InterpolationMode: 0
+  ErrorCorrectionRateMin: 3.3
+  ErrorCorrectionRateMax: 10
+  ErrorPositionBlendStart: 0.25
+  ErrorPositionBlendEnd: 1
+  ErrorRotationBlendStart: 0.1
+  ErrorRotationBlendEnd: 0.5
+  ErrorPositionMinCorrection: 0.025
+  ErrorPositionTeleportDistance: 2
+  ErrorRotationTeleportDistance: 0.5
+  OnEntityInstantiated:
+    m_PersistentCalls:
+      m_Calls: []
+  OnEntityDestroyed:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &9103484220220173819
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4057597631457596921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 836dcb7e0f6259748b850a10912ce727, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  TransformMode: 1
+  Transform2DVertical:
+    IsEnabled: 0
+    Height:
+      RawValue: 0
+    PositionOffset:
+      RawValue: 0
+  PhysicsCollider:
+    IsEnabled: 1
+    IsTrigger: 0
+    Material:
+      Id:
+        Value: 501774642357182384
+    SourceCollider: {fileID: 0}
+    SourceShapeSettings:
+      IsScaledBySource: 0
+      CapsuleDirection2D: 0
+      CapsuleDirection3D: 0
+    Shape2D:
+      ShapeType: 0
+      PolygonCollider:
+        Id:
+          Value: 0
+      CircleRadius:
+        RawValue: 0
+      CapsuleSize:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+      EdgeExtent:
+        RawValue: 0
+      BoxExtents:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+      PositionOffset:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+      RotationOffset:
+        RawValue: 0
+      UserTag: 0
+      IsPersistent: 1
+      CompoundShapes: []
+    Shape3D:
+      ShapeType: 1
+      SphereRadius:
+        RawValue: 131072
+      CapsuleRadius:
+        RawValue: 32768
+      CapsuleHeight:
+        RawValue: 65536
+      PositionOffset:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      BoxExtents:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      RotationOffset:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      UserTag: 0
+      IsPersistent: 1
+      CompoundShapes: []
+    LayerSource: 0
+    Layer: 15
+    CallbackFlags:
+      Value: 0
+  PhysicsBody:
+    IsEnabled: 1
+    Config2D: 116
+    Config3D: 58
+    RotationFreeze: 255
+    InertiaMode: 0
+    Mass:
+      RawValue: 65536
+    Drag:
+      RawValue: 131072
+    AngularDrag:
+      RawValue: 32768
+    ExplicitInertia2D:
+      RawValue: 65536
+    ExplicitInertia3D:
+      X:
+        RawValue: 65536
+      Y:
+        RawValue: 65536
+      Z:
+        RawValue: 65536
+    CenterOfMass2D:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+    CenterOfMass3D:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
+    ParametricInertiaShape2D:
+      ShapeType: 0
+      PolygonCollider:
+        Id:
+          Value: 0
+      CircleRadius:
+        RawValue: 32768
+      CapsuleSize:
+        X:
+          RawValue: 65536
+        Y:
+          RawValue: 131072
+      EdgeExtent:
+        RawValue: 32768
+      BoxExtents:
+        X:
+          RawValue: 32768
+        Y:
+          RawValue: 32768
+      PositionOffset:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+      RotationOffset:
+        RawValue: 0
+      UserTag: 0
+      IsPersistent: 1
+      CompoundShapes: []
+    ParametricInertiaShape3D:
+      ShapeType: 0
+      SphereRadius:
+        RawValue: 32768
+      CapsuleRadius:
+        RawValue: 32768
+      CapsuleHeight:
+        RawValue: 131072
+      PositionOffset:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      BoxExtents:
+        X:
+          RawValue: 32768
+        Y:
+          RawValue: 32768
+        Z:
+          RawValue: 32768
+      RotationOffset:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      UserTag: 0
+      IsPersistent: 1
+      CompoundShapes: []
+    InertiaScale:
+      _hasValue: 0
+      _value:
+        RawValue: 65536
+    GravityScale:
+      _hasValue: 1
+      _value:
+        RawValue: 131072
+  NavMeshPathfinder:
+    IsEnabled: 0
+    NavMeshAgentConfig:
+      Id:
+        Value: 0
+    InitialTarget:
+      IsEnabled: 0
+      Target: {fileID: 0}
+      Position:
+        X:
+          RawValue: 0
+        Y:
+          RawValue: 0
+        Z:
+          RawValue: 0
+      NavMesh:
+        Reference: {fileID: 0}
+        Asset:
+          Id:
+            Value: 0
+        Name: 
+  NavMeshSteeringAgent:
+    IsEnabled: 0
+    MaxSpeed:
+      IsEnabled: 0
+      Value:
+        RawValue: 0
+    Acceleration:
+      IsEnabled: 0
+      Value:
+        RawValue: 0
+  NavMeshAvoidanceAgent:
+    IsEnabled: 0
+  View:
+    Id:
+      Value: 0
+--- !u!114 &4129693004089299414
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4057597631457596921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73286dcd3a395419e9a0f39613489d84, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Quantum.Unity::Quantum.QPrototypeAim
+  Prototype:
+    Angle:
+      RawValue: 0
+    Target: {fileID: 0}
+    LockedTarget: {fileID: 0}
+    TargetSwitchTimer:
+      RawValue: 0
+    FacingSign:
+      RawValue: 0
+--- !u!114 &8225006387620072241
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4057597631457596921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8916998eb46534d50badd2b4ca7d7518, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Quantum.Unity::Quantum.QPrototypeEnemy
+  Prototype:
+    EnemyData:
+      Id:
+        Value: 464407345595852480
+    Target: {fileID: 0}
+    Phase:
+      Value: 0
+    StateTimer:
+      RawValue: 0
+    AttackCooldownRemaining:
+      RawValue: 0
+    CurrentActionSlot: 0
+    SkillTargetPosition:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
+    SkillStartPosition:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
+    TraversalJumpOrigin:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
+    TraversalJumpDestination:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
+    TraversalJumpTimer:
+      RawValue: 0
+    TraversalJumpDuration:
+      RawValue: 0
+    TraversalJumpAnticipationTimer:
+      RawValue: 0
+    TraversalJumpPendingDestination:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
+    TraversalJumpPendingSpeed:
+      RawValue: 0
+    KnockbackTimer:
+      RawValue: 0
+    SkillProjectile: {fileID: 0}
+    FlyingHoverCheckTimer:
+      RawValue: 0
+    FlyingHoverTargetHeight:
+      RawValue: 0
+    Faction:
+      Value: 0
+--- !u!114 &904307809960737103
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4057597631457596921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f542d5767fe2540dbb3fe88db82febab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Quantum.Unity::Quantum.QPrototypeHealth
+  Prototype:
+    CurrentHealth:
+      RawValue: 3276800
+    MaxHealth:
+      RawValue: 3276800
+    RegenRate:
+      RawValue: 0
+    RegenTimer:
+      RawValue: 0
+--- !u!114 &3319259241535440385
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4057597631457596921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1564e64c052e94f26b57d5d0e562825e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuantumUser.View.Managers.EntityViewCacheInit
+  _playerRef:
+    _index: 0
+  initialized: 0
+  executeOnlyOnLocal: 0
+  isLocal: 0
+--- !u!114 &4628453549901500658
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4057597631457596921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da61e877f0690443d8a59908590acdc9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Quantum.Unity::Quantum.QPrototypeStatusEffects
+  Prototype:
+    BurnRemaining:
+      RawValue: 0
+    BurnTickTimer:
+      RawValue: 0
+    BurnDamagePerTick:
+      RawValue: 0
+    BurnOwner: {fileID: 0}
+    BurnSource:
+      Value: 0
+    RiftMarkStacks: 0
+    RiftMarkRemaining:
+      RawValue: 0
+    RiftMarkReactionLockoutRemaining:
+      RawValue: 0
+    DetonationCooldownRemaining:
+      RawValue: 0
+    DeepFreezeCooldownRemaining:
+      RawValue: 0
+    OverloadCooldownRemaining:
+      RawValue: 0
+    RuptureCooldownRemaining:
+      RawValue: 0
+    SingularityCooldownRemaining:
+      RawValue: 0
+    MarkApplicationCooldowns:
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    FirstContactTriggered:
+      Value: 0
+    OverflowingRiftCooldownRemaining:
+      RawValue: 0
+    FracturedPresenceExposedBy:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    FracturedPresenceExposureTime:
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    IceRemaining:
+      RawValue: 0
+    IceSpeedMultiplier:
+      RawValue: 0
+    StunRemaining:
+      RawValue: 0
+    AnticipationSlowRemaining:
+      RawValue: 0
+    AnticipationSlowMultiplier:
+      RawValue: 0
+    RootRemaining:
+      RawValue: 0
+    RuptureRemaining:
+      RawValue: 0
+    RuptureDamageMultiplier:
+      RawValue: 0
+    HasteRemaining:
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    HasteAttackSpeedMultiplier:
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    HasteSource:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    ShieldRegenRemaining:
+      RawValue: 0
+    ShieldRegenMultiplier:
+      RawValue: 0
+    TimeDilationRemaining:
+      RawValue: 0
+    TimeDilationMultiplier:
+      RawValue: 0
+    DamageReductionRemaining:
+      RawValue: 0
+    DamageReductionAmount:
+      RawValue: 0
+    GuardianDamageReductionRemaining:
+      RawValue: 0
+    GuardianDamageReductionAmount:
+      RawValue: 0
+    TemporaryDamageReductionRemaining:
+      RawValue: 0
+    TemporaryDamageReductionAmount:
+      RawValue: 0
+    GuardianReactiveCooldownRemaining:
+      RawValue: 0
+    IntimidateRemaining:
+      RawValue: 0
+    IntimidateDamageMultiplier:
+      RawValue: 0
+    KnockbackTakenRemaining:
+      RawValue: 0
+    KnockbackTakenMultiplier:
+      RawValue: 0
+    CheatDeathImmunityRemaining:
+      RawValue: 0
+    TemporaryWeaponDamageRemaining:
+      RawValue: 0
+    TemporaryWeaponDamageAmount:
+      RawValue: 0
+    RetaliationCooldownRemaining:
+      RawValue: 0
+    NoAmmoConsumptionRemaining:
+      RawValue: 0
+    BoundRemaining:
+      RawValue: 0
+    TempMoveSpeedRemaining:
+      RawValue: 0
+    TempMoveSpeedMultiplier:
+      RawValue: 0
+--- !u!114 &382911034274762262
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4057597631457596921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b93314ba8895c4d36abf37463a1cd15b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Quantum.EnemyView
+  _playerRef:
+    _index: 0
+  initialized: 0
+  executeOnlyOnLocal: 0
+  isLocal: 0
+  spriteRoot: {fileID: 5679338556948834654}
+  viewRadiusPadding: 0.15
+  widgetSpriteTopPadding: 0
+  widgetRadiusOffsetMultiplier: 1
+--- !u!114 &8020308353297223607
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4057597631457596921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6b92b56d19e64d1a9e11a435effbb05, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Quantum.EnemyAttackVisualsView
+  _playerRef:
+    _index: 0
+  initialized: 0
+  executeOnlyOnLocal: 0
+  isLocal: 0
+  blobAnimationView: {fileID: 3804005094351733771}
+  armAimView: {fileID: 3275125383435110723}
+--- !u!114 &3804005094351733771
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4057597631457596921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2c6b8a8e520bb4edd87f84ad2dd376a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Quantum.EnemyBlobAnimationView
+  _playerRef:
+    _index: 0
+  initialized: 0
+  executeOnlyOnLocal: 0
+  isLocal: 0
+  billboardToCamera: 1
+  facingDeadzone: 0.2
+  idleBreatheFrequency: 1.2
+  idleBreatheAmount: 0.05
+  idleWobbleDegrees: 2
+  idleWobbleSpeed: 0.3
+  runReferenceSpeed: 6
+  moveSpeedEpsilon: 0.15
+  runStrideFrequency: 1
+  runSquashAmount: 0.05
+  runBounceAmount: 0.2
+  runLeanDegrees: -4
+  runStepRockDegrees: 4
+  dieDuration: 0.4
+  dieJumpHeight: 1
+  dieToppleDegrees: 100
+  dieSquash: -0.1
+  dieGroundOffsetY: 0.45
+  dieGroundOffsetZ: 0
+  dieShrinkDelay: 1
+  dieShrinkDuration: 0.1
+  burrowSinkDuration: 0.35
+  burrowRiseDuration: 0.35
+  burrowSquash: 0.5
+  burrowSinkAmount: 0.3
+  jumpCrouchSquash: 0.3
+  jumpCrouchSinkAmount: 0
+  jumpPopStretch: 0.35
+  defaultCenterPivotHeight: 0
+  squashLerpSpeed: 14
+  volumePreservation: 0.6
+  headSquashInfluence: 0.4
+  debugTestStep:
+    AnimationType: 0
+    Duration: 0.3
+    BodySprite: {fileID: 0}
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+--- !u!114 &7213704155496264851
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4057597631457596921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17edc47547113402989931086b70eb02, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuantumUser.View.Util.HitFeedback
+  _playerRef:
+    _index: 0
+  initialized: 0
+  executeOnlyOnLocal: 0
+  isLocal: 0
+  sprites: []
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
+  burnFlashColor: {r: 1, g: 0.45, b: 0.1, a: 1}
+  frontalReducedFlashColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  restColor: {r: 1, g: 1, b: 1, a: 0}
+  duration: 0.2
+  healFlashColor: {r: 0.4, g: 1, b: 0.4, a: 1}
+  shieldFlashColor: {r: 0.4, g: 0.75, b: 1, a: 1}
+  deathColor: {r: 0, g: 0, b: 0, a: 0.5}
+  riftMarkMaterial: {fileID: 2100000, guid: 7e404e068a4ff4625b9e9f6414fcfaa3, type: 2}
+  riftMarkApplicationFlashColor: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
+  riftMarkApplicationFlashDuration: 0.08
+  expPickupFlashColor: {r: 0.3, g: 0.55, b: 1, a: 1}
+  coinPickupFlashColor: {r: 1, g: 0.84, b: 0.2, a: 1}
+  riftShardPickupFlashColor: {r: 1, g: 0.35, b: 0.75, a: 1}
+  pickupFlashDuration: 0.35
+  freezeMaterial: {fileID: 2100000, guid: b153b2878790f4feab0589455e95ac70, type: 2}
+--- !u!114 &1460262746628902169
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4057597631457596921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ace9888105c6f4799b64a4cccceb286c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Quantum.Unity::Quantum.QPrototypeEnemyCombatModifiers
+  Prototype:
+    DamageMultiplier:
+      RawValue: 65536
+--- !u!114 &3275125383435110723
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4057597631457596921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f60f7f9e517f44c18dcd34e92cd32f9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Quantum.EnemyArmAimView
+  _playerRef:
+    _index: 0
+  initialized: 0
+  executeOnlyOnLocal: 0
+  isLocal: 0
+  cameraTransform: {fileID: 0}
+  blobAnimationView: {fileID: 3804005094351733771}
+  rotationSmoothing: 20
+  debugTestAngle: 0
+--- !u!114 &8664933306770135768
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4057597631457596921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b361a0d1188d143a8bbdf9481f333325, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Quantum.Unity::Quantum.QPrototypeBossRuntimeState
+  Prototype:
+    StaggerMeter:
+      RawValue: 0
+    LastObservedHealth:
+      RawValue: 0
+    CurrentPhaseIndex: 0
+    PhaseTimer:
+      RawValue: 0
+    LastObservedPhase:
+      Value: 0
+    ActiveComboAction:
+      Id:
+        Value: 0
+    ComboRepeatsRemaining: 0
+    RetargetTimer:
+      RawValue: 0
+--- !u!114 &1581274295084455462
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4057597631457596921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 108294b6ca4e54488a92e410adc53892, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Quantum.Unity::Quantum.QPrototypeEnemyActionSlots
+  Prototype:
+    SkillCooldowns:
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+--- !u!1001 &4724006734157348091
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 5679338556948834654}
+    m_Modifications:
+    - target: {fileID: 736891227221864247, guid: 5f52d98df5a844a60925a5ad01f4a4c7, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 174966615, guid: 65b523ff0d70a4099bf47bb72f5a9e7a, type: 3}
+    - target: {fileID: 992325718291592200, guid: 5f52d98df5a844a60925a5ad01f4a4c7, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 992325718291592200, guid: 5f52d98df5a844a60925a5ad01f4a4c7, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 992325718291592200, guid: 5f52d98df5a844a60925a5ad01f4a4c7, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 992325718291592200, guid: 5f52d98df5a844a60925a5ad01f4a4c7, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 992325718291592200, guid: 5f52d98df5a844a60925a5ad01f4a4c7, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 992325718291592200, guid: 5f52d98df5a844a60925a5ad01f4a4c7, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 992325718291592200, guid: 5f52d98df5a844a60925a5ad01f4a4c7, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 992325718291592200, guid: 5f52d98df5a844a60925a5ad01f4a4c7, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 992325718291592200, guid: 5f52d98df5a844a60925a5ad01f4a4c7, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 992325718291592200, guid: 5f52d98df5a844a60925a5ad01f4a4c7, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 992325718291592200, guid: 5f52d98df5a844a60925a5ad01f4a4c7, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 992325718291592200, guid: 5f52d98df5a844a60925a5ad01f4a4c7, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 992325718291592200, guid: 5f52d98df5a844a60925a5ad01f4a4c7, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8476845490732343577, guid: 5f52d98df5a844a60925a5ad01f4a4c7, type: 3}
+      propertyPath: m_Name
+      value: ScavengerHunt-Boss
+      objectReference: {fileID: 0}
+    - target: {fileID: 8811299158180872323, guid: 5f52d98df5a844a60925a5ad01f4a4c7, type: 3}
+      propertyPath: baseScale
+      value: 5
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 5f52d98df5a844a60925a5ad01f4a4c7, type: 3}
+--- !u!4 &5497340312068114675 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 992325718291592200, guid: 5f52d98df5a844a60925a5ad01f4a4c7, type: 3}
+  m_PrefabInstance: {fileID: 4724006734157348091}
+  m_PrefabAsset: {fileID: 0}

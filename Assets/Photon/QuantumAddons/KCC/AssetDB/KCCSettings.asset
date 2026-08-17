@@ -17,13 +17,13 @@ MonoBehaviour:
     Guid:
       Value: 385596505887953737
   Radius:
-    RawValue: 26214
+    RawValue: 39322
   Height:
     RawValue: 65536
   Extent:
     RawValue: 1965
   CollisionLayerMask:
-    BitMask: 577
+    BitMask: 33345
   MaxPenetrationSteps: 3
   CCDRadiusMultiplier:
     RawValue: 49152

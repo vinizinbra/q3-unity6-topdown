@@ -32,7 +32,7 @@ MonoBehaviour:
     CoinValue:
       RawValue: 65536
     CoinDropChance:
-      RawValue: 13107
+      RawValue: 32768
     Shield:
       RawValue: 0
     ShieldRechargeDelay:
@@ -56,9 +56,9 @@ MonoBehaviour:
     RiftShardDropChance:
       RawValue: 0
     CoinValue:
-      RawValue: 327680
+      RawValue: 131072
     CoinDropChance:
-      RawValue: 13107
+      RawValue: 32768
     Shield:
       RawValue: 1638400
     ShieldRechargeDelay:
@@ -82,7 +82,7 @@ MonoBehaviour:
     RiftShardDropChance:
       RawValue: 65536
     CoinValue:
-      RawValue: 65536
+      RawValue: 327680
     CoinDropChance:
       RawValue: 65536
     Shield:
@@ -108,7 +108,7 @@ MonoBehaviour:
     RiftShardDropChance:
       RawValue: 65536
     CoinValue:
-      RawValue: 65536
+      RawValue: 655360
     CoinDropChance:
       RawValue: 65536
     Shield:
@@ -142,7 +142,7 @@ MonoBehaviour:
     ShieldRechargeDelay:
       RawValue: 131072
     ShieldRechargeRate:
-      RawValue: 327680
+      RawValue: 1310720
     CanBeInterruptedByKnockback: 0
     KnockbackRecoveryTime:
       RawValue: 16384
@@ -168,7 +168,7 @@ MonoBehaviour:
     ShieldRechargeDelay:
       RawValue: 131072
     ShieldRechargeRate:
-      RawValue: 327680
+      RawValue: 3276800
     CanBeInterruptedByKnockback: 0
     KnockbackRecoveryTime:
       RawValue: 16384

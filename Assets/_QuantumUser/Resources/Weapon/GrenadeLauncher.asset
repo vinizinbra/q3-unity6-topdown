@@ -19,7 +19,7 @@ MonoBehaviour:
   DisplayName: 
   FireType: 1
   Damage:
-    RawValue: 2621440
+    RawValue: 5898240
   Element: 0
   CriticalChance:
     RawValue: 6554
@@ -48,9 +48,9 @@ MonoBehaviour:
       Value: 268986146537756646
   ViewPrefab: {fileID: 8089491252618662435, guid: 76663fba1fb8145d0802358c5a0b27ec, type: 3}
   ShakeTier: 0
-  _dpsPreview: 'Burst DPS: 40
+  _dpsPreview: 'Burst DPS: 90
 
-    Sustained DPS (incl. reload): 36.8
+    Sustained DPS (incl. reload): 82.8
 
     Damage/min:
-    2207'
+    4966'

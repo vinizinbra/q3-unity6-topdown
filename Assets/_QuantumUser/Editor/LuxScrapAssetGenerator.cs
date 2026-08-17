@@ -53,7 +53,6 @@ namespace QuantumUser.Editor
             EfficientSalvagePassiveUpgradeData efficientSalvage = CreateOrUpdate<EfficientSalvagePassiveUpgradeData>($"{PassiveUpgradesFolderPath}/EfficientSalvage.asset", asset =>
             {
                 asset.DisplayName = "Efficient Salvage";
-                asset.Rarity = UpgradeRarity.Rare;
                 asset.Description = "Increases Scrap drop chance.";
                 asset.DropChanceBonus = FP.FromString("0.25");
             });
@@ -61,7 +60,6 @@ namespace QuantumUser.Editor
             EnhacementPassiveUpgradeData enhacement = CreateOrUpdate<EnhacementPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/Enhacement.asset", asset =>
             {
                 asset.DisplayName = "Enhacement";
-                asset.Rarity = UpgradeRarity.Rare;
                 asset.Description = "Scrap also increases your machine's max health.";
                 asset.MachineHealthBonusPerPickup = 5;
             });
@@ -69,7 +67,6 @@ namespace QuantumUser.Editor
             RapidRecyclingPassiveUpgradeData rapidRecycling = CreateOrUpdate<RapidRecyclingPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/RapidRecycling.asset", asset =>
             {
                 asset.DisplayName = "Rapid Recycling";
-                asset.Rarity = UpgradeRarity.Rare;
                 asset.Description = "Each Scrap pickup also reduces your Hero Skill's cooldown.";
                 asset.CooldownReductionPerPickup = FP._1;
             });
@@ -77,14 +74,12 @@ namespace QuantumUser.Editor
             ScavengerPassiveUpgradeData scavenger = CreateOrUpdate<ScavengerPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/Scavenger.asset", asset =>
             {
                 asset.DisplayName = "Scavenger";
-                asset.Rarity = UpgradeRarity.Rare;
                 asset.Description = "Filler-tier enemies can also drop Scrap.";
             });
 
             RepairNearbyMachinesSkillAction emergencyRepair = CreateOrUpdate<RepairNearbyMachinesSkillAction>($"{DashUpgradesFolderPath}/EmergencyRepairSkillAction.asset", asset =>
             {
                 asset.DisplayName = "Emergency Repair";
-                asset.Rarity = UpgradeRarity.Rare;
                 asset.Radius = 6;
                 asset.RepairFraction = FP._0_50;
             });
@@ -92,7 +87,6 @@ namespace QuantumUser.Editor
             PortableCoverSkillAction portableCover = CreateOrUpdate<PortableCoverSkillAction>($"{DashUpgradesFolderPath}/PortableCoverSkillAction.asset", asset =>
             {
                 asset.DisplayName = "Portable Cover";
-                asset.Rarity = UpgradeRarity.Epic;
                 asset.ShieldRestoreAmount = 20;
                 asset.MachineShieldRestoreAmount = 10;
                 asset.MachineRadius = 6;

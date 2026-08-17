@@ -578,7 +578,8 @@ namespace Quantum {
 
     private void OnEntityViewInstantiated(QuantumGame game, Frame frame, QuantumEntityView instance, EntityRef handle) {
       if ((instance.ViewFlags & QuantumEntityViewFlags.DisableEntityRefNaming) == 0) {
-        instance.gameObject.name = handle.GetName(frame);
+        var prefabName = instance.gameObject.name.Replace("(Clone)", string.Empty).Trim();
+        instance.gameObject.name = $"{prefabName} {handle.GetName(frame)}";
       }
 
       instance.EntityRef = handle;

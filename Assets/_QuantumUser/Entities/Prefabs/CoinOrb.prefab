@@ -146,8 +146,7 @@ GameObject:
   - component: {fileID: 2029515808838196738}
   - component: {fileID: 3536497076714000028}
   - component: {fileID: 8924151480177325548}
-  - component: {fileID: -3622596322927943113}
-  - component: {fileID: 7288735781386881578}
+  - component: {fileID: -6042203242506162812}
   m_Layer: 0
   m_Name: CoinOrb
   m_TagString: Untagged
@@ -455,27 +454,7 @@ MonoBehaviour:
       Value: 1
     Value:
       RawValue: 0
---- !u!114 &-3622596322927943113
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4796121196519982832}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1c219931844004bfdbde2b81afb773a2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Quantum.Unity::Quantum.QPrototypePopVelocity
-  Prototype:
-    Velocity:
-      X:
-        RawValue: 0
-      Y:
-        RawValue: 655360
-      Z:
-        RawValue: 0
---- !u!114 &7288735781386881578
+--- !u!114 &-6042203242506162812
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

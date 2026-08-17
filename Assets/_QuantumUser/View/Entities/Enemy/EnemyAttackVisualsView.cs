@@ -90,6 +90,12 @@ namespace Quantum
             base.DeInitialize(game);
             ClearParentedParticle(instant: true);
             ClearTelegraph(instant: true);
+
+            // Guards against ViewPrefabPool reuse - if this entity is torn down mid-attack, make
+            // sure the pooled rig goes back to its rest sprite before some other enemy's SetRig
+            // caches it as their own "default" (see EnemyBlobAnimationView._defaultBodySprite).
+            if (blobAnimationView != null)
+                blobAnimationView.ResetBodySprite();
         }
 
         // Fires for every hit that lands anywhere, not just this enemy's own - Owner filters down to
@@ -249,6 +255,12 @@ namespace Quantum
                 && enemyPhase != EnemyActionPhase.Telegraph
                 && enemyPhase != EnemyActionPhase.Active;
 
+            // BodySprite is deliberately NOT force-reverted here, unlike the telegraph below - a
+            // step's sprite should stay up for its own full authored Duration even if the attack
+            // itself (Enemy.Phase) already wrapped up first, so EnemyBlobAnimationView's own
+            // _bodySpriteTimeRemaining countdown is the only thing that reverts it (see
+            // ApplyStepSprite/QUpdate there). DeInitialize below still force-reverts on teardown -
+            // that's a pool-reuse safeguard, not a "cut the visual short" concern.
             if (attackNoLongerActive == true && _currentTelegraph != null)
             {
                 ClearTelegraph();
@@ -260,6 +272,7 @@ namespace Quantum
             if (step != null)
             {
                 blobAnimationView.PlayAttackStep(step);
+                blobAnimationView.ApplyStepSprite(step.BodySprite, step.Duration);
                 SpawnStepParticle(frame, enemy, step);
             }
 
@@ -496,6 +509,22 @@ namespace Quantum
                 Vector3 areaWorldPosition = areaPosition.ToUnityVector3();
                 position = telegraph.SnapToGround == true ? SnapToGround(areaWorldPosition) : areaWorldPosition;
                 rotation = Quaternion.LookRotation(Vector3.up, Vector3.forward);
+
+                // Optional continuous spin around the world-vertical axis (e.g. a rotating
+                // danger-sector pinwheel - ScrapstormDeliveryData) - derived from enemy.StateTimer
+                // (the same field driving GrowthDuration above) rather than a separately-tracked
+                // elapsed-time value, deliberately matching the exact formula the paired
+                // ScrapstormDeliveryData.Tick() uses sim-side, so the visible wedge pattern and the
+                // actual danger-zone damage check can't drift apart. Post-multiplied as a local
+                // Z-axis twist, same composition idiom the ChargeLane/Rectangle branch below already
+                // uses for its own twist - local Z is what LookRotation(up, forward) mapped to world
+                // up, so this spins the already-flattened decal in place rather than tilting it.
+                if (telegraph.RotationDegreesPerSecond != 0f)
+                {
+                    float spinDegrees = -enemy.StateTimer.AsFloat * telegraph.RotationDegreesPerSecond;
+                    rotation *= Quaternion.Euler(0f, 0f, spinDegrees);
+                }
+
                 scale = new Vector3(radius * 2f, radius * 2f, 1f);
                 return true;
             }

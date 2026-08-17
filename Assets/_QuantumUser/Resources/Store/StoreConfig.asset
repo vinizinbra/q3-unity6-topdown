@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa7c54f8c05f14eb3b413c76c547fae9, type: 3}
+  m_Name: StoreConfig
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.StoreConfig
+  Identifier:
+    Path: _QuantumUser/Resources/Store/StoreConfig
+    Guid:
+      Value: 466436701424375694
+  WeaponPool:
+    Id:
+      Value: 489069850842438477
+  MaxWeaponOfferSlots: 3
+  WeaponOfferTalentLevel: 2
+  WeaponOfferBasePrice:
+    RawValue: 6553600
+  WeaponOfferPricePerPerk:
+    RawValue: 1638400
+  FoodPool:
+    Id:
+      Value: 412821431523284470
+  FoodOfferCount: 2

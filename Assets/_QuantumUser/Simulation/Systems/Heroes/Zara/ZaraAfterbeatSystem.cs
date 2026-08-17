@@ -1,37 +1,113 @@
 namespace Quantum
 {
     using Photon.Deterministic;
+    using Quantum.Physics3D;
     using UnityEngine.Scripting;
 
-    // Ticks down ZaraAfterbeat.Remaining (see AfterbeatSkillAction, which sets it) and fires the
-    // delayed pulse once it hits 0 - same "countdown component ticked by its own tiny System" shape
-    // as ExplodeOnDeathTimerSystem/JuggernautDischargeCooldownSystem.
+    // Ticks down ZaraAfterbeat's two independent countdowns (Start/End - see ZaraAfterbeat.qtn, set
+    // by AfterbeatSkillAction) and fires each delayed pulse once it hits 0 - same "countdown
+    // component ticked by its own tiny System" shape as ExplodeOnDeathTimerSystem/
+    // JuggernautDischargeCooldownSystem, just two independent slots on one component instead of one.
     [Preserve]
     public unsafe class ZaraAfterbeatSystem : SystemMainThreadFilter<ZaraAfterbeatSystem.Filter>
     {
         public override void Update(Frame f, ref Filter filter)
         {
-            ZaraAfterbeat* afterbeat = filter.Afterbeat;
+            TickPulse(f, filter.Entity, filter.Afterbeat, isStart: true);
+            TickPulse(f, filter.Entity, filter.Afterbeat, isStart: false);
+        }
 
-            if (afterbeat->Remaining <= FP._0)
+        private static void TickPulse(Frame f, EntityRef owner, ZaraAfterbeat* afterbeat, bool isStart)
+        {
+            FP remaining = isStart ? afterbeat->StartRemaining : afterbeat->EndRemaining;
+
+            if (remaining <= FP._0)
                 return;
 
-            afterbeat->Remaining -= f.DeltaTime;
+            remaining -= f.DeltaTime;
 
-            if (afterbeat->Remaining > FP._0)
+            if (isStart)
+            {
+                afterbeat->StartRemaining = remaining;
+            }
+            else
+            {
+                afterbeat->EndRemaining = remaining;
+            }
+
+            if (remaining > FP._0)
                 return;
 
-            HitEffectUtility.ApplyDamageInRadius(f, afterbeat->Position, afterbeat->Radius, filter.Entity,
-                afterbeat->Damage, DamageSource.Skill, DamageTargetMask.Enemies);
+            if (isStart)
+            {
+                Fire(f, owner, afterbeat, afterbeat->StartPosition, afterbeat->StartDamage, afterbeat->StartRadius, afterbeat->StartKnockbackForce);
+            }
+            else
+            {
+                Fire(f, owner, afterbeat, afterbeat->EndPosition, afterbeat->EndDamage, afterbeat->EndRadius, afterbeat->EndKnockbackForce);
+            }
+        }
 
-            f.Events.ResonancePulseReleased(filter.Entity, afterbeat->Position, afterbeat->Radius);
+        // Inline overlap+damage+knockback loop (mirrors VortexSystem.TryRepulseOnDestroy's shape)
+        // rather than HitEffectUtility.ApplyDamageInRadius/ApplyShockwave, since rank 3's own
+        // Resonance-per-enemy-hit bonus needs the exact hit COUNT from this same sweep.
+        private static void Fire(Frame f, EntityRef owner, ZaraAfterbeat* afterbeat, FPVector3 position, FP damage, FP radius, FP knockbackForce)
+        {
+            if (damage <= FP._0 && knockbackForce <= FP._0)
+                return;
 
-            // Fired directly rather than through HitEffectUtility.ApplyShockwave - Afterbeat is a pure
-            // damage echo with no knockback of its own (see ZaraAfterbeat.qtn), but still wants the
-            // same view hookup: ResonanceFxView (filtered to this entity) plays Zara's own tinted pulse
-            // particle for it, same as a normal Resonance pulse (see ResonanceUtility.FirePulse), with
-            // EffectsManager's generic handler as a fallback if that component/prefab isn't set up.
-            f.Events.ShockwaveReleased(filter.Entity, afterbeat->Position, afterbeat->Radius, default);
+            if (radius <= FP._0)
+                return;
+
+            Shape3D sphere = Shape3D.CreateSphere(radius);
+            var hits = f.Physics3D.OverlapShape(position, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
+
+            int enemiesHit = 0;
+
+            for (int i = 0; i < hits.Count; i++)
+            {
+                EntityRef target = hits[i].Entity;
+
+                if (target == owner || f.Has<Enemy>(target) == false)
+                    continue;
+
+                if (f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == false)
+                    continue;
+
+                // generatesResonance: false - Afterbeat's own damage must not generate Resonance
+                // through the generic per-damage hook; rank 3's own capped per-enemy-hit bonus below
+                // is the only Resonance Afterbeat ever grants (confirmed with the user).
+                if (damage > FP._0)
+                {
+                    DamageUtility.ApplyDamage(f, target, damage, owner, DamageSource.Skill, generatesResonance: false);
+                }
+
+                if (knockbackForce > FP._0)
+                {
+                    DamageUtility.ApplyKnockback(f, target, targetTransform->Position - position, knockbackForce, FP._0, owner);
+                }
+
+                enemiesHit++;
+            }
+
+            // Own dedicated event (ZaraAfterbeatFxView) rather than ResonancePulseReleased/
+            // ShockwaveReleased - see AfterbeatPulseReleased's own comment in Events.qtn for why.
+            f.Events.AfterbeatPulseReleased(owner, position, radius);
+
+            // Afterbeat rank 3 "Double Beat" - enemies hit generate additional Resonance, capped per
+            // dash (ResonanceGrantedThisDash, reset every dash Begin - see AfterbeatSkillAction).
+            // ResonancePerEnemyHit is 0 at rank<3/unpicked, so this is a pure no-op otherwise.
+            if (afterbeat->ResonancePerEnemyHit <= FP._0 || enemiesHit <= 0)
+                return;
+
+            FP remainingCap = afterbeat->MaxResonancePerDash - afterbeat->ResonanceGrantedThisDash;
+
+            if (remainingCap <= FP._0)
+                return;
+
+            FP grant = FPMath.Min(afterbeat->ResonancePerEnemyHit * enemiesHit, remainingCap);
+            ResonanceUtility.Grant(f, owner, grant);
+            afterbeat->ResonanceGrantedThisDash += grant;
         }
 
         public struct Filter

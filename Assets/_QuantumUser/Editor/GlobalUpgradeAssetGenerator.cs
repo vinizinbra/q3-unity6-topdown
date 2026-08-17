@@ -31,7 +31,6 @@ namespace QuantumUser.Editor
             public Type Type;
             public string FileName;
             public string DisplayName;
-            public UpgradeRarity Rarity;
             public string Description;
             public Action<GlobalUpgradeData> Configure;
         }
@@ -43,56 +42,56 @@ namespace QuantumUser.Editor
             new UpgradeSpec
             {
                 Type = typeof(WeaponDamageUpgradeData), FileName = "WeaponDamage",
-                DisplayName = "Weapon Damage", Rarity = UpgradeRarity.Common,
+                DisplayName = "Weapon Damage",
                 Description = "+{0}% Weapon Damage",
                 Configure = p => Multiplier(p, "1.1")
             },
             new UpgradeSpec
             {
                 Type = typeof(FireRateUpgradeData), FileName = "FireRate",
-                DisplayName = "Fire Rate", Rarity = UpgradeRarity.Common,
+                DisplayName = "Fire Rate",
                 Description = "+{0}% Fire Rate",
                 Configure = p => Multiplier(p, "1.1")
             },
             new UpgradeSpec
             {
                 Type = typeof(ReloadSpeedUpgradeData), FileName = "ReloadSpeed",
-                DisplayName = "Reload Speed", Rarity = UpgradeRarity.Common,
+                DisplayName = "Reload Speed",
                 Description = "+{0}% Reload Speed",
                 Configure = p => Multiplier(p, "1.15")
             },
             new UpgradeSpec
             {
                 Type = typeof(MagazineSizeUpgradeData), FileName = "MagazineSize",
-                DisplayName = "Magazine Size", Rarity = UpgradeRarity.Common,
+                DisplayName = "Magazine Size",
                 Description = "+{0}% Magazine",
                 Configure = p => ((MagazineSizeUpgradeData)p).Multiplier = FP.FromString("1.2")
             },
             new UpgradeSpec
             {
                 Type = typeof(CriticalChanceUpgradeData), FileName = "CriticalChance",
-                DisplayName = "Critical Chance", Rarity = UpgradeRarity.Rare,
+                DisplayName = "Critical Chance",
                 Description = "+{0}% Crit Chance",
                 Configure = p => ((CriticalChanceUpgradeData)p).Chance = FP.FromString("0.05")
             },
             new UpgradeSpec
             {
                 Type = typeof(CriticalDamageUpgradeData), FileName = "CriticalDamage",
-                DisplayName = "Critical Damage", Rarity = UpgradeRarity.Common,
+                DisplayName = "Critical Damage",
                 Description = "+{0}% Crit Damage",
                 Configure = p => Multiplier(p, "1.2")
             },
             new UpgradeSpec
             {
                 Type = typeof(WeaponRangeUpgradeData), FileName = "WeaponRange",
-                DisplayName = "Weapon Range", Rarity = UpgradeRarity.Common,
+                DisplayName = "Weapon Range",
                 Description = "+{0}% Weapon Range",
                 Configure = p => ((WeaponRangeUpgradeData)p).Multiplier = FP.FromString("1.15")
             },
             new UpgradeSpec
             {
                 Type = typeof(ProjectileSpeedUpgradeData), FileName = "ProjectileSpeed",
-                DisplayName = "Projectile Speed", Rarity = UpgradeRarity.Common,
+                DisplayName = "Projectile Speed",
                 Description = "+{0}% Projectile Speed",
                 Configure = p => Multiplier(p, "1.2")
             },
@@ -101,42 +100,42 @@ namespace QuantumUser.Editor
             new UpgradeSpec
             {
                 Type = typeof(MaxHealthUpgradeData), FileName = "MaxHealth",
-                DisplayName = "Max Health", Rarity = UpgradeRarity.Common,
+                DisplayName = "Max Health",
                 Description = "+{0}% Max HP",
                 Configure = p => Multiplier(p, "1.15")
             },
             new UpgradeSpec
             {
                 Type = typeof(ShieldUpgradeData), FileName = "Shield",
-                DisplayName = "Shield", Rarity = UpgradeRarity.Common,
+                DisplayName = "Shield",
                 Description = "+{0}% Shield",
                 Configure = p => Multiplier(p, "1.1")
             },
             new UpgradeSpec
             {
                 Type = typeof(MoveSpeedUpgradeData), FileName = "MoveSpeed",
-                DisplayName = "Movement Speed", Rarity = UpgradeRarity.Rare,
+                DisplayName = "Movement Speed",
                 Description = "+{0}% Move Speed",
                 Configure = p => Multiplier(p, "1.1")
             },
             new UpgradeSpec
             {
                 Type = typeof(HealthRegenUpgradeData), FileName = "HealthRegen",
-                DisplayName = "Health Regeneration", Rarity = UpgradeRarity.Rare,
+                DisplayName = "Health Regeneration",
                 Description = "+{0} HP/sec",
                 Configure = p => ((HealthRegenUpgradeData)p).RegenAmount = FP._1
             },
             new UpgradeSpec
             {
                 Type = typeof(HealingReceivedUpgradeData), FileName = "HealingReceived",
-                DisplayName = "Healing Received", Rarity = UpgradeRarity.Common,
+                DisplayName = "Healing Received",
                 Description = "+{0}% Healing",
                 Configure = p => Multiplier(p, "1.2")
             },
             new UpgradeSpec
             {
                 Type = typeof(PickupRadiusUpgradeData), FileName = "PickupRadius",
-                DisplayName = "Pickup Radius", Rarity = UpgradeRarity.Common,
+                DisplayName = "Pickup Radius",
                 Description = "+{0}% Pickup Radius",
                 Configure = p => Multiplier(p, "1.2")
             },
@@ -145,14 +144,14 @@ namespace QuantumUser.Editor
             new UpgradeSpec
             {
                 Type = typeof(DashCooldownUpgradeData), FileName = "DashCooldown",
-                DisplayName = "Dash Cooldown", Rarity = UpgradeRarity.Rare,
+                DisplayName = "Dash Cooldown",
                 Description = "-{0}% Dash Cooldown",
                 Configure = p => Multiplier(p, "1.15")
             },
             new UpgradeSpec
             {
                 Type = typeof(DashChargeUpgradeData), FileName = "DashCharge",
-                DisplayName = "Dash Charge", Rarity = UpgradeRarity.Rare,
+                DisplayName = "Dash Charge",
                 Description = "+{0} charge",
                 Configure = p => ((DashChargeUpgradeData)p).Charges = 1
             },
@@ -161,35 +160,35 @@ namespace QuantumUser.Editor
             new UpgradeSpec
             {
                 Type = typeof(SkillDamageUpgradeData), FileName = "SkillDamage",
-                DisplayName = "Skill Damage", Rarity = UpgradeRarity.Common,
+                DisplayName = "Skill Damage",
                 Description = "+{0}% Skill Damage",
                 Configure = p => Multiplier(p, "1.2")
             },
             new UpgradeSpec
             {
                 Type = typeof(SkillCooldownUpgradeData), FileName = "SkillCooldown",
-                DisplayName = "Skill Cooldown", Rarity = UpgradeRarity.Rare,
+                DisplayName = "Skill Cooldown",
                 Description = "-{0}% Cooldown",
                 Configure = p => Multiplier(p, "1.15")
             },
             new UpgradeSpec
             {
                 Type = typeof(SkillDurationUpgradeData), FileName = "SkillDuration",
-                DisplayName = "Skill Duration", Rarity = UpgradeRarity.Common,
+                DisplayName = "Skill Duration",
                 Description = "+{0}% Duration",
                 Configure = p => Multiplier(p, "1.2")
             },
             new UpgradeSpec
             {
                 Type = typeof(SkillAreaUpgradeData), FileName = "SkillArea",
-                DisplayName = "Skill Area", Rarity = UpgradeRarity.Common,
+                DisplayName = "Skill Area",
                 Description = "+{0}% Radius",
                 Configure = p => Multiplier(p, "1.2")
             },
             new UpgradeSpec
             {
                 Type = typeof(HeroSkillChargeUpgradeData), FileName = "HeroSkillCharge",
-                DisplayName = "Hero Skill Charge", Rarity = UpgradeRarity.Rare,
+                DisplayName = "Hero Skill Charge",
                 Description = "+{0} charge",
                 Configure = p => ((HeroSkillChargeUpgradeData)p).Charges = 1
             },
@@ -198,7 +197,7 @@ namespace QuantumUser.Editor
             new UpgradeSpec
             {
                 Type = typeof(ExperienceGainUpgradeData), FileName = "ExperienceGain",
-                DisplayName = "Experience Gain", Rarity = UpgradeRarity.Common,
+                DisplayName = "Experience Gain",
                 Description = "+{0}% XP",
                 Configure = p => Multiplier(p, "1.15")
             },
@@ -233,7 +232,6 @@ namespace QuantumUser.Editor
                     : existing;
 
                 asset.DisplayName = spec.DisplayName;
-                asset.Rarity = spec.Rarity;
                 asset.Description = spec.Description;
                 spec.Configure(asset);
 
