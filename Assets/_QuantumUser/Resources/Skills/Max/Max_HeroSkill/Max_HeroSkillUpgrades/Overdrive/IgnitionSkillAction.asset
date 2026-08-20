@@ -16,9 +16,8 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/Max_HeroSkill/Max_HeroSkillUpgrades/Overdrive/IgnitionSkillAction
     Guid:
       Value: 287946968249638524
-  Icon: {fileID: 0}
+  Icon: {fileID: 570146469, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
   DisplayName: Ignition
-  Rarity: 2
   RankDescriptions:
   - At max Rage, weapon hits guarantee Burn.
   - At max Rage, weapon hits guarantee Burn, and moving drops Burning Ground patches

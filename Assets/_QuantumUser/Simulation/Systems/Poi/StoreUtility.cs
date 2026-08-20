@@ -95,15 +95,16 @@ namespace Quantum
         }
 
         // Distinct weapons drawn the same uniform-without-replacement way
-        // LevelUpUtility.RollChooseWeaponOptionsFor already does, then each priced/perked via the
-        // EXACT same LevelUpUtility.RollWeaponOption formula a Choose-Weapon level-up option uses
-        // (promoted internal for this reuse - see docs/store-blacksmith.md) - driven by the
-        // triggering player's own RuntimePlayer.Talents.WeaponLevel (the SAME persistent
-        // meta-progression stat that seeds CharacterStats.WeaponTalentLevel at spawn, see
-        // PlayerSpawnUtility.Spawn/docs/talents.md), not the live in-run CharacterStats.
-        // WeaponTalentLevel (which keeps climbing over a run as Choose-Weapon picks/Store purchases
-        // land) - Store offers reflect the player's account-level weapon mastery, not how lucky
-        // they've been so far this run.
+        // LevelUpUtility.RollChooseWeaponOptionsFor already does. Unlike a Choose-Weapon level-up
+        // pick, three independent axes drive a Store offer's own quality (see
+        // docs/store-blacksmith.md's "Break Progression" section) rather than one shared
+        // WeaponTalentLevel: the current Breathing Break sets Weapon Level + starting perk COUNT
+        // (StoreConfig.ResolveBreakWeaponConfig/RollStorePerkCount), while the triggering player's
+        // own RuntimePlayer.Talents.WeaponLevel (the SAME persistent meta-progression stat that
+        // seeds CharacterStats.WeaponTalentLevel at spawn, see PlayerSpawnUtility.Spawn/
+        // docs/talents.md - deliberately NOT the live in-run CharacterStats.WeaponTalentLevel, which
+        // keeps climbing over a run) sets perk RARITY (StoreConfig.ResolveTalentRarityTuning/
+        // RollStorePerks).
         private static void RollWeaponOffers(Frame f, EntityRef player, StoreInventory* inventory, StoreConfig config)
         {
             var offers = inventory->WeaponOffers;
@@ -121,7 +122,8 @@ namespace Quantum
 
             WeaponChoicePoolData pool = f.FindAsset(config.WeaponPool);
             LevelUpConfig levelUpConfig = f.FindAsset(f.RuntimeConfig.LevelUpConfig);
-            byte weaponLevel = ResolveWeaponLevelTalent(f, player);
+            byte weaponTalentLevel = ResolveWeaponLevelTalent(f, player);
+            StoreBreakWeaponConfig breakConfig = config.ResolveBreakWeaponConfig(f.Global->BreathingIndex);
 
             int poolCount = pool.Weapons.Count;
             int slots = config.MaxWeaponOfferSlots < offers.Length ? config.MaxWeaponOfferSlots : offers.Length;
@@ -144,23 +146,84 @@ namespace Quantum
 
                 taken[roll] = true;
 
-                LevelUpOption rolled = LevelUpUtility.RollWeaponOption(f, levelUpConfig, pool.Weapons[roll], weaponLevel);
+                int perkCount = RollStorePerkCount(f, breakConfig.StartingPerkRolls);
+                AssetRef<WeaponPerkData>[] rolledPerks = RollStorePerks(f, levelUpConfig.WeaponPerkPool, perkCount, config, weaponTalentLevel);
 
                 StoreWeaponOffer offer = default;
-                offer.WeaponData = rolled.WeaponData;
-                offer.RolledPerkCount = rolled.RolledPerkCount;
+                offer.WeaponData = pool.Weapons[roll];
+                offer.WeaponLevel = breakConfig.WeaponLevel;
+                offer.RolledPerkCount = (byte)rolledPerks.Length;
 
-                var rolledPerks = offer.RolledPerks;
-                for (int p = 0; p < rolledPerks.Length; p++)
-                    rolledPerks[p] = p < rolled.RolledPerkCount ? rolled.RolledPerks[p] : default;
+                var offerPerks = offer.RolledPerks;
+                for (int p = 0; p < offerPerks.Length; p++)
+                    offerPerks[p] = p < rolledPerks.Length ? rolledPerks[p] : default;
 
-                offer.Price = config.WeaponOfferBasePrice + config.WeaponOfferPricePerPerk * rolled.RolledPerkCount;
+                offer.Price = config.WeaponOfferBasePrice + config.WeaponOfferPricePerPerk * offer.RolledPerkCount;
 
                 offers[drawn] = offer;
                 drawn++;
             }
 
             inventory->WeaponOfferCount = (byte)drawn;
+        }
+
+        // Break-configured starting-perk-COUNT roll (StoreConfig.BreakWeaponConfig) - each entry in
+        // `rolls` is an INDEPENDENT Bernoulli chance (unlike LevelUpUtility.RollWeaponOption's
+        // "clamp01((weaponTalentLevel - slot) * ChancePerLevelPerSlot)" formula), so Break
+        // progression and Weapon Talent Level stay fully independent axes - see
+        // docs/store-blacksmith.md. Reuses DamageUtility.RollChance, the same RNG helper
+        // RollWeaponOption itself already calls per slot.
+        private static int RollStorePerkCount(Frame f, FP[] rolls)
+        {
+            if (rolls == null)
+                return 0;
+
+            int count = 0;
+
+            for (int i = 0; i < rolls.Length; i++)
+            {
+                if (DamageUtility.RollChance(f, rolls[i]) == true)
+                    count++;
+            }
+
+            return count;
+        }
+
+        // Weighted draw WITHOUT REPLACEMENT (WeightedDrawUtility) from the same WeaponPerkPool a
+        // Choose-Weapon level-up pick already draws from (LevelUpConfig.WeaponPerkPool) - weighted
+        // by StoreConfig.TalentRarityTuning (the buyer's own account-level Weapon Talent Level)
+        // rather than WeaponPerkPoolData's own flat Common/Rare/Epic/LegendaryWeight fields, mirrors
+        // BlacksmithUtility.RollPerkOptions' exact shape. One candidate per distinct perk asset, so
+        // "without replacement" is what guarantees a freshly-rolled weapon can never receive the
+        // same perk twice (no AlreadyEquipped exclusion needed here - unlike Blacksmith, this is a
+        // brand new weapon with no perks yet).
+        private static AssetRef<WeaponPerkData>[] RollStorePerks(Frame f, AssetRef<WeaponPerkPoolData> poolRef, int perkCount, StoreConfig config, byte weaponTalentLevel)
+        {
+            if (perkCount <= 0 || poolRef.IsValid == false)
+                return System.Array.Empty<AssetRef<WeaponPerkData>>();
+
+            WeaponPerkPoolData pool = f.FindAsset(poolRef);
+            WeaponTalentRarityTuning tuning = config.ResolveTalentRarityTuning(weaponTalentLevel);
+
+            List<WeightedDrawUtility.Candidate<AssetRef<WeaponPerkData>>> candidates = new List<WeightedDrawUtility.Candidate<AssetRef<WeaponPerkData>>>();
+
+            for (int i = 0; i < pool.Perks.Count; i++)
+            {
+                AssetRef<WeaponPerkData> perkRef = pool.Perks[i];
+
+                if (perkRef.IsValid == false)
+                    continue;
+
+                WeaponPerkData data = f.FindAsset(perkRef);
+                int weight = tuning.GetWeight(data.Rarity);
+
+                if (weight <= 0)
+                    continue;
+
+                candidates.Add(new WeightedDrawUtility.Candidate<AssetRef<WeaponPerkData>> { Value = perkRef, Weight = weight });
+            }
+
+            return WeightedDrawUtility.Draw(f, candidates, perkCount);
         }
 
         // RuntimePlayer.Talents lives outside the deterministic Frame state proper (it's the raw
@@ -286,9 +349,26 @@ namespace Quantum
                 optionPerks[i] = i < offerPerks.Length ? offerPerks[i] : default;
 
             WeaponChoiceUtility.Grant(f, player, option);
+            ApplyBreakWeaponLevel(f, player, offer.WeaponLevel, config);
             MarkPurchased(f, player, store, offerIndex, isWeaponOffer: true);
 
-            Log.Debug($"[Store] {player} bought weapon offer {offerIndex} ({offer.WeaponData}) for {offer.Price} Coins");
+            Log.Debug($"[Store] {player} bought weapon offer {offerIndex} ({offer.WeaponData}) for {offer.Price} Coins, starting at Weapon Level {offer.WeaponLevel}");
+        }
+
+        // Brings a freshly-granted Store weapon up to its offer's own Break-rolled WeaponLevel -
+        // WeaponChoiceUtility.Grant always calls WeaponSystem.Equip, which resets Level back to 0
+        // (WeaponSystem.SeedStats), so this has to run AFTER Grant, not baked into the option/offer
+        // itself. Reuses WeaponSystem.AddLevel/StoreConfig.WeaponLevelUpDamageBonusPerLevel
+        // unchanged - the exact same "+5%, compounding" mechanism the guaranteed Increase-Weapon-
+        // Level offer already uses (see BuyWeaponLevelUp), so a Break-leveled Store weapon composes
+        // identically with a purchased level-up.
+        private static void ApplyBreakWeaponLevel(Frame f, EntityRef player, byte weaponLevel, StoreConfig config)
+        {
+            if (weaponLevel <= 0 || f.Unsafe.TryGetPointer<Weapon>(player, out var weapon) == false)
+                return;
+
+            for (int i = 0; i < weaponLevel; i++)
+                WeaponSystem.AddLevel(weapon, config.WeaponLevelUpDamageBonusPerLevel);
         }
 
         // Called from StoreSystem when a BuyStoreFoodCommand lands - same re-validate/spend/apply
@@ -329,6 +409,69 @@ namespace Quantum
             MarkPurchased(f, player, store, offerIndex, isWeaponOffer: false);
 
             Log.Debug($"[Store] {player} bought food offer {offerIndex} ({offer.Food}) for {offer.Price} Coins");
+        }
+
+        // "Increase Weapon Level" - a guaranteed offer, always present, never rolled into
+        // StoreInventory (see StoreConfig's own comment). Price scales with the buyer's OWN
+        // currently-equipped Weapon.Level, live - not cached anywhere, same "read live, never
+        // baked" idiom every other Store price already follows.
+        public static FP ResolveWeaponLevelUpPrice(Frame f, EntityRef player, StoreConfig config)
+        {
+            byte level = f.Unsafe.TryGetPointer<Weapon>(player, out var weapon) == true ? weapon->Level : (byte)0;
+            return config.WeaponLevelUpBasePrice + config.WeaponLevelUpPricePerLevel * level;
+        }
+
+        // See StorePurchases.WeaponLevelUpPurchasedAtBreathingIndexPlusOne's own comment for why
+        // this is stored offset by 1 rather than compared directly against BreathingIndex.
+        public static bool IsWeaponLevelUpPurchased(Frame f, EntityRef player)
+        {
+            if (f.Unsafe.TryGetPointer<StorePurchases>(player, out var purchases) == false)
+                return false;
+
+            return purchases->WeaponLevelUpPurchasedAtBreathingIndexPlusOne == f.Global->BreathingIndex + 1;
+        }
+
+        // Called from StoreSystem when a BuyStoreWeaponLevelCommand lands - re-validates
+        // affordability/once-per-Break server-side same as every other Store purchase, spends
+        // Coins, then levels up the buyer's own equipped Weapon directly (WeaponSystem.AddLevel) -
+        // no WeaponChoiceUtility.Grant involved, this doesn't touch CharacterStats.WeaponTalentLevel
+        // or grant a new weapon, only the one already equipped.
+        public static void BuyWeaponLevelUp(Frame f, EntityRef player)
+        {
+            if (f.RuntimeConfig.StoreConfig.IsValid == false)
+                return;
+
+            if (f.Unsafe.TryGetPointer<Weapon>(player, out var weapon) == false)
+            {
+                Log.Error($"[Store] {player} sent BuyWeaponLevelUp but has no equipped Weapon - ignored");
+                return;
+            }
+
+            if (IsWeaponLevelUpPurchased(f, player) == true)
+            {
+                Log.Debug($"[Store] {player} already bought a weapon level up this Break - ignored");
+                return;
+            }
+
+            StoreConfig config = f.FindAsset(f.RuntimeConfig.StoreConfig);
+            FP price = ResolveWeaponLevelUpPrice(f, player, config);
+
+            if (CoinUtility.TrySpend(f, player, price) == false)
+            {
+                Log.Debug($"[Store] {player} can't afford a weapon level up ({price} Coins)");
+                return;
+            }
+
+            WeaponSystem.AddLevel(weapon, config.WeaponLevelUpDamageBonusPerLevel);
+            MarkWeaponLevelUpPurchased(f, player);
+
+            Log.Debug($"[Store] {player} bought a weapon level up (now Level {weapon->Level}) for {price} Coins");
+        }
+
+        private static void MarkWeaponLevelUpPurchased(Frame f, EntityRef player)
+        {
+            f.AddOrGet<StorePurchases>(player, out var purchases);
+            purchases->WeaponLevelUpPurchasedAtBreathingIndexPlusOne = f.Global->BreathingIndex + 1;
         }
 
         // Per-offer purchase tracking - NOT PoiUsage (that's one bit per whole POI, see Store.qtn's

@@ -128,6 +128,20 @@ namespace Quantum
 
         protected override void QUpdate(QuantumGame game)
         {
+            // Hides the whole weapon locator (weaponSocket / MainChar's WeaponLocator - and therefore
+            // the gun plus anything else parented under it) while Downed/KO (see docs/revive.md) -
+            // can't fire anyway (WeaponSystem's own IsIncapacitated gate), and a collapsed character
+            // still visibly holding a raised weapon reads as broken. Restored the instant they're
+            // revived. Only toggles weaponSocket when it's explicitly assigned - Socket's fallback is
+            // this component's own GameObject, which must stay active for QUpdate to keep running.
+            if (weaponSocket != null)
+            {
+                bool incapacitated = PlayerLifeStateUtility.IsIncapacitated(game.Frames.Predicted, _entityRef);
+
+                if (weaponSocket.gameObject.activeSelf == incapacitated)
+                    weaponSocket.gameObject.SetActive(incapacitated == false);
+            }
+
             if (hasWeaponPosition == false) return;
 
             float facingSign = torsoFollow != null ? torsoFollow.FacingSign : 1f;

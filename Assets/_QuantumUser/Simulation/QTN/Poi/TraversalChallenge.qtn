@@ -1,0 +1,77 @@
+// A world POI, timed platform crossing to a reward already sitting on the far side of a gap (see
+// docs/traversal-challenge.md) - press-to-activate via the same generic Base-Skill-button redirect
+// every other POI uses (Interactable/ContextInteraction, see ContextInteraction.qtn). Unlike
+// HealingShrine/CursedRift this is deliberately NOT per-player gated (no PoiUsagePolicy/PoiUsage) -
+// the world-shared State machine alone governs re-triggerability, since ANY connected player can
+// activate it while Idle and ANY connected player can complete it while Active (the intended co-op
+// case is one player fighting elsewhere while a teammate crosses). Also deliberately never touches
+// PoiInteractionLockUtility - nobody's movement/weapon/skill input is locked by this POI, unlike
+// Cursed Rift/Store/Blacksmith, since the whole point is everyone else keeps playing normally.
+enum TraversalChallengeState : Byte
+{
+    Idle,      // not currently attempted - Base Skill press activates it
+    Active,    // platforms are up, RemainingTime counting down
+    Completed, // terminal - some player reached the checkpoint in time; platforms stay solid forever
+    Failed     // terminal - the timer ran out with nobody at the checkpoint. Same one-attempt-per-run
+               // contract as Completed (confirmed with the user): NOT reset back to Idle, so a failed
+               // attempt can't just be retried - only succeeding was ever going to clear the gap.
+}
+
+component TraversalChallenge
+{
+    PoiAvailability Availability;
+    FP Duration;
+    FP RemainingTime;
+    TraversalChallengeState State;
+    EntityRef ActivatedBy;
+
+    // The Chunk this activator was resolved to belong to (nearest chunk, same
+    // FallRespawnUtility.TryFindNearestChunk lookup Chunk.RespawnPoint resolution already uses -
+    // see "Chunk seam gap pattern" - not strict-containment, which can miss at a chunk boundary
+    // seam), resolved once by TryActivate and cached here so TraversalChallengeSystem doesn't
+    // re-scan every Chunk entity every tick while Active.
+    EntityRef Chunk;
+
+    // Offsets relative to the resolved CHUNK's own Transform3D (position AND rotation - a chunk can
+    // be placed rotated 90/270 degrees, same as Chunk.RespawnPoint's own resolution), NOT relative
+    // to this entity's own placement and NOT absolute world coordinates. Chunk-relative (not
+    // activator-relative) so authoring matches the same frame of reference TraversalChunk.asset's
+    // own ChunkSpawnConfig.Spawns[].Offset already uses for the chest - a designer can eyeball both
+    // the chest's offset and these in the same coordinate space. Resolved to world space only in
+    // TraversalChallengeUtility.TryActivate / TraversalChallengeSystem.Update, via `chunkPosition +
+    // chunkRotation * offset`.
+    FPVector3 CheckpointPosition;
+    FP CheckpointRadius;
+
+    // Spawned fresh via f.Create on activate, f.Destroy'd on Fail (left alone forever on Complete) -
+    // NOT a pre-placed/collider-toggled BossArenaGate-style entity, since Quantum's own entity view
+    // spawn/destroy lifecycle already handles visibility for free and platforms have no need to
+    // exist before activation. Positions are chunk-relative offsets too - same frame of reference
+    // as CheckpointPosition above.
+    AssetRef<EntityPrototype> PlatformPrototype;
+    Byte PlatformCount;
+    array<FPVector3>[8] PlatformPositions;
+    array<EntityRef>[8] SpawnedPlatforms;
+}
+
+global
+{
+    // Incremented on TryActivate, decremented (clamped at 0) on Complete/Fail - guards SurvivalTime/
+    // CombatDirectorSystem globally while ANY TraversalChallenge is Active (a counter, not a bool,
+    // so multiple concurrent instances across different Traversal chunks stay correct independently).
+    // Checked at the exact same two points SurvivalPhaseKind.Breathing already is, WITHOUT touching
+    // GameState or disabling GameplaySystemGroup - see SurvivalProgressionUtility.Tick/
+    // CombatDirectorSystem.Update. Kept in its own file's global block rather than folded into
+    // GameState.qtn/SurvivalDirector.qtn - same "conceptually unrelated, own file" convention
+    // SurvivalDirector.qtn's own global block comment documents.
+    Int32 ActiveTraversalChallengeCount;
+
+    // Purely a cheap client-facing convenience value, same "no asset lookup needed" role
+    // Global.BreathingTimeRemaining already plays for Breathing's own countdown - written by
+    // TraversalChallengeSystem every tick a challenge is Active, so a global (not per-instance-
+    // following) HUD banner (TraversalChallengeWidget) can show one whole-team countdown without
+    // filtering for the live entity itself. If more than one Traversal Challenge is ever Active at
+    // once, this simply reflects whichever one's own system Update happened to run last that tick -
+    // a deliberate simplification, not a bug (see docs/traversal-challenge.md).
+    FP TraversalChallengeTimeRemaining;
+}

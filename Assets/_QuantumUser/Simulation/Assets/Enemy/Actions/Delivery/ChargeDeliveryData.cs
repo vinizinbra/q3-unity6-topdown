@@ -118,6 +118,12 @@ namespace Quantum
             // same line, at or before the wall) actually blocks the charge from being worth starting.
             Hit3D? playerHit = f.Physics3D.Raycast(wallCheckOrigin, direction, DashDistance, EnemyMovementUtility.GetPlayerLayerMask(f), QueryOptions.HitAll);
 
+            // A Downed/KO player (see docs/revive.md) standing in the way shouldn't validate the
+            // charge on their own - Tick's own hit-connect loop (TryFindNearestPlayer) already
+            // skips them too, so treating this raycast as a miss keeps CanBegin/Tick consistent.
+            if (playerHit.HasValue == true && PlayerLifeStateUtility.IsIncapacitated(f, playerHit.Value.Entity) == true)
+                playerHit = null;
+
             return playerHit.HasValue == true && playerHit.Value.CastDistanceNormalized <= wallHit.Value.CastDistanceNormalized;
         }
 

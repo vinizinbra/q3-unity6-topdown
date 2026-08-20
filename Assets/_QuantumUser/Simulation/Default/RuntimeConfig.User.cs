@@ -109,6 +109,11 @@ namespace Quantum
         // see TalentsConfig, TalentUtility and RuntimePlayer's own Player*/Has*/Can* fields.
         public AssetRef<TalentsConfig> TalentsConfig;
 
+        [Header("Revive")]
+        // Hold-to-revive tuning (Downed/KO life-state, revive/self-revive durations, damage-pause,
+        // completion heal/invuln) - see ReviveConfig and docs/revive.md.
+        public AssetRef<ReviveConfig> ReviveConfig;
+
         [Header("Prefabs")]
         // Every pickup entity spawned straight from RuntimeConfig rather than authored on a
         // prototype elsewhere - see PrefabRefs below.

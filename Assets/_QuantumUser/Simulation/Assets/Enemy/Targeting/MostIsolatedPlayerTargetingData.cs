@@ -20,6 +20,11 @@ namespace Quantum
             {
                 EntityRef candidate = hits[i].Entity;
 
+                // Downed/KO players are neither a valid primary target nor worth counting as
+                // "another nearby player" for someone else's isolation score - see docs/revive.md.
+                if (PlayerLifeStateUtility.IsIncapacitated(f, candidate) == true)
+                    continue;
+
                 if (f.Unsafe.TryGetPointer<Transform3D>(candidate, out var candidateTransform) == false)
                     continue;
 
@@ -29,6 +34,9 @@ namespace Quantum
                 for (int j = 0; j < hits.Count; j++)
                 {
                     if (j == i)
+                        continue;
+
+                    if (PlayerLifeStateUtility.IsIncapacitated(f, hits[j].Entity) == true)
                         continue;
 
                     if (f.Unsafe.TryGetPointer<Transform3D>(hits[j].Entity, out var otherTransform) == false)

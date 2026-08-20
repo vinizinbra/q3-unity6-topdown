@@ -18,7 +18,6 @@ MonoBehaviour:
       Value: 393583907183411523
   Icon: {fileID: -1650662890, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
   DisplayName: Skill Duration
-  Rarity: 0
   MaxPicks: 3
   Description: +{0}% Duration
   Multiplier:

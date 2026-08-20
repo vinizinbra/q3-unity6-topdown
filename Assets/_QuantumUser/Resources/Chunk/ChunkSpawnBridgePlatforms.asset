@@ -1,0 +1,84 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee8242cb69d344458aa9cd25a7c455b3, type: 3}
+  m_Name: ChunkSpawnBridgePlatforms
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ChunkSpawnConfig
+  Identifier:
+    Path: _QuantumUser/Resources/Chunk/ChunkSpawnBridgePlatforms
+    Guid:
+      Value: 478368276581227196
+  Spawns:
+  - Prototype:
+      Id:
+        Value: 1490237048963392359
+    Offset:
+      X:
+        RawValue: 411566
+      Y:
+        RawValue: 258211
+      Z:
+        RawValue: 557711
+    Requirement: 0
+    Chance:
+      RawValue: 0
+  - Prototype:
+      Id:
+        Value: 1490237048963392359
+    Offset:
+      X:
+        RawValue: 1376256
+      Y:
+        RawValue: 258211
+      Z:
+        RawValue: 950272
+    Requirement: 0
+    Chance:
+      RawValue: 0
+  - Prototype:
+      Id:
+        Value: 1490237048963392359
+    Offset:
+      X:
+        RawValue: 406323
+      Y:
+        RawValue: 258211
+      Z:
+        RawValue: 1310720
+    Requirement: 0
+    Chance:
+      RawValue: 0
+  - Prototype:
+      Id:
+        Value: 1490237048963392359
+    Offset:
+      X:
+        RawValue: 369623
+      Y:
+        RawValue: 258211
+      Z:
+        RawValue: 226099
+    Requirement: 0
+    Chance:
+      RawValue: 0
+  - Prototype:
+      Id:
+        Value: 1490237048963392359
+    Offset:
+      X:
+        RawValue: 1547305
+      Y:
+        RawValue: 258211
+      Z:
+        RawValue: 169738
+    Requirement: 0
+    Chance:
+      RawValue: 0

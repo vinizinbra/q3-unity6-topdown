@@ -15,6 +15,13 @@ namespace Quantum
             if (shield->Current >= shield->Max)
                 return;
 
+            // Downed/KO players don't regen Shield either (see docs/revive.md) - frozen the same
+            // way Health/Shield damage itself already is (Invulnerable), so a Shield just sits
+            // exactly where it was the instant they went down until they're revived. No-op for
+            // anything without PlayerLifeState (enemies/bosses with their own Shield).
+            if (PlayerLifeStateUtility.IsIncapacitated(f, filter.Entity) == true)
+                return;
+
             bool hasShieldRegenBuff = StatusEffectUtility.HasShieldRegenBuff(f, filter.Entity);
 
             if (shield->RechargeTimer > FP._0 && hasShieldRegenBuff == false)

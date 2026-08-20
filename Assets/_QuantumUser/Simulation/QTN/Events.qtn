@@ -659,3 +659,55 @@ event ContextInteractionRejected
     EntityRef Player;
     EntityRef Target;
 }
+
+// Fired by TraversalChallengeUtility.TryActivate the instant a player's Base Skill press starts a
+// Traversal Challenge (see TraversalChallenge.qtn/docs/traversal-challenge.md) - View-only hook for
+// the activator's own visual swap (TraversalChallengeView) and the platform-spawn VFX. Player is
+// who pressed it, purely for UI messaging (e.g. "Player X started the crossing!") - completion is
+// NOT restricted to this same player.
+event TraversalChallengeActivated
+{
+    EntityRef Challenge;
+    EntityRef Player;
+}
+
+// Fired by TraversalChallengeUtility.Complete the instant ANY player reaches the checkpoint in
+// time - platforms are left alone (stay solid forever), SurvivalTime/enemy spawning resume next
+// tick (see ActiveTraversalChallengeCount). View-only hook for the activator's terminal visual.
+event TraversalChallengeCompleted
+{
+    EntityRef Challenge;
+}
+
+// Fired by TraversalChallengeUtility.Fail the instant RemainingTime runs out with nobody at the
+// checkpoint - platforms are already destroyed by the time this fires, State is already back to
+// Idle (retryable) - a View never actually observes TraversalChallengeState.Failed on the
+// component itself, it reacts to this event instead (see that enum value's own comment).
+event TraversalChallengeFailed
+{
+    EntityRef Challenge;
+}
+
+// Fired by PlayerLifeStateUtility.EnterDowned the instant a player's Health hits 0 (see
+// docs/revive.md - replaces the old instant-respawn DamageUtility.RespawnPlayer path entirely).
+// View-only hook for a downed pose/VFX - nothing consumes this yet, same "vocabulary now, wired
+// later" precedent every other not-yet-wired event in this file follows.
+event PlayerDowned
+{
+    EntityRef Entity;
+}
+
+// Fired by PlayerLifeStateUtility.EnterKO when a Downed player's own bleed-out timer runs out
+// without being revived in time. View-only hook, not yet wired.
+event PlayerKO
+{
+    EntityRef Entity;
+}
+
+// Fired by PlayerLifeStateUtility.Revive the instant a hold-to-revive channel (teammate or self)
+// completes. Reviver == Target for a self-revive. View-only hook, not yet wired.
+event PlayerRevived
+{
+    EntityRef Target;
+    EntityRef Reviver;
+}

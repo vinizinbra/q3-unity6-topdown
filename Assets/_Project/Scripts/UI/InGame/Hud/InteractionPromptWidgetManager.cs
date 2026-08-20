@@ -26,13 +26,14 @@ public class InteractionPromptWidgetManager : MonoBehaviour
     }
 
     public void SpawnWidget(EntityRef entityRef, QuantumGame game, Transform followTarget, string title,
-        string activeDescription, string phaseUnavailableDescription, string alreadyUsedDescription, string notNeededDescription, Vector3 worldOffset = default)
+        string activeDescription, string phaseUnavailableDescription, string alreadyUsedDescription, string notNeededDescription,
+        Vector3 worldOffset = default, string occupiedDescription = "")
     {
         if (_widgets.ContainsKey(entityRef))
             return;
 
         var widget = Instantiate(widgetPrefab, widgetParent);
-        widget.Setup(game, entityRef, followTarget, title, activeDescription, phaseUnavailableDescription, alreadyUsedDescription, notNeededDescription, worldOffset);
+        widget.Setup(game, entityRef, followTarget, title, activeDescription, phaseUnavailableDescription, alreadyUsedDescription, notNeededDescription, worldOffset, occupiedDescription);
         widget.gameObject.SetActive(true);
         _widgets.Add(entityRef, widget);
     }

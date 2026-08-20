@@ -50,7 +50,7 @@ MonoBehaviour:
   MaxLedgeHeight:
     RawValue: 65536
   MantleProbeDistance:
-    RawValue: 58982
+    RawValue: 52429
   AnkleProbeHeight:
     RawValue: 0
   EdgeProbeDistance:

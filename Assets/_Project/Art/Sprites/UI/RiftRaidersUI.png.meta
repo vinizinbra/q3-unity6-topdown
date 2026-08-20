@@ -513,9 +513,9 @@ TextureImporter:
       name: RR_Hex16_Border
       rect:
         serializedVersion: 2
-        x: 32
-        y: 427
-        width: 31
+        x: 31
+        y: 429
+        width: 29
         height: 30
       alignment: 0
       pivot: {x: 0.5, y: 0.5}

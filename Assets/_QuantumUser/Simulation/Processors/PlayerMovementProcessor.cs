@@ -17,8 +17,6 @@ namespace Quantum
     {
         private const string NotJumpableLayerName = "GroundNotJumpable";
 
-        private static int? _notJumpableLayerMask;
-
         public void BeforeMove(KCCContext context, KCCProcessorInfo processorInfo)
         {
             Frame frame = context.Frame;
@@ -54,11 +52,27 @@ namespace Quantum
             // Blacksmith Choice Window open (see docs/breathing-poi.md/docs/store-blacksmith.md) is
             // locked the same way a Stun/Root already blocks movement, but deliberately NOT via
             // GameplaySystemGroup/Time.timeScale - only this one player's own input is gated,
-            // everyone else (and the simulation itself) keeps running normally.
+            // everyone else (and the simulation itself) keeps running normally. A Downed/KO player
+            // (see docs/revive.md) is separately, fully pinned via IsIncapacitated - no partial
+            // movement for the incapacitated player themselves, only for an Alive reviver (below).
+            //
+            // ReviveChannel is deliberately carved OUT of the shared zero-speed branch even though
+            // IsInputLocked also returns true for it (needed so WeaponSystem/SkillSystem/
+            // ContextInteractionSystem still fully lock the reviver's OTHER actions) - a reviver
+            // must keep moving at a reduced, not zero, speed (see docs/revive.md).
+            bool incapacitated = PlayerLifeStateUtility.IsIncapacitated(frame, entity);
+            bool reviving = frame.Has<ReviveChannel>(entity);
+
             if (StatusEffectUtility.IsStunned(frame, entity) == true || StatusEffectUtility.IsRooted(frame, entity) == true
-                || PoiInteractionLockUtility.IsInputLocked(frame, entity) == true)
+                || incapacitated == true
+                || (PoiInteractionLockUtility.IsInputLocked(frame, entity) == true && reviving == false))
             {
                 targetSpeed = FP._0;
+            }
+            else if (reviving == true)
+            {
+                ReviveConfig reviveConfig = PlayerLifeStateUtility.GetConfig(frame);
+                targetSpeed *= reviveConfig != null ? reviveConfig.ReviveMoveSpeedMultiplier : FP.FromString("0.30");
             }
 
             context.KCC->Data.Gravity        = data.Gravity;
@@ -148,10 +162,11 @@ namespace Quantum
             return ledgeBlocked == false;
         }
 
+        // No static caching - f.Layers.GetLayerMask is a cheap lookup into immutable per-match
+        // config; a static field would live outside Quantum's Frame/rollback state entirely.
         private static int GetNotJumpableLayerMask(Frame f)
         {
-            _notJumpableLayerMask ??= f.Layers.GetLayerMask(NotJumpableLayerName);
-            return _notJumpableLayerMask.Value;
+            return f.Layers.GetLayerMask(NotJumpableLayerName);
         }
     }
 }

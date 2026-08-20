@@ -1,0 +1,123 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee8242cb69d344458aa9cd25a7c455b3, type: 3}
+  m_Name: ChunkSpawnTwinPlatforms
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ChunkSpawnConfig
+  Identifier:
+    Path: _QuantumUser/Resources/Chunk/ChunkSpawnTwinPlatforms
+    Guid:
+      Value: 417168539880722853
+  Spawns:
+  - Prototype:
+      Id:
+        Value: 1490237048963392359
+    Offset:
+      X:
+        RawValue: 324403
+      Y:
+        RawValue: 163840
+      Z:
+        RawValue: 543948
+    Requirement: 0
+    Chance:
+      RawValue: 0
+  - Prototype:
+      Id:
+        Value: 1490237048963392359
+    Offset:
+      X:
+        RawValue: 431882
+      Y:
+        RawValue: 163840
+      Z:
+        RawValue: 1068892
+    Requirement: 0
+    Chance:
+      RawValue: 0
+  - Prototype:
+      Id:
+        Value: 1490237048963392359
+    Offset:
+      X:
+        RawValue: 1364459
+      Y:
+        RawValue: 163840
+      Z:
+        RawValue: 998113
+    Requirement: 0
+    Chance:
+      RawValue: 0
+  - Prototype:
+      Id:
+        Value: 1490237048963392359
+    Offset:
+      X:
+        RawValue: 1603665
+      Y:
+        RawValue: 163840
+      Z:
+        RawValue: 543293
+    Requirement: 0
+    Chance:
+      RawValue: 0
+  - Prototype:
+      Id:
+        Value: 1490237048963392359
+    Offset:
+      X:
+        RawValue: 1486356
+      Y:
+        RawValue: 163840
+      Z:
+        RawValue: 1371668
+    Requirement: 0
+    Chance:
+      RawValue: 0
+  - Prototype:
+      Id:
+        Value: 1490237048963392359
+    Offset:
+      X:
+        RawValue: 1403781
+      Y:
+        RawValue: 163840
+      Z:
+        RawValue: 1462763
+    Requirement: 0
+    Chance:
+      RawValue: 0
+  - Prototype:
+      Id:
+        Value: 1490237048963392359
+    Offset:
+      X:
+        RawValue: 553779
+      Y:
+        RawValue: 163840
+      Z:
+        RawValue: 1462108
+    Requirement: 0
+    Chance:
+      RawValue: 0
+  - Prototype:
+      Id:
+        Value: 1490237048963392359
+    Offset:
+      X:
+        RawValue: 443678
+      Y:
+        RawValue: 163840
+      Z:
+        RawValue: 1534853
+    Requirement: 0
+    Chance:
+      RawValue: 0

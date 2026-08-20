@@ -50,6 +50,13 @@ namespace Quantum
         // CharacterStats.Coins itself is FP, effectively unbounded.
         public int StartingCoins;
 
+        // Self-revive charge talent - seeds CharacterStats.SelfReviveCharges once at spawn
+        // (PlayerSpawnUtility.Spawn), same raw-flat-count shape as RerollQuantity/
+        // ShopWeaponOfferCount above. Per-player (not one of the shared Has*/Can* bools below) -
+        // confirmed with the user: every player carries their own independent charge count, usable
+        // whenever Downed or KO regardless of team composition. See docs/revive.md.
+        public byte SelfReviveCharges;
+
         // Player* fields are baked into this player's own CharacterStats at spawn
         // (PlayerSpawnUtility.Spawn -> TalentUtility.ApplyPerPlayerTalents). Has*/Can* fields are
         // OR'd across every connected player (TalentUtility.ComputeSharedTalents) to decide what

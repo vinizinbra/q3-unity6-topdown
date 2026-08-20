@@ -20,16 +20,21 @@ namespace Quantum
     {
         public override void Update(Frame f)
         {
-            if (f.Global->DebugCheatsApplied == false)
+            if (f.Global->DebugCheatsApplied == false && PlayerSpawnUtility.IsReadyToSpawn(f) == true)
             {
-                if (PlayerSpawnUtility.IsReadyToSpawn(f) == false)
-                    return;
-
                 ApplyOnce(f);
                 f.Global->DebugCheatsApplied = true;
             }
 
-            TryOpenNextPendingLevelUp(f);
+            if (f.Global->DebugCheatsApplied == true)
+            {
+                TryOpenNextPendingLevelUp(f);
+            }
+
+            // Captured AFTER TryOpenNextPendingLevelUp so it reflects this tick's final, published
+            // value - read back at the START of next tick's call below to detect "still closed as of
+            // a full tick ago" vs "only just closed THIS tick" (see that method's own comment).
+            f.Global->DebugLevelUpScreenOpenLastTick = f.Global->LevelUpScreenOpen;
         }
 
         private void ApplyOnce(Frame f)
@@ -95,14 +100,30 @@ namespace Quantum
 
         // Chains through Global.DebugPendingLevelUps one screen at a time - LevelUpUtility.
         // OpenUpgradeScreen's own LevelUpScreenOpen guard means calling BeginLevelUpScreen while one is
-        // still open is a silent no-op, so this only actually opens the next screen on the tick the
-        // previous one resolves (Global.LevelUpScreenOpen flips back to false). Increments Global.Level
-        // exactly like a real level-up would (ExperienceUtility.Grant's own while loop) rather than just
-        // re-rolling the same screen N times, so LevelUpConfig.LevelSequence category cycling and the
-        // next REAL level-up's XP curve threshold both stay consistent with actually having gotten here.
+        // still open is a silent no-op, so this only actually opens the next screen once the previous
+        // one has been resolved for at least one full published tick (DebugLevelUpScreenOpenLastTick,
+        // not just Global.LevelUpScreenOpen itself). Increments Global.Level exactly like a real
+        // level-up would (ExperienceUtility.Grant's own while loop) rather than just re-rolling the
+        // same screen N times, so LevelUpConfig.LevelSequence category cycling and the next REAL
+        // level-up's XP curve threshold both stay consistent with actually having gotten here.
+        //
+        // The extra "was it ALSO closed last tick" gate (beyond just "is it closed now") matters
+        // specifically for this debug chain: without it, LevelUpSystem resolving screen N and this
+        // method opening screen N+1 both happen inside the SAME Frame.Update - LevelUpScreenOpen goes
+        // true -> false -> true again without ever being published as false in between, which the
+        // View's own edge-detected LevelUpScreenOpen polling (GameplayUiController.UpdateUpgradeScreen)
+        // can never observe. Concretely, that means the upgrade window never re-shows for screen N+1
+        // (its close-on-open-edge / _upgradeScreenClosedEarly reset never re-fires) even though the
+        // simulation DID open it and correctly re-disabled GameplaySystemGroup for it - a real, visible
+        // freeze (player frozen mid-air, no card UI left to click) despite the simulation itself doing
+        // exactly what it's supposed to. A real (non-debug) level-up can never hit this - a single
+        // ExperienceUtility.Grant call collapses every level gained into ONE screen, never several
+        // back-to-back - so this is purely a debug-chain hazard, fixed here rather than in the View.
         private void TryOpenNextPendingLevelUp(Frame f)
         {
-            if (f.Global->DebugPendingLevelUps <= 0 || f.Global->LevelUpScreenOpen == true)
+            if (f.Global->DebugPendingLevelUps <= 0
+                || f.Global->LevelUpScreenOpen == true
+                || f.Global->DebugLevelUpScreenOpenLastTick == true)
                 return;
 
             f.Global->Level++;
@@ -116,6 +137,23 @@ namespace Quantum
             }
 
             LevelUpUtility.BeginLevelUpScreen(f);
+
+            // BeginLevelUpScreen/OpenUpgradeScreen can legitimately no-op (every pool empty/
+            // exhausted for every recipient - see its own Log.Debug) without ever setting
+            // LevelUpScreenOpen. Left unchecked, that's silent and catastrophic here specifically:
+            // the very next tick this same method runs again (LevelUpScreenOpen is still false) and
+            // immediately tries the next queued level-up, which - if the empty pool was structural
+            // (e.g. LevelUpConfig.LevelSequence repeatedly landing on a category this hero/run has
+            // nothing left in) rather than a one-off - fails the exact same way, cascading through
+            // every remaining DebugPendingLevelUps in a handful of frames with nothing ever shown.
+            // Stop the chain here instead of burning through it invisibly, so a designer sees exactly
+            // why it stopped instead of "some upgrades silently never appeared."
+            if (f.Global->LevelUpScreenOpen == false)
+            {
+                Log.Warn($"[Debug] debug level-up at level {f.Global->Level + 1} rolled nothing (every upgrade pool empty/exhausted for every recipient) - screen skipped, stopping debug chain with {f.Global->DebugPendingLevelUps} still queued rather than silently burning through them");
+                f.Global->DebugPendingLevelUps = 0;
+                return;
+            }
 
             Log.Debug($"[Debug] opened debug level-up screen ({f.Global->DebugPendingLevelUps} remaining) at level {f.Global->Level + 1}");
         }

@@ -192,6 +192,25 @@ namespace QuantumUser.Editor
             config.WeaponOfferBasePrice = 100;
             config.WeaponOfferPricePerPerk = 25;
 
+            // Break Index -> Weapon Level / starting perk count - see StoreConfig.
+            // ResolveBreakWeaponConfig/docs/store-blacksmith.md's "Break Progression" section.
+            config.BreakWeaponConfig = new[]
+            {
+                new StoreBreakWeaponConfig { WeaponLevel = 0, StartingPerkRolls = new[] { FP._0_20 } },
+                new StoreBreakWeaponConfig { WeaponLevel = 1, StartingPerkRolls = new[] { FP.FromString("0.45"), FP._0_20 } },
+                new StoreBreakWeaponConfig { WeaponLevel = 2, StartingPerkRolls = new[] { FP.FromString("0.65"), FP.FromString("0.40"), FP._0_20 } },
+                new StoreBreakWeaponConfig { WeaponLevel = 3, StartingPerkRolls = new[] { FP.FromString("0.80"), FP.FromString("0.60"), FP.FromString("0.40"), FP._0_20 } },
+            };
+
+            // Weapon Talent Level -> starting perk rarity - see StoreConfig.ResolveTalentRarityTuning.
+            config.TalentRarityTuning = new[]
+            {
+                new WeaponTalentRarityTuning { CommonWeight = 90, RareWeight = 10, EpicWeight = 0, LegendaryWeight = 0 },
+                new WeaponTalentRarityTuning { CommonWeight = 75, RareWeight = 25, EpicWeight = 0, LegendaryWeight = 0 },
+                new WeaponTalentRarityTuning { CommonWeight = 55, RareWeight = 35, EpicWeight = 10, LegendaryWeight = 0 },
+                new WeaponTalentRarityTuning { CommonWeight = 35, RareWeight = 45, EpicWeight = 18, LegendaryWeight = 2 },
+            };
+
             FinalizeAsset(config, StoreConfigPath, isNew);
         }
 

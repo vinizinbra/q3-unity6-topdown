@@ -1,0 +1,22 @@
+// Hold-to-revive channel for reviving a TEAMMATE (see docs/revive.md) - the smallest reusable
+// extension of the generic Context Interaction / Base-Skill redirect (ContextInteraction.qtn) this
+// codebase already uses for Cursed Rift/Healing Shrine/Store/Blacksmith/Traversal Challenge.
+// Self-revive is a SEPARATE, unrelated path (SelfReviveCommand, a dedicated View window) - a
+// deliberate single press/confirm, not a hold/channel, so it never uses this component at all.
+// Always targets a Downed player - KO has no revive path at all anymore (teammate hold or
+// self-revive alike), it's a dead end until Global.BreathingAreaSecured auto-revives everyone
+// still incapacitated (PlayerLifeStateUtility.EnterKO/ReviveAllIncapacitated) - confirmed with the
+// user. ReviveTargetKind (Downed/KO) existed here before that decision and was removed entirely
+// once KO could no longer reach this component at all.
+
+// Per-REVIVER (not per-target - see PlayerLifeState.ReviveHolder for the target-side pointer back).
+// Component presence == actively channeling, same "presence is the in-progress flag" convention
+// CursedRiftInteraction/LevelUpChoice already use. Target is locked here at TryBeginInteraction and
+// never re-resolved from ContextInteraction while this exists - ContextInteractionSystem reruns its
+// own closest-in-radius scan fresh every tick with no stickiness, so reading ActiveTarget mid-hold
+// would let a reviver drifting near some other POI silently blank the revive prompt on their real
+// target (see docs/revive.md).
+component ReviveChannel
+{
+    EntityRef Target;
+}

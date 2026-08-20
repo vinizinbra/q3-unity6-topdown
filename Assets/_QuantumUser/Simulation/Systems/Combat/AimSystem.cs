@@ -44,8 +44,6 @@ namespace Quantum
         // here - keeps the facing flip from flickering while aiming near straight up/down.
         private static readonly FP FacingDeadzone = FP._1 / 5;
 
-        private int? _enemyLayerMask;
-
         public override void Update(Frame f, ref Filter filter)
         {
             FPVector3 velocity = filter.KCC->Data.KinematicVelocity;
@@ -126,10 +124,10 @@ namespace Quantum
 
         private EntityRef FindClosestTarget(Frame f, EntityRef self, FPVector3 origin)
         {
-            _enemyLayerMask ??= f.Layers.GetLayerMask(EnemyLayerName) | f.Layers.GetLayerMask(BossLayerName);
+            int enemyLayerMask = f.Layers.GetLayerMask(EnemyLayerName) | f.Layers.GetLayerMask(BossLayerName);
 
             Shape3D sphere = Shape3D.CreateSphere(GetTargetRange(f, self));
-            var hits = f.Physics3D.OverlapShape(origin, FPQuaternion.Identity, sphere, _enemyLayerMask.Value, QueryOptions.HitAll);
+            var hits = f.Physics3D.OverlapShape(origin, FPQuaternion.Identity, sphere, enemyLayerMask, QueryOptions.HitAll);
 
             // Max's Vendetta - among otherwise-valid candidates, prefer whichever enemy already
             // carries this entity's own RevengeMark, closest first. A priority, not an exclusive

@@ -108,8 +108,8 @@ namespace QuantumUser.Editor
             {
                 Type = typeof(ShieldUpgradeData), FileName = "Shield",
                 DisplayName = "Shield",
-                Description = "+{0}% Shield",
-                Configure = p => Multiplier(p, "1.1")
+                Description = "+{0} Shield",
+                Configure = p => ((ShieldUpgradeData)p).Amount = FP.FromString("10")
             },
             new UpgradeSpec
             {

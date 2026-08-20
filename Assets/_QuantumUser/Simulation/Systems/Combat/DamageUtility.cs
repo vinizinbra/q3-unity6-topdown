@@ -74,6 +74,16 @@ namespace Quantum
                 return;
             }
 
+            // Co-op is friendly-fire-free by design - since every damage source (weapon, skill,
+            // area, DoT) ultimately funnels through here, one check covers all of them instead of
+            // each delivery type needing its own owner-vs-target guard. Self-damage (owner ==
+            // target, e.g. standing in your own explosion) is untouched.
+            if (owner != target && f.Has<PlayerLink>(owner) == true && f.Has<PlayerLink>(target) == true)
+            {
+                Log.Debug($"[Damage] {target} ignored a hit from {owner} - friendly fire");
+                return;
+            }
+
             // A landed weapon hit, not a DoT tick replaying an already-resolved magnitude (see
             // bypassOutgoingResolution below) - StatusEffectSystem's Burn/Poison ticks are also
             // tagged DamageSource.Weapon when they trace back to a weapon's elemental proc, so
@@ -217,7 +227,13 @@ namespace Quantum
                 }
                 else if (f.Has<PlayerLink>(target) == true)
                 {
-                    RespawnPlayer(f, target, health);
+                    // A lethal hit on a player no longer instantly heals/teleports them (the old
+                    // RespawnPlayer behavior) - it downs them in place instead (see
+                    // PlayerLifeStateUtility.EnterDowned/docs/revive.md). The entity is never
+                    // destroyed either way, so CharacterStats/Weapon/CharacterSkills/LevelUpChoice/
+                    // GlobalUpgradePicks/RiftMutationPicks/UpgradeHistory all still ride on it
+                    // untouched.
+                    PlayerLifeStateUtility.EnterDowned(f, target);
                 }
                 else
                 {
@@ -429,59 +445,6 @@ namespace Quantum
             f.Events.SentryOverloadDetonated(owner, transform->Position, overload->Radius, overload->Source);
 
             Log.Debug($"[Damage] {target}'s Overload detonated at {transform->Position} radius {overload->Radius} for {overload->Damage}");
-        }
-
-        // A lethal hit on a player no longer destroys the entity (the original behavior, shared
-        // with Sentry/Mini Bomb/Decoy via the else branch above) - CharacterStats/Weapon/
-        // CharacterSkills/LevelUpChoice/GlobalUpgradePicks/RiftMutationPicks/UpgradeHistory all
-        // ride on that same entity, so destroying it silently wiped every upgrade earned this run.
-        // Instead: refill Health/Shield and teleport back to the run's start position, same
-        // "reposition without destroying" idiom PlayerFallSystem/PlayerSpawnUtility already use.
-        // Level/TotalExperience are untouched either way since they live on Frame.Global.
-        // CharacterStats.Coins/RiftShards (per-player wallets, see docs/breathing-poi.md) survive
-        // for the same reason every other CharacterStats field does here - the entity itself is
-        // never destroyed.
-        private static void RespawnPlayer(Frame f, EntityRef target, Health* health)
-        {
-            health->CurrentHealth = health->MaxHealth;
-
-            if (f.Unsafe.TryGetPointer<Shield>(target, out var shield) == true)
-            {
-                shield->Current = shield->Max;
-                shield->RechargeTimer = FP._0;
-            }
-
-            FPVector3 respawnPosition = f.Global->PlayerSpawnPosition;
-
-            if (f.Unsafe.TryGetPointer<KCC>(target, out var kcc) == true)
-            {
-                kcc->Teleport(f, respawnPosition);
-
-                // Teleport() only repositions - any knockback/dash momentum from the killing
-                // blow would otherwise carry straight into the fresh respawn position.
-                kcc->SetKinematicVelocity(FPVector3.Zero);
-                kcc->SetDynamicVelocity(FPVector3.Zero);
-                kcc->SetExternalImpulse(FPVector3.Zero);
-            }
-            else if (f.Unsafe.TryGetPointer<Transform3D>(target, out var transform) == true)
-            {
-                transform->Position = respawnPosition;
-            }
-
-            // Move speed is otherwise left carrying whatever it had the instant before death - a
-            // player who died mid-Ice/Root/Stun respawned still slowed/pinned/frozen until those
-            // timers happened to run out on their own. CharacterStats.MoveSpeedMultiplier is
-            // untouched - that's the permanent hero/upgrade baseline, not a status effect.
-            if (f.Unsafe.TryGetPointer<StatusEffects>(target, out var statusEffects) == true)
-            {
-                statusEffects->IceRemaining = FP._0;
-                statusEffects->StunRemaining = FP._0;
-                statusEffects->RootRemaining = FP._0;
-            }
-
-            Log.Debug($"[Damage] {target} died and respawned at {respawnPosition}");
-
-            f.Events.PlayerRespawned(target, respawnPosition);
         }
 
         // CharacterStats.DamageReduction was already seeded from CharacterData (see

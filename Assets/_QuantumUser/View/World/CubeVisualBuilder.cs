@@ -54,6 +54,9 @@ public class CubeVisualBuilder : MonoBehaviour
     [Tooltip("Temporary diagnostic: logs every spawned piece's yaw/position math (local vs. world) - see docs/environment-details.md rotation investigation. Off by default to avoid log spam.")]
     [SerializeField] private bool debugLogPlacement;
 
+    [Tooltip("If true, Generate() fires from OnEnable() instead of the usual Start()-driven auto-generate below - for a runtime-spawned/pooled instance (e.g. a Traversal Challenge platform, f.Create/f.Destroy'd and possibly recycled through a view pool via SetActive) whose GameObject can be reactivated without Start() ever running again, since Unity only calls Start() once per object lifetime regardless of how many times it's since been disabled/re-enabled. Default false reproduces today's exact Start()-only behavior for every hand-placed chunk wall cube - flip this on only for a prefab that's actually spawned/recycled at runtime. Start() below skips its own auto-Generate() entirely when this is set (same as HasDetailAvoidance already does), so a fresh instantiate doesn't generate twice - OnEnable() fires before Start() on first activation either way, so nothing is missed.")]
+    [SerializeField] private bool generateOnEnable;
+
     [SerializeField, HideInInspector] private Transform colliderRoot;
     [SerializeField, HideInInspector] private Transform visualRoot;
 
@@ -81,6 +84,15 @@ public class CubeVisualBuilder : MonoBehaviour
     // in there and does nothing.
     public void Start()
     {
+        // Deferred to OnEnable() instead - see generateOnEnable's own comment above. Skipped here
+        // for the same reason HasDetailAvoidance is skipped just below: without this, a freshly
+        // instantiated, active object would generate twice (OnEnable always runs before Start on
+        // first activation, so nothing is missed by leaving this out of Start entirely).
+        if (generateOnEnable)
+        {
+            return;
+        }
+
         // Waits for an explicit ChunkDetailScatter.Generate() call instead - see
         // ShownDetailPositions/HasDetailAvoidance's own comment above for why.
         //
@@ -108,6 +120,20 @@ public class CubeVisualBuilder : MonoBehaviour
         {
             consumedByMerge.Add(member);
         }
+    }
+
+    // Runs Generate() every time this GameObject is (re)activated, instead of Start()'s "only ever
+    // once per lifetime" - see generateOnEnable's own comment. Deliberately independent of the
+    // merge-cluster/consumedByMerge bookkeeping above (that's for statically scene-placed wall
+    // clusters); a runtime-spawned/pooled cube generating on enable is expected to stand alone.
+    private void OnEnable()
+    {
+        if (generateOnEnable == false)
+        {
+            return;
+        }
+
+        Generate();
     }
 
 #if UNITY_EDITOR

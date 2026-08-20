@@ -16,9 +16,8 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/Max_HeroSkill/Max_HeroSkillUpgrades/Overdrive/LastStandSkillAction
     Guid:
       Value: 329573136349118667
-  Icon: {fileID: 0}
+  Icon: {fileID: -727180227, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
   DisplayName: Last Stand
-  Rarity: 2
   RankDescriptions:
   - 'Unshaken: taking damage during Overdrive no longer resets your Rage.'
   - 'Unshaken, plus Retaliation: taking damage during Overdrive grants +20% Weapon

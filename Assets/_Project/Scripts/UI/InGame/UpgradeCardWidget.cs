@@ -36,6 +36,12 @@ public class UpgradeCardWidget : MonoBehaviour
         public int CurrentStacks;
         public int MaxStacks;
 
+        // True only for a ranked Hero Ascension line (IRankedUpgrade with MaxRank > 1) - tells Setup
+        // to show the rank being picked as a Roman numeral (I/II/III = CurrentStacks + 1) instead of
+        // the "2/3" stack readout a capped Global Upgrade uses. Default false leaves every non-ranked
+        // card unchanged.
+        public bool IsRanked;
+
         // Choice Window generalization (see docs/choice-window-refactor.md) - all three below
         // default to empty/unset, which reproduces the exact pre-existing visuals for every
         // Level-Up/Weapon-Upgrade/Chest call site untouched.
@@ -73,10 +79,14 @@ public class UpgradeCardWidget : MonoBehaviour
     private TMP_Text rarityText;
     [SerializeField, Tooltip("Shows which pool the option came from, e.g. \"Weapon Perk\".")]
     private TMP_Text kindText;
-    [SerializeField, Tooltip("Shows current/max stacks for a capped Global Upgrade (e.g. \"2/3\"); hidden when MaxStacks is 0.")]
+    [SerializeField, Tooltip("Shows current/max stacks for a capped Global Upgrade (e.g. \"2/3\"); hidden when MaxStacks is 0 or the option is a ranked ascension (rankRoot shows a Roman numeral instead).")]
     private GameObject stackRoot;
     [SerializeField]
     private TMP_Text stackText;
+    [SerializeField, Tooltip("Shown for a ranked Hero Ascension (CardData.IsRanked) - a Roman numeral of the rank being picked (I/II/III). Hidden for every other card. Optional.")]
+    private GameObject rankRoot;
+    [SerializeField]
+    private TMP_Text rankText;
     [SerializeField] private Button button;
 
     [SerializeField, Tooltip("Live before->after value row (e.g. \"MAX HP 100 -> 80\") - hidden entirely when CardData.ValuePreview is empty. Optional - only Sacrifice cards use this.")]
@@ -176,7 +186,16 @@ public class UpgradeCardWidget : MonoBehaviour
         if (kindText != null)
             kindText.text = data.KindText;
 
-        bool showStacks = data.MaxStacks > 0;
+        // A ranked ascension shows the rank being picked (CurrentStacks + 1) as a Roman numeral;
+        // a capped Global Upgrade shows the "2/3" stack readout. The two are mutually exclusive.
+        bool showRank = data.IsRanked && data.MaxStacks > 1;
+        bool showStacks = data.MaxStacks > 0 && showRank == false;
+
+        if (rankRoot != null)
+            rankRoot.SetActive(showRank);
+
+        if (rankText != null)
+            rankText.text = showRank ? ToRoman(data.CurrentStacks + 1) : string.Empty;
 
         if (stackRoot != null)
             stackRoot.SetActive(showStacks);
@@ -191,5 +210,17 @@ public class UpgradeCardWidget : MonoBehaviour
 
         if (buyButton != null)
             buyButton.interactable = interactable;
+    }
+
+    // Ranks are tiny (MaxRank is a byte, in practice 3), so a small lookup covers every real case;
+    // anything unexpectedly large falls back to the plain number.
+    private static readonly string[] Romans = { "", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X" };
+
+    private static string ToRoman(int n)
+    {
+        if (n <= 0)
+            return string.Empty;
+
+        return n < Romans.Length ? Romans[n] : n.ToString();
     }
 }

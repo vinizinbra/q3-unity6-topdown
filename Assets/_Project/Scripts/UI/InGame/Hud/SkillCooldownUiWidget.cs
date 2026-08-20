@@ -68,6 +68,17 @@ public class SkillCooldownUiWidget : QuantumGlobalMonoBehaviour
         if (frame.Has<CharacterSkills>(_entityRef) == false)
             return;
 
+        // Revive (see docs/revive.md), HeroSkill-slot only, checked BEFORE the plain Context
+        // Interaction redirect below - once a channel begins, ContextInteraction.State reads Busy
+        // (not Available), so that branch alone would stop showing anything mid-hold. Always a
+        // TEAMMATE revive - self-revive is a separate instant path with its own dedicated
+        // SelfReviveWidget, not shown on this HUD button at all.
+        if (slot == SkillSlotId.HeroSkill && frame.Has<ReviveChannel>(_entityRef) == true)
+        {
+            ShowReviveProgress(frame);
+            return;
+        }
+
         // Base-Skill-button redirect (see docs/breathing-poi.md) - only ever checked for the
         // HeroSkill-slot instance (Dash never redirects) and only takes over the display when a
         // real override icon is actually assigned, so an unconfigured/DashSkill instance behaves
@@ -79,7 +90,7 @@ public class SkillCooldownUiWidget : QuantumGlobalMonoBehaviour
             && frame.Unsafe.TryGetPointer<ContextInteraction>(_entityRef, out var context) == true
             && context->State == ContextInteractionState.Available)
         {
-            ShowContextInteraction();
+            ShowContextInteractionIcon(contextInteractionIcon);
             return;
         }
 
@@ -90,11 +101,61 @@ public class SkillCooldownUiWidget : QuantumGlobalMonoBehaviour
         UpdateIcon(frame, resolvedSlot);
     }
 
+    // Reuses cooldownFillImages for hold-progress instead of cooldown recovery - same fillAmount
+    // idiom, different source (ReviveChannel's own target progress/duration rather than
+    // SkillSlot.CooldownTimer). Duration resolution (ResolveReviveDuration) mirrors
+    // ReviveChannelSystem's own DownedReviveDuration read - kept in sync manually since this is
+    // plain View code, not simulation.
+    private unsafe void ShowReviveProgress(Frame frame)
+    {
+        SetShown(skillActiveObject, false);
+
+        if (iconImage != null)
+        {
+            SetShown(iconImage, true);
+            iconImage.sprite = contextInteractionIcon;
+        }
+
+        if (chargeText != null)
+            chargeText.text = string.Empty;
+
+        SetShown(interactPromptRoot, true);
+
+        if (frame.Unsafe.TryGetPointer<ReviveChannel>(_entityRef, out var channel) == false)
+        {
+            SetShown(cooldownFillImages, false);
+            return;
+        }
+
+        EntityRef target = channel->Target;
+
+        if (frame.Unsafe.TryGetPointer<PlayerLifeState>(target, out var lifeState) == false)
+        {
+            SetShown(cooldownFillImages, false);
+            return;
+        }
+
+        FP duration = ResolveReviveDuration(frame);
+
+        SetShown(cooldownFillImages, true);
+        SetFillAmount(cooldownFillImages, duration > FP._0 ? (lifeState->ReviveProgress / duration).AsFloat : 0f);
+    }
+
+    // A ReviveChannel only ever targets a Downed player anymore - KO has no revive path at all
+    // (see PlayerLifeStateUtility.EnterKO/ReviveUtility) - so there's nothing left to resolve by
+    // Kind.
+    private static FP ResolveReviveDuration(Frame frame)
+    {
+        ReviveConfig config = PlayerLifeStateUtility.GetConfig(frame);
+
+        return config != null ? config.DownedReviveDuration : (FP._2 + FP._0_50);
+    }
+
     // Swaps in the interaction icon/prompt in place of the normal cooldown fill/skill icon -
     // leaving the button's own position/size untouched (same widget, same slot) so it reads as
     // "my normal button is temporarily being used to interact with this object," not a separate
     // control.
-    private void ShowContextInteraction()
+    private void ShowContextInteractionIcon(Sprite icon)
     {
         SetShown(cooldownFillImages, false);
         SetShown(skillActiveObject, false);
@@ -102,7 +163,7 @@ public class SkillCooldownUiWidget : QuantumGlobalMonoBehaviour
         if (iconImage != null)
         {
             SetShown(iconImage, true);
-            iconImage.sprite = contextInteractionIcon;
+            iconImage.sprite = icon;
         }
 
         if (chargeText != null)

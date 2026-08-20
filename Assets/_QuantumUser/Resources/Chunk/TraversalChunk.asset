@@ -19,14 +19,27 @@ MonoBehaviour:
   Spawns:
   - Prototype:
       Id:
-        Value: 1463096646222268440
+        Value: 1528180406975598938
     Offset:
       X:
-        RawValue: 2300757
+        RawValue: 235663
       Y:
-        RawValue: 183500
+        RawValue: 65542
       Z:
-        RawValue: 384618
+        RawValue: 519915
+    Requirement: 0
+    Chance:
+      RawValue: 0
+  - Prototype:
+      Id:
+        Value: 1321529338188975839
+    Offset:
+      X:
+        RawValue: 2295457
+      Y:
+        RawValue: 175636
+      Z:
+        RawValue: 383763
     Requirement: 0
     Chance:
       RawValue: 0

@@ -16,9 +16,8 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/Max_HeroSkill/Max_HeroSkillUpgrades/Overdrive/UncontrolledFurySkillAction
     Guid:
       Value: 337766368886409189
-  Icon: {fileID: 0}
+  Icon: {fileID: 1079704276, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
   DisplayName: Uncontrolled Fury
-  Rarity: 1
   RankDescriptions:
   - Every 3rd kill during Overdrive extends it by 1s (up to +3s per activation).
   - Every 2nd kill during Overdrive extends it by 1s (up to +5s per activation).

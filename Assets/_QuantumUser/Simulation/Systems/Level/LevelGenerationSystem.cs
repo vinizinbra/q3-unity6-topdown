@@ -23,6 +23,7 @@ namespace Quantum
             public int Width;
             public int Depth;
             public ChunkConnectionSide AllowedConnectionSides;
+            public ChunkTypeMask ForbiddenNeighbors;
         }
 
         // Footprint isn't stored here - it's read from the entity's own baked Chunk component
@@ -151,6 +152,7 @@ namespace Quantum
                     Width = ToCellCount(chunk.ChunkSizeWidth, config),
                     Depth = ToCellCount(chunk.ChunkSizeDepth, config),
                     AllowedConnectionSides = chunk.AllowedConnectionSides,
+                    ForbiddenNeighbors = chunk.ForbiddenNeighbors,
                 };
 
                 MarkOccupied(occupied, neighborAllowedSides, placedChunk);
@@ -298,12 +300,13 @@ namespace Quantum
         }
 
         // LobbyStart is pinned to the end, not the front - right after a hand-placed BossArena,
-        // the only frontier cells that exist yet are Boss's own border, and LobbyStart is never
-        // allowed to attach directly to Boss (see TryPlaceRequest), so going first would leave it
-        // with zero legal anchors every time and it'd always fail to place. Growing every other
-        // pool entry first diversifies the frontier away from Boss, giving LobbyStart real
-        // non-Boss anchors to land on by the time its turn comes. Every other entry is shuffled
-        // via f.RNG so the resulting graph branches unpredictably.
+        // the only frontier cells that exist yet are Boss's own border, and a LobbyStart prototype
+        // is typically authored to forbid Boss as a neighbor (Chunk.ForbiddenNeighbors, enforced in
+        // TryPlaceRequest/ViolatesForbiddenNeighbor), so going first would leave it with zero legal
+        // anchors and it'd always fail to place. Growing every other pool entry first diversifies the
+        // frontier away from Boss, giving LobbyStart real non-forbidden anchors to land on by the time
+        // its turn comes. Every other entry is shuffled via f.RNG so the resulting graph branches
+        // unpredictably.
         private List<ChunkRequest> BuildShuffledBag(Frame f, LevelConfig config)
         {
             List<ChunkRequest> startRequests = new List<ChunkRequest>();
@@ -311,14 +314,24 @@ namespace Quantum
 
             foreach (ChunkPoolEntry entry in config.ChunkPool)
             {
+                if (entry.Prototypes == null || entry.Prototypes.Length == 0)
+                {
+                    Log.Warn($"[LevelGen] ChunkPool entry {entry.Type} (Count {entry.Count}) has no Prototypes assigned - skipping");
+                    continue;
+                }
+
                 List<ChunkRequest> target = entry.Type == ChunkType.LobbyStart ? startRequests : otherRequests;
 
                 for (int i = 0; i < entry.Count; i++)
                 {
+                    // Each instance independently rolls one of the entry's variants - f.RNG keeps it
+                    // deterministic across clients. Next(0, N) is [0, N).
+                    AssetRef<EntityPrototype> prototype = entry.Prototypes[f.RNG->Next(0, entry.Prototypes.Length)];
+
                     target.Add(new ChunkRequest
                     {
                         Type = entry.Type,
-                        Prototype = entry.Prototype,
+                        Prototype = prototype,
                         MustHave = entry.MustHave,
                     });
                 }
@@ -629,7 +642,7 @@ namespace Quantum
             {
                 for (int originZ = 0; originZ <= maxOriginZ; originZ++)
                 {
-                    if (IsValidGrowthPlacement(type, chunk, width, depth, originX, originZ, occupied, neighborAllowedSides, placed))
+                    if (IsValidGrowthPlacement(type, chunk, width, depth, originX, originZ, occupied, neighborAllowedSides, placed, config.MinConnectionWidthCells))
                     {
                         candidates.Add((originX, originZ));
                     }
@@ -641,7 +654,7 @@ namespace Quantum
 
         // originX/originZ are already guaranteed in-bounds by FindAllValidOrigins' loop range, so
         // unlike the old per-attempt CommitPlacement this has no FitsInGrid check to make.
-        private bool IsValidGrowthPlacement(ChunkType type, Chunk* chunk, int width, int depth, int originX, int originZ, bool[,] occupied, ChunkConnectionSide[,] neighborAllowedSides, List<PlacedChunk> placed)
+        private bool IsValidGrowthPlacement(ChunkType type, Chunk* chunk, int width, int depth, int originX, int originZ, bool[,] occupied, ChunkConnectionSide[,] neighborAllowedSides, List<PlacedChunk> placed, int minConnectionWidthCells)
         {
             if (!IsFree(occupied, width, depth, originX, originZ))
             {
@@ -665,8 +678,15 @@ namespace Quantum
                 return false;
             }
 
-            // LobbyStart is meant to be a safe area away from the boss, not a room right next to it.
-            if (type == ChunkType.LobbyStart && WouldBeAdjacentToBoss(placed, originX, originZ, width, depth))
+            if (HasUndersizedConnection(originX, originZ, width, depth, placed, minConnectionWidthCells))
+            {
+                return false;
+            }
+
+            // Data-driven per-prototype neighbor-type rule (see Chunk.ForbiddenNeighbors) - e.g. a
+            // LobbyStart authored to forbid Boss/POI types so spawn never borders them. Applies to
+            // every chunk, in both directions.
+            if (ViolatesForbiddenNeighbor(type, chunk->ForbiddenNeighbors, placed, originX, originZ, width, depth))
             {
                 return false;
             }
@@ -694,6 +714,7 @@ namespace Quantum
                 Width = width,
                 Depth = depth,
                 AllowedConnectionSides = chunk->AllowedConnectionSides,
+                ForbiddenNeighbors = chunk->ForbiddenNeighbors,
             };
 
             MarkOccupied(occupied, neighborAllowedSides, placedChunk);
@@ -888,16 +909,81 @@ namespace Quantum
             return zTouching && xOverlapping;
         }
 
-        // Used by TryPlaceRequest to reject a LobbyStart placement before it's committed - builds a
-        // throwaway PlacedChunk for the candidate footprint (Entity/Type are irrelevant to
-        // AreAdjacent) and checks it against every Boss chunk placed so far.
-        private bool WouldBeAdjacentToBoss(List<PlacedChunk> placed, int originX, int originZ, int width, int depth)
+        // True if the candidate footprint is flush against an already-placed chunk (shares a
+        // straight edge) but the overlapping span along that edge is shorter than
+        // minConnectionWidthCells - i.e. it would connect via a sliver narrower than intended
+        // instead of a real, walkable passage. ComputeTouchedSides can't tell this on its own since
+        // it only tracks a per-cell occupied bitmask, not which placed chunk owns each cell.
+        private bool HasUndersizedConnection(int originX, int originZ, int width, int depth, List<PlacedChunk> placed, int minConnectionWidthCells)
         {
+            foreach (PlacedChunk other in placed)
+            {
+                bool xFlush = originX + width == other.OriginX || other.OriginX + other.Width == originX;
+                if (xFlush)
+                {
+                    int overlap = OverlapLength(originZ, depth, other.OriginZ, other.Depth);
+                    if (overlap > 0 && overlap < minConnectionWidthCells)
+                    {
+                        return true;
+                    }
+                }
+
+                bool zFlush = originZ + depth == other.OriginZ || other.OriginZ + other.Depth == originZ;
+                if (zFlush)
+                {
+                    int overlap = OverlapLength(originX, width, other.OriginX, other.Width);
+                    if (overlap > 0 && overlap < minConnectionWidthCells)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        // Length of the overlap between two 1D spans (0 if they don't overlap at all).
+        private int OverlapLength(int aStart, int aLength, int bStart, int bLength)
+        {
+            int overlapStart = aStart > bStart ? aStart : bStart;
+            int aEnd = aStart + aLength;
+            int bEnd = bStart + bLength;
+            int overlapEnd = aEnd < bEnd ? aEnd : bEnd;
+            int overlap = overlapEnd - overlapStart;
+            return overlap > 0 ? overlap : 0;
+        }
+
+        // A ChunkType as its single-bit ChunkTypeMask value. Relies on ChunkTypeMask's bit positions
+        // being kept 1:1 with ChunkType's ordinals (enforced by the comment in Chunk.qtn), so the bit
+        // for a type is simply 1 << its enum value.
+        private static ChunkTypeMask ToMask(ChunkType type)
+        {
+            return (ChunkTypeMask)(1 << (int)type);
+        }
+
+        // True if placing a chunk of the given type/forbidden-set at this footprint would end up
+        // adjacent to an already-placed chunk that either side refuses (see Chunk.ForbiddenNeighbors).
+        // Bidirectional - rejects if the candidate forbids the neighbor's type OR the neighbor forbids
+        // the candidate's type - so a rule authored on only one prototype of a pair still holds, and
+        // it works regardless of placement order (every chunk is checked against all already-placed
+        // ones, and chunks are never moved once placed). Builds a throwaway PlacedChunk for the
+        // candidate footprint (Entity is irrelevant to AreAdjacent).
+        private bool ViolatesForbiddenNeighbor(ChunkType type, ChunkTypeMask forbidden, List<PlacedChunk> placed, int originX, int originZ, int width, int depth)
+        {
+            byte candidateBit = (byte)ToMask(type);
             PlacedChunk candidate = new PlacedChunk { OriginX = originX, OriginZ = originZ, Width = width, Depth = depth };
 
             foreach (PlacedChunk other in placed)
             {
-                if (other.Type == ChunkType.Boss && AreAdjacent(candidate, other))
+                if (AreAdjacent(candidate, other) == false)
+                {
+                    continue;
+                }
+
+                bool candidateForbidsOther = ((byte)forbidden & (byte)ToMask(other.Type)) != 0;
+                bool otherForbidsCandidate = ((byte)other.ForbiddenNeighbors & candidateBit) != 0;
+
+                if (candidateForbidsOther || otherForbidsCandidate)
                 {
                     return true;
                 }

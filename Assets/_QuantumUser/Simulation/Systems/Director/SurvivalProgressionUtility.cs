@@ -27,12 +27,19 @@ namespace Quantum
         // hold on their own matching EnemyDataAsset.Tier, Breathing holds on ANY currently-alive
         // enemy (see IsEncounterCleared below) - so a Break's own countdown doesn't even start
         // until the area is actually clear, even though spawning stops and SurvivalTime freezes
-        // the instant the phase boundary is crossed either way.
+        // the instant the phase boundary is crossed either way. BOTH clocks additionally freeze
+        // together while any Traversal Challenge is Active (Global.ActiveTraversalChallengeCount >
+        // 0, see TraversalChallenge.qtn/docs/traversal-challenge.md) - a challenge activated mid-
+        // Breathing must not let the Break quietly end (and Director spawning resume) underneath it.
         public static SurvivalPhase Tick(Frame f, SurvivalConfig config)
         {
             SurvivalPhase currentPhase = config.Phases[f.Global->CurrentPhaseIndex];
 
-            if (currentPhase.Kind != SurvivalPhaseKind.Breathing)
+            // Also frozen while any Traversal Challenge is Active (Global.ActiveTraversalChallengeCount
+            // > 0) - same freeze, deliberately NOT via SurvivalPhaseKind.Breathing (which would also
+            // trigger BreathingIndex/POI-usage/Cursed-Rift side effects this ad-hoc pause doesn't
+            // want). See TraversalChallenge.qtn.
+            if (currentPhase.Kind != SurvivalPhaseKind.Breathing && f.Global->ActiveTraversalChallengeCount <= 0)
                 f.Global->SurvivalTime += f.DeltaTime;
 
             // Elite/Boss phases hold open until every currently-alive enemy of the matching
@@ -48,10 +55,28 @@ namespace Quantum
             // being held just under Duration, so nudging Duration in the Editor can't accidentally
             // let it slip past while an encounter is still live.
             bool encounterCleared = IsEncounterCleared(f, currentPhase.Kind);
+            bool wasSecured = f.Global->BreathingAreaSecured;
+            bool isSecured = currentPhase.Kind == SurvivalPhaseKind.Breathing && encounterCleared;
 
-            f.Global->BreathingAreaSecured = currentPhase.Kind == SurvivalPhaseKind.Breathing && encounterCleared;
+            f.Global->BreathingAreaSecured = isSecured;
 
-            if (encounterCleared == true)
+            // Edge-detected off the field's own previous-tick value (no separate flag needed) -
+            // confirmed with the user: the moment the team has genuinely secured a Breathing Break
+            // (not just entered one - IsEncounterCleared still has to actually clear first), every
+            // still-Downed/KO player is fully revived automatically. See
+            // PlayerLifeStateUtility.ReviveAllIncapacitated's own comment for why this lives there,
+            // not here - this file "owns pacing only" (see this class's own header comment).
+            if (isSecured == true && wasSecured == false)
+                PlayerLifeStateUtility.ReviveAllIncapacitated(f);
+
+            // Also frozen while any Traversal Challenge is Active, same as SurvivalTime's own freeze
+            // above - without this, a Breathing Break's own end-of-Break countdown (this is what
+            // actually backs Global.BreathingTimeRemaining) would keep ticking down and could end the
+            // Break - resuming normal Director spawning - out from under a still-in-progress
+            // Traversal Challenge. Applies to every phase kind, not just Breathing: the point is the
+            // WHOLE Director pauses while a challenge is active, matching SurvivalTime's own
+            // unconditional freeze.
+            if (encounterCleared == true && f.Global->ActiveTraversalChallengeCount <= 0)
                 f.Global->PhaseTimer += f.DeltaTime;
 
             bool isLastPhase = f.Global->CurrentPhaseIndex >= config.Phases.Length - 1;

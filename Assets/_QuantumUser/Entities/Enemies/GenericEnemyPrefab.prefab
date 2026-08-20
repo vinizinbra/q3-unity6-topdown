@@ -209,7 +209,7 @@ MonoBehaviour:
     RotationFreeze: 255
     InertiaMode: 0
     Mass:
-      RawValue: 65536
+      RawValue: 6553600
     Drag:
       RawValue: 131072
     AngularDrag:
@@ -612,6 +612,8 @@ MonoBehaviour:
       RawValue: 0
     TempMoveSpeedMultiplier:
       RawValue: 0
+    ReviveImmunityRemaining:
+      RawValue: 0
 --- !u!114 &382911034274762262
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -704,6 +706,7 @@ MonoBehaviour:
   debugTestStep:
     AnimationType: 0
     Duration: 0.3
+    BodySprite: {fileID: 0}
     Shake:
       Frequency: 18
       RockDegrees: 6
@@ -787,6 +790,10 @@ MonoBehaviour:
   riftMarkMaterial: {fileID: 2100000, guid: 7e404e068a4ff4625b9e9f6414fcfaa3, type: 2}
   riftMarkApplicationFlashColor: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
   riftMarkApplicationFlashDuration: 0.08
+  expPickupFlashColor: {r: 0.3, g: 0.55, b: 1, a: 1}
+  coinPickupFlashColor: {r: 1, g: 0.84, b: 0.2, a: 1}
+  riftShardPickupFlashColor: {r: 1, g: 0.35, b: 0.75, a: 1}
+  pickupFlashDuration: 0.35
   freezeMaterial: {fileID: 2100000, guid: b153b2878790f4feab0589455e95ac70, type: 2}
 --- !u!114 &1460262746628902169
 MonoBehaviour:

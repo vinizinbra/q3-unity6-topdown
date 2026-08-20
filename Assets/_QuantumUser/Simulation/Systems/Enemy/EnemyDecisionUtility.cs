@@ -229,8 +229,18 @@ namespace Quantum
             if (range <= FP._0)
                 return FP._0;
 
+            // Downed/KO players don't count toward "worth catching more than one target" - hitting
+            // them does nothing (see docs/revive.md), so they shouldn't inflate an area action's score.
             var hits = EnemyMovementUtility.FindPlayersInRadius(f, targetPosition, range);
-            int extraTargets = hits.Count > 0 ? hits.Count - 1 : 0;
+            int aliveCount = 0;
+
+            for (int i = 0; i < hits.Count; i++)
+            {
+                if (PlayerLifeStateUtility.IsIncapacitated(f, hits[i].Entity) == false)
+                    aliveCount++;
+            }
+
+            int extraTargets = aliveCount > 0 ? aliveCount - 1 : 0;
             return extraTargets * TargetCountScoreWeight;
         }
     }

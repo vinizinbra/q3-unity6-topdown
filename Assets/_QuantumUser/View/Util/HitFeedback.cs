@@ -93,6 +93,7 @@ namespace QuantumUser.View.Util
             QuantumEvent.Subscribe<EventEntityShielded>(this, OnEntityShielded);
             QuantumEvent.Subscribe<EventEntityDied>(this, OnEntityDied);
             QuantumEvent.Subscribe<EventPlayerRespawned>(this, OnPlayerRespawned);
+            QuantumEvent.Subscribe<EventPlayerRevived>(this, OnPlayerRevived);
 
             // Enemies leave sprites empty here and populate it later via SetRig instead - see that
             // method's comment for why.
@@ -219,13 +220,27 @@ namespace QuantumUser.View.Util
             Die();
         }
 
-        // Only ever fires for a player (DamageUtility.ApplyDamage's PlayerLink branch respawns
-        // instead of destroying the entity) - undoes Die()'s permanent gray tint/QUpdate lockout,
-        // since nothing else would (this entity/view is never recreated the way a fresh enemy
-        // spawn would re-run InitializeSprites).
+        // Only ever fires for a player falling off the level (PlayerFallSystem/FallRespawnUtility -
+        // DamageUtility.ApplyDamage's own PlayerLink branch no longer respawns, see docs/revive.md)
+        // - undoes Die()'s permanent gray tint/QUpdate lockout, since nothing else would (this
+        // entity/view is never recreated the way a fresh enemy spawn would re-run InitializeSprites).
         private void OnPlayerRespawned(EventPlayerRespawned e)
         {
             if (e.Entity != _entityRef)
+                return;
+
+            Respawn();
+        }
+
+        // A lethal hit fires EntityDied (see OnEntityDied/Die() above) UNCONDITIONALLY, before
+        // DamageUtility.ApplyDamage's own PlayerLink branch even checks whether the target is a
+        // player going Downed rather than truly dying - so a player going Downed/KO gets the exact
+        // same permanent gray death tint an enemy corpse does. PlayerRevived (see docs/revive.md/
+        // PlayerLifeStateUtility.Revive) is this path's own "undo it" signal, same Respawn() call
+        // OnPlayerRespawned already uses for the fall-recovery case above.
+        private void OnPlayerRevived(EventPlayerRevived e)
+        {
+            if (e.Target != _entityRef)
                 return;
 
             Respawn();

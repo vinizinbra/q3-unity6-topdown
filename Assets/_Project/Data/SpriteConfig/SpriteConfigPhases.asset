@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SpriteConfigCurrency
   sprites:
   - name: Breathing
-    sprite: {fileID: -1016452943, guid: d9bb3bd610ed442fe983639e2c3f95fb, type: 3}
+    sprite: {fileID: 21300000, guid: 3783f68dc301b4d8cbf647f3cfb9d9f4, type: 3}
   - name: Elite
     sprite: {fileID: -103353411, guid: d9bb3bd610ed442fe983639e2c3f95fb, type: 3}
   - name: Boss

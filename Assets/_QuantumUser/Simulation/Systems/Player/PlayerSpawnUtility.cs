@@ -53,6 +53,7 @@ namespace Quantum
                 stats->RerollQuantity = runtimePlayer.Talents.RerollQuantity;
                 stats->ShopWeaponOfferCount = runtimePlayer.Talents.ShopWeaponOfferCount;
                 stats->Coins = (FP)runtimePlayer.Talents.StartingCoins;
+                stats->SelfReviveCharges = runtimePlayer.Talents.SelfReviveCharges;
                 TalentUtility.ApplyPerPlayerTalents(f, entity, runtimePlayer, stats);
             }
 

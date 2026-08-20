@@ -16,9 +16,8 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/Max_PassiveSkill/Max_PassiveSkillUpgrades/Vendetta/BurningVengeance
     Guid:
       Value: 423077782144865530
-  Icon: {fileID: -1765001774, guid: 9a944adac56bb4e8dbce2f7bab4127e3, type: 3}
+  Icon: {fileID: -651916795, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
   DisplayName: Burning Vengeance
-  Rarity: 2
   Description: Consuming a Vendetta mark spreads Burn to nearby enemies - eventually
     detonating a fiery burst if the kill was already Burning.
   <MaxRank>k__BackingField: 3

@@ -1,5 +1,6 @@
 namespace Quantum
 {
+    using System.Collections.Generic;
     using Photon.Deterministic;
     using Quantum.Physics3D;
     using UnityEngine.Scripting;
@@ -7,6 +8,48 @@ namespace Quantum
     [Preserve]
     public unsafe class ProjectileSystem : SystemMainThreadFilter<ProjectileSystem.Filter>
     {
+        // Called from PlayerLifeStateUtility.EnterDowned - a player entity is never itself destroyed
+        // (Alive/Downed/KO all keep the same entity alive, see docs/revive.md), so there's no
+        // entity-destruction signal a projectile could hook cleanup off of the way it might for an
+        // Enemy owner (which IS f.Destroy'd on death, EnemySystem/DamageUtility - though nothing
+        // actually listens for that either, so an enemy's own in-flight shots are just as orphaned
+        // today; this method is player-only, matching what was actually asked for). Without this, a
+        // shot fired the instant before a lethal hit just kept flying forever - harmless but visible
+        // under the old instant-respawn flow (player and camera both snapped away immediately), far
+        // more noticeable now that Downed keeps the player in place for up to ~20s.
+        //
+        // Collects matches first, destroys in a second pass - avoids mutating the entity set while
+        // f.Filter's own iterator is still walking it. Reuses the single Destroy() every normal
+        // hit/expire already funnels through, so ClearSourceSlot still fires (an owner's own
+        // DashSkill/HeroSkill ProjectilePending slot doesn't stay stuck true forever) alongside the
+        // normal ProjectileDestroyed event.
+        public static void DestroyOwnedBy(Frame f, EntityRef owner)
+        {
+            var projectiles = f.Filter<Projectile>();
+            List<EntityRef> owned = null;
+
+            while (projectiles.Next(out EntityRef entity, out Projectile projectile))
+            {
+                if (projectile.Owner != owner)
+                    continue;
+
+                owned ??= new List<EntityRef>();
+                owned.Add(entity);
+            }
+
+            if (owned == null)
+                return;
+
+            for (int i = 0; i < owned.Count; i++)
+            {
+                EntityRef entity = owned[i];
+                Projectile* projectile = f.Unsafe.GetPointer<Projectile>(entity);
+                FPVector3 position = f.Unsafe.GetPointer<Transform3D>(entity)->Position;
+
+                Destroy(f, entity, projectile, position);
+            }
+        }
+
         public override void Update(Frame f, ref Filter filter)
         {
             if (filter.Projectile->RemainingSpawnDelay > FP._0)

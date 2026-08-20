@@ -18,7 +18,6 @@ MonoBehaviour:
       Value: 428258390261410246
   Icon: {fileID: 1703147407, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
   DisplayName: Dash Charge
-  Rarity: 1
   MaxPicks: 3
   Description: +{0} charge
   Charges: 1

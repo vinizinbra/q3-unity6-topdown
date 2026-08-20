@@ -1,5 +1,6 @@
 namespace Quantum
 {
+    using System;
     using System.Collections.Generic;
     using Photon.Deterministic;
 
@@ -10,7 +11,7 @@ namespace Quantum
     // EnemyGroupConfig, so encounter design lives entirely in that asset.
     public static unsafe class CombatDirectorUtility
     {
-        public static void TryPulse(Frame f, SurvivalPhase phase, DirectorConfig directorConfig, LifecycleConfig lifecycleConfig)
+        public static void TryPulse(Frame f, SurvivalPhase phase, DirectorConfig directorConfig, LifecycleConfig lifecycleConfig, BalanceConfig balance)
         {
             f.Global->DirectorPulseTimer -= f.DeltaTime;
 
@@ -20,48 +21,118 @@ namespace Quantum
             f.Global->DirectorPulseTimer = phase.PulseInterval;
             f.Global->DirectorBudget += phase.BudgetPerPulse * ResolveBudgetMultiplier(f);
 
-            if (TryComputePredictedCombatCenter(f, directorConfig, out FPVector3 predictedCombatCenter) == false)
+            // One "front" per player cluster - cohesive parties resolve to a single front at the
+            // team centroid, so this is identical to the pre-cluster Director for solo/grouped play.
+            // See PlayerClusterDirectorUtility.
+            if (PlayerClusterDirectorUtility.BuildAnchors(f, phase, directorConfig, balance, out var plan) == false)
             {
                 Log.Debug("[Director] pulse skipped - no players to spawn combat around");
                 return;
             }
 
+            // Splitting legitimately needs more concurrent enemies (multiple fronts), so the alive
+            // cap scales by the same multiplier the budget/pressure do - but never below the
+            // authored value.
+            FP splitThreat = f.Global->SplitThreatMultiplier <= FP._0 ? FP._1 : f.Global->SplitThreatMultiplier;
+            int maxAlive = FPMath.RoundToInt(phase.MaxAliveEnemies * splitThreat);
+            if (maxAlive < phase.MaxAliveEnemies)
+                maxAlive = phase.MaxAliveEnemies;
+
+            // A front that can't place a group (no valid anchor near it) shouldn't starve the
+            // others - it's marked exhausted and the loop moves on to the next neediest.
+            Span<bool> exhausted = stackalloc bool[PlayerClusterDirectorUtility.MaxPlayers];
+            for (int i = 0; i < plan.Count; i++)
+                exhausted[i] = false;
+
             int purchases = 0;
+            int maxPurchases = directorConfig.MaxPurchasesPerPulse * plan.Count;
 
-            while (purchases < directorConfig.MaxPurchasesPerPulse)
+            while (purchases < maxPurchases)
             {
-                FP pressure = ComputeRelevantPressure(f);
+                // Serve the front furthest below its own pressure target (per-front, not one global
+                // gate - that's the whole point: a busy front near one player must not stop a lonely
+                // teammate's front from filling).
+                int front = SelectNeediestFront(f, plan, directorConfig, exhausted);
 
-                if (pressure >= phase.TargetPressure)
-                {
-                    Log.Debug($"[Director] pulse stopped - pressure {pressure} already at/above target {phase.TargetPressure}");
-                    break;
-                }
+                if (front < 0)
+                    break; // every front is at/above target, or exhausted
 
                 int aliveCount = CountAliveDirectorEnemies(f);
 
-                if (TrySelectGroup(f, phase, aliveCount, out EnemyGroupConfig group, out AssetRef<EnemyGroupConfig> groupRef, out FP groupCost) == false)
+                if (TrySelectGroup(f, phase, aliveCount, maxAlive, out EnemyGroupConfig group, out AssetRef<EnemyGroupConfig> groupRef, out FP groupCost) == false)
                 {
-                    Log.Debug($"[Director] pulse stopped - no valid group (budget={f.Global->DirectorBudget}, alive={aliveCount}, cap={phase.MaxAliveEnemies})");
+                    Log.Debug($"[Director] pulse stopped - no valid group (budget={f.Global->DirectorBudget}, alive={aliveCount}, cap={maxAlive})");
                     break;
                 }
 
-                // GroupSpawnerUtility owns WHERE entirely (ring anchor + per-member placement,
-                // bounded by DirectorConfig.MaxGroupSpawnAttempts) - budget is only ever spent
-                // below, after it reports a full success, never before (see its own "Budget
-                // Transaction" comment). A failure here just means the next pulse, a few seconds
-                // later, tries again with a fresh prediction - not an unbounded retry loop.
-                if (GroupSpawnerUtility.TrySpawnGroup(f, group, groupRef, predictedCombatCenter, directorConfig, out int spawnedCount) == false)
+                // Major enemies (Elite+) stay a GLOBAL event - never duplicated per front. They
+                // anchor at the party centroid regardless of which front's deficit triggered the
+                // purchase (the Boss itself uses a separate path, RunPhaseUtility.BeginBossEncounter).
+                bool major = GroupContainsMajor(f, group);
+                FPVector3 anchor = major ? plan.GlobalCentroid : plan.Centers[front];
+
+                if (GroupSpawnerUtility.TrySpawnGroup(f, group, groupRef, anchor, directorConfig, out int spawnedCount) == false)
                 {
-                    Log.Debug($"[Director] pulse stopped - {group.name} found no valid spawn near the predicted combat center");
-                    break;
+                    Log.Debug($"[Director] {group.name} found no valid spawn at front {front} - marking it exhausted this pulse");
+                    exhausted[front] = true;
+                    continue;
                 }
 
                 f.Global->DirectorBudget -= groupCost;
                 purchases++;
 
-                Log.Debug($"[Director] purchased {group.name} ({spawnedCount} enemies) for {groupCost} - budget now {f.Global->DirectorBudget}, pressure was {pressure}/{phase.TargetPressure}, alive was {aliveCount}/{phase.MaxAliveEnemies}");
+                Log.Debug($"[Director] purchased {group.name} ({spawnedCount} enemies){(major ? " [major-global]" : $" at front {front}")} for {groupCost} - budget now {f.Global->DirectorBudget}, alive was {aliveCount}/{maxAlive}, split x{splitThreat}");
             }
+        }
+
+        // Largest (TargetPressure - LocalPressure) among non-exhausted fronts, and only if that
+        // deficit is positive (front still wants more). -1 if every front is satisfied/exhausted.
+        private static int SelectNeediestFront(Frame f, PlayerClusterDirectorUtility.AnchorPlan plan, DirectorConfig directorConfig, Span<bool> exhausted)
+        {
+            int best = -1;
+            FP bestDeficit = FP._0;
+
+            for (int i = 0; i < plan.Count; i++)
+            {
+                if (exhausted[i])
+                    continue;
+
+                // One front = the cohesive/solo case: use the exact pre-cluster global pressure gate
+                // (all active enemies) rather than a radius-limited count, so solo/grouped play is
+                // unchanged. Only a genuine 2+ front split scopes pressure to each front's own area.
+                FP frontPressure = plan.Count == 1
+                    ? PlayerClusterDirectorUtility.GlobalPressure(f)
+                    : PlayerClusterDirectorUtility.LocalPressure(f, plan.Centers[i], directorConfig.ClusterPressureRadius);
+                FP deficit = plan.TargetPressure[i] - frontPressure;
+
+                if (deficit > bestDeficit)
+                {
+                    bestDeficit = deficit;
+                    best = i;
+                }
+            }
+
+            return best;
+        }
+
+        // True if any member is Elite tier or higher - such a group is spawned once at the global
+        // centroid, never round-robined per cluster (Elite/midboss stay a global event).
+        private static bool GroupContainsMajor(Frame f, EnemyGroupConfig group)
+        {
+            if (group.Members == null)
+                return false;
+
+            foreach (GroupMemberEntry member in group.Members)
+            {
+                if (member.EnemyData.Id.IsValid == false)
+                    continue;
+
+                EnemyDataAsset data = f.FindAsset(member.EnemyData);
+                if (data != null && data.Tier >= EnemyTier.Elite)
+                    return true;
+            }
+
+            return false;
         }
 
         // Run curve (ramps over the 12-minute run) * co-op multiplier (scales with live player
@@ -82,26 +153,13 @@ namespace Quantum
             FP curveMultiplier = balance.Evaluate(CurveChannel.DirectorBudget, f.Global->SurvivalTime);
             FP coopMultiplier = balance.GetCoopGlobal(CoopGlobalKey.DirectorBudget, f.PlayerCount);
 
-            return curveMultiplier * coopMultiplier;
-        }
+            // Player-cluster split scaling (>=1, 1 when cohesive - see PlayerClusterDirectorUtility).
+            // Since the base already applies coop(f.PlayerCount) and the split multiplier is
+            // FinalTotal/coop(liveClusterCount), the two compose into the summed-cluster budget the
+            // design specifies, cap included. Defended to 1 for the pre-first-tick zero default.
+            FP splitMultiplier = f.Global->SplitThreatMultiplier <= FP._0 ? FP._1 : f.Global->SplitThreatMultiplier;
 
-        private static FP ComputeRelevantPressure(Frame f)
-        {
-            FP pressure = FP._0;
-            var filtered = f.Filter<Enemy, EnemyLifecycle>();
-
-            while (filtered.Next(out EntityRef entity, out Enemy enemy, out EnemyLifecycle lifecycle))
-            {
-                // State == Active is exactly "currently relevant" (EnemyLifecycleSystem only ever
-                // sets it that way) - no separate relevance recheck needed here.
-                if (lifecycle.State != EnemyLifecycleState.Active)
-                    continue;
-
-                EnemyDataAsset data = f.FindAsset(enemy.EnemyData);
-                pressure += data.ResolveCost(f);
-            }
-
-            return pressure;
+            return curveMultiplier * coopMultiplier * splitMultiplier;
         }
 
         // Refunds a fraction of the enemy's own cost into DirectorBudget, then destroys it. Called
@@ -157,7 +215,7 @@ namespace Quantum
         // the candidate list itself. Variety is still meant to come from authoring more groups, not
         // from a tactical scoring formula - Weight only biases how often an already-valid group is
         // picked relative to its siblings.
-        private static bool TrySelectGroup(Frame f, SurvivalPhase phase, int aliveCount, out EnemyGroupConfig chosen, out AssetRef<EnemyGroupConfig> chosenRef, out FP chosenCost)
+        private static bool TrySelectGroup(Frame f, SurvivalPhase phase, int aliveCount, int maxAliveEnemies, out EnemyGroupConfig chosen, out AssetRef<EnemyGroupConfig> chosenRef, out FP chosenCost)
         {
             List<AssetRef<EnemyGroupConfig>> validGroups = new List<AssetRef<EnemyGroupConfig>>();
             List<FP> validCosts = new List<FP>();
@@ -214,10 +272,10 @@ namespace Quantum
                         continue; // not affordable
                     }
 
-                    if (aliveCount + candidate.ComputeMemberCount() > phase.MaxAliveEnemies)
+                    if (aliveCount + candidate.ComputeMemberCount() > maxAliveEnemies)
                     {
-                        Log.Debug($"[Director] {candidate.name} rejected - would exceed alive cap ({aliveCount} + {candidate.ComputeMemberCount()} > {phase.MaxAliveEnemies})");
-                        continue; // would exceed the alive cap
+                        Log.Debug($"[Director] {candidate.name} rejected - would exceed alive cap ({aliveCount} + {candidate.ComputeMemberCount()} > {maxAliveEnemies})");
+                        continue; // would exceed the (split-scaled) alive cap
                     }
 
                     if (candidate.MaxConcurrent > 0 && CountAliveForGroup(f, groupRef) >= candidate.MaxConcurrent)
@@ -259,42 +317,6 @@ namespace Quantum
             chosenRef = validGroups[chosenIndex];
             chosen = f.FindAsset(chosenRef);
             chosenCost = validCosts[chosenIndex];
-            return true;
-        }
-
-        // TeamCenter + AverageVelocity * PredictionTime - the "moving combat bubble". False if no
-        // players exist yet to spawn combat around.
-        private static bool TryComputePredictedCombatCenter(Frame f, DirectorConfig directorConfig, out FPVector3 predictedCombatCenter)
-        {
-            FPVector3 positionSum = FPVector3.Zero;
-            FPVector3 velocitySum = FPVector3.Zero;
-            int count = 0;
-
-            var filtered = f.Filter<PlayerLink>();
-
-            while (filtered.Next(out EntityRef entity, out PlayerLink _))
-            {
-                if (f.Unsafe.TryGetPointer<Transform3D>(entity, out var transform) == false)
-                    continue;
-
-                positionSum += transform->Position;
-                count++;
-
-                if (f.Unsafe.TryGetPointer<KCC>(entity, out var kcc) == true)
-                {
-                    velocitySum += kcc->Data.RealVelocity;
-                }
-            }
-
-            if (count == 0)
-            {
-                predictedCombatCenter = default;
-                return false;
-            }
-
-            FPVector3 teamCenter = positionSum / (FP)count;
-            FPVector3 averageVelocity = velocitySum / (FP)count;
-            predictedCombatCenter = teamCenter + averageVelocity * directorConfig.PredictionTime;
             return true;
         }
     }

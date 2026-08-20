@@ -16,4 +16,19 @@ global
     // writers, one reader/spender - no separate refund queue.
     FP DirectorBudget;
     FP DirectorPulseTimer;
+
+    // --- Co-op player-cluster split spawning (see docs/survival-director.md "Player clusters" +
+    // PlayerClusterDirectorUtility). DirectorSplitActive is the COMMITTED cohesive<->split mode,
+    // hysteresis-debounced by DirectorSplitTimer (DirectorConfig.ClusterSplit/MergeDelay) so it
+    // can't flicker at the ClusterDistance boundary. The three scalars are recomputed every combat
+    // tick by UpdateRuntimeScalars: SplitThreatMultiplier (>=1, capped by MaxSplitThreatMultiplier)
+    // scales DirectorBudget accrual + TargetPressure + MaxAliveEnemies; PerEnemyXpScale/
+    // PerEnemyCoinScale (<=1) are applied by CurrencyOrbSystem so the extra enemies splitting spawns
+    // don't become an XP/Coin farm. All default to 0 but are written before use each combat tick,
+    // and read defensively as 1 if still 0 (pre-first-tick / non-combat states).
+    Boolean DirectorSplitActive;
+    FP DirectorSplitTimer;
+    FP SplitThreatMultiplier;
+    FP PerEnemyXpScale;
+    FP PerEnemyCoinScale;
 }

@@ -232,3 +232,55 @@ Candidate ordering is always the authored array order (`phase.AllowedGroups`, `E
 Alongside this, all 11 `BaseEnemies`' action `Damage` values were rebalanced by hand (see `docs/hero-balance-pass.md`-adjacent context in `CLAUDE.md` for the player-side target baseline: 100 HP/30 Shield live on Kai) - `HeavySlammer` was doing literally 0 damage (dead action), `Sniper` was hitting for 40 (nearly a third of a player's effective HP) off a cheap Normal-tier enemy, and `Swarm`'s near-zero attack cycle worked out to ~25 DPS in melee contact. All 11 are now edited directly in their `.asset` files (no codegen needed, same as any other plain data field) to a coherent tier-shaped curve - no per-enemy `.asset` needs regenerating for this part, only the group/phase content above needs the Editor step.
 
 If `RuntimeConfig` is missing any of the three Domain config refs, or `SurvivalConfig.Phases` is empty, `CombatDirectorSystem` logs an error once and stays idle rather than throwing - no longer the actual state, but still the correct fallback behavior to know about.
+
+---
+
+## Player clusters (co-op split spawning)
+
+When co-op players wander apart, spawning everything at the party centroid drops enemies in the
+empty gap between them, where they instantly fall outside `LifecycleConfig.RelevantRange` of anyone
+and retire without engaging - the reported "survival mode does nothing when players are far apart".
+Fixed by treating each proximity cluster as its own combat front.
+
+**Files:** `PlayerClusterDirectorUtility.cs` (new) owns clustering + all the split math; wired from
+`CombatDirectorSystem.Update` (`UpdateRuntimeScalars` each combat tick) and
+`CombatDirectorUtility.TryPulse` (anchor plan + per-front distribution). New `DirectorConfig` fields
+and `SurvivalDirector.qtn` globals hold the tunables/runtime state. Reward scaling injected in
+`CurrencyOrbSystem.Grant`.
+
+**Threat model (reuses the existing per-player-count curve as `GetThreatBudget(n)` =
+`BalanceConfig.GetCoopGlobal(DirectorBudget, n)`):**
+- `BasePartyBudget = GetThreatBudget(liveClusteredPlayerCount)`.
+- `RequestedSplit = Σ GetThreatBudget(clusterSize)` over the live clusters.
+- `FinalTotal = min(RequestedSplit, BasePartyBudget * MaxSplitThreatMultiplier)` (cap, 1.40 default;
+  over-cap cluster budgets scale down proportionally).
+- `SplitThreatMultiplier = FinalTotal / BasePartyBudget` (>=1, exactly 1 when cohesive). Multiplies
+  `DirectorBudget` accrual, per-front `TargetPressure`, and `MaxAliveEnemies`. Nothing is hardcoded
+  to 4 players - every term reads a live cluster size.
+
+**Rewards (kept separate from threat so splitting isn't an XP/Coin farm):**
+`PerEnemyXpScale = (1 + (SplitThreatMultiplier-1)*SplitXpRewardFactor) / SplitThreatMultiplier`
+(coin analogue with `SplitCoinRewardFactor`). With factor 0 it's exact break-even (total reward
+unchanged despite more enemies); the shipped defaults 0.25/0.10 give a small risk bonus (+10% XP /
++4% coins at the 1.40 cap). Applied per orb in `CurrencyOrbSystem.Grant`; Rift Shards unscaled.
+
+**Cluster detection:** deterministic union-find over `PlayerLink` entities by flat XZ
+`ClusterDistance` (30). Anti-flicker is a hysteresis on the cohesive<->split *mode* only
+(`DirectorSplitActive`/`DirectorSplitTimer`, `ClusterSplitDelay` 2s / `ClusterMergeDelay` 1s), so
+wandering near the boundary doesn't thrash the scalars; within split mode the anchors follow players
+live. Single-front (solo/cohesive) uses the exact pre-cluster global pressure gate, so non-split
+play is unchanged.
+
+**Distribution:** each pulse round-robins purchases to the front furthest below its own
+`TargetPressure` share (local pressure = active enemy cost within `ClusterPressureRadius`); a front
+that can't place a group is marked exhausted so it doesn't starve the others. **Major enemies
+(`Tier >= Elite`) always anchor at the global centroid, never duplicated per front** - Elite/midboss
+stay a global event; the Boss uses its own separate `RunPhaseUtility.BeginBossEncounter` path.
+During Breathing/Boss the scalars reset to 1 (no split threat/reward while the party scatters to
+shops). No existing enemies are ever moved/retired by a cluster change - it only affects future
+spawns.
+
+**Editor:** `SurvivalDirector.qtn`'s new globals need codegen (automatic in the open Editor). The new
+`DirectorConfig` fields default in code, so the existing `DirectorConfig.asset` picks them up on
+reimport - tune `ClusterDistance`/`MaxSplitThreatMultiplier`/reward factors/delays there. Not yet
+verified end-to-end in co-op.

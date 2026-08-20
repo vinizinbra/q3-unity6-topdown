@@ -314,7 +314,7 @@ namespace Quantum
         public FP DeathLingerTime = 3;
 
         // Single place every Director budget site (EnemyGroupConfig.ComputeCost,
-        // CombatDirectorUtility.ComputeRelevantPressure, EnemyLifecycleSystem.Retire) reads this
+        // PlayerClusterDirectorUtility.LocalPressure, EnemyLifecycleSystem.Retire) reads this
         // enemy's actual cost from, so Economy.CostMultiplier can't drift out of sync between them.
         public FP ResolveCost(Frame f) => EnemyTierStatsConfig.Resolve(f, Tier).Cost * Economy.CostMultiplier;
 

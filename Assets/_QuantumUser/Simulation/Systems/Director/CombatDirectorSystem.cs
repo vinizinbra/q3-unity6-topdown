@@ -72,10 +72,25 @@ namespace Quantum
 
             ApplyPhaseGameState(f, currentPhase);
 
+            // Co-op player-cluster scalars (SplitThreatMultiplier + per-enemy XP/Coin scales) are
+            // refreshed every combat tick, before any spawning or reward grant reads them. Runs in
+            // Breathing too, where combatActive is false so everything resets to 1 (no split threat/
+            // reward while the party legitimately scatters to shops). See PlayerClusterDirectorUtility.
+            BalanceConfig balanceConfig = f.FindAsset(f.RuntimeConfig.BalanceConfig);
+            bool combatActive = currentPhase.Kind == SurvivalPhaseKind.Combat || currentPhase.Kind == SurvivalPhaseKind.Elite;
+            PlayerClusterDirectorUtility.UpdateRuntimeScalars(f, directorConfig, balanceConfig, combatActive);
+
             if (currentPhase.Kind == SurvivalPhaseKind.Breathing)
                 return; // no Director spawning during a Breathing phase
 
-            CombatDirectorUtility.TryPulse(f, currentPhase, directorConfig, lifecycleConfig);
+            // No Director spawning while any Traversal Challenge is Active either - a standalone
+            // counter independent of GameState/SurvivalPhaseKind (mirrors Global.BossPauseTimer's own
+            // "checked, not GameState-driven" shape), so this pause never disables GameplaySystemGroup
+            // and never touches the Breathing timeline. See TraversalChallenge.qtn.
+            if (f.Global->ActiveTraversalChallengeCount > 0)
+                return;
+
+            CombatDirectorUtility.TryPulse(f, currentPhase, directorConfig, lifecycleConfig, balanceConfig);
         }
 
         // Keeps Global.CurrentState in sync with whichever phase is now in effect, and runs the
@@ -125,6 +140,25 @@ namespace Quantum
             f.Global->BreathingTimeRemaining = currentPhase.Kind == SurvivalPhaseKind.Breathing
                 ? FPMath.Max(FP._0, currentPhase.Duration - f.Global->PhaseTimer)
                 : FP._0;
+
+            ApplyHudBanner(f);
+        }
+
+        // Resolves the single top-screen HUD banner every tick this method runs (i.e. every tick
+        // while CurrentState is Survival/Breathing - see this class's own Update gate; once Boss is
+        // entered this stops being called at all until the run leaves Boss, but by then HudBanner is
+        // already correctly latched to Boss and nothing else can touch it in the meantime, same
+        // "computed once, holds" reasoning ApplyPhaseGameState's own Boss transition already relies
+        // on for GameStateUtility.SetState itself). See HudBannerKind's own comment (GameState.qtn)
+        // for the full "why not just reuse GameState" reasoning and resolution order.
+        private static void ApplyHudBanner(Frame f)
+        {
+            if (f.Global->CurrentState == GameState.Boss)
+                f.Global->HudBanner = HudBannerKind.Boss;
+            else if (f.Global->ActiveTraversalChallengeCount > 0)
+                f.Global->HudBanner = HudBannerKind.TraversalChallenge;
+            else
+                f.Global->HudBanner = HudBannerKind.DirectorTimeline;
         }
 
         // Combat/Elite both still map to Survival, unchanged from before - only Breathing/Boss get

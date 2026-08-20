@@ -50,6 +50,38 @@ namespace Quantum
             f.Events.WeaponEquipped(owner, weaponDataRef);
         }
 
+        // Called by StoreUtility.BuyWeaponLevelUp when a player buys the Store's guaranteed
+        // "Increase Weapon Level" offer (see docs/store-blacksmith.md) - compounds
+        // damageBonusPerLevel into DamageMultiplier, the exact same idiom
+        // DamageMultiplierWeaponPerkData.Apply already uses for a rolled perk, so it composes with
+        // every other damage-multiplier source identically. Level itself is bookkeeping only
+        // (pricing/display - see Weapon.qtn's own comment), never read back into damage math.
+        public static void AddLevel(Weapon* weapon, FP damageBonusPerLevel)
+        {
+            weapon->Level++;
+            weapon->DamageMultiplier = CompoundLevelMultiplier(weapon->DamageMultiplier, damageBonusPerLevel);
+        }
+
+        // Resolves what DamageMultiplier would compound to after `levels` calls to AddLevel starting
+        // from a fresh (Multiplier = 1) weapon - same per-level compounding step AddLevel itself
+        // applies in place, extracted here so a not-yet-granted weapon (e.g. a Store offer card's own
+        // damage preview, see GameplayUiController.BuildStoreWeaponCardData) can show the correct
+        // level-adjusted damage without mutating a real Weapon component.
+        public static FP ResolveLevelDamageMultiplier(int levels, FP damageBonusPerLevel)
+        {
+            FP multiplier = FP._1;
+
+            for (int i = 0; i < levels; i++)
+                multiplier = CompoundLevelMultiplier(multiplier, damageBonusPerLevel);
+
+            return multiplier;
+        }
+
+        private static FP CompoundLevelMultiplier(FP current, FP damageBonusPerLevel)
+        {
+            return FPMath.Max(FP._0, current * (FP._1 + damageBonusPerLevel));
+        }
+
         // Pixie's Explosive Rounds passive ascension (see ExplosiveRoundsPassiveUpgradeData/
         // PixieExplosiveWeapon.qtn) - baked here, after perks, so it survives every weapon swap
         // instead of only the weapon she was holding when she picked it. Forces every shot to proc
@@ -80,6 +112,7 @@ namespace Quantum
             weapon->DamageMultiplier = FP._1;
             weapon->FireCooldownMultiplier = FP._1;
             weapon->RangeMultiplier = FP._1;
+            weapon->Level = 0;
             weapon->MagazineSize = weaponData.MagazineSize;
             weapon->ReloadDuration = weaponData.ReloadDuration;
             weapon->CriticalChance = weaponData.CriticalChance;
@@ -196,9 +229,16 @@ namespace Quantum
             if (StatusEffectUtility.IsStunned(f, filter.Entity) == true)
                 return;
 
-            // Same per-player input lock PlayerMovementProcessor/SkillSystem also gate on - a
-            // Cursed Rift/Store/Blacksmith Choice Window open for this player blocks firing without
-            // touching GameplaySystemGroup/Time.timeScale (see docs/breathing-poi.md).
+            // Downed/KO can't fire either (see docs/revive.md) - checked separately from the POI
+            // lock below since it has its own gate (PlayerLifeStateUtility.IsIncapacitated), not a
+            // session component PoiInteractionLockUtility would otherwise need to know about.
+            if (PlayerLifeStateUtility.IsIncapacitated(f, filter.Entity) == true)
+                return;
+
+            // Same per-player input lock SkillSystem also gates on - a Cursed Rift/Store/Blacksmith
+            // Choice Window (or an active Revive channel) open for this player blocks firing
+            // without touching GameplaySystemGroup/Time.timeScale (see docs/breathing-poi.md/
+            // docs/revive.md).
             if (PoiInteractionLockUtility.IsInputLocked(f, filter.Entity) == true)
                 return;
 

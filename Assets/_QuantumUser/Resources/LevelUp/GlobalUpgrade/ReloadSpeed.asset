@@ -18,7 +18,6 @@ MonoBehaviour:
       Value: 522814388069534076
   Icon: {fileID: 1987535197, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
   DisplayName: Reload Speed
-  Rarity: 0
   MaxPicks: 3
   Description: +{0}% Reload Speed
   Multiplier:

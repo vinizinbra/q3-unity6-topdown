@@ -467,6 +467,7 @@ namespace Quantum.Prototypes {
     public FP OutgoingStatusDurationMultiplier;
     public FP MaxHealthMultiplier;
     public FP MaxShieldMultiplier;
+    public FP BonusMaxShield;
     public FP DamageReduction;
     public FP KnockbackTakenMultiplier;
     public FP HealingReceivedMultiplier;
@@ -480,6 +481,7 @@ namespace Quantum.Prototypes {
     public Byte WeaponTalentLevel;
     public Byte ShopWeaponOfferCount;
     public Byte RerollQuantity;
+    public Byte SelfReviveCharges;
     public Byte BurnOnHitStacks;
     public FP DashShieldCost;
     public FP CritSkillCooldownReduction;
@@ -526,6 +528,7 @@ namespace Quantum.Prototypes {
         result.OutgoingStatusDurationMultiplier = this.OutgoingStatusDurationMultiplier;
         result.MaxHealthMultiplier = this.MaxHealthMultiplier;
         result.MaxShieldMultiplier = this.MaxShieldMultiplier;
+        result.BonusMaxShield = this.BonusMaxShield;
         result.DamageReduction = this.DamageReduction;
         result.KnockbackTakenMultiplier = this.KnockbackTakenMultiplier;
         result.HealingReceivedMultiplier = this.HealingReceivedMultiplier;
@@ -539,6 +542,7 @@ namespace Quantum.Prototypes {
         result.WeaponTalentLevel = this.WeaponTalentLevel;
         result.ShopWeaponOfferCount = this.ShopWeaponOfferCount;
         result.RerollQuantity = this.RerollQuantity;
+        result.SelfReviveCharges = this.SelfReviveCharges;
         result.BurnOnHitStacks = this.BurnOnHitStacks;
         result.DashShieldCost = this.DashShieldCost;
         result.CritSkillCooldownReduction = this.CritSkillCooldownReduction;
@@ -627,6 +631,7 @@ namespace Quantum.Prototypes {
     public Byte WaypointCount;
     public AssetRef<ChunkSpawnConfig> SpawnConfig;
     public Quantum.QEnum8<ChunkConnectionSide> AllowedConnectionSides;
+    public Quantum.QEnum8<ChunkTypeMask> ForbiddenNeighbors;
     public QBoolean Discovered;
     public QBoolean HasRespawnPoint;
     public FPVector3 RespawnPoint;
@@ -648,6 +653,7 @@ namespace Quantum.Prototypes {
         result.WaypointCount = this.WaypointCount;
         result.SpawnConfig = this.SpawnConfig;
         result.AllowedConnectionSides = this.AllowedConnectionSides;
+        result.ForbiddenNeighbors = this.ForbiddenNeighbors;
         result.Discovered = this.Discovered;
         result.HasRespawnPoint = this.HasRespawnPoint;
         result.RespawnPoint = this.RespawnPoint;
@@ -1982,6 +1988,25 @@ namespace Quantum.Prototypes {
     }
   }
   [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.PlayerLifeState))]
+  public unsafe class PlayerLifeStatePrototype : ComponentPrototype<Quantum.PlayerLifeState> {
+    public Quantum.QEnum8<PlayerLifeStateKind> State;
+    public FP BleedOutRemaining;
+    public FP ReviveProgress;
+    public MapEntityId ReviveHolder;
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.PlayerLifeState component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.PlayerLifeState result, in PrototypeMaterializationContext context = default) {
+        result.State = this.State;
+        result.BleedOutRemaining = this.BleedOutRemaining;
+        result.ReviveProgress = this.ReviveProgress;
+        PrototypeValidator.FindMapEntity(this.ReviveHolder, in context, out result.ReviveHolder);
+    }
+  }
+  [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.PlayerLink))]
   public unsafe partial class PlayerLinkPrototype : ComponentPrototype<Quantum.PlayerLink> {
     public PlayerRef Player;
@@ -2370,6 +2395,19 @@ namespace Quantum.Prototypes {
         PrototypeValidator.FindMapEntity(this.MarkedBy, in context, out result.MarkedBy);
         result.RemainingDuration = this.RemainingDuration;
         result.StoredDamage = this.StoredDamage;
+    }
+  }
+  [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.ReviveChannel))]
+  public unsafe class ReviveChannelPrototype : ComponentPrototype<Quantum.ReviveChannel> {
+    public MapEntityId Target;
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.ReviveChannel component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.ReviveChannel result, in PrototypeMaterializationContext context = default) {
+        PrototypeValidator.FindMapEntity(this.Target, in context, out result.Target);
     }
   }
   [System.SerializableAttribute()]
@@ -2806,6 +2844,7 @@ namespace Quantum.Prototypes {
     public FP BoundRemaining;
     public FP TempMoveSpeedRemaining;
     public FP TempMoveSpeedMultiplier;
+    public FP ReviveImmunityRemaining;
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.StatusEffects component = default;
         Materialize((Frame)f, ref component, in context);
@@ -2876,6 +2915,7 @@ namespace Quantum.Prototypes {
         result.BoundRemaining = this.BoundRemaining;
         result.TempMoveSpeedRemaining = this.TempMoveSpeedRemaining;
         result.TempMoveSpeedMultiplier = this.TempMoveSpeedMultiplier;
+        result.ReviveImmunityRemaining = this.ReviveImmunityRemaining;
     }
   }
   [System.SerializableAttribute()]
@@ -2995,6 +3035,7 @@ namespace Quantum.Prototypes {
   public unsafe class StorePurchasesPrototype : ComponentPrototype<Quantum.StorePurchases> {
     [ArrayLengthAttribute(8)]
     public Quantum.Prototypes.StorePurchaseEntryPrototype[] Entries = new Quantum.Prototypes.StorePurchaseEntryPrototype[8];
+    public Int32 WeaponLevelUpPurchasedAtBreathingIndexPlusOne;
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.StorePurchases component = default;
         Materialize((Frame)f, ref component, in context);
@@ -3004,6 +3045,7 @@ namespace Quantum.Prototypes {
         for (int i = 0, count = PrototypeValidator.CheckLength(Entries, 8, in context); i < count; ++i) {
           this.Entries[i].Materialize(frame, ref *result.Entries.GetPointer(i), in context);
         }
+        result.WeaponLevelUpPurchasedAtBreathingIndexPlusOne = this.WeaponLevelUpPurchasedAtBreathingIndexPlusOne;
     }
   }
   [System.SerializableAttribute()]
@@ -3014,6 +3056,7 @@ namespace Quantum.Prototypes {
     public AssetRef<WeaponPerkData>[] RolledPerks = new AssetRef<WeaponPerkData>[5];
     public Byte RolledPerkCount;
     public FP Price;
+    public Byte WeaponLevel;
     partial void MaterializeUser(Frame frame, ref Quantum.StoreWeaponOffer result, in PrototypeMaterializationContext context);
     public void Materialize(Frame frame, ref Quantum.StoreWeaponOffer result, in PrototypeMaterializationContext context = default) {
         result.WeaponData = this.WeaponData;
@@ -3022,6 +3065,7 @@ namespace Quantum.Prototypes {
         }
         result.RolledPerkCount = this.RolledPerkCount;
         result.Price = this.Price;
+        result.WeaponLevel = this.WeaponLevel;
         MaterializeUser(frame, ref result, in context);
     }
   }
@@ -3038,6 +3082,47 @@ namespace Quantum.Prototypes {
     public void Materialize(Frame frame, ref Quantum.StunDamageBonusUpgrade result, in PrototypeMaterializationContext context = default) {
         result.DamageMultiplierBonus = this.DamageMultiplierBonus;
         MaterializeUser(frame, ref result, in context);
+    }
+  }
+  [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.TraversalChallenge))]
+  public unsafe class TraversalChallengePrototype : ComponentPrototype<Quantum.TraversalChallenge> {
+    public Quantum.Prototypes.PoiAvailabilityPrototype Availability;
+    public FP Duration;
+    public FP RemainingTime;
+    public Quantum.QEnum8<TraversalChallengeState> State;
+    public MapEntityId ActivatedBy;
+    public MapEntityId Chunk;
+    public FPVector3 CheckpointPosition;
+    public FP CheckpointRadius;
+    public AssetRef<EntityPrototype> PlatformPrototype;
+    public Byte PlatformCount;
+    [ArrayLengthAttribute(8)]
+    public FPVector3[] PlatformPositions = new FPVector3[8];
+    [ArrayLengthAttribute(8)]
+    public MapEntityId[] SpawnedPlatforms = new MapEntityId[8];
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.TraversalChallenge component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.TraversalChallenge result, in PrototypeMaterializationContext context = default) {
+        this.Availability.Materialize(frame, ref result.Availability, in context);
+        result.Duration = this.Duration;
+        result.RemainingTime = this.RemainingTime;
+        result.State = this.State;
+        PrototypeValidator.FindMapEntity(this.ActivatedBy, in context, out result.ActivatedBy);
+        PrototypeValidator.FindMapEntity(this.Chunk, in context, out result.Chunk);
+        result.CheckpointPosition = this.CheckpointPosition;
+        result.CheckpointRadius = this.CheckpointRadius;
+        result.PlatformPrototype = this.PlatformPrototype;
+        result.PlatformCount = this.PlatformCount;
+        for (int i = 0, count = PrototypeValidator.CheckLength(PlatformPositions, 8, in context); i < count; ++i) {
+          *result.PlatformPositions.GetPointer(i) = this.PlatformPositions[i];
+        }
+        for (int i = 0, count = PrototypeValidator.CheckLength(SpawnedPlatforms, 8, in context); i < count; ++i) {
+          PrototypeValidator.FindMapEntity(this.SpawnedPlatforms[i], in context, out *result.SpawnedPlatforms.GetPointer(i));
+        }
     }
   }
   [System.SerializableAttribute()]
@@ -3389,6 +3474,7 @@ namespace Quantum.Prototypes {
     public FP CriticalDamageBonus;
     public FP DamageMultiplier;
     public FP FireCooldownMultiplier;
+    public Byte Level;
     public FP FireCooldownTimer;
     public Int32 Ammo;
     public FP ReloadTimer;
@@ -3411,6 +3497,7 @@ namespace Quantum.Prototypes {
         result.CriticalDamageBonus = this.CriticalDamageBonus;
         result.DamageMultiplier = this.DamageMultiplier;
         result.FireCooldownMultiplier = this.FireCooldownMultiplier;
+        result.Level = this.Level;
         result.FireCooldownTimer = this.FireCooldownTimer;
         result.Ammo = this.Ammo;
         result.ReloadTimer = this.ReloadTimer;

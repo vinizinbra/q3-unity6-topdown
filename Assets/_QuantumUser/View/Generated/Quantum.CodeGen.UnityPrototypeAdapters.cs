@@ -308,6 +308,23 @@ namespace Quantum.Prototypes.Unity {
     }
   }
   [System.SerializableAttribute()]
+  public unsafe partial class PlayerLifeStatePrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.PlayerLifeStatePrototype> {
+    public Quantum.QEnum8<PlayerLifeStateKind> State;
+    public FP BleedOutRemaining;
+    public FP ReviveProgress;
+    public Quantum.QuantumEntityPrototype ReviveHolder;
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.PlayerLifeStatePrototype prototype);
+    public override Quantum.Prototypes.PlayerLifeStatePrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.PlayerLifeStatePrototype();
+      converter.Convert(this.State, out result.State);
+      converter.Convert(this.BleedOutRemaining, out result.BleedOutRemaining);
+      converter.Convert(this.ReviveProgress, out result.ReviveProgress);
+      converter.Convert(this.ReviveHolder, out result.ReviveHolder);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
   public unsafe partial class PoiUsagePrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.PoiUsagePrototype> {
     [ArrayLengthAttribute(8)]
     public Quantum.Prototypes.Unity.PoiUsageEntryPrototype[] Entries = new Quantum.Prototypes.Unity.PoiUsageEntryPrototype[8];
@@ -398,6 +415,17 @@ namespace Quantum.Prototypes.Unity {
       converter.Convert(this.MarkedBy, out result.MarkedBy);
       converter.Convert(this.RemainingDuration, out result.RemainingDuration);
       converter.Convert(this.StoredDamage, out result.StoredDamage);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
+  public unsafe partial class ReviveChannelPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.ReviveChannelPrototype> {
+    public Quantum.QuantumEntityPrototype Target;
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.ReviveChannelPrototype prototype);
+    public override Quantum.Prototypes.ReviveChannelPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.ReviveChannelPrototype();
+      converter.Convert(this.Target, out result.Target);
       ConvertUser(converter, ref result);
       return result;
     }
@@ -508,6 +536,7 @@ namespace Quantum.Prototypes.Unity {
     public FP BoundRemaining;
     public FP TempMoveSpeedRemaining;
     public FP TempMoveSpeedMultiplier;
+    public FP ReviveImmunityRemaining;
     partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.StatusEffectsPrototype prototype);
     public override Quantum.Prototypes.StatusEffectsPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
       var result = new Quantum.Prototypes.StatusEffectsPrototype();
@@ -563,6 +592,7 @@ namespace Quantum.Prototypes.Unity {
       converter.Convert(this.BoundRemaining, out result.BoundRemaining);
       converter.Convert(this.TempMoveSpeedRemaining, out result.TempMoveSpeedRemaining);
       converter.Convert(this.TempMoveSpeedMultiplier, out result.TempMoveSpeedMultiplier);
+      converter.Convert(this.ReviveImmunityRemaining, out result.ReviveImmunityRemaining);
       ConvertUser(converter, ref result);
       return result;
     }
@@ -599,10 +629,47 @@ namespace Quantum.Prototypes.Unity {
   public unsafe partial class StorePurchasesPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.StorePurchasesPrototype> {
     [ArrayLengthAttribute(8)]
     public Quantum.Prototypes.Unity.StorePurchaseEntryPrototype[] Entries = new Quantum.Prototypes.Unity.StorePurchaseEntryPrototype[8];
+    public Int32 WeaponLevelUpPurchasedAtBreathingIndexPlusOne;
     partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.StorePurchasesPrototype prototype);
     public override Quantum.Prototypes.StorePurchasesPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
       var result = new Quantum.Prototypes.StorePurchasesPrototype();
       converter.Convert(this.Entries, out result.Entries);
+      converter.Convert(this.WeaponLevelUpPurchasedAtBreathingIndexPlusOne, out result.WeaponLevelUpPurchasedAtBreathingIndexPlusOne);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
+  public unsafe partial class TraversalChallengePrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.TraversalChallengePrototype> {
+    public Quantum.Prototypes.PoiAvailabilityPrototype Availability;
+    public FP Duration;
+    public FP RemainingTime;
+    public Quantum.QEnum8<TraversalChallengeState> State;
+    public Quantum.QuantumEntityPrototype ActivatedBy;
+    public Quantum.QuantumEntityPrototype Chunk;
+    public FPVector3 CheckpointPosition;
+    public FP CheckpointRadius;
+    public AssetRef<EntityPrototype> PlatformPrototype;
+    public Byte PlatformCount;
+    [ArrayLengthAttribute(8)]
+    public FPVector3[] PlatformPositions = new FPVector3[8];
+    [ArrayLengthAttribute(8)]
+    public Quantum.QuantumEntityPrototype[] SpawnedPlatforms = new Quantum.QuantumEntityPrototype[8];
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.TraversalChallengePrototype prototype);
+    public override Quantum.Prototypes.TraversalChallengePrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.TraversalChallengePrototype();
+      converter.Convert(this.Availability, out result.Availability);
+      converter.Convert(this.Duration, out result.Duration);
+      converter.Convert(this.RemainingTime, out result.RemainingTime);
+      converter.Convert(this.State, out result.State);
+      converter.Convert(this.ActivatedBy, out result.ActivatedBy);
+      converter.Convert(this.Chunk, out result.Chunk);
+      converter.Convert(this.CheckpointPosition, out result.CheckpointPosition);
+      converter.Convert(this.CheckpointRadius, out result.CheckpointRadius);
+      converter.Convert(this.PlatformPrototype, out result.PlatformPrototype);
+      converter.Convert(this.PlatformCount, out result.PlatformCount);
+      converter.Convert(this.PlatformPositions, out result.PlatformPositions);
+      converter.Convert(this.SpawnedPlatforms, out result.SpawnedPlatforms);
       ConvertUser(converter, ref result);
       return result;
     }

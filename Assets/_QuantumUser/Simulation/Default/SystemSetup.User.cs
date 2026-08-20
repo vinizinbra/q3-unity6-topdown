@@ -153,6 +153,21 @@
                 // Must run after KCCSystem (KCC.SetActive/Teleport need this tick's movement already
                 // resolved) and after AimSystem (DashSkillData reads Aim.Angle as a facing fallback).
                 new SkillSystem(),
+                // Hold-to-revive (see docs/revive.md) - PlayerLifeStateSystem ticks a Downed
+                // player's own bleed-out timer (must run after SkillSystem so a same-tick
+                // TryBeginInteraction that just set ReviveHolder is already reflected before this
+                // decides whether to tick this tick) AND processes this player's own
+                // SelfReviveCommand (a separate, instant press/confirm - no channel/hold involved).
+                // ReviveChannelSystem ticks every actively-holding TEAMMATE reviver's own channel,
+                // right after it for the same same-tick-consistency reason. ReviveDamageInterruptSystem
+                // is signal-driven (OnHealthDamageApplied/OnShieldDamageApplied fire synchronously
+                // from wherever DamageUtility.ApplyDamage is actually called, not from this position
+                // in the list) - grouped here purely for discoverability. RunFailureSystem is last
+                // so it reads this tick's fully-resolved life-state.
+                new PlayerLifeStateSystem(),
+                new ReviveChannelSystem(),
+                new ReviveDamageInterruptSystem(),
+                new RunFailureSystem(),
                 // Debug-only command processor for LevelUpPoolKind.PassiveUpgrade (see
                 // PassiveUpgradeSystem's own comment) - before VoidFieldSystem so a same-tick-granted
                 // Void Pressure ascension is already reflected when that system runs this same tick.
@@ -287,6 +302,13 @@
                 // ContextInteractionSystem) so a usage marked by either this same tick is already
                 // reflected in PoiActivation.State this same tick, not one tick stale.
                 new PoiActivationSystem(),
+                // Ticks each Active Traversal Challenge's own countdown/checkpoint check - lives
+                // inside this group (unlike BossPauseSystem/ChestSystem) since it never itself
+                // disables/enables GameplaySystemGroup; its global pause instead goes through
+                // Global.ActiveTraversalChallengeCount, checked by CombatDirectorSystem/
+                // SurvivalProgressionUtility much earlier in this same list. See
+                // docs/traversal-challenge.md.
+                new TraversalChallengeSystem(),
                 // After every hit-resolving system above (this tick's Enemy.Phase is fully settled, so
                 // a same-tick combat death is correctly excluded from retirement/refund) and before
                 // DestroyAfterTimeSystem, preserving that system's own "must be last" invariant since

@@ -371,7 +371,10 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
         StoreConfig config = frame.FindAsset(frame.RuntimeConfig.StoreConfig);
         int weaponOfferCount = StoreUtility.ResolveWeaponOfferCount(frame, entity, store, config);
 
-        var foodData = new UpgradeCardWidget.CardData[inventory->FoodOffers.Length];
+        // +1: the guaranteed "Increase Weapon Level" offer (see BuildWeaponLevelUpCardData) is
+        // appended right after the rolled FoodOffers slots - StoreWeaponLevelUpCardIndex documents
+        // why that index can never collide with a real, rolled food offer.
+        var foodData = new UpgradeCardWidget.CardData[inventory->FoodOffers.Length + 1];
 
         for (int j = 0; j < inventory->FoodOffers.Length; j++)
         {
@@ -380,12 +383,14 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
                 : default;
         }
 
+        foodData[StoreWeaponLevelUpCardIndex] = BuildWeaponLevelUpCardData(frame, entity, config);
+
         var weaponData = new WeaponCardWidget.CardData[inventory->WeaponOffers.Length];
 
         for (int j = 0; j < inventory->WeaponOffers.Length; j++)
         {
             weaponData[j] = j < weaponOfferCount && j < inventory->WeaponOfferCount
-                ? BuildStoreWeaponCardData(frame, entity, store, j, inventory->WeaponOffers[j])
+                ? BuildStoreWeaponCardData(frame, entity, store, j, inventory->WeaponOffers[j], config)
                 : default;
         }
 
@@ -450,11 +455,62 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
         };
     }
 
+    // Card index the guaranteed "Increase Weapon Level" offer is appended at within Store's own
+    // foodData[] (see RefreshStoreWindow) - matches Store.qtn's StoreInventory.FoodOffers[2] ceiling
+    // exactly, one past its last real slot. A real rolled food offer can never reach this index
+    // (FoodOfferCount is always clamped <= FoodOffers.Length, see StoreUtility.RollFoodOffers), so
+    // there's no collision risk even when 0 food offers roll. OnCardClicked uses this same constant
+    // to route a click here to BuyStoreWeaponLevelCommand instead of BuyStoreFoodCommand.
+    private const int StoreWeaponLevelUpCardIndex = 2;
+
+    // Store's guaranteed "Increase Weapon Level" card - unlike every other Store card, this isn't
+    // read off a rolled StoreInventory offer at all (nothing rolled about it); price/current level
+    // are both resolved live off the buyer's own equipped Weapon (see
+    // StoreUtility.ResolveWeaponLevelUpPrice), same "read live, never baked" idiom every other
+    // Store price already follows.
+    private static unsafe UpgradeCardWidget.CardData BuildWeaponLevelUpCardData(Frame frame, EntityRef entity, StoreConfig config)
+    {
+        FP price = StoreUtility.ResolveWeaponLevelUpPrice(frame, entity, config);
+        bool purchased = StoreUtility.IsWeaponLevelUpPurchased(frame, entity);
+        FP coins = frame.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats) == true ? stats->Coins : FP._0;
+        byte level = frame.Unsafe.TryGetPointer<Weapon>(entity, out var weapon) == true ? weapon->Level : (byte)0;
+
+        return new UpgradeCardWidget.CardData
+        {
+            HasOption = true,
+            DisplayName = "Weapon Level Up",
+            Description = $"+{(config.WeaponLevelUpDamageBonusPerLevel * 100).AsFloat:0}% weapon damage. Currently Level {level}.",
+            KindText = "FOOD & UTILITY",
+            TopLabelOverride = "UPGRADE",
+            ButtonLabel = "BUY",
+            Purchase = new PurchasableCardState
+            {
+                ShowPurchaseUi = true,
+                Price = price.AsFloat,
+                Currency = CurrencyType.Coin,
+                CanAfford = coins >= price,
+                IsSoldOut = purchased
+            }
+        };
+    }
+
     // Store weapon offer card - reuses BuildWeaponCardData (refactored to take raw fields, see its
     // own comment) unchanged, then layers the purchase affordance on top.
-    private static unsafe WeaponCardWidget.CardData BuildStoreWeaponCardData(Frame frame, EntityRef entity, EntityRef store, int offerIndex, StoreWeaponOffer offer)
+    private static unsafe WeaponCardWidget.CardData BuildStoreWeaponCardData(Frame frame, EntityRef entity, EntityRef store, int offerIndex, StoreWeaponOffer offer, StoreConfig config)
     {
-        WeaponCardWidget.CardData data = BuildWeaponCardData(frame, offer.WeaponData, offer.RolledPerks, offer.RolledPerkCount);
+        WeaponCardWidget.CardData data = BuildWeaponCardData(frame, offer.WeaponData, offer.RolledPerks, offer.RolledPerkCount, offer.WeaponLevel);
+
+        // Preview the SAME level-adjusted damage the offer will actually equip with (WeaponSystem.
+        // ResolveLevelDamageMultiplier - the same compounding step WeaponSystem.AddLevel itself
+        // applies, extracted so this can be shown before purchase without mutating a real Weapon) -
+        // otherwise the card would show a plain-Level-0 base Damage even though the weapon's own
+        // "+N" title (see BuildWeaponCardData) already advertises a higher level.
+        if (offer.WeaponLevel > 0)
+        {
+            FP multiplier = WeaponSystem.ResolveLevelDamageMultiplier(offer.WeaponLevel, config.WeaponLevelUpDamageBonusPerLevel);
+            data.Damage *= multiplier.AsFloat;
+        }
+
         bool purchased = StoreUtility.IsPurchased(frame, entity, store, offerIndex, isWeaponOffer: true);
         FP coins = frame.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats) == true ? stats->Coins : FP._0;
 
@@ -589,7 +645,10 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
                 break;
 
             case ChoiceWindowOwner.Store:
-                _game.SendCommand(slotIndex, new BuyStoreFoodCommand { OfferIndex = (byte)optionIndex });
+                if (optionIndex == StoreWeaponLevelUpCardIndex)
+                    _game.SendCommand(slotIndex, new BuyStoreWeaponLevelCommand());
+                else
+                    _game.SendCommand(slotIndex, new BuyStoreFoodCommand { OfferIndex = (byte)optionIndex });
                 break;
 
             case ChoiceWindowOwner.Blacksmith:
@@ -685,6 +744,7 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
         UpgradeData data = frame.FindAsset(option.Upgrade);
         int currentStacks = 0;
         int maxStacks = 0;
+        bool isRanked = false;
         string description = data.GetDescription();
 
         // Hero Ascension lines (Passive Upgrade or Skill Upgrade) with MaxRank > 1 - generic over
@@ -696,6 +756,7 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
             maxStacks = ranked.MaxRank;
             currentStacks = UpgradeHistoryUtility.GetCount(frame, entity, option.Kind, option.Upgrade);
             description = ranked.GetDescription(currentStacks + 1);
+            isRanked = true;
         }
         else if (option.Kind == LevelUpPoolKind.GlobalUpgrade)
         {
@@ -725,7 +786,8 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
             RarityIndex = rarityIndex,
             KindText = KindText(option),
             CurrentStacks = currentStacks,
-            MaxStacks = maxStacks
+            MaxStacks = maxStacks,
+            IsRanked = isRanked
         };
     }
 
@@ -738,7 +800,7 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
     // Takes the 3 raw fields directly (not a whole LevelUpOption) so Store's own weapon-offer
     // builder (BuildStoreWeaponCardData, StoreWeaponOffer carries the exact same 3 fields) reuses
     // this unchanged alongside the existing Choose-Weapon caller.
-    private static unsafe WeaponCardWidget.CardData BuildWeaponCardData(Frame frame, AssetRef<WeaponDataAsset> weaponDataRef, FixedArray<AssetRef<WeaponPerkData>> rolledPerks, int rolledPerkCount)
+    private static unsafe WeaponCardWidget.CardData BuildWeaponCardData(Frame frame, AssetRef<WeaponDataAsset> weaponDataRef, FixedArray<AssetRef<WeaponPerkData>> rolledPerks, int rolledPerkCount, int weaponLevel = 0)
     {
         WeaponDataAsset weaponData = frame.FindAsset(weaponDataRef);
         var perks = new WeaponCardWidget.PerkRowData[rolledPerkCount];
@@ -756,15 +818,20 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
             };
         }
 
+        // DisplayName isn't authored on most WeaponDataAsset instances yet (see docs/weapon-perks.md) -
+        // fall back to the asset's own file name, beautified (e.g. "AssaultRifleWeaponData" -> "Assault Rifle").
+        string baseName = string.IsNullOrEmpty(weaponData.DisplayName)
+            ? StringUtility.Beautify(weaponData.name, "WeaponData")
+            : weaponData.DisplayName;
+
         return new WeaponCardWidget.CardData
         {
             HasOption = true,
             WeaponIcon = weaponData.GetIcon(),
-            // DisplayName isn't authored on most WeaponDataAsset instances yet (see docs/weapon-perks.md) -
-            // fall back to the asset's own file name, beautified (e.g. "AssaultRifleWeaponData" -> "Assault Rifle").
-            WeaponName = string.IsNullOrEmpty(weaponData.DisplayName)
-                ? StringUtility.Beautify(weaponData.name, "WeaponData")
-                : weaponData.DisplayName,
+            // weaponLevel is 0 for a plain Choose-Weapon level-up option (no level concept there) -
+            // WithLevelSuffix no-ops in that case, so this call site is unaffected. Only a Store
+            // offer (see BuildStoreWeaponCardData) ever passes a level > 0, e.g. "Shotgun +1".
+            WeaponName = StringUtility.WithLevelSuffix(baseName, weaponLevel),
             Damage = weaponData.Damage.AsFloat,
             FireRate = weaponData.FireRate.AsFloat,
             Range = weaponData.Range.AsFloat,

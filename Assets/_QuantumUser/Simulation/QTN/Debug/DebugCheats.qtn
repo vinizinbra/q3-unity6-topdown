@@ -12,4 +12,17 @@ global
     // DebugCheatSystem each time the previous screen resolves. 0 = none pending, including the
     // normal case where no debug cheat was configured at all.
     Int32 DebugPendingLevelUps;
+
+    // Last tick's Global.LevelUpScreenOpen value - lets DebugCheatSystem require a full published
+    // tick of LevelUpScreenOpen == false before opening the next queued screen, instead of
+    // reopening it the SAME tick the previous one resolves. A real level-up can never chain two
+    // screens back to back like this (ExperienceUtility.Grant collapses multiple level-ups from one
+    // XP grant into a single screen - see its own comment), so this same-tick reopen is a debug-only
+    // artifact, but it's a real one: GameplayUiController's View-side LevelUpScreenOpen edge-detector
+    // (and the _upgradeScreenClosedEarly flag CloseUpgradeScreenIfSolo sets) would otherwise never
+    // observe the screen closing at all, silently leaving the upgrade window hidden/unresolvable
+    // while GameplaySystemGroup is disabled again for the next screen - a real, visible freeze
+    // (player frozen mid-air, no card UI to click) even though the simulation itself is behaving
+    // correctly. See DebugCheatSystem.TryOpenNextPendingLevelUp.
+    Boolean DebugLevelUpScreenOpenLastTick;
 }

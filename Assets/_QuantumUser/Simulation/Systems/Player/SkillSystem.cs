@@ -19,12 +19,23 @@ namespace Quantum
             Button dashSkillButton = input->DashSkill;
             Button heroSkillButton = input->HeroSkill;
 
-            // A Cursed Rift/Store/Blacksmith Choice Window open for this player (see
-            // docs/breathing-poi.md/docs/store-blacksmith.md) locks both slots - neutralized (not
-            // skipped) buttons still let UpdateSlot's own cooldown/stack-recovery ticking run
-            // normally, just block the press edge, same reasoning TickCooldown already runs
-            // regardless of State.
-            if (PoiInteractionLockUtility.IsInputLocked(f, filter.Entity) == true)
+            // Downed/KO (see docs/revive.md) - no Dash, no Hero Skill cast/interaction redirect.
+            // Self-revive is a separate, unrelated path (SelfReviveCommand, sent from a dedicated
+            // View window, processed by PlayerLifeStateSystem) - not the Hero Skill button at all.
+            // ReviveChannelSystem reads Input.HeroSkill directly for a TEAMMATE-driven channel's own
+            // ongoing hold/release detection every tick, unaffected by this local neutralization
+            // (never mutates the underlying Input struct).
+            if (PlayerLifeStateUtility.IsIncapacitated(f, filter.Entity) == true)
+            {
+                dashSkillButton = default;
+                heroSkillButton = default;
+            }
+            // A Cursed Rift/Store/Blacksmith/Revive-channel session open for this player (see
+            // docs/breathing-poi.md/docs/store-blacksmith.md/docs/revive.md) locks both slots -
+            // neutralized (not skipped) buttons still let UpdateSlot's own cooldown/stack-recovery
+            // ticking run normally, just block the press edge, same reasoning TickCooldown already
+            // runs regardless of State.
+            else if (PoiInteractionLockUtility.IsInputLocked(f, filter.Entity) == true)
             {
                 dashSkillButton = default;
                 heroSkillButton = default;
@@ -64,6 +75,14 @@ namespace Quantum
 
                     case InteractableKind.Blacksmith:
                         BlacksmithUtility.TryBeginInteraction(f, filter.Entity, context->ActiveTarget);
+                        break;
+
+                    case InteractableKind.TraversalChallenge:
+                        TraversalChallengeUtility.TryActivate(f, filter.Entity, context->ActiveTarget);
+                        break;
+
+                    case InteractableKind.Revive:
+                        ReviveUtility.TryBeginInteraction(f, filter.Entity, context->ActiveTarget);
                         break;
                 }
 

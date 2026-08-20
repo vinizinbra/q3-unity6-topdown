@@ -25,6 +25,18 @@ component Weapon
     FP    DamageMultiplier;
     FP    FireCooldownMultiplier;
 
+    // Store's "Increase Weapon Level" purchase (see StoreUtility.BuyWeaponLevelUp/
+    // docs/store-blacksmith.md) - a per-weapon-instance counter, reset to 0 on every Equip
+    // alongside DamageMultiplier (see WeaponSystem.SeedStats). Pure bookkeeping for pricing/
+    // display; the actual +damage bonus is baked straight into DamageMultiplier at purchase time
+    // (WeaponSystem.AddLevel), same compounding idiom DamageMultiplierWeaponPerkData.Apply already
+    // uses for a rolled perk - Level itself is never read back into live damage math. Distinct from
+    // BOTH CharacterStats.WeaponTalentLevel (drives how many perks a FUTURE weapon pick rolls) and
+    // RuntimePlayer.Talents.WeaponLevel (permanent meta-progression that seeds the former at spawn)
+    // - this one only affects the specific Weapon instance currently equipped, resets on any
+    // re-equip.
+    Byte  Level;
+
     FP    FireCooldownTimer;
     Int32 Ammo;
     FP    ReloadTimer;

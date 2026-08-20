@@ -17,7 +17,7 @@ public class DirectorTimelineUiWidget : QuantumGlobalMonoBehaviour
 {
     [SerializeField] private Slider timelineSlider;
     [SerializeField] private TMP_Text timerText;
-    [SerializeField, Tooltip("Container for the bar's visible children (timelineSlider/timerText/markerRoot) - toggled off during GameState.Boss so this doesn't visually compete with BossWidget. Must be a CHILD GameObject, not the GameObject this script itself lives on, since QUpdate stops firing once its own GameObject is disabled.")]
+    [SerializeField, Tooltip("Container for the bar's visible children (timelineSlider/timerText/markerRoot) - toggled off whenever Global.HudBanner isn't DirectorTimeline (Boss/TraversalChallenge currently own the banner slot instead - see GameState.qtn's own HudBannerKind comment), so this doesn't visually compete with BossWidget/TraversalChallengeWidget. Must be a CHILD GameObject, not the GameObject this script itself lives on, since QUpdate stops firing once its own GameObject is disabled.")]
     private GameObject visualRoot;
 
     [Header("Phase markers")]
@@ -42,10 +42,10 @@ public class DirectorTimelineUiWidget : QuantumGlobalMonoBehaviour
     {
         Frame frame = game.Frames.Predicted;
 
-        bool isBoss = frame.Global->CurrentState == GameState.Boss;
-        SetShown(visualRoot, isBoss == false);
+        bool shown = frame.Global->HudBanner == HudBannerKind.DirectorTimeline;
+        SetShown(visualRoot, shown);
 
-        if (isBoss)
+        if (shown == false)
             return;
 
         if (frame.RuntimeConfig.SurvivalConfig.Id.IsValid == false)
@@ -62,6 +62,27 @@ public class DirectorTimelineUiWidget : QuantumGlobalMonoBehaviour
 
         if (_timelineDuration > FP._0)
             UpdateSlider(frame.Global->SurvivalTime / _timelineDuration);
+
+        UpdateMarkerStates(frame.Global->CurrentPhaseIndex);
+    }
+
+    // Before the run reaches a marker's phase it's Before; while the run is IN that phase it's
+    // Reached (recolored + idle scale wiggle); once the run advances past it it's Passed. Driven off
+    // the current phase index rather than the fill fraction, so it stays exact even though
+    // SurvivalTime freezes during a Breathing phase (the marker's own point on the bar).
+    private void UpdateMarkerStates(int currentPhaseIndex)
+    {
+        for (int i = 0; i < _spawnedMarkers.Count; i++)
+        {
+            DirectorPhaseMarkerWidget marker = _spawnedMarkers[i];
+
+            DirectorPhaseMarkerWidget.MarkerState state =
+                currentPhaseIndex < marker.PhaseIndex ? DirectorPhaseMarkerWidget.MarkerState.Before
+                : currentPhaseIndex == marker.PhaseIndex ? DirectorPhaseMarkerWidget.MarkerState.Reached
+                : DirectorPhaseMarkerWidget.MarkerState.Passed;
+
+            marker.SetState(state);
+        }
     }
 
     private void BuildMarkersOnce(SurvivalConfig config)
@@ -126,7 +147,7 @@ public class DirectorTimelineUiWidget : QuantumGlobalMonoBehaviour
             // A kind with no matching entry still spawns the marker itself, just with no icon
             // (SpawnMarker reads a null sprite as "hide the icon" below).
             if (nextKind != SurvivalPhaseKind.Combat && nextKind != SurvivalPhaseKind.Boss && isFinalBreathingBeforeBoss == false)
-                SpawnMarker((cumulative / _timelineDuration).AsFloat, SpriteManager.GetSprite(nextKind.ToString()));
+                SpawnMarker((cumulative / _timelineDuration).AsFloat, i + 1, SpriteManager.GetSprite(nextKind.ToString()));
         }
 
         // markerPrefab is only a template - it may be sitting active in the scene for editing
@@ -135,12 +156,13 @@ public class DirectorTimelineUiWidget : QuantumGlobalMonoBehaviour
         markerPrefab.gameObject.SetActive(false);
     }
 
-    private void SpawnMarker(float normalizedTime, Sprite icon)
+    private void SpawnMarker(float normalizedTime, int phaseIndex, Sprite icon)
     {
         if (markerRoot == null || markerPrefab == null)
             return;
 
         DirectorPhaseMarkerWidget marker = Instantiate(markerPrefab, markerRoot);
+        marker.PhaseIndex = phaseIndex;
         RectTransform markerTransform = (RectTransform)marker.transform;
         markerTransform.gameObject.SetActive(true);
 

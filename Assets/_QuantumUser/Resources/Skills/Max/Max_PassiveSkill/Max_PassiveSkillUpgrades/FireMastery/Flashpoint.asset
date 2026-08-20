@@ -16,9 +16,8 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/Max_PassiveSkill/Max_PassiveSkillUpgrades/FireMastery/Flashpoint
     Guid:
       Value: 317035501367371776
-  Icon: {fileID: -520350581, guid: 9a944adac56bb4e8dbce2f7bab4127e3, type: 3}
+  Icon: {fileID: -1867794150, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
   DisplayName: Flashpoint
-  Rarity: 3
   Description: Burning enemies become far more dangerous to be near - bonus Critical
     Chance, crits that detonate, and eventually outright execution.
   <MaxRank>k__BackingField: 3

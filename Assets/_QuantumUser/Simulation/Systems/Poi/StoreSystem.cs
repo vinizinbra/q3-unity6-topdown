@@ -37,6 +37,10 @@ namespace Quantum
                         StoreUtility.BuyFood(f, entity, interaction, buyFood.OfferIndex);
                         break;
 
+                    case BuyStoreWeaponLevelCommand:
+                        StoreUtility.BuyWeaponLevelUp(f, entity);
+                        break;
+
                     case CloseStoreCommand:
                         StoreUtility.Close(f, entity);
                         break;

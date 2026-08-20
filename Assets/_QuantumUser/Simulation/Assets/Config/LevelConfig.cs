@@ -3,18 +3,25 @@ namespace Quantum
     using System;
     using Photon.Deterministic;
 
-    // One entry in LevelConfig.ChunkPool - describes a chunk prototype the generator can place
-    // and how many of it should end up in a generated level. LobbyStart should have Count 1 (the
-    // generator seeds the grid with it); Boss isn't listed here at all - it's a fixed, hand-placed
-    // chunk (BossArena) with its own pre-baked navmesh that the generator discovers in the scene
-    // and grows the rest of the level around, rather than something it spawns itself.
+    // One entry in LevelConfig.ChunkPool - describes a SET of interchangeable chunk prototype
+    // variants the generator can place and how many total should end up in a generated level. Each
+    // of the Count placements independently picks a random prototype from Prototypes (via f.RNG, so
+    // every client generates the identical layout) - e.g. an Enemy entry with 4 Prototypes and
+    // Count 10 places 10 enemy chunks, each randomly one of the 4 variants. LobbyStart should have
+    // Count 1 (the generator seeds the grid with it); Boss isn't listed here at all - it's a fixed,
+    // hand-placed chunk (BossArena) with its own pre-baked navmesh that the generator discovers in
+    // the scene and grows the rest of the level around, rather than something it spawns itself.
     // Footprint size isn't here - LevelGenerationSystem reads it straight off the entity's own
     // baked Chunk component right after f.Create, so a prefab's size only has to be authored once.
     [Serializable]
     public struct ChunkPoolEntry
     {
         public ChunkType Type;
-        public AssetRef<EntityPrototype> Prototype;
+
+        // Interchangeable variant prototypes for this entry - one is picked at random per placed
+        // instance. A single-element array reproduces the old "one prototype per entry" behavior.
+        public AssetRef<EntityPrototype>[] Prototypes;
+
         public Int32 Count;
 
         // If true, LevelGenerationSystem treats every instance of this entry as required: it gets
@@ -52,6 +59,12 @@ namespace Quantum
         // its chunk's own footprint boundary - only applies when that chunk has no hand-authored
         // Chunk.RespawnPoint.
         public FP FallRespawnEdgeMargin = 2;
+
+        // A candidate placement touching an already-placed chunk with a straight overlap shorter
+        // than this (in cells) is rejected - prevents a chunk from attaching via a razor-thin
+        // sliver (e.g. a single-cell-wide doorway) instead of a real, walkable connection. 1
+        // reproduces the old unrestricted behavior.
+        public Int32 MinConnectionWidthCells = 2;
 
         public ChunkPoolEntry[] ChunkPool;
 

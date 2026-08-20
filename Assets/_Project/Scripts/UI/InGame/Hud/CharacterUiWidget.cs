@@ -3,6 +3,7 @@ using NaughtyAttributes;
 using Photon.Client.StructWrapping;
 using Photon.Deterministic;
 using Quantum;
+using QuantumUser.View;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -438,10 +439,12 @@ public class CharacterUiWidget : MonoBehaviour
     // Own component, not part of StatusEffects - see Vendetta.qtn/MaxVendettaSystem. RevengeMark is
     // the target-side mirror of whichever Max entity currently has this entity marked (RemainingDuration
     // kept in lockstep by MaxVendettaSystem/RevengeMarkTimeoutSystem), so this entity's widget can
-    // show "you are marked" without any cross-entity lookup.
+    // show "you are marked" without any cross-entity lookup. Only shown to the player whose own Max
+    // applied the mark (MarkedBy) - a teammate's Vendetta mark isn't this viewer's business.
     private void UpdateRevengeMark(Frame frame)
     {
-        bool shown = frame.TryGet<RevengeMark>(_entityRef, out var mark) && mark.RemainingDuration > FP._0;
+        bool shown = frame.TryGet<RevengeMark>(_entityRef, out var mark) && mark.RemainingDuration > FP._0
+            && MyLocalPlayer.Instance != null && MyLocalPlayer.Instance.IsLocalEntity(mark.MarkedBy);
         revengeMarkIndicator.SetShown(shown);
 
         if (shown)

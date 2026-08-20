@@ -20,6 +20,7 @@ namespace Quantum
             CharacterSystem.RefreshMaxHealth(f, entity);
 
             stats->MaxShieldMultiplier = FP._0;
+            stats->BonusMaxShield = FP._0; // else a flat ShieldUpgradeData pick would revive shield on a later RefreshMaxShield
 
             if (f.Unsafe.TryGetPointer<Shield>(entity, out var shield) == true)
             {

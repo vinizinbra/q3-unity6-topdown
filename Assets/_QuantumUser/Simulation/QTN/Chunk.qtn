@@ -40,6 +40,27 @@ flags ChunkConnectionSide : Byte
     Left = 3
 }
 
+// A SET of chunk TYPES a chunk refuses to be placed directly adjacent to (see
+// Chunk.ForbiddenNeighbors / LevelGenerationSystem). `flags` for the same reason ChunkConnectionSide
+// above is: so LevelGenerationSystem can OR types together AND so Quantum's QEnum8 Inspector drawer
+// renders it as a multi-select checklist. Each value is a BIT POSITION (codegen turns "= N" into
+// "1 << N"), and these bit positions MUST stay 1:1 with the ChunkType enum's own ordinals
+// (LobbyStart=0, Enemy=1, ... Blacksmith=7) - LevelGenerationSystem.ToMask converts a ChunkType to
+// its bit via `1 << (int)type`, so if you add/reorder a ChunkType you must mirror it here. A Byte
+// holds 8 bits, exactly enough for today's 8 ChunkType values. 0/Nothing (the default) forbids
+// nothing, so every chunk prototype authored before this field existed is unchanged.
+flags ChunkTypeMask : Byte
+{
+    LobbyStart = 0,
+    Enemy = 1,
+    Boss = 2,
+    Merchant = 3,
+    Traversal = 4,
+    HealingShrine = 5,
+    CursedRift = 6,
+    Blacksmith = 7
+}
+
 // One waypoint of a chunk's baked AI navigation graph (see the Editor-side
 // ChunkWaypointBaker) - LocalPosition is relative to the chunk prototype's own pivot, not
 // world space, so it stays correct wherever the chunk ends up placed by
@@ -83,6 +104,17 @@ component Chunk
     // not tied to any wall/door geometry. 0/Nothing (the default) means unrestricted - every chunk
     // prototype authored before this field existed keeps attaching on any side, unchanged.
     ChunkConnectionSide AllowedConnectionSides;
+
+    // See ChunkTypeMask - the set of chunk TYPES this chunk refuses to sit directly adjacent to.
+    // Enforced BIDIRECTIONALLY in LevelGenerationSystem.ViolatesForbiddenNeighbor: a candidate
+    // placement adjacent to an already-placed chunk is rejected if EITHER the candidate forbids the
+    // neighbor's type OR the neighbor forbids the candidate's type - so authoring the rule on just
+    // one side of a pair is enough, and it holds regardless of which chunk was placed first.
+    // Unlike AllowedConnectionSides (which restricts WHICH SIDE anything may attach to), this
+    // restricts WHICH TYPE may be a neighbor at all, on any side. 0/Nothing (default) forbids
+    // nothing. Example: author a LobbyStart prototype with Boss|Merchant|Blacksmith|HealingShrine|
+    // CursedRift so spawn never borders the boss arena or any POI.
+    ChunkTypeMask ForbiddenNeighbors;
 
     // Set once by ChunkDiscoverySystem the first time any player physically enters this chunk's
     // world footprint - shared/co-op, not per-player (same convention Experience/Talents already

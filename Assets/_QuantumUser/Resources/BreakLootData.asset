@@ -24,17 +24,17 @@ MonoBehaviour:
     Chance:
       RawValue: 65536
     Value:
-      RawValue: 65536
-    Count: 3
+      RawValue: 327680
+    Count: 1
   - Prototype:
       Id:
         Value: 1351728669323849151
     Requirement: 0
     Chance:
-      RawValue: 65536
+      RawValue: 655
     Value:
       RawValue: 65536
-    Count: 3
+    Count: 1
   MinSpawnOffset:
     RawValue: 13107
   MaxSpawnOffset:

@@ -19,7 +19,7 @@ MonoBehaviour:
   Description: Enemies that damage Max are marked with Vendetta. Killing a marked
     enemy heals him.
   BaseHealMultiplier:
-    RawValue: 32768
+    RawValue: 16384
   BaseMarkDuration:
     RawValue: 524288
   BaseDamageBonus:

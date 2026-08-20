@@ -408,19 +408,34 @@ nearest-chunk fallback could strand it outside its own `BossArenaGate`-sealed bo
    each run, so anything inserted by a second script would get silently wiped out next time it
    runs).
 2. **`BreathingCountdownWidget`** (View, `Assets/_Project/Scripts/UI/InGame/Hud/`) - "AREA
-   SECURED" + "NEXT ASSAULT 00:30" HUD element, needs wiring on the scene HUD prefab. Always
-   visible (part of the normal HUD, never hidden by the Cursed Rift Choice Window - see
-   `docs/choice-window-refactor.md`), though its `areaSecuredRoot`/`countdownRoot` children stay
-   hidden until `Global.BreathingAreaSecured` flips true (see above) - there's currently no
-   "clearing area" visual for the window between the phase boundary and that point, the widget
-   just shows nothing. As of 2026-08-14 also owns the Skip Vote UI: `skipButton`
-   (sends `SkipBreathingCommand` for every one of this client's own local slots at once - shown
-   until all of them have voted this Break) and `waitingRoot`/`waitingText` ("WAITING FOR OTHER
-   PLAYERS...", shown in the button's place once this client HAS voted but the Break hasn't ended
-   yet) - neither has a real GameObject built/assigned in the scene yet. No live "X/Y ready"
-   vote-count readout - only a binary voted/not-voted for this client's own local player(s), since
-   nothing currently exposes a cross-player count to the View (would need a small addition, e.g. a
-   `Global` counter, if that's wanted later).
+   SECURED" + "NEXT ASSAULT 00:30" HUD element, wired on the scene HUD prefab (`skipButton`/
+   `waitingRoot`/`waitingText` are wired in `Assets/gamesceneBackup.unity`, the live working
+   scene - `QuantumGameScene.unity` itself is a step behind and still only has the base
+   `root`/`areaSecuredRoot`/`countdownRoot` fields wired). Always visible (part of the normal HUD,
+   never hidden by the Cursed Rift Choice Window - see `docs/choice-window-refactor.md`). As of
+   2026-08-19, its `areaSecuredRoot`/`countdownRoot`/Skip Vote UI children staying hidden until
+   `Global.BreathingAreaSecured` flips true is now enforced explicitly every tick (previously
+   `skipButton`/`waitingRoot` were only ever touched from inside the `isSecured == true` branch, so
+   once wired in-scene they could show while enemies were still alive, reading whatever
+   `activeSelf` the prefab happened to default to or was left at from a prior secured Break - a
+   real bug hit in testing, fixed by explicitly forcing both off in the `isSecured == false`
+   branch too) - and the previously-empty window between the phase boundary and
+   `BreathingAreaSecured` flipping true now shows a `notSecuredRoot`/`notSecuredText` "CLEAR ALL
+   ENEMIES TO SECURE THE AREA" prompt instead of nothing. A second, separate slide/fade banner,
+   `survivalStartedRoot`/`survivalStartedText` ("SURVIVAL MODE STARTED"), plays once when Breathing
+   ends and hands off into a normal `Survival` phase specifically (not `Boss` - that already gets
+   its own reveal via `BossWidget`/`BossWindow`, see the Boss Phase Trigger section of CLAUDE.md) -
+   same slide/fade visual language as `areaSecuredRoot` (own independent fields/tweens, mirroring
+   `areaSecuredRoot`'s own `CanvasGroup`+`RectTransform` shape one-for-one) but MUST be a sibling of
+   `root` in the hierarchy, not nested under it, since `root` itself is deactivated the same tick
+   Breathing ends. None of `notSecuredRoot`/`notSecuredText`/`survivalStartedRoot`/
+   `survivalStartedText` (+ its own `CanvasGroup`/`RectTransform`) have real GameObjects
+   built/assigned in the scene yet - the easiest path is duplicating `areaSecuredRoot`'s own
+   existing GameObject twice (once simple, text-only, for `notSecuredRoot`; once full, keeping the
+   CanvasGroup+RectTransform, for `survivalStartedRoot`) and re-wiring. Skip Vote UI still has no
+   live "X/Y ready" vote-count readout - only a binary voted/not-voted for this client's own local
+   player(s), since nothing currently exposes a cross-player count to the View (would need a small
+   addition, e.g. a `Global` counter, if that's wanted later).
 3. **No `Elite` `SurvivalConfig.Phases[]` entry authored yet** - a designer needs to add one,
    pointing `AllowedGroups` at a group containing only `EnemyTier.Elite` enemies (no such group
    exists yet either), before the encounter-hold mechanic has anything to actually hold on.

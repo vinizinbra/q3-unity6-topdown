@@ -25,7 +25,7 @@ MonoBehaviour:
   BaseArmor:
     RawValue: 0
   BaseMaxShield:
-    RawValue: 3276800
+    RawValue: 1638400
   ShieldRechargeDelay:
     RawValue: 327680
   ShieldRechargeRate:

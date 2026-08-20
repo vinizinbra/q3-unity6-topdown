@@ -18,7 +18,6 @@ MonoBehaviour:
       Value: 375594071662370515
   Icon: {fileID: -2049905287, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
   DisplayName: Healing Received
-  Rarity: 0
   MaxPicks: 3
   Description: +{0}% Healing
   Multiplier:

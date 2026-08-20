@@ -1,0 +1,35 @@
+// Alive -> Downed -> KO (see docs/revive.md). Alive is deliberately enum value 0 so a fresh player
+// prototype starts Alive with no explicit seeding needed, same "zero-default" convention
+// GameState.Lobby/ContextInteractionState.None already use.
+enum PlayerLifeStateKind : Byte
+{
+    Alive,
+    Downed,
+    KO
+}
+
+// Present on every player entity from spawn (added to each hero's own EntityPrototype). Downed is
+// damage-immune (see PlayerLifeStateUtility.EnterDowned, which reuses the existing Invulnerable
+// tag) - a bleed-out timer is the ONLY way a Downed player becomes KO, never another hit.
+component PlayerLifeState
+{
+    PlayerLifeStateKind State;
+
+    // Counts down only while State == Downed AND ReviveHolder == EntityRef.None (see
+    // PlayerLifeStateSystem) - paused the instant someone starts holding to revive this player, so
+    // a near-complete revive can never get yanked into KO by an unlucky timer expiry mid-channel.
+    // Hits 0 -> PlayerLifeStateUtility.EnterKO.
+    FP BleedOutRemaining;
+
+    // Seconds accumulated toward whichever reviver currently holds ReviveHolder - lives here
+    // (target-side), not on the reviver's own ReviveChannel, since it must survive independent of
+    // which specific reviver is currently holding (see docs/revive.md's own note on why
+    // ContextInteraction.ActiveTarget can't be reused for this).
+    FP ReviveProgress;
+
+    // Which TEAMMATE is currently holding to revive this entity - EntityRef.None means nobody.
+    // Only ever set by ReviveUtility.TryBeginInteraction, cleared by PlayerLifeStateUtility.Revive
+    // or ReviveUtility.Cancel. Self-revive (TryPerformSelfRevive) never touches this - it's an
+    // instant press/confirm with no channel/hold concept at all, see docs/revive.md.
+    EntityRef ReviveHolder;
+}

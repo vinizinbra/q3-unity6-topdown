@@ -91,10 +91,18 @@ namespace Quantum
         // unscaled orb value, not pre-multiplied by the finder's stats.
         private static void Grant(Frame f, CurrencyOrbType type, CharacterStats* finderStats, FP amount)
         {
+            // Per-enemy reward scale from co-op player-cluster splitting (see
+            // PlayerClusterDirectorUtility): when splitting spawns extra enemies, these dial each
+            // enemy's XP/Coin down so total progression rises only slightly, not proportionally to
+            // the added kills. Both are 1 when cohesive; read defensively as 1 for the zero default
+            // before the Director's first combat-tick write. RiftShards are deliberately unscaled.
+            FP xpScale = f.Global->PerEnemyXpScale <= FP._0 ? FP._1 : f.Global->PerEnemyXpScale;
+            FP coinScale = f.Global->PerEnemyCoinScale <= FP._0 ? FP._1 : f.Global->PerEnemyCoinScale;
+
             switch (type)
             {
-                case CurrencyOrbType.Experience: ExperienceUtility.Grant(f, amount * finderStats->ExperienceGainMultiplier); break;
-                case CurrencyOrbType.Coin: CoinUtility.GrantAll(f, amount); break;
+                case CurrencyOrbType.Experience: ExperienceUtility.Grant(f, amount * finderStats->ExperienceGainMultiplier * xpScale); break;
+                case CurrencyOrbType.Coin: CoinUtility.GrantAll(f, amount * coinScale); break;
                 case CurrencyOrbType.RiftShard: RiftShardUtility.GrantAll(f, amount); break;
             }
         }

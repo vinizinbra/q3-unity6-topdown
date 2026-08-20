@@ -16,9 +16,8 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/Max_HeroSkill/Max_HeroSkillUpgrades/Overdrive/FullThrottleSkillAction
     Guid:
       Value: 503198828803139370
-  Icon: {fileID: 0}
+  Icon: {fileID: 120216522, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
   DisplayName: Full Throttle
-  Rarity: 1
   RankDescriptions:
   - 'At max Rage: +20% Weapon Damage.'
   - 'At max Rage: +30% Weapon Damage, +50% Reload Speed.'

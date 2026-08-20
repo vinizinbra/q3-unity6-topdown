@@ -1,8 +1,10 @@
 using PrimeTween;
+using Photon.Deterministic;
 using Quantum;
 using QuantumUser.View;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 // Screen-space HUD widget for the Base-Skill-button redirect's world-space prompt (see
 // docs/breathing-poi.md) - same "manager-pooled widget under the HUD Canvas, not parented under
@@ -38,6 +40,10 @@ public class InteractionPromptWidget : MonoBehaviour
     [SerializeField, Tooltip("Container for descriptionText - left unassigned, only descriptionText itself is toggled.")]
     private GameObject descriptionRoot;
 
+    [Header("Hold Progress (Revive - see docs/revive.md)")]
+    [SerializeField, Tooltip("Optional - Slider.value (0-1) driven by a Revive channel's own live progress/duration while one of THIS client's local players is holding to revive the entity this widget is following. Left unassigned, this feature is simply off.")]
+    private Slider progressFillSlider;
+
     [Header("Scale In/Out")]
     [SerializeField, Tooltip("Springy pop on entering range - matches ColliderVisualScaleView/DamageNumberUiWidget's own default.")]
     private float scaleInDuration = 0.2f;
@@ -58,6 +64,13 @@ public class InteractionPromptWidget : MonoBehaviour
     private string _phaseUnavailableDescription;
     private string _alreadyUsedDescription;
     private string _notNeededDescription;
+    private string _occupiedDescription;
+    // Downed's own live bleed-out countdown ("15s"), reusing descriptionText/ApplyDescription
+    // instead of a dedicated field - see RefreshReviveTitle. Empty whenever there's nothing to
+    // show (Alive - the only case that reaches this widget at all, since KO has no revive
+    // prompt/path anymore), in which case the generic per-ContextInteractionState description
+    // (ResolveDescription) takes over instead.
+    private string _bleedOutDescription = string.Empty;
     private bool _isShown;
     private Tween _scaleTween;
 
@@ -105,7 +118,8 @@ public class InteractionPromptWidget : MonoBehaviour
     // stay inactive until SetActive(true) right after this call, same "Setup runs before the clone
     // is ever enabled" ordering CharacterUiWidget's own Setup relies on.
     public void Setup(QuantumGame game, EntityRef entityRef, Transform followTarget, string title,
-        string activeDescription, string phaseUnavailableDescription, string alreadyUsedDescription, string notNeededDescription, Vector3 worldOffset = default)
+        string activeDescription, string phaseUnavailableDescription, string alreadyUsedDescription, string notNeededDescription,
+        Vector3 worldOffset = default, string occupiedDescription = "")
     {
         _game = game;
         _entityRef = entityRef;
@@ -116,9 +130,9 @@ public class InteractionPromptWidget : MonoBehaviour
         _phaseUnavailableDescription = phaseUnavailableDescription;
         _alreadyUsedDescription = alreadyUsedDescription;
         _notNeededDescription = notNeededDescription;
+        _occupiedDescription = occupiedDescription;
 
-        if (titleText != null)
-            titleText.text = title;
+        SetTitle(title);
 
         _isShown = false;
 
@@ -127,6 +141,21 @@ public class InteractionPromptWidget : MonoBehaviour
             visualRoot.transform.localScale = Vector3.zero;
             visualRoot.SetActive(false);
         }
+
+        // Revive-only elements (see docs/revive.md) - this same prefab/widget is shared across
+        // EVERY Interactable kind (InteractionPromptWidgetManager pools one widgetPrefab for Cursed
+        // Rift/Healing Shrine/Store/Blacksmith/Traversal Challenge/Revive alike), so a non-revive
+        // instance would otherwise show these at whatever state the shared prefab was left in.
+        // RefreshReviveTitle's own early-return re-hides them every frame for the Alive/no-
+        // PlayerLifeState case too - this Setup-time hide only covers the gap before that first runs.
+        SetActive(progressFillSlider, false);
+    }
+
+    // Only writes if changed (avoids per-tick TMP layout thrash).
+    public void SetTitle(string title)
+    {
+        if (titleText != null && titleText.text != title)
+            titleText.text = title;
     }
 
     private unsafe void LateUpdate()
@@ -135,7 +164,125 @@ public class InteractionPromptWidget : MonoBehaviour
             return;
 
         FollowTarget();
+
+        // Applies the Downed title/color and live bleed-out countdown every frame this entity's
+        // PlayerLifeState is Downed - the only state this widget ever shows for now (KO removes its
+        // own Interactable, see PlayerLifeStateUtility.EnterKO, despawning this whole widget via
+        // ReviveInteractionPromptView's own edge-detect before this could ever run for it).
+        RefreshReviveTitle();
+
+        // Revive (see docs/revive.md) - checked BEFORE the generic ContextInteraction-driven
+        // switch below and returns early when handled. ContextInteraction.ActiveTarget is fully
+        // re-resolved fresh every tick with no stickiness, so once a channel is active this reads
+        // PlayerLifeState/ReviveChannel directly instead - a reviver drifting near some other POI
+        // mid-hold must never silently blank this prompt on its real (locked) target. Returns false
+        // (nobody local currently holding) whenever there's nothing to show progress for, letting
+        // the generic path below drive the passive Available/Occupied display off the
+        // already-fresh title instead.
+        if (UpdateFromReviveState() == true)
+            return;
+
         UpdateFromState();
+    }
+
+    private unsafe void RefreshReviveTitle()
+    {
+        Frame frame = _game.Frames.Predicted;
+
+        if (frame.Unsafe.TryGetPointer<PlayerLifeState>(_entityRef, out var lifeState) == false
+            || lifeState->State != PlayerLifeStateKind.Downed)
+        {
+            _bleedOutDescription = string.Empty;
+
+            // Runs every frame for every widget instance regardless of Interactable kind - the
+            // one guaranteed choke point that keeps these revive-only elements hidden for every
+            // non-revive POI (and for a Revive-kind widget on the rare frame its target reads back
+            // Alive/KO), independent of Setup-time pooling/reuse quirks.
+            SetActive(progressFillSlider, false);
+            return;
+        }
+
+        SetTitle("REVIVE");
+
+        // Reads the live value directly, so it automatically reflects the simulation's own
+        // pause-while-held behavior (PlayerLifeStateSystem) with no extra UI logic. Shown via the
+        // existing descriptionText (ApplyDescription) rather than a dedicated field - see
+        // UpdateFromReviveState/UpdateFromState, both of which now prefer this over the plain
+        // per-ContextInteractionState description whenever it's non-empty.
+        _bleedOutDescription = FormatBleedOutTimer(lifeState->BleedOutRemaining);
+    }
+
+    private static string FormatBleedOutTimer(FP secondsRemaining)
+    {
+        int seconds = Mathf.Max(0, Mathf.CeilToInt(secondsRemaining.AsFloat));
+        return $"{seconds}s";
+    }
+
+    // Returns true if this entity is currently being revived by one of THIS client's own local
+    // players - in which case the prompt shows live hold progress instead of falling through to
+    // the generic ContextInteraction-driven display below.
+    private unsafe bool UpdateFromReviveState()
+    {
+        Frame frame = _game.Frames.Predicted;
+
+        // KO no longer has a revive path at all (see PlayerLifeStateUtility.EnterKO) - this whole
+        // widget won't even exist for a KO'd entity (ReviveInteractionPromptView despawns it the
+        // instant Interactable is removed), but the check stays explicit (State != Downed, not
+        // just == Alive) for the same "never trust it" reason every other resolver here follows.
+        if (frame.Unsafe.TryGetPointer<PlayerLifeState>(_entityRef, out var lifeState) == false
+            || lifeState->State != PlayerLifeStateKind.Downed)
+        {
+            return false;
+        }
+
+        EntityRef holder = lifeState->ReviveHolder;
+        ReviveChannel* channel = null;
+
+        if (holder != EntityRef.None && IsLocalPlayer(holder) == true)
+            frame.Unsafe.TryGetPointer<ReviveChannel>(holder, out channel);
+
+        if (channel == null)
+        {
+            // Nothing actively channeling (locally) right now - hidden entirely, not just reset to
+            // 0, so standing near a Downed teammate without holding yet doesn't show a stray empty
+            // progress bar; also covers stale progress from an earlier hold never lingering visible
+            // underneath the generic idle prompt below.
+            SetActive(progressFillSlider, false);
+
+            return false;
+        }
+
+        ReviveConfig config = PlayerLifeStateUtility.GetConfig(frame);
+        FP duration = config != null ? config.DownedReviveDuration : (FP._2 + FP._0_50);
+
+        // Only ever shown here, while a real Revive channel is actively progressing - see Setup/
+        // RefreshReviveTitle/the idle branch above for every other case that keeps it hidden.
+        SetActive(progressFillSlider, true);
+
+        if (progressFillSlider != null)
+            progressFillSlider.value = duration > FP._0 ? (lifeState->ReviveProgress / duration).AsFloat : 0f;
+
+        // Live bleed-out countdown even while actively being revived (reinforces that it's
+        // currently frozen, alongside the progress bar).
+        ApplyDescription(_bleedOutDescription);
+        SetShown(true);
+        return true;
+    }
+
+    private unsafe bool IsLocalPlayer(EntityRef entity)
+    {
+        if (MyLocalPlayer.Instance == null)
+            return false;
+
+        var slots = MyLocalPlayer.Instance.Slots;
+
+        for (int i = 0; i < slots.Count; i++)
+        {
+            if (slots[i].IsSet && slots[i].EntityRef == entity)
+                return true;
+        }
+
+        return false;
     }
 
     private void FollowTarget()
@@ -179,10 +326,15 @@ public class InteractionPromptWidget : MonoBehaviour
         bool shown = state == ContextInteractionState.Available
             || state == ContextInteractionState.PhaseUnavailable
             || state == ContextInteractionState.AlreadyUsed
-            || state == ContextInteractionState.NotNeeded;
+            || state == ContextInteractionState.NotNeeded
+            || state == ContextInteractionState.Occupied;
 
+        // Downed's live bleed-out countdown (see RefreshReviveTitle) takes priority over the plain
+        // per-state description whenever it's non-empty - a nearby teammate should always see the
+        // clock, whether they're simply in range (Available) or someone else already claimed the
+        // revive (Occupied).
         if (shown)
-            ApplyDescription(ResolveDescription(state));
+            ApplyDescription(string.IsNullOrEmpty(_bleedOutDescription) == false ? _bleedOutDescription : ResolveDescription(state));
 
         SetShown(shown);
     }
@@ -195,6 +347,7 @@ public class InteractionPromptWidget : MonoBehaviour
             case ContextInteractionState.PhaseUnavailable: return _phaseUnavailableDescription;
             case ContextInteractionState.AlreadyUsed: return _alreadyUsedDescription;
             case ContextInteractionState.NotNeeded: return _notNeededDescription;
+            case ContextInteractionState.Occupied: return _occupiedDescription;
             default: return string.Empty;
         }
     }
@@ -214,6 +367,18 @@ public class InteractionPromptWidget : MonoBehaviour
             descriptionText.gameObject.SetActive(hasDescription);
             descriptionText.text = description;
         }
+    }
+
+    private static void SetActive(GameObject go, bool active)
+    {
+        if (go != null && go.activeSelf != active)
+            go.SetActive(active);
+    }
+
+    private static void SetActive(Slider slider, bool active)
+    {
+        if (slider != null)
+            SetActive(slider.gameObject, active);
     }
 
     // Scales the prompt in/out instead of an instant SetActive snap - useUnscaledTime so it stays

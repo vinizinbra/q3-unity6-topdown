@@ -70,9 +70,14 @@ public class CurrentWeaponUiWidget : QuantumGlobalMonoBehaviour
 
         if (weaponName != null)
         {
-            weaponName.text = string.IsNullOrEmpty(weaponData.DisplayName)
+            string baseName = string.IsNullOrEmpty(weaponData.DisplayName)
                 ? StringUtility.Beautify(weaponData.name, "WeaponData")
                 : weaponData.DisplayName;
+
+            // weapon.Level - Store's "Increase Weapon Level" purchase, or a Break-leveled Store
+            // weapon offer (see docs/store-blacksmith.md) - same "+N" suffix
+            // GameplayUiController.BuildWeaponCardData already shows on a Store offer card.
+            weaponName.text = StringUtility.WithLevelSuffix(baseName, weapon.Level);
         }
 
         RefreshPerks(frame, weapon);

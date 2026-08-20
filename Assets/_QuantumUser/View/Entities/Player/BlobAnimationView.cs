@@ -86,6 +86,16 @@ namespace Quantum
         [SerializeField] private float landingSpringFrequency = 6f;
         [SerializeField] private float landingSpringDamping = 0.35f;
 
+        [Header("Downed/KO (see docs/revive.md) - a plain active-object swap, NOT a procedural pose. Alive shows bodyRoot, Downed shows downedRoot, KO shows koRoot. Each root is a separately-authored GameObject with its own sprite art.")]
+        [SerializeField, Tooltip("The normal, alive rig - shown only while Alive. MUST be a CHILD of the object this component sits on (not this object itself, or an ancestor), or disabling it would stop QUpdate from firing and it could never re-enable. Typically the same GameObject as root.")]
+        private GameObject bodyRoot;
+        [SerializeField, Tooltip("Downed-pose visual - shown only while Downed. Same child-of-this-component requirement as bodyRoot.")]
+        private GameObject downedRoot;
+        [SerializeField, Tooltip("KO-pose visual - shown only while KO. Same child-of-this-component requirement as bodyRoot.")]
+        private GameObject koRoot;
+        [SerializeField, Tooltip("The weapon hands (WeaponHandGripView's rig) - shown only while Alive, hidden alongside bodyRoot on Downed/KO. Separate field because the hands track the weapon grips, so they aren't parented under bodyRoot and wouldn't be hidden by it. Point this at their common parent GameObject.")]
+        private GameObject handsRoot;
+
         [Header("General")]
         [SerializeField] private float squashLerpSpeed = 14f;
         [SerializeField] private float volumePreservation = 0.6f;
@@ -199,6 +209,18 @@ namespace Quantum
             Debug.Break();
         }
 
+        // Debug preview for the Downed/KO object swap, without a running simulation. QUpdate reasserts
+        // the swap off the real PlayerLifeState every frame once one is driving it, so this is purely
+        // an Editor/Play-Mode convenience for checking the authored downedRoot/koRoot visuals.
+        [Button]
+        private void PreviewAlive() => ApplyLifeStateVisuals(PlayerLifeStateKind.Alive);
+
+        [Button]
+        private void PreviewDowned() => ApplyLifeStateVisuals(PlayerLifeStateKind.Downed);
+
+        [Button]
+        private void PreviewKO() => ApplyLifeStateVisuals(PlayerLifeStateKind.KO);
+
         private void ApplyBaselineTransforms()
         {
             if (root != null) { root.localPosition = _rootBaseLocalPos; root.localScale = _rootBaseScale; }
@@ -283,6 +305,24 @@ namespace Quantum
                 return;
 
             var kcc = frame.Get<KCC>(_entityRef);
+
+            // Downed/KO (see docs/revive.md) - a plain active-object swap off PlayerLifeState.State,
+            // no procedural pose. Alive shows bodyRoot, Downed shows downedRoot, KO shows koRoot.
+            // While not Alive the normal KCC-velocity locomotion below is skipped entirely - an
+            // incapacitated player can't move anyway (PlayerLifeStateUtility.IsIncapacitated).
+            PlayerLifeStateKind lifeState = frame.Has<PlayerLifeState>(_entityRef) == true
+                ? frame.Get<PlayerLifeState>(_entityRef).State
+                : PlayerLifeStateKind.Alive;
+
+            ApplyLifeStateVisuals(lifeState);
+
+            if (lifeState != PlayerLifeStateKind.Alive)
+            {
+                _springActive = false; // cancel any in-flight landing spring so it doesn't resume on revive
+                _wasGrounded = kcc.Data.IsGrounded;
+                return;
+            }
+
             Vector3 velocity = kcc.Data.RealVelocity.ToUnityVector3();
             float horizontalSpeed = new Vector2(velocity.x, velocity.z).magnitude;
             float verticalSpeed = velocity.y;
@@ -494,6 +534,24 @@ namespace Quantum
             return horizontalSpeed > moveSpeedEpsilon ? State.Run : State.Idle;
         }
 
+        // Shows exactly one of the three authored roots for the current life state (see docs/revive.md).
+        // Idempotent - SetActive only changes state when it differs - so calling this every frame is
+        // free. Any root left unassigned is simply skipped.
+        private void ApplyLifeStateVisuals(PlayerLifeStateKind state)
+        {
+            bool alive = state == PlayerLifeStateKind.Alive;
+            SetActive(bodyRoot, alive);
+            SetActive(handsRoot, alive);
+            SetActive(downedRoot, state == PlayerLifeStateKind.Downed);
+            SetActive(koRoot, state == PlayerLifeStateKind.KO);
+        }
+
+        private static void SetActive(GameObject go, bool active)
+        {
+            if (go != null && go.activeSelf != active)
+                go.SetActive(active);
+        }
+
         private void IntegrateLandingSpring(float dt)
         {
             // Damped harmonic oscillator pulling _jumpSquashT back to 0, with overshoot/bounce.
@@ -641,7 +699,7 @@ namespace Quantum
             }
         }
 
-        private void ApplyPose(float leanDegrees, float rockDegrees, float bobOffset, float upperBodyBobOffset)
+        private void ApplyPose(float leanDegrees, float rockDegrees, float bobOffset, float upperBodyBobOffset, float depthOffset = 0f)
         {
             float verticalMult = Mathf.Clamp(1f - _squashT * volumePreservation, 0.15f, 3f);
             float horizontalMult = Mathf.Clamp(1f / verticalMult, 0.3f, 3f);
@@ -681,6 +739,7 @@ namespace Quantum
                 var localPos = _rootBaseLocalPos;
                 localPos.y += bobOffset;
                 localPos.z += cameraCenterZOffset;
+                localPos.z += depthOffset;
                 root.localPosition = localPos;
 
                 // Jump squash/stretch - the whole rig deforms together as one blob, instead of

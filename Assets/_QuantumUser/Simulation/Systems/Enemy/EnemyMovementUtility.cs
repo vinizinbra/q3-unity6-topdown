@@ -21,19 +21,13 @@ namespace Quantum
         private const string IgnoreProjectileLayerName = "IgnoreProjectile";
         private const string ObstacleLayerName = "Obstacle";
 
-        private static int? _playerLayerMask;
-        private static int? _groundLayerMask;
-        private static int? _enemyLayerMask;
-        private static int? _ignoreProjectileLayerMask;
-        private static int? _obstacleLayerMask;
-        private static int? _pickupLayerMask;
-        private static int? _playerLayerIndex;
-        private static int? _ignoreProjectileLayerIndex;
+        // No static caching for any of the masks/indices below - f.Layers.GetLayerMask/
+        // GetLayerIndex are cheap lookups into immutable per-match config; a static field would
+        // live outside Quantum's Frame/rollback state entirely.
 
         public static int GetPlayerLayerMask(Frame f)
         {
-            _playerLayerMask ??= f.Layers.GetLayerMask(PlayerLayerName);
-            return _playerLayerMask.Value;
+            return f.Layers.GetLayerMask(PlayerLayerName);
         }
 
         // Level geometry (walls, floor) lives on this layer - used to pin IsBlockedByWall/
@@ -41,8 +35,7 @@ namespace Quantum
         // to happen to include it.
         public static int GetGroundLayerMask(Frame f)
         {
-            _groundLayerMask ??= f.Layers.GetLayerMask(GroundLayerName);
-            return _groundLayerMask.Value;
+            return f.Layers.GetLayerMask(GroundLayerName);
         }
 
         // Unrelated to decoy targeting, which uses a plain Decoy-component scan instead (see
@@ -51,8 +44,7 @@ namespace Quantum
         // one shared helper, so Boss only needed adding here once.
         public static int GetEnemyLayerMask(Frame f)
         {
-            _enemyLayerMask ??= f.Layers.GetLayerMask(EnemyLayerName) | f.Layers.GetLayerMask(BossLayerName);
-            return _enemyLayerMask.Value;
+            return f.Layers.GetLayerMask(EnemyLayerName) | f.Layers.GetLayerMask(BossLayerName);
         }
 
         // ProjectileSystem excludes this layer from its hit raycast so a projectile passes through
@@ -61,8 +53,7 @@ namespace Quantum
         // through enemy bodies too. DashSkillData moves the dasher onto it for the duration of a dash.
         public static int GetIgnoreProjectileLayerMask(Frame f)
         {
-            _ignoreProjectileLayerMask ??= f.Layers.GetLayerMask(IgnoreProjectileLayerName);
-            return _ignoreProjectileLayerMask.Value;
+            return f.Layers.GetLayerMask(IgnoreProjectileLayerName);
         }
 
         // Level props/walls that aren't the Ground layer itself - used by GroupSpawnerUtility's
@@ -70,8 +61,7 @@ namespace Quantum
         // overlapping blocking geometry, without also rejecting the floor it needs to stand on.
         public static int GetObstacleLayerMask(Frame f)
         {
-            _obstacleLayerMask ??= f.Layers.GetLayerMask(ObstacleLayerName);
-            return _obstacleLayerMask.Value;
+            return f.Layers.GetLayerMask(ObstacleLayerName);
         }
 
         // Player | IgnoreProjectile - a dashing player sits on IgnoreProjectile for the dash's
@@ -82,20 +72,17 @@ namespace Quantum
         // together via this instead of GetPlayerLayerMask.
         public static int GetPickupLayerMask(Frame f)
         {
-            _pickupLayerMask ??= GetPlayerLayerMask(f) | GetIgnoreProjectileLayerMask(f);
-            return _pickupLayerMask.Value;
+            return GetPlayerLayerMask(f) | GetIgnoreProjectileLayerMask(f);
         }
 
         public static int GetIgnoreProjectileLayerIndex(Frame f)
         {
-            _ignoreProjectileLayerIndex ??= f.Layers.GetLayerIndex(IgnoreProjectileLayerName);
-            return _ignoreProjectileLayerIndex.Value;
+            return f.Layers.GetLayerIndex(IgnoreProjectileLayerName);
         }
 
         public static int GetPlayerLayerIndex(Frame f)
         {
-            _playerLayerIndex ??= f.Layers.GetLayerIndex(PlayerLayerName);
-            return _playerLayerIndex.Value;
+            return f.Layers.GetLayerIndex(PlayerLayerName);
         }
 
         public static bool TryGetTargetPosition(Frame f, EntityRef target, out FPVector3 position)
@@ -113,21 +100,31 @@ namespace Quantum
         // Uses Physics3D.OverlapShape (broadphase query, needs PlayerLink entities on the
         // "Player" physics layer) so cost scales with nearby entities instead of total player
         // count. A true 3D sphere - correctly accounts for vertical distance too (Flying chase
-        // detection, or a dash's hit-check regardless of height).
+        // detection, or a dash's hit-check regardless of height). Skips a Downed/KO player (see
+        // docs/revive.md/PlayerLifeStateUtility.IsIncapacitated) the same way TryFindNearestEnemy
+        // already skips a dying/Invulnerable enemy below - deliberately NOT a plain
+        // f.Has<Invulnerable> check, since that tag is also used for two other still-Alive cases
+        // (Max's Cheat Death, post-revive grace) that must stay targetable.
         public static bool TryFindNearestPlayer(Frame f, FPVector3 origin, FP range, out EntityRef entity)
         {
             Shape3D sphere = Shape3D.CreateSphere(range);
             var hits = f.Physics3D.OverlapShape(origin, FPQuaternion.Identity, sphere, GetPlayerLayerMask(f), QueryOptions.HitAll);
 
-            if (hits.Count == 0)
+            hits.Sort(origin);
+
+            for (int i = 0; i < hits.Count; i++)
             {
-                entity = EntityRef.None;
-                return false;
+                EntityRef candidate = hits[i].Entity;
+
+                if (PlayerLifeStateUtility.IsIncapacitated(f, candidate) == true)
+                    continue;
+
+                entity = candidate;
+                return true;
             }
 
-            hits.Sort(origin);
-            entity = hits[0].Entity;
-            return true;
+            entity = EntityRef.None;
+            return false;
         }
 
         // Reverse of TryFindNearestPlayer - for a non-enemy shooter (e.g. Lux's sentry gun) that

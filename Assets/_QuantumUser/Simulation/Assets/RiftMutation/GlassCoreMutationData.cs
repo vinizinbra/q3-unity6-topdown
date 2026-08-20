@@ -4,10 +4,10 @@ namespace Quantum
 
     // Absolute-set tradeoff, not a stacking increment (Rift Mutations are non-stackable pool-wide,
     // see RiftMutationData/RiftMutationPicks) - Shield doubles, Max Health collapses to exactly
-    // TargetMaxHealth regardless of any prior Max Health picks. Mirrors
-    // MaxHealthUpgradeData/ShieldUpgradeData's RefreshMax*/multiplier-field
-    // shape, but assigns MaxHealthMultiplier directly instead of multiplying it further, since
-    // "becomes 1" is an absolute target, not a relative increment. See docs/rift-mutations.md.
+    // TargetMaxHealth regardless of any prior Max Health picks. Mirrors MaxHealthUpgradeData's
+    // RefreshMax*/multiplier-field shape (ShieldUpgradeData is now flat-additive instead), but
+    // assigns MaxHealthMultiplier directly instead of multiplying it further, since "becomes 1" is
+    // an absolute target, not a relative increment. See docs/rift-mutations.md.
     public unsafe class GlassCoreMutationData : RiftMutationData
     {
         public FP ShieldMultiplier = FP._1;

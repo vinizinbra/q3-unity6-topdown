@@ -27,7 +27,7 @@ enum GameState : Byte
                 // GameplaySystemGroup itself for Global.BossPauseTimer seconds (see below) so the
                 // Boss Window reveal plays with everything frozen, before play resumes.
 
-    Breathing   // A repeating Breathing Break between Survival segments (see docs/run-phase.md) -
+    Breathing,  // A repeating Breathing Break between Survival segments (see docs/run-phase.md) -
                 // just another entry in SurvivalConfig.Phases[] (SurvivalPhase.Kind),
                 // detected by CombatDirectorSystem/SurvivalProgressionUtility, the same place
                 // that already walks that same Phases[] timeline for Survival. Enemy spawning
@@ -35,11 +35,44 @@ enum GameState : Byte
                 // != Breathing gate on the Director-pulse half only, same as Lobby, but
                 // GameplaySystemGroup itself is NOT disabled - players must stay fully
                 // controllable to explore/use Breathing-only POIs (Healing Shrine, Cursed Rift).
+
+    RunFailed   // Vocabulary-only, same "wired later" precedent GameState.Event/pre-2026-08-17
+                // GameState.Boss already established - fired once by RunFailureSystem the instant
+                // every connected player is simultaneously Downed/KO AND every one of them has 0
+                // SelfReviveCharges left (see docs/revive.md). GameplaySystemGroup is deliberately
+                // NOT disabled here - a future Game Over screen would add that itself.
+}
+
+// Which single top-screen HUD banner should be showing right now, out of the (growing) set of
+// always-present global banners that would otherwise compete for the same screen real estate -
+// DirectorTimelineUiWidget (the match-clock bar), BossWidget (boss HP/shield), and
+// TraversalChallengeWidget (the crossing countdown, see docs/traversal-challenge.md) all now read
+// this ONE resolved value instead of each independently re-deriving "am I the one that should show"
+// off GameState/ActiveTraversalChallengeCount themselves - previously BossWidget/
+// DirectorTimelineUiWidget each duplicated the same `CurrentState == GameState.Boss` check to stay
+// mutually exclusive, which doesn't scale to a 3rd (or more) contender. Resolved once, every tick,
+// by CombatDirectorSystem.ApplyPhaseGameState - NOT a new value on GameState itself, deliberately:
+// GameState gates real simulation behavior (PoiAvailabilityUtility, CombatDirectorSystem's own
+// spawn gate, GameplaySystemGroup disables, ...), and a Traversal Challenge being Active must NOT
+// change what GameState the match is actually in (other players keep fighting normally elsewhere -
+// see docs/traversal-challenge.md) - this is purely a presentation-layer "who currently owns the
+// banner slot" concern, kept fully separate from that.
+enum HudBannerKind : Byte
+{
+    DirectorTimeline, // default - shown whenever nothing more specific is happening
+    TraversalChallenge,
+    Boss
 }
 
 global
 {
     GameState CurrentState;
+
+    // Resolved every tick by CombatDirectorSystem.ApplyPhaseGameState - see HudBannerKind's own
+    // comment for the resolution order (Boss beats TraversalChallenge beats DirectorTimeline, the
+    // more specific/urgent thing always wins over the passive default) and why this is a dedicated
+    // field rather than reusing CurrentState itself.
+    HudBannerKind HudBanner;
 
     // Set by LevelUpUtility.OpenUpgradeScreen right before switching CurrentState to Upgrade,
     // read back by Resolve to restore exactly the state that was interrupted - see GameState.

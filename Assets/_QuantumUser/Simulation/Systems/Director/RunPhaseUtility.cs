@@ -152,9 +152,8 @@ namespace Quantum
             }
         }
 
-        // Same teleport idiom DamageUtility.RespawnPlayer already uses for the death/respawn
-        // teleport - KCC.Teleport plus zeroing every velocity source so momentum from wherever the
-        // player was standing doesn't carry into the arena. Player i lands on
+        // KCC.Teleport plus zeroing every velocity source so momentum from wherever the player was
+        // standing doesn't carry into the arena. Player i lands on
         // teleportPositions[i % teleportPositions.Count] - wraps around if fewer points than
         // players are authored (always at least 1, the geometric-center fallback), spreads players
         // across up to 4 hand-placed points otherwise instead of everyone stacking on one spot.

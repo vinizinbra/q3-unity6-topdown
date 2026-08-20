@@ -16,20 +16,19 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/Max_PassiveSkill/Max_PassiveSkillUpgrades/Vendetta/BloodDebt
     Guid:
       Value: 514137246864066863
-  Icon: {fileID: -734267089, guid: 9a944adac56bb4e8dbce2f7bab4127e3, type: 3}
+  Icon: {fileID: 1230983659, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
   DisplayName: Blood Debt
-  Rarity: 1
   Description: Vendetta marks last longer, Shield damage counts toward them too,
     and eventually Vendetta heals for the full amount dealt.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
   - Vendetta marks last 12s.
   - Vendetta marks last 16s, and Shield damage now also marks your Vendetta target.
-  - Vendetta marks last 16s, Shield damage counts, and Vendetta heals for the full
-    amount of damage dealt during the mark.
+  - Vendetta marks last 16s, Shield damage counts, and Vendetta heals for half of
+    damage taken during the mark.
   MarkDuration:
   - RawValue: 786432
   - RawValue: 1048576
   - RawValue: 1048576
   HealMultiplierAtMaxRank:
-    RawValue: 65536
+    RawValue: 32768

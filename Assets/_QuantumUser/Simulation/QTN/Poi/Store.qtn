@@ -23,6 +23,13 @@ struct StoreWeaponOffer
     array<AssetRef<WeaponPerkData>>[5] RolledPerks;
     Byte RolledPerkCount;
     FP Price;
+
+    // Break-driven starting Weapon Level (StoreConfig.ResolveBreakWeaponConfig, see
+    // docs/store-blacksmith.md) - applied via WeaponSystem.AddLevel AFTER WeaponChoiceUtility.Grant
+    // in StoreUtility.BuyWeapon, since Grant/Equip always resets a freshly-equipped Weapon to Level
+    // 0 (WeaponSystem.SeedStats). Reuses the exact same "+5%, compounding" mechanism the guaranteed
+    // Increase-Weapon-Level offer already uses - nothing new baked into damage math here.
+    Byte WeaponLevel;
 }
 
 struct StoreFoodOffer
@@ -78,4 +85,14 @@ struct StorePurchaseEntry
 component StorePurchases
 {
     array<StorePurchaseEntry>[8] Entries;
+
+    // Purchase-limit tracking for the guaranteed "Increase Weapon Level" offer (see
+    // StoreUtility.BuyWeaponLevelUp) - NOT an Entries slot, since this purchase isn't part of the
+    // shared, rolled StoreInventory (nothing random about it, always available). Stored as
+    // BreathingIndex + 1 rather than a bare BreathingIndex, so a fresh 0 default unambiguously
+    // means "never purchased" - a bare BreathingIndex would collide with the real index 0 on a
+    // fresh StorePurchases (e.g. one created by an earlier food/weapon-offer purchase this same
+    // Break, which never seeds this field), the exact bug class RolledAtBreathingIndex's own -1
+    // sentinel exists to avoid.
+    Int32 WeaponLevelUpPurchasedAtBreathingIndexPlusOne;
 }

@@ -55,6 +55,12 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
    // like the other talent prefs below get).
    private static readonly PlayerPrefInt StartingCoinsPref = new PlayerPrefInt("starting_coins", 0);
 
+   // Player's own meta-progression self-revive-charge talent, same "carried in from outside this
+   // match" contract as WeaponTalentLevelPref/RerollQuantityPref above - read here right before
+   // AddPlayer and copied onto RuntimePlayer.Talents.SelfReviveCharges, which PlayerSpawnUtility.
+   // Spawn seeds CharacterStats.SelfReviveCharges from once at spawn. See docs/revive.md.
+   private static readonly PlayerPrefInt SelfReviveChargesPref = new PlayerPrefInt("self_revive_charges", 0);
+
    // Player's own meta-progression Talents (see docs/talents.md), carried in from outside this
    // match the same way as WeaponTalentLevelPref above - read here right before AddPlayer and
    // copied onto RuntimePlayer's own Player*/Has*/Can* fields. One JSON-blob pref (PlayerPrefObject)
@@ -368,6 +374,7 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
          byte rerollQuantity = (byte)Mathf.Clamp(RerollQuantityPref.Value, 0, byte.MaxValue);
          byte shopWeaponOfferCount = (byte)Mathf.Clamp(ShopWeaponOfferCountPref.Value, 0, byte.MaxValue);
          int startingCoins = Mathf.Max(StartingCoinsPref.Value, 0);
+         byte selfReviveCharges = (byte)Mathf.Clamp(SelfReviveChargesPref.Value, 0, byte.MaxValue);
          TalentSaveData talents = TalentsPref.Value;
          AssetRef<EntityPrototype> localCharacterAvatar = PartyManager.Instance.ResolveLocalCharacterAvatar();
 
@@ -386,6 +393,7 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
             if (rerollQuantity > 0) RuntimePlayers[i].Talents.RerollQuantity = rerollQuantity;
             if (shopWeaponOfferCount > 0) RuntimePlayers[i].Talents.ShopWeaponOfferCount = shopWeaponOfferCount;
             if (startingCoins > 0) RuntimePlayers[i].Talents.StartingCoins = startingCoins;
+            if (selfReviveCharges > 0) RuntimePlayers[i].Talents.SelfReviveCharges = selfReviveCharges;
             RuntimePlayers[i].Talents.PlayerDamageLevel = talents.PlayerDamageLevel;
             RuntimePlayers[i].Talents.PlayerCooldownLevel = talents.PlayerCooldownLevel;
             RuntimePlayers[i].Talents.PlayerFireRateLevel = talents.PlayerFireRateLevel;

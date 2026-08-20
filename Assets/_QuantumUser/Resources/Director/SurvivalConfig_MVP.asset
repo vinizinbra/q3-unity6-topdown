@@ -17,40 +17,6 @@ MonoBehaviour:
     Guid:
       Value: 516156630782283822
   Phases:
-  - Name: Breathing 1
-    Kind: 1
-    Duration:
-      RawValue: 131072
-    BudgetPerPulse:
-      RawValue: 0
-    PulseInterval:
-      RawValue: 0
-    TargetPressure:
-      RawValue: 0
-    MaxAliveEnemies: 0
-    AllowedGroups: []
-    BossPrototype:
-      Id:
-        Value: 0
-    PauseDuration:
-      RawValue: 0
-  - Name: Boss
-    Kind: 2
-    Duration:
-      RawValue: 0
-    BudgetPerPulse:
-      RawValue: 0
-    PulseInterval:
-      RawValue: 0
-    TargetPressure:
-      RawValue: 0
-    MaxAliveEnemies: 0
-    AllowedGroups: []
-    BossPrototype:
-      Id:
-        Value: 1314062773136615755
-    PauseDuration:
-      RawValue: 262144
   - Name: Intro
     Kind: 0
     Duration:
@@ -65,6 +31,23 @@ MonoBehaviour:
     AllowedGroups:
     - Id:
         Value: 447917649156750950
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+  - Name: Breathing 1
+    Kind: 1
+    Duration:
+      RawValue: 1966080
+    BudgetPerPulse:
+      RawValue: 0
+    PulseInterval:
+      RawValue: 0
+    TargetPressure:
+      RawValue: 0
+    MaxAliveEnemies: 0
+    AllowedGroups: []
     BossPrototype:
       Id:
         Value: 0
@@ -394,7 +377,7 @@ MonoBehaviour:
   - Name: Breathing 4
     Kind: 1
     Duration:
-      RawValue: 1966080
+      RawValue: 5898240
     BudgetPerPulse:
       RawValue: 0
     PulseInterval:
@@ -408,3 +391,20 @@ MonoBehaviour:
         Value: 0
     PauseDuration:
       RawValue: 0
+  - Name: BOSS
+    Kind: 2
+    Duration:
+      RawValue: 0
+    BudgetPerPulse:
+      RawValue: 0
+    PulseInterval:
+      RawValue: 0
+    TargetPressure:
+      RawValue: 0
+    MaxAliveEnemies: 0
+    AllowedGroups: []
+    BossPrototype:
+      Id:
+        Value: 1314062773136615755
+    PauseDuration:
+      RawValue: 262144

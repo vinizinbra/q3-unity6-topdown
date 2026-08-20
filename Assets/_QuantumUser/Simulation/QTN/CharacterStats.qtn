@@ -54,6 +54,13 @@ component CharacterStats
     FP MaxHealthMultiplier;
     FP MaxShieldMultiplier;
 
+    // Flat additive shield capacity (NOT a multiplier) - folded into CharacterSystem.SeedShield /
+    // RefreshMaxShield as BaseMaxShield * MaxShieldMultiplier + BonusMaxShield, so a flat "+10
+    // Shield" Global Upgrade (ShieldUpgradeData) survives every later RefreshMaxShield the
+    // multiplier path triggers. Defaults to 0; LastBastionMutationData clears it too, since it
+    // removes shield outright.
+    FP BonusMaxShield;
+
     FP DamageReduction;
     FP KnockbackTakenMultiplier;
     FP HealingReceivedMultiplier;
@@ -96,6 +103,13 @@ component CharacterStats
     // simulation" shape as WeaponTalentLevel below. Only ever decreases for the rest of a match.
     // Per-character (this component), not shared run-wide.
     Byte RerollQuantity;
+
+    // Meta-progression talent, same "seeded once at spawn from RuntimePlayer.Talents, never
+    // written back to it, only decreases" shape as RerollQuantity just above (see docs/talents.md/
+    // docs/revive.md). Consumed by ReviveUtility.TryPerformSelfRevive (SelfReviveCommand) - lets a
+    // Downed or KO player hold to revive themselves regardless of team composition, independent of
+    // any teammate's own SelfReviveCharges.
+    Byte SelfReviveCharges;
 
     // Incremented/decremented by any active effect (e.g. BerserkSkillData) that guarantees Burn
     // on every weapon hit for as long as it's up - a counter rather than a bool so two overlapping

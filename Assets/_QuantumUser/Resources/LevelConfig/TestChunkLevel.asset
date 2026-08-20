@@ -28,46 +28,53 @@ MonoBehaviour:
     RawValue: 131072
   FallDamagePercent:
     RawValue: 6554
+  FallRespawnEdgeMargin:
+    RawValue: 131072
+  MinConnectionWidthCells: 2
   ChunkPool:
   - Type: 0
-    Prototype:
-      Id:
+    Prototypes:
+    - Id:
         Value: 1463002180470635866
     Count: 1
     MustHave: 1
   - Type: 1
-    Prototype:
-      Id:
+    Prototypes:
+    - Id:
+        Value: 1364521608353916650
+    - Id:
+        Value: 1447946178488252128
+    - Id:
         Value: 1482437271914828619
     Count: 10
     MustHave: 1
   - Type: 4
-    Prototype:
-      Id:
+    Prototypes:
+    - Id:
         Value: 1387348814873747697
     Count: 1
     MustHave: 1
   - Type: 5
-    Prototype:
-      Id:
+    Prototypes:
+    - Id:
         Value: 1528059320859826915
     Count: 1
     MustHave: 1
   - Type: 6
-    Prototype:
-      Id:
+    Prototypes:
+    - Id:
         Value: 1377925101269758295
     Count: 1
     MustHave: 1
   - Type: 3
-    Prototype:
-      Id:
+    Prototypes:
+    - Id:
         Value: 1533526507179207519
     Count: 1
     MustHave: 1
   - Type: 7
-    Prototype:
-      Id:
+    Prototypes:
+    - Id:
         Value: 1344858893066880175
     Count: 1
     MustHave: 1

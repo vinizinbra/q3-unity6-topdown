@@ -614,7 +614,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &32240722
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5120,7 +5120,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &279803053
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5819,7 +5819,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &316922258
 RectTransform:
   m_ObjectHideFlags: 0
@@ -7846,6 +7846,9 @@ MonoBehaviour:
     TalentsConfig:
       Id:
         Value: 344446873976981054
+    ReviveConfig:
+      Id:
+        Value: 533983932994204390
     Prefabs:
       ExpOrbPrototype:
         Id:
@@ -7863,7 +7866,10 @@ MonoBehaviour:
       RawValue: 65536
     DebugInitialShieldMultiplier:
       RawValue: 65536
-    DebugManualFireInput: 0
+    DebugManualFireInput: 1
+    DebugStartSurvivalTimeSeconds:
+      RawValue: 0
+    DebugStartLevelUpCount: 0
   RuntimePlayers:
   - PlayerAvatar:
       Id:
@@ -7876,6 +7882,7 @@ MonoBehaviour:
       RerollQuantity: 2
       ShopWeaponOfferCount: 1
       StartingCoins: 500
+      SelfReviveCharges: 3
       PlayerDamageLevel: 0
       PlayerCooldownLevel: 0
       PlayerFireRateLevel: 0
@@ -9567,7 +9574,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &587284081
 RectTransform:
   m_ObjectHideFlags: 0
@@ -48874,7 +48881,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &2057196542
 RectTransform:
   m_ObjectHideFlags: 0

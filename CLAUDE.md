@@ -312,7 +312,7 @@ The moment `SurvivalConfig`'s phase timeline (see "Survival Director" above) rea
 
 A new `EnemyFallSystem` (`Assets/_QuantumUser/Simulation/Systems/Enemy/`) gives Boss/Elite-tier enemies the same "fall off the level → take fall damage → respawn to safety" treatment `PlayerFallSystem` already gives players - confirmed with the user, so a Boss or Elite pushed off a ledge (physics/knockback) can't end up lost/stuck instead of just dying normally like every other tier still does. The shared nearest-chunk/inset-into-bounds respawn math was extracted out of `PlayerFallSystem` into a new `FallRespawnUtility` so both systems use the exact same logic; Elite reuses it directly off its own current position (it has no tracked "last grounded" position the way `PlayerMovement` does), while Boss respawns specifically at its own sealed Boss Arena's `BossSpawnPoints[0]` (`LevelGenerationSystem.ResolveBossSpawnPositions`, ground-corrected the same way `RunPhaseUtility.BeginBossEncounter` already is) rather than the generic nearest-chunk fallback, since respawning it into some nearby chunk would strand it outside its own `BossArenaGate`-sealed boundary mid-fight.
 
-View-side, as of 2026-08-17, the boss also gets its own dedicated HUD instead of sharing the normal enemy UI: `EnemyView.RefreshSprite` now skips `EnemyUiWidgetManager.SpawnWidget` entirely for `EnemyTier.Boss` (a new `EnemyView.IsBoss` gate) - no floating `CharacterUiWidget` above the boss at all - and a new single-instance `BossWidget` (`Assets/_Project/Scripts/UI/InGame/Hud/BossWidget.cs`) shows a top-screen name + HP bar + shield bar for whichever entity `frame.Filter<BossRuntimeState, Health>()` finds, while `DirectorTimelineUiWidget` hides its own `visualRoot` for the same condition - the two are mutually exclusive across the match. Shield turned out to already be enemy-agnostic (`EnemySystem.SeedShield` seeds it off `EnemyDataAsset.Stats.ShieldMultiplier` for any enemy, boss included - `GrasslandOutpostBoss.asset` already has `ShieldMultiplier = 1` authored), so `BossWidget`'s shield bar needed no new simulation-side work. Both widgets poll `Global.CurrentState` directly every `QUpdate`, same idiom `BreathingCountdownWidget` already uses - deliberately still not the `GameStateChanged` event, so this section's own "Simulation-side only so far" line above stays accurate.
+View-side, as of 2026-08-17, the boss also gets its own dedicated HUD instead of sharing the normal enemy UI: `EnemyView.RefreshSprite` now skips `EnemyUiWidgetManager.SpawnWidget` entirely for `EnemyTier.Boss` (a new `EnemyView.IsBoss` gate) - no floating `CharacterUiWidget` above the boss at all - and a new single-instance `BossWidget` (`Assets/_Project/Scripts/UI/InGame/Hud/BossWidget.cs`) shows a top-screen name + HP bar + shield bar for whichever entity `frame.Filter<BossRuntimeState, Health>()` finds. Shield turned out to already be enemy-agnostic (`EnemySystem.SeedShield` seeds it off `EnemyDataAsset.Stats.ShieldMultiplier` for any enemy, boss included - `GrasslandOutpostBoss.asset` already has `ShieldMultiplier = 1` authored), so `BossWidget`'s shield bar needed no new simulation-side work. As of 2026-08-18, `BossWidget`/`DirectorTimelineUiWidget`/`TraversalChallengeWidget` (see "Traversal Challenge" below) all read one shared `Global.HudBanner` (`HudBannerKind`, `GameState.qtn`) instead of each independently re-deriving "am I the one that should show" off `GameState`/`ActiveTraversalChallengeCount` themselves - resolved once a tick by `CombatDirectorSystem.ApplyHudBanner` (Boss beats TraversalChallenge beats the DirectorTimeline default), so the three always stay mutually exclusive on-screen even though a Traversal Challenge deliberately never changes `GameState` itself. Every widget still polls `Global` directly every `QUpdate`, same idiom `BreathingCountdownWidget` already uses - deliberately still not the `GameStateChanged` event, so this section's own "Simulation-side only so far" line above stays accurate.
 
 Two more View-only pieces, no simulation changes: a new `BossWarningWidget` (`Assets/_Project/Scripts/UI/InGame/Hud/BossWarningWidget.cs`) shows a "BOSS APPROACHING" HUD banner + countdown - but only during the LAST `Breathing` phase before `Boss` (peeked via `SurvivalConfig.Phases[CurrentPhaseIndex + 1].Kind == Boss`, same idiom `DirectorTimelineUiWidget`'s own marker-skip logic already uses) and only once `Global.BreathingTimeRemaining` drops to its own `warningThreshold` (10s default) - confirmed with the user, the boss encounter itself stays fully automatic (SurvivalConfig-driven), this is purely a heads-up layered on the pre-existing countdown, not a new pause/trigger stage. Separately, `BossWidget` now also triggers the `BossWindow` reveal (see "Boss Window" below) the instant it finds the boss entity for the first time each encounter (edge-detected via a new `_wasBoss` field) - reuses `BossWidget`'s own already-running "find the boss, resolve its `EnemyDataAsset`" lookup rather than a separate trigger component, and casts to `BossDataAsset` to pull `Title`/`Subtitle`/`UiSprite` for the window if it resolves.
 
@@ -550,10 +550,17 @@ really is "used up" per player per Break. Confirmed with the user: Blacksmith pe
 (same purchase UI/flow as Store, never offers an already-owned perk, no rank-upgrade mechanic);
 `ShopWeaponOfferCount` (a meta-progression talent, same "seeded once at spawn" shape as
 `WeaponTalentLevel`/`RerollQuantity`) maps rank 0 -> 1 Store weapon offer, rank 1 -> 2, rank 2 -> 3;
-Store's screen shows both card families at once, food/utility row first, weapons row second. Full
-design, file map, edge cases, and current status: **`docs/store-blacksmith.md`**. Read it before
-touching anything Store/Blacksmith/`PurchasableCardState`/`ChoiceWindowOwner`/
-`PoiInteractionLockUtility` related.
+Store's screen shows both card families at once, food/utility row first, weapons row second. As of
+2026-08-18, the Store also always offers a third, guaranteed, non-rolled card - "Increase Weapon
+Level" - which levels up the buyer's own currently-equipped `Weapon` directly (a NEW `Weapon.Level`
+field, `+5%` damage per level via `WeaponSystem.AddLevel`, same compounding idiom
+`DamageMultiplierWeaponPerkData.Apply` already uses), purchasable once per player per Break. This is
+a THIRD, deliberately separate "weapon level" concept from the other two already in the codebase -
+`RuntimePlayer.Talents.WeaponLevel` (permanent meta-progression) and `CharacterStats.
+WeaponTalentLevel` (live in-run, drives future weapon-pick perk counts, see "Level-Up Upgrades"
+above) - neither of which this purchase touches. Full design, file map, edge cases, and current
+status: **`docs/store-blacksmith.md`**. Read it before touching anything Store/Blacksmith/
+`PurchasableCardState`/`ChoiceWindowOwner`/`PoiInteractionLockUtility`/weapon-level related.
 
 Short version: the code compiles once codegen picks up every new/changed `.qtn` file (`Store.qtn`,
 `Blacksmith.qtn`, `ContextInteraction.qtn`'s new `InteractableKind.Store`/`Blacksmith` values,
@@ -573,6 +580,161 @@ on either card prefab, and `ChooseWindow`'s food row (`cards[]`) and weapon row 
 still occupy the same overlapping rect (needs splitting into two visible sections for Store's own
 screen to read correctly). Not yet manually verified end-to-end in-Editor, solo or co-op - see
 `docs/store-blacksmith.md`'s own "Current status" for the full checklist.
+
+## Traversal Challenge
+
+A `ChunkType.Traversal` interactable prop turns a gap-crossing into a timed co-op puzzle: press the
+Base Skill button on it (same generic `Interactable`/`ContextInteraction` redirect Healing Shrine/
+Cursed Rift/Store/Blacksmith already use) and a set of platforms spawn, bridging the gap toward the
+`GlobalUpgradeChestEntity` chest `TraversalChunk.asset`'s `ChunkSpawnConfig` already baked at a
+fixed offset (an unfinished scaffold this feature completes). A `Duration`-second countdown (45s
+authored default) starts; while it's running, `Global.SurvivalTime` AND `Global.PhaseTimer` (the
+latter is what actually drives `Global.BreathingTimeRemaining`/ends a Breathing Break - without
+freezing it too, a challenge activated mid-Breathing would let the Break quietly end and Director
+spawning resume underneath it) both freeze, and `CombatDirectorSystem` stops spawning new enemies
+globally, all via a new standalone `Global.ActiveTraversalChallengeCount` counter, checked at the
+same three guard points `SurvivalPhaseKind.Breathing` already is - deliberately NOT routed through
+`GameState.Breathing` itself (would fire unwanted `BreathingIndex`/POI-usage/Cursed-Rift side
+effects), and `GameplaySystemGroup` is never disabled, so nobody's input is locked. Any connected player can
+activate it and any connected player can complete it (reach a proximity checkpoint near the far
+side) - the intended co-op case is one player fighting elsewhere while a teammate crosses, then
+walking over to the now-permanently-solid platforms and collecting the chest later with no time
+pressure. Both the checkpoint and every platform position are authored as offsets relative to the
+owning CHUNK (resolved via `FallRespawnUtility.TryFindNearestChunk`, the same "Chunk seam gap
+pattern" nearest-chunk lookup `Chunk.RespawnPoint` already uses), not the activator prop's own
+placement - same frame of reference `TraversalChunk.asset`'s own `ChunkSpawnConfig` offset already
+uses for the chest, and correctly rotation-aware for a chunk placed at 90/270°. If nobody reaches the checkpoint in time, every spawned platform is destroyed and the
+challenge resets to retryable. Unlike every other POI, it deliberately has no `PoiUsagePolicy`/
+`PoiUsage` (world-shared, not per-player-gated) and never touches `PoiInteractionLockUtility`
+(nobody's input is locked). Full design, file map, current status, and known simplifications:
+**`docs/traversal-challenge.md`**. Read it before touching anything Traversal-Challenge-related.
+
+Short version: the code compiles once codegen picks up the new `TraversalChallenge.qtn`/
+`ContextInteraction.qtn`/`Events.qtn` changes and is registered in `SystemSetup.User.cs`. The
+countdown is a single, always-present, whole-team HUD banner (`TraversalChallengeWidget`, same
+idiom `BreathingCountdownWidget` already uses for "NEXT ASSAULT") reading
+`Global.TraversalChallengeTimeRemaining` directly - deliberately NOT a per-entity world-following
+widget, since the pause effect is global for the whole team, not just whoever's looking at the
+activator. Its own visibility, along with `BossWidget`'s and `DirectorTimelineUiWidget`'s, is now
+arbitrated by one shared `Global.HudBanner` (see "Boss Phase Trigger" above) so only one of the
+three ever shows at once. Nothing is authored yet - no
+`TraversalChallengeActivator.prefab`/`Platform.prefab` exist, no `TraversalChallengeWidget` scene
+instance under the HUD, and `TraversalChunk.prefab` doesn't have an activator instance placed under
+its `Entities` child or a re-baked `ChunkSpawnConfig` yet - see the doc's own "Editor authoring
+needed" checklist. Not yet manually verified end-to-end in-Editor.
+
+## Hold-to-Revive (Alive → Downed → KO)
+
+A player life-state machine (`Alive → Downed → KO`, neither of which existed in any form before
+this pass - a lethal hit on a player used to go straight to an instant full-heal-and-teleport
+`RespawnPlayer`, now deleted entirely) plus a hold-to-revive channel, built as the smallest reusable
+extension of the existing Context Interaction / Base-Skill-button redirect (`ContextInteraction.qtn`,
+see "Breathing Phase, Healing Shrine, Cursed Rift & Choice Window Refactor" above) - the same generic
+mechanism Cursed Rift/Healing Shrine/Store/Blacksmith/Traversal Challenge already use. A Downed
+player is damage-immune (reuses the existing `Invulnerable` tag) with a `DownedBleedOutDuration`
+bleed-out timer as the only path to KO - confirmed with the user, and deliberately paused the instant
+someone starts holding to revive them. Reviving a TEAMMATE is a genuine hold: `ReviveChannelSystem`
+reads `Input.HeroSkill.IsDown` directly every tick (the first continuous-hold interaction in this
+codebase - everything else is `WasPressed`-edge-triggered). **Reworked after initial testing showed
+mid-combat revives were nearly impossible** (a lone reviver draws continuous enemy fire, and the
+original design fully reset progress to 0 on release/out-of-range and separately froze-not-reset it
+for 0.5s per hit - between the two, an uninterrupted window rarely lasted long enough, especially
+for the 5s KO duration; the first attempt that actually landed tended to be the very next hold once
+combat ended, which read as the target "automatically" reviving on the next Breathing Break rather
+than a revive anyone actually completed): every cancel trigger (release, out-of-range, reviver
+incapacitated, and now also a fresh hit - `ReviveDamageInterruptSystem`, renamed from
+`ReviveDamagePauseSystem`, now interrupts the hold outright on `Combat.qtn`'s
+`OnHealthDamageApplied`/`OnShieldDamageApplied` against the *reviver* instead of merely freezing it)
+now leaves `ReviveProgress` untouched instead of zeroing it; `PlayerLifeStateSystem` decays it back
+toward 0 at `ReviveConfig.ReviveProgressDecayRate` (default 0.5/sec, half the build rate) only while
+nobody is actively holding, so a teammate resuming an interrupted revive picks up roughly where it
+left off instead of starting over. **KO revival was ultimately removed entirely rather than tuned
+further** - confirmed with the user ("remove KO revive functionality completely"): even after the
+decay/interrupt rework, a full 5s KO hold stayed fragile under fire, so `ReviveChannel`/self-revive
+now only ever apply to a Downed target (`ReviveTargetKind`/`ReviveChannel.Kind` were deleted
+outright - nothing left to discriminate by), and `PlayerLifeStateUtility.EnterKO` now *removes*
+`Interactable` instead of leaving it (previously untouched, since REVIVE/RESTORE was just a
+View-layer label swap) - a KO'd player is no longer ever a valid revive candidate for anyone. The
+reviver moves at a configurable reduced speed
+(`ReviveMoveSpeedMultiplier`, default 0.30) rather than
+being frozen - a deliberate carve-out in `PlayerMovementProcessor` distinct from the existing
+Cursed-Rift/Store/Blacksmith full-movement-lock `PoiInteractionLockUtility` already provides,
+confirmed with the spec. Revive always outranks an ordinary nearby POI regardless of distance via a
+new, generic kind-based priority tier ahead of `ContextInteractionSystem`'s existing exact-distance
+tie-break (`InteractableKindUtility.GetPriorityTier`) - confirmed reusable by any future
+always-wins interactable, not hardcoded to Revive specifically. Every connected player also carries
+their own personal, meta-progression-seeded `SelfReviveCharges` (mirrors the existing
+`RerollQuantity`/`WeaponTalentLevel` talent pattern one-for-one) - usable while Downed regardless of
+team composition, not solo-gated, but **no longer usable once KO'd** (`ReviveUtility.
+TryPerformSelfRevive` now checks `State == Downed` specifically, not the generic `IsIncapacitated`)
+now that KO revival was cut entirely - a KO'd player's own unspent charges just sit unused until
+the area is secured (see below); `SelfReviveWidget` hides its own charges readout/button entirely
+once KO'd rather than showing a permanently-dead control. **Self-revive is deliberately
+NOT a hold** - reworked mid-implementation at the user's explicit direction into a dedicated small
+HUD element (`SelfReviveWidget`, content-wise closer in spirit to `BossWindow` than `ChooseWindow` -
+confirmed with the user this should NOT clone/extend `ChooseWindow`, matching this codebase's own
+established anti-pattern precedent against a second parallel window; architecturally it's a Widget,
+not a Window - a self-polling `QuantumGlobalMonoBehaviour` per local slot, same shape as
+`SkillCooldownUiWidget`/`CurrencyUiWidget`, not a `UiWindow` subclass) with a single press/confirm
+button sending
+a new zero-payload `SelfReviveCommand`, processed by `PlayerLifeStateSystem`
+(`ReviveUtility.TryPerformSelfRevive`) - entirely separate from `ReviveChannel`/`SkillSystem`'s Hero
+Skill redirect, so a self-revive can never be damage-interrupted (no channel exists to interrupt) and never
+races a teammate's own in-progress hold (both stay simultaneously valid; whichever completes first
+just cancels the other via the normal "target became Alive" invalidation). A third, unconditional
+path back to Alive was added after testing showed manual revival could stay out of reach for an
+entire fight: **the instant `Global.BreathingAreaSecured` flips false→true** (an existing field,
+recomputed every tick by `SurvivalProgressionUtility.Tick` - Breathing phase reached AND every
+enemy actually dead/Retired), **every still-Downed/KO player is auto-revived**, no hold, no charge
+spent - `Tick` edge-detects its own field's previous-tick value (no new field needed) and calls a
+new `PlayerLifeStateUtility.ReviveAllIncapacitated`, which reuses the same `Revive()` every other
+path funnels through. This is now KO's **only** way back, since neither teammate-hold nor
+self-revive apply to it anymore - without it a KO'd player with nobody able to secure the area would
+simply be stuck for the rest of the run. A minimal, vocabulary-only
+`GameState.RunFailed` (same "wired later" precedent `GameState.Event`/pre-2026-08-17 `GameState.Boss`
+already established) fires once every connected player is simultaneously down and nobody has any way
+back on their own - updated for the KO change: a still-Downed player's unspent charges still count
+as an escape, but a KO'd player's charges no longer do (`RunFailureSystem` now checks `State ==
+Downed && SelfReviveCharges > 0`, not just charge count) - confirmed with the user as an explicit,
+deliberately small addition rather than a full Game Over system. A Downed/KO player is also fully
+untargetable by enemies, not just damage-immune - confirmed
+with the user - the mirror image of the existing Burrow feature's own "make an enemy untargetable by
+players" patch (`docs/enemy-burrow.md`), but touching a disjoint set of files since player-aims-at-
+enemy and enemy-aims-at-player are separate code paths; deliberately checks
+`PlayerLifeStateUtility.IsIncapacitated` rather than reusing a plain `Invulnerable` check, since that
+tag is also used by two still-Alive cases (Cheat Death, post-revive grace) that must stay targetable.
+The real fix is in `EnemySystem.UpdateChasing`/`UpdateRecovery` - `Enemy.Target` is otherwise fully
+sticky once Chasing, so an enemy already locked onto a player before they went Downed now drops back
+to Idle and re-acquires instead of harmlessly chasing them forever. A Downed/KO player's character
+also visibly collapses - confirmed with the user as the priority feedback piece over a screen tint/
+camera lock/impact shake (all considered, deferred) - via a new reversible `BlobAnimationView.
+State.Downed` porting `EnemyBlobAnimationView`'s own Burrow shape (not Die, which is one-way since
+a dying enemy is actually destroyed after); their weapon visually hides (`WeaponViewController`);
+and `ShieldSystem` now also gates on `IsIncapacitated` so Shield stays frozen rather than quietly
+recharging while they can't be hit anyway (`HealthRegenSystem` needed no equivalent change - it
+already no-ops for them for free via `HealUtility.ApplyFlatHeal`'s own `CurrentHealth <= 0` guard).
+`InteractionPromptWidget`'s hold-progress is a `Slider` now, not an `Image.fillAmount`, and its
+bleed-out countdown reuses the existing `descriptionText` mechanism rather than a dedicated field.
+Full design, file map, current status, and known simplifications: **`docs/revive.md`**. Read it
+before touching anything Downed/KO/revive/self-revive/life-state/enemy-targeting related.
+
+Short version: the code compiles once codegen picks up every changed/new `.qtn` file
+(`PlayerLifeState.qtn`, `Poi/Revive.qtn` - most recently the `ReviveTargetKind` enum/
+`ReviveChannel.Kind` field removal once KO revival was cut - `ContextInteraction.qtn`'s new
+`Revive`/`Occupied` values, `StatusEffects.qtn`'s `ReviveImmunityRemaining`, `GameState.qtn`'s
+`RunFailed`, `CharacterStats.qtn`'s `SelfReviveCharges`, `Events.qtn`'s
+`PlayerDowned`/`PlayerKO`/`PlayerRevived`), `SystemSetup.User.cs` registers
+`PlayerLifeStateSystem`/`ReviveChannelSystem`/`ReviveDamageInterruptSystem`/`RunFailureSystem`
+right after `SkillSystem`, and `CommandSetup.User.cs` registers the new `SelfReviveCommand`.
+`ReviveConfig.asset` (`Tools/RiftRaiders/Generate Revive Content`) is authored and has been used for
+live in-Editor testing (Downed/KO/self-revive all confirmed reachable pre-KO-removal; the
+teammate-hold/self-revive/KO-dead-end change itself hasn't been re-verified in-Editor yet) - see
+docs/revive.md's own
+"Editor authoring needed" list for whatever's still outstanding on the UI-polish side
+(`ReviveInteractionPromptView`/`SelfReviveWidget` scene wiring completeness hasn't been independently
+re-verified from code alone). Auto-revive-on-secure
+(`PlayerLifeStateUtility.ReviveAllIncapacitated`, triggered from `SurvivalProgressionUtility.Tick`)
+needs no additional Editor authoring - it reuses the existing `ReviveConfig`/`BreathingAreaSecured`.
 
 ## Quantum `.qtn` codegen gotcha
 

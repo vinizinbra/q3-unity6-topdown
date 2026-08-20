@@ -770,6 +770,8 @@ MonoBehaviour:
             Value: 0
         AllowedConnectionSides:
           Value: 15
+        ForbiddenNeighbors:
+          Value: 0
         Discovered:
           Value: 0
         HasRespawnPoint:

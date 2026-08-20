@@ -222,4 +222,11 @@ component StatusEffects
     // concern the way Burn's tick damage does.
     FP TempMoveSpeedRemaining;
     FP TempMoveSpeedMultiplier;
+
+    // Post-revive grace window (see docs/revive.md/PlayerLifeStateUtility.Revive) - a second,
+    // independent reason the Invulnerable tag is present alongside CheatDeathImmunityRemaining
+    // above, same "own dedicated field, never a shared slot" convention this file already
+    // establishes. Just gates when Invulnerable gets removed again - see
+    // StatusEffectSystem.TickReviveImmunity.
+    FP ReviveImmunityRemaining;
 }

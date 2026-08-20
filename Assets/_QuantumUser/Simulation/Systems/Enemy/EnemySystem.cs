@@ -580,9 +580,16 @@ namespace Quantum
             if (EnemyMovementUtility.TickTraversalJump(f, ref filter, data) == true)
                 return;
 
-            if (EnemyMovementUtility.TryGetTargetPosition(f, filter.Enemy->Target, out FPVector3 targetPosition) == false)
+            // Enemy.Target is otherwise fully sticky through Chasing (see this method's own header
+            // comment) - a Downed/KO player (see docs/revive.md) has to be treated exactly like a
+            // destroyed target here, or an enemy that locked on before its target went down would
+            // keep "chasing" someone it can no longer meaningfully attack (Invulnerable) instead of
+            // dropping back to Idle and re-acquiring a still-Alive player via its own configured
+            // EnemyTargetingData/decoy check.
+            if (EnemyMovementUtility.TryGetTargetPosition(f, filter.Enemy->Target, out FPVector3 targetPosition) == false
+                || PlayerLifeStateUtility.IsIncapacitated(f, filter.Enemy->Target) == true)
             {
-                Log.Debug($"[Enemy] {filter.Entity} lost target {filter.Enemy->Target} (no longer exists), switching Chasing -> Idle");
+                Log.Debug($"[Enemy] {filter.Entity} lost target {filter.Enemy->Target} (no longer exists or went Downed/KO), switching Chasing -> Idle");
                 filter.Enemy->Target = EntityRef.None;
                 filter.Enemy->Phase = EnemyActionPhase.Idle;
                 return;
@@ -752,7 +759,10 @@ namespace Quantum
             if (filter.Enemy->StateTimer > FP._0)
                 return;
 
-            if (EnemyMovementUtility.TryGetTargetPosition(f, filter.Enemy->Target, out FPVector3 targetPosition) == false)
+            // Same "treat a Downed/KO target exactly like a destroyed one" reasoning as
+            // UpdateChasing's own check above - see docs/revive.md.
+            if (EnemyMovementUtility.TryGetTargetPosition(f, filter.Enemy->Target, out FPVector3 targetPosition) == false
+                || PlayerLifeStateUtility.IsIncapacitated(f, filter.Enemy->Target) == true)
             {
                 filter.Enemy->Target = EntityRef.None;
                 filter.Enemy->Phase = EnemyActionPhase.Idle;

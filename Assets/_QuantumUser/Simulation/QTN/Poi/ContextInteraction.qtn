@@ -13,7 +13,14 @@ enum InteractableKind : Byte
     CursedRift,
     HealingShrine,
     Store,
-    Blacksmith
+    Blacksmith,
+    TraversalChallenge,
+
+    // A Downed/KO player's own entity (see docs/revive.md) - the only InteractableKind whose
+    // candidate is a PLAYER, not a static world POI. Always outranks every other kind regardless
+    // of distance (see InteractableKindUtility.GetPriorityTier), so a nearby dying teammate is
+    // never eclipsed by a closer Store/Chest.
+    Revive
 }
 
 // WHY a nearby Interactable can or can't be used right now - richer than a plain found/not-found
@@ -28,7 +35,10 @@ enum ContextInteractionState : Byte
     AlreadyUsed,        // in range, phase OK, but THIS player already used it this Break/Run
     NotNeeded,          // in range, phase/usage OK, but interacting would be pointless right now
                         // (e.g. Healing Shrine at full Health) - generic, not Healing-Shrine-specific
-    Busy                // this player is already mid a different interaction (Base Skill fully claimed)
+    Busy,               // this player is already mid a different interaction (Base Skill fully claimed)
+    Occupied            // in range and otherwise eligible, but someone ELSE is already reviving this
+                        // target right now (see docs/revive.md) - NOT the same meaning as AlreadyUsed
+                        // (personally-already-consumed-forever), so it's its own value.
 }
 
 // Marks a POI entity as eligible for the Base-Skill-button redirect - authored alongside that

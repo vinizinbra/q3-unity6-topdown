@@ -44,5 +44,37 @@ namespace Quantum
         // unrestricted, same "empty means no rule" convention LevelConfig.ChunkPool-adjacent
         // authoring already uses - every group spawns exactly as before this field existed.
         public ChunkType[] ForbiddenSpawnChunkTypes;
+
+        // --- Co-op player-cluster split spawning (see docs/survival-director.md "Player clusters" +
+        // PlayerClusterDirectorUtility). Nothing here is hardcoded to 4 players; every formula is
+        // driven by live cluster sizes fed through the existing per-player-count threat curve
+        // (BalanceConfig CoopGlobalKey.DirectorBudget, reused verbatim as "GetThreatBudget(n)"). ---
+
+        // Two players farther apart than this (flat XZ) are treated as separate combat fronts;
+        // closer, they share one. Keep >= SpawnRingRadiusMax + RelevantRange so a single centroid
+        // still reaches both before they count as split.
+        public FP ClusterDistance = 30;
+
+        // Radius around a cluster's center within which an active enemy counts toward THAT cluster's
+        // local pressure (the per-front analogue of the global TargetPressure gate). ~RelevantRange.
+        public FP ClusterPressureRadius = 16;
+
+        // Cap on how much extra total threat splitting may request, as a multiple of the normal
+        // same-party budget: FinalTotal = min(sum of per-cluster budgets, base * this). 1 disables
+        // the bonus (spawns are only redistributed, never increased); 1.40 = up to +40%.
+        public FP MaxSplitThreatMultiplier = FP.FromString("1.40");
+
+        // Extra XP/Coin for the extra split threat, as a fraction of it: PerEnemyReward =
+        // (1 + (SplitThreatMultiplier-1)*Factor) / SplitThreatMultiplier, applied by CurrencyOrbSystem
+        // so splitting gives a little more progression for the added risk, NOT proportional to the
+        // added enemies (0 = splitting yields no extra reward, only redistributed spawns).
+        public FP SplitXpRewardFactor = FP.FromString("0.25");
+        public FP SplitCoinRewardFactor = FP.FromString("0.10");
+
+        // Anti-flicker: a cohesive<->split change must persist this long before it commits, so
+        // wandering near ClusterDistance doesn't thrash the budget/reward scalars. Splitting commits
+        // slower than merging (rejoining should feel immediate).
+        public FP ClusterSplitDelay = 2;
+        public FP ClusterMergeDelay = 1;
     }
 }

@@ -5,11 +5,13 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// Dedicated top-screen boss-fight HUD, shown only while GameState.Boss - takes over as the boss's
-// only HP/shield display. EnemyView skips EnemyUiWidgetManager.SpawnWidget entirely for
-// EnemyTier.Boss (see its own comment), so the boss gets no floating CharacterUiWidget of its own;
-// DirectorTimelineUiWidget hides itself for the same GameState.Boss condition, so the two widgets
-// are mutually exclusive across the whole match.
+// Dedicated top-screen boss-fight HUD, shown only while Global.HudBanner == HudBannerKind.Boss -
+// takes over as the boss's only HP/shield display. EnemyView skips EnemyUiWidgetManager.SpawnWidget
+// entirely for EnemyTier.Boss (see its own comment), so the boss gets no floating CharacterUiWidget
+// of its own; DirectorTimelineUiWidget/TraversalChallengeWidget both read that exact same shared
+// HudBanner value (resolved once a tick by CombatDirectorSystem.ApplyHudBanner - see GameState.qtn's
+// own HudBannerKind comment), so all three stay mutually exclusive across the whole match without
+// each independently re-deriving "am I the one that should show."
 //
 // Single shared instance for the whole HUD (not per-local-player-slot) - same "always exists,
 // self-governs visibility" shape BreathingCountdownWidget/DirectorTimelineUiWidget already use.
@@ -66,7 +68,7 @@ public class BossWidget : QuantumGlobalMonoBehaviour
     public override unsafe void QUpdate(QuantumGame game)
     {
         Frame frame = game.Frames.Predicted;
-        bool isBoss = frame.Global->CurrentState == GameState.Boss;
+        bool isBoss = frame.Global->HudBanner == HudBannerKind.Boss;
 
         SetShown(root, isBoss);
 

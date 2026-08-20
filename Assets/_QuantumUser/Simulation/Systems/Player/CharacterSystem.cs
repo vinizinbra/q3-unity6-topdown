@@ -115,7 +115,7 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<Shield>(entity, out var shield) == false)
                 return;
 
-            shield->Max = data.BaseMaxShield * stats->MaxShieldMultiplier;
+            shield->Max = data.BaseMaxShield * stats->MaxShieldMultiplier + stats->BonusMaxShield;
             shield->Current = shield->Max * f.RuntimeConfig.DebugInitialShieldMultiplier;
             shield->RechargeDelay = data.ShieldRechargeDelay;
             shield->RechargeRate = data.ShieldRechargeRate;
@@ -163,7 +163,7 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<Shield>(entity, out var shield) == false)
                 return;
 
-            FP newMax = f.FindAsset(stats->CharacterData).BaseMaxShield * stats->MaxShieldMultiplier;
+            FP newMax = f.FindAsset(stats->CharacterData).BaseMaxShield * stats->MaxShieldMultiplier + stats->BonusMaxShield;
 
             if (newMax <= FP._0 || shield->Max <= FP._0)
                 return;

@@ -49,6 +49,7 @@ namespace Quantum
             TickMarkApplicationCooldowns(f, status);
             TickHaste(f, status);
             TickCheatDeathImmunity(f, filter.Entity, status);
+            TickReviveImmunity(f, filter.Entity, status);
 
             // Last Stand's cooldown is per-PLAYER, not per-target, so it lives on CharacterStats
             // instead of this component - only players carry CharacterStats, everything else is a
@@ -86,6 +87,22 @@ namespace Quantum
             status->CheatDeathImmunityRemaining -= f.DeltaTime;
 
             if (status->CheatDeathImmunityRemaining <= FP._0)
+            {
+                f.Remove<Invulnerable>(entity);
+            }
+        }
+
+        // Revive's own post-completion grace window (see PlayerLifeStateUtility.Revive/
+        // docs/revive.md) - same guarded-decrement-then-cleanup shape as TickCheatDeathImmunity
+        // just above, a second independent reason Invulnerable can be present.
+        private static void TickReviveImmunity(Frame f, EntityRef entity, StatusEffects* status)
+        {
+            if (status->ReviveImmunityRemaining <= FP._0)
+                return;
+
+            status->ReviveImmunityRemaining -= f.DeltaTime;
+
+            if (status->ReviveImmunityRemaining <= FP._0)
             {
                 f.Remove<Invulnerable>(entity);
             }

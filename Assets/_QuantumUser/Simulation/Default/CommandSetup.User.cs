@@ -25,9 +25,11 @@
             factories.Add(new SkipBreathingCommand());
             factories.Add(new BuyStoreWeaponCommand());
             factories.Add(new BuyStoreFoodCommand());
+            factories.Add(new BuyStoreWeaponLevelCommand());
             factories.Add(new CloseStoreCommand());
             factories.Add(new SelectBlacksmithPerkCommand());
             factories.Add(new CancelBlacksmithCommand());
+            factories.Add(new SelfReviveCommand());
         }
     }
 }
