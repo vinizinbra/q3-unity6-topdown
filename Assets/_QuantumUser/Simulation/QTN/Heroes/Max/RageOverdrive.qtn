@@ -5,18 +5,18 @@
 // multiply at max stacks" mechanic was removed as part of the Ascension refactor). Whether Max is
 // "at max Rage" is purely a live boolean condition (RageOverdriveUtility.IsAtMaxRage) that Ascensions
 // (Full Throttle, Ignition) read and react to on their own - reaching max Rage does not create a
-// third major stat state by itself. Taking damage resets Stacks back to 0 (MaxOverdriveReactionSystem's
-// OnHealthDamageApplied/OnShieldDamageApplied reaction -> RageOverdriveUtility.ResetStacks) unless the
-// entity carries RageRetentionUpgrade below (Last Stand rank 1).
+// third major stat state by itself.
+//
+// This component's PRESENCE is also what every other Overdrive Ascension reads as "an activation is
+// running right now" (MaxOverdriveReactionSystem, VendettaStrikeSkillAction), which is why it is
+// still removed at End even when Last Stand rank 1 keeps the Rage itself alive - the parked count
+// lives on LastStandUpgrade.StoredRageStacks instead.
+//
+// Taking damage removes Rage (MaxOverdriveReactionSystem's OnHealthDamageApplied/
+// OnShieldDamageApplied reaction -> RageOverdriveUtility.ResetStacks) - the whole current amount by
+// default, or only LastStandUpgrade.RageLossFraction of it once Last Stand rank 2 is equipped.
 component RageOverdrive
 {
     Byte Stacks;
     Byte MaxStacks;
-}
-
-// Marker tag for Last Stand rank 1 ("Unshaken") - checked via f.Has<T>, same idiom as
-// Invulnerable/Burrowed/Decoy. Renamed from RageOverdriveImmunity/the old standalone "Rage Overdrive"
-// Hero Ascension it used to belong to - that pick no longer exists on its own, folded into Last Stand.
-component RageRetentionUpgrade
-{
 }

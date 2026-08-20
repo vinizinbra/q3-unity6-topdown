@@ -16,9 +16,8 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Kai/Kai_HeroSkill/Kai_HeroSkillUpgrades/VortexCollapseSkillAction
     Guid:
       Value: 502058709761426382
-  Icon: {fileID: 0}
+  Icon: {fileID: -1558002361, guid: 167fe127f1a734214a64d3f39af97f1f, type: 3}
   DisplayName: Vortex Collapse
-  Rarity: 1
   RankDescriptions:
   - When Vortex ends, it collapses and deals heavy damage around its center.
   - Vortex Collapse deals 200% Skill Damage and has a larger blast radius.

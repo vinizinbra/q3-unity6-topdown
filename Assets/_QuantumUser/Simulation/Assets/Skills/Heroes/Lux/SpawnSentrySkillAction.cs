@@ -1,39 +1,50 @@
 namespace Quantum
 {
     using Photon.Deterministic;
+    using UnityEngine;
 
     // Dedicated spawn action (not the generic SpawnEntitySkillAction) because it needs to configure
-    // the spawned sentry's Sentry/Weapon/Shield/aura fields in the same method call that has the
-    // entity reference - SkillSlot has nowhere safe to stash "the entity I just spawned" for a
-    // second action to pick up later (an EntityRef field on SkillSlot silently breaks the Upgrades
-    // array's own Inspector authoring - CharacterSkills.qtn's own SkillSlot.ProjectilePending comment
-    // documents exactly this, after a previous EntityRef field there caused it). Mirrors
-    // SpawnVortexEffectData's own shape: spawn, then read each Begin-only upgrade off the caster and
-    // bake a copy onto the spawned entity, so the sentry keeps working even once the caster's own
-    // activation has long since ended.
+    // the spawned sentry's Sentry/Weapon/aura fields in the same method call that has the entity
+    // reference - SkillSlot has nowhere safe to stash "the entity I just spawned" for a second action
+    // to pick up later (an EntityRef field on SkillSlot silently breaks the Upgrades array's own
+    // Inspector authoring - CharacterSkills.qtn's own SkillSlot.ProjectilePending comment documents
+    // exactly this). Mirrors SpawnVortexEffectData's own shape: spawn, then read each Begin-only
+    // upgrade off the caster and bake a copy onto the spawned entity, so the sentry keeps working even
+    // once the caster's own activation has long since ended.
+    //
+    // BASELINE IS DELIBERATELY MINIMAL - one Cannon, short range, no shield, no aura, no on-death
+    // explosion, no fire-rate bonus. Rocket/Minigun/Laser/Shield Battery/Fire Support/Overclock/
+    // Extended Range/Overload Core were all removed from the baseline and are Ascensions now; that arc
+    // from "a basic machine" to "a full weapons platform" is the entire point of Lux's redesign.
     //
     // Priority deliberately high (opposite of IncreaseAreaSkillAction's -100) - this lives in the
-    // skill's baseline Actions, while every SentryXxxUpgrade grant (Increase Range, Add Shield, Add
-    // Fire Rate, ...) lives in slot->Upgrades, and SkillSystem.InvokeActions runs baseline Actions
-    // before Upgrades whenever Priority ties (both default to 0). Left at the default, this action
-    // would read each upgrade's component BEFORE that same activation's own grant actions (re)write
-    // it, so a sentry deployed the very first time an upgrade is picked would spawn without it - only
-    // catching up starting the NEXT cast, once a prior activation's grant had already run once. A
-    // high Priority forces this to run last within the phase regardless of Actions/Upgrades list
-    // position, so it always reads this activation's freshly (re)granted values.
+    // skill's baseline Actions, while every Ascension's grant lives in slot->Upgrades, and
+    // SkillSystem.InvokeActions runs baseline Actions before Upgrades whenever Priority ties (both
+    // default to 0). Left at the default, this would read each upgrade's component BEFORE that same
+    // activation's own grant action (re)wrote it, so a sentry deployed the very first time an upgrade
+    // was picked would spawn without it. A high Priority forces this to run last within the phase.
     public unsafe partial class SpawnSentrySkillAction : SkillActionData
     {
         public AssetRef<EntityPrototype> Prototype;
 
-        // Transform3D + InputSource + SentryBarrel - Weapon is added dynamically per equipped slot
-        // (see ApplyWeaponUpgrade), not pre-authored, since a sentry might arm anywhere from 0 to 4
-        // of them.
+        // Transform3D + InputSource + SentryBarrel - Weapon is added dynamically per armed slot (see
+        // ApplyWeaponUpgrade), not pre-authored, since a sentry arms anywhere from 1 to 4 of them.
         public AssetRef<EntityPrototype> BarrelPrototype;
 
         // No longer a hard despawn timer - see ResolveDecayRate, which turns this into how long a
         // fully-undamaged sentry survives its own Health drain instead.
-        public FP Duration = 20;
-        public FP Range = 8;
+        public FP Duration = 10;
+
+        [Tooltip("Baseline targeting/aura range. Fortification rank 1 (Extended Range) adds to it.")]
+        public FP Range = 3;
+
+        [Tooltip("The percentage basis every Lux Ascension that deals damage scales off - see LuxAscensionUtility.ResolveSentrySkillDamage.")]
+        public FP SkillDamage = 20;
+
+        [Header("Baseline armament")]
+        [Tooltip("The Cannon every sentry always deploys with, in slot 0. Weapon Systems arms slots 1-3 on top; Field Modifications rank 3 (MK II) swaps THIS one for a Twin Cannon.")]
+        [ExpandableAsset] public AssetRef<WeaponDataAsset> BaselineWeapon;
+        public FPVector3 BaselineWeaponOffset = new FPVector3(0, FP._0_50, 0);
 
         // Local-space (X=right, Y=up, Z=forward), rotated by the caster's own aim yaw - same
         // convention SpawnEntitySkillAction's own Offset uses.
@@ -45,23 +56,25 @@ namespace Quantum
             Priority = 100;
         }
 
-        // {0} = Range, {1} = Duration - both flat values (not percents) - e.g. "Deploys a sentry
-        // turret at Lux's position with {0} range that decays over about {1} seconds if left
-        // undamaged, applying any equipped weapon, shield, and aura upgrades to it."
+        // {0} = Range, {1} = Duration - both flat values (not percents).
         protected override object[] DescriptionArgs => new object[] { Range, Duration };
 
         public override void Execute(Frame f, ref SkillSystem.Filter filter, SkillSlot* slot, SkillData skill, SkillActionPhase firedPhase)
         {
+            // Enforced BEFORE spawning, so the cap is a genuine ceiling on live machines rather than
+            // something that briefly exceeds it. Retiring past-cap sentries is deliberately silent
+            // (DespawnIntent reason Replaced) - Overload Core must not pay out for housekeeping, or
+            // redeploy-spam becomes the optimal way to fire it.
+            RetireOldestOverCap(f, filter.Entity);
+
             // Aim only decides WHERE this spawns (in front of Lux's current facing) - not how it's
             // oriented. The chassis keeps whatever rotation Prototype was authored with instead of
-            // snapping to her aim, so it doesn't visually spin to match wherever she happened to be
-            // looking when she cast. Barrel offsets below are resolved against that same
-            // prototype-authored rotation (not Aim either), so muzzle placement stays visually
-            // consistent with however the chassis is actually oriented.
+            // snapping to her aim.
             FPQuaternion aimFacing = FPQuaternion.Euler(0, filter.Aim->Angle, 0);
             FPVector3 position = filter.Transform3D->Position + aimFacing * Offset;
 
-            EntityRef spawned = SpawnedEntitySpawner.Spawn(f, filter.Entity, Prototype, Duration, position, DamageSource.Skill);
+            FP duration = Duration + ResolveDurationBonus(f, filter.Entity);
+            EntityRef spawned = SpawnedEntitySpawner.Spawn(f, filter.Entity, Prototype, duration, position, DamageSource.Skill);
 
             FPQuaternion chassisRotation = FPQuaternion.Identity;
 
@@ -76,36 +89,109 @@ namespace Quantum
                 return;
             }
 
-            sentry->Range = Range + ResolveRangeBonus(f, filter.Entity);
+            // Skill Area scales the deployed turret's reach, the same way it already scales every other
+            // skill's area in the game (HitPathSkillAction/SpawnEntitySkillAction/AreaHitData all
+            // compose slot->AreaMultiplier with StatUtility.GetAreaMultiplier exactly like this).
+            // Sentry.Range is the single value that drives targeting range, the Fortification aura's
+            // own reach (Range * AuraRangeRatio) and the range indicator ring, so scaling it here is
+            // all that's needed - every consumer reads it live.
+            //
+            // Applied AFTER Fortification rank 1's additive Extended Range bonus, so the percentage
+            // covers the ascension's contribution too rather than only the authored baseline - same
+            // ordering Brute's Aftershock uses for its own stack-radius bonus.
+            sentry->Range = (Range + ResolveRangeBonus(f, filter.Entity))
+                * slot->AreaMultiplier * StatUtility.GetAreaMultiplier(f, filter.Entity);
             sentry->Owner = filter.Entity;
             sentry->DecayRate = ResolveDecayRate(f, spawned);
+            sentry->TempFireRateMultiplier = FP._1;
+            sentry->TempFireRateRemaining = FP._0;
+            sentry->RedlineActive = false;
 
+            // Per-sentry extension allowance - 0 unless a Dash Ascension rank that offers extensions
+            // is held (see SentryLifetimeExtensionBudget), which is what keeps a dash-cooldown build
+            // from holding one machine open indefinitely.
+            sentry->LifetimeExtensionRemaining = f.Unsafe.TryGetPointer<SentryLifetimeExtensionBudget>(filter.Entity, out var budget)
+                ? budget->MaxPerSentry
+                : FP._0;
+
+            ApplyOverclockUpgrade(f, filter.Entity, sentry);
+            ApplyBaselineWeapon(f, filter.Entity, spawned, position, chassisRotation);
             ApplyWeaponUpgrade(f, filter.Entity, spawned, position, chassisRotation);
-            ApplyShieldUpgrade(f, filter.Entity, spawned);
-            ApplyFireRateAuraUpgrade(f, filter.Entity, spawned);
-            ApplyShieldAreaRateAuraUpgrade(f, filter.Entity, spawned);
+            ApplyFortificationUpgrade(f, filter.Entity, spawned);
             ApplyOverloadUpgrade(f, filter.Entity, spawned);
+            ApplyFieldModifications(f, filter.Entity, spawned);
 
-            Log.Debug($"[Skill] {filter.Entity} deployed a sentry {spawned} at {position}, range {sentry->Range}");
+            Log.Debug($"[Skill] {filter.Entity} deployed a sentry {spawned} at {position}, range {sentry->Range}, duration {duration}");
         }
 
-        // SentryRangeUpgrade (see SentryIncreaseRangeSkillAction) - additive on top of this action's
-        // own authored Range, same "bonus stacks on authored value" shape SpawnRadiusUpgrade/
-        // IncreaseDurationUpgrade already use elsewhere.
+        // Deploying past LuxScrapCollector.MaxActiveSentries retires this Lux's oldest live sentries
+        // first. Collected in ONE pass then retired - deliberately not a "count, retire one, re-count"
+        // loop, which would depend on f.Destroy being observable to a fresh filter query in the same
+        // tick. Scoped by Sentry.Owner, so two Luxes never count against each other.
+        private const int MaxTrackedSentries = 8;
+
+        private static void RetireOldestOverCap(Frame f, EntityRef owner)
+        {
+            if (f.Unsafe.TryGetPointer<LuxScrapCollector>(owner, out var collector) == false || collector->MaxActiveSentries == 0)
+                return;
+
+            EntityRef* entities = stackalloc EntityRef[MaxTrackedSentries];
+            FP* remaining = stackalloc FP[MaxTrackedSentries];
+            int count = 0;
+
+            var sentries = f.Filter<Sentry, Health>();
+
+            while (sentries.Next(out EntityRef entity, out Sentry sentry, out Health health))
+            {
+                if (sentry.Owner != owner || count >= MaxTrackedSentries)
+                    continue;
+
+                entities[count] = entity;
+                remaining[count] = sentry.DecayRate > FP._0 ? health.CurrentHealth / sentry.DecayRate : FP.MaxValue;
+                count++;
+            }
+
+            int excess = count - collector->MaxActiveSentries + 1;
+
+            for (int i = 0; i < excess; i++)
+            {
+                int oldest = -1;
+                FP lowest = FP.MaxValue;
+
+                for (int j = 0; j < count; j++)
+                {
+                    if (entities[j] == EntityRef.None || remaining[j] >= lowest)
+                        continue;
+
+                    lowest = remaining[j];
+                    oldest = j;
+                }
+
+                if (oldest < 0)
+                    return;
+
+                DespawnIntentUtility.DespawnSilently(f, entities[oldest], EntityDespawnReason.Replaced);
+                entities[oldest] = EntityRef.None;
+            }
+        }
+
+        private static FP ResolveDurationBonus(Frame f, EntityRef owner)
+        {
+            return f.Unsafe.TryGetPointer<SentryOverclockUpgrade>(owner, out var upgrade) ? upgrade->DurationBonus : FP._0;
+        }
+
+        // Fortification rank 1 "Extended Range" - additive on top of this action's own authored Range.
         private static FP ResolveRangeBonus(Frame f, EntityRef owner)
         {
-            if (f.Unsafe.TryGetPointer<SentryRangeUpgrade>(owner, out var upgrade) == false)
-                return FP._0;
-
-            return upgrade->RangeBonus;
+            return f.Unsafe.TryGetPointer<SentryFortificationUpgrade>(owner, out var upgrade) ? upgrade->RangeBonus : FP._0;
         }
 
-        // Turns Duration into Sentry.DecayRate (MaxHealth / Duration) instead of a plain
+        // Turns the resolved duration into Sentry.DecayRate (MaxHealth / duration) instead of a plain
         // DestroyAfterTime countdown - see SentryDecaySystem and Sentry.qtn's own DecayRate comment.
         // SpawnedEntitySpawner.Spawn already added DestroyAfterTime with the fully-resolved duration
-        // (including any IncreaseDurationUpgrade stretch, via its own ResolveDuration) - read that
-        // value once here for the decay math, then remove the component so the generic timer doesn't
-        // ALSO destroy this entity independently of Health.
+        // (including any IncreaseDurationUpgrade stretch); read that value once here for the decay
+        // math, then remove the component so the generic timer doesn't ALSO destroy this entity
+        // independently of Health.
         private static FP ResolveDecayRate(Frame f, EntityRef spawned)
         {
             FP resolvedDuration = FP._0;
@@ -131,29 +217,52 @@ namespace Quantum
             return health->MaxHealth / resolvedDuration;
         }
 
-        // SentryWeaponUpgrade (see SentryAddWeaponSkillAction) - without this, the sentry has no
-        // barrels/weapons at all. One SentryBarrel child entity per equipped slot (a valid
-        // WeaponData), not 4 fields on the sentry itself - a single entity can only ever carry one
-        // Weapon component, so simultaneous multi-weapon fire needs one entity per gun. Each
-        // barrel's own Transform3D.Position is the muzzle offset already resolved into world space
-        // and baked in once - WeaponSystem then just reads its caster position as normal, no runtime
-        // hold-offset resolution needed for a Sentry at all.
+        // Overclock - the permanent fire-rate multiplier plus rank 3's Redline configuration. Read
+        // once at deploy; SentryDecaySystem is what later latches RedlineActive on.
+        private static void ApplyOverclockUpgrade(Frame f, EntityRef owner, Sentry* sentry)
+        {
+            if (f.Unsafe.TryGetPointer<SentryOverclockUpgrade>(owner, out var upgrade) == false)
+            {
+                sentry->FireRateMultiplier = FP._1;
+                return;
+            }
+
+            sentry->FireRateMultiplier = upgrade->FireRateMultiplier > FP._0 ? upgrade->FireRateMultiplier : FP._1;
+            sentry->RedlineThreshold = upgrade->RedlineThreshold;
+            sentry->RedlineFireRateMultiplier = upgrade->RedlineFireRateMultiplier;
+        }
+
+        // The baseline Cannon, always armed, in slot 0 - the one weapon a sentry has with no Ascension
+        // at all. Slot 0 is also what MK II later swaps, so keeping it a fixed, known slot matters.
+        private void ApplyBaselineWeapon(Frame f, EntityRef owner, EntityRef sentry, FPVector3 sentryPosition, FPQuaternion chassisRotation)
+        {
+            if (BaselineWeapon.IsValid == false)
+            {
+                Log.Error("[Skill] SpawnSentrySkillAction has no BaselineWeapon assigned - the deployed sentry will have no Cannon at all");
+                return;
+            }
+
+            SpawnBarrel(f, owner, sentry, sentryPosition, chassisRotation, BaselineWeapon, BaselineWeaponOffset, 0, default);
+        }
+
+        // Weapon Systems (see SentryWeaponSystemsSkillAction) - slots 1..3 only; slot 0 is the
+        // baseline Cannon above and is never touched here.
         private void ApplyWeaponUpgrade(Frame f, EntityRef owner, EntityRef sentry, FPVector3 sentryPosition, FPQuaternion chassisRotation)
         {
             if (f.Unsafe.TryGetPointer<SentryWeaponUpgrade>(owner, out var upgrade) == false)
                 return;
 
-            for (int i = 0; i < 4; i++)
+            for (int i = 1; i < 4; i++)
             {
                 if (upgrade->WeaponData[i].IsValid == false)
                     continue;
 
-                SpawnBarrel(f, owner, sentry, sentryPosition, chassisRotation, upgrade->WeaponData[i], upgrade->WeaponOffset[i], (byte) i, upgrade->Source[i]);
+                SpawnBarrel(f, owner, sentry, sentryPosition, chassisRotation, upgrade->WeaponData[i], upgrade->WeaponOffset[i], (byte)i, upgrade->Source[i]);
             }
         }
 
         private void SpawnBarrel(Frame f, EntityRef owner, EntityRef sentry, FPVector3 sentryPosition, FPQuaternion chassisRotation,
-            AssetRef<WeaponDataAsset> weaponData, FPVector3 weaponOffset, byte slotIndex, AssetRef<SentryAddWeaponSkillAction> source)
+            AssetRef<WeaponDataAsset> weaponData, FPVector3 weaponOffset, byte slotIndex, AssetRef<SentryWeaponSystemsSkillAction> source)
         {
             if (BarrelPrototype.IsValid == false)
             {
@@ -174,15 +283,11 @@ namespace Quantum
             // A barrel's position/rotation is entirely scripted by SentryBarrelSystem re-anchoring it
             // to the chassis every tick - it must never be a physically-simulated body of its own, or
             // Quantum's physics engine keeps integrating its own gravity/velocity on top of (or
-            // instead of) that scripted anchor, letting it drift away under its own free fall
-            // uncorrected instead of following the chassis. Forced here rather than trusted to however
-            // BarrelPrototype happened to author PhysicsBody3D.
+            // instead of) that scripted anchor.
             if (f.Unsafe.TryGetPointer<PhysicsBody3D>(barrel, out var barrelBody) == true)
             {
                 barrelBody->IsKinematic = true;
             }
-
-            Log.Debug($"[Skill] slot {slotIndex} barrel {barrel} spawned at {barrelPosition} (sentry {sentry} at {sentryPosition}, offset {weaponOffset})");
 
             // WeaponData is set BEFORE Add (not AddOrGet-then-set) so WeaponSystem's own
             // ISignalOnComponentAdded<Weapon> fires with real data already in place and equips it
@@ -191,88 +296,63 @@ namespace Quantum
             weapon.WeaponData = weaponData;
             f.Add(barrel, weapon);
 
-            ApplyFireRateUpgrade(f, owner, barrel);
-
             f.AddOrGet<SentryBarrel>(barrel, out var sentryBarrel);
             sentryBarrel->Sentry = sentry;
             sentryBarrel->WeaponOffset = weaponOffset;
             sentryBarrel->SlotIndex = slotIndex;
             sentryBarrel->Source = source;
 
+            // The barrel's own un-modified fire cooldown, captured right after equip - every
+            // sentry-wide fire-rate effect composes against THIS rather than against whatever the
+            // multiplier happens to be this tick, which is what stops repeated per-tick application
+            // from compounding. See SentryBarrelSystem.
+            sentryBarrel->BaseFireCooldownMultiplier = f.Unsafe.TryGetPointer<Weapon>(barrel, out var equipped)
+                ? equipped->FireCooldownMultiplier
+                : FP._1;
+
             // Purely cosmetic - lets the chassis's own view (SentryView) activate the matching gun
-            // sprite out of its authored list and resolve Barrel's own View/Transform; the sim never
-            // re-reads this.
+            // sprite out of its authored list; the sim never re-reads this.
             f.Events.SentryBarrelSpawned(sentry, barrel, slotIndex);
         }
 
-        // SentryFireRateUpgrade (see SentryIncreaseFireRateSkillAction) - permanently compounds into
-        // this barrel's own Weapon.FireCooldownMultiplier, same math FireRateWeaponPerkData.Apply
-        // already uses for player weapon perks (see Weapon.qtn for why this is a multiplier, not a
-        // baked absolute). Deliberately NOT the temporary Haste status effect
-        // SentryFireRateAuraUpgrade/SentryAuraSystem grants to ALLIES - a barrel has neither
-        // CharacterStats nor StatusEffects, and this is a permanent stat on the sentry's own guns.
-        private static void ApplyFireRateUpgrade(Frame f, EntityRef owner, EntityRef barrel)
+        // Fortification ranks 2-3 - copied onto the spawned sentry itself (not re-read off Lux later)
+        // so SentryAuraSystem keeps supporting allies even if she's no longer nearby or alive.
+        private static void ApplyFortificationUpgrade(Frame f, EntityRef owner, EntityRef spawned)
         {
-            if (f.Unsafe.TryGetPointer<SentryFireRateUpgrade>(owner, out var upgrade) == false)
+            if (f.Unsafe.TryGetPointer<SentryFortificationUpgrade>(owner, out var upgrade) == false)
                 return;
 
-            if (f.Unsafe.TryGetPointer<Weapon>(barrel, out var weapon) == false)
-                return;
-
-            weapon->FireCooldownMultiplier = FPMath.Max(FP._0, weapon->FireCooldownMultiplier / upgrade->AttackSpeedMultiplier);
+            f.AddOrGet<SentryFortificationUpgrade>(spawned, out var copy);
+            *copy = *upgrade;
         }
 
-        // SentryShieldUpgrade (see SentryAddShieldSkillAction) - a vanilla sentry has no Shield at
-        // all, same optional-component pattern every other shielded entity in the game follows.
-        private static void ApplyShieldUpgrade(Frame f, EntityRef owner, EntityRef spawned)
-        {
-            if (f.Unsafe.TryGetPointer<SentryShieldUpgrade>(owner, out var upgrade) == false)
-                return;
-
-            f.AddOrGet<Shield>(spawned, out var shield);
-            shield->Max = upgrade->Max;
-            shield->Current = upgrade->Max;
-            shield->RechargeDelay = upgrade->RechargeDelay;
-            shield->RechargeRate = upgrade->RechargeRate;
-        }
-
-        // SentryFireRateAuraUpgrade (see SentryAddFireRateSkillAction) - copied onto the spawned
-        // sentry itself (not re-read off the caster later) so SentryAuraSystem keeps buffing allies
-        // even if the caster who deployed this sentry is no longer around.
-        private static void ApplyFireRateAuraUpgrade(Frame f, EntityRef owner, EntityRef spawned)
-        {
-            if (f.Unsafe.TryGetPointer<SentryFireRateAuraUpgrade>(owner, out var upgrade) == false)
-                return;
-
-            f.AddOrGet<SentryFireRateAuraUpgrade>(spawned, out var copy);
-            copy->AttackSpeedMultiplier = upgrade->AttackSpeedMultiplier;
-        }
-
-        // SentryShieldAreaRateUpgrade (see SentryAddShieldAreaRateSkillAction) - same
-        // copy-onto-spawned reasoning as ApplyFireRateAuraUpgrade.
-        private static void ApplyShieldAreaRateAuraUpgrade(Frame f, EntityRef owner, EntityRef spawned)
-        {
-            if (f.Unsafe.TryGetPointer<SentryShieldAreaRateUpgrade>(owner, out var upgrade) == false)
-                return;
-
-            f.AddOrGet<SentryShieldAreaRateUpgrade>(spawned, out var copy);
-            copy->ShieldRegenMultiplier = upgrade->ShieldRegenMultiplier;
-        }
-
-        // SentryOverloadUpgrade (see SentryAddOverloadSkillAction) - copied onto the spawned sentry
-        // itself, same copy-onto-spawned reasoning as ApplyFireRateAuraUpgrade, so
-        // DamageUtility.TrySentryOverload keeps working even once the caster who deployed this sentry
-        // is no longer around. Fully independent from the enemy kill-chain ExplodeOnDeath mechanic -
-        // its own Radius/Damage, nothing shared.
+        // Overload Core - same copy-onto-spawned reasoning. Damage is resolved from a percentage of
+        // Sentry Skill Damage into a flat number HERE, at deploy time, so a sentry's blast reflects
+        // Lux's skill damage as it was when she built the machine.
         private static void ApplyOverloadUpgrade(Frame f, EntityRef owner, EntityRef spawned)
         {
             if (f.Unsafe.TryGetPointer<SentryOverloadUpgrade>(owner, out var upgrade) == false)
                 return;
 
             f.AddOrGet<SentryOverloadUpgrade>(spawned, out var copy);
-            copy->Damage = upgrade->Damage;
-            copy->Radius = upgrade->Radius;
-            copy->Source = upgrade->Source;
+            *copy = *upgrade;
+        }
+
+        // Field Modifications - the live stack state lives on the SENTRY (see SentryModifications), so
+        // stacks belong to one machine and die with it. Only added when Lux actually holds the
+        // Ascension (MaxStacks > 0).
+        private static void ApplyFieldModifications(Frame f, EntityRef owner, EntityRef spawned)
+        {
+            if (f.Unsafe.TryGetPointer<LuxScrapCollector>(owner, out var collector) == false || collector->FieldModMaxStacks == 0)
+                return;
+
+            f.AddOrGet<SentryModifications>(spawned, out var modifications);
+            modifications->Stacks = 0;
+            modifications->MaxStacks = collector->FieldModMaxStacks;
+            modifications->DamagePerStack = collector->FieldModDamagePerStack;
+            modifications->FireRatePerStack = collector->FieldModFireRatePerStack;
+            modifications->MkIIWeapon = collector->MkIIWeapon;
+            modifications->MkIIApplied = false;
         }
     }
 }

@@ -31,9 +31,11 @@ namespace Quantum
             // Rage is reverted and cleared right here, not left for BerserkSkillData.End to
             // discover next tick, so a Full Throttle/Ignition effect that was active at max Rage
             // can't linger for the one tick between this save and Overdrive actually ending.
-            // RageOverdriveUtility.Revert (not ResetStacks) deliberately bypasses the
-            // RageRetentionUpgrade check ResetStacks has - a rank-3 Last Stand holder always also
-            // carries rank 1's retention tag, which would otherwise block this entirely.
+            // RageOverdriveUtility.Revert + a direct zero (not ResetStacks) deliberately bypasses
+            // Last Stand rank 2's own RageLossFraction, which a rank-3 holder always also carries and
+            // which would otherwise leave most of the Rage standing - "consume/reset Rage" is part of
+            // what this save costs. BerserkSkillData.End then parks that 0 for rank 1's carry-over,
+            // so a cheated death genuinely spends the momentum.
             if (f.Unsafe.TryGetPointer<RageOverdrive>(entity, out var rage) == true)
             {
                 RageOverdriveUtility.Revert(f, entity, rage);

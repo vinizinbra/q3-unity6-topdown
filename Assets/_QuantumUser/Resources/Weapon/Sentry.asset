@@ -16,6 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapon/Sentry
     Guid:
       Value: 471208801872943650
+  DisplayName: 
   FireType: 1
   Damage:
     RawValue: 65536
@@ -31,15 +32,25 @@ MonoBehaviour:
     RawValue: 65536
   Range:
     RawValue: 196608
+  PelletCount: 1
+  SpreadAngle:
+    RawValue: 0
   SpawnAnchor: 0
   SpawnOffset:
     X:
       RawValue: 0
     Y:
-      RawValue: 0
+      RawValue: 65536
     Z:
-      RawValue: 0
+      RawValue: -65536
   ProjectileData:
     Id:
-      Value: 501518674430704528
-  ViewPrefab: {fileID: 8089491252618662435, guid: b98c7f425f94340238641d20e1057c84, type: 3}
+      Value: 2052039704194794421
+  ViewPrefab: {fileID: 8089491252618662435, guid: 71e454c59b0bb4e6b949d1333a8bcb33, type: 3}
+  ShakeTier: 0
+  _dpsPreview: 'Burst DPS: 5
+
+    Sustained DPS (incl. reload): 5
+
+    Damage/min:
+    299'

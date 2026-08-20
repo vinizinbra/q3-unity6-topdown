@@ -17,7 +17,22 @@ namespace Quantum
             if (context.Target == EntityRef.None)
                 return;
 
-            HealUtility.ApplyHeal(f, context.Target, context.Owner, context.Damage * HealMultiplier);
+            if (f.Unsafe.TryGetPointer<Health>(context.Target, out var health) == false)
+                return;
+
+            FP requested = health->MaxHealth * context.Damage * HealMultiplier;
+
+            // Per-deployable-instance healing cap (Zara's "20% Max HP per Totem per ally") - a no-op
+            // for any area that doesn't carry an AreaAllyBudget, which is every one that didn't opt
+            // in. Once the allowance is spent this returns 0 and the Support Beat still delivers
+            // everything else in its Effects list (Move Speed, Fire Rate, cooldown reduction) with
+            // only the HP half switched off, exactly as specified.
+            FP allowed = AreaAllyBudgetUtility.ConsumeHeal(f, context.SourceEntity, context.Target, requested, health->MaxHealth);
+
+            if (allowed <= FP._0)
+                return;
+
+            HealUtility.ApplyFlatHeal(f, context.Target, context.Owner, health, allowed);
         }
     }
 }

@@ -79,14 +79,10 @@ public class UpgradeCardWidget : MonoBehaviour
     private TMP_Text rarityText;
     [SerializeField, Tooltip("Shows which pool the option came from, e.g. \"Weapon Perk\".")]
     private TMP_Text kindText;
-    [SerializeField, Tooltip("Shows current/max stacks for a capped Global Upgrade (e.g. \"2/3\"); hidden when MaxStacks is 0 or the option is a ranked ascension (rankRoot shows a Roman numeral instead).")]
+    [SerializeField, Tooltip("Shows current/max stacks for a capped Global Upgrade (e.g. \"2/3\"); hidden when MaxStacks is 0 or the option is a ranked ascension (the title shows a Roman numeral instead).")]
     private GameObject stackRoot;
     [SerializeField]
     private TMP_Text stackText;
-    [SerializeField, Tooltip("Shown for a ranked Hero Ascension (CardData.IsRanked) - a Roman numeral of the rank being picked (I/II/III). Hidden for every other card. Optional.")]
-    private GameObject rankRoot;
-    [SerializeField]
-    private TMP_Text rankText;
     [SerializeField] private Button button;
 
     [SerializeField, Tooltip("Live before->after value row (e.g. \"MAX HP 100 -> 80\") - hidden entirely when CardData.ValuePreview is empty. Optional - only Sacrifice cards use this.")]
@@ -177,8 +173,15 @@ public class UpgradeCardWidget : MonoBehaviour
         if (buttonLabelText != null && string.IsNullOrEmpty(data.ButtonLabel) == false)
             buttonLabelText.text = data.ButtonLabel;
 
+        // A ranked ascension shows the rank being picked (CurrentStacks + 1) as a Roman numeral in
+        // the TITLE ("Cluster Bomb - II") - no separate UI element. A capped Global Upgrade instead
+        // shows the "2/3" stack readout below. The two are mutually exclusive.
+        bool showRank = data.IsRanked && data.MaxStacks > 1;
+
         if (displayName != null)
-            displayName.text = data.DisplayName;
+            displayName.text = showRank
+                ? $"{data.DisplayName} - {ToRoman(data.CurrentStacks + 1)}"
+                : data.DisplayName;
 
         if (description != null)
             description.text = data.Description;
@@ -186,16 +189,9 @@ public class UpgradeCardWidget : MonoBehaviour
         if (kindText != null)
             kindText.text = data.KindText;
 
-        // A ranked ascension shows the rank being picked (CurrentStacks + 1) as a Roman numeral;
-        // a capped Global Upgrade shows the "2/3" stack readout. The two are mutually exclusive.
-        bool showRank = data.IsRanked && data.MaxStacks > 1;
+        // Capped Global Upgrade "2/3" readout - suppressed for a ranked ascension (its rank is in
+        // the title instead).
         bool showStacks = data.MaxStacks > 0 && showRank == false;
-
-        if (rankRoot != null)
-            rankRoot.SetActive(showRank);
-
-        if (rankText != null)
-            rankText.text = showRank ? ToRoman(data.CurrentStacks + 1) : string.Empty;
 
         if (stackRoot != null)
             stackRoot.SetActive(showStacks);

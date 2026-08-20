@@ -16,9 +16,8 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/Brute_PassiveSkill/Brute_PassiveSkillUpgrades/IronPresence
     Guid:
       Value: 505319841889557397
-  Icon: {fileID: -1422584567, guid: 1398529c57dc443e7a3096f4ad470a4c, type: 3}
+  Icon: {fileID: 2129868926, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
   DisplayName: Iron Presence
-  Rarity: 2
   Description: Intimidated enemies in your Protector Aura move slower and take more
     knockback - eventually, you deal bonus damage to them too.
   <MaxRank>k__BackingField: 3

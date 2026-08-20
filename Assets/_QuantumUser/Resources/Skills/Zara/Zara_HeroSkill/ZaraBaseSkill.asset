@@ -45,8 +45,14 @@ MonoBehaviour:
   HealEffects:
   - Id:
       Value: 276820451133602943
+  - Id:
+      Value: 338081535048431641
+  - Id:
+      Value: 0
   HealAmount:
-    RawValue: 6554
+    RawValue: 655
+  MaxHealFractionPerAlly:
+    RawValue: 13107
   DamageAmount:
     RawValue: 655360
   DamageMask: 2
@@ -133,7 +139,7 @@ MonoBehaviour:
   - Id:
       Value: 506336313018381212
   - Id:
-      Value: 401519153522005829
+      Value: 490069236516948011
   - Id:
       Value: 456045470573843368
   - Id:

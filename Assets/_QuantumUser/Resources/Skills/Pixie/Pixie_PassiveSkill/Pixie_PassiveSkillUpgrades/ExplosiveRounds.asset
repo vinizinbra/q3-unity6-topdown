@@ -18,22 +18,27 @@ MonoBehaviour:
       Value: 271843238532602476
   Icon: {fileID: -1426688026, guid: b217254d41b6945b1873986186a25786, type: 3}
   DisplayName: Explosive Rounds
-  Rarity: 1
-  Description: Weapon hits also create a small explosion - a full qualifying Pixie
-    explosion in its own right.
+  Description: Weapon hits have a chance to create a small explosion - a full qualifying
+    Pixie explosion in its own right.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - Weapon hits create a small explosion dealing 20% of the triggering weapon hit's
-    damage.
-  - Weapon hits create a small explosion dealing 30% of the triggering weapon hit's
-    damage.
-  - Weapon hits create a small explosion dealing 40% of the triggering weapon hit's
-    damage.
+  - Weapon hits have a 15% chance to create a small explosion dealing 20% of that
+    hit's damage.
+  - Weapon hits have a 30% chance to create a small explosion dealing 30% of that
+    hit's damage.
+  - Weapon hits have a 100% chance to create a small explosion dealing 40% of that
+    hit's damage.
+  ProcChance:
+  - RawValue: 9830
+  - RawValue: 26214
+  - RawValue: 65536
   Radius:
+  - RawValue: 98304
   - RawValue: 131072
-  - RawValue: 157286
   - RawValue: 157286
   DamageMultiplier:
   - RawValue: 13107
   - RawValue: 19661
   - RawValue: 26214
+  ProcCooldown:
+    RawValue: 0

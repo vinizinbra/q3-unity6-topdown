@@ -222,3 +222,130 @@ the `MaxDistance`/`ZaraDeviceSpeaker.prefab` corrections above (re-run the gener
 Drop's every-3rd-beat stun, Main Stage's opening/closing bonus beats (and that a Portable Speaker never
 gets them), the Resonance self-feed fix, Remix's guaranteed-2-distinct rank 3, Portable Speaker itself
 end-to-end, and Portable Speaker's Mobile Stage inheritance.
+
+---
+
+# 2026-08-20 balance pass — Combat DJ / Tempo Support
+
+Zara drops from 10 lines to the target **9 lines × 3 ranks**, and her identity is retargeted: **support
+first, healer second.** Every line that used to buy more healing now buys tempo, mitigation or control
+instead. Healing is deliberately capped from three directions.
+
+## Roster now
+
+| Pool | Lines |
+|---|---|
+| Totem (Hero Skill) | Amplifier, **Sound Boost**, Double Time, Main Stage |
+| Resonance (Passive) | Faster Tempo, **Protective Rhythm**, Remix |
+| Dash | Afterbeat, Portable Speaker |
+
+Removed: **Heavy Bass** (standalone line cut — Amplifier is her offensive path; the Subwoofer
+component/system and `Resonance.Subwoofer*` are deleted). **Healing Chorus** → reworked into Sound
+Boost. **Restorative Beat** → replaced by Protective Rhythm.
+
+## Base Totem: "Healing Beat" is now a Support Beat
+
+The alternation itself is unchanged (`AlternatingArea`, Damage → Support → Damage → Support, never
+both at once). What a Support Beat *does* changed:
+
+- Heals **1%** Max HP (was 10%) — a trickle, not a heal.
+- Grants **+10% Move Speed and +10% Fire Rate** for ~2s, via the new generic `AllyBuffEffectData`.
+- `SpawnAlternatingAreaEffectData.HealEffects` now has a **slot contract** Sound Boost writes into:
+  `[0]` the heal, `[1]` the ally buff bundle, `[2]` reserved for Sound Boost R2+'s cooldown reduction.
+  Slot-indexed rather than "first empty slot", so a rank swap replaces the buff rather than leaving two
+  competing ones on the same beat.
+
+### Global Totem healing cap
+
+`SpawnAlternatingAreaEffectData.MaxHealFractionPerAlly` (20% of Max HP) is applied to **every Totem at
+every Sound Boost rank**, not just the top rank — which is what stops Double Time (more beats) from
+letting a lower rank out-heal a higher one. It's enforced by the new generic
+`AreaAllyBudget`/`AreaAllyBudgetUtility`, living on the **spawned Totem entity**: a fresh deploy is a
+fresh allowance for everyone, and two Zaras' Totems never share one. Once spent, Support Beats still
+deliver Move Speed / Fire Rate / cooldown reduction — only the HP half switches off.
+
+## The lines
+
+- **Amplifier** — unchanged (+30% / +60% + knockback / +100% + Bass Drop stun every 3rd Damage Beat).
+  Bass Drop's stuns now automatically respect the generic per-tier CC immunity window.
+- **Sound Boost** (replaces Healing Chorus) — R1: heal 2% Max HP, +15% Move Speed / +15% Fire Rate.
+  R2: every Support Beat also reduces affected allies' **remaining Hero Skill cooldown** by 0.5s.
+  R3 "Power Chord": heal 5% Max HP and +15% **outgoing damage** for 2s.
+  - The cooldown reduction is the new generic `ModifyRemainingCooldownEffectData` — remaining-cooldown
+    only, clamped at 0, never banking. Capped per Totem per ally by
+    `SoundBoostUpgrade.MaxCooldownReductionPerTotem` (exposed as the brief requires; shipped at a
+    generous **6s**, expected tuning range 3-4s). The budget is charged only for reduction that
+    actually landed, so an already-ready skill never eats the allowance.
+  - Each rank's buff profile is ONE authored `AllyBuffEffectData` asset, not a pile of numbers — the
+    same generic effect Lux's Fire Support aura uses.
+- **Double Time** — unchanged (1.0 → 0.85 → 0.70 → 0.50s). Its synergy with Sound Boost is intentional
+  and balanced through `MaxCooldownReductionPerTotem`, not special-cased.
+- **Main Stage** — unchanged (+30/50/75% radius, +2s duration at R2, R3's opening Damage Beat and
+  closing Support Beat).
+- **Faster Tempo** — unchanged (+25/50/75% generation, R3 retains 20% of the threshold).
+- **Protective Rhythm** (replaces Restorative Beat) — R1: Pulse grants allies an Overshield worth 10%
+  of **their own** Max Shield. R2: 15% plus 10% DR for 2s. R3 "Fortissimo": 20% plus 20% DR.
+  **It never touches HP healing.** The DR routes through the shared reactive-DR slot
+  (`ApplyTemporaryDamageReduction`, take-the-stronger), so a co-op stack with Brute's Guardian/Bodyguard
+  resolves through the generic policy instead of adding up.
+- **Remix** — R2 additionally starts the next Resonance cycle at 20% (`Resonance.RemixRetainFraction`).
+  **Explicitly resolved against Faster Tempo R3:** the two are **take-the-maximum**, never additive —
+  `AddResonance` applies Faster Tempo's floor, then `FirePulse` raises it to Remix's if higher. There is
+  exactly one floor, never two stacked. Status pool, weights and deterministic `f.RNG` selection are
+  unchanged; the View is still told the result via `RemixPulseTriggered` and never rolls anything.
+- **Afterbeat** — R1 "Quick Tempo" is now a **flat 20 Resonance** (was 20% of Max) *plus* 10 per enemy
+  the dash physically passes through (a new OnGoing sweep, deduped per enemy per dash via
+  `ZaraAfterbeat.SweptEnemies`). R2 is the delayed pulse at the dash start; R3 adds the end pulse and
+  its own per-enemy Resonance. R1's sweep and R3's pulse hits draw on **one shared per-dash allowance**
+  (`MaxResonancePerDash`, 40), so they can't compound past the cap.
+- **Portable Speaker** — reworked around three rules the brief pins down:
+  - **Never heals HP, at any rank** — by construction, not a runtime check: no heal effect is ever
+    authored into a Speaker's Support Beat and `HealAmount` stays 0. It also carries no
+    `AreaAllyBudget` (nothing to cap).
+  - **Capped active count per Zara** (`MaxActiveSpeakers`: 1 / 1 / 2). A new one past the cap silently
+    retires her **oldest** (smallest `DestroyAfterTime.RemainingTime`) via
+    `DespawnIntentUtility.DespawnSilently(Replaced)`, so no on-destroy effect misreads housekeeping as
+    a death. Scoped by `AreaOwner.Owner`, so two Zaras never share a cap. New `PortableSpeaker` marker.
+  - **R2's dash-end effect is a BUFF, not a heal** — the same generic `AllyBuffEffectData` asset.
+  - **R3 "Mobile Stage" inheritance is simplified.** It inherits Double Time's interval shrink and Main
+    Stage's radius at `MobileStageInheritanceFraction`, Amplifier's damage bonus, and Sound Boost via
+    **its own authored reduced-effect Speaker-variant assets** (`SpeakerSupportBuffEffect`/
+    `SpeakerCooldownEffect`) rather than a runtime multiplier — "a different data profile, not complex
+    hero-specific inheritance code". It does NOT inherit HP healing, the per-Totem healing cap, Main
+    Stage's duration bonus, Amplifier's knockback/Bass-Drop stun, or Main Stage's opening/closing bonus
+    beats (`MainStageBonusBeats` is never stamped on a Speaker).
+
+## Base Resonance retuning
+
+`Resonance.Max` stays 500 and `HealPercent` drops to **2%** (the emergency heal). The doc-level guidance
+is now explicit on the asset: tune `Max` against `GenerationPerDamage` and Zara's real DPS toward
+roughly **one Pulse every 10-12s** in active combat, rather than treating 500 as a meaningful number in
+isolation.
+
+**Playtest first:** Sound Boost + Double Time cooldown reduction (the single most build-defining thing
+she gives a team — `MaxCooldownReductionPerTotem` is the knob); Resonance pulse cadence; whether the
+20% Totem healing cap is reached in a normal Totem lifetime; two Speakers overlapping at rank 3; two
+Zaras in the same match.
+
+---
+
+# 2026-08-20 (later) — Portable Speaker never buffed Zara herself
+
+Found while fixing the identical defect in Brute's Bodyguard (full writeup in
+`docs/brute-ascensions.md`, "Bodyguard never shielded Brute himself"). Not reported from testing — found
+by inspection, because it is the same code shape for the same reason.
+
+Portable Speaker rank 2+ grants a short ally buff on dash completion, scanning with
+`EnemyMovementUtility.FindPlayersInRadius`. That helper's `Player`-only layer mask deliberately cannot
+see a **dashing** player (`DashSkillData` parks the dasher on `IgnoreProjectile` for the dash's duration,
+which is what gives Dash its i-frames). Since this fires at dash **End**, it coincides with that swap by
+definition, and `Core.PhysicsSystem3D` runs before every user system — so the broadphase the query reads
+was already built with Zara still on `IgnoreProjectile`. She buffed every nearby ally except the one who
+earned it, every single time.
+
+Fixed by switching to `EnemyMovementUtility.FindPlayersInRadiusIncludingDashing` (renamed from
+`FindPlayersInRadiusForPickup`, which already existed for exactly this problem). No behavior change for
+anything else.
+
+The Speaker's own spawned beats are unaffected — they pulse from a placed entity over time, not at the
+instant of the dash.

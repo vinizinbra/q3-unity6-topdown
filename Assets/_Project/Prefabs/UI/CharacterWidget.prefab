@@ -1074,7 +1074,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &771549987686729164
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1886,7 +1886,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &6345225895319250751
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3339,7 +3339,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1824518595095328487
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3917,13 +3917,6 @@ GameObject:
   - component: {fileID: 7877302889667244238}
   - component: {fileID: 7583885581931335167}
   - component: {fileID: 1432785678203966473}
-  - component: {fileID: 4562101394183758767}
-  - component: {fileID: 357869589038389749}
-  - component: {fileID: 268528360959304860}
-  - component: {fileID: 2347443690935451023}
-  - component: {fileID: 5985607605923681437}
-  - component: {fileID: 3856428703371974211}
-  - component: {fileID: 7846234795994635268}
   m_Layer: 5
   m_Name: Skills (1)
   m_TagString: Untagged
@@ -3998,116 +3991,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &4562101394183758767
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4421207342488213641}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 312ba84e75dd3417a85825f33dfe67ca, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ScrapUiWidget
-  root: {fileID: 2216689288955092225}
-  stacksText: {fileID: 5979916133917011590}
-  maxStacksObject: {fileID: 9162367371463671534}
-  autoBindLocalPlayerOne: 1
---- !u!114 &357869589038389749
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4421207342488213641}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d5aaca65e93ba4b5a918e63c6fc47511, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::AdrenalineUiWidget
-  root: {fileID: 5819221812655678728}
-  stacksText: {fileID: 1943873106238158445}
-  maxStacksObject: {fileID: 564239616713090275}
-  autoBindLocalPlayerOne: 1
---- !u!114 &268528360959304860
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4421207342488213641}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5f012c0246cd3416783e62c2447009e6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RageOverdriveUiWidget
-  root: {fileID: 7078762529456961345}
-  fillSlider: {fileID: 3882537055728646563}
-  shineEffect: {fileID: 9146941382854158652}
-  autoBindLocalPlayerOne: 1
---- !u!114 &2347443690935451023
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4421207342488213641}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ad4e99ad307d1433981b6bb40293d055, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::JuggernautChargeUiWidget
-  root: {fileID: 5066858474348982532}
-  fillSlider: {fileID: 1670053307542244562}
-  shineEffect: {fileID: 138959763909633196}
-  autoBindLocalPlayerOne: 1
---- !u!114 &5985607605923681437
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4421207342488213641}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 23796e5316aac4816a877cf8b7f25169, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ResonanceUiWidget
-  root: {fileID: 1032526263125033367}
-  fillSlider: {fileID: 1321571347050207495}
-  shineEffect: {fileID: 0}
-  autoBindLocalPlayerOne: 1
---- !u!114 &3856428703371974211
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4421207342488213641}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0ac14d372c4114e17a082ce99df1be2e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RemixUiWidget
-  root: {fileID: 8688061676091992129}
-  pulsesText: {fileID: 2065646633935504633}
-  autoBindLocalPlayerOne: 1
---- !u!114 &7846234795994635268
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4421207342488213641}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 69737edf08ed74f21b1eb5566e86f410, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::JuggernautStackDamageUiWidget
-  root: {fileID: 3616300540377143531}
-  stacksText: {fileID: 7874472254869196970}
-  autoBindLocalPlayerOne: 1
 --- !u!1 &4952671408620076898
 GameObject:
   m_ObjectHideFlags: 0
@@ -4199,7 +4082,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &6737631437730989315
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4663,7 +4546,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &8826543684085634401
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5619,7 +5502,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &6497566664556665150
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5968,14 +5851,6 @@ MonoBehaviour:
   skillCooldownWidgets:
   - {fileID: 4839753522674354304}
   - {fileID: 1811063021959350740}
-  skillProgressWidgets:
-  - {fileID: 268528360959304860}
-  - {fileID: 2347443690935451023}
-  - {fileID: 5985607605923681437}
-  adrenalineWidget: {fileID: 357869589038389749}
-  remixWidget: {fileID: 3856428703371974211}
-  scrapWidget: {fileID: 4562101394183758767}
-  juggernautStackDamageWidget: {fileID: 0}
   upgradeHistoryContainer: {fileID: 3767260230974360175}
 --- !u!114 &7886954908555520580
 MonoBehaviour:
@@ -6437,7 +6312,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &6262891291123657123
 RectTransform:
   m_ObjectHideFlags: 0

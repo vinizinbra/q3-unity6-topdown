@@ -8,7 +8,7 @@ namespace QuantumUser.Editor
 
     // Authors RiftShardConfig.asset - the one piece of Editor authoring the Rift Shard currency
     // (see docs/global-upgrades.md "Greed") needs that a script can actually produce. Mirrors
-    // LuxScrapAssetGenerator's own ScrapConfig step exactly, including why RuntimeConfig itself
+    // LuxAscensionAssetGenerator's own ScrapConfig step exactly, including why RuntimeConfig itself
     // isn't wired here: RuntimeConfig's asset refs live on QuantumMenuConfig.asset (a scene/menu
     // config, not a plain AssetObject this generator can safely locate the same way) - see the log
     // below for the manual step. Re-running is safe: an existing asset at the expected path is

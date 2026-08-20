@@ -29,7 +29,7 @@ namespace Quantum
                 return;
 
             FP queryRadius = pickupRadius * QueryRadiusScale;
-            var hits = EnemyMovementUtility.FindPlayersInRadiusForPickup(f, filter.Transform3D->Position, queryRadius);
+            var hits = EnemyMovementUtility.FindPlayersInRadiusIncludingDashing(f, filter.Transform3D->Position, queryRadius);
 
             for (int i = 0; i < hits.Count; i++)
             {

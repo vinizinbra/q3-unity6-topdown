@@ -249,3 +249,218 @@ ignore the return value.
   after rank 3, and specifically confirm Backblast's End-phase bomb only drops from rank 2 onward, its
   rank-3 bombs force-mark everything they hit, and Hot Fuse's instant-detonate only triggers at rank 3
   on a direct enemy hit (not on landing).
+
+---
+
+# 2026-08-20 balance pass
+
+Pixie stays at **9 lines × 3 ranks**, but the pool distribution and two of the lines change.
+
+## Roster now
+
+| Pool | Lines |
+|---|---|
+| Bunny Bomb (Hero Skill) | Cluster Bomb, Birthday Cake, **Direct Hit** |
+| Passive | Pocket Bombs, Unstable Mixture, Explosive Rounds |
+| Dash | Backblast, Hot Fuse, **Blast Jump** |
+
+**Deviation from the brief, deliberate:** the brief groups Hot Fuse under "Bunny Bomb" (giving 4/3/2).
+Hot Fuse's mechanic is *"Dash empowers the next Bunny Bomb"*, and a Hero-Skill-pool `SkillActionData`
+only executes when the Hero Skill is cast — too late to empower that same throw, and it would
+introduce a bootstrap gap (pick it, dash, nothing happens until you first cast Bunny Bomb). It stays
+in the Dash pool. The hard target (9 × 3 = 27) is met; only the preferred pool split differs. Direct
+Hit *did* move into the Hero Skill pool as specified.
+
+## What changed
+
+- **Direct Hit moved from Passive to Hero Skill.** New `DirectHitSkillAction` on
+  `PixieBaseSkill.Actions` (`Activated = false`); `DirectHitPassiveUpgradeData` deleted. Behaviourally
+  identical — `DemolitionMasteryUtility` reads `DirectHitUpgrade` through a plain optional pointer and
+  never cared which grant mechanism put it there (the same conversion Brute's Juggernaut lines went
+  through). `InnerRadiusFraction` is now per-rank (0.35 → 0.45 → 0.45), so R2 genuinely *widens* the
+  zone rather than only raising its multiplier.
+- **Unstable Targeting deleted.** Not in the brief's roster. `MarkExplosiveDeath.DamageBonusVsUnstable`
+  and its `DamageUtility` branch are gone with it — that branch also had a latent bug: Max's own
+  `MarkExplosiveDeath` grant never seeded the field, so a Max hitting an `ExplodeOnDeath`-marked enemy
+  multiplied his damage by **0**.
+- **Unstable Mixture redesigned away from numeric scaling.** Was "+X% death-explosion damage/radius per
+  rank". Now: an explosion that KILLS banks a stack (`UnstableMixtureUpgrade`), the next explosion
+  spends every stack for +30% damage / +15% radius each, R2 raises the cap to 2 stacks, and R3 makes a
+  max-stack explosion split into a delayed secondary blast.
+  - **Recursion safety is structural, not a guard.** Stacks are gained only from a kill dealt by a
+    genuine, non-chained explosion (`isExplosion && !isChainedExplosion` in `DamageUtility`), and spent
+    only by one (`DemolitionMasteryUtility.ResolveExplosionEmpowerment`, called once per blast from
+    `HitEffectUtility.ApplyInRadius`/`ApplyDamageInRadius`). The secondary fires with
+    `isChainedExplosion: true`, so by both rules it can neither consume empowerment nor generate more —
+    a payout, never a new link. It still counts as a real explosion for Direct Hit / Chain Reaction /
+    Pocket Bombs, which is the intended "respects generic proc rules".
+  - The secondary uses the new generic `DelayedBlast`/`DelayedBlastSystem` (shared with Brute's
+    Earthquake), not a Pixie-specific timer.
+  - Unstable Mixture still raises `MaxAffectedTier` to Heavy — a prerequisite for the chain it feeds
+    on, not a bonus.
+- **Explosive Rounds is chance-based.** It forced `ExplosiveSequenceInterval = 1` (literally every
+  weapon hit exploded). It still makes every shot *eligible*, but now gates on
+  `PixieExplosiveWeapon.ProcChance` (15% / 22% / 30%). Two new generic fields on
+  `WeaponPostImpactProcs` back this: `ExplosiveSequenceChance` and an OPTIONAL
+  `ExplosiveSequenceCooldown` — both default to "off", so the Explosive Sequence weapon perk is
+  completely unchanged. The cooldown ships at 0 per the brief ("do not hardcode an internal cooldown
+  unless required by data").
+- **Blast Jump (new Dash line).** R1: a 2s window where the next Bunny Bomb flies +25% faster and
+  blasts +25% wider. R2: dashing removes 1s from Bunny Bomb's remaining cooldown. R3: dashing through
+  one of her own **planted** bombs detonates it for +50% damage.
+  - R3 identifies a planted bomb by the exact shape `ProjectileSystem.TryPlant` leaves behind
+    (`ExplodeOnDestroy` with `TriggersSpawnUpgrades`, `AreaOwner.Owner == her`, no `Projectile`), so it
+    can never trigger a bomb still in flight, another player's bomb, a Pocket Bombs Mini Bomb, or a
+    Backblast drop. Detonation reuses the ordinary destroy path, so Birthday Cake/Cluster Bomb/Pocket
+    Bombs all behave exactly as they would have on the bomb's own fuse.
+- **`PixieHotFuseCharge` → `PixieBombCharge`.** Generalized so Hot Fuse and Blast Jump share one
+  "next Bunny Bomb is empowered" charge, one timer and one consumption point. Each line owns its OWN
+  multiplier fields on it rather than compounding into shared ones — both lines' `Execute` run in the
+  same Begin phase of the same dash, so a shared field would depend on list order. A field left at 0
+  reads as a neutral 1 (`PixieAscensionUtility.Neutral`). `PixieHotFuseTimerSystem` →
+  `PixieBombChargeSystem`.
+- Cluster Bomb, Birthday Cake, Pocket Bombs and Backblast keep their existing values (already matching
+  the brief).
+
+**Playtest first:** Explosive Rounds proc frequency on a high-Fire-Rate weapon (the `ProcCooldown`
+escape hatch exists but is off); whether Unstable Mixture's secondary blast can chain-feed anything it
+shouldn't; Blast Jump R3's trigger radius feel.
+
+---
+
+# 2026-08-20 — Backblast no longer spawns Cluster Bomb bomblets
+
+Reported from testing: bomblets spawned off a Backblast bomb sometimes never met the ground. The float
+was the visible symptom; the design mismatch underneath it was the real problem, so both were fixed by
+the same change.
+
+## Why Backblast shouldn't cluster
+
+- **It collapses the pool contract.** Pixie is 3 Hero Skill / 3 Passive / 3 Dash. That split only
+  produces real choices if each pool buys a *different kind* of power. Cluster Bomb is the Hero Skill
+  pool's payoff — its job is to make **Bunny Bomb** bigger. With a Dash line triggering it too, Dash
+  investment silently bought Hero-Skill value and three decisions collapsed into one.
+- **The multiplier landed on the wrong ability.** Dash cooldown is far shorter than Bunny Bomb's, and
+  Backblast drops **two** bombs per dash from rank 2. At Cluster rank 3 that is `2 × (1 + 4)` = **10
+  detonations per dash**, on the cheapest, most-spammable button in the kit — making "never cast the
+  Hero Skill, just dash" the optimal line, inverting the loop the kit is built around.
+- **Dominant strategy.** Backblast + Cluster became the correct pick every run, leaving the other
+  7 lines as filler — the opposite of what an Ascension pool is for.
+- **Legibility.** Ten overlapping blasts per dash destroys clear causation; the player can't tell what
+  killed what.
+
+## What Backblast keeps
+
+Everything that made its bombs *real* Pixie explosions, which was the good half of the original
+decision: the `OnAreaExplosionDetonated` signal (so Pocket Bombs still reacts), Direct Hit's proximity
+bonus, ordinary Chain Reaction marking, and rank 3's `ForceMarkOnDetonate`. None of those multiply
+output — they deepen Backblast's identity without turning it into the kit's main damage source.
+
+## The split
+
+`ExplodeOnDestroy.TriggersSpawnUpgrades` was answering two unrelated questions at once. It now answers
+only the first, and a new `ExplodeOnDestroy.IsPlantedThrow` answers the second:
+
+| Question | Field | Backblast |
+|---|---|---|
+| "Does this count as a full, genuine explosion?" (signal, Chain Reaction, Direct Hit) | `TriggersSpawnUpgrades` | **true** |
+| "May this multiply into more projectiles?" (Cluster Bomb) | `IsPlantedThrow` | **false** |
+
+`IsPlantedThrow` is set in exactly one place — `ProjectileSystem.TryPlant` — so it means precisely "this
+bomb was genuinely thrown and has now landed", and can't drift. A planted Bunny Bomb still clusters,
+keeping parity with what it would have done detonating on impact.
+
+`AreaHitData.Detonate` gained `bool allowClusterBomblets = true`, a caller-side veto layered on top of
+the existing per-asset flag. The default keeps every live-projectile detonation completely unchanged;
+only `ExplodeOnDestroyUtility.TryDetonate` passes a real value.
+
+## Bug also fixed by this, and why it happened
+
+Bomblets launch **purely horizontally** — `TrySpawnClusterBomblets` aims at `center + direction`, where
+`direction` is a Y-axis rotation of `Forward`, so the target Y equals the detonation Y. Whether they
+ever meet the ground therefore depends entirely on the parent bomb detonating *at ground level*.
+
+A thrown Bunny Bomb detonates on the ground by construction, which is why the same code always looked
+right there. A Backblast bomb spawns at **Pixie's own transform position** and then *eases* down —
+`DashBomb.prefab`'s `GroundOffset` has `FallGravityMultiplier = 10` and `FloatSpeed = 0`, so a
+descending spawn gets `SettlingToGround` spread across ticks rather than snapping. Against a **1.0s
+fuse**, a bomb spawned high (dashing off a ledge, on a slope, near a drop) was still airborne when it
+went off, and its bomblets fanned out in mid-air with nothing beneath them — expiring at their 1s
+`Lifetime` without ever touching anything. That is the "sometimes."
+
+## Fixed alongside — Blast Jump was detonating Backblast bombs
+
+`BlastJumpSkillAction.TryDetonateNearbyPlantedBombs` keyed off `TriggersSpawnUpgrades`, and its own
+comment claimed that excluded "a Pocket Bombs Mini Bomb or a Backblast bomb". That stopped being true
+the moment Backblast started setting the flag true — Blast Jump had been detonating Backblast bombs
+despite the comment. It now keys off `IsPlantedThrow`, which restores the documented intent and can't
+drift again.
+
+## Not changed — worth a look
+
+`ClusterBombAreaHitData.TriggersSpawnUpgrades` is authored **1**, but `ClusterBombSkillAction`'s own
+comment states it must be `false` "or each bomblet would cluster-bomb again on its own detonation,
+cascading forever." Only `AreaHitData.MaxSpawnUpgradeDepth = 1` is stopping that today. Harmless as it
+stands, but the safety net shouldn't be the only thing holding it — worth setting to 0 in the Editor.
+
+---
+
+# 2026-08-20 (later) — Blast Jump made the Bunny Bomb overshoot
+
+Reported from testing: "Blast Jump is not working properly."
+
+## Cause
+
+Bunny Bomb is a **fixed-arc lob**. `ThrownProjectileMovementData` documents this explicitly — it leaves
+at a fixed horizontal `Speed` with a fixed `LaunchVelocityY` of lift and falls under constant `Gravity`,
+so "range is whatever those three produce and **aiming is the only control over it**."
+
+Authored: `Speed = 5`, `LaunchVelocityY = 10`, `Gravity = 40`.
+
+```
+range  = 2 * Speed * LaunchVelocityY / Gravity = 2*5*10/40 = 2.5 units
+flight = 2 * LaunchVelocityY / Gravity         = 0.5 s
+```
+
+Blast Jump rank 1 applied its speed bonus as `launch.Velocity *= 1.25` — scaling the **vertical**
+component along with the horizontal. For a ballistic arc that lengthens the flight time by the same
+factor it speeds up the horizontal travel, so **range scales with the multiplier squared**:
+
+```
+range = 2 * (5*1.25) * (10*1.25) / 40 = 3.91 units   (x1.5625, a 56% overshoot)
+apex  x1.5625 as well
+```
+
+On a weapon whose entire range is 2.5 units and whose only aiming control is where the player points,
+that is 1.4 units of overshoot for the full 2s window after every dash. The old comment claimed it
+"keeps its arc shape and simply covers it faster" — which simply isn't true of projectile motion.
+
+## Fix
+
+New virtual `ProjectileMovementData.ApplySpeedMultiplier(ref ProjectileLaunch, FP)`, because "faster"
+is not the same operation for every movement type:
+
+| Movement | Behavior |
+|---|---|
+| Straight / Homing (base default) | `Velocity *= k` — **unchanged** from the old inline code |
+| Thrown / Ballistic (override) | horizontal `* k`, vertical `/ k` via the shared `ScaleArcPreservingRange` |
+
+For an arc the two cancel out of `2 * vHorizontal * vVertical / gravity`, so the shot **lands in exactly
+the same place**, arrives in `1/k` the time, and flies a flatter arc (apex `1/k²`). That is what "flies
+25% faster" should mean for a grenade — sooner and flatter, not further.
+
+Both call sites now route through it instead of multiplying the vector inline:
+`ProjectileSkillData.ApplyBombCharge` (Blast Jump) and `ProjectileSpawner.Spawn` (the global stat,
+below). In `Spawn` it is applied *before* the transform is oriented off `launch.Velocity`, since for an
+arc this changes the launch direction too, not just its magnitude.
+
+## Same bug, wider blast radius: the global "Projectile Speed" upgrade
+
+`CharacterStats.ProjectileSpeedMultiplier` (the `ProjectileSpeedUpgradeData` global upgrade) was applied
+the same way in `ProjectileSpawner.Spawn`, so **every arcing projectile in the game** — Bunny Bomb, any
+`BallisticProjectileMovementData` mortar lob, cluster bomblets — overshot its aim point in proportion to
+that stat, and a `BallisticProjectileMovementData` shot no longer landed on the point `SolveLaunch` had
+just solved for. Routing it through the same virtual fixes all of them.
+
+This is a real behavior change for anyone stacking Projectile Speed: arcing shots now land where aimed
+and arrive faster, rather than landing further away. Straight-line projectiles are completely unaffected.

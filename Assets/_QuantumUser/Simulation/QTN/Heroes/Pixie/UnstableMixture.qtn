@@ -1,0 +1,36 @@
+// Pixie's Unstable Mixture Ascension - reworked from pure numeric scaling ("+X% death-explosion
+// damage/radius per rank") into a build-defining rhythm: an explosion that KILLS something empowers
+// her NEXT explosion, up to a small stack cap, and at max stacks that empowered blast splits into a
+// second delayed shockwave.
+//
+// Lives on Pixie herself, granted/refreshed by UnstableMixturePassiveUpgradeData.
+//
+// Proc-recursion safety is the load-bearing part of this line, and is handled entirely through the
+// codebase's existing explosion source tagging rather than a bespoke guard:
+//  - Stacks are GAINED only from a kill dealt by a genuine, non-chained explosion (see
+//    DamageUtility.ApplyDamage's isExplosion/isChainedExplosion pair). A death-explosion chaining
+//    into another death-explosion is already tagged isChainedExplosion, so a chain reaction can't
+//    farm stacks off itself.
+//  - Stacks are SPENT only by a genuine, non-chained explosion too (see
+//    DemolitionMasteryUtility.ResolveExplosionEmpowerment, called once per blast from
+//    HitEffectUtility.ApplyInRadius/ApplyDamageInRadius).
+//  - The rank 3 secondary blast fires with isChainedExplosion: true, so by both rules above it can
+//    neither consume empowerment nor generate more of it - it is a payout, never a new link.
+component UnstableMixtureUpgrade
+{
+    // Per-stack bonuses applied to the empowered explosion.
+    FP DamageBonusPerStack;
+    FP RadiusBonusPerStack;
+
+    // How many stacks can be banked at once - 1 at rank 1, 2 at rank 2+ (the "can stack up to 2"
+    // rank). Stacks hold at this ceiling rather than overflowing.
+    Byte MaxStacks;
+    Byte Stacks;
+
+    // Rank 3 only - when an empowered explosion goes off at MaxStacks, schedule a second, smaller
+    // blast shortly afterwards at the same point. 0 SecondaryDamagePercent (ranks 1-2/unpicked)
+    // schedules nothing.
+    FP SecondaryDamagePercent;
+    FP SecondaryRadiusMultiplier;
+    FP SecondaryDelay;
+}

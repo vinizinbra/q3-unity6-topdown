@@ -70,7 +70,7 @@ namespace Quantum
 
             SkillSlotId sourceSlot = slot == &filter.CharacterSkills->DashSkill ? SkillSlotId.DashSkill : SkillSlotId.HeroSkill;
             FP damage = Damage * ResolveDamageMultiplier(f, filter.Entity);
-            damage *= ApplyHotFuseCharge(f, filter.Entity, sourceSlot);
+            damage *= ApplyBombCharge(f, filter.Entity, sourceSlot, movement, ref launch);
             ProjectileSpawner.Spawn(f, filter.Entity, ProjectileData, launch, damage, DamageSource.Skill, sourceSlot, filter.Aim->Target);
             slot->ProjectilePending = true;
 
@@ -87,17 +87,19 @@ namespace Quantum
             return f.Unsafe.TryGetPointer<ProjectileDamageUpgrade>(owner, out var upgrade) == true ? upgrade->Multiplier : FP._1;
         }
 
-        // PixieHotFuseCharge (see Heroes/Pixie/HotFuseSkillAction) - only ever meant to empower Bunny
-        // Bomb specifically (Pixie's HeroSkill), not any other projectile-type skill, so gated on
-        // sourceSlot rather than just component presence. Returns the damage multiplier for this
-        // throw; radius/instant-detonate are applied later, at this bomb's own detonation - see
-        // AreaHitData.Detonate and PixieHotFuseCharge.qtn's own comment for why the split.
-        private static FP ApplyHotFuseCharge(Frame f, EntityRef owner, SkillSlotId sourceSlot)
+        // PixieBombCharge (see that component - shared by Hot Fuse and Blast Jump) - only ever meant
+        // to empower Bunny Bomb specifically (Pixie's HeroSkill), not any other projectile-type
+        // skill, so gated on sourceSlot rather than just component presence. Applies this throw's
+        // damage multiplier (returned) and projectile speed (scaled into `launch` in place); the
+        // combined radius multiplier is applied later, at this bomb's own detonation - see
+        // AreaHitData.Detonate and PixieBombCharge.qtn's own comment for why the split.
+        private static FP ApplyBombCharge(Frame f, EntityRef owner, SkillSlotId sourceSlot,
+            ProjectileMovementData movement, ref ProjectileLaunch launch)
         {
             if (sourceSlot != SkillSlotId.HeroSkill)
                 return FP._1;
 
-            if (f.Unsafe.TryGetPointer<PixieHotFuseCharge>(owner, out var charge) == false)
+            if (f.Unsafe.TryGetPointer<PixieBombCharge>(owner, out var charge) == false)
                 return FP._1;
 
             if (charge->InstantDetonate == true)
@@ -105,7 +107,17 @@ namespace Quantum
                 f.AddOrGet<InstantDetonate>(owner, out _);
             }
 
-            return charge->DamageMultiplier;
+            // Blast Jump - delegated to the movement rather than multiplying launch.Velocity here,
+            // because "faster" is not the same operation for every movement type. This used to scale
+            // the whole vector inline, which on Bunny Bomb's arc scaled the vertical launch speed too
+            // and therefore multiplied its RANGE by 1.25^2 - a ~56% overshoot on a lob whose entire
+            // range is ~2.5 units and whose only aiming control is where the player points. See
+            // ProjectileMovementData.ApplySpeedMultiplier / ThrownProjectileMovementData's override.
+            FP speedMultiplier = PixieAscensionUtility.Neutral(charge->BlastJumpProjectileSpeedMultiplier);
+
+            movement.ApplySpeedMultiplier(ref launch, speedMultiplier);
+
+            return PixieAscensionUtility.Neutral(charge->HotFuseDamageMultiplier);
         }
     }
 }

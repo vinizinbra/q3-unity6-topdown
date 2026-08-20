@@ -26,7 +26,7 @@ namespace Quantum
             // Same proximity idiom ChestSystem.Update already uses - sphere overlap first, then a
             // re-checked SqrMagnitude distance guard (OverlapShape can return near-boundary false
             // positives). First player found inside the radius completes it for everyone.
-            var hits = EnemyMovementUtility.FindPlayersInRadiusForPickup(f, checkpoint, radius);
+            var hits = EnemyMovementUtility.FindPlayersInRadiusIncludingDashing(f, checkpoint, radius);
 
             for (int i = 0; i < hits.Count; i++)
             {

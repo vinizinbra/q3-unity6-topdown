@@ -18,6 +18,14 @@ namespace Quantum
     // every enemy it hits marks for Chain Reaction regardless of tier/chance - see that component's
     // own comment for why this is scoped to the bomb entity, not the owner.
     //
+    // IsPlantedThrow is deliberately left FALSE, so a Backblast bomb never spawns Cluster Bomb
+    // bomblets. That is a design decision, not an oversight: Cluster Bomb belongs to the Hero Skill
+    // pool and is balanced against Bunny Bomb's cooldown. Backblast fires off the dash - the cheapest,
+    // most-frequent button in the kit - and drops TWO bombs per dash from rank 2, so clustering off it
+    // would have meant up to 10 detonations per dash and made "never cast the Hero Skill, just dash"
+    // the optimal line. Everything else above is kept precisely because it deepens Backblast's
+    // identity without multiplying its output. See docs/pixie-ascensions.md.
+    //
     // Reads live rank fresh every activation via selfRef, so a rank-up mid-run takes effect on the
     // very next dash.
     public unsafe partial class BackblastSkillAction : SkillActionData

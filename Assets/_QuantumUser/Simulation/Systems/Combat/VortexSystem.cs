@@ -14,18 +14,19 @@ namespace Quantum
     // EnemySystem's stagger branch for as long as it stays in range. PhysicsCollider3D is a required
     // filter field, not an optional lookup, the same reasoning AreaDamageSystem's own collider is
     // required - a vortex without one has no radius to pull from at all. Also drives Kai's own Vortex
-    // Ascension lines (Singularity/Compression/Vortex Collapse/Void Shards, see docs/kai-ascensions.md)
-    // and doubles as the entity Warp Wake's Dash Void spawns, reusing this same pull/AreaDamage/
-    // explode-or-repulse-on-destroy machinery for free.
+    // Ascension lines (Singularity/Compression/Vortex Collapse/Void Shards, see docs/kai-ascensions.md).
+    //
+    // Note the PULL pulses on TickInterval but Singularity's INTERRUPT is checked EVERY tick - see
+    // Update. They are two different cadences on purpose; sharing one is what used to let a caught
+    // enemy finish a wind-up in the gap between pulses.
     [Preserve]
     public unsafe class VortexSystem : SystemMainThreadFilter<VortexSystem.Filter>
     {
         public override void Update(Frame f, ref Filter filter)
         {
             // Checked before anything below, and regardless of whether Force/radius are even valid -
-            // an expiring vortex should still get to explode/repulse even if it wasn't pulling anything.
+            // an expiring vortex should still get to explode even if it wasn't pulling anything.
             TryExplodeOnDestroy(f, ref filter);
-            TryRepulseOnDestroy(f, ref filter);
             TryHomingProjectile(f, ref filter);
             TryGravityPulse(f, ref filter);
 
@@ -49,19 +50,41 @@ namespace Quantum
                 return;
             }
 
-            if (filter.Vortex->TickTimer > FP._0)
+            f.Unsafe.TryGetPointer<VortexInterruptConfig>(filter.Entity, out var interruptConfig);
+
+            // The PULL is a periodic pulse (TickInterval, ~0.5s), but Singularity's INTERRUPT is not -
+            // it is checked every tick.
+            //
+            // They used to share this timer, which quietly made the Ascension miss most of what it
+            // exists to stop: an enemy that began its wind-up just after a pulse got a free half-second
+            // of anticipation, which is longer than plenty of telegraphs, so its attack simply landed.
+            // "Vortex interrupts anticipated attacks" has to mean an eligible enemy caught in it can
+            // never finish a wind-up, and that requires looking every tick rather than twice a second.
+            //
+            // Checking this often is safe by construction, and always was - re-interrupt pacing is
+            // enforced per target by the generic per-tier hard-CC immunity window
+            // (EnemyTierResistanceConfig.InterruptImmunityDuration) inside
+            // EnemyActionUtility.TryInterrupt, never by how often a caller happens to ask. It is the
+            // same reasoning that already lets rank 3's gravity pulse fire ~3x a second.
+            bool isPullPulse = filter.Vortex->TickTimer <= FP._0;
+
+            if (isPullPulse == true)
+            {
+                filter.Vortex->TickTimer = filter.Vortex->TickInterval;
+            }
+            else
             {
                 filter.Vortex->TickTimer -= f.DeltaTime;
-                return;
             }
 
-            filter.Vortex->TickTimer = filter.Vortex->TickInterval;
+            // Nothing to do on an off-pulse tick unless this vortex actually has an interrupt to run -
+            // a vanilla (non-Singularity) vortex costs exactly what it did before, one overlap per pulse.
+            if (isPullPulse == false && interruptConfig == null)
+                return;
 
             FPVector3 center = filter.Transform3D->Position;
             Shape3D sphere = Shape3D.CreateSphere(radius);
             var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
-
-            f.Unsafe.TryGetPointer<VortexInterruptConfig>(filter.Entity, out var interruptConfig);
 
             int caughtCount = 0;
 
@@ -74,6 +97,14 @@ namespace Quantum
 
                 caughtCount++;
 
+                if (interruptConfig != null)
+                {
+                    TryInterruptCaughtEnemy(f, filter.Entity, target, interruptConfig);
+                }
+
+                if (isPullPulse == false)
+                    continue;
+
                 if (f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == false)
                     continue;
 
@@ -85,13 +116,14 @@ namespace Quantum
                 // enemy (see the class comment above for why).
                 DamageUtility.ApplyPull(f, target, pullDirection, filter.Vortex->Force);
 
-                if (interruptConfig != null)
-                {
-                    TryInterruptCaughtEnemy(f, filter.Entity, target, interruptConfig);
-                }
-
                 Log.Debug($"[Vortex] {filter.Entity} pulsed {target} with force {filter.Vortex->Force} (radius {radius})");
             }
+
+            // Crowd size, crowd-scaled damage and the every-third-pulse implosion all stay on the PULL
+            // cadence - they are pulse-counting mechanics, and re-deriving them every tick would both
+            // change their meaning and make the implosion fire far too often.
+            if (isPullPulse == false)
+                return;
 
             filter.Vortex->CaughtCount = (byte)caughtCount;
             ApplyCrowdDamageToAreaDamage(f, filter.Entity, caughtCount);
@@ -101,45 +133,31 @@ namespace Quantum
         // Kai's Singularity Ascension - interrupts a caught enemy's own attack, whether it's still
         // winding up OR already committed (see EnemyActionUtility.TryInterrupt, which handles both
         // Preparation/Telegraph and Active - a charging Charger or an airborne Leaper gets cancelled
-        // either way, not just during its wind-up). Filler/Normal (tier index <=
-        // UnlimitedBelowOrEqualTierIndex) interrupt every single pulse, unlimited; anything above that
-        // (Specialist/Heavy/Elite, gated by MaxEligibleTierIndex) is capped at one successful interrupt
-        // per enemy for this vortex INSTANCE specifically - see VortexInterruptTracker, which lives on
-        // the vortex itself and is discarded for free the instant it's destroyed.
+        // either way, not just during its wind-up). MaxEligibleTierIndex is the rank gate: which tiers
+        // this Singularity rank is allowed to interrupt at all.
+        //
+        // Called every tick (not once per pull pulse - see Update), so an eligible enemy caught in the
+        // vortex can never get a wind-up all the way out between pulses.
+        //
+        // Re-interrupt pacing is NOT handled here any more. It used to be a per-vortex-instance
+        // tracker capping tough tiers at one interrupt each; that was replaced by the generic hard-CC
+        // immunity window every CC source in the game now shares
+        // (EnemyTierResistanceConfig.InterruptImmunityDuration, consumed inside
+        // EnemyActionUtility.TryInterrupt itself). Same protection, but it also covers a second
+        // Singularity, a Brute stun, and anything added later - which a per-vortex tracker never
+        // could - and it is what makes rank 3's ~3-pulses-per-second gravity pulses safe to fire
+        // against a protected enemy without perma-locking it.
         private static void TryInterruptCaughtEnemy(Frame f, EntityRef vortexEntity, EntityRef target, VortexInterruptConfig* config)
         {
             if (f.Unsafe.TryGetPointer<Enemy>(target, out var enemy) == false)
                 return;
 
             EnemyDataAsset data = f.FindAsset(enemy->EnemyData);
-            byte tierIndex = (byte)data.Tier;
 
-            if (tierIndex > config->MaxEligibleTierIndex)
+            if ((byte)data.Tier > config->MaxEligibleTierIndex)
                 return;
 
-            if (tierIndex <= config->UnlimitedBelowOrEqualTierIndex)
-            {
-                EnemyActionUtility.TryInterrupt(f, target, ignoreInterruptibleFlag: true);
-                return;
-            }
-
-            f.AddOrGet<VortexInterruptTracker>(vortexEntity, out var tracker);
-
-            for (int i = 0; i < tracker->Count; i++)
-            {
-                if (tracker->InterruptedEntities[i] == target)
-                    return; // already interrupted this enemy via this vortex instance - capped
-            }
-
-            if (EnemyActionUtility.TryInterrupt(f, target, ignoreInterruptibleFlag: true) == false)
-                return; // wasn't actually interruptible this tick - don't consume a slot
-
-            if (tracker->Count < 8)
-            {
-                tracker->InterruptedEntities[tracker->Count] = target;
-                tracker->InterruptCounts[tracker->Count] = 1;
-                tracker->Count++;
-            }
+            EnemyActionUtility.TryInterrupt(f, target, ignoreInterruptibleFlag: true);
         }
 
         // Refreshes AreaDamage.Damage from VortexDamageUpgrade's own untouched base each pull pulse,
@@ -269,62 +287,6 @@ namespace Quantum
         // flat damage hit. Kept as its own component/method rather than folding into
         // VortexExplodeOnDestroy - "pull in then explode" and "push out instead" are different enough
         // shapes to keep the per-asset Source typing unambiguous for the view.
-        private static void TryRepulseOnDestroy(Frame f, ref Filter filter)
-        {
-            if (f.Unsafe.TryGetPointer<DestroyAfterTime>(filter.Entity, out var lifetime) == false)
-                return;
-
-            if (lifetime->RemainingTime > f.DeltaTime)
-                return;
-
-            if (f.Unsafe.TryGetPointer<VortexRepulseOnDestroy>(filter.Entity, out var repulse) == false)
-                return;
-
-            if (repulse->Damage <= FP._0 && repulse->KnockbackForce <= FP._0)
-                return;
-
-            if (filter.Collider->Shape.Type != Shape3DType.Sphere)
-                return;
-
-            FP radius = filter.Collider->Shape.Sphere.Radius;
-
-            if (radius <= FP._0)
-                return;
-
-            ResolveOwner(f, filter.Entity, out EntityRef owner, out DamageSource source, out _);
-
-            FPVector3 position = filter.Transform3D->Position;
-            Shape3D sphere = Shape3D.CreateSphere(radius);
-            var hits = f.Physics3D.OverlapShape(position, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
-
-            for (int i = 0; i < hits.Count; i++)
-            {
-                EntityRef target = hits[i].Entity;
-
-                if (f.Has<Enemy>(target) == false)
-                    continue;
-
-                if (f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == false)
-                    continue;
-
-                if (repulse->Damage > FP._0)
-                {
-                    DamageUtility.ApplyDamage(f, target, repulse->Damage, owner, source);
-                }
-
-                if (repulse->KnockbackForce > FP._0)
-                {
-                    FPVector3 delta = targetTransform->Position - position;
-                    FPVector3 direction = delta.SqrMagnitude > FP._0 ? delta.Normalized : FPVector3.Forward;
-                    DamageUtility.ApplyKnockback(f, target, direction, repulse->KnockbackForce, FP._0, owner);
-                }
-            }
-
-            f.Events.VortexRepulsed(filter.Entity, owner, position, radius, repulse->Source);
-
-            Log.Debug($"[Vortex] {filter.Entity} repulsed on destroy at {position}, radius {radius}");
-        }
-
         // Kai's Singularity rank 3 - a periodic, stronger, independently-paced pull layered on top of
         // the base Vortex.Force pull above (own TickTimer/Interval so it doesn't disturb the base
         // pull's own cadence). No-ops without VortexGravityPulse (ranks 1-2, or no upgrade at all).

@@ -87,7 +87,7 @@ namespace Quantum
         // just damaged, without duplicating this whole multiplier chain a second time. Every other
         // caller is free to ignore the return value.
         public FP Detonate(Frame f, EntityRef owner, DamageSource source, ElementType element, FP damage,
-            int spawnDepth, FPVector3 center, FP radiusMultiplier = default)
+            int spawnDepth, FPVector3 center, FP radiusMultiplier = default, bool allowClusterBomblets = true)
         {
             if (radiusMultiplier <= FP._0)
                 radiusMultiplier = FP._1;
@@ -98,13 +98,13 @@ namespace Quantum
             // StatUtility.GetAreaMultiplier folds in the generic "Skill Area" global upgrade
             // (CharacterStats.AreaRadiusMultiplier) - without this, a thrown bomb (Bunny Bomb) never
             // read it at all, unlike HitPathSkillAction/SpawnEntitySkillAction which already do.
-            // ResolveHotFuseRadiusMultiplier consumes (and clears) Pixie's Hot Fuse charge, if any -
-            // see PixieHotFuseCharge.qtn for why that consumption happens here rather than at throw
-            // time.
+            // ResolveBombChargeRadiusMultiplier consumes (and clears) Pixie's shared next-bomb charge,
+            // if any - see PixieBombCharge.qtn for why that consumption happens here rather than at
+            // throw time.
             FP radius = BlastRadius
                 * DamageUtility.ResolvePixieExplosionRadiusMultiplier(f, owner)
                 * StatUtility.GetAreaMultiplier(f, owner)
-                * ResolveHotFuseRadiusMultiplier(f, owner)
+                * ResolveBombChargeRadiusMultiplier(f, owner)
                 * radiusMultiplier;
 
             // isExplosion: true - a bomb detonation is a genuine area/explosive blast, read by
@@ -129,7 +129,15 @@ namespace Quantum
             // this gate, any later AreaHitData blast owned by that same entity - a weapon perk,
             // another hero's AoE, anything - would read the stale tag and spawn bomblets off a hit
             // that has nothing to do with the bomb that granted it.
-            if (TriggersSpawnUpgrades == true && source == DamageSource.Skill
+            // allowClusterBomblets is the caller's own veto, ON TOP of the per-asset flag: a bomb that
+            // was DROPPED rather than thrown passes false (see ExplodeOnDestroyUtility.TryDetonate /
+            // ExplodeOnDestroy.IsPlantedThrow), so it still counts as a full genuine explosion for
+            // everything above - Chain Reaction marking, Direct Hit, the Pocket Bombs signal - but can
+            // never multiply into more projectiles. Cluster Bomb is the Hero SKILL pool's payoff and
+            // is balanced against Bunny Bomb's cooldown; letting a dash-dropped bomb spawn bomblets
+            // put the kit's biggest damage multiplier on its cheapest button. Defaults true, so a live
+            // Projectile detonating on impact is completely unaffected.
+            if (allowClusterBomblets == true && TriggersSpawnUpgrades == true && source == DamageSource.Skill
                 && spawnDepth < MaxSpawnUpgradeDepth)
             {
                 TrySpawnClusterBomblets(f, owner, center, damage, spawnDepth + 1);
@@ -138,18 +146,21 @@ namespace Quantum
             return radius;
         }
 
-        // PixieHotFuseCharge (see Heroes/Pixie/HotFuseSkillAction) - this is this specific bomb's own
+        // PixieBombCharge (shared by Hot Fuse and Blast Jump) - this is this specific bomb's own
         // detonation, so this is also where the charge (and the InstantDetonate tag it may have set
-        // at throw time - see ProjectileSkillData.ApplyHotFuseCharge) gets cleared, since both were
-        // only ever meant for this one throw. 1 (no effect) for every owner without an active charge.
-        private static FP ResolveHotFuseRadiusMultiplier(Frame f, EntityRef owner)
+        // at throw time - see ProjectileSkillData.ApplyBombCharge) gets cleared, since both were only
+        // ever meant for this one throw. Both lines' radius bonuses compose multiplicatively; an
+        // unpicked line's field reads as a neutral 1. 1 (no effect) for every owner without an active
+        // charge.
+        private static FP ResolveBombChargeRadiusMultiplier(Frame f, EntityRef owner)
         {
-            if (f.Unsafe.TryGetPointer<PixieHotFuseCharge>(owner, out var charge) == false)
+            if (f.Unsafe.TryGetPointer<PixieBombCharge>(owner, out var charge) == false)
                 return FP._1;
 
-            FP multiplier = charge->RadiusMultiplier;
+            FP multiplier = PixieAscensionUtility.Neutral(charge->HotFuseRadiusMultiplier)
+                * PixieAscensionUtility.Neutral(charge->BlastJumpRadiusMultiplier);
 
-            f.Remove<PixieHotFuseCharge>(owner);
+            f.Remove<PixieBombCharge>(owner);
             f.Remove<InstantDetonate>(owner);
 
             return multiplier;

@@ -1,0 +1,74 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49955da391b334d0e8221a041cfd3d2a, type: 3}
+  m_Name: SentryFortificationSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.SentryFortificationSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Lux/Lux_HeroSkill/Lux_HeroSkillUpgrades/SentryFortificationSkillAction
+    Guid:
+      Value: 479614577650482228
+  Icon: {fileID: 0}
+  DisplayName: Fortification
+  RankDescriptions:
+  - 'Extended Range: Sentry attack range +2.'
+  - 'Shield Battery: allies standing near your Sentry recover 3 Shield per second.'
+  - 'Fire Support: allies near your Sentry also gain +15% Fire Rate and 10% Damage
+    Reduction.'
+  <MaxRank>k__BackingField: 3
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 0
+  Description: Your Sentry becomes a position worth holding - longer reach, then
+    Shield, then covering fire.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  RangeBonus:
+  - RawValue: 131072
+  - RawValue: 131072
+  - RawValue: 131072
+  AllyShieldPerSecond:
+  - RawValue: 0
+  - RawValue: 196608
+  - RawValue: 196608
+  AuraRangeRatio:
+    RawValue: 32768
+  FireSupportEffect:
+  - Id:
+      Value: 0
+  - Id:
+      Value: 0
+  - Id:
+      Value: 297551053167391233

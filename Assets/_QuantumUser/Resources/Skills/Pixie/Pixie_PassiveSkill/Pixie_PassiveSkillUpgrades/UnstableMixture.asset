@@ -18,24 +18,24 @@ MonoBehaviour:
       Value: 361478584056376078
   Icon: {fileID: -361352915, guid: b217254d41b6945b1873986186a25786, type: 3}
   DisplayName: Unstable Mixture
-  Rarity: 2
-  Description: Marked-enemy death explosions deal more damage and cover more area.
-    Specialist and Heavy enemies create especially large death explosions.
+  Description: An explosion that gets a kill empowers your next one - and at full
+    charge, that one splits in two.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - Marked-enemy death explosions gain +30% damage and +15% radius. Specialist and
-    Heavy enemies create death explosions with an additional +50% radius.
-  - Marked-enemy death explosions gain +60% damage and +30% radius. Specialist and
-    Heavy enemies create death explosions with an additional +50% radius.
-  - Marked-enemy death explosions gain +90% damage and +40% radius. Specialist and
-    Heavy enemies create death explosions with an additional +50% radius.
-  BonusDamageMultiplier:
-  - RawValue: 85197
-  - RawValue: 104858
-  - RawValue: 124518
-  BonusRadiusMultiplier:
-  - RawValue: 75366
-  - RawValue: 85197
-  - RawValue: 91750
-  TierRadiusMultiplier:
-    RawValue: 98304
+  - 'An explosion that kills an enemy empowers your next explosion: +30% damage and
+    +15% radius.'
+  - The empowerment can bank up to 2 kills, for +60% damage and +30% radius on your
+    next explosion.
+  - At 2 banked kills, the empowered explosion also detonates a second, smaller blast
+    shortly after.
+  DamageBonusPerStack:
+    RawValue: 19661
+  RadiusBonusPerStack:
+    RawValue: 9830
+  MaxStacks: 010202
+  SecondaryDamagePercent:
+    RawValue: 32768
+  SecondaryRadiusMultiplier:
+    RawValue: 49152
+  SecondaryDelay:
+    RawValue: 32768

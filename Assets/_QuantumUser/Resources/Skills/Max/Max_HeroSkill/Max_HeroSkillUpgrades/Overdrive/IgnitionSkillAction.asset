@@ -20,9 +20,9 @@ MonoBehaviour:
   DisplayName: Ignition
   RankDescriptions:
   - At max Rage, weapon hits guarantee Burn.
-  - At max Rage, weapon hits guarantee Burn, and moving drops Burning Ground patches
-    behind you.
-  - At max Rage, weapon hits guarantee Burn and you drop Burning Ground while moving
+  - At max Rage, weapon hits guarantee Burn - and Burning enemies you kill leave
+    a Burning Ground patch behind.
+  - At max Rage, weapon hits guarantee Burn and Burning kills leave Burning Ground
     - the first time you reach max Rage each activation, Inferno also detonates a
     radial Burn pulse around you.
   <MaxRank>k__BackingField: 3
@@ -76,6 +76,10 @@ MonoBehaviour:
     Id:
       Value: 1323926246826422929
   BurningGroundDuration:
-    RawValue: 196608
-  BurningGroundSpacing:
+    RawValue: 262144
+  BurningGroundRadius:
     RawValue: 131072
+  BurningGroundDamage:
+    RawValue: 262144
+  BurningGroundTickInterval:
+    RawValue: 32768

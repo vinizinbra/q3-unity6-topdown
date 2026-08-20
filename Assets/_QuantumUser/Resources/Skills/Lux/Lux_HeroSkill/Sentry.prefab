@@ -389,6 +389,8 @@ MonoBehaviour:
       RawValue: 6553600
     RegenRate:
       RawValue: 0
+    RegenTimer:
+      RawValue: 0
 --- !u!114 &8808795492261865308
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -406,6 +408,20 @@ MonoBehaviour:
       RawValue: 0
     Owner: {fileID: 0}
     DecayRate:
+      RawValue: 0
+    FireRateMultiplier:
+      RawValue: 0
+    TempFireRateMultiplier:
+      RawValue: 0
+    TempFireRateRemaining:
+      RawValue: 0
+    RedlineThreshold:
+      RawValue: 0
+    RedlineFireRateMultiplier:
+      RawValue: 0
+    RedlineActive:
+      Value: 0
+    LifetimeExtensionRemaining:
       RawValue: 0
 --- !u!114 &414817762925730490
 MonoBehaviour:
@@ -474,9 +490,13 @@ MonoBehaviour:
   healFlashColor: {r: 0.4, g: 1, b: 0.4, a: 1}
   shieldFlashColor: {r: 0.4, g: 0.75, b: 1, a: 1}
   deathColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
-  pickupGlowColor: {r: 1, g: 0.85, b: 0.3, a: 1}
-  pickupGlowDuration: 0.5
   riftMarkMaterial: {fileID: 0}
+  riftMarkApplicationFlashColor: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
+  riftMarkApplicationFlashDuration: 0.08
+  expPickupFlashColor: {r: 0.3, g: 0.55, b: 1, a: 1}
+  coinPickupFlashColor: {r: 1, g: 0.84, b: 0.2, a: 1}
+  riftShardPickupFlashColor: {r: 1, g: 0.35, b: 0.75, a: 1}
+  pickupFlashDuration: 0.35
   freezeMaterial: {fileID: 0}
 --- !u!114 &4985489237094476416
 MonoBehaviour:
@@ -533,6 +553,7 @@ MonoBehaviour:
   playOnEnable: 1
   playType: 0
   backwardMultiplier: 0.7
+  useUnscaledTime: 0
 --- !u!114 &8725198916948242395
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -851,6 +872,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.HasShadow
   baseScale: 2
+  shadowOffset: {x: 0, y: 0}
 --- !u!114 &1708314770225175532
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1030,7 +1052,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 351ba1bc536654a439e6cb10706289de, type: 3}
+  m_Sprite: {fileID: 21300000, guid: d1205d938ca124596832a02356ee715f, type: 3}
   m_Color: {r: 0.5754717, g: 0.5754717, b: 0.5754717, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -1053,6 +1075,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.HasShadow
   baseScale: 1
+  shadowOffset: {x: 0, y: 0}
 --- !u!114 &4610966412717363858
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6128,7 +6151,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 351ba1bc536654a439e6cb10706289de, type: 3}
+  m_Sprite: {fileID: 21300000, guid: d1205d938ca124596832a02356ee715f, type: 3}
   m_Color: {r: 0.5754717, g: 0.5754717, b: 0.5754717, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -6151,6 +6174,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.HasShadow
   baseScale: 1
+  shadowOffset: {x: 0, y: 0}
 --- !u!114 &7581697028079935543
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6642,7 +6666,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 351ba1bc536654a439e6cb10706289de, type: 3}
+  m_Sprite: {fileID: 21300000, guid: d1205d938ca124596832a02356ee715f, type: 3}
   m_Color: {r: 0.5754717, g: 0.5754717, b: 0.5754717, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -6665,6 +6689,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.HasShadow
   baseScale: 1
+  shadowOffset: {x: 0, y: 0}
 --- !u!114 &8375619371612322969
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7012,7 +7037,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 351ba1bc536654a439e6cb10706289de, type: 3}
+  m_Sprite: {fileID: 21300000, guid: d1205d938ca124596832a02356ee715f, type: 3}
   m_Color: {r: 0.5754717, g: 0.5754717, b: 0.5754717, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -7035,6 +7060,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.HasShadow
   baseScale: 1
+  shadowOffset: {x: 0, y: 0}
 --- !u!114 &7985834177374479781
 MonoBehaviour:
   m_ObjectHideFlags: 0

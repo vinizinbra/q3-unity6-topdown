@@ -1,0 +1,80 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7d618447a9454a1abb5df55718d41e6, type: 3}
+  m_Name: RelocationProtocolSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.RelocationProtocolSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Lux/Lux_DashSkillUpgrades/RelocationProtocolSkillAction
+    Guid:
+      Value: 465261250465140776
+  Icon: {fileID: 0}
+  DisplayName: Relocation Protocol
+  RankDescriptions:
+  - 'Reposition: dashing from within 4m of your Sentry moves it to your dash destination,
+    keeping its Health, lifetime, upgrades and modifications.'
+  - 'Rapid Setup: after relocating, that Sentry gains +25% Fire Rate for 2s and 1s
+    of extra lifetime.'
+  - 'Hot Drop: landing also fires an immediate volley and a knockback pulse at everything
+    nearby.'
+  <MaxRank>k__BackingField: 3
+  Priority: 0
+  Phase: -1
+  Interval:
+    RawValue: 0
+  Activated: 1
+  Description: Dash while standing at your Sentry and it comes with you - fully intact.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  PickupRange:
+    RawValue: 262144
+  TempFireRateMultiplier:
+  - RawValue: 65536
+  - RawValue: 81920
+  - RawValue: 81920
+  TempFireRateDuration:
+    RawValue: 131072
+  LifetimeExtension:
+  - RawValue: 0
+  - RawValue: 65536
+  - RawValue: 65536
+  MaxLifetimeExtensionPerSentry:
+    RawValue: 262144
+  HotDropDamagePercent:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 52429
+  HotDropRadius:
+    RawValue: 262144
+  HotDropKnockbackForce:
+    RawValue: 524288

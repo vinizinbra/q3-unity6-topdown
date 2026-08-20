@@ -16,7 +16,9 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Lux/Lux_PassiveSkill/ScrapCollectorPassiveData
     Guid:
       Value: 305265041979885090
-  Description: Lux's kills on Normal-tier and tougher enemies have a chance to drop Scrap. Collect enough Scrap and Lux gains a free Hero Skill charge.
+  Description: Lux's kills on Normal-tier and tougher enemies have a chance to drop
+    Scrap. Collect enough Scrap and Lux gains a free Hero Skill charge.
   DropChance:
     RawValue: 16384
   StacksRequired: 10
+  MaxActiveSentries: 2

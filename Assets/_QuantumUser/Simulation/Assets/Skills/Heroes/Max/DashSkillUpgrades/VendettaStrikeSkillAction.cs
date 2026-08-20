@@ -18,7 +18,10 @@ namespace Quantum
     //    a kill, even with zero StoredDamage banked.
     //  - Rank 3: also rewards landing the strike depending on Overdrive's own current state - reduces
     //    the Hero Skill's own cooldown if dormant, or extends the current Overdrive activation if
-    //    already active (OverdriveUtility.TryExtend, same mechanism Uncontrolled Fury uses).
+    //    already active. That extension goes through OverdriveUtility.TryExtend like every other
+    //    source, so it books against - and is capped by - the same shared per-activation
+    //    OverdriveExtension ledger Uncontrolled Fury uses. There is deliberately no way for this to
+    //    add duration past that ceiling, no matter how many enemies a dash sweeps.
     // Procs at most once per enemy per dash - see VendettaStrikeHitTracker, granted fresh on this
     // action's own Begin phase, same shape/precedent as Brute's IronShoulderSkillAction/
     // IronShoulderHitTracker. Enemy sweep shape copied from Pixie's SlowFuseSkillAction.
@@ -57,7 +60,8 @@ namespace Quantum
 
             int rank = System.Math.Max(1, SkillUpgradeUtility.GetRank(f, filter.Entity, selfRef));
 
-            Shape3D sphere = Shape3D.CreateSphere(Radius);
+            // Skill Area - see StatUtility.GetAreaMultiplier.
+            Shape3D sphere = Shape3D.CreateSphere(Radius * StatUtility.GetAreaMultiplier(f, filter.Entity));
             var hits = f.Physics3D.OverlapShape(filter.Transform3D->Position, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
 
             for (int i = 0; i < hits.Count; i++)

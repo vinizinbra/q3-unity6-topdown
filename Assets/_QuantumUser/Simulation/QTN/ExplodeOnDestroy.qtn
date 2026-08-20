@@ -53,4 +53,21 @@ component ExplodeOnDestroy
     // bomb, AreaHitData.PlantedFuseTime) rather than a fire-and-forget trap, where losing that
     // cascade/signal eligibility would be a real regression, not a safety guard.
     Boolean TriggersSpawnUpgrades;
+
+    // "This detonation is a delayed continuation of a real Hero Skill THROW" - true only for a bomb
+    // that was actually thrown and then planted (ProjectileSystem.TryPlant), never for a bomb that
+    // was simply dropped (Pixie's Backblast, Pocket Bombs' Mini Bomb, DashBomb).
+    //
+    // Deliberately NOT the same question as TriggersSpawnUpgrades above, even though for a while one
+    // flag answered both. That one asks "does this count as a full, genuine explosion" - Chain
+    // Reaction marking, Direct Hit's proximity bonus, the OnAreaExplosionDetonated signal - which a
+    // dropped Backblast bomb legitimately wants. This one asks "may this MULTIPLY into more
+    // projectiles", which it must not: Cluster Bomb is the Hero Skill pool's payoff and is balanced
+    // against Bunny Bomb's cooldown, whereas Backblast fires off the dash and drops TWO bombs from
+    // rank 2, so letting a drop cluster put the kit's biggest damage multiplier on its cheapest,
+    // most-spammable button. See docs/pixie-ascensions.md.
+    //
+    // Consumers: AreaHitData.Detonate's cluster-bomblet gate, and BlastJumpSkillAction's
+    // "detonate nearby PLANTED bombs" sweep (which is what that line always meant to key off).
+    Boolean IsPlantedThrow;
 }

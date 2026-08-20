@@ -56,6 +56,24 @@ namespace QuantumUser.View.Managers
         [SerializeField, Tooltip("Tint applied only when falling back to defaultAreaBlastEffect (overflowingRiftPulsePrefab left empty) - hot-pink, same Rift Mark color rule as detonationFallbackColor/riftMarkColor.")]
         private Color overflowingRiftFallbackColor = new Color32(0xFD, 0x39, 0x71, 0xFF);
 
+        [Header("Groundbreaker")]
+        [SerializeField, Tooltip("Played on GroundbreakerSlammed (Brute's Groundbreaker Ascension - see docs/brute-ascensions.md) at his landing point. Authored at a reference radius of 1 and scaled by e.Radius, so one prefab covers all three ranks (3 / 3 / 4.5) rather than needing three. Falls back to defaultAreaBlastEffect, tinted groundbreakerFallbackColor, if left empty - same dedicated-slot-with-tinted-fallback pattern as the reaction VFX above.")]
+        private ParticleSystem groundbreakerImpactPrefab;
+        [SerializeField, Tooltip("Optional ground crack/dust decal stamped at the raycast-detected ground point under the landing, radius-scaled like the burst itself. Same optional-decal shape as deathDecalEffect - skipped entirely if left empty, or if no Ground-layer geometry is found within groundbreakerDecalMaxGroundDistance.")]
+        private ParticleSystem groundbreakerDecalPrefab;
+        [SerializeField, Tooltip("Max vertical distance below the landing position to accept Ground-layer geometry for groundbreakerDecalPrefab placement. Small by design - Groundbreaker only fires on a landing, so real ground is always right there; this exists to avoid stamping a crack on some distant floor if he lands on a thin platform over a pit.")]
+        private float groundbreakerDecalMaxGroundDistance = 2f;
+        [SerializeField, Tooltip("Tint applied only when falling back to defaultAreaBlastEffect (groundbreakerImpactPrefab left empty) - a dusty earth tone, since this is a terrain impact rather than an explosion or a rift reaction. Ignored once a dedicated prefab is authored.")]
+        private Color groundbreakerFallbackColor = new Color(0.72f, 0.6f, 0.42f);
+
+        [Header("Wall Slam")]
+        [SerializeField, Tooltip("Played on WallSlammed at the wall CONTACT point, oriented into the surface (see WallSlamUtility) - generic and source-agnostic, so both Brute's Iron Shoulder dash and his Groundbreaker landing use it with no per-source hookup. Falls back to defaultAreaBlastEffect if left empty.")]
+        private ParticleSystem wallSlamEffectPrefab;
+        [SerializeField, Tooltip("Uniform scale for wallSlamEffectPrefab when the Stun did NOT land (a hard-CC immunity window, or an ImmuneToHardCC tier - the target still hit the wall). This event carries no radius, so scale is authored rather than derived, same reasoning as meleeHitEffectScale.")]
+        private float wallSlamEffectScale = 1f;
+        [SerializeField, Tooltip("Uniform scale used instead when the Stun genuinely LANDED - the moment that actually rewards the player (and the one that opens Groundbreaker rank 3's Exposed window), so it reads heavier than a wall contact that got resisted.")]
+        private float wallSlamStunnedEffectScale = 1.6f;
+
         [Header("Melee Hit")]
         [SerializeField, Tooltip("Played whenever a HitEffectApplied event fires from a non-enemy Owner (a player skill/weapon hitting something) - generic and source-agnostic, not per-asset. Falls back to defaultAreaBlastEffect if left empty. Enemy-caused hits are handled separately by EnemyAttackVisualsView (per-delivery HitImpactPrefab), so this only covers the previously-uncovered player-hit case.")]
         private ParticleSystem meleeHitEffectPrefab;
@@ -65,7 +83,7 @@ namespace QuantumUser.View.Managers
         [Header("Heal / Shield Grant")]
         [SerializeField, Tooltip("Played at the target whenever EntityHealed fires, from any source (PortableSpeakerSkillAction, HealEffectData, HealthRegenSystem, ...) - generic and source-agnostic, not per-asset. The floating heal number (DamageFeedbackManager) and hit-flash (HitFeedback) already cover this event too; this is just the particle. Leave empty to skip the particle - unlike the blast-style handlers above, this deliberately does NOT fall back to defaultAreaBlastEffect, since a combat blast reads wrong for a heal.")]
         private ParticleSystem healGrantEffectPrefab;
-        [SerializeField, Tooltip("Played at the target whenever EntityShielded fires, from any source (BodyguardSkillAction, PortableCoverSkillAction, ShieldEffectData) - generic and source-agnostic, not per-asset. Leave empty to skip the particle, same no-fallback reasoning as healGrantEffectPrefab.")]
+        [SerializeField, Tooltip("Played at the target whenever EntityShielded fires, from any source (BodyguardSkillAction, Lux's Shield Battery aura, ShieldEffectData) - generic and source-agnostic, not per-asset. Leave empty to skip the particle, same no-fallback reasoning as healGrantEffectPrefab.")]
         private ParticleSystem shieldGrantEffectPrefab;
         [SerializeField, Tooltip("Played at the target whenever ShieldBroken fires (Shield.Current hitting 0 - see DamageUtility.AbsorbWithShield), from any source (player or enemy). Leave empty to skip the particle, same no-fallback reasoning as healGrantEffectPrefab.")]
         private ParticleSystem shieldBreakEffectPrefab;
@@ -127,7 +145,6 @@ namespace QuantumUser.View.Managers
             QuantumEvent.Subscribe<EventExplodeOnDeathDetonated>(this, OnExplodeOnDeathDetonated);
             QuantumEvent.Subscribe<EventVortexExploded>(this, OnVortexExploded);
             QuantumEvent.Subscribe<EventVortexImploded>(this, OnVortexImploded);
-            QuantumEvent.Subscribe<EventVortexRepulsed>(this, OnVortexRepulsed);
             QuantumEvent.Subscribe<EventUndertowTriggered>(this, OnUndertowTriggered);
             QuantumEvent.Subscribe<EventJuggernautDischarged>(this, OnJuggernautDischarged);
             QuantumEvent.Subscribe<EventJuggernautEndExploded>(this, OnJuggernautEndExploded);
@@ -135,6 +152,8 @@ namespace QuantumUser.View.Managers
             QuantumEvent.Subscribe<EventEnemyExploded>(this, OnEnemyExploded);
             QuantumEvent.Subscribe<EventSentryOverloadDetonated>(this, OnSentryOverloadDetonated);
             QuantumEvent.Subscribe<EventShockwaveReleased>(this, OnShockwaveReleased);
+            QuantumEvent.Subscribe<EventGroundbreakerSlammed>(this, OnGroundbreakerSlammed);
+            QuantumEvent.Subscribe<EventWallSlammed>(this, OnWallSlammed);
             QuantumEvent.Subscribe<EventWeaponExplosionReleased>(this, OnWeaponExplosionReleased);
             QuantumEvent.Subscribe<EventDetonationReleased>(this, OnDetonationReleased);
             QuantumEvent.Subscribe<EventSingularityTriggered>(this, OnSingularityTriggered);
@@ -220,14 +239,6 @@ namespace QuantumUser.View.Managers
             PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
         }
 
-        // Kai's Warp Wake rank 3 "Repulsion" - a Dash Void collapsing into an outward shockwave.
-        // Generic, not per-asset (no dedicated prefab field on WarpWakeSkillAction) - same simpler
-        // shape OnExplodeOnDeathDetonated/OnWeaponExplosionReleased already use.
-        private void OnVortexRepulsed(EventVortexRepulsed e)
-        {
-            PlayEffect(defaultAreaBlastEffect, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
-        }
-
         // Kai's Undertow ascension - a small, fixed-scale impact/mark flash on BOTH the struck enemy
         // and its pull target (Source/Target here are always genuine enemies, never Kai/the owner -
         // see UndertowTriggered's own comment in Events.qtn), separate from the ongoing tether line
@@ -255,14 +266,14 @@ namespace QuantumUser.View.Managers
         }
 
         // Same resolution as OnVortexExploded - Source always comes from exactly one
-        // SentryAddOverloadSkillAction asset, which is where BlastEffectPrefab lives (see
-        // SentryAddOverloadSkillAction.View.cs).
+        // SentryOverloadCoreSkillAction asset, which is where BlastEffectPrefab lives (see
+        // SentryOverloadCoreSkillAction.View.cs).
         private void OnSentryOverloadDetonated(EventSentryOverloadDetonated e)
         {
             Frame frame = e.Game.Frames.Predicted;
             if (frame == null) return;
 
-            SentryAddOverloadSkillAction action = frame.FindAsset(e.Source);
+            SentryOverloadCoreSkillAction action = frame.FindAsset(e.Source);
             ParticleSystem prefab = action.BlastEffectPrefab ?? defaultAreaBlastEffect;
 
             PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
@@ -333,6 +344,56 @@ namespace QuantumUser.View.Managers
             ParticleSystem prefab = shockwaveEffectPrefab ?? defaultAreaBlastEffect;
 
             PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
+        }
+
+        // Brute's Groundbreaker Ascension (see docs/brute-ascensions.md) - fires once per qualifying
+        // landing, whether or not anything was caught, so a big drop into an empty room still reads.
+        // Same "no single asset to resolve a bespoke prefab from" reasoning as the reaction handlers
+        // above: it's a PassiveUpgradeData, whose Apply gets no self AssetRef to travel with the event,
+        // so the prefab lives on this manager rather than per-asset (the shape Undertow/Detonation/
+        // Singularity/Overflowing Rift already use for exactly the same reason).
+        //
+        // e.Position is Brute's own landing transform, which sits at his feet - close enough for the
+        // burst, but the decal is ground-probed separately so a crack can't float above a slope.
+        private void OnGroundbreakerSlammed(EventGroundbreakerSlammed e)
+        {
+            Vector3 position = e.Position.ToUnityVector3();
+            Vector3 scale = Vector3.one * e.Radius.AsFloat;
+
+            if (groundbreakerImpactPrefab != null)
+                PlayEffect(groundbreakerImpactPrefab, position, Quaternion.identity, scale);
+            else
+                PlayEffect(defaultAreaBlastEffect, position, Quaternion.identity, scale, groundbreakerFallbackColor);
+
+            if (groundbreakerDecalPrefab != null
+                && TryFindGroundBelow(position, groundbreakerDecalMaxGroundDistance, out Vector3 groundPoint))
+                PlayEffect(groundbreakerDecalPrefab, groundPoint, Quaternion.identity, scale);
+        }
+
+        // Generic - fires for every WallSlamUtility.TryWallSlam that actually found a wall, regardless
+        // of which knockback source produced it (Brute's Iron Shoulder dash, his Groundbreaker landing,
+        // anything added later). Same source-agnostic reasoning as OnShockwaveReleased.
+        //
+        // Oriented INTO the wall off e.PushDirection, so the burst sprays against the surface rather
+        // than playing a symmetric puff; e.Position is already the wall contact point, not the target's
+        // own position. e.Stunned picks the heavier variant - a wall hit that got resisted by a hard-CC
+        // immunity window (or an ImmuneToHardCC tier) shouldn't read as the same payoff as one that
+        // landed, since only the landed case opens Groundbreaker rank 3's Exposed window.
+        private void OnWallSlammed(EventWallSlammed e)
+        {
+            ParticleSystem prefab = wallSlamEffectPrefab ?? defaultAreaBlastEffect;
+            float scale = e.Stunned == true ? wallSlamStunnedEffectScale : wallSlamEffectScale;
+
+            Vector3 push = e.PushDirection.ToUnityVector3();
+
+            // A degenerate direction can't produce a rotation - LookRotation logs an error and returns
+            // identity for a zero vector. The simulation already rejects a zero push before raycasting,
+            // so this is belt-and-braces rather than an expected case.
+            Quaternion rotation = push.sqrMagnitude > 0.0001f
+                ? Quaternion.LookRotation(push, Vector3.up)
+                : Quaternion.identity;
+
+            PlayEffect(prefab, e.Position.ToUnityVector3(), rotation, Vector3.one * scale);
         }
 
         // Generic - fires for any weapon-perk explosion that has no dedicated VFX of its own

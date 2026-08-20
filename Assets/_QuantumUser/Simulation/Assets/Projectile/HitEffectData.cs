@@ -28,6 +28,18 @@ namespace Quantum
         // None when the projectile struck level geometry rather than an entity.
         public EntityRef Target;
 
+        // The ENTITY that produced this hit - a spawned area/deployable (Zara's Totem, a fire trail),
+        // as opposed to Owner, which is the player credited with it. None for a hit with no
+        // persistent entity behind it (a hitscan shot, an already-consumed projectile's blast), which
+        // is every caller that doesn't explicitly pass one.
+        //
+        // Exists so a per-deployable-instance effect (AreaAllyBudget's healing/cooldown caps - see
+        // AreaAllyBudgetUtility) can find the specific instance that's paying, rather than having to
+        // key off Owner (which would merge two of the same Zara's Totems into one shared budget) or
+        // off the effect asset (shared by every instance). Set by AreaDamageSystem/
+        // AlternatingAreaSystem.FireBonusPulse.
+        public EntityRef SourceEntity;
+
         public FPVector3 Position;
 
         // Travel direction for a direct hit, radial from the blast center for an area hit - the

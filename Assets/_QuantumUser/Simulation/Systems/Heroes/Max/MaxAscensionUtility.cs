@@ -24,6 +24,13 @@ namespace Quantum
             stats->ReloadSpeedMultiplier *= FP._1 + fullThrottle->ReloadSpeedBonus;
             fullThrottle->Applied = true;
 
+            // Rank 3 - a single refill on the threshold crossing itself. Applied (just latched above)
+            // is what guarantees "once per entry into max Rage", not a per-tick live condition.
+            if (fullThrottle->HasInstantReload == true)
+            {
+                WeaponSystem.RefillMagazine(f, owner);
+            }
+
             Log.Debug($"[Skill] {owner} Full Throttle engaged (+{fullThrottle->WeaponDamageBonus} Weapon Damage, +{fullThrottle->ReloadSpeedBonus} Reload Speed)");
         }
 
@@ -60,7 +67,10 @@ namespace Quantum
                 && f.Unsafe.TryGetPointer<Transform3D>(owner, out var transform) == true)
             {
                 ignition->InfernoTriggeredThisActivation = true;
-                ApplyRadialBurn(f, transform->Position, ignition->InfernoRadius, owner, FP._0,
+                // Skill Area - see StatUtility.GetAreaMultiplier. Max's kit is mostly self-buff, but
+                // Ignition's Inferno burst and Burning Ground below are genuine skill areas and scale
+                // like every other hero's.
+                ApplyRadialBurn(f, transform->Position, ignition->InfernoRadius * StatUtility.GetAreaMultiplier(f, owner), owner, FP._0,
                     ignition->InfernoBurnDuration, ignition->InfernoBurnIntensity);
             }
         }
@@ -78,11 +88,50 @@ namespace Quantum
             ignition->Applied = false;
         }
 
-        // Damage + Burn to every enemy in radius - Ignition rank 3's Inferno pulse and Burning
-        // Vengeance rank 3's fiery burst both call this instead of each re-deriving the same
-        // OverlapShape/Enemy-gate loop. damage may be 0 to apply Burn only (Inferno's own pulse -
-        // the ignited Burn tick is the actual damage here, not a separate upfront hit). Mirrors
-        // BruteAscensionUtility.ApplyRadialStunDamage's exact shape.
+        // Ignition rank 2 - drops a burning-ground patch at a Burning enemy's death position (see
+        // MaxOverdriveReactionSystem.TryDropBurningGround). Every value comes off IgnitionUpgrade
+        // rather than the prototype, so the patch can be balanced without opening a prefab; the
+        // prototype only supplies the collider shape and whatever AreaDamage.Effects it authors (a
+        // Burn effect, typically), which are left exactly as authored.
+        public static void SpawnBurningGround(Frame f, EntityRef owner, IgnitionUpgrade* ignition, FPVector3 position)
+        {
+            if (ignition->BurningGroundPrototype.IsValid == false)
+            {
+                Log.Error($"[Skill] {owner}'s Ignition rank 2 has no BurningGroundPrototype assigned - nothing spawned");
+                return;
+            }
+
+            EntityRef patch = SpawnedEntitySpawner.Spawn(f, owner, ignition->BurningGroundPrototype,
+                ignition->BurningGroundDuration, position, DamageSource.Skill);
+
+            if (patch == EntityRef.None)
+                return;
+
+            if (f.Unsafe.TryGetPointer<AreaDamage>(patch, out var area) == true)
+            {
+                area->Damage = ignition->BurningGroundDamage;
+
+                if (ignition->BurningGroundTickInterval > FP._0)
+                {
+                    area->TickInterval = ignition->BurningGroundTickInterval;
+                }
+            }
+
+            // Radius is authored here too, so one prototype can serve every rank/tuning pass - same
+            // "spawn, then configure the spawned entity's own collider" shape
+            // SpawnAlternatingAreaEffectData.ApplyMainStageRadius already uses.
+            if (ignition->BurningGroundRadius > FP._0
+                && f.Unsafe.TryGetPointer<PhysicsCollider3D>(patch, out var collider) == true
+                && collider->Shape.Type == Shape3DType.Sphere)
+            {
+                collider->Shape.Sphere.Radius = ignition->BurningGroundRadius * StatUtility.GetAreaMultiplier(f, owner);
+            }
+        }
+
+        // Damage + Burn to every enemy in radius - Ignition rank 3's Inferno pulse calls this instead
+        // of re-deriving the same OverlapShape/Enemy-gate loop. damage may be 0 to apply Burn only
+        // (Inferno's own pulse - the ignited Burn tick is the actual damage here, not a separate
+        // upfront hit). Mirrors BruteAscensionUtility.ApplyRadialStunDamage's exact shape.
         public static void ApplyRadialBurn(Frame f, FPVector3 center, FP radius, EntityRef owner, FP damage, FP burnDuration, FP burnIntensity)
         {
             if (radius <= FP._0)

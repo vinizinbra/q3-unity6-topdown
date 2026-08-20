@@ -183,7 +183,8 @@ MonoBehaviour:
       Value: 3435789117373323794
   Icon: {fileID: 0}
   DisplayName: Deploy Sentry
-  Rarity: 0
+  RankDescriptions: []
+  <MaxRank>k__BackingField: 1
   Priority: 100
   Phase: 1
   Interval:
@@ -226,6 +227,18 @@ MonoBehaviour:
     RawValue: 655360
   Range:
     RawValue: 196608
+  SkillDamage:
+    RawValue: 1310720
+  BaselineWeapon:
+    Id:
+      Value: 471208801872943650
+  BaselineWeaponOffset:
+    X:
+      RawValue: -32768
+    Y:
+      RawValue: 98304
+    Z:
+      RawValue: 0
   Offset:
     X:
       RawValue: 0
@@ -253,28 +266,18 @@ MonoBehaviour:
   InitStacks: 1
   Cooldown:
     RawValue: 1310720
-  CheckActions: 0
+  CheckActions: 1
   Actions:
   - Id:
       Value: 3435789117373323794
   - Id:
-      Value: 905484235574983035
+      Value: 529575028993573537
   - Id:
-      Value: 2542790117256456073
+      Value: 388233548457362718
   - Id:
-      Value: 3492794733492268349
+      Value: 479614577650482228
   - Id:
-      Value: 1888623492355216042
-  - Id:
-      Value: 422702433047713982
-  - Id:
-      Value: 2744247192482565106
-  - Id:
-      Value: 753955061593946555
-  - Id:
-      Value: 4599612503724607643
-  - Id:
-      Value: 1587832588088237092
+      Value: 299753101746548512
   Icon: {fileID: -2044957003, guid: 09ab27b92d44c4a54a95d6d0d0b9c281, type: 3}
   Description: Deploys a sentry turret that fights by your side, gaining new weapons
     and support auras as you level up.

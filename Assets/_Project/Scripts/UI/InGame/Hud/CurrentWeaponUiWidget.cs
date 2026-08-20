@@ -9,7 +9,7 @@ using UnityEngine.UI;
 // perk reads identically here and on the level-up Choose-Weapon card. WeaponSystem.AddPerk (a plain
 // level-up WeaponPerk grant, unlike a full Equip) fires no Quantum event, so this polls Weapon every
 // QUpdate rather than reacting to EventWeaponEquipped - see docs/weapon-perks.md. By default self-binds
-// to local slot 0 (player 1), same as ScrapUiWidget/AdrenalineUiWidget.
+// to local slot 0 (player 1), same as SkillCooldownUiWidget.
 public class CurrentWeaponUiWidget : QuantumGlobalMonoBehaviour
 {
     [SerializeField] private GameObject root;

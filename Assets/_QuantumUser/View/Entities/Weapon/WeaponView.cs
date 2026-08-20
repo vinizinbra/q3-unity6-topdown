@@ -90,6 +90,30 @@ namespace Quantum
         public Vector3 RightHandGripPosition => transform.TransformPoint(anim.rightHandGrip);
         public Vector3 LeftHandGripPosition => transform.TransformPoint(anim.leftHandGrip);
 
+        // The rest of the hand pose WeaponHandGripView applies alongside the position above -
+        // authored per weapon with the grips themselves (a heavy weapon wants a different hand
+        // angle/size than a pistol). Rotation is an absolute local-rotation override, scale a
+        // multiplier over whatever the hand rig itself authors, so both default to "unchanged".
+        public Vector3 RightHandGripRotation => MirrorGripRotation(anim.rightHandGripRotation);
+        public Vector3 LeftHandGripRotation => MirrorGripRotation(anim.leftHandGripRotation);
+        public Vector3 RightHandGripScale => anim.rightHandGripScale;
+        public Vector3 LeftHandGripScale => anim.leftHandGripScale;
+
+        // Whether the gun is currently mirrored - PlayerGunAimView derives this from
+        // BlobAnimationView.FacingSign, so it's the character's own facing, not an independently
+        // computed one. Exposed for WeaponHandGripView, whose hands hang off the rig's
+        // WeaponLocator rather than the body root and so don't inherit the body's own flip.
+        public bool Flipped => lastFlipped;
+
+        // Z (the screen-plane twist) mirrors while the gun is flipped, same convention Shoot()'s
+        // own rotationKick and ApplyAim's offset mirroring already use - so a grip cocked "down
+        // along the barrel" keeps reading that way when aiming left instead of flipping upward.
+        private Vector3 MirrorGripRotation(Vector3 authored)
+        {
+            if (lastFlipped == false) return authored;
+            return new Vector3(authored.x, authored.y, -authored.z);
+        }
+
         private Vector3 baseScale = Vector3.one;
         private Vector3 restLocalPosition;
         private Vector2 currentOffset;

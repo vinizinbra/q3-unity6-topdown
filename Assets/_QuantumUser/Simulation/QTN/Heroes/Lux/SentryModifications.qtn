@@ -1,0 +1,25 @@
+// Field Modifications' live state, on the SENTRY rather than on Lux - which is the whole point of the
+// line: stacks belong to one machine, last for that machine's lifetime, and die with it. Redeploying
+// starts a fresh machine at zero stacks, so the loop is genuinely "deploy -> collect Scrap -> upgrade
+// this machine before it expires", not a permanent stat Lux accumulates.
+//
+// Added at deploy time by SpawnSentrySkillAction (only when Lux actually holds the Ascension), then
+// mutated by ScrapUtility.ApplyFieldModification on each Scrap pickup.
+component SentryModifications
+{
+    Byte Stacks;
+    Byte MaxStacks;
+
+    // Copied from LuxScrapCollector at deploy time rather than read back off Lux on every pickup - so
+    // a sentry keeps the profile it was deployed with, consistent with every other sentry field.
+    FP DamagePerStack;
+    FP FireRatePerStack;
+
+    // Rank 3 "MK II" - swapped onto the slot-0 barrel via WeaponSystem.Equip the first time Stacks
+    // reaches MaxStacks. Invalid = the rank isn't held.
+    AssetRef<WeaponDataAsset> MkIIWeapon;
+
+    // Latch, so the MK II swap (and its accompanying event) happens exactly once even though
+    // ApplyFieldModification is called on every subsequent pickup.
+    Boolean MkIIApplied;
+}

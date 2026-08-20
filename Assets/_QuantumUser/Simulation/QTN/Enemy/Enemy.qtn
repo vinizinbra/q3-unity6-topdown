@@ -61,6 +61,21 @@ component Enemy
     // EnemyDataAsset.KnockbackRecoveryTime.
     FP KnockbackTimer;
 
+    // Anti-"shoved into the scenery" safety net - see EnemyStuckRecoveryUtility. A hard enough
+    // knockback (Brute's Iron Shoulder pushes at 20 u/s, his Groundbreaker at up to 16.5) can drive
+    // an enemy far enough into a chunk's compound collider in one physics step that the solver
+    // doesn't push it back out, and once its center is INSIDE the geometry the wall raycasts
+    // EnemyMovementUtility steers by (which all originate at the enemy's own position) no longer see
+    // anything to avoid - so normal chase movement just drives it deeper. It reads as the enemy
+    // walking into the environment and getting stuck there.
+    //
+    // Rather than clamping every knockback in the game (which would flatten the feel of knockback
+    // near walls, and still wouldn't cover being popped OVER one), this records where the enemy was
+    // standing the instant it was pushed and watches for a short window afterward. Both fields are
+    // only ever touched inside that window, so an enemy nobody has knocked around costs nothing.
+    FPVector3 PreKnockbackPosition;
+    FP StuckCheckTimer;
+
     // Set by EnemyDeliveryData.Begin() for a delivery that hands off to a separately-ticking
     // spawned entity instead of finishing on the spot (e.g. a future lobbed-shell delivery) -
     // Tick() watches f.Exists(SkillProjectile) to know when that entity is actually done (hit

@@ -31,8 +31,16 @@ namespace Quantum
         [Header("Hand Grips")]
         [Tooltip("Local position (relative to this weapon) where the right hand blob should sit while held. Z defaults to -0.01 so the hand renders in front of the gun sprite instead of behind it - this object is billboarded to face the camera, so local Z tracks camera depth.")]
         public Vector3 rightHandGrip = new Vector3(0f, 0f, -0.01f);
+        [Tooltip("Local rotation (euler degrees) the right hand is forced to while holding this weapon, e.g. (0, 0, -20) cocks the hand down along the barrel. Applied in the WEAPON's own space (the hand follows the gun's rotation), and an absolute override rather than an offset - zero means held exactly like the gun. Z is auto-mirrored when the gun is flipped, so it keeps reading the same way aiming left.")]
+        public Vector3 rightHandGripRotation;
+        [Tooltip("Multiplier on the right hand's own authored rest scale while this weapon is held, e.g. (1.2, 1.2, 1.2) fattens the hand on a heavy weapon. 1 = the rig's own scale, untouched.")]
+        public Vector3 rightHandGripScale = Vector3.one;
         [Tooltip("Local position (relative to this weapon) where the left hand blob (off-hand support) should sit while held. Same Z convention as rightHandGrip.")]
         public Vector3 leftHandGrip = new Vector3(0f, 0f, -0.01f);
+        [Tooltip("Local rotation (euler degrees) the left hand is forced to. Same convention as rightHandGripRotation.")]
+        public Vector3 leftHandGripRotation;
+        [Tooltip("Multiplier on the left hand's own authored rest scale. Same convention as rightHandGripScale.")]
+        public Vector3 leftHandGripScale = Vector3.one;
 
         [Header("Shoot Recoil")]
         [Tooltip("Screen-space distance the gun snaps back on each shot, opposite the currently-held aim direction.")]

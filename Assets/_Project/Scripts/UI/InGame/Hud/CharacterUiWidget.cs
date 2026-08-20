@@ -80,10 +80,14 @@ public class CharacterUiWidget : MonoBehaviour
     private StatusIndicator revengeMarkIndicator;
 
     [Header("Defense States (Brute)")]
-    [SerializeField, Tooltip("Shown on whoever is CURRENTLY benefiting from a Guardian-ascended Brute's Protector Aura (any player, not just Brute himself) - StatusEffects.GuardianDamageReductionRemaining, its own dedicated field so it can't collide with Max's Too Angry to Die.")]
+    [SerializeField, Tooltip("Shown on whoever is CURRENTLY benefiting from any continuous damage-reduction aura (a Guardian-ascended Brute's Protector Aura, a Fire Support Lux Sentry) - StatusEffects.AuraDamageReductionRemaining, the one shared aura-DR slot, so it can't collide with Max's Too Angry to Die.")]
     private StatusIndicator guardianAuraIndicator;
     [SerializeField, Tooltip("Shown on Brute himself while his Juggernaut Hero Skill is actively channeling (JuggernautCharge component present) - that's when CharacterStats.DamageReduction is temporarily boosted, see JuggernautSkillData.Begin/End.")]
     private StatusIndicator juggernautChannelIndicator;
+
+    [Header("Hero Resources")]
+    [SerializeField, Tooltip("Per-hero resource readouts (Brute/Max/Zara/Lux) authored as children of this widget - left empty, auto-populated via GetComponentsInChildren in Setup. Each one self-hides unless the entity this widget follows actually carries that hero's own components, so the single shared prefab keeps serving every hero AND every enemy. This is the only place they live: the party HUD deliberately shows none of them.")]
+    private HeroHudWidget[] heroWidgets;
 
     private Canvas _canvas;
     private Camera _worldCamera;
@@ -121,6 +125,9 @@ public class CharacterUiWidget : MonoBehaviour
 
         if (weaponRowRect == null && ammoSlider != null)
             weaponRowRect = ammoSlider.GetComponent<RectTransform>();
+
+        if (heroWidgets == null || heroWidgets.Length == 0)
+            heroWidgets = GetComponentsInChildren<HeroHudWidget>(true);
 
         SetShown(nameText, string.IsNullOrEmpty(displayName) == false);
         if (nameText != null)
@@ -194,6 +201,22 @@ public class CharacterUiWidget : MonoBehaviour
         UpdateStatusEffects(frame);
         UpdateExplodeOnDeath(frame);
         UpdateRevengeMark(frame);
+        UpdateHeroWidgets(frame);
+    }
+
+    // Every hero widget is refreshed off the frame already resolved above rather than reading one
+    // of its own - they have no Quantum callback and no local-player binding, since this widget
+    // already knows exactly which entity it follows (see HeroHudWidget).
+    private void UpdateHeroWidgets(Frame frame)
+    {
+        if (heroWidgets == null)
+            return;
+
+        foreach (HeroHudWidget widget in heroWidgets)
+        {
+            if (widget != null)
+                widget.Refresh(frame, _entityRef);
+        }
     }
 
     private void FollowTarget()
@@ -409,11 +432,11 @@ public class CharacterUiWidget : MonoBehaviour
 
     private void UpdateGuardianAura(bool hasStatus, StatusEffects status)
     {
-        bool shown = hasStatus && status.GuardianDamageReductionRemaining > FP._0;
+        bool shown = hasStatus && status.AuraDamageReductionRemaining > FP._0;
         guardianAuraIndicator.SetShown(shown);
 
         if (shown)
-            guardianAuraIndicator.SetTimer($"{status.GuardianDamageReductionRemaining.AsFloat:F1}s");
+            guardianAuraIndicator.SetTimer($"{status.AuraDamageReductionRemaining.AsFloat:F1}s");
     }
 
     // Not part of StatusEffects - JuggernautCharge is added at Begin/removed at End (see

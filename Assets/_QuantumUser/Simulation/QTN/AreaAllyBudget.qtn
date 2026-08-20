@@ -1,0 +1,36 @@
+// Per-SPAWNED-AREA, per-ally spend caps - "this one deployable may only ever give any single ally
+// N total of X." Generic (not Zara-named): the first consumers are her Totem's global healing cap
+// (20% of an ally's Max HP per Totem instance) and Sound Boost's Hero-Skill-cooldown-reduction cap
+// (MaxHeroSkillCooldownReductionPerTotem), but nothing here knows about Totems - any spawned entity
+// carrying AreaDamage can add this and have its effects respect it.
+//
+// Lives on the AREA entity, not on the ally and not on the owner, which is exactly what makes the
+// cap "per Totem instance": a fresh deploy is a fresh entity, so it starts a fresh allowance for
+// everyone, and two Zaras' Totems each track their own budgets with zero cross-talk. Discarded for
+// free when the area is destroyed - no cleanup system needed, the same reasoning every other "state
+// that only means anything while this specific spawned entity is alive" component here uses for
+// living on the spawned entity rather than on its owner.
+//
+// Fixed-capacity keyed-entry array, the same idiom StatusEffects.HasteSource/RiftMutationPicks/
+// IronShoulderHitTracker already use (Quantum's qtn DSL has no map type). Sized to 4 - this
+// project's established co-op cap, so every connected player always gets their own slot and the
+// evict/overflow case can't arise in a real match.
+component AreaAllyBudget
+{
+    // Parallel keyed arrays: Ally[i] owns Healed[i]/CooldownReduced[i]. An empty (EntityRef.None)
+    // slot is free. Slots are claimed in order and never released - an ally that leaves and returns
+    // to the same Totem correctly resumes their already-spent allowance rather than getting a fresh
+    // one.
+    array<EntityRef>[4] Ally;
+    array<FP>[4] Healed;
+    array<FP>[4] CooldownReduced;
+
+    // Cap on total HP this area may restore to any ONE ally, as a fraction of that ally's own
+    // MaxHealth (so it scales with whoever is standing in it rather than being a flat number tuned
+    // against one hero). 0 = uncapped, which is what every area that doesn't author this gets.
+    FP MaxHealFractionPerAlly;
+
+    // Cap on total seconds of remaining-cooldown reduction this area may grant any ONE ally. 0 =
+    // uncapped. See ModifyRemainingCooldownEffectData.
+    FP MaxCooldownReductionPerAlly;
+}

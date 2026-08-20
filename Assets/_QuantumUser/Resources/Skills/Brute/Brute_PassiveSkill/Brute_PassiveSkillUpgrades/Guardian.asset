@@ -16,23 +16,31 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/Brute_PassiveSkill/Brute_PassiveSkillUpgrades/Guardian
     Guid:
       Value: 299772149483885795
-  Icon: {fileID: -842112799, guid: 1398529c57dc443e7a3096f4ad470a4c, type: 3}
+  Icon: {fileID: 1060707514, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
   DisplayName: Guardian
-  Rarity: 2
-  Description: Grows the Protector Aura and grants allies inside it Damage Reduction
-    - eventually reacting to protect them further the instant they're hit.
+  Description: Grows the Protector Aura and shelters allies inside it - eventually
+    reacting to protect them further the instant they're hit.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - Aura radius +2m, allies inside gain 10% Damage Reduction.
-  - Aura radius +3m, allies inside gain 20% Damage Reduction.
-  - Aura radius +3m, allies inside gain 25% Damage Reduction. When an ally in the
-    aura takes damage from an enemy, they gain +15% additional Damage Reduction for
-    1.5s (~4s cooldown per ally).
+  - Aura radius +2m; allies inside gain 10% Damage Reduction.
+  - Aura radius +3m; allies inside gain 15% Damage Reduction and 30% Knockback Resistance.
+  - The same 15% baseline - and when an ally in the aura takes an enemy hit, they
+    gain a further +20% Damage Reduction for 2s (5s cooldown per ally).
   RadiusBonus:
   - RawValue: 131072
   - RawValue: 196608
   - RawValue: 196608
   AllyDamageReductionAmount:
   - RawValue: 6554
-  - RawValue: 13107
-  - RawValue: 16384
+  - RawValue: 9830
+  - RawValue: 9830
+  AllyKnockbackTakenMultiplier:
+  - RawValue: 65536
+  - RawValue: 45875
+  - RawValue: 45875
+  ReactiveDamageReductionAmount:
+    RawValue: 13107
+  ReactiveDamageReductionDuration:
+    RawValue: 131072
+  ReactiveCooldownPerAlly:
+    RawValue: 327680

@@ -217,3 +217,66 @@ gained fields; `FullThrottleUpgrade`/`IgnitionUpgrade`/`LastStandUpgrade`/`CanAp
    enemies, with its per-dash hit-tracker preventing multi-proc; Flashpoint doesn't appear in the
    draft until a real Burn source is picked.
 5. Grep for any remaining reference to a deleted class/component name before considering this closed.
+
+---
+
+# 2026-08-20 balance pass
+
+Max drops from 10 lines to the target **9 lines × 3 ranks**. Overdrive and Dash keep their four/two
+lines unchanged in shape; the Passive half loses one line to a merge.
+
+## Roster now
+
+| Pool | Lines |
+|---|---|
+| Overdrive (Hero Skill) | Last Stand, Full Throttle, Uncontrolled Fury, Ignition |
+| Passive | Blood Debt, Wildfire, Flashpoint |
+| Dash | Run & Gun, Vendetta Strike |
+
+## What changed
+
+- **Burning Vengeance deleted, merged into Wildfire.** Two near-identical Burn-spread lines (one
+  scoped to Vendetta kills, one to any Burning death) composed onto the same `StatusSpreadOnDeath`
+  component. `TriggerOnVendettaKill`/`HasFieryBurst` are gone, `MaxVendettaSystem` no longer spreads
+  Burn at all, and `MaxFireMasteryReactionSystem.OnEntityKilled` is the single trigger path. Wildfire
+  now SETS its fields per rank rather than `FPMath.Max`-composing, since it's the only writer.
+- **Last Stand reworked around Rage fragility.** R1 is no longer "Rage survives being hit" — it's
+  **Rage survives between activations** (`LastStandUpgrade.PersistsRage`/`StoredRageStacks`, parked at
+  `BerserkSkillData.End` and handed back at `Begin`). R2 is the new "damage removes only
+  `RageLossFraction` of current Rage" (`RageOverdriveUtility.ResetStacks` now scales instead of
+  wiping). The old Retaliation weapon-damage proc and the `RageRetentionUpgrade` tag are both gone.
+  R3 (Too Angry to Die) is unchanged mechanically but now correctly bypasses R2's softening — a
+  cheated death genuinely spends the Rage.
+  - Consequence: an Overdrive can now **start already at max Rage**. `FullThrottleSkillAction` and
+    `IgnitionSkillAction` each re-check `IsAtMaxRage` in their own Begin (both apply paths are latched
+    and idempotent), so their effects engage immediately rather than waiting for a threshold crossing
+    that already happened. `RageOverdriveUtility.EnterMaxRage` is the shared entry point.
+- **Full Throttle R3 is a one-shot refill, not a permanent state.** The `InstantReloadOverdrive` tag
+  and `WeaponSystem.IsInstantReloadOverdriven` are deleted; `FullThrottleUpgrade.HasInstantReload`
+  fires `WeaponSystem.RefillMagazine` once, on the max-Rage crossing itself, latched by `Applied`.
+  The brief explicitly rules out re-resolving this every tick.
+- **One capped ledger for every Overdrive extension.** `UncontrolledFuryExtension` →
+  **`OverdriveExtension`**, now added by `BerserkSkillData.Begin` itself (seeded from a new
+  `BaseMaxExtension`) and removed at `End`. `OverdriveUtility.TryExtend` clamps and books against it.
+  Uncontrolled Fury's Vendetta-kill bonus was **uncapped** before and is not any more — it draws from
+  the same pool and *replaces* (not stacks with) the ordinary per-N-kills grant for that kill. Vendetta
+  Strike R3's own extension books against the same ledger. R1/R2/R3 caps are 3s/5s/10s.
+- **Ignition R2 is kill-triggered.** Burning Ground was a distance-paced trail spawned every N units
+  travelled while at max Rage; it now drops where a **Burning enemy you killed** died, still gated on
+  max Rage (`MaxOverdriveReactionSystem.TryDropBurningGround`). Radius/damage/tick interval/duration
+  are all authored on `IgnitionUpgrade` rather than baked into the prototype.
+- **Blood Debt reshaped.** R1 12s mark (was 12→16 across ranks; now flat). R2 grants
+  `RevengeConfig.RageOnVendettaKill` (+2 Rage per Vendetta kill) alongside the existing Shield-damage
+  qualification. R3 raises `HealMultiplier` to 0.60 — deliberately lower than the old 1.0 — and adds a
+  hard `MaxHealFractionPerKill` (15% of Max's own MaxHealth) so it can't become a healing engine.
+- **Cremation retiered.** `ExecuteAgainstStatus` now carries `NormalHealthThreshold` (15%,
+  Filler/Normal), `SpecialistHealthThreshold` (8%, Specialist/Heavy), and an Elite/Boss
+  **bonus-damage** window instead of execution (`EliteBossDamageThreshold`/`EliteBossDamageBonus`,
+  read by `MaxFireMasteryReactionSystem.ResolveCremationDamageBonus` from
+  `DamageUtility.ResolveOutgoingDamage`). `BossExecutionEnabled`/`BossHealthThreshold`/
+  `EliteHealthThreshold` are deleted — Elite and Boss are never executable, full stop.
+- Run & Gun and Vendetta Strike are unchanged apart from the shared extension cap.
+
+**Playtest first:** total Overdrive uptime with Last Stand R1 + Uncontrolled Fury R3 (carried Rage +
+10s extension is the intended ceiling); Wildfire chain length now that `RetainedFraction < 1` is the
+only decay; Cremation's Elite/Boss damage window against a real boss.

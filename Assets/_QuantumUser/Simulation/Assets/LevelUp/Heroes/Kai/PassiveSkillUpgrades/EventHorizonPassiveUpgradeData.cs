@@ -1,6 +1,7 @@
 namespace Quantum
 {
     using Photon.Deterministic;
+    using UnityEngine;
 
     // Ranked Passive Ascension (Event Horizon, line 1/3) - see docs/kai-ascensions.md. Merges the old
     // single-pick EventHorizonPassiveUpgradeData/TimeDilationPassiveUpgradeData/
@@ -9,17 +10,14 @@ namespace Quantum
     // ("Void Pressure") additionally slows nearby enemies' own attack-execution timers.
     public unsafe partial class EventHorizonPassiveUpgradeData : PassiveUpgradeData
     {
-        public FP[] RadiusBonus = { FP._1_50, FP.FromString("2.50"), FP.FromString("2.50") };
+        [Tooltip("Absolute Void Field radius per rank, not a bonus - each rank SETS the total. Floored at the field's own spawn-time BaseRadius so this can never shrink it.")]
+        public FP[] Radius = { 4, 5, 5 };
 
-        // Subtracted from VoidFieldPassiveData.SpeedMultiplier's own baseline (0.60) - {0.10, 0.20,
-        // 0.40} gives live projectile speeds of 50%/40%/20% at ranks 1/2/3.
-        public FP[] SpeedMultiplierBonus = { FP.FromString("0.10"), FP._0_20, FP.FromString("0.40") };
+        [Tooltip("Live projectile speed inside the field, per rank - 0.65 = enemy projectiles fly at 65% speed (-35%). Deliberately far milder than the pre-rebalance 0.20 (-80%), which suppressed enemy ranged pressure almost entirely.")]
+        public FP[] ProjectileSpeedMultiplier = { FP.FromString("0.65"), FP._0_50, FP.FromString("0.40") };
 
-        // Rank 3 only (0 at ranks 1-2, which leaves ProjectileSlowField.EnemyTimeDilationMultiplier at
-        // its 0 "off" default). 0.60 = enemy attack-execution timers run at 60% speed ("40% slower"),
-        // same simple-fraction convention the rest of this field already uses (1.0 = normal, lower =
-        // slower - see StatusEffectUtility.ApplyTimeDilation/GetLocalTimeMultiplier).
-        public FP[] EnemyTimeDilationMultiplier = { FP._0, FP._0, FP.FromString("0.60") };
+        [Tooltip("Rank 3 only - enemy attack-execution timers inside the field. 0.80 = 20% slower. 0 leaves it off.")]
+        public FP[] EnemyTimeDilationMultiplier = { FP._0, FP._0, FP.FromString("0.80") };
 
         public override void Apply(Frame f, EntityRef entity, int rank)
         {
@@ -28,13 +26,14 @@ namespace Quantum
 
             int index = System.Math.Clamp(rank, 1, (int)MaxRank) - 1;
 
-            // BaseRadius is the immutable spawn-time anchor (see ProjectileSlowField.qtn) - each rank
-            // SETS the total (BaseRadius + this rank's bonus), not accumulates on top of whatever a
-            // previous rank already added, so a rank 1 -> rank 2 re-pick computes a correct total
-            // without needing to know/undo the earlier bonus - same fix Brute's Guardian already
-            // applied via ProtectorAura.BaseRadius.
-            field->Radius = field->BaseRadius + RadiusBonus[index];
-            field->SpeedMultiplier = FPMath.Max(FP._0, field->BaseSpeedMultiplier - SpeedMultiplierBonus[index]);
+            // Each rank SETS the total rather than accumulating, so a rank 1 -> rank 2 re-pick lands
+            // on a correct value without needing to know/undo whatever the earlier rank added - same
+            // fix Brute's Guardian already applied via ProtectorAura.BaseRadius. BaseRadius/
+            // BaseSpeedMultiplier remain the immutable spawn-time anchors (see
+            // ProjectileSlowField.qtn); the radius floor keeps a low authored rank from ever
+            // shrinking the base field.
+            field->Radius = FPMath.Max(field->BaseRadius, Radius[index]);
+            field->SpeedMultiplier = FPMath.Clamp(ProjectileSpeedMultiplier[index], FP._0, field->BaseSpeedMultiplier);
             field->EnemyTimeDilationMultiplier = EnemyTimeDilationMultiplier[index];
         }
     }

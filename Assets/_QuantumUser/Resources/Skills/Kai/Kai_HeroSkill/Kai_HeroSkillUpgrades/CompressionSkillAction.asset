@@ -16,9 +16,8 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Kai/Kai_HeroSkill/Kai_HeroSkillUpgrades/CompressionSkillAction
     Guid:
       Value: 383027106168017771
-  Icon: {fileID: 0}
+  Icon: {fileID: 618724772, guid: 167fe127f1a734214a64d3f39af97f1f, type: 3}
   DisplayName: Compression
-  Rarity: 1
   RankDescriptions:
   - Vortex damages trapped enemies every 0.5s.
   - Vortex deals 8% more damage for each additional trapped enemy, up to +56%.
@@ -61,7 +60,7 @@ MonoBehaviour:
     RawValue: 32768
   DamageEffect:
     Id:
-      Value: 280329904200879658
+      Value: 440091783757558214
   CrowdPerEnemyBonus:
   - RawValue: 0
   - RawValue: 5243

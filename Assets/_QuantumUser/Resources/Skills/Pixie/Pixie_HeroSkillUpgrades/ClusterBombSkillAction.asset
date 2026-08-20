@@ -18,7 +18,6 @@ MonoBehaviour:
       Value: 268813963301101186
   Icon: {fileID: -1580156667, guid: b217254d41b6945b1873986186a25786, type: 3}
   DisplayName: Cluster Bomb
-  Rarity: 1
   RankDescriptions:
   - After Bunny Bomb explodes, spawn 2 Mini Bombs, each dealing 40% of Bunny Bomb
     damage.

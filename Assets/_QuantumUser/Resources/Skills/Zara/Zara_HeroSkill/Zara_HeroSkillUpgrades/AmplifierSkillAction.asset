@@ -18,7 +18,6 @@ MonoBehaviour:
       Value: 506336313018381212
   Icon: {fileID: 0}
   DisplayName: Amplifier
-  Rarity: 1
   RankDescriptions:
   - Totem Damage Beats deal 30% more damage.
   - Damage Beats deal 60% more damage and knock enemies back.

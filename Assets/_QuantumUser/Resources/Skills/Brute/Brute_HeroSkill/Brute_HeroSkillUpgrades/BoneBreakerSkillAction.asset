@@ -16,9 +16,8 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/Brute_HeroSkill/Brute_HeroSkillUpgrades/BoneBreakerSkillAction
     Guid:
       Value: 506109649730992270
-  Icon: {fileID: 0}
+  Icon: {fileID: 1985923074, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
   DisplayName: Bone Breaker
-  Rarity: 1
   RankDescriptions:
   - Discharge deals +30% damage.
   - Discharge deals +60% damage.

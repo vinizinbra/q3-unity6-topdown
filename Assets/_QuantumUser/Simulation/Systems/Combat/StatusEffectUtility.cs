@@ -127,17 +127,70 @@ namespace Quantum
         // owner defaults to None for any caller that genuinely has no attacker to attribute this to
         // (there isn't one today, but every call site should still prefer passing its own real owner
         // over leaving this default).
-        public static void ApplyStun(Frame f, EntityRef target, FP duration, EntityRef owner = default)
+        //
+        // Returns whether the Stun actually landed, so a caller that needs to know (a per-pulse
+        // effect wanting to skip its own VFX on a rejected proc) doesn't need a second query. Every
+        // pre-existing call site ignores it, unchanged.
+        //
+        // Hard-CC diminishing returns: an enemy tier authored with a StunImmunityDuration (or with
+        // ImmuneToHardCC, i.e. Boss) rejects a Stun outright while its own window is still running -
+        // see StatusEffects.StunImmunityRemaining. Both default to 0/false, so a target with no tier
+        // resistance at all (the player, any non-Enemy) keeps the original plain
+        // overwrite-on-reapply behavior exactly.
+        public static bool ApplyStun(Frame f, EntityRef target, FP duration, EntityRef owner = default)
         {
             if (f.Unsafe.TryGetPointer<StatusEffects>(target, out var status) == false)
-                return;
+                return false;
+
+            FP immunityWindow = FP._0;
 
             if (GetTierResistance(f, target) is { } resistance)
             {
+                if (resistance.ImmuneToHardCC == true)
+                    return false;
+
                 duration *= resistance.StunDurationMultiplier;
+                immunityWindow = resistance.StunImmunityDuration;
             }
 
+            if (immunityWindow > FP._0 && status->StunImmunityRemaining > FP._0)
+                return false;
+
             status->StunRemaining = duration;
+
+            if (immunityWindow > FP._0)
+            {
+                status->StunImmunityRemaining = duration + immunityWindow;
+            }
+
+            return true;
+        }
+
+        // Interrupt half of the same generic hard-CC diminishing-returns mechanism ApplyStun uses -
+        // an action-interrupt isn't a status effect of its own (nothing lingers on the target), so
+        // EnemyActionUtility.TryInterrupt calls this as a pure check-then-consume gate rather than
+        // going through an Apply* method. Returns false when the interrupt should be rejected.
+        // Anything with no tier resistance, or a tier authored with InterruptImmunityDuration 0
+        // (Filler/Normal), is never gated.
+        public static bool TryConsumeInterruptImmunity(Frame f, EntityRef target)
+        {
+            if (GetTierResistance(f, target) is not { } resistance)
+                return true;
+
+            if (resistance.ImmuneToHardCC == true)
+                return false;
+
+            if (resistance.InterruptImmunityDuration <= FP._0)
+                return true;
+
+            if (f.Unsafe.TryGetPointer<StatusEffects>(target, out var status) == false)
+                return true; // nowhere to record the window - don't silently block the interrupt
+
+            if (status->InterruptImmunityRemaining > FP._0)
+                return false;
+
+            status->InterruptImmunityRemaining = resistance.InterruptImmunityDuration;
+            return true;
         }
 
         // Unlike Stun, only pins movement - PlayerMovementProcessor/EnemySystem read this
@@ -151,8 +204,12 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<StatusEffects>(target, out var status) == false)
                 return;
 
+            // Root is hard CC, so it obeys the same per-tier immunity Stun does.
             if (GetTierResistance(f, target) is { } resistance)
             {
+                if (resistance.ImmuneToHardCC == true)
+                    return;
+
                 duration *= resistance.RootDurationMultiplier;
             }
 
@@ -316,27 +373,37 @@ namespace Quantum
             return FPMath.Clamp(FP._1 - status->DamageReductionAmount, FP._0, FP._1);
         }
 
-        // Guardian ascension's own dedicated pair - same shape as ApplyDamageReduction/
-        // GetDamageReductionMultiplier above, kept separate rather than sharing those fields so
-        // Guardian's aura (refreshed every tick an ally stays in range - see
-        // ProtectorAuraSystem.ApplyToAllies) can never silently overwrite Max's Too Angry to Die (or
-        // vice versa) if both land on the same entity in the same tick. See StatusEffects.qtn's own
-        // comment on the field pair.
-        public static void ApplyGuardianDamageReduction(Frame f, EntityRef target, FP duration, FP amount)
+        // The shared CONTINUOUS-AURA damage-reduction slot - Brute's Guardian and Lux's Fire Support
+        // both write here, deliberately sharing ONE slot rather than each owning their own pair. That
+        // sharing IS the stacking policy: two aura sources never stack additively, the strongest wins
+        // (take-the-stronger/longer on reapply, so a weaker aura refreshing every tick can never cut a
+        // stronger one's window short, and neither can it downgrade it). Kept separate from the
+        // generic ApplyDamageReduction pair so a per-tick aura refresh can't stomp a rarer reactive
+        // proc - see StatusEffects.qtn's own comment on the field pair.
+        public static void ApplyAuraDamageReduction(Frame f, EntityRef target, FP duration, FP amount)
         {
             if (f.Unsafe.TryGetPointer<StatusEffects>(target, out var status) == false)
                 return;
 
-            status->GuardianDamageReductionRemaining = duration;
-            status->GuardianDamageReductionAmount = amount;
+            bool active = status->AuraDamageReductionRemaining > FP._0;
+
+            if (active == false || amount >= status->AuraDamageReductionAmount)
+            {
+                status->AuraDamageReductionAmount = amount;
+                status->AuraDamageReductionRemaining = duration;
+            }
+            else if (duration > status->AuraDamageReductionRemaining)
+            {
+                status->AuraDamageReductionRemaining = duration;
+            }
         }
 
-        public static FP GetGuardianDamageReductionMultiplier(Frame f, EntityRef entity)
+        public static FP GetAuraDamageReductionMultiplier(Frame f, EntityRef entity)
         {
-            if (f.Unsafe.TryGetPointer<StatusEffects>(entity, out var status) == false || status->GuardianDamageReductionRemaining <= FP._0)
+            if (f.Unsafe.TryGetPointer<StatusEffects>(entity, out var status) == false || status->AuraDamageReductionRemaining <= FP._0)
                 return FP._1;
 
-            return FPMath.Clamp(FP._1 - status->GuardianDamageReductionAmount, FP._0, FP._1);
+            return FPMath.Clamp(FP._1 - status->AuraDamageReductionAmount, FP._0, FP._1);
         }
 
         // Second, independent timed DR pair - see StatusEffects.qtn's own comment on
@@ -400,6 +467,37 @@ namespace Quantum
                 return FP._1;
 
             return FP._1 + status->TemporaryWeaponDamageAmount;
+        }
+
+        // Generic timed OUTGOING-damage buff, applying to EVERY DamageSource (unlike
+        // ApplyTemporaryWeaponDamage just above, which is scoped to DamageSource.Weapon) - a
+        // tempo-support buff (Zara's Power Chord) is meant to speed up whatever the buffed ally's own
+        // build actually does, not just their gun. Take-the-stronger/longer on reapply, same shape,
+        // so a source pulsing every beat can never cut a stronger window short.
+        public static void ApplyTempOutgoingDamage(Frame f, EntityRef target, FP duration, FP amount)
+        {
+            if (f.Unsafe.TryGetPointer<StatusEffects>(target, out var status) == false)
+                return;
+
+            bool active = status->TempOutgoingDamageRemaining > FP._0;
+
+            if (active == false || amount >= status->TempOutgoingDamageAmount)
+            {
+                status->TempOutgoingDamageAmount = amount;
+                status->TempOutgoingDamageRemaining = duration;
+            }
+            else if (duration > status->TempOutgoingDamageRemaining)
+            {
+                status->TempOutgoingDamageRemaining = duration;
+            }
+        }
+
+        public static FP GetTempOutgoingDamageMultiplier(Frame f, EntityRef entity)
+        {
+            if (f.Unsafe.TryGetPointer<StatusEffects>(entity, out var status) == false || status->TempOutgoingDamageRemaining <= FP._0)
+                return FP._1;
+
+            return FP._1 + status->TempOutgoingDamageAmount;
         }
 
         // Run & Gun rank 3 - checked directly by WeaponSystem right before its own unconditional

@@ -161,10 +161,10 @@ TextureImporter:
       name: PixieSkills_1
       rect:
         serializedVersion: 2
-        x: 578
-        y: 550
-        width: 277
-        height: 328
+        x: 572
+        y: 651
+        width: 293
+        height: 344
       alignment: 9
       pivot: {x: 0.5163213, y: 0.38513798}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -180,13 +180,13 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: PixieSkills_2
+      name: TrapBomb
       rect:
         serializedVersion: 2
-        x: 176
-        y: 28
-        width: 286
-        height: 423
+        x: 26
+        y: 221
+        width: 314
+        height: 254
       alignment: 9
       pivot: {x: 0.5000001, y: 0.30049306}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -223,6 +223,50 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: PocketBomb
+      rect:
+        serializedVersion: 2
+        x: 19
+        y: 20
+        width: 176
+        height: 160
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2ee2fad90c8bf4708aca57b72b377f44
+      internalID: -600616544
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ClusterBomb
+      rect:
+        serializedVersion: 2
+        x: 265
+        y: 46
+        width: 108
+        height: 158
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 54e969f30c90b437d82fff12e1e83d17
+      internalID: -600037154
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
@@ -237,10 +281,12 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
+      ClusterBomb: -600037154
       PixieSkills_0: 1504846261
       PixieSkills_1: -99672104
-      PixieSkills_2: -1632563839
       PixieSkills_3: -1066289369
+      PocketBomb: -600616544
+      TrapBomb: -1632563839
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

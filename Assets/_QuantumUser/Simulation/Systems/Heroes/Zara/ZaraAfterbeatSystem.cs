@@ -94,10 +94,22 @@ namespace Quantum
             // ShockwaveReleased - see AfterbeatPulseReleased's own comment in Events.qtn for why.
             f.Events.AfterbeatPulseReleased(owner, position, radius);
 
-            // Afterbeat rank 3 "Double Beat" - enemies hit generate additional Resonance, capped per
-            // dash (ResonanceGrantedThisDash, reset every dash Begin - see AfterbeatSkillAction).
-            // ResonancePerEnemyHit is 0 at rank<3/unpicked, so this is a pure no-op otherwise.
-            if (afterbeat->ResonancePerEnemyHit <= FP._0 || enemiesHit <= 0)
+            // Afterbeat rank 3 "Double Beat" - enemies hit generate additional Resonance, drawing on
+            // the SAME per-dash allowance rank 1's dash sweep uses (see GrantCappedResonance), so the
+            // two sources can never compound past MaxResonancePerDash between them.
+            for (int i = 0; i < enemiesHit; i++)
+            {
+                GrantCappedResonance(f, owner, afterbeat);
+            }
+        }
+
+        // The single per-dash-capped Resonance faucet, shared by rank 1's dash sweep
+        // (AfterbeatSkillAction.SweepForResonance) and rank 3's pulse hits above - one allowance, one
+        // place that spends it, so neither can quietly bypass the other's cap. Public for the skill
+        // action's own sweep to call in.
+        public static void GrantCappedResonance(Frame f, EntityRef owner, ZaraAfterbeat* afterbeat)
+        {
+            if (afterbeat->ResonancePerEnemyHit <= FP._0)
                 return;
 
             FP remainingCap = afterbeat->MaxResonancePerDash - afterbeat->ResonanceGrantedThisDash;
@@ -105,7 +117,7 @@ namespace Quantum
             if (remainingCap <= FP._0)
                 return;
 
-            FP grant = FPMath.Min(afterbeat->ResonancePerEnemyHit * enemiesHit, remainingCap);
+            FP grant = FPMath.Min(afterbeat->ResonancePerEnemyHit, remainingCap);
             ResonanceUtility.Grant(f, owner, grant);
             afterbeat->ResonanceGrantedThisDash += grant;
         }

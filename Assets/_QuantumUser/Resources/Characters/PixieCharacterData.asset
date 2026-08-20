@@ -114,14 +114,12 @@ MonoBehaviour:
       Value: 340599251920562766
   - Id:
       Value: 481991757651309151
-  PassiveUpgrades:
   - Id:
-      Value: 452474009302283869
+      Value: 359663036923996402
+  PassiveUpgrades:
   - Id:
       Value: 425116734721973481
   - Id:
       Value: 361478584056376078
-  - Id:
-      Value: 369929941063600227
   - Id:
       Value: 271843238532602476

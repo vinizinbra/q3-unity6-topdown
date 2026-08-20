@@ -18,7 +18,18 @@ MonoBehaviour:
       Value: 487893626376381545
   Icon: {fileID: 0}
   DisplayName: Rapid Recycling
-  Rarity: 1
-  Description: Each Scrap pickup also reduces your Hero Skill's cooldown.
+  Description: Collected Scrap shortens your Sentry's cooldown.
+  <MaxRank>k__BackingField: 3
+  RankDescriptions:
+  - Each Scrap collected removes 0.5s from your Sentry's remaining cooldown.
+  - Each Scrap collected removes 1s from your Sentry's remaining cooldown.
+  - 'Instant Assembly: earning a Fabrication Charge also removes a further 3s from
+    your Sentry''s cooldown.'
   CooldownReductionPerPickup:
-    RawValue: 65536
+  - RawValue: 32768
+  - RawValue: 65536
+  - RawValue: 65536
+  CooldownReductionOnCharge:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 196608

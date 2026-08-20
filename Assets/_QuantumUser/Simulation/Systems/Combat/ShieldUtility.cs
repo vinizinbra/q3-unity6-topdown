@@ -3,7 +3,7 @@ namespace Quantum
     using Photon.Deterministic;
 
     // Shield counterpart to HealUtility - a shared "grant Shield" entry point so every genuine
-    // grant (Bodyguard/PortableCoverSkillAction, ShieldEffectData) fires the same EntityShielded
+    // grant (Bodyguard, Lux's Shield Battery aura, ShieldEffectData) fires the same EntityShielded
     // event, driving the same floating-number/particle feedback EntityHealed already gets (see
     // DamageFeedbackManager/EffectsManager) instead of each caller silently writing Shield.Current
     // on its own. Passive recharge (ShieldSystem), initial seeding (CharacterSystem/EnemySystem),

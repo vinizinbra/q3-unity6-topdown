@@ -1,0 +1,16 @@
+// Marker tag stamped on every entity Zara's Portable Speaker Dash Ascension spawns - the ONLY thing
+// that distinguishes a Speaker from her Totem at runtime (both are otherwise the same
+// AlternatingArea + AreaDamage + AreaOwner shape, deliberately: "reuse the Totem Beat architecture
+// with a different data profile").
+//
+// Two jobs, both of which need a Speaker to be identifiable as such:
+//  - Enforcing the per-Zara active-Speaker cap (PortableSpeakerSkillAction counts these, filtered by
+//    AreaOwner.Owner, and silently retires the oldest when a new one would exceed the cap). Ownership
+//    comes from AreaOwner, not from a field here, so two Zaras' Speakers never count against each
+//    other - the co-op isolation requirement.
+//  - Guaranteeing a Speaker never inherits anything Totem-only. That guarantee is structural rather
+//    than conditional: MainStageBonusBeats is never stamped on a Speaker, and no AreaAllyBudget is
+//    added to one (a Speaker has no HP healing to cap in the first place).
+component PortableSpeaker
+{
+}

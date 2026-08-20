@@ -16,9 +16,8 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/Brute_DashSkillUpgrades/IronShoulderSkillAction
     Guid:
       Value: 360341579882539830
-  Icon: {fileID: 2052678921, guid: 1398529c57dc443e7a3096f4ad470a4c, type: 3}
+  Icon: {fileID: 937128853, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
   DisplayName: Iron Shoulder
-  Rarity: 1
   RankDescriptions:
   - Dash becomes an empowered shoulder charge - enemies hit take strong knockback
     and are Stunned if pushed into a wall.

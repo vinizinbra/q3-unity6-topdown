@@ -7,7 +7,7 @@ namespace Quantum
     // One-shot VFX for Afterbeat's own delayed dash pulse (rank 2+ Start, rank 3 "Double Beat" also
     // End - see ZaraAfterbeatSystem.Fire/ZaraAfterbeatTelegraphView for the wait-then-land shape).
     // Deliberately its own event/component rather than reusing ResonanceFxView's ShockwaveReleased
-    // handler - every OTHER Zara pulse (Resonance passive, Heavy Bass Subwoofer, Remix) shares that
+    // handler - every OTHER Zara pulse (Resonance passive, Remix) shares that
     // event/handler, so hooking Afterbeat into it would make it look identical to those. Same
     // "PlayEffect via EffectsManager, filtered to this entity" shape as ResonanceFxView, just without
     // Remix's tint logic - Afterbeat never carries a HitEffectData to tint by.

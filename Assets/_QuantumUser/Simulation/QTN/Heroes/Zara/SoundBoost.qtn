@@ -1,0 +1,43 @@
+// Hero Skill Ascension (Sound Boost, ranked, line 2/4 on the Totem) - Zara's primary combat-support
+// path, and the reason she reads as tempo support rather than a healer. Renamed/reworked from the old
+// "Healing Chorus", which grew healing per rank; healing here is deliberately capped low and the
+// ranks buy TEMPO instead: stronger Move Speed/Fire Rate, then Hero Skill cooldown reduction, then an
+// outgoing-damage window.
+//
+// Granted onto Zara's own entity, bake-once-at-Totem-spawn - see
+// SpawnAlternatingAreaEffectData.Configure. Every field here is what that spawn reads to build the
+// Totem's Support Beat; nothing is re-read afterwards, so a Totem keeps the profile it was deployed
+// with even if Zara ranks up mid-life.
+component SoundBoostUpgrade
+{
+    // Support Beat healing as a fraction of the target's own MaxHealth - SETS AlternatingArea.
+    // HealAmount outright (not a bonus on the baseline), since this line owns that number. Still
+    // subject to the global per-Totem healing cap (AreaAllyBudget.MaxHealFractionPerAlly), which is
+    // deliberately NOT rank-gated - see SpawnAlternatingAreaEffectData.
+    FP HealPercent;
+
+    // The Support Beat's buff bundle (Move Speed / Fire Rate / outgoing damage) as an
+    // AllyBuffEffectData asset - a rank's whole buff profile is one authored asset rather than a
+    // handful of numbers copied onto this component, so the same generic effect class serves the
+    // Totem, the Speaker and Lux's Fire Support aura identically.
+    AssetRef<HitEffectData> SupportBuffEffect;
+
+    // Rank 2+ - a ModifyRemainingCooldownEffectData appended to the Support Beat, shaving time off
+    // every affected ally's Hero Skill. Invalid at rank 1, which is what leaves it off.
+    AssetRef<HitEffectData> CooldownEffect;
+
+    // Total seconds of Hero Skill cooldown reduction ONE Totem may ever give ONE ally, enforced by the
+    // generic AreaAllyBudget on the spawned Totem itself. Exposed exactly as the brief asks, even
+    // though the first pass leaves it generous - this is the single knob that keeps Sound Boost +
+    // Double Time (many more beats per Totem) from collapsing everyone's Hero Skill cooldowns. 0 =
+    // uncapped.
+    FP MaxCooldownReductionPerTotem;
+
+    // Reduced-effectiveness counterparts of the two effects above, used ONLY by Portable Speaker rank
+    // 3 "Mobile Stage". Authored as their own assets rather than computed at runtime from a fraction:
+    // "reuse the Totem Beat architecture with a different data profile" is the whole design, and it
+    // keeps the Speaker's numbers readable/tunable in the Inspector instead of hidden behind a
+    // multiplier applied somewhere else. Invalid = the Speaker simply gets nothing from that half.
+    AssetRef<HitEffectData> SpeakerSupportBuffEffect;
+    AssetRef<HitEffectData> SpeakerCooldownEffect;
+}

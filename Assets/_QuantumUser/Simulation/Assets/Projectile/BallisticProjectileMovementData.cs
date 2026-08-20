@@ -37,6 +37,20 @@ namespace Quantum
             return GetFlatTargetPoint(origin, direction, TargetDistance);
         }
 
+        // Same reasoning as ThrownProjectileMovementData's own override - a mortar lob is an arc under
+        // constant gravity, so scaling the whole solved vector would multiply its range by the square
+        // of the multiplier and drop the shell well past the point SolveLaunch just aimed it at. This
+        // deliberately flattens the arc below the authored LaunchAngle instead: the whole point of a
+        // speed bonus on a lob is that it arrives sooner, and a solved shot that no longer lands on
+        // its solution is simply broken.
+        public override void ApplySpeedMultiplier(ref ProjectileLaunch launch, FP multiplier)
+        {
+            if (multiplier <= FP._0 || multiplier == FP._1)
+                return;
+
+            ScaleArcPreservingRange(ref launch, multiplier);
+        }
+
         protected override ProjectileLaunch SolveLaunch(Frame f, FPVector3 spawnPosition, FPVector3 target, EntityRef targetEntity)
         {
             if (PredictionTime > FP._0 && targetEntity != EntityRef.None && f.Unsafe.TryGetPointer<PhysicsBody3D>(targetEntity, out var targetBody) == true)

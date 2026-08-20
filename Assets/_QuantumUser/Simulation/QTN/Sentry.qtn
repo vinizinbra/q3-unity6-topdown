@@ -1,35 +1,72 @@
-// Marks the "chassis" entity of an autonomous sentry (e.g. Lux's sentry gun) - doesn't shoot or aim
-// itself. Up to 4 separate SentryBarrel child entities (one per equipped SentryWeaponUpgrade slot)
-// each carry their own Weapon/Aim/InputSource and independently find their own nearest enemy every
-// tick (SentryBarrelSystem, searching from that barrel's own position - so different barrels can
-// end up aiming at different enemies), so they can all fire simultaneously through WeaponSystem
-// completely unchanged. Splitting weapons into their own entities (rather than 4 fields on one
-// Weapon-like component) is what actually lets 4 guns fire at once - a single entity can only ever
-// carry one Weapon component. The chassis itself just holds shared, sentry-wide properties: Range
-// (read by every barrel and by SentryAuraSystem), Health/Shield, and the aura upgrades.
+// Marks the "chassis" entity of an autonomous sentry (Lux's Sentry) - doesn't shoot or aim itself.
+// Up to 4 separate SentryBarrel child entities (one per armed weapon slot) each carry their own
+// Weapon/Aim/InputSource and independently find their own nearest enemy every tick
+// (SentryBarrelSystem, searching from that barrel's own position - so different barrels can end up
+// aiming at different enemies), so they can all fire simultaneously through WeaponSystem completely
+// unchanged. Splitting weapons into their own entities (rather than 4 fields on one Weapon-like
+// component) is what actually lets 4 guns fire at once - a single entity can only ever carry one
+// Weapon component. The chassis itself just holds shared, sentry-wide properties.
+//
+// The BASELINE sentry is deliberately minimal: one Cannon, short range, no shield, no aura, no
+// on-death explosion. Everything else is an Ascension (see docs - Weapon Systems / Overclock /
+// Fortification / Overload Core), which is the whole "start with a simple machine, turn it into a
+// weapons platform" arc.
 component Sentry
 {
     // Targeting/aura range - deliberately its own field rather than reading any one equipped
-    // WeaponDataAsset.Range, since a sentry can have zero, one, or several barrels (each with a
-    // potentially different Range) and detection is a property of the sentry itself, not of any one
-    // gun bolted onto it.
+    // WeaponDataAsset.Range, since a sentry can have one or several barrels (each with a potentially
+    // different Range) and detection is a property of the sentry itself, not of any one gun bolted
+    // onto it.
     FP Range;
 
     // The player who deployed this sentry (SpawnSentrySkillAction) - WeaponSystem/DamageUtility
-    // otherwise treat a barrel as its own independent shooter/target, which is exactly what lets 4 of
-    // them fire at once, so nothing else derives this on its own. Read by SentryDecaySystem as the
-    // owner of its own self-decay hit, and by view-only code (e.g. DamageFeedbackManager, resolving
-    // "is this hit mine" for a barrel via SentryBarrel.Sentry -> Sentry.Owner) to trace a chassis or
-    // its barrels back to the player who owns them, since neither carries a PlayerLink of its own.
+    // otherwise treat a barrel as its own independent shooter/target, which is exactly what lets
+    // several of them fire at once, so nothing else derives this on its own. Read by SentryDecaySystem
+    // as the owner of its own self-decay hit, by every Ascension that has to scope "MY sentries" in
+    // co-op, and by view-only code (e.g. DamageFeedbackManager) to trace a chassis or its barrels back
+    // to the player who owns them, since neither carries a PlayerLink of its own.
     EntityRef Owner;
 
     // Health drained per second while alive (DamageUtility.ApplyDamage, via SentryDecaySystem) -
-    // computed once at spawn as MaxHealth / (this sentry's own resolved Duration), replacing the
-    // plain DestroyAfterTime countdown every other SpawnedEntitySpawner.Spawn call gets. This makes
-    // "ran out of time" and "killed by combat damage" the exact same death path - Health hitting 0 -
-    // so any on-death upgrade (SentryAddOverloadSkillAction) fires either way, and the sentry's own
-    // health bar doubles as a time-remaining readout. Routed through the normal damage pipeline
-    // rather than a direct Health write, so an equipped Shield absorbs/soaks it exactly like any
-    // other hit - a sentry with no Shield (the base skill) just drains straight through.
+    // computed once at spawn as MaxHealth / (this sentry's own resolved Duration), replacing the plain
+    // DestroyAfterTime countdown every other SpawnedEntitySpawner.Spawn call gets. This makes "ran out
+    // of time" and "killed by combat damage" the exact same death path - Health hitting 0 - so any
+    // on-death upgrade (Overload Core) fires either way, and the sentry's own health bar doubles as a
+    // time-remaining readout. Routed through the normal damage pipeline rather than a direct Health
+    // write, so an equipped Shield absorbs/soaks it exactly like any other hit.
+    //
+    // It also means REMAINING LIFETIME is derivable rather than a second timer to keep in sync:
+    // CurrentHealth / DecayRate seconds. Redline reads that; Emergency Repair/Relocation extend
+    // lifetime by adding DecayRate * seconds back onto Health. See SentryUtility.
     FP DecayRate;
+
+    // -- Fire rate --
+    // Permanent sentry-wide fire-rate multiplier (Overclock's rank bonus, Field Modification stacks,
+    // MK II). 1 = unmodified. Applied to every barrel's own Weapon.FireCooldownMultiplier by
+    // SentryBarrelSystem every tick, composed against SentryBarrel.BaseFireCooldownMultiplier, so a
+    // change mid-life takes effect immediately on the barrels already attached and can't compound
+    // across ticks.
+    FP FireRateMultiplier;
+
+    // Timed sentry-wide fire-rate multiplier stacked on top of the permanent one - Emergency
+    // Overclock (Emergency Repair rank 3) and Rapid Setup (Relocation Protocol rank 2). 1/0 = none.
+    // Ticked down by SentryDecaySystem.
+    FP TempFireRateMultiplier;
+    FP TempFireRateRemaining;
+
+    // -- Overclock rank 3 "Redline" --
+    // Once REMAINING lifetime first drops below RedlineThreshold seconds, RedlineActive latches true
+    // and stays true until the sentry dies - deliberately the simple behavior the brief prefers, so
+    // extending lifetime afterwards (Emergency Repair, Relocation) does NOT switch it back off. 0
+    // threshold = the Ascension isn't equipped.
+    FP RedlineThreshold;
+    FP RedlineFireRateMultiplier;
+    Boolean RedlineActive;
+
+    // -- Lifetime extension budget --
+    // Seconds of lifetime this specific sentry may still be granted by Emergency Repair/Relocation
+    // Protocol, seeded at spawn from the Ascension's own cap. Counting DOWN a per-sentry allowance
+    // (rather than up toward a limit) is what stops a dash-cooldown build from keeping one sentry
+    // alive indefinitely.
+    FP LifetimeExtensionRemaining;
 }

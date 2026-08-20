@@ -1,0 +1,29 @@
+// The single per-activation ledger for "how much longer can this Overdrive be made to run" - added
+// fresh by BerserkSkillData.Begin every activation (seeded from its own BaseMaxExtension) and removed
+// at End, so nothing carries over between casts.
+//
+// EVERY source that extends Overdrive goes through it (OverdriveUtility.TryExtend): Uncontrolled
+// Fury's per-N-kills grant, its rank 3 Vendetta-kill grant, and Vendetta Strike rank 3's own dash
+// bonus. That is the point - the spec's hard requirement is that no combination of effects can
+// produce a permanent Overdrive, and a single shared MaxExtension ceiling is the only way to
+// guarantee that no matter which lines a build stacks. An earlier design had one capped pool plus a
+// separate uncapped Vendetta bonus, which failed exactly that requirement.
+//
+// Renamed from UncontrolledFuryExtension once it stopped belonging to one Ascension line.
+component OverdriveExtension
+{
+    // Hard ceiling on total seconds added to THIS activation, from all sources combined. Seeded from
+    // BerserkSkillData.BaseMaxExtension, then raised by UncontrolledFurySkillAction to that line's
+    // own ranked value.
+    FP MaxExtension;
+    FP AccumulatedExtension;
+
+    // Uncontrolled Fury's own gating - 0 KillsPerExtension (the baseline seeded by BerserkSkillData)
+    // means the line isn't equipped, so kills grant nothing and MaxOverdriveReactionSystem skips the
+    // whole branch. PerKillExtension is the ordinary grant; VendettaKillExtension replaces it (rank
+    // 3) when the kill consumed one of this owner's own Vendetta marks.
+    FP PerKillExtension;
+    Byte KillCount;
+    Byte KillsPerExtension;
+    FP VendettaKillExtension;
+}

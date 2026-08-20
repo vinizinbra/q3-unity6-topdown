@@ -188,14 +188,25 @@ namespace Quantum
         // Combat Reboot (emptying the magazine reduces the Hero Skill's cooldown, see
         // WeaponSystem.StartReload). Clamped at 0 rather than letting it go negative and "banking"
         // toward the next cast.
-        public static void ReduceCooldown(Frame f, CharacterSkills* skills, SkillSlotId slotId, FP amount)
+        // Returns how many seconds were ACTUALLY removed (0 if the slot was already off cooldown) -
+        // a capped source (Zara's Sound Boost, budgeted per Totem per ally via AreaAllyBudget) needs
+        // this so it only ever charges its allowance for reduction that genuinely landed, rather than
+        // burning the cap against an already-ready skill. Every pre-existing caller ignores the
+        // return value, unchanged.
+        public static FP ReduceCooldown(Frame f, CharacterSkills* skills, SkillSlotId slotId, FP amount)
         {
             SkillSlot* slot = ResolveSlot(skills, slotId);
 
             if (slot == null || amount <= FP._0)
-                return;
+                return FP._0;
 
-            slot->CooldownTimer = FPMath.Max(FP._0, slot->CooldownTimer - amount);
+            FP applied = FPMath.Min(amount, slot->CooldownTimer);
+
+            if (applied <= FP._0)
+                return FP._0;
+
+            slot->CooldownTimer -= applied;
+            return applied;
         }
 
         // Marks a slot's *next* activation as free - added for Lux's Scrap Collector passive (10
@@ -353,7 +364,7 @@ namespace Quantum
 
             // Upgrades grant their Begin-phase state before the skill's own Begin runs, not after -
             // a skill whose Begin is itself the one-shot moment it acts (ProjectileSkillData firing,
-            // reading ProjectileDamageUpgrade/PixieHotFuseCharge) needs whatever it grants already
+            // reading ProjectileDamageUpgrade/PixieBombCharge) needs whatever it grants already
             // in place, since there's no later tick where that one-shot logic runs again to pick it
             // up. Every existing upgrade already reads state independent of this order (e.g.
             // LastStandSkillAction reads BerserkSkillData's own asset fields, not anything

@@ -98,11 +98,11 @@ namespace Quantum
             Log.Debug($"[FireMastery] {owner}'s Cremation executed {target} (tier {data.Tier})");
         }
 
-        // Filler/Normal/Specialist/Heavy all share the "Normal" bucket - Cremation only authors 3
-        // threshold tiers (see docs/max-vendetta-fire-mastery.md's "verify before implementing"
-        // note), so every sub-Elite tier reads off NormalHealthThreshold rather than needing its
-        // own field. Boss additionally requires BossExecutionEnabled so a lower rank can't
-        // accidentally execute a Boss just by authoring a nonzero BossHealthThreshold default.
+        // Filler/Normal share NormalHealthThreshold; Specialist/Heavy share the lower
+        // SpecialistHealthThreshold. Elite/Boss are never executable at all - the line's payoff
+        // against them is the separate bonus-damage window instead (see
+        // ResolveCremationDamageBonus below), so there is deliberately no "enable Boss execution"
+        // toggle any more.
         private static FP ResolveExecuteThreshold(ExecuteAgainstStatus* execute, EnemyTier tier, out bool eligible)
         {
             eligible = true;
@@ -110,13 +110,47 @@ namespace Quantum
             switch (tier)
             {
                 case EnemyTier.Boss:
-                    eligible = execute->BossExecutionEnabled;
-                    return execute->BossHealthThreshold;
                 case EnemyTier.Elite:
-                    return execute->EliteHealthThreshold;
+                    eligible = false;
+                    return FP._0;
+
+                case EnemyTier.Specialist:
+                case EnemyTier.Heavy:
+                    return execute->SpecialistHealthThreshold;
+
                 default:
                     return execute->NormalHealthThreshold;
             }
+        }
+
+        // Cremation's Elite/Boss half - they can't be executed, so instead they take bonus damage
+        // while Burning AND already below the configured threshold, which is what keeps the rank
+        // meaningful in a boss fight without deleting one. Read live from
+        // DamageUtility.ResolveOutgoingDamage, same "optional owner-side component, conditional
+        // multiplier" idiom Unstable Targeting/Stun Damage Bonus already use. Returns 1 whenever
+        // anything about the condition doesn't hold.
+        public static FP ResolveCremationDamageBonus(Frame f, EntityRef owner, EntityRef target)
+        {
+            if (f.Unsafe.TryGetPointer<ExecuteAgainstStatus>(owner, out var execute) == false
+                || execute->EliteBossDamageBonus <= FP._0)
+                return FP._1;
+
+            if (f.Unsafe.TryGetPointer<Enemy>(target, out var enemy) == false)
+                return FP._1;
+
+            EnemyDataAsset data = f.FindAsset(enemy->EnemyData);
+
+            if (data.Tier < EnemyTier.Elite)
+                return FP._1;
+
+            if (StatusEffectUtility.IsBurning(f, target) == false)
+                return FP._1;
+
+            if (f.Unsafe.TryGetPointer<Health>(target, out var health) == false
+                || health->CurrentHealth > health->MaxHealth * execute->EliteBossDamageThreshold)
+                return FP._1;
+
+            return FP._1 + execute->EliteBossDamageBonus;
         }
 
         // Wildfire - any kill while Burning spreads Burn to nearby enemies, independent of whether

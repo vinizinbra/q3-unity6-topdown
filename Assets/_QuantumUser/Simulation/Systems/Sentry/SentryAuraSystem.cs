@@ -3,84 +3,83 @@ namespace Quantum
     using Photon.Deterministic;
     using UnityEngine.Scripting;
 
-    // Buffs allies standing within a Sentry's own Range - Fire Rate (SentryFireRateAuraUpgrade, via
-    // StatusEffectUtility.ApplyHaste) and Shield Area Rate (SentryShieldAreaRateUpgrade, via
-    // StatusEffectUtility.ApplyShieldRegen) are each optional and independent, baked onto the sentry
-    // itself at spawn time (see SpawnSentrySkillAction) rather than read live off the caster who
-    // deployed it, so the aura keeps working even if that caster is no longer nearby/alive. Neither
-    // is a required filter field (a sentry might have zero, one, or both) - skips entirely if it has
-    // neither, so a plain damage-only sentry doesn't pay for the FindPlayersInRadius query at all.
+    // Lux's Fortification Ascension, ranks 2-3 - the support half of "fight around the machine".
+    // Reapplies Shield Battery (a flat Shield-per-second trickle) and Fire Support (an
+    // AllyBuffEffectData: Fire Rate + Damage Reduction) to allies standing inside the sentry's aura.
     //
-    // Continuously refreshed rather than a persistent flag, so each buff naturally fades some time
-    // after leaving the radius instead of needing its own explicit removal path. Fire Rate reuses
-    // RuntimeConfig.EffectConfig.HasteDuration - the same lingering window Zara's Healing Chorus
-    // grants via HasteEffectData - so "how long Haste lingers" is tuned in one place regardless of
-    // source, rather than this aura fading near-instantly on a short local constant while the
-    // Speaker's much sparser heal-pulse cadence leaves a multi-second tail. Shield Area Rate has no
-    // other source granting it, so it keeps its own short AuraRefreshDuration instead.
+    // Both are baked onto the sentry itself at deploy time (see SpawnSentrySkillAction) rather than
+    // read live off the Lux who deployed it, so the aura keeps working even once she's no longer
+    // nearby or alive.
+    //
+    // Continuously refreshed rather than a persistent flag, so each buff naturally fades shortly after
+    // leaving the radius instead of needing its own explicit removal path - the same idiom
+    // ProtectorAuraSystem uses. That, plus Fire Support's Damage Reduction landing in the single
+    // shared aura-DR slot (take-the-stronger, see StatusEffectUtility.ApplyAuraDamageReduction), is
+    // what makes "buffs from multiple Sentries must not stack" true by construction: two Sentries
+    // covering the same ally write the same slot, and the stronger simply wins.
+    //
+    // Skips entirely for a sentry with neither upgrade, so a baseline machine doesn't pay for the
+    // FindPlayersInRadius query at all.
     [Preserve]
     public unsafe class SentryAuraSystem : SystemMainThreadFilter<SentryAuraSystem.Filter>
     {
-        private static readonly FP AuraRefreshDuration = FP._1;
-
-        // Shield regen reaches a smaller area than fire rate/targeting - half of the sentry's own
-        // Range, not the full radius - so it needs its own OverlapShape query instead of sharing the
-        // fire-rate one below.
-        private static readonly FP ShieldAreaRangeRatio = FP._0_50;
-
         public override void Update(Frame f, ref Filter filter)
         {
-            bool hasFireRate = f.Unsafe.TryGetPointer<SentryFireRateAuraUpgrade>(filter.Entity, out var fireRate) == true;
-            bool hasShieldRate = f.Unsafe.TryGetPointer<SentryShieldAreaRateUpgrade>(filter.Entity, out var shieldRate) == true;
-
-            if (hasFireRate == false && hasShieldRate == false)
+            if (f.Unsafe.TryGetPointer<SentryFortificationUpgrade>(filter.Entity, out var fortification) == false)
                 return;
 
-            if (hasFireRate == true)
-            {
-                FP hasteDuration = ResolveHasteDuration(f);
-                var hits = EnemyMovementUtility.FindPlayersInRadius(f, filter.Transform3D->Position, filter.Sentry->Range);
+            bool hasShieldBattery = fortification->AllyShieldPerSecond > FP._0;
+            bool hasFireSupport = fortification->FireSupportEffect.IsValid;
 
-                for (int i = 0; i < hits.Count; i++)
+            if (hasShieldBattery == false && hasFireSupport == false)
+                return;
+
+            FP ratio = fortification->AuraRangeRatio > FP._0 ? fortification->AuraRangeRatio : FP._1;
+            FP auraRadius = filter.Sentry->Range * ratio;
+
+            if (auraRadius <= FP._0)
+                return;
+
+            var allies = EnemyMovementUtility.FindPlayersInRadius(f, filter.Transform3D->Position, auraRadius);
+
+            if (allies.Count == 0)
+                return;
+
+            HitEffectData fireSupport = hasFireSupport ? f.FindAsset(fortification->FireSupportEffect) : null;
+
+            for (int i = 0; i < allies.Count; i++)
+            {
+                EntityRef ally = allies[i].Entity;
+
+                // Shield Battery - a real per-second amount, converted to this tick's share. Flat by
+                // design: the old version multiplied the ally's OWN shield recharge rate, which scaled
+                // with the recipient and was effectively unbounded.
+                if (hasShieldBattery == true && f.Unsafe.TryGetPointer<Shield>(ally, out var shield) == true)
                 {
-                    StatusEffectUtility.ApplyHaste(f, hits[i].Entity, filter.Entity, hasteDuration, fireRate->AttackSpeedMultiplier);
+                    ShieldUtility.ApplyFlatShield(f, ally, filter.Sentry->Owner, shield, fortification->AllyShieldPerSecond * f.DeltaTime);
                 }
-            }
 
-            if (hasShieldRate == true)
-            {
-                FP shieldRadius = filter.Sentry->Range * ShieldAreaRangeRatio;
-                var hits = EnemyMovementUtility.FindPlayersInRadius(f, filter.Transform3D->Position, shieldRadius);
+                if (fireSupport == null)
+                    continue;
 
-                // Throttled to once a second (same shape as ShieldSystem's own stuck-shield error) -
-                // the aura's radius is HALF of Sentry.Range, smaller than the range indicator/circle
-                // players actually see, so "standing inside the visible ring but nothing happens" is
-                // expected if they're outside this smaller radius - this line is what tells you
-                // whether that's what's going on versus the upgrade never having reached this sentry.
-                if (f.Number % f.UpdateRate == 0)
-                    Log.Debug($"[Sentry] {filter.Entity} Shield Area Rate - {hits.Count} ally(ies) within {shieldRadius} (half of {filter.Sentry->Range})");
-
-                for (int i = 0; i < hits.Count; i++)
+                var context = new HitEffectContext
                 {
-                    StatusEffectUtility.ApplyShieldRegen(f, hits[i].Entity, AuraRefreshDuration, shieldRate->ShieldRegenMultiplier);
-                }
+                    // Owner is the deploying Lux, not the sentry - so the Haste inside the buff bundle
+                    // keys its per-source slot to HER, meaning two Sentries she owns share one slot
+                    // (they're the same source and must not compound) while a second Lux's Sentry gets
+                    // its own.
+                    Owner = filter.Sentry->Owner,
+                    Target = ally,
+                    Position = filter.Transform3D->Position,
+                    PushDirection = FPVector3.Zero,
+                    Damage = FP._0,
+                    Source = DamageSource.Skill,
+                    Element = ElementType.Neutral,
+                    SourceEntity = filter.Entity,
+                };
+
+                fireSupport.Apply(f, ref context);
             }
-        }
-
-        // Falls back to the aura's own short constant if RuntimeConfig.EffectConfig can't resolve,
-        // same defensive shape as HasteEffectData.Apply's own missing-config check - a config asset
-        // that isn't assigned yet shouldn't leave the aura granting a permanent (never-decaying)
-        // buff, it should just behave like it did before this shared duration existed.
-        private static FP ResolveHasteDuration(Frame f)
-        {
-            EffectConfig config = StatusEffectUtility.GetEffectConfig(f);
-
-            if (config == null)
-            {
-                return AuraRefreshDuration;
-            }
-
-            return config.HasteDuration;
         }
 
         public struct Filter

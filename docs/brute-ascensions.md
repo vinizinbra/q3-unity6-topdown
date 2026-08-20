@@ -266,3 +266,343 @@ Generate Ascension Assets` (or `Generate All Assets`) still needs to be run** to
 new Hero-Skill-Ascension assets at `Brute_HeroSkill/Brute_HeroSkillUpgrades/` and wire them into
 `BruteBaseSkill-Juggernaut.Actions`. `JuggernautSkillData.Damage` (30) is a placeholder pending a real
 balance pass alongside the rest of Brute's kit. Not yet manually verified end-to-end in the Editor.
+
+---
+
+# 2026-08-20 balance pass
+
+Brute goes from 8 lines to the target **9 lines × 3 ranks** — a new third Protector line, plus a
+redesign of his offensive build engine and a rein-in of his team damage reduction.
+
+## Roster now
+
+| Pool | Lines |
+|---|---|
+| Juggernaut (Hero Skill) | Momentum, Bone Breaker, Aftershock, Concussive Impact |
+| Protector (Passive) | Iron Presence, Guardian, **Unstoppable** — *superseded, see the next section* |
+| Dash | Iron Shoulder, Bodyguard |
+
+> **Superseded below.** Unstoppable was cut later the same day and replaced by **Groundbreaker**. The
+> Unstoppable material in the rest of this section is kept as the record of why it existed; nothing it
+> describes is still in the codebase.
+
+## What changed
+
+- **Aftershock is now Brute's primary build engine.** Was "+15%/+20% per enemy hit, capped at 6/8
+  stacks, +20% radius, stun at 5+". Now every rank uses the same +15%/stack up to **5 stacks**;
+  R2 adds **+5% radius per stack**; R3 "Earthquake" replaces the stun with a **second shockwave 0.5s
+  later** at 60% of the primary's own (already stack-scaled) damage. The reward for routing through a
+  crowd before ending Juggernaut is now the whole point of the line. `AftershockUpgrade.RadiusMultiplier`
+  and `StunsAtHighPressure` are gone; `StackRadiusPercent` and the four Earthquake fields replace them.
+  Earthquake uses the new generic `DelayedBlast`/`DelayedBlastSystem` (shared with Pixie), not a
+  Brute-specific timer.
+- **Guardian's permanent team DR capped at 15%.** Was 10% / 20% / 25% and climbing. Now 10% / 15% /
+  15% — rank 3's payoff is a **reactive** burst (+20% DR for 2s, 5s cooldown per ally) rather than a
+  bigger always-on number, and rank 2 adds 30% knockback resistance
+  (`ProtectorAura.AllyKnockbackTakenMultiplier`, via the existing generic
+  `StatusEffectUtility.ApplyKnockbackTaken`). Every reactive value is now authored on the Ascension
+  (`ReactiveDamageReductionAmount`/`Duration`/`ReactiveCooldownPerAlly`) instead of being hardcoded
+  constants in `BruteProtectorReactionSystem`, and that system now picks the STRONGEST covering aura
+  rather than the first one iterated.
+  - The aura itself writes the shared aura-DR slot (`StatusEffectUtility.ApplyAuraDamageReduction`,
+    renamed from the Guardian-specific one and now take-the-stronger), which is what makes "Guardian
+    from multiple Brutes must NOT stack additively" true by construction — and what keeps a Brute +
+    Zara + Lux DR stack from compounding.
+- **Bodyguard restores a FLAT Shield, on a per-ally cooldown.** Was 10%/15%/20% of the ally's own Max
+  Shield with no pacing — a dash-cooldown build could pump unbounded effective Shield into a
+  high-Shield teammate. Now 10 / 15 / 20 flat, gated by
+  `StatusEffects.AllyShieldRestoreCooldownRemaining` (4.5s, authored). The cooldown lives on the ALLY,
+  not on Brute: per-Brute would still let two Brutes chain-refill one teammate, and would punish
+  dashing between different allies — exactly the play this line should reward. R3's DR values are
+  authored rather than hardcoded.
+- **Unstoppable (new Protector line).**
+  - R1 "Thick Skull": hard CC lasts 30% less on him — implemented purely through the new generic
+    `CharacterStats.HardCcDurationMultiplier`, folded into `StatusEffectUtility.ApplyStun`/`ApplyRoot`
+    beside the enemy-tier resistances. Nothing Brute-specific reaches those paths.
+  - R2 "Come At Me": being hit by a Specialist-or-tougher enemy grants +1 Momentum (only while
+    Juggernaut is channelling, since `JuggernautCharge` only exists then), on an authored trigger
+    cooldown.
+  - R3 "Unstoppable": at max Momentum he's immune to knockback and hard CC and deals +20% impact
+    damage. Immunity is refresh-only (`StatusEffects.HardCcImmunityRemaining` plus a zero
+    `ApplyKnockbackTaken`), the same idiom every aura here uses — so it lapses on its own the instant
+    Momentum drops or Juggernaut ends, with no removal path to get wrong. The damage bonus is applied
+    by `BruteAscensionUtility.ResolveImpactDamageMultiplier` at all three body-collision sources:
+    Discharge, Aftershock and Iron Shoulder.
+  - New `UnstoppableUpgrade` component + `BruteUnstoppableSystem`.
+- Momentum, Bone Breaker, Concussive Impact, Iron Presence and Iron Shoulder are unchanged. Concussive
+  Impact's repeated stuns now automatically respect the generic per-tier CC immunity window (see
+  `EnemyTierResistanceConfig`), with no change to the line itself.
+
+**Playtest first:** Aftershock stack acquisition rate (5 stacks should be a real routing goal, not
+automatic); Guardian + Zara's Protective Rhythm + Lux's Fire Support stacked on one ally; Unstoppable
+R3's uptime given Momentum retention from Momentum R3.
+
+---
+
+# 2026-08-20 (later) — Unstoppable removed, Groundbreaker added
+
+Brute stays at **9 lines × 3 ranks**; the third Protector line is replaced outright.
+
+## Why Unstoppable was cut
+
+It was built around CC resistance, Stun/knockback immunity, Momentum generation on being hit, and a
+max-Momentum defensive state. Every one of those either overlapped Momentum's own design space or
+read as a stat tweak rather than a mechanic. Replaced by a line that occupies a completely different
+space: **terrain and verticality**.
+
+## Roster now
+
+| Pool | Lines |
+|---|---|
+| Juggernaut (Hero Skill) | Momentum, Bone Breaker, Aftershock, Concussive Impact |
+| Protector (Passive) | Iron Presence, Guardian, **Groundbreaker** |
+| Dash | Iron Shoulder, Bodyguard |
+
+## Groundbreaker
+
+The loop: **high ground → drop → impact shockwave → knock enemies away → wall slam → stun → damage
+window.**
+
+- **R1 "Heavy Landing"** — landing from a real drop throws nearby enemies directly away from the
+  landing point (radius 3, moderate knockback, low impact damage).
+- **R2 "Crash Landing"** — harder knockback, real impact damage, and anything shoved into a wall is
+  **Stunned** (1s).
+- **R3 "Seismic Impact"** — radius 4.5 (+50%), knockback ~+65% over R1, damage 75% of Juggernaut Skill
+  Damage, and anything actually **wall-stunned** becomes **Exposed** (+25% damage taken, 3s).
+
+It deliberately contains **no** Momentum generation/retention/reset, no Move Speed, and no Juggernaut
+duration change. That half of the kit stays entirely Momentum's responsibility.
+
+### Landing trigger — generic, not map-specific
+
+It reacts to the pre-existing **`OnPlayerLanded(entity, fallDistance, source)`** signal
+(`PlayerMovement.qtn`/`AutoJumpSystem`), which already existed as hero-agnostic infrastructure with
+**no consumer** since Brute's old Ground Pound was removed. `fallDistance` is the drop in *grounded* Y
+between takeoff and landing, so the trigger is a plain configurable height threshold
+(`MinimumFallHeight`) rather than anything tied to map tiles or terrain tiers — it works from terrain
+transitions, elevated platforms, jumps, and any future launch mechanic alike.
+
+Everything the brief rules out is excluded for free rather than special-cased: ordinary movement never
+ungrounds at all, a same-height dash and a walked-down step both report ~0, an upward auto-mantle is
+clamped to 0, and **the known false auto-hop at chunk-cube seams reports ~0 too** — a real argument for
+the threshold approach over any "did we leave the ground" test.
+
+Default `MinimumFallHeight = 2`, deliberately double `MovementDataAsset.MaxLedgeHeight` (1, the tallest
+ledge Brute can auto-mantle), so ordinary traversal can never reach it. The level has no discrete
+height-level grid (floor is baked at Y=0; vertical variation is hand-placed chunk geometry), so world
+units *are* the project's vertical representation here.
+
+**`AllowedLandingSources`** is a real authored knob, not a placeholder: a new generic `LandingSource`
+enum (`Fall`/`Jump`/`Launched`) is now carried on `PlayerMovement.AirborneSource` and through the
+signal. `Fall` is the default and needs no writer; `AutoJumpSystem.DoJump` claims `Jump`;
+`DamageUtility.ApplyResolvedImpulse` claims `Launched` when an upward impulse hits a player. It resets
+to `Fall` on landing, right after the signal. All three are allowed by default — the height
+requirement is the real filter.
+
+### Wall slam — one shared implementation, not a second system
+
+Iron Shoulder's private `TryStunIfPushedIntoWall` was **extracted verbatim** into a new hero-agnostic
+**`WallSlamUtility.TryWallSlam`**, which both lines now call. Groundbreaker supplies only a different
+knockback source; it owns no wall-collision code of its own. The architecture is now literally
+*knockback source → enemy movement → valid wall impact → wall-slam effect*.
+
+`TryWallSlam` reports the wall hit **and**, separately, whether the Stun genuinely *landed* — those
+differ whenever the target sits inside a hard-CC immunity window or is a tier authored
+`ImmuneToHardCC`. Iron Shoulder ignores the second (its damage bonus keys off the wall); Groundbreaker
+needs it.
+
+### The damage-window rule
+
+Exposed is gated on the **Stun actually landing**, never on merely being caught in the shockwave and
+never on merely finding a wall. The reward is specifically: good positioning → correct knockback angle
+→ wall impact → Stun → burst opportunity. Exposed reuses the pre-existing generic **Rupture** status
+(`StatusEffectUtility.ApplyRupture`, take-the-stronger), exactly as Lux's Overload Core rank 3 does —
+no Brute-specific status was added.
+
+### Concussive Impact: no double-trigger, by construction
+
+Concussive Impact reacts to an **enemy's** own landing after being launched by Discharge
+(`JuggernautLaunched`, stamped only by `JuggernautSkillData.Discharge`, consumed by
+`JuggernautLandingImpactSystem`). Groundbreaker reacts to **Brute's** own landing. Different trigger,
+different entity — and Groundbreaker never stamps `JuggernautLaunched`, so the same landing cannot
+satisfy both and neither can feed the other. No guard was needed, and none was added.
+
+Iron Presence needs no special-casing either: Groundbreaker's knockback goes through the ordinary
+`DamageUtility.ApplyKnockback`, which already folds in `StatusEffects.KnockbackTakenMultiplier` —
+so Iron Presence's reduced-knockback-resistance debuff on Intimidated enemies composes automatically.
+
+### Determinism
+
+The simulation decides everything: whether it triggers, who is caught, knockback direction, the wall
+result, the Stun, and the Exposed window. The View only renders the new `GroundbreakerSlammed` event.
+
+### View FX
+
+Presentation only — the simulation has already decided everything by the time any of this runs.
+
+**Landing shockwave.** `EffectsManager` handles `GroundbreakerSlammed`: a radius-scaled burst at the
+landing point plus an optional ground crack/dust decal, ground-probed via the same `TryFindGroundBelow`
+the enemy-death decal already uses so a crack can't float over a slope. One prefab authored at radius 1
+covers all three ranks (3 / 3 / 4.5) rather than needing three. Falls back to `defaultAreaBlastEffect`
+tinted a dusty earth tone — the same dedicated-slot-with-tinted-fallback pattern Detonation/Singularity/
+Overflowing Rift already use, so it reads distinctly even before a bespoke prefab exists.
+
+The prefab lives on `EffectsManager` rather than on `GroundbreakerPassiveUpgradeData` — unlike
+`SkillActionData`, `PassiveUpgradeData.Apply` gets no self `AssetRef` to travel with the event, which is
+exactly why Kai's Undertow and every reaction VFX already sit on the manager too.
+
+**Wall impact — a generic event, not a Groundbreaker one.** A new `WallSlammed` event is fired by
+**`WallSlamUtility` itself**, so every knockback source routing through that utility gets the impact VFX
+with no per-source hookup. Brute's **Iron Shoulder dash gets this for free** — it had no dedicated wall
+visual before. It carries the wall **contact point** (resolved from `CastDistanceNormalized`, since
+`Hit3D.Point` is only populated under `ComputeDetailedInfo`, which this query deliberately doesn't pay
+for), the push direction so the burst sprays *into* the surface instead of puffing symmetrically, and
+`Stunned` — which drives a heavier variant, because a wall hit resisted by a hard-CC immunity window
+isn't the same payoff as one that landed and opened the Exposed window.
+
+**Camera shake.** A new `ImpactCameraShakeListener` (`View/Camera/`, same shape as
+`WeaponCameraShakeListener` including its `[Button]` test triggers) shakes on both events, filtered to a
+**local** player's own impacts so a remote Brute across the map doesn't rattle this client. Landing
+amplitude scales linearly with the event's radius against an authored reference radius and is clamped,
+so rank 3 hits harder than ranks 1–2 off one value instead of three. Both event hookups have their own
+on/off toggle. Tuning lives on the component rather than in `CameraShakeConfig`, whose per-`WeaponShakeTier`
+vocabulary doesn't describe a landing or a wall impact.
+
+**Exposed** needs nothing new — it reuses the generic Rupture status, which `StatusEffectsManager` and
+`CharacterUiWidget` already visualize.
+
+## Removed with Unstoppable
+
+`UnstoppablePassiveUpgradeData`, `Unstoppable.qtn` (`UnstoppableUpgrade`), `BruteUnstoppableSystem`,
+and `BruteAscensionUtility.ResolveImpactDamageMultiplier` plus its three call sites (Discharge,
+Aftershock, Iron Shoulder).
+
+Two **generic** hooks had been created solely for Unstoppable and had no other consumer, so they were
+removed too rather than left as invisible dead code:
+
+- `CharacterStats.HardCcDurationMultiplier` (+ `StatusEffectUtility.GetHardCcDurationMultiplier` and
+  its seed in `CharacterSystem`) — Unstoppable R1's only mechanism.
+- `StatusEffects.HardCcImmunityRemaining` (+ its tick and its checks in `ApplyStun`/`ApplyRoot`/
+  `TryConsumeInterruptImmunity`) — Unstoppable R3's only mechanism.
+
+**Deliberately kept**, because they are used elsewhere: the per-tier hard-CC diminishing-returns
+windows (`EnemyTierResistanceConfig.StunImmunityDuration`/`InterruptImmunityDuration`/`ImmuneToHardCC`
++ `StatusEffects.StunImmunityRemaining`/`InterruptImmunityRemaining`), which Kai's Singularity, Brute's
+own Concussive Impact and Zara's Bass Drop all rely on.
+
+## Status
+
+All four assemblies (`Quantum.Simulation`, `Quantum.Unity`, `Quantum.Unity.Editor`, `Assembly-CSharp` —
+the View code lives in the last of these) verified to compile against freshly-run codegen. `Tools >
+RiftRaiders > Brute > Generate Ascension Assets` authors Groundbreaker and rewires
+`BruteCharacterData.PassiveUpgrades` — **not yet run**, and the stale `Unstoppable.asset` needs deleting
+by hand. Not verified in-Editor.
+
+**Editor authoring for the FX** (all of it optional — every slot has a working fallback, so nothing
+breaks if it's skipped): author `groundbreakerImpactPrefab` / `groundbreakerDecalPrefab` and
+`wallSlamEffectPrefab` on the scene's `EffectsManager` (unset falls back to `defaultAreaBlastEffect`,
+tinted for the landing), and add an `ImpactCameraShakeListener` component to a HUD/manager GameObject in
+`QuantumGameScene` (no component in the scene = no shake, nothing else changes).
+
+**Playtest first:** whether `MinimumFallHeight = 2` matches the real terrain drops in generated levels
+(this is the single value that decides whether the line ever triggers); how often a knocked-back enemy
+actually finds a wall inside `WallCheckDistance` at rank 2+, since the whole rank-3 payoff is gated
+behind it; and whether R1's knockback-only version reads as satisfying without the wall reaction.
+
+---
+
+# 2026-08-20 (later still) — Bodyguard never shielded Brute himself
+
+Reported from live testing: Bodyguard restored Shield to allies but never to the casting Brute.
+
+**Cause.** Bodyguard scanned with `EnemyMovementUtility.FindPlayersInRadius`, whose `Player`-only layer
+mask deliberately cannot see a dashing player — `DashSkillData.Begin` parks the dasher on
+`IgnoreProjectile` for the dash's whole duration, which is what gives Dash its i-frames against enemy
+attacks and projectiles.
+
+Bodyguard fires at **dash End**, so it coincides with that layer swap *by definition*. `DashSkillData.End`
+does restore the layer one line before the End-phase actions run
+([SkillSystem.cs:424-425](Assets/_QuantumUser/Simulation/Systems/Player/SkillSystem.cs#L424-L425)) — but
+that is far too late: `Core.PhysicsSystem3D` runs **before every user system**, so the broadphase the
+overlap query reads was already built this tick with Brute still on `IgnoreProjectile`. The result is a
+100% failure, not an intermittent one. Allies were always found correctly, which is exactly why it read
+as "Bodyguard doesn't shield me."
+
+The `SelfEffectMultiplier` half of the design was therefore dead code — it had never once run.
+
+**Fix.** Use the existing broader mask, which already exists for precisely this problem. The helper and
+mask were renamed for what they *do* rather than for their first caller, since the exclusion has nothing
+to do with pickups and every friendly query hits it:
+
+- `GetPickupLayerMask` → **`GetPlayerIncludingDashingLayerMask`**
+- `FindPlayersInRadiusForPickup` → **`FindPlayersInRadiusIncludingDashing`**
+
+The five existing pickup/chest/traversal callers are unchanged in behavior.
+
+**Same bug, same day, different hero.** Zara's **Portable Speaker** rank 2+ dash-end ally buff had the
+identical defect for the identical reason and got the identical fix — see `docs/zara-ascensions.md`.
+
+**Deliberately not changed.** `ProtectorAuraSystem`, `SentryAuraSystem` and `ResonanceUtility.FirePulse`
+also use the narrow mask, but they are refresh-only auras re-applied every tick with a 1s window against
+a 0.5s `DashDuration` — the buff never actually lapses, so a dashing player loses nothing. Only queries
+that fire *at* dash end are guaranteed to coincide with the layer swap.
+
+---
+
+# 2026-08-20 (later still) — enemies knocked INTO the environment and stuck
+
+Reported from live testing: some of Brute's knockbacks pushed enemies into the walls rather than
+against them, and they stayed there.
+
+## Why it happens
+
+Enemies are ordinary dynamic `PhysicsBody3D`s (mass 100, non-trigger, Enemy layer), and the Enemy layer
+*does* collide with Ground, so the normal case is correct — a shoved enemy hits a wall and stops. But:
+
+- Brute's knockbacks are by far the hardest in the game and use `KnockbackApplyMode.Override`, which
+  sets velocity outright: **Iron Shoulder 20 u/s** (`KnockbackTier.Strong`), **Groundbreaker up to
+  16.5**. That is ~0.33 and ~0.28 units in a single 60 Hz step.
+- A chunk's walls are one **compound** `PhysicsCollider3D` baked by `ChunkCompoundColliderBuilder`, and
+  this project already has documented gaps at **chunk seams** (see the auto-jump seam bug). A hard
+  enough push into a compound corner or a seam can end a step inside the geometry, and Quantum's 3D
+  physics has no continuous collision detection to fall back on.
+- Once the enemy's center is *inside*, it can never get out on its own: every wall check
+  `EnemyMovementUtility` steers by (`IsBlockedByWall` and friends) raycasts **from the enemy's own
+  position**. From in there, there is no wall ahead to avoid — so `EnemySystem` cheerfully drives it
+  deeper on the next tick. That is the "walked into the environment and got stuck" symptom.
+
+Juggernaut's Discharge is a second, separate route in: its impulse is
+`(velocityXZ * 0.10 + Up * 4) * 4`, i.e. **+16 u/s straight up**, which against the project's **-40**
+gravity apexes at ~3.2 units — enough to pop an enemy clean over a low wall and drop it behind one.
+
+## Fix — recovery, not a clamp
+
+New generic `EnemyStuckRecoveryUtility` (`Systems/Enemy/`), plus two fields on `Enemy`
+(`PreKnockbackPosition`, `StuckCheckTimer`):
+
+- `EnemySystem.OnEnemyKnockedBack` records where the enemy was standing at the moment it was hit — a
+  known-good spot — and opens a 3s watch window. This is done **before** the
+  `CanBeInterruptedByKnockback` early-out, so Heavy/Elite/Boss (which take the impulse without being
+  staggered) are covered too.
+- While that window is open, `EnemySystem.Update` probes a **half-radius** sphere at the enemy's true
+  collider center against the Ground layer (`HitStatics | HitKinematics` — a chunk collider is a
+  kinematic entity collider, so `HitStatics` alone finds no walls at all). Half-radius means resting
+  *flush* against a wall can never trip it; only a center that has genuinely sunk in does.
+- On a hit: return the enemy to the recorded position, zero its velocity, close the window.
+
+It runs before any movement work, including `TickKnockbackRecovery`'s own early-out, since a push can
+bury an enemy mid-stagger.
+
+**Why not clamp the knockback instead?** Capping every impulse against a wall probe would flatten how
+knockback feels anywhere near a wall (which is most of an arena), would have to guess at drag to know
+how far a push actually carries, and *still* wouldn't catch the over-the-wall case. This changes no
+combat numbers at all, and costs nothing for an enemy nobody has knocked around.
+
+## Not changed — flagged for your call
+
+Juggernaut Discharge's **+16 u/s upward** is extreme next to every other knockback in the game
+(`KnockbackTier.Strong` upward is 1.0; Groundbreaker's is 2). It is authored as
+`KnockbackUpwardForce = 4` × `KnockbackForce = 4` in `BruteBaseSkill-Juggernaut.asset` — the
+multiplication is easy to miss when tuning either number alone. Lowering `KnockbackUpwardForce` to ~1
+would bring the pop in line without touching the horizontal push. Left alone because it is a balance
+decision, not a bug.

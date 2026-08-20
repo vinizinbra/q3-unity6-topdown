@@ -8,7 +8,7 @@ using UnityEngine;
 // stat-only kinds (Global/Passive) that otherwise leave no visible trace on the entity. Weapon Perk
 // is excluded (already visible on the weapon itself). Same "leaf widget bound externally via
 // Initialize, self-hides via root, autoBindLocalPlayerOne default" shape as its PartyHudWidget
-// siblings (ScrapUiWidget etc.) - none of them share a base class, so this one doesn't either.
+// siblings (CurrencyUiWidget etc.) - none of them share a base class, so this one doesn't either.
 public class PartyHistoryUpgradeContainer : QuantumGlobalMonoBehaviour
 {
     [SerializeField] private GameObject root;
@@ -43,7 +43,7 @@ public class PartyHistoryUpgradeContainer : QuantumGlobalMonoBehaviour
     }
 
     // Called by PartyHudWidget on every widget it owns, so an externally-driven slot
-    // never fights its own children's default self-binding - see ScrapUiWidget's own comment.
+    // never fights its own children's default self-binding - see SkillCooldownUiWidget's own comment.
     public void DisableAutoBind()
     {
         autoBindLocalPlayerOne = false;

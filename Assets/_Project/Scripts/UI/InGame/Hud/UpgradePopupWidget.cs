@@ -69,7 +69,7 @@ public class UpgradePopupWidget : QuantumGlobalMonoBehaviour
     }
 
     // Called by PartyHudWidget on every widget it owns, so an externally-driven slot
-    // never fights its own children's default self-binding - see ScrapUiWidget's own comment.
+    // never fights its own children's default self-binding - see SkillCooldownUiWidget's own comment.
     public void DisableAutoBind()
     {
         autoBindLocalPlayerOne = false;

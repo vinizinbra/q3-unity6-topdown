@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a18c0629b3ab0494e9d9f61712da5476, type: 3}
+  m_Name: Unstoppable
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.UnstoppablePassiveUpgradeData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Brute/Brute_PassiveSkill/Brute_PassiveSkillUpgrades/Unstoppable
+    Guid:
+      Value: 338659376148529605
+  Icon: {fileID: 971092801, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
+  DisplayName: Unstoppable
+  Description: Being hit stops slowing you down and starts feeding you - until, at
+    full Momentum, nothing can stop you at all.
+  <MaxRank>k__BackingField: 3
+  RankDescriptions:
+  - 'Thick Skull: hard crowd control (Stun, Root) lasts 30% less time on you.'
+  - 'Come At Me: being hit by a Specialist or tougher enemy grants you +1 Momentum
+    during Juggernaut.'
+  - 'Unstoppable: at max Momentum you''re immune to knockback and hard crowd control,
+    and deal +20% impact damage.'
+  HardCcDurationMultiplier:
+  - RawValue: 45875
+  - RawValue: 45875
+  - RawValue: 45875
+  MomentumOnHit: 000101
+  MomentumOnHitCooldown:
+    RawValue: 131072
+  MinAttackerTier: 2
+  ImpactDamageBonus:
+    RawValue: 13107

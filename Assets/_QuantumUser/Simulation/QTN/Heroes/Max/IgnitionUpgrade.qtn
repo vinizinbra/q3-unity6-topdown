@@ -1,11 +1,15 @@
-// Overdrive rank 4 ("Ignition") - granted once by IgnitionSkillAction.Apply, which SETs every field
+// Overdrive line 4 ("Ignition") - granted once by IgnitionSkillAction.Execute, which SETs every field
 // below to the picked rank's cumulative tuned values. All three ranks gate on being at max Rage
 // (RageOverdriveUtility.IsAtMaxRage), not just Overdrive being active at all:
 //  - Rank 1: BurnOnHitStacks toggles CharacterStats.BurnOnHitStacks on/off at the max-Rage threshold
 //    (MaxAscensionUtility.OnEnteredMaxRage/RevertIgnition, same enter/exit-threshold shape Full
 //    Throttle uses).
-//  - Rank 2: HasBurningGround gates IgnitionSkillAction's own OnGoing distance-accumulation spawn
-//    logic - Max-specific, not routed through this shared component.
+//  - Rank 2: HasBurningGround - a BURNING ENEMY KILLED while at max Rage leaves a burning-ground
+//    patch where it died (MaxOverdriveReactionSystem.OnEntityKilled -> MaxAscensionUtility.
+//    SpawnBurningGround). Reworked from an earlier distance-paced "drop a patch every N units
+//    travelled" trail, which paid out regardless of whether Ignition's own Burn was doing anything.
+//    Every knob the patch needs is authored here rather than baked into the prototype, so it can be
+//    balanced without opening a prefab.
 //  - Rank 3: HasInferno + InfernoRadius/InfernoBurnDuration/InfernoBurnIntensity back one
 //    MaxAscensionUtility.ApplyRadialBurn pulse the FIRST time max Rage is reached each Overdrive
 //    activation - InfernoTriggeredThisActivation latches that, reset by IgnitionSkillAction.Execute
@@ -13,7 +17,14 @@
 component IgnitionUpgrade
 {
     Byte BurnOnHitStacks;
+
     Boolean HasBurningGround;
+    AssetRef<EntityPrototype> BurningGroundPrototype;
+    FP BurningGroundDuration;
+    FP BurningGroundRadius;
+    FP BurningGroundDamage;
+    FP BurningGroundTickInterval;
+
     Boolean HasInferno;
     FP InfernoRadius;
     FP InfernoBurnDuration;

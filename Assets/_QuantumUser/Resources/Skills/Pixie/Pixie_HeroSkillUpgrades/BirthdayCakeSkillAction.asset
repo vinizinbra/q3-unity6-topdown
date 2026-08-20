@@ -18,7 +18,6 @@ MonoBehaviour:
       Value: 413478364742523529
   Icon: {fileID: 1776201555, guid: b217254d41b6945b1873986186a25786, type: 3}
   DisplayName: Birthday Cake
-  Rarity: 1
   RankDescriptions:
   - After landing, Bunny Bomb becomes a decoy, taunting nearby enemies for 1s before
     detonating.

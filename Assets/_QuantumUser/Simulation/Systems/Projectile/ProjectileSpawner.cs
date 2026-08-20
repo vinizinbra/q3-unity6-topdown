@@ -31,6 +31,22 @@ namespace Quantum
             ElementType element = ElementType.Neutral, int spawnDepth = 0, int pelletIndex = 0)
         {
             ProjectileDataAsset projectileData = f.FindAsset(projectileDataRef);
+
+            // Applied here, before the transform is oriented off launch.Velocity below, because for an
+            // ARC movement this changes the launch DIRECTION as well as its magnitude (see
+            // ProjectileMovementData.ApplySpeedMultiplier) - orienting first would point the projectile
+            // along a heading it is no longer travelling.
+            //
+            // Delegated to the movement rather than multiplying the vector here: a straight shot just
+            // wants a bigger velocity, but an arc (thrown/ballistic) would have its range multiplied by
+            // the SQUARE of the multiplier and land well past where it was aimed. A movement that
+            // re-homes velocity later (HomingProjectileMovementData.UpdateVelocity) re-derives its own
+            // magnitude, so this only guarantees the multiplier holds for the initial launch.
+            //
+            // GetProjectileSpeedMultiplier is 1 for anything without CharacterStats (every enemy today).
+            ProjectileMovementData movement = f.FindAsset(projectileData.Movement);
+            movement.ApplySpeedMultiplier(ref launch, StatUtility.GetProjectileSpeedMultiplier(f, owner));
+
             EntityRef projectileEntity = f.Create(projectileData.Prototype);
 
             if (f.Unsafe.TryGetPointer<Transform3D>(projectileEntity, out var transform) == true)
@@ -41,13 +57,7 @@ namespace Quantum
 
             if (f.Unsafe.TryGetPointer<Projectile>(projectileEntity, out var projectile) == true)
             {
-                // Scales the whole spawn-time velocity by the owner's CharacterStats.
-                // ProjectileSpeedMultiplier (1 for anything without CharacterStats, e.g. every enemy
-                // today) rather than threading a multiplier through every ProjectileMovementData
-                // subclass's own Speed - a movement that re-homes velocity later
-                // (HomingProjectileMovementData.UpdateVelocity) re-derives its own magnitude, so this
-                // only guarantees the multiplier holds for the initial launch, not forever.
-                projectile->Velocity = launch.Velocity * StatUtility.GetProjectileSpeedMultiplier(f, owner);
+                projectile->Velocity = launch.Velocity;
                 projectile->Damage = damage;
                 projectile->RemainingLifetime = projectileData.Lifetime;
                 projectile->Owner = owner;

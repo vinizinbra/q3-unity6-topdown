@@ -392,6 +392,10 @@ MonoBehaviour:
       Value: 0
     Element:
       Value: 0
+    PerkElement:
+      Value: 0
+    PerkElementChance:
+      RawValue: 0
     SourceSlot:
       Value: 0
     Target: {fileID: 0}
@@ -442,6 +446,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.HasShadow
   baseScale: 1.5
+  shadowOffset: {x: 0, y: 0}
 --- !u!114 &5326691767572644603
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -495,8 +500,8 @@ Transform:
   m_GameObject: {fileID: 8485456491351088542}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 6.5, y: 6.5, z: 6.5}
+  m_LocalPosition: {x: 0, y: 0.41, z: 0}
+  m_LocalScale: {x: 15, y: 15, z: 15}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5119253826584135351}
@@ -551,7 +556,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -1066289369, guid: 19acf56c49556470a8c80dca4d46ccf3, type: 3}
+  m_Sprite: {fileID: -600037154, guid: 19acf56c49556470a8c80dca4d46ccf3, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0

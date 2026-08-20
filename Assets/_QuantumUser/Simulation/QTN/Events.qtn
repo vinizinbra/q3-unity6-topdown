@@ -222,7 +222,7 @@ event RemixPulseTriggered
 // Fired by ZaraAfterbeatSystem.Fire (Dash Ascension "Afterbeat", ranked - the delayed dash pulse,
 // not the Resonance passive above). Kept as its own event rather than reusing
 // ResonancePulseReleased/ShockwaveReleased, which every OTHER Zara pulse (Resonance passive, Heavy
-// Bass Subwoofer, Remix) shares and which ResonanceFxView renders - so Afterbeat's own pulse can
+// Remix) shares and which ResonanceFxView renders - so Afterbeat's own pulse can
 // play a visually distinct VFX (see ZaraAfterbeatFxView) instead of looking identical to those.
 event AfterbeatPulseReleased
 {
@@ -297,16 +297,66 @@ event ExplodeOnDeathDetonated
 // Fired by DamageUtility.TrySentryOverload - fully independent from ExplodeOnDeathDetonated above
 // despite the similar shape, since Overload is its own mechanic (SentryOverloadUpgrade's own
 // Radius/Damage, not RuntimeConfig.ExplodeOnDeathConfig). DOES carry an asset ref, unlike
-// ExplodeOnDeathDetonated - Overload always comes from exactly one SentryAddOverloadSkillAction
+// ExplodeOnDeathDetonated - Overload always comes from exactly one SentryOverloadCoreSkillAction
 // asset, which is where the view resolves BlastEffectPrefab from
-// (SentryAddOverloadSkillAction.View.cs) - same "AssetRef travels with the event" shape
-// VortexExploded uses for VortexExplodeOnDestroySkillAction.
+// (SentryOverloadCoreSkillAction.View.cs) - same "AssetRef travels with the event" shape
+// VortexExploded uses for VortexCollapseSkillAction.
 event SentryOverloadDetonated
 {
     EntityRef  Owner;
     FPVector3  Position;
     FP         Radius;
-    AssetRef<SentryAddOverloadSkillAction> Source;
+    AssetRef<SentryOverloadCoreSkillAction> Source;
+}
+
+// Brute's Groundbreaker Passive Ascension - fired once per qualifying landing, at his own landing
+// position, whether or not anything was actually caught (same "still reads visually against an empty
+// room" convention AreaDetonated/ShockwaveReleased already follow). Radius is the rank's own resolved
+// ImpactRadius, so a view can scale one prefab rather than authoring three.
+//
+// Presentation only: the simulation has already decided who was hit, which way they were thrown,
+// whether they slammed a wall, and whether they were Stunned/Exposed by the time this fires.
+event GroundbreakerSlammed
+{
+    EntityRef Owner;
+    FPVector3 Position;
+    FP        Radius;
+}
+
+// Lux's Emergency Repair Dash Ascension - fired when a dash ends near one of her own Sentries and
+// actually services it. View-only cue (a repair spark on the chassis); the sim never reads it.
+event SentryRepaired
+{
+    EntityRef Owner;
+    EntityRef Sentry;
+}
+
+// Lux's Relocation Protocol Dash Ascension - fired when a Sentry is picked up and MOVED to her dash
+// destination. Position is where it landed. Deliberately distinct from a fresh deploy: the same
+// entity (and all its state) simply moved, so a view should relocate/replay rather than treat this as
+// a new machine.
+event SentryRelocated
+{
+    EntityRef Owner;
+    EntityRef Sentry;
+    FPVector3 Position;
+}
+
+// Lux's Overclock rank 3 "Redline" - fired once, the moment a Sentry's remaining lifetime first
+// crosses the threshold and it goes into overdrive for the rest of its life. A one-shot cue, not a
+// state readout (the state is Sentry.RedlineActive).
+event SentryRedlineEngaged
+{
+    EntityRef Sentry;
+}
+
+// Lux's Field Modifications rank 3 "MK II" - fired once, when a Sentry hits max stacks and its
+// primary Cannon is swapped for the Twin Cannon. Barrel is the slot-0 barrel that was re-equipped, so
+// a view can swap that specific gun's art rather than the whole chassis.
+event SentryUpgradedToMkII
+{
+    EntityRef Sentry;
+    EntityRef Barrel;
 }
 
 // Fired by VortexSystem.TryExplodeOnDestroy (see VortexExplodeOnDestroy) - same shape as
@@ -337,18 +387,6 @@ event VortexImploded
     FPVector3  Position;
     FP         Radius;
     AssetRef<CompressionSkillAction> Source;
-}
-
-// Fired by VortexSystem.TryRepulseOnDestroy (see VortexRepulseOnDestroy, Kai's Warp Wake rank 3) - a
-// Dash Void collapsing into an outward shockwave instead of Vortex Collapse's own inward-pulling
-// blast. Same "AssetRef travels with the event" shape as VortexExploded/VortexImploded's own Source.
-event VortexRepulsed
-{
-    EntityRef  Entity;
-    EntityRef  Owner;
-    FPVector3  Position;
-    FP         Radius;
-    AssetRef<WarpWakeSkillAction> Source;
 }
 
 // Fired by KaiUndertowSystem.TickUndertowPulls whenever a struck enemy's pull target resolves to a
@@ -427,15 +465,34 @@ event EntityRooted
 // already uses, see EffectsManager. Effect is invalid/default for every caller except Zara's Remix
 // ascension (see ResonanceUtility.ResolveRemixEffect) - EffectsManager's own generic handler skips
 // playing entirely whenever this is valid, deferring the (colored) shockwave visual to ResonanceFxView
-// instead, so a Remix pulse never plays two overlapping shockwave particles. Kai's old Dash Shockwave
-// ascension (DashShockwaveTriggered) is gone - absorbed into Warp Wake rank 3's Repulsion, which fires
-// VortexRepulsed instead (see Vortex.qtn/VortexRepulseOnDestroy).
+// instead, so a Remix pulse never plays two overlapping shockwave particles.
 event ShockwaveReleased
 {
     EntityRef                Entity;
     FPVector3                Position;
     FP                       Radius;
     AssetRef<HitEffectData>  Effect;
+}
+
+// Fired by WallSlamUtility.TryWallSlam whenever a knocked-back target actually finds a wall -
+// deliberately generic, exactly like ShockwaveReleased above, because the wall check itself is now one
+// shared implementation rather than one per Ascension. Every current and future knockback source that
+// routes through that utility (Brute's Iron Shoulder dash, his Groundbreaker landing) gets the same
+// impact VFX for free, with no per-source hookup.
+//
+// PushDirection is the normalized direction the target was shoved (i.e. INTO the wall), so a view can
+// orient a directional impact/dust burst against the surface rather than playing a symmetric puff.
+// Stunned reports whether the Stun genuinely LANDED, which is NOT the same as hitting the wall - a
+// target inside a hard-CC immunity window, or an ImmuneToHardCC tier, hits the wall without being
+// stunned (see EnemyTierResistanceConfig). A view can play a harder variant for the stunned case, which
+// is also the one that opens Groundbreaker rank 3's Exposed window.
+event WallSlammed
+{
+    EntityRef  Target;
+    EntityRef  Owner;
+    FPVector3  Position;
+    FPVector3  PushDirection;
+    Boolean    Stunned;
 }
 
 // Fired by DirectHitData.ApplyQuantumRounds whenever the perk actually chains a hit onto a second

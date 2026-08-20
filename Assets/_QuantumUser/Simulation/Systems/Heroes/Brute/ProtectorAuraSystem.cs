@@ -47,20 +47,36 @@ namespace Quantum
             }
         }
 
-        // Guardian only - 0 AllyDamageReductionAmount (the base passive's default) means the
-        // ascension hasn't been taken, so this is skipped entirely. Includes Brute himself if he's
+        // Guardian only - both effects are off (DR at 0, knockback multiplier at 1) until that
+        // ascension sets them, so this is skipped entirely otherwise. Includes Brute himself if he's
         // standing inside his own aura (FindPlayersInRadius doesn't exclude the source) - the
         // Protector protecting himself too is a reasonable reading of the aura, not a bug.
+        //
+        // The DR goes through the SHARED aura-DR slot (StatusEffectUtility.ApplyAuraDamageReduction),
+        // which is what enforces the brief's "Guardian aura from multiple Brutes must NOT stack
+        // additively": two Brutes' auras write the same slot, strongest wins, no per-hero special
+        // case anywhere.
         private static void ApplyToAllies(Frame f, ProtectorAura* aura, FPVector3 center)
         {
-            if (aura->AllyDamageReductionAmount <= FP._0)
+            bool hasDamageReduction = aura->AllyDamageReductionAmount > FP._0;
+            bool hasKnockbackResist = aura->AllyKnockbackTakenMultiplier > FP._0 && aura->AllyKnockbackTakenMultiplier < FP._1;
+
+            if (hasDamageReduction == false && hasKnockbackResist == false)
                 return;
 
             var allies = EnemyMovementUtility.FindPlayersInRadius(f, center, aura->Radius);
 
             for (int i = 0; i < allies.Count; i++)
             {
-                StatusEffectUtility.ApplyGuardianDamageReduction(f, allies[i].Entity, AuraRefreshDuration, aura->AllyDamageReductionAmount);
+                if (hasDamageReduction == true)
+                {
+                    StatusEffectUtility.ApplyAuraDamageReduction(f, allies[i].Entity, AuraRefreshDuration, aura->AllyDamageReductionAmount);
+                }
+
+                if (hasKnockbackResist == true)
+                {
+                    StatusEffectUtility.ApplyKnockbackTaken(f, allies[i].Entity, AuraRefreshDuration, aura->AllyKnockbackTakenMultiplier);
+                }
             }
         }
 

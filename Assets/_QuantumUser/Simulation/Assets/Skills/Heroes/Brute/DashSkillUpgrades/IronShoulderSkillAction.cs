@@ -18,11 +18,11 @@ namespace Quantum
     // granted fresh on this action's own Begin phase. Elite/Boss enemies are no longer excluded - they
     // go through the same DamageUtility.ApplyKnockback call as everyone else, which already scales (or
     // fully resists) by the target's own tier resistance (StatusEffectUtility.GetTierResistance), so a
-    // heavy target naturally shrugs off more of the shove without a separate hard skip here. The "pushed into a
-    // wall" check is a simplification: rather than tracking the knockback impulse across ticks to see
-    // where it actually lands, this raycasts a short distance in the push direction from the hit
-    // point the instant it lands - if a wall is right there, it counts. Reads as "shoved into the
-    // wall behind them" without needing multi-tick physics tracking. Rank 3's shockwave deliberately
+    // heavy target naturally shrugs off more of the shove without a separate hard skip here. The
+    // "pushed into a wall" check is no longer this class's own - it moved to the shared, hero-agnostic
+    // WallSlamUtility.TryWallSlam once Groundbreaker needed the identical reaction from a different
+    // knockback source (a vertical landing rather than a dash); behavior here is unchanged, see that
+    // class for what the check actually does and why it's a simplification. Rank 3's shockwave deliberately
     // calls BruteAscensionUtility.ApplyRadialStunDamage (a plain damage+stun sweep) rather than
     // another knockback/wall-check, so it can never recursively re-trigger the wall reaction itself.
     // Its damage naturally synergizes with Concussive Impact's own bonus vs Stunned targets (see
@@ -111,7 +111,7 @@ namespace Quantum
                 if (f.Unsafe.TryGetPointer<Transform3D>(hitEntity, out var hitTransform))
                     f.Events.HitEffectApplied(filter.Entity, hitEntity, hitTransform->Position, true);
 
-                bool hitWall = TryStunIfPushedIntoWall(f, filter.Entity, hitEntity, direction);
+                bool hitWall = WallSlamUtility.TryWallSlam(f, hitEntity, filter.Entity, direction, WallCheckDistance, StunDuration, out _);
 
                 if (damage > FP._0)
                 {
@@ -122,7 +122,10 @@ namespace Quantum
                 if (hitWall == true && ShockwaveRadius[index] > FP._0 && hitTransform != null)
                 {
                     FP shockwaveDamage = ShockwaveDamagePercent[index] * BruteAscensionUtility.ResolveJuggernautSkillDamage(f, filter.Entity);
-                    BruteAscensionUtility.ApplyRadialStunDamage(f, hitTransform->Position, ShockwaveRadius[index], filter.Entity, shockwaveDamage, FP._1);
+                    // Skill Area, same as every other Brute blast radius.
+                    FP shockwaveRadius = ShockwaveRadius[index] * StatUtility.GetAreaMultiplier(f, filter.Entity);
+
+                    BruteAscensionUtility.ApplyRadialStunDamage(f, hitTransform->Position, shockwaveRadius, filter.Entity, shockwaveDamage, FP._1);
                 }
             }
         }
@@ -158,23 +161,5 @@ namespace Quantum
             return true;
         }
 
-        // Returns whether hitEntity was pushed into a wall - callers use this to gate the wall-slam
-        // damage bonus/shockwave (rank 2+/3) alongside the Stun that already rode on it at rank 1.
-        private bool TryStunIfPushedIntoWall(Frame f, EntityRef owner, EntityRef hitEntity, FPVector3 direction)
-        {
-            if (f.Unsafe.TryGetPointer<Transform3D>(hitEntity, out var transform) == false)
-                return false;
-
-            int wallMask = EnemyMovementUtility.GetGroundLayerMask(f);
-            const QueryOptions WallQueryOptions = QueryOptions.HitStatics | QueryOptions.HitKinematics;
-            Hit3D? wallHit = f.Physics3D.Raycast(transform->Position, direction, WallCheckDistance, wallMask, WallQueryOptions);
-
-            if (wallHit.HasValue == true)
-            {
-                StatusEffectUtility.ApplyStun(f, hitEntity, StunDuration, owner);
-            }
-
-            return wallHit.HasValue;
-        }
     }
 }

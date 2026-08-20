@@ -19,19 +19,21 @@ MonoBehaviour:
   Icon: {fileID: -727180227, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
   DisplayName: Last Stand
   RankDescriptions:
-  - 'Unshaken: taking damage during Overdrive no longer resets your Rage.'
-  - 'Unshaken, plus Retaliation: taking damage during Overdrive grants +20% Weapon
-    Damage for 2s (short cooldown).'
-  - 'Unshaken, Retaliation, plus Too Angry to Die: lethal damage during Overdrive
-    instead leaves you at 1 Health, clears Rage, and immediately ends Overdrive.'
+  - Rage now persists after Overdrive ends - your next Overdrive starts where the
+    last one left off.
+  - Rage persists between Overdrives, and taking damage during Overdrive now only
+    costs half of it instead of all of it.
+  - 'Rage persists and resists damage - and Too Angry to Die: lethal damage during
+    Overdrive instead leaves you at 1 Health, spends your Rage, ends Overdrive, and
+    grants 2s of invulnerability.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Overdrive grows harder to punish - keep your Rage on hit, retaliate
-    when struck, and cheat death outright.
+  Description: Your Rage stops being fragile - it survives between Overdrives, then
+    survives being hit, then survives death itself.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -56,9 +58,9 @@ MonoBehaviour:
     ScaleByRadius: 0
     Scale: 1
     Alignment: 0
-  RetaliationDuration:
-    RawValue: 131072
-  RetaliationDamageBonus:
-    RawValue: 13107
+  RageLossFraction:
+  - RawValue: 65536
+  - RawValue: 32768
+  - RawValue: 32768
   CheatDeathImmunityDuration:
     RawValue: 131072

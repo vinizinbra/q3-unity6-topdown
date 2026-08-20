@@ -18,7 +18,6 @@ MonoBehaviour:
       Value: 340599251920562766
   Icon: {fileID: 1133475158, guid: b217254d41b6945b1873986186a25786, type: 3}
   DisplayName: Backblast
-  Rarity: 1
   RankDescriptions:
   - When Pixie dashes, she drops a bomb at the dash starting position - it explodes
     after a short fuse for 50% of Bunny Bomb damage.

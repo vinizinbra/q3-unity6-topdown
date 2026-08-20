@@ -16,6 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapon/BeamGun
     Guid:
       Value: 405919671996400745
+  DisplayName: 
   FireType: 0
   Damage:
     RawValue: 262144
@@ -44,8 +45,9 @@ MonoBehaviour:
       RawValue: 0
   ProjectileData:
     Id:
-      Value: 0
+      Value: 3746254916086688166
   ViewPrefab: {fileID: 8089491252618662435, guid: 40c07803716bc474a920e48339790715, type: 3}
+  ShakeTier: 0
   _dpsPreview: 'Burst DPS: 20
 
     Sustained DPS (incl. reload): 17.1

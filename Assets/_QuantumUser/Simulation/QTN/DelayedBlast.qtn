@@ -1,0 +1,34 @@
+// A single pending "go off shortly, over there" area blast, parked on the OWNER's own entity and
+// counted down by DelayedBlastSystem. Generic and hero-agnostic - the same "countdown component on
+// the hero, ticked by its own tiny System" shape Zara's ZaraAfterbeat already uses,
+// chosen over spawning a marker entity because there is nothing physical or visual to represent
+// between scheduling and firing.
+//
+// Two consumers today, and neither needed its own copy of this: Pixie's Unstable Mixture rank 3
+// (an empowered explosion splitting into a delayed second blast) and Brute's Aftershock rank 3
+// "Earthquake" (a second shockwave half a second after the first).
+//
+// Exactly one pending blast per owner - a fresh schedule overwrites whatever was pending rather than
+// queueing, which is also what stops these accumulating under a fast repeat. That cap is fine because
+// no single hero has two lines that schedule one.
+component DelayedBlast
+{
+    FP Remaining;
+    FPVector3 Position;
+    FP Damage;
+    FP Radius;
+
+    // Optional - 0 skips the stun sweep entirely. Routed through StatusEffectUtility.ApplyStun like
+    // any other stun, so it respects the generic per-tier hard-CC immunity window.
+    FP StunDuration;
+
+    // Whether this counts as a genuine explosion for the systems that care (Pixie's Chain Reaction
+    // marking, Direct Hit's proximity bonus, Pocket Bombs). Brute's Earthquake is a shockwave, not an
+    // explosion, and leaves both false.
+    Boolean IsExplosion;
+
+    // Marks this blast as PROC-GENERATED rather than a fresh player action - the generic source tag
+    // that stops a payout blast from re-entering the mechanic that spawned it (see
+    // DemolitionMasteryUtility/UnstableMixture.qtn). Only meaningful alongside IsExplosion.
+    Boolean IsChainedExplosion;
+}

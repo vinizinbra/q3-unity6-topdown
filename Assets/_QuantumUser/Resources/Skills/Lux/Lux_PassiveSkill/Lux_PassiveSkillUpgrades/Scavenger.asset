@@ -18,5 +18,21 @@ MonoBehaviour:
       Value: 269759498164841875
   Icon: {fileID: 0}
   DisplayName: Scavenger
-  Rarity: 1
-  Description: Filler-tier enemies can also drop Scrap.
+  Description: More enemies drop Scrap, and more often.
+  <MaxRank>k__BackingField: 3
+  RankDescriptions:
+  - Filler enemies can now drop Scrap too (10% chance).
+  - All Scrap drop chances increase by about 25%.
+  - 'Jackpot: Specialist, Heavy and Elite enemies always drop at least 1 Scrap. Bosses
+    drop 3.'
+  DropChance:
+  - RawValue: 16384
+  - RawValue: 20316
+  - RawValue: 20316
+  FillerDropChance:
+  - RawValue: 6554
+  - RawValue: 8520
+  - RawValue: 8520
+  GuaranteedDropTier: 2
+  GuaranteedDropCount: 000001
+  BossGuaranteedScrap: 3

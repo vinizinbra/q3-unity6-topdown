@@ -50,13 +50,13 @@ public static class StringUtility
         return string.Join(" ", words);
     }
 
-    // Appends a "+N" level suffix to a display name once level > 0 - e.g. "Shotgun" at Level 1 reads
-    // "Shotgun +1". Shared by every place a weapon's own Weapon.Level (or a not-yet-granted Store
-    // offer's own rolled WeaponLevel) needs to show up in its display name - GameplayUiController.
+    // Appends a " - LvN" level suffix to a display name once level > 0 - e.g. "Shotgun" at Level 1
+    // reads "Shotgun - Lv1". Shared by every place a weapon's own Weapon.Level (or a not-yet-granted
+    // Store offer's own rolled WeaponLevel) needs to show up in its display name - GameplayUiController.
     // BuildWeaponCardData and CurrentWeaponUiWidget's live HUD readout - so the format can't drift
     // between the two.
     public static string WithLevelSuffix(string name, int level)
     {
-        return level > 0 ? $"{name} +{level}" : name;
+        return level > 0 ? $"{name} - Lv{level}" : name;
     }
 }

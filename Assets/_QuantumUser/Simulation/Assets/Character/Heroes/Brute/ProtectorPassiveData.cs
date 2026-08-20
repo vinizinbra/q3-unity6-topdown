@@ -24,7 +24,15 @@ namespace Quantum
                 IntimidateSlowMultiplier = FP._0,
                 IntimidateKnockbackTakenMultiplier = FP._1,
                 FearlessBonusVsIntimidated = FP._0,
-                HasReactiveDamageReduction = false,
+
+                // 1 = no effect; only Guardian rank 2+ lowers it (allies take less knockback).
+                AllyKnockbackTakenMultiplier = FP._1,
+
+                // 0 = Guardian rank 3's reactive proc is off, which is what gates
+                // BruteProtectorReactionSystem out entirely for a Brute who hasn't taken it.
+                ReactiveDamageReductionAmount = FP._0,
+                ReactiveDamageReductionDuration = FP._0,
+                ReactiveCooldownPerAlly = FP._0,
             });
         }
     }

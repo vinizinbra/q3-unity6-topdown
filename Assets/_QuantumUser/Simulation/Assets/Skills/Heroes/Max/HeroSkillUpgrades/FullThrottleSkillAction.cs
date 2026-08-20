@@ -2,12 +2,13 @@ namespace Quantum
 {
     using Photon.Deterministic;
 
-    // Overdrive rank 2 - a Weapon Damage/Reload Speed buff active only while Overdrive is active AND
+    // Overdrive line 2 - a Weapon Damage/Reload Speed buff active only while Overdrive is active AND
     // Rage is genuinely maxed (RageOverdriveUtility.IsAtMaxRage) - toggled exactly at that threshold
-    // by RageOverdriveUtility.TryAdvanceStack/ResetStacks via MaxAscensionUtility.ApplyFullThrottle/
-    // RevertFullThrottle, not active for the whole Overdrive window. Rank 3 additionally grants the
-    // existing InstantReloadOverdrive tag, repointing WeaponSystem's own IsInstantReloadOverdriven
-    // check onto the same live max-Rage condition instead of the old standalone Instant Reload pick.
+    // by RageOverdriveUtility.EnterMaxRage/ResetStacks via MaxAscensionUtility.ApplyFullThrottle/
+    // RevertFullThrottle, not active for the whole Overdrive window. Rank 3 additionally refills the
+    // magazine ONCE on that same threshold crossing (FullThrottleUpgrade.HasInstantReload ->
+    // WeaponSystem.RefillMagazine), replacing the old always-free-reload-while-maxed tag - see that
+    // component's own comment.
     // Fires on every Berserk Begin, same "refresh fresh off the live rank each cast" idiom Brute's
     // MomentumSkillAction already established.
     public unsafe partial class FullThrottleSkillAction : SkillActionData
@@ -29,10 +30,14 @@ namespace Quantum
             f.AddOrGet<FullThrottleUpgrade>(filter.Entity, out var fullThrottle);
             fullThrottle->WeaponDamageBonus = WeaponDamageBonus[index];
             fullThrottle->ReloadSpeedBonus = ReloadSpeedBonus[index];
+            fullThrottle->HasInstantReload = rank >= 3;
 
-            if (rank >= 3)
+            // Last Stand rank 1 can start an activation already at max Rage, in which case there is
+            // no later threshold crossing for RageOverdriveUtility to hook - so react to the state
+            // we're actually in. ApplyFullThrottle latches on Applied, so this can't double-apply.
+            if (RageOverdriveUtility.IsAtMaxRage(f, filter.Entity) == true)
             {
-                f.AddOrGet<InstantReloadOverdrive>(filter.Entity, out _);
+                MaxAscensionUtility.ApplyFullThrottle(f, filter.Entity, fullThrottle);
             }
         }
 

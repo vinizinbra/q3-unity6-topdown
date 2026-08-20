@@ -18,7 +18,6 @@ MonoBehaviour:
       Value: 423069476414731352
   Icon: {fileID: 0}
   DisplayName: Faster Tempo
-  Rarity: 1
   Description: Generate Resonance faster.
   <MaxRank>k__BackingField: 3
   RankDescriptions:

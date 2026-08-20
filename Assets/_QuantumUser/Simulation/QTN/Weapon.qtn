@@ -19,7 +19,7 @@ component Weapon
     // the asset's base value in the Inspector takes effect immediately on already-equipped weapons
     // instead of only on the next Equip. Perks (DamageMultiplierWeaponPerkData,
     // CooldownMultiplierWeaponPerkData, FireRateWeaponPerkData) and the sentry-only
-    // SentryFireRateUpgrade compound into these in place instead of mutating an absolute stat -
+    // Lux's sentry fire-rate composition compounds into these in place instead of mutating an absolute stat -
     // same reasoning CharacterStats keeps a standing multiplier rather than baking. Seeded to 1 at
     // equip (see WeaponSystem.SeedStats).
     FP    DamageMultiplier;

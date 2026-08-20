@@ -70,18 +70,22 @@ namespace QuantumUser.Editor
                 asset.MarkChance = FP._0_50;
             });
 
-            DirectHitPassiveUpgradeData directHit = CreateOrUpdate<DirectHitPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/DirectHit.asset", asset =>
+            // MOVED from the Passive pool into the Hero Skill pool per the balance brief - it reads as
+            // "how Bunny Bomb behaves", and the level-up UI labels a line by the pool it's drafted
+            // from. Activated = false, same "Hero Skill Ascension" shape Cluster Bomb/Birthday Cake use.
+            DirectHitSkillAction directHit = CreateOrUpdate<DirectHitSkillAction>($"{HeroSkillUpgradesFolderPath}/DirectHitSkillAction.asset", asset =>
             {
                 asset.DisplayName = "Direct Hit";
-                asset.Description = "Rewards accurate Bunny Bomb placement - enemies inside the inner blast zone take bonus damage. At rank 3, they're also knocked back hard.";
+                asset.Activated = false;
+                asset.Description = "Rewards accurate Bunny Bomb placement - enemies inside the inner blast zone take bonus damage. At rank 3, they're also staggered.";
                 asset.RankDescriptions = new[]
                 {
-                    "Enemies inside the Direct Hit area take +30% explosion damage.",
-                    "Enemies inside the Direct Hit area take +50% explosion damage.",
-                    "Enemies inside the Direct Hit area take +75% explosion damage and receive strong knockback.",
+                    "Enemies within the inner 35% of the blast take +30% explosion damage.",
+                    "The inner zone widens to 45% of the blast, and enemies inside it take +50% explosion damage.",
+                    "Enemies within the inner 45% of the blast take +75% explosion damage and are knocked back hard.",
                 };
                 asset.MaxRank = 3;
-                asset.InnerRadiusFraction = FP.FromString("0.35");
+                asset.InnerRadiusFraction = new[] { FP.FromString("0.35"), FP.FromString("0.45"), FP.FromString("0.45") };
                 asset.DamageMultiplierBonus = new[] { FP.FromString("0.30"), FP.FromString("0.50"), FP.FromString("0.75") };
                 asset.KnockbackForce = 8;
                 asset.KnockbackUpwardForce = 2;
@@ -107,46 +111,40 @@ namespace QuantumUser.Editor
             UnstableMixturePassiveUpgradeData unstableMixture = CreateOrUpdate<UnstableMixturePassiveUpgradeData>($"{PassiveUpgradesFolderPath}/UnstableMixture.asset", asset =>
             {
                 asset.DisplayName = "Unstable Mixture";
-                asset.Description = "Marked-enemy death explosions deal more damage and cover more area. Specialist and Heavy enemies create especially large death explosions.";
+                asset.Description = "An explosion that gets a kill empowers your next one - and at full charge, that one splits in two.";
                 asset.RankDescriptions = new[]
                 {
-                    "Marked-enemy death explosions gain +30% damage and +15% radius. Specialist and Heavy enemies create death explosions with an additional +50% radius.",
-                    "Marked-enemy death explosions gain +60% damage and +30% radius. Specialist and Heavy enemies create death explosions with an additional +50% radius.",
-                    "Marked-enemy death explosions gain +90% damage and +40% radius. Specialist and Heavy enemies create death explosions with an additional +50% radius.",
+                    "An explosion that kills an enemy empowers your next explosion: +30% damage and +15% radius.",
+                    "The empowerment can bank up to 2 kills, for +60% damage and +30% radius on your next explosion.",
+                    "At 2 banked kills, the empowered explosion also detonates a second, smaller blast shortly after.",
                 };
                 asset.MaxRank = 3;
-                asset.BonusDamageMultiplier = new[] { FP.FromString("1.30"), FP.FromString("1.60"), FP.FromString("1.90") };
-                asset.BonusRadiusMultiplier = new[] { FP.FromString("1.15"), FP.FromString("1.30"), FP.FromString("1.40") };
-                asset.TierRadiusMultiplier = FP.FromString("1.5");
-            });
-
-            UnstableTargetingPassiveUpgradeData unstableTargeting = CreateOrUpdate<UnstableTargetingPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/UnstableTargeting.asset", asset =>
-            {
-                asset.DisplayName = "Unstable Targeting";
-                asset.Description = "Deal bonus damage against any enemy currently marked to explode on death.";
-                asset.RankDescriptions = new[]
-                {
-                    "Deal +20% damage against enemies marked to explode on death.",
-                    "Deal +35% damage against enemies marked to explode on death.",
-                    "Deal +50% damage against enemies marked to explode on death.",
-                };
-                asset.MaxRank = 3;
-                asset.DamageMultiplier = new[] { FP.FromString("1.20"), FP.FromString("1.35"), FP.FromString("1.50") };
+                asset.DamageBonusPerStack = FP.FromString("0.30");
+                asset.RadiusBonusPerStack = FP.FromString("0.15");
+                asset.MaxStacks = new byte[] { 1, 2, 2 };
+                asset.SecondaryDamagePercent = FP._0_50;
+                asset.SecondaryRadiusMultiplier = FP.FromString("0.75");
+                asset.SecondaryDelay = FP._0_50;
             });
 
             ExplosiveRoundsPassiveUpgradeData explosiveRounds = CreateOrUpdate<ExplosiveRoundsPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/ExplosiveRounds.asset", asset =>
             {
                 asset.DisplayName = "Explosive Rounds";
-                asset.Description = "Weapon hits also create a small explosion - a full qualifying Pixie explosion in its own right.";
+                asset.Description = "Weapon hits have a chance to create a small explosion - a full qualifying Pixie explosion in its own right.";
                 asset.RankDescriptions = new[]
                 {
-                    "Weapon hits create a small explosion dealing 20% of the triggering weapon hit's damage.",
-                    "Weapon hits create a small explosion dealing 30% of the triggering weapon hit's damage.",
-                    "Weapon hits create a small explosion dealing 40% of the triggering weapon hit's damage.",
+                    "Weapon hits have a 15% chance to create a small explosion dealing 20% of that hit's damage.",
+                    "Weapon hits have a 22% chance to create a small explosion dealing 30% of that hit's damage.",
+                    "Weapon hits have a 30% chance to create a small explosion dealing 40% of that hit's damage.",
                 };
                 asset.MaxRank = 3;
+                asset.ProcChance = new[] { FP.FromString("0.15"), FP.FromString("0.22"), FP.FromString("0.30") };
                 asset.Radius = new[] { FP._2, FP.FromString("2.4"), FP.FromString("2.4") };
                 asset.DamageMultiplier = new[] { FP.FromString("0.20"), FP.FromString("0.30"), FP.FromString("0.40") };
+
+                // Shipped OFF - the per-shot chance above is the primary lever. Turn this on from data
+                // only if a very high-Fire-Rate weapon still procs too often in playtesting.
+                asset.ProcCooldown = FP._0;
             });
 
             ClusterBombSkillAction clusterBomb = CreateOrUpdate<ClusterBombSkillAction>($"{HeroSkillUpgradesFolderPath}/ClusterBombSkillAction.asset", asset =>
@@ -216,20 +214,39 @@ namespace QuantumUser.Editor
                 asset.RadiusMultiplier = new[] { FP._1, FP.FromString("1.30"), FP.FromString("1.30") };
             });
 
+            BlastJumpSkillAction blastJump = CreateOrUpdate<BlastJumpSkillAction>($"{DashUpgradesFolderPath}/BlastJumpSkillAction.asset", asset =>
+            {
+                asset.DisplayName = "Blast Jump";
+                asset.MaxRank = 3;
+                asset.Description = "Dashing launches your next Bunny Bomb harder - and eventually lets you set off a planted one by dashing through it.";
+                asset.RankDescriptions = new[]
+                {
+                    "For 2s after dashing, Pixie's next Bunny Bomb flies 25% faster and blasts 25% wider.",
+                    "The same, and dashing also removes 1s from Bunny Bomb's remaining cooldown.",
+                    "The same, and dashing through one of your own planted Bunny Bombs detonates it instantly for +50% damage.",
+                };
+                asset.Window = 2;
+                asset.ProjectileSpeedMultiplier = new[] { FP._1_25, FP._1_25, FP._1_25 };
+                asset.RadiusMultiplier = new[] { FP._1_25, FP._1_25, FP._1_25 };
+                asset.CooldownReduction = new FP[] { 0, 1, 1 };
+                asset.TriggerRadius = 3;
+                asset.DetonationDamageBonus = FP._0_50;
+            });
+
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh(); // lets QuantumAssetObjectPostprocessor stamp Guid/Identifier on anything just created
 
             WireCharacterData(passive,
-                new List<PassiveUpgradeData> { directHit, pocketBombs, unstableMixture, unstableTargeting, explosiveRounds },
-                new List<SkillActionData> { backblast, hotFuse });
+                new List<PassiveUpgradeData> { pocketBombs, unstableMixture, explosiveRounds },
+                new List<SkillActionData> { backblast, hotFuse, blastJump });
 
-            WireBaseSkill(new List<SkillActionData> { clusterBomb, birthdayCake });
+            WireBaseSkill(new List<SkillActionData> { clusterBomb, birthdayCake, directHit });
 
-            LogHelper.Log("PixieAscensionAssetGenerator", "Chain Reaction passive + 9 Ascension lines authored and wired (5 Passive Upgrades " +
-                      "into PixieCharacterData.PassiveUpgrades, Cluster Bomb/Birthday Cake into PixieBaseSkill.Actions, Backblast/Hot Fuse into " +
+            LogHelper.Log("PixieAscensionAssetGenerator", "Chain Reaction passive + 9 Ascension lines authored and wired (3 Passive Upgrades " +
+                      "into PixieCharacterData.PassiveUpgrades, Cluster Bomb/Birthday Cake/Direct Hit into PixieBaseSkill.Actions, Backblast/Hot Fuse/Blast Jump into " +
                       "PixieCharacterData.DashSkillUpgrades - every list fully replaced, not appended; every per-rank value is re-set explicitly on " +
                       "every run, so a pre-existing asset from before the rank rework - Direct Hit/Unstable Mixture/Explosive Rounds/Backblast - " +
-                      "gets its arrays repaired too, not just newly-created ones). Three asset references still need assigning by hand: " +
+                      "gets its arrays repaired too, not just newly-created ones). Direct Hit MOVED from the Passive pool into PixieBaseSkill.Actions, and Unstable Targeting was removed entirely - delete their stale .asset files by hand. Three asset references still need assigning by hand: " +
                       "PocketBombs.MiniBombPrototype/Explosion and Backblast.BombPrototype/Explosion (a minimal stationary EntityPrototype - " +
                       "Transform3D only, no PhysicsCollider3D/movement data, see ExplodeOnDestroy.qtn's own comment - and an AreaHitData asset with " +
                       "a small BlastRadius each; DashBomb.prefab/its own AreaHitData, see docs/explode-on-destroy.md, is an existing reference " +

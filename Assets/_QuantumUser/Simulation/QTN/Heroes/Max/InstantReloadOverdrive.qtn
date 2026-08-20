@@ -1,8 +1,0 @@
-// Tag component granted (never revoked) by FullThrottleSkillAction rank 3 - presence means the
-// owner has that rank equipped. No fields: WeaponSystem also checks
-// RageOverdriveUtility.IsAtMaxRage before actually zeroing the reload time, so the benefit only
-// kicks in once Rage is genuinely maxed, not for the whole Overdrive window - this component only
-// needs to say "is the upgrade equipped at all".
-component InstantReloadOverdrive
-{
-}

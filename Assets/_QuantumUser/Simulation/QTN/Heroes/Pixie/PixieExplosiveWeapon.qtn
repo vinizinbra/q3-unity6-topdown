@@ -1,12 +1,24 @@
 // Granted by Pixie's Explosive Rounds passive ascension (see ExplosiveRoundsPassiveUpgradeData) -
-// while present, WeaponSystem.Equip/ApplyPixieExplosiveWeapon forces every one of her weapon shots
-// to proc a small explosion, reusing Weapon.ExplosiveSequence* exactly like the Explosive Sequence
-// weapon perk, just forced to Interval=1 (every shot, not every Nth). As a side effect
-// (HitEffectUtility.ApplyExplosion always tags isExplosion=true), this is also what makes her base
-// Chain Reaction passive's Instability marking fire reliably, instead of depending on an explosive
-// weapon drop or perk roll (see DamageUtility.TryMarkExplodeOnDeath's own isExplosion gate).
+// while present, WeaponSystem.Equip/ApplyPixieExplosiveWeapon makes every one of her weapon shots
+// ELIGIBLE to proc a small explosion (Weapon.ExplosiveSequenceInterval = 1, reusing the Explosive
+// Sequence perk pipeline unchanged), and then gates how often that actually happens on ProcChance
+// below. As a side effect (HitEffectUtility.ApplyExplosion always tags isExplosion=true), this is
+// also what makes her base Chain Reaction passive's Instability marking fire reliably, instead of
+// depending on an explosive weapon drop or perk roll (see DamageUtility.TryMarkExplodeOnDeath's own
+// isExplosion gate).
 component PixieExplosiveWeapon
 {
     FP Radius;
     FP DamageMultiplier;
+
+    // Probability (0-1) a shot's explosion actually fires. Replaces the earlier always-on behavior
+    // (every single hit exploded), which the balance brief calls out as excessive - especially on a
+    // high-Fire-Rate weapon, where it turned her sidearm into a continuous AoE stream and drowned out
+    // her actual bomb identity.
+    FP ProcChance;
+
+    // Optional internal cooldown in seconds - 0 (the authored default) means off. Present purely so a
+    // playtest can rein in a very high-Fire-Rate weapon from data if the per-shot chance alone turns
+    // out not to be enough, rather than by hardcoding a limit in WeaponSystem.
+    FP ProcCooldown;
 }

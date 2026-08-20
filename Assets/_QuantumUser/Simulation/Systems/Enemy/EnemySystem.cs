@@ -232,6 +232,14 @@ namespace Quantum
 
             TickAttackCooldown(f, ref filter);
 
+            // Before ANY movement work below (including TickKnockbackRecovery's own early-out, since
+            // a push can bury an enemy mid-stagger): if a knockback drove this enemy inside level
+            // geometry, put it back where it was standing when it got hit. No-ops entirely unless
+            // this specific enemy was knocked back in the last few seconds - see
+            // EnemyStuckRecoveryUtility for why this is a recovery rather than a clamp on knockback.
+            if (EnemyStuckRecoveryUtility.Tick(f, filter.Entity, filter.Enemy, filter.Transform3D, filter.PhysicsBody3D) == true)
+                return;
+
             // Root takes priority over TickKnockbackRecovery's own "still airborne" gate below - a
             // Rooted enemy is meant to freeze wherever it currently is (mid-air against a wall
             // included), not keep waiting to touch real ground first the way a plain knockback does.
@@ -459,6 +467,12 @@ namespace Quantum
 
             if (enemy->Phase == EnemyActionPhase.Dead)
                 return;
+
+            // Deliberately BEFORE the CanBeInterruptedByKnockback early-out below: a Heavy/Elite/Boss
+            // still physically receives the impulse (this signal only fires once a push actually
+            // landed - see DamageUtility.ApplyResolvedImpulse), it just doesn't get staggered by it.
+            // It can still be nudged into geometry, so it still wants the safety net.
+            EnemyStuckRecoveryUtility.OnKnockedBack(f, entity, enemy);
 
             EnemyDataAsset data = f.FindAsset(enemy->EnemyData);
             TierStats tierStats = EnemyTierStatsConfig.Resolve(f, data.Tier);

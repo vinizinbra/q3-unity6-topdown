@@ -376,6 +376,8 @@ MonoBehaviour:
         RawValue: 0
       Z:
         RawValue: 0
+    AirborneSource:
+      Value: 0
 --- !u!114 &-3971490095111579385
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -627,9 +629,9 @@ MonoBehaviour:
   riftMarkMaterial: {fileID: 0}
   riftMarkApplicationFlashColor: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
   riftMarkApplicationFlashDuration: 0.08
-  expPickupFlashColor: {r: 0.3, g: 0.55, b: 1, a: 1}
-  coinPickupFlashColor: {r: 1, g: 0.84, b: 0.2, a: 1}
-  riftShardPickupFlashColor: {r: 1, g: 0.35, b: 0.75, a: 1}
+  expPickupFlashColor: {r: 0.2980392, g: 0.8055482, b: 1, a: 0.6862745}
+  coinPickupFlashColor: {r: 1, g: 0.84, b: 0.2, a: 0.21960784}
+  riftShardPickupFlashColor: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
   pickupFlashDuration: 0.35
   freezeMaterial: {fileID: 0}
 --- !u!114 &8110188611109955938
@@ -1138,6 +1140,10 @@ MonoBehaviour:
       RawValue: 0
     StunRemaining:
       RawValue: 0
+    StunImmunityRemaining:
+      RawValue: 0
+    InterruptImmunityRemaining:
+      RawValue: 0
     AnticipationSlowRemaining:
       RawValue: 0
     AnticipationSlowMultiplier:
@@ -1175,15 +1181,21 @@ MonoBehaviour:
       RawValue: 0
     DamageReductionAmount:
       RawValue: 0
-    GuardianDamageReductionRemaining:
+    AuraDamageReductionRemaining:
       RawValue: 0
-    GuardianDamageReductionAmount:
+    AuraDamageReductionAmount:
       RawValue: 0
     TemporaryDamageReductionRemaining:
       RawValue: 0
     TemporaryDamageReductionAmount:
       RawValue: 0
-    GuardianReactiveCooldownRemaining:
+    ReactiveDamageReductionCooldownRemaining:
+      RawValue: 0
+    AllyShieldRestoreCooldownRemaining:
+      RawValue: 0
+    TempOutgoingDamageRemaining:
+      RawValue: 0
+    TempOutgoingDamageAmount:
       RawValue: 0
     IntimidateRemaining:
       RawValue: 0
@@ -1455,6 +1467,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AppearSlideVertically
   canvasGroup: {fileID: 1395915258645440228}
+  spriteRenderers: []
   rect: {fileID: 5715578354852566327}
   inDistance: 2
   inDuration: 0.3

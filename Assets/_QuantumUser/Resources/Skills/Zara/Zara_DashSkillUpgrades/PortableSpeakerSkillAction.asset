@@ -18,22 +18,21 @@ MonoBehaviour:
       Value: 349471251026126198
   Icon: {fileID: 0}
   DisplayName: Portable Speaker
-  Rarity: 2
   RankDescriptions:
-  - Dashing leaves behind a Portable Speaker that alternates damaging and healing
-    Beats.
-  - Portable Speaker lasts longer and covers a larger area. Dash ending also heals
-    nearby allies.
-  - Portable Speaker inherits part of your Totem Ascensions, turning each Dash into
-    a mobile extension of your build.
+  - Dashing leaves behind a Portable Speaker alternating Damage and Support Beats
+    at reduced strength.
+  - Portable Speaker lasts longer and covers a larger area, and completing the dash
+    also buffs nearby allies.
+  - 'Mobile Stage: the Speaker inherits your own Beat interval, radius and Sound
+    Boost profile at reduced effectiveness.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 5
   Interval:
     RawValue: 0
   Activated: 1
-  Description: Dashing leaves behind a Portable Speaker that alternates damaging
-    and healing Beats.
+  Description: Dashing leaves behind a Portable Speaker running the same Damage/Support
+    rhythm at reduced strength. It never heals.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -66,32 +65,28 @@ MonoBehaviour:
   - RawValue: 262144
   - RawValue: 262144
   BaseRadius:
-    RawValue: 98304
+    RawValue: 196608
   RadiusMultiplier:
   - RawValue: 65536
   - RawValue: 85197
   - RawValue: 85197
   BeatInterval:
     RawValue: 65536
+  MaxActiveSpeakers: 010102
   TotemBaseDamage:
     RawValue: 655360
-  TotemBaseHealPercent:
-    RawValue: 6554
   DamagePercentOfTotem:
-    RawValue: 32768
-  HealPercentOfTotem:
     RawValue: 32768
   DamageEffect:
     Id:
       Value: 898240819200457878
-  HealEffect:
+  SupportBuffEffect:
     Id:
-      Value: 276820451133602943
-  DashEndHealPercent:
-  - RawValue: 0
-  - RawValue: 3277
-  - RawValue: 3277
-  DashEndHealRadius:
+      Value: 420844765751843033
+  DashEndBuffEffect:
+    Id:
+      Value: 420844765751843033
+  DashEndBuffRadius:
     RawValue: 327680
   MobileStageInheritanceFraction:
     RawValue: 32768

@@ -329,11 +329,11 @@ RectTransform:
   - {fileID: 3199335038030992294}
   - {fileID: 4702740092173826503}
   - {fileID: 6753352775354112406}
-  m_Father: {fileID: 4209482276784838796}
+  m_Father: {fileID: 4115546947717657696}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: -2.8749542, y: 171.10002}
+  m_AnchoredPosition: {x: -2.8749542, y: -38.899918}
   m_SizeDelta: {x: 100, y: 50}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!222 &6874666688784664540
@@ -2341,12 +2341,10 @@ GameObject:
   m_Component:
   - component: {fileID: 4209482276784838796}
   - component: {fileID: 6699795292473856965}
-  - component: {fileID: 4703982010156316309}
-  - component: {fileID: 7439058206364117972}
-  - component: {fileID: 2622359849441182110}
-  - component: {fileID: 5337035270674043950}
-  - component: {fileID: 2993936868187809112}
-  - component: {fileID: 3597589244489744914}
+  - component: {fileID: 9200000000000000001}
+  - component: {fileID: 9200000000000000002}
+  - component: {fileID: 9200000000000000003}
+  - component: {fileID: 9200000000000000004}
   m_Layer: 5
   m_Name: SkillsOverlay
   m_TagString: Untagged
@@ -2369,7 +2367,6 @@ RectTransform:
   - {fileID: 4979520519468786330}
   - {fileID: 7433677172230821477}
   - {fileID: 3567258657315100269}
-  - {fileID: 1665304433259614170}
   - {fileID: 1122834714565429072}
   - {fileID: 5153473059705682316}
   - {fileID: 4115546947717657696}
@@ -2388,7 +2385,7 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3818631606550917668}
   m_CullTransparentMesh: 1
---- !u!114 &4703982010156316309
+--- !u!114 &9200000000000000001
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2397,48 +2394,26 @@ MonoBehaviour:
   m_GameObject: {fileID: 3818631606550917668}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 312ba84e75dd3417a85825f33dfe67ca, type: 3}
+  m_Script: {fileID: 11500000, guid: 6e3a81aa9ad74840821254e43713df18, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ScrapUiWidget
-  root: {fileID: 4630371234823063249}
-  stacksText: {fileID: 2073173877377920527}
-  maxStacksObject: {fileID: 5129847408951101952}
-  autoBindLocalPlayerOne: 1
---- !u!114 &7439058206364117972
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3818631606550917668}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5f012c0246cd3416783e62c2447009e6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RageOverdriveUiWidget
-  root: {fileID: 1743278603814686433}
-  fillSlider: {fileID: 8162350459775130766}
-  progressText: {fileID: 0}
-  shineEffect: {fileID: 0}
-  autoBindLocalPlayerOne: 1
---- !u!114 &2622359849441182110
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3818631606550917668}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ad4e99ad307d1433981b6bb40293d055, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::JuggernautChargeUiWidget
+  m_EditorClassIdentifier: Assembly-CSharp::BruteHudWidget
   root: {fileID: 4493774188576901890}
-  fillSlider: {fileID: 7912734491165177414}
-  progressText: {fileID: 0}
-  shineEffect: {fileID: 0}
-  autoBindLocalPlayerOne: 1
---- !u!114 &5337035270674043950
+  chargeGauge:
+    root: {fileID: 4493774188576901890}
+    slider: {fileID: 7912734491165177414}
+    valueText: {fileID: 0}
+    completeObject: {fileID: 0}
+  stacks:
+    root: {fileID: 1487891333386564852}
+    slider: {fileID: 0}
+    valueText: {fileID: 5640183398959676184}
+    completeObject: {fileID: 8410072324328259123}
+  timer:
+    root: {fileID: 4619553788378007940}
+    slider: {fileID: 0}
+    valueText: {fileID: 7309905135033602513}
+    completeObject: {fileID: 0}
+--- !u!114 &9200000000000000002
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2447,15 +2422,26 @@ MonoBehaviour:
   m_GameObject: {fileID: 3818631606550917668}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 23796e5316aac4816a877cf8b7f25169, type: 3}
+  m_Script: {fileID: 11500000, guid: 2bb0ed621c3848609961f59c1b3d2a93, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ResonanceUiWidget
-  root: {fileID: 3774600707047561217}
-  fillSlider: {fileID: 263409331306444799}
-  progressText: {fileID: 0}
-  shineEffect: {fileID: 0}
-  autoBindLocalPlayerOne: 1
---- !u!114 &2993936868187809112
+  m_EditorClassIdentifier: Assembly-CSharp::MaxHudWidget
+  root: {fileID: 0}
+  rageGauge:
+    root: {fileID: 1743278603814686433}
+    slider: {fileID: 8162350459775130766}
+    valueText: {fileID: 0}
+    completeObject: {fileID: 0}
+  rageStacks:
+    root: {fileID: 3009016812466316123}
+    slider: {fileID: 0}
+    valueText: {fileID: 7338656565914435872}
+    completeObject: {fileID: 4361934811946512044}
+  timer:
+    root: {fileID: 0}
+    slider: {fileID: 0}
+    valueText: {fileID: 0}
+    completeObject: {fileID: 0}
+--- !u!114 &9200000000000000003
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2464,13 +2450,21 @@ MonoBehaviour:
   m_GameObject: {fileID: 3818631606550917668}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0ac14d372c4114e17a082ce99df1be2e, type: 3}
+  m_Script: {fileID: 11500000, guid: 75997f20c4a04fe5b6a52ad536a225dc, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RemixUiWidget
-  root: {fileID: 7905006409927664930}
-  pulsesText: {fileID: 844658856532040889}
-  autoBindLocalPlayerOne: 1
---- !u!114 &3597589244489744914
+  m_EditorClassIdentifier: Assembly-CSharp::ZaraHudWidget
+  root: {fileID: 0}
+  resonanceGauge:
+    root: {fileID: 3774600707047561217}
+    slider: {fileID: 263409331306444799}
+    valueText: {fileID: 0}
+    completeObject: {fileID: 0}
+  remix:
+    root: {fileID: 7905006409927664930}
+    slider: {fileID: 0}
+    valueText: {fileID: 844658856532040889}
+    completeObject: {fileID: 1735713812456913464}
+--- !u!114 &9200000000000000004
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2479,12 +2473,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 3818631606550917668}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 69737edf08ed74f21b1eb5566e86f410, type: 3}
+  m_Script: {fileID: 11500000, guid: 57c548e69776451c80c8e4bd09d0c74e, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::JuggernautStackDamageUiWidget
-  root: {fileID: 1487891333386564852}
-  stacksText: {fileID: 5640183398959676184}
-  autoBindLocalPlayerOne: 1
+  m_EditorClassIdentifier: Assembly-CSharp::LuxHudWidget
+  root: {fileID: 0}
+  scrap:
+    root: {fileID: 4630371234823063249}
+    slider: {fileID: 0}
+    valueText: {fileID: 2073173877377920527}
+    completeObject: {fileID: 5129847408951101952}
 --- !u!1 &3875633752620130655
 GameObject:
   m_ObjectHideFlags: 0
@@ -3037,7 +3034,7 @@ GameObject:
   - component: {fileID: 4115546947717657696}
   - component: {fileID: 7912734491165177414}
   m_Layer: 5
-  m_Name: BruteGauge
+  m_Name: BruteRoot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3058,6 +3055,7 @@ RectTransform:
   - {fileID: 1502981169748171468}
   - {fileID: 6965689788525377217}
   - {fileID: 4136251429653019171}
+  - {fileID: 1665304433259614170}
   m_Father: {fileID: 4209482276784838796}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
@@ -3486,6 +3484,7 @@ MonoBehaviour:
   juggernautChannelIndicator:
     root: {fileID: 575704386288893485}
     timerText: {fileID: 0}
+  heroWidgets: []
 --- !u!114 &7971975030683631198
 MonoBehaviour:
   m_ObjectHideFlags: 0

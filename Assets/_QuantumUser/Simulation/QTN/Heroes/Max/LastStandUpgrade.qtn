@@ -1,12 +1,26 @@
-// Overdrive rank 1 ("Last Stand") - granted once by LastStandSkillAction.Apply, which SETs every
-// field below to the picked rank's cumulative tuned values. Rank 1 ("Unshaken") needs no field here
-// at all - it's carried entirely by the separate RageRetentionUpgrade tag (see RageOverdrive.qtn).
-// HasRetaliation/RetaliationDuration/RetaliationDamageBonus back rank 2's own reactive proc (see
-// MaxOverdriveReactionSystem.OnHealthDamageApplied/OnShieldDamageApplied). Rank 3 ("Too Angry to
-// Die") needs no field here either - it just grants the existing CheatDeathGuard component directly.
+// Overdrive line 1 ("Last Stand") - granted once by LastStandSkillAction.Execute, which SETs every
+// field below to the picked rank's cumulative tuned values. Persistent: granted on every Overdrive
+// Begin and never revoked, so StoredRageStacks survives between activations (which is the entire
+// point of rank 1).
+//
+//  - Rank 1: PersistsRage - Rage is no longer wiped when an Overdrive activation ends. Whatever
+//    Stacks were live at End are parked in StoredRageStacks and handed straight back at the next
+//    Begin (see BerserkSkillData.Begin/End). Without this, every activation always starts at 0.
+//  - Rank 2: RageLossFraction - how much of the CURRENT Rage a hit taken during Overdrive removes.
+//    1 (rank 1's value) is a full reset, i.e. the unchanged baseline; rank 2+ authors a fraction, so
+//    getting hit costs momentum instead of erasing it. See RageOverdriveUtility.ResetStacks.
+//  - Rank 3 ("Too Angry to Die"): needs no field here - it just grants the existing CheatDeathGuard
+//    component directly.
 component LastStandUpgrade
 {
-    Boolean HasRetaliation;
-    FP RetaliationDuration;
-    FP RetaliationDamageBonus;
+    Boolean PersistsRage;
+    FP RageLossFraction;
+
+    // Written only by BerserkSkillData.End (and only while PersistsRage) - the parked Rage count
+    // carried into the next activation. Lives here rather than on RageOverdrive itself because that
+    // component is deliberately removed at End: its PRESENCE is what every other Ascension reads as
+    // "an Overdrive activation is running right now" (see MaxOverdriveReactionSystem/
+    // VendettaStrikeSkillAction), so keeping it alive between activations to hold a number would
+    // silently break all of them.
+    Byte StoredRageStacks;
 }

@@ -11,49 +11,47 @@ component ConditionalCriticalModifier
     FP CriticalChanceBonusVsBurning;
 }
 
-// Shared by Burning Vengeance (Vendetta.qtn's own Vendetta-kill trigger) and Wildfire (this file's
-// any-burning-death trigger) - up to two different PassiveUpgradeData assets compose onto the same
-// instance via FPMath.Max, same "upgrades compose onto one shared component" idiom RevengeConfig
-// itself uses. TriggerOnVendettaKill is read by MaxVendettaSystem.OnEntityKilled;
-// TriggerOnAnyBurningDeath is read by MaxFireMasteryReactionSystem.OnEntityKilled - both flags can
-// be true at once if a build picks both upgrades, and each trigger path is independent.
+// Wildfire's own component - the SINGLE Burn-spread mechanism in Max's kit. An earlier design had a
+// second, near-identical line (Burning Vengeance, scoped to Vendetta kills) composing onto this same
+// instance; the two were merged, so TriggerOnVendettaKill/HasFieryBurst are gone and
+// MaxFireMasteryReactionSystem.OnEntityKilled is now the one and only trigger path.
 component StatusSpreadOnDeath
 {
-    Boolean TriggerOnVendettaKill;
     Boolean TriggerOnAnyBurningDeath;
     FP Radius;
     FP BurnDuration;
     FP BurnIntensity;
     Int32 MaxTargets;
 
-    // Burning Vengeance rank 3 - a genuine radial Burn/damage burst (MaxAscensionUtility.
-    // ApplyRadialBurn) at the death position of a Vendetta-consumed kill that was already Burning,
-    // on top of (not instead of) the ordinary spread above. Reuses this same component's own
-    // Radius/BurnDuration/BurnIntensity rather than a second set of fields - see
-    // MaxVendettaSystem.OnEntityKilled.
-    Boolean HasFieryBurst;
-
-    // Wildfire rank 3 - when > 0, the any-Burning-death spread reads the dying enemy's OWN live Burn
+    // Wildfire rank 3 - when > 0, the spread reads the dying enemy's OWN live Burn
     // (StatusEffects.BurnRemaining/BurnDamagePerTick) scaled by this fraction instead of the flat
     // authored BurnDuration/BurnIntensity above, so a fire that's already burning hot/long propagates
     // that same intensity/duration onward (scaled down) rather than resetting every jump back to the
     // base amount. 0 (the default) keeps every lower rank's flat-authored behavior unchanged. See
     // MaxFireMasteryReactionSystem.OnEntityKilled.
+    //
+    // The retained fraction being < 1 is also what makes the chain self-terminating: each jump
+    // inherits strictly less than the fire it came from, so a spread-ignited enemy dying spreads a
+    // weaker fire again rather than sustaining itself forever. Same-tick recursion is separately
+    // impossible - TriggerOnAnyBurningDeath lives on the owner, not per-enemy, and OnEntityKilled
+    // fires once per genuine death event.
     FP WildfireRetainedFraction;
 }
 
-// Cremation - forces a Burning target's Health the rest of the way to 0 once it's already below
-// its own tier's threshold, letting the existing death branch in DamageUtility.ApplyDamage handle
-// the rest unmodified. Filler/Normal/Specialist/Heavy enemies all read off NormalHealthThreshold
-// (see MaxFireMasteryReactionSystem.ResolveExecuteThreshold) - only Elite and Boss get their own
-// dedicated threshold, Boss additionally gated by BossExecutionEnabled so a lower-rank pick can't
-// accidentally execute a Boss.
+// Cremation (Flashpoint rank 3) - forces a Burning target's Health the rest of the way to 0 once
+// it's already below its own tier's threshold, letting the existing death branch in
+// DamageUtility.ApplyDamage handle the rest unmodified. Filler/Normal share NormalHealthThreshold;
+// Specialist/Heavy share the (lower) SpecialistHealthThreshold; Elite and Boss are NEVER executable
+// at all - instead they take EliteBossDamageBonus extra damage while Burning and below
+// EliteBossDamageThreshold, so the line still pays off against them without deleting a boss outright.
+// See MaxFireMasteryReactionSystem.ResolveExecuteThreshold/DamageUtility.ResolveOutgoingDamage.
 component ExecuteAgainstStatus
 {
     FP NormalHealthThreshold;
-    FP EliteHealthThreshold;
-    FP BossHealthThreshold;
-    Boolean BossExecutionEnabled;
+    FP SpecialistHealthThreshold;
+
+    FP EliteBossDamageThreshold;
+    FP EliteBossDamageBonus;
 }
 
 // Flashpoint - a crit against an already-Burning target detonates a capped-radius explosion

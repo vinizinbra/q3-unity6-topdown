@@ -33,7 +33,16 @@ component ProtectorAura
     // standalone Fearless ascension into Iron Presence - see docs/brute-ascensions.md.)
     FP FearlessBonusVsIntimidated;
 
-    // Guardian rank 3 only - gates BruteProtectorReactionSystem's own reactive DR proc, so ranks 1-2
-    // don't pay the signal-handling cost/grant nothing.
-    Boolean HasReactiveDamageReduction;
+    // 1 (no effect) until Guardian rank 2 lowers it - knockback resistance for allies in the aura,
+    // via the same generic StatusEffectUtility.ApplyKnockbackTaken Iron Presence already uses in the
+    // opposite direction on enemies (0.70 = allies take 30% less knockback).
+    FP AllyKnockbackTakenMultiplier;
+
+    // Guardian rank 3 - the reactive DR proc (see BruteProtectorReactionSystem). All three values are
+    // authored on the Ascension rather than hardcoded in that system, per the brief's
+    // "balance-sensitive values must be editable without code changes". Amount 0 (ranks 1-2) is what
+    // gates the proc off entirely.
+    FP ReactiveDamageReductionAmount;
+    FP ReactiveDamageReductionDuration;
+    FP ReactiveCooldownPerAlly;
 }

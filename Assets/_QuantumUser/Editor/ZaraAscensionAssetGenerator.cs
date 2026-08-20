@@ -32,6 +32,13 @@ namespace QuantumUser.Editor
         private const string PassiveUpgradesFolderPath = "Assets/_QuantumUser/Resources/Passives/Zara/Zara_PassiveSkillUpgrades";
         private const string HeroSkillUpgradesFolderPath = "Assets/_QuantumUser/Resources/Skills/Zara/Zara_HeroSkill/Zara_HeroSkillUpgrades";
         private const string DashUpgradesFolderPath = "Assets/_QuantumUser/Resources/Skills/Zara/Zara_DashSkillUpgrades";
+        // The ONE place Portable Speaker's "reduced effectiveness" number lives. Mobile Stage is
+        // deliberately "reuse the Totem Beat architecture with a different DATA profile", so the
+        // Speaker's own buff/cooldown assets are authored here at this fraction rather than being
+        // multiplied down at runtime - which keeps the Speaker's real numbers readable/tunable in the
+        // Inspector instead of hidden behind a multiplier applied somewhere else.
+        private static readonly FP SpeakerEffectFraction = FP._0_50;
+
         private const string SharedEffectsFolderPath = "Assets/_QuantumUser/Resources/Skills/Zara/Zara_SharedEffects";
         private const string CharacterDataPath = "Assets/_QuantumUser/Resources/Characters/ZaraCharacterData.asset";
         private const string ZaraBaseSkillPath = "Assets/_QuantumUser/Resources/Skills/Zara/Zara_HeroSkill/ZaraBaseSkill.asset";
@@ -55,19 +62,76 @@ namespace QuantumUser.Editor
             CreateFolderRecursive(SharedEffectsFolderPath);
 
             // Shared generic effect assets - authored once, referenced by whichever ranks/lines need
-            // them (Healing Chorus/Restorative Beat share the same short-Haste asset, Encore reuses
-            // the same overheal-to-Shield asset Restorative Beat's own code path re-derives inline).
+            // them. Everything Zara grants an ally now routes through ONE generic effect class
+            // (AllyBuffEffectData) rather than a per-stat effect asset each, so a designer tunes a
+            // whole buff profile in one place regardless of whether a Totem, a Speaker or Lux's Sentry
+            // aura is emitting it.
             var scaledHeal = CreateOrUpdate<ScaledHealEffectData>($"{SharedEffectsFolderPath}/ZaraScaledHealPulse.asset", a => a.HealMultiplier = FP._1);
-            var overhealShield = CreateOrUpdate<OverhealToShieldEffectData>($"{SharedEffectsFolderPath}/ZaraOverhealToShieldEffectData.asset", a =>
-            {
-                a.ShieldConversionPercent = FP._0_50;
-                a.OvershieldCapMultiplier = FP._1_50;
-            });
-            var shortHaste = CreateOrUpdate<TimedHasteEffectData>($"{SharedEffectsFolderPath}/ZaraShortHasteEffectData.asset", a =>
+
+            // Baseline Support Beat buff - what a Totem grants with NO Sound Boost rank at all.
+            var baseSupportBuff = CreateOrUpdate<AllyBuffEffectData>($"{SharedEffectsFolderPath}/ZaraSupportBeatBuff.asset", a =>
             {
                 a.Duration = FP._2;
-                a.AttackSpeedMultiplier = FP._1_50;
+                a.MoveSpeedBonus = FP._0_10;
+                a.FireRateBonus = FP._0_10;
             });
+
+            // Sound Boost's own per-rank profiles. Rank 3 "Power Chord" adds the outgoing-damage
+            // window; ranks 1-2 share the same stronger Move Speed / Fire Rate values.
+            var soundBoostBuffR1 = CreateOrUpdate<AllyBuffEffectData>($"{SharedEffectsFolderPath}/ZaraSoundBoostBuff_R1.asset", a =>
+            {
+                a.Duration = FP._2;
+                a.MoveSpeedBonus = FP.FromString("0.15");
+                a.FireRateBonus = FP.FromString("0.15");
+            });
+            var soundBoostBuffR3 = CreateOrUpdate<AllyBuffEffectData>($"{SharedEffectsFolderPath}/ZaraSoundBoostBuff_R3.asset", a =>
+            {
+                a.Duration = FP._2;
+                a.MoveSpeedBonus = FP.FromString("0.15");
+                a.FireRateBonus = FP.FromString("0.15");
+                a.OutgoingDamageBonus = FP.FromString("0.15");
+            });
+
+            // Portable Speaker's reduced-effect counterparts ("Mobile Stage" = a different DATA
+            // PROFILE, not different code). SpeakerEffectFraction is the one place that halving lives.
+            var speakerSupportBuff = CreateOrUpdate<AllyBuffEffectData>($"{SharedEffectsFolderPath}/ZaraSpeakerSupportBuff.asset", a =>
+            {
+                a.Duration = FP._2;
+                a.MoveSpeedBonus = FP._0_10 * SpeakerEffectFraction;
+                a.FireRateBonus = FP._0_10 * SpeakerEffectFraction;
+            });
+            var speakerSoundBoostBuffR1 = CreateOrUpdate<AllyBuffEffectData>($"{SharedEffectsFolderPath}/ZaraSpeakerSoundBoostBuff_R1.asset", a =>
+            {
+                a.Duration = FP._2;
+                a.MoveSpeedBonus = FP.FromString("0.15") * SpeakerEffectFraction;
+                a.FireRateBonus = FP.FromString("0.15") * SpeakerEffectFraction;
+            });
+            var speakerSoundBoostBuffR3 = CreateOrUpdate<AllyBuffEffectData>($"{SharedEffectsFolderPath}/ZaraSpeakerSoundBoostBuff_R3.asset", a =>
+            {
+                a.Duration = FP._2;
+                a.MoveSpeedBonus = FP.FromString("0.15") * SpeakerEffectFraction;
+                a.FireRateBonus = FP.FromString("0.15") * SpeakerEffectFraction;
+                a.OutgoingDamageBonus = FP.FromString("0.15") * SpeakerEffectFraction;
+            });
+
+            // Sound Boost rank 2+ - the generic Hero-Skill-cooldown-reduction effect, budget-capped
+            // per Totem per ally by AreaAllyBudget. Not a Zara-specific mechanism.
+            var cooldownEffect = CreateOrUpdate<ModifyRemainingCooldownEffectData>($"{SharedEffectsFolderPath}/ZaraSupportCooldownEffect.asset", a =>
+            {
+                a.Slot = SkillSlotId.HeroSkill;
+                a.Amount = FP._0_50;
+                a.RespectAreaBudget = true;
+            });
+            var speakerCooldownEffect = CreateOrUpdate<ModifyRemainingCooldownEffectData>($"{SharedEffectsFolderPath}/ZaraSpeakerCooldownEffect.asset", a =>
+            {
+                a.Slot = SkillSlotId.HeroSkill;
+                a.Amount = FP._0_50 * SpeakerEffectFraction;
+
+                // A Speaker carries no AreaAllyBudget of its own (nothing to cap), so this one is
+                // deliberately uncapped per application - its own short lifetime is the limit.
+                a.RespectAreaBudget = false;
+            });
+
             var amplifierKnockback = CreateOrUpdate<KnockbackEffectData>($"{SharedEffectsFolderPath}/AmplifierKnockback.asset", a => a.Tier = KnockbackTier.Small);
             var bassDropStun = LoadHitEffect("StunEffectData");
 
@@ -90,7 +154,10 @@ namespace QuantumUser.Editor
                 a.Max = 500;
                 a.GenerationPerDamage = FP._1;
                 a.Radius = FP._3;
-                a.HealPercent = FP._0_05;
+
+                // Deliberately small and NOT scaled by any Ascension - Zara is support first, healer
+                // second. Protective Rhythm buys Shield/mitigation instead of more healing.
+                a.HealPercent = FP.FromString("0.02");
                 a.DamageAmount = 10;
                 a.KnockbackTier = KnockbackTier.Small;
             });
@@ -114,21 +181,52 @@ namespace QuantumUser.Editor
                 a.StunEffect = bassDropStun;
             });
 
-            HealingChorusSkillAction healingChorus = CreateOrUpdate<HealingChorusSkillAction>($"{HeroSkillUpgradesFolderPath}/HealingChorusSkillAction.asset", a =>
+            SoundBoostSkillAction soundBoost = CreateOrUpdate<SoundBoostSkillAction>($"{HeroSkillUpgradesFolderPath}/SoundBoostSkillAction.asset", a =>
             {
-                a.DisplayName = "Healing Chorus";
+                a.DisplayName = "Sound Boost";
                 a.Activated = false;
                 a.MaxRank = 3;
-                a.Description = "Totem Healing Beats restore more Health.";
+                a.Description = "Support Beats push the whole team's tempo - stronger buffs, then Hero Skill cooldown reduction, then an outgoing-damage window.";
                 a.RankDescriptions = new[]
                 {
-                    "Totem Healing Beats restore 30% more Health.",
-                    "Healing Beats restore 60% more Health and briefly Haste allies they heal.",
-                    "Healing Beats restore double Health, and 50% of excess healing becomes Shield.",
+                    "Support Beats heal 2% Max Health and grant +15% Move Speed and +15% Fire Rate.",
+                    "Sound Boost: Support Beats also reduce affected allies' remaining Hero Skill cooldown by 0.5s.",
+                    "Power Chord: Support Beats heal 5% Max Health and additionally grant +15% outgoing Damage for 2s.",
                 };
-                a.HealBonus = new[] { FP.FromString("0.30"), FP.FromString("0.60"), FP._1 };
-                a.HasteEffect = shortHaste;
-                a.HealEffectAsset = new AssetRef<HitEffectData>[] { scaledHeal, scaledHeal, overhealShield };
+                a.HealPercent = new[] { FP.FromString("0.02"), FP.FromString("0.02"), FP._0_05 };
+                a.SupportBuffEffect = new[]
+                {
+                    new AssetRef<HitEffectData>(soundBoostBuffR1.Guid),
+                    new AssetRef<HitEffectData>(soundBoostBuffR1.Guid),
+                    new AssetRef<HitEffectData>(soundBoostBuffR3.Guid),
+                };
+
+                // Rank 1's entry is deliberately left invalid - that is what keeps cooldown reduction
+                // off until rank 2, with no extra flag to keep in sync.
+                a.CooldownEffect = new[]
+                {
+                    default(AssetRef<HitEffectData>),
+                    new AssetRef<HitEffectData>(cooldownEffect.Guid),
+                    new AssetRef<HitEffectData>(cooldownEffect.Guid),
+                };
+
+                // Exposed exactly as the brief asks. Left generous for the first playtest; expected
+                // tuning range is 3-4s. This is the single knob that keeps Sound Boost + Double Time
+                // (many more beats per Totem) from collapsing the whole team's Hero Skill cooldowns.
+                a.MaxCooldownReductionPerTotem = 6;
+
+                a.SpeakerSupportBuffEffect = new[]
+                {
+                    new AssetRef<HitEffectData>(speakerSoundBoostBuffR1.Guid),
+                    new AssetRef<HitEffectData>(speakerSoundBoostBuffR1.Guid),
+                    new AssetRef<HitEffectData>(speakerSoundBoostBuffR3.Guid),
+                };
+                a.SpeakerCooldownEffect = new[]
+                {
+                    default(AssetRef<HitEffectData>),
+                    new AssetRef<HitEffectData>(speakerCooldownEffect.Guid),
+                    new AssetRef<HitEffectData>(speakerCooldownEffect.Guid),
+                };
             });
 
             DoubleTimeSkillAction doubleTime = CreateOrUpdate<DoubleTimeSkillAction>($"{HeroSkillUpgradesFolderPath}/DoubleTimeSkillAction.asset", a =>
@@ -179,41 +277,21 @@ namespace QuantumUser.Editor
                 a.RetainFraction = new[] { FP._0, FP._0, FP._0_20 };
             });
 
-            HeavyBassPassiveUpgradeData heavyBass = CreateOrUpdate<HeavyBassPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/HeavyBass.asset", a =>
+            ProtectiveRhythmPassiveUpgradeData protectiveRhythm = CreateOrUpdate<ProtectiveRhythmPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/ProtectiveRhythm.asset", a =>
             {
-                a.DisplayName = "Heavy Bass";
+                a.DisplayName = "Protective Rhythm";
                 a.MaxRank = 3;
-                a.Description = "Resonance Pulse deals more damage.";
+                a.Description = "Resonance Pulse shelters the team - temporary Overshield, then damage reduction on top. Deliberately never more HP healing.";
                 a.RankDescriptions = new[]
                 {
-                    "Resonance Pulse deals 50% more damage.",
-                    "Resonance Pulse deals 75% more damage and knocks enemies back much harder.",
-                    "Resonance Pulse deals double damage and releases a second damaging shockwave shortly afterward.",
+                    "Resonance Pulse grants allies a temporary Overshield worth 10% of their Max Shield.",
+                    "Overshield rises to 15% of Max Shield, and allies also gain 10% Damage Reduction for 2s.",
+                    "Fortissimo: Overshield rises to 20% of Max Shield, and Damage Reduction rises to 20% for 2s.",
                 };
-                a.BaseDamageAmount = 10;
-                a.DamageBonus = new[] { FP._0_50, FP.FromString("0.75"), FP._1 };
-                a.KnockbackTierByRank = new[] { KnockbackTier.Small, KnockbackTier.Medium, KnockbackTier.Strong };
-                a.SubwooferDamagePercent = new[] { FP._0, FP._0, FP._0_50 };
-                a.SubwooferDelay = FP.FromString("0.4");
-                a.SubwooferRadiusMultiplier = FP._1;
-            });
-
-            RestorativeBeatPassiveUpgradeData restorativeBeat = CreateOrUpdate<RestorativeBeatPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/RestorativeBeat.asset", a =>
-            {
-                a.DisplayName = "Restorative Beat";
-                a.MaxRank = 3;
-                a.Description = "Resonance Pulse heals nearby allies for more of their Max Health.";
-                a.RankDescriptions = new[]
-                {
-                    "Resonance Pulse heals nearby allies for 7.5% of their Max Health.",
-                    "Resonance Pulse heals 10% Max Health and briefly Hastes nearby allies.",
-                    "Resonance Pulse heals 12.5% Max Health and converts excess healing into Shield.",
-                };
-                a.HealPercent = new[] { FP.FromString("0.075"), FP._0_10, FP.FromString("0.125") };
-                a.HasteDuration = new[] { FP._0, FP._2, FP._2 };
-                a.HasteMultiplier = new[] { FP._0, FP._1_50, FP._1_50 };
-                a.ShieldConversionPercent = new[] { FP._0, FP._0, FP._0_50 };
+                a.OvershieldPercentOfMaxShield = new[] { FP._0_10, FP.FromString("0.15"), FP._0_20 };
                 a.OvershieldCapMultiplier = FP._1_50;
+                a.DamageReductionAmount = new[] { FP._0, FP._0_10, FP._0_20 };
+                a.DamageReductionDuration = FP._2;
             });
 
             RemixPassiveUpgradeData remix = CreateOrUpdate<RemixPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/Remix.asset", a =>
@@ -224,10 +302,15 @@ namespace QuantumUser.Editor
                 a.RankDescriptions = new[]
                 {
                     "Every third Resonance Pulse applies a random status effect to enemies hit.",
-                    "Remix effects become stronger and last longer.",
-                    "Every third Resonance Pulse applies two different random status effects to enemies hit.",
+                    "Extended Mix: Remix effects become stronger and last longer, and you start the next Resonance cycle with 20% Resonance.",
+                    "Full Remix: every third Resonance Pulse applies two DIFFERENT random status effects to enemies hit.",
                 };
                 a.Effects = remixPool;
+
+                // If Faster Tempo rank 3's own retention is also active, the HIGHER of the two applies -
+                // never both. See Resonance.qtn's RemixRetainFraction comment; the brief explicitly
+                // asks for that resolution to be spelled out rather than left implicit.
+                a.RetainFractionAfterRemix = new[] { FP._0, FP._0_20, FP._0_20 };
             });
 
             // 2 Dash lines
@@ -241,23 +324,30 @@ namespace QuantumUser.Editor
                 // asset once already - see docs/zara-ascensions.md's "Corrections" section) would
                 // otherwise silently survive every future regeneration.
                 a.Phase = SkillActionPhase.Begin | SkillActionPhase.End;
-                a.Description = "Dashing generates Resonance.";
+                a.Phase = SkillActionPhase.Begin | SkillActionPhase.OnGoing | SkillActionPhase.End;
+                a.Interval = FP._0;
+                a.Description = "Dashing generates Resonance - and eventually leaves damaging beats behind you.";
                 a.RankDescriptions = new[]
                 {
-                    "Dashing generates 20% of your Resonance threshold.",
-                    "1s after Dashing, an Afterbeat erupts from your starting position, damaging and knocking back nearby enemies.",
-                    "Dashing creates Afterbeats at both ends of the Dash. Enemies hit generate additional Resonance.",
+                    "Quick Tempo: dashing generates 20 Resonance, plus 10 more per enemy you pass through.",
+                    "Afterbeat: 1s after dashing, a beat erupts at your starting position, damaging and knocking back nearby enemies.",
+                    "Double Beat: beats erupt at BOTH ends of the dash, and enemies they hit generate additional Resonance.",
                 };
-                a.ResonancePercentOnDash = FP._0_20;
+                a.ResonanceOnDash = 20;
+                a.SweepRadius = FP._1_50;
+
+                // One shared per-dash allowance covers BOTH rank 1's dash sweep and rank 3's pulse
+                // hits, so the two can never compound past the cap.
+                a.ResonancePerEnemyHit = 10;
+                a.MaxResonancePerDash = 40;
+
                 a.Delay = FP._1;
                 a.DamagePercentOfSkill = new[] { FP._0, FP.FromString("0.75"), FP.FromString("0.75") };
                 a.Radius = new[] { FP._0, FP._4, FP._4 };
                 a.KnockbackForce = new[] { FP._0, FP._6, FP._6 };
-                a.ResonancePerEnemyHit = 5;
-                a.MaxResonancePerDash = 30;
             });
 
-            AssetRef<HitEffectData> damageEffect = ConfigureTotemThrow(new AssetRef<HitEffectData>(scaledHeal.Guid));
+            AssetRef<HitEffectData> damageEffect = ConfigureTotemThrow(new AssetRef<HitEffectData>(scaledHeal.Guid), new AssetRef<HitEffectData>(baseSupportBuff.Guid));
             AssetRef<EntityPrototype> speakerPrototype = ResolvePortableSpeakerPrototype();
 
             PortableSpeakerSkillAction portableSpeaker = CreateOrUpdate<PortableSpeakerSkillAction>($"{DashUpgradesFolderPath}/PortableSpeakerSkillAction.asset", a =>
@@ -268,41 +358,48 @@ namespace QuantumUser.Editor
                 // identical comment above for why this matters on every future regeneration, not just
                 // the first.
                 a.Phase = SkillActionPhase.Begin | SkillActionPhase.End;
-                a.Description = "Dashing leaves behind a Portable Speaker that alternates damaging and healing Beats.";
+                a.Description = "Dashing leaves behind a Portable Speaker running the same Damage/Support rhythm at reduced strength. It never heals.";
                 a.RankDescriptions = new[]
                 {
-                    "Dashing leaves behind a Portable Speaker that alternates damaging and healing Beats.",
-                    "Portable Speaker lasts longer and covers a larger area. Dash ending also heals nearby allies.",
-                    "Portable Speaker inherits part of your Totem Ascensions, turning each Dash into a mobile extension of your build.",
+                    "Dashing leaves behind a Portable Speaker alternating Damage and Support Beats at reduced strength.",
+                    "Portable Speaker lasts longer and covers a larger area, and completing the dash also buffs nearby allies.",
+                    "Mobile Stage: the Speaker inherits your own Beat interval, radius and Sound Boost profile at reduced effectiveness.",
                 };
                 a.Prototype = speakerPrototype;
                 a.Duration = new[] { FP._3, FP._4, FP._4 };
                 a.BaseRadius = FP._3;
                 a.RadiusMultiplier = new[] { FP._1, FP.FromString("1.30"), FP.FromString("1.30") };
                 a.BeatInterval = FP._1;
+
+                // At most one live Speaker per Zara at ranks 1-2; rank 3 optionally allows a second.
+                // A new one past the cap silently retires her oldest.
+                a.MaxActiveSpeakers = new byte[] { 1, 1, 2 };
+
                 a.TotemBaseDamage = 10;
-                a.TotemBaseHealPercent = FP._0_10;
-                a.DamagePercentOfTotem = FP._0_50;
-                a.HealPercentOfTotem = FP._0_50;
+                a.DamagePercentOfTotem = SpeakerEffectFraction;
                 a.DamageEffect = damageEffect;
-                a.HealEffect = new AssetRef<HitEffectData>(scaledHeal.Guid);
-                a.DashEndHealPercent = new[] { FP._0, FP._0_05, FP._0_05 };
-                a.DashEndHealRadius = FP._5;
-                a.MobileStageInheritanceFraction = FP._0_50;
+
+                // Support Beat = BUFF ONLY. No heal effect is authored anywhere on a Speaker, at any
+                // rank - "Portable Speaker must NEVER heal HP" is enforced by construction, not by a
+                // runtime check.
+                a.SupportBuffEffect = new AssetRef<HitEffectData>(speakerSupportBuff.Guid);
+                a.DashEndBuffEffect = new AssetRef<HitEffectData>(speakerSupportBuff.Guid);
+                a.DashEndBuffRadius = FP._5;
+                a.MobileStageInheritanceFraction = SpeakerEffectFraction;
             });
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh(); // lets QuantumAssetObjectPostprocessor stamp Guid/Identifier on anything just created
 
             WireCharacterData(passive,
-                new List<PassiveUpgradeData> { fasterTempo, heavyBass, restorativeBeat, remix },
+                new List<PassiveUpgradeData> { fasterTempo, protectiveRhythm, remix },
                 new List<SkillActionData> { afterbeat, portableSpeaker });
 
-            WireTotemActions(new List<SkillActionData> { amplifier, healingChorus, doubleTime, mainStage });
+            WireTotemActions(new List<SkillActionData> { amplifier, soundBoost, doubleTime, mainStage });
 
-            LogHelper.Log("ZaraAscensionAssetGenerator", "Resonance passive + 10 Ascension lines authored and wired (4 Passive Upgrades " +
+            LogHelper.Log("ZaraAscensionAssetGenerator", "Resonance passive + 9 Ascension lines authored and wired (3 Passive Upgrades " +
                       "into ZaraCharacterData.PassiveUpgrades, Afterbeat/Portable Speaker into ZaraCharacterData.DashSkillUpgrades, " +
-                      "Amplifier/Healing Chorus/Double Time/Main Stage into ZaraBaseSkill.Actions as Hero Skill Ascensions - every list " +
+                      "Amplifier/Sound Boost/Double Time/Main Stage into ZaraBaseSkill.Actions as Hero Skill Ascensions - every list " +
                       "fully replaced, not appended; every per-rank value is re-set explicitly on every run). Portable Speaker's Prototype " +
                       "is ZaraSpeaker.prefab (the Totem's own placed entity, reused directly).");
         }
@@ -314,7 +411,7 @@ namespace QuantumUser.Editor
         // as KaiAscensionAssetGenerator.ResolveKaiVortexPrototype. Returns the embedded
         // ZaraVoidPulseDamage's own AssetRef so Portable Speaker's DamageEffect can reuse the exact
         // same asset rather than duplicating it.
-        private static AssetRef<HitEffectData> ConfigureTotemThrow(AssetRef<HitEffectData> scaledHealEffect)
+        private static AssetRef<HitEffectData> ConfigureTotemThrow(AssetRef<HitEffectData> scaledHealEffect, AssetRef<HitEffectData> supportBuffEffect)
         {
             var subObjects = AssetDatabase.LoadAllAssetsAtPath(ZaraBaseSkillPath);
 
@@ -349,8 +446,22 @@ namespace QuantumUser.Editor
 
             spawnArea.TickInterval = FP._1;
             spawnArea.HealTargetMask = DamageTargetMask.Players;
-            spawnArea.HealEffects = new List<AssetRef<HitEffectData>> { scaledHealEffect };
-            spawnArea.HealAmount = FP._0_10;
+
+            // SLOT ORDER IS A CONTRACT Sound Boost relies on (see
+            // SpawnAlternatingAreaEffectData.SupportHealSlot/SupportBuffSlot/SupportCooldownSlot):
+            // [0] the heal, [1] the ally buff bundle, [2] reserved for Sound Boost rank 2+'s cooldown
+            // reduction. Slot 2 is authored empty here on purpose.
+            spawnArea.HealEffects = new List<AssetRef<HitEffectData>> { scaledHealEffect, supportBuffEffect, default };
+
+            // Baseline Support Beat trickle - 1% Max HP. Sound Boost SETS this higher per rank.
+            spawnArea.HealAmount = FP.FromString("0.01");
+
+            // The GLOBAL per-Totem healing cap, applied at every Sound Boost rank and regardless of
+            // Beat frequency - what stops Double Time from letting a lower Sound Boost rank out-heal a
+            // higher one. Once spent, Support Beats still deliver Move Speed / Fire Rate / cooldown
+            // reduction; only the HP half switches off.
+            spawnArea.MaxHealFractionPerAlly = FP._0_20;
+
             spawnArea.DamageAmount = 10;
             spawnArea.DamageMask = DamageTargetMask.Enemies;
             spawnArea.DamageEffects = new List<AssetRef<HitEffectData>> { damageEffect };

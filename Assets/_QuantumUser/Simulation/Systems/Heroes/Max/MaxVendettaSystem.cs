@@ -93,6 +93,14 @@ namespace Quantum
                 FP heal = FPMath.Max(mark->StoredDamage * config->HealMultiplier,
                     FPMath.Max(health->MaxHealth * config->MinHealFraction, targetMaxHealth * config->EnemyMaxHealthFraction));
 
+                // Blood Debt's hard per-kill ceiling - keeps rank 3's higher HealMultiplier from
+                // turning a single big banked hit into a full heal. 0 = uncapped, for a build that
+                // never picked Blood Debt at all (the base passive leaves this unset).
+                if (config->MaxHealFractionPerKill > FP._0)
+                {
+                    heal = FPMath.Min(heal, health->MaxHealth * config->MaxHealFractionPerKill);
+                }
+
                 if (heal > FP._0)
                 {
                     // ApplyFlatHeal fires the generic EntityHealed itself (already clamped to missing
@@ -106,26 +114,10 @@ namespace Quantum
 
             f.Remove<RevengeMark>(target);
 
-            // Burning Vengeance - spreads Burn to nearby enemies, scoped to a Vendetta-consuming
-            // kill specifically (see FireMastery.qtn's own comment on why this shares
-            // StatusSpreadOnDeath with Wildfire's any-Burning-death trigger instead of a dedicated
-            // component).
-            if (f.Unsafe.TryGetPointer<StatusSpreadOnDeath>(owner, out var spread) == true
-                && spread->TriggerOnVendettaKill == true
-                && f.Unsafe.TryGetPointer<Transform3D>(target, out var deathTransform) == true)
-            {
-                bool wasBurning = StatusEffectUtility.IsBurning(f, target);
-
-                FireMasterySpreadUtility.SpreadBurn(f, deathTransform->Position, owner, target, spread->Radius, spread->BurnDuration, spread->BurnIntensity, spread->MaxTargets);
-
-                // Burning Vengeance rank 3 - a genuine fiery burst (damage + Burn to everyone in
-                // radius), on top of the ordinary spread above, only when the kill was already
-                // Burning - not another spread-on-death chain.
-                if (spread->HasFieryBurst == true && wasBurning == true)
-                {
-                    MaxAscensionUtility.ApplyRadialBurn(f, deathTransform->Position, spread->Radius, owner, FP._0, spread->BurnDuration, spread->BurnIntensity);
-                }
-            }
+            // Burn spread on a Vendetta kill used to live here as its own Ascension line (Burning
+            // Vengeance) - merged into Wildfire, which now owns every Burn-spread trigger from one
+            // place (MaxFireMasteryReactionSystem.OnEntityKilled). Nothing Burn-related reacts to a
+            // Vendetta kill any more; that was one of two redundant spread lines the brief called out.
         }
     }
 }

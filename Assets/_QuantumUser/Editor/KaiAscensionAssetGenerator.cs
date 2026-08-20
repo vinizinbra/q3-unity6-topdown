@@ -8,9 +8,10 @@ namespace QuantumUser.Editor
     using UnityEditor;
     using UnityEngine;
 
-    // Authors Kai's Void Field base passive and his 10 Ascension lines (Singularity/Compression/
+    // Authors Kai's Void Field base passive and his 9 Ascension lines (Singularity/Compression/
     // Vortex Collapse/Void Shards on the Vortex Hero Skill; Event Horizon/Undertow/First Strike as
-    // Passives; Mirror Step/Phantom Strike/Warp Wake as Dash Ascensions - see docs/kai-ascensions.md),
+    // Passives; Mirror Step/Phantom Strike as Dash Ascensions - Warp Wake was removed entirely in the
+    // balance pass - see docs/kai-ascensions.md),
     // then wires all of it into KaiCharacterData.asset and KaiVortexSkill.asset. Replaces the old
     // KaiVoidFieldAssetGenerator.cs/KaiVoidwalkerMasteryAssetGenerator.cs pair - same "one generator
     // fully replaces every list it touches end to end" fix Brute/Max/Pixie's own refactors already
@@ -81,10 +82,13 @@ namespace QuantumUser.Editor
                 asset.PullRadiusMultiplier = new[] { FP.FromString("1.30"), FP.FromString("1.50"), FP.FromString("1.75") };
                 asset.PullForceMultiplier = new[] { FP._1, FP.FromString("1.30"), FP._1_50 };
                 asset.MaxEligibleTierIndex = new[] { (byte)EnemyTier.Normal, (byte)EnemyTier.Heavy, (byte)EnemyTier.Elite };
-                asset.UnlimitedBelowOrEqualTierIndex = new[] { (byte)EnemyTier.Normal, (byte)EnemyTier.Normal, (byte)EnemyTier.Normal };
                 asset.HasGravityPulse = new[] { false, false, true };
                 asset.GravityPulseForceMultiplier = 3;
-                asset.GravityPulseInterval = 1;
+
+                // ~3 pulses/second. Safe at this cadence because re-interrupt pacing is now the generic
+                // per-tier hard-CC immunity window (EnemyTierResistanceConfig.InterruptImmunityDuration),
+                // not a per-vortex tracker - so a protected enemy can't be perma-locked by the pulse rate.
+                asset.GravityPulseInterval = FP._1 / 3;
             });
 
             CompressionSkillAction compression = CreateOrUpdate<CompressionSkillAction>($"{HeroSkillUpgradesFolderPath}/CompressionSkillAction.asset", asset =>
@@ -149,18 +153,19 @@ namespace QuantumUser.Editor
             {
                 asset.DisplayName = "Event Horizon";
                 asset.MaxRank = 3;
-                asset.Description = "Grows Kai's Void Field, slowing enemy projectiles further and eventually enemies themselves.";
+                asset.Description = "Grows Kai's Void Field, slowing enemy projectiles inside it and eventually the enemies themselves.";
                 asset.RankDescriptions = new[]
                 {
-                    "Increase Void Field radius by 1.5m.",
-                    "Void Field grows larger and slows enemy projectiles even further.",
-                    "Enemies inside Void Field attack more slowly while their projectiles are heavily slowed.",
+                    "Void Field reaches 4m and slows enemy projectiles inside it by 35%.",
+                    "Void Field reaches 5m and slows enemy projectiles by 50%.",
+                    "Void Field slows enemy projectiles by 60%, and enemies inside it attack 20% slower.",
                 };
-                asset.RadiusBonus = new[] { FP._1_50, FP.FromString("2.50"), FP.FromString("2.50") };
-                // Subtracted from the base Void Field's 0.60 SpeedMultiplier - gives live projectile
-                // speeds of 50%/40%/20% at ranks 1/2/3.
-                asset.SpeedMultiplierBonus = new[] { FP.FromString("0.10"), FP._0_20, FP.FromString("0.40") };
-                asset.EnemyTimeDilationMultiplier = new[] { FP._0, FP._0, FP.FromString("0.60") };
+                // Absolute per-rank totals, not bonuses. Deliberately far milder than the pre-rebalance
+                // values (which reached -80% projectile speed / -40% attack speed and suppressed enemy
+                // ranged pressure almost entirely).
+                asset.Radius = new FP[] { 4, 5, 5 };
+                asset.ProjectileSpeedMultiplier = new[] { FP.FromString("0.65"), FP._0_50, FP.FromString("0.40") };
+                asset.EnemyTimeDilationMultiplier = new[] { FP._0, FP._0, FP.FromString("0.80") };
             });
 
             UndertowPassiveUpgradeData undertow = CreateOrUpdate<UndertowPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/Undertow.asset", asset =>
@@ -190,10 +195,10 @@ namespace QuantumUser.Editor
                 {
                     "Your first hit against an enemy deals 40% bonus damage.",
                     "Your first hit against an enemy deals 70% bonus damage.",
-                    "First Strike deals 100% bonus damage and refreshes after an enemy avoids your damage for 5s.",
+                    "First Strike deals 100% bonus damage, and killing a First Strike target empowers your next one by a further 25%.",
                 };
                 asset.DamageMultiplierBonus = new[] { FP.FromString("0.40"), FP.FromString("0.70"), FP._1 };
-                asset.RefreshWindow = new[] { FP._0, FP._0, FP._5 };
+                asset.KillEmpowerBonus = new[] { FP._0, FP._0, FP._0_25 };
             });
 
             MirrorStepSkillAction mirrorStep = CreateOrUpdate<MirrorStepSkillAction>($"{DashUpgradesFolderPath}/MirrorStepSkillAction.asset", asset =>
@@ -228,44 +233,16 @@ namespace QuantumUser.Editor
                 asset.PierceBonus = new[] { 1, 2, 99 };
             });
 
-            // Defaults to Kai's own Hero Skill vortex prototype - assign a dedicated Dash Void prefab
-            // once one exists for a visually distinct look (see WarpWakeSkillAction's own class
-            // comment; nothing gameplay-relevant depends on which prototype is used).
-            AssetRef<EntityPrototype> vortexPrototype = ResolveKaiVortexPrototype();
-
-            WarpWakeSkillAction warpWake = CreateOrUpdate<WarpWakeSkillAction>($"{DashUpgradesFolderPath}/WarpWakeSkillAction.asset", asset =>
-            {
-                asset.DisplayName = "Warp Wake";
-                asset.MaxRank = 3;
-                asset.Description = "Dashing leaves behind a temporary Void that pulls nearby enemies inward.";
-                asset.RankDescriptions = new[]
-                {
-                    "Dashing leaves behind a temporary Void that pulls nearby enemies inward.",
-                    "Your Dash Void becomes larger, pulls harder, and damages enemies trapped inside.",
-                    "When your Dash Void collapses, it violently repels nearby enemies and deals damage.",
-                };
-                asset.Prototype = vortexPrototype;
-                asset.Duration = new[] { FP.FromString("1.5"), FP.FromString("1.5"), FP.FromString("1.5") };
-                asset.PullForce = new[] { FP._6, FP._9, FP._9 };
-                asset.BaseRadius = new[] { FP.FromString("2.50"), FP.FromString("3.50"), FP.FromString("3.50") };
-                asset.PullTickInterval = FP._0_50;
-                asset.PulseDamagePercent = new[] { FP._0, FP.FromString("0.25"), FP.FromString("0.25") };
-                asset.PulseTickInterval = FP._0_50;
-                asset.DamageEffect = genericDamageEffect;
-                asset.RepulsionDamagePercent = new[] { FP._0, FP._0, FP.FromString("0.75") };
-                asset.RepulsionKnockbackForce = new[] { FP._0, FP._0, FP._10 };
-            });
-
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh(); // lets QuantumAssetObjectPostprocessor stamp Guid/Identifier on anything just created
 
             WireCharacterData(passive,
                 new List<PassiveUpgradeData> { eventHorizon, undertow, firstStrike },
-                new List<SkillActionData> { mirrorStep, phantomStrike, warpWake });
+                new List<SkillActionData> { mirrorStep, phantomStrike });
 
             WireVortexActions(new List<SkillActionData> { singularity, compression, vortexCollapse, voidShards });
 
-            LogHelper.Log("KaiAscensionAssetGenerator", "Void Field passive + 10 Ascension lines authored and wired (3 Passive Upgrades " +
+            LogHelper.Log("KaiAscensionAssetGenerator", "Void Field passive + 9 Ascension lines authored and wired (3 Passive Upgrades " +
                       "into KaiCharacterData.PassiveUpgrades, Mirror Step/Phantom Strike/Warp Wake into KaiCharacterData.DashSkillUpgrades, " +
                       "Singularity/Compression/Vortex Collapse/Void Shards into KaiVortexSkill.Actions as Hero Skill Ascensions - every list " +
                       "fully replaced, not appended; every per-rank value is re-set explicitly on every run).");

@@ -1,0 +1,106 @@
+// Lux's four Sentry (Hero Skill) Ascension lines. Every one of these lives on LUX HERSELF, is
+// granted/refreshed on each Hero Skill Begin by its own ranked SkillActionData, and is READ ONCE at
+// deploy time by SpawnSentrySkillAction, which bakes the resulting configuration onto the spawned
+// chassis. Same "configure what gets spawned, then let the spawned thing be self-sufficient" shape
+// every other deployable in this codebase uses - a sentry keeps working exactly as deployed even
+// after Lux dies, moves away, or ranks up.
+//
+// Consolidated from seven separate single-pick components (SentryFireRateUpgrade,
+// SentryFireRateAuraUpgrade, SentryShieldUpgrade, SentryShieldAreaRateUpgrade, SentryRangeUpgrade,
+// plus the two below) - one component per LINE now, not one per individual effect.
+
+// Weapon Systems - which weapon slots a fresh sentry arms. Slot 0 is the baseline Cannon (armed by
+// SpawnSentrySkillAction itself, never by this line); this line owns slots 1..3 - Minigun at rank 1,
+// Rocket Pod at rank 2, Laser at rank 3. Each is an ordinary WeaponDataAsset, so "periodic burst",
+// "AoE rocket" and "piercing laser" are authored weapon data (fire rate, projectile, pierce), not
+// bespoke turret code - the whole point of splitting barrels into their own Weapon-carrying entities.
+component SentryWeaponUpgrade
+{
+    array<AssetRef<WeaponDataAsset>>[4] WeaponData;
+
+    // Local-space muzzle position (X=right, Y=up, Z=forward) per slot, rotated by the sentry's own
+    // facing at spawn time and baked into that slot's SentryBarrel.Transform3D.Position directly (not
+    // re-resolved every shot) - see SpawnSentrySkillAction.ApplyWeaponUpgrade.
+    array<FPVector3>[4] WeaponOffset;
+
+    // Which asset armed each slot - carried through to the spawned SentryBarrel's own Source field so
+    // SentryGunView can resolve that asset's View-only WeaponSprite and show the right gun art. Purely
+    // cosmetic; the sim never re-reads it.
+    array<AssetRef<SentryWeaponSystemsSkillAction>>[4] Source;
+}
+
+// Overclock - the sentry's attack-speed/uptime line.
+component SentryOverclockUpgrade
+{
+    // Multiplies Sentry.FireRateMultiplier at deploy time. 1 = no change.
+    FP FireRateMultiplier;
+
+    // Rank 2+ - extra seconds of sentry lifetime, folded into the deploy-time Duration before
+    // DecayRate is derived from it (so the health bar still reads as time remaining).
+    FP DurationBonus;
+
+    // Rank 3 "Redline" - see Sentry.RedlineThreshold/RedlineFireRateMultiplier. 0 threshold = not
+    // equipped.
+    FP RedlineThreshold;
+    FP RedlineFireRateMultiplier;
+}
+
+// Fortification - turns the sentry into a position the team wants to fight around.
+component SentryFortificationUpgrade
+{
+    // Rank 1 "Extended Range" - added to the sentry's authored Range at deploy time.
+    FP RangeBonus;
+
+    // Rank 2 "Shield Battery" - FLAT Shield restored per second to allies inside the aura.
+    // Deliberately a real per-second number rather than the old "multiply the ally's own shield
+    // recharge rate by 100", which scaled with the recipient and was effectively unbounded.
+    FP AllyShieldPerSecond;
+
+    // Fraction of Sentry.Range the support aura reaches - the aura is deliberately tighter than the
+    // targeting range, so "fight around the machine" means genuinely standing near it.
+    FP AuraRangeRatio;
+
+    // Rank 3 "Fire Support" - an AllyBuffEffectData (Fire Rate + Damage Reduction) reapplied to allies
+    // in the aura every tick. The same generic effect asset Zara's Support Beat uses, so its Damage
+    // Reduction lands in the ONE shared aura-DR slot - which is what makes "multiple Sentries don't
+    // stack" true by construction rather than by a per-Lux check.
+    AssetRef<HitEffectData> FireSupportEffect;
+}
+
+// Overload Core - the sentry's death becomes offensive. Copied onto the spawned sentry itself so
+// DamageUtility.TrySentryOverload keeps working even once Lux is long gone. Fires only from Health
+// actually reaching 0 (decay or combat damage alike) - a sentry retired for housekeeping (replaced
+// past the active cap, or picked up by Relocation Protocol) is despawned with an explicit
+// DespawnIntent, which suppresses this. See DespawnIntent.qtn.
+component SentryOverloadUpgrade
+{
+    // Percent of Lux's own Sentry Skill Damage, resolved to a flat number at deploy time (see
+    // LuxAscensionUtility.ResolveSentrySkillDamage) - so it scales with her skill damage rather than
+    // being a fixed value that falls off.
+    FP Damage;
+    FP Radius;
+
+    // Rank 2+ - 0 skips the knockback sweep entirely.
+    FP KnockbackForce;
+
+    // Rank 3 "Critical Meltdown" - enemies caught become Exposed (take more damage from EVERY source
+    // for a short window), via the generic StatusEffectUtility.ApplyRupture - the pre-existing
+    // incoming-damage-multiplier status, not a new Lux-specific one. 0 = not equipped.
+    FP ExposedDamageTakenBonus;
+    FP ExposedDuration;
+
+    // Carried through to the SentryOverloadDetonated event so the view can resolve BlastEffectPrefab
+    // off the exact asset that granted this.
+    AssetRef<SentryOverloadCoreSkillAction> Source;
+}
+
+// Per-sentry lifetime-extension allowance, granted onto LUX by whichever Dash Ascension rank offers to
+// extend a sentry's life (Emergency Repair rank 2, Relocation Protocol rank 2) and read once at deploy
+// time to seed Sentry.LifetimeExtensionRemaining. Absent (or 0) means no extension is possible at all,
+// which is the correct default: without it, a dash-cooldown build could keep one machine alive
+// forever. Two ranks granting it compose via take-the-larger, so holding both lines doesn't stack the
+// budget twice.
+component SentryLifetimeExtensionBudget
+{
+    FP MaxPerSentry;
+}

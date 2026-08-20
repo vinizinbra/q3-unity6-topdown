@@ -80,27 +80,28 @@ namespace Quantum
                 if (f.Unsafe.TryGetPointer<Health>(ally, out var health) == false)
                     continue;
 
-                // Restorative Beat - requested is computed pre-owner-heal-multiplier (the nominal
-                // ask), applied is what HealUtility.ApplyFlatHeal actually let through (post-
-                // multiplier, post-cap) - the gap between the two is this heal's own "excess," a
-                // decisive simplification for rank 3's overheal-to-Shield conversion rather than
-                // threading the heal multiplier through that calc too.
-                FP requested = health->MaxHealth * resonance->HealPercent;
-                FP applied = HealUtility.ApplyFlatHeal(f, ally, owner, health, requested);
+                // The Pulse's own small emergency heal - flat percentage of the ally's own MaxHealth,
+                // deliberately NOT scaled by any Ascension. Healing is secondary for Zara by design;
+                // Protective Rhythm buys Shield and mitigation instead, which is what the two blocks
+                // below do.
+                HealUtility.ApplyFlatHeal(f, ally, owner, health, health->MaxHealth * resonance->HealPercent);
 
-                if (resonance->HasteOnHealDuration > FP._0)
+                // Protective Rhythm - a temporary Overshield as a fraction of the ALLY's own Max
+                // Shield, so it scales to whoever it lands on. 0 (unpicked) grants nothing.
+                if (resonance->OvershieldPercentOfMaxShield > FP._0
+                    && f.Unsafe.TryGetPointer<Shield>(ally, out var allyShield) == true)
                 {
-                    StatusEffectUtility.ApplyHaste(f, ally, owner, resonance->HasteOnHealDuration, resonance->HasteOnHealMultiplier);
+                    ShieldUtility.ApplyOvershield(f, ally, owner,
+                        allyShield->Max * resonance->OvershieldPercentOfMaxShield, resonance->OvershieldCapMultiplier);
                 }
 
-                if (resonance->ShieldConversionPercent > FP._0)
+                // Protective Rhythm rank 2+ - routed through the shared REACTIVE damage-reduction slot
+                // (take-the-stronger on reapply), so a Zara pulsing every ~10s and a Brute's Guardian
+                // proc landing on the same ally resolve as "strongest wins", never as an additive
+                // stack. That generic policy is the whole reason this isn't its own bespoke field.
+                if (resonance->DamageReductionAmount > FP._0)
                 {
-                    FP excess = requested - applied;
-
-                    if (excess > FP._0)
-                    {
-                        ShieldUtility.ApplyOvershield(f, ally, owner, excess * resonance->ShieldConversionPercent, resonance->OvershieldCapMultiplier);
-                    }
+                    StatusEffectUtility.ApplyTemporaryDamageReduction(f, ally, resonance->DamageReductionDuration, resonance->DamageReductionAmount);
                 }
             }
 
@@ -178,20 +179,15 @@ namespace Quantum
             {
                 effectConfig.GetKnockback((KnockbackTier)resonance->KnockbackTier, out FP force, out _);
                 HitEffectUtility.ApplyShockwave(f, position, radius, owner, force, effect: remixEntry1.Effect);
+            }
 
-                // Heavy Bass rank 3 "Subwoofer" - schedules a second, smaller delayed shockwave from
-                // this same position/radius, reusing this pulse's own KnockbackTier-derived force
-                // rather than a separately-tuned one. 0 SubwooferDamagePercent (rank<3/unpicked)
-                // never schedules anything - see ZaraSubwooferPulseSystem.
-                if (resonance->SubwooferDamagePercent > FP._0)
-                {
-                    f.AddOrGet<ZaraSubwooferPulse>(owner, out var sub);
-                    sub->Remaining = resonance->SubwooferDelay;
-                    sub->Position = position;
-                    sub->Damage = resonance->DamageAmount * resonance->SubwooferDamagePercent;
-                    sub->Radius = radius * resonance->SubwooferRadiusMultiplier;
-                    sub->KnockbackForce = force;
-                }
+            // Remix rank 2 - start the next cycle partly charged. Deliberately a MAXIMUM against
+            // whatever floor AddResonance already applied for Faster Tempo rank 3, never an addition:
+            // a build holding both gets one floor, the higher of the two (see Resonance.qtn's own
+            // RemixRetainFraction comment on why that resolution is spelled out rather than implied).
+            if (isRemixPulse == true && resonance->RemixRetainFraction > FP._0)
+            {
+                resonance->Current = FPMath.Max(resonance->Current, resonance->Max * resonance->RemixRetainFraction);
             }
         }
 

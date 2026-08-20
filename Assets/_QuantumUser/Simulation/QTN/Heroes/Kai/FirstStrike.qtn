@@ -3,25 +3,34 @@
 // DamageUtility.ResolveOutgoingDamage - gated on the OWNER holding this trait (not "has anyone ever
 // hit this enemy"), so another hero's shot landing first in co-op doesn't silently deny Kai his own
 // bonus.
+//
+// Each enemy triggers First Strike exactly ONCE, ever. An earlier design let the mark expire after a
+// few untouched seconds, which turned an assassination mechanic into a damage-over-time rotation
+// against the same target; rank 3's payoff is instead about CHAINING targets - see
+// KillEmpowerBonus below.
 component FirstStrikeUpgrade
 {
     FP DamageMultiplierBonus;
 
-    // Rank 3 "Perfect Opening" only - 0 at ranks 1-2 (the mark then never ticks/expires, "never
-    // removed" preserved exactly). At 5 (rank 3), a mark left untouched for this long is freed by
-    // FirstStrikeMarkTimeoutSystem, letting the bonus re-trigger on the same enemy.
-    FP RefreshWindow;
+    // Rank 3 only (0 at ranks 1-2). Killing an enemy that still carries this owner's own FirstStrike
+    // mark empowers the NEXT First Strike by this much on top of DamageMultiplierBonus - the reward
+    // for actually finishing the target you opened on, and what makes switching targets the strong
+    // play rather than tunnelling one. See KaiFirstStrikeSystem.
+    FP KillEmpowerBonus;
+
+    // Live one-shot state, not authored: set to KillEmpowerBonus on a First-Strike kill, consumed
+    // (back to 0) by the next First Strike hit. Deliberately non-stacking - a second kill before
+    // spending it re-arms the same bonus rather than doubling it, so a chain of kills can't compound
+    // into an unbounded multiplier.
+    FP PendingEmpowerBonus;
 }
 
 // Lives on the TARGET, replacing the old bare KaiFirstStruck tag - same RevengeMark-shaped pattern
 // (see Heroes/Max/Vendetta.qtn) so this can genuinely track WHICH Kai most recently claimed the mark,
 // not just "has this enemy ever been hit." A second Kai's hit reclaims the mark (MarkedBy overwritten)
-// rather than tracking both simultaneously - matches RevengeMark's own precedent.
+// rather than tracking both simultaneously - matches RevengeMark's own precedent. Never expires and
+// is never removed while the enemy lives; the enemy dying is what clears it.
 component FirstStrikeMark
 {
     EntityRef MarkedBy;
-
-    // 0 = permanent mark (rank 1-2 behavior, "never removed" - FirstStrikeMarkTimeoutSystem ignores
-    // it). >0 = counts down (rank 3's 5s refresh window); freed at 0.
-    FP RemainingGrace;
 }

@@ -33,7 +33,17 @@ namespace Quantum
             if (rage->Stacks < rage->MaxStacks)
                 return;
 
-            // Entering max Rage - Full Throttle/Ignition react here, not via a per-tick poll.
+            EnterMaxRage(f, owner);
+        }
+
+        // Also called directly from FullThrottleSkillAction/IgnitionSkillAction's own Begin-phase
+        // Execute - with Last Stand rank 1 parking Rage between activations, an Overdrive can now
+        // START already at max, in which case there is no TryAdvanceStack crossing to hook. Both
+        // halves are idempotent (Full Throttle latches on Applied, Ignition on Applied/
+        // InfernoTriggeredThisActivation), so calling this on a Rage total that is already max is
+        // safe regardless of which path got there.
+        public static void EnterMaxRage(Frame f, EntityRef owner)
+        {
             if (f.Unsafe.TryGetPointer<FullThrottleUpgrade>(owner, out var fullThrottle) == true)
             {
                 MaxAscensionUtility.ApplyFullThrottle(f, owner, fullThrottle);
@@ -44,29 +54,41 @@ namespace Quantum
                 MaxAscensionUtility.OnEnteredMaxRage(f, owner, ignition);
             }
 
-            Log.Debug($"[Skill] {owner} reached max Rage ({rage->Stacks}/{rage->MaxStacks})");
+            Log.Debug($"[Skill] {owner} is at max Rage");
         }
 
         // Called from MaxOverdriveReactionSystem when the owner takes damage while Overdrive is
-        // active - a no-op if they carry RageRetentionUpgrade (Last Stand rank 1) or already have 0
-        // stacks.
+        // active. Removes LastStandUpgrade.RageLossFraction of the CURRENT Rage rather than always
+        // wiping it - the fraction is 1 (a full reset, the unchanged baseline) for anyone without
+        // Last Stand, and for Last Stand rank 1, since only rank 2 authors a softer value.
+        // CeilToInt so a partial loss always costs at least one stack - a fraction that rounds to 0
+        // would make getting hit entirely free, which is the opposite of Max's intended weakness.
         public static void ResetStacks(Frame f, EntityRef owner)
         {
             if (f.Unsafe.TryGetPointer<RageOverdrive>(owner, out var rage) == false || rage->Stacks == 0)
                 return;
 
-            if (f.Has<RageRetentionUpgrade>(owner) == true)
+            FP lossFraction = FP._1;
+
+            if (f.Unsafe.TryGetPointer<LastStandUpgrade>(owner, out var lastStand) == true && lastStand->RageLossFraction > FP._0)
+            {
+                lossFraction = FPMath.Clamp(lastStand->RageLossFraction, FP._0, FP._1);
+            }
+
+            int lost = FPMath.CeilToInt(rage->Stacks * lossFraction);
+
+            if (lost <= 0)
                 return;
 
             bool wasAtMax = rage->Stacks >= rage->MaxStacks;
-            rage->Stacks = 0;
+            rage->Stacks = lost >= rage->Stacks ? (byte)0 : (byte)(rage->Stacks - lost);
 
-            if (wasAtMax == true)
+            if (wasAtMax == true && rage->Stacks < rage->MaxStacks)
             {
                 RevertMaxRageEffects(f, owner);
             }
 
-            Log.Debug($"[Skill] {owner} took damage - Rage reset to 0");
+            Log.Debug($"[Skill] {owner} took damage - Rage dropped by {lost} to {rage->Stacks}/{rage->MaxStacks}");
         }
 
         // Called from BerserkSkillData.End - no-op if Rage never reached max this activation,

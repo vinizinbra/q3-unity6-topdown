@@ -52,7 +52,8 @@ namespace Quantum
                 return;
             }
 
-            FP radius = Radius[index];
+            // Skill Area - see StatUtility.GetAreaMultiplier.
+            FP radius = Radius[index] * StatUtility.GetAreaMultiplier(f, filter.Entity);
             FP damageMultiplier = ReflectedDamageMultiplier[index];
             FPVector3 position = filter.Transform3D->Position;
             var projectiles = f.Filter<Projectile, Transform3D>();

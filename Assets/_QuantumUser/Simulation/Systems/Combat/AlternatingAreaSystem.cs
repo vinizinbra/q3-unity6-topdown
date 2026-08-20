@@ -127,7 +127,7 @@ namespace Quantum
             }
 
             HitEffectUtility.ApplyInCollider(f, areaDamage->Effects, transform, collider, owner, damage, source,
-                null, element, targetMask);
+                null, element, targetMask, entity);
 
             f.Events.AlternatingAreaPulsed(entity, isHealing);
 

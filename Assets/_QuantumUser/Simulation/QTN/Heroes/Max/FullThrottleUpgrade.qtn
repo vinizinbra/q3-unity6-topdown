@@ -1,18 +1,23 @@
-// Overdrive rank 2 ("Full Throttle") - granted once by FullThrottleSkillAction.Apply, which SETs
+// Overdrive line 2 ("Full Throttle") - granted once by FullThrottleSkillAction.Execute, which SETs
 // every field below to the picked rank's cumulative tuned values (same "bake the rank's total, not
 // an increment" convention every ranked Ascension uses). Applied/toggled at the max-Rage threshold
-// by RageOverdriveUtility.TryAdvanceStack/ResetStacks (entering/leaving max Rage) via
-// MaxAscensionUtility.ApplyFullThrottle/RevertFullThrottle - not active for the whole Overdrive
-// window, only while Rage is actually maxed. Rank 3's instant-reload benefit is NOT a field here -
-// it's carried by the separate, pre-existing InstantReloadOverdrive tag (see FullThrottleSkillAction/
-// WeaponSystem.IsInstantReloadOverdriven), same "read an existing tag component" idiom
-// RageRetentionUpgrade already uses for Last Stand rank 1.
+// by RageOverdriveUtility.EnterMaxRage/ResetStacks via MaxAscensionUtility.ApplyFullThrottle/
+// RevertFullThrottle - not active for the whole Overdrive window, only while Rage is actually maxed.
 component FullThrottleUpgrade
 {
     FP WeaponDamageBonus;
     FP ReloadSpeedBonus;
 
+    // Rank 3 - refill the magazine ONCE, at the instant max Rage is first reached. Deliberately a
+    // one-shot on the threshold crossing rather than the old "every reload is free while at max
+    // Rage" tag (InstantReloadOverdrive, deleted): that version re-resolved live on every reload
+    // attempt, which the spec explicitly rules out ("do not repeatedly instant-reload every
+    // simulation tick while Rage remains maximum - use a transition/event check"). Applied below is
+    // exactly that transition latch, so this fires once per entry into max Rage and no more.
+    Boolean HasInstantReload;
+
     // Latches whether the toggle is currently applied, so entering/leaving max Rage twice in a row
-    // (or a stray extra call) can't double-apply or double-revert the multipliers.
+    // (or a stray extra call) can't double-apply or double-revert the multipliers - and, for
+    // HasInstantReload, is what makes the refill genuinely once-per-crossing.
     Boolean Applied;
 }

@@ -418,9 +418,9 @@ MonoBehaviour:
     MaxHealth:
       RawValue: 1310720
     RegenRate:
-      RawValue: 65536
+      RawValue: 0
     RegenTimer:
-      RawValue: 65536
+      RawValue: 0
 --- !u!114 &4301389450636590431
 MonoBehaviour:
   m_ObjectHideFlags: 0

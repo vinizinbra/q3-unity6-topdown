@@ -1,0 +1,33 @@
+// Why an entity is about to be removed. Generic and hero-agnostic: the spec's "do not allow
+// despawn reasons that should not count as destruction to accidentally trigger [an on-death effect]
+// - use despawn/death reason tags."
+//
+// Absence of the component is itself the default reading: a removal with no intent stamped is a
+// genuine Destroyed/Expired, which is what every pre-existing destroy site in the codebase already
+// is. Only a DELIBERATE, non-death removal stamps one - so nothing has to be retrofitted for this to
+// be correct.
+enum EntityDespawnReason : Byte
+{
+    // Killed by damage, or its own lifetime ran out. On-death effects (Lux's Overload Core) SHOULD
+    // fire. Never actually stamped - it's what "no DespawnIntent component" already means.
+    Destroyed = 0,
+
+    // Superseded by a newer instance of the same thing (Lux redeploying past her active-Sentry cap,
+    // Zara's second Portable Speaker replacing her first). On-death effects must NOT fire - the
+    // player didn't lose anything, and letting a free explosion fall out of "deploy again" would
+    // make redeploy-spam the optimal Overload Core rotation.
+    Replaced = 1,
+
+    // Deliberately picked up/moved by its owner and re-created elsewhere (Lux's Relocation Protocol).
+    // On-death effects must NOT fire, same reasoning as Replaced.
+    Recalled = 2
+}
+
+// Stamped immediately before f.Destroy by whoever is doing the deliberate removal, and read by any
+// on-death hook via DespawnIntentUtility.ShouldTriggerDeathEffects. Never ticked or cleaned up - it
+// only ever exists for the handful of frames between being stamped and the entity actually going
+// away.
+component DespawnIntent
+{
+    EntityDespawnReason Reason;
+}

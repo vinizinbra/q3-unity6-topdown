@@ -2,20 +2,24 @@ namespace Quantum
 {
     using Photon.Deterministic;
 
-    // Ranked Dash Ascension - Pixie's second Dash path alongside Backblast: instead of exploding
-    // herself, the dash empowers her NEXT Bunny Bomb throw (see PixieHotFuseCharge.qtn/
-    // ProjectileSkillData.Fire/AreaHitData.Detonate for how the charge is applied and consumed).
-    // Mechanically distinct from Backblast (dash itself is offensive) - this uses the dash purely as
-    // setup, and the two coexist freely: both are independent SkillSlot.Upgrades entries on the same
-    // Dash slot, so one dash activation invokes both Execute calls in the same Begin phase with no
-    // extra coordination code needed.
+    // Ranked Dash Ascension - instead of exploding herself, the dash empowers Pixie's NEXT Bunny Bomb
+    // throw (see PixieBombCharge.qtn/ProjectileSkillData.ApplyBombCharge/AreaHitData.Detonate for how
+    // the charge is applied and consumed). Mechanically distinct from Backblast (dash itself is
+    // offensive) - this uses the dash purely as setup.
+    //
+    //  - Rank 1: next bomb deals +30% damage.
+    //  - Rank 2: +30% damage and +30% radius.
+    //  - Rank 3: +60% damage, +30% radius, and a direct impact detonates it immediately.
     //
     // Rank 3's InstantDetonate only short-circuits a direct ENEMY hit (see ProjectileHitData.
-    // ShouldDetonate/InstantDetonate.qtn) - it does not affect ground/geometry contact, so a bomb
-    // that lands instead of hitting an enemy still plants and runs its normal fuse behavior
-    // untouched, including Birthday Cake's taunt-then-detonate sequence if that's also equipped.
-    // Hot Fuse's damage/radius bonuses still apply either way (Fire()/Detonate() apply them
-    // unconditionally, independent of whether instant-detonation actually triggered).
+    // ShouldDetonate/InstantDetonate.qtn) - it does not affect ground/geometry contact, so a bomb that
+    // lands instead of hitting an enemy still plants and runs its normal fuse behavior untouched,
+    // including Birthday Cake's taunt-then-detonate sequence if that's also equipped. Hot Fuse's
+    // damage/radius bonuses still apply either way.
+    //
+    // Writes only its OWN fields on the shared charge (see PixieBombCharge.qtn) - Blast Jump writes
+    // its own, so a build holding both gets both regardless of which action's Execute happens to run
+    // first within the same dash.
     //
     // Re-granting fresh (idempotent) every dash and never removing it directly mirrors
     // ClusterBombSkillAction/BirthdayCakeSkillAction's own Begin-only pattern - reads live rank fresh
@@ -37,10 +41,10 @@ namespace Quantum
             int rank = System.Math.Max(1, SkillUpgradeUtility.GetRank(f, filter.Entity, selfRef));
             int index = System.Math.Clamp(rank, 1, (int)MaxRank) - 1;
 
-            f.AddOrGet<PixieHotFuseCharge>(filter.Entity, out var charge);
-            charge->Remaining = Window;
-            charge->DamageMultiplier = DamageMultiplier[index];
-            charge->RadiusMultiplier = RadiusMultiplier[index];
+            f.AddOrGet<PixieBombCharge>(filter.Entity, out var charge);
+            PixieAscensionUtility.ExtendBombChargeWindow(charge, Window);
+            charge->HotFuseDamageMultiplier = DamageMultiplier[index];
+            charge->HotFuseRadiusMultiplier = RadiusMultiplier[index];
             charge->InstantDetonate = rank >= 3;
         }
 

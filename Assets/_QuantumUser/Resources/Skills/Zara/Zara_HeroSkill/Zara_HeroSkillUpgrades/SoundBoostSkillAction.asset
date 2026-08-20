@@ -1,0 +1,92 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9afbf7fbdac874fac8f3e5e8e8dc8e52, type: 3}
+  m_Name: SoundBoostSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.SoundBoostSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Zara/Zara_HeroSkill/Zara_HeroSkillUpgrades/SoundBoostSkillAction
+    Guid:
+      Value: 490069236516948011
+  Icon: {fileID: 0}
+  DisplayName: Sound Boost
+  RankDescriptions:
+  - Support Beats heal 2% Max Health and grant +15% Move Speed and +15% Fire Rate.
+  - 'Sound Boost: Support Beats also reduce affected allies'' remaining Hero Skill
+    cooldown by 0.5s.'
+  - 'Power Chord: Support Beats heal 5% Max Health and additionally grant +15% outgoing
+    Damage for 2s.'
+  <MaxRank>k__BackingField: 3
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 0
+  Description: Support Beats push the whole team's tempo - stronger buffs, then Hero
+    Skill cooldown reduction, then an outgoing-damage window.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  HealPercent:
+  - RawValue: 1311
+  - RawValue: 1311
+  - RawValue: 3277
+  SupportBuffEffect:
+  - Id:
+      Value: 360927758152465337
+  - Id:
+      Value: 360927758152465337
+  - Id:
+      Value: 298290957802237393
+  CooldownEffect:
+  - Id:
+      Value: 0
+  - Id:
+      Value: 393272425250098266
+  - Id:
+      Value: 393272425250098266
+  MaxCooldownReductionPerTotem:
+    RawValue: 393216
+  SpeakerSupportBuffEffect:
+  - Id:
+      Value: 499571504267359061
+  - Id:
+      Value: 499571504267359061
+  - Id:
+      Value: 535971377142463696
+  SpeakerCooldownEffect:
+  - Id:
+      Value: 0
+  - Id:
+      Value: 477794549257301989
+  - Id:
+      Value: 477794549257301989

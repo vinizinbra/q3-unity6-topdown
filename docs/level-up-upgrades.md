@@ -618,13 +618,14 @@ onto it.
 
 ## Upgrade history / party HUD icons
 
-`PartyHudWidget` (see `docs/hud-couch-coop.md` if present) gains a fifth "hero resource gauge"
-sibling alongside Adrenaline/Remix/Scrap/Juggernaut Stack Damage:
+`PartyHudWidget` gains an externally-bound sibling alongside its portrait/health/shield/skill-cooldown
+widgets (as of 2026-08-20 the per-hero resource gauges it used to also carry - Remix/Scrap/Juggernaut
+Stack Damage - live only under `CharacterUiWidget` instead, see `HeroHudWidget`):
 
 - `Assets/_Project/Scripts/UI/Hud/PartyHistoryUpgradeContainer.cs` - **new**, same shape as
-  `ScrapUiWidget` (`QuantumGlobalMonoBehaviour`, `autoBindLocalPlayerOne`, `Initialize(EntityRef)`/
-  `DisableAutoBind()` called externally by `PartyHudWidget`, self-hides its own `root` rather than
-  assuming every entity has one) - no shared base class exists among these sibling widgets, so this
+  `SkillCooldownUiWidget` (`QuantumGlobalMonoBehaviour`, `autoBindLocalPlayerOne`,
+  `Initialize(EntityRef)`/`DisableAutoBind()` called externally by `PartyHudWidget`, self-hides its
+  own `root` rather than assuming every entity has one) - no shared base class exists among these sibling widgets, so this
   one doesn't introduce one either. Shows Skill Upgrade/Global Upgrade/Passive Upgrade/Rift
   Mutation picks only - `UpgradeHistory` itself never contains a Weapon Perk entry (see
   `LevelUpUtility.RecordHistory` above), so there's no filtering to do here. Reads `UpgradeHistory`

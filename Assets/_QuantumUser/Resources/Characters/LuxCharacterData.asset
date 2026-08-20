@@ -86,7 +86,7 @@ MonoBehaviour:
     RawValue: 65536
   CoinGainMultiplier:
     RawValue: 65536
-  RingColor: {r: 1, g: 1, b: 1, a: 1}
+  RingColor: {r: 1, g: 0.7065829, b: 0.3443396, a: 1}
   WeaponPosition:
     X:
       RawValue: 0
@@ -108,18 +108,16 @@ MonoBehaviour:
       Value: 305265041979885090
   StartingWeapon:
     Id:
-      Value: 486587533721559972
+      Value: 532371987665164333
   DashSkillUpgrades:
   - Id:
       Value: 420168397532520612
   - Id:
-      Value: 339282098208670876
+      Value: 465261250465140776
   PassiveUpgrades:
   - Id:
-      Value: 279385305130049783
-  - Id:
-      Value: 461752073218338127
+      Value: 269759498164841875
   - Id:
       Value: 487893626376381545
   - Id:
-      Value: 269759498164841875
+      Value: 369611404177242297

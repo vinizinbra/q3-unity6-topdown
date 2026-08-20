@@ -248,6 +248,7 @@ GameObject:
   - component: {fileID: 1170755833417969864}
   - component: {fileID: 3061145013519703360}
   - component: {fileID: 7802862760426973587}
+  - component: {fileID: 4157499341075325287}
   m_Layer: 7
   m_Name: Pixie
   m_TagString: Untagged
@@ -582,6 +583,8 @@ MonoBehaviour:
         RawValue: 0
       Z:
         RawValue: 0
+    AirborneSource:
+      Value: 0
 --- !u!114 &-3971490095111579385
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -678,13 +681,14 @@ MonoBehaviour:
   maxLandingSquash: 0.6
   landingSpringFrequency: 6
   landingSpringDamping: 0.35
+  bodyRoot: {fileID: 0}
+  downedRoot: {fileID: 0}
+  koRoot: {fileID: 0}
+  handsRoot: {fileID: 0}
   squashLerpSpeed: 14
   volumePreservation: 0.6
   headSquashInfluence: 0.4
   jumpHeadSquashInfluence: 0.25
-  shootPunchStrength: {x: 0, y: 0.04, z: 0}
-  shootPunchDuration: 0.12
-  shootPunchFrequency: 20
 --- !u!114 &3238834508286719383
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -758,6 +762,7 @@ MonoBehaviour:
       RawValue: 0
     FireCooldownMultiplier:
       RawValue: 0
+    Level: 0
     FireCooldownTimer:
       RawValue: 0
     Ammo: 0
@@ -832,11 +837,13 @@ MonoBehaviour:
   healFlashColor: {r: 0.4, g: 1, b: 0.4, a: 1}
   shieldFlashColor: {r: 0.4, g: 0.75, b: 1, a: 1}
   deathColor: {r: 0, g: 0, b: 0, a: 0.5}
-  pickupGlowColor: {r: 1, g: 0.85, b: 0.3, a: 1}
-  pickupGlowDuration: 0.5
   riftMarkMaterial: {fileID: 0}
   riftMarkApplicationFlashColor: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
   riftMarkApplicationFlashDuration: 0.08
+  expPickupFlashColor: {r: 0.3, g: 0.55, b: 1, a: 1}
+  coinPickupFlashColor: {r: 1, g: 0.84, b: 0.2, a: 1}
+  riftShardPickupFlashColor: {r: 1, g: 0.35, b: 0.75, a: 1}
+  pickupFlashDuration: 0.35
   freezeMaterial: {fileID: 0}
 --- !u!114 &8110188611109955938
 MonoBehaviour:
@@ -856,6 +863,23 @@ MonoBehaviour:
         Id:
           Value: 0
       Upgrades:
+      - Id:
+          Value: 0
+      - Id:
+          Value: 0
+      - Id:
+          Value: 0
+      - Id:
+          Value: 0
+      - Id:
+          Value: 0
+      PendingUpgrades:
+      - Id:
+          Value: 0
+      - Id:
+          Value: 0
+      - Id:
+          Value: 0
       - Id:
           Value: 0
       - Id:
@@ -912,6 +936,23 @@ MonoBehaviour:
         Id:
           Value: 0
       Upgrades:
+      - Id:
+          Value: 0
+      - Id:
+          Value: 0
+      - Id:
+          Value: 0
+      - Id:
+          Value: 0
+      - Id:
+          Value: 0
+      PendingUpgrades:
+      - Id:
+          Value: 0
+      - Id:
+          Value: 0
+      - Id:
+          Value: 0
       - Id:
           Value: 0
       - Id:
@@ -983,6 +1024,7 @@ MonoBehaviour:
   isLocalPlayer: 0
   viewTransform: {fileID: 0}
   isBot: 0
+  widgetOffset: {x: 0, y: 0, z: 0}
   weaponRowOffset: {x: 0, y: -1.5, z: 0}
   groundLayer:
     serializedVersion: 2
@@ -1007,6 +1049,8 @@ MonoBehaviour:
     MaxHealth:
       RawValue: 0
     RegenRate:
+      RawValue: 0
+    RegenTimer:
       RawValue: 0
 --- !u!114 &6945579441375826571
 MonoBehaviour:
@@ -1066,6 +1110,8 @@ MonoBehaviour:
       RawValue: 0
     MaxShieldMultiplier:
       RawValue: 0
+    BonusMaxShield:
+      RawValue: 0
     DamageReduction:
       RawValue: 0
     KnockbackTakenMultiplier:
@@ -1082,6 +1128,14 @@ MonoBehaviour:
       RawValue: 0
     CoinGainMultiplier:
       RawValue: 0
+    Coins:
+      RawValue: 0
+    RiftShards:
+      RawValue: 0
+    WeaponTalentLevel: 0
+    ShopWeaponOfferCount: 0
+    RerollQuantity: 0
+    SelfReviveCharges: 0
     BurnOnHitStacks: 0
     DashShieldCost:
       RawValue: 0
@@ -1174,6 +1228,43 @@ MonoBehaviour:
   initialized: 0
   executeOnlyOnLocal: 0
   isLocal: 0
+--- !u!114 &7802862760426973587
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 506928541793919104}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1564e64c052e94f26b57d5d0e562825e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuantumUser.View.Managers.EntityViewCacheInit
+  _playerRef:
+    _index: 0
+  initialized: 0
+  executeOnlyOnLocal: 0
+  isLocal: 0
+--- !u!114 &4157499341075325287
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 506928541793919104}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ac2b7cb95d3d4f048cc32ee63f6d276, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Quantum.Unity::Quantum.QPrototypePlayerLifeState
+  Prototype:
+    State:
+      Value: 0
+    BleedOutRemaining:
+      RawValue: 0
+    ReviveProgress:
+      RawValue: 0
+    ReviveHolder: {fileID: 0}
 --- !u!1 &1545853343455048392
 GameObject:
   m_ObjectHideFlags: 0
@@ -2404,20 +2495,3 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5292615511809375842, guid: 95a3634ae517a460cb68deae3f0770d3, type: 3}
   m_PrefabInstance: {fileID: 2127705868109635390}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &7802862760426973587
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 506928541793919104}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1564e64c052e94f26b57d5d0e562825e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::QuantumUser.View.Managers.EntityViewCacheInit
-  _playerRef:
-    _index: 0
-  initialized: 0
-  executeOnlyOnLocal: 0
-  isLocal: 0

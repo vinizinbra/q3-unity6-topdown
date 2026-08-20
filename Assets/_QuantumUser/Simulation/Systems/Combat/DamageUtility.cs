@@ -1,6 +1,7 @@
 namespace Quantum
 {
     using Photon.Deterministic;
+    using Quantum.Physics3D;
 
     // Additive: the default - stacks with whatever external impulse/velocity the target already
     // has this tick, so multiple simultaneous sources (two players, a player plus an environmental
@@ -40,7 +41,7 @@ namespace Quantum
         // target within a single tick.
         // generatesResonance defaults true, so every existing caller (weapon fire, Totem/Speaker
         // Damage Beats, any other hero) is unaffected. Zara's own already-Resonance-sourced effects
-        // (Resonance Pulse, Heavy Bass's Subwoofer, Afterbeat) pass false - see ResonanceUtility.
+        // (the Resonance Pulse itself and Afterbeat's own delayed pulses) pass false - see ResonanceUtility.
         // OnDamageDealt's own call below - preventing a Resonance-fueled ability from recursively
         // refunding the Resonance it just spent. A plain bool on this shared funnel rather than an
         // owner-type check, so it composes with any future "this damage shouldn't build resource X"
@@ -201,6 +202,16 @@ namespace Quantum
             {
                 f.Events.EntityDied(target, owner);
                 f.Signals.OnEntityKilled(target, owner, source);
+
+                // Pixie's Unstable Mixture - banks a stack when a GENUINE (non-chained) explosion
+                // gets a kill, empowering her next explosion. Scoped by the same isExplosion/
+                // isChainedExplosion pair every other explosion-source rule here uses, which is what
+                // stops a chain reaction from farming its own stacks (see UnstableMixture.qtn).
+                if (isExplosion == true && isChainedExplosion == false)
+                {
+                    DemolitionMasteryUtility.OnExplosionKill(f, owner);
+                }
+
                 ExperienceUtility.TrySpawnDrop(f, target, owner);
                 ScrapUtility.TrySpawnDrop(f, target, owner);
                 RiftShardUtility.TrySpawnDrop(f, target, owner);
@@ -425,11 +436,17 @@ namespace Quantum
             Log.Debug($"[Damage] {target}'s marked death exploded at {transform->Position} radius {blastRadius} for {damage}");
         }
 
-        // Fully independent from the enemy MarkExplosiveDeath/ExplodeOnDeath kill-chain mechanic above
-        // - its own Radius/Damage (SentryOverloadUpgrade, granted by SentryAddOverloadSkillAction and
-        // copied onto the spawned sentry by SpawnSentrySkillAction.ApplyOverloadUpgrade), no shared
-        // RuntimeConfig. Still uses the same low-level HitEffectUtility.ApplyDamageInRadius every AoE
-        // in the game already uses, just with its own values instead of ExplodeOnDeathConfig's.
+        // Lux's Overload Core Ascension. Fully independent from the enemy MarkExplosiveDeath/
+        // ExplodeOnDeath kill-chain mechanic above - its own Radius/Damage (SentryOverloadUpgrade,
+        // granted by SentryOverloadCoreSkillAction and copied onto the spawned sentry by
+        // SpawnSentrySkillAction.ApplyOverloadUpgrade), no shared RuntimeConfig. Still uses the same
+        // low-level HitEffectUtility.ApplyDamageInRadius every AoE in the game already uses.
+        //
+        // Reached only from a genuine death (Health hit 0 - decay or combat damage alike, which are
+        // the same path for a sentry by design). A sentry retired for HOUSEKEEPING - replaced past
+        // Lux's active cap, or picked up by Relocation Protocol - is despawned with an explicit
+        // DespawnIntent instead, which the guard below rejects. Without that, redeploy-spam would
+        // become the cheapest way to fire this.
         private static void TrySentryOverload(Frame f, EntityRef owner, EntityRef target)
         {
             if (f.Unsafe.TryGetPointer<SentryOverloadUpgrade>(target, out var overload) == false)
@@ -438,13 +455,47 @@ namespace Quantum
             if (overload->Radius <= FP._0 || overload->Damage <= FP._0)
                 return;
 
+            if (DespawnIntentUtility.ShouldTriggerDeathEffects(f, target) == false)
+                return;
+
             if (f.Unsafe.TryGetPointer<Transform3D>(target, out var transform) == false)
                 return;
 
-            HitEffectUtility.ApplyDamageInRadius(f, transform->Position, overload->Radius, owner, overload->Damage, DamageSource.Skill, DamageTargetMask.Enemies);
-            f.Events.SentryOverloadDetonated(owner, transform->Position, overload->Radius, overload->Source);
+            FPVector3 center = transform->Position;
 
-            Log.Debug($"[Damage] {target}'s Overload detonated at {transform->Position} radius {overload->Radius} for {overload->Damage}");
+            HitEffectUtility.ApplyDamageInRadius(f, center, overload->Radius, owner, overload->Damage, DamageSource.Skill, DamageTargetMask.Enemies);
+
+            // Rank 2's knockback and rank 3's "Exposed" both sweep the same radius. Exposed reuses the
+            // pre-existing generic Rupture status (an incoming-damage multiplier with take-the-stronger
+            // semantics) rather than introducing a Lux-specific one - so it composes with everything
+            // that already reads it, and two Sentries meltdown-ing together don't stack additively.
+            if (overload->KnockbackForce > FP._0 || overload->ExposedDamageTakenBonus > FP._0)
+            {
+                Shape3D sphere = Shape3D.CreateSphere(overload->Radius);
+                var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
+
+                for (int i = 0; i < hits.Count; i++)
+                {
+                    EntityRef caught = hits[i].Entity;
+
+                    if (f.Has<Enemy>(caught) == false)
+                        continue;
+
+                    if (overload->KnockbackForce > FP._0 && f.Unsafe.TryGetPointer<Transform3D>(caught, out var caughtTransform) == true)
+                    {
+                        ApplyKnockback(f, caught, caughtTransform->Position - center, overload->KnockbackForce, FP._0, owner);
+                    }
+
+                    if (overload->ExposedDamageTakenBonus > FP._0)
+                    {
+                        StatusEffectUtility.ApplyRupture(f, caught, overload->ExposedDuration, FP._1 + overload->ExposedDamageTakenBonus);
+                    }
+                }
+            }
+
+            f.Events.SentryOverloadDetonated(owner, center, overload->Radius, overload->Source);
+
+            Log.Debug($"[Damage] {target}'s Overload detonated at {center} radius {overload->Radius} for {overload->Damage}");
         }
 
         // CharacterStats.DamageReduction was already seeded from CharacterData (see
@@ -472,8 +523,8 @@ namespace Quantum
 
             // Brute's Guardian ascension (Protector Aura, ally-targeted) - its own dedicated pair,
             // not the generic one above, so it can never collide with Too Angry to Die - see
-            // StatusEffects.qtn's own comment on GuardianDamageReductionRemaining/Amount.
-            multiplier *= StatusEffectUtility.GetGuardianDamageReductionMultiplier(f, target);
+            // StatusEffects.qtn's own comment on AuraDamageReductionRemaining/Amount.
+            multiplier *= StatusEffectUtility.GetAuraDamageReductionMultiplier(f, target);
 
             // A third, independent timed DR - Brute's Guardian rank 3 reactive proc and Bodyguard
             // rank 3's own proc both write here, layered on top of Guardian's continuous aura DR
@@ -614,6 +665,11 @@ namespace Quantum
             damage *= stats->DamageMultiplier * GetSourceMultiplier(stats, source);
             damage *= ResolveRangeDamageMultiplier(f, owner, target, stats);
 
+            // Generic timed outgoing-damage buff (Zara's Power Chord Support Beat) - unlike the
+            // Weapon-scoped buff just below, this applies to every DamageSource, so a tempo-support
+            // buff speeds up whatever the buffed ally's own build actually does.
+            damage *= StatusEffectUtility.GetTempOutgoingDamageMultiplier(f, owner);
+
             // Max's Last Stand rank 2 / Run & Gun rank 2 - a temporary Weapon Damage buff, read live
             // rather than baked into CharacterStats.WeaponDamageMultiplier. Scoped to DamageSource.
             // Weapon, same convention GetSourceMultiplier uses.
@@ -622,16 +678,10 @@ namespace Quantum
                 damage *= StatusEffectUtility.GetTemporaryWeaponDamageMultiplier(f, owner);
             }
 
-            // Pixie's Unstable Targeting - bonus damage against a target currently marked
-            // ExplodeOnDeath ("Unstable"), read live rather than baked into CharacterStats.
-            // DamageMultiplier, same idiom Hot Target uses below for its own conditional bonus.
-            // Gated on MarkExplosiveDeath's presence purely as "does this owner hold the upgrade" -
-            // the mark being read is the TARGET's own, regardless of who applied it.
-            if (f.Unsafe.TryGetPointer<MarkExplosiveDeath>(owner, out var mark) == true
-                && f.Has<ExplodeOnDeath>(target) == true)
-            {
-                damage *= mark->DamageBonusVsUnstable;
-            }
+            // Max's Cremation (Flashpoint rank 3) - Elite/Boss can't be executed, so a Burning one
+            // already below the threshold takes bonus damage instead. Returns 1 for every other
+            // owner/target/tier combination.
+            damage *= MaxFireMasteryReactionSystem.ResolveCremationDamageBonus(f, owner, target);
 
             // Brute's Concussive Impact rank 3 - bonus damage against a currently-Stunned target,
             // read live rather than baked into CharacterStats.DamageMultiplier, same idiom as
@@ -657,12 +707,15 @@ namespace Quantum
 
                 if (firstStrikeEligible == true)
                 {
-                    damage *= FP._1 + firstStrike->DamageMultiplierBonus;
+                    // Rank 3 - a banked "you finished your last opening" bonus rides along with this
+                    // one strike and is spent here (see KaiFirstStrikeSystem). 0 at ranks 1-2 and
+                    // whenever nothing is banked, so this is the plain rank bonus otherwise.
+                    damage *= FP._1 + firstStrike->DamageMultiplierBonus + firstStrike->PendingEmpowerBonus;
+                    firstStrike->PendingEmpowerBonus = FP._0;
                 }
 
                 f.AddOrGet<FirstStrikeMark>(target, out var liveFirstStrikeMark);
                 liveFirstStrikeMark->MarkedBy = owner;
-                liveFirstStrikeMark->RemainingGrace = firstStrike->RefreshWindow;
             }
 
             // Kai's Undertow rank 3 "Gravitational Bond" - bonus damage against any Bound enemy (see
@@ -822,6 +875,15 @@ namespace Quantum
                 }
 
                 pushed = true;
+
+                // Claims responsibility for whatever airtime this impulse causes, so the eventual
+                // OnPlayerLanded reports Launched rather than the default Fall (see LandingSource).
+                // Only an upward push can actually put a grounded player in the air; a purely
+                // horizontal shove leaves them grounded and shouldn't relabel a later, unrelated fall.
+                if (impulse.Y > FP._0 && f.Unsafe.TryGetPointer<PlayerMovement>(target, out var movement) == true)
+                {
+                    movement->AirborneSource = LandingSource.Launched;
+                }
             }
 
             if (f.Unsafe.TryGetPointer<PhysicsBody3D>(target, out var body) == true)

@@ -1,0 +1,74 @@
+// Brute's Groundbreaker Passive Ascension - terrain/verticality/environmental crowd control. Granted
+// onto Brute himself by GroundbreakerPassiveUpgradeData; driven entirely by BruteGroundbreakerSystem
+// reacting to the generic OnPlayerLanded signal (see PlayerMovement.qtn).
+//
+// The loop it exists to create:
+//
+//     high ground -> drop -> impact shockwave -> knock enemies away -> wall slam -> stun -> burst window
+//
+// Replaces the old Unstoppable line, which overlapped too heavily with Momentum. Groundbreaker
+// occupies a completely different design space and deliberately does NOT touch Momentum in any way -
+// no generation, no retention, no reset behavior, no Charged move speed, no Juggernaut duration. That
+// half of Brute's kit stays entirely the Momentum Ascension's own responsibility.
+component GroundbreakerUpgrade
+{
+    // -- Landing trigger --
+
+    // How far Brute must have DROPPED (in world units, the project's own vertical representation -
+    // the level has no discrete height-level grid; floor is baked at Y=0 and vertical variation comes
+    // from hand-placed chunk geometry) before a landing counts. Compared against OnPlayerLanded's own
+    // fallDistance, which is the drop in grounded Y between takeoff and landing.
+    //
+    // Deliberately a plain height threshold rather than anything tied to specific map tiles or terrain
+    // tiers, so this works from terrain transitions, elevated platforms, jumps, and any future
+    // launch/airborne mechanic alike. It is also what excludes everything it should: ordinary movement
+    // never ungrounds at all, a same-height dash and a walked-down step both report ~0, and the known
+    // false auto-hop at chunk-cube seams reports ~0 too.
+    FP MinimumFallHeight;
+
+    // Which kinds of airtime qualify, as a BITMASK over LandingSource (1 << (byte)source). Authored,
+    // not hardcoded - "whether specific airborne mechanics qualify" is data. All three bits set by
+    // default: the height requirement above is the real filter, not the source.
+    Byte AllowedLandingSources;
+
+    // -- Impact shockwave --
+
+    FP ImpactRadius;
+    FP KnockbackForce;
+    FP KnockbackUpwardForce;
+
+    // Fraction of Juggernaut Skill Damage (BruteAscensionUtility.ResolveJuggernautSkillDamage), NOT a
+    // flat number - stored as a percent and resolved live at landing time, so it tracks Brute's skill
+    // damage the same way every other Ascension in his kit does. 0 is valid and means "knockback
+    // only", which is what rank 1 may well want.
+    FP ImpactDamagePercent;
+
+    // (byte)EnemyTier this can affect, inclusive - tiers above are skipped entirely. Same data-not-code
+    // tier gating idiom Kai's SingularityUpgrade.MaxEligibleTierIndex uses. Defaults to Boss (every
+    // tier), because knockback already scales down (or is fully resisted) per tier via
+    // DamageUtility.ResolveKnockbackScale - a hard skip on top of that would double-punish.
+    Byte MaxAffectedTierIndex;
+
+    // -- Wall slam (rank 2+) --
+
+    // How far past a knocked-back enemy to probe for a wall. See WallSlamUtility.TryWallSlam, the
+    // shared implementation Iron Shoulder also uses - Groundbreaker only supplies a different
+    // knockback source, it does not own a second wall-collision system.
+    Boolean WallStunEnabled;
+    FP WallStunDuration;
+    FP WallCheckDistance;
+
+    // -- Exposed / Vulnerable (rank 3) --
+
+    // Applied ONLY to an enemy this landing actually WALL-STUNNED, never to everyone caught in the
+    // shockwave - the reward is for good positioning producing a real wall impact, not for landing
+    // near a crowd. Gated on the Stun genuinely landing (not merely on a wall being present), so an
+    // enemy inside a hard-CC immunity window or a tier authored ImmuneToHardCC correctly gets neither.
+    //
+    // Reuses the pre-existing generic Rupture status (StatusEffectUtility.ApplyRupture - an incoming
+    // damage multiplier with take-the-stronger semantics), the same one Lux's Overload Core rank 3
+    // uses for its own "Exposed". No Brute-specific status was added.
+    Boolean VulnerabilityEnabled;
+    FP VulnerabilityDamageTakenModifier;
+    FP VulnerabilityDuration;
+}

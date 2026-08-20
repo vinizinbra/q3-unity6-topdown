@@ -131,6 +131,22 @@ component WeaponPostImpactProcs
     FP    ExplosiveSequenceDamageMultiplier;
     Int32 ShotsSinceExplosiveProc;
 
+    // Probability (0-1) that an otherwise-due explosive proc actually fires. 0 or >= 1 means "always"
+    // - which is what the Explosive Sequence PERK sets, so its every-Nth-shot behavior is completely
+    // unchanged. Pixie's Explosive Rounds ascension is the one consumer that authors a real chance:
+    // it makes every shot due (Interval = 1) and then gates on this, which is how "15%/22%/30% of
+    // weapon hits explode" is expressed without a second, parallel proc mechanism. Rolled through
+    // DamageUtility.RollChance (f.RNG), so it stays deterministic.
+    FP ExplosiveSequenceChance;
+
+    // OPTIONAL internal cooldown between explosive procs, in seconds - 0 (the default, and what every
+    // perk authors) disables it entirely, preserving existing behavior exactly. Exists so a very
+    // high-Fire-Rate weapon carrying a per-shot proc chance can be reined in from data if playtesting
+    // shows it needs it, rather than by hardcoding a limit in WeaponSystem. Ticked in
+    // WeaponSystem.Update alongside the weapon's other timers.
+    FP ExplosiveSequenceCooldown;
+    FP ExplosiveSequenceCooldownRemaining;
+
     Boolean HasCataclysmRound;
     FP      CataclysmRadius;
     FP      CataclysmDamageMultiplier;

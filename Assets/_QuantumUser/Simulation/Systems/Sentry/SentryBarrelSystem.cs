@@ -48,6 +48,34 @@ namespace Quantum
             }
 
             filter.InputSource->Data.Fire = hasTarget;
+
+            ApplySentryFireRate(f, filter.Entity, filter.Barrel, sentry);
+        }
+
+        // 3. Recomposes this barrel's own Weapon.FireCooldownMultiplier from the sentry-wide fire-rate
+        //    multiplier every tick - the single place Overclock, Redline, Field Modification stacks,
+        //    Emergency Overclock and Rapid Setup all land, rather than five effects each writing
+        //    barrels directly.
+        //
+        //    Composed against SentryBarrel.BaseFireCooldownMultiplier (captured once at spawn) rather
+        //    than against the live value, which is what makes a per-tick write idempotent instead of
+        //    compounding without bound - and also what lets a timed multiplier simply lapse and
+        //    restore the correct baseline with no revert logic anywhere.
+        private static void ApplySentryFireRate(Frame f, EntityRef barrelEntity, SentryBarrel* barrel, Sentry* sentry)
+        {
+            if (f.Unsafe.TryGetPointer<Weapon>(barrelEntity, out var weapon) == false)
+                return;
+
+            FP multiplier = SentryUtility.ResolveFireRateMultiplier(sentry);
+
+            if (multiplier <= FP._0)
+                return;
+
+            FP baseMultiplier = barrel->BaseFireCooldownMultiplier > FP._0 ? barrel->BaseFireCooldownMultiplier : FP._1;
+
+            // Fire cooldown is the inverse of fire rate - same division WeaponSystem/
+            // FireRateWeaponPerkData already use for a player weapon perk.
+            weapon->FireCooldownMultiplier = baseMultiplier / multiplier;
         }
 
         public struct Filter

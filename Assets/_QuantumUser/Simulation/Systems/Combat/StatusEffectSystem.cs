@@ -27,9 +27,13 @@ namespace Quantum
             status->ShieldRegenRemaining -= f.DeltaTime;
             status->TimeDilationRemaining -= f.DeltaTime;
             status->DamageReductionRemaining -= f.DeltaTime;
-            status->GuardianDamageReductionRemaining -= f.DeltaTime;
+            status->AuraDamageReductionRemaining -= f.DeltaTime;
             status->TemporaryDamageReductionRemaining -= f.DeltaTime;
-            status->GuardianReactiveCooldownRemaining -= f.DeltaTime;
+            status->ReactiveDamageReductionCooldownRemaining -= f.DeltaTime;
+            status->AllyShieldRestoreCooldownRemaining -= f.DeltaTime;
+            status->StunImmunityRemaining -= f.DeltaTime;
+            status->InterruptImmunityRemaining -= f.DeltaTime;
+            status->TempOutgoingDamageRemaining -= f.DeltaTime;
             status->IntimidateRemaining -= f.DeltaTime;
             status->KnockbackTakenRemaining -= f.DeltaTime;
             status->RiftMarkReactionLockoutRemaining -= f.DeltaTime;

@@ -10,8 +10,10 @@ namespace Quantum
     // Eligibility" section), since every effect here only matters against a Burning target. Each rank
     // SETS the total values for whichever component(s) that rank unlocks - a lower rank leaves higher
     // ranks' components untouched rather than granting them early with placeholder values.
-    // BossExecutionEnabled is never set true here - the brief drops the old per-pick toggle entirely,
-    // Boss is never executable by this line, full stop.
+    // Elite/Boss are never executable by this line, full stop - rank 3 gives them a bonus-damage
+    // window instead (EliteBossDamageThreshold/Bonus, read by
+    // MaxFireMasteryReactionSystem.ResolveCremationDamageBonus), so the rank still pays off in a
+    // boss fight without deleting one.
     public unsafe partial class FlashpointPassiveUpgradeData : PassiveUpgradeData
     {
         [Header("Rank 1 - Hot Target")]
@@ -24,8 +26,15 @@ namespace Quantum
         public int ExplosionMaxTargets = 5;
 
         [Header("Rank 3 - Cremation")]
+        [Tooltip("Burning Filler/Normal enemies at or below this fraction of Max Health are executed outright.")]
         public FP NormalHealthThreshold = FP.FromString("0.15");
-        public FP EliteHealthThreshold = FP._0_10;
+
+        [Tooltip("Same, for Specialist/Heavy - deliberately a tighter window than Normal.")]
+        public FP SpecialistHealthThreshold = FP.FromString("0.08");
+
+        [Tooltip("Elite/Boss are NEVER executed. Instead they take EliteBossDamageBonus extra damage while Burning and at or below this fraction of Max Health.")]
+        public FP EliteBossDamageThreshold = FP.FromString("0.15");
+        public FP EliteBossDamageBonus = FP._0_25;
 
         public override bool IsEligible(Frame f, EntityRef entity) => f.Has<CanApplyBurn>(entity);
 
@@ -47,7 +56,9 @@ namespace Quantum
             {
                 f.AddOrGet<ExecuteAgainstStatus>(entity, out var execute);
                 execute->NormalHealthThreshold = NormalHealthThreshold;
-                execute->EliteHealthThreshold = EliteHealthThreshold;
+                execute->SpecialistHealthThreshold = SpecialistHealthThreshold;
+                execute->EliteBossDamageThreshold = EliteBossDamageThreshold;
+                execute->EliteBossDamageBonus = EliteBossDamageBonus;
             }
         }
     }

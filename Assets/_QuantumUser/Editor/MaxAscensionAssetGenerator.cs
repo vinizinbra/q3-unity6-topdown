@@ -70,15 +70,14 @@ namespace QuantumUser.Editor
                 asset.DisplayName = "Last Stand";
                 asset.Activated = false;
                 asset.MaxRank = 3;
-                asset.Description = "Overdrive grows harder to punish - keep your Rage on hit, retaliate when struck, and cheat death outright.";
+                asset.Description = "Your Rage stops being fragile - it survives between Overdrives, then survives being hit, then survives death itself.";
                 asset.RankDescriptions = new[]
                 {
-                    "Unshaken: taking damage during Overdrive no longer resets your Rage.",
-                    "Unshaken, plus Retaliation: taking damage during Overdrive grants +20% Weapon Damage for 2s (short cooldown).",
-                    "Unshaken, Retaliation, plus Too Angry to Die: lethal damage during Overdrive instead leaves you at 1 Health, clears Rage, and immediately ends Overdrive.",
+                    "Rage now persists after Overdrive ends - your next Overdrive starts where the last one left off.",
+                    "Rage persists between Overdrives, and taking damage during Overdrive now only costs half of it instead of all of it.",
+                    "Rage persists and resists damage - and Too Angry to Die: lethal damage during Overdrive instead leaves you at 1 Health, spends your Rage, ends Overdrive, and grants 2s of invulnerability.",
                 };
-                asset.RetaliationDuration = 2;
-                asset.RetaliationDamageBonus = FP.FromString("0.20");
+                asset.RageLossFraction = new[] { FP._1, FP._0_50, FP._0_50 };
                 asset.CheatDeathImmunityDuration = 2;
             });
 
@@ -125,8 +124,8 @@ namespace QuantumUser.Editor
                 asset.RankDescriptions = new[]
                 {
                     "At max Rage, weapon hits guarantee Burn.",
-                    "At max Rage, weapon hits guarantee Burn, and moving drops Burning Ground patches behind you.",
-                    "At max Rage, weapon hits guarantee Burn and you drop Burning Ground while moving - the first time you reach max Rage each activation, Inferno also detonates a radial Burn pulse around you.",
+                    "At max Rage, weapon hits guarantee Burn - and Burning enemies you kill leave a Burning Ground patch behind.",
+                    "At max Rage, weapon hits guarantee Burn and Burning kills leave Burning Ground - the first time you reach max Rage each activation, Inferno also detonates a radial Burn pulse around you.",
                 };
                 asset.BurnOnHitStacks = new byte[] { 1, 1, 1 };
                 asset.HasBurningGround = new[] { false, true, true };
@@ -135,8 +134,10 @@ namespace QuantumUser.Editor
                 asset.InfernoBurnDuration = new FP[] { 0, 0, 4 };
                 asset.InfernoBurnIntensity = new FP[] { 0, 0, 5 };
                 asset.BurningGroundPrototype = AssetDatabase.LoadAssetAtPath<EntityPrototype>(BurningGroundPrototypePath);
-                asset.BurningGroundDuration = 3;
-                asset.BurningGroundSpacing = 2;
+                asset.BurningGroundDuration = 4;
+                asset.BurningGroundRadius = 2;
+                asset.BurningGroundDamage = 4;
+                asset.BurningGroundTickInterval = FP._0_50;
 
                 if (asset.BurningGroundPrototype == null)
                 {
@@ -148,32 +149,17 @@ namespace QuantumUser.Editor
             {
                 asset.DisplayName = "Blood Debt";
                 asset.MaxRank = 3;
-                asset.Description = "Vendetta marks last longer, Shield damage counts toward them too, and eventually Vendetta heals for the full amount dealt.";
+                asset.Description = "Vendetta marks last longer, feed your Rage, and eventually heal you when consumed.";
                 asset.RankDescriptions = new[]
                 {
                     "Vendetta marks last 12s.",
-                    "Vendetta marks last 16s, and Shield damage now also marks your Vendetta target.",
-                    "Vendetta marks last 16s, Shield damage counts, and Vendetta heals for the full amount of damage dealt during the mark.",
+                    "Vendetta marks last 12s, Shield damage now also marks your attacker, and every Vendetta kill grants +2 Rage.",
+                    "Vendetta marks last 12s, Shield damage counts, Vendetta kills grant +2 Rage, and consuming a mark heals you for 60% of the damage it dealt (capped at 15% of your max Health).",
                 };
-                asset.MarkDuration = new FP[] { 12, 16, 16 };
-                asset.HealMultiplierAtMaxRank = FP._1;
-            });
-
-            BurningVengeancePassiveUpgradeData burningVengeance = CreateOrUpdate<BurningVengeancePassiveUpgradeData>($"{VendettaUpgradesFolderPath}/BurningVengeance.asset", asset =>
-            {
-                asset.DisplayName = "Burning Vengeance";
-                asset.MaxRank = 3;
-                asset.Description = "Consuming a Vendetta mark spreads Burn to nearby enemies - eventually detonating a fiery burst if the kill was already Burning.";
-                asset.RankDescriptions = new[]
-                {
-                    "Consuming a Vendetta mark spreads Burn to 2 nearby enemies within 4m.",
-                    "Consuming a Vendetta mark spreads Burn to 4 nearby enemies within 5m, more intensely.",
-                    "Consuming a Vendetta mark spreads Burn to 4 nearby enemies within 5m - if the kill was already Burning, also detonates a fiery burst (damage + Burn) around it.",
-                };
-                asset.Radius = new FP[] { 4, 5, 5 };
-                asset.BurnDuration = new FP[] { 3, 4, 4 };
-                asset.BurnIntensity = new[] { FP._0_10, FP.FromString("0.15"), FP.FromString("0.15") };
-                asset.MaxTargets = new[] { 2, 4, 4 };
+                asset.MarkDuration = new FP[] { 12, 12, 12 };
+                asset.RageOnVendettaKill = 2;
+                asset.HealMultiplierAtMaxRank = FP.FromString("0.60");
+                asset.MaxHealFractionPerKill = FP.FromString("0.15");
             });
 
             WildfirePassiveUpgradeData wildfire = CreateOrUpdate<WildfirePassiveUpgradeData>($"{FireMasteryUpgradesFolderPath}/Wildfire.asset", asset =>
@@ -184,13 +170,13 @@ namespace QuantumUser.Editor
                 asset.RankDescriptions = new[]
                 {
                     "Killing a Burning enemy spreads Burn to 2 nearby enemies within 4m.",
-                    "Killing a Burning enemy spreads Burn to 4 nearby enemies within 5m, more intensely.",
-                    "Killing a Burning enemy spreads Burn to 4 nearby enemies within 5m, propagating 75% of its own remaining Burn instead of a flat amount - a fire this strong can keep jumping.",
+                    "Killing a Burning enemy spreads a stronger Burn to 5 nearby enemies within 6m.",
+                    "Killing a Burning enemy spreads Burn to 5 nearby enemies within 6m, propagating 75% of its own remaining Burn instead of a flat amount - a fire this strong keeps jumping.",
                 };
-                asset.Radius = new FP[] { 4, 5, 5 };
+                asset.Radius = new FP[] { 4, 6, 6 };
                 asset.BurnDuration = new FP[] { 3, 4, 4 };
-                asset.BurnIntensity = new[] { FP._0_10, FP.FromString("0.15"), FP.FromString("0.15") };
-                asset.MaxTargets = new[] { 2, 4, 4 };
+                asset.BurnIntensity = new[] { FP._0_10, FP.FromString("0.18"), FP.FromString("0.18") };
+                asset.MaxTargets = new[] { 2, 5, 5 };
                 asset.RetainedFractionAtMaxRank = FP.FromString("0.75");
             });
 
@@ -203,7 +189,7 @@ namespace QuantumUser.Editor
                 {
                     "Hot Target: +10% Critical Chance against Burning enemies.",
                     "Hot Target, plus Flashpoint: critical hits against Burning enemies detonate a fiery explosion (3m radius, 50% damage, capped at 5 targets).",
-                    "Hot Target, Flashpoint, plus Cremation: Burning enemies already below a Health threshold (15% Normal/Specialist, 10% Elite) are executed outright.",
+                    "Hot Target, Flashpoint, plus Cremation: Burning enemies below a Health threshold are executed outright (15% for Filler/Normal, 8% for Specialist/Heavy). Elite and Boss can't be executed - instead you deal +25% damage to them while they're Burning and below 15% Health.",
                 };
                 asset.CriticalChanceBonusVsBurning = FP._0_10;
                 asset.ExplosionRadius = 3;
@@ -211,7 +197,9 @@ namespace QuantumUser.Editor
                 asset.ExplosionProcCooldown = 2;
                 asset.ExplosionMaxTargets = 5;
                 asset.NormalHealthThreshold = FP.FromString("0.15");
-                asset.EliteHealthThreshold = FP._0_10;
+                asset.SpecialistHealthThreshold = FP.FromString("0.08");
+                asset.EliteBossDamageThreshold = FP.FromString("0.15");
+                asset.EliteBossDamageBonus = FP._0_25;
             });
 
             RunAndGunSkillAction runAndGun = CreateOrUpdate<RunAndGunSkillAction>($"{DashUpgradesFolderPath}/RunAndGunSkillAction.asset", asset =>
@@ -257,11 +245,11 @@ namespace QuantumUser.Editor
             WireHeroSkill(new List<SkillActionData> { lastStand, fullThrottle, uncontrolledFury, ignition });
 
             WireCharacterData(passive,
-                new List<PassiveUpgradeData> { bloodDebt, burningVengeance, wildfire, flashpoint },
+                new List<PassiveUpgradeData> { bloodDebt, wildfire, flashpoint },
                 new List<SkillActionData> { runAndGun, vendettaStrike });
 
-            LogHelper.Log("MaxAscensionAssetGenerator", "Vendetta base passive + 10 Max Ascension lines authored and wired (4 Overdrive into " +
-                      "MaxHeroSkill.Actions, 4 Passive + 2 Dash into MaxCharacterData) - every list fully replaced, not appended; every " +
+            LogHelper.Log("MaxAscensionAssetGenerator", "Vendetta base passive + 9 Max Ascension lines authored and wired (4 Overdrive into " +
+                      "MaxHeroSkill.Actions, 3 Passive + 2 Dash into MaxCharacterData) - every list fully replaced, not appended; every " +
                       "per-rank value is re-set explicitly on every run. MaxHeroSkill.asset's own dead embedded sub-objects were swept.");
         }
 

@@ -1,0 +1,79 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eff16ec311a894053a15b5f73965e5f2, type: 3}
+  m_Name: SentryOverloadCoreSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.SentryOverloadCoreSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Lux/Lux_HeroSkill/Lux_HeroSkillUpgrades/SentryOverloadCoreSkillAction
+    Guid:
+      Value: 299753101746548512
+  Icon: {fileID: 0}
+  DisplayName: Overload Core
+  RankDescriptions:
+  - When your Sentry expires or is destroyed, it explodes for 100% of Sentry Skill
+    Damage.
+  - The explosion deals 175% Sentry Skill Damage, covers 30% more ground, and knocks
+    enemies back hard.
+  - 'Critical Meltdown: the explosion deals 250% Sentry Skill Damage and leaves enemies
+    Exposed, taking +20% damage for 3s.'
+  <MaxRank>k__BackingField: 3
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 0
+  Description: Losing a Sentry stops being a loss - it detonates.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  DamagePercent:
+  - RawValue: 65536
+  - RawValue: 114688
+  - RawValue: 163840
+  BaseRadius:
+    RawValue: 262144
+  RadiusMultiplier:
+  - RawValue: 65536
+  - RawValue: 85197
+  - RawValue: 85197
+  KnockbackForce:
+  - RawValue: 0
+  - RawValue: 786432
+  - RawValue: 786432
+  ExposedDamageTakenBonus:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 13107
+  ExposedDuration:
+    RawValue: 196608
+  BlastEffectPrefab: {fileID: 6350743763286976369, guid: b4b6430ff720846dda6db6869b105a09, type: 3}

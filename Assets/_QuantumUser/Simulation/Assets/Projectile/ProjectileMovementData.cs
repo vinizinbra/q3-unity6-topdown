@@ -52,6 +52,38 @@ namespace Quantum
         {
         }
 
+        // "This shot travels faster" applied to an already-solved launch - by the owner's
+        // CharacterStats.ProjectileSpeedMultiplier (see ProjectileSpawner.Spawn) or by an ascension
+        // that empowers one specific throw (Pixie's Blast Jump, see ProjectileSkillData.ApplyBombCharge).
+        //
+        // Virtual because "faster" is not the same operation for every movement. For a straight shot
+        // it is simply a bigger velocity, which is what this default does - unchanged from when both
+        // call sites multiplied the vector inline. For anything that ARCS, scaling the whole vector
+        // also scales the vertical launch speed, which lengthens the flight time as well as the
+        // horizontal speed and therefore multiplies RANGE by the square of the multiplier - the shot
+        // sails past where the player aimed. See ThrownProjectileMovementData's override.
+        public virtual void ApplySpeedMultiplier(ref ProjectileLaunch launch, FP multiplier)
+        {
+            if (multiplier <= FP._0 || multiplier == FP._1)
+                return;
+
+            launch.Velocity *= multiplier;
+        }
+
+        // Shared by every movement that flies an ARC under constant gravity (thrown, ballistic).
+        // Range for those is 2 * horizontalSpeed * verticalSpeed / gravity, so multiplying the whole
+        // vector multiplies range by the multiplier SQUARED and the shot overshoots where it was
+        // aimed. Dividing the vertical component by the same factor the horizontal is multiplied by
+        // cancels out of that product: the shot lands in exactly the same place, arrives in 1/k the
+        // time, and flies a flatter arc (apex 1/k^2) - which is what "faster" should mean for a lob.
+        protected static void ScaleArcPreservingRange(ref ProjectileLaunch launch, FP multiplier)
+        {
+            launch.Velocity = new FPVector3(
+                launch.Velocity.X * multiplier,
+                launch.Velocity.Y / multiplier,
+                launch.Velocity.Z * multiplier);
+        }
+
         // Shared by the movements that measure their free-aim fallback as ground distance rather
         // than following the pitch of the aim ray.
         protected static FPVector3 GetFlatTargetPoint(FPVector3 origin, FPVector3 direction, FP distance)

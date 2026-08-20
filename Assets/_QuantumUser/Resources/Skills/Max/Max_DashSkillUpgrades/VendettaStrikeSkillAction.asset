@@ -18,7 +18,6 @@ MonoBehaviour:
       Value: 316536704450074610
   Icon: {fileID: -1480122659, guid: 9a944adac56bb4e8dbce2f7bab4127e3, type: 3}
   DisplayName: Vendetta Strike
-  Rarity: 1
   RankDescriptions:
   - Dashing through an enemy guarantees Burn.
   - Also marks the enemy for Vendetta - refreshing the mark if it already had one,

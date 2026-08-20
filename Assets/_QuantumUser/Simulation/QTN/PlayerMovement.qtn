@@ -1,3 +1,19 @@
+// WHY this player is currently airborne - carried through OnPlayerLanded so a landing reaction can
+// discriminate. Generic and hero-agnostic; Brute's Groundbreaker is the first consumer and exposes it
+// as an authored mask (GroundbreakerUpgrade.AllowedLandingSources), so "which airborne mechanics
+// qualify" is data rather than code.
+//
+// Fall is the default and needs no writer: it's simply what "left the ground and nothing else claimed
+// responsibility" means (walking off a ledge). The other two are set at the exact moment something
+// else causes the airtime, and PlayerMovement.AirborneSource resets to Fall on landing, right after
+// the signal fires.
+enum LandingSource : Byte
+{
+    Fall     = 0,
+    Jump     = 1,
+    Launched = 2
+}
+
 component PlayerMovement
 {
     AssetRef<MovementDataAsset> MovementData;
@@ -7,13 +23,25 @@ component PlayerMovement
 
     // Updated by AutoJumpSystem whenever grounded; PlayerFallSystem respawns here on a fall.
     FPVector3 LastGroundedPosition;
+
+    // See LandingSource above. Written by AutoJumpSystem.DoJump (Jump) and
+    // DamageUtility.ApplyResolvedImpulse (Launched); reset to Fall by AutoJumpSystem on landing.
+    LandingSource AirborneSource;
 }
 
-// Fired from AutoJumpSystem's own wasGrounded->isGrounded edge (auto-hop/mantle or the manual jump
-// button) - hero-agnostic, no effect for anyone without a reaction gated on it. fallDistance is the
-// drop in LastGroundedPosition.Y between takeoff and landing (0 for a flat hop/mantle, positive for
-// a genuine fall off high ground) - AutoJumpSystem just reports it, leaving "how much counts as a
-// real fall" to whoever reacts. No current consumer (Brute's old Ground Pound trait, its original
-// consumer, was removed in the Brute Ascension refactor - see docs/brute-ascensions.md) - kept as
-// generic, hero-agnostic infrastructure for whatever reacts to a real fall next.
-signal OnPlayerLanded(EntityRef entity, FP fallDistance);
+// Fired from AutoJumpSystem's own wasGrounded->isGrounded edge (auto-hop/mantle, the manual jump
+// button, walking off a ledge, or being launched) - hero-agnostic, no effect for anyone without a
+// reaction gated on it.
+//
+// fallDistance is the drop in LastGroundedPosition.Y between takeoff and landing: 0 for a flat hop or
+// an upward mantle (it's clamped at 0), positive for a genuine fall off high ground. AutoJumpSystem
+// just reports it and leaves "how much counts as a real fall" entirely to whoever reacts - which is
+// what lets a reaction key off a configurable height threshold instead of hardcoded map tiles or
+// height levels. It is also what makes the known false auto-hop at chunk-cube seams harmless to any
+// consumer: a spurious hop reports ~0 fall distance and fails any meaningful threshold.
+//
+// source says WHY the entity was airborne (see LandingSource), so a reaction can accept or reject
+// jumps/launches/plain falls independently rather than treating all airtime alike.
+//
+// Consumer: Brute's Groundbreaker Passive Ascension (BruteGroundbreakerSystem).
+signal OnPlayerLanded(EntityRef entity, FP fallDistance, LandingSource source);

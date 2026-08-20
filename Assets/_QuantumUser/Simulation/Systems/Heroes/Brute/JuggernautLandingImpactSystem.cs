@@ -38,7 +38,10 @@ namespace Quantum
             FP damage = filter.Launched->Damage;
             FP stunChance = filter.Launched->StunChance;
             FP stunDuration = filter.Launched->StunDuration;
-            FP shockwaveRadius = filter.Launched->ShockwaveRadius;
+            // Skill Area - resolved off the OWNER (the Brute who launched this enemy), never off the
+            // enemy itself, which has no CharacterStats to read a multiplier from. Same funnel every
+            // other Juggernaut radius already uses (see JuggernautSkillData's own Discharge/Aftershock).
+            FP shockwaveRadius = filter.Launched->ShockwaveRadius * StatUtility.GetAreaMultiplier(f, owner);
             FP shockwaveDamagePercent = filter.Launched->ShockwaveDamagePercent;
             FP shockwaveStunDuration = filter.Launched->ShockwaveStunDuration;
             AssetRef<ConcussiveImpactSkillAction> source = filter.Launched->Source;

@@ -27,8 +27,20 @@ namespace Quantum
         [SerializeField, Tooltip("The sprite/rig transform actually rotated - falls back to this component's own transform if left empty.")]
         private Transform visualRoot;
 
-        [SerializeField, Tooltip("Swapped to SentryBarrel.Source's own WeaponSprite (SentryAddWeaponSkillAction.View.cs) in Initialize, if that asset authored one - falls back to a GetComponentInChildren lookup if left empty. Leave the granting asset's WeaponSprite unset to keep whatever this already shows.")]
+        [SerializeField, Tooltip("Swapped to SentryBarrel.Source's own per-slot WeaponSprite (SentryWeaponSystemsSkillAction.View.cs) in Initialize, if that asset authored one - falls back to a GetComponentInChildren lookup if left empty. Leave the granting asset's WeaponSprite unset to keep whatever this already shows.")]
         private SpriteRenderer spriteRenderer;
+
+        [SerializeField, Tooltip("Where the sentry's tentacle should grab this gun - the equivalent of a weapon's own hand-grip anchor (WeaponView.RightHandGripPosition). MUST be a child of visualRoot so it inherits the aim rotation, the left-facing flip, the idle float and the shoot punch; anything outside visualRoot is a fixed point the gun visibly swings away from. Falls back to visualRoot itself if left empty, which still tracks correctly - just at the gun's own pivot rather than a hand-authored spot on it.")]
+        private Transform gripAnchor;
+
+        [SerializeField, Tooltip("Depth nudge applied to the grip point so the tentacle tip draws IN FRONT of the gun sprite instead of z-fighting with it or disappearing behind it. visualRoot is billboarded to face the camera, so its local +Z runs away from the viewer - a NEGATIVE value pulls the hand toward the camera. Purely presentational; it never moves the gun itself.")]
+        private float gripZOffset = -0.02f;
+
+        // The transform SentryView.OnSentryBarrelSpawned actually pins the tentacle to - a runtime
+        // child of the authored anchor, built in Awake, never the authored transform itself. Keeping
+        // it separate is what lets gripZOffset exist at all: the fallback anchor is visualRoot, and
+        // nudging THAT would move the whole gun sprite rather than just the hand.
+        private Transform gripPoint;
 
         [SerializeField, Tooltip("Degrees added so the sprite's own rest orientation lines up with angle 0 (screen-right). -90 if the gun art is drawn pointing up.")]
         private float angleOffset = -90f;
@@ -96,6 +108,8 @@ namespace Quantum
             baseScale = visualRoot.localScale;
             restLocalPosition = visualRoot.localPosition;
 
+            CreateGripPoint();
+
             // Randomized once per instance (not just phase - frequency too) so 4 barrels on one
             // sentry don't bob in visible lockstep, and don't gradually drift back into sync with
             // each other over time the way a phase-only offset eventually would.
@@ -111,6 +125,33 @@ namespace Quantum
         {
             base.OnDestroy();
             QuantumEvent.UnsubscribeListener(this);
+        }
+
+        // Read by SentryView.OnSentryBarrelSpawned to pin the same-indexed tentacle leg onto this gun.
+        //
+        // Deliberately NOT this component's own root transform: that is the one QuantumEntityView
+        // writes the barrel entity's raw simulated Transform3D.Position onto every frame, and nothing
+        // else about the gun's presentation lives there. Rotation, flip, idle float and shoot punch
+        // are all applied to visualRoot (a child) in QUpdate, so a tentacle pinned to the root grabs a
+        // point the gun continuously moves away from - it reads as the tentacle pointing NEAR the gun
+        // rather than holding it. Same reason WeaponHandGripView resolves the player's hand grip
+        // through the weapon's own live transform instead of the character's.
+        public Transform GripAnchor => gripPoint != null ? gripPoint : (gripAnchor != null ? gripAnchor : visualRoot);
+
+        // Parented under the authored anchor (or visualRoot when none is authored) with identity local
+        // rotation/scale, so it inherits every bit of the gun's motion and adds only the depth nudge.
+        // worldPositionStays: false on SetParent - this is being placed BY its local offset, not
+        // preserving some world pose it never had.
+        private void CreateGripPoint()
+        {
+            Transform anchor = gripAnchor != null ? gripAnchor : visualRoot;
+
+            if (anchor == null)
+                return;
+
+            gripPoint = new GameObject("GripPoint").transform;
+            gripPoint.SetParent(anchor, false);
+            gripPoint.localPosition = new Vector3(0f, 0f, gripZOffset);
         }
 
         // WeaponSystem fires this generically for any Weapon-carrying entity, not just real
@@ -161,11 +202,16 @@ namespace Quantum
             if (barrel.Source.IsValid == false || spriteRenderer == null)
                 return;
 
-            SentryAddWeaponSkillAction source = game.Frames.Verified.FindAsset(barrel.Source);
+            // One ranked asset now arms all three Ascension slots, so the sprite is resolved per
+            // SLOT rather than per asset - see SentryWeaponSystemsSkillAction.View.cs. Slot 0 (the
+            // baseline Cannon) has no granting asset at all, which the Source.IsValid check above
+            // already filtered out.
+            SentryWeaponSystemsSkillAction source = game.Frames.Verified.FindAsset(barrel.Source);
+            Sprite weaponSprite = source.GetWeaponSprite(barrel.SlotIndex);
 
-            if (source.WeaponSprite != null)
+            if (weaponSprite != null)
             {
-                spriteRenderer.sprite = source.WeaponSprite;
+                spriteRenderer.sprite = weaponSprite;
             }
         }
 

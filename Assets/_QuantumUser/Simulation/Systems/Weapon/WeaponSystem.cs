@@ -100,6 +100,25 @@ namespace Quantum
             procs->ExplosiveSequenceInterval = 1;
             procs->ExplosiveSequenceRadius = FPMath.Max(procs->ExplosiveSequenceRadius, explosive->Radius);
             procs->ExplosiveSequenceDamageMultiplier = FPMath.Max(procs->ExplosiveSequenceDamageMultiplier, explosive->DamageMultiplier);
+
+            // Interval = 1 makes every shot ELIGIBLE; the actual frequency is this chance (see
+            // PixieExplosiveWeapon.ProcChance). Reworked from the old always-on version, which made
+            // literally every weapon hit explode - far too frequent, and the first thing the balance
+            // brief calls out for this line. ProcCooldown is 0 unless a playtest turns it on.
+            procs->ExplosiveSequenceChance = explosive->ProcChance;
+            procs->ExplosiveSequenceCooldown = explosive->ProcCooldown;
+        }
+
+        // Optional per-weapon internal cooldown between explosive procs - only ticks when something
+        // actually authored one (see WeaponPostImpactProcs.ExplosiveSequenceCooldown), so this is a
+        // failed pointer lookup and nothing else for every weapon that didn't.
+        private static void TickExplosiveProcCooldown(Frame f, EntityRef entity)
+        {
+            if (f.Unsafe.TryGetPointer<WeaponPostImpactProcs>(entity, out var procs) == false
+                || procs->ExplosiveSequenceCooldownRemaining <= FP._0)
+                return;
+
+            procs->ExplosiveSequenceCooldownRemaining -= f.DeltaTime;
         }
 
         // Every perk-mutable stat starts life as its authored value; perks then edit these in place.
@@ -225,6 +244,7 @@ namespace Quantum
             TickKillerInstinct(f, filter.Entity, f.DeltaTime);
             TickPendingEchoes(f, filter.Entity, filter.Weapon, f.DeltaTime);
             TickPendingDoubleTap(f, filter.Entity, filter.Weapon, f.DeltaTime);
+            TickExplosiveProcCooldown(f, filter.Entity);
 
             if (StatusEffectUtility.IsStunned(f, filter.Entity) == true)
                 return;
@@ -293,7 +313,7 @@ namespace Quantum
             bool isEchoEligibleShot = filter.Weapon->MagazineSize - filter.Weapon->Ammo + 1 <= 3;
 
             f.Unsafe.TryGetPointer<WeaponPostImpactProcs>(filter.Entity, out var postImpactProcs);
-            bool isExplosiveProc = ResolveExplosiveProc(postImpactProcs);
+            bool isExplosiveProc = ResolveExplosiveProc(f, postImpactProcs);
             bool isCataclysm = postImpactProcs != null && postImpactProcs->HasCataclysmRound == true && isLastBullet == true;
 
             // Read fresh off the asset every fire, not a baked stat - see Weapon.qtn - so tuning
@@ -497,7 +517,7 @@ namespace Quantum
         // expiry" - a proc'd shot that misses still consumed its place in the sequence). procs may
         // be null (no post-impact perk rolled) - a no-op, same as ExplosiveSequenceInterval == 0
         // used to mean before the split.
-        private static bool ResolveExplosiveProc(WeaponPostImpactProcs* procs)
+        private static bool ResolveExplosiveProc(Frame f, WeaponPostImpactProcs* procs)
         {
             if (procs == null || procs->ExplosiveSequenceInterval <= 0)
                 return false;
@@ -508,6 +528,26 @@ namespace Quantum
                 return false;
 
             procs->ShotsSinceExplosiveProc = 0;
+
+            // Optional internal cooldown - 0 (every perk's own value) skips this entirely.
+            if (procs->ExplosiveSequenceCooldown > FP._0)
+            {
+                if (procs->ExplosiveSequenceCooldownRemaining > FP._0)
+                    return false;
+            }
+
+            // Optional proc chance - 0 or >= 1 means "always", which is what the Explosive Sequence
+            // perk authors, so its every-Nth-shot behavior is unchanged. Pixie's Explosive Rounds
+            // ascension is the consumer that authors a real chance (see PixieExplosiveWeapon).
+            if (procs->ExplosiveSequenceChance > FP._0 && procs->ExplosiveSequenceChance < FP._1
+                && DamageUtility.RollChance(f, procs->ExplosiveSequenceChance) == false)
+                return false;
+
+            if (procs->ExplosiveSequenceCooldown > FP._0)
+            {
+                procs->ExplosiveSequenceCooldownRemaining = procs->ExplosiveSequenceCooldown;
+            }
+
             return true;
         }
 
@@ -681,17 +721,15 @@ namespace Quantum
             return false;
         }
 
-        // A real (ammo-depleted) reload takes 0 time for whoever equipped Full Throttle rank 3
-        // once Rage is genuinely maxed out - see IsInstantReloadOverdriven.
-        // Treated the same as a weapon authored with ReloadDuration <= 0: instant top-up plus the
-        // WeaponReloaded event, not a ReloadTimer that just happens to be very short.
+        // A weapon authored with ReloadDuration <= 0 gets an instant top-up plus the WeaponReloaded
+        // event, not a ReloadTimer that just happens to be very short.
         private static void StartReload(Frame f, EntityRef entity, Weapon* weapon)
         {
             weapon->TimeSinceFireReleased = FP._0;
 
             ApplyMagazineEmptiedPerks(f, entity);
 
-            if (weapon->ReloadDuration > FP._0 && IsInstantReloadOverdriven(f, entity) == false)
+            if (weapon->ReloadDuration > FP._0)
             {
                 weapon->ReloadTimer = StatUtility.GetReloadDuration(f, entity, weapon->ReloadDuration);
                 TryApplyEmergencyReload(f, entity);
@@ -755,14 +793,23 @@ namespace Quantum
             hooks->EmergencyReloadApplied = false;
         }
 
-        // Full Throttle rank 3 (Overdrive Ascension) - InstantReloadOverdrive is granted/revoked
-        // alongside FullThrottleUpgrade itself (see FullThrottleSkillAction), and the benefit only
-        // actually kicks in once Rage is genuinely maxed out, not for the whole Overdrive window -
-        // same live-condition read every other max-Rage-gated effect uses
-        // (RageOverdriveUtility.IsAtMaxRage), not a baked flag.
-        private static bool IsInstantReloadOverdriven(Frame f, EntityRef entity)
+        // Generic "top this entity's magazine back up right now, as if a reload had just completed" -
+        // the reusable primitive behind any one-shot reload grant (Max's Full Throttle rank 3 firing
+        // once on the max-Rage crossing today). Deliberately an explicit, event-driven call rather
+        // than a live condition consulted inside StartReload, so nothing can repeat it every tick.
+        // Also cancels an in-progress reload, since the magazine is full either way.
+        public static void RefillMagazine(Frame f, EntityRef entity)
         {
-            return f.Has<InstantReloadOverdrive>(entity) == true && RageOverdriveUtility.IsAtMaxRage(f, entity);
+            if (f.Unsafe.TryGetPointer<Weapon>(entity, out var weapon) == false)
+                return;
+
+            if (weapon->Ammo >= weapon->MagazineSize && weapon->ReloadTimer <= FP._0)
+                return;
+
+            weapon->ReloadTimer = FP._0;
+            weapon->Ammo = weapon->MagazineSize;
+            RevertEmergencyReload(f, entity);
+            f.Events.WeaponReloaded(entity);
         }
 
         // Firing itself is driven by Aim.Target now (auto-attack), not a held Fire input - but a

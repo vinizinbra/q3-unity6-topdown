@@ -8,9 +8,11 @@ namespace Quantum
     // SpawnVortexEffectData.ApplySingularityUpgrade), composing with Skill Area rather than replacing
     // it. Also grants Vortex the ability to interrupt caught enemies' own attacks, winding up or
     // already committed alike (EnemyActionUtility.TryInterrupt) - tier eligibility/caps are pure data
-    // here (MaxEligibleTierIndex/UnlimitedBelowOrEqualTierIndex), read generically by VortexSystem
-    // with zero hardcoded tier names. Rank 3 additionally adds a periodic stronger gravity pulse on
-    // top of the base pull (VortexGravityPulse).
+    // here (MaxEligibleTierIndex), read generically by VortexSystem with zero hardcoded tier names.
+    // Rank 3 additionally adds a periodic stronger gravity pulse on top of the base pull
+    // (VortexGravityPulse) - safe to fire several times a second against a protected enemy because
+    // re-interrupt pacing is enforced by the generic per-tier hard-CC immunity window
+    // (EnemyTierResistanceConfig.InterruptImmunityDuration), not by this line.
     //
     // Begin-only, deliberately not paired with End - same reasoning as every other "configures what
     // gets spawned" upgrade this session: re-granting fresh (idempotent) every activation and never
@@ -24,13 +26,12 @@ namespace Quantum
         // Bosses (5) are always immune, at every rank - MaxEligibleTierIndex never reaches that high.
         public byte[] MaxEligibleTierIndex = { (byte)EnemyTier.Normal, (byte)EnemyTier.Heavy, (byte)EnemyTier.Elite };
 
-        // Filler/Normal (index <= 1) are always unlimited, at every rank - only tiers above this get
-        // capped at one successful interrupt per enemy per Vortex cast (see VortexInterruptTracker).
-        public byte[] UnlimitedBelowOrEqualTierIndex = { (byte)EnemyTier.Normal, (byte)EnemyTier.Normal, (byte)EnemyTier.Normal };
-
         public bool[] HasGravityPulse = { false, false, true };
         public FP GravityPulseForceMultiplier = 3;
-        public FP GravityPulseInterval = 1;
+
+        // ~3 pulses per second, per the brief. Safe at this cadence precisely because a repeated pulse
+        // can no longer repeatedly hard-interrupt a protected enemy - see the class comment above.
+        public FP GravityPulseInterval = FP._1 / 3;
 
         public SingularitySkillAction()
         {
@@ -47,7 +48,6 @@ namespace Quantum
             upgrade->PullRadiusMultiplier = PullRadiusMultiplier[index];
             upgrade->PullForceMultiplier = PullForceMultiplier[index];
             upgrade->MaxEligibleTierIndex = MaxEligibleTierIndex[index];
-            upgrade->UnlimitedBelowOrEqualTierIndex = UnlimitedBelowOrEqualTierIndex[index];
             upgrade->HasGravityPulse = HasGravityPulse[index];
             upgrade->GravityPulseForceMultiplier = GravityPulseForceMultiplier;
             upgrade->GravityPulseInterval = GravityPulseInterval;

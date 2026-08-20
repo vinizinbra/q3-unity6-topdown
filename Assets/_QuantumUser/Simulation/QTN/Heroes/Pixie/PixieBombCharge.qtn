@@ -1,0 +1,45 @@
+// "Pixie's NEXT Bunny Bomb throw is empowered" - a single shared charge granted/refreshed on dash by
+// EITHER of her two dash lines that empower the bomb rather than doing something themselves (Hot
+// Fuse, Blast Jump). Renamed/generalized from the old Hot-Fuse-only PixieHotFuseCharge once a second
+// line needed the same "next throw only, not a timed buff on every throw" shape - one charge, one
+// timer, one consumption point, instead of two near-identical components racing to configure the
+// same throw.
+//
+// Each line owns its OWN multiplier fields rather than compounding into shared ones. That is
+// deliberate: both lines' Execute run in the same Begin phase of the same dash, in list order, so a
+// shared field would either double-apply on a re-dash or depend on which action happened to run
+// first. With separate fields each line can simply SET its own values every dash, and consumption
+// multiplies whatever is present - a build holding both gets both, in any order, idempotently.
+// A field left at 0 (its line not picked) is read as 1 - see PixieBombChargeUtility.
+//
+// Remaining ticks down every frame (PixieBombChargeSystem, same shape ExplodeOnDeathTimerSystem uses
+// for ExplodeOnDeath.Remaining) and the whole component is removed at 0, so an unused charge "cures"
+// instead of lingering forever waiting for a throw that never comes - which is also what resets every
+// field back to a clean slate.
+//
+// Consumed across two points, since damage/speed/instant-detonate have to be locked in at throw time
+// but radius is only resolved later, at the bomb's own detonation:
+// - ProjectileSkillData.Fire (throw time) - damage and projectile speed for this specific throw, plus
+//   granting the existing InstantDetonate tag if Hot Fuse rank 3 set it.
+// - AreaHitData.Detonate (this bomb's own detonation, whichever point actually resolves it - hit or
+//   planted-fuse expiry) - applies the combined radius multiplier, then removes both this component
+//   and the InstantDetonate tag, since both were only ever meant for this one throw.
+//
+// Only one Bunny Bomb can be in flight from one caster at a time (ProjectileSkillData.Tick blocks a
+// re-throw until the current one resolves), so reading/consuming this at Detonate time correctly
+// scopes to the throw that consumed it at Fire time in the overwhelming common case - a player
+// dashing again mid-flight to refresh the charge before the first bomb lands is a narrow, low-stakes
+// edge case, not specifically guarded against.
+component PixieBombCharge
+{
+    FP Remaining;
+
+    // -- Hot Fuse --
+    FP HotFuseDamageMultiplier;
+    FP HotFuseRadiusMultiplier;
+    Boolean InstantDetonate;
+
+    // -- Blast Jump --
+    FP BlastJumpRadiusMultiplier;
+    FP BlastJumpProjectileSpeedMultiplier;
+}

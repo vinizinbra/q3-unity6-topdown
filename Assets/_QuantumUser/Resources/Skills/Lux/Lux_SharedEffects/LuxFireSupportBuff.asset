@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3175397dde69c485da5ab86dc3477bdd, type: 3}
+  m_Name: LuxFireSupportBuff
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.AllyBuffEffectData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Lux/Lux_SharedEffects/LuxFireSupportBuff
+    Guid:
+      Value: 297551053167391233
+  Duration:
+    RawValue: 131072
+  MoveSpeedBonus:
+    RawValue: 0
+  FireRateBonus:
+    RawValue: 9830
+  OutgoingDamageBonus:
+    RawValue: 0
+  DamageReductionAmount:
+    RawValue: 6554
+  FlatShieldRestore:
+    RawValue: 0

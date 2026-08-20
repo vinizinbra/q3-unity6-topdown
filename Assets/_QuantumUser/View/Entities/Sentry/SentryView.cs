@@ -30,7 +30,7 @@ namespace Quantum
         [SerializeField, Tooltip("The sentry's own leg rig, if it has one (e.g. a spider-like chassis standing on ProceduralTentacleWalker2D legs). Falls back to GetComponentInChildren if left empty. Each spawned barrel's slot index pins that same-indexed tentacle onto the barrel's own Transform - see OnSentryBarrelSpawned.")]
         private ProceduralTentacleWalker2D tentacleWalker;
 
-        [SerializeField, Tooltip("Played only while this sentry actually has the Shield Area Rate aura (SentryShieldAreaRateUpgrade/SentryAddShieldAreaRateSkillAction equipped) - left stopped/inactive otherwise. Its own transform is scaled to match this sentry's Sentry.Range every frame, since that's the exact radius SentryAuraSystem uses to find allies to buff.")]
+        [SerializeField, Tooltip("Played only while this sentry actually has Fortification's Shield Battery (SentryFortificationUpgrade.AllyShieldPerSecond above 0) - left stopped/inactive otherwise. Its own transform is scaled to match the aura's real reach (Sentry.Range * SentryFortificationUpgrade.AuraRangeRatio) every frame, since that's the exact radius SentryAuraSystem uses to find allies.")]
         private ParticleSystem shieldAreaParticle;
 
         [SerializeField, Tooltip("Multiplies Sentry.Range when sizing shieldAreaParticle's own transform - tune to match however the particle's shape/size was authored. Defaults to half of Range.")]
@@ -38,7 +38,7 @@ namespace Quantum
 
         private bool shieldAreaParticleActive;
 
-        [SerializeField, Tooltip("Played only while this sentry actually has the Fire Rate aura (SentryFireRateAuraUpgrade/SentryAddFireRateSkillAction equipped) - left stopped/inactive otherwise. Its own transform is scaled to match this sentry's full Sentry.Range every frame, since that's the exact radius SentryAuraSystem uses to find allies to buff (unlike Shield Area Rate, which only reaches half of it).")]
+        [SerializeField, Tooltip("Played only while this sentry actually has Fortification's Fire Support (SentryFortificationUpgrade.FireSupportEffect assigned) - left stopped/inactive otherwise. Same aura radius as the Shield Battery ring above; both halves share one aura now.")]
         private ParticleSystem fireRateAreaParticle;
 
         [SerializeField, Tooltip("Multiplies Sentry.Range when sizing fireRateAreaParticle's own transform - tune to match however the particle's shape/size was authored. Defaults to the full Range.")]
@@ -183,12 +183,24 @@ namespace Quantum
             }
         }
 
+        // Mirrors SentryAuraSystem's own fallback - an unauthored ratio means "the full range",
+        // never a zero-radius aura.
+        private static float ResolveAuraRatio(SentryFortificationUpgrade fortification)
+        {
+            return fortification.AuraRangeRatio > FP._0 ? fortification.AuraRangeRatio.AsFloat : 1f;
+        }
+
         private void UpdateShieldAreaParticle(Frame frame)
         {
             if (shieldAreaParticle == null)
                 return;
 
-            if (frame.Has<SentryShieldAreaRateUpgrade>(_entityRef) == false)
+            // Fortification rank 2 - present only once Shield Battery is actually active on this
+            // machine (a Fortification rank 1 sentry carries the component but restores nothing).
+            bool hasShieldBattery = frame.TryGet<SentryFortificationUpgrade>(_entityRef, out var shieldFortification)
+                && shieldFortification.AllyShieldPerSecond > FP._0;
+
+            if (hasShieldBattery == false)
             {
                 if (shieldAreaParticleActive == true)
                 {
@@ -200,8 +212,11 @@ namespace Quantum
                 return;
             }
 
-            float range = frame.Get<Sentry>(_entityRef).Range.AsFloat;
-            shieldAreaParticle.transform.localScale = Vector3.one * (range * shieldAreaScaleMultiplier);
+            // Scaled to the aura's REAL reach, not the sentry's targeting range - the two differ by
+            // AuraRangeRatio, and a ring drawn at the wrong one reads as a bug to a player standing
+            // just outside it (see SentryAuraSystem, which uses exactly this radius).
+            float auraRange = frame.Get<Sentry>(_entityRef).Range.AsFloat * ResolveAuraRatio(shieldFortification);
+            shieldAreaParticle.transform.localScale = Vector3.one * (auraRange * shieldAreaScaleMultiplier);
 
             if (shieldAreaParticleActive == false)
             {
@@ -216,7 +231,11 @@ namespace Quantum
             if (fireRateAreaParticle == null)
                 return;
 
-            if (frame.Has<SentryFireRateAuraUpgrade>(_entityRef) == false)
+            // Fortification rank 3 - present only once Fire Support is actually assigned.
+            bool hasFireSupport = frame.TryGet<SentryFortificationUpgrade>(_entityRef, out var fireFortification)
+                && fireFortification.FireSupportEffect.IsValid;
+
+            if (hasFireSupport == false)
             {
                 if (fireRateAreaParticleActive == true)
                 {
@@ -228,8 +247,10 @@ namespace Quantum
                 return;
             }
 
-            float range = frame.Get<Sentry>(_entityRef).Range.AsFloat;
-            fireRateAreaParticle.transform.localScale = Vector3.one * (range * fireRateAreaScaleMultiplier);
+            // Same aura radius as the Shield Battery ring - both halves of Fortification share one
+            // aura now, rather than the old "fire rate reaches full range, shield only half".
+            float fireAuraRange = frame.Get<Sentry>(_entityRef).Range.AsFloat * ResolveAuraRatio(fireFortification);
+            fireRateAreaParticle.transform.localScale = Vector3.one * (fireAuraRange * fireRateAreaScaleMultiplier);
 
             if (fireRateAreaParticleActive == false)
             {
@@ -237,6 +258,17 @@ namespace Quantum
                 fireRateAreaParticle.Play(true);
                 fireRateAreaParticleActive = true;
             }
+        }
+
+        // The point on a spawned barrel a tentacle should actually grab. Falls back to the barrel's
+        // own root only when it has no SentryGunView at all (a barrel prefab that isn't a gun) - a
+        // SentryGunView with no gripAnchor authored already falls back to its own visualRoot, which
+        // still tracks the gun's motion, just at its pivot rather than a hand-placed spot on it.
+        private static Transform ResolveGripTarget(QuantumEntityView barrelView)
+        {
+            SentryGunView gunView = barrelView.GetComponentInChildren<SentryGunView>();
+
+            return gunView != null && gunView.GripAnchor != null ? gunView.GripAnchor : barrelView.transform;
         }
 
         private void OnSentryBarrelSpawned(EventSentryBarrelSpawned e)
@@ -262,11 +294,19 @@ namespace Quantum
 
             barrelTransforms[e.SlotIndex] = barrelView.transform;
 
-            // Grips the same-indexed tentacle leg onto this barrel's own Transform, replacing
-            // whatever fixed homeTarget/pinnedTarget it was authored with - barrels are spawned
-            // dynamically (0-4 of them, at whichever WeaponOffset each upgrade authored), so a
-            // static Inspector-wired pin can't cover every possible loadout the way a runtime one can.
-            tentacleWalker?.SetPinnedTarget(e.SlotIndex, barrelView.transform);
+            // Grips the same-indexed tentacle leg onto this barrel, replacing whatever fixed
+            // homeTarget/pinnedTarget it was authored with - barrels are spawned dynamically (0-4 of
+            // them, at whichever WeaponOffset each upgrade authored), so a static Inspector-wired pin
+            // can't cover every possible loadout the way a runtime one can.
+            //
+            // Pinned to the GUN's own grip anchor, not to barrelView.transform. That root is only ever
+            // the barrel entity's raw simulated position - SentryGunView applies the aim rotation, the
+            // left-facing flip, the idle float and the shoot punch to a CHILD (visualRoot) instead. A
+            // tentacle pinned to the root therefore reaches for a point the gun continuously moves away
+            // from, which reads as the tentacle gesturing near the gun rather than holding it. This is
+            // the sentry's counterpart to WeaponHandGripView, which resolves the player's hand grip
+            // through the weapon's own live transform for exactly the same reason.
+            tentacleWalker?.SetPinnedTarget(e.SlotIndex, ResolveGripTarget(barrelView));
         }
     }
 }

@@ -8,8 +8,8 @@ namespace QuantumUser.Editor
     using UnityEditor;
     using UnityEngine;
 
-    // Authors Brute's Protector base passive and his 8 Ascension lines (Momentum/Bone Breaker/
-    // Aftershock/Concussive Impact/Iron Presence/Guardian/Iron Shoulder/Bodyguard - see
+    // Authors Brute's Protector base passive and his 9 Ascension lines (Momentum/Bone Breaker/
+    // Aftershock/Concussive Impact/Iron Presence/Guardian/Groundbreaker/Iron Shoulder/Bodyguard - see
     // docs/brute-ascensions.md), then wires all of it into BruteCharacterData.asset and
     // BruteBaseSkill-Juggernaut.asset. Replaces the old BruteProtectorAssetGenerator.cs/
     // BruteKnockbackMasteryAssetGenerator.cs pair - same "one generator fully replaces every list it
@@ -105,16 +105,20 @@ namespace QuantumUser.Editor
                 asset.DisplayName = "Aftershock";
                 asset.Activated = false;
                 asset.MaxRank = 3;
-                asset.Description = "When Juggernaut ends, release a shockwave that grows stronger the more enemies you struck with Discharge during the cast.";
+                asset.Description = "Route through a crowd, then cash it in - Juggernaut's closing shockwave grows with every enemy you struck during the cast.";
                 asset.RankDescriptions = new[]
                 {
-                    "When Juggernaut ends, release a shockwave dealing 100% of Juggernaut Skill Damage around you.",
-                    "Juggernaut's end shockwave deals 100% of Juggernaut Skill Damage, +15% per enemy struck by Discharge during the cast (max 6 stacks), +20% radius.",
-                    "Juggernaut's end shockwave deals 100% of Juggernaut Skill Damage, +20% per enemy struck by Discharge during the cast (max 8 stacks), +20% radius - if you built up 5+ stacks, it also Stuns affected enemies for 1s.",
+                    "Juggernaut's closing shockwave deals +15% damage per enemy struck during the cast, up to 5 stacks.",
+                    "Each stack also widens the shockwave by 5%.",
+                    "Earthquake: at 5 stacks, a second shockwave lands half a second after the first.",
                 };
-                asset.RadiusMultiplier = new[] { FP._1, FP.FromString("1.20"), FP.FromString("1.20") };
-                asset.StackDamagePercent = new[] { FP._0, FP.FromString("0.15"), FP.FromString("0.20") };
-                asset.MaxStacks = new byte[] { 0, 6, 8 };
+                asset.StackDamagePercent = new[] { FP.FromString("0.15"), FP.FromString("0.15"), FP.FromString("0.15") };
+                asset.StackRadiusPercent = new[] { FP._0, FP.FromString("0.05"), FP.FromString("0.05") };
+                asset.MaxStacks = new byte[] { 5, 5, 5 };
+                asset.EarthquakeStackThreshold = new byte[] { 0, 0, 5 };
+                asset.EarthquakeDamagePercent = FP.FromString("0.60");
+                asset.EarthquakeRadiusMultiplier = FP._1;
+                asset.EarthquakeDelay = FP._0_50;
             });
 
             ConcussiveImpactSkillAction concussiveImpact = CreateOrUpdate<ConcussiveImpactSkillAction>($"{HeroSkillUpgradesFolderPath}/ConcussiveImpactSkillAction.asset", asset =>
@@ -157,16 +161,56 @@ namespace QuantumUser.Editor
             GuardianPassiveUpgradeData guardian = CreateOrUpdate<GuardianPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/Guardian.asset", asset =>
             {
                 asset.DisplayName = "Guardian";
-                asset.Description = "Grows the Protector Aura and grants allies inside it Damage Reduction - eventually reacting to protect them further the instant they're hit.";
+                asset.Description = "Grows the Protector Aura and shelters allies inside it - eventually reacting to protect them further the instant they're hit.";
                 asset.RankDescriptions = new[]
                 {
-                    "Aura radius +2m, allies inside gain 10% Damage Reduction.",
-                    "Aura radius +3m, allies inside gain 20% Damage Reduction.",
-                    "Aura radius +3m, allies inside gain 25% Damage Reduction. When an ally in the aura takes damage from an enemy, they gain +15% additional Damage Reduction for 1.5s (~4s cooldown per ally).",
+                    "Aura radius +2m; allies inside gain 10% Damage Reduction.",
+                    "Aura radius +3m; allies inside gain 15% Damage Reduction and 30% Knockback Resistance.",
+                    "The same 15% baseline - and when an ally in the aura takes an enemy hit, they gain a further +20% Damage Reduction for 2s (5s cooldown per ally).",
                 };
                 asset.MaxRank = 3;
                 asset.RadiusBonus = new[] { FP._2, FP._3, FP._3 };
-                asset.AllyDamageReductionAmount = new[] { FP.FromString("0.10"), FP.FromString("0.20"), FP.FromString("0.25") };
+
+                // Deliberately FLAT from rank 2 onward - rank 3's value is the reactive spike, not a
+                // bigger always-on number. Combined with the shared aura-DR slot (two Brutes never
+                // stack additively), this is what keeps a co-op DR stack from reaching near-immunity.
+                asset.AllyDamageReductionAmount = new[] { FP.FromString("0.10"), FP.FromString("0.15"), FP.FromString("0.15") };
+                asset.AllyKnockbackTakenMultiplier = new[] { FP._1, FP.FromString("0.70"), FP.FromString("0.70") };
+                asset.ReactiveDamageReductionAmount = FP._0_20;
+                asset.ReactiveDamageReductionDuration = FP._2;
+                asset.ReactiveCooldownPerAlly = FP._5;
+            });
+
+            GroundbreakerPassiveUpgradeData groundbreaker = CreateOrUpdate<GroundbreakerPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/Groundbreaker.asset", asset =>
+            {
+                asset.DisplayName = "Groundbreaker";
+                asset.Description = "Dropping from higher ground turns Brute's own weight into a weapon - scattering enemies, slamming them into walls, and cracking them open.";
+                asset.RankDescriptions = new[]
+                {
+                    "Heavy Landing: landing from higher ground creates a shockwave that knocks nearby enemies away.",
+                    "Crash Landing: Heavy Landing knocks enemies farther and hits harder. Enemies slammed into walls are Stunned.",
+                    "Seismic Impact: Heavy Landing has increased area and knockback. Enemies slammed into walls become Exposed and take increased damage.",
+                };
+                asset.MaxRank = 3;
+
+                // Double MovementDataAsset.MaxLedgeHeight (1) - the tallest ledge Brute can auto-mantle
+                // - so ordinary traversal can never reach it. See GroundbreakerPassiveUpgradeData.
+                asset.MinimumFallHeight = 2;
+                asset.AllowFallLandings = true;
+                asset.AllowJumpLandings = true;
+                asset.AllowLaunchedLandings = true;
+
+                asset.ImpactRadius = new[] { FP._3, FP._3, FP.FromString("4.5") };
+                asset.KnockbackForce = new FP[] { 10, 14, FP.FromString("16.5") };
+                asset.KnockbackUpwardForce = FP._2;
+                asset.ImpactDamagePercent = new[] { FP.FromString("0.20"), FP._0_50, FP.FromString("0.75") };
+                asset.MaxAffectedTier = EnemyTier.Boss;
+
+                asset.WallStunDuration = FP._1;
+                asset.WallCheckDistance = FP._2;
+
+                asset.VulnerabilityDamageTakenModifier = FP._0_25;
+                asset.VulnerabilityDuration = FP._3;
             });
 
             IronShoulderSkillAction ironShoulder = CreateOrUpdate<IronShoulderSkillAction>($"{DashUpgradesFolderPath}/IronShoulderSkillAction.asset", asset =>
@@ -196,28 +240,35 @@ namespace QuantumUser.Editor
                 asset.Description = "On Dash complete, restore Shield to nearby allies.";
                 asset.RankDescriptions = new[]
                 {
-                    "On Dash complete, restore 10% of Max Shield to allies within 6m.",
-                    "On Dash complete, restore 15% of Max Shield to allies within 8m.",
-                    "On Dash complete, restore 20% of Max Shield to allies within 8m and grant them +20% Damage Reduction for 2s.",
+                    "On Dash complete, restore 10 Shield to allies within 6m.",
+                    "On Dash complete, restore 15 Shield to allies within 8m.",
+                    "On Dash complete, restore 20 Shield to allies within 8m and grant them +20% Damage Reduction for 2s.",
                 };
                 asset.Radius = new[] { FP._6, FP._8, FP._8 };
-                asset.ShieldRestoreFraction = new[] { FP.FromString("0.10"), FP.FromString("0.15"), FP._0_20 };
+
+                // FLAT, not a percentage of the ally's own Max Shield - a percentage restore scales with
+                // the recipient and let a dash-cooldown build pump unbounded Shield into a tanky ally.
+                asset.ShieldRestore = new FP[] { 10, 15, 20 };
+                asset.CooldownPerAlly = FP.FromString("4.5");
                 asset.SelfEffectMultiplier = FP._0_50;
+                asset.DamageReductionAmount = FP._0_20;
+                asset.DamageReductionDuration = FP._2;
             });
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh(); // lets QuantumAssetObjectPostprocessor stamp Guid/Identifier on anything just created
 
             WireCharacterData(passive,
-                new List<PassiveUpgradeData> { ironPresence, guardian },
+                new List<PassiveUpgradeData> { ironPresence, guardian, groundbreaker },
                 new List<SkillActionData> { ironShoulder, bodyguard });
 
             WireJuggernautActions(new List<SkillActionData> { momentum, boneBreaker, aftershock, concussiveImpact });
 
-            LogHelper.Log("BruteAscensionAssetGenerator", "Protector passive + 8 Ascension lines authored and wired (2 Passive Upgrades " +
+            LogHelper.Log("BruteAscensionAssetGenerator", "Protector passive + 9 Ascension lines authored and wired (3 Passive Upgrades " +
                       "into BruteCharacterData.PassiveUpgrades, Iron Shoulder/Bodyguard into BruteCharacterData.DashSkillUpgrades, Momentum/Bone " +
                       "Breaker/Aftershock/Concussive Impact into BruteBaseSkill-Juggernaut.Actions as Hero Skill Ascensions - every list fully " +
-                      "replaced, not appended; every per-rank value is re-set explicitly on every run).");
+                      "replaced, not appended; every per-rank value is re-set explicitly on every run). Unstoppable was " +
+                      "removed and replaced by Groundbreaker - delete the stale Unstoppable.asset by hand.");
         }
 
         private static T CreateOrUpdate<T>(string path, System.Action<T> configure) where T : AssetObject

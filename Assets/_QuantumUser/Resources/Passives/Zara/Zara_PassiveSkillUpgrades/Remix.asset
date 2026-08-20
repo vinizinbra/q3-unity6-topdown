@@ -18,12 +18,16 @@ MonoBehaviour:
       Value: 296911590756529144
   Icon: {fileID: 0}
   DisplayName: Remix
-  Rarity: 2
   Description: Every third Resonance Pulse also applies a random status effect to
     enemies caught in it.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
   - Every third Resonance Pulse applies a random status effect to enemies hit.
-  - Remix effects become stronger and last longer.
-  - Every third Resonance Pulse applies two different random status effects to enemies
-    hit.
+  - 'Extended Mix: Remix effects become stronger and last longer, and you start the
+    next Resonance cycle with 20% Resonance.'
+  - 'Full Remix: every third Resonance Pulse applies two DIFFERENT random status
+    effects to enemies hit.'
+  RetainFractionAfterRemix:
+  - RawValue: 0
+  - RawValue: 13107
+  - RawValue: 13107

@@ -67,3 +67,5 @@ MonoBehaviour:
   ReloadSpeedBonus:
     RawValue: 19661
   MaxRageStacks: 10
+  BaseMaxExtension:
+    RawValue: 262144

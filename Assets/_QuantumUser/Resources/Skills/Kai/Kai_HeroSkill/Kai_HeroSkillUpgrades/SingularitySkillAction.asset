@@ -16,9 +16,8 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Kai/Kai_HeroSkill/Kai_HeroSkillUpgrades/SingularitySkillAction
     Guid:
       Value: 530708352601032816
-  Icon: {fileID: 0}
+  Icon: {fileID: -2050750743, guid: 167fe127f1a734214a64d3f39af97f1f, type: 3}
   DisplayName: Singularity
-  Rarity: 0
   RankDescriptions:
   - Vortex grows 30% larger and interrupts anticipated attacks from Filler and Normal
     enemies.
@@ -64,12 +63,11 @@ MonoBehaviour:
   - RawValue: 114688
   PullForceMultiplier:
   - RawValue: 65536
-  - RawValue: 85197
+  - RawValue: 78643
   - RawValue: 98304
   MaxEligibleTierIndex: 010304
-  UnlimitedBelowOrEqualTierIndex: 010101
-  HasGravityPulse: 000001
+  HasGravityPulse: 000000
   GravityPulseForceMultiplier:
-    RawValue: -65536
+    RawValue: 196608
   GravityPulseInterval:
-    RawValue: 65536
+    RawValue: 21845

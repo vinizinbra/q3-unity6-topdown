@@ -40,6 +40,19 @@ component RevengeConfig
     // all. Seeded to 0.05 (5%) by VendettaPassiveData.Apply - a decisive placeholder, not yet
     // balance-passed.
     FP EnemyMaxHealthFraction;
+
+    // Hard ceiling on ONE Vendetta kill's heal, as a fraction of Max's own MaxHealth - applied after
+    // the highest-of-three resolution above (see MaxVendettaSystem.OnEntityKilled). Exists
+    // specifically so Blood Debt rank 3 can raise HealMultiplier without turning Vendetta into an
+    // unbounded healing engine off a single big banked hit: the sustain stays real but stays capped,
+    // and both halves are editable. 0 = uncapped (never authored that way today).
+    FP MaxHealFractionPerKill;
+
+    // Blood Debt rank 2 - Rage stacks refunded when a Vendetta kill lands, feeding Max's own
+    // Overdrive uptime off his revenge loop (see MaxOverdriveReactionSystem.TryRefundRage). A plain
+    // stack count rather than a fraction, since Rage itself is a small integer counter. 0 (the base
+    // passive's default, and rank 1) grants nothing.
+    Byte RageOnVendettaKill;
 }
 
 // Unbroken Spirit upgrade - tag only, no fields. Presence means Shield damage from an active

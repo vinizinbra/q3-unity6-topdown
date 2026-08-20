@@ -48,23 +48,28 @@ component Resonance
     // wraps, same as before this field existed.
     FP RetainFraction;
 
-    // Heavy Bass rank 3 "Subwoofer" - a second, smaller delayed shockwave after the main pulse (see
-    // ZaraSubwooferPulse.qtn/ZaraSubwooferPulseSystem). 0 SubwooferDamagePercent (every other rank/
-    // unpicked) means no second shockwave is ever scheduled.
-    FP SubwooferDamagePercent;
-    FP SubwooferDelay;
-    FP SubwooferRadiusMultiplier;
-
-    // Restorative Beat rank 2+ - allies healed by the Resonance Pulse gain a short Haste (see
-    // ResonanceUtility.FirePulse). 0 duration (rank 1/unpicked) grants nothing.
-    FP HasteOnHealDuration;
-    FP HasteOnHealMultiplier;
-
-    // Restorative Beat rank 3 - portion of a Resonance Pulse heal's own excess (requested minus
-    // actually-applied) that converts into Overshield (see ShieldUtility.ApplyOvershield). 0
-    // ShieldConversionPercent (rank 1-2/unpicked) converts nothing.
-    FP ShieldConversionPercent;
+    // -- Protective Rhythm (Passive line 2/3) --
+    // Zara's defensive support path, deliberately NOT more HP healing: the Pulse grants allies a
+    // temporary Overshield and (rank 2+) a brief damage reduction. Both 0 (unpicked) grant nothing,
+    // so the base Pulse stays a plain heal + damage + shockwave.
+    //
+    // OvershieldPercentOfMaxShield is a fraction of the ALLY's own Max Shield, so it scales to
+    // whoever it lands on rather than needing per-hero tuning. DamageReduction routes through the
+    // shared REACTIVE damage-reduction slot (StatusEffectUtility.ApplyTemporaryDamageReduction), the
+    // same one Brute's Guardian rank 3 and Bodyguard rank 3 use - so the codebase's generic
+    // take-the-stronger policy arbitrates a co-op stack instead of three sources adding up.
+    FP OvershieldPercentOfMaxShield;
     FP OvershieldCapMultiplier;
+    FP DamageReductionAmount;
+    FP DamageReductionDuration;
+
+    // Remix rank 2 - fraction of Max retained specifically AFTER a Remix pulse (as opposed to
+    // RetainFraction above, which Faster Tempo rank 3 applies to EVERY pulse). Resolution when a
+    // build holds both is explicitly TAKE-THE-MAXIMUM, not additive: ResonanceUtility.AddResonance
+    // applies RetainFraction's floor first, then FirePulse raises it to this one on a Remix pulse if
+    // it happens to be higher. Documented here because "avoid accidental double-retention" is a
+    // stated requirement - there is exactly one floor, never two stacked.
+    FP RemixRetainFraction;
 
     // Remix ascension's own rank, 0 = not picked. Separate from reading RemixPool's own occupancy so
     // "picked but every pool slot happens to be empty" and "never picked" stay distinguishable if

@@ -16,25 +16,21 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/Brute_HeroSkill/Brute_HeroSkillUpgrades/AftershockSkillAction
     Guid:
       Value: 533225152632302883
-  Icon: {fileID: 0}
+  Icon: {fileID: -1247703252, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
   DisplayName: Aftershock
-  Rarity: 2
   RankDescriptions:
-  - When Juggernaut ends, release a shockwave dealing 100% of Juggernaut Skill Damage
-    around you.
-  - Juggernaut's end shockwave deals 100% of Juggernaut Skill Damage, +15% per enemy
-    struck by Discharge during the cast (max 6 stacks), +20% radius.
-  - Juggernaut's end shockwave deals 100% of Juggernaut Skill Damage, +20% per enemy
-    struck by Discharge during the cast (max 8 stacks), +20% radius - if you built
-    up 5+ stacks, it also Stuns affected enemies for 1s.
+  - Juggernaut's closing shockwave deals +15% damage per enemy struck during the
+    cast, up to 5 stacks.
+  - Each stack also widens the shockwave by 5%.
+  - 'Earthquake: at 5 stacks, a second shockwave lands half a second after the first.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: When Juggernaut ends, release a shockwave that grows stronger the
-    more enemies you struck with Discharge during the cast.
+  Description: Route through a crowd, then cash it in - Juggernaut's closing shockwave
+    grows with every enemy you struck during the cast.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -59,13 +55,20 @@ MonoBehaviour:
     ScaleByRadius: 0
     Scale: 1
     Alignment: 0
-  RadiusMultiplier:
-  - RawValue: 65536
-  - RawValue: 78643
-  - RawValue: 78643
   StackDamagePercent:
-  - RawValue: 0
   - RawValue: 9830
-  - RawValue: 13107
-  MaxStacks: 000608
+  - RawValue: 9830
+  - RawValue: 9830
+  StackRadiusPercent:
+  - RawValue: 0
+  - RawValue: 3277
+  - RawValue: 3277
+  MaxStacks: 050505
+  EarthquakeStackThreshold: 000005
+  EarthquakeDamagePercent:
+    RawValue: 39322
+  EarthquakeRadiusMultiplier:
+    RawValue: 65536
+  EarthquakeDelay:
+    RawValue: 32768
   BlastEffectPrefab: {fileID: 6350743763286976369, guid: 2dcb44456e58b4eb3823d152a70d114f, type: 3}

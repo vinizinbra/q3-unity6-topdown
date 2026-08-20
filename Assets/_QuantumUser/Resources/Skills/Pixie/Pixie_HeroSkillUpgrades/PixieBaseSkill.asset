@@ -212,6 +212,8 @@ MonoBehaviour:
       Value: 268813963301101186
   - Id:
       Value: 413478364742523529
+  - Id:
+      Value: 341122185964529345
   Icon: {fileID: -163092016, guid: 09ab27b92d44c4a54a95d6d0d0b9c281, type: 3}
   Description: Throws a bomb that deals 100 damage and knocks back enemies in a 2-unit
     blast radius.
@@ -298,7 +300,6 @@ MonoBehaviour:
       Value: 3814045670205608185
   Icon: {fileID: 1776201555, guid: b217254d41b6945b1873986186a25786, type: 3}
   DisplayName: Birthday Cake
-  Rarity: 0
   RankDescriptions: []
   <MaxRank>k__BackingField: 1
   Priority: 0
@@ -418,7 +419,6 @@ MonoBehaviour:
       Value: 2745017411806782050
   Icon: {fileID: -1580156667, guid: b217254d41b6945b1873986186a25786, type: 3}
   DisplayName: Cluster Bomb
-  Rarity: 0
   RankDescriptions: []
   <MaxRank>k__BackingField: 1
   Priority: 0

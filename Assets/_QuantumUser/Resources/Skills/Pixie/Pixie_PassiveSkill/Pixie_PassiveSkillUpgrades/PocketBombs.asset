@@ -18,7 +18,6 @@ MonoBehaviour:
       Value: 425116734721973481
   Icon: {fileID: 1236816446, guid: b217254d41b6945b1873986186a25786, type: 3}
   DisplayName: Pocket Bombs
-  Rarity: 2
   Description: Qualifying Pixie explosions have a chance to drop a stationary Mini
     Bomb, dealing a percentage of Bunny Bomb damage.
   <MaxRank>k__BackingField: 3
@@ -38,10 +37,10 @@ MonoBehaviour:
   - RawValue: 29491
   - RawValue: 36045
   Fuse:
-    RawValue: 26214
+    RawValue: 65536
   MiniBombPrototype:
     Id:
-      Value: 1349088406501725067
+      Value: 1386498296654667623
   Explosion:
     Id:
       Value: 280410021018812087

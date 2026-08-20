@@ -32,7 +32,6 @@ namespace Quantum
             mark->BonusDamageMultiplier = FP._1;
             mark->ChainReactionMultiplier = FP._0;
             mark->TierRadiusMultiplier = FP._1;
-            mark->DamageBonusVsUnstable = FP._1;
         }
     }
 }

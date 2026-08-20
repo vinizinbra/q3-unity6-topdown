@@ -24,7 +24,7 @@ namespace Quantum
 
             HitEffectUtility.ApplyInCollider(f, filter.AreaDamage->Effects, filter.Transform3D,
                 filter.PhysicsCollider3D, owner, filter.AreaDamage->Damage, source, ResolvePushDirection(ref filter), element,
-                filter.AreaDamage->TargetMask);
+                filter.AreaDamage->TargetMask, filter.Entity);
         }
 
         // Local space: rotated by the entity's own facing so a blast spawned with

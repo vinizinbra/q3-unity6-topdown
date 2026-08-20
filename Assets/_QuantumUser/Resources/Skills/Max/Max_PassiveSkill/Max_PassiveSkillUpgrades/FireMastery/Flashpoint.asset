@@ -25,8 +25,10 @@ MonoBehaviour:
   - 'Hot Target: +10% Critical Chance against Burning enemies.'
   - 'Hot Target, plus Flashpoint: critical hits against Burning enemies detonate
     a fiery explosion (3m radius, 50% damage, capped at 5 targets).'
-  - 'Hot Target, Flashpoint, plus Cremation: Burning enemies already below a Health
-    threshold (15% Normal/Specialist, 10% Elite) are executed outright.'
+  - 'Hot Target, Flashpoint, plus Cremation: Burning enemies below a Health threshold
+    are executed outright (15% for Filler/Normal, 8% for Specialist/Heavy). Elite
+    and Boss can''t be executed - instead you deal +25% damage to them while they''re
+    Burning and below 15% Health.'
   CriticalChanceBonusVsBurning:
     RawValue: 6554
   ExplosionRadius:
@@ -38,5 +40,9 @@ MonoBehaviour:
   ExplosionMaxTargets: 5
   NormalHealthThreshold:
     RawValue: 9830
-  EliteHealthThreshold:
-    RawValue: 6554
+  SpecialistHealthThreshold:
+    RawValue: 5243
+  EliteBossDamageThreshold:
+    RawValue: 9830
+  EliteBossDamageBonus:
+    RawValue: 16384

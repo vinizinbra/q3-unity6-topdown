@@ -178,16 +178,27 @@ namespace Quantum
             if (damage <= FP._0 || AftershockRadius <= FP._0)
                 return;
 
-            // Skill Area (CharacterStats.AreaRadiusMultiplier) grows the end-explosion's damage and
-            // push radius alike - 1x for anyone without it.
-            FP radius = AftershockRadius * upgrade->RadiusMultiplier * StatUtility.GetAreaMultiplier(f, owner);
+            // Rank 2's per-stack radius growth composes with Skill Area
+            // (CharacterStats.AreaRadiusMultiplier) - both grow the damage and push radius alike.
+            FP radius = AftershockRadius * (FP._1 + upgrade->StackRadiusPercent * stacks) * StatUtility.GetAreaMultiplier(f, owner);
 
             HitEffectUtility.ApplyDamageInRadius(f, position, radius, owner, damage, DamageSource.Skill, DamageTargetMask.Enemies);
             ApplyEndExplosionPush(f, owner, position, radius, AftershockPushDuration);
 
-            if (upgrade->StunsAtHighPressure == true && stacks >= 5)
+            // Rank 3 "Earthquake" - a second shockwave shortly after, scaled off the primary's own
+            // already-stack-scaled numbers so it rewards the same routing rather than being a flat
+            // extra hit. Uses the generic DelayedBlast component/system (shared with Pixie's own
+            // delayed secondary), not an Aftershock-specific timer.
+            if (upgrade->EarthquakeStackThreshold > 0 && stacks >= upgrade->EarthquakeStackThreshold)
             {
-                BruteAscensionUtility.ApplyRadialStunDamage(f, position, radius, owner, FP._0, FP._1);
+                f.AddOrGet<DelayedBlast>(owner, out var earthquake);
+                earthquake->Remaining = upgrade->EarthquakeDelay;
+                earthquake->Position = position;
+                earthquake->Damage = damage * upgrade->EarthquakeDamagePercent;
+                earthquake->Radius = radius * upgrade->EarthquakeRadiusMultiplier;
+                earthquake->StunDuration = FP._0;
+                earthquake->IsExplosion = false;
+                earthquake->IsChainedExplosion = false;
             }
 
             f.Events.JuggernautEndExploded(owner, position, radius, damage, upgrade->Source);

@@ -39,10 +39,17 @@ namespace Quantum
                 // an immediate re-trigger the instant the character touches down.
                 filter.PlayerMovement->JumpCooldownTimer = data.JumpCooldownTime;
 
-                // Generic landing hook (see PlayerMovement.qtn) - Brute's Ground Pound is the first
-                // reaction gated on this, everyone else is unaffected.
+                // Generic landing hook (see PlayerMovement.qtn) - Brute's Groundbreaker Ascension is
+                // the only reaction gated on this today, everyone else is unaffected.
+                //
+                // Clamped at 0, so landing HIGHER than takeoff (an auto-mantle up a ledge) reports no
+                // fall at all rather than a negative one.
                 FP fallDistance = FPMath.Max(FP._0, previousGroundedY - filter.KCC->Position.Y);
-                f.Signals.OnPlayerLanded(filter.Entity, fallDistance);
+                f.Signals.OnPlayerLanded(filter.Entity, fallDistance, filter.PlayerMovement->AirborneSource);
+
+                // Reset AFTER the signal - the next stretch of airtime is a plain fall unless
+                // something (a jump, a launch) explicitly claims it. See LandingSource.
+                filter.PlayerMovement->AirborneSource = LandingSource.Fall;
             }
 
             if (filter.PlayerMovement->JumpCooldownTimer > FP._0)
@@ -70,6 +77,7 @@ namespace Quantum
         private static void DoJump(Frame f, EntityRef entity, KCC* kcc, PlayerMovement* movement, MovementDataAsset data)
         {
             kcc->Jump(FPVector3.Up * data.JumpVelocity);
+            movement->AirborneSource = LandingSource.Jump;
             movement->HasAirJumped = true;
             movement->JumpCooldownTimer = data.JumpCooldownTime;
             f.Events.PlayerJumped(entity);

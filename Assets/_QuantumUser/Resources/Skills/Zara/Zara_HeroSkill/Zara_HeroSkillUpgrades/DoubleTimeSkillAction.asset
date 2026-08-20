@@ -18,7 +18,6 @@ MonoBehaviour:
       Value: 456045470573843368
   Icon: {fileID: 0}
   DisplayName: Double Time
-  Rarity: 1
   RankDescriptions:
   - Totem Beats occur every 0.85s.
   - Totem Beats occur every 0.70s.

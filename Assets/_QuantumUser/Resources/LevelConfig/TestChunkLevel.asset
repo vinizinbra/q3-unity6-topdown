@@ -46,7 +46,7 @@ MonoBehaviour:
         Value: 1447946178488252128
     - Id:
         Value: 1482437271914828619
-    Count: 10
+    Count: 20
     MustHave: 1
   - Type: 4
     Prototypes:

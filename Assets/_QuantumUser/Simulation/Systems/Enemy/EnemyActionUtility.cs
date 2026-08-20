@@ -44,6 +44,13 @@ namespace Quantum
                 if (ignoreInterruptibleFlag == false && action.InterruptibleDuringTelegraph == false)
                     return false;
 
+                // Generic hard-CC diminishing returns - consulted AFTER the phase/flag checks so a
+                // pulse that wasn't going to interrupt anything anyway never burns the target's
+                // immunity window. Filler/Normal (and anything with no tier resistance) are never
+                // gated; Boss is rejected outright. See EnemyTierResistanceConfig.
+                if (StatusEffectUtility.TryConsumeInterruptImmunity(f, entity) == false)
+                    return false;
+
                 EnemySystem.CancelWindup(f, entity, enemy, action);
 
                 Log.Debug($"[Enemy] {entity}'s telegraphed action was interrupted (Phase {enemy->Phase})");
@@ -53,6 +60,9 @@ namespace Quantum
             if (enemy->Phase == EnemyActionPhase.Active)
             {
                 if (ignoreInterruptibleFlag == false && action.InterruptibleDuringActive == false)
+                    return false;
+
+                if (StatusEffectUtility.TryConsumeInterruptImmunity(f, entity) == false)
                     return false;
 
                 EnemySystem.CancelActive(f, entity, enemy, data, action);

@@ -59,7 +59,7 @@ MonoBehaviour:
   - RawValue: 65536
   - RawValue: 65536
   - RawValue: 65536
-  KillsPerExtension: 030201
+  KillsPerExtension: 030202
   MaxExtension:
   - RawValue: 196608
   - RawValue: 327680
@@ -67,4 +67,4 @@ MonoBehaviour:
   VendettaKillExtension:
   - RawValue: 0
   - RawValue: 0
-  - RawValue: 65536
+  - RawValue: 131072

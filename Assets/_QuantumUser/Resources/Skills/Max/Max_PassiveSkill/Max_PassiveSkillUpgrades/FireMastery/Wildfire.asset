@@ -23,22 +23,22 @@ MonoBehaviour:
   <MaxRank>k__BackingField: 3
   RankDescriptions:
   - Killing a Burning enemy spreads Burn to 2 nearby enemies within 4m.
-  - Killing a Burning enemy spreads Burn to 4 nearby enemies within 5m, more intensely.
-  - Killing a Burning enemy spreads Burn to 4 nearby enemies within 5m, propagating
-    75% of its own remaining Burn instead of a flat amount - a fire this strong can
-    keep jumping.
+  - Killing a Burning enemy spreads a stronger Burn to 5 nearby enemies within 6m.
+  - Killing a Burning enemy spreads Burn to 5 nearby enemies within 6m, propagating
+    75% of its own remaining Burn instead of a flat amount - a fire this strong keeps
+    jumping.
   Radius:
   - RawValue: 262144
-  - RawValue: 327680
-  - RawValue: 327680
+  - RawValue: 393216
+  - RawValue: 393216
   BurnDuration:
   - RawValue: 196608
   - RawValue: 262144
   - RawValue: 262144
   BurnIntensity:
   - RawValue: 6554
-  - RawValue: 9830
-  - RawValue: 9830
-  MaxTargets: 020000000400000004000000
+  - RawValue: 11796
+  - RawValue: 11796
+  MaxTargets: 020000000500000005000000
   RetainedFractionAtMaxRank:
     RawValue: 49152

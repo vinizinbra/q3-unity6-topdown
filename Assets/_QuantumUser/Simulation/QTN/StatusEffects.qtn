@@ -75,6 +75,18 @@ component StatusEffects
     // by EnemySystem, PlayerMovementProcessor and WeaponSystem. Plain overwrite-on-reapply.
     FP StunRemaining;
 
+    // Generic hard-CC diminishing-returns windows (see EnemyTierResistanceConfig.
+    // TierStatusResistance.StunImmunityDuration/InterruptImmunityDuration). While > 0, a further
+    // Stun (StatusEffectUtility.ApplyStun) or action-interrupt (EnemyActionUtility.TryInterrupt) is
+    // REJECTED outright rather than refreshing - which is what stops a repeating pulse (Kai's
+    // Singularity gravity pulses, Zara's Bass Drop, Brute's Concussive Impact shockwaves) from
+    // perma-locking a protected enemy. Seeded to (the applied CC's own duration + that tier's
+    // authored immunity window) at the moment the CC lands, so the gap is measured from the end of
+    // the CC, not its start. Stays 0 forever for anything with no tier resistance (the player, any
+    // non-Enemy), reproducing the pre-existing refresh-on-reapply behavior exactly.
+    FP StunImmunityRemaining;
+    FP InterruptImmunityRemaining;
+
     // Ice+RiftMark's Deep Freeze reaction - stretches an enemy's own AttackPhase.Preparation/Telegraph windup
     // (read only where EnemySystem.UpdatePreparation decrements StateTimer), not a lockout. Mirrors
     // TimeDilationRemaining's shape (a duration + a multiplier, read at one specific timer) but
@@ -134,17 +146,21 @@ component StatusEffects
     FP DamageReductionRemaining;
     FP DamageReductionAmount;
 
-    // Guardian ascension's own dedicated pair (Brute's Protector Aura, ally-targeted - see
-    // ProtectorAuraSystem.ApplyToAllies) - deliberately NOT folded into the generic
+    // The shared CONTINUOUS-AURA damage-reduction slot (Brute's Guardian, Lux's Fire Support - any
+    // "stand inside my radius and take less damage" source). Deliberately NOT folded into the generic
     // DamageReductionRemaining/DamageReductionAmount pair above, even though the effect (a timed
-    // incoming-damage reduction) is identical - Guardian's aura refreshes every tick an ally stays
-    // in range, so sharing the generic slot with Max's Too Angry to Die would let either one
-    // silently overwrite the other's duration/amount if both ever land on the same entity in the
-    // same tick. Same 0-1 convention, same StatusEffectUtility.ApplyGuardianDamageReduction/
-    // GetGuardianDamageReductionMultiplier shape, folded into DamageUtility.ResolveDamageReduction
-    // alongside the other two (all three stack multiplicatively).
-    FP GuardianDamageReductionRemaining;
-    FP GuardianDamageReductionAmount;
+    // incoming-damage reduction) is identical - an aura refreshes every tick an ally stays in range,
+    // so sharing that slot with Max's Too Angry to Die would let either one silently overwrite the
+    // other's duration/amount if both ever land on the same entity in the same tick.
+    //
+    // Renamed off the old Guardian-specific name once a second hero's aura needed the same slot -
+    // this ONE slot is the explicit stacking policy the spec asks for: two aura sources (two Brutes,
+    // or a Brute plus a Lux Sentry) never stack additively, the STRONGEST simply wins for as long as
+    // it keeps refreshing (see StatusEffectUtility.ApplyAuraDamageReduction's take-the-stronger
+    // semantics). Same 0-1 convention as the pairs above, folded into
+    // DamageUtility.ResolveDamageReduction alongside them (all three stack multiplicatively).
+    FP AuraDamageReductionRemaining;
+    FP AuraDamageReductionAmount;
 
     // A second, independent timed DR pair, generic (not Guardian-named) since two different reactive
     // procs both write to it: Brute's Guardian ascension rank 3 (an ally in the aura losing
@@ -160,11 +176,30 @@ component StatusEffects
     FP TemporaryDamageReductionRemaining;
     FP TemporaryDamageReductionAmount;
 
-    // Guardian ascension rank 3's own per-ally cooldown, so a target getting hit repeatedly in quick
-    // succession doesn't refresh the reactive DR bonus above on every single hit - see
-    // BruteProtectorReactionSystem. Bodyguard's own proc needs no equivalent cooldown - it's already
-    // paced by the Dash's own cooldown.
-    FP GuardianReactiveCooldownRemaining;
+    // Per-ally cooldown for a REACTIVE damage-reduction proc, so a target getting hit repeatedly in
+    // quick succession doesn't refresh the bonus above on every single hit - Brute's Guardian rank 3
+    // is the only writer today (see BruteProtectorReactionSystem), but the name is generic so any
+    // future "ally took a hit -> brief DR" proc shares one pacing slot rather than each adding a
+    // field.
+    FP ReactiveDamageReductionCooldownRemaining;
+
+    // Per-ally cooldown for an ALLY-SHIELD-RESTORE proc (Brute's Bodyguard rank 1-3). Its own slot
+    // rather than sharing the reactive-DR one just above: the two are granted by different sources
+    // with different pacing, and a Brute running both shouldn't have one silently gate the other.
+    // Deliberately per-ALLY (on the receiving entity) rather than per-Brute, so a dash-cooldown build
+    // can't funnel unlimited Shield into one teammate - see docs/brute-ascensions.md.
+    FP AllyShieldRestoreCooldownRemaining;
+
+    // Generic timed OUTGOING-damage buff (Zara's Power Chord Support Beat is the first consumer) -
+    // the mirror of TemporaryWeaponDamageRemaining/Amount just below, but applying to EVERY
+    // DamageSource rather than only DamageSource.Weapon, since a tempo-support buff is meant to speed
+    // up whatever the buffed ally's own build actually does. See
+    // StatusEffectUtility.ApplyTempOutgoingDamage/GetTempOutgoingDamageMultiplier, folded into
+    // DamageUtility.ResolveOutgoingDamage before its own per-source blocks. Take-the-stronger/longer
+    // semantics on reapply, same shape as TemporaryWeaponDamage - a pulsing source re-applying every
+    // beat must never cut a stronger window short.
+    FP TempOutgoingDamageRemaining;
+    FP TempOutgoingDamageAmount;
 
     // Reduces the AFFECTED entity's own OUTGOING damage (Brute's Protector Aura Intimidate debuff) -
     // the mirror of Break, which reduces INCOMING damage instead. Read via

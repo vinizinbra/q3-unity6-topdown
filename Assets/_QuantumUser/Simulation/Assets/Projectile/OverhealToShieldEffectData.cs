@@ -24,6 +24,16 @@ namespace Quantum
                 return;
 
             FP requested = health->MaxHealth * context.Damage;
+
+            // Same per-deployable-instance healing cap ScaledHealEffectData respects (see
+            // AreaAllyBudgetUtility) - the cap governs HP restored, so the excess that converts to
+            // Shield is computed against the ALLOWED ask, not the nominal one. Once the allowance is
+            // spent this contributes nothing, HP or Shield.
+            requested = AreaAllyBudgetUtility.ConsumeHeal(f, context.SourceEntity, context.Target, requested, health->MaxHealth);
+
+            if (requested <= FP._0)
+                return;
+
             FP applied = HealUtility.ApplyFlatHeal(f, context.Target, context.Owner, health, requested);
             FP excess = requested - applied;
 

@@ -67,10 +67,15 @@ namespace Quantum
         // Player | IgnoreProjectile - a dashing player sits on IgnoreProjectile for the dash's
         // duration (see DashSkillData.Begin/End), so a plain GetPlayerLayerMask query (what every
         // enemy-attack/targeting call site above deliberately relies on to give dash its i-frames)
-        // can't see them. Pickup-style queries (currency orbs, scrap, chests) want the opposite -
-        // collecting shouldn't be interrupted by dashing through a drop - so they OR the two masks
-        // together via this instead of GetPlayerLayerMask.
-        public static int GetPickupLayerMask(Frame f)
+        // can't see them. Anything FRIENDLY to that player wants the opposite - a pickup shouldn't be
+        // missed because you dashed through it, and an ally buff shouldn't skip its own caster - so
+        // those queries OR the two masks together via this instead of GetPlayerLayerMask.
+        //
+        // Named for the property rather than for pickups (it was GetPlayerIncludingDashingLayerMask): the exclusion it
+        // undoes has nothing to do with pickups, and every friendly query hits it. Two Dash-END
+        // Ascensions did exactly that (Brute's Bodyguard, Zara's Portable Speaker) - see
+        // FindPlayersInRadiusIncludingDashing below.
+        public static int GetPlayerIncludingDashingLayerMask(Frame f)
         {
             return GetPlayerLayerMask(f) | GetIgnoreProjectileLayerMask(f);
         }
@@ -175,13 +180,21 @@ namespace Quantum
             return f.Physics3D.OverlapShape(origin, FPQuaternion.Identity, sphere, GetPlayerLayerMask(f), QueryOptions.HitAll);
         }
 
-        // Same as FindPlayersInRadius but via GetPickupLayerMask, so a dashing player still shows
-        // up - see that mask's own comment for why pickups need the broader mask while everyone
-        // else (enemy attacks/targeting) keeps using the narrower GetPlayerLayerMask one.
-        public static Physics3D.HitCollection3D FindPlayersInRadiusForPickup(Frame f, FPVector3 origin, FP radius)
+        // Same as FindPlayersInRadius but via GetPlayerIncludingDashingLayerMask, so a DASHING player
+        // still shows up - see that mask's own comment for why every friendly query needs the broader
+        // mask while everyone else (enemy attacks/targeting) keeps the narrower GetPlayerLayerMask one.
+        //
+        // Any friendly query that can coincide with a dash MUST use this, and one that fires AT dash
+        // end always coincides with it: PhysicsSystem3D runs before every user system, so the
+        // broadphase a Dash-End SkillAction queries was built while the dasher was still on
+        // IgnoreProjectile - DashSkillData.End restoring the layer moments earlier in the same tick
+        // comes too late to matter. A plain FindPlayersInRadius there silently drops the dasher every
+        // single time, which is exactly how Brute's Bodyguard and Zara's Portable Speaker both ended up
+        // never affecting their own caster.
+        public static Physics3D.HitCollection3D FindPlayersInRadiusIncludingDashing(Frame f, FPVector3 origin, FP radius)
         {
             Shape3D sphere = Shape3D.CreateSphere(radius);
-            return f.Physics3D.OverlapShape(origin, FPQuaternion.Identity, sphere, GetPickupLayerMask(f), QueryOptions.HitAll);
+            return f.Physics3D.OverlapShape(origin, FPQuaternion.Identity, sphere, GetPlayerIncludingDashingLayerMask(f), QueryOptions.HitAll);
         }
 
         // "Max aggro": a Decoy always wins over the nearest player, regardless of distance. A

@@ -16,9 +16,8 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/Max_DashSkillUpgrades/RunAndGunSkillAction
     Guid:
       Value: 377700293714812557
-  Icon: {fileID: 0}
+  Icon: {fileID: 1153697183, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
   DisplayName: Run & Gun
-  Rarity: 1
   RankDescriptions:
   - Dashing restores 50% of your magazine and grants +20% Fire Rate for 2s.
   - Dashing fully reloads your magazine, grants +30% Fire Rate for 2s, and +15% Weapon
@@ -62,9 +61,9 @@ MonoBehaviour:
   - RawValue: 65536
   - RawValue: 65536
   FireRateBonus:
-  - RawValue: 78643
-  - RawValue: 85197
-  - RawValue: 91750
+  - RawValue: 13107
+  - RawValue: 19661
+  - RawValue: 26214
   HasteDuration:
     RawValue: 131072
   WeaponDamageBonusDuration:

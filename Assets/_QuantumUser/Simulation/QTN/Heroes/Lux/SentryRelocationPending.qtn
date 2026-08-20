@@ -1,0 +1,11 @@
+// Relocation Protocol's one-tick latch, on LUX herself - which of her own Sentries was close enough
+// when the dash STARTED to be brought along. Resolved at Begin and consumed at End.
+//
+// Latching at Begin (rather than searching again at End) is what makes the mechanic read as "dash
+// while standing at your Sentry and it comes with you", instead of "dash anywhere and grab whatever
+// machine happens to be at the destination". Cleared to None on consumption, so a dash that starts
+// nowhere near a Sentry can't accidentally relocate one on a later dash.
+component SentryRelocationPending
+{
+    EntityRef Sentry;
+}

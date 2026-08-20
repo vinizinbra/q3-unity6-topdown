@@ -16,14 +16,13 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/Brute_DashSkillUpgrades/BodyguardSkillAction
     Guid:
       Value: 518122874274750699
-  Icon: {fileID: -802107416, guid: 1398529c57dc443e7a3096f4ad470a4c, type: 3}
+  Icon: {fileID: 1060707514, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
   DisplayName: Bodyguard
-  Rarity: 1
   RankDescriptions:
-  - On Dash complete, restore 10% of Max Shield to allies within 6m.
-  - On Dash complete, restore 15% of Max Shield to allies within 8m.
-  - On Dash complete, restore 20% of Max Shield to allies within 8m and grant them
-    +20% Damage Reduction for 2s.
+  - On Dash complete, restore 10 Shield to allies within 6m.
+  - On Dash complete, restore 15 Shield to allies within 8m.
+  - On Dash complete, restore 20 Shield to allies within 8m and grant them +20% Damage
+    Reduction for 2s.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 4
@@ -59,9 +58,15 @@ MonoBehaviour:
   - RawValue: 393216
   - RawValue: 524288
   - RawValue: 524288
-  ShieldRestoreFraction:
-  - RawValue: 6554
-  - RawValue: 9830
-  - RawValue: 13107
+  ShieldRestore:
+  - RawValue: 655360
+  - RawValue: 983040
+  - RawValue: 1310720
+  CooldownPerAlly:
+    RawValue: 294912
   SelfEffectMultiplier:
     RawValue: 32768
+  DamageReductionAmount:
+    RawValue: 13107
+  DamageReductionDuration:
+    RawValue: 131072

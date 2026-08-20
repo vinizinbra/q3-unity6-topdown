@@ -18,7 +18,6 @@ MonoBehaviour:
       Value: 536920649201853917
   Icon: {fileID: 0}
   DisplayName: Main Stage
-  Rarity: 2
   RankDescriptions:
   - Increase Totem Beat radius by 30%.
   - Totem grows 50% larger and lasts 2s longer.

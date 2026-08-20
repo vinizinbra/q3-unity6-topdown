@@ -38,19 +38,37 @@ component BoneBreakerUpgrade
     FP TierDamageBonus;
 }
 
-// Aftershock - absorbs the old Aftershock + Building Pressure concepts; Building Pressure becomes
-// internal state rather than its own standalone mechanic, reusing the already-existing
-// JuggernautCharge.UnitsHit (cumulative enemies actually knocked back by Discharge this whole
-// activation) as its stack count directly - no separate tracking needed, and it resets for free every
-// activation since JuggernautCharge itself is removed at End regardless of this Ascension. See
-// JuggernautSkillData.TryEndExplosion. StunsAtHighPressure (rank 3 only) stuns everyone caught in the
-// blast if at least 5 stacks were built during the cast.
+// Aftershock - Brute's primary offensive build engine, and the reason routing THROUGH a crowd before
+// ending Juggernaut is the correct play rather than an afterthought. Every enemy actually struck
+// during the channel is a stack; the closing blast scales off them.
+//
+// Stacks reuse the already-existing JuggernautCharge.UnitsHit (cumulative enemies knocked back by
+// Discharge this whole activation) directly - no separate tracking component, and it resets for free
+// every activation since JuggernautCharge itself is removed at End regardless. See
+// JuggernautSkillData.TryEndExplosion.
+//
+//  - Rank 1: StackDamagePercent per stack, up to MaxStacks.
+//  - Rank 2: StackRadiusPercent per stack on top, so a big route also widens the blast.
+//  - Rank 3 "Earthquake": at EarthquakeStackThreshold stacks or more, a SECOND shockwave lands
+//    EarthquakeDelay later (see the generic DelayedBlast component - not an Aftershock-specific
+//    mechanism).
 component AftershockUpgrade
 {
-    FP RadiusMultiplier;
     FP StackDamagePercent;
+
+    // 0 at rank 1 (damage-only stacks), authored at rank 2+.
+    FP StackRadiusPercent;
     Byte MaxStacks;
-    Boolean StunsAtHighPressure;
+
+    // 0 (ranks 1-2) disables Earthquake entirely.
+    Byte EarthquakeStackThreshold;
+
+    // Fraction of the primary Aftershock's own already-stack-scaled damage/radius, so Earthquake
+    // scales with the route that earned it rather than being a flat second hit.
+    FP EarthquakeDamagePercent;
+    FP EarthquakeRadiusMultiplier;
+    FP EarthquakeDelay;
+
     AssetRef<AftershockSkillAction> Source;
 }
 

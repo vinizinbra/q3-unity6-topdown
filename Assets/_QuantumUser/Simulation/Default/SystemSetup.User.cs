@@ -117,11 +117,12 @@
                 // Rift Mutation roster (Critical Focus, Infinite Momentum, Shield Breaker). See
                 // docs/rift-mutations.md.
                 new RiftMutationReactionSystem(),
-                // Max's Overdrive Ascension reactions - Uncontrolled Fury's per-N-kills extension plus
-                // its own separate uncapped Vendetta-kill bonus, and Last Stand rank 2's Retaliation
-                // proc. MUST run BEFORE MaxVendettaSystem just below - Uncontrolled Fury rank 3's
-                // Vendetta-kill bonus reads RevengeMark.MarkedBy on the same OnEntityKilled dispatch
-                // MaxVendettaSystem's own handler then removes the mark on. See docs/max-ascensions.md.
+                // Max's Overdrive Ascension reactions - Uncontrolled Fury's capped per-N-kills
+                // extension (Vendetta kills included), Ignition rank 2's Burning Ground drop, Blood
+                // Debt rank 2's Rage refund, and Rage's own loss-on-damage. MUST run BEFORE
+                // MaxVendettaSystem just below - two of those reactions read RevengeMark.MarkedBy on
+                // the same OnEntityKilled dispatch MaxVendettaSystem's own handler then removes the
+                // mark on. See docs/max-ascensions.md.
                 new MaxOverdriveReactionSystem(),
                 // Max's Vendetta passive - reacts to Combat.qtn's OnHealthDamageApplied/
                 // OnShieldDamageApplied/OnEntityKilled (mark creation/accumulation/consumption+heal).
@@ -131,9 +132,12 @@
                 // "needs to keep counting down regardless of anything else" reasoning
                 // ExplodeOnDeathTimerSystem's own comment gives.
                 new RevengeMarkTimeoutSystem(),
-                // Same "needs to keep counting down regardless of anything else" reasoning as
-                // RevengeMarkTimeoutSystem just above - ticks Kai's First Strike rank 3 refresh window.
-                new FirstStrikeMarkTimeoutSystem(),
+                // Kai's First Strike rank 3 - banks a one-shot bonus onto his next First Strike when
+                // he kills a First-Strike-marked target. Replaces FirstStrikeMarkTimeoutSystem (the
+                // refresh-window mechanism it ticked was removed - each enemy triggers First Strike
+                // exactly once now). Signal-driven, no ordering dependency, same shape as
+                // MaxVendettaSystem.
+                new KaiFirstStrikeSystem(),
                 // Max's Fire Mastery traits - reacts to Combat.qtn's OnCriticalHit/
                 // OnHealthDamageApplied/OnEntityKilled (Flashpoint/Cremation/Wildfire), plus its own
                 // per-tick ExplosionOnConditionalHit.CooldownRemaining ticking. Independent of
@@ -236,10 +240,15 @@
                 // Same reasoning as JuggernautDischargeCooldownSystem just above - ticks independently of
                 // whoever applied the mark (see ExplodeOnDeath).
                 new ExplodeOnDeathTimerSystem(),
-                // Same shape as ExplodeOnDeathTimerSystem just above - ticks down Pixie's Hot Fuse
-                // charge regardless of anything else, so an unused charge expires instead of lingering
-                // forever (see PixieHotFuseCharge.qtn).
-                new PixieHotFuseTimerSystem(),
+                // Same shape as ExplodeOnDeathTimerSystem just above - ticks down Pixie's shared
+                // next-Bunny-Bomb charge (Hot Fuse + Blast Jump) regardless of anything else, so an
+                // unused charge expires instead of lingering forever (see PixieBombCharge.qtn).
+                new PixieBombChargeSystem(),
+                // Generic one-shot delayed area blast - Pixie's Unstable Mixture rank 3 secondary
+                // explosion and Brute's Aftershock rank 3 "Earthquake" both schedule through it.
+                // Independent countdown, no ordering dependency, same reasoning as every other
+                // countdown system here.
+                new DelayedBlastSystem(),
                 new JuggernautLandingImpactSystem(),
                 // Also independent - drives JuggernautExplosionPush's own short kinematic move
                 // regardless of anything else going on for the enemy (see EnemySystem's own
@@ -254,12 +263,15 @@
                 // OnHealthDamageApplied/OnShieldDamageApplied, same signal-driven "no ordering
                 // dependency" shape as MaxVendettaSystem.
                 new BruteProtectorReactionSystem(),
+                // Brute's Groundbreaker ascension - reacts to the generic OnPlayerLanded signal
+                // (PlayerMovement.qtn) rather than ticking, so it has no ordering dependency of its
+                // own; placed alongside his other Protector-pool reaction, and before
+                // StatusEffectSystem for the same "applied this tick starts ticking next tick" reason
+                // every other status-applying system is.
+                new BruteGroundbreakerSystem(),
                 // Zara's Afterbeat dash ascension - no ordering dependency on anything else, same
                 // reasoning as JuggernautDischargeCooldownSystem's own placement comment.
                 new ZaraAfterbeatSystem(),
-                // Zara's Heavy Bass rank 3 "Subwoofer" - same independent-countdown shape as
-                // ZaraAfterbeatSystem just above, placed alongside it for the same reason.
-                new ZaraSubwooferPulseSystem(),
                 new SentryAuraSystem(),
                 // Drains a sentry's own Health toward 0 over its lifetime - a real hit as far as
                 // DamageUtility is concerned (resets Shield's RechargeTimer like any other), so it must

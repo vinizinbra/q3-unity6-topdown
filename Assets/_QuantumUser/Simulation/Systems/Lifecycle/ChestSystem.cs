@@ -32,7 +32,7 @@ namespace Quantum
             if (f.Global->LevelUpScreenOpen == true)
                 return; // another screen (this Chest's own, or a real level-up) is already up
 
-            var hits = EnemyMovementUtility.FindPlayersInRadiusForPickup(f, filter.Transform3D->Position, filter.Chest->PickupRadius);
+            var hits = EnemyMovementUtility.FindPlayersInRadiusIncludingDashing(f, filter.Transform3D->Position, filter.Chest->PickupRadius);
 
             for (int i = 0; i < hits.Count; i++)
             {

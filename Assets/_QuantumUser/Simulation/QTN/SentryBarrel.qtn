@@ -29,8 +29,15 @@ component SentryBarrel
     // sprites to activate, purely cosmetic (SentryBarrelSystem/WeaponSystem don't read this).
     Byte SlotIndex;
 
-    // Which SentryAddWeaponSkillAction granted this specific weapon - resolved by SentryGunView to
-    // find that asset's View-only WeaponSprite (SentryAddWeaponSkillAction.View.cs) and show the
-    // right gun art. Purely cosmetic, same as SlotIndex - nothing in simulation reads this.
-    AssetRef<SentryAddWeaponSkillAction> Source;
+    // Which SentryWeaponSystemsSkillAction granted this specific weapon - resolved by SentryGunView
+    // to find that asset's View-only per-slot WeaponSprite and show the right gun art. Purely
+    // cosmetic, same as SlotIndex - nothing in simulation reads this. Invalid for slot 0 (the baseline
+    // Cannon), which no Ascension granted.
+    AssetRef<SentryWeaponSystemsSkillAction> Source;
+
+    // This barrel's own fire cooldown multiplier as equipped, captured once at spawn. Every
+    // sentry-wide fire-rate effect (Overclock, Redline, Field Modifications, Emergency Overclock,
+    // Rapid Setup) composes against THIS baseline every tick rather than against the live value - see
+    // SentryBarrelSystem. Without it, re-applying a multiplier per tick would compound without bound.
+    FP BaseFireCooldownMultiplier;
 }

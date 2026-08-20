@@ -16,9 +16,8 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/Brute_HeroSkill/Brute_HeroSkillUpgrades/ConcussiveImpactSkillAction
     Guid:
       Value: 291462109882006022
-  Icon: {fileID: 0}
+  Icon: {fileID: 2016768158, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
   DisplayName: Concussive Impact
-  Rarity: 2
   RankDescriptions:
   - Launched enemies take 30% Juggernaut damage and are Stunned 0.75s on landing.
   - Launched enemies take 50% Juggernaut damage and are Stunned 1s on landing, and

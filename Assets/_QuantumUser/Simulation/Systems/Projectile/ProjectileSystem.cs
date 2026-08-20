@@ -224,6 +224,11 @@ namespace Quantum
             explode->Explosion = new AssetRef<AreaHitData>(projectileData.Hit.Id);
             explode->TriggersSpawnUpgrades = areaHit.TriggersSpawnUpgrades;
 
+            // This bomb was genuinely thrown and has now landed, so its delayed detonation is the same
+            // event it would have been on impact - it keeps full Cluster Bomb eligibility, unlike a
+            // bomb that was merely dropped. See ExplodeOnDestroy.IsPlantedThrow.
+            explode->IsPlantedThrow = true;
+
             f.AddOrGet<DestroyAfterTime>(filter.Entity, out var fuse);
             fuse->RemainingTime = areaHit.PlantedFuseTime;
 

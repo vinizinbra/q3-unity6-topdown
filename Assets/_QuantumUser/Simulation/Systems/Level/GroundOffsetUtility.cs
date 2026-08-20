@@ -4,9 +4,11 @@ namespace Quantum
     using Quantum.Physics3D;
 
     // Shared by SpawnedEntitySpawner (a skill/projectile-impact spawn, ground-checked right after
-    // Transform3D.Position is set) and MapGroundSettleSystem (a map-baked entity, ground-checked once
-    // it materializes at its own hand-placed position) - both need the exact same raycast/target-Y/
-    // settle-or-snap resolution against a GroundOffset, just from different trigger points.
+    // Transform3D.Position is set), MapGroundSettleSystem (a map-baked entity, ground-checked once it
+    // materializes at its own hand-placed position) and RelocationProtocolSkillAction (an entity MOVED
+    // mid-life to wherever the caster was standing, which may be mid-air) - all three need the exact
+    // same raycast/target-Y/settle-or-snap resolution against a GroundOffset, just from different
+    // trigger points.
     public static unsafe class GroundOffsetUtility
     {
         // Raycasts straight down from the entity's current XZ. Snaps immediately unless the relevant
@@ -35,9 +37,13 @@ namespace Quantum
                 return;
             }
 
-            SettlingToGround settling = default;
-            settling.TargetY = targetY;
-            f.Add(entity, settling);
+            // AddOrGet, and both fields written explicitly: this can legitimately run more than once
+            // on the same entity (a relocated sentry re-grounding at a new spot), and a plain Add
+            // would silently keep a stale TargetY from the previous settle. FallVelocity resets so a
+            // fresh drop accelerates from rest instead of inheriting the last one's speed.
+            f.AddOrGet<SettlingToGround>(entity, out var settling);
+            settling->TargetY = targetY;
+            settling->FallVelocity = FP._0;
         }
 
         // How far the entity's own collider bottom sits below its pivot - same "half-height minus

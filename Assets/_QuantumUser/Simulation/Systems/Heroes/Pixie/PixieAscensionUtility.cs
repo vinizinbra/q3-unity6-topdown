@@ -16,6 +16,20 @@ namespace Quantum
     // double-apply those multipliers.
     public static unsafe class PixieAscensionUtility
     {
+        // A PixieBombCharge field left at 0 means "the line that owns it isn't picked" - read as a
+        // neutral 1 rather than annihilating the product. Every consumption site goes through this
+        // instead of repeating the same guard, and it's what lets each dash line own its own fields
+        // (see PixieBombCharge.qtn) without either having to know the other exists.
+        public static FP Neutral(FP multiplier) => multiplier > FP._0 ? multiplier : FP._1;
+
+        // Refreshes the shared "next Bunny Bomb is empowered" window without clobbering whichever
+        // line set it first this same dash - both dash lines' Execute run in the same Begin phase, so
+        // the longer of the two windows wins.
+        public static void ExtendBombChargeWindow(PixieBombCharge* charge, FP window)
+        {
+            charge->Remaining = FPMath.Max(charge->Remaining, window);
+        }
+
         public static FP ResolveBunnyBombDamage(Frame f, EntityRef owner)
         {
             if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false || stats->CharacterData.IsValid == false)

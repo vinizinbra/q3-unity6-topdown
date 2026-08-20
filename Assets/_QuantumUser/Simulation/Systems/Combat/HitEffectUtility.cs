@@ -60,8 +60,18 @@ namespace Quantum
         // unaffected; AreaHitData.Detonate (Pixie's own bomb) is the one that passes true.
         public static void ApplyInRadius(Frame f, List<AssetRef<HitEffectData>> effects, FPVector3 center,
             FP radius, EntityRef owner, FP damage, DamageSource source, ElementType element = ElementType.Neutral,
-            DamageTargetMask targetMask = DamageTargetMask.Both, bool isExplosion = false)
+            DamageTargetMask targetMask = DamageTargetMask.Both, bool isExplosion = false,
+            bool isChainedExplosion = false)
         {
+            // Pixie's Unstable Mixture - resolved once for the whole blast, before the overlap query,
+            // so an empowered explosion is bigger for everyone caught rather than per-target. Scoped
+            // to a genuine, non-chained explosion: a chained blast is a payout, never a new link (see
+            // UnstableMixture.qtn). No-op for any other owner.
+            if (isExplosion == true && isChainedExplosion == false)
+            {
+                DemolitionMasteryUtility.ResolveExplosionEmpowerment(f, owner, center, ref damage, ref radius);
+            }
+
             Shape3D sphere = Shape3D.CreateSphere(radius);
             var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
 
@@ -115,10 +125,14 @@ namespace Quantum
         // pushDirection overrides the default radial-from-center push - see ApplyInShape; a
         // stationary area has no swept direction to fall back on, so unlike ApplyInShape this stays
         // optional and defaults to radial.
+        // sourceEntity is the area entity itself - carried through to HitEffectContext.SourceEntity so
+        // a per-deployable-instance effect (AreaAllyBudget's caps) can find the exact instance paying
+        // for it. Defaults to None; every caller that has one (AreaDamageSystem/
+        // AlternatingAreaSystem.FireBonusPulse) passes it.
         public static void ApplyInCollider(Frame f, FixedArray<AssetRef<HitEffectData>> effects, Transform3D* transform,
             PhysicsCollider3D* collider, EntityRef owner, FP damage, DamageSource source,
             FPVector3? pushDirection = null, ElementType element = ElementType.Neutral,
-            DamageTargetMask targetMask = DamageTargetMask.Both)
+            DamageTargetMask targetMask = DamageTargetMask.Both, EntityRef sourceEntity = default)
         {
             // Takes the transform and shape by value, and applies the shape's own local offset
             // relative to it - so a collider authored off-center overlaps where it actually sits.
@@ -135,6 +149,8 @@ namespace Quantum
                 if (TryBuildContext(f, hits[i].Entity, transform->Position, owner, damage, source, element, out var context,
                         pushDirection) == false)
                     continue;
+
+                context.SourceEntity = sourceEntity;
 
                 ApplyToTarget(f, effects, ref context, multiTarget: true);
             }
@@ -183,6 +199,13 @@ namespace Quantum
             DamageSource source, DamageTargetMask targetMask = DamageTargetMask.Both,
             bool isChainedExplosion = false, bool isExplosion = false)
         {
+            // Pixie's Unstable Mixture - the effects-free counterpart of ApplyInRadius's own identical
+            // hook. Same non-chained gate, same once-per-blast placement.
+            if (isExplosion == true && isChainedExplosion == false)
+            {
+                DemolitionMasteryUtility.ResolveExplosionEmpowerment(f, owner, center, ref damage, ref radius);
+            }
+
             Shape3D sphere = Shape3D.CreateSphere(radius);
             var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
 

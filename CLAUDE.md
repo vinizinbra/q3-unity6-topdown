@@ -736,6 +736,116 @@ re-verified from code alone). Auto-revive-on-secure
 (`PlayerLifeStateUtility.ReviveAllIncapacitated`, triggered from `SurvivalProgressionUtility.Tick`)
 needs no additional Editor authoring - it reuses the existing `ReviveConfig`/`BreathingAreaSecured`.
 
+## Hero Ascension Balance Pass (2026-08-20)
+
+All six heroes (Max/Pixie/Kai/Brute/Zara/Lux) were normalized to **9 Ascension lines x 3 ranks**,
+rebalanced, and - for Zara and Lux - substantially refactored. Read
+**`docs/hero-ascension-balance-pass.md`** first: it holds the architecture decisions, the deliberate
+deviations from the brief, and the list of values left open for playtesting. Per-hero detail lives in
+each hero's own doc (each ends with a dated "2026-08-20 balance pass" section);
+**`docs/lux-ascensions.md`** is new.
+
+Counts now: Max 4 Overdrive/3 Passive/2 Dash. Pixie 3/3/3 (a deliberate deviation - Hot Fuse stays a
+Dash line because its mechanic is dash-triggered; see the doc). Kai 4/3/2. Brute 4/3/2. Zara 4/3/2.
+Lux 4/3/2.
+
+**Generic primitives this pass added or generalized** - reach for these before writing anything
+hero-specific:
+
+- **Hard-CC diminishing returns**: `EnemyTierResistanceConfig.StunImmunityDuration`/
+  `InterruptImmunityDuration`/`ImmuneToHardCC` + `StatusEffects.StunImmunityRemaining`/
+  `InterruptImmunityRemaining`. `StatusEffectUtility.ApplyStun` (now returns bool) and
+  `EnemyActionUtility.TryInterrupt` REJECT rather than refresh while the window runs. Defaults:
+  Filler/Normal none, Specialist 2s, Heavy 3s, Elite 4s, Boss immune. This replaced Kai's own
+  per-vortex interrupt tracker.
+- **`WallSlamUtility.TryWallSlam`**: the shared *knockback source -> enemy movement -> valid wall impact
+  -> wall-slam effect* step, extracted verbatim from Iron Shoulder's own private version once Brute's
+  Groundbreaker needed the same reaction from a completely different source. Reports whether a wall was
+  hit AND, separately, whether the Stun genuinely LANDED (they differ under a hard-CC immunity window or
+  an `ImmuneToHardCC` tier). Any future knockback source wanting a wall reaction calls this rather than
+  writing a second wall probe. It also owns the PRESENTATION half - it raises the generic `WallSlammed`
+  event itself (wall contact point + push direction + whether the Stun landed), so every source routing
+  through it gets the shared wall-impact VFX (`EffectsManager`) and camera shake
+  (`ImpactCameraShakeListener`) with no per-source hookup; Brute's Iron Shoulder gained a wall visual it
+  never had this way.
+- **`EnemyStuckRecoveryUtility`**: safety net for an enemy a knockback drove INTO level geometry rather
+  than against it. A hard push (Iron Shoulder sets velocity to 20 u/s, Groundbreaker up to 16.5, both
+  `Override`) can move a body far enough in one physics step - into a corner of a chunk's COMPOUND
+  collider, or a chunk seam - that the solver never recovers it; Quantum 3D has no CCD. Once the
+  enemy's center is inside the geometry it can never get out on its own, because every wall check
+  `EnemyMovementUtility` steers by raycasts FROM the enemy's own position, so `EnemySystem` just drives
+  it deeper - it reads as the enemy walking into the environment and sticking. `OnEnemyKnockedBack`
+  records the (known-good) spot it was standing in and opens a 3s window on `Enemy.StuckCheckTimer`;
+  while that window is open `EnemySystem.Update` probes a half-radius sphere at the enemy's true
+  collider center against the Ground layer and, on a genuine penetration, returns it there and zeroes
+  its velocity. Deliberately a RECOVERY, not a clamp on knockback: clamping would flatten how knockback
+  feels near any wall, would have to guess at drag, and still wouldn't catch an enemy popped up and
+  OVER a wall (Discharge imparts +16 u/s upward, ~3.2 units of apex against the project's -40 gravity).
+  Costs nothing for an enemy nobody knocked around. Reach for this rather than per-source wall clamps.
+- **`LandingSource` + a 3-arg `OnPlayerLanded`**: the pre-existing generic landing signal
+  (`PlayerMovement.qtn`/`AutoJumpSystem`, dormant with no consumer since Brute's old Ground Pound was
+  removed) now also carries WHY the player was airborne - `Fall`/`Jump`/`Launched`, tracked on
+  `PlayerMovement.AirborneSource`, claimed by `AutoJumpSystem.DoJump` and
+  `DamageUtility.ApplyResolvedImpulse`, reset to `Fall` right after the signal fires. Brute's
+  Groundbreaker is the first consumer.
+- **ONE shared aura-DR slot**: `GuardianDamageReduction*` renamed to `AuraDamageReduction*`, now
+  take-the-stronger. Brute's Guardian and Lux's Fire Support both write it, so aura DR never stacks
+  additively between sources - the strongest simply wins. `TemporaryDamageReduction*` remains the
+  separate REACTIVE-proc slot (Guardian R3, Bodyguard R3, Zara's Protective Rhythm).
+- **`AreaAllyBudget` + `AreaAllyBudgetUtility`**: per-**spawned-deployable**, per-ally spend caps (HP
+  healed, cooldown reduced). Lives on the area entity, so a fresh deploy is a fresh allowance and two
+  Zaras never share one. Backs Zara's global Totem healing cap and Sound Boost's cooldown cap.
+- **`ModifyRemainingCooldownEffectData`**: generic "reduce this ally's remaining skill cooldown" hit
+  effect, budget-aware, clamped at 0, never banks. Use this instead of hero-specific cooldown code.
+- **`AllyBuffEffectData`**: generic timed ally-buff bundle (Move Speed / Fire Rate / outgoing damage /
+  DR / flat Shield, all opt-in). Shared by Zara's Support Beat, her Portable Speaker and Lux's Fire
+  Support aura.
+- **`DelayedBlast` + `DelayedBlastSystem`**: generic one-shot "go off shortly, over there" blast parked
+  on the owner. Pixie's Unstable Mixture R3 and Brute's Aftershock R3 both use it.
+- **`DespawnIntent` + `DespawnIntentUtility`**: despawn/death REASON tags, so a housekeeping removal
+  (a Sentry replaced past Lux's cap, a Speaker replaced, a Sentry relocated) doesn't fire on-death
+  effects. Absence of the component means "genuine death", so nothing had to be retrofitted.
+- **`StatusEffects.TempOutgoingDamage*`**: timed outgoing-damage buff across every `DamageSource` (the
+  Weapon-only pair already existed).
+- **`HitEffectContext.SourceEntity`**: the area entity that produced a hit, so a per-instance effect can
+  find its own instance.
+- **`WeaponSystem.RefillMagazine`**: explicit one-shot magazine refill (Max's Full Throttle R3).
+- **`WeaponPostImpactProcs.ExplosiveSequenceChance`/`ExplosiveSequenceCooldown`**: optional proc chance
+  and optional internal cooldown on the shared explosive-proc path. Both default to "off", so the
+  Explosive Sequence weapon perk is unchanged; Pixie's Explosive Rounds is the one consumer.
+- **Proc-source tagging (reused, not new)**: `isExplosion` + `isChainedExplosion` now also gate Pixie's
+  Unstable Mixture stack GAIN and SPEND - a chained blast is a payout, never a new link.
+
+Short version: all three assemblies (Simulation, View, Editor) were verified to compile cleanly against
+freshly-run codegen. Every hero's asset generator was updated (`Tools > RiftRaiders > <Hero> > Generate
+Ascension Assets`; `LuxScrapAssetGenerator` was replaced by `LuxAscensionAssetGenerator`) and **none of
+them has been run yet** - until they are, the live `.asset` files still describe the old rosters. Stale
+`.asset` files for deleted lines (Max's Burning Vengeance, Pixie's Unstable Targeting + the old Passive
+Direct Hit, Kai's Warp Wake, Zara's Heavy Bass/Restorative Beat/Healing Chorus, Lux's Efficient
+Salvage/Enhancement/Portable Cover, Brute's Unstoppable) need deleting by hand. Nothing has been
+verified in-Editor yet.
+
+**Follow-up the same day - Brute's third Passive replaced.** Brute stays at 9x3; **Unstoppable was cut
+and Groundbreaker put in its place**, so his Passive pool is now Iron Presence / Guardian /
+Groundbreaker. Groundbreaker is terrain/verticality CC - *high ground -> drop -> impact shockwave ->
+knock enemies away -> wall slam -> stun -> burst window* - reacting to the generic `OnPlayerLanded`
+signal above with a plain configurable `MinimumFallHeight` (2, deliberately double
+`MovementDataAsset.MaxLedgeHeight`) rather than anything tied to map tiles or terrain tiers, and reusing
+`WallSlamUtility` for the wall half and the pre-existing generic Rupture status for rank 3's Exposed
+window. It deliberately shares NO design space with Momentum (no generation/retention/reset, no Move
+Speed, no Juggernaut duration), and rank 3's Exposed is gated on the wall Stun genuinely landing - never
+on merely being caught in the shockwave. Files: `Groundbreaker.qtn`, `BruteGroundbreakerSystem`,
+`GroundbreakerPassiveUpgradeData`, `WallSlamUtility`, `event GroundbreakerSlammed`. View FX (all with
+working fallbacks, so nothing breaks unauthored): a radius-scaled landing burst + optional ground decal
+and a generic wall-impact spark on `EffectsManager`, plus a new `ImpactCameraShakeListener`
+(`View/Camera/`, local-player-filtered, radius-scaled landing shake) - see `docs/brute-ascensions.md`'s
+"View FX" section. Deleted with
+Unstoppable: `Unstoppable.qtn`, `BruteUnstoppableSystem`, `UnstoppablePassiveUpgradeData`,
+`BruteAscensionUtility.ResolveImpactDamageMultiplier`, and the two generic hooks that existed SOLELY for
+it - `CharacterStats.HardCcDurationMultiplier` and `StatusEffects.HardCcImmunityRemaining` (the per-tier
+hard-CC diminishing-returns row above was kept - Kai/Brute/Zara all still use it). Full writeup:
+**`docs/brute-ascensions.md`**'s own "2026-08-20 (later)" section.
+
 ## Quantum `.qtn` codegen gotcha
 
 Any time a `.qtn` file changes, Quantum's DSL codegen must run before C# referencing the new component/global fields will compile. The open Editor does this automatically. If you ever need to do this headlessly (batch mode/CI), see the "Quantum codegen gotcha" section in `docs/survival-director.md` - there's a chicken-and-egg trap if new C# and new `.qtn`-derived types land in the same pass, and a real risk in running a second headless Unity instance against a project that already has a live Editor open (check for `Temp/UnityLockfile` / a running `Unity` process first).

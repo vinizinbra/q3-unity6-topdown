@@ -33,6 +33,25 @@ namespace Quantum
             };
         }
 
+        // A lob's range is 2 * horizontalSpeed * launchVelocityY / Gravity, so scaling the WHOLE
+        // launch vector (the default) multiplies range by the multiplier SQUARED - at Blast Jump's
+        // 1.25 that is a 56% overshoot, on a Bunny Bomb whose entire range is only ~2.5 units and
+        // whose sole aiming control is where the player points. It reads as the bomb sailing past
+        // the target for the whole buff window.
+        //
+        // Speeding the shot up while keeping it landing where it was aimed means dividing the
+        // vertical launch speed by the same factor the horizontal is multiplied by: range is
+        // unchanged (the k and 1/k cancel), flight time drops to 1/k, and the apex flattens to
+        // 1/k^2. That is what "flies faster" should mean for a grenade - it arrives sooner and
+        // flatter, not further.
+        public override void ApplySpeedMultiplier(ref ProjectileLaunch launch, FP multiplier)
+        {
+            if (multiplier <= FP._0 || multiplier == FP._1)
+                return;
+
+            ScaleArcPreservingRange(ref launch, multiplier);
+        }
+
         public override void UpdateVelocity(Frame f, FPVector3 position, Projectile* projectile)
         {
             // A settled fuse (see AreaHitData.DetonateOnLevelGeometry) has already zeroed Velocity -

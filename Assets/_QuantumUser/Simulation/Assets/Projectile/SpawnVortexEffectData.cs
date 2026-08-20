@@ -83,7 +83,6 @@ namespace Quantum
 
             f.AddOrGet<VortexInterruptConfig>(spawned, out var interruptConfig);
             interruptConfig->MaxEligibleTierIndex = upgrade->MaxEligibleTierIndex;
-            interruptConfig->UnlimitedBelowOrEqualTierIndex = upgrade->UnlimitedBelowOrEqualTierIndex;
 
             if (upgrade->HasGravityPulse == true)
             {

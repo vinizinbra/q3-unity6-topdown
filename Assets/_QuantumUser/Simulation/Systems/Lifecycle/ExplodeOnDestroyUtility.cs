@@ -56,7 +56,12 @@ namespace Quantum
             // never cascade into another Pocket Bombs/ClusterBomb spawn.
             if (explode->TriggersSpawnUpgrades == true)
             {
-                FP blastRadius = explosion.Detonate(f, owner, source, element, damage, explode->SpawnDepth, transform->Position, radiusMultiplier);
+                // allowClusterBomblets: only a genuinely THROWN-then-planted bomb may cluster (see
+                // ExplodeOnDestroy.IsPlantedThrow). A dropped bomb still gets everything else this
+                // full path exists for - the OnAreaExplosionDetonated signal, Chain Reaction marking,
+                // Direct Hit's proximity bonus - it just can't multiply into more projectiles.
+                FP blastRadius = explosion.Detonate(f, owner, source, element, damage, explode->SpawnDepth,
+                    transform->Position, radiusMultiplier, allowClusterBomblets: explode->IsPlantedThrow);
 
                 // Backblast rank 3 (Pixie ascension) - granted onto this specific bomb entity, not
                 // the owner, so it never leaks onto an unrelated explosion (Bunny Bomb, a Pocket

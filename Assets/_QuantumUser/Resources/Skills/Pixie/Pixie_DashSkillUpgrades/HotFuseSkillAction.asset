@@ -18,8 +18,12 @@ MonoBehaviour:
       Value: 481991757651309151
   Icon: {fileID: -659355639, guid: b217254d41b6945b1873986186a25786, type: 3}
   DisplayName: Hot Fuse
-  Rarity: 1
-  RankDescriptions: []
+  RankDescriptions:
+  - After dashing, Pixie's next Bunny Bomb within 3s gains +30% damage.
+  - After dashing, Pixie's next Bunny Bomb within 3s gains +30% damage and +30% explosion
+    radius.
+  - After dashing, Pixie's next Bunny Bomb within 3s gains +60% damage and +30% explosion
+    radius, and detonates instantly if it directly hits an enemy.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

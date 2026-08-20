@@ -237,3 +237,100 @@ Mirror Step's rank 2 radius, Warp Wake's full numeric pass) is a decisive placeh
 balance pass, same convention as every other hero's own Ascension refactor in this codebase. Warp
 Wake's Dash Void currently reuses Kai's own Hero Skill vortex prefab rather than a dedicated one - a
 cosmetic follow-up, not a functional gap. Not yet manually verified end-to-end in-Editor.
+
+---
+
+# 2026-08-20 balance pass
+
+Kai drops from 10 lines to the target **9 lines × 3 ranks**, in the brief's preferred 4/3/2 split.
+
+## Roster now
+
+| Pool | Lines |
+|---|---|
+| Vortex (Hero Skill) | Singularity, Compression, Vortex Collapse, Void Shards |
+| Passive | Event Horizon, Undertow, First Strike |
+| Dash | Mirror Step, Phantom Strike |
+
+## What changed
+
+- **Warp Wake removed entirely** (`WarpWakeSkillAction`, `VortexRepulseOnDestroy`, the `VortexRepulsed`
+  event, `VortexSystem.TryRepulseOnDestroy` and the `EffectsManager` handler are all deleted). It was
+  the 10th line and the brief cuts it. Kai's Dash is now Mirror Step / Phantom Strike only.
+- **Singularity's per-cast interrupt tracker is gone, replaced by generic CC immunity.**
+  `VortexInterruptTracker` and `SingularityUpgrade.UnlimitedBelowOrEqualTierIndex` are deleted;
+  `VortexInterruptConfig` keeps only `MaxEligibleTierIndex` (the rank gate: which tiers this rank may
+  interrupt at all). Re-interrupt pacing is now the shared per-tier hard-CC immunity window
+  (`EnemyTierResistanceConfig.InterruptImmunityDuration`, consumed inside
+  `EnemyActionUtility.TryInterrupt`). That's strictly better: the old tracker protected only against
+  ONE vortex, not against a second Singularity, a Brute stun, or anything added later — and it is what
+  makes rank 3's faster pulses safe.
+  - `GravityPulseInterval` is now **1/3 s** (~3 pulses/second) per the brief, up from 1s.
+- **Event Horizon's control values cut hard.** It reached −80% projectile speed and −40% enemy attack
+  speed, which suppressed enemy ranged pressure almost entirely. Now authored as **absolute per-rank
+  totals** rather than bonuses subtracted from a baseline: radius 4m / 5m / 5m, projectile speed
+  ×0.65 / ×0.50 / ×0.40 (−35% / −50% / −60%), and rank 3's enemy attack speed ×0.80 (−20%). Radius is
+  floored at the field's own `BaseRadius` so a low authored rank can never shrink it.
+- **First Strike is an assassination/target-switching mechanic again.** The rank-3 "mark refreshes
+  after 5s untouched" behavior is deleted (`FirstStrikeUpgrade.RefreshWindow`,
+  `FirstStrikeMark.RemainingGrace` and `FirstStrikeMarkTimeoutSystem` all gone) — it turned the line
+  into a damage-over-time rotation against one target. **Every enemy now triggers First Strike exactly
+  once, ever.** Rank 3 instead banks a one-shot `KillEmpowerBonus` (+25%) onto the NEXT First Strike
+  when you kill a First-Strike-marked target — non-stacking (a second kill re-arms, never doubles),
+  handled by the new `KaiFirstStrikeSystem` (registered where the timeout system used to sit).
+- Compression, Vortex Collapse, Void Shards, Undertow, Mirror Step and Phantom Strike already matched
+  the brief's numbers and are unchanged. (Compression R2's `CrowdMaxCount = 8` yields exactly the
+  specified +56% cap, since `ResolveCrowdMultiplier` counts *additional* enemies.)
+
+**Playtest first:** Singularity R3's actual CC uptime against Specialist/Heavy/Elite now that the
+pulse rate tripled but each target has a 2-4s immunity window; whether Event Horizon still feels
+meaningful at −35% rather than −80%.
+
+---
+
+# 2026-08-20 — Singularity wasn't interrupting anticipated attacks
+
+Reported from testing. The Ascension's whole rank-1 promise ("interrupts anticipated attacks") was
+mostly not happening.
+
+## Cause — one timer doing two jobs
+
+`VortexSystem.Update` gated **everything** behind the pull's own pulse timer:
+
+```csharp
+if (filter.Vortex->TickTimer > FP._0) { TickTimer -= DeltaTime; return; }   // <- interrupts too
+```
+
+`KaiVortexSkill`'s authored `TickInterval` is **0.5s**, so the interrupt sweep only ran **twice per
+second**. An enemy that began its wind-up just after a pulse got a free half-second of anticipation
+before anything looked at it — longer than plenty of telegraphs, so the attack simply landed. It read
+as the Ascension not working, because most of the time it genuinely didn't.
+
+Everything else checked out: `EnemyActionUtility.TryInterrupt` handles Preparation/Telegraph correctly,
+`SingularitySkillAction.asset` is authored correctly (`MaxEligibleTierIndex` = Normal / Heavy / Elite,
+`HasGravityPulse` = false/false/true), `SpawnVortexEffectData.ApplySingularityUpgrade` does bake
+`VortexInterruptConfig` onto the spawned vortex, and the per-tier immunity gate behaves. The pull
+cadence was the only thing wrong.
+
+## Fix — two cadences, on purpose
+
+The pull still pulses on `TickInterval`. The interrupt sweep now runs **every tick**, because
+"an eligible enemy caught in the vortex can never finish a wind-up" is not something a twice-a-second
+check can express.
+
+Checking that often is safe by construction, and always was: **re-interrupt pacing is enforced per
+target** by the generic per-tier hard-CC immunity window
+(`EnemyTierResistanceConfig.InterruptImmunityDuration`, consumed inside `TryInterrupt` itself), never by
+how often a caller asks. It is the same reasoning that already lets rank 3's gravity pulse fire ~3x a
+second against a protected enemy without perma-locking it. Filler/Normal have no immunity window, so
+they are now genuinely unable to attack while caught — which is exactly what rank 1's own card text
+promises.
+
+Deliberately unchanged, all still on the **pull** cadence because they are pulse-counting mechanics:
+`Vortex.CaughtCount`, `ApplyCrowdDamageToAreaDamage`, and Compression rank 3's every-third-pulse
+`TryImplosionPulse`.
+
+Cost: a **vanilla (non-Singularity) vortex is completely unaffected** — it still does exactly one
+overlap query per pulse, via an early-out when there is no `VortexInterruptConfig` and this isn't a
+pulse tick. Only a Singularity-empowered vortex pays for the per-tick sweep, and `TryInterrupt` is a
+cheap no-op on any enemy not currently in Preparation/Telegraph/Active.

@@ -64,7 +64,7 @@ Transform:
   m_GameObject: {fileID: 1709235890584439881}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.5, y: 0, z: -0.5}
+  m_LocalPosition: {x: -0.5, y: -1, z: -0.5}
   m_LocalScale: {x: 1, y: 4, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -171,6 +171,7 @@ MonoBehaviour:
   innerCornerYaw: 270
   touchGapTolerance: 0.2
   debugLogPlacement: 0
+  generateOnEnable: 0
   colliderRoot: {fileID: 0}
   visualRoot: {fileID: 0}
 --- !u!65 &1299701383131550041
@@ -340,7 +341,7 @@ MonoBehaviour:
         X:
           RawValue: 0
         Y:
-          RawValue: 131072
+          RawValue: 65536
         Z:
           RawValue: 0
       BoxExtents:

@@ -1,33 +1,67 @@
-// Added by ScrapCollectorPassiveData.Apply at spawn (opt-in, same shape SeedShield/SeedArmor
-// already use) - carries every tunable ScrapUtility/ScrapOrbSystem read later. A Passive Ascension
-// mutates these fields directly (see the PassiveUpgradeData subclasses under LevelUp/Heroes/Lux),
-// not CharacterStats, since none of these tunables are generic hero stats - they only mean
-// anything to whoever has this component.
+// Added by ScrapCollectorPassiveData.Apply at spawn (opt-in, same shape SeedShield/SeedArmor already
+// use) - carries every tunable ScrapUtility/ScrapOrbSystem reads later. A Passive Ascension mutates
+// these fields directly (see the PassiveUpgradeData subclasses under LevelUp/Heroes/Lux), not
+// CharacterStats, since none of these tunables are generic hero stats - they only mean anything to
+// whoever has this component.
+//
+// Lives on LUX HERSELF, which is what makes every count here per-player: two Luxes have entirely
+// separate Scrap progressions, Fabrication Charges, Sentry caps and Field Modification stacks with no
+// shared state anywhere.
 component LuxScrapCollector
 {
+    // -- Base passive: Scrap Collector --
+
     // Chance (0-1) an eligible enemy kill drops a ScrapOrb - see ScrapUtility.TrySpawnDrop.
     FP DropChance;
 
-    // False by default - the base passive only drops Scrap from Normal-tier enemies and up; the
-    // Scavenger ascension raises this to also include Filler-tier kills.
+    // False by default - the base passive only drops Scrap from Normal-tier enemies and up; Scavenger
+    // rank 1 raises this to also include Filler-tier kills, at its own separate FillerDropChance.
     Boolean IncludeFillerTier;
+    FP FillerDropChance;
 
-    // Additive per-pickup bonus to the Lux-owned Sentry's MaxHealth - see
-    // ScrapUtility.ApplyToOwnedSentry. Zero (the base passive's default) means no effect; only the
-    // Enhacement ascension raises this above zero.
-    FP MachineHealthBonusPerPickup;
-
-    // Flat cooldown reduction (seconds) applied to the Hero Skill on every Scrap pickup - see
-    // ScrapUtility.Grant/SkillSystem.ReduceCooldown. Zero (the base passive's default) means no
-    // effect; only the Rapid Recycling ascension raises this above zero. Not the base passive's own
-    // payoff - see ScrapStacks/StacksRequired below for that.
-    FP CooldownReductionPerPickup;
+    // Scavenger rank 3 "Jackpot" - (byte)EnemyTier at or above which a kill drops Scrap
+    // unconditionally (no chance roll), and how many orbs it drops. 0 count = not equipped. Boss is
+    // configured separately via BossGuaranteedScrap so it can be tuned without touching the rest.
+    Byte GuaranteedDropTierIndex;
+    Byte GuaranteedDropCount;
+    Byte BossGuaranteedScrap;
 
     // The base passive's real payoff: every pickup increments this (held at StacksRequired, not
-    // overflowed, once reached). Reaching StacksRequired marks the Hero Skill's next cast free via
-    // SkillSystem.GrantFreeCast - but this only resets to 0 once that free cast is actually spent
-    // (ScrapUtility.OnFreeCastConsumed, fired off SkillSystem's OnFreeCastUsed signal), not the
-    // instant the threshold is reached.
+    // overflowed, once reached). Reaching StacksRequired grants a Fabrication Charge - the Hero
+    // Skill's next cast is free regardless of its remaining cooldown, via SkillSystem.GrantFreeCast -
+    // but this only resets to 0 once that free cast is actually SPENT (ScrapUtility.OnFreeCastConsumed,
+    // fired off SkillSystem's OnFreeCastUsed signal), not the instant the threshold is reached. That,
+    // plus GrantFreeCast's own no-op-if-already-pending, is what enforces "maximum 1 stored
+    // Fabrication Charge".
     Byte ScrapStacks;
     Byte StacksRequired;
+
+    // How many Sentries this Lux may have deployed at once. Deploying past it silently retires her
+    // oldest (DespawnIntent reason Replaced, so Overload Core does NOT fire for it) rather than
+    // refusing the cast - see SpawnSentrySkillAction. The hard stop on a Sentry -> kill -> Scrap ->
+    // Sentry runaway.
+    Byte MaxActiveSentries;
+
+    // -- Rapid Recycling --
+
+    // Flat cooldown reduction (seconds) applied to the Hero Skill on every Scrap pickup. 0 (the base
+    // passive's default) means the ascension hasn't been taken.
+    FP CooldownReductionPerPickup;
+
+    // Rank 3 "Instant Assembly" - an additional one-off reduction applied at the moment a Fabrication
+    // Charge is actually earned, on top of the per-pickup amount. 0 = not equipped.
+    FP CooldownReductionOnCharge;
+
+    // -- Field Modifications --
+    // Collecting Scrap while she owns an active Sentry powers THAT Sentry up for the rest of its life
+    // (see SentryModifications, which lives on the sentry itself - so stacks are per-machine and die
+    // with it, exactly as specified). 0 MaxStacks = the ascension hasn't been taken.
+    FP FieldModDamagePerStack;
+    FP FieldModFireRatePerStack;
+    Byte FieldModMaxStacks;
+
+    // Rank 3 "MK II" - at max stacks the Sentry's primary Cannon is swapped for this weapon (a Twin
+    // Cannon). A plain WeaponDataAsset swap on the existing slot-0 barrel via WeaponSystem.Equip, NOT
+    // a second turret implementation. Invalid = not equipped.
+    AssetRef<WeaponDataAsset> MkIIWeapon;
 }
