@@ -75,8 +75,8 @@ namespace QuantumUser.Editor
                 asset.Description = "Vortex grows larger, pulls harder, and interrupts enemies' telegraphed attacks.";
                 asset.RankDescriptions = new[]
                 {
-                    "Vortex grows 30% larger and interrupts anticipated attacks from Filler and Normal enemies.",
-                    "Vortex grows larger and pulls harder. It can now interrupt anticipated attacks from Specialist and Heavy enemies.",
+                    "Vortex grows 30% larger and interrupts anticipated attacks from enemies up to Normal tier.",
+                    "Vortex grows larger and pulls harder, interrupting anticipated attacks from enemies up to Heavy tier.",
                     "Vortex becomes a Singularity, periodically crushing enemies toward its core and interrupting anticipated attacks from enemies up to Elite tier.",
                 };
                 asset.PullRadiusMultiplier = new[] { FP.FromString("1.30"), FP.FromString("1.50"), FP.FromString("1.75") };
@@ -100,8 +100,8 @@ namespace QuantumUser.Editor
                 asset.RankDescriptions = new[]
                 {
                     "Vortex damages trapped enemies every 0.5s.",
-                    "Vortex deals 8% more damage for each additional trapped enemy, up to +56%.",
-                    "Every third Vortex pulse creates a powerful implosion at its core.",
+                    "Vortex damages trapped enemies every 0.5s, dealing 8% more per additional enemy trapped, up to +56%.",
+                    "Vortex damages trapped enemies every 0.5s, scaling with how many are trapped. Every third pulse creates a powerful implosion at its core.",
                 };
                 asset.PulseDamagePercent = FP._0_20;
                 asset.PulseTickInterval = FP._0_50;
@@ -122,7 +122,7 @@ namespace QuantumUser.Editor
                 asset.RankDescriptions = new[]
                 {
                     "When Vortex ends, it collapses and deals heavy damage around its center.",
-                    "Vortex Collapse deals 200% Skill Damage and has a larger blast radius.",
+                    "When Vortex ends, it collapses for 200% Skill Damage in a larger blast.",
                     "Before collapsing, Vortex violently pulls enemies into its core, then detonates for massive damage.",
                 };
                 asset.DamagePercent = new[] { FP._1_50, FP._2, FP.FromString("2.50") };
@@ -139,7 +139,7 @@ namespace QuantumUser.Editor
                 asset.RankDescriptions = new[]
                 {
                     "Vortex periodically fires a homing Void Shard at a nearby enemy.",
-                    "Void Shards fire faster, travel farther, deal increased damage, and pierce through 2 enemies.",
+                    "Vortex fires homing Void Shards more often, travelling farther, hitting harder and piercing 2 enemies.",
                     "Vortex launches two powerful Void Shards with every volley, each piercing through 3 enemies.",
                 };
                 asset.DamagePercent = new[] { FP.FromString("0.30"), FP.FromString("0.40"), FP.FromString("0.45") };
@@ -176,8 +176,8 @@ namespace QuantumUser.Editor
                 asset.RankDescriptions = new[]
                 {
                     "Weapon hits pull enemies toward their nearest ally.",
-                    "Undertow pulls enemies together with much greater force.",
-                    "Enemies pulled by Undertow become Bound for 2s and take 20% increased damage from Kai.",
+                    "Weapon hits pull enemies toward their nearest ally with much greater force.",
+                    "Weapon hits pull enemies toward their nearest ally, Binding them for 2s and making them take 20% more damage from you.",
                 };
                 asset.PullForce = new[] { FP._3, FP._6, FP._6 };
                 asset.PullDuration = new[] { FP.FromString("0.2"), FP.FromString("0.2"), FP.FromString("0.2") };
@@ -195,7 +195,7 @@ namespace QuantumUser.Editor
                 {
                     "Your first hit against an enemy deals 40% bonus damage.",
                     "Your first hit against an enemy deals 70% bonus damage.",
-                    "First Strike deals 100% bonus damage, and killing a First Strike target empowers your next one by a further 25%.",
+                    "Your first hit against an enemy deals 100% bonus damage. Killing that target empowers your next first hit by a further 25%.",
                 };
                 asset.DamageMultiplierBonus = new[] { FP.FromString("0.40"), FP.FromString("0.70"), FP._1 };
                 asset.KillEmpowerBonus = new[] { FP._0, FP._0, FP._0_25 };
@@ -209,8 +209,8 @@ namespace QuantumUser.Editor
                 asset.RankDescriptions = new[]
                 {
                     "Dashing reflects nearby enemy projectiles back toward their attackers.",
-                    "Reflect projectiles from farther away and increase their reflected damage.",
-                    "Reflecting projectiles during Dash reduces Vortex cooldown by 0.5s each, up to 2s per Dash.",
+                    "Dashing reflects enemy projectiles from farther away and increases their reflected damage.",
+                    "Dashing reflects nearby enemy projectiles back at their attackers. Each reflect cuts 0.5s off Vortex's cooldown, up to 2s per dash.",
                 };
                 asset.Radius = new[] { FP._3, FP.FromString("4.50"), FP.FromString("4.50") };
                 asset.ReflectedDamageMultiplier = new[] { FP._1, FP._1_50, FP._1_50 };

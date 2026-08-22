@@ -11,8 +11,8 @@ GameObject:
   - component: {fileID: 6401525507235055035}
   - component: {fileID: 9206941670624691104}
   - component: {fileID: -2502961045244918138}
-  - component: {fileID: 3777915859411849480}
   - component: {fileID: 1373866797397224936}
+  - component: {fileID: 2903964948913411594}
   m_Layer: 0
   m_Name: BeamGun
   m_TagString: Untagged
@@ -119,7 +119,11 @@ MonoBehaviour:
     upOffset: {x: 0.2, y: 0.3}
     downOffset: {x: 0.1, y: 0.4}
     rightHandGrip: {x: 0.25, y: -0.5, z: -0.05}
+    rightHandGripRotation: {x: 0, y: 0, z: 0}
+    rightHandGripScale: {x: 1, y: 1, z: 1}
     leftHandGrip: {x: 1.38, y: -0.21, z: -0.05}
+    leftHandGripRotation: {x: 0, y: 0, z: 0}
+    leftHandGripScale: {x: 1, y: 1, z: 1}
     recoilKickDistance: 0
     recoilRotationKick: 5
     recoilDuration: 0.2
@@ -127,24 +131,31 @@ MonoBehaviour:
     recoilAsymmetry: 0
     knockbackDistance: 0.1
     knockbackScalePunch: 0.05
+    shakePositionHead:
+      Strength: {x: 0, y: 0.04, z: 0}
+      Duration: 0.1
+      Frequency: 20
+    shakeRotationBody:
+      Strength: {x: -6, y: 0, z: 0}
+      Duration: 0.1
+      Frequency: 20
+    shakeRotationHead:
+      Strength: {x: 0, y: 0, z: 0}
+      Duration: 0.1
+      Frequency: 20
+    shakeScaleBody:
+      Strength: {x: 0.06, y: -0.08, z: 0.06}
+      Duration: 0.08
+      Frequency: 20
+    shakeScaleHead:
+      Strength: {x: 0, y: 0, z: 0}
+      Duration: 0.1
+      Frequency: 20
+  character: {fileID: 0}
   muzzleParticle: {fileID: 1999947104554364320}
-  tracerPrefab: {fileID: 3777915859411849480}
---- !u!114 &3777915859411849480
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8089491252618662435}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 96d4444c2ab424d8db0e927f265ddd29, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Quantum.WeaponTracerView
-  line: {fileID: 1373866797397224936}
-  duration: 1
-  beginParticle: {fileID: 5846248286874490523}
-  endParticle: {fileID: 4355944354714430305}
+  tracerPrefab: {fileID: 0}
+  beamParticle: {fileID: 0}
+  beamStopGrace: 0.15
 --- !u!120 &1373866797397224936
 LineRenderer:
   serializedVersion: 3
@@ -255,6 +266,28 @@ LineRenderer:
   m_UseWorldSpace: 1
   m_Loop: 0
   m_ApplyActiveColorSpace: 1
+--- !u!114 &2903964948913411594
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8089491252618662435}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0affdcde59bf64170955595d71748097, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Quantum.LineRendererHitscanView
+  _playerRef:
+    _index: 0
+  initialized: 0
+  executeOnlyOnLocal: 0
+  isLocal: 0
+  lineTemplate: {fileID: 1373866797397224936}
+  muzzleParticleTemplate: {fileID: 5846248286874490523}
+  hitParticleTemplate: {fileID: 4355944354714430305}
+  hitParticleOnEnemiesOnly: 1
+  fadeDuration: 0.05
 --- !u!1001 &1999947104573112648
 PrefabInstance:
   m_ObjectHideFlags: 0

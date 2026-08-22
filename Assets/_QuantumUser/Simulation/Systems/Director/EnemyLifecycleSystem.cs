@@ -89,7 +89,7 @@ namespace Quantum
             if (IsAttacking(filter.Enemy->Phase) == true)
                 return true;
 
-            return IsCloseToAnyPlayer(f, filter.Transform3D->Position, lifecycleConfig.RelevantRange);
+            return PlayerQueryUtility.IsAnyPlayerWithinFlatRange(f, filter.Transform3D->Position, lifecycleConfig.RelevantRange);
         }
 
         private static bool IsAttacking(EnemyActionPhase phase)
@@ -101,21 +101,10 @@ namespace Quantum
                 || phase == EnemyActionPhase.Recovery;
         }
 
-        // Plain loop over live PlayerLink entities, not a physics overlap query - for 2-4 players
-        // a direct compare beats query/layer-mask setup overhead.
-        private static bool IsCloseToAnyPlayer(Frame f, FPVector3 position, FP range)
-        {
-            FP rangeSqr = range * range;
-            var filtered = f.Filter<PlayerLink, Transform3D>();
-
-            while (filtered.Next(out EntityRef entity, out PlayerLink _, out Transform3D transform))
-            {
-                if (EnemyMovementUtility.FlatSqrDistance(position, transform.Position) <= rangeSqr)
-                    return true;
-            }
-
-            return false;
-        }
+        // "Plain loop over live PlayerLink entities, not a physics overlap query - for 2-4 players a
+        // direct compare beats query/layer-mask setup overhead" used to live here as a private
+        // helper. It moved to PlayerQueryUtility unchanged once every other player lookup in the
+        // simulation adopted the same reasoning - see that class's own comment.
 
         // Same no-dedicated-signal trick BossRuntimeState.LastObservedHealth already uses -
         // diffed against Health.CurrentHealth each tick instead of hooking DamageUtility directly.

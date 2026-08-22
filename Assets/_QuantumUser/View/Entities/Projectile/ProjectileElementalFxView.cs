@@ -11,8 +11,9 @@ namespace Quantum
     //
     // The held particle instance lives under EffectsManager's own hierarchy (see
     // EffectsManager.GetHeldInstance), not parented to this projectile's GameObject, specifically so
-    // it survives ProjectileView.PlayDestroyEffectAndDestroy's Destroy(gameObject) - which fires
-    // shortly (<=0.2s) after impact, well before this effect's own resting grace period is up. The
+    // it survives both this view's own destruction and ProjectileVisualController.Finish destroying
+    // the detached visual - which happens within 0.2s of impact, well before this effect's own
+    // resting grace period is up. The
     // catch-up tween and the delayed release below are both targeted on the particle instance itself
     // (not on this component/transform) for the same reason: PrimeTween auto-kills a tween when its
     // target is destroyed, and this component dies together with the projectile.
@@ -39,14 +40,24 @@ namespace Quantum
         // Own copy, independent of the base class's _entityRef - same DeInitialize-ordering race
         // ProjectileView documents on its own _ownEntityRef.
         private EntityRef _ownEntityRef;
+        // The bullet's real on-screen position, which is NOT this GameObject during the catch-up
+        // after spawn - ProjectileView detaches the visual and lets it chase the simulated entity
+        // from the muzzle (see there). Following the entity instead would leave the elemental trail
+        // running meters ahead of the bullet it belongs to for the first tenth of a second.
+        private ProjectileView _projectileView;
         private ParticleSystem _prefab;
         private ParticleSystem _instance;
         private bool _resolved;
         private bool _following;
 
+        private Vector3 VisualPosition => _projectileView != null
+            ? _projectileView.VisualTransform.position
+            : transform.position;
+
         public override void Awake()
         {
             base.Awake();
+            _projectileView = GetComponent<ProjectileView>();
             QuantumEvent.Subscribe<EventProjectileDestroyed>(this, OnProjectileDestroyed);
         }
 
@@ -72,7 +83,7 @@ namespace Quantum
         protected override void QUpdate(QuantumGame game)
         {
             if (_following)
-                _instance.transform.position = transform.position;
+                _instance.transform.position = VisualPosition;
 
             if (_resolved)
                 return;
@@ -95,7 +106,7 @@ namespace Quantum
             if (_instance == null)
                 return;
 
-            _instance.transform.SetPositionAndRotation(transform.position, Quaternion.identity);
+            _instance.transform.SetPositionAndRotation(VisualPosition, Quaternion.identity);
             _instance.Play();
             _following = true;
         }

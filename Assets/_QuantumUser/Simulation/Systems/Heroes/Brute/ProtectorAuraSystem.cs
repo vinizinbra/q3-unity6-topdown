@@ -1,5 +1,6 @@
 namespace Quantum
 {
+    using System;
     using Photon.Deterministic;
     using UnityEngine.Scripting;
 
@@ -64,18 +65,18 @@ namespace Quantum
             if (hasDamageReduction == false && hasKnockbackResist == false)
                 return;
 
-            var allies = EnemyMovementUtility.FindPlayersInRadius(f, center, aura->Radius);
-
-            for (int i = 0; i < allies.Count; i++)
+            Span<EntityRef> allies = stackalloc EntityRef[PlayerQueryUtility.MaxPlayerLayerCandidates];
+            int alliesCount = EnemyMovementUtility.FindPlayersInRadius(f, center, aura->Radius, allies);
+            for (int i = 0; i < alliesCount; i++)
             {
                 if (hasDamageReduction == true)
                 {
-                    StatusEffectUtility.ApplyAuraDamageReduction(f, allies[i].Entity, AuraRefreshDuration, aura->AllyDamageReductionAmount);
+                    StatusEffectUtility.ApplyAuraDamageReduction(f, allies[i], AuraRefreshDuration, aura->AllyDamageReductionAmount);
                 }
 
                 if (hasKnockbackResist == true)
                 {
-                    StatusEffectUtility.ApplyKnockbackTaken(f, allies[i].Entity, AuraRefreshDuration, aura->AllyKnockbackTakenMultiplier);
+                    StatusEffectUtility.ApplyKnockbackTaken(f, allies[i], AuraRefreshDuration, aura->AllyKnockbackTakenMultiplier);
                 }
             }
         }

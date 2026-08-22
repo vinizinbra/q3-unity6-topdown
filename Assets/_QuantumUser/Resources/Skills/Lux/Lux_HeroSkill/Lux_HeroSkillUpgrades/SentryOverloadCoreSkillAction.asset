@@ -19,12 +19,9 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Overload Core
   RankDescriptions:
-  - When your Sentry expires or is destroyed, it explodes for 100% of Sentry Skill
-    Damage.
-  - The explosion deals 175% Sentry Skill Damage, covers 30% more ground, and knocks
-    enemies back hard.
-  - 'Critical Meltdown: the explosion deals 250% Sentry Skill Damage and leaves enemies
-    Exposed, taking +20% damage for 3s.'
+  - When your Sentry expires or is destroyed, it explodes for 100% of Sentry Skill Damage.
+  - When your Sentry expires or is destroyed, it explodes for 175% Sentry Skill Damage over 30% more ground, knocking enemies back hard.
+  - 'Critical Meltdown: when your Sentry expires or is destroyed, it explodes for 250% Sentry Skill Damage, leaving enemies Exposed and taking +20% damage for 3s.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

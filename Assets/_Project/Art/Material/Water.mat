@@ -111,7 +111,7 @@ Material:
     - _EnvironmentReflections: 1
     - _FacetSteps: 3
     - _FlipbookMode: 0
-    - _FoamDistance: 0.2
+    - _FoamDistance: 0.06
     - _FoamNoiseScale: 2
     - _FoamRippleFrequency: 2
     - _FoamRippleSpeed: 1.5
@@ -123,7 +123,7 @@ Material:
     - _GlossinessSource: 0
     - _GlossyReflections: 0
     - _HighlightSize: 48
-    - _HighlightStrength: 0.072
+    - _HighlightStrength: 0.181
     - _IntersectionFoam: 0
     - _LightingEnabled: 0
     - _Metallic: 0
@@ -148,7 +148,7 @@ Material:
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
     - _Surface: 0
-    - _WaterOpacity: 0.75
+    - _WaterOpacity: 0.568
     - _WaveHeight: 0.1
     - _WaveScale: 5
     - _WaveSpeed: 1

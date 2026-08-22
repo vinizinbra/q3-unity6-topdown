@@ -131,8 +131,24 @@ component Chunk
 
 global
 {
+    // Flips true only on the LAST generation tick (see LevelGenerationSystem.StepGeneration) -
+    // generation is spread over several ticks now, and this is what PlayerSpawnUtility.IsReadyToSpawn
+    // (and therefore hero spawning) waits on, so a hero still never appears before the level is
+    // complete.
     bool LevelGenerated;
     FPVector3 PlayerSpawnPosition;
+
+    // Multi-tick level generation bookkeeping - see LevelGenerationSystem.StepGeneration's own
+    // comment for why generation can't just cache this on the system itself. LevelGenSeed is rolled
+    // once on the first generation tick and re-seeds a private RNGSession every tick so the shuffled
+    // chunk-request bag rebuilds identically without having to be stored; LevelGenCursor is how many
+    // of those requests have been consumed so far, and LevelGenTotal how many there are in all.
+    // Cursor/Total are also the only two numbers a "Generating level..." loading screen needs to
+    // render a real progress bar.
+    bool LevelGenStarted;
+    Int32 LevelGenSeed;
+    Int32 LevelGenCursor;
+    Int32 LevelGenTotal;
 
     // Elapsed simulated time since LevelGenerated flipped true - PlayerSpawnUtility.IsReadyToSpawn
     // holds players back until this passes a delay, giving newly-created chunk colliders a moment

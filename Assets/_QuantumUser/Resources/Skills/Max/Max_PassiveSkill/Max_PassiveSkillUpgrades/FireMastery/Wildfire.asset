@@ -18,15 +18,12 @@ MonoBehaviour:
       Value: 532309429254581296
   Icon: {fileID: -2131257479, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
   DisplayName: Wildfire
-  Description: Killing any Burning enemy spreads the fire to nearby enemies - eventually
-    propagating the dying enemy's own live Burn instead of a flat amount.
+  Description: Killing a Burning enemy spreads the fire to nearby enemies.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - Killing a Burning enemy spreads Burn to 2 nearby enemies within 4m.
-  - Killing a Burning enemy spreads a stronger Burn to 5 nearby enemies within 6m.
-  - Killing a Burning enemy spreads Burn to 5 nearby enemies within 6m, propagating
-    75% of its own remaining Burn instead of a flat amount - a fire this strong keeps
-    jumping.
+  - Killing a Burning enemy spreads Burn to 2 enemies within 4m.
+  - Killing a Burning enemy spreads a stronger Burn to 5 enemies within 6m.
+  - Killing a Burning enemy spreads 75% of its remaining Burn to 5 enemies within 6m.
   Radius:
   - RawValue: 262144
   - RawValue: 393216

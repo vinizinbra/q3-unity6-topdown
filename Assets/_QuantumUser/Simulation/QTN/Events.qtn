@@ -245,16 +245,23 @@ event ProjectileDestroyed
     AssetRef<ProjectileDataAsset> ProjectileData;
 }
 
-// Fired once per pellet from WeaponSystem.FireHitscan - a Hitscan weapon never spawns an entity
-// (unlike Projectile, which gets ProjectileDestroyed above), so this is the only view hook for a
-// hitscan shot's path/endpoint. EndPoint is the resolved hit point on a hit, or the max-range
-// point along the ray on a miss, so a tracer always has somewhere to draw to either way.
+// Fired once per SEGMENT from WeaponSystem.FireHitscanPellet - one per pellet of a volley, plus one
+// more for every Ricochet bounce, each beginning exactly where the previous one ended. A Hitscan
+// weapon never spawns an entity (unlike Projectile, which gets ProjectileDestroyed above), so this
+// is the only view hook for a hitscan shot's path/endpoint. EndPoint is the resolved hit point on a
+// hit, or the max-range point along the ray on a miss, so a tracer always has somewhere to draw to
+// either way.
+//
+// DidHit covers hitting ANYTHING, level geometry included; Target is what it actually landed on, or
+// None for a miss or a wall - the two together are what let a view tell "sparks on stone" from
+// "impact on an enemy" (see HitscanViewBase and the three view styles built on it).
 event HitscanFired
 {
     EntityRef  Owner;
     FPVector3  Origin;
     FPVector3  EndPoint;
     Boolean    DidHit;
+    EntityRef  Target;
 }
 
 // Radius is supplied explicitly rather than left to the view to read off HitData.Radius - an

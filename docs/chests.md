@@ -86,18 +86,65 @@ else's) has the group disabled, so it can:
 - stay reachable for a second nearby Chest the instant the first screen closes, rather than being
   frozen alongside every paused gameplay system for the whole screen's duration.
 
-## Falling onto the ground (`MapGroundSettleSystem`)
+## Falling onto the ground (`GroundOffset` / `GroundSettleSystem`)
 
 A Chest is placed directly in the map asset (`MapEntityLink`, added implicitly by Quantum), not
-spawned via `SpawnedEntitySpawner.Spawn` like a skill/projectile-spawned entity (Sentry, Vortex) -
-so its authored `GroundOffset` used to sit inert, and it just hung at whatever raw
-`Transform3D.Position.Y` was hand-placed in the editor. `MapGroundSettleSystem`
-(`ISignalOnEntityPrototypeMaterialized`, registered in the always-on section of `SystemSetup.User.cs`
-right after `PlayerInitSystem`) now runs the same `GroundOffsetUtility.Apply` raycast/settle logic
-`SpawnedEntitySpawner` uses, gated on the entity having both `GroundOffset` and `MapEntityLink` so it
-can't double-apply to an actual spawn. Result: a Chest with `GroundOffset.FallGravityMultiplier > 0`
-now visibly falls onto the ground over several ticks at map load, same as Sentry does at cast time,
-instead of snapping or staying frozen at its placed height.
+spawned via `SpawnedEntitySpawner.Spawn` like a skill/projectile-spawned entity (Sentry, Vortex) - so
+nothing at its "spawn site" ever runs a ground check for it. It doesn't need one: `GroundOffset` is a
+continuous, gravity-like component, not a one-shot placement pass. While `GroundOffset.Enabled` is
+true, `GroundSettleSystem` re-resolves the real ground underneath the entity **every tick** and moves
+`Transform3D.Position.Y` toward `groundY + <collider bottom clearance> + Offset`, then clears
+`Enabled` the instant it arrives - so a landed Chest costs one bool check per tick and nothing else.
+Author `Enabled` true on the prototype and it grounds itself the moment it exists, wherever it exists.
+
+Result: a Chest with `GroundOffset.FallGravityMultiplier > 0` visibly falls onto the ground, same as
+Sentry does at cast time, instead of snapping or staying frozen at its placed height.
+
+### Why it's continuous, not resolved once at spawn (reworked 2026-08-21)
+
+`GroundOffset` used to be a one-shot: `GroundOffsetUtility.Apply` raycast once, wrote a `TargetY` onto
+a `SettlingToGround` marker, and `GroundSettleSystem` eased toward that baked value and removed the
+marker on arrival. Map-baked entities got their one call from a `MapGroundSettleSystem` reacting to
+`ISignalOnEntityPrototypeMaterialized` - and, as written, that could **never** work for any map-baked
+entity (found via a floating `BreakableBarrel`; the Chest had the identical bug). That signal is
+raised from `Core.EntityPrototypeSystem.OnInit`, i.e. before a single system's first `Update`, which
+is two independent reasons too early for a ground raycast:
+
+1. **The level doesn't exist yet.** Every chunk except the hand-placed Boss Arena is `f.Create`'d by
+   `LevelGenerationSystem.GenerateLevel`, which runs in frame 0's `Update`. At materialize time there
+   is literally no floor under a map-baked prop.
+2. **Even the map's own entity colliders aren't queryable yet.** `f.Physics3D` queries only see what
+   the last `Core.PhysicsSystem3D` update put in the broadphase, and at `OnInit` it has never run.
+
+So the raycast always missed, logged `[GroundOffset] ... no ground was found beneath ... - left at
+spawn Y`, and left the prop hanging in mid-air for the whole run.
+
+Re-resolving every tick fixes that class of bug outright rather than patching the one trigger point:
+an entity with nothing underneath it simply **holds position** (silently - a prop authored over a hole
+would otherwise spam an error every tick, and falling into the void is strictly worse than hovering)
+until there genuinely is ground, and starts falling then. It also stays correct for ground that
+appears, moves or vanishes *later*, which a baked `TargetY` never could. `SettlingToGround` and
+`MapGroundSettleSystem` were both deleted; `FallVelocity` moved onto `GroundOffset` itself.
+
+`GroundOffsetUtility.Apply(f, entity)` survives as a pure **re-arm** (`Enabled = true`,
+`FallVelocity = 0`, no raycast) for an entity *moved* mid-life -
+`RelocationProtocolSkillAction` teleporting a Sentry to wherever Lux was standing is the canonical
+case, since that Sentry cleared its own `Enabled` back when it first landed. The runtime spawn paths
+(`SpawnedEntitySpawner`, `TalentGateSystem`, `OrbSpawnUtility`, `ExperienceUtility`) still call it as
+a belt-and-braces guarantee that a spawn grounds itself even if a new prototype ships with the box
+unticked.
+
+Two supporting changes came with it:
+
+- **`EnemyMovementUtility.TryFindGroundHeight` gained an optional `ignoreEntity`.** A caller asking
+  "what is the ground under this thing" never means the thing itself. Without it, anything that both
+  sits on the Ground layer and carries a `GroundOffset` (a level chunk) reads its own floor as the
+  surface to rest on and climbs itself, one clearance per tick, forever.
+- **`GroundSettleSystem` skips anything still carrying `PopVelocity`.** `PopMotionSystem` owns a
+  popped orb's Y for the length of its ballistic arc and does its own per-tick ground resolve against
+  the same `GroundOffset.Offset`; two systems integrating one Y would fight. On landing
+  `PopMotionSystem` clears `GroundOffset.Enabled` itself, since it places the orb exactly at its
+  resting height.
 
 ## Editor authoring needed (nothing shown at runtime without this)
 

@@ -44,6 +44,13 @@ namespace Quantum
 
             FPVector3 velocity = ResolveRandomPopVelocity(f, randomHorizontalSpeed, randomVerticalSpeed);
 
+            // The floor this drop belongs to - see PopVelocity.OriginGroundY. Falls back to the anchor's
+            // own Y when no ground is found beneath it (an enemy killed out over a pit), which simply
+            // means the orb is never treated as climbing and behaves exactly as it did before.
+            FP originGroundY = EnemyMovementUtility.TryFindGroundHeight(f, anchor, EnemyMovementUtility.GetGroundLayerMask(f), out FP anchorGroundY)
+                ? anchorGroundY
+                : anchor.Y;
+
             if (maxOffset > FP._0)
             {
                 FPVector3 landing = EnemyMovementUtility.RandomPositionInRing(f, anchor, minOffset, maxOffset);
@@ -59,11 +66,11 @@ namespace Quantum
                 // Neither a ring scatter nor a random kick was requested (or the arc solve failed with
                 // no random component to fall back on) - just ground-snap in place, exactly as the
                 // arc-only path did before.
-                GroundOffsetUtility.Apply(f, orb, orbTransform);
+                GroundOffsetUtility.Apply(f, orb);
                 return;
             }
 
-            f.Add(orb, new PopVelocity { Velocity = velocity });
+            f.Add(orb, new PopVelocity { Velocity = velocity, OriginGroundY = originGroundY });
         }
 
         // Deterministic random burst - a random compass direction at a random speed in

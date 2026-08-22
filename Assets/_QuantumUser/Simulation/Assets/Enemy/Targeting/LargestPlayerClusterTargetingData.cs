@@ -1,5 +1,6 @@
 namespace Quantum
 {
+    using System;
     using Photon.Deterministic;
 
     // Targets whichever player (within DetectionRange) has the most OTHER players within
@@ -14,16 +15,17 @@ namespace Quantum
             if (TryGetSelfContext(f, self, out FP range, out FPVector3 position) == false)
                 return EntityRef.None;
 
-            var hits = EnemyMovementUtility.FindPlayersInRadius(f, position, range);
+            Span<EntityRef> candidates = stackalloc EntityRef[PlayerQueryUtility.MaxPlayerLayerCandidates];
+            int candidateCount = EnemyMovementUtility.FindPlayersInRadius(f, position, range, candidates);
             FP clusterRadiusSqr = ClusterRadius * ClusterRadius;
 
             EntityRef best = EntityRef.None;
             int bestCount = -1;
             FP bestSqrDistanceToSelf = default;
 
-            for (int i = 0; i < hits.Count; i++)
+            for (int i = 0; i < candidateCount; i++)
             {
-                EntityRef candidate = hits[i].Entity;
+                EntityRef candidate = candidates[i];
 
                 // Downed/KO players are neither a valid primary target nor worth counting toward
                 // someone else's cluster size - see docs/revive.md.
@@ -35,15 +37,15 @@ namespace Quantum
 
                 int clusterCount = 0;
 
-                for (int j = 0; j < hits.Count; j++)
+                for (int j = 0; j < candidateCount; j++)
                 {
                     if (j == i)
                         continue;
 
-                    if (PlayerLifeStateUtility.IsIncapacitated(f, hits[j].Entity) == true)
+                    if (PlayerLifeStateUtility.IsIncapacitated(f, candidates[j]) == true)
                         continue;
 
-                    if (f.Unsafe.TryGetPointer<Transform3D>(hits[j].Entity, out var otherTransform) == false)
+                    if (f.Unsafe.TryGetPointer<Transform3D>(candidates[j], out var otherTransform) == false)
                         continue;
 
                     if (EnemyMovementUtility.FlatSqrDistance(candidateTransform->Position, otherTransform->Position) <= clusterRadiusSqr)

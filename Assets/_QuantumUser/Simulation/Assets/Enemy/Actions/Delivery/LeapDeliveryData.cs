@@ -1,5 +1,6 @@
 namespace Quantum
 {
+    using System;
     using Photon.Deterministic;
 
     // Leaps toward the target and slams down, damaging every player within DamageRange of the
@@ -73,10 +74,11 @@ namespace Quantum
             // damage every player caught in the blast radius, not just the original target.
             filter.Transform3D->Position = filter.Enemy->SkillTargetPosition;
 
-            var hits = EnemyMovementUtility.FindPlayersInRadius(f, filter.Enemy->SkillTargetPosition, action.DamageRange);
-            for (int i = 0; i < hits.Count; i++)
+            Span<EntityRef> hits = stackalloc EntityRef[PlayerQueryUtility.MaxPlayerLayerCandidates];
+            int hitsCount = EnemyMovementUtility.FindPlayersInRadius(f, filter.Enemy->SkillTargetPosition, action.DamageRange, hits);
+            for (int i = 0; i < hitsCount; i++)
             {
-                EntityRef hitEntity = hits[i].Entity;
+                EntityRef hitEntity = hits[i];
 
                 if (f.Unsafe.TryGetPointer<Transform3D>(hitEntity, out var hitTransform) == false)
                     continue;

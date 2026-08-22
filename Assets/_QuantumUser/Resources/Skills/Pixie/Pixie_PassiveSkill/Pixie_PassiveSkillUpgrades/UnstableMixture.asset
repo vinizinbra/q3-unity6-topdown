@@ -18,16 +18,12 @@ MonoBehaviour:
       Value: 361478584056376078
   Icon: {fileID: -361352915, guid: b217254d41b6945b1873986186a25786, type: 3}
   DisplayName: Unstable Mixture
-  Description: An explosion that gets a kill empowers your next one - and at full
-    charge, that one splits in two.
+  Description: An explosion kill empowers your next explosion.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - 'An explosion that kills an enemy empowers your next explosion: +30% damage and
-    +15% radius.'
-  - The empowerment can bank up to 2 kills, for +60% damage and +30% radius on your
-    next explosion.
-  - At 2 banked kills, the empowered explosion also detonates a second, smaller blast
-    shortly after.
+  - Each explosion kill empowers your next blast with +30% damage and +15% radius.
+  - Explosion kills bank up to 2 charges, empowering your next blast with up to +60% damage and +30% radius.
+  - Explosion kills bank up to 2 charges for +60% damage and +30% radius. At 2 charges the blast also detonates a second time.
   DamageBonusPerStack:
     RawValue: 19661
   RadiusBonusPerStack:

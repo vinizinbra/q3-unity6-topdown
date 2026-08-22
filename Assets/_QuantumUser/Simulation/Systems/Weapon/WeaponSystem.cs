@@ -405,11 +405,11 @@ namespace Quantum
             switch (weaponData.FireType)
             {
                 case WeaponFireType.Hitscan:
-                    // Phantom Strike's bonus pierce has no Hitscan equivalent - a raycast hits once and
-                    // stops, same reason Piercing Rounds/Ricochet (RemainingPierces/RemainingBounces,
-                    // both Projectile-only fields) never manifest on a Hitscan weapon either. The
-                    // damage bonus above already applied regardless of FireType.
-                    FireHitscan(f, owner, weapon, weaponData, damage, spawnPosition, aimDirection, isExplosiveProc, isCataclysm);
+                    // grantPierceAmount (Kai's Phantom Strike) counts here too now that a hitscan beam
+                    // pierces - see FireHitscanPellet. It used to be dropped on the floor for the same
+                    // reason Piercing Rounds/Ricochet were: both perks only ever wrote Projectile
+                    // fields, so a raycast that hit once and stopped could never express either.
+                    FireHitscan(f, owner, weapon, weaponData, damage, spawnPosition, aimDirection, isExplosiveProc, isCataclysm, grantPierceAmount);
                     break;
 
                 case WeaponFireType.Projectile:
@@ -831,85 +831,323 @@ namespace Quantum
             return ProjectileAimUtility.ResolveAimsAtCenter(f, weaponData.ProjectileData);
         }
 
+        // How far past a hit a Ricochet bounce looks for its next target - the same search radius
+        // DirectHitData.TryRicochet uses for the Projectile version of the perk, so one pick behaves
+        // the same on either fire type.
+        private static readonly FP HitscanRicochetSearchRadius = 8;
+
         private static void FireHitscan(Frame f, EntityRef owner, Weapon* weapon, WeaponDataAsset weaponData,
-            FP damage, FPVector3 origin, FPVector3 direction, bool isExplosiveProc, bool isCataclysm)
+            FP damage, FPVector3 origin, FPVector3 direction, bool isExplosiveProc, bool isCataclysm, int grantPierceAmount = 0)
         {
             FP range = weaponData.Range * weapon->RangeMultiplier;
             int pelletCount = weaponData.PelletCount > 0 ? weaponData.PelletCount : 1;
 
+            // Piercing Rounds/Ricochet, read live rather than baked onto anything: these are the very
+            // same WeaponFireTimeMods a Projectile weapon stamps onto every shot it spawns
+            // (ApplyProjectilePerks -> Projectile.RemainingPierces/RemainingBounces). A hitscan shot
+            // has no entity to stamp, which is why both perks used to do literally nothing here while
+            // still being offered by every draw site - a hitscan weapon could spend a pick on a perk
+            // it could never use.
+            int pierces = 1;
+            int bounces = 0;
+
+            if (f.Unsafe.TryGetPointer<WeaponFireTimeMods>(owner, out var mods) == true)
+            {
+                pierces += mods->BonusPierce;
+                bounces += mods->BonusBounces;
+            }
+
+            // Kai's Phantom Strike - a one-shot flat pierce bonus consumed once per fired shot, on
+            // top of whatever Piercing Rounds already grants. Same value FireProjectile hands to
+            // ApplyProjectilePerks.
+            pierces += grantPierceAmount;
+
+            // Shared across the whole volley so two pellets landing on one target in the same tick
+            // stay distinct events - and now also across the several contacts a single pierced or
+            // ricocheted pellet can land. See Events.qtn's comment on EntityDamaged.HitIndex.
+            byte hitIndex = 0;
+
             for (int i = 0; i < pelletCount; i++)
             {
                 FPVector3 pelletDirection = FPQuaternion.Euler(0, GetPelletAngle(i, pelletCount, weaponData.SpreadAngle), 0) * direction;
-                Hit3D? hit = f.Physics3D.Raycast(origin, pelletDirection, range, -1, QueryOptions.HitAll);
 
-                bool didHit = hit.HasValue == true && hit.Value.Entity != owner;
-                FPVector3 endPoint;
+                // Only pellet 0 of a volley procs Explosive Sequence/Cataclysm Round - otherwise an
+                // N-pellet shotgun would detonate N explosions off a single trigger pull - or tracks
+                // Focused Breach, same "one beam, not N" reasoning.
+                FireHitscanPellet(f, owner, weaponData, damage, origin, pelletDirection, range, pierces, bounces,
+                    isExplosiveProc && i == 0, isCataclysm && i == 0, isPrimaryPellet: i == 0, ref hitIndex);
+            }
+        }
 
-                if (didHit == true)
+        // One pellet's entire path: the initial beam, plus a fresh segment per Ricochet bounce, each
+        // segment passing through up to as many entities as Piercing Rounds allows. Deliberately
+        // mirrors DirectHitData.ApplyHit's ordering for the Projectile version of the same two perks -
+        // Quantum Rounds on every contact, one pierce spent per entity, level geometry ending the shot
+        // however much pierce is left, and Explosive Sequence/Cataclysm Round detonating once at
+        // wherever the path finally stops.
+        private static void FireHitscanPellet(Frame f, EntityRef owner, WeaponDataAsset weaponData,
+            FP damage, FPVector3 origin, FPVector3 direction, FP range, int pierces, int bounces,
+            bool isExplosiveProc, bool isCataclysm, bool isPrimaryPellet, ref byte hitIndex)
+        {
+            FPVector3 segmentOrigin = origin;
+            FPVector3 segmentDirection = direction;
+            FP remainingRange = range;
+            int remainingPierces = pierces;
+            bool trackedFocusedBreach = false;
+
+            // Bounded by construction - the initial beam, plus one iteration per Ricochet bounce
+            // (capped by `bounces` below), plus at most one pierce-flatten per contact that actually
+            // spent a pierce (capped by `pierces`, and never repeatable on an already-level segment) -
+            // so neither continuation can loop forever however the target search resolves.
+            int usedBounces = 0;
+            int maxSegments = bounces + pierces + 1;
+
+            for (int segment = 0; segment < maxSegments; segment++)
+            {
+                FPVector3 endPoint = segmentOrigin + segmentDirection * remainingRange;
+                FP travelled = remainingRange;
+                bool didHit = false;
+                EntityRef bounceFrom = EntityRef.None;
+
+                // The entity a surviving pierce should carry the beam on FROM, level, rather than
+                // continuing to dive into the floor behind it - see the pierce block below.
+                EntityRef flattenFrom = EntityRef.None;
+
+                // What this segment finally landed on, for the view's own impact effect - the LAST
+                // entity it damaged, since that is the one sitting at endPoint. Stays None when the
+                // segment ended on level geometry or simply ran out of range.
+                EntityRef segmentTarget = EntityRef.None;
+
+                var hits = f.Physics3D.RaycastAll(segmentOrigin, segmentDirection, remainingRange, -1, QueryOptions.HitAll);
+
+                // Walked in cast order off CastDistanceNormalized rather than via
+                // HitCollection3D.Sort, which orders by Hit3D.Point - and Point only holds real data
+                // when the query passes QueryOptions.ComputeDetailedInfo, which this one deliberately
+                // doesn't (see ResolveHitscanPoint). O(n^2) over the handful of hits one short ray
+                // collects, and stable on ties since it keeps the first index at equal distance.
+                bool* consumed = stackalloc bool[hits.Count > 0 ? hits.Count : 1];
+
+                for (int step = 0; step < hits.Count; step++)
                 {
-                    // hitIndex: pellets sharing a target/damage/tick would otherwise hash-collide and
-                    // get silently collapsed by Quantum's event dedup - see Events.qtn's comment on
-                    // EntityDamaged.HitIndex.
-                    DamageUtility.ApplyDamage(f, hit.Value.Entity, damage, owner, DamageSource.Weapon, hitIndex: (byte)i);
-                    Log.Debug($"[Weapon] Hitscan from {owner} hit {hit.Value.Entity} for {damage} base damage");
+                    int nearest = -1;
+                    FP nearestDistance = FP.MaxValue;
 
-                    // Hitscan has no Effects list to run through HitEffectUtility (unlike
-                    // ProjectileHitData/AreaDamage), so this is called directly here instead. Snapshot
-                    // pre-hit Rift Mark stacks the same way HitEffectUtility.ApplyToTarget does - see
-                    // HitEffectContext.PreHitRiftMarkStacks' own comment.
-                    byte preHitRiftMarkStacks = StatusEffectUtility.GetRiftMarkStacks(f, hit.Value.Entity);
-                    StatusEffectUtility.TryApplyElementalStatus(f, hit.Value.Entity, owner, DamageSource.Weapon,
-                        weaponData.Element, damage, preHitRiftMarkStacks);
-
-                    // Element Infusion perk (WeaponElementInfusion) - hitscan has no projectile to carry
-                    // PerkElement on, so read it live off the owner here and apply the extra element with
-                    // its own proc chance, sharing the same pre-hit Rift Mark snapshot as the base call.
-                    if (f.Unsafe.TryGetPointer<WeaponElementInfusion>(owner, out var infusion) == true)
+                    for (int i = 0; i < hits.Count; i++)
                     {
-                        StatusEffectUtility.TryApplyInfusedElement(f, hit.Value.Entity, owner, DamageSource.Weapon,
-                            infusion->Element, infusion->ProcChance, damage, preHitRiftMarkStacks);
+                        if (consumed[i] == true)
+                            continue;
+
+                        FP candidate = hits[i].CastDistanceNormalized;
+
+                        if (nearest >= 0 && candidate >= nearestDistance)
+                            continue;
+
+                        nearest = i;
+                        nearestDistance = candidate;
                     }
 
-                    // Hit3D.Point only reads real data when the query passes
-                    // QueryOptions.ComputeDetailedInfo (see ProjectileSystem.ResolveHitPoint's own
-                    // comment on this) - this raycast doesn't, so an entity hit resolves its own
-                    // Transform3D instead, falling back to the raycast distance along the ray for the
-                    // (rare) non-entity/no-Transform3D case.
-                    FPVector3 hitPosition = f.Unsafe.TryGetPointer<Transform3D>(hit.Value.Entity, out var hitTransform)
-                        ? hitTransform->Position
-                        : origin + pelletDirection * range * hit.Value.CastDistanceNormalized;
+                    if (nearest < 0)
+                        break;
 
-                    endPoint = hitPosition;
+                    consumed[nearest] = true;
 
-                    // Only pellet 0 of a volley procs Explosive Sequence/Cataclysm Round - otherwise
-                    // an N-pellet shotgun would detonate N explosions off a single trigger pull.
-                    // Quantum Rounds stays live on every pellet since it's already a genuine per-hit
-                    // effect, not a per-shot one.
-                    ApplyHitscanWeaponPerks(f, owner, weapon, hit.Value.Entity, hitPosition, damage,
-                        isExplosiveProc && i == 0, isCataclysm && i == 0);
+                    EntityRef hitEntity = hits[nearest].Entity;
 
-                    if (i == 0)
+                    if (hitEntity == owner)
+                        continue;
+
+                    FP distance = remainingRange * nearestDistance;
+
+                    didHit = true;
+                    endPoint = ResolveHitscanPoint(f, hitEntity, segmentOrigin, segmentDirection, distance);
+                    travelled = distance;
+
+                    if (isPrimaryPellet == true && trackedFocusedBreach == false)
                     {
-                        TryApplyFocusedBreach(f, owner, hit.Value.Entity);
+                        trackedFocusedBreach = true;
+                        TryApplyFocusedBreach(f, owner, hitEntity);
                     }
+
+                    // Level geometry ends the shot outright, whatever pierce is left - the same rule
+                    // DirectHitData.ApplyHit applies to its own EntityRef.None hit, except that
+                    // "geometry" here also covers the entity-backed kind (see IsHitscanTarget).
+                    if (IsHitscanTarget(f, hitEntity) == false)
+                        break;
+
+                    ApplyHitscanHit(f, owner, weaponData, hitEntity, endPoint, damage, ref hitIndex);
+                    segmentTarget = hitEntity;
+
+                    remainingPierces--;
+
+                    if (remainingPierces > 0)
+                    {
+                        // A muzzle held above the shooter (CharacterData.WeaponPosition) firing at a
+                        // target's collider center makes this beam a DOWNWARD one, so its remaining
+                        // pierces would be spent on the floor a step past this enemy instead of on
+                        // the ones behind it - the hitscan half of DirectHitData's own
+                        // FlattenTrajectoryOnPierce. Re-cast level from here instead, keeping the
+                        // pierces and the range this beam has left.
+                        if (ProjectileAimUtility.TryFlattenHeading(segmentDirection, out _) == true)
+                        {
+                            flattenFrom = hitEntity;
+                            break;
+                        }
+
+                        continue; // Piercing Rounds - carry on through this same segment
+                    }
+
+                    bounceFrom = hitEntity;
+                    break;
                 }
-                else
-                {
-                    Log.Debug($"[Weapon] Hitscan from {owner} missed");
-                    endPoint = origin + pelletDirection * range;
 
-                    if (i == 0)
-                    {
-                        ResetFocusedBreach(f, owner);
-                    }
+                // A segment that ends on a surviving pierce is carried on from that enemy's own
+                // collider CENTRE (see the levelling block below), so the leg drawn to it ends there
+                // too rather than at the enemy's transform origin - its feet. Keeps the drawn path
+                // contiguous for the views that stitch legs together on their own ChainTolerance
+                // (ParticleHitscanView/ContinuousHitscanView), and puts the contact at body height,
+                // which is where the beam actually passed through.
+                if (flattenFrom != EntityRef.None
+                    && ProjectileAimUtility.TryGetAimPoint(f, flattenFrom, aimAtCenter: true, out FPVector3 pierceCenter) == true)
+                {
+                    endPoint = pierceCenter;
                 }
 
                 // Hitscan never spawns an entity (unlike Projectile, which the view tracks via
                 // ProjectileDestroyed) - this is the only view hook for a hitscan pellet's tracer/
-                // impact VFX, see WeaponView/WeaponTracerView.
-                f.Events.HitscanFired(owner, origin, endPoint, didHit);
+                // impact VFX, see HitscanViewBase and its styles. Raised per SEGMENT, so a Ricochet
+                // bounce draws its own leg of the path with no view-side changes at all.
+                f.Events.HitscanFired(owner, segmentOrigin, endPoint, didHit, segmentTarget);
+
+                if (isPrimaryPellet == true && didHit == false && segment == 0)
+                {
+                    ResetFocusedBreach(f, owner);
+                }
+
+                FP nextRange = remainingRange - travelled;
+
+                // Carries the beam on from the enemy it just pierced, level - endPoint is that
+                // enemy's collider centre by the time it gets here (see above), not the surface point
+                // the ray clipped: body height is where the enemies behind it are, and a ray never
+                // reports the collider its own origin sits inside of, so the beam can't re-hit what it
+                // just pierced (the same property a Ricochet bounce off endPoint already relies on).
+                // Deliberately does not spend a bounce; this is the same beam, just level.
+                if (flattenFrom != EntityRef.None && nextRange > FP._0
+                    && ProjectileAimUtility.TryFlattenHeading(segmentDirection, out FPVector3 levelDirection) == true)
+                {
+                    segmentOrigin = endPoint;
+                    segmentDirection = levelDirection.Normalized;
+                    remainingRange = nextRange;
+                    continue;
+                }
+
+                // Ricochet - redirects from the entity that spent the last pierce toward the nearest
+                // other enemy, exactly as DirectHitData.TryRicochet does for a projectile: no
+                // reflection off a surface normal this has no information about, and no bounce at all
+                // when there is nothing else in range to bounce to. nextRange carries the shot's
+                // remaining engagement range across the bounce, the same way a ricocheting projectile
+                // keeps spending its own MaxTravelDistance budget rather than getting a fresh one.
+                if (bounceFrom != EntityRef.None && usedBounces < bounces && nextRange > FP._0
+                    && TryFindRicochetTarget(f, endPoint, bounceFrom, out var targetPosition) == true)
+                {
+                    FPVector3 toTarget = targetPosition - endPoint;
+
+                    if (toTarget.SqrMagnitude > FP._0)
+                    {
+                        usedBounces++;
+                        segmentOrigin = endPoint;
+                        segmentDirection = toTarget.Normalized;
+                        remainingRange = nextRange;
+                        remainingPierces = 1; // one contact per bounce, same as a ricocheting projectile
+                        continue;
+                    }
+                }
+
+                ApplyHitscanTerminalPerks(f, owner, endPoint, damage, isExplosiveProc, isCataclysm);
+                return;
             }
         }
+
+        // Hit3D.Point only reads real data when the query passes QueryOptions.ComputeDetailedInfo
+        // (see ProjectileSystem.ResolveHitPoint's own comment on this) - these raycasts don't, so the
+        // point has to be reconstructed.
+        //
+        // Only a real TARGET resolves to its own Transform3D: an enemy or a breakable is a point-ish
+        // body, and terminating the shot at its center reads better than at whatever surface point
+        // the ray happened to clip. Level geometry is the exact opposite - some of it in this project
+        // is a genuinely dynamic ENTITY whose Transform3D is the whole chunk's PIVOT, which can sit
+        // tens of units from where the beam actually met the wall, so a tracer drawn to it shoots off
+        // to a point in space with nothing there. That is what "the line goes nowhere on a wall hit"
+        // was: everything else about the shot was right, just this one position. Distance along the
+        // ray is the only sane answer for anything that isn't a target.
+        private static FPVector3 ResolveHitscanPoint(Frame f, EntityRef hitEntity, FPVector3 origin, FPVector3 direction, FP distance)
+        {
+            if (IsHitscanTarget(f, hitEntity) == true && f.Unsafe.TryGetPointer<Transform3D>(hitEntity, out var hitTransform) == true)
+                return hitTransform->Position;
+
+            return origin + direction * distance;
+        }
+
+        // What a beam can shoot INTO versus what stops it dead. Mirrors ProjectileHitData's own
+        // ShouldDetonate/IsCombatant split, which matters far more now that a beam can pierce: some
+        // level geometry in this project is a genuinely dynamic ENTITY (see EnemyMovementUtility's
+        // own notes on this), so an EntityRef.None test alone would let Piercing Rounds shoot a
+        // hitscan weapon straight through a wall. Only a real target consumes a pierce and lets the
+        // beam carry on; everything else ends it where it stands.
+        private static bool IsHitscanTarget(Frame f, EntityRef entity)
+        {
+            return entity != EntityRef.None
+                && (f.Has<Enemy>(entity) == true || f.Has<PlayerLink>(entity) == true || f.Has<Breakable>(entity) == true);
+        }
+
+        private static bool TryFindRicochetTarget(Frame f, FPVector3 point, EntityRef exclude, out FPVector3 targetPosition)
+        {
+            targetPosition = default;
+
+            if (WeaponPerkUtility.TryFindNearestEnemy(f, point, HitscanRicochetSearchRadius, exclude, out var target) == false)
+                return false;
+
+            if (f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == false)
+                return false;
+
+            targetPosition = targetTransform->Position;
+            return true;
+        }
+
+        // Everything one hitscan contact does to a single target: damage, the weapon's own element,
+        // Element Infusion, and Quantum Rounds. Split out of FireHitscan once Piercing Rounds and
+        // Ricochet made "one shot, one contact" stop being true, and internal so Critical Rebound's
+        // own hitscan bounce (WeaponPerkReactionSystem) lands exactly like a normal contact does.
+        internal static void ApplyHitscanHit(Frame f, EntityRef owner, WeaponDataAsset weaponData,
+            EntityRef hitEntity, FPVector3 point, FP damage, ref byte hitIndex)
+        {
+            // hitIndex: contacts sharing a target/damage/tick would otherwise hash-collide and get
+            // silently collapsed by Quantum's event dedup - see Events.qtn's comment on
+            // EntityDamaged.HitIndex.
+            DamageUtility.ApplyDamage(f, hitEntity, damage, owner, DamageSource.Weapon, hitIndex: hitIndex);
+            hitIndex++;
+
+            Log.Debug($"[Weapon] Hitscan from {owner} hit {hitEntity} for {damage} base damage");
+
+            // Hitscan has no Effects list to run through HitEffectUtility (unlike ProjectileHitData/
+            // AreaDamage), so this is called directly here instead. Snapshot pre-hit Rift Mark stacks
+            // the same way HitEffectUtility.ApplyToTarget does - see
+            // HitEffectContext.PreHitRiftMarkStacks' own comment.
+            byte preHitRiftMarkStacks = StatusEffectUtility.GetRiftMarkStacks(f, hitEntity);
+            StatusEffectUtility.TryApplyElementalStatus(f, hitEntity, owner, DamageSource.Weapon,
+                weaponData.Element, damage, preHitRiftMarkStacks);
+
+            // Element Infusion perk (WeaponElementInfusion) - hitscan has no projectile to carry
+            // PerkElement on, so read it live off the owner here and apply the extra element with
+            // its own proc chance, sharing the same pre-hit Rift Mark snapshot as the base call.
+            if (f.Unsafe.TryGetPointer<WeaponElementInfusion>(owner, out var infusion) == true)
+            {
+                StatusEffectUtility.TryApplyInfusedElement(f, hitEntity, owner, DamageSource.Weapon,
+                    infusion->Element, infusion->ProcChance, damage, preHitRiftMarkStacks);
+            }
+
+            ApplyHitscanQuantumRounds(f, owner, hitEntity, point, damage);
+        }
+
 
         // Cone spread around the aim direction, same convention as
         // FanProjectileDeliveryData.Begin's non-Radial branch: pellet 0 sits at -SpreadAngle/2, the
@@ -924,27 +1162,40 @@ namespace Quantum
             return -spreadAngle / 2 + step * index;
         }
 
-        // Quantum Rounds/Explosive Sequence/Cataclysm Round's Hitscan equivalent - a Hitscan weapon
-        // has no Projectile entity for these to hook off of (see DirectHitData for the
-        // Projectile-type version), so they apply directly here instead, synchronously with the
-        // raycast hit itself.
-        private static void ApplyHitscanWeaponPerks(Frame f, EntityRef owner, Weapon* weapon, EntityRef hitEntity,
-            FPVector3 point, FP damage, bool isExplosiveProc, bool isCataclysm)
+        // Quantum Rounds' Hitscan equivalent - a Hitscan weapon has no Projectile entity for it to
+        // hook off of (see DirectHitData.ApplyQuantumRounds for the Projectile-type version), so it
+        // applies directly here instead, synchronously with the raycast contact itself. Every
+        // contact, not just the terminal one - "hits damage an additional nearby enemy" reads as a
+        // per-hit effect, not a per-shot one, same as it does for a piercing projectile.
+        private static void ApplyHitscanQuantumRounds(Frame f, EntityRef owner, EntityRef hitEntity, FPVector3 point, FP damage)
         {
-            if (f.Unsafe.TryGetPointer<WeaponPostImpactProcs>(owner, out var procs) == false)
+            if (f.Unsafe.TryGetPointer<WeaponPostImpactProcs>(owner, out var procs) == false || procs->HasQuantumRounds == false)
                 return;
 
-            if (procs->HasQuantumRounds == true
-                && WeaponPerkUtility.TryFindNearestEnemy(f, point, procs->QuantumRoundsRadius, hitEntity, out var nearby) == true)
-            {
-                DamageUtility.ApplyDamage(f, nearby, damage * procs->QuantumRoundsDamageMultiplier, owner, DamageSource.Weapon);
+            if (WeaponPerkUtility.TryFindNearestEnemy(f, point, procs->QuantumRoundsRadius, hitEntity, out var nearby) == false)
+                return;
 
-                FPVector3 targetPosition = f.Unsafe.TryGetPointer<Transform3D>(nearby, out var nearbyTransform) == true
-                    ? nearbyTransform->Position
-                    : point;
+            DamageUtility.ApplyDamage(f, nearby, damage * procs->QuantumRoundsDamageMultiplier, owner, DamageSource.Weapon);
 
-                f.Events.QuantumRoundsTriggered(nearby, targetPosition, procs->QuantumRoundsSource);
-            }
+            FPVector3 targetPosition = f.Unsafe.TryGetPointer<Transform3D>(nearby, out var nearbyTransform) == true
+                ? nearbyTransform->Position
+                : point;
+
+            f.Events.QuantumRoundsTriggered(nearby, targetPosition, procs->QuantumRoundsSource);
+        }
+
+        // Explosive Sequence/Cataclysm Round's Hitscan equivalent, fired once at wherever the pellet's
+        // whole path ended - through every pierce and every Ricochet bounce, mirroring
+        // DirectHitData.ApplyTerminalWeaponPerks, which only runs when the projectile is finally
+        // spent. Detonates on level geometry too, same as that one does.
+        private static void ApplyHitscanTerminalPerks(Frame f, EntityRef owner, FPVector3 point, FP damage,
+            bool isExplosiveProc, bool isCataclysm)
+        {
+            if (isExplosiveProc == false && isCataclysm == false)
+                return;
+
+            if (f.Unsafe.TryGetPointer<WeaponPostImpactProcs>(owner, out var procs) == false)
+                return;
 
             // Bigger Boom (Pixie passive ascension) - read live rather than baked into the weapon at
             // equip time, so picking (or ranking up) Bigger Boom mid-run scales every explosion
@@ -963,7 +1214,7 @@ namespace Quantum
                     damage * procs->CataclysmDamageMultiplier, DamageSource.Weapon);
                 WeaponPerkUtility.TryApplyUnstablePayloadMarks(f, point, radius, owner);
             }
-            else if (isExplosiveProc == true)
+            else
             {
                 FP radius = procs->ExplosiveSequenceRadius * radiusMultiplier;
                 HitEffectUtility.ApplyExplosion(f, point, radius, owner,
@@ -972,10 +1223,11 @@ namespace Quantum
             }
         }
 
+
         // Focused Breach (see docs/weapon-perks.md) - simulates "beam contact" as continuous same-
         // target Hitscan hits, since this project has no dedicated Beam fire type. Losing contact (a
         // miss, or the hit entity changing) resets progress via ResetFocusedBreach below; only pellet
-        // 0 of a volley tracks it, same "one beam, not N" reasoning ApplyHitscanWeaponPerks's own
+        // 0 of a volley tracks it, same "one beam, not N" reasoning FireHitscan's own
         // Explosive Sequence/Cataclysm Round gating uses.
         private static void TryApplyFocusedBreach(Frame f, EntityRef owner, EntityRef hitEntity)
         {

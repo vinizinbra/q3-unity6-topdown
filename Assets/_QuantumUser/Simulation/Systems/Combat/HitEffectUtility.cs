@@ -275,7 +275,7 @@ namespace Quantum
         // A radial damage-only blast (no knockback) - ApplyDamageInRadius plus the
         // WeaponExplosionReleased view hook, the generic entry point for any weapon-perk explosion
         // that has no dedicated VFX of its own (currently Cataclysm Round and Explosive Sequence,
-        // see DirectHitData.ApplyTerminalWeaponPerks/WeaponSystem.ApplyHitscanWeaponPerks) - callers
+        // see DirectHitData.ApplyTerminalWeaponPerks/WeaponSystem.ApplyHitscanTerminalPerks) - callers
         // share one fallback prefab (EffectsManager.OnWeaponExplosionReleased always plays
         // defaultAreaBlastEffect) instead of each needing their own. Fires the event unconditionally,
         // even if nothing was actually caught, so it still reads visually against an empty room -

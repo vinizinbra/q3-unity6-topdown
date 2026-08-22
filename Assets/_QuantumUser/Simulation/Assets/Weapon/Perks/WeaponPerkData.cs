@@ -18,6 +18,14 @@ namespace Quantum
 
         public abstract void Apply(Frame f, EntityRef owner, Weapon* weapon);
 
+        // Whether this perk can express itself at all on a weapon of the given fire type - checked
+        // by every draw site (WeaponGenerator/LevelUpUtility/StoreUtility/BlacksmithUtility) so a
+        // perk that would do nothing is never offered rather than being a wasted pick. Almost every
+        // perk either bakes into Weapon's own stats or reacts to a hit and works on both fire types,
+        // so the default is true; SplitShotWeaponPerkData is the one that overrides it - see there
+        // for why it, unlike Piercing Rounds/Ricochet/Critical Rebound, has no hitscan reading.
+        public virtual bool SupportsFireType(WeaponFireType fireType) => true;
+
         public override string GetDescription() => GetFormattedDescription();
     }
 }

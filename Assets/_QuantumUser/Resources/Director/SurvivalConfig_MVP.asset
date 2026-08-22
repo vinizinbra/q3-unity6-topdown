@@ -39,7 +39,7 @@ MonoBehaviour:
   - Name: Breathing 1
     Kind: 1
     Duration:
-      RawValue: 1966080
+      RawValue: 65470464
     BudgetPerPulse:
       RawValue: 0
     PulseInterval:

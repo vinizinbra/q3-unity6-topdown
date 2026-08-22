@@ -30,7 +30,7 @@ MonoBehaviour:
     EnableLobbyStatistics: 0
     NetworkLogging: 1
     ClientLogging: 2
-  PlayerTtlInSeconds: 60
-  EmptyRoomTtlInSeconds: 60
+  PlayerTtlInSeconds: 300
+  EmptyRoomTtlInSeconds: 300
   EnableCrc: 0
   BestRegionSummaryKey: Quantum.BestRegionSummary

@@ -1,5 +1,6 @@
 namespace Quantum
 {
+    using System;
     using Photon.Deterministic;
 
     // Targets whichever player (within DetectionRange) is farthest from their own nearest other
@@ -11,14 +12,15 @@ namespace Quantum
             if (TryGetSelfContext(f, self, out FP range, out FPVector3 position) == false)
                 return EntityRef.None;
 
-            var hits = EnemyMovementUtility.FindPlayersInRadius(f, position, range);
+            Span<EntityRef> candidates = stackalloc EntityRef[PlayerQueryUtility.MaxPlayerLayerCandidates];
+            int candidateCount = EnemyMovementUtility.FindPlayersInRadius(f, position, range, candidates);
 
             EntityRef best = EntityRef.None;
             FP bestIsolationSqr = default;
 
-            for (int i = 0; i < hits.Count; i++)
+            for (int i = 0; i < candidateCount; i++)
             {
-                EntityRef candidate = hits[i].Entity;
+                EntityRef candidate = candidates[i];
 
                 // Downed/KO players are neither a valid primary target nor worth counting as
                 // "another nearby player" for someone else's isolation score - see docs/revive.md.
@@ -31,15 +33,15 @@ namespace Quantum
                 bool hasOther = false;
                 FP nearestOtherSqr = default;
 
-                for (int j = 0; j < hits.Count; j++)
+                for (int j = 0; j < candidateCount; j++)
                 {
                     if (j == i)
                         continue;
 
-                    if (PlayerLifeStateUtility.IsIncapacitated(f, hits[j].Entity) == true)
+                    if (PlayerLifeStateUtility.IsIncapacitated(f, candidates[j]) == true)
                         continue;
 
-                    if (f.Unsafe.TryGetPointer<Transform3D>(hits[j].Entity, out var otherTransform) == false)
+                    if (f.Unsafe.TryGetPointer<Transform3D>(candidates[j], out var otherTransform) == false)
                         continue;
 
                     FP sqrDistance = EnemyMovementUtility.FlatSqrDistance(candidateTransform->Position, otherTransform->Position);

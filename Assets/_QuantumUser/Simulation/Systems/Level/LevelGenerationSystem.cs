@@ -5,10 +5,11 @@ namespace Quantum
     using Quantum.Physics3D;
     using UnityEngine.Scripting;
 
-    // Generates the level once at Frame 0 (guarded by f.Global->LevelGenerated) out of
-    // LevelConfig.ChunkPool. Any Chunk already in the world (e.g. a hand-placed BossArena with its
-    // own pre-baked navmesh) seeds the grid; everything else is placed by f.Create around it, so
-    // every client in the match generates the identical layout from the same f.RNG sequence.
+    // Generates the level out of LevelConfig.ChunkPool, spread over consecutive ticks
+    // (LevelConfig.ChunksPerGenerationTick at a time) rather than all inside Frame 0 - see
+    // StepGeneration for why and how. Any Chunk already in the world (e.g. a hand-placed BossArena
+    // with its own pre-baked navmesh) seeds the grid; everything else is placed by f.Create around
+    // it, so every client in the match generates the identical layout from the same f.RNG sequence.
     // Keeps running every frame afterward (rather than early-returning for good) to hold off
     // spawning players until PlayerSpawnUtility.IsReadyToSpawn - see its comment for why.
     [Preserve]
@@ -40,7 +41,7 @@ namespace Quantum
         {
             if (f.Global->LevelGenerated == false)
             {
-                GenerateLevel(f);
+                StepGeneration(f);
                 return;
             }
 
@@ -61,7 +62,29 @@ namespace Quantum
             SpawnPendingPlayers(f);
         }
 
-        private void GenerateLevel(Frame f)
+        // One tick's worth of generation. This used to be a single GenerateLevel call that ran
+        // start-to-finish inside Frame 0 - it placed every chunk, and (far more expensively) left
+        // the View to instantiate every chunk prefab in the same Unity frame. That read as a hard
+        // hang on the client, and a hang that long can stall the main thread past a connection
+        // timeout and drop players out of the match. It now places at most
+        // LevelConfig.ChunksPerGenerationTick requests per tick and only flips
+        // f.Global->LevelGenerated on the FINAL tick - which is what PlayerSpawnUtility.IsReadyToSpawn
+        // (and therefore hero spawning) already gates on, so heroes still never appear before the
+        // level is finished.
+        //
+        // Nothing is cached on the system between ticks, deliberately: a Quantum system has to stay
+        // stateless because rollback re-simulates ticks, so anything remembered in a field would
+        // desync. Instead each tick re-derives its working state:
+        //   - occupied / neighborAllowedSides / placed are rebuilt from the Chunk entities that
+        //     actually exist in the frame. SeedFromExistingChunks already did exactly this for the
+        //     hand-placed Boss Arena; it now also picks up everything earlier ticks placed, and
+        //     CommitPlacement's grid<->world math round-trips exactly, so the rebuilt grid is
+        //     identical to the one the old single-tick pass carried in locals.
+        //   - the shuffled request bag is the one thing NOT re-derivable from the world, so rather
+        //     than storing it in frame state, the first tick rolls Global.LevelGenSeed and every
+        //     tick rebuilds the identical bag from a private RNGSession seeded with it. Only the
+        //     cursor into that bag is persisted.
+        private void StepGeneration(Frame f)
         {
             if (f.RuntimeConfig.LevelConfig.Id.IsValid == false)
             {
@@ -72,22 +95,54 @@ namespace Quantum
             }
 
             LevelConfig config = f.FindAsset(f.RuntimeConfig.LevelConfig);
-            Log.Debug($"[LevelGen] starting - GridWidth={config.GridWidth}, GridDepth={config.GridDepth}, CellSize={config.CellSize}, ChunkPool entries={config.ChunkPool?.Length ?? 0}");
+            bool firstStep = f.Global->LevelGenStarted == false;
+
+            if (firstStep)
+            {
+                // Rolled off f.RNG (already seeded from RuntimeConfig.Seed), so it varies per run and
+                // is identical on every client. Bounded well inside Int32 rather than drawn across the
+                // full range - nothing here needs 2^31 distinct layouts, and it keeps the draw clear of
+                // any range-arithmetic edge in RNGSession.Next(int, int).
+                f.Global->LevelGenSeed = f.RNG->Next(1, 1 << 30);
+                f.Global->LevelGenCursor = 0;
+                f.Global->LevelGenStarted = true;
+
+                Log.Debug($"[LevelGen] starting - GridWidth={config.GridWidth}, GridDepth={config.GridDepth}, CellSize={config.CellSize}, ChunkPool entries={config.ChunkPool?.Length ?? 0}, ChunksPerGenerationTick={config.ChunksPerGenerationTick}");
+            }
 
             (int gridOriginX, int gridOriginZ) = ComputeGridOrigin(f, config);
-            Log.Debug($"[LevelGen] grid origin (world cell units) = ({gridOriginX},{gridOriginZ})");
 
             bool[,] occupied = new bool[config.GridWidth, config.GridDepth];
             ChunkConnectionSide[,] neighborAllowedSides = new ChunkConnectionSide[config.GridWidth, config.GridDepth];
             List<PlacedChunk> placed = new List<PlacedChunk>();
 
-            SeedFromExistingChunks(f, config, gridOriginX, gridOriginZ, occupied, neighborAllowedSides, placed);
-            Log.Debug($"[LevelGen] seeded from existing chunks - placed={placed.Count}");
+            SeedFromExistingChunks(f, config, gridOriginX, gridOriginZ, occupied, neighborAllowedSides, placed, firstStep);
 
-            List<ChunkRequest> bag = BuildShuffledBag(f, config);
-            Log.Debug($"[LevelGen] bag built - requests={bag.Count}");
+            RNGSession bagRng = new RNGSession(f.Global->LevelGenSeed);
+            List<ChunkRequest> bag = BuildShuffledBag(config, ref bagRng, firstStep);
 
-            GrowLevel(f, config, gridOriginX, gridOriginZ, occupied, neighborAllowedSides, placed, bag);
+            if (firstStep)
+            {
+                f.Global->LevelGenTotal = bag.Count;
+                Log.Debug($"[LevelGen] grid origin (world cell units) = ({gridOriginX},{gridOriginZ}), seeded from existing chunks - placed={placed.Count}, bag built - requests={bag.Count}");
+            }
+
+            // <= 0 is clamped rather than treated as "everything this tick" - a misauthored 0 would
+            // otherwise silently restore the exact freeze this whole split exists to avoid.
+            int budget = config.ChunksPerGenerationTick > 0 ? config.ChunksPerGenerationTick : 1;
+
+            while (budget > 0 && f.Global->LevelGenCursor < bag.Count)
+            {
+                TryPlaceRequest(f, config, gridOriginX, gridOriginZ, bag[f.Global->LevelGenCursor], occupied, neighborAllowedSides, placed);
+                f.Global->LevelGenCursor++;
+                budget--;
+            }
+
+            if (f.Global->LevelGenCursor < bag.Count)
+            {
+                return; // more ticks to go - LevelGenerated stays false, so nobody spawns yet
+            }
+
             Log.Debug($"[LevelGen] grow complete - placed={placed.Count}");
 
             FillInnerGaps(f, config, gridOriginX, gridOriginZ, occupied);
@@ -133,7 +188,12 @@ namespace Quantum
             return (0, 0);
         }
 
-        private void SeedFromExistingChunks(Frame f, LevelConfig config, int gridOriginX, int gridOriginZ, bool[,] occupied, ChunkConnectionSide[,] neighborAllowedSides, List<PlacedChunk> placed)
+        // Rebuilds the whole working grid from whatever Chunk entities exist right now - originally
+        // just the hand-placed Boss Arena, but since generation is spread over ticks (see
+        // StepGeneration) this also picks up every chunk earlier ticks placed, which is what lets the
+        // system stay stateless between them. logDetails is off on every tick after the first so the
+        // per-chunk lines don't repeat once per tick for the whole generation.
+        private void SeedFromExistingChunks(Frame f, LevelConfig config, int gridOriginX, int gridOriginZ, bool[,] occupied, ChunkConnectionSide[,] neighborAllowedSides, List<PlacedChunk> placed, bool logDetails)
         {
             var filtered = f.Filter<Chunk>();
             while (filtered.Next(out EntityRef entity, out Chunk chunk))
@@ -158,7 +218,10 @@ namespace Quantum
                 MarkOccupied(occupied, neighborAllowedSides, placedChunk);
                 placed.Add(placedChunk);
 
-                Log.Debug($"[LevelGen] found pre-existing {chunk.Type} chunk {entity} at grid cell ({placedChunk.OriginX},{placedChunk.OriginZ}) (world cell {worldOriginX},{worldOriginZ}), footprint {placedChunk.Width}x{placedChunk.Depth}");
+                if (logDetails)
+                {
+                    Log.Debug($"[LevelGen] found pre-existing {chunk.Type} chunk {entity} at grid cell ({placedChunk.OriginX},{placedChunk.OriginZ}) (world cell {worldOriginX},{worldOriginZ}), footprint {placedChunk.Width}x{placedChunk.Depth}");
+                }
             }
         }
 
@@ -305,9 +368,13 @@ namespace Quantum
         // TryPlaceRequest/ViolatesForbiddenNeighbor), so going first would leave it with zero legal
         // anchors and it'd always fail to place. Growing every other pool entry first diversifies the
         // frontier away from Boss, giving LobbyStart real non-forbidden anchors to land on by the time
-        // its turn comes. Every other entry is shuffled via f.RNG so the resulting graph branches
-        // unpredictably.
-        private List<ChunkRequest> BuildShuffledBag(Frame f, LevelConfig config)
+        // its turn comes. Every other entry is shuffled so the resulting graph branches unpredictably.
+        //
+        // Rebuilt from scratch every generation tick off a private RNGSession seeded with
+        // Global.LevelGenSeed (NOT f.RNG, which keeps advancing as chunks are placed) - a pure
+        // function of (config, seed), so every tick and every client reconstructs the identical
+        // ordered bag without any of it having to live in frame state. See StepGeneration.
+        private List<ChunkRequest> BuildShuffledBag(LevelConfig config, ref RNGSession rng, bool logDetails)
         {
             List<ChunkRequest> startRequests = new List<ChunkRequest>();
             List<ChunkRequest> otherRequests = new List<ChunkRequest>();
@@ -316,7 +383,11 @@ namespace Quantum
             {
                 if (entry.Prototypes == null || entry.Prototypes.Length == 0)
                 {
-                    Log.Warn($"[LevelGen] ChunkPool entry {entry.Type} (Count {entry.Count}) has no Prototypes assigned - skipping");
+                    if (logDetails)
+                    {
+                        Log.Warn($"[LevelGen] ChunkPool entry {entry.Type} (Count {entry.Count}) has no Prototypes assigned - skipping");
+                    }
+
                     continue;
                 }
 
@@ -324,9 +395,9 @@ namespace Quantum
 
                 for (int i = 0; i < entry.Count; i++)
                 {
-                    // Each instance independently rolls one of the entry's variants - f.RNG keeps it
-                    // deterministic across clients. Next(0, N) is [0, N).
-                    AssetRef<EntityPrototype> prototype = entry.Prototypes[f.RNG->Next(0, entry.Prototypes.Length)];
+                    // Each instance independently rolls one of the entry's variants.
+                    if (PickVariant(ref rng, entry, out AssetRef<EntityPrototype> prototype) == false)
+                        continue;
 
                     target.Add(new ChunkRequest
                     {
@@ -337,29 +408,73 @@ namespace Quantum
                 }
             }
 
-            Shuffle(f, otherRequests);
+            Shuffle(ref rng, otherRequests);
             otherRequests.AddRange(startRequests);
             return otherRequests;
         }
 
-        private void Shuffle<T>(Frame f, List<T> list)
+        // Deterministic weighted roll among an entry's variants - a single Next(0, totalWeight)
+        // draw walked against each variant's own Weight, the same cumulative-weight shape
+        // CombatDirectorUtility.TrySelectGroup uses to pick an enemy group. A variant with Weight <= 0
+        // is soft-disabled (skipped entirely), EXCEPT when every variant in the entry is <= 0: Unity
+        // zero-inits a freshly added array element, so an unauthored/unmigrated list falls back to the
+        // old uniform pick rather than silently placing nothing. Returns false only when the entry has
+        // no usable variant at all.
+        private bool PickVariant(ref RNGSession rng, ChunkPoolEntry entry, out AssetRef<EntityPrototype> prototype)
+        {
+            FP totalWeight = FP._0;
+
+            for (int i = 0; i < entry.Prototypes.Length; i++)
+            {
+                if (entry.Prototypes[i].Weight > FP._0)
+                    totalWeight += entry.Prototypes[i].Weight;
+            }
+
+            if (totalWeight <= FP._0)
+            {
+                // Next(0, N) is [0, N).
+                prototype = entry.Prototypes[rng.Next(0, entry.Prototypes.Length)].Prototype;
+                return true;
+            }
+
+            FP roll = rng.Next(FP._0, totalWeight);
+            FP cumulative = FP._0;
+            int chosenIndex = -1;
+
+            for (int i = 0; i < entry.Prototypes.Length; i++)
+            {
+                if (entry.Prototypes[i].Weight <= FP._0)
+                    continue;
+
+                cumulative += entry.Prototypes[i].Weight;
+                // Also latches the last positive-weight variant, so float rounding leaving `roll` a
+                // hair under totalWeight still resolves to a real pick instead of none.
+                chosenIndex = i;
+
+                if (roll < cumulative)
+                    break;
+            }
+
+            if (chosenIndex < 0)
+            {
+                prototype = default;
+                return false;
+            }
+
+            prototype = entry.Prototypes[chosenIndex].Prototype;
+            return true;
+        }
+
+        private void Shuffle<T>(ref RNGSession rng, List<T> list)
         {
             for (int i = list.Count - 1; i > 0; i--)
             {
-                int j = f.RNG->Next(0, i + 1);
+                int j = rng.Next(0, i + 1);
                 (list[i], list[j]) = (list[j], list[i]);
             }
         }
 
-        private void GrowLevel(Frame f, LevelConfig config, int gridOriginX, int gridOriginZ, bool[,] occupied, ChunkConnectionSide[,] neighborAllowedSides, List<PlacedChunk> placed, List<ChunkRequest> bag)
-        {
-            foreach (ChunkRequest request in bag)
-            {
-                TryPlaceRequest(f, config, gridOriginX, gridOriginZ, request, occupied, neighborAllowedSides, placed);
-            }
-        }
-
-        // GrowLevel only ever attaches new chunks to the existing frontier, so it has no way to
+        // Placement only ever attaches new chunks to the existing frontier, so it has no way to
         // guarantee full coverage - it can leave scattered single-cell pockets fully enclosed by
         // chunks on every side. Those read identically to the open exterior beyond the level's own
         // edge in `occupied` (both are just `false`), so telling them apart means flood-filling
@@ -559,8 +674,9 @@ namespace Quantum
         // Creates the entity first so the footprint can be read straight off its own baked Chunk
         // component (LevelConfig never duplicates a size that's already authored on the prefab) -
         // then searches for a valid spot for that exact footprint, destroying the entity if none
-        // exists anywhere on the grid. Safe to create-then-destroy within the same one-shot frame-0
-        // pass: the entity never exists in a frame the View layer would see.
+        // exists anywhere on the grid. Safe because both happen inside the same tick: the entity
+        // never exists in a frame the View layer would see, so a rejected candidate never costs a
+        // prefab instantiation (which is what makes generation expensive in the first place).
         private bool TryPlaceRequest(Frame f, LevelConfig config, int gridOriginX, int gridOriginZ, ChunkRequest request, bool[,] occupied, ChunkConnectionSide[,] neighborAllowedSides, List<PlacedChunk> placed)
         {
             if (request.Prototype.Id.IsValid == false)
@@ -624,7 +740,7 @@ namespace Quantum
             return false;
         }
 
-        // Every legal origin for this footprint, in scan order (not shuffled - GrowLevel's caller
+        // Every legal origin for this footprint, in scan order (not shuffled - TryPlaceRequest
         // picks randomly among the results via f.RNG, so determinism only needs the CANDIDATE SET to
         // be identical across clients, not the scan order). A candidate must touch at least one
         // already-placed chunk (ComputeTouchedSides != 0) - not just fit in a free rectangle - so a

@@ -19,12 +19,9 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Relocation Protocol
   RankDescriptions:
-  - 'Reposition: dashing from within 4m of your Sentry moves it to your dash destination,
-    keeping its Health, lifetime, upgrades and modifications.'
-  - 'Rapid Setup: after relocating, that Sentry gains +25% Fire Rate for 2s and 1s
-    of extra lifetime.'
-  - 'Hot Drop: landing also fires an immediate volley and a knockback pulse at everything
-    nearby.'
+  - 'Reposition: dashing from within 4m of your Sentry moves it to your dash destination, keeping its Health, lifetime, upgrades and modifications.'
+  - 'Rapid Setup: dashing from within 4m of your Sentry moves it to your dash destination, then grants it +25% Fire Rate for 2s and 1s of extra lifetime.'
+  - 'Hot Drop: dashing from within 4m of your Sentry moves it to your dash destination, where it immediately fires a volley and a knockback pulse at everything nearby.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: -1

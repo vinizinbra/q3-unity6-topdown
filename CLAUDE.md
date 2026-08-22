@@ -68,7 +68,7 @@ Short version: the code compiles and is registered in `SystemSetup.User.cs`. `To
 Generate Rift Mutation Assets` needs re-running after the two-pool split - it already ran once
 against the old single-list design, so `LevelUpConfig.asset`'s `RiftMutations` list still holds all
 25 GUIDs (11 of which now belong in `RiftMarkMutations`) until it's run again.
-`UpgradePopupWidget.riftMarkContent` (the tab-hold party summary popup's new 4th list) still needs a
+`HeroInfoPopupWidget.riftMarkContent` (the tab-hold party summary popup's new 4th list) still needs a
 scene Transform assigned - no null guard, so it must be wired before a Rift Mark Mutation pick is
 ever recorded. Same gap `ExpOrb` itself once had: no `RiftShardOrb` prototype prefab exists yet and
 `RuntimeConfig.RiftShardConfig`/`RiftShardPrototype` aren't assigned, so Greed's currency half won't
@@ -235,6 +235,29 @@ see the doc's own "Current status" for the full checklist.
 Talents are small, permanent unlocks earned OUTSIDE a match - flat named fields (`PlayerDamageLevel`...`PlayerExperienceLevel`, twelve 0-5 per-player leveling stats each worth +5%/level; `HasWeaponChest`/`HasHeroChest`/`HasGlobalUpgradeChest`/`HasUnlockedRift`/`CanFindStones`/`HasEvent`, six shared/coop bools OR'd across every connected player) living on `RuntimePlayer.Talents` - as of 2026-08-07 a single nested `PlayerTalents` struct field (grouped together with `WeaponLevel`/`RerollQuantity`, see "Level-Up Upgrades" above) rather than flat on `RuntimePlayer` itself. Same "seeded once from outside the match" contract `WeaponLevel` already had, persisted via one new `PlayerPrefObject` JSON pref (`MatchMakingConfig.TalentsPref`) mirroring `WeaponTalentLevelPref`. No hand-placed boundary entity - `ChunkType.Start` was renamed to `ChunkType.LobbyStart` in place, and `LevelGenerationSystem.TryGetLobbyStartBounds` reads that chunk's own world-space footprint straight off its existing `Transform3D`/`Chunk` fields (the same way it already reads the Boss Arena's footprint back out for its own grid-origin math); `LobbyBoundarySystem` polls that footprint each tick and transitions `Global.CurrentState` from `GameState.Lobby` to `GameState.Survival` (see "Game State" below) once every connected, spawned player has physically walked outside it - `CombatDirectorSystem` (and therefore all enemy spawning/`Global.SurvivalTime` counting) only runs during `GameState.Survival`. Talent-gated spawning is a `ChunkSpawnConfig` DataAsset (`Assets/_QuantumUser/Simulation/Assets/Config/ChunkSpawnConfig.cs`), holding a `SpawnEntityWithRequirement[] Spawns` array (`AssetRef<EntityPrototype> Prototype`, `FPVector3 Offset`, `SharedTalentRequirement Requirement`, `FP Chance` per entry) - referenced via one new `AssetRef<ChunkSpawnConfig> SpawnConfig` field on `Chunk` itself (`Chunk.qtn`), typically assigned on the `LobbyStart` chunk prototype. Was originally a qtn *component* of the same shape, one instance per entity - reworked into an `AssetObject` array (same "array field on an `AssetObject`, not a component" shape `LevelConfig.ChunkPool`/`ChunkPoolEntry[]` already uses) once a single chunk needed more than one independent conditional spawn at once (e.g. Weapon+Hero+GlobalUpgrade chests together), which the old component shape couldn't do - Quantum entities can only carry one instance of a given component type. `TalentGateSystem` resolves every `Chunk` entity's own `SpawnConfig` (if assigned) exactly once (`f.Create` per satisfied/chance-rolled entry, the first entity-spawn-at-runtime pattern this codebase has used for something otherwise normally hand-placed, like a Chest). Nested/child `EntityPrototype`s were explicitly ruled out as a way to co-locate spawns with the chunk - Quantum's prefab importer only reads a prefab's root GameObject, silently ignoring nested `QuantumEntityPrototype`s. Full design, file map, current status, and known simplifications: **`docs/talents.md`**. Read it before touching anything Talents/meta-progression/LobbyStart/ChunkSpawnConfig related.
 
 Short version: the code compiles once codegen picks up the new `Talents.qtn`/`Chunk.qtn` fields, and is registered in `SystemSetup.User.cs`, but no `TalentsConfig.asset` or `ChunkSpawnConfig.asset` exists yet (so `RuntimeConfig.TalentsConfig` and every chunk's `SpawnConfig` are unassigned) - nothing talent-gated spawns without both authored. `Assets/_QuantumUser/Entities/LevelChunk/LevelChunk.prefab` also still has the OLD component-based `SpawnEntityWithRequirement` added from before this rework - needs manual removal/replacement with a `SpawnConfig` assignment once codegen regenerates (see `docs/talents.md`'s own authoring checklist). On top of the pre-existing general "no Chest prototypes authored" gap `docs/chests.md` already tracks. Nothing currently *writes* to the new `player_talents` pref - same gap `weapon_talent_level` already had (an account/profile screen elsewhere would be what actually raises these over time). Not yet manually verified end-to-end in-Editor.
+
+## Hero Info Popup (Tab-hold)
+
+The Tab-hold overlay was renamed `UpgradePopupWidget` -> `HeroInfoPopupWidget` (GUID-preserving
+rename, every existing scene assignment survived) and widened from a pure upgrade-history list into
+a full "everything I'm currently running" readout: a new `HeroInfoWidget` (head icon, health/shield,
+Base Skill and Passive Skill rows), then `CurrentWeaponUiWidget` (equipped weapon + its perks,
+reused as-is), then the pre-existing 4 `LevelUpPoolKind`-split upgrade-history lists, unchanged.
+`HeroInfoWidget` reimplements nothing - it composes `PlayerPortraitUiWidget`/`HealthUiWidget`/
+`ShieldUiWidget`/`UpgradeWidget` and forwards `Initialize`, same shape as `PartyHudWidget`
+(`UpgradeWidget` is already a generic icon+name+description+optional-level row; the two skill rows
+pass level 0 so its badge stays hidden). Base Skill resolves off the LIVE `CharacterSkills.
+HeroSkill.Skill`, not `CharacterData.HeroSkill`, so a mid-run Hero Skill swap shows up. One
+simulation-side addition: `PassiveData` gained `Icon`/`DisplayName` via a new `PassiveData.View.cs`
+partial (mirrors `SkillData`/`SkillData.View.cs`) - it previously had only a `Description`. Full
+design, file map, and the Editor authoring checklist: **`docs/hero-info-popup.md`**.
+
+Short version: the code compiles, no `.qtn` change so no codegen dependency, and the rename cost the
+scene nothing. Nothing new is authored yet, though - no `HeroInfoWidget` hierarchy or
+`CurrentWeaponUiWidget` instance exists under the popup, so `heroInfoWidget`/`currentWeaponWidget`
+are unassigned (both are plain optional null-checks, so the popup still works as the old
+upgrade-history list until they're built), and all 6 `PassiveData` assets have unauthored
+`Icon`/`DisplayName`. Not yet manually verified end-to-end in-Editor.
 
 ## Minimap
 

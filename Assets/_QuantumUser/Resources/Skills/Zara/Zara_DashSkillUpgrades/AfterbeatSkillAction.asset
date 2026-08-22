@@ -19,20 +19,16 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Afterbeat
   RankDescriptions:
-  - 'Quick Tempo: dashing generates 20 Resonance, plus 10 more per enemy you pass
-    through.'
-  - 'Afterbeat: 1s after dashing, a beat erupts at your starting position, damaging
-    and knocking back nearby enemies.'
-  - 'Double Beat: beats erupt at BOTH ends of the dash, and enemies they hit generate
-    additional Resonance.'
+  - 'Quick Tempo: dashing generates 20 Resonance, plus 10 more per enemy you pass through.'
+  - 'Afterbeat: dashing generates 20 Resonance plus 10 per enemy passed through, and 1s later a beat erupts at your starting position, damaging and knocking back nearby enemies.'
+  - 'Double Beat: dashing generates 20 Resonance plus 10 per enemy passed through, and beats erupt at both ends of the dash, generating additional Resonance from enemies they hit.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 7
   Interval:
     RawValue: 0
   Activated: 1
-  Description: Dashing generates Resonance - and eventually leaves damaging beats
-    behind you.
+  Description: Dashing generates Resonance - and eventually leaves damaging beats behind you.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

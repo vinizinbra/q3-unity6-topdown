@@ -167,16 +167,17 @@ namespace Quantum
             weapon->Ammo = restored > weapon->MagazineSize ? weapon->MagazineSize : restored;
         }
 
-        // No-ops for a Hitscan weapon (nothing to aim a secondary projectile off of) and if there's
-        // no other enemy within CriticalReboundRadius of the crit's own target - a secondary shot
-        // with nothing to chase to isn't fired at all rather than flying off in an arbitrary
-        // direction, documented simplification (see docs/weapon-perks.md).
+        // No-ops if there's no other enemy within CriticalReboundRadius of the crit's own target - a
+        // secondary shot with nothing to chase isn't fired at all rather than flying off in an
+        // arbitrary direction, documented simplification (see docs/weapon-perks.md).
+        //
+        // A Hitscan weapon takes the branch below rather than being skipped outright, which is what
+        // it used to do: the perk is "a crit bounces to a second target", and nothing about that
+        // needs a projectile - only the way it gets there does. A beam lands its bounce instantly on
+        // the second target instead, exactly like any other hitscan contact.
         private static void TryFireCriticalRebound(Frame f, EntityRef owner, Weapon* weapon, WeaponOnCritReactions* reactions, EntityRef primaryTarget)
         {
             WeaponDataAsset weaponData = f.FindAsset(weapon->WeaponData);
-
-            if (weaponData.FireType != WeaponFireType.Projectile || weaponData.ProjectileData.IsValid == false)
-                return;
 
             if (f.Unsafe.TryGetPointer<Transform3D>(primaryTarget, out var primaryTransform) == false)
                 return;
@@ -187,6 +188,24 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<Transform3D>(secondaryTarget, out var secondaryTransform) == false)
                 return;
 
+            FP reboundDamage = weaponData.Damage * weapon->DamageMultiplier * reactions->CriticalReboundDamageMultiplier;
+
+            if (weaponData.FireType != WeaponFireType.Projectile || weaponData.ProjectileData.IsValid == false)
+            {
+                // Applied through the same funnel a normal beam contact uses, so the bounce carries
+                // the weapon's element, Element Infusion and Quantum Rounds just like the shot that
+                // crit did. hitIndex starts fresh: this lands on a different target from the crit
+                // itself, so there is nothing for it to collide with in Quantum's per-tick event
+                // dedup (see Events.qtn's EntityDamaged.HitIndex).
+                byte hitIndex = 0;
+                WeaponSystem.ApplyHitscanHit(f, owner, weaponData, secondaryTarget, secondaryTransform->Position, reboundDamage, ref hitIndex);
+
+                // The only view hook a hitscan shot has - draws the bounce from the crit's own target
+                // to the second one, same as FireHitscanPellet raises one per Ricochet segment.
+                f.Events.HitscanFired(owner, primaryTransform->Position, secondaryTransform->Position, true, secondaryTarget);
+                return;
+            }
+
             ProjectileDataAsset projectileData = f.FindAsset(weaponData.ProjectileData);
             ProjectileMovementData movement = f.FindAsset(projectileData.Movement);
 
@@ -195,9 +214,7 @@ namespace Quantum
             if (launch.IsValid == false)
                 return;
 
-            FP damage = weaponData.Damage * weapon->DamageMultiplier * reactions->CriticalReboundDamageMultiplier;
-
-            EntityRef secondary = ProjectileSpawner.Spawn(f, owner, weaponData.ProjectileData, launch, damage, DamageSource.Weapon,
+            EntityRef secondary = ProjectileSpawner.Spawn(f, owner, weaponData.ProjectileData, launch, reboundDamage, DamageSource.Weapon,
                 target: secondaryTarget, element: weaponData.Element);
 
             // Same engagement-range cap every other weapon-fired projectile gets - see

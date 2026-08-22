@@ -70,12 +70,12 @@ namespace QuantumUser.Editor
                 asset.DisplayName = "Last Stand";
                 asset.Activated = false;
                 asset.MaxRank = 3;
-                asset.Description = "Your Rage stops being fragile - it survives between Overdrives, then survives being hit, then survives death itself.";
+                asset.Description = "Rage stops being fragile - it survives Overdrive ending, damage, and death.";
                 asset.RankDescriptions = new[]
                 {
-                    "Rage now persists after Overdrive ends - your next Overdrive starts where the last one left off.",
-                    "Rage persists between Overdrives, and taking damage during Overdrive now only costs half of it instead of all of it.",
-                    "Rage persists and resists damage - and Too Angry to Die: lethal damage during Overdrive instead leaves you at 1 Health, spends your Rage, ends Overdrive, and grants 2s of invulnerability.",
+                    "Rage carries over between Overdrives instead of resetting.",
+                    "Rage carries over between Overdrives, and damage taken during Overdrive costs only half of it.",
+                    "Rage carries over and resists damage. Lethal damage during Overdrive leaves you at 1 Health, spends your Rage, and grants 2s of invulnerability.",
                 };
                 asset.RageLossFraction = new[] { FP._1, FP._0_50, FP._0_50 };
                 asset.CheatDeathImmunityDuration = 2;
@@ -86,12 +86,12 @@ namespace QuantumUser.Editor
                 asset.DisplayName = "Full Throttle";
                 asset.Activated = false;
                 asset.MaxRank = 3;
-                asset.Description = "At max Rage during Overdrive, gain bonus Weapon Damage - eventually Reload Speed and instant reloads too.";
+                asset.Description = "At max Rage, gain bonus Weapon Damage and faster reloads.";
                 asset.RankDescriptions = new[]
                 {
-                    "At max Rage: +20% Weapon Damage.",
-                    "At max Rage: +30% Weapon Damage, +50% Reload Speed.",
-                    "At max Rage: +40% Weapon Damage, instant reloads.",
+                    "At max Rage, +20% Weapon Damage.",
+                    "At max Rage, +30% Weapon Damage and +50% Reload Speed.",
+                    "At max Rage, +40% Weapon Damage and instant reloads.",
                 };
                 asset.WeaponDamageBonus = new[] { FP.FromString("0.20"), FP.FromString("0.30"), FP.FromString("0.40") };
                 asset.ReloadSpeedBonus = new[] { FP._0, FP._0_50, FP._0_50 };
@@ -102,12 +102,12 @@ namespace QuantumUser.Editor
                 asset.DisplayName = "Uncontrolled Fury";
                 asset.Activated = false;
                 asset.MaxRank = 3;
-                asset.Description = "Kills during Overdrive extend the activation - killing your Vendetta target extends it further still.";
+                asset.Description = "Kills during Overdrive extend it.";
                 asset.RankDescriptions = new[]
                 {
-                    "Every 3rd kill during Overdrive extends it by 1s (up to +3s per activation).",
-                    "Every 2nd kill during Overdrive extends it by 1s (up to +5s per activation).",
-                    "Every 2nd kill during Overdrive extends it by 1s (up to +7s per activation) - killing your Vendetta target grants an additional, uncapped +2s.",
+                    "Every 3rd kill during Overdrive extends it by 1s, up to +3s.",
+                    "Every 2nd kill during Overdrive extends it by 1s, up to +5s.",
+                    "Every 2nd kill during Overdrive extends it by 1s, up to +7s. Vendetta kills add an uncapped +2s.",
                 };
                 asset.PerKillExtension = new FP[] { 1, 1, 1 };
                 asset.KillsPerExtension = new byte[] { 3, 2, 2 };
@@ -120,12 +120,12 @@ namespace QuantumUser.Editor
                 asset.DisplayName = "Ignition";
                 asset.Activated = false;
                 asset.MaxRank = 3;
-                asset.Description = "At max Rage during Overdrive, every hit guarantees Burn - eventually leaving a trail of fire and igniting the battlefield outright.";
+                asset.Description = "At max Rage, every weapon hit Burns.";
                 asset.RankDescriptions = new[]
                 {
                     "At max Rage, weapon hits guarantee Burn.",
-                    "At max Rage, weapon hits guarantee Burn - and Burning enemies you kill leave a Burning Ground patch behind.",
-                    "At max Rage, weapon hits guarantee Burn and Burning kills leave Burning Ground - the first time you reach max Rage each activation, Inferno also detonates a radial Burn pulse around you.",
+                    "At max Rage, weapon hits Burn, and Burning kills leave a Burning Ground patch.",
+                    "At max Rage, weapon hits Burn and Burning kills leave Burning Ground. Reaching max Rage also detonates a radial Burn pulse, once per Overdrive.",
                 };
                 asset.BurnOnHitStacks = new byte[] { 1, 1, 1 };
                 asset.HasBurningGround = new[] { false, true, true };
@@ -149,12 +149,12 @@ namespace QuantumUser.Editor
             {
                 asset.DisplayName = "Blood Debt";
                 asset.MaxRank = 3;
-                asset.Description = "Vendetta marks last longer, feed your Rage, and eventually heal you when consumed.";
+                asset.Description = "Vendetta marks last longer, feed your Rage, and heal you.";
                 asset.RankDescriptions = new[]
                 {
                     "Vendetta marks last 12s.",
-                    "Vendetta marks last 12s, Shield damage now also marks your attacker, and every Vendetta kill grants +2 Rage.",
-                    "Vendetta marks last 12s, Shield damage counts, Vendetta kills grant +2 Rage, and consuming a mark heals you for 60% of the damage it dealt (capped at 15% of your max Health).",
+                    "Vendetta marks last 12s. Shield damage also marks attackers, and each Vendetta kill grants +2 Rage.",
+                    "Vendetta marks last 12s, Shield damage marks attackers, and kills grant +2 Rage. Consuming a mark heals 60% of the damage it dealt, up to 15% of your Health.",
                 };
                 asset.MarkDuration = new FP[] { 12, 12, 12 };
                 asset.RageOnVendettaKill = 2;
@@ -166,12 +166,12 @@ namespace QuantumUser.Editor
             {
                 asset.DisplayName = "Wildfire";
                 asset.MaxRank = 3;
-                asset.Description = "Killing any Burning enemy spreads the fire to nearby enemies - eventually propagating the dying enemy's own live Burn instead of a flat amount.";
+                asset.Description = "Killing a Burning enemy spreads the fire to nearby enemies.";
                 asset.RankDescriptions = new[]
                 {
-                    "Killing a Burning enemy spreads Burn to 2 nearby enemies within 4m.",
-                    "Killing a Burning enemy spreads a stronger Burn to 5 nearby enemies within 6m.",
-                    "Killing a Burning enemy spreads Burn to 5 nearby enemies within 6m, propagating 75% of its own remaining Burn instead of a flat amount - a fire this strong keeps jumping.",
+                    "Killing a Burning enemy spreads Burn to 2 enemies within 4m.",
+                    "Killing a Burning enemy spreads a stronger Burn to 5 enemies within 6m.",
+                    "Killing a Burning enemy spreads 75% of its remaining Burn to 5 enemies within 6m.",
                 };
                 asset.Radius = new FP[] { 4, 6, 6 };
                 asset.BurnDuration = new FP[] { 3, 4, 4 };
@@ -184,12 +184,12 @@ namespace QuantumUser.Editor
             {
                 asset.DisplayName = "Flashpoint";
                 asset.MaxRank = 3;
-                asset.Description = "Burning enemies become far more dangerous to be near - bonus Critical Chance, crits that detonate, and eventually outright execution.";
+                asset.Description = "Burning enemies take extra crits, explode on crit, and can be executed.";
                 asset.RankDescriptions = new[]
                 {
-                    "Hot Target: +10% Critical Chance against Burning enemies.",
-                    "Hot Target, plus Flashpoint: critical hits against Burning enemies detonate a fiery explosion (3m radius, 50% damage, capped at 5 targets).",
-                    "Hot Target, Flashpoint, plus Cremation: Burning enemies below a Health threshold are executed outright (15% for Filler/Normal, 8% for Specialist/Heavy). Elite and Boss can't be executed - instead you deal +25% damage to them while they're Burning and below 15% Health.",
+                    "+10% Critical Chance against Burning enemies.",
+                    "+10% Critical Chance against Burning enemies. Crits on them explode for 50% damage in 3m, up to 5 targets.",
+                    "+10% Critical Chance against Burning enemies, whose crits explode. Burning enemies below 15% Health are executed - 8% for Specialist and Heavy, while Elite and Boss instead take +25% damage.",
                 };
                 asset.CriticalChanceBonusVsBurning = FP._0_10;
                 asset.ExplosionRadius = 3;
@@ -206,12 +206,12 @@ namespace QuantumUser.Editor
             {
                 asset.DisplayName = "Run & Gun";
                 asset.MaxRank = 3;
-                asset.Description = "Dashing restores ammo and grants a brief Fire Rate window - eventually adding bonus Weapon Damage and a window of unlimited ammo.";
+                asset.Description = "Dashing reloads and grants a burst of Fire Rate.";
                 asset.RankDescriptions = new[]
                 {
                     "Dashing restores 50% of your magazine and grants +20% Fire Rate for 2s.",
-                    "Dashing fully reloads your magazine, grants +30% Fire Rate for 2s, and +15% Weapon Damage for 2s.",
-                    "Dashing fully reloads your magazine, grants +40% Fire Rate for 2s, +15% Weapon Damage for 2s, and 2s of unlimited ammo.",
+                    "Dashing fully reloads and grants +30% Fire Rate and +15% Weapon Damage for 2s.",
+                    "Dashing fully reloads and grants +40% Fire Rate, +15% Weapon Damage and unlimited ammo for 2s.",
                 };
                 asset.AmmoRestoreFraction = new[] { FP._0_50, FP._1, FP._1 };
                 asset.FireRateBonus = new[] { FP._0_20, FP.FromString("0.30"), FP.FromString("0.40") };
@@ -225,12 +225,12 @@ namespace QuantumUser.Editor
             {
                 asset.DisplayName = "Vendetta Strike";
                 asset.MaxRank = 3;
-                asset.Description = "Dashing through an enemy guarantees Burn - eventually also marking it for Vendetta and rewarding Overdrive.";
+                asset.Description = "Dashing through an enemy Burns it.";
                 asset.RankDescriptions = new[]
                 {
                     "Dashing through an enemy guarantees Burn.",
-                    "Also marks the enemy for Vendetta - refreshing the mark if it already had one, or creating a fresh one even if it's never hit you.",
-                    "Also reduces your Hero Skill cooldown by 2s if Overdrive is dormant, or extends the current Overdrive by 1s if already active.",
+                    "Dashing through an enemy Burns it and marks it for Vendetta, even if it has never hit you.",
+                    "Dashing through an enemy Burns and marks it, and cuts 2s off Overdrive's cooldown or extends an active Overdrive by 1s.",
                 };
                 asset.Radius = FP._1_50;
                 asset.BurnDuration = 3;

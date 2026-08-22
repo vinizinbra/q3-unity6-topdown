@@ -21,16 +21,14 @@ MonoBehaviour:
   RankDescriptions:
   - Discharge deals +30% damage.
   - Discharge deals +60% damage.
-  - Discharge deals +100% damage. Specialist and Heavy enemies take an additional
-    +30% Discharge damage.
+  - Discharge deals +100% damage. Specialist and Heavy enemies take an additional +30% Discharge damage.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Discharge deals significantly more damage, especially against Specialist
-    and Heavy enemies.
+  Description: Discharge deals significantly more damage, especially against Specialist and Heavy enemies.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

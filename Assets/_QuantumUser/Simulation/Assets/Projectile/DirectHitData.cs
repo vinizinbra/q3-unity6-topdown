@@ -7,6 +7,20 @@ namespace Quantum
         // Entities the shot passes through before it's spent; 1 stops on the first one.
         public int PierceCount = 1;
 
+        // A weapon is held wherever its hero carries it (CharacterData.WeaponPosition - Kai's sits a
+        // full 2 units up, over his head) while a shot is aimed at its target's collider CENTER, so a
+        // flat-looking shot is really travelling DOWNWARD - at 5 units of range that is roughly a 17
+        // degree dive. The first hit lands fine, but the rest of the flight then buries itself in the
+        // floor a step past that enemy, so a pierce almost never reaches the enemy standing behind
+        // it: the perk reads as doing nothing, worst on exactly the heroes whose muzzle sits highest.
+        //
+        // Once a shot has actually pierced something, its heading is levelled onto the horizontal
+        // plane it connected on (same speed, same bearing, no vertical component - the dive has
+        // already done its job of reaching the first body) so the remaining pierces play out along
+        // the row of enemies instead of into the ground. Only applies to a movement that holds its
+        // launch heading - an arc keeps its own (see ProjectileMovementData.FlattensOnPierce).
+        public bool FlattenTrajectoryOnPierce = true;
+
         // Split Shot re-spawns through this same DirectHitData asset - caps how many generations of
         // splitting can cascade off one original shot, same reasoning as AreaHitData.
         // MaxSpawnUpgradeDepth (a misconfigured/self-referencing weapon still can't recurse forever).
@@ -48,7 +62,10 @@ namespace Quantum
             projectile->RemainingPierces--;
 
             if (projectile->RemainingPierces > 0)
+            {
+                TryFlattenTrajectory(f, projectile);
                 return false;
+            }
 
             if (projectile->Source == DamageSource.Weapon && projectile->RemainingBounces > 0
                 && TryRicochet(f, projectile, hitEntity, point) == true)
@@ -81,7 +98,7 @@ namespace Quantum
                 return;
 
             // Bigger Boom (Pixie passive ascension) - read live, same reasoning as
-            // WeaponSystem.ApplyHitscanWeaponPerks' own copy of this line: mid-run rank-ups scale
+            // WeaponSystem.ApplyHitscanTerminalPerks' own copy of this line: mid-run rank-ups scale
             // immediately and compound off the same unscaled base radius every time.
             // Skill Area (CharacterStats.AreaRadiusMultiplier) folded in alongside Bigger Boom so it
             // scales these weapon explosions (Cataclysm Round / Explosive Sequence) too, matching the
@@ -107,6 +124,27 @@ namespace Quantum
             {
                 SpawnSplitProjectiles(f, projectile, point, weapon, procs);
             }
+        }
+
+        // Levels a still-flying shot onto the horizontal plane - see FlattenTrajectoryOnPierce. Only
+        // reached on a hit the shot actually survived, so a shot that never pierces pays nothing for
+        // this. The rest of THIS tick's move still runs along the old heading (ProjectileSystem
+        // resolves its destination before the hit is applied, same as it already does for a Ricochet
+        // redirect) - a fraction of a unit at any real projectile speed.
+        private void TryFlattenTrajectory(Frame f, Projectile* projectile)
+        {
+            if (FlattenTrajectoryOnPierce == false)
+                return;
+
+            ProjectileDataAsset projectileData = f.FindAsset(projectile->ProjectileData);
+
+            if (f.FindAsset(projectileData.Movement).FlattensOnPierce == false)
+                return;
+
+            if (ProjectileAimUtility.TryFlattenHeading(projectile->Velocity, out FPVector3 flattened) == false)
+                return;
+
+            projectile->Velocity = flattened;
         }
 
         // Every hit (pierced through or the one that ends it), not just the terminal one - "hits

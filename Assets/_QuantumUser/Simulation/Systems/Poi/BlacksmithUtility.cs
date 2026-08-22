@@ -146,6 +146,10 @@ namespace Quantum
             WeaponPerkPoolData pool = f.FindAsset(config.PerkPool);
             BlacksmithBreakTuning tuning = config.ResolveBreakTuning(f.Global->BreathingIndex);
 
+            // Same exclusion as an already-owned perk: a perk that can do nothing on this weapon's
+            // fire type would be a dead purchase. See WeaponPerkData.SupportsFireType.
+            WeaponFireType fireType = WeaponGenerator.ResolveFireType(f, weapon->WeaponData);
+
             for (int i = 0; i < pool.Perks.Count; i++)
             {
                 AssetRef<WeaponPerkData> perkRef = pool.Perks[i];
@@ -154,6 +158,10 @@ namespace Quantum
                     continue;
 
                 WeaponPerkData data = f.FindAsset(perkRef);
+
+                if (data.SupportsFireType(fireType) == false)
+                    continue;
+
                 int weight = tuning.GetWeight(data.Rarity);
 
                 if (weight <= 0)

@@ -20,8 +20,8 @@ MonoBehaviour:
   DisplayName: Emergency Repair
   RankDescriptions:
   - Ending a dash within 6m of your Sentry repairs 30% of its Max Health.
-  - The repair also extends its remaining lifetime by 2s (up to 4s total per Sentry).
-  - 'Emergency Overclock: the repair also grants that Sentry +50% Fire Rate for 2s.'
+  - Ending a dash within 6m of your Sentry repairs 30% of its Max Health and extends its lifetime by 2s (up to 4s per Sentry).
+  - 'Emergency Overclock: ending a dash within 6m of your Sentry repairs 30% of its Max Health, extends its lifetime by 2s, and grants it +50% Fire Rate for 2s.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 5

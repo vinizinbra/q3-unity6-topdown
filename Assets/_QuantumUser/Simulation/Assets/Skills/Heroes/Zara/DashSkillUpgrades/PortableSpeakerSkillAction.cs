@@ -1,5 +1,6 @@
 namespace Quantum
 {
+    using System;
     using Photon.Deterministic;
     using Quantum.Physics3D;
     using UnityEngine;
@@ -89,15 +90,16 @@ namespace Quantum
             // broadphase is concerned, so a plain Player-mask query would buff every ally EXCEPT the
             // one who earned it. Same fix, same reason, as Brute's Bodyguard - see that class.
             FPVector3 position = filter.Transform3D->Position;
-            var allies = EnemyMovementUtility.FindPlayersInRadiusIncludingDashing(f, position, DashEndBuffRadius);
+            Span<EntityRef> allies = stackalloc EntityRef[PlayerQueryUtility.MaxPlayerLayerCandidates];
+            int alliesCount = EnemyMovementUtility.FindPlayersInRadiusIncludingDashing(f, position, DashEndBuffRadius, allies);
             HitEffectData buff = f.FindAsset(DashEndBuffEffect);
 
-            for (int i = 0; i < allies.Count; i++)
+            for (int i = 0; i < alliesCount; i++)
             {
                 var context = new HitEffectContext
                 {
                     Owner = filter.Entity,
-                    Target = allies[i].Entity,
+                    Target = allies[i],
                     Position = position,
                     PushDirection = FPVector3.Zero,
                     Damage = FP._0,

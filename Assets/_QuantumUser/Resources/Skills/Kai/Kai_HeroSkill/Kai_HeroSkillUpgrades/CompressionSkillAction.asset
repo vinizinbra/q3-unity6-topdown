@@ -20,16 +20,15 @@ MonoBehaviour:
   DisplayName: Compression
   RankDescriptions:
   - Vortex damages trapped enemies every 0.5s.
-  - Vortex deals 8% more damage for each additional trapped enemy, up to +56%.
-  - Every third Vortex pulse creates a powerful implosion at its core.
+  - Vortex damages trapped enemies every 0.5s, dealing 8% more per additional enemy trapped, up to +56%.
+  - Vortex damages trapped enemies every 0.5s, scaling with how many are trapped. Every third pulse creates a powerful implosion at its core.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Vortex damages trapped enemies, scaling up with how many are caught
-    at once.
+  Description: Vortex damages trapped enemies, scaling up with how many are caught at once.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

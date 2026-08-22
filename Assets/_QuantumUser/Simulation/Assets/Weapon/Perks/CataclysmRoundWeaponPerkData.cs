@@ -2,7 +2,7 @@ namespace Quantum
 {
     using Photon.Deterministic;
 
-    // Consumed by DirectHitData/WeaponSystem.ApplyHitscanWeaponPerks - the last bullet in every
+    // Consumed by DirectHitData/WeaponSystem.ApplyHitscanTerminalPerks - the last bullet in every
     // magazine (Ammo == 1 at fire time, same moment Final Round reads) becomes a big explosive hit.
     public unsafe class CataclysmRoundWeaponPerkData : WeaponPerkData
     {

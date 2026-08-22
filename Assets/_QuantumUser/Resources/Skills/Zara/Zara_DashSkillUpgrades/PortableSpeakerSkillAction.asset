@@ -19,20 +19,16 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Portable Speaker
   RankDescriptions:
-  - Dashing leaves behind a Portable Speaker alternating Damage and Support Beats
-    at reduced strength.
-  - Portable Speaker lasts longer and covers a larger area, and completing the dash
-    also buffs nearby allies.
-  - 'Mobile Stage: the Speaker inherits your own Beat interval, radius and Sound
-    Boost profile at reduced effectiveness.'
+  - Dashing leaves behind a Portable Speaker alternating Damage and Support Beats at reduced strength.
+  - Dashing leaves a Portable Speaker alternating Damage and Support Beats for longer and over a wider area, and completing the dash buffs nearby allies.
+  - 'Mobile Stage: dashing leaves a Portable Speaker that inherits your own Beat interval, radius and Sound Boost profile at reduced effectiveness.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 5
   Interval:
     RawValue: 0
   Activated: 1
-  Description: Dashing leaves behind a Portable Speaker running the same Damage/Support
-    rhythm at reduced strength. It never heals.
+  Description: Dashing leaves behind a Portable Speaker running the same Damage/Support rhythm at reduced strength. It never heals.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

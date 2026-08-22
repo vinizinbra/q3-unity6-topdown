@@ -1,5 +1,6 @@
 namespace Quantum
 {
+    using System;
     using Photon.Deterministic;
 
     // A big central slam plus an outward-expanding second wave - e.g. Scrapjaw's Crusher Slam.
@@ -63,11 +64,11 @@ namespace Quantum
         private void FireRingBand(Frame f, ref EnemySystem.Filter filter, EnemyActionData action, FP innerBound, FP outerBound)
         {
             FPVector3 center = filter.Enemy->SkillStartPosition;
-            var hits = EnemyMovementUtility.FindPlayersInRadius(f, center, outerBound);
-
-            for (int i = 0; i < hits.Count; i++)
+            Span<EntityRef> hits = stackalloc EntityRef[PlayerQueryUtility.MaxPlayerLayerCandidates];
+            int hitsCount = EnemyMovementUtility.FindPlayersInRadius(f, center, outerBound, hits);
+            for (int i = 0; i < hitsCount; i++)
             {
-                EntityRef hitEntity = hits[i].Entity;
+                EntityRef hitEntity = hits[i];
 
                 if (f.Unsafe.TryGetPointer<Transform3D>(hitEntity, out var hitTransform) == false)
                     continue;

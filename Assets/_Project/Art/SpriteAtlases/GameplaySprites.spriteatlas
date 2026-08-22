@@ -65,13 +65,12 @@ SpriteAtlas:
     - {fileID: 2800000, guid: f2b0d6acd2974434fa9993c035800eec, type: 3}
     - {fileID: 2800000, guid: 11e8fcaeceabe4b3c8220e6bfa161095, type: 3}
     - {fileID: 2800000, guid: 19acf56c49556470a8c80dca4d46ccf3, type: 3}
-    - {fileID: 2800000, guid: 09ab27b92d44c4a54a95d6d0d0b9c281, type: 3}
+    - {fileID: 2800000, guid: 3defc518a28524a38851c55150693a74, type: 3}
     - {fileID: 2800000, guid: d7a4a6e9d205b485da8f4c0415a662fd, type: 3}
     - {fileID: 2800000, guid: af7dc1eda53304bb79cf0ecdba700bce, type: 3}
     - {fileID: 2800000, guid: dc60f814ea1354d7388fb7689c93d82a, type: 3}
     - {fileID: 2800000, guid: 937a9d6c28f144847a8dd71d3c155021, type: 3}
     - {fileID: 2800000, guid: 24b9e422c41ad48799d54a95d82cc8e7, type: 3}
-    - {fileID: 2800000, guid: 3defc518a28524a38851c55150693a74, type: 3}
     bindAsDefault: 1
     isAtlasV2: 0
     cachedData: {fileID: 0}
@@ -130,13 +129,6 @@ SpriteAtlas:
     - 7efd4fa9c49b243f8a1d20d07ab29e20: -605909376
     - 7efd4fa9c49b243f8a1d20d07ab29e20: 1377687629
     - 7efd4fa9c49b243f8a1d20d07ab29e20: -142501578
-    - 09ab27b92d44c4a54a95d6d0d0b9c281: 1166301417
-    - 09ab27b92d44c4a54a95d6d0d0b9c281: -2044957003
-    - 09ab27b92d44c4a54a95d6d0d0b9c281: 1263592270
-    - 09ab27b92d44c4a54a95d6d0d0b9c281: -1224975165
-    - 09ab27b92d44c4a54a95d6d0d0b9c281: 99700747
-    - 09ab27b92d44c4a54a95d6d0d0b9c281: -296207809
-    - 09ab27b92d44c4a54a95d6d0d0b9c281: -163092016
     - d7a4a6e9d205b485da8f4c0415a662fd: -313575680
     - d7a4a6e9d205b485da8f4c0415a662fd: 984801944
     - d7a4a6e9d205b485da8f4c0415a662fd: -1367336749
@@ -266,13 +258,6 @@ SpriteAtlas:
   - {fileID: -605909376, guid: 7efd4fa9c49b243f8a1d20d07ab29e20, type: 3}
   - {fileID: 1377687629, guid: 7efd4fa9c49b243f8a1d20d07ab29e20, type: 3}
   - {fileID: -142501578, guid: 7efd4fa9c49b243f8a1d20d07ab29e20, type: 3}
-  - {fileID: 1166301417, guid: 09ab27b92d44c4a54a95d6d0d0b9c281, type: 3}
-  - {fileID: -2044957003, guid: 09ab27b92d44c4a54a95d6d0d0b9c281, type: 3}
-  - {fileID: 1263592270, guid: 09ab27b92d44c4a54a95d6d0d0b9c281, type: 3}
-  - {fileID: -1224975165, guid: 09ab27b92d44c4a54a95d6d0d0b9c281, type: 3}
-  - {fileID: 99700747, guid: 09ab27b92d44c4a54a95d6d0d0b9c281, type: 3}
-  - {fileID: -296207809, guid: 09ab27b92d44c4a54a95d6d0d0b9c281, type: 3}
-  - {fileID: -163092016, guid: 09ab27b92d44c4a54a95d6d0d0b9c281, type: 3}
   - {fileID: -313575680, guid: d7a4a6e9d205b485da8f4c0415a662fd, type: 3}
   - {fileID: 984801944, guid: d7a4a6e9d205b485da8f4c0415a662fd, type: 3}
   - {fileID: -1367336749, guid: d7a4a6e9d205b485da8f4c0415a662fd, type: 3}
@@ -401,13 +386,6 @@ SpriteAtlas:
   - torso3
   - head2
   - head1
-  - RR_Sound
-  - RR_Turret
-  - RR_Overdrive
-  - RR_Dash
-  - RR_Juggernaut
-  - RR_Vortex
-  - RR_BunnyBomb
   - ZaraDanceMoves_10
   - ZaraDanceMoves_11
   - ZaraDanceMoves_9

@@ -814,7 +814,7 @@ MonoBehaviour:
   viewTransform: {fileID: 2784763235198929911}
   isBot: 0
   widgetOffset: {x: 0, y: 0, z: 0}
-  weaponRowOffset: {x: 0, y: -1.5, z: 0}
+  weaponRowOffset: {x: 0, y: 0, z: 0}
   groundLayer:
     serializedVersion: 2
     m_Bits: 64

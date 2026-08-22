@@ -20,18 +20,15 @@ MonoBehaviour:
   DisplayName: Vendetta Strike
   RankDescriptions:
   - Dashing through an enemy guarantees Burn.
-  - Also marks the enemy for Vendetta - refreshing the mark if it already had one,
-    or creating a fresh one even if it's never hit you.
-  - Also reduces your Hero Skill cooldown by 2s if Overdrive is dormant, or extends
-    the current Overdrive by 1s if already active.
+  - Dashing through an enemy Burns it and marks it for Vendetta, even if it has never hit you.
+  - Dashing through an enemy Burns and marks it, and cuts 2s off Overdrive's cooldown or extends an active Overdrive by 1s.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 2
   Interval:
     RawValue: 0
   Activated: 1
-  Description: Dashing through an enemy guarantees Burn - eventually also marking
-    it for Vendetta and rewarding Overdrive.
+  Description: Dashing through an enemy Burns it.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

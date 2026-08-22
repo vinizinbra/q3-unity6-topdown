@@ -11,6 +11,10 @@ namespace Quantum
         public FP Speed = 20;
         public FP TurnRateDegrees = 180;
 
+        // UpdateVelocity re-derives the whole heading from the target every tick, so a levelled one
+        // would not survive a single tick. See FlattensOnPierce.
+        public override bool FlattensOnPierce => false;
+
         protected override ProjectileLaunch SolveLaunch(Frame f, FPVector3 spawnPosition, FPVector3 target, EntityRef targetEntity)
         {
             FPVector3 delta = target - spawnPosition;

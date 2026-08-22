@@ -8,7 +8,7 @@ PlayerSettings:
   AndroidProfiler: 0
   AndroidFilterTouchesWhenObscured: 0
   AndroidEnableSustainedPerformanceMode: 0
-  defaultScreenOrientation: 4
+  defaultScreenOrientation: 2
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
@@ -837,7 +837,7 @@ PlayerSettings:
   webWasm2023: 0
   webEnableSubmoduleStrippingCompatibility: 0
   scriptingDefineSymbols:
-    Android: CF_FORCE_MOBILE_MODE;QUANTUM_LOGLEVEL_DEBUG
+    Android: CF_FORCE_MOBILE_MODE
     EmbeddedLinux: QUANTUM_LOGLEVEL_DEBUG
     GameCoreScarlett: QUANTUM_LOGLEVEL_DEBUG
     GameCoreXboxOne: QUANTUM_LOGLEVEL_DEBUG
@@ -862,7 +862,8 @@ PlayerSettings:
   scriptingBackend:
     Android: 1
     Standalone: 1
-  il2cppCompilerConfiguration: {}
+  il2cppCompilerConfiguration:
+    Android: 2
   il2cppCodeGeneration: {}
   il2cppStacktraceInformation: {}
   managedStrippingLevel:

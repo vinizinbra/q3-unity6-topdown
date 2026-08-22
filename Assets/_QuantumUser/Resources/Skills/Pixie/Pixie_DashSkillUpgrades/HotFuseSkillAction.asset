@@ -19,18 +19,16 @@ MonoBehaviour:
   Icon: {fileID: -659355639, guid: b217254d41b6945b1873986186a25786, type: 3}
   DisplayName: Hot Fuse
   RankDescriptions:
-  - After dashing, Pixie's next Bunny Bomb within 3s gains +30% damage.
-  - After dashing, Pixie's next Bunny Bomb within 3s gains +30% damage and +30% explosion
-    radius.
-  - After dashing, Pixie's next Bunny Bomb within 3s gains +60% damage and +30% explosion
-    radius, and detonates instantly if it directly hits an enemy.
+  - For 3s after a dash, your next Bunny Bomb deals +30% damage.
+  - For 3s after a dash, your next Bunny Bomb deals +30% damage with +30% radius.
+  - For 3s after a dash, your next Bunny Bomb deals +60% damage, +30% radius, and detonates on a direct hit.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 1
-  Description: Dashing empowers your next Bunny Bomb throw.
+  Description: Dashing empowers your next Bunny Bomb.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

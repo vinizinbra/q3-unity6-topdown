@@ -35,6 +35,12 @@ namespace Quantum
         [SerializeField, Tooltip("How quickly weaponSocket eases toward its target local position when facing flips. Higher = snappier.")]
         private float positionSmoothing = 12f;
 
+        // The spawned GameObject, tracked SEPARATELY from the WeaponView component on it - a view
+        // prefab whose root is missing that component (a beam weapon that is nothing but a
+        // LineRenderer, say) would otherwise leave currentWeaponView null, so the "destroy the old
+        // one first" guard below would never fire and every re-spawn - Initialize plus every
+        // WeaponEquipped - would silently stack another copy in the socket.
+        private GameObject currentWeaponInstance;
         private WeaponView currentWeaponView;
         private Vector3 restWeaponPosition;
         private bool hasWeaponPosition;
@@ -93,23 +99,14 @@ namespace Quantum
         public override void DeInitialize(QuantumGame game)
         {
             base.DeInitialize(game);
-
-            if (currentWeaponView != null)
-            {
-                Destroy(currentWeaponView.gameObject);
-                currentWeaponView = null;
-            }
+            DestroyCurrentWeaponView();
         }
 
         // Public so both Initialize (cold read) and OnWeaponEquipped (live re-equip) can call this -
         // see the class comment above.
         public void SpawnWeaponView(WeaponDataAsset weaponData)
         {
-            if (currentWeaponView != null)
-            {
-                Destroy(currentWeaponView.gameObject);
-                currentWeaponView = null;
-            }
+            DestroyCurrentWeaponView();
 
             if (weaponData == null || weaponData.ViewPrefab == null)
             {
@@ -117,13 +114,24 @@ namespace Quantum
                 return;
             }
 
-            GameObject instance = Instantiate(weaponData.ViewPrefab, Socket);
-            currentWeaponView = instance.GetComponent<WeaponView>();
+            currentWeaponInstance = Instantiate(weaponData.ViewPrefab, Socket);
+            currentWeaponView = currentWeaponInstance.GetComponent<WeaponView>();
 
             if (currentWeaponView == null)
             {
-                LogHelper.Warn("WeaponViewController", $"{weaponData.ViewPrefab} has no WeaponView component.", this);
+                LogHelper.Warn("WeaponViewController", $"{weaponData.ViewPrefab.name} has no WeaponView on its root - " +
+                    "it won't be aimed, won't recoil and won't place the hands (PlayerGunAimView/WeaponHandGripView both " +
+                    "resolve through it). Only the hitscan view styles on it will do anything.", this);
             }
+        }
+
+        private void DestroyCurrentWeaponView()
+        {
+            if (currentWeaponInstance != null)
+                Destroy(currentWeaponInstance);
+
+            currentWeaponInstance = null;
+            currentWeaponView = null;
         }
 
         protected override void QUpdate(QuantumGame game)

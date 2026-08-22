@@ -19,19 +19,16 @@ MonoBehaviour:
   Icon: {fileID: 1776201555, guid: b217254d41b6945b1873986186a25786, type: 3}
   DisplayName: Birthday Cake
   RankDescriptions:
-  - After landing, Bunny Bomb becomes a decoy, taunting nearby enemies for 1s before
-    detonating.
-  - After landing, Bunny Bomb becomes a decoy, taunting nearby enemies for 1.5s before
-    detonating with a bigger blast.
-  - After landing, Bunny Bomb becomes a decoy, taunting nearby enemies for 1.5s before
-    detonating with a bigger blast. Taunted enemies take +30% Bunny Bomb damage.
+  - Landed bombs taunt nearby enemies for 1s, then detonate.
+  - Landed bombs taunt nearby enemies for 1.5s, then detonate with a 25% wider blast.
+  - Landed bombs taunt nearby enemies for 1.5s, then detonate with a 25% wider blast. Taunted enemies take +30% damage.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: A landed Bunny Bomb taunts nearby enemies before detonating.
+  Description: A landed Bunny Bomb taunts enemies before it blows.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

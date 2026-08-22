@@ -22,13 +22,13 @@ public class CharacterUiWidgetManager : MonoBehaviour
         widgetPrefab.gameObject.SetActive(false);
     }
 
-    public void SpawnWidget(EntityRef entityRef, QuantumGame game, Transform followTarget, string displayName = null, Vector3 characterOffset = default, Vector3 weaponRowOffset = default)
+    public void SpawnWidget(EntityRef entityRef, QuantumGame game, Transform followTarget, string displayName = null, Vector3 characterOffset = default)
     {
         if (_widgets.ContainsKey(entityRef))
             return;
 
         var widget = Instantiate(widgetPrefab, widgetParent);
-        widget.Setup(game, entityRef, followTarget, displayName, characterOffset, weaponRowOffset);
+        widget.Setup(game, entityRef, followTarget, displayName, characterOffset);
         widget.gameObject.SetActive(true);
         _widgets.Add(entityRef, widget);
     }

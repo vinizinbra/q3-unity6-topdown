@@ -53,10 +53,8 @@ MonoBehaviour:
   DisplayName: Void Shards
   RankDescriptions:
   - Vortex periodically fires a homing Void Shard at a nearby enemy.
-  - Void Shards fire faster, travel farther, deal increased damage, and pierce through
-    2 enemies.
-  - Vortex launches two powerful Void Shards with every volley, each piercing through
-    3 enemies.
+  - Vortex fires homing Void Shards more often, travelling farther, hitting harder and piercing 2 enemies.
+  - Vortex launches two powerful Void Shards with every volley, each piercing through 3 enemies.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

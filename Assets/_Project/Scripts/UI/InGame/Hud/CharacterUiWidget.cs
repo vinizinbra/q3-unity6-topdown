@@ -58,8 +58,6 @@ public class CharacterUiWidget : MonoBehaviour
     private RectTransform reloadPunchTarget;
     [SerializeField] private float reloadPunchScale = 1.25f;
     [SerializeField] private float reloadPunchDuration = 0.25f;
-    [SerializeField, Tooltip("Container for the ammo/reload row (reloadSlider sits under it). Tracks world space in the same units as selfRect (worldOffset + characterOffset) plus its own further per-character delta on top - see CharView.weaponRowOffset. Auto-resolved from ammoSlider's own RectTransform if left unassigned.")]
-    private RectTransform weaponRowRect;
 
     [Header("Status Effects")]
     [SerializeField] private StatusIndicator burnIndicator;
@@ -95,7 +93,6 @@ public class CharacterUiWidget : MonoBehaviour
     private EntityRef _entityRef;
     private Transform _followTarget;
     private Vector3 _characterOffset;
-    private Vector3 _weaponRowOffset;
     private Coroutine _reloadPunchRoutine;
     private Coroutine _shieldShineRoutine;
     private bool _shieldWasRecharging;
@@ -112,19 +109,15 @@ public class CharacterUiWidget : MonoBehaviour
 
     // The manager's widgetPrefab is a disabled scene object (see CharacterUiWidgetManager.Awake) -
     // clones stay inactive until SetActive(true) right after this call, so Unity defers their Awake()
-    // until then. Setup runs first and only once per instance, so weaponRowRect must be resolved here
-    // rather than in Awake - by the time Awake finally fires, FollowTarget may already need it.
-    public void Setup(QuantumGame game, EntityRef entityRef, Transform followTarget, string displayName = null, Vector3 characterOffset = default, Vector3 weaponRowOffset = default)
+    // until then. Setup runs first and only once per instance, so anything FollowTarget needs has to
+    // be resolved here rather than in Awake - by the time Awake finally fires, it may already be too late.
+    public void Setup(QuantumGame game, EntityRef entityRef, Transform followTarget, string displayName = null, Vector3 characterOffset = default)
     {
         _game = game;
         _entityRef = entityRef;
         _followTarget = followTarget;
         _characterOffset = characterOffset;
-        _weaponRowOffset = weaponRowOffset;
         _worldCamera = Camera.main;
-
-        if (weaponRowRect == null && ammoSlider != null)
-            weaponRowRect = ammoSlider.GetComponent<RectTransform>();
 
         if (heroWidgets == null || heroWidgets.Length == 0)
             heroWidgets = GetComponentsInChildren<HeroHudWidget>(true);
@@ -223,14 +216,10 @@ public class CharacterUiWidget : MonoBehaviour
     {
         Vector3 widgetPosition = _followTarget.position + worldOffset + _characterOffset;
 
+        // The ammo/reload row is a plain child of selfRect and rides along with it - no world
+        // tracking of its own, so its authored layout position inside the widget is what shows.
         if (UIHelper.TryWorldToAnchoredPosition(selfRect, _canvas, _worldCamera, widgetPosition, out var anchoredPosition))
             selfRect.anchoredPosition = anchoredPosition;
-
-        // weaponRowRect's parent is selfRect, so with weaponRowOffset left at zero this lands exactly
-        // where selfRect just did (same rigid-child behavior as before) - weaponRowOffset is a further
-        // per-hero delta on top of that, not a replacement for characterOffset's own raise/lower.
-        if (weaponRowRect != null && UIHelper.TryWorldToAnchoredPosition(weaponRowRect, _canvas, _worldCamera, widgetPosition + _weaponRowOffset, out var weaponAnchoredPosition))
-            weaponRowRect.anchoredPosition = weaponAnchoredPosition;
     }
 
     private void UpdateHealth(Frame frame)
@@ -491,12 +480,16 @@ public class CharacterUiWidget : MonoBehaviour
         slider.value = value;
     }
 
+    // Routed through TextBatchOptimizer instead of SetActive directly: a label this widget has had
+    // hoisted for draw-call batching no longer lives in its own hierarchy, so switching it off here
+    // would be undone by the next sync. The optimizer redirects the toggle onto the placeholder left
+    // behind in the label's original slot; anything never hoisted is toggled as before.
     private static void SetShown(Component component, bool shown)
     {
-        if (component == null || component.gameObject.activeSelf == shown)
+        if (component == null)
             return;
 
-        component.gameObject.SetActive(shown);
+        TextBatchOptimizer.SetActive(component.gameObject, shown);
     }
 
     // One per status type (Burn/RiftMark/Ice/DeepFreeze/Stun/Rupture/Intimidate) - root is whatever the Inspector wires up as
@@ -511,8 +504,7 @@ public class CharacterUiWidget : MonoBehaviour
 
         public void SetShown(bool shown)
         {
-            if (root != null && root.activeSelf != shown)
-                root.SetActive(shown);
+            TextBatchOptimizer.SetActive(root, shown);
         }
 
         public void SetTimer(string text)

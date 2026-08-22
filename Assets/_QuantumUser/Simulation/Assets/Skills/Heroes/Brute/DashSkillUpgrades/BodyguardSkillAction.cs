@@ -1,5 +1,6 @@
 namespace Quantum
 {
+    using System;
     using Photon.Deterministic;
     using UnityEngine;
 
@@ -57,12 +58,13 @@ namespace Quantum
             int index = System.Math.Clamp(rank, 1, (int)MaxRank) - 1;
 
             FPVector3 position = filter.Transform3D->Position;
-            var allies = EnemyMovementUtility.FindPlayersInRadiusIncludingDashing(f, position, Radius[index]);
+            Span<EntityRef> allies = stackalloc EntityRef[PlayerQueryUtility.MaxPlayerLayerCandidates];
+            int alliesCount = EnemyMovementUtility.FindPlayersInRadiusIncludingDashing(f, position, Radius[index], allies);
             FP amount = ShieldRestore[index];
 
-            for (int i = 0; i < allies.Count; i++)
+            for (int i = 0; i < alliesCount; i++)
             {
-                EntityRef ally = allies[i].Entity;
+                EntityRef ally = allies[i];
 
                 if (f.Unsafe.TryGetPointer<StatusEffects>(ally, out var status) == false
                     || status->AllyShieldRestoreCooldownRemaining > FP._0)

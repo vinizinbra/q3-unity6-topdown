@@ -195,7 +195,7 @@ namespace Quantum
             // ResolveAimWorldDirection's own comment), and that tilt read through the camera's
             // pitched "up" axis was rotating the flat 2D gun sprite far enough to visually dip
             // into the ground when aiming at a target well below/in front - same class of problem
-            // WeaponView.OrientBeamParticle's own FlatWorldDirection exists to avoid, just applied
+            // WeaponView.AimPose.FlatWorldDirection exists to avoid, just applied
             // to the sprite rotation itself here instead of a 3D beam. The horizontal bearing (the
             // actual direction to the target) is unaffected - only the elevation tilt is dropped.
             worldDir.y = 0f;

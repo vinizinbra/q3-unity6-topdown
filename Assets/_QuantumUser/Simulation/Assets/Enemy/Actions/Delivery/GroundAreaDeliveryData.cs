@@ -1,5 +1,6 @@
 namespace Quantum
 {
+    using System;
     using Photon.Deterministic;
 
     // Instant area effect - unlike LeapDeliveryData, no movement first; hits everyone within
@@ -41,8 +42,9 @@ namespace Quantum
             FPVector3 targetAnchor = filter.Enemy->SkillTargetPosition;
             FPVector3 origin = action.Origin == EnemyActionOrigin.Self ? filter.Transform3D->Position : targetAnchor;
 
-            var hits = EnemyMovementUtility.FindPlayersInRadius(f, origin, action.DamageRange);
+            Span<EntityRef> hits = stackalloc EntityRef[PlayerQueryUtility.MaxPlayerLayerCandidates];
 
+            int hitsCount = EnemyMovementUtility.FindPlayersInRadius(f, origin, action.DamageRange, hits);
             // Same Dot-vs-Cos(half-arc) idiom DamageUtility's own frontal-arc check already uses
             // (see DamageUtility.cs) - cheaper than an Acos per candidate, and keeps this consistent
             // with that established pattern instead of introducing a different one.
@@ -56,9 +58,9 @@ namespace Quantum
                 coneArcCos = FPMath.Cos(ConeAngleDegrees * FP._0_50 * FP.Deg2Rad);
             }
 
-            for (int i = 0; i < hits.Count; i++)
+            for (int i = 0; i < hitsCount; i++)
             {
-                EntityRef hitEntity = hits[i].Entity;
+                EntityRef hitEntity = hits[i];
 
                 if (f.Unsafe.TryGetPointer<Transform3D>(hitEntity, out var hitTransform) == false)
                     continue;

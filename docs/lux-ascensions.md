@@ -344,16 +344,18 @@ Two fixes to the same line, both about the moment the Sentry actually moves.
 where `destination` is wherever **Lux** was standing - which is easily mid-air when she dashes off a
 ledge or over a gap. Nothing re-grounded it, so it stayed at her Y for the rest of its life.
 
-It now calls `GroundOffsetUtility.Apply` right after the move: the same ground resolve every spawn
-already runs. `Sentry.prefab` already authors a `GroundOffset` with `FallGravityMultiplier = 1`, so the
-turret **drops under real accelerating gravity** via `SettlingToGround`/`GroundSettleSystem` rather than
-snapping. No new authoring needed.
+It now calls `GroundOffsetUtility.Apply` right after the move. `Sentry.prefab` already authors a
+`GroundOffset` with `FallGravityMultiplier = 1`, so the turret **drops under real accelerating
+gravity** via `GroundSettleSystem` rather than snapping. No new authoring needed.
 
-That also exposed a latent bug in the shared helper: `GroundOffsetUtility.Apply` did a plain
-`f.Add<SettlingToGround>`, which silently keeps a **stale `TargetY`** if the entity has settled before -
-fine when it only ever ran once at spawn, wrong the moment anything re-grounds mid-life. It is now
-`AddOrGet` with both fields written explicitly, `FallVelocity` reset so a fresh drop accelerates from
-rest instead of inheriting the previous fall's speed.
+That also exposed a latent bug in the shared helper, since fixed twice over. `GroundOffsetUtility.Apply`
+originally did a plain `f.Add<SettlingToGround>`, which silently kept a **stale `TargetY`** if the
+entity had settled before - fine when it only ever ran once at spawn, wrong the moment anything
+re-grounds mid-life. `SettlingToGround` no longer exists at all: `GroundOffset` became a continuous,
+gravity-like component that re-resolves the ground every tick while its own `Enabled` flag is set (see
+`docs/chests.md`), so there is no baked target left to go stale. `Apply` is now purely a re-arm
+(`Enabled = true`, `FallVelocity = 0`), and this Ascension is its canonical "an entity MOVED mid-life"
+caller - the Sentry cleared its own `Enabled` back when it first landed.
 
 ## The Sentry teleported instead of travelling
 
@@ -378,3 +380,61 @@ latch (`End` still needs it) and does not re-ground (the machine is being carrie
 Barrels needed no handling at all - `SentryBarrelSystem` already re-anchors them off the chassis every
 tick. An interrupted dash (stopped by a wall) still fires `End`, so it lands correctly either way, and a
 Sentry destroyed mid-dash is covered by the existing `f.Exists` guard.
+
+---
+
+# 2026-08-21 — Sentry gunfire now scales with Lux's Skill Damage
+
+Found while auditing `CharacterStats.SkillDamageMultiplier` coverage the same way Skill Area was
+audited (see `docs/hero-ascension-balance-pass.md`). Skill Damage turned out to be applied in exactly
+one place - `DamageUtility.ResolveOutgoingDamage`, keyed on `DamageSource.Skill` - and every hero skill
+path passes that source correctly. **One gap:** Lux's Sentry barrels.
+
+## Cause
+
+A barrel is its own entity carrying its own `Weapon`, and `WeaponSystem` fires it with the **barrel** as
+the owner. `SentryBarrel.prefab` carries no `CharacterStats`, so `ResolveOutgoingDamage` returns at its
+own stats gate:
+
+```csharp
+if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false)
+    return damage;
+```
+
+Everything past that line is skipped, so sentry gunfire received **none** of Lux's offense - not Skill
+Damage, not the global `DamageMultiplier`, not crit, not range falloff. A Lux stacking damage saw her
+turrets contribute a flat, un-scaling amount for the whole run.
+
+Her Ascension effects were never affected - Overload Core and friends already resolve off
+`SpawnSentrySkillAction.SkillDamage` at deploy time. This was specifically the barrels' weapon fire.
+
+## Fix
+
+New `StatUtility.GetSkillDamageMultiplier(f, owner)` returns the full multiplier a `DamageSource.Skill`
+hit from that owner would receive (`DamageMultiplier * SkillDamageMultiplier`, exactly as
+`ResolveOutgoingDamage` composes them). `SpawnSentrySkillAction.SpawnBarrel` compounds it into the
+freshly-equipped barrel's `Weapon.DamageMultiplier`.
+
+`Weapon.DamageMultiplier` is the right home: it is seeded to 1 at Equip, it is where every other
+standing weapon modifier already accumulates (`DamageMultiplierWeaponPerkData.Apply`,
+`WeaponSystem.AddLevel`), and `WeaponSystem` re-reads `WeaponDataAsset.Damage` against it fresh on every
+shot - so Inspector tuning still takes effect live on an already-deployed sentry.
+
+**Crit and range falloff are deliberately excluded.** Both are per-hit rolls/distances with no meaning
+as a baked constant; a sentry still does not crit.
+
+**Resolved once at deploy**, matching the sentry's Range, its Overload Core blast damage and its
+Fortification copies - a damage upgrade taken mid-run applies to the *next* sentry rather than
+retroactively buffing machines already in the field.
+
+## Everything else audited clean
+
+| Path | Source | Verdict |
+|---|---|---|
+| All 10 hero-skill `ApplyDamage` sites | `DamageSource.Skill` | correct |
+| `DelayedBlastSystem` (Pixie Unstable Mixture R3, Brute Aftershock R3) | `DamageSource.Skill` | correct |
+| Spawned areas (Zara Totem beats, Max Burning Ground, Kai Vortex damage) | `AreaOwner.Source`, stamped by `SpawnedEntitySpawner` | correct |
+| `ExplodeOnDestroy` blasts (Backblast, Pocket Bombs) | `AreaOwner.Source` | correct |
+| Burn DoT | `bypassOutgoingResolution: true`, per-tick derived from the already-scaled hit | correct - avoids double-applying |
+
+No mis-sourced call site anywhere; no `DamageSource.None` in hero skill code.

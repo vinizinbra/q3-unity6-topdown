@@ -1,5 +1,6 @@
 namespace Quantum
 {
+    using System;
     using Photon.Deterministic;
     using UnityEngine.Scripting;
 
@@ -13,11 +14,9 @@ namespace Quantum
     [Preserve]
     public unsafe class HealthOrbSystem : SystemMainThreadFilter<HealthOrbSystem.Filter>
     {
-        // Same broadphase margin CurrencyOrbSystem uses - comfortably larger than any realistic
-        // PickupRangeMultiplier stack so the query never misses a player who'd qualify once their own
-        // multiplier is applied below.
-        private static readonly FP QueryRadiusScale = 8;
-
+        // Same shape CurrencyOrbSystem uses - the padded broadphase prefilter it used to share is
+        // gone (see that system's own comment); the authoritative per-player center test below is
+        // unchanged.
         public override void Update(Frame f, ref Filter filter)
         {
             if (f.RuntimeConfig.HealthOrbConfig.IsValid == false)
@@ -28,12 +27,16 @@ namespace Quantum
             if (pickupRadius <= FP._0)
                 return;
 
-            FP queryRadius = pickupRadius * QueryRadiusScale;
-            var hits = EnemyMovementUtility.FindPlayersInRadiusIncludingDashing(f, filter.Transform3D->Position, queryRadius);
+            Span<EntityRef> players = stackalloc EntityRef[PlayerQueryUtility.MaxPlayers];
+            int playerCount = PlayerQueryUtility.GatherPlayers(f, players);
 
-            for (int i = 0; i < hits.Count; i++)
+            EntityRef collector = EntityRef.None;
+            Health* collectorHealth = null;
+            FP closestSqrDistance = default;
+
+            for (int i = 0; i < playerCount; i++)
             {
-                EntityRef player = hits[i].Entity;
+                EntityRef player = players[i];
 
                 if (f.Unsafe.TryGetPointer<Transform3D>(player, out var playerTransform) == false)
                     continue;
@@ -50,13 +53,24 @@ namespace Quantum
                 if (sqrDistance > effectiveRadius * effectiveRadius)
                     continue;
 
-                // Percentage of the collector's own MaxHealth (see HealthOrb.qtn). Owner == the healed
-                // player itself, so HealUtility's own HealingReceivedMultiplier (read off owner's
-                // CharacterStats) applies exactly as it would for any self-received heal.
-                HealUtility.ApplyFlatHeal(f, player, player, health, health->MaxHealth * filter.HealthOrb->HealPercent);
-                f.Destroy(filter.Entity);
-                return;
+                // Nearest wins - see CurrencyOrbSystem's own note on this.
+                if (collector != EntityRef.None && sqrDistance >= closestSqrDistance)
+                    continue;
+
+                collector = player;
+                collectorHealth = health;
+                closestSqrDistance = sqrDistance;
             }
+
+            if (collector == EntityRef.None)
+                return;
+
+            // Percentage of the collector's own MaxHealth (see HealthOrb.qtn). Owner == the healed
+            // player itself, so HealUtility's own HealingReceivedMultiplier (read off owner's
+            // CharacterStats) applies exactly as it would for any self-received heal.
+            HealUtility.ApplyFlatHeal(f, collector, collector, collectorHealth,
+                collectorHealth->MaxHealth * filter.HealthOrb->HealPercent);
+            f.Destroy(filter.Entity);
         }
 
         public struct Filter

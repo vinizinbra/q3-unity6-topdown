@@ -18,17 +18,12 @@ MonoBehaviour:
       Value: 317035501367371776
   Icon: {fileID: -1867794150, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
   DisplayName: Flashpoint
-  Description: Burning enemies become far more dangerous to be near - bonus Critical
-    Chance, crits that detonate, and eventually outright execution.
+  Description: Burning enemies take extra crits, explode on crit, and can be executed.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - 'Hot Target: +10% Critical Chance against Burning enemies.'
-  - 'Hot Target, plus Flashpoint: critical hits against Burning enemies detonate
-    a fiery explosion (3m radius, 50% damage, capped at 5 targets).'
-  - 'Hot Target, Flashpoint, plus Cremation: Burning enemies below a Health threshold
-    are executed outright (15% for Filler/Normal, 8% for Specialist/Heavy). Elite
-    and Boss can''t be executed - instead you deal +25% damage to them while they''re
-    Burning and below 15% Health.'
+  - +10% Critical Chance against Burning enemies.
+  - +10% Critical Chance against Burning enemies. Crits on them explode for 50% damage in 3m, up to 5 targets.
+  - +10% Critical Chance against Burning enemies, whose crits explode. Burning enemies below 15% Health are executed - 8% for Specialist and Heavy, while Elite and Boss instead take +25% damage.
   CriticalChanceBonusVsBurning:
     RawValue: 6554
   ExplosionRadius:

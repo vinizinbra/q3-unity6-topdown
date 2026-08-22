@@ -21,6 +21,12 @@ Shader "Project/Mobile Toon Modular Level"
         _InkColor ("Outline Color", Color) = (0.025,0.02,0.03,1)
         _WallOuterGlowStrength ("Outline Fade", Range(0,1)) = 0.3
 
+        [Header(World Height Wall Line)]
+        _WallLineColor ("Line Color", Color) = (0.025,0.02,0.03,1)
+        _WallLineY ("World Y", Float) = 0
+        _WallLineThickness ("Thickness", Float) = 0.1
+        _WallLineStrength ("Strength", Range(0,1)) = 0
+
         [Header(Surface)]
         _SurfaceColor ("Surface Color", Color) = (1,1,1,1)
         _SurfaceEdgeColor ("Surface Fade Color", Color) = (0.22,0.16,0.1,0.55)
@@ -71,9 +77,9 @@ Shader "Project/Mobile Toon Modular Level"
             TEXTURE2D(_GlobalNoiseMap); SAMPLER(sampler_GlobalNoiseMap);
             CBUFFER_START(UnityPerMaterial)
             float4 _WallMap_ST; float4 _SurfaceMap_ST;
-            half4 _BaseColor, _WallColor, _SurfaceColor, _AOColor, _HeightFogColor, _InkColor, _SurfaceEdgeColor, _GradientBottomColor, _GradientTopColor, _ShadowTint, _GlobalNoiseDarkColor, _GlobalNoiseLightColor;
-            half _WallAOStrength, _SurfaceAOStrength, _SurfaceUseWorldUV, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength;
-            float _GradientStartY, _GradientDistance, _HeightFogTopY, _HeightFogFalloff, _GlobalNoiseScale;
+            half4 _BaseColor, _WallColor, _SurfaceColor, _AOColor, _HeightFogColor, _InkColor, _SurfaceEdgeColor, _GradientBottomColor, _GradientTopColor, _ShadowTint, _GlobalNoiseDarkColor, _GlobalNoiseLightColor, _WallLineColor;
+            half _WallAOStrength, _SurfaceAOStrength, _SurfaceUseWorldUV, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength, _WallLineStrength;
+            float _GradientStartY, _GradientDistance, _HeightFogTopY, _HeightFogFalloff, _GlobalNoiseScale, _WallLineY, _WallLineThickness;
             float4 _GlobalNoiseOffset;
             CBUFFER_END
             half SampleGlobalNoiseFBM(float2 baseUv)
@@ -117,6 +123,15 @@ Shader "Project/Mobile Toon Modular Level"
                 baseColor*=lerp(half3(1,1,1),aoTint,aoStrength);
                 float t=saturate((i.positionWS.y-_GradientStartY)/max(abs(_GradientDistance),0.0001));
                 baseColor*=lerp(half3(1,1,1),lerp(_GradientBottomColor.rgb,_GradientTopColor.rgb,t),_GradientStrength);
+
+                // Draw one continuous, pixel-stable band across wall-role geometry only.
+                float lineDistance=abs(i.positionWS.y-_WallLineY);
+                float lineHalfThickness=max(_WallLineThickness*0.5,0.0);
+                float lineAntiAlias=max(fwidth(i.positionWS.y),0.0001);
+                half wallLineMask=(1-surface)*(1-smoothstep(lineHalfThickness,lineHalfThickness+lineAntiAlias,lineDistance));
+                wallLineMask*=saturate(_WallLineStrength)*_WallLineColor.a;
+                baseColor=lerp(baseColor,_WallLineColor.rgb,wallLineMask);
+
                 half2 styleMask=SAMPLE_TEXTURE2D(_StyleMask,sampler_StyleMask,i.uv3).rg;
                 half rawMask=1-styleMask.r;
                 half amount=saturate(rawMask);
@@ -154,9 +169,9 @@ Shader "Project/Mobile Toon Modular Level"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
             CBUFFER_START(UnityPerMaterial)
             float4 _WallMap_ST; float4 _SurfaceMap_ST;
-            half4 _BaseColor, _WallColor, _SurfaceColor, _AOColor, _HeightFogColor, _InkColor, _SurfaceEdgeColor, _GradientBottomColor, _GradientTopColor, _ShadowTint, _GlobalNoiseDarkColor, _GlobalNoiseLightColor;
-            half _WallAOStrength, _SurfaceAOStrength, _SurfaceUseWorldUV, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength;
-            float _GradientStartY, _GradientDistance, _HeightFogTopY, _HeightFogFalloff, _GlobalNoiseScale;
+            half4 _BaseColor, _WallColor, _SurfaceColor, _AOColor, _HeightFogColor, _InkColor, _SurfaceEdgeColor, _GradientBottomColor, _GradientTopColor, _ShadowTint, _GlobalNoiseDarkColor, _GlobalNoiseLightColor, _WallLineColor;
+            half _WallAOStrength, _SurfaceAOStrength, _SurfaceUseWorldUV, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength, _WallLineStrength;
+            float _GradientStartY, _GradientDistance, _HeightFogTopY, _HeightFogFalloff, _GlobalNoiseScale, _WallLineY, _WallLineThickness;
             float4 _GlobalNoiseOffset;
             CBUFFER_END
             float3 _LightDirection;
@@ -193,9 +208,9 @@ Shader "Project/Mobile Toon Modular Level"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             CBUFFER_START(UnityPerMaterial)
             float4 _WallMap_ST; float4 _SurfaceMap_ST;
-            half4 _BaseColor, _WallColor, _SurfaceColor, _AOColor, _HeightFogColor, _InkColor, _SurfaceEdgeColor, _GradientBottomColor, _GradientTopColor, _ShadowTint, _GlobalNoiseDarkColor, _GlobalNoiseLightColor;
-            half _WallAOStrength, _SurfaceAOStrength, _SurfaceUseWorldUV, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength;
-            float _GradientStartY, _GradientDistance, _HeightFogTopY, _HeightFogFalloff, _GlobalNoiseScale;
+            half4 _BaseColor, _WallColor, _SurfaceColor, _AOColor, _HeightFogColor, _InkColor, _SurfaceEdgeColor, _GradientBottomColor, _GradientTopColor, _ShadowTint, _GlobalNoiseDarkColor, _GlobalNoiseLightColor, _WallLineColor;
+            half _WallAOStrength, _SurfaceAOStrength, _SurfaceUseWorldUV, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength, _WallLineStrength;
+            float _GradientStartY, _GradientDistance, _HeightFogTopY, _HeightFogFalloff, _GlobalNoiseScale, _WallLineY, _WallLineThickness;
             float4 _GlobalNoiseOffset;
             CBUFFER_END
             struct DepthAttributes { float4 positionOS:POSITION; float3 normalOS:NORMAL; UNITY_VERTEX_INPUT_INSTANCE_ID };
@@ -218,9 +233,9 @@ Shader "Project/Mobile Toon Modular Level"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             CBUFFER_START(UnityPerMaterial)
             float4 _WallMap_ST; float4 _SurfaceMap_ST;
-            half4 _BaseColor, _WallColor, _SurfaceColor, _AOColor, _HeightFogColor, _InkColor, _SurfaceEdgeColor, _GradientBottomColor, _GradientTopColor, _ShadowTint, _GlobalNoiseDarkColor, _GlobalNoiseLightColor;
-            half _WallAOStrength, _SurfaceAOStrength, _SurfaceUseWorldUV, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength;
-            float _GradientStartY, _GradientDistance, _HeightFogTopY, _HeightFogFalloff, _GlobalNoiseScale;
+            half4 _BaseColor, _WallColor, _SurfaceColor, _AOColor, _HeightFogColor, _InkColor, _SurfaceEdgeColor, _GradientBottomColor, _GradientTopColor, _ShadowTint, _GlobalNoiseDarkColor, _GlobalNoiseLightColor, _WallLineColor;
+            half _WallAOStrength, _SurfaceAOStrength, _SurfaceUseWorldUV, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength, _WallLineStrength;
+            float _GradientStartY, _GradientDistance, _HeightFogTopY, _HeightFogFalloff, _GlobalNoiseScale, _WallLineY, _WallLineThickness;
             float4 _GlobalNoiseOffset;
             CBUFFER_END
             struct NormalAttributes { float4 positionOS:POSITION; float3 normalOS:NORMAL; UNITY_VERTEX_INPUT_INSTANCE_ID };

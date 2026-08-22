@@ -1,29 +1,55 @@
-// Optional - only entities that need to settle into a resting height carry this (Sentry, Vortex,
-// Chest, ...). GroundOffsetUtility.Apply resolves the ground once - right after
-// SpawnedEntitySpawner.Spawn places a skill/projectile-spawned entity's Position, or right when a
-// map-baked entity materializes (see MapGroundSettleSystem) - then either snaps straight to
-// groundY + <collider bottom clearance> + Offset or, if the relevant approach rate below is
-// authored, tags the entity with SettlingToGround so GroundSettleSystem eases it there over
-// subsequent ticks instead of teleporting into place. The clearance term
-// (GroundOffsetUtility.ResolveGroundClearance) already accounts for the entity's own collider
-// sitting centered on its pivot, so Offset itself is a pure adjustment from true-flush: 0 sits
-// flush on the ground (Sentry); a positive Offset hovers above that (Vortex); a negative Offset
-// embeds it into the ground on purpose (a bomb lodged in the dirt).
+// Optional - only entities that need to settle onto a resting height carry this (a level prop, a
+// Sentry, a Chest, a dropped orb, ...). This project's own lightweight kinematic stand-in for
+// gravity: while Enabled, GroundSettleSystem re-resolves the REAL ground under the entity every
+// tick and moves Transform3D.Position.Y toward groundY + <collider bottom clearance> + Offset,
+// then clears Enabled the instant it arrives - so a settled entity costs one bool check per tick
+// and nothing else, and a level full of already-landed props is effectively free.
+//
+// Deliberately re-resolved every tick rather than baked once at spawn (which is what this used to
+// do, via a one-shot GroundOffsetUtility.Apply raycast plus a since-deleted SettlingToGround
+// marker holding the resolved TargetY). A single raycast is only correct if the ground already
+// exists AND is already queryable at the exact moment some spawn path remembers to call Apply -
+// and for a map-baked entity it never is: those materialize from Core.EntityPrototypeSystem.OnInit,
+// before LevelGenerationSystem has placed a single chunk and before Core.PhysicsSystem3D has ever
+// built a broadphase, so the raycast always missed and the prop hung in mid-air for the whole run
+// (found via a floating BreakableBarrel; the Chest had the identical bug). Re-resolving per tick
+// means an entity simply waits in place until there is genuinely something underneath it, and it
+// stays correct for ground that appears, moves or vanishes later - which a baked TargetY never
+// could.
+//
+// The clearance term (GroundOffsetUtility.ResolveGroundClearance) already accounts for the entity's
+// own collider sitting centered on its pivot, so Offset itself is a pure adjustment from
+// true-flush: 0 sits flush on the ground (Sentry); a positive Offset hovers above that (Vortex); a
+// negative Offset embeds it into the ground on purpose (a bomb lodged in the dirt).
 component GroundOffset
 {
+    // Author true on any prototype that should ground itself the moment it exists - no spawn-site
+    // call needed, which is the entire point of the flag. Every "this thing floats in mid-air" bug
+    // this design replaced was a spawn path that either never called GroundOffsetUtility.Apply or
+    // called it too early to find anything. GroundSettleSystem clears it on arrival;
+    // GroundOffsetUtility.Apply sets it true again to re-ground an entity MOVED mid-life (see
+    // RelocationProtocolSkillAction).
+    bool Enabled;
+
     FP Offset;
 
-    // Descending approach only (spawn Y above the resting height) - accelerates like real gravity
-    // (SettlingToGround.FallVelocity builds up each tick) rather than moving at a flat speed, so a
-    // drop reads as an actual fall instead of a lift descending on a cable. A multiplier against
+    // Descending approach only (currently above the resting height) - accelerates like real gravity
+    // (FallVelocity builds up each tick) rather than moving at a flat speed, so a drop reads as an
+    // actual fall instead of a lift descending on a cable. A multiplier against
     // f.SimulationConfig.Physics.Gravity (the same shared value PhysicsBody3D.GravityScale scales
     // for real dynamic bodies), not a standalone acceleration - 1 falls at the project's normal
     // gravity, 2 falls twice as fast, 0.5 drifts down softly. 0 = snap straight down instead of
     // easing.
     FP FallGravityMultiplier;
 
-    // Ascending approach only (spawn Y below the resting height, e.g. Vortex's hover Offset) - a
+    // Ascending approach only (currently below the resting height, e.g. Vortex's hover Offset) - a
     // flat speed, not gravity-accelerated, since floating up should read as a controlled levitation
     // rather than a launch. 0 = snap straight up instead of easing.
     FP FloatSpeed;
+
+    // Runtime only, never worth authoring - fall speed accumulated so far on the way down. Zeroed
+    // on arrival and whenever the entity is re-armed, so a fresh drop always accelerates from rest
+    // instead of inheriting the last one's speed. Only meaningful while descending; the ascending
+    // path moves at a flat FloatSpeed and resets this to 0.
+    FP FallVelocity;
 }

@@ -1282,9 +1282,11 @@ namespace Quantum.Prototypes {
   [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.GroundOffset))]
   public unsafe partial class GroundOffsetPrototype : ComponentPrototype<Quantum.GroundOffset> {
+    public QBoolean Enabled;
     public FP Offset;
     public FP FallGravityMultiplier;
     public FP FloatSpeed;
+    public FP FallVelocity;
     partial void MaterializeUser(Frame frame, ref Quantum.GroundOffset result, in PrototypeMaterializationContext context);
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.GroundOffset component = default;
@@ -1292,9 +1294,11 @@ namespace Quantum.Prototypes {
         return f.Set(entity, component) == SetResult.ComponentAdded;
     }
     public void Materialize(Frame frame, ref Quantum.GroundOffset result, in PrototypeMaterializationContext context = default) {
+        result.Enabled = this.Enabled;
         result.Offset = this.Offset;
         result.FallGravityMultiplier = this.FallGravityMultiplier;
         result.FloatSpeed = this.FloatSpeed;
+        result.FallVelocity = this.FallVelocity;
         MaterializeUser(frame, ref result, in context);
     }
   }
@@ -2274,6 +2278,7 @@ namespace Quantum.Prototypes {
   [Quantum.Prototypes.Prototype(typeof(Quantum.PopVelocity))]
   public unsafe partial class PopVelocityPrototype : ComponentPrototype<Quantum.PopVelocity> {
     public FPVector3 Velocity;
+    public FP OriginGroundY;
     partial void MaterializeUser(Frame frame, ref Quantum.PopVelocity result, in PrototypeMaterializationContext context);
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.PopVelocity component = default;
@@ -2282,6 +2287,7 @@ namespace Quantum.Prototypes {
     }
     public void Materialize(Frame frame, ref Quantum.PopVelocity result, in PrototypeMaterializationContext context = default) {
         result.Velocity = this.Velocity;
+        result.OriginGroundY = this.OriginGroundY;
         MaterializeUser(frame, ref result, in context);
     }
   }
@@ -2304,6 +2310,7 @@ namespace Quantum.Prototypes {
   [Quantum.Prototypes.Prototype(typeof(Quantum.Projectile))]
   public unsafe class ProjectilePrototype : ComponentPrototype<Quantum.Projectile> {
     public FPVector3 Velocity;
+    public FPVector3 SpawnPosition;
     public FP Damage;
     public FP RemainingLifetime;
     public MapEntityId Owner;
@@ -2333,6 +2340,7 @@ namespace Quantum.Prototypes {
     }
     public void Materialize(Frame frame, ref Quantum.Projectile result, in PrototypeMaterializationContext context = default) {
         result.Velocity = this.Velocity;
+        result.SpawnPosition = this.SpawnPosition;
         result.Damage = this.Damage;
         result.RemainingLifetime = this.RemainingLifetime;
         PrototypeValidator.FindMapEntity(this.Owner, in context, out result.Owner);
@@ -2816,23 +2824,6 @@ namespace Quantum.Prototypes {
         for (int i = 0, count = PrototypeValidator.CheckLength(Source, 4, in context); i < count; ++i) {
           *result.Source.GetPointer(i) = this.Source[i];
         }
-        MaterializeUser(frame, ref result, in context);
-    }
-  }
-  [System.SerializableAttribute()]
-  [Quantum.Prototypes.Prototype(typeof(Quantum.SettlingToGround))]
-  public unsafe partial class SettlingToGroundPrototype : ComponentPrototype<Quantum.SettlingToGround> {
-    public FP TargetY;
-    public FP FallVelocity;
-    partial void MaterializeUser(Frame frame, ref Quantum.SettlingToGround result, in PrototypeMaterializationContext context);
-    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
-        Quantum.SettlingToGround component = default;
-        Materialize((Frame)f, ref component, in context);
-        return f.Set(entity, component) == SetResult.ComponentAdded;
-    }
-    public void Materialize(Frame frame, ref Quantum.SettlingToGround result, in PrototypeMaterializationContext context = default) {
-        result.TargetY = this.TargetY;
-        result.FallVelocity = this.FallVelocity;
         MaterializeUser(frame, ref result, in context);
     }
   }

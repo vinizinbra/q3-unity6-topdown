@@ -18,7 +18,7 @@ MonoBehaviour:
     LockstepSimulation: 0
     InputDeltaCompression: 1
     UpdateFPS: 20
-    ChecksumInterval: 20
+    ChecksumInterval: 0
     RollbackWindow: 20
     InputHardTolerance: 8
     InputRedundancy: 3

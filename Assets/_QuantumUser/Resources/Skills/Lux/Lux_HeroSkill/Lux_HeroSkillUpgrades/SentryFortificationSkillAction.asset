@@ -20,17 +20,15 @@ MonoBehaviour:
   DisplayName: Fortification
   RankDescriptions:
   - 'Extended Range: Sentry attack range +2.'
-  - 'Shield Battery: allies standing near your Sentry recover 3 Shield per second.'
-  - 'Fire Support: allies near your Sentry also gain +15% Fire Rate and 10% Damage
-    Reduction.'
+  - 'Shield Battery: Sentry attack range +2, and allies standing near your Sentry recover 3 Shield per second.'
+  - 'Fire Support: Sentry attack range +2. Allies near your Sentry recover 3 Shield per second and gain +15% Fire Rate and 10% Damage Reduction.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Your Sentry becomes a position worth holding - longer reach, then
-    Shield, then covering fire.
+  Description: Your Sentry becomes a position worth holding - longer reach, then Shield, then covering fire.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

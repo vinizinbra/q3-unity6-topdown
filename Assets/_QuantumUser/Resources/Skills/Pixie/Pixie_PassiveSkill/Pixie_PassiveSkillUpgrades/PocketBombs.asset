@@ -18,16 +18,12 @@ MonoBehaviour:
       Value: 425116734721973481
   Icon: {fileID: 1236816446, guid: b217254d41b6945b1873986186a25786, type: 3}
   DisplayName: Pocket Bombs
-  Description: Qualifying Pixie explosions have a chance to drop a stationary Mini
-    Bomb, dealing a percentage of Bunny Bomb damage.
+  Description: Your explosions can drop a stationary Mini Bomb.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - Qualifying explosions have a 15% chance to spawn a stationary Mini Bomb dealing
-    35% of Bunny Bomb damage.
-  - Qualifying explosions have a 25% chance to spawn a stationary Mini Bomb dealing
-    45% of Bunny Bomb damage.
-  - Qualifying explosions have a 35% chance to spawn a stationary Mini Bomb dealing
-    55% of Bunny Bomb damage.
+  - 15% chance to drop a Mini Bomb dealing 35% of Bunny Bomb damage.
+  - 25% chance to drop a Mini Bomb dealing 45% of Bunny Bomb damage.
+  - 35% chance to drop a Mini Bomb dealing 55% of Bunny Bomb damage.
   Chance:
   - RawValue: 9830
   - RawValue: 16384

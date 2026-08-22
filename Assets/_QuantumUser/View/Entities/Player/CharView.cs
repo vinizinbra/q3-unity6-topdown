@@ -22,8 +22,6 @@ namespace Quantum
         [Header("HUD Widget")]
         [SerializeField, Tooltip("Per-hero offset added on top of CharacterUiWidget.worldOffset - nudge this hero's health/name widget up or down for a taller or shorter model.")]
         private Vector3 widgetOffset;
-        [SerializeField, Tooltip("Per-hero world-space offset for the ammo/reload row (CharacterUiWidget.weaponRowRect), same units as widgetOffset above and added on top of it (not instead of it) - leave at zero to have the row simply follow widgetOffset, or nudge it further to line up with this hero's held weapon.")]
-        private Vector3 weaponRowOffset;
 
         [Header("Ground Check")]
         [SerializeField, Tooltip("Real Unity Physics raycast, checked once here so every view component that cares (e.g. RunDustFxView) can just read LocalIsGrounded instead of raycasting independently - works for any CharView, not just the local player, despite the name (see LocalIsGrounded).")]
@@ -50,7 +48,7 @@ namespace Quantum
         {
             base.Initialize(game);
             EntityViewManager.Instance.AddView(_playerRef,_entityRef, this, "PlayerName");
-            CharacterUiWidgetManager.Instance?.SpawnWidget(_entityRef, game, transform, ResolvePlayerName(game), widgetOffset, weaponRowOffset);
+            CharacterUiWidgetManager.Instance?.SpawnWidget(_entityRef, game, transform, ResolvePlayerName(game), widgetOffset);
 
             if (QuantumHelper.IsLocalPlayer(_playerRef))
             {

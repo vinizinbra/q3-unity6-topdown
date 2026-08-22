@@ -58378,7 +58378,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1574a668cc26b435aa4e5af1f73c9ab9, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UpgradePopupWidget
+  m_EditorClassIdentifier: Assembly-CSharp::HeroInfoPopupWidget
   root: {fileID: 823551609}
   upgradeWidgetPrefab: {fileID: 1288585971}
   heroContent: {fileID: 2088374583}

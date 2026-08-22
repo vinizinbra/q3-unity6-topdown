@@ -19,19 +19,16 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Direct Hit
   RankDescriptions:
-  - Enemies within the inner 35% of the blast take +30% explosion damage.
-  - The inner zone widens to 45% of the blast, and enemies inside it take +50% explosion
-    damage.
-  - Enemies within the inner 45% of the blast take +75% explosion damage and are
-    knocked back hard.
+  - Inner 35% of the blast deals +30% damage.
+  - Inner 45% of the blast deals +50% damage.
+  - Inner 45% of the blast deals +75% damage and knocks enemies back hard.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Rewards accurate Bunny Bomb placement - enemies inside the inner blast
-    zone take bonus damage. At rank 3, they're also staggered.
+  Description: Enemies caught near the center of the blast take bonus damage.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

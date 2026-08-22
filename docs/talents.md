@@ -213,7 +213,7 @@ Just the leveling-talent tuning now - chest prototype/offset/chance moved onto
 ## `TalentGateSystem.cs`
 
 Unfiltered `SystemMainThread`, registered in the always-on section of `SystemSetup.User.cs` right
-after `MapGroundSettleSystem` and before `ChestSystem` (so an entity spawned this tick is already
+after `PlayerInitSystem` and before `ChestSystem` (so an entity spawned this tick is already
 visible to that system's own filter this same tick). Each tick, while `!Global.TalentsResolved`:
 waits for every connected player (same null-slot-skipping loop as `ComputeSharedTalents`) to have
 spawned (`PlayerSpawnUtility.HasSpawned`) - the earliest tick every client is guaranteed identical,
@@ -225,13 +225,14 @@ that `ChunkSpawnConfig` asset and iterates every entry in its `Spawns` array (`R
 For each entry: checks `TalentUtility.IsSatisfied` against its `Requirement`, rolls `Chance`
 (`DamageUtility.RollChance`, skipped entirely if `Chance <= 0`), and if both pass, `f.Create`s
 `Prototype` positioned at that CHUNK entity's own `Transform3D.Position + Offset`, then calls
-`GroundOffsetUtility.Apply(f, spawned, spawnedTransform)` right after - same "`f.Create` -> set
+`GroundOffsetUtility.Apply(f, spawned)` right after - same "`f.Create` -> set
 `Position` -> `GroundOffsetUtility.Apply`" pattern every other runtime-spawn path in this codebase
 already follows (`SpawnedEntitySpawner`, `CoinUtility`, `RiftShardUtility`, `ScrapUtility`,
-`ExperienceUtility`). A spawned entity isn't `MapEntityLink`-tagged (it wasn't baked into the
-scene), so `MapGroundSettleSystem` itself never reacts to it - that system is only the map-baked
-counterpart to this same call, per its own doc comment, not a substitute for it. `Apply` no-ops
-safely if the spawned prototype has no `GroundOffset` component at all.
+`ExperienceUtility`). Strictly belt-and-braces since `GroundOffset` became continuous (see
+`docs/chests.md`) - a prototype authoring `GroundOffset.Enabled` true already grounds itself with no
+spawn-site call at all - but it costs nothing and keeps a Chest grounding correctly even if a new
+prototype ships with that box unticked. `Apply` no-ops safely if the spawned prototype has no
+`GroundOffset` component at all.
 
 **Known simplification**: this resolves once. A player who joins after the sweep has already run
 doesn't retroactively spawn something their own talent alone would have earned for the group,

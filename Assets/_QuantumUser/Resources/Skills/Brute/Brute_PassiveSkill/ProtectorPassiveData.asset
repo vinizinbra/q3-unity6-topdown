@@ -18,6 +18,8 @@ MonoBehaviour:
       Value: 393071073715498458
   Description: Brute radiates an aura that intimidates nearby enemies, weakening
     the damage they deal to him and his allies.
+  Icon: {fileID: 1607168006, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
+  DisplayName: 
   Radius:
     RawValue: 393216
   IntimidateDamageMultiplier:

@@ -19,18 +19,16 @@ MonoBehaviour:
   Icon: {fileID: 1079704276, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
   DisplayName: Uncontrolled Fury
   RankDescriptions:
-  - Every 3rd kill during Overdrive extends it by 1s (up to +3s per activation).
-  - Every 2nd kill during Overdrive extends it by 1s (up to +5s per activation).
-  - Every 2nd kill during Overdrive extends it by 1s (up to +7s per activation) -
-    killing your Vendetta target grants an additional, uncapped +2s.
+  - Every 3rd kill during Overdrive extends it by 1s, up to +3s.
+  - Every 2nd kill during Overdrive extends it by 1s, up to +5s.
+  - Every 2nd kill during Overdrive extends it by 1s, up to +7s. Vendetta kills add an uncapped +2s.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Kills during Overdrive extend the activation - killing your Vendetta
-    target extends it further still.
+  Description: Kills during Overdrive extend it.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

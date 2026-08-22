@@ -1,5 +1,6 @@
 namespace Quantum
 {
+    using System;
     using Photon.Deterministic;
     using UnityEngine.Scripting;
 
@@ -40,16 +41,16 @@ namespace Quantum
             if (auraRadius <= FP._0)
                 return;
 
-            var allies = EnemyMovementUtility.FindPlayersInRadius(f, filter.Transform3D->Position, auraRadius);
-
-            if (allies.Count == 0)
+            Span<EntityRef> allies = stackalloc EntityRef[PlayerQueryUtility.MaxPlayerLayerCandidates];
+            int alliesCount = EnemyMovementUtility.FindPlayersInRadius(f, filter.Transform3D->Position, auraRadius, allies);
+            if (alliesCount == 0)
                 return;
 
             HitEffectData fireSupport = hasFireSupport ? f.FindAsset(fortification->FireSupportEffect) : null;
 
-            for (int i = 0; i < allies.Count; i++)
+            for (int i = 0; i < alliesCount; i++)
             {
-                EntityRef ally = allies[i].Entity;
+                EntityRef ally = allies[i];
 
                 // Shield Battery - a real per-second amount, converted to this tick's share. Flat by
                 // design: the old version multiplied the ally's OWN shield recharge rate, which scaled

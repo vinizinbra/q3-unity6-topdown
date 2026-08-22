@@ -231,14 +231,13 @@ namespace Quantum
 
             // Downed/KO players don't count toward "worth catching more than one target" - hitting
             // them does nothing (see docs/revive.md), so they shouldn't inflate an area action's score.
-            var hits = EnemyMovementUtility.FindPlayersInRadius(f, targetPosition, range);
-            int aliveCount = 0;
-
-            for (int i = 0; i < hits.Count; i++)
-            {
-                if (PlayerLifeStateUtility.IsIncapacitated(f, hits[i].Entity) == false)
-                    aliveCount++;
-            }
+            //
+            // TrySelectAction calls this once per eligible slot, for every chasing enemy, every
+            // tick - so this used to be up to 8 allocating broadphase queries per enemy per tick,
+            // by far the densest physics-query site in the simulation. PlayerQueryUtility counts
+            // the same candidates directly (see its own comment).
+            int aliveCount = PlayerQueryUtility.CountOnPlayerLayerInRadius(f, targetPosition, range,
+                EnemyMovementUtility.GetPlayerLayerMask(f), skipIncapacitated: true);
 
             int extraTargets = aliveCount > 0 ? aliveCount - 1 : 0;
             return extraTargets * TargetCountScoreWeight;

@@ -78,6 +78,9 @@ namespace Quantum
         [Tooltip("Tint for the local player's ground ring/glow/movement-arrow (see MovementRingView) - lets each hero's \"this is you\" marker read as their own color.")]
         public Color RingColor = Color.white;
 
+        [Tooltip("Sprite used to represent this hero on the minimap's player marker (see MinimapWidget). Left unassigned, the marker keeps its prefab's default sprite.")]
+        public Sprite PawnSprite;
+
         [Header("Positioning")]
         [Tooltip("Where this character holds its weapon, added on top of the weapon's own SpawnOffset (see WeaponDataAsset) - e.g. a taller hero's hand sits higher than the authored weapon offset alone accounts for. X is authored as a positive \"facing right\" magnitude and mirrored to negative while facing left (both in the view socket and in sim - see WeaponViewController and StatUtility.GetWeaponHoldOffset), rather than rotating continuously with aim angle the way SpawnOffset does.")]
         [FormerlySerializedAs("WeaponHoldOffset")]

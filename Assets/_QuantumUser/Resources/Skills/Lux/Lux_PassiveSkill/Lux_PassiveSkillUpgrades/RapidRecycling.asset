@@ -23,8 +23,7 @@ MonoBehaviour:
   RankDescriptions:
   - Each Scrap collected removes 0.5s from your Sentry's remaining cooldown.
   - Each Scrap collected removes 1s from your Sentry's remaining cooldown.
-  - 'Instant Assembly: earning a Fabrication Charge also removes a further 3s from
-    your Sentry''s cooldown.'
+  - 'Instant Assembly: each Scrap removes 1s from your Sentry''s cooldown, and earning a Fabrication Charge removes a further 3s.'
   CooldownReductionPerPickup:
   - RawValue: 32768
   - RawValue: 65536

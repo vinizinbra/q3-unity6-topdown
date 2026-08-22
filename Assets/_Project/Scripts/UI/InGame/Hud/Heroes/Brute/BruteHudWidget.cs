@@ -10,10 +10,10 @@ using UnityEngine;
 // Replaces the old JuggernautChargeUiWidget/JuggernautStackDamageUiWidget pair.
 public class BruteHudWidget : HeroHudWidget
 {
-    [SerializeField, Tooltip("Ground covered toward the next Discharge - ChargePoints against the active JuggernautSkillData's own MaxCharge (which lives on the asset, not the component). Complete = Charged, i.e. the next enemy touched gets knocked back.")]
+    [SerializeField, Tooltip("Ground covered toward the next Discharge - ChargePoints against the active JuggernautSkillData's own MaxCharge (which lives on the asset, not the component). Glows once Charged, i.e. the next enemy touched gets knocked back.")]
     private Section chargeGauge;
 
-    [SerializeField, Tooltip("Aftershock's \"Building Pressure\" stacks - JuggernautCharge.UnitsHit clamped to AftershockUpgrade.MaxStacks, the same clamp its end-of-channel explosion applies (see JuggernautSkillData.TryEndExplosion). Hidden entirely unless that Ascension is equipped.")]
+    [SerializeField, Tooltip("Aftershock's \"Building Pressure\" stacks - JuggernautCharge.UnitsHit clamped to AftershockUpgrade.MaxStacks, the same clamp its end-of-channel explosion applies (see JuggernautSkillData.TryEndExplosion). Hidden entirely unless that Ascension is equipped; glows at the clamp.")]
     private Section stacks;
 
     [SerializeField, Tooltip("Seconds left before Juggernaut ends on its own (SkillSlot.StateTimer against JuggernautSkillData.Duration).")]

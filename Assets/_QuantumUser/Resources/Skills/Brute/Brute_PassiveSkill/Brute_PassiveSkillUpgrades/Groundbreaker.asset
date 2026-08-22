@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/Brute_PassiveSkill/Brute_PassiveSkillUpgrades/Groundbreaker
     Guid:
       Value: 492402531825067847
-  Icon: {fileID: 0}
+  Icon: {fileID: -1355689374, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
   DisplayName: Groundbreaker
   Description: Dropping from higher ground turns Brute's own weight into a weapon
     - scattering enemies, slamming them into walls, and cracking them open.
@@ -24,10 +24,10 @@ MonoBehaviour:
   RankDescriptions:
   - 'Heavy Landing: landing from higher ground creates a shockwave that knocks nearby
     enemies away.'
-  - 'Crash Landing: Heavy Landing knocks enemies farther and hits harder. Enemies
-    slammed into walls are Stunned.'
-  - 'Seismic Impact: Heavy Landing has increased area and knockback. Enemies slammed
-    into walls become Exposed and take increased damage.'
+  - 'Crash Landing: landing from higher ground creates a stronger shockwave that
+    knocks enemies farther. Enemies slammed into walls are Stunned.'
+  - 'Seismic Impact: landing from higher ground creates a wide, powerful shockwave.
+    Enemies slammed into walls are Stunned, become Exposed and take increased damage.'
   MinimumFallHeight:
     RawValue: 32768
   AllowFallLandings: 1

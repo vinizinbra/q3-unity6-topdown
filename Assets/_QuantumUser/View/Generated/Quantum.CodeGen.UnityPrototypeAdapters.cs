@@ -376,6 +376,7 @@ namespace Quantum.Prototypes.Unity {
   [System.SerializableAttribute()]
   public unsafe partial class ProjectilePrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.ProjectilePrototype> {
     public FPVector3 Velocity;
+    public FPVector3 SpawnPosition;
     public FP Damage;
     public FP RemainingLifetime;
     public Quantum.QuantumEntityPrototype Owner;
@@ -402,6 +403,7 @@ namespace Quantum.Prototypes.Unity {
     public override Quantum.Prototypes.ProjectilePrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
       var result = new Quantum.Prototypes.ProjectilePrototype();
       converter.Convert(this.Velocity, out result.Velocity);
+      converter.Convert(this.SpawnPosition, out result.SpawnPosition);
       converter.Convert(this.Damage, out result.Damage);
       converter.Convert(this.RemainingLifetime, out result.RemainingLifetime);
       converter.Convert(this.Owner, out result.Owner);

@@ -180,7 +180,10 @@ public class PartyManager : PgSingleton<PartyManager>, IInRoomCallbacks, IMatchm
         SetPhase(PartyPhase.InRoom);
         _lastAllOthersReady = false;
         SetLocalReady(false);
-        ToastManager.Instance?.Show(MatchMakingConfig.Instance.Client.CurrentRoom.PlayerCount == 1 ? "Party created" : "Joined party");
+        ToastManager.Instance?.Show(
+            MatchMakingConfig.Instance.matchMakingType == MatchMakingConfig.MatchMakingType.RECONNECT
+                ? "Rejoined"
+                : MatchMakingConfig.Instance.Client.CurrentRoom.PlayerCount == 1 ? "Party created" : "Joined party");
         OnRosterChanged?.Invoke();
 
         if (_autoStartWhenRoomReady)

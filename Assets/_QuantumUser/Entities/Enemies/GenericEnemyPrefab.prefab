@@ -430,6 +430,15 @@ MonoBehaviour:
       RawValue: 0
     KnockbackTimer:
       RawValue: 0
+    PreKnockbackPosition:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
+    StuckCheckTimer:
+      RawValue: 0
     SkillProjectile: {fileID: 0}
     FlyingHoverCheckTimer:
       RawValue: 0
@@ -541,6 +550,10 @@ MonoBehaviour:
       RawValue: 0
     StunRemaining:
       RawValue: 0
+    StunImmunityRemaining:
+      RawValue: 0
+    InterruptImmunityRemaining:
+      RawValue: 0
     AnticipationSlowRemaining:
       RawValue: 0
     AnticipationSlowMultiplier:
@@ -578,15 +591,21 @@ MonoBehaviour:
       RawValue: 0
     DamageReductionAmount:
       RawValue: 0
-    GuardianDamageReductionRemaining:
+    AuraDamageReductionRemaining:
       RawValue: 0
-    GuardianDamageReductionAmount:
+    AuraDamageReductionAmount:
       RawValue: 0
     TemporaryDamageReductionRemaining:
       RawValue: 0
     TemporaryDamageReductionAmount:
       RawValue: 0
-    GuardianReactiveCooldownRemaining:
+    ReactiveDamageReductionCooldownRemaining:
+      RawValue: 0
+    AllyShieldRestoreCooldownRemaining:
+      RawValue: 0
+    TempOutgoingDamageRemaining:
+      RawValue: 0
+    TempOutgoingDamageAmount:
       RawValue: 0
     IntimidateRemaining:
       RawValue: 0
@@ -783,7 +802,7 @@ MonoBehaviour:
   burnFlashColor: {r: 1, g: 0.45, b: 0.1, a: 1}
   frontalReducedFlashColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   restColor: {r: 1, g: 1, b: 1, a: 0}
-  duration: 0.2
+  duration: 0.3
   healFlashColor: {r: 0.4, g: 1, b: 0.4, a: 1}
   shieldFlashColor: {r: 0.4, g: 0.75, b: 1, a: 1}
   deathColor: {r: 0, g: 0, b: 0, a: 0.5}

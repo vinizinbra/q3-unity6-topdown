@@ -20,9 +20,8 @@ MonoBehaviour:
   DisplayName: Main Stage
   RankDescriptions:
   - Increase Totem Beat radius by 30%.
-  - Totem grows 50% larger and lasts 2s longer.
-  - Totem becomes a massive Main Stage, opening with an immediate Damage Beat and
-    ending with a final Healing Beat.
+  - Totem Beat radius +50%, and the Totem lasts 2s longer.
+  - Totem Beat radius +75% and the Totem lasts 2s longer, becoming a Main Stage that opens with an immediate Damage Beat and ends with a final Healing Beat.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

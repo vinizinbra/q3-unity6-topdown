@@ -133,6 +133,8 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
 
     public void Leave()
     {
+        // Same reasoning as InMatchWindow.OnLeaveClicked - quitting a run on purpose still leaves
+        // it rejoinable until PlayerTtl expires, so the reconnect information is left alone here.
         MatchMakingConfig.Instance.Client.Disconnect();
         _onLeave?.Invoke(_placement);
 

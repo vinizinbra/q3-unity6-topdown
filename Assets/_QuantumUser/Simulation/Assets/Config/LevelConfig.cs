@@ -3,14 +3,29 @@ namespace Quantum
     using System;
     using Photon.Deterministic;
 
+    // One interchangeable variant inside a ChunkPoolEntry - the prototype plus how often it should
+    // be picked relative to its siblings. Weight mirrors EnemyGroupConfig.Weight's own convention:
+    // it only biases how often an already-valid variant wins, and <= 0 soft-disables that variant
+    // (a designer can mute a prototype without removing it from the list). The one deliberate
+    // difference is the all-zero case - Unity zero-inits a freshly added array element, so an entry
+    // whose variants are ALL <= 0 (an unmigrated/unauthored list) falls back to the old uniform pick
+    // rather than silently placing nothing. See LevelGenerationSystem.PickVariant.
+    [Serializable]
+    public struct ChunkPrototypeVariant
+    {
+        public AssetRef<EntityPrototype> Prototype;
+        public FP Weight;
+    }
+
     // One entry in LevelConfig.ChunkPool - describes a SET of interchangeable chunk prototype
     // variants the generator can place and how many total should end up in a generated level. Each
-    // of the Count placements independently picks a random prototype from Prototypes (via f.RNG, so
-    // every client generates the identical layout) - e.g. an Enemy entry with 4 Prototypes and
-    // Count 10 places 10 enemy chunks, each randomly one of the 4 variants. LobbyStart should have
-    // Count 1 (the generator seeds the grid with it); Boss isn't listed here at all - it's a fixed,
-    // hand-placed chunk (BossArena) with its own pre-baked navmesh that the generator discovers in
-    // the scene and grows the rest of the level around, rather than something it spawns itself.
+    // of the Count placements independently rolls one variant out of Prototypes, weighted by that
+    // variant's own Weight (via f.RNG, so every client generates the identical layout) - e.g. an
+    // Enemy entry with 4 Prototypes and Count 10 places 10 enemy chunks, each one of the 4
+    // variants. LobbyStart should have Count 1 (the generator seeds the grid with it); Boss isn't
+    // listed here at all - it's a fixed, hand-placed chunk (BossArena) with its own pre-baked
+    // navmesh that the generator discovers in the scene and grows the rest of the level around,
+    // rather than something it spawns itself.
     // Footprint size isn't here - LevelGenerationSystem reads it straight off the entity's own
     // baked Chunk component right after f.Create, so a prefab's size only has to be authored once.
     [Serializable]
@@ -18,9 +33,10 @@ namespace Quantum
     {
         public ChunkType Type;
 
-        // Interchangeable variant prototypes for this entry - one is picked at random per placed
-        // instance. A single-element array reproduces the old "one prototype per entry" behavior.
-        public AssetRef<EntityPrototype>[] Prototypes;
+        // Interchangeable variant prototypes for this entry - one is picked per placed instance,
+        // weighted by each variant's own Weight. A single-element array reproduces the old "one
+        // prototype per entry" behavior regardless of what that entry's Weight is.
+        public ChunkPrototypeVariant[] Prototypes;
 
         public Int32 Count;
 
@@ -67,6 +83,16 @@ namespace Quantum
         public Int32 MinConnectionWidthCells = 2;
 
         public ChunkPoolEntry[] ChunkPool;
+
+        // How many chunk requests LevelGenerationSystem places per simulation tick. Generation used
+        // to run start-to-finish inside one tick, which froze the client for as long as it took to
+        // place every chunk AND for the View to instantiate all of their prefabs in the same Unity
+        // frame - long enough to read as a hard hang, and long enough to risk stalling the network
+        // pump into a disconnect. Raise it to generate faster at the cost of a heavier per-tick
+        // spike; <= 0 is clamped to 1 rather than meaning "all at once", so a misauthored 0 can't
+        // reintroduce the freeze. Nothing spawns players any earlier either way -
+        // PlayerSpawnUtility.IsReadyToSpawn still waits for the final tick's LevelGenerated flip.
+        public Int32 ChunksPerGenerationTick = 1;
 
         // Optional - GrowLevel's frontier-based placement has no way to guarantee full coverage,
         // so it can leave scattered single-cell pockets fully enclosed by chunks. If assigned,

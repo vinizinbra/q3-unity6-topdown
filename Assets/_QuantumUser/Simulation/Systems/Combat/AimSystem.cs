@@ -15,8 +15,13 @@ namespace Quantum
     // lowest priority - see FindClosestTarget), so the player can deliberately destroy a barrel/crate
     // without an enemy ever losing the reticle. Distance is XZ-only (flat), so elevation differences
     // (flying enemies, terrain height) don't skew which one counts as closest. Range comes from the entity's equipped
-    // Weapon.WeaponData.Range when it has one (players); entities without a Weapon (enemies
-    // target players for facing purposes too) fall back to FallbackTargetRange.
+    // Weapon.WeaponData.Range when it has one; anything without a Weapon falls back to
+    // FallbackTargetRange.
+    //
+    // The filter requires KCC, so in practice this only ever runs for PLAYERS - no enemy prototype
+    // in this project carries one (an enemy's own Aim.Angle is written directly by
+    // EnemyMovementUtility instead). Worth knowing before assuming the cost here scales with enemy
+    // count: it scales with player count.
     //
     // WeaponSystem calls NotifyFired on every shot, which locks Aim.Target in place
     // (Aim.LockedTarget/TargetSwitchTimer) for TargetLockDuration - otherwise a shot could land
@@ -26,11 +31,6 @@ namespace Quantum
     [Preserve]
     public unsafe class AimSystem : SystemMainThreadFilter<AimSystem.Filter>
     {
-        private const string EnemyLayerName = "Enemy";
-        // Boss lives on its own physics layer, not Enemy (see EnemyMovementUtility.BossLayerName's
-        // own comment) - included here too so aim-assist can still lock onto it.
-        private const string BossLayerName = "Boss";
-
         private static readonly FP MinSpeed = FP._0_10;
         private static readonly FP FallbackTargetRange = 12;
         private static readonly FP TargetLockDuration = 1;
@@ -124,7 +124,9 @@ namespace Quantum
 
         private EntityRef FindClosestTarget(Frame f, EntityRef self, FPVector3 origin)
         {
-            int enemyLayerMask = f.Layers.GetLayerMask(EnemyLayerName) | f.Layers.GetLayerMask(BossLayerName);
+            // Enemy | Boss, resolved through the one shared helper rather than re-deriving the same
+            // two string layer lookups here every player every tick.
+            int enemyLayerMask = EnemyMovementUtility.GetEnemyLayerMask(f);
 
             Shape3D sphere = Shape3D.CreateSphere(GetTargetRange(f, self));
             var hits = f.Physics3D.OverlapShape(origin, FPQuaternion.Identity, sphere, enemyLayerMask, QueryOptions.HitAll);

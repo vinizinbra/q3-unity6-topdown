@@ -70,7 +70,7 @@ namespace QuantumUser.Editor
                 asset.Activated = false;
                 asset.MaxRank = 3;
                 // Static fallback for surfaces that call the plain, rank-unaware GetDescription() -
-                // e.g. UpgradePopupWidget's Tab-hold history list. GetDescription(int rank) (below,
+                // e.g. HeroInfoPopupWidget's Tab-hold history list. GetDescription(int rank) (below,
                 // built from the per-rank arrays) is what every rank-aware surface actually shows.
                 asset.Description = "Juggernaut builds Charge faster while you're running, and rewards staying Charged with extra Move Speed.";
                 asset.RankDescriptions = new[]
@@ -109,8 +109,8 @@ namespace QuantumUser.Editor
                 asset.RankDescriptions = new[]
                 {
                     "Juggernaut's closing shockwave deals +15% damage per enemy struck during the cast, up to 5 stacks.",
-                    "Each stack also widens the shockwave by 5%.",
-                    "Earthquake: at 5 stacks, a second shockwave lands half a second after the first.",
+                    "Juggernaut's closing shockwave deals +15% damage and +5% radius per enemy struck during the cast, up to 5 stacks.",
+                    "Juggernaut's closing shockwave deals +15% damage and +5% radius per enemy struck, up to 5 stacks. At 5 stacks a second shockwave lands 0.5s later.",
                 };
                 asset.StackDamagePercent = new[] { FP.FromString("0.15"), FP.FromString("0.15"), FP.FromString("0.15") };
                 asset.StackRadiusPercent = new[] { FP._0, FP.FromString("0.05"), FP.FromString("0.05") };
@@ -166,7 +166,7 @@ namespace QuantumUser.Editor
                 {
                     "Aura radius +2m; allies inside gain 10% Damage Reduction.",
                     "Aura radius +3m; allies inside gain 15% Damage Reduction and 30% Knockback Resistance.",
-                    "The same 15% baseline - and when an ally in the aura takes an enemy hit, they gain a further +20% Damage Reduction for 2s (5s cooldown per ally).",
+                    "Aura radius +3m; allies inside gain 15% Damage Reduction and 30% Knockback Resistance. An ally hit while in the aura gains a further +20% Damage Reduction for 2s (5s cooldown per ally).",
                 };
                 asset.MaxRank = 3;
                 asset.RadiusBonus = new[] { FP._2, FP._3, FP._3 };
@@ -188,8 +188,8 @@ namespace QuantumUser.Editor
                 asset.RankDescriptions = new[]
                 {
                     "Heavy Landing: landing from higher ground creates a shockwave that knocks nearby enemies away.",
-                    "Crash Landing: Heavy Landing knocks enemies farther and hits harder. Enemies slammed into walls are Stunned.",
-                    "Seismic Impact: Heavy Landing has increased area and knockback. Enemies slammed into walls become Exposed and take increased damage.",
+                    "Crash Landing: landing from higher ground creates a stronger shockwave that knocks enemies farther. Enemies slammed into walls are Stunned.",
+                    "Seismic Impact: landing from higher ground creates a wide, powerful shockwave. Enemies slammed into walls are Stunned, become Exposed and take increased damage.",
                 };
                 asset.MaxRank = 3;
 

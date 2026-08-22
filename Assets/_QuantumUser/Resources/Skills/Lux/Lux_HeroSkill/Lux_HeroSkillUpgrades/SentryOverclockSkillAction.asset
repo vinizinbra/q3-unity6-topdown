@@ -21,16 +21,14 @@ MonoBehaviour:
   RankDescriptions:
   - Sentry Fire Rate +25%.
   - Sentry Fire Rate +40%, and your Sentry lasts 2s longer.
-  - 'Redline: Sentry Fire Rate +50%, and during the last 3s of its life it gains
-    a further +100% Fire Rate.'
+  - 'Redline: Sentry Fire Rate +50%, and during the last 3s of its life it gains a further +100% Fire Rate.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Your Sentry fires faster and lives longer - and goes into overdrive
-    as it burns out.
+  Description: Your Sentry fires faster and lives longer - and goes into overdrive as it burns out.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

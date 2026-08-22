@@ -58,6 +58,7 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<Projectile>(projectileEntity, out var projectile) == true)
             {
                 projectile->Velocity = launch.Velocity;
+                projectile->SpawnPosition = launch.SpawnPosition;
                 projectile->Damage = damage;
                 projectile->RemainingLifetime = projectileData.Lifetime;
                 projectile->Owner = owner;

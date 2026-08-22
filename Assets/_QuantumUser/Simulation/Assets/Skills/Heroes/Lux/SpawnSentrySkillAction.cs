@@ -302,13 +302,32 @@ namespace Quantum
             sentryBarrel->SlotIndex = slotIndex;
             sentryBarrel->Source = source;
 
-            // The barrel's own un-modified fire cooldown, captured right after equip - every
-            // sentry-wide fire-rate effect composes against THIS rather than against whatever the
-            // multiplier happens to be this tick, which is what stops repeated per-tick application
-            // from compounding. See SentryBarrelSystem.
-            sentryBarrel->BaseFireCooldownMultiplier = f.Unsafe.TryGetPointer<Weapon>(barrel, out var equipped)
-                ? equipped->FireCooldownMultiplier
-                : FP._1;
+            sentryBarrel->BaseFireCooldownMultiplier = FP._1;
+
+            if (f.Unsafe.TryGetPointer<Weapon>(barrel, out var equipped) == true)
+            {
+                // The barrel's own un-modified fire cooldown, captured right after equip - every
+                // sentry-wide fire-rate effect composes against THIS rather than against whatever the
+                // multiplier happens to be this tick, which is what stops repeated per-tick
+                // application from compounding. See SentryBarrelSystem.
+                sentryBarrel->BaseFireCooldownMultiplier = equipped->FireCooldownMultiplier;
+
+                // Lux's Skill Damage, baked in at deploy. A barrel fires its Weapon with ITSELF as the
+                // owner, and it has no CharacterStats - so DamageUtility.ResolveOutgoingDamage returns
+                // at its own stats gate and a sentry shot would otherwise receive none of her build.
+                //
+                // Compounded into Weapon.DamageMultiplier rather than written as an absolute: that
+                // field is seeded to 1 at Equip and is exactly where every other standing weapon
+                // modifier already accumulates (DamageMultiplierWeaponPerkData.Apply,
+                // WeaponSystem.AddLevel), and WeaponSystem re-reads WeaponDataAsset.Damage against it
+                // fresh on every shot, so Inspector tuning still takes effect live.
+                //
+                // Resolved ONCE at deploy, deliberately - the same "baked at spawn" contract the
+                // sentry's Range, its Overload Core blast and its Fortification copies all follow, so
+                // a damage upgrade taken mid-run applies to the NEXT sentry rather than retroactively
+                // buffing machines already in the field.
+                equipped->DamageMultiplier *= StatUtility.GetSkillDamageMultiplier(f, owner);
+            }
 
             // Purely cosmetic - lets the chassis's own view (SentryView) activate the matching gun
             // sprite out of its authored list; the sim never re-reads this.

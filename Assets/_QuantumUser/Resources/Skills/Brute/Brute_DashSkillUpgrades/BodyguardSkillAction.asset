@@ -21,8 +21,7 @@ MonoBehaviour:
   RankDescriptions:
   - On Dash complete, restore 10 Shield to allies within 6m.
   - On Dash complete, restore 15 Shield to allies within 8m.
-  - On Dash complete, restore 20 Shield to allies within 8m and grant them +20% Damage
-    Reduction for 2s.
+  - On Dash complete, restore 20 Shield to allies within 8m and grant them +20% Damage Reduction for 2s.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 4

@@ -18,14 +18,12 @@ MonoBehaviour:
       Value: 320692999273507519
   Icon: {fileID: 145059788, guid: 167fe127f1a734214a64d3f39af97f1f, type: 3}
   DisplayName: Undertow
-  Description: Weapon hits pull enemies together, eventually Binding them for bonus
-    damage.
+  Description: Weapon hits pull enemies together, eventually Binding them for bonus damage.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
   - Weapon hits pull enemies toward their nearest ally.
-  - Undertow pulls enemies together with much greater force.
-  - Enemies pulled by Undertow become Bound for 2s and take 20% increased damage
-    from Kai.
+  - Weapon hits pull enemies toward their nearest ally with much greater force.
+  - Weapon hits pull enemies toward their nearest ally, Binding them for 2s and making them take 20% more damage from you.
   PullForce:
   - RawValue: 196608
   - RawValue: 393216

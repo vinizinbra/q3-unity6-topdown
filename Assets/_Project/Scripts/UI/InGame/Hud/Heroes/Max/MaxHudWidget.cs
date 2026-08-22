@@ -8,16 +8,18 @@ using UnityEngine;
 // so its presence already IS the "an activation is running right now" check every Overdrive
 // Ascension reads.
 //
+// Rage is ONE section, not a bar plus a separate "3/5" row - the gauge's own valueText carries the
+// exact count when it's wired, so a second stack row was two things to author and keep in sync for
+// one number. Max Rage isn't a badge anymore either: the section glows in its own authored color
+// instead (see HeroHudWidget.Section).
+//
 // Replaces the old RageOverdriveUiWidget.
 public class MaxHudWidget : HeroHudWidget
 {
-    [SerializeField, Tooltip("Rage as a fill - Stacks against MaxStacks. Complete = at max Rage, the live condition Full Throttle/Ignition react to (RageOverdriveUtility.IsAtMaxRage).")]
+    [SerializeField, Tooltip("Rage as a fill - Stacks against MaxStacks, with the exact \"3/5\" on its own valueText if one is wired. Glows at max Rage, the live condition Full Throttle/Ignition react to (RageOverdriveUtility.IsAtMaxRage).")]
     private Section rageGauge;
 
-    [SerializeField, Tooltip("The same Rage as a discrete \"3/5\" count. Optional second view of rageGauge above - Rage moves one stack at a time off landed hits, which a bare fill is easy to lose track of.")]
-    private Section rageStacks;
-
-    [SerializeField, Tooltip("Seconds left before Overdrive ends on its own (SkillSlot.StateTimer against BerserkSkillData.Duration).")]
+    [SerializeField, Tooltip("Seconds left before Overdrive ends on its own (SkillSlot.StateTimer against BerserkSkillData.Duration). Drains toward 0, so it deliberately never glows - a fresh activation being \"full\" isn't a payoff to call out.")]
     private Section timer;
 
     protected override bool TryRefresh(Frame frame, EntityRef entity)
@@ -26,11 +28,11 @@ public class MaxHudWidget : HeroHudWidget
             return false;
 
         int max = Mathf.Max(1, rage.MaxStacks);
+        float fill = Mathf.Clamp01(rage.Stacks / (float)max);
         bool atMaxRage = rage.Stacks >= rage.MaxStacks;
         string value = $"{rage.Stacks}/{rage.MaxStacks}";
 
-        rageGauge.Show(rage.Stacks / (float)max, value, atMaxRage);
-        rageStacks.Show(rage.Stacks / (float)max, value, atMaxRage);
+        rageGauge.Show(fill, value, atMaxRage);
 
         UpdateTimer(frame, entity);
         return true;
@@ -50,7 +52,6 @@ public class MaxHudWidget : HeroHudWidget
     protected override void HideSections()
     {
         rageGauge.Hide();
-        rageStacks.Hide();
         timer.Hide();
     }
 }

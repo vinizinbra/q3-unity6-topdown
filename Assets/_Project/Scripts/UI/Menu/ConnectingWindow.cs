@@ -43,6 +43,9 @@ public class ConnectingWindow : UiWindow,IMatchmakingCallbacks
                 mainMenuTab.windowManager.ShowWindow<WaitingForPlayersWindow>();
                 break;
             case MatchMakingConfig.MatchMakingType.RECONNECT:
+                // Intentionally nothing: MatchMakingConfig.ReconnectAsync owns what happens next
+                // once the rejoin resolves (StartRunner for a live match, MainMenuWindow for a
+                // party room that never started). This callback fires mid-await, before either.
                 break;
             default:
                 break;
@@ -62,6 +65,7 @@ public class ConnectingWindow : UiWindow,IMatchmakingCallbacks
                 mainMenuTab.windowManager.ShowWindow<WaitingForPlayersWindow>();
                 break;
             case MatchMakingConfig.MatchMakingType.RECONNECT:
+                // See OnCreatedRoom above - ReconnectAsync drives the transition, not this.
                 break;
         }
     }

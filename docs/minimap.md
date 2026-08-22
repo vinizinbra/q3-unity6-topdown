@@ -76,6 +76,25 @@ simulation.
   position/size, clips whatever overflows) that defines the actual visible viewport - the standard
   "content pans, mask stays put" technique.
 
+  **Full-map panel** (`fullMapImage`, optional): a second surface showing the WHOLE level at once,
+  unpanned/unmasked (e.g. a Tab-key panel). The *texture* is literally shared - both `RawImage`s
+  point at the same `Texture2D`, so every repaint updates both for free - but icons and player
+  markers are real UI objects, not texture content, so each surface gets its own clone of each,
+  held together in an `OverlayPair` (`Mini` under `mapRect`, `Full` under `_fullOverlayRoot`) and
+  driven in lockstep from the same data. The only per-surface differences are the rect positions
+  are computed against (`WorldToMapPosition`/`TexelRectCenterToMapPosition` both take a root rect,
+  since the two surfaces draw the same texture at different UI sizes) and `fullMapOverlayScale`, a
+  uniform scale for the big map's own clones since it's usually drawn much larger. `_fullOverlayRoot`
+  is `fullMapRect` if assigned, else `fullMapImage`'s own `RectTransform` - which is correct as
+  long as that's square and center-pivoted. With `fullMapImage` unassigned, every `Full` is simply
+  `null` and nothing changes.
+
+  Chunk icons are positioned once at spawn (a chunk never moves), which would strand them if a
+  surface is laid out *later* - the full-map panel is typically inactive, and possibly zero-sized,
+  until first opened. `RefreshIconPositionsIfResized` (polled every `QUpdate`, a no-op unless a
+  surface's own `rect.width` actually changed) re-places them from each pair's cached `TexelRect`.
+  Player markers need none of this - they're repositioned every frame anyway.
+
   **Prefab templates**: `iconPrefab`/`playerMarkerPrefab` are expected to be scene child objects
   under this same widget (not Project-window prefab assets) - `QStart` disables both once so the
   template itself doesn't render at its own design-time position; every spawned clone explicitly
@@ -104,12 +123,18 @@ though:
 4. Author an icon template and a player-marker template (plain `Image`s are enough) as child
    objects under the `MinimapWidget` GameObject, assign both to `iconPrefab`/`playerMarkerPrefab`.
 5. Assign `chunkTypeSprites[]` (one sprite per `ChunkType` value, in enum order: `LobbyStart`,
-   `Enemy`, `Boss`, `Merchant`, `Traversal`, `HealingShrine`, `CursedRift` - the last two added
-   2026-08-14 for the two Breathing POI chunks, see `docs/breathing-poi.md`) on each instance -
+   `Enemy`, `Boss`, `Merchant`, `Traversal`, `HealingShrine`, `CursedRift`, `Blacksmith` -
+   `HealingShrine`/`CursedRift` added 2026-08-14 for the two Breathing POI chunks, see
+   `docs/breathing-poi.md`; `Blacksmith` since, see `docs/store-blacksmith.md`) on each instance -
    leave `Enemy`/`Traversal` empty.
 6. Set `worldExtent`/`worldCenter` to match the actual authored playable world size.
 7. Set `outlineTexels` > 0 (and consider a lower `worldUnitsPerTexel`, e.g. 5, for more texel
    headroom) to enable the level outline; leave at 0 to disable it entirely.
+8. For the full-map panel: assign its `RawImage` to `fullMapImage`. If that `RawImage` is square
+   and center-pivoted, leave `fullMapRect` empty; otherwise nest a square, center-pivoted content
+   layer of the same size over it and assign that instead. Tune `fullMapOverlayScale` so the
+   shared icon/marker templates read at the right size on the bigger surface (they're clones of
+   the same prefabs the minimap uses, so their authored size is minimap-sized).
 
 Not yet manually verified end-to-end in-Editor.
 
@@ -119,8 +144,9 @@ Not yet manually verified end-to-end in-Editor.
   now have their own `ChunkType` values (see above) and so CAN get a minimap icon like
   Boss/Merchant, but no sprite is authored for either yet.
 - No secret-room hiding - no "secret" concept exists on `Chunk`.
-- No toggle/zoom/full-map view - always-on small corner map only (now player-centered/panning
-  within its mask, see above, rather than a fixed whole-level view).
+- ~~No toggle/zoom/full-map view~~ - superseded: an optional second full-map surface
+  (`fullMapImage`) now shares the texture, icons, and player markers with the panned corner map
+  (see "Full-map panel" above). Zoom itself is still out of scope.
 - No breathing-window pulse/highlight behavior - belongs to the larger, deferred pacing system.
 
 ## Known simplification (resolved 2026-08-13)

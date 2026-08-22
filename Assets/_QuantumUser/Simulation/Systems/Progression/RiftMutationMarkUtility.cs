@@ -257,6 +257,15 @@ namespace Quantum
             if (f.Has<Enemy>(target) == false)
                 return;
 
+            // Nobody in the run has the mutation - by far the common case, since it is one pick out
+            // of a 25-mutation catalog. Bails before the Transform lookup, the RuntimeConfig
+            // FindAsset and the wider 3-component player scan below, all of which otherwise ran for
+            // EVERY StatusEffects-bearing entity EVERY tick to do nothing. Skipping cannot leave a
+            // stale exposure slot behind: a slot is only ever written while a player actually holds
+            // the mutation, and a holder never loses it.
+            if (AnyPlayerHasFracturedPresence(f) == false)
+                return;
+
             if (f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == false)
                 return;
 
@@ -300,6 +309,21 @@ namespace Quantum
                 status->FracturedPresenceExposureTime[slot] = FP._0;
                 RequestAndApply(f, target, player, RiftMarkApplicationSource.MutationFracturedPresence, config);
             }
+        }
+
+        // Deliberately its own tiny scan rather than a cached Global flag - <= 4 players, and a
+        // cached flag would be one more piece of rollback state to keep honest.
+        private static bool AnyPlayerHasFracturedPresence(Frame f)
+        {
+            var filtered = f.Filter<PlayerLink, CharacterStats>();
+
+            while (filtered.Next(out EntityRef _, out PlayerLink _, out CharacterStats stats))
+            {
+                if (stats.HasFracturedPresenceMutation == true)
+                    return true;
+            }
+
+            return false;
         }
 
         private static int FindOrAssignFracturedPresenceSlot(StatusEffects* status, EntityRef player)

@@ -1,5 +1,6 @@
 namespace Quantum
 {
+    using System;
     using Photon.Deterministic;
 
     // Gain/pulse side of Zara's Resonance passive - see Resonance.qtn (the component). Mirrors
@@ -71,11 +72,11 @@ namespace Quantum
             // the upgrade. 1x for anyone without it.
             FP radius = resonance->Radius * StatUtility.GetAreaMultiplier(f, owner);
 
-            var allies = EnemyMovementUtility.FindPlayersInRadius(f, position, radius);
-
-            for (int i = 0; i < allies.Count; i++)
+            Span<EntityRef> allies = stackalloc EntityRef[PlayerQueryUtility.MaxPlayerLayerCandidates];
+            int alliesCount = EnemyMovementUtility.FindPlayersInRadius(f, position, radius, allies);
+            for (int i = 0; i < alliesCount; i++)
             {
-                EntityRef ally = allies[i].Entity;
+                EntityRef ally = allies[i];
 
                 if (f.Unsafe.TryGetPointer<Health>(ally, out var health) == false)
                     continue;

@@ -1,5 +1,6 @@
 namespace Quantum
 {
+    using System;
     using Photon.Deterministic;
     using UnityEngine.Scripting;
 
@@ -23,14 +24,14 @@ namespace Quantum
             FPVector3 checkpoint = anchorPosition + anchorRotation * filter.TraversalChallenge->CheckpointPosition;
             FP radius = filter.TraversalChallenge->CheckpointRadius;
 
-            // Same proximity idiom ChestSystem.Update already uses - sphere overlap first, then a
-            // re-checked SqrMagnitude distance guard (OverlapShape can return near-boundary false
-            // positives). First player found inside the radius completes it for everyone.
-            var hits = EnemyMovementUtility.FindPlayersInRadiusIncludingDashing(f, checkpoint, radius);
-
-            for (int i = 0; i < hits.Count; i++)
+            // Same proximity idiom ChestSystem.Update already uses - PlayerQueryUtility's own
+            // collider-radius-inclusive range test first, then a re-checked exact SqrMagnitude
+            // guard. First player found inside the radius completes it for everyone.
+            Span<EntityRef> hits = stackalloc EntityRef[PlayerQueryUtility.MaxPlayerLayerCandidates];
+            int hitsCount = EnemyMovementUtility.FindPlayersInRadiusIncludingDashing(f, checkpoint, radius, hits);
+            for (int i = 0; i < hitsCount; i++)
             {
-                if (f.Unsafe.TryGetPointer<Transform3D>(hits[i].Entity, out var playerTransform) == false)
+                if (f.Unsafe.TryGetPointer<Transform3D>(hits[i], out var playerTransform) == false)
                     continue;
 
                 if ((playerTransform->Position - checkpoint).SqrMagnitude > radius * radius)

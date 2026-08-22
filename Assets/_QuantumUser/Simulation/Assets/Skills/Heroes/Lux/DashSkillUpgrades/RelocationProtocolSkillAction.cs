@@ -119,12 +119,13 @@ namespace Quantum
 
             // The destination is wherever LUX was standing, which can easily be mid-air - dashing off
             // a ledge, or over a gap. Without this the machine simply hangs there at her Y for the
-            // rest of its life. Re-runs the exact same ground resolve every spawn already goes through
-            // (SpawnedEntitySpawner), so the sentry's own authored GroundOffset decides what happens:
-            // FallGravityMultiplier > 0 (which Sentry.prefab authors at 1) drops it under real
-            // accelerating gravity via SettlingToGround/GroundSettleSystem, 0 would snap it down
-            // instantly. No-ops entirely for a prototype with no GroundOffset at all.
-            GroundOffsetUtility.Apply(f, sentryEntity, sentryTransform);
+            // rest of its life, since its GroundOffset already cleared its own Enabled flag back when
+            // it first landed. This is the canonical "an entity MOVED mid-life" re-arm: the sentry's
+            // own authored GroundOffset then decides what happens - FallGravityMultiplier > 0 (which
+            // Sentry.prefab authors at 1) drops it under real accelerating gravity via
+            // GroundSettleSystem, 0 would snap it down on the next tick. No-ops entirely for a
+            // prototype with no GroundOffset at all.
+            GroundOffsetUtility.Apply(f, sentryEntity);
 
             if (TempFireRateMultiplier[index] > FP._1)
             {

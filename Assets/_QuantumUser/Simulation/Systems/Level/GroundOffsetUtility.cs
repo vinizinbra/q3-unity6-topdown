@@ -1,49 +1,27 @@
 namespace Quantum
 {
     using Photon.Deterministic;
-    using Quantum.Physics3D;
 
-    // Shared by SpawnedEntitySpawner (a skill/projectile-impact spawn, ground-checked right after
-    // Transform3D.Position is set), MapGroundSettleSystem (a map-baked entity, ground-checked once it
-    // materializes at its own hand-placed position) and RelocationProtocolSkillAction (an entity MOVED
-    // mid-life to wherever the caster was standing, which may be mid-air) - all three need the exact
-    // same raycast/target-Y/settle-or-snap resolution against a GroundOffset, just from different
-    // trigger points.
+    // Small shared helpers around the GroundOffset component. The actual grounding is continuous and
+    // lives in GroundSettleSystem (see GroundOffset.qtn) - this is only the "(re-)arm it" call plus
+    // the collider-clearance math GroundSettleSystem and PopMotionSystem both need.
     public static unsafe class GroundOffsetUtility
     {
-        // Raycasts straight down from the entity's current XZ. Snaps immediately unless the relevant
-        // direction's approach rate is authored (descending reads FallGravityMultiplier, ascending
-        // reads FloatSpeed) - only then is this worth spreading across ticks via
-        // SettlingToGround/GroundSettleSystem instead of just placing the entity there once, up front.
-        public static void Apply(Frame f, EntityRef entity, Transform3D* transform)
+        // Re-arms an entity so GroundSettleSystem drops (or raises) it onto the ground again from
+        // wherever it is now. A freshly created entity does NOT need this - it arrives with Enabled
+        // authored true on its own prototype, which is the entire point of that flag. This exists for
+        // an entity MOVED mid-life (RelocationProtocolSkillAction teleporting a Sentry to wherever Lux
+        // was standing, which may well be mid-air), and is kept on the spawn paths as a cheap
+        // guarantee that a spawn grounds itself even if someone forgets to tick Enabled on a new
+        // prototype. FallVelocity resets so a fresh drop accelerates from rest instead of inheriting
+        // the last one's speed. No-ops entirely for an entity with no GroundOffset at all.
+        public static void Apply(Frame f, EntityRef entity)
         {
             if (f.Unsafe.TryGetPointer<GroundOffset>(entity, out var groundOffset) == false)
                 return;
 
-            int groundLayerMask = EnemyMovementUtility.GetGroundLayerMask(f);
-
-            if (EnemyMovementUtility.TryFindGroundHeight(f, transform->Position, groundLayerMask, out FP groundY) == false)
-            {
-                Log.Error($"[GroundOffset] {entity} has a GroundOffset but no ground was found beneath {transform->Position} - left at spawn Y");
-                return;
-            }
-
-            FP targetY = groundY + ResolveGroundClearance(f, entity) + groundOffset->Offset;
-            FP approachRate = targetY < transform->Position.Y ? groundOffset->FallGravityMultiplier : groundOffset->FloatSpeed;
-
-            if (approachRate <= FP._0)
-            {
-                transform->Position = new FPVector3(transform->Position.X, targetY, transform->Position.Z);
-                return;
-            }
-
-            // AddOrGet, and both fields written explicitly: this can legitimately run more than once
-            // on the same entity (a relocated sentry re-grounding at a new spot), and a plain Add
-            // would silently keep a stale TargetY from the previous settle. FallVelocity resets so a
-            // fresh drop accelerates from rest instead of inheriting the last one's speed.
-            f.AddOrGet<SettlingToGround>(entity, out var settling);
-            settling->TargetY = targetY;
-            settling->FallVelocity = FP._0;
+            groundOffset->Enabled = true;
+            groundOffset->FallVelocity = FP._0;
         }
 
         // How far the entity's own collider bottom sits below its pivot - same "half-height minus
@@ -52,9 +30,9 @@ namespace Quantum
         // the pivot itself at groundY + Offset, which only reads as "resting on the ground" for a
         // shape with zero height below its own pivot - anything else (a sphere/box/capsule centered
         // on the pivot, as colliders here always are) sank in by its own half-height. 0 for an entity
-        // with no collider at all, same as ResolveEntityRadius's fallback. Public so PopMotionSystem
-        // can resolve the same resting-height clearance every tick while an orb is mid-arc, not just
-        // once here at spawn.
+        // with no collider at all, same as ResolveEntityRadius's fallback. Shared by GroundSettleSystem
+        // (every tick while an entity is still settling) and PopMotionSystem (every tick while an orb
+        // is mid-arc), so both resolve the identical resting height.
         public static FP ResolveGroundClearance(Frame f, EntityRef entity)
         {
             if (f.Unsafe.TryGetPointer<PhysicsCollider3D>(entity, out var collider) == false)

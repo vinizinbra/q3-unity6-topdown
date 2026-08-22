@@ -383,7 +383,7 @@ ever meet the ground therefore depends entirely on the parent bomb detonating *a
 A thrown Bunny Bomb detonates on the ground by construction, which is why the same code always looked
 right there. A Backblast bomb spawns at **Pixie's own transform position** and then *eases* down —
 `DashBomb.prefab`'s `GroundOffset` has `FallGravityMultiplier = 10` and `FloatSpeed = 0`, so a
-descending spawn gets `SettlingToGround` spread across ticks rather than snapping. Against a **1.0s
+descending spawn is eased down by `GroundSettleSystem` across ticks rather than snapping. Against a **1.0s
 fuse**, a bomb spawned high (dashing off a ledge, on a slope, near a drop) was still airborne when it
 went off, and its bomblets fanned out in mid-air with nothing beneath them — expiring at their 1s
 `Lifetime` without ever touching anything. That is the "sometimes."

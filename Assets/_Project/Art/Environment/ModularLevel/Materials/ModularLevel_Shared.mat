@@ -170,6 +170,9 @@ Material:
     - _WallDisplacementBottomOnly: 0
     - _WallDisplacementBottomReach: 0.01
     - _WallFresnelStrength: 1
+    - _WallLineStrength: 1
+    - _WallLineThickness: 0.1
+    - _WallLineY: 0
     - _WallOuterGlowStrength: 0.323
     - _WallOutlineStrength: 1
     - _WallStrokeExpansion: 0
@@ -192,7 +195,8 @@ Material:
     - _ShadowTint: {r: 0.5879761, g: 0.62670416, b: 0.6886792, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
     - _SurfaceColor: {r: 0.7630516, g: 0.8773585, b: 0.33521718, a: 1}
-    - _SurfaceEdgeColor: {r: 0, g: 0, b: 0, a: 0.3529412}
+    - _SurfaceEdgeColor: {r: 0, g: 0, b: 0, a: 0.4509804}
     - _WallColor: {r: 0.47570974, g: 0.27661088, b: 0.5283019, a: 1}
+    - _WallLineColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

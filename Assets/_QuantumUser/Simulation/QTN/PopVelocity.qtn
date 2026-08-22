@@ -2,8 +2,20 @@
 // dropped currency/scrap orb pops out on a short ballistic arc from the enemy's death position
 // instead of teleporting straight to a scattered landing spot at the enemy's own death Y.
 // PopMotionSystem integrates gravity each tick and removes this the instant the arc lands, same
-// "settled = free to iterate afterward" contract SettlingToGround/GroundSettleSystem already use.
+// "settled = free to iterate afterward" contract GroundOffset.Enabled/GroundSettleSystem already
+// use - landing also clears GroundOffset.Enabled, since the orb is placed exactly at its resting
+// height and has nothing left to settle toward.
 component PopVelocity
 {
     FPVector3 Velocity;
+
+    // Real ground height under the position this orb popped FROM (the enemy's death point), resolved
+    // once by OrbSpawnUtility.SpawnWithPop. PopMotionSystem refuses to let the arc carry the orb up
+    // onto anything meaningfully higher than this, so a drop can never come to rest on a raised
+    // platform the player has no reason to climb for a coin - it bumps the platform's edge and falls
+    // back down onto the floor its enemy actually died on.
+    //
+    // Only CLIMBING is blocked, never falling: an enemy killed on a ledge still drops coins that can
+    // scatter off it and land below, which reads fine and is often the only reachable outcome anyway.
+    FP OriginGroundY;
 }

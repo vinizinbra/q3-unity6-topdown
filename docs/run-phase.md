@@ -322,7 +322,7 @@ slightly off the real floor:
 2. **Seal the arena** - a new empty marker component, `BossArenaGate` (`BossEncounter.qtn`), tags
    whichever collider entities the level designer hand-places around the Boss Arena's own
    corridor(s). A new signal-only system, `BossArenaGateSystem` (`ISignalOnComponentAdded<BossArenaGate>`,
-   same shape as `MapGroundSettleSystem`), forces each one's `PhysicsCollider3D.Enabled` to `false`
+   an `ISignalOnEntityPrototypeMaterialized` reactor), forces each one's `PhysicsCollider3D.Enabled` to `false`
    the instant it's created - regardless of what `IsEnabled` was authored as on the prototype, so
    there's no "forgot to uncheck it on this one gate" footgun to rely on Editor discipline for.
    This mechanism deliberately does no adjacency computation of its own - confirmed with the user,

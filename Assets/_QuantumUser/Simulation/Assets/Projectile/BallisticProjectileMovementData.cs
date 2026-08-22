@@ -32,6 +32,10 @@ namespace Quantum
         // A lob descends onto the ground the target stands on, not into its chest.
         public override bool AimsAtTargetCenter => false;
 
+        // Gravity is re-applied every tick, so levelling the heading on a pierce would be undone
+        // immediately - and the arc is the whole point of this movement. See FlattensOnPierce.
+        public override bool FlattensOnPierce => false;
+
         protected override FPVector3 GetTargetPoint(FPVector3 origin, FPVector3 direction)
         {
             return GetFlatTargetPoint(origin, direction, TargetDistance);

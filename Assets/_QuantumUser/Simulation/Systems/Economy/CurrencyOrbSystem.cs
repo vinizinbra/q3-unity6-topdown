@@ -1,5 +1,6 @@
 namespace Quantum
 {
+    using System;
     using Photon.Deterministic;
     using UnityEngine.Scripting;
 
@@ -20,11 +21,11 @@ namespace Quantum
     [Preserve]
     public unsafe class CurrencyOrbSystem : SystemMainThreadFilter<CurrencyOrbSystem.Filter>
     {
-        // Comfortably larger than any realistic PickupRangeMultiplier stack so the broadphase
-        // query never misses a player who'd otherwise qualify once their own multiplier is
-        // applied below - a known simplification, see docs/experience-drops.md.
-        private static readonly FP QueryRadiusScale = 8;
-
+        // Collection used to open with a padded (8x radius) Physics3D.OverlapShape as a broadphase
+        // prefilter, then re-test true center distance below. With at most 4 players that query cost
+        // far more than it saved - one frame-heap allocation per orb per tick - so the candidates
+        // now come straight off PlayerQueryUtility and the authoritative center test below is
+        // unchanged. See docs/experience-drops.md.
         public override void Update(Frame f, ref Filter filter)
         {
             FP pickupRadius = ResolvePickupRadius(f, filter.CurrencyOrb->Type);
@@ -32,12 +33,16 @@ namespace Quantum
             if (pickupRadius <= FP._0)
                 return;
 
-            FP queryRadius = pickupRadius * QueryRadiusScale;
-            var hits = EnemyMovementUtility.FindPlayersInRadiusIncludingDashing(f, filter.Transform3D->Position, queryRadius);
+            Span<EntityRef> players = stackalloc EntityRef[PlayerQueryUtility.MaxPlayers];
+            int playerCount = PlayerQueryUtility.GatherPlayers(f, players);
 
-            for (int i = 0; i < hits.Count; i++)
+            EntityRef collector = EntityRef.None;
+            CharacterStats* collectorStats = null;
+            FP closestSqrDistance = default;
+
+            for (int i = 0; i < playerCount; i++)
             {
-                EntityRef player = hits[i].Entity;
+                EntityRef player = players[i];
 
                 if (f.Unsafe.TryGetPointer<Transform3D>(player, out var playerTransform) == false)
                     continue;
@@ -51,12 +56,23 @@ namespace Quantum
                 if (sqrDistance > effectiveRadius * effectiveRadius)
                     continue;
 
-                FP value = filter.CurrencyOrb->Value;
-                Grant(f, filter.CurrencyOrb->Type, stats, value);
-                RaiseCollectedEvent(f, filter.CurrencyOrb->Type, player, filter.Transform3D->Position, value);
-                f.Destroy(filter.Entity);
-                return;
+                // Nearest wins, rather than whoever happened to come first in the old query's hit
+                // order - only distinguishable when two players are in range on the same tick.
+                if (collector != EntityRef.None && sqrDistance >= closestSqrDistance)
+                    continue;
+
+                collector = player;
+                collectorStats = stats;
+                closestSqrDistance = sqrDistance;
             }
+
+            if (collector == EntityRef.None)
+                return;
+
+            FP value = filter.CurrencyOrb->Value;
+            Grant(f, filter.CurrencyOrb->Type, collectorStats, value);
+            RaiseCollectedEvent(f, filter.CurrencyOrb->Type, collector, filter.Transform3D->Position, value);
+            f.Destroy(filter.Entity);
         }
 
         private static FP ResolvePickupRadius(Frame f, CurrencyOrbType type)

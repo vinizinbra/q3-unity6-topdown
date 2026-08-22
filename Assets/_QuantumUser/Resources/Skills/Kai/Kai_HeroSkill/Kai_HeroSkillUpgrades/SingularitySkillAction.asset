@@ -19,20 +19,16 @@ MonoBehaviour:
   Icon: {fileID: -2050750743, guid: 167fe127f1a734214a64d3f39af97f1f, type: 3}
   DisplayName: Singularity
   RankDescriptions:
-  - Vortex grows 30% larger and interrupts anticipated attacks from Filler and Normal
-    enemies.
-  - Vortex grows larger and pulls harder. It can now interrupt anticipated attacks
-    from Specialist and Heavy enemies.
-  - Vortex becomes a Singularity, periodically crushing enemies toward its core and
-    interrupting anticipated attacks from enemies up to Elite tier.
+  - Vortex grows 30% larger and interrupts anticipated attacks from enemies up to Normal tier.
+  - Vortex grows larger and pulls harder, interrupting anticipated attacks from enemies up to Heavy tier.
+  - Vortex becomes a Singularity, periodically crushing enemies toward its core and interrupting anticipated attacks from enemies up to Elite tier.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Vortex grows larger, pulls harder, and interrupts enemies' telegraphed
-    attacks.
+  Description: Vortex grows larger, pulls harder, and interrupts enemies' telegraphed attacks.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

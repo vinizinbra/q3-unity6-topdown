@@ -1,5 +1,6 @@
 namespace Quantum
 {
+    using System;
     using Photon.Deterministic;
     using Quantum.Physics3D;
 
@@ -102,34 +103,20 @@ namespace Quantum
             return true;
         }
 
-        // Uses Physics3D.OverlapShape (broadphase query, needs PlayerLink entities on the
-        // "Player" physics layer) so cost scales with nearby entities instead of total player
-        // count. A true 3D sphere - correctly accounts for vertical distance too (Flying chase
-        // detection, or a dash's hit-check regardless of height). Skips a Downed/KO player (see
+        // A true 3D sphere - correctly accounts for vertical distance too (Flying chase detection,
+        // or a dash's hit-check regardless of height). Skips a Downed/KO player (see
         // docs/revive.md/PlayerLifeStateUtility.IsIncapacitated) the same way TryFindNearestEnemy
         // already skips a dying/Invulnerable enemy below - deliberately NOT a plain
         // f.Has<Invulnerable> check, since that tag is also used for two other still-Alive cases
         // (Max's Cheat Death, post-revive grace) that must stay targetable.
+        //
+        // Was a Physics3D.OverlapShape on the Player layer mask; now a direct scan of the entities
+        // actually ON that layer (PlayerQueryUtility), which is the same set for a fraction of the
+        // cost and none of the frame-heap allocation - see that class's own comment.
         public static bool TryFindNearestPlayer(Frame f, FPVector3 origin, FP range, out EntityRef entity)
         {
-            Shape3D sphere = Shape3D.CreateSphere(range);
-            var hits = f.Physics3D.OverlapShape(origin, FPQuaternion.Identity, sphere, GetPlayerLayerMask(f), QueryOptions.HitAll);
-
-            hits.Sort(origin);
-
-            for (int i = 0; i < hits.Count; i++)
-            {
-                EntityRef candidate = hits[i].Entity;
-
-                if (PlayerLifeStateUtility.IsIncapacitated(f, candidate) == true)
-                    continue;
-
-                entity = candidate;
-                return true;
-            }
-
-            entity = EntityRef.None;
-            return false;
+            return PlayerQueryUtility.TryFindNearestOnPlayerLayer(f, origin, range, GetPlayerLayerMask(f),
+                skipIncapacitated: true, out entity);
         }
 
         // Reverse of TryFindNearestPlayer - for a non-enemy shooter (e.g. Lux's sentry gun) that
@@ -171,13 +158,17 @@ namespace Quantum
             return entity != EntityRef.None;
         }
 
-        // Same query as TryFindNearestPlayer but returns every player in range instead of just
-        // the nearest one - for area deliveries (e.g. LeapDeliveryData's landing-zone damage) that
-        // need to hit everyone caught in the blast, not a single target.
-        public static Physics3D.HitCollection3D FindPlayersInRadius(Frame f, FPVector3 origin, FP radius)
+        // Same set as TryFindNearestPlayer but returns every player in range instead of just the
+        // nearest one - for area deliveries (e.g. LeapDeliveryData's landing-zone damage) that need
+        // to hit everyone caught in the blast, not a single target. Unlike TryFindNearestPlayer this
+        // does NOT skip a Downed/KO player; every caller applies its own eligibility rule.
+        //
+        // Fills the caller's buffer (stackalloc it at PlayerQueryUtility.MaxPlayerLayerCandidates)
+        // and returns how many were written - a span rather than the old
+        // Physics3D.HitCollection3D return, which allocated on the frame heap on every single call.
+        public static int FindPlayersInRadius(Frame f, FPVector3 origin, FP radius, Span<EntityRef> buffer)
         {
-            Shape3D sphere = Shape3D.CreateSphere(radius);
-            return f.Physics3D.OverlapShape(origin, FPQuaternion.Identity, sphere, GetPlayerLayerMask(f), QueryOptions.HitAll);
+            return PlayerQueryUtility.GatherOnPlayerLayer(f, origin, radius, GetPlayerLayerMask(f), buffer);
         }
 
         // Same as FindPlayersInRadius but via GetPlayerIncludingDashingLayerMask, so a DASHING player
@@ -191,10 +182,9 @@ namespace Quantum
         // comes too late to matter. A plain FindPlayersInRadius there silently drops the dasher every
         // single time, which is exactly how Brute's Bodyguard and Zara's Portable Speaker both ended up
         // never affecting their own caster.
-        public static Physics3D.HitCollection3D FindPlayersInRadiusIncludingDashing(Frame f, FPVector3 origin, FP radius)
+        public static int FindPlayersInRadiusIncludingDashing(Frame f, FPVector3 origin, FP radius, Span<EntityRef> buffer)
         {
-            Shape3D sphere = Shape3D.CreateSphere(radius);
-            return f.Physics3D.OverlapShape(origin, FPQuaternion.Identity, sphere, GetPlayerIncludingDashingLayerMask(f), QueryOptions.HitAll);
+            return PlayerQueryUtility.GatherOnPlayerLayer(f, origin, radius, GetPlayerIncludingDashingLayerMask(f), buffer);
         }
 
         // "Max aggro": a Decoy always wins over the nearest player, regardless of distance. A
@@ -788,7 +778,11 @@ namespace Quantum
         // EntityRef.None-isn't-enough gotcha IsGrounded's own hitEntity check documents.
         private const int GroundRaycastHeight = 20;
 
-        public static bool TryFindGroundHeight(Frame f, FPVector3 position, int layerMask, out FP groundY)
+        // ignoreEntity skips one specific entity's own collider - for a caller asking "what is the
+        // ground UNDER this thing", which is never the thing itself. Without it anything that both
+        // sits on the Ground layer and grounds itself (a level chunk carrying a GroundOffset) reads
+        // its own floor as the surface to rest on and climbs itself, one clearance per tick, forever.
+        public static bool TryFindGroundHeight(Frame f, FPVector3 position, int layerMask, out FP groundY, EntityRef ignoreEntity = default)
         {
             FPVector3 origin = new FPVector3(position.X, position.Y + GroundRaycastHeight, position.Z);
             var hits = f.Physics3D.RaycastAll(origin, FPVector3.Down, GroundRaycastHeight * 2, layerMask, QueryOptions.HitStatics | QueryOptions.HitKinematics | QueryOptions.HitDynamics);
@@ -798,7 +792,7 @@ namespace Quantum
             {
                 EntityRef hitEntity = hits[i].Entity;
 
-                if (hitEntity != EntityRef.None && (f.Has<Enemy>(hitEntity) == true || f.Has<PlayerLink>(hitEntity) == true))
+                if (hitEntity != EntityRef.None && (hitEntity == ignoreEntity || f.Has<Enemy>(hitEntity) == true || f.Has<PlayerLink>(hitEntity) == true))
                     continue;
 
                 groundY = hits[i].Point.Y;

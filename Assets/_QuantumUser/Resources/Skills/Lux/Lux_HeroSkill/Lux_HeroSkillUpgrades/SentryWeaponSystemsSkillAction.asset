@@ -20,9 +20,8 @@ MonoBehaviour:
   DisplayName: Weapon Systems
   RankDescriptions:
   - 'Minigun: your Sentry gains a rapid secondary gun alongside its Cannon.'
-  - 'Rocket Pod: your Sentry also periodically launches an explosive rocket.'
-  - 'Full Arsenal: your Sentry also mounts a piercing Laser - Cannon, Minigun, Rockets
-    and Laser all firing at once.'
+  - 'Rocket Pod: your Sentry fires its Cannon, a rapid Minigun, and periodic explosive rockets.'
+  - 'Full Arsenal: your Sentry fires Cannon, Minigun, Rockets and a piercing Laser all at once.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

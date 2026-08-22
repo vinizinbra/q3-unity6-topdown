@@ -65,6 +65,28 @@ namespace Quantum
             return true;
         }
 
+        // A heading with its vertical component removed, keeping the same speed - the shared half of
+        // the pierce fix used by both fire types (see DirectHitData.FlattenTrajectoryOnPierce and
+        // WeaponSystem.FireHitscanPellet). False when there is nothing to do (already level) or
+        // nothing left to fly along once the vertical component is dropped (a straight up/down shot),
+        // in which case the caller keeps whatever heading it already had.
+        public static bool TryFlattenHeading(FPVector3 heading, out FPVector3 flattened)
+        {
+            flattened = heading;
+
+            if (heading.Y == FP._0)
+                return false;
+
+            FPVector3 flat = new FPVector3(heading.X, FP._0, heading.Z);
+
+            if (flat.SqrMagnitude <= FP._0)
+                return false;
+
+            flattened = flat.Normalized * heading.Magnitude;
+
+            return true;
+        }
+
         // Pulled out of TryGetAimPoint so a caller already holding a separately-locked target
         // position (e.g. an enemy delivery's Enemy.SkillTargetPosition, frozen mid-windup by
         // AimLock - see ProjectileDeliveryData/FanProjectileDeliveryData) can add just the

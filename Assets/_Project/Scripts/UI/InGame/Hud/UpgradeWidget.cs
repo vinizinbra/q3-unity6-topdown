@@ -2,9 +2,11 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// One row in UpgradePopupWidget's hero/global/rift lists - plain data-in widget with no Quantum
+// One row in HeroInfoPopupWidget's hero/global/rift lists - plain data-in widget with no Quantum
 // awareness of its own, same idiom as UpgradeCardWidget/PartyHistoryUpgradeWidget. Level is the
-// upgrade's UpgradeHistoryEntry.Count (times picked) - hidden when 0.
+// upgrade's UpgradeHistoryEntry.Count (times picked) - hidden when 0. Despite the name it's a
+// generic icon + name + description + optional level row: HeroInfoWidget reuses it as-is for the
+// Base Skill/Passive Skill rows (level 0, so no badge), rather than a second near-identical class.
 public class UpgradeWidget : MonoBehaviour
 {
     [SerializeField] private Image icon;

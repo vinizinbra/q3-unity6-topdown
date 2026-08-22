@@ -19,17 +19,16 @@ MonoBehaviour:
   Icon: {fileID: 120216522, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
   DisplayName: Full Throttle
   RankDescriptions:
-  - 'At max Rage: +20% Weapon Damage.'
-  - 'At max Rage: +30% Weapon Damage, +50% Reload Speed.'
-  - 'At max Rage: +40% Weapon Damage, instant reloads.'
+  - At max Rage, +20% Weapon Damage.
+  - At max Rage, +30% Weapon Damage and +50% Reload Speed.
+  - At max Rage, +40% Weapon Damage and instant reloads.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: At max Rage during Overdrive, gain bonus Weapon Damage - eventually
-    Reload Speed and instant reloads too.
+  Description: At max Rage, gain bonus Weapon Damage and faster reloads.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

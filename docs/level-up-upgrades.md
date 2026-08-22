@@ -302,7 +302,7 @@ only as boolean presence. That's the entire foundation; no new component was nee
   remains anywhere in the roster. This was a deliberate tradeoff: authored text can't auto-stay in
   sync with a balance-pass number change the way a computed string could, but it's editable by a
   writer without touching C#, which is what the ranked pool's original text-generation shape didn't
-  allow. Also fixed a real bug this surfaced: `UpgradePopupWidget.cs` (the Tab-hold ascension history
+  allow. Also fixed a real bug this surfaced: `HeroInfoPopupWidget.cs` (the Tab-hold ascension history
   popup) called the plain, rank-unaware `GetDescription()` with no `IRankedUpgrade` check, so every
   ranked `SkillActionData` Ascension (which never had `Description` authored, relying entirely on the
   rank override) showed up there with a blank description - fixed to resolve the same

@@ -18,16 +18,12 @@ MonoBehaviour:
       Value: 514137246864066863
   Icon: {fileID: 1230983659, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
   DisplayName: Blood Debt
-  Description: Vendetta marks last longer, feed your Rage, and eventually heal you
-    when consumed.
+  Description: Vendetta marks last longer, feed your Rage, and heal you.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
   - Vendetta marks last 12s.
-  - Vendetta marks last 12s, Shield damage now also marks your attacker, and every
-    Vendetta kill grants +2 Rage.
-  - Vendetta marks last 12s, Shield damage counts, Vendetta kills grant +2 Rage,
-    and consuming a mark heals you for 60% of the damage it dealt (capped at 15%
-    of your max Health).
+  - Vendetta marks last 12s. Shield damage also marks attackers, and each Vendetta kill grants +2 Rage.
+  - Vendetta marks last 12s, Shield damage marks attackers, and kills grant +2 Rage. Consuming a mark heals 60% of the damage it dealt, up to 15% of your Health.
   MarkDuration:
   - RawValue: 786432
   - RawValue: 786432

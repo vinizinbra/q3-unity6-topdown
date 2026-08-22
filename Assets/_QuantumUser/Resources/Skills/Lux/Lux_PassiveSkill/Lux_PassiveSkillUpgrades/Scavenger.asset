@@ -21,10 +21,9 @@ MonoBehaviour:
   Description: More enemies drop Scrap, and more often.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - Filler enemies can now drop Scrap too (10% chance).
-  - All Scrap drop chances increase by about 25%.
-  - 'Jackpot: Specialist, Heavy and Elite enemies always drop at least 1 Scrap. Bosses
-    drop 3.'
+  - Filler enemies can drop Scrap (10% chance).
+  - Filler enemies can drop Scrap (10% chance), and all Scrap drop chances increase by about 25%.
+  - 'Jackpot: Filler enemies can drop Scrap and every drop chance is raised. Specialist, Heavy and Elite always drop at least 1 Scrap; Bosses drop 3.'
   DropChance:
   - RawValue: 16384
   - RawValue: 20316

@@ -77,12 +77,12 @@ namespace QuantumUser.Editor
             {
                 asset.DisplayName = "Direct Hit";
                 asset.Activated = false;
-                asset.Description = "Rewards accurate Bunny Bomb placement - enemies inside the inner blast zone take bonus damage. At rank 3, they're also staggered.";
+                asset.Description = "Enemies caught near the center of the blast take bonus damage.";
                 asset.RankDescriptions = new[]
                 {
-                    "Enemies within the inner 35% of the blast take +30% explosion damage.",
-                    "The inner zone widens to 45% of the blast, and enemies inside it take +50% explosion damage.",
-                    "Enemies within the inner 45% of the blast take +75% explosion damage and are knocked back hard.",
+                    "Inner 35% of the blast deals +30% damage.",
+                    "Inner 45% of the blast deals +50% damage.",
+                    "Inner 45% of the blast deals +75% damage and knocks enemies back hard.",
                 };
                 asset.MaxRank = 3;
                 asset.InnerRadiusFraction = new[] { FP.FromString("0.35"), FP.FromString("0.45"), FP.FromString("0.45") };
@@ -95,12 +95,12 @@ namespace QuantumUser.Editor
             PocketBombsPassiveUpgradeData pocketBombs = CreateOrUpdate<PocketBombsPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/PocketBombs.asset", asset =>
             {
                 asset.DisplayName = "Pocket Bombs";
-                asset.Description = "Qualifying Pixie explosions have a chance to drop a stationary Mini Bomb, dealing a percentage of Bunny Bomb damage.";
+                asset.Description = "Your explosions can drop a stationary Mini Bomb.";
                 asset.RankDescriptions = new[]
                 {
-                    "Qualifying explosions have a 15% chance to spawn a stationary Mini Bomb dealing 35% of Bunny Bomb damage.",
-                    "Qualifying explosions have a 25% chance to spawn a stationary Mini Bomb dealing 45% of Bunny Bomb damage.",
-                    "Qualifying explosions have a 35% chance to spawn a stationary Mini Bomb dealing 55% of Bunny Bomb damage.",
+                    "15% chance to drop a Mini Bomb dealing 35% of Bunny Bomb damage.",
+                    "25% chance to drop a Mini Bomb dealing 45% of Bunny Bomb damage.",
+                    "35% chance to drop a Mini Bomb dealing 55% of Bunny Bomb damage.",
                 };
                 asset.MaxRank = 3;
                 asset.Chance = new[] { FP.FromString("0.15"), FP.FromString("0.25"), FP.FromString("0.35") };
@@ -111,12 +111,12 @@ namespace QuantumUser.Editor
             UnstableMixturePassiveUpgradeData unstableMixture = CreateOrUpdate<UnstableMixturePassiveUpgradeData>($"{PassiveUpgradesFolderPath}/UnstableMixture.asset", asset =>
             {
                 asset.DisplayName = "Unstable Mixture";
-                asset.Description = "An explosion that gets a kill empowers your next one - and at full charge, that one splits in two.";
+                asset.Description = "An explosion kill empowers your next explosion.";
                 asset.RankDescriptions = new[]
                 {
-                    "An explosion that kills an enemy empowers your next explosion: +30% damage and +15% radius.",
-                    "The empowerment can bank up to 2 kills, for +60% damage and +30% radius on your next explosion.",
-                    "At 2 banked kills, the empowered explosion also detonates a second, smaller blast shortly after.",
+                    "Each explosion kill empowers your next blast with +30% damage and +15% radius.",
+                    "Explosion kills bank up to 2 charges, empowering your next blast with up to +60% damage and +30% radius.",
+                    "Explosion kills bank up to 2 charges for +60% damage and +30% radius. At 2 charges the blast also detonates a second time.",
                 };
                 asset.MaxRank = 3;
                 asset.DamageBonusPerStack = FP.FromString("0.30");
@@ -130,12 +130,12 @@ namespace QuantumUser.Editor
             ExplosiveRoundsPassiveUpgradeData explosiveRounds = CreateOrUpdate<ExplosiveRoundsPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/ExplosiveRounds.asset", asset =>
             {
                 asset.DisplayName = "Explosive Rounds";
-                asset.Description = "Weapon hits have a chance to create a small explosion - a full qualifying Pixie explosion in its own right.";
+                asset.Description = "Weapon hits can trigger a small explosion.";
                 asset.RankDescriptions = new[]
                 {
-                    "Weapon hits have a 15% chance to create a small explosion dealing 20% of that hit's damage.",
-                    "Weapon hits have a 22% chance to create a small explosion dealing 30% of that hit's damage.",
-                    "Weapon hits have a 30% chance to create a small explosion dealing 40% of that hit's damage.",
+                    "15% chance on weapon hit to explode for 20% of the hit's damage.",
+                    "22% chance on weapon hit to explode for 30% of the hit's damage.",
+                    "30% chance on weapon hit to explode for 40% of the hit's damage.",
                 };
                 asset.MaxRank = 3;
                 asset.ProcChance = new[] { FP.FromString("0.15"), FP.FromString("0.22"), FP.FromString("0.30") };
@@ -153,14 +153,14 @@ namespace QuantumUser.Editor
                 asset.Activated = false;
                 asset.MaxRank = 3;
                 // Static fallback for surfaces that call the plain, rank-unaware GetDescription() -
-                // e.g. UpgradePopupWidget's Tab-hold history list. GetDescription(int rank) (below,
+                // e.g. HeroInfoPopupWidget's Tab-hold history list. GetDescription(int rank) (below,
                 // built from the per-rank arrays) is what every rank-aware surface actually shows.
-                asset.Description = "Bunny Bomb explosions scatter bomblets, each dealing a percentage of Bunny Bomb damage.";
+                asset.Description = "Bunny Bomb scatters Mini Bombs when it explodes.";
                 asset.RankDescriptions = new[]
                 {
-                    "After Bunny Bomb explodes, spawn 2 Mini Bombs, each dealing 40% of Bunny Bomb damage.",
-                    "After Bunny Bomb explodes, spawn 3 Mini Bombs, each dealing 45% of Bunny Bomb damage.",
-                    "After Bunny Bomb explodes, spawn 4 Mini Bombs, each dealing 50% of Bunny Bomb damage.",
+                    "Bunny Bomb scatters 2 Mini Bombs, each dealing 40% of its damage.",
+                    "Bunny Bomb scatters 3 Mini Bombs, each dealing 45% of its damage.",
+                    "Bunny Bomb scatters 4 Mini Bombs, each dealing 50% of its damage.",
                 };
                 asset.Count = new byte[] { 2, 3, 4 };
                 asset.DamagePercent = new[] { FP.FromString("0.40"), FP.FromString("0.45"), FP.FromString("0.50") };
@@ -171,12 +171,12 @@ namespace QuantumUser.Editor
                 asset.DisplayName = "Birthday Cake";
                 asset.Activated = false;
                 asset.MaxRank = 3;
-                asset.Description = "A landed Bunny Bomb taunts nearby enemies before detonating.";
+                asset.Description = "A landed Bunny Bomb taunts enemies before it blows.";
                 asset.RankDescriptions = new[]
                 {
-                    "After landing, Bunny Bomb becomes a decoy, taunting nearby enemies for 1s before detonating.",
-                    "After landing, Bunny Bomb becomes a decoy, taunting nearby enemies for 1.5s before detonating with a bigger blast.",
-                    "After landing, Bunny Bomb becomes a decoy, taunting nearby enemies for 1.5s before detonating with a bigger blast. Taunted enemies take +30% Bunny Bomb damage.",
+                    "Landed bombs taunt nearby enemies for 1s, then detonate.",
+                    "Landed bombs taunt nearby enemies for 1.5s, then detonate with a 25% wider blast.",
+                    "Landed bombs taunt nearby enemies for 1.5s, then detonate with a 25% wider blast. Taunted enemies take +30% damage.",
                 };
                 asset.TauntDuration = new[] { FP._1, FP.FromString("1.5"), FP.FromString("1.5") };
                 asset.TauntRadiusMultiplier = new[] { FP._1, FP.FromString("1.25"), FP.FromString("1.25") };
@@ -187,12 +187,12 @@ namespace QuantumUser.Editor
             {
                 asset.DisplayName = "Backblast";
                 asset.MaxRank = 3;
-                asset.Description = "When Pixie dashes, she drops a bomb that explodes after a short fuse for a percentage of Bunny Bomb damage.";
+                asset.Description = "Dashing drops a fused bomb behind you.";
                 asset.RankDescriptions = new[]
                 {
-                    "When Pixie dashes, she drops a bomb at the dash starting position - it explodes after a short fuse for 50% of Bunny Bomb damage.",
-                    "Drop a bomb at both the start and end of the dash - each explodes after a short fuse for 50% of Bunny Bomb damage.",
-                    "Drop a bomb at both the start and end of the dash - each explodes after a short fuse for 75% of Bunny Bomb damage, and enemies hit are marked for Chain Reaction.",
+                    "Dash drops a bomb where you started, dealing 50% of Bunny Bomb damage.",
+                    "Dash drops a bomb at both ends, each dealing 50% of Bunny Bomb damage.",
+                    "Dash drops a bomb at both ends, each dealing 75% damage and marking enemies hit.",
                 };
                 asset.Fuse = FP._1;
                 asset.DamagePercent = new[] { FP.FromString("0.50"), FP.FromString("0.50"), FP.FromString("0.75") };
@@ -202,12 +202,12 @@ namespace QuantumUser.Editor
             {
                 asset.DisplayName = "Hot Fuse";
                 asset.MaxRank = 3;
-                asset.Description = "Dashing empowers your next Bunny Bomb throw.";
+                asset.Description = "Dashing empowers your next Bunny Bomb.";
                 asset.RankDescriptions = new[]
                 {
-                    "After dashing, Pixie's next Bunny Bomb within 3s gains +30% damage.",
-                    "After dashing, Pixie's next Bunny Bomb within 3s gains +30% damage and +30% explosion radius.",
-                    "After dashing, Pixie's next Bunny Bomb within 3s gains +60% damage and +30% explosion radius, and detonates instantly if it directly hits an enemy.",
+                    "For 3s after a dash, your next Bunny Bomb deals +30% damage.",
+                    "For 3s after a dash, your next Bunny Bomb deals +30% damage with +30% radius.",
+                    "For 3s after a dash, your next Bunny Bomb deals +60% damage, +30% radius, and detonates on a direct hit.",
                 };
                 asset.Window = 3;
                 asset.DamageMultiplier = new[] { FP.FromString("1.30"), FP.FromString("1.30"), FP.FromString("1.60") };
@@ -218,12 +218,12 @@ namespace QuantumUser.Editor
             {
                 asset.DisplayName = "Blast Jump";
                 asset.MaxRank = 3;
-                asset.Description = "Dashing launches your next Bunny Bomb harder - and eventually lets you set off a planted one by dashing through it.";
+                asset.Description = "Dashing supercharges your next Bunny Bomb throw.";
                 asset.RankDescriptions = new[]
                 {
-                    "For 2s after dashing, Pixie's next Bunny Bomb flies 25% faster and blasts 25% wider.",
-                    "The same, and dashing also removes 1s from Bunny Bomb's remaining cooldown.",
-                    "The same, and dashing through one of your own planted Bunny Bombs detonates it instantly for +50% damage.",
+                    "For 2s after a dash, your next Bunny Bomb flies 25% faster and blasts 25% wider.",
+                    "For 2s after a dash, your next Bunny Bomb flies 25% faster and blasts 25% wider. Dashing also cuts 1s off its cooldown.",
+                    "For 2s after a dash, your next Bunny Bomb flies 25% faster and blasts 25% wider. Dash through a planted bomb to detonate it for +50% damage.",
                 };
                 asset.Window = 2;
                 asset.ProjectileSpeedMultiplier = new[] { FP._1_25, FP._1_25, FP._1_25 };

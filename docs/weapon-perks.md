@@ -54,10 +54,13 @@ Editor authoring is still needed before any of this can drop or be offered at ru
   component - every one of these effects is a property of *this weapon*, so `Weapon` stays the single
   source of truth for every perk, the same as the original 5.
 - For a **Hitscan** weapon, Explosive Sequence/Quantum Rounds/Cataclysm Round apply directly inside
-  `WeaponSystem.FireHitscan`/`ApplyHitscanWeaponPerks` (a real hit position is available
-  synchronously, no `Projectile` entity needed). Ricochet/Split Shot/Piercing Rounds/Echo
-  Chamber/Infinite Echo/Critical Rebound have no meaningful Hitscan equivalent (nothing travels) and
-  simply don't apply to one - a documented simplification, not a gap.
+  `WeaponSystem.FireHitscan` (`ApplyHitscanHit` per contact, `ApplyHitscanTerminalPerks` once at the
+  end of the shot's path) - a real hit position is available synchronously, no `Projectile` entity
+  needed. As of 2026-08-21 **Piercing Rounds, Ricochet and Critical Rebound work on Hitscan too**
+  (see "Hitscan pierce, ricochet and rebound" at the end of this doc); Echo Chamber/Infinite Echo
+  already replayed through `FireHitscan`. **Split Shot is the only Projectile-only perk left**, and
+  it is now filtered out of the draw for a Hitscan weapon rather than being offered as a dead pick -
+  see `WeaponPerkData.SupportsFireType`.
 
 ## Roster and mechanism
 
@@ -370,10 +373,15 @@ drop (`WeaponGenerator.Roll`) can, once something actually calls it with this po
    only populates `WeaponPerkPoolData.asset` itself, not `LevelUpConfig`'s reference to it (that
    config doesn't exist yet at all).
 2. **Every asset's `Icon` is unset** - needs manual per-perk sprite assignment in the Inspector.
-3. **Hitscan weapons don't get Ricochet/Split Shot/Piercing Rounds/Echo Chamber/Infinite
-   Echo/Critical Rebound** - nothing travels for these to hook onto. Explosive Sequence/Cataclysm
-   Round/Quantum Rounds apply directly at the hit point instead for a Hitscan weapon, so those three
-   work on both fire types.
+3. **Split Shot is the only perk a Hitscan weapon can't use, and it is no longer offered to one** -
+   it spawns child PROJECTILES off the parent shot once that shot is spent
+   (`DirectHitData.ApplyTerminalWeaponPerks`), and a hitscan weapon has neither a parent shot to
+   finish nor a `ProjectileData` to spawn children from. Every draw site
+   (`WeaponGenerator.DrawDistinctPerks`, `LevelUpUtility.CollectWeaponPerkCandidates`/
+   `RollWeaponOption`, `StoreUtility.RollStorePerks`, `BlacksmithUtility.RollPerkOptions`) now asks
+   `WeaponPerkData.SupportsFireType` and skips it, so it can't be rolled onto a weapon it would do
+   nothing on. Piercing Rounds/Ricochet/Critical Rebound were listed here too until 2026-08-21 - all
+   three now work on Hitscan, see the section at the end of this doc.
 4. **Split Shot's children are bare repeats, not full re-rolls** - a split projectile is spawned
    directly via `ProjectileSpawner.Spawn`, not through `WeaponSystem.FireProjectile`, so it doesn't
    re-apply Piercing Rounds/Ricochet/Explosive Sequence/Cataclysm Round to itself - only the
@@ -411,3 +419,99 @@ drop (`WeaponGenerator.Roll`) can, once something actually calls it with this po
    ApplyQuantumRounds`) and the Hitscan path (`WeaponSystem.ApplyHitscanWeaponPerks`) fire it. Falls
    back to `EffectsManager.defaultAreaBlastEffect` at `quantumRoundsEffectScale` until a bespoke
    particle is assigned to the generated `QuantumRoundsWeaponPerkData.asset`.
+
+## Hitscan pierce, ricochet and rebound (2026-08-21)
+
+Piercing Rounds, Ricochet and Critical Rebound were all silently dead on a Hitscan weapon, while
+still being offered by every draw site - so a hitscan weapon could spend a level-up pick, a chest
+roll or Blacksmith coins on a perk that could never do anything. The first two only ever wrote
+`Projectile` fields (`WeaponFireTimeMods.BonusPierce`/`BonusBounces` -> `RemainingPierces`/
+`RemainingBounces`, baked in `WeaponSystem.ApplyProjectilePerks`), and `FireHitscan` cast one ray per
+pellet and stopped at the first thing it hit; Critical Rebound bailed outright on any non-Projectile
+weapon. `BeamGun` is currently the only Hitscan weapon in the project.
+
+**Piercing Rounds / Ricochet.** `FireHitscan` reads the same `WeaponFireTimeMods` live (there is no
+entity to bake onto) and hands each pellet to `FireHitscanPellet`, which walks the shot as a sequence
+of segments: one for the initial beam, one more per bounce, bounded by construction so a chain can't
+loop. Within a segment it `RaycastAll`s and walks the hits in cast order, spending one pierce per
+target and stopping dead on level geometry however much pierce is left - deliberately the same
+ordering `DirectHitData.ApplyHit` uses for the projectile version, so one pick behaves the same on
+either fire type. Two details worth keeping:
+
+- Hits are ordered by `CastDistanceNormalized` by hand rather than with `HitCollection3D.Sort`, which
+  orders by `Hit3D.Point` - and `Point` only holds real data when the query passes
+  `QueryOptions.ComputeDetailedInfo`, which this one deliberately doesn't (same gotcha
+  `ProjectileSystem.ResolveHitPoint` documents).
+- What stops a beam is `IsHitscanTarget` (Enemy/PlayerLink/Breakable), not `EntityRef.None`. Some
+  level geometry in this project is a genuinely dynamic ENTITY, so a None-only test would have let
+  Piercing Rounds shoot straight through a wall. Mirrors `ProjectileHitData.ShouldDetonate`/
+  `IsCombatant`.
+
+A bounce searches for the nearest other enemy within 8 units of the contact point
+(`WeaponPerkUtility.TryFindNearestEnemy`, the same radius and same "no reflection off a surface
+normal we don't have" reasoning as `DirectHitData.TryRicochet`), carries the shot's REMAINING
+engagement range across (never a fresh budget), and gets one contact before it may bounce again -
+exactly what a ricocheting projectile gets. Each segment raises its own `HitscanFired`, so
+`WeaponTracerView` draws every leg of the path with no view-side changes at all.
+
+Kai's **Phantom Strike** bonus pierce now reaches Hitscan too, for the same reason - it was being
+dropped on the floor purely because a raycast couldn't express it.
+
+**Critical Rebound** no longer checks fire type before deciding whether a crit can bounce. The perk
+is "a crit bounces to a second target"; only the way it travels needed a projectile. A hitscan weapon
+lands the bounce instantly on the second target through `WeaponSystem.ApplyHitscanHit` - the same
+funnel a normal beam contact uses, so the bounce carries the weapon's element, Element Infusion and
+Quantum Rounds - and raises its own `HitscanFired` so the bounce draws.
+
+**Split Shot** got the opposite treatment: see "Known simplifications" item 3.
+
+Two behavioural notes that fall out of this and apply to Hitscan weapons generally: Quantum Rounds
+now fires per CONTACT rather than once per shot (matching `DirectHitData.ApplyQuantumRounds`, and
+identical to the old behaviour for an unpierced shot), and Explosive Sequence/Cataclysm Round
+detonate once at wherever the whole path ends rather than at the first contact (matching
+`ApplyTerminalWeaponPerks`, again identical when nothing pierces or bounces). `EntityDamaged.HitIndex`
+is now a per-shot counter across pellets and contacts instead of the pellet index, so several contacts
+on one target in one tick can't hash-collide in Quantum's event dedup.
+
+## Pierce trajectory levelling (2026-08-21)
+
+Pierce was working - it just spent its extra hits on the floor. A shot leaves the muzzle, which sits
+wherever the hero carries the weapon (`CharacterData.WeaponPosition` - Kai holds his over his head,
+a full 2 units above his own origin), and is aimed at the target's collider CENTER
+(`ProjectileAimUtility.ResolveAimDirection`, ~0.5 units up). So a shot that looks flat is really
+diving: about 17 degrees down at 5 units of range, steeper the closer the target. The first hit lands
+fine. Everything after it is below the enemies it was supposed to reach - the shot meets ground a
+step or two past the first target, and level geometry ends it however much pierce is left. The
+higher a hero holds the weapon, the worse it gets, which is why it read as "pierce doesn't do much"
+rather than as a bug.
+
+Fix, both fire types: **once a shot has actually pierced something, its heading is levelled onto the
+horizontal plane it connected on** - same speed, same bearing, vertical component dropped (the dive
+had one job, reaching the first body, and has done it). Nothing about aim, spawn position or the
+first hit changes.
+
+- Shared half: `ProjectileAimUtility.TryFlattenHeading` (false when there's nothing to drop, or
+  nothing left to fly along once it's dropped - a straight up/down shot keeps its heading).
+- Projectile: `DirectHitData.FlattenTrajectoryOnPierce` (new, defaults true - so every existing
+  asset, `GenericDirectHitData` included, gets it with no re-authoring) applied on a hit the shot
+  survived. Gated on `ProjectileMovementData.FlattensOnPierce` (new virtual, true by default,
+  overridden false by `Thrown`/`Ballistic` - gravity re-applies the vertical component every tick and
+  the arc IS the shot - and by `Homing`, which re-derives its whole heading every tick anyway).
+- Hitscan: `FireHitscanPellet` re-casts the remainder of the beam level from the pierced enemy's
+  collider centre instead of walking the rest of the original diving ray. Body height is where the
+  enemies behind it are, and a ray never reports the collider its own origin is inside of, so it
+  can't re-hit what it just pierced (the same property a Ricochet bounce already relies on). It
+  raises its own `HitscanFired`, so the tracer draws both legs. A levelling continuation deliberately
+  does NOT spend a bounce - the Ricochet budget moved from the segment index onto its own
+  `usedBounces` counter to keep the two independent.
+- The leg that ENDS on a surviving pierce now also reports that same collider centre as its
+  `HitscanFired.EndPoint`, rather than the enemy's transform origin (its feet, see
+  `ResolveHitscanPoint`). Two reasons: it is where the beam genuinely passed through, and it keeps
+  the drawn path contiguous - `ParticleHitscanView`/`ContinuousHitscanView` stitch a multi-leg path
+  together purely by "this leg begins where the last one ended" (`HitscanViewBase.ChainTolerance`),
+  which a centre-height continuation off a feet-height endpoint would have silently broken.
+
+Not changed, deliberately: the remainder of the tick a projectile pierces on still runs along the old
+heading (`ProjectileSystem` resolves its destination before the hit is applied - the same thing it
+already does for a Ricochet redirect, and a fraction of a unit at any real projectile speed); and a
+levelled shot still stops on walls and still spends its normal range/lifetime budget.

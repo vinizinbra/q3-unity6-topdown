@@ -147,7 +147,8 @@ namespace Quantum
                 taken[roll] = true;
 
                 int perkCount = RollStorePerkCount(f, breakConfig.StartingPerkRolls);
-                AssetRef<WeaponPerkData>[] rolledPerks = RollStorePerks(f, levelUpConfig.WeaponPerkPool, perkCount, config, weaponTalentLevel);
+                AssetRef<WeaponPerkData>[] rolledPerks = RollStorePerks(f, levelUpConfig.WeaponPerkPool, perkCount, config,
+                    weaponTalentLevel, pool.Weapons[roll]);
 
                 StoreWeaponOffer offer = default;
                 offer.WeaponData = pool.Weapons[roll];
@@ -197,13 +198,18 @@ namespace Quantum
         // "without replacement" is what guarantees a freshly-rolled weapon can never receive the
         // same perk twice (no AlreadyEquipped exclusion needed here - unlike Blacksmith, this is a
         // brand new weapon with no perks yet).
-        private static AssetRef<WeaponPerkData>[] RollStorePerks(Frame f, AssetRef<WeaponPerkPoolData> poolRef, int perkCount, StoreConfig config, byte weaponTalentLevel)
+        private static AssetRef<WeaponPerkData>[] RollStorePerks(Frame f, AssetRef<WeaponPerkPoolData> poolRef, int perkCount,
+            StoreConfig config, byte weaponTalentLevel, AssetRef<WeaponDataAsset> weaponRef)
         {
             if (perkCount <= 0 || poolRef.IsValid == false)
                 return System.Array.Empty<AssetRef<WeaponPerkData>>();
 
             WeaponPerkPoolData pool = f.FindAsset(poolRef);
             WeaponTalentRarityTuning tuning = config.ResolveTalentRarityTuning(weaponTalentLevel);
+
+            // The offer's own weapon, not the buyer's current one - these perks are rolled onto the
+            // weapon being sold. See WeaponPerkData.SupportsFireType.
+            WeaponFireType fireType = WeaponGenerator.ResolveFireType(f, weaponRef);
 
             List<WeightedDrawUtility.Candidate<AssetRef<WeaponPerkData>>> candidates = new List<WeightedDrawUtility.Candidate<AssetRef<WeaponPerkData>>>();
 
@@ -215,6 +221,10 @@ namespace Quantum
                     continue;
 
                 WeaponPerkData data = f.FindAsset(perkRef);
+
+                if (data.SupportsFireType(fireType) == false)
+                    continue;
+
                 int weight = tuning.GetWeight(data.Rarity);
 
                 if (weight <= 0)

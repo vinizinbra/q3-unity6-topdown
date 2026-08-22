@@ -20,8 +20,8 @@ MonoBehaviour:
   DisplayName: Amplifier
   RankDescriptions:
   - Totem Damage Beats deal 30% more damage.
-  - Damage Beats deal 60% more damage and knock enemies back.
-  - Damage Beats deal double damage, and every third Damage Beat Stuns enemies.
+  - Totem Damage Beats deal 60% more damage and knock enemies back.
+  - Totem Damage Beats deal double damage, and every third one Stuns enemies.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

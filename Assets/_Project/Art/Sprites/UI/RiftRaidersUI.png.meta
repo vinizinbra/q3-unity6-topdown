@@ -1279,6 +1279,50 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: RR_PopupBg
+      rect:
+        serializedVersion: 2
+        x: 326
+        y: 15
+        width: 137
+        height: 123
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 60, y: 59, z: 60, w: 60}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5c52f13fcf606433f881fd0d8f102d63
+      internalID: -731856986
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Hex96WhiteBorderBlack
+      rect:
+        serializedVersion: 2
+        x: 13
+        y: 5
+        width: 90
+        height: 90
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 44, y: 44, z: 44, w: 44}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a79a2a10362ba40c79b48f744c0aeb57
+      internalID: -109343418
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
@@ -1330,6 +1374,7 @@ TextureImporter:
       RR_Hex64_OutlineShadowIn: -2119640919
       RR_Hex64_OutlineShadowInOut: -1763799934
       RR_Hex64_Top: -1066619883
+      RR_Hex96WhiteBorderBlack: -109343418
       RR_Hex96_Border: -432480249
       RR_Hex96_BorderThick: 430454459
       RR_Hex96_Outline: -851629501
@@ -1341,6 +1386,7 @@ TextureImporter:
       RR_MenuButtonBottom: 700219559
       RR_PlayButton: 2116157734
       RR_PlayerCard: -991539854
+      RR_PopupBg: -731856986
       RR_Square: -1829256367
       RR_Subtitle: -1147070994
       RR_UpgradeTitle1: -548207295

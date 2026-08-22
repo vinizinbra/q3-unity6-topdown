@@ -87,6 +87,7 @@ MonoBehaviour:
   CoinGainMultiplier:
     RawValue: 65536
   RingColor: {r: 0.7722275, g: 0.35506406, b: 0.9528302, a: 1}
+  PawnSprite: {fileID: 1231564051, guid: b49db0c0e58ba4e9b8349764e5b8d384, type: 3}
   WeaponPosition:
     X:
       RawValue: 0

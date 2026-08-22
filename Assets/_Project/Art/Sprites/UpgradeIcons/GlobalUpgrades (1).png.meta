@@ -139,9 +139,9 @@ TextureImporter:
       name: WeaponDamage
       rect:
         serializedVersion: 2
-        x: 21
-        y: 1037
-        width: 155
+        x: 24
+        y: 648
+        width: 160
         height: 160
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -161,9 +161,9 @@ TextureImporter:
       name: FireRate
       rect:
         serializedVersion: 2
-        x: 188
-        y: 1037
-        width: 143
+        x: 232
+        y: 649
+        width: 159
         height: 159
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -183,9 +183,9 @@ TextureImporter:
       name: ReloadSpeed
       rect:
         serializedVersion: 2
-        x: 343
-        y: 1037
-        width: 144
+        x: 440
+        y: 649
+        width: 159
         height: 159
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -205,9 +205,9 @@ TextureImporter:
       name: MagazineSize
       rect:
         serializedVersion: 2
-        x: 498
-        y: 1037
-        width: 145
+        x: 648
+        y: 649
+        width: 159
         height: 159
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -227,9 +227,9 @@ TextureImporter:
       name: CriticalChance
       rect:
         serializedVersion: 2
-        x: 653
-        y: 1037
-        width: 139
+        x: 856
+        y: 649
+        width: 159
         height: 159
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -249,9 +249,9 @@ TextureImporter:
       name: CriticalDamage
       rect:
         serializedVersion: 2
-        x: 802
-        y: 1037
-        width: 139
+        x: 1064
+        y: 649
+        width: 159
         height: 159
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -271,9 +271,9 @@ TextureImporter:
       name: WeaponRange
       rect:
         serializedVersion: 2
-        x: 950
-        y: 1037
-        width: 136
+        x: 24
+        y: 441
+        width: 159
         height: 159
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -293,9 +293,9 @@ TextureImporter:
       name: ProjectileSpeed
       rect:
         serializedVersion: 2
-        x: 1095
-        y: 1037
-        width: 138
+        x: 232
+        y: 441
+        width: 159
         height: 159
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -315,9 +315,9 @@ TextureImporter:
       name: MaxHealth
       rect:
         serializedVersion: 2
-        x: 21
-        y: 736
-        width: 176
+        x: 429
+        y: 430
+        width: 181
         height: 181
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -337,9 +337,9 @@ TextureImporter:
       name: Shield
       rect:
         serializedVersion: 2
-        x: 223
-        y: 736
-        width: 173
+        x: 637
+        y: 430
+        width: 181
         height: 181
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -359,9 +359,9 @@ TextureImporter:
       name: MovementSpeed
       rect:
         serializedVersion: 2
-        x: 423
-        y: 736
-        width: 175
+        x: 845
+        y: 430
+        width: 181
         height: 181
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -381,9 +381,9 @@ TextureImporter:
       name: HealthRegeneration
       rect:
         serializedVersion: 2
-        x: 625
-        y: 736
-        width: 175
+        x: 1053
+        y: 430
+        width: 181
         height: 181
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -403,9 +403,9 @@ TextureImporter:
       name: HealingReceived
       rect:
         serializedVersion: 2
-        x: 828
-        y: 736
-        width: 175
+        x: 13
+        y: 222
+        width: 181
         height: 181
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -425,9 +425,9 @@ TextureImporter:
       name: PickupRadius
       rect:
         serializedVersion: 2
-        x: 1031
-        y: 736
-        width: 175
+        x: 221
+        y: 222
+        width: 181
         height: 181
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -447,10 +447,10 @@ TextureImporter:
       name: DashCooldown
       rect:
         serializedVersion: 2
-        x: 20
-        y: 473
+        x: 432
+        y: 224
         width: 176
-        height: 147
+        height: 176
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -469,10 +469,10 @@ TextureImporter:
       name: DashCharge
       rect:
         serializedVersion: 2
-        x: 223
-        y: 473
+        x: 642
+        y: 226
         width: 172
-        height: 146
+        height: 172
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -491,10 +491,10 @@ TextureImporter:
       name: SkillDamage
       rect:
         serializedVersion: 2
-        x: 20
-        y: 225
+        x: 837
+        y: 213
         width: 198
-        height: 158
+        height: 198
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -513,10 +513,10 @@ TextureImporter:
       name: SkillCooldown
       rect:
         serializedVersion: 2
-        x: 244
-        y: 225
+        x: 1042
+        y: 211
         width: 203
-        height: 158
+        height: 203
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -535,10 +535,10 @@ TextureImporter:
       name: SkillDuration
       rect:
         serializedVersion: 2
-        x: 474
-        y: 225
+        x: 9
+        y: 10
         width: 189
-        height: 158
+        height: 189
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -557,10 +557,10 @@ TextureImporter:
       name: SkillArea
       rect:
         serializedVersion: 2
-        x: 688
-        y: 225
+        x: 216
+        y: 9
         width: 191
-        height: 158
+        height: 191
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -579,10 +579,10 @@ TextureImporter:
       name: HeroSkillCharge
       rect:
         serializedVersion: 2
-        x: 904
-        y: 224
+        x: 428
+        y: 12
         width: 184
-        height: 159
+        height: 184
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -601,10 +601,10 @@ TextureImporter:
       name: ExperienceGain
       rect:
         serializedVersion: 2
-        x: 283
+        x: 636
         y: 13
         width: 183
-        height: 142
+        height: 183
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}

@@ -34,50 +34,83 @@ MonoBehaviour:
   ChunkPool:
   - Type: 0
     Prototypes:
-    - Id:
-        Value: 1463002180470635866
+    - Prototype:
+        Id:
+          Value: 1463002180470635866
+      Weight:
+        RawValue: 65536
     Count: 1
     MustHave: 1
   - Type: 1
     Prototypes:
-    - Id:
-        Value: 1364521608353916650
-    - Id:
-        Value: 1447946178488252128
-    - Id:
-        Value: 1482437271914828619
+    - Prototype:
+        Id:
+          Value: 1364521608353916650
+      Weight:
+        RawValue: 65536
+    - Prototype:
+        Id:
+          Value: 1447946178488252128
+      Weight:
+        RawValue: 32768
+    - Prototype:
+        Id:
+          Value: 1482437271914828619
+      Weight:
+        RawValue: 65536
+    - Prototype:
+        Id:
+          Value: 1531964196362064826
+      Weight:
+        RawValue: 65536
     Count: 20
     MustHave: 1
   - Type: 4
     Prototypes:
-    - Id:
-        Value: 1387348814873747697
+    - Prototype:
+        Id:
+          Value: 1387348814873747697
+      Weight:
+        RawValue: 65536
     Count: 1
     MustHave: 1
   - Type: 5
     Prototypes:
-    - Id:
-        Value: 1528059320859826915
+    - Prototype:
+        Id:
+          Value: 1528059320859826915
+      Weight:
+        RawValue: 65536
     Count: 1
     MustHave: 1
   - Type: 6
     Prototypes:
-    - Id:
-        Value: 1377925101269758295
+    - Prototype:
+        Id:
+          Value: 1377925101269758295
+      Weight:
+        RawValue: 65536
     Count: 1
     MustHave: 1
   - Type: 3
     Prototypes:
-    - Id:
-        Value: 1533526507179207519
+    - Prototype:
+        Id:
+          Value: 1533526507179207519
+      Weight:
+        RawValue: 65536
     Count: 1
     MustHave: 1
   - Type: 7
     Prototypes:
-    - Id:
-        Value: 1344858893066880175
+    - Prototype:
+        Id:
+          Value: 1344858893066880175
+      Weight:
+        RawValue: 65536
     Count: 1
     MustHave: 1
+  ChunksPerGenerationTick: 5
   GapFillerPrototype:
     Id:
       Value: 1326923107156391042

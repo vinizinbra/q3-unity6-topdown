@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using NaughtyAttributes;
 using PrimeTween;
 using QuantumUser.View.Util;
@@ -13,6 +12,13 @@ namespace Quantum
     // weapon: the cardinal position offsets, hand grips, and the shoot recoil "animation"
     // (previously a separate WeaponRecoilView - folded in here since it's just as weapon-specific
     // as the offsets, and needs its own EntityRef to know which OnPlayerFired events are its own).
+    //
+    // Deliberately owns NOTHING about how a shot itself is drawn. Tracer lines and the looping
+    // continuous-fire beam both used to live here; they are now one of the interchangeable
+    // HitscanViewBase styles (LineRenderer/Particle/Continuous), added to this same prefab and
+    // driven off the simulation's own per-segment EventHitscanFired rather than off "the player
+    // pulled the trigger". That split is what let the continuous beam follow a Ricochet bounce and
+    // stop guessing at aim direction - see HitscanViewBase.
     public class WeaponView : CustomQuantumEntityViewComponent
     {
         // Everything PlayerGunAimView computes each frame that isn't specific to this weapon's
@@ -32,7 +38,11 @@ namespace Quantum
             // Ground-plane (XZ), camera-independent bearing - unlike AimDirection/CameraRight/
             // CameraUp (which all live in the camera's billboard-facing plane, correct for
             // positioning a 2D sprite), this is what a 3D effect that must stay level with the
-            // ground - see WeaponView.OrientBeamParticle - should build its rotation from. The two
+            // ground should build its rotation from. Currently unused - the looping beam particle
+            // that needed it lived here until the HitscanViewBase styles took over, and those work
+            // in world space off the simulation's own hit positions instead. Kept because it is a
+            // property of the pose, not of that one effect, and the next ground-aligned effect will
+            // want it (see EnemyArmAimView for the same problem solved separately). The two
             // planes only coincide when the camera looks straight down; on any tilted top-down
             // camera a billboard-plane rotation visibly dips into/out of the floor.
             public readonly Vector3 FlatWorldDirection;
@@ -63,25 +73,6 @@ namespace Quantum
         [Header("Muzzle Flash")]
         [SerializeField, Tooltip("Particle system parented at the muzzle, restarted on every shot (e.g. an Epic Toon FX Muzzleflash prefab).")]
         private ParticleSystem muzzleParticle;
-
-        [Header("Hitscan Tracer")]
-        [SerializeField, Tooltip("WeaponTracerView prefab - draws the line and plays its own begin/end particles (see WeaponTracerView). Pooled rather than instantiated fresh per shot (see tracerPool), so a rapid-fire weapon's overlapping fades read as one near-continuous beam instead of discrete flashes. Leave empty for no tracer. Ignored for Projectile weapons - they never fire EventHitscanFired.")]
-        private WeaponTracerView tracerPrefab;
-
-        // Reused across shots instead of Instantiate/Destroy per hitscan pellet - see
-        // GetPooledTracer. Grows to roughly this weapon's peak concurrent pellet count (shotgun
-        // PelletCount, or however many rapid shots overlap within one tracer's fade duration) and
-        // stays there.
-        private readonly List<WeaponTracerView> tracerPool = new List<WeaponTracerView>();
-
-        [Header("Continuous Fire Particle")]
-        [SerializeField, Tooltip("Particle system played continuously while this weapon keeps firing (e.g. a looping laser beam stream) - Play()'d on the first shot of a burst, Stop()'d once no new shot arrives within Beam Stop Grace. A start/stop toggle, not per-shot restarted like muzzleParticle. Leave empty to skip.")]
-        private ParticleSystem beamParticle;
-        [SerializeField, Tooltip("Seconds since the last shot before beamParticle is stopped. Keep at or above the weapon's fire interval (1/FireRate) so back-to-back shots don't visibly stop and restart it between hits.")]
-        private float beamStopGrace = 0.15f;
-
-        private float timeSinceLastShotForBeam;
-        private bool beamFiring;
 
         // Resolved through this weapon's own transform every call - TransformPoint applies its
         // current rotation (billboard + aim) and scale (the Y-axis flip in ApplyAim), so the
@@ -135,7 +126,6 @@ namespace Quantum
                 character = transform.root.GetComponentInChildren<BlobAnimationView>();
 
             QuantumEvent.Subscribe<EventPlayerFired>(this, OnPlayerFired);
-            QuantumEvent.Subscribe<EventHitscanFired>(this, OnHitscanFired);
         }
 
         public override void OnDestroy()
@@ -147,12 +137,6 @@ namespace Quantum
             // when the owner dies mid-shot - without this, PrimeTween logs a stack-trace-capturing
             // error per orphaned tween every time that happens.
             Tween.StopAll(this);
-
-            for (int i = 0; i < tracerPool.Count; i++)
-            {
-                if (tracerPool[i] != null)
-                    Destroy(tracerPool[i].gameObject);
-            }
         }
 
         private void CacheRestPose()
@@ -165,65 +149,6 @@ namespace Quantum
         {
             if (e.Entity != _entityRef) return;
             Shoot();
-            NotifyBeamFired();
-        }
-
-        // Starts beamParticle once, on the first shot of a burst - Update() below is what stops it
-        // again once shots stop arriving, not this. Safe to call every shot regardless of fire type
-        // (hitscan or projectile); a no-op while beamParticle is already playing.
-        private void NotifyBeamFired()
-        {
-            if (beamParticle == null) return;
-
-            timeSinceLastShotForBeam = 0f;
-
-            if (beamFiring == true) return;
-
-            beamFiring = true;
-            beamParticle.Play(true);
-        }
-
-        private void Update()
-        {
-            if (beamFiring == false) return;
-
-            timeSinceLastShotForBeam += Time.deltaTime;
-
-            if (timeSinceLastShotForBeam < beamStopGrace) return;
-
-            beamFiring = false;
-            beamParticle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
-        }
-
-        // One event per hitscan pellet (see WeaponSystem.FireHitscan) - a Projectile weapon never
-        // fires this, so tracerPrefab simply goes unused on one of those.
-        private void OnHitscanFired(EventHitscanFired e)
-        {
-            if (e.Owner != _entityRef) return;
-            if (tracerPrefab == null) return;
-
-            Vector3 origin = e.Origin.ToUnityVector3();
-            Vector3 endPoint = e.EndPoint.ToUnityVector3();
-
-            GetPooledTracer(origin).Play(origin, endPoint, e.DidHit);
-        }
-
-        // Reuses the first idle instance (its previous fade already finished - see
-        // WeaponTracerView.IsPlaying) rather than instantiating fresh every shot. A high-fire-rate
-        // weapon will keep finding every instance still mid-fade and grow the pool by one instead -
-        // that's expected and what makes overlapping pellets/rapid shots read as one continuous
-        // beam rather than a single flickering line.
-        private WeaponTracerView GetPooledTracer(Vector3 origin)
-        {
-            for (int i = 0; i < tracerPool.Count; i++)
-            {
-                if (tracerPool[i].IsPlaying == false)
-                    return tracerPool[i];
-            }
-
-            WeaponTracerView tracer = Instantiate(tracerPrefab, origin, Quaternion.identity);
-            tracerPool.Add(tracer);
-            return tracer;
         }
 
         // Three independent PunchCustom kicks (position, rotation, knockback), each punching its
@@ -322,27 +247,6 @@ namespace Quantum
             Vector3 localPosition = transform.localPosition;
             localPosition.z = restLocalPosition.z;
             transform.localPosition = localPosition;
-
-            OrientBeamParticle(pose);
-        }
-
-        // beamParticle can't just inherit this weapon's own transform.rotation - that's a billboard
-        // (pose.FacingCamera) composed with a screen-plane Z spin, so its local +Z (the default
-        // Cone shape's emission axis) points toward/away from the camera, not across the screen at
-        // whatever's being aimed at. Same class of bug the position offset above already has a
-        // comment about (parent rig shears under billboard + non-uniform scale) - solved the same
-        // way, by computing the aim direction explicitly instead of trusting anything inherited
-        // through the hierarchy. Built from FlatWorldDirection/Vector3.up (ground-plane, camera-
-        // independent), not CameraRight/CameraUp - those live in the camera's billboard-facing
-        // plane, which only coincides with the ground when the camera looks straight down. Using
-        // them here would keep the beam visually level with the SCREEN, not the ground, and it'd
-        // tip into/out of the floor on any tilted top-down camera.
-        private void OrientBeamParticle(in AimPose pose)
-        {
-            if (beamParticle == null) return;
-            if (pose.FlatWorldDirection.sqrMagnitude < 0.0001f) return;
-
-            beamParticle.transform.rotation = Quaternion.LookRotation(pose.FlatWorldDirection, Vector3.up);
         }
 
         // Nothing left to do per-frame here - recoilOffset/recoilRotationCurrent/knockbackPunch

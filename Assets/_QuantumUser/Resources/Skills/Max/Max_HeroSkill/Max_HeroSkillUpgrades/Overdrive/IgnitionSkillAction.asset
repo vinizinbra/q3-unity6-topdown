@@ -20,19 +20,15 @@ MonoBehaviour:
   DisplayName: Ignition
   RankDescriptions:
   - At max Rage, weapon hits guarantee Burn.
-  - At max Rage, weapon hits guarantee Burn - and Burning enemies you kill leave
-    a Burning Ground patch behind.
-  - At max Rage, weapon hits guarantee Burn and Burning kills leave Burning Ground
-    - the first time you reach max Rage each activation, Inferno also detonates a
-    radial Burn pulse around you.
+  - At max Rage, weapon hits Burn, and Burning kills leave a Burning Ground patch.
+  - At max Rage, weapon hits Burn and Burning kills leave Burning Ground. Reaching max Rage also detonates a radial Burn pulse, once per Overdrive.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 3
   Interval:
     RawValue: 0
   Activated: 0
-  Description: At max Rage during Overdrive, every hit guarantees Burn - eventually
-    leaving a trail of fire and igniting the battlefield outright.
+  Description: At max Rage, every weapon hit Burns.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

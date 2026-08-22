@@ -20,20 +20,15 @@ MonoBehaviour:
   DisplayName: Concussive Impact
   RankDescriptions:
   - Launched enemies take 30% Juggernaut damage and are Stunned 0.75s on landing.
-  - Launched enemies take 50% Juggernaut damage and are Stunned 1s on landing, and
-    launch force is increased by +25%.
-  - Launched enemies take 75% Juggernaut damage and are Stunned 1.25s on landing,
-    +25% launch force, and create a 2.5m impact shockwave dealing 40% Juggernaut
-    damage that Stuns nearby enemies. You deal +40% damage to Stunned enemies.
+  - Launched enemies take 50% Juggernaut damage and are Stunned 1s on landing, and launch force is increased by +25%.
+  - Launched enemies take 75% Juggernaut damage and are Stunned 1.25s on landing, +25% launch force, and create a 2.5m impact shockwave dealing 40% Juggernaut damage that Stuns nearby enemies. You deal +40% damage to Stunned enemies.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Enemies launched by Discharge take real damage when they land and
-    hit harder walls - culminating in an impact shockwave and bonus damage against
-    Stunned enemies.
+  Description: Enemies launched by Discharge take real damage when they land and hit harder walls - culminating in an impact shockwave and bonus damage against Stunned enemies.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

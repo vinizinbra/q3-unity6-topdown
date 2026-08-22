@@ -1,18 +1,17 @@
 namespace Quantum
 {
+    using System;
     using Photon.Deterministic;
     using UnityEngine.Scripting;
 
     // Collects a ScrapOrb once the Lux who owns it (the LuxScrapCollector holder ScrapUtility.
     // TrySpawnDrop rolled the drop for) walks within pickup range. Unlike CurrencyOrbSystem, this never
     // checks every nearby player - Scrap only ever means anything to whoever has the passive, so a
-    // hit without LuxScrapCollector is simply skipped, same query broadened generously the same way
-    // CurrencyOrbSystem's own QueryRadiusScale is (a known simplification - see docs/experience-drops.md).
+    // candidate without LuxScrapCollector is simply skipped. The padded broadphase prefilter this
+    // used to share with CurrencyOrbSystem is gone - see that system's own comment.
     [Preserve]
     public unsafe class ScrapOrbSystem : SystemMainThreadFilter<ScrapOrbSystem.Filter>, ISignalOnFreeCastUsed
     {
-        private static readonly FP QueryRadiusScale = 8;
-
         public override void Update(Frame f, ref Filter filter)
         {
             FP pickupRadius = FP._2;
@@ -22,12 +21,16 @@ namespace Quantum
                 pickupRadius = f.FindAsset(f.RuntimeConfig.ScrapConfig).PickupRadius;
             }
 
-            FP queryRadius = pickupRadius * QueryRadiusScale;
-            var hits = EnemyMovementUtility.FindPlayersInRadiusIncludingDashing(f, filter.Transform3D->Position, queryRadius);
+            Span<EntityRef> players = stackalloc EntityRef[PlayerQueryUtility.MaxPlayers];
+            int playerCount = PlayerQueryUtility.GatherPlayers(f, players);
 
-            for (int i = 0; i < hits.Count; i++)
+            EntityRef collectorEntity = EntityRef.None;
+            LuxScrapCollector* collectorData = null;
+            FP closestSqrDistance = default;
+
+            for (int i = 0; i < playerCount; i++)
             {
-                EntityRef player = hits[i].Entity;
+                EntityRef player = players[i];
 
                 if (f.Unsafe.TryGetPointer<LuxScrapCollector>(player, out var collector) == false)
                     continue;
@@ -47,11 +50,21 @@ namespace Quantum
                 if (sqrDistance > effectiveRadius * effectiveRadius)
                     continue;
 
-                ScrapUtility.Grant(f, player, collector);
-                f.Events.ScrapOrbCollected(player, filter.Transform3D->Position);
-                f.Destroy(filter.Entity);
-                return;
+                // Nearest wins - see CurrencyOrbSystem's own note on this.
+                if (collectorEntity != EntityRef.None && sqrDistance >= closestSqrDistance)
+                    continue;
+
+                collectorEntity = player;
+                collectorData = collector;
+                closestSqrDistance = sqrDistance;
             }
+
+            if (collectorEntity == EntityRef.None)
+                return;
+
+            ScrapUtility.Grant(f, collectorEntity, collectorData);
+            f.Events.ScrapOrbCollected(collectorEntity, filter.Transform3D->Position);
+            f.Destroy(filter.Entity);
         }
 
         // ScrapUtility is a static utility, not a system, so it can't itself listen for the generic

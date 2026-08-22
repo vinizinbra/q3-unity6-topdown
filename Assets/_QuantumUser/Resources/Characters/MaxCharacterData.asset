@@ -87,6 +87,7 @@ MonoBehaviour:
   CoinGainMultiplier:
     RawValue: 65536
   RingColor: {r: 0.98039216, g: 0.47066006, b: 0.023529401, a: 1}
+  PawnSprite: {fileID: -514289054, guid: b49db0c0e58ba4e9b8349764e5b8d384, type: 3}
   WeaponPosition:
     X:
       RawValue: 0
@@ -108,7 +109,7 @@ MonoBehaviour:
       Value: 294791046206285621
   StartingWeapon:
     Id:
-      Value: 532371987665164333
+      Value: 530648557105192714
   DashSkillUpgrades:
   - Id:
       Value: 377700293714812557

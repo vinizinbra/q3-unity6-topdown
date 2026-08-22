@@ -19,20 +19,16 @@ MonoBehaviour:
   Icon: {fileID: 1133475158, guid: b217254d41b6945b1873986186a25786, type: 3}
   DisplayName: Backblast
   RankDescriptions:
-  - When Pixie dashes, she drops a bomb at the dash starting position - it explodes
-    after a short fuse for 50% of Bunny Bomb damage.
-  - Drop a bomb at both the start and end of the dash - each explodes after a short
-    fuse for 50% of Bunny Bomb damage.
-  - Drop a bomb at both the start and end of the dash - each explodes after a short
-    fuse for 75% of Bunny Bomb damage, and enemies hit are marked for Chain Reaction.
+  - Dash drops a bomb where you started, dealing 50% of Bunny Bomb damage.
+  - Dash drops a bomb at both ends, each dealing 50% of Bunny Bomb damage.
+  - Dash drops a bomb at both ends, each dealing 75% damage and marking enemies hit.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 5
   Interval:
     RawValue: 0
   Activated: 1
-  Description: When Pixie dashes, she drops a bomb that explodes after a short fuse
-    for a percentage of Bunny Bomb damage.
+  Description: Dashing drops a fused bomb behind you.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

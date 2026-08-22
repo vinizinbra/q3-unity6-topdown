@@ -1,5 +1,6 @@
 namespace Quantum
 {
+    using System;
     using Photon.Deterministic;
     using UnityEngine.Scripting;
 
@@ -32,11 +33,20 @@ namespace Quantum
             if (f.Global->LevelUpScreenOpen == true)
                 return; // another screen (this Chest's own, or a real level-up) is already up
 
-            var hits = EnemyMovementUtility.FindPlayersInRadiusIncludingDashing(f, filter.Transform3D->Position, filter.Chest->PickupRadius);
+            // Candidates come from PlayerQueryUtility, not a Player-layer physics query. Besides
+            // dropping the per-chest per-tick frame-heap allocation, this fixes a real bug: the old
+            // query returned everything on the Player layer and this loop only required a
+            // Transform3D, so a Lux SENTRY (authored on layer 7, no PlayerLink) parked inside the
+            // radius opened the chest and was handed to BeginChestScreen as the "player".
+            Span<EntityRef> players = stackalloc EntityRef[PlayerQueryUtility.MaxPlayers];
+            int playerCount = PlayerQueryUtility.GatherPlayers(f, players);
 
-            for (int i = 0; i < hits.Count; i++)
+            EntityRef opener = EntityRef.None;
+            FP closestSqrDistance = default;
+
+            for (int i = 0; i < playerCount; i++)
             {
-                EntityRef player = hits[i].Entity;
+                EntityRef player = players[i];
 
                 if (f.Unsafe.TryGetPointer<Transform3D>(player, out var playerTransform) == false)
                     continue;
@@ -46,6 +56,16 @@ namespace Quantum
                 if (sqrDistance > filter.Chest->PickupRadius * filter.Chest->PickupRadius)
                     continue;
 
+                // Nearest wins, rather than whoever came first in the old query's hit order.
+                if (opener == EntityRef.None || sqrDistance < closestSqrDistance)
+                {
+                    opener = player;
+                    closestSqrDistance = sqrDistance;
+                }
+            }
+
+            if (opener != EntityRef.None)
+            {
                 filter.Chest->Opened = true;
                 f.AddOrGet<DestroyAfterTime>(filter.Entity, out var destroy);
                 // Linger exactly ONE rendered frame after the upgrade screen closes, then hide.
@@ -57,9 +77,8 @@ namespace Quantum
                 // Two sim steps makes it survive that first frame (rendered once) and destroy on the
                 // next - one visible frame of linger, frame-rate independent.
                 destroy->RemainingTime = f.DeltaTime * 2;
-                LevelUpUtility.BeginChestScreen(f, player, filter.Chest->Kind);
-                f.Events.ChestOpened(filter.Entity, player, filter.Transform3D->Position, filter.Chest->Kind);
-                return;
+                LevelUpUtility.BeginChestScreen(f, opener, filter.Chest->Kind);
+                f.Events.ChestOpened(filter.Entity, opener, filter.Transform3D->Position, filter.Chest->Kind);
             }
         }
 

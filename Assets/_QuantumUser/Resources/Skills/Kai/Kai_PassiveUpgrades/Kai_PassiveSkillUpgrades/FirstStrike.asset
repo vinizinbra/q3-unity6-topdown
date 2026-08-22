@@ -23,8 +23,7 @@ MonoBehaviour:
   RankDescriptions:
   - Your first hit against an enemy deals 40% bonus damage.
   - Your first hit against an enemy deals 70% bonus damage.
-  - First Strike deals 100% bonus damage, and killing a First Strike target empowers
-    your next one by a further 25%.
+  - Your first hit against an enemy deals 100% bonus damage. Killing that target empowers your next first hit by a further 25%.
   DamageMultiplierBonus:
   - RawValue: 26214
   - RawValue: 45875

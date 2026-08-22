@@ -18,13 +18,12 @@ MonoBehaviour:
       Value: 369611404177242297
   Icon: {fileID: 0}
   DisplayName: Field Modifications
-  Description: Scrap collected while a Sentry is deployed upgrades that Sentry, for
-    as long as it lives.
+  Description: Scrap collected while a Sentry is deployed upgrades that Sentry, for as long as it lives.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
   - Scrap collected while your Sentry is active grants it +4% Damage, up to 5 stacks.
-  - Each stack also grants your Sentry +3% Fire Rate.
-  - 'MK II: at 5 stacks your Sentry''s Cannon is replaced by a Twin Cannon.'
+  - Scrap collected while your Sentry is active grants it +4% Damage and +3% Fire Rate, up to 5 stacks.
+  - 'MK II: Scrap collected while your Sentry is active grants +4% Damage and +3% Fire Rate, up to 5 stacks. At 5 stacks its Cannon becomes a Twin Cannon.'
   DamagePerStack:
   - RawValue: 2621
   - RawValue: 2621

@@ -281,12 +281,13 @@ namespace Quantum {
         _f.AddEvent(ev);
         return ev;
       }
-      public EventHitscanFired HitscanFired(EntityRef Owner, FPVector3 Origin, FPVector3 EndPoint, QBoolean DidHit) {
+      public EventHitscanFired HitscanFired(EntityRef Owner, FPVector3 Origin, FPVector3 EndPoint, QBoolean DidHit, EntityRef Target) {
         var ev = _f.Context.AcquireEvent<EventHitscanFired>(EventHitscanFired.ID);
         ev.Owner = Owner;
         ev.Origin = Origin;
         ev.EndPoint = EndPoint;
         ev.DidHit = DidHit;
+        ev.Target = Target;
         _f.AddEvent(ev);
         return ev;
       }
@@ -1200,6 +1201,7 @@ namespace Quantum {
     public FPVector3 Origin;
     public FPVector3 EndPoint;
     public QBoolean DidHit;
+    public EntityRef Target;
     protected EventHitscanFired(Int32 id, EventFlags flags) : 
         base(id, flags) {
     }
@@ -1221,6 +1223,7 @@ namespace Quantum {
         hash = hash * 31 + Origin.GetHashCode();
         hash = hash * 31 + EndPoint.GetHashCode();
         hash = hash * 31 + DidHit.GetHashCode();
+        hash = hash * 31 + Target.GetHashCode();
         return hash;
       }
     }

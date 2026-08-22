@@ -64,6 +64,27 @@ namespace Quantum
             return stats->AreaRadiusMultiplier;
         }
 
+        // The full outgoing-damage multiplier a DamageSource.Skill hit from this owner would receive -
+        // the global DamageMultiplier and the Skill-scoped one together, exactly as
+        // DamageUtility.ResolveOutgoingDamage composes them for a live hit.
+        //
+        // Exists for the one case that CANNOT go through that per-hit path: damage that has to be
+        // BAKED up front onto something that will later deal it on its own, with itself as the owner.
+        // Lux's Sentry barrels are the case - each barrel is its own entity carrying its own Weapon,
+        // and WeaponSystem fires it with the BARREL as owner. A barrel has no CharacterStats, so
+        // ResolveOutgoingDamage returns at its own stats gate and the shot receives none of Lux's
+        // build at all. Baking her skill-damage multiplier in at deploy time is what reconnects them.
+        //
+        // Crit and range falloff are deliberately NOT folded in here: both are per-hit rolls/distances
+        // that have no meaning as a baked constant.
+        public static FP GetSkillDamageMultiplier(Frame f, EntityRef owner)
+        {
+            if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false)
+                return FP._1;
+
+            return stats->DamageMultiplier * stats->SkillDamageMultiplier;
+        }
+
         // Same shape as GetAreaMultiplier - a plain size multiplier (1 = authored speed), folded
         // into a projectile's spawn velocity once in ProjectileSpawner.Spawn rather than threaded
         // through every ProjectileMovementData subclass's own Speed field.

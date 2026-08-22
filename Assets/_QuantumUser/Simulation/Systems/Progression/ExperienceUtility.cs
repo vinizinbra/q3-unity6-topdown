@@ -42,7 +42,7 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<Transform3D>(orb, out var orbTransform) == true)
             {
                 orbTransform->Position = targetTransform->Position;
-                GroundOffsetUtility.Apply(f, orb, orbTransform);
+                GroundOffsetUtility.Apply(f, orb);
             }
 
             if (f.Unsafe.TryGetPointer<CurrencyOrb>(orb, out var currencyOrb) == true)

@@ -17,14 +17,19 @@ public class MainMenuWindow : UiWindow
     public Button quickPlayButton;
     public Button practiceButton;
 
-    // Single button, three mutually-exclusive states (see PlayButtonClicked/Update below) -
-    // replaces the old standalone reconnectButton, which used to toggle its own visibility
-    // independently of whatever "Play" button already existed.
+    [Tooltip("Shown only while there is a live match to rejoin (MatchMakingConfig.CanReconnect). Hidden entirely otherwise - it is not a disabled-but-visible control.")]
+    public Button reconnectButton;
+
+    // Two mutually-exclusive states (see PlayButtonClicked/Update below). Reconnect is no longer
+    // one of them - it has its own button now, so Play never silently turns into something else.
     public TMP_Text playButtonLabel;
 
     private void Start()
     {
         playButton.onClick.AddListener(PlayButtonClicked);
+
+        if (reconnectButton != null)
+            reconnectButton.onClick.AddListener(Reconnect);
        /* quickPlayButton.onClick.AddListener(QuickPlay);
         practiceButton.onClick.AddListener(Practice);*/
     }
@@ -32,6 +37,9 @@ public class MainMenuWindow : UiWindow
     private void OnDestroy()
     {
         playButton.onClick.RemoveListener(PlayButtonClicked);
+
+        if (reconnectButton != null)
+            reconnectButton.onClick.RemoveListener(Reconnect);
        /* quickPlayButton.onClick.RemoveListener(QuickPlay);
         practiceButton.onClick.RemoveListener(Practice);*/
     }
@@ -39,14 +47,21 @@ public class MainMenuWindow : UiWindow
     public override void Show()
     {
         base.Show();
-        Application.targetFrameRate = 60;
+        Application.targetFrameRate = 120;
     }
 
     void Update()
     {
-        if (MatchMakingConfig.Instance.CanReconnect)
-            playButtonLabel.text = "Reconnect";
-        else if (PartyManager.Instance.IsPartyLeader)
+        // CanReconnect is already the full "is there anything to rejoin" answer - not in a room,
+        // reconnect information present, and not timed out. See MatchMakingConfig.
+        if (reconnectButton != null)
+        {
+            bool canReconnect = MatchMakingConfig.Instance.CanReconnect;
+            if (reconnectButton.gameObject.activeSelf != canReconnect)
+                reconnectButton.gameObject.SetActive(canReconnect);
+        }
+
+        if (PartyManager.Instance.IsPartyLeader)
             playButtonLabel.text = "Play";
         else
             playButtonLabel.text = PartyManager.Instance.IsLocalReady ? "Cancel Ready" : "Ready";
@@ -65,17 +80,11 @@ public class MainMenuWindow : UiWindow
         MatchMakingConfig.Instance.ReconnectAsync();
     }
 
-    // The single Play/Ready/Reconnect button's click handler - see the label logic in Update()
-    // above for what's currently shown. Reconnect always takes priority; then either starts the
-    // run (leader/solo) or just toggles this player's own ready state (non-leader party member).
+    // The Play/Ready button's click handler - see the label logic in Update() above for what's
+    // currently shown. Either starts the run (leader/solo) or just toggles this player's own ready
+    // state (non-leader party member). Reconnect is reconnectButton's job, not this one's.
     private void PlayButtonClicked()
     {
-        if (MatchMakingConfig.Instance.CanReconnect)
-        {
-            Reconnect();
-            return;
-        }
-
         if (!PartyManager.Instance.InParty)
         {
             // Show the loading screen immediately on click, not just once StartRunner() eventually

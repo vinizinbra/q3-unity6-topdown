@@ -26,7 +26,7 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<Transform3D>(entity, out var transform) == true)
             {
                 transform->Position = position;
-                GroundOffsetUtility.Apply(f, entity, transform);
+                GroundOffsetUtility.Apply(f, entity);
             }
 
             ConfigureOwnerAndArea(f, entity, owner, source, element, damageOverride, targetMaskOverride);

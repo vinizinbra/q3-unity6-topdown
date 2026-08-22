@@ -20,9 +20,8 @@ MonoBehaviour:
   DisplayName: Vortex Collapse
   RankDescriptions:
   - When Vortex ends, it collapses and deals heavy damage around its center.
-  - Vortex Collapse deals 200% Skill Damage and has a larger blast radius.
-  - Before collapsing, Vortex violently pulls enemies into its core, then detonates
-    for massive damage.
+  - When Vortex ends, it collapses for 200% Skill Damage in a larger blast.
+  - Before collapsing, Vortex violently pulls enemies into its core, then detonates for massive damage.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

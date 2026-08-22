@@ -19,19 +19,16 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Blast Jump
   RankDescriptions:
-  - For 2s after dashing, Pixie's next Bunny Bomb flies 25% faster and blasts 25%
-    wider.
-  - The same, and dashing also removes 1s from Bunny Bomb's remaining cooldown.
-  - The same, and dashing through one of your own planted Bunny Bombs detonates it
-    instantly for +50% damage.
+  - For 2s after a dash, your next Bunny Bomb flies 25% faster and blasts 25% wider.
+  - For 2s after a dash, your next Bunny Bomb flies 25% faster and blasts 25% wider. Dashing also cuts 1s off its cooldown.
+  - For 2s after a dash, your next Bunny Bomb flies 25% faster and blasts 25% wider. Dash through a planted bomb to detonate it for +50% damage.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 3
   Interval:
     RawValue: 0
   Activated: 1
-  Description: Dashing launches your next Bunny Bomb harder - and eventually lets
-    you set off a planted one by dashing through it.
+  Description: Dashing supercharges your next Bunny Bomb throw.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

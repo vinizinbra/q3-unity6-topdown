@@ -3402,7 +3402,6 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1050393977931135117}
   - {fileID: 318403896176381732}
   - {fileID: 4209482276784838796}
   m_Father: {fileID: 0}
@@ -3447,7 +3446,6 @@ MonoBehaviour:
   reloadPunchTarget: {fileID: 1050393977931135117}
   reloadPunchScale: 1.25
   reloadPunchDuration: 0.25
-  weaponRowRect: {fileID: 1050393977931135117}
   burnIndicator:
     root: {fileID: 5612912166280188700}
     timerText: {fileID: 0}
@@ -4863,7 +4861,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6129076353993164910}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -4871,12 +4869,12 @@ RectTransform:
   - {fileID: 1040815998992001752}
   - {fileID: 3145747799232606093}
   - {fileID: 6398248332123860801}
-  m_Father: {fileID: 2657475772373124126}
+  m_Father: {fileID: 318403896176381732}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -40}
-  m_SizeDelta: {x: 100, y: 20}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &6608365010020717270
 MonoBehaviour:
@@ -6493,6 +6491,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7249586111599986400}
+  - {fileID: 1050393977931135117}
   - {fileID: 9069687874567984895}
   - {fileID: 3750405309599750559}
   - {fileID: 7105935531427777933}

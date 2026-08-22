@@ -19,20 +19,16 @@ MonoBehaviour:
   Icon: {fileID: -1580156667, guid: b217254d41b6945b1873986186a25786, type: 3}
   DisplayName: Cluster Bomb
   RankDescriptions:
-  - After Bunny Bomb explodes, spawn 2 Mini Bombs, each dealing 40% of Bunny Bomb
-    damage.
-  - After Bunny Bomb explodes, spawn 3 Mini Bombs, each dealing 45% of Bunny Bomb
-    damage.
-  - After Bunny Bomb explodes, spawn 4 Mini Bombs, each dealing 50% of Bunny Bomb
-    damage.
+  - Bunny Bomb scatters 2 Mini Bombs, each dealing 40% of its damage.
+  - Bunny Bomb scatters 3 Mini Bombs, each dealing 45% of its damage.
+  - Bunny Bomb scatters 4 Mini Bombs, each dealing 50% of its damage.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Bunny Bomb explosions scatter bomblets, each dealing a percentage
-    of Bunny Bomb damage.
+  Description: Bunny Bomb scatters Mini Bombs when it explodes.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

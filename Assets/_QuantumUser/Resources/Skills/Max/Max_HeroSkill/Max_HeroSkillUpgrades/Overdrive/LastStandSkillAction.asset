@@ -19,21 +19,16 @@ MonoBehaviour:
   Icon: {fileID: -727180227, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
   DisplayName: Last Stand
   RankDescriptions:
-  - Rage now persists after Overdrive ends - your next Overdrive starts where the
-    last one left off.
-  - Rage persists between Overdrives, and taking damage during Overdrive now only
-    costs half of it instead of all of it.
-  - 'Rage persists and resists damage - and Too Angry to Die: lethal damage during
-    Overdrive instead leaves you at 1 Health, spends your Rage, ends Overdrive, and
-    grants 2s of invulnerability.'
+  - Rage carries over between Overdrives instead of resetting.
+  - Rage carries over between Overdrives, and damage taken during Overdrive costs only half of it.
+  - Rage carries over and resists damage. Lethal damage during Overdrive leaves you at 1 Health, spends your Rage, and grants 2s of invulnerability.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Your Rage stops being fragile - it survives between Overdrives, then
-    survives being hit, then survives death itself.
+  Description: Rage stops being fragile - it survives Overdrive ending, damage, and death.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

@@ -2,7 +2,7 @@ namespace Quantum
 {
     using Photon.Deterministic;
 
-    // Consumed by DirectHitData.ApplyQuantumRounds/WeaponSystem.ApplyHitscanWeaponPerks - every hit
+    // Consumed by DirectHitData.ApplyQuantumRounds/WeaponSystem.ApplyHitscanQuantumRounds - every hit
     // also damages the single nearest other enemy within Radius.
     public unsafe partial class QuantumRoundsWeaponPerkData : WeaponPerkData
     {

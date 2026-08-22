@@ -1211,6 +1211,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Quantum.Unity::Quantum.QPrototypeGroundOffset
   Prototype:
+    Enabled:
+      Value: 0
     Offset:
       RawValue: 0
     FallGravityMultiplier:

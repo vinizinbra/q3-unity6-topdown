@@ -19,16 +19,17 @@
             systems.Add(new CharacterSystem());
             systems.Add(new PlayerInitSystem());
 
-            // Same "must react even while an upgrade screen is open" reasoning as CharacterSystem
-            // just above - a map-baked Chest materializes at whatever raw Y it was hand-placed in the
-            // editor, and needs GroundOffset applied (adding SettlingToGround so GroundSettleSystem,
-            // inside the pausable group below, eases it onto the ground) the instant it appears,
-            // regardless of pause state. See docs/chests.md.
-            systems.Add(new MapGroundSettleSystem());
+            // Nothing needed here for map-baked entities (Chest, BreakableBarrel, ...) any more - a
+            // GroundOffset now grounds itself continuously from inside GameplaySystemGroup
+            // (GroundSettleSystem, see GroundOffset.qtn), so a hand-placed prop just waits in mid-air
+            // until the procedural level actually exists beneath it and then falls. The one-shot
+            // MapGroundSettleSystem this replaced could never work: it raycast from
+            // ISignalOnEntityPrototypeMaterialized, which fires before LevelGenerationSystem has
+            // placed a chunk and before physics has ever built a broadphase.
 
-            // Same "must react the instant it materializes, regardless of pause state" shape as
-            // MapGroundSettleSystem just above - forces every hand-placed BossArenaGate's collider
-            // disabled on creation, so a level designer can't forget to uncheck IsEnabled on one and
+            // Must react the instant it materializes, regardless of pause state - forces every
+            // hand-placed BossArenaGate's collider disabled on creation, so a level designer can't
+            // forget to uncheck IsEnabled on one and
             // leave a corridor solid from the start of the run. See docs/run-phase.md's "Boss phase
             // trigger".
             systems.Add(new BossArenaGateSystem());

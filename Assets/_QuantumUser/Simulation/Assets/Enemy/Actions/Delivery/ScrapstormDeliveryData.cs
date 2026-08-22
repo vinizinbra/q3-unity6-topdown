@@ -1,5 +1,6 @@
 namespace Quantum
 {
+    using System;
     using Photon.Deterministic;
 
     // A rotating pattern of alternating danger/safe pie-slice wedges around the caster, e.g.
@@ -89,11 +90,11 @@ namespace Quantum
             FP wedgeWidth = fullCircle / (DangerSectorCount * 2);
             FP halfWidthCos = FPMath.Cos(wedgeWidth * FP._0_50 * FP.Deg2Rad);
 
-            var hits = EnemyMovementUtility.FindPlayersInRadius(f, center, action.DamageRange);
-
-            for (int i = 0; i < hits.Count; i++)
+            Span<EntityRef> hits = stackalloc EntityRef[PlayerQueryUtility.MaxPlayerLayerCandidates];
+            int hitsCount = EnemyMovementUtility.FindPlayersInRadius(f, center, action.DamageRange, hits);
+            for (int i = 0; i < hitsCount; i++)
             {
-                EntityRef hitEntity = hits[i].Entity;
+                EntityRef hitEntity = hits[i];
 
                 if (f.Unsafe.TryGetPointer<Transform3D>(hitEntity, out var hitTransform) == false)
                     continue;

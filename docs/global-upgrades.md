@@ -190,3 +190,45 @@ Several `CharacterStats` fields were seeded but had **zero consumers anywhere** 
    rare, build-defining" is a different shape from this pool's "small stacking increment" one. If a
    future pick is a one-shot tradeoff or a new rule rather than a flat +X%, it belongs there, not
    here.
+
+---
+
+# 2026-08-20 — dropped orbs no longer land on raised platforms
+
+Reported from testing: coins dropped by an enemy sometimes popped up onto an upper platform, where the
+player has no reason to go for them.
+
+## Cause
+
+`OrbSpawnUtility.SpawnWithPop` launches Coin / Rift Shard / Scrap orbs on a real ballistic arc (a solved
+45° lob to a scattered ring point, plus an optional random burst). `PopMotionSystem` then re-resolves
+the real ground under the orb's **current** position every tick and lands it the moment its trajectory
+reaches that surface.
+
+That re-resolve is deliberate and correct - it is what stops an orb ever being placed under a mesh it
+hasn't reached yet - but it makes no distinction about *which* surface it finds. If the arc clears the
+lip of a raised platform, the ground under the orb becomes that platform's top, and the orb settles up
+there.
+
+## Fix
+
+`PopVelocity` gained `OriginGroundY` - the real ground height under the position the orb popped from,
+resolved once at spawn. `PopMotionSystem` now refuses to carry an orb onto ground more than
+`MaxRiseAboveOrigin` (**0.5**) above that floor.
+
+Modelled as a **bump**, not as ignoring the surface: horizontal velocity is dropped while the vertical
+component keeps integrating, so the orb stops dead against the platform's edge and falls straight down
+onto its own floor. Ignoring the raised ground instead would have let the orb sail *through* the
+platform and settle underneath it - strictly worse.
+
+**Only climbing is blocked.** Ground lower than the origin passes straight through unchanged, so an
+enemy killed on a ledge still scatters coins down off it, which reads fine and is often the only
+reachable outcome anyway.
+
+0.5 is deliberately generous next to `MovementDataAsset.MaxLedgeHeight` (1, the tallest step a player
+auto-mantles): it absorbs ordinary terrain unevenness - a ramp, a kerb, a slightly raised slab - while
+still keeping drops off anything a player would have to deliberately climb. It is a constant rather than
+an authored field because it is a reachability guard, not a balance knob.
+
+Applies to every orb that pops (Coin, Rift Shard, Scrap). Exp orbs are unaffected - they deliberately
+spawn exactly on the death point and never arc (see `ExperienceUtility.TrySpawnDrop`).

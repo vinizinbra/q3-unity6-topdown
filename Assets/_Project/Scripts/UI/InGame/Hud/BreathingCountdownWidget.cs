@@ -136,7 +136,7 @@ public class BreathingCountdownWidget : QuantumGlobalMonoBehaviour
         if (countdownText != null)
         {
             int seconds = Mathf.CeilToInt(Mathf.Max(frame.Global->BreathingTimeRemaining.AsFloat, 0f));
-            countdownText.text = $"NEXT ASSAULT {seconds / 60:00}:{seconds % 60:00}";
+            countdownText.text = $"{seconds}s";
         }
 
         UpdateSkipVoteUi(frame);

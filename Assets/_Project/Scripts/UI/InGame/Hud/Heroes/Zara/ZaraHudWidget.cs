@@ -13,10 +13,10 @@ public class ZaraHudWidget : HeroHudWidget
     // Every third pulse - see ResonanceUtility.FirePulse/ZaraRemixUtility.
     private const int PulsesPerTrigger = 3;
 
-    [SerializeField, Tooltip("Resonance toward the next pulse - Current against Max. Complete mirrors ResonanceUtility.FirePulse's own \">= Max\" gate, even though Current wraps (carrying the remainder) rather than resetting to 0.")]
+    [SerializeField, Tooltip("Resonance toward the next pulse - Current against Max. Glows on ResonanceUtility.FirePulse's own \">= Max\" gate, even though Current wraps (carrying the remainder) rather than resetting to 0.")]
     private Section resonanceGauge;
 
-    [SerializeField, Tooltip("Remix - pulses fired since the last proc, out of 3. Hidden entirely unless the Ascension is taken (Resonance.RemixRank above 0); complete = the NEXT pulse is the one that procs.")]
+    [SerializeField, Tooltip("Remix - which pulse of the 3-pulse cycle fires next, so it counts 1/3 -> 2/3 -> 3/3 and wraps. Hidden entirely unless the Ascension is taken (Resonance.RemixRank above 0); glows at 3/3, i.e. the next pulse is the one that procs.")]
     private Section remix;
 
     protected override bool TryRefresh(Frame frame, EntityRef entity)
@@ -42,8 +42,16 @@ public class ZaraHudWidget : HeroHudWidget
             return;
         }
 
-        int sinceProc = resonance.PulseCount % PulsesPerTrigger;
-        remix.Show(sinceProc / (float)PulsesPerTrigger, $"{sinceProc}/{PulsesPerTrigger}", sinceProc == PulsesPerTrigger - 1);
+        // The sim increments PulseCount BEFORE testing it (ResonanceUtility.FirePulse's own
+        // "PulseCount % 3 == 0"), so the proc pulse wraps the count back to 0 in the very same tick -
+        // a raw remainder can therefore only ever read 0/3, 1/3 or 2/3, with the payoff landing on
+        // 2/3. That's a gauge that fills two thirds and then lights up, and a 3/3 nobody can see.
+        //
+        // Counted as "which pulse of the 3 comes NEXT" instead: 1/3 immediately after a proc, 3/3 -
+        // full and glowing - when the next pulse is the Remix one. Same number underneath, but the
+        // bar is now full exactly when the payoff is one pulse away.
+        int nextPulse = resonance.PulseCount % PulsesPerTrigger + 1;
+        remix.Show(nextPulse / (float)PulsesPerTrigger, $"{nextPulse}/{PulsesPerTrigger}", nextPulse == PulsesPerTrigger);
     }
 
     protected override void HideSections()

@@ -295,7 +295,7 @@ class + `RiftMutationAssetGenerator` spec, but:
    continuous per-tick decay while simply not firing - a reasonable MVP reading of "losing contact
    resets or rapidly decays progress" given Hitscan firing is already discrete, not a true
    continuous-beam decay.
-10. **Two-pool split (2026-08-14) - Editor wiring still needed**: `UpgradePopupWidget.riftMarkContent`
+10. **Two-pool split (2026-08-14) - Editor wiring still needed**: `HeroInfoPopupWidget.riftMarkContent`
     (the tab-hold party summary popup's new 4th list) has no null guard and needs a ScrollRect
     Content Transform authored in the scene before this ships live, or a Rift Mark Mutation pick
     will NRE the popup the first time it tries to render. `DebugUpgradeMenuWindow.riftMarkTabButton`

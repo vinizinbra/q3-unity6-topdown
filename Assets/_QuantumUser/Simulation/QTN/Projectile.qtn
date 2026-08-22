@@ -1,6 +1,16 @@
 component Projectile
 {
     FPVector3 Velocity;
+
+    // Where this shot actually left from, kept for the VIEW's benefit only - nothing in the
+    // simulation reads it back. A projectile's view is created on the frame the entity first
+    // appears in Frames.Predicted, which for anything fired by a remote player is several ticks
+    // after the shot really happened (this client only learns about the input later, rolls back and
+    // resimulates - by the time the view exists the bullet is already meters downrange).
+    // ProjectileView puts its visual back here on spawn and lets it catch up, so a shot reads as
+    // leaving the barrel instead of popping into existence halfway to the target.
+    FPVector3 SpawnPosition;
+
     FP        Damage;
     FP        RemainingLifetime;
     EntityRef Owner;

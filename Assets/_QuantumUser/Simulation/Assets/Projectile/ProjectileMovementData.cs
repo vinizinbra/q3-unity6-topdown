@@ -9,6 +9,15 @@ namespace Quantum
         // lob instead falls onto the ground the target stands on - see BallisticProjectileMovementData.
         public virtual bool AimsAtTargetCenter => true;
 
+        // Whether a shot that survives a hit may have its heading levelled onto the horizontal plane
+        // it connected on - see DirectHitData.FlattenTrajectoryOnPierce for what that fixes. True for
+        // anything that holds the heading it was launched with (a straight shot): its vertical
+        // component only ever existed to reach the first target's body from a muzzle held above it,
+        // and is pure liability afterwards. False for an ARC, whose vertical component IS the shape of
+        // the shot and is re-applied every tick anyway (gravity), and for a movement that re-derives
+        // its own heading each tick (homing), which would simply overwrite the levelled one.
+        public virtual bool FlattensOnPierce => true;
+
         // Free-aimed shots have only a direction and no real target entity to lead, so the movement
         // invents a point to aim at and solves onto it exactly as given.
         public ProjectileLaunch GetLaunch(Frame f, FPVector3 origin, FPVector3 direction)

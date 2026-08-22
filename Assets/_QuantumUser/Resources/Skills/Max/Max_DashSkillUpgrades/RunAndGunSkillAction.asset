@@ -20,18 +20,15 @@ MonoBehaviour:
   DisplayName: Run & Gun
   RankDescriptions:
   - Dashing restores 50% of your magazine and grants +20% Fire Rate for 2s.
-  - Dashing fully reloads your magazine, grants +30% Fire Rate for 2s, and +15% Weapon
-    Damage for 2s.
-  - Dashing fully reloads your magazine, grants +40% Fire Rate for 2s, +15% Weapon
-    Damage for 2s, and 2s of unlimited ammo.
+  - Dashing fully reloads and grants +30% Fire Rate and +15% Weapon Damage for 2s.
+  - Dashing fully reloads and grants +40% Fire Rate, +15% Weapon Damage and unlimited ammo for 2s.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 4
   Interval:
     RawValue: 0
   Activated: 1
-  Description: Dashing restores ammo and grants a brief Fire Rate window - eventually
-    adding bonus Weapon Damage and a window of unlimited ammo.
+  Description: Dashing reloads and grants a burst of Fire Rate.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

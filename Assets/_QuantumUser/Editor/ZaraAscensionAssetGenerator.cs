@@ -172,8 +172,8 @@ namespace QuantumUser.Editor
                 a.RankDescriptions = new[]
                 {
                     "Totem Damage Beats deal 30% more damage.",
-                    "Damage Beats deal 60% more damage and knock enemies back.",
-                    "Damage Beats deal double damage, and every third Damage Beat Stuns enemies.",
+                    "Totem Damage Beats deal 60% more damage and knock enemies back.",
+                    "Totem Damage Beats deal double damage, and every third one Stuns enemies.",
                 };
                 a.DamageBonus = new[] { FP.FromString("0.30"), FP.FromString("0.60"), FP._1 };
                 a.KnockbackEffect = amplifierKnockback;
@@ -190,8 +190,8 @@ namespace QuantumUser.Editor
                 a.RankDescriptions = new[]
                 {
                     "Support Beats heal 2% Max Health and grant +15% Move Speed and +15% Fire Rate.",
-                    "Sound Boost: Support Beats also reduce affected allies' remaining Hero Skill cooldown by 0.5s.",
-                    "Power Chord: Support Beats heal 5% Max Health and additionally grant +15% outgoing Damage for 2s.",
+                    "Sound Boost: Support Beats heal 2% Max Health, grant +15% Move Speed and +15% Fire Rate, and cut 0.5s off allies' remaining Hero Skill cooldown.",
+                    "Power Chord: Support Beats heal 5% Max Health, grant +15% Move Speed and +15% Fire Rate, cut 0.5s off allies' Hero Skill cooldown, and grant +15% outgoing Damage for 2s.",
                 };
                 a.HealPercent = new[] { FP.FromString("0.02"), FP.FromString("0.02"), FP._0_05 };
                 a.SupportBuffEffect = new[]
@@ -253,8 +253,8 @@ namespace QuantumUser.Editor
                 a.RankDescriptions = new[]
                 {
                     "Increase Totem Beat radius by 30%.",
-                    "Totem grows 50% larger and lasts 2s longer.",
-                    "Totem becomes a massive Main Stage, opening with an immediate Damage Beat and ending with a final Healing Beat.",
+                    "Totem Beat radius +50%, and the Totem lasts 2s longer.",
+                    "Totem Beat radius +75% and the Totem lasts 2s longer, becoming a Main Stage that opens with an immediate Damage Beat and ends with a final Healing Beat.",
                 };
                 a.RadiusBonus = new[] { FP.FromString("0.30"), FP._0_50, FP.FromString("0.75") };
                 a.DurationBonus = new[] { FP._0, FP._2, FP._2 };
@@ -285,8 +285,8 @@ namespace QuantumUser.Editor
                 a.RankDescriptions = new[]
                 {
                     "Resonance Pulse grants allies a temporary Overshield worth 10% of their Max Shield.",
-                    "Overshield rises to 15% of Max Shield, and allies also gain 10% Damage Reduction for 2s.",
-                    "Fortissimo: Overshield rises to 20% of Max Shield, and Damage Reduction rises to 20% for 2s.",
+                    "Resonance Pulse grants allies an Overshield worth 15% of their Max Shield and 10% Damage Reduction for 2s.",
+                    "Fortissimo: Resonance Pulse grants allies an Overshield worth 20% of their Max Shield and 20% Damage Reduction for 2s.",
                 };
                 a.OvershieldPercentOfMaxShield = new[] { FP._0_10, FP.FromString("0.15"), FP._0_20 };
                 a.OvershieldCapMultiplier = FP._1_50;
@@ -302,7 +302,7 @@ namespace QuantumUser.Editor
                 a.RankDescriptions = new[]
                 {
                     "Every third Resonance Pulse applies a random status effect to enemies hit.",
-                    "Extended Mix: Remix effects become stronger and last longer, and you start the next Resonance cycle with 20% Resonance.",
+                    "Extended Mix: every third Resonance Pulse applies a random status effect, stronger and longer-lasting, and you start the next Resonance cycle with 20% Resonance.",
                     "Full Remix: every third Resonance Pulse applies two DIFFERENT random status effects to enemies hit.",
                 };
                 a.Effects = remixPool;
@@ -330,8 +330,8 @@ namespace QuantumUser.Editor
                 a.RankDescriptions = new[]
                 {
                     "Quick Tempo: dashing generates 20 Resonance, plus 10 more per enemy you pass through.",
-                    "Afterbeat: 1s after dashing, a beat erupts at your starting position, damaging and knocking back nearby enemies.",
-                    "Double Beat: beats erupt at BOTH ends of the dash, and enemies they hit generate additional Resonance.",
+                    "Afterbeat: dashing generates 20 Resonance plus 10 per enemy passed through, and 1s later a beat erupts at your starting position, damaging and knocking back nearby enemies.",
+                    "Double Beat: dashing generates 20 Resonance plus 10 per enemy passed through, and beats erupt at both ends of the dash, generating additional Resonance from enemies they hit.",
                 };
                 a.ResonanceOnDash = 20;
                 a.SweepRadius = FP._1_50;
@@ -362,8 +362,8 @@ namespace QuantumUser.Editor
                 a.RankDescriptions = new[]
                 {
                     "Dashing leaves behind a Portable Speaker alternating Damage and Support Beats at reduced strength.",
-                    "Portable Speaker lasts longer and covers a larger area, and completing the dash also buffs nearby allies.",
-                    "Mobile Stage: the Speaker inherits your own Beat interval, radius and Sound Boost profile at reduced effectiveness.",
+                    "Dashing leaves a Portable Speaker alternating Damage and Support Beats for longer and over a wider area, and completing the dash buffs nearby allies.",
+                    "Mobile Stage: dashing leaves a Portable Speaker that inherits your own Beat interval, radius and Sound Boost profile at reduced effectiveness.",
                 };
                 a.Prototype = speakerPrototype;
                 a.Duration = new[] { FP._3, FP._4, FP._4 };

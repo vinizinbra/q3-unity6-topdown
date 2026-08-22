@@ -16,8 +16,6 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Pixie/Pixie_PassiveSkill/ChainReactionPassiveData
     Guid:
       Value: 307784346442998099
-  Description: Pixie's explosions have a chance to mark the weaker enemies they hit.
-    A marked enemy detonates when it dies, damaging others nearby and chaining into
-    more explosions.
+  Description: Your explosions mark weaker enemies. A marked enemy blows up on death, chaining into more explosions.
   MarkChance:
     RawValue: 32768

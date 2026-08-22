@@ -88,12 +88,12 @@ namespace Quantum
 
                 // Same "f.Create -> set Position -> GroundOffsetUtility.Apply" pattern every
                 // other runtime spawn path in this codebase follows (SpawnedEntitySpawner,
-                // CoinUtility, RiftShardUtility, ScrapUtility, ExperienceUtility) -
-                // MapGroundSettleSystem is only the map-baked (MapEntityLink) counterpart to
-                // this, not a substitute for it; a spawned Chest never gets MapEntityLink, so
-                // without this call its GroundOffset would sit inert. No-ops safely if the
+                // CoinUtility, RiftShardUtility, ScrapUtility, ExperienceUtility). Strictly a
+                // belt-and-braces re-arm now that a prototype authors GroundOffset.Enabled itself
+                // (see GroundOffset.qtn) - it costs nothing and keeps a Chest grounding correctly
+                // even if a new prototype ships with that box unticked. No-ops safely if the
                 // spawned prototype has no GroundOffset component at all.
-                GroundOffsetUtility.Apply(f, spawned, spawnedTransform);
+                GroundOffsetUtility.Apply(f, spawned);
             }
 
             Log.Debug($"[Talents] {chunkEntity}'s ChunkSpawnConfig entry {index} spawned {spawned}");

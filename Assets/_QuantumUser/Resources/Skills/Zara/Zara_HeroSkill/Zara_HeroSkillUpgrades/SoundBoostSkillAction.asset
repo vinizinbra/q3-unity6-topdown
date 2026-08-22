@@ -20,18 +20,15 @@ MonoBehaviour:
   DisplayName: Sound Boost
   RankDescriptions:
   - Support Beats heal 2% Max Health and grant +15% Move Speed and +15% Fire Rate.
-  - 'Sound Boost: Support Beats also reduce affected allies'' remaining Hero Skill
-    cooldown by 0.5s.'
-  - 'Power Chord: Support Beats heal 5% Max Health and additionally grant +15% outgoing
-    Damage for 2s.'
+  - 'Sound Boost: Support Beats heal 2% Max Health, grant +15% Move Speed and +15% Fire Rate, and cut 0.5s off allies'' remaining Hero Skill cooldown.'
+  - 'Power Chord: Support Beats heal 5% Max Health, grant +15% Move Speed and +15% Fire Rate, cut 0.5s off allies'' Hero Skill cooldown, and grant +15% outgoing Damage for 2s.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Support Beats push the whole team's tempo - stronger buffs, then Hero
-    Skill cooldown reduction, then an outgoing-damage window.
+  Description: Support Beats push the whole team's tempo - stronger buffs, then Hero Skill cooldown reduction, then an outgoing-damage window.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

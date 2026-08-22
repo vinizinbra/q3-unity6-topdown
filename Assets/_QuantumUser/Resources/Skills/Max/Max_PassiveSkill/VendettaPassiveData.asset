@@ -16,8 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/Max_PassiveSkill/VendettaPassiveData
     Guid:
       Value: 294791046206285621
-  Description: Enemies that damage Max are marked with Vendetta. Killing a marked
-    enemy heals him.
+  Description: Enemies that damage you are marked. Killing a marked enemy heals you.
   BaseHealMultiplier:
     RawValue: 32768
   BaseMarkDuration:

@@ -13,7 +13,7 @@ public class ShieldUiWidget : QuantumGlobalMonoBehaviour
     private TMP_Text shieldText;
 
     [SerializeField, Tooltip("Fill color while Current <= Max (the normal case). Left default (white) uses whatever color is already authored on the Slider's own fill Image.")]
-    private Color normalFillColor = Color.white;
+    private Color normalFillColor = Color.cyan;
     [SerializeField, Tooltip("Fill color while Current > Max (Overshield - see ShieldUtility.ApplyOvershield, e.g. Zara's Encore/Restorative Beat). The Slider's own value clamps to its [0,1] range regardless (so the bar itself always reads as 'full' once at or above Max - it can't stretch past its own frame without a dedicated overshield segment), so this color swap is what actually signals the overshielded state; shieldText still shows the true Current/Max numbers either way.")]
     private Color overshieldFillColor = new Color(1f, 0.85f, 0.25f);
 
