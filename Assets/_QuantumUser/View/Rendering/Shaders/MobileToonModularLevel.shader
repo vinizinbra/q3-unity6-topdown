@@ -30,6 +30,15 @@ Shader "Project/Mobile Toon Modular Level"
         [Header(Surface)]
         _SurfaceColor ("Surface Color", Color) = (1,1,1,1)
         _SurfaceEdgeColor ("Surface Fade Color", Color) = (0.22,0.16,0.1,0.55)
+        _SurfaceFadeSteps ("Fade Steps", Range(1,6)) = 3
+        _SurfaceFadeQuantize ("Fade Hardness", Range(0,1)) = 1
+        _SurfaceLineColor ("Edge Line Color", Color) = (0,0,0,1)
+        _SurfaceLineWidth ("Edge Line Width", Range(0,0.5)) = 0.15
+
+        [Header(Shadow Hatching)]
+        [NoScaleOffset] _HatchMap ("Hatch Texture", 2D) = "white" {}
+        _HatchScale ("Hatch Tiling (per world unit)", Float) = 0.5
+        _HatchStrength ("Hatch Strength", Range(0,1)) = 0
 
         [Header(Height Fog)]
         _HeightFogColor ("Height Fog Color", Color) = (0.55,0.62,0.7,1)
@@ -75,11 +84,12 @@ Shader "Project/Mobile Toon Modular Level"
             TEXTURE2D(_SurfaceMap); SAMPLER(sampler_SurfaceMap);
             TEXTURE2D(_StyleMask); SAMPLER(sampler_StyleMask);
             TEXTURE2D(_GlobalNoiseMap); SAMPLER(sampler_GlobalNoiseMap);
+            TEXTURE2D(_HatchMap);
             CBUFFER_START(UnityPerMaterial)
             float4 _WallMap_ST; float4 _SurfaceMap_ST;
-            half4 _BaseColor, _WallColor, _SurfaceColor, _AOColor, _HeightFogColor, _InkColor, _SurfaceEdgeColor, _GradientBottomColor, _GradientTopColor, _ShadowTint, _GlobalNoiseDarkColor, _GlobalNoiseLightColor, _WallLineColor;
-            half _WallAOStrength, _SurfaceAOStrength, _SurfaceUseWorldUV, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength, _WallLineStrength;
-            float _GradientStartY, _GradientDistance, _HeightFogTopY, _HeightFogFalloff, _GlobalNoiseScale, _WallLineY, _WallLineThickness;
+            half4 _BaseColor, _WallColor, _SurfaceColor, _AOColor, _HeightFogColor, _InkColor, _SurfaceEdgeColor, _GradientBottomColor, _GradientTopColor, _ShadowTint, _GlobalNoiseDarkColor, _GlobalNoiseLightColor, _WallLineColor, _SurfaceLineColor;
+            half _WallAOStrength, _SurfaceAOStrength, _SurfaceUseWorldUV, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength, _WallLineStrength, _HatchStrength, _SurfaceFadeSteps, _SurfaceFadeQuantize, _SurfaceLineWidth;
+            float _GradientStartY, _GradientDistance, _HeightFogTopY, _HeightFogFalloff, _GlobalNoiseScale, _WallLineY, _WallLineThickness, _HatchScale;
             float4 _GlobalNoiseOffset;
             CBUFFER_END
             half SampleGlobalNoiseFBM(float2 baseUv)
@@ -141,11 +151,58 @@ Shader "Project/Mobile Toon Modular Level"
                 half glowEnvelope=saturate(1-styleMask.g);
                 half wallOuterGlow=saturate(glowEnvelope-saturate(rawMask))*(1-surface);
                 baseColor*=1-saturate(wallOuterGlow*_WallOuterGlowStrength);
-                baseColor=lerp(baseColor,lerp(_InkColor.rgb,_SurfaceEdgeColor.rgb,surface),amount*roleAlpha);
+                // Terrace the surface fade into flat bands. The baked mask is a smoothstep ramp
+                // (Uv2InkMaskBakerWindow.DrawFadeLine), which is what makes it read as a soft
+                // gradient; rounding it to _SurfaceFadeSteps levels turns it into stacked flat
+                // shapes instead. Walls deliberately keep the raw ramp - they use this same mask
+                // channel for crease ink, which has to stay a continuous stroke.
+                half fadeSteps=max(_SurfaceFadeSteps,1);
+                half bandedAmount=floor(amount*fadeSteps+0.5h)/fadeSteps;
+                half shapedAmount=lerp(amount,bandedAmount,saturate(_SurfaceFadeQuantize));
+                half tintAmount=lerp(amount,shapedAmount,surface);
+                baseColor=lerp(baseColor,lerp(_InkColor.rgb,_SurfaceEdgeColor.rgb,surface),tintAmount*roleAlpha);
+
+                // A hard line sitting at the shared edge, drawn over the banded fade. amount is
+                // exactly 1 at that edge and falls inward, so 1-amount is a direct distance from
+                // it. fwidth keeps the line one screen-pixel soft at any camera distance instead
+                // of stair-stepping, without needing its own softness property.
+                half edgeDistance=1-amount;
+                half edgeAA=max(fwidth(edgeDistance),0.0001h);
+                half surfaceLineMask=(1-smoothstep(_SurfaceLineWidth,_SurfaceLineWidth+edgeAA,edgeDistance))*surface*_SurfaceLineColor.a;
+                baseColor=lerp(baseColor,_SurfaceLineColor.rgb,surfaceLineMask);
                 half3 n=normalize(i.normalWS); Light light=GetMainLight(TransformWorldToShadowCoord(i.positionWS));
                 half lit=smoothstep(_LightThreshold-_BandSoftness,_LightThreshold+_BandSoftness,saturate(dot(n,light.direction))*light.shadowAttenuation);
                 half3 gi=SAMPLE_GI(i.lightmapUV,i.vertexSH,n);
                 half3 color=baseColor*(lerp(_ShadowTint.rgb,light.color,lit)+gi);
+
+                // Comic cross-hatching, confined to the shadow side. 'lit' is the existing toon
+                // band, so this needs no threshold of its own - it simply fades in wherever that
+                // band already went dark. Note the Mobile RP asset ships with main-light shadows
+                // off, so lit is pure N.L there and the hatch tracks facing, not cast shadows.
+                //
+                // Projected in WORLD space, matching the surface noise above. Sampling it in
+                // screen space pins the pattern to the display and the level slides underneath it
+                // as the camera pans. One sample, no triplanar: the surface role is flat so it
+                // takes a plain XZ projection, and walls pick whichever vertical plane their
+                // normal faces most - exact for axis-aligned modular pieces, shearing only on
+                // geometry rotated off the world axes.
+                //
+                // Uniform condition, so the branch is fully coherent and costs nothing when the
+                // effect is off - which is the default, leaving every existing material unchanged.
+                [branch] if (_HatchStrength > 0.001h)
+                {
+                    float2 wallUv=abs(n.x)>abs(n.z) ? i.positionWS.zy : i.positionWS.xy;
+                    float2 hatchUv=lerp(wallUv,i.positionWS.xz,surface)*_HatchScale;
+                    half hatch=SAMPLE_TEXTURE2D(_HatchMap,sampler_LinearRepeat,hatchUv).r;
+                    // The hatch multiplies the composited colour, so without this it lands ON TOP
+                    // of the baked crease ink and the world-height wall line and scratches through
+                    // them. Both are line work that has to stay solid and read above the shading,
+                    // so hold the hatch out of wherever either one is already drawn - the lines
+                    // then sit over a hatched field instead of being broken up by it.
+                    half lineMask=saturate(max(max(amount*roleAlpha,wallLineMask),surfaceLineMask));
+                    color*=lerp(1,hatch,saturate(1-lit)*_HatchStrength*(1-lineMask));
+                }
+
                 half heightFogDepth=max(_HeightFogTopY-i.positionWS.y,0);
                 half heightFogFalloffSq=max(_HeightFogFalloff*_HeightFogFalloff,0.0001);
                 half heightFog=1-exp(-(heightFogDepth*heightFogDepth)/heightFogFalloffSq);
@@ -169,9 +226,9 @@ Shader "Project/Mobile Toon Modular Level"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
             CBUFFER_START(UnityPerMaterial)
             float4 _WallMap_ST; float4 _SurfaceMap_ST;
-            half4 _BaseColor, _WallColor, _SurfaceColor, _AOColor, _HeightFogColor, _InkColor, _SurfaceEdgeColor, _GradientBottomColor, _GradientTopColor, _ShadowTint, _GlobalNoiseDarkColor, _GlobalNoiseLightColor, _WallLineColor;
-            half _WallAOStrength, _SurfaceAOStrength, _SurfaceUseWorldUV, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength, _WallLineStrength;
-            float _GradientStartY, _GradientDistance, _HeightFogTopY, _HeightFogFalloff, _GlobalNoiseScale, _WallLineY, _WallLineThickness;
+            half4 _BaseColor, _WallColor, _SurfaceColor, _AOColor, _HeightFogColor, _InkColor, _SurfaceEdgeColor, _GradientBottomColor, _GradientTopColor, _ShadowTint, _GlobalNoiseDarkColor, _GlobalNoiseLightColor, _WallLineColor, _SurfaceLineColor;
+            half _WallAOStrength, _SurfaceAOStrength, _SurfaceUseWorldUV, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength, _WallLineStrength, _HatchStrength, _SurfaceFadeSteps, _SurfaceFadeQuantize, _SurfaceLineWidth;
+            float _GradientStartY, _GradientDistance, _HeightFogTopY, _HeightFogFalloff, _GlobalNoiseScale, _WallLineY, _WallLineThickness, _HatchScale;
             float4 _GlobalNoiseOffset;
             CBUFFER_END
             float3 _LightDirection;
@@ -208,9 +265,9 @@ Shader "Project/Mobile Toon Modular Level"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             CBUFFER_START(UnityPerMaterial)
             float4 _WallMap_ST; float4 _SurfaceMap_ST;
-            half4 _BaseColor, _WallColor, _SurfaceColor, _AOColor, _HeightFogColor, _InkColor, _SurfaceEdgeColor, _GradientBottomColor, _GradientTopColor, _ShadowTint, _GlobalNoiseDarkColor, _GlobalNoiseLightColor, _WallLineColor;
-            half _WallAOStrength, _SurfaceAOStrength, _SurfaceUseWorldUV, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength, _WallLineStrength;
-            float _GradientStartY, _GradientDistance, _HeightFogTopY, _HeightFogFalloff, _GlobalNoiseScale, _WallLineY, _WallLineThickness;
+            half4 _BaseColor, _WallColor, _SurfaceColor, _AOColor, _HeightFogColor, _InkColor, _SurfaceEdgeColor, _GradientBottomColor, _GradientTopColor, _ShadowTint, _GlobalNoiseDarkColor, _GlobalNoiseLightColor, _WallLineColor, _SurfaceLineColor;
+            half _WallAOStrength, _SurfaceAOStrength, _SurfaceUseWorldUV, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength, _WallLineStrength, _HatchStrength, _SurfaceFadeSteps, _SurfaceFadeQuantize, _SurfaceLineWidth;
+            float _GradientStartY, _GradientDistance, _HeightFogTopY, _HeightFogFalloff, _GlobalNoiseScale, _WallLineY, _WallLineThickness, _HatchScale;
             float4 _GlobalNoiseOffset;
             CBUFFER_END
             struct DepthAttributes { float4 positionOS:POSITION; float3 normalOS:NORMAL; UNITY_VERTEX_INPUT_INSTANCE_ID };
@@ -233,9 +290,9 @@ Shader "Project/Mobile Toon Modular Level"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             CBUFFER_START(UnityPerMaterial)
             float4 _WallMap_ST; float4 _SurfaceMap_ST;
-            half4 _BaseColor, _WallColor, _SurfaceColor, _AOColor, _HeightFogColor, _InkColor, _SurfaceEdgeColor, _GradientBottomColor, _GradientTopColor, _ShadowTint, _GlobalNoiseDarkColor, _GlobalNoiseLightColor, _WallLineColor;
-            half _WallAOStrength, _SurfaceAOStrength, _SurfaceUseWorldUV, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength, _WallLineStrength;
-            float _GradientStartY, _GradientDistance, _HeightFogTopY, _HeightFogFalloff, _GlobalNoiseScale, _WallLineY, _WallLineThickness;
+            half4 _BaseColor, _WallColor, _SurfaceColor, _AOColor, _HeightFogColor, _InkColor, _SurfaceEdgeColor, _GradientBottomColor, _GradientTopColor, _ShadowTint, _GlobalNoiseDarkColor, _GlobalNoiseLightColor, _WallLineColor, _SurfaceLineColor;
+            half _WallAOStrength, _SurfaceAOStrength, _SurfaceUseWorldUV, _AOContrast, _HeightFogStrength, _WallOuterGlowStrength, _GradientStrength, _LightThreshold, _BandSoftness, _GlobalNoiseStrength, _WallLineStrength, _HatchStrength, _SurfaceFadeSteps, _SurfaceFadeQuantize, _SurfaceLineWidth;
+            float _GradientStartY, _GradientDistance, _HeightFogTopY, _HeightFogFalloff, _GlobalNoiseScale, _WallLineY, _WallLineThickness, _HatchScale;
             float4 _GlobalNoiseOffset;
             CBUFFER_END
             struct NormalAttributes { float4 positionOS:POSITION; float3 normalOS:NORMAL; UNITY_VERTEX_INPUT_INSTANCE_ID };

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Photon.Deterministic;
 using UnityEngine;
 
 namespace Quantum
@@ -26,6 +27,10 @@ namespace Quantum
         private ParticleSystem impactTemplate;
         [SerializeField, Tooltip("On: the impact particle only plays while the beam is on an actual enemy (EventHitscanFired.Target). Off: it also plays on level geometry.")]
         private bool impactOnEnemiesOnly;
+
+        [Header("Sound")]
+        [SerializeField, Tooltip("Held muzzle loop for as long as the beam is firing - intro/loop/tail, all optional. Started on the first segment, kept alive by every later one, and stopped by the same stopGrace window that hides the beam, so the sound and the visual always end together. A continuous weapon should use THIS rather than WeaponView.fireSound, which would otherwise fire a one-shot every simulated tick.")]
+        private SustainedSound fireLoop = new SustainedSound();
 
         [Header("Timing")]
         [SerializeField, Tooltip("Floor on how long the beam is held after the last shot. Only a floor - the real grace is derived per shot from the weapon's own LIVE fire interval (see ResolveStopGrace), so a weapon whose fire rate changes mid-run, or one that simply isn't fast enough to read as continuous, can't blink the beam off between ticks.")]
@@ -77,6 +82,10 @@ namespace Quantum
             lastSegmentTime = Time.time;
             resolvedStopGrace = ResolveStopGrace();
             firing = true;
+
+            // Same window the beam is held for, so the sound can never outlive the visual or cut
+            // out from under it - one number, derived from the weapon's own live fire interval.
+            fireLoop.Keep(MuzzleTransform, resolvedStopGrace, EntitySound.ResolveVolume(fireLoop.Loop, _entityRef));
 
             ApplyBeam();
             ApplyImpact(segment);
@@ -135,8 +144,20 @@ namespace Quantum
 
         protected override void QUpdate(QuantumGame game)
         {
+            fireLoop.Tick(Time.deltaTime);
+
             if (firing == false)
                 return;
+
+            // A reload ends the burst outright - shots simply stop arriving, so the grace window
+            // alone would leave the muzzle loop droning on into the reload. Read straight off the
+            // predicted frame; ResolveStopGrace already fetches this component, so it's free.
+            if (IsReloading(game))
+            {
+                fireLoop.Stop();
+                StopBeam();
+                return;
+            }
 
             if (Time.time - lastSegmentTime < resolvedStopGrace)
             {
@@ -146,6 +167,21 @@ namespace Quantum
                 return;
             }
 
+            fireLoop.Stop();
+            StopBeam();
+        }
+
+        private bool IsReloading(QuantumGame game)
+        {
+            Frame frame = game != null ? game.Frames.Predicted : null;
+
+            return frame != null
+                && frame.TryGet<Weapon>(_entityRef, out var weapon)
+                && weapon.ReloadTimer > FP._0;
+        }
+
+        private void StopBeam()
+        {
             firing = false;
             points.Clear();
 
@@ -200,6 +236,9 @@ namespace Quantum
         // see HitscanViewBase.OnDisable), so this beam has nothing left to hold.
         protected override void OnInstancesReturned()
         {
+            // playTail: false - the weapon is gone, so a spin-down trailing after it is wrong.
+            fireLoop.Stop(false);
+
             beam = null;
             impact = null;
             points.Clear();

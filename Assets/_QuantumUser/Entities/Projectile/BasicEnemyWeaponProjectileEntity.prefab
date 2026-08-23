@@ -367,6 +367,13 @@ MonoBehaviour:
         RawValue: 0
       Z:
         RawValue: 0
+    SpawnPosition:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
     Damage:
       RawValue: 0
     RemainingLifetime:
@@ -423,11 +430,13 @@ MonoBehaviour:
   initialized: 0
   executeOnlyOnLocal: 0
   isLocal: 0
-  visualRenderer: {fileID: 0}
+  visualRoot: {fileID: 0}
+  catchUpSpeedMultiplier: 2
   destroyEffectPrefab: {fileID: 6350743763286976369, guid: 3d63a7155f35f4b72ba173b63b299202, type: 3}
   trailParticle: {fileID: 0}
-  minCatchUpDuration: 0.03
-  maxCatchUpDuration: 0.2
+  minImpactDuration: 0.03
+  maxImpactDuration: 0.2
+  orphanTimeout: 3
 --- !u!114 &8435151729028434002
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -652,7 +661,8 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 9026f4195b40e448f95287adc0759ad9, type: 2}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 8280622, guid: 4e1790ceaba7cf84d97431c9452ca8fb, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 438534, guid: 4e1790ceaba7cf84d97431c9452ca8fb, type: 3}

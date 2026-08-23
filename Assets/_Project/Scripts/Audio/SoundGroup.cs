@@ -43,6 +43,11 @@ public enum SoundGroup
 
     // Hero barks and announcer lines. Small budget on purpose - overlapping dialogue is unreadable.
     Voice = 8,
+
+    // Hero abilities - skills, dashes, ascension procs. Its own bus because these are low-frequency,
+    // high-signal moments that have to cut through a firefight: sharing the Weapons or Sfx budget
+    // would let constant chatter starve the one sound the player actually pressed a button for.
+    Heroes = 9,
 }
 
 // What happens when a play would exceed its group's voice budget.

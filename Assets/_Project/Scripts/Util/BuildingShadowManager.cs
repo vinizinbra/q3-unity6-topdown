@@ -29,6 +29,11 @@ public class BuildingShadowManager : MonoBehaviour
 
     private ObjectPool<GameObject> pool;
 
+    // Read by HasBuildingShadow's editor-only "Bake Shadow Into Prefab" button, which builds a
+    // persistent hand-tweakable copy of the same shadow instead of taking one from the pool.
+    public GameObject ShadowPrefab => shadowPrefab;
+    public BuildingShadowConfig Config => config;
+
     private void Awake()
     {
         Instance = this;
@@ -62,7 +67,7 @@ public class BuildingShadowManager : MonoBehaviour
             return null;
         }
 
-        if (TryGetFlatGroundHeight(footprintRenderer, out float groundY) == false)
+        if (TryGetFlatGroundHeight(footprintRenderer, config, out float groundY) == false)
             return null; // reason already logged by TryGetFlatGroundHeight
 
         GameObject instance = pool.Get();
@@ -70,7 +75,7 @@ public class BuildingShadowManager : MonoBehaviour
 
         Bounds bounds = footprintRenderer.bounds;
         instanceTransform.SetPositionAndRotation(
-            new Vector3(bounds.center.x, groundY + config.GroundOffset, bounds.center.z),
+            ResolveShadowPosition(bounds, groundY, config),
             FlatRotation);
         instanceTransform.localScale = Vector3.one;
 
@@ -79,7 +84,7 @@ public class BuildingShadowManager : MonoBehaviour
             LogHelper.Warn("BuildingShadow", "shadowPrefab has no SpriteRenderer.", this);
         else
         {
-            renderer.size = new Vector2(bounds.size.x + config.ShadowPadding, bounds.size.z + config.ShadowPadding);
+            renderer.size = ResolveShadowSize(bounds, config);
             renderer.enabled = true;
         }
 
@@ -94,7 +99,24 @@ public class BuildingShadowManager : MonoBehaviour
         pool.Release(handle.GameObject);
     }
 
-    private bool TryGetFlatGroundHeight(Renderer footprintRenderer, out float groundY)
+    // World-space flat rotation every building shadow uses - exposed so the editor-only bake path
+    // lays its own copy down exactly the same way the pooled runtime one does.
+    public static Quaternion ShadowRotation => FlatRotation;
+
+    public static Vector2 ResolveShadowSize(Bounds footprintBounds, BuildingShadowConfig config)
+    {
+        return new Vector2(footprintBounds.size.x + config.ShadowPadding, footprintBounds.size.z + config.ShadowPadding);
+    }
+
+    public static Vector3 ResolveShadowPosition(Bounds footprintBounds, float groundY, BuildingShadowConfig config)
+    {
+        return new Vector3(footprintBounds.center.x, groundY + config.GroundOffset, footprintBounds.center.z);
+    }
+
+    // Static (and config-parameterised) so the editor-only bake path on HasBuildingShadow runs the
+    // exact same corner-raycast flatness check the runtime pool does, with no manager instance -
+    // there isn't one outside Play mode.
+    public static bool TryGetFlatGroundHeight(Renderer footprintRenderer, BuildingShadowConfig config, out float groundY)
     {
         groundY = 0f;
 

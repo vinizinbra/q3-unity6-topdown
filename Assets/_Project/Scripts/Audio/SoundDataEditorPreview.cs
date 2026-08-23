@@ -14,9 +14,10 @@ using UnityEngine;
 //
 // Deliberately lives in a runtime folder wrapped in UNITY_EDITOR rather than an Editor/ folder: this
 // project has no asmdefs, so an Editor/ file lands in Assembly-CSharp-Editor, which SoundData
-// (Assembly-CSharp) could not reference.
+// (Assembly-CSharp) could not reference. Public rather than internal for the mirror-image reason:
+// SoundDataEditor DOES live in Assembly-CSharp-Editor and has to call into this.
 [InitializeOnLoad]
-internal static class SoundDataEditorPreview
+public static class SoundDataEditorPreview
 {
     private const string LogTag = "Audio";
 
@@ -42,7 +43,7 @@ internal static class SoundDataEditorPreview
 
     // One press = one roll: random clip (per the pick mode), random pitch, random volume, random
     // delay, with fades and trim applied. This is what the game would actually play.
-    internal static void PlayVariant(SoundData data)
+    public static void PlayVariant(SoundData data)
     {
         if (data == null)
             return;
@@ -58,7 +59,7 @@ internal static class SoundDataEditorPreview
     // Walks the clip list in order, one at a time, so every variation can be checked - including
     // the one bad take that only shows up once in twenty rolls. Each clip still gets the sound's
     // pitch/volume/fade/trim treatment, so this auditions the authored SOUND, not the raw files.
-    internal static void PlayEveryClip(SoundData data)
+    public static void PlayEveryClip(SoundData data)
     {
         if (data == null)
             return;
@@ -79,7 +80,7 @@ internal static class SoundDataEditorPreview
         _nextAuditionTime = 0d; // Start on the very next editor tick.
     }
 
-    internal static void Stop(SoundData data)
+    public static void Stop(SoundData data)
     {
         CancelAudition();
 
@@ -144,7 +145,10 @@ internal static class SoundDataEditorPreview
 
         // In Play Mode the real manager ticks itself off Update - only drive the Edit Mode rig.
         if (!Application.isPlaying && _manager != null)
+        {
             _manager.Tick(dt, dt);
+            _manager.TickFollow();
+        }
     }
 
     private static void AdvanceAudition(double now)

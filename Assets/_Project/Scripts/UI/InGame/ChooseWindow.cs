@@ -111,6 +111,13 @@ public class ChooseWindow : UiWindow
     // then plays itself via its own OnEnable (UiTween.playOnEnable / ParticleSystem.playOnAwake).
     // Forced inactive here, before base.Show() activates the whole popup, so none of them fire early
     // just because their parent turned on - only reactivating one explicitly (a trigger) does.
+    [Header("Sound")]
+    [SerializeField, Tooltip("Played once per CARD as it animates in, on the same stagger as the intro - so three cards read as three beats rather than one lump. Covers both card families (upgrade and weapon). Only fires for cards actually being shown, so a screen with fewer cards doesn't play phantom ones.")]
+    private SoundData cardAppearSound;
+
+    [SerializeField, Tooltip("Played when a card is clicked - either family, and the Buy button too, since that routes through the same onClicked. Fires before the choice is sent, so it is heard even though the window closes immediately after.")]
+    private SoundData cardChooseSound;
+
     [SerializeField, Tooltip("Particles that must NOT play just because the window opened - reset to inactive every Show(), and only meant to be reactivated by an explicit trigger (e.g. titleIntro.onImpact -> SetActive(true)).")]
     private GameObject[] introParticles;
 
@@ -175,7 +182,11 @@ public class ChooseWindow : UiWindow
         for (int i = 0; i < cards.Length; i++)
         {
             int index = i; // capture by value, not by the loop variable
-            cards[i].onClicked += _ => onCardClicked?.Invoke(index);
+            cards[i].onClicked += _ =>
+            {
+                PlayCardChoose();
+                onCardClicked?.Invoke(index);
+            };
         }
 
         weaponCards = new WeaponCardWidget[weaponCardCount];
@@ -196,7 +207,11 @@ public class ChooseWindow : UiWindow
         for (int i = 0; i < weaponCards.Length; i++)
         {
             int index = i; // capture by value, not by the loop variable
-            weaponCards[i].onClicked += _ => onWeaponCardClicked?.Invoke(index);
+            weaponCards[i].onClicked += _ =>
+            {
+                PlayCardChoose();
+                onWeaponCardClicked?.Invoke(index);
+            };
         }
 
         if (rerollButton != null)
@@ -269,10 +284,39 @@ public class ChooseWindow : UiWindow
         float cardsStart = titleStart + cardIntroStartDelay;
 
         for (int i = 0; i < cards.Length; i++)
-            cardIntros[i]?.Play(cardsStart + i * cardIntroStagger);
+        {
+            float at = cardsStart + i * cardIntroStagger;
+            cardIntros[i]?.Play(at);
+            PlayCardAppear(cards[i] != null && cards[i].gameObject.activeSelf, at);
+        }
 
         for (int i = 0; i < weaponCards.Length; i++)
-            weaponCardIntros[i]?.Play(cardsStart + i * cardIntroStagger);
+        {
+            float at = cardsStart + i * cardIntroStagger;
+            weaponCardIntros[i]?.Play(at);
+            PlayCardAppear(weaponCards[i] != null && weaponCards[i].gameObject.activeSelf, at);
+        }
+    }
+
+    // Scheduled through the audio system's own delay rather than a coroutine, so it shares the
+    // voice's unscaled clock - a Level-Up screen ramps Time.timeScale down match-wide, and a
+    // coroutine-timed sound would drift away from the card it is supposed to accompany.
+    //
+    // Gated on the card actually being visible: these arrays are fixed-size (cardCount /
+    // weaponCardCount) and a given screen may show fewer, or none of one family - Store is the only
+    // screen that shows both. Without this, a 3-slot array would fire three sounds for one card.
+    private void PlayCardAppear(bool visible, float delay)
+    {
+        if (visible == false || cardAppearSound == null)
+            return;
+
+        AudioManager.Play(cardAppearSound, 1f, delay);
+    }
+
+    private void PlayCardChoose()
+    {
+        if (cardChooseSound != null)
+            AudioManager.Play(cardChooseSound);
     }
 
     // Replays the intro exactly the way GameplayUiController's real trigger does (Show() is what

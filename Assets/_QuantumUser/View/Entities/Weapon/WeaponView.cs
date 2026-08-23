@@ -1,5 +1,7 @@
 using NaughtyAttributes;
+using Photon.Deterministic;
 using PrimeTween;
+using UnityEngine.Serialization;
 using QuantumUser.View.Util;
 using UnityEngine;
 
@@ -115,6 +117,17 @@ namespace Quantum
         private float recoilRotationCurrent;
         private float knockbackPunch;
 
+        [Header("Sound")]
+        [SerializeField, Tooltip("Played once per shot, on the same EventPlayerFired that drives the recoil kick. Author its pitch/volume variance and cooldown on the SoundData itself - a fast weapon fires many times a second, so the Group budget (Weapons) is what stops a sustained burst turning to mush. Leave empty for a silent weapon.")]
+        private SoundData fireSound;
+
+        [SerializeField, Tooltip("Played the moment a reload BEGINS - the magazine-out/rack sound. Detected from Weapon.ReloadTimer going positive rather than an event, since the simulation only raises an event when a reload COMPLETES (WeaponSystem.StartReload is silent). Leave empty to skip.")]
+        private SoundData reloadStartSound;
+
+        [FormerlySerializedAs("reloadSound")]
+        [SerializeField, Tooltip("Played when a reload COMPLETES and the weapon is ready again (EventWeaponReloaded) - the magazine-in/slide-forward sound. This is the one the player actually listens for, so keep it distinct from the start. Leave empty to skip.")]
+        private SoundData reloadReadySound;
+
         public override void Awake()
         {
             base.Awake();
@@ -126,6 +139,7 @@ namespace Quantum
                 character = transform.root.GetComponentInChildren<BlobAnimationView>();
 
             QuantumEvent.Subscribe<EventPlayerFired>(this, OnPlayerFired);
+            QuantumEvent.Subscribe<EventWeaponReloaded>(this, OnWeaponReloaded);
         }
 
         public override void OnDestroy()
@@ -139,6 +153,9 @@ namespace Quantum
             Tween.StopAll(this);
         }
 
+        // Rising-edge state for PollReloadStart.
+        private bool _wasReloading;
+
         private void CacheRestPose()
         {
             baseScale = transform.localScale;
@@ -148,7 +165,23 @@ namespace Quantum
         private void OnPlayerFired(EventPlayerFired e)
         {
             if (e.Entity != _entityRef) return;
+
+            // Attached rather than fired-and-forgotten at a point: a weapon moves with the player
+            // every frame, and this transform is the one thing guaranteed to still be where the gun
+            // is. Only its position is read, so the billboard rotation/flip/shear ApplyAim bakes
+            // into it (see this class's own comments) doesn't affect the sound.
+            if (fireSound != null)
+                EntitySound.PlayAttached(fireSound, transform, _entityRef);
+
             Shoot();
+        }
+
+        private void OnWeaponReloaded(EventWeaponReloaded e)
+        {
+            if (e.Entity != _entityRef) return;
+
+            if (reloadReadySound != null)
+                EntitySound.PlayAttached(reloadReadySound, transform, _entityRef);
         }
 
         // Three independent PunchCustom kicks (position, rotation, knockback), each punching its
@@ -256,6 +289,26 @@ namespace Quantum
         // abstract), otherwise unused by this component.
         protected override void QUpdate(QuantumGame game)
         {
+            PollReloadStart(game);
+        }
+
+        // Reload START has no event of its own - WeaponSystem.StartReload just sets ReloadTimer, and
+        // the only event it ever raises is WeaponReloaded on COMPLETION. Rather than add a .qtn
+        // event (and a codegen dependency) for a purely cosmetic cue, watch the timer go positive:
+        // it's set once when the reload begins and counts down to 0, so a rising edge is exactly the
+        // start. Same read ContinuousHitscanView.IsReloading already does for the beam.
+        private void PollReloadStart(QuantumGame game)
+        {
+            Frame frame = game != null ? game.Frames.Predicted : null;
+
+            bool reloading = frame != null
+                && frame.TryGet<Weapon>(_entityRef, out var weapon)
+                && weapon.ReloadTimer > FP._0;
+
+            if (reloading && _wasReloading == false && reloadStartSound != null)
+                EntitySound.PlayAttached(reloadStartSound, transform, _entityRef);
+
+            _wasReloading = reloading;
         }
     }
 }

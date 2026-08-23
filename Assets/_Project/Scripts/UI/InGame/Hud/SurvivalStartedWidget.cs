@@ -12,8 +12,24 @@ using UnityEngine;
 // and the reveal is a fade + slide in / hold / fade + slide out. Edge-detects the RAW CurrentState,
 // ignoring any HudBanner presentation override, since the phase transition itself is a real sim
 // event regardless of what banner happened to be on-screen.
+//
+// Also publishes when that reveal is completely finished (RevealCompleted) so another HUD element
+// can wait its turn rather than popping back in on top of it - DirectorTimelineUiWidget is the one
+// consumer today. IsPresent lets a consumer tell "no reveal will ever play here" (this widget isn't
+// in the scene / is disabled) apart from "a reveal is coming, wait for it", so an unauthored scene
+// degrades to showing immediately instead of waiting forever.
 public class SurvivalStartedWidget : QuantumGlobalMonoBehaviour
 {
+    // Fired once per reveal, the instant the outro has fully played out (or immediately, if there's
+    // nothing assigned to animate). Static rather than a UnityEvent on the instance: consumers are
+    // other always-present HUD widgets that shouldn't need a scene reference to this one.
+    public static event System.Action RevealCompleted;
+
+    // True only while an enabled instance exists in the scene.
+    public static bool IsPresent => _instance != null;
+
+    private static SurvivalStartedWidget _instance;
+
     [SerializeField] private GameObject root;
     [SerializeField] private CanvasGroup canvasGroup;
     [SerializeField, Tooltip("How long the banner stays fully visible before it slides/fades out.")]
@@ -41,6 +57,17 @@ public class SurvivalStartedWidget : QuantumGlobalMonoBehaviour
     private Tween _slideTween;
     private float _restX;
     private bool _restXCaptured;
+
+    private void OnEnable()
+    {
+        _instance = this;
+    }
+
+    private void OnDisable()
+    {
+        if (_instance == this)
+            _instance = null;
+    }
 
     public override void QStart(QuantumGame game)
     {
@@ -106,7 +133,10 @@ public class SurvivalStartedWidget : QuantumGlobalMonoBehaviour
             slideInDuration, slideInEase, useUnscaledTime: true);
     }
 
-    // Slides out to the right (plus an optional fade), then deactivates on completion.
+    // Slides out to the right (plus an optional fade), then deactivates on completion. Whichever
+    // path actually owns the deactivate is also the one that raises RevealCompleted, so a consumer
+    // waiting on this banner is released at the same moment it genuinely leaves the screen - including
+    // the degenerate "nothing assigned to animate" case, which fires it right away rather than never.
     private void Hide()
     {
         _fadeTween.Stop();
@@ -128,10 +158,18 @@ public class SurvivalStartedWidget : QuantumGlobalMonoBehaviour
             {
                 if (r != null)
                     r.SetActive(false);
+
+                RaiseRevealCompleted();
             }
             else
             {
-                _fadeTween.OnComplete(() => { if (r != null) r.SetActive(false); });
+                _fadeTween.OnComplete(() =>
+                {
+                    if (r != null)
+                        r.SetActive(false);
+
+                    RaiseRevealCompleted();
+                });
             }
 
             return;
@@ -145,7 +183,14 @@ public class SurvivalStartedWidget : QuantumGlobalMonoBehaviour
             {
                 if (r != null)
                     r.SetActive(false);
+
+                RaiseRevealCompleted();
             });
+    }
+
+    private static void RaiseRevealCompleted()
+    {
+        RevealCompleted?.Invoke();
     }
 
     private void CaptureRestX()

@@ -5,9 +5,11 @@ namespace Quantum
 
     // Resolves shared/coop Talents exactly once, at level start, then resolves every Chunk
     // entity's own ChunkSpawnConfig (e.g. the LobbyStart chunk's own SpawnConfig, spawning
-    // whichever starter chests were earned) - see docs/talents.md. Waits for
-    // every connected player to have spawned (PlayerSpawnUtility.HasSpawned) rather than
-    // resolving as soon as the level generates - this is the earliest tick every client is
+    // whichever starter chests were earned) - see docs/talents.md. Holds until BOTH
+    // Global.LevelGenerated (the chunks it positions spawns against have to exist - generation is
+    // spread over several ticks, see LevelGenerationSystem.StepGeneration) and every connected
+    // player having spawned (PlayerSpawnUtility.HasSpawned). The player wait is the stricter of the
+    // two in the normal case and isn't redundant with it - this is the earliest tick every client is
     // guaranteed to have identical, fully-populated RuntimePlayer data for all players, avoiding a
     // determinism hazard from resolving the shared mask before a remote player's join has
     // replicated. Unfiltered SystemMainThread (like LevelGenerationSystem/CombatDirectorSystem)
@@ -20,6 +22,20 @@ namespace Quantum
         public override void Update(Frame f)
         {
             if (f.Global->TalentsResolved == true)
+                return;
+
+            // Every spawn resolved below is positioned relative to a Chunk entity, so this can't run
+            // before the level actually exists. That used to hold by accident rather than by rule:
+            // generation completed entirely inside frame 0 and LevelGenerationSystem is registered
+            // ahead of this system, so by the time this ran every chunk was already there. Once
+            // generation was spread across ticks (LevelGenerationSystem.StepGeneration) the accident
+            // stopped holding - and the player loop below is not a second line of defence, because it
+            // `continue`s past a player whose RuntimePlayer hasn't arrived yet instead of holding. On
+            // a fresh session's frame 0, with no player data yet, every iteration continued, this fell
+            // straight through, latched TalentsResolved for good, and swept a world containing one
+            // chunk. LobbyStart - which is where a ChunkSpawnConfig is normally authored - is
+            // deliberately placed LAST of all, so its chests never spawned at all.
+            if (f.Global->LevelGenerated == false)
                 return;
 
             for (int i = 0; i < f.PlayerCount; i++)

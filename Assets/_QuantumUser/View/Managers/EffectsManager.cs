@@ -10,6 +10,13 @@ namespace QuantumUser.View.Managers
     // reference, so bursts of short-lived effects (many projectiles dying per second) don't hit
     // Instantiate/Destroy on every play. Pooled prefabs must not loop - PlayEffect returns an
     // instance to its pool once ParticleSystem.IsAlive() goes false.
+    //
+    // DefaultExecutionOrder pins Awake() (which sets Instance) ahead of every default-order script,
+    // same reason GroundBlobManager/BuildingShadowManager/SpriteManager are pinned: Awake order
+    // between two independent MonoBehaviours is otherwise undefined, and EnvironmentManager.Load
+    // pushes the world's blood colour in from ITS Awake. Losing that race left every world running
+    // the serialized default red until something called Load() again by hand.
+    [DefaultExecutionOrder(-1000)]
     public class EffectsManager : MonoBehaviour
     {
         public static EffectsManager Instance;

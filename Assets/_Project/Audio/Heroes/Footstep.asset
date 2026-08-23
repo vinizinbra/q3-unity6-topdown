@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c04d8195895c42008e9658fbf433bf7, type: 3}
+  m_Name: Footstep
+  m_EditorClassIdentifier: Assembly-CSharp::SoundData
+  clips:
+  - {fileID: 8300000, guid: 8f15a547b784346409c27c3649f0f35a, type: 3}
+  - {fileID: 8300000, guid: a46caff7c0dbe4848aa8999887e42d84, type: 3}
+  - {fileID: 8300000, guid: 62f0243ed7f6c42478f2cd6f1c00d265, type: 3}
+  pick: 1
+  layers: []
+  group: 9
+  output: {fileID: 0}
+  volume: {x: 0.5, y: 0.5}
+  pitch: {x: 0.95, y: 1.05}
+  delay: {x: 0, y: 0}
+  startAt: 0
+  endAt: 0
+  fadeIn: 0
+  fadeOut: 0
+  loop: 0
+  quieterWhenRemote: 1
+  localPlayerOnly: 0
+  spatial: 1
+  cooldown: 0
+  maxConcurrent: 8
+  priority: 128
+  useUnscaledTime: 1

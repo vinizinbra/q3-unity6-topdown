@@ -482,6 +482,12 @@ MonoBehaviour:
   volumePreservation: 0.6
   headSquashInfluence: 0.4
   jumpHeadSquashInfluence: 0.25
+  jumpSound: {fileID: 11400000, guid: c055538af98464b82a2e409c38480fa1, type: 2}
+  landSound: {fileID: 11400000, guid: 5250a6426a34b463ea11cbe6b0ef83bb, type: 2}
+  landSoundMinImpactSpeed: 2
+  landSoundFullImpactSpeed: 12
+  footstepSound: {fileID: 11400000, guid: f45b5bdb36bed489aba3b5ebc3737d42, type: 2}
+  footstepDistance: 2.2
 --- !u!114 &3238834508286719383
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -814,7 +820,6 @@ MonoBehaviour:
   viewTransform: {fileID: 2784763235198929911}
   isBot: 0
   widgetOffset: {x: 0, y: 0, z: 0}
-  weaponRowOffset: {x: 0, y: 0, z: 0}
   groundLayer:
     serializedVersion: 2
     m_Bits: 64
@@ -7476,7 +7481,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 351ba1bc536654a439e6cb10706289de, type: 3}
   m_Color: {r: 1, g: 0.7085838, b: 0.43867922, a: 1}
@@ -7567,7 +7572,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 351ba1bc536654a439e6cb10706289de, type: 3}
   m_Color: {r: 1, g: 0.7085838, b: 0.43867922, a: 1}
@@ -7917,7 +7922,8 @@ PrefabInstance:
       propertyPath: m_Name
       value: SimpleExplosion2
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 542327606518731916, guid: 72416818bb99743468f4dbaf314f34da, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []

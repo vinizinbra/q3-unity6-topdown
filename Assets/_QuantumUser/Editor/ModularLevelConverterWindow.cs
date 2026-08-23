@@ -212,6 +212,10 @@ namespace QuantumUser.Editor
             output.SetUVs(0, outUv0); output.SetUVs(2, outUv3); output.SetColors(colors);
             output.SetTriangles(triangles, 0); output.RecalculateBounds();
             Unwrapping.GenerateSecondaryUVSet(output); // UV2 for lightmaps; UV3 remains the mask atlas.
+            // UV4 carries position-averaged normals for the Borderlands shader's inverted-hull
+            // outline. Baked here so regenerating a mesh can never silently drop the channel and
+            // collapse that shader's outline back to nothing.
+            SmoothNormalBakerWindow.Bake(output);
             if (output.uv3 == null || output.uv3.Length != output.vertexCount)
                 throw new InvalidOperationException($"UV3 style coordinates were lost while generating UV2 for '{input.name}'.");
             if (isNewAsset)

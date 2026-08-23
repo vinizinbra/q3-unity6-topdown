@@ -12,7 +12,10 @@ using UnityEngine;
 //   - areaSecuredRoot ("AREA SECURED" baked into the prefab): a one-shot fade in/out banner the
 //     instant the area becomes secured.
 //   - countdownRoot + the "NEXT ASSAULT mm:ss" countdown (the ONE genuinely dynamic label here):
-//     shown for the rest of the Break once secured, plus the Skip Vote button/waiting swap.
+//     shown for the rest of the Break, plus the Skip Vote button/waiting swap - but only once the
+//     AREA SECURED banner above has FULLY played out (hold + slide/fade off), not the instant the
+//     area is secured, so the two never share the screen. It scales up on arrival, matching how
+//     DirectorTimelineUiWidget's own bar scales away right at this same moment.
 //
 // Hidden whenever Global.HudBanner == HudBannerKind.TraversalChallenge even while still in
 // GameState.Breathing, joining BossWidget/DirectorTimelineUiWidget/TraversalChallengeWidget in
@@ -59,10 +62,15 @@ public class BreathingCountdownWidget : QuantumGlobalMonoBehaviour
     [Header("Countdown")]
     [SerializeField] private GameObject countdownRoot;
     [SerializeField] private TMP_Text countdownText;
+    [SerializeField, Tooltip("Scale-up duration for the countdown, and for the skip / waiting row when it follows it in. Each keeps its own authored localScale as what it grows back to.")]
+    private float revealScaleInDuration = 0.3f;
+    [SerializeField] private Ease revealScaleInEase = Ease.OutBack;
 
     [Header("Skip Vote")]
     [SerializeField, Tooltip("Sends SkipBreathingCommand for every currently-set local slot on click. Shown until this client's local slot(s) have all voted this Breathing phase.")]
     private UnityEngine.UI.Button skipButton;
+    [SerializeField, Tooltip("Seconds after the countdown appears before the skip vote becomes available. Deliberately not instant: the Break is when players read the timeline, pick up drops and use POIs, and an already-primed player mashing the Base Skill button could otherwise end it before anyone else has registered that it started. Set 0 to make it available immediately. Kept short - it stacks on top of the AREA SECURED hold that already ran before the countdown even appeared.")]
+    private float skipButtonDelay = 1f;
     [SerializeField, Tooltip("Shown instead of skipButton once this client's local slot(s) have voted. Static \"WAITING FOR OTHER PLAYERS...\" text baked into the prefab.")]
     private GameObject waitingRoot;
 
@@ -73,10 +81,28 @@ public class BreathingCountdownWidget : QuantumGlobalMonoBehaviour
     private float _areaSecuredRestX;
     private bool _areaSecuredRestXCaptured;
 
+    // False from the moment the area becomes secured until the AREA SECURED banner has completely
+    // left the screen - the countdown/skip-vote half stays off until then, so this widget only ever
+    // shows one thing at a time.
+    private bool _countdownReleased;
+    // Counts down once the countdown is released, gating the skip vote UI. Unscaled, like every
+    // other timing in this widget - another player's Level-Up screen can ramp Time.timeScale
+    // down match-wide, and that shouldn't stretch how long the skip stays unavailable.
+    private float _skipDelayTimer;
+    private ScalePop _countdownPop;
+    private ScalePop _skipPop;
+    private ScalePop _waitingPop;
+
     private void Awake()
     {
         if (skipButton != null)
             skipButton.onClick.AddListener(OnSkipButtonClicked);
+
+        // Captured before anything ever scales them, so every later Break grows them back to the
+        // authored size rather than compounding whatever the last tween left behind.
+        _countdownPop = new ScalePop(countdownRoot);
+        _skipPop = new ScalePop(skipButton != null ? skipButton.gameObject : null);
+        _waitingPop = new ScalePop(waitingRoot);
     }
 
     public override void QStart(QuantumGame game)
@@ -102,7 +128,13 @@ public class BreathingCountdownWidget : QuantumGlobalMonoBehaviour
         if (isSecured == true && _wasSecured == false)
         {
             _areaSecuredTimer = areaSecuredDisplayDuration;
+            _countdownReleased = false;
             ShowAreaSecured();
+
+            // A zero/negative hold would never reach the timer countdown below, so the banner would
+            // stay up and the countdown would never be released - take it straight off instead.
+            if (areaSecuredDisplayDuration <= 0f)
+                HideAreaSecured();
         }
 
         _wasSecured = isSecured;
@@ -114,12 +146,8 @@ public class BreathingCountdownWidget : QuantumGlobalMonoBehaviour
             // Not in Breathing, or Breathing but not clear yet - force everything secured-gated off
             // explicitly rather than leaving it at whatever activeSelf it last had.
             SetShown(areaSecuredRoot, false);
-            SetShown(countdownRoot, false);
-
-            if (skipButton != null)
-                SetShown(skipButton.gameObject, false);
-
-            SetShown(waitingRoot, false);
+            HideCountdown();
+            HideSkipVoteUi();
             return;
         }
 
@@ -131,12 +159,30 @@ public class BreathingCountdownWidget : QuantumGlobalMonoBehaviour
                 HideAreaSecured();
         }
 
-        SetShown(countdownRoot, true);
+        // Still playing the AREA SECURED banner - the countdown waits its turn rather than fading up
+        // alongside it.
+        if (_countdownReleased == false)
+        {
+            HideSkipVoteUi();
+            return;
+        }
 
         if (countdownText != null)
         {
             int seconds = Mathf.CeilToInt(Mathf.Max(frame.Global->BreathingTimeRemaining.AsFloat, 0f));
             countdownText.text = $"{seconds}s";
+        }
+
+        // The countdown itself keeps running above - only the vote UI waits.
+        if (_skipDelayTimer > 0f)
+        {
+            _skipDelayTimer -= Time.unscaledDeltaTime;
+
+            if (_skipDelayTimer > 0f)
+            {
+                HideSkipVoteUi();
+                return;
+            }
         }
 
         UpdateSkipVoteUi(frame);
@@ -176,7 +222,10 @@ public class BreathingCountdownWidget : QuantumGlobalMonoBehaviour
             areaSecuredSlideInDuration, areaSecuredSlideInEase, useUnscaledTime: true);
     }
 
-    // Slides out to the right (plus an optional fade), then deactivates on completion.
+    // Slides out to the right (plus an optional fade), then deactivates on completion. Whichever path
+    // owns that deactivate is also the one that hands the screen over to the countdown (ShowCountdown),
+    // so the two never overlap - including the degenerate "nothing assigned to animate" case, which
+    // hands over immediately rather than never.
     private void HideAreaSecured()
     {
         _areaSecuredTween.Stop();
@@ -195,9 +244,20 @@ public class BreathingCountdownWidget : QuantumGlobalMonoBehaviour
             // No slide target - if there's also no fade to wait on, snap off; otherwise let the fade
             // own the deactivate.
             if (areaSecuredCanvasGroup == null)
+            {
                 SetShown(areaSecuredRoot, false);
+                ShowCountdown();
+            }
             else
-                _areaSecuredTween.OnComplete(() => { if (r != null) r.SetActive(false); });
+            {
+                _areaSecuredTween.OnComplete(() =>
+                {
+                    if (r != null)
+                        r.SetActive(false);
+
+                    ShowCountdown();
+                });
+            }
 
             return;
         }
@@ -210,7 +270,37 @@ public class BreathingCountdownWidget : QuantumGlobalMonoBehaviour
             {
                 if (r != null)
                     r.SetActive(false);
+
+                ShowCountdown();
             });
+    }
+
+    // Scales the countdown up from nothing once AREA SECURED is off the screen - useUnscaledTime,
+    // same as every other animation here.
+    private void ShowCountdown()
+    {
+        _countdownReleased = true;
+
+        // Armed here rather than when the Break begins, so the delay is measured from the countdown
+        // actually appearing - the AREA SECURED banner's own hold doesn't eat into it, and retuning
+        // that hold can't silently change when the skip becomes available.
+        _skipDelayTimer = skipButtonDelay;
+
+        _countdownPop.SetShown(true, revealScaleInDuration, revealScaleInEase);
+    }
+
+    // No scale-down counterpart - the Break ending isn't a moment this widget animates out of, the
+    // whole root just goes (and SurvivalStartedWidget's own banner takes over from here).
+    private void HideCountdown()
+    {
+        _countdownReleased = false;
+        _countdownPop.SetShown(false, revealScaleInDuration, revealScaleInEase);
+    }
+
+    private void HideSkipVoteUi()
+    {
+        _skipPop.SetShown(false, revealScaleInDuration, revealScaleInEase);
+        _waitingPop.SetShown(false, revealScaleInDuration, revealScaleInEase);
     }
 
     private void CaptureAreaSecuredRestX()
@@ -226,10 +316,9 @@ public class BreathingCountdownWidget : QuantumGlobalMonoBehaviour
     {
         bool localVoted = HasLocalPlayerVoted(frame);
 
-        if (skipButton != null)
-            SetShown(skipButton.gameObject, localVoted == false);
-
-        SetShown(waitingRoot, localVoted == true);
+        // Same pop the countdown gets, so the skip doesn't just blink into existence after its delay.
+        _skipPop.SetShown(localVoted == false, revealScaleInDuration, revealScaleInEase);
+        _waitingPop.SetShown(localVoted == true, revealScaleInDuration, revealScaleInEase);
     }
 
     // True only once EVERY one of this client's own local slots has voted for the CURRENT Breathing
@@ -281,5 +370,47 @@ public class BreathingCountdownWidget : QuantumGlobalMonoBehaviour
 
         if (go.activeSelf != shown)
             go.SetActive(shown);
+    }
+
+    // One GameObject that pops in with a scale-up and just goes on hide (nothing here is worth an
+    // outro - a Break ends all at once). Holds its own authored rest scale, captured at Awake before
+    // anything has scaled it, so repeated Breaks never compound.
+    private sealed class ScalePop
+    {
+        private readonly GameObject _target;
+        private readonly Vector3 _restScale;
+        private Tween _tween;
+        private bool _shown;
+        private bool _initialized;
+
+        public ScalePop(GameObject target)
+        {
+            _target = target;
+            _restScale = target != null ? target.transform.localScale : Vector3.one;
+        }
+
+        public void SetShown(bool shown, float duration, Ease ease)
+        {
+            if (_target == null)
+                return;
+
+            if (_initialized == true && _shown == shown)
+                return;
+
+            _initialized = true;
+            _shown = shown;
+            _tween.Stop();
+
+            if (shown == false)
+            {
+                _target.transform.localScale = _restScale;
+                _target.SetActive(false);
+                return;
+            }
+
+            _target.transform.localScale = Vector3.zero;
+            _target.SetActive(true);
+            _tween = Tween.Scale(_target.transform, _restScale, duration, ease, useUnscaledTime: true);
+        }
     }
 }

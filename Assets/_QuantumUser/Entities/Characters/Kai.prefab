@@ -591,6 +591,8 @@ MonoBehaviour:
         RawValue: 0
       Z:
         RawValue: 0
+    AirborneSource:
+      Value: 0
 --- !u!114 &-3971490095111579385
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -687,10 +689,20 @@ MonoBehaviour:
   maxLandingSquash: 0.6
   landingSpringFrequency: 6
   landingSpringDamping: 0.35
+  bodyRoot: {fileID: 0}
+  downedRoot: {fileID: 0}
+  koRoot: {fileID: 0}
+  handsRoot: {fileID: 0}
   squashLerpSpeed: 14
   volumePreservation: 0.6
   headSquashInfluence: 0.4
   jumpHeadSquashInfluence: 0.25
+  jumpSound: {fileID: 11400000, guid: c055538af98464b82a2e409c38480fa1, type: 2}
+  landSound: {fileID: 11400000, guid: 5250a6426a34b463ea11cbe6b0ef83bb, type: 2}
+  landSoundMinImpactSpeed: 2
+  landSoundFullImpactSpeed: 12
+  footstepSound: {fileID: 11400000, guid: f45b5bdb36bed489aba3b5ebc3737d42, type: 2}
+  footstepDistance: 2.2
 --- !u!114 &3238834508286719383
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -764,6 +776,7 @@ MonoBehaviour:
       RawValue: 0
     FireCooldownMultiplier:
       RawValue: 0
+    Level: 0
     FireCooldownTimer:
       RawValue: 0
     Ammo: 0
@@ -837,6 +850,10 @@ MonoBehaviour:
   riftMarkMaterial: {fileID: 0}
   riftMarkApplicationFlashColor: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
   riftMarkApplicationFlashDuration: 0.08
+  expPickupFlashColor: {r: 0.3, g: 0.55, b: 1, a: 1}
+  coinPickupFlashColor: {r: 1, g: 0.84, b: 0.2, a: 1}
+  riftShardPickupFlashColor: {r: 1, g: 0.35, b: 0.75, a: 1}
+  pickupFlashDuration: 0.35
   freezeMaterial: {fileID: 0}
 --- !u!114 &8110188611109955938
 MonoBehaviour:
@@ -1018,7 +1035,6 @@ MonoBehaviour:
   viewTransform: {fileID: 0}
   isBot: 0
   widgetOffset: {x: 0, y: 0.75, z: 0}
-  weaponRowOffset: {x: 0, y: -1.5, z: 0}
   groundLayer:
     serializedVersion: 2
     m_Bits: 0
@@ -1103,6 +1119,8 @@ MonoBehaviour:
       RawValue: 0
     MaxShieldMultiplier:
       RawValue: 0
+    BonusMaxShield:
+      RawValue: 0
     DamageReduction:
       RawValue: 0
     KnockbackTakenMultiplier:
@@ -1119,8 +1137,14 @@ MonoBehaviour:
       RawValue: 0
     CoinGainMultiplier:
       RawValue: 0
+    Coins:
+      RawValue: 0
+    RiftShards:
+      RawValue: 0
     WeaponTalentLevel: 0
+    ShopWeaponOfferCount: 0
     RerollQuantity: 0
+    SelfReviveCharges: 0
     BurnOnHitStacks: 0
     DashShieldCost:
       RawValue: 0

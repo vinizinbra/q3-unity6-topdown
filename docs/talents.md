@@ -215,10 +215,24 @@ Just the leveling-talent tuning now - chest prototype/offset/chance moved onto
 Unfiltered `SystemMainThread`, registered in the always-on section of `SystemSetup.User.cs` right
 after `PlayerInitSystem` and before `ChestSystem` (so an entity spawned this tick is already
 visible to that system's own filter this same tick). Each tick, while `!Global.TalentsResolved`:
-waits for every connected player (same null-slot-skipping loop as `ComputeSharedTalents`) to have
-spawned (`PlayerSpawnUtility.HasSpawned`) - the earliest tick every client is guaranteed identical,
-fully-populated `RuntimePlayer` data for all players, avoiding a determinism hazard from resolving
-the shared mask before a remote player's join has replicated. Once true: calls
+
+1. Waits for `Global.LevelGenerated`. Every spawn below is positioned relative to a `Chunk` entity,
+   so the chunks have to exist first. This used to hold by accident rather than by rule -
+   generation completed entirely inside frame 0 and `LevelGenerationSystem` is registered ahead of
+   this one - and broke the moment generation was spread over several ticks
+   (`LevelGenerationSystem.StepGeneration`, added to stop the multi-second generation freeze). The
+   player wait below is *not* a second line of defence: it `continue`s past a player whose
+   `RuntimePlayer` hasn't arrived yet rather than holding, so on a fresh session's frame 0 - no
+   player data yet - every iteration continued, this fell straight through, latched
+   `TalentsResolved` for good, and swept a world containing one chunk. `LobbyStart`, which is where
+   a `ChunkSpawnConfig` is normally authored, is deliberately placed LAST of all, so its chests
+   never spawned at all.
+2. Waits for every connected player (same null-slot-skipping loop as `ComputeSharedTalents`) to have
+   spawned (`PlayerSpawnUtility.HasSpawned`) - the earliest tick every client is guaranteed identical,
+   fully-populated `RuntimePlayer` data for all players, avoiding a determinism hazard from resolving
+   the shared mask before a remote player's join has replicated.
+
+Once both hold: calls
 `ComputeSharedTalents`, sets `TalentsResolved = true`, then filters every `Chunk + Transform3D`
 entity in the level (`ResolveSpawners`) - for each with a valid `SpawnConfig` assigned, resolves
 that `ChunkSpawnConfig` asset and iterates every entry in its `Spawns` array (`ResolveSpawn`).
@@ -243,11 +257,28 @@ though their own per-player Talents still apply correctly at their own spawn (in
 
 Unfiltered `SystemMainThread`, registered right after `ChestSystem`, before the pausable
 `GameplaySystemGroup` opens (so it runs before `CombatDirectorSystem`, inside that group, later the
-same tick). Each tick, while `Global.CurrentState == GameState.Lobby`: same "wait for every
-connected player to have spawned" guard as `TalentGateSystem`, then calls
-`LevelGenerationSystem.TryGetLobbyStartBounds` and checks every spawned `PlayerLink + Transform3D`
-entity's position (X/Z) against that AABB - if any spawned player is still inside it, the lobby
-hasn't been exited yet. No-ops (stays paused) if no `LobbyStart` chunk has been placed at all.
+same tick). Each tick, while `Global.CurrentState == GameState.Lobby`, it requires all of:
+
+1. `Global.LevelGenerated`. `TryGetLobbyStartBounds` builds its AABB *around*
+   `Global.PlayerSpawnPosition`, which isn't assigned until the last step of generation
+   (`AssignPlayerSpawnPosition`). Read earlier it's still default `(0,0,0)`, so the bounds describe a
+   box around the world origin instead of the lobby - and a hand-placed `LobbyStart` chunk (seeded
+   from frame 0 by `SeedFromExistingChunks`) makes the call succeed with exactly those bogus bounds.
+2. Every connected player spawned (`PlayerSpawnUtility.HasSpawned`) - a player who hasn't spawned
+   hasn't left the lobby either.
+3. At least one real `PlayerLink` entity in the world. The footprint scan below decides "everyone has
+   left" by finding nobody still inside it, which an **empty** world satisfies just as well as a
+   departed one. The slot loop in (2) skips a slot whose `RuntimePlayer` hasn't replicated yet rather
+   than holding - the same `continue`-instead-of-hold hole that broke `TalentGateSystem` - so without
+   this the run began immediately with zero players in the world. Counted off `PlayerLink` entities
+   rather than joined player slots deliberately: that also keeps working for a player entity placed
+   directly in a scene for testing, which never goes through `PlayerSpawnUtility.Spawn` and so has no
+   `RuntimePlayer` slot to count.
+
+The scan itself calls `LevelGenerationSystem.TryGetLobbyStartBounds` and checks every spawned
+`PlayerLink + Transform3D` entity's position (X/Z) against that AABB - if any spawned player is
+still inside it, the lobby hasn't been exited yet. No-ops (stays paused) if no `LobbyStart` chunk
+has been placed at all.
 Transitions to `GameState.Survival` via `GameStateUtility.SetState` once every player is outside -
 see `docs/game-state.md` for the full state machine this is now part of.
 

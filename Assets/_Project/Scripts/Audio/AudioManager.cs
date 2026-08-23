@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using NaughtyAttributes;
+using Playtime.Core;
 using QuantumUser.View.Util;
 using UnityEngine;
 using UnityEngine.Audio;
@@ -36,12 +37,34 @@ public class AudioManager : MonoBehaviour
     private bool persistAcrossScenes = true;
 
     [Header("Volumes")]
-    [SerializeField, Range(0f, 1f), Tooltip("Multiplies every category. This is what a single master options slider should drive - see the static MasterVolume property.")]
+    [SerializeField, Range(0f, 1f), Tooltip("Multiplies every group. This is what a single master options slider should drive - see the static MasterVolume property. With Persist Volumes on, the value here is only the DEFAULT for a fresh install; a saved setting replaces it at startup.")]
     private float masterVolume = 1f;
+
+    [SerializeField, Tooltip("Saves master and per-group volumes to PlayerPrefs (same ObscuredPrefs-backed PlayerPrefFloat every other setting in this project uses) and reloads them on startup, so an options slider sticks between sessions. Turn OFF while tuning the mix if a previously-saved value keeps overriding what you author here.")]
+    private bool persistVolumes = true;
 
     [Header("Groups")]
     [SerializeField, Tooltip("One row per SoundGroup value, indexed by that value - the table auto-resizes when the enum changes, so rows never drift out of alignment. Holds each group's volume bus AND its shared voice budget.")]
     private GroupSettings[] groups = System.Array.Empty<GroupSettings>();
+
+    [SerializeField, Range(0f, 1f), Tooltip("Volume for sounds produced by a player who is NOT local to this client, for any SoundData with 'Quieter When Remote' ticked. 1 = no reduction. 0.5 halves them. Tuned here rather than per asset so one slider re-balances 'mine vs theirs' across the whole mix.")]
+    private float remotePlayerVolume = 0.5f;
+
+    [Header("3D Falloff")]
+    [SerializeField, Range(0f, 1f), Tooltip("How positional a spatial sound is. 1 = fully 3D. Slightly under 1 (0.85-0.95) keeps a little of every sound in both ears, which reads better on a top-down game where the listener is far from most of the action and hard-panned sounds can feel like they vanish.")]
+    private float spatialBlend = 1f;
+
+    [SerializeField, Min(0.01f), Tooltip("Distance within which a spatial sound stays at full volume. Applies to every SoundData with Spatial ticked - authored once here rather than per asset, so the whole mix shares one consistent sense of distance.")]
+    private float minDistance = 5f;
+
+    [SerializeField, Min(0.01f), Tooltip("Distance at which a spatial sound has fully attenuated to silence. Wants to be generous on a top-down camera - the listener sits on the local player (see LocalPlayerAudioListener), so this is measured in world units from the character, not from the camera.")]
+    private float maxDistance = 40f;
+
+    [SerializeField, Tooltip("Skip a one-shot entirely when its position is further than Max Distance from the listener, instead of starting a voice that is already silent. Reaching Max Distance only means volume 0 - the voice still occupies a slot and still counts against its group budget, so a firefight across the map can starve the sounds happening next to the player. Loops are never culled this way (see below).")]
+    private bool cullBeyondMaxDistance = true;
+
+    [SerializeField, Tooltip("How volume falls off between Min and Max Distance. Linear is easier to reason about for a fixed-camera top-down game; Logarithmic is physically accurate but drops off very fast up close.")]
+    private AudioRolloffMode rolloff = AudioRolloffMode.Linear;
 
     [Header("Routing")]
     [SerializeField, Tooltip("Fallback AudioMixerGroup for any SoundData that doesn't author its own `output`. Optional - this project has no mixer yet, so category volumes above are applied as plain multipliers instead.")]
@@ -106,6 +129,12 @@ public class AudioManager : MonoBehaviour
     private readonly Dictionary<SoundData, float> _lastPlayTime = new Dictionary<SoundData, float>();
     private SoundHandle _music = SoundHandle.None;
     private readonly GroupSettings _fallbackGroup = new GroupSettings();
+    private Transform _listener;
+
+    // Static so the cached read inside PlayerPrefProperty survives manager teardown/recreation
+    // (scene loads, the Edit Mode preview rig) rather than re-hitting storage each time.
+    private static PlayerPrefFloat _masterVolumePref;
+    private static PlayerPrefFloat[] _groupVolumePrefs;
     private static bool _quitting;
 
     // ------------------------------------------------------------------ lifecycle
@@ -142,6 +171,7 @@ public class AudioManager : MonoBehaviour
     {
         Instance = this;
         SyncGroupSettings();
+        LoadVolumes();
         while (_voices.Count < initialVoices)
             CreateVoice();
     }
@@ -171,6 +201,32 @@ public class AudioManager : MonoBehaviour
         }
     }
 
+    // Prefs are constructed with whatever the Inspector authored as their DEFAULT, so a fresh
+    // install hears the mix as tuned, and only a player who actually moved a slider gets a stored
+    // value back. Nothing is written until something calls a setter.
+    private void LoadVolumes()
+    {
+        if (persistVolumes == false)
+            return;
+
+        _masterVolumePref ??= new PlayerPrefFloat("audio_volume_master", masterVolume);
+        masterVolume = Mathf.Clamp01(_masterVolumePref.Value);
+
+        for (var i = 0; i < groups.Length; i++)
+            groups[i].Volume = Mathf.Clamp01(GroupPref((SoundGroup)i, groups[i].Volume).Value);
+    }
+
+    private static PlayerPrefFloat GroupPref(SoundGroup group, float authoredDefault)
+    {
+        _groupVolumePrefs ??= new PlayerPrefFloat[System.Enum.GetValues(typeof(SoundGroup)).Length];
+
+        var index = (int)group;
+        if (index < 0 || index >= _groupVolumePrefs.Length)
+            return new PlayerPrefFloat($"audio_volume_{group}", authoredDefault);
+
+        return _groupVolumePrefs[index] ??= new PlayerPrefFloat($"audio_volume_{group}", authoredDefault);
+    }
+
     // Never returns null - an out-of-range group (stale serialized data) falls back to a default row
     // rather than throwing on the audio path.
     private GroupSettings ResolveGroup(SoundGroup group)
@@ -180,6 +236,44 @@ public class AudioManager : MonoBehaviour
             return _fallbackGroup;
 
         return groups[index] ?? _fallbackGroup;
+    }
+
+    private void OnEnable()
+    {
+        AudioSettings.OnAudioConfigurationChanged += OnAudioConfigurationChanged;
+    }
+
+    private void OnDisable()
+    {
+        AudioSettings.OnAudioConfigurationChanged -= OnAudioConfigurationChanged;
+    }
+
+    // Unity tears down and rebuilds its audio output when the device changes - headphones plugged
+    // in, a Bluetooth device connecting, the OS switching sample rate. Every AudioSource is stopped
+    // in the process, but nothing tells the game that: pooled voices are left believing they're
+    // still playing, so they're never released, the pool fills with dead entries, and everything
+    // afterwards sounds wrong or silent until the Editor is restarted. This is the "Unity audio
+    // randomly goes weird" people usually restart to fix.
+    //
+    // Recovery is just to drop every voice. Nothing needs restarting by hand: MusicDirector notices
+    // its track stopped and replays it, and SustainedSound restarts its loop on the next Keep - both
+    // already self-heal, because a group budget could steal those voices anyway.
+    private void OnAudioConfigurationChanged(bool deviceWasChanged)
+    {
+        LogHelper.Log(LogTag, $"Audio configuration changed (deviceWasChanged={deviceWasChanged}) - releasing {_voices.Count} pooled voices so nothing is left stuck on the old device.", this);
+
+        ReleaseAllVoices();
+    }
+
+    private void ReleaseAllVoices()
+    {
+        foreach (var voice in _voices)
+        {
+            if (voice.Active)
+                Release(voice);
+        }
+
+        _music = SoundHandle.None;
     }
 
     private void OnDestroy()
@@ -216,6 +310,11 @@ public class AudioManager : MonoBehaviour
         var voice = new Voice { Source = go.AddComponent<AudioSource>() };
         voice.Source.playOnAwake = false;
         voice.Source.spatialBlend = 0f;
+        // The listening point rides the local character now (see LocalPlayerAudioListener), and a
+        // pooled voice is re-positioned across the map the instant it's reused - between the two,
+        // Unity's frame-to-frame velocity estimate produces pitch swoops on sounds nobody moved.
+        // Nothing in a top-down shooter wants doppler, so it's off at the source.
+        voice.Source.dopplerLevel = 0f;
         _voices.Add(voice);
         return voice;
     }
@@ -223,6 +322,31 @@ public class AudioManager : MonoBehaviour
     // ------------------------------------------------------------------ per-frame envelope
 
     private void Update() => Tick(Time.deltaTime, Time.unscaledDeltaTime);
+
+    // Emitter tracking runs in LateUpdate, NOT in Tick above, and the distinction is audible on
+    // anything that moves fast - a dash covers several units in the time a frame takes. Quantum
+    // entity views write their transforms during Update, and Unity's Update order between unrelated
+    // components is arbitrary, so sampling a follow target from Update lands a coin-flip one frame
+    // behind: the sound trails the character it is supposedly attached to.
+    //
+    // This is also why followed voices are NOT re-parented under their target, which would give the
+    // same result for free: these AudioSources are POOLED, and Unity destroys children with their
+    // parent - one despawning entity would take a pooled voice down with it and leave a null hole in
+    // the pool. Writing the position late is the same outcome without owning the object's lifetime.
+    private void LateUpdate() => TickFollow();
+
+    internal void TickFollow()
+    {
+        for (var i = 0; i < _voices.Count; i++)
+        {
+            var voice = _voices[i];
+
+            // A destroyed target just detaches - a one-shot should finish at the last known position
+            // rather than cut when its entity despawns.
+            if (voice.Active && voice.Follow != null)
+                voice.Source.transform.position = voice.Follow.position;
+        }
+    }
 
     // Advances every active voice's envelope by one frame. Split out of Update so the Edit Mode
     // preview can drive the identical code from EditorApplication.update - previewing has to hear
@@ -251,11 +375,6 @@ public class AudioManager : MonoBehaviour
                 voice.Source.Play();
                 voice.Started = true;
             }
-
-            // Follow a moving emitter. A destroyed target just detaches - a one-shot should finish
-            // at the last known position rather than cut when its entity despawns.
-            if (voice.Follow != null)
-                voice.Source.transform.position = voice.Follow.position;
 
             // Sub-region loop: rewind by hand, since AudioSource.loop always loops the whole clip.
             // The isPlaying check covers the trimStart-only case (end == clip length), where the
@@ -355,8 +474,12 @@ public class AudioManager : MonoBehaviour
 
     // ------------------------------------------------------------------ play
 
-    public static SoundHandle Play(SoundData data, float volumeScale = 1f)
-        => PlayInternal(data, null, Vector3.zero, false, volumeScale);
+    // delay is ADDED to whatever the SoundData authors, for a caller that needs to line a sound up
+    // with an animation it is already scheduling (see ChooseWindow's staggered card intros). It runs
+    // on the voice's own clock, so a sound authored Use Unscaled Time still lands correctly while a
+    // Level-Up screen has Time.timeScale ramped down.
+    public static SoundHandle Play(SoundData data, float volumeScale = 1f, float delay = 0f)
+        => PlayInternal(data, null, Vector3.zero, false, volumeScale, null, false, delay);
 
     public static SoundHandle PlayAt(SoundData data, Vector3 position, float volumeScale = 1f)
         => PlayInternal(data, null, position, true, volumeScale);
@@ -379,7 +502,7 @@ public class AudioManager : MonoBehaviour
         return manager._music;
     }
 
-    private static SoundHandle PlayInternal(SoundData data, Transform follow, Vector3 position, bool positioned, float volumeScale, AudioClip forcedClip = null, bool ignoreCooldown = false)
+    private static SoundHandle PlayInternal(SoundData data, Transform follow, Vector3 position, bool positioned, float volumeScale, AudioClip forcedClip = null, bool ignoreCooldown = false, float extraDelay = 0f, int depth = 0)
     {
         if (data == null)
             return SoundHandle.None;
@@ -406,6 +529,16 @@ public class AudioManager : MonoBehaviour
             manager._lastPlayTime[data] = now;
         }
 
+        // Both have to hold for a sound to be positional: the SoundData has to be tagged spatial,
+        // AND the call has to have supplied a position at all. A plain Play() never does.
+        var spatial = positioned && data.spatial;
+
+        // Deliberately NOT applied to loops: a looping emitter out of range now is one the listener
+        // may simply walk toward, and nothing would ever start it once culled. A one-shot is
+        // momentary - if it is out of range at the instant it fires, it is never heard at all.
+        if (spatial && manager.cullBeyondMaxDistance && !data.loop && manager.IsBeyondEarshot(position))
+            return SoundHandle.None;
+
         var voice = manager.AcquireVoice(data);
         if (voice == null)
             return SoundHandle.None;
@@ -418,10 +551,12 @@ public class AudioManager : MonoBehaviour
         source.outputAudioMixerGroup = data.output != null ? data.output : manager.defaultOutput;
         source.pitch = pitch;
         source.panStereo = 0f;
-        source.spatialBlend = positioned ? data.spatialBlend : 0f;
-        source.minDistance = data.minDistance;
-        source.maxDistance = data.maxDistance;
-        source.rolloffMode = data.rolloff;
+        // Both have to hold for a sound to be positional: the SoundData has to be tagged spatial,
+        // AND the call has to have supplied a position at all. A plain Play() never does.
+        source.spatialBlend = spatial ? manager.spatialBlend : 0f;
+        source.minDistance = manager.minDistance;
+        source.maxDistance = manager.maxDistance;
+        source.rolloffMode = manager.rolloff;
         // AudioSource.priority is inverted (0 = most important); SoundData.priority reads the
         // intuitive way round, so flip it here.
         source.priority = Mathf.Clamp(255 - data.priority, 0, 255);
@@ -437,7 +572,7 @@ public class AudioManager : MonoBehaviour
         voice.Active = true;
         voice.Started = false;
         voice.Elapsed = 0f;
-        voice.Delay = data.RollDelay();
+        voice.Delay = data.RollDelay() + Mathf.Max(0f, extraDelay);
         voice.BaseVolume = data.RollVolume() * volumeScale;
         voice.FadeIn = data.fadeIn;
         voice.FadeOut = data.fadeOut;
@@ -463,7 +598,46 @@ public class AudioManager : MonoBehaviour
             source.volume = voice.BaseVolume * (data.fadeIn > 0f ? 0f : 1f) * manager.ResolveBusVolume(data);
         }
 
+        manager.PlayLayers(data, follow, position, positioned, volumeScale, depth);
+
         return new SoundHandle(manager._voices.IndexOf(voice), voice.Generation);
+    }
+
+    // A layered sound can itself be built from layered sounds, so this is bounded rather than
+    // trusted - a SoundData that (directly or through a chain) lists itself would otherwise recurse
+    // until the stack gives out. Authoring mistake rather than a real use case, so it's capped and
+    // reported instead of being made to work.
+    private const int MaxLayerDepth = 4;
+
+    private void PlayLayers(SoundData data, Transform follow, Vector3 position, bool positioned, float volumeScale, int depth)
+    {
+        if (data.layers == null || data.layers.Length == 0)
+            return;
+
+        if (depth >= MaxLayerDepth)
+        {
+            LogHelper.Warn(LogTag, $"'{data.name}' exceeded the layer depth cap ({MaxLayerDepth}) - check for a SoundData that layers itself.", data);
+            return;
+        }
+
+        for (var i = 0; i < data.layers.Length; i++)
+        {
+            var layer = data.layers[i];
+            if (layer?.sound == null || layer.sound == data)
+                continue;
+
+            // Rolled per play, independently per layer - that's what keeps an occasional voice line
+            // occasional instead of tied to whatever else happened to fire.
+            if (layer.chance < 1f && UnityEngine.Random.value > layer.chance)
+                continue;
+
+            var delay = Mathf.Max(0f, UnityEngine.Random.Range(layer.delay.x, layer.delay.y));
+
+            // Layers inherit the parent's cooldown bypass deliberately NOT set: a layer with its own
+            // cooldown (a voice pool that shouldn't retrigger for 5s) must still honour it.
+            PlayInternal(layer.sound, follow, position, positioned, volumeScale * layer.volumeScale,
+                null, false, delay, depth + 1);
+        }
     }
 
 #if UNITY_EDITOR
@@ -475,6 +649,25 @@ public class AudioManager : MonoBehaviour
     internal static SoundHandle PlayPreview(SoundData data, AudioClip forcedClip = null)
         => PlayInternal(data, null, Vector3.zero, false, 1f, forcedClip, true);
 #endif
+
+    // Squared-distance test against the live listening point. Resolved lazily and re-resolved
+    // whenever it goes null, since the listener is not a fixed scene object here -
+    // LocalPlayerAudioListener parks it on the local player's spawned character, so it does not
+    // exist until a match starts and is replaced across scene loads.
+    private bool IsBeyondEarshot(Vector3 position)
+    {
+        if (_listener == null)
+        {
+            var found = FindFirstObjectByType<AudioListener>();
+            _listener = found != null ? found.transform : null;
+        }
+
+        // No listener yet (menu, pre-spawn) - nothing can be judged out of earshot, so let it play.
+        if (_listener == null)
+            return false;
+
+        return (position - _listener.position).sqrMagnitude > maxDistance * maxDistance;
+    }
 
     // Finds a free voice, grows the pool up to maxVoices, then falls back to stealing.
     private Voice AcquireVoice(SoundData data)
@@ -529,6 +722,7 @@ public class AudioManager : MonoBehaviour
     private int CountActive(SoundData data, SoundGroup group, out Voice oldest)
     {
         oldest = null;
+        var oldestIsLoop = true;
         var count = 0;
 
         for (var i = 0; i < _voices.Count; i++)
@@ -542,8 +736,22 @@ public class AudioManager : MonoBehaviour
                 continue;
 
             count++;
-            if (oldest == null || candidate.Elapsed > oldest.Elapsed)
-                oldest = candidate;
+
+            // Prefer stealing a ONE-SHOT over a loop. Stealing a one-shot costs a fraction of a
+            // second of a sound that repeats constantly anyway; stealing a loop silences an emitter
+            // for good, because nothing ever replays it (SustainedSound self-heals for exactly this
+            // reason, but not creating the problem is better). Falls back to a loop only when the
+            // whole group is loops. Same policy StealVoice already applies pool-wide.
+            bool isLoop = candidate.Source.loop || candidate.ManualLoop;
+            bool better = oldest == null
+                || (oldestIsLoop && isLoop == false)
+                || (oldestIsLoop == isLoop && candidate.Elapsed > oldest.Elapsed);
+
+            if (better == false)
+                continue;
+
+            oldest = candidate;
+            oldestIsLoop = isLoop;
         }
 
         return count;
@@ -665,6 +873,15 @@ public class AudioManager : MonoBehaviour
         voice.VolumeFadeDuration = duration;
     }
 
+    // Multiplies whatever pitch this voice actually rolled, rather than replacing it - a streak
+    // offset and the asset's own per-play variation should compose, not cancel each other out.
+    internal static void ScalePitch(SoundHandle handle, float multiplier)
+    {
+        var voice = Instance != null ? Instance.Resolve(handle) : null;
+        if (voice != null)
+            voice.Source.pitch = Mathf.Max(0.01f, voice.Source.pitch * multiplier);
+    }
+
     internal static void SetPitch(SoundHandle handle, float pitch)
     {
         var voice = Instance != null ? Instance.Resolve(handle) : null;
@@ -733,10 +950,27 @@ public class AudioManager : MonoBehaviour
 
     // Drive these from an options screen. They apply live to already-playing voices, since bus
     // volume is folded into the envelope every frame rather than baked at play time.
+    // 1 when there is no manager yet - a sound that plays before one exists is never "someone
+    // else's", and silently halving it would be worse than doing nothing.
+    public static float RemotePlayerVolume => Instance != null ? Instance.remotePlayerVolume : 1f;
+
     public static float MasterVolume
     {
         get => Instance != null ? Instance.masterVolume : 1f;
-        set { if (Instance != null) Instance.masterVolume = Mathf.Clamp01(value); }
+        set
+        {
+            var manager = Resolve();
+            if (manager == null)
+                return;
+
+            manager.masterVolume = Mathf.Clamp01(value);
+
+            if (manager.persistVolumes)
+            {
+                _masterVolumePref ??= new PlayerPrefFloat("audio_volume_master", manager.masterVolume);
+                _masterVolumePref.Value = manager.masterVolume;
+            }
+        }
     }
 
     public static void SetGroupVolume(SoundGroup group, float volume)
@@ -745,7 +979,11 @@ public class AudioManager : MonoBehaviour
         if (manager == null)
             return;
 
-        manager.ResolveGroup(group).Volume = Mathf.Clamp01(volume);
+        volume = Mathf.Clamp01(volume);
+        manager.ResolveGroup(group).Volume = volume;
+
+        if (manager.persistVolumes)
+            GroupPref(group, volume).Value = volume;
     }
 
     public static float GetGroupVolume(SoundGroup group)
@@ -760,6 +998,58 @@ public class AudioManager : MonoBehaviour
             return;
 
         manager.ResolveGroup(group).MaxConcurrent = Mathf.Max(0, maxConcurrent);
+    }
+
+    // Wipes every saved volume so the Inspector-authored mix is what plays again - the escape hatch
+    // for "I retuned the mix but the game still sounds like my old test settings".
+    // Manual version of the device-change recovery above, for when audio has gone wrong and it
+    // isn't clear why. Cheaper than restarting the Editor, and non-destructive: looping sounds come
+    // back on their own, one-shots were transient anyway.
+    // For the classic "everything is suddenly high- or low-pitched" case: a global pitch shift is a
+    // SAMPLE-RATE mismatch, not anything to do with SoundData.pitch. Unity resolves the system rate
+    // once at startup (ProjectSettings m_SampleRate: 0) and doesn't re-check when the output device
+    // changes underneath it, so every clip then plays at the wrong speed.
+    [Button("Restart Audio Engine")]
+    private void RestartAudioEngine()
+    {
+        ReleaseAllVoices();
+
+        AudioConfiguration config = AudioSettings.GetConfiguration();
+
+        // Zeroed on purpose, and this is the whole point of the button. GetConfiguration returns the
+        // rate Unity is CURRENTLY running at - which, when everything has gone high- or low-pitched,
+        // is precisely the wrong one: the engine latched a rate at startup and the output device has
+        // since moved to another (a Bluetooth headset connecting at 48kHz over a 44.1kHz session is
+        // the usual way). Handing that stale value straight back would rebuild at the same wrong
+        // rate. 0 means "ask the device", which is what re-detects it - the same thing restarting
+        // the Editor does, without restarting the Editor.
+        config.sampleRate = 0;
+
+        if (AudioSettings.Reset(config) == false)
+        {
+            LogHelper.Warn(LogTag, "AudioSettings.Reset failed - the output device may be unavailable.", this);
+            return;
+        }
+
+        // Re-read rather than reusing `config` - that still holds the 0 we asked for, not the rate
+        // the device actually reported back.
+        AudioConfiguration applied = AudioSettings.GetConfiguration();
+        LogHelper.Log(LogTag, $"Audio engine restarted ({applied.sampleRate}Hz, buffer {applied.dspBufferSize}, {applied.speakerMode}).", this);
+    }
+
+    [Button("Reset Saved Volumes")]
+    private void ResetSavedVolumes()
+    {
+        PlayerPrefs.DeleteKey("audio_volume_master");
+        foreach (SoundGroup group in System.Enum.GetValues(typeof(SoundGroup)))
+            PlayerPrefs.DeleteKey($"audio_volume_{group}");
+
+        PlayerPrefs.Save();
+
+        _masterVolumePref = null;
+        _groupVolumePrefs = null;
+
+        LogHelper.Log(LogTag, "Saved volumes cleared - authored values apply on next load.", this);
     }
 
     [Button("Log Active Voices")]

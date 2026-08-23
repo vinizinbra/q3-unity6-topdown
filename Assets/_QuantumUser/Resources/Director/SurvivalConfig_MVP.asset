@@ -20,7 +20,7 @@ MonoBehaviour:
   - Name: Intro
     Kind: 0
     Duration:
-      RawValue: 1966080
+      RawValue: 655360
     BudgetPerPulse:
       RawValue: 196608
     PulseInterval:

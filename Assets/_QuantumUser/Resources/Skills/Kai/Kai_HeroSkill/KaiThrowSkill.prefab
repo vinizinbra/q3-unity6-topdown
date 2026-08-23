@@ -380,6 +380,13 @@ MonoBehaviour:
         RawValue: 0
       Z:
         RawValue: 0
+    SpawnPosition:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
     Damage:
       RawValue: 0
     RemainingLifetime:
@@ -439,6 +446,8 @@ MonoBehaviour:
     HealEffects:
     - Id:
         Value: 898240819200457878
+    HealAmount:
+      RawValue: 0
     DamageAmount:
       RawValue: 0
     DamageMask:
@@ -464,11 +473,13 @@ MonoBehaviour:
   initialized: 0
   executeOnlyOnLocal: 0
   isLocal: 0
-  visualRenderer: {fileID: 0}
+  visualRoot: {fileID: 0}
+  catchUpSpeedMultiplier: 2
   destroyEffectPrefab: {fileID: 6350743763286976369, guid: 3d63a7155f35f4b72ba173b63b299202, type: 3}
   trailParticle: {fileID: 7402652605636523878}
-  minCatchUpDuration: 0.03
-  maxCatchUpDuration: 0.2
+  minImpactDuration: 0.03
+  maxImpactDuration: 0.2
+  orphanTimeout: 3
 --- !u!1001 &7402652605655766366
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -601,7 +612,10 @@ PrefabInstance:
       propertyPath: ColorModule.gradient.maxGradient.m_ColorSpace
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 7218608172401035527, guid: 672a9f8d9b8441b47a4cc0a5c3d60b7c, type: 3}
+    - {fileID: 10831138, guid: 672a9f8d9b8441b47a4cc0a5c3d60b7c, type: 3}
+    - {fileID: 8270042, guid: 672a9f8d9b8441b47a4cc0a5c3d60b7c, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []

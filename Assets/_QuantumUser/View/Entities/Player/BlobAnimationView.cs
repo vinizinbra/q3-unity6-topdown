@@ -178,6 +178,30 @@ namespace Quantum
         // time, and lossyScale can't reliably decompose that combination (shearing).
         public float CurrentRootVerticalScale { get; private set; } = 1f;
 
+        [Header("Sound")]
+        [SerializeField, Tooltip("Played on EventPlayerJumped - the same event that starts the anticipation squash. Note jumping here is the AUTO-jump ledge assist (AutoJumpSystem), not a button the player pressed, so this is informational rather than input confirmation: keep it subtle. Leave empty to skip.")]
+        private SoundData jumpSound;
+
+        [SerializeField, Tooltip("Played the frame the character regains ground, alongside the landing squash. Volume is scaled by impact speed (see landSoundMinImpactSpeed / landSoundFullImpactSpeed) so a small hop off a ledge doesn't land as hard as a long fall. Leave empty to skip.")]
+        private SoundData landSound;
+
+        [SerializeField, Tooltip("Downward speed at or below which a landing is silent - stops the constant micro-landings of walking over uneven geometry from firing a step-thud every few frames.")]
+        private float landSoundMinImpactSpeed = 2f;
+
+        [SerializeField, Tooltip("Downward speed at which the landing sound reaches full volume. Between this and the minimum it scales linearly.")]
+        private float landSoundFullImpactSpeed = 12f;
+
+        [SerializeField, Tooltip("Footstep, played every footstepDistance world units actually travelled while grounded. Deliberately distance-driven rather than timed, so it self-syncs to real speed (Haste, slows, backpedalling) without reading the stride animation's internals. See the class comment on why this is the first thing to cut if the mix gets crowded. Leave empty to skip.")]
+        private SoundData footstepSound;
+
+        [SerializeField, Tooltip("World units of grounded travel between footsteps. Larger = fewer steps. Tune against the run cycle so steps land on the stride rather than drifting against it.")]
+        private float footstepDistance = 2.2f;
+
+        // Distance-accumulator for footsteps, and the last position it measured from.
+        private float _footstepAccumulator;
+        private Vector3 _lastFootstepPosition;
+        private bool _hasFootstepPosition;
+
         public override void Awake()
         {
             base.Awake();
@@ -244,6 +268,9 @@ namespace Quantum
         private void OnPlayerJumped(EventPlayerJumped e)
         {
             if (e.Entity != _entityRef) return;
+
+            if (jumpSound != null)
+                EntitySound.PlayAttached(jumpSound, transform, _entityRef);
 
             _state = State.Anticipate;
             _stateTimer = 0f;
@@ -346,6 +373,7 @@ namespace Quantum
             if (justLanded)
             {
                 float impactSpeed = Mathf.Abs(Mathf.Min(0f, verticalSpeed));
+                PlayLandSound(impactSpeed);
                 _jumpSquashT = Mathf.Clamp(impactSpeed * landingSquashPerSpeed, 0f, maxLandingSquash);
                 _springVelocity = 0f;
                 _springActive = true;
@@ -377,6 +405,8 @@ namespace Quantum
             {
                 IntegrateLandingSpring(dt);
             }
+
+            UpdateFootsteps(isGrounded, horizontalSpeed);
 
             float leanTarget = 0f;
             float rockTarget = 0f;
@@ -527,6 +557,65 @@ namespace Quantum
                 if (_bodyPunchRotation != 0f)
                     root.rotation *= Quaternion.Euler(0f, 0f, _bodyPunchRotation);
             }
+        }
+
+        // Scaled by how hard the landing actually was, using the same impact speed the landing
+        // squash is derived from - so the sound and the visual always agree about how big it was.
+        // Below landSoundMinImpactSpeed it's skipped entirely: walking across uneven chunk geometry
+        // produces a stream of tiny regroundings, and a thud on each one reads as a stutter.
+        private void PlayLandSound(float impactSpeed)
+        {
+            if (landSound == null || impactSpeed < landSoundMinImpactSpeed)
+                return;
+
+            float range = Mathf.Max(0.01f, landSoundFullImpactSpeed - landSoundMinImpactSpeed);
+            float volume = Mathf.Clamp01((impactSpeed - landSoundMinImpactSpeed) / range);
+
+            EntitySound.PlayAttached(landSound, transform, _entityRef, volume);
+
+            // A landing interrupts the stride, so the next footstep should be a full stride away
+            // rather than firing immediately on top of the thud.
+            _footstepAccumulator = 0f;
+        }
+
+        // Distance-driven rather than timed: accumulate real horizontal travel and fire a step every
+        // footstepDistance units. That self-scales with movement speed - Haste, slows and
+        // backpedalling all change step cadence for free - without this view needing to know
+        // anything about the run cycle's own phase.
+        private void UpdateFootsteps(bool isGrounded, float horizontalSpeed)
+        {
+            if (footstepSound == null || footstepDistance <= 0f)
+                return;
+
+            Vector3 position = transform.position;
+
+            if (isGrounded == false || horizontalSpeed <= moveSpeedEpsilon)
+            {
+                // Airborne or standing still: hold the accumulator and drop the reference point, so
+                // the distance covered by a dash or a fall never counts toward a footstep.
+                _hasFootstepPosition = false;
+                return;
+            }
+
+            if (_hasFootstepPosition == false)
+            {
+                _lastFootstepPosition = position;
+                _hasFootstepPosition = true;
+                return;
+            }
+
+            Vector3 delta = position - _lastFootstepPosition;
+            delta.y = 0f;
+            _footstepAccumulator += delta.magnitude;
+            _lastFootstepPosition = position;
+
+            if (_footstepAccumulator < footstepDistance)
+                return;
+
+            // Reset rather than subtract: a single frame that covered several strides (a teleport,
+            // a respawn) should produce ONE step, not a burst of them.
+            _footstepAccumulator = 0f;
+            EntitySound.PlayAttached(footstepSound, transform, _entityRef);
         }
 
         private State DetermineGroundedState(float horizontalSpeed)

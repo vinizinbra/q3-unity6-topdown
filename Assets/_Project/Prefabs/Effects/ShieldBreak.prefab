@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 569897190297691181}
   - component: {fileID: 6350743763286976369}
   - component: {fileID: 6081716198590185604}
+  - component: {fileID: 4429103127596118871}
   m_Layer: 0
   m_Name: ShieldBreak
   m_TagString: Untagged
@@ -4895,6 +4896,26 @@ ParticleSystemRenderer:
   m_MeshWeighting1: 1
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
+--- !u!114 &4429103127596118871
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9201039851411323099}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 287b1faaa056b45cfb4b4da18b45fa5b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ParticleSound
+  mode: 0
+  sound: {fileID: 11400000, guid: 567d0eda16ae04aa9a32879b51942cf6, type: 2}
+  loop:
+    intro: {fileID: 0}
+    loop: {fileID: 0}
+    tail: {fileID: 0}
+  volumeScale: 1
+  source: {fileID: 6350743763286976369}
 --- !u!1001 &542327606512612504
 PrefabInstance:
   m_ObjectHideFlags: 0

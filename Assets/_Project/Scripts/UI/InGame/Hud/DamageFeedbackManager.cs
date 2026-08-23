@@ -14,6 +14,12 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
 {
     public static DamageFeedbackManager Instance;
 
+    [SerializeField, Tooltip("Played when the LOCAL player lands a critical hit - never for a teammate's crit, and never for one taken. Deliberately gated on the same resolution the crit NUMBER uses, so the sound and the number always agree about whose hit it was.\n\nA multi-pellet weapon can crit several times in one tick, so author a small cooldown on the SoundData (~0.05s) or a shotgun crit fires one sound per pellet. Untick its Spatial flag to have it read as flat UI feedback rather than something happening out in the world.")]
+    private SoundData criticalHitSound;
+
+    [SerializeField, Tooltip("Played when the LOCAL player lands an ordinary (non-critical) hit - never for a teammate's, never for one taken, and never for a damage-over-time tick.\n\nThis is the single highest-frequency sound in the game: every bullet, every pellet, every enemy in an explosion. Author a cooldown on the SoundData (~0.05s) and keep the Impacts group budget tight, or a shotgun into a crowd fires dozens of copies in one tick.")]
+    private SoundData hitSound;
+
     [SerializeField] private DamageNumberUiWidget widgetPrefab;
     [SerializeField, Tooltip("HUD canvas slot the numbers live under - same idea as CharacterUiWidgetManager's widgetParent.")]
     private Transform widgetParent;
@@ -106,7 +112,37 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
         if (TryResolveKind(e, out var kind) == false)
             return;
 
+        PlayImpactSound(kind, e.Position.ToUnityVector3());
+
         Spawn(kind, e.Damage.AsFloat, e.Position.ToUnityVector3() + worldOffset);
+    }
+
+    // Piggy-backs on the kind already resolved for the floating number rather than re-deriving
+    // ownership: that resolution also traces a hit back through a Sentry chassis/barrel to the
+    // player who deployed it (see ResolveOwningPlayer), so your sentry's hits count as yours -
+    // which a plain `e.Owner == localPlayer` check would miss. It also means the sound and the
+    // number can never disagree about whose hit it was.
+    private void PlayImpactSound(DamageNumberKind kind, Vector3 position)
+    {
+        SoundData sound = kind switch
+        {
+            // A crit REPLACES the common impact rather than stacking on top of it, so the two can't
+            // double up into a muddy hit. To layer them, put hitSound in criticalHitSound's own
+            // Layers list - that's what layers are for, and it keeps the decision in the asset.
+            DamageNumberKind.CriticalDealtByMe => criticalHitSound,
+
+            // A frontal-reduced hit still connected, so it gets the common impact - it just doesn't
+            // get the crit's reward sound (see the priority order in TryResolveKind).
+            DamageNumberKind.DealtByMe or DamageNumberKind.FrontalReducedDealtByMe => hitSound,
+
+            // Everything else deliberately silent here: BurnDealtByMe is a damage-over-time TICK,
+            // not an impact, and would machine-gun this sound for the whole burn duration; the
+            // TakenByMe/Healed/Shielded kinds aren't hits I landed at all.
+            _ => null,
+        };
+
+        if (sound != null)
+            AudioManager.PlayAt(sound, position);
     }
 
     // Taking a hit is checked before dealing one so self-damage (own explosion, decoy backfire)

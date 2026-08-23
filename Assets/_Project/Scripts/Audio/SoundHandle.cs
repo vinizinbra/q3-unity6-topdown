@@ -42,6 +42,10 @@ public readonly struct SoundHandle
     // cutscene, or easing an ambience in as the player enters an area.
     public void FadeTo(float volume, float duration) => AudioManager.FadeTo(this, volume, duration);
 
+    // Multiplies the pitch this voice rolled, keeping the asset's own variation intact. Same
+    // caveat as SetPitch below.
+    public void ScalePitch(float multiplier) => AudioManager.ScalePitch(this, multiplier);
+
     // Live pitch change (playback rate). Note this does not retime an already-scheduled trim end -
     // the remaining duration was computed from the pitch at play time.
     public void SetPitch(float pitch) => AudioManager.SetPitch(this, pitch);

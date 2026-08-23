@@ -80,6 +80,11 @@ namespace Quantum
         // already parented under the weapon socket, so it at least moves with the player either way.
         protected Vector3 MuzzlePosition => muzzle != null ? muzzle.position : transform.position;
 
+        // The same fallback as MuzzlePosition, as a Transform - for anything that has to FOLLOW the
+        // barrel across frames rather than sample it once (a held muzzle sound, see
+        // ContinuousHitscanView.fireLoop) and so cannot use a position snapshot.
+        protected Transform MuzzleTransform => muzzle != null ? muzzle : transform;
+
         // Where the previous segment ENDED, in the simulation's own coordinates (never the
         // substituted muzzle position - see OnHitscanFired) - the only thing that distinguishes a
         // continuation of a path from the opening leg of a new one.
