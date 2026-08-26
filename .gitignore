@@ -107,3 +107,11 @@ InitTestScene*.unity*
 
 # Claude Code personal settings
 /.claude/settings.local.json
+
+# Large Asset Store audio libraries - kept locally, not in version control.
+# The clips actually used by the project live in Assets/_Project/Audio/Library/.
+# Re-import these from the Unity Asset Store on a fresh clone if you need to browse them.
+/Assets/3rd-party/Ultimate SFX Bundle - HD Remaster/
+/Assets/3rd-party/Ultimate SFX Bundle - HD Remaster.meta
+/Assets/3rd-party/Universal Sound FX/
+/Assets/3rd-party/Universal Sound FX.meta
