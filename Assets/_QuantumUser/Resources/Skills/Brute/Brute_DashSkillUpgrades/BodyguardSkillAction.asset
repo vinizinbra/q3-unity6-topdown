@@ -21,7 +21,8 @@ MonoBehaviour:
   RankDescriptions:
   - On Dash complete, restore 10 Shield to allies within 6m.
   - On Dash complete, restore 15 Shield to allies within 8m.
-  - On Dash complete, restore 20 Shield to allies within 8m and grant them +20% Damage Reduction for 2s.
+  - On Dash complete, restore 20 Shield to allies within 8m and grant them +20% Damage
+    Reduction for 2s.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 4
@@ -51,21 +52,23 @@ MonoBehaviour:
     Parent: 0
     Offset: {x: 0, y: 0, z: 0}
     ScaleByRadius: 1
-    Scale: 2
+    Scale: 0.5
     Alignment: 0
   Radius:
   - RawValue: 393216
+  - RawValue: 393216
   - RawValue: 524288
-  - RawValue: 524288
-  ShieldRestore:
+  GuardDuration:
+  - RawValue: 163840
+  - RawValue: 229376
+  - RawValue: 229376
+  ShieldReward:
+  - RawValue: 0
   - RawValue: 655360
   - RawValue: 983040
-  - RawValue: 1310720
   CooldownPerAlly:
-    RawValue: 294912
-  SelfEffectMultiplier:
-    RawValue: 32768
-  DamageReductionAmount:
-    RawValue: 13107
-  DamageReductionDuration:
-    RawValue: 131072
+    RawValue: 163840
+  ShockwaveRadius:
+    RawValue: 196608
+  ShockwaveForce:
+    RawValue: 262144

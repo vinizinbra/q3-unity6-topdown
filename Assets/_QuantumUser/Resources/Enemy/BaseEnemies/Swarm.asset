@@ -46,7 +46,7 @@ MonoBehaviour:
   Damage:
     RawValue: 131072
   AnticipationTime:
-    RawValue: 0
+    RawValue: 6554
   DirectionTracking: 2
   IgnoreY: 1
   Origin: 0
@@ -74,6 +74,7 @@ MonoBehaviour:
   AnticipationStep:
     AnimationType: 0
     Duration: 0.3
+    BodySprite: {fileID: 0}
     Shake:
       Frequency: 18
       RockDegrees: 6
@@ -131,6 +132,7 @@ MonoBehaviour:
   BeginStep:
     AnimationType: 0
     Duration: 0.3
+    BodySprite: {fileID: 0}
     Shake:
       Frequency: 18
       RockDegrees: 6
@@ -188,6 +190,7 @@ MonoBehaviour:
   OnGoingStep:
     AnimationType: 0
     Duration: 0.3
+    BodySprite: {fileID: 0}
     Shake:
       Frequency: 18
       RockDegrees: 6
@@ -245,6 +248,7 @@ MonoBehaviour:
   EndStep:
     AnimationType: 0
     Duration: 0.3
+    BodySprite: {fileID: 0}
     Shake:
       Frequency: 18
       RockDegrees: 6

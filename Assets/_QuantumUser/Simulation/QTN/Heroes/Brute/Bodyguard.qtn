@@ -1,0 +1,30 @@
+// Brute's Bodyguard Dash Ascension - see docs/brute-ascensions.md.
+//
+// Granted onto BRUTE (never onto the protected ally) by BodyguardSkillAction, refreshed on every
+// dash so it always reflects the currently-picked rank. Its only reader is
+// BruteBodyguardReactionSystem, which fires when a Free Hit Guard Brute granted actually eats a hit
+// (OnFreeHitGuardConsumed, Combat.qtn) and needs to know what that save is worth WITHOUT re-resolving
+// the rank from the skill asset - by then the dash is long over and the signal only carries entity
+// refs.
+//
+// Same "bake the resolved per-rank numbers onto a component the read side polls" shape every other
+// Brute line already uses (MomentumUpgrade/BoneBreakerUpgrade/AftershockUpgrade/
+// ConcussiveImpactUpgrade).
+component BodyguardUpgrade
+{
+    // How long a granted Free Hit Guard lasts (rank 1: 2.5s, rank 2+: 3.5s).
+    FP GuardDuration;
+
+    // Flat Shield paid back to Brute when a guard he granted actually blocks a hit. 0 at rank 1 -
+    // the payback is the rank 2 reward, so a rank-1 Bodyguard is purely altruistic.
+    FP ShieldReward;
+
+    // Rank 3 - radius of the knockback shockwave released around the SAVED ALLY (not around Brute)
+    // when their guard blocks. 0 at ranks 1-2 skips it entirely.
+    FP ShockwaveRadius;
+
+    // Horizontal push of that rank-3 shockwave. Radial, away from the saved ally - the point is to
+    // buy them space right after they nearly died, not to deal damage, so there is deliberately no
+    // damage or stun on it.
+    FP ShockwaveForce;
+}

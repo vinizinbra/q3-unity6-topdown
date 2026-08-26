@@ -25,6 +25,11 @@ component AreaAllyBudget
     array<FP>[4] Healed;
     array<FP>[4] CooldownReduced;
 
+    // Count of Free Hit Guards this area has granted each ally (see StatusEffects.FreeHitGuardRemaining).
+    // A COUNT rather than an FP amount because a guard is indivisible - you have one or you don't -
+    // which also means its cap is a plain integer rather than a magnitude.
+    array<Byte>[4] GuardsGranted;
+
     // Cap on total HP this area may restore to any ONE ally, as a fraction of that ally's own
     // MaxHealth (so it scales with whoever is standing in it rather than being a flat number tuned
     // against one hero). 0 = uncapped, which is what every area that doesn't author this gets.
@@ -33,4 +38,14 @@ component AreaAllyBudget
     // Cap on total seconds of remaining-cooldown reduction this area may grant any ONE ally. 0 =
     // uncapped. See ModifyRemainingCooldownEffectData.
     FP MaxCooldownReductionPerAlly;
+
+    // Cap on how many Free Hit Guards this area may grant any ONE ally over its whole lifetime.
+    // Lux's Sentry Fortification rank 2+ is the first consumer, at 1 - "one denial per hero per
+    // turret", so getting another means deploying another turret, which is what ties the line into
+    // his own cooldown/redeploy economy rather than making it a passive aura.
+    //
+    // 0 = grants none at all (the default every area that doesn't author it gets), NOT uncapped -
+    // deliberately the opposite convention to the two FP caps above, because a guard is a discrete
+    // grant that has to be opted into rather than a magnitude that happens to be unbounded.
+    Byte MaxGuardsPerAlly;
 }

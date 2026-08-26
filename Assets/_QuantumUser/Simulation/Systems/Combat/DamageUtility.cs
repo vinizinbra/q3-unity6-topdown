@@ -39,18 +39,11 @@ namespace Quantum
         // EntityDamaged.HitIndex) - defaults to 0 for every caller except WeaponSystem.FireHitscan's
         // pellet loop, the only place multiple identical-damage hits can land on one stationary
         // target within a single tick.
-        // generatesResonance defaults true, so every existing caller (weapon fire, Totem/Speaker
-        // Damage Beats, any other hero) is unaffected. Zara's own already-Resonance-sourced effects
-        // (the Resonance Pulse itself and Afterbeat's own delayed pulses) pass false - see ResonanceUtility.
-        // OnDamageDealt's own call below - preventing a Resonance-fueled ability from recursively
-        // refunding the Resonance it just spent. A plain bool on this shared funnel rather than an
-        // owner-type check, so it composes with any future "this damage shouldn't build resource X"
-        // need without a hardcoded per-skill exception.
         public static void ApplyDamage(Frame f, EntityRef target, FP damage, EntityRef owner,
             DamageSource source = DamageSource.None, bool bypassOutgoingResolution = false,
             ElementType element = ElementType.Neutral, bool silent = false,
             bool isChainedExplosion = false, bool isExplosion = false,
-            byte hitIndex = 0, bool generatesResonance = true)
+            byte hitIndex = 0)
         {
             if (f.Unsafe.TryGetPointer<Health>(target, out var health) == false)
             {
@@ -82,6 +75,83 @@ namespace Quantum
             if (owner != target && f.Has<PlayerLink>(owner) == true && f.Has<PlayerLink>(target) == true)
             {
                 Log.Debug($"[Damage] {target} ignored a hit from {owner} - friendly fire");
+                return;
+            }
+
+            // "A hostile attack connected" - raised ABOVE every negation layer below, so it reports
+            // that the hit landed regardless of whether anything survives to actually damage the
+            // target. See Combat.qtn for the full contract; the short version is that this is the
+            // authoritative "was I hit?" while OnHealthDamageApplied/OnShieldDamageApplied further
+            // down answer "did I lose anything?".
+            //
+            // Placement is the whole design: below Invulnerable (a dodged or i-framed hit never
+            // connected) and below the friendly-fire guard, but above the Free Hit Guard and Accessory
+            // Guard, so any future negation mechanic added beneath this line inherits the correct
+            // behaviour for free rather than needing its own hook.
+            //
+            // Consumers may modify how the rest of THIS call resolves - Quantum dispatches signals
+            // synchronously, so a reaction that applies a damage-reduction status here still lands in
+            // time for ResolveDamageReduction below (Zara's Keep the Beat relies on exactly this).
+            if (bypassOutgoingResolution == false && f.Has<Enemy>(owner) == true)
+            {
+                f.Signals.OnHostileHitConnected(target, owner);
+            }
+
+            // Free Hit Guard - a one-shot granted negation (Brute's Bodyguard today, see
+            // StatusEffects.qtn). Sits immediately ABOVE the Accessory Guard below so it is always
+            // spent first: it's a gift with a timer on it, whereas a durability point costs Coins at
+            // a Merchant to get back, so the free one has to go first or it could expire unused while
+            // the expensive one was burned. Negates exactly as cleanly as a block does, for the same
+            // reasons spelled out below, and under the same direct-hit gate.
+            if (bypassOutgoingResolution == false
+                && StatusEffectUtility.TryConsumeFreeHitGuard(f, target, out EntityRef guardSource) == true)
+            {
+                FPVector3 guardPosition = f.Unsafe.TryGetPointer<Transform3D>(target, out var guardTransform) == true
+                    ? guardTransform->Position
+                    : FPVector3.Zero;
+
+                Log.Debug($"[Damage] {target} negated a hit with a Free Hit Guard from {guardSource}");
+
+                // Signal for whoever granted it (the reward is theirs to decide - see Combat.qtn),
+                // event for the View. Raised after the negation is already committed, so nothing a
+                // consumer does can un-negate the hit.
+                f.Signals.OnFreeHitGuardConsumed(target, guardSource, owner);
+                f.Events.FreeHitGuardConsumed(target, guardSource, guardPosition);
+                return;
+            }
+
+            // Recoverable Accessory Guard - the accessory eats this hit outright and pops off (see
+            // AccessoryGuardUtility.TryBlock/docs/accessory-guard.md). Placed here, above every
+            // resolution step below, deliberately: a blocked hit is NEGATED, not mitigated, so it
+            // must roll no crit, apply no elemental proc, build no Rage and fire no
+            // on-hit signal - returning before any of that is the only way to guarantee all of it.
+            //
+            // Gated to direct hits (bypassOutgoingResolution == false, the same gate
+            // OnWeaponHitLanded below already uses to exclude DoT-tick replays), so a Burn/Poison
+            // tick can never quietly consume a durability point the player never saw land. That
+            // same gate also correctly excludes the two other already-resolved damage sources that
+            // pass true - PlayerFallSystem's fall damage (an accessory shouldn't cushion a fall,
+            // and it would drop into the pit the player just fell down) and SentryDecaySystem's
+            // self-drain - without either needing a special case here.
+            //
+            // Also deliberately BELOW the Invulnerable check above: a player already protected by
+            // Cheat Death or post-revive grace must not silently burn a durability point on a hit
+            // that was never going to land anyway.
+            //
+            // SHIELD PROTECTS THE ACCESSORY. Any Shield at all and the accessory sits this one out -
+            // the hit is going to be absorbed below, so it was never "a hit into Health", which is
+            // the only thing the accessory is there to catch. Expressed as a gate here rather than by
+            // moving the hook below AbsorbWithShield, which would forfeit every negation guarantee
+            // spelled out above (the crit roll, procs, Rage and OnWeaponHitLanded all
+            // happen in between).
+            //
+            // A hit bigger than the remaining Shield is deliberately NOT caught: the Shield empties
+            // and the overflow lands on Health with durability untouched. That gives Shield a real
+            // failure mode instead of making it a strictly-better accessory, and it guarantees chip
+            // damage can never cost a durability point.
+            if (bypassOutgoingResolution == false && HasShieldRemaining(f, target) == false
+                && AccessoryGuardUtility.TryBlock(f, target, owner, damage) == true)
+            {
                 return;
             }
 
@@ -182,13 +252,6 @@ namespace Quantum
 
             f.Events.EntityDamaged(target, owner, totalDamage, isCritical, element, silent, frontalMultiplier < FP._1, hitPosition, hitIndex);
 
-            // Zara's Resonance - builds from dealing damage only, scaled by the amount actually
-            // dealt. No-ops on anything without Resonance (every hero but Zara). Gated on
-            // generatesResonance so Zara's own Resonance-spending effects don't feed themselves.
-            if (generatesResonance == true)
-            {
-                ResonanceUtility.OnDamageDealt(f, owner, totalDamage);
-            }
 
             Log.Debug($"[Damage] {target} took {remaining} to health (raw {damage}, after stats {totalDamage}) " +
                       $"-> {health->CurrentHealth}/{health->MaxHealth}");
@@ -599,6 +662,15 @@ namespace Quantum
 
             FP t = (distance - RangeDamageNearThreshold) / (RangeDamageFarThreshold - RangeDamageNearThreshold);
             return FPMath.Lerp(stats->NearDamageMultiplier, stats->FarDamageMultiplier, t);
+        }
+
+        // "Is there a Shield standing between this hit and Health right now?" - the one thing the
+        // Accessory Guard gate above needs to know. Deliberately just presence-of-any-Shield rather
+        // than "is the Shield big enough to soak this hit": see that gate's own comment for why the
+        // overflow case is left to land.
+        private static bool HasShieldRemaining(Frame f, EntityRef target)
+        {
+            return f.Unsafe.TryGetPointer<Shield>(target, out var shield) == true && shield->Current > FP._0;
         }
 
         private static FP ReduceByArmor(Frame f, EntityRef target, FP damage)

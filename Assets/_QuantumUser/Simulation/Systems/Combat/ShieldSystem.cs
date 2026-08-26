@@ -12,6 +12,13 @@ namespace Quantum
         {
             Shield* shield = filter.Shield;
 
+            // Charge-only (every player - see Shield.qtn): filled by abilities/teammates/purchases,
+            // never by time. Bailing here rather than authoring RechargeRate 0 is what keeps the
+            // "stuck at 0 - RechargeRate is 0" guardrail below meaningful for everything that IS
+            // supposed to recharge, instead of it error-spamming once a second for a whole run.
+            if (shield->ChargeOnly == true)
+                return;
+
             if (shield->Current >= shield->Max)
                 return;
 

@@ -118,7 +118,7 @@ public abstract class HeroHudWidget : MonoBehaviour
         [SerializeField] private TMP_Text valueText;
 
         [Header("Full Glow")]
-        [SerializeField, Tooltip("On: the fill (and its value text) pulse while this section's own resource is full/ready - Rage at max, Juggernaut Charged, a Resonance pulse about to fire, Scrap at its free-cast threshold. Off: full looks exactly like any other value.")]
+        [SerializeField, Tooltip("On: the fill (and its value text) pulse while this section's own resource is full/ready - Rage at max, Juggernaut Charged, Zara at Max Flow, Scrap at its free-cast threshold. Off: full looks exactly like any other value.")]
         private bool glowWhenFull = true;
         [SerializeField, Tooltip("Optional explicit color to pulse toward. Leave alpha at 0 (the default) to derive it from whatever color is authored on the fill/text instead - see glowIntensity.")]
         private Color glowColor = new Color(0f, 0f, 0f, 0f);

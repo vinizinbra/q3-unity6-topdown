@@ -275,7 +275,7 @@ namespace Quantum
                 // FireShot/ResolveAimDirection already fall back to facing direction when target is
                 // None, so firing untargeted is safe as-is. Non-player shooters (Lux's sentry gun)
                 // have no PlayerLink and stay purely target-driven regardless of this flag.
-                canFire = f.GetPlayerInput(playerLink->Player)->Fire.IsDown == true;
+                canFire = PlayerInputUtility.Resolve(f, filter.Entity, playerLink)->Fire.IsDown == true;
             }
             else
             {

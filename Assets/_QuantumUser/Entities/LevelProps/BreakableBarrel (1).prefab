@@ -442,6 +442,8 @@ MonoBehaviour:
       RawValue: 65536
     FloatSpeed:
       RawValue: 65536
+    FallVelocity:
+      RawValue: 0
 --- !u!114 &7021118618245991733
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -461,7 +463,7 @@ MonoBehaviour:
   isLocal: 0
   normalVisual: {fileID: 5668972644701865680}
   brokenVisual: {fileID: 7779810812535093599}
-  breakEffectPrefab: {fileID: 6350743763286976369, guid: 2dcb44456e58b4eb3823d152a70d114f, type: 3}
+  breakEffectPrefab: {fileID: 3501008743596093556, guid: b6125774204064b139f169252f6acd22, type: 3}
   breakEffectOffset: {x: 0, y: 0, z: 0}
 --- !u!114 &4124911159080650277
 MonoBehaviour:

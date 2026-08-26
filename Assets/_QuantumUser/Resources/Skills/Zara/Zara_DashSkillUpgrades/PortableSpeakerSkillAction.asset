@@ -19,16 +19,20 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Portable Speaker
   RankDescriptions:
-  - Dashing leaves behind a Portable Speaker alternating Damage and Support Beats at reduced strength.
-  - Dashing leaves a Portable Speaker alternating Damage and Support Beats for longer and over a wider area, and completing the dash buffs nearby allies.
-  - 'Mobile Stage: dashing leaves a Portable Speaker that inherits your own Beat interval, radius and Sound Boost profile at reduced effectiveness.'
+  - Dashing leaves behind a Portable Speaker alternating Damage and Support Beats
+    at half strength, healing allies for half of what your Totem would.
+  - Dashing leaves a Portable Speaker alternating Damage and Support Beats for longer
+    and over a wider area, and completing the dash buffs nearby allies.
+  - 'Mobile Stage: dashing leaves a Portable Speaker that inherits your own Beat
+    interval, radius and Sound Boost profile at reduced effectiveness.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 5
   Interval:
     RawValue: 0
   Activated: 1
-  Description: Dashing leaves behind a Portable Speaker running the same Damage/Support rhythm at reduced strength. It never heals.
+  Description: Dashing leaves behind a Portable Speaker running the same Damage/Support
+    rhythm at half strength.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -73,12 +77,21 @@ MonoBehaviour:
     RawValue: 655360
   DamagePercentOfTotem:
     RawValue: 32768
+  TotemBaseHeal:
+    RawValue: 655
   DamageEffect:
     Id:
       Value: 898240819200457878
   SupportBuffEffect:
     Id:
       Value: 420844765751843033
+  HealEffect:
+    Id:
+      Value: 276820451133602943
+  HealPercentOfTotem:
+    RawValue: 32768
+  MaxHealFractionPerAlly:
+    RawValue: 6554
   DashEndBuffEffect:
     Id:
       Value: 420844765751843033

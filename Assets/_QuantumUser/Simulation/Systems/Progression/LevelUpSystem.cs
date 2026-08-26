@@ -17,6 +17,7 @@ namespace Quantum
             if (f.Global->LevelUpScreenOpen == false)
                 return;
 
+            AutoPickForBots(f);
             ProcessSelectCommands(f);
             ProcessRerollCommands(f);
             ProcessKeepCurrentCommands(f);
@@ -82,6 +83,24 @@ namespace Quantum
                     continue;
 
                 LevelUpUtility.ConfirmKeepCurrent(f, entity, choice);
+            }
+        }
+
+        // A bot has nobody at the keyboard, so it takes itself out of the "waiting for all players"
+        // gate the tick the screen opens instead of making the human sit through the full
+        // countdown for a pick that would have been random anyway. AutoConfirm is the exact same
+        // random draw Resolve's own timeout fallback makes - see LevelUpUtility.AutoConfirm - so
+        // this changes WHEN a bot picks, never HOW. Opt-out via RuntimeConfig.Bots.
+        private static void AutoPickForBots(Frame f)
+        {
+            if (f.RuntimeConfig.Bots.DisableAutoLevelUpPick == true)
+                return;
+
+            var filtered = f.Filter<LevelUpChoice, BotBrain>();
+
+            while (filtered.Next(out EntityRef entity, out LevelUpChoice _, out BotBrain _))
+            {
+                LevelUpUtility.AutoConfirm(f, entity);
             }
         }
 

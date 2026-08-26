@@ -6,6 +6,16 @@ namespace Quantum
     {
         public FP test;
 
+        // Local-testing convenience (see docs/bots.md): this player slot is driven by the
+        // simulation's own BotInputSystem instead of a real device, so one person can play a full
+        // co-op party solo. Read exactly twice - PlayerSpawnUtility.Spawn (adds BotBrain, which is
+        // what every simulation-side check actually keys off from then on) and the View's
+        // QuantumHelper.GetLocalSlotIndex (which hides bots from every "is this a LOCAL player"
+        // path, so a bot never claims a couch-co-op slot, a camera target, or a HUD binding).
+        // Authored per entry on QuantumRunnerLocalDebug.LocalPlayers[] / MatchMakingConfig.
+        // RuntimePlayers[], same "seeded once from outside the match" contract Talents below has.
+        public bool IsBot;
+
         // Every field on this entity's own meta-progression - carried in from OUTSIDE this match
         // (see MatchMakingConfig.StartRunner, which reads it from local PlayerPrefs before
         // AddPlayer) and, with the sole exception of WeaponLevel below, seeded once into this

@@ -34,8 +34,10 @@ namespace Quantum
         // caller (Coin/RiftShard/Scrap) is unchanged. PopMotionSystem re-resolves real ground under
         // the orb every tick, so any launch velocity lands safely - a bigger random kick just travels
         // further before settling, never underground.
+        // canLandHigher defaults false, so every currency/scrap caller is unchanged - see
+        // PopVelocity.CanLandHigher for why only a dropped accessory passes true.
         public static void SpawnWithPop(Frame f, EntityRef orb, FPVector3 anchor, FP minOffset, FP maxOffset,
-            FP randomHorizontalSpeed, FP randomVerticalSpeed)
+            FP randomHorizontalSpeed, FP randomVerticalSpeed, bool canLandHigher = false)
         {
             if (f.Unsafe.TryGetPointer<Transform3D>(orb, out var orbTransform) == false)
                 return;
@@ -70,7 +72,50 @@ namespace Quantum
                 return;
             }
 
-            f.Add(orb, new PopVelocity { Velocity = velocity, OriginGroundY = originGroundY });
+            f.Add(orb, new PopVelocity { Velocity = velocity, OriginGroundY = originGroundY, CanLandHigher = canLandHigher });
+        }
+
+        // Same arc machinery as SpawnWithPop above, but aimed at an EXPLICIT, already-validated
+        // landing point with no random velocity layered on top - so where it comes down is decided
+        // before it ever leaves the ground, not discovered afterwards.
+        //
+        // That ordering is the whole point for a dropped accessory (docs/accessory-guard.md): the
+        // generic ring-scatter path can happily lob a drop over water or a pit, which for a coin is
+        // a shrug and for a recoverable accessory is a lost defensive resource (and, if corrected
+        // after the fact, a visible teleport). Variety comes from launchAngle instead, which changes
+        // the arc's shape without moving where it terminates.
+        //
+        // Returns false when no valid arc exists (target directly overhead, degenerate distance) -
+        // the caller should then just ground-snap in place rather than launch something unpredictable.
+        public static bool SpawnWithPopTo(Frame f, EntityRef orb, FPVector3 anchor, FPVector3 landing,
+            FP launchAngle, bool canLandHigher)
+        {
+            if (f.Unsafe.TryGetPointer<Transform3D>(orb, out var orbTransform) == false)
+                return false;
+
+            orbTransform->Position = anchor;
+
+            FP originGroundY = EnemyMovementUtility.TryFindGroundHeight(f, anchor, EnemyMovementUtility.GetGroundLayerMask(f), out FP anchorGroundY)
+                ? anchorGroundY
+                : anchor.Y;
+
+            FP gravity = FPMath.Abs(f.SimulationConfig.Physics.Gravity.Y);
+            ProjectileLaunch launch = ProjectileSpawner.SolveArcLaunch(anchor, landing, launchAngle, gravity);
+
+            if (launch.IsValid == false)
+            {
+                GroundOffsetUtility.Apply(f, orb);
+                return false;
+            }
+
+            f.Add(orb, new PopVelocity
+            {
+                Velocity = launch.Velocity,
+                OriginGroundY = originGroundY,
+                CanLandHigher = canLandHigher
+            });
+
+            return true;
         }
 
         // Deterministic random burst - a random compass direction at a random speed in

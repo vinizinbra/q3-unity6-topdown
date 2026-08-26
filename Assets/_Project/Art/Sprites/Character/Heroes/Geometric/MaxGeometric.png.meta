@@ -139,10 +139,10 @@ TextureImporter:
       name: MaxGeometric_0
       rect:
         serializedVersion: 2
-        x: 72
+        x: 67
         y: 596
-        width: 420
-        height: 391
+        width: 453
+        height: 376
       alignment: 9
       pivot: {x: 0.53588074, y: 0.025934009}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -227,12 +227,12 @@ TextureImporter:
       name: MaxGeometric_4
       rect:
         serializedVersion: 2
-        x: 560
+        x: 519
         y: 576
-        width: 392
-        height: 425
+        width: 470
+        height: 385
       alignment: 9
-      pivot: {x: 0.4784716, y: 0.052913424}
+      pivot: {x: 0.56824976, y: 0.04117067}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -249,12 +249,12 @@ TextureImporter:
       name: MaxGeometric_5
       rect:
         serializedVersion: 2
-        x: 488
-        y: 49
-        width: 453
-        height: 449
+        x: 459
+        y: 51
+        width: 452
+        height: 382
       alignment: 9
-      pivot: {x: 0.4001993, y: 0.030114401}
+      pivot: {x: 0.5515037, y: 0.036827054}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []

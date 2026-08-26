@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
   clips:
   - {fileID: 8300000, guid: c922c34f559ead440a273a13a924cfc7, type: 3}
-  pick: 1
+  pick: 0
   layers: []
   group: 4
   output: {fileID: 0}
   volume: {x: 0.5, y: 0.5}
-  pitch: {x: 0.8, y: 1.2}
+  pitch: {x: 0.7, y: 0.8}
   delay: {x: 0, y: 0}
   startAt: 0
   endAt: 0

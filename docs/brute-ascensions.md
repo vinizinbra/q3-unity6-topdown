@@ -67,13 +67,15 @@ high-pressure stun pulse.
 ### Juggernaut (4 lines, all `SkillActionData` on `JuggernautSkillData.Actions`)
 
 Baseline, no Ascension needed (same treatment `ActiveMoveSpeedBonus`/`ChargedMoveSpeedBonus` already
-got): every enemy caught by a Discharge grants Brutus `ShieldGainPerHit` (5) as **Overshield**, not a
-capped-at-Max restore - `ShieldUtility.ApplyOvershield` adds straight to `Shield.Current`, capped at
-`OvershieldCapMultiplier` (1.5x) of his own Max Shield rather than 1x, so a multi-enemy Discharge can
-push him above his own Max Shield without stacking unboundedly. Nothing else needed to support the
-"above Max" half: `ShieldSystem`'s passive regen already no-ops whenever `Current >= Max`, and
-`DamageUtility.AbsorbWithShield` already drains `Current` by a plain `Min(Current, damage)` regardless
-of how far above Max it sits - the overshield just bleeds off as normal Shield would as damage lands.
+got): every enemy caught by a Discharge grants Brutus `ShieldGainPerHit` (5) Shield, capped at his own
+Max via `ShieldUtility.ApplyFlatShield`.
+
+> **Superseded in detail, unchanged in shape.** This was originally an **Overshield** (above-Max, 1.5x
+> cap) because player Shield refilled itself for free and a grant needed something to make it feel
+> meaningful. As of 2026-08-25 Shield is charge-only and Overshield is deleted outright — which makes
+> this Discharge grant Brutus's ONLY self-sufficient Shield source, and therefore what keeps his
+> Accessory on his head. See the "Juggernaut and Bodyguard rebuilt on the charge-only Shield" section
+> at the end of this doc, and `docs/accessory-guard.md`.
 
 **1. Momentum** (`MomentumSkillAction` → `MomentumUpgrade`, absorbs old Momentum + Unstoppable)
 - Rank 1: Momentum builds 25% faster while running during Juggernaut (`GenerationMultiplier` scales
@@ -176,6 +178,13 @@ Bodyguard, which stays its own separate Dash line)
   normal `DamageUtility.ApplyDamage` pipeline - no extra code needed for that.
 
 **8. Bodyguard** (`BodyguardSkillAction`)
+
+> **Fully superseded 2026-08-25** — Bodyguard no longer restores Shield to allies at all. It now grants
+> Brute and every nearby ally a **Free Hit Guard** (a one-shot complete negation of their next hit) on
+> dash complete, and pays Brute back in Shield when one actually blocks. Everything below is the
+> pre-rework record; see "Juggernaut and Bodyguard rebuilt on the charge-only Shield" at the end of
+> this doc for what is live.
+
 - Rank 1: on Dash complete, restore 10% Max Shield to allies within 6m.
 - Rank 2: 15%, radius 8m.
 - Rank 3: 20%; affected allies also get +20% DR for 2s (via the same shared `TemporaryDamageReduction`
@@ -606,3 +615,192 @@ Juggernaut Discharge's **+16 u/s upward** is extreme next to every other knockba
 multiplication is easy to miss when tuning either number alone. Lowering `KnockbackUpwardForce` to ~1
 would bring the pop in line without touching the horizontal push. Left alone because it is a balance
 decision, not a bug.
+
+---
+
+# 2026-08-25 — Juggernaut and Bodyguard rebuilt on the charge-only Shield
+
+Shield stopped being a self-refilling absorb pool and became an earned, spendable buffer whose job is
+to keep your Accessory on your head — full writeup in `docs/accessory-guard.md`'s own
+"Shield reworked into the Accessory's protective layer" section. Read that first; this section only
+covers Brute's two consumers.
+
+## Juggernaut — barely changed, but it means something different now
+
+Discharge still grants `ShieldGainPerHit` (5) per enemy caught. Two edits:
+
+- `ShieldUtility.ApplyOvershield` → `ApplyFlatShield`, so it caps at Max like every other grant.
+  `OvershieldCapMultiplier` is gone from `JuggernautSkillData`.
+- Nothing else.
+
+What changed is the *meaning*. This is now Brutus's **only self-sufficient Shield source**, and since
+holding any Shield stops his Accessory being knocked off, an aggressive multi-enemy Discharge is his
+defensive payoff twice over: the Shield itself, and his hat staying on. The 50% channel DR was always
+his defensive window; now the channel also produces something that outlives it.
+
+**Playtest knob:** 5/enemy against his authored `BaseMaxShield` of 50 is 10 Discharged enemies for a full charge,
+against an 8s channel on a 15s cooldown with a 1s per-enemy discharge cooldown. Reachable in a dense
+crowd, out of reach solo. 30-40 Max Shield is the likelier landing spot — tune after a real run rather
+than pre-emptively.
+
+## Bodyguard — Free Hit Guard
+
+| Rank | Effect |
+|---|---|
+| R1 | On dash complete, **Brute and allies within 3m** gain **Free Hit Guard for 2.5s** — the next damaging hit is completely negated |
+| R2 | Radius **6m**, guard lasts **3.5s**. When one blocks a hit, **Brute gains 10 Shield** |
+| R3 | When one blocks, it also releases a **3m knockback shockwave** around whoever it saved. **Brute gains 15 Shield** instead |
+
+The old line restored flat Shield at dash end. That only ever topped up a bar which refilled itself
+anyway; with Shield charge-only, the interesting thing to hand out is a guaranteed negation, and
+Brute's own reward is Shield he **earns when a guard actually blocks** rather than something handed to
+him for dashing. The old `SelfEffectMultiplier` is gone — Brute is simply a full-value recipient now.
+
+**Delivery shape is unchanged from the pre-rework line:** still `Phase = End`, still one radius query
+at the dash's end point, still the same 4.5s per-recipient cooldown. Radii were hand-tuned to
+**3m / 6m / 8m** (they used to plateau at 6m/8m/8m) — growing every rank makes rank 1 tight enough
+that guarding a teammate is a deliberate act of aiming the dash at them rather than something that
+happens incidentally, and gives the line a reason to be levelled beyond its Shield payback. A
+`Begin | OnGoing | End` sweep version was built and reverted — a dash-end radius is the intended feel.
+
+**Brute is included at full value.** He trivially ends the dash inside his own radius, and at rank 1
+that self-guard is the point of dashing defensively. At ranks 2-3 it closes a real loop: guard
+yourself, eat a hit with it, get Shield back. The per-recipient cooldown applies to him exactly as to
+anyone else, so a dash-cooldown build cannot hold a permanent guard.
+
+### The layer mask is load-bearing, not defensive
+
+`EnemyMovementUtility.FindPlayersInRadiusIncludingDashing` is what makes "it also triggers on Brute"
+actually true. This fires at dash **End**, and `DashSkillData` parks the dasher on `IgnoreProjectile`
+for the dash's whole duration (that is what gives Dash its i-frames). `DashSkillData.End` restores the
+layer one line before End-phase actions run, but `Core.PhysicsSystem3D` runs before every user system,
+so the broadphase this query reads was already built this tick with Brute still on `IgnoreProjectile`.
+The narrow `Player` mask drops him **100% of the time, not intermittently** — which is exactly how the
+old self-restore silently never ran (see "Bodyguard never shielded Brute himself" above). Switching
+this query back to `FindPlayersInRadius` would silently re-break self-inclusion.
+
+### New generic primitive: Free Hit Guard
+
+`StatusEffects.FreeHitGuardRemaining` + `FreeHitGuardSource`, with
+`StatusEffectUtility.ApplyFreeHitGuard`/`HasFreeHitGuard`/`TryConsumeFreeHitGuard`. A one-shot, timed,
+complete negation of the next damaging hit — **hero-agnostic; Bodyguard is its first consumer, not its
+owner**.
+
+Consumed in `DamageUtility.ApplyDamage` immediately **above** the Accessory Guard hook, under the same
+`bypassOutgoingResolution == false` direct-hit gate. Above, deliberately: a free hit is a gift with a
+timer on it, whereas a durability point costs Coins at a Merchant to restore — so the free one must be
+spent first, or it could lapse unused while the expensive one was burned.
+
+The reward deliberately lives **outside** the primitive. `Combat.qtn`'s
+`OnFreeHitGuardConsumed(target, source, attacker)` reports only that a guard triggered and who granted
+it; `BruteBodyguardReactionSystem` reads Brute's own `BodyguardUpgrade` component and decides what that
+save is worth. Any future hero, perk or consumable can hand out a free block on its own terms without
+touching the primitive. There is also a `FreeHitGuardConsumed` event carrying the position, for the
+same reason `AccessoryBlocked` exists: a fully negated hit fires no `EntityDamaged`, so without it a
+save reads as a miss.
+
+`BodyguardUpgrade` (`Bodyguard.qtn`) carries the rank-resolved `GuardDuration`/`ShieldReward`/
+`ShockwaveRadius`/`ShockwaveForce`, refreshed on every dash. The reaction system runs long after the
+dash is over, when only entity refs remain — re-resolving the rank from the skill asset at that point
+is not possible.
+
+Rank 3's shockwave is centred on **whoever the guard saved**, not on Brute: the guard routinely
+outlives the dash, so when it protects an ally Brute is usually nowhere near, and centring it on him
+would detonate it away from the fight it exists to break up. (When Brute's own guard blocks, he *is*
+the saved party, so it lands on him — the same code path, no special case.) It uses a new
+knockback-only sibling of the existing radial helper, `BruteAscensionUtility.ApplyRadialKnockback` —
+no damage, no stun, because the point is buying space right after a near-death, not sneaking a damage
+line into a defensive rank.
+
+The cooldown survives the rework, renamed
+`StatusEffects.AllyShieldRestoreCooldownRemaining` → `AllyGuardGrantCooldownRemaining`. It is still on
+the RECIPIENT rather than on Brute, for the reasons the 2026-08-20 pass documented: per-Brute would let
+two Brutes chain-guard one teammate, and would punish dashing *between* allies — exactly the play this
+line should reward. Now that Brute guards himself, it is also what paces his own self-guard uptime.
+
+### Known simplification
+
+A Free Hit Guard is consumed by any damaging hit, including one the ally's own Shield would have fully
+absorbed. Adding a "don't spend it if Shield covers this" check was considered and rejected as
+complexity the spec did not ask for — the guard is simply the stronger layer and goes first.
+
+## Current status
+
+Code-complete, pending codegen for `Shield.qtn`/`StatusEffects.qtn`/`Combat.qtn`/`Events.qtn`/the new
+`Bodyguard.qtn`. `BruteBodyguardReactionSystem` is registered in `SystemSetup.User.cs` beside
+`BruteProtectorReactionSystem`. `BruteAscensionAssetGenerator` authors the new Bodyguard fields and rank
+descriptions but **has still never been run** — until it is, `BodyguardSkillAction.asset` keeps its old
+`ShieldRestore`/`SelfEffectMultiplier` serialisation and stale rank text, `Unstoppable.asset` is still
+on disk, and `BruteBaseSkill-Juggernaut.asset` still carries its 5 pre-refactor embedded sub-actions.
+Not yet verified in-Editor.
+
+### View — Free Hit Guard
+
+Three pieces, all reusing existing infrastructure rather than adding a parallel one.
+
+**The guard while it's up** — `CharacterUiWidget.UpdateFreeHitGuard`: a `freeHitGuardRoot` shown while
+`StatusEffects.FreeHitGuardRemaining > 0`, plus a `freeHitGuardFill` (`Image`, Type = Filled) draining
+as the timer runs down. This is the load-bearing piece for a *granted* buff — without it a teammate has
+no way to know Brute gave them anything, and the ability is invisible to the very person it protects
+until it silently saves them. The fill (rather than an icon) is deliberate: a guard that lapses unused
+should visibly be running out, so there's a reason to go spend it.
+
+It needed one simulation field, `StatusEffects.FreeHitGuardDuration`. Every other timed status on this
+widget shows a countdown NUMBER via `StatusIndicator.timerText` and so needs no denominator; a fill is
+the first readout that has to know what "full" was. Deriving it View-side by remembering the largest
+`Remaining` ever seen breaks the moment a longer guard refreshes a shorter one, which is exactly what
+happens when a rank-2 Brute re-guards someone a rank-1 Brute already covered.
+
+**The moment it blocks** — a negated hit fires no `EntityDamaged`, so without explicit hookups it lands
+completely silently and reads as a miss. Same gap `AccessoryBlocked` documented; the guard now shares
+all three of its handlers:
+
+| Where | What | Keyed off |
+|---|---|---|
+| `HitFeedback` | `FlashDamage(freeHitGuardFlashColor)` — top-priority tier, so it never loses to a heal glow | `Target` — flashes whoever was saved, teammate included |
+| `HurtOverlayUiWidget` | hit-stop + screen flash, flat `blockHitStopDuration` (no damage to scale a tier off) | `Target`, local-player-gated — your screen shouldn't freeze for a save across the map |
+| `EffectsManager` | `freeHitGuardEffectPrefab` at the contact point, tinted cyan | position from the event |
+
+### A negated hit is never a damage colour
+
+Both negations run through `EffectsManager.PlayNegatedHitImpact` — shared plumbing only. Each keeps its
+**own** prefab, scale and tint, because they are different mechanics from different sources and which
+one just saved you should be readable at a glance:
+
+| | Accessory block | Free Hit Guard |
+|---|---|---|
+| Prefab | `accessoryBlockedEffectPrefab` | `freeHitGuardEffectPrefab` |
+| Impact tint | blue `(0.25, 0.6, 1)` | **none** — plays in its authored colours |
+| Character flash | `HitFeedback.blockFlashColor`, blue | `HitFeedback.freeHitGuardFlashColor`, cyan |
+
+The guard's impact is deliberately **untinted**. Its prefab is authored for this one job, so the colours
+are the artist's to own — runtime-tinting a purpose-built effect only fights the authoring. The
+accessory block keeps its tint because it leans on the generic hit spark, where the tint is doing real
+work turning a borrowed effect into a negation. `PlayNegatedHitImpact` takes a `Color?` for exactly
+this: pass one to recolour a borrowed prefab, pass null to leave a bespoke one alone.
+
+What carries the "this was stopped, not damage" signal in both cases is the **character flash**, and
+that is where cyan matters: `blockFlashColor` was **white** before this pass, i.e. identical to taking
+an ordinary hit. Both are cool colours now, distinct from the damage palette (white / orange burn /
+grey frontal-reduced) and from each other.
+
+Both flashes deliberately route through `FlashDamage` (the top-priority tier) despite not being damage:
+a negation is still an **impact**, and it must never lose out to a heal/shield/pickup glow landing in
+the same moment.
+
+Everything degrades cleanly unauthored — each impact falls back `<own prefab>` →
+`meleeHitEffectPrefab` → `defaultAreaBlastEffect`, and every `CharacterUiWidget` field is an optional
+null-check.
+
+**Editor authoring still needed:**
+1. Build the `freeHitGuardRoot`/`freeHitGuardFill` pair on `CharacterUiWidget.prefab` — the fill
+   `Image` **must** have Image Type = Filled or `fillAmount` silently does nothing.
+2. Author `freeHitGuardEffectPrefab` and `accessoryBlockedEffectPrefab` on `EffectsManager`. Until then
+   both fall back to `meleeHitEffectPrefab` (`SoftRadialPunchMedium`), which is a *brawling impact* —
+   it reads as "you got hit hard", the opposite of what a negation means. The fallback exists so
+   nothing is silent, not because it's the right art.
+3. Only the accessory block is tinted, and only while it's borrowing the generic spark — check it
+   actually lands in Play Mode. `PlayEffect`'s tinted overload writes `main.startColor` on the instance
+   and every child system; a prefab driving colour through Color-over-Lifetime or a material tint will
+   ignore it and keep its authored colour. Once a bespoke `accessoryBlockedEffectPrefab` exists, that
+   tint can be dropped too (pass null) for the same reason the guard's already is.

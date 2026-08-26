@@ -1,0 +1,132 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d3102fc2ee4f84753a6df9941224046d, type: 3}
+  m_Name: KaiVoiceBank
+  m_EditorClassIdentifier: Assembly-CSharp::HeroVoiceBank
+  hero: 4
+  characterData: {fileID: 11400000, guid: 741b137ac179c4a4d8bf5a634b46243b, type: 2}
+  voiceSettings: {fileID: 11400000, guid: 9118d90cd127f40f09487095578f5feb, type: 2}
+  entries:
+  - name: RunStarted  (3 variants)
+    Trigger: 1
+    Variants:
+    - {fileID: 8300000, guid: 8ac11479915664cd087d5631e3227391, type: 3}
+    - {fileID: 8300000, guid: c5c793702684e4e9192d6f76122ec341, type: 3}
+    - {fileID: 8300000, guid: 48839bb749955400c9d1440ddc4994d4, type: 3}
+    PairOverrides: []
+  - name: SurvivalStarted  (3 variants)
+    Trigger: 2
+    Variants:
+    - {fileID: 8300000, guid: 4aa400173234e48348a2af42b61f1a1e, type: 3}
+    - {fileID: 8300000, guid: d96ad1f2d804d47528fb2ecea63b855a, type: 3}
+    - {fileID: 8300000, guid: 6bda769d5baf84678a676fea8a8a36a3, type: 3}
+    PairOverrides: []
+  - name: BreathingTimeStarted  (3 variants)
+    Trigger: 3
+    Variants:
+    - {fileID: 8300000, guid: 5f54eaaaf2da2410fb5f14857e76c8d9, type: 3}
+    - {fileID: 8300000, guid: 74e477494c4c84fe6a476504d3b0501b, type: 3}
+    - {fileID: 8300000, guid: e9463460ae66b43ac8cee38df98b4725, type: 3}
+    PairOverrides: []
+  - name: HeroSkillUsed  (3 variants)
+    Trigger: 10
+    Variants:
+    - {fileID: 8300000, guid: ca05126bcf0f74b689ba6f4ed5a3113c, type: 3}
+    - {fileID: 8300000, guid: dd0ff23e4b2cb404bb9c0bc67114f7ed, type: 3}
+    - {fileID: 8300000, guid: 904e8adb29bed4c938cdbcc17e022482, type: 3}
+    PairOverrides: []
+  - name: UpgradeChosen  (3 variants)
+    Trigger: 22
+    Variants:
+    - {fileID: 8300000, guid: ed9220ebc84f14bdd8bb102de7ba702d, type: 3}
+    - {fileID: 8300000, guid: 820f59479bab14859843e6c718468977, type: 3}
+    - {fileID: 8300000, guid: 497fa96b9192c4168b1fb27a6d91b027, type: 3}
+    PairOverrides: []
+  - name: UpgradeMaxed  (3 variants)
+    Trigger: 23
+    Variants:
+    - {fileID: 8300000, guid: 56c4f5283eb7546d3bb621b77e875fbd, type: 3}
+    - {fileID: 8300000, guid: 4a5d39234b80f4adab37a7bd6e6659ec, type: 3}
+    - {fileID: 8300000, guid: a666e204b6cce46908ecd27855eb3bfe, type: 3}
+    PairOverrides: []
+  - name: ItemPurchased  (3 variants)
+    Trigger: 24
+    Variants:
+    - {fileID: 8300000, guid: 7ac13658003b44e5db98961a585cd6c2, type: 3}
+    - {fileID: 8300000, guid: 8a4d1cddfa75e4aa4b806ee90bd83ab4, type: 3}
+    - {fileID: 8300000, guid: 7523129755ea24dc686b6f27e0d11d1b, type: 3}
+    PairOverrides: []
+  - name: HeavyHitReceived  (3 variants)
+    Trigger: 30
+    Variants:
+    - {fileID: 8300000, guid: 4e3bf170f42d04f3986f9717d29ee62d, type: 3}
+    - {fileID: 8300000, guid: 87c983a407134455da8a9ce70228bf3d, type: 3}
+    - {fileID: 8300000, guid: 7b4f7ac41cf1d471697a0cb8b97742ab, type: 3}
+    PairOverrides: []
+  - name: AbilityNotReady  (3 variants)
+    Trigger: 40
+    Variants:
+    - {fileID: 8300000, guid: 06637f3ea3a654ebba85f14510b935c0, type: 3}
+    - {fileID: 8300000, guid: bee5565f822bc485e9fc610c380086aa, type: 3}
+    - {fileID: 8300000, guid: b86715bd52527476bb8863a23d3b698e, type: 3}
+    PairOverrides: []
+  - name: PlayerDowned  (3 variants)
+    Trigger: 50
+    Variants:
+    - {fileID: 8300000, guid: dfaf5e2c772b74846a7f87d9ee892006, type: 3}
+    - {fileID: 8300000, guid: 3b1d65b2904424f4cad2f9c8b08932a2, type: 3}
+    - {fileID: 8300000, guid: caeb4a1e8992d445c8a70087499922b9, type: 3}
+    PairOverrides: []
+  - name: PlayerKO  (3 variants)
+    Trigger: 51
+    Variants:
+    - {fileID: 8300000, guid: d8e053ed46d0f422ca99950bd458f39b, type: 3}
+    - {fileID: 8300000, guid: 22c09292b36a44c7e86125b9a68f5a75, type: 3}
+    - {fileID: 8300000, guid: 98f7bf293eecd432cb28be8499f8c96a, type: 3}
+    PairOverrides: []
+  - name: SelfRevive  (3 variants)
+    Trigger: 57
+    Variants:
+    - {fileID: 8300000, guid: c477e4322e54d4c22bb4b8f33b8b1060, type: 3}
+    - {fileID: 8300000, guid: 601c5c1d6f0a94e36a43f735c5d6f0f3, type: 3}
+    - {fileID: 8300000, guid: b65d2cc1f2a4f4ed7b7505a8096daa7b, type: 3}
+    PairOverrides: []
+  - name: AccessoryDropped  (3 variants)
+    Trigger: 60
+    Variants:
+    - {fileID: 8300000, guid: a17c088bfa3304d28a57371c094f764f, type: 3}
+    - {fileID: 8300000, guid: e41927cb803a549bc983b819355457bd, type: 3}
+    - {fileID: 8300000, guid: f7aab3c4111dc489a9a9648166daba15, type: 3}
+    PairOverrides: []
+  - name: AccessorySelfRecovered  (3 variants)
+    Trigger: 61
+    Variants:
+    - {fileID: 8300000, guid: 3b3409f7b756041f59a1dbbd8f3c0bb0, type: 3}
+    - {fileID: 8300000, guid: bb4dd528408bb4542aa712db4739697d, type: 3}
+    - {fileID: 8300000, guid: 928b9553f386f41e988d7a3c23eb00f3, type: 3}
+    PairOverrides: []
+  - name: AccessoryBroken  (3 variants)
+    Trigger: 63
+    Variants:
+    - {fileID: 8300000, guid: 951441bbe58a64afcad1cebfb90bbf43, type: 3}
+    - {fileID: 8300000, guid: a617be9cf25014dd8b9994f3cd71e586, type: 3}
+    - {fileID: 8300000, guid: a47344b0d14464cd194bddb9bbc6455a, type: 3}
+    PairOverrides: []
+  - name: AccessoryRestored  (3 variants)
+    Trigger: 64
+    Variants:
+    - {fileID: 8300000, guid: 81994678688694566aa4457701db7447, type: 3}
+    - {fileID: 8300000, guid: cf563aefef45e4188a5e09b37a6a333e, type: 3}
+    - {fileID: 8300000, guid: 910efd3a4cfb84df899dc687d5ab95e0, type: 3}
+    PairOverrides: []
+  testTrigger: 1
+  testAlly: 0

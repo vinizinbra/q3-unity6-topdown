@@ -13,9 +13,10 @@ namespace Quantum
     // no longer a bare knockback) and resets ChargePoints - by default fully to 0, unless the Momentum
     // Ascension's DischargeRetentionFraction says otherwise - so the cycle repeats for the rest of the
     // skill's fixed Duration. Every enemy caught by a Discharge also grants Brutus ShieldGainPerHit as
-    // Overshield, capped at OvershieldCapMultiplier of his own Max Shield - baseline, no Ascension
-    // needed - so an aggressive multi-enemy Discharge doubles as his own defensive payoff, without
-    // being able to stack Shield without limit.
+    // Shield, capped at his own Max - baseline, no Ascension needed. Since player Shield never
+    // recharges on its own any more (see Shield.qtn) this is Brutus's ONLY self-sufficient source of
+    // it, which makes an aggressive multi-enemy Discharge his defensive payoff twice over: the Shield
+    // itself, and the fact that holding any Shield keeps his Accessory from being knocked off.
     public unsafe partial class JuggernautSkillData : SkillData
     {
         public FP Duration = 8;
@@ -82,14 +83,13 @@ namespace Quantum
 
         // Flat Shield granted to Brutus himself per enemy caught by a Discharge - baseline, no
         // Ascension needed (same treatment ActiveMoveSpeedBonus/ChargedMoveSpeedBonus already got).
-        // Overshield, not a capped-at-Max restore - see ShieldUtility.ApplyOvershield - so a
-        // multi-enemy Discharge can push Current above Max, up to OvershieldCapMultiplier of it.
+        // Capped at his own Max Shield like every other grant; there is no above-Max overshield any
+        // more, because a charge-only Shield (see Shield.qtn) is already scarce enough without one.
+        //
+        // This is Brutus's ONLY self-sufficient Shield source, so it doubles as his Accessory
+        // protection: Discharge through a crowd, and the resulting Shield is what keeps his hat on.
+        // Playtest knob - at 5/enemy against a 60 Max Shield that's 12 enemies for a full charge.
         public FP ShieldGainPerHit = 5;
-
-        // How far above his own Max Shield Discharge's Overshield gain can stack Current to - 1.5x
-        // Max, not unbounded, so a huge multi-enemy Discharge still caps out rather than granting an
-        // effectively permanent second health bar.
-        public FP OvershieldCapMultiplier = FP._1_50;
 
         // {0} = Duration, {1} = DamageReductionBonus as a percent - e.g. "Channel for {0} seconds,
         // reducing damage taken by {1}% and gaining Charge as you move - once fully Charged, touching
@@ -501,10 +501,13 @@ namespace Quantum
                 charge->UnitsHit++;
 
                 // Rewarded for landing the hit itself, independent of whether this same hit goes on
-                // to kill target below - Overshield, so a multi-enemy Discharge can push Brutus above
-                // his own Max Shield (capped at OvershieldCapMultiplier of it), not just top him back
-                // up to Max.
-                ShieldUtility.ApplyOvershield(f, owner, owner, ShieldGainPerHit, OvershieldCapMultiplier);
+                // to kill target below. This is the whole reason Brutus has a Shield: it never
+                // recharges on its own (see Shield.qtn), so Discharging through a crowd is how he
+                // charges it - and while it holds charge, his Accessory can't be knocked off.
+                if (f.Unsafe.TryGetPointer<Shield>(owner, out var ownerShield) == true)
+                {
+                    ShieldUtility.ApplyFlatShield(f, owner, owner, ownerShield, ShieldGainPerHit);
+                }
 
                 // Bone Breaker - always dealt now (baseline Damage), scaled by the Ascension's own
                 // multiplier and, at rank 3, a further bonus against Specialist/Heavy tier targets.

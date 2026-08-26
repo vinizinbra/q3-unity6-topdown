@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b746db1788d514c9d9a6a30a0524c862, type: 3}
+  m_Name: Headliner
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.HeadlinerPassiveUpgradeData
+  Identifier:
+    Path: _QuantumUser/Resources/Passives/Zara/Zara_PassiveSkillUpgrades/Headliner
+    Guid:
+      Value: 359104458669361970
+  Icon: {fileID: 0}
+  DisplayName: Headliner
+  Description: Max Flow becomes a payoff - for your damage, your Totem, and your
+    whole team.
+  <MaxRank>k__BackingField: 3
+  RankDescriptions:
+  - While at Max Flow, you deal +10% damage.
+  - While at Max Flow, you deal +10% damage and your Totem's Beats are 15% more effective.
+  - 'Headliner: reaching Max Flow grants you and allies within 6m +10% Move Speed
+    and +10% Fire Rate for 3s (8s cooldown).'
+  MaxFlowDamageBonus:
+  - RawValue: 6554
+  - RawValue: 6554
+  - RawValue: 6554
+  MaxFlowBeatEffectiveness:
+  - RawValue: 0
+  - RawValue: 9830
+  - RawValue: 9830
+  HypeRadius:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 393216
+  HypeDuration:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 196608
+  HypeMoveSpeedBonus:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 6554
+  HypeFireRateBonus:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 6554
+  HypeCooldown:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 524288

@@ -54,6 +54,6 @@ MonoBehaviour:
   AnkleProbeHeight:
     RawValue: 0
   EdgeProbeDistance:
-    RawValue: 32768
+    RawValue: 49152
   EdgeCheckDistance:
     RawValue: 65536

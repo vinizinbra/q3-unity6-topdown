@@ -387,10 +387,41 @@ fall through as "no escape." Nothing downstream consumes `RunFailed` yet, delibe
   frozen). Reads the live value directly, so it automatically reflects the simulation's own
   pause-while-held behavior (`PlayerLifeStateSystem`) with no extra UI logic. A separate
   `UpdateFromReviveState` branch, checked *before* the generic `ContextInteraction`-driven switch,
-  takes over the display (progress fill only) while one of this client's own local players is
-  actively holding the channel; otherwise it hides the fill and falls through to the generic path,
-  which already handles the passive Available/Occupied display correctly using the now-fresh
-  title/color/countdown.
+  takes over the display (progress fill only) while there's a live channel this client should be
+  showing - **either** one of its own local players is actively holding it (the reviver's view)
+  **or** one of its own local players IS the Downed target (the target's own view, see below);
+  otherwise it hides the fill and falls through to the generic path, which already handles the
+  passive Available/Occupied display correctly using the now-fresh title/color/countdown.
+- **The player being revived sees it too** (2026-08-25). The prompt is anchored above the Downed
+  entity's own head and already exists on every client, but until this change it stayed blank on
+  the target's own screen: `UpdateFromReviveState` only accepted a LOCAL holder, and the generic
+  fall-through path resolves off `ContextInteraction.ActiveTarget`, which an incapacitated player
+  never has (they can't target themselves), so a downed player got no feedback at all that a
+  teammate was picking them up - only `SelfReviveWidget`'s own "YOU ARE DOWNED" panel. The fix is
+  one extra OR in that holder check (`_isLocalTarget`, resolved every frame in `RefreshReviveTitle`
+  since local slots bind asynchronously), so the target's client shows the exact same live progress
+  bar and bleed-out clock the reviver sees. The title flips to a new serialized
+  `selfDownedTitle` ("BEING REVIVED") for that case, since "REVIVE" is an instruction aimed at
+  whoever is holding the button. No new authoring - it reuses the same pooled widget and the same
+  `progressFillSlider`.
+- `SelfReviveWidget` gains an optional `reviveProgressSlider` + `beingRevivedRoot` pair - **"Being
+  revived: the target's own feedback."** The world-space prompt above the Downed player's own head
+  (above) is the reviver-facing display; it's anchored to a character the downed player isn't
+  necessarily looking at, and it's easy to lose in a crowded fight. The same hold progress therefore
+  also renders on the downed player's OWN HUD panel, next to the "YOU ARE DOWNED" title and
+  bleed-out clock they're already watching. Driven off the target-side
+  `PlayerLifeState.ReviveProgress`/`ReviveHolder` (not the reviver's own `ReviveChannel`), so it
+  neither knows nor cares WHO is holding or whether they're a remote player - the same field that
+  pauses the bleed-out clock is the one that shows the bar. Shown only while `ReviveHolder !=
+  EntityRef.None` and never while KO'd (no revive path exists there at all), hidden entirely rather
+  than reset to 0 so an interrupted hold's stale progress never lingers. Both fields are optional in
+  the usual sense - unassigned, the feature is simply off. `titleText` swaps from "YOU ARE
+  **DOWNED**" to "**BEING REVIVED**" for the duration of the hold (same `titleHighlightColorHex`
+  rich-text highlight, applied to the whole phrase since there's no "YOU ARE" prefix left to sit
+  outside it) and reverts the instant it's interrupted - polled off the same `ReviveHolder` field,
+  no state tracked for it. Deliberately does NOT hide the
+  self-revive button while a teammate holds: both paths stay simultaneously valid, whichever lands
+  first cancels the other (see above).
 - `SkillCooldownUiWidget` (HeroSkill slot only) gains one new branch ahead of the existing Context
   Interaction redirect, reusing `cooldownFillImages` for hold-progress while a TEAMMATE `ReviveChannel`
   is present (needed because `ContextInteraction.State` reads `Busy`, not `Available`, once a channel
@@ -527,7 +558,11 @@ yet run. Still needed by hand before anything works end-to-end at runtime:
    `Max`/`MainChar`/`Lux` under `Assets/_QuantumUser/Entities/Characters/`) - defaults all-zero
    (Alive), nothing else to author on it.
 3. Add `ReviveInteractionPromptView` to each hero's own View prefab, wiring
-   `InteractionPromptWidgetManager` the same way `PoiView` already is.
+   `InteractionPromptWidgetManager` the same way `PoiView` already is. **`Zara.prefab` is still
+   missing it** (2026-08-25) - Brute/Kai/Lux/Max/Pixie all have it, Zara does not, so a Downed Zara
+   gets no world-space revive prompt at all, on anyone's screen (her reviver still sees their own
+   `SkillCooldownUiWidget` hold fill, which is what makes this look like a one-sided bug rather
+   than a missing component).
 4. Build a `Slider` on the HUD prompt prefab for `InteractionPromptWidget`'s new
    `progressFillSlider` field (the title is plain "REVIVE" text now, no color override; the bleed-out
    countdown itself reuses the existing `descriptionText`, no new Text element needed - only needs
@@ -535,8 +570,9 @@ yet run. Still needed by hand before anything works end-to-end at runtime:
 5. Wire `SkillCooldownUiWidget`'s HeroSkill-slot `contextInteractionIcon`/`interactPromptRoot`
    (same pre-existing gap `docs/breathing-poi.md` already tracks) - teammate revive only.
 6. Build a `SelfReviveWidget` prefab (`titleText`/`chargesText`/`selfReviveButton`/
-   `bleedOutTimerText`) per local player slot in the HUD scene (`localSlotIndex` 0 and 1 for couch
-   co-op) - entirely unauthored today.
+   `bleedOutTimerText`, plus the optional `reviveProgressSlider`/`beingRevivedRoot` pair - see
+   "Being revived: the target's own feedback" below) per local player slot in the HUD scene
+   (`localSlotIndex` 0 and 1 for couch co-op).
 7. Nothing writes the new `self_revive_charges` `PlayerPref` yet - same accepted gap
    `weapon_talent_level`/`reroll_quantity` already have; seed `PlayerTalents.SelfReviveCharges` by
    hand in the Inspector for testing.

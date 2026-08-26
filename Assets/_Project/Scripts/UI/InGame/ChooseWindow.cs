@@ -4,6 +4,7 @@ using PrimeTween;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
+using QuantumUser.View.Util;
 using UnityEngine.UI;
 
 // Generic choice screen - Level-Up/Weapon-Upgrade/Chest, Cursed Rift's own Sacrifice/Mutation
@@ -457,6 +458,9 @@ public class ChooseWindow : UiWindow
     // of purchases can land while this window stays open, so `interactable` is unconditionally true
     // here; per-offer affordability/sold-out gating lives entirely in each CardData's own
     // PurchasableCardState (see PurchasableCardUi.Apply).
+    // One-shot, so a mis-sized window reports once rather than every frame the Store is open.
+    private bool _warnedCardShortfall;
+
     public void RefreshStore(string title, UpgradeCardWidget.CardData[] foodData, WeaponCardWidget.CardData[] weaponData, string subtitle = null)
     {
         SetCardFamilyActive(showCards: true, showWeaponCards: true);
@@ -465,6 +469,19 @@ public class ChooseWindow : UiWindow
         RefreshCountdown(0f);
         SetSecondaryButtonActive(true, "CLOSE");
         SetRerollButtonActive(false);
+
+        // Store is the one screen that can be handed MORE card data than this window was authored
+        // with (its rolled food offers plus two guaranteed, never-rolled offers - Increase Weapon
+        // Level, and the Accessory Repair/Replacement service). Silently dropping the overflow is
+        // exactly how the accessory card went missing once already, so say so instead: the fix is
+        // always to raise cardCount on this instance.
+        if (foodData.Length > cards.Length && _warnedCardShortfall == false)
+        {
+            _warnedCardShortfall = true;
+            LogHelper.Warn("ChooseWindow", $"{name} has cardCount {cards.Length} but the Store needs " +
+                $"{foodData.Length} card slots - the last {foodData.Length - cards.Length} offer(s) " +
+                "(e.g. the Accessory Repair/Replacement service) will never be shown. Raise cardCount.", this);
+        }
 
         for (int i = 0; i < cards.Length; i++)
         {

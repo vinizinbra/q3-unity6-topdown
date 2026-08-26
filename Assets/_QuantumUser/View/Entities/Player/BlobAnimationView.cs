@@ -25,6 +25,13 @@ namespace Quantum
         // without being able to reassign the rig transform this component itself animates.
         public Transform Head => head;
 
+        // The rig's own top transform - everything this component poses hangs off it. Read-only,
+        // same reasoning as Head above. Exposed for CharacterPreviewWidget, which shows a hero in
+        // the menu by keeping ONLY this branch of the instantiated prefab and discarding the rest
+        // (weapon, shadow, colliders, skill FX), so a preview frames the character itself rather
+        // than the full gameplay entity built around it.
+        public Transform Root => root;
+
         [Header("Facing")]
         [SerializeField] private bool billboardToCamera = true;
         [SerializeField, Tooltip("Fallback only, used when Aim is missing: minimum |velocity.x| before the facing flip commits. The normal path reads Aim.FacingSign, which AimSystem already computes with its own deadzone.")]
@@ -150,6 +157,18 @@ namespace Quantum
         private Vector3 _headPunchScale;
 
         private bool _wasGrounded = true;
+
+        // Lobby character preview (CharacterPreviewWidget): this rig is an instance of the hero
+        // prefab standing in a MenuScene with no QuantumRunner at all, so QUpdate never fires -
+        // the widget drives Animate directly through TickPreview instead. The flag exists purely
+        // to mute the two sound paths, which key off _entityRef (EntityRef.None here) and would
+        // ask AudioManager for a voice for a character that isn't in any match.
+        private bool _previewMode;
+        // Billboarding normally faces Camera.main. A preview rig is rendered by its own offscreen
+        // camera on its own layer, and Camera.main in a menu is the menu's camera pointing
+        // somewhere else entirely - which would turn the sprite edge-on. Set, this wins over
+        // Camera.main; unset (every in-game rig), nothing changes.
+        private Camera _previewCamera;
 
         // Set by ResetToInitialPoseAndPause, consumed on the next QUpdate - i.e. the first frame
         // after resuming from the pause it triggers, so whatever pose was hand-tweaked in the
@@ -316,7 +335,52 @@ namespace Quantum
                 (view, val) => view._headPunchScale = val);
         }
 
+        // Drives the rig for one frame with no simulation behind it: standing still, on the
+        // ground, alive - i.e. the idle breathe/bob/wobble cycle and nothing else. Called every
+        // frame by CharacterPreviewWidget, which owns the instantiated prefab and the offscreen
+        // camera rendering it. Deliberately a push from outside rather than this component
+        // growing its own Update(): CustomQuantumEntityViewComponent already declares a private
+        // Update() driving QUpdate, and a second one here would hide it and break every live rig.
+        public void TickPreview(float dt)
+        {
+            _previewMode = true;
+            Animate(Vector3.zero, true, PlayerLifeStateKind.Alive, dt);
+        }
+
+        // See _previewCamera. Pass null to fall back to Camera.main.
+        public void SetPreviewCamera(Camera camera)
+        {
+            _previewCamera = camera;
+        }
+
         protected override void QUpdate(QuantumGame game)
+        {
+            var frame = game.Frames.Predicted;
+            if (frame.Has<KCC>(_entityRef) == false)
+                return;
+
+            var kcc = frame.Get<KCC>(_entityRef);
+
+            // Downed/KO (see docs/revive.md) - a plain active-object swap off PlayerLifeState.State,
+            // no procedural pose. Alive shows bodyRoot, Downed shows downedRoot, KO shows koRoot.
+            PlayerLifeStateKind lifeState = frame.Has<PlayerLifeState>(_entityRef) == true
+                ? frame.Get<PlayerLifeState>(_entityRef).State
+                : PlayerLifeStateKind.Alive;
+
+            Vector3 velocity = kcc.Data.RealVelocity.ToUnityVector3();
+            UpdateFacing(frame, velocity);
+
+            Animate(velocity, kcc.Data.IsGrounded, lifeState, Time.deltaTime);
+        }
+
+        // Drives one frame of the rig off plain values instead of a Frame, so the exact same pose
+        // math serves both the live entity (QUpdate above) and the simulation-free lobby character
+        // preview (TickPreview above, see CharacterPreviewWidget) - rather than the preview growing
+        // its own second copy of the idle cycle to drift out of sync with this one. Everything
+        // Quantum-specific stays in QUpdate: the KCC/PlayerLifeState reads, and the Aim read that
+        // UpdateFacing does. Nothing in here touches _entityRef except the two sound paths, and
+        // those no-op under _previewMode.
+        private void Animate(Vector3 velocity, bool isGrounded, PlayerLifeStateKind lifeState, float dt)
         {
             if (root == null && head == null && torso == null && legLeft == null && legRight == null)
                 return;
@@ -327,39 +391,21 @@ namespace Quantum
                 _recaptureBaselineOnResume = false;
             }
 
-            var frame = game.Frames.Predicted;
-            if (frame.Has<KCC>(_entityRef) == false)
-                return;
-
-            var kcc = frame.Get<KCC>(_entityRef);
-
-            // Downed/KO (see docs/revive.md) - a plain active-object swap off PlayerLifeState.State,
-            // no procedural pose. Alive shows bodyRoot, Downed shows downedRoot, KO shows koRoot.
-            // While not Alive the normal KCC-velocity locomotion below is skipped entirely - an
-            // incapacitated player can't move anyway (PlayerLifeStateUtility.IsIncapacitated).
-            PlayerLifeStateKind lifeState = frame.Has<PlayerLifeState>(_entityRef) == true
-                ? frame.Get<PlayerLifeState>(_entityRef).State
-                : PlayerLifeStateKind.Alive;
-
             ApplyLifeStateVisuals(lifeState);
 
+            // While not Alive the normal velocity-driven locomotion below is skipped entirely - an
+            // incapacitated player can't move anyway (PlayerLifeStateUtility.IsIncapacitated).
             if (lifeState != PlayerLifeStateKind.Alive)
             {
                 _springActive = false; // cancel any in-flight landing spring so it doesn't resume on revive
-                _wasGrounded = kcc.Data.IsGrounded;
+                _wasGrounded = isGrounded;
                 return;
             }
 
-            Vector3 velocity = kcc.Data.RealVelocity.ToUnityVector3();
             float horizontalSpeed = new Vector2(velocity.x, velocity.z).magnitude;
             float verticalSpeed = velocity.y;
-            bool isGrounded = kcc.Data.IsGrounded;
             bool justLanded = isGrounded && _wasGrounded == false;
             bool justLeftGround = isGrounded == false && _wasGrounded;
-
-            float dt = Time.deltaTime;
-
-            UpdateFacing(frame, velocity);
 
             // Facing now follows aim rather than velocity, so travel direction and facing can
             // disagree (e.g. strafing/backpedaling while aiming the other way). moveXSign is the
@@ -565,7 +611,7 @@ namespace Quantum
         // produces a stream of tiny regroundings, and a thud on each one reads as a stutter.
         private void PlayLandSound(float impactSpeed)
         {
-            if (landSound == null || impactSpeed < landSoundMinImpactSpeed)
+            if (_previewMode || landSound == null || impactSpeed < landSoundMinImpactSpeed)
                 return;
 
             float range = Mathf.Max(0.01f, landSoundFullImpactSpeed - landSoundMinImpactSpeed);
@@ -584,7 +630,7 @@ namespace Quantum
         // anything about the run cycle's own phase.
         private void UpdateFootsteps(bool isGrounded, float horizontalSpeed)
         {
-            if (footstepSound == null || footstepDistance <= 0f)
+            if (_previewMode || footstepSound == null || footstepDistance <= 0f)
                 return;
 
             Vector3 position = transform.position;
@@ -845,9 +891,10 @@ namespace Quantum
                 CurrentRockDegrees = rockDegrees;
                 CurrentBobOffset = bobOffset + upperBodyBobOffset;
 
-                if (billboardToCamera && Camera.main != null)
+                Camera billboardCamera = _previewCamera != null ? _previewCamera : Camera.main;
+                if (billboardToCamera && billboardCamera != null)
                 {
-                    var camForward = Camera.main.transform.forward;
+                    var camForward = billboardCamera.transform.forward;
                     root.rotation = Quaternion.LookRotation(camForward, Vector3.up) * Quaternion.Euler(0f, 0f, totalTilt);
                 }
                 else

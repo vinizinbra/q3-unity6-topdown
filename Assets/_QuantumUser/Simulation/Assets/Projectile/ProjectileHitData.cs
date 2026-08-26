@@ -71,6 +71,9 @@ namespace Quantum
         // so a planted bomb (see AreaHitData.PlantedFuseTime/ProjectileSystem.TryPlant) still lands
         // and runs its own fuse/taunt behavior (e.g. Birthday Cake) exactly as it would without this
         // upgrade. Only the enemy-hit path is meant to skip straight to detonation.
+        [UnityEngine.Tooltip("Off (the default): a shot from the players' side passes THROUGH teammates, so an ally in the firing line can't absorb it. On: it detonates on them - only wanted for a projectile that deliberately targets allies (a heal or buff shot), which is the one case where hitting a teammate is the point.\n\nEnemy-fired projectiles ignore this entirely and always detonate on a player.")]
+        public bool DetonateOnAllyHit;
+
         protected bool ShouldDetonate(Frame f, Projectile* projectile, EntityRef hitEntity)
         {
             if (hitEntity != EntityRef.None && f.Has<Enemy>(hitEntity) == true)
@@ -84,8 +87,22 @@ namespace Quantum
             if (hitEntity != EntityRef.None && f.Has<Breakable>(hitEntity) == true)
                 return true;
 
-            if (IsCombatant(f, hitEntity) == true) // a player - no toggle requested yet, always counts
-                return true;
+            if (hitEntity != EntityRef.None && f.Has<PlayerLink>(hitEntity) == true)
+            {
+                // A shot fired by the PLAYERS' side passes straight through a teammate. It used to
+                // detonate on them: no damage got through (DamageTargetMask filters that), but the
+                // projectile was still consumed, so a teammate standing in the firing line silently
+                // ate your bullets. In co-op that reads as the gun being broken.
+                //
+                // Allegiance is decided by whether the OWNER is an Enemy rather than by whether it
+                // is a player - a Sentry, a turret or any other player-deployed shooter has no
+                // PlayerLink of its own, and its shots must not be stopped by the player who
+                // deployed it either.
+                bool firedByEnemy = projectile->Owner != EntityRef.None
+                                    && f.Has<Enemy>(projectile->Owner) == true;
+
+                return firedByEnemy || DetonateOnAllyHit;
+            }
 
             return DetonateOnLevelGeometry;
         }

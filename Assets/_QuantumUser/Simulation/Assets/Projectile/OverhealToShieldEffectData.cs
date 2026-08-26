@@ -4,8 +4,14 @@ namespace Quantum
 
     // Healing Chorus rank 3 "Encore" / Restorative Beat's own overheal-to-Shield mechanic - heals
     // AND converts the heal's own excess (whatever didn't fit under the target's MaxHealth) into
-    // Overshield in one call, replacing ScaledHealEffectData in a Totem/Portable Speaker's
+    // Shield in one call, replacing ScaledHealEffectData in a Totem/Portable Speaker's
     // HealEffects slot 0 at rank 3 rather than needing a second list entry to coordinate with.
+    //
+    // The Shield half is capped at the target's own Max like every other grant - there is no
+    // above-Max overshield any more (see ShieldUtility). It's worth more than it used to be all the
+    // same: player Shield is charge-only now, so an at-full-health ally being topped up with Shield
+    // is genuinely protecting their Accessory rather than padding a bar that would have refilled
+    // itself anyway.
     // context.Damage carries the heal PERCENT (same convention ScaledHealEffectData uses, seeded
     // from AlternatingArea.HealAmount) - requested is computed pre-owner-heal-multiplier (the
     // nominal ask, not what ResolveHealMultiplier inside ApplyFlatHeal ultimately lets through), a
@@ -13,7 +19,6 @@ namespace Quantum
     public unsafe class OverhealToShieldEffectData : HitEffectData
     {
         public FP ShieldConversionPercent = FP._0_50;
-        public FP OvershieldCapMultiplier = FP._1_50;
 
         public override void Apply(Frame f, ref HitEffectContext context)
         {
@@ -40,7 +45,10 @@ namespace Quantum
             if (excess <= FP._0)
                 return;
 
-            ShieldUtility.ApplyOvershield(f, context.Target, context.Owner, excess * ShieldConversionPercent, OvershieldCapMultiplier);
+            if (f.Unsafe.TryGetPointer<Shield>(context.Target, out var shield) == false)
+                return;
+
+            ShieldUtility.ApplyFlatShield(f, context.Target, context.Owner, shield, excess * ShieldConversionPercent);
         }
     }
 }

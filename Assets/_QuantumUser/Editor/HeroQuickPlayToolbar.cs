@@ -18,12 +18,12 @@ namespace QuantumUser.Editor
     {
         private static readonly (string Name, string PrototypePath)[] Heroes =
         {
-            ("Max", "Assets/_QuantumUser/Entities/Characters/MaxEntityPrototype.qprototype"),
-            ("Brute", "Assets/_QuantumUser/Entities/Characters/BruteEntityPrototype.qprototype"),
-            ("Pixie", "Assets/_QuantumUser/Entities/Characters/PixieEntityPrototype.qprototype"),
-            ("Zara", "Assets/_QuantumUser/Entities/Characters/ZaraEntityPrototype.qprototype"),
-            ("Kai", "Assets/_QuantumUser/Entities/Characters/KaiEntityPrototype.qprototype"),
-            ("Lux", "Assets/_QuantumUser/Entities/Characters/LuxEntityPrototype.qprototype"),
+            ("Max", "Assets/_QuantumUser/Entities/Characters/QMaxEntityPrototype.qprototype"),
+            ("Brute", "Assets/_QuantumUser/Entities/Characters/QBruteEntityPrototype.qprototype"),
+            ("Pixie", "Assets/_QuantumUser/Entities/Characters/QPixieEntityPrototype.qprototype"),
+            ("Zara", "Assets/_QuantumUser/Entities/Characters/QZaraEntityPrototype.qprototype"),
+            ("Kai", "Assets/_QuantumUser/Entities/Characters/QKaiEntityPrototype.qprototype"),
+            ("Lux", "Assets/_QuantumUser/Entities/Characters/QLuxEntityPrototype.qprototype"),
         };
 
         [MainToolbarElement("RiftRaiders/Hero Quick Play", defaultDockPosition = MainToolbarDockPosition.Left)]

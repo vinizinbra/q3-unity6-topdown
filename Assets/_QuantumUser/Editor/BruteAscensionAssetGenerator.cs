@@ -237,22 +237,29 @@ namespace QuantumUser.Editor
             {
                 asset.DisplayName = "Bodyguard";
                 asset.MaxRank = 3;
-                asset.Description = "On Dash complete, restore Shield to nearby allies.";
+                asset.Description = "Dash to leave yourself and nearby allies a guard that negates the next hit taken.";
                 asset.RankDescriptions = new[]
                 {
-                    "On Dash complete, restore 10 Shield to allies within 6m.",
-                    "On Dash complete, restore 15 Shield to allies within 8m.",
-                    "On Dash complete, restore 20 Shield to allies within 8m and grant them +20% Damage Reduction for 2s.",
+                    "On Dash complete, you and allies within 3m gain Free Hit Guard for 2.5s - the next damaging hit is completely negated.",
+                    "On Dash complete, you and allies within 6m gain Free Hit Guard for 3.5s. When it blocks a hit, you gain 10 Shield.",
+                    "On Dash complete, you and allies within 8m gain Free Hit Guard for 3.5s. When it blocks a hit, it also releases a 3m knockback shockwave around them, and you gain 15 Shield.",
                 };
-                asset.Radius = new[] { FP._6, FP._8, FP._8 };
 
-                // FLAT, not a percentage of the ally's own Max Shield - a percentage restore scales with
-                // the recipient and let a dash-cooldown build pump unbounded Shield into a tanky ally.
-                asset.ShieldRestore = new FP[] { 10, 15, 20 };
+                // Grows every rank rather than plateauing at rank 2 (hand-tuned in the Inspector and
+                // brought back here so a regeneration can't stomp it). A tight rank-1 radius makes
+                // guarding a teammate a deliberate act of aiming the dash at them.
+                asset.Radius = new[] { FP._3, FP._6, FP._8 };
+                asset.GuardDuration = new[] { FP.FromString("2.5"), FP.FromString("3.5"), FP.FromString("3.5") };
+
+                // Brute's own payoff is EARNED on a guard actually blocking, rather than handed to him
+                // for dashing the way the old SelfEffectMultiplier self-restore was. He guards himself
+                // too, so ranks 2-3 close a real loop: guard, eat a hit with it, get Shield back. Same
+                // pool Juggernaut charges, so it's a second route to keeping his own Accessory on
+                // (any Shield at all = the accessory never pops).
+                asset.ShieldReward = new FP[] { FP._0, 10, 15 };
                 asset.CooldownPerAlly = FP.FromString("4.5");
-                asset.SelfEffectMultiplier = FP._0_50;
-                asset.DamageReductionAmount = FP._0_20;
-                asset.DamageReductionDuration = FP._2;
+                asset.ShockwaveRadius = FP._3;
+                asset.ShockwaveForce = FP._4;
             });
 
             AssetDatabase.SaveAssets();

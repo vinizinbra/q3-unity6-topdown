@@ -56,9 +56,10 @@ namespace Quantum
 
             filter.Transform3D->Position = respawnPosition;
 
-            // Teleport() on a player's KCC also zeroes its velocity sources for the same reason -
-            // without this, whatever fall/knockback velocity carried it off the level would just
-            // keep driving it straight back off the respawn point.
+            // Without this, whatever fall/knockback velocity carried it off the level would just
+            // keep driving it straight back off the respawn point. PlayerFallSystem needs the same
+            // reset and does it explicitly too - KCC.Teleport does NOT clear velocity on its own
+            // (it only sets position/HasTeleported), which this comment used to claim.
             filter.PhysicsBody3D->Velocity = FPVector3.Zero;
 
             Log.Debug($"[Fall] {filter.Entity} ({data.name}) respawned at {respawnPosition}");

@@ -1,4 +1,4 @@
-namespace Quantum
+﻿namespace Quantum
 {
     using System;
     using Photon.Deterministic;
@@ -109,6 +109,14 @@ namespace Quantum
         // see TalentsConfig, TalentUtility and RuntimePlayer's own Player*/Has*/Can* fields.
         public AssetRef<TalentsConfig> TalentsConfig;
 
+        [Header("Accessory Guard")]
+        // Recoverable Accessory Guard tuning - durability, how the accessory pops off/is recovered,
+        // and what a Merchant repair/replacement costs. See AccessoryGuardConfig,
+        // AccessoryGuardUtility/AccessoryServiceUtility and docs/accessory-guard.md. Unassigned
+        // disables the mechanic entirely (nothing is seeded, so nothing ever blocks) - the same
+        // "no config, no feature" shape every other optional POI/mechanic config here already has.
+        public AssetRef<AccessoryGuardConfig> AccessoryGuardConfig;
+
         [Header("Revive")]
         // Hold-to-revive tuning (Downed/KO life-state, revive/self-revive durations, damage-pause,
         // completion heal/invuln) - see ReviveConfig and docs/revive.md.
@@ -146,6 +154,63 @@ namespace Quantum
         // 0 (default) is a no-op.
         public int DebugStartLevelUpCount = 0;
 
+        // Local-testing bots (see docs/bots.md) - tuning for every RuntimePlayer.IsBot slot in the
+        // match. Lives here, next to the other debug knobs, rather than in its own DataAsset
+        // precisely because it IS a debug tool: RuntimeConfig is already assigned in both scenes,
+        // so there is nothing to author before a bot works. Every field below treats 0 as
+        // "use the built-in default" (BotInputSystem.Or), so an already-serialized RuntimeConfig
+        // that predates this block behaves sensibly without being re-saved.
+        public BotSettings Bots;
+
+        // See RuntimeConfig.Bots above. All distances are world units, all times seconds.
+        [Serializable]
+        public struct BotSettings
+        {
+            [Header("Follow")]
+            // How close the bot tries to get to its follow target before stopping, plus the extra
+            // slack it must drift past before starting to move again - without the hysteresis a bot
+            // parked exactly at FollowDistance stutters in and out of motion every tick.
+            public FP FollowDistance;
+            public FP FollowSlack;
+
+            // Beyond this distance the bot holds Run (Input.Run) so it can actually catch up
+            // instead of walking forever behind a sprinting player.
+            public FP RunDistance;
+
+            [Header("Leash")]
+            // Teleport the bot next to its target once it has been further than LeashDistance for
+            // LeashTimeout seconds. The follow steering has no pathfinding (see BotInputSystem),
+            // so this is the recovery for a bot stuck behind level geometry. LeashDistance <= 0
+            // disables the leash entirely.
+            public FP LeashDistance;
+            public FP LeashTimeout;
+
+            [Header("Skills")]
+            // The bot presses Hero Skill / Dash on a countdown re-rolled inside these bands after
+            // every press, so two bots never stay in lockstep. Max <= Min collapses to a fixed
+            // interval.
+            public FP HeroSkillIntervalMin;
+            public FP HeroSkillIntervalMax;
+            public FP DashIntervalMin;
+            public FP DashIntervalMax;
+
+            // Only press Hero Skill when an enemy is within this range - a skill fired into an
+            // empty room is just a wasted cooldown to watch. <= 0 removes the check (always cast
+            // on the timer).
+            public FP HeroSkillEnemyRange;
+
+            [Header("Flow")]
+            // A bot has nobody at the keyboard, so by default it takes itself out of every
+            // "waiting for all players" gate instead of making the human wait out a timeout: it
+            // random-picks its own level-up option the tick the screen opens
+            // (LevelUpUtility.AutoConfirm, the exact pick a real timeout would have made) and
+            // auto-votes to skip every Breathing Break so the human's own vote is enough to end
+            // it. Both are phrased as opt-OUTs because a C# struct can't carry field initializers -
+            // an unauthored (all-zero) BotSettings therefore has to mean "the sensible default".
+            public bool DisableAutoLevelUpPick;
+            public bool DisableAutoBreathingSkipVote;
+        }
+
         // The pickup entity prototypes each currency/pickup utility spawns on an eligible enemy
         // kill - see ExpOrb.qtn/ScrapOrb.qtn/RiftShard.qtn/Coin.qtn and
         // ExperienceUtility/ScrapUtility/RiftShardUtility/CoinUtility.TrySpawnDrop.
@@ -156,6 +221,12 @@ namespace Quantum
             public AssetRef<EntityPrototype> ScrapOrbPrototype;
             public AssetRef<EntityPrototype> RiftShardPrototype;
             public AssetRef<EntityPrototype> CoinPrototype;
+
+            // ONE shared prototype for every hero's dropped Signature Accessory - the collectible is
+            // fully generic (see DroppedAccessory in AccessoryGuard.qtn) and resolves its own sprite
+            // from its owner's hero presentation data on the View side (DroppedAccessoryView), so
+            // there is deliberately no per-hero prototype here.
+            public AssetRef<EntityPrototype> DroppedAccessoryPrototype;
         }
     }
 }

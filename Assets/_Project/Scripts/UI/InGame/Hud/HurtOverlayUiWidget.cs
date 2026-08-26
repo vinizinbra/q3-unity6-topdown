@@ -58,6 +58,9 @@ public class HurtOverlayUiWidget : QuantumGlobalMonoBehaviour
         new HitStopTier { DamagePercent = 40f, Duration = 0.20f },
     };
 
+    [SerializeField, Tooltip("Hit-stop duration when the local player's Accessory Guard eats a hit outright (EventAccessoryBlocked - see docs/accessory-guard.md). A flat value rather than a damage% tier, since a block deals no damage to scale off; it exists so a block still SLAMS instead of passing silently. 0 disables it.")]
+    private float blockHitStopDuration = 0.12f;
+
     private Tween[] _tweens;
     private bool _isDying;
 
@@ -80,6 +83,8 @@ public class HurtOverlayUiWidget : QuantumGlobalMonoBehaviour
     public override void QStart(QuantumGame game)
     {
         QuantumEvent.Subscribe<EventEntityDamaged>(this, OnEntityDamaged);
+        QuantumEvent.Subscribe<EventAccessoryBlocked>(this, OnAccessoryBlocked);
+        QuantumEvent.Subscribe<EventFreeHitGuardConsumed>(this, OnFreeHitGuardConsumed);
     }
 
     private void OnDestroy()
@@ -178,6 +183,45 @@ public class HurtOverlayUiWidget : QuantumGlobalMonoBehaviour
 
         // Already looping the dying blink - a plain one-shot Flash would just cut that tween off
         // and race back to restColor, reading as a glitch instead of the sustained warning.
+        if (_isDying == true)
+            return;
+
+        Flash();
+    }
+
+    // A hit the Accessory Guard ate entirely never reaches EventEntityDamaged (DamageUtility returns
+    // before firing it - the hit is negated, not mitigated), so without this a block would land with
+    // no screen feedback at all and read as a miss. Same local-player gate and same dying-blink
+    // deference as a real hit; the freeze is a flat authored duration rather than a damage% tier,
+    // since there is no damage to scale off.
+    private void OnAccessoryBlocked(EventAccessoryBlocked e)
+    {
+        if (MyLocalPlayer.Instance == null || MyLocalPlayer.Instance.IsLocalEntity(e.Owner) == false)
+            return;
+
+        TriggerHitStop(blockHitStopDuration);
+
+        if (_isDying == true)
+            return;
+
+        Flash();
+    }
+
+    // A Free Hit Guard being spent is the same kind of moment as an accessory block - a hit stopped
+    // cold, firing no EventEntityDamaged - so it earns the same screen slam and reuses the same flat
+    // duration rather than a second authored one.
+    //
+    // Gated on Target, not Source: this is LOCAL-PLAYER screen feedback, and it should fire when I am
+    // the one who was saved. A Brute whose guard saves a teammate across the map gets his payoff on
+    // the character (HitFeedback flashes the saved ally) and in Shield, not by freezing his own
+    // screen for something that happened to someone else.
+    private void OnFreeHitGuardConsumed(EventFreeHitGuardConsumed e)
+    {
+        if (MyLocalPlayer.Instance == null || MyLocalPlayer.Instance.IsLocalEntity(e.Target) == false)
+            return;
+
+        TriggerHitStop(blockHitStopDuration);
+
         if (_isDying == true)
             return;
 

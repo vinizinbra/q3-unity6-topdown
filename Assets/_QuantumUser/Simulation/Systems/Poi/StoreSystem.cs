@@ -41,6 +41,14 @@ namespace Quantum
                         StoreUtility.BuyWeaponLevelUp(f, entity);
                         break;
 
+                    // A Merchant SERVICE, not an inventory purchase - it deliberately touches
+                    // neither StoreInventory nor the per-offer StorePurchases tracking, so it can
+                    // never consume this player's weapon purchase allowance. See
+                    // AccessoryServiceUtility/docs/accessory-guard.md.
+                    case BuyAccessoryServiceCommand:
+                        AccessoryServiceUtility.TryPurchaseService(f, entity);
+                        break;
+
                     case CloseStoreCommand:
                         StoreUtility.Close(f, entity);
                         break;

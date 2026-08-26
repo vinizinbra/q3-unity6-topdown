@@ -50,6 +50,12 @@ namespace Quantum
             EntityViewManager.Instance.AddView(_playerRef,_entityRef, this, "PlayerName");
             CharacterUiWidgetManager.Instance?.SpawnWidget(_entityRef, game, transform, ResolvePlayerName(game), widgetOffset);
 
+            // A bot is never a local player (see docs/bots.md) - QuantumHelper.IsLocalPlayer
+            // already returns false for one, so it never claims a couch-co-op slot, a FollowCamera
+            // target or any of MyLocalPlayer's slot-bound HUD. The flag itself is only read by
+            // EntityViewManager's online/bot head counts.
+            isBot = QuantumHelper.IsBotPlayer(_playerRef);
+
             if (QuantumHelper.IsLocalPlayer(_playerRef))
             {
                 isLocalPlayer = true;

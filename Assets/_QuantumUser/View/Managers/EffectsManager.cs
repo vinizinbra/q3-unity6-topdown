@@ -42,13 +42,13 @@ namespace QuantumUser.View.Managers
         [Header("ExplodeOnDeath (Rift-Marked)")]
         [SerializeField, Tooltip("Played on ExplodeOnDeathDetonated when e.RiftMarked is true (see docs/elemental-reactions.md and ExplodeOnDeathConfig.RiftMarkRadiusMultiplier/RiftMarkDamageMultiplier) instead of the flat defaultAreaBlastEffect every other ExplodeOnDeath kill uses, so the bigger/harder rift-boosted blast reads as visually distinct rather than just a scaled-up copy. Falls back to defaultAreaBlastEffect, tinted riftMarkedExplodeFallbackColor, if left empty - same dedicated-slot-with-tinted-fallback pattern as detonationEffectPrefab below.")]
         private ParticleSystem riftMarkedExplodeEffectPrefab;
-        [SerializeField, Tooltip("Tint applied only when falling back to defaultAreaBlastEffect (riftMarkedExplodeEffectPrefab left empty) - matches detonationFallbackColor/ResonanceFxView's riftMarkColor and the Rift Mark hot-pink #FD3971 presentation rule. Ignored once a dedicated prefab is authored.")]
+        [SerializeField, Tooltip("Tint applied only when falling back to defaultAreaBlastEffect (riftMarkedExplodeEffectPrefab left empty) - matches detonationFallbackColor and the Rift Mark hot-pink #FD3971 presentation rule. Ignored once a dedicated prefab is authored.")]
         private Color riftMarkedExplodeFallbackColor = new Color32(0xFD, 0x39, 0x71, 0xFF);
 
         [Header("Detonation")]
         [SerializeField, Tooltip("Played on DetonationReleased (Fire+RiftMark reaction - see docs/elemental-reactions.md and StatusEffectUtility.TryTriggerDetonation). Falls back to defaultAreaBlastEffect, tinted detonationFallbackColor, if left empty - so it already reads distinctly hot-pink even before a bespoke prefab is authored.")]
         private ParticleSystem detonationEffectPrefab;
-        [SerializeField, Tooltip("Tint applied only when falling back to defaultAreaBlastEffect (detonationEffectPrefab left empty) - matches ResonanceFxView's own riftMarkColor and the Rift Mark hot-pink #FD3971 presentation rule (purple is reserved for Void). Ignored once a dedicated prefab is authored, since that plays with its own authored color.")]
+        [SerializeField, Tooltip("Tint applied only when falling back to defaultAreaBlastEffect (detonationEffectPrefab left empty) - matches the Rift Mark hot-pink #FD3971 presentation rule (purple is reserved for Void). Ignored once a dedicated prefab is authored, since that plays with its own authored color.")]
         private Color detonationFallbackColor = new Color32(0xFD, 0x39, 0x71, 0xFF);
 
         [Header("Singularity")]
@@ -80,6 +80,36 @@ namespace QuantumUser.View.Managers
         private float wallSlamEffectScale = 1f;
         [SerializeField, Tooltip("Uniform scale used instead when the Stun genuinely LANDED - the moment that actually rewards the player (and the one that opens Groundbreaker rank 3's Exposed window), so it reads heavier than a wall contact that got resisted.")]
         private float wallSlamStunnedEffectScale = 1.6f;
+
+        [Header("Accessory Guard")]
+        [SerializeField, Tooltip("GENERIC fallback played where a BROKEN accessory's debris comes to rest (see docs/accessory-guard.md) - the durability-0 block still knocks the accessory off and flies it on the normal arc, and this is the \"it shattered\" payoff at the landing point. A hero can override it per-accessory via CharacterData.Accessory.BrokenEffectPrefab; this covers everyone who doesn't. Leave empty to skip the particle entirely; deliberately no fallback to defaultAreaBlastEffect, since an explosion reads wrong for a hat breaking.")]
+        private ParticleSystem accessoryBrokenEffectPrefab;
+        [SerializeField, Tooltip("Uniform scale for accessoryBrokenEffectPrefab - this event carries no radius of its own to derive one from, same as meleeHitEffectScale.")]
+        private float accessoryBrokenEffectScale = 1f;
+
+        [SerializeField, Tooltip("Played where a dropped accessory is picked back up by its owner (EventAccessoryRecovered) - the \"got it back\" payoff that closes the go-and-fetch loop. Leave empty to skip; no fallback, since a combat blast reads wrong for a pickup.")]
+        private ParticleSystem accessoryRecoveredEffectPrefab;
+        [SerializeField, Tooltip("Uniform scale for accessoryRecoveredEffectPrefab.")]
+        private float accessoryRecoveredEffectScale = 1f;
+
+        [SerializeField, Tooltip("Played at the point of impact when the Accessory Guard eats a hit outright (EventAccessoryBlocked). Falls back to the generic melee hit spark, then to defaultAreaBlastEffect - a block IS an impact, so the normal hit VFX reads correctly here; it's the TINT below that says \"stopped\" rather than \"hurt\". Left empty, the fallback chain still gives every block a visual.")]
+        private ParticleSystem accessoryBlockedEffectPrefab;
+        [SerializeField, Tooltip("Uniform scale for accessoryBlockedEffectPrefab - this event carries no radius of its own, same as meleeHitEffectScale.")]
+        private float accessoryBlockedEffectScale = 1f;
+        [SerializeField, Tooltip("Tint applied to the block impact. Blue by default: a blocked hit must never read as damage, and this is the same colour language the guard uses everywhere else (HitFeedback.blockFlashColor, CharacterUiWidget's guard fill). Uses the tinted PlayEffect overload, so one shared spark prefab covers both a normal hit and a block.")]
+        private Color accessoryBlockedEffectColor = new Color(0.25f, 0.6f, 1f);
+
+        [Header("Free Hit Guard")]
+        [SerializeField, Tooltip("Played at the point of impact when a Free Hit Guard negates a hit (EventFreeHitGuardConsumed - Brute's Bodyguard today). Its own prefab rather than sharing the accessory block's: both are 'that hit was stopped cold', but they are different mechanics with different sources, and a player should be able to tell at a glance which one just saved them. Falls back to the generic melee hit spark, then defaultAreaBlastEffect, so a guard is never silent unauthored.")]
+        private ParticleSystem freeHitGuardEffectPrefab;
+        [SerializeField, Tooltip("Uniform scale for freeHitGuardEffectPrefab - this event carries no radius of its own, same as meleeHitEffectScale.")]
+        private float freeHitGuardEffectScale = 1f;
+
+        // Deliberately NO tint field here, unlike the accessory block above. This prefab is authored
+        // for this one purpose, so its colours are the artist's to own - runtime-tinting a
+        // purpose-built effect only ever fights the authoring. The "this was negated, not damage"
+        // colour signal is carried by the CHARACTER flash instead (HitFeedback.freeHitGuardFlashColor,
+        // cyan rather than the normal white), which is the part that would otherwise read as a hit.
 
         [Header("Melee Hit")]
         [SerializeField, Tooltip("Played whenever a HitEffectApplied event fires from a non-enemy Owner (a player skill/weapon hitting something) - generic and source-agnostic, not per-asset. Falls back to defaultAreaBlastEffect if left empty. Enemy-caused hits are handled separately by EnemyAttackVisualsView (per-delivery HitImpactPrefab), so this only covers the previously-uncovered player-hit case.")]
@@ -172,6 +202,10 @@ namespace QuantumUser.View.Managers
             QuantumEvent.Subscribe<EventEntityShielded>(this, OnEntityShielded);
             QuantumEvent.Subscribe<EventShieldBroken>(this, OnShieldBroken);
             QuantumEvent.Subscribe<EventEnemySelfDestructBeginVisual>(this, OnEnemySelfDestructBeginVisual);
+            QuantumEvent.Subscribe<EventAccessoryBroken>(this, OnAccessoryBroken);
+            QuantumEvent.Subscribe<EventAccessoryRecovered>(this, OnAccessoryRecovered);
+            QuantumEvent.Subscribe<EventAccessoryBlocked>(this, OnAccessoryBlocked);
+            QuantumEvent.Subscribe<EventFreeHitGuardConsumed>(this, OnFreeHitGuardConsumed);
         }
 
         private void OnDestroy()
@@ -330,22 +364,21 @@ namespace QuantumUser.View.Managers
         }
 
         // Generic - fires for any radial-push moment regardless of source (Empty Chamber, Kai's Dash
-        // Shockwave, Zara's Resonance pulse - see HitEffectUtility.ApplyShockwave/
+        // Shockwave - see HitEffectUtility.ApplyShockwave/
         // WeaponSystem.ApplyMagazineEmptiedPerks). Same "no single asset to resolve a bespoke prefab
         // from" reasoning as OnExplodeOnDeathDetonated - the prefab lives directly on this manager,
         // not per-perk.
         //
-        // Skips entirely for EVERY Zara Resonance pulse (owner carries Resonance), not just her Remix
-        // ones: ResonanceFxView (attached to her own entity) already plays her dedicated pulse VFX on
-        // every pulse - tinted by the Remix status when e.Effect is valid, default-colored otherwise -
-        // so playing this generic one on top would double it. Empty Chamber carries no Resonance, so
-        // it still plays here as before. (e.Effect.IsValid alone used to only cover the Remix case,
+        // Skipped whenever the shockwave carries its own resolved effect (e.Effect valid) - that case
+        // has a dedicated, effect-tinted visual of its own and playing the generic one on top would
+        // double it. (Zara's own Resonance pulse used to be excluded here too; Resonance no longer
+        // exists - see Flow.qtn - so only the effect-carrying case remains.)
         // leaving normal pulses double-playing.)
         private void OnShockwaveReleased(EventShockwaveReleased e)
         {
             Frame frame = e.Game.Frames.Predicted;
 
-            if (e.Effect.IsValid == true || (frame != null && frame.Has<Resonance>(e.Entity) == true))
+            if (e.Effect.IsValid == true)
                 return;
 
             ParticleSystem prefab = shockwaveEffectPrefab ?? defaultAreaBlastEffect;
@@ -386,6 +419,118 @@ namespace QuantumUser.View.Managers
         // own position. e.Stunned picks the heavier variant - a wall hit that got resisted by a hard-CC
         // immunity window (or an ImmuneToHardCC tier) shouldn't read as the same payoff as one that
         // landed, since only the landed case opens Groundbreaker rank 3's Exposed window.
+        // Fired by AccessoryGuardSystem the moment the broken accessory's debris LANDS (not when the
+        // hit was taken), so the shatter plays where the player can actually see it come apart - see
+        // DroppedAccessory.Broken. Falls back to the owner's own position only when no debris ever
+        // flew (no prototype assigned), which AccessoryGuardUtility.TryBlock raises directly.
+        private void OnAccessoryBroken(EventAccessoryBroken e)
+        {
+            // A break leaves NOTHING in the world to explain itself - unlike a normal block, no
+            // collectible spawns and no radar arrow points anywhere, so the only way back (paying the
+            // Merchant at the Store) would go uncommunicated. Local player(s) only: a teammate's break
+            // is theirs to act on. Raised before the prefab lookup below, which early-returns when no
+            // shatter effect is authored.
+            if (MyLocalPlayer.Instance != null && MyLocalPlayer.Instance.IsLocalEntity(e.Owner))
+                ToastManager.Instance?.Show("ACCESSORY DESTROYED\nBuy a new one at the Store");
+
+            // Per-hero override first, generic fallback second - so authoring nothing per hero still
+            // gives every accessory a break effect, and a hero only needs its own when a shared puff
+            // genuinely doesn't fit (feathers vs. shards). Same default-with-override shape
+            // EnemyDataAsset.ViewPrefab/FactionSkins already uses.
+            ParticleSystem prefab = ResolveAccessoryBrokenEffect(e) ?? accessoryBrokenEffectPrefab;
+
+            if (prefab == null)
+                return;
+
+            PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity,
+                Vector3.one * accessoryBrokenEffectScale);
+        }
+
+        // A hit the accessory ate outright never reaches EventEntityDamaged (DamageUtility returns
+        // before firing it - the hit is NEGATED, not mitigated), so nothing in the normal hit-VFX path
+        // runs for it. Without this a block lands with no impact at the contact point at all, which
+        // reads as the attack having missed rather than having been stopped - the same gap
+        // HitFeedback/HurtOverlayUiWidget already fill on the character and screen respectively.
+        //
+        // Deliberately reuses the ordinary hit spark rather than authoring a bespoke one: a block IS
+        // an impact and should hit as hard visually. The BLUE tint is what distinguishes it, via the
+        // existing tinted PlayEffect overload - so one shared prefab covers both cases and they can
+        // never drift apart in feel.
+        private void OnAccessoryBlocked(EventAccessoryBlocked e)
+        {
+            PlayNegatedHitImpact(accessoryBlockedEffectPrefab, e.Position.ToUnityVector3(),
+                accessoryBlockedEffectScale, accessoryBlockedEffectColor);
+        }
+
+        // Free Hit Guard (Brute's Bodyguard today - see StatusEffects.qtn) negates a hit the same way
+        // an accessory block does, and for the same reason produces no EventEntityDamaged. It gets its
+        // OWN prefab/scale/tint rather than sharing the accessory's: they are different mechanics from
+        // different sources, and which one just saved you is worth being able to read at a glance.
+        // Only the plumbing below is shared.
+        private void OnFreeHitGuardConsumed(EventFreeHitGuardConsumed e)
+        {
+            // Untinted - plays in whatever colours its prefab was authored with. See the field's own
+            // comment for why this one doesn't get a tint the way the accessory block does.
+            PlayNegatedHitImpact(freeHitGuardEffectPrefab, e.Position.ToUnityVector3(),
+                freeHitGuardEffectScale, null);
+        }
+
+        // Shared plumbing for every "this hit was stopped cold" impact. A negated hit returns from
+        // DamageUtility before EventEntityDamaged fires, so nothing in the normal hit-VFX path runs for
+        // it - without an explicit play here the attack reads as having MISSED rather than having been
+        // stopped, which is the same gap HitFeedback/HurtOverlayUiWidget fill on the character and
+        // screen respectively.
+        // color is optional: pass one to tint a SHARED/borrowed prefab into reading as a negation (the
+        // accessory block, which leans on the generic hit spark), or null to play a purpose-built
+        // prefab in its own authored colours (the Free Hit Guard). Tinting an effect authored for one
+        // job only fights the artist.
+        private void PlayNegatedHitImpact(ParticleSystem prefab, Vector3 position, float scale, Color? color)
+        {
+            // Same fallback chain OnHitEffectApplied uses, one step longer - a negated hit should never
+            // be silent just because no bespoke prefab was authored for it yet. Borrowing the ordinary
+            // hit spark is fine as a stopgap: a block IS an impact and should land as hard visually.
+            ParticleSystem resolved = prefab ?? meleeHitEffectPrefab ?? defaultAreaBlastEffect;
+
+            if (resolved == null)
+                return;
+
+            if (color.HasValue == true)
+            {
+                PlayEffect(resolved, position, Quaternion.identity, Vector3.one * scale, color.Value);
+                return;
+            }
+
+            PlayEffect(resolved, position, Quaternion.identity, Vector3.one * scale);
+        }
+
+        // Resolved through the OWNER's own hero data, the same lookup DroppedAccessoryView uses for
+        // the collectible sprite - so this stays generic (no hero is named here) and a hero that
+        // authors nothing simply falls through to the shared effect.
+        private static ParticleSystem ResolveAccessoryBrokenEffect(EventAccessoryBroken e)
+        {
+            Frame frame = e.Game != null ? e.Game.Frames.Predicted : null;
+
+            if (frame == null || e.Owner == EntityRef.None)
+                return null;
+
+            if (frame.TryGet<CharacterStats>(e.Owner, out var stats) == false || stats.CharacterData.IsValid == false)
+                return null;
+
+            CharacterData data = frame.FindAsset(stats.CharacterData);
+            return data != null ? data.Accessory.BrokenEffectPrefab : null;
+        }
+
+        // Fired by AccessoryGuardUtility.Recover at the collectible's own resting position (not the
+        // player's), so the burst plays exactly where the accessory was snatched up.
+        private void OnAccessoryRecovered(EventAccessoryRecovered e)
+        {
+            if (accessoryRecoveredEffectPrefab == null)
+                return;
+
+            PlayEffect(accessoryRecoveredEffectPrefab, e.Position.ToUnityVector3(), Quaternion.identity,
+                Vector3.one * accessoryRecoveredEffectScale);
+        }
+
         private void OnWallSlammed(EventWallSlammed e)
         {
             ParticleSystem prefab = wallSlamEffectPrefab ?? defaultAreaBlastEffect;
@@ -505,7 +650,7 @@ namespace QuantumUser.View.Managers
         //
         // Also skips MultiTarget hits entirely - those come from an overlap query that can (and
         // regularly does) catch several entities in one action, e.g. an AreaHitData bomb or Zara's
-        // Resonance pulse. Playing this generic spark once per target hit would stack N of them on
+        // area pulse. Playing this generic spark once per target hit would stack N of them on
         // top of the action's own single dedicated blast VFX (AreaDetonated/ShockwaveReleased/...)
         // - the exact "several generic hit effects on one area hit" bug this guard exists to
         // prevent. A multi-target action that wants its own per-target impact needs a dedicated

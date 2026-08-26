@@ -17,7 +17,7 @@ MonoBehaviour:
     Guid:
       Value: 349590471165109495
   BaseMaxHealth:
-    RawValue: 6553600
+    RawValue: 4587520
   BaseHealthRegenRate:
     RawValue: 0
   MoveSpeedMultiplier:
@@ -25,11 +25,12 @@ MonoBehaviour:
   BaseArmor:
     RawValue: 0
   BaseMaxShield:
-    RawValue: 2621440
+    RawValue: 0
+  ShieldChargeOnly: 1
   ShieldRechargeDelay:
-    RawValue: 327680
+    RawValue: 0
   ShieldRechargeRate:
-    RawValue: 655360
+    RawValue: 0
   DamageMultiplier:
     RawValue: 65536
   WeaponDamageMultiplier:
@@ -86,13 +87,13 @@ MonoBehaviour:
     RawValue: 65536
   CoinGainMultiplier:
     RawValue: 65536
-  RingColor: {r: 0.20392157, g: 0.9372549, b: 0.793582, a: 1}
+  RingColor: {r: 0.21226418, g: 0.9914017, b: 1, a: 1}
   PawnSprite: {fileID: 1773360120, guid: b49db0c0e58ba4e9b8349764e5b8d384, type: 3}
   WeaponPosition:
     X:
       RawValue: 0
     Y:
-      RawValue: 36045
+      RawValue: 42598
     Z:
       RawValue: 0
   Prototype:
@@ -106,7 +107,7 @@ MonoBehaviour:
       Value: 333637161281502097
   Passive:
     Id:
-      Value: 362511977538535212
+      Value: 330595328459879646
   StartingWeapon:
     Id:
       Value: 532371987665164333
@@ -119,6 +120,11 @@ MonoBehaviour:
   - Id:
       Value: 423069476414731352
   - Id:
-      Value: 372438392154665844
+      Value: 464159436060411710
   - Id:
-      Value: 296911590756529144
+      Value: 359104458669361970
+  Accessory:
+    DisplayName: 
+    CollectibleSprite: {fileID: -1306266345, guid: f664891c957894bd1ba05f39cf427393, type: 3}
+    CollectibleScale: 1.5
+    BrokenEffectPrefab: {fileID: 3501008743596093556, guid: 9300a2826f3984209acba7c2da992151, type: 3}

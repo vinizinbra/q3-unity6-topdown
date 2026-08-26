@@ -47,7 +47,9 @@ namespace Quantum
                 f.Events.WeaponReloaded(filter.Entity);
             }
 
-            StatusEffectUtility.ApplyHaste(f, filter.Entity, filter.Entity, HasteDuration, FireRateBonus[index]);
+            // ApplyHaste takes an ABSOLUTE multiplier (StatUtility.GetFireCooldown divides by it),
+            // not a bonus fraction - same FP._1 + bonus conversion AllyBuffEffectData already does.
+            StatusEffectUtility.ApplyHaste(f, filter.Entity, filter.Entity, HasteDuration, FP._1 + FireRateBonus[index]);
 
             if (rank >= 2)
             {

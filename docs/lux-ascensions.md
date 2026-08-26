@@ -438,3 +438,68 @@ retroactively buffing machines already in the field.
 | Burn DoT | `bypassOutgoingResolution: true`, per-tick derived from the already-scaled hit | correct - avoids double-applying |
 
 No mis-sourced call site anywhere; no `DamageSource.None` in hero skill code.
+
+---
+
+# 2026-08-25 — Fortification rank 2: Shield Battery → Covering Fire
+
+Rank 2 no longer restores Shield. Allies standing in the Sentry's aura are **shielded from one hit
+outright** — the same generic Free Hit Guard Brute's Bodyguard grants — **once per ally per turret**.
+
+| Rank | Now |
+|---|---|
+| R1 | Extended Range: Sentry attack range +2 *(unchanged)* |
+| R2 | **Covering Fire**: range +2, and allies in the aura are shielded from one hit. Once per ally per Sentry |
+| R3 | **Fire Support**: range +2, the same denial, **plus** +15% Fire Rate and 10% DR *(buff half unchanged)* |
+
+## Why Shield Battery had to go
+
+It was a flat 3 Shield/sec trickle. That was fine while Shield refilled itself anyway — but once player
+Shield became charge-only (see `docs/accessory-guard.md`), a Sentry refilling it made a parked Lux the
+single biggest standing Shield source in the game. And because **Shield gates the Accessory**, that
+quietly suppressed the entire accessory-loss loop for the whole party: nobody near his turret would
+ever drop their hat.
+
+A bounded, discrete denial does the same protective job — including protecting the accessory, since a
+Free Hit Guard is consumed above the accessory hook — without being a fountain. It also reads as a
+*moment* (cyan flash, impact VFX, hit stop) instead of an invisible tick.
+
+## It cannot stack with Bodyguard
+
+Guaranteed by construction, not by a check: there is exactly **one** `FreeHitGuardRemaining` slot per
+entity, and `ApplyFreeHitGuard` is take-the-longer. Two sources contend for one slot rather than
+granting two blocks.
+
+`SentryAuraSystem` goes one step further and refuses to *spend* a turret's charge on an ally somebody
+else has already guarded — since the guard couldn't stack anyway, burning the charge there would be
+pure waste. Three cases, in order:
+
+1. **The standing guard is ours** → refresh it, free. This is what makes "while you're inside the
+   range" true: the duration is short (1s) and the aura re-applies every tick, so walking out lets it
+   lapse on its own with no revoke path to get wrong. Refreshing only our OWN matters — blindly
+   refreshing would let a turret keep a Brute's guard alive indefinitely.
+2. **Someone else's guard is standing** → leave it alone, spend nothing.
+3. **No guard at all** → claim one from the turret's budget and grant it.
+
+## "Per turret" is the whole design
+
+The cap lives in an `AreaAllyBudget` on the **spawned sentry** (`MaxGuardsPerAlly`, 1), not on Lux —
+the same primitive Zara's Totem healing cap uses, and for the same reason: a fresh deploy is a fresh
+entity and therefore a fresh allowance for everyone, two of his sentries each track their own, and two
+Luxes never share one.
+
+The budget is booked on **grant** and never refunded, so an ally who wanders out unharmed has still
+spent their charge on that turret. That's deliberate — refunding on expiry would let a Lux who
+repeatedly clips allies with the aura edge hand out unlimited denials.
+
+Which means another denial requires **another turret**, tying this line directly to his redeploy
+economy (Rapid Recycling's cooldown-per-Scrap, Relocation Protocol) instead of it being a passive aura.
+
+`AreaAllyBudget` gained `GuardsGranted[]`/`MaxGuardsPerAlly` and `AreaAllyBudgetUtility` gained
+`TryConsumeGuard`. Note its convention is the **opposite** of the two FP caps there: 0 denies outright
+rather than meaning "uncapped", because a guard is a discrete grant that must be opted into — an
+unbudgeted area handing out unlimited hit denials every tick is the failure mode, not the safe default.
+
+**Current status:** code-complete pending codegen (`SentryUpgrades.qtn`, `AreaAllyBudget.qtn`).
+`SentryView`'s aura ring now keys off `GuardDuration` instead of the removed `AllyShieldPerSecond`.
+`LuxAscensionAssetGenerator` has the new fields and rank text but **still has not been run**.

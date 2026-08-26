@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 855d0c2c61066433bba6fce5793498e6, type: 3}
+  m_Name: FlowStatePassiveData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.FlowStatePassiveData
+  Identifier:
+    Path: _QuantumUser/Resources/Passives/Zara/FlowStatePassiveData
+    Guid:
+      Value: 330595328459879646
+  Description: Keep moving to build Flow - each stack grants Move Speed and Fire
+    Rate. Standing still lets it decay; getting hit breaks it outright.
+  Icon: {fileID: 0}
+  DisplayName: 
+  BuildDuration:
+    RawValue: 163840
+  MoveSpeedBonus:
+    RawValue: 16384
+  FireRateBonus:
+    RawValue: 9830
+  MovementInputThreshold:
+    RawValue: 6554
+  StationaryGrace:
+    RawValue: 81920
+  DecayDuration:
+    RawValue: 294912

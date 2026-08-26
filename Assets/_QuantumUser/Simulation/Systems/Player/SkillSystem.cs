@@ -14,7 +14,7 @@ namespace Quantum
     {
         public override void Update(Frame f, ref Filter filter)
         {
-            var input = f.GetPlayerInput(filter.PlayerLink->Player);
+            var input = PlayerInputUtility.Resolve(f, filter.Entity, filter.PlayerLink);
 
             Button dashSkillButton = input->DashSkill;
             Button heroSkillButton = input->HeroSkill;

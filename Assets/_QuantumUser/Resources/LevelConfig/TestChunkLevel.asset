@@ -63,7 +63,7 @@ MonoBehaviour:
           Value: 1531964196362064826
       Weight:
         RawValue: 65536
-    Count: 20
+    Count: 30
     MustHave: 1
   - Type: 4
     Prototypes:

@@ -245,6 +245,72 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: BruteSkill (1)_0
+      rect:
+        serializedVersion: 2
+        x: 243
+        y: 78
+        width: 242
+        height: 255
+      alignment: 9
+      pivot: {x: 0.50109243, y: 0.100441605}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 68cde5fc541604cb188ac0bba7a1924d
+      internalID: -969754420
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BruteSkill (1)_1
+      rect:
+        serializedVersion: 2
+        x: 477
+        y: 82
+        width: 291
+        height: 276
+      alignment: 9
+      pivot: {x: 0.4248567, y: 0.056920342}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 280dab0f7edd54fa29fc5ebd5845dd84
+      internalID: 2072359626
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BruteSkill (1)_2
+      rect:
+        serializedVersion: 2
+        x: 18
+        y: 84
+        width: 227
+        height: 242
+      alignment: 9
+      pivot: {x: 0.5288229, y: 0.042443234}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 67bcd25b6af0941f39da2cd7827e65a5
+      internalID: 46137415
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
@@ -259,6 +325,9 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
+      BruteSkill (1)_0: -969754420
+      BruteSkill (1)_1: 2072359626
+      BruteSkill (1)_2: 46137415
       head1: -142501578
       head2: 1377687629
       torso1: -471919903

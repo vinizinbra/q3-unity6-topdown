@@ -20,7 +20,7 @@ MonoBehaviour:
   layers: []
   group: 9
   output: {fileID: 0}
-  volume: {x: 0.5, y: 0.5}
+  volume: {x: 1, y: 1}
   pitch: {x: 0.95, y: 1.05}
   delay: {x: 0, y: 0}
   startAt: 0

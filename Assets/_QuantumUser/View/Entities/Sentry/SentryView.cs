@@ -30,7 +30,7 @@ namespace Quantum
         [SerializeField, Tooltip("The sentry's own leg rig, if it has one (e.g. a spider-like chassis standing on ProceduralTentacleWalker2D legs). Falls back to GetComponentInChildren if left empty. Each spawned barrel's slot index pins that same-indexed tentacle onto the barrel's own Transform - see OnSentryBarrelSpawned.")]
         private ProceduralTentacleWalker2D tentacleWalker;
 
-        [SerializeField, Tooltip("Played only while this sentry actually has Fortification's Shield Battery (SentryFortificationUpgrade.AllyShieldPerSecond above 0) - left stopped/inactive otherwise. Its own transform is scaled to match the aura's real reach (Sentry.Range * SentryFortificationUpgrade.AuraRangeRatio) every frame, since that's the exact radius SentryAuraSystem uses to find allies.")]
+        [SerializeField, Tooltip("Played only while this sentry actually has Fortification's Covering Fire (SentryFortificationUpgrade.GuardDuration above 0) - left stopped/inactive otherwise. Its own transform is scaled to match the aura's real reach (Sentry.Range * SentryFortificationUpgrade.AuraRangeRatio) every frame, since that's the exact radius SentryAuraSystem uses to find allies.")]
         private ParticleSystem shieldAreaParticle;
 
         [SerializeField, Tooltip("Multiplies Sentry.Range when sizing shieldAreaParticle's own transform - tune to match however the particle's shape/size was authored. Defaults to half of Range.")]
@@ -195,12 +195,12 @@ namespace Quantum
             if (shieldAreaParticle == null)
                 return;
 
-            // Fortification rank 2 - present only once Shield Battery is actually active on this
-            // machine (a Fortification rank 1 sentry carries the component but restores nothing).
-            bool hasShieldBattery = frame.TryGet<SentryFortificationUpgrade>(_entityRef, out var shieldFortification)
-                && shieldFortification.AllyShieldPerSecond > FP._0;
+            // Fortification rank 2 - present only once Covering Fire is actually active on this
+            // machine (a Fortification rank 1 sentry carries the component but grants nothing).
+            bool hasCoveringFire = frame.TryGet<SentryFortificationUpgrade>(_entityRef, out var shieldFortification)
+                && shieldFortification.GuardDuration > FP._0;
 
-            if (hasShieldBattery == false)
+            if (hasCoveringFire == false)
             {
                 if (shieldAreaParticleActive == true)
                 {

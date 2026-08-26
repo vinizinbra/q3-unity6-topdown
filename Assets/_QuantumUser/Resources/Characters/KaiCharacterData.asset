@@ -26,6 +26,7 @@ MonoBehaviour:
     RawValue: 0
   BaseMaxShield:
     RawValue: 1966080
+  ShieldChargeOnly: 1
   ShieldRechargeDelay:
     RawValue: 327680
   ShieldRechargeRate:
@@ -122,3 +123,8 @@ MonoBehaviour:
       Value: 320692999273507519
   - Id:
       Value: 318677384688188296
+  Accessory:
+    DisplayName: 
+    CollectibleSprite: {fileID: 753418782, guid: babf8bf5c1b784e07bb668d455b33d8d, type: 3}
+    CollectibleScale: 1.2
+    BrokenEffectPrefab: {fileID: 0}

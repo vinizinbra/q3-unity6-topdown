@@ -79,8 +79,9 @@ public static void SetState(Frame f, GameState newState)
 
 ## Wired transitions
 
-- **`Lobby` -> `Survival`**: `LobbyBoundarySystem` (`docs/talents.md`) - once every connected,
-  spawned player has walked outside the `LobbyStart` chunk's own footprint. Its own early-return
+- **`Lobby` -> `Survival`**: `LobbyBoundarySystem` (`docs/talents.md`) - once any one connected,
+  spawned player has walked outside the `LobbyStart` chunk's own footprint (every connected player
+  must have spawned first; the exit itself is first-one-out, not everyone-out). Its own early-return
   guard changed from `LobbyExited == true` to `CurrentState != GameState.Lobby` - a stricter,
   more correct guard than the old boolean: if `Upgrade` is currently interrupting `Lobby` (the
   Chest-opened-before-leaving case above), this system now correctly skips its own check instead

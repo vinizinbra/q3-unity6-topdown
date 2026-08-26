@@ -6,7 +6,7 @@ They're persisted locally (see "Persistence" below) and carried into a match on 
 the same mechanism that already existed for `RuntimePlayer.Talents.WeaponLevel` before this feature.
 
 Lobby Start is a companion feature: the run doesn't actually begin (no enemy spawning, no
-`Global.SurvivalTime` counting) until every connected player has physically walked outside the
+`Global.SurvivalTime` counting) until any one connected player has physically walked outside the
 level's starting chunk's own footprint - the same chunk (renamed `ChunkType.LobbyStart`, formerly
 `ChunkType.Start`) that already anchors `Global.PlayerSpawnPosition`. That chunk's own `Chunk.
 SpawnConfig` (see below) is where a starter chest gets configured so it spawns there once its
@@ -266,21 +266,23 @@ same tick). Each tick, while `Global.CurrentState == GameState.Lobby`, it requir
    from frame 0 by `SeedFromExistingChunks`) makes the call succeed with exactly those bogus bounds.
 2. Every connected player spawned (`PlayerSpawnUtility.HasSpawned`) - a player who hasn't spawned
    hasn't left the lobby either.
-3. At least one real `PlayerLink` entity in the world. The footprint scan below decides "everyone has
-   left" by finding nobody still inside it, which an **empty** world satisfies just as well as a
-   departed one. The slot loop in (2) skips a slot whose `RuntimePlayer` hasn't replicated yet rather
-   than holding - the same `continue`-instead-of-hold hole that broke `TalentGateSystem` - so without
-   this the run began immediately with zero players in the world. Counted off `PlayerLink` entities
-   rather than joined player slots deliberately: that also keeps working for a player entity placed
-   directly in a scene for testing, which never goes through `PlayerSpawnUtility.Spawn` and so has no
-   `RuntimePlayer` slot to count.
+3. At least one real `PlayerLink` entity actually **outside** the footprint. This is what also keeps
+   an **empty** world from starting the run: nobody outside means nobody at all. (The earlier
+   everyone-out form asked the inverse question - "is nobody still inside" - which an empty world
+   satisfied just as well as a departed one, and the slot loop in (2) skips a slot whose
+   `RuntimePlayer` hasn't replicated yet rather than holding - the same `continue`-instead-of-hold
+   hole that broke `TalentGateSystem` - so the run used to begin immediately with zero players in
+   the world.) Scanned off `PlayerLink` entities rather than joined player slots deliberately: that
+   also keeps working for a player entity placed directly in a scene for testing, which never goes
+   through `PlayerSpawnUtility.Spawn` and so has no `RuntimePlayer` slot to count.
 
-The scan itself calls `LevelGenerationSystem.TryGetLobbyStartBounds` and checks every spawned
-`PlayerLink + Transform3D` entity's position (X/Z) against that AABB - if any spawned player is
-still inside it, the lobby hasn't been exited yet. No-ops (stays paused) if no `LobbyStart` chunk
-has been placed at all.
-Transitions to `GameState.Survival` via `GameStateUtility.SetState` once every player is outside -
-see `docs/game-state.md` for the full state machine this is now part of.
+The scan itself calls `LevelGenerationSystem.TryGetLobbyStartBounds` and checks each spawned
+`PlayerLink + Transform3D` entity's position (X/Z) against that AABB, stopping at the first one
+found outside. No-ops (stays paused) if no `LobbyStart` chunk has been placed at all.
+Transitions to `GameState.Survival` via `GameStateUtility.SetState` as soon as **any one** player is
+outside - deliberately first-one-out rather than everyone-out, so a co-op party isn't held in the
+lobby by whoever is slowest to walk; see `docs/game-state.md` for the full state machine this is now
+part of.
 
 `CombatDirectorSystem.Update` (`Assets/_QuantumUser/Simulation/Systems/Director/CombatDirectorSystem.cs`)
 gained one extra early-return line requiring `Global.CurrentState == GameState.Survival`, right

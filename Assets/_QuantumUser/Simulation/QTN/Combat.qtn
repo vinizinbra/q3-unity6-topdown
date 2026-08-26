@@ -41,3 +41,44 @@ signal OnShieldDamageApplied(EntityRef target, EntityRef owner, FP amount, Damag
 // Cycle/Relentless Fire. target added for Fracture Rounds (WeaponPerkReactionSystem.
 // OnWeaponHitLanded) - the ramp pool itself still only reads owner.
 signal OnWeaponHitLanded(EntityRef target, EntityRef owner);
+
+// "A hostile attack CONNECTED with this entity" - fired before any defensive layer gets a say, and
+// therefore INDEPENDENT of whether a single point of damage was ultimately applied.
+//
+// This is the authoritative answer to "was I hit?", as opposed to OnHealthDamageApplied /
+// OnShieldDamageApplied below, which answer "did I lose anything?". The two differ precisely where it
+// matters: a hit eaten by the Accessory Guard or by a Free Hit Guard connected, and fires this, but
+// applies no damage and fires neither of those.
+//
+// Fired from DamageUtility.ApplyDamage between the friendly-fire guard and the first negation layer,
+// which is what makes all of these correct with no per-mechanic special-casing:
+//
+//   - damage lands              -> fires
+//   - Accessory Guard blocks it -> fires (it connected; the hat is what saved you)
+//   - Free Hit Guard eats it    -> fires (likewise)
+//   - a FUTURE negation layer   -> fires, automatically, because it sits above all of them
+//   - target is Invulnerable    -> does NOT fire (dodged/i-framed; nothing ever connected)
+//   - friendly fire             -> does NOT fire
+//
+// Two deliberate restrictions. It requires a live Enemy attacker, so environmental damage, fall
+// damage and self-inflicted hits are not "attacks". And it is gated on bypassOutgoingResolution ==
+// false, the same gate the negation layers use, so a Burn/Poison tick replaying an already-resolved
+// magnitude is not a second connect.
+//
+// Zara's Flow State is the first consumer ("guarding saves your health but not your rhythm"), but
+// nothing about the signal is hero-specific.
+signal OnHostileHitConnected(EntityRef target, EntityRef attacker);
+
+// Fired the instant a Free Hit Guard (StatusEffects.FreeHitGuardRemaining) actually eats a hit -
+// from DamageUtility.ApplyDamage, immediately before it returns, so the negation itself has already
+// happened and no consumer can undo it.
+//
+// target is who was protected, source is who GRANTED the guard (may be EntityRef.None if the granter
+// died or despawned in the meantime - check it), attacker is whoever threw the punch (may also be
+// None for environmental damage, same convention as OnHealthDamageApplied above).
+//
+// Deliberately a signal rather than logic inside StatusEffectUtility: the primitive only knows a
+// guard triggered, and whatever that is WORTH belongs to the ability that granted it. Brute's
+// Bodyguard is the first consumer (BruteBodyguardReactionSystem - Shield back to Brute at rank 2+,
+// plus a knockback shockwave around the saved ally at rank 3).
+signal OnFreeHitGuardConsumed(EntityRef target, EntityRef source, EntityRef attacker);

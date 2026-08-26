@@ -1,0 +1,107 @@
+// Zara's Flow State passive - her rhythm, tracked on HER, never on her Totem.
+//
+// Replaced Resonance entirely. Resonance was a damage-fed meter that fired an automatic pulse; Flow is
+// a movement-fed state that continuously buffs her. She is rewarded for constant intentional movement,
+// dodging and aggressive Dash use, and punished for standing still or being hit - "staying in the
+// groove".
+//
+// DELIBERATELY TWO THINGS ONLY: a fill, and whether it is on.
+//
+//   Progress   0 -> 1, built by movement, drained by standing still, wiped by a hit.
+//   IsActive   true once Progress fills; false again the moment it stops being full.
+//
+// It started life as a 3-stack ladder with per-stack bonuses. That was more machinery than the fantasy
+// needed - "am I in the groove or not" is a binary the player reads instantly, whereas "am I on stack 2
+// or 3" is bookkeeping. One bar filling toward one payoff says the same thing with a third of the
+// state, and every Ascension below reads better against it.
+//
+// Every tuning number lives here as live state rather than being re-read off the passive asset each
+// tick: an Ascension (Faster Tempo) rewrites several of them, and baking them once at seed/pick time
+// is the same shape every other hero's ranked upgrade uses. Seeded by FlowStatePassiveData.
+component ZaraFlow
+{
+    // -- Live state --
+
+    // 0..1. The single source of truth: IsActive is just "this reached 1". Built while moving, held
+    // during the stationary grace window, drained after it, and reset by a hostile hit.
+    FP Progress;
+
+    // Maintained by ZaraFlowSystem alongside Progress rather than derived by readers, so the View, the
+    // stat bake and the Ascension payoffs all agree on one authoritative answer - and so the
+    // ACTIVATION EDGE (which Headliner's Hype fires on) is unambiguous.
+    Boolean IsActive;
+
+    // Resolved every tick from the player's own movement INPUT (not velocity - see
+    // ZaraFlowSystem.ResolveIsMoving), so knockback, teleports and physics shoves can never build Flow.
+    // Stored so the HUD can explain WHY the bar is draining.
+    Boolean IsMoving;
+
+    // Counts UP while not moving. Below StationaryGrace nothing happens at all; past it, Progress
+    // drains. Reset the instant she moves again.
+    FP StationaryTimer;
+
+    // -- Baseline tuning (seeded from FlowStatePassiveData) --
+
+    // Seconds of continuous meaningful movement to fill from empty. Faster Tempo divides this.
+    FP BuildDuration;
+
+    // What being Active is worth. Flat, applied once on activation - not per-stack any more.
+    FP MoveSpeedBonus;
+    FP FireRateBonus;
+
+    FP MovementInputThreshold;
+    FP StationaryGrace;
+
+    // Seconds to drain a FULL bar while standing still. Expressed as a duration rather than a rate for
+    // the same reason BuildDuration is - "it empties in 3 seconds" is what a designer actually tunes.
+    FP DecayDuration;
+
+    // Captured ONCE at seed so the bonus can be rebaked from a clean baseline every time Flow toggles,
+    // instead of multiplying the live value and compounding.
+    FP BaseMoveSpeedMultiplier;
+    FP BaseAttackSpeedMultiplier;
+
+    // -- Faster Tempo (Ascension line A) --
+
+    // Multiplies the RATE Flow builds at, so BuildDuration is effectively divided by this. 1 = unpicked.
+    FP BuildRateMultiplier;
+
+    // Rank 3 "Full Tempo" - extra Fire Rate on top of FireRateBonus while Active. 0 = unpicked.
+    FP ActiveFireRateBonus;
+
+    // -- Second Wind (Ascension line B) --
+
+    // Rank 1 - Move Speed granted for SecondWindDuration when a hostile hit breaks Flow. 0 = unpicked.
+    FP SecondWindMoveSpeedBonus;
+    FP SecondWindDuration;
+
+    // Rank 2+ - Progress left standing after a hostile hit instead of dropping to 0. The binary state
+    // still switches off either way; this only decides how far she has to rebuild.
+    FP ProgressRetainedOnHit;
+
+    // Rank 3 "Keep the Beat" - damage reduction applied to a hit that lands while Active, and its own
+    // cooldown. Relies on OnHostileHitConnected being dispatched synchronously ABOVE the
+    // damage-resolution steps, so the reduction reaches the very hit that triggered it.
+    FP KeepTheBeatDamageReduction;
+    FP KeepTheBeatCooldown;
+    FP KeepTheBeatCooldownRemaining;
+
+    // -- Headliner (Ascension line C) --
+
+    // Rank 1 - outgoing damage bonus while Active. 0 = unpicked.
+    FP ActiveDamageBonus;
+
+    // Rank 2 - Totem Beat effectiveness bonus while Active (damage AND heal/buff magnitude). The single
+    // intentional Flow/Totem crossover in this design; pushed onto her owned areas on the activation
+    // edge rather than baked at deploy, so it tracks her rhythm rather than when she planted the Totem.
+    FP ActiveBeatEffectiveness;
+
+    // Rank 3 "Hype" - a one-shot party buff fired on ACTIVATION, not an aura held while Active. Its own
+    // internal cooldown stops a Zara who repeatedly bounces off the top of the bar from keeping it up.
+    FP HypeRadius;
+    FP HypeDuration;
+    FP HypeMoveSpeedBonus;
+    FP HypeFireRateBonus;
+    FP HypeCooldown;
+    FP HypeCooldownRemaining;
+}

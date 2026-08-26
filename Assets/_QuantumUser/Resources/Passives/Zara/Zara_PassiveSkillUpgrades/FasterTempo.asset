@@ -18,19 +18,27 @@ MonoBehaviour:
       Value: 423069476414731352
   Icon: {fileID: 0}
   DisplayName: Faster Tempo
-  Description: Generate Resonance faster.
+  Description: Reach Flow faster, and make every stack of it worth more.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - Generate Resonance 25% faster.
-  - Generate Resonance 50% faster.
-  - Generate Resonance 75% faster and retain 20% Resonance after each Resonance Pulse.
-  BaseGenerationPerDamage:
-    RawValue: 65536
-  GenerationBonus:
-  - RawValue: 16384
-  - RawValue: 32768
-  - RawValue: 49152
-  RetainFraction:
+  - Flow builds 25% faster.
+  - Flow builds 50% faster, and each Flow stack grants +6% Move Speed and +6% Fire
+    Rate.
+  - 'Full Tempo: Flow builds 75% faster, and at Max Flow you gain a further +10%
+    Fire Rate.'
+  BuildRateMultiplier:
+  - RawValue: 81920
+  - RawValue: 98304
+  - RawValue: 114688
+  MoveSpeedPerStack:
+  - RawValue: 3277
+  - RawValue: 3932
+  - RawValue: 3932
+  FireRatePerStack:
+  - RawValue: 3277
+  - RawValue: 3932
+  - RawValue: 3932
+  MaxFlowFireRateBonus:
   - RawValue: 0
   - RawValue: 0
-  - RawValue: 13107
+  - RawValue: 6554

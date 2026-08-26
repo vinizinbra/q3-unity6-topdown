@@ -4,31 +4,34 @@ namespace Quantum
     using Quantum.Physics3D;
     using UnityEngine;
 
-    // Ranked Dash Ascension (Afterbeat, line 1/2 on Dash) - Zara's dash feeds her Resonance clock and
-    // then leaves rhythm behind her.
+    // Ranked Dash Ascension (Afterbeat, line 1/2 on Dash) - Zara's dash feeds her Flow and then leaves
+    // rhythm behind her. Migrated wholesale from Resonance; the line's identity as her Dash/movement
+    // line is unchanged, only the resource it pays into.
     //
-    //  - Rank 1 "Quick Tempo": dashing grants a flat chunk of Resonance, and passing THROUGH enemies
-    //    during the dash grants more per enemy (capped per dash, deduped per enemy).
+    //  - Rank 1 "Quick Tempo": dashing immediately pushes the Flow bar up a chunk, and each UNIQUE
+    //    enemy passed THROUGH during the dash pushes it further (capped per dash, deduped per enemy).
     //  - Rank 2 "Afterbeat": about a second after the dash, a damaging/knocking pulse lands at the
     //    dash's own starting position.
-    //  - Rank 3 "Double Beat": a second identical pulse at the dash's ENDING position too, and enemies
-    //    caught by either pulse also generate Resonance - drawing on the same shared per-dash
-    //    allowance rank 1's sweep uses, so the two can't compound past the cap.
+    //  - Rank 3 "Double Beat": a second identical pulse at the dash's ENDING position too, and landing
+    //    EITHER pulse on at least one enemy pushes the bar again - at most once per dash across both
+    //    pulses, never once per enemy.
     //
     // Countdowns/positions live on ZaraAfterbeat, ticked by ZaraAfterbeatSystem - no EntityPrototype
     // authoring needed, since neither pulse has a physical presence between scheduling and firing.
     public unsafe partial class AfterbeatSkillAction : SkillActionData
     {
         [Header("Rank 1 - Quick Tempo")]
-        [Tooltip("Flat Resonance granted the moment the dash starts.")]
-        public FP ResonanceOnDash = 20;
+        [Tooltip("Fraction of the Flow bar granted the moment the dash starts (0.35 = a third of a bar). Clamped at full like every other grant, so this can never overfill. Dash is the most reliable way to keep the rhythm going, which is what pays for its cooldown.")]
+        public FP FlowProgressOnDash = FP.FromString("0.35");
 
         [Tooltip("Radius around Zara checked every dash tick for enemies passed through.")]
         public FP SweepRadius = FP._1_50;
 
-        [Tooltip("Resonance per enemy the dash passes through, and per enemy an Afterbeat pulse catches at rank 3. One shared per-dash cap covers both.")]
-        public FP ResonancePerEnemyHit = 10;
-        public FP MaxResonancePerDash = 40;
+        [Tooltip("Fraction of the Flow bar granted per UNIQUE enemy the dash passes through (0.10 = a tenth of a bar each). An accelerant on top of the flat on-dash grant - dashing through a crowd fills faster than dashing through empty space.")]
+        public FP ProgressPerEnemyHit = FP._0_10;
+
+        [Tooltip("Cap on the per-enemy fraction above, per dash - so a dash through a dense pack converges instead of scaling with pack size.")]
+        public FP MaxProgressPerDash = FP.FromString("0.40");
 
         [Header("Rank 2+ - the delayed pulse")]
         public FP Delay = FP._1;
@@ -58,19 +61,26 @@ namespace Quantum
 
             if (firedPhase == SkillActionPhase.OnGoing)
             {
-                SweepForResonance(f, filter.Entity, filter.Transform3D->Position, afterbeat);
+                SweepForFlowProgress(f, filter.Entity, filter.Transform3D->Position, afterbeat);
                 return;
             }
 
             if (firedPhase == SkillActionPhase.Begin)
             {
-                // Quick Tempo - a flat amount, so it reads as a fixed, predictable contribution to the
-                // Resonance clock rather than silently rescaling if Resonance.Max is ever retuned.
-                ResonanceUtility.Grant(f, filter.Entity, ResonanceOnDash);
+                // Quick Tempo - a solid chunk of the bar up front, which is what makes Dash the single
+                // most reliable way to keep the rhythm going and pays for its cooldown on its own.
+                if (FlowProgressOnDash > FP._0 && f.Unsafe.TryGetPointer<ZaraFlow>(filter.Entity, out var flow) == true)
+                {
+                    ZaraFlowUtility.AddProgress(f, filter.Entity, flow, FlowProgressOnDash);
+                }
 
-                afterbeat->ResonanceGrantedThisDash = FP._0;
-                afterbeat->ResonancePerEnemyHit = ResonancePerEnemyHit;
-                afterbeat->MaxResonancePerDash = MaxResonancePerDash;
+                // Per-dash allowances all reset here, which is what makes every cap below genuinely
+                // "per dash" rather than per activation of the ascension.
+                afterbeat->ProgressThisDash = FP._0;
+                afterbeat->ProgressPerEnemyHit = ProgressPerEnemyHit;
+                afterbeat->MaxProgressPerDash = MaxProgressPerDash;
+                afterbeat->GrantsFlowOnPulseHit = rank >= 3;
+                afterbeat->FlowGrantedThisDash = false;
                 afterbeat->SweptCount = 0;
 
                 if (rank < 2)
@@ -95,13 +105,16 @@ namespace Quantum
             afterbeat->EndKnockbackForce = KnockbackForce[index];
         }
 
-        // Rank 1's "passing through enemies during the Dash grants additional Resonance" - deals no
-        // damage of its own, this is purely a Resonance faucet. Deduped per enemy per dash
-        // (ZaraAfterbeat.SweptEnemies) so standing inside the sweep radius doesn't pay every tick, and
-        // capped by the same shared per-dash allowance rank 3's pulse hits use.
-        private void SweepForResonance(Frame f, EntityRef owner, FPVector3 position, ZaraAfterbeat* afterbeat)
+        // Rank 1's "passing through enemies during the Dash fills the bar faster" - deals no damage of
+        // its own, this is purely an accelerant. Deduped per enemy per dash (ZaraAfterbeat.SweptEnemies)
+        // so lingering inside the sweep radius doesn't pay every tick, and capped per dash so a crowded
+        // dash converges instead of scaling with pack size.
+        private void SweepForFlowProgress(Frame f, EntityRef owner, FPVector3 position, ZaraAfterbeat* afterbeat)
         {
-            if (afterbeat->ResonancePerEnemyHit <= FP._0 || SweepRadius <= FP._0)
+            if (afterbeat->ProgressPerEnemyHit <= FP._0 || SweepRadius <= FP._0)
+                return;
+
+            if (f.Unsafe.TryGetPointer<ZaraFlow>(owner, out var flow) == false)
                 return;
 
             Shape3D sphere = Shape3D.CreateSphere(SweepRadius);
@@ -115,8 +128,24 @@ namespace Quantum
                     continue;
 
                 MarkSwept(afterbeat, target);
-                ZaraAfterbeatSystem.GrantCappedResonance(f, owner, afterbeat);
+                GrantSweepProgress(f, owner, afterbeat, flow);
             }
+        }
+
+        // Spends from one shared per-dash allowance, so a crowded dash converges on the cap instead of
+        // scaling with pack size. Routed through AddProgress like every other write, so it can activate
+        // Flow (and fire Headliner's Hype) mid-dash exactly as movement would.
+        private static void GrantSweepProgress(Frame f, EntityRef owner, ZaraAfterbeat* afterbeat, ZaraFlow* flow)
+        {
+            FP remaining = afterbeat->MaxProgressPerDash - afterbeat->ProgressThisDash;
+
+            if (remaining <= FP._0)
+                return;
+
+            FP granted = FPMath.Min(afterbeat->ProgressPerEnemyHit, remaining);
+
+            afterbeat->ProgressThisDash += granted;
+            ZaraFlowUtility.AddProgress(f, owner, flow, granted);
         }
 
         private static bool AlreadySwept(ZaraAfterbeat* afterbeat, EntityRef target)

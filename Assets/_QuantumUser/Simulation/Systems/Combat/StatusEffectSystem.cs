@@ -30,7 +30,8 @@ namespace Quantum
             status->AuraDamageReductionRemaining -= f.DeltaTime;
             status->TemporaryDamageReductionRemaining -= f.DeltaTime;
             status->ReactiveDamageReductionCooldownRemaining -= f.DeltaTime;
-            status->AllyShieldRestoreCooldownRemaining -= f.DeltaTime;
+            status->AllyGuardGrantCooldownRemaining -= f.DeltaTime;
+            status->FreeHitGuardRemaining -= f.DeltaTime;
             status->StunImmunityRemaining -= f.DeltaTime;
             status->InterruptImmunityRemaining -= f.DeltaTime;
             status->TempOutgoingDamageRemaining -= f.DeltaTime;

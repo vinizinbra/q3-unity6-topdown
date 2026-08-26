@@ -128,7 +128,7 @@ event ShieldBroken
 //
 // MultiTarget is true whenever this connect came from an overlap query that can catch more than
 // one entity in one action (ApplyInRadius/ApplyInShape/ApplyInCollider, plus a couple of manual
-// per-target loops - ResonanceUtility.FirePulse, IronShoulderSkillAction), false for a guaranteed
+// per-target loops - IronShoulderSkillAction), false for a guaranteed
 // single-connect hit (a projectile striking its one target). Lets a generic per-hit VIEW reaction
 // (EffectsManager.OnHitEffectApplied's meleeHitEffectPrefab) skip itself for a multi-target action -
 // that already gets (or should get) its own single dedicated blast VFX
@@ -192,37 +192,49 @@ event AreaDamageTicked
     EntityRef Entity;
 }
 
-// Fired by ResonanceUtility.FirePulse - Zara's Resonance passive reaching max simultaneously heals
-// nearby allies and damages nearby enemies, unlike AlternatingAreaPulsed above (her Hero Skill
-// speaker's own heal-OR-damage alternation) - kept as its own event rather than reused, since this
-// fires on Zara's own player entity, not a speaker entity, and view code keyed off one shouldn't
-// have to guess which shape of pulse it's looking at.
-event ResonancePulseReleased
+// Zara's Flow State (see Flow.qtn) - her bar moved, for any reason: filled by movement, drained while
+// standing still, pushed by Afterbeat, or wiped by a hit. Carries IsActive so a one-shot reaction can
+// tell an ordinary tick of fill from the moment it actually switched on.
+//
+// The View NEVER derives Flow from this event alone - ZaraFlowView/ZaraHudWidget poll ZaraFlow itself,
+// the same authoritative-state-not-event-replay convention AccessoryView and BlobAnimationView already
+// document. This exists for one-shot reactions (a stack-gain chime, a break sting).
+event ZaraFlowChanged
+{
+    EntityRef Owner;
+    FP        Progress;
+    Boolean   IsActive;
+}
+
+// A hostile hit connected and broke her rhythm (see Combat.qtn's OnHostileHitConnected). Fires even
+// when the hit was fully negated by the Accessory Guard or a Free Hit Guard - that is the point of the
+// mechanic, and it is why this is its own event rather than something derived from damage. Progress is
+// what she was left with - 0 baseline, higher with Second Wind rank 2+.
+event ZaraFlowBroken
+{
+    EntityRef Owner;
+    FP        Progress;
+}
+
+// Second Wind rank 3 "Keep the Beat" actually reduced an incoming hit. Its own event because the
+// reduction is invisible otherwise - the hit still lands, just smaller.
+event ZaraKeepTheBeat
+{
+    EntityRef Owner;
+}
+
+// Headliner rank 3 - fired once when she REACHES Max Flow and the party buff actually goes out (never
+// on a re-reach while its cooldown is running). Radius is carried so the burst can be drawn at the
+// real reach rather than an authored guess.
+event ZaraHypeTriggered
 {
     EntityRef Owner;
     FPVector3 Position;
     FP        Radius;
 }
 
-// Fired by ResonanceUtility.FirePulse alongside ResonancePulseReleased/ShockwaveReleased above,
-// only on a Remix pulse (Resonance.RemixRank > 0 and the pulse count is a multiple of 3) - carries
-// the deterministically-chosen effect(s) so the client only ever displays a result the simulation
-// already picked, never rolls its own (see docs/rift-mutations.md's "presentation only displays"
-// convention, reused here for the same reason). Effect2 is default/invalid unless Remix rank 3
-// ("Full Remix") rolled a second, distinct effect.
-event RemixPulseTriggered
-{
-    EntityRef                Entity;
-    FPVector3                Position;
-    FP                       Radius;
-    AssetRef<HitEffectData>  Effect1;
-    AssetRef<HitEffectData>  Effect2;
-}
-
 // Fired by ZaraAfterbeatSystem.Fire (Dash Ascension "Afterbeat", ranked - the delayed dash pulse,
-// not the Resonance passive above). Kept as its own event rather than reusing
-// ResonancePulseReleased/ShockwaveReleased, which every OTHER Zara pulse (Resonance passive, Heavy
-// Remix) shares and which ResonanceFxView renders - so Afterbeat's own pulse can
+// Kept as its own event rather than reusing the shared ShockwaveReleased, so Afterbeat's own pulse can
 // play a visually distinct VFX (see ZaraAfterbeatFxView) instead of looking identical to those.
 event AfterbeatPulseReleased
 {
@@ -467,11 +479,11 @@ event EntityRooted
 
 // Fired by HitEffectUtility.ApplyShockwave - a knockback-only radial push around a point, deliberately
 // generic (unlike AreaDetonated/JuggernautDischarged etc.) so ANY caller (Empty Chamber weapon perk,
-// Zara's Resonance pulse) can fire this same event/VFX instead of each needing its own bespoke hookup -
+// any other area pulse) can fire this same event/VFX instead of each needing its own bespoke hookup -
 // same "no single upgrade asset to resolve a bespoke prefab from" reasoning ExplodeOnDeathDetonated
 // already uses, see EffectsManager. Effect is invalid/default for every caller except Zara's Remix
-// ascension (see ResonanceUtility.ResolveRemixEffect) - EffectsManager's own generic handler skips
-// playing entirely whenever this is valid, deferring the (colored) shockwave visual to ResonanceFxView
+// caller that resolved one deterministically - EffectsManager's own generic handler skips
+// playing entirely whenever this is valid, deferring the (colored) shockwave visual to that caller
 // instead, so a Remix pulse never plays two overlapping shockwave particles.
 event ShockwaveReleased
 {
@@ -774,4 +786,76 @@ event PlayerRevived
 {
     EntityRef Target;
     EntityRef Reviver;
+}
+
+// A Free Hit Guard (StatusEffects.FreeHitGuardRemaining) just negated a hit - the View-facing
+// counterpart of the OnFreeHitGuardConsumed signal in Combat.qtn, carrying the position so the burst
+// can play on the SAVED ally rather than on whoever granted the guard. Same reason AccessoryBlocked
+// below exists: a fully negated hit fires no EntityDamaged, so without this a save reads as a miss.
+event FreeHitGuardConsumed
+{
+    EntityRef Target;
+    EntityRef Source;
+    FPVector3 Position;
+}
+
+// Recoverable Accessory Guard (see AccessoryGuard.qtn/docs/accessory-guard.md). All five below are
+// View-facing hooks for one-shot moments (impact FX, sounds, a pop of the collectible appearing) -
+// the AccessoryView's own visibility deliberately does NOT read them, it polls AccessoryGuard.State
+// directly, same self-healing "authoritative state, not an event replay" idiom
+// BlobAnimationView/WeaponViewController already use for Downed/KO.
+
+// The accessory just ate a hit. Damage is the RAW incoming amount, before any resolution - a block
+// negates the hit outright, so nothing further was ever computed for it (see
+// AccessoryGuardUtility.TryBlock). RemainingDurability is the value AFTER this block.
+event AccessoryBlocked
+{
+    EntityRef Owner;
+    EntityRef Attacker;
+    FP        Damage;
+    Byte      RemainingDurability;
+    FPVector3 Position;
+}
+
+// The popped-off accessory's ballistic arc just ended - it's now lying on the ground and
+// collectible by its owner. Separate from AccessoryBlocked since the landing happens some ticks
+// later, wherever the arc actually came down.
+event AccessoryLanded
+{
+    EntityRef Owner;
+    FPVector3 Position;
+}
+
+// The owner walked over their own dropped accessory and put it back on, at whatever durability it
+// still had - recovery never restores durability, only the accessory itself.
+event AccessoryRecovered
+{
+    EntityRef Owner;
+
+    // Who physically picked it up - equal to Owner when they fetched it themselves, a TEAMMATE
+    // otherwise (co-op, see AccessoryGuardConfig.AllowAllyRecovery). Carried on the event so the
+    // View can credit the right person without re-deriving it; the accessory always returns to
+    // Owner regardless.
+    EntityRef Recoverer;
+
+    FPVector3 Position;
+    Byte      Durability;
+}
+
+// Durability hit 0. No world collectible is spawned for this one - there is nothing to walk back
+// for, only a Merchant replacement to buy.
+event AccessoryBroken
+{
+    EntityRef Owner;
+    FPVector3 Position;
+}
+
+// A Merchant service completed (see AccessoryServiceUtility.TryPurchaseService) - always back to
+// full, so Durability is always MaxDurability. WasReplacement distinguishes a Broken replacement
+// from a plain repair for presentation only; the simulation treats them identically.
+event AccessoryRestored
+{
+    EntityRef Owner;
+    Boolean   WasReplacement;
+    Byte      Durability;
 }

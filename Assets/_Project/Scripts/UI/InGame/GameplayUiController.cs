@@ -59,6 +59,22 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
     // read inside the click handler itself.
     private ChoiceWindowOwner[] _windowOwner;
 
+    // What each card in the Store's food/utility row actually IS this refresh. The row is packed
+    // dynamically (rolled food offers, then whichever guaranteed offers StoreConfig enables), so a
+    // card's index no longer implies its meaning the way two hardcoded constants used to - and that
+    // fragility is exactly what silently hid the accessory service card when it sat at a fixed
+    // index past cardCount. Recorded per window slot on every refresh and read back by
+    // OnCardClicked, so what was clicked is always what was drawn.
+    private enum StoreCardKind { None, Food, WeaponLevelUp, AccessoryService }
+
+    private struct StoreCardSlot
+    {
+        public StoreCardKind Kind;
+        public int OfferIndex; // only meaningful for Food
+    }
+
+    private StoreCardSlot[][] _storeCardSlots;
+
     // Cached per slot every UpdatePoiWindow tick - OnCardClicked needs to know whether a card click
     // (while ChoiceWindowOwner.CursedRift) means "pick a sacrifice" or "pick a mutation" (both
     // stages reuse the same 3-card grid/onCardClicked event), without re-deriving it from a fresh
@@ -74,6 +90,7 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
         _rerollClickedHandlers = new Action[choiceWindows.Length];
         _secondaryButtonClickedHandlers = new Action[choiceWindows.Length];
         _windowOwner = new ChoiceWindowOwner[choiceWindows.Length];
+        _storeCardSlots = new StoreCardSlot[choiceWindows.Length][];
         _poiWindowStage = new CursedRiftInteractionState[choiceWindows.Length];
 
         for (int i = 0; i < choiceWindows.Length; i++)
@@ -348,7 +365,7 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
 
                 case ChoiceWindowOwner.Store:
                     if (frame.Unsafe.TryGetPointer<StoreInteraction>(entity, out var store) == true)
-                        RefreshStoreWindow(frame, entity, store, choiceWindows[i]);
+                        RefreshStoreWindow(frame, i, entity, store, choiceWindows[i]);
                     break;
 
                 case ChoiceWindowOwner.Blacksmith:
@@ -363,7 +380,7 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
     // own layout decision), both live on the SAME ChooseWindow.RefreshStore call. Subtitle shows
     // this player's own live Coin total, same "read live, never cached" idiom every other purchase
     // affordance in this method uses.
-    private static unsafe void RefreshStoreWindow(Frame frame, EntityRef entity, StoreInteraction* interaction, ChooseWindow window)
+    private unsafe void RefreshStoreWindow(Frame frame, int slotIndex, EntityRef entity, StoreInteraction* interaction, ChooseWindow window)
     {
         EntityRef store = interaction->Store;
 
@@ -373,19 +390,48 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
         StoreConfig config = frame.FindAsset(frame.RuntimeConfig.StoreConfig);
         int weaponOfferCount = StoreUtility.ResolveWeaponOfferCount(frame, entity, store, config);
 
-        // +1: the guaranteed "Increase Weapon Level" offer (see BuildWeaponLevelUpCardData) is
-        // appended right after the rolled FoodOffers slots - StoreWeaponLevelUpCardIndex documents
-        // why that index can never collide with a real, rolled food offer.
-        var foodData = new UpgradeCardWidget.CardData[inventory->FoodOffers.Length + 1];
+        // The food/utility row is PACKED, not fixed-index: however many food offers actually rolled,
+        // then whichever guaranteed offers StoreConfig turns on, in order. With the stock config
+        // that's [food, food, accessory service] - exactly 3, which is what cardCount ships at.
+        // Every slot's meaning is recorded in _storeCardSlots so OnCardClicked dispatches on what
+        // was drawn rather than on a hardcoded index.
+        int foodOfferCount = inventory->FoodOfferCount < inventory->FoodOffers.Length
+            ? inventory->FoodOfferCount
+            : inventory->FoodOffers.Length;
 
-        for (int j = 0; j < inventory->FoodOffers.Length; j++)
+        int cardCount = foodOfferCount
+                        + (config.OfferWeaponLevelUp ? 1 : 0)
+                        + (config.OfferAccessoryService ? 1 : 0);
+
+        var foodData = new UpgradeCardWidget.CardData[cardCount];
+        var cardSlots = new StoreCardSlot[cardCount];
+        int next = 0;
+
+        for (int j = 0; j < foodOfferCount; j++)
         {
-            foodData[j] = j < inventory->FoodOfferCount
-                ? BuildFoodOfferCardData(frame, entity, store, j, inventory->FoodOffers[j])
-                : default;
+            foodData[next] = BuildFoodOfferCardData(frame, entity, store, j, inventory->FoodOffers[j]);
+            cardSlots[next] = new StoreCardSlot { Kind = StoreCardKind.Food, OfferIndex = j };
+            next++;
         }
 
-        foodData[StoreWeaponLevelUpCardIndex] = BuildWeaponLevelUpCardData(frame, entity, config);
+        if (config.OfferWeaponLevelUp == true)
+        {
+            foodData[next] = BuildWeaponLevelUpCardData(frame, entity, config);
+            cardSlots[next] = new StoreCardSlot { Kind = StoreCardKind.WeaponLevelUp };
+            next++;
+        }
+
+        if (config.OfferAccessoryService == true)
+        {
+            // Deliberately reserves its slot even when it resolves to an empty card (accessory at
+            // full durability) - the row keeping a stable shape as durability changes reads far
+            // better than cards shuffling left and right mid-visit.
+            foodData[next] = BuildAccessoryServiceCardData(frame, entity);
+            cardSlots[next] = new StoreCardSlot { Kind = StoreCardKind.AccessoryService };
+            next++;
+        }
+
+        _storeCardSlots[slotIndex] = cardSlots;
 
         var weaponData = new WeaponCardWidget.CardData[inventory->WeaponOffers.Length];
 
@@ -457,14 +503,6 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
         };
     }
 
-    // Card index the guaranteed "Increase Weapon Level" offer is appended at within Store's own
-    // foodData[] (see RefreshStoreWindow) - matches Store.qtn's StoreInventory.FoodOffers[2] ceiling
-    // exactly, one past its last real slot. A real rolled food offer can never reach this index
-    // (FoodOfferCount is always clamped <= FoodOffers.Length, see StoreUtility.RollFoodOffers), so
-    // there's no collision risk even when 0 food offers roll. OnCardClicked uses this same constant
-    // to route a click here to BuyStoreWeaponLevelCommand instead of BuyStoreFoodCommand.
-    private const int StoreWeaponLevelUpCardIndex = 2;
-
     // Store's guaranteed "Increase Weapon Level" card - unlike every other Store card, this isn't
     // read off a rolled StoreInventory offer at all (nothing rolled about it); price/current level
     // are both resolved live off the buyer's own equipped Weapon (see
@@ -494,6 +532,89 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
                 IsSoldOut = purchased
             }
         };
+    }
+
+    // The Merchant's Accessory Repair/Replacement service card (see docs/accessory-guard.md).
+    // Structurally the same guaranteed, never-rolled offer BuildWeaponLevelUpCardData already is -
+    // price, service kind and affordability are all resolved LIVE off the buyer's own AccessoryGuard
+    // through AccessoryServiceUtility, never cached and never sent from here to the simulation (the
+    // command carries no payload at all; the sim re-derives everything).
+    //
+    // Hero-agnostic apart from one purely cosmetic lookup: the accessory's DisplayName comes from
+    // the buyer's own CharacterData.Accessory, so Max's card reads "Lucky Cap" and Zara's reads
+    // "Studio Headset" with no branch here - and falls back to a generic label when unauthored.
+    //
+    // HasOption = false (an empty card slot) whenever the accessory is already at full durability,
+    // which is how "3/3 offers no repair service" is expressed - not a disabled card, no card.
+    private static unsafe UpgradeCardWidget.CardData BuildAccessoryServiceCardData(Frame frame, EntityRef entity)
+    {
+        AccessoryServiceKind kind = AccessoryServiceUtility.ResolveService(frame, entity);
+
+        if (kind == AccessoryServiceKind.None)
+            return default;
+
+        if (frame.Unsafe.TryGetPointer<AccessoryGuard>(entity, out var guard) == false)
+            return default;
+
+        FP price = AccessoryServiceUtility.ResolvePrice(frame, entity);
+        FP coins = frame.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats) == true ? stats->Coins : FP._0;
+
+        string accessoryName = ResolveAccessoryName(frame, entity);
+        bool isReplacement = kind == AccessoryServiceKind.Replacement;
+
+        return new UpgradeCardWidget.CardData
+        {
+            HasOption = true,
+            Icon = ResolveAccessoryIcon(frame, entity),
+            DisplayName = isReplacement ? $"Replace {accessoryName}" : $"Repair {accessoryName}",
+            Description = isReplacement
+                ? $"Your {accessoryName} is broken. A replacement restores it to full durability."
+                : $"Restores your {accessoryName} to full durability. It blocks one hit per point.",
+            KindText = "FOOD & UTILITY",
+            TopLabelOverride = isReplacement ? "REPLACE" : "REPAIR",
+            // Repair ALWAYS goes straight to full - there are no per-point purchases (see
+            // docs/accessory-guard.md), so this preview can always name MaxDurability as the result.
+            ValuePreview = $"DURABILITY {guard->CurrentDurability}/{guard->MaxDurability} -> {guard->MaxDurability}/{guard->MaxDurability}",
+            ButtonLabel = "BUY",
+            Purchase = new PurchasableCardState
+            {
+                ShowPurchaseUi = true,
+                Price = price.AsFloat,
+                Currency = CurrencyType.Coin,
+                CanAfford = coins >= price,
+                // Never "sold out" - a completed service restores to full, which resolves the
+                // service to None and removes this card entirely on the very next refresh, so there
+                // is no already-bought state for it to sit in.
+                IsSoldOut = false
+            }
+        };
+    }
+
+    // Per-hero accessory presentation, read straight off the buyer's own CharacterData (see
+    // CharacterData.View.cs) - the only per-hero lookup on the Merchant side, and cosmetic only.
+    private static unsafe string ResolveAccessoryName(Frame frame, EntityRef entity)
+    {
+        CharacterData data = ResolveCharacterData(frame, entity);
+        string authored = data != null ? data.Accessory.DisplayName : null;
+
+        return string.IsNullOrEmpty(authored) ? "Accessory" : authored;
+    }
+
+    private static unsafe Sprite ResolveAccessoryIcon(Frame frame, EntityRef entity)
+    {
+        CharacterData data = ResolveCharacterData(frame, entity);
+
+        // Reuses the world-collectible sprite as the shop icon rather than asking for a third
+        // authored asset - it is already "this hero's accessory, drawn on its own".
+        return data != null ? data.Accessory.CollectibleSprite : null;
+    }
+
+    private static unsafe CharacterData ResolveCharacterData(Frame frame, EntityRef entity)
+    {
+        if (frame.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats) == false)
+            return null;
+
+        return stats->CharacterData.IsValid ? frame.FindAsset(stats->CharacterData) : null;
     }
 
     // Store weapon offer card - reuses BuildWeaponCardData (refactored to take raw fields, see its
@@ -647,14 +768,47 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
                 break;
 
             case ChoiceWindowOwner.Store:
-                if (optionIndex == StoreWeaponLevelUpCardIndex)
-                    _game.SendCommand(slotIndex, new BuyStoreWeaponLevelCommand());
-                else
-                    _game.SendCommand(slotIndex, new BuyStoreFoodCommand { OfferIndex = (byte)optionIndex });
+                SendStoreCardCommand(slotIndex, optionIndex);
                 break;
 
             case ChoiceWindowOwner.Blacksmith:
                 _game.SendCommand(slotIndex, new SelectBlacksmithPerkCommand { OptionIndex = (byte)optionIndex });
+                break;
+        }
+    }
+
+    // Store's food/utility row is packed dynamically (see RefreshStoreWindow), so a click is
+    // dispatched on what that slot was actually DRAWN as this refresh, never on a fixed index.
+    private void SendStoreCardCommand(int slotIndex, int optionIndex)
+    {
+        StoreCardSlot[] cardSlots = _storeCardSlots[slotIndex];
+
+        if (cardSlots == null || optionIndex < 0 || optionIndex >= cardSlots.Length)
+            return;
+
+        // What was bought rides along as context, so one trigger covers the whole shop - EXCEPT the
+        // accessory service, which has its own AccessoryRestored trigger. Every accessory restore is
+        // a Merchant purchase, so firing both would be two lines for one click, and the more
+        // specific one is the better line. A generic trigger yields to a specific one.
+        StoreCardKind kind = cardSlots[optionIndex].Kind;
+
+        if (kind != StoreCardKind.AccessoryService)
+            ReportPurchase(slotIndex, (int)kind);
+
+        StoreCardSlot slot = cardSlots[optionIndex];
+
+        switch (slot.Kind)
+        {
+            case StoreCardKind.Food:
+                _game.SendCommand(slotIndex, new BuyStoreFoodCommand { OfferIndex = (byte)slot.OfferIndex });
+                break;
+
+            case StoreCardKind.WeaponLevelUp:
+                _game.SendCommand(slotIndex, new BuyStoreWeaponLevelCommand());
+                break;
+
+            case StoreCardKind.AccessoryService:
+                _game.SendCommand(slotIndex, new BuyAccessoryServiceCommand());
                 break;
         }
     }
@@ -875,8 +1029,76 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
     // or the timer expires (see LevelUpSystem.AllConfirmed).
     private void OnUpgradeCardClicked(int slotIndex, int optionIndex)
     {
+        ReportUpgradeChosen(slotIndex, optionIndex);
+
         _game.SendCommand(slotIndex, new SelectLevelUpUpgradeCommand { OptionIndex = (byte)optionIndex });
         CloseUpgradeScreenIfSolo();
+    }
+
+    // Raised from the CLICK rather than from the simulation granting the upgrade, and that is the
+    // right place for it: picking is a local, personal moment, so only this client's own pick should
+    // ever produce a line. It also needs no new Quantum event - the option the player just clicked is
+    // already sitting in their own LevelUpChoice.
+    private unsafe void ReportUpgradeChosen(int slotIndex, int optionIndex)
+    {
+        if (VoiceDirector.Instance == null || MyLocalPlayer.Instance == null)
+            return;
+
+        if (slotIndex < 0 || slotIndex >= MyLocalPlayer.Instance.Slots.Count)
+            return;
+
+        EntityRef entity = MyLocalPlayer.Instance.Slots[slotIndex].EntityRef;
+
+        if (entity == EntityRef.None)
+            return;
+
+        Frame frame = _game.Frames.Predicted;
+
+        if (frame.Unsafe.TryGetPointer<LevelUpChoice>(entity, out var choice) == false)
+            return;
+
+        if (optionIndex < 0 || optionIndex >= choice->OptionCount)
+            return;
+
+        LevelUpOption option = choice->Options[optionIndex];
+
+        // Maxing a ranked line REPLACES the generic pick, so one click never produces two lines.
+        VoiceLineTrigger trigger = WillMaxOut(frame, entity, option)
+            ? VoiceLineTrigger.UpgradeMaxed
+            : VoiceLineTrigger.UpgradeChosen;
+
+        // Pool travels as context so one trigger covers every pool - see VoiceLineTrigger.UpgradeChosen.
+        VoiceDirector.Instance.ReportUpgrade(_game, trigger, entity, option.Upgrade, (int)option.Kind);
+    }
+
+    // Would this pick take a ranked Ascension to its LAST rank? Read from the upgrade's own MaxRank
+    // against how many times this player has already taken it, which is exactly how the card's own
+    // rank badge is resolved - so the line and the badge can never disagree. An unranked upgrade
+    // (Weapon Perk, Global Upgrade, Rift Mutation) has no MaxRank and never maxes.
+    // Raised from the click for the same reason UpgradeChosen is: spending is a personal moment, so
+    // only this client's own purchase should ever produce a line.
+    private void ReportPurchase(int slotIndex, int kind)
+    {
+        if (VoiceDirector.Instance == null || MyLocalPlayer.Instance == null)
+            return;
+
+        if (slotIndex < 0 || slotIndex >= MyLocalPlayer.Instance.Slots.Count)
+            return;
+
+        EntityRef entity = MyLocalPlayer.Instance.Slots[slotIndex].EntityRef;
+
+        if (entity != EntityRef.None)
+            VoiceDirector.Instance.Report(_game, VoiceLineTrigger.ItemPurchased, entity, kind);
+    }
+
+    private unsafe bool WillMaxOut(Frame frame, EntityRef entity, LevelUpOption option)
+    {
+        if (frame.FindAsset(option.Upgrade) is not IRankedUpgrade ranked || ranked.MaxRank <= 1)
+            return false;
+
+        int owned = UpgradeHistoryUtility.GetCount(frame, entity, option.Kind, option.Upgrade);
+
+        return owned + 1 >= ranked.MaxRank;
     }
 
     private void OnRerollClicked(int slotIndex)

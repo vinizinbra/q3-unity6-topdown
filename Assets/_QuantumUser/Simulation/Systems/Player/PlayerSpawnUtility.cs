@@ -57,6 +57,23 @@ namespace Quantum
                 TalentUtility.ApplyPerPlayerTalents(f, entity, runtimePlayer, stats);
             }
 
+            // Local-testing bot (see docs/bots.md) - RuntimePlayer.IsBot is read exactly here and
+            // turned into a BotBrain component, so nothing downstream ever fetches RuntimePlayer
+            // again to ask "is this a bot": PlayerInputUtility.Resolve, LevelUpSystem's own
+            // auto-pick and RunPhaseUtility's Breathing skip vote all key off the component.
+            if (runtimePlayer.IsBot == true)
+            {
+                f.AddOrGet<BotBrain>(entity, out var brain);
+
+                // Seeded rather than left at 0, which would make every bot cast on its very first
+                // tick, all together, the instant the match starts.
+                RuntimeConfig.BotSettings bots = f.RuntimeConfig.Bots;
+                brain->HeroSkillTimer = BotInputSystem.RollHeroSkillInterval(f, bots);
+                brain->DashSkillTimer = BotInputSystem.RollDashInterval(f, bots);
+
+                Log.Debug($"[Bot] player {player} spawned as a bot ({entity})");
+            }
+
             // Skill stacks are NOT initialized here - SkillSystem.EnsureInitialized does it lazily
             // on first Update instead, so it's correct regardless of how the entity came to exist
             // (this dynamic spawn path, or a player placed directly in a scene for testing, which

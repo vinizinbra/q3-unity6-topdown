@@ -437,6 +437,67 @@ namespace Quantum
             return FPMath.Clamp(FP._1 - status->TemporaryDamageReductionAmount, FP._0, FP._1);
         }
 
+        // FREE HIT GUARD - a one-shot, timed, complete negation of the next damaging hit. Generic and
+        // hero-agnostic (Brute's Bodyguard is simply the first consumer); see StatusEffects.qtn.
+        //
+        // Take-the-longer on reapply, matching every other timed slot here. There is no "magnitude" to
+        // compare - a free hit is a free hit - so the only question a second grant can answer is
+        // whether it lasts longer than what's already running. source is overwritten alongside a
+        // longer window, so the granter who actually ends up saving someone is the one paid back.
+        public static void ApplyFreeHitGuard(Frame f, EntityRef target, EntityRef source, FP duration)
+        {
+            if (duration <= FP._0)
+                return;
+
+            if (f.Unsafe.TryGetPointer<StatusEffects>(target, out var status) == false)
+                return;
+
+            if (duration <= status->FreeHitGuardRemaining)
+                return;
+
+            status->FreeHitGuardRemaining = duration;
+            status->FreeHitGuardDuration = duration;
+            status->FreeHitGuardSource = source;
+        }
+
+        public static bool HasFreeHitGuard(Frame f, EntityRef entity)
+        {
+            return f.Unsafe.TryGetPointer<StatusEffects>(entity, out var status) == true
+                   && status->FreeHitGuardRemaining > FP._0;
+        }
+
+        // Who granted the guard currently running, or EntityRef.None if there isn't one. Non-consuming
+        // - the read a refreshing source needs to answer "is the guard standing on this ally MINE?",
+        // so it can keep its own alive without also extending someone else's indefinitely.
+        public static EntityRef GetFreeHitGuardSource(Frame f, EntityRef entity)
+        {
+            if (f.Unsafe.TryGetPointer<StatusEffects>(entity, out var status) == false
+                || status->FreeHitGuardRemaining <= FP._0)
+                return EntityRef.None;
+
+            return status->FreeHitGuardSource;
+        }
+
+        // Spends the guard if one is up, reporting who granted it so the caller can raise
+        // OnFreeHitGuardConsumed. Clears the window outright rather than letting it tick out - it's
+        // one hit, not a duration of immunity, so a second hit the same tick must land normally.
+        public static bool TryConsumeFreeHitGuard(Frame f, EntityRef target, out EntityRef source)
+        {
+            source = EntityRef.None;
+
+            if (f.Unsafe.TryGetPointer<StatusEffects>(target, out var status) == false
+                || status->FreeHitGuardRemaining <= FP._0)
+                return false;
+
+            source = status->FreeHitGuardSource;
+
+            status->FreeHitGuardRemaining = FP._0;
+            status->FreeHitGuardDuration = FP._0;
+            status->FreeHitGuardSource = EntityRef.None;
+
+            return true;
+        }
+
         // Temporary Weapon Damage buff (Max's Last Stand rank 2 retaliation proc, Run & Gun rank 2) -
         // take-the-stronger/longer semantics on reapply, same shape as ApplyTemporaryDamageReduction:
         // a weaker/shorter proc landing while a stronger one is still active extends nothing and

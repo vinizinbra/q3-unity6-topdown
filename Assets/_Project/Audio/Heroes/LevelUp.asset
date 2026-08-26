@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: LevelUp
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
   clips:
-  - {fileID: 8300000, guid: 83326e6cf3a7a084e9c65d4df6b82c9a, type: 3}
+  - {fileID: 8300000, guid: a3bc2b2926328dd43b76831874825c65, type: 3}
   pick: 1
   layers: []
   group: 9

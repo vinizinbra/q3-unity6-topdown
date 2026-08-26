@@ -139,8 +139,8 @@ TextureImporter:
       name: ZaraGeometric_0
       rect:
         serializedVersion: 2
-        x: 110
-        y: 547
+        x: 0
+        y: 645
         width: 391
         height: 379
       alignment: 9
@@ -161,10 +161,10 @@ TextureImporter:
       name: ZaraGeometric_1
       rect:
         serializedVersion: 2
-        x: 152
-        y: 147
-        width: 344
-        height: 337
+        x: 0
+        y: 299
+        width: 347
+        height: 340
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -183,8 +183,8 @@ TextureImporter:
       name: ZaraGeometric_2
       rect:
         serializedVersion: 2
-        x: 633
-        y: 291
+        x: 2
+        y: 0
         width: 174
         height: 276
       alignment: 9
@@ -205,8 +205,8 @@ TextureImporter:
       name: ZaraGeometric_3
       rect:
         serializedVersion: 2
-        x: 806
-        y: 296
+        x: 176
+        y: 0
         width: 189
         height: 271
       alignment: 9
@@ -249,8 +249,8 @@ TextureImporter:
       name: ZaraGeometric_5
       rect:
         serializedVersion: 2
-        x: 613
-        y: 76
+        x: 610
+        y: 22
         width: 352
         height: 151
       alignment: 0
@@ -263,6 +263,50 @@ TextureImporter:
       bones: []
       spriteID: 7c527897ab5a14215a417fd3d6ec53c2
       internalID: 1333023621
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ZaraAccessory
+      rect:
+        serializedVersion: 2
+        x: 709
+        y: 240
+        width: 315
+        height: 234
+      alignment: 9
+      pivot: {x: 0.48902684, y: 0.06943142}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c1fe6b9a387004d22be149aba4a829ef
+      internalID: -1306266345
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ZaraGeometric_7
+      rect:
+        serializedVersion: 2
+        x: 358
+        y: 219
+        width: 353
+        height: 383
+      alignment: 9
+      pivot: {x: 0.52561474, y: 0.094725884}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 641e865e69f8b41cc98458b3c4b19d97
+      internalID: 1214862872
       vertices: []
       indices: 
       edges: []
@@ -281,12 +325,14 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
+      ZaraAccessory: -1306266345
       ZaraGeometric_0: -1855909297
       ZaraGeometric_1: 498005117
       ZaraGeometric_2: 1108605348
       ZaraGeometric_3: 1674939565
       ZaraGeometric_4: -740471422
       ZaraGeometric_5: 1333023621
+      ZaraGeometric_7: 1214862872
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

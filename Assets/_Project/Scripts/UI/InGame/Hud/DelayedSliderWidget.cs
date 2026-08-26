@@ -23,6 +23,20 @@ public class DelayedSliderWidget : MonoBehaviour
     private float _lastWatchedValue;
     private float _drainTimer;
     private bool _hasSnapped;
+    private bool _instant;
+
+    // Turns the trail off without turning the bar off: the slider keeps mirroring the watched one
+    // exactly, so it stays hidden behind the real fill instead of freezing at a stale value (which
+    // is what disabling this component outright would leave on screen). For widgets whose readout
+    // should be immediate - a sentry's, where the bar is small, short-lived and shared with the
+    // owner's own HUD - rather than dramatic.
+    public void SetInstant(bool instant)
+    {
+        _instant = instant;
+
+        if (instant == true && selfSlider != null && watchedSlider != null)
+            Snap(watchedSlider.value);
+    }
 
     private void OnEnable()
     {
@@ -35,6 +49,12 @@ public class DelayedSliderWidget : MonoBehaviour
             return;
 
         float watchedValue = watchedSlider.value;
+
+        if (_instant == true)
+        {
+            Snap(watchedValue);
+            return;
+        }
 
         // Spawned onto an already-damaged entity, the first real value would otherwise read as a
         // fresh hit and drain for it.

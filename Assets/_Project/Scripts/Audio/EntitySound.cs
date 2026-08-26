@@ -18,6 +18,14 @@ using UnityEngine;
 // Couch co-op: every local split-screen player counts as local (IsLocalEntity checks all slots), so
 // only a genuinely networked teammate is scaled down. That is the intent - you are listening from
 // between the local players (LocalPlayerAudioListener), so all of them are "here".
+//
+// Bots (RuntimePlayer.IsBot, see docs/bots.md) are deliberately NOT local, even though on a
+// local-debug session they are literally this client's own player slots. They never register with
+// MyLocalPlayer, so IsLocalEntity returns false for one and a bot's sounds are mixed exactly like a
+// networked teammate's: quieterWhenRemote scales them down, localPlayerOnly drops them entirely.
+// That is what keeps a bot Pixie's reload clicks and ability cues out of the mix that should only
+// ever be about the player actually holding the controller. No bot-specific code here - the rule is
+// the same single MyLocalPlayer check it always was.
 public static class EntitySound
 {
     public static SoundHandle PlayAttached(SoundData sound, Transform follow, EntityRef owner)

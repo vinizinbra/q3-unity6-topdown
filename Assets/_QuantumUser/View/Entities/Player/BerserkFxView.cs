@@ -18,16 +18,37 @@ namespace Quantum
         [SerializeField] private ParticleSystem berserkAura;
 
         [Header("Head Sprite Swap")]
-        [SerializeField] private SpriteRenderer headSprite;
+        [SerializeField, Tooltip("Head renderer inside the WITH-ACCESSORY root (the one AccessoryView shows while the hat is on).")]
+        private SpriteRenderer headSprite;
         [SerializeField] private Sprite berserkHeadSprite;
 
         [Header("Rage Overdrive (Max Stacks)")]
         [SerializeField] private ParticleSystem overdriveAura;
         [SerializeField] private Sprite overdriveHeadSprite;
 
+        // The Accessory Guard (docs/accessory-guard.md) means Max can be in any tier while WEARING
+        // his cap or while it's knocked off, and AccessoryView swaps a whole root between those two
+        // cases - so the head renderer above lives inside only ONE of them. Without the parallel set
+        // below, going Berserk/Overdrive while hatless writes the tier sprite onto a hidden
+        // renderer and nothing changes on screen.
+        //
+        // Deliberately resolved WITHOUT reading AccessoryGuard here: this view keeps BOTH heads
+        // correct for the current tier, and AccessoryView independently decides which root is
+        // visible. That means no accessory logic is duplicated, no ordering dependency exists
+        // between the two components, and a hat knocked off mid-Overdrive needs no reaction at all -
+        // the other root was already showing the right sprite.
+        [Header("No Accessory (hat off) variants")]
+        [SerializeField, Tooltip("Head renderer inside the WITHOUT-ACCESSORY root (AccessoryView's unequippedVisual). Leave unassigned on any hero with no hatless variant - everything below is then skipped and this view behaves exactly as before.")]
+        private SpriteRenderer noAccessoryHeadSprite;
+        [SerializeField, Tooltip("Berserk head sprite for the hatless root. Falls back to berserkHeadSprite when unassigned.")]
+        private Sprite berserkNoAccessoryHeadSprite;
+        [SerializeField, Tooltip("Overdrive head sprite for the hatless root. Falls back to overdriveHeadSprite when unassigned.")]
+        private Sprite overdriveNoAccessoryHeadSprite;
+
         private bool _active;
         private bool _overdriven;
         private Sprite _defaultHeadSprite;
+        private Sprite _defaultNoAccessoryHeadSprite;
 
         public override void Awake()
         {
@@ -35,6 +56,9 @@ namespace Quantum
 
             if (headSprite != null)
                 _defaultHeadSprite = headSprite.sprite;
+
+            if (noAccessoryHeadSprite != null)
+                _defaultNoAccessoryHeadSprite = noAccessoryHeadSprite.sprite;
         }
 
         public override void DeInitialize(QuantumGame game)
@@ -81,8 +105,7 @@ namespace Quantum
             overdriveAura.Stop();
             berserkAura.Play();
 
-            if (headSprite != null && berserkHeadSprite != null)
-                headSprite.sprite = berserkHeadSprite;
+            ApplyHeads(berserkHeadSprite, berserkNoAccessoryHeadSprite ?? berserkHeadSprite);
         }
 
         [Button]
@@ -91,8 +114,7 @@ namespace Quantum
             berserkAura.Stop();
             overdriveAura.Play();
 
-            if (headSprite != null && overdriveHeadSprite != null)
-                headSprite.sprite = overdriveHeadSprite;
+            ApplyHeads(overdriveHeadSprite, overdriveNoAccessoryHeadSprite ?? overdriveHeadSprite);
         }
 
         [Button]
@@ -102,8 +124,20 @@ namespace Quantum
             overdriveAura.Stop();
             _overdriven = false;
 
-            if (headSprite != null)
-                headSprite.sprite = _defaultHeadSprite;
+            ApplyHeads(_defaultHeadSprite, _defaultNoAccessoryHeadSprite);
+        }
+
+        // Both roots' heads are written every tier change, not just whichever one is currently
+        // visible - that's what makes this independent of AccessoryView (and of the hat's own state)
+        // entirely. Each is skipped when its renderer or its sprite is unassigned, so a hero with no
+        // hatless variant, or a tier with no authored sprite, is simply left alone.
+        private void ApplyHeads(Sprite withAccessory, Sprite withoutAccessory)
+        {
+            if (headSprite != null && withAccessory != null)
+                headSprite.sprite = withAccessory;
+
+            if (noAccessoryHeadSprite != null && withoutAccessory != null)
+                noAccessoryHeadSprite.sprite = withoutAccessory;
         }
 
         private static bool IsBerserkActive(Frame f, EntityRef entity)

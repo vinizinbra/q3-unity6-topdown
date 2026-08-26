@@ -24,13 +24,13 @@ namespace Quantum
 
             if (healNext == true)
             {
-                filter.AreaDamage->Damage = filter.Alternating->HealAmount;
+                filter.AreaDamage->Damage = filter.Alternating->HealAmount * ResolveEffectiveness(filter.Alternating);
                 filter.AreaDamage->TargetMask = filter.Alternating->HealTargetMask;
                 CopyEffects(filter.Alternating->HealEffects, filter.AreaDamage);
             }
             else
             {
-                filter.AreaDamage->Damage = filter.Alternating->DamageAmount;
+                filter.AreaDamage->Damage = filter.Alternating->DamageAmount * ResolveEffectiveness(filter.Alternating);
                 filter.AreaDamage->TargetMask = filter.Alternating->DamageMask;
                 CopyEffects(filter.Alternating->DamageEffects, filter.AreaDamage);
 
@@ -48,6 +48,14 @@ namespace Quantum
         // checked live here instead, off the speaker's owner, but the owning upgrade's Begin/End
         // only brackets the throw itself, which ends before this speaker's later pulses would ever
         // see it - baking it in once at spawn is what actually works for a speaker's whole lifetime.
+        // Generic owner-driven scalar (see AlternatingArea.EffectivenessMultiplier). Treats 0 as 1 so an
+        // area spawned before this field existed - or by any path that simply never sets it - behaves
+        // exactly as it always did rather than silently pulsing for nothing.
+        private static FP ResolveEffectiveness(AlternatingArea* alternating)
+        {
+            return alternating->EffectivenessMultiplier > FP._0 ? alternating->EffectivenessMultiplier : FP._1;
+        }
+
         private static void CopyEffects(FixedArray<AssetRef<HitEffectData>> source, AreaDamage* areaDamage)
         {
             for (int i = 0; i < source.Length; i++)
@@ -112,13 +120,13 @@ namespace Quantum
 
             if (isHealing == true)
             {
-                damage = alternating->HealAmount;
+                damage = alternating->HealAmount * ResolveEffectiveness(alternating);
                 targetMask = alternating->HealTargetMask;
                 CopyEffects(alternating->HealEffects, areaDamage);
             }
             else
             {
-                damage = alternating->DamageAmount;
+                damage = alternating->DamageAmount * ResolveEffectiveness(alternating);
                 targetMask = alternating->DamageMask;
                 CopyEffects(alternating->DamageEffects, areaDamage);
 

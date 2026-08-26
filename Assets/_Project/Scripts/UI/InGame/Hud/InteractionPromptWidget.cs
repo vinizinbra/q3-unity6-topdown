@@ -41,8 +41,10 @@ public class InteractionPromptWidget : MonoBehaviour
     private GameObject descriptionRoot;
 
     [Header("Hold Progress (Revive - see docs/revive.md)")]
-    [SerializeField, Tooltip("Optional - Slider.value (0-1) driven by a Revive channel's own live progress/duration while one of THIS client's local players is holding to revive the entity this widget is following. Left unassigned, this feature is simply off.")]
+    [SerializeField, Tooltip("Optional - Slider.value (0-1) driven by a Revive channel's own live progress/duration while SOMEONE is holding to revive the entity this widget is following - either one of THIS client's local players (reviver's view) or a teammate reviving one of this client's own local players (the downed player's own view). Left unassigned, this feature is simply off.")]
     private Slider progressFillSlider;
+    [SerializeField, Tooltip("Title shown instead of \"REVIVE\" when the Downed entity this widget follows is one of THIS client's own local players - they're not the one pressing anything, they're the one being picked up.")]
+    private string selfDownedTitle = "BEING REVIVED";
 
     [Header("Scale In/Out")]
     [SerializeField, Tooltip("Springy pop on entering range - matches ColliderVisualScaleView/DamageNumberUiWidget's own default.")]
@@ -72,6 +74,11 @@ public class InteractionPromptWidget : MonoBehaviour
     // (ResolveDescription) takes over instead.
     private string _bleedOutDescription = string.Empty;
     private bool _isShown;
+    // Whether the entity this widget follows is one of THIS client's own local players - i.e. we're
+    // rendering the DOWNED player's own view of their revive, not a nearby reviver's. Refreshed
+    // every frame in RefreshReviveTitle (local slots are bound asynchronously, so this can't be
+    // resolved once in Setup).
+    private bool _isLocalTarget;
     private Tween _scaleTween;
 
     private void Awake()
@@ -176,9 +183,9 @@ public class InteractionPromptWidget : MonoBehaviour
         // re-resolved fresh every tick with no stickiness, so once a channel is active this reads
         // PlayerLifeState/ReviveChannel directly instead - a reviver drifting near some other POI
         // mid-hold must never silently blank this prompt on its real (locked) target. Returns false
-        // (nobody local currently holding) whenever there's nothing to show progress for, letting
-        // the generic path below drive the passive Available/Occupied display off the
-        // already-fresh title instead.
+        // (nobody holding a channel this client should be showing) whenever there's nothing to show
+        // progress for, letting the generic path below drive the passive Available/Occupied display
+        // off the already-fresh title instead.
         if (UpdateFromReviveState() == true)
             return;
 
@@ -193,6 +200,7 @@ public class InteractionPromptWidget : MonoBehaviour
             || lifeState->State != PlayerLifeStateKind.Downed)
         {
             _bleedOutDescription = string.Empty;
+            _isLocalTarget = false;
 
             // Runs every frame for every widget instance regardless of Interactable kind - the
             // one guaranteed choke point that keeps these revive-only elements hidden for every
@@ -202,7 +210,12 @@ public class InteractionPromptWidget : MonoBehaviour
             return;
         }
 
-        SetTitle("REVIVE");
+        _isLocalTarget = IsLocalPlayer(_entityRef);
+
+        // A player being revived sees their own prompt too (it's anchored above their own head),
+        // so "REVIVE" - an instruction aimed at whoever is holding the button - would read wrong
+        // there. Same widget, same progress bar and bleed-out clock, just the other side of it.
+        SetTitle(_isLocalTarget == true ? selfDownedTitle : "REVIVE");
 
         // Reads the live value directly, so it automatically reflects the simulation's own
         // pause-while-held behavior (PlayerLifeStateSystem) with no extra UI logic. Shown via the
@@ -218,9 +231,13 @@ public class InteractionPromptWidget : MonoBehaviour
         return $"{seconds}s";
     }
 
-    // Returns true if this entity is currently being revived by one of THIS client's own local
-    // players - in which case the prompt shows live hold progress instead of falling through to
-    // the generic ContextInteraction-driven display below.
+    // Returns true if there is a live Revive channel on this entity THIS client should be showing -
+    // either one of its own local players is holding to revive someone (the reviver's view), or one
+    // of its own local players is the DOWNED entity being revived by a teammate (the target's own
+    // view - they never resolve a ContextInteraction of their own while incapacitated, so without
+    // this branch the whole prompt would simply never show for them). In both cases the prompt
+    // shows live hold progress instead of falling through to the generic ContextInteraction-driven
+    // display below.
     private unsafe bool UpdateFromReviveState()
     {
         Frame frame = _game.Frames.Predicted;
@@ -238,12 +255,13 @@ public class InteractionPromptWidget : MonoBehaviour
         EntityRef holder = lifeState->ReviveHolder;
         ReviveChannel* channel = null;
 
-        if (holder != EntityRef.None && IsLocalPlayer(holder) == true)
+        // _isLocalTarget is refreshed by RefreshReviveTitle, which LateUpdate always runs first.
+        if (holder != EntityRef.None && (IsLocalPlayer(holder) == true || _isLocalTarget == true))
             frame.Unsafe.TryGetPointer<ReviveChannel>(holder, out channel);
 
         if (channel == null)
         {
-            // Nothing actively channeling (locally) right now - hidden entirely, not just reset to
+            // Nothing actively channeling right now - hidden entirely, not just reset to
             // 0, so standing near a Downed teammate without holding yet doesn't show a stray empty
             // progress bar; also covers stale progress from an earlier hold never lingering visible
             // underneath the generic idle prompt below.

@@ -4,45 +4,54 @@ namespace Quantum
     using Photon.Deterministic;
     using UnityEngine;
 
-    // Ranked Dash Ascension (Bodyguard) - allies near the dash destination get Shield back, growing
-    // per rank; rank 3 additionally grants them a brief DR window (StatusEffectUtility.
-    // ApplyTemporaryDamageReduction, the same shared reactive-proc slot Guardian's own rank 3 uses).
+    // Ranked Dash Ascension (Bodyguard) - on dash complete, Brute and every ally around him get a
+    // Free Hit Guard: the next damaging hit they take is negated outright (see StatusEffects.qtn /
+    // StatusEffectUtility.ApplyFreeHitGuard).
     //
-    // Restores a FLAT amount, not a fraction of the ally's Max Shield. That's a deliberate change from
-    // the earlier percentage version: a percentage restore scales with the recipient's own pool, so a
-    // dash-cooldown build could pump unbounded effective Shield into a high-Shield teammate. A flat
-    // number plus the per-ally cooldown below caps the sustain from both directions.
+    //  - Rank 1: guard lasts 2.5s. Brute is included at full value, same as any ally.
+    //  - Rank 2: guard lasts 3.5s, and when one blocks, Brute gains 10 Shield.
+    //  - Rank 3: when one blocks it also releases a knockback shockwave around whoever it saved, and
+    //            Brute gains 15 Shield instead.
     //
-    // The cooldown lives on the ALLY (StatusEffects.AllyShieldRestoreCooldownRemaining), not on Brute:
-    // capping it per-Brute would still let two Brutes chain-refill one teammate, and it would punish a
-    // Brute for dashing between different allies, which is exactly the play this line should reward.
+    // Replaces the old "restore flat Shield to allies at dash end". That version could only ever top
+    // up a bar that refilled itself anyway; now that player Shield is charge-only (see Shield.qtn) the
+    // interesting protection to hand out is a guaranteed negation, and Brute's own Shield reward is
+    // EARNED when a guard he placed actually saves someone - which, since Shield is what keeps his
+    // Accessory on his head, means protecting the team is also how he protects his own gear.
     //
-    // Brute himself is included in the ally scan (he trivially ends the dash within his own Radius of
-    // himself) but only gets SelfEffectMultiplier of the full amount - a reduced, not full,
-    // self-benefit, configurable rather than hardcoded.
+    // Because Brute guards himself too, ranks 2-3 close a real loop: guard yourself, eat a hit with
+    // it, get Shield back. The per-ally cooldown below is what paces that - it applies to Brute
+    // exactly as it does to everyone else, so a dash-cooldown build can't hold a permanent guard.
     //
-    // That self-include only actually works via FindPlayersInRadiusIncludingDashing, NOT the plain
-    // FindPlayersInRadius every non-dash ally scan uses: this fires at dash END, and the broadphase it
-    // queries was built by PhysicsSystem3D (which runs before every user system) while Brute was still
-    // parked on the IgnoreProjectile layer for his dash i-frames. DashSkillData.End restores his layer
-    // one line before this executes, but that is far too late to affect a broadphase already built this
-    // tick - so a plain Player-mask query drops him 100% of the time, never intermittently. Allies were
-    // always found correctly, which is exactly why this read as "Bodyguard doesn't shield me".
+    // THE LAYER MASK IS LOAD-BEARING, NOT DEFENSIVE. This fires at dash End, and DashSkillData parks
+    // the dasher on IgnoreProjectile for the dash's whole duration to give Dash its i-frames.
+    // DashSkillData.End restores the layer one line before End-phase actions run, but that is far too
+    // late: Core.PhysicsSystem3D runs before every user system, so the broadphase this query reads was
+    // already built this tick with Brute still on IgnoreProjectile. A plain Player-mask
+    // FindPlayersInRadius therefore drops him 100% of the time, not intermittently - which is exactly
+    // how the old self-restore silently never ran (see docs/brute-ascensions.md, "Bodyguard never
+    // shielded Brute himself"). FindPlayersInRadiusIncludingDashing is what makes "it also triggers on
+    // Brute" actually true.
     public unsafe partial class BodyguardSkillAction : SkillActionData
     {
-        public FP[] Radius = { FP._6, FP._8, FP._8 };
+        [Tooltip("Radius around the dash's end point that receives a guard, per rank. Brute is included. Grows every rank rather than plateauing at rank 2 - at rank 1 it is tight enough that guarding a teammate is a deliberate act of aiming the dash at them, not something that happens incidentally.")]
+        public FP[] Radius = { FP._3, FP._6, FP._8 };
 
-        [Tooltip("Flat Shield restored per affected ally, per rank. Deliberately not a percentage - see this class's own comment.")]
-        public FP[] ShieldRestore = { 10, 15, 20 };
+        [Tooltip("How long the granted Free Hit Guard lasts before it lapses unused, per rank.")]
+        public FP[] GuardDuration = { FP.FromString("2.5"), FP.FromString("3.5"), FP.FromString("3.5") };
 
-        [Tooltip("Per-ALLY cooldown before this can restore Shield to that same ally again.")]
+        [Tooltip("Rank 2+ - flat Shield paid back to Brute when a guard he granted actually blocks a hit, including one he placed on himself. 0 at rank 1.")]
+        public FP[] ShieldReward = { FP._0, 10, 15 };
+
+        [Tooltip("Per-RECIPIENT cooldown before another guard can be placed on that same person, Brute included. Deliberately on the recipient, not on Brute: per-Brute would still let two Brutes chain-guard one teammate, and it would punish dashing BETWEEN different allies - exactly the play this line should reward.")]
         public FP CooldownPerAlly = FP.FromString("4.5");
 
-        public FP SelfEffectMultiplier = FP._0_50;
-
         [Header("Rank 3")]
-        public FP DamageReductionAmount = FP._0_20;
-        public FP DamageReductionDuration = FP._2;
+        [Tooltip("Radius of the knockback shockwave released around whoever the guard just saved.")]
+        public FP ShockwaveRadius = 3;
+
+        [Tooltip("Horizontal push of that shockwave. No damage and no stun - the point is to buy space right after a near-death, not to deal damage.")]
+        public FP ShockwaveForce = 4;
 
         public BodyguardSkillAction()
         {
@@ -54,35 +63,47 @@ namespace Quantum
         public override void Execute(Frame f, ref SkillSystem.Filter filter, SkillSlot* slot, SkillData skill,
             SkillActionPhase firedPhase, AssetRef<SkillActionData> selfRef)
         {
-            int rank = System.Math.Max(1, SkillUpgradeUtility.GetRank(f, filter.Entity, selfRef));
-            int index = System.Math.Clamp(rank, 1, (int)MaxRank) - 1;
+            int rank = Math.Max(1, SkillUpgradeUtility.GetRank(f, filter.Entity, selfRef));
+            int index = Math.Clamp(rank, 1, (int)MaxRank) - 1;
 
-            FPVector3 position = filter.Transform3D->Position;
+            // Refreshed on every dash rather than written once at pick time, so the component always
+            // describes the CURRENTLY picked rank - BruteBodyguardReactionSystem reads it long after
+            // the dash is over, when only entity refs are left to work from.
+            f.AddOrGet<BodyguardUpgrade>(filter.Entity, out var upgrade);
+
+            upgrade->GuardDuration = GuardDuration[index];
+            upgrade->ShieldReward = ShieldReward[index];
+            upgrade->ShockwaveRadius = rank >= 3 ? ShockwaveRadius : FP._0;
+            upgrade->ShockwaveForce = rank >= 3 ? ShockwaveForce : FP._0;
+
+            FP guardDuration = GuardDuration[index];
+
+            if (guardDuration <= FP._0)
+                return;
+
+            // Skill Area (CharacterStats.AreaRadiusMultiplier) applies here the same way it does to
+            // every other radius in Brute's kit - see StatUtility.GetAreaMultiplier.
+            FP radius = Radius[index] * StatUtility.GetAreaMultiplier(f, filter.Entity);
+
+            if (radius <= FP._0)
+                return;
+
             Span<EntityRef> allies = stackalloc EntityRef[PlayerQueryUtility.MaxPlayerLayerCandidates];
-            int alliesCount = EnemyMovementUtility.FindPlayersInRadiusIncludingDashing(f, position, Radius[index], allies);
-            FP amount = ShieldRestore[index];
+            int alliesCount = EnemyMovementUtility.FindPlayersInRadiusIncludingDashing(f, filter.Transform3D->Position, radius, allies);
 
             for (int i = 0; i < alliesCount; i++)
             {
                 EntityRef ally = allies[i];
 
+                // Brute himself is deliberately NOT excluded - he trivially ends the dash within his
+                // own radius, and at rank 1 that self-guard is the whole point of dashing defensively.
                 if (f.Unsafe.TryGetPointer<StatusEffects>(ally, out var status) == false
-                    || status->AllyShieldRestoreCooldownRemaining > FP._0)
+                    || status->AllyGuardGrantCooldownRemaining > FP._0)
                     continue;
 
-                status->AllyShieldRestoreCooldownRemaining = CooldownPerAlly;
+                status->AllyGuardGrantCooldownRemaining = CooldownPerAlly;
 
-                FP allyAmount = ally == filter.Entity ? amount * SelfEffectMultiplier : amount;
-
-                if (f.Unsafe.TryGetPointer<Shield>(ally, out var shield) == true)
-                {
-                    ShieldUtility.ApplyFlatShield(f, ally, filter.Entity, shield, allyAmount);
-                }
-
-                if (rank >= 3)
-                {
-                    StatusEffectUtility.ApplyTemporaryDamageReduction(f, ally, DamageReductionDuration, DamageReductionAmount);
-                }
+                StatusEffectUtility.ApplyFreeHitGuard(f, ally, filter.Entity, guardDuration);
             }
         }
 

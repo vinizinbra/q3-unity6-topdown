@@ -5,10 +5,11 @@ namespace Quantum
 
     // Lobby Start - the run doesn't actually begin (see CombatDirectorSystem's own GameState gate)
     // until the level has finished generating, at least one player has actually joined, every
-    // connected player has spawned, and all of them have physically walked outside the LobbyStart
-    // chunk's own footprint. The first three are not paperwork: the footprint scan decides "everyone
-    // has left" by finding nobody still inside, which an empty or not-yet-generated world satisfies
-    // just as well as a departed one - see the guards in Update.
+    // connected player has spawned, and ANY ONE of them has physically walked outside the LobbyStart
+    // chunk's own footprint. Deliberately first-one-out, not everyone-out: a co-op party shouldn't
+    // be held in the lobby by whoever is slowest to walk, and the run starting is what everyone is
+    // waiting on. The other guards are not paperwork - the footprint scan needs a real, fully placed
+    // world and at least one spawned player before "someone is outside" means anything - see Update.
     // No separate hand-placed boundary entity - the chunk IS the boundary, read
     // back via LevelGenerationSystem.TryGetLobbyStartBounds the same way SpawnAtBossArenaDirectly
     // reads the Boss Arena's own footprint. Unfiltered SystemMainThread (like
@@ -51,26 +52,27 @@ namespace Quantum
                 return; // no LobbyStart chunk placed yet - nothing to check against
 
             var players = f.Filter<PlayerLink, Transform3D>();
-            bool anyPlayerInWorld = false;
+            bool anyPlayerOutside = false;
 
             while (players.Next(out EntityRef _, out PlayerLink _, out Transform3D playerTransform))
             {
-                anyPlayerInWorld = true;
-
                 if (IsInsideFootprint(playerTransform.Position, min, max))
-                    return; // at least one player is still inside the LobbyStart footprint
+                    continue;
+
+                anyPlayerOutside = true;
+                break; // first player out of the lobby starts the run for everyone
             }
 
-            // "Nobody is inside the footprint" is what this scan proves, and an EMPTY world proves it
-            // just as well as a departed one. That was the actual bug: the slot loop above skips a
-            // player whose RuntimePlayer hasn't replicated yet rather than holding (the same
-            // continue-instead-of-hold hole that broke TalentGateSystem), so before anyone had joined
-            // this fell straight through and started the run with zero players in the world.
-            // Deliberately counted off real PlayerLink entities rather than off joined player slots:
-            // that also keeps working for a player entity placed directly in a scene for testing,
-            // which never goes through PlayerSpawnUtility.Spawn and so has no RuntimePlayer slot to
-            // count (see that utility's own comment).
-            if (anyPlayerInWorld == false)
+            // An EMPTY world can never satisfy this (nobody outside means nobody at all), which is
+            // what keeps the run from starting before anyone has joined - the old "nobody is inside"
+            // form was satisfied by an empty world just as well as a departed one, and the slot loop
+            // above skips a player whose RuntimePlayer hasn't replicated yet rather than holding (the
+            // same continue-instead-of-hold hole that broke TalentGateSystem). Deliberately scanned
+            // off real PlayerLink entities rather than joined player slots: that also keeps working
+            // for a player entity placed directly in a scene for testing, which never goes through
+            // PlayerSpawnUtility.Spawn and so has no RuntimePlayer slot to count (see that utility's
+            // own comment).
+            if (anyPlayerOutside == false)
                 return;
 
             GameStateUtility.SetState(f, GameState.Survival);

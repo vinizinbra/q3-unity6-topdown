@@ -49,8 +49,8 @@ namespace Quantum
         }
 
         // Inline overlap+damage+knockback loop (mirrors VortexSystem.TryRepulseOnDestroy's shape)
-        // rather than HitEffectUtility.ApplyDamageInRadius/ApplyShockwave, since rank 3's own
-        // Resonance-per-enemy-hit bonus needs the exact hit COUNT from this same sweep.
+        // rather than HitEffectUtility.ApplyDamageInRadius/ApplyShockwave, since rank 3 needs to know
+        // whether this sweep caught ANYTHING at all.
         private static void Fire(Frame f, EntityRef owner, ZaraAfterbeat* afterbeat, FPVector3 position, FP damage, FP radius, FP knockbackForce)
         {
             if (damage <= FP._0 && knockbackForce <= FP._0)
@@ -74,12 +74,9 @@ namespace Quantum
                 if (f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == false)
                     continue;
 
-                // generatesResonance: false - Afterbeat's own damage must not generate Resonance
-                // through the generic per-damage hook; rank 3's own capped per-enemy-hit bonus below
-                // is the only Resonance Afterbeat ever grants (confirmed with the user).
                 if (damage > FP._0)
                 {
-                    DamageUtility.ApplyDamage(f, target, damage, owner, DamageSource.Skill, generatesResonance: false);
+                    DamageUtility.ApplyDamage(f, target, damage, owner, DamageSource.Skill);
                 }
 
                 if (knockbackForce > FP._0)
@@ -90,36 +87,39 @@ namespace Quantum
                 enemiesHit++;
             }
 
-            // Own dedicated event (ZaraAfterbeatFxView) rather than ResonancePulseReleased/
-            // ShockwaveReleased - see AfterbeatPulseReleased's own comment in Events.qtn for why.
+            // Own dedicated event (ZaraAfterbeatFxView) rather than the shared ShockwaveReleased - see
+            // AfterbeatPulseReleased's own comment in Events.qtn for why.
             f.Events.AfterbeatPulseReleased(owner, position, radius);
 
-            // Afterbeat rank 3 "Double Beat" - enemies hit generate additional Resonance, drawing on
-            // the SAME per-dash allowance rank 1's dash sweep uses (see GrantCappedResonance), so the
-            // two sources can never compound past MaxResonancePerDash between them.
-            for (int i = 0; i < enemiesHit; i++)
+            // Afterbeat rank 3 "Double Beat" - a chunk of Flow if this pulse caught anything, and at
+            // most once per dash across BOTH pulses (FlowGrantedThisDash, reset on dash Begin). Flat,
+            // never per-enemy: the reward is for landing the beat at all, so a dash into a crowd is
+            // worth exactly what a dash into a single target is.
+            if (enemiesHit > 0)
             {
-                GrantCappedResonance(f, owner, afterbeat);
+                TryGrantPulseFlow(f, owner, afterbeat);
             }
         }
 
-        // The single per-dash-capped Resonance faucet, shared by rank 1's dash sweep
-        // (AfterbeatSkillAction.SweepForResonance) and rank 3's pulse hits above - one allowance, one
-        // place that spends it, so neither can quietly bypass the other's cap. Public for the skill
-        // action's own sweep to call in.
-        public static void GrantCappedResonance(Frame f, EntityRef owner, ZaraAfterbeat* afterbeat)
+        // The single per-dash Flow grant for rank 3. One allowance, one place that spends it, so the
+        // Start and End pulses can never each pay out.
+        //
+        // Sized as a fraction of the bar rather than read off the skill asset: this system ticks a
+        // countdown parked on Zara long after the action that scheduled it has finished, so it has no
+        // asset in hand - the same reason every other value it needs was baked onto ZaraAfterbeat at
+        // dash time.
+        private static readonly FP PulseFlowProgress = FP.FromString("0.35");
+
+        private static void TryGrantPulseFlow(Frame f, EntityRef owner, ZaraAfterbeat* afterbeat)
         {
-            if (afterbeat->ResonancePerEnemyHit <= FP._0)
+            if (afterbeat->GrantsFlowOnPulseHit == false || afterbeat->FlowGrantedThisDash == true)
                 return;
 
-            FP remainingCap = afterbeat->MaxResonancePerDash - afterbeat->ResonanceGrantedThisDash;
-
-            if (remainingCap <= FP._0)
+            if (f.Unsafe.TryGetPointer<ZaraFlow>(owner, out var flow) == false)
                 return;
 
-            FP grant = FPMath.Min(afterbeat->ResonancePerEnemyHit, remainingCap);
-            ResonanceUtility.Grant(f, owner, grant);
-            afterbeat->ResonanceGrantedThisDash += grant;
+            afterbeat->FlowGrantedThisDash = true;
+            ZaraFlowUtility.AddProgress(f, owner, flow, PulseFlowProgress);
         }
 
         public struct Filter

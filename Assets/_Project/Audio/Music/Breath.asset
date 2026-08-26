@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Breath
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
   clips:
-  - {fileID: 8300000, guid: acf691201c7ad4f48b5ba3f6b7759de4, type: 3}
+  - {fileID: 8300000, guid: 84a65ef6798e94b9a8c4d4607b61457f, type: 3}
   pick: 1
   layers: []
   group: 0

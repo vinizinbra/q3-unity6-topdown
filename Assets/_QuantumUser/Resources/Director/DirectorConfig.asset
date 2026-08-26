@@ -25,6 +25,20 @@ MonoBehaviour:
     RawValue: 786432
   SpawnRingRadiusMax:
     RawValue: 1048576
-  MaxPurchasesPerPulse: 5
+  MaxPurchasesPerPulse: 3
   MaxGroupSpawnAttempts: 8
   ForbiddenSpawnChunkTypes: 0400
+  ClusterDistance:
+    RawValue: 1966080
+  ClusterPressureRadius:
+    RawValue: 1048576
+  MaxSplitThreatMultiplier:
+    RawValue: 91750
+  SplitXpRewardFactor:
+    RawValue: 16384
+  SplitCoinRewardFactor:
+    RawValue: 6554
+  ClusterSplitDelay:
+    RawValue: 131072
+  ClusterMergeDelay:
+    RawValue: 65536

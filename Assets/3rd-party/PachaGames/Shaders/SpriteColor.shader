@@ -2,7 +2,7 @@ Shader "Sprites/SpriteColor"
 {
     Properties
     {
-        _MainTex ("Texture", 2D) = "white" {}
+        [PerRendererData] _MainTex ("Texture", 2D) = "white" {}
     }
 
     SubShader
@@ -19,20 +19,31 @@ Shader "Sprites/SpriteColor"
 
         Cull Off
         ZWrite Off
-        Blend SrcAlpha OneMinusSrcAlpha
+        // Premultiplied blending, exactly like Sprites/Default. NOT "SrcAlpha OneMinusSrcAlpha"
+        // with a straight-alpha output: that factor also applies to the ALPHA channel, so the
+        // destination alpha ends up as a*a instead of a. On an opaque backbuffer nobody notices,
+        // but anything that composites this render by its alpha - a transparent-background
+        // RenderTexture shown through a RawImage, e.g. CharacterPreviewWidget - gets far too much
+        // background bleeding through every antialiased edge texel, which reads as a bright halo
+        // eating into the sprite's own dark outline.
+        Blend One OneMinusSrcAlpha
 
         Pass
         {
             Tags { "LightMode" = "SRPDefaultUnlit" }
 
             HLSLPROGRAM
+            #pragma target 2.0
             #pragma vertex vert
             #pragma fragment frag
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
             TEXTURE2D(_MainTex);
             SAMPLER(sampler_MainTex);
-            float4 _MainTex_ST;
+
+            CBUFFER_START(UnityPerMaterial)
+                float4 _MainTex_ST;
+            CBUFFER_END
 
             struct appdata_t
             {
@@ -66,9 +77,12 @@ Shader "Sprites/SpriteColor"
                 texColor.rgb = lerp(texColor.rgb, i.color.rgb, i.color.a);
 
                 // Sprite shape/opacity always comes from the texture, never from i.color.a.
+                texColor.rgb *= texColor.a;
                 return texColor;
             }
             ENDHLSL
         }
     }
+
+    FallBack Off
 }

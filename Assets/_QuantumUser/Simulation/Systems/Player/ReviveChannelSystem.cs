@@ -54,7 +54,7 @@ namespace Quantum
                 }
             }
 
-            var input = f.GetPlayerInput(filter.PlayerLink->Player);
+            var input = PlayerInputUtility.Resolve(f, filter.Entity, filter.PlayerLink);
 
             if (input->HeroSkill.IsDown == false)
             {

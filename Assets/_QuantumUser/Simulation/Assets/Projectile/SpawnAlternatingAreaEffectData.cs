@@ -93,6 +93,12 @@ namespace Quantum
             alternating->DamageMask = DamageMask;
             CopyEffects(DamageEffects, alternating->DamageEffects);
 
+            // Deployed WHILE the owner is already at Max Flow, this is what makes Headliner rank 2
+            // apply immediately - RefreshOwnedAreaEffectiveness otherwise only fires on a Max-Flow
+            // transition, which has already happened by now. No-ops for any owner without Flow.
+            alternating->EffectivenessMultiplier = FP._1;
+            ZaraFlowUtility.RefreshOwnedAreaEffectiveness(f, owner);
+
             ApplySoundBoostUpgrade(f, owner, alternating);
             ApplyAmplifierKnockback(f, owner, alternating);
             ApplyAllyBudget(f, owner, spawned);

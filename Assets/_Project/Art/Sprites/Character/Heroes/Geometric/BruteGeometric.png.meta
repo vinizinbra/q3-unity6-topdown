@@ -166,7 +166,7 @@ TextureImporter:
         width: 448
         height: 383
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -223,6 +223,28 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: BruteGeometric_0
+      rect:
+        serializedVersion: 2
+        x: 646
+        y: 819
+        width: 206
+        height: 201
+      alignment: 9
+      pivot: {x: 0.5731551, y: 0.035157464}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8348acab3b07a4c8da8ae921537359bc
+      internalID: 1022389871
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
@@ -237,6 +259,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
+      BruteGeometric_0: 1022389871
       BrutusGeometric_0: 1374950880
       BrutusGeometric_1: -2116705038
       BrutusGeometric_2: -1161744609

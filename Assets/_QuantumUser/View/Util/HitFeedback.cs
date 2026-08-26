@@ -16,6 +16,13 @@ namespace QuantumUser.View.Util
         private Color flashColor = Color.white;
         [SerializeField, Tooltip("Used instead of flashColor when the hit's ElementType is Fire - i.e. a Burn tick (see StatusEffectSystem.TickBurn).")]
         private Color burnFlashColor = new Color(1f, 0.45f, 0.1f);
+        [SerializeField, Tooltip("Flash colour when the accessory is put back on - recovered off the ground, or repaired/replaced at the Merchant (EventAccessoryRecovered/EventAccessoryRestored). Low priority, so it never stomps a hit flash.")]
+        private Color recoverFlashColor = Color.cyan;
+        [SerializeField, Tooltip("Flash colour when the Accessory Guard eats a hit entirely (EventAccessoryBlocked). BLUE, not a damage colour: nothing was actually lost, so it must never read as being hurt. Matches EffectsManager.accessoryBlockedEffectColor so the character flash and the impact spark speak the same language. See docs/accessory-guard.md.")]
+        private Color blockFlashColor = new Color(0.25f, 0.6f, 1f);
+
+        [SerializeField, Tooltip("Flash colour when a Free Hit Guard is spent (EventFreeHitGuardConsumed - Brute's Bodyguard today). CYAN: same cool family as the accessory block above (both are negations, neither is damage) but a distinct hue, so which one just saved you is readable at a glance. Matches EffectsManager.freeHitGuardEffectColor.")]
+        private Color freeHitGuardFlashColor = new Color(0.4f, 0.95f, 1f);
         [SerializeField, Tooltip("Used instead of flashColor/burnFlashColor when EventEntityDamaged.FrontalReduced is true (a FrontalDamageReduction enemy hit within its facing arc) - takes priority over the element color either way.")]
         private Color frontalReducedFlashColor = Color.gray;
         [SerializeField] private Color restColor = Color.clear;
@@ -89,6 +96,10 @@ namespace QuantumUser.View.Util
         {
             base.Awake();
             QuantumEvent.Subscribe<EventEntityDamaged>(this, OnEntityDamaged);
+            QuantumEvent.Subscribe<EventAccessoryBlocked>(this, OnAccessoryBlocked);
+            QuantumEvent.Subscribe<EventFreeHitGuardConsumed>(this, OnFreeHitGuardConsumed);
+            QuantumEvent.Subscribe<EventAccessoryRecovered>(this, OnAccessoryRecovered);
+            QuantumEvent.Subscribe<EventAccessoryRestored>(this, OnAccessoryRestored);
             QuantumEvent.Subscribe<EventEntityHealed>(this, OnEntityHealed);
             QuantumEvent.Subscribe<EventEntityShielded>(this, OnEntityShielded);
             QuantumEvent.Subscribe<EventEntityDied>(this, OnEntityDied);
@@ -244,6 +255,53 @@ namespace QuantumUser.View.Util
                 return;
 
             Respawn();
+        }
+
+        // A hit fully eaten by the Accessory Guard (see docs/accessory-guard.md) deals no damage at
+        // all, so it never reaches EventEntityDamaged - without this a block would land completely
+        // silently, which reads as the hit having missed rather than having been stopped. Routed
+        // through FlashDamage (the top-priority tier) because a block IS an impact: it should never
+        // lose out to a heal/shield/pickup glow happening the same moment.
+        private void OnAccessoryBlocked(EventAccessoryBlocked e)
+        {
+            if (e.Owner != _entityRef)
+                return;
+
+            FlashDamage(blockFlashColor);
+        }
+
+        // A Free Hit Guard being spent negates the hit exactly the way an accessory block does, and
+        // reaches no EventEntityDamaged for the same reason - so it needs its own flash or it reads as
+        // a miss. Its OWN colour rather than the accessory's, matching the separate impact VFX: both
+        // are negations, but they come from different mechanics and should be tellable apart.
+        //
+        // Routed through FlashDamage (the top-priority tier) despite not being damage, for the same
+        // reason a block is: this is an IMPACT, and it must never lose out to a heal/shield/pickup glow
+        // landing in the same moment.
+        //
+        // Keyed off Target (who was saved), not Source (who granted it): the flash belongs on the
+        // character that just survived something, whether that's Brute or the teammate he guarded.
+        private void OnFreeHitGuardConsumed(EventFreeHitGuardConsumed e)
+        {
+            if (e.Target != _entityRef)
+                return;
+
+            FlashDamage(freeHitGuardFlashColor);
+        }
+
+        // Putting the accessory back on - by walking over it, or by paying the Merchant. A LOW
+        // priority flash (the same tier a currency pickup uses), deliberately: getting your guard
+        // back is good news, and it must never stomp a hit flash that lands in the same moment.
+        private void OnAccessoryRecovered(EventAccessoryRecovered e)
+        {
+            if (e.Owner == _entityRef)
+                Flash(recoverFlashColor);
+        }
+
+        private void OnAccessoryRestored(EventAccessoryRestored e)
+        {
+            if (e.Owner == _entityRef)
+                Flash(recoverFlashColor);
         }
 
         [Button]

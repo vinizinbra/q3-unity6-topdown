@@ -50,6 +50,23 @@ namespace Quantum.Prototypes.Unity {
   #endif //;
   
   [System.SerializableAttribute()]
+  public unsafe partial class AccessoryGuardPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.AccessoryGuardPrototype> {
+    public Quantum.QEnum8<AccessoryGuardState> State;
+    public Byte CurrentDurability;
+    public Byte MaxDurability;
+    public Quantum.QuantumEntityPrototype Accessory;
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.AccessoryGuardPrototype prototype);
+    public override Quantum.Prototypes.AccessoryGuardPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.AccessoryGuardPrototype();
+      converter.Convert(this.State, out result.State);
+      converter.Convert(this.CurrentDurability, out result.CurrentDurability);
+      converter.Convert(this.MaxDurability, out result.MaxDurability);
+      converter.Convert(this.Accessory, out result.Accessory);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
   public unsafe partial class AimPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.AimPrototype> {
     public FP Angle;
     public Quantum.QuantumEntityPrototype Target;
@@ -76,16 +93,21 @@ namespace Quantum.Prototypes.Unity {
     public FP[] Healed = new FP[4];
     [ArrayLengthAttribute(4)]
     public FP[] CooldownReduced = new FP[4];
+    [ArrayLengthAttribute(4)]
+    public Byte[] GuardsGranted = new Byte[4];
     public FP MaxHealFractionPerAlly;
     public FP MaxCooldownReductionPerAlly;
+    public Byte MaxGuardsPerAlly;
     partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.AreaAllyBudgetPrototype prototype);
     public override Quantum.Prototypes.AreaAllyBudgetPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
       var result = new Quantum.Prototypes.AreaAllyBudgetPrototype();
       converter.Convert(this.Ally, out result.Ally);
       converter.Convert(this.Healed, out result.Healed);
       converter.Convert(this.CooldownReduced, out result.CooldownReduced);
+      converter.Convert(this.GuardsGranted, out result.GuardsGranted);
       converter.Convert(this.MaxHealFractionPerAlly, out result.MaxHealFractionPerAlly);
       converter.Convert(this.MaxCooldownReductionPerAlly, out result.MaxCooldownReductionPerAlly);
+      converter.Convert(this.MaxGuardsPerAlly, out result.MaxGuardsPerAlly);
       ConvertUser(converter, ref result);
       return result;
     }
@@ -170,6 +192,19 @@ namespace Quantum.Prototypes.Unity {
       converter.Convert(this.SacrificeChoiceCount, out result.SacrificeChoiceCount);
       converter.Convert(this.MutationChoices, out result.MutationChoices);
       converter.Convert(this.MutationChoiceCount, out result.MutationChoiceCount);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
+  public unsafe partial class DroppedAccessoryPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.DroppedAccessoryPrototype> {
+    public Quantum.QuantumEntityPrototype Owner;
+    public QBoolean Broken;
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.DroppedAccessoryPrototype prototype);
+    public override Quantum.Prototypes.DroppedAccessoryPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.DroppedAccessoryPrototype();
+      converter.Convert(this.Owner, out result.Owner);
+      converter.Convert(this.Broken, out result.Broken);
       ConvertUser(converter, ref result);
       return result;
     }
@@ -579,7 +614,10 @@ namespace Quantum.Prototypes.Unity {
     public FP TemporaryDamageReductionRemaining;
     public FP TemporaryDamageReductionAmount;
     public FP ReactiveDamageReductionCooldownRemaining;
-    public FP AllyShieldRestoreCooldownRemaining;
+    public FP AllyGuardGrantCooldownRemaining;
+    public FP FreeHitGuardRemaining;
+    public Quantum.QuantumEntityPrototype FreeHitGuardSource;
+    public FP FreeHitGuardDuration;
     public FP TempOutgoingDamageRemaining;
     public FP TempOutgoingDamageAmount;
     public FP IntimidateRemaining;
@@ -640,7 +678,10 @@ namespace Quantum.Prototypes.Unity {
       converter.Convert(this.TemporaryDamageReductionRemaining, out result.TemporaryDamageReductionRemaining);
       converter.Convert(this.TemporaryDamageReductionAmount, out result.TemporaryDamageReductionAmount);
       converter.Convert(this.ReactiveDamageReductionCooldownRemaining, out result.ReactiveDamageReductionCooldownRemaining);
-      converter.Convert(this.AllyShieldRestoreCooldownRemaining, out result.AllyShieldRestoreCooldownRemaining);
+      converter.Convert(this.AllyGuardGrantCooldownRemaining, out result.AllyGuardGrantCooldownRemaining);
+      converter.Convert(this.FreeHitGuardRemaining, out result.FreeHitGuardRemaining);
+      converter.Convert(this.FreeHitGuardSource, out result.FreeHitGuardSource);
+      converter.Convert(this.FreeHitGuardDuration, out result.FreeHitGuardDuration);
       converter.Convert(this.TempOutgoingDamageRemaining, out result.TempOutgoingDamageRemaining);
       converter.Convert(this.TempOutgoingDamageAmount, out result.TempOutgoingDamageAmount);
       converter.Convert(this.IntimidateRemaining, out result.IntimidateRemaining);
@@ -807,9 +848,11 @@ namespace Quantum.Prototypes.Unity {
     public FP EndDamage;
     public FP EndRadius;
     public FP EndKnockbackForce;
-    public FP ResonancePerEnemyHit;
-    public FP MaxResonancePerDash;
-    public FP ResonanceGrantedThisDash;
+    public FP ProgressPerEnemyHit;
+    public FP MaxProgressPerDash;
+    public FP ProgressThisDash;
+    public QBoolean GrantsFlowOnPulseHit;
+    public QBoolean FlowGrantedThisDash;
     [ArrayLengthAttribute(8)]
     public Quantum.QuantumEntityPrototype[] SweptEnemies = new Quantum.QuantumEntityPrototype[8];
     public Byte SweptCount;
@@ -826,9 +869,11 @@ namespace Quantum.Prototypes.Unity {
       converter.Convert(this.EndDamage, out result.EndDamage);
       converter.Convert(this.EndRadius, out result.EndRadius);
       converter.Convert(this.EndKnockbackForce, out result.EndKnockbackForce);
-      converter.Convert(this.ResonancePerEnemyHit, out result.ResonancePerEnemyHit);
-      converter.Convert(this.MaxResonancePerDash, out result.MaxResonancePerDash);
-      converter.Convert(this.ResonanceGrantedThisDash, out result.ResonanceGrantedThisDash);
+      converter.Convert(this.ProgressPerEnemyHit, out result.ProgressPerEnemyHit);
+      converter.Convert(this.MaxProgressPerDash, out result.MaxProgressPerDash);
+      converter.Convert(this.ProgressThisDash, out result.ProgressThisDash);
+      converter.Convert(this.GrantsFlowOnPulseHit, out result.GrantsFlowOnPulseHit);
+      converter.Convert(this.FlowGrantedThisDash, out result.FlowGrantedThisDash);
       converter.Convert(this.SweptEnemies, out result.SweptEnemies);
       converter.Convert(this.SweptCount, out result.SweptCount);
       ConvertUser(converter, ref result);

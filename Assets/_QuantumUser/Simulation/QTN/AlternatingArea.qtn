@@ -24,6 +24,17 @@ component AlternatingArea
     FP HealAmount;
 
     FP DamageAmount;
+
+    // Generic per-pulse effectiveness scalar applied to BOTH HealAmount and DamageAmount at the moment
+    // a beat fires (see AlternatingAreaSystem). 1 = unchanged, and every spawn path that doesn't touch
+    // it gets exactly that.
+    //
+    // Exists so an owner's LIVE state can scale an already-deployed area without the area having to be
+    // respawned, and without this generic system knowing anything about who is scaling it or why.
+    // Zara's Headliner rank 2 is the first consumer: it rewrites this on her own areas when her Flow
+    // crosses into or out of Max (see ZaraFlowUtility.RefreshOwnedAreaEffectiveness) rather than being
+    // baked at deploy time, so a Totem planted before she hit Max Flow still benefits.
+    FP EffectivenessMultiplier;
     DamageTargetMask DamageMask;
     array<AssetRef<HitEffectData>>[4] DamageEffects;
 

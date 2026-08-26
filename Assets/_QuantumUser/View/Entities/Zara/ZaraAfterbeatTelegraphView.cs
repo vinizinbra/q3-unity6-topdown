@@ -12,7 +12,7 @@ namespace Quantum
     // component field" idiom MaxImmortalView/PixieBombView/EnemyAttackVisualsView already use for
     // this exact shape of problem (a duration that's already ticking down deterministically in the
     // simulation needs no separate event to stay in sync across rollback). The pulse's own landing
-    // VFX (ResonanceFxView, reacting to ShockwaveReleased) still fires separately at the instant
+    // VFX (reacting to AfterbeatPulseReleased) still fires separately at the instant
     // Remaining hits 0 - this view only covers the WAIT, not the impact.
     //
     // Reuses the existing enemy-telegraph pooling (TelegraphManager/TelegraphFade/TelegraphGrow,

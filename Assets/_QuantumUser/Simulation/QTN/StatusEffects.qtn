@@ -183,12 +183,36 @@ component StatusEffects
     // field.
     FP ReactiveDamageReductionCooldownRemaining;
 
-    // Per-ally cooldown for an ALLY-SHIELD-RESTORE proc (Brute's Bodyguard rank 1-3). Its own slot
+    // Per-ally cooldown for an ALLY-GUARD-GRANT proc (Brute's Bodyguard rank 1-3). Its own slot
     // rather than sharing the reactive-DR one just above: the two are granted by different sources
     // with different pacing, and a Brute running both shouldn't have one silently gate the other.
     // Deliberately per-ALLY (on the receiving entity) rather than per-Brute, so a dash-cooldown build
-    // can't funnel unlimited Shield into one teammate - see docs/brute-ascensions.md.
-    FP AllyShieldRestoreCooldownRemaining;
+    // can't funnel unlimited protection into one teammate - see docs/brute-ascensions.md.
+    FP AllyGuardGrantCooldownRemaining;
+
+    // FREE HIT GUARD - a one-shot, timed, COMPLETE negation of the next damaging hit. Generic and
+    // hero-agnostic; Brute's Bodyguard is simply its first consumer.
+    //
+    // Consumed by DamageUtility.ApplyDamage immediately ABOVE the Accessory Guard hook, under the
+    // same bypassOutgoingResolution == false gate, so it is spent before any accessory durability is
+    // and negates just as cleanly (no crit roll, no elemental proc, no Rage build, no
+    // on-hit signal). Reapply is take-the-longer, matching every other timed slot here.
+    //
+    // Source is who GRANTED the guard, not who is protected by it - it's what lets a granter be paid
+    // back when their guard actually saves someone (see OnFreeHitGuardConsumed in Combat.qtn). The
+    // reward itself deliberately lives with the granting ability, never here, so this stays a
+    // primitive rather than a Bodyguard field.
+    FP FreeHitGuardRemaining;
+    EntityRef FreeHitGuardSource;
+
+    // The FULL duration of the guard currently running, purely so a View can render Remaining as a
+    // fraction (CharacterUiWidget's radial fill). Every other timed status here gets away without a
+    // denominator because they only ever show a countdown NUMBER (StatusIndicator.timerText) - a fill
+    // is the first readout that needs to know what "full" was, and re-deriving it View-side by
+    // remembering the largest Remaining ever seen breaks the moment a longer guard refreshes a
+    // shorter one. Written by ApplyFreeHitGuard alongside Remaining, cleared with it.
+    FP FreeHitGuardDuration;
+
 
     // Generic timed OUTGOING-damage buff (Zara's Power Chord Support Beat is the first consumer) -
     // the mirror of TemporaryWeaponDamageRemaining/Amount just below, but applying to EVERY

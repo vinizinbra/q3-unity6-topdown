@@ -41,6 +41,14 @@ public abstract class CustomQuantumEntityViewComponent : MonoBehaviour
 
     public virtual void Start()
     {
+        // Absent outside a gameplay scene - the lobby character preview (CharacterPreviewWidget)
+        // instantiates a real hero prefab into MenuScene, which has no QuantumRunner and no
+        // MyLocalPlayer at all. Nothing local-player-specific applies to a rig that isn't in a
+        // match, and Update() already no-ops there (_game stays null), so skipping is correct
+        // rather than merely defensive.
+        if (MyLocalPlayer.Instance == null)
+            return;
+
         foreach (var slot in MyLocalPlayer.Instance.Slots)
         {
             if (slot.IsSet)

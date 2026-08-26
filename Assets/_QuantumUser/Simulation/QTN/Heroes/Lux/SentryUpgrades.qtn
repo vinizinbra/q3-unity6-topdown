@@ -51,10 +51,32 @@ component SentryFortificationUpgrade
     // Rank 1 "Extended Range" - added to the sentry's authored Range at deploy time.
     FP RangeBonus;
 
-    // Rank 2 "Shield Battery" - FLAT Shield restored per second to allies inside the aura.
-    // Deliberately a real per-second number rather than the old "multiply the ally's own shield
-    // recharge rate by 100", which scaled with the recipient and was effectively unbounded.
-    FP AllyShieldPerSecond;
+    // Rank 2 "Covering Fire" - how long a Free Hit Guard granted to an ally in the aura lasts
+    // (StatusEffects.FreeHitGuardRemaining, the same one-shot denial Brute's Bodyguard grants). 0 =
+    // this rank isn't picked.
+    //
+    // Kept SHORT and re-applied every tick the ally is in range, the same refresh idiom the Fire
+    // Support buff below uses: that is what makes "while you're inside the turret's range" true with
+    // no revoke path to get wrong - walk out and it simply lapses about a second later.
+    //
+    // HOW MANY an ally may ever receive is not here - it's AreaAllyBudget.MaxGuardsPerAlly on the
+    // sentry itself, so the cap is genuinely per-TURRET (a fresh deploy is a fresh allowance, and two
+    // Luxes never share one). That is what ties this line to his redeploy economy rather than making
+    // it a passive aura.
+    //
+    // Replaced "Shield Battery" (a flat Shield-per-second trickle). Once player Shield became
+    // charge-only, a sentry refilling it made a parked Lux the biggest standing Shield source in the
+    // game - and since Shield gates the Accessory, that quietly suppressed the whole accessory-loss
+    // loop for the entire party. A bounded, discrete denial does the same protective job without
+    // being a fountain.
+    FP GuardDuration;
+
+    // How many guards ONE ally may ever receive from ONE turret. Carried here rather than read off the
+    // skill asset at spawn so it travels with the rest of the line through
+    // SpawnSentrySkillAction.ApplyFortificationUpgrade's straight component copy, which is also what
+    // keeps a sentry's behaviour fixed at the rank it was built with. Written straight into
+    // AreaAllyBudget.MaxGuardsPerAlly on the spawned sentry.
+    Byte GuardsPerAlly;
 
     // Fraction of Sentry.Range the support aura reaches - the aura is deliberately tighter than the
     // targeting range, so "fight around the machine" means genuinely standing near it.

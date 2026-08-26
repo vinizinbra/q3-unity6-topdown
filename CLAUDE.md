@@ -115,6 +115,8 @@ Short version: the code compiles once codegen picks up every changed/new/removed
 
 Brute's Hero Ascension pool - previously fragmented across a 4-trait Protector Aura pool, a 4-trait "Knockback Mastery" pool, and 8 baseline Juggernaut sub-actions that turned out to be **permanently dead code** (`BruteBaseSkill-Juggernaut.asset` had `CheckActions: 0`, so none of them ever executed regardless of their own `Activated` flag - Discharge was knockback-only, no landing damage/stun, no end-explosion, no stacking, before this refactor) - was consolidated into exactly 8 three-rank Ascension lines (4 Juggernaut/2 Protector/2 Dash), reusing the same generic rank architecture Pixie's own refactor built (`IRankedUpgrade`/`MaxRank`/`UpgradeHistoryUtility` - see "Level-Up Upgrades" above), zero Brute-specific rank code. The 4 Juggernaut lines (Momentum/Bone Breaker/Aftershock/Concussive Impact) are ranked `SkillActionData` living on `JuggernautSkillData.Actions` (`Activated = false`, same "Hero Skill Ascension" shape Pixie's `ClusterBombSkillAction`/`BirthdayCakeSkillAction` already use) - originally built as `PassiveUpgradeData` instead, but that made them show up labeled as a generic "Passive Upgrade" in the level-up UI/debug menu, indistinguishable from genuinely hero-wide passives like Iron Presence/Guardian; converting them fixed the label to "Hero Skill" everywhere with zero UI changes. `JuggernautSkillData`'s own hardcoded `Tick`/`Discharge`/`End` logic reads the components they set via plain optional `TryGetPointer` checks either way, agnostic of grant mechanism - sidestepping the dead `Actions`/`CheckActions` mechanism entirely rather than fixing it (a *picked* Ascension executes via `SkillSlot.Upgrades`, which bypasses `CheckActions` regardless). A new baseline `JuggernautSkillData.Damage` ("Juggernaut Skill Damage") is the shared percentage basis every line references. The 2 Protector lines (Iron Presence, absorbing the old standalone Fearless; Guardian, absorbing the old standalone Bulwark plus a new rank-3 reactive-DR proc reacting to `Combat.qtn`'s `OnHealthDamageApplied`/`OnShieldDamageApplied` via a new `BruteProtectorReactionSystem`) mutate the existing `ProtectorAura` component, which gained `BaseRadius` (an immutable spawn-time anchor so Guardian's ranked radius bonus can always compute a correct total) and `HasReactiveDamageReduction`. A new generic `StatusEffects.TemporaryDamageReductionRemaining/Amount` pair (deliberately not Guardian-named) is shared by both Guardian rank 3's reactive proc and Bodyguard rank 3's own dash-end proc, since both are occasional bonuses layered on top of Guardian's own continuous aura DR rather than a replacement for it. The 2 Dash lines (Iron Shoulder, Bodyguard) were already single-pick `SkillActionData` and just needed ranking - Iron Shoulder's rank 1 reproduces its exact pre-refactor knockback-only behavior with zero regression. Ground Pound was deleted entirely ("too disconnected from Brute's primary loop"); Crushing Blow's mechanism survives as the renamed `StunDamageBonusUpgrade`, now granted by Concussive Impact rank 3; Lasting Impact/Overwhelming Force fold into Concussive Impact's own landing-stun ranks/knockback bonus. Full design, the exact per-rank numbers, the `CheckActions` bug writeup, and current status: **`docs/brute-ascensions.md`**. Read it before touching anything Brute Ascension/Juggernaut/Protector Aura/Iron Shoulder/Bodyguard related.
 
+**Juggernaut and Bodyguard were rebuilt on the charge-only Shield (2026-08-25)** - see "Recoverable Accessory Guard" below for the Shield model itself. Juggernaut's Discharge Shield gain is now a plain `ApplyFlatShield` capped at Max (Overshield is gone), which makes it Brutus's ONLY self-sufficient Shield source and therefore what keeps his own Accessory on his head. **Bodyguard no longer restores Shield at all**: on dash complete it grants a **Free Hit Guard** (the generic one-shot negation primitive) to **Brute AND every ally** within 6m/8m/8m - 2.5s at R1, 3.5s at R2+ - and pays Brute back **10/15 Shield when one of those guards actually blocks a hit**, with R3 additionally releasing a 3m knockback shockwave around whoever it saved (`BruteAscensionUtility.ApplyRadialKnockback`, a new knockback-only sibling of `ApplyRadialStunDamage`). Delivery shape is unchanged from the pre-rework line - still `Phase = End`, one radius query at the dash's end point (a `Begin | OnGoing | End` sweep was built and deliberately reverted). Brute is a full-value recipient, which closes a real loop at R2-3 (guard yourself, eat a hit, get Shield back) - and that makes `EnemyMovementUtility.FindPlayersInRadiusIncludingDashing` **load-bearing rather than defensive**: firing at dash End means the broadphase was built with Brute still on `IgnoreProjectile`, so the narrow Player mask drops him 100% of the time (the exact 2026-08-20 "Bodyguard never shielded Brute himself" bug). New `BodyguardUpgrade` component carries the rank-resolved values for the new `BruteBodyguardReactionSystem` (registered beside `BruteProtectorReactionSystem`), which reacts to `OnFreeHitGuardConsumed` - the reward deliberately lives with the ability, never in the primitive. `StatusEffects.AllyShieldRestoreCooldownRemaining` was renamed `AllyGuardGrantCooldownRemaining` and still paces per-RECIPIENT (Brute included). `BodyguardSkillAction`'s old `ShieldRestore`/`SelfEffectMultiplier`/`DamageReductionAmount`/`DamageReductionDuration` are gone.
+
 Short version: the code compiles once codegen picks up the changed `.qtn` components (`JuggernautAscensions.qtn`, `ProtectorAura.qtn`, `JuggernautLaunched.qtn`, `StatusEffects.qtn`) and is registered in `SystemSetup.User.cs`. `BruteAscensionAssetGenerator.cs` (`Tools > RiftRaiders > Brute > Generate Ascension Assets`) replaces the two old generators and is pointed at each surviving asset's verified live path (the old `BruteProtectorAssetGenerator`'s own path constants had drifted out of sync with reality - see the doc's own "Asset path drift" section). It was run once under the earlier `PassiveUpgradeData` design for the 4 Juggernaut lines; after converting them to `SkillActionData` the 4 stale assets were deleted by hand and `BruteCharacterData.PassiveUpgrades` trimmed back to Iron Presence/Guardian, but the generator still needs re-running to author the 4 new Hero-Skill-Ascension assets and wire them into `BruteBaseSkill-Juggernaut.Actions`. `JuggernautSkillData.Damage` (30) is a placeholder pending a real balance pass. Not yet manually verified end-to-end in-Editor.
 
 ## Max — Ascensions (Overdrive / Vendetta / Fire Mastery)
@@ -232,7 +234,7 @@ see the doc's own "Current status" for the full checklist.
 
 ## Talents (meta-progression) + Lobby Start
 
-Talents are small, permanent unlocks earned OUTSIDE a match - flat named fields (`PlayerDamageLevel`...`PlayerExperienceLevel`, twelve 0-5 per-player leveling stats each worth +5%/level; `HasWeaponChest`/`HasHeroChest`/`HasGlobalUpgradeChest`/`HasUnlockedRift`/`CanFindStones`/`HasEvent`, six shared/coop bools OR'd across every connected player) living on `RuntimePlayer.Talents` - as of 2026-08-07 a single nested `PlayerTalents` struct field (grouped together with `WeaponLevel`/`RerollQuantity`, see "Level-Up Upgrades" above) rather than flat on `RuntimePlayer` itself. Same "seeded once from outside the match" contract `WeaponLevel` already had, persisted via one new `PlayerPrefObject` JSON pref (`MatchMakingConfig.TalentsPref`) mirroring `WeaponTalentLevelPref`. No hand-placed boundary entity - `ChunkType.Start` was renamed to `ChunkType.LobbyStart` in place, and `LevelGenerationSystem.TryGetLobbyStartBounds` reads that chunk's own world-space footprint straight off its existing `Transform3D`/`Chunk` fields (the same way it already reads the Boss Arena's footprint back out for its own grid-origin math); `LobbyBoundarySystem` polls that footprint each tick and transitions `Global.CurrentState` from `GameState.Lobby` to `GameState.Survival` (see "Game State" below) once every connected, spawned player has physically walked outside it - `CombatDirectorSystem` (and therefore all enemy spawning/`Global.SurvivalTime` counting) only runs during `GameState.Survival`. Talent-gated spawning is a `ChunkSpawnConfig` DataAsset (`Assets/_QuantumUser/Simulation/Assets/Config/ChunkSpawnConfig.cs`), holding a `SpawnEntityWithRequirement[] Spawns` array (`AssetRef<EntityPrototype> Prototype`, `FPVector3 Offset`, `SharedTalentRequirement Requirement`, `FP Chance` per entry) - referenced via one new `AssetRef<ChunkSpawnConfig> SpawnConfig` field on `Chunk` itself (`Chunk.qtn`), typically assigned on the `LobbyStart` chunk prototype. Was originally a qtn *component* of the same shape, one instance per entity - reworked into an `AssetObject` array (same "array field on an `AssetObject`, not a component" shape `LevelConfig.ChunkPool`/`ChunkPoolEntry[]` already uses) once a single chunk needed more than one independent conditional spawn at once (e.g. Weapon+Hero+GlobalUpgrade chests together), which the old component shape couldn't do - Quantum entities can only carry one instance of a given component type. `TalentGateSystem` resolves every `Chunk` entity's own `SpawnConfig` (if assigned) exactly once (`f.Create` per satisfied/chance-rolled entry, the first entity-spawn-at-runtime pattern this codebase has used for something otherwise normally hand-placed, like a Chest). Nested/child `EntityPrototype`s were explicitly ruled out as a way to co-locate spawns with the chunk - Quantum's prefab importer only reads a prefab's root GameObject, silently ignoring nested `QuantumEntityPrototype`s. Full design, file map, current status, and known simplifications: **`docs/talents.md`**. Read it before touching anything Talents/meta-progression/LobbyStart/ChunkSpawnConfig related.
+Talents are small, permanent unlocks earned OUTSIDE a match - flat named fields (`PlayerDamageLevel`...`PlayerExperienceLevel`, twelve 0-5 per-player leveling stats each worth +5%/level; `HasWeaponChest`/`HasHeroChest`/`HasGlobalUpgradeChest`/`HasUnlockedRift`/`CanFindStones`/`HasEvent`, six shared/coop bools OR'd across every connected player) living on `RuntimePlayer.Talents` - as of 2026-08-07 a single nested `PlayerTalents` struct field (grouped together with `WeaponLevel`/`RerollQuantity`, see "Level-Up Upgrades" above) rather than flat on `RuntimePlayer` itself. Same "seeded once from outside the match" contract `WeaponLevel` already had, persisted via one new `PlayerPrefObject` JSON pref (`MatchMakingConfig.TalentsPref`) mirroring `WeaponTalentLevelPref`. No hand-placed boundary entity - `ChunkType.Start` was renamed to `ChunkType.LobbyStart` in place, and `LevelGenerationSystem.TryGetLobbyStartBounds` reads that chunk's own world-space footprint straight off its existing `Transform3D`/`Chunk` fields (the same way it already reads the Boss Arena's footprint back out for its own grid-origin math); `LobbyBoundarySystem` polls that footprint each tick and transitions `Global.CurrentState` from `GameState.Lobby` to `GameState.Survival` (see "Game State" below) once ANY ONE connected, spawned player has physically walked outside it (first-one-out, deliberately not everyone-out - every connected player must still have spawned first) - `CombatDirectorSystem` (and therefore all enemy spawning/`Global.SurvivalTime` counting) only runs during `GameState.Survival`. Talent-gated spawning is a `ChunkSpawnConfig` DataAsset (`Assets/_QuantumUser/Simulation/Assets/Config/ChunkSpawnConfig.cs`), holding a `SpawnEntityWithRequirement[] Spawns` array (`AssetRef<EntityPrototype> Prototype`, `FPVector3 Offset`, `SharedTalentRequirement Requirement`, `FP Chance` per entry) - referenced via one new `AssetRef<ChunkSpawnConfig> SpawnConfig` field on `Chunk` itself (`Chunk.qtn`), typically assigned on the `LobbyStart` chunk prototype. Was originally a qtn *component* of the same shape, one instance per entity - reworked into an `AssetObject` array (same "array field on an `AssetObject`, not a component" shape `LevelConfig.ChunkPool`/`ChunkPoolEntry[]` already uses) once a single chunk needed more than one independent conditional spawn at once (e.g. Weapon+Hero+GlobalUpgrade chests together), which the old component shape couldn't do - Quantum entities can only carry one instance of a given component type. `TalentGateSystem` resolves every `Chunk` entity's own `SpawnConfig` (if assigned) exactly once (`f.Create` per satisfied/chance-rolled entry, the first entity-spawn-at-runtime pattern this codebase has used for something otherwise normally hand-placed, like a Chest). Nested/child `EntityPrototype`s were explicitly ruled out as a way to co-locate spawns with the chunk - Quantum's prefab importer only reads a prefab's root GameObject, silently ignoring nested `QuantumEntityPrototype`s. Full design, file map, current status, and known simplifications: **`docs/talents.md`**. Read it before touching anything Talents/meta-progression/LobbyStart/ChunkSpawnConfig related.
 
 Short version: the code compiles once codegen picks up the new `Talents.qtn`/`Chunk.qtn` fields, and is registered in `SystemSetup.User.cs`, but no `TalentsConfig.asset` or `ChunkSpawnConfig.asset` exists yet (so `RuntimeConfig.TalentsConfig` and every chunk's `SpawnConfig` are unassigned) - nothing talent-gated spawns without both authored. `Assets/_QuantumUser/Entities/LevelChunk/LevelChunk.prefab` also still has the OLD component-based `SpawnEntityWithRequirement` added from before this rework - needs manual removal/replacement with a `SpawnConfig` assignment once codegen regenerates (see `docs/talents.md`'s own authoring checklist). On top of the pre-existing general "no Chest prototypes authored" gap `docs/chests.md` already tracks. Nothing currently *writes* to the new `player_talents` pref - same gap `weapon_talent_level` already had (an account/profile screen elsewhere would be what actually raises these over time). Not yet manually verified end-to-end in-Editor.
 
@@ -814,7 +816,42 @@ hero-specific:
 - **ONE shared aura-DR slot**: `GuardianDamageReduction*` renamed to `AuraDamageReduction*`, now
   take-the-stronger. Brute's Guardian and Lux's Fire Support both write it, so aura DR never stacks
   additively between sources - the strongest simply wins. `TemporaryDamageReduction*` remains the
-  separate REACTIVE-proc slot (Guardian R3, Bodyguard R3, Zara's Protective Rhythm).
+  separate REACTIVE-proc slot (Guardian R3, Zara's Protective Rhythm; Bodyguard R3 no longer uses it -
+  its rank-3 payoff became a knockback shockwave, see the Brute section above).
+
+**Zara's Resonance was REMOVED ENTIRELY and replaced by Flow State (2026-08-25)** - this supersedes
+every earlier Zara/Resonance note in this file. Gone: the meter, the automatic Pulse and its damage/
+heal/knockback, `Resonance.qtn`, `ResonanceUtility`, `ResonancePassiveData`, `ZaraRemixUtility`,
+`ZaraProtectiveRhythmSystem`, `ResonanceFxView`, the `ResonancePulseReleased`/`RemixPulseTriggered`
+events, `StatusEffects.ProtectiveRhythm*`, and `DamageUtility`'s `generatesResonance` parameter. Zara is
+now 100 HP / **0 Shield** with no dormant recharge config - **Brute is the only hero with a personal
+Shield mechanic**. Her passive is **Flow State** (`Flow.qtn`/`FlowStatePassiveData`/`ZaraFlowUtility`/
+`ZaraFlowSystem`), deliberately **two things only - a fill and an on/off state**: `Progress` runs 0->1
+over 2.5s of movement, `IsActive` flips when it lands and is worth +15% Move Speed / +15% Fire Rate,
+1.25s stationary grace then the full bar drains over 4.5s, and a hostile hit empties it outright. (It
+shipped first as a 3-stack ladder and was simplified the same day - "am I in the groove" is a binary,
+"am I on stack 2 or 3" is bookkeeping.) The stat bonus is rebaked onto `CharacterStats` from captured
+baselines on the TOGGLE only, never as the bar moves. Movement is read
+from player INPUT (`Input.Direction` + an active Dash), never velocity - which is what makes knockback/
+teleports/physics shoves unable to build it, with no per-source exclusion. Her three passive lines are
+now **Faster Tempo** (build rate + per-stack value), **Second Wind** (recovery after a break; R3 "Keep
+the Beat" = 30% DR on a hit taken at Max Flow) and **Headliner** (Max Flow payoffs; R2 boosts Totem
+Beats, R3 fires a party Hype buff). Afterbeat migrated to Flow (R1 grants a stack + shaves next-stack
+time per enemy dashed through; R3 grants one more stack if either beat lands). Totem and Portable
+Speaker are functionally untouched.
+
+**New GENERIC primitive - `Combat.qtn`'s `OnHostileHitConnected(target, attacker)`.** Fired from
+`DamageUtility.ApplyDamage` ABOVE every negation layer (below `Invulnerable` and the friendly-fire
+guard, above Free Hit Guard and Accessory Guard), so it is the authoritative **"was I hit?"** as opposed
+to `OnHealthDamageApplied`'s **"did I lose anything?"**. A hit fully negated by the Accessory Guard or a
+Free Hit Guard still fires it; a dodged/i-framed hit does not. Requires a live `Enemy` attacker and is
+gated on `bypassOutgoingResolution == false`. Any future negation mechanic placed beneath that line
+inherits correct behaviour for free. Zara's Flow is its first consumer ("guarding saves your health but
+not your rhythm"); Keep the Beat's DR reaches the triggering hit because Quantum dispatches signals
+synchronously above the resolution steps. `AlternatingArea` also gained a generic
+`EffectivenessMultiplier` (applied to both Damage and Support beats) so Headliner R2 can scale an
+already-deployed Totem without `AlternatingAreaSystem` knowing Zara exists. See
+`docs/zara-ascensions.md`.
 - **`AreaAllyBudget` + `AreaAllyBudgetUtility`**: per-**spawned-deployable**, per-ally spend caps (HP
   healed, cooldown reduced). Lives on the area entity, so a fresh deploy is a fresh allowance and two
   Zaras never share one. Backs Zara's global Totem healing cap and Sound Boost's cooldown cap.
@@ -868,6 +905,246 @@ Unstoppable: `Unstoppable.qtn`, `BruteUnstoppableSystem`, `UnstoppablePassiveUpg
 it - `CharacterStats.HardCcDurationMultiplier` and `StatusEffects.HardCcImmunityRemaining` (the per-tier
 hard-CC diminishing-returns row above was kept - Kai/Brute/Zara all still use it). Full writeup:
 **`docs/brute-ascensions.md`**'s own "2026-08-20 (later)" section.
+
+## Recoverable Accessory Guard
+
+Every hero wears a **Signature Accessory** that eats one incoming hit outright, loses one durability
+point, and physically pops off into the world as a collectible the owner has to walk back for
+(`Equipped -> Airborne -> Dropped -> Equipped`, or `-> Broken` at 0 durability, where no collectible
+spawns at all). Durability persists across the whole run - `Survival -> Break -> Survival` - and is
+only ever restored by paying a Merchant, deliberately turning it into both a *spatial* combat
+resource (a block relocates you mid-fight) and an *economic* Break decision (restore defense now vs.
+save Coins for weapons/perks). The block hook is a single early-return in `DamageUtility.ApplyDamage`
+placed ABOVE every resolution step (a block NEGATES the hit - no crit roll, no elemental proc, no
+Rage/Resonance build, no `OnWeaponHitLanded`/`OnHealthDamageApplied` signal, and therefore no
+revive-channel interrupt) and BELOW the `Invulnerable` check (Cheat Death/post-revive grace must not
+burn a durability point), gated on `bypassOutgoingResolution == false` - the same gate
+`OnWeaponHitLanded` already uses to exclude DoT-tick replays, which for free also excludes
+`PlayerFallSystem`'s fall damage and `SentryDecaySystem`'s self-drain. Multi-hit sources are
+self-limiting with no cooldown/i-frame window, since `TryBlock` only fires while `Equipped`. The
+dropped collectible is ONE shared, fully generic `EntityPrototype`
+(`RuntimeConfig.Prefabs.DroppedAccessoryPrototype`). Unlike every currency drop it picks its LANDING
+POINT FIRST and then solves an exact arc onto it (`AccessoryGuardUtility.ResolveLandingPosition`
+samples ring spots and takes the first with real Ground under it - water is its own Unity layer, so
+it's rejected by the same test as a pit, no water-specific check needed; falls back to the owner's
+own feet, solid by definition; variety comes from a randomised launch ANGLE, never velocity, which
+would break the solved arc). Lobbing it blind and correcting afterwards was a visible teleport, which
+is why the fall-rescue below is now only a backstop for post-landing displacement. Three further
+deliberate differences from a currency orb: collection always returns it to its **OWNER** regardless
+of who picks it up (co-op - `AllowAllyRecovery`, default on; deliberately NO proximity
+requirement and no carry mechanic - an owner-must-be-nearby gate was built and reverted, since its
+failure mode is a silent "nothing happened" and the case barely occurs, and carry-and-deliver charges
+the helper twice while the owner pays nothing; the two coherent designs are the extremes, both
+reachable from that one flag - and `AccessoryRecovered` carries a `Recoverer` purely for View credit), **no lifetime at all** (a timer would silently turn a recoverable
+resource into a broken one), and it **may land on higher ground** - `PopMotionSystem`'s 0.5-unit climb
+clamp is opted out per drop via a new `PopVelocity.CanLandHigher` (false for every currency/scrap
+caller, so nothing else changes), because a coin you must climb for is a chore whereas retrieval IS
+this mechanic. `Airborne -> Dropped` is read straight off `PopVelocity`'s
+own removal by `PopMotionSystem` rather than a second timer, so an accessory can't be re-caught
+mid-air - `DroppedAccessoryView` reads that same signal to spin the sprite while it's in the air and
+ease it forward to 0 on landing. That view OWNS both billboarding and the spin in one `LateUpdate`
+write (it reproduces `Billboard`'s own `LookRotation` and composes the spin on top in billboard
+space, disabling any `Billboard` on that transform - two writers to one rotation is a script-order
+coin flip), with `spinAxis` defaulting to Z so a camera-facing sprite rolls in the screen plane
+instead of going edge-on. The angle is accumulated in its own float field: reading
+`localEulerAngles` back is silently broken on a tilted transform (`AccessoryOrb`'s sprite child sits
+at X = 45), which is what made the first version not spin at all. Recovery restores the STATE,
+not the durability. A BREAKING block (durability -> 0) still flies the accessory, as
+`DroppedAccessory.Broken` debris - non-collectible, untracked by the guard, destroyed on landing,
+where `AccessoryBroken` fires so the shatter VFX (`EffectsManager`) plays at the resting point rather
+than on the player. Because a blocked hit returns before `EntityDamaged` fires, every normal damage
+reaction is bypassed, so `HitFeedback` (character flash, top-priority `FlashDamage` tier) and
+`HurtOverlayUiWidget` (screen flash + a flat `blockHitStopDuration` hit stop, since there's no damage
+to scale a tier off) both listen to `AccessoryBlocked` instead - without them a block reads as a
+miss. Recovery (walking over it, or the Merchant restore) plays its own particle at the pickup point plus a
+LOW-priority `recoverFlashColor` flash, so it can't stomp a simultaneous hit flash.
+`CharacterUiWidget` shows an `accessoryEquippedRoot` plus an `accessoryGuardPips[]` array
+deactivated from the right (index i shown while i < CurrentDurability). Finding a drop again is
+a FOURTH ground arrow on `MovementRingView` (the local player's own movement ring), not a HUD element
+- deliberately folded into that component rather than a parallel one of its own, since it is the same
+job as its pre-existing target arrow: a flat ground sprite orbiting the character, aimed
+at a world entity, sharing the ring's own grounded fade and `PositionAndRotateArrow`. Reads
+`AccessoryGuard.Accessory` directly (broken debris is untracked by the guard, so a break correctly
+shows nothing), positions off `EntityViewManager.GetEntityTransform` with a `Transform3D` fallback,
+XZ-only for both heading and distance. Entirely optional - gated on `accessoryArrowSprite` being
+assigned, with an optional companion `accessoryIconSprite` painted at spawn from that hero's own
+`CharacterData.Accessory.CollectibleSprite` (the same sprite `DroppedAccessoryView` puts on the
+pickup) which keeps its flat authored rotation while the arrow turns. Local-player-only comes for
+free from `executeOnlyOnLocal`. Max is the one hero needing
+extra View work: `BerserkFxView` swaps his head sprite across 3 tiers (Normal/Berserk/Overdrive) and
+that renderer lives inside only ONE of `AccessoryView`'s two roots, so it gained a parallel hatless
+set (`noAccessoryHeadSprite` + per-tier sprites, each falling back to its with-hat counterpart) and
+writes BOTH heads on every tier change - deliberately without reading `AccessoryGuard` itself, so the
+two components stay ordering-independent and no accessory logic is duplicated.
+
+Merchant repair/replacement is sold on the **Store**'s own screen, modelled directly on its existing
+guaranteed "Increase Weapon Level" offer (not part of the rolled `StoreInventory`, price resolved
+live, own zero-payload `BuyAccessoryServiceCommand`): `2/3 -> repair 25`, `1/3 -> repair 50`,
+`0/3 Broken -> replace 100`, always straight back to full - **there is no partial/per-point restore
+path anywhere in the feature**. Costs are an explicit `FP[] RepairCostByMissingDurability` array
+indexed by MISSING durability (plus `BrokenReplacementCost`) on `AccessoryGuardConfig`, not a formula,
+with an Editor-only `OnValidate` guardrail enforcing "more damaged -> more expensive" and
+"replacement > any repair". It needs no once-per-Break purchase tracking of its own - a successful
+service restores to full, which immediately resolves to `AccessoryServiceKind.None`, so **the state is
+the limit** - and it can never consume the weapon purchase allowance, since it touches neither
+`StoreUtility.ResolveWeaponOfferCount` nor `StorePurchases.Entries`. Repairing while the accessory is
+still lying out in the level is deliberately allowed; `AccessoryGuardUtility.Restore` destroys the
+outstanding collectible, which is what upholds the never-both-worn-and-on-the-floor invariant.
+
+**The gameplay system is completely hero-agnostic** - no simulation file (and no View file that drives
+behaviour) ever names a hero. The per-hero half is one `HeroAccessoryPresentation` struct on a new
+`CharacterData.View.cs` partial (`DisplayName`/`CollectibleSprite`/`CollectibleScale` - the scale
+exists because ONE prototype serves every hero, so a cap and a headset need per-hero size
+correction; it multiplies the prefab's authored scale, 0/unset reads as 1), resolved generically
+through the owner's own `CharacterStats.CharacterData` by `DroppedAccessoryView` (paints the shared
+prototype's `SpriteRenderer`). The WORN half deliberately does NOT live in hero data: `AccessoryView` is a
+two-way SWITCH between two hand-placed GameObjects on the hero's own view prefab
+(`equippedVisual` ON / `unequippedVisual` OFF while `Equipped`, reversed otherwise), because these
+rigs are sprite-based (`head_0`/`Torso_0`/`CharBody`) so "wearing it" and "not wearing it" are two
+different authored head sprites rather than a prop parented onto a bare head - the same
+active-object-swap idiom `BlobAnimationView` already uses for Alive/Downed/KO, and it keeps per-hero
+RIG references on the prefab (next to `BlobAnimationView`'s) while per-hero ASSETS stay in
+`CharacterData`. `AccessoryView` POLLS `AccessoryGuard.State` every
+`QUpdate` rather than subscribing to the 5 new events - state is authoritative and self-healing, same
+reasoning `BlobAnimationView`/`WeaponViewController` document for their own Downed/KO swaps; the
+events (`AccessoryBlocked`/`Landed`/`Recovered`/`Broken`/`Restored`) exist for one-shot FX and have no
+subscriber yet. The component is seeded by `CharacterSystem` (gated on `PlayerLink`) rather than
+authored per-hero-prototype, so the whole mechanic switches on/off with a single
+`RuntimeConfig.AccessoryGuardConfig` assignment. Full design, file map, the acceptance-criteria
+coverage table, and current status: **`docs/accessory-guard.md`**. Read it before touching anything
+accessory/durability/accessory-repair related.
+
+**Shield now exists to serve this feature (2026-08-25).** Player Shield was reworked from a free
+auto-regenerating absorb pool into an earned, charge-only buffer whose job is to keep the Accessory on
+your head, because a bar that refills every 5s blunted the whole Merchant-repair decision. Three rules:
+(1) player Shield **never auto-recharges** (`Shield.ChargeOnly`, seeded from the new
+`CharacterData.ShieldChargeOnly`, on for all six heroes) and starts a run **empty**; (2) **Shield
+protects the Accessory** - `DamageUtility.ApplyDamage` skips `AccessoryGuardUtility.TryBlock` entirely
+while `Shield.Current > 0` (a gate, deliberately NOT moving the hook below `AbsorbWithShield`, which
+would forfeit the block's no-crit/no-proc/no-signal negation contract), so the accessory only ever
+blocks a hit headed for Health; (3) **Overshield is deleted** - `ShieldUtility.ApplyOvershield` and
+every `OvershieldCapMultiplier` are gone, all grants cap at Max. Enemy/boss shields are untouched
+(`EnemySystem.SeedShield` never sets the flag), so the Shielder enemy, the `ShieldWall` group and
+`BossWidget`'s bar still recharge classically. A hit larger than the remaining Shield deliberately
+overflows to Health WITHOUT the accessory catching it, so chip damage can never cost durability. Also
+new and generic: **Free Hit Guard** (`StatusEffects.FreeHitGuardRemaining`/`FreeHitGuardSource`,
+`StatusEffectUtility.ApplyFreeHitGuard`/`TryConsumeFreeHitGuard`) - a one-shot timed complete negation
+consumed immediately ABOVE the accessory hook (a free gift outranks a Coin-priced durability point),
+reporting via `Combat.qtn`'s `OnFreeHitGuardConsumed` so the granting ability owns the reward; Brute's
+Bodyguard is its first consumer, not its owner. Knock-ons deliberately NOT retuned yet (balance calls,
+each listed in the doc): Kai/Pixie/Max have no Shield source of their own and sit at 0; Rift Mutations
+Glass Core/Last Bastion/Infinite Momentum/Shield Breaker; the "+10 Max Shield" Global Upgrade and the
+`PlayerMaxShieldLevel` talent; and the now player-dead `StatusEffects.ShieldRegen*`/`ShieldRegenBuffView`.
+
+Short version: the code compiles once codegen picks up the new `Accessory/AccessoryGuard.qtn` and
+`Events.qtn`'s 5 new events; `AccessoryGuardSystem` is registered inside `GameplaySystemGroup`
+alongside the other pickup systems and `BuyAccessoryServiceCommand` in `CommandSetup.User.cs`.
+`Tools > RiftRaiders > Generate Accessory Guard Content` authors `AccessoryGuardConfig.asset` - not
+yet run. Nothing is authored: `RuntimeConfig.AccessoryGuardConfig` and
+`RuntimeConfig.Prefabs.DroppedAccessoryPrototype` are both unassigned (the first one being unassigned
+disables the mechanic entirely - nothing is seeded, so nothing blocks), no `DroppedAccessory`
+prototype exists, no hero's `CharacterData.Accessory` block is filled in (`MaxGeometricHat.png` is
+already imported for Max), no hero view prefab has an `AccessoryView` (needs its `equippedVisual`/`unequippedVisual` pair assigned), and no hero prefab has `MovementRingView.accessoryArrowSprite` assigned (unauthored the radar arrow simply shows nothing - see `docs/accessory-guard.md`'s "Radar" section). The Store's
+food/utility row is packed dynamically from `StoreConfig.OfferWeaponLevelUp`/`OfferAccessoryService`
+(two hardcoded card-index constants were deleted - that fragility is what let the accessory card sit
+past `cardCount` and silently never render), defaulting to `[food, food, accessory service]` which
+fits the stock `ChooseWindow.cardCount` of 3; re-enabling Increase Weapon Level needs cardCount 4.
+Not yet manually verified in-Editor.
+
+## Local-testing Bots
+
+`RuntimePlayer.IsBot` turns a player slot into a bot: a real Quantum player whose `Input` is
+synthesized by the simulation (`BotInputSystem` -> `BotBrain.Data`) instead of polled from a device,
+so one person can run a full co-op party locally and actually watch a hero's kit fire. `IsBot` is
+read in exactly ONE place - `PlayerSpawnUtility.Spawn`, which turns it into a `BotBrain` component -
+and every per-tick path keys off the component instead. The single integration point is a new
+`PlayerInputUtility.Resolve(f, entity, playerLink)` returning `Input*` (bot's `BotBrain.Data` or
+`f.GetPlayerInput`); the five consumers (`PlayerMovementProcessor`/`SkillSystem`/`AutoJumpSystem`/
+`ReviveChannelSystem`/`WeaponSystem`) each swapped one line and none of them knows a bot exists.
+Same "fake a player's Input on an entity" shape `InputSource.qtn` already established for Lux's
+sentry gun, deliberately a SECOND component since a bot really does have a `PlayerLink` and
+`WeaponSystem.HasFireDriver` reads "has `InputSource`" as "is a non-player shooter". The AI itself is
+minimal on purpose: follow the lowest-`PlayerRef` human, `SteerAroundWalls` deflection plus ledge/
+void avoidance (no pathfinding), a leash teleport as the stuck-recovery, and Dash/Hero Skill pulsed
+on randomized `[min,max]` countdowns gated on an enemy being nearby. Void avoidance is not optional
+polish: the player AUTO-HOP reacts to "no ground ahead" by JUMPING, so a bot walking at a pit gets
+launched into it - `BotInputSystem.TryFindSafeDirection` therefore probes FURTHER ahead than
+`MovementDataAsset.EdgeProbeDistance` and rejects the direction before auto-hop can fire, deflecting
++/-45/90 degrees to walk along a chasm lip, and reporting "blocked" (which itself triggers the leash,
+since the target can be metres away across a gap) only when every candidate is a pit. It never writes `Input.Fire` - firing is
+already auto-attack off `Aim.Target`. View-side, the ONLY structural change is
+`QuantumHelper.GetLocalSlotIndex`: a bot resolves to -1 AND never consumes a local slot, so a human
+sitting behind two bots in `LocalPlayers[]` is still slot 0 and every existing "is available to the
+local player" call site (camera targets, `MyLocalPlayer.Slots`, every `BindToSlot(0, ...)` widget,
+`GameplayUiController.choiceWindows[]`) stays bot-unaware for free - including AUDIO, which needed
+no bot-specific code: `EntitySound.ResolveVolume` asks `MyLocalPlayer.IsLocalEntity`, so a bot's
+sounds are mixed exactly like a networked teammate's (`quieterWhenRemote` scales them down,
+`localPlayerOnly` drops them entirely), and `LocalPlayerAudioListener`/`VoiceDirector` skip them. Two "don't make the human wait"
+gates were added, both opt-out via `RuntimeConfig.Bots`: a bot random-picks its own level-up option
+the tick the screen opens (`LevelUpUtility.AutoConfirm`, the same draw the 30s timeout would have
+made) and auto-votes to skip every Breathing Break. Full design, file map, the local-slot reasoning,
+and current status: **`docs/bots.md`**. Read it before touching anything bot/player-input-resolution/
+local-slot-index related.
+
+Short version: the code compiles once codegen picks up the new `BotBrain.qtn`, and `BotInputSystem`
+is registered in `SystemSetup.User.cs` inside `GameplaySystemGroup` right before `KCCSystem`. There
+is NO asset authoring at all - all tuning lives on `RuntimeConfig.Bots` (under the existing
+`[Header("Debug")]`, every `FP` treating 0 as "use the built-in default"). Only scene work: on
+`QuantumRunnerLocalDebug.LocalPlayers[]`, add entries, tick **Is Bot**, and give each bot its own
+`PlayerAvatar`. Not yet manually verified in-Editor.
+
+## Loading / Generating Level Screen
+
+A full-screen screen covering the whole match start - from the moment a run is actually starting until
+the local hero is standing in the world - then fading and handing off to `InMatchWindow`. **Reworked
+2026-08-26 from a `QuantumGameScene`-side widget into a menu-side `UiWindow`.** The original
+`LoadingScreenWidget` lived in the gameplay scene on its own Canvas; that was the wrong home on three
+counts: `SessionRunner.StartAsync` is what additively LOADS `QuantumGameScene`, so a screen living
+there doesn't exist for the first and slowest part of the start; it has to out-sort the gameplay HUD
+Canvas it lives beside; and the menu's own `WindowManager` was already the thing driving
+`MainMenuWindow -> ConnectingWindow -> InMatchWindow`, so the loading screen belonged IN that chain
+rather than beside it. It's now `LoadingWindow` (`Assets/_Project/Scripts/UI/Menu/`), a real `UiWindow`
+under `MainMenuTab`'s `WindowManager` - the chain is
+`MainMenuWindow -> ConnectingWindow -> LoadingWindow -> InMatchWindow`, one continuous overlay with no
+gap where an unfinished level is visible. `ShowWindow<T>()` hiding every other window is not the
+hazard here it is for Cursed Rift's screen: during a match start nothing else should show, and being
+pre-empted by the failure path's `MainMenuWindow`/`OnDisconnected`'s `AlertPopup` is correct. The one
+thing kept from the old design is its **own nested Canvas with Override Sorting, `sortingOrder` 999**
+- menu Canvases sort at 0 and the gameplay HUD at 11, so without it the HUD of a match that hasn't
+visually started draws over the screen hiding it (no `CanvasScaler` - a nested Canvas inherits its
+parent's, which is what keeps it on the same reference resolution as every other menu window).
+
+The actual bug this fixed: `StartRunner` called `ShowWindow<InMatchWindow>()` the moment `AddPlayer`
+returned, and `InMatchWindow.Show` disables the whole menu Canvas - i.e. that call is what REVEALS the
+gameplay scene, at a point where the level isn't generated and no hero has spawned. Two lines changed
+there: the top's `ShowWindow<ConnectingWindow>()` became `ShowWindow<LoadingWindow>()` (so the screen
+also covers the scene load itself; `ConnectingWindow` still owns the connect/room phase from
+`MainMenuWindow`, and the callbacks it stopped registering during the start window only raised alerts
+`OnDisconnected`/`StartRunner`'s own `catch` already raise), and the post-`AddPlayer`
+`ShowWindow<InMatchWindow>()` was deleted - that transition is `LoadingWindow`'s own call now, made
+only once `MyLocalPlayer.AnyLocalPlayerSetup` is true (hero exists AND its view registered), fading
+ITSELF out first and showing `InMatchWindow` on complete, since that window disabling the menu Canvas
+would otherwise cut the fade off mid-way. The menu background behind it fades along with it
+(`fadeWithScreen`, an array of objects outside the window's own hierarchy - one tween value drives the
+window's `CanvasGroup` and every entry, and a `CanvasGroup` is auto-added to anything lacking one), or
+the fade would reveal the MAIN MENU rather than the game; the hand-off's own `Hide` deliberately
+leaves those at alpha 0 while every other `Hide` restores them to 1, gated on having actually faded
+since `ShowWindow` calls `Hide` on every non-shown window. **Zero simulation change** - no `.qtn` edit, no system, no
+codegen dependency: the bar reads `Global.LevelGenCursor`/`LevelGenTotal`, which `Chunk.qtn`'s own
+comment already named a "Generating level..." screen as the intended consumer of. Three bands
+(Connecting 0-0.15, Generating 0.15-0.85 - the only one with countable work - Entering 0.85-1),
+monotonic by construction, one `LogHelper` line per stage change so a genuine hang is diagnosable from
+the log; minimum display duration, and a 45s failsafe that hands off anyway naming the stage it was
+stuck in. Full design and the authoring checklist: **`docs/loading-screen.md`**.
+
+Short version: the code compiles against existing types only, but nothing is in the menu scene yet -
+run `Tools > RiftRaiders > Create Loading Window` with `MenuScene` open (it parents the window under
+`MainMenuTab.windowManager`, which registers it for free via `GetComponentsInChildren`, and builds +
+wires the override-sorting Canvas, backdrop, title, stage label, progress bar, percent and tip line)
+and save. `LoadingScreenWidget.cs`/`LoadingScreenBuilder.cs` are deleted; the old builder had been run
+with `gamesceneBackup.unity` open rather than `QuantumGameScene`, which is why the previous screen
+never appeared in a real match - that backup scene now holds a missing-script `LoadingScreen`
+GameObject, harmless but worth deleting if it's ever opened. Not yet verified in-Editor.
 
 ## Quantum `.qtn` codegen gotcha
 

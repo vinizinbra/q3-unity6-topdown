@@ -1,0 +1,155 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 663e14528b4c64d15930e6e46885a812, type: 3}
+  m_Name: VoiceLineConfig
+  m_EditorClassIdentifier: Assembly-CSharp::VoiceLineConfig
+  rules:
+  - name: RunStarted
+    Trigger: 1
+    Probability: 1
+    Cooldown: 0
+    Priority: 1
+    Audience: 2
+  - name: SurvivalStarted
+    Trigger: 2
+    Probability: 0.5
+    Cooldown: 30
+    Priority: 1
+    Audience: 0
+  - name: BreathingTimeStarted
+    Trigger: 3
+    Probability: 0.6
+    Cooldown: 30
+    Priority: 1
+    Audience: 0
+  - name: BossStarted
+    Trigger: 4
+    Probability: 1
+    Cooldown: 0
+    Priority: 2
+    Audience: 2
+  - name: BossDefeated
+    Trigger: 5
+    Probability: 1
+    Cooldown: 0
+    Priority: 2
+    Audience: 2
+  - name: HeroSkillUsed
+    Trigger: 10
+    Probability: 0.2
+    Cooldown: 25
+    Priority: 1
+    Audience: 1
+  - name: UpgradeChosen
+    Trigger: 22
+    Probability: 0.3
+    Cooldown: 20
+    Priority: 1
+    Audience: 0
+  - name: UpgradeMaxed
+    Trigger: 23
+    Probability: 1
+    Cooldown: 0
+    Priority: 2
+    Audience: 0
+  - name: ItemPurchased
+    Trigger: 24
+    Probability: 0.5
+    Cooldown: 6
+    Priority: 1
+    Audience: 0
+  - name: HeavyHitReceived
+    Trigger: 30
+    Probability: 0.35
+    Cooldown: 15
+    Priority: 1
+    Audience: 0
+  - name: AbilityNotReady
+    Trigger: 40
+    Probability: 1
+    Cooldown: 12
+    Priority: 0
+    Audience: 0
+  - name: PlayerDowned
+    Trigger: 50
+    Probability: 1
+    Cooldown: 0
+    Priority: 3
+    Audience: 2
+  - name: PlayerKO
+    Trigger: 51
+    Probability: 1
+    Cooldown: 0
+    Priority: 3
+    Audience: 2
+  - name: TeammateDowned
+    Trigger: 53
+    Probability: 0.8
+    Cooldown: 8
+    Priority: 2
+    Audience: 0
+  - name: RevivingTeammate
+    Trigger: 55
+    Probability: 0.6
+    Cooldown: 8
+    Priority: 1
+    Audience: 3
+  - name: RevivedTeammate
+    Trigger: 56
+    Probability: 1
+    Cooldown: 0
+    Priority: 2
+    Audience: 3
+  - name: SelfRevive
+    Trigger: 57
+    Probability: 1
+    Cooldown: 0
+    Priority: 2
+    Audience: 0
+  - name: AccessoryDropped
+    Trigger: 60
+    Probability: 0.7
+    Cooldown: 8
+    Priority: 1
+    Audience: 0
+  - name: AccessorySelfRecovered
+    Trigger: 61
+    Probability: 0.35
+    Cooldown: 15
+    Priority: 0
+    Audience: 0
+  - name: AccessoryReturnedToAlly
+    Trigger: 62
+    Probability: 1
+    Cooldown: 0
+    Priority: 2
+    Audience: 3
+  - name: AccessoryBroken
+    Trigger: 63
+    Probability: 1
+    Cooldown: 0
+    Priority: 2
+    Audience: 0
+  - name: AccessoryRestored
+    Trigger: 64
+    Probability: 0.6
+    Cooldown: 5
+    Priority: 1
+    Audience: 0
+  - name: HeroExceptionalEvent
+    Trigger: 90
+    Probability: 1
+    Cooldown: 20
+    Priority: 2
+    Audience: 1
+  perSpeakerCooldown: 4
+  globalCooldown: 2

@@ -928,8 +928,7 @@ MonoBehaviour:
   ammoSlider: {fileID: 3984403169306300072}
   reloadSlider: {fileID: 8618044172969640538}
   reloadPunchTarget: {fileID: 6638756857600494744}
-  reloadPunchScale: 1.25
-  reloadPunchDuration: 0.25
+  reloadPunchDuration: 0.45
   weaponRowRect: {fileID: 6638756857600494744}
   burnIndicator:
     root: {fileID: 3323662003187796770}

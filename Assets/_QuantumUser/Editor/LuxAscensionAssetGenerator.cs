@@ -134,15 +134,21 @@ namespace QuantumUser.Editor
                 asset.DisplayName = "Fortification";
                 asset.Activated = false;
                 asset.MaxRank = 3;
-                asset.Description = "Your Sentry becomes a position worth holding - longer reach, then Shield, then covering fire.";
+                asset.Description = "Your Sentry becomes a position worth holding - longer reach, then covering fire.";
                 asset.RankDescriptions = new[]
                 {
                     "Extended Range: Sentry attack range +2.",
-                    "Shield Battery: Sentry attack range +2, and allies standing near your Sentry recover 3 Shield per second.",
-                    "Fire Support: Sentry attack range +2. Allies near your Sentry recover 3 Shield per second and gain +15% Fire Rate and 10% Damage Reduction.",
+                    "Covering Fire: Sentry attack range +2, and allies standing near your Sentry are shielded from one hit. Once per ally per Sentry.",
+                    "Fire Support: Sentry attack range +2. Allies near your Sentry are shielded from one hit (once per ally per Sentry) and gain +15% Fire Rate and 10% Damage Reduction.",
                 };
                 asset.RangeBonus = new FP[] { 2, 2, 2 };
-                asset.AllyShieldPerSecond = new FP[] { 0, 3, 3 };
+
+                // Replaced Shield Battery's flat Shield-per-second. Short duration because the aura
+                // re-applies it every tick an ally stands in range - this is how long it survives after
+                // they step OUT, not how long they hold it. One per ally per turret, capped by the
+                // sentry's own AreaAllyBudget, so another denial means another deployment.
+                asset.GuardDuration = new FP[] { 0, 1, 1 };
+                asset.GuardsPerAlly = new byte[] { 0, 1, 1 };
                 asset.AuraRangeRatio = FP._0_50;
                 asset.FireSupportEffect = new[]
                 {

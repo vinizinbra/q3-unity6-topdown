@@ -323,6 +323,13 @@ MonoBehaviour:
         RawValue: 0
       Z:
         RawValue: 0
+    SpawnPosition:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
     Damage:
       RawValue: 0
     RemainingLifetime:
@@ -393,11 +400,13 @@ MonoBehaviour:
   initialized: 0
   executeOnlyOnLocal: 0
   isLocal: 0
-  visualRenderer: {fileID: 0}
+  visualRoot: {fileID: 0}
+  catchUpSpeedMultiplier: 2
   destroyEffectPrefab: {fileID: 6350743763286976369, guid: 3d63a7155f35f4b72ba173b63b299202, type: 3}
   trailParticle: {fileID: 0}
-  minCatchUpDuration: 0.03
-  maxCatchUpDuration: 0.2
+  minImpactDuration: 0.03
+  maxImpactDuration: 0.2
+  orphanTimeout: 3
 --- !u!114 &8435151729028434002
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -435,6 +444,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.HasShadow
   baseScale: 1
+  shadowOffset: {x: 0, y: 0}
 --- !u!1001 &7454792091129253677
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -487,11 +497,45 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 82723163243150482, guid: 14a334c03c1cccd458efe9a3d4fbc240, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1258406917094090, guid: 14a334c03c1cccd458efe9a3d4fbc240, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3380733512164409214}
   m_SourcePrefab: {fileID: 100100000, guid: 14a334c03c1cccd458efe9a3d4fbc240, type: 3}
+--- !u!198 &7328869477943408433 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 198688473503397916, guid: 14a334c03c1cccd458efe9a3d4fbc240, type: 3}
+  m_PrefabInstance: {fileID: 7454792091129253677}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &7453674448049157607 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1258406917094090, guid: 14a334c03c1cccd458efe9a3d4fbc240, type: 3}
+  m_PrefabInstance: {fileID: 7454792091129253677}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &3380733512164409214
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7453674448049157607}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 287b1faaa056b45cfb4b4da18b45fa5b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ParticleSound
+  mode: 0
+  sound: {fileID: 11400000, guid: 5bb97788b8e084cd5948b902be3d8d5b, type: 2}
+  loop:
+    intro: {fileID: 0}
+    loop: {fileID: 0}
+    tail: {fileID: 0}
+  volumeScale: 1
+  source: {fileID: 7328869477943408433}
 --- !u!4 &7456704937189355667 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4279621146394558, guid: 14a334c03c1cccd458efe9a3d4fbc240, type: 3}

@@ -17,8 +17,46 @@ namespace Quantum {
     /// </summary>
     /// <param name="callback"></param>
     public void PollInput(CallbackPollInput callback) {
-      Quantum.Input i = callback.PlayerSlot == 1 ? PollPlayerTwoInput() : PollPlayerOneInput();
+      // A bot slot (RuntimePlayer.IsBot - see docs/bots.md) has its Input synthesized inside the
+      // simulation by BotInputSystem, which ignores whatever is polled here. Sending empty input
+      // for it anyway keeps the two from looking like rival drivers of the same character - and
+      // more practically, stops the human's own keys from being mirrored onto a bot slot by the
+      // PlayerSlot ternary below (with three local players, slots 0 and 2 both fall through to
+      // PollPlayerOneInput).
+      Quantum.Input i = IsBotSlot(callback)
+        ? default
+        : (callback.PlayerSlot == 1 ? PollPlayerTwoInput() : PollPlayerOneInput());
       callback.SetInput(i, DeterministicInputFlags.Repeatable);
+    }
+
+    // Maps this poll's local PlayerSlot back to the PlayerRef occupying it (GetLocalPlayers/
+    // GetLocalPlayerSlots are parallel arrays) so the slot's own RuntimePlayer can be read. Any
+    // uncertainty - no game, no frame, player not added yet - reports "not a bot", so a real
+    // player can never be silently muted by this.
+    private static bool IsBotSlot(CallbackPollInput callback) {
+      QuantumGame game = callback.Game;
+      if (game == null) {
+        return false;
+      }
+
+      Frame frame = game.Frames.Predicted;
+      if (frame == null) {
+        return false;
+      }
+
+      var localPlayers = game.GetLocalPlayers();
+      var localSlots = game.GetLocalPlayerSlots();
+
+      for (int i = 0; i < localPlayers.Count && i < localSlots.Count; i++) {
+        if (localSlots[i] != callback.PlayerSlot) {
+          continue;
+        }
+
+        RuntimePlayer playerData = frame.GetPlayerData(localPlayers[i]);
+        return playerData != null && playerData.IsBot;
+      }
+
+      return false;
     }
 
     private Quantum.Input PollPlayerOneInput() {

@@ -26,6 +26,17 @@ public class PartyManager : PgSingleton<PartyManager>, IInRoomCallbacks, IMatchm
     public event Action<PartyPhase> OnPhaseChanged;
     public event Action OnRosterChanged;
 
+    // The local player's current character pick, mirrored here as plain state alongside the Photon
+    // custom property SetLocalCharacter writes. The property is the authoritative copy the rest of
+    // the party reads; this exists so UI can read the LOCAL pick without a room existing at all -
+    // character selection deliberately works before connecting (see PartyRoomWidget), and
+    // LocalPlayer's properties aren't a reliable local mirror at that point.
+    public string LocalCharacterId { get; private set; }
+
+    // Fires whenever the local pick changes, so anything showing it (CharacterPreviewWidget) stays
+    // in sync without being wired to whichever screen happened to change it.
+    public event Action<string> OnLocalCharacterChanged;
+
     private bool _autoStartWhenRoomReady;
     private bool _lastAllOthersReady;
 
@@ -89,6 +100,9 @@ public class PartyManager : PgSingleton<PartyManager>, IInRoomCallbacks, IMatchm
     {
         LogHelper.Error("CharacterSelect", $"SetLocalCharacter({characterId}) - writing custom property for local player {MatchMakingConfig.Instance.Client.LocalPlayer.ActorNumber}");
         MatchMakingConfig.Instance.Client.LocalPlayer.SetCustomProperties(new PhotonHashtable { { PropKeyCharacter, characterId } });
+
+        LocalCharacterId = characterId;
+        OnLocalCharacterChanged?.Invoke(characterId);
     }
 
     public void SetLocalReady(bool ready)

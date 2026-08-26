@@ -69,7 +69,8 @@ plain numeric field off the owner at its own spawn time). R2 +60% total, allies 
 `EffectConfig` 5s default). R3 "Encore" +100% total, 50% of excess healing becomes Shield (new
 `OverhealToShieldEffectData`, replacing `ScaledHealEffectData` in `HealEffects[0]` entirely at rank 3 -
 uses `HealUtility.ApplyFlatHeal`'s new `FP` return value to compute `requested - applied`, then
-`ShieldUtility.ApplyOvershield`).
+`ShieldUtility.ApplyFlatShield` - this was `ApplyOvershield` until Overshield was removed game-wide on
+2026-08-25, see the section at the end of this doc).
 
 **3. Double Time** - replaces Rapid Pulse. Direct per-rank interval override (1.0 → 0.85 → 0.70 →
 0.50s), not a rate multiplier - spec pins exact seconds. `DoubleTimeUpgrade.BeatInterval`, baked once
@@ -283,8 +284,10 @@ deliver Move Speed / Fire Rate / cooldown reduction — only the HP half switche
 - **Main Stage** — unchanged (+30/50/75% radius, +2s duration at R2, R3's opening Damage Beat and
   closing Support Beat).
 - **Faster Tempo** — unchanged (+25/50/75% generation, R3 retains 20% of the threshold).
-- **Protective Rhythm** (replaces Restorative Beat) — R1: Pulse grants allies an Overshield worth 10%
-  of **their own** Max Shield. R2: 15% plus 10% DR for 2s. R3 "Fortissimo": 20% plus 20% DR.
+- **Protective Rhythm** (replaces Restorative Beat) — **fully superseded 2026-08-25.** It granted
+  Shield (10/15/20% of the ally's own Max Shield) plus DR at R2+. It now HEALS instead — 3/4/5% Max HP,
+  DR 10/20% at R2+, and a Resonance feedback loop at R3 — because Shield stopped being something every
+  hero can receive. See "Protective Rhythm reworked off Shield onto healing" at the end of this doc.
   **It never touches HP healing.** The DR routes through the shared reactive-DR slot
   (`ApplyTemporaryDamageReduction`, take-the-stronger), so a co-op stack with Brute's Guardian/Bodyguard
   resolves through the generic policy instead of adding up.
@@ -299,9 +302,9 @@ deliver Move Speed / Fire Rate / cooldown reduction — only the HP half switche
   its own per-enemy Resonance. R1's sweep and R3's pulse hits draw on **one shared per-dash allowance**
   (`MaxResonancePerDash`, 40), so they can't compound past the cap.
 - **Portable Speaker** — reworked around three rules the brief pins down:
-  - **Never heals HP, at any rank** — by construction, not a runtime check: no heal effect is ever
-    authored into a Speaker's Support Beat and `HealAmount` stays 0. It also carries no
-    `AreaAllyBudget` (nothing to cap).
+  - ~~**Never heals HP, at any rank**~~ — **reversed 2026-08-25**, see "Portable Speaker now heals" at
+    the end of this doc. It was enforced by construction (no heal effect authored, `HealAmount` 0, no
+    `AreaAllyBudget`); it now heals at half the Totem's live value and carries its own budget.
   - **Capped active count per Zara** (`MaxActiveSpeakers`: 1 / 1 / 2). A new one past the cap silently
     retires her **oldest** (smallest `DestroyAfterTime.RemainingTime`) via
     `DespawnIntentUtility.DespawnSilently(Replaced)`, so no on-destroy effect misreads housekeeping as
@@ -349,3 +352,266 @@ anything else.
 
 The Speaker's own spawned beats are unaffected — they pulse from a placed entity over time, not at the
 instant of the dash.
+
+---
+
+# 2026-08-25 — Overshield removed; Protective Rhythm grants plain Shield
+
+Consequence of the game-wide Shield rework (full writeup in `docs/accessory-guard.md`'s
+"Shield reworked into the Accessory's protective layer" section): player Shield no longer
+auto-recharges, and **Overshield is deleted outright** — `ShieldUtility.ApplyOvershield` and every
+`OvershieldCapMultiplier` are gone, so all grants cap at the target's own Max.
+
+Two of Zara's lines touched it:
+
+- **Protective Rhythm** — `Resonance.OvershieldPercentOfMaxShield` → **`ShieldPercentOfMaxShield`**, and
+  `OvershieldCapMultiplier` dropped from the component, `ProtectiveRhythmPassiveUpgradeData` and
+  `ResonancePassiveData`'s seeding. The per-rank values are unchanged (10% / 15% / 20% of the ally's
+  own Max Shield), as is the rank 2+ damage reduction.
+- **Healing Chorus rank 3 "Encore"** (`OverhealToShieldEffectData`) — the overheal conversion now calls
+  `ApplyFlatShield`; `OvershieldCapMultiplier` removed. `ShieldConversionPercent` is unchanged.
+
+**Her support value went UP, not down.** Both of these used to top up a bar that would have refilled
+itself in five seconds. Now Shield is charge-only and is what keeps an ally's Accessory from being
+knocked off — and Kai, Pixie and Max have no Shield source of their own at all — so Zara is one of the
+few standing team Shield sources in the game, and Protective Rhythm quietly protects her team's *gear*
+as much as their health. Worth a look during the next balance pass: the line may now be undertuned in
+the other direction.
+
+Nothing else in her kit changed. Sound Boost and Portable Speaker never granted Shield (their
+`AllyBuffEffectData.FlatShieldRestore` is authored 0 everywhere), and `ZaraAscensionAssetGenerator` was
+updated for the renamed field plus the rank text, which no longer says "Overshield" — it still has not
+been re-run.
+
+---
+
+# 2026-08-25 (later) — Protective Rhythm reworked off Shield onto healing
+
+Shield turned out to be the wrong currency for this line the moment it became charge-only. **Max and
+Pixie both author `BaseMaxShield: 0`**, so `ApplyFlatShield` capped at their own Max granted them
+literally nothing — rank 1 was dead weight against a third of the roster, and there was no way for
+them to opt in. Healing is the only defensive currency every hero can actually receive.
+
+| Rank | Effect |
+|---|---|
+| R1 | Resonance Pulse heals nearby allies for **3% Max HP** |
+| R2 | Heal **4% Max HP**, allies gain **10% DR for 2s** |
+| R3 "Fortissimo" | Heal **5% Max HP**, DR **20% for 2s**, and damage allies take while protected **feeds Resonance back to Zara** |
+
+This does reverse the line's original "deliberately never more HP healing" stance — that existed to
+stop Zara becoming a sustain engine, and Shield was how she got a defensive payload without one. With
+Shield gone as a universal target, the honest options were "heal" or "nothing", and the numbers are
+sized accordingly: 3-5% of Max HP on a pulse that fires roughly every 10-12s is a trickle, not
+sustain. Her emergency-heal baseline is unchanged at 2%.
+
+**The heal OVERWRITES rather than stacks.** `Apply` writes `Resonance.HealPercent` directly, replacing
+the 2% baseline with 3/4/5% — the same "one value, owned by whoever writes it" shape Faster Tempo uses
+for `GenerationPerDamage`. There is exactly one heal number in the pulse, so it can never double-apply.
+
+## Fortissimo's feedback loop
+
+Rank 3 is the only genuinely new mechanism, and it closes a real loop: her defensive investment is
+repaid by the team being under pressure, so she pulses more often exactly when a party needs it most.
+A Zara protecting nobody — or protecting a party nothing is hitting — gains nothing from the rank.
+
+It needed its own marker, `StatusEffects.ProtectiveRhythmRemaining` + `ProtectiveRhythmSource`
+(`StatusEffectUtility.ApplyProtectiveRhythm`/`TryGetProtectiveRhythmSource`), stamped by `FirePulse`
+alongside the DR and for the same duration. It deliberately does **not** key off the DR slot that
+window also writes: `TemporaryDamageReduction` is shared with Brute's Guardian rank 3 and Bodyguard
+rank 3, so reading it would pay Zara Resonance for damage taken under a *Brute's* protection. Recording
+the source is also what lets two Zaras in one match each be paid only for their own window.
+
+`ZaraProtectiveRhythmSystem` (registered beside `ZaraAfterbeatSystem`) reacts to
+`OnHealthDamageApplied`/`OnShieldDamageApplied`. Three deliberate details:
+
+- **Shield damage counts too.** Rarer now that player Shield is charge-only, but a hit soaked by Shield
+  is still a hit taken under her protection — excluding it would quietly make her worse at protecting
+  whoever is best equipped to survive.
+- **The attacker must be a live `Enemy`**, so self-inflicted and environmental damage can't be farmed.
+- **Routed through `ResonanceUtility.Grant`, not `OnDamageDealt`** — this is not Zara dealing damage, so
+  it must not be gated by the `generatesResonance` flag that exists to stop her own Resonance-sourced
+  effects (the Pulse, Subwoofer, Afterbeat) regenerating Resonance from themselves. No re-entrancy
+  hazard: a pulse triggered by this only ever damages enemies, and an enemy never carries the marker.
+
+`ProtectedResonancePerDamage` (1.0 per point at rank 3) is a placeholder pending a real balance pass —
+weigh it against `Resonance.Max` (500) so it accelerates her pulses without replacing her own damage as
+the primary way she charges.
+
+**Current status:** code-complete pending codegen for `Resonance.qtn`/`StatusEffects.qtn`.
+`ZaraAscensionAssetGenerator` is updated with the new fields and rank text but **still has not been
+run**, so `ProtectiveRhythm.asset` keeps its old Shield-era serialisation and card text until it is.
+
+---
+
+# 2026-08-25 (later still) — Portable Speaker now heals
+
+A Speaker heals allies for **`HealPercentOfTotem` (50%) of whatever the Totem's Support Beat would
+currently restore**, at every rank. The old "never heals HP, by construction" rule is gone.
+
+Same reason Protective Rhythm moved off Shield: healing is now the defensive currency Zara's kit
+actually trades in, and a deployable that only buffs reads as strictly worse than one that heals when
+half her lines are built around the Support Beat.
+
+## It tracks Sound Boost automatically
+
+`ResolveTotemHealAmount` reads Zara's live `SoundBoostUpgrade.HealPercent` if she holds that line, else
+the Totem baseline — then halves it. So a Speaker follows Sound Boost up its ladder (2% → 2% → 5%
+becomes 1% → 1% → 2.5%) with **no second per-rank table to keep in sync**. Mirrors
+`SpawnAlternatingAreaEffectData.ResolveHealAmount`, which is private to that asset; `TotemBaseHeal` is
+mirrored the same deliberate way `TotemBaseDamage` already was, with both authored side by side in
+`ZaraAscensionAssetGenerator` to limit drift.
+
+The heal slot reuses the Totem's **own** `ZaraScaledHealPulse.asset` rather than a Speaker copy. That
+effect takes its percentage from `AlternatingArea.HealAmount`, which is where the halving happens — so
+one asset serves both and there is no parallel heal number that can drift.
+
+## It needed its own budget — this part is load-bearing
+
+A Speaker now carries an `AreaAllyBudget` (`MaxHealFractionPerAlly`, 10% — half the Totem's 20%,
+matching the halved heal). This is **not** belt-and-braces: a rank-3 Speaker inherits Double Time's
+shorter Beat interval, so without a cap more beats would let a lower Sound Boost rank out-heal a higher
+one. That is the exact failure the Totem's own cap was added to prevent, and Mobile Stage reintroduces
+it here. Cooldown-reduction allowance still rides on Sound Boost's own per-Totem number rather than
+getting a second one.
+
+Mobile Stage does **not** add healing on top — the heal already applies at every rank, so there is
+nothing left for rank 3 to inherit. It still never inherits Main Stage's bonus beats or duration, or
+Amplifier's knockback/Bass-Drop stun.
+
+## Watch this in playtest
+
+Zara now has **three** healing sources: the Totem's Support Beat, the Resonance Pulse (2% baseline,
+3-5% with Protective Rhythm), and now up to two Speakers. Each is individually capped or paced, but
+nothing caps them in aggregate, and the design's stated intent is "support first, healer second". If a
+Sound Boost + Protective Rhythm + Mobile Stage Zara ends up as a pure healer, the Speaker's
+`MaxHealFractionPerAlly` and `HealPercentOfTotem` are the two cheapest knobs to turn down.
+
+**Current status:** code-complete pending codegen. `ZaraAscensionAssetGenerator` authors the new
+`HealEffect`/`TotemBaseHeal`/`HealPercentOfTotem`/`MaxHealFractionPerAlly` fields and the updated rank-1
+card text, but **still has not been run** — until it is, `PortableSpeakerSkillAction.asset` has no heal
+effect assigned and the Speaker keeps healing nothing.
+
+---
+
+# 2026-08-25 (final) — Resonance removed; Flow State is her new passive
+
+Resonance is **gone from the project entirely** - the meter, the automatic Pulse and all of its damage,
+healing and knockback; `Resonance.qtn`, `ResonanceUtility`, `ResonancePassiveData`, `ZaraRemixUtility`,
+`ZaraProtectiveRhythmSystem`, `ResonanceFxView`, the `ResonancePulseReleased`/`RemixPulseTriggered`
+events, the `StatusEffects.ProtectiveRhythm*` marker and `DamageUtility`'s `generatesResonance`
+parameter. Her Shield is zeroed too (100 HP / 0 Shield, no dormant recharge config) - **Brute is now the
+only hero with a personal Shield mechanic.**
+
+Her new passive is **Flow State**, and it is deliberately **two things only: a fill, and whether it is
+on.** Flow belongs to ZARA, never to her Totem.
+
+> It shipped first as a 3-stack ladder with per-stack bonuses, then was simplified the same day. That
+> was more machinery than the fantasy needed - "am I in the groove or not" is a binary a player reads
+> instantly, while "am I on stack 2 or 3" is bookkeeping. One bar filling toward one payoff says the
+> same thing with a third of the state, and every Ascension below reads better against it.
+
+## The rules
+
+| | |
+|---|---|
+| Fill | `Progress` 0 → 1 over **2.5s** of continuous meaningful movement |
+| Active | `IsActive` flips true the moment the bar lands; worth **+15% Move Speed and +15% Fire Rate** |
+| Movement | Player **input** (`Input.Direction` past `MovementInputThreshold`) or an active Dash |
+| Stationary grace | **1.25s** - the bar is simply held, costs nothing |
+| Decay | past grace, the full bar drains over **4.5s**; a single moving tick stops it dead |
+| Broken | any hostile hit that **connects** → bar to 0 (a third with Second Wind R2+), Flow off |
+
+**Movement is input-driven, never velocity-driven.** That single choice is what makes knockback,
+teleports, physics shoves and environmental displacement unable to build Flow - none of them touch
+input, so none of them need their own exclusion check.
+
+## The generic primitive this needed: `OnHostileHitConnected`
+
+The brief's hardest requirement is that a hit **blocked by the Accessory Guard or a Free Hit Guard
+still breaks Flow**, while a genuinely dodged hit does not. Listening to HP loss cannot express that.
+
+So `Combat.qtn` gained a new signal, fired from `DamageUtility.ApplyDamage` **above every negation
+layer**:
+
+```
+Invulnerable        -> return          (dodged/i-framed: never fires)
+friendly fire       -> return          (never fires)
+>>> OnHostileHitConnected <<<          (fires here)
+Free Hit Guard      -> negate, return  (already fired)
+Accessory Guard     -> negate, return  (already fired)
+...resolution... damage lands          (already fired)
+```
+
+Placement *is* the design: it is the authoritative **"was I hit?"**, as opposed to
+`OnHealthDamageApplied`/`OnShieldDamageApplied`'s **"did I lose anything?"**. Any future negation
+mechanic added beneath that line inherits correct Flow-breaking for free, with no per-mechanic hook -
+which is exactly what the brief asked for. It requires a live `Enemy` attacker (so environmental and
+self-inflicted damage are not "attacks") and is gated on `bypassOutgoingResolution == false` (so a DoT
+tick replaying an already-resolved magnitude is not a second connect).
+
+## The three lines
+
+**Faster Tempo** (kept its name - its ROLE survived, only the resource changed)
+R1 builds 25% faster · R2 50% faster and Active worth +18% · R3 "Full Tempo" 75% faster and a further
++10% Fire Rate while Active.
+
+**Second Wind** (replaces Protective Rhythm)
+R1 +20% Move Speed for 1.5s when Flow breaks · R2 a hit drops the bar to a third instead of 0 ·
+R3 "Keep the Beat" a hit taken while Active deals 30% less damage, 6s cooldown.
+
+**Headliner** (replaces Remix)
+R1 +10% outgoing damage while Active · R2 Totem Beats 15% more effective while Active ·
+R3 "Headliner" ACTIVATING Flow grants her and allies within 6m +10% Move Speed / Fire Rate for 3s,
+8s cooldown.
+
+## Three implementation decisions worth knowing
+
+**Flow's own bonus writes `CharacterStats`, not the timed status slots.** It rebakes Move Speed / Fire
+Rate from `BaseMoveSpeedMultiplier`/`BaseAttackSpeedMultiplier` (captured once at seed) on the on/off
+TOGGLE only - never as the bar moves - so repeated toggles can never compound and the per-tick cost is
+nothing. Had Flow used the shared timed slots
+instead, Headliner's own Hype buff - which *does* use them, take-the-stronger - would silently have
+stopped stacking on top of it.
+
+**Keep the Beat's DR reaches the hit that triggered it.** Quantum dispatches signals synchronously, so
+a reaction to `OnHostileHitConnected` still lands before `ResolveDamageReduction` reads it later in the
+same `ApplyDamage` call. It routes through the generic reactive-DR slot rather than a bespoke hook,
+which is what keeps it from interfering with Accessory durability or Free Hit Guard logic - both sit
+*above* DR and have already had their say.
+
+**Headliner R2 does not put Zara inside a generic system.** `AlternatingArea` gained a generic
+`EffectivenessMultiplier` that `AlternatingAreaSystem` applies to both Damage and Support beats; Zara's
+own code writes it on the areas she owns, on the activation edge and at spawn. That system serves any
+future hero's alternating area and still knows nothing about her.
+
+## Afterbeat, migrated
+
+Identity unchanged (her Dash/movement line), resource swapped. R1 "Quick Tempo" fills **35% of the bar**
+on dash plus **10% per unique enemy dashed through** (capped at 40% per dash, deduped). R2 is the delayed
+beat at the dash start, unchanged. R3 "Double Beat" adds the end beat, and landing **either** on at least
+one enemy fills another **35% - once per dash, never per enemy**.
+
+## Untouched
+
+**Portable Speaker** had no Resonance dependency and is functionally intact (it still heals at half the
+Totem's rate, from earlier today). **The Totem** still runs Damage Beat → Support Beat; Flow never
+becomes a Totem resource, and the Totem never generates Flow.
+
+## Current status
+
+Code-complete pending codegen (`Flow.qtn`, `ZaraAfterbeat.qtn`, `AlternatingArea.qtn`, `Combat.qtn`,
+`Events.qtn`, `StatusEffects.qtn`). `ZaraFlowSystem` is registered in `SystemSetup.User.cs` where
+`ZaraProtectiveRhythmSystem` used to sit. Every obsolete asset is deleted (`ResonancePassiveData`,
+`ProtectiveRhythm`, `Remix`, plus the long-stale `HeavyBass`/`RestorativeBeat`).
+
+**Not yet done - Editor work:**
+1. Run `Tools/RiftRaiders/Zara/Generate Ascension Assets` - it authors `FlowStatePassiveData.asset`,
+   `SecondWind.asset` and `Headliner.asset` and rewires `ZaraCharacterData`. **Until it is run, Zara has
+   no base passive asset at all** (the old one is deleted), so nothing works.
+2. Point `ZaraCharacterData.Passive` at the new `FlowStatePassiveData.asset` if the generator's own
+   wiring doesn't (verify after running).
+3. Build the HUD's `flowFill` (an Image with **Image Type = Filled**) and optional `activeRoot` on
+   Zara's `ZaraHudWidget`.
+4. Add `ZaraFlowView` to her view prefab and assign its single `flowParticle`.
+
+Not verified in-Editor.

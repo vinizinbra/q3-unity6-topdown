@@ -21,7 +21,9 @@ namespace Quantum
         // deliberately climb is exactly what this exists to keep coins off.
         //
         // A constant rather than an authored field on purpose - this is a reachability guard, not a
-        // balance knob, and there is no gameplay reason to ever tune it per drop type.
+        // balance knob, so it is never TUNED per drop type. It is however opt-out-able per drop
+        // (PopVelocity.CanLandHigher): a dropped Signature Accessory deliberately may land above you,
+        // because going and getting it back is that mechanic's whole point - docs/accessory-guard.md.
         private static readonly FP MaxRiseAboveOrigin = FP._0_50;
 
         public override void Update(Frame f, ref Filter filter)
@@ -46,7 +48,8 @@ namespace Quantum
             //
             // Only climbing is blocked. Ground lower than the origin passes straight through here, so
             // an enemy killed on a ledge still scatters coins down off it as before.
-            if (EnemyMovementUtility.TryFindGroundHeight(f, nextPosition, groundLayerMask, out FP aheadGroundY, filter.Entity) == true
+            if (filter.Pop->CanLandHigher == false
+                && EnemyMovementUtility.TryFindGroundHeight(f, nextPosition, groundLayerMask, out FP aheadGroundY, filter.Entity) == true
                 && aheadGroundY > filter.Pop->OriginGroundY + MaxRiseAboveOrigin)
             {
                 velocity.X = FP._0;

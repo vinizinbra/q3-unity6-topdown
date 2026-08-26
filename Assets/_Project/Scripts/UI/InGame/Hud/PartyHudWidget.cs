@@ -3,7 +3,7 @@ using Quantum;
 using UnityEngine;
 
 // One player's entry in the always-visible party HUD (PartyHudManager) - portrait, health, shield,
-// and skill cooldowns. Deliberately shows NO per-hero resource (Juggernaut charge, Rage, Resonance,
+// and skill cooldowns. Deliberately shows NO per-hero resource (Juggernaut charge, Rage, Flow,
 // Scrap): those live only under each character's own world-following CharacterUiWidget now, where
 // they sit right next to the character they belong to instead of being duplicated per party slot
 // and kept in sync by hand - see HeroHudWidget.

@@ -30,6 +30,8 @@ namespace Quantum
         [Tooltip("Leave empty to disable the swap - this projectile has no decoy variant.")]
         [SerializeField] private SpriteRenderer spriteRenderer;
         [SerializeField] private Sprite decoySprite;
+        [Tooltip("Optional one-shot burst played on the tick the bomb turns into a decoy. Expected to be a child of this object, so it follows the bomb; left empty the swap is silent.")]
+        [SerializeField] private ParticleSystem decoyParticle;
 
         private int _lastWholeSecondRemaining = -1;
         private bool _hasShaken;
@@ -86,16 +88,25 @@ namespace Quantum
         // just be a one-shot check in Initialize - it has to keep watching until it flips.
         private void TickDecoySprite(Frame frame)
         {
-            if (spriteRenderer == null || decoySprite == null)
-                return;
-
             bool isDecoy = frame.Has<Decoy>(_entityRef);
 
             if (_isDecoy == isDecoy)
                 return;
 
             _isDecoy = isDecoy;
-            spriteRenderer.sprite = isDecoy == true ? decoySprite : _defaultSprite;
+
+            if (spriteRenderer != null && decoySprite != null)
+                spriteRenderer.sprite = isDecoy == true ? decoySprite : _defaultSprite;
+
+            if (decoyParticle == null)
+                return;
+
+            // Deliberately fires on the FIRST read too, unlike TickPunch's baseline skip - the tag
+            // is added the same tick the projectile spawns, so the first read IS the flip.
+            if (isDecoy == true)
+                PlayDecoyParticle();
+            else
+                decoyParticle.Stop(withChildren: true, ParticleSystemStopBehavior.StopEmitting);
         }
 
         private void TickPunch(float remaining)
@@ -124,6 +135,15 @@ namespace Quantum
 
             _hasShaken = true;
             Shake();
+        }
+
+        [Button]
+        public void PlayDecoyParticle()
+        {
+            if (decoyParticle == null)
+                return;
+
+            decoyParticle.Play();
         }
 
         [Button]

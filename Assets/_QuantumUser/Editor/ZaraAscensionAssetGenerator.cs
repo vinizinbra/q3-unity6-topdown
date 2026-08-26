@@ -8,9 +8,9 @@ namespace QuantumUser.Editor
     using UnityEditor;
     using UnityEngine;
 
-    // Authors Zara's Resonance base passive and her 10 Ascension lines (Amplifier/Healing Chorus/
-    // Double Time/Main Stage on the Totem Hero Skill; Faster Tempo/Heavy Bass/Restorative Beat/Remix
-    // as Passives; Afterbeat/Portable Speaker as Dash Ascensions - see docs/zara-ascensions.md), then
+    // Authors Zara's Flow State base passive and her 9 Ascension lines (Amplifier/Sound Boost/
+    // Double Time/Main Stage on the Totem Hero Skill; Faster Tempo/Second Wind/Headliner as Passives;
+    // Afterbeat/Portable Speaker as Dash Ascensions - see docs/zara-ascensions.md), then
     // wires all of it into ZaraCharacterData.asset and ZaraBaseSkill.asset. Replaces
     // ZaraResonanceAssetGenerator.cs - same "one generator fully replaces every list it touches end to
     // end" fix Brute/Max/Pixie/Kai's own refactors already applied for the identical append-vs-replace
@@ -135,31 +135,17 @@ namespace QuantumUser.Editor
             var amplifierKnockback = CreateOrUpdate<KnockbackEffectData>($"{SharedEffectsFolderPath}/AmplifierKnockback.asset", a => a.Tier = KnockbackTier.Small);
             var bassDropStun = LoadHitEffect("StunEffectData");
 
-            // Remix pool - reuses the same shared, zero-config HitEffectData instances every other
-            // status source in the game already reads (Burn/Slow/Stun/Rift Mark all pull their own
-            // magnitudes from RuntimeConfig.EffectConfig/ElementalReactionConfig), rather than
-            // authoring Remix-specific variants.
-            var remixPool = new List<RemixPoolEntry>
+            // Passive base - Flow State, replacing Resonance entirely (see Flow.qtn).
+            FlowStatePassiveData passive = CreateOrUpdate<FlowStatePassiveData>($"{PassivesFolderPath}/FlowStatePassiveData.asset", a =>
             {
-                new RemixPoolEntry { Effect = LoadHitEffect("SlowEffectData"), Rank2DurationMultiplier = FP._1_50, Rank2MagnitudeMultiplier = FP._1_50 },
-                new RemixPoolEntry { Effect = LoadHitEffect("BurnEffectData"), Rank2DurationMultiplier = FP._1_50, Rank2MagnitudeMultiplier = FP._1_50 },
-                new RemixPoolEntry { Effect = LoadHitEffect("StunEffectData"), Rank2DurationMultiplier = FP._1_50, Rank2MagnitudeMultiplier = FP._1 },
-                new RemixPoolEntry { Effect = LoadHitEffect("RiftMarkEffectData"), Rank2DurationMultiplier = FP._1_50, Rank2MagnitudeMultiplier = FP._1_50 },
-            };
+                a.Description = "Keep moving to fill your Flow bar - once full, gain Move Speed and Fire Rate. Standing still drains it; getting hit breaks it outright.";
 
-            // Passive base - live-tuned values (Max=500/Radius=3/HealPercent=0.05/DamageAmount=10),
-            // not the stale C# class field-initializer defaults the old generator used to author.
-            ResonancePassiveData passive = CreateOrUpdate<ResonancePassiveData>($"{PassivesFolderPath}/ResonancePassiveData.asset", a =>
-            {
-                a.Max = 500;
-                a.GenerationPerDamage = FP._1;
-                a.Radius = FP._3;
-
-                // Deliberately small and NOT scaled by any Ascension - Zara is support first, healer
-                // second. Protective Rhythm buys Shield/mitigation instead of more healing.
-                a.HealPercent = FP.FromString("0.02");
-                a.DamageAmount = 10;
-                a.KnockbackTier = KnockbackTier.Small;
+                a.BuildDuration = FP.FromString("2.5");
+                a.MoveSpeedBonus = FP.FromString("0.15");
+                a.FireRateBonus = FP.FromString("0.15");
+                a.MovementInputThreshold = FP._0_10;
+                a.StationaryGrace = FP.FromString("1.25");
+                a.DecayDuration = FP.FromString("4.5");
             });
 
             // 4 Hero Skill lines (ranked SkillActionData, wired into ZaraBaseSkill.Actions below)
@@ -260,57 +246,66 @@ namespace QuantumUser.Editor
                 a.DurationBonus = new[] { FP._0, FP._2, FP._2 };
             });
 
-            // 4 Passive lines (ranked PassiveUpgradeData)
+            // 3 Passive lines (ranked PassiveUpgradeData) - all three rebuilt on Flow.
             FasterTempoPassiveUpgradeData fasterTempo = CreateOrUpdate<FasterTempoPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/FasterTempo.asset", a =>
             {
                 a.DisplayName = "Faster Tempo";
                 a.MaxRank = 3;
-                a.Description = "Generate Resonance faster.";
+                a.Description = "Reach Flow faster, and make every stack of it worth more.";
                 a.RankDescriptions = new[]
                 {
-                    "Generate Resonance 25% faster.",
-                    "Generate Resonance 50% faster.",
-                    "Generate Resonance 75% faster and retain 20% Resonance after each Resonance Pulse.",
+                    "Flow builds 25% faster.",
+                    "Flow builds 50% faster, and active Flow grants +18% Move Speed and +18% Fire Rate.",
+                    "Full Tempo: Flow builds 75% faster, and active Flow grants a further +10% Fire Rate.",
                 };
-                a.BaseGenerationPerDamage = FP._1;
-                a.GenerationBonus = new[] { FP._0_25, FP._0_50, FP.FromString("0.75") };
-                a.RetainFraction = new[] { FP._0, FP._0, FP._0_20 };
+
+                a.BuildRateMultiplier = new[] { FP.FromString("1.25"), FP.FromString("1.50"), FP.FromString("1.75") };
+
+                // Rank 1 restates the 15% baseline rather than leaving it alone, so a re-pick at any
+                // rank always writes a complete, correct value into ZaraFlow.
+                a.MoveSpeedBonus = new[] { FP.FromString("0.15"), FP.FromString("0.18"), FP.FromString("0.18") };
+                a.FireRateBonus = new[] { FP.FromString("0.15"), FP.FromString("0.18"), FP.FromString("0.18") };
+                a.ActiveFireRateBonus = new[] { FP._0, FP._0, FP._0_10 };
             });
 
-            ProtectiveRhythmPassiveUpgradeData protectiveRhythm = CreateOrUpdate<ProtectiveRhythmPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/ProtectiveRhythm.asset", a =>
+            SecondWindPassiveUpgradeData secondWind = CreateOrUpdate<SecondWindPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/SecondWind.asset", a =>
             {
-                a.DisplayName = "Protective Rhythm";
+                a.DisplayName = "Second Wind";
                 a.MaxRank = 3;
-                a.Description = "Resonance Pulse shelters the team - temporary Overshield, then damage reduction on top. Deliberately never more HP healing.";
+                a.Description = "Recover faster when your rhythm is broken.";
                 a.RankDescriptions = new[]
                 {
-                    "Resonance Pulse grants allies a temporary Overshield worth 10% of their Max Shield.",
-                    "Resonance Pulse grants allies an Overshield worth 15% of their Max Shield and 10% Damage Reduction for 2s.",
-                    "Fortissimo: Resonance Pulse grants allies an Overshield worth 20% of their Max Shield and 20% Damage Reduction for 2s.",
+                    "When a hit breaks your Flow, gain +20% Move Speed for 1.5s.",
+                    "A hit no longer empties your Flow - it drops to a third instead, and you still gain +20% Move Speed for 1.5s.",
+                    "Keep the Beat: a hit taken while Flow is active deals 30% less damage (6s cooldown).",
                 };
-                a.OvershieldPercentOfMaxShield = new[] { FP._0_10, FP.FromString("0.15"), FP._0_20 };
-                a.OvershieldCapMultiplier = FP._1_50;
-                a.DamageReductionAmount = new[] { FP._0, FP._0_10, FP._0_20 };
-                a.DamageReductionDuration = FP._2;
+
+                a.MoveSpeedBonus = new[] { FP._0_20, FP._0_20, FP._0_20 };
+                a.Duration = new[] { FP.FromString("1.5"), FP.FromString("1.5"), FP.FromString("1.5") };
+                a.ProgressRetainedOnHit = new[] { FP._0, FP.FromString("0.33"), FP.FromString("0.33") };
+                a.DamageReduction = new[] { FP._0, FP._0, FP.FromString("0.30") };
+                a.Cooldown = new[] { FP._0, FP._0, FP._6 };
             });
 
-            RemixPassiveUpgradeData remix = CreateOrUpdate<RemixPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/Remix.asset", a =>
+            HeadlinerPassiveUpgradeData headliner = CreateOrUpdate<HeadlinerPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/Headliner.asset", a =>
             {
-                a.DisplayName = "Remix";
+                a.DisplayName = "Headliner";
                 a.MaxRank = 3;
-                a.Description = "Every third Resonance Pulse also applies a random status effect to enemies caught in it.";
+                a.Description = "Max Flow becomes a payoff - for your damage, your Totem, and your whole team.";
                 a.RankDescriptions = new[]
                 {
-                    "Every third Resonance Pulse applies a random status effect to enemies hit.",
-                    "Extended Mix: every third Resonance Pulse applies a random status effect, stronger and longer-lasting, and you start the next Resonance cycle with 20% Resonance.",
-                    "Full Remix: every third Resonance Pulse applies two DIFFERENT random status effects to enemies hit.",
+                    "While Flow is active, you deal +10% damage.",
+                    "While Flow is active, you deal +10% damage and your Totem's Beats are 15% more effective.",
+                    "Headliner: activating Flow grants you and allies within 6m +10% Move Speed and +10% Fire Rate for 3s (8s cooldown).",
                 };
-                a.Effects = remixPool;
 
-                // If Faster Tempo rank 3's own retention is also active, the HIGHER of the two applies -
-                // never both. See Resonance.qtn's RemixRetainFraction comment; the brief explicitly
-                // asks for that resolution to be spelled out rather than left implicit.
-                a.RetainFractionAfterRemix = new[] { FP._0, FP._0_20, FP._0_20 };
+                a.ActiveDamageBonus = new[] { FP._0_10, FP._0_10, FP._0_10 };
+                a.ActiveBeatEffectiveness = new[] { FP._0, FP.FromString("0.15"), FP.FromString("0.15") };
+                a.HypeRadius = new[] { FP._0, FP._0, FP._6 };
+                a.HypeDuration = new[] { FP._0, FP._0, FP._3 };
+                a.HypeMoveSpeedBonus = new[] { FP._0, FP._0, FP._0_10 };
+                a.HypeFireRateBonus = new[] { FP._0, FP._0, FP._0_10 };
+                a.HypeCooldown = new[] { FP._0, FP._0, FP._8 };
             });
 
             // 2 Dash lines
@@ -326,20 +321,20 @@ namespace QuantumUser.Editor
                 a.Phase = SkillActionPhase.Begin | SkillActionPhase.End;
                 a.Phase = SkillActionPhase.Begin | SkillActionPhase.OnGoing | SkillActionPhase.End;
                 a.Interval = FP._0;
-                a.Description = "Dashing generates Resonance - and eventually leaves damaging beats behind you.";
+                a.Description = "Dashing feeds your Flow - and eventually leaves damaging beats behind you.";
                 a.RankDescriptions = new[]
                 {
-                    "Quick Tempo: dashing generates 20 Resonance, plus 10 more per enemy you pass through.",
-                    "Afterbeat: dashing generates 20 Resonance plus 10 per enemy passed through, and 1s later a beat erupts at your starting position, damaging and knocking back nearby enemies.",
-                    "Double Beat: dashing generates 20 Resonance plus 10 per enemy passed through, and beats erupt at both ends of the dash, generating additional Resonance from enemies they hit.",
+                    "Quick Tempo: dashing fills a third of your Flow bar, plus more for each enemy you pass through.",
+                    "Afterbeat: dashing fills your Flow bar as before, and 1s later a beat erupts at your starting position, damaging and knocking back nearby enemies.",
+                    "Double Beat: beats erupt at both ends of the dash - landing either one on an enemy fills your Flow bar again (once per dash).",
                 };
-                a.ResonanceOnDash = 20;
+                a.FlowProgressOnDash = FP.FromString("0.35");
                 a.SweepRadius = FP._1_50;
 
                 // One shared per-dash allowance covers BOTH rank 1's dash sweep and rank 3's pulse
                 // hits, so the two can never compound past the cap.
-                a.ResonancePerEnemyHit = 10;
-                a.MaxResonancePerDash = 40;
+                a.ProgressPerEnemyHit = FP._0_10;
+                a.MaxProgressPerDash = FP.FromString("0.40");
 
                 a.Delay = FP._1;
                 a.DamagePercentOfSkill = new[] { FP._0, FP.FromString("0.75"), FP.FromString("0.75") };
@@ -358,10 +353,10 @@ namespace QuantumUser.Editor
                 // identical comment above for why this matters on every future regeneration, not just
                 // the first.
                 a.Phase = SkillActionPhase.Begin | SkillActionPhase.End;
-                a.Description = "Dashing leaves behind a Portable Speaker running the same Damage/Support rhythm at reduced strength. It never heals.";
+                a.Description = "Dashing leaves behind a Portable Speaker running the same Damage/Support rhythm at half strength.";
                 a.RankDescriptions = new[]
                 {
-                    "Dashing leaves behind a Portable Speaker alternating Damage and Support Beats at reduced strength.",
+                    "Dashing leaves behind a Portable Speaker alternating Damage and Support Beats at half strength, healing allies for half of what your Totem would.",
                     "Dashing leaves a Portable Speaker alternating Damage and Support Beats for longer and over a wider area, and completing the dash buffs nearby allies.",
                     "Mobile Stage: dashing leaves a Portable Speaker that inherits your own Beat interval, radius and Sound Boost profile at reduced effectiveness.",
                 };
@@ -379,9 +374,20 @@ namespace QuantumUser.Editor
                 a.DamagePercentOfTotem = SpeakerEffectFraction;
                 a.DamageEffect = damageEffect;
 
-                // Support Beat = BUFF ONLY. No heal effect is authored anywhere on a Speaker, at any
-                // rank - "Portable Speaker must NEVER heal HP" is enforced by construction, not by a
-                // runtime check.
+                // Support Beat now heals as well as buffing, at half the Totem's live value. Reuses the
+                // Totem's OWN ScaledHealEffectData asset rather than a Speaker-specific copy - that
+                // effect takes its percentage from AlternatingArea.HealAmount, which SpawnSpeaker
+                // halves, so one asset covers both and there is no second heal number to drift.
+                //
+                // These two values are the Totem's, mirrored (see PortableSpeakerSkillAction's own
+                // comment on TotemBaseDamage) - keep them in step with spawnArea.HealAmount /
+                // MaxHealFractionPerAlly in ConfigureTotemThrow below, which is why both live in this
+                // one file.
+                a.HealEffect = new AssetRef<HitEffectData>(scaledHeal.Guid);
+                a.TotemBaseHeal = FP.FromString("0.01");
+                a.HealPercentOfTotem = SpeakerEffectFraction;
+                a.MaxHealFractionPerAlly = FP._0_10;
+
                 a.SupportBuffEffect = new AssetRef<HitEffectData>(speakerSupportBuff.Guid);
                 a.DashEndBuffEffect = new AssetRef<HitEffectData>(speakerSupportBuff.Guid);
                 a.DashEndBuffRadius = FP._5;
@@ -392,12 +398,12 @@ namespace QuantumUser.Editor
             AssetDatabase.Refresh(); // lets QuantumAssetObjectPostprocessor stamp Guid/Identifier on anything just created
 
             WireCharacterData(passive,
-                new List<PassiveUpgradeData> { fasterTempo, protectiveRhythm, remix },
+                new List<PassiveUpgradeData> { fasterTempo, secondWind, headliner },
                 new List<SkillActionData> { afterbeat, portableSpeaker });
 
             WireTotemActions(new List<SkillActionData> { amplifier, soundBoost, doubleTime, mainStage });
 
-            LogHelper.Log("ZaraAscensionAssetGenerator", "Resonance passive + 9 Ascension lines authored and wired (3 Passive Upgrades " +
+            LogHelper.Log("ZaraAscensionAssetGenerator", "Flow State passive + 9 Ascension lines authored and wired (3 Passive Upgrades " +
                       "into ZaraCharacterData.PassiveUpgrades, Afterbeat/Portable Speaker into ZaraCharacterData.DashSkillUpgrades, " +
                       "Amplifier/Sound Boost/Double Time/Main Stage into ZaraBaseSkill.Actions as Hero Skill Ascensions - every list " +
                       "fully replaced, not appended; every per-rank value is re-set explicitly on every run). Portable Speaker's Prototype " +
@@ -492,14 +498,14 @@ namespace QuantumUser.Editor
 
         // Looks up an already-authored, shared HitEffectData instance under Resources/HitEffects
         // (BurnEffectData.asset, RiftMarkEffectData.asset, etc. - all zero-config, reading their own
-        // magnitudes from RuntimeConfig.EffectConfig) rather than creating a Remix-specific copy.
+        // magnitudes from RuntimeConfig.EffectConfig) rather than creating a bespoke copy.
         private static AssetRef<HitEffectData> LoadHitEffect(string name)
         {
             var asset = AssetDatabase.LoadAssetAtPath<HitEffectData>($"{HitEffectsFolderPath}/{name}.asset");
 
             if (asset == null)
             {
-                LogHelper.Error("ZaraAscensionAssetGenerator", $"No HitEffectData asset at {HitEffectsFolderPath}/{name}.asset - Remix's pool (or Bass Drop's Stun) is missing an entry.");
+                LogHelper.Error("ZaraAscensionAssetGenerator", $"No HitEffectData asset at {HitEffectsFolderPath}/{name}.asset - Bass Drop's Stun is missing.");
                 return default;
             }
 
@@ -526,7 +532,7 @@ namespace QuantumUser.Editor
             return asset;
         }
 
-        private static void WireCharacterData(ResonancePassiveData passive, List<PassiveUpgradeData> passiveUpgrades, List<SkillActionData> dashUpgrades)
+        private static void WireCharacterData(FlowStatePassiveData passive, List<PassiveUpgradeData> passiveUpgrades, List<SkillActionData> dashUpgrades)
         {
             var characterData = AssetDatabase.LoadAssetAtPath<CharacterData>(CharacterDataPath);
 

@@ -17,11 +17,16 @@ namespace Quantum
     //  - Rank 3 "Mobile Stage": inherits Zara's own Beat-interval and radius modifiers, and runs the
     //    reduced-effectiveness variants of whatever Sound Boost profile she holds.
     //
-    // A Speaker NEVER heals HP, at any rank - by construction, not by a runtime check: nothing here
-    // ever writes a heal effect into its Support Beat slot, and HealAmount stays 0. That also means it
-    // needs no AreaAllyBudget (there is no HP for a per-Totem cap to govern), and it never inherits
-    // Main Stage's opening/closing bonus beats (MainStageBonusBeats is only ever stamped by the
-    // Totem's own spawn path).
+    // A Speaker DOES heal, at HealPercentOfTotem (half) of whatever the Totem's own Support Beat would
+    // currently restore - so it tracks Sound Boost's rank automatically rather than needing its own
+    // ladder. It used to heal nothing at all by construction; that was reversed once Shield stopped
+    // being a universal defensive currency and healing became the thing Zara's kit actually trades in.
+    //
+    // Because it heals, it carries its own AreaAllyBudget exactly like the Totem does - see
+    // MaxHealFractionPerAlly below for why that cap is load-bearing rather than belt-and-braces.
+    //
+    // It still never inherits Main Stage's opening/closing bonus beats (MainStageBonusBeats is only
+    // ever stamped by the Totem's own spawn path).
     //
     // Active Speakers are capped per Zara (MaxActiveSpeakers) - a new one past the cap silently
     // retires the oldest via DespawnIntentUtility (reason Replaced), so no on-destroy effect misreads
@@ -45,10 +50,22 @@ namespace Quantum
         public FP TotemBaseDamage = 10;
         public FP DamagePercentOfTotem = FP._0_50;
 
+        [Tooltip("The Totem's own baseline Support Beat heal (SpawnAlternatingAreaEffectData.HealAmount), mirrored here for the same reason TotemBaseDamage is. Only used when Zara holds no Sound Boost - with it, her live per-rank value is read instead.")]
+        public FP TotemBaseHeal = FP.FromString("0.01");
+
         [ExpandableAsset] public AssetRef<HitEffectData> DamageEffect;
 
-        [Tooltip("The Speaker's own baseline Support Beat buff (reduced Move Speed / Fire Rate, never healing). Replaced by Sound Boost's own Speaker variant at rank 3 if she holds that line.")]
+        [Tooltip("The Speaker's own baseline Support Beat buff (reduced Move Speed / Fire Rate). Replaced by Sound Boost's own Speaker variant at rank 3 if she holds that line.")]
         [ExpandableAsset] public AssetRef<HitEffectData> SupportBuffEffect;
+
+        [Tooltip("The Support Beat's heal. Author the SAME ScaledHealEffectData the Totem uses - it reads its percentage from AlternatingArea.HealAmount, which is halved below, so one shared asset covers both and there is no second number to keep in sync. Left unassigned, the Speaker simply doesn't heal.")]
+        [ExpandableAsset] public AssetRef<HitEffectData> HealEffect;
+
+        [Tooltip("Fraction of the Totem's CURRENT Support Beat heal that a Speaker restores. Resolved live off Zara's own Sound Boost rank, so the Speaker tracks that line automatically instead of carrying its own heal ladder that could drift out of sync.")]
+        public FP HealPercentOfTotem = FP._0_50;
+
+        [Tooltip("Per-Speaker cap on how much HP one Speaker may ever restore to any ONE ally, as a fraction of their MaxHealth - the same mechanism (and the same reason) as the Totem's own MaxHealFractionPerAlly. Load-bearing rather than belt-and-braces: a rank-3 Speaker inherits Double Time's shorter Beat interval, so without a cap more beats would let a lower Sound Boost rank out-heal a higher one, which is exactly the failure the Totem's cap exists to prevent. Half the Totem's 20% by default, matching the halved heal.")]
+        public FP MaxHealFractionPerAlly = FP._0_10;
 
         [Header("Rank 2 - dash-end buff")]
         [Tooltip("Applied directly to nearby allies when the dash completes. A buff, never a heal.")]
@@ -192,14 +209,19 @@ namespace Quantum
             alternating->DamageMask = DamageTargetMask.Enemies;
             alternating->DamageAmount = TotemBaseDamage * DamagePercentOfTotem;
 
-            // 0, always - a Speaker has no HP healing at any rank, so there is nothing for
-            // ScaledHealEffectData to scale even if one were ever authored into its list.
-            alternating->HealAmount = FP._0;
+            // Half (HealPercentOfTotem) of whatever the Totem's own Support Beat would currently heal,
+            // resolved live off Zara's Sound Boost rank - so the Speaker follows that line up its
+            // ladder automatically instead of carrying a second set of per-rank numbers to keep in
+            // sync. ScaledHealEffectData reads this as a percentage of the target's own MaxHealth.
+            alternating->HealAmount = ResolveTotemHealAmount(f, owner) * HealPercentOfTotem;
             alternating->DamageEffects[0] = DamageEffect;
 
-            // Support Beat = buff only. Slot 1 mirrors the Totem's own slot contract (see
-            // SpawnAlternatingAreaEffectData.SupportBuffSlot) purely for readability - slot 0 is left
-            // empty rather than holding a heal.
+            // Support Beat slot contract, mirroring the Totem's own (see
+            // SpawnAlternatingAreaEffectData.SupportHealSlot/SupportBuffSlot): [0] the heal, [1] the
+            // buff bundle. Slot 0 holds the SAME ScaledHealEffectData asset the Totem uses - it takes
+            // its percentage from HealAmount above, so halving that is the entire difference and there
+            // is no parallel heal asset to keep in step.
+            alternating->HealEffects[SpawnAlternatingAreaEffectData.SupportHealSlot] = HealEffect;
             alternating->HealEffects[SpawnAlternatingAreaEffectData.SupportBuffSlot] = SupportBuffEffect;
 
             // Skill Area (CharacterStats.AreaRadiusMultiplier) - see StatUtility.GetAreaMultiplier. A Speaker is a deployed area like the
@@ -215,6 +237,49 @@ namespace Quantum
             {
                 collider->Shape.Sphere.Radius = radius;
             }
+
+            ApplyAllyBudget(f, owner, spawned);
+
+            // Same reasoning as the Totem's own spawn path - a Speaker dropped while she is already at
+            // Max Flow must pick up Headliner rank 2 straight away, not wait for the next transition.
+            alternating->EffectivenessMultiplier = FP._1;
+            ZaraFlowUtility.RefreshOwnedAreaEffectiveness(f, owner);
+        }
+
+        // Per-SPEAKER spend caps, exactly the shape the Totem uses (see
+        // SpawnAlternatingAreaEffectData.ApplyAllyBudget) - a property of THIS deployable, so a fresh
+        // drop is a fresh allowance for everyone and two Zaras' Speakers never share one.
+        //
+        // Always added, even at rank 1 with no Ascension: the healing cap is global by design. A rank-3
+        // Speaker inherits Double Time's shorter Beat interval, so without a cap more beats would let a
+        // lower Sound Boost rank out-heal a higher one - the exact failure the Totem's own cap exists
+        // to prevent.
+        //
+        // Cooldown reduction is inherited only through Sound Boost's authored Speaker-variant effect
+        // (see ApplyMobileStageInheritance), so its allowance rides on the same per-Totem number rather
+        // than getting a second one of its own.
+        private void ApplyAllyBudget(Frame f, EntityRef owner, EntityRef spawned)
+        {
+            f.AddOrGet<AreaAllyBudget>(spawned, out var budget);
+
+            budget->MaxHealFractionPerAlly = MaxHealFractionPerAlly;
+            budget->MaxCooldownReductionPerAlly = f.Unsafe.TryGetPointer<SoundBoostUpgrade>(owner, out var soundBoost)
+                ? soundBoost->MaxCooldownReductionPerTotem
+                : FP._0;
+        }
+
+        // The Totem's CURRENT Support Beat heal - Sound Boost's own per-rank value if Zara holds that
+        // line, else the Totem's baseline. Mirrors SpawnAlternatingAreaEffectData.ResolveHealAmount
+        // (which is private to that asset) rather than cross-referencing it live, the same deliberate
+        // trade TotemBaseDamage already makes above: simpler and fully deterministic, at the cost of
+        // TotemBaseHeal needing to be kept in step by hand during a balance pass. Both live
+        // side-by-side in ZaraAscensionAssetGenerator.cs to limit that drift risk.
+        private FP ResolveTotemHealAmount(Frame f, EntityRef owner)
+        {
+            if (f.Unsafe.TryGetPointer<SoundBoostUpgrade>(owner, out var upgrade) == true && upgrade->HealPercent > FP._0)
+                return upgrade->HealPercent;
+
+            return TotemBaseHeal;
         }
 
         // Mobile Stage (rank 3) - the simplified inheritance rules the brief asks for. It picks up
@@ -222,11 +287,15 @@ namespace Quantum
         // MobileStageInheritanceFraction, and swaps in Sound Boost's own authored reduced-effect
         // Speaker variants for the buff/cooldown halves.
         //
-        // It deliberately does NOT inherit: HP healing (a Speaker has none), the per-Totem healing cap
-        // (nothing to cap), Main Stage's opening/closing bonus beats (MainStageBonusBeats is never
-        // stamped here), Main Stage's duration bonus, or Amplifier's knockback/Bass-Drop stun. The
-        // Damage Beat DOES pick up Amplifier's damage bonus, since Amplifier is explicitly listed as
-        // inheritable.
+        // It deliberately does NOT inherit: Main Stage's opening/closing bonus beats
+        // (MainStageBonusBeats is never stamped here), Main Stage's duration bonus, or Amplifier's
+        // knockback/Bass-Drop stun. The Damage Beat DOES pick up Amplifier's damage bonus, since
+        // Amplifier is explicitly listed as inheritable.
+        //
+        // HP healing is NOT inherited here either, but for a different reason than the rest: a Speaker
+        // heals at every rank now (HealPercentOfTotem of the Totem's live value, resolved in
+        // SpawnSpeaker), so there is nothing left for Mobile Stage to add. Its cap is likewise its own
+        // (MaxHealFractionPerAlly), not the Totem's.
         private void ApplyMobileStageInheritance(Frame f, EntityRef owner, AlternatingArea* alternating, AreaDamage* area, ref FP radius)
         {
             if (f.Unsafe.TryGetPointer<AmplifierUpgrade>(owner, out var amplifier) == true)

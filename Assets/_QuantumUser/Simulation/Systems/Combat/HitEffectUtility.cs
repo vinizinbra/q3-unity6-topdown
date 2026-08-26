@@ -247,7 +247,7 @@ namespace Quantum
         // unconditionally, even if nothing was actually caught, so it still reads visually against
         // an empty room - same convention AreaDetonated/ExplodeOnDeathDetonated already follow.
         // effect is invalid/default for every caller except Zara's Remix ascension (see
-        // ResonanceUtility.ResolveRemixEffect) - passed straight through to the event so the View can
+        // a caller that resolved one deterministically) - passed straight through to the event so the View can
         // tint this specific shockwave's particle by which HitEffectData was randomly chosen, without
         // this utility needing to know or care about color itself.
         public static void ApplyShockwave(Frame f, FPVector3 center, FP radius, EntityRef owner, FP knockbackForce,

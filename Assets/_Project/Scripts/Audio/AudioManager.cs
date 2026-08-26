@@ -146,6 +146,7 @@ public class AudioManager : MonoBehaviour
     {
         Instance = null;
         _quitting = false;
+        _clipDefaults = null;
     }
 
 
@@ -481,6 +482,50 @@ public class AudioManager : MonoBehaviour
     public static SoundHandle Play(SoundData data, float volumeScale = 1f, float delay = 0f)
         => PlayInternal(data, null, Vector3.zero, false, volumeScale, null, false, delay);
 
+    // Plays ONE specific clip using `template` purely for its settings - group, volume, pitch range,
+    // spatial, cooldown. For content authored as raw clips (a dialogue script, where each line is a
+    // distinct take rather than an interchangeable variation) so every line doesn't need its own
+    // SoundData asset.
+    //
+    // The template is OPTIONAL: with none, ClipDefaults below supplies plain sensible settings, so
+    // raw clips work with no authoring at all. Assign one when the lines should share a volume bus,
+    // be positional, or obey a cooldown.
+    public static SoundHandle PlayClip(SoundData template, AudioClip clip, float volumeScale = 1f, float delay = 0f)
+        => clip == null ? SoundHandle.None
+            : PlayInternal(ResolveTemplate(template), null, Vector3.zero, false, volumeScale, clip, true, delay);
+
+    public static SoundHandle PlayClipAttached(SoundData template, AudioClip clip, Transform follow, float volumeScale = 1f)
+        => clip == null ? SoundHandle.None
+            : PlayInternal(ResolveTemplate(template), follow, follow != null ? follow.position : Vector3.zero, true, volumeScale, clip, true);
+
+    // A throwaway in-memory SoundData standing in for "no settings authored". HideAndDontSave so it
+    // never becomes a stray asset, and cached because building one per line would allocate on every
+    // spoken word.
+    private static SoundData _clipDefaults;
+
+    internal static SoundData ResolveTemplate(SoundData template)
+    {
+        if (template != null)
+            return template;
+
+        if (_clipDefaults == null)
+        {
+            _clipDefaults = ScriptableObject.CreateInstance<SoundData>();
+            _clipDefaults.name = "<clip defaults>";
+            _clipDefaults.hideFlags = HideFlags.HideAndDontSave;
+            _clipDefaults.group = SoundGroup.Voice;
+            _clipDefaults.volume = Vector2.one;
+            _clipDefaults.pitch = Vector2.one;
+            _clipDefaults.spatial = false;
+            _clipDefaults.cooldown = 0f;
+            // Unlimited: a dialogue exchange must never have its own later lines stolen by its
+            // earlier ones, which an inherited default of 8 could eventually do.
+            _clipDefaults.maxConcurrent = 0;
+        }
+
+        return _clipDefaults;
+    }
+
     public static SoundHandle PlayAt(SoundData data, Vector3 position, float volumeScale = 1f)
         => PlayInternal(data, null, position, true, volumeScale);
 
@@ -511,7 +556,8 @@ public class AudioManager : MonoBehaviour
         if (manager == null)
             return SoundHandle.None;
 
-        // forcedClip is the "audition every clip in order" path - everything else rolls normally.
+        // forcedClip is either the "audition every clip in order" path or a dialogue line naming its
+        // own take - everything else rolls normally.
         var clip = forcedClip != null ? forcedClip : data.NextClip();
         if (clip == null)
         {
@@ -647,7 +693,7 @@ public class AudioManager : MonoBehaviour
     // button can walk the list instead of rolling. Everything else - pitch/volume roll, trim, fades,
     // voice limits - goes through the normal path unchanged, which is the whole point.
     internal static SoundHandle PlayPreview(SoundData data, AudioClip forcedClip = null)
-        => PlayInternal(data, null, Vector3.zero, false, 1f, forcedClip, true);
+        => PlayInternal(ResolveTemplate(data), null, Vector3.zero, false, 1f, forcedClip, true);
 #endif
 
     // Squared-distance test against the live listening point. Resolved lazily and re-resolved

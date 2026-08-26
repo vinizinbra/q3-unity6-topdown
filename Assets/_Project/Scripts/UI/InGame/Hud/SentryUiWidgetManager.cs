@@ -34,6 +34,10 @@ public class SentryUiWidgetManager : MonoBehaviour
 
         var widget = Instantiate(widgetPrefab, widgetParent);
         widget.Setup(game, entityRef, followTarget);
+
+        // A sentry decays constantly and dies fast, so a trailing "recent damage" bar would spend
+        // most of its life mid-drain and never settle - it reads as a lagging bar, not as impact.
+        widget.SetBarsInstant(true);
         widget.gameObject.SetActive(true);
         _widgets.Add(entityRef, widget);
     }

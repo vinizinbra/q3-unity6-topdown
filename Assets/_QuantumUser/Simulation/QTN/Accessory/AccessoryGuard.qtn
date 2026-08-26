@@ -1,0 +1,66 @@
+// Recoverable Accessory Guard (see docs/accessory-guard.md) - every hero wears a Signature
+// Accessory that eats one incoming hit outright, loses a durability point, and physically pops off
+// into the world. Deliberately hero-AGNOSTIC: nothing here (or in any system reading it) knows
+// whether the accessory is Max's cap, Zara's headset or Brute's mask - that's purely presentation,
+// authored per hero on CharacterData's own View partial (CharacterData.View.cs) and resolved only
+// by the View layer.
+
+// Equipped is deliberately enum value 0 so a freshly-added component reads as "worn" with no
+// explicit seeding needed, same zero-default convention PlayerLifeStateKind.Alive/GameState.Lobby
+// already use.
+//
+// Airborne vs Dropped are two halves of ONE world collectible entity's life, not two entities: the
+// collectible exists (and is visible) in both, but is only PICKABLE once it has actually landed -
+// which is exactly what PopVelocity's own presence/removal already tracks (see
+// OrbSpawnUtility.SpawnWithPop/PopMotionSystem), so AccessoryGuardSystem reads that rather than
+// tracking a second timer of its own.
+//
+// Broken (durability 0) has NO world collectible at all - there is nothing to recover, only a
+// Merchant replacement to buy (see AccessoryServiceUtility).
+enum AccessoryGuardState : Byte
+{
+    Equipped,
+    Airborne,
+    Dropped,
+    Broken
+}
+
+// Per-player. Seeded once at spawn from AccessoryGuardConfig (CharacterSystem.SeedAccessoryGuard),
+// then never reset by anything except an explicit Merchant repair/replacement - durability
+// deliberately PERSISTS across Survival -> Breathing -> Survival, which is the whole point of the
+// economic decision it creates (see docs/accessory-guard.md).
+component AccessoryGuard
+{
+    AccessoryGuardState State;
+
+    // Current/Max rather than "missing", so a View or a shop card can render "1/3" straight off the
+    // component. MaxDurability is copied off the config at seed time rather than re-read from it on
+    // every check, so a mid-run config swap can never leave a player at 4/3.
+    Byte CurrentDurability;
+    Byte MaxDurability;
+
+    // The world collectible this player's accessory currently IS, while Airborne/Dropped -
+    // EntityRef.None while Equipped or Broken. Owned one-to-one: a player can never have two
+    // outstanding accessories, since the guard can only pop off while Equipped.
+    EntityRef Accessory;
+}
+
+// The generic dropped-accessory collectible - one component on the shared prototype
+// (RuntimeConfig.Prefabs.DroppedAccessoryPrototype), identical for every hero. Ownership is the only
+// thing that varies, and the View resolves its sprite through that owner (see
+// DroppedAccessoryView), so there is exactly ONE prototype rather than one per hero.
+component DroppedAccessory
+{
+    // Only this player may collect it - unlike a currency orb (CurrencyOrbSystem), which any player
+    // can pick up for the whole party. Also the key the View resolves presentation through.
+    EntityRef Owner;
+
+    // True on the DEBRIS spawned by the killing block - the one that took durability to 0. It flies
+    // the exact same arc as a recoverable drop (the accessory visibly gets knocked off either way),
+    // but is never collectible and is NOT tracked by its owner's AccessoryGuard.Accessory: it's
+    // fire-and-forget, destroyed by AccessoryGuardSystem the moment it lands, which is also where
+    // AccessoryBroken fires so the destruction VFX plays at the landing point rather than at the
+    // player. The owner's own State is already Broken from the instant of the hit, so the worn
+    // visual disappears immediately while this is still in the air.
+    Boolean Broken;
+}

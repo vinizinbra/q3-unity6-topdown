@@ -185,4 +185,6 @@ MonoBehaviour:
     RawValue: 0
   DetonateOnLevelGeometry: 1
   DetonateOnEnemyHit: 0
+  DetonateOnAllyHit: 0
   PierceCount: 1
+  FlattenTrajectoryOnPierce: 1

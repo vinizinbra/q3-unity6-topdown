@@ -1,6 +1,15 @@
 // Optional - only entities that actually have a shield carry this, so an unshielded enemy costs
-// nothing. Absorbed before Health, and unlike Health it recharges itself back to full once the
-// entity has gone RechargeDelay without being hit.
+// nothing. Absorbed before Health.
+//
+// Two different shields live on this one component, distinguished by ChargeOnly:
+//
+//  - ENEMY/BOSS shields (ChargeOnly false) behave the classic way - they recharge themselves back
+//    to full once the entity has gone RechargeDelay without being hit.
+//  - PLAYER shields (ChargeOnly true) never recharge at all. They start a run empty and are only
+//    ever filled by an ability, a teammate or a purchase, which is what turns Shield from passive
+//    mitigation into an earned, spendable buffer. Its job is to keep the owner's Accessory on their
+//    head: DamageUtility skips AccessoryGuardUtility.TryBlock entirely while Current > 0, so the
+//    accessory only ever blocks a hit that was going to land on Health.
 component Shield
 {
     FP Current;
@@ -8,11 +17,22 @@ component Shield
 
     // Reset to RechargeDelay by every hit that lands, including one the shield fully soaks, so
     // sustained fire keeps it suppressed. ShieldSystem recharges only once this reaches zero.
+    // Meaningless while ChargeOnly - nothing ever reads it, since nothing recharges.
     FP RechargeTimer;
     FP RechargeDelay;
 
-    // Points per second once recharging starts.
+    // Points per second once recharging starts. Ignored entirely while ChargeOnly.
     FP RechargeRate;
+
+    // "This shield is filled by gameplay, never by time." Set once at seed time from
+    // CharacterData.ShieldChargeOnly (players) and left false by EnemySystem.SeedShield (enemies /
+    // bosses). Lives on the component rather than being re-read off the data asset so ShieldSystem
+    // can early-return without a FindAsset on a per-entity, per-tick path.
+    //
+    // It also suppresses the two "you authored RechargeRate 0" guardrails (CharacterSystem.SeedShield
+    // and ShieldSystem), which stay loud for everything else - they catch genuine authoring
+    // mistakes, and a charge-only shield is deliberate rather than a mistake.
+    Boolean ChargeOnly;
 }
 
 // Fired by DamageUtility.AbsorbWithShield the exact tick Current crosses from >0 to <=0 - not on

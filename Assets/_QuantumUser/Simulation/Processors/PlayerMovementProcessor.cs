@@ -17,6 +17,11 @@ namespace Quantum
     {
         private const string NotJumpableLayerName = "GroundNotJumpable";
 
+        // Fallback for a MovementDataAsset authored with MaxFallSpeed <= 0 - matches that field's
+        // own default. Deliberately not "unlimited": an unbounded fall is the bug this clamp
+        // exists for, so there is no way to opt back into it by leaving the field at 0.
+        private static readonly FP DefaultMaxFallSpeed = 30;
+
         public void BeforeMove(KCCContext context, KCCProcessorInfo processorInfo)
         {
             Frame frame = context.Frame;
@@ -28,7 +33,7 @@ namespace Quantum
                 return;
 
             MovementDataAsset data = frame.FindAsset(movement->MovementData);
-            var input = frame.GetPlayerInput(playerLink->Player);
+            var input = PlayerInputUtility.Resolve(frame, entity, playerLink);
 
             FPVector3 moveDirection = input->Direction != default ? input->Direction.Normalized.XOY : default;
             FP targetSpeed = input->Run.IsDown ? data.RunSpeed : data.WalkSpeed;
@@ -104,12 +109,35 @@ namespace Quantum
             }
 
             EnvironmentProcessor.SetDynamicVelocity(context, ref context.KCC->Data, data.JumpMultiplier, data.DynamicGroundFriction, data.DynamicAirFriction);
+            ClampFallSpeed(context, data);
             EnvironmentProcessor.SetKinematicVelocity(context, ref context.KCC->Data, targetSpeed, data.KinematicGroundAcceleration, data.KinematicAirAcceleration, data.KinematicGroundFriction, data.KinematicAirFriction);
         }
 
         public void AfterMoveStep(KCCContext context, KCCProcessorInfo processorInfo, KCCOverlapInfo overlapInfo)
         {
             EnvironmentProcessor.ProcessAfterMoveStep(context, processorInfo, overlapInfo);
+        }
+
+        // Terminal velocity. SetDynamicVelocity just added another Gravity * dt to DynamicVelocity
+        // and applies air friction on XZ only, so nothing in the KCC ever bounds downward speed -
+        // a character that never lands accelerates forever. See MovementDataAsset.MaxFallSpeed for
+        // why that matters beyond the number getting silly (KCC's CCD loop subdivides by distance
+        // and is uncapped, so per-tick physics cost scales with fall speed).
+        //
+        // Applied HERE, right after the one place gravity accumulates, rather than in a System
+        // afterwards: BeforeMove runs once per KCC.Update, before the CCD loop consumes
+        // DesiredVelocity, so clamping here bounds this tick's actual movement instead of
+        // correcting it a tick late. Downward only - an upward impulse (jump, Discharge's launch,
+        // knockback) is untouched, and KinematicVelocity has no Y for a player, so DynamicVelocity
+        // is the whole of the fall.
+        private static void ClampFallSpeed(KCCContext context, MovementDataAsset data)
+        {
+            FP maxFallSpeed = data.MaxFallSpeed > FP._0 ? data.MaxFallSpeed : DefaultMaxFallSpeed;
+
+            if (context.KCC->Data.DynamicVelocity.Y >= -maxFallSpeed)
+                return;
+
+            context.KCC->Data.DynamicVelocity.Y = -maxFallSpeed;
         }
 
         private static void DoJump(KCC* kcc, PlayerMovement* movement, MovementDataAsset data)

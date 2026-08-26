@@ -1,28 +1,50 @@
 namespace Quantum
 {
     using Photon.Deterministic;
+    using UnityEngine;
 
-    // Passive Ascension (Faster Tempo, ranked, line 1/4 on Resonance) - see docs/zara-ascensions.md.
-    // Resonance builds faster (rank 1-3), and rank 3 "Never Stop" retains a fraction of Max instead
-    // of fully wrapping to 0 after each Resonance Pulse - see ResonanceUtility.AddResonance.
+    // Ranked Passive Ascension (Faster Tempo, Flow line A) - reach Flow faster, and make each stack
+    // worth more.
+    //
+    //  - Rank 1: Flow builds 25% faster.
+    //  - Rank 2: 50% faster, and Active Flow is worth +18% instead of +15%.
+    //  - Rank 3 "Full Tempo": 75% faster, and Active Flow grants a further +10% Fire Rate on top.
+    //
+    // Kept its name through the Resonance -> Flow refactor because its ROLE survived intact ("get to
+    // the good state sooner"); only the resource it accelerates changed.
+    //
+    // Each rank SETS the totals; they are not additive across ranks.
     public unsafe partial class FasterTempoPassiveUpgradeData : PassiveUpgradeData
     {
-        // Captured separately from ResonancePassiveData's own authored baseline so re-picking a
-        // higher rank always multiplies off the SAME base, never an already-boosted value.
-        public FP BaseGenerationPerDamage = FP._1;
+        [Tooltip("Multiplies the RATE Flow builds at, per rank (1.25 = 25% faster). ZaraFlowSystem divides the base interval by this rather than overwriting it, so the stated percentage stays true if the baseline interval is ever retuned.")]
+        public FP[] BuildRateMultiplier = { FP.FromString("1.25"), FP.FromString("1.50"), FP.FromString("1.75") };
 
-        public FP[] GenerationBonus = { FP._0_25, FP._0_50, FP.FromString("0.75") };
-        public FP[] RetainFraction = { FP._0, FP._0, FP._0_20 };
+        [Tooltip("Move Speed while Flow is Active, per rank - OVERWRITES the passive's own baseline (0.15). Rank 1 deliberately restates that baseline rather than leaving it alone, so a re-pick at any rank always writes a complete, correct value.")]
+        public FP[] MoveSpeedBonus = { FP.FromString("0.15"), FP.FromString("0.18"), FP.FromString("0.18") };
+
+        [Tooltip("Fire Rate while Flow is Active, per rank - same overwrite semantics as MoveSpeedBonus.")]
+        public FP[] FireRateBonus = { FP.FromString("0.15"), FP.FromString("0.18"), FP.FromString("0.18") };
+
+        [Tooltip("Rank 3 \"Full Tempo\" - additional Fire Rate on top of FireRateBonus while Active. 0 at ranks 1-2.")]
+        public FP[] ActiveFireRateBonus = { FP._0, FP._0, FP._0_10 };
 
         public override void Apply(Frame f, EntityRef entity, int rank)
         {
-            if (f.Unsafe.TryGetPointer<Resonance>(entity, out var resonance) == false)
+            if (f.Unsafe.TryGetPointer<ZaraFlow>(entity, out var flow) == false)
                 return;
 
             int index = System.Math.Clamp(rank, 1, (int)MaxRank) - 1;
 
-            resonance->GenerationPerDamage = BaseGenerationPerDamage * (FP._1 + GenerationBonus[index]);
-            resonance->RetainFraction = RetainFraction[index];
+            flow->BuildRateMultiplier = BuildRateMultiplier[index];
+            flow->MoveSpeedBonus = MoveSpeedBonus[index];
+            flow->FireRateBonus = FireRateBonus[index];
+            flow->ActiveFireRateBonus = ActiveFireRateBonus[index];
+
+            // The bonus values just changed, so whatever is currently baked into CharacterStats is
+            // stale by exactly this pick. Rebaking immediately (rather than waiting for the next
+            // toggle) is what stops a Zara who is Active right now from having to break and rebuild her
+            // Flow before the upgrade does anything.
+            ZaraFlowUtility.ApplyStatBonuses(f, entity, flow);
         }
     }
 }

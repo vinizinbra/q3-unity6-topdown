@@ -67,5 +67,44 @@ namespace Quantum
                 }
             }
         }
+
+        // Knockback-only sibling of ApplyRadialStunDamage - pushes every enemy in radius radially away
+        // from center, with no damage and no stun. Bodyguard rank 3's shockwave (fired around the ALLY
+        // whose Free Hit Guard just saved them, not around Brute) is the first caller: its job is to
+        // buy that ally breathing room the instant they nearly died, so adding damage would quietly
+        // turn a defensive payoff into a damage line.
+        //
+        // Routes through DamageUtility.ApplyKnockback rather than writing velocity directly, so tier
+        // knockback resistance, Iron Presence's knockback bonus and the enemy stuck-recovery window
+        // (EnemyStuckRecoveryUtility) all apply exactly as they do for every other push Brute makes.
+        public static void ApplyRadialKnockback(Frame f, FPVector3 center, FP radius, EntityRef owner, FP force)
+        {
+            if (radius <= FP._0 || force <= FP._0)
+                return;
+
+            Shape3D sphere = Shape3D.CreateSphere(radius);
+            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
+
+            for (int i = 0; i < hits.Count; i++)
+            {
+                EntityRef target = hits[i].Entity;
+
+                if (f.Has<Enemy>(target) == false)
+                    continue;
+
+                if (f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == false)
+                    continue;
+
+                FPVector3 away = targetTransform->Position - center;
+                away.Y = FP._0;
+
+                // An enemy standing exactly on the center has no direction to be pushed in - skip it
+                // rather than normalizing a zero vector into garbage.
+                if (away.SqrMagnitude <= FP._0)
+                    continue;
+
+                DamageUtility.ApplyKnockback(f, target, away.Normalized, force, FP._0, owner);
+            }
+        }
     }
 }

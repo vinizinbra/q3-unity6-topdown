@@ -166,7 +166,7 @@ TextureImporter:
         width: 391
         height: 461
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -183,8 +183,8 @@ TextureImporter:
       name: Kai (2)_2
       rect:
         serializedVersion: 2
-        x: 538
-        y: 54
+        x: 535
+        y: 42
         width: 205
         height: 222
       alignment: 9
@@ -205,8 +205,8 @@ TextureImporter:
       name: Kai (2)_3
       rect:
         serializedVersion: 2
-        x: 744
-        y: 55
+        x: 746
+        y: 40
         width: 184
         height: 222
       alignment: 9
@@ -227,12 +227,12 @@ TextureImporter:
       name: Kai (2)_4
       rect:
         serializedVersion: 2
-        x: 554
-        y: 586
-        width: 390
-        height: 382
+        x: 562
+        y: 713
+        width: 431
+        height: 247
       alignment: 9
-      pivot: {x: 0.46522343, y: 0.034489974}
+      pivot: {x: 0.5561325, y: 0.272436}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -241,6 +241,28 @@ TextureImporter:
       bones: []
       spriteID: c3d2a55686fd34da49092bd3e949bd4c
       internalID: 753418782
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: KaiWithoutMask
+      rect:
+        serializedVersion: 2
+        x: 554
+        y: 266
+        width: 402
+        height: 372
+      alignment: 9
+      pivot: {x: 0.48426706, y: 0.028453622}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 796facc05bb05492c8f06b2b3bd1f5a7
+      internalID: -85774159
       vertices: []
       indices: 
       edges: []
@@ -264,6 +286,7 @@ TextureImporter:
       Kai (2)_2: 244198134
       Kai (2)_3: -831188296
       Kai (2)_4: 753418782
+      KaiWithoutMask: -85774159
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

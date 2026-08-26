@@ -33,6 +33,7 @@ namespace Quantum
             SeedShield(f, entity, data, stats);
             SeedSkills(f, entity, data);
             SeedWeapon(f, entity, data);
+            SeedAccessoryGuard(f, entity);
 
             // Last, so a passive that scales max health lands on an already-seeded Health.
             ApplyPassive(f, entity, data, stats);
@@ -100,6 +101,22 @@ namespace Quantum
                       $"(base {data.BaseMaxHealth} x mult {stats->MaxHealthMultiplier}, debug current x{f.RuntimeConfig.DebugInitialHealthMultiplier})");
         }
 
+        // Recoverable Accessory Guard (see docs/accessory-guard.md) - added here rather than
+        // authored on each hero's own prototype, so the whole mechanic switches on/off with a single
+        // RuntimeConfig.AccessoryGuardConfig assignment and no hero can silently be missing it.
+        //
+        // PlayerLink is the "is this a player character, not some other CharacterStats carrier"
+        // gate - the same distinction PlayerSpawnUtility.Spawn relies on. Seeded from here rather
+        // than from Spawn() so a hero placed directly in a scene for testing (which never runs
+        // through Spawn at all - see that method's own comment) is seeded too.
+        private static void SeedAccessoryGuard(Frame f, EntityRef entity)
+        {
+            if (f.Has<PlayerLink>(entity) == false)
+                return;
+
+            AccessoryGuardUtility.Seed(f, entity);
+        }
+
         private static void SeedArmor(Frame f, EntityRef entity, CharacterData data)
         {
             if (f.Unsafe.TryGetPointer<Armor>(entity, out var armor) == false)
@@ -116,16 +133,25 @@ namespace Quantum
                 return;
 
             shield->Max = data.BaseMaxShield * stats->MaxShieldMultiplier + stats->BonusMaxShield;
-            shield->Current = shield->Max * f.RuntimeConfig.DebugInitialShieldMultiplier;
+            shield->ChargeOnly = data.ShieldChargeOnly;
             shield->RechargeDelay = data.ShieldRechargeDelay;
             shield->RechargeRate = data.ShieldRechargeRate;
             shield->RechargeTimer = FP._0;
 
-            Log.Debug($"[Character] {entity} shield seeded -> {shield->Current}/{shield->Max} " +
-                      $"at {shield->RechargeRate}/s after {shield->RechargeDelay}s");
+            // A charge-only shield starts EMPTY - it's earned in-run and never given for free, so the
+            // debug "start at x% shield" multiplier deliberately doesn't apply to it either (it would
+            // hand out exactly the free buffer this model exists to remove).
+            shield->Current = shield->ChargeOnly == true
+                ? FP._0
+                : shield->Max * f.RuntimeConfig.DebugInitialShieldMultiplier;
 
-            if (shield->Max > FP._0 && shield->RechargeRate <= FP._0)
-                Log.Error($"[Character] {entity} has a shield but {data.name} authors ShieldRechargeRate 0 - it will never recharge");
+            Log.Debug($"[Character] {entity} shield seeded -> {shield->Current}/{shield->Max} " +
+                      $"{(shield->ChargeOnly == true ? "(charge-only - never recharges)" : $"at {shield->RechargeRate}/s after {shield->RechargeDelay}s")}");
+
+            // Only meaningful for a shield that's supposed to recharge - a charge-only one never reads
+            // RechargeRate at all, so 0 there is correct rather than a mistake worth shouting about.
+            if (shield->ChargeOnly == false && shield->Max > FP._0 && shield->RechargeRate <= FP._0)
+                Log.Error($"[Character] {entity} has a recharging shield but {data.name} authors ShieldRechargeRate 0 - it will never recharge");
         }
 
         // Both of these exist because Health.MaxHealth / Shield.Max are stored, not derived on read

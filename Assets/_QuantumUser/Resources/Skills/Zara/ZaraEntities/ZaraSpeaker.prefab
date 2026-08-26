@@ -753,6 +753,9 @@ MonoBehaviour:
     Particle: {fileID: 3887186911173573348}
     Detail: {fileID: 1606418612621529298}
     DetailRoot: {fileID: 7148479279773979454}
+  damageBeatSound: {fileID: 11400000, guid: 9c5e1419e180e47428117160db08f8a5, type: 2}
+  supportBeatSound: {fileID: 11400000, guid: 16f77846fb3c745a5a0646f04c3798cc, type: 2}
+  speakerVolumeScale: 0.6
   bumpSprite: {fileID: 4406408959684788484}
   bumpSprites:
   - {fileID: 1116899456, guid: d7a4a6e9d205b485da8f4c0415a662fd, type: 3}
@@ -789,7 +792,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9168c542245be475f8ee71bd6733ba7c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.HasShadow
-  baseScale: 1.5
+  baseScale: 3
+  shadowOffset: {x: 0, y: 0}
 --- !u!114 &7356188417406382929
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -857,8 +861,12 @@ MonoBehaviour:
         Value: 0
     - Id:
         Value: 0
+    HealAmount:
+      RawValue: 0
     DamageAmount:
       RawValue: 65536
+    EffectivenessMultiplier:
+      RawValue: 0
     DamageMask:
       Value: 2
     DamageEffects:

@@ -3,6 +3,7 @@ using Quantum;
 using QuantumUser.View;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 // Dedicated small HUD element shown to an incapacitated (Downed/KO) LOCAL player with a SELF REVIVE
 // button - see docs/revive.md. A Widget, not a Window - it's a self-polling QuantumGlobalMonoBehaviour
@@ -38,6 +39,12 @@ public class SelfReviveWidget : QuantumGlobalMonoBehaviour
     [SerializeField, Tooltip("Hex color (e.g. \"#FD3971\") wrapped via TMP rich text around just the state word - \"YOU ARE <color=#FD3971>DOWNED</color>\" - not the whole titleText. Requires Rich Text enabled on titleText (TMP's own default).")]
     private string titleHighlightColorHex = "#FD3971";
 
+    [Header("Being Revived (teammate hold - see docs/revive.md)")]
+    [SerializeField, Tooltip("Optional - Slider.value (0-1) driven by PlayerLifeState.ReviveProgress/ReviveConfig.DownedReviveDuration while a TEAMMATE is holding to revive this player. Hidden entirely whenever nobody is holding (not just reset to 0), so an interrupted hold's stale progress never lingers on screen. Left unassigned, this feature is simply off.")]
+    private Slider reviveProgressSlider;
+    [SerializeField, Tooltip("Optional container shown alongside reviveProgressSlider while a teammate is holding - e.g. a \"BEING REVIVED\" label. Left unassigned, only the slider itself is toggled.")]
+    private GameObject beingRevivedRoot;
+
     [SerializeField, Tooltip("On: binds itself to localSlotIndex automatically. Off: stays unbound until something else calls Initialize (e.g. a future party HUD).")]
     private bool autoBindLocalSlot = true;
     [SerializeField, Tooltip("Local slot index to bind to when autoBindLocalSlot is on - 0 for player 1, 1 for a second local (couch co-op) player.")]
@@ -61,6 +68,8 @@ public class SelfReviveWidget : QuantumGlobalMonoBehaviour
         _shown = false;
         if (visualRoot != null)
             visualRoot.SetActive(false);
+
+        SetBeingRevivedShown(false);
     }
 
     public void Initialize(EntityRef entityRef)
@@ -94,16 +103,32 @@ public class SelfReviveWidget : QuantumGlobalMonoBehaviour
         SetShown(incapacitated);
 
         if (incapacitated == false)
+        {
+            // visualRoot going inactive already hides these, but only if they live under it -
+            // they're optional, hand-placed references that don't have to. Cleared explicitly so a
+            // completed/interrupted revive never leaves a stale bar behind either way.
+            SetBeingRevivedShown(false);
             return;
+        }
 
         bool hasLifeState = frame.Unsafe.TryGetPointer<PlayerLifeState>(_entityRef, out var lifeState);
         bool isKo = hasLifeState == true && lifeState->State == PlayerLifeStateKind.KO;
 
+        // A teammate actively holding to pick this player up (see RefreshBeingRevived) - resolved
+        // here rather than inside that method because the title reads off it too.
+        bool beingRevived = hasLifeState == true && isKo == false && lifeState->ReviveHolder != EntityRef.None;
+
         if (titleText != null)
         {
+            // "YOU ARE DOWNED" is a status; while somebody is actually picking you up the panel
+            // has something more useful to say, so the title takes over for the duration of the
+            // hold and reverts the instant it's interrupted (same self-healing poll as everything
+            // else here - no state is tracked for it).
             titleText.text = isKo
                 ? $"YOU ARE <color={titleHighlightColorHex}>KO'D</color>"
-                : $"YOU ARE <color={titleHighlightColorHex}>DOWNED</color>";
+                : beingRevived == true
+                    ? $"<color={titleHighlightColorHex}>BEING REVIVED</color>"
+                    : $"YOU ARE <color={titleHighlightColorHex}>DOWNED</color>";
         }
 
         // Only Downed has a bleed-out clock - KO has no timer, you just wait for a revive (see
@@ -116,6 +141,14 @@ public class SelfReviveWidget : QuantumGlobalMonoBehaviour
             if (isKo == false && hasLifeState == true)
                 bleedOutTimerText.text = FormatBleedOutTimer(lifeState->BleedOutRemaining);
         }
+
+        // A teammate's hold-to-revive progress, on the downed player's OWN HUD. The world-space
+        // InteractionPromptWidget above their head shows the same bar, but that one is anchored to
+        // a character the downed player isn't necessarily looking at (and is easy to miss in a
+        // crowded fight) - this panel is where their eyes already are, so the feedback belongs here
+        // too. Reads the target-side PlayerLifeState directly rather than the reviver's own
+        // ReviveChannel, so it doesn't care WHO is holding (or that they're a remote player).
+        RefreshBeingRevived(frame, beingRevived, lifeState);
 
         byte charges = frame.Unsafe.TryGetPointer<CharacterStats>(_entityRef, out var stats) == true ? stats->SelfReviveCharges : (byte)0;
 
@@ -145,6 +178,43 @@ public class SelfReviveWidget : QuantumGlobalMonoBehaviour
     private void OnSelfReviveClicked()
     {
         _game?.SendCommand(localSlotIndex, new SelfReviveCommand());
+    }
+
+    // Shown only while somebody is actually holding (PlayerLifeState.ReviveHolder != None, the same
+    // field that pauses the bleed-out clock), and never while KO'd - KO has no revive path at all
+    // anymore (see PlayerLifeStateUtility.EnterKO), so there can be no hold in progress to show.
+    // Both conditions are folded into the caller's own `beingRevived`, which the title reads too.
+    private unsafe void RefreshBeingRevived(Frame frame, bool beingRevived, PlayerLifeState* lifeState)
+    {
+        if (beingRevived == false || lifeState == null)
+        {
+            SetBeingRevivedShown(false);
+            return;
+        }
+
+        SetBeingRevivedShown(true);
+
+        if (reviveProgressSlider == null)
+            return;
+
+        ReviveConfig config = PlayerLifeStateUtility.GetConfig(frame);
+        FP duration = config != null ? config.DownedReviveDuration : (FP._2 + FP._0_50);
+
+        reviveProgressSlider.value = duration > FP._0 ? (lifeState->ReviveProgress / duration).AsFloat : 0f;
+    }
+
+    private void SetBeingRevivedShown(bool shown)
+    {
+        SetActive(beingRevivedRoot, shown);
+
+        if (reviveProgressSlider != null)
+            SetActive(reviveProgressSlider.gameObject, shown);
+    }
+
+    private static void SetActive(GameObject go, bool active)
+    {
+        if (go != null && go.activeSelf != active)
+            go.SetActive(active);
     }
 
     private static string FormatBleedOutTimer(FP secondsRemaining)

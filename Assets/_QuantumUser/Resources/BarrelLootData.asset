@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5096a9d60f3f40019b2d67e24a9dadf, type: 3}
+  m_Name: BarrelLootData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.BreakLootData
+  Identifier:
+    Path: _QuantumUser/Resources/BarrelLootData
+    Guid:
+      Value: 469936170100199969
+  Drops:
+  - Prototype:
+      Id:
+        Value: 1526470837466056071
+    Requirement: 0
+    Chance:
+      RawValue: 65536
+    Value:
+      RawValue: 3276800
+    Count: 1
+  - Prototype:
+      Id:
+        Value: 1351728669323849151
+    Requirement: 0
+    Chance:
+      RawValue: 655
+    Value:
+      RawValue: 65536
+    Count: 1
+  MinSpawnOffset:
+    RawValue: 13107
+  MaxSpawnOffset:
+    RawValue: 32768
+  OrbLifetime:
+    RawValue: 65470464
+  PopHorizontalBurstSpeed:
+    RawValue: 32768
+  PopVerticalBurstSpeed:
+    RawValue: 196608

@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using QuantumUser.View.Util;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 // Deliberately NOT a PgSingleton<T> - this lives on the Camera baked into QuantumGameScene, and
 // PgSingleton.Awake()/.I both call DontDestroyOnLoad on the GameObject they're attached to. That
@@ -9,8 +11,20 @@ using UnityEngine;
 // destroys itself (Destroy(this)), not the new scene's Camera GameObject, leaving both active at
 // once. A plain scene-local static ties this camera's lifecycle to QuantumGameScene's own, exactly
 // like the equivalent FollowCamera in the Jelly Upgrade project.
+//
+// That alone isn't enough, though: this component never calls DontDestroyOnLoad, but ANY other
+// script can still drag the whole camera out of QuantumGameScene - by calling DontDestroyOnLoad on
+// any component that sits on it (Camera/AudioListener/a shake listener), or by parenting it under
+// an object that already lives in the DontDestroyOnLoad scene, which pulls the whole subtree along
+// with it. A camera that escaped that way survives the match's own scene unload, so after a
+// disconnect it keeps rendering (and keeps its AudioListener alive) over the menu, and the next
+// match's freshly-loaded scene brings a second Camera+AudioListener up alongside it. EnforceHomeScene
+// below detects that, names what's around the camera so the culprit can be identified, and puts it
+// back where it belongs - or destroys it outright once its own scene is gone.
 public class FollowCamera : MonoBehaviour
 {
+    private const string LogTag = "Camera";
+
     public static FollowCamera I;
 
     public Vector3 offset;
@@ -36,6 +50,11 @@ public class FollowCamera : MonoBehaviour
     // normal multi-player framing exactly where it would have been anyway.
     private Transform _focusOverrideTarget;
 
+    // The scene this camera was loaded with (QuantumGameScene). Captured in Awake so the guard can
+    // tell "still where I belong" apart from "someone moved me into DontDestroyOnLoad".
+    private Scene _homeScene;
+    private bool _reportedEscape;
+
     // Shake state - additive offset on top of the framed position, decaying linearly over
     // _shakeDuration. A later Shake() call only takes over if it's stronger than what's currently
     // playing, so a weak shot can't cut off a strong one still ringing out.
@@ -50,12 +69,78 @@ public class FollowCamera : MonoBehaviour
         I = this;
         _shakeSeed = new Vector2(Random.value * 100f, Random.value * 100f);
         _smoothedPosition = transform.position;
+
+        _homeScene = gameObject.scene;
+        SceneManager.sceneUnloaded += OnSceneUnloaded;
     }
 
     private void OnDestroy()
     {
+        SceneManager.sceneUnloaded -= OnSceneUnloaded;
+
         if (I == this)
             I = null;
+    }
+
+    // Only ever reached by a camera that was NOT destroyed along with its own scene - i.e. one
+    // sitting in DontDestroyOnLoad that EnforceHomeScene couldn't put back (its scene was already
+    // on the way out when it noticed). Nothing should outlive the match here, so it goes.
+    private void OnSceneUnloaded(Scene scene)
+    {
+        if (scene != _homeScene || this == null)
+            return;
+
+        LogHelper.Warn(LogTag,
+            $"'{name}' outlived '{scene.name}' (now in '{gameObject.scene.name}') - destroying it so it can't render over the menu or collide with the next match's own camera.",
+            this);
+
+        Destroy(gameObject);
+    }
+
+    // See the class comment. Cheap enough to poll (a scene-handle compare), and polling is the only
+    // option - Unity raises no callback for "this object changed scene".
+    private bool EnforceHomeScene()
+    {
+        if (gameObject.scene == _homeScene)
+            return true;
+
+        if (_reportedEscape == false)
+        {
+            _reportedEscape = true;
+            LogHelper.Error(LogTag,
+                $"'{name}' was moved out of '{_homeScene.name}' into '{gameObject.scene.name}' by something other than {nameof(FollowCamera)}" +
+                $" - parent='{(transform.parent != null ? transform.parent.name : "<none>")}', root='{transform.root.name}', children=[{DescribeChildren()}]." +
+                " Whatever owns those objects is what to fix; putting the camera back for now.",
+                this);
+        }
+
+        // A camera dragged along by a DontDestroyOnLoad parent has to be detached first - both
+        // because MoveGameObjectToScene only accepts root objects, and because staying parented
+        // would just pull it straight back out again.
+        if (transform.parent != null)
+            transform.SetParent(null, worldPositionStays: true);
+
+        if (_homeScene.IsValid() && _homeScene.isLoaded)
+        {
+            SceneManager.MoveGameObjectToScene(gameObject, _homeScene);
+            return true;
+        }
+
+        // Its scene is already gone, so there is nothing left for this camera to follow.
+        Destroy(gameObject);
+        return false;
+    }
+
+    private string DescribeChildren()
+    {
+        if (transform.childCount == 0)
+            return "<none>";
+
+        var names = new string[transform.childCount];
+        for (int i = 0; i < transform.childCount; i++)
+            names[i] = transform.GetChild(i).name;
+
+        return string.Join(", ", names);
     }
 
     public void AddTarget(Transform target)
@@ -112,6 +197,9 @@ public class FollowCamera : MonoBehaviour
 
     private void Update()
     {
+        if (EnforceHomeScene() == false)
+            return;
+
         Vector3 center;
         float spread;
 

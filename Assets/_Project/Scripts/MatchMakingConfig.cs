@@ -669,7 +669,14 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
 
       _runnerStartRequested = true;
 
-      GameManager.Instance.MainMenuTab.windowManager.ShowWindow<ConnectingWindow>();
+      // From here to the moment the hero is actually standing in the world, ONE screen covers
+      // everything - including SessionRunner.StartAsync below, which is what additively loads
+      // QuantumGameScene and therefore brings that scene's own HUD Canvas (sortingOrder 11) up over
+      // every menu Canvas (0). LoadingWindow's own nested Canvas sorts above both, so nothing of a
+      // match that hasn't visually started yet can flash through. ConnectingWindow is no longer
+      // shown here: its Photon callbacks only produced alerts that MatchMakingConfig.OnDisconnected
+      // and the catch below already raise on their own.
+      GameManager.Instance.MainMenuTab.windowManager.ShowWindow<LoadingWindow>();
 
       try
       {
@@ -714,7 +721,11 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
          // the pref is actually > 0 keeps a real future write taking effect while leaving
          // Inspector-set test values alone until then.
          for (int i = 0; i < RuntimePlayers.Count; i++) {
-            RuntimePlayers[i].PlayerAvatar = localCharacterAvatar;
+            // A bot keeps whatever PlayerAvatar was authored on its own entry (see docs/bots.md) -
+            // the whole point of filling the party with bots is watching a DIFFERENT hero than the
+            // one this client picked, so the character-select choice must not be stamped onto them.
+            if (RuntimePlayers[i].IsBot == false)
+               RuntimePlayers[i].PlayerAvatar = localCharacterAvatar;
             if (weaponTalentLevel > 0) RuntimePlayers[i].Talents.WeaponLevel = weaponTalentLevel;
             if (rerollQuantity > 0) RuntimePlayers[i].Talents.RerollQuantity = rerollQuantity;
             if (shopWeaponOfferCount > 0) RuntimePlayers[i].Talents.ShopWeaponOfferCount = shopWeaponOfferCount;
@@ -742,7 +753,12 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
             runner.Game.AddPlayer(i, RuntimePlayers[i]);
          }
 
-         GameManager.Instance.MainMenuTab.windowManager.ShowWindow<InMatchWindow>();
+         // Deliberately NOT ShowWindow<InMatchWindow>() here, which is what this used to do: that
+         // window disables the whole menu Canvas (see InMatchWindow.Show), and at this point the
+         // level hasn't been generated and no hero has spawned - taking the menu down here is
+         // exactly what left the player staring at a half-built, empty level. The LoadingWindow
+         // shown above stays up and shows InMatchWindow itself once the local hero is genuinely
+         // standing in the world.
       }
       catch (Exception e)
       {

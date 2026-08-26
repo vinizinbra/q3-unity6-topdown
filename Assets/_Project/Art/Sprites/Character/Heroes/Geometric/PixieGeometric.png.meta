@@ -184,7 +184,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 622
-        y: 351
+        y: 349
         width: 152
         height: 247
       alignment: 9
@@ -267,6 +267,50 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: PixieGeometric_0
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 0
+        width: 484
+        height: 345
+      alignment: 9
+      pivot: {x: 0.58718127, y: 0.09376788}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 14a468847bb4d419ebac74f20c9f57a5
+      internalID: 1146653916
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: PixieGeometric_1
+      rect:
+        serializedVersion: 2
+        x: 342
+        y: 813
+        width: 217
+        height: 159
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e8efa41704cca45cca4bfc8bce151280
+      internalID: -748738874
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
@@ -287,6 +331,8 @@ TextureImporter:
       PixieGeometric (1)_3: 1425999062
       PixieGeometric (1)_4: 868958174
       PixieGeometric (1)_5: -1192322350
+      PixieGeometric_0: 1146653916
+      PixieGeometric_1: -748738874
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

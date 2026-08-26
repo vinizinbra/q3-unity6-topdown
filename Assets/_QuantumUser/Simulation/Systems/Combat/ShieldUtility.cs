@@ -42,29 +42,11 @@ namespace Quantum
             f.Events.EntityShielded(target, owner, applied);
         }
 
-        // Overshield counterpart to ApplyShield/ApplyFlatShield above - capped at shield->Max *
-        // capMultiplier rather than shield->Max itself, so Current can still sit above Max (e.g.
-        // Brute's Discharge Shield gain caps at 1.5x Max, not 1x) without growing unbounded. Nothing
-        // else needed to support the "above Max" half: ShieldSystem's passive regen already no-ops
-        // whenever Current >= Max, and DamageUtility.AbsorbWithShield already drains Current by a
-        // plain Min(Current, damage) regardless of how far above Max it is - the overshield just
-        // bleeds off as damage is taken, same as regular Shield.
-        public static void ApplyOvershield(Frame f, EntityRef target, EntityRef owner, FP amount, FP capMultiplier)
-        {
-            if (amount <= FP._0)
-                return;
-
-            if (f.Unsafe.TryGetPointer<Shield>(target, out var shield) == false)
-                return;
-
-            FP cap = shield->Max * capMultiplier;
-            FP applied = FPMath.Min(amount, cap - shield->Current);
-
-            if (applied <= FP._0)
-                return; // already at or above the overshield cap
-
-            shield->Current += applied;
-            f.Events.EntityShielded(target, owner, applied);
-        }
+        // There is deliberately no Overshield (above-Max) entry point. It existed back when player
+        // Shield refilled itself for free, where "stack a bit above Max" was the only way a grant
+        // could feel meaningful. Player Shield is charge-only now (see Shield.qtn) - it starts empty
+        // and only gameplay ever fills it - so a plain Max-capped pool already carries all the
+        // scarcity the old 1.5x cap was there to create, and every grant funnels through the two
+        // methods above.
     }
 }

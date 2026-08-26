@@ -67,7 +67,7 @@ namespace Quantum
             }
 
             // Manual jump button, for testing without needing to trigger auto-mantle/hop.
-            var input = f.GetPlayerInput(filter.PlayerLink->Player);
+            var input = PlayerInputUtility.Resolve(f, filter.Entity, filter.PlayerLink);
             if (isGrounded == true && canJump == true && input->Jump.WasPressed == true)
             {
                 DoJump(f, filter.Entity, filter.KCC, filter.PlayerMovement, data);

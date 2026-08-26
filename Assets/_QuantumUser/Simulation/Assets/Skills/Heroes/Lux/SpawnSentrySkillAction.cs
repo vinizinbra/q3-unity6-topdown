@@ -343,6 +343,19 @@ namespace Quantum
 
             f.AddOrGet<SentryFortificationUpgrade>(spawned, out var copy);
             *copy = *upgrade;
+
+            // Covering Fire's "one denial per hero per TURRET" allowance. Lives on the sentry rather
+            // than on Lux for exactly that reason - a fresh deploy is a fresh entity and therefore a
+            // fresh allowance for everyone, two of her sentries each track their own, and two Luxes
+            // never share one. Same AreaAllyBudget primitive Zara's Totem/Speaker healing caps use.
+            //
+            // Only added when the rank is actually held: MaxGuardsPerAlly 0 (or no component at all)
+            // denies outright, so a rank-1 sentry grants nothing.
+            if (upgrade->GuardDuration <= FP._0)
+                return;
+
+            f.AddOrGet<AreaAllyBudget>(spawned, out var budget);
+            budget->MaxGuardsPerAlly = upgrade->GuardsPerAlly;
         }
 
         // Overload Core - same copy-onto-spawned reasoning. Damage is resolved from a percentage of

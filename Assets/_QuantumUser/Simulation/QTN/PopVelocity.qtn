@@ -18,4 +18,13 @@ component PopVelocity
     // Only CLIMBING is blocked, never falling: an enemy killed on a ledge still drops coins that can
     // scatter off it and land below, which reads fine and is often the only reachable outcome anyway.
     FP OriginGroundY;
+
+    // Opt-out of the climb block above. False (every currency/scrap drop) keeps the original
+    // behaviour: a coin may never come to rest meaningfully higher than the floor it dropped from,
+    // because a coin the player has to go and climb for is a chore, not a decision.
+    //
+    // True for a dropped Signature Accessory (see docs/accessory-guard.md), which is the exact
+    // opposite case: it is SUPPOSED to be able to land somewhere awkward, including a platform above
+    // you. Going and getting it back is the mechanic, not a tax on a reward you already earned.
+    Boolean CanLandHigher;
 }

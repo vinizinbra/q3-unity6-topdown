@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24923c166f6d34005a377560a9b6e8b7, type: 3}
+  m_Name: SecondWind
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.SecondWindPassiveUpgradeData
+  Identifier:
+    Path: _QuantumUser/Resources/Passives/Zara/Zara_PassiveSkillUpgrades/SecondWind
+    Guid:
+      Value: 464159436060411710
+  Icon: {fileID: 0}
+  DisplayName: Second Wind
+  Description: Recover faster when your rhythm is broken.
+  <MaxRank>k__BackingField: 3
+  RankDescriptions:
+  - When a hit breaks your Flow, gain +20% Move Speed for 1.5s.
+  - A hit no longer wipes your Flow - you drop to 1 stack instead, and still gain
+    +20% Move Speed for 1.5s.
+  - 'Keep the Beat: a hit taken at Max Flow deals 30% less damage and drops you to
+    1 stack (6s cooldown).'
+  MoveSpeedBonus:
+  - RawValue: 13107
+  - RawValue: 13107
+  - RawValue: 13107
+  Duration:
+  - RawValue: 98304
+  - RawValue: 98304
+  - RawValue: 98304
+  StacksRetainedOnHit: 000101
+  DamageReduction:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 19661
+  Cooldown:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 393216

@@ -25,11 +25,12 @@ MonoBehaviour:
   BaseArmor:
     RawValue: 0
   BaseMaxShield:
-    RawValue: 1638400
+    RawValue: 0
+  ShieldChargeOnly: 1
   ShieldRechargeDelay:
-    RawValue: 327680
+    RawValue: 0
   ShieldRechargeRate:
-    RawValue: 655360
+    RawValue: 0
   DamageMultiplier:
     RawValue: 65536
   WeaponDamageMultiplier:
@@ -122,3 +123,8 @@ MonoBehaviour:
       Value: 532309429254581296
   - Id:
       Value: 317035501367371776
+  Accessory:
+    DisplayName: 
+    CollectibleSprite: {fileID: -301743902, guid: 42575e5623f17440fa06a862f89be50a, type: 3}
+    CollectibleScale: 1
+    BrokenEffectPrefab: {fileID: 3501008743596093556, guid: b4bcd92e9d3fa47f4af90b63ff7706c7, type: 3}

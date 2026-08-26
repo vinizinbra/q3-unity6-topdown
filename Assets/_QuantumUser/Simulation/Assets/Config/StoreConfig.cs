@@ -116,6 +116,21 @@ namespace Quantum
         public AssetRef<FoodOfferPoolData> FoodPool;
         public int FoodOfferCount = 2;
 
+        // The two GUARANTEED, never-rolled offers that share the food/utility row with the rolled
+        // FoodOffers above. Both are toggles rather than fixed slots so a designer owns the row's
+        // contents: whatever is enabled is packed in order after the rolled offers, and the row
+        // needs FoodOfferCount + (however many of these are on) card slots on ChooseWindow.cardCount.
+        //
+        // Defaults give FoodOfferCount 2 + accessory service = exactly 3, matching the stock
+        // cardCount of 3. Increase Weapon Level ships OFF for that reason - it is not deleted, just
+        // not competing for a slot; turning it back on requires raising cardCount to 4.
+        [Header("Guaranteed Offers")]
+        [Tooltip("Show the \"Increase Weapon Level\" offer (see BuyWeaponLevelUp). OFF by default so the row fits in 3 card slots - turning it on needs ChooseWindow.cardCount raised to 4.")]
+        public bool OfferWeaponLevelUp = false;
+
+        [Tooltip("Show the Accessory Repair/Replacement service (see AccessoryServiceUtility/docs/accessory-guard.md). The card is only actually populated when the buyer's accessory is damaged or broken - at full durability the slot is reserved but empty, deliberately, so the row never reflows as durability changes.")]
+        public bool OfferAccessoryService = true;
+
         // "Increase Weapon Level" - a guaranteed offer, always present every Breathing Break
         // (unlike WeaponOffers/FoodOffers, nothing rolled/random about it - see
         // StoreUtility.BuyWeaponLevelUp). Levels up the buyer's own currently-equipped Weapon

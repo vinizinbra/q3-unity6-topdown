@@ -24,6 +24,9 @@ public class MainMenuWindow : UiWindow
     // one of them - it has its own button now, so Play never silently turns into something else.
     public TMP_Text playButtonLabel;
 
+    [Tooltip("Optional - the party panel that owns the room-code field. While a code is typed there and this player isn't already in a party, the Play button becomes Join and joins that room instead of starting a run. Left unassigned, Play behaves exactly as before.")]
+    public PartyRoomWidget partyRoom;
+
     private void Start()
     {
         playButton.onClick.AddListener(PlayButtonClicked);
@@ -61,11 +64,21 @@ public class MainMenuWindow : UiWindow
                 reconnectButton.gameObject.SetActive(canReconnect);
         }
 
-        if (PartyManager.Instance.IsPartyLeader)
+        if (ShouldOfferJoin)
+            playButtonLabel.text = "Join";
+        else if (PartyManager.Instance.IsPartyLeader)
             playButtonLabel.text = "Play";
         else
             playButtonLabel.text = PartyManager.Instance.IsLocalReady ? "Cancel Ready" : "Ready";
     }
+
+    // A room code typed but not yet acted on means the player is clearly trying to join someone,
+    // so the single prominent button should do that rather than drop them into a solo run they'd
+    // have to back out of. Gated on not already being in a party: once in one, the code field is
+    // behind the room panel and Play has to go back to being Play/Ready.
+    private bool ShouldOfferJoin => partyRoom != null
+        && partyRoom.HasPendingRoomCode
+        && PartyManager.Instance.InParty == false;
 
     private void QuickPlay()
     {
@@ -85,6 +98,13 @@ public class MainMenuWindow : UiWindow
     // state (non-leader party member). Reconnect is reconnectButton's job, not this one's.
     private void PlayButtonClicked()
     {
+        // Checked before the solo path below, since that path is exactly what this replaces.
+        if (ShouldOfferJoin)
+        {
+            PartyManager.Instance.JoinParty(partyRoom.PendingRoomCode);
+            return;
+        }
+
         if (!PartyManager.Instance.InParty)
         {
             // Show the loading screen immediately on click, not just once StartRunner() eventually

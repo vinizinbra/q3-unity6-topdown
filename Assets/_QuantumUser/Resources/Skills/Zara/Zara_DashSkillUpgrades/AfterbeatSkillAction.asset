@@ -19,16 +19,20 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Afterbeat
   RankDescriptions:
-  - 'Quick Tempo: dashing generates 20 Resonance, plus 10 more per enemy you pass through.'
-  - 'Afterbeat: dashing generates 20 Resonance plus 10 per enemy passed through, and 1s later a beat erupts at your starting position, damaging and knocking back nearby enemies.'
-  - 'Double Beat: dashing generates 20 Resonance plus 10 per enemy passed through, and beats erupt at both ends of the dash, generating additional Resonance from enemies they hit.'
+  - 'Quick Tempo: dashing grants 1 Flow stack, and each enemy you pass through brings
+    the next stack 0.25s closer (up to 1s).'
+  - 'Afterbeat: dashing grants 1 Flow stack and brings the next closer, and 1s later
+    a beat erupts at your starting position, damaging and knocking back nearby enemies.'
+  - 'Double Beat: beats erupt at both ends of the dash - landing either one on an
+    enemy grants another Flow stack (once per dash).'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 7
   Interval:
     RawValue: 0
   Activated: 1
-  Description: Dashing generates Resonance - and eventually leaves damaging beats behind you.
+  Description: Dashing feeds your Flow - and eventually leaves damaging beats behind
+    you.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -53,14 +57,13 @@ MonoBehaviour:
     ScaleByRadius: 0
     Scale: 4
     Alignment: 0
-  ResonanceOnDash:
-    RawValue: 1310720
+  FlowStacksOnDash: 1
   SweepRadius:
     RawValue: 98304
-  ResonancePerEnemyHit:
-    RawValue: 655360
-  MaxResonancePerDash:
-    RawValue: 2621440
+  BuildTimeBonusPerEnemyHit:
+    RawValue: 16384
+  MaxBuildTimeBonusPerDash:
+    RawValue: 65536
   Delay:
     RawValue: 65536
   DamagePercentOfSkill:

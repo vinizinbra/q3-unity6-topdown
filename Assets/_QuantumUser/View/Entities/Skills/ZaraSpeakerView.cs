@@ -38,6 +38,16 @@ namespace Quantum
         [SerializeField] private SpeakerEffect lightGreenEffect;
         [SerializeField] private SpeakerEffect lightPurpleEffect;
 
+        [Header("Beat Audio")]
+        [SerializeField, Tooltip("Played on every DAMAGE Beat. If only one of the two beat sounds is assigned, that one plays on BOTH beats - so filling in a single field is all it takes to give the Totem a sound on every trigger.")]
+        private SoundData damageBeatSound;
+
+        [SerializeField, Tooltip("Played on every SUPPORT (heal/buff) Beat. Giving the two beats distinct sounds is what makes the Totem read as an alternating rhythm rather than a metronome - it is the whole Combat DJ fantasy in audio form. Falls back to damageBeatSound if left empty.")]
+        private SoundData supportBeatSound;
+
+        [SerializeField, Range(0f, 1f), Tooltip("Volume multiplier applied to a PORTABLE SPEAKER's beats (this same prefab doubles as the Speaker's spawn prototype). Speakers are a half-strength, short-lived, potentially-doubled deployable, so beating at full volume alongside the real Totem gets noisy fast. 1 = no distinction.")]
+        private float speakerVolumeScale = 0.6f;
+
         [Header("Bump Sprite (random, non-repeating per pulse)")]
         [SerializeField, Tooltip("Its sprite is swapped on every pulse to a random one drawn from bumpSprites.")]
         private SpriteRenderer bumpSprite;
@@ -109,10 +119,55 @@ namespace Quantum
             if (e.Entity != _entityRef)
                 return;
 
+            PlayBeatSound(e);
+
             if (e.IsHealing == true)
                 PlayLightGreen();
             else
                 PlayLightPurple();
+        }
+
+        // One sound per beat, every beat - the Totem's audible pulse.
+        //
+        // Volume is resolved against the Totem's OWNER (Zara), not against the Totem entity itself:
+        // EntitySound.ResolveVolume asks MyLocalPlayer.IsLocalEntity, and a speaker entity is never a
+        // player, so passing _entityRef would make a quieterWhenRemote sound treat your OWN totem as
+        // somebody else's and duck it. Falls back to the entity when there is no AreaOwner to read.
+        //
+        // No per-view throttle: beats are already paced by the simulation (1.0s, or 0.5s under Double
+        // Time), and several Totems/Speakers overlapping is exactly what SoundData's own SoundGroup
+        // voice budget exists to arbitrate - handling it here as well would fight that.
+        private void PlayBeatSound(EventAlternatingAreaPulsed e)
+        {
+            SoundData sound = ResolveBeatSound(e.IsHealing);
+
+            if (sound == null)
+                return;
+
+            Frame frame = e.Game.Frames.Predicted;
+
+            EntityRef owner = frame != null && frame.TryGet<AreaOwner>(_entityRef, out var areaOwner)
+                ? areaOwner.Owner
+                : _entityRef;
+
+            // A Portable Speaker is this same prefab in its half-strength role (see
+            // PortableSpeakerSkillAction) - identified by its own marker rather than by any visual
+            // difference, since there is none.
+            float volumeScale = frame != null && frame.Has<PortableSpeaker>(_entityRef)
+                ? speakerVolumeScale
+                : 1f;
+
+            EntitySound.PlayAttached(sound, transform, owner, volumeScale);
+        }
+
+        // Either field alone covers both beats, so assigning just one gives "a sound on every
+        // trigger" with no further setup; assigning both gives the alternation its own texture.
+        private SoundData ResolveBeatSound(bool isHealing)
+        {
+            if (isHealing == true)
+                return supportBeatSound != null ? supportBeatSound : damageBeatSound;
+
+            return damageBeatSound != null ? damageBeatSound : supportBeatSound;
         }
 
         [Button("Light Green")]

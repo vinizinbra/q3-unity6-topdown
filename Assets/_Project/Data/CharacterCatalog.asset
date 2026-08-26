@@ -18,28 +18,34 @@ MonoBehaviour:
     avatar:
       Id:
         Value: 1427283638148129588
+    viewPrefab: {fileID: 506928541793919104, guid: 5af9a744e75764c0e8dd3b4a1eb8cf2b, type: 3}
   - id: Brute
     displayName: Brute
     avatar:
       Id:
         Value: 1376154637061154524
+    viewPrefab: {fileID: 506928541793919104, guid: 17be069910e1a46b1923add50a1753d2, type: 3}
   - id: Pixie
     displayName: Pixie
     avatar:
       Id:
         Value: 1271619087951089254
+    viewPrefab: {fileID: 506928541793919104, guid: ee85e910ecba34873a088acf598476eb, type: 3}
   - id: Kai
     displayName: Kai
     avatar:
       Id:
         Value: 1472908484413352043
+    viewPrefab: {fileID: 506928541793919104, guid: c5e5663aac6514edc86adee9cbc8a19d, type: 3}
   - id: Zara
     displayName: Zara
     avatar:
       Id:
         Value: 1324160128536901815
+    viewPrefab: {fileID: 506928541793919104, guid: 92445699946014419b8a6a3ad7cf35de, type: 3}
   - id: Lux
     displayName: Lux
     avatar:
       Id:
         Value: 1358955562811382291
+    viewPrefab: {fileID: 506928541793919104, guid: f8459f8149498419681c218da21925c8, type: 3}

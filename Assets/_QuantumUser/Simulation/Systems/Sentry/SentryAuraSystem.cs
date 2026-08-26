@@ -29,10 +29,10 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<SentryFortificationUpgrade>(filter.Entity, out var fortification) == false)
                 return;
 
-            bool hasShieldBattery = fortification->AllyShieldPerSecond > FP._0;
+            bool hasCoveringFire = fortification->GuardDuration > FP._0;
             bool hasFireSupport = fortification->FireSupportEffect.IsValid;
 
-            if (hasShieldBattery == false && hasFireSupport == false)
+            if (hasCoveringFire == false && hasFireSupport == false)
                 return;
 
             FP ratio = fortification->AuraRangeRatio > FP._0 ? fortification->AuraRangeRatio : FP._1;
@@ -52,12 +52,38 @@ namespace Quantum
             {
                 EntityRef ally = allies[i];
 
-                // Shield Battery - a real per-second amount, converted to this tick's share. Flat by
-                // design: the old version multiplied the ally's OWN shield recharge rate, which scaled
-                // with the recipient and was effectively unbounded.
-                if (hasShieldBattery == true && f.Unsafe.TryGetPointer<Shield>(ally, out var shield) == true)
+                // Covering Fire - one hit denial per hero per turret, held for as long as they stand in
+                // range.
+                //
+                // Three cases, and the order is what makes the rules hold:
+                //
+                //  1. The guard already standing on this ally is OURS -> refresh it, free. The duration
+                //     is short and this runs every tick, so "while you're inside the range" needs no
+                //     revoke path: walk out and it lapses on its own about a second later. Refreshing
+                //     only our OWN is essential - blindly refreshing would let a turret keep a Brute's
+                //     Bodyguard guard alive indefinitely.
+                //  2. Someone ELSE's guard is standing -> leave it completely alone and spend nothing.
+                //     The two can never stack anyway (one FreeHitGuardRemaining slot per entity,
+                //     take-the-longer), so burning this turret's single charge there is pure waste.
+                //  3. No guard at all -> claim one from this turret's budget and grant it.
+                //
+                // The budget is charged on that first grant and never refunded, so an ally who wanders
+                // out unharmed has still used their charge on this turret. That's the point: another
+                // denial means another turret, which is what ties this line to Lux's redeploy economy
+                // (Rapid Recycling, Relocation Protocol) instead of it being a passive aura.
+                if (hasCoveringFire == true)
                 {
-                    ShieldUtility.ApplyFlatShield(f, ally, filter.Sentry->Owner, shield, fortification->AllyShieldPerSecond * f.DeltaTime);
+                    EntityRef guardSource = StatusEffectUtility.GetFreeHitGuardSource(f, ally);
+
+                    if (guardSource == filter.Sentry->Owner)
+                    {
+                        StatusEffectUtility.ApplyFreeHitGuard(f, ally, filter.Sentry->Owner, fortification->GuardDuration);
+                    }
+                    else if (guardSource == EntityRef.None
+                             && AreaAllyBudgetUtility.TryConsumeGuard(f, filter.Entity, ally) == true)
+                    {
+                        StatusEffectUtility.ApplyFreeHitGuard(f, ally, filter.Sentry->Owner, fortification->GuardDuration);
+                    }
                 }
 
                 if (fireSupport == null)

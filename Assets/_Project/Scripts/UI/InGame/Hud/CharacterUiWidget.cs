@@ -2,8 +2,10 @@ using System.Collections;
 using NaughtyAttributes;
 using Photon.Client.StructWrapping;
 using Photon.Deterministic;
+using PrimeTween;
 using Quantum;
 using QuantumUser.View;
+using QuantumUser.View.Util;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -54,10 +56,13 @@ public class CharacterUiWidget : MonoBehaviour
     [SerializeField] private Slider ammoSlider;
     [SerializeField, Tooltip("Fills as the reload runs and hides once it lands, so it reads as \"time until a full magazine\" rather than a second ammo bar.")]
     private Slider reloadSlider;
-    [SerializeField, Tooltip("Punch-scaled when the weapon finishes reloading (timed or instant). Left unassigned to skip the effect.")]
+    [SerializeField, Tooltip("Punch-scaled the moment the magazine comes back to FULL - a timed reload landing, an instant reload, or a mid-combat refill (Max's Full Throttle, Run & Gun). Left unassigned to skip the effect.")]
     private RectTransform reloadPunchTarget;
-    [SerializeField] private float reloadPunchScale = 1.25f;
-    [SerializeField] private float reloadPunchDuration = 0.25f;
+    [SerializeField, Tooltip("Punch strength per axis, ADDED to the target's own scale. Deliberately non-uniform and Y-heavy: this target is a horizontal bar, so stretching it vertically reads as a punch, while stretching it horizontally just reads as the bar briefly getting longer - i.e. as more ammo, which is exactly the wrong signal. Keep X small and Z at 0.")]
+    private Vector3 reloadPunchStrength = new Vector3(0.15f, 1f, 0f);
+    [SerializeField] private float reloadPunchDuration = 0.45f;
+    [SerializeField, Tooltip("Punch oscillations per second. LOWER reads as one big deliberate swell (best when you want the punch to feel heavy); higher reads snappy and buzzy. Turn this DOWN, not up, to make a punch feel bigger.")]
+    private float reloadPunchFrequency = 7f;
 
     [Header("Status Effects")]
     [SerializeField] private StatusIndicator burnIndicator;
@@ -84,6 +89,23 @@ public class CharacterUiWidget : MonoBehaviour
     private StatusIndicator juggernautChannelIndicator;
 
     [Header("Hero Resources")]
+    [Header("Accessory Guard")]
+    [SerializeField, Tooltip("Shown only while this entity's Signature Accessory is actually WORN (AccessoryGuard.State == Equipped) - hidden while it's flying, lying in the level, or broken. Left unassigned to skip. See docs/accessory-guard.md.")]
+    private GameObject accessoryEquippedRoot;
+
+    [SerializeField, Tooltip("The whole pip strip - its empty frames/backing included. Hidden outright for any entity that has no AccessoryGuard at all (every enemy, every sentry), since the pips themselves going dark would otherwise leave a row of empty guard slots on a thing that can never have one. Left unassigned to skip.")]
+    private GameObject accessoryGuardRoot;
+
+    [SerializeField, Tooltip("One object per durability point, deactivated from the right as guards are spent: index i is shown while i < CurrentDurability. Author as many as AccessoryGuardConfig.BaseDurability (3 by default). All hide entirely for an entity with no AccessoryGuard, so the same prefab still serves enemies.")]
+    private GameObject[] accessoryGuardPips;
+
+    [Header("Free Hit Guard")]
+    [SerializeField, Tooltip("Shown only while this entity has a Free Hit Guard running (StatusEffects.FreeHitGuardRemaining - granted by Brute's Bodyguard today). Left unassigned to skip. Self-hides for every entity that has none, so the one shared prefab keeps serving players and enemies alike.")]
+    private GameObject freeHitGuardRoot;
+
+    [SerializeField, Tooltip("Image with Image Type = Filled, drained as the guard's timer runs down (1 = just granted, 0 = about to lapse). Needs StatusEffects.FreeHitGuardDuration as its denominator, which is exactly why the simulation stores it - every OTHER timed status here only shows a countdown NUMBER, so this is the first one that had to know what 'full' was.")]
+    private Image freeHitGuardFill;
+
     [SerializeField, Tooltip("Per-hero resource readouts (Brute/Max/Zara/Lux) authored as children of this widget - left empty, auto-populated via GetComponentsInChildren in Setup. Each one self-hides unless the entity this widget follows actually carries that hero's own components, so the single shared prefab keeps serving every hero AND every enemy. This is the only place they live: the party HUD deliberately shows none of them.")]
     private HeroHudWidget[] heroWidgets;
 
@@ -91,9 +113,12 @@ public class CharacterUiWidget : MonoBehaviour
     private Camera _worldCamera;
     private QuantumGame _game;
     private EntityRef _entityRef;
+
+    // One-shot so a pip/MaxDurability mismatch is reported once per widget rather than every frame.
+    private bool _warnedPipShortfall;
     private Transform _followTarget;
     private Vector3 _characterOffset;
-    private Coroutine _reloadPunchRoutine;
+    private Tween _reloadPunchTween;
     private Coroutine _shieldShineRoutine;
     private bool _shieldWasRecharging;
 
@@ -129,6 +154,16 @@ public class CharacterUiWidget : MonoBehaviour
         QuantumEvent.Subscribe<EventWeaponReloaded>(this, OnWeaponReloaded);
     }
 
+    // Drops the trailing "recent damage" bars on every slider of this widget, so its readout tracks
+    // the simulation with no lag at all. Opt-in per spawner rather than per prefab, since one prefab
+    // serves players, enemies and sentries alike - a sentry's bar is a small, short-lived thing the
+    // owner reads at a glance, where a trail reads as the widget being wrong rather than as drama.
+    public void SetBarsInstant(bool instant)
+    {
+        foreach (var trailingBar in GetComponentsInChildren<DelayedSliderWidget>(true))
+            trailingBar.SetInstant(instant);
+    }
+
     private void OnWeaponReloaded(EventWeaponReloaded e)
     {
         if (e.Entity != _entityRef)
@@ -137,41 +172,27 @@ public class CharacterUiWidget : MonoBehaviour
         PunchReloadScale();
     }
 
+    // Replaces a hand-rolled coroutine that lerped a UNIFORM Vector3.one * scale out and back with
+    // SmoothStep. Two things were wrong with that for a bar: it scaled X as much as Y (so the bar
+    // momentarily read as being longer, i.e. as MORE ammo, fighting the thing it was trying to
+    // celebrate), and a symmetric out-and-back ease has no snap to it. PrimeTween's PunchScale is
+    // per-axis and springy, and is already this project's idiom for exactly this (CurrencyUiWidget,
+    // JuicyEffects) - so this is one call instead of two coroutines.
+    //
+    // Unscaled time, same as CurrencyUiWidget's own punch: a reload landing during a hit-stop freeze
+    // (HurtOverlayUiWidget) should still play rather than being held mid-punch.
     [Button]
     private void PunchReloadScale()
     {
         if (reloadPunchTarget == null)
             return;
 
-        if (_reloadPunchRoutine != null)
-            StopCoroutine(_reloadPunchRoutine);
-
-        _reloadPunchRoutine = StartCoroutine(ReloadPunchRoutine());
-    }
-
-    private IEnumerator ReloadPunchRoutine()
-    {
-        float peakDuration = reloadPunchDuration * 0.35f;
-        float settleDuration = reloadPunchDuration - peakDuration;
-
-        yield return AnimateScale(1f, reloadPunchScale, peakDuration);
-        yield return AnimateScale(reloadPunchScale, 1f, settleDuration);
-
-        _reloadPunchRoutine = null;
-    }
-
-    private IEnumerator AnimateScale(float from, float to, float duration)
-    {
-        float elapsed = 0f;
-
-        while (elapsed < duration)
-        {
-            elapsed += Time.deltaTime;
-            reloadPunchTarget.localScale = Vector3.one * Mathf.SmoothStep(from, to, elapsed / duration);
-            yield return null;
-        }
-
-        reloadPunchTarget.localScale = Vector3.one * to;
+        // Stopped rather than left to overlap - PunchScale is relative to the target's scale when it
+        // starts, so a second punch landing mid-punch would otherwise compound off an already-
+        // stretched bar and leave it permanently the wrong size.
+        _reloadPunchTween.Stop();
+        _reloadPunchTween = Tween.PunchScale(reloadPunchTarget, reloadPunchStrength, reloadPunchDuration,
+            reloadPunchFrequency, useUnscaledTime: true);
     }
 
     private void LateUpdate()
@@ -194,12 +215,86 @@ public class CharacterUiWidget : MonoBehaviour
         UpdateStatusEffects(frame);
         UpdateExplodeOnDeath(frame);
         UpdateRevengeMark(frame);
+        UpdateAccessoryGuard(frame);
+        UpdateFreeHitGuard(frame);
         UpdateHeroWidgets(frame);
+    }
+
+    // Recoverable Accessory Guard readout (see docs/accessory-guard.md) - an "is it currently worn"
+    // marker plus one pip per remaining durability point. Both are plain SetActive swaps off the
+    // simulation's own AccessoryGuard, the same idiom every other indicator on this widget uses, and
+    // both self-hide entirely for any entity that has no guard at all (every enemy, and every hero
+    // in a build where RuntimeConfig.AccessoryGuardConfig was never assigned) - so the one shared
+    // widget prefab keeps serving players and enemies alike.
+    //
+    // pips are authored as a fixed array and simply deactivated from the right: index i is shown
+    // while i < CurrentDurability. Authoring more pips than MaxDurability is harmless (the extras
+    // just never light up); authoring fewer silently caps the readout, which is why the count is
+    // logged as a warning once rather than clamped silently.
+    private void UpdateAccessoryGuard(Frame frame)
+    {
+        bool hasGuard = frame.TryGet<AccessoryGuard>(_entityRef, out var guard) && guard.MaxDurability > 0;
+
+        if (accessoryGuardRoot != null && accessoryGuardRoot.activeSelf != hasGuard)
+            accessoryGuardRoot.SetActive(hasGuard);
+
+        if (accessoryEquippedRoot != null)
+            accessoryEquippedRoot.SetActive(hasGuard && guard.State == AccessoryGuardState.Equipped);
+
+        if (accessoryGuardPips == null)
+            return;
+
+        for (int i = 0; i < accessoryGuardPips.Length; i++)
+        {
+            if (accessoryGuardPips[i] == null)
+                continue;
+
+            bool shown = hasGuard && i < guard.CurrentDurability;
+
+            if (accessoryGuardPips[i].activeSelf != shown)
+                accessoryGuardPips[i].SetActive(shown);
+        }
+
+        if (hasGuard == true && _warnedPipShortfall == false && accessoryGuardPips.Length < guard.MaxDurability)
+        {
+            _warnedPipShortfall = true;
+            LogHelper.Warn("Accessory", $"{name} has {accessoryGuardPips.Length} accessory guard pip(s) but " +
+                $"MaxDurability is {guard.MaxDurability} - the readout will under-report remaining guards.", this);
+        }
     }
 
     // Every hero widget is refreshed off the frame already resolved above rather than reading one
     // of its own - they have no Quantum callback and no local-player binding, since this widget
     // already knows exactly which entity it follows (see HeroHudWidget).
+    // Free Hit Guard readout - "you currently have a free block banked, and here's how long it lasts."
+    //
+    // This matters more than a typical status icon because Bodyguard is a GRANTED buff: without a
+    // readout, a teammate has no way to know Brute gave them anything, and the ability is invisible to
+    // the very person it protects until it silently saves them. The fill is the point - a guard that
+    // lapses unused should be visibly running out, so there's a reason to go spend it.
+    //
+    // Unlike every other timed status on this widget (which show a countdown number via
+    // StatusIndicator.timerText and therefore need no denominator), a fill has to know what "full"
+    // was - hence StatusEffects.FreeHitGuardDuration. Deriving it View-side by remembering the largest
+    // Remaining seen would break the moment a longer guard refreshes a shorter one.
+    private void UpdateFreeHitGuard(Frame frame)
+    {
+        bool active = frame.TryGet<StatusEffects>(_entityRef, out var status) && status.FreeHitGuardRemaining > FP._0;
+
+        if (freeHitGuardRoot != null && freeHitGuardRoot.activeSelf != active)
+            freeHitGuardRoot.SetActive(active);
+
+        if (active == false || freeHitGuardFill == null)
+            return;
+
+        // Duration is only ever 0 here if a guard was somehow applied without going through
+        // ApplyFreeHitGuard - show a full bar rather than an empty one, so the readout fails toward
+        // "you have a guard" (which is true) instead of "it's about to expire" (which isn't).
+        freeHitGuardFill.fillAmount = status.FreeHitGuardDuration > FP._0
+            ? Mathf.Clamp01((status.FreeHitGuardRemaining / status.FreeHitGuardDuration).AsFloat)
+            : 1f;
+    }
+
     private void UpdateHeroWidgets(Frame frame)
     {
         if (heroWidgets == null)

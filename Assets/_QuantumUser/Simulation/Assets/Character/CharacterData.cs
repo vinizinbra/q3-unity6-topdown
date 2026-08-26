@@ -23,7 +23,14 @@ namespace Quantum
 
         [Header("Shield")]
         public FP BaseMaxShield = FP._0;
+
+        [Tooltip("Shield is filled by gameplay only, never by time - it starts a run EMPTY and never recharges. On for every hero: Shield is an earned, spendable buffer whose job is to keep your Accessory on your head (while you have any Shield, hits eat Shield and the accessory never pops off). Leave OFF for anything that should recharge the classic way. Suppresses the RechargeDelay/RechargeRate fields below entirely.")]
+        public bool ShieldChargeOnly = true;
+
+        [Tooltip("Ignored while Shield Charge Only is on.")]
         public FP ShieldRechargeDelay = 3;
+
+        [Tooltip("Ignored while Shield Charge Only is on.")]
         public FP ShieldRechargeRate = 20;
 
         [Header("Offense")]

@@ -89,6 +89,12 @@
                 // Also drives the Combat<->Breathing loop now (Breathing is just another entry in
                 // SurvivalConfig.Phases[], see docs/run-phase.md) - no separate system needed.
                 new CombatDirectorSystem(),
+                // Synthesizes this tick's Input for every RuntimePlayer.IsBot slot (see
+                // BotBrain.qtn / docs/bots.md) - immediately before KCCSystem so the decision it
+                // makes is the one this same tick's movement resolves, rather than landing a tick
+                // late. Inside the pausable group deliberately: a bot should freeze along with
+                // everyone else while an upgrade screen is open.
+                new BotInputSystem(),
                 new KCCSystem(),
                 // Must run after KCCSystem so it reacts to this tick's freshly-resolved grounded state.
                 new AutoJumpSystem(),
@@ -264,6 +270,11 @@
                 // OnHealthDamageApplied/OnShieldDamageApplied, same signal-driven "no ordering
                 // dependency" shape as MaxVendettaSystem.
                 new BruteProtectorReactionSystem(),
+                // Bodyguard ascension ranks 2-3's payout - reacts to Combat.qtn's
+                // OnFreeHitGuardConsumed, so like the two reactions around it it has no ordering
+                // dependency of its own and is placed here purely to keep Brute's reaction systems
+                // together.
+                new BruteBodyguardReactionSystem(),
                 // Brute's Groundbreaker ascension - reacts to the generic OnPlayerLanded signal
                 // (PlayerMovement.qtn) rather than ticking, so it has no ordering dependency of its
                 // own; placed alongside his other Protector-pool reaction, and before
@@ -273,6 +284,11 @@
                 // Zara's Afterbeat dash ascension - no ordering dependency on anything else, same
                 // reasoning as JuggernautDischargeCooldownSystem's own placement comment.
                 new ZaraAfterbeatSystem(),
+                // Zara's Flow State - ticks her movement/build/decay clock and reacts to Combat.qtn's
+                // OnHostileHitConnected to break it. Placed before StatusEffectSystem for the same
+                // "applied this tick starts ticking next tick" reason every status-applying system is,
+                // and it is filtered on ZaraFlow so it costs nothing for any other hero.
+                new ZaraFlowSystem(),
                 new SentryAuraSystem(),
                 // Drains a sentry's own Health toward 0 over its lifetime - a real hit as far as
                 // DamageUtility is concerned (resets Shield's RechargeTimer like any other), so it must
@@ -308,6 +324,13 @@
                 // DestroyAfterTimeSystem since it also f.Destroys) - collects HealthOrbs dropped by a
                 // Breakable's loot table and heals the collecting player. See HealthOrbSystem.
                 new HealthOrbSystem(),
+                // Same walk-into-radius/f.Destroy-before-DestroyAfterTimeSystem shape as the three
+                // pickup systems just above, with one deliberate difference: only the accessory's
+                // OWNER can collect it, so it scans one player instead of all of them. Also drives
+                // the popped-off accessory's own Airborne -> Dropped landing transition (read off
+                // PopVelocity, which PopMotionSystem removes on landing much earlier this same tick).
+                // See docs/accessory-guard.md.
+                new AccessoryGuardSystem(),
                 // Healing Shrine has no system of its own - it's press-to-heal via the same
                 // Base-Skill-button redirect Cursed Rift uses (HealingShrineUtility.TryInteract,
                 // called from SkillSystem), not a walk-into-radius system - see docs/breathing-poi.md.

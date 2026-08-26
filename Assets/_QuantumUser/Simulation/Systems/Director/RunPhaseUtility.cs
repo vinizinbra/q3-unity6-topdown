@@ -269,11 +269,21 @@ namespace Quantum
 
         private static void ProcessSkipVotes(Frame f)
         {
+            // A bot never sends a SkipBreathingCommand (nobody is holding its controller), so
+            // without this the unanimity check below can never pass in a bot party and the human's
+            // own Skip button would silently do nothing. Same "take the bot out of every
+            // waiting-for-all-players gate" reasoning as LevelUpSystem.AutoPickForBots - the bot
+            // votes yes as soon as the vote exists, so the human's vote alone decides. Opt-out via
+            // RuntimeConfig.Bots.
+            bool autoVoteBots = f.RuntimeConfig.Bots.DisableAutoBreathingSkipVote == false;
             var filtered = f.Filter<PlayerLink>();
 
             while (filtered.Next(out EntityRef entity, out PlayerLink playerLink))
             {
-                if (f.GetPlayerCommand(playerLink.Player) is SkipBreathingCommand)
+                bool voted = f.GetPlayerCommand(playerLink.Player) is SkipBreathingCommand
+                    || (autoVoteBots == true && f.Has<BotBrain>(entity) == true);
+
+                if (voted == true)
                 {
                     f.AddOrGet<BreathingSkipVote>(entity, out var vote);
                     vote->VotedAtBreathingIndex = f.Global->BreathingIndex;

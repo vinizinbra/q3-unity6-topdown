@@ -1,0 +1,32 @@
+// Marks a player entity whose Input is produced by the SIMULATION itself (BotInputSystem) every
+// tick instead of being polled from a real device - a local-testing convenience so one person can
+// play a full co-op party (see docs/bots.md). Added at spawn by PlayerSpawnUtility purely from
+// RuntimePlayer.IsBot, so nothing else in the codebase has to know what a bot is: every
+// Input-consuming system reads PlayerInputUtility.Resolve, which hands back this component's own
+// Data for a bot and f.GetPlayerInput for everyone else.
+//
+// Same "fake a player's Input on an entity that has no real one behind it" shape InputSource.qtn
+// already established for Lux's sentry gun - deliberately a SECOND component rather than reusing
+// InputSource, because a bot DOES have a PlayerLink/PlayerRef (it occupies a real player slot),
+// and WeaponSystem.HasFireDriver treats "has InputSource" as "is a non-player shooter".
+component BotBrain
+{
+    // This tick's synthesized Input. Buttons are written as one-tick pulses (the whole struct is
+    // cleared at the top of every BotInputSystem.Update), so a WasPressed-driven consumer -
+    // SkillSystem's Dash/Hero Skill, AutoJumpSystem's Jump - sees exactly one press edge per
+    // decision, never a held button that re-triggers every tick.
+    Input Data;
+
+    // Countdown to this bot's next Hero Skill / Dash press. Re-rolled inside the configured
+    // [min, max] band on every press so two bots spawned on the same tick drift apart instead of
+    // casting in lockstep. Seeded at spawn (PlayerSpawnUtility) rather than left at 0, which would
+    // make every bot cast on its very first tick.
+    FP HeroSkillTimer;
+    FP DashSkillTimer;
+
+    // How long this bot has been further than BotSettings.LeashDistance from its follow target.
+    // Once it passes LeashTimeout the bot is teleported back next to the target - the follow
+    // steering is deliberately dumb (no pathfinding), so this is what stops a bot that walked into
+    // a dead end from being lost for the rest of the run.
+    FP LeashTimer;
+}

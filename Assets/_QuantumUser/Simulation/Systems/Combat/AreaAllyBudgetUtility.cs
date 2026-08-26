@@ -60,6 +60,31 @@ namespace Quantum
             return allowed;
         }
 
+        // Free Hit Guard counterpart - "may this area grant `ally` another guard?", booking it if so.
+        //
+        // Deliberately DENIES rather than permits when the area carries no budget or authors
+        // MaxGuardsPerAlly 0, the opposite of the two FP caps above. A guard is a discrete grant that
+        // must be opted into; an unbudgeted area handing out unlimited hit denials every tick is the
+        // failure mode, not the safe default.
+        public static bool TryConsumeGuard(Frame f, EntityRef area, EntityRef ally)
+        {
+            if (area == EntityRef.None)
+                return false;
+
+            if (f.Unsafe.TryGetPointer<AreaAllyBudget>(area, out var budget) == false
+                || budget->MaxGuardsPerAlly == 0)
+                return false;
+
+            if (TryResolveSlot(budget, ally, out int slot) == false)
+                return false; // no free slot (>4 allies) - deny, for the same reason as above
+
+            if (budget->GuardsGranted[slot] >= budget->MaxGuardsPerAlly)
+                return false;
+
+            budget->GuardsGranted[slot]++;
+            return true;
+        }
+
         // Gives back allowance a caller booked but couldn't actually spend (e.g. a cooldown reduction
         // that landed on an already-ready skill) - clamped at 0, so an over-refund can never hand out
         // more than was booked in the first place.
@@ -101,6 +126,7 @@ namespace Quantum
                 budget->Ally[i] = ally;
                 budget->Healed[i] = FP._0;
                 budget->CooldownReduced[i] = FP._0;
+                budget->GuardsGranted[i] = 0;
                 slot = i;
                 return true;
             }
