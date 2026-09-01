@@ -19,6 +19,8 @@ MonoBehaviour:
   Effects:
   - Id:
       Value: 440091783757558214
+  - Id:
+      Value: 478782960494475570
   RestOffset:
     RawValue: 0
   DetonateOnLevelGeometry: 1

@@ -32,81 +32,15 @@ MonoBehaviour:
     AllowedEnemies:
     - EnemyData:
         Id:
-          Value: 414697522645550537
-      Faction: 0
-      Weight:
-        RawValue: 65536
-      MinimumSurvivalTime:
-        RawValue: 0
-      MaximumSurvivalTime:
-        RawValue: 0
-      MaxConcurrent: 50
-    - EnemyData:
-        Id:
-          Value: 285873967767323801
-      Faction: 0
-      Weight:
-        RawValue: 65536
-      MinimumSurvivalTime:
-        RawValue: 0
-      MaximumSurvivalTime:
-        RawValue: 0
-      MaxConcurrent: 50
-    - EnemyData:
-        Id:
-          Value: 375525024859964486
-      Faction: 0
-      Weight:
-        RawValue: 65536
-      MinimumSurvivalTime:
-        RawValue: 0
-      MaximumSurvivalTime:
-        RawValue: 0
-      MaxConcurrent: 50
-    - EnemyData:
-        Id:
-          Value: 275775637166140646
-      Faction: 0
-      Weight:
-        RawValue: 65536
-      MinimumSurvivalTime:
-        RawValue: 0
-      MaximumSurvivalTime:
-        RawValue: 0
-      MaxConcurrent: 50
-    - EnemyData:
-        Id:
-          Value: 380491306257295384
-      Faction: 0
-      Weight:
-        RawValue: 65536
-      MinimumSurvivalTime:
-        RawValue: 0
-      MaximumSurvivalTime:
-        RawValue: 0
-      MaxConcurrent: 50
-    - EnemyData:
-        Id:
           Value: 441492803210562088
-      Faction: 0
+      Faction: 1
       Weight:
-        RawValue: 65536
+        RawValue: 65470464
       MinimumSurvivalTime:
         RawValue: 0
       MaximumSurvivalTime:
         RawValue: 0
-      MaxConcurrent: 50
-    - EnemyData:
-        Id:
-          Value: 445092933849088039
-      Faction: 0
-      Weight:
-        RawValue: 65536
-      MinimumSurvivalTime:
-        RawValue: 0
-      MaximumSurvivalTime:
-        RawValue: 0
-      MaxConcurrent: 50
+      MaxConcurrent: 1
     BossPrototype:
       Id:
         Value: 0

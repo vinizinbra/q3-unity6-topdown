@@ -184,6 +184,6 @@ MonoBehaviour:
   - Faction: 2
     ViewPrefab: {fileID: 8476845490732343577, guid: 2e4a8f2b5eaf44c0ba7cade36c968ed0, type: 3}
     ScaleMultiplier: 1
-  - Faction: 0
-    ViewPrefab: {fileID: 8476845490732343577, guid: f8e0e322414154c5a941e35c6dd113da, type: 3}
+  - Faction: 1
+    ViewPrefab: {fileID: 8476845490732343577, guid: 6693b9f5a94d24c6abb671572d63e821, type: 3}
     ScaleMultiplier: 1

@@ -24,6 +24,10 @@ component PlayerMovement
     // Updated by AutoJumpSystem whenever grounded; PlayerFallSystem respawns here on a fall.
     FPVector3 LastGroundedPosition;
 
+    // Counts down (seconds) after PlayerFallSystem detects a fall, before it actually teleports
+    // the player back - see LevelConfig.FallRespawnDelay. 0 means no fall is currently pending.
+    FP FallRespawnTimer;
+
     // See LandingSource above. Written by AutoJumpSystem.DoJump (Jump) and
     // DamageUtility.ApplyResolvedImpulse (Launched); reset to Fall by AutoJumpSystem on landing.
     LandingSource AirborneSource;

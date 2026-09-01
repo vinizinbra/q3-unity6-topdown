@@ -516,6 +516,11 @@ namespace Quantum
                 ? frame.Get<PlayerLifeState>(_entityRef).State
                 : PlayerLifeStateKind.Alive;
 
+            // Fall-respawn delay pending (see PlayerFallSystem/LevelConfig.FallRespawnDelay) - the
+            // character has vanished off the map and is about to be teleported back. Polled every
+            // tick, same "self-healing, no event needed" idiom AccessoryView already uses.
+            bool isFallPending = FallStateUtility.IsFallPending(frame, _entityRef);
+
             Vector3 velocity = kcc.Data.RealVelocity.ToUnityVector3();
             UpdateFacing(frame, velocity);
 
@@ -525,7 +530,7 @@ namespace Quantum
             bool isDashing = frame.Has<CharacterSkills>(_entityRef) == true
                 && frame.Get<CharacterSkills>(_entityRef).DashSkill.State == SkillState.Active;
 
-            Animate(velocity, kcc.Data.IsGrounded, lifeState, Time.deltaTime, isDashing);
+            Animate(velocity, kcc.Data.IsGrounded, lifeState, Time.deltaTime, isDashing, isFallPending);
         }
 
         // Drives one frame of the rig off plain values instead of a Frame, so the exact same pose
@@ -535,7 +540,7 @@ namespace Quantum
         // Quantum-specific stays in QUpdate: the KCC/PlayerLifeState/CharacterSkills reads, and the
         // Aim read that UpdateFacing does. Nothing in here touches _entityRef except the two sound
         // paths, and those no-op under _previewMode.
-        private void Animate(Vector3 velocity, bool isGrounded, PlayerLifeStateKind lifeState, float dt, bool isDashing = false)
+        private void Animate(Vector3 velocity, bool isGrounded, PlayerLifeStateKind lifeState, float dt, bool isDashing = false, bool isFallPending = false)
         {
             if (root == null && head == null && torso == null && legLeft == null && legRight == null)
                 return;
@@ -546,11 +551,13 @@ namespace Quantum
                 _recaptureBaselineOnResume = false;
             }
 
-            ApplyLifeStateVisuals(lifeState);
+            ApplyLifeStateVisuals(lifeState, isFallPending);
 
-            // While not Alive the normal velocity-driven locomotion below is skipped entirely - an
-            // incapacitated player can't move anyway (PlayerLifeStateUtility.IsIncapacitated).
-            if (lifeState != PlayerLifeStateKind.Alive)
+            // While not Alive - or a fall-respawn is pending - the normal velocity-driven locomotion
+            // below is skipped entirely: an incapacitated player can't move anyway
+            // (PlayerLifeStateUtility.IsIncapacitated), and a player currently off the map has
+            // nothing visible to animate.
+            if (lifeState != PlayerLifeStateKind.Alive || isFallPending == true)
             {
                 _springActive = false; // cancel any in-flight landing spring so it doesn't resume on revive
                 _wasGrounded = isGrounded;
@@ -893,13 +900,17 @@ namespace Quantum
         // Shows exactly one of the three authored roots for the current life state (see docs/revive.md).
         // Idempotent - SetActive only changes state when it differs - so calling this every frame is
         // free. Any root left unassigned is simply skipped.
-        private void ApplyLifeStateVisuals(PlayerLifeStateKind state)
+        //
+        // isFallPending (PlayerFallSystem's own FallRespawnTimer, see LevelConfig.FallRespawnDelay)
+        // forces every root off regardless of life state - a fall isn't a life-state change, it's a
+        // separate "vanished off the map, about to respawn" window layered on top of it.
+        private void ApplyLifeStateVisuals(PlayerLifeStateKind state, bool isFallPending = false)
         {
-            bool alive = state == PlayerLifeStateKind.Alive;
+            bool alive = state == PlayerLifeStateKind.Alive && isFallPending == false;
             SetActive(bodyRoot, alive);
             SetActive(handsRoot, alive);
-            SetActive(downedRoot, state == PlayerLifeStateKind.Downed);
-            SetActive(koRoot, state == PlayerLifeStateKind.KO);
+            SetActive(downedRoot, isFallPending == false && state == PlayerLifeStateKind.Downed);
+            SetActive(koRoot, isFallPending == false && state == PlayerLifeStateKind.KO);
         }
 
         private static void SetActive(GameObject go, bool active)

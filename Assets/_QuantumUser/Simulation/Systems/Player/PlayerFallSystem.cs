@@ -12,8 +12,49 @@ namespace Quantum
         {
             LevelConfig config = f.FindAsset(f.RuntimeConfig.LevelConfig);
 
+            // A fall is already pending - just count the delay down (see LevelConfig.
+            // FallRespawnDelay) rather than re-checking FallDeathHeight, which would otherwise
+            // re-trigger every tick while the player keeps falling below it.
+            if (filter.PlayerMovement->FallRespawnTimer > FP._0)
+            {
+                filter.PlayerMovement->FallRespawnTimer -= f.DeltaTime;
+
+                if (filter.PlayerMovement->FallRespawnTimer > FP._0)
+                    return;
+
+                FPVector3 respawnPosition = ResolveRespawnPosition(f, filter.PlayerMovement->LastGroundedPosition, config);
+                filter.KCC->Teleport(f, respawnPosition);
+
+                // KCC.Teleport moves the character but does NOT clear its velocity - it only sets
+                // DesiredPosition/TargetPosition/HasTeleported and the stepping-up/ground-snapping
+                // flags. Without this the player arrives at the respawn point still carrying every
+                // bit of the downward speed the fall built up (plus whatever it kept accumulating
+                // during the delay above), which is what turned one fall into a loop: respawn ->
+                // immediately fall again -> take fall damage again -> respawn faster, since
+                // DynamicVelocity was never reset. PlayerMovementProcessor.ClampFallSpeed now bounds
+                // how fast that can get, but a respawn should land you standing, not already falling
+                // at terminal velocity. Same three-line reset RunPhaseUtility.
+                // TeleportPlayersToBossArena already does after its own KCC.Teleport, for exactly
+                // the same reason.
+                filter.KCC->SetKinematicVelocity(FPVector3.Zero);
+                filter.KCC->SetDynamicVelocity(FPVector3.Zero);
+                filter.KCC->SetExternalImpulse(FPVector3.Zero);
+
+                Log.Debug($"[Fall] {filter.Entity} respawned at {respawnPosition}");
+
+                f.Events.PlayerRespawned(filter.Entity, respawnPosition);
+                return;
+            }
+
             if (filter.KCC->Position.Y >= config.FallDeathHeight)
                 return;
+
+            // Centroid, not feet - filter.KCC->Position is the capsule's base/ground-contact point
+            // (see EnemyMovementUtility.ResolveEntityCenter's own comment), which read as the
+            // particle spawning at the player's feet instead of on their body.
+            FPVector3 fallCenter = EnemyMovementUtility.ResolveEntityCenter(f, filter.Entity);
+            FP fallRadius = EnemyMovementUtility.ResolveEntityRadius(f, filter.Entity);
+            f.Events.FallDeathTriggered(filter.Entity, fallCenter, fallRadius);
 
             if (f.Unsafe.TryGetPointer<Health>(filter.Entity, out var health) == false)
                 return;
@@ -32,26 +73,8 @@ namespace Quantum
             if (f.Exists(filter.Entity) == false)
                 return;
 
-            FPVector3 respawnPosition = ResolveRespawnPosition(f, filter.PlayerMovement->LastGroundedPosition, config);
-            filter.KCC->Teleport(f, respawnPosition);
-
-            // KCC.Teleport moves the character but does NOT clear its velocity - it only sets
-            // DesiredPosition/TargetPosition/HasTeleported and the stepping-up/ground-snapping
-            // flags. Without this the player arrives at the respawn point still carrying every bit
-            // of the downward speed the fall built up, which is what turned one fall into a loop:
-            // respawn -> immediately fall again -> take fall damage again -> respawn faster, since
-            // DynamicVelocity was never reset and just kept accumulating Gravity * dt.
-            // PlayerMovementProcessor.ClampFallSpeed now bounds how fast that can get, but a
-            // respawn should land you standing, not already falling at terminal velocity. Same
-            // three-line reset RunPhaseUtility.TeleportPlayersToBossArena already does after its
-            // own KCC.Teleport, for exactly the same reason.
-            filter.KCC->SetKinematicVelocity(FPVector3.Zero);
-            filter.KCC->SetDynamicVelocity(FPVector3.Zero);
-            filter.KCC->SetExternalImpulse(FPVector3.Zero);
-
-            Log.Debug($"[Fall] {filter.Entity} respawned at {respawnPosition}");
-
-            f.Events.PlayerRespawned(filter.Entity, respawnPosition);
+            // Actual teleport is deferred - see the FallRespawnTimer branch above.
+            filter.PlayerMovement->FallRespawnTimer = config.FallRespawnDelay;
         }
 
         // Thin wrapper over the shared FallRespawnUtility (also used by EnemyFallSystem for

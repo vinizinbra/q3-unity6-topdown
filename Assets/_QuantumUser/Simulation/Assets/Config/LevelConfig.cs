@@ -71,6 +71,12 @@ namespace Quantum
         // Fraction of MaxHealth a player takes when they fall off the level.
         public FP FallDamagePercent = FP._0_10;
 
+        // Delay (seconds) between a fall being detected (damage applied, FallDeathTriggered VFX
+        // fired) and the actual respawn teleport - PlayerFallSystem/EnemyFallSystem's own
+        // FallRespawnTimer counts this down, so the fall reads before the character snaps back
+        // instead of an instant teleport in the same tick.
+        public FP FallRespawnDelay = 1;
+
         // Minimum distance PlayerFallSystem's automatic (non-baked) respawn fallback keeps from
         // its chunk's own footprint boundary - only applies when that chunk has no hand-authored
         // Chunk.RespawnPoint.

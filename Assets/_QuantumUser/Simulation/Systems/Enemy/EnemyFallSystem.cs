@@ -23,15 +23,48 @@ namespace Quantum
             if (filter.Enemy->Phase == EnemyActionPhase.Dead)
                 return;
 
+            LevelConfig config = f.FindAsset(f.RuntimeConfig.LevelConfig);
+
+            // A fall is already pending - just count the delay down (see LevelConfig.
+            // FallRespawnDelay) rather than re-checking FallDeathHeight, which would otherwise
+            // re-trigger every tick while the enemy keeps falling below it.
+            if (filter.Enemy->FallRespawnTimer > FP._0)
+            {
+                filter.Enemy->FallRespawnTimer -= f.DeltaTime;
+
+                if (filter.Enemy->FallRespawnTimer > FP._0)
+                    return;
+
+                EnemyDataAsset pendingData = f.FindAsset(filter.Enemy->EnemyData);
+                FPVector3 respawnPosition = ResolveRespawnPosition(f, filter.Enemy->FallOriginPosition, pendingData, config);
+
+                filter.Transform3D->Position = respawnPosition;
+
+                // Without this, whatever fall/knockback velocity carried it off the level (plus
+                // whatever it kept accumulating during the delay above) would just keep driving it
+                // straight back off the respawn point. PlayerFallSystem needs the same reset and
+                // does it explicitly too - KCC.Teleport does NOT clear velocity on its own (it only
+                // sets position/HasTeleported), which this comment used to claim.
+                filter.PhysicsBody3D->Velocity = FPVector3.Zero;
+
+                Log.Debug($"[Fall] {filter.Entity} ({pendingData.name}) respawned at {respawnPosition}");
+                return;
+            }
+
             EnemyDataAsset data = f.FindAsset(filter.Enemy->EnemyData);
 
             if (data == null || (data.Tier != EnemyTier.Boss && data.Tier != EnemyTier.Elite && data.Economy.Persistent == false))
                 return;
 
-            LevelConfig config = f.FindAsset(f.RuntimeConfig.LevelConfig);
-
             if (filter.Transform3D->Position.Y >= config.FallDeathHeight)
                 return;
+
+            // Centroid, not feet - filter.Transform3D->Position is ground level (see
+            // EnemyMovementUtility.ResolveEntityCenter's own comment), which read as the particle
+            // spawning at the enemy's feet instead of on its body.
+            FPVector3 fallCenter = EnemyMovementUtility.ResolveEntityCenter(f, filter.Entity);
+            FP fallRadius = EnemyMovementUtility.ResolveEntityRadius(f, filter.Entity);
+            f.Events.FallDeathTriggered(filter.Entity, fallCenter, fallRadius);
 
             if (f.Unsafe.TryGetPointer<Health>(filter.Entity, out var health) == false)
                 return;
@@ -65,17 +98,11 @@ namespace Quantum
                 return;
             }
 
-            FPVector3 respawnPosition = ResolveRespawnPosition(f, filter.Transform3D->Position, data, config);
-
-            filter.Transform3D->Position = respawnPosition;
-
-            // Without this, whatever fall/knockback velocity carried it off the level would just
-            // keep driving it straight back off the respawn point. PlayerFallSystem needs the same
-            // reset and does it explicitly too - KCC.Teleport does NOT clear velocity on its own
-            // (it only sets position/HasTeleported), which this comment used to claim.
-            filter.PhysicsBody3D->Velocity = FPVector3.Zero;
-
-            Log.Debug($"[Fall] {filter.Entity} ({data.name}) respawned at {respawnPosition}");
+            // Actual teleport is deferred - see the FallRespawnTimer branch above. Position is
+            // captured now (not re-read at expiry) so residual fall/knockback velocity during the
+            // delay can't drift the respawn resolution away from where it actually fell.
+            filter.Enemy->FallOriginPosition = filter.Transform3D->Position;
+            filter.Enemy->FallRespawnTimer = config.FallRespawnDelay;
         }
 
         // Boss respawns at its own sealed arena's first spawn point (BossSpawnPoints[0], or the

@@ -120,7 +120,7 @@ MonoBehaviour:
     Parented: 0
     AlignToEnemyDirection: 0
     RotationOffset: {x: 0, y: 0, z: 0}
-    Scale: 1
+    Scale: 1.5
     OverrideSortingOrder: 0
     SortingOrder: 0
   BeginStep:
@@ -347,6 +347,8 @@ MonoBehaviour:
   ConeAngleDegrees:
     RawValue: 23592960
   SelfDestructs: 1
+  MaxHeightDifference:
+    RawValue: 0
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0

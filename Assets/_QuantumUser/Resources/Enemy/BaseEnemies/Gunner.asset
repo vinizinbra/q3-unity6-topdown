@@ -85,7 +85,7 @@ MonoBehaviour:
       Value: 964534466313562998
   Name: 
   EngageRange:
-    RawValue: 196608
+    RawValue: 393216
   DamageRange:
     RawValue: 393216
   Damage:
@@ -622,7 +622,7 @@ MonoBehaviour:
       Value: 1528429220434386440
   Movement:
     Id:
-      Value: 1637224532365372608
+      Value: 371908630583993270
   Hit:
     Id:
       Value: 458157697180888248

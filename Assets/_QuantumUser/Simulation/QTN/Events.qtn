@@ -261,6 +261,18 @@ event PlayerRespawned
     FPVector3 Position;
 }
 
+// Fires for both a falling player (PlayerFallSystem) and a falling Boss/Elite/Persistent enemy
+// (EnemyFallSystem) the instant they drop below LevelConfig.FallDeathHeight - at the position
+// they fell FROM, before any respawn teleport. Radius is the entity's own KCC (player) or
+// PhysicsCollider3D (enemy) radius, so a single VFX prefab authored at reference radius 1 scales
+// correctly for both.
+event FallDeathTriggered
+{
+    EntityRef Entity;
+    FPVector3 Position;
+    FP        Radius;
+}
+
 event ProjectileDestroyed
 {
     EntityRef  Entity;

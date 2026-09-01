@@ -3385,7 +3385,7 @@ namespace Quantum {
   }
   [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct Enemy : Quantum.IComponent {
-    public const Int32 SIZE = 264;
+    public const Int32 SIZE = 304;
     public const Int32 ALIGNMENT = 8;
     [FieldOffset(8)]
     public AssetRef<EnemyDataAsset> EnemyData;
@@ -3393,43 +3393,49 @@ namespace Quantum {
     public EntityRef Target;
     [FieldOffset(1)]
     public EnemyActionPhase Phase;
-    [FieldOffset(72)]
+    [FieldOffset(88)]
     public FP StateTimer;
+    [FieldOffset(80)]
+    public FP SpawnGraceRemaining;
     [FieldOffset(32)]
     public FP AttackCooldownRemaining;
     [FieldOffset(0)]
     public Byte CurrentActionSlot;
-    [FieldOffset(168)]
+    [FieldOffset(208)]
     public FPVector3 SkillTargetPosition;
-    [FieldOffset(144)]
+    [FieldOffset(184)]
     public FPVector3 SkillStartPosition;
-    [FieldOffset(216)]
+    [FieldOffset(256)]
     public FPVector3 TraversalJumpOrigin;
-    [FieldOffset(192)]
+    [FieldOffset(232)]
     public FPVector3 TraversalJumpDestination;
-    [FieldOffset(112)]
+    [FieldOffset(128)]
     public FP TraversalJumpTimer;
-    [FieldOffset(96)]
+    [FieldOffset(112)]
     public FP TraversalJumpDuration;
-    [FieldOffset(88)]
-    public FP TraversalJumpAnticipationTimer;
-    [FieldOffset(240)]
-    public FPVector3 TraversalJumpPendingDestination;
     [FieldOffset(104)]
-    public FP TraversalJumpPendingSpeed;
-    [FieldOffset(56)]
-    public FP KnockbackTimer;
+    public FP TraversalJumpAnticipationTimer;
+    [FieldOffset(280)]
+    public FPVector3 TraversalJumpPendingDestination;
     [FieldOffset(120)]
+    public FP TraversalJumpPendingSpeed;
+    [FieldOffset(64)]
+    public FP KnockbackTimer;
+    [FieldOffset(160)]
     public FPVector3 PreKnockbackPosition;
-    [FieldOffset(80)]
+    [FieldOffset(96)]
     public FP StuckCheckTimer;
+    [FieldOffset(40)]
+    public FP FallRespawnTimer;
+    [FieldOffset(136)]
+    public FPVector3 FallOriginPosition;
     [FieldOffset(16)]
     public EntityRef SkillProjectile;
-    [FieldOffset(40)]
-    public FP FlyingHoverCheckTimer;
     [FieldOffset(48)]
+    public FP FlyingHoverCheckTimer;
+    [FieldOffset(56)]
     public FP FlyingHoverTargetHeight;
-    [FieldOffset(64)]
+    [FieldOffset(72)]
     public FP LostTimer;
     [FieldOffset(2)]
     public EnemyFaction Faction;
@@ -3440,6 +3446,7 @@ namespace Quantum {
         hash = hash * 31 + Target.GetHashCode();
         hash = hash * 31 + (Byte)Phase;
         hash = hash * 31 + StateTimer.GetHashCode();
+        hash = hash * 31 + SpawnGraceRemaining.GetHashCode();
         hash = hash * 31 + AttackCooldownRemaining.GetHashCode();
         hash = hash * 31 + CurrentActionSlot.GetHashCode();
         hash = hash * 31 + SkillTargetPosition.GetHashCode();
@@ -3454,6 +3461,8 @@ namespace Quantum {
         hash = hash * 31 + KnockbackTimer.GetHashCode();
         hash = hash * 31 + PreKnockbackPosition.GetHashCode();
         hash = hash * 31 + StuckCheckTimer.GetHashCode();
+        hash = hash * 31 + FallRespawnTimer.GetHashCode();
+        hash = hash * 31 + FallOriginPosition.GetHashCode();
         hash = hash * 31 + SkillProjectile.GetHashCode();
         hash = hash * 31 + FlyingHoverCheckTimer.GetHashCode();
         hash = hash * 31 + FlyingHoverTargetHeight.GetHashCode();
@@ -3471,16 +3480,19 @@ namespace Quantum {
         EntityRef.Serialize(&p->SkillProjectile, serializer);
         EntityRef.Serialize(&p->Target, serializer);
         FP.Serialize(&p->AttackCooldownRemaining, serializer);
+        FP.Serialize(&p->FallRespawnTimer, serializer);
         FP.Serialize(&p->FlyingHoverCheckTimer, serializer);
         FP.Serialize(&p->FlyingHoverTargetHeight, serializer);
         FP.Serialize(&p->KnockbackTimer, serializer);
         FP.Serialize(&p->LostTimer, serializer);
+        FP.Serialize(&p->SpawnGraceRemaining, serializer);
         FP.Serialize(&p->StateTimer, serializer);
         FP.Serialize(&p->StuckCheckTimer, serializer);
         FP.Serialize(&p->TraversalJumpAnticipationTimer, serializer);
         FP.Serialize(&p->TraversalJumpDuration, serializer);
         FP.Serialize(&p->TraversalJumpPendingSpeed, serializer);
         FP.Serialize(&p->TraversalJumpTimer, serializer);
+        FPVector3.Serialize(&p->FallOriginPosition, serializer);
         FPVector3.Serialize(&p->PreKnockbackPosition, serializer);
         FPVector3.Serialize(&p->SkillStartPosition, serializer);
         FPVector3.Serialize(&p->SkillTargetPosition, serializer);
@@ -4914,16 +4926,18 @@ namespace Quantum {
   }
   [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct PlayerMovement : Quantum.IComponent {
-    public const Int32 SIZE = 48;
+    public const Int32 SIZE = 56;
     public const Int32 ALIGNMENT = 8;
     [FieldOffset(8)]
     public AssetRef<MovementDataAsset> MovementData;
     [FieldOffset(4)]
     public QBoolean HasAirJumped;
-    [FieldOffset(16)]
-    public FP JumpCooldownTimer;
     [FieldOffset(24)]
+    public FP JumpCooldownTimer;
+    [FieldOffset(32)]
     public FPVector3 LastGroundedPosition;
+    [FieldOffset(16)]
+    public FP FallRespawnTimer;
     [FieldOffset(0)]
     public LandingSource AirborneSource;
     public override readonly Int32 GetHashCode() {
@@ -4933,6 +4947,7 @@ namespace Quantum {
         hash = hash * 31 + HasAirJumped.GetHashCode();
         hash = hash * 31 + JumpCooldownTimer.GetHashCode();
         hash = hash * 31 + LastGroundedPosition.GetHashCode();
+        hash = hash * 31 + FallRespawnTimer.GetHashCode();
         hash = hash * 31 + (Byte)AirborneSource;
         return hash;
       }
@@ -4942,6 +4957,7 @@ namespace Quantum {
         serializer.Stream.Serialize((Byte*)&p->AirborneSource);
         QBoolean.Serialize(&p->HasAirJumped, serializer);
         AssetRef.Serialize(&p->MovementData, serializer);
+        FP.Serialize(&p->FallRespawnTimer, serializer);
         FP.Serialize(&p->JumpCooldownTimer, serializer);
         FPVector3.Serialize(&p->LastGroundedPosition, serializer);
     }

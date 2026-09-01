@@ -1455,7 +1455,7 @@ Transform:
   m_GameObject: {fileID: 39796856}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1, y: 0.03437, z: 0.30198}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -3261,6 +3261,8 @@ MonoBehaviour:
       Value: 0
     StateTimer:
       RawValue: 0
+    SpawnGraceRemaining:
+      RawValue: 0
     AttackCooldownRemaining:
       RawValue: 0
     CurrentActionSlot: 0
@@ -3318,6 +3320,15 @@ MonoBehaviour:
         RawValue: 0
     StuckCheckTimer:
       RawValue: 0
+    FallRespawnTimer:
+      RawValue: 0
+    FallOriginPosition:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
     SkillProjectile: {fileID: 0}
     FlyingHoverCheckTimer:
       RawValue: 0
@@ -5116,6 +5127,8 @@ MonoBehaviour:
       Value: 0
     StateTimer:
       RawValue: 0
+    SpawnGraceRemaining:
+      RawValue: 0
     AttackCooldownRemaining:
       RawValue: 0
     CurrentActionSlot: 0
@@ -5173,6 +5186,15 @@ MonoBehaviour:
         RawValue: 0
     StuckCheckTimer:
       RawValue: 0
+    FallRespawnTimer:
+      RawValue: 0
+    FallOriginPosition:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
     SkillProjectile: {fileID: 0}
     FlyingHoverCheckTimer:
       RawValue: 0
@@ -8991,6 +9013,8 @@ MonoBehaviour:
       Value: 0
     StateTimer:
       RawValue: 0
+    SpawnGraceRemaining:
+      RawValue: 0
     AttackCooldownRemaining:
       RawValue: 0
     CurrentActionSlot: 0
@@ -9048,6 +9072,15 @@ MonoBehaviour:
         RawValue: 0
     StuckCheckTimer:
       RawValue: 0
+    FallRespawnTimer:
+      RawValue: 0
+    FallOriginPosition:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
     SkillProjectile: {fileID: 0}
     FlyingHoverCheckTimer:
       RawValue: 0
@@ -63548,6 +63581,8 @@ MonoBehaviour:
   groundbreakerDecalPrefab: {fileID: 0}
   groundbreakerDecalMaxGroundDistance: 2
   groundbreakerFallbackColor: {r: 0.72, g: 0.6, b: 0.42, a: 1}
+  fallDeathParticlePrefab: {fileID: 19873706, guid: e2550dae06524a94bbc4bcdf375a88b9, type: 3}
+  fallDeathFallbackColor: {r: 0.15, g: 0.15, b: 0.2, a: 1}
   wallSlamEffectPrefab: {fileID: 4425481775148980287, guid: 33603ad5a2a86471199b3a9641457205, type: 3}
   wallSlamEffectScale: 1
   wallSlamStunnedEffectScale: 1.6
@@ -64156,6 +64191,8 @@ MonoBehaviour:
       Value: 0
     StateTimer:
       RawValue: 0
+    SpawnGraceRemaining:
+      RawValue: 0
     AttackCooldownRemaining:
       RawValue: 0
     CurrentActionSlot: 0
@@ -64213,6 +64250,15 @@ MonoBehaviour:
         RawValue: 0
     StuckCheckTimer:
       RawValue: 0
+    FallRespawnTimer:
+      RawValue: 0
+    FallOriginPosition:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
     SkillProjectile: {fileID: 0}
     FlyingHoverCheckTimer:
       RawValue: 0
@@ -75759,6 +75805,8 @@ MonoBehaviour:
       Value: 0
     StateTimer:
       RawValue: 0
+    SpawnGraceRemaining:
+      RawValue: 0
     AttackCooldownRemaining:
       RawValue: 0
     CurrentActionSlot: 0
@@ -75816,6 +75864,15 @@ MonoBehaviour:
         RawValue: 0
     StuckCheckTimer:
       RawValue: 0
+    FallRespawnTimer:
+      RawValue: 0
+    FallOriginPosition:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
     SkillProjectile: {fileID: 0}
     FlyingHoverCheckTimer:
       RawValue: 0
@@ -79743,6 +79800,8 @@ MonoBehaviour:
       Value: 0
     StateTimer:
       RawValue: 0
+    SpawnGraceRemaining:
+      RawValue: 0
     AttackCooldownRemaining:
       RawValue: 0
     CurrentActionSlot: 0
@@ -79800,6 +79859,15 @@ MonoBehaviour:
         RawValue: 0
     StuckCheckTimer:
       RawValue: 0
+    FallRespawnTimer:
+      RawValue: 0
+    FallOriginPosition:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
     SkillProjectile: {fileID: 0}
     FlyingHoverCheckTimer:
       RawValue: 0
@@ -90686,6 +90754,8 @@ MonoBehaviour:
       Value: 0
     StateTimer:
       RawValue: 0
+    SpawnGraceRemaining:
+      RawValue: 0
     AttackCooldownRemaining:
       RawValue: 0
     CurrentActionSlot: 0
@@ -90743,6 +90813,15 @@ MonoBehaviour:
         RawValue: 0
     StuckCheckTimer:
       RawValue: 0
+    FallRespawnTimer:
+      RawValue: 0
+    FallOriginPosition:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
     SkillProjectile: {fileID: 0}
     FlyingHoverCheckTimer:
       RawValue: 0
@@ -93412,6 +93491,8 @@ MonoBehaviour:
       Value: 0
     StateTimer:
       RawValue: 0
+    SpawnGraceRemaining:
+      RawValue: 0
     AttackCooldownRemaining:
       RawValue: 0
     CurrentActionSlot: 0
@@ -93469,6 +93550,15 @@ MonoBehaviour:
         RawValue: 0
     StuckCheckTimer:
       RawValue: 0
+    FallRespawnTimer:
+      RawValue: 0
+    FallOriginPosition:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
     SkillProjectile: {fileID: 0}
     FlyingHoverCheckTimer:
       RawValue: 0
@@ -96654,8 +96744,9 @@ GameObject:
   - component: {fileID: 2003288710}
   - component: {fileID: 2003288709}
   - component: {fileID: 2003288708}
+  - component: {fileID: 2003288711}
   m_Layer: 4
-  m_Name: Quad
+  m_Name: Water
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -96733,6 +96824,27 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &2003288711
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2003288706}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 0}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &2003941767
 GameObject:
   m_ObjectHideFlags: 0
@@ -98899,6 +99011,8 @@ MonoBehaviour:
       Value: 0
     StateTimer:
       RawValue: 0
+    SpawnGraceRemaining:
+      RawValue: 0
     AttackCooldownRemaining:
       RawValue: 0
     CurrentActionSlot: 0
@@ -98956,6 +99070,15 @@ MonoBehaviour:
         RawValue: 0
     StuckCheckTimer:
       RawValue: 0
+    FallRespawnTimer:
+      RawValue: 0
+    FallOriginPosition:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
     SkillProjectile: {fileID: 0}
     FlyingHoverCheckTimer:
       RawValue: 0

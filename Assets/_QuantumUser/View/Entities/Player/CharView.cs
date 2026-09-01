@@ -75,6 +75,21 @@ namespace Quantum
         {
             Vector3 origin = viewTransform.position + Vector3.up * groundCheckRaycastHeight;
             LocalIsGrounded = Physics.Raycast(origin, Vector3.down, groundCheckRaycastHeight + groundCheckDistance, groundLayer);
+
+            // Freezes the camera on its last-tracked position while this local player's own
+            // fall-respawn delay is pending (see PlayerFallSystem/LevelConfig.FallRespawnDelay) -
+            // same AddTarget/RemoveTarget pair MyLocalPlayer.Register/Deinitialize already use, so
+            // re-adding on respawn resumes tracking exactly like a freshly-registered local player
+            // would. Remote players/bots are never added to FollowCamera's target list in the first
+            // place (see MyLocalPlayer.Register's own IsLocalPlayer gate), so this is a no-op for
+            // them - only ever needed for isLocalPlayer here.
+            if (isLocalPlayer == true && FollowCamera.I != null)
+            {
+                if (FallStateUtility.IsFallPending(game.Frames.Predicted, _entityRef) == true)
+                    FollowCamera.I.RemoveTarget(viewTransform);
+                else
+                    FollowCamera.I.AddTarget(viewTransform);
+            }
         }
 
         // The player widget shows the PLAYER's own name, not the hero's - RuntimePlayer.PlayerNickname

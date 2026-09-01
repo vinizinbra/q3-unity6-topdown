@@ -1,0 +1,319 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b3ffe095a046457f99f64ffca9d87e9, type: 3}
+  m_Name: DroneGunnerActionData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.EnemyActionData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/BaseEnemies/DroneGunnerActionData
+    Guid:
+      Value: 449912945870059262
+  Name: 
+  EngageRange:
+    RawValue: 393216
+  DamageRange:
+    RawValue: 393216
+  Damage:
+    RawValue: 393216
+  AnticipationTime:
+    RawValue: 26214
+  DirectionTracking: 2
+  IgnoreY: 0
+  Origin: 0
+  DownTime:
+    RawValue: 13107
+  CooldownTime:
+    RawValue: 117965
+  TelegraphStartPercent:
+    RawValue: 32768
+  Trigger:
+    Type: 0
+    Radius:
+      RawValue: 0
+    HealthPercent:
+      RawValue: 0
+  AimLock: 0
+  AimLockPercent:
+    RawValue: 65536
+  SelectionWeight: 1
+  InterruptibleDuringTelegraph: 1
+  InterruptibleDuringActive: 0
+  Delivery:
+    Id:
+      Value: 2019945611795522965
+  Effects: []
+  Telegraph:
+    Id:
+      Value: 0
+  AnticipationStep:
+    AnimationType: 1
+    Duration: 0.4
+    BodySprite: {fileID: 0}
+    ShakeImpact: 0
+    Shake:
+      Frequency: 10
+      RockDegrees: 1
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.1
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+  BeginStep:
+    AnimationType: 8
+    Duration: 0.2
+    BodySprite: {fileID: 0}
+    ShakeImpact: 0
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 15
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 15
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+  OnGoingStep:
+    AnimationType: 0
+    Duration: 0.3
+    BodySprite: {fileID: 0}
+    ShakeImpact: 0
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+  EndStep:
+    AnimationType: 0
+    Duration: 0.3
+    BodySprite: {fileID: 0}
+    ShakeImpact: 0
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0

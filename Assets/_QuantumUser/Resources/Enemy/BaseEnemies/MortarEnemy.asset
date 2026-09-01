@@ -18,7 +18,7 @@ MonoBehaviour:
       Value: 2938925554936299593
   Prototype:
     Id:
-      Value: 1289801711717108447
+      Value: 1371172601944218507
   Movement:
     Id:
       Value: 1741878077199039724
@@ -613,6 +613,8 @@ MonoBehaviour:
   Effects:
   - Id:
       Value: 440091783757558214
+  - Id:
+      Value: 452814084348607209
   RestOffset:
     RawValue: 0
   DetonateOnLevelGeometry: 1
@@ -624,7 +626,9 @@ MonoBehaviour:
   TriggersSpawnUpgrades: 1
   PlantedFuseTime:
     RawValue: 0
-  BlastEffectPrefab: {fileID: 6350743763286976369, guid: 2dcb44456e58b4eb3823d152a70d114f, type: 3}
+  MaxHeightDifference:
+    RawValue: 0
+  BlastEffectPrefab: {fileID: 6350743763286976369, guid: f820879cbd8004b6682add523f1c7949, type: 3}
 --- !u!114 &4599746686988740020
 MonoBehaviour:
   m_ObjectHideFlags: 0

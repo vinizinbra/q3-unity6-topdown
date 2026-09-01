@@ -16,7 +16,7 @@ MonoBehaviour:
   maxRaycastDistance: 10
   groundLayer:
     serializedVersion: 2
-    m_Bits: 64
+    m_Bits: 80
   groundOffset: 0.02
   shadowOffset: {x: 0, y: 0}
   shadowColor: {r: 1, g: 1, b: 1, a: 1}

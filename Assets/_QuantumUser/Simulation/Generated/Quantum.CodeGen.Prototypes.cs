@@ -1129,6 +1129,7 @@ namespace Quantum.Prototypes {
     public MapEntityId Target;
     public Quantum.QEnum8<EnemyActionPhase> Phase;
     public FP StateTimer;
+    public FP SpawnGraceRemaining;
     public FP AttackCooldownRemaining;
     public Byte CurrentActionSlot;
     public FPVector3 SkillTargetPosition;
@@ -1143,6 +1144,8 @@ namespace Quantum.Prototypes {
     public FP KnockbackTimer;
     public FPVector3 PreKnockbackPosition;
     public FP StuckCheckTimer;
+    public FP FallRespawnTimer;
+    public FPVector3 FallOriginPosition;
     public MapEntityId SkillProjectile;
     public FP FlyingHoverCheckTimer;
     public FP FlyingHoverTargetHeight;
@@ -1158,6 +1161,7 @@ namespace Quantum.Prototypes {
         PrototypeValidator.FindMapEntity(this.Target, in context, out result.Target);
         result.Phase = this.Phase;
         result.StateTimer = this.StateTimer;
+        result.SpawnGraceRemaining = this.SpawnGraceRemaining;
         result.AttackCooldownRemaining = this.AttackCooldownRemaining;
         result.CurrentActionSlot = this.CurrentActionSlot;
         result.SkillTargetPosition = this.SkillTargetPosition;
@@ -1172,6 +1176,8 @@ namespace Quantum.Prototypes {
         result.KnockbackTimer = this.KnockbackTimer;
         result.PreKnockbackPosition = this.PreKnockbackPosition;
         result.StuckCheckTimer = this.StuckCheckTimer;
+        result.FallRespawnTimer = this.FallRespawnTimer;
+        result.FallOriginPosition = this.FallOriginPosition;
         PrototypeValidator.FindMapEntity(this.SkillProjectile, in context, out result.SkillProjectile);
         result.FlyingHoverCheckTimer = this.FlyingHoverCheckTimer;
         result.FlyingHoverTargetHeight = this.FlyingHoverTargetHeight;
@@ -2363,6 +2369,7 @@ namespace Quantum.Prototypes {
     public QBoolean HasAirJumped;
     public FP JumpCooldownTimer;
     public FPVector3 LastGroundedPosition;
+    public FP FallRespawnTimer;
     public Quantum.QEnum8<LandingSource> AirborneSource;
     partial void MaterializeUser(Frame frame, ref Quantum.PlayerMovement result, in PrototypeMaterializationContext context);
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
@@ -2375,6 +2382,7 @@ namespace Quantum.Prototypes {
         result.HasAirJumped = this.HasAirJumped;
         result.JumpCooldownTimer = this.JumpCooldownTimer;
         result.LastGroundedPosition = this.LastGroundedPosition;
+        result.FallRespawnTimer = this.FallRespawnTimer;
         result.AirborneSource = this.AirborneSource;
         MaterializeUser(frame, ref result, in context);
     }

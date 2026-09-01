@@ -160,6 +160,12 @@ namespace Quantum
         private float _burrowT;
         private bool _burrowSinking;
 
+        // Fall-respawn delay pending (see EnemyFallSystem/LevelConfig.FallRespawnDelay) - polled
+        // fresh every QUpdate, unlike Burrow's edge-triggered state machine, since the enemy is
+        // already well below the map and invisible the instant this goes true, so an instant hide/
+        // show (rather than an eased transition) reads no differently.
+        private bool _isFallPending;
+
         // Optional sibling on the same generic entity GameObject (not the rig) - see SetShadow.
         // Null for any enemy view with no HasShadow component.
         private HasShadow _shadow;
@@ -315,6 +321,8 @@ namespace Quantum
             Enemy enemy = hasEnemy == true ? frame.Get<Enemy>(_entityRef) : default;
             EnemyActionPhase? enemyPhase = hasEnemy == true ? enemy.Phase : null;
 
+            _isFallPending = FallStateUtility.IsFallPending(frame, _entityRef);
+
             if (enemyPhase.HasValue == true)
             {
                 if (enemyPhase == EnemyActionPhase.Dead && _lastEnemyPhase != EnemyActionPhase.Dead)
@@ -426,7 +434,7 @@ namespace Quantum
             // (e.g. a dash) is excluded from this freeze - the enemy is genuinely moving toward a
             // real point there, so facing should keep following it.
             if (enemyPhase != EnemyActionPhase.Recovery)
-                UpdateFacing(frame, velocity);
+                UpdateFacing(frame, velocity, enemy, hasEnemy);
 
             _stateTimer += dt;
 
@@ -785,8 +793,36 @@ namespace Quantum
             return horizontalSpeed > moveSpeedEpsilon ? State.Run : State.Idle;
         }
 
-        private void UpdateFacing(Frame frame, Vector3 velocity)
+        private void UpdateFacing(Frame frame, Vector3 velocity, Enemy enemy, bool hasEnemy)
         {
+            // A stationary enemy (Stats.MoveSpeed == 0, e.g. a Turret) never has real movement to
+            // derive facing from, and its Aim.Angle is only re-snapshotted once per attack cycle
+            // (EnemyMovementUtility.FaceTarget, called from EnemySystem.UpdateChasing on entering
+            // Preparation) rather than continuously. A fast attack cycle re-samples a near-
+            // stationary target's bearing often enough that ordinary target movement jitter flips
+            // which side of 0 the snapshot lands on between cycles, reading as constant left/right
+            // flicker even though both the enemy and its target are barely moving. A stationary
+            // enemy has no walking facing worth preserving between samples either, so it can
+            // safely re-derive facing from the live target position every frame instead - the same
+            // continuous source EnemyArmAimView.ResolveAimWorldDirection already uses for the gun,
+            // which is why the weapon tracks smoothly while the old snapshot-based body facing did
+            // not.
+            if (hasEnemy == true)
+            {
+                EnemyDataAsset data = frame.FindAsset(enemy.EnemyData);
+
+                if (data != null && data.Stats.MoveSpeed <= FP._0
+                    && EnemyMovementUtility.TryGetTargetPosition(frame, enemy.Target, out FPVector3 targetPosition) == true)
+                {
+                    float dirX = (targetPosition.X - frame.Get<Transform3D>(_entityRef).Position.X).AsFloat;
+
+                    if (Mathf.Abs(dirX) > facingDeadzone)
+                        _facingSign = Mathf.Sign(dirX);
+
+                    return;
+                }
+            }
+
             // Prefer the resolved Aim angle (kept up to date by EnemyMovementUtility.FaceTarget
             // while Chasing/Anticipating) over raw velocity, so facing follows the actual target
             // instead of just which way the enemy was last walking - otherwise the sprite freezes
@@ -813,8 +849,10 @@ namespace Quantum
 
             // Independent shrink sources, multiplied together rather than picking one - Die's is
             // one-way (_dieShrinkT never comes back down), Burrow's is reversible (_burrowT), and
-            // in practice only one is ever non-zero at a time for a given enemy.
-            float shrinkMult = (1f - Easing.Evaluate(_dieShrinkT, Ease.InBack)) * (1f - Easing.Evaluate(_burrowT, Ease.InOutSine));
+            // in practice only one is ever non-zero at a time for a given enemy. _isFallPending is
+            // a third, instant (not eased) source - the enemy is already well below the map and
+            // invisible the instant a fall-respawn delay opens, so there's nothing to ease.
+            float shrinkMult = (1f - Easing.Evaluate(_dieShrinkT, Ease.InBack)) * (1f - Easing.Evaluate(_burrowT, Ease.InOutSine)) * (_isFallPending ? 0f : 1f);
 
             // Ground shadow blob (GroundBlobManager) sizes itself purely off HasShadow.BaseScale -
             // it never reads the sprite's own live scale - so without this it would sit at full

@@ -23,11 +23,13 @@ MonoBehaviour:
   PlayerSpawnHeight:
     RawValue: 131072
   FallDeathHeight:
-    RawValue: -655360
+    RawValue: -65536
   FallRespawnHeightOffset:
     RawValue: 131072
   FallDamagePercent:
     RawValue: 6554
+  FallRespawnDelay:
+    RawValue: 131072
   FallRespawnEdgeMargin:
     RawValue: 131072
   MinConnectionWidthCells: 2

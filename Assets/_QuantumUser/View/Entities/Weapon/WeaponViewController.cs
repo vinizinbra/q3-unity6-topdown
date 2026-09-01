@@ -140,14 +140,19 @@ namespace Quantum
             // the gun plus anything else parented under it) while Downed/KO (see docs/revive.md) -
             // can't fire anyway (WeaponSystem's own IsIncapacitated gate), and a collapsed character
             // still visibly holding a raised weapon reads as broken. Restored the instant they're
-            // revived. Only toggles weaponSocket when it's explicitly assigned - Socket's fallback is
-            // this component's own GameObject, which must stay active for QUpdate to keep running.
+            // revived. Also hidden while a fall-respawn delay is pending (see PlayerFallSystem/
+            // LevelConfig.FallRespawnDelay) - a floating gun with no visible character underneath it
+            // reads just as broken. Only toggles weaponSocket when it's explicitly assigned -
+            // Socket's fallback is this component's own GameObject, which must stay active for
+            // QUpdate to keep running.
             if (weaponSocket != null)
             {
-                bool incapacitated = PlayerLifeStateUtility.IsIncapacitated(game.Frames.Predicted, _entityRef);
+                Frame frame = game.Frames.Predicted;
+                bool hidden = PlayerLifeStateUtility.IsIncapacitated(frame, _entityRef)
+                    || FallStateUtility.IsFallPending(frame, _entityRef);
 
-                if (weaponSocket.gameObject.activeSelf == incapacitated)
-                    weaponSocket.gameObject.SetActive(incapacitated == false);
+                if (weaponSocket.gameObject.activeSelf == hidden)
+                    weaponSocket.gameObject.SetActive(hidden == false);
             }
 
             if (hasWeaponPosition == false) return;

@@ -4861,8 +4861,8 @@ Transform:
   m_GameObject: {fileID: 528268433944073081}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.25, y: 1.42, z: 0}
-  m_LocalScale: {x: 2, y: 2, z: 2}
+  m_LocalPosition: {x: 0.528, y: 2.739, z: 0}
+  m_LocalScale: {x: 4, y: 4, z: 4}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1488431331216489862}
@@ -9754,7 +9754,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 2111132911, guid: a6bb8b2fcd8aa4ce28836427b006b167, type: 3}
+  m_Sprite: {fileID: 644828112, guid: 3d1752f50757d464f9a860260e2aaf1f, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 0}
   m_FlipX: 0
   m_FlipY: 0
@@ -9803,6 +9803,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.HasShadow
   baseScale: 3
   shadowOffset: {x: 0, y: 0}
+  shadowAlphaMultiplier: 1
 --- !u!1001 &2033220763431434550
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9817,23 +9818,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 460164, guid: bcd34d169e9abd34bb3484f9e3ddf57c, type: 3}
       propertyPath: m_LocalScale.x
-      value: 3
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 460164, guid: bcd34d169e9abd34bb3484f9e3ddf57c, type: 3}
       propertyPath: m_LocalScale.y
-      value: 3
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 460164, guid: bcd34d169e9abd34bb3484f9e3ddf57c, type: 3}
       propertyPath: m_LocalScale.z
-      value: 3
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 460164, guid: bcd34d169e9abd34bb3484f9e3ddf57c, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.25
+      value: 0.478
       objectReference: {fileID: 0}
     - target: {fileID: 460164, guid: bcd34d169e9abd34bb3484f9e3ddf57c, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.26
+      value: 2.686
       objectReference: {fileID: 0}
     - target: {fileID: 460164, guid: bcd34d169e9abd34bb3484f9e3ddf57c, type: 3}
       propertyPath: m_LocalPosition.z

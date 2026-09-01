@@ -254,6 +254,14 @@ namespace Quantum
             if (f.Has<Invulnerable>(entity) == true)
                 return false;
 
+            // Fallen off the level and waiting out its respawn delay (see EnemyFallSystem/
+            // LevelConfig.FallRespawnDelay) - it's invisible and about to teleport away, so drop it
+            // the same instant its own view hides (releases a sticky lock early via ResolveTarget's
+            // IsAliveTarget check, same as Dead/Invulnerable above) instead of leaving the reticle
+            // (TargetView) and auto-fire locked onto empty air until it reappears.
+            if (FallStateUtility.IsFallPending(f, entity) == true)
+                return false;
+
             // An already-broken Breakable is an inert husk (collider disabled) - drop it as a target
             // immediately so a fire-lock (NotifyFired) releases the instant it breaks rather than
             // holding the reticle on the debris for the rest of TargetLockDuration.

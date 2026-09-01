@@ -140,6 +140,7 @@ public class CharacterUiWidget : MonoBehaviour
     private bool _shieldWasRecharging;
     private Color _shieldBaseFillColor = Color.white;
     private bool _shieldBaseFillColorCaptured;
+    private CanvasGroup _selfCanvasGroup;
 
     private void Awake()
     {
@@ -226,6 +227,18 @@ public class CharacterUiWidget : MonoBehaviour
         // CharView/EnemyView despawn this widget from their DeInitialize, which lands a frame or
         // more after the sim destroyed the entity - reading components in that window throws.
         if (frame.Exists(_entityRef) == false)
+            return;
+
+        // Hidden for the same window PlayerFallSystem/EnemyFallSystem hide the character/enemy
+        // sprite itself (see LevelConfig.FallRespawnDelay) - a health bar hovering with nothing
+        // visible underneath it reads just as broken as a floating gun. A CanvasGroup rather than
+        // SetActive on this widget's own GameObject, which would stop THIS LateUpdate from running
+        // and leave it stuck hidden forever - same "must stay active to self-heal" reasoning
+        // BlobAnimationView's bodyRoot/handsRoot fields already document.
+        bool isFallPending = FallStateUtility.IsFallPending(frame, _entityRef);
+        ApplySelfHidden(isFallPending);
+
+        if (isFallPending == true)
             return;
 
         UpdateHealth(frame);
@@ -394,6 +407,28 @@ public class CharacterUiWidget : MonoBehaviour
             if (widget != null)
                 widget.Refresh(frame, _entityRef);
         }
+    }
+
+    // Lazily adds a CanvasGroup to selfRect the first time it's needed, so no prefab needs
+    // re-authoring for this to work. No-op if selfRect was never assigned - same "left unassigned
+    // to skip" convention every other optional field here uses.
+    private void ApplySelfHidden(bool hidden)
+    {
+        if (selfRect == null)
+            return;
+
+        if (_selfCanvasGroup == null)
+            _selfCanvasGroup = selfRect.GetComponent<CanvasGroup>();
+        if (_selfCanvasGroup == null)
+            _selfCanvasGroup = selfRect.gameObject.AddComponent<CanvasGroup>();
+
+        float targetAlpha = hidden ? 0f : 1f;
+        if (Mathf.Approximately(_selfCanvasGroup.alpha, targetAlpha) == true)
+            return;
+
+        _selfCanvasGroup.alpha = targetAlpha;
+        _selfCanvasGroup.blocksRaycasts = hidden == false;
+        _selfCanvasGroup.interactable = hidden == false;
     }
 
     private void FollowTarget()

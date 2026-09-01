@@ -258,6 +258,7 @@ namespace Quantum.Prototypes.Unity {
     public Quantum.QuantumEntityPrototype Target;
     public Quantum.QEnum8<EnemyActionPhase> Phase;
     public FP StateTimer;
+    public FP SpawnGraceRemaining;
     public FP AttackCooldownRemaining;
     public Byte CurrentActionSlot;
     public FPVector3 SkillTargetPosition;
@@ -272,6 +273,8 @@ namespace Quantum.Prototypes.Unity {
     public FP KnockbackTimer;
     public FPVector3 PreKnockbackPosition;
     public FP StuckCheckTimer;
+    public FP FallRespawnTimer;
+    public FPVector3 FallOriginPosition;
     public Quantum.QuantumEntityPrototype SkillProjectile;
     public FP FlyingHoverCheckTimer;
     public FP FlyingHoverTargetHeight;
@@ -284,6 +287,7 @@ namespace Quantum.Prototypes.Unity {
       converter.Convert(this.Target, out result.Target);
       converter.Convert(this.Phase, out result.Phase);
       converter.Convert(this.StateTimer, out result.StateTimer);
+      converter.Convert(this.SpawnGraceRemaining, out result.SpawnGraceRemaining);
       converter.Convert(this.AttackCooldownRemaining, out result.AttackCooldownRemaining);
       converter.Convert(this.CurrentActionSlot, out result.CurrentActionSlot);
       converter.Convert(this.SkillTargetPosition, out result.SkillTargetPosition);
@@ -298,6 +302,8 @@ namespace Quantum.Prototypes.Unity {
       converter.Convert(this.KnockbackTimer, out result.KnockbackTimer);
       converter.Convert(this.PreKnockbackPosition, out result.PreKnockbackPosition);
       converter.Convert(this.StuckCheckTimer, out result.StuckCheckTimer);
+      converter.Convert(this.FallRespawnTimer, out result.FallRespawnTimer);
+      converter.Convert(this.FallOriginPosition, out result.FallOriginPosition);
       converter.Convert(this.SkillProjectile, out result.SkillProjectile);
       converter.Convert(this.FlyingHoverCheckTimer, out result.FlyingHoverCheckTimer);
       converter.Convert(this.FlyingHoverTargetHeight, out result.FlyingHoverTargetHeight);

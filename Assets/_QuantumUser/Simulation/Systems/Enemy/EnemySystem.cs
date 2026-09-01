@@ -25,6 +25,13 @@ namespace Quantum
     [Preserve]
     public unsafe class EnemySystem : SystemMainThreadFilter<EnemySystem.Filter>, ISignalOnEnemyDied, ISignalOnEnemyKnockedBack, ISignalOnEntityPrototypeMaterialized
     {
+        // How long every enemy sits inert right after spawning before its AI state machine starts
+        // running at all - see Enemy.SpawnGraceRemaining's own comment and the gate in Update below.
+        // A flat global value, not per-EnemyDataAsset - this is about masking spawn-frame jank (an
+        // enemy popping in mid-air, or instantly locking onto a player the same tick it materializes),
+        // not a per-enemy-type balance knob.
+        private static readonly FP SpawnGraceDuration = FP._0_10 * 3;
+
         // Seeds Health/Shield from EnemyDataAsset once the whole prototype is materialized, not
         // from ISignalOnComponentAdded<Enemy> - mirrors CharacterSystem.OnEntityPrototypeMaterialized's
         // own reasoning (components land one at a time, so seeding off Enemy's own add could run
@@ -70,6 +77,18 @@ namespace Quantum
             SeedRadius(f, entity, data);
             SeedWaypointPath(f, entity, data);
             SeedChargeHitTracking(f, entity, data);
+            SeedSpawnGrace(f, entity);
+        }
+
+        // See SpawnGraceDuration's own comment. Unconditional - every enemy carries the shared
+        // Enemy component, so unlike e.g. SeedShield there's no "does this one even have the
+        // relevant component" gate to check first.
+        private static void SeedSpawnGrace(Frame f, EntityRef entity)
+        {
+            if (f.Unsafe.TryGetPointer<Enemy>(entity, out var enemy) == false)
+                return;
+
+            enemy->SpawnGraceRemaining = SpawnGraceDuration;
         }
 
         // UseWaypointDetour (EnemyPathfindingUtility.TryGetDetourDirection) needs somewhere to
@@ -300,6 +319,16 @@ namespace Quantum
                     EnemyMovementUtility.StopMovement(f, ref filter, data);
                     return;
                 }
+            }
+
+            // Spawn grace (see SpawnGraceDuration's own comment) - deliberately placed after every
+            // physics/status handler above (gravity, stuck recovery, knockback, Root, Stun) so a
+            // freshly-spawned enemy still settles onto the ground and reacts to being hit normally;
+            // only the AI state machine below (targeting/movement/attacking) is held off.
+            if (filter.Enemy->SpawnGraceRemaining > FP._0)
+            {
+                filter.Enemy->SpawnGraceRemaining -= f.DeltaTime;
+                return;
             }
 
             switch (filter.Enemy->Phase)

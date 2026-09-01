@@ -919,9 +919,13 @@ namespace Quantum
         // ResolveShapeRadius, resolved straight off whatever entity is actually asking - for
         // callers that don't already have a PhysicsCollider3D* in hand (unlike
         // JuggernautLandingImpactSystem.Filter.Collider, which can call ResolveShapeRadius
-        // directly). 0 if the entity has no collider at all.
+        // directly). A player's KCC has no PhysicsCollider3D of its own (see KCCSettings), so it's
+        // checked first - 0 if the entity has neither a KCC nor a collider at all.
         public static FP ResolveEntityRadius(Frame f, EntityRef entity)
         {
+            if (f.Unsafe.TryGetPointer<KCC>(entity, out var kcc) == true)
+                return f.FindAsset(kcc->Settings).Radius;
+
             return f.Unsafe.TryGetPointer<PhysicsCollider3D>(entity, out var collider) == true
                 ? ResolveShapeRadius(collider->Shape)
                 : FP._0;
@@ -932,8 +936,17 @@ namespace Quantum
         // the entity has no collider. Same shape as ResolveEntityRadius; pulled out here so any
         // view component positioning a VFX at an entity's real visual center (not its feet/origin)
         // can share it instead of re-deriving it (see EnemyAllyLinkView/EnemyStatusEffectsView).
+        //
+        // A player's KCC.Position is its capsule's BASE (feet/ground contact - see
+        // LevelConfig.PlayerSpawnHeight's own comment), not its Transform3D, so it's checked first
+        // and returns Position lifted by half the capsule's authored Height instead of falling
+        // through to the collider branch below (which a KCC entity never has - see
+        // ResolveEntityRadius's own comment).
         public static FPVector3 ResolveEntityCenter(Frame f, EntityRef entity)
         {
+            if (f.Unsafe.TryGetPointer<KCC>(entity, out var kcc) == true)
+                return kcc->Position + FPVector3.Up * (f.FindAsset(kcc->Settings).Height / 2);
+
             FPVector3 center = f.Get<Transform3D>(entity).Position;
 
             if (f.Unsafe.TryGetPointer<PhysicsCollider3D>(entity, out var collider) == true)

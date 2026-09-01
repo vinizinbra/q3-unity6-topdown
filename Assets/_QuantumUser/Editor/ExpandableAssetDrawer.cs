@@ -605,15 +605,22 @@ namespace Quantum.Editor
         [MenuItem("Assets/Delete Sub-Asset", false, 21)]
         private static void DeleteSubAssetMenuItem()
         {
-            AssetObject asset = (AssetObject)Selection.activeObject;
-            if (EditorUtility.DisplayDialog("Delete Sub-Asset", $"Delete '{asset.name}'? This cannot be undone.", "Delete", "Cancel"))
-                DeleteAssetObject(asset);
+            AssetObject[] assets = Selection.objects.OfType<AssetObject>().Where(AssetDatabase.IsSubAsset).ToArray();
+            string message = assets.Length == 1
+                ? $"Delete '{assets[0].name}'? This cannot be undone."
+                : $"Delete {assets.Length} sub-assets? This cannot be undone.";
+
+            if (EditorUtility.DisplayDialog("Delete Sub-Asset", message, "Delete", "Cancel"))
+            {
+                foreach (AssetObject asset in assets)
+                    DeleteAssetObject(asset);
+            }
         }
 
         [MenuItem("Assets/Delete Sub-Asset", true)]
         private static bool ValidateDeleteSubAssetMenuItem()
         {
-            return Selection.activeObject is AssetObject asset && AssetDatabase.IsSubAsset(asset);
+            return Selection.objects.Length > 0 && Selection.objects.All(o => o is AssetObject asset && AssetDatabase.IsSubAsset(asset));
         }
 
         // Companion to DrawBrokenReferenceButton above: that only clears the dangling field

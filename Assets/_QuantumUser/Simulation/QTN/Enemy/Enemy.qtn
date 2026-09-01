@@ -6,6 +6,13 @@ component Enemy
     EnemyActionPhase Phase;
     FP         StateTimer;
 
+    // Counts down from EnemySystem.SpawnGraceDuration, seeded once by SeedFromEnemyData - while
+    // above 0, EnemySystem.Update skips the whole Phase state machine (no targeting/movement/
+    // attacking) for every enemy type, no per-prototype opt-in needed. Physics (gravity, knockback
+    // recovery, stuck recovery) still runs during the window so a freshly-spawned enemy still
+    // settles onto the ground normally instead of hanging mid-air.
+    FP SpawnGraceRemaining;
+
     // Time before EnemyDataAsset.BasicAction is usable again - ticked every tick regardless of
     // Phase (EnemySystem.TickAttackCooldown), independent of DownTime/StateTimer, so the enemy
     // could resume chasing before this action specifically comes back off cooldown. SkillActions
@@ -75,6 +82,14 @@ component Enemy
     // only ever touched inside that window, so an enemy nobody has knocked around costs nothing.
     FPVector3 PreKnockbackPosition;
     FP StuckCheckTimer;
+
+    // Counts down (seconds) after EnemyFallSystem detects a fall, before it actually teleports
+    // the enemy back - see LevelConfig.FallRespawnDelay. 0 means no fall is currently pending.
+    // FallOriginPosition freezes where it fell FROM at detection time, so gravity/residual
+    // knockback velocity still applied during the delay can't drift the eventual respawn's own
+    // nearest-chunk resolution away from where it actually fell.
+    FP FallRespawnTimer;
+    FPVector3 FallOriginPosition;
 
     // Set by EnemyDeliveryData.Begin() for a delivery that hands off to a separately-ticking
     // spawned entity instead of finishing on the spot (e.g. a future lobbed-shell delivery) -

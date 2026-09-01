@@ -73,6 +73,12 @@ namespace QuantumUser.View.Managers
         [SerializeField, Tooltip("Tint applied only when falling back to defaultAreaBlastEffect (groundbreakerImpactPrefab left empty) - a dusty earth tone, since this is a terrain impact rather than an explosion or a rift reaction. Ignored once a dedicated prefab is authored.")]
         private Color groundbreakerFallbackColor = new Color(0.72f, 0.6f, 0.42f);
 
+        [Header("Fall Death")]
+        [SerializeField, Tooltip("Played on FallDeathTriggered (PlayerFallSystem/EnemyFallSystem, see CLAUDE.md's KCC fall-velocity notes) at the position an entity fell below LevelConfig.FallDeathHeight - before any respawn teleport, so it plays where they vanished, not where they land. Unlike most other radius-scaled effects on this manager, scale is the PREFAB's OWN authored localScale multiplied by e.Radius (KCC radius for a player, PhysicsCollider3D radius for an enemy) rather than an absolute reference-radius-1 override, so the artist's authored proportions survive the per-entity scaling. Falls back to defaultAreaBlastEffect, tinted fallDeathFallbackColor, if left empty - same dedicated-slot-with-tinted-fallback pattern as the reaction VFX above.")]
+        private ParticleSystem fallDeathParticlePrefab;
+        [SerializeField, Tooltip("Tint applied only when falling back to defaultAreaBlastEffect (fallDeathParticlePrefab left empty) - a dark void tone, since this reads as vanishing off the map rather than an explosion or terrain impact. Ignored once a dedicated prefab is authored.")]
+        private Color fallDeathFallbackColor = new Color(0.15f, 0.15f, 0.2f);
+
         [Header("Wall Slam")]
         [SerializeField, Tooltip("Played on WallSlammed at the wall CONTACT point, oriented into the surface (see WallSlamUtility) - generic and source-agnostic, so both Brute's Iron Shoulder dash and his Groundbreaker landing use it with no per-source hookup. Falls back to defaultAreaBlastEffect if left empty.")]
         private ParticleSystem wallSlamEffectPrefab;
@@ -224,6 +230,7 @@ namespace QuantumUser.View.Managers
             QuantumEvent.Subscribe<EventAccessoryBlocked>(this, OnAccessoryBlocked);
             QuantumEvent.Subscribe<EventFreeHitGuardConsumed>(this, OnFreeHitGuardConsumed);
             QuantumEvent.Subscribe<EventPlayerRevived>(this, OnPlayerRevived);
+            QuantumEvent.Subscribe<EventFallDeathTriggered>(this, OnFallDeathTriggered);
         }
 
         private void OnDestroy()
@@ -426,6 +433,26 @@ namespace QuantumUser.View.Managers
             if (groundbreakerDecalPrefab != null
                 && TryFindGroundBelow(position, groundbreakerDecalMaxGroundDistance, out Vector3 groundPoint))
                 PlayEffect(groundbreakerDecalPrefab, groundPoint, Quaternion.identity, scale);
+        }
+
+        // Fires for both a falling player (PlayerFallSystem) and a falling Boss/Elite/Persistent
+        // enemy (EnemyFallSystem) the instant they drop below LevelConfig.FallDeathHeight. e.Radius
+        // is that entity's own KCC (player) or PhysicsCollider3D (enemy) radius. Unlike most other
+        // radius-scaled effects here (which override localScale to the reference-radius-1
+        // convention), this one preserves whatever scale the prefab is authored at and multiplies
+        // IT by e.Radius, so a non-uniform/pre-scaled prefab's own proportions survive.
+        private void OnFallDeathTriggered(EventFallDeathTriggered e)
+        {
+            ParticleSystem prefab = fallDeathParticlePrefab != null ? fallDeathParticlePrefab : defaultAreaBlastEffect;
+            if (prefab == null) return;
+
+            Vector3 position = e.Position.ToUnityVector3();
+            Vector3 scale = prefab.transform.localScale * e.Radius.AsFloat;
+
+            if (fallDeathParticlePrefab != null)
+                PlayEffect(prefab, position, Quaternion.identity, scale);
+            else
+                PlayEffect(prefab, position, Quaternion.identity, scale, fallDeathFallbackColor);
         }
 
         // Generic - fires for every WallSlamUtility.TryWallSlam that actually found a wall, regardless
