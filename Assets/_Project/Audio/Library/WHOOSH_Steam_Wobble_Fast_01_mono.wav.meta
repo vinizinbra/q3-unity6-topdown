@@ -9,18 +9,22 @@ labels:
 - steam
 - wobble
 AudioImporter:
-  serializedVersion: 6
+  externalObjects: {}
+  serializedVersion: 8
   defaultSettings:
-    loadType: 1
-    sampleRateSetting: 0
-    sampleRateOverride: 0
-    compressionFormat: 0
+    serializedVersion: 2
+    loadType: 0
+    sampleRateSetting: 2
+    sampleRateOverride: 22050
+    compressionFormat: 2
     quality: 0
     conversionMode: 0
+    preloadAudioData: 1
   platformSettingOverrides: {}
-  forceToMono: 0
-  preloadAudioData: 1
+  forceToMono: 1
+  normalize: 1
   loadInBackground: 0
+  ambisonic: 0
   3D: 1
   userData: 
   assetBundleName: 
