@@ -17,12 +17,14 @@ MonoBehaviour:
     Guid:
       Value: 285873967767323801
   EnemyName: Jumper
-  Tier: 1
+  Tier: 2
   Economy:
     Persistent: 0
     SpawnProfile:
       Id:
         Value: 443472774672561949
+    CostMultiplier:
+      RawValue: 81920
   Stats:
     MoveSpeed:
       RawValue: 196608
@@ -67,6 +69,8 @@ MonoBehaviour:
       RawValue: 65536
     ShieldMultiplier:
       RawValue: 0
+    HealthMultiplier:
+      RawValue: 65536
     Traits: 
     FrontalDamageReductionAmount:
       RawValue: 0
@@ -86,6 +90,8 @@ MonoBehaviour:
       RawValue: 655360
     LeashRange:
       RawValue: 983040
+    DetectionRangeMultiplier:
+      RawValue: 65536
   Actions:
     BasicAction:
       Id:
@@ -93,6 +99,11 @@ MonoBehaviour:
     SkillActions: []
   DeathLingerTime:
     RawValue: 196608
+  ChestDrop:
+    Id:
+      Value: 0
+  ChestDropChance:
+    RawValue: 65536
   Cost:
     RawValue: 65536
   Persistent: 0

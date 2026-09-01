@@ -77,6 +77,7 @@ namespace Quantum
             stats->OutgoingStatusDurationMultiplier = data.OutgoingStatusDurationMultiplier;
 
             stats->DamageReduction = data.DamageReduction;
+            stats->DamageTakenMultiplier = data.DamageTakenMultiplier;
             stats->KnockbackTakenMultiplier = data.KnockbackTakenMultiplier;
             stats->HealingReceivedMultiplier = data.HealingReceivedMultiplier;
 
@@ -137,6 +138,8 @@ namespace Quantum
             shield->RechargeDelay = data.ShieldRechargeDelay;
             shield->RechargeRate = data.ShieldRechargeRate;
             shield->RechargeTimer = FP._0;
+            shield->TemporaryDuration = data.ShieldTemporaryDuration;
+            shield->ExpirationRemaining = FP._0;
 
             // A charge-only shield starts EMPTY - it's earned in-run and never given for free, so the
             // debug "start at x% shield" multiplier deliberately doesn't apply to it either (it would

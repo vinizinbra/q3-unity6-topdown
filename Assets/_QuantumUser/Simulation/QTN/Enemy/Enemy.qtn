@@ -95,6 +95,13 @@ component Enemy
     FP FlyingHoverCheckTimer;
     FP FlyingHoverTargetHeight;
 
+    // Elite-only (see EliteRelocationSystem/LifecycleConfig.EliteLostRange) - continuous seconds
+    // with no player within EliteLostRange, reset to 0 the instant one is. Lives on the shared
+    // Enemy component rather than a separate optional one, same reasoning as
+    // FlyingHoverCheckTimer/FlyingHoverTargetHeight above (a single FP, and this way an Elite just
+    // works with no separate per-prototype component to remember to add).
+    FP LostTimer;
+
     // Which world faction this enemy visually belongs to (EnemyDataAsset.FactionSkins picks its
     // ViewPrefab off this) - purely cosmetic, no gameplay effect. Authored explicitly per-slot on
     // the EnemyGroupConfig.GroupMemberEntry that spawned it (GroupSpawnerUtility.SpawnMember), not

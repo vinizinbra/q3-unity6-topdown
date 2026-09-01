@@ -5,8 +5,8 @@ Continuous-spawn combat pacing system for the Quantum simulation. Replaces "no e
 Design follows four deliberately small, composable domains rather than one large "smart" director. Each domain has exactly one job and never reaches into the next domain's decisions:
 
 1. **Survival Progression** - owns the survival timer, the current phase, and that phase's budget/pressure/cap/allowed-groups. Never spawns anything itself.
-2. **Combat Director** - every pulse: read the phase, add budget, measure current relevant pressure, stop if already at target, otherwise pick one authored `EnemyGroupConfig` (deterministic weighted roll among unlocked/affordable/uncapped candidates) and ask the Group Spawner to place it near a predicted "moving combat bubble," repeat until the purchase limit. Decides *when*, *what*, and *whether affordable* - never *where*.
-3. **Group Spawner** - a stateless helper (`GroupSpawnerUtility`), not its own System. Decides *where* a Director-selected group can spawn safely: finds a ring anchor with ground under it, generates a deterministic formation around that anchor, validates every member (ground + per-profile height rule + clearance), and only creates entities once the *entire* formation is confirmed valid. Never chooses which group, when, or whether it's affordable.
+2. **Combat Director** - every pulse: read the phase, add budget, measure current relevant pressure, stop if already at target, otherwise pick one authored `EnemyGroupConfig` OR a single directly-authored enemy (`SurvivalPhase.AllowedEnemies`, deterministic weighted roll shared with `AllowedGroups` among unlocked/affordable/uncapped candidates) and ask the Group Spawner to place it near a predicted "moving combat bubble," repeat until the purchase limit. Decides *when*, *what*, and *whether affordable* - never *where*.
+3. **Group Spawner** - a stateless helper (`GroupSpawnerUtility`), not its own System. Decides *where* a Director-selected group (or single direct enemy) can spawn safely: finds a ring anchor with ground under it, generates a deterministic formation around that anchor (or, for a direct enemy, uses the anchor itself with no formation to solve), validates every member (ground + per-profile height rule + clearance), and only creates entities once the *entire* formation (or the one enemy) is confirmed valid. Never chooses which group/enemy, when, or whether it's affordable.
 4. **Enemy Lifecycle** - a purchased enemy is `Active` while relevant (close/attacking/recently hit/elite/persistent), goes `Irrelevant` once none of those hold, and `Retired` (destroyed, partial refund) after sitting `Irrelevant` past `RetireDelay`. Persistent enemies never leave `Active`.
 
 ## Runtime flow
@@ -20,9 +20,9 @@ CombatDirectorUtility.TryPulse (Domain 2)
   -> compute predicted combat center (team center + average velocity * PredictionTime)
   -> loop (bounded by DirectorConfig.MaxPurchasesPerPulse):
        measure relevant pressure -> stop if >= phase.TargetPressure
-       TrySelectGroup            -> stop if no valid/affordable/unlocked group
-       GroupSpawnerUtility.TrySpawnGroup (Domain 3) -> stop if it can't find a safe formation
-       only on spawner success: DirectorBudget -= group.ComputeCost(f)
+       TrySelectSpawn             -> stop if no valid/affordable/unlocked group OR direct enemy
+       GroupSpawnerUtility.TrySpawnGroup / TrySpawnEnemy (Domain 3) -> stop if it can't find a safe spot
+       only on spawner success: DirectorBudget -= candidate cost (group.ComputeCost(f) or data.ResolveCost(f))
 
 GroupSpawnerUtility.TrySpawnGroup (Domain 3)
   -> for each of MaxGroupSpawnAttempts ring anchors:
@@ -30,6 +30,12 @@ GroupSpawnerUtility.TrySpawnGroup (Domain 3)
        generate every member's offset via GroupFormationUtility (SpawnPattern)
        validate every member (ground, height rule, clearance) - one failure discards the whole anchor
        on full success: create every entity, add EnemyLifecycle, return success
+
+GroupSpawnerUtility.TrySpawnEnemy (Domain 3, AllowedEnemies' counterpart)
+  -> same ring-anchor/ground/chunk-connectivity loop as TrySpawnGroup, but one slot (the anchor
+     itself) instead of a formation - no GroupFormationUtility involved
+  -> on full success: create the one entity (SourceGroup left default - no owning group), add
+     EnemyLifecycle, return success
 
 EnemyLifecycleSystem (Domain 4, every tick, every entity with EnemyLifecycle)
   -> relevance check -> Active/Irrelevant/Retired state advance
@@ -39,8 +45,8 @@ EnemyLifecycleSystem (Domain 4, every tick, every entity with EnemyLifecycle)
 ## Files
 
 **Data (`Assets/_QuantumUser/Simulation/Assets/Director/`)**
-- `SurvivalConfig.cs` - `SurvivalPhase[] Phases`. Each phase: `Duration`, `BudgetPerPulse`, `PulseInterval`, `TargetPressure`, `MaxAliveEnemies`, `AllowedGroups`. Last phase never expires (loops forever once reached).
-- `EnemyGroupConfig.cs` - `Members[]` (`EnemyData` + `Quantity`, no authored offsets), `Weight`, `MinimumSurvivalTime`/`MaximumSurvivalTime`, `MaxConcurrent`, `SpawnPattern`, `FormationRadius`, `AllowsPartialSpawn` (reserved, unused). `Cost` is **not** a field - see `ComputeCost(f)`.
+- `SurvivalConfig.cs` - `SurvivalPhase[] Phases`. Each phase: `Duration`, `BudgetPerPulse`, `PulseInterval`, `TargetPressure`, `MaxAliveEnemies`, `AllowedGroups`, `AllowedEnemies` (see "Direct enemy spawns" below). Last phase never expires (loops forever once reached).
+- `EnemyGroupConfig.cs` - `Members[]` (`EnemyData` + `Quantity`, no authored offsets), `Weight`, `MinimumSurvivalTime`/`MaximumSurvivalTime`, `MaxConcurrent`, `SpawnPattern`, `FormationRadius`, `AllowsPartialSpawn` (reserved, unused). `Cost` is **not** a field - see `ComputeCost(f)`. Also defines `EnemySpawnEntry` - `AllowedEnemies`' element type (`EnemyData`, `Faction`, `Weight`, `MinimumSurvivalTime`/`MaximumSurvivalTime`, `MaxConcurrent` - the same selection fields as `EnemyGroupConfig` itself, just inline on the phase instead of a separate asset).
 - `EnemySpawnProfile.cs` - Domain 3 per-enemy-type placement rules: `SpawnCategory`, `MinimumHeightDifference`/`MaximumHeightDifference`, `ClearanceRadius`/`ClearanceHeight`. Referenced by `EnemyDataAsset.SpawnProfile`.
 - `DirectorConfig.cs` - `EnemyPrototype` (the one shared generic prototype every Director purchase is created from), `PredictionTime`, `SpawnRingRadiusMin/Max`, `MaxPurchasesPerPulse`, `MaxGroupSpawnAttempts`.
 - `LifecycleConfig.cs` - `RelevantRange`, `RecentCombatWindow`, `RetireDelay`, `RefundFraction`.
@@ -78,7 +84,7 @@ This pass only added/changed plain C# `AssetObject` fields (`EnemyGroupConfig`, 
 
 ## AssetObject definitions
 
-**`SurvivalConfig`** (Domain 1) - `SurvivalPhase[] Phases`, each `{ Duration, BudgetPerPulse, PulseInterval, TargetPressure, MaxAliveEnemies, AllowedGroups }`. Unchanged this pass.
+**`SurvivalConfig`** (Domain 1) - `SurvivalPhase[] Phases`, each `{ Duration, BudgetPerPulse, PulseInterval, TargetPressure, MaxAliveEnemies, AllowedGroups, AllowedEnemies, BossPrototype, PauseDuration, GuaranteedGroup }`. `AllowedEnemies` (`EnemySpawnEntry[]`) is `AllowedGroups`' sibling - see "Direct enemy spawns" below.
 
 **`DirectorConfig`** (Domain 2/3 shared) - `EnemyPrototype`, `PredictionTime`, `SpawnRingRadiusMin/Max`, `MaxPurchasesPerPulse`, `MaxGroupSpawnAttempts` (renamed from `MaxSpawnPlacementAttempts` - same role, now explicitly "attempts at picking a **group** anchor", since a single anchor now validates a whole formation, not one enemy).
 
@@ -111,14 +117,14 @@ Unchanged this pass - no `.qtn` edits (see "Why no codegen was needed").
 3. Compute the predicted combat center (team center + average velocity * `PredictionTime`); skip the whole pulse if no players exist yet.
 4. Loop up to `MaxPurchasesPerPulse` times:
    a. Measure relevant pressure (sum of `Cost` over every `EnemyLifecycle.State == Active` entity) - stop if `>= phase.TargetPressure`.
-   b. `TrySelectGroup` - stop if nothing valid (see "Group validation algorithm").
-   c. `GroupSpawnerUtility.TrySpawnGroup` - stop if it can't find a safe formation near the predicted center.
-   d. Only on spawner success: `DirectorBudget -= group.ComputeCost(f)`.
+   b. `TrySelectSpawn` - stop if nothing valid (see "Spawn candidate validation algorithm").
+   c. `GroupSpawnerUtility.TrySpawnGroup` (group candidate) or `.TrySpawnEnemy` (direct-enemy candidate) - stop if it can't find a safe spot near the predicted center.
+   d. Only on spawner success: `DirectorBudget -= candidate cost` (`group.ComputeCost(f)` or `data.ResolveCost(f)`).
 5. Each stop condition just ends the loop for *this* pulse - the next pulse (a few seconds later, per `PulseInterval`) tries again with fresh state. No unbounded retry anywhere.
 
-Note: the alive-enemy cap (`phase.MaxAliveEnemies`) isn't a separate early-exit step - it's one of `TrySelectGroup`'s per-candidate filters (`aliveCount + candidate.ComputeMemberCount() > phase.MaxAliveEnemies`), so a pulse that's at cap for big groups can still legitimately select and spawn a small one.
+Note: the alive-enemy cap (`phase.MaxAliveEnemies`) isn't a separate early-exit step - it's one of `TrySelectSpawn`'s per-candidate filters (`aliveCount + candidate.ComputeMemberCount() > phase.MaxAliveEnemies` for a group, `aliveCount + 1 > phase.MaxAliveEnemies` for a direct enemy), so a pulse that's at cap for big groups can still legitimately select and spawn a small one (or a lone direct enemy).
 
-## Group validation algorithm (`CombatDirectorUtility.TrySelectGroup`)
+## Spawn candidate validation algorithm (`CombatDirectorUtility.TrySelectSpawn`)
 
 For each `AssetRef<EnemyGroupConfig>` in `phase.AllowedGroups`, in authored order:
 
@@ -128,9 +134,23 @@ For each `AssetRef<EnemyGroupConfig>` in `phase.AllowedGroups`, in authored orde
 4. `aliveCount + ComputeMemberCount() <= phase.MaxAliveEnemies`.
 5. `MaxConcurrent <= 0`, or live copies (recounted from `EnemyLifecycle.SourceGroup`, not a maintained counter) `< MaxConcurrent`.
 
-Every group that survives all five becomes a candidate in a **deterministic weighted roll**: one `f.RNG->Next(FP._0, totalWeight)` draw walked against each candidate's own `Weight` in authored order - not one roll per candidate, not a tactical score. A dev debugging "why this group" only ever needs the candidate list plus that single roll value.
+Then, for each `EnemySpawnEntry` in `phase.AllowedEnemies`, in authored order, the exact same five checks against the entry's own fields instead of a group's - cost is `EnemyDataAsset.ResolveCost(f)` (no `ComputeCost` to call, there's no group), the alive-cap check adds exactly `1`, and live-copy counting (`CountAliveForEnemy`) is keyed by `Enemy.EnemyData` across every `EnemyLifecycle`-carrying entity instead of `EnemyLifecycle.SourceGroup` - since a direct spawn has no owning group, a count scoped to "spawned via this entry" wouldn't mean anything; two different `AllowedEnemies` entries for the same `EnemyDataAsset`, or a group that also contains it, share one live count.
 
-**Known gap:** this step does not pre-check that every member's `EnemyData`/`SpawnProfile` assets actually exist - a group with a broken reference still gets selected here and only fails inside `GroupSpawnerUtility` (with a clear `Log.Error` and no budget spent, so it's safe, just not caught a step earlier). Acceptable for now since a broken reference is an authoring mistake surfaced immediately and loudly in the Console, not a runtime edge case.
+Every group AND every direct enemy that survives its own five checks becomes a candidate in **one shared deterministic weighted roll**: one `f.RNG->Next(FP._0, totalWeight)` draw walked against each candidate's own `Weight` (groups first, then enemies, both in authored order) - not one roll per candidate, not a tactical score, and not two separate rolls that would need their own relative-frequency tuning. A dev debugging "why this candidate" only ever needs the combined candidate list plus that single roll value.
+
+**Known gap:** this step does not pre-check that every group member's or direct entry's `EnemyData`/`SpawnProfile` assets actually exist - a broken reference still gets selected here and only fails inside `GroupSpawnerUtility` (with a clear `Log.Error` and no budget spent, so it's safe, just not caught a step earlier). Acceptable for now since a broken reference is an authoring mistake surfaced immediately and loudly in the Console, not a runtime edge case.
+
+## Direct enemy spawns (`SurvivalPhase.AllowedEnemies`)
+
+`AllowedGroups`' sibling - a phase can list individual `EnemySpawnEntry` values (`EnemyData`, `Faction`, `Weight`, `MinimumSurvivalTime`/`MaximumSurvivalTime`, `MaxConcurrent`) directly, with no `EnemyGroupConfig` asset needed just to wrap one enemy at `Quantity 1`. `TrySelectSpawn` rolls both lists into one weighted draw each purchase (see above), so a phase can freely mix whole encounters and lone spawns within the same pulse - a designer forcing, say, a lone `Sniper` to show up periodically alongside the normal group roster just adds one entry to `AllowedEnemies`, no new asset file.
+
+`GroupSpawnerUtility.TrySpawnEnemy` is the placement counterpart to `TrySpawnGroup`, reusing almost the entire pipeline: the same `MaxGroupSpawnAttempts` ring-anchor/ground-height/chunk-connectivity loop, and the same private `TryValidateMember` (height rule + forbidden-chunk + clearance) - just against one point (the anchor itself) instead of a `GroupFormationUtility`-generated offset formation, since there's nothing to arrange around a center. On success it calls the same private `SpawnMember` a group member uses, with `groupRef = default` - `EnemyLifecycle.SourceGroup` ends up invalid/default, which is inert everywhere it's read (`CombatDirectorUtility.CountAliveForGroup` is keyed by a specific `AssetRef<EnemyGroupConfig>`, so a default value there never matches any real group's count).
+
+"Major" status (Elite+ tier, global-centroid anchoring, Chunk Connectivity gating - see "Chunk Connectivity" below) works identically to a group: `CombatDirectorUtility.EnemyIsMajor` checks the entry's own `EnemyDataAsset.Tier >= Elite`, the same threshold `GroupContainsMajor` uses for a group's members. `EncounterModifierUtility.ResolveEnemyWeightMultiplier` is the direct-enemy counterpart to `ResolveGroupWeightMultiplier` for Elite Territory's weighting bias, sharing the same underlying multiplier resolution so a run-wide "more Elites" modifier biases both pools identically.
+
+There is no "GuaranteedEnemy" analog to `SurvivalPhase.GuaranteedGroup` - `AllowedEnemies` only ever competes for the normal weighted purchase roll. A single enemy that must bypass the budget/alive-cap gate still needs wrapping in a one-member `EnemyGroupConfig` and assigning to `GuaranteedGroup` (see "Guaranteed spawns" below).
+
+**Editor generators**: neither `SurvivalDirectorContentGenerator.cs` nor `SurvivalDirectorMvpContentGenerator.cs`/`MvpSurvivalContentGenerator.cs`/`Combat1MainFactionContentGenerator.cs` author `AllowedEnemies` yet - each rebuilds `SurvivalPhase[]` wholesale from its own `PhaseSpec`, so `AllowedEnemies` stays at its default (`null`, treated identically to an empty list) unless a generator is extended with a matching spec field, or the array is hand-authored directly on a `SurvivalConfig` asset in the Inspector.
 
 ## Physics-based group spawning algorithm (`GroupSpawnerUtility.TrySpawnGroup`)
 
@@ -152,6 +172,56 @@ Every group that survives all five becomes a candidate in a **deterministic weig
 
 **Not implemented yet** - this is Milestone 4 (see roadmap). Today a `GroundMelee`/`GroundRanged` member only needs *a* floor under it within the height-difference band; nothing walks the path between the anchor and the predicted player position to reject an isolated platform, cliff-top ledge, or gap the enemy can't actually cross on foot. `EnemyMovementUtility.CanCrossLedge`/`HasGroundAhead` already implement the per-step version of this same probe for normal movement (see that file) - Milestone 4's job is reusing that shape as a multi-sample pre-spawn check (`GroundContinuitySamples`, `MaximumStepHeight` on `EnemySpawnProfile`), not inventing a new one.
 
+## Chunk Connectivity (Elite Spawn Gating)
+
+The ring-anchor algorithm above only knows *world-space* distance - it has no idea whether the
+chunk a candidate anchor lands in is actually reachable on foot from the nearest player's own
+chunk, or just physically close to it across a wall separating two branches of the level. This
+mattered most for Elite+ ("major") groups specifically: `CombatDirectorUtility.TryPulse` anchors
+every major group at `plan.GlobalCentroid` (a virtual average of all player positions, not any
+single player's real chunk), so an Elite could spawn in a room that reads as "right next to" a
+player on the minimap but requires a long detour to actually reach - the enemy never threatens
+anyone until they happen to wander over.
+
+**`Chunk.ConnectedChunks`/`ConnectedChunkCount`** (`Chunk.qtn`) persists a real adjacency graph:
+every chunk records every OTHER chunk it directly borders, computed exactly once by
+`LevelGenerationSystem.ComputeChunkConnectivity`, called right after the level finishes growing
+(after `AssignPlayerSpawnPosition`, before `Global.LevelGenerated` flips true). It reuses the
+existing `AreAdjacent` rectangle-edge test the placement algorithm already validates every pair of
+placed chunks against (see "Physics-based group spawning algorithm" above for the placement rules
+themselves) - two chunks that end up geometrically adjacent already passed
+`AllowedConnectionSides`/`ForbiddenNeighbors` during placement, so adjacency here always means a
+real, walkable connection; nothing about doors/openings needs re-deriving. Symmetric (each side
+records the other), capped at 8 connections per chunk (`ChunkConnectionSide` only has 4 sides, but
+one large chunk's single side can border more than one smaller neighbor).
+
+**`ChunkConnectivityUtility`** (`Assets/_QuantumUser/Simulation/Systems/Level/`) is the generic,
+hero/tier-agnostic reader: `IsConnected(f, chunkA, chunkB)` checks the graph directly;
+`IsConnectedToNearestPlayer(f, point)` resolves the chunk containing whichever connected player is
+nearest `point` (via `PlayerQueryUtility.GatherPlayers` + `EnemyPathfindingUtility
+.TryFindContainingChunk`) and checks it against the chunk containing `point` itself. Permissive by
+design whenever the data needed to judge is missing (no player found, or the point isn't inside any
+known chunk) - it only ever rejects on positive evidence of disconnection, the same philosophy
+`GroupSpawnerUtility.IsInForbiddenChunk` already uses for its own chunk-type check.
+
+**Wired into `GroupSpawnerUtility.TrySpawnGroup`** (and its `TrySpawnEnemy` counterpart, see "Direct
+enemy spawns" above - same `isMajor` parameter, same check, same position in the retry loop) via a
+new `isMajorGroup`/`isMajor` parameter: right after a ring candidate's ground height resolves
+(cheaper than the full formation validation that follows), a major candidate whose anchor fails
+`IsConnectedToNearestPlayer` is rejected and the attempt loop retries with a fresh anchor - exactly
+like the existing forbidden-chunk-type rejection, just one more filter in the same retry loop.
+Non-major candidates are unaffected (`isMajor == false` skips the check entirely, so per-front normal
+purchases behave exactly as before). Callers resolve majority via `CombatDirectorUtility
+.GroupContainsMajor(f, group)` for a group or `.EnemyIsMajor(f, enemyDataRef)` for a direct enemy -
+`CombatDirectorUtility.TryPulse`'s normal purchase path and `RunPhaseUtility.SpawnGuaranteedGroup`'s
+`SurvivalPhase.GuaranteedGroup` path (see "Guaranteed spawns" below) both use the group check, so a
+guaranteed Elite spawn gets the identical gate a normal Elite purchase would.
+
+**Status**: compiles once Quantum DSL codegen picks up the new `Chunk.qtn` fields - unlike most
+features in this codebase, **no Editor authoring is needed at all**: the adjacency graph derives
+entirely from data `LevelGenerationSystem` already produces during procedural generation, so it's
+live the moment a level generates. Not yet manually verified in-Editor.
+
 ## High-ground shooter validation
 
 **Not implemented yet** - Milestone 5. `EnemySpawnCategory.HighGroundRanged` and `.Boss` exist as authored values today, but `GroupSpawnerUtility.ValidateHeightRule` treats both exactly like `Flying` (no height restriction at all) until line-of-sight and jump-down-landing search are built. Spawning a `HighGroundRanged` enemy today can strand it somewhere with no valid escape - don't author real `HighGroundRanged` content until this milestone lands.
@@ -171,9 +241,9 @@ Every random decision in the Director/Spawner goes through `f.RNG` (Quantum's de
 - Predicted-center ring anchor: `EnemyMovementUtility.RandomPositionInRing` (angle + distance).
 - Formation facing roll: one `f.RNG->Next(0, 360)` per spawn attempt, shared by the whole formation.
 - `GroupSpawnPattern.Scatter` offsets: one angle + distance roll per member (the only pattern that draws RNG at all - Cluster/Circle/Arc/Line are pure `index/count` formulas, reproducible from the member count alone with zero RNG draws).
-- Weighted group selection: one `f.RNG->Next(FP._0, totalWeight)` cumulative-weight roll (see "Group validation algorithm").
+- Weighted spawn candidate selection (groups AND direct enemies): one `f.RNG->Next(FP._0, totalWeight)` cumulative-weight roll (see "Spawn candidate validation algorithm").
 
-Candidate ordering is always the authored array order (`phase.AllowedGroups`, `EnemyGroupConfig.Members`) - never a set/dictionary iteration - so the same seed and game state reproduce the same selected group and the same spawn attempt sequence, satisfying the original design's determinism requirement without any extra bookkeeping.
+Candidate ordering is always the authored array order (`phase.AllowedGroups` then `phase.AllowedEnemies`, `EnemyGroupConfig.Members`) - never a set/dictionary iteration - so the same seed and game state reproduce the same selected candidate and the same spawn attempt sequence, satisfying the original design's determinism requirement without any extra bookkeeping.
 
 ## Failure cases and safeguards
 
@@ -183,6 +253,42 @@ Candidate ordering is always the authored array order (`phase.AllowedGroups`, `E
 - **Missing `DirectorConfig.EnemyPrototype`**: `GroupSpawnerUtility.TrySpawnGroup` logs and returns false immediately, no attempts spent.
 - **Broken group/member references**: missing `EnemyData`/`SpawnProfile` on a member logs a clear error naming the group and rejects only that spawn attempt (see "Group validation algorithm"'s known gap).
 - **Authoring guardrail**: `CombatDirectorSystem.ValidateOnce` logs an error (not a hard failure) if `LifecycleConfig.RelevantRange < DirectorConfig.SpawnRingRadiusMax` - a freshly spawned enemy could otherwise land already `Irrelevant` and retire without ever engaging.
+- **Crowded map silently eating a phase's only spawn**: a normal purchase can be rejected outright by `TrySelectSpawn`'s budget/alive-cap gate with no retry until the next pulse - for an `Elite` phase in particular this could previously mean the phase's own Elite never spawned at all yet the phase still read as "cleared" and expired on `Duration`. `SurvivalPhase.GuaranteedGroup` (see "Guaranteed spawns" above) exists specifically to bypass this gate for a phase's one must-happen spawn (`AllowedEnemies` direct spawns have no guaranteed analog - see "Direct enemy spawns").
+
+## Guaranteed spawns (`SurvivalPhase.GuaranteedGroup`)
+
+A real gap in the normal purchase loop: `TrySelectSpawn` (see "Spawn candidate validation algorithm") rejects
+a candidate group outright if `cost > DirectorBudget` or `aliveCount + memberCount > maxAliveEnemies`
+- if EVERY group in a phase's `AllowedGroups` fails one of those two gates on a given pulse (e.g. the
+map is already crowded with `Economy.Persistent` enemies from an earlier phase, or budget just hasn't
+accumulated enough yet), `TryPulse` spawns nothing that pulse - a `Log.Debug` only, no error, no
+retry until the next `PulseInterval`. For a normal Combat phase a missed pulse is harmless (the next
+one usually succeeds); for an **Elite** phase it's worse - `SurvivalProgressionUtility.
+IsEncounterCleared('Elite')` checks "is there currently a live Elite-tier enemy," not "has one ever
+spawned this phase," so a phase whose only Elite never got a chance to spawn reads as already cleared
+from tick 1 and can expire on `Duration` alone having guaranteed nothing at all (see
+`docs/run-phase.md`'s "Elite / Boss phases").
+
+`SurvivalPhase.GuaranteedGroup` (`AssetRef<EnemyGroupConfig>`, any `Kind`, most useful on `Elite`)
+closes this: `RunPhaseUtility.SpawnGuaranteedGroup`, called from `CombatDirectorSystem.Update`
+right after `SurvivalProgressionUtility.Tick`/`ApplyPhaseGameState` - deliberately BEFORE the
+Breathing/Traversal Challenge early-returns, so the guarantee lands regardless of whether ordinary
+`TryPulse` spawning is currently allowed - fires it exactly once per phase entry
+(`Global.PhaseGuaranteedSpawnDone`, reset by `SurvivalProgressionUtility.Tick` whenever
+`CurrentPhaseIndex` changes). It reuses `GroupSpawnerUtility.TrySpawnGroup` directly - the exact
+same formation/ground/clearance search every normal purchase uses (so it still won't land inside a
+wall), and the spawned member(s) still get `EnemyLifecycle` (so they count toward `MaxAliveEnemies`
+for subsequent normal purchases and still refund `DirectorBudget` on retirement) - it only skips
+`TrySelectSpawn`'s own budget/alive-cap gate, which is the one thing a "guarantee" needs to bypass.
+The group does **not** also need to be listed in `AllowedGroups`. Anchored at
+`PlayerClusterDirectorUtility`'s own `AnchorPlan.GlobalCentroid` - the same point Elite+ ("major")
+groups already route to during a normal purchase - since a guaranteed spawn has no per-front
+"neediest front" selection to run. It is not an absolute, unconditional guarantee: if no anchor
+within `DirectorConfig.MaxGroupSpawnAttempts` has valid ground/clearance at all (a fully blocked
+map), `TrySpawnGroup` still returns `false` and `SpawnGuaranteedGroup` logs a `Log.Error` rather than
+spawning into geometry - same "fail loud, never spawn into garbage" idiom every other spawn point in
+this codebase already follows (e.g. `RunPhaseUtility.BeginBossEncounter`'s own Boss Arena chunk
+check).
 
 ## Minimal implementation roadmap
 
@@ -200,7 +306,8 @@ Candidate ordering is always the authored array order (`phase.AllowedGroups`, `E
 - **`HighGroundRanged`/`Boss` spawn categories are placeholders.** They exist so a designer can mark intent now, but `GroupSpawnerUtility` treats both exactly like `Flying` (no height restriction) until Milestone 5. Don't author real `HighGroundRanged` content yet.
 - **No ground-accessibility/path heuristic yet** (Milestone 4) - a `GroundMelee` member only needs *a* floor at the right height, not a walkable route from there to the fight.
 - **`AllowsPartialSpawn` is authored but unused.** `GroupSpawnerUtility` is always strictly all-or-nothing today.
-- **`TrySelectGroup` doesn't pre-validate member asset references** - see "Group validation algorithm"'s own "Known gap" note. Safe (no budget spent) but not caught a step earlier.
+- **`TrySelectSpawn` doesn't pre-validate member/entry asset references** - see "Spawn candidate validation algorithm"'s own "Known gap" note. Safe (no budget spent) but not caught a step earlier.
+- **No `AllowedEnemies` generator support yet** - every Editor content generator rebuilds `SurvivalPhase[]` wholesale and none of them author `AllowedEnemies` (see "Direct enemy spawns"), so it's Inspector-only for now.
 - **No manual debug spawn command yet** - test via a fast-pulsing `SurvivalConfig` phase instead (see roadmap step 2).
 
 ## What's implemented vs. what's still needed (authoring checklist)

@@ -11,12 +11,21 @@ namespace Quantum
     // and resimulates, and by the time the view exists the bullet is already meters downrange. The
     // visual therefore pops into existence halfway to the target instead of leaving the barrel.
     //
-    // So on spawn this DETACHES visualRoot from this GameObject, puts it back on the simulation's
-    // own Projectile.SpawnPosition (the muzzle), and hands it to a ProjectileVisualController that
-    // chases this entity's interpolated position at catchUpSpeedMultiplier x the projectile's real
-    // speed until it converges. The deficit is paid back in around a tenth of a second, and the shot
-    // reads correctly the whole way. A locally simulated shot (every enemy's, and this client's own)
-    // has no deficit to pay back in the first place, so it just tracks its entity exactly.
+    // So on spawn this DETACHES visualRoot from this GameObject, puts it back at the muzzle, and
+    // hands it to a ProjectileVisualController that chases this entity's interpolated position at
+    // catchUpSpeedMultiplier x the projectile's real speed until it converges. The deficit is paid
+    // back in around a tenth of a second, and the shot reads correctly the whole way. A locally
+    // simulated shot (every enemy's, and this client's own) has no deficit to pay back in the first
+    // place, so it just tracks its entity exactly.
+    //
+    // "The muzzle" is resolved LIVE off the firing Weapon's own WeaponView.MuzzleTransform
+    // (ResolveMuzzleTransform below) rather than the simulation's own Projectile.SpawnPosition -
+    // that field is only ever "caster position + a small forward nudge + hand height", never
+    // anchored to this weapon's actual authored barrel length (see StatUtility.
+    // GetWeaponHoldOffset/ProjectileSpawner.ResolveSpawnOrigin), so a shot spawned there visibly
+    // starts behind or in front of the visible barrel. SpawnPosition remains the fallback for
+    // anything with no resolvable WeaponView - every enemy attack, and a player shot spawned before
+    // its owner's own view exists yet.
     //
     // Detaching also means the visual outlives this view - which is what let ManualDisposal go away
     // entirely. It used to be set here so this GameObject could survive its own entity long enough
@@ -84,7 +93,13 @@ namespace Quantum
 
             Vector3 spawnPosition = transform.position;
             if (frame != null && frame.TryGet<Projectile>(_entityRef, out var projectile) == true)
+            {
                 spawnPosition = projectile.SpawnPosition.ToUnityVector3();
+
+                Transform muzzle = ResolveMuzzleTransform(projectile.Owner);
+                if (muzzle != null)
+                    spawnPosition = muzzle.position;
+            }
 
             var settings = new ProjectileVisualController.Settings
             {
@@ -156,6 +171,37 @@ namespace Quantum
 
             _visual.Push(transform.position, rotation, speed,
                 visible: hasProjectile == false || projectile.RemainingSpawnDelay <= 0);
+        }
+
+        // Shared across every ProjectileView instance rather than resolved per-spawn - a fast weapon
+        // fires several of these a second, and FindFirstObjectByType is the expensive part. Unity's
+        // overloaded null-check on a destroyed Object makes this self-healing across a scene
+        // reload/reconnect for free, same as the field BossWidget caches per-instance.
+        private static QuantumEntityViewUpdater _entityViewUpdater;
+
+        // Resolves the firing Weapon's own live muzzle transform, or null if the owner has no
+        // resolvable WeaponView (every enemy attack, or a player shot whose owner view does not
+        // exist - e.g. already disconnected). See the class comment above for why this is preferred
+        // over the simulation's own Projectile.SpawnPosition.
+        private static Transform ResolveMuzzleTransform(EntityRef owner)
+        {
+            if (owner == EntityRef.None)
+                return null;
+
+            if (_entityViewUpdater == null)
+                _entityViewUpdater = FindFirstObjectByType<QuantumEntityViewUpdater>();
+
+            if (_entityViewUpdater == null)
+                return null;
+
+            QuantumEntityView ownerView = _entityViewUpdater.GetView(owner);
+            if (ownerView == null)
+                return null;
+
+            WeaponViewController weaponController = ownerView.GetComponentInChildren<WeaponViewController>();
+            WeaponView weaponView = weaponController != null ? weaponController.CurrentWeaponView : null;
+
+            return weaponView != null ? weaponView.MuzzleTransform : null;
         }
 
         // The bullet mesh is a child in every projectile prefab here, but not always the FIRST one

@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bb51f48d451e4d148d492421a410eb0, type: 3}
+  m_Name: LuxSentryLaser
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.WeaponDataAsset
+  Identifier:
+    Path: _QuantumUser/Resources/Weapons/LuxSentryLaser
+    Guid:
+      Value: 509762407051158019
+  DisplayName: 
+  FireType: 0
+  Damage:
+    RawValue: 0
+  Element: 0
+  CriticalChance:
+    RawValue: 65536
+  CriticalDamageBonus:
+    RawValue: 0
+  FireRate:
+    RawValue: 655360
+  MagazineSize: 999
+  ReloadDuration:
+    RawValue: 65536
+  Range:
+    RawValue: 1310720
+  PelletCount: 1
+  SpreadAngle:
+    RawValue: 0
+  SpawnAnchor: 0
+  SpawnOffset:
+    X:
+      RawValue: 0
+    Y:
+      RawValue: 0
+    Z:
+      RawValue: 0
+  ProjectileData:
+    Id:
+      Value: 2052039704194794421
+  ViewPrefab: {fileID: 8089491252618662435, guid: 71e454c59b0bb4e6b949d1333a8bcb33, type: 3}
+  ShakeTier: 0
+  _dpsPreview: 'Burst DPS: 0
+
+    Sustained DPS (incl. reload): 0
+
+    Damage/min:
+    0'

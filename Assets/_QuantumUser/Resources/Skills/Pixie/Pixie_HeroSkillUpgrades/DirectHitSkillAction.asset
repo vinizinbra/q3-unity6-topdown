@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Direct Hit
   RankDescriptions:
-  - Inner 35% of the blast deals +30% damage.
-  - Inner 45% of the blast deals +50% damage.
-  - Inner 45% of the blast deals +75% damage and knocks enemies back hard.
+  - 'Inner <color=#FD3971>35%</color> of the blast deals <color=#FD3971>+30%</color> damage.'
+  - 'Inner <color=#FD3971>45%</color> of the blast deals <color=#FD3971>+50%</color> damage.'
+  - 'Inner <color=#FD3971>45%</color> of the blast deals <color=#FD3971>+75%</color> damage and knocks enemies back hard.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

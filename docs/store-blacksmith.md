@@ -16,41 +16,59 @@ systems rather than duplicating them.
   any player opens it that Break (`StoreUtility.EnsureInventoryRolled`) - deterministic across
   clients (`f.RNG`), same guarantee every other shared roll in this codebase relies on.
 - Weapon offers are rolled the same way `LevelUpUtility.RollChooseWeaponOptionsFor` rolls a
-  Choose-Weapon level-up (distinct weapons, uniform draw without replacement), but - as of
-  2026-08-19 - a Store offer's own quality is driven by 3 **deliberately independent** axes instead
-  of the single `WeaponTalentLevel` a Choose-Weapon pick uses, so each stays separately tunable (see
-  "Break Progression" below): the current Breathing Break sets **Weapon Level** and **starting perk
-  COUNT**; `ShopWeaponOfferCount` (unchanged, see below) sets how many offers are shown; the
-  TRIGGERING player's own `RuntimePlayer.Talents.WeaponLevel` (`StoreUtility.
-  ResolveWeaponLevelTalent`, resolved via that entity's own `PlayerLink` -> `f.GetPlayerData` -
-  unchanged, still the persistent meta-progression stat that seeds `CharacterStats.WeaponTalentLevel`
-  at spawn, deliberately NOT the live in-run one, which keeps climbing over a run) sets starting perk
-  **RARITY**. Since `StoreInventory` is rolled ONCE, shared across every player, whoever opens the
-  Store first each Break is whose talent sets the perk rarity for everyone until the next restock -
-  an accepted consequence of the shared-inventory design, not per-player.
-  `Price = WeaponOfferBasePrice + WeaponOfferPricePerPerk * RolledPerkCount` (unchanged - Weapon
-  Level doesn't factor into price).
+  Choose-Weapon level-up (distinct weapons, uniform draw without replacement). As of 2026-08-29, a
+  Store offer's own quality is driven by 2 **deliberately independent** axes (previously 3 - see
+  "Weapon Offer Scaling" below for what changed): `Global.SurvivalTime` sets **Weapon Level** and
+  **starting perk COUNT**, shared with a Choose-Weapon level-up/Chest pick so both draw from the
+  exact same random configuration; the TRIGGERING player's own `RuntimePlayer.Talents.WeaponLevel`
+  (`StoreUtility.ResolveWeaponLevelTalent`, resolved via that entity's own `PlayerLink` ->
+  `f.GetPlayerData` - unchanged, still the persistent meta-progression stat that seeds
+  `CharacterStats.WeaponTalentLevel` at spawn, deliberately NOT the live in-run one, which is pure
+  bookkeeping now) sets starting perk **RARITY**. `ShopWeaponOfferCount` (unchanged, see below) sets
+  how many offers are shown - a separate, 3rd axis. Since `StoreInventory` is rolled ONCE, shared
+  across every player, whoever opens the Store first each Break is whose talent sets the perk rarity
+  for everyone until the next restock - an accepted consequence of the shared-inventory design, not
+  per-player. `Price = WeaponOfferBasePrice + WeaponOfferPricePerPerk * RolledPerkCount` (unchanged -
+  Weapon Level doesn't factor into price).
 
-#### Break Progression (Weapon Level / starting perk count / perk rarity)
+#### Weapon Offer Scaling (Weapon Level / starting perk count) - `LevelUpConfig.WeaponOfferCurve`
 
-- **Weapon Level**: `StoreConfig.BreakWeaponConfig[]` (a `StoreBreakWeaponConfig` row per Break,
-  `StoreConfig.ResolveBreakWeaponConfig(Global.BreathingIndex)` - same "last authored row holds
-  forever past the authored range" clamp `BlacksmithConfig.ResolveBreakTuning` already established)
-  carries a target `WeaponLevel` per Break. This is the SAME `Weapon.Level`/`WeaponSystem.AddLevel`
-  (+5%, compounding, `StoreConfig.WeaponLevelUpDamageBonusPerLevel`) the guaranteed "Increase Weapon
-  Level" offer already uses - no new damage formula. Since `WeaponChoiceUtility.Grant` always calls
-  `WeaponSystem.Equip`, which resets a freshly-equipped `Weapon` back to Level 0
-  (`WeaponSystem.SeedStats`), the Break's target level can't be baked into the granted option itself
-  - `StoreWeaponOffer` instead carries its own resolved `WeaponLevel` (new field), and
-  `StoreUtility.ApplyBreakWeaponLevel` calls `AddLevel` that many times right after `Grant` in
-  `BuyWeapon`.
-- **Starting perk count**: each `StoreBreakWeaponConfig.StartingPerkRolls` is a configurable array of
-  INDEPENDENT Bernoulli chances (`StoreUtility.RollStorePerkCount`, reusing `DamageUtility.
-  RollChance` per entry) - e.g. Break 4's `[0.80, 0.60, 0.40, 0.20]` matches "usually 2 perks, rare
-  chance of 3-4". Deliberately NOT `LevelUpUtility.RollWeaponOption`'s
-  `clamp01((weaponTalentLevel - slot) * ChancePerLevelPerSlot)` formula - that formula is
-  WeaponTalentLevel-driven by design (a Choose-Weapon pick's own axis) and stays untouched/unused by
-  Store, which needs an explicit, independently-authorable array per Break instead.
+**Reworked 2026-08-29** - previously Store scaled Weapon Level/starting perk count off
+`Global.BreathingIndex` via its own `StoreConfig.BreakWeaponConfig[]`/`ResolveBreakWeaponConfig`,
+while a Choose-Weapon level-up/Chest pick scaled its own starting perk count off the persistent
+`CharacterStats.WeaponTalentLevel` via `LevelUpUtility.RollWeaponOption`'s
+`clamp01((weaponTalentLevel - slot) * ChancePerLevelPerSlot)` formula - two independently-tuned
+mechanisms producing the same kind of value. Both are gone, replaced by one shared,
+`Global.SurvivalTime`-driven curve on `LevelUpConfig` (not `StoreConfig` - it has to live somewhere
+both Store and Choose-Weapon/Chest can reach, and `LevelUpConfig` is already the "weapon choose"
+config both paths reference):
+
+- **`LevelUpConfig.WeaponOfferCurve[]`** (`WeaponOfferTimeAnchor` rows: `Minute`/`WeaponLevel`/
+  `StartingPerkRolls`) - one row per anchor minute of `Global.SurvivalTime`, mirroring
+  `BalanceConfig.RunCurveAnchor`/`Evaluate`'s own shape (linear interpolation between the two
+  bracketing anchors, clamped flat outside the authored range) rather than folded into the shared
+  `BalanceConfig` asset itself, since `WeaponLevel`/`StartingPerkRolls` are direct authored values,
+  not multipliers applied to a baseline the way `EnemyHp`/`EnemyDmg`/`DirectorBudget` are.
+  `LevelUpConfig.ResolveWeaponOfferLevel(survivalSeconds)` lerps `WeaponLevel` (rounded to the
+  nearest `byte`); `LevelUpConfig.RollWeaponOfferPerkCount(f, survivalSeconds)` lerps each
+  `StartingPerkRolls` slot independently (a slot past either bracketing anchor's own authored array
+  length reads as 0 - "not yet unlocked") then rolls each as an INDEPENDENT Bernoulli chance
+  (`DamageUtility.RollChance`) - the number of successes is the rolled perk count. Both methods are
+  called from `StoreUtility.RollWeaponOffers` AND `LevelUpUtility.RollWeaponOption` - the single
+  shared roll behind "weapons in the Store and weapons from a Chest/Choose-Weapon level-up use the
+  same random configuration."
+- **Weapon Level application**: this is the SAME `Weapon.Level`/`WeaponSystem.AddLevel` (+5%,
+  compounding, `LevelUpConfig.WeaponLevelDamageBonusPerLevel` - a new field, distinct from
+  `StoreConfig.WeaponLevelUpDamageBonusPerLevel`, which stays its own separate value for the
+  unrelated guaranteed "Increase Weapon Level" purchase below) the guaranteed offer already uses - no
+  new damage formula. Since `WeaponChoiceUtility.Grant` always calls `WeaponSystem.Equip`, which
+  resets a freshly-equipped `Weapon` back to Level 0 (`WeaponSystem.SeedStats`), the rolled starting
+  Level can't be baked into the option/weapon beforehand - it's carried as a new
+  `LevelUpOption.RolledWeaponLevel` field (Choose-Weapon/Chest) or copied from `StoreWeaponOffer.
+  WeaponLevel` into that same field at purchase time (Store), and `Grant` now takes an explicit
+  `weaponLevelDamageBonusPerLevel` parameter and applies `AddLevel` that many times right after
+  `Equip`, in BOTH paths - previously only Store ever produced a nonzero Level at all (`StoreUtility.
+  ApplyBreakWeaponLevel`, now deleted); a Choose-Weapon/Chest pick was always Level 0.
 - **Starting perk rarity**: `StoreConfig.TalentRarityTuning[]` (`WeaponTalentRarityTuning` rows,
   `StoreConfig.ResolveTalentRarityTuning(weaponTalentLevel)` - indexed by the SAME account-level
   `RuntimePlayer.Talents.WeaponLevel` `ResolveWeaponLevelTalent` already resolves) mirrors
@@ -184,18 +202,22 @@ Choice Window already locks input - movement/weapon/Dash/Hero-Skill gated, `Game
 
 - `Assets/_QuantumUser/Simulation/QTN/Poi/Store.qtn` - `Store`/`StoreInventory`/`StoreWeaponOffer`/
   `StoreFoodOffer`/`StoreInteraction`/`StorePurchases`/`StorePurchaseEntry` (+ `StorePurchases.
-  WeaponLevelUpPurchasedAtBreathingIndexPlusOne`, and as of 2026-08-19 `StoreWeaponOffer.
-  WeaponLevel` - the offer's own Break-resolved starting Weapon Level, see "Break Progression"
-  above).
-- `Assets/_QuantumUser/Simulation/QTN/Weapon.qtn` - `Weapon.Level` (new field, the guaranteed
-  offer's own target - see Design above). `Assets/_QuantumUser/Simulation/Systems/Weapon/
-  WeaponSystem.cs` - `AddLevel` (new), `SeedStats` resets `Level = 0` alongside `DamageMultiplier`.
-- `Assets/_QuantumUser/Simulation/Assets/Config/StoreConfig.cs` - as of 2026-08-19, also
-  `StoreBreakWeaponConfig`/`BreakWeaponConfig[]`/`ResolveBreakWeaponConfig` (Break -> Weapon Level +
-  starting perk count) and `WeaponTalentRarityTuning`/`TalentRarityTuning[]`/
-  `ResolveTalentRarityTuning` (Weapon Talent Level -> starting perk rarity) - see "Break Progression"
-  above. `StoreUtility.cs` - `RollStorePerkCount`/`RollStorePerks`/`ApplyBreakWeaponLevel` (new),
-  `RollWeaponOffers` rewritten to use all three instead of `LevelUpUtility.RollWeaponOption`.
+  WeaponLevelUpPurchasedAtBreathingIndexPlusOne`, and `StoreWeaponOffer.WeaponLevel` - the offer's
+  own resolved starting Weapon Level, `LevelUpConfig.ResolveWeaponOfferLevel` as of 2026-08-29 - see
+  "Weapon Offer Scaling" above).
+- `Assets/_QuantumUser/Simulation/QTN/Weapon.qtn` - `Weapon.Level` (the guaranteed offer's own
+  target - see Design above). `Assets/_QuantumUser/Simulation/Systems/Weapon/WeaponSystem.cs` -
+  `AddLevel`, `SeedStats` resets `Level = 0` alongside `DamageMultiplier`.
+- `Assets/_QuantumUser/Simulation/Assets/Config/StoreConfig.cs` - `WeaponTalentRarityTuning`/
+  `TalentRarityTuning[]`/`ResolveTalentRarityTuning` (Weapon Talent Level -> starting perk rarity) -
+  see "Weapon Offer Scaling" above. As of 2026-08-29, Weapon Level/starting perk count are no longer
+  here (`StoreBreakWeaponConfig`/`BreakWeaponConfig[]`/`ResolveBreakWeaponConfig` deleted) - see
+  `Assets/_QuantumUser/Simulation/Assets/LevelUp/LevelUpConfig.cs` (`WeaponOfferTimeAnchor`/
+  `WeaponOfferCurve[]`/`ResolveWeaponOfferLevel`/`RollWeaponOfferPerkCount`/
+  `WeaponLevelDamageBonusPerLevel`) and `Assets/_QuantumUser/Simulation/QTN/LevelUp.qtn`
+  (`LevelUpOption.RolledWeaponLevel`, new field). `StoreUtility.cs` - `RollWeaponOffers` rewritten to
+  call the shared `LevelUpConfig` methods (`RollStorePerkCount`/`ApplyBreakWeaponLevel` deleted),
+  `RollStorePerks` unchanged (perk RARITY stays Store-only).
 - `Assets/_QuantumUser/Simulation/QTN/Poi/Blacksmith.qtn` - `Blacksmith`/`BlacksmithInteraction`.
 - `Assets/_QuantumUser/Simulation/QTN/Poi/ContextInteraction.qtn` - `InteractableKind` gained
   `Store`/`Blacksmith` (append-only).
@@ -251,11 +273,13 @@ Choice Window already locks input - movement/weapon/Dash/Hero-Skill gated, `Game
   `CancelBlacksmithCommand.cs`.
 - `Assets/_QuantumUser/Editor/StoreBlacksmithContentGenerator.cs` (`Tools/RiftRaiders/Generate
   Store & Blacksmith Content`) - authors the 4 `FoodOfferData` instances, `FoodOfferPoolData`,
-  `StoreConfig`, `BlacksmithConfig`, and as of 2026-08-19 `StoreConfig.BreakWeaponConfig`/
-  `TalentRarityTuning` (the same decisive-placeholder defaults documented above). Deliberately does
-  NOT touch `WeaponPool`/`PerkPool` (no safe way to locate the right assets), `RuntimeConfig`,
-  hand-placed `EntityPrototype`s, or UI prefab wiring - same scope-limit every other generator in
-  this codebase follows.
+  `StoreConfig`, `BlacksmithConfig`, and `TalentRarityTuning` (the same decisive-placeholder defaults
+  documented above). As of 2026-08-29 no longer authors `BreakWeaponConfig` (deleted) -
+  `LevelUpConfig.WeaponOfferCurve`/`WeaponLevelDamageBonusPerLevel` are hand-authored via the
+  Inspector instead, same convention every other `LevelUpConfig` field already follows (see
+  `LevelUpConfig.cs`'s own class-level defaults). Deliberately does NOT touch `WeaponPool`/`PerkPool`
+  (no safe way to locate the right assets), `RuntimeConfig`, hand-placed `EntityPrototype`s, or UI
+  prefab wiring - same scope-limit every other generator in this codebase follows.
 
 ## Edge cases
 
@@ -280,16 +304,17 @@ Short version: the code compiles once codegen picks up every new/changed `.qtn` 
 `Blacksmith.qtn`, `ContextInteraction.qtn`'s new `InteractableKind` values, `Chunk.qtn`'s new
 `ChunkType` value, `CharacterStats.qtn`'s `ShopWeaponOfferCount`, `StatusEffects.qtn`'s
 `TempMoveSpeedRemaining`/`Multiplier`, `Weapon.qtn`'s `Level` field +
-`Store.qtn`'s `StorePurchases.WeaponLevelUpPurchasedAtBreathingIndexPlusOne` (2026-08-18), and, as of
-2026-08-19, `Store.qtn`'s `StoreWeaponOffer.WeaponLevel`), and `SystemSetup.User.cs`/
+`Store.qtn`'s `StorePurchases.WeaponLevelUpPurchasedAtBreathingIndexPlusOne` (2026-08-18),
+`Store.qtn`'s `StoreWeaponOffer.WeaponLevel` (2026-08-19), and, as of 2026-08-29,
+`LevelUp.qtn`'s `LevelUpOption.RolledWeaponLevel`), and `SystemSetup.User.cs`/
 `CommandSetup.User.cs` register `StoreSystem`/`BlacksmithSystem` and the 6 new commands
 (`BuyStoreWeaponLevelCommand` added alongside the original 5). The guaranteed "Increase Weapon
 Level" card reuses the exact same food-card UI slot/prefab everything else in this doc's own
 "Editor authoring needed" list already covers - no new UI gap introduced, it needs the identical
-purchase-row wiring (item 5 below) before it displays anything. As of 2026-08-19, a Store weapon
-offer's own Weapon Level/starting perk count/starting perk rarity are all data-driven via
-`StoreConfig` (see "Break Progression" above) - no additional Editor authoring needed beyond what
-this list already covers, since `StoreConfig`'s new fields ship with the same decisive-placeholder
+purchase-row wiring (item 5 below) before it displays anything. As of 2026-08-29, a Store weapon
+offer's own Weapon Level/starting perk count are rolled off the shared `LevelUpConfig.
+WeaponOfferCurve` (see "Weapon Offer Scaling" above) - no additional Editor authoring needed beyond
+what this list already covers, since `LevelUpConfig`'s new fields ship with the same decisive-placeholder
 defaults every other config in this doc already has. Not yet run/authored in the Editor:
 
 1. `Tools/RiftRaiders/Generate Store & Blacksmith Content` (authors the plain-data assets) - not yet run.

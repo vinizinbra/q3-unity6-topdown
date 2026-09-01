@@ -7,11 +7,15 @@ namespace Quantum
     // Computes the gun's aim rotation and secondary-motion offsets from the entity's Aim.Angle
     // (see AimSystem), which is already resolved once in simulation and holds its last direction
     // while stationary - so this doesn't need its own speed threshold or a MonoBehaviour movement
-    // reference the way a client-side equivalent would. Reconstructs a world-space direction from
-    // that angle (tilted toward Aim.Target's actual elevation when one is locked, since Angle
-    // itself is always flat - see ResolveAimWorldDirection) and projects it onto the camera's
-    // screen plane (right/up) so it reads correctly on screen regardless of camera pitch/yaw -
-    // the same trick BlobAnimationView uses for tilt.
+    // reference the way a client-side equivalent would. While a real target is locked, the on-
+    // screen rotation is resolved by WorldToScreenPoint-ing the weapon's own actual (elevated,
+    // sway/follow-offset) position and the target's position and taking the delta between them
+    // (see ResolveScreenAimDirection) - the real "what does this look like on screen" answer under
+    // a perspective camera, correct regardless of camera pitch or how close/how far below the gun's
+    // own pivot the target is. With no target, it falls back to reconstructing a flat world-space
+    // direction from Aim.Angle and projecting it through the camera's basis vectors (right/up) -
+    // the same trick BlobAnimationView uses for tilt, fine for a directionless facing but not for a
+    // real point-to-point aim (see ProjectToScreen's own comment for why).
     //
     // Doesn't touch any transform itself: this only computes the generic, weapon-agnostic pose
     // (rotation, aim direction, flip, camera basis, and the summed sway/follow/recoil offset) and
@@ -31,6 +35,9 @@ namespace Quantum
         [Header("References")]
         [SerializeField, Tooltip("Falls back to Camera.main if left empty.")]
         private Transform cameraTransform;
+        // Resolved from cameraTransform in Awake (falls back to Camera.main) - the actual Camera
+        // component, needed to WorldToScreenPoint the real weapon/target world positions.
+        private Camera aimCamera;
         [SerializeField, Tooltip("Falls back to a BlobAnimationView anywhere under the rig root if left empty. Source of the Body Follow motion below.")]
         private BlobAnimationView torsoFollow;
         [SerializeField, Tooltip("Assign explicitly - the WeaponViewController on this same rig. Its CurrentWeaponView is read fresh every frame (see WeaponHandGripView) so this keeps tracking correctly across a future weapon swap, and receives the computed pose to apply to the transform.")]
@@ -53,6 +60,14 @@ namespace Quantum
         private float followLag = 6f;
         [SerializeField, Tooltip("Screen-up offset per unit the torso's jump squash/stretch deviates from rest (BlobAnimationView.CurrentRootVerticalScale - 1, e.g. 0.2 at a 1.2x stretch). Positive pushes the gun up when the body stretches taller. Set to 0 to disable.")]
         private float squashPositionCompensation = 1f;
+
+        [Header("Jump Flip (follows BlobAnimationView.CurrentFlipDegrees)")]
+        [SerializeField, Tooltip("Spin the weapon along with the body's flip even while aimed at a real target.")]
+        private bool rotateWeaponWithTarget = false;
+        [SerializeField, Tooltip("Spin the weapon along with the body's flip while it has no target to aim at. If both this and rotateWeaponWithTarget are off, the weapon never reacts to a flip at all.")]
+        private bool rotateWeaponWithoutTarget = true;
+        [SerializeField, Tooltip("How quickly the weapon's own rotation catches up to the body's flip (exponential lerp rate) - lower = more lag/inertia, so the gun trails the tumble instead of matching it frame-for-frame. Uses LerpAngle, so a reasonable value also eases smoothly through the flip's own 360°->0° reset instead of snapping - too low a value (falling more than ~180° behind) can make it briefly spin the wrong way to catch up.")]
+        private float flipLagSpeed = 10f;
 
         [Header("Speed Sway (weight/inertia feel)")]
         [SerializeField, Tooltip("Turn this whole layer on/off - useful for isolating it from Body Follow above while tuning either one.")]
@@ -84,6 +99,8 @@ namespace Quantum
         private Vector2 currentAimDir = Vector2.right; // persists if projection ever degenerates, so offset still applies
         private bool isFlipped;
         private float laggedLeanDegrees;
+        // The weapon's own lagged copy of torsoFollow.CurrentFlipDegrees - see flipLagSpeed.
+        private float laggedFlipDegrees;
         private Vector2 swayOffset;
         private Vector2 swayVelocity;
 
@@ -93,6 +110,13 @@ namespace Quantum
 
             if (cameraTransform == null && Camera.main != null)
                 cameraTransform = Camera.main.transform;
+
+            // Real Camera component (not just its transform) - needed to WorldToScreenPoint the
+            // actual weapon/target positions below instead of approximating with a direction-vector
+            // projection through the camera's basis vectors.
+            aimCamera = cameraTransform != null ? cameraTransform.GetComponentInParent<Camera>() : null;
+            if (aimCamera == null)
+                aimCamera = Camera.main;
 
             // Mirrors CustomQuantumEntityViewComponent's own entityView lookup - the gun is
             // often parented under a socket/bone that isn't a direct ancestor chain up to the
@@ -113,8 +137,9 @@ namespace Quantum
 
             float dt = Time.deltaTime;
 
-            Vector3 worldDir = ResolveAimWorldDirection(frame, frame.Get<Aim>(_entityRef));
-            Vector2 screenDir = ProjectToScreen(worldDir);
+            Aim aim = frame.Get<Aim>(_entityRef);
+            Vector3 worldDir = ResolveAimWorldDirection(frame, aim);
+            Vector2 screenDir = ResolveScreenAimDirection(frame, aim, weaponView, worldDir);
 
             float smoothT = 1f - Mathf.Exp(-rotationSmoothing * dt);
 
@@ -132,13 +157,33 @@ namespace Quantum
                 ? torsoFollow.FacingSign < 0f
                 : flipWhenAimingLeft && screenDir.x < 0f;
 
+            // Jump Flip: which case(s) the weapon should spin along with the body for, per the two
+            // flags - both off means it never reacts to a flip at all. Computed BEFORE Body Follow/
+            // Speed Sway below (not just before pose construction) so weaponIsFlipping can gate
+            // both of them - a flip is already a large, deliberate motion, and Body Follow's lean/
+            // rock/bob or Speed Sway's velocity-reactive spring blending on top of it at the same
+            // time made the two impossible to tell apart, especially while eyeballing
+            // flipPivotOffset (a fast auto-hop is exactly when velocity/lean are also largest).
+            bool hasTarget = aim.Target != EntityRef.None;
+            bool shouldFollowFlip = (hasTarget && rotateWeaponWithTarget) || (hasTarget == false && rotateWeaponWithoutTarget);
+            // Distinct from shouldFollowFlip - that's just "is the weapon configured to react in
+            // this targeting state", true even at rest with no flip happening at all. This also
+            // requires an actual flip in progress (CurrentFlipDegrees != 0, which BlobAnimationView
+            // guarantees is exactly 0 whenever no flip is playing), so Body Follow/Speed Sway stay
+            // fully live during ordinary movement and only cut out for the flip's own duration.
+            bool weaponIsFlipping = shouldFollowFlip && torsoFollow != null && torsoFollow.CurrentFlipDegrees != 0f;
+
+            float flipTarget = weaponIsFlipping ? torsoFollow.CurrentFlipDegrees : 0f;
+            laggedFlipDegrees = Mathf.LerpAngle(laggedFlipDegrees, flipTarget, 1f - Mathf.Exp(-flipLagSpeed * dt));
+            float flipRotation = laggedFlipDegrees;
+
             // Body Follow: lean lags on its own slow time constant (a visible delay for the
             // body's overall acceleration tilt); rock/bob pass through unlagged since they
             // already oscillate every stride - artificial smoothing there just kills the motion.
             float followRotation = 0f;
             float followRight = 0f;
             float followUp = 0f;
-            if (enableBodyFollow && torsoFollow != null)
+            if (enableBodyFollow && torsoFollow != null && weaponIsFlipping == false)
             {
                 float leanT = 1f - Mathf.Exp(-followLag * dt);
                 laggedLeanDegrees = Mathf.LerpAngle(laggedLeanDegrees, torsoFollow.CurrentLeanDegrees, leanT);
@@ -168,7 +213,7 @@ namespace Quantum
             // velocity - trailing back while accelerating, then swinging past rest once velocity
             // drops (e.g. coming to a stop), and offsetting opposite vertical speed so a jump
             // doesn't look glued to the torso.
-            if (enableSpeedSway)
+            if (enableSpeedSway && weaponIsFlipping == false)
             {
                 Vector3 velocity = Vector3.zero;
                 if (frame.Has<KCC>(_entityRef))
@@ -210,6 +255,7 @@ namespace Quantum
 
             var pose = new WeaponView.AimPose(
                 currentAngle + followRotation,
+                flipRotation,
                 facingCamera,
                 currentAimDir,
                 isFlipped,
@@ -236,6 +282,34 @@ namespace Quantum
         private Vector2 ProjectToScreen(Vector3 worldDir)
         {
             return new Vector2(Vector3.Dot(worldDir, cameraTransform.right), Vector3.Dot(worldDir, cameraTransform.up));
+        }
+
+        // ProjectToScreen(worldDir) projects a DIRECTION through the camera's basis vectors, which
+        // implicitly assumes an orthographic camera and ignores where the two endpoints actually are
+        // - fine for the flat/no-target fallback below (there's no real target point to speak of),
+        // but wrong for a locked target: the weapon's own visible pivot sits well above and offset
+        // from the player's Transform3D.Position (root/feet) once sway/follow/hand-grip offsets are
+        // applied (WeaponView.ApplyAim), and under a real PERSPECTIVE camera that elevation/offset
+        // difference creates genuine screen-space parallax the direction-only approach can't see -
+        // most visible at close range, where a target standing right next to the player can read as
+        // the gun aiming "up" even though the world-space direction to it is basically flat/downward.
+        // WorldToScreenPoint-ing the weapon's actual current position and the target's actual
+        // position and taking the delta between them is the real "what does this look like on
+        // screen" answer, correct regardless of camera pitch, weapon elevation or target distance.
+        private Vector2 ResolveScreenAimDirection(Frame frame, Aim aim, WeaponView weaponView, Vector3 fallbackWorldDir)
+        {
+            if (aimCamera != null && aim.Target != EntityRef.None && frame.Has<Transform3D>(aim.Target) == true)
+            {
+                Vector3 targetPosition = frame.Get<Transform3D>(aim.Target).Position.ToUnityVector3();
+                Vector3 gunScreen = aimCamera.WorldToScreenPoint(weaponView.transform.position);
+                Vector3 targetScreen = aimCamera.WorldToScreenPoint(targetPosition);
+                Vector2 screenDelta = new Vector2(targetScreen.x - gunScreen.x, targetScreen.y - gunScreen.y);
+
+                if (screenDelta.sqrMagnitude > 0.0001f)
+                    return screenDelta;
+            }
+
+            return ProjectToScreen(fallbackWorldDir);
         }
 
         // Aim.Angle is always flat (AimSystem deliberately ignores Y so flying/elevated enemies

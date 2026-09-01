@@ -16,12 +16,12 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Zara/Zara_HeroSkill/Zara_HeroSkillUpgrades/DoubleTimeSkillAction
     Guid:
       Value: 456045470573843368
-  Icon: {fileID: 0}
+  Icon: {fileID: 27512113, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
   DisplayName: Double Time
   RankDescriptions:
-  - Totem Beats occur every 0.85s.
-  - Totem Beats occur every 0.70s.
-  - Totem Beats occur every 0.5s.
+  - 'Totem Beats occur every <color=#FD3971>0.85s</color>.'
+  - 'Totem Beats occur every <color=#FD3971>0.70s</color>.'
+  - 'Totem Beats occur every <color=#FD3971>0.5s</color>.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

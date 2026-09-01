@@ -138,7 +138,7 @@ namespace QuantumUser.Editor
             // Passive base - Flow State, replacing Resonance entirely (see Flow.qtn).
             FlowStatePassiveData passive = CreateOrUpdate<FlowStatePassiveData>($"{PassivesFolderPath}/FlowStatePassiveData.asset", a =>
             {
-                a.Description = "Keep moving to fill your Flow bar - once full, gain Move Speed and Fire Rate. Standing still drains it; getting hit breaks it outright.";
+                a.Description = "Keep moving to fill Flow. At full Flow, gain Move Speed and Fire Rate.";
 
                 a.BuildDuration = FP.FromString("2.5");
                 a.MoveSpeedBonus = FP.FromString("0.15");
@@ -176,8 +176,8 @@ namespace QuantumUser.Editor
                 a.RankDescriptions = new[]
                 {
                     "Support Beats heal 2% Max Health and grant +15% Move Speed and +15% Fire Rate.",
-                    "Sound Boost: Support Beats heal 2% Max Health, grant +15% Move Speed and +15% Fire Rate, and cut 0.5s off allies' remaining Hero Skill cooldown.",
-                    "Power Chord: Support Beats heal 5% Max Health, grant +15% Move Speed and +15% Fire Rate, cut 0.5s off allies' Hero Skill cooldown, and grant +15% outgoing Damage for 2s.",
+                    "Support Beats heal 2% Max Health, grant +15% Move Speed and Fire Rate, and cut 0.5s off allies' skill cooldown.",
+                    "Support Beats heal 5% Max Health, grant +15% Move Speed and Fire Rate, cut 0.5s off cooldowns and +15% damage.",
                 };
                 a.HealPercent = new[] { FP.FromString("0.02"), FP.FromString("0.02"), FP._0_05 };
                 a.SupportBuffEffect = new[]
@@ -240,7 +240,7 @@ namespace QuantumUser.Editor
                 {
                     "Increase Totem Beat radius by 30%.",
                     "Totem Beat radius +50%, and the Totem lasts 2s longer.",
-                    "Totem Beat radius +75% and the Totem lasts 2s longer, becoming a Main Stage that opens with an immediate Damage Beat and ends with a final Healing Beat.",
+                    "Totem Beat radius +75% and it lasts 2s longer, opening with a Damage Beat and ending with a Healing Beat.",
                 };
                 a.RadiusBonus = new[] { FP.FromString("0.30"), FP._0_50, FP.FromString("0.75") };
                 a.DurationBonus = new[] { FP._0, FP._2, FP._2 };
@@ -256,7 +256,7 @@ namespace QuantumUser.Editor
                 {
                     "Flow builds 25% faster.",
                     "Flow builds 50% faster, and active Flow grants +18% Move Speed and +18% Fire Rate.",
-                    "Full Tempo: Flow builds 75% faster, and active Flow grants a further +10% Fire Rate.",
+                    "Flow builds 75% faster, and active Flow grants a further +10% Fire Rate.",
                 };
 
                 a.BuildRateMultiplier = new[] { FP.FromString("1.25"), FP.FromString("1.50"), FP.FromString("1.75") };
@@ -277,7 +277,7 @@ namespace QuantumUser.Editor
                 {
                     "When a hit breaks your Flow, gain +20% Move Speed for 1.5s.",
                     "A hit no longer empties your Flow - it drops to a third instead, and you still gain +20% Move Speed for 1.5s.",
-                    "Keep the Beat: a hit taken while Flow is active deals 30% less damage (6s cooldown).",
+                    "A hit taken while Flow is active deals 30% less damage (6s cooldown).",
                 };
 
                 a.MoveSpeedBonus = new[] { FP._0_20, FP._0_20, FP._0_20 };
@@ -296,7 +296,7 @@ namespace QuantumUser.Editor
                 {
                     "While Flow is active, you deal +10% damage.",
                     "While Flow is active, you deal +10% damage and your Totem's Beats are 15% more effective.",
-                    "Headliner: activating Flow grants you and allies within 6m +10% Move Speed and +10% Fire Rate for 3s (8s cooldown).",
+                    "Activating Flow grants you and allies within 6m +10% Move Speed and Fire Rate for 3s (8s cooldown).",
                 };
 
                 a.ActiveDamageBonus = new[] { FP._0_10, FP._0_10, FP._0_10 };
@@ -324,9 +324,9 @@ namespace QuantumUser.Editor
                 a.Description = "Dashing feeds your Flow - and eventually leaves damaging beats behind you.";
                 a.RankDescriptions = new[]
                 {
-                    "Quick Tempo: dashing fills a third of your Flow bar, plus more for each enemy you pass through.",
-                    "Afterbeat: dashing fills your Flow bar as before, and 1s later a beat erupts at your starting position, damaging and knocking back nearby enemies.",
-                    "Double Beat: beats erupt at both ends of the dash - landing either one on an enemy fills your Flow bar again (once per dash).",
+                    "Dashing fills a third of your Flow bar, plus more for each enemy you pass through.",
+                    "Dashing fills your Flow bar, and 1s later a beat erupts at your start point, damaging and knocking enemies back.",
+                    "Beats erupt at both ends of the dash - landing either on an enemy fills your Flow bar again (once per dash).",
                 };
                 a.FlowProgressOnDash = FP.FromString("0.35");
                 a.SweepRadius = FP._1_50;
@@ -356,9 +356,9 @@ namespace QuantumUser.Editor
                 a.Description = "Dashing leaves behind a Portable Speaker running the same Damage/Support rhythm at half strength.";
                 a.RankDescriptions = new[]
                 {
-                    "Dashing leaves behind a Portable Speaker alternating Damage and Support Beats at half strength, healing allies for half of what your Totem would.",
-                    "Dashing leaves a Portable Speaker alternating Damage and Support Beats for longer and over a wider area, and completing the dash buffs nearby allies.",
-                    "Mobile Stage: dashing leaves a Portable Speaker that inherits your own Beat interval, radius and Sound Boost profile at reduced effectiveness.",
+                    "Dashing leaves a Portable Speaker alternating Damage and Support Beats at half strength.",
+                    "Dashing leaves a Portable Speaker that lasts longer and covers a wider area; the dash also buffs nearby allies.",
+                    "The Portable Speaker inherits your Beat interval, radius and Sound Boost profile at reduced effectiveness.",
                 };
                 a.Prototype = speakerPrototype;
                 a.Duration = new[] { FP._3, FP._4, FP._4 };

@@ -21,9 +21,9 @@ MonoBehaviour:
   Description: Your explosions can drop a stationary Mini Bomb.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - 15% chance to drop a Mini Bomb dealing 35% of Bunny Bomb damage.
-  - 25% chance to drop a Mini Bomb dealing 45% of Bunny Bomb damage.
-  - 35% chance to drop a Mini Bomb dealing 55% of Bunny Bomb damage.
+  - '<color=#FD3971>15%</color> chance to drop a Mini Bomb dealing <color=#FD3971>35%</color> of Bunny Bomb damage.'
+  - '<color=#FD3971>25%</color> chance to drop a Mini Bomb dealing <color=#FD3971>45%</color> of Bunny Bomb damage.'
+  - '<color=#FD3971>35%</color> chance to drop a Mini Bomb dealing <color=#FD3971>55%</color> of Bunny Bomb damage.'
   Chance:
   - RawValue: 9830
   - RawValue: 16384

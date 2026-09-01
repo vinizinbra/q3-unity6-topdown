@@ -11,15 +11,32 @@ namespace Quantum
     {
         // A weapon's real engagement range - WeaponDataAsset.Range scaled by whatever Long Barrel/
         // Weapon Range Upgrade already baked into Weapon.RangeMultiplier. FireHitscan already limits
-        // its raycast to exactly this; every weapon-fire Projectile spawn site (WeaponSystem.
-        // ApplyProjectilePerks, WeaponPerkReactionSystem.TryFireCriticalRebound, DirectHitData.
-        // SpawnSplitProjectiles) bakes it into Projectile.MaxTravelDistance so a Projectile weapon's
-        // shots - and anything another perk spawns off one mid-flight - are capped the same way.
+        // its raycast to exactly this, and AimSystem/SentryBarrelSystem use it as-is for target
+        // acquisition. A Projectile weapon's own shots don't use this value directly, though - see
+        // ResolveProjectileMaxTravelDistance below.
         public static FP ResolveWeaponRange(Frame f, Weapon* weapon)
         {
             WeaponDataAsset weaponData = f.FindAsset(weapon->WeaponData);
 
             return weaponData.Range * weapon->RangeMultiplier;
+        }
+
+        // Same weapon range, but padded for the specific Projectile it's about to be baked onto as
+        // MaxTravelDistance (see Projectile.qtn) - every weapon-fire Projectile spawn site
+        // (WeaponSystem.ApplyProjectilePerks, WeaponPerkReactionSystem.TryFireCriticalRebound,
+        // DirectHitData.SpawnSplitProjectiles) calls this instead of ResolveWeaponRange directly, so a
+        // Projectile weapon's shots - and anything another perk spawns off one mid-flight - are capped
+        // consistently. See ProjectileMovementData.ResolveMaxTravelDistance for why a straight shot
+        // needs no padding but an arc (BallisticProjectileMovementData) does. Reads the movement off
+        // the projectile's own ProjectileData rather than taking one as a parameter, so a split-shot
+        // child spawned off a hit projectile is padded exactly like its parent was.
+        public static FP ResolveProjectileMaxTravelDistance(Frame f, Weapon* weapon, Projectile* projectile)
+        {
+            FP range = ResolveWeaponRange(f, weapon);
+            ProjectileDataAsset projectileData = f.FindAsset(projectile->ProjectileData);
+            ProjectileMovementData movement = f.FindAsset(projectileData.Movement);
+
+            return movement.ResolveMaxTravelDistance(range);
         }
 
         public static bool TryFindNearestEnemy(Frame f, FPVector3 center, FP radius, EntityRef exclude, out EntityRef result)

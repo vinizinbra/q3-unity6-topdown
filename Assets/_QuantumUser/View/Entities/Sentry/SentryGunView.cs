@@ -54,12 +54,19 @@ namespace Quantum
         [Header("Shoot Punch")]
         [SerializeField, Tooltip("Particle system parented at the muzzle, restarted on every shot (e.g. an Epic Toon FX Muzzleflash prefab) - same convention as WeaponView.muzzleParticle for the player's own gun.")]
         private ParticleSystem muzzleParticle;
-        [SerializeField, Tooltip("Punch-scale strength on X/Y (PrimeTween's Tween.PunchScale, applied to spriteRenderer's own transform - separate from visualRoot, which owns rotation/idle-float instead). Z is never punched - a Vector2 so that can't drift from the Inspector.")]
+        [SerializeField, Tooltip("Punch-scale strength on X/Y, as a FRACTION of the gun's authored scale (0.2 = 20% bigger at the peak). Composed into visualRoot's own per-frame scale write rather than tweened onto a transform directly - see Shoot(). Z is never punched - a Vector2 so that can't drift from the Inspector.")]
         private Vector2 punchStrength = new Vector2(0.2f, 0.2f);
         [SerializeField, Tooltip("How long the punch takes to settle back to rest.")]
         private float punchDuration = 0.25f;
         [SerializeField, Tooltip("PrimeTween's own shake frequency (oscillations per second) - higher reads as a snappier, more jittery punch.")]
         private float punchFrequency = 10f;
+
+        [SerializeField, Tooltip("Per-axis shake distance on every shot, in visualRoot's own LOCAL space - the same frame of reference the idle float below uses (its parent is the barrel entity, which carries the chassis rotation), NOT screen space and NOT relative to where the gun is currently aiming. Leaving an axis at 0 locks it, which is the whole point: (0, 0.05, 0) is a pure vertical kick, (0.05, 0, 0) a pure sideways one. Z reads as depth toward/away from the camera on a billboarded sprite, so it is usually left at 0. All axes 0 skips the shake entirely.")]
+        private Vector3 shakePositionStrength = new Vector3(0f, 0.05f, 0f);
+        [SerializeField, Tooltip("How long the position shake takes to settle back to rest. Keep it at or below the barrel's fire interval - a faster barrel restarts the shake before it has finished, and a restart re-anchors from rest rather than stacking.")]
+        private float shakePositionDuration = 0.2f;
+        [SerializeField, Tooltip("Oscillations per second for the position shake. Higher reads as a sharper rattle; low values read as a single shove.")]
+        private float shakePositionFrequency = 14f;
 
         [Header("Idle Float")]
         [SerializeField, Tooltip("How far the gun bobs left/right from rest while idle.")]
@@ -80,6 +87,20 @@ namespace Quantum
         private float currentAngle;
         private bool isFlipped;
         private Vector3 baseScale = Vector3.one;
+
+        // The live shoot-punch, as a fraction over rest (0 = at rest). Owned as a FIELD rather than
+        // tweened straight onto a transform because QUpdate below rewrites visualRoot.localScale
+        // every single frame for the left-facing flip - and visualRoot is the very same GameObject
+        // the SpriteRenderer sits on, so a Tween.PunchScale on it was simply overwritten before it
+        // could ever be seen. Same "one writer per transform, compose everything into it" shape
+        // WeaponView.Shoot already uses for the player's own gun recoil.
+        private Vector3 punchScale;
+
+        // The live shot shake, in the same local space restLocalPosition/the idle float already work
+        // in - composed into the ONE localPosition write in QUpdate for exactly the same reason
+        // punchScale is: that write happens every frame, so a tween owning the transform directly
+        // would be overwritten before it rendered.
+        private Vector3 punchPosition;
 
         public override void Awake()
         {
@@ -169,15 +190,41 @@ namespace Quantum
         // displacement - sin(0) = 0 - the instant a shot fires, then eases back into its cycle on
         // its own; without this the punch could land while the idle bob is mid-swing, reading as a
         // jump/pop instead of a clean recoil.
+        [Button("Test Shoot")]
         public void Shoot()
         {
             idlePhaseX = 0f;
             idlePhaseY = 0f;
 
-            if (spriteRenderer != null)
+            // Stopped rather than stacked: a fast barrel fires again well inside punchDuration, and
+            // overlapping punches on one value compound instead of settling. Targets `this` (not a
+            // transform) since both punches drive fields - see punchScale/punchPosition.
+            Tween.StopAll(this);
+
+            // Each punch runs 0 -> 0, so restarting one always re-anchors it at rest. A strength of
+            // zero is skipped and its field cleared BY HAND instead: StopAll leaves a half-decayed
+            // value exactly where it stopped, which would otherwise stick the gun off-centre for
+            // good the moment an axis is zeroed in the Inspector.
+            Vector3 scaleStrength = new Vector3(punchStrength.x, punchStrength.y, 0f);
+
+            if (scaleStrength.sqrMagnitude > 0f)
             {
-                Tween.StopAll(spriteRenderer.transform);
-                Tween.PunchScale(spriteRenderer.transform, new Vector3(punchStrength.x, punchStrength.y, 0f), punchDuration, punchFrequency);
+                Tween.PunchCustom(this, Vector3.zero, new ShakeSettings(scaleStrength, punchDuration, punchFrequency),
+                    (view, val) => view.punchScale = val);
+            }
+            else
+            {
+                punchScale = Vector3.zero;
+            }
+
+            if (shakePositionStrength.sqrMagnitude > 0f)
+            {
+                Tween.PunchCustom(this, Vector3.zero, new ShakeSettings(shakePositionStrength, shakePositionDuration, shakePositionFrequency),
+                    (view, val) => view.punchPosition = val);
+            }
+            else
+            {
+                punchPosition = Vector3.zero;
             }
 
             PlayMuzzleParticle();
@@ -239,11 +286,14 @@ namespace Quantum
             Quaternion facingCamera = Quaternion.LookRotation(cameraTransform.forward, Vector3.up);
             visualRoot.rotation = facingCamera * Quaternion.Euler(0f, 0f, currentAngle);
 
-            Vector3 scale = baseScale;
+            // Punch first, flip second - punchScale is a fraction over the AUTHORED scale, so it has
+            // to multiply baseScale before the mirror negates Y, or a punch would read as shrinking
+            // the gun whenever it happens to be facing left.
+            Vector3 scale = Vector3.Scale(baseScale, Vector3.one + punchScale);
             scale.y *= isFlipped ? -1f : 1f;
             visualRoot.localScale = scale;
 
-            visualRoot.localPosition = restLocalPosition + IntegrateIdleFloat(dt);
+            visualRoot.localPosition = restLocalPosition + IntegrateIdleFloat(dt) + punchPosition;
         }
 
         // Independent X/Y sine waves, each with their own randomized (per-instance) phase and

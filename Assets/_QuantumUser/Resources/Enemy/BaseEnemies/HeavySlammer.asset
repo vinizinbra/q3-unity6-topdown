@@ -69,6 +69,8 @@ MonoBehaviour:
       RawValue: 65536
     ShieldMultiplier:
       RawValue: 0
+    HealthMultiplier:
+      RawValue: 65536
     Traits: 
     FrontalDamageReductionAmount:
       RawValue: 0
@@ -88,6 +90,8 @@ MonoBehaviour:
       RawValue: 655360
     LeashRange:
       RawValue: 983040
+    DetectionRangeMultiplier:
+      RawValue: 65536
   Actions:
     BasicAction:
       Id:
@@ -95,6 +99,11 @@ MonoBehaviour:
     SkillActions: []
   DeathLingerTime:
     RawValue: 196608
+  ChestDrop:
+    Id:
+      Value: 0
+  ChestDropChance:
+    RawValue: 65536
   Cost:
     RawValue: 65536
   Persistent: 0
@@ -198,6 +207,8 @@ MonoBehaviour:
   ConeAngleDegrees:
     RawValue: 23592960
   SelfDestructs: 0
+  MaxHeightDifference:
+    RawValue: 6554
 --- !u!114 &6077675977003838517
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -218,20 +229,26 @@ MonoBehaviour:
   EngageRange:
     RawValue: 131072
   DamageRange:
-    RawValue: 131072
+    RawValue: 393216
   Damage:
     RawValue: 2621440
   AnticipationTime:
     RawValue: 65536
   DirectionTracking: 0
   IgnoreY: 1
-  Origin: 0
+  Origin: 1
   DownTime:
     RawValue: 65536
   CooldownTime:
     RawValue: 65536
   TelegraphStartPercent:
     RawValue: 32768
+  Trigger:
+    Type: 0
+    Radius:
+      RawValue: 0
+    HealthPercent:
+      RawValue: 0
   AimLock: 0
   AimLockPercent:
     RawValue: 65536
@@ -250,8 +267,10 @@ MonoBehaviour:
     Id:
       Value: 421452812317222291
   AnticipationStep:
-    AnimationType: 11
+    AnimationType: 2
     Duration: 1
+    BodySprite: {fileID: 1780748329695835414, guid: 414c7fe531867433e9e397ec12cedb2e, type: 3}
+    ShakeImpact: 0
     Shake:
       Frequency: 18
       RockDegrees: 6
@@ -295,6 +314,13 @@ MonoBehaviour:
       ImpactShakeDegrees: 4
       ImpactShakeFrequency: 30
       BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
     CenterPivot: 0
     PivotHeightOverride: 0
     ParticlePrefab: {fileID: 0}
@@ -307,8 +333,10 @@ MonoBehaviour:
     OverrideSortingOrder: 0
     SortingOrder: 0
   BeginStep:
-    AnimationType: 14
-    Duration: 1
+    AnimationType: 7
+    Duration: 0.3
+    BodySprite: {fileID: -2902663509325438561, guid: 414c7fe531867433e9e397ec12cedb2e, type: 3}
+    ShakeImpact: 1
     Shake:
       Frequency: 18
       RockDegrees: 6
@@ -352,20 +380,29 @@ MonoBehaviour:
       ImpactShakeDegrees: 5
       ImpactShakeFrequency: 30
       BodyFollow: -0.5
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
     CenterPivot: 0
     PivotHeightOverride: 0
-    ParticlePrefab: {fileID: 3308319309734866876, guid: 73f6ab46adf6f4923899d8a01e54f72c, type: 3}
-    Anchor: 1
-    Offset: {x: 0, y: 0, z: 0}
+    ParticlePrefab: {fileID: 1135367114030593087, guid: 80e93f3eee8094aa887b89d1603f7fd1, type: 3}
+    Anchor: 0
+    Offset: {x: 0, y: -0.5, z: 0}
     Parented: 0
     AlignToEnemyDirection: 0
     RotationOffset: {x: 90, y: 0, z: 0}
-    Scale: 2
+    Scale: 6
     OverrideSortingOrder: 0
     SortingOrder: 0
   OnGoingStep:
     AnimationType: 0
     Duration: 0.3
+    BodySprite: {fileID: 0}
+    ShakeImpact: 0
     Shake:
       Frequency: 18
       RockDegrees: 6
@@ -409,6 +446,13 @@ MonoBehaviour:
       ImpactShakeDegrees: 4
       ImpactShakeFrequency: 30
       BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
     CenterPivot: 0
     PivotHeightOverride: 0
     ParticlePrefab: {fileID: 0}
@@ -423,6 +467,8 @@ MonoBehaviour:
   EndStep:
     AnimationType: 0
     Duration: 0.3
+    BodySprite: {fileID: 0}
+    ShakeImpact: 0
     Shake:
       Frequency: 18
       RockDegrees: 6
@@ -466,6 +512,13 @@ MonoBehaviour:
       ImpactShakeDegrees: 4
       ImpactShakeFrequency: 30
       BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
     CenterPivot: 0
     PivotHeightOverride: 0
     ParticlePrefab: {fileID: 0}
@@ -506,6 +559,7 @@ MonoBehaviour:
   ToOffset: 0
   Width: 1
   RadiusMultiplier: 1
+  RotationDegreesPerSecond: 0
   GrowthDuration: 1
   FadeInDuration: 0.15
   FadeOutDuration: 0.15

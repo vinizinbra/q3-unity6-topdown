@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c04d8195895c42008e9658fbf433bf7, type: 3}
   m_Name: TestSound
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
+  variants: []
   clips: []
   pick: 1
   layers: []

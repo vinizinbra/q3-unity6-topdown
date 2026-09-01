@@ -21,9 +21,9 @@ MonoBehaviour:
   Description: Your first hit against an enemy deals bonus damage.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - Your first hit against an enemy deals 40% bonus damage.
-  - Your first hit against an enemy deals 70% bonus damage.
-  - Your first hit against an enemy deals 100% bonus damage. Killing that target empowers your next first hit by a further 25%.
+  - 'Your first hit against an enemy deals <color=#FD3971>40%</color> bonus damage.'
+  - 'Your first hit against an enemy deals <color=#FD3971>70%</color> bonus damage.'
+  - 'Your first hit on an enemy deals <color=#FD3971>+100%</color> damage. Killing it empowers your next first hit by a further <color=#FD3971>25%</color>.'
   DamageMultiplierBonus:
   - RawValue: 26214
   - RawValue: 45875

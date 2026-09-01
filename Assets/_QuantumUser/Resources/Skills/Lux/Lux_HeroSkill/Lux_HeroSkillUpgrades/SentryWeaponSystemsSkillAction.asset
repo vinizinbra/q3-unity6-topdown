@@ -16,12 +16,12 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Lux/Lux_HeroSkill/Lux_HeroSkillUpgrades/SentryWeaponSystemsSkillAction
     Guid:
       Value: 529575028993573537
-  Icon: {fileID: 0}
+  Icon: {fileID: 1503738143, guid: 355e00907e214470bac0029f70064510, type: 3}
   DisplayName: Weapon Systems
   RankDescriptions:
-  - 'Minigun: your Sentry gains a rapid secondary gun alongside its Cannon.'
-  - 'Rocket Pod: your Sentry fires its Cannon, a rapid Minigun, and periodic explosive rockets.'
-  - 'Full Arsenal: your Sentry fires Cannon, Minigun, Rockets and a piercing Laser all at once.'
+  - Your Sentry gains a rapid Minigun alongside its Cannon.
+  - Your Sentry fires its Cannon, a rapid Minigun, and periodic explosive rockets.
+  - Your Sentry fires Cannon, Minigun, Rockets and a piercing Laser all at once.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
@@ -55,36 +55,36 @@ MonoBehaviour:
     Alignment: 0
   MinigunWeapon:
     Id:
-      Value: 303582807116665979
+      Value: 403402137048408789
   MinigunOffset:
     X:
-      RawValue: 65536
+      RawValue: 26214
     Y:
-      RawValue: 32768
+      RawValue: 65536
     Z:
-      RawValue: -32768
+      RawValue: 65536
   RocketWeapon:
     Id:
-      Value: 511120127865671028
+      Value: 282806388448616639
   RocketOffset:
     X:
-      RawValue: -65536
+      RawValue: -58982
     Y:
-      RawValue: 32768
+      RawValue: 98304
     Z:
       RawValue: -32768
   LaserWeapon:
     Id:
-      Value: 511120127865671028
+      Value: 509762407051158019
   LaserOffset:
     X:
-      RawValue: 32768
+      RawValue: 58982
     Y:
       RawValue: 98304
     Z:
-      RawValue: 13107
+      RawValue: -32768
   WeaponSpriteBySlot:
+  - {fileID: -1988497972, guid: 11e8fcaeceabe4b3c8220e6bfa161095, type: 3}
   - {fileID: 250965891, guid: 11e8fcaeceabe4b3c8220e6bfa161095, type: 3}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: -247756672, guid: 11e8fcaeceabe4b3c8220e6bfa161095, type: 3}
+  - {fileID: 1320015041, guid: 11e8fcaeceabe4b3c8220e6bfa161095, type: 3}

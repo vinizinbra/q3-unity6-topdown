@@ -39,6 +39,20 @@ namespace Quantum
                 return; // already at full Shield
 
             shield->Current += applied;
+
+            // Temporary shield (Brute's Juggernaut - see Shield.qtn/docs/brute-ascensions.md): every
+            // successful grant refreshes the ONE expiration timer back to its full configured
+            // duration rather than adding a second, independent countdown - reset, not extended, per
+            // the design spec. TemporaryDuration is 0 for everything that never opted in, so this is
+            // a no-op for enemies/bosses and every other hero. Deliberately keyed off "any grant
+            // landed here," not "this specific grant came from Juggernaut Discharge" - the single
+            // shared entry point is what a Bodyguard payout or a Store Shield purchase land on too,
+            // and refreshing here instead of only from Juggernaut avoids a grant surviving zero
+            // ticks because the shared timer had already run out. Damage taken, weapon damage dealt
+            // and movement never call this method, so none of them can ever refresh it.
+            if (shield->TemporaryDuration > FP._0)
+                shield->ExpirationRemaining = shield->TemporaryDuration;
+
             f.Events.EntityShielded(target, owner, applied);
         }
 

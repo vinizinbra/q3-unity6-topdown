@@ -215,6 +215,10 @@
                 // right after EnemySystem/BossSystem so it reads this tick's resolved
                 // Transform3D.Position before anything else acts on a freshly-respawned position.
                 new EnemyFallSystem(),
+                // Elite-only "never forgotten" relocation - same "read this tick's resolved
+                // position before anything else acts on it" placement as EnemyFallSystem right
+                // above, and must run after it so a same-tick fall-respawn is what this reads too.
+                new EliteRelocationSystem(),
                 new ProjectileSystem(),
                 // Must run before AreaDamageSystem so the phase it swaps in for this tick's pulse is
                 // what actually gets applied, not last tick's - see AlternatingAreaSystem.

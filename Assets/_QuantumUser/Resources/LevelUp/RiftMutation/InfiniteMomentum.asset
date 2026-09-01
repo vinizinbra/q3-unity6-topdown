@@ -16,11 +16,11 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/InfiniteMomentum
     Guid:
       Value: 455787944400972856
-  Icon: {fileID: 870082225, guid: 9dcd69f213ec845fa868b0a3699cf683, type: 3}
+  Icon: {fileID: -1552338469, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
   DisplayName: Infinite Momentum
   Rarity: 2
-  Description: '{0:+0;-0}% Dash Cooldown, Dash now costs {1:0.#} Shield'
-  DashCooldownRateMultiplier:
-    RawValue: 131072
-  ShieldCost:
-    RawValue: 655360
+  Scope: 0
+  IncompatibleWith: []
+  Description: 'While Dash is on cooldown, keep Dashing for <color=#FD3971>{0:0.#}%</color> of your Max Health each time'
+  HealthCostFraction:
+    RawValue: 3277

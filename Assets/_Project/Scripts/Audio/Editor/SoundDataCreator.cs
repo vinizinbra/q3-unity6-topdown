@@ -57,7 +57,7 @@ internal static class SoundDataCreator
 
         var asset = ScriptableObject.CreateInstance<SoundData>();
         asset.group = group;
-        asset.clips = clips;
+        asset.variants = clips.Select(c => new SoundClip(c)).ToArray();
 
         // A single clip has no variation to pick between, so leave its pitch flat rather than
         // quietly detuning a one-off sound. Multiple clips are a variation set by definition and

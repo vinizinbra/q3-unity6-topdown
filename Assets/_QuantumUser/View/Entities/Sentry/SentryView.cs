@@ -27,6 +27,9 @@ namespace Quantum
         [SerializeField, Tooltip("One entry per SentryWeaponUpgrade slot (index 0-3) - activated when EventSentryBarrelSpawned reports that slot armed for this entity. Leave entries unassigned for slots this sentry prefab doesn't visually support.")]
         private List<GameObject> gunSprites = new List<GameObject>();
 
+        [SerializeField, Tooltip("Hide every tentacle ARM at spawn and reveal each one only when its own weapon slot actually arms (EventSentryBarrelSpawned), so a sentry with an empty slot doesn't wave an arm holding nothing. Only ever touches tentacle indices 0-3 - one per SentryWeaponUpgrade slot, the same index SetPinnedTarget already pins by - so any extra legs a future chassis authors past those are left alone. Turn OFF for a rig whose first four tentacles are structural walking legs rather than arms.")]
+        private bool hideUnarmedArms = true;
+
         [SerializeField, Tooltip("The sentry's own leg rig, if it has one (e.g. a spider-like chassis standing on ProceduralTentacleWalker2D legs). Falls back to GetComponentInChildren if left empty. Each spawned barrel's slot index pins that same-indexed tentacle onto the barrel's own Transform - see OnSentryBarrelSpawned.")]
         private ProceduralTentacleWalker2D tentacleWalker;
 
@@ -94,6 +97,17 @@ namespace Quantum
             {
                 if (gunSprite != null)
                     gunSprite.SetActive(false);
+            }
+
+            // Same shape as the gunSprites loop above - everything off up front, each slot switched
+            // back on by its own EventSentryBarrelSpawned. A slot that never arms simply never fires
+            // that event, so its arm stays hidden for this sentry's whole life. Bounded by
+            // barrelTransforms.Length rather than by the walker's own tentacle count, so only the
+            // arms that map to a weapon slot are ever touched.
+            if (hideUnarmedArms == true && tentacleWalker != null)
+            {
+                for (int i = 0; i < barrelTransforms.Length; i++)
+                    tentacleWalker.SetTentacleVisible(i, false);
             }
 
             if (shieldAreaParticle != null)
@@ -280,6 +294,13 @@ namespace Quantum
             {
                 gunSprites[e.SlotIndex].SetActive(true);
             }
+
+            // Revealed HERE rather than beside the SetPinnedTarget call below, which sits after two
+            // early returns (an out-of-range slot, and a barrel whose View isn't up yet) - this
+            // event firing at all is what "this slot is armed" means, and an armed slot must show
+            // its arm even on the tick where the pin itself can't be resolved.
+            if (hideUnarmedArms == true)
+                tentacleWalker?.SetTentacleVisible(e.SlotIndex, true);
 
             if (e.SlotIndex >= barrelTransforms.Length)
                 return;

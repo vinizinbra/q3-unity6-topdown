@@ -16,9 +16,12 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/CriticalFocus
     Guid:
       Value: 504000970958733469
-  Icon: {fileID: 1853687508, guid: 9dcd69f213ec845fa868b0a3699cf683, type: 3}
+  Icon: {fileID: 27831358, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
   DisplayName: Critical Focus
   Rarity: 2
-  Description: Critical hits reduce Hero Skill and Dash cooldown by {0:0.#}s
+  Scope: 0
+  IncompatibleWith: []
+  Description: 'Every <color=#FD3971>{0:0}</color> Critical Hits, reduce Hero Skill and Dash cooldowns by <color=#FD3971>{1:0.#}s</color>'
+  CritsRequired: 3
   CooldownReduction:
-    RawValue: 32768
+    RawValue: 65536

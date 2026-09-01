@@ -18,12 +18,12 @@ MonoBehaviour:
       Value: 299772149483885795
   Icon: {fileID: 1060707514, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
   DisplayName: Guardian
-  Description: Grows the Protector Aura and shelters allies inside it - eventually reacting to protect them further the instant they're hit.
+  Description: Your Protector Aura widens into a real safe zone - allies standing inside take less damage, hold their ground against knockback, and get covered when they are hit.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - Aura radius +2m; allies inside gain 10% Damage Reduction.
-  - Aura radius +3m; allies inside gain 15% Damage Reduction and 30% Knockback Resistance.
-  - Aura radius +3m; allies inside gain 15% Damage Reduction and 30% Knockback Resistance. An ally hit while in the aura gains a further +20% Damage Reduction for 2s (5s cooldown per ally).
+  - 'Protector Aura radius <color=#FD3971>+2m</color>, and allies inside it take <color=#FD3971>10%</color> less damage from every source.'
+  - 'Protector Aura radius <color=#FD3971>+3m</color>; allies inside take <color=#FD3971>15%</color> less damage and <color=#FD3971>30%</color> less knockback.'
+  - 'Aura radius <color=#FD3971>+3m</color>; allies inside take <color=#FD3971>15%</color> less damage, <color=#FD3971>30%</color> less knockback. A hit ally gains <color=#FD3971>20%</color> more Reduction for <color=#FD3971>2s</color>.'
   RadiusBonus:
   - RawValue: 131072
   - RawValue: 196608

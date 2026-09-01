@@ -16,11 +16,13 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/GlassCore
     Guid:
       Value: 325283577507392568
-  Icon: {fileID: -193993232, guid: 9dcd69f213ec845fa868b0a3699cf683, type: 3}
+  Icon: {fileID: 1750707472, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
   DisplayName: Glass Core
   Rarity: 3
-  Description: "Shield \xD7{0:0.#}, Max Health becomes {1:0}"
-  ShieldMultiplier:
+  Scope: 0
+  IncompatibleWith: []
+  Description: 'Accessory durability x<color=#FD3971>{0:0.#}</color>, but <color=#FD3971>{1:+0;-0}%</color> Max Health'
+  DurabilityMultiplier:
     RawValue: 131072
-  TargetMaxHealth:
-    RawValue: 65536
+  HealthMultiplier:
+    RawValue: 32768

@@ -10,6 +10,49 @@ using UnityEngine.Audio;
 //
 // Play it with the static facade: AudioManager.Play(mySound) / PlayAt(mySound, worldPos) /
 // PlayAttached(mySound, transform). See AudioManager for the pooling/voice model.
+
+// One authored variation inside a SoundData - the clip plus, optionally, its OWN trim and fade.
+//
+// The motivating case: a variation set assembled from takes that don't line up. Three footsteps
+// ripped from one recording have different amounts of dead air on the head, and a whoosh sampled
+// from a longer take needs a different tail than its neighbours. Before this, startAt/endAt/fadeIn/
+// fadeOut lived only on the SoundData, so one loose take forced either a re-export or its own
+// separate asset - which then also duplicated the group, volume, pitch, cooldown and voice limits
+// that were never the problem.
+//
+// Both overrides are OFF by default and each is all-or-nothing: with Override Trim off this clip
+// uses the sound's shared startAt/endAt, with it on the two values here fully replace them (rather
+// than adding to them, which would make "0" ambiguous between "no change" and "from the start").
+// Fade works the same way. So an untouched variation behaves exactly as it did before this existed,
+// and the SoundData-level values remain the real default for the set.
+[System.Serializable]
+public class SoundClip
+{
+    [Tooltip("The audio file this variation plays.")]
+    public AudioClip clip;
+
+    [Tooltip("ON = this clip uses the Start At / End At below instead of the sound's shared trim. For one take with more dead air on the head than its neighbours, or a sub-region cut out of a longer sample.")]
+    public bool overrideTrim;
+
+    [Tooltip("Seconds of this clip's head to skip. Only used when Override Trim is on.")]
+    [Min(0f)] public float startAt;
+
+    [Tooltip("Seconds into this clip to stop. 0 (or past the clip's length) means play to the end. Only used when Override Trim is on.")]
+    [Min(0f)] public float endAt;
+
+    [Tooltip("ON = this clip uses the Fade In / Fade Out below instead of the sound's shared fade. For a take whose attack or tail differs from the rest of the set.")]
+    public bool overrideFade;
+
+    [Tooltip("Seconds to ramp up from silence at the start of this clip. Only used when Override Fade is on.")]
+    [Min(0f)] public float fadeIn;
+
+    [Tooltip("Seconds to ramp down to silence at the end of this clip. Only used when Override Fade is on.")]
+    [Min(0f)] public float fadeOut;
+
+    public SoundClip() { }
+    public SoundClip(AudioClip clip) { this.clip = clip; }
+}
+
 // One extra sound played ALONGSIDE its parent - a second layer, not an alternative take. The
 // motivating case: a skill fires its impact sound and, sometimes, a hero voice line on top.
 //
@@ -19,7 +62,7 @@ using UnityEngine.Audio;
 [System.Serializable]
 public class SoundLayer
 {
-    [Tooltip("The sound to play alongside the parent. Brings its own clips, pick mode, pitch/volume variance and group - this is a full SoundData, not a clip.")]
+    [SoundDataPicker, Tooltip("The sound to play alongside the parent. Brings its own clips, pick mode, pitch/volume variance and group - this is a full SoundData, not a clip.")]
     public SoundData sound;
 
     [Range(0f, 1f), Tooltip("Probability this layer plays at all, rolled independently per play. 1 = always. This is what makes a voice line occasional rather than a catchphrase the player hears on every single cast.")]
@@ -33,7 +76,7 @@ public class SoundLayer
 }
 
 [CreateAssetMenu(fileName = "NewSound", menuName = "RiftRaiders/Audio/Sound Data")]
-public class SoundData : ScriptableObject
+public class SoundData : ScriptableObject, ISerializationCallbackReceiver
 {
     // How the next clip is chosen out of `clips` on each play. Only meaningful with 2+ clips.
     public enum PickMode
@@ -51,8 +94,13 @@ public class SoundData : ScriptableObject
     }
 
     [Header("Clips")]
-    [Tooltip("Interchangeable variations of this one sound. One entry is fine; two or more turns on the pick mode below. Null/missing entries are skipped at play time rather than erroring.")]
-    public AudioClip[] clips = Array.Empty<AudioClip>();
+    [Tooltip("Interchangeable variations of this one sound. One entry is fine; two or more turns on the pick mode below. Null/missing entries are skipped at play time rather than erroring.\n\nEach entry can additionally override the shared Trim and Fade below for itself - see SoundClip - so one badly-topped take doesn't need its own asset.")]
+    public SoundClip[] variants = Array.Empty<SoundClip>();
+
+    // Pre-SoundClip authoring, kept only so an asset saved before per-clip trim/fade existed still
+    // plays. Migrated into `variants` on first load (MigrateLegacyClips) and re-saved by OnValidate
+    // the next time the asset is touched in the Editor; nothing writes to it any more.
+    [HideInInspector, SerializeField] private AudioClip[] clips = Array.Empty<AudioClip>();
 
     [Tooltip("How the next clip is picked out of the list above. RandomNoRepeat is the usual choice for combat sounds - plain Random will audibly double up.")]
     public PickMode pick = PickMode.RandomNoRepeat;
@@ -77,18 +125,18 @@ public class SoundData : ScriptableObject
     [Tooltip("Seconds to wait before the sound actually starts. Rolled per play, so a burst of simultaneous plays can be smeared apart slightly instead of landing as one flam.")]
     [MinMaxSlider(0f, 5f)] public Vector2 delay = Vector2.zero;
 
-    [Header("Trim (seconds into the clip)")]
-    [Tooltip("Skip this many seconds of the clip's head. Useful for shaving dead air or a soft attack off a sample without re-exporting it. 0 = play from the start.")]
+    [Header("Trim (seconds into the clip) - shared default, per-clip overridable")]
+    [Tooltip("Skip this many seconds of the clip's head. Useful for shaving dead air or a soft attack off a sample without re-exporting it. 0 = play from the start.\n\nApplies to every clip that hasn't ticked Override Trim for itself.")]
     [Min(0f)] public float startAt;
 
-    [Tooltip("Stop this many seconds into the clip. 0 (or anything past the clip's length) means 'play to the end'. Combined with startAt this cuts an arbitrary sub-region out of a longer sample - and with Loop on, that sub-region is what loops.")]
+    [Tooltip("Stop this many seconds into the clip. 0 (or anything past the clip's length) means 'play to the end'. Combined with startAt this cuts an arbitrary sub-region out of a longer sample - and with Loop on, that sub-region is what loops.\n\nApplies to every clip that hasn't ticked Override Trim for itself.")]
     [Min(0f)] public float endAt;
 
-    [Header("Fade")]
-    [Tooltip("Seconds to ramp from silence up to the rolled volume at the start of a play. 0 = start at full volume.")]
+    [Header("Fade - shared default, per-clip overridable")]
+    [Tooltip("Seconds to ramp from silence up to the rolled volume at the start of a play. 0 = start at full volume.\n\nApplies to every clip that hasn't ticked Override Fade for itself.")]
     [Min(0f)] public float fadeIn;
 
-    [Tooltip("Seconds to ramp down to silence at the end. For a one-shot this is subtracted from the trimmed duration so the fade finishes exactly at the end; for a loop (or any manual Stop) it's the default ramp AudioManager uses when the sound is asked to stop.")]
+    [Tooltip("Seconds to ramp down to silence at the end. For a one-shot this is subtracted from the trimmed duration so the fade finishes exactly at the end; for a loop (or any manual Stop) it's the default ramp AudioManager uses when the sound is asked to stop.\n\nApplies to every clip that hasn't ticked Override Fade for itself.")]
     [Min(0f)] public float fadeOut;
 
     [Header("Looping")]
@@ -123,21 +171,51 @@ public class SoundData : ScriptableObject
     [NonSerialized] private int[] _bag;
     [NonSerialized] private int _bagCursor;
 
-    // Rolls the next clip according to `pick`. Returns null if nothing is authored - callers are
-    // expected to no-op rather than error, so a half-authored SoundData is silent, not a crash.
-    public AudioClip NextClip()
+    // Folds any pre-SoundClip `clips` authoring into `variants`, once. Called from OnAfterDeserialize
+    // so a legacy asset plays correctly at RUNTIME with no Editor pass, and from OnValidate so the
+    // Editor actually re-saves it in the new shape. Only ever runs while `variants` is empty, so it
+    // can never clobber real authoring.
+    private void MigrateLegacyClips()
     {
+        if (variants != null && variants.Length > 0)
+            return;
+
         if (clips == null || clips.Length == 0)
+            return;
+
+        variants = new SoundClip[clips.Length];
+        for (var i = 0; i < clips.Length; i++)
+            variants[i] = new SoundClip(clips[i]);
+
+        clips = Array.Empty<AudioClip>();
+    }
+
+    public void OnBeforeSerialize() { }
+
+    public void OnAfterDeserialize() => MigrateLegacyClips();
+
+#if UNITY_EDITOR
+    private void OnValidate() => MigrateLegacyClips();
+#endif
+
+    // Rolls the next variation according to `pick`. Returns null if nothing is authored - callers
+    // are expected to no-op rather than error, so a half-authored SoundData is silent, not a crash.
+    // Entries with no clip assigned are skipped rather than rolled into silence.
+    public SoundClip NextVariant()
+    {
+        if (variants == null || variants.Length == 0)
             return null;
 
-        if (clips.Length == 1)
-            return clips[0];
+        if (variants.Length == 1)
+            return variants[0] != null && variants[0].clip != null ? variants[0] : null;
 
+        // Roll over the whole list (so Sequential/Shuffle keep their authored order), then walk
+        // forward past any empty slot. Bounded by the list length, so an all-empty list terminates.
         int index;
         switch (pick)
         {
             case PickMode.Sequential:
-                index = (_lastIndex + 1) % clips.Length;
+                index = (_lastIndex + 1) % variants.Length;
                 break;
 
             case PickMode.Shuffle:
@@ -145,7 +223,7 @@ public class SoundData : ScriptableObject
                 break;
 
             case PickMode.RandomNoRepeat:
-                index = UnityEngine.Random.Range(0, clips.Length - 1);
+                index = UnityEngine.Random.Range(0, variants.Length - 1);
                 // Fold the excluded slot out of the range instead of rejection-sampling, so this
                 // stays one roll regardless of how unlucky it gets.
                 if (index >= _lastIndex && _lastIndex >= 0)
@@ -153,20 +231,47 @@ public class SoundData : ScriptableObject
                 break;
 
             default:
-                index = UnityEngine.Random.Range(0, clips.Length);
+                index = UnityEngine.Random.Range(0, variants.Length);
                 break;
         }
 
-        _lastIndex = index;
-        return clips[index];
+        for (var step = 0; step < variants.Length; step++)
+        {
+            var candidate = variants[(index + step) % variants.Length];
+            if (candidate != null && candidate.clip != null)
+            {
+                _lastIndex = (index + step) % variants.Length;
+                return candidate;
+            }
+        }
+
+        return null;
+    }
+
+    // The variation that owns `clip`, or null if this sound doesn't list it. Used by the paths that
+    // name their own clip rather than rolling one (the per-clip audition, and PlayClip's raw-clip
+    // dialogue case) - a clip the sound doesn't own has no per-clip settings to find, and correctly
+    // falls back to the shared trim/fade.
+    public SoundClip FindVariant(AudioClip clip)
+    {
+        if (clip == null || variants == null)
+            return null;
+
+        foreach (var variant in variants)
+        {
+            if (variant != null && variant.clip == clip)
+                return variant;
+        }
+
+        return null;
     }
 
     // "Bag" shuffle - every clip plays once before any plays twice, reshuffling when exhausted.
     private int NextFromBag()
     {
-        if (_bag == null || _bag.Length != clips.Length || _bagCursor >= _bag.Length)
+        if (_bag == null || _bag.Length != variants.Length || _bagCursor >= _bag.Length)
         {
-            _bag = new int[clips.Length];
+            _bag = new int[variants.Length];
             for (var i = 0; i < _bag.Length; i++)
                 _bag[i] = i;
 
@@ -192,14 +297,31 @@ public class SoundData : ScriptableObject
     public float RollDelay() => Mathf.Max(0f, UnityEngine.Random.Range(delay.x, delay.y));
 
     // Resolves the trimmed [start, end] window against a specific clip's real length, since clips in
-    // the same SoundData can differ in length and `endAt` is authored once for all of them.
-    public void ResolveTrim(AudioClip clip, out float start, out float end)
+    // the same SoundData differ in length and the shared `endAt` is authored once for all of them.
+    //
+    // `variant` supplies the per-clip override when it has one; pass null (or a variant with
+    // Override Trim off) to get the sound's shared values. Clamping happens after that choice, so a
+    // per-clip endAt past its own clip's end still resolves to "play to the end" rather than erroring.
+    public void ResolveTrim(AudioClip clip, SoundClip variant, out float start, out float end)
     {
+        var useVariant = variant != null && variant.overrideTrim;
+        var rawStart = useVariant ? variant.startAt : startAt;
+        var rawEnd = useVariant ? variant.endAt : endAt;
+
         var length = clip != null ? clip.length : 0f;
-        start = Mathf.Clamp(startAt, 0f, Mathf.Max(0f, length - 0.01f));
-        end = endAt > 0f ? Mathf.Min(endAt, length) : length;
+        start = Mathf.Clamp(rawStart, 0f, Mathf.Max(0f, length - 0.01f));
+        end = rawEnd > 0f ? Mathf.Min(rawEnd, length) : length;
         if (end <= start)
             end = length;
+    }
+
+    // Same shape as ResolveTrim: the variant's fade when it overrides, the sound's shared fade
+    // otherwise. Kept separate from trim so a clip can override one without the other.
+    public void ResolveFade(SoundClip variant, out float inSeconds, out float outSeconds)
+    {
+        var useVariant = variant != null && variant.overrideFade;
+        inSeconds = Mathf.Max(0f, useVariant ? variant.fadeIn : fadeIn);
+        outSeconds = Mathf.Max(0f, useVariant ? variant.fadeOut : fadeOut);
     }
 
     // ------------------------------------------------------------------ Inspector audition

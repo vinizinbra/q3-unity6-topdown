@@ -16,11 +16,19 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/HeavyArsenal
     Guid:
       Value: 459194346184904757
-  Icon: {fileID: -371872225, guid: 9dcd69f213ec845fa868b0a3699cf683, type: 3}
+  Icon: {fileID: 993515312, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
   DisplayName: Heavy Arsenal
   Rarity: 2
-  Description: '{0:+0;-0}% Weapon Damage, {1:+0;-0}% Fire Rate'
+  Scope: 0
+  IncompatibleWith: []
+  Description: '<color=#FD3971>{0:+0;-0}%</color> Weapon Damage, <color=#FD3971>{1:+0;-0}%</color> Fire Rate. Shots knock back and stagger.'
   DamageMultiplier:
-    RawValue: 114688
+    RawValue: 104858
   FireRateMultiplier:
-    RawValue: 42598
+    RawValue: 45875
+  KnockbackMultiplier:
+    RawValue: 98304
+  StaggerChance:
+    RawValue: 9830
+  StaggerDuration:
+    RawValue: 32768

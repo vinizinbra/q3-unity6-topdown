@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: 1776201555, guid: b217254d41b6945b1873986186a25786, type: 3}
   DisplayName: Birthday Cake
   RankDescriptions:
-  - Landed bombs taunt nearby enemies for 1s, then detonate.
-  - Landed bombs taunt nearby enemies for 1.5s, then detonate with a 25% wider blast.
-  - Landed bombs taunt nearby enemies for 1.5s, then detonate with a 25% wider blast. Taunted enemies take +30% damage.
+  - 'Landed bombs taunt nearby enemies for <color=#FD3971>1s</color>, then detonate.'
+  - 'Landed bombs taunt nearby enemies for <color=#FD3971>1.5s</color>, then detonate with a <color=#FD3971>25%</color> wider blast.'
+  - 'Landed bombs taunt nearby enemies <color=#FD3971>1.5s</color>, then detonate <color=#FD3971>25%</color> wider. Taunted enemies take <color=#FD3971>+30%</color> damage.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

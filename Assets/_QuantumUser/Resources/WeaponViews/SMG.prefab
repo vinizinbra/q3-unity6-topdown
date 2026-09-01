@@ -136,7 +136,7 @@ MonoBehaviour:
       Duration: 0.1
       Frequency: 20
     shakeRotationHead:
-      Strength: {x: 0, y: 0, z: 0}
+      Strength: {x: 0.1, y: 0, z: 0}
       Duration: 0.1
       Frequency: 20
     shakeScaleBody:
@@ -144,7 +144,7 @@ MonoBehaviour:
       Duration: 0.08
       Frequency: 20
     shakeScaleHead:
-      Strength: {x: 0, y: 0, z: 0}
+      Strength: {x: 0.1, y: 0, z: 0}
       Duration: 0.1
       Frequency: 20
   character: {fileID: 0}

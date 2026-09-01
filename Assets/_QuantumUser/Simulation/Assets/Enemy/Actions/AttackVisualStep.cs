@@ -11,9 +11,16 @@ namespace Quantum
     // directly (all axes together), closer to a classic hit-impact "punch". ArmPunch is PunchScale's
     // same idea retargeted to the arm alone (ArmSwingBackParams/ArmSnapParams's own ArmScale fields
     // cover a scale riding those two tells; ArmPunch is for a standalone punch step that wants
-    // scale+rotation+a short impact rattle together, without a paired windup step). Appended at the
-    // end so existing authored assets keep their serialized enum indices.
-    public enum AttackAnimationType { None, Shake, SwingBack, Pulse, Crouch, Inflate, Lunge, Slam, Snap, Chomp, Spin, ArmSwingBack, ArmSnap, PunchScale, ArmPunch }
+    // scale+rotation+a short impact rattle together, without a paired windup step). Jump is the one
+    // type that actually offsets root on local Y (a real hop arc, same bobTarget channel Die/Run
+    // already ride) rather than squashing/rotating in place - every other type deliberately stays
+    // grounded (see e.g. Crouch/Slam's SinkAmount, which is local Z specifically to avoid this).
+    // Dive combines that same hop with a rotate-and-sink second half (rockTarget toward
+    // RotateDegrees while depthTarget sinks, same local-Z sink idiom Crouch/Slam/Burrow already
+    // use) - reads as diving headfirst into the ground rather than a plain squash; pairs naturally
+    // with BurrowDeliveryData's own Dive sub-phase, authored on BeginStep. Appended at the end so
+    // existing authored assets keep their serialized enum indices.
+    public enum AttackAnimationType { None, Shake, SwingBack, Pulse, Crouch, Inflate, Lunge, Slam, Snap, Chomp, Spin, ArmSwingBack, ArmSnap, PunchScale, ArmPunch, Jump, Dive }
 
     // SkillTargetPosition (not OnTarget - renamed for clarity) resolves via
     // EnemyAttackVisualsView.TryGetAnchorPosition: prefers Enemy.SkillTargetPosition (the anchor
@@ -141,6 +148,21 @@ namespace Quantum
         [Tooltip("How much of this punch's rotation also rocks the body, same convention as ArmSwingBack/ArmSnap's BodyFollow. 0 = arm only.")] public float BodyFollow = 0.2f;
     }
 
+    [Serializable]
+    public class JumpParams
+    {
+        [Tooltip("Peak local-Y hop height at the middle of the step - the actual world-space arc (if any) is the simulation's own doing (e.g. BurrowDeliveryData's resurface), this is purely the character-animation pop layered on top.")] public float Height = 0.4f;
+        [Tooltip("Squash compression ramping in toward the end of the step, as if landing from the hop.")] public float LandSquash = 0.3f;
+    }
+
+    [Serializable]
+    public class DiveParams
+    {
+        [Tooltip("Peak local-Y hop height across roughly the first half of the step, before the rotate-and-sink.")] public float JumpHeight = 0.3f;
+        [Tooltip("How far the body rotates (toward facing direction) as it dives, ramping in across the second half of the step.")] public float RotateDegrees = 90f;
+        [Tooltip("How far the body sinks (local Z, not Y - same reasoning as Crouch/Slam's own SinkAmount) by the end of the dive.")] public float SinkAmount = 0.3f;
+    }
+
     // One phase's worth of visual configuration (body animation + optional particle) -
     // EnemyActionData.View.cs has four of these, all sharing this reusable shape. Conditional field
     // display and the "Body Animation"/"Particle" foldouts live in AttackVisualStepDrawer
@@ -154,6 +176,9 @@ namespace Quantum
 
         [Tooltip("Optional - swaps the enemy's body SpriteRenderer (EnemyViewRig.ReferenceSprite) to this sprite for this step, independent of AnimationType. Leave empty to leave whatever sprite is currently showing untouched. Reverts to the enemy's real spawn sprite once the attack fully ends (EnemyAttackVisualsView's attackNoLongerActive edge), regardless of which step last set it.")]
         public Sprite BodySprite;
+
+        [Tooltip("0 = no camera shake. Above 0, this step shakes FollowCamera from its own resolved position (self, or the step's own anchor/target if Anchor below is set to SkillTargetPosition) - attenuated by distance from the camera (FollowCamera.stepShakeFalloffRadius) and scaled by this value (FollowCamera.stepShakeAmplitudePerImpact), independent of AnimationType/particle. A distant hit on another part of the map naturally shakes little to nothing.")]
+        public float ShakeImpact = 0f;
 
         public ShakeParams Shake = new ShakeParams();
         public SwingBackParams SwingBack = new SwingBackParams();
@@ -169,6 +194,8 @@ namespace Quantum
         public ArmSnapParams ArmSnap = new ArmSnapParams();
         public PunchScaleParams PunchScale = new PunchScaleParams();
         public ArmPunchParams ArmPunch = new ArmPunchParams();
+        public JumpParams Jump = new JumpParams();
+        public DiveParams Dive = new DiveParams();
 
         [Tooltip("Only shown for animation types that rotate the body (Shake/SwingBack/Snap/Spin/ArmSwingBack/ArmSnap). Off (default) rotates around root's own base/ground-contact pivot, same as idle wobble/run rock/die topple - correct for a rock/lean tell. On instead compensates position so the body rotates in place around a centered point, using PivotHeightOverride below (or EnemyBlobAnimationView's own rig-level default/auto height if left at 0) - what a full spin needs to avoid arcing around the feet.")]
         public bool CenterPivot = false;
@@ -178,6 +205,7 @@ namespace Quantum
         [Tooltip("Leave empty for no particle on this step.")]
         public ParticleSystem ParticlePrefab;
         public ParticleAnchor Anchor = ParticleAnchor.OnSelf;
+        [Tooltip("Relative to the enemy's own current facing (full Aim.Angle direction, not just a left/right mirror), not raw world space - Z is forward along that facing, X is to its right, Y is world-up. Rotates with the enemy so e.g. a muzzle offset stays on the correct side no matter which way it's currently facing.")]
         public Vector3 Offset;
         [Tooltip("Attaches to the anchor and follows it for the phase's duration (e.g. a charge trail), instead of a one-shot burst left behind at a fixed point.")]
         public bool Parented;

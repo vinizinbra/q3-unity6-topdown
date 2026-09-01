@@ -40,6 +40,32 @@ namespace Quantum
         public EnemyFaction Faction;
     }
 
+    // A single enemy a phase can purchase directly, alongside AllowedGroups, with no
+    // EnemyGroupConfig asset needed just to wrap one enemy at Quantity 1 - see
+    // SurvivalPhase.AllowedEnemies. Selection fields deliberately mirror EnemyGroupConfig's own
+    // (Weight/MinimumSurvivalTime/MaximumSurvivalTime/MaxConcurrent) so
+    // CombatDirectorUtility.TrySelectSpawn can roll groups and single enemies through the exact
+    // same weighted-draw/unlock-window/cap logic - one candidate pool, not two independently-tuned
+    // mechanisms. Struct fields get no default initializers (same convention GroupMemberEntry/
+    // SurvivalPhase already follow) - a freshly-added array element defaults to Weight 0, which
+    // TrySelectSpawn treats as soft-disabled exactly like EnemyGroupConfig.Weight <= 0, so it must
+    // be set explicitly before the entry is live (same footgun a fresh GroupMemberEntry.Quantity
+    // already has).
+    [Serializable]
+    public struct EnemySpawnEntry
+    {
+        public AssetRef<EnemyDataAsset> EnemyData;
+        public EnemyFaction Faction;
+        public FP Weight;
+        public FP MinimumSurvivalTime;
+        public FP MaximumSurvivalTime;
+
+        // <= 0 = unlimited, recounted live from Enemy.EnemyData across every EnemyLifecycle-carrying
+        // entity (not scoped to "spawned via this entry" - two different AllowedEnemies entries for
+        // the same EnemyDataAsset, or a group that also contains it, share one live count).
+        public Int32 MaxConcurrent;
+    }
+
     // Where encounter design lives - CombatDirectorUtility only ever purchases one of these as a
     // whole, never an individual enemy, so composition is entirely up to whoever authors this
     // asset. Placement (formation shape) is separate from composition (Members) - see
@@ -48,8 +74,8 @@ namespace Quantum
     {
         public GroupMemberEntry[] Members;
 
-        // Relative pick weight among groups that already passed every other TrySelectGroup check
-        // (unlocked/affordable/cap/concurrency) - see CombatDirectorUtility.TrySelectGroup's
+        // Relative pick weight among groups that already passed every other TrySelectSpawn check
+        // (unlocked/affordable/cap/concurrency) - see CombatDirectorUtility.TrySelectSpawn's
         // deterministic cumulative-weight roll. <= 0 excludes this group from the roll entirely
         // (a soft-disable a designer can flip without touching any phase's AllowedGroups list).
         public FP Weight = 1;

@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: 570146469, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
   DisplayName: Ignition
   RankDescriptions:
-  - At max Rage, weapon hits guarantee Burn.
-  - At max Rage, weapon hits Burn, and Burning kills leave a Burning Ground patch.
-  - At max Rage, weapon hits Burn and Burning kills leave Burning Ground. Reaching max Rage also detonates a radial Burn pulse, once per Overdrive.
+  - 'At max Rage, weapon hits guarantee Burn.'
+  - 'At max Rage, weapon hits Burn, and Burning kills leave a Burning Ground patch.'
+  - 'At max Rage, weapon hits Burn and Burning kills leave Burning Ground. Reaching max Rage bursts a Burn pulse.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 3

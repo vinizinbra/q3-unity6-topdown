@@ -1,0 +1,666 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-5687956042331617942
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e4466fb33c0b49d18f49f2ba3307d49, type: 3}
+  m_Name: GrenadierProjectileDataAsset
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ProjectileDataAsset
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/BaseEnemies/MortarEnemy|GrenadierProjectileDataAsset
+    Guid:
+      Value: 2938925554936299593
+  Prototype:
+    Id:
+      Value: 1289801711717108447
+  Movement:
+    Id:
+      Value: 1741878077199039724
+  Hit:
+    Id:
+      Value: 841189594855702069
+  Lifetime:
+    RawValue: 196608
+  HitRadius:
+    RawValue: 0
+  SpawnDelay:
+    RawValue: 0
+  MaxDistance:
+    RawValue: 6553600
+--- !u!114 &-1214267090618874293
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52edb4eefc1db48109cc7d1ac53b2f13, type: 3}
+  m_Name: GrenadierCircleTelegraphData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.TelegraphData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/BaseEnemies/MortarEnemy|GrenadierCircleTelegraphData
+    Guid:
+      Value: 1593100491986115808
+  Shape: 0
+  StartPhase: 1
+  EndPhase: 5
+  LiveTracking: 1
+  LiveTrackingSmoothing: 15
+  TelegraphPrefab: {fileID: 3870463405479579449, guid: b557fcfdfd0db4376ba4c16190a9008e, type: 3}
+  SnapToGround: 1
+  LineLength: 0
+  FixedDistanceValue: 5
+  FromOffset: 0
+  ToOffset: 0
+  Width: 1
+  RadiusMultiplier: 1
+  RotationDegreesPerSecond: 0
+  GrowthDuration: 0.35
+  FadeInDuration: 0.15
+  FadeOutDuration: 0.15
+--- !u!114 &-590058241565749966
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b3ffe095a046457f99f64ffca9d87e9, type: 3}
+  m_Name: GrenadierAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.EnemyActionData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/BaseEnemies/MortarEnemy|GrenadierAction
+    Guid:
+      Value: 3052483645530495185
+  Name: 
+  EngageRange:
+    RawValue: 393216
+  DamageRange:
+    RawValue: 196608
+  Damage:
+    RawValue: 1966080
+  AnticipationTime:
+    RawValue: 52429
+  DirectionTracking: 1
+  IgnoreY: 1
+  Origin: 0
+  DownTime:
+    RawValue: 65536
+  CooldownTime:
+    RawValue: 65536
+  TelegraphStartPercent:
+    RawValue: 32768
+  Trigger:
+    Type: 0
+    Radius:
+      RawValue: 0
+    HealthPercent:
+      RawValue: 0
+  AimLock: 0
+  AimLockPercent:
+    RawValue: 65536
+  SelectionWeight: 1
+  InterruptibleDuringTelegraph: 0
+  InterruptibleDuringActive: 0
+  Delivery:
+    Id:
+      Value: 297009737100070335
+  Effects: []
+  Telegraph:
+    Id:
+      Value: 1593100491986115808
+  AnticipationStep:
+    AnimationType: 1
+    Duration: 0.5
+    BodySprite: {fileID: 0}
+    ShakeImpact: 0
+    Shake:
+      Frequency: 10
+      RockDegrees: 1
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+  BeginStep:
+    AnimationType: 3
+    Duration: 0.3
+    BodySprite: {fileID: 0}
+    ShakeImpact: 0
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+  OnGoingStep:
+    AnimationType: 0
+    Duration: 0.3
+    BodySprite: {fileID: 0}
+    ShakeImpact: 0
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+  EndStep:
+    AnimationType: 0
+    Duration: 0.3
+    BodySprite: {fileID: 0}
+    ShakeImpact: 0
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04c8957753d4c417e81337f7a383dcc6, type: 3}
+  m_Name: MortarEnemy
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.EnemyDataAsset
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/BaseEnemies/MortarEnemy
+    Guid:
+      Value: 296950194662925891
+  EnemyName: 
+  Tier: 1
+  Economy:
+    Persistent: 0
+    SpawnProfile:
+      Id:
+        Value: 443472774672561949
+    CostMultiplier:
+      RawValue: 131072
+  Stats:
+    MoveSpeed:
+      RawValue: 196608
+    Height:
+      InitialState: 0
+      FlightHeight:
+        RawValue: 131072
+      HoverCheckInterval:
+        RawValue: 65536
+      HoverSpringFrequency:
+        RawValue: 65536
+      HoverSpringDamping:
+        RawValue: 32768
+      CanFly: 0
+      CanBeLaunched: 0
+      CanBeGrounded: 1
+      ClimbProbeThreshold:
+        RawValue: 13107
+      GapProbeThreshold:
+        RawValue: 13107
+      ArcHeight:
+        RawValue: 65536
+      TraversalJumpSpeedMultiplier:
+        RawValue: 131072
+      CanClimbCliffs: 1
+      CliffHeight:
+        RawValue: 131072
+      AffectedByGroundHazards: 0
+      AffectedByShockwaves: 0
+      TargetableByMelee: 1
+      TargetableByProjectiles: 1
+      CanJumpGaps: 1
+      GapDistance:
+        RawValue: 262144
+      CanFallFromCliff: 1
+      FallHeight:
+        RawValue: 196608
+    Movement:
+      Id:
+        Value: 328519676567531755
+    Radius:
+      RawValue: 65536
+    ShieldMultiplier:
+      RawValue: 0
+    HealthMultiplier:
+      RawValue: 65536
+    Traits: 
+    FrontalDamageReductionAmount:
+      RawValue: 0
+    FrontalDamageReductionArcDegrees:
+      RawValue: 7864320
+    AvoidWalls: 0
+    WallAvoidProbeDistance:
+      RawValue: 65536
+    UseWaypointDetour: 0
+    WaypointArrivalDistance:
+      RawValue: 65536
+  AI:
+    Targeting:
+      Id:
+        Value: 2227200805678239736
+    DetectionRange:
+      RawValue: 851968
+    LeashRange:
+      RawValue: 983040
+    DetectionRangeMultiplier:
+      RawValue: 65536
+  Actions:
+    BasicAction:
+      Id:
+        Value: 3052483645530495185
+    SkillActions: []
+  DeathLingerTime:
+    RawValue: 196608
+  ChestDrop:
+    Id:
+      Value: 0
+  ChestDropChance:
+    RawValue: 65536
+  Cost:
+    RawValue: 65536
+  Persistent: 0
+  SpawnProfile:
+    Id:
+      Value: 0
+  MoveSpeed:
+    RawValue: 196608
+  Radius:
+    RawValue: 65536
+  MaxHealth:
+    RawValue: 3276800
+  MaxShield:
+    RawValue: 0
+  ShieldRechargeDelay:
+    RawValue: 131072
+  ShieldRechargeRate:
+    RawValue: 327680
+  Traits: 
+  FrontalDamageReductionAmount:
+    RawValue: 32768
+  FrontalDamageReductionArcDegrees:
+    RawValue: 7864320
+  Height:
+    InitialState: 0
+    FlightHeight:
+      RawValue: 0
+    HoverCheckInterval:
+      RawValue: 0
+    HoverSpringFrequency:
+      RawValue: 0
+    HoverSpringDamping:
+      RawValue: 0
+    CanFly: 0
+    CanBeLaunched: 0
+    CanBeGrounded: 0
+    ClimbProbeThreshold:
+      RawValue: 0
+    GapProbeThreshold:
+      RawValue: 0
+    ArcHeight:
+      RawValue: 0
+    TraversalJumpSpeedMultiplier:
+      RawValue: 0
+    CanClimbCliffs: 0
+    CliffHeight:
+      RawValue: 0
+    AffectedByGroundHazards: 0
+    AffectedByShockwaves: 0
+    TargetableByMelee: 0
+    TargetableByProjectiles: 0
+    CanJumpGaps: 0
+    GapDistance:
+      RawValue: 0
+    CanFallFromCliff: 0
+    FallHeight:
+      RawValue: 0
+  Movement:
+    Id:
+      Value: 0
+  Targeting:
+    Id:
+      Value: 0
+  DetectionRange:
+    RawValue: 655360
+  LeashRange:
+    RawValue: 983040
+  CanBeInterruptedByKnockback: 1
+  KnockbackRecoveryTime:
+    RawValue: 16384
+  BasicAction:
+    Id:
+      Value: 0
+  SkillActions: []
+  ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
+  ViewPrefab: {fileID: 8476845490732343577, guid: 7ad7fe09f5376444a979b39bc7acfe43, type: 3}
+  FactionSkins:
+  - Faction: 1
+    ViewPrefab: {fileID: 8476845490732343577, guid: 3144efe8802be4f9896cb5bb6d48f6fe, type: 3}
+    ScaleMultiplier: 0
+  - Faction: 2
+    ViewPrefab: {fileID: 8476845490732343577, guid: 6639da8f3bb724c61a61b875cb158f25, type: 3}
+    ScaleMultiplier: 0
+--- !u!114 &790037820283738255
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd859d155f2c04ed6b2f0c3e748ee127, type: 3}
+  m_Name: GrenadierBallisticProjectileMovementData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.BallisticProjectileMovementData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/BaseEnemies/MortarEnemy|GrenadierBallisticProjectileMovementData
+    Guid:
+      Value: 1741878077199039724
+  LaunchAngle:
+    RawValue: 5242880
+  Gravity:
+    RawValue: 1310720
+  TargetDistance:
+    RawValue: 0
+  PredictionTime:
+    RawValue: 0
+--- !u!114 &3415772207712230766
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bd27c6472ddf4108a0a905dc9d8a1c1, type: 3}
+  m_Name: GrenadierAreaHitData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.AreaHitData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/BaseEnemies/MortarEnemy|GrenadierAreaHitData
+    Guid:
+      Value: 841189594855702069
+  Effects:
+  - Id:
+      Value: 440091783757558214
+  RestOffset:
+    RawValue: 0
+  DetonateOnLevelGeometry: 1
+  DetonateOnEnemyHit: 1
+  DetonateOnAllyHit: 0
+  BlastRadius:
+    RawValue: 196608
+  TargetMask: 0
+  TriggersSpawnUpgrades: 1
+  PlantedFuseTime:
+    RawValue: 0
+  BlastEffectPrefab: {fileID: 6350743763286976369, guid: 2dcb44456e58b4eb3823d152a70d114f, type: 3}
+--- !u!114 &4599746686988740020
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e43bc8092b084053aa02a595615b9e5, type: 3}
+  m_Name: GrenadierProjectileDelivery
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ProjectileDeliveryData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/BaseEnemies/MortarEnemy|GrenadierProjectileDelivery
+    Guid:
+      Value: 297009737100070335
+  MinRandomOffset:
+    RawValue: 0
+  MaxRandomOffset:
+    RawValue: 0
+  HitImpactPrefab: {fileID: 0}
+  HitImpactOffset: {x: 0, y: 0, z: 0}
+  ProjectileData:
+    Id:
+      Value: 2938925554936299593
+  SpawnAnchor: 0
+  SpawnOffset:
+    X:
+      RawValue: 0
+    Y:
+      RawValue: 78643
+    Z:
+      RawValue: 0
+  UseArc: 0
+  LaunchAngle:
+    RawValue: 2949120
+  Gravity:
+    RawValue: 1310720
+  WaitForImpact: 1

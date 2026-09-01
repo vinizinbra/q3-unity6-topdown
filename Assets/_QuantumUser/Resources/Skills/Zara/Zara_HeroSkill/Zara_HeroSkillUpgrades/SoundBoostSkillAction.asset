@@ -16,15 +16,12 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Zara/Zara_HeroSkill/Zara_HeroSkillUpgrades/SoundBoostSkillAction
     Guid:
       Value: 490069236516948011
-  Icon: {fileID: 0}
+  Icon: {fileID: 1506874409, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
   DisplayName: Sound Boost
   RankDescriptions:
-  - Support Beats heal 2% Max Health and grant +15% Move Speed and +15% Fire Rate.
-  - 'Sound Boost: Support Beats heal 2% Max Health, grant +15% Move Speed and +15%
-    Fire Rate, and cut 0.5s off allies'' remaining Hero Skill cooldown.'
-  - 'Power Chord: Support Beats heal 5% Max Health, grant +15% Move Speed and +15%
-    Fire Rate, cut 0.5s off allies'' Hero Skill cooldown, and grant +15% outgoing
-    Damage for 2s.'
+  - 'Support Beats heal <color=#FD3971>2%</color> Max Health and grant <color=#FD3971>+15%</color> Move Speed and <color=#FD3971>+15%</color> Fire Rate.'
+  - 'Support Beats heal <color=#FD3971>2%</color> Max Health, grant <color=#FD3971>+15%</color> Move Speed and Fire Rate, and cut <color=#FD3971>0.5s</color> off allies'' skill cooldown.'
+  - 'Support Beats heal <color=#FD3971>5%</color> Max Health, grant <color=#FD3971>+15%</color> Move Speed and Fire Rate, cut <color=#FD3971>0.5s</color> off cooldowns and <color=#FD3971>+15%</color> damage.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: 1133475158, guid: b217254d41b6945b1873986186a25786, type: 3}
   DisplayName: Backblast
   RankDescriptions:
-  - Dash drops a bomb where you started, dealing 50% of Bunny Bomb damage.
-  - Dash drops a bomb at both ends, each dealing 50% of Bunny Bomb damage.
-  - Dash drops a bomb at both ends, each dealing 75% damage and marking enemies hit.
+  - 'Dash drops a bomb where you started, dealing <color=#FD3971>50%</color> of Bunny Bomb damage.'
+  - 'Dash drops a bomb at both ends, each dealing <color=#FD3971>50%</color> of Bunny Bomb damage.'
+  - 'Dash drops a bomb at both ends, each dealing <color=#FD3971>75%</color> damage and marking enemies hit.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 5

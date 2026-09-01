@@ -16,7 +16,9 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/FirstContact
     Guid:
       Value: 384250695999827635
-  Icon: {fileID: 1313579896, guid: 9dcd69f213ec845fa868b0a3699cf683, type: 3}
+  Icon: {fileID: 33570023, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
   DisplayName: First Contact
   Rarity: 1
+  Scope: 0
+  IncompatibleWith: []
   Description: The first hit against a full-health enemy applies Rift Mark

@@ -128,11 +128,11 @@ MonoBehaviour:
     knockbackDistance: 0.1
     knockbackScalePunch: 0.3
     shakePositionHead:
-      Strength: {x: -0.1, y: 0.04, z: 0}
+      Strength: {x: 0, y: 0.04, z: 0}
       Duration: 0.2
       Frequency: 20
     shakeRotationBody:
-      Strength: {x: 5, y: 0, z: 0}
+      Strength: {x: 10, y: 0, z: 0}
       Duration: 0.2
       Frequency: 10
     shakeRotationHead:

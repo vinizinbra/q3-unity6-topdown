@@ -43,6 +43,59 @@ component AccessoryGuard
     // EntityRef.None while Equipped or Broken. Owned one-to-one: a player can never have two
     // outstanding accessories, since the guard can only pop off while Equipped.
     EntityRef Accessory;
+
+    // Hard opt-out: this player has no Accessory at all and can never block, recover, repair or
+    // repurchase one (Last Bastion trades the whole mechanic away for raw Health - see
+    // docs/rift-mutations.md). A genuine availability flag rather than "keep durability pinned at
+    // 0", so the Store's own service card correctly resolves to AccessoryServiceKind.None instead
+    // of forever offering a replacement that would be immediately meaningless.
+    //
+    // Zero-default is deliberately "enabled", same reasoning as State's own Equipped = 0 above -
+    // a freshly-seeded guard needs no explicit write. Honoured by AccessoryGuardUtility.TryBlock/
+    // Restore, AccessoryServiceUtility.ResolveService and AccessoryGuardSystem.ResolveRecoverer.
+    Boolean Disabled;
+}
+
+// Generic "this player's Accessory just ate a hit" hook, fired by AccessoryGuardUtility.TryBlock
+// the instant a block actually resolves - in EVERY branch (dropped / degraded-in-place / broken),
+// since from a reaction's point of view all three are "the accessory saved me". broken is true
+// only on the branch that took durability to 0 AND wasn't rescued by an emergency reserve below.
+//
+// Deliberately ONE signal rather than the separate Blocked/Dropped/Destroyed/Recovered/Purchased
+// set a first pass might reach for: the other four moments already have View-facing events
+// (AccessoryBlocked/Landed/Recovered/Broken/Restored, Events.qtn) and no simulation consumer, and
+// this is the only one an ability can meaningfully react to. Fires strictly on a real block, so a
+// recovery, a Merchant purchase or a manual drop can never trigger a reaction wired to it.
+signal OnAccessoryBlocked(EntityRef owner, EntityRef attacker, Boolean broken);
+
+// Generic "this player's Accessory was recovered from the world" hook, fired by
+// AccessoryGuardUtility.Recover. Deliberately NOT fired by Restore (a Merchant repair or
+// replacement), because that is a purchase, not a recovery - which is what makes a reaction wired
+// here impossible to farm at a shop.
+//
+// owner is always the accessory's OWNER, never whoever physically collected it: a teammate can pick
+// it up, but it always returns to its owner, so any reward belongs to them. recoverer is passed
+// separately purely so a consumer can credit the helper if it wants to.
+//
+// One drop passes through Recover exactly once (the guard's own state machine guarantees it), so
+// "once per block/drop cycle" needs no extra bookkeeping from consumers.
+signal OnAccessoryRecovered(EntityRef owner, EntityRef recoverer);
+
+// Generic emergency reserve - a would-be BREAK instead consumes one charge and puts the accessory
+// straight back on the player's head, bypassing the normal "destroyed accessories wait for the next
+// Breathing Break" rule. Optional: absent on every player who hasn't been granted one.
+//
+// Nothing anywhere refills Charges, so "once per run, and NOT reset at Breathing Time, and NOT
+// re-armed by repairing or repurchasing" is structural rather than a rule some system has to
+// police - the component simply runs out. Spare Parts (docs/rift-mutations.md) is today's only
+// grantor, but nothing here knows that.
+component AccessoryEmergencyReserve
+{
+    Byte Charges;
+
+    // What CurrentDurability is set to when a charge is consumed - clamped to MaxDurability, so a
+    // player whose max is lower than this (or raised by Glass Core) still gets a sane result.
+    Byte RestoreDurability;
 }
 
 // The generic dropped-accessory collectible - one component on the shared prototype

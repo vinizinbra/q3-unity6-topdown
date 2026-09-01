@@ -139,14 +139,14 @@ TextureImporter:
       name: WeaponDamage
       rect:
         serializedVersion: 2
-        x: 24
-        y: 648
-        width: 160
-        height: 160
+        x: 34
+        y: 659
+        width: 135
+        height: 135
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -154,21 +154,21 @@ TextureImporter:
       spriteID: 4b925637047a4dd09398ca84d41a49ba
       internalID: 1389070835
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
       name: FireRate
       rect:
         serializedVersion: 2
-        x: 232
-        y: 649
-        width: 159
-        height: 159
+        x: 244
+        y: 651
+        width: 135
+        height: 135
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -176,21 +176,21 @@ TextureImporter:
       spriteID: 3f69f8ea717842f19a8cc59adcafa303
       internalID: 421420180
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
       name: ReloadSpeed
       rect:
         serializedVersion: 2
-        x: 440
-        y: 649
-        width: 159
-        height: 159
+        x: 451
+        y: 660
+        width: 135
+        height: 135
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -198,21 +198,21 @@ TextureImporter:
       spriteID: f19519686a474e5aa98fbd16e88b59d2
       internalID: 1987535197
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
       name: MagazineSize
       rect:
         serializedVersion: 2
-        x: 648
-        y: 649
-        width: 159
-        height: 159
+        x: 659
+        y: 660
+        width: 135
+        height: 135
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -220,21 +220,21 @@ TextureImporter:
       spriteID: 78d307a609574a98b2a8533e6aa140b7
       internalID: 1544372281
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
       name: CriticalChance
       rect:
         serializedVersion: 2
-        x: 856
-        y: 649
-        width: 159
-        height: 159
+        x: 865
+        y: 658
+        width: 135
+        height: 135
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -242,21 +242,21 @@ TextureImporter:
       spriteID: 8e788996bd234f5bbe4b0d006d7cf4be
       internalID: 1698213784
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
       name: CriticalDamage
       rect:
         serializedVersion: 2
-        x: 1064
-        y: 649
-        width: 159
-        height: 159
+        x: 1076
+        y: 660
+        width: 135
+        height: 135
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -264,21 +264,21 @@ TextureImporter:
       spriteID: 82ad2c69cb49460e8896099d55316df3
       internalID: 1480749247
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
       name: WeaponRange
       rect:
         serializedVersion: 2
-        x: 24
-        y: 441
-        width: 159
-        height: 159
+        x: 35
+        y: 453
+        width: 130
+        height: 130
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -286,21 +286,21 @@ TextureImporter:
       spriteID: c3338e8ad8184d56bc53c945536d86f1
       internalID: 2079421101
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
       name: ProjectileSpeed
       rect:
         serializedVersion: 2
-        x: 232
-        y: 441
-        width: 159
-        height: 159
+        x: 243
+        y: 451
+        width: 130
+        height: 130
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -308,21 +308,21 @@ TextureImporter:
       spriteID: 817af33568a64eb29368cde41b51fa7c
       internalID: 2061635622
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
       name: MaxHealth
       rect:
         serializedVersion: 2
-        x: 429
-        y: 430
-        width: 181
-        height: 181
+        x: 434
+        y: 434
+        width: 170
+        height: 170
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -330,21 +330,21 @@ TextureImporter:
       spriteID: 2724fa161a944677b5059fb89e27b9bc
       internalID: 482999638
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
       name: Shield
       rect:
         serializedVersion: 2
-        x: 637
+        x: 638
         y: 430
         width: 181
         height: 181
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -352,21 +352,21 @@ TextureImporter:
       spriteID: 2edb7acb56b94197b03a333600687bf9
       internalID: 1938730749
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
       name: MovementSpeed
       rect:
         serializedVersion: 2
-        x: 845
-        y: 430
-        width: 181
-        height: 181
+        x: 850
+        y: 431
+        width: 170
+        height: 170
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -374,7 +374,7 @@ TextureImporter:
       spriteID: 2729c915f6e748a6bb76072b71048aee
       internalID: 642217845
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
@@ -388,7 +388,7 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -396,21 +396,21 @@ TextureImporter:
       spriteID: da1835db462e43e0b7ddf4f1456296eb
       internalID: 1406246131
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
       name: HealingReceived
       rect:
         serializedVersion: 2
-        x: 13
-        y: 222
-        width: 181
-        height: 181
+        x: 17
+        y: 227
+        width: 170
+        height: 170
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -418,7 +418,7 @@ TextureImporter:
       spriteID: ee84508f8b924c32864cc6841f27e246
       internalID: -2049905287
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
@@ -432,7 +432,7 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -440,21 +440,21 @@ TextureImporter:
       spriteID: b6aaecbf5614417f8f94df18949168de
       internalID: 1519381753
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
       name: DashCooldown
       rect:
         serializedVersion: 2
-        x: 432
-        y: 224
-        width: 176
-        height: 176
+        x: 461
+        y: 241
+        width: 140
+        height: 140
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -462,21 +462,21 @@ TextureImporter:
       spriteID: 19c4984beba34a6bb9e2f54cc68256e7
       internalID: 984604686
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
       name: DashCharge
       rect:
         serializedVersion: 2
-        x: 642
-        y: 226
-        width: 172
-        height: 172
+        x: 670
+        y: 241
+        width: 140
+        height: 140
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -484,21 +484,21 @@ TextureImporter:
       spriteID: e05bf968b5134daab9590ff2e61828e4
       internalID: 1703147407
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
       name: SkillDamage
       rect:
         serializedVersion: 2
-        x: 837
-        y: 213
-        width: 198
-        height: 198
+        x: 863
+        y: 234
+        width: 155
+        height: 155
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -506,21 +506,21 @@ TextureImporter:
       spriteID: a51eeb5f058d48ce88185b298d00a7e3
       internalID: -592327179
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
       name: SkillCooldown
       rect:
         serializedVersion: 2
-        x: 1042
-        y: 211
-        width: 203
-        height: 203
+        x: 1063
+        y: 233
+        width: 151
+        height: 153
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -528,7 +528,7 @@ TextureImporter:
       spriteID: 596ce33d2d5a4a55816a540694a3cb8b
       internalID: 1774982024
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
@@ -542,7 +542,7 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -550,7 +550,7 @@ TextureImporter:
       spriteID: 4808a63bb8cf4442918caf7f8e3597d7
       internalID: -1650662890
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
@@ -564,7 +564,7 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -572,7 +572,7 @@ TextureImporter:
       spriteID: 3784f80468844b19a84e6cb0db896107
       internalID: -923845276
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
@@ -586,7 +586,7 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -594,21 +594,21 @@ TextureImporter:
       spriteID: c3f514a402b0483499413afc9ae915c2
       internalID: -408659391
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
       name: ExperienceGain
       rect:
         serializedVersion: 2
-        x: 636
-        y: 13
-        width: 183
-        height: 183
+        x: 675
+        y: 39
+        width: 130
+        height: 130
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -616,23 +616,68 @@ TextureImporter:
       spriteID: 4d03c50c53f944bcb50c8d9145d70c87
       internalID: 873863531
       vertices: []
-      indices:
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Toughness
+      rect:
+        serializedVersion: 2
+        x: 857
+        y: 38
+        width: 155
+        height: 155
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a384079550fb34b7abcf47539376a6b4
+      internalID: 345698372
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Coins
+      rect:
+        serializedVersion: 2
+        x: 1056
+        y: 39
+        width: 151
+        height: 152
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1a44e01f834664f099954b9494738bc8
+      internalID: 1980703905
+      vertices: []
+      indices: 
       edges: []
       weights: []
     outline: []
-    customData:
+    customData: 
     physicsShape: []
     bones: []
     spriteID: 08cc4e06f40745f9939c1cd437a46107
     internalID: 0
     vertices: []
-    indices:
+    indices: 
     edges: []
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
+      Coins: 1980703905
       CriticalChance: 1698213784
       CriticalDamage: 1480749247
       DashCharge: 1703147407
@@ -653,9 +698,10 @@ TextureImporter:
       SkillCooldown: 1774982024
       SkillDamage: -592327179
       SkillDuration: -1650662890
+      Toughness: 345698372
       WeaponDamage: 1389070835
       WeaponRange: 2079421101
-  mipmapLimitGroupName:
+  mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
   assetBundleName: 

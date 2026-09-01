@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a02311fd8ed24c08a5cc3dfe09a6e16, type: 3}
+  m_Name: AdrenalineKick
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.AdrenalineKickMutationData
+  Identifier:
+    Path: _QuantumUser/Resources/LevelUp/RiftMutation/AdrenalineKick
+    Guid:
+      Value: 524350525567682883
+  Icon: {fileID: -376461961, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
+  DisplayName: Adrenaline Kick
+  Rarity: 2
+  Scope: 0
+  IncompatibleWith: []
+  Description: 'When your Accessory blocks a hit, reset Dash and cut <color=#FD3971>{0:0}%</color> off your remaining Hero Skill cooldown'
+  SkillCooldownFraction:
+    RawValue: 32768

@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 421880759282160726}
   - component: {fileID: 8784772530330802063}
   - component: {fileID: 4999311499769038028}
+  - component: {fileID: 5314173847130174680}
   m_Layer: 0
   m_Name: WeaponChestEntity
   m_TagString: Untagged
@@ -342,6 +343,8 @@ MonoBehaviour:
       RawValue: 65536
     FloatSpeed:
       RawValue: 0
+    FallVelocity:
+      RawValue: 0
 --- !u!114 &8784772530330802063
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -361,8 +364,8 @@ MonoBehaviour:
   isLocal: 0
   visualRoot: {fileID: 7857244589762922266}
   spriteRenderer: {fileID: 3282891849697788840}
-  openSprite: {fileID: -171230515, guid: 9500f48424b214942acfffa7912cb6be, type: 3}
-  openEffectPrefab: {fileID: 198756107662936000, guid: 6bea1543e5b3fca40a6c415bb1ecabe3, type: 3}
+  openSprite: {fileID: 402091364, guid: 0cf0582dba7bf45ba9963b3b841d95a6, type: 3}
+  openEffectPrefab: {fileID: 198667465655177208, guid: 14161271ee835af47b035cd4863fe801, type: 3}
   openEffectOffset: {x: 0, y: 0, z: 0}
   shakeBuildupStrength: {x: 0.08, y: 0.08, z: 0}
   shakeBuildupDuration: 0.5
@@ -416,6 +419,24 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &5314173847130174680
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4779101775879659691}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3da98805c67b4f31bc2ad5df570d771f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlaySoundOnEnable
+  sound: {fileID: 11400000, guid: b79d1c4a53f52414c96e2045678ef0dd, type: 2}
+  placement: 0
+  volumeScale: 1
+  delay: 0
+  stopOnDisable: 0
+  stopFade: -1
 --- !u!1 &7412009841341536917
 GameObject:
   m_ObjectHideFlags: 0
@@ -428,6 +449,7 @@ GameObject:
   - component: {fileID: 3282891849697788840}
   - component: {fileID: 5774253268238027976}
   - component: {fileID: 4920596716692340166}
+  - component: {fileID: 6182136582633768884}
   m_Layer: 0
   m_Name: Square
   m_TagString: Untagged
@@ -444,8 +466,8 @@ Transform:
   m_GameObject: {fileID: 7412009841341536917}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.244, z: 0}
-  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_LocalPosition: {x: 0, y: -0.5, z: 0}
+  m_LocalScale: {x: 0.4, y: 0.4, z: 0.4}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5480121746554610211}
@@ -499,7 +521,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -1589900202, guid: 9500f48424b214942acfffa7912cb6be, type: 3}
+  m_Sprite: {fileID: -1192908521, guid: 0cf0582dba7bf45ba9963b3b841d95a6, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -533,5 +555,42 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9168c542245be475f8ee71bd6733ba7c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.HasShadow
-  baseScale: 2
-  shadowOffset: {x: 0, y: 0}
+  baseScale: 4
+  shadowOffset: {x: 0, y: 0.2}
+--- !u!114 &6182136582633768884
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7412009841341536917}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0723c21be28454a039f7ffebd04176e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::JuicyEffects
+  scaleInOnEnable: 1
+  scaleInDelay: 0
+  scaleInDuration: 0.45
+  scaleInEase: 27
+  punchScaleStrength: {x: 0.4, y: 0.4, z: 0}
+  punchScaleDuration: 0.4
+  punchScaleFrequency: 16
+  punchRotationStrength: {x: 0, y: 0, z: 25}
+  punchRotationDuration: 0.45
+  punchRotationFrequency: 14
+  shakeStrength: {x: 0.3, y: 0.3, z: 0}
+  shakeDuration: 0.45
+  shakeFrequency: 25
+  idleWobbleOnEnable: 1
+  idleWobbleSquashAmount: 0.05
+  idleWobbleDuration: 0.5
+  idleWobbleEase: 4
+  idleRareWiggleOnEnable: 1
+  idleRareWiggleInterval: {x: 1, y: 4}
+  idleRareWiggleIncludeScale: 1
+  idleRareWiggleIncludeRotation: 0
+  idleRareWiggleIncludePosition: 0
+  idleRareWiggleStrengthMultiplier: 0.1
+  scaleUseUnscaledTime: 0
+  useUnscaledTime: 0

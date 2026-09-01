@@ -16,11 +16,13 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/FocusedPower
     Guid:
       Value: 533573372186029248
-  Icon: {fileID: 731441001, guid: 9dcd69f213ec845fa868b0a3699cf683, type: 3}
+  Icon: {fileID: 1548765126, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
   DisplayName: Focused Power
   Rarity: 2
-  Description: '{0:+0;-0}% Skill Area, {1:+0;-0}% Skill Damage'
+  Scope: 0
+  IncompatibleWith: []
+  Description: '<color=#FD3971>{0:+0;-0}%</color> Skill Area, but Skill Damage rises to <color=#FD3971>{1:+0;-0}%</color> at the center of the effect'
   SkillAreaMultiplier:
     RawValue: 32768
-  SkillDamageMultiplier:
-    RawValue: 131072
+  CenterDamageBonus:
+    RawValue: 98304

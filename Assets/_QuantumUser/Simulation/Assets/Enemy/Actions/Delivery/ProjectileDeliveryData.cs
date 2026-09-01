@@ -71,6 +71,16 @@ namespace Quantum
                     targetPosition += centerOffset;
                 }
 
+                // action.IgnoreY promises a flat shot - SkillTargetPosition arrives already
+                // flattened onto the enemy's own ground Y (see EnemySystem/EnemyDeliveryData), but
+                // AimsAtTargetCenter just re-added the target's own collider centroid, which would
+                // undo that. Re-flattened onto resolvedOrigin's own height, same reasoning as
+                // FanProjectileDeliveryData's own copy of this fix.
+                if (action.IgnoreY == true)
+                {
+                    targetPosition.Y = resolvedOrigin.Y;
+                }
+
                 // The whole target point goes to the movement, not a flattened direction - a
                 // lob needs the real distance to land on the target rather than a fixed
                 // TargetDistance.

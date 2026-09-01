@@ -34,7 +34,7 @@ public class ParticleSound : MonoBehaviour
     [SerializeField, Tooltip("OneShot fires once when the effect starts. Loop is held while the effect emits and stopped when it stops. Pick by what the PARTICLE does - a looping system with a one-shot sound goes silent after the first cycle.")]
     private Mode mode = Mode.OneShot;
 
-    [SerializeField, ShowIf("mode", Mode.OneShot), AllowNesting]
+    [SerializeField, SoundDataPicker, ShowIf("mode", Mode.OneShot), AllowNesting]
     [Tooltip("Played once per effect start. Author its variation/cooldown/group on the SoundData itself - a high-frequency effect wants a cooldown and a tight group budget, or a burst of them turns to mush.")]
     private SoundData sound;
 

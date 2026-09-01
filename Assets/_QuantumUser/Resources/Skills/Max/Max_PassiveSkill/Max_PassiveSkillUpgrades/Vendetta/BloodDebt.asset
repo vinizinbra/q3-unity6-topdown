@@ -21,9 +21,9 @@ MonoBehaviour:
   Description: Vendetta marks last longer, feed your Rage, and heal you.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - Vendetta marks last 12s.
-  - Vendetta marks last 12s. Shield damage also marks attackers, and each Vendetta kill grants +2 Rage.
-  - Vendetta marks last 12s, Shield damage marks attackers, and kills grant +2 Rage. Consuming a mark heals 60% of the damage it dealt, up to 15% of your Health.
+  - 'Vendetta marks last <color=#FD3971>12s</color>.'
+  - 'Vendetta marks last <color=#FD3971>12s</color>. Shield damage also marks attackers, and each Vendetta kill grants <color=#FD3971>+2</color> Rage.'
+  - 'Marks last <color=#FD3971>12s</color>, Shield damage marks attackers, kills grant <color=#FD3971>+2</color> Rage. Consuming a mark heals <color=#FD3971>60%</color> of its damage.'
   MarkDuration:
   - RawValue: 786432
   - RawValue: 786432

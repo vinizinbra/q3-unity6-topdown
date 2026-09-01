@@ -23,9 +23,9 @@ struct PoiAvailability
     Boolean AvailableInBreathing;
 }
 
-enum PoiUsagePolicy : Byte { Reusable, OncePerPlayerPerBreak, OncePerPlayerPerRun, OncePerWorld }
+enum PoiUsagePolicy : Byte { Reusable, OncePerPlayerPerBreak, OncePerPlayerPerRun, OncePerWorld, Cooldown }
 
-struct PoiUsageEntry { EntityRef Poi; Int32 UsedAtBreathingIndex; }
+struct PoiUsageEntry { EntityRef Poi; Int32 UsedAtBreathingIndex; FP CooldownRemaining; }
 
 component PoiUsage { array<PoiUsageEntry>[8] Entries; } // per-player
 ```
@@ -39,12 +39,26 @@ component PoiUsage { array<PoiUsageEntry>[8] Entries; } // per-player
   encounter-clear hold), not just from the phase boundary onward. Since this is the single funnel
   every POI resolver (`HealingShrineUtility`/`CursedRiftUtility`/`StoreUtility`/`BlacksmithUtility`)
   and `PoiActivationUtility.Refresh` already call, no other file needed touching.
-- `PoiUsageUtility.CanUse`/`MarkUsed(f, player, poi, policy)` - per-player, keyed by the POI's own
-  `EntityRef`, same fixed-array-of-keyed-entries convention `RiftMutationPicks`/
-  `GlobalUpgradePicks` already use. `OncePerPlayerPerRun` stores a `-1` sentinel ("used forever").
-  **`OncePerWorld` is declared but not implemented this pass** (`CanUse` logs an error and returns
-  `false`) - neither current POI needs it; it would need a flag on the POI's own component instead
-  of this per-player one.
+- `PoiUsageUtility.CanUse`/`MarkUsed(f, player, poi, policy, cooldownDuration = 0)` - per-player,
+  keyed by the POI's own `EntityRef`, same fixed-array-of-keyed-entries convention
+  `RiftMutationPicks`/`GlobalUpgradePicks` already use. `OncePerPlayerPerRun` stores a `-1`
+  sentinel ("used forever"). **`OncePerWorld` is declared but not implemented this pass** (`CanUse`
+  logs an error and returns `false`) - no current POI needs it; it would need a flag on the POI's
+  own component instead of this per-player one.
+- **`Cooldown`** (2026-08-29) - per-player like `OncePerPlayerPerBreak`/`PerRun`, but real-time
+  instead of Break-indexed: usable again once `PoiUsageEntry.CooldownRemaining` decays to 0.
+  `cooldownDuration` is NOT part of the generic policy vocabulary - it's a per-POI-kind tuning
+  value living on the POI's own component (e.g. `HealingShrine.CooldownDuration`, same convention
+  `HealPercent` already uses), forwarded into `MarkUsed` by whichever call site owns it. Ticked
+  down every frame by a new `PoiUsageUtility.TickCooldowns(f, player)`, called once per
+  `PoiUsage`-carrying entity per tick from `PoiActivationSystem` (the existing generic per-tick
+  POI-infra pass, extended with one more loop - this one keyed by player, not by POI). Deliberately
+  ticks by `f.DeltaTime` rather than comparing against a stored timestamp, since it has to keep
+  counting down through a Breathing Break even though `Global.SurvivalTime` itself freezes there
+  (see `docs/run-phase.md`'s "Independent timers") - a timestamp-based cooldown would silently
+  pause too. Meant to pair with `PoiAvailability.AvailableInCombat = true` so a POI can be an
+  anytime tool with a real-time cost, not just a once-per-Break pick - Healing Shrine is the first
+  candidate (see below), authored per-instance in the Editor like every other POI field.
 - **8-slot array is scoped to "2 POI instances exist in the whole run today"** (both persistent,
   singular) - grow it (same pattern `RiftMutationPicks` went `[16]`→`[32]`) once more POIs land.
 
@@ -89,6 +103,7 @@ component HealingShrine
     PoiAvailability Availability;
     PoiUsagePolicy UsagePolicy;
     FP HealPercent;
+    FP CooldownDuration; // only read under UsagePolicy == Cooldown - see the Cooldown bullet above
     // Radius/Priority live on the sibling Interactable component instead - one source of truth,
     // same convention CursedRift.qtn already uses.
 }
@@ -325,6 +340,14 @@ per POI instance instead (see `PoiView`'s own `promptTitle`/`promptActiveDescrip
   - `Available`/`PhaseUnavailable`/`AlreadyUsed`/`NotNeeded` - shown, `titleText` stays constant
     (set once in `Setup`) while `descriptionText`/`descriptionRoot` are set to the matching
     authored description and hidden entirely whenever that state's description is empty.
+    `AlreadyUsed` is a special case as of 2026-08-29 (`ResolveAlreadyUsedDescription`): it reads
+    `PoiUsage` straight off the simulation for the targeting player, and if it finds a live
+    `PoiUsageEntry.CooldownRemaining > 0` for THIS POI shows a real-time `"Xs"` countdown instead of
+    the plain authored `promptAlreadyUsedDescription` text - same "View reads the sim state
+    directly for a live number" precedent the Revive bleed-out timer below already sets. Only ever
+    fires for a `PoiUsagePolicy.Cooldown` POI (`MarkUsed` writes `CooldownRemaining = 0` under every
+    other policy), so a `OncePerPlayerPerBreak`/`PerRun` POI's `AlreadyUsed` still shows its plain
+    authored text unchanged.
   - `Busy` - hidden entirely (the real Choice Window is already open at that point, a floating
     label on top of it would be redundant).
   - `None` - hidden (nobody local is targeting it).

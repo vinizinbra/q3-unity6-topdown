@@ -16,12 +16,12 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Lux/Lux_HeroSkill/Lux_HeroSkillUpgrades/SentryOverclockSkillAction
     Guid:
       Value: 388233548457362718
-  Icon: {fileID: 0}
+  Icon: {fileID: -937771317, guid: 355e00907e214470bac0029f70064510, type: 3}
   DisplayName: Overclock
   RankDescriptions:
-  - Sentry Fire Rate +25%.
-  - Sentry Fire Rate +40%, and your Sentry lasts 2s longer.
-  - 'Redline: Sentry Fire Rate +50%, and during the last 3s of its life it gains a further +100% Fire Rate.'
+  - 'Sentry Fire Rate <color=#FD3971>+25%</color>.'
+  - 'Sentry Fire Rate <color=#FD3971>+40%</color>, and your Sentry lasts <color=#FD3971>2s</color> longer.'
+  - 'Sentry Fire Rate <color=#FD3971>+50%</color>, and during its last <color=#FD3971>3s</color> of life it gains a further <color=#FD3971>+100%</color> Fire Rate.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

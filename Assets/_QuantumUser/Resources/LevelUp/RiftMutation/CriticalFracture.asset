@@ -16,7 +16,9 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/CriticalFracture
     Guid:
       Value: 368502755868404442
-  Icon: {fileID: -1718766845, guid: 9dcd69f213ec845fa868b0a3699cf683, type: 3}
+  Icon: {fileID: -652182819, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
   DisplayName: Critical Fracture
   Rarity: 1
+  Scope: 0
+  IncompatibleWith: []
   Description: Critical hits apply Rift Mark

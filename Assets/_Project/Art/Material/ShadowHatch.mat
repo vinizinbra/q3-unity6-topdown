@@ -120,7 +120,7 @@ Material:
     - _HatchScale: 0.3
     - _HatchStrength: 0.473
     - _Metallic: 0
-    - _MinShadowAmount: 0.03
+    - _MinShadowAmount: 0.008
     - _OcclusionStrength: 1
     - _Parallax: 0.005
     - _QueueOffset: 0

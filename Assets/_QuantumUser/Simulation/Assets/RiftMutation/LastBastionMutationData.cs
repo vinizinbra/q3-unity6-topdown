@@ -2,11 +2,13 @@ namespace Quantum
 {
     using Photon.Deterministic;
 
-    // Mirror of GlassCoreMutationData in the opposite direction - Health doubles, Shield is removed
-    // outright. Directly zeroes Shield.Max/Current rather than going through
-    // CharacterSystem.RefreshMaxShield - that method's newMax <= 0 guard exists to protect against
-    // an *unintentional* zero (see its own comment), this one is deliberate. See
-    // docs/rift-mutations.md.
+    // Pure HP survival, the exact opposite trade to Glass Core: a much larger health pool, and no
+    // Accessory at all.
+    //
+    // The Accessory is removed via an explicit availability flag (AccessoryGuardUtility.Disable)
+    // rather than by pinning durability at 0 - that flag is what makes the Store correctly stop
+    // offering a repair/replacement this player could never benefit from, instead of endlessly
+    // selling them a defence that would be disabled again a moment later.
     public unsafe class LastBastionMutationData : RiftMutationData
     {
         public FP HealthMultiplier = FP._1;
@@ -19,14 +21,7 @@ namespace Quantum
             stats->MaxHealthMultiplier = FPMath.Max(FP._0, stats->MaxHealthMultiplier * HealthMultiplier);
             CharacterSystem.RefreshMaxHealth(f, entity);
 
-            stats->MaxShieldMultiplier = FP._0;
-            stats->BonusMaxShield = FP._0; // else a flat ShieldUpgradeData pick would revive shield on a later RefreshMaxShield
-
-            if (f.Unsafe.TryGetPointer<Shield>(entity, out var shield) == true)
-            {
-                shield->Max = FP._0;
-                shield->Current = FP._0;
-            }
+            AccessoryGuardUtility.Disable(f, entity);
         }
 
         protected override object[] DescriptionArgs => new object[] { (HealthMultiplier.AsFloat - 1f) * 100f };

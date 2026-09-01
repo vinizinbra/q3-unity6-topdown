@@ -21,9 +21,9 @@ MonoBehaviour:
   Description: Weapon hits can trigger a small explosion.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - 15% chance on weapon hit to explode for 20% of the hit's damage.
-  - 30% chance on weapon hit to explode for 30% of the hit's damage.
-  - Every weapon hit explodes for 40% of the hit's damage.
+  - '<color=#FD3971>15%</color> chance on weapon hit to explode for <color=#FD3971>20%</color> of the hit''s damage.'
+  - '<color=#FD3971>30%</color> chance on weapon hit to explode for <color=#FD3971>30%</color> of the hit''s damage.'
+  - 'Every weapon hit explodes for <color=#FD3971>40%</color> of the hit''s damage.'
   ProcChance:
   - RawValue: 9830
   - RawValue: 26214

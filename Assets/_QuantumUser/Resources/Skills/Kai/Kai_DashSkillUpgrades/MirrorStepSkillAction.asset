@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: -625045729, guid: 167fe127f1a734214a64d3f39af97f1f, type: 3}
   DisplayName: Mirror Step
   RankDescriptions:
-  - Dashing reflects nearby enemy projectiles back toward their attackers.
-  - Dashing reflects enemy projectiles from farther away and increases their reflected damage.
-  - Dashing reflects nearby enemy projectiles back at their attackers. Each reflect cuts 0.5s off Vortex's cooldown, up to 2s per dash.
+  - 'Dashing reflects nearby enemy projectiles back toward their attackers.'
+  - 'Dashing reflects enemy projectiles from farther away and increases their reflected damage.'
+  - 'Dashing reflects nearby enemy projectiles. Each reflect cuts <color=#FD3971>0.5s</color> off Vortex''s cooldown, up to <color=#FD3971>2s</color> per dash.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 3

@@ -151,6 +151,8 @@ namespace Quantum
 
             AssignPlayerSpawnPosition(f, config, gridOriginX, gridOriginZ, placed);
 
+            ComputeChunkConnectivity(f, placed);
+
             f.Global->LevelGenerated = true;
         }
 
@@ -415,7 +417,7 @@ namespace Quantum
 
         // Deterministic weighted roll among an entry's variants - a single Next(0, totalWeight)
         // draw walked against each variant's own Weight, the same cumulative-weight shape
-        // CombatDirectorUtility.TrySelectGroup uses to pick an enemy group. A variant with Weight <= 0
+        // CombatDirectorUtility.TrySelectSpawn uses to pick an enemy group. A variant with Weight <= 0
         // is soft-disabled (skipped entirely), EXCEPT when every variant in the entry is <= 0: Unity
         // zero-inits a freshly added array element, so an unauthored/unmigrated list falls back to the
         // old uniform pick rather than silently placing nothing. Returns false only when the entry has
@@ -1023,6 +1025,50 @@ namespace Quantum
             bool xOverlapping = a.OriginX < b.OriginX + b.Width && b.OriginX < a.OriginX + a.Width;
 
             return zTouching && xOverlapping;
+        }
+
+        // Persists which other chunks each chunk directly borders (Chunk.ConnectedChunks) - read by
+        // ChunkConnectivityUtility to gate Elite ("major" Director group) spawn placement, see
+        // docs/survival-director.md's "Chunk Connectivity" section. Reuses the exact same AreAdjacent
+        // rectangle test placement itself already validated every pair against, so two chunks found
+        // adjacent here already passed AllowedConnectionSides/ForbiddenNeighbors during placement -
+        // nothing about doors/openings needs re-checking. O(n^2) over `placed` (n = chunk count for
+        // the level, small), done exactly once, here, since `placed` only exists as a local for the
+        // final generation tick.
+        private void ComputeChunkConnectivity(Frame f, List<PlacedChunk> placed)
+        {
+            for (int i = 0; i < placed.Count; i++)
+            {
+                for (int j = i + 1; j < placed.Count; j++)
+                {
+                    if (AreAdjacent(placed[i], placed[j]) == false)
+                    {
+                        continue;
+                    }
+
+                    AddChunkConnection(f, placed[i].Entity, placed[j].Entity);
+                    AddChunkConnection(f, placed[j].Entity, placed[i].Entity);
+                }
+            }
+        }
+
+        // One direction of a symmetric edge - ComputeChunkConnectivity always calls this in both
+        // directions for a given pair. Logs rather than throws if the fixed array is ever exhausted,
+        // since a missed connection only makes ChunkConnectivityUtility slightly more conservative
+        // (an Elite spawn candidate near this chunk may be rejected when it shouldn't be), not a
+        // correctness hazard for anything else.
+        private void AddChunkConnection(Frame f, EntityRef from, EntityRef to)
+        {
+            Chunk* chunk = f.Unsafe.GetPointer<Chunk>(from);
+
+            if (chunk->ConnectedChunkCount >= 8)
+            {
+                Log.Warn($"[LevelGen] chunk {from} already has 8 connected chunks recorded - {to} not added, ChunkConnectivityUtility may be overly conservative near it");
+                return;
+            }
+
+            chunk->ConnectedChunks[chunk->ConnectedChunkCount] = to;
+            chunk->ConnectedChunkCount++;
         }
 
         // True if the candidate footprint is flush against an already-placed chunk (shares a

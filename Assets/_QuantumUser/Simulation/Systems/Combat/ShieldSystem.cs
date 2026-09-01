@@ -17,7 +17,10 @@ namespace Quantum
             // "stuck at 0 - RechargeRate is 0" guardrail below meaningful for everything that IS
             // supposed to recharge, instead of it error-spamming once a second for a whole run.
             if (shield->ChargeOnly == true)
+            {
+                TickExpiration(f, filter.Entity, shield);
                 return;
+            }
 
             if (shield->Current >= shield->Max)
                 return;
@@ -66,6 +69,26 @@ namespace Quantum
 
             if (shield->Current >= shield->Max)
                 Log.Debug($"[Shield] {filter.Entity} back to full at {shield->Max}");
+        }
+
+        // Brute's Juggernaut Shield (see docs/brute-ascensions.md) - a temporary shield decays as a
+        // single pool on a single timer, never gradually and never per-grant. No-ops entirely for
+        // any shield with TemporaryDuration 0 (every hero/enemy that never opted in), so this costs
+        // nothing for the common case.
+        private static void TickExpiration(Frame f, EntityRef entity, Shield* shield)
+        {
+            if (shield->TemporaryDuration <= FP._0 || shield->Current <= FP._0)
+                return;
+
+            shield->ExpirationRemaining -= f.DeltaTime;
+
+            if (shield->ExpirationRemaining > FP._0)
+                return;
+
+            Log.Debug($"[Shield] {entity}'s temporary Shield expired - {shield->Current}/{shield->Max} -> 0");
+
+            shield->Current = FP._0;
+            shield->ExpirationRemaining = FP._0;
         }
 
         public struct Filter

@@ -113,10 +113,10 @@ public class ChooseWindow : UiWindow
     // Forced inactive here, before base.Show() activates the whole popup, so none of them fire early
     // just because their parent turned on - only reactivating one explicitly (a trigger) does.
     [Header("Sound")]
-    [SerializeField, Tooltip("Played once per CARD as it animates in, on the same stagger as the intro - so three cards read as three beats rather than one lump. Covers both card families (upgrade and weapon). Only fires for cards actually being shown, so a screen with fewer cards doesn't play phantom ones.")]
+    [SerializeField, SoundDataPicker, Tooltip("Played once per CARD as it animates in, on the same stagger as the intro - so three cards read as three beats rather than one lump. Covers both card families (upgrade and weapon). Only fires for cards actually being shown, so a screen with fewer cards doesn't play phantom ones.")]
     private SoundData cardAppearSound;
 
-    [SerializeField, Tooltip("Played when a card is clicked - either family, and the Buy button too, since that routes through the same onClicked. Fires before the choice is sent, so it is heard even though the window closes immediately after.")]
+    [SerializeField, SoundDataPicker, Tooltip("Played when a card is clicked - either family, and the Buy button too, since that routes through the same onClicked. Fires before the choice is sent, so it is heard even though the window closes immediately after.")]
     private SoundData cardChooseSound;
 
     [SerializeField, Tooltip("Particles that must NOT play just because the window opened - reset to inactive every Show(), and only meant to be reactivated by an explicit trigger (e.g. titleIntro.onImpact -> SetActive(true)).")]

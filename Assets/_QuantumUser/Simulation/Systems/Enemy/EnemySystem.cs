@@ -157,17 +157,21 @@ namespace Quantum
         // pure trigger/hazard entity also using the Enemy component), so this is not an error case.
         // MaxHealth comes from the once-per-spawn EnemyBalanceUtility.ResolveEnemyStats snapshot -
         // EnemyTierStatsConfig.MaxHealth scaled by BalanceConfig's run curves/co-op multipliers,
-        // not read directly here - see docs/run-curves-coop-scaling.md.
+        // not read directly here - see docs/run-curves-coop-scaling.md - further scaled by this
+        // enemy's own EnemyDataAsset.Stats.HealthMultiplier, an author-facing per-enemy correction
+        // on top of that shared curve (1 by default, same role ShieldMultiplier plays for Shield).
         private static void SeedHealth(Frame f, EntityRef entity, EnemyDataAsset data, EnemyRuntimeStats stats)
         {
             if (f.Unsafe.TryGetPointer<Health>(entity, out var health) == false)
                 return;
 
-            // Greed's own difficulty-scaling side effect (see RiftShards.qtn) - 1 + the global bonus
-            // so an unseeded/never-picked run (bonus 0) reads as an exact no-op multiplier.
-            FP healthMultiplier = FP._1 + f.Global->EnemyHealthBonusMultiplier;
+            // Run-wide encounter modifiers (Greed's +50%, Overpopulation's -25%; see
+            // RunMutations.qtn) - exactly 1x for a run where none was picked. Tier-aware: a
+            // NEGATIVE total is ignored for a Boss, so a horde mutation can't trivialise a boss
+            // fight. Baked once here, so already-alive enemies keep whatever they rolled.
+            FP healthMultiplier = EncounterModifierUtility.ResolveEnemyHealthMultiplier(f, data.Tier);
 
-            health->MaxHealth = stats.MaxHp * healthMultiplier;
+            health->MaxHealth = stats.MaxHp * healthMultiplier * data.Stats.HealthMultiplier;
             health->CurrentHealth = health->MaxHealth;
         }
 
@@ -359,11 +363,21 @@ namespace Quantum
         // A large multiple of MaxHealth rather than a fixed huge constant - guarantees the hit
         // still blows through any Armor/Shield mitigation (both finite) regardless of the enemy's
         // own health scale, same DamageUtility pipeline as every other death.
+        //
+        // Boss/Elite/Persistent are deliberately excluded - EnemyFallSystem owns their fall
+        // handling instead (respawn to safety, never actually die - confirmed with the user), same
+        // split that system's own header comment already documents. Without this exclusion, THIS
+        // check killed them outright before EnemyFallSystem (registered right after EnemySystem, so
+        // it runs later this same tick) ever got a chance to run its own respawn-safe logic.
         private static bool CheckFallDeath(Frame f, ref Filter filter)
         {
             LevelConfig config = f.FindAsset(f.RuntimeConfig.LevelConfig);
 
             if (filter.Transform3D->Position.Y >= config.FallDeathHeight)
+                return false;
+
+            EnemyDataAsset data = f.FindAsset(filter.Enemy->EnemyData);
+            if (data.Tier == EnemyTier.Boss || data.Tier == EnemyTier.Elite || data.Economy.Persistent == true)
                 return false;
 
             if (f.Unsafe.TryGetPointer<Health>(filter.Entity, out var health) == false)
@@ -559,7 +573,7 @@ namespace Quantum
             {
                 filter.Enemy->Target = target;
                 filter.Enemy->Phase = EnemyActionPhase.Chasing;
-                Log.Debug($"[Enemy] {filter.Entity} detected {target} within DetectionRange={data.AI.DetectionRange}, switching Idle -> Chasing");
+                Log.Debug($"[Enemy] {filter.Entity} detected {target} within DetectionRange={data.AI.ResolveDetectionRange()}, switching Idle -> Chasing");
             }
         }
 
@@ -570,7 +584,7 @@ namespace Quantum
         // first, else whatever the profile picks.
         private static EntityRef ResolveInitialTarget(Frame f, ref Filter filter, EnemyDataAsset data)
         {
-            if (EnemyMovementUtility.TryFindNearestDecoy(f, filter.Transform3D->Position, data.AI.DetectionRange, out EntityRef decoyTarget) == true)
+            if (EnemyMovementUtility.TryFindNearestDecoy(f, filter.Transform3D->Position, data.AI.ResolveDetectionRange(), out EntityRef decoyTarget) == true)
                 return decoyTarget;
 
             if (data.AI.Targeting.IsValid == false)
@@ -616,7 +630,7 @@ namespace Quantum
             // EnemyMovementUtility.TryFindNearestDecoy. Preparation/Telegraph/Active are
             // deliberately not covered - an enemy already committed to a windup/attack doesn't
             // retarget mid-attack.
-            if (EnemyMovementUtility.TryFindNearestDecoy(f, selfPosition, data.AI.DetectionRange, out EntityRef decoyTarget) == true && decoyTarget != filter.Enemy->Target)
+            if (EnemyMovementUtility.TryFindNearestDecoy(f, selfPosition, data.AI.ResolveDetectionRange(), out EntityRef decoyTarget) == true && decoyTarget != filter.Enemy->Target)
             {
                 Log.Debug($"[Enemy] {filter.Entity} retargeting {filter.Enemy->Target} -> decoy {decoyTarget} (max aggro)");
                 filter.Enemy->Target = decoyTarget;
@@ -651,7 +665,7 @@ namespace Quantum
                 // "the target's raw position right now" (e.g. Charge's DashDistance-clamped
                 // endpoint) still overwrite this themselves in their own Begin().
                 filter.Enemy->SkillStartPosition = selfPosition;
-                filter.Enemy->SkillTargetPosition = targetPosition;
+                filter.Enemy->SkillTargetPosition = EnemyMovementUtility.ResolveIgnoreY(selfPosition, targetPosition, action.IgnoreY);
                 return;
             }
 
@@ -755,7 +769,7 @@ namespace Quantum
             if (action.DirectionTracking == DirectionUpdateMode.UpdateTargetDirectionWhileActive &&
                 EnemyMovementUtility.TryGetTargetPosition(f, filter.Enemy->Target, out FPVector3 targetPosition) == true)
             {
-                filter.Enemy->SkillTargetPosition = targetPosition;
+                filter.Enemy->SkillTargetPosition = EnemyMovementUtility.ResolveIgnoreY(filter.Transform3D->Position, targetPosition, action.IgnoreY);
             }
 
             bool finished = delivery.Tick(f, ref filter, data, action, filter.Enemy->Target);

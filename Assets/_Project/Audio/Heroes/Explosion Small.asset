@@ -12,15 +12,34 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c04d8195895c42008e9658fbf433bf7, type: 3}
   m_Name: Explosion Small
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
-  clips:
-  - {fileID: 8300000, guid: e6469cf3a093022478deef0bad2eef00, type: 3}
-  - {fileID: 8300000, guid: 9039131abf976aa44b63aa8f1f499aac, type: 3}
-  - {fileID: 8300000, guid: ea329195381f4724195c0932712e064e, type: 3}
+  variants:
+  - clip: {fileID: 8300000, guid: e6469cf3a093022478deef0bad2eef00, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: 9039131abf976aa44b63aa8f1f499aac, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: ea329195381f4724195c0932712e064e, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  clips: []
   pick: 1
   layers: []
   group: 9
   output: {fileID: 0}
-  volume: {x: 0.5, y: 0.5}
+  volume: {x: 0.3, y: 0.3}
   pitch: {x: 0.95, y: 1.05}
   delay: {x: 0, y: 0}
   startAt: 0

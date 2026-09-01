@@ -16,16 +16,14 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Passives/Zara/Zara_PassiveSkillUpgrades/SecondWind
     Guid:
       Value: 464159436060411710
-  Icon: {fileID: 0}
+  Icon: {fileID: -75756975, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
   DisplayName: Second Wind
   Description: Recover faster when your rhythm is broken.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - When a hit breaks your Flow, gain +20% Move Speed for 1.5s.
-  - A hit no longer wipes your Flow - you drop to 1 stack instead, and still gain
-    +20% Move Speed for 1.5s.
-  - 'Keep the Beat: a hit taken at Max Flow deals 30% less damage and drops you to
-    1 stack (6s cooldown).'
+  - 'When a hit breaks your Flow, gain <color=#FD3971>+20%</color> Move Speed for <color=#FD3971>1.5s</color>.'
+  - 'A hit no longer wipes your Flow - you drop to <color=#FD3971>1</color> stack instead, and still gain <color=#FD3971>+20%</color> Move Speed for <color=#FD3971>1.5s</color>.'
+  - 'Keep the Beat: a hit taken at Max Flow deals <color=#FD3971>30%</color> less damage and drops you to <color=#FD3971>1</color> stack (<color=#FD3971>6s</color> cooldown).'
   MoveSpeedBonus:
   - RawValue: 13107
   - RawValue: 13107

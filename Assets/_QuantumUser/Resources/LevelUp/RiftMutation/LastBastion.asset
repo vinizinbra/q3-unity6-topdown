@@ -16,9 +16,11 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/LastBastion
     Guid:
       Value: 281905491815589831
-  Icon: {fileID: 1595656912, guid: 9dcd69f213ec845fa868b0a3699cf683, type: 3}
+  Icon: {fileID: -1377374326, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
   DisplayName: Last Bastion
   Rarity: 3
-  Description: +{0:0}% Max Health, Shield removed
+  Scope: 0
+  IncompatibleWith: []
+  Description: '+<color=#FD3971>{0:0}%</color> Max Health, but you no longer have an Accessory'
   HealthMultiplier:
     RawValue: 131072

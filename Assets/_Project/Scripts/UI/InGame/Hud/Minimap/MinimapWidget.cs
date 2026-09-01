@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Quantum;
 using QuantumUser.View;
@@ -21,9 +22,23 @@ using UnityEngine.UI;
 // outline reveals progressively alongside discovery, same as everything else on the map.
 //
 // FilterMode.Point (no bilinear smoothing) gives the flat, blocky look. A handful of small icon
-// overlays (Boss/Merchant/LobbyStart - see chunkTypeSprites; deliberately left unassigned for
-// Enemy/Traversal) sit on top as separate lightweight UI Images - cheap, since there are only ever
-// a few of these per level - plus one live marker per match player.
+// overlays (Boss/Merchant/LobbyStart - see chunkTypeSprites, a ChunkType->Sprite map rather than a
+// positional array so authoring survives ChunkType being reordered/extended; deliberately left
+// unassigned for Enemy/Traversal) sit on top as separate lightweight UI Images - cheap, since there
+// are only ever a few of these per level - plus one live marker per match player, one per currently-alive
+// Elite-tier enemy (see UpdateEliteMarkers), one per currently-alive non-Elite Persistent enemy
+// (see UpdateSpecialMarkers), and - only while GameState.Breathing hasn't yet secured the area (see
+// Global.BreathingAreaSecured) - one per every still-alive ORDINARY enemy, i.e. excluding
+// Elite/Persistent (see UpdateClearEnemyMarkers), matching the "CLEAR ALL ENEMIES..." state
+// BreathingCountdownWidget shows during the same window. Elite/Special are the same
+// always-relevant, never-retiring enemies EnemyLifecycleSystem singles out (EnemyDataAsset.Tier ==
+// Elite / Economy.Persistent == true), so calling them out on the map follows the same reasoning;
+// Special is deliberately its own marker prefab rather than reusing eliteMarkerPrefab, since a
+// Persistent non-Elite enemy isn't actually an Elite. Clear-enemy markers exclude both so a single
+// enemy never shows two markers at once, and - being ordinary (non-Persistent) enemies - can
+// naturally expire via EnemyLifecycleSystem's Irrelevant->Retired timeout (f.Destroy, see
+// CombatDirectorUtility.RetireEnemy) with zero signal - the same seen/stale-sweep pooling every
+// marker pass here already uses is what tears theirs down the instant that happens, same as a kill.
 //
 // TWO map surfaces share this one widget: the panned/masked minimap (mapRect) and an optional
 // full-map panel (fullMapImage/fullMapRect) showing the whole level at once. The TEXTURE is
@@ -59,6 +74,12 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     [SerializeField, Tooltip("Uniform scale applied to the full-map panel's own icon/player overlay clones - the big map is usually drawn much larger than the minimap, so its markers often want to be bigger (or smaller) than the shared prefab's authored size.")]
     private float fullMapOverlayScale = 1f;
 
+    [Header("Toggle")]
+    [SerializeField, Tooltip("Clicking this (e.g. a Button covering the minimap's own corner rect) toggles fullMapPanel - lets the minimap act as the button that opens/closes the big map. Leave unassigned to disable click-to-toggle (the panel can still be shown/hidden by other means).")]
+    private UnityEngine.UI.Button toggleButton;
+    [SerializeField, Tooltip("Root shown/hidden by toggleButton - typically a backdrop plus fullMapImage/fullMapRect, carrying a JuicyGameobject (PachaGames.Runtime) so opening/closing scales in/out instead of an instant snap. Its starting active state (usually inactive) is left exactly as authored - only click toggling ever flips it. Leave unassigned to look for a JuicyGameobject on fullMapImage's own GameObject instead.")]
+    private JuicyGameobject fullMapPanel;
+
     [Header("Colors")]
     [SerializeField] private Color undiscoveredColor = new Color(0.12f, 0.12f, 0.12f, 1f);
     [SerializeField] private Color discoveredColor = new Color(0.55f, 0.55f, 0.55f, 1f);
@@ -72,12 +93,25 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     [SerializeField, Tooltip("Outline stroke thickness in texels. 0 = no outline computed/drawn at all.")]
     private int outlineTexels = 0;
 
+    [Serializable]
+    private struct ChunkTypeSpriteEntry
+    {
+        public ChunkType Type;
+        public Sprite Sprite;
+    }
+
     [Header("Overlays")]
-    [SerializeField, Tooltip("One sprite per ChunkType value, in enum order: LobbyStart, Enemy, Boss, Merchant, Traversal, HealingShrine, CursedRift, Blacksmith. Leave an entry unassigned for a type that shouldn't show an icon at all (e.g. Enemy, Traversal).")]
-    private Sprite[] chunkTypeSprites;
+    [SerializeField, Tooltip("Icon sprite per ChunkType, keyed explicitly rather than by array position - safe to add/reorder ChunkType values without reassigning every existing entry. Leave a type out of the list (or its Sprite unassigned) to show no icon for it (e.g. Enemy, Traversal).")]
+    private List<ChunkTypeSpriteEntry> chunkTypeSprites = new();
     [SerializeField] private Image iconPrefab;
     [SerializeField, Tooltip("Simple colored-dot prefab (or similar) representing one player. No per-player identity beyond position for this first pass.")]
     private RectTransform playerMarkerPrefab;
+    [SerializeField, Tooltip("Marker shown for every currently-alive Elite-tier enemy (EnemyDataAsset.Tier == Elite) - same always-relevant/never-retires enemies EnemyLifecycleSystem treats specially, so they're worth calling out on the map. One generic marker for every Elite regardless of which EnemyDataAsset it is - no per-enemy-type identity, same first-pass scope as playerMarkerPrefab. Leave unassigned to disable Elite markers entirely.")]
+    private RectTransform eliteMarkerPrefab;
+    [SerializeField, Tooltip("Marker shown for every currently-alive Persistent, non-Elite enemy (EnemyDataAsset.Economy.Persistent == true and Tier != Elite) - the same always-relevant/never-retires treatment EnemyLifecycleSystem gives Elites, but for a persistent enemy that isn't actually an Elite (e.g. a boss's summoned add). One generic marker regardless of which EnemyDataAsset it is, same first-pass scope as eliteMarkerPrefab. Leave unassigned to disable Special markers entirely.")]
+    private RectTransform specialMarkerPrefab;
+    [SerializeField, Tooltip("Marker shown for EVERY currently-alive enemy (no Tier/Persistent filter) while GameState.Breathing hasn't yet secured the area (Global.BreathingAreaSecured == false) - the same 'CLEAR ALL ENEMIES...' window BreathingCountdownWidget shows. Torn down the instant an enemy dies/expires, or the instant the area secures/GameState leaves Breathing, whichever comes first. Leave unassigned to disable Clear-Enemy markers entirely.")]
+    private RectTransform clearEnemyMarkerPrefab;
 
     [Header("Local player")]
     [SerializeField, Tooltip("Which local player slot's current chunk this instance highlights (MyLocalPlayer.Slots index) - 0 for the first local player's own HUD instance, 1 for a second couch co-op player's.")]
@@ -87,6 +121,23 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     private readonly Dictionary<EntityRef, OverlayPair> _playerMarkers = new();
     private readonly HashSet<EntityRef> _seenPlayersThisFrame = new();
     private List<EntityRef> _stalePlayerBuffer;
+
+    // Same seen/stale-sweep shape as the player markers above, keyed by enemy EntityRef instead of
+    // PlayerLink - see UpdateEliteMarkers.
+    private readonly Dictionary<EntityRef, OverlayPair> _eliteMarkers = new();
+    private readonly HashSet<EntityRef> _seenElitesThisFrame = new();
+    private List<EntityRef> _staleEliteBuffer;
+
+    // Same shape again for Persistent non-Elite enemies - see UpdateSpecialMarkers.
+    private readonly Dictionary<EntityRef, OverlayPair> _specialMarkers = new();
+    private readonly HashSet<EntityRef> _seenSpecialsThisFrame = new();
+    private List<EntityRef> _staleSpecialBuffer;
+
+    // Same shape again for every alive enemy while the area isn't yet secured - see
+    // UpdateClearEnemyMarkers.
+    private readonly Dictionary<EntityRef, OverlayPair> _clearEnemyMarkers = new();
+    private readonly HashSet<EntityRef> _seenClearEnemiesThisFrame = new();
+    private List<EntityRef> _staleClearEnemyBuffer;
 
     // Resolved once in QStart - the full-map panel's own content layer (fullMapRect, or
     // fullMapImage's own RectTransform). Null whenever no full-map panel is wired up, which is
@@ -166,6 +217,27 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     private float _worldToTexelScale;
     private bool _textureDirty;
 
+    private void Awake()
+    {
+        if (toggleButton != null)
+            toggleButton.onClick.AddListener(ToggleFullMap);
+    }
+
+    // Flips fullMapPanel's own current active state via JuicyGameobject.SetActive (scale in/out
+    // instead of an instant snap) - reads gameObject.activeSelf live rather than tracking a
+    // separate open/closed bool, so whatever active state it's authored with in the Editor (and
+    // anything else that later shows/hides it) stays the source of truth.
+    private void ToggleFullMap()
+    {
+        JuicyGameobject panel = fullMapPanel != null
+            ? fullMapPanel
+            : (fullMapImage != null ? fullMapImage.GetComponent<JuicyGameobject>() : null);
+        if (panel == null)
+            return;
+
+        panel.SetActive(panel.gameObject.activeSelf == false);
+    }
+
     public override void QStart(QuantumGame game)
     {
         _worldToTexelScale = 1f / worldUnitsPerTexel;
@@ -207,6 +279,15 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
 
         if (playerMarkerPrefab != null)
             playerMarkerPrefab.gameObject.SetActive(false);
+
+        if (eliteMarkerPrefab != null)
+            eliteMarkerPrefab.gameObject.SetActive(false);
+
+        if (specialMarkerPrefab != null)
+            specialMarkerPrefab.gameObject.SetActive(false);
+
+        if (clearEnemyMarkerPrefab != null)
+            clearEnemyMarkerPrefab.gameObject.SetActive(false);
     }
 
     public override void QLateUpdate(QuantumGame game)
@@ -222,6 +303,9 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         UpdateChunks(frame);
         RefreshIconPositionsIfResized();
         UpdatePlayerMarkers(frame);
+        UpdateEliteMarkers(frame);
+        UpdateSpecialMarkers(frame);
+        UpdateClearEnemyMarkers(frame);
         CenterOnLocalPlayer(frame);
     }
 
@@ -865,6 +949,262 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
             image.sprite = data.PawnSprite;
     }
 
+    // One marker per currently-alive Elite-tier enemy - same seen/stale-sweep shape as
+    // UpdatePlayerMarkers, keyed by the enemy's own EntityRef instead of PlayerLink. A dead enemy
+    // (EnemyActionPhase.Dead - it lingers destroyed-but-present for EnemyDataAsset.DeathLingerTime,
+    // see DamageUtility's own enemy-death branch) is skipped here, so it's never added to
+    // _seenElitesThisFrame and its marker is torn down by the stale sweep immediately on death
+    // rather than waiting for the entity to actually be destroyed.
+    private void UpdateEliteMarkers(Frame frame)
+    {
+        var enemies = frame.Filter<Enemy, Transform3D>();
+
+        while (enemies.Next(out EntityRef entity, out Enemy enemy, out Transform3D transform))
+        {
+            if (enemy.Phase == EnemyActionPhase.Dead)
+                continue;
+
+            EnemyDataAsset data = frame.FindAsset(enemy.EnemyData);
+            if (data == null || data.Tier != EnemyTier.Elite)
+                continue;
+
+            _seenElitesThisFrame.Add(entity);
+
+            if (_eliteMarkers.TryGetValue(entity, out OverlayPair marker) == false)
+            {
+                marker = new OverlayPair
+                {
+                    Mini = SpawnEliteMarker(mapRect, 1f),
+                    Full = SpawnEliteMarker(_fullOverlayRoot, fullMapOverlayScale)
+                };
+
+                marker.SetActive(true); // template itself is disabled - see QStart
+                _eliteMarkers[entity] = marker;
+            }
+
+            var worldPos = new Vector2(transform.Position.X.AsFloat, transform.Position.Z.AsFloat);
+
+            if (marker.Mini != null)
+                marker.Mini.anchoredPosition = WorldToMapPosition(worldPos, mapRect);
+
+            if (marker.Full != null)
+                marker.Full.anchoredPosition = WorldToMapPosition(worldPos, _fullOverlayRoot);
+        }
+
+        // Releases any marker whose Elite wasn't seen this frame (died or was destroyed).
+        foreach (var pair in _eliteMarkers)
+        {
+            if (_seenElitesThisFrame.Contains(pair.Key))
+                continue;
+
+            (_staleEliteBuffer ??= new List<EntityRef>()).Add(pair.Key);
+        }
+
+        if (_staleEliteBuffer != null)
+        {
+            foreach (var entity in _staleEliteBuffer)
+            {
+                if (_eliteMarkers.TryGetValue(entity, out OverlayPair marker))
+                    marker.Destroy();
+
+                _eliteMarkers.Remove(entity);
+            }
+
+            _staleEliteBuffer.Clear();
+        }
+
+        _seenElitesThisFrame.Clear();
+    }
+
+    // One Elite marker instance on one map surface. Null root (no full-map panel wired up) simply
+    // produces no instance - same shape as SpawnPlayerMarker, minus the per-entity pawn sprite (an
+    // Elite has no hero identity to tint by) - shows whatever sprite eliteMarkerPrefab's own Image
+    // is authored with as-is.
+    private RectTransform SpawnEliteMarker(RectTransform root, float scale)
+    {
+        if (root == null || eliteMarkerPrefab == null)
+            return null;
+
+        RectTransform marker = Instantiate(eliteMarkerPrefab, root);
+        marker.localScale = Vector3.one * scale;
+        return marker;
+    }
+
+    // One marker per currently-alive Persistent, non-Elite enemy - identical shape to
+    // UpdateEliteMarkers, just gated on data.Economy.Persistent instead of data.Tier == Elite (and
+    // excluding Elite, since a Persistent Elite already gets its own Elite marker above - this is
+    // for a persistent enemy that ISN'T actually an Elite).
+    private void UpdateSpecialMarkers(Frame frame)
+    {
+        var enemies = frame.Filter<Enemy, Transform3D>();
+
+        while (enemies.Next(out EntityRef entity, out Enemy enemy, out Transform3D transform))
+        {
+            if (enemy.Phase == EnemyActionPhase.Dead)
+                continue;
+
+            EnemyDataAsset data = frame.FindAsset(enemy.EnemyData);
+            if (data == null || data.Economy.Persistent == false || data.Tier == EnemyTier.Elite)
+                continue;
+
+            _seenSpecialsThisFrame.Add(entity);
+
+            if (_specialMarkers.TryGetValue(entity, out OverlayPair marker) == false)
+            {
+                marker = new OverlayPair
+                {
+                    Mini = SpawnSpecialMarker(mapRect, 1f),
+                    Full = SpawnSpecialMarker(_fullOverlayRoot, fullMapOverlayScale)
+                };
+
+                marker.SetActive(true); // template itself is disabled - see QStart
+                _specialMarkers[entity] = marker;
+            }
+
+            var worldPos = new Vector2(transform.Position.X.AsFloat, transform.Position.Z.AsFloat);
+
+            if (marker.Mini != null)
+                marker.Mini.anchoredPosition = WorldToMapPosition(worldPos, mapRect);
+
+            if (marker.Full != null)
+                marker.Full.anchoredPosition = WorldToMapPosition(worldPos, _fullOverlayRoot);
+        }
+
+        // Releases any marker whose Special enemy wasn't seen this frame (died or was destroyed).
+        foreach (var pair in _specialMarkers)
+        {
+            if (_seenSpecialsThisFrame.Contains(pair.Key))
+                continue;
+
+            (_staleSpecialBuffer ??= new List<EntityRef>()).Add(pair.Key);
+        }
+
+        if (_staleSpecialBuffer != null)
+        {
+            foreach (var entity in _staleSpecialBuffer)
+            {
+                if (_specialMarkers.TryGetValue(entity, out OverlayPair marker))
+                    marker.Destroy();
+
+                _specialMarkers.Remove(entity);
+            }
+
+            _staleSpecialBuffer.Clear();
+        }
+
+        _seenSpecialsThisFrame.Clear();
+    }
+
+    // One Special marker instance on one map surface - same shape as SpawnEliteMarker.
+    private RectTransform SpawnSpecialMarker(RectTransform root, float scale)
+    {
+        if (root == null || specialMarkerPrefab == null)
+            return null;
+
+        RectTransform marker = Instantiate(specialMarkerPrefab, root);
+        marker.localScale = Vector3.one * scale;
+        return marker;
+    }
+
+    // One marker per every currently-alive ORDINARY enemy - excluding Elite/Persistent, which
+    // already get their own Elite/Special marker above (see UpdateEliteMarkers/UpdateSpecialMarkers)
+    // - but only while the area isn't yet secured (GameState.Breathing && !BreathingAreaSecured -
+    // the same "CLEAR ALL ENEMIES..." window BreathingCountdownWidget shows). Outside that window
+    // every existing marker is torn down immediately, not left to the normal stale sweep - covers
+    // both "the area just secured" (enemies gone, sweep would have caught it anyway) and "GameState
+    // left Breathing some other way while enemies were still up" (sweep alone wouldn't catch that).
+    // Ordinary enemies aren't Persistent, so unlike Elite/Special they can expire via
+    // EnemyLifecycleSystem's own Irrelevant->Retired timeout (f.Destroy - see
+    // CombatDirectorUtility.RetireEnemy) with no signal; the seen/stale-sweep below tears their
+    // marker down the moment the filter stops returning them, identical to how a kill
+    // (Phase == Dead) is handled.
+    private unsafe void UpdateClearEnemyMarkers(Frame frame)
+    {
+        bool clearingWindow = frame.Global->CurrentState == GameState.Breathing
+            && frame.Global->BreathingAreaSecured == false;
+
+        if (clearingWindow == false)
+        {
+            foreach (var marker in _clearEnemyMarkers.Values)
+                marker.Destroy();
+
+            _clearEnemyMarkers.Clear();
+            return;
+        }
+
+        var enemies = frame.Filter<Enemy, Transform3D>();
+
+        while (enemies.Next(out EntityRef entity, out Enemy enemy, out Transform3D transform))
+        {
+            if (enemy.Phase == EnemyActionPhase.Dead)
+                continue;
+
+            // Elite/Persistent enemies already get their own always-relevant Elite/Special marker
+            // (see UpdateEliteMarkers/UpdateSpecialMarkers) - skip them here so a single enemy never
+            // shows two markers at once.
+            EnemyDataAsset data = frame.FindAsset(enemy.EnemyData);
+            if (data != null && (data.Tier == EnemyTier.Elite || data.Economy.Persistent))
+                continue;
+
+            _seenClearEnemiesThisFrame.Add(entity);
+
+            if (_clearEnemyMarkers.TryGetValue(entity, out OverlayPair marker) == false)
+            {
+                marker = new OverlayPair
+                {
+                    Mini = SpawnClearEnemyMarker(mapRect, 1f),
+                    Full = SpawnClearEnemyMarker(_fullOverlayRoot, fullMapOverlayScale)
+                };
+
+                marker.SetActive(true); // template itself is disabled - see QStart
+                _clearEnemyMarkers[entity] = marker;
+            }
+
+            var worldPos = new Vector2(transform.Position.X.AsFloat, transform.Position.Z.AsFloat);
+
+            if (marker.Mini != null)
+                marker.Mini.anchoredPosition = WorldToMapPosition(worldPos, mapRect);
+
+            if (marker.Full != null)
+                marker.Full.anchoredPosition = WorldToMapPosition(worldPos, _fullOverlayRoot);
+        }
+
+        // Releases any marker whose enemy wasn't seen this frame (died or expired/retired).
+        foreach (var pair in _clearEnemyMarkers)
+        {
+            if (_seenClearEnemiesThisFrame.Contains(pair.Key))
+                continue;
+
+            (_staleClearEnemyBuffer ??= new List<EntityRef>()).Add(pair.Key);
+        }
+
+        if (_staleClearEnemyBuffer != null)
+        {
+            foreach (var entity in _staleClearEnemyBuffer)
+            {
+                if (_clearEnemyMarkers.TryGetValue(entity, out OverlayPair marker))
+                    marker.Destroy();
+
+                _clearEnemyMarkers.Remove(entity);
+            }
+
+            _staleClearEnemyBuffer.Clear();
+        }
+
+        _seenClearEnemiesThisFrame.Clear();
+    }
+
+    // One Clear-Enemy marker instance on one map surface - same shape as SpawnEliteMarker.
+    private RectTransform SpawnClearEnemyMarker(RectTransform root, float scale)
+    {
+        if (root == null || clearEnemyMarkerPrefab == null)
+            return null;
+
+        RectTransform marker = Instantiate(clearEnemyMarkerPrefab, root);
+        marker.localScale = Vector3.one * scale;
+        return marker;
+    }
+
     private Vector2Int WorldToTexel(Vector2 worldXZ)
     {
         Vector2 local = worldXZ - worldCenter;
@@ -901,11 +1241,15 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
 
     private Sprite ResolveChunkTypeSprite(ChunkType type)
     {
-        int index = (int)type;
-
-        if (chunkTypeSprites == null || index < 0 || index >= chunkTypeSprites.Length)
+        if (chunkTypeSprites == null)
             return null;
 
-        return chunkTypeSprites[index];
+        for (int i = 0; i < chunkTypeSprites.Count; i++)
+        {
+            if (chunkTypeSprites[i].Type == type)
+                return chunkTypeSprites[i].Sprite;
+        }
+
+        return null;
     }
 }

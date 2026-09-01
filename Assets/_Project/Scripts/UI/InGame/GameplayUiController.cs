@@ -492,6 +492,7 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
             KindText = "FOOD & UTILITY",
             TopLabelOverride = string.IsNullOrEmpty(data.TopLabel) ? "FOOD" : data.TopLabel,
             ButtonLabel = string.IsNullOrEmpty(data.ButtonLabel) ? "BUY" : data.ButtonLabel,
+            IconScale = 0.75f,
             Purchase = new PurchasableCardState
             {
                 ShowPurchaseUi = true,
@@ -576,6 +577,7 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
             // docs/accessory-guard.md), so this preview can always name MaxDurability as the result.
             ValuePreview = $"DURABILITY {guard->CurrentDurability}/{guard->MaxDurability} -> {guard->MaxDurability}/{guard->MaxDurability}",
             ButtonLabel = "BUY",
+            IconScale = 0.75f,
             Purchase = new PurchasableCardState
             {
                 ShowPurchaseUi = true,
@@ -945,6 +947,28 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
             MaxStacks = maxStacks,
             IsRanked = isRanked
         };
+    }
+
+    // "Can this upgrade be taken more than once?" - the same stacking question BuildCardData above
+    // answers as maxStacks, asked in the one form that also covers an UNCAPPED Global Upgrade (which
+    // reports maxStacks 0 precisely because it stacks forever, so maxStacks > 0 is not the test).
+    // Answered off the asset TYPE alone, so no LevelUpPoolKind/Frame is needed:
+    //   - a ranked Hero Ascension stacks while MaxRank > 1 (MaxRank == 1 is a classic single pick);
+    //   - a Global Upgrade stacks unless MaxPicks is exactly 1 - 0 means unlimited (the default for
+    //     most of the pool, see GlobalUpgradeData.MaxPicks), and > 1 is a capped multi-pick;
+    //   - everything else is single-pick, which notably includes both Rift Mutation pools - those
+    //     are non-stackable pool-wide via RiftMutationPicks (see docs/rift-mutations.md).
+    // Used by HeroInfoPopupWidget to decide whether a history row's title carries a rank numeral at
+    // all: a mutation is always owned exactly once, so "- I" on it would be noise.
+    internal static bool CanStack(UpgradeData data)
+    {
+        if (data is IRankedUpgrade ranked)
+            return ranked.MaxRank > 1;
+
+        if (data is GlobalUpgradeData globalUpgrade)
+            return globalUpgrade.MaxPicks != 1;
+
+        return false;
     }
 
     // ChooseWeapon has no single UpgradeData/Rarity to resolve generically like BuildCardData above

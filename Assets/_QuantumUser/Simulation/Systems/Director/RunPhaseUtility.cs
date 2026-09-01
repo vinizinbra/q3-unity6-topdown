@@ -243,6 +243,48 @@ namespace Quantum
             Log.Debug($"[RunPhase] Boss spawned: {entity} ({data?.name ?? "NULL EnemyDataAsset"}) at {position}");
         }
 
+        // Fires exactly once per phase entry (Global.PhaseGuaranteedSpawnDone, reset by
+        // SurvivalProgressionUtility.Tick on every CurrentPhaseIndex change) - closes the gap where
+        // a phase's only spawn source is CombatDirectorUtility.TryPulse, which can silently skip a
+        // purchase if the map is already crowded (see SurvivalConfig.cs's own GuaranteedGroup
+        // comment). Deliberately reuses GroupSpawnerUtility.TrySpawnGroup - same formation/ground/
+        // clearance search and EnemyLifecycle bookkeeping every normal Director purchase gets - and
+        // only skips CombatDirectorUtility.TrySelectSpawn's budget/alive-cap gate, which is the one
+        // gate a "guarantee" needs to bypass; a truly ungrounded/fully-blocked anchor still fails
+        // loud (Log.Error) rather than spawning into geometry, same as every other spawn point in
+        // this codebase. Anchored at PlayerClusterDirectorUtility's own GlobalCentroid - the same
+        // point Elite+ ("major") groups already route to during a normal purchase - since a
+        // guaranteed spawn has no per-front "neediest front" selection to run.
+        public static void SpawnGuaranteedGroup(Frame f, SurvivalPhase phase, DirectorConfig directorConfig, BalanceConfig balanceConfig)
+        {
+            if (phase.GuaranteedGroup.Id.IsValid == false)
+            {
+                Log.Debug($"[RunPhase] {phase.Name} entered with no GuaranteedGroup assigned - nothing to guarantee-spawn");
+                return;
+            }
+
+            EnemyGroupConfig group = f.FindAsset(phase.GuaranteedGroup);
+
+            if (PlayerClusterDirectorUtility.BuildAnchors(f, phase, directorConfig, balanceConfig, out var plan) == false)
+            {
+                Log.Error($"[RunPhase] {phase.Name}'s GuaranteedGroup ({group.name}) has no players to anchor the spawn near - skipped");
+                return;
+            }
+
+            // Anchored at GlobalCentroid regardless of tier (see this method's own comment above), so
+            // it gets the same chunk-connectivity gate a normal purchase would only apply when the
+            // group actually contains an Elite+ member - see CombatDirectorUtility.GroupContainsMajor.
+            bool major = CombatDirectorUtility.GroupContainsMajor(f, group);
+
+            if (GroupSpawnerUtility.TrySpawnGroup(f, group, phase.GuaranteedGroup, plan.GlobalCentroid, major, directorConfig, out int spawnedCount) == false)
+            {
+                Log.Error($"[RunPhase] {phase.Name}'s GuaranteedGroup ({group.name}) found no valid spawn anchor near {plan.GlobalCentroid} - nothing guaranteed-spawned this phase");
+                return;
+            }
+
+            Log.Debug($"[RunPhase] {phase.Name} guaranteed-spawned {spawnedCount} member(s) of {group.name}");
+        }
+
         // Called every tick from CombatDirectorSystem, BEFORE SurvivalProgressionUtility.Tick -
         // processes any SkipBreathingCommand sent this tick (idempotent re-vote), then, if every
         // currently-connected player has now voted for the CURRENT Breathing phase, force-ends it

@@ -12,8 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c04d8195895c42008e9658fbf433bf7, type: 3}
   m_Name: KaiBaseSkill
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
-  clips:
-  - {fileID: 8300000, guid: 73f34590ca4a9b6409f7d3d29781d2ad, type: 3}
+  variants:
+  - clip: {fileID: 8300000, guid: 73f34590ca4a9b6409f7d3d29781d2ad, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  clips: []
   pick: 1
   layers: []
   group: 9

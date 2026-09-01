@@ -39,10 +39,10 @@ namespace Quantum
         [SerializeField] private SpeakerEffect lightPurpleEffect;
 
         [Header("Beat Audio")]
-        [SerializeField, Tooltip("Played on every DAMAGE Beat. If only one of the two beat sounds is assigned, that one plays on BOTH beats - so filling in a single field is all it takes to give the Totem a sound on every trigger.")]
+        [SerializeField, SoundDataPicker, Tooltip("Played on every DAMAGE Beat. If only one of the two beat sounds is assigned, that one plays on BOTH beats - so filling in a single field is all it takes to give the Totem a sound on every trigger.")]
         private SoundData damageBeatSound;
 
-        [SerializeField, Tooltip("Played on every SUPPORT (heal/buff) Beat. Giving the two beats distinct sounds is what makes the Totem read as an alternating rhythm rather than a metronome - it is the whole Combat DJ fantasy in audio form. Falls back to damageBeatSound if left empty.")]
+        [SerializeField, SoundDataPicker, Tooltip("Played on every SUPPORT (heal/buff) Beat. Giving the two beats distinct sounds is what makes the Totem read as an alternating rhythm rather than a metronome - it is the whole Combat DJ fantasy in audio form. Falls back to damageBeatSound if left empty.")]
         private SoundData supportBeatSound;
 
         [SerializeField, Range(0f, 1f), Tooltip("Volume multiplier applied to a PORTABLE SPEAKER's beats (this same prefab doubles as the Speaker's spawn prototype). Speakers are a half-strength, short-lived, potentially-doubled deployable, so beating at full volume alongside the real Totem gets noisy fast. 1 = no distinction.")]

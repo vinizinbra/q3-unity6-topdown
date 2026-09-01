@@ -12,9 +12,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c04d8195895c42008e9658fbf433bf7, type: 3}
   m_Name: EnemyShoot
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
-  clips:
-  - {fileID: 8300000, guid: 92a79699f236d3341bd4f95d66f33bee, type: 3}
-  - {fileID: 8300000, guid: ed0248ee2f79347479c2d8c657bf2c16, type: 3}
+  variants:
+  - clip: {fileID: 8300000, guid: 92a79699f236d3341bd4f95d66f33bee, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: ed0248ee2f79347479c2d8c657bf2c16, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  clips: []
   pick: 1
   layers: []
   group: 6

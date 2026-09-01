@@ -12,20 +12,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c04d8195895c42008e9658fbf433bf7, type: 3}
   m_Name: VortexSound
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
-  clips:
-  - {fileID: 8300000, guid: 127818c7f0e32fb48b749e0b10e879a3, type: 3}
+  variants:
+  - clip: {fileID: 8300000, guid: b1c933f98f45ea646964b7eef52fa90b, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  clips: []
   pick: 1
   layers: []
   group: 9
   output: {fileID: 0}
   volume: {x: 0.5, y: 0.5}
-  pitch: {x: 0.5, y: 0.5}
+  pitch: {x: 1, y: 1}
   delay: {x: 0, y: 0}
   startAt: 0
   endAt: 0
   fadeIn: 0.5
   fadeOut: 0.5
-  loop: 0
+  loop: 1
   quieterWhenRemote: 1
   localPlayerOnly: 0
   spatial: 1

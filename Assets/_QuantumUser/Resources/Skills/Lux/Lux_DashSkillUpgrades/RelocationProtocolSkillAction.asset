@@ -16,12 +16,12 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Lux/Lux_DashSkillUpgrades/RelocationProtocolSkillAction
     Guid:
       Value: 465261250465140776
-  Icon: {fileID: 0}
+  Icon: {fileID: -649492913, guid: 355e00907e214470bac0029f70064510, type: 3}
   DisplayName: Relocation Protocol
   RankDescriptions:
-  - 'Reposition: dashing from within 4m of your Sentry moves it to your dash destination, keeping its Health, lifetime, upgrades and modifications.'
-  - 'Rapid Setup: dashing from within 4m of your Sentry moves it to your dash destination, then grants it +25% Fire Rate for 2s and 1s of extra lifetime.'
-  - 'Hot Drop: dashing from within 4m of your Sentry moves it to your dash destination, where it immediately fires a volley and a knockback pulse at everything nearby.'
+  - 'Dashing from within <color=#FD3971>4m</color> of your Sentry moves it to your dash destination, fully intact.'
+  - 'Dashing from within <color=#FD3971>4m</color> moves your Sentry to your destination, granting <color=#FD3971>+25%</color> Fire Rate for <color=#FD3971>2s</color> and <color=#FD3971>+1s</color> lifetime.'
+  - 'Your Sentry moves to your dash destination, immediately firing a volley and a knockback pulse at nearby enemies.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: -1

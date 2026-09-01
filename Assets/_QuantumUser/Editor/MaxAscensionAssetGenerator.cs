@@ -59,6 +59,8 @@ namespace QuantumUser.Editor
             // offered as a level-up card, so it has no DisplayName/Rarity/Description to set here.
             VendettaPassiveData passive = CreateOrUpdate<VendettaPassiveData>($"{PassivesFolderPath}/VendettaPassiveData.asset", asset =>
             {
+                asset.Description = "Enemies that damage you get marked - killing one heals you.";
+
                 asset.BaseHealMultiplier = FP._0_50;
                 asset.BaseMarkDuration = 8;
                 asset.BaseDamageBonus = FP.FromString("0.15");
@@ -75,7 +77,7 @@ namespace QuantumUser.Editor
                 {
                     "Rage carries over between Overdrives instead of resetting.",
                     "Rage carries over between Overdrives, and damage taken during Overdrive costs only half of it.",
-                    "Rage carries over and resists damage. Lethal damage during Overdrive leaves you at 1 Health, spends your Rage, and grants 2s of invulnerability.",
+                    "Rage carries over and resists damage. Lethal damage during Overdrive leaves you at 1 Health and grants 2s immunity.",
                 };
                 asset.RageLossFraction = new[] { FP._1, FP._0_50, FP._0_50 };
                 asset.CheatDeathImmunityDuration = 2;
@@ -125,7 +127,7 @@ namespace QuantumUser.Editor
                 {
                     "At max Rage, weapon hits guarantee Burn.",
                     "At max Rage, weapon hits Burn, and Burning kills leave a Burning Ground patch.",
-                    "At max Rage, weapon hits Burn and Burning kills leave Burning Ground. Reaching max Rage also detonates a radial Burn pulse, once per Overdrive.",
+                    "At max Rage, weapon hits Burn and Burning kills leave Burning Ground. Reaching max Rage bursts a Burn pulse.",
                 };
                 asset.BurnOnHitStacks = new byte[] { 1, 1, 1 };
                 asset.HasBurningGround = new[] { false, true, true };
@@ -154,7 +156,7 @@ namespace QuantumUser.Editor
                 {
                     "Vendetta marks last 12s.",
                     "Vendetta marks last 12s. Shield damage also marks attackers, and each Vendetta kill grants +2 Rage.",
-                    "Vendetta marks last 12s, Shield damage marks attackers, and kills grant +2 Rage. Consuming a mark heals 60% of the damage it dealt, up to 15% of your Health.",
+                    "Marks last 12s, Shield damage marks attackers, kills grant +2 Rage. Consuming a mark heals 60% of its damage.",
                 };
                 asset.MarkDuration = new FP[] { 12, 12, 12 };
                 asset.RageOnVendettaKill = 2;
@@ -189,7 +191,7 @@ namespace QuantumUser.Editor
                 {
                     "+10% Critical Chance against Burning enemies.",
                     "+10% Critical Chance against Burning enemies. Crits on them explode for 50% damage in 3m, up to 5 targets.",
-                    "+10% Critical Chance against Burning enemies, whose crits explode. Burning enemies below 15% Health are executed - 8% for Specialist and Heavy, while Elite and Boss instead take +25% damage.",
+                    "+10% Crit Chance vs Burning enemies, whose crits explode. Execute Burning enemies below 15% Health; Elites take +25%.",
                 };
                 asset.CriticalChanceBonusVsBurning = FP._0_10;
                 asset.ExplosionRadius = 3;
@@ -230,7 +232,7 @@ namespace QuantumUser.Editor
                 {
                     "Dashing through an enemy guarantees Burn.",
                     "Dashing through an enemy Burns it and marks it for Vendetta, even if it has never hit you.",
-                    "Dashing through an enemy Burns and marks it, and cuts 2s off Overdrive's cooldown or extends an active Overdrive by 1s.",
+                    "Dashing through an enemy Burns and marks it, and cuts 2s off Overdrive's cooldown or extends it by 1s.",
                 };
                 asset.Radius = FP._1_50;
                 asset.BurnDuration = 3;

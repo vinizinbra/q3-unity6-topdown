@@ -29,8 +29,10 @@ component CharacterStats
     // Attacker-side range falloff - DamageUtility.ResolveRangeDamageMultiplier lerps between these
     // two off the attacker-target distance (Close Quarters/Longshot Rift Mutations). Both default
     // to 1 (no falloff) same as every other multiplier here; picking both Close Quarters and
-    // Longshot just partially cancels rather than being blocked outright - no exclusivity system
-    // between distinct Rift Mutations, only within one (see RiftMutationPicks).
+    // Longshot just partially cancels rather than being blocked outright - the mutation
+    // incompatibility system (RiftMutationData.IncompatibleWith) exists but deliberately isn't
+    // authored for this pair, since the two genuinely compose into a flat build rather than a
+    // degenerate one.
     FP NearDamageMultiplier;
     FP FarDamageMultiplier;
 
@@ -55,13 +57,23 @@ component CharacterStats
     FP MaxShieldMultiplier;
 
     // Flat additive shield capacity (NOT a multiplier) - folded into CharacterSystem.SeedShield /
-    // RefreshMaxShield as BaseMaxShield * MaxShieldMultiplier + BonusMaxShield, so a flat "+10
-    // Shield" Global Upgrade (ShieldUpgradeData) survives every later RefreshMaxShield the
-    // multiplier path triggers. Defaults to 0; LastBastionMutationData clears it too, since it
-    // removes shield outright.
+    // RefreshMaxShield as BaseMaxShield * MaxShieldMultiplier + BonusMaxShield, so a flat "+N
+    // Shield" grant survives every later RefreshMaxShield the multiplier path triggers. No live
+    // source writes it today (the "+10 Shield" Global Upgrade it was built for was replaced by
+    // Toughness - see docs/global-upgrades.md); kept as the generic flat-capacity term, and
+    // LastBastionMutationData still clears it, since that mutation removes shield outright.
     FP BonusMaxShield;
 
     FP DamageReduction;
+
+    // Multiplicative damage-taken scaling, deliberately SEPARATE from the additive DamageReduction
+    // fraction above (and mirroring KnockbackTakenMultiplier's own shape just below): the Toughness
+    // Global Upgrade stacks indefinitely, so a flat additive -10% would reach outright immunity by
+    // the 10th pick, while compounding 0.9 never can. Folded into
+    // DamageUtility.ResolveDamageReduction alongside every other DR source, so it also composes
+    // correctly with a temporary additive source that is up when a pick lands (e.g. Juggernaut).
+    FP DamageTakenMultiplier;
+
     FP KnockbackTakenMultiplier;
 
     FP HealingReceivedMultiplier;
@@ -84,10 +96,9 @@ component CharacterStats
 
     // Choose-Weapon talent level - increments once each time this entity actually picks a
     // LevelUpCategory.ChooseWeapon option (see WeaponChoiceUtility.Grant), independent of overall
-    // player level. Drives LevelUpUtility.RollWeaponOption's per-slot perk-count roll - see
-    // LevelUpConfig.ChancePerLevelPerSlot/MaxRolledPerks. ALSO drives StoreUtility's own weapon
-    // offer count (Store buys reuse this exact stat, same "picking a weapon" meaning either way -
-    // see docs/store-blacksmith.md), independent of ShopWeaponOfferCount below.
+    // player level. Pure bookkeeping now - a rolled weapon offer's perk count/starting Level come
+    // from LevelUpConfig.WeaponOfferCurve (Global.SurvivalTime-driven, shared by Store and Choose-
+    // Weapon/Chest - see docs/store-blacksmith.md) rather than this stat.
     Byte WeaponTalentLevel;
 
     // Meta-progression Store talent, seeded once at spawn from RuntimePlayer.Talents (same
@@ -122,23 +133,165 @@ component CharacterStats
     // Rift Mutation reactive fields - all mutation-only (no CharacterData baseline, default to
     // their natural zero/false, same category as BurnOnHitStacks above). See docs/rift-mutations.md.
     //
-    // Infinite Momentum: flat Shield (spilling to Health, floored at 1) drained by
-    // RiftMutationReactionSystem.OnSkillActivated every time SkillSlotId.DashSkill fires.
-    FP DashShieldCost;
+    // -- Weapon-stat pipeline (Bullet Storm / One in the Chamber) --
+    // Weapon.MagazineSize is BAKED at equip (see Weapon.qtn/WeaponSystem.SeedStats), so a mutation
+    // that wrote it directly would silently die on the next weapon pickup. These two are applied
+    // instead by WeaponSystem.ApplyOwnerWeaponModifiers, which runs as a stage of every Equip
+    // (after perks and hero modifiers) - the same "owner-level effect re-baked on every equip"
+    // shape ApplyPixieExplosiveWeapon already uses.
+    //
+    // MagazineSizeBonus is a bonus (0 = no change, read as 1 + this); MagazineSizeOverride is an
+    // ABSOLUTE size (0 = no override) and deliberately wins over the bonus, so One in the Chamber
+    // still means exactly one round even alongside Bullet Storm.
+    FP MagazineSizeBonus;
+    Int32 MagazineSizeOverride;
 
-    // Critical Focus: flat cooldown seconds refunded on BOTH Hero Skill and Dash by
-    // RiftMutationReactionSystem.OnCriticalHit - one merged mutation, not two independent ones
-    // (an earlier design split this per-slot; merged since Rift Mutations don't stack).
-    FP CritSkillCooldownReduction;
+    // Longshot: extra pierces granted to a shot fired at a target beyond DamageUtility's own far
+    // range threshold. Resolved once per SHOT at fire time (WeaponSystem.Update), not per target -
+    // pierce is a property of the projectile/hitscan walk, not of any individual hit - and fed into
+    // the exact same two places Kai's Phantom Strike already feeds its own PierceBonus.
+    Int32 LongRangePierceBonus;
 
-    // Shield Breaker: grants an immediately-usable Dash charge (+1 CurrentStacks, capped at
-    // MaxStacks - not a permanent capacity increase) the instant Shield.OnShieldBroken fires - see
-    // RiftMutationReactionSystem.OnShieldBroken.
-    Boolean ShieldBreakGrantsDashCharge;
+    // Heavy Arsenal: chance for a weapon hit to briefly stagger (stun) what it hits, and for how
+    // long. Rolled once in DamageUtility.ApplyDamage beside OnWeaponHitLanded, so it covers every
+    // weapon uniformly and excludes DoT-tick replays for free. Goes through
+    // StatusEffectUtility.ApplyStun, which already owns per-tier hard-CC immunity/diminishing
+    // returns - a Boss simply never staggers, with no check here.
+    FP WeaponStaggerChance;
+    FP WeaponStaggerDuration;
 
-    // All or Nothing: read by LevelUpUtility.RollOptionsFor to force a single, rarity-shifted
-    // option on this entity's next level-up roll instead of the normal 3.
-    Boolean AllOrNothingActive;
+    // Close Quarters: a kill within DamageUtility's own near range threshold grants this much extra
+    // Move Speed for this long, via StatusEffectUtility.ApplyTempMoveSpeed (overwrite-on-reapply,
+    // so repeated kills REFRESH the window rather than stacking it). See
+    // RiftMutationReactionSystem.OnEntityKilled.
+    FP NearKillMoveSpeedBonus;
+    FP NearKillMoveSpeedDuration;
+
+    // Focused Power: how much extra damage a Skill area hit deals at its exact CENTER, falling
+    // linearly to none at the rim (0 = off). Applied generically by SkillFocusUtility from inside
+    // HitEffectUtility.ApplyToTarget - a skill with no meaningful spatial area reports
+    // HitEffectContext.AreaRadius == 0 and is untouched, so this needs no per-hero handling.
+    FP SkillCenterFocusBonus;
+
+    // Critical Focus: every CritFocusThreshold critical hits, refund CritFocusCooldownReduction
+    // seconds on BOTH Hero Skill and Dash, then reset the counter. A deterministic crit COUNT, not
+    // a hidden real-time internal cooldown. CritFocusProgress is the live counter and is the only
+    // one of the three the simulation writes back. See RiftMutationReactionSystem.OnCriticalHit.
+    Byte CritFocusThreshold;
+    Byte CritFocusProgress;
+    FP CritFocusCooldownReduction;
+
+    // Infinite Momentum: while Dash is on cooldown the player may keep Dashing by paying this
+    // fraction of Max Health each time (0 = off). Deliberately UNLIMITED - the only thing rationing
+    // it is affordability, since SkillSystem.TryPayEmergencyActivation refuses a Dash whose cost
+    // wouldn't leave at least 1 health behind. That affordability rule replaced an earlier
+    // once-per-cooldown-cycle gate, and is also what stops the mutation going free: clamping the
+    // result at 1 instead would make every Dash taken at 1 health cost nothing at all.
+    //
+    // The cost is a direct health write, never DamageUtility.ApplyDamage, so nothing scoped to
+    // hostile damage reacts to it. A FRACTION of max health rather than a flat amount, so it scales
+    // with a build instead of becoming trivial - and stays meaningful even against Glass Core's
+    // halved pool.
+    FP EmergencyDashHealthCost;
+
+    // Money Talks: +CoinDamagePerHundred outgoing damage for every FULL 100 Coins currently held,
+    // capped at CoinDamageMaxBonus (0 = off). Deliberately recomputed LIVE per hit
+    // (CoinUtility.ResolveDamageBonus, called from DamageUtility.ResolveOutgoingDamage) rather than
+    // baked at pick time - the whole point is that the bonus rises as you save and falls the moment
+    // you spend at the Store, which a one-shot bake could never express.
+    //
+    // Stepped per whole 100 rather than continuous, so the next breakpoint is a number the player
+    // can actually aim at. Scales ALL damage, not a per-DamageSource slice, so it sits alongside
+    // DamageMultiplier rather than the Weapon/Skill-scoped fields.
+    FP CoinDamagePerHundred;
+    FP CoinDamageMaxBonus;
+
+    // -- Live conditional damage bonuses --
+    // Danger Pay / No Safety Net / Pressure Cooker / Money Talks all scale ALL outgoing damage off a
+    // condition that changes constantly, so none of them can be baked at pick time. They are composed
+    // into ONE multiplier per hit by MutationModifierUtility.ResolveLiveDamageMultiplier, called from
+    // DamageUtility.ResolveOutgoingDamage - a single term rather than four separate lines, so adding a
+    // fifth conditional bonus later touches one method instead of the damage pipeline.
+    //
+    // Every one is 0 = off, so a player holding none of them pays one multiply by 1.
+
+    // Danger Pay: while CurrentHealth/MaxHealth is below the threshold, gain this much damage and
+    // move speed. Re-evaluated per hit / per movement tick, never snapshotted - crossing back above
+    // the threshold removes both bonuses on the very next evaluation.
+    FP DangerPayHealthThreshold;
+    FP DangerPayDamageBonus;
+    FP DangerPayMoveSpeedBonus;
+
+    // No Safety Net: damage bonus that applies only while the Accessory is NOT on your head
+    // (Airborne/Dropped/Broken). Reads AccessoryGuard.State directly rather than tracking its own
+    // copy, so it reacts the instant the guard changes and can never drift out of sync. Deliberately
+    // inert for a player whose Accessory was removed outright (AccessoryGuard.Disabled - Last
+    // Bastion), which would otherwise be a permanent free bonus.
+    FP NoSafetyNetDamageBonus;
+
+    // Pressure Cooker: damage gained per FULL second without taking HP damage, and its ceiling.
+    // SafeTimeSeconds is the live accumulator, ticked in StatusEffectSystem and reset to 0 by
+    // OnHealthDamageApplied. Only real HP loss resets it - an Accessory block or a Shield-only hit
+    // never reaches that signal, so the streak survives both.
+    FP PressureCookerDamagePerSecond;
+    FP PressureCookerMaxBonus;
+    FP SafeTimeSeconds;
+
+    // -- Overkill --
+    // Fraction of the damage dealt BEYOND a killed enemy's remaining health, re-dealt as an
+    // explosion at the corpse. 0 = off. The explosion is flagged as a chained explosion so it can
+    // never recursively re-trigger Overkill from its own kills - the same brake Pixie's Chain
+    // Reaction already relies on.
+    FP OverkillConversion;
+    FP OverkillRadius;
+
+    // -- Scavenger Rush --
+    // Collect RequiredPickups collectibles within Window seconds to gain a timed Move Speed + Fire
+    // Rate buff. PickupCount/WindowRemaining are the live counter and its deadline, ticked in
+    // StatusEffectSystem; the buff itself rides the generic StatusEffectUtility temp-buff slots
+    // rather than a bespoke timer, so it refreshes rather than stacks like every other buff here.
+    Byte ScavengerRequiredPickups;
+    FP ScavengerWindow;
+    FP ScavengerBuffDuration;
+    FP ScavengerMoveSpeedBonus;
+    FP ScavengerFireRateBonus;
+    Byte ScavengerPickupCount;
+    FP ScavengerWindowRemaining;
+
+    // -- Blood Money --
+    // Fraction of CURRENT Coins lost whenever this player actually loses HP. Reacts to
+    // OnHealthDamageApplied, which by construction never fires for an Accessory-blocked hit or a
+    // Shield-only hit - so both correctly cost nothing. The coin-drop half of the mutation needs no
+    // field of its own: it rides the existing per-player CoinGainMultiplier above, which is already
+    // the player-scoped half of a globally-broadcast pickup (see CoinUtility.GrantAll).
+    FP CoinLossPercentOnHpDamage;
+
+    // -- Second Wind --
+    // Fraction of Max Health healed when this player's own Accessory is RECOVERED from the world.
+    // One recovery is one heal by construction, since the guard's state machine only passes through
+    // Recovered once per drop; a Merchant repair/replacement goes through Restore instead and is
+    // deliberately not a recovery.
+    FP SecondWindHealPercent;
+
+    // -- Dead Weight --
+    // Hard ceiling on the Dash slot's usable charges (0 = no cap). Deliberately a CAP rather than a
+    // subtraction: SkillSlot.MaxStacks keeps whatever upgrades accumulated into it, and
+    // SkillSystem.ResolveEffectiveMaxStacks returns min(MaxStacks, cap) at the points that decide
+    // availability. That is what lets an already-owned +1 Charge upgrade stay owned but suppressed,
+    // and what keeps Dash-reset/bypass mechanics working - they restore or skip the existing charge
+    // rather than raising the ceiling.
+    Byte DashChargeHardCap;
+
+    // Adrenaline Kick: reactions to the generic OnAccessoryBlocked signal (AccessoryGuard.qtn).
+    // ResetsDash refills the Dash slot outright; SkillCooldownFraction shaves that fraction off the
+    // Hero Skill's REMAINING cooldown (0.5 = 8s left becomes 4s left), not off its base.
+    //
+    // Kept as two independent fields rather than one "Adrenaline Kick owned" bool so a future
+    // mutation can grant either half on its own and the two still compose - and because
+    // SkillSystem.ResetCooldown is idempotent, two sources firing on one block still leave exactly
+    // one ready Dash.
+    Boolean AccessoryBlockResetsDash;
+    FP AccessoryBlockSkillCooldownFraction;
 
     // -- Rift Mark content pool (Weapon Perks live on Weapon, not here - see Weapon.qtn) --
     // All mutation-only flags, same category as the Rift Mutation fields above - see

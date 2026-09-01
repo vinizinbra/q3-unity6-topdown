@@ -16,10 +16,12 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/UltimateCommitment
     Guid:
       Value: 514921480666595401
-  Icon: {fileID: 686234662, guid: 9dcd69f213ec845fa868b0a3699cf683, type: 3}
+  Icon: {fileID: -715709906, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
   DisplayName: Ultimate Commitment
   Rarity: 2
-  Description: '{0:+0;-0}% Skill Damage, {1:+0;-0}% Skill Cooldown'
+  Scope: 0
+  IncompatibleWith: []
+  Description: '<color=#FD3971>{0:+0;-0}%</color> Hero Skill Damage, <color=#FD3971>{1:+0;-0}%</color> Hero Skill Cooldown'
   SkillDamageMultiplier:
     RawValue: 131072
   SkillCooldownRateMultiplier:

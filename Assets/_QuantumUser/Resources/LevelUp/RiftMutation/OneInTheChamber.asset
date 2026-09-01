@@ -16,9 +16,12 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/OneInTheChamber
     Guid:
       Value: 390042850462076770
-  Icon: {fileID: 549831686, guid: 9dcd69f213ec845fa868b0a3699cf683, type: 3}
+  Icon: {fileID: -814934484, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
   DisplayName: One in the Chamber
   Rarity: 3
-  Description: Magazine becomes 1 round, +{0}% damage on it
-  FinalRoundDamageBonus:
-    RawValue: 262144
+  Scope: 0
+  IncompatibleWith: []
+  Description: 'Magazine Size becomes <color=#FD3971>{0:0}</color>, but that round deals <color=#FD3971>{1:+0;-0}%</color> Weapon Damage'
+  MagazineSize: 1
+  DamageMultiplier:
+    RawValue: 327680

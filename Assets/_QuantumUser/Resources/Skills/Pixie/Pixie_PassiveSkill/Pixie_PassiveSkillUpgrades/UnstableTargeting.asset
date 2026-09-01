@@ -23,9 +23,9 @@ MonoBehaviour:
     death.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - Deal +20% damage against enemies marked to explode on death.
-  - Deal +35% damage against enemies marked to explode on death.
-  - Deal +50% damage against enemies marked to explode on death.
+  - 'Deal <color=#FD3971>+20%</color> damage against enemies marked to explode on death.'
+  - 'Deal <color=#FD3971>+35%</color> damage against enemies marked to explode on death.'
+  - 'Deal <color=#FD3971>+50%</color> damage against enemies marked to explode on death.'
   DamageMultiplier:
   - RawValue: 78643
   - RawValue: 88474

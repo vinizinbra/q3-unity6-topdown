@@ -109,5 +109,23 @@ namespace Quantum
         {
             projectile->Velocity.Y -= Gravity * f.DeltaTime;
         }
+
+        // A lob's real flight path is an arc, not a straight line, so it always covers more ground
+        // than the flat distance it lands at. Left at the base class's 1:1 budget, ProjectileSystem.
+        // TryExpire's distance check (Projectile.TraveledDistance, a running sum of true 3D arc
+        // length) trips while the shot is still descending - well short of the ground, at whatever
+        // height it happened to be at that tick. That's the "grenade explodes in mid-air" bug this
+        // fixes, and it hits hardest on a shot fired near the weapon's own max Range, where there's
+        // the least slack before the cap.
+        //
+        // The ratio between arc length and flat range depends only on LaunchAngle - the arc is
+        // self-similar, the same shape at any range - so one multiplier covers every shot this weapon
+        // ever fires. At the 45-degree default it's ~1.15x; padded well above that here (an exact
+        // figure needs an inverse hyperbolic sine, which isn't part of this project's deterministic
+        // math surface) so a mis-authored angle still finishes its descent before the budget runs out.
+        public override FP ResolveMaxTravelDistance(FP range)
+        {
+            return range * FP._1_50;
+        }
     }
 }

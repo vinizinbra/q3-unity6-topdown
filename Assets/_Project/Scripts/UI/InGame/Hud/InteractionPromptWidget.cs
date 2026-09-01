@@ -317,6 +317,7 @@ public class InteractionPromptWidget : MonoBehaviour
     private unsafe void UpdateFromState()
     {
         ContextInteractionState state = ContextInteractionState.None;
+        EntityRef player = EntityRef.None;
 
         if (MyLocalPlayer.Instance != null)
         {
@@ -334,6 +335,7 @@ public class InteractionPromptWidget : MonoBehaviour
                 if (context->ActiveTarget == _entityRef)
                 {
                     state = context->State;
+                    player = slots[i].EntityRef;
                     break;
                 }
             }
@@ -352,22 +354,54 @@ public class InteractionPromptWidget : MonoBehaviour
         // clock, whether they're simply in range (Available) or someone else already claimed the
         // revive (Occupied).
         if (shown)
-            ApplyDescription(string.IsNullOrEmpty(_bleedOutDescription) == false ? _bleedOutDescription : ResolveDescription(state));
+            ApplyDescription(string.IsNullOrEmpty(_bleedOutDescription) == false ? _bleedOutDescription : ResolveDescription(state, player));
 
         SetShown(shown);
     }
 
-    private string ResolveDescription(ContextInteractionState state)
+    private unsafe string ResolveDescription(ContextInteractionState state, EntityRef player)
     {
         switch (state)
         {
             case ContextInteractionState.Available: return _activeDescription;
             case ContextInteractionState.PhaseUnavailable: return _phaseUnavailableDescription;
-            case ContextInteractionState.AlreadyUsed: return _alreadyUsedDescription;
+            case ContextInteractionState.AlreadyUsed: return ResolveAlreadyUsedDescription(player);
             case ContextInteractionState.NotNeeded: return _notNeededDescription;
             case ContextInteractionState.Occupied: return _occupiedDescription;
             default: return string.Empty;
         }
+    }
+
+    // AlreadyUsed covers both "used up this Break/Run" (PoiUsagePolicy.OncePerPlayerPerBreak/
+    // PerRun - no live clock, falls back to the plain authored _alreadyUsedDescription) AND, as of
+    // 2026-08-29, PoiUsagePolicy.Cooldown - a real-time-per-player cooldown that DOES have
+    // something live to show. Reads PoiUsage straight off the simulation (same "View reads the
+    // sim state directly for a live countdown" precedent RefreshReviveTitle's own bleed-out timer
+    // already sets), scanning for this widget's own POI entity - a Cooldown-policy POI's
+    // PoiUsageEntry.CooldownRemaining is the only case that's ever > 0 here (MarkUsed writes 0
+    // under every other policy), so this generically does nothing for a non-Cooldown POI.
+    private unsafe string ResolveAlreadyUsedDescription(EntityRef player)
+    {
+        if (player != EntityRef.None && _game != null)
+        {
+            Frame frame = _game.Frames.Predicted;
+
+            if (frame.Unsafe.TryGetPointer<PoiUsage>(player, out var usage) == true)
+            {
+                var entries = usage->Entries;
+
+                for (int i = 0; i < entries.Length; i++)
+                {
+                    if (entries[i].Poi != _entityRef || entries[i].CooldownRemaining <= FP._0)
+                        continue;
+
+                    int seconds = Mathf.Max(0, Mathf.CeilToInt(entries[i].CooldownRemaining.AsFloat));
+                    return $"{seconds}s";
+                }
+            }
+        }
+
+        return _alreadyUsedDescription;
     }
 
     // Optional - hidden entirely (root + text) whenever this state's own description is empty,

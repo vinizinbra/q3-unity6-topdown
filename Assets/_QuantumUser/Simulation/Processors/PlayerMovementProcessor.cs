@@ -53,6 +53,13 @@ namespace Quantum
             // multiplicatively alongside Ice's own slow, same pattern.
             targetSpeed *= StatusEffectUtility.GetTempMoveSpeedMultiplier(frame, entity);
 
+            // Danger Pay (Rift Mutation) - a CONDITION, not a timed buff, so it can't live in the
+            // StatusEffects slots above: it has to appear and disappear the instant health crosses
+            // its threshold in either direction, with nothing to expire. Evaluated fresh every
+            // movement tick from the same helper the damage half uses, so the two can never
+            // disagree about whether the player is currently in danger.
+            targetSpeed *= MutationModifierUtility.ResolveLiveMoveSpeedMultiplier(frame, entity);
+
             // PoiInteractionLockUtility.IsInputLocked - a player with their own Cursed Rift/Store/
             // Blacksmith Choice Window open (see docs/breathing-poi.md/docs/store-blacksmith.md) is
             // locked the same way a Stun/Root already blocks movement, but deliberately NOT via
@@ -100,6 +107,10 @@ namespace Quantum
                 if (HasGroundAhead(context, data, position, moveDirection) == false)
                 {
                     DoJump(context.KCC, movement, data);
+
+                    // View-only cue for BlobAnimationView's Jump Flip - see PlayerAutoJumpedDown's
+                    // own comment for why this is a dedicated event rather than reusing PlayerJumped.
+                    frame.Events.PlayerAutoJumpedDown(entity);
                 }
                 // Auto-mantle: blocked ahead at foot height but clear above => climbable obstacle.
                 else if (TryDetectMantle(context, data, position, moveDirection) == true)

@@ -87,6 +87,26 @@ namespace Quantum
         [SerializeField, Tooltip("Vertical speed magnitude that separates rising/apex/falling for the skateboard angle above. Below this on either side of 0 counts as the apex.")]
         private float skateboardSpeedThreshold = 2f;
 
+        [Header("Jump Flip (auto-hop DOWN off a ledge only - see EventPlayerAutoJumpedDown; a mantle-up or a manual/button jump never triggers this)")]
+        [SerializeField, Tooltip("Unchecked = auto-hop-down plays exactly like any other jump (anticipation squash only, no tumble) - the same fallback a mantle/manual jump already gets.")]
+        private bool useFlip = true;
+        [SerializeField, Tooltip("Seconds for one full 360° rotation.")]
+        private float jumpFlipDuration = 0.45f;
+        [SerializeField, Tooltip("Front flip while travelling the same way you're facing (forward hop off a ledge), back flip while backpedaling off one facing the other way. Checked swaps the two.")]
+        private bool invertFlipDirection = false;
+        [SerializeField, Tooltip("How fast the LEGS catch up to root's own flip rotation (exponential lerp rate) - high = legs lead the rotation almost rigidly, low = legs trail behind.")]
+        private float legFlipLagSpeed = 26f;
+        [SerializeField, Tooltip("Same as legFlipLagSpeed but for the torso - tuned lower so it trails the legs.")]
+        private float torsoFlipLagSpeed = 16f;
+        [SerializeField, Tooltip("Same as legFlipLagSpeed but for the head - tuned lowest so it whips behind last, like a follow-through crack, and keeps settling for a moment after root's own rotation has already finished.")]
+        private float headFlipLagSpeed = 9f;
+        [SerializeField, Tooltip("How far above root's own local origin (root sits at the feet/ground contact point) the flip pivots around, so the character tumbles in place around roughly its own center of mass instead of swinging around its feet. Tune against the rig's real height - a good starting guess is the torso's own local Y offset.")]
+        private float flipPivotHeight = 0.6f;
+        [SerializeField, Range(0.1f, 1f), Tooltip("Root squashes down to this fraction of its normal vertical scale at the flip's midpoints (90°/270°, twice per revolution) and back to full size at 0°/180° - fakes the foreshortening a real tumble would have as it turns edge-on to camera, which a flat Z-axis spin otherwise doesn't produce on its own. 1 = no squash, a purely rigid spin.")]
+        private float flipMidRotationSquash = 0.55f;
+        [SerializeField, Tooltip("Seconds to finish the CURRENT rotation in when a dash interrupts an in-progress flip, instead of running out the full jumpFlipDuration. Always keeps spinning forward to completion (never unwinds backward) - only the remaining speed changes. Landing and the flip's own natural completion are unaffected (see CancelFlip).")]
+        private float dashFlipSpeedUpDuration = 0.2f;
+
         [Header("Landing")]
         [SerializeField] private float landingSquashPerSpeed = 0.06f;
         [SerializeField] private float maxLandingSquash = 0.6f;
@@ -102,6 +122,10 @@ namespace Quantum
         private GameObject koRoot;
         [SerializeField, Tooltip("The weapon hands (WeaponHandGripView's rig) - shown only while Alive, hidden alongside bodyRoot on Downed/KO. Separate field because the hands track the weapon grips, so they aren't parented under bodyRoot and wouldn't be hidden by it. Point this at their common parent GameObject.")]
         private GameObject handsRoot;
+        [SerializeField, Tooltip("Punch-scale strength/duration/frequency played the instant EventPlayerRevived fires for this player - reuses the same additive PunchBodyScale mechanism WeaponView's shoot punches use (see OnPlayerRevived). Also snaps the rig back to its authored rest scale first: Animate() skips the whole squash/stretch pass entirely while Downed/KO (see its own early-return above), so whatever deformation was mid-pose the instant this player went down is otherwise still sitting on the rig the moment bodyRoot reactivates, reading as a random leftover scale rather than a clean revive.")]
+        private Vector3 revivePunchScaleStrength = new Vector3(0.35f, 0.35f, 0f);
+        [SerializeField] private float revivePunchScaleDuration = 0.4f;
+        [SerializeField] private float revivePunchScaleFrequency = 10f;
 
         [Header("General")]
         [SerializeField] private float squashLerpSpeed = 14f;
@@ -139,9 +163,44 @@ namespace Quantum
         private bool _springActive;
         private float _springVelocity;
 
+        // Jump Flip - a single 360° tumble, independent of _state/_jumpSquashT (same "orthogonal
+        // effect layered on top of the normal pose" idiom the shoot punches below already use), so it
+        // can play over an auto-hop-down's ordinary anticipation/air squash without touching either.
+        // _flipT runs 0->1 over jumpFlipDuration and drives root's own rotation directly; cancelled
+        // (not eased) back to 0 on landing since a partial flip finishing on the ground reads as
+        // broken.
+        private bool _flipActive;
+        // True only during a dash-interrupt speed-up (see the isDashing branch in Animate) - _flipT
+        // is still counting UP toward 1 (finishing the current rotation forward, never reversing),
+        // just over dashFlipSpeedUpDuration instead of the normal jumpFlipDuration.
+        private bool _flipSpeedingUp;
+        private float _flipT;
+        private float _flipDegrees;
+        // Captured once at trigger time (see OnPlayerAutoJumpedDown) - NOT recomputed from live
+        // _facingSign every frame, so turning to aim the other way mid-air can't reverse an
+        // already-spinning flip. See that field's own comment for why _facingSign is folded in at all.
+        private float _flipSign = 1f;
+
+        // Torso/head/legs each track their own smoothed COPY of _flipT (0-1 progress, not raw
+        // degrees - avoids any 360/0 wrap discontinuity when the flip resets) chasing it at their
+        // own rate (see legFlipLagSpeed/torsoFlipLagSpeed/headFlipLagSpeed). Root's rotation always
+        // carries the full flip immediately (it's the parent every other part hangs off), so the gap
+        // between a part's own smoothed progress and root's is applied as a small counter-rotation on
+        // that part - giving the classic "core leads, extremities trail" follow-through instead of
+        // the whole rig spinning as one rigid block. Deliberately NOT reset to 0 when the flip
+        // completes naturally (only on landing-cancel) - letting them keep chasing _flipT back down
+        // to 0 on their own is what produces the brief settle/whip-crack after root's own spin is
+        // already done.
+        private float _legFlipProgress, _torsoFlipProgress, _headFlipProgress;
+        private float _legFlipLagDegrees, _torsoFlipLagDegrees, _headFlipLagDegrees;
+
         private float _stridePhase;
         private float _legPhase;
         private float _facingSign = 1f;
+        // Cached copy of Animate()'s own local moveAlignSign (+1 = travelling the same way you're
+        // facing, -1 = backpedaling) - read once at flip-trigger time (OnPlayerAutoJumpedDown) to
+        // decide front vs back, since the event handler itself has no velocity to derive it from.
+        private float _moveAlignSign = 1f;
         private float _wobbleSeed;
         private float _leanT;
 
@@ -196,12 +255,16 @@ namespace Quantum
         // themselves - root is both rotated (billboard) and non-uniformly scaled at the same
         // time, and lossyScale can't reliably decompose that combination (shearing).
         public float CurrentRootVerticalScale { get; private set; } = 1f;
+        // Root's current Jump Flip rotation in degrees (0 whenever no flip is playing) - lets a
+        // follower (PlayerGunAimView, while untargeted) spin along with the body instead of holding
+        // its last aim direction through a tumble it has no target to justify pointing away from.
+        public float CurrentFlipDegrees => _flipDegrees;
 
         [Header("Sound")]
-        [SerializeField, Tooltip("Played on EventPlayerJumped - the same event that starts the anticipation squash. Note jumping here is the AUTO-jump ledge assist (AutoJumpSystem), not a button the player pressed, so this is informational rather than input confirmation: keep it subtle. Leave empty to skip.")]
+        [SerializeField, SoundDataPicker, Tooltip("Played on EventPlayerJumped - the same event that starts the anticipation squash. Note jumping here is the AUTO-jump ledge assist (AutoJumpSystem), not a button the player pressed, so this is informational rather than input confirmation: keep it subtle. Leave empty to skip.")]
         private SoundData jumpSound;
 
-        [SerializeField, Tooltip("Played the frame the character regains ground, alongside the landing squash. Volume is scaled by impact speed (see landSoundMinImpactSpeed / landSoundFullImpactSpeed) so a small hop off a ledge doesn't land as hard as a long fall. Leave empty to skip.")]
+        [SerializeField, SoundDataPicker, Tooltip("Played the frame the character regains ground, alongside the landing squash. Volume is scaled by impact speed (see landSoundMinImpactSpeed / landSoundFullImpactSpeed) so a small hop off a ledge doesn't land as hard as a long fall. Leave empty to skip.")]
         private SoundData landSound;
 
         [SerializeField, Tooltip("Downward speed at or below which a landing is silent - stops the constant micro-landings of walking over uneven geometry from firing a step-thud every few frames.")]
@@ -210,7 +273,7 @@ namespace Quantum
         [SerializeField, Tooltip("Downward speed at which the landing sound reaches full volume. Between this and the minimum it scales linearly.")]
         private float landSoundFullImpactSpeed = 12f;
 
-        [SerializeField, Tooltip("Footstep, played every footstepDistance world units actually travelled while grounded. Deliberately distance-driven rather than timed, so it self-syncs to real speed (Haste, slows, backpedalling) without reading the stride animation's internals. See the class comment on why this is the first thing to cut if the mix gets crowded. Leave empty to skip.")]
+        [SerializeField, SoundDataPicker, Tooltip("Footstep, played every footstepDistance world units actually travelled while grounded. Deliberately distance-driven rather than timed, so it self-syncs to real speed (Haste, slows, backpedalling) without reading the stride animation's internals. See the class comment on why this is the first thing to cut if the mix gets crowded. Leave empty to skip.")]
         private SoundData footstepSound;
 
         [SerializeField, Tooltip("World units of grounded travel between footsteps. Larger = fewer steps. Tune against the run cycle so steps land on the stride rather than drifting against it.")]
@@ -227,6 +290,8 @@ namespace Quantum
             CacheBaseline();
             _wobbleSeed = Random.value * 1000f;
             QuantumEvent.Subscribe<EventPlayerJumped>(this, OnPlayerJumped);
+            QuantumEvent.Subscribe<EventPlayerAutoJumpedDown>(this, OnPlayerAutoJumpedDown);
+            QuantumEvent.Subscribe<EventPlayerRevived>(this, OnPlayerRevived);
         }
 
         public override void OnDestroy()
@@ -264,6 +329,20 @@ namespace Quantum
         [Button]
         private void PreviewKO() => ApplyLifeStateVisuals(PlayerLifeStateKind.KO);
 
+        // Shows flipPivotHeight in the Scene view so it can be eyeballed against the rig without a
+        // live flip running - drawn off root's CURRENT transform, so it stays accurate at rest,
+        // mid-pose, or (Play Mode) mid-flip. Selected-only so it doesn't clutter the scene for every
+        // other character on screen at once.
+        private void OnDrawGizmosSelected()
+        {
+            if (root == null) return;
+
+            Vector3 pivotWorld = root.TransformPoint(Vector3.up * flipPivotHeight);
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawSphere(pivotWorld, 0.06f);
+            Gizmos.DrawLine(root.position, pivotWorld);
+        }
+
         private void ApplyBaselineTransforms()
         {
             if (root != null) { root.localPosition = _rootBaseLocalPos; root.localScale = _rootBaseScale; }
@@ -287,7 +366,77 @@ namespace Quantum
         private void OnPlayerJumped(EventPlayerJumped e)
         {
             if (e.Entity != _entityRef) return;
+            BeginJumpAnticipation();
+        }
 
+        // Auto-hop DOWN off a ledge only (see EventPlayerAutoJumpedDown) - same anticipation squash
+        // every jump gets, plus the one-shot tumble a mantle/manual jump never plays.
+        private void OnPlayerAutoJumpedDown(EventPlayerAutoJumpedDown e)
+        {
+            if (e.Entity != _entityRef) return;
+            BeginJumpAnticipation();
+
+            if (useFlip == false) return; // falls back to a plain jump, same as a mantle/manual jump
+
+            CancelFlip(); // clean slate in case of an overlapping re-trigger
+            _flipActive = true;
+
+            // Front flip while travelling the same way you're facing (moving right while aiming
+            // right, or left while aiming left - moveAlignSign >= 0), back flip while backpedaling
+            // off the ledge (moving right while aiming left, or vice versa) - invertFlipDirection
+            // swaps the two. _moveAlignSign is a cached copy of Animate()'s own local value (this
+            // handler has no velocity of its own to derive it from) - see that field's own comment.
+            bool isBackflip = (_moveAlignSign < 0f) != invertFlipDirection;
+
+            // Captured once here, not re-derived from live facing every frame - otherwise turning to
+            // aim the other way mid-air (a very normal thing to do while airborne) would reverse an
+            // already-spinning flip partway through (start a frontflip, end a backflip).
+            //
+            // The literal +1/-1 mapping here is empirical, not derived - given this rig's actual
+            // axis/camera conventions, a NEGATIVE angle is what reads on screen as tumbling forward.
+            _flipSign = (isBackflip ? 1f : -1f) * _facingSign;
+        }
+
+        // Fires for teammate-hold, self-revive, and the auto-revive-on-secure sweep alike (see
+        // docs/revive.md) - all funnel through the same PlayerLifeStateUtility.Revive, one event.
+        // Animate() skips its entire deformation pass while not Alive (see its own early-return),
+        // so whatever squash/stretch/flip state was mid-pose the instant this player went
+        // Downed/KO is still sitting here untouched - zero it and snap back to rest before
+        // punching, or the punch would ring out from whatever random leftover scale was frozen in
+        // rather than from a clean rest pose.
+        private void OnPlayerRevived(EventPlayerRevived e)
+        {
+            if (e.Target != _entityRef) return;
+
+            _squashT = 0f;
+            _jumpSquashT = 0f;
+            _springVelocity = 0f;
+            _springActive = false;
+            CancelFlip();
+            ApplyBaselineTransforms();
+
+            PunchBodyScale(revivePunchScaleStrength, revivePunchScaleDuration, revivePunchScaleFrequency);
+        }
+
+        // Shared HARD reset for every place a flip actually ENDS - landing, its own natural
+        // completion (including a dash's sped-up finish, which also lands here), or a fresh
+        // re-trigger clearing stale state first. Always resets everything together (root's own
+        // _flipT alongside every part's lag progress) so no part is ever left mid-catch-up after
+        // root's rotation has already stopped - a lagging part still easing toward a target that
+        // already snapped to 0 reads as the character rotating slightly back toward rest right
+        // after the flip finished.
+        private void CancelFlip()
+        {
+            _flipActive = false;
+            _flipSpeedingUp = false;
+            _flipT = 0f;
+            _legFlipProgress = 0f;
+            _torsoFlipProgress = 0f;
+            _headFlipProgress = 0f;
+        }
+
+        private void BeginJumpAnticipation()
+        {
             if (jumpSound != null)
                 EntitySound.PlayAttached(jumpSound, transform, _entityRef);
 
@@ -370,17 +519,23 @@ namespace Quantum
             Vector3 velocity = kcc.Data.RealVelocity.ToUnityVector3();
             UpdateFacing(frame, velocity);
 
-            Animate(velocity, kcc.Data.IsGrounded, lifeState, Time.deltaTime);
+            // Same poll DashFxView already uses - dashing outright cancels an in-progress Jump Flip
+            // (see Animate's own cancel block), since a dash's own burst of speed/i-frames reads as
+            // a deliberate interrupt, not something that should keep tumbling underneath it.
+            bool isDashing = frame.Has<CharacterSkills>(_entityRef) == true
+                && frame.Get<CharacterSkills>(_entityRef).DashSkill.State == SkillState.Active;
+
+            Animate(velocity, kcc.Data.IsGrounded, lifeState, Time.deltaTime, isDashing);
         }
 
         // Drives one frame of the rig off plain values instead of a Frame, so the exact same pose
         // math serves both the live entity (QUpdate above) and the simulation-free lobby character
         // preview (TickPreview above, see CharacterPreviewWidget) - rather than the preview growing
         // its own second copy of the idle cycle to drift out of sync with this one. Everything
-        // Quantum-specific stays in QUpdate: the KCC/PlayerLifeState reads, and the Aim read that
-        // UpdateFacing does. Nothing in here touches _entityRef except the two sound paths, and
-        // those no-op under _previewMode.
-        private void Animate(Vector3 velocity, bool isGrounded, PlayerLifeStateKind lifeState, float dt)
+        // Quantum-specific stays in QUpdate: the KCC/PlayerLifeState/CharacterSkills reads, and the
+        // Aim read that UpdateFacing does. Nothing in here touches _entityRef except the two sound
+        // paths, and those no-op under _previewMode.
+        private void Animate(Vector3 velocity, bool isGrounded, PlayerLifeStateKind lifeState, float dt, bool isDashing = false)
         {
             if (root == null && head == null && torso == null && legLeft == null && legRight == null)
                 return;
@@ -407,6 +562,22 @@ namespace Quantum
             bool justLanded = isGrounded && _wasGrounded == false;
             bool justLeftGround = isGrounded == false && _wasGrounded;
 
+            // Landing cancels the flip outright, not eased - a flip caught mid-rotation on the
+            // ground reads as broken rather than interrupted, and landing is already its own
+            // distinct squash beat that shouldn't have a tumble running underneath it.
+            if (justLanded && _flipActive)
+            {
+                CancelFlip();
+            }
+            // Dashing out of a flip instead speeds up to FINISH the rotation quickly
+            // (dashFlipSpeedUpDuration) rather than either an instant snap or unwinding backward -
+            // it should always keep spinning the same way it was already going, just faster.
+            else if (isDashing && _flipActive)
+            {
+                _flipActive = false;
+                _flipSpeedingUp = true;
+            }
+
             // Facing now follows aim rather than velocity, so travel direction and facing can
             // disagree (e.g. strafing/backpedaling while aiming the other way). moveXSign is the
             // character's actual left/right travel; moveAlignSign is +1 when that travel matches
@@ -415,6 +586,7 @@ namespace Quantum
             // instead of the faced one, so backpedaling doesn't read as moonwalking.
             float moveXSign = Mathf.Abs(velocity.x) > moveSpeedEpsilon ? Mathf.Sign(velocity.x) : _facingSign;
             float moveAlignSign = moveXSign * _facingSign;
+            _moveAlignSign = moveAlignSign; // cached for OnPlayerAutoJumpedDown - see that field's own comment
 
             if (justLanded)
             {
@@ -561,6 +733,52 @@ namespace Quantum
             ApplyLegScale(_legScaleT);
 
             _leanT = Mathf.Lerp(_leanT, leanTarget, 1f - Mathf.Exp(-leanLerpSpeed * dt));
+
+            if (_flipActive)
+            {
+                _flipT += dt / Mathf.Max(0.01f, jumpFlipDuration);
+                if (_flipT >= 1f)
+                {
+                    // Hard reset, same as CancelFlip - a part still lagging behind when root snaps
+                    // back to 0 would otherwise keep visibly catching up for a moment afterward,
+                    // reading as the character rotating slightly back toward its rest pose right
+                    // after the flip already finished.
+                    CancelFlip();
+                }
+            }
+            else if (_flipSpeedingUp)
+            {
+                // Dash interrupt (see the justLanded/isDashing block above) - keeps counting _flipT
+                // UP toward 1 (finishing the CURRENT rotation forward) rather than back toward 0,
+                // which would visibly spin the character backward to unwind it - a flip must always
+                // keep turning the direction it was already turning, only the remaining speed
+                // changes. A fixed-rate MoveTowards rather than an exponential lerp so it actually
+                // finishes in dashFlipSpeedUpDuration regardless of how far into the flip it was
+                // interrupted, instead of asymptotically trailing off forever.
+                _flipT = Mathf.MoveTowards(_flipT, 1f, dt / Mathf.Max(0.01f, dashFlipSpeedUpDuration));
+                if (_flipT >= 1f)
+                {
+                    CancelFlip();
+                }
+            }
+
+            // Legs/torso/head each ease toward root's own _flipT at their own rate (see the fields'
+            // own comment) - this naturally rides along with the dash speed-up above too, adding
+            // their own extra lag on top of root's own faster finish rather than needing special-casing.
+            _legFlipProgress = Mathf.Lerp(_legFlipProgress, _flipT, 1f - Mathf.Exp(-legFlipLagSpeed * dt));
+            _torsoFlipProgress = Mathf.Lerp(_torsoFlipProgress, _flipT, 1f - Mathf.Exp(-torsoFlipLagSpeed * dt));
+            _headFlipProgress = Mathf.Lerp(_headFlipProgress, _flipT, 1f - Mathf.Exp(-headFlipLagSpeed * dt));
+
+            // _flipSign was captured once at trigger time (see OnPlayerAutoJumpedDown) rather than
+            // read live here - it already folds in the facing this jump started with, and reusing
+            // that same fixed sign for the whole flip (instead of re-deriving it from _facingSign
+            // every frame) is what keeps the rotation going the same way even if the player turns to
+            // aim the other way mid-air.
+            _flipDegrees = _flipT * 360f * _flipSign;
+            _legFlipLagDegrees = _legFlipProgress * 360f * _flipSign - _flipDegrees;
+            _torsoFlipLagDegrees = _torsoFlipProgress * 360f * _flipSign - _flipDegrees;
+            _headFlipLagDegrees = _headFlipProgress * 360f * _flipSign - _flipDegrees;
+
             ApplyPose(_leanT, rockTarget, bobTarget, upperBodyBobTarget);
 
             _wasGrounded = isGrounded;
@@ -585,7 +803,10 @@ namespace Quantum
                 headScale.z *= 1f + _headPunchScale.z;
                 head.localScale = headScale;
 
-                head.localRotation = _headBaseRot * Quaternion.Euler(0f, 0f, _headPunchRotation);
+                // _headFlipLagDegrees is the follow-through lag behind root's own flip - see that
+                // field's own comment; 0 whenever no flip is in play, so this composes for free with
+                // the shoot-punch rotation it already sits alongside here.
+                head.localRotation = _headBaseRot * Quaternion.Euler(0f, 0f, _headPunchRotation + _headFlipLagDegrees);
             }
 
             if (root != null)
@@ -794,10 +1015,11 @@ namespace Quantum
         private void ApplyLegAngle(float targetDegrees, float dt)
         {
             _legAngleT = Mathf.Lerp(_legAngleT, targetDegrees, 1f - Mathf.Exp(-airLegTuckLerpSpeed * dt));
+            // Follow-through lag, see _legFlipLagDegrees - 0 whenever no flip is in play.
             if (legLeft != null)
-                legLeft.localRotation = _legLeftBaseRot * Quaternion.Euler(0f, 0f, _legAngleT);
+                legLeft.localRotation = _legLeftBaseRot * Quaternion.Euler(0f, 0f, _legAngleT + _legFlipLagDegrees);
             if (legRight != null)
-                legRight.localRotation = _legRightBaseRot * Quaternion.Euler(0f, 0f, -_legAngleT);
+                legRight.localRotation = _legRightBaseRot * Quaternion.Euler(0f, 0f, -_legAngleT + _legFlipLagDegrees);
         }
 
         // Skateboard is a separate prop transform, not part of the leg rig - it only tilts while
@@ -845,6 +1067,9 @@ namespace Quantum
                 var torsoPos = _torsoBaseLocalPos;
                 torsoPos.y += upperBodyBobOffset;
                 torso.localPosition = torsoPos;
+                // Follow-through lag, see _torsoFlipLagDegrees - 0 whenever no flip is in play, so
+                // this never fights any other torso rotation (torso has none of its own otherwise).
+                torso.localRotation = Quaternion.Euler(0f, 0f, _torsoFlipLagDegrees);
             }
 
             // Jump squash/stretch lives on root (see below) so it reaches every child, head
@@ -854,6 +1079,26 @@ namespace Quantum
             // what root does (jumpHeadSquashInfluence) while torso still gets it in full.
             float rootVerticalMult = Mathf.Clamp(1f - _jumpSquashT * volumePreservation, 0.15f, 3f);
             float rootHorizontalMult = Mathf.Clamp(1f / rootVerticalMult, 0.3f, 3f);
+
+            // Jump Flip overrides speed-driven squash/stretch entirely while it plays (a
+            // non-uniform stretch spinning through a full 360° would read as the rig warping
+            // mid-tumble, not a clean flip) and replaces it with a squash driven purely by
+            // rotation PHASE instead: a flat Z-axis spin never actually foreshortens on a
+            // billboarded sprite the way a real tumble would, so this fakes that - squashing
+            // toward flipMidRotationSquash at the two points (90°/270°) where a real body
+            // rotating edge-on to the camera would look thinnest, and back to full size at
+            // 0°/180° (facing the camera square-on) - twice per revolution, same as how a
+            // spinning coin shows its thin edge twice per turn. Reads as far more
+            // three-dimensional/believable than an undeformed spin. A pure no-op at rest
+            // (_flipDegrees is 0, sin(0) is 0, so both multipliers land on exactly 1).
+            float flipRad = _flipDegrees * Mathf.Deg2Rad;
+            float flipVerticalMult = Mathf.Lerp(1f, flipMidRotationSquash, Mathf.Abs(Mathf.Sin(flipRad)));
+
+            if (_flipActive || _flipSpeedingUp)
+            {
+                rootVerticalMult = flipVerticalMult;
+                rootHorizontalMult = Mathf.Clamp(1f / flipVerticalMult, 0.3f, 3f);
+            }
 
             if (head != null)
             {
@@ -886,20 +1131,50 @@ namespace Quantum
                 root.localScale = scale;
                 CurrentRootVerticalScale = rootVerticalMult;
 
-                float totalTilt = leanDegrees + rockDegrees;
+                // Jump Flip - a spin about the billboard's own local Z axis (the same axis
+                // lean/rock/totalTilt already rotate on, i.e. the axis pointing straight at the
+                // camera after LookRotation) so it's centered on the sprite's current facing rather
+                // than tumbling it off-plane. 0 whenever no flip is active, so this is a pure no-op
+                // for every jump that isn't an auto-hop off a ledge. Torso/head/legs each counter
+                // this with their own small lag offset - see _torsoFlipLagDegrees etc.
+                float totalTilt = leanDegrees + rockDegrees + _flipDegrees;
                 CurrentLeanDegrees = leanDegrees;
                 CurrentRockDegrees = rockDegrees;
                 CurrentBobOffset = bobOffset + upperBodyBobOffset;
+
+                // Root's own origin sits at the feet (ground contact point) - rotating root about
+                // ITS origin would swing head/torso through a wide arc around the feet instead of
+                // tumbling in place. pivotLocal picks a point roughly at the character's own center
+                // instead; baseRotation (no flip) vs fullRotation (with flip) lets us solve for the
+                // root position that keeps that pivot point fixed in world space across the flip,
+                // exactly like rotating around an arbitrary pivot. This is a pure no-op for
+                // lean/rock alone (fullRotation == baseRotation when _flipDegrees is 0), so idle/run
+                // tilt is completely unaffected - only the flip itself gets re-centered.
+                Vector3 pivotLocal = Vector3.up * flipPivotHeight;
 
                 Camera billboardCamera = _previewCamera != null ? _previewCamera : Camera.main;
                 if (billboardToCamera && billboardCamera != null)
                 {
                     var camForward = billboardCamera.transform.forward;
-                    root.rotation = Quaternion.LookRotation(camForward, Vector3.up) * Quaternion.Euler(0f, 0f, totalTilt);
+                    Quaternion billboardBase = Quaternion.LookRotation(camForward, Vector3.up);
+                    Quaternion baseRotation = billboardBase * Quaternion.Euler(0f, 0f, leanDegrees + rockDegrees);
+                    Quaternion fullRotation = billboardBase * Quaternion.Euler(0f, 0f, totalTilt);
+
+                    Vector3 worldRootPos = root.position; // reflects the localPosition set above
+                    Vector3 pivotWorld = worldRootPos + baseRotation * pivotLocal;
+
+                    root.rotation = fullRotation;
+                    root.position = pivotWorld - fullRotation * pivotLocal;
                 }
                 else
                 {
-                    root.localRotation = Quaternion.Euler(0f, 0f, totalTilt);
+                    Quaternion baseRotation = Quaternion.Euler(0f, 0f, leanDegrees + rockDegrees);
+                    Quaternion fullRotation = Quaternion.Euler(0f, 0f, totalTilt);
+
+                    Vector3 pivotAtRest = localPos + baseRotation * pivotLocal;
+
+                    root.localRotation = fullRotation;
+                    root.localPosition = pivotAtRest - fullRotation * pivotLocal;
                 }
             }
         }

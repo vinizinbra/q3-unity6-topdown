@@ -286,6 +286,12 @@ MonoBehaviour:
     - rid: 7496929354346135553
     - rid: 7496929354346135554
     - rid: 7496929354346135555
+  - Components:
+    - rid: 8411826831572860928
+    - rid: 8411826831572860929
+    - rid: 8411826831572860930
+    - rid: 8411826831572860931
+    - rid: 8411826831572860932
   SerializedTriangleDataUncompressedSize: 8
   references:
     version: 2
@@ -772,6 +778,16 @@ MonoBehaviour:
           Value: 15
         ForbiddenNeighbors:
           Value: 0
+        ConnectedChunks:
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        ConnectedChunkCount: 0
         Discovered:
           Value: 0
         HasRespawnPoint:
@@ -783,3 +799,87 @@ MonoBehaviour:
             RawValue: 0
           Z:
             RawValue: 65536
+    - rid: 8411826831572860928
+      type: {class: Transform3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        Position:
+          X:
+            RawValue: 360448
+          Y:
+            RawValue: 442368
+          Z:
+            RawValue: -186777
+        Rotation:
+          X:
+            RawValue: 0
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 0
+    - rid: 8411826831572860929
+      type: {class: PhysicsCollider3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        ShapeConfig:
+          ShapeType: 1
+          SphereRadius:
+            RawValue: 32768
+          CapsuleRadius:
+            RawValue: 32768
+          CapsuleHeight:
+            RawValue: 131072
+          PositionOffset:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          BoxExtents:
+            X:
+              RawValue: 16384
+            Y:
+              RawValue: 16384
+            Z:
+              RawValue: 16384
+          RotationOffset:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          UserTag: 0
+          IsPersistent: 1
+          CompoundShapes: []
+        Layer: 0
+        IsTrigger: 1
+        PhysicsMaterial:
+          Id:
+            Value: 0
+    - rid: 8411826831572860930
+      type: {class: PhysicsCallbacks3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        CallbackFlags:
+          Value: 0
+    - rid: 8411826831572860931
+      type: {class: ChestPrototype, ns: Quantum.Prototypes, asm: Quantum.Simulation}
+      data:
+        Kind:
+          Value: 2
+        PickupRadius:
+          RawValue: 65536
+        Opened:
+          Value: 0
+    - rid: 8411826831572860932
+      type: {class: GroundOffsetPrototype, ns: Quantum.Prototypes, asm: Quantum.Simulation}
+      data:
+        Enabled:
+          Value: 1
+        Offset:
+          RawValue: 1311
+        FallGravityMultiplier:
+          RawValue: 65536
+        FloatSpeed:
+          RawValue: 0
+        FallVelocity:
+          RawValue: 0

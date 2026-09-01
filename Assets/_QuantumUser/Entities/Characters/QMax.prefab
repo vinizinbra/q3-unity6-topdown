@@ -470,6 +470,15 @@ MonoBehaviour:
   skateboardAngleApexDegrees: 0
   skateboardAngleDownDegrees: -15
   skateboardSpeedThreshold: 2
+  useFlip: 1
+  jumpFlipDuration: 0.6
+  invertFlipDirection: 0
+  legFlipLagSpeed: 26
+  torsoFlipLagSpeed: 16
+  headFlipLagSpeed: 9
+  flipPivotHeight: 0.6
+  flipMidRotationSquash: 0.9
+  dashFlipSpeedUpDuration: 0.2
   landingSquashPerSpeed: 0.06
   maxLandingSquash: 0.6
   landingSpringFrequency: 6
@@ -478,6 +487,9 @@ MonoBehaviour:
   downedRoot: {fileID: 1624666222663002818}
   koRoot: {fileID: 7228880224124699915}
   handsRoot: {fileID: 0}
+  revivePunchScaleStrength: {x: 0.35, y: 0.35, z: 0}
+  revivePunchScaleDuration: 0.4
+  revivePunchScaleFrequency: 10
   squashLerpSpeed: 14
   volumePreservation: 0.6
   headSquashInfluence: 0.4
@@ -598,6 +610,10 @@ MonoBehaviour:
   followAmount: 1
   followLag: 6
   squashPositionCompensation: 1
+  rotateWeaponWithTarget: 0
+  rotateWeaponWithoutTarget: 1
+  flipLagSpeed: 20
+  bodyFollowDuringFlip: 0.2
   enableSpeedSway: 1
   swayAmount: 0.5
   swaySpringiness: 0.5
@@ -642,6 +658,7 @@ MonoBehaviour:
   expPickupFlashColor: {r: 0.2980392, g: 0.8055482, b: 1, a: 0.6862745}
   coinPickupFlashColor: {r: 1, g: 0.84, b: 0.2, a: 0.21960784}
   riftShardPickupFlashColor: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
+  scrapPickupFlashColor: {r: 0.95, g: 0.6, b: 0.25, a: 1}
   pickupFlashDuration: 0.35
   freezeMaterial: {fileID: 0}
 --- !u!114 &8110188611109955938
@@ -912,6 +929,8 @@ MonoBehaviour:
       RawValue: 0
     DamageReduction:
       RawValue: 0
+    DamageTakenMultiplier:
+      RawValue: 0
     KnockbackTakenMultiplier:
       RawValue: 0
     HealingReceivedMultiplier:
@@ -935,14 +954,69 @@ MonoBehaviour:
     RerollQuantity: 0
     SelfReviveCharges: 0
     BurnOnHitStacks: 0
-    DashShieldCost:
+    MagazineSizeBonus:
       RawValue: 0
-    CritSkillCooldownReduction:
+    MagazineSizeOverride: 0
+    LongRangePierceBonus: 0
+    WeaponStaggerChance:
       RawValue: 0
-    ShieldBreakGrantsDashCharge:
+    WeaponStaggerDuration:
+      RawValue: 0
+    NearKillMoveSpeedBonus:
+      RawValue: 0
+    NearKillMoveSpeedDuration:
+      RawValue: 0
+    SkillCenterFocusBonus:
+      RawValue: 0
+    CritFocusThreshold: 0
+    CritFocusProgress: 0
+    CritFocusCooldownReduction:
+      RawValue: 0
+    EmergencyDashHealthCost:
+      RawValue: 0
+    CoinDamagePerHundred:
+      RawValue: 0
+    CoinDamageMaxBonus:
+      RawValue: 0
+    DangerPayHealthThreshold:
+      RawValue: 0
+    DangerPayDamageBonus:
+      RawValue: 0
+    DangerPayMoveSpeedBonus:
+      RawValue: 0
+    NoSafetyNetDamageBonus:
+      RawValue: 0
+    PressureCookerDamagePerSecond:
+      RawValue: 0
+    PressureCookerMaxBonus:
+      RawValue: 0
+    SafeTimeSeconds:
+      RawValue: 0
+    OverkillConversion:
+      RawValue: 0
+    OverkillRadius:
+      RawValue: 0
+    ScavengerRequiredPickups: 0
+    ScavengerWindow:
+      RawValue: 0
+    ScavengerBuffDuration:
+      RawValue: 0
+    ScavengerMoveSpeedBonus:
+      RawValue: 0
+    ScavengerFireRateBonus:
+      RawValue: 0
+    ScavengerPickupCount: 0
+    ScavengerWindowRemaining:
+      RawValue: 0
+    CoinLossPercentOnHpDamage:
+      RawValue: 0
+    SecondWindHealPercent:
+      RawValue: 0
+    DashChargeHardCap: 0
+    AccessoryBlockResetsDash:
       Value: 0
-    AllOrNothingActive:
-      Value: 0
+    AccessoryBlockSkillCooldownFraction:
+      RawValue: 0
     HasCriticalFractureMutation:
       Value: 0
     HasSkillFractureMutation:
@@ -992,6 +1066,10 @@ MonoBehaviour:
       RawValue: 0
     ChargeOnly:
       Value: 0
+    TemporaryDuration:
+      RawValue: 0
+    ExpirationRemaining:
+      RawValue: 0
 --- !u!114 &4084801270582750977
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1487,6 +1565,13 @@ MonoBehaviour:
   idleWobbleSquashAmount: 0.05
   idleWobbleDuration: 1
   idleWobbleEase: 4
+  idleRareWiggleOnEnable: 0
+  idleRareWiggleInterval: {x: 3, y: 8}
+  idleRareWiggleIncludeScale: 1
+  idleRareWiggleIncludeRotation: 1
+  idleRareWiggleIncludePosition: 1
+  idleRareWiggleStrengthMultiplier: 0.5
+  idleRareWiggleDurationMultiplier: 1
   scaleUseUnscaledTime: 0
   useUnscaledTime: 0
 --- !u!1 &1973933749131681354
@@ -7152,6 +7237,13 @@ MonoBehaviour:
   idleWobbleSquashAmount: 0.05
   idleWobbleDuration: 1
   idleWobbleEase: 4
+  idleRareWiggleOnEnable: 0
+  idleRareWiggleInterval: {x: 3, y: 8}
+  idleRareWiggleIncludeScale: 1
+  idleRareWiggleIncludeRotation: 1
+  idleRareWiggleIncludePosition: 1
+  idleRareWiggleStrengthMultiplier: 0.5
+  idleRareWiggleDurationMultiplier: 1
   scaleUseUnscaledTime: 0
   useUnscaledTime: 0
 --- !u!1 &7708773108632353514

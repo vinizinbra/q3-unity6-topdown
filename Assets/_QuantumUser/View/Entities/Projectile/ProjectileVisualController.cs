@@ -193,7 +193,13 @@ namespace Quantum
                 return;
 
             if (playEffect == true && _settings.DestroyEffectPrefab != null && EffectsManager.Instance != null)
-                EffectsManager.Instance.PlayEffect(_settings.DestroyEffectPrefab, transform.position, Quaternion.identity);
+            {
+                // PlayEffect's 3-arg overload hardcodes Vector3.one (pooled instances default back
+                // to unscaled so a scaled play can't leak onto the next unscaled one drawn from the
+                // same pool) - pass the prefab's own authored scale explicitly or it always plays at 1.
+                Vector3 scale = _settings.DestroyEffectPrefab.transform.localScale;
+                EffectsManager.Instance.PlayEffect(_settings.DestroyEffectPrefab, transform.position, Quaternion.identity, scale);
+            }
 
             // Only on a real impact: unparents itself and finishes emitting where the shot landed.
             // A teardown/orphan cleanup deliberately leaves nothing behind - there was no impact to

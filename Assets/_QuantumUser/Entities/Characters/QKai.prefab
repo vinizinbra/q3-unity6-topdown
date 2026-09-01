@@ -691,9 +691,17 @@ MonoBehaviour:
   skateboardAngleApexDegrees: 0
   skateboardAngleDownDegrees: -15
   skateboardSpeedThreshold: 2
+  useFlip: 1
+  jumpFlipDuration: 0.6
+  invertFlipDirection: 1
+  legFlipLagSpeed: 26
+  torsoFlipLagSpeed: 16
+  headFlipLagSpeed: 9
+  flipPivotHeight: 0.65
+  flipMidRotationSquash: 0.9
   landingSquashPerSpeed: 0.06
-  maxLandingSquash: 0.6
-  landingSpringFrequency: 6
+  maxLandingSquash: 1
+  landingSpringFrequency: 3
   landingSpringDamping: 0.35
   bodyRoot: {fileID: 1973933749131681354}
   downedRoot: {fileID: 921315042055089785}
@@ -819,6 +827,9 @@ MonoBehaviour:
   followAmount: 1
   followLag: 6
   squashPositionCompensation: 1
+  rotateWeaponWithTarget: 0
+  rotateWeaponWithoutTarget: 0
+  flipLagSpeed: 10
   enableSpeedSway: 1
   swayAmount: 0.5
   swaySpringiness: 0.5
@@ -863,6 +874,7 @@ MonoBehaviour:
   expPickupFlashColor: {r: 0.3, g: 0.55, b: 1, a: 1}
   coinPickupFlashColor: {r: 1, g: 0.84, b: 0.2, a: 1}
   riftShardPickupFlashColor: {r: 1, g: 0.35, b: 0.75, a: 1}
+  scrapPickupFlashColor: {r: 0.95, g: 0.6, b: 0.25, a: 1}
   pickupFlashDuration: 0.35
   freezeMaterial: {fileID: 0}
 --- !u!114 &8110188611109955938
@@ -1133,6 +1145,8 @@ MonoBehaviour:
       RawValue: 0
     DamageReduction:
       RawValue: 0
+    DamageTakenMultiplier:
+      RawValue: 0
     KnockbackTakenMultiplier:
       RawValue: 0
     HealingReceivedMultiplier:
@@ -1156,14 +1170,69 @@ MonoBehaviour:
     RerollQuantity: 0
     SelfReviveCharges: 0
     BurnOnHitStacks: 0
-    DashShieldCost:
+    MagazineSizeBonus:
       RawValue: 0
-    CritSkillCooldownReduction:
+    MagazineSizeOverride: 0
+    LongRangePierceBonus: 0
+    WeaponStaggerChance:
       RawValue: 0
-    ShieldBreakGrantsDashCharge:
+    WeaponStaggerDuration:
+      RawValue: 0
+    NearKillMoveSpeedBonus:
+      RawValue: 0
+    NearKillMoveSpeedDuration:
+      RawValue: 0
+    SkillCenterFocusBonus:
+      RawValue: 0
+    CritFocusThreshold: 0
+    CritFocusProgress: 0
+    CritFocusCooldownReduction:
+      RawValue: 0
+    EmergencyDashHealthCost:
+      RawValue: 0
+    CoinDamagePerHundred:
+      RawValue: 0
+    CoinDamageMaxBonus:
+      RawValue: 0
+    DangerPayHealthThreshold:
+      RawValue: 0
+    DangerPayDamageBonus:
+      RawValue: 0
+    DangerPayMoveSpeedBonus:
+      RawValue: 0
+    NoSafetyNetDamageBonus:
+      RawValue: 0
+    PressureCookerDamagePerSecond:
+      RawValue: 0
+    PressureCookerMaxBonus:
+      RawValue: 0
+    SafeTimeSeconds:
+      RawValue: 0
+    OverkillConversion:
+      RawValue: 0
+    OverkillRadius:
+      RawValue: 0
+    ScavengerRequiredPickups: 0
+    ScavengerWindow:
+      RawValue: 0
+    ScavengerBuffDuration:
+      RawValue: 0
+    ScavengerMoveSpeedBonus:
+      RawValue: 0
+    ScavengerFireRateBonus:
+      RawValue: 0
+    ScavengerPickupCount: 0
+    ScavengerWindowRemaining:
+      RawValue: 0
+    CoinLossPercentOnHpDamage:
+      RawValue: 0
+    SecondWindHealPercent:
+      RawValue: 0
+    DashChargeHardCap: 0
+    AccessoryBlockResetsDash:
       Value: 0
-    AllOrNothingActive:
-      Value: 0
+    AccessoryBlockSkillCooldownFraction:
+      RawValue: 0
     HasCriticalFractureMutation:
       Value: 0
     HasSkillFractureMutation:
@@ -1862,6 +1931,13 @@ MonoBehaviour:
   idleWobbleSquashAmount: 0.05
   idleWobbleDuration: 1
   idleWobbleEase: 4
+  idleRareWiggleOnEnable: 0
+  idleRareWiggleInterval: {x: 3, y: 8}
+  idleRareWiggleIncludeScale: 1
+  idleRareWiggleIncludeRotation: 1
+  idleRareWiggleIncludePosition: 1
+  idleRareWiggleStrengthMultiplier: 0.5
+  idleRareWiggleDurationMultiplier: 1
   scaleUseUnscaledTime: 0
   useUnscaledTime: 0
 --- !u!1 &1545853343455048392
@@ -1982,7 +2058,7 @@ Transform:
   m_GameObject: {fileID: 1759350683254206233}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2071,8 +2147,8 @@ ParticleSystem:
     startLifetime:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 0.5
-      minScalar: 0.2
+      scalar: 0.3
+      minScalar: 0.1
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -2178,7 +2254,7 @@ ParticleSystem:
       serializedVersion: 2
       minMaxState: 0
       minColor: {r: 1, g: 1, b: 1, a: 1}
-      maxColor: {r: 1, g: 1, b: 1, a: 1}
+      maxColor: {r: 0.6862745, g: 0.61960787, b: 1, a: 1}
       maxGradient:
         serializedVersion: 2
         key0: {r: 1, g: 1, b: 1, a: 1}
@@ -2242,8 +2318,8 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 0.2
-      minScalar: 0.1
+      scalar: 0.5
+      minScalar: 0.5
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -2566,7 +2642,7 @@ ParticleSystem:
     gravityModifier:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 0
+      scalar: -0.3
       minScalar: 0
       maxCurve:
         serializedVersion: 2
@@ -3263,34 +3339,34 @@ ParticleSystem:
       maxColor: {r: 1, g: 1, b: 1, a: 1}
       maxGradient:
         serializedVersion: 2
-        key0: {r: 0.8437975, g: 0.6839622, b: 1, a: 0}
-        key1: {r: 0.6670052, g: 0.32626626, b: 1, a: 0.89117646}
-        key2: {r: 0.6627451, g: 0.31764707, b: 1, a: 0}
+        key0: {r: 1, g: 1, b: 1, a: 0}
+        key1: {r: 1, g: 1, b: 1, a: 1}
+        key2: {r: 0.6627451, g: 0.31764707, b: 1, a: 0.89117646}
         key3: {r: 0, g: 0, b: 0, a: 0}
         key4: {r: 0, g: 0, b: 0, a: 0}
         key5: {r: 0, g: 0, b: 0, a: 0}
         key6: {r: 0, g: 0, b: 0, a: 0}
         key7: {r: 0, g: 0, b: 0, a: 0}
         ctime0: 0
-        ctime1: 20239
-        ctime2: 65535
+        ctime1: 19661
+        ctime2: 65342
         ctime3: 0
         ctime4: 0
         ctime5: 0
         ctime6: 0
         ctime7: 0
         atime0: 0
-        atime1: 7132
-        atime2: 65535
-        atime3: 0
+        atime1: 6746
+        atime2: 47995
+        atime3: 65535
         atime4: 0
         atime5: 0
         atime6: 0
         atime7: 0
         m_Mode: 0
         m_ColorSpace: 0
-        m_NumColorKeys: 3
-        m_NumAlphaKeys: 3
+        m_NumColorKeys: 2
+        m_NumAlphaKeys: 4
       minGradient:
         serializedVersion: 2
         key0: {r: 1, g: 1, b: 1, a: 1}
@@ -4037,7 +4113,7 @@ ParticleSystem:
     m_Curve:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 0.1
+      scalar: 0.3
       minScalar: 0
       maxCurve:
         serializedVersion: 2
@@ -6737,7 +6813,7 @@ ParticleSystemRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 6a312713056bd45a084b295008bd19ad, type: 2}
+  - {fileID: 2100000, guid: c6cdd0046bc5f49b1b38b9c773ba3b2e, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -6758,7 +6834,7 @@ ParticleSystemRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 1
+  m_SortingOrder: 0
   m_MaskInteraction: 0
   m_RenderMode: 0
   m_MeshDistribution: 0
@@ -7099,7 +7175,7 @@ Transform:
   m_GameObject: {fileID: 5083544464633299211}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -7188,8 +7264,8 @@ ParticleSystem:
     startLifetime:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 0.5
-      minScalar: 0.2
+      scalar: 0.3
+      minScalar: 0.1
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -7295,7 +7371,7 @@ ParticleSystem:
       serializedVersion: 2
       minMaxState: 0
       minColor: {r: 1, g: 1, b: 1, a: 1}
-      maxColor: {r: 1, g: 1, b: 1, a: 1}
+      maxColor: {r: 0.6862745, g: 0.61960787, b: 1, a: 1}
       maxGradient:
         serializedVersion: 2
         key0: {r: 1, g: 1, b: 1, a: 1}
@@ -7359,8 +7435,8 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 0.2
-      minScalar: 0.1
+      scalar: 0.5
+      minScalar: 0.5
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -7683,7 +7759,7 @@ ParticleSystem:
     gravityModifier:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 0
+      scalar: -0.3
       minScalar: 0
       maxCurve:
         serializedVersion: 2
@@ -8380,34 +8456,34 @@ ParticleSystem:
       maxColor: {r: 1, g: 1, b: 1, a: 1}
       maxGradient:
         serializedVersion: 2
-        key0: {r: 0.8437975, g: 0.6839622, b: 1, a: 0}
-        key1: {r: 0.6670052, g: 0.32626626, b: 1, a: 0.89117646}
-        key2: {r: 0.6627451, g: 0.31764707, b: 1, a: 0}
+        key0: {r: 1, g: 1, b: 1, a: 0}
+        key1: {r: 1, g: 1, b: 1, a: 1}
+        key2: {r: 0.6627451, g: 0.31764707, b: 1, a: 0.89117646}
         key3: {r: 0, g: 0, b: 0, a: 0}
         key4: {r: 0, g: 0, b: 0, a: 0}
         key5: {r: 0, g: 0, b: 0, a: 0}
         key6: {r: 0, g: 0, b: 0, a: 0}
         key7: {r: 0, g: 0, b: 0, a: 0}
         ctime0: 0
-        ctime1: 20239
-        ctime2: 65535
+        ctime1: 19661
+        ctime2: 65342
         ctime3: 0
         ctime4: 0
         ctime5: 0
         ctime6: 0
         ctime7: 0
         atime0: 0
-        atime1: 7132
-        atime2: 65535
-        atime3: 0
+        atime1: 6746
+        atime2: 47995
+        atime3: 65535
         atime4: 0
         atime5: 0
         atime6: 0
         atime7: 0
         m_Mode: 0
         m_ColorSpace: 0
-        m_NumColorKeys: 3
-        m_NumAlphaKeys: 3
+        m_NumColorKeys: 2
+        m_NumAlphaKeys: 4
       minGradient:
         serializedVersion: 2
         key0: {r: 1, g: 1, b: 1, a: 1}
@@ -9154,7 +9230,7 @@ ParticleSystem:
     m_Curve:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 0.1
+      scalar: 0.3
       minScalar: 0
       maxCurve:
         serializedVersion: 2
@@ -11854,7 +11930,7 @@ ParticleSystemRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 6a312713056bd45a084b295008bd19ad, type: 2}
+  - {fileID: 2100000, guid: c6cdd0046bc5f49b1b38b9c773ba3b2e, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -11875,7 +11951,7 @@ ParticleSystemRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 1
+  m_SortingOrder: 0
   m_MaskInteraction: 0
   m_RenderMode: 0
   m_MeshDistribution: 0
@@ -17498,7 +17574,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: a378b804f1d5040b5ae45ebb24e2aa12, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -17519,10 +17595,10 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 351ba1bc536654a439e6cb10706289de, type: 3}
-  m_Color: {r: 0.9132337, g: 0.5801887, b: 1, a: 0.48235294}
+  m_Color: {r: 0.4000001, g: 0, b: 1, a: 0.65882355}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -17823,7 +17899,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: a378b804f1d5040b5ae45ebb24e2aa12, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -17844,10 +17920,10 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 351ba1bc536654a439e6cb10706289de, type: 3}
-  m_Color: {r: 0.9132337, g: 0.5801887, b: 1, a: 0.48235294}
+  m_Color: {r: 0.4000001, g: 0, b: 1, a: 0.65882355}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0

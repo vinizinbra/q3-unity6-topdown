@@ -56,13 +56,18 @@ public class UpgradeCardWidget : MonoBehaviour
         public string ValuePreview;
 
         // Overrides the card's baked button label (e.g. "SACRIFICE"/"PAY" instead of "CHOOSE").
-        // Empty (default) leaves whatever label is authored on the card prefab.
+        // Empty (default) resets to DefaultButtonLabel - Setup always writes one or the other, so a
+        // reused card slot never keeps a stale label from whatever kind was shown on it last.
         public string ButtonLabel;
 
         // Store food/Blacksmith perk purchase affordance (see docs/store-blacksmith.md) -
         // ShowPurchaseUi defaults false, so every existing Level-Up/Weapon-Upgrade/Chest/Cursed-Rift
         // call site is unaffected.
         public PurchasableCardState Purchase;
+
+        // Icon Image scale multiplier - 0 (default) means "unchanged" (1). Store's food/utility and
+        // accessory-service cards use a smaller value than the normal Level-Up/Chest/Mutation icon.
+        public float IconScale;
     }
 
     [SerializeField] private GameObject root;
@@ -87,8 +92,10 @@ public class UpgradeCardWidget : MonoBehaviour
 
     [SerializeField, Tooltip("Live before->after value row (e.g. \"MAX HP 100 -> 80\") - hidden entirely when CardData.ValuePreview is empty. Optional - only Sacrifice cards use this.")]
     private TMP_Text valuePreviewText;
-    [SerializeField, Tooltip("The button's own label text - overridden only when CardData.ButtonLabel is non-empty, otherwise left at whatever's authored on the prefab.")]
+    [SerializeField, Tooltip("The button's own label text - set to CardData.ButtonLabel when non-empty, otherwise reset to defaultButtonLabel every Setup so a reused card slot can't keep a stale label from whatever kind was shown on it last.")]
     private TMP_Text buttonLabelText;
+    [SerializeField, Tooltip("Fallback buttonLabelText value whenever CardData.ButtonLabel is empty - the normal Level-Up/Chest/Weapon-Perk/Mutation label.")]
+    private string defaultButtonLabel = "CHOOSE";
 
     [Header("Purchase (Store food / Blacksmith perk)")]
     [SerializeField, Tooltip("Root of the price/currency-icon/Buy-affordance row - shown only when CardData.Purchase.ShowPurchaseUi is true. Optional - only Store/Blacksmith cards use this.")]
@@ -121,7 +128,10 @@ public class UpgradeCardWidget : MonoBehaviour
             return;
 
         if (icon != null)
+        {
             icon.sprite = data.Icon;
+            icon.rectTransform.localScale = Vector3.one * (data.IconScale > 0f ? data.IconScale : 1f);
+        }
 
         bool hasTopLabelOverride = string.IsNullOrEmpty(data.TopLabelOverride) == false;
 
@@ -170,8 +180,8 @@ public class UpgradeCardWidget : MonoBehaviour
             valuePreviewText.text = data.ValuePreview;
         }
 
-        if (buttonLabelText != null && string.IsNullOrEmpty(data.ButtonLabel) == false)
-            buttonLabelText.text = data.ButtonLabel;
+        if (buttonLabelText != null)
+            buttonLabelText.text = string.IsNullOrEmpty(data.ButtonLabel) ? defaultButtonLabel : data.ButtonLabel;
 
         // A ranked ascension shows the rank being picked (CurrentStacks + 1) as a Roman numeral in
         // the TITLE ("Cluster Bomb - II") - no separate UI element. A capped Global Upgrade instead
@@ -180,7 +190,7 @@ public class UpgradeCardWidget : MonoBehaviour
 
         if (displayName != null)
             displayName.text = showRank
-                ? $"{data.DisplayName} - {ToRoman(data.CurrentStacks + 1)}"
+                ? StringUtility.WithRankSuffix(data.DisplayName, data.CurrentStacks + 1)
                 : data.DisplayName;
 
         if (description != null)
@@ -206,17 +216,5 @@ public class UpgradeCardWidget : MonoBehaviour
 
         if (buyButton != null)
             buyButton.interactable = interactable;
-    }
-
-    // Ranks are tiny (MaxRank is a byte, in practice 3), so a small lookup covers every real case;
-    // anything unexpectedly large falls back to the plain number.
-    private static readonly string[] Romans = { "", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X" };
-
-    private static string ToRoman(int n)
-    {
-        if (n <= 0)
-            return string.Empty;
-
-        return n < Romans.Length ? Romans[n] : n.ToString();
     }
 }

@@ -7,7 +7,8 @@ using UnityEngine;
 // (which clips, how much variation) sit level with things touched once a year, so this is organised
 // by how often each knob is actually reached for:
 //
-//   always visible  - audition buttons, the clip list, the group, volume/pitch variance
+//   always visible  - audition buttons, the clip list (with per-clip trim/fade overrides), the
+//                     group, volume/pitch variance
 //   collapsed       - trim, fade, looping, 3D, voice limits, layers
 //
 // Sections remember their own open/closed state per SoundData, so opening a sound you were just
@@ -23,6 +24,7 @@ public class SoundDataEditor : Editor
 
     private void OnEnable()
     {
+        _drawn.Add("variants");
         _drawn.Add("clips");
         _drawn.Add("layers");
         _clips = BuildClipList();
@@ -40,7 +42,7 @@ public class SoundDataEditor : Editor
         DrawClipDropArea();
 
         // Only meaningful with something to choose between - a one-clip sound has no pick to make.
-        using (new EditorGUI.DisabledScope(Prop("clips").arraySize < 2))
+        using (new EditorGUI.DisabledScope(Prop("variants").arraySize < 2))
             EditorGUILayout.PropertyField(Prop("pick"));
 
         EditorGUILayout.Space(6);
@@ -68,6 +70,9 @@ public class SoundDataEditor : Editor
 
         DrawSection("Trim & Fade", () =>
         {
+            EditorGUILayout.HelpBox(
+                "Shared by every clip in this sound. A clip that needs its own can tick Trim or Fade on its row in the list above.",
+                MessageType.None);
             DrawMinMax(Prop("delay"), "Start Delay", 0f, 5f);
             EditorGUILayout.PropertyField(Prop("startAt"));
             EditorGUILayout.PropertyField(Prop("endAt"));
@@ -139,7 +144,7 @@ public class SoundDataEditor : Editor
             if (GUILayout.Button("Play", GUILayout.Height(24)))
                 SoundDataEditorPreview.PlayVariant(data);
 
-            using (new EditorGUI.DisabledScope(data.clips == null || data.clips.Length < 2))
+            using (new EditorGUI.DisabledScope(data.variants == null || data.variants.Length < 2))
             {
                 if (GUILayout.Button("Play Every Clip", GUILayout.Height(24)))
                     SoundDataEditorPreview.PlayEveryClip(data);
@@ -152,25 +157,87 @@ public class SoundDataEditor : Editor
 
     // ------------------------------------------------------------------ clips
 
+    // One row per variation: the clip field always, plus - only when the row's own override is
+    // ticked - that clip's private trim/fade. Collapsed by default so a set where every take lines
+    // up still reads as the plain clip list it was before per-clip settings existed, and the extra
+    // fields only take space on the rows actually using them.
     private ReorderableList BuildClipList()
     {
-        SerializedProperty clips = serializedObject.FindProperty("clips");
+        SerializedProperty variants = serializedObject.FindProperty("variants");
 
-        var list = new ReorderableList(serializedObject, clips, true, true, true, true);
+        var list = new ReorderableList(serializedObject, variants, true, true, true, true);
 
         list.drawHeaderCallback = rect =>
         {
-            EditorGUI.LabelField(rect, clips.arraySize == 1 ? "Clip" : $"Clips  ({clips.arraySize} variations)");
+            EditorGUI.LabelField(rect, variants.arraySize == 1 ? "Clip" : $"Clips  ({variants.arraySize} variations)");
         };
 
         list.drawElementCallback = (rect, index, _, _) =>
         {
+            SerializedProperty element = variants.GetArrayElementAtIndex(index);
+            SerializedProperty trim = element.FindPropertyRelative("overrideTrim");
+            SerializedProperty fade = element.FindPropertyRelative("overrideFade");
+
+            float line = EditorGUIUtility.singleLineHeight;
             rect.y += 2f;
-            rect.height = EditorGUIUtility.singleLineHeight;
-            EditorGUI.PropertyField(rect, clips.GetArrayElementAtIndex(index), GUIContent.none);
+            rect.height = line;
+
+            // Clip on the left, a play button plus the two override toggles on the right - so which
+            // rows differ from the shared settings is visible at a glance down the list, and each
+            // clip can be auditioned (with this sound's current volume/pitch/trim/fade) on its own.
+            SerializedProperty clipProp = element.FindPropertyRelative("clip");
+            var clipRect = new Rect(rect.x, rect.y, rect.width - 174f, line);
+            EditorGUI.PropertyField(clipRect, clipProp, GUIContent.none);
+
+            var playRect = new Rect(rect.xMax - 170f, rect.y, 28f, line);
+            var trimRect = new Rect(rect.xMax - 136f, rect.y, 64f, line);
+            var fadeRect = new Rect(rect.xMax - 68f, rect.y, 64f, line);
+
+            using (new EditorGUI.DisabledScope(clipProp.objectReferenceValue == null))
+            {
+                if (GUI.Button(playRect, "▶"))
+                    SoundDataEditorPreview.PlayClip((SoundData)target, clipProp.objectReferenceValue as AudioClip);
+            }
+
+            trim.boolValue = GUI.Toggle(trimRect, trim.boolValue, "Trim", EditorStyles.miniButton);
+            fade.boolValue = GUI.Toggle(fadeRect, fade.boolValue, "Fade", EditorStyles.miniButton);
+
+            using (new EditorGUI.IndentLevelScope())
+            {
+                if (trim.boolValue)
+                {
+                    rect.y += line + 2f;
+                    EditorGUI.PropertyField(new Rect(rect.x, rect.y, rect.width, line), element.FindPropertyRelative("startAt"), new GUIContent("Start At"));
+                    rect.y += line + 2f;
+                    EditorGUI.PropertyField(new Rect(rect.x, rect.y, rect.width, line), element.FindPropertyRelative("endAt"), new GUIContent("End At"));
+                }
+
+                if (fade.boolValue)
+                {
+                    rect.y += line + 2f;
+                    EditorGUI.PropertyField(new Rect(rect.x, rect.y, rect.width, line), element.FindPropertyRelative("fadeIn"), new GUIContent("Fade In"));
+                    rect.y += line + 2f;
+                    EditorGUI.PropertyField(new Rect(rect.x, rect.y, rect.width, line), element.FindPropertyRelative("fadeOut"), new GUIContent("Fade Out"));
+                }
+            }
         };
 
-        list.elementHeight = EditorGUIUtility.singleLineHeight + 6f;
+        // Variable height: a plain row is one line, each ticked override adds its two.
+        list.elementHeightCallback = index =>
+        {
+            SerializedProperty element = variants.GetArrayElementAtIndex(index);
+            float line = EditorGUIUtility.singleLineHeight + 2f;
+            float height = line + 4f;
+
+            if (element.FindPropertyRelative("overrideTrim").boolValue)
+                height += line * 2f;
+
+            if (element.FindPropertyRelative("overrideFade").boolValue)
+                height += line * 2f;
+
+            return height;
+        };
+
         return list;
     }
 
@@ -211,14 +278,19 @@ public class SoundDataEditor : Editor
 
         DragAndDrop.AcceptDrag();
 
-        SerializedProperty clips = Prop("clips");
+        SerializedProperty variants = Prop("variants");
         foreach (Object dragged in DragAndDrop.objectReferences)
         {
             if (dragged is not AudioClip clip)
                 continue;
 
-            clips.arraySize++;
-            clips.GetArrayElementAtIndex(clips.arraySize - 1).objectReferenceValue = clip;
+            variants.arraySize++;
+            SerializedProperty added = variants.GetArrayElementAtIndex(variants.arraySize - 1);
+            added.FindPropertyRelative("clip").objectReferenceValue = clip;
+            // A new array element copies the one before it, so clear the overrides explicitly -
+            // otherwise a clip dropped after one with a custom trim silently inherits that trim.
+            added.FindPropertyRelative("overrideTrim").boolValue = false;
+            added.FindPropertyRelative("overrideFade").boolValue = false;
         }
 
         serializedObject.ApplyModifiedProperties();

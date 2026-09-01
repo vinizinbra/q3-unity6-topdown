@@ -1,7 +1,9 @@
-// Appended (not inserted) - MinimapWidget.chunkTypeSprites is a Sprite[] indexed positionally by
-// (int)ChunkType (see MinimapWidget.ResolveChunkTypeSprite), so inserting a new value before
-// Traversal would silently shift every already-authored sprite in both scenes to the wrong chunk
-// type. HealingShrine/CursedRift/Blacksmith are POI-flavored chunks (each holding one hand-placed
+// Appended (not inserted) - ChunkTypeMask below is a flags enum whose bit positions must stay 1:1
+// with these ordinals (see its own comment), so inserting a new value before Traversal would
+// require re-deriving every already-authored ForbiddenNeighbors mask in both scenes.
+// MinimapWidget.chunkTypeSprites is keyed explicitly by ChunkType (not positional), so it's safe to
+// reorder/insert here independent of that concern. HealingShrine/CursedRift/Blacksmith are
+// POI-flavored chunks (each holding one hand-placed
 // Breathing POI via Chunk.SpawnConfig, see docs/breathing-poi.md/docs/store-blacksmith.md) -
 // CursedRift, not CursedShrine, to match this codebase's own dominant naming for the feature
 // (CursedRiftSystem/CursedRiftUtility/InteractableKind.CursedRift etc. - "CursedShrine" only ever
@@ -115,6 +117,19 @@ component Chunk
     // nothing. Example: author a LobbyStart prototype with Boss|Merchant|Blacksmith|HealingShrine|
     // CursedRift so spawn never borders the boss arena or any POI.
     ChunkTypeMask ForbiddenNeighbors;
+
+    // Every OTHER chunk this one directly borders (shares a placed-adjacency edge with) - computed
+    // once by LevelGenerationSystem.ComputeChunkConnectivity right after the level finishes growing,
+    // symmetric (each side records the other). Two chunks that ended up geometrically adjacent
+    // already passed AllowedConnectionSides/ForbiddenNeighbors during placement, so adjacency here
+    // always means a real, walkable connection - nothing about doors/openings needs re-checking.
+    // Read by ChunkConnectivityUtility to keep an Elite ("major" Director group) spawn from landing
+    // in a chunk that's merely close in world-space but not actually reachable from the nearest
+    // player's own chunk without a detour - see docs/survival-director.md's "Chunk Connectivity"
+    // section. 8 is a generous cap: ChunkConnectionSide only has 4 sides, but one large chunk's
+    // single side can border more than one smaller neighbor.
+    array<EntityRef>[8] ConnectedChunks;
+    Byte ConnectedChunkCount;
 
     // Set once by ChunkDiscoverySystem the first time any player physically enters this chunk's
     // world footprint - shared/co-op, not per-player (same convention Experience/Talents already

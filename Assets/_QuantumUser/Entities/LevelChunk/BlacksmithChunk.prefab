@@ -170,6 +170,7 @@ MonoBehaviour:
   innerCornerYaw: 270
   touchGapTolerance: 0.1
   debugLogPlacement: 1
+  generateOnEnable: 0
   colliderRoot: {fileID: 0}
   visualRoot: {fileID: 0}
 --- !u!65 &1299701383131550041
@@ -220,6 +221,8 @@ MonoBehaviour:
   footprintRenderer: {fileID: 0}
   maxAcquireAttempts: 5
   acquireRetryInterval: 1
+  bakedShadow: {fileID: 0}
+  bakeShadowPrefabOverride: {fileID: 0}
 --- !u!1 &2447848535451485947
 GameObject:
   m_ObjectHideFlags: 0
@@ -14793,7 +14796,7 @@ SpriteRenderer:
   m_Size: {x: 1, y: 1}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
 --- !u!1 &4489235936766002015
 GameObject:
@@ -14884,7 +14887,7 @@ SpriteRenderer:
   m_Size: {x: 1, y: 1}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
 --- !u!1 &5993867519525850044
 GameObject:
@@ -15393,7 +15396,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Quantum.Unity::Quantum.QPrototypeChunk
   Prototype:
     Type:
-      Value: 6
+      Value: 7
     ChunkSizeWidth: 8
     ChunkSizeDepth: 8
     OriginCellX: 0
@@ -15533,8 +15536,19 @@ MonoBehaviour:
         Value: 289158524736587673
     AllowedConnectionSides:
       Value: 15
+    ForbiddenNeighbors:
+      Value: 0
     Discovered:
       Value: 0
+    HasRespawnPoint:
+      Value: 0
+    RespawnPoint:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
 --- !u!114 &6992737075964169537
 MonoBehaviour:
   m_ObjectHideFlags: 0

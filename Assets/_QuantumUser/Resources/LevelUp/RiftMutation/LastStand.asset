@@ -16,7 +16,9 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/LastStand
     Guid:
       Value: 273823591783865772
-  Icon: {fileID: 1786987597, guid: 9dcd69f213ec845fa868b0a3699cf683, type: 3}
+  Icon: {fileID: -1456117275, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
   DisplayName: Last Stand
   Rarity: 2
+  Scope: 0
+  IncompatibleWith: []
   Description: Taking a large hit marks nearby enemies

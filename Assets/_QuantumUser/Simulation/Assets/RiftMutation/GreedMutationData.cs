@@ -2,29 +2,29 @@ namespace Quantum
 {
     using Photon.Deterministic;
 
-    // Doubles Rift Shard gain (CharacterStats.RiftShardGainMultiplier) and raises every enemy's Max
-    // Health for the rest of the run (Frame.Global.EnemyHealthBonusMultiplier, read by
-    // EnemySystem.SeedHealth) - the enemy-scaling half is run-wide, not per-entity, so it affects
-    // every enemy the instant any player picks this, co-op or not. See docs/rift-mutations.md.
+    // Team economy versus tougher enemies. RUN-SCOPE: both halves change shared state, so it applies
+    // exactly once no matter how many players are offered it (see MutationScope/RunMutations.qtn).
+    //
+    // The reward is run-wide precisely because the drawback is - every enemy in the match gains
+    // health the moment anyone takes this, so everyone paying that price shares the payout. That's
+    // why the shard bonus goes to Frame.Global (applied by RiftShardUtility.GrantAll to the base
+    // amount, before each player's own multiplier) rather than only to the picker's own
+    // CharacterStats.RiftShardGainMultiplier, which is what it used to do.
     public unsafe class GreedMutationData : RiftMutationData
     {
-        public FP RiftShardMultiplier = FP._1;
+        public FP RiftShardGainBonus = FP._0;
         public FP EnemyHealthBonus = FP._0;
 
         public override void Apply(Frame f, EntityRef entity)
         {
-            if (f.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats) == true)
-            {
-                stats->RiftShardGainMultiplier = FPMath.Max(FP._0, stats->RiftShardGainMultiplier * RiftShardMultiplier);
-            }
-
-            f.Global->EnemyHealthBonusMultiplier += EnemyHealthBonus;
+            f.Global->RiftShardGainBonus += RiftShardGainBonus;
+            f.Global->EnemyMaxHealthBonus += EnemyHealthBonus;
         }
 
         protected override object[] DescriptionArgs => new object[]
         {
-            (RiftShardMultiplier.AsFloat - 1f) * 100f,
-            FPMath.RoundToInt(EnemyHealthBonus * 100)
+            RiftShardGainBonus.AsFloat * 100f,
+            EnemyHealthBonus.AsFloat * 100f
         };
     }
 }

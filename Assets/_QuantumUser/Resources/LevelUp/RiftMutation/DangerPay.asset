@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c49344b915264e1fa401d4c353e00dd, type: 3}
+  m_Name: DangerPay
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.DangerPayMutationData
+  Identifier:
+    Path: _QuantumUser/Resources/LevelUp/RiftMutation/DangerPay
+    Guid:
+      Value: 302357521748849114
+  Icon: {fileID: -1549294200, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
+  DisplayName: Danger Pay
+  Rarity: 2
+  Scope: 0
+  IncompatibleWith: []
+  Description: 'Below <color=#FD3971>{0:0}%</color> Health: +<color=#FD3971>{1:0}%</color> Damage and +<color=#FD3971>{2:0}%</color> Move Speed'
+  HealthThreshold:
+    RawValue: 26214
+  DamageBonus:
+    RawValue: 22938
+  MoveSpeedBonus:
+    RawValue: 13107

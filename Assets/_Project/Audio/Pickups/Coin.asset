@@ -12,10 +12,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c04d8195895c42008e9658fbf433bf7, type: 3}
   m_Name: Coin
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
-  clips:
-  - {fileID: 8300000, guid: be92968074239e6458b6e5362ba60dec, type: 3}
-  - {fileID: 8300000, guid: 4f47d6ea0f922d34f86e4ada46e3f777, type: 3}
-  - {fileID: 8300000, guid: 57cf310387322e84fa9728bd694165a8, type: 3}
+  variants:
+  - clip: {fileID: 8300000, guid: be92968074239e6458b6e5362ba60dec, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: 4f47d6ea0f922d34f86e4ada46e3f777, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: 57cf310387322e84fa9728bd694165a8, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  clips: []
   pick: 1
   layers: []
   group: 7

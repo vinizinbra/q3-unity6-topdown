@@ -12,15 +12,34 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c04d8195895c42008e9658fbf433bf7, type: 3}
   m_Name: Footstep
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
-  clips:
-  - {fileID: 8300000, guid: 8f15a547b784346409c27c3649f0f35a, type: 3}
-  - {fileID: 8300000, guid: a46caff7c0dbe4848aa8999887e42d84, type: 3}
-  - {fileID: 8300000, guid: 62f0243ed7f6c42478f2cd6f1c00d265, type: 3}
+  variants:
+  - clip: {fileID: 8300000, guid: 8f15a547b784346409c27c3649f0f35a, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: a46caff7c0dbe4848aa8999887e42d84, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: 62f0243ed7f6c42478f2cd6f1c00d265, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  clips: []
   pick: 1
   layers: []
   group: 9
   output: {fileID: 0}
-  volume: {x: 0.5, y: 0.5}
+  volume: {x: 0.21463414, y: 0.21463414}
   pitch: {x: 0.95, y: 1.05}
   delay: {x: 0, y: 0}
   startAt: 0

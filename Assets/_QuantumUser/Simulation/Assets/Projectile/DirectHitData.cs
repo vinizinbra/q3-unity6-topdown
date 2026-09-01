@@ -194,8 +194,8 @@ namespace Quantum
         // ProjectileSpawner.Spawn directly rather than through WeaponSystem.FireProjectile, so they
         // don't re-roll Bonus­Pierce/Bounces/Explosive Sequence/Cataclysm themselves (a bare,
         // un-perked repeat of the base shot at reduced damage), only capped recursion
-        // (MaxSplitShotDepth) and MaxTravelDistance (WeaponPerkUtility.ResolveWeaponRange, same as
-        // every other weapon-fired projectile - see Projectile.qtn) carry over.
+        // (MaxSplitShotDepth) and MaxTravelDistance (WeaponPerkUtility.ResolveProjectileMaxTravelDistance,
+        // same as every other weapon-fired projectile - see Projectile.qtn) carry over.
         private static void SpawnSplitProjectiles(Frame f, Projectile* projectile, FPVector3 point, Weapon* weapon, WeaponPostImpactProcs* procs)
         {
             int count = procs->SplitShotCount;
@@ -209,7 +209,7 @@ namespace Quantum
             FP baseAngle = headingAngle - SplitShotArcDegrees / 2 + f.RNG->Next(0, step);
             FP splitDamage = projectile->Damage * procs->SplitShotDamageMultiplier;
             FP speed = projectile->Velocity.Magnitude;
-            FP maxTravelDistance = WeaponPerkUtility.ResolveWeaponRange(f, weapon);
+            FP maxTravelDistance = WeaponPerkUtility.ResolveProjectileMaxTravelDistance(f, weapon, projectile);
 
             for (int i = 0; i < count; i++)
             {

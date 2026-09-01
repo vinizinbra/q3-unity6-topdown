@@ -16,6 +16,6 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Pixie/Pixie_PassiveSkill/ChainReactionPassiveData
     Guid:
       Value: 307784346442998099
-  Description: Your explosions mark weaker enemies. A marked enemy blows up on death, chaining into more explosions.
+  Description: Your explosions mark weak enemies - a marked enemy blows up on death.
   MarkChance:
     RawValue: 32768

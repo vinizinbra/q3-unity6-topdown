@@ -32,6 +32,10 @@ namespace Quantum
         [SerializeField, Tooltip("Held muzzle loop for as long as the beam is firing - intro/loop/tail, all optional. Started on the first segment, kept alive by every later one, and stopped by the same stopGrace window that hides the beam, so the sound and the visual always end together. A continuous weapon should use THIS rather than WeaponView.fireSound, which would otherwise fire a one-shot every simulated tick.")]
         private SustainedSound fireLoop = new SustainedSound();
 
+        [Header("Scrolling")]
+        [SerializeField, Tooltip("Texture repeats per world unit of beam length - the same knob LineRendererHitscanView has, and it matters MORE here: a held beam's length changes continuously as the target moves, so the default Stretch mode visibly squashes and smears the texture along it as the range closes. Tile keeps the pattern (and a scrolling material's flow rate) constant whatever the beam currently reaches. 0 leaves the template's own authored texture mode alone. The texture itself must be set to Repeat rather than Clamp for this to read correctly.")]
+        private float textureTilesPerUnit;
+
         [Header("Timing")]
         [SerializeField, Tooltip("Floor on how long the beam is held after the last shot. Only a floor - the real grace is derived per shot from the weapon's own LIVE fire interval (see ResolveStopGrace), so a weapon whose fire rate changes mid-run, or one that simply isn't fast enough to read as continuous, can't blink the beam off between ticks.")]
         private float stopGrace = 0.15f;
@@ -102,6 +106,12 @@ namespace Quantum
             beam.gameObject.SetActive(true);
             beam.useWorldSpace = true;
             beam.positionCount = points.Count;
+
+            // Tile mode repeats per WORLD UNIT, so this is length-independent - it does not need
+            // re-deriving as the beam stretches, and RefreshOrigin deliberately doesn't touch it.
+            // Set here rather than once on acquire purely because a pooled instance is reused; both
+            // writes inside ApplyTextureTiling are guarded against redundant assignment.
+            ApplyTextureTiling(beam, textureTilesPerUnit);
 
             for (int i = 0; i < points.Count; i++)
                 beam.SetPosition(i, points[i]);

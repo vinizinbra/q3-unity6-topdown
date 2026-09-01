@@ -24,11 +24,10 @@ struct StoreWeaponOffer
     Byte RolledPerkCount;
     FP Price;
 
-    // Break-driven starting Weapon Level (StoreConfig.ResolveBreakWeaponConfig, see
-    // docs/store-blacksmith.md) - applied via WeaponSystem.AddLevel AFTER WeaponChoiceUtility.Grant
-    // in StoreUtility.BuyWeapon, since Grant/Equip always resets a freshly-equipped Weapon to Level
-    // 0 (WeaponSystem.SeedStats). Reuses the exact same "+5%, compounding" mechanism the guaranteed
-    // Increase-Weapon-Level offer already uses - nothing new baked into damage math here.
+    // SurvivalTime-driven starting Weapon Level (LevelUpConfig.ResolveWeaponOfferLevel, shared with
+    // Choose-Weapon/Chest - see docs/store-blacksmith.md) - copied into LevelUpOption.RolledWeaponLevel
+    // and applied via WeaponSystem.AddLevel AFTER WeaponChoiceUtility.Grant in StoreUtility.BuyWeapon,
+    // since Grant/Equip always resets a freshly-equipped Weapon to Level 0 (WeaponSystem.SeedStats).
     Byte WeaponLevel;
 }
 

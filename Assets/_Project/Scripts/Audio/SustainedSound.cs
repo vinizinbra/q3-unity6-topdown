@@ -23,13 +23,13 @@ using UnityEngine;
 [Serializable]
 public class SustainedSound
 {
-    [SerializeField, Tooltip("Optional one-shot played once as the sound starts - a spin-up or ignition. Leave empty to have the loop simply begin.")]
+    [SerializeField, SoundDataPicker, Tooltip("Optional one-shot played once as the sound starts - a spin-up or ignition. Leave empty to have the loop simply begin.")]
     private SoundData intro;
 
-    [SerializeField, Tooltip("The held loop. Its SoundData wants Loop ticked, and a small fadeIn/fadeOut on it smooths the start and stop. Leave empty to use this purely as an intro/tail pair.")]
+    [SerializeField, SoundDataPicker, Tooltip("The held loop. Its SoundData wants Loop ticked, and a small fadeIn/fadeOut on it smooths the start and stop. Leave empty to use this purely as an intro/tail pair.")]
     private SoundData loop;
 
-    [SerializeField, Tooltip("Optional one-shot played once as the sound stops - a spin-down or release tail. Skipped on a hard stop (weapon swapped away, entity pooled), where there is nothing left to trail off.")]
+    [SerializeField, SoundDataPicker, Tooltip("Optional one-shot played once as the sound stops - a spin-down or release tail. Skipped on a hard stop (weapon swapped away, entity pooled), where there is nothing left to trail off.")]
     private SoundData tail;
 
     private SoundHandle _handle = SoundHandle.None;

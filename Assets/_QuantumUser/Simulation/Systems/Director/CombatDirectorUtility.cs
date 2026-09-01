@@ -6,11 +6,25 @@ namespace Quantum
 
     // Domain 2 (Combat Director) - the full 10-step pulse algorithm from the Survival Director
     // design: read phase, add budget, measure pressure, stop if target already met, find/select/
-    // spawn an authored group, subtract its cost, repeat until the purchase limit or no valid
-    // group/anchor remains. Never spawns an individual enemy - only ever purchases a whole
-    // EnemyGroupConfig, so encounter design lives entirely in that asset.
+    // spawn an authored group OR a single directly-authored enemy, subtract its cost, repeat until
+    // the purchase limit or no valid candidate/anchor remains. AllowedGroups and AllowedEnemies
+    // share one weighted-draw candidate pool (TrySelectSpawn) so a phase can freely mix whole
+    // encounters and lone spawns within the same pulse.
     public static unsafe class CombatDirectorUtility
     {
+        // One purchase's worth of "what to spawn next" - either a whole EnemyGroupConfig or a
+        // single AllowedEnemies entry, picked by the same weighted roll (see TrySelectSpawn). Kept
+        // as a small carrier struct rather than two parallel out-params so the purchase loop in
+        // TryPulse has one thing to branch on.
+        private struct SpawnCandidate
+        {
+            public bool IsGroup;
+            public EnemyGroupConfig Group;
+            public AssetRef<EnemyGroupConfig> GroupRef;
+            public EnemySpawnEntry Enemy;
+            public FP Cost;
+        }
+
         public static void TryPulse(Frame f, SurvivalPhase phase, DirectorConfig directorConfig, LifecycleConfig lifecycleConfig, BalanceConfig balance)
         {
             f.Global->DirectorPulseTimer -= f.DeltaTime;
@@ -26,17 +40,24 @@ namespace Quantum
             // See PlayerClusterDirectorUtility.
             if (PlayerClusterDirectorUtility.BuildAnchors(f, phase, directorConfig, balance, out var plan) == false)
             {
-                Log.Debug("[Director] pulse skipped - no players to spawn combat around");
+                Log.Error("[Director] pulse skipped - no players to spawn combat around");
                 return;
             }
 
             // Splitting legitimately needs more concurrent enemies (multiple fronts), so the alive
-            // cap scales by the same multiplier the budget/pressure do - but never below the
-            // authored value.
+            // cap scales by the same multiplier the budget/pressure do - as does any run-wide
+            // density modifier (Overpopulation/Elite Territory/Escalation, see
+            // EncounterModifierUtility). Never below the authored value when only splitting is at
+            // play; a density modifier that genuinely LOWERS density (Elite Territory) is allowed
+            // to take it under, since that's the whole point of the trade.
             FP splitThreat = f.Global->SplitThreatMultiplier <= FP._0 ? FP._1 : f.Global->SplitThreatMultiplier;
-            int maxAlive = FPMath.RoundToInt(phase.MaxAliveEnemies * splitThreat);
-            if (maxAlive < phase.MaxAliveEnemies)
-                maxAlive = phase.MaxAliveEnemies;
+            FP density = EncounterModifierUtility.ResolveSpawnDensityMultiplier(f);
+            int maxAlive = FPMath.RoundToInt(phase.MaxAliveEnemies * splitThreat * density);
+            int splitFloor = FPMath.RoundToInt(phase.MaxAliveEnemies * density);
+            if (maxAlive < splitFloor)
+                maxAlive = splitFloor;
+            if (maxAlive < 1)
+                maxAlive = 1;
 
             // A front that can't place a group (no valid anchor near it) shouldn't starve the
             // others - it's marked exhausted and the loop moves on to the next neediest.
@@ -59,29 +80,45 @@ namespace Quantum
 
                 int aliveCount = CountAliveDirectorEnemies(f);
 
-                if (TrySelectGroup(f, phase, aliveCount, maxAlive, out EnemyGroupConfig group, out AssetRef<EnemyGroupConfig> groupRef, out FP groupCost) == false)
+                if (TrySelectSpawn(f, phase, aliveCount, maxAlive, out SpawnCandidate candidate) == false)
                 {
-                    Log.Debug($"[Director] pulse stopped - no valid group (budget={f.Global->DirectorBudget}, alive={aliveCount}, cap={maxAlive})");
+                    Log.Error($"[Director] pulse stopped - no valid group or enemy (budget={f.Global->DirectorBudget}, alive={aliveCount}, cap={maxAlive})");
                     break;
                 }
 
                 // Major enemies (Elite+) stay a GLOBAL event - never duplicated per front. They
                 // anchor at the party centroid regardless of which front's deficit triggered the
                 // purchase (the Boss itself uses a separate path, RunPhaseUtility.BeginBossEncounter).
-                bool major = GroupContainsMajor(f, group);
+                bool major = candidate.IsGroup ? GroupContainsMajor(f, candidate.Group) : EnemyIsMajor(f, candidate.Enemy.EnemyData);
                 FPVector3 anchor = major ? plan.GlobalCentroid : plan.Centers[front];
 
-                if (GroupSpawnerUtility.TrySpawnGroup(f, group, groupRef, anchor, directorConfig, out int spawnedCount) == false)
+                bool spawnedOk;
+                int spawnedCount;
+                string candidateName;
+
+                if (candidate.IsGroup)
                 {
-                    Log.Debug($"[Director] {group.name} found no valid spawn at front {front} - marking it exhausted this pulse");
+                    spawnedOk = GroupSpawnerUtility.TrySpawnGroup(f, candidate.Group, candidate.GroupRef, anchor, major, directorConfig, out spawnedCount);
+                    candidateName = candidate.Group.name;
+                }
+                else
+                {
+                    spawnedOk = GroupSpawnerUtility.TrySpawnEnemy(f, candidate.Enemy, anchor, major, directorConfig);
+                    spawnedCount = spawnedOk ? 1 : 0;
+                    candidateName = f.FindAsset(candidate.Enemy.EnemyData)?.name ?? candidate.Enemy.EnemyData.ToString();
+                }
+
+                if (spawnedOk == false)
+                {
+                    Log.Error($"[Director] {candidateName} found no valid spawn at front {front} - marking it exhausted this pulse");
                     exhausted[front] = true;
                     continue;
                 }
 
-                f.Global->DirectorBudget -= groupCost;
+                f.Global->DirectorBudget -= candidate.Cost;
                 purchases++;
 
-                Log.Debug($"[Director] purchased {group.name} ({spawnedCount} enemies){(major ? " [major-global]" : $" at front {front}")} for {groupCost} - budget now {f.Global->DirectorBudget}, alive was {aliveCount}/{maxAlive}, split x{splitThreat}");
+                Log.Error($"[Director] purchased {candidateName} ({spawnedCount} enemies){(major ? " [major-global]" : $" at front {front}")} for {candidate.Cost} - budget now {f.Global->DirectorBudget}, alive was {aliveCount}/{maxAlive}, split x{splitThreat}");
             }
         }
 
@@ -116,8 +153,11 @@ namespace Quantum
         }
 
         // True if any member is Elite tier or higher - such a group is spawned once at the global
-        // centroid, never round-robined per cluster (Elite/midboss stay a global event).
-        private static bool GroupContainsMajor(Frame f, EnemyGroupConfig group)
+        // centroid, never round-robined per cluster (Elite/midboss stay a global event). Also the
+        // "is this an Elite encounter" test EncounterModifierUtility.ResolveGroupWeightMultiplier
+        // biases its roll by (Elite Territory), which is why this is internal rather than private -
+        // one definition of "major group", not two that could drift.
+        internal static bool GroupContainsMajor(Frame f, EnemyGroupConfig group)
         {
             if (group.Members == null)
                 return false;
@@ -133,6 +173,17 @@ namespace Quantum
             }
 
             return false;
+        }
+
+        // AllowedEnemies' counterpart to GroupContainsMajor - a direct single-enemy candidate is
+        // "major" purely by its own Tier, same Elite+ threshold.
+        internal static bool EnemyIsMajor(Frame f, AssetRef<EnemyDataAsset> enemyDataRef)
+        {
+            if (enemyDataRef.Id.IsValid == false)
+                return false;
+
+            EnemyDataAsset data = f.FindAsset(enemyDataRef);
+            return data != null && data.Tier >= EnemyTier.Elite;
         }
 
         // Run curve (ramps over the 12-minute run) * co-op multiplier (scales with live player
@@ -159,7 +210,12 @@ namespace Quantum
             // design specifies, cap included. Defended to 1 for the pre-first-tick zero default.
             FP splitMultiplier = f.Global->SplitThreatMultiplier <= FP._0 ? FP._1 : f.Global->SplitThreatMultiplier;
 
-            return curveMultiplier * coopMultiplier * splitMultiplier;
+            // Run-wide encounter modifiers (Overpopulation/Elite Territory) plus Escalation's
+            // within-phase ramp - exactly 1 for a run where none was picked. See
+            // EncounterModifierUtility.
+            FP densityMultiplier = EncounterModifierUtility.ResolveSpawnDensityMultiplier(f);
+
+            return curveMultiplier * coopMultiplier * splitMultiplier * densityMultiplier;
         }
 
         // Refunds a fraction of the enemy's own cost into DirectorBudget, then destroys it. Called
@@ -174,7 +230,7 @@ namespace Quantum
             FP refund = data.ResolveCost(f) * lifecycleConfig.RefundFraction;
             f.Global->DirectorBudget += refund;
 
-            Log.Debug($"[Director] retiring {entity} ({data.name}) - refunding {refund}, DirectorBudget now {f.Global->DirectorBudget}");
+            Log.Error($"[Director] retiring {entity} ({data.name}) - refunding {refund}, DirectorBudget now {f.Global->DirectorBudget}");
 
             f.Destroy(entity);
         }
@@ -209,22 +265,39 @@ namespace Quantum
             return count;
         }
 
-        // Deterministic weighted roll among qualifying candidates, in authored (phase.AllowedGroups)
-        // order - a single f.RNG->Next(0, totalWeight) draw walked against each candidate's own
-        // Weight, not one roll per candidate, so the result only ever depends on the RNG state and
-        // the candidate list itself. Variety is still meant to come from authoring more groups, not
-        // from a tactical scoring formula - Weight only biases how often an already-valid group is
-        // picked relative to its siblings.
-        private static bool TrySelectGroup(Frame f, SurvivalPhase phase, int aliveCount, int maxAliveEnemies, out EnemyGroupConfig chosen, out AssetRef<EnemyGroupConfig> chosenRef, out FP chosenCost)
+        // AllowedEnemies' counterpart to CountAliveForGroup - counts by Enemy.EnemyData across
+        // every EnemyLifecycle-carrying entity regardless of how it was spawned (group or direct),
+        // since a direct spawn has no owning group to key a count off.
+        private static int CountAliveForEnemy(Frame f, AssetRef<EnemyDataAsset> enemyDataRef)
         {
-            List<AssetRef<EnemyGroupConfig>> validGroups = new List<AssetRef<EnemyGroupConfig>>();
-            List<FP> validCosts = new List<FP>();
+            int count = 0;
+            var filtered = f.Filter<EnemyLifecycle, Enemy>();
+
+            while (filtered.Next(out EntityRef entity, out EnemyLifecycle _, out Enemy enemy))
+            {
+                if (enemy.EnemyData == enemyDataRef)
+                    count++;
+            }
+
+            return count;
+        }
+
+        // Deterministic weighted roll among qualifying candidates from BOTH phase.AllowedGroups and
+        // phase.AllowedEnemies, in authored order (groups first, then enemies) - a single
+        // f.RNG->Next(0, totalWeight) draw walked against each candidate's own Weight, not one roll
+        // per candidate, so the result only ever depends on the RNG state and the candidate list
+        // itself. Variety is still meant to come from authoring more groups/enemies, not from a
+        // tactical scoring formula - Weight only biases how often an already-valid candidate is
+        // picked relative to its siblings.
+        private static bool TrySelectSpawn(Frame f, SurvivalPhase phase, int aliveCount, int maxAliveEnemies, out SpawnCandidate chosen)
+        {
+            List<SpawnCandidate> valid = new List<SpawnCandidate>();
             List<FP> validWeights = new List<FP>();
             FP totalWeight = FP._0;
 
             if (phase.AllowedGroups == null || phase.AllowedGroups.Count == 0)
             {
-                Log.Debug("[Director] current phase has no AllowedGroups authored");
+                Log.Error("[Director] current phase has no AllowedGroups authored");
             }
             else
             {
@@ -234,7 +307,7 @@ namespace Quantum
 
                     if (groupRef.Id.IsValid == false)
                     {
-                        Log.Debug($"[Director] AllowedGroups[{i}] rejected - AssetRef not assigned");
+                        Log.Error($"[Director] AllowedGroups[{i}] rejected - AssetRef not assigned");
                         continue;
                     }
 
@@ -248,19 +321,19 @@ namespace Quantum
 
                     if (candidate.Weight <= FP._0)
                     {
-                        Log.Debug($"[Director] {candidate.name} rejected - Weight <= 0 (soft-disabled)");
+                        Log.Error($"[Director] {candidate.name} rejected - Weight <= 0 (soft-disabled)");
                         continue; // soft-disabled
                     }
 
                     if (f.Global->SurvivalTime < candidate.MinimumSurvivalTime)
                     {
-                        Log.Debug($"[Director] {candidate.name} rejected - not unlocked yet ({f.Global->SurvivalTime} < MinimumSurvivalTime {candidate.MinimumSurvivalTime})");
+                        Log.Error($"[Director] {candidate.name} rejected - not unlocked yet ({f.Global->SurvivalTime} < MinimumSurvivalTime {candidate.MinimumSurvivalTime})");
                         continue; // not unlocked yet
                     }
 
                     if (candidate.MaximumSurvivalTime > FP._0 && f.Global->SurvivalTime > candidate.MaximumSurvivalTime)
                     {
-                        Log.Debug($"[Director] {candidate.name} rejected - unlock window passed ({f.Global->SurvivalTime} > MaximumSurvivalTime {candidate.MaximumSurvivalTime})");
+                        Log.Error($"[Director] {candidate.name} rejected - unlock window passed ({f.Global->SurvivalTime} > MaximumSurvivalTime {candidate.MaximumSurvivalTime})");
                         continue; // unlock window already passed
                     }
 
@@ -268,42 +341,110 @@ namespace Quantum
 
                     if (cost > f.Global->DirectorBudget)
                     {
-                        Log.Debug($"[Director] {candidate.name} rejected - not affordable (cost {cost} > budget {f.Global->DirectorBudget})");
+                        Log.Error($"[Director] {candidate.name} rejected - not affordable (cost {cost} > budget {f.Global->DirectorBudget})");
                         continue; // not affordable
                     }
 
                     if (aliveCount + candidate.ComputeMemberCount() > maxAliveEnemies)
                     {
-                        Log.Debug($"[Director] {candidate.name} rejected - would exceed alive cap ({aliveCount} + {candidate.ComputeMemberCount()} > {maxAliveEnemies})");
+                        Log.Error($"[Director] {candidate.name} rejected - would exceed alive cap ({aliveCount} + {candidate.ComputeMemberCount()} > {maxAliveEnemies})");
                         continue; // would exceed the (split-scaled) alive cap
                     }
 
                     if (candidate.MaxConcurrent > 0 && CountAliveForGroup(f, groupRef) >= candidate.MaxConcurrent)
                     {
-                        Log.Debug($"[Director] {candidate.name} rejected - MaxConcurrent {candidate.MaxConcurrent} already reached");
+                        Log.Error($"[Director] {candidate.name} rejected - MaxConcurrent {candidate.MaxConcurrent} already reached");
                         continue; // concurrent copies already at MaxConcurrent
                     }
 
-                    validGroups.Add(groupRef);
-                    validCosts.Add(cost);
-                    validWeights.Add(candidate.Weight);
-                    totalWeight += candidate.Weight;
+                    // Run-wide weighting bias (Elite Territory makes Elite-bearing groups far more
+                    // likely) - exactly 1 for every group when nothing is modifying the run, so the
+                    // roll below is unchanged in the normal case. See EncounterModifierUtility.
+                    FP weight = candidate.Weight * EncounterModifierUtility.ResolveGroupWeightMultiplier(f, candidate);
+
+                    valid.Add(new SpawnCandidate { IsGroup = true, Group = candidate, GroupRef = groupRef, Cost = cost });
+                    validWeights.Add(weight);
+                    totalWeight += weight;
                 }
             }
 
-            if (validGroups.Count == 0)
+            if (phase.AllowedEnemies != null)
             {
-                chosen = null;
-                chosenRef = default;
-                chosenCost = FP._0;
+                for (int i = 0; i < phase.AllowedEnemies.Length; i++)
+                {
+                    EnemySpawnEntry entry = phase.AllowedEnemies[i];
+
+                    if (entry.EnemyData.Id.IsValid == false)
+                    {
+                        Log.Error($"[Director] AllowedEnemies[{i}] rejected - EnemyData not assigned");
+                        continue;
+                    }
+
+                    if (entry.Weight <= FP._0)
+                    {
+                        Log.Error($"[Director] AllowedEnemies[{i}] rejected - Weight <= 0 (soft-disabled)");
+                        continue; // soft-disabled
+                    }
+
+                    EnemyDataAsset data = f.FindAsset(entry.EnemyData);
+
+                    if (data == null)
+                    {
+                        Log.Error($"[Director] AllowedEnemies[{i}] ({entry.EnemyData}) rejected - did not resolve to an asset (dangling reference)");
+                        continue;
+                    }
+
+                    if (f.Global->SurvivalTime < entry.MinimumSurvivalTime)
+                    {
+                        Log.Error($"[Director] {data.name} (direct) rejected - not unlocked yet ({f.Global->SurvivalTime} < MinimumSurvivalTime {entry.MinimumSurvivalTime})");
+                        continue; // not unlocked yet
+                    }
+
+                    if (entry.MaximumSurvivalTime > FP._0 && f.Global->SurvivalTime > entry.MaximumSurvivalTime)
+                    {
+                        Log.Error($"[Director] {data.name} (direct) rejected - unlock window passed ({f.Global->SurvivalTime} > MaximumSurvivalTime {entry.MaximumSurvivalTime})");
+                        continue; // unlock window already passed
+                    }
+
+                    FP cost = data.ResolveCost(f);
+
+                    if (cost > f.Global->DirectorBudget)
+                    {
+                        Log.Error($"[Director] {data.name} (direct) rejected - not affordable (cost {cost} > budget {f.Global->DirectorBudget})");
+                        continue; // not affordable
+                    }
+
+                    if (aliveCount + 1 > maxAliveEnemies)
+                    {
+                        Log.Error($"[Director] {data.name} (direct) rejected - would exceed alive cap ({aliveCount} + 1 > {maxAliveEnemies})");
+                        continue; // would exceed the (split-scaled) alive cap
+                    }
+
+                    if (entry.MaxConcurrent > 0 && CountAliveForEnemy(f, entry.EnemyData) >= entry.MaxConcurrent)
+                    {
+                        Log.Error($"[Director] {data.name} (direct) rejected - MaxConcurrent {entry.MaxConcurrent} already reached");
+                        continue; // concurrent copies already at MaxConcurrent
+                    }
+
+                    FP weight = entry.Weight * EncounterModifierUtility.ResolveEnemyWeightMultiplier(f, data);
+
+                    valid.Add(new SpawnCandidate { IsGroup = false, Enemy = entry, Cost = cost });
+                    validWeights.Add(weight);
+                    totalWeight += weight;
+                }
+            }
+
+            if (valid.Count == 0)
+            {
+                chosen = default;
                 return false;
             }
 
             FP roll = f.RNG->Next(FP._0, totalWeight);
             FP cumulative = FP._0;
-            int chosenIndex = validGroups.Count - 1; // falls back to the last candidate if float rounding leaves `roll` a hair under totalWeight
+            int chosenIndex = valid.Count - 1; // falls back to the last candidate if float rounding leaves `roll` a hair under totalWeight
 
-            for (int i = 0; i < validGroups.Count; i++)
+            for (int i = 0; i < valid.Count; i++)
             {
                 cumulative += validWeights[i];
 
@@ -314,9 +455,7 @@ namespace Quantum
                 }
             }
 
-            chosenRef = validGroups[chosenIndex];
-            chosen = f.FindAsset(chosenRef);
-            chosenCost = validCosts[chosenIndex];
+            chosen = valid[chosenIndex];
             return true;
         }
     }

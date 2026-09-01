@@ -26,6 +26,12 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<AccessoryGuard>(player, out var guard) == false)
                 return AccessoryServiceKind.None;
 
+            // Last Bastion traded the mechanic away entirely - there is nothing to sell this player.
+            // Stated explicitly rather than relying on Disable() also zeroing MaxDurability below,
+            // so the intent survives any future change to how a disabled guard is represented.
+            if (guard->Disabled == true)
+                return AccessoryServiceKind.None;
+
             if (guard->MaxDurability == 0)
                 return AccessoryServiceKind.None;
 

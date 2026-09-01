@@ -116,7 +116,11 @@ MonoBehaviour:
     upOffset: {x: 0.2, y: 0.3}
     downOffset: {x: 0.1, y: 0.6}
     rightHandGrip: {x: 0.25, y: -0.5, z: -0.05}
+    rightHandGripRotation: {x: 0, y: 0, z: 0}
+    rightHandGripScale: {x: 1, y: 1, z: 1}
     leftHandGrip: {x: 1.38, y: -0.21, z: -0.05}
+    leftHandGripRotation: {x: 0, y: 0, z: 0}
+    leftHandGripScale: {x: 1, y: 1, z: 1}
     recoilKickDistance: 0.5
     recoilRotationKick: 30
     recoilDuration: 0.3
@@ -124,10 +128,31 @@ MonoBehaviour:
     recoilAsymmetry: 0
     knockbackDistance: 0.2
     knockbackScalePunch: 0.4
+    shakePositionHead:
+      Strength: {x: 0, y: 0.04, z: 0}
+      Duration: 0.1
+      Frequency: 20
+    shakeRotationBody:
+      Strength: {x: -6, y: 0, z: 0}
+      Duration: 0.1
+      Frequency: 20
+    shakeRotationHead:
+      Strength: {x: 0, y: 0, z: 0}
+      Duration: 0.1
+      Frequency: 20
+    shakeScaleBody:
+      Strength: {x: 0.06, y: -0.08, z: 0.06}
+      Duration: 0.08
+      Frequency: 20
+    shakeScaleHead:
+      Strength: {x: 0, y: 0, z: 0}
+      Duration: 0.1
+      Frequency: 20
+  character: {fileID: 0}
   muzzleParticle: {fileID: 1999947104554364320}
-  tracerPrefab: {fileID: 0}
-  beamParticle: {fileID: 0}
-  beamStopGrace: 0.15
+  fireSound: {fileID: 11400000, guid: 34f0a7b485ac44c8da13b8aa8c6e59c1, type: 2}
+  reloadStartSound: {fileID: 11400000, guid: 5edaefd69c1f24edc81078b02a2b8b2a, type: 2}
+  reloadReadySound: {fileID: 11400000, guid: f2fd980e55c984487af99afe28b60074, type: 2}
 --- !u!120 &3083923039476104243
 LineRenderer:
   serializedVersion: 3

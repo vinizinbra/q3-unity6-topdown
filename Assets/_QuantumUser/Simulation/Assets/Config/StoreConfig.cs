@@ -4,31 +4,6 @@ namespace Quantum
     using Photon.Deterministic;
     using UnityEngine;
 
-    // Break-progression tuning for a freshly-rolled Store weapon offer (see
-    // StoreConfig.BreakWeaponConfig/StoreUtility.RollWeaponOffers) - indexed by
-    // Clamp(Global.BreathingIndex, 0, BreakWeaponConfig.Length - 1), same "last authored row holds
-    // forever past the authored range" convention BlacksmithConfig.BreakTuning/SurvivalConfig.
-    // Phases[] already use. Controls ONLY Weapon Level and starting perk COUNT - deliberately
-    // independent of ShopWeaponOfferCount (offer CHOICE count, see StoreUtility.
-    // ResolveWeaponOfferCount) and TalentRarityTuning below (perk RARITY) - see
-    // docs/store-blacksmith.md's "Break Progression" section.
-    [Serializable]
-    public struct StoreBreakWeaponConfig
-    {
-        // Applied via WeaponSystem.AddLevel (reused unchanged, see StoreUtility.
-        // ApplyBreakWeaponLevel) AFTER WeaponChoiceUtility.Grant, since Grant/Equip always resets a
-        // freshly-equipped Weapon to Level 0.
-        public byte WeaponLevel;
-
-        // Each entry is an INDEPENDENT Bernoulli chance rolled in order (see StoreUtility.
-        // RollStorePerkCount) - the number of successes is this weapon's starting perk count.
-        // Deliberately NOT the "clamp01((weaponTalentLevel - slot) * ChancePerLevelPerSlot)" formula
-        // LevelUpUtility.RollWeaponOption uses for a Choose-Weapon pick - Store's perk count is
-        // Break-driven, not Weapon-Talent-driven, so it needs its own explicit, independently
-        // configurable array per Break rather than a derived formula.
-        public FP[] StartingPerkRolls;
-    }
-
     // Weapon-Talent-Level-driven perk rarity tuning for a freshly-rolled Store weapon offer (see
     // StoreConfig.TalentRarityTuning/StoreUtility.RollStorePerks) - same shape as
     // BlacksmithConfig.BlacksmithBreakTuning (Common/Rare/Epic/Legendary weights + GetWeight),
@@ -73,25 +48,11 @@ namespace Quantum
         public FP WeaponOfferBasePrice = 100;
         public FP WeaponOfferPricePerPerk = 25; // Price = Base + RolledPerkCount * PricePerPerk
 
-        [Header("Break Progression (Weapon Level / Starting Perk Count)")]
-        public StoreBreakWeaponConfig[] BreakWeaponConfig =
-        {
-            new StoreBreakWeaponConfig { WeaponLevel = 0, StartingPerkRolls = new[] { FP._0_20 } },
-            new StoreBreakWeaponConfig { WeaponLevel = 1, StartingPerkRolls = new[] { FP.FromString("0.45"), FP._0_20 } },
-            new StoreBreakWeaponConfig { WeaponLevel = 2, StartingPerkRolls = new[] { FP.FromString("0.65"), FP.FromString("0.40"), FP._0_20 } },
-            new StoreBreakWeaponConfig { WeaponLevel = 3, StartingPerkRolls = new[] { FP.FromString("0.80"), FP.FromString("0.60"), FP.FromString("0.40"), FP._0_20 } },
-        };
-
-        public StoreBreakWeaponConfig ResolveBreakWeaponConfig(int breathingIndex)
-        {
-            if (BreakWeaponConfig == null || BreakWeaponConfig.Length == 0)
-                return default;
-
-            int index = breathingIndex < 0 ? 0 : breathingIndex;
-            index = index < BreakWeaponConfig.Length ? index : BreakWeaponConfig.Length - 1;
-
-            return BreakWeaponConfig[index];
-        }
+        // Weapon Level / starting perk COUNT for a freshly-rolled Store weapon offer are no longer
+        // authored here - both now come from the shared LevelUpConfig.WeaponOfferCurve (keyed by
+        // Global.SurvivalTime instead of Global.BreathingIndex), so Store and a Choose-Weapon
+        // level-up/Chest pick draw from the exact same random configuration - see
+        // StoreUtility.RollWeaponOffers and docs/store-blacksmith.md.
 
         [Header("Weapon Talent Level -> Starting Perk Rarity")]
         public WeaponTalentRarityTuning[] TalentRarityTuning =

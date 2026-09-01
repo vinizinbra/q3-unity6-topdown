@@ -9,4 +9,11 @@ component HealingShrine
     PoiAvailability Availability;
     PoiUsagePolicy UsagePolicy;
     FP HealPercent;
+
+    // Only read when UsagePolicy == Cooldown (see Poi.qtn) - a per-player cooldown instead of a
+    // once-per-Break limit, meant to pair with Availability.AvailableInCombat so the shrine works
+    // as an anytime combat-sustain tool rather than a Breathing-only economy valve. Ignored under
+    // every other policy, same "unused field under other policies" shape LevelUpOption's own
+    // per-kind fields already have.
+    FP CooldownDuration;
 }

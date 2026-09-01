@@ -19,7 +19,7 @@ MonoBehaviour:
     m_Bits: 64
   groundOffset: 0.02
   shadowOffset: {x: 0, y: 0}
-  shadowColor: {r: 0, g: 0, b: 0, a: 1}
+  shadowColor: {r: 1, g: 1, b: 1, a: 1}
   maxHeightForFalloff: 4
   heightFalloffCurve:
     serializedVersion: 2
@@ -27,12 +27,12 @@ MonoBehaviour:
     - serializedVersion: 3
       time: 0
       value: 1
-      inSlope: 0
-      outSlope: 0
+      inSlope: -0.7851279
+      outSlope: -0.7851279
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
-      outWeight: 0
+      outWeight: 0.0875
     - serializedVersion: 3
       time: 1.0125122
       value: 0.026184082
@@ -47,6 +47,6 @@ MonoBehaviour:
     m_RotationOrder: 4
   minScaleMultiplier: 0.4
   shadowScaleMultiplier: 1
-  groundAlpha: 0.5
-  lightAlpha: 0.15
+  groundAlpha: 1
+  lightAlpha: 0.3
   minAlphaMultiplier: 0.25

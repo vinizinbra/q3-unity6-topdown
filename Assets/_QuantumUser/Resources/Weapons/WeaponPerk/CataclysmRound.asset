@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5bfcdb9bc86a44435ae049758ca0b027, type: 3}
+  m_Name: CataclysmRound
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.CataclysmRoundWeaponPerkData
+  Identifier:
+    Path: _QuantumUser/Resources/Weapons/WeaponPerk/CataclysmRound
+    Guid:
+      Value: 413249485350196850
+  Icon: {fileID: -663504267, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  DisplayName: Cataclysm Round
+  Rarity: 2
+  Description: 'Final shot becomes a massive explosive projectile (<color=#FD3971>{0:0}%</color> damage, <color=#FD3971>{1:0}m</color> radius)'
+  Radius:
+    RawValue: 327680
+  DamageMultiplier:
+    RawValue: 131072

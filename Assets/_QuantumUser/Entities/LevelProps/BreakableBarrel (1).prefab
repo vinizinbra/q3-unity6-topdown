@@ -19,6 +19,8 @@ GameObject:
   - component: {fileID: 4301389450636590431}
   - component: {fileID: 7021118618245991733}
   - component: {fileID: 4124911159080650277}
+  - component: {fileID: 7847991724607987301}
+  - component: {fileID: 1016692175792200134}
   m_Layer: 0
   m_Name: BreakableBarrel (1)
   m_TagString: Untagged
@@ -479,6 +481,68 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.HasShadow
   baseScale: 2
   shadowOffset: {x: 0, y: 0}
+--- !u!114 &7847991724607987301
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4905991528047589105}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0723c21be28454a039f7ffebd04176e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::JuicyEffects
+  scaleInOnEnable: 0
+  scaleInDelay: 0
+  scaleInDuration: 0.45
+  scaleInEase: 27
+  punchScaleStrength: {x: 0.2, y: 0.2, z: 0}
+  punchScaleDuration: 0.25
+  punchScaleFrequency: 16
+  punchRotationStrength: {x: 0, y: 0, z: 25}
+  punchRotationDuration: 0.45
+  punchRotationFrequency: 14
+  shakeStrength: {x: 0.3, y: 0.3, z: 0}
+  shakeDuration: 0.45
+  shakeFrequency: 25
+  idleWobbleOnEnable: 0
+  idleWobbleSquashAmount: 0.15
+  idleWobbleDuration: 1.4
+  idleWobbleEase: 4
+  idleRareWiggleOnEnable: 0
+  idleRareWiggleInterval: {x: 3, y: 8}
+  idleRareWiggleIncludeScale: 1
+  idleRareWiggleIncludeRotation: 1
+  idleRareWiggleIncludePosition: 1
+  idleRareWiggleStrengthMultiplier: 0.5
+  idleRareWiggleDurationMultiplier: 1
+  scaleUseUnscaledTime: 0
+  useUnscaledTime: 0
+--- !u!114 &1016692175792200134
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4905991528047589105}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51833be953e14e9fb5cf7dadd4a7e158, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Quantum.BreakableHitFeedback
+  _playerRef:
+    _index: 0
+  initialized: 0
+  executeOnlyOnLocal: 0
+  isLocal: 0
+  sprites:
+  - {fileID: 1494367795927577046}
+  - {fileID: 5172514277704470707}
+  flashColor: {r: 2.5, g: 2.5, b: 2.5, a: 1}
+  restColor: {r: 1, g: 1, b: 1, a: 1}
+  flashDuration: 0.1
+  juicyEffects: {fileID: 7847991724607987301}
 --- !u!1 &5668972644701865680
 GameObject:
   m_ObjectHideFlags: 0

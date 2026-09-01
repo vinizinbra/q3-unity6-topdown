@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52edb4eefc1db48109cc7d1ac53b2f13, type: 3}
+  m_Name: TelegraphData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.TelegraphData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/BaseEnemies/TelegraphData
+    Guid:
+      Value: 351581780566482522
+  Shape: 0
+  StartPhase: 0
+  EndPhase: 1
+  LiveTracking: 0
+  LiveTrackingSmoothing: 15
+  TelegraphPrefab: {fileID: 0}
+  SnapToGround: 1
+  LineLength: 0
+  FixedDistanceValue: 5
+  FromOffset: 0
+  ToOffset: 0
+  Width: 1
+  RadiusMultiplier: 1
+  RotationDegreesPerSecond: 0
+  GrowthDuration: 1
+  FadeInDuration: 0.15
+  FadeOutDuration: 0.15

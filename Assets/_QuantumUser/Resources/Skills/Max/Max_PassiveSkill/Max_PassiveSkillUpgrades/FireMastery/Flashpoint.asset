@@ -21,9 +21,9 @@ MonoBehaviour:
   Description: Burning enemies take extra crits, explode on crit, and can be executed.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - +10% Critical Chance against Burning enemies.
-  - +10% Critical Chance against Burning enemies. Crits on them explode for 50% damage in 3m, up to 5 targets.
-  - +10% Critical Chance against Burning enemies, whose crits explode. Burning enemies below 15% Health are executed - 8% for Specialist and Heavy, while Elite and Boss instead take +25% damage.
+  - '<color=#FD3971>+10%</color> Critical Chance against Burning enemies.'
+  - '<color=#FD3971>+10%</color> Critical Chance against Burning enemies. Crits on them explode for <color=#FD3971>50%</color> damage in <color=#FD3971>3m</color>, up to <color=#FD3971>5</color> targets.'
+  - '<color=#FD3971>+10%</color> Crit Chance vs Burning enemies, whose crits explode. Execute Burning enemies below <color=#FD3971>15%</color> Health; Elites take <color=#FD3971>+25%</color>.'
   CriticalChanceBonusVsBurning:
     RawValue: 6554
   ExplosionRadius:

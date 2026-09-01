@@ -19,16 +19,16 @@ MonoBehaviour:
   Icon: {fileID: -1247703252, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
   DisplayName: Aftershock
   RankDescriptions:
-  - Juggernaut's closing shockwave deals +15% damage per enemy struck during the cast, up to 5 stacks.
-  - Juggernaut's closing shockwave deals +15% damage and +5% radius per enemy struck during the cast, up to 5 stacks.
-  - Juggernaut's closing shockwave deals +15% damage and +5% radius per enemy struck, up to 5 stacks. At 5 stacks a second shockwave lands 0.5s later.
+  - 'Each enemy struck during Juggernaut adds <color=#FD3971>+15%</color> damage to the closing shockwave, up to <color=#FD3971>5</color> stacks.'
+  - 'Each enemy struck adds <color=#FD3971>+15%</color> damage and <color=#FD3971>+5%</color> radius to the closing shockwave, up to <color=#FD3971>5</color> stacks.'
+  - 'Each enemy struck adds <color=#FD3971>+15%</color> damage and <color=#FD3971>+5%</color> radius, up to <color=#FD3971>5</color> stacks. At <color=#FD3971>5</color> stacks a second shockwave follows in <color=#FD3971>0.5s</color>.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Route through a crowd, then cash it in - Juggernaut's closing shockwave grows with every enemy you struck during the cast.
+  Description: Juggernaut's closing shockwave grows with every enemy you struck during the channel, so routing through a crowd before it ends is what makes the finish hurt.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

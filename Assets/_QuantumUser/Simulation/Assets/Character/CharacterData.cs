@@ -33,6 +33,9 @@ namespace Quantum
         [Tooltip("Ignored while Shield Charge Only is on.")]
         public FP ShieldRechargeRate = 20;
 
+        [Tooltip("How long a charge-only Shield holds its Current value after the most recent successful grant before snapping to 0 - a single shared timer, refreshed (not extended/stacked) by every gain. 0 disables expiration entirely (a plain persistent charge-only shield). Brute is the only hero authoring this above 0 - see docs/brute-ascensions.md's Temporary Shield section.")]
+        public FP ShieldTemporaryDuration = FP._0;
+
         [Header("Offense")]
         [Tooltip("Scales every hit. WeaponDamageMultiplier/SkillDamageMultiplier stack on top of it and apply only to their own DamageSource.")]
         public FP DamageMultiplier = FP._1;
@@ -71,6 +74,10 @@ namespace Quantum
         public FP MaxShieldMultiplier = FP._1;
 
         public FP DamageReduction = FP._0;
+
+        [Tooltip("Multiplicative damage-taken scaling (1 = unchanged, 0.9 = takes 10% less). Separate from the additive DamageReduction fraction above - see CharacterStats.qtn.")]
+        public FP DamageTakenMultiplier = FP._1;
+
         public FP KnockbackTakenMultiplier = FP._1;
         public FP HealingReceivedMultiplier = FP._1;
 

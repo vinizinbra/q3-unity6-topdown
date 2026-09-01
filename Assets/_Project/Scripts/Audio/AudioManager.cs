@@ -526,11 +526,13 @@ public class AudioManager : MonoBehaviour
         return _clipDefaults;
     }
 
-    public static SoundHandle PlayAt(SoundData data, Vector3 position, float volumeScale = 1f)
-        => PlayInternal(data, null, position, true, volumeScale);
+    // delay is ADDED to whatever the SoundData authors, same as on Play above - optional, so every
+    // existing call site is unchanged.
+    public static SoundHandle PlayAt(SoundData data, Vector3 position, float volumeScale = 1f, float delay = 0f)
+        => PlayInternal(data, null, position, true, volumeScale, null, false, delay);
 
-    public static SoundHandle PlayAttached(SoundData data, Transform follow, float volumeScale = 1f)
-        => PlayInternal(data, follow, follow != null ? follow.position : Vector3.zero, true, volumeScale);
+    public static SoundHandle PlayAttached(SoundData data, Transform follow, float volumeScale = 1f, float delay = 0f)
+        => PlayInternal(data, follow, follow != null ? follow.position : Vector3.zero, true, volumeScale, null, false, delay);
 
     // Convenience for the single-track case: crossfades out whatever the previous PlayMusic started.
     // Any other looping SoundData is unaffected - this only tracks the one music handle.
@@ -557,8 +559,12 @@ public class AudioManager : MonoBehaviour
             return SoundHandle.None;
 
         // forcedClip is either the "audition every clip in order" path or a dialogue line naming its
-        // own take - everything else rolls normally.
-        var clip = forcedClip != null ? forcedClip : data.NextClip();
+        // own take - everything else rolls normally. Either way we resolve the VARIANT behind the
+        // clip, since per-clip trim/fade lives there; a forced clip this sound doesn't list (a raw
+        // dialogue line played through a settings-only template) simply has none, and falls back to
+        // the sound's shared values.
+        var variant = forcedClip != null ? data.FindVariant(forcedClip) : data.NextVariant();
+        var clip = forcedClip != null ? forcedClip : variant?.clip;
         if (clip == null)
         {
             LogHelper.Warn(LogTag, $"'{data.name}' has no clips assigned - nothing played.", data);
@@ -590,7 +596,8 @@ public class AudioManager : MonoBehaviour
             return SoundHandle.None;
 
         var pitch = data.RollPitch();
-        data.ResolveTrim(clip, out var trimStart, out var trimEnd);
+        data.ResolveTrim(clip, variant, out var trimStart, out var trimEnd);
+        data.ResolveFade(variant, out var fadeIn, out var fadeOut);
 
         var source = voice.Source;
         source.clip = clip;
@@ -620,8 +627,8 @@ public class AudioManager : MonoBehaviour
         voice.Elapsed = 0f;
         voice.Delay = data.RollDelay() + Mathf.Max(0f, extraDelay);
         voice.BaseVolume = data.RollVolume() * volumeScale;
-        voice.FadeIn = data.fadeIn;
-        voice.FadeOut = data.fadeOut;
+        voice.FadeIn = fadeIn;
+        voice.FadeOut = fadeOut;
         voice.TrimStart = trimStart;
         voice.TrimEnd = trimEnd;
         voice.ManualLoop = data.loop && !wholeClip;
@@ -641,7 +648,7 @@ public class AudioManager : MonoBehaviour
         {
             source.Play();
             voice.Started = true;
-            source.volume = voice.BaseVolume * (data.fadeIn > 0f ? 0f : 1f) * manager.ResolveBusVolume(data);
+            source.volume = voice.BaseVolume * (fadeIn > 0f ? 0f : 1f) * manager.ResolveBusVolume(data);
         }
 
         manager.PlayLayers(data, follow, position, positioned, volumeScale, depth);
@@ -875,8 +882,10 @@ public class AudioManager : MonoBehaviour
         if (voice.Stopping)
             return;
 
-        // Negative means "use the sound's own authored fadeOut".
-        var duration = fadeOut < 0f ? (voice.Data != null ? voice.Data.fadeOut : 0f) : fadeOut;
+        // Negative means "use the sound's own authored fadeOut" - voice.FadeOut, not data.fadeOut,
+        // so a variation that overrides the fade for itself stops with ITS tail rather than the
+        // set's shared one. They're the same value for any clip that doesn't override.
+        var duration = fadeOut < 0f ? voice.FadeOut : fadeOut;
 
         if (duration <= 0f)
         {

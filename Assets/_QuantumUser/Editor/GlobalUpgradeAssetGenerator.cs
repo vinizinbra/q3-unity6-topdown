@@ -24,7 +24,7 @@ namespace QuantumUser.Editor
     public static class GlobalUpgradeAssetGenerator
     {
         private const string FolderPath = "Assets/_QuantumUser/Resources/LevelUp/GlobalUpgrade";
-        private const string ConfigAssetPath = "Assets/_QuantumUser/Resources/LevelUpConfig.asset";
+        private const string ConfigAssetPath = "Assets/_QuantumUser/Resources/Configs/LevelUpConfig.asset";
 
         private class UpgradeSpec
         {
@@ -106,10 +106,13 @@ namespace QuantumUser.Editor
             },
             new UpgradeSpec
             {
-                Type = typeof(ShieldUpgradeData), FileName = "Shield",
-                DisplayName = "Shield",
-                Description = "+{0} Shield",
-                Configure = p => ((ShieldUpgradeData)p).Amount = FP.FromString("10")
+                // Replaced the old flat "+10 Shield" pick - see docs/global-upgrades.md. 0.9
+                // compounds per pick (never additive), so stacking it all run approaches but never
+                // reaches immunity.
+                Type = typeof(ToughnessUpgradeData), FileName = "Toughness",
+                DisplayName = "Toughness",
+                Description = "-{0}% Damage Taken",
+                Configure = p => Multiplier(p, "0.9")
             },
             new UpgradeSpec
             {
@@ -198,8 +201,21 @@ namespace QuantumUser.Editor
             {
                 Type = typeof(ExperienceGainUpgradeData), FileName = "ExperienceGain",
                 DisplayName = "Experience Gain",
-                Description = "+{0}% XP",
-                Configure = p => Multiplier(p, "1.15")
+                // Experience is one SHARED run-wide total, so this benefits the whole team - but it
+                // only applies to orbs this player personally walks into (CurrencyOrbSystem scales
+                // by the finder's own multiplier).
+                Description = "+{0}% XP for the team",
+                Configure = p => Multiplier(p, "1.10")
+            },
+            new UpgradeSpec
+            {
+                Type = typeof(CoinGainUpgradeData), FileName = "CoinGain",
+                DisplayName = "Coin Gain",
+                // Deliberately worded as personal: Coins are per-player wallets, so unlike XP above
+                // this only ever raises the picker's own income (CoinUtility.GrantAll scales each
+                // player by their OWN multiplier).
+                Description = "+{0}% Coins for you",
+                Configure = p => Multiplier(p, "1.20")
             },
         };
 

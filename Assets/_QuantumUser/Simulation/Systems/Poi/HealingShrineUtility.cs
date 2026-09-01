@@ -61,7 +61,7 @@ namespace Quantum
             // Owner == the healed player itself - Shield is never touched (HealUtility only ever
             // touches Health), matching the spec's own "do not restore Shield" rule for free.
             HealUtility.ApplyHeal(f, player, player, healingShrine->HealPercent);
-            PoiUsageUtility.MarkUsed(f, player, shrine, healingShrine->UsagePolicy);
+            PoiUsageUtility.MarkUsed(f, player, shrine, healingShrine->UsagePolicy, healingShrine->CooldownDuration);
 
             Log.Debug($"[HealingShrine] {player} interacted with {shrine} - healed {healingShrine->HealPercent.AsFloat:P0} of Max Health");
         }

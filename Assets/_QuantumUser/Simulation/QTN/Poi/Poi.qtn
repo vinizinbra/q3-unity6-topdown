@@ -18,23 +18,32 @@ struct PoiAvailability
 // How often one player may use one POI instance. OncePerWorld is declared but not implemented
 // this pass (see PoiUsageUtility.CanUse) - neither Healing Shrine nor Cursed Rift need it yet;
 // it would need a flag living on the POI's own component instead of PoiUsage below, since it
-// isn't per-player.
+// isn't per-player. Cooldown is per-player like OncePerPlayerPerBreak/PerRun, but time-based
+// instead of Break-indexed - the duration itself lives on the POI's own component (e.g.
+// HealingShrine.CooldownDuration), same convention HealPercent already uses, not here, since it's
+// a per-POI-kind tuning value rather than part of the generic policy vocabulary.
 enum PoiUsagePolicy : Byte
 {
     Reusable,
     OncePerPlayerPerBreak,
     OncePerPlayerPerRun,
-    OncePerWorld
+    OncePerWorld,
+    Cooldown
 }
 
 // One player's own record of having used a specific POI instance. UsedAtBreathingIndex == -1 is
 // the OncePerPlayerPerRun sentinel ("used forever" - never matches any real Global.BreathingIndex
 // again); any other value is the BreathingIndex the player used it during (OncePerPlayerPerBreak
 // compares this against the CURRENT Global.BreathingIndex, so it naturally resets every Break).
+// CooldownRemaining is only meaningful under the Cooldown policy - ticked down every frame by
+// PoiActivationSystem (via PoiUsageUtility.TickCooldowns) rather than compared against a stored
+// timestamp, since it has to keep counting down through a Breathing Break even though
+// Global.SurvivalTime itself freezes there (see docs/run-phase.md's "Independent timers").
 struct PoiUsageEntry
 {
     EntityRef Poi;
     Int32 UsedAtBreathingIndex;
+    FP CooldownRemaining;
 }
 
 // Per-player. 8 slots is deliberately small - only 2 POI instances (one Healing Shrine, one

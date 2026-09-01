@@ -69,6 +69,8 @@ namespace QuantumUser.Editor
             // as a level-up card, so it has no DisplayName/Description to set here.
             ScrapCollectorPassiveData passive = CreateOrUpdate<ScrapCollectorPassiveData>($"{PassivesFolderPath}/ScrapCollectorPassiveData.asset", asset =>
             {
+                asset.Description = "Tougher kills drop Scrap. Collect enough to earn a free Sentry.";
+
                 asset.DropChance = FP._0_25;
                 asset.StacksRequired = 10;
 
@@ -99,9 +101,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Bolts additional weapon systems onto your Sentry, one per rank.";
                 asset.RankDescriptions = new[]
                 {
-                    "Minigun: your Sentry gains a rapid secondary gun alongside its Cannon.",
-                    "Rocket Pod: your Sentry fires its Cannon, a rapid Minigun, and periodic explosive rockets.",
-                    "Full Arsenal: your Sentry fires Cannon, Minigun, Rockets and a piercing Laser all at once.",
+                    "Your Sentry gains a rapid Minigun alongside its Cannon.",
+                    "Your Sentry fires its Cannon, a rapid Minigun, and periodic explosive rockets.",
+                    "Your Sentry fires Cannon, Minigun, Rockets and a piercing Laser all at once.",
                 };
                 asset.MinigunWeapon = LoadWeapon(MinigunPath);
                 asset.MinigunOffset = new FPVector3(FP._0_50, FP._0_50, 0);
@@ -121,7 +123,7 @@ namespace QuantumUser.Editor
                 {
                     "Sentry Fire Rate +25%.",
                     "Sentry Fire Rate +40%, and your Sentry lasts 2s longer.",
-                    "Redline: Sentry Fire Rate +50%, and during the last 3s of its life it gains a further +100% Fire Rate.",
+                    "Sentry Fire Rate +50%, and during its last 3s of life it gains a further +100% Fire Rate.",
                 };
                 asset.FireRateMultiplier = new[] { FP._1_25, FP.FromString("1.40"), FP._1_50 };
                 asset.DurationBonus = new FP[] { 0, 2, 2 };
@@ -137,9 +139,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Your Sentry becomes a position worth holding - longer reach, then covering fire.";
                 asset.RankDescriptions = new[]
                 {
-                    "Extended Range: Sentry attack range +2.",
-                    "Covering Fire: Sentry attack range +2, and allies standing near your Sentry are shielded from one hit. Once per ally per Sentry.",
-                    "Fire Support: Sentry attack range +2. Allies near your Sentry are shielded from one hit (once per ally per Sentry) and gain +15% Fire Rate and 10% Damage Reduction.",
+                    "Sentry attack range +2.",
+                    "Sentry attack range +2, and allies near your Sentry are shielded from one hit (once per Sentry).",
+                    "Sentry range +2. Allies near it are shielded from one hit and gain +15% Fire Rate and 10% Damage Reduction.",
                 };
                 asset.RangeBonus = new FP[] { 2, 2, 2 };
 
@@ -167,8 +169,8 @@ namespace QuantumUser.Editor
                 asset.RankDescriptions = new[]
                 {
                     "When your Sentry expires or is destroyed, it explodes for 100% of Sentry Skill Damage.",
-                    "When your Sentry expires or is destroyed, it explodes for 175% Sentry Skill Damage over 30% more ground, knocking enemies back hard.",
-                    "Critical Meltdown: when your Sentry expires or is destroyed, it explodes for 250% Sentry Skill Damage, leaving enemies Exposed and taking +20% damage for 3s.",
+                    "When your Sentry is destroyed, it explodes for 175% Sentry Skill Damage over 30% more ground, knocking enemies back.",
+                    "When your Sentry is destroyed, it explodes for 250% Sentry Skill Damage, leaving enemies Exposed for 3s (+20% damage).",
                 };
                 asset.DamagePercent = new[] { FP._1, FP.FromString("1.75"), FP.FromString("2.50") };
                 asset.BaseRadius = FP._4;
@@ -189,7 +191,7 @@ namespace QuantumUser.Editor
                 {
                     "Filler enemies can drop Scrap (10% chance).",
                     "Filler enemies can drop Scrap (10% chance), and all Scrap drop chances increase by about 25%.",
-                    "Jackpot: Filler enemies can drop Scrap and every drop chance is raised. Specialist, Heavy and Elite always drop at least 1 Scrap; Bosses drop 3.",
+                    "Every Scrap drop chance rises. Specialist, Heavy and Elite always drop at least 1 Scrap; Bosses drop 3.",
                 };
                 asset.DropChance = new[] { FP._0_25, FP.FromString("0.31"), FP.FromString("0.31") };
                 asset.FillerDropChance = new[] { FP._0_10, FP.FromString("0.13"), FP.FromString("0.13") };
@@ -207,7 +209,7 @@ namespace QuantumUser.Editor
                 {
                     "Each Scrap collected removes 0.5s from your Sentry's remaining cooldown.",
                     "Each Scrap collected removes 1s from your Sentry's remaining cooldown.",
-                    "Instant Assembly: each Scrap removes 1s from your Sentry's cooldown, and earning a Fabrication Charge removes a further 3s.",
+                    "Each Scrap removes 1s from your Sentry's cooldown, and earning a Fabrication Charge removes a further 3s.",
                 };
                 asset.CooldownReductionPerPickup = new[] { FP._0_50, FP._1, FP._1 };
                 asset.CooldownReductionOnCharge = new FP[] { 0, 0, 3 };
@@ -222,7 +224,7 @@ namespace QuantumUser.Editor
                 {
                     "Scrap collected while your Sentry is active grants it +4% Damage, up to 5 stacks.",
                     "Scrap collected while your Sentry is active grants it +4% Damage and +3% Fire Rate, up to 5 stacks.",
-                    "MK II: Scrap collected while your Sentry is active grants +4% Damage and +3% Fire Rate, up to 5 stacks. At 5 stacks its Cannon becomes a Twin Cannon.",
+                    "Scrap grants your active Sentry +4% Damage and +3% Fire Rate, up to 5 stacks. At 5 stacks it gains a Twin Cannon.",
                 };
                 asset.DamagePerStack = new[] { FP.FromString("0.04"), FP.FromString("0.04"), FP.FromString("0.04") };
                 asset.FireRatePerStack = new[] { FP._0, FP.FromString("0.03"), FP.FromString("0.03") };
@@ -246,8 +248,8 @@ namespace QuantumUser.Editor
                 asset.RankDescriptions = new[]
                 {
                     "Ending a dash within 6m of your Sentry repairs 30% of its Max Health.",
-                    "Ending a dash within 6m of your Sentry repairs 30% of its Max Health and extends its lifetime by 2s (up to 4s per Sentry).",
-                    "Emergency Overclock: ending a dash within 6m of your Sentry repairs 30% of its Max Health, extends its lifetime by 2s, and grants it +50% Fire Rate for 2s.",
+                    "Ending a dash within 6m of your Sentry repairs 30% Max Health and adds 2s lifetime (4s max per Sentry).",
+                    "Ending a dash near your Sentry repairs 30% Max Health, adds 2s lifetime and grants +50% Fire Rate for 2s.",
                 };
                 asset.Range = FP._6;
                 asset.RepairFraction = new[] { FP.FromString("0.30"), FP.FromString("0.30"), FP.FromString("0.30") };
@@ -268,9 +270,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Dash while standing at your Sentry and it comes with you - fully intact.";
                 asset.RankDescriptions = new[]
                 {
-                    "Reposition: dashing from within 4m of your Sentry moves it to your dash destination, keeping its Health, lifetime, upgrades and modifications.",
-                    "Rapid Setup: dashing from within 4m of your Sentry moves it to your dash destination, then grants it +25% Fire Rate for 2s and 1s of extra lifetime.",
-                    "Hot Drop: dashing from within 4m of your Sentry moves it to your dash destination, where it immediately fires a volley and a knockback pulse at everything nearby.",
+                    "Dashing from within 4m of your Sentry moves it to your dash destination, fully intact.",
+                    "Dashing from within 4m moves your Sentry to your destination, granting +25% Fire Rate for 2s and +1s lifetime.",
+                    "Your Sentry moves to your dash destination, immediately firing a volley and a knockback pulse at nearby enemies.",
                 };
                 asset.PickupRange = FP._4;
                 asset.TempFireRateMultiplier = new[] { FP._1, FP._1_25, FP._1_25 };

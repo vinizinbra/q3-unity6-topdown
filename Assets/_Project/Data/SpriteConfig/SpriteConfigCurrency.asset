@@ -19,3 +19,5 @@ MonoBehaviour:
     sprite: {fileID: -2056722183, guid: 77c2f44268eb44de198d4a86b48556ea, type: 3}
   - name: Experience
     sprite: {fileID: 490990547, guid: 77c2f44268eb44de198d4a86b48556ea, type: 3}
+  - name: Scrap
+    sprite: {fileID: -1132560452, guid: 77c2f44268eb44de198d4a86b48556ea, type: 3}

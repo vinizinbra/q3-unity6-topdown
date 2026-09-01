@@ -19,6 +19,6 @@ MonoBehaviour:
   Icon: {fileID: 873863531, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
   DisplayName: Experience Gain
   MaxPicks: 3
-  Description: +{0}% XP
+  Description: +{0}% XP for the team
   Multiplier:
-    RawValue: 75366
+    RawValue: 72090

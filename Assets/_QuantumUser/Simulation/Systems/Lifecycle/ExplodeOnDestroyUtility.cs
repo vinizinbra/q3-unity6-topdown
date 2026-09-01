@@ -78,7 +78,8 @@ namespace Quantum
             FP radius = ResolveBlastRadius(f, explosion.BlastRadius, owner) * radiusMultiplier;
 
             HitEffectUtility.ApplyInRadius(f, explosion.Effects, transform->Position, radius, owner,
-                damage, source, element, explosion.TargetMask, isExplosion: true);
+                damage, source, element, explosion.TargetMask, isExplosion: true,
+                maxHeightDifference: explosion.MaxHeightDifference);
 
             f.Events.AreaDetonated(owner, transform->Position, explode->Explosion, radius);
 

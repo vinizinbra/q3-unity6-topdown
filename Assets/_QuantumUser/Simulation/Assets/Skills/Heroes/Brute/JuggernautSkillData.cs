@@ -13,10 +13,14 @@ namespace Quantum
     // no longer a bare knockback) and resets ChargePoints - by default fully to 0, unless the Momentum
     // Ascension's DischargeRetentionFraction says otherwise - so the cycle repeats for the rest of the
     // skill's fixed Duration. Every enemy caught by a Discharge also grants Brutus ShieldGainPerHit as
-    // Shield, capped at his own Max - baseline, no Ascension needed. Since player Shield never
-    // recharges on its own any more (see Shield.qtn) this is Brutus's ONLY self-sufficient source of
-    // it, which makes an aggressive multi-enemy Discharge his defensive payoff twice over: the Shield
-    // itself, and the fact that holding any Shield keeps his Accessory from being knocked off.
+    // Shield, capped at his own Max - baseline, no Ascension needed. Player Shield never recharges on
+    // its own (see Shield.qtn), and Brutus's own Shield is additionally TEMPORARY - a single pool on a
+    // single expiration timer, refreshed by every successful grant and snapped to 0 the instant it
+    // runs out (see CharacterData.ShieldTemporaryDuration/ShieldUtility.ApplyFlatShield) - so it is
+    // both his ONLY self-sufficient source of it AND something he has to keep earning by staying
+    // aggressive. An aggressive multi-enemy Discharge is his defensive payoff twice over while it
+    // lasts: the Shield itself, and the fact that holding any Shield keeps his Accessory from being
+    // knocked off.
     public unsafe partial class JuggernautSkillData : SkillData
     {
         public FP Duration = 8;
@@ -88,7 +92,11 @@ namespace Quantum
         //
         // This is Brutus's ONLY self-sufficient Shield source, so it doubles as his Accessory
         // protection: Discharge through a crowd, and the resulting Shield is what keeps his hat on.
-        // Playtest knob - at 5/enemy against a 60 Max Shield that's 12 enemies for a full charge.
+        // The grant also refreshes his single Shield expiration timer back to
+        // CharacterData.ShieldTemporaryDuration (see ShieldUtility.ApplyFlatShield) - the Shield is a
+        // temporary combat window, not a bankable resource, so he has to keep discharging through
+        // enemies to hold onto it. Playtest knob - at 5/enemy against a 60 Max Shield that's 12
+        // enemies for a full charge, and it all evaporates 6s after the last one lands.
         public FP ShieldGainPerHit = 5;
 
         // {0} = Duration, {1} = DamageReductionBonus as a percent - e.g. "Channel for {0} seconds,
@@ -123,15 +131,44 @@ namespace Quantum
             {
                 AdvanceCharge(f, filter.Entity, slot, charge);
 
+                bool discharged = false;
+
                 if (charge->ChargePoints >= MaxCharge)
                 {
-                    TryDischarge(f, ref filter, charge);
+                    discharged = TryDischarge(f, ref filter, charge);
                 }
 
                 UpdateSpeedBoost(f, filter.Entity, charge);
+
+                // Momentum rank 3 - Duration ran out, but Brutus is still holding a full Charge he
+                // hasn't spent. Keep the whole channel alive (damage reduction, Charged speed, the
+                // lot) until he actually cashes it in on an enemy rather than letting the timer throw
+                // it away. Deliberately gated on the discharge NOT having just fired this same tick:
+                // the discharge is what ends the overtime, so an expired channel resolves on the tick
+                // it finally connects. Checked here rather than in End() because End() is the
+                // teardown - by the time it runs the decision to stop has already been made.
+                //
+                // Note this holds on Charge, never on the retention fraction: at rank 3 retention is
+                // 100%, so ChargePoints stays at Max after a discharge too, and keying off Charge
+                // alone would leave the channel running forever.
+                if (slot->StateTimer <= FP._0 && discharged == false && charge->ChargePoints >= MaxCharge
+                    && HoldsUntilDischarge(f, filter.Entity) == true)
+                {
+                    // Pinned at exactly 0 rather than left to run negative - SkillCooldownUiWidget
+                    // prints StateTimer straight out as the channel's remaining seconds, so an
+                    // unclamped overtime would count downwards into "-3.4s" on the HUD.
+                    slot->StateTimer = FP._0;
+                    return false;
+                }
             }
 
             return slot->StateTimer <= FP._0;
+        }
+
+        // Momentum rank 3 only - see MomentumUpgrade.HoldUntilDischarge.
+        private static bool HoldsUntilDischarge(Frame f, EntityRef entity)
+        {
+            return f.Unsafe.TryGetPointer<MomentumUpgrade>(entity, out var momentum) == true && momentum->HoldUntilDischarge == true;
         }
 
         public override void End(Frame f, ref SkillSystem.Filter filter, SkillSlot* slot)
@@ -402,15 +439,17 @@ namespace Quantum
         // knockback landing afterward (see EnemyActionData.InterruptibleDuringTelegraph's own comment -
         // it only cancels a Telegraph-phase attack, not one already Active). Checking every tick
         // maximizes the chance Discharge's stagger lands while the enemy is still interruptible.
-        private void TryDischarge(Frame f, ref SkillSystem.Filter filter, JuggernautCharge* charge)
+        // Returns true only if a discharge actually fired this tick - Momentum rank 3's overtime hold
+        // (see Tick) needs to know when the Charge was finally spent so it can let the channel end.
+        private bool TryDischarge(Frame f, ref SkillSystem.Filter filter, JuggernautCharge* charge)
         {
             if (f.Unsafe.TryGetPointer<KCC>(filter.Entity, out var kcc) == false)
-                return;
+                return false;
 
             FP contactRadius = f.FindAsset(kcc->Settings).Radius;
 
             if (contactRadius <= FP._0)
-                return;
+                return false;
 
             FPVector3 center = filter.Transform3D->Position;
             Shape3D contactShape = Shape3D.CreateSphere(contactRadius);
@@ -428,7 +467,7 @@ namespace Quantum
             }
 
             if (touchedEnemy == false)
-                return;
+                return false;
 
             FPVector3 velocity = kcc->Data.RealVelocity;
             FPVector3 velocityXZ = new FPVector3(velocity.X, FP._0, velocity.Z);
@@ -454,6 +493,8 @@ namespace Quantum
             charge->DistanceSinceLastPoint = FP._0;
 
             Log.Debug($"[Skill] {filter.Entity} Juggernaut Charge reset by discharge: {previousChargePoints} -> {charge->ChargePoints} (retention {retention})");
+
+            return true;
         }
 
         // The actual area knockback + damage - deliberately a wider radius than the contact check

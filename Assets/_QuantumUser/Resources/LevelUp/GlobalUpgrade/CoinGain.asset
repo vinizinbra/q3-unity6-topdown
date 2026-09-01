@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcd8392062d1043aea7cf8e0b31f0eea, type: 3}
+  m_Name: CoinGain
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.CoinGainUpgradeData
+  Identifier:
+    Path: _QuantumUser/Resources/LevelUp/GlobalUpgrade/CoinGain
+    Guid:
+      Value: 490873783517536495
+  Icon: {fileID: 1980703905, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
+  DisplayName: Coin Gain
+  MaxPicks: 0
+  Description: +{0}% Coins for you
+  Multiplier:
+    RawValue: 78643

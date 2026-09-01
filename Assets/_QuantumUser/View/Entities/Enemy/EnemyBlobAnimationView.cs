@@ -330,10 +330,30 @@ namespace Quantum
 
             if (isBurrowed != _lastBurrowed)
             {
-                if (isBurrowed == true)
-                    TriggerBurrowDown();
-                else
-                    TriggerBurrowUp();
+                // Always recorded regardless of the guard below, so the unconditional _burrowT tick
+                // further down still knows which way to head even on a tick where this doesn't also
+                // force _state.
+                _burrowSinking = isBurrowed;
+
+                // Don't stomp an AttackStep that's actively mid-playback THIS tick - Burrow's own
+                // dive/resurface can land on the exact same simulation tick as
+                // EnemyAttackVisualsView's own Begin/End step (e.g. BurrowDeliveryData's Dive/Jump
+                // AttackVisualSteps authored on BeginStep/EndStep), and PlayAttackStep may have
+                // already claimed _state this frame from the sibling component's own QUpdate -
+                // Unity doesn't guarantee which of the two runs first, so this only refuses to
+                // OVERWRITE an attack step that already won this tick rather than trying to always
+                // win itself (if PlayAttackStep instead fires later this same frame, it always wins
+                // unconditionally regardless of this guard, same as before). _burrowT (visibility)
+                // still advances every frame regardless - see below - so the enemy can never get
+                // stuck invisible just because an AttackStep pose is what's actually driving the
+                // transform on a given tick.
+                if (_state != State.AttackStep || _currentStep == null || _stateTimer >= _currentStep.Duration)
+                {
+                    if (isBurrowed == true)
+                        TriggerBurrowDown();
+                    else
+                        TriggerBurrowUp();
+                }
 
                 _lastBurrowed = isBurrowed;
             }
@@ -370,6 +390,19 @@ namespace Quantum
             _horizontalSpeed = new Vector2(velocity.x, velocity.z).magnitude;
 
             float dt = Time.deltaTime;
+
+            // Independent of _state - always advances toward the current target (1 = hidden while
+            // sinking, 0 = visible while rising) regardless of which case in UpdatePose's switch
+            // actually owns the pose this frame. Must NOT live inside case State.Burrow anymore: the
+            // QUpdate guard above can deliberately leave _state on AttackStep for an overlapping
+            // EndStep/BeginStep tell (e.g. a Jump/Dive AttackVisualStep authored to play alongside
+            // the resurface/dive), and if _burrowT only ticked inside the Burrow case, it would get
+            // stuck at 1 forever whenever that guard wins - the enemy staying invisible/scale-0
+            // permanently, since nothing else would ever bring it back down. A no-op once already at
+            // its target, same "own independent timer" idiom _bodySpriteTimeRemaining uses above.
+            float burrowRateDuration = _burrowSinking ? burrowSinkDuration : burrowRiseDuration;
+            float burrowRate = burrowRateDuration > 0f ? dt / burrowRateDuration : 1f;
+            _burrowT = Mathf.MoveTowards(_burrowT, _burrowSinking ? 1f : 0f, burrowRate);
 
             // Ice+RiftMark's Deep Freeze reaction stretches the enemy's own Preparation/Telegraph windup
             // (StatusEffectUtility.GetAnticipationMultiplier - see EnemySystem.UpdatePreparation,
@@ -640,6 +673,39 @@ namespace Quantum
                             // against another - see ApplyPose's punchScaleMult.
                             punchScaleTarget = Mathf.Sin(t * step.PunchScale.Frequency * Mathf.PI * 2f) * decay * step.PunchScale.Strength;
                             break;
+
+                        case AttackAnimationType.Jump:
+                        {
+                            // A real hop arc on local Y (bobTarget) - unlike every other type above,
+                            // which deliberately stays grounded - with a squash ramping in toward the
+                            // end as if landing. Purely a character-animation pop layered over
+                            // whatever the simulation itself is doing to Transform3D.Position (e.g.
+                            // BurrowDeliveryData's resurface already bakes the real vertical motion).
+                            bobTarget = Mathf.Sin(t * Mathf.PI) * step.Jump.Height;
+                            float jumpLandT = t * t;
+                            _squashT = Mathf.Lerp(_squashT, step.Jump.LandSquash * jumpLandT, 1f - Mathf.Exp(-squashLerpSpeed * dt * 2f));
+                            break;
+                        }
+
+                        case AttackAnimationType.Dive:
+                        {
+                            // Hop (bobTarget, same peaked-at-the-middle arc as Jump above) and
+                            // rotate-into-the-ground (rockTarget + depthTarget - local Z, not Y, same
+                            // reasoning as Crouch/Slam's own SinkAmount) run CONCURRENTLY across the
+                            // whole step, not sequentially - reads as diving headfirst as it leaves
+                            // the ground, rather than hopping first and only tipping over afterward.
+                            // Rotation/sink ease in toward the end (decay^2, same ramp Slam/Crouch use
+                            // for their own impact/sink) while the hop follows its own independent
+                            // arc. Pairs with BurrowDeliveryData's own Dive sub-phase, authored on
+                            // BeginStep.
+                            bobTarget = Mathf.Sin(t * Mathf.PI) * step.Dive.JumpHeight;
+
+                            float diveEase = t * t;
+                            rockTarget = step.Dive.RotateDegrees * diveEase * _facingSign;
+                            depthTarget = -step.Dive.SinkAmount * diveEase;
+                            _squashT = Mathf.Lerp(_squashT, 0f, 1f - Mathf.Exp(-squashLerpSpeed * dt));
+                            break;
+                        }
                     }
                     break;
                 }
@@ -696,13 +762,11 @@ namespace Quantum
 
                 case State.Burrow:
                 {
-                    // Driven toward 1 (hidden) while sinking, back toward 0 (visible) while rising -
-                    // pinned at whichever end it reaches until the next trigger flips direction, see
-                    // TriggerBurrowDown/TriggerBurrowUp.
-                    float duration = _burrowSinking ? burrowSinkDuration : burrowRiseDuration;
-                    float rate = duration > 0f ? dt / duration : 1f;
-                    _burrowT = Mathf.MoveTowards(_burrowT, _burrowSinking ? 1f : 0f, rate);
-
+                    // _burrowT itself now advances unconditionally in QUpdate (see there) so
+                    // visibility keeps recovering even on a tick where this case isn't the one
+                    // actually selected - this only renders the squash/sink POSE for whichever tick
+                    // State.Burrow does own.
+                    //
                     // Peaks at the midpoint of the transition regardless of direction, so the same
                     // curve reads as a "pop" both diving down and popping back up. Sink rides
                     // depthTarget (local Z), not bobTarget (local Y) - see jumpCrouchSinkAmount's

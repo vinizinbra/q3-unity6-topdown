@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bb51f48d451e4d148d492421a410eb0, type: 3}
+  m_Name: BeamGunParticle
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.WeaponDataAsset
+  Identifier:
+    Path: _QuantumUser/Resources/Weapons/BeamGunParticle
+    Guid:
+      Value: 371508131991285892
+  DisplayName: 
+  FireType: 0
+  Damage:
+    RawValue: 1310720
+  Element: 0
+  CriticalChance:
+    RawValue: 0
+  CriticalDamageBonus:
+    RawValue: 0
+  FireRate:
+    RawValue: 131072
+  MagazineSize: 80
+  ReloadDuration:
+    RawValue: 65536
+  Range:
+    RawValue: 524288
+  PelletCount: 1
+  SpreadAngle:
+    RawValue: 1966080
+  SpawnAnchor: 0
+  SpawnOffset:
+    X:
+      RawValue: 0
+    Y:
+      RawValue: 0
+    Z:
+      RawValue: 0
+  ProjectileData:
+    Id:
+      Value: 0
+  ViewPrefab: {fileID: 8089491252618662435, guid: 1ce0d7eaa8b024bf49857a9011c7347b, type: 3}
+  ShakeTier: 0
+  _dpsPreview: 'Burst DPS: 40
+
+    Sustained DPS (incl. reload): 39
+
+    Damage/min:
+    2341'

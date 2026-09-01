@@ -26,6 +26,13 @@ component MomentumUpgrade
     FP GenerationMultiplier;
     FP ChargedMoveSpeedBonus;
     FP DischargeRetentionFraction;
+
+    // Rank 3 only - if Juggernaut's own Duration runs out while Brutus is still fully Charged, the
+    // channel deliberately does NOT end there: it stays live (damage reduction, Charged speed, the
+    // lot) until he actually cashes that Charge in on an enemy, and ends on that discharge instead.
+    // Without this a full Charge earned in the last second of the channel is simply thrown away.
+    // See JuggernautSkillData.Tick.
+    Boolean HoldUntilDischarge;
 }
 
 // Bone Breaker - "Discharge damage progression." Discharge deals JuggernautSkillData.Damage

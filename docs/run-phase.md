@@ -124,11 +124,15 @@ Now:
   or the Break would never end.
 - **`SurvivalTime`** - "how much COMBAT time has this run accumulated," consumed by
   `BalanceConfig`'s run curves/co-op scaling (see CLAUDE.md's "Run Curves & Co-op Scaling") and any
-  future HUD run-timer. Advances ONLY while the current phase's `Kind != Breathing` - frozen
-  entirely during a Breathing phase (Elite/Boss phases do NOT freeze it - only their own
-  `PhaseTimer` advancement is held, see below). Unlike `PhaseTimer`, this freeze is NOT conditional
-  on enemies being cleared - it freezes the instant `Kind == Breathing`, full stop, same tick
-  spawning also stops.
+  future HUD run-timer. Frozen entirely during a Breathing phase - unconditionally, the instant
+  `Kind == Breathing`, full stop, same tick spawning also stops, NOT conditional on enemies being
+  cleared (unlike `PhaseTimer`). As of 2026-08-29, it also freezes during an **Elite** phase for as
+  long as that phase's own `IsEncounterCleared` hold is open (`encounterCleared == false`) - the
+  team is "locked into" the encounter with no way to advance it, so accumulated combat time
+  shouldn't run out from under them either. **Boss deliberately keeps `SurvivalTime` running**
+  through its own hold - a boss fight is an active, ongoing fight the players ARE making progress
+  on, not a stall, so it stays symmetric with `PhaseTimer` (which both Elite and Boss already held)
+  rather than Breathing's unconditional freeze.
 
 Concrete example (the one that motivated this): Phase 1 authored `Duration=120` (combat), Phase 2
 a Breathing entry `Duration=30`, Phase 3 the next combat phase. `SurvivalTime` reaches `120` the
@@ -245,7 +249,20 @@ scan every tick (same "read live, never maintain a separate counter that could d
 counts - `Combat` phases always read as cleared (no gate at all). Enemies are still introduced the
 normal way, via `CombatDirectorUtility.TryPulse` pulling from the phase's own `AllowedGroups`
 (author a group containing only `EnemyTier.Elite`/`Boss` enemies) - this mechanic only gates the
-PHASE TRANSITION, nothing about spawning itself changes.
+PHASE TRANSITION, nothing about spawning itself changes. As of 2026-08-29, an Elite phase's own
+hold ALSO freezes `SurvivalTime` (not just `PhaseTimer`) for as long as `encounterCleared ==
+false` - see "Independent timers" above. Boss does not get this treatment - its hold leaves
+`SurvivalTime` running.
+
+**Also as of 2026-08-29**: `IsEncounterCleared('Elite')` only checks "is an Elite-tier enemy
+currently alive" - it has no memory of whether one has ever actually spawned this phase. Since the
+normal `CombatDirectorUtility.TryPulse` purchase can silently fail (crowded map/insufficient budget,
+see `docs/survival-director.md`'s "Failure cases and safeguards"), an Elite phase could previously
+expire on `Duration` alone without ever having spawned its Elite - reading as "cleared" from tick 1.
+`SurvivalPhase.GuaranteedGroup` closes this: it force-spawns one specific `EnemyGroupConfig` the
+instant the phase begins, bypassing `TrySelectSpawn`'s budget/alive-cap gate (but not the normal
+formation/ground/clearance search) - see `docs/survival-director.md`'s own "Guaranteed spawns"
+section for the full mechanism.
 
 `Breathing` reuses the exact same `IsEncounterCleared` hold, just with no tier filter - ANY
 currently-alive enemy (not `EnemyActionPhase.Dead`) holds it open, mirrored into

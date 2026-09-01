@@ -16,12 +16,12 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Zara/Zara_HeroSkill/Zara_HeroSkillUpgrades/AmplifierSkillAction
     Guid:
       Value: 506336313018381212
-  Icon: {fileID: 0}
+  Icon: {fileID: -1095911109, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
   DisplayName: Amplifier
   RankDescriptions:
-  - Totem Damage Beats deal 30% more damage.
-  - Totem Damage Beats deal 60% more damage and knock enemies back.
-  - Totem Damage Beats deal double damage, and every third one Stuns enemies.
+  - 'Totem Damage Beats deal <color=#FD3971>30%</color> more damage.'
+  - 'Totem Damage Beats deal <color=#FD3971>60%</color> more damage and knock enemies back.'
+  - 'Totem Damage Beats deal double damage, and every third one Stuns enemies.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

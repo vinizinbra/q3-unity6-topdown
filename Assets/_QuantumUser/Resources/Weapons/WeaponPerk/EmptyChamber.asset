@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 052c67b48ba614c8e9741796e8bb21d3, type: 3}
+  m_Name: EmptyChamber
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.EmptyChamberWeaponPerkData
+  Identifier:
+    Path: _QuantumUser/Resources/Weapons/WeaponPerk/EmptyChamber
+    Guid:
+      Value: 336917286344424812
+  Icon: {fileID: 901284195, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  DisplayName: Empty Chamber
+  Rarity: 1
+  Description: 'Empty magazine releases a shockwave that knocks back enemies within <color=#FD3971>{0:0}m</color>'
+  Radius:
+    RawValue: 262144
+  Knockback:
+    RawValue: 655360

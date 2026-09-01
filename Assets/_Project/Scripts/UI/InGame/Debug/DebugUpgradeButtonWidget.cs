@@ -55,7 +55,7 @@ public class DebugUpgradeButtonWidget : MonoBehaviour
         // once fully granted (currentStacks, which already equals maxStacks at that point). A
         // non-ranked row (maxStacks <= 1) shows the bare name, unchanged from before ranking existed.
         if (displayNameText != null)
-            displayNameText.text = maxStacks > 1 ? $"{displayName} {ToRomanNumeral(granted ? currentStacks : currentStacks + 1)}" : displayName;
+            displayNameText.text = maxStacks > 1 ? $"{displayName} {StringUtility.ToRomanNumeral(granted ? currentStacks : currentStacks + 1)}" : displayName;
 
         if (descriptionText != null)
             descriptionText.text = description;
@@ -140,7 +140,7 @@ public class DebugUpgradeButtonWidget : MonoBehaviour
                     stackText.text = $"{nextRank - 1}/{maxStacks}";
 
                 if (displayNameText != null)
-                    displayNameText.text = $"{displayName} {ToRomanNumeral(nextRank)}";
+                    displayNameText.text = $"{displayName} {StringUtility.ToRomanNumeral(nextRank)}";
 
                 if (descriptionText != null && getDescriptionForRank != null)
                     descriptionText.text = getDescriptionForRank(nextRank);
@@ -155,34 +155,5 @@ public class DebugUpgradeButtonWidget : MonoBehaviour
 
         if (actionButtonLabel != null)
             actionButtonLabel.text = label;
-    }
-
-    // Standard greedy-subtraction Roman numeral conversion - correct for any positive rank, not just
-    // the 1-3 every current Ascension line happens to cap at, so a future hero with a longer line
-    // doesn't need this touched.
-    private static string ToRomanNumeral(int number)
-    {
-        if (number <= 0)
-            return string.Empty;
-
-        (int value, string symbol)[] map =
-        {
-            (1000, "M"), (900, "CM"), (500, "D"), (400, "CD"),
-            (100, "C"), (90, "XC"), (50, "L"), (40, "XL"),
-            (10, "X"), (9, "IX"), (5, "V"), (4, "IV"), (1, "I")
-        };
-
-        var builder = new System.Text.StringBuilder();
-
-        foreach (var (value, symbol) in map)
-        {
-            while (number >= value)
-            {
-                builder.Append(symbol);
-                number -= value;
-            }
-        }
-
-        return builder.ToString();
     }
 }

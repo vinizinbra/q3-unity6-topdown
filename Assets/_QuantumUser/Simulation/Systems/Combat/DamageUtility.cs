@@ -138,18 +138,19 @@ namespace Quantum
             // Cheat Death or post-revive grace must not silently burn a durability point on a hit
             // that was never going to land anyway.
             //
-            // SHIELD PROTECTS THE ACCESSORY. Any Shield at all and the accessory sits this one out -
-            // the hit is going to be absorbed below, so it was never "a hit into Health", which is
-            // the only thing the accessory is there to catch. Expressed as a gate here rather than by
-            // moving the hook below AbsorbWithShield, which would forfeit every negation guarantee
-            // spelled out above (the crit roll, procs, Rage and OnWeaponHitLanded all
-            // happen in between).
+            // SHIELD PROTECTS THE ACCESSORY, UP TO WHAT IT CAN ACTUALLY SOAK. A hit the current
+            // Shield fully covers sits the accessory out entirely - it's going to be absorbed below,
+            // so it was never "a hit into Health", which is the only thing the accessory is there to
+            // catch. Expressed as a gate here rather than by moving the hook below AbsorbWithShield,
+            // which would forfeit every negation guarantee spelled out above (the crit roll, procs,
+            // Rage and OnWeaponHitLanded all happen in between).
             //
-            // A hit bigger than the remaining Shield is deliberately NOT caught: the Shield empties
-            // and the overflow lands on Health with durability untouched. That gives Shield a real
-            // failure mode instead of making it a strictly-better accessory, and it guarantees chip
-            // damage can never cost a durability point.
-            if (bypassOutgoingResolution == false && HasShieldRemaining(f, target) == false
+            // A hit BIGGER than the remaining Shield is the accessory's cue instead: rather than let
+            // the excess spill onto Health, the accessory eats the whole hit and a durability point
+            // instead of the player's life. So "how much Shield do I have" is the real gate that
+            // decides "do I lose a durability point or take that damage" - not "do I have an
+            // accessory at all."
+            if (bypassOutgoingResolution == false && ShieldFullyCoversDamage(f, target, damage) == false
                 && AccessoryGuardUtility.TryBlock(f, target, owner, damage) == true)
             {
                 return;
@@ -163,6 +164,7 @@ namespace Quantum
             {
                 RageOverdriveUtility.TryAdvanceStack(f, owner);
                 f.Signals.OnWeaponHitLanded(target, owner);
+                TryApplyWeaponStagger(f, target, owner);
             }
 
             FP totalDamage;
@@ -228,6 +230,11 @@ namespace Quantum
 
             FP healthAfter = health->CurrentHealth - remaining;
 
+            // Damage dealt BEYOND what was left - captured here because CheatDeath below rewrites
+            // healthAfter to 1, and health->CurrentHealth is clamped to 0 further down, so this is
+            // the last point the excess is knowable. 0 for any non-lethal hit.
+            FP overkillDamage = FPMath.Max(FP._0, -healthAfter);
+
             // Too Angry to Die - a hit that would otherwise be lethal instead leaves the owner at 1
             // Health and force-ends their current Overdrive activation (see CheatDeathUtility). Only
             // ever intervenes on an actually-lethal hit, never a survivable one.
@@ -266,6 +273,11 @@ namespace Quantum
                 f.Events.EntityDied(target, owner);
                 f.Signals.OnEntityKilled(target, owner, source);
 
+                // Overkill - re-deals a fraction of the excess damage as a blast at the corpse.
+                // Raised AFTER the kill signal/event so normal kill attribution, drops and on-kill
+                // reactions all resolve against the original hit first.
+                OverkillUtility.TryDetonate(f, target, owner, source, overkillDamage, isChainedExplosion);
+
                 // Pixie's Unstable Mixture - banks a stack when a GENUINE (non-chained) explosion
                 // gets a kill, empowering her next explosion. Scoped by the same isExplosion/
                 // isChainedExplosion pair every other explosion-source rule here uses, which is what
@@ -279,12 +291,13 @@ namespace Quantum
                 ScrapUtility.TrySpawnDrop(f, target, owner);
                 RiftShardUtility.TrySpawnDrop(f, target, owner);
                 CoinUtility.TrySpawnDrop(f, target, owner);
+                EnemyChestDropUtility.TrySpawnDrop(f, target);
 
                 if (f.Unsafe.TryGetPointer<Enemy>(target, out var enemy) == true)
                 {
                     EnemyDataAsset data = f.FindAsset(enemy->EnemyData);
 
-                    if (data.Tier == EnemyTier.Filler || data.Tier == EnemyTier.Normal)
+                    if (data.Tier == EnemyTier.Filler || data.Tier == EnemyTier.Normal|| data.Tier == EnemyTier.Heavy|| data.Tier == EnemyTier.Specialist)
                     {
                         FireEnemyExploded(f, target, enemy->EnemyData);
                         TryExplodeOnDeath(f, owner, target, EnemyMovementUtility.ResolveEntityRadius(f, target), health->MaxHealth, enemy->EnemyData);
@@ -578,6 +591,12 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<CharacterStats>(target, out var stats) == true)
             {
                 multiplier *= FPMath.Clamp(FP._1 - stats->DamageReduction, FP._0, FP._1);
+
+                // The Toughness Global Upgrade's own compounding term - multiplicative rather than
+                // folded into the additive fraction above precisely because it stacks indefinitely
+                // (see CharacterStats.qtn). Floored at 0, but never clamped up to 1: a value above
+                // 1 is a legitimate "takes MORE damage" tradeoff for a future pick.
+                multiplier *= FPMath.Max(FP._0, stats->DamageTakenMultiplier);
             }
 
             // Max's Too Angry to Die - a timed buff, independent of (and stacking with) the permanent
@@ -634,14 +653,44 @@ namespace Quantum
             return FPMath.Clamp(FP._1 - enemyData.Stats.FrontalDamageReductionAmount, FP._0, FP._1);
         }
 
-        // Attacker-side, unlike ResolveFrontalDamageMultiplier above (target-side) - Close
-        // Quarters/Longshot (Global Upgrades) lerp between the attacker's own
+        // Generic "this build's weapon hits land heavier" stagger - a chance for any weapon hit to
+        // briefly stun what it hit (Heavy Arsenal, see docs/rift-mutations.md). Deliberately one
+        // roll at one place rather than per weapon type or per perk, so it covers hitscan, pellets,
+        // projectiles and explosive procs uniformly and needs no weapon-specific code anywhere.
+        //
+        // Called from the DamageSource.Weapon + !bypassOutgoingResolution block, so a DoT tick
+        // replaying an already-resolved magnitude can never re-roll it.
+        //
+        // Routed through StatusEffectUtility.ApplyStun, which already owns per-tier hard-CC immunity
+        // and diminishing returns - so a Boss simply never staggers and a Heavy staggers at most
+        // once every few seconds, with no tier check of any kind here.
+        private static void TryApplyWeaponStagger(Frame f, EntityRef target, EntityRef owner)
+        {
+            if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false)
+                return;
+
+            if (stats->WeaponStaggerChance <= FP._0 || stats->WeaponStaggerDuration <= FP._0)
+                return;
+
+            if (RollChance(f, stats->WeaponStaggerChance) == false)
+                return;
+
+            StatusEffectUtility.ApplyStun(f, target, stats->WeaponStaggerDuration);
+        }
+
+        // Attacker-side, unlike ResolveFrontalDamageMultiplier above (target-side) - the Close
+        // Quarters/Longshot Rift Mutations lerp between the attacker's own
         // NearDamageMultiplier/FarDamageMultiplier off the flat attacker-target distance at the
         // moment the hit resolves. Fixed design-constant thresholds for now (not per-asset tunable)
         // - a placeholder starting point for balance passes, same convention the asset generators
         // already use for their own untuned proc magnitudes.
-        private static readonly FP RangeDamageNearThreshold = 5;
-        private static readonly FP RangeDamageFarThreshold = 12;
+        //
+        // internal rather than private because they are the single definition of "near" and "far"
+        // for the whole build: Longshot's own bonus pierce (WeaponSystem.ResolveLongRangePierceBonus)
+        // and Close Quarters' on-kill speed burst (RiftMutationReactionSystem.OnEntityKilled) both
+        // key off the same two numbers, and a second copy of either would drift.
+        internal static readonly FP RangeDamageNearThreshold = 5;
+        internal static readonly FP RangeDamageFarThreshold = 10;
 
         private static FP ResolveRangeDamageMultiplier(Frame f, EntityRef owner, EntityRef target, CharacterStats* stats)
         {
@@ -664,13 +713,12 @@ namespace Quantum
             return FPMath.Lerp(stats->NearDamageMultiplier, stats->FarDamageMultiplier, t);
         }
 
-        // "Is there a Shield standing between this hit and Health right now?" - the one thing the
-        // Accessory Guard gate above needs to know. Deliberately just presence-of-any-Shield rather
-        // than "is the Shield big enough to soak this hit": see that gate's own comment for why the
-        // overflow case is left to land.
-        private static bool HasShieldRemaining(Frame f, EntityRef target)
+        // "Is the current Shield big enough to soak this hit on its own?" - the one thing the
+        // Accessory Guard gate above needs to know. A target with no Shield component (or an empty
+        // one) never covers anything, so it always falls through to the accessory.
+        private static bool ShieldFullyCoversDamage(Frame f, EntityRef target, FP damage)
         {
-            return f.Unsafe.TryGetPointer<Shield>(target, out var shield) == true && shield->Current > FP._0;
+            return f.Unsafe.TryGetPointer<Shield>(target, out var shield) == true && shield->Current >= damage;
         }
 
         private static FP ReduceByArmor(Frame f, EntityRef target, FP damage)
@@ -735,6 +783,12 @@ namespace Quantum
                 return damage;
 
             damage *= stats->DamageMultiplier * GetSourceMultiplier(stats, source);
+
+            // Every LIVE, condition-dependent mutation bonus in one term (Money Talks, Danger Pay,
+            // No Safety Net, Pressure Cooker) - see MutationModifierUtility. Deliberately one call
+            // rather than four lines here: the damage pipeline stays a fixed length no matter how
+            // many conditional mutations the roster grows. Exactly 1 for a player holding none.
+            damage *= MutationModifierUtility.ResolveLiveDamageMultiplier(f, owner, stats);
             damage *= ResolveRangeDamageMultiplier(f, owner, target, stats);
 
             // Generic timed outgoing-damage buff (Zara's Power Chord Support Beat) - unlike the

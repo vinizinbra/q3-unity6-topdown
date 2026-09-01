@@ -44,6 +44,14 @@ public class FollowCamera : MonoBehaviour
     private float _zoom = 1f;
     private Vector3 _smoothedPosition;
 
+    // Ground-level point the camera is actually FRAMING (targets' average, or the focus-override
+    // target) - updated every Update(), before `offset` is added. Distance-falloff shake measures
+    // from this, not from transform.position/_smoothedPosition: those already include `offset`
+    // (how far back/up the camera physically sits, e.g. Y=15/Z=-10 for a top-down tilt), so measuring
+    // from the real camera transform made every step's shake fall outside any sane falloff radius
+    // even standing right on top of the enemy.
+    private Vector3 _focusPosition;
+
     // While set, framing locks onto this single transform instead of averaging _targets - used for
     // the boss encounter's camera-focus cutaway (see BossWidget). _targets themselves are left
     // completely untouched (no AddTarget/RemoveTarget churn), so clearing this instantly resumes
@@ -63,6 +71,16 @@ public class FollowCamera : MonoBehaviour
     private float _shakeAmplitude;
     private float _shakeFrequency;
     private Vector2 _shakeSeed;
+
+    [Header("Step impact shake")]
+    [Tooltip("World-unit distance from the camera at which an AttackVisualStep's ShakeImpact fully falls off to zero amplitude. Distance is measured from this camera's own transform, not from any one local player - correct for the shared multi-player framing this camera already does.")]
+    public float stepShakeFalloffRadius = 12f;
+    [Tooltip("Amplitude at ShakeImpact = 1 right at the camera (distance 0), before falloff. Scales linearly with the step's own authored ShakeImpact value and with the 0-1 falloff factor.")]
+    public float stepShakeAmplitudePerImpact = 0.25f;
+    [Tooltip("Ceiling on the resulting amplitude, so a large ShakeImpact close to the camera can't produce an unplayable shake.")]
+    public float stepShakeMaxAmplitude = 0.6f;
+    public float stepShakeDuration = 0.2f;
+    public float stepShakeFrequency = 20f;
 
     private void Awake()
     {
@@ -166,6 +184,31 @@ public class FollowCamera : MonoBehaviour
         _shakeFrequency = frequency;
     }
 
+    // Generic distance-falloff shake entry point for AttackVisualStep.ShakeImpact - unlike Shake()
+    // above (a flat, already-attenuated amplitude every other caller pre-computes itself), this
+    // takes a world ORIGIN and does the falloff here, so any step anywhere on the map can just pass
+    // its own ShakeImpact without knowing anything about the camera. Distance measured from
+    // _focusPosition (what the camera is actually framing - the players' own ground-level position),
+    // NOT transform.position - the real camera transform sits `offset` away (up/back for the
+    // top-down tilt), which would put every origin "far" regardless of how close it is to the
+    // players.
+    public void ShakeAtPosition(Vector3 origin, float impact)
+    {
+        if (impact <= 0f)
+            return;
+
+        float distance = Vector3.Distance(_focusPosition, origin);
+        float falloff = stepShakeFalloffRadius > 0f ? Mathf.Clamp01(1f - distance / stepShakeFalloffRadius) : 1f;
+
+        LogHelper.Log(LogTag, $"ShakeAtPosition: origin={origin}, followTarget={_focusPosition}, distance={distance:F1}, falloffRadius={stepShakeFalloffRadius:F1}, falloff={falloff:F2}, impact={impact:F2}");
+
+        if (falloff <= 0f)
+            return;
+
+        float amplitude = Mathf.Min(impact * stepShakeAmplitudePerImpact * falloff, stepShakeMaxAmplitude);
+        Shake(amplitude, stepShakeDuration, stepShakeFrequency);
+    }
+
     // Locks framing onto a single target (e.g. the boss) instead of the normal multi-player
     // average - snap defaults true since this is meant to be called while the screen is hidden
     // behind a fade (see ScreenFadeWidget/BossWidget), so the camera should already be exactly on
@@ -223,6 +266,8 @@ public class FollowCamera : MonoBehaviour
             foreach (var t in _targets)
                 spread = Mathf.Max(spread, Vector3.Distance(t.position, center));
         }
+
+        _focusPosition = center;
 
         float desiredZoom = Mathf.Clamp(1f + spread / spreadReference, minZoom, maxZoom);
         _zoom = Mathf.Lerp(_zoom, desiredZoom, Time.deltaTime * zoomLerpSpeed);

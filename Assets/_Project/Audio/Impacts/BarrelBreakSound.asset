@@ -12,10 +12,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c04d8195895c42008e9658fbf433bf7, type: 3}
   m_Name: BarrelBreakSound
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
-  clips:
-  - {fileID: 8300000, guid: 988dbafbd004ff84c98246dd81f5e740, type: 3}
-  - {fileID: 8300000, guid: 005e13960b64b724a9de67e16d7fd869, type: 3}
-  - {fileID: 8300000, guid: dec61e95ebee5854f8b35b60982e1e0a, type: 3}
+  variants:
+  - clip: {fileID: 8300000, guid: 988dbafbd004ff84c98246dd81f5e740, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: 005e13960b64b724a9de67e16d7fd869, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: dec61e95ebee5854f8b35b60982e1e0a, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  clips: []
   pick: 1
   layers: []
   group: 5

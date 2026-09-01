@@ -60,6 +60,12 @@ MonoBehaviour:
     RawValue: 65536
   TelegraphStartPercent:
     RawValue: 32768
+  Trigger:
+    Type: 0
+    Radius:
+      RawValue: 0
+    HealthPercent:
+      RawValue: 0
   AimLock: 0
   AimLockPercent:
     RawValue: 65536
@@ -80,6 +86,8 @@ MonoBehaviour:
   AnticipationStep:
     AnimationType: 4
     Duration: 0.9
+    BodySprite: {fileID: 536943234, guid: 0a8c1f724aa9b4c7d9200ed9a54a68ff, type: 3}
+    ShakeImpact: 0
     Shake:
       Frequency: 18
       RockDegrees: 6
@@ -89,8 +97,8 @@ MonoBehaviour:
       Frequency: 6
       MaxSquash: 0.25
     Crouch:
-      Squash: 0.4
-      SinkAmount: 0
+      Squash: 0.2
+      SinkAmount: 0.1
     Inflate:
       Amount: 0.4
     Lunge:
@@ -123,6 +131,13 @@ MonoBehaviour:
       ImpactShakeDegrees: 4
       ImpactShakeFrequency: 30
       BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
     CenterPivot: 0
     PivotHeightOverride: 0
     ParticlePrefab: {fileID: 0}
@@ -137,6 +152,8 @@ MonoBehaviour:
   BeginStep:
     AnimationType: 5
     Duration: 0.3
+    BodySprite: {fileID: 0}
+    ShakeImpact: 0
     Shake:
       Frequency: 18
       RockDegrees: 6
@@ -180,9 +197,16 @@ MonoBehaviour:
       ImpactShakeDegrees: 4
       ImpactShakeFrequency: 30
       BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
     CenterPivot: 0
     PivotHeightOverride: 0
-    ParticlePrefab: {fileID: 3308319309734866876, guid: 73f6ab46adf6f4923899d8a01e54f72c, type: 3}
+    ParticlePrefab: {fileID: 3308319309734866876, guid: 30a0a936d51294bde9c498bbf141013c, type: 3}
     Anchor: 0
     Offset: {x: 0, y: 0, z: 0}
     Parented: 0
@@ -194,6 +218,8 @@ MonoBehaviour:
   OnGoingStep:
     AnimationType: 0
     Duration: 0.3
+    BodySprite: {fileID: 1542363554, guid: 0a8c1f724aa9b4c7d9200ed9a54a68ff, type: 3}
+    ShakeImpact: 0
     Shake:
       Frequency: 18
       RockDegrees: 6
@@ -237,9 +263,16 @@ MonoBehaviour:
       ImpactShakeDegrees: 4
       ImpactShakeFrequency: 30
       BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
     CenterPivot: 0
     PivotHeightOverride: 0
-    ParticlePrefab: {fileID: 19852826, guid: 9c8280f4dc1c19b4abebf96bc3d992f2, type: 3}
+    ParticlePrefab: {fileID: 2712700381257934115, guid: 1c2fa915827f14ee4807de4d637bc057, type: 3}
     Anchor: 0
     Offset: {x: 0, y: 0, z: 0}
     Parented: 1
@@ -251,6 +284,8 @@ MonoBehaviour:
   EndStep:
     AnimationType: 4
     Duration: 0.1
+    BodySprite: {fileID: 536943234, guid: 0a8c1f724aa9b4c7d9200ed9a54a68ff, type: 3}
+    ShakeImpact: 1
     Shake:
       Frequency: 18
       RockDegrees: 6
@@ -260,7 +295,7 @@ MonoBehaviour:
       Frequency: 6
       MaxSquash: 0.25
     Crouch:
-      Squash: 0.5
+      Squash: 0.2
       SinkAmount: 0.15
     Inflate:
       Amount: 0.4
@@ -294,6 +329,13 @@ MonoBehaviour:
       ImpactShakeDegrees: 4
       ImpactShakeFrequency: 30
       BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
     CenterPivot: 0
     PivotHeightOverride: 0
     ParticlePrefab: {fileID: 3308319309734866876, guid: 73f6ab46adf6f4923899d8a01e54f72c, type: 3}

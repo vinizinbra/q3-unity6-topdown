@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using NaughtyAttributes;
 using Photon.Client.StructWrapping;
 using Photon.Deterministic;
@@ -52,6 +53,12 @@ public class CharacterUiWidget : MonoBehaviour
     [SerializeField] private Color shieldShineColor = Color.white;
     [SerializeField] private float shieldShineDuration = 0.4f;
 
+    [SerializeField, Tooltip("Only relevant for a TEMPORARY shield (Shield.TemporaryDuration > 0, e.g. Brute's Juggernaut) - once ExpirationRemaining drops to/below this many seconds, the fill starts pulsing toward shieldWarningColor so it's visually obvious the Shield is about to disappear entirely, not just draining. Meaningless (never triggers) for a plain persistent charge-only shield or a classically recharging one, since both always read TemporaryDuration 0.")]
+    private float shieldWarningThreshold = 1.5f;
+    [SerializeField] private Color shieldWarningColor = new Color(1f, 0.55f, 0.1f);
+    [SerializeField, Tooltip("Pulse speed while warning, in radians/sec.")]
+    private float shieldWarningPulseSpeed = 6f;
+
     [Header("Weapon")]
     [SerializeField] private Slider ammoSlider;
     [SerializeField, Tooltip("Fills as the reload runs and hides once it lands, so it reads as \"time until a full magazine\" rather than a second ammo bar.")]
@@ -96,7 +103,13 @@ public class CharacterUiWidget : MonoBehaviour
     [SerializeField, Tooltip("The whole pip strip - its empty frames/backing included. Hidden outright for any entity that has no AccessoryGuard at all (every enemy, every sentry), since the pips themselves going dark would otherwise leave a row of empty guard slots on a thing that can never have one. Left unassigned to skip.")]
     private GameObject accessoryGuardRoot;
 
-    [SerializeField, Tooltip("One object per durability point, deactivated from the right as guards are spent: index i is shown while i < CurrentDurability. Author as many as AccessoryGuardConfig.BaseDurability (3 by default). All hide entirely for an entity with no AccessoryGuard, so the same prefab still serves enemies.")]
+    [SerializeField, Tooltip("A SINGLE pip used as a template - one instance is spawned per point of MaxDurability at runtime, so the strip adapts to whatever a player's max actually is (Glass Core doubles it, Last Bastion drops it to 0). Deactivated automatically and never shown itself. Each spawned pip stays active for its whole life (it IS the slot); only its own available/spent children swap as durability is spent. Assign this rather than the fixed array below.")]
+    private AccessoryGuardPipWidget accessoryGuardPipTemplate;
+
+    [SerializeField, Tooltip("Where spawned pips are parented. Optional - defaults to accessoryGuardPipTemplate's own parent, which is right for a strip authored as template-inside-its-own-row.")]
+    private Transform accessoryGuardPipContainer;
+
+    [SerializeField, Tooltip("LEGACY fallback, used only when no pip template is assigned: a fixed array of hand-authored pips, deactivated from the right (index i shown while i < CurrentDurability). Cannot represent a MaxDurability higher than the number of objects authored here, which is why the template above is preferred.")]
     private GameObject[] accessoryGuardPips;
 
     [Header("Free Hit Guard")]
@@ -116,11 +129,17 @@ public class CharacterUiWidget : MonoBehaviour
 
     // One-shot so a pip/MaxDurability mismatch is reported once per widget rather than every frame.
     private bool _warnedPipShortfall;
+
+    // Live pip instances spawned from accessoryGuardPipTemplate, rebuilt only when MaxDurability
+    // changes (see RebuildAccessoryPips). Empty on the legacy hand-authored-array path.
+    private readonly List<AccessoryGuardPipWidget> _spawnedAccessoryPips = new List<AccessoryGuardPipWidget>();
     private Transform _followTarget;
     private Vector3 _characterOffset;
     private Tween _reloadPunchTween;
     private Coroutine _shieldShineRoutine;
     private bool _shieldWasRecharging;
+    private Color _shieldBaseFillColor = Color.white;
+    private bool _shieldBaseFillColorCaptured;
 
     private void Awake()
     {
@@ -227,10 +246,14 @@ public class CharacterUiWidget : MonoBehaviour
     // in a build where RuntimeConfig.AccessoryGuardConfig was never assigned) - so the one shared
     // widget prefab keeps serving players and enemies alike.
     //
-    // pips are authored as a fixed array and simply deactivated from the right: index i is shown
-    // while i < CurrentDurability. Authoring more pips than MaxDurability is harmless (the extras
-    // just never light up); authoring fewer silently caps the readout, which is why the count is
-    // logged as a warning once rather than clamped silently.
+    // The pip strip is SPAWNED to match MaxDurability rather than hand-authored, because MaxDurability
+    // is not a constant: Glass Core doubles it (3 -> 6) mid-run, and Last Bastion drops it to 0. A
+    // fixed array can't represent either, so the strip is rebuilt whenever that number changes and
+    // then only toggled per pip as durability is spent - index i shown while i < CurrentDurability.
+    //
+    // Rebuild is gated on MaxDurability actually changing, so the common case (durability going up and
+    // down within the same max) is just a few SetActive calls, not a respawn. Same
+    // destroy-and-reinstantiate-from-a-deactivated-template idiom PartyHistoryUpgradeContainer uses.
     private void UpdateAccessoryGuard(Frame frame)
     {
         bool hasGuard = frame.TryGet<AccessoryGuard>(_entityRef, out var guard) && guard.MaxDurability > 0;
@@ -241,6 +264,71 @@ public class CharacterUiWidget : MonoBehaviour
         if (accessoryEquippedRoot != null)
             accessoryEquippedRoot.SetActive(hasGuard && guard.State == AccessoryGuardState.Equipped);
 
+        int maxDurability = hasGuard ? guard.MaxDurability : 0;
+        int currentDurability = hasGuard ? guard.CurrentDurability : 0;
+
+        if (accessoryGuardPipTemplate != null)
+        {
+            UpdateSpawnedAccessoryPips(maxDurability, currentDurability);
+            return;
+        }
+
+        UpdateAuthoredAccessoryPips(hasGuard, maxDurability, currentDurability);
+    }
+
+    // Two different quantities drive the strip, which is why the pip is its own widget:
+    //   - how many pips EXIST tracks MaxDurability (rebuilt only when that changes)
+    //   - whether each one reads as available tracks CurrentDurability (every frame, cheap)
+    // A spent pip therefore leaves its empty frame behind instead of vanishing, so the player can
+    // still see how much durability a full repair would give back.
+    private void UpdateSpawnedAccessoryPips(int maxDurability, int currentDurability)
+    {
+        if (_spawnedAccessoryPips.Count != maxDurability)
+            RebuildAccessoryPips(maxDurability);
+
+        for (int i = 0; i < _spawnedAccessoryPips.Count; i++)
+        {
+            if (_spawnedAccessoryPips[i] == null)
+                continue;
+
+            _spawnedAccessoryPips[i].SetAvailable(i < currentDurability);
+        }
+    }
+
+    private void RebuildAccessoryPips(int maxDurability)
+    {
+        // The template is never shown itself, so it can be authored visible in the prefab for
+        // editing convenience and still not leak an extra pip at runtime.
+        if (accessoryGuardPipTemplate.gameObject.activeSelf == true)
+            accessoryGuardPipTemplate.gameObject.SetActive(false);
+
+        for (int i = 0; i < _spawnedAccessoryPips.Count; i++)
+        {
+            if (_spawnedAccessoryPips[i] != null)
+                Destroy(_spawnedAccessoryPips[i].gameObject);
+        }
+
+        _spawnedAccessoryPips.Clear();
+
+        Transform container = accessoryGuardPipContainer != null
+            ? accessoryGuardPipContainer
+            : accessoryGuardPipTemplate.transform.parent;
+
+        for (int i = 0; i < maxDurability; i++)
+        {
+            AccessoryGuardPipWidget pip = Instantiate(accessoryGuardPipTemplate, container);
+
+            // The pip itself is the SLOT and stays visible; SetAvailable (called by the caller right
+            // after this) is what decides whether it reads as filled or empty.
+            pip.gameObject.SetActive(true);
+            _spawnedAccessoryPips.Add(pip);
+        }
+    }
+
+    // Legacy path for a widget still authored with a fixed pip array. Kept so an un-rewired scene
+    // keeps working, but it cannot grow past what was authored - hence the one-time warning.
+    private void UpdateAuthoredAccessoryPips(bool hasGuard, int maxDurability, int currentDurability)
+    {
         if (accessoryGuardPips == null)
             return;
 
@@ -249,17 +337,18 @@ public class CharacterUiWidget : MonoBehaviour
             if (accessoryGuardPips[i] == null)
                 continue;
 
-            bool shown = hasGuard && i < guard.CurrentDurability;
+            bool shown = i < currentDurability;
 
             if (accessoryGuardPips[i].activeSelf != shown)
                 accessoryGuardPips[i].SetActive(shown);
         }
 
-        if (hasGuard == true && _warnedPipShortfall == false && accessoryGuardPips.Length < guard.MaxDurability)
+        if (hasGuard == true && _warnedPipShortfall == false && accessoryGuardPips.Length < maxDurability)
         {
             _warnedPipShortfall = true;
-            LogHelper.Warn("Accessory", $"{name} has {accessoryGuardPips.Length} accessory guard pip(s) but " +
-                $"MaxDurability is {guard.MaxDurability} - the readout will under-report remaining guards.", this);
+            LogHelper.Warn("Accessory", $"{name} has {accessoryGuardPips.Length} hand-authored accessory guard pip(s) but " +
+                $"MaxDurability is {maxDurability} - the readout will under-report remaining guards. " +
+                "Assign accessoryGuardPipTemplate instead, which spawns the strip to fit.", this);
         }
     }
 
@@ -350,6 +439,38 @@ public class CharacterUiWidget : MonoBehaviour
             ShineShieldFill();
 
         _shieldWasRecharging = isRecharging;
+
+        UpdateShieldExpirationWarning(shield);
+    }
+
+    // Temporary-shield-only (see shieldWarningThreshold's own tooltip) - pulses the fill toward
+    // shieldWarningColor once the single shared expiration timer is about to run out, so "the Shield
+    // is about to vanish" reads distinctly from "the Shield is merely low." Yields to the (rarer,
+    // shorter) recharge shine above rather than fighting it for the same Image.color.
+    private void UpdateShieldExpirationWarning(Shield shield)
+    {
+        Image fillImage = ResolveShieldFillImage();
+
+        if (fillImage == null || _shieldShineRoutine != null)
+            return;
+
+        if (_shieldBaseFillColorCaptured == false)
+        {
+            _shieldBaseFillColor = fillImage.color;
+            _shieldBaseFillColorCaptured = true;
+        }
+
+        bool warning = shield.TemporaryDuration > FP._0 && shield.Current > FP._0
+            && shield.ExpirationRemaining > FP._0 && shield.ExpirationRemaining.AsFloat <= shieldWarningThreshold;
+
+        if (warning == false)
+        {
+            fillImage.color = _shieldBaseFillColor;
+            return;
+        }
+
+        float pulse = (Mathf.Sin(Time.time * shieldWarningPulseSpeed) + 1f) * 0.5f;
+        fillImage.color = Color.Lerp(_shieldBaseFillColor, shieldWarningColor, pulse);
     }
 
     [Button]

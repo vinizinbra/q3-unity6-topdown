@@ -16,11 +16,13 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/Greed
     Guid:
       Value: 536002132847580972
-  Icon: {fileID: -1341527421, guid: 9dcd69f213ec845fa868b0a3699cf683, type: 3}
+  Icon: {fileID: -252217315, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
   DisplayName: Greed
   Rarity: 3
-  Description: +{0:0}% Rift Shards, enemies gain +{1}% Max Health
-  RiftShardMultiplier:
-    RawValue: 131072
+  Scope: 1
+  IncompatibleWith: []
+  Description: 'The whole team gains <color=#FD3971>{0:+0;-0}%</color> Rift Shards, but every enemy gains <color=#FD3971>{1:+0;-0}%</color> Max Health'
+  RiftShardGainBonus:
+    RawValue: 65536
   EnemyHealthBonus:
     RawValue: 32768

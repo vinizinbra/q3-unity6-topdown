@@ -62,8 +62,23 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<AccessoryGuard>(target, out var guard) == false)
                 return false;
 
+            // Hard opt-out (Last Bastion) - this player traded the whole mechanic away, so every
+            // hit goes straight through to their (much larger) health pool.
+            if (guard->Disabled == true)
+                return false;
+
             if (guard->State != AccessoryGuardState.Equipped || guard->CurrentDurability == 0)
                 return false;
+
+            // Chip-damage floor: a hit too small to be worth a durability point goes straight through
+            // to Health untouched (see AccessoryGuardConfig.MinDamageToBlock) - a Filler/Swarm enemy
+            // tapping for 1 no longer costs the same Coin-priced durability point a Heavy's real hit
+            // does. 0 (default) reproduces the original "block everything" behaviour exactly.
+            if (TryGetConfig(f, out AccessoryGuardConfig config) == true && config.MinDamageToBlock > FP._0
+                && damage < config.MinDamageToBlock)
+            {
+                return false;
+            }
 
             guard->CurrentDurability--;
 
@@ -79,6 +94,17 @@ namespace Quantum
             // so the worn visual disappears on impact while the debris is still in the air.
             if (guard->CurrentDurability == 0)
             {
+                // ...unless something granted this player an emergency reserve (Spare Parts), in
+                // which case the break is cancelled outright and the accessory stays on their head.
+                // Checked BEFORE any debris is spawned, so a rescued break has no world artefact at
+                // all - the accessory never left.
+                if (TryConsumeEmergencyReserve(f, target, guard) == true)
+                {
+                    f.Events.AccessoryBlocked(target, owner, damage, guard->CurrentDurability, position);
+                    f.Signals.OnAccessoryBlocked(target, owner, false);
+                    return true;
+                }
+
                 guard->State = AccessoryGuardState.Broken;
                 guard->Accessory = EntityRef.None;
 
@@ -90,6 +116,8 @@ namespace Quantum
                 // instead, at the player, rather than losing the break VFX entirely.
                 if (debris == EntityRef.None)
                     f.Events.AccessoryBroken(target, position);
+
+                f.Signals.OnAccessoryBlocked(target, owner, true);
 
                 Log.Debug($"[Accessory] {target} blocked {damage} and BROKE (0/{guard->MaxDurability}), debris {debris}");
                 return true;
@@ -105,6 +133,7 @@ namespace Quantum
             if (collectible == EntityRef.None)
             {
                 f.Events.AccessoryBlocked(target, owner, damage, guard->CurrentDurability, position);
+                f.Signals.OnAccessoryBlocked(target, owner, false);
                 return true;
             }
 
@@ -112,9 +141,99 @@ namespace Quantum
             guard->Accessory = collectible;
 
             f.Events.AccessoryBlocked(target, owner, damage, guard->CurrentDurability, position);
+            f.Signals.OnAccessoryBlocked(target, owner, false);
 
             Log.Debug($"[Accessory] {target} blocked {damage} -> {guard->CurrentDurability}/{guard->MaxDurability}, accessory popped off as {guard->Accessory}");
             return true;
+        }
+
+        // Generic "a would-be break is cancelled by an emergency reserve" step - see
+        // AccessoryEmergencyReserve (AccessoryGuard.qtn). Deliberately knows nothing about which
+        // mutation granted the reserve; any future source of one works for free.
+        //
+        // Restores to RestoreDurability rather than to full, clamped to whatever this player's max
+        // currently is (so it stays sane under Glass Core's doubled max, or a max lower than the
+        // authored restore value). Nothing here ever refills Charges, which is what makes
+        // "once per run, not reset by a Breathing Break, not re-armed by a repair" structural.
+        private static bool TryConsumeEmergencyReserve(Frame f, EntityRef player, AccessoryGuard* guard)
+        {
+            if (f.Unsafe.TryGetPointer<AccessoryEmergencyReserve>(player, out var reserve) == false)
+                return false;
+
+            if (reserve->Charges == 0 || reserve->RestoreDurability == 0)
+                return false;
+
+            reserve->Charges--;
+
+            byte restored = reserve->RestoreDurability < guard->MaxDurability
+                ? reserve->RestoreDurability
+                : guard->MaxDurability;
+
+            guard->CurrentDurability = restored;
+            guard->State = AccessoryGuardState.Equipped;
+            guard->Accessory = EntityRef.None;
+
+            // Reuses the Merchant's own restore event so the existing View/UI refresh path applies -
+            // it isn't a replacement purchase, hence wasReplacement: false.
+            f.Events.AccessoryRestored(player, false, guard->CurrentDurability);
+
+            Log.Debug($"[Accessory] {player}'s emergency reserve cancelled a break -> {guard->CurrentDurability}/{guard->MaxDurability}, {reserve->Charges} charge(s) left");
+            return true;
+        }
+
+        // Scales this player's MAXIMUM durability (Glass Core doubles it). The delta is added to
+        // current durability too, so picking it mid-run is an immediate gain rather than only
+        // paying off at the next repair - and it keeps working across recovery/repair/replacement
+        // for free, since Restore() sets current from max.
+        //
+        // A Broken or Disabled guard has its max raised but not its current: there is nothing worn
+        // to top up, and the Merchant restore is what should hand back the new, larger amount.
+        public static void ScaleMaxDurability(Frame f, EntityRef player, FP multiplier)
+        {
+            if (f.Unsafe.TryGetPointer<AccessoryGuard>(player, out var guard) == false || multiplier <= FP._0)
+                return;
+
+            int scaled = FPMath.RoundToInt(guard->MaxDurability * multiplier);
+
+            if (scaled < 1)
+                scaled = 1;
+
+            if (scaled > byte.MaxValue)
+                scaled = byte.MaxValue;
+
+            byte newMax = (byte)scaled;
+
+            if (newMax <= guard->MaxDurability)
+                return;
+
+            int gained = newMax - guard->MaxDurability;
+            guard->MaxDurability = newMax;
+
+            if (guard->State != AccessoryGuardState.Broken && guard->Disabled == false)
+            {
+                int topped = guard->CurrentDurability + gained;
+                guard->CurrentDurability = (byte)(topped > newMax ? newMax : topped);
+            }
+
+            Log.Debug($"[Accessory] {player} max durability scaled by {multiplier} -> {guard->CurrentDurability}/{guard->MaxDurability}");
+        }
+
+        // Removes this player from the Accessory mechanic entirely (Last Bastion). An explicit
+        // availability flag rather than "pin durability at 0 forever": the Store's own service card
+        // then correctly resolves to AccessoryServiceKind.None instead of endlessly offering a
+        // replacement that would be immediately meaningless.
+        public static void Disable(Frame f, EntityRef player)
+        {
+            f.AddOrGet<AccessoryGuard>(player, out var guard);
+
+            DestroyOutstandingCollectible(f, guard);
+
+            guard->Disabled = true;
+            guard->State = AccessoryGuardState.Broken;
+            guard->CurrentDurability = 0;
+            guard->MaxDurability = 0;
+
+            Log.Debug($"[Accessory] {player} no longer uses an Accessory at all");
         }
 
         // The generic collectible - ONE shared prototype for every hero (the View resolves which
@@ -208,6 +327,16 @@ namespace Quantum
             f.Destroy(collectible);
             f.Events.AccessoryRecovered(owner, recoverer, position, guard->CurrentDurability);
 
+            // Generic "an Accessory came back off the ground" hook, fired ONLY on a real world
+            // recovery - a Merchant repair/replacement goes through Restore() instead and
+            // deliberately does not reach here. One drop passes through this exactly once, which is
+            // what makes "once per block/drop cycle" structural for any reaction wired to it.
+            //
+            // Always reports the OWNER, never the recoverer: the accessory always returns to its
+            // owner (see this method's own comment), so a reaction belongs to them even when a
+            // teammate physically walked over it.
+            f.Signals.OnAccessoryRecovered(owner, recoverer);
+
             Log.Debug(recoverer == owner
                 ? $"[Accessory] {owner} recovered their own accessory at {guard->CurrentDurability}/{guard->MaxDurability}"
                 : $"[Accessory] {recoverer} returned {owner}'s accessory at {guard->CurrentDurability}/{guard->MaxDurability}");
@@ -224,6 +353,11 @@ namespace Quantum
         public static void Restore(Frame f, EntityRef player)
         {
             if (f.Unsafe.TryGetPointer<AccessoryGuard>(player, out var guard) == false)
+                return;
+
+            // A disabled guard has no accessory to restore - and MaxDurability is 0, so restoring
+            // would silently "succeed" into a 0/0 equipped state that blocks nothing.
+            if (guard->Disabled == true)
                 return;
 
             DestroyOutstandingCollectible(f, guard);
@@ -244,6 +378,33 @@ namespace Quantum
                 f.Destroy(guard->Accessory);
 
             guard->Accessory = EntityRef.None;
+        }
+
+        // "Does this player participate in the Accessory mechanic at all?" - the capability test the
+        // Accessory-dependent Rift Mutations gate their own IsEligible on, so none of them is ever
+        // offered to a player who could never benefit (Last Bastion traded the whole system away, or
+        // RuntimeConfig.AccessoryGuardConfig was never assigned so nothing was ever seeded).
+        //
+        // Deliberately a state query on the guard itself rather than a separate marker component:
+        // there is exactly one source of truth for whether an Accessory exists, and it is this.
+        public static bool IsAvailable(Frame f, EntityRef player)
+        {
+            return f.Unsafe.TryGetPointer<AccessoryGuard>(player, out var guard) == true
+                && guard->Disabled == false
+                && guard->MaxDurability > 0;
+        }
+
+        // "Is the Accessory currently NOT on the player's head?" - Airborne, Dropped or Broken.
+        // Read live by No Safety Net, which is why that mutation needs no state tracking of its own
+        // and reacts the instant the guard changes.
+        //
+        // False for a player with no Accessory system at all, so Last Bastion can never be a
+        // permanent free damage bonus.
+        public static bool IsExposed(Frame f, EntityRef player)
+        {
+            return IsAvailable(f, player) == true
+                && f.Unsafe.TryGetPointer<AccessoryGuard>(player, out var guard) == true
+                && guard->State != AccessoryGuardState.Equipped;
         }
 
         // How many durability points are missing - the single input both the service KIND and its

@@ -16,7 +16,9 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/RiftDash
     Guid:
       Value: 436220813378156689
-  Icon: {fileID: 1504739795, guid: 9dcd69f213ec845fa868b0a3699cf683, type: 3}
+  Icon: {fileID: -312525281, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
   DisplayName: Rift Dash
   Rarity: 1
+  Scope: 0
+  IncompatibleWith: []
   Description: Dashing through an enemy applies Rift Mark

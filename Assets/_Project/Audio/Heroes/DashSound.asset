@@ -12,10 +12,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c04d8195895c42008e9658fbf433bf7, type: 3}
   m_Name: DashSound
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
-  clips:
-  - {fileID: 8300000, guid: 7165168245e9e8c4b9e509b59d28964a, type: 3}
-  - {fileID: 8300000, guid: 574ff7cbc953aa24fbcbacf229058132, type: 3}
-  - {fileID: 8300000, guid: 285b02bdb8ff930469e1f30b4583657a, type: 3}
+  variants:
+  - clip: {fileID: 8300000, guid: 7165168245e9e8c4b9e509b59d28964a, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: 574ff7cbc953aa24fbcbacf229058132, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: 285b02bdb8ff930469e1f30b4583657a, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  clips: []
   pick: 1
   layers: []
   group: 9

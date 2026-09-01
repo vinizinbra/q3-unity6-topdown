@@ -20,9 +20,9 @@ MonoBehaviour:
   DisplayName: Healing Chorus
   Rarity: 1
   RankDescriptions:
-  - Totem Healing Beats restore 30% more Health.
-  - Healing Beats restore 60% more Health and briefly Haste allies they heal.
-  - Healing Beats restore double Health, and 50% of excess healing becomes Shield.
+  - 'Totem Healing Beats restore <color=#FD3971>30%</color> more Health.'
+  - 'Healing Beats restore <color=#FD3971>60%</color> more Health and briefly Haste allies they heal.'
+  - 'Healing Beats restore double Health, and <color=#FD3971>50%</color> of excess healing becomes Shield.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

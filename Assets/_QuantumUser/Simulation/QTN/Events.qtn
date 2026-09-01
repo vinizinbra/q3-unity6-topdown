@@ -13,6 +13,18 @@ event PlayerJumped
     EntityRef Entity;
 }
 
+// Fired only by PlayerMovementProcessor's predictive auto-hop, specifically the "no ground ahead"
+// edge-of-a-ledge branch (HasGroundAhead == false) - NOT the auto-mantle-up branch (TryDetectMantle),
+// and NOT a manual/AutoJumpSystem jump (those still fire PlayerJumped above). View-only hook for a
+// distinct "hopping down" flourish (BlobAnimationView's Jump Flip) that a mantle or a manual jump
+// shouldn't play - deliberately a separate event rather than overloading PlayerJumped with a source
+// enum, since no simulation system needs to tell the two apart (LandingSource/AirborneSource already
+// classifies both as a plain Fall on landing - see PlayerMovement.qtn).
+event PlayerAutoJumpedDown
+{
+    EntityRef Entity;
+}
+
 event PlayerFired
 {
     EntityRef Entity;

@@ -67,6 +67,8 @@ namespace QuantumUser.Editor
             // offered as a level-up card, so it has no DisplayName/Rarity/Description to set here.
             ChainReactionPassiveData passive = CreateOrUpdate<ChainReactionPassiveData>($"{PassivesFolderPath}/ChainReactionPassiveData.asset", asset =>
             {
+                asset.Description = "Your explosions mark weak enemies - a marked enemy blows up on death.";
+
                 asset.MarkChance = FP._0_50;
             });
 
@@ -116,7 +118,7 @@ namespace QuantumUser.Editor
                 {
                     "Each explosion kill empowers your next blast with +30% damage and +15% radius.",
                     "Explosion kills bank up to 2 charges, empowering your next blast with up to +60% damage and +30% radius.",
-                    "Explosion kills bank up to 2 charges for +60% damage and +30% radius. At 2 charges the blast also detonates a second time.",
+                    "Explosion kills bank up to 2 charges for +60% damage and +30% radius; at 2 charges the blast detonates twice.",
                 };
                 asset.MaxRank = 3;
                 asset.DamageBonusPerStack = FP.FromString("0.30");
@@ -176,7 +178,7 @@ namespace QuantumUser.Editor
                 {
                     "Landed bombs taunt nearby enemies for 1s, then detonate.",
                     "Landed bombs taunt nearby enemies for 1.5s, then detonate with a 25% wider blast.",
-                    "Landed bombs taunt nearby enemies for 1.5s, then detonate with a 25% wider blast. Taunted enemies take +30% damage.",
+                    "Landed bombs taunt nearby enemies 1.5s, then detonate 25% wider. Taunted enemies take +30% damage.",
                 };
                 asset.TauntDuration = new[] { FP._1, FP.FromString("1.5"), FP.FromString("1.5") };
                 asset.TauntRadiusMultiplier = new[] { FP._1, FP.FromString("1.25"), FP.FromString("1.25") };
@@ -223,7 +225,7 @@ namespace QuantumUser.Editor
                 {
                     "For 2s after a dash, your next Bunny Bomb flies 25% faster and blasts 25% wider.",
                     "For 2s after a dash, your next Bunny Bomb flies 25% faster and blasts 25% wider. Dashing also cuts 1s off its cooldown.",
-                    "For 2s after a dash, your next Bunny Bomb flies 25% faster and blasts 25% wider. Dash through a planted bomb to detonate it for +50% damage.",
+                    "For 2s after a dash, your Bunny Bomb is 25% faster and wider. Dashing a planted bomb detonates it for +50%.",
                 };
                 asset.Window = 2;
                 asset.ProjectileSpeedMultiplier = new[] { FP._1_25, FP._1_25, FP._1_25 };

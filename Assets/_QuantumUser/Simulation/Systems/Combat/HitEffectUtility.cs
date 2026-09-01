@@ -18,6 +18,7 @@ namespace Quantum
         public static void ApplyToTarget(Frame f, List<AssetRef<HitEffectData>> effects, ref HitEffectContext context, bool multiTarget = false)
         {
             context.Damage = ScaleByEnemyDamageMultiplier(f, context.Owner, context.Damage);
+            context.Damage *= SkillFocusUtility.ResolveCenterFocusMultiplier(f, ref context);
             context.PreHitRiftMarkStacks = StatusEffectUtility.GetRiftMarkStacks(f, context.Target);
             StatusEffectUtility.TryApplyElementalStatus(f, context.Target, context.Owner, context.Source, context.Element, context.Damage, context.PreHitRiftMarkStacks);
             StatusEffectUtility.TryApplyInfusedElement(f, context.Target, context.Owner, context.Source, context.PerkElement, context.PerkElementChance, context.Damage, context.PreHitRiftMarkStacks);
@@ -36,6 +37,7 @@ namespace Quantum
         public static void ApplyToTarget(Frame f, FixedArray<AssetRef<HitEffectData>> effects, ref HitEffectContext context, bool multiTarget = false)
         {
             context.Damage = ScaleByEnemyDamageMultiplier(f, context.Owner, context.Damage);
+            context.Damage *= SkillFocusUtility.ResolveCenterFocusMultiplier(f, ref context);
             context.PreHitRiftMarkStacks = StatusEffectUtility.GetRiftMarkStacks(f, context.Target);
             StatusEffectUtility.TryApplyElementalStatus(f, context.Target, context.Owner, context.Source, context.Element, context.Damage, context.PreHitRiftMarkStacks);
             StatusEffectUtility.TryApplyInfusedElement(f, context.Target, context.Owner, context.Source, context.PerkElement, context.PerkElementChance, context.Damage, context.PreHitRiftMarkStacks);
@@ -58,10 +60,17 @@ namespace Quantum
         // isExplosion flags this radius hit as a genuine area/explosive blast (see
         // HitEffectContext.IsExplosion's own comment) - defaults false, so every existing caller is
         // unaffected; AreaHitData.Detonate (Pixie's own bomb) is the one that passes true.
+        // maxHeightDifference (0 default, opt-in) turns the blast into a flat GROUND-area delivery
+        // instead of a volumetric sphere - e.g. Mortar's grenade landing at ground level shouldn't
+        // reach a hero standing on an elevated ledge/platform above it, even though a plain 3D sphere
+        // overlap of the same radius would still touch them. Above zero, a target only counts if its
+        // flat (XZ) distance from center is within radius AND its height differs from center by no
+        // more than this many units - see IsWithinFlatGroundArea. 0 preserves the exact prior
+        // behavior (a true volumetric sphere) for every existing caller.
         public static void ApplyInRadius(Frame f, List<AssetRef<HitEffectData>> effects, FPVector3 center,
             FP radius, EntityRef owner, FP damage, DamageSource source, ElementType element = ElementType.Neutral,
             DamageTargetMask targetMask = DamageTargetMask.Both, bool isExplosion = false,
-            bool isChainedExplosion = false)
+            bool isChainedExplosion = false, FP maxHeightDifference = default)
         {
             // Pixie's Unstable Mixture - resolved once for the whole blast, before the overlap query,
             // so an empowered explosion is bigger for everyone caught rather than per-target. Scoped
@@ -72,8 +81,15 @@ namespace Quantum
                 DemolitionMasteryUtility.ResolveExplosionEmpowerment(f, owner, center, ref damage, ref radius);
             }
 
-            Shape3D sphere = Shape3D.CreateSphere(radius);
+            // Over-fetched by maxHeightDifference so a candidate right at the flat radius boundary
+            // with a small height offset isn't dropped by the 3D sphere query itself - the real
+            // ground-area cutoff is IsWithinFlatGroundArea below, not this query shape.
+            FP queryRadius = maxHeightDifference > FP._0 ? radius + maxHeightDifference : radius;
+            Shape3D sphere = Shape3D.CreateSphere(queryRadius);
             var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
+
+            // Resolved once per blast, not per candidate - see EnemyMovementUtility.ResolveGroundY.
+            FP centerGroundY = maxHeightDifference > FP._0 ? EnemyMovementUtility.ResolveGroundY(f, center) : default;
 
             Log.Debug($"[Effect] {owner}'s blast at {center} radius {radius} caught {hits.Count} shapes");
 
@@ -82,7 +98,12 @@ namespace Quantum
                 if (MatchesTargetMask(f, hits[i].Entity, targetMask) == false)
                     continue;
 
-                if (TryBuildContext(f, hits[i].Entity, center, owner, damage, source, element, out var context, isExplosion: isExplosion) == false)
+                if (maxHeightDifference > FP._0 &&
+                    IsWithinFlatGroundArea(f, hits[i].Entity, center, centerGroundY, radius, maxHeightDifference) == false)
+                    continue;
+
+                if (TryBuildContext(f, hits[i].Entity, center, owner, damage, source, element, out var context,
+                        isExplosion: isExplosion, areaRadius: radius) == false)
                     continue;
 
                 // Pixie's Demolition Mastery (Direct Hit/Concussive Force) - only ever does anything
@@ -96,6 +117,18 @@ namespace Quantum
 
                 ApplyToTarget(f, effects, ref context, multiTarget: true);
             }
+        }
+
+        // Ground-area delivery gate (see ApplyInRadius's own comment) - in place of the volumetric
+        // 3D sphere the overlap query above already over-fetched for. False (never hits) if the
+        // target has no Transform3D. See EnemyMovementUtility.IsWithinFlatGroundArea - shared with
+        // GroundAreaDeliveryData's own identical gate for melee/instant ground slams.
+        private static bool IsWithinFlatGroundArea(Frame f, EntityRef target, FPVector3 center, FP centerGroundY, FP radius, FP maxHeightDifference)
+        {
+            if (f.Unsafe.TryGetPointer<Transform3D>(target, out var transform) == false)
+                return false;
+
+            return EnemyMovementUtility.IsWithinFlatGroundArea(f, center, centerGroundY, transform->Position, radius, maxHeightDifference);
         }
 
         // For a hit that sweeps a volume instead of radiating from a point. The caller supplies one
@@ -146,8 +179,14 @@ namespace Quantum
                 if (MatchesTargetMask(f, hits[i].Entity, targetMask) == false)
                     continue;
 
+                // A spherical area collider has a genuine center and radius, so a persistent area
+                // (a Totem pulse, a fire trail) supports center-focus scaling exactly like a blast
+                // does. Any other shape has no single radius, so it reports 0 - "no meaningful
+                // area" - rather than a made-up one.
+                FP areaRadius = collider->Shape.Type == Shape3DType.Sphere ? collider->Shape.Sphere.Radius : FP._0;
+
                 if (TryBuildContext(f, hits[i].Entity, transform->Position, owner, damage, source, element, out var context,
-                        pushDirection) == false)
+                        pushDirection, areaRadius: areaRadius) == false)
                     continue;
 
                 context.SourceEntity = sourceEntity;
@@ -165,12 +204,17 @@ namespace Quantum
         // delivery type, since every enemy attack - melee/area/beam/projectile alike - funnels
         // through ApplyToTarget with Owner still the attacking entity (see ProjectileHitData.
         // ApplyEffects, which preserves projectile->Owner through to this same call).
+        //
+        // On top of that per-spawn snapshot, any run-wide enemy-damage modifier (Blood Tithe, see
+        // RunMutations.qtn) is applied LIVE here rather than baked, so picking it mid-fight makes
+        // the enemies already on screen hit harder. Gated on the same EnemyCombatModifiers presence
+        // check, so a player-dealt hit is still untouched.
         private static FP ScaleByEnemyDamageMultiplier(Frame f, EntityRef owner, FP damage)
         {
             if (f.Unsafe.TryGetPointer<EnemyCombatModifiers>(owner, out var modifiers) == false)
                 return damage;
 
-            return damage * modifiers->DamageMultiplier;
+            return damage * modifiers->DamageMultiplier * EncounterModifierUtility.ResolveEnemyDamageMultiplier(f);
         }
 
         // Both (the default) matches this codebase's behavior before this concept existed - no
@@ -221,7 +265,11 @@ namespace Quantum
                 if (MatchesTargetMask(f, target, targetMask) == false)
                     continue;
 
-                FP resolvedDamage = damage;
+                // This effects-free path bypasses ApplyToTarget entirely, so it has to apply the
+                // enemy damage scaling itself - without this an enemy's own suicide explosion
+                // (ExplodeOnDeath) would ignore both its per-spawn run-curve/co-op multiplier and
+                // any run-wide enemy-damage modifier, unlike every other enemy delivery type.
+                FP resolvedDamage = ScaleByEnemyDamageMultiplier(f, owner, damage);
 
                 // Pixie's Demolition Mastery (Direct Hit/Concussive Force) - the weapon-perk-
                 // explosion counterpart of ApplyInRadius's own identical hook. Gated on isExplosion
@@ -302,9 +350,14 @@ namespace Quantum
         // (e.g. Zara standing in her own speaker's pulse). Effects that shouldn't hit their owner
         // (DamageEffectData, BurnEffectData, KnockbackEffectData) check context.Target != context.Owner
         // themselves instead.
+        // areaRadius describes the spatial extent this hit covered, for effects that care where
+        // within it a target was caught (see HitEffectContext.AreaRadius/SkillFocusUtility). Left at
+        // its 0 default by any caller that has no single meaningful radius - a swept volume, a
+        // non-spherical area collider - which reads as "no meaningful area" rather than as a
+        // zero-sized one.
         private static bool TryBuildContext(Frame f, EntityRef target, FPVector3 center, EntityRef owner,
             FP damage, DamageSource source, ElementType element, out HitEffectContext context,
-            FPVector3? pushDirection = null, bool isExplosion = false)
+            FPVector3? pushDirection = null, bool isExplosion = false, FP areaRadius = default)
         {
             context = default;
 
@@ -323,7 +376,9 @@ namespace Quantum
                 Damage = damage,
                 Source = source,
                 Element = element,
-                IsExplosion = isExplosion
+                IsExplosion = isExplosion,
+                AreaCenter = center,
+                AreaRadius = areaRadius
             };
 
             return true;

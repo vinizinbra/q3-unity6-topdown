@@ -30,16 +30,16 @@ public class MusicDirector : QuantumGlobalMonoBehaviour
     // frame - back off this long between attempts instead.
     private const float FailedPlayRetryDelay = 3f;
 
-    [SerializeField, Tooltip("Played in the lobby, before anyone has walked out of the LobbyStart chunk. Leave empty for silence there.")]
+    [SerializeField, SoundDataPicker, Tooltip("Played in the lobby, before anyone has walked out of the LobbyStart chunk. Leave empty for silence there.")]
     private SoundData lobbyMusic;
 
-    [SerializeField, Tooltip("Combat music. Also holds through the first part of a Breathing Break - see breathingMusic - and stands in for Boss if no boss track is authored.\n\nFor several combat songs rather than one, put every song in this ONE asset's Clips list, untick its Loop and set Pick to Shuffle (every song plays once before any repeats) or Random No Repeat. Each song then plays to the end and the next is rolled automatically - see the Track Gap below. Every track on this component works that way, not just this one.")]
+    [SerializeField, SoundDataPicker, Tooltip("Combat music. Also holds through the first part of a Breathing Break - see breathingMusic - and stands in for Boss if no boss track is authored.\n\nFor several combat songs rather than one, put every song in this ONE asset's Clips list, untick its Loop and set Pick to Shuffle (every song plays once before any repeats) or Random No Repeat. Each song then plays to the end and the next is rolled automatically - see the Track Gap below. Every track on this component works that way, not just this one.")]
     private SoundData survivalMusic;
 
-    [SerializeField, Tooltip("Calm/Break music. Deliberately NOT played the moment Breathing begins: it waits for Global.BreathingAreaSecured, i.e. every remaining enemy actually dead or retired. Until then survivalMusic keeps playing, because until then it is still a fight.\n\nMultiple Break songs are authored exactly like the combat ones - several clips on this one asset, Loop unticked, Pick set to Shuffle.")]
+    [SerializeField, SoundDataPicker, Tooltip("Calm/Break music. Deliberately NOT played the moment Breathing begins: it waits for Global.BreathingAreaSecured, i.e. every remaining enemy actually dead or retired. Until then survivalMusic keeps playing, because until then it is still a fight.\n\nMultiple Break songs are authored exactly like the combat ones - several clips on this one asset, Loop unticked, Pick set to Shuffle.")]
     private SoundData breathingMusic;
 
-    [SerializeField, Tooltip("Boss encounter music. Falls back to survivalMusic if left empty, so a boss fight is never silent just because this wasn't authored.")]
+    [SerializeField, SoundDataPicker, Tooltip("Boss encounter music. Falls back to survivalMusic if left empty, so a boss fight is never silent just because this wasn't authored.")]
     private SoundData bossMusic;
 
     [SerializeField, Tooltip("Seconds the OUTGOING track takes to fade out. The incoming track's own fade-in is authored on its SoundData (Fade In), so a true crossfade wants both set - roughly matching values feel best.")]

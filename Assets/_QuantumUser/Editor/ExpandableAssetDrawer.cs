@@ -288,7 +288,8 @@ namespace Quantum.Editor
             if (GUI.Button(rect, new GUIContent("+", "Create as a new top-level asset file"), EditorStyles.miniButton) == false)
                 return;
 
-            SelectConcreteType(rect, assetType, chosen => CreateAsset(rect, guidProperty, chosen));
+            SelectConcreteType(rect, assetType, chosen =>
+                TextInputWizard.Show("Create Asset", "Name", chosen.Name, name => CreateAsset(rect, guidProperty, chosen, name)));
         }
 
         // For fields that will never be reused across parents - keeps the Project window from
@@ -365,28 +366,34 @@ namespace Quantum.Editor
         // of piling into one place. When the owner has no path of its own (a component on a scene
         // object, i.e. a View-side config asset) there's no natural home to inherit, so the user
         // picks one via ShowFolderPicker instead of guessing.
-        private static void CreateAsset(Rect rect, SerializedProperty guidProperty, Type assetType)
+        private static void CreateAsset(Rect rect, SerializedProperty guidProperty, Type assetType, string assetName)
         {
             string ownerPath = AssetDatabase.GetAssetPath(guidProperty.serializedObject.targetObject);
             if (string.IsNullOrEmpty(ownerPath) == false)
             {
-                CreateAssetInFolder(guidProperty, assetType, Path.GetDirectoryName(ownerPath).Replace('\\', '/'));
+                CreateAssetInFolder(guidProperty, assetType, Path.GetDirectoryName(ownerPath).Replace('\\', '/'), assetName);
                 return;
             }
 
-            ShowFolderPicker(rect, folder => CreateAssetInFolder(guidProperty, assetType, folder));
+            ShowFolderPicker(rect, folder => CreateAssetInFolder(guidProperty, assetType, folder, assetName));
         }
 
-        private static void CreateAssetInFolder(SerializedProperty guidProperty, Type assetType, string folder)
+        // Mirrors CreateNestedAsset below: Refresh() + SetGuidValue (rather than writing straight
+        // into the guidProperty captured when the button was clicked) so a freshly-created top-level
+        // asset's guid is actually committed before it's assigned, and so the write survives even if
+        // this callback lands on a later editor tick (e.g. after the type-select dropdown closes) by
+        // which point the original SerializedProperty may already be stale.
+        private static void CreateAssetInFolder(SerializedProperty guidProperty, Type assetType, string folder, string assetName)
         {
             AssetObject asset = ScriptableObject.CreateInstance(assetType) as AssetObject;
-            string assetPath = AssetDatabase.GenerateUniqueAssetPath($"{folder}/{assetType.Name}.asset");
+            asset.name = assetName;
+            string assetPath = AssetDatabase.GenerateUniqueAssetPath($"{folder}/{assetName}.asset");
 
             AssetDatabase.CreateAsset(asset, assetPath);
             AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
 
-            guidProperty.longValue = asset.Guid.Value;
-            guidProperty.serializedObject.ApplyModifiedProperties();
+            SetGuidValue(guidProperty, asset.Guid.Value);
         }
 
         // Lets the user pick an existing subfolder of DataRoot (e.g. ViewConfigs) or create a new
@@ -507,7 +514,7 @@ namespace Quantum.Editor
 
         private static void DrawContextMenuButton(Rect rect, SerializedProperty guidProperty, AssetObject asset)
         {
-            if (GUI.Button(rect, new GUIContent("⋮", "Rename, extract, or delete this asset"), EditorStyles.miniButton) == false)
+            if (GUI.Button(rect, new GUIContent("⋮", "Rename, extract, clear, or delete this asset"), EditorStyles.miniButton) == false)
                 return;
 
             GenericMenu menu = new GenericMenu();
@@ -523,6 +530,12 @@ namespace Quantum.Editor
                 menu.AddItem(new GUIContent("Extract to Separate File"), false,
                     () => ExtractAsset(guidProperty, asset));
             }
+
+            // Unassigns this field only - the asset itself (and any other field still pointing at
+            // it) is untouched. The object field's own drag/picker "None" gesture is often the only
+            // other way to do this and can be finicky for a nested sub-asset, so this is the
+            // reliable path.
+            menu.AddItem(new GUIContent("Clear Reference"), false, () => SetGuidValue(guidProperty, 0L));
 
             menu.AddItem(new GUIContent("Delete Asset"), false, () => DeleteAsset(guidProperty, asset));
             menu.DropDown(rect);

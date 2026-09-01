@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Blast Jump
   RankDescriptions:
-  - For 2s after a dash, your next Bunny Bomb flies 25% faster and blasts 25% wider.
-  - For 2s after a dash, your next Bunny Bomb flies 25% faster and blasts 25% wider. Dashing also cuts 1s off its cooldown.
-  - For 2s after a dash, your next Bunny Bomb flies 25% faster and blasts 25% wider. Dash through a planted bomb to detonate it for +50% damage.
+  - 'For <color=#FD3971>2s</color> after a dash, your next Bunny Bomb flies <color=#FD3971>25%</color> faster and blasts <color=#FD3971>25%</color> wider.'
+  - 'For <color=#FD3971>2s</color> after a dash, your next Bunny Bomb flies <color=#FD3971>25%</color> faster and blasts <color=#FD3971>25%</color> wider. Dashing also cuts <color=#FD3971>1s</color> off its cooldown.'
+  - 'For <color=#FD3971>2s</color> after a dash, your Bunny Bomb is <color=#FD3971>25%</color> faster and wider. Dashing a planted bomb detonates it for <color=#FD3971>+50%</color>.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 3

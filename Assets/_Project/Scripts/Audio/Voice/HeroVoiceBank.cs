@@ -51,7 +51,7 @@ public class HeroVoiceBank : ScriptableObject
     [SerializeField, Tooltip("This hero's CharacterData asset - the link that lets VoiceDirector turn a live player entity into a HeroId. Without it this hero is never recognised in a match.")]
     public CharacterData characterData;
 
-    [SerializeField, Tooltip("OPTIONAL. Supplies group/volume/pitch/spatial for every clip in this bank - one SoundData with NO clips of its own, acting purely as settings. Leave empty and lines play at full volume on the Voice group, flat.")]
+    [SerializeField, SoundDataPicker, Tooltip("OPTIONAL. Supplies group/volume/pitch/spatial for every clip in this bank - one SoundData with NO clips of its own, acting purely as settings. Leave empty and lines play at full volume on the Voice group, flat.")]
     public SoundData voiceSettings;
 
     [InfoBox(

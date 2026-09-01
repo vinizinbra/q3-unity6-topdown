@@ -175,7 +175,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -1673558010, guid: 24b9e422c41ad48799d54a95d82cc8e7, type: 3}
+  m_Sprite: {fileID: -1625532976, guid: 75497725b64e94e598821aa684265654, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 0}
   m_FlipX: 0
   m_FlipY: 0
@@ -222,5 +222,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9168c542245be475f8ee71bd6733ba7c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.HasShadow
-  baseScale: 2
-  shadowOffset: {x: 0, y: 0}
+  baseScale: 5
+  shadowOffset: {x: 0, y: 0.1}
+  shadowAlphaMultiplier: 1

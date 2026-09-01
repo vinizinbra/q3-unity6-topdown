@@ -4915,7 +4915,7 @@ MonoBehaviour:
     loop: {fileID: 0}
     tail: {fileID: 0}
   volumeScale: 1
-  source: {fileID: 0}
+  source: {fileID: 542327606532136594}
 --- !u!1001 &542327606512612504
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4978,5 +4978,10 @@ PrefabInstance:
 --- !u!4 &542327606512757884 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 448740, guid: 71b02155078e4bf4e962f302d3675af2, type: 3}
+  m_PrefabInstance: {fileID: 542327606512612504}
+  m_PrefabAsset: {fileID: 0}
+--- !u!198 &542327606532136594 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 19802634, guid: 71b02155078e4bf4e962f302d3675af2, type: 3}
   m_PrefabInstance: {fileID: 542327606512612504}
   m_PrefabAsset: {fileID: 0}

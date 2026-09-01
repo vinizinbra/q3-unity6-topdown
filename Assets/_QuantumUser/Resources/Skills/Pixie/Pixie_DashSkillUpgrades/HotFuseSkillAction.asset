@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: -659355639, guid: b217254d41b6945b1873986186a25786, type: 3}
   DisplayName: Hot Fuse
   RankDescriptions:
-  - For 3s after a dash, your next Bunny Bomb deals +30% damage.
-  - For 3s after a dash, your next Bunny Bomb deals +30% damage with +30% radius.
-  - For 3s after a dash, your next Bunny Bomb deals +60% damage, +30% radius, and detonates on a direct hit.
+  - 'For <color=#FD3971>3s</color> after a dash, your next Bunny Bomb deals <color=#FD3971>+30%</color> damage.'
+  - 'For <color=#FD3971>3s</color> after a dash, your next Bunny Bomb deals <color=#FD3971>+30%</color> damage with <color=#FD3971>+30%</color> radius.'
+  - 'For <color=#FD3971>3s</color> after a dash, your next Bunny Bomb deals <color=#FD3971>+60%</color> damage, <color=#FD3971>+30%</color> radius, and detonates on a direct hit.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

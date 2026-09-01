@@ -22,9 +22,9 @@ namespace Quantum
 
     // One phase of the survival curve - capped at exactly the values SurvivalProgressionUtility/
     // CombatDirectorUtility need, so balancing this system stays a matter of tuning six named
-    // numbers instead of hunting through a larger sheet. AllowedGroups doubles as this phase's own
-    // "unlock list" - a group is unlocked exactly when it's in here, so there's no separate
-    // unlock flag/system anywhere else.
+    // numbers instead of hunting through a larger sheet. AllowedGroups/AllowedEnemies together
+    // double as this phase's own "unlock list" - a group or single enemy is unlocked exactly when
+    // it's in one of these, so there's no separate unlock flag/system anywhere else.
     //
     // Kind == Breathing turns this entry into a Breathing Break instead of a combat phase (see
     // docs/run-phase.md) - only Duration is read for a Breathing entry (how long the Break lasts);
@@ -44,6 +44,25 @@ namespace Quantum
     // one-off prototype (Chests, POIs). PauseDuration is how long BeginBossEncounter then disables
     // GameplaySystemGroup for, right after spawning - a brief hard freeze so the Boss Window reveal
     // (see BossWindow.cs) plays with nothing able to act, before play resumes (BossPauseSystem).
+    //
+    // GuaranteedGroup (any Kind, most useful on Elite) closes a real gap in the normal
+    // CombatDirectorUtility.TryPulse path: a purchase can silently fail to spawn if the map is
+    // already crowded (DirectorBudget too low, or aliveCount + group size would exceed
+    // MaxAliveEnemies - see TrySelectSpawn) - only a Log.Debug, no retry until next pulse. For an
+    // Elite phase specifically this is worse than a missed spawn: SurvivalProgressionUtility.
+    // IsEncounterCleared('Elite') reads "is there currently a live Elite", not "has one ever
+    // spawned this phase" - so a phase whose only Elite never got a chance to spawn reads as
+    // already cleared from tick 1 and can expire on Duration alone, having guaranteed nothing. If
+    // assigned, RunPhaseUtility.SpawnGuaranteedGroup spawns this ENTIRE group exactly once, the
+    // instant this phase begins (Global.PhaseGuaranteedSpawnDone), via the same
+    // GroupSpawnerUtility.TrySpawnGroup formation/clearance/ground search every normal purchase
+    // uses (so it still won't land inside a wall, and still gets EnemyLifecycle - it counts toward
+    // MaxAliveEnemies/refunds like any other Director enemy) - it just skips TrySelectSpawn's own
+    // budget/alive-cap gate entirely. Author it as any other EnemyGroupConfig (e.g. one Elite
+    // member at Quantity 1) - it does not also need to be listed in AllowedGroups. There is no
+    // "GuaranteedEnemy" analog - AllowedEnemies only ever competes for the normal weighted
+    // purchase roll, same as AllowedGroups; a single enemy that must bypass that gate still needs
+    // to be wrapped in a one-member EnemyGroupConfig and assigned here.
     [Serializable]
     public struct SurvivalPhase
     {
@@ -57,8 +76,15 @@ namespace Quantum
         public FP TargetPressure;
         public Int32 MaxAliveEnemies;
         public List<AssetRef<EnemyGroupConfig>> AllowedGroups;
+
+        // AllowedGroups' sibling - a single enemy the phase can purchase directly, with no
+        // EnemyGroupConfig asset needed just to wrap one enemy. CombatDirectorUtility.TrySelectSpawn
+        // rolls both lists into one weighted draw each purchase, so a phase authoring both freely
+        // mixes whole encounters and lone spawns in the same pulse. See EnemySpawnEntry.
+        public EnemySpawnEntry[] AllowedEnemies;
         public AssetRef<EntityPrototype> BossPrototype;
         public FP PauseDuration;
+        public AssetRef<EnemyGroupConfig> GuaranteedGroup;
     }
 
     // Drives SurvivalProgressionUtility.Tick. The last entry never expires - once

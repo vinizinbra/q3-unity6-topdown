@@ -16,9 +16,8 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Passives/Zara/FlowStatePassiveData
     Guid:
       Value: 330595328459879646
-  Description: Keep moving to build Flow - each stack grants Move Speed and Fire
-    Rate. Standing still lets it decay; getting hit breaks it outright.
-  Icon: {fileID: 0}
+  Description: Keep moving to fill Flow. At full Flow, gain Move Speed and Fire Rate.
+  Icon: {fileID: 2065160306, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
   DisplayName: 
   BuildDuration:
     RawValue: 163840

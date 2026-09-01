@@ -91,6 +91,32 @@ namespace Quantum
             }
         }
 
+        // Money Talks (Rift Mutation) - the live "how much damage is my current balance worth"
+        // resolution. Pure and side-effect free, so both the damage path
+        // (DamageUtility.ResolveOutgoingDamage) and the debug dump read the identical formula
+        // instead of each reimplementing it.
+        //
+        // Counts only FULL hundreds, so the next breakpoint is a number the player can aim at, and
+        // the returned value is a BONUS (0 when the mutation isn't held) that the caller reads as
+        // 1 + this - same convention every other bonus in this codebase uses.
+        public static FP ResolveDamageBonus(CharacterStats* stats)
+        {
+            if (stats->CoinDamagePerHundred <= FP._0 || stats->CoinDamageMaxBonus <= FP._0)
+                return FP._0;
+
+            if (stats->Coins < CoinsPerDamageStep)
+                return FP._0;
+
+            FP steps = FPMath.Floor(stats->Coins / CoinsPerDamageStep);
+
+            return FPMath.Min(stats->CoinDamageMaxBonus, steps * stats->CoinDamagePerHundred);
+        }
+
+        // How many Coins one step of Money Talks is worth. A shared design constant rather than a
+        // per-asset field, same call this codebase already makes for DamageUtility's own range
+        // thresholds - the mutation's description templates off the per-step BONUS, not this.
+        public const int CoinsPerDamageStep = 100;
+
         // Spends from ONE player's own wallet - used by Cursed Rift's Coin Offering sacrifice
         // (CoinOfferingSacrificeData). Guards insufficient funds rather than allowing a negative
         // balance.

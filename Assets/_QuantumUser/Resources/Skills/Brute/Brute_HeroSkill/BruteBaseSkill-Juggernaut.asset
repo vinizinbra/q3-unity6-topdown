@@ -292,10 +292,7 @@ MonoBehaviour:
   - Id:
       Value: 291462109882006022
   Icon: {fileID: 99700747, guid: 09ab27b92d44c4a54a95d6d0d0b9c281, type: 3}
-  Description: Channel as Juggernaut for {0}s, reducing damage taken by {1}% and
-    building Charge as you move. Once fully Charged, every enemy you touch triggers
-    a knockback discharge that launches them airborne, repeating for as long as the
-    channel lasts.
+  Description: Channel {0}s at {1}% Damage Reduction, launching enemies you touch.
   Duration:
     RawValue: 524288
   DamageReductionBonus:

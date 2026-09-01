@@ -22,11 +22,9 @@ MonoBehaviour:
     detonating a fiery burst if the kill was already Burning.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - Consuming a Vendetta mark spreads Burn to 2 nearby enemies within 4m.
-  - Consuming a Vendetta mark spreads Burn to 4 nearby enemies within 5m, more intensely.
-  - Consuming a Vendetta mark spreads Burn to 4 nearby enemies within 5m - if the
-    kill was already Burning, also detonates a fiery burst (damage + Burn) around
-    it.
+  - 'Consuming a Vendetta mark spreads Burn to <color=#FD3971>2</color> nearby enemies within <color=#FD3971>4m</color>.'
+  - 'Consuming a Vendetta mark spreads Burn to <color=#FD3971>4</color> nearby enemies within <color=#FD3971>5m</color>, more intensely.'
+  - 'Consuming a Vendetta mark spreads Burn to <color=#FD3971>4</color> nearby enemies within <color=#FD3971>5m</color> - if the kill was already Burning, also detonates a fiery burst (damage + Burn) around it.'
   Radius:
   - RawValue: 262144
   - RawValue: 327680

@@ -19,33 +19,39 @@ MonoBehaviour:
       Id:
         Value: 1427283638148129588
     viewPrefab: {fileID: 506928541793919104, guid: 5af9a744e75764c0e8dd3b4a1eb8cf2b, type: 3}
+    menuPrefab: {fileID: 9191534349798276892, guid: 816f93078536849b393ac0ac3a3a7ea9, type: 3}
   - id: Brute
     displayName: Brute
     avatar:
       Id:
         Value: 1376154637061154524
     viewPrefab: {fileID: 506928541793919104, guid: 17be069910e1a46b1923add50a1753d2, type: 3}
+    menuPrefab: {fileID: 1932710815037739766, guid: 267ac07249fba4251abb31ea407eb249, type: 3}
   - id: Pixie
     displayName: Pixie
     avatar:
       Id:
         Value: 1271619087951089254
     viewPrefab: {fileID: 506928541793919104, guid: ee85e910ecba34873a088acf598476eb, type: 3}
+    menuPrefab: {fileID: 6518181404652115371, guid: f6da62384320c47da9b87e9d4a59470a, type: 3}
   - id: Kai
     displayName: Kai
     avatar:
       Id:
         Value: 1472908484413352043
     viewPrefab: {fileID: 506928541793919104, guid: c5e5663aac6514edc86adee9cbc8a19d, type: 3}
+    menuPrefab: {fileID: 7103265064398240672, guid: c14de8e14db184f8b89664c368ae1648, type: 3}
   - id: Zara
     displayName: Zara
     avatar:
       Id:
         Value: 1324160128536901815
     viewPrefab: {fileID: 506928541793919104, guid: 92445699946014419b8a6a3ad7cf35de, type: 3}
+    menuPrefab: {fileID: 8369380886623440971, guid: 3241035f34ca94ecd94267e074ae2831, type: 3}
   - id: Lux
     displayName: Lux
     avatar:
       Id:
         Value: 1358955562811382291
     viewPrefab: {fileID: 506928541793919104, guid: f8459f8149498419681c218da21925c8, type: 3}
+    menuPrefab: {fileID: 1623904066032058302, guid: a4c9657f40b084064820da2949219baa, type: 3}

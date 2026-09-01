@@ -16,12 +16,12 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Lux/Lux_HeroSkill/Lux_HeroSkillUpgrades/SentryFortificationSkillAction
     Guid:
       Value: 479614577650482228
-  Icon: {fileID: 0}
+  Icon: {fileID: 535018670, guid: 355e00907e214470bac0029f70064510, type: 3}
   DisplayName: Fortification
   RankDescriptions:
-  - 'Extended Range: Sentry attack range +2.'
-  - 'Shield Battery: Sentry attack range +2, and allies standing near your Sentry recover 3 Shield per second.'
-  - 'Fire Support: Sentry attack range +2. Allies near your Sentry recover 3 Shield per second and gain +15% Fire Rate and 10% Damage Reduction.'
+  - 'Sentry attack range <color=#FD3971>+2</color>.'
+  - 'Shield Battery: Sentry attack range <color=#FD3971>+2</color>, and allies standing near your Sentry recover <color=#FD3971>3</color> Shield per second.'
+  - 'Fire Support: Sentry attack range <color=#FD3971>+2</color>. Allies near your Sentry recover <color=#FD3971>3</color> Shield per second and gain <color=#FD3971>+15%</color> Fire Rate and <color=#FD3971>10%</color> Damage Reduction.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

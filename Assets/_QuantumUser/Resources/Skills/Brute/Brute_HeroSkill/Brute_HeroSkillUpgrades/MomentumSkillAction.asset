@@ -19,16 +19,16 @@ MonoBehaviour:
   Icon: {fileID: 1679328721, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
   DisplayName: Momentum
   RankDescriptions:
-  - Momentum builds 25% faster while running during Juggernaut, +10% Move Speed while Charged, and a discharge only resets Momentum to 30% instead of fully draining it.
-  - Momentum builds 40% faster while running during Juggernaut, +20% Move Speed while Charged, and a discharge only resets Momentum to 60% instead of fully draining it.
-  - Momentum builds 40% faster while running during Juggernaut, +30% Move Speed while Charged, and discharging no longer resets Momentum at all.
+  - 'Juggernaut Charge builds <color=#FD3971>25%</color> faster; being fully Charged grants <color=#FD3971>+10%</color> Move Speed. A discharge drops you to <color=#FD3971>30%</color> Charge.'
+  - 'Juggernaut Charge builds <color=#FD3971>40%</color> faster; being fully Charged grants <color=#FD3971>+20%</color> Move Speed. A discharge drops you to <color=#FD3971>60%</color> Charge.'
+  - 'While Juggernaut is channeling, running builds Charge <color=#FD3971>40%</color> faster and being fully Charged grants <color=#FD3971>+30%</color> Move Speed. Discharging no longer drains your Charge at all.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Juggernaut builds Charge faster while you're running, and rewards staying Charged with extra Move Speed.
+  Description: Juggernaut rewards staying on the move - running builds Charge faster, being Charged makes you faster still, and a discharge no longer costs you all of it.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

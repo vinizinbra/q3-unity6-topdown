@@ -100,6 +100,25 @@ Shader "Custom/BlobShadowSpriteMultiply"
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
+            // SpriteRenderer.color is NOT reliably vertex colour. Unity bakes it into the vertices
+            // only when it DYNAMICALLY BATCHES the sprite; drawn any other way - instanced, which is
+            // exactly what a pool of identical blobs sharing one sprite and one material gets - the
+            // vertices stay white and the colour arrives as a per-draw constant instead
+            // (unity_SpriteColor, already declared in URP's UnityPerDraw block via Core.hlsl, or the
+            // PerDrawSprite instancing buffer below). Reading only input.color therefore drops
+            // GroundBlobManager's per-frame height fade AND its tint the moment Unity picks the other
+            // path, leaving a jumping character's shadow at full strength all the way up - and it
+            // switches silently depending on how many blobs happen to be on screen. URP's own
+            // Sprite-Unlit-Default composes both sources the same way (input.color * unity_SpriteColor).
+            #ifdef UNITY_INSTANCING_ENABLED
+                UNITY_INSTANCING_BUFFER_START(PerDrawSprite)
+                    UNITY_DEFINE_INSTANCED_PROP(float4, unity_SpriteRendererColorArray)
+                UNITY_INSTANCING_BUFFER_END(PerDrawSprite)
+                #define BLOB_SPRITE_COLOR UNITY_ACCESS_INSTANCED_PROP(PerDrawSprite, unity_SpriteRendererColorArray)
+            #else
+                #define BLOB_SPRITE_COLOR unity_SpriteColor
+            #endif
+
             TEXTURE2D(_MainTex);
             SAMPLER(sampler_MainTex);
             TEXTURE2D(_HatchMap);
@@ -149,7 +168,9 @@ Shader "Custom/BlobShadowSpriteMultiply"
                 output.positionCS = TransformWorldToHClip(positionWS);
                 output.groundUv = positionWS.xz * _HatchScale;
                 output.uv = input.uv;
-                output.color = input.color;
+                // Resolved here, not in the fragment: it is uniform across the quad, so the
+                // instanced-property access happens once per vertex instead of once per pixel.
+                output.color = input.color * (half4)BLOB_SPRITE_COLOR;
                 return output;
             }
 
@@ -166,12 +187,24 @@ Shader "Custom/BlobShadowSpriteMultiply"
                 half hardShape = step(_ShapeThreshold, shape);
                 half amount = lerp(shape, hardShape, _ShapeCutout);
 
+                // The height fade (GroundBlobManager/PlayerShadow drive vertex alpha as the owner
+                // rises off the ground) folded together with the material's own master strength.
                 amount *= input.color.a * _Strength;
 
                 // Discarded rather than shaded, so this fragment never reaches the stencil write
                 // either. That matters more than the fillrate it saves: a barely-visible rim that
                 // claimed a pixel would lock out the solid interior of a shadow drawn later, and
                 // the notch that leaves is far more visible than the sliver of fade given up here.
+                //
+                // Deliberately tested against the FADED contribution, not against the raw shape. It
+                // was briefly moved above the fade so a height-faded shadow would keep its whole
+                // soft gradient instead of collapsing to a hard core - but that also let the faint
+                // outer rim of a high, nearly-invisible blob claim stencil pixels, which is exactly
+                // the notch this threshold exists to prevent: on a rig carrying several overlapping
+                // blobs (Lux's sentry - one on the chassis plus one per hand) a hovering hand's rim
+                // stamped a hard-edged disc straight through the chassis's own shadow. How much
+                // gradient survives the fade is _MinShadowAmount's job to tune (it wants to be small
+                // - 0.01 or below), not the ordering's.
                 clip(amount - _MinShadowAmount);
 
                 half3 tint = lerp(half3(1.0h, 1.0h, 1.0h), _ShadowColor.rgb * input.color.rgb, amount);

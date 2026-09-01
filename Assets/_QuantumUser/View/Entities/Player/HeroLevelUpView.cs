@@ -21,7 +21,7 @@ namespace Quantum
         [SerializeField, Tooltip("Burst played on this character when the party levels up. A child ParticleSystem of the hero prefab, so it follows the character while it plays - authored in place rather than pooled, since there is exactly one per hero and it fires rarely. Leave empty to skip.")]
         private ParticleSystem levelUpEffect;
 
-        [SerializeField, Tooltip("Played on the level-up. Every hero fires this on the same frame (experience is shared run-wide), so tick Local Player Only on the asset unless you genuinely want one copy per player. Leave empty to skip.")]
+        [SerializeField, SoundDataPicker, Tooltip("Played on the level-up. Every hero fires this on the same frame (experience is shared run-wide), so tick Local Player Only on the asset unless you genuinely want one copy per player. Leave empty to skip.")]
         private SoundData levelUpSound;
 
         // -1 rather than 0: Level legitimately starts at 0 (see Experience.qtn), so a 0 seed here

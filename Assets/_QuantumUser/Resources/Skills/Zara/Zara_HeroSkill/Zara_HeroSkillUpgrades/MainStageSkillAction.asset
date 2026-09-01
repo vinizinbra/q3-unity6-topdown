@@ -16,13 +16,12 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Zara/Zara_HeroSkill/Zara_HeroSkillUpgrades/MainStageSkillAction
     Guid:
       Value: 536920649201853917
-  Icon: {fileID: 0}
+  Icon: {fileID: -1158149854, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
   DisplayName: Main Stage
   RankDescriptions:
-  - Increase Totem Beat radius by 30%.
-  - Totem Beat radius +50%, and the Totem lasts 2s longer.
-  - Totem Beat radius +75% and the Totem lasts 2s longer, becoming a Main Stage that
-    opens with an immediate Damage Beat and ends with a final Healing Beat.
+  - 'Increase Totem Beat radius by <color=#FD3971>30%</color>.'
+  - 'Totem Beat radius <color=#FD3971>+50%</color>, and the Totem lasts <color=#FD3971>2s</color> longer.'
+  - 'Totem Beat radius <color=#FD3971>+75%</color> and it lasts <color=#FD3971>2s</color> longer, opening with a Damage Beat and ending with a Healing Beat.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

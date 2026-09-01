@@ -69,7 +69,7 @@ public class MainMenuWindow : UiWindow
         else if (PartyManager.Instance.IsPartyLeader)
             playButtonLabel.text = "Play";
         else
-            playButtonLabel.text = PartyManager.Instance.IsLocalReady ? "Cancel Ready" : "Ready";
+            playButtonLabel.text = PartyManager.Instance.IsLocalReady ? "Not Ready" : "Ready";
     }
 
     // A room code typed but not yet acted on means the player is clearly trying to join someone,

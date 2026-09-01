@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87d6a85517aa94112915f59df73efd51, type: 3}
+  m_Name: Escalation
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.EscalationMutationData
+  Identifier:
+    Path: _QuantumUser/Resources/LevelUp/RiftMutation/Escalation
+    Guid:
+      Value: 382321730790450748
+  Icon: {fileID: 0}
+  DisplayName: Escalation
+  Rarity: 2
+  Scope: 1
+  IncompatibleWith: []
+  Description: 'Enemies spawn faster and faster as each Survival phase goes on, up to <color=#FD3971>{0:0.##}x</color> by its end'
+  EndOfPhaseDensityBonus:
+    RawValue: 49152

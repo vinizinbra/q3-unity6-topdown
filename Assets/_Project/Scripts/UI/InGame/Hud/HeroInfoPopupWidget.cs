@@ -225,8 +225,12 @@ public class HeroInfoPopupWidget : QuantumGlobalMonoBehaviour
                 ? ranked.GetDescription(count)
                 : data.GetDescription();
 
+            // Only an upgrade that can actually be owned more than once gets a rank numeral in its
+            // title - a Rift Mutation is non-stackable by design, so "- I" on it would just be noise
+            // on every single row. Passing 0 is UpgradeWidget's own "no rank" input, the same thing
+            // HeroInfoWidget passes for the Base/Passive Skill rows.
             widget.gameObject.SetActive(true);
-            widget.Setup(data.Icon, data.DisplayName, description, count);
+            widget.Setup(data.Icon, data.DisplayName, description, GameplayUiController.CanStack(data) ? count : 0);
         }
 
         for (int i = entries.Count; i < pool.Count; i++)

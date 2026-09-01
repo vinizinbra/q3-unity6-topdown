@@ -699,9 +699,10 @@ alive. Shield now has a different job, and it is defined in terms of this featur
 1. **Player Shield never auto-recharges** (`Shield.ChargeOnly`, seeded from
    `CharacterData.ShieldChargeOnly`, on for all six heroes). It starts a run **empty** and is only ever
    filled by an ability, a teammate or a purchase.
-2. **Shield protects the accessory.** `DamageUtility.ApplyDamage` skips `AccessoryGuardUtility.TryBlock`
-   entirely while the target has any `Shield.Current` at all, so the accessory only ever blocks a hit
-   that was going to land on Health.
+2. **Shield protects the accessory, up to what it can actually soak.** `DamageUtility.ApplyDamage`
+   skips `AccessoryGuardUtility.TryBlock` only while the target's `Shield.Current` fully covers the
+   incoming hit — see "2026-08-29 — Shield only covers what it can afford" below, which supersedes the
+   original "any Shield at all" gate this section originally shipped with.
 3. **Overshield is gone.** `ShieldUtility.ApplyOvershield` and every `OvershieldCapMultiplier` were
    deleted; all grants cap at `Max`. The above-Max concept only existed because a self-refilling pool
    needed something to make a grant feel meaningful — a charge-only pool is already scarce enough.
@@ -715,12 +716,9 @@ a blocked hit rolls no crit, applies no elemental proc, builds no Rage/Resonance
 hook would forfeit every one of those guarantees — and a 1-damage overflow would burn a whole
 durability point, meaning chip damage could eat hats.
 
-Gating instead (`HasShieldRemaining`) produces the same player-visible behaviour with none of that
-cost, and is hero-agnostic for free.
-
-**Overflow is deliberate.** A hit larger than the remaining Shield empties it and the remainder lands
-on Health with durability untouched. Shield keeps a real failure mode instead of being a
-strictly-better accessory, and chip damage can never cost a durability point.
+Gating instead produces the same player-visible behaviour with none of that cost, and is hero-agnostic
+for free. **As of 2026-08-29 the gate compares magnitude, not just presence** — see the section below
+for why "any Shield at all" turned out to be the wrong question.
 
 ## Guardrails
 
@@ -743,10 +741,14 @@ behaviour.
 - **Not yet retuned, deliberately** (each is a balance call, not a code one): Rift Mutations Glass Core
   (2x Max Shield now only raises a cap you must fill), Last Bastion (trading Shield away is now nearly
   costless), Infinite Momentum (its 10-Shield dash cost is now usually a Health cost) and Shield Breaker
-  (its `OnShieldBroken` trigger is now rare); the "+10 Max Shield" Global Upgrade and the
-  `PlayerMaxShieldLevel` talent, both now cap-raisers rather than protection; and
+  (its `OnShieldBroken` trigger is now rare); the `PlayerMaxShieldLevel` talent, now a cap-raiser
+  rather than protection; and
   `StatusEffects.ShieldRegen*` / `HasShieldRegenBuff` / `ShieldRegenBuffView`, which are now
   player-dead.
+- **Retuned since (2026-08-27):** the "+10 Max Shield" Global Upgrade was replaced outright by
+  **Toughness** ("-10% Damage Taken", a compounding `CharacterStats.DamageTakenMultiplier`) - a
+  repeatable pick that raised a cap the player can no longer reliably fill had stopped reading as
+  survivability. See `docs/global-upgrades.md`'s "Toughness replaces Shield" section.
 - `ShieldUiWidget` lost its above-Max colour swap (nothing can exceed Max any more), and
   `CharacterUiWidget`'s recharge shine no longer fires for players.
 
@@ -777,3 +779,82 @@ field's value on a pre-existing asset must be verified on disk, never assumed - 
 warning `BruteAscensionAssetGenerator`'s own header already gives for changed field TYPES. Had this
 gone unnoticed, every hero would have silently kept a classic auto-recharging Shield and the entire
 rework would have been a no-op at runtime.
+
+---
+
+# 2026-08-29 — Shield only covers what it can afford
+
+The "any Shield at all skips the accessory" gate from the 2026-08-25 rework, above, meant a hit that
+blew straight through a small remaining Shield still spilled its overflow onto Health with the
+accessory sitting there untouched — confirmed with the user as the wrong feel: a hit big enough to
+overwhelm your Shield should cost you the hat, not your life.
+
+**The rule now:** `DamageUtility.ApplyDamage`'s gate (still the same call site, `DamageUtility.cs`
+right above `AccessoryGuardUtility.TryBlock`) compares the incoming hit's raw magnitude against
+`Shield.Current` instead of just checking whether it's nonzero — `ShieldFullyCoversDamage(f, target,
+damage)` (renamed from `HasShieldRemaining`), `shield->Current >= damage`. Comparison is against the
+*raw* pre-crit, pre-armor `damage` passed into `ApplyDamage`, the same value `TryBlock` itself is
+called with — the block hook runs before crit/armor resolution regardless, so there is no
+"post-mitigation" number available yet to compare against instead.
+
+- **Shield fully covers the hit** (`Current >= damage`): unchanged from 2026-08-25 - the accessory
+  sits out, `AbsorbWithShield` drains the Shield by exactly `damage`, Health takes nothing.
+- **Shield does NOT fully cover the hit** (`Current < damage`, including a Shield of 0 or no Shield
+  component at all): `AccessoryGuardUtility.TryBlock` runs instead. If it succeeds, this is a full
+  negation — same "no crit roll, no elemental proc, no Rage/Resonance, no
+  OnWeaponHitLanded/OnHealthDamageApplied" guarantee the 2026-08-25 section already established for
+  every accessory block — and **the Shield is untouched**, not drained. The durability point is what
+  paid for the hit, not the Shield.
+- If the accessory can't block (already `Broken`, `Disabled`, or `CurrentDurability == 0`), execution
+  falls through to the normal path: `AbsorbWithShield` drains whatever Shield there is and the
+  remainder lands on Health, exactly like the old always-overflow-to-Health behaviour. The accessory
+  gate is a first refusal, not a guarantee — a target with no working accessory left still needs
+  Shield/Health to fall back on.
+
+**Why leave Shield untouched on a successful block, rather than draining it first and blocking only
+the remainder:** `TryBlock` is architecturally all-or-nothing — it returns before any of `ApplyDamage`'s
+resolution steps run, which is the entire point of the negation guarantee above. Splitting the hit into
+a "Shield eats part, accessory eats the rest" hybrid would mean partially resolving the hit (draining
+Shield, firing `OnShieldDamageApplied`) while also fully negating it (no crit, no Health), which is a
+contradiction the rest of the pipeline isn't built to express. Full negation keeps the guarantee simple:
+either Shield alone was enough and the hit resolves as absorbed, or it wasn't and the accessory eats the
+*entire* hit, Shield included. A side effect worth knowing: a hit that blows through a nearly-full
+Shield still costs a whole durability point rather than draining that Shield down first — the same
+"partial credit doesn't exist" trade the 2026-08-25 gate always made, just flipped to favor the
+accessory instead of Health.
+
+---
+
+# 2026-08-30 — Minimum damage threshold to block (chip damage no longer costs durability)
+
+Flagged by the user: a block is tudo-ou-nada (full negation, same durability cost) regardless of the
+hit's size, so a Filler/Swarm enemy tapping for 1 damage drained the exact same Coin-priced durability
+point as a Heavy landing a real hit. In a swarm-heavy fight that made the accessory's economy bleed out
+fast for almost no defensive value, while against one big hit it was clearly worth it.
+
+**The fix:** a new `AccessoryGuardConfig.MinDamageToBlock` (`FP`, default `0`). `AccessoryGuardUtility.
+TryBlock` checks it right after the existing `State`/`CurrentDurability` early-returns and *before*
+decrementing durability - a hit dealing less than the threshold returns `false` immediately, so it falls
+straight through to `DamageUtility.ApplyDamage`'s normal resolution (crit roll, procs, Health) exactly
+as if no accessory existed for that one hit. Nothing is spent, nothing pops off. `0` (the default)
+reproduces the original "block everything" behaviour exactly, so every existing call site/asset is
+unaffected until a nonzero value is authored - same "opt-in, no behaviour change until set" convention
+`EncounterModifierUtility`'s bonuses and `LevelUpConfig.LevelSequence` already use.
+
+Deliberately compared against the same raw pre-crit/pre-armor `damage` the block hook already receives
+(the value `TryBlock` was always called with) - no new resolution step, no new parameter threaded
+through `ApplyDamage`. `AccessoryGuardContentGenerator` now authors a decisive placeholder of `3`
+(Filler/Swarm chip damage is typically 1-2, a real hit from Normal-tier-or-above is expected to clear
+it) - pending a real balance pass once actual per-tier damage numbers are tuned, same convention every
+other number in this file follows.
+
+**Known simplification:** the threshold is a single flat number, not per-tier or per-source. A weapon
+perk or mutation that deals unusually small direct-hit damage would also slip under it - accepted, since
+introducing a second axis (which *sources* count) for an edge case with no reported instance yet would
+be exactly the kind of premature generality this codebase avoids elsewhere.
+
+**Editor authoring needed:** re-run `Tools > RiftRaiders > Generate Accessory Guard Content` (or edit
+`AccessoryGuardConfig.asset` by hand) to actually author the new `3` value - the existing asset on disk
+predates this field and will keep resolving to `0`/disabled until then.
+
+---

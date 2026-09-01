@@ -41,7 +41,7 @@ namespace Quantum
         [SerializeField, Tooltip("Shown ONLY while the accessory is NOT equipped (Airborne/Dropped/Broken) - e.g. the same head sprite without the cap. Optional: leave unassigned for a hero whose accessory is a pure add-on with no separate bare-headed version.")]
         private GameObject unequippedVisual;
 
-        [SerializeField, Tooltip("Plain SFX played when the accessory goes back ON - covers every way that happens: walking over your own, an ally bringing it to you, or paying the Merchant to repair or replace it. Not a voice line; the spoken reactions are VoiceDirector's job.\n\nRouted through EntitySound, so ticking Quieter When Remote (or Local Player Only) on the SoundData keeps a teammate's re-equip from being as loud as your own.")]
+        [SerializeField, SoundDataPicker, Tooltip("Plain SFX played when the accessory goes back ON - covers every way that happens: walking over your own, an ally bringing it to you, or paying the Merchant to repair or replace it. Not a voice line; the spoken reactions are VoiceDirector's job.\n\nRouted through EntitySound, so ticking Quieter When Remote (or Local Player Only) on the SoundData keeps a teammate's re-equip from being as loud as your own.")]
         private SoundData equippedSound;
 
         // Nullable so the very first resolve always applies, even if it happens to match whatever

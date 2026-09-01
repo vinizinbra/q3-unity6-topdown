@@ -16,12 +16,12 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Lux/Lux_DashSkillUpgrades/EmergencyRepairSkillAction
     Guid:
       Value: 420168397532520612
-  Icon: {fileID: 0}
+  Icon: {fileID: -1527857662, guid: 355e00907e214470bac0029f70064510, type: 3}
   DisplayName: Emergency Repair
   RankDescriptions:
-  - Ending a dash within 6m of your Sentry repairs 30% of its Max Health.
-  - Ending a dash within 6m of your Sentry repairs 30% of its Max Health and extends its lifetime by 2s (up to 4s per Sentry).
-  - 'Emergency Overclock: ending a dash within 6m of your Sentry repairs 30% of its Max Health, extends its lifetime by 2s, and grants it +50% Fire Rate for 2s.'
+  - 'Ending a dash within <color=#FD3971>6m</color> of your Sentry repairs <color=#FD3971>30%</color> of its Max Health.'
+  - 'Ending a dash within <color=#FD3971>6m</color> of your Sentry repairs <color=#FD3971>30%</color> Max Health and adds <color=#FD3971>2s</color> lifetime (<color=#FD3971>4s</color> max per Sentry).'
+  - 'Ending a dash near your Sentry repairs <color=#FD3971>30%</color> Max Health, adds <color=#FD3971>2s</color> lifetime and grants <color=#FD3971>+50%</color> Fire Rate for <color=#FD3971>2s</color>.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 5

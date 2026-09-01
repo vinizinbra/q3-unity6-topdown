@@ -380,7 +380,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dda2a2277b7a465e9b25c46eeba186a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.HasLight
-  color: {r: 1, g: 0.84254533, b: 0.3726415, a: 0.15686275}
+  color: {r: 0.37254906, g: 1, b: 0.96898276, a: 0.15686275}
   baseScale: 1
 --- !u!114 &9000172568175392284
 MonoBehaviour:
@@ -401,7 +401,7 @@ MonoBehaviour:
   isLocal: 0
   visualRoot: {fileID: 0}
   catchUpSpeedMultiplier: 2
-  destroyEffectPrefab: {fileID: 6350743763286976369, guid: 3d63a7155f35f4b72ba173b63b299202, type: 3}
+  destroyEffectPrefab: {fileID: 3308115373013161897, guid: 3608992ed98f542228996f9a7318c87b, type: 3}
   trailParticle: {fileID: 0}
   minImpactDuration: 0.03
   maxImpactDuration: 0.2

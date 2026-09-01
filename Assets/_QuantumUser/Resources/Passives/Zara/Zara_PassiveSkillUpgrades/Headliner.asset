@@ -16,16 +16,15 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Passives/Zara/Zara_PassiveSkillUpgrades/Headliner
     Guid:
       Value: 359104458669361970
-  Icon: {fileID: 0}
+  Icon: {fileID: 2028119123, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
   DisplayName: Headliner
   Description: Max Flow becomes a payoff - for your damage, your Totem, and your
     whole team.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - While at Max Flow, you deal +10% damage.
-  - While at Max Flow, you deal +10% damage and your Totem's Beats are 15% more effective.
-  - 'Headliner: reaching Max Flow grants you and allies within 6m +10% Move Speed
-    and +10% Fire Rate for 3s (8s cooldown).'
+  - 'While at Max Flow, you deal <color=#FD3971>+10%</color> damage.'
+  - 'While at Max Flow, you deal <color=#FD3971>+10%</color> damage and your Totem''s Beats are <color=#FD3971>15%</color> more effective.'
+  - 'Headliner: reaching Max Flow grants you and allies within <color=#FD3971>6m</color> <color=#FD3971>+10%</color> Move Speed and <color=#FD3971>+10%</color> Fire Rate for <color=#FD3971>3s</color> (<color=#FD3971>8s</color> cooldown).'
   MaxFlowDamageBonus:
   - RawValue: 6554
   - RawValue: 6554

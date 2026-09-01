@@ -69,6 +69,8 @@ MonoBehaviour:
       RawValue: 65536
     ShieldMultiplier:
       RawValue: 0
+    HealthMultiplier:
+      RawValue: 65536
     Traits: 
     FrontalDamageReductionAmount:
       RawValue: 0
@@ -88,6 +90,8 @@ MonoBehaviour:
       RawValue: 655360
     LeashRange:
       RawValue: 983040
+    DetectionRangeMultiplier:
+      RawValue: 65536
   Actions:
     BasicAction:
       Id:
@@ -95,6 +99,11 @@ MonoBehaviour:
     SkillActions: []
   DeathLingerTime:
     RawValue: 196608
+  ChestDrop:
+    Id:
+      Value: 0
+  ChestDropChance:
+    RawValue: 65536
   Cost:
     RawValue: 65536
   Persistent: 0
@@ -174,4 +183,7 @@ MonoBehaviour:
   FactionSkins:
   - Faction: 2
     ViewPrefab: {fileID: 8476845490732343577, guid: 2e4a8f2b5eaf44c0ba7cade36c968ed0, type: 3}
+    ScaleMultiplier: 1
+  - Faction: 0
+    ViewPrefab: {fileID: 8476845490732343577, guid: f8e0e322414154c5a941e35c6dd113da, type: 3}
     ScaleMultiplier: 1

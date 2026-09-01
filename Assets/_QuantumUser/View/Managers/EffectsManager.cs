@@ -81,6 +81,17 @@ namespace QuantumUser.View.Managers
         [SerializeField, Tooltip("Uniform scale used instead when the Stun genuinely LANDED - the moment that actually rewards the player (and the one that opens Groundbreaker rank 3's Exposed window), so it reads heavier than a wall contact that got resisted.")]
         private float wallSlamStunnedEffectScale = 1.6f;
 
+        [Header("Enemy Attack Anticipation")]
+        [SerializeField, Tooltip("Billboard particle prefab (e.g. an exclamation mark, with its own Billboard component) shown above an enemy's head for its entire attack windup (Preparation+Telegraph) - a generic readiness cue for every enemy/action/delivery, not authored per-EnemyActionData. EnemyAttackVisualsView spawns/releases an instance via GetAnticipationIconInstance/ReleaseAnticipationIconInstance below (bound to this field, same held-and-externally-repositioned shape GetHeldInstance/ReleaseHeldInstance already provide for EnemyAllyLinkView's tether particles) rather than owning its own prefab reference, so the icon is configured here alongside every other combat VFX. Must not auto-destroy/one-shot itself. Leave empty to skip.")]
+        private ParticleSystem anticipationIconEffectPrefab;
+        [SerializeField, Tooltip("Extra offset EnemyAttackVisualsView adds on top of the auto-resolved head height (AnticipationIconOffset below, read by that component's own UpdateAnticipationIcon) - scaled by the enemy's own live collider radius (so one authored value reads correctly on a Filler and a Boss alike), then X is mirrored (not rotated) by which way the enemy is currently facing, matching its sprite's own left/right flip; Y/Z stay as authored (also radius-scaled). Values are therefore in \"radius units\", not world units - nudge higher/forward if the icon reads as clipping into the art. Lives here rather than on EnemyAttackVisualsView so it's tweakable in the same place as the prefab itself.")]
+        private Vector3 anticipationIconOffset = Vector3.up * 0.3f;
+        [SerializeField, Tooltip("Minimum real-time (Time.time-based, not simulation ticks) EnemyAttackVisualsView keeps the icon visible once shown, even if the enemy's own windup (AnticipationTime, Preparation+Telegraph) ends sooner - a fast enemy's short windup could otherwise flash the icon for a single frame, unreadable as an actual warning cue. The icon keeps tracking the enemy's head for the remainder even after the windup itself has ended.")]
+        private float minimumAnticipationIconDuration = 0.4f;
+
+        public Vector3 AnticipationIconOffset => anticipationIconOffset;
+        public float MinimumAnticipationIconDuration => minimumAnticipationIconDuration;
+
         [Header("Accessory Guard")]
         [SerializeField, Tooltip("GENERIC fallback played where a BROKEN accessory's debris comes to rest (see docs/accessory-guard.md) - the durability-0 block still knocks the accessory off and flies it on the normal arc, and this is the \"it shattered\" payoff at the landing point. A hero can override it per-accessory via CharacterData.Accessory.BrokenEffectPrefab; this covers everyone who doesn't. Leave empty to skip the particle entirely; deliberately no fallback to defaultAreaBlastEffect, since an explosion reads wrong for a hat breaking.")]
         private ParticleSystem accessoryBrokenEffectPrefab;
@@ -134,6 +145,12 @@ namespace QuantumUser.View.Managers
         private ParticleSystem projectileReflectedEffectPrefab;
         [SerializeField, Tooltip("Uniform scale used for projectileReflectedEffectPrefab (or its fallback) - this effect has no radius of its own to derive a scale from.")]
         private float projectileReflectedEffectScale = 1f;
+
+        [Header("Revive")]
+        [SerializeField, Tooltip("Played at the target's position whenever EventPlayerRevived fires (teammate-hold, self-revive, or the auto-revive-on-secure sweep - see docs/revive.md) - generic and source-agnostic, the same for every hero, so it lives here rather than per-view (see BlobAnimationView.OnPlayerRevived for that same event's own punch-scale reaction). Leave empty to skip the particle.")]
+        private ParticleSystem reviveEffectPrefab;
+        [SerializeField, Tooltip("Uniform scale for reviveEffectPrefab - this event carries no radius of its own to derive one from, same as meleeHitEffectScale.")]
+        private float reviveEffectScale = 1f;
 
         [Header("Enemy Death")]
         [SerializeField, Tooltip("Played whenever a Filler-tier enemy explodes instead of playing its lingering die animation (see DamageUtility.ApplyDamage/EnemyExploded). Shared across every enemy type - tinted by bloodColor, set per-world via SetBloodColor (see EnvironmentManager). Falls back to defaultAreaBlastEffect if left empty.")]
@@ -206,6 +223,7 @@ namespace QuantumUser.View.Managers
             QuantumEvent.Subscribe<EventAccessoryRecovered>(this, OnAccessoryRecovered);
             QuantumEvent.Subscribe<EventAccessoryBlocked>(this, OnAccessoryBlocked);
             QuantumEvent.Subscribe<EventFreeHitGuardConsumed>(this, OnFreeHitGuardConsumed);
+            QuantumEvent.Subscribe<EventPlayerRevived>(this, OnPlayerRevived);
         }
 
         private void OnDestroy()
@@ -703,6 +721,22 @@ namespace QuantumUser.View.Managers
             PlayEffect(shieldGrantEffectPrefab, frame.Get<Transform3D>(e.Target).Position.ToUnityVector3(), Quaternion.identity);
         }
 
+        // Generic - fires for every PlayerRevived regardless of source (teammate hold, self-revive,
+        // the auto-revive-on-secure sweep - see docs/revive.md), the same for every hero. Position
+        // is read off the TARGET's own live Transform3D - the event carries no position of its own,
+        // same shape as OnEntityHealed/OnEntityShielded.
+        private void OnPlayerRevived(EventPlayerRevived e)
+        {
+            if (reviveEffectPrefab == null)
+                return;
+
+            Frame frame = e.Game.Frames.Predicted;
+            if (frame == null || frame.Has<Transform3D>(e.Target) == false)
+                return;
+
+            PlayEffect(reviveEffectPrefab, frame.Get<Transform3D>(e.Target).Position.ToUnityVector3(), Quaternion.identity, Vector3.one * reviveEffectScale);
+        }
+
         // Fired the exact tick Shield.Current crosses from >0 to <=0 (see DamageUtility.
         // AbsorbWithShield/Shield.qtn's OnShieldBroken signal) - a "pop" moment distinct from
         // EntityShielded's own grant particle above, generic across every target (player or enemy).
@@ -885,6 +919,23 @@ namespace QuantumUser.View.Managers
 
             ObjectPool<ParticleSystem> pool = (disablePooling || prefab == null) ? null : GetOrCreatePool(prefab);
             StartCoroutine(ReleaseWhenFinished(instance, pool));
+        }
+
+        // Thin wrappers around GetHeldInstance/ReleaseHeldInstance bound to anticipationIconEffectPrefab -
+        // EnemyAttackVisualsView spawns/releases this per Enemy.Phase edge (not a Quantum event, unlike
+        // every PlayEffect handler above), so it calls these instead of holding its own prefab reference,
+        // keeping the actual asset configured here with every other combat VFX. Returns null (silently
+        // showing nothing) if the prefab is left unassigned - same degrade-gracefully contract every
+        // other optional prefab field on this manager already has.
+        public ParticleSystem GetAnticipationIconInstance()
+        {
+            return anticipationIconEffectPrefab != null ? GetHeldInstance(anticipationIconEffectPrefab) : null;
+        }
+
+        public void ReleaseAnticipationIconInstance(ParticleSystem instance)
+        {
+            if (instance != null)
+                ReleaseHeldInstance(anticipationIconEffectPrefab, instance);
         }
 
         private ParticleSystem GetPooledInstance(ParticleSystem prefab, Vector3 position, Quaternion rotation, Vector3 scale, out ObjectPool<ParticleSystem> pool)

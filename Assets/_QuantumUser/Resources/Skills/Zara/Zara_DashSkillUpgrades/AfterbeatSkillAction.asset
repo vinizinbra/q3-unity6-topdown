@@ -16,15 +16,12 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Zara/Zara_DashSkillUpgrades/AfterbeatSkillAction
     Guid:
       Value: 408176212789416036
-  Icon: {fileID: 0}
+  Icon: {fileID: 1950513883, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
   DisplayName: Afterbeat
   RankDescriptions:
-  - 'Quick Tempo: dashing grants 1 Flow stack, and each enemy you pass through brings
-    the next stack 0.25s closer (up to 1s).'
-  - 'Afterbeat: dashing grants 1 Flow stack and brings the next closer, and 1s later
-    a beat erupts at your starting position, damaging and knocking back nearby enemies.'
-  - 'Double Beat: beats erupt at both ends of the dash - landing either one on an
-    enemy grants another Flow stack (once per dash).'
+  - 'Quick Tempo: dashing grants <color=#FD3971>1</color> Flow stack, and each enemy you pass through brings the next stack <color=#FD3971>0.25s</color> closer (up to <color=#FD3971>1s</color>).'
+  - 'Afterbeat: dashing grants <color=#FD3971>1</color> Flow stack and brings the next closer, and <color=#FD3971>1s</color> later a beat erupts at your starting position, damaging and knocking back nearby enemies.'
+  - 'Double Beat: beats erupt at both ends of the dash - landing either one on an enemy grants another Flow stack (once per dash).'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 7

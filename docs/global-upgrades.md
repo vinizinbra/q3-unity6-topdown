@@ -13,7 +13,7 @@ over and over across a run. The game's other three level-up pools live elsewhere
 `LevelUpPoolKind.RiftMutation` pool - rare, non-stackable, run-wide rule/synergy/tradeoff effects,
 which is where the more dramatic build-defining picks live).
 
-**Status: 22 of 26 rows are implemented in code.** `GlobalUpgradeData` is an abstract base with a
+**Status: 22 of 26 rows are implemented in code** (the flat `Shield` row was replaced by `Toughness`, not removed - see below)**.** `GlobalUpgradeData` is an abstract base with a
 real `Apply(Frame f, EntityRef entity)` (same shape as `WeaponPerkData`'s `Apply(Frame, Weapon*)`),
 and `GlobalUpgradeUtility.Grant` dispatches to it generically. Most concrete upgrades derive from
 `CharacterStatMultiplierUpgradeData` (`Assets/_QuantumUser/Simulation/Assets/LevelUp/
@@ -69,7 +69,7 @@ a parallel do-nothing `CharacterStats` field.
 | Upgrade | Class | Target | Status |
 |---|---|---|---|
 | Max Health | `MaxHealthUpgradeData` | `CharacterStats.MaxHealthMultiplier` + `CharacterSystem.RefreshMaxHealth` | ✅ |
-| Shield | `ShieldUpgradeData` | `CharacterStats.MaxShieldMultiplier` + `CharacterSystem.RefreshMaxShield` | ✅ |
+| Toughness | `ToughnessUpgradeData` | `CharacterStats.DamageTakenMultiplier` (new field, read by `DamageUtility.ResolveDamageReduction`) | ✅ replaced the old `Shield` row - see "Toughness replaces Shield" below |
 | Movement Speed | `MoveSpeedUpgradeData` | `CharacterStats.MoveSpeedMultiplier` | ✅ |
 | Health Regeneration | `HealthRegenUpgradeData` | `Health.RegenRate` (new field, ticked by new `HealthRegenSystem`) | ✅ |
 | Healing Received | `HealingReceivedUpgradeData` | `CharacterStats.HealingReceivedMultiplier` (now wired into `HealUtility.ResolveHealMultiplier`) | ✅ |
@@ -192,6 +192,36 @@ Several `CharacterStats` fields were seeded but had **zero consumers anywhere** 
    here.
 
 ---
+
+## Toughness replaces Shield (2026-08-27)
+
+The `Shield` row ("+10 Shield", `ShieldUpgradeData`, flat `CharacterStats.BonusMaxShield`) was
+replaced by **Toughness** ("-10% Damage Taken", `ToughnessUpgradeData`). Player Shield stopped being
+a free auto-regenerating absorb pool in the 2026-08-25 charge-only rework (`docs/accessory-guard.md`)
+- it now starts a run empty, never recharges on its own, and exists mainly to keep the Accessory on
+your head - so a repeatable "+N Max Shield" pick only raised a cap the player had no reliable way to
+fill. Toughness is flat survivability that needs no source to be useful.
+
+Three implementation notes:
+
+- **It multiplies, it doesn't add.** The new `CharacterStats.DamageTakenMultiplier` is a separate,
+  multiplicative term rather than an addition to the existing additive `DamageReduction` fraction,
+  precisely because this pool stacks indefinitely: a flat +0.10 per pick reaches outright immunity on
+  the 10th pick, while 0.9 compounding never can (10 picks -> ~65% reduction, 20 -> ~88%). It mirrors
+  `KnockbackTakenMultiplier`, which already sat right next to it with exactly this shape.
+- **It composes with every other DR source** - `DamageUtility.ResolveDamageReduction` multiplies it in
+  alongside the additive `CharacterStats.DamageReduction`, Too Angry to Die, aura DR and the reactive
+  proc slot. Keeping it out of the additive fraction also means a pick landing while a temporary
+  additive source is up (Brute's Juggernaut channel, paused mid-Level-Up) can't under- or over-grant.
+  `DamageReductionUiWidget` needs no change - it already reads the combined multiplier.
+- **`CharacterStats.BonusMaxShield` was kept**, not deleted along with `ShieldUpgradeData`. It's a
+  generic flat-capacity term already folded into `CharacterSystem.SeedShield`/`RefreshMaxShield`, and
+  `LastBastionMutationData` still clears it. No live source writes it today.
+
+`Shield.asset` was deleted (it had been hand-tuned in the Inspector to `MaxPicks: 3` and given an
+`Icon` - Toughness's own asset starts with neither), and its dangling `AssetRef` was removed from
+`LevelUpConfig.asset`'s `GlobalUpgrades` list by hand. Re-run the generator to author
+`Toughness.asset` and rebuild that list.
 
 # 2026-08-20 — dropped orbs no longer land on raised platforms
 

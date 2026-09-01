@@ -30,8 +30,19 @@ namespace Quantum
             if (filter.Chest->Opened == true)
                 return; // already opened - DestroyAfterTime (added below) cleans it up
 
-            if (f.Global->LevelUpScreenOpen == true)
-                return; // another screen (this Chest's own, or a real level-up) is already up
+            // The LastTick check matters beyond just "is it open right now": LevelUpSystem runs
+            // immediately before this system every tick, so a level-up screen resolving (Resolve
+            // sets LevelUpScreenOpen false) and this Chest opening a brand new one can otherwise both
+            // happen inside the SAME tick - LevelUpScreenOpen goes true -> false -> true without ever
+            // being published as false in between, which the View's own edge-detected
+            // LevelUpScreenOpen polling (GameplayUiController.UpdateUpgradeScreen) can never observe.
+            // The simulation would still correctly roll this Chest's options and re-disable
+            // GameplaySystemGroup, but no window would ever show for it - a real, visible freeze
+            // (player frozen, no card UI left to click) despite the simulation doing exactly what
+            // it's supposed to. See Global.LevelUpScreenOpenLastTick's own comment - same hazard
+            // DebugCheatSystem.TryOpenNextPendingLevelUp already guards against for its own chain.
+            if (f.Global->LevelUpScreenOpen == true || f.Global->LevelUpScreenOpenLastTick == true)
+                return; // another screen (this Chest's own, or a real level-up) is already up, or only just closed this same tick
 
             // Candidates come from PlayerQueryUtility, not a Player-layer physics query. Besides
             // dropping the per-chest per-tick frame-heap allocation, this fixes a real bug: the old

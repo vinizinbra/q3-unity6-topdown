@@ -86,6 +86,30 @@ else's) has the group disabled, so it can:
 - stay reachable for a second nearby Chest the instant the first screen closes, rather than being
   frozen alongside every paused gameplay system for the whole screen's duration.
 
+**2026-08-29 bug fix - "reachable the instant the first screen closes" was too eager.** Because
+`ChestSystem` runs immediately after `LevelUpSystem` every tick, a level-up screen resolving
+(`LevelUpUtility.Resolve` sets `Global.LevelUpScreenOpen` false) and this Chest opening a brand new
+one could both happen inside the SAME tick - `LevelUpScreenOpen` goes `true -> false -> true` without
+ever being published as `false` in between, which `GameplayUiController`'s edge-detected
+`LevelUpScreenOpen` polling can never observe. The simulation still correctly rolled the Chest's
+options and re-disabled `GameplaySystemGroup` for it, but no window ever showed - a real, visible
+freeze (player frozen, no card UI left to click) despite the simulation doing exactly what it's
+supposed to. Same hazard `DebugCheatSystem.TryOpenNextPendingLevelUp` already found and fixed for its
+own debug chain (`Global.DebugLevelUpScreenOpenLastTick`) - that field is captured too late in the
+tick order to also protect `ChestSystem` (it's snapshotted by `DebugCheatSystem` itself, which runs
+AFTER `ChestSystem`), so a new, earlier-captured `Global.LevelUpScreenOpenLastTick` was added
+(snapshotted at the very top of `LevelUpSystem.Update`, before that tick's own `Resolve` can run) and
+`ChestSystem`'s own guard now also checks it - a Chest can only claim the flag once it's been
+observably closed for at least one full published tick.
+
+Also fixed the same day: `ExperienceUtility.Grant`'s own `Global.Level` increment is unconditional,
+but its call to `LevelUpUtility.BeginLevelUpScreen` was a single fire-and-forget attempt - if
+`OpenUpgradeScreen`'s re-entrancy guard was blocked (a Chest's own screen already open) that pick was
+silently lost forever, with the Level already spent and no retry. `Global.PendingLevelUpScreen` makes
+this durable instead: set the instant `BeginLevelUpScreen` is called, cleared only once
+`OpenUpgradeScreen` actually gets to run for that (non-Chest) request, retried every tick by
+`LevelUpSystem.Update` in the meantime.
+
 ## Falling onto the ground (`GroundOffset` / `GroundSettleSystem`)
 
 A Chest is placed directly in the map asset (`MapEntityLink`, added implicitly by Quantum), not

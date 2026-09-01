@@ -21,9 +21,9 @@ MonoBehaviour:
   Description: An explosion kill empowers your next explosion.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - Each explosion kill empowers your next blast with +30% damage and +15% radius.
-  - Explosion kills bank up to 2 charges, empowering your next blast with up to +60% damage and +30% radius.
-  - Explosion kills bank up to 2 charges for +60% damage and +30% radius. At 2 charges the blast also detonates a second time.
+  - 'Each explosion kill empowers your next blast with <color=#FD3971>+30%</color> damage and <color=#FD3971>+15%</color> radius.'
+  - 'Explosion kills bank up to <color=#FD3971>2</color> charges, empowering your next blast with up to <color=#FD3971>+60%</color> damage and <color=#FD3971>+30%</color> radius.'
+  - 'Explosion kills bank up to <color=#FD3971>2</color> charges for <color=#FD3971>+60%</color> damage and <color=#FD3971>+30%</color> radius; at <color=#FD3971>2</color> charges the blast detonates twice.'
   DamageBonusPerStack:
     RawValue: 19661
   RadiusBonusPerStack:

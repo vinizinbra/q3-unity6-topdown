@@ -12,13 +12,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c04d8195895c42008e9658fbf433bf7, type: 3}
   m_Name: Grenadier
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
-  clips:
-  - {fileID: 8300000, guid: a76b32836dc7cc44aa9a52f0694ee199, type: 3}
+  variants:
+  - clip: {fileID: 8300000, guid: ba097d4ed30c02a44bb98da186a76950, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  clips: []
   pick: 1
   layers: []
   group: 6
   output: {fileID: 0}
-  volume: {x: 0.5, y: 0.5}
+  volume: {x: 0.7293578, y: 0.7293578}
   pitch: {x: 1, y: 1}
   delay: {x: 0, y: 0}
   startAt: 0

@@ -21,9 +21,9 @@ MonoBehaviour:
   Description: Weapon hits pull enemies together, eventually Binding them for bonus damage.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - Weapon hits pull enemies toward their nearest ally.
-  - Weapon hits pull enemies toward their nearest ally with much greater force.
-  - Weapon hits pull enemies toward their nearest ally, Binding them for 2s and making them take 20% more damage from you.
+  - 'Weapon hits pull enemies toward their nearest ally.'
+  - 'Weapon hits pull enemies toward their nearest ally with much greater force.'
+  - 'Weapon hits pull enemies toward their nearest ally, Binding them <color=#FD3971>2s</color> and making them take <color=#FD3971>20%</color> more damage.'
   PullForce:
   - RawValue: 196608
   - RawValue: 393216

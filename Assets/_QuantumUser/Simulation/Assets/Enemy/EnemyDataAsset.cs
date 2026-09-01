@@ -205,6 +205,13 @@ namespace Quantum
         // tier-driven, see EnemyTierStatsConfig.ShieldRechargeDelay/Rate.
         public FP ShieldMultiplier;
 
+        // Multiplies the once-per-spawn EnemyRuntimeStats.MaxHp (EnemyBalanceUtility.
+        // ResolveEnemyStats' tier baseline + run curves/co-op scaling) in EnemySystem.SeedHealth -
+        // an author-facing per-enemy correction on top of that shared curve, the same role
+        // ShieldMultiplier plays for Shield. Unlike ShieldMultiplier, 0 has no opt-out meaning here
+        // (every enemy has Health), so this defaults to 1 (no change) instead of 0.
+        public FP HealthMultiplier;
+
         // Inert today - no consumer reads this yet. Each trait gets wired into its own mechanic as
         // that mechanic is touched (e.g. KnockbackResistance into DamageUtility.ResolveKnockbackScale).
         public EnemyTrait[] Traits;
@@ -253,6 +260,22 @@ namespace Quantum
 
         public FP DetectionRange;
         public FP LeashRange;
+
+        // Tuning knob layered on top of DetectionRange, same "baseValue * multiplier, default 1"
+        // convention as Stats.ShieldMultiplier/EnemyTierStatsConfig.ScaleMultiplier - lets an
+        // enemy asset scale its perception range without hand-editing the flat DetectionRange
+        // value itself. Every detection check reads through ResolveDetectionRange() below rather
+        // than DetectionRange directly, so the multiplier can't drift out of sync between them.
+        public FP DetectionRangeMultiplier;
+
+        // Guards against a real footgun this codebase already has live elsewhere
+        // (EnemyStatsData.HealthMultiplier reads as 0 - not 1 - on several already-authored enemy
+        // assets that predate that field, silently zeroing MaxHealth): Unity backfills a struct
+        // field missing from an old serialized .asset with a zeroed default, never the C#
+        // `= FP._1` initializer, which only runs for a freshly-constructed instance. Treating
+        // <= 0 as "unset" here means any enemy asset saved before this field existed keeps its
+        // original, un-multiplied DetectionRange instead of silently going blind.
+        public readonly FP ResolveDetectionRange() => DetectionRangeMultiplier <= FP._0 ? DetectionRange : DetectionRange * DetectionRangeMultiplier;
     }
 
     // The action(s) this enemy can perform - see EnemyDecisionUtility.
@@ -285,6 +308,7 @@ namespace Quantum
         {
             MoveSpeed = 3,
             Radius = 1,
+            HealthMultiplier = 1,
             Traits = new EnemyTrait[0],
             FrontalDamageReductionAmount = FP._0_50,
             FrontalDamageReductionArcDegrees = 120,
@@ -307,11 +331,23 @@ namespace Quantum
             },
         };
 
-        public EnemyAIData AI = new EnemyAIData { DetectionRange = 10, LeashRange = 15 };
+        public EnemyAIData AI = new EnemyAIData { DetectionRange = 10, LeashRange = 15, DetectionRangeMultiplier = FP._1 };
 
         public EnemyActionsData Actions = new EnemyActionsData { SkillActions = new() };
 
         public FP DeathLingerTime = 3;
+
+        // A specific enemy's own designed Chest drop (e.g. a mini-boss/rare spawn) - see
+        // EnemyChestDropUtility.TrySpawnDrop. Unassigned (default) means this enemy never drops
+        // one - most enemies leave this empty, same "unset = opt out" convention as
+        // Stats.ShieldMultiplier.
+        [ExpandableAsset] public AssetRef<EntityPrototype> ChestDrop;
+
+        // Chance ChestDrop actually spawns, rolled independently on this enemy's death - only
+        // checked once ChestDrop itself is assigned. Same DamageUtility.RollChance/DropChance
+        // convention as EnemyTierStatsConfig.CoinDropChance/RiftShardDropChance, defaulting to
+        // guaranteed (1) so simply assigning ChestDrop with no further tuning always drops it.
+        public FP ChestDropChance = FP._1;
 
         // Single place every Director budget site (EnemyGroupConfig.ComputeCost,
         // PlayerClusterDirectorUtility.LocalPressure, EnemyLifecycleSystem.Retire) reads this

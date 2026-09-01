@@ -3,6 +3,7 @@ namespace QuantumUser.View.Managers
     using System.Collections.Generic;
     using NaughtyAttributes;
     using Quantum;
+    using QuantumUser.View.Util;
     using UnityEngine;
     using UnityEngine.Pool;
     using UnityEngine.Serialization;
@@ -30,15 +31,32 @@ namespace QuantumUser.View.Managers
         [FormerlySerializedAs("shadowPrefab")]
         [SerializeField, Tooltip("Must have a SpriteRenderer. Its rotation is forced flat every frame regardless of authored rotation.")]
         private GameObject blobPrefab;
+        [SerializeField, Tooltip("Material used while a pooled blob is serving as a LIGHT (HasLight). Shadows keep whatever material blobPrefab itself carries - Custom/BlobShadowSpriteMultiply, a MULTIPLY blend (Blend DstColor Zero) that can only ever darken, which is why a light drawn with it read as a grey patch instead of as light. Left empty this falls back to a runtime Sprites/Default material, which is the intended default; assign one explicitly only to use an additive or custom light material instead.")]
+        private Material lightMaterial;
         [SerializeField, Tooltip("Instances created up front so the first few blob-owners spawning don't pay an Instantiate cost. The pool still grows past this on demand.")]
         private int prewarmCount = 8;
 
         private ObjectPool<GameObject> pool;
         private readonly List<GroundBlobHandle> active = new List<GroundBlobHandle>();
 
+        // The material blobPrefab itself was authored with, captured once at Awake. A pooled
+        // instance handed out as a light has its material swapped, so it needs this back the next
+        // time it comes out of the pool as a shadow - the same self-healing reason Acquire rewrites
+        // the tint on every single call rather than once at creation.
+        private Material shadowMaterial;
+
+        // Only built when no lightMaterial is assigned. Sprites/Default is a built-in shader with no
+        // material asset sitting in the project to drag into the Inspector, and it is already in
+        // Graphics settings' Always Included Shaders, so Shader.Find resolves it in a build too.
+        // DontSave since it exists purely for this session, and destroyed with the manager so
+        // entering/exiting Play mode repeatedly can't leak a material per run.
+        private Material runtimeLightMaterial;
+
         private void Awake()
         {
             Instance = this;
+
+            CacheMaterials();
 
             pool = new ObjectPool<GameObject>(
                 createFunc: () => Instantiate(blobPrefab, transform),
@@ -49,17 +67,58 @@ namespace QuantumUser.View.Managers
             Prewarm(prewarmCount);
         }
 
+        private void CacheMaterials()
+        {
+            if (blobPrefab != null)
+            {
+                var prefabRenderer = blobPrefab.GetComponent<SpriteRenderer>();
+
+                if (prefabRenderer != null)
+                    shadowMaterial = prefabRenderer.sharedMaterial;
+            }
+
+            if (lightMaterial != null)
+                return;
+
+            Shader spriteShader = Shader.Find("Sprites/Default");
+
+            if (spriteShader == null)
+            {
+                LogHelper.Warn("GroundBlob", "Sprites/Default not found - lights fall back to the shadow's multiply material and will read as grey patches.", this);
+                return;
+            }
+
+            runtimeLightMaterial = new Material(spriteShader)
+            {
+                name = "GroundBlobLight (runtime Sprites/Default)",
+                hideFlags = HideFlags.DontSave
+            };
+        }
+
+        private void OnDestroy()
+        {
+            if (runtimeLightMaterial != null)
+                Destroy(runtimeLightMaterial);
+        }
+
+        private Material ResolveLightMaterial()
+        {
+            return lightMaterial != null ? lightMaterial : runtimeLightMaterial;
+        }
+
         // offset is a per-owner world X/Z nudge stacked on top of config.ShadowOffset - e.g. to slide
         // a shadow under a character whose sprite pivot sits off to one side, when the global offset
         // can't correct just that one character. Defaults to zero, so existing callers are unchanged.
-        public GroundBlobHandle AcquireShadow(Transform target, float baseScale, Vector2 offset = default)
+        // alphaMultiplier multiplies config.GroundAlpha for this shadow only, after height falloff -
+        // 1 (default) reproduces the exact pre-existing behavior.
+        public GroundBlobHandle AcquireShadow(Transform target, float baseScale, Vector2 offset = default, float alphaMultiplier = 1f)
         {
-            return Acquire(target, baseScale, config != null ? config.ShadowColor : Color.black, isLight: false, offset);
+            return Acquire(target, baseScale, config != null ? config.ShadowColor : Color.black, isLight: false, offset, alphaMultiplier);
         }
 
         public GroundBlobHandle AcquireLight(Transform target, float baseScale, Color color)
         {
-            return Acquire(target, baseScale, color, isLight: true, offset: default);
+            return Acquire(target, baseScale, color, isLight: true, offset: default, alphaMultiplier: 1f);
         }
 
         public void Release(GroundBlobHandle handle)
@@ -70,12 +129,22 @@ namespace QuantumUser.View.Managers
             pool.Release(handle.GameObject);
         }
 
-        private GroundBlobHandle Acquire(Transform target, float baseScale, Color tint, bool isLight, Vector2 offset)
+        private GroundBlobHandle Acquire(Transform target, float baseScale, Color tint, bool isLight, Vector2 offset, float alphaMultiplier)
         {
             if (blobPrefab == null) return null;
 
             var instance = pool.Get();
             var renderer = instance.GetComponent<SpriteRenderer>();
+
+            // Swapped on every Acquire for the same reason the tint below is: instances are pooled
+            // and shared between the two kinds, so one last handed out as a light must get the
+            // shadow material back when it next serves as a shadow. sharedMaterial, never .material -
+            // the latter instances a private copy per renderer, which both leaks and breaks batching
+            // across every blob on screen.
+            Material material = isLight ? ResolveLightMaterial() : shadowMaterial;
+
+            if (material != null && renderer.sharedMaterial != material)
+                renderer.sharedMaterial = material;
 
             Color color = renderer.color;
             color.r = tint.r;
@@ -90,7 +159,8 @@ namespace QuantumUser.View.Managers
                 Target = target,
                 BaseScale = baseScale,
                 IsLight = isLight,
-                Offset = offset
+                Offset = offset,
+                AlphaMultiplier = alphaMultiplier
             };
             active.Add(handle);
             return handle;
@@ -131,7 +201,7 @@ namespace QuantumUser.View.Managers
 
             float maxAlpha = blob.IsLight ? config.LightAlpha : config.GroundAlpha;
             Color color = blob.Renderer.color;
-            color.a = maxAlpha * Mathf.Lerp(config.MinAlphaMultiplier, 1f, falloff);
+            color.a = maxAlpha * Mathf.Lerp(config.MinAlphaMultiplier, 1f, falloff) * blob.AlphaMultiplier;
             blob.Renderer.color = color;
         }
 
@@ -155,5 +225,6 @@ namespace QuantumUser.View.Managers
         internal float BaseScale;
         internal bool IsLight;
         internal Vector2 Offset;
+        internal float AlphaMultiplier = 1f;
     }
 }

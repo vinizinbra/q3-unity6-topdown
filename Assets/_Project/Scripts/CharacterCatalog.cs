@@ -13,8 +13,11 @@ public class CharacterCatalog : ScriptableObject
         public string displayName;
         public AssetRef<EntityPrototype> avatar;
 
-        [Tooltip("The hero's own gameplay prefab (Kai.prefab, Zara.prefab...), shown as a live animated preview in the menu by CharacterPreviewWidget. Deliberately a separate field from Avatar above rather than derived from it: Avatar is an AssetRef<EntityPrototype> resolved through Quantum's asset DB, which has no way back to the source GameObject at runtime. Leave unassigned to show no preview for this character.")]
+        [Tooltip("The hero's own gameplay prefab (Kai.prefab, Zara.prefab...), used to resolve this character's icon sprite and ring colour (see ResolveIconSprite/TryResolveRingColor below). Deliberately a separate field from Avatar above rather than derived from it: Avatar is an AssetRef<EntityPrototype> resolved through Quantum's asset DB, which has no way back to the source GameObject at runtime.")]
         public GameObject viewPrefab;
+
+        [Tooltip("A dedicated, menu-ready display prefab for this character, spawned directly into the menu's 3D scene by CharacterPreviewWidget (at a hand-placed spawn point, not rendered into a RawImage). Unlike viewPrefab this is authored specifically for the menu, so it needs none of the gameplay-only stripping the old RenderTexture approach required. Leave unassigned to show no preview for this character.")]
+        public GameObject menuPrefab;
     }
 
     public Entry[] characters;
@@ -45,6 +48,17 @@ public class CharacterCatalog : ScriptableObject
         {
             if (entry.id == id)
                 return entry.viewPrefab;
+        }
+
+        return null;
+    }
+
+    public GameObject ResolveMenuPrefab(string id)
+    {
+        foreach (var entry in characters)
+        {
+            if (entry.id == id)
+                return entry.menuPrefab;
         }
 
         return null;

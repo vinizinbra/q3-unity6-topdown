@@ -23,6 +23,11 @@ namespace Quantum
         public override void Awake()
         {
             base.Awake();
+
+            // Only makes sense on the local player's own screen - a remote teammate's (or bot's)
+            // weapon range must never leak onto this client, same idiom as TargetView/MovementRingView.
+            executeOnlyOnLocal = true;
+
             rangeLine = GetComponent<LineRenderer>();
         }
 

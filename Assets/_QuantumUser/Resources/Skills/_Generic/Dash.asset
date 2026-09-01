@@ -23,8 +23,7 @@ MonoBehaviour:
   CheckActions: 0
   Actions: []
   Icon: {fileID: -1224975165, guid: 09ab27b92d44c4a54a95d6d0d0b9c281, type: 3}
-  Description: Dash quickly in the direction you're moving, passing harmlessly through
-    enemy projectiles until you arrive or hit a wall.
+  Description: Dash where you're moving, passing safely through enemy projectiles.
   DashSpeed:
     RawValue: 1310720
   DashDistance:

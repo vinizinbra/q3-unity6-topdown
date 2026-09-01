@@ -86,7 +86,30 @@ Max via `ShieldUtility.ApplyFlatShield`.
 - Rank 2: 40% faster; +20% Move Speed while Charged; Discharge resets down to 60% instead of fully
   draining.
 - Rank 3: 40% faster (same as rank 2); +30% Move Speed while Charged; Discharge no longer resets
-  Charge at all (`DischargeRetentionFraction` 100%).
+  Charge at all (`DischargeRetentionFraction` 100%); **and Juggernaut refuses to expire while Brutus
+  is still sitting on a full Charge** (`HoldUntilDischarge`) - if `Duration` runs out while
+  `ChargePoints >= MaxCharge`, `JuggernautSkillData.Tick` returns `false` instead of finishing, so the
+  whole channel (damage reduction, Charged speed, the lot) stays live until he actually cashes the
+  Charge in on an enemy, and ends on that discharge. Without it, a full Charge earned in the last
+  second of the channel is simply thrown away.
+  - The hold keys off **Charge, never the retention fraction** - at rank 3 retention is 100%, so
+    `ChargePoints` stays at Max after a discharge too, and holding on "still Charged" alone would
+    never terminate. `TryDischarge` returns whether it actually fired, and Tick refuses to hold on
+    the tick it did.
+  - `slot->StateTimer` is pinned to exactly 0 for the duration of the hold rather than left running
+    negative - `SkillCooldownUiWidget` prints it straight out as the channel's remaining seconds, so
+    an unclamped overtime reads as "-3.4s" on the HUD.
+  - **Aftershock rides along with it.** `TryEndExplosion` fires from `End`, which only runs via
+    `SkillSystem.FinishSkill`, so the closing blast is deferred too - and it lands on the SAME tick as
+    the final discharge, at the point of contact, with that discharge's own hits already counted in
+    its stacks (`Discharge` increments `JuggernautCharge.UnitsHit` before `End` reads it). Rank 3
+    therefore turns the end of the channel into an aimed one-two rather than a timer that can dump
+    the blast in an empty corridor. Rank 3 Aftershock's own Earthquake `DelayedBlast` is scheduled off
+    that same blast, so it follows to the same place.
+  - Juggernaut's own cooldown only arms in `SkillSystem.FinishSkill`, so the overtime delays the
+    next cast by however long Brutus takes to spend the Charge - the natural price of the free
+    damage reduction, no extra guard needed. A banked spare charge can still cancel-and-recast out
+    of it through the pre-existing `CanCancelAndRecast` path.
 
 **2. Bone Breaker** (`BoneBreakerSkillAction` → `BoneBreakerUpgrade`, new - "Discharge damage
 progression")
@@ -804,3 +827,94 @@ null-check.
    and every child system; a prefab driving colour through Color-over-Lifetime or a material tint will
    ignore it and keep its authored colour. Once a bespoke `accessoryBlockedEffectPrefab` exists, that
    tint can be dropped too (pass null) for the same reason the guard's already is.
+
+---
+
+# 2026-08-30 — Juggernaut Shield made temporary
+
+Player Shield stopped being merely "charge-only" (earned, never regenerates) and became genuinely
+**temporary** on top of that: Brute's Juggernaut Shield now decays entirely a fixed window after the
+last successful gain, rather than sitting banked indefinitely until spent or restored at a Merchant.
+The design goal: a *temporary second life earned through aggression* — Discharge enemies, get a short
+defensive window, keep discharging or lose it — not a stored resource that survives into the next
+encounter untouched.
+
+## What changed
+
+Two new fields on `Shield` (`Shield.qtn`), both 0 by default so nothing except an entity that opts in
+is affected:
+
+- **`TemporaryDuration`** — how long Current survives after the most recent successful grant, seeded
+  once from a new `CharacterData.ShieldTemporaryDuration` (`CharacterSystem.SeedShield`). 0 disables
+  expiration outright — every hero/enemy that never opts in reads it as 0 and the two fields below are
+  simply never touched, so this costs nothing for the common case.
+- **`ExpirationRemaining`** — the live countdown, ticked by `ShieldSystem.TickExpiration` (folded into
+  the existing `ChargeOnly` early-return, since only a charge-only shield can meaningfully expire — a
+  classically recharging enemy/boss shield never reads either field). Hits 0 → `Current` snaps straight
+  to 0 in the same tick. No gradual decay, no conversion to Health, no partial preservation.
+
+**One pool, one timer, by construction.** `ExpirationRemaining` is *reset* to `TemporaryDuration`, never
+added to or stacked — `ShieldUtility.ApplyFlatShield` (the single shared "grant Shield" entry point
+every source in the game already funnels through: Juggernaut Discharge, Bodyguard's Shield reward,
+the Store's `RestoreShieldFoodOfferData`) refreshes it on every successful grant. A second, third,
+fourth Discharge in the same window collapses into the same one timer rather than opening independent
+expirations — there is no way for this to accidentally create several competing countdowns.
+
+**Deliberate interpretation: any successful grant refreshes the timer, not only a Juggernaut
+Discharge specifically.** The alternative — only Discharge refreshes it, leaving Bodyguard's/the
+Store's grants to land on whatever the timer already happened to be — has a real failure mode: a
+grant landing after `ExpirationRemaining` had already run out to 0 would get wiped by
+`TickExpiration` the very next tick, making that grant functionally worthless. Routing the refresh
+through the one shared funnel instead keeps every source consistent and avoids that bug, while the
+actual intent behind "must keep discharging to keep the Shield" still holds: **taking damage, dealing
+weapon damage, and moving never call `ApplyFlatShield`**, so none of them can refresh it — only a
+genuine Shield gain can, exactly per spec.
+
+## Brute's own numbers
+
+`BruteCharacterData.asset`: `BaseMaxShield` raised 20 → **60** (the new Temporary Shield cap — there
+is still no per-normal/Overshield distinction, a single `Shield.Max` covers it exactly as it already
+did before this pass), new `ShieldTemporaryDuration` authored at **6** seconds.
+`JuggernautSkillData.ShieldGainPerHit` is unchanged at **5** per enemy caught by a Discharge — already
+correct for the spec, it just now also refreshes the new expiration timer via the shared
+`ShieldUtility` funnel rather than only capping at Max.
+
+## Not changed
+
+- **Shield-before-Health ordering, the Accessory Guard gate, and Juggernaut's own 50% channel DR** are
+  all untouched — `DamageUtility`'s pipeline reads `Shield.Current` exactly as before; *why* it might
+  be sitting at 0 (spent on damage vs. simply timed out) makes no difference to that pipeline.
+- **No new "Shield expired" signal/event.** `OnShieldBroken`/`ShieldBroken` (the existing "Current
+  crossed from >0 to <=0" hook, today driving `ShieldBroken` shatter VFX and the Shield Breaker Rift
+  Mutation) deliberately does **not** fire on expiration — that hook means "a hit just broke your
+  shield," and firing a shatter/impact effect on a quiet timeout would misrepresent what actually
+  happened. Both HUD widgets already poll `Shield.Current`/`ExpirationRemaining` every frame, so the
+  bar reads correctly either way with no extra plumbing.
+- **Overshield/1.5x-Max semantics** — already fully removed in the 2026-08-25 pass above; nothing left
+  to migrate.
+- **Passive regeneration** — already off for every player (`ChargeOnly`); this pass only adds decay on
+  top, it doesn't touch the regen gate.
+
+## UI
+
+Both Shield readouts (`CharacterUiWidget`, the world-space per-entity bar; `ShieldUiWidget`, the
+player-1-cluster/party-strip bar) poll the two new fields directly, no event needed:
+
+- `CharacterUiWidget.UpdateShieldExpirationWarning` pulses the fill `Image` toward a configurable
+  `shieldWarningColor` once `ExpirationRemaining` drops to/below `shieldWarningThreshold` (1.5s
+  default) — yields to the pre-existing recharge-shine coroutine rather than fighting it for the same
+  `Image.color`.
+- `ShieldUiWidget` does the same pulse and additionally appends a `(X.Xs)` countdown to its text
+  readout while warning.
+- Both are no-ops for anyone with `TemporaryDuration == 0` (everyone except Brute today), so no other
+  hero's Shield bar changes behavior.
+
+## Current status
+
+Code-complete, pending Quantum's `.qtn` codegen for `Shield.qtn`'s two new fields (same "the open
+Editor picks this up automatically" gotcha every other pass in this file notes). Not yet verified in
+Play Mode. `BruteBaseSkill-Juggernaut.asset` still carries its pre-refactor stale
+`OvershieldCapMultiplier` YAML key and its old dead sub-action `Actions` list (`CheckActions: 0`) —
+both are the same pre-existing "generator hasn't been run yet" gap the 2026-08-20 sections above
+already track, untouched by this pass; `Tools > RiftRaiders > Brute > Generate Ascension Assets`
+regenerating that asset will drop the stale key on its own.

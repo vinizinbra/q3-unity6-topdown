@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: -1480122659, guid: 9a944adac56bb4e8dbce2f7bab4127e3, type: 3}
   DisplayName: Vendetta Strike
   RankDescriptions:
-  - Dashing through an enemy guarantees Burn.
-  - Dashing through an enemy Burns it and marks it for Vendetta, even if it has never hit you.
-  - Dashing through an enemy Burns and marks it, and cuts 2s off Overdrive's cooldown or extends an active Overdrive by 1s.
+  - 'Dashing through an enemy guarantees Burn.'
+  - 'Dashing through an enemy Burns it and marks it for Vendetta, even if it has never hit you.'
+  - 'Dashing through an enemy Burns and marks it, and cuts <color=#FD3971>2s</color> off Overdrive''s cooldown or extends it by <color=#FD3971>1s</color>.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 2

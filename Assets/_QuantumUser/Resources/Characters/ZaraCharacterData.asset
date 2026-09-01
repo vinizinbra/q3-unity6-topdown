@@ -31,6 +31,8 @@ MonoBehaviour:
     RawValue: 0
   ShieldRechargeRate:
     RawValue: 0
+  ShieldTemporaryDuration:
+    RawValue: 0
   DamageMultiplier:
     RawValue: 65536
   WeaponDamageMultiplier:
@@ -73,6 +75,8 @@ MonoBehaviour:
     RawValue: 65536
   DamageReduction:
     RawValue: 0
+  DamageTakenMultiplier:
+    RawValue: 65536
   KnockbackTakenMultiplier:
     RawValue: 65536
   HealingReceivedMultiplier:

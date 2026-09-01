@@ -11,6 +11,12 @@ global
     Int32 CurrentPhaseIndex;
     FP PhaseTimer;
 
+    // Reset to false by SurvivalProgressionUtility.Tick the moment CurrentPhaseIndex changes;
+    // consumed by CombatDirectorSystem.Update to fire SurvivalPhase.GuaranteedGroup exactly once
+    // per phase entry, regardless of Breathing/Traversal Challenge/budget. See SurvivalConfig.cs's
+    // own GuaranteedGroup comment.
+    Boolean PhaseGuaranteedSpawnDone;
+
     // Credited by SurvivalPhase.BudgetPerPulse each pulse AND by EnemyLifecycleSystem's refunds on
     // retirement; spent only by CombatDirectorUtility's purchase loop. One shared field, two
     // writers, one reader/spender - no separate refund queue.

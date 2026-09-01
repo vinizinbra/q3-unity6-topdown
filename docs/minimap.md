@@ -65,6 +65,42 @@ simulation.
   **Player markers**: one pooled `RectTransform` per **match player** (`PlayerLink` filter - local
   and remote alike, not `MyLocalPlayer.Slots`, so teammates show up too), repositioned every frame.
 
+  **Elite markers** (`UpdateEliteMarkers`): one pooled `RectTransform` per currently-alive
+  `EnemyDataAsset.Tier == Elite` enemy (`Enemy` filter, skipping `EnemyActionPhase.Dead`),
+  repositioned every frame - same seen/stale-sweep pooling shape as player markers, just keyed by
+  the enemy's own `EntityRef` and gated on Tier instead of `PlayerLink`. One generic marker
+  (`eliteMarkerPrefab`) for every Elite regardless of which `EnemyDataAsset` it is, no per-enemy-type
+  sprite - Elites already get special always-relevant/never-retiring treatment from
+  `EnemyLifecycleSystem` (see CLAUDE.md's own "Boss Phase Trigger" section), so surfacing them on
+  the map follows the same reasoning. Shares the identical `OverlayPair`/full-map-panel machinery
+  every other overlay here does, so it shows on both map surfaces for free. Shows whatever sprite
+  `eliteMarkerPrefab`'s own `Image` is authored with as-is - no per-entity-type sprite override.
+  Leave `eliteMarkerPrefab` unassigned to disable Elite markers entirely.
+
+  **Special markers** (`UpdateSpecialMarkers`): identical shape to Elite markers, one pooled
+  `RectTransform` per currently-alive enemy with `EnemyDataAsset.Economy.Persistent == true` AND
+  `Tier != Elite` - a persistent enemy that isn't actually an Elite (e.g. a boss's own persistent
+  summon), which still gets the same always-relevant/never-retiring treatment from
+  `EnemyLifecycleSystem`. Deliberately its own `specialMarkerPrefab` rather than reusing the Elite
+  marker, since a Special isn't an Elite and shouldn't read as one on the map. Leave
+  `specialMarkerPrefab` unassigned to disable Special markers entirely.
+
+  **Clear-Enemy markers** (`UpdateClearEnemyMarkers`): one pooled marker per every currently-alive
+  ORDINARY enemy - excluding `Tier == Elite`/`Economy.Persistent == true`, which already get their
+  own Elite/Special marker above, so a single enemy never shows two markers at once - but ONLY while
+  `GameState.CurrentState == Breathing` AND `Global.BreathingAreaSecured == false` - the same "CLEAR
+  ALL ENEMIES..." window
+  `BreathingCountdownWidget`'s `notSecuredRoot` shows (see `docs/run-phase.md`'s "Elite / Boss
+  phases" section - Breathing holds `PhaseTimer` open until every alive enemy is gone, mirrored into
+  `BreathingAreaSecured`). Outside that window every existing marker is torn down immediately
+  (not left to the stale sweep) - covers both "the area just secured" and "`GameState` left
+  Breathing some other way while enemies were still up." Ordinary enemies aren't Persistent, so
+  unlike Elite/Special they can expire via `EnemyLifecycleSystem`'s own `Irrelevant -> Retired`
+  timeout (`f.Destroy`, see `CombatDirectorUtility.RetireEnemy`) with no signal to react to - the
+  same seen/stale-sweep pooling shape every marker pass here uses is what tears its marker down the
+  instant `frame.Filter<Enemy, Transform3D>()` stops returning it, identical to a normal kill. Leave
+  `clearEnemyMarkerPrefab` unassigned to disable Clear-Enemy markers entirely.
+
   **Current chunk** (`ResolveCurrentChunk`): whichever chunk contains *this instance's own* bound
   local player, via `MyLocalPlayer.Slots[localSlotIndex]` - the one place this class needs
   local-player awareness for chunk state.
@@ -75,6 +111,19 @@ simulation.
   this. Expects `mapRect` to be nested inside a separately-authored masked container (fixed
   position/size, clips whatever overflows) that defines the actual visible viewport - the standard
   "content pans, mask stays put" technique.
+
+  **Toggle** (`toggleButton`/`fullMapPanel`, optional): clicking `toggleButton` flips `fullMapPanel`
+  (a `JuicyGameobject` -
+  `Assets/3rd-party/PachaGames/Scripts/Runtime/Util/JuicyGameobject.cs` - or one found on
+  `fullMapImage`'s own `GameObject` if `fullMapPanel` is unassigned) active/inactive via its own
+  `SetActive`, which scales from zero and activates on `Show`/`SetActive(true)` and scales to zero
+  THEN deactivates on `Hide`/`SetActive(false)`, instead of an instant on/off snap - lets the corner
+  minimap itself act as the button that opens/closes the big map, no input-system binding needed.
+  Reads the panel's own live `gameObject.activeSelf` rather than tracking a separate open/closed
+  bool, so its authored starting state (normally inactive) and anything else that shows/hides it
+  later stay the source of truth. `toggleButton` is wired in `Awake` (not `QStart`) since it's plain
+  Unity UI, not simulation-driven. Leave `toggleButton` unassigned to disable click-to-toggle
+  entirely - the panel can still be opened by whatever else drives its active state.
 
   **Full-map panel** (`fullMapImage`, optional): a second surface showing the WHOLE level at once,
   unpanned/unmasked (e.g. a Tab-key panel). The *texture* is literally shared - both `RawImage`s
@@ -120,13 +169,20 @@ though:
    viewport, and nest `mapRect` (square, centered pivot) inside it - `mapRect` pans every frame
    (`CenterOnLocalPlayer`), so it should be sized to cover the whole map, not just the viewport.
 3. Assign a `RawImage` (`mapImage`) sized to fill `mapRect`.
-4. Author an icon template and a player-marker template (plain `Image`s are enough) as child
-   objects under the `MinimapWidget` GameObject, assign both to `iconPrefab`/`playerMarkerPrefab`.
-5. Assign `chunkTypeSprites[]` (one sprite per `ChunkType` value, in enum order: `LobbyStart`,
-   `Enemy`, `Boss`, `Merchant`, `Traversal`, `HealingShrine`, `CursedRift`, `Blacksmith` -
-   `HealingShrine`/`CursedRift` added 2026-08-14 for the two Breathing POI chunks, see
-   `docs/breathing-poi.md`; `Blacksmith` since, see `docs/store-blacksmith.md`) on each instance -
-   leave `Enemy`/`Traversal` empty.
+4. Author an icon template, a player-marker template, an Elite-marker template, a Special-marker
+   template, and a Clear-Enemy-marker template (plain `Image`s are enough) as child objects under
+   the `MinimapWidget` GameObject, assign to
+   `iconPrefab`/`playerMarkerPrefab`/`eliteMarkerPrefab`/`specialMarkerPrefab`/
+   `clearEnemyMarkerPrefab` respectively - a distinct color/shape from the player marker (and from
+   each other) is worth authoring so an Elite reads as a threat, a Special reads as its own thing
+   (neither a teammate nor an Elite), and a Clear-Enemy marker reads as an ordinary, temporary
+   threat rather than either.
+5. Assign `chunkTypeSprites` (a `List<ChunkTypeSpriteEntry>` - each entry an explicit `ChunkType` +
+   `Sprite` pair, not a positional array, so entries can be added/reordered freely; add one entry
+   per `ChunkType` that should show an icon - `Boss`, `Merchant`, `LobbyStart`, `HealingShrine`,
+   `CursedRift` (added 2026-08-14 for the two Breathing POI chunks, see `docs/breathing-poi.md`),
+   `Blacksmith` (see `docs/store-blacksmith.md`) - on each instance; leave `Enemy`/`Traversal` out
+   of the list (or their `Sprite` unassigned) so they show no icon.
 6. Set `worldExtent`/`worldCenter` to match the actual authored playable world size.
 7. Set `outlineTexels` > 0 (and consider a lower `worldUnitsPerTexel`, e.g. 5, for more texel
    headroom) to enable the level outline; leave at 0 to disable it entirely.
@@ -135,6 +191,13 @@ though:
    layer of the same size over it and assign that instead. Tune `fullMapOverlayScale` so the
    shared icon/marker templates read at the right size on the bigger surface (they're clones of
    the same prefabs the minimap uses, so their authored size is minimap-sized).
+9. To let the corner minimap itself open/close the full-map panel: add a `Button` (e.g. covering
+   the minimap's own masked viewport rect, `Image` + `Raycast Target` on) and assign it to
+   `toggleButton`; add a `JuicyGameobject` component to the panel's root (backdrop +
+   `fullMapImage`/`fullMapRect`, whatever should show/hide together) and assign IT to
+   `fullMapPanel`, leaving that root **inactive** in the scene by default so the big map starts
+   closed. An `EventSystem` must exist in the scene for the click to register, same as any other
+   Unity UI `Button`.
 
 Not yet manually verified end-to-end in-Editor.
 

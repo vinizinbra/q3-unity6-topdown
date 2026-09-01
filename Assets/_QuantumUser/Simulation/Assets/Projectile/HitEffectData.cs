@@ -85,5 +85,16 @@ namespace Quantum
         // (Quantum's per-tick event dedup swallowing a multi-pellet weapon's overlapping hits).
         // 0 for anything that isn't a fanned pellet (a single-shot weapon, a skill, an AoE tick).
         public byte HitIndex;
+
+        // The spatial extent of the hit that produced this context, for any effect that wants to
+        // care WHERE within a blast a target was caught - see SkillFocusUtility (Focused Power's
+        // damage-toward-the-center falloff).
+        //
+        // Set only by the radius/shape/collider overlap paths in HitEffectUtility. AreaRadius stays
+        // 0 for every direct hit and every single-target skill, and 0 is the explicit "this hit has
+        // no meaningful area" reading - which is what lets a distance-from-center effect degrade to
+        // a plain no-op for those instead of needing to know which skills are areas.
+        public FPVector3 AreaCenter;
+        public FP AreaRadius;
     }
 }

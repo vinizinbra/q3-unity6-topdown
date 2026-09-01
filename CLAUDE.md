@@ -8,6 +8,31 @@ A continuous-spawn combat pacing system (Survival Progression / Combat Director 
 
 Short version: the code compiles and is registered in `SystemSetup.User.cs`, and as of 2026-08-07 `SurvivalConfig`/`EnemyGroupConfig`/`DirectorConfig`/`LifecycleConfig`/`EnemySpawnProfile` asset instances all exist, are authored, and are assigned to `RuntimeConfig` - the Director should actually spawn at runtime. `LifecycleConfig.RelevantRange` was found less than `DirectorConfig.SpawnRingRadiusMax` (the exact case the `ValidateOnce` guardrail warns about) and has been fixed - see `docs/survival-director.md`'s authoring checklist item 6. A first playable content pass was also authored the same day: all 11 `BaseEnemies`' action `Damage` values were rebalanced (one, `HeavySlammer`, was doing literal 0 damage), and `Tools > RiftRaiders > Generate Survival Director Content` (a new Editor generator script, not yet run) will author 10 `EnemyGroupConfig` encounters plus a full 6-phase `SurvivalConfig` timeline tuned for a ~15 minute run - see `docs/survival-director.md`'s "First playable content pass" section.
 
+**2026-08-30: Elite spawns are now gated on chunk connectivity.** `Chunk.qtn` gained a persisted
+adjacency graph (`ConnectedChunks`/`ConnectedChunkCount`), computed once by
+`LevelGenerationSystem.ComputeChunkConnectivity` right after a level finishes generating, from data
+placement already produces (reuses the existing `AreAdjacent` rectangle test). A new
+`ChunkConnectivityUtility` gates `GroupSpawnerUtility.TrySpawnGroup`'s ring-anchor retry loop for
+Elite+ ("major") groups only: a candidate anchor whose chunk isn't the nearest player's own chunk or
+directly connected to it is rejected and retried, so an Elite can no longer spawn in a room that's
+merely close in world-space (as `plan.GlobalCentroid` ring placement alone would allow) but requires
+a detour to actually reach. See `docs/survival-director.md`'s "Chunk Connectivity" section. Compiles
+once codegen runs; needs no Editor authoring at all. Not yet manually verified in-Editor.
+
+**2026-08-31: a phase can now spawn a single enemy directly, with no `EnemyGroupConfig` asset
+needed to wrap it.** `SurvivalPhase.AllowedEnemies` (`EnemySpawnEntry[]` - `EnemyData`/`Faction`/
+`Weight`/`MinimumSurvivalTime`/`MaximumSurvivalTime`/`MaxConcurrent`, the same selection fields
+`EnemyGroupConfig` itself has) is `AllowedGroups`' sibling: `CombatDirectorUtility.TrySelectSpawn`
+(renamed from `TrySelectGroup`) rolls both lists into one shared weighted-draw candidate pool each
+purchase, so a phase can freely mix whole encounters and lone spawns in the same pulse.
+`GroupSpawnerUtility.TrySpawnEnemy` is the placement counterpart to `TrySpawnGroup` - same ring-
+anchor/ground/chunk-connectivity-for-majors loop, minus the formation math, reusing the same
+private `TryValidateMember`/`SpawnMember` helpers a group member uses (`SourceGroup` ends up
+default/inert since there's no owning group). No `.qtn` change, no codegen dependency - plain C#
+`AssetObject` fields only. See `docs/survival-director.md`'s "Direct enemy spawns" section. No
+Editor generator authors `AllowedEnemies` yet (every content generator rebuilds `Phases[]`
+wholesale) - it's Inspector-only for now.
+
 ## Run Curves & Co-op Scaling
 
 A consolidated `BalanceConfig` asset (`Assets/_QuantumUser/Simulation/Balance/`) holds time-based "run curves" (one `RunCurveAnchor` row per anchor minute over a 12-minute run, `CurveChannel`) and player-count "co-op scaling" (flat P1-P4 lookups, `CoopGlobalKey` + a per-`EnemyTier` `CoopHpRow` table), with three consumers: `EnemyBalanceUtility.ResolveEnemyStats` combines the `EnemyHp`/`EnemyDmg` curves + `CoopHp`/`EnemyDamage` co-op rows with the pre-existing per-Tier HP baseline (`EnemyTierStatsConfig.MaxHealth`, **not** duplicated here) into a once-per-spawn `EnemyRuntimeStats` (HP + a generic damage multiplier) - baked into `Health.MaxHealth` and a new `EnemyCombatModifiers.DamageMultiplier` component from `EnemySystem.SeedFromEnemyData`, never re-evaluated after spawn, and actually applied to every hit an enemy lands via `HitEffectUtility.ScaleByEnemyDamageMultiplier` (the single funnel every enemy delivery type - melee/area/beam/projectile alike - ultimately calls). `CombatDirectorUtility.ResolveBudgetMultiplier` combines the `DirectorBudget` curve + co-op row into a multiplier applied to `phase.BudgetPerPulse` every Director pulse (Survival Director's own "Milestone 7", see `docs/survival-director.md`) - recomputed every pulse, not a one-time snapshot. `ExperienceUtility.ResolveXpRequirementMultiplier` applies the `XpRequirement` co-op row (no paired curve - `ExperienceConfig.RequiredExperience` already has its own per-level curve) to the level-up threshold in `ExperienceUtility.Grant`. `ExpectedPlayerDps`/`EliteFrequency` remain unconsumed. Full design, the exact curve/co-op numbers, and current status: **`docs/run-curves-coop-scaling.md`**. Read it before touching anything run-curve/co-op-scaling/enemy-HP-baseline/DirectorBudget-scaling/XP-requirement-scaling related.
@@ -42,37 +67,138 @@ already used) so multiple drops off one kill don't stack exactly on top of each 
 ## Rift Mutations
 
 Two level-up pools alongside Global Upgrade/Weapon Perk/Hero Ascension - **Rift Mutation**
-(`LevelUpPoolKind.RiftMutation`/`LevelUpCategory.RiftMutation`, `LevelUpConfig.RiftMutations`, 14
-entries) and, as of 2026-08-14, a second independently-rollable **Rift Mark Mutation** pool
-(`LevelUpPoolKind.RiftMarkMutation`/`LevelUpCategory.RiftMarkMutation`,
+(`LevelUpPoolKind.RiftMutation`/`LevelUpCategory.RiftMutation`, `LevelUpConfig.RiftMutations`, 27
+entries as of 2026-08-27) and, as of 2026-08-14, a second independently-rollable **Rift Mark
+Mutation** pool (`LevelUpPoolKind.RiftMarkMutation`/`LevelUpCategory.RiftMarkMutation`,
 `LevelUpConfig.RiftMarkMutations`, 11 entries - previously folded into the same pool as Rift
 Mutation, split out so a designer can pace/gate the two independently via
 `LevelUpConfig.LevelSequence`). Both share one `RiftMutationData`/`RiftMutationUtility`/
 `RiftMutationPicks` hierarchy (see `Assets/_QuantumUser/Simulation/Assets/RiftMutation/`) - a single
 shared pick-history component, since both pools draw from the same catalog and their assets never
 overlap - for **rare, non-stackable, run-wide** effects: a one-shot build-defining tradeoff (Glass
-Core, Heavy Arsenal - Rift Mutation), a new reactive rule (Shield Breaker, Critical Focus - Rift
-Mutation) or Rift-Mark-on-trigger effect (Critical Fracture, Last Stand - Rift Mark Mutation), or
-both (Infinite Momentum). "Non-stackable" is enforced pool-wide (`RiftMutationPicks`) across BOTH
-pools, unlike Global Upgrade's opt-in per-asset `MaxPicks`. Cursed Rift's own reward roll
+Core, Heavy Arsenal), a new reactive rule (Adrenaline Kick, Critical Focus), a run-wide encounter/economy
+change (Overpopulation, Elite Territory, Greed), or a Rift-Mark-on-trigger effect (Critical Fracture,
+Last Stand - Rift Mark Mutation). "Non-stackable" is enforced pool-wide (`RiftMutationPicks`) across
+BOTH pools, unlike Global Upgrade's opt-in per-asset `MaxPicks`. Cursed Rift's own reward roll
 (`LevelUpUtility.RollMutationOptions`, see the Breathing Phase section below) deliberately keeps
-drawing only from Rift Mutation, never Rift Mark Mutation. New `RiftMutationReactionSystem` reacts to
-crit/dash-activation/shield-break signals for the mutations that need more than a one-shot
-`CharacterStats` bake. Greed introduced a new **Rift Shard** currency system (`RiftShard.qtn`/
-`RiftShards.qtn`/`RiftShardConfig`/`RiftShardUtility`/`RiftShardOrbSystem`), mirroring `ExpOrb`'s
-drop-and-collect pattern. Full design, the complete 25-mutation roster split across both pools, and
+drawing only from Rift Mutation, never Rift Mark Mutation. `RiftMutationReactionSystem` handles the
+mutations needing more than a one-shot `CharacterStats` bake, off `OnCriticalHit`/`OnEntityKilled`/
+`OnAccessoryBlocked`. Greed introduced the **Rift Shard** currency system (`RiftShards.qtn`/
+`RiftShardConfig`/`RiftShardUtility`, collected via the shared `CurrencyOrb`), mirroring `ExpOrb`'s
+drop-and-collect pattern. Full design, the complete 38-mutation roster split across both pools, and
 current status: **`docs/rift-mutations.md`**. Read it before touching anything
 Rift-Mutation/Rift-Mark-Mutation-related.
 
-Short version: the code compiles and is registered in `SystemSetup.User.cs`. `Tools/RiftRaiders/
-Generate Rift Mutation Assets` needs re-running after the two-pool split - it already ran once
-against the old single-list design, so `LevelUpConfig.asset`'s `RiftMutations` list still holds all
-25 GUIDs (11 of which now belong in `RiftMarkMutations`) until it's run again.
-`HeroInfoPopupWidget.riftMarkContent` (the tab-hold party summary popup's new 4th list) still needs a
+**2026-08-27 rework.** The core pool was rebuilt around the **Accessory** now that it (not Shield) is
+the defensive system - every Shield dependency is gone from Rift Mutations, though the Shield system
+itself is untouched. Glass Core doubles Accessory durability instead of Shield; Last Bastion disables
+the Accessory outright via a real `AccessoryGuard.Disabled` availability flag rather than pinning
+durability at 0 (which is what makes the Store correctly stop offering a service); Shield Breaker's role was
+folded into **Adrenaline Kick**, and **All or Nothing was cut entirely** - it was the only consumer of
+`LevelUpUtility`'s single-choice/rarity-shift machinery, so that whole `rarityShift` parameter chain
+came out with it. Fifteen mutations are new. Four are run-level (Overpopulation, Elite Territory, **Blood Tithe** and
+**Escalation** - the latter two renamed from Blood Money/Pressure Cooker to free those names for the
+personal, player-scoped mutations of the same flavour). Eleven are player-scoped: Spare Parts,
+Adrenaline Kick, Money Talks, Danger Pay, Overkill, Scavenger Rush, Blood Money, No Safety Net,
+Second Wind, Dead Weight, Pressure Cooker. **Money Talks** is
+the one that needed a genuinely new shape: it bakes a RULE rather than a number, since its bonus
+(+5% all damage per 100 Coins held, capped at +40%) is resolved live per hit from the wallet -
+`CoinUtility.ResolveDamageBonus`, called by `DamageUtility.ResolveOutgoingDamage` - so it rises as
+you save and falls the instant you spend at the Store.
+
+The reusable pieces that pass added - **reach for these before writing anything mutation-specific**:
+
+- **`MutationScope` (Player/Run) + `Frame.Global.RunMutationPicks`** (`QTN/RiftMutation/RunMutations.qtn`)
+  - a Run-scope mutation writes shared state and is applied exactly ONCE per run no matter how many
+  players are offered it. `RiftMutationUtility.Grant`/`IsBlocked` own the guard, so no call site has to
+  think about co-op determinism.
+- **`EncounterModifierUtility`** - the single reader of every run-wide encounter modifier (enemy Max
+  Health, enemy damage, spawn density, Elite group weighting, Rift Shard gain, Pressure Cooker's
+  phase ramp). All are bonuses defaulting to 0 and read as `1 + bonus`, so an untouched run is an exact
+  no-op. Replaced `RiftShards.qtn`'s lone `EnemyHealthBonusMultiplier`. Density scales all THREE
+  Director levers together (budget accrual, `MaxAliveEnemies`, `TargetPressure`) exactly as the
+  pre-existing `SplitThreatMultiplier` does - scaling one alone just moves the bottleneck.
+- **`IsEligible(Frame, EntityRef)` on `GlobalUpgradeData` and `RiftMutationData`** - the prerequisite
+  hook `PassiveUpgradeData`/`SkillActionData` already had, extended to the two pools that lacked it.
+  Default true. For mutations it is checked inside `RiftMutationUtility.IsBlocked`, so one override
+  covers level-ups, Chests, Cursed Rift and debug grants at once. The codebase idiom is a capability
+  QUERY (`f.Has<T>` / a state helper), never a string tag - Accessory-dependent mutations gate on
+  `AccessoryGuardUtility.IsAvailable`, and Dash Charge suppresses itself on "is my ceiling capped?"
+  rather than naming Dead Weight.
+- **`SkillSystem.ResolveEffectiveMaxStacks`** - `min(MaxStacks, DashChargeHardCap)`, read at every
+  availability point. Dead Weight's cap is expressed HERE rather than by subtracting from MaxStacks,
+  which is what lets an already-owned +1 Charge stay owned but suppressed, keeps the cap authoritative
+  under any later stacking, and leaves Dash RESTORE/BYPASS mechanics working untouched.
+- **`MutationModifierUtility`** - the single composition point for every LIVE conditional player
+  modifier (Money Talks' wallet, Danger Pay's health threshold, No Safety Net's Accessory state,
+  Pressure Cooker's safe-time streak). One term in `ResolveOutgoingDamage` instead of one line per
+  mutation, so the damage pipeline stays a fixed length as the roster grows.
+- **`MutationTimerUtility`** - per-player deterministic timers, ticked off `f.DeltaTime` from
+  `StatusEffectSystem`'s existing per-entity iteration rather than a new system (that filter already
+  covers exactly the right entities, and already hosts `LastStandCooldownRemaining`).
+- **`OverkillUtility`** - excess-damage blast. `DamageUtility`'s unclamped post-hit health already IS
+  the excess, so this needed no damage-pipeline restructuring; recursion is bounded by reusing the
+  existing `isChainedExplosion` flag rather than a new depth counter.
+- **`signal OnCollectibleCollected(collector, CurrencyOrbType)`** (`CurrencyOrb.qtn`) and **`signal
+  OnAccessoryRecovered(owner, recoverer)`** (`AccessoryGuard.qtn`) - two generic hooks. The first
+  fires only from the currency-orb path, so "valid collectible" excludes Accessory recoveries/shop
+  purchases structurally; the second fires only on a real world recovery, never on a Merchant
+  Restore, and always reports the OWNER.
+- **`RiftMutationData.IncompatibleWith`** - data-driven mutual exclusion, checked SYMMETRICALLY
+  (`IsBlocked`), so a pair only needs authoring on one side and can't half-work if someone forgets to
+  mirror it. **No pair is currently authored** - Glass Core / Infinite Momentum needed the rule only
+  while Glass Core set Max Health to an absolute 1; once it became a plain x0.5 multiplier the 5%
+  health cost was a real price again. So the path exists but is unexercised.
+- **`signal OnAccessoryBlocked(owner, attacker, broken)`** + **`AccessoryEmergencyReserve`** +
+  `AccessoryGuardUtility.Disable`/`ScaleMaxDurability` - the generic Accessory hooks. The signal fires
+  only on a genuine block (never on recovery/purchase/non-block destruction); the reserve is a
+  "would-be break instead consumes a charge" primitive whose `Charges` nothing ever refills, which is
+  what makes Spare Parts' once-per-run structural rather than policed.
+- **`WeaponSystem.ApplyOwnerWeaponModifiers`** - a new stage of every `Equip` (after perks and hero
+  modifiers) applying `CharacterStats.MagazineSizeBonus`/`MagazineSizeOverride`. `Weapon.MagazineSize`
+  is a BAKED absolute that `SeedStats` resets, which is why the old One in the Chamber silently died on
+  the next weapon pickup. Same dual-call precedent (`Equip` + direct from the granting asset) that
+  `ApplyPixieExplosiveWeapon` already set. Damage/fire rate/reload/pierce need nothing here - already
+  live-resolved `CharacterStats` multipliers.
+- **`SkillFocusUtility` + `HitEffectContext.AreaCenter`/`AreaRadius`** - a generic normalized
+  distance-to-center damage multiplier for skill areas (Focused Power). `AreaRadius == 0` is the
+  explicit "no meaningful spatial area" reading, so a direct hit or single-target cast is an exact
+  no-op and no hero is ever named.
+- **`SkillSystem.ResetCooldown`** (idempotent - two sources firing on the same block still leave one
+  ready Dash, never banked charges) and **emergency activation**
+  (`TryPayEmergencyActivation`, Infinite Momentum's paid Dash - a direct health write, never
+  `DamageUtility.ApplyDamage`, so it can't roll crit, count as hostile damage, interrupt a revive
+  channel, or cost a durability point). Unlimited, refused ONLY at the 1-health floor - above it the
+  player pays what they can and lands at 1 if short. Both obvious alternatives are wrong: clamping
+  the result at 1 with no gate makes every Dash at 1 health free, while demanding the full price
+  leave 1 behind blocks the Dash exactly when a low player needs to escape.
+- **`CharacterStats.WeaponStaggerChance`/`Duration`** - one generic roll in
+  `DamageUtility.TryApplyWeaponStagger` beside `OnWeaponHitLanded`, routed through
+  `StatusEffectUtility.ApplyStun` so per-tier hard-CC immunity applies with no tier check of its own.
+- **`DamageUtility.RangeDamageNearThreshold`/`FarThreshold`** (5 / 10, was 5 / 12) widened to
+  `internal`, so Longshot's bonus pierce and Close Quarters' kill burst key off the same numbers the
+  damage falloff does rather than second copies.
+- **`RiftMutationDebugUtility`** - log-only (no UI): active mutations per player, run-wide modifiers
+  and what they resolve to, Accessory durability, Spare Parts charges, the Critical Focus counter,
+  emergency-dash availability, and final weapon stats. `LogFiltered` fires from `IsBlocked` naming the
+  mutation and reason, which is otherwise completely invisible - a filtered mutation just stops
+  appearing.
+
+Short version: the simulation code is written and `RiftMutationReactionSystem` is registered in
+`SystemSetup.User.cs`, but **the 2026-08-27 pass has not been compiled or verified in-Editor** - the
+changed `.qtn` files (`CharacterStats.qtn`, `LevelUp.qtn`, `Accessory/AccessoryGuard.qtn`,
+`RiftShards.qtn`, new `RiftMutation/RunMutations.qtn`) need Quantum's DSL codegen to run first. Then:
+run `Tools/RiftRaiders/Generate Rift Mutation Assets` (authors the 7 new assets, retunes the 9
+rewritten ones, wires `Scope`/`IncompatibleWith`, rebuilds both `LevelUpConfig` lists) and
+hand-delete the orphaned `ShieldBreaker.asset`/`AllOrNothing.asset`/`ImpactDrive.asset`. That re-run also repairs a real
+pre-existing authoring bug: `RiftMarkMutations` currently holds **12** entries with `HeavyFracture`
+duplicated where `LongFracture` should be, so that mutation has had double weight and could be drawn
+twice in one roll. Every numeric value in this pass is a decisive placeholder pending a balance pass.
+`HeroInfoPopupWidget.riftMarkContent` (the tab-hold party summary popup's 4th list) still needs a
 scene Transform assigned - no null guard, so it must be wired before a Rift Mark Mutation pick is
 ever recorded. Same gap `ExpOrb` itself once had: no `RiftShardOrb` prototype prefab exists yet and
-`RuntimeConfig.RiftShardConfig`/`RiftShardPrototype` aren't assigned, so Greed's currency half won't
-drop or credit anything at runtime until that's authored in the Editor.
+`RuntimeConfig.RiftShardConfig`/`RiftShardPrototype` aren't assigned, so Greed/Blood Money's currency
+half won't drop or credit anything at runtime until that's authored in the Editor.
 
 ## Weapon Perks
 
@@ -118,6 +244,8 @@ Brute's Hero Ascension pool - previously fragmented across a 4-trait Protector A
 **Juggernaut and Bodyguard were rebuilt on the charge-only Shield (2026-08-25)** - see "Recoverable Accessory Guard" below for the Shield model itself. Juggernaut's Discharge Shield gain is now a plain `ApplyFlatShield` capped at Max (Overshield is gone), which makes it Brutus's ONLY self-sufficient Shield source and therefore what keeps his own Accessory on his head. **Bodyguard no longer restores Shield at all**: on dash complete it grants a **Free Hit Guard** (the generic one-shot negation primitive) to **Brute AND every ally** within 6m/8m/8m - 2.5s at R1, 3.5s at R2+ - and pays Brute back **10/15 Shield when one of those guards actually blocks a hit**, with R3 additionally releasing a 3m knockback shockwave around whoever it saved (`BruteAscensionUtility.ApplyRadialKnockback`, a new knockback-only sibling of `ApplyRadialStunDamage`). Delivery shape is unchanged from the pre-rework line - still `Phase = End`, one radius query at the dash's end point (a `Begin | OnGoing | End` sweep was built and deliberately reverted). Brute is a full-value recipient, which closes a real loop at R2-3 (guard yourself, eat a hit, get Shield back) - and that makes `EnemyMovementUtility.FindPlayersInRadiusIncludingDashing` **load-bearing rather than defensive**: firing at dash End means the broadphase was built with Brute still on `IgnoreProjectile`, so the narrow Player mask drops him 100% of the time (the exact 2026-08-20 "Bodyguard never shielded Brute himself" bug). New `BodyguardUpgrade` component carries the rank-resolved values for the new `BruteBodyguardReactionSystem` (registered beside `BruteProtectorReactionSystem`), which reacts to `OnFreeHitGuardConsumed` - the reward deliberately lives with the ability, never in the primitive. `StatusEffects.AllyShieldRestoreCooldownRemaining` was renamed `AllyGuardGrantCooldownRemaining` and still paces per-RECIPIENT (Brute included). `BodyguardSkillAction`'s old `ShieldRestore`/`SelfEffectMultiplier`/`DamageReductionAmount`/`DamageReductionDuration` are gone.
 
 Short version: the code compiles once codegen picks up the changed `.qtn` components (`JuggernautAscensions.qtn`, `ProtectorAura.qtn`, `JuggernautLaunched.qtn`, `StatusEffects.qtn`) and is registered in `SystemSetup.User.cs`. `BruteAscensionAssetGenerator.cs` (`Tools > RiftRaiders > Brute > Generate Ascension Assets`) replaces the two old generators and is pointed at each surviving asset's verified live path (the old `BruteProtectorAssetGenerator`'s own path constants had drifted out of sync with reality - see the doc's own "Asset path drift" section). It was run once under the earlier `PassiveUpgradeData` design for the 4 Juggernaut lines; after converting them to `SkillActionData` the 4 stale assets were deleted by hand and `BruteCharacterData.PassiveUpgrades` trimmed back to Iron Presence/Guardian, but the generator still needs re-running to author the 4 new Hero-Skill-Ascension assets and wire them into `BruteBaseSkill-Juggernaut.Actions`. `JuggernautSkillData.Damage` (30) is a placeholder pending a real balance pass. Not yet manually verified end-to-end in-Editor.
+
+**Juggernaut Shield became genuinely temporary, not just charge-only (2026-08-30).** `Shield.qtn` gained `TemporaryDuration`/`ExpirationRemaining` (both 0 by default - opt-in, Brute is the only hero authoring `CharacterData.ShieldTemporaryDuration` above 0, at 6s) - `Current` now snaps straight to 0 the instant `ExpirationRemaining` counts down, no gradual decay, no HP conversion, no carry-over between encounters. One pool, one timer: `ShieldUtility.ApplyFlatShield` (the single funnel every grant already used - Discharge, Bodyguard's reward, the Store's Shield food offer) resets the same shared timer on every successful gain rather than opening a new one per grant, while damage/weapon-hits/movement never call that path so none of them can refresh it. `BaseMaxShield` raised 20 → 60 (the new Temporary Shield cap - still a single `Shield.Max`, no separate Overshield concept, which was already removed in the 2026-08-25 pass below). Both HUD Shield bars (`CharacterUiWidget`, `ShieldUiWidget`) pulse toward a warning color once the countdown drops below a threshold. See `docs/brute-ascensions.md`'s own "2026-08-30" section for the full writeup and the deliberate call on which grants refresh the timer.
 
 ## Max — Ascensions (Overdrive / Vendetta / Fire Mastery)
 
@@ -513,6 +641,22 @@ Interaction/Base-Skill redirect, per-player input lock), and **`docs/choice-wind
 before touching anything Breathing/Healing-Shrine/Cursed-Rift/Context-Interaction/Choice-Window/
 per-player-currency related.
 
+**2026-08-29: `PoiUsagePolicy` gained a `Cooldown` case** - a per-player, real-time cooldown
+instead of a once-per-Break limit, meant to let a POI work as an anytime tool (usable in Combat
+too, not just Breathing) with a repeatable time cost rather than a single use per Break. The
+duration itself lives on the POI's own component (`HealingShrine.CooldownDuration`, new field,
+same convention `HealPercent` already uses), not in the generic `Poi.qtn` vocabulary.
+`PoiUsageEntry` gained a `CooldownRemaining` field, ticked down every frame by
+`PoiUsageUtility.TickCooldowns` - called once per `PoiUsage`-carrying player entity per tick from
+the existing `PoiActivationSystem` (one more loop in the same generic per-tick POI-infra pass, this
+one keyed by player rather than by POI). Deliberately decays by `f.DeltaTime` rather than comparing
+against a stored timestamp, since `Global.SurvivalTime` itself freezes during a Breathing Break
+(see "Run Curves & Co-op Scaling" above / `docs/run-phase.md`'s "Independent timers") - a
+timestamp-based cooldown would silently pause too, which isn't the intent. Healing Shrine is the
+first candidate for this policy (see `docs/breathing-poi.md`'s own "Cooldown" bullet), but nothing
+about it is Healing-Shrine-specific - any future POI's own component can add its own duration field
+and opt in the same way.
+
 Short version: the code compiles once codegen picks up every new/changed `.qtn` file
 (`GameState.qtn` - now also `BreathingSkipVote`, `CharacterStats.qtn`, `Poi.qtn`,
 `HealingShrine.qtn`, `CursedRift.qtn`, `ContextInteraction.qtn`, `Coins.qtn`/`RiftShards.qtn`),
@@ -530,7 +674,10 @@ hand before anything shows up at runtime: interleave `IsBreathing = true` entrie
 `SurvivalConfig.Phases[]`; assign `RuntimeConfig.CursedRiftConfig` (`QuantumMenuConfig.asset`);
 hand-place `HealingShrine`/`CursedRift` `EntityPrototype`s in a level, both now needing a real
 `Interactable` component (`HealingShrine.prefab` already has one authored with a matching Radius,
-but `Kind` still needs flipping from its stale default to `HealingShrine`) - a rough
+but `Kind` still needs flipping from its stale default to `HealingShrine`; its own `HealingShrine`
+component still needs `UsagePolicy`/`CooldownDuration`/`Availability.AvailableInCombat` authored if
+the new Cooldown policy above is what's wanted for it, rather than the original Breathing-only
+once-per-Break behavior) - a rough
 `HealingShrine.prefab` and an in-progress `CursedShrine.prefab` (still on the wrong
 `QPrototypeHealingShrine` component, mid-transition) already exist under
 `Assets/_QuantumUser/Entities/LevelProps/`; on `choiceWindows[0]` (the existing Level-Up instance),
@@ -582,10 +729,20 @@ field, `+5%` damage per level via `WeaponSystem.AddLevel`, same compounding idio
 `DamageMultiplierWeaponPerkData.Apply` already uses), purchasable once per player per Break. This is
 a THIRD, deliberately separate "weapon level" concept from the other two already in the codebase -
 `RuntimePlayer.Talents.WeaponLevel` (permanent meta-progression) and `CharacterStats.
-WeaponTalentLevel` (live in-run, drives future weapon-pick perk counts, see "Level-Up Upgrades"
-above) - neither of which this purchase touches. Full design, file map, edge cases, and current
+WeaponTalentLevel` (live in-run, pure bookkeeping as of 2026-08-29 - see below) - neither of which
+this purchase touches. **2026-08-29**: Store's weapon offers and a Choose-Weapon level-up/Chest pick
+now scale off ONE shared, `Global.SurvivalTime`-driven curve (`LevelUpConfig.WeaponOfferCurve`,
+mirroring `BalanceConfig.RunCurveAnchor`/`Evaluate`'s per-anchor-minute lerp shape) instead of two
+independently-tuned mechanisms - previously Store scaled Weapon Level/starting perk count off
+`Global.BreathingIndex` (`StoreConfig.BreakWeaponConfig`, now deleted) while Choose-Weapon/Chest
+scaled its own starting perk count off `CharacterStats.WeaponTalentLevel` (which is why that stat is
+pure bookkeeping now - it still increments, just drives nothing). A freshly-rolled weapon's starting
+`Weapon.Level` is now also generic to both paths (`LevelUpOption.RolledWeaponLevel`, applied by
+`WeaponChoiceUtility.Grant` - previously only a Store purchase ever produced a nonzero Level; a
+Choose-Weapon/Chest pick was always Level 0). Full design, file map, edge cases, and current
 status: **`docs/store-blacksmith.md`**. Read it before touching anything Store/Blacksmith/
-`PurchasableCardState`/`ChoiceWindowOwner`/`PoiInteractionLockUtility`/weapon-level related.
+`PurchasableCardState`/`ChoiceWindowOwner`/`PoiInteractionLockUtility`/weapon-level/
+weapon-offer-scaling related.
 
 Short version: the code compiles once codegen picks up every new/changed `.qtn` file (`Store.qtn`,
 `Blacksmith.qtn`, `ContextInteraction.qtn`'s new `InteractableKind.Store`/`Blacksmith` values,
@@ -1019,22 +1176,38 @@ auto-regenerating absorb pool into an earned, charge-only buffer whose job is to
 your head, because a bar that refills every 5s blunted the whole Merchant-repair decision. Three rules:
 (1) player Shield **never auto-recharges** (`Shield.ChargeOnly`, seeded from the new
 `CharacterData.ShieldChargeOnly`, on for all six heroes) and starts a run **empty**; (2) **Shield
-protects the Accessory** - `DamageUtility.ApplyDamage` skips `AccessoryGuardUtility.TryBlock` entirely
-while `Shield.Current > 0` (a gate, deliberately NOT moving the hook below `AbsorbWithShield`, which
-would forfeit the block's no-crit/no-proc/no-signal negation contract), so the accessory only ever
-blocks a hit headed for Health; (3) **Overshield is deleted** - `ShieldUtility.ApplyOvershield` and
+protects the Accessory, up to what it can actually soak** - `DamageUtility.ApplyDamage` skips
+`AccessoryGuardUtility.TryBlock` only while `Shield.Current` fully covers the incoming hit (a gate,
+deliberately NOT moving the hook below `AbsorbWithShield`, which would forfeit the block's
+no-crit/no-proc/no-signal negation contract); (3) **Overshield is deleted** - `ShieldUtility.ApplyOvershield` and
 every `OvershieldCapMultiplier` are gone, all grants cap at Max. Enemy/boss shields are untouched
 (`EnemySystem.SeedShield` never sets the flag), so the Shielder enemy, the `ShieldWall` group and
-`BossWidget`'s bar still recharge classically. A hit larger than the remaining Shield deliberately
-overflows to Health WITHOUT the accessory catching it, so chip damage can never cost durability. Also
+`BossWidget`'s bar still recharge classically. **As of 2026-08-29, a hit BIGGER than the remaining
+Shield no longer overflows to Health** - it's the accessory's cue instead: `TryBlock` negates the
+whole hit (Shield left untouched, not drained) and spends a durability point, so an overwhelming hit
+now costs the hat, not your life; only once the accessory itself can't block
+(`Broken`/`Disabled`/no durability) does the old drain-then-overflow-to-Health path still run. See
+`docs/accessory-guard.md`'s "2026-08-29 — Shield only covers what it can afford" section. Also
 new and generic: **Free Hit Guard** (`StatusEffects.FreeHitGuardRemaining`/`FreeHitGuardSource`,
 `StatusEffectUtility.ApplyFreeHitGuard`/`TryConsumeFreeHitGuard`) - a one-shot timed complete negation
 consumed immediately ABOVE the accessory hook (a free gift outranks a Coin-priced durability point),
 reporting via `Combat.qtn`'s `OnFreeHitGuardConsumed` so the granting ability owns the reward; Brute's
 Bodyguard is its first consumer, not its owner. Knock-ons deliberately NOT retuned yet (balance calls,
-each listed in the doc): Kai/Pixie/Max have no Shield source of their own and sit at 0; Rift Mutations
-Glass Core/Last Bastion/Infinite Momentum/Shield Breaker; the "+10 Max Shield" Global Upgrade and the
-`PlayerMaxShieldLevel` talent; and the now player-dead `StatusEffects.ShieldRegen*`/`ShieldRegenBuffView`.
+each listed in the doc): Kai/Pixie/Max have no Shield source of their own and sit at 0; the
+`PlayerMaxShieldLevel` talent; and the now player-dead
+`StatusEffects.ShieldRegen*`/`ShieldRegenBuffView`. Two knock-ons WERE resolved (both 2026-08-27):
+every Shield-dependent **Rift Mutation** was rebuilt around the Accessory instead (Glass Core doubles
+durability and halves Health, Last Bastion disables the Accessory, Infinite Momentum costs Health, and
+Shield Breaker's role became the Accessory-block-triggered Adrenaline Kick) - see "Rift Mutations" above; and
+the "+10 Max Shield" Global Upgrade was replaced by **Toughness** ("-10% Damage Taken", a new
+compounding `CharacterStats.DamageTakenMultiplier` read by `DamageUtility.ResolveDamageReduction` -
+multiplicative precisely because that pool stacks indefinitely) - see `docs/global-upgrades.md`.
+
+**2026-08-30: a block no longer costs a durability point regardless of hit size.** Flagged by the
+user - Filler/Swarm chip damage was draining the same Coin-priced durability point a real Heavy hit
+does. A new `AccessoryGuardConfig.MinDamageToBlock` (default 0, opt-in) makes `AccessoryGuardUtility.
+TryBlock` fall through untouched for any hit below it, straight to normal Health resolution - no new
+`.qtn`, no codegen dependency. See `docs/accessory-guard.md`'s own "2026-08-30" section.
 
 Short version: the code compiles once codegen picks up the new `Accessory/AccessoryGuard.qtn` and
 `Events.qtn`'s 5 new events; `AccessoryGuardSystem` is registered inside `GameplaySystemGroup`

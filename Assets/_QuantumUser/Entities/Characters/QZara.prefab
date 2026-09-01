@@ -584,6 +584,13 @@ MonoBehaviour:
   skateboardAngleApexDegrees: 0
   skateboardAngleDownDegrees: -15
   skateboardSpeedThreshold: 10
+  useFlip: 0
+  jumpFlipDuration: 0.5
+  invertFlipDirection: 0
+  legFlipLagSpeed: 26
+  torsoFlipLagSpeed: 16
+  headFlipLagSpeed: 9
+  flipPivotHeight: 0.6
   landingSquashPerSpeed: 0.06
   maxLandingSquash: 0.6
   landingSpringFrequency: 6
@@ -712,6 +719,9 @@ MonoBehaviour:
   followAmount: 1
   followLag: 6
   squashPositionCompensation: 1
+  rotateWeaponWithTarget: 0
+  rotateWeaponWithoutTarget: 1
+  flipLagSpeed: 10
   enableSpeedSway: 1
   swayAmount: 0.5
   swaySpringiness: 0.5
@@ -758,6 +768,7 @@ MonoBehaviour:
   expPickupFlashColor: {r: 0.3, g: 0.55, b: 1, a: 1}
   coinPickupFlashColor: {r: 1, g: 0.84, b: 0.2, a: 1}
   riftShardPickupFlashColor: {r: 1, g: 0.35, b: 0.75, a: 1}
+  scrapPickupFlashColor: {r: 0.95, g: 0.6, b: 0.25, a: 1}
   pickupFlashDuration: 0.35
   freezeMaterial: {fileID: 0}
 --- !u!114 &8110188611109955938
@@ -1028,6 +1039,8 @@ MonoBehaviour:
       RawValue: 0
     DamageReduction:
       RawValue: 0
+    DamageTakenMultiplier:
+      RawValue: 0
     KnockbackTakenMultiplier:
       RawValue: 0
     HealingReceivedMultiplier:
@@ -1051,14 +1064,69 @@ MonoBehaviour:
     RerollQuantity: 0
     SelfReviveCharges: 0
     BurnOnHitStacks: 0
-    DashShieldCost:
+    MagazineSizeBonus:
       RawValue: 0
-    CritSkillCooldownReduction:
+    MagazineSizeOverride: 0
+    LongRangePierceBonus: 0
+    WeaponStaggerChance:
       RawValue: 0
-    ShieldBreakGrantsDashCharge:
+    WeaponStaggerDuration:
+      RawValue: 0
+    NearKillMoveSpeedBonus:
+      RawValue: 0
+    NearKillMoveSpeedDuration:
+      RawValue: 0
+    SkillCenterFocusBonus:
+      RawValue: 0
+    CritFocusThreshold: 0
+    CritFocusProgress: 0
+    CritFocusCooldownReduction:
+      RawValue: 0
+    EmergencyDashHealthCost:
+      RawValue: 0
+    CoinDamagePerHundred:
+      RawValue: 0
+    CoinDamageMaxBonus:
+      RawValue: 0
+    DangerPayHealthThreshold:
+      RawValue: 0
+    DangerPayDamageBonus:
+      RawValue: 0
+    DangerPayMoveSpeedBonus:
+      RawValue: 0
+    NoSafetyNetDamageBonus:
+      RawValue: 0
+    PressureCookerDamagePerSecond:
+      RawValue: 0
+    PressureCookerMaxBonus:
+      RawValue: 0
+    SafeTimeSeconds:
+      RawValue: 0
+    OverkillConversion:
+      RawValue: 0
+    OverkillRadius:
+      RawValue: 0
+    ScavengerRequiredPickups: 0
+    ScavengerWindow:
+      RawValue: 0
+    ScavengerBuffDuration:
+      RawValue: 0
+    ScavengerMoveSpeedBonus:
+      RawValue: 0
+    ScavengerFireRateBonus:
+      RawValue: 0
+    ScavengerPickupCount: 0
+    ScavengerWindowRemaining:
+      RawValue: 0
+    CoinLossPercentOnHpDamage:
+      RawValue: 0
+    SecondWindHealPercent:
+      RawValue: 0
+    DashChargeHardCap: 0
+    AccessoryBlockResetsDash:
       Value: 0
-    AllOrNothingActive:
-      Value: 0
+    AccessoryBlockSkillCooldownFraction:
+      RawValue: 0
     HasCriticalFractureMutation:
       Value: 0
     HasSkillFractureMutation:

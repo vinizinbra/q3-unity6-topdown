@@ -188,12 +188,18 @@ namespace Quantum
 
             plan.GlobalCentroid = PredictedCenter(pos, vel, playerCount, directorConfig.PredictionTime);
 
+            // Run-wide density modifiers (Overpopulation/Elite Territory/Escalation) scale
+            // target pressure alongside the Director's budget and alive cap - all three levers move
+            // together, same as they already do for the cluster-split multiplier. Exactly 1 when
+            // nothing is modifying the run. See EncounterModifierUtility.
+            FP density = EncounterModifierUtility.ResolveSpawnDensityMultiplier(f);
+
             bool split = f.Global->DirectorSplitActive && playerCount > 1;
             if (split == false)
             {
                 plan.Count = 1;
                 plan.Centers = new[] { plan.GlobalCentroid };
-                plan.TargetPressure = new[] { phase.TargetPressure * ResolveSplitThreat(f) };
+                plan.TargetPressure = new[] { phase.TargetPressure * ResolveSplitThreat(f) * density };
                 return true;
             }
 
@@ -230,9 +236,9 @@ namespace Quantum
                 plan.Centers[c] = PredictedCenter(posSum, velSum, size, directorConfig.PredictionTime);
 
                 FP clusterBudget = GetThreatBudget(balance, size) * shareScale;
-                plan.TargetPressure[c] = basePartyBudget > FP._0
+                plan.TargetPressure[c] = (basePartyBudget > FP._0
                     ? phase.TargetPressure * clusterBudget / basePartyBudget
-                    : phase.TargetPressure;
+                    : phase.TargetPressure) * density;
             }
 
             return true;

@@ -1,0 +1,103 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21a65f01a477948e49f13f124c8b3292, type: 3}
+  m_Name: WeaponPerkPoolData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.WeaponPerkPoolData
+  Identifier:
+    Path: _QuantumUser/Resources/Weapons/WeaponPerk/WeaponPerkPoolData
+    Guid:
+      Value: 274665352178253875
+  Perks:
+  - Id:
+      Value: 401600444918086180
+  - Id:
+      Value: 502682413085804085
+  - Id:
+      Value: 504272276944233190
+  - Id:
+      Value: 427983149550015854
+  - Id:
+      Value: 345316708933131668
+  - Id:
+      Value: 353269447177605751
+  - Id:
+      Value: 278805214816823798
+  - Id:
+      Value: 485799689735595026
+  - Id:
+      Value: 456316048361573836
+  - Id:
+      Value: 420829169343257683
+  - Id:
+      Value: 452779746857446377
+  - Id:
+      Value: 410077869205496657
+  - Id:
+      Value: 375097789155564651
+  - Id:
+      Value: 309906799217660589
+  - Id:
+      Value: 511442117593394302
+  - Id:
+      Value: 412418293922873780
+  - Id:
+      Value: 291189915456134934
+  - Id:
+      Value: 492307963213126171
+  - Id:
+      Value: 336917286344424812
+  - Id:
+      Value: 311199697939096361
+  - Id:
+      Value: 460045808380559555
+  - Id:
+      Value: 304155948433359418
+  - Id:
+      Value: 435382047734290004
+  - Id:
+      Value: 277574942251946638
+  - Id:
+      Value: 403673336391302759
+  - Id:
+      Value: 330234426950999633
+  - Id:
+      Value: 413249485350196850
+  - Id:
+      Value: 428002282059014817
+  - Id:
+      Value: 418014237698802465
+  - Id:
+      Value: 308062823772408145
+  - Id:
+      Value: 440353410511059787
+  - Id:
+      Value: 533594513984765615
+  - Id:
+      Value: 511482658906849683
+  - Id:
+      Value: 477743010933221134
+  - Id:
+      Value: 514982724285622082
+  - Id:
+      Value: 470534786904663121
+  - Id:
+      Value: 345357713320602159
+  - Id:
+      Value: 332382039102458498
+  - Id:
+      Value: 432572078382922686
+  - Id:
+      Value: 361375898294280482
+  CommonWeight: 100
+  RareWeight: 20
+  EpicWeight: 5
+  LegendaryWeight: 1

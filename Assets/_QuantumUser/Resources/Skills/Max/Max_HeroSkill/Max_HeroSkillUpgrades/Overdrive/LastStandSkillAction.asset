@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: -727180227, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
   DisplayName: Last Stand
   RankDescriptions:
-  - Rage carries over between Overdrives instead of resetting.
-  - Rage carries over between Overdrives, and damage taken during Overdrive costs only half of it.
-  - Rage carries over and resists damage. Lethal damage during Overdrive leaves you at 1 Health, spends your Rage, and grants 2s of invulnerability.
+  - 'Rage carries over between Overdrives instead of resetting.'
+  - 'Rage carries over between Overdrives, and damage taken during Overdrive costs only half of it.'
+  - 'Rage carries over and resists damage. Lethal damage during Overdrive leaves you at <color=#FD3971>1</color> Health and grants <color=#FD3971>2s</color> immunity.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

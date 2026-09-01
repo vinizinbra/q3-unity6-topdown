@@ -12,10 +12,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c04d8195895c42008e9658fbf433bf7, type: 3}
   m_Name: XpOrbSound
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
-  clips:
-  - {fileID: 8300000, guid: b58c8372490699545b767b21f086886e, type: 3}
-  - {fileID: 8300000, guid: 6967cf531cd5e6746a6914663fe90a47, type: 3}
-  - {fileID: 8300000, guid: ca83316ef81ba044cba35e86b4f4decc, type: 3}
+  variants:
+  - clip: {fileID: 8300000, guid: b58c8372490699545b767b21f086886e, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: 6967cf531cd5e6746a6914663fe90a47, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: ca83316ef81ba044cba35e86b4f4decc, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  clips: []
   pick: 1
   layers: []
   group: 7

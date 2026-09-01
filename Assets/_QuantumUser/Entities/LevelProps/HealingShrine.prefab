@@ -652,13 +652,15 @@ MonoBehaviour:
   Prototype:
     Availability:
       AvailableInCombat:
-        Value: 0
+        Value: 1
       AvailableInBreathing:
         Value: 1
     UsagePolicy:
-      Value: 1
+      Value: 4
     HealPercent:
       RawValue: 16384
+    CooldownDuration:
+      RawValue: 7864320
 --- !u!114 &7765723511766734453
 MonoBehaviour:
   m_ObjectHideFlags: 0

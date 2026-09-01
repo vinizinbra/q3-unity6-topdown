@@ -61,7 +61,12 @@ namespace Quantum
             // no-op TryGetPointer. Reusing this filter's own per-entity iteration (rather than a
             // second dedicated system) since every player already has StatusEffects too.
             if (f.Unsafe.TryGetPointer<CharacterStats>(filter.Entity, out var stats) == true)
+            {
                 stats->LastStandCooldownRemaining -= f.DeltaTime;
+
+                // Rift Mutation per-player timers, on the same reused iteration for the same reason.
+                MutationTimerUtility.Tick(f, filter.Entity, stats);
+            }
 
             RiftMutationMarkUtility.TickFracturedPresence(f, filter.Entity, status);
         }

@@ -115,7 +115,11 @@ MonoBehaviour:
     upOffset: {x: 0.2, y: 0}
     downOffset: {x: 0.1, y: 0.4}
     rightHandGrip: {x: 0.41, y: -0.27, z: -0.02}
+    rightHandGripRotation: {x: 0, y: 0, z: -22.19}
+    rightHandGripScale: {x: 1, y: 1, z: 1}
     leftHandGrip: {x: 1.37, y: -0.36, z: 0.02}
+    leftHandGripRotation: {x: 0, y: 0, z: 93.59}
+    leftHandGripScale: {x: 0.75, y: 1, z: 1}
     recoilKickDistance: 0.15
     recoilRotationKick: 30
     recoilDuration: 0.35
@@ -145,9 +149,9 @@ MonoBehaviour:
       Frequency: 20
   character: {fileID: 0}
   muzzleParticle: {fileID: 1999947104554364320}
-  tracerPrefab: {fileID: 0}
-  beamParticle: {fileID: 0}
-  beamStopGrace: 0.15
+  fireSound: {fileID: 11400000, guid: 326cebb9355604ac78928fd1d8a53833, type: 2}
+  reloadStartSound: {fileID: 11400000, guid: 5edaefd69c1f24edc81078b02a2b8b2a, type: 2}
+  reloadReadySound: {fileID: 11400000, guid: f2fd980e55c984487af99afe28b60074, type: 2}
 --- !u!1001 &1999947104573112648
 PrefabInstance:
   m_ObjectHideFlags: 0

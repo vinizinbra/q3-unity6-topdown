@@ -75,8 +75,8 @@ namespace QuantumUser.Editor
                 "(5) on ChooseWindow's own prefab, split the food row (cards[]) and weapon row (weaponCards[]) into two visible sections " +
                 "(food/utility above, weapons below - currently the same overlapping rect, toggled mutually exclusive) and add a \"CLOSE\" " +
                 "label variant for secondaryButton; " +
-                "(6) append a Blacksmith sprite to MinimapWidget.chunkTypeSprites[] (positionally indexed, append-only - Merchant's slot " +
-                "already exists); " +
+                "(6) add a Blacksmith entry to MinimapWidget.chunkTypeSprites (a ChunkType->Sprite map, order-independent - Merchant's " +
+                "entry already exists); " +
                 "(7) author real Icon sprites for the other 4 FoodOfferData assets (Field Rations/Shield Cell/Energy Drink/Combat Stims) - " +
                 "left unassigned here (Burger's own Icon IS wired, from the existing RiftRaidersIcon1.png sheet's RR_Burger sub-sprite).");
         }
@@ -192,15 +192,10 @@ namespace QuantumUser.Editor
             config.WeaponOfferBasePrice = 100;
             config.WeaponOfferPricePerPerk = 25;
 
-            // Break Index -> Weapon Level / starting perk count - see StoreConfig.
-            // ResolveBreakWeaponConfig/docs/store-blacksmith.md's "Break Progression" section.
-            config.BreakWeaponConfig = new[]
-            {
-                new StoreBreakWeaponConfig { WeaponLevel = 0, StartingPerkRolls = new[] { FP._0_20 } },
-                new StoreBreakWeaponConfig { WeaponLevel = 1, StartingPerkRolls = new[] { FP.FromString("0.45"), FP._0_20 } },
-                new StoreBreakWeaponConfig { WeaponLevel = 2, StartingPerkRolls = new[] { FP.FromString("0.65"), FP.FromString("0.40"), FP._0_20 } },
-                new StoreBreakWeaponConfig { WeaponLevel = 3, StartingPerkRolls = new[] { FP.FromString("0.80"), FP.FromString("0.60"), FP.FromString("0.40"), FP._0_20 } },
-            };
+            // Weapon Level / starting perk count are no longer authored here - both are now rolled
+            // off the shared LevelUpConfig.WeaponOfferCurve (Global.SurvivalTime-driven), same as a
+            // Choose-Weapon level-up/Chest pick - see StoreConfig.cs's own comment and
+            // docs/store-blacksmith.md.
 
             // Weapon Talent Level -> starting perk rarity - see StoreConfig.ResolveTalentRarityTuning.
             config.TalentRarityTuning = new[]

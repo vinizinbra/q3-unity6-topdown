@@ -22,11 +22,9 @@ MonoBehaviour:
     full Momentum, nothing can stop you at all.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - 'Thick Skull: hard crowd control (Stun, Root) lasts 30% less time on you.'
-  - 'Come At Me: being hit by a Specialist or tougher enemy grants you +1 Momentum
-    during Juggernaut.'
-  - 'Unstoppable: at max Momentum you''re immune to knockback and hard crowd control,
-    and deal +20% impact damage.'
+  - 'Thick Skull: hard crowd control (Stun, Root) lasts <color=#FD3971>30%</color> less time on you.'
+  - 'Come At Me: being hit by a Specialist or tougher enemy grants you <color=#FD3971>+1</color> Momentum during Juggernaut.'
+  - 'Unstoppable: at max Momentum you''re immune to knockback and hard crowd control, and deal <color=#FD3971>+20%</color> impact damage.'
   HardCcDurationMultiplier:
   - RawValue: 45875
   - RawValue: 45875

@@ -5,12 +5,16 @@ using QuantumUser.View.Util;
 using UnityEngine;
 using UnityEngine.Pool;
 
-// Spawns one flying pickup sprite per currency-collected event (Exp/Coin/RiftShard) - purely
+// Spawns one flying pickup sprite per pickup-collected event (Exp/Coin/RiftShard/Scrap) - purely
 // cosmetic, no local-player filtering: every client plays this for every pickup regardless of who
 // physically walked over the orb, same as the currency totals themselves being shared/global state
-// (see Experience.qtn/Coins.qtn/RiftShards.qtn). One manager/widget pair for all three currencies
+// (see Experience.qtn/Coins.qtn/RiftShards.qtn). One manager/widget pair for all of them
 // (CurrencyType-driven) rather than one per currency, replacing the old UI-space FlyingXpManager/
 // FlyingXpWidget (Exp-only, flew to the HUD bar instead of the collecting character).
+//
+// Scrap rides the same pipeline despite being Lux's own per-passive resource rather than a wallet
+// currency (see CurrencyType) - its Collector is always the one Lux the pickup means anything to
+// (ScrapOrbSystem), but the flight itself still plays on every client like every other pickup.
 //
 // Flies a world-space sprite (FlyingCurrencyWidget) from the orb's collected position to the
 // COLLECTOR's own live position (EntityViewManager.Instance.GetEntityTransform, re-resolved every
@@ -27,14 +31,17 @@ public class FlyingCurrencyManager : QuantumGlobalMonoBehaviour
     public static FlyingCurrencyManager Instance;
 
     [Header("Sound")]
-    [SerializeField, Tooltip("Played when an XP orb actually REACHES the collector, not when it's picked up. Every kill drops one and they're hoovered up in bulk, so this is by far the most repeated pickup in the game - author a cooldown (~0.08s) on the SoundData and keep it quiet, or tick Local Player Only, or leave it empty. It is the easiest sound in the project to make annoying.")]
+    [SerializeField, SoundDataPicker, Tooltip("Played when an XP orb actually REACHES the collector, not when it's picked up. Every kill drops one and they're hoovered up in bulk, so this is by far the most repeated pickup in the game - author a cooldown (~0.08s) on the SoundData and keep it quiet, or tick Local Player Only, or leave it empty. It is the easiest sound in the project to make annoying.")]
     private SoundData experienceCollectSound;
 
-    [SerializeField, Tooltip("Played when a Coin reaches the collector. Gated by per-tier CoinDropChance, so it's rare enough to be a real reward sound - worth making distinct and satisfying.")]
+    [SerializeField, SoundDataPicker, Tooltip("Played when a Coin reaches the collector. Gated by per-tier CoinDropChance, so it's rare enough to be a real reward sound - worth making distinct and satisfying.")]
     private SoundData coinCollectSound;
 
-    [SerializeField, Tooltip("Played when a Rift Shard reaches the collector. Same reasoning as Coin - rare by drop chance, so it can afford to be prominent.")]
+    [SerializeField, SoundDataPicker, Tooltip("Played when a Rift Shard reaches the collector. Same reasoning as Coin - rare by drop chance, so it can afford to be prominent.")]
     private SoundData riftShardCollectSound;
+
+    [SerializeField, SoundDataPicker, Tooltip("Played when a Scrap orb reaches Lux. Only ever fires for a player running the Scrap Collector passive, and each pickup is a real step toward a free Hero Skill cast - so it can be distinct, but a Jackpot drop arrives as a burst, so author a cooldown on the SoundData the way Experience does.")]
+    private SoundData scrapCollectSound;
 
     [SerializeField, Tooltip("Raises the XP pickup's pitch a step for each orb collected in quick succession, resetting after a gap. Turns a burst of pickups into an ascending run instead of the same tick repeated - the difference between feedback that rewards a big clear and feedback that just reports one. Applies to Experience ONLY: Coin and Rift Shard are rare by drop chance, so a streak would never really trigger, and a rare reward should sound identical every time to stay recognisable.")]
     private bool experiencePitchStreak = true;
@@ -76,6 +83,7 @@ public class FlyingCurrencyManager : QuantumGlobalMonoBehaviour
         QuantumEvent.Subscribe<EventExpOrbCollected>(this, e => OnCollected(CurrencyType.Experience, e.Collector, e.Position.ToUnityVector3()));
         QuantumEvent.Subscribe<EventCoinCollected>(this, e => OnCollected(CurrencyType.Coin, e.Collector, e.Position.ToUnityVector3()));
         QuantumEvent.Subscribe<EventRiftShardCollected>(this, e => OnCollected(CurrencyType.RiftShard, e.Collector, e.Position.ToUnityVector3()));
+        QuantumEvent.Subscribe<EventScrapOrbCollected>(this, e => OnCollected(CurrencyType.Scrap, e.Collector, e.Position.ToUnityVector3()));
     }
 
     private void OnDestroy()
@@ -114,8 +122,10 @@ public class FlyingCurrencyManager : QuantumGlobalMonoBehaviour
         PlayCollectSound(type, collector, target);
 
         // Exp keeps its existing "bar catches up + flashes" reaction, on top of the character
-        // flash above - Coin/RiftShard have no equivalent bar to catch up (CurrencyUiWidget's own
-        // punch-on-change already covers those independently of this arrival).
+        // flash above - nothing else needs one here: CurrencyUiWidget's own punch-on-change already
+        // covers Coin/RiftShard independently of this arrival, and Scrap's gauge (LuxHudWidget) is
+        // per-character rather than a singleton, so it just polls its own stacks like it already
+        // does - its "free cast banked" glow is the moment worth reacting to, not each pickup.
         if (type == CurrencyType.Experience)
             ExpBarUiWidget.Instance?.Flash();
     }
@@ -133,6 +143,7 @@ public class FlyingCurrencyManager : QuantumGlobalMonoBehaviour
             CurrencyType.Experience => experienceCollectSound,
             CurrencyType.Coin => coinCollectSound,
             CurrencyType.RiftShard => riftShardCollectSound,
+            CurrencyType.Scrap => scrapCollectSound,
             _ => null,
         };
 

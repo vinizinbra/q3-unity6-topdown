@@ -36,9 +36,9 @@ MonoBehaviour:
   - Id:
       Value: 408436436096618404
   - Id:
-      Value: 465459675167579920
+      Value: 318742377411220703
   - Id:
-      Value: 461468297172547822
+      Value: 465459675167579920
   - Id:
       Value: 410997976481653038
   - Id:
@@ -52,9 +52,11 @@ MonoBehaviour:
   - Id:
       Value: 413323579687518313
   - Id:
+      Value: 502025948778833896
+  - Id:
       Value: 387762313514897616
   - Id:
-      Value: 502025948778833896
+      Value: 490873783517536495
   RiftMutations:
   - Id:
       Value: 325283577507392568
@@ -67,23 +69,49 @@ MonoBehaviour:
   - Id:
       Value: 390042850462076770
   - Id:
+      Value: 481232238730376622
+  - Id:
+      Value: 534224374613054322
+  - Id:
       Value: 514921480666595401
   - Id:
       Value: 533573372186029248
   - Id:
       Value: 455787944400972856
   - Id:
-      Value: 411322840850662590
+      Value: 504000970958733469
+  - Id:
+      Value: 524350525567682883
+  - Id:
+      Value: 410312301915607199
+  - Id:
+      Value: 395350068690393966
+  - Id:
+      Value: 302357521748849114
+  - Id:
+      Value: 365049916202436520
+  - Id:
+      Value: 533947951423803528
+  - Id:
+      Value: 454290102408607413
+  - Id:
+      Value: 465212681664073504
+  - Id:
+      Value: 412179679706899192
+  - Id:
+      Value: 349810371214074495
+  - Id:
+      Value: 533476228992090200
   - Id:
       Value: 536002132847580972
   - Id:
-      Value: 481232238730376622
+      Value: 432321786390088922
   - Id:
-      Value: 534224374613054322
+      Value: 395063439985713636
   - Id:
-      Value: 504000970958733469
+      Value: 528128519533753672
   - Id:
-      Value: 335039749820039824
+      Value: 382321730790450748
   RiftMarkMutations:
   - Id:
       Value: 368502755868404442
@@ -95,8 +123,6 @@ MonoBehaviour:
       Value: 298522279084543542
   - Id:
       Value: 458560360156938353
-  - Id:
-      Value: 298522279084543542
   - Id:
       Value: 374078439829188407
   - Id:
@@ -113,9 +139,85 @@ MonoBehaviour:
   WeaponChoicePool:
     Id:
       Value: 489069850842438477
-  ChancePerLevelPerSlot:
-    RawValue: 13107
-  MaxRolledPerks: 3
+  WeaponOfferCurve:
+  - Minute: 0
+    WeaponLevel: 0
+    StartingPerkRolls:
+    - RawValue: 13107
+  - Minute: 1
+    WeaponLevel: 0
+    StartingPerkRolls:
+    - RawValue: 17039
+    - RawValue: 3277
+  - Minute: 2
+    WeaponLevel: 1
+    StartingPerkRolls:
+    - RawValue: 21627
+    - RawValue: 6554
+  - Minute: 3
+    WeaponLevel: 1
+    StartingPerkRolls:
+    - RawValue: 25559
+    - RawValue: 9830
+  - Minute: 4
+    WeaponLevel: 1
+    StartingPerkRolls:
+    - RawValue: 29491
+    - RawValue: 13107
+  - Minute: 5
+    WeaponLevel: 1
+    StartingPerkRolls:
+    - RawValue: 32768
+    - RawValue: 16384
+    - RawValue: 3277
+  - Minute: 6
+    WeaponLevel: 2
+    StartingPerkRolls:
+    - RawValue: 36045
+    - RawValue: 19661
+    - RawValue: 6554
+  - Minute: 7
+    WeaponLevel: 2
+    StartingPerkRolls:
+    - RawValue: 39322
+    - RawValue: 22938
+    - RawValue: 9830
+  - Minute: 8
+    WeaponLevel: 2
+    StartingPerkRolls:
+    - RawValue: 42598
+    - RawValue: 26214
+    - RawValue: 13107
+  - Minute: 9
+    WeaponLevel: 2
+    StartingPerkRolls:
+    - RawValue: 45220
+    - RawValue: 29491
+    - RawValue: 16384
+    - RawValue: 3277
+  - Minute: 10
+    WeaponLevel: 3
+    StartingPerkRolls:
+    - RawValue: 47841
+    - RawValue: 32768
+    - RawValue: 19661
+    - RawValue: 6554
+  - Minute: 11
+    WeaponLevel: 3
+    StartingPerkRolls:
+    - RawValue: 49807
+    - RawValue: 36045
+    - RawValue: 22938
+    - RawValue: 9830
+  - Minute: 12
+    WeaponLevel: 3
+    StartingPerkRolls:
+    - RawValue: 52429
+    - RawValue: 39322
+    - RawValue: 26214
+    - RawValue: 13107
+  WeaponLevelDamageBonusPerLevel:
+    RawValue: 3277
   CommonWeight: 100
   RareWeight: 20
   EpicWeight: 5

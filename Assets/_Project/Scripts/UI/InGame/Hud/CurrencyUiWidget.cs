@@ -40,9 +40,12 @@ public class CurrencyUiWidget : QuantumGlobalMonoBehaviour
     private EntityRef _entityRef;
     private FP? _lastTotal;
     private Tween _punchTween;
+    private Vector3 _restScale;
 
     private void Start()
     {
+        _restScale = (punchTarget != null ? punchTarget : (valueText != null ? valueText.transform : transform)).localScale;
+
         if (icon != null)
             icon.sprite = SpriteManager.GetSprite(currency.ToString());
 
@@ -129,7 +132,13 @@ public class CurrencyUiWidget : QuantumGlobalMonoBehaviour
     {
         Transform target = punchTarget != null ? punchTarget : (valueText != null ? valueText.transform : transform);
 
+        // Reset to the authored rest scale before punching again - Tween.PunchScale punches
+        // relative to whatever scale is CURRENT when it's called, so without this a punch that
+        // lands before the previous one finished decaying compounds on top of it instead of
+        // punching from rest, growing unbounded when several pickups land in quick succession
+        // (see JuicyEffects.PlayPunchScale for the same reset-before-punch idiom).
         _punchTween.Stop();
+        target.localScale = _restScale;
         _punchTween = Tween.PunchScale(target, punchStrength, punchDuration, punchFrequency, useUnscaledTime: true);
     }
 }

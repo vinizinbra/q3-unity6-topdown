@@ -59,6 +59,12 @@ namespace Quantum
         }
 
         private EnemyActionPhase? _lastEnemyPhase;
+        private ParticleSystem _currentAnticipationIcon;
+        // Real time (Time.time), not simulation ticks - EffectsManager.MinimumAnticipationIconDuration
+        // is a wall-clock readability floor, so it has to be measured the same way. See
+        // RequestClearAnticipationIcon/UpdateAnticipationIcon.
+        private float _anticipationIconSpawnTime;
+        private bool _anticipationIconPendingClear;
         private GameObject _currentParentedParticle;
         private GameObject _currentTelegraph;
         private GameObject _currentTelegraphPrefab;
@@ -88,6 +94,7 @@ namespace Quantum
         public override void DeInitialize(QuantumGame game)
         {
             base.DeInitialize(game);
+            ClearAnticipationIcon();
             ClearParentedParticle(instant: true);
             ClearTelegraph(instant: true);
 
@@ -112,6 +119,11 @@ namespace Quantum
 
             Frame frame = e.Game.Frames.Predicted;
             if (frame == null || frame.Has<Enemy>(_entityRef) == false)
+                return;
+
+            // Target is EntityRef.None for a hit that lands on level geometry rather than a hero -
+            // the impact prefab is meant to represent hitting a player, not scenery.
+            if (frame.Has<PlayerLink>(e.Target) == false)
                 return;
 
             Enemy enemy = frame.Get<Enemy>(_entityRef);
@@ -149,6 +161,12 @@ namespace Quantum
             // throughout the whole windup, not just re-render once when a phase transition is
             // observed.
             UpdateLiveTelegraph(frame, enemy, enemyData);
+
+            // Same "every frame, not just phase edges" reasoning as UpdateLiveTelegraph just above -
+            // the enemy can keep moving throughout its own windup, so a position captured once at
+            // SpawnAnticipationIcon would visibly detach from a moving head. No-ops instantly
+            // whenever no icon is currently held (the common case, most frames).
+            UpdateAnticipationIcon(frame);
 
             EnemyActionPhase? lastPhase = _lastEnemyPhase;
             _lastEnemyPhase = enemyPhase;
@@ -211,10 +229,17 @@ namespace Quantum
 
                 if (armAimView != null)
                     armAimView.PlayPreShoot();
+
+                SpawnAnticipationIcon(frame);
             }
 
-            if (exitedAnticipating == true && armAimView != null)
-                armAimView.StopPreShoot();
+            if (exitedAnticipating == true)
+            {
+                if (armAimView != null)
+                    armAimView.StopPreShoot();
+
+                RequestClearAnticipationIcon();
+            }
 
             if (firedBegin == true)
             {
@@ -274,6 +299,7 @@ namespace Quantum
                 blobAnimationView.PlayAttackStep(step);
                 blobAnimationView.ApplyStepSprite(step.BodySprite, step.Duration);
                 SpawnStepParticle(frame, enemy, step);
+                TriggerStepShake(frame, enemy, step);
             }
 
             if (telegraph != null && ResolveTelegraphPrefab(telegraph) != null)
@@ -345,6 +371,171 @@ namespace Quantum
             return EnemyMovementUtility.TryGetTargetPosition(frame, enemy.Target, out position);
         }
 
+        // GetAnticipationIconInstance/ReleaseAnticipationIconInstance are thin wrappers on
+        // EffectsManager around its own GetHeldInstance/ReleaseHeldInstance - the same shape
+        // EnemyAllyLinkView already established for its own tether-endpoint particles, just bound to
+        // EffectsManager.anticipationIconEffectPrefab instead of a SerializeField living here, so the
+        // actual asset is configured alongside every other combat VFX. The returned instance is
+        // parented onto this enemy's own transform (worldPositionStays: false, so it doesn't visibly
+        // pop at wherever the pool last released it) so it tracks enemy movement for free -
+        // UpdateAnticipationIcon still repositions it every frame, since the enemy's own Unity
+        // transform never rotates (2D top-down; facing comes from Aim.Angle, not transform.rotation -
+        // see ResolveEnemyDirectionRotation), so the offset itself still needs re-deriving from the
+        // enemy's current facing even though position tracking is now free via parenting. Billboard,
+        // on the prefab itself, overwrites its world rotation every LateUpdate regardless, so it
+        // stays camera-facing with no rotation math needed here. Degrades to silently showing nothing
+        // if EffectsManager isn't in the scene or its prefab is unassigned.
+        private void SpawnAnticipationIcon(Frame frame)
+        {
+            if (EffectsManager.Instance == null)
+                return;
+
+            ClearAnticipationIcon();
+
+            _currentAnticipationIcon = EffectsManager.Instance.GetAnticipationIconInstance();
+
+            if (_currentAnticipationIcon != null)
+                _currentAnticipationIcon.transform.SetParent(transform, worldPositionStays: false);
+
+            _currentAnticipationIcon?.Play();
+            _anticipationIconSpawnTime = Time.time;
+            _anticipationIconPendingClear = false;
+            UpdateAnticipationIcon(frame); // avoid a one-frame pop at wherever the pool last released it
+        }
+
+        // Deferred release, called from the exitedAnticipating edge instead of ClearAnticipationIcon
+        // directly - EffectsManager.MinimumAnticipationIconDuration is a wall-clock readability floor
+        // (a fast enemy's own AnticipationTime can otherwise end in a fraction of a second, flashing
+        // the icon for a single frame), so a windup ending before that floor is reached leaves the
+        // icon showing (and still tracking the head - UpdateAnticipationIcon owns the actual deferred
+        // release once enough time has passed) rather than cutting it short.
+        private void RequestClearAnticipationIcon()
+        {
+            if (_currentAnticipationIcon == null)
+                return;
+
+            float minimumDuration = EffectsManager.Instance != null ? EffectsManager.Instance.MinimumAnticipationIconDuration : 0f;
+
+            if (Time.time - _anticipationIconSpawnTime >= minimumDuration)
+            {
+                ClearAnticipationIcon();
+                return;
+            }
+
+            _anticipationIconPendingClear = true;
+        }
+
+        // Reparents back onto EffectsManager itself before release - a held instance is only
+        // deactivated (not destroyed) by ReleaseHeldInstance, so leaving it parented to this enemy
+        // would destroy it for good the moment this enemy's own view is torn down, silently poisoning
+        // the pool with a dangling reference.
+        private void ClearAnticipationIcon()
+        {
+            if (_currentAnticipationIcon != null && EffectsManager.Instance != null)
+            {
+                _currentAnticipationIcon.transform.SetParent(EffectsManager.Instance.transform, worldPositionStays: false);
+                EffectsManager.Instance.ReleaseAnticipationIconInstance(_currentAnticipationIcon);
+            }
+
+            _currentAnticipationIcon = null;
+            _anticipationIconPendingClear = false;
+        }
+
+        private void UpdateAnticipationIcon(Frame frame)
+        {
+            if (_currentAnticipationIcon == null)
+                return;
+
+            // A pending clear (windup ended before the minimum-duration floor) resolves here, the
+            // one place that already runs every frame regardless of phase edges - once real time
+            // catches up to the floor, release for real instead of continuing to reposition a
+            // released-elsewhere instance.
+            if (_anticipationIconPendingClear == true)
+            {
+                float minimumDuration = EffectsManager.Instance != null ? EffectsManager.Instance.MinimumAnticipationIconDuration : 0f;
+
+                if (Time.time - _anticipationIconSpawnTime >= minimumDuration)
+                {
+                    ClearAnticipationIcon();
+                    return;
+                }
+            }
+
+            // Read fresh off EffectsManager every frame rather than cached at spawn - a designer
+            // tweaking AnticipationIconOffset in the Inspector during Play Mode should see it move
+            // immediately, same live-iteration expectation every other Inspector-tuned offset here has.
+            Vector3 offset = EffectsManager.Instance != null ? EffectsManager.Instance.AnticipationIconOffset : Vector3.zero;
+
+            // Scaled by the enemy's own live collider radius (post tier-scale, same call EnemyView
+            // uses for its own fit-scale/widget-offset math) so one authored offset reads correctly
+            // across every enemy size instead of a Filler and a Boss getting the exact same nudge.
+            float radius = EnemyMovementUtility.ResolveEntityRadius(frame, _entityRef).AsFloat;
+            Vector3 scaledOffset = offset * radius;
+
+            // X only ever mirrors (left/right), not a full rotation - reuses
+            // EnemyBlobAnimationView's own FacingSign (the exact sign its root transform's
+            // localScale.x already flips by) rather than re-deriving facing here, so the icon can
+            // never disagree with which way the enemy sprite itself is actually mirrored.
+            scaledOffset.x *= blobAnimationView.FacingSign;
+
+            Vector3 localPosition = ResolveHeadOffset() + scaledOffset;
+            _currentAnticipationIcon.transform.SetLocalPositionAndRotation(localPosition, Quaternion.identity);
+        }
+
+        // Same sprite-bounds measurement EnemyView.ResolveWidgetOffset uses for the HUD
+        // nameplate/health bar - reusing it here is what makes the icon clear each enemy's actual
+        // rendered head regardless of tier/art size, with zero per-enemy tuning. No radius-floor
+        // fallback (unlike ResolveWidgetOffset) since a missing/unmeasurable sprite just means the
+        // icon renders at the collider center instead of over an empty head - visible enough to
+        // notice and fix in the Editor rather than silently wrong.
+        private Vector3 ResolveHeadOffset()
+        {
+            if (rig != null && rig.ReferenceSprite != null && rig.ReferenceSprite.sprite != null)
+                return Vector3.up * (rig.ReferenceSprite.bounds.max.y - transform.position.y);
+
+            return Vector3.zero;
+        }
+
+        // Shared by SpawnStepParticle and TriggerStepShake - "where is this step actually
+        // happening" is the same question for a particle spawn and a camera shake alike, so both
+        // key off the step's own Anchor rather than each re-deriving it (self, or the resolved
+        // SkillTargetPosition/live-target anchor).
+        private bool TryResolveStepOrigin(Frame frame, Enemy enemy, AttackVisualStep step, out Photon.Deterministic.FPVector3 origin)
+        {
+            if (step.Anchor == ParticleAnchor.OnSelf)
+            {
+                origin = frame.Get<Transform3D>(_entityRef).Position;
+                return true;
+            }
+
+            return TryGetAnchorPosition(frame, enemy, out origin);
+        }
+
+        // Distance-falloff camera shake for AttackVisualStep.ShakeImpact - see FollowCamera.
+        // ShakeAtPosition. No-ops for 0 (the default, meaning "no shake authored on this step") or
+        // if this step's own anchor can't currently be resolved (e.g. SkillTargetPosition with a
+        // lost target).
+        private void TriggerStepShake(Frame frame, Enemy enemy, AttackVisualStep step)
+        {
+            if (step.ShakeImpact <= 0f)
+                return;
+
+            if (FollowCamera.I == null)
+            {
+                LogHelper.Log("EnemyAttackVisualsView", $"TriggerStepShake: ShakeImpact={step.ShakeImpact} but FollowCamera.I is null.");
+                return;
+            }
+
+            if (TryResolveStepOrigin(frame, enemy, step, out Photon.Deterministic.FPVector3 origin) == false)
+            {
+                LogHelper.Log("EnemyAttackVisualsView", $"TriggerStepShake: ShakeImpact={step.ShakeImpact} but couldn't resolve step origin (Anchor={step.Anchor}).");
+                return;
+            }
+
+            LogHelper.Log("EnemyAttackVisualsView", $"TriggerStepShake: firing ShakeImpact={step.ShakeImpact} at {origin.ToUnityVector3()}.");
+            FollowCamera.I.ShakeAtPosition(origin.ToUnityVector3(), step.ShakeImpact);
+        }
+
         private void SpawnStepParticle(Frame frame, Enemy enemy, AttackVisualStep step)
         {
             // Every phase transition ends whatever parented particle (e.g. a charge trail) the
@@ -357,24 +548,22 @@ namespace Quantum
             if (step.ParticlePrefab == null)
                 return;
 
-            Photon.Deterministic.FPVector3 anchorPosition;
-
-            if (step.Anchor == ParticleAnchor.OnSelf)
-            {
-                anchorPosition = frame.Get<Transform3D>(_entityRef).Position;
-            }
-            else if (TryGetAnchorPosition(frame, enemy, out anchorPosition) == false)
-            {
+            if (TryResolveStepOrigin(frame, enemy, step, out Photon.Deterministic.FPVector3 anchorPosition) == false)
                 return; // SkillTargetPosition but nothing valid to anchor to
-            }
 
-            Vector3 worldPosition = anchorPosition.ToUnityVector3() + step.Offset;
+            // Offset is authored relative to the enemy's own current facing (Z = forward along
+            // Aim.Angle, X = to its right), not a raw world-space nudge - rotating it by the
+            // enemy's full flat facing direction (any angle, not just a left/right mirror) before
+            // adding it to the anchor is what keeps e.g. a muzzle offset on the correct side/in
+            // front of the enemy regardless of which way it's actually facing.
+            Quaternion directionRotation = ResolveEnemyDirectionRotation(frame);
+            Vector3 worldPosition = anchorPosition.ToUnityVector3() + directionRotation * step.Offset;
 
             // AlignToEnemyDirection gives a base rotation matching the enemy's current facing
             // (same flat Aim.Angle convention EnemyBlobAnimationView/EnemyArmAimView already use);
             // RotationOffset then applies on top either way, so a purely fixed rotation is just
             // AlignToEnemyDirection=false with the desired Euler baked into RotationOffset.
-            Quaternion baseRotation = step.AlignToEnemyDirection == true ? ResolveEnemyDirectionRotation(frame) : Quaternion.identity;
+            Quaternion baseRotation = step.AlignToEnemyDirection == true ? directionRotation : Quaternion.identity;
             Quaternion rotation = baseRotation * Quaternion.Euler(step.RotationOffset);
 
             // Scale multiplies the PREFAB's own authored scale (not whatever a previous pooled
@@ -561,9 +750,11 @@ namespace Quantum
                 if (TryGetAnchorPosition(frame, enemy, out Photon.Deterministic.FPVector3 targetPosition) == false)
                     return false;
 
-                // See EnemyActionData.IgnoreY above - same reasoning, and doubles as what keeps this
-                // line flat: a nonzero Y delta here would tilt the "lie flat on the ground"
-                // rotation below instead of just twisting around the up axis as intended.
+                // See EnemyActionData.IgnoreY above. When true, targetPosition.Y is flattened to
+                // selfPosition.Y so direction below ends up perfectly horizontal and the rotation
+                // math further down naturally lies flat. When false (e.g. Sniper), direction keeps
+                // its real vertical delta and the lane tilts to match - see the rotation comment
+                // below.
                 if (ignoreY == true)
                     targetPosition.Y = selfPosition.Y;
 
@@ -598,9 +789,26 @@ namespace Quantum
                 // ChargeLane/Rectangle sprite art is drawn with its long/pointing edge along local
                 // X, not the Y convention Circle/Cone's rotation trick otherwise sets up (see this
                 // method's own doc comment) - length sits on X, Width on Y, with a 90-degree twist
-                // around the already-flat local Z compensating so the long edge still ends up
-                // pointing along `direction` instead of sideways.
-                rotation = Quaternion.LookRotation(Vector3.up, direction) * Quaternion.Euler(0f, 0f, 90f);
+                // around local Z compensating so the long edge still ends up pointing along
+                // `direction` instead of sideways.
+                //
+                // The local-Z reference passed into LookRotation is normally just Vector3.up (a
+                // pure flat lane), but that only works because `direction` used to be forced
+                // horizontal by the ignoreY branch above. With IgnoreY=false, `direction` can carry
+                // a real vertical delta (Sniper aiming up/down at an elevated/lowered target) - so
+                // instead of the fixed world-up, use the component of world-up perpendicular to
+                // `direction` (Gram-Schmidt). This is exactly Vector3.up whenever direction is
+                // horizontal (zero behavior change for every other ChargeLane/Rectangle user, which
+                // all still author IgnoreY=true), and smoothly tilts the lane's plane to match the
+                // shot's real angle otherwise, so the telegraph visually follows the same up/down
+                // aim the projectile will actually take.
+                Vector3 zAxis = Vector3.up - direction * Vector3.Dot(Vector3.up, direction);
+                if (zAxis.sqrMagnitude <= 0.0001f)
+                    zAxis = Vector3.forward; // direction points straight up/down - arbitrary twist is fine
+                else
+                    zAxis.Normalize();
+
+                rotation = Quaternion.LookRotation(zAxis, direction) * Quaternion.Euler(0f, 0f, 90f);
                 scale = new Vector3(length, telegraph.Width, 1f);
 
                 return true;

@@ -21,7 +21,7 @@ public class LuxHudWidget : HeroHudWidget
         int required = Mathf.Max(1, collector.StacksRequired);
         bool ready = collector.ScrapStacks >= collector.StacksRequired;
 
-        scrap.Show(collector.ScrapStacks / (float)required, $"{collector.ScrapStacks}/{collector.StacksRequired}", ready);
+        scrap.Show(collector.ScrapStacks / (float)required, $"{collector.ScrapStacks}<size=10>/{collector.StacksRequired}</size>", ready);
         return true;
     }
 

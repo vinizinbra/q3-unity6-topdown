@@ -12,10 +12,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c04d8195895c42008e9658fbf433bf7, type: 3}
   m_Name: EnemyDeath
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
-  clips:
-  - {fileID: 8300000, guid: 051241c328288ca4eab6528d104a0f8f, type: 3}
-  - {fileID: 8300000, guid: 6fef2e22a51042c41ae796155eb77424, type: 3}
-  - {fileID: 8300000, guid: 421d011b2e81efb47b43ede521250fe6, type: 3}
+  variants:
+  - clip: {fileID: 8300000, guid: 051241c328288ca4eab6528d104a0f8f, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: 6fef2e22a51042c41ae796155eb77424, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: 421d011b2e81efb47b43ede521250fe6, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  clips: []
   pick: 1
   layers: []
   group: 6

@@ -16,14 +16,14 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Lux/Lux_PassiveSkill/Lux_PassiveSkillUpgrades/Scavenger
     Guid:
       Value: 269759498164841875
-  Icon: {fileID: 0}
+  Icon: {fileID: 1059982369, guid: 355e00907e214470bac0029f70064510, type: 3}
   DisplayName: Scavenger
   Description: More enemies drop Scrap, and more often.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - Filler enemies can drop Scrap (10% chance).
-  - Filler enemies can drop Scrap (10% chance), and all Scrap drop chances increase by about 25%.
-  - 'Jackpot: Filler enemies can drop Scrap and every drop chance is raised. Specialist, Heavy and Elite always drop at least 1 Scrap; Bosses drop 3.'
+  - 'Filler enemies can drop Scrap (<color=#FD3971>10%</color> chance).'
+  - 'Filler enemies can drop Scrap (<color=#FD3971>10%</color> chance), and all Scrap drop chances increase by about <color=#FD3971>25%</color>.'
+  - 'Every Scrap drop chance rises. Specialist, Heavy and Elite always drop at least <color=#FD3971>1</color> Scrap; Bosses drop <color=#FD3971>3</color>.'
   DropChance:
   - RawValue: 16384
   - RawValue: 20316

@@ -13,6 +13,12 @@ namespace Quantum
     // inert today (single-action model).
     public enum EnemyTriggerType { Cooldown, OnDeath, OnProximity, OnHealthThreshold }
 
+    // [Serializable] is required here - a plain struct field on a MonoBehaviour/AssetObject is
+    // silently NOT persisted by Unity without it (no compile error, no Inspector error - Trigger
+    // just always reads back as default { Type = Cooldown, Radius = 0, HealthPercent = 0}
+    // regardless of what's set in the Inspector, which is exactly the bug that made every
+    // authored OnHealthThreshold/OnProximity trigger silently no-op).
+    [System.Serializable]
     public struct EnemyTriggerData
     {
         public EnemyTriggerType Type;

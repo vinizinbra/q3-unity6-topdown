@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5390bacb03284b97b8ab045c14a0cdb, type: 3}
+  m_Name: ScavengerRush
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ScavengerRushMutationData
+  Identifier:
+    Path: _QuantumUser/Resources/LevelUp/RiftMutation/ScavengerRush
+    Guid:
+      Value: 533947951423803528
+  Icon: {fileID: -765598237, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
+  DisplayName: Scavenger Rush
+  Rarity: 1
+  Scope: 0
+  IncompatibleWith: []
+  Description: 'Collect <color=#FD3971>{0:0}</color> pickups within <color=#FD3971>{1:0.#}s</color>: +<color=#FD3971>{2:0}%</color> Move Speed and +<color=#FD3971>{3:0}%</color> Fire Rate for <color=#FD3971>{4:0.#}s</color>'
+  RequiredPickups: 5
+  CollectionWindow:
+    RawValue: 196608
+  BuffDuration:
+    RawValue: 262144
+  MoveSpeedBonus:
+    RawValue: 19661
+  FireRateBonus:
+    RawValue: 19661

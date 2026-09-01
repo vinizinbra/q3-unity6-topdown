@@ -38,7 +38,7 @@ namespace Quantum
         private string promptActiveDescription = "";
         [SerializeField, Tooltip("Optional - shown under the title while ContextInteractionState == PhaseUnavailable (nearby but not currently available, e.g. still Combat).")]
         private string promptPhaseUnavailableDescription = "COME BACK ON BREAK";
-        [SerializeField, Tooltip("Optional - shown under the title while ContextInteractionState == AlreadyUsed (available, but this player already used it this Break/Run).")]
+        [SerializeField, Tooltip("Optional - shown under the title while ContextInteractionState == AlreadyUsed (available, but this player already used it this Break/Run). Fallback only - a Cooldown-policy POI (see Poi.qtn) shows a live \"Xs\" countdown instead whenever it's actually on cooldown, and only falls back to this text if that read comes back empty (see InteractionPromptWidget.ResolveAlreadyUsedDescription).")]
         private string promptAlreadyUsedDescription = "ALREADY USED";
         [SerializeField, Tooltip("Optional - shown under the title while ContextInteractionState == NotNeeded (available and unused, but interacting would be pointless right now - e.g. a Healing Shrine at full Health). Also fired once, edge-triggered, as a ToastManager popup - see InteractionPromptWidget.")]
         private string promptNotNeededDescription = "FULL HEALTH";

@@ -14,6 +14,18 @@ namespace Quantum
     {
         public override void Update(Frame f)
         {
+            // Captured before anything below (or ChestSystem, which runs right after this system
+            // every tick) can change LevelUpScreenOpen this same tick - see
+            // Global.LevelUpScreenOpenLastTick's own comment.
+            f.Global->LevelUpScreenOpenLastTick = f.Global->LevelUpScreenOpen;
+
+            // A level-up screen got blocked (another screen already had LevelUpScreenOpen claimed
+            // the instant Grant raised Level) and is still owed - retry every tick until it actually
+            // gets through, same "keep retrying while blocked" idiom ChestSystem's own top-of-Update
+            // guard already uses. See Global.PendingLevelUpScreen's own comment.
+            if (f.Global->LevelUpScreenOpen == false && f.Global->PendingLevelUpScreen == true)
+                LevelUpUtility.BeginLevelUpScreen(f);
+
             if (f.Global->LevelUpScreenOpen == false)
                 return;
 

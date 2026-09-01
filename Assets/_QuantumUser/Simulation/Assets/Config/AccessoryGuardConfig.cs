@@ -28,6 +28,9 @@ namespace Quantum
         [Tooltip("Durability every hero's accessory starts a run with, and what a Merchant repair/replacement restores it to. Each blocked hit costs exactly 1; reaching 0 breaks it. 0 disables the whole mechanic (nothing is seeded, nothing blocks).")]
         public byte BaseDurability = 3;
 
+        [Tooltip("A hit dealing LESS than this passes straight through to Health and costs no durability - the guard only ever reacts to it. 0 (default) blocks every hit regardless of size, reproducing the original no-threshold behaviour. Exists so chip damage from Filler/Swarm enemies can't drain a durability point (worth real Coins to repair) for a hit that barely threatened the player's Health in the first place.")]
+        public FP MinDamageToBlock = FP._0;
+
         [Header("Drop / Pop")]
         [Tooltip("Ring around the owner that candidate landing spots are sampled from at the moment of the block.")]
         public FP MinDropOffset = FP._1;

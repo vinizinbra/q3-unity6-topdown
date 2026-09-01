@@ -37,7 +37,7 @@ namespace Quantum
             filter.Transform3D->Position = position;
             filter.Transform3D->Rotation = sentryTransform->Rotation;
 
-            bool hasTarget = EnemyMovementUtility.TryFindNearestEnemy(f, position, sentry->Range, out EntityRef target);
+            bool hasTarget = EnemyMovementUtility.TryFindNearestEnemy(f, position, ResolveEngagementRange(f, filter.Entity, sentry), out EntityRef target);
 
             filter.Aim->Target = target;
 
@@ -50,6 +50,28 @@ namespace Quantum
             filter.InputSource->Data.Fire = hasTarget;
 
             ApplySentryFireRate(f, filter.Entity, filter.Barrel, sentry);
+        }
+
+        // Detection range is a property of the SENTRY (see the class comment above), but the shot
+        // itself is capped by this barrel's own WeaponDataAsset.Range - WeaponSystem casts exactly
+        // that far and no further, and a projectile expires at exactly that MaxTravelDistance.
+        // Nothing kept the two in sync: Sentry.Range is scaled by Fortification's Extended Range and
+        // by Lux's own skill-range multiplier, while a barrel's Weapon.RangeMultiplier is only ever
+        // touched by player weapon perks and so stays 1 forever. A sentry with any range upgrade
+        // therefore locked on, fired every single cooldown, and had the shot die in mid-air short of
+        // a target it was visibly aiming at. Engaging at whichever range is actually smaller fixes
+        // that without changing what the sentry can DETECT (the Fortification aura and the range
+        // indicator ring both still read Sentry.Range directly).
+        private static FP ResolveEngagementRange(Frame f, EntityRef barrelEntity, Sentry* sentry)
+        {
+            if (f.Unsafe.TryGetPointer<Weapon>(barrelEntity, out var weapon) == false)
+                return sentry->Range;
+
+            FP weaponRange = WeaponPerkUtility.ResolveWeaponRange(f, weapon);
+
+            // An unauthored/zero weapon Range would otherwise silently disarm the barrel entirely -
+            // keep the sentry's own range in that case, which is the pre-existing behaviour.
+            return weaponRange > FP._0 ? FPMath.Min(sentry->Range, weaponRange) : sentry->Range;
         }
 
         // 3. Recomposes this barrel's own Weapon.FireCooldownMultiplier from the sentry-wide fire-rate

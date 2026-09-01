@@ -12,14 +12,35 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c04d8195895c42008e9658fbf433bf7, type: 3}
   m_Name: Assault Rifle Shot
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
-  clips:
-  - {fileID: 8300000, guid: 1e1caf4ad93d1fa4f8cd9b6360060506, type: 3}
+  variants:
+  - clip: {fileID: 8300000, guid: b98791d943809264c9a66c6970868512, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: eea904033193c0c41a784dc49aad9611, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: 69dfa915776f6044582d60a855d7aea3, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  clips: []
   pick: 0
   layers: []
   group: 4
   output: {fileID: 0}
-  volume: {x: 0.5, y: 0.5}
-  pitch: {x: 0.7, y: 0.8}
+  volume: {x: 0.1, y: 0.1}
+  pitch: {x: 0.95, y: 1.05}
   delay: {x: 0, y: 0}
   startAt: 0
   endAt: 0
@@ -29,7 +50,7 @@ MonoBehaviour:
   quieterWhenRemote: 1
   localPlayerOnly: 0
   spatial: 1
-  cooldown: 0.1
+  cooldown: 0.01
   maxConcurrent: 8
   priority: 128
   useUnscaledTime: 1

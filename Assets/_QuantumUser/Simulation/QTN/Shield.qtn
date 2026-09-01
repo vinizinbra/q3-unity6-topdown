@@ -33,6 +33,23 @@ component Shield
     // and ShieldSystem), which stay loud for everything else - they catch genuine authoring
     // mistakes, and a charge-only shield is deliberate rather than a mistake.
     Boolean ChargeOnly;
+
+    // Temporary-shield support (Brute's Juggernaut - see docs/brute-ascensions.md's "Temporary
+    // Shield" section). 0 disables expiration entirely - a plain persistent charge-only shield
+    // (every hero without a Shield-granting ability) or a classically-recharging enemy/boss shield
+    // both simply never read either of these two fields. Non-zero turns Current into an earned,
+    // strictly time-limited combat-window buffer: seeded once from CharacterData.
+    // ShieldTemporaryDuration (CharacterSystem.SeedShield), meaningless unless ChargeOnly is also
+    // true (a recharging shield has no business expiring on its own).
+    FP TemporaryDuration;
+
+    // Counts down every tick a temporary shield holds any Current (ShieldSystem.TickExpiration).
+    // Reset to TemporaryDuration - never added to - by every successful ShieldUtility grant, so
+    // multiple gains in the same window collapse into ONE refreshed timer rather than stacking
+    // individual expirations. Hits zero -> Current snaps straight to 0, no partial decay, no
+    // conversion to Health, no carry-over into the next encounter. Taking damage, dealing weapon
+    // damage and moving never touch this field - only a genuine Shield gain does.
+    FP ExpirationRemaining;
 }
 
 // Fired by DamageUtility.AbsorbWithShield the exact tick Current crosses from >0 to <=0 - not on

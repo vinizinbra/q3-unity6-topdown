@@ -1996,7 +1996,7 @@ MonoBehaviour:
   isLocal: 0
   spriteRoot: {fileID: 0}
   viewRadiusPadding: 0.2
-  widgetSpriteTopPadding: 0
+  widgetSpriteTopPadding: 0.25
   widgetRadiusOffsetMultiplier: 1
 --- !u!114 &84188352
 MonoBehaviour:
@@ -3412,7 +3412,7 @@ MonoBehaviour:
   isLocal: 0
   spriteRoot: {fileID: 0}
   viewRadiusPadding: 0.2
-  widgetSpriteTopPadding: 0
+  widgetSpriteTopPadding: 0.25
   widgetRadiusOffsetMultiplier: 1
 --- !u!114 &131388555
 MonoBehaviour:
@@ -7038,7 +7038,7 @@ MonoBehaviour:
   isLocal: 0
   spriteRoot: {fileID: 0}
   viewRadiusPadding: 0.2
-  widgetSpriteTopPadding: 0
+  widgetSpriteTopPadding: 0.25
   widgetRadiusOffsetMultiplier: 1
 --- !u!114 &273120141
 MonoBehaviour:
@@ -37187,7 +37187,7 @@ MonoBehaviour:
   isLocal: 0
   spriteRoot: {fileID: 0}
   viewRadiusPadding: 0.2
-  widgetSpriteTopPadding: 0
+  widgetSpriteTopPadding: 0.25
   widgetRadiusOffsetMultiplier: 1
 --- !u!114 &1327287524
 MonoBehaviour:
@@ -42198,7 +42198,7 @@ MonoBehaviour:
   isLocal: 0
   spriteRoot: {fileID: 0}
   viewRadiusPadding: 0.2
-  widgetSpriteTopPadding: 0
+  widgetSpriteTopPadding: 0.25
   widgetRadiusOffsetMultiplier: 1
 --- !u!114 &1558090503
 MonoBehaviour:
@@ -45822,7 +45822,7 @@ MonoBehaviour:
   isLocal: 0
   spriteRoot: {fileID: 0}
   viewRadiusPadding: 0.2
-  widgetSpriteTopPadding: 0
+  widgetSpriteTopPadding: 0.25
   widgetRadiusOffsetMultiplier: 1
 --- !u!114 &1677667445
 MonoBehaviour:
@@ -55771,7 +55771,7 @@ MonoBehaviour:
   isLocal: 0
   spriteRoot: {fileID: 0}
   viewRadiusPadding: 0.2
-  widgetSpriteTopPadding: 0
+  widgetSpriteTopPadding: 0.25
   widgetRadiusOffsetMultiplier: 1
 --- !u!114 &1853180434
 MonoBehaviour:
@@ -58614,7 +58614,7 @@ MonoBehaviour:
   isLocal: 0
   spriteRoot: {fileID: 1356304377}
   viewRadiusPadding: 0.2
-  widgetSpriteTopPadding: 0
+  widgetSpriteTopPadding: 0.25
   widgetRadiusOffsetMultiplier: 1
 --- !u!114 &1903073337
 MonoBehaviour:
@@ -62865,7 +62865,7 @@ MonoBehaviour:
   isLocal: 0
   spriteRoot: {fileID: 1882639921}
   viewRadiusPadding: 0.2
-  widgetSpriteTopPadding: 0
+  widgetSpriteTopPadding: 0.25
   widgetRadiusOffsetMultiplier: 1
 --- !u!114 &2071994032
 MonoBehaviour:

@@ -80,9 +80,9 @@ namespace Quantum
                 // Excludes the IgnoreProjectile layer so a projectile passes through an entity on
                 // it instead of being consumed on contact for zero damage.
                 int hitMask = -1 & ~EnemyMovementUtility.GetIgnoreProjectileLayerMask(f);
-                Hit3D? hit = CastForHit(f, origin, direction, travelDistance, hitMask, projectileData.HitRadius);
+                Hit3D? hit = CastForHit(f, filter.Projectile->Owner, origin, direction, travelDistance, hitMask, projectileData.HitRadius);
 
-                if (hit.HasValue == true && IsValidHitTarget(f, filter.Projectile->Owner, hit.Value.Entity))
+                if (hit.HasValue == true)
                 {
                     FPVector3 hitPoint = ResolveHitPoint(origin, moveDelta, hit.Value);
                     bool wasGrounded = filter.Projectile->Grounded;
@@ -131,13 +131,55 @@ namespace Quantum
         // of a near-miss, but the only way to catch a target the projectile spawned already
         // overlapping, since a Raycast never reports a hit against a collider its own origin starts
         // inside of (see ProjectileDataAsset.HitRadius's own comment).
-        private static Hit3D? CastForHit(Frame f, FPVector3 origin, FPVector3 direction, FP travelDistance, int hitMask, FP hitRadius)
+        //
+        // Collects EVERY contact along this tick's step and returns the nearest one this shot may
+        // actually hit, rather than the single nearest overall. It used to take one cast and let the
+        // caller test the result, so a nearest contact the shot must ignore - its own OWNER above all
+        // - threw the whole tick's result away and hid every valid target behind it. Every muzzle sits
+        // inside the shooter's own capsule (CharacterData.WeaponPosition is ~0.5 against a 0.5-radius,
+        // 1-high capsule), and Lux/Kai carry theirs deliberately ABOVE the head (1.8/2 - that is their
+        // authored silhouette, not a mistake), which makes a point-blank shot dive straight back down
+        // through that same capsule on its way to the target's collider center. Either way the first
+        // unit or so of a shot's flight could register nothing at all, so an enemy standing point-blank
+        // was simply never hit. Same nearest-first walk over an -All query
+        // WeaponSystem.FireHitscanPellet already does, for exactly this reason.
+        private static Hit3D? CastForHit(Frame f, EntityRef owner, FPVector3 origin, FPVector3 direction, FP travelDistance, int hitMask, FP hitRadius)
         {
-            if (hitRadius <= FP._0)
-                return f.Physics3D.Raycast(origin, direction, travelDistance, hitMask, QueryOptions.HitAll);
+            HitCollection3D hits;
 
-            Shape3D sphere = Shape3D.CreateSphere(hitRadius);
-            return f.Physics3D.ShapeCast(origin, FPQuaternion.Identity, sphere, direction * travelDistance, hitMask, QueryOptions.HitAll);
+            if (hitRadius <= FP._0)
+            {
+                hits = f.Physics3D.RaycastAll(origin, direction, travelDistance, hitMask, QueryOptions.HitAll);
+            }
+            else
+            {
+                Shape3D sphere = Shape3D.CreateSphere(hitRadius);
+                hits = f.Physics3D.ShapeCastAll(origin, FPQuaternion.Identity, sphere, direction * travelDistance, hitMask, QueryOptions.HitAll);
+            }
+
+            Hit3D? nearest = null;
+            FP nearestDistance = FP.MaxValue;
+
+            // Ordered off CastDistanceNormalized rather than HitCollection3D.Sort, which orders by
+            // Hit3D.Point - and Point only holds real data when the query passes
+            // QueryOptions.ComputeDetailedInfo, which this one deliberately doesn't (ResolveHitPoint
+            // reconstructs the contact from the normalized distance instead). Keeps the first index
+            // on ties, same as the hitscan walk.
+            for (int i = 0; i < hits.Count; i++)
+            {
+                if (IsValidHitTarget(f, owner, hits[i].Entity) == false)
+                    continue;
+
+                FP distance = hits[i].CastDistanceNormalized;
+
+                if (nearest.HasValue == true && distance >= nearestDistance)
+                    continue;
+
+                nearest = hits[i];
+                nearestDistance = distance;
+            }
+
+            return nearest;
         }
 
         // The raycast mask only excludes IgnoreProjectile, not the projectile layers themselves - a

@@ -12,11 +12,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c04d8195895c42008e9658fbf433bf7, type: 3}
   m_Name: ReloadReady
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
-  clips:
-  - {fileID: 8300000, guid: 3ea08426cf1e0d14e9a6bd666e141370, type: 3}
-  - {fileID: 8300000, guid: 8d1716d2ffa5c7f4e8249762a3caffc2, type: 3}
-  - {fileID: 8300000, guid: fcdc18ce292da7c4f97715755efbad0c, type: 3}
-  - {fileID: 8300000, guid: 7af2ca19031554c4b9ce7a0b6a49b628, type: 3}
+  variants:
+  - clip: {fileID: 8300000, guid: 3ea08426cf1e0d14e9a6bd666e141370, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: 8d1716d2ffa5c7f4e8249762a3caffc2, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: fcdc18ce292da7c4f97715755efbad0c, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: 7af2ca19031554c4b9ce7a0b6a49b628, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  clips: []
   pick: 1
   layers: []
   group: 4

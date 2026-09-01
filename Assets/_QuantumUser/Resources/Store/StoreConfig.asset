@@ -20,12 +20,36 @@ MonoBehaviour:
     Id:
       Value: 489069850842438477
   MaxWeaponOfferSlots: 3
-  WeaponOfferTalentLevel: 2
   WeaponOfferBasePrice:
     RawValue: 6553600
   WeaponOfferPricePerPerk:
     RawValue: 1638400
+  TalentRarityTuning:
+  - CommonWeight: 90
+    RareWeight: 10
+    EpicWeight: 0
+    LegendaryWeight: 0
+  - CommonWeight: 75
+    RareWeight: 25
+    EpicWeight: 0
+    LegendaryWeight: 0
+  - CommonWeight: 55
+    RareWeight: 35
+    EpicWeight: 10
+    LegendaryWeight: 0
+  - CommonWeight: 35
+    RareWeight: 45
+    EpicWeight: 18
+    LegendaryWeight: 2
   FoodPool:
     Id:
       Value: 412821431523284470
-  FoodOfferCount: 2
+  FoodOfferCount: 1
+  OfferWeaponLevelUp: 0
+  OfferAccessoryService: 1
+  WeaponLevelUpBasePrice:
+    RawValue: 6553600
+  WeaponLevelUpPricePerLevel:
+    RawValue: 3276800
+  WeaponLevelUpDamageBonusPerLevel:
+    RawValue: 3277

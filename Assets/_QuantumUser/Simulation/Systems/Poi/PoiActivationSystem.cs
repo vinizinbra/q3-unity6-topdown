@@ -44,6 +44,17 @@ namespace Quantum
             {
                 PoiActivationUtility.Refresh(f, entity, forge.Availability, forge.UsagePolicy);
             }
+
+            // Per-PLAYER, not per-POI (unlike every loop above) - decays any Cooldown-policy
+            // PoiUsage entries so a cooldown keeps counting down through a Breathing Break, not
+            // just through Combat (see PoiUsageUtility.TickCooldowns). Lives here anyway since this
+            // is already the single generic per-tick POI-infra pass.
+            var players = f.Filter<PoiUsage>();
+
+            while (players.Next(out EntityRef entity, out PoiUsage _))
+            {
+                PoiUsageUtility.TickCooldowns(f, entity);
+            }
         }
     }
 }

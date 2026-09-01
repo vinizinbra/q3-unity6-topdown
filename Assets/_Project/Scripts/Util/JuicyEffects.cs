@@ -35,6 +35,19 @@ public class JuicyEffects : MonoBehaviour
     [SerializeField] private float idleWobbleDuration = 1.4f;
     [SerializeField] private Ease idleWobbleEase = Ease.InOutSine;
 
+    [Header("Idle Rare Wiggle (one-shot punch/shake on a random interval)")]
+    [SerializeField] private bool idleRareWiggleOnEnable = false;
+    [SerializeField, Tooltip("Random delay range between wiggles, in seconds.")]
+    private Vector2 idleRareWiggleInterval = new Vector2(3f, 8f);
+    [SerializeField, Tooltip("Which one-shot effects above are eligible - one is picked at random each time.")]
+    private bool idleRareWiggleIncludeScale = true;
+    [SerializeField] private bool idleRareWiggleIncludeRotation = true;
+    [SerializeField] private bool idleRareWiggleIncludePosition = true;
+    [SerializeField, Range(0f, 1f), Tooltip("Scales down the Punch Scale/Rotation/Shake strength above when triggered by the idle wiggle, so a passive idle flourish reads softer than a real hit reaction without retuning those shared values.")]
+    private float idleRareWiggleStrengthMultiplier = 0.5f;
+    [SerializeField, Min(0.01f), Tooltip("Scales the Punch Scale/Rotation/Shake duration above when triggered by the idle wiggle - independent of the strength multiplier, since a soft flourish might still want to linger longer (or resolve quicker) than a real hit reaction.")]
+    private float idleRareWiggleDurationMultiplier = 1f;
+
     [Header("Timing")]
     [SerializeField, Tooltip("If true, PlayScaleIn/PlayPunchScale/StartIdleWobble ignore Time.timeScale (run on real/unscaled time) - turn on for scale juice that must still play at full speed while the game is paused or slowed, e.g. a Chest's open punch during the upgrade-screen time-scale ease (see GameplayUiController).")]
     private bool scaleUseUnscaledTime = false;
@@ -48,6 +61,7 @@ public class JuicyEffects : MonoBehaviour
     private Tween _scaleTween;
     private Tween _rotationTween;
     private Tween _positionTween;
+    private Tween _idleRareWiggleTween;
 
     private void Awake()
     {
@@ -63,6 +77,9 @@ public class JuicyEffects : MonoBehaviour
 
         if (idleWobbleOnEnable)
             StartIdleWobble();
+
+        if (idleRareWiggleOnEnable)
+            StartIdleRareWiggle();
     }
 
     // Pooled objects get disabled/re-enabled rather than destroyed - stop every tween and snap back
@@ -72,6 +89,7 @@ public class JuicyEffects : MonoBehaviour
         _scaleTween.Stop();
         _rotationTween.Stop();
         _positionTween.Stop();
+        _idleRareWiggleTween.Stop();
         transform.localScale = _baseScale;
         transform.localRotation = _baseRotation;
         transform.localPosition = _baseLocalPosition;
@@ -124,5 +142,68 @@ public class JuicyEffects : MonoBehaviour
     {
         _scaleTween.Stop();
         transform.localScale = _baseScale;
+    }
+
+    [Button]
+    public void StartIdleRareWiggle()
+    {
+        _idleRareWiggleTween.Stop();
+        ScheduleNextIdleRareWiggle();
+    }
+
+    [Button]
+    public void StopIdleRareWiggle()
+    {
+        _idleRareWiggleTween.Stop();
+    }
+
+    private void ScheduleNextIdleRareWiggle()
+    {
+        float delay = Random.Range(idleRareWiggleInterval.x, idleRareWiggleInterval.y);
+        _idleRareWiggleTween = Tween.Delay(gameObject, delay, useUnscaledTime: useUnscaledTime).OnComplete(() =>
+        {
+            PlayRandomIdleWiggleEffect();
+            ScheduleNextIdleRareWiggle();
+        });
+    }
+
+    // Picks uniformly among whichever one-shot effects above are opted in, so a caller can e.g.
+    // restrict a fragile-looking prop to scale-only without touching its position/rotation.
+    private void PlayRandomIdleWiggleEffect()
+    {
+        int count = (idleRareWiggleIncludeScale ? 1 : 0) + (idleRareWiggleIncludeRotation ? 1 : 0) + (idleRareWiggleIncludePosition ? 1 : 0);
+        if (count == 0)
+            return;
+
+        int pick = Random.Range(0, count);
+        int index = 0;
+
+        if (idleRareWiggleIncludeScale) { if (index == pick) { PlayIdleRareWiggleScale(); return; } index++; }
+        if (idleRareWiggleIncludeRotation) { if (index == pick) { PlayIdleRareWiggleRotation(); return; } index++; }
+        if (idleRareWiggleIncludePosition) { PlayIdleRareWiggleShake(); }
+    }
+
+    // Same tweens as PlayPunchScale/PlayPunchRotation/PlayShake, just scaled down by
+    // idleRareWiggleStrengthMultiplier so tuning the idle flourish never touches the strength
+    // those methods use for a real hit reaction elsewhere.
+    private void PlayIdleRareWiggleScale()
+    {
+        _scaleTween.Stop();
+        transform.localScale = _baseScale;
+        _scaleTween = Tween.PunchScale(transform, punchScaleStrength * idleRareWiggleStrengthMultiplier, punchScaleDuration * idleRareWiggleDurationMultiplier, punchScaleFrequency, useUnscaledTime: scaleUseUnscaledTime);
+    }
+
+    private void PlayIdleRareWiggleRotation()
+    {
+        _rotationTween.Stop();
+        transform.localRotation = _baseRotation;
+        _rotationTween = Tween.PunchLocalRotation(transform, punchRotationStrength * idleRareWiggleStrengthMultiplier, punchRotationDuration * idleRareWiggleDurationMultiplier, punchRotationFrequency, useUnscaledTime: useUnscaledTime);
+    }
+
+    private void PlayIdleRareWiggleShake()
+    {
+        _positionTween.Stop();
+        transform.localPosition = _baseLocalPosition;
+        _positionTween = Tween.ShakeLocalPosition(transform, shakeStrength * idleRareWiggleStrengthMultiplier, shakeDuration * idleRareWiggleDurationMultiplier, shakeFrequency, useUnscaledTime: useUnscaledTime);
     }
 }

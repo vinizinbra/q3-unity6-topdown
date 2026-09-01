@@ -445,6 +445,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.HasShadow
   baseScale: 1
   shadowOffset: {x: 0, y: 0}
+  shadowAlphaMultiplier: 1
 --- !u!1001 &7454792091129253677
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -505,6 +506,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1258406917094090, guid: 14a334c03c1cccd458efe9a3d4fbc240, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3380733512164409214}
+    - targetCorrespondingSourceObject: {fileID: 1258406917094090, guid: 14a334c03c1cccd458efe9a3d4fbc240, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5310822003664685974}
   m_SourcePrefab: {fileID: 100100000, guid: 14a334c03c1cccd458efe9a3d4fbc240, type: 3}
 --- !u!198 &7328869477943408433 stripped
 ParticleSystem:
@@ -536,6 +540,21 @@ MonoBehaviour:
     tail: {fileID: 0}
   volumeScale: 1
   source: {fileID: 7328869477943408433}
+--- !u!114 &5310822003664685974
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7453674448049157607}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9168c542245be475f8ee71bd6733ba7c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Quantum.HasShadow
+  baseScale: 0.75
+  shadowOffset: {x: 0, y: 0}
+  shadowAlphaMultiplier: 0.5
 --- !u!4 &7456704937189355667 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4279621146394558, guid: 14a334c03c1cccd458efe9a3d4fbc240, type: 3}

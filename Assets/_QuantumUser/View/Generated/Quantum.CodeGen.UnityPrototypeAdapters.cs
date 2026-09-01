@@ -55,6 +55,7 @@ namespace Quantum.Prototypes.Unity {
     public Byte CurrentDurability;
     public Byte MaxDurability;
     public Quantum.QuantumEntityPrototype Accessory;
+    public QBoolean Disabled;
     partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.AccessoryGuardPrototype prototype);
     public override Quantum.Prototypes.AccessoryGuardPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
       var result = new Quantum.Prototypes.AccessoryGuardPrototype();
@@ -62,6 +63,7 @@ namespace Quantum.Prototypes.Unity {
       converter.Convert(this.CurrentDurability, out result.CurrentDurability);
       converter.Convert(this.MaxDurability, out result.MaxDurability);
       converter.Convert(this.Accessory, out result.Accessory);
+      converter.Convert(this.Disabled, out result.Disabled);
       ConvertUser(converter, ref result);
       return result;
     }
@@ -159,6 +161,47 @@ namespace Quantum.Prototypes.Unity {
     }
   }
   [System.SerializableAttribute()]
+  public unsafe partial class ChunkPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.ChunkPrototype> {
+    public Quantum.QEnum8<ChunkType> Type;
+    public Int32 ChunkSizeWidth;
+    public Int32 ChunkSizeDepth;
+    public Int32 OriginCellX;
+    public Int32 OriginCellZ;
+    [ArrayLengthAttribute(16)]
+    public Quantum.Prototypes.WaypointNodePrototype[] Waypoints = new Quantum.Prototypes.WaypointNodePrototype[16];
+    public Byte WaypointCount;
+    public AssetRef<ChunkSpawnConfig> SpawnConfig;
+    public Quantum.QEnum8<ChunkConnectionSide> AllowedConnectionSides;
+    public Quantum.QEnum8<ChunkTypeMask> ForbiddenNeighbors;
+    [ArrayLengthAttribute(8)]
+    public Quantum.QuantumEntityPrototype[] ConnectedChunks = new Quantum.QuantumEntityPrototype[8];
+    public Byte ConnectedChunkCount;
+    public QBoolean Discovered;
+    public QBoolean HasRespawnPoint;
+    public FPVector3 RespawnPoint;
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.ChunkPrototype prototype);
+    public override Quantum.Prototypes.ChunkPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.ChunkPrototype();
+      converter.Convert(this.Type, out result.Type);
+      converter.Convert(this.ChunkSizeWidth, out result.ChunkSizeWidth);
+      converter.Convert(this.ChunkSizeDepth, out result.ChunkSizeDepth);
+      converter.Convert(this.OriginCellX, out result.OriginCellX);
+      converter.Convert(this.OriginCellZ, out result.OriginCellZ);
+      converter.Convert(this.Waypoints, out result.Waypoints);
+      converter.Convert(this.WaypointCount, out result.WaypointCount);
+      converter.Convert(this.SpawnConfig, out result.SpawnConfig);
+      converter.Convert(this.AllowedConnectionSides, out result.AllowedConnectionSides);
+      converter.Convert(this.ForbiddenNeighbors, out result.ForbiddenNeighbors);
+      converter.Convert(this.ConnectedChunks, out result.ConnectedChunks);
+      converter.Convert(this.ConnectedChunkCount, out result.ConnectedChunkCount);
+      converter.Convert(this.Discovered, out result.Discovered);
+      converter.Convert(this.HasRespawnPoint, out result.HasRespawnPoint);
+      converter.Convert(this.RespawnPoint, out result.RespawnPoint);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
   public unsafe partial class ContextInteractionPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.ContextInteractionPrototype> {
     public Quantum.QuantumEntityPrototype ActiveTarget;
     public Quantum.QEnum8<InteractableKind> ActiveKind;
@@ -232,6 +275,7 @@ namespace Quantum.Prototypes.Unity {
     public Quantum.QuantumEntityPrototype SkillProjectile;
     public FP FlyingHoverCheckTimer;
     public FP FlyingHoverTargetHeight;
+    public FP LostTimer;
     public Quantum.QEnum8<EnemyFaction> Faction;
     partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.EnemyPrototype prototype);
     public override Quantum.Prototypes.EnemyPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
@@ -257,6 +301,7 @@ namespace Quantum.Prototypes.Unity {
       converter.Convert(this.SkillProjectile, out result.SkillProjectile);
       converter.Convert(this.FlyingHoverCheckTimer, out result.FlyingHoverCheckTimer);
       converter.Convert(this.FlyingHoverTargetHeight, out result.FlyingHoverTargetHeight);
+      converter.Convert(this.LostTimer, out result.LostTimer);
       converter.Convert(this.Faction, out result.Faction);
       ConvertUser(converter, ref result);
       return result;
@@ -399,11 +444,13 @@ namespace Quantum.Prototypes.Unity {
   public unsafe partial class PoiUsageEntryPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.PoiUsageEntryPrototype> {
     public Quantum.QuantumEntityPrototype Poi;
     public Int32 UsedAtBreathingIndex;
+    public FP CooldownRemaining;
     partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.PoiUsageEntryPrototype prototype);
     public override Quantum.Prototypes.PoiUsageEntryPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
       var result = new Quantum.Prototypes.PoiUsageEntryPrototype();
       converter.Convert(this.Poi, out result.Poi);
       converter.Convert(this.UsedAtBreathingIndex, out result.UsedAtBreathingIndex);
+      converter.Convert(this.CooldownRemaining, out result.CooldownRemaining);
       ConvertUser(converter, ref result);
       return result;
     }

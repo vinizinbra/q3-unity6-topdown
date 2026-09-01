@@ -90,6 +90,8 @@ MonoBehaviour:
       RawValue: 65536
     ShieldMultiplier:
       RawValue: 0
+    HealthMultiplier:
+      RawValue: 65536
     Traits: 
     FrontalDamageReductionAmount:
       RawValue: 0
@@ -109,6 +111,8 @@ MonoBehaviour:
       RawValue: 851968
     LeashRange:
       RawValue: 983040
+    DetectionRangeMultiplier:
+      RawValue: 65536
   Actions:
     BasicAction:
       Id:
@@ -116,6 +120,11 @@ MonoBehaviour:
     SkillActions: []
   DeathLingerTime:
     RawValue: 196608
+  ChestDrop:
+    Id:
+      Value: 0
+  ChestDropChance:
+    RawValue: 65536
   Cost:
     RawValue: 65536
   Persistent: 0
@@ -237,11 +246,11 @@ MonoBehaviour:
   DamageRange:
     RawValue: 98304
   Damage:
-    RawValue: 589824
+    RawValue: 0
   AnticipationTime:
     RawValue: 13107
   DirectionTracking: 2
-  IgnoreY: 1
+  IgnoreY: 0
   Origin: 1
   DownTime:
     RawValue: 65536
@@ -249,6 +258,12 @@ MonoBehaviour:
     RawValue: 65536
   TelegraphStartPercent:
     RawValue: 32768
+  Trigger:
+    Type: 0
+    Radius:
+      RawValue: 0
+    HealthPercent:
+      RawValue: 0
   AimLock: 1
   AimLockPercent:
     RawValue: 65536
@@ -257,7 +272,7 @@ MonoBehaviour:
   InterruptibleDuringActive: 0
   Delivery:
     Id:
-      Value: 340169074355723138
+      Value: 1000605023884426500
   Effects:
   - Id:
       Value: 280329904200879658
@@ -267,6 +282,8 @@ MonoBehaviour:
   AnticipationStep:
     AnimationType: 11
     Duration: 0.2
+    BodySprite: {fileID: 0}
+    ShakeImpact: 0
     Shake:
       Frequency: 18
       RockDegrees: 6
@@ -310,6 +327,13 @@ MonoBehaviour:
       ImpactShakeDegrees: 4
       ImpactShakeFrequency: 30
       BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
     CenterPivot: 0
     PivotHeightOverride: 0
     ParticlePrefab: {fileID: 0}
@@ -324,6 +348,8 @@ MonoBehaviour:
   BeginStep:
     AnimationType: 7
     Duration: 0.3
+    BodySprite: {fileID: 0}
+    ShakeImpact: 0
     Shake:
       Frequency: 18
       RockDegrees: 6
@@ -367,6 +393,13 @@ MonoBehaviour:
       ImpactShakeDegrees: 4
       ImpactShakeFrequency: 30
       BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
     CenterPivot: 0
     PivotHeightOverride: 0
     ParticlePrefab: {fileID: 0}
@@ -381,6 +414,8 @@ MonoBehaviour:
   OnGoingStep:
     AnimationType: 0
     Duration: 0.3
+    BodySprite: {fileID: 0}
+    ShakeImpact: 0
     Shake:
       Frequency: 18
       RockDegrees: 6
@@ -424,6 +459,13 @@ MonoBehaviour:
       ImpactShakeDegrees: 4
       ImpactShakeFrequency: 30
       BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
     CenterPivot: 0
     PivotHeightOverride: 0
     ParticlePrefab: {fileID: 0}
@@ -438,6 +480,8 @@ MonoBehaviour:
   EndStep:
     AnimationType: 0
     Duration: 0.3
+    BodySprite: {fileID: 0}
+    ShakeImpact: 0
     Shake:
       Frequency: 18
       RockDegrees: 6
@@ -481,6 +525,13 @@ MonoBehaviour:
       ImpactShakeDegrees: 4
       ImpactShakeFrequency: 30
       BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
     CenterPivot: 0
     PivotHeightOverride: 0
     ParticlePrefab: {fileID: 0}

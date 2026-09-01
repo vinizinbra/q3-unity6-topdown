@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c04d8195895c42008e9658fbf433bf7, type: 3}
+  m_Name: LuxFootstepImpact
+  m_EditorClassIdentifier: Assembly-CSharp::SoundData
+  variants:
+  - clip: {fileID: 8300000, guid: 5d601aa94fdbf1a4d962d11321a5ba64, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: 09ff3269a0c293b45aaf15c9ca3348cc, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: e7fb5d6bdbf5d034d91fecfdf55c01d9, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: 7eb3a6687831fb74180275633c4991b7, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  clips: []
+  pick: 1
+  layers: []
+  group: 9
+  output: {fileID: 0}
+  volume: {x: 0.3, y: 0.4}
+  pitch: {x: 0.95, y: 1.05}
+  delay: {x: 0, y: 0}
+  startAt: 0
+  endAt: 0
+  fadeIn: 0
+  fadeOut: 0
+  loop: 0
+  quieterWhenRemote: 1
+  localPlayerOnly: 0
+  spatial: 1
+  cooldown: 0.1
+  maxConcurrent: 1
+  priority: 128
+  useUnscaledTime: 1

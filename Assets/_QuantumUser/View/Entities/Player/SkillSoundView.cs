@@ -18,10 +18,10 @@ namespace Quantum
     // place that answers "what does activating a skill sound like" instead of two.
     public class SkillSoundView : CustomQuantumEntityViewComponent
     {
-        [SerializeField, Tooltip("Played when the Dash slot activates. Leave empty to skip.")]
+        [SerializeField, SoundDataPicker, Tooltip("Played when the Dash slot activates. Leave empty to skip.")]
         private SoundData dashSound;
 
-        [SerializeField, Tooltip("Played when the Hero (base) skill slot activates - the same slot the Base Skill button drives. Per-hero variation is authored by putting a different SoundData on each hero's own prefab. Leave empty to skip.")]
+        [SerializeField, SoundDataPicker, Tooltip("Played when the Hero (base) skill slot activates - the same slot the Base Skill button drives. Per-hero variation is authored by putting a different SoundData on each hero's own prefab. Leave empty to skip.")]
         private SoundData heroSkillSound;
 
         private bool _dashActive;

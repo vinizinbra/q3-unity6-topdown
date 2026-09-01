@@ -15,6 +15,16 @@ namespace Quantum
         // entity, and GlobalUpgradeUtility.Grant is what actually records each pick.
         public byte MaxPicks = 0;
 
+        // Generic prerequisite gate, mirroring PassiveUpgradeData/SkillActionData's own IsEligible
+        // exactly - default true, so every existing upgrade is unaffected. Checked by
+        // LevelUpUtility.CollectGlobalUpgradeCandidates alongside the MaxPicks cap.
+        //
+        // Exists so an upgrade can stop being offered once it would be a DEAD card - the same
+        // reasoning MaxPicks already encodes for "picked enough times", extended to "something else
+        // this player owns has made this pointless". Dash Charge overrides it against Dead Weight's
+        // hard cap; a hero-specific branch in LevelUpUtility would have been the alternative.
+        public virtual bool IsEligible(Frame f, EntityRef entity) => true;
+
         public abstract void Apply(Frame f, EntityRef entity);
 
         public override string GetDescription() => GetFormattedDescription();

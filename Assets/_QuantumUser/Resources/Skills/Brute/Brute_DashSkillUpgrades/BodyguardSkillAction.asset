@@ -19,17 +19,16 @@ MonoBehaviour:
   Icon: {fileID: 1060707514, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
   DisplayName: Bodyguard
   RankDescriptions:
-  - On Dash complete, restore 10 Shield to allies within 6m.
-  - On Dash complete, restore 15 Shield to allies within 8m.
-  - On Dash complete, restore 20 Shield to allies within 8m and grant them +20% Damage
-    Reduction for 2s.
+  - 'Ending a Dash gives you and allies within <color=#FD3971>3m</color> a Free Hit Guard for <color=#FD3971>2.5s</color>, negating the next hit taken.'
+  - 'Ending a Dash gives you and allies within <color=#FD3971>6m</color> a Free Hit Guard for <color=#FD3971>3.5s</color>. Each hit it blocks restores <color=#FD3971>10</color> Shield.'
+  - 'Ending a Dash guards you and allies within <color=#FD3971>8m</color> for <color=#FD3971>3.5s</color>. A blocked hit restores <color=#FD3971>15</color> Shield and bursts a <color=#FD3971>3m</color> knockback.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 4
   Interval:
     RawValue: 0
   Activated: 1
-  Description: On Dash complete, restore Shield to nearby allies.
+  Description: Dash to hand out protection - you and every ally you sweep past get a guard that eats the next hit outright, and at higher ranks it pays you back for the save.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

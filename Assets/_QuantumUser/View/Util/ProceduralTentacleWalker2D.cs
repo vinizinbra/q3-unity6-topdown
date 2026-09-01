@@ -304,6 +304,28 @@ public sealed class ProceduralTentacleWalker2D : MonoBehaviour
     }
 
     /// <summary>
+    /// Shows or hides the tentacle at the given index: its LineRenderer is disabled and its
+    /// endAnchor deactivated, while the leg itself keeps being simulated so it is already in the
+    /// right place if it is ever shown again. For a rig whose legs are OPTIONAL rather than
+    /// structural - e.g. a sentry arm that should only exist while its own weapon slot is armed.
+    /// Nothing in this component ever writes lineRenderer.enabled itself, so a hidden tentacle
+    /// stays hidden until a caller says otherwise. No-ops silently if index is out of range.
+    /// </summary>
+    public void SetTentacleVisible(int index, bool visible)
+    {
+        if (tentacles == null || index < 0 || index >= tentacles.Length)
+            return;
+
+        Tentacle tentacle = tentacles[index];
+
+        if (tentacle.lineRenderer != null)
+            tentacle.lineRenderer.enabled = visible;
+
+        if (tentacle.endAnchor != null && tentacle.endAnchor.gameObject.activeSelf != visible)
+            tentacle.endAnchor.gameObject.SetActive(visible);
+    }
+
+    /// <summary>
     /// Immediately places every foot at its current home target.
     /// This can also be called manually after teleporting the character.
     /// </summary>

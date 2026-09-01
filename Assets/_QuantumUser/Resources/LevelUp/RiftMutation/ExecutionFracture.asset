@@ -16,7 +16,9 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/ExecutionFracture
     Guid:
       Value: 532072750547023600
-  Icon: {fileID: 2045584798, guid: 9dcd69f213ec845fa868b0a3699cf683, type: 3}
+  Icon: {fileID: 968494509, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
   DisplayName: Execution Fracture
   Rarity: 1
-  Description: Hitting enemies below 25% health applies Rift Mark
+  Scope: 0
+  IncompatibleWith: []
+  Description: 'Hitting enemies below <color=#FD3971>25%</color> health applies Rift Mark'

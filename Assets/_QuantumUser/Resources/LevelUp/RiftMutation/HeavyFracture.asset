@@ -16,7 +16,9 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/HeavyFracture
     Guid:
       Value: 298522279084543542
-  Icon: {fileID: 373620650, guid: 9dcd69f213ec845fa868b0a3699cf683, type: 3}
+  Icon: {fileID: -233418806, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
   DisplayName: Heavy Fracture
   Rarity: 1
+  Scope: 0
+  IncompatibleWith: []
   Description: Large hits apply Rift Mark

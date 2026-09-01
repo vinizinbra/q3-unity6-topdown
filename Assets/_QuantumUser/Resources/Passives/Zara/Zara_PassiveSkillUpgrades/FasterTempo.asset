@@ -16,16 +16,14 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Passives/Zara/Zara_PassiveSkillUpgrades/FasterTempo
     Guid:
       Value: 423069476414731352
-  Icon: {fileID: 0}
+  Icon: {fileID: -1928859675, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
   DisplayName: Faster Tempo
   Description: Reach Flow faster, and make every stack of it worth more.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - Flow builds 25% faster.
-  - Flow builds 50% faster, and each Flow stack grants +6% Move Speed and +6% Fire
-    Rate.
-  - 'Full Tempo: Flow builds 75% faster, and at Max Flow you gain a further +10%
-    Fire Rate.'
+  - 'Flow builds <color=#FD3971>25%</color> faster.'
+  - 'Flow builds <color=#FD3971>50%</color> faster, and each Flow stack grants <color=#FD3971>+6%</color> Move Speed and <color=#FD3971>+6%</color> Fire Rate.'
+  - 'Full Tempo: Flow builds <color=#FD3971>75%</color> faster, and at Max Flow you gain a further <color=#FD3971>+10%</color> Fire Rate.'
   BuildRateMultiplier:
   - RawValue: 81920
   - RawValue: 98304

@@ -26,21 +26,19 @@ namespace Quantum
         // stops advancing while the current phase's own encounter isn't cleared yet - Elite/Boss
         // hold on their own matching EnemyDataAsset.Tier, Breathing holds on ANY currently-alive
         // enemy (see IsEncounterCleared below) - so a Break's own countdown doesn't even start
-        // until the area is actually clear, even though spawning stops and SurvivalTime freezes
-        // the instant the phase boundary is crossed either way. BOTH clocks additionally freeze
-        // together while any Traversal Challenge is Active (Global.ActiveTraversalChallengeCount >
-        // 0, see TraversalChallenge.qtn/docs/traversal-challenge.md) - a challenge activated mid-
-        // Breathing must not let the Break quietly end (and Director spawning resume) underneath it.
+        // until the area is actually clear, even though spawning stops the instant the phase
+        // boundary is crossed either way. SurvivalTime ALSO freezes while a Breathing phase's own
+        // hold is open, same as an Elite phase's own hold (encounterCleared == false) - "locked
+        // into" an Elite encounter shouldn't burn co-op-scaling/run-curve time the players can't
+        // do anything to advance; Boss deliberately keeps SurvivalTime running through its own
+        // hold (an active, ongoing fight the players ARE progressing, not a stall). BOTH clocks
+        // additionally freeze together while any Traversal Challenge is Active
+        // (Global.ActiveTraversalChallengeCount > 0, see TraversalChallenge.qtn/
+        // docs/traversal-challenge.md) - a challenge activated mid-Breathing must not let the
+        // Break quietly end (and Director spawning resume) underneath it.
         public static SurvivalPhase Tick(Frame f, SurvivalConfig config)
         {
             SurvivalPhase currentPhase = config.Phases[f.Global->CurrentPhaseIndex];
-
-            // Also frozen while any Traversal Challenge is Active (Global.ActiveTraversalChallengeCount
-            // > 0) - same freeze, deliberately NOT via SurvivalPhaseKind.Breathing (which would also
-            // trigger BreathingIndex/POI-usage/Cursed-Rift side effects this ad-hoc pause doesn't
-            // want). See TraversalChallenge.qtn.
-            if (currentPhase.Kind != SurvivalPhaseKind.Breathing && f.Global->ActiveTraversalChallengeCount <= 0)
-                f.Global->SurvivalTime += f.DeltaTime;
 
             // Elite/Boss phases hold open until every currently-alive enemy of the matching
             // EnemyDataAsset.Tier is dead - "however many got spawned" (an Elite/Boss phase can
@@ -51,10 +49,22 @@ namespace Quantum
             // more; whatever's left has to actually be killed or fall Irrelevant long enough to
             // auto-retire (EnemyLifecycleSystem, unchanged, still runs during Breathing). PhaseTimer
             // itself genuinely stops advancing while blocked (same "freeze, don't just gate the
-            // transition" idiom SurvivalTime's own Breathing freeze above already uses) rather than
+            // transition" idiom SurvivalTime's own Breathing freeze below already uses) rather than
             // being held just under Duration, so nudging Duration in the Editor can't accidentally
             // let it slip past while an encounter is still live.
             bool encounterCleared = IsEncounterCleared(f, currentPhase.Kind);
+
+            // Also frozen while any Traversal Challenge is Active (Global.ActiveTraversalChallengeCount
+            // > 0) - same freeze, deliberately NOT via SurvivalPhaseKind.Breathing (which would also
+            // trigger BreathingIndex/POI-usage/Cursed-Rift side effects this ad-hoc pause doesn't
+            // want). See TraversalChallenge.qtn. An Elite phase's own hold freezes it too (see
+            // header comment) - Boss does not, its hold is an active fight, not a stall.
+            bool freezeSurvivalTime = currentPhase.Kind == SurvivalPhaseKind.Breathing
+                || (currentPhase.Kind == SurvivalPhaseKind.Elite && encounterCleared == false);
+
+            if (freezeSurvivalTime == false && f.Global->ActiveTraversalChallengeCount <= 0)
+                f.Global->SurvivalTime += f.DeltaTime;
+
             bool wasSecured = f.Global->BreathingAreaSecured;
             bool isSecured = currentPhase.Kind == SurvivalPhaseKind.Breathing && encounterCleared;
 
@@ -85,8 +95,9 @@ namespace Quantum
             {
                 f.Global->CurrentPhaseIndex++;
                 f.Global->PhaseTimer = FP._0;
+                f.Global->PhaseGuaranteedSpawnDone = false;
                 currentPhase = config.Phases[f.Global->CurrentPhaseIndex];
-                Log.Debug($"[Director] advanced to phase {f.Global->CurrentPhaseIndex}");
+                Log.Error($"[Director] advanced to phase {f.Global->CurrentPhaseIndex}");
             }
 
             return currentPhase;

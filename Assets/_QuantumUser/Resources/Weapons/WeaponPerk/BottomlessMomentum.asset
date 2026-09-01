@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3050fcfa7e44f4d82884b4a48779988b, type: 3}
+  m_Name: BottomlessMomentum
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.BottomlessMomentumWeaponPerkData
+  Identifier:
+    Path: _QuantumUser/Resources/Weapons/WeaponPerk/BottomlessMomentum
+    Guid:
+      Value: 330234426950999633
+  Icon: {fileID: -1308015637, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  DisplayName: Bottomless Momentum
+  Rarity: 2
+  Description: '<color=#FD3971>{0:0}%</color> chance for crits to restore <color=#FD3971>{1:0}</color> ammo'
+  Chance:
+    RawValue: 32768
+  Amount: 1

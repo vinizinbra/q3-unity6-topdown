@@ -80,14 +80,17 @@ component Projectile
     FP TraveledDistance;
 
     // An absolute world-unit cap seeded from the firing Weapon's own engagement range
-    // (WeaponPerkUtility.ResolveWeaponRange - WeaponDataAsset.Range * Weapon.RangeMultiplier, the
-    // same distance FireHitscan already limits a raycast to) by every weapon-fire spawn site -
+    // (WeaponPerkUtility.ResolveProjectileMaxTravelDistance - WeaponDataAsset.Range *
+    // Weapon.RangeMultiplier, the same distance FireHitscan already limits a raycast to, padded per
+    // ProjectileMovementData.ResolveMaxTravelDistance for a movement whose real flight path covers
+    // more ground than that flat distance, e.g. an arc) by every weapon-fire spawn site -
     // WeaponSystem.ApplyProjectilePerks (primary shot, Double Tap's replay, Echo Chamber/Infinite
     // Echo), WeaponPerkReactionSystem.TryFireCriticalRebound, and DirectHitData.
     // SpawnSplitProjectiles - so a shotgun with Range 6 can't have any weapon-fired projectile,
-    // including one spawned mid-flight by another perk, outrun that same 6 units. <= 0 (the default -
-    // an enemy attack, a skill, anything not fired by a Weapon) means "no weapon-driven cap", falling
-    // back to ProjectileDataAsset.MaxDistance * MaxDistanceMultiplier exactly as before this existed.
+    // including one spawned mid-flight by another perk, outrun that same 6 units (padded first for an
+    // arc, so it still finishes its descent). <= 0 (the default - an enemy attack, a skill, anything
+    // not fired by a Weapon) means "no weapon-driven cap", falling back to ProjectileDataAsset.
+    // MaxDistance * MaxDistanceMultiplier exactly as before this existed.
     FP MaxTravelDistance;
 
     // Which pellet of a fanned volley this is (0 for anything not fanned - a single-shot weapon, a

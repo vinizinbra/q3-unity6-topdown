@@ -12,15 +12,34 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c04d8195895c42008e9658fbf433bf7, type: 3}
   m_Name: HitSound
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
-  clips:
-  - {fileID: 8300000, guid: e6a8940062eae754b891f259533c1040, type: 3}
-  - {fileID: 8300000, guid: 2eb632cdef7361d4a8bc2e7de9f97b79, type: 3}
-  - {fileID: 8300000, guid: dc66b2bbd73f7e643904689b6be7b3c0, type: 3}
+  variants:
+  - clip: {fileID: 8300000, guid: 07054a8c5e13d084ba3d209f7b62c960, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: 1bb20ae5097df4c49ba5e7c5f4ea247f, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: eb154e6a68fec964fba3162e1fd8b7ac, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  clips: []
   pick: 1
   layers: []
   group: 9
   output: {fileID: 0}
-  volume: {x: 1, y: 1}
+  volume: {x: 0.1, y: 0.1}
   pitch: {x: 0.95, y: 1.05}
   delay: {x: 0, y: 0}
   startAt: 0

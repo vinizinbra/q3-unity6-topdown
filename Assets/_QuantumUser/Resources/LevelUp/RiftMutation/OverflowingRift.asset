@@ -16,7 +16,9 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/OverflowingRift
     Guid:
       Value: 412775407445566150
-  Icon: {fileID: -1609869452, guid: 9dcd69f213ec845fa868b0a3699cf683, type: 3}
+  Icon: {fileID: 711059245, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
   DisplayName: Overflowing Rift
   Rarity: 2
+  Scope: 0
+  IncompatibleWith: []
   Description: Marking an already-maxed target releases a small Rift pulse instead

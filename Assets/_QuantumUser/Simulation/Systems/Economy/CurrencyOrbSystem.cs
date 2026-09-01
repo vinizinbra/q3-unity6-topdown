@@ -72,6 +72,12 @@ namespace Quantum
             FP value = filter.CurrencyOrb->Value;
             Grant(f, filter.CurrencyOrb->Type, collectorStats, value);
             RaiseCollectedEvent(f, filter.CurrencyOrb->Type, collector, filter.Transform3D->Position, value);
+
+            // Generic pickup-cadence hook (see CurrencyOrb.qtn) - fires for every currency type, and
+            // only ever from here, which is what keeps Accessory recoveries and shop purchases off
+            // it without any consumer needing an exclusion list.
+            f.Signals.OnCollectibleCollected(collector, filter.CurrencyOrb->Type);
+
             f.Destroy(filter.Entity);
         }
 

@@ -29,6 +29,15 @@ public class LakeVisualBuilder : MonoBehaviour
     [SerializeField, Tooltip("World-space width of the foam ring running along the shoreline.")]
     private float foamBorderWidth = 1f;
 
+    // Water/foam are both fully transparent (ZWrite Off) - with only a "Default" Sorting Layer in
+    // this project, every SpriteRenderer/LineRenderer also sits on Default, so Sorting Layer ties
+    // and Unity falls back to Render Queue as the tiebreaker. That made the shader's own
+    // "Transparent-50" Queue offset the ONLY thing keeping water drawing under sprites - fragile,
+    // and apparently already losing. A dedicated "Water" Sorting Layer, ordered before Default in
+    // Project Settings > Tags and Layers > Sorting Layers, makes the draw order explicit and no
+    // longer dependent on Queue math at all.
+    [SerializeField] private string sortingLayerName = "Water";
+
     [SerializeField, HideInInspector] private MeshFilter meshFilter;
     [SerializeField, HideInInspector] private MeshRenderer meshRenderer;
 
@@ -486,6 +495,26 @@ public class LakeVisualBuilder : MonoBehaviour
         }
 
         meshRenderer.enabled = true;
+
+        if (!string.IsNullOrEmpty(sortingLayerName) && SortingLayerExists(sortingLayerName))
+        {
+            meshRenderer.sortingLayerName = sortingLayerName;
+        }
+    }
+
+    // SortingLayer.NameToID falls back to 0 (the "Default" layer's own real ID) for an unknown
+    // name, so it can't distinguish "doesn't exist" from "is Default" - check the actual layer list.
+    private static bool SortingLayerExists(string layerName)
+    {
+        foreach (SortingLayer layer in SortingLayer.layers)
+        {
+            if (layer.name == layerName)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // Reads the box's real local-space mesh bounds instead of assuming any fixed size/pivot

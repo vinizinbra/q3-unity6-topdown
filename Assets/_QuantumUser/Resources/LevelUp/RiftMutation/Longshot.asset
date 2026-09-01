@@ -16,11 +16,14 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/Longshot
     Guid:
       Value: 534224374613054322
-  Icon: {fileID: -1103205774, guid: 9dcd69f213ec845fa868b0a3699cf683, type: 3}
+  Icon: {fileID: -658787004, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
   DisplayName: Longshot
   Rarity: 1
-  Description: '{0:+0;-0}% Damage at range, {1:+0;-0}% Damage up close'
+  Scope: 0
+  IncompatibleWith: []
+  Description: 'Up to <color=#FD3971>{0:+0;-0}%</color> Damage at range and +<color=#FD3971>{1:0}</color> Pierce on distant shots, <color=#FD3971>{2:+0;-0}%</color> up close'
   FarMultiplier:
     RawValue: 98304
   NearMultiplier:
-    RawValue: 45875
+    RawValue: 49152
+  LongRangePierceBonus: 1

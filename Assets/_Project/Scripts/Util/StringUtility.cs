@@ -59,4 +59,45 @@ public static class StringUtility
     {
         return level > 0 ? $"{name} - Lv{level}" : name;
     }
+
+    // Converts a positive rank/level into a Roman numeral - "II", "III", "IV". Standard greedy
+    // subtraction, so it's correct for any positive number, not just the 1-3 every current Ascension
+    // line happens to cap at. Returns an empty string for 0 or less ("no rank"). Lives here next to
+    // WithLevelSuffix for the same reason: every place a rank shows up in a display name shares one
+    // implementation instead of a per-widget private copy (UpgradeCardWidget's level-up card,
+    // UpgradeWidget's popup row, DebugUpgradeButtonWidget's debug row).
+    public static string ToRomanNumeral(int number)
+    {
+        if (number <= 0)
+            return string.Empty;
+
+        (int value, string symbol)[] map =
+        {
+            (1000, "M"), (900, "CM"), (500, "D"), (400, "CD"),
+            (100, "C"), (90, "XC"), (50, "L"), (40, "XL"),
+            (10, "X"), (9, "IX"), (5, "V"), (4, "IV"), (1, "I")
+        };
+
+        var builder = new StringBuilder();
+
+        foreach ((int value, string symbol) in map)
+        {
+            while (number >= value)
+            {
+                builder.Append(symbol);
+                number -= value;
+            }
+        }
+
+        return builder.ToString();
+    }
+
+    // Appends a " - <Roman numeral>" rank suffix to a display name once rank > 0 - e.g. "Glass Core"
+    // at rank 2 reads "Glass Core - II". The rank counterpart of WithLevelSuffix, and the one format
+    // every ranked display name goes through so the level-up card and the hero-info popup row can't
+    // drift apart.
+    public static string WithRankSuffix(string name, int rank)
+    {
+        return rank > 0 ? $"{name} - {ToRomanNumeral(rank)}" : name;
+    }
 }

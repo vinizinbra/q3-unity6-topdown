@@ -139,8 +139,8 @@ TextureImporter:
       name: RR_Dash
       rect:
         serializedVersion: 2
-        x: 23
-        y: 574
+        x: 42
+        y: 585
         width: 317
         height: 325
       alignment: 0
@@ -161,8 +161,8 @@ TextureImporter:
       name: RR_Overdrive
       rect:
         serializedVersion: 2
-        x: 378
-        y: 575
+        x: 389
+        y: 593
         width: 318
         height: 325
       alignment: 0
@@ -183,10 +183,10 @@ TextureImporter:
       name: RR_Juggernaut
       rect:
         serializedVersion: 2
-        x: 719
-        y: 566
-        width: 335
-        height: 335
+        x: 747
+        y: 596
+        width: 315
+        height: 315
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -205,8 +205,8 @@ TextureImporter:
       name: RR_Turret
       rect:
         serializedVersion: 2
-        x: 981
-        y: 150
+        x: 949
+        y: 174
         width: 332
         height: 334
       alignment: 0
@@ -227,8 +227,8 @@ TextureImporter:
       name: RR_Sound
       rect:
         serializedVersion: 2
-        x: 547
-        y: 138
+        x: 563
+        y: 170
         width: 336
         height: 341
       alignment: 0
@@ -249,8 +249,8 @@ TextureImporter:
       name: RR_Vortex
       rect:
         serializedVersion: 2
-        x: 122
-        y: 149
+        x: 178
+        y: 178
         width: 320
         height: 332
       alignment: 0
@@ -271,10 +271,10 @@ TextureImporter:
       name: RR_BunnyBomb
       rect:
         serializedVersion: 2
-        x: 1080
-        y: 572
-        width: 327
-        height: 337
+        x: 1088
+        y: 600
+        width: 320
+        height: 320
       alignment: 9
       pivot: {x: 0.5, y: 0.48}
       border: {x: 0, y: 0, z: 0, w: 0}

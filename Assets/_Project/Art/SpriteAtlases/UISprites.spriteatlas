@@ -181,8 +181,10 @@ SpriteAtlas:
     - f84ce79583fb14332abb138fcbc0fff8: -2049905287
     - f84ce79583fb14332abb138fcbc0fff8: -923845276
     - f84ce79583fb14332abb138fcbc0fff8: 642217845
+    - f84ce79583fb14332abb138fcbc0fff8: 345698372
     - f84ce79583fb14332abb138fcbc0fff8: 1389070835
     - f84ce79583fb14332abb138fcbc0fff8: 1406246131
+    - f84ce79583fb14332abb138fcbc0fff8: 1980703905
     - f84ce79583fb14332abb138fcbc0fff8: 1698213784
     - f84ce79583fb14332abb138fcbc0fff8: 1703147407
     - f84ce79583fb14332abb138fcbc0fff8: 1480749247
@@ -447,8 +449,10 @@ SpriteAtlas:
   - {fileID: -2049905287, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
   - {fileID: -923845276, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
   - {fileID: 642217845, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
+  - {fileID: 345698372, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
   - {fileID: 1389070835, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
   - {fileID: 1406246131, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
+  - {fileID: 1980703905, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
   - {fileID: 1698213784, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
   - {fileID: 1703147407, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
   - {fileID: 1480749247, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
@@ -712,8 +716,10 @@ SpriteAtlas:
   - HealingReceived
   - SkillArea
   - MovementSpeed
+  - Toughness
   - WeaponDamage
   - HealthRegeneration
+  - Coins
   - CriticalChance
   - DashCharge
   - CriticalDamage

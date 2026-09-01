@@ -18,6 +18,17 @@ namespace Quantum
         // its own heading each tick (homing), which would simply overwrite the levelled one.
         public virtual bool FlattensOnPierce => true;
 
+        // How large a flight-distance BUDGET (Projectile.MaxTravelDistance) a flat engagement Range
+        // should become - see WeaponPerkUtility's own MaxTravelDistance helper, the only place this is
+        // baked onto a weapon-fired shot. 1:1 for anything that travels in a straight line to its
+        // target, where flat distance and actual flight distance are the same number (every hitscan-
+        // shaped movement). See BallisticProjectileMovementData's override for the one movement type
+        // where they aren't, and why that gap matters.
+        public virtual FP ResolveMaxTravelDistance(FP range)
+        {
+            return range;
+        }
+
         // Free-aimed shots have only a direction and no real target entity to lead, so the movement
         // invents a point to aim at and solves onto it exactly as given.
         public ProjectileLaunch GetLaunch(Frame f, FPVector3 origin, FPVector3 direction)

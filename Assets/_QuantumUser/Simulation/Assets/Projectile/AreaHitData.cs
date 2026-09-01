@@ -29,6 +29,17 @@ namespace Quantum
         // the end of its lifetime). See ProjectileSystem.Update's justGrounded branch.
         public FP PlantedFuseTime = FP._0;
 
+        // 0 (the default) keeps every existing asset's exact prior behavior - a true volumetric
+        // sphere blast. Above zero, this becomes a ground-area delivery: only a target within
+        // BlastRadius on the flat (XZ) plane AND whose ACTUAL FLOOR height (a real ground raycast,
+        // not raw Transform3D.Y/the impact point's own Y - see EnemyMovementUtility.
+        // IsWithinFlatGroundArea/ResolveGroundY) is within this many units of the floor under the
+        // blast gets hit - so a hero standing on an elevated ledge/platform above the blast (or down
+        // in a pit below it) is missed, even though they'd fall inside a plain 3D sphere of the same
+        // radius. See HitEffectUtility.ApplyInRadius's own comment. Mortar's grenade is the intended
+        // first user.
+        public FP MaxHeightDifference = FP._0;
+
         // DetonateOnLevelGeometry/DetonateOnEnemyHit/ShouldDetonate/IsCombatant/Settle all live on
         // ProjectileHitData now - shared with any other hit data that wants the same fuse/pass-
         // through behavior, not just this one.
@@ -111,7 +122,7 @@ namespace Quantum
             // Pixie's Chain Reaction passive (see MarkExplosiveDeath.RequiresExplosion) to decide
             // whether this hit is allowed to mark anyone at all.
             HitEffectUtility.ApplyInRadius(f, Effects, center, radius, owner,
-                damage, source, targetMask: TargetMask, isExplosion: true);
+                damage, source, targetMask: TargetMask, isExplosion: true, maxHeightDifference: MaxHeightDifference);
 
             f.Events.AreaDetonated(owner, center, this, radius);
 

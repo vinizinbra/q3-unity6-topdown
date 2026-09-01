@@ -16,7 +16,9 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/CloseFracture
     Guid:
       Value: 458560360156938353
-  Icon: {fileID: 1693413656, guid: 9dcd69f213ec845fa868b0a3699cf683, type: 3}
+  Icon: {fileID: -432652128, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
   DisplayName: Close Fracture
   Rarity: 1
+  Scope: 0
+  IncompatibleWith: []
   Description: Hits against nearby enemies periodically apply Rift Mark

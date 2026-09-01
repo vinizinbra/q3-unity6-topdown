@@ -18,16 +18,12 @@ MonoBehaviour:
       Value: 492402531825067847
   Icon: {fileID: -1355689374, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
   DisplayName: Groundbreaker
-  Description: Dropping from higher ground turns Brute's own weight into a weapon
-    - scattering enemies, slamming them into walls, and cracking them open.
+  Description: Dropping from high ground turns Brute's own weight into a weapon - the landing throws everything clear, slams enemies into walls, and eventually cracks them open.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - 'Heavy Landing: landing from higher ground creates a shockwave that knocks nearby
-    enemies away.'
-  - 'Crash Landing: landing from higher ground creates a stronger shockwave that
-    knocks enemies farther. Enemies slammed into walls are Stunned.'
-  - 'Seismic Impact: landing from higher ground creates a wide, powerful shockwave.
-    Enemies slammed into walls are Stunned, become Exposed and take increased damage.'
+  - 'Landing from <color=#FD3971>2m</color> up bursts a <color=#FD3971>3m</color> shockwave for <color=#FD3971>20%</color> Juggernaut damage, knocking nearby enemies clear.'
+  - 'Landing from height bursts a <color=#FD3971>3m</color> shockwave for <color=#FD3971>50%</color> Juggernaut damage, Stunning enemies slammed into a wall.'
+  - 'Landing from height bursts a <color=#FD3971>4.5m</color> shockwave for <color=#FD3971>75%</color> damage. Wall-slammed enemies are Stunned and Exposed <color=#FD3971>3s</color>.'
   MinimumFallHeight:
     RawValue: 32768
   AllowFallLandings: 1

@@ -4881,6 +4881,7 @@ GameObject:
   - component: {fileID: 2840205078812031753}
   - component: {fileID: 2712700381257934115}
   - component: {fileID: 2712145225480805833}
+  - component: {fileID: 5128634777773225851}
   m_Layer: 0
   m_Name: HitDustExplosion
   m_TagString: Untagged
@@ -9706,6 +9707,26 @@ ParticleSystemRenderer:
   m_MeshWeighting1: 1
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
+--- !u!114 &5128634777773225851
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2837609728858217907}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 287b1faaa056b45cfb4b4da18b45fa5b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ParticleSound
+  mode: 0
+  sound: {fileID: 11400000, guid: c4006f977e2a84a5483a6d70c2915bad, type: 2}
+  loop:
+    intro: {fileID: 0}
+    loop: {fileID: 0}
+    tail: {fileID: 0}
+  volumeScale: 1
+  source: {fileID: 0}
 --- !u!1 &3950357308618146871
 GameObject:
   m_ObjectHideFlags: 0

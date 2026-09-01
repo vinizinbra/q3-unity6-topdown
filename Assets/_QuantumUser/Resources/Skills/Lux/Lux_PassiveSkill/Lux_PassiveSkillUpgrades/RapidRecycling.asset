@@ -16,14 +16,14 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Lux/Lux_PassiveSkill/Lux_PassiveSkillUpgrades/RapidRecycling
     Guid:
       Value: 487893626376381545
-  Icon: {fileID: 0}
+  Icon: {fileID: 306343709, guid: 355e00907e214470bac0029f70064510, type: 3}
   DisplayName: Rapid Recycling
   Description: Collected Scrap shortens your Sentry's cooldown.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - Each Scrap collected removes 0.5s from your Sentry's remaining cooldown.
-  - Each Scrap collected removes 1s from your Sentry's remaining cooldown.
-  - 'Instant Assembly: each Scrap removes 1s from your Sentry''s cooldown, and earning a Fabrication Charge removes a further 3s.'
+  - 'Each Scrap collected removes <color=#FD3971>0.5s</color> from your Sentry''s remaining cooldown.'
+  - 'Each Scrap collected removes <color=#FD3971>1s</color> from your Sentry''s remaining cooldown.'
+  - 'Each Scrap removes <color=#FD3971>1s</color> from your Sentry''s cooldown, and earning a Fabrication Charge removes a further <color=#FD3971>3s</color>.'
   CooldownReductionPerPickup:
   - RawValue: 32768
   - RawValue: 65536

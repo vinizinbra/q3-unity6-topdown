@@ -25,12 +25,14 @@ MonoBehaviour:
   BaseArmor:
     RawValue: 0
   BaseMaxShield:
-    RawValue: 3276800
+    RawValue: 1310720
   ShieldChargeOnly: 0
   ShieldRechargeDelay:
     RawValue: 327680
   ShieldRechargeRate:
-    RawValue: 655360
+    RawValue: 32768
+  ShieldTemporaryDuration:
+    RawValue: 0
   DamageMultiplier:
     RawValue: 65536
   WeaponDamageMultiplier:
@@ -42,7 +44,7 @@ MonoBehaviour:
   CriticalDamageMultiplier:
     RawValue: 98304
   ElementalChance:
-    RawValue: 0
+    RawValue: 6554
   AttackSpeedMultiplier:
     RawValue: 65536
   ReloadSpeedMultiplier:
@@ -73,6 +75,8 @@ MonoBehaviour:
     RawValue: 65536
   DamageReduction:
     RawValue: 0
+  DamageTakenMultiplier:
+    RawValue: 65536
   KnockbackTakenMultiplier:
     RawValue: 65536
   HealingReceivedMultiplier:

@@ -224,9 +224,9 @@ MonoBehaviour:
     Id:
       Value: 1406289943297679234
   Duration:
-    RawValue: 655360
+    RawValue: 1966080
   Range:
-    RawValue: 196608
+    RawValue: 327680
   SkillDamage:
     RawValue: 1310720
   BaselineWeapon:
@@ -234,11 +234,11 @@ MonoBehaviour:
       Value: 471208801872943650
   BaselineWeaponOffset:
     X:
-      RawValue: -32768
+      RawValue: -26214
     Y:
-      RawValue: 98304
+      RawValue: 65536
     Z:
-      RawValue: 0
+      RawValue: 65536
   Offset:
     X:
       RawValue: 0
@@ -278,9 +278,8 @@ MonoBehaviour:
       Value: 479614577650482228
   - Id:
       Value: 299753101746548512
-  Icon: {fileID: -2044957003, guid: 09ab27b92d44c4a54a95d6d0d0b9c281, type: 3}
-  Description: Deploys a sentry turret that fights by your side, gaining new weapons
-    and support auras as you level up.
+  Icon: {fileID: -1072980634, guid: 355e00907e214470bac0029f70064510, type: 3}
+  Description: Deploys a sentry that fights for you and gains weapons as you level.
 --- !u!114 &2172607896446886912
 MonoBehaviour:
   m_ObjectHideFlags: 0

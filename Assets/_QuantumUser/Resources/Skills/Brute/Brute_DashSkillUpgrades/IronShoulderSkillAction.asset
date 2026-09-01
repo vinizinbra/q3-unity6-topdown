@@ -19,16 +19,16 @@ MonoBehaviour:
   Icon: {fileID: 937128853, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
   DisplayName: Iron Shoulder
   RankDescriptions:
-  - Dash becomes an empowered shoulder charge - enemies hit take strong knockback and are Stunned if pushed into a wall.
-  - Dash becomes an empowered shoulder charge dealing 60% Juggernaut damage on collision (+50% if slammed into a wall) and Stunning enemies pushed into a wall.
-  - Dash becomes an empowered shoulder charge dealing 60% Juggernaut damage on collision (+50% if slammed into a wall) and Stunning enemies pushed into a wall - a wall-slam also creates a 3m impact shockwave dealing 80% Juggernaut damage that Stuns nearby enemies.
+  - 'Dash becomes a shoulder charge: enemies hit take heavy knockback, and any slammed into a wall is Stunned <color=#FD3971>1s</color>.'
+  - 'The charge also deals <color=#FD3971>60%</color> Juggernaut damage, <color=#FD3971>+50%</color> more on a wall slam, and still Stuns what it pins there.'
+  - 'The charge deals <color=#FD3971>60%</color> damage (<color=#FD3971>+50%</color> on a wall slam) and Stuns. A wall slam bursts a <color=#FD3971>3m</color> Stun shockwave for <color=#FD3971>80%</color>.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 6
   Interval:
     RawValue: 655
   Activated: 1
-  Description: Dash becomes an empowered shoulder charge - enemies hit take strong knockback and are Stunned if pushed into a wall.
+  Description: Dash becomes a shoulder charge that bowls enemies over, and anything you drive into a wall takes the worst of it - eventually taking the whole room with it.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

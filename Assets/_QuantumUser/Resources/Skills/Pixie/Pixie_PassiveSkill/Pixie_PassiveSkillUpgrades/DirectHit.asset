@@ -23,10 +23,9 @@ MonoBehaviour:
     zone take bonus damage. At rank 3, they're also knocked back hard.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - Enemies inside the Direct Hit area take +30% explosion damage.
-  - Enemies inside the Direct Hit area take +50% explosion damage.
-  - Enemies inside the Direct Hit area take +75% explosion damage and receive strong
-    knockback.
+  - 'Enemies inside the Direct Hit area take <color=#FD3971>+30%</color> explosion damage.'
+  - 'Enemies inside the Direct Hit area take <color=#FD3971>+50%</color> explosion damage.'
+  - 'Enemies inside the Direct Hit area take <color=#FD3971>+75%</color> explosion damage and receive strong knockback.'
   InnerRadiusFraction:
     RawValue: 22938
   DamageMultiplierBonus:

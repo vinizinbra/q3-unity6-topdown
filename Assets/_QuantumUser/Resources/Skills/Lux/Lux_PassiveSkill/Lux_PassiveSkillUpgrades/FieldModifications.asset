@@ -16,14 +16,14 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Lux/Lux_PassiveSkill/Lux_PassiveSkillUpgrades/FieldModifications
     Guid:
       Value: 369611404177242297
-  Icon: {fileID: 0}
+  Icon: {fileID: 65697102, guid: 355e00907e214470bac0029f70064510, type: 3}
   DisplayName: Field Modifications
   Description: Scrap collected while a Sentry is deployed upgrades that Sentry, for as long as it lives.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - Scrap collected while your Sentry is active grants it +4% Damage, up to 5 stacks.
-  - Scrap collected while your Sentry is active grants it +4% Damage and +3% Fire Rate, up to 5 stacks.
-  - 'MK II: Scrap collected while your Sentry is active grants +4% Damage and +3% Fire Rate, up to 5 stacks. At 5 stacks its Cannon becomes a Twin Cannon.'
+  - 'Scrap collected while your Sentry is active grants it <color=#FD3971>+4%</color> Damage, up to <color=#FD3971>5</color> stacks.'
+  - 'Scrap collected while your Sentry is active grants it <color=#FD3971>+4%</color> Damage and <color=#FD3971>+3%</color> Fire Rate, up to <color=#FD3971>5</color> stacks.'
+  - 'Scrap grants your active Sentry <color=#FD3971>+4%</color> Damage and <color=#FD3971>+3%</color> Fire Rate, up to <color=#FD3971>5</color> stacks. At <color=#FD3971>5</color> stacks it gains a Twin Cannon.'
   DamagePerStack:
   - RawValue: 2621
   - RawValue: 2621

@@ -30,6 +30,12 @@ namespace Quantum
         public readonly struct AimPose
         {
             public readonly float RotationDegrees;
+            // The Jump Flip's OWN contribution to rotation, kept separate from RotationDegrees
+            // (which is everything else - base aim, Body Follow, recoil) rather than pre-summed
+            // into it, so ApplyAim can pivot-correct ONLY this part (see flipPivotOffset) - the
+            // normal aim rotation must keep pivoting around the grip exactly as it always has,
+            // only the flip needs re-centering. 0 whenever no flip is playing.
+            public readonly float FlipDegrees;
             public readonly Quaternion FacingCamera;
             public readonly Vector2 AimDirection;
             public readonly bool Flipped;
@@ -49,9 +55,10 @@ namespace Quantum
             // camera a billboard-plane rotation visibly dips into/out of the floor.
             public readonly Vector3 FlatWorldDirection;
 
-            public AimPose(float rotationDegrees, Quaternion facingCamera, Vector2 aimDirection, bool flipped, Vector2 extraOffset, Vector3 cameraRight, Vector3 cameraUp, Vector3 flatWorldDirection)
+            public AimPose(float rotationDegrees, float flipDegrees, Quaternion facingCamera, Vector2 aimDirection, bool flipped, Vector2 extraOffset, Vector3 cameraRight, Vector3 cameraUp, Vector3 flatWorldDirection)
             {
                 RotationDegrees = rotationDegrees;
+                FlipDegrees = flipDegrees;
                 FacingCamera = facingCamera;
                 AimDirection = aimDirection;
                 Flipped = flipped;
@@ -72,9 +79,22 @@ namespace Quantum
         [SerializeField, Tooltip("Falls back to a BlobAnimationView anywhere under the rig root if left empty - same resolution PlayerGunAimView.torsoFollow uses. Shoot() kicks anim's Character Shoot Punch settings into this every shot.")]
         private BlobAnimationView character;
 
+        [Header("Jump Flip")]
+        [SerializeField, Tooltip("EYE-TUNE THIS PER WEAPON. This transform's own origin sits at the grip (see rightHandGrip/leftHandGrip below), not the sprite's visual center - rotating around the grip is fine for normal small aim adjustments, but a full 360° Jump Flip rotation around an off-center grip swings the visible sprite through a wide arc instead of spinning in place. This is that pivot point instead, in this weapon's own LOCAL space (same space rightHandGrip/leftHandGrip are authored in) - only the flip's own rotation gets re-centered around it, normal aim/recoil/sway keep pivoting around the grip exactly as before. Leave at (0,0,0) to fall back to the old grip-pivot behavior. Play Mode + Test Shoot/an actual flip is the only way to eyeball a good value.")]
+        private Vector3 flipPivotOffset;
+
         [Header("Muzzle Flash")]
         [SerializeField, Tooltip("Particle system parented at the muzzle, restarted on every shot (e.g. an Epic Toon FX Muzzleflash prefab).")]
         private ParticleSystem muzzleParticle;
+
+        // Where a projectile's visual should actually leave from - read LIVE by ProjectileView at
+        // spawn instead of the simulation's own Projectile.SpawnPosition, which is only an
+        // approximation ("caster position + a small forward nudge + hand height", see
+        // StatUtility.GetWeaponHoldOffset/ProjectileSpawner.ResolveSpawnOrigin) never anchored to
+        // this weapon's actual authored barrel length. Falls back to this weapon's own root when no
+        // muzzleParticle is assigned, same "leave empty to draw from an approximation" convention
+        // HitscanViewBase.muzzle already uses for hitscan shots.
+        public Transform MuzzleTransform => muzzleParticle != null ? muzzleParticle.transform : transform;
 
         // Resolved through this weapon's own transform every call - TransformPoint applies its
         // current rotation (billboard + aim) and scale (the Y-axis flip in ApplyAim), so the
@@ -118,14 +138,14 @@ namespace Quantum
         private float knockbackPunch;
 
         [Header("Sound")]
-        [SerializeField, Tooltip("Played once per shot, on the same EventPlayerFired that drives the recoil kick. Author its pitch/volume variance and cooldown on the SoundData itself - a fast weapon fires many times a second, so the Group budget (Weapons) is what stops a sustained burst turning to mush. Leave empty for a silent weapon.")]
+        [SerializeField, SoundDataPicker, Tooltip("Played once per shot, on the same EventPlayerFired that drives the recoil kick. Author its pitch/volume variance and cooldown on the SoundData itself - a fast weapon fires many times a second, so the Group budget (Weapons) is what stops a sustained burst turning to mush. Leave empty for a silent weapon.")]
         private SoundData fireSound;
 
-        [SerializeField, Tooltip("Played the moment a reload BEGINS - the magazine-out/rack sound. Detected from Weapon.ReloadTimer going positive rather than an event, since the simulation only raises an event when a reload COMPLETES (WeaponSystem.StartReload is silent). Leave empty to skip.")]
+        [SerializeField, SoundDataPicker, Tooltip("Played the moment a reload BEGINS - the magazine-out/rack sound. Detected from Weapon.ReloadTimer going positive rather than an event, since the simulation only raises an event when a reload COMPLETES (WeaponSystem.StartReload is silent). Leave empty to skip.")]
         private SoundData reloadStartSound;
 
         [FormerlySerializedAs("reloadSound")]
-        [SerializeField, Tooltip("Played when a reload COMPLETES and the weapon is ready again (EventWeaponReloaded) - the magazine-in/slide-forward sound. This is the one the player actually listens for, so keep it distinct from the start. Leave empty to skip.")]
+        [SerializeField, SoundDataPicker, Tooltip("Played when a reload COMPLETES and the weapon is ready again (EventWeaponReloaded) - the magazine-in/slide-forward sound. This is the one the player actually listens for, so keep it distinct from the start. Leave empty to skip.")]
         private SoundData reloadReadySound;
 
         public override void Awake()
@@ -230,6 +250,18 @@ namespace Quantum
             character.PunchHeadScale(anim.shakeScaleHead.Strength, anim.shakeScaleHead.Duration, anim.shakeScaleHead.Frequency);
         }
 
+        // Shows flipPivotOffset in the Scene view so it can be eyeballed against the sprite without
+        // needing a live flip running - drawn off the weapon's CURRENT transform, so it stays
+        // accurate whether checked at rest, mid-aim, or (Play Mode) mid-flip. Selected-only so it
+        // doesn't clutter the scene for every other weapon instance at once.
+        private void OnDrawGizmosSelected()
+        {
+            Vector3 pivotWorld = transform.TransformPoint(flipPivotOffset);
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawSphere(pivotWorld, 0.04f);
+            Gizmos.DrawLine(transform.position, pivotWorld);
+        }
+
         [Button]
         private void PlayMuzzleParticle()
         {
@@ -253,7 +285,12 @@ namespace Quantum
             if (pose.Flipped) targetOffset.x = -targetOffset.x;
             currentOffset = Vector2.Lerp(currentOffset, targetOffset, smoothT);
 
-            transform.rotation = pose.FacingCamera * Quaternion.Euler(0f, 0f, pose.RotationDegrees + recoilRotationCurrent);
+            // baseRotation is everything EXCEPT the flip (aim/follow/recoil) - the normal rotation
+            // this weapon has always used, pivoting around the grip (transform's own origin).
+            // fullRotation adds the flip's own contribution on top. Kept separate so the position
+            // pivot-correction below only has to re-center the FLIP - see flipPivotOffset.
+            Quaternion baseRotation = pose.FacingCamera * Quaternion.Euler(0f, 0f, pose.RotationDegrees + recoilRotationCurrent);
+            Quaternion fullRotation = pose.FacingCamera * Quaternion.Euler(0f, 0f, pose.RotationDegrees + recoilRotationCurrent + pose.FlipDegrees);
 
             Vector3 scale = baseScale * (1f - knockbackPunch * anim.knockbackScalePunch);
             scale.y *= pose.Flipped ? -1f : 1f;
@@ -270,7 +307,17 @@ namespace Quantum
             // space and adding the offset there keeps it exactly in the plane it was computed in,
             // regardless of how sheared the parent currently is.
             Vector3 restWorldPosition = transform.parent != null ? transform.parent.TransformPoint(restLocalPosition) : restLocalPosition;
-            transform.position = restWorldPosition + worldOffset;
+            Vector3 basePosition = restWorldPosition + worldOffset;
+
+            // Re-center the FLIP only: solve for the position that keeps flipPivotOffset fixed in
+            // world space across the difference between baseRotation and fullRotation, exactly like
+            // BlobAnimationView's own root pivot-correction. A pure no-op when FlipDegrees is 0
+            // (fullRotation == baseRotation), so every existing weapon is bit-for-bit unaffected
+            // until flipPivotOffset is actually tuned away from (0,0,0) AND a flip is playing.
+            Vector3 pivotWorld = basePosition + baseRotation * flipPivotOffset;
+
+            transform.rotation = fullRotation;
+            transform.position = pivotWorld - fullRotation * flipPivotOffset;
 
             // Re-pin local Z to the rest pose after the world-space add above - that add keeps
             // X/Y correct even while the parent rig is sheared by billboard rotation + non-uniform

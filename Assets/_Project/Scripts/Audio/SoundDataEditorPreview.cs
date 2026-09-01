@@ -73,7 +73,7 @@ public static class SoundDataEditorPreview
 
         CancelAudition();
 
-        if (data.clips == null || data.clips.Length == 0)
+        if (data.variants == null || data.variants.Length == 0)
         {
             LogHelper.Warn(LogTag, $"'{data.name}' has no clips assigned - nothing to audition.", data);
             return;
@@ -249,22 +249,27 @@ public static class SoundDataEditorPreview
             return;
 
         // Skip empty slots rather than stalling the walk on them.
-        while (_auditionIndex < _auditionData.clips.Length && _auditionData.clips[_auditionIndex] == null)
+        while (_auditionIndex < _auditionData.variants.Length
+               && (_auditionData.variants[_auditionIndex] == null || _auditionData.variants[_auditionIndex].clip == null))
             _auditionIndex++;
 
-        if (_auditionIndex >= _auditionData.clips.Length)
+        if (_auditionIndex >= _auditionData.variants.Length)
         {
             CancelAudition();
             return;
         }
 
-        var clip = _auditionData.clips[_auditionIndex];
+        var variant = _auditionData.variants[_auditionIndex];
+        var clip = variant.clip;
         AudioManager.PlayPreview(_auditionData, clip);
 
         // Schedule the next one off this clip's own trimmed length. Pitch is rolled per play and
         // changes real duration, so budget for the SLOWEST pitch this sound can roll - overlapping
         // two auditioned variations would defeat the point of stepping through them.
-        _auditionData.ResolveTrim(clip, out var start, out var end);
+        // Per-clip trim, so a variation that overrides it doesn't get the next audition scheduled
+        // off the shared window - which would overlap or leave a gap exactly on the clips being
+        // stepped through to check.
+        _auditionData.ResolveTrim(clip, variant, out var start, out var end);
         var slowestPitch = Mathf.Max(0.01f, Mathf.Min(_auditionData.pitch.x, _auditionData.pitch.y));
         var duration = (end - start) / slowestPitch + Mathf.Max(0f, _auditionData.delay.y);
 

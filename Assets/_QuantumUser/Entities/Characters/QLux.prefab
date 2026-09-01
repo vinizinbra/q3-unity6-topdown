@@ -599,6 +599,13 @@ MonoBehaviour:
   skateboardAngleApexDegrees: 0
   skateboardAngleDownDegrees: -15
   skateboardSpeedThreshold: 2
+  useFlip: 0
+  jumpFlipDuration: 0.45
+  invertFlipDirection: 0
+  legFlipLagSpeed: 26
+  torsoFlipLagSpeed: 16
+  headFlipLagSpeed: 9
+  flipPivotHeight: 0.6
   landingSquashPerSpeed: 0.06
   maxLandingSquash: 0.6
   landingSpringFrequency: 6
@@ -611,11 +618,11 @@ MonoBehaviour:
   volumePreservation: 0.6
   headSquashInfluence: 0.4
   jumpHeadSquashInfluence: 0.25
-  jumpSound: {fileID: 0}
-  landSound: {fileID: 0}
+  jumpSound: {fileID: 11400000, guid: c055538af98464b82a2e409c38480fa1, type: 2}
+  landSound: {fileID: 11400000, guid: 5250a6426a34b463ea11cbe6b0ef83bb, type: 2}
   landSoundMinImpactSpeed: 2
   landSoundFullImpactSpeed: 12
-  footstepSound: {fileID: 0}
+  footstepSound: {fileID: 11400000, guid: c4006f977e2a84a5483a6d70c2915bad, type: 2}
   footstepDistance: 2.2
 --- !u!114 &3238834508286719383
 MonoBehaviour:
@@ -727,6 +734,9 @@ MonoBehaviour:
   followAmount: 1
   followLag: 6
   squashPositionCompensation: 1
+  rotateWeaponWithTarget: 0
+  rotateWeaponWithoutTarget: 1
+  flipLagSpeed: 10
   enableSpeedSway: 1
   swayAmount: 0.5
   swaySpringiness: 0.5
@@ -768,6 +778,7 @@ MonoBehaviour:
   expPickupFlashColor: {r: 0.3, g: 0.55, b: 1, a: 1}
   coinPickupFlashColor: {r: 1, g: 0.84, b: 0.2, a: 1}
   riftShardPickupFlashColor: {r: 1, g: 0.35, b: 0.75, a: 1}
+  scrapPickupFlashColor: {r: 0.95, g: 0.6, b: 0.25, a: 1}
   pickupFlashDuration: 0.35
   freezeMaterial: {fileID: 0}
 --- !u!114 &8110188611109955938
@@ -1038,6 +1049,8 @@ MonoBehaviour:
       RawValue: 0
     DamageReduction:
       RawValue: 0
+    DamageTakenMultiplier:
+      RawValue: 0
     KnockbackTakenMultiplier:
       RawValue: 0
     HealingReceivedMultiplier:
@@ -1061,14 +1074,69 @@ MonoBehaviour:
     RerollQuantity: 0
     SelfReviveCharges: 0
     BurnOnHitStacks: 0
-    DashShieldCost:
+    MagazineSizeBonus:
       RawValue: 0
-    CritSkillCooldownReduction:
+    MagazineSizeOverride: 0
+    LongRangePierceBonus: 0
+    WeaponStaggerChance:
       RawValue: 0
-    ShieldBreakGrantsDashCharge:
+    WeaponStaggerDuration:
+      RawValue: 0
+    NearKillMoveSpeedBonus:
+      RawValue: 0
+    NearKillMoveSpeedDuration:
+      RawValue: 0
+    SkillCenterFocusBonus:
+      RawValue: 0
+    CritFocusThreshold: 0
+    CritFocusProgress: 0
+    CritFocusCooldownReduction:
+      RawValue: 0
+    EmergencyDashHealthCost:
+      RawValue: 0
+    CoinDamagePerHundred:
+      RawValue: 0
+    CoinDamageMaxBonus:
+      RawValue: 0
+    DangerPayHealthThreshold:
+      RawValue: 0
+    DangerPayDamageBonus:
+      RawValue: 0
+    DangerPayMoveSpeedBonus:
+      RawValue: 0
+    NoSafetyNetDamageBonus:
+      RawValue: 0
+    PressureCookerDamagePerSecond:
+      RawValue: 0
+    PressureCookerMaxBonus:
+      RawValue: 0
+    SafeTimeSeconds:
+      RawValue: 0
+    OverkillConversion:
+      RawValue: 0
+    OverkillRadius:
+      RawValue: 0
+    ScavengerRequiredPickups: 0
+    ScavengerWindow:
+      RawValue: 0
+    ScavengerBuffDuration:
+      RawValue: 0
+    ScavengerMoveSpeedBonus:
+      RawValue: 0
+    ScavengerFireRateBonus:
+      RawValue: 0
+    ScavengerPickupCount: 0
+    ScavengerWindowRemaining:
+      RawValue: 0
+    CoinLossPercentOnHpDamage:
+      RawValue: 0
+    SecondWindHealPercent:
+      RawValue: 0
+    DashChargeHardCap: 0
+    AccessoryBlockResetsDash:
       Value: 0
-    AllOrNothingActive:
-      Value: 0
+    AccessoryBlockSkillCooldownFraction:
+      RawValue: 0
     HasCriticalFractureMutation:
       Value: 0
     HasSkillFractureMutation:
@@ -2376,7 +2444,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 1
+  m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 37d8b396e50924c92a5b0c5fa9fce5c4, type: 3}
   m_Color: {r: 1, g: 0.8509804, b: 0, a: 0.09803922}
@@ -2523,7 +2591,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0.38268346, y: 0, z: 0, w: 0.9238795}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.5, y: 1.5, z: 1.5}
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7429264184530951584}
@@ -2577,7 +2645,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: d1205d938ca124596832a02356ee715f, type: 3}
+  m_Sprite: {fileID: 21300000, guid: b6214b3607a8249a4923a01ab663aa77, type: 3}
   m_Color: {r: 0.5754717, g: 0.5754717, b: 0.5754717, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -2684,8 +2752,8 @@ MonoBehaviour:
     lineRenderer: {fileID: 3979277287145085613}
     endAnchor: {fileID: 8072009070793895742}
     gaitGroup: 3
-    localBendDirection: {x: -1, y: 0}
-    bendMultiplier: 1
+    localBendDirection: {x: -0.5, y: 0}
+    bendMultiplier: 0.5
     mirrorBendWithFacing: 1
     stepDistanceMultiplier: 1
   curveResolution: 10
@@ -2858,7 +2926,7 @@ LineRenderer:
   - {x: 0, y: 0, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.3
+    widthMultiplier: 0.15
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -3887,6 +3955,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: PlayerEffects
       objectReference: {fileID: 0}
+    - target: {fileID: 4899901628646550216, guid: 95a3634ae517a460cb68deae3f0770d3, type: 3}
+      propertyPath: heroSkillSound
+      value: 
+      objectReference: {fileID: 11400000, guid: 025935b4e27be4e688d14d7213cd1bea, type: 2}
     - target: {fileID: 5292615511809375842, guid: 95a3634ae517a460cb68deae3f0770d3, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

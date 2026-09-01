@@ -48,6 +48,8 @@ namespace QuantumUser.Editor
 
             VoidFieldPassiveData passive = CreateOrUpdate<VoidFieldPassiveData>($"{PassiveFolderPath}/VoidFieldPassiveData.asset", asset =>
             {
+                asset.Description = "A void field slows enemy projectiles, making them far easier to dodge.";
+
                 asset.Radius = FP.FromString("2.5");
                 asset.SpeedMultiplier = FP.FromString("0.60");
             });
@@ -77,7 +79,7 @@ namespace QuantumUser.Editor
                 {
                     "Vortex grows 30% larger and interrupts anticipated attacks from enemies up to Normal tier.",
                     "Vortex grows larger and pulls harder, interrupting anticipated attacks from enemies up to Heavy tier.",
-                    "Vortex becomes a Singularity, periodically crushing enemies toward its core and interrupting anticipated attacks from enemies up to Elite tier.",
+                    "Vortex becomes a Singularity, periodically crushing enemies to its core and interrupting attacks up to Elite tier.",
                 };
                 asset.PullRadiusMultiplier = new[] { FP.FromString("1.30"), FP.FromString("1.50"), FP.FromString("1.75") };
                 asset.PullForceMultiplier = new[] { FP._1, FP.FromString("1.30"), FP._1_50 };
@@ -101,7 +103,7 @@ namespace QuantumUser.Editor
                 {
                     "Vortex damages trapped enemies every 0.5s.",
                     "Vortex damages trapped enemies every 0.5s, dealing 8% more per additional enemy trapped, up to +56%.",
-                    "Vortex damages trapped enemies every 0.5s, scaling with how many are trapped. Every third pulse creates a powerful implosion at its core.",
+                    "Vortex damages trapped enemies every 0.5s, scaling with how many are trapped. Every third pulse implodes.",
                 };
                 asset.PulseDamagePercent = FP._0_20;
                 asset.PulseTickInterval = FP._0_50;
@@ -177,7 +179,7 @@ namespace QuantumUser.Editor
                 {
                     "Weapon hits pull enemies toward their nearest ally.",
                     "Weapon hits pull enemies toward their nearest ally with much greater force.",
-                    "Weapon hits pull enemies toward their nearest ally, Binding them for 2s and making them take 20% more damage from you.",
+                    "Weapon hits pull enemies toward their nearest ally, Binding them 2s and making them take 20% more damage.",
                 };
                 asset.PullForce = new[] { FP._3, FP._6, FP._6 };
                 asset.PullDuration = new[] { FP.FromString("0.2"), FP.FromString("0.2"), FP.FromString("0.2") };
@@ -195,7 +197,7 @@ namespace QuantumUser.Editor
                 {
                     "Your first hit against an enemy deals 40% bonus damage.",
                     "Your first hit against an enemy deals 70% bonus damage.",
-                    "Your first hit against an enemy deals 100% bonus damage. Killing that target empowers your next first hit by a further 25%.",
+                    "Your first hit on an enemy deals +100% damage. Killing it empowers your next first hit by a further 25%.",
                 };
                 asset.DamageMultiplierBonus = new[] { FP.FromString("0.40"), FP.FromString("0.70"), FP._1 };
                 asset.KillEmpowerBonus = new[] { FP._0, FP._0, FP._0_25 };
@@ -210,7 +212,7 @@ namespace QuantumUser.Editor
                 {
                     "Dashing reflects nearby enemy projectiles back toward their attackers.",
                     "Dashing reflects enemy projectiles from farther away and increases their reflected damage.",
-                    "Dashing reflects nearby enemy projectiles back at their attackers. Each reflect cuts 0.5s off Vortex's cooldown, up to 2s per dash.",
+                    "Dashing reflects nearby enemy projectiles. Each reflect cuts 0.5s off Vortex's cooldown, up to 2s per dash.",
                 };
                 asset.Radius = new[] { FP._3, FP.FromString("4.50"), FP.FromString("4.50") };
                 asset.ReflectedDamageMultiplier = new[] { FP._1, FP._1_50, FP._1_50 };

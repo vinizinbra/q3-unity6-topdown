@@ -54,7 +54,7 @@ namespace Quantum
                 return;
 
             EnemyMovementUtility.FaceTarget(filter.Aim, filter.Transform3D->Position, targetPosition);
-            filter.Enemy->SkillTargetPosition = targetPosition;
+            filter.Enemy->SkillTargetPosition = EnemyMovementUtility.ResolveIgnoreY(filter.Transform3D->Position, targetPosition, action.IgnoreY);
         }
 
         // Gate checked BEFORE the enemy commits to Preparation/Telegraph (EnemySystem.UpdateChasing,

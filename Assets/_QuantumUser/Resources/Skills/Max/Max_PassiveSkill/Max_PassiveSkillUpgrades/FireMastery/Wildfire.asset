@@ -21,9 +21,9 @@ MonoBehaviour:
   Description: Killing a Burning enemy spreads the fire to nearby enemies.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - Killing a Burning enemy spreads Burn to 2 enemies within 4m.
-  - Killing a Burning enemy spreads a stronger Burn to 5 enemies within 6m.
-  - Killing a Burning enemy spreads 75% of its remaining Burn to 5 enemies within 6m.
+  - 'Killing a Burning enemy spreads Burn to <color=#FD3971>2</color> enemies within <color=#FD3971>4m</color>.'
+  - 'Killing a Burning enemy spreads a stronger Burn to <color=#FD3971>5</color> enemies within <color=#FD3971>6m</color>.'
+  - 'Killing a Burning enemy spreads <color=#FD3971>75%</color> of its remaining Burn to <color=#FD3971>5</color> enemies within <color=#FD3971>6m</color>.'
   Radius:
   - RawValue: 262144
   - RawValue: 393216

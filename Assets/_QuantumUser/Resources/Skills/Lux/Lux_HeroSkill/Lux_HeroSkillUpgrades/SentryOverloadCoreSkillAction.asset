@@ -16,12 +16,12 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Lux/Lux_HeroSkill/Lux_HeroSkillUpgrades/SentryOverloadCoreSkillAction
     Guid:
       Value: 299753101746548512
-  Icon: {fileID: 0}
+  Icon: {fileID: -161778479, guid: 355e00907e214470bac0029f70064510, type: 3}
   DisplayName: Overload Core
   RankDescriptions:
-  - When your Sentry expires or is destroyed, it explodes for 100% of Sentry Skill Damage.
-  - When your Sentry expires or is destroyed, it explodes for 175% Sentry Skill Damage over 30% more ground, knocking enemies back hard.
-  - 'Critical Meltdown: when your Sentry expires or is destroyed, it explodes for 250% Sentry Skill Damage, leaving enemies Exposed and taking +20% damage for 3s.'
+  - 'When your Sentry expires or is destroyed, it explodes for <color=#FD3971>100%</color> of Sentry Skill Damage.'
+  - 'When your Sentry is destroyed, it explodes for <color=#FD3971>175%</color> Sentry Skill Damage over <color=#FD3971>30%</color> more ground, knocking enemies back.'
+  - 'When your Sentry is destroyed, it explodes for <color=#FD3971>250%</color> Sentry Skill Damage, leaving enemies Exposed for <color=#FD3971>3s</color> (<color=#FD3971>+20%</color> damage).'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

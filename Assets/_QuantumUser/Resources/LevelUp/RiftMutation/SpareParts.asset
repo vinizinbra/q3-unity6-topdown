@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 510598fd590ea43e089a47867d93e6b1, type: 3}
+  m_Name: SpareParts
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.SparePartsMutationData
+  Identifier:
+    Path: _QuantumUser/Resources/LevelUp/RiftMutation/SpareParts
+    Guid:
+      Value: 395350068690393966
+  Icon: {fileID: 319963483, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
+  DisplayName: Spare Parts
+  Rarity: 2
+  Scope: 0
+  IncompatibleWith: []
+  Description: 'Once per run, a destroyed Accessory instantly returns with <color=#FD3971>{0:0}</color> durability'
+  Charges: 1
+  RestoreDurability: 2

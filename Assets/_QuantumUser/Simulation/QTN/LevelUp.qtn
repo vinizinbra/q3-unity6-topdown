@@ -60,6 +60,13 @@ struct LevelUpOption
     AssetRef<WeaponDataAsset> WeaponData;
     array<AssetRef<WeaponPerkData>>[5] RolledPerks;  // mirrors Weapon.Perks[5]'s own ceiling
     Byte RolledPerkCount;
+
+    // Rolled alongside RolledPerkCount by LevelUpUtility.RollWeaponOption (LevelUpConfig.
+    // ResolveWeaponOfferLevel) - applied via WeaponSystem.AddLevel AFTER WeaponChoiceUtility.Grant's
+    // own WeaponSystem.Equip call, since Equip always resets a freshly-equipped Weapon to Level 0
+    // (WeaponSystem.SeedStats). Store's own StoreWeaponOffer.WeaponLevel is copied into this field
+    // at purchase time (see StoreUtility.BuyWeapon) rather than re-rolled.
+    Byte RolledWeaponLevel;
 }
 
 // Attached to a player's own character entity (found via PlayerLink) the instant a level-up screen
@@ -116,13 +123,18 @@ struct GlobalUpgradePickEntry
 // an opt-in per-asset MaxPicks) regardless of which of the two pools it's drawn from, and the two
 // pools' assets never overlap - see RiftMutationUtility.Grant/IsAlreadyPicked and
 // LevelUpUtility.CollectRiftMutationCandidates/CollectRiftMarkMutationCandidates. Fixed array with
-// headroom over the current 25-mutation catalog (14 RiftMutation + 11 RiftMarkMutation - see
-// docs/rift-mutations.md), same convention as GlobalUpgradePicks/SkillSlot.Upgrades. Grown from [16]
-// in the same pass that added the 11 Rift Mark mutations, since 14+11 already exceeded the old
-// headroom.
+// headroom over the current 30-mutation catalog (19 RiftMutation + 11 RiftMarkMutation - see
+// docs/rift-mutations.md), same convention as GlobalUpgradePicks/SkillSlot.Upgrades. Grown [16] ->
+// [32] when the 11 Rift Mark mutations landed, then [32] -> [48] when the core pool's own
+// expansion left the old size with a single free slot.
+//
+// Note this records PLAYER-scope and RUN-scope picks alike (see RiftMutationData.Scope) - a
+// run-scope mutation is still recorded on whoever picked it, so their own history/HUD reads
+// correctly; Frame.Global.RunMutationPicks (RunMutations.qtn) is the separate, run-wide guard that
+// stops a second player from applying the same shared effect twice.
 component RiftMutationPicks
 {
-    array<AssetRef<RiftMutationData>>[32] Picked;
+    array<AssetRef<RiftMutationData>>[48] Picked;
 }
 
 // Flat run-wide record of every upgrade an entity has ever been granted, covering Skill Upgrade/

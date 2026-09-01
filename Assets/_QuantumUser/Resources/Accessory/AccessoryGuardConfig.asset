@@ -17,16 +17,21 @@ MonoBehaviour:
     Guid:
       Value: 390381435654004468
   BaseDurability: 3
+  MinDamageToBlock:
+    RawValue: 327680
   MinDropOffset:
     RawValue: 458752
   MaxDropOffset:
     RawValue: 655360
-  PopHorizontalSpeed:
-    RawValue: 655360
-  PopVerticalSpeed:
-    RawValue: 655360
+  LandingSampleAttempts: 8
+  MinLaunchAngle:
+    RawValue: 2621440
+  MaxLaunchAngle:
+    RawValue: 4259840
+  CanLandOnHigherGround: 1
   PickupRadius:
     RawValue: 81920
+  AllowAllyRecovery: 1
   RepairCostByMissingDurability:
   - RawValue: 1638400
   - RawValue: 3276800

@@ -1,3 +1,4 @@
+using QuantumUser.View;
 using QuantumUser.View.Util;
 using UnityEngine;
 
@@ -44,7 +45,16 @@ namespace Quantum
             Frame frame = game.Frames.Predicted;
             bool hasSentry = frame.Has<Sentry>(_entityRef);
 
-            UpdateFade(hasSentry);
+            // The chassis itself is never a registered local-player slot (only a hero's own
+            // character entity is, see CustomQuantumEntityViewComponent.isLocal), so this can't use
+            // executeOnlyOnLocal like WeaponRangeIndicatorView - trace back to the deploying player
+            // instead, same idiom as DamageFeedbackManager.ResolveOwningPlayer, so a teammate's (or
+            // bot's) sentry range never leaks onto this client.
+            bool isOwnedByLocalPlayer = hasSentry
+                && MyLocalPlayer.Instance != null
+                && MyLocalPlayer.Instance.IsLocalEntity(frame.Get<Sentry>(_entityRef).Owner);
+
+            UpdateFade(isOwnedByLocalPlayer);
 
             if (_currentAlpha <= 0f)
             {
@@ -54,15 +64,15 @@ namespace Quantum
 
             rangeLine.enabled = true;
 
-            if (hasSentry)
+            if (isOwnedByLocalPlayer)
             {
                 DrawCircle(frame.Get<Sentry>(_entityRef).Range.AsFloat);
             }
         }
 
-        private void UpdateFade(bool hasSentry)
+        private void UpdateFade(bool shouldShow)
         {
-            if (hasSentry == false)
+            if (shouldShow == false)
             {
                 _currentAlpha = 0f;
             }

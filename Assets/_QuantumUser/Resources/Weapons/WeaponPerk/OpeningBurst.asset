@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca644145c9de0417591552060b1f70f9, type: 3}
+  m_Name: OpeningBurst
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.OpeningBurstWeaponPerkData
+  Identifier:
+    Path: _QuantumUser/Resources/Weapons/WeaponPerk/OpeningBurst
+    Guid:
+      Value: 452779746857446377
+  Icon: {fileID: 1024857288, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  DisplayName: Opening Burst
+  Rarity: 1
+  Description: 'First <color=#FD3971>{0:0}%</color> of magazine: <color=#FD3971>{1:+0;-0}%</color> Fire Rate'
+  FireRateBonus:
+    RawValue: 16384
+  Threshold:
+    RawValue: 13107

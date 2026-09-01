@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: -1580156667, guid: b217254d41b6945b1873986186a25786, type: 3}
   DisplayName: Cluster Bomb
   RankDescriptions:
-  - Bunny Bomb scatters 2 Mini Bombs, each dealing 40% of its damage.
-  - Bunny Bomb scatters 3 Mini Bombs, each dealing 45% of its damage.
-  - Bunny Bomb scatters 4 Mini Bombs, each dealing 50% of its damage.
+  - 'Bunny Bomb scatters <color=#FD3971>2</color> Mini Bombs, each dealing <color=#FD3971>40%</color> of its damage.'
+  - 'Bunny Bomb scatters <color=#FD3971>3</color> Mini Bombs, each dealing <color=#FD3971>45%</color> of its damage.'
+  - 'Bunny Bomb scatters <color=#FD3971>4</color> Mini Bombs, each dealing <color=#FD3971>50%</color> of its damage.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

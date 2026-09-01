@@ -39,6 +39,7 @@ namespace Quantum
             SeedStats(f, owner, weapon);
             ApplyPerks(f, owner, weapon);
             ApplyPixieExplosiveWeapon(f, owner, weapon);
+            ApplyOwnerWeaponModifiers(f, owner, weapon);
 
             weapon->Ammo = weapon->MagazineSize;
             weapon->FireCooldownTimer = FP._0;
@@ -51,11 +52,12 @@ namespace Quantum
         }
 
         // Called by StoreUtility.BuyWeaponLevelUp when a player buys the Store's guaranteed
-        // "Increase Weapon Level" offer (see docs/store-blacksmith.md) - compounds
-        // damageBonusPerLevel into DamageMultiplier, the exact same idiom
-        // DamageMultiplierWeaponPerkData.Apply already uses for a rolled perk, so it composes with
-        // every other damage-multiplier source identically. Level itself is bookkeeping only
-        // (pricing/display - see Weapon.qtn's own comment), never read back into damage math.
+        // "Increase Weapon Level" offer, and by WeaponChoiceUtility.Grant to apply a freshly-rolled
+        // weapon offer's own starting Level (LevelUpOption.RolledWeaponLevel, see
+        // docs/store-blacksmith.md) - compounds damageBonusPerLevel into DamageMultiplier, the exact
+        // same idiom DamageMultiplierWeaponPerkData.Apply already uses for a rolled perk, so it
+        // composes with every other damage-multiplier source identically. Level itself is bookkeeping
+        // only (pricing/display - see Weapon.qtn's own comment), never read back into damage math.
         public static void AddLevel(Weapon* weapon, FP damageBonusPerLevel)
         {
             weapon->Level++;
@@ -107,6 +109,50 @@ namespace Quantum
             // brief calls out for this line. ProcCooldown is 0 unless a playtest turns it on.
             procs->ExplosiveSequenceChance = explosive->ProcChance;
             procs->ExplosiveSequenceCooldown = explosive->ProcCooldown;
+        }
+
+        // The RIFT MUTATION stage of the weapon-stat pipeline:
+        //   WeaponDataAsset -> SeedStats -> ApplyPerks -> hero modifiers -> THIS -> live per-shot
+        //   resolution (ResolveLiveDamage/ResolveLiveFireCooldown/StatUtility/ResolveOutgoingDamage).
+        //
+        // It exists for exactly one reason: Weapon.MagazineSize is a BAKED absolute that SeedStats
+        // resets on every Equip (see Weapon.qtn), so a persistent owner-level modifier that wrote it
+        // directly would silently vanish the next time the player picked a weapon up. Running as a
+        // stage of Equip is what makes those modifiers survive a weapon swap - the same shape (and
+        // the same reason) as ApplyPixieExplosiveWeapon directly above.
+        //
+        // Damage, fire rate, reload speed and pierce need nothing here: they are already live-resolved
+        // multipliers on CharacterStats, so they survive a swap for free.
+        //
+        // Also called DIRECTLY by the mutations that write these fields, so picking one mid-run takes
+        // effect on the weapon already in hand rather than only on the next equip - same dual-call
+        // precedent ApplyPixieExplosiveWeapon/ExplosiveRoundsPassiveUpgradeData already set. No-op for
+        // any owner with no CharacterStats (Lux's sentry barrels) or no modifier authored.
+        public static void ApplyOwnerWeaponModifiers(Frame f, EntityRef owner, Weapon* weapon)
+        {
+            if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false)
+                return;
+
+            if (stats->MagazineSizeBonus != FP._0)
+            {
+                int scaled = FPMath.RoundToInt(weapon->MagazineSize * (FP._1 + stats->MagazineSizeBonus));
+                weapon->MagazineSize = scaled < 1 ? 1 : scaled;
+            }
+
+            // An absolute override deliberately WINS over the bonus above, so One in the Chamber
+            // still means exactly one round even for a player who also took Bullet Storm.
+            if (stats->MagazineSizeOverride > 0)
+            {
+                weapon->MagazineSize = stats->MagazineSizeOverride;
+            }
+
+            // Matters only for the mid-run direct call - Equip sets Ammo from MagazineSize straight
+            // after this anyway. Without it, shrinking the magazine under a partly-spent one would
+            // leave a weapon holding more rounds than it can now hold.
+            if (weapon->Ammo > weapon->MagazineSize)
+            {
+                weapon->Ammo = weapon->MagazineSize;
+            }
         }
 
         // Optional per-weapon internal cooldown between explosive procs - only ticks when something
@@ -337,6 +383,12 @@ namespace Quantum
                 f.Remove<PhantomStrikeCharge>(filter.Entity);
             }
 
+            // Longshot - extra pierce on a shot taken at long range. Resolved here, once per shot,
+            // because pierce is a property of the projectile/hitscan WALK, not of any individual
+            // hit: by the time a target's own distance is known the shot has already been built.
+            // Measured against the current aim target, the same thing the shot is being aimed at.
+            grantPierceAmount += ResolveLongRangePierceBonus(f, filter.Entity, filter.Aim->Target, casterPosition);
+
             FireShot(f, filter.Entity, filter.Weapon, weaponData, damage, casterPosition, aimAngle, holdOffset,
                 spawnPosition, aimDirection, filter.Aim->Target, aimAtCenter, isExplosiveProc, isCataclysm, grantPierceAmount);
 
@@ -443,6 +495,27 @@ namespace Quantum
             {
                 reactions->KillerInstinctTimer = FPMath.Max(FP._0, reactions->KillerInstinctTimer - deltaTime);
             }
+        }
+
+        // Longshot's bonus pierce - granted only when the shot is genuinely being taken at long
+        // range, measured against the SAME threshold the damage falloff uses
+        // (DamageUtility.RangeDamageFarThreshold), so "beyond 10 units" means one thing across the
+        // whole mutation rather than two numbers that could drift apart.
+        //
+        // Distance is to the current aim target rather than to whatever the shot eventually hits:
+        // pierce has to be baked into the projectile/hitscan walk before any of that is known, and
+        // the aim target is what the player is actually shooting at.
+        private static int ResolveLongRangePierceBonus(Frame f, EntityRef owner, EntityRef target, FPVector3 casterPosition)
+        {
+            if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false || stats->LongRangePierceBonus <= 0)
+                return 0;
+
+            if (target == EntityRef.None || f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == false)
+                return 0;
+
+            FP distance = FPVector3.Distance(casterPosition, targetTransform->Position);
+
+            return distance >= DamageUtility.RangeDamageFarThreshold ? stats->LongRangePierceBonus : 0;
         }
 
         // Fraction of the magazine consumed INCLUDING the shot about to fire - 1/MagazineSize on
@@ -956,6 +1029,16 @@ namespace Quantum
                     if (hitEntity == owner)
                         continue;
 
+                    // A contact that neither damages this beam's shooter's enemies nor physically
+                    // stops the beam is flown straight past - it must be skipped HERE, before
+                    // didHit/endPoint/travelled are written below, or the segment visibly
+                    // terminates on it for zero damage. Covers a friendly player (the exact case
+                    // ProjectileHitData.ShouldDetonate already fixes for projectiles, which this
+                    // path never got) and every non-solid world entity carrying a real collider -
+                    // a dropped orb, a chest, a POI prop, or another of the same sentry's barrels.
+                    if (StopsHitscan(f, owner, hitEntity) == false)
+                        continue;
+
                     FP distance = remainingRange * nearestDistance;
 
                     didHit = true;
@@ -1097,6 +1180,48 @@ namespace Quantum
         {
             return entity != EntityRef.None
                 && (f.Has<Enemy>(entity) == true || f.Has<PlayerLink>(entity) == true || f.Has<Breakable>(entity) == true);
+        }
+
+        // Whether a contact does anything to the beam at all - the gate every hit passes before it
+        // is allowed to end a segment. IsHitscanTarget alone only answers "is this a real target";
+        // this also answers "and if it isn't, is it solid enough to stop the shot" - which used to
+        // be assumed true for absolutely everything.
+        private static bool StopsHitscan(Frame f, EntityRef owner, EntityRef hitEntity)
+        {
+            if (IsHitscanTarget(f, hitEntity) == true)
+                return IsFriendlyPlayer(f, owner, hitEntity) == false;
+
+            return IsHitscanBlocker(f, hitEntity);
+        }
+
+        // Mirrors ProjectileHitData.ShouldDetonate's own ally rule one-for-one, including its
+        // reasoning: allegiance is decided by whether the OWNER is an Enemy rather than by whether
+        // it is a player, so a Sentry/turret (which has no PlayerLink of its own) isn't stopped by
+        // the player who deployed it either. An enemy's own hitscan still hits players normally.
+        private static bool IsFriendlyPlayer(Frame f, EntityRef owner, EntityRef hitEntity)
+        {
+            if (f.Has<PlayerLink>(hitEntity) == false)
+                return false;
+
+            return owner == EntityRef.None || f.Has<Enemy>(owner) == false;
+        }
+
+        // Only genuine level geometry ends a beam that hit nothing damageable. EntityRef.None is a
+        // static map collider. Anything else is judged by the layer its own collider sits on rather
+        // than by its components, since this project's walls are dynamic ENTITIES (see
+        // IsHitscanTarget) and the Default layer is shared by Breakable props, dropped currency/exp
+        // orbs, chests, POI props and player deployables alike - no component test separates them.
+        // An entity the cast returned always has a collider, so that branch only keeps the old
+        // conservative answer for an impossible case.
+        private static bool IsHitscanBlocker(Frame f, EntityRef entity)
+        {
+            if (entity == EntityRef.None)
+                return true;
+
+            if (f.Unsafe.TryGetPointer<PhysicsCollider3D>(entity, out var collider) == false)
+                return true;
+
+            return (EnemyMovementUtility.GetShotBlockerLayerMask(f) & (1 << collider->Layer)) != 0;
         }
 
         private static bool TryFindRicochetTarget(Frame f, FPVector3 point, EntityRef exclude, out FPVector3 targetPosition)
@@ -1346,7 +1471,7 @@ namespace Quantum
 
             projectile->RemainingPierces += grantPierceAmount;
 
-            projectile->MaxTravelDistance = WeaponPerkUtility.ResolveWeaponRange(f, weapon);
+            projectile->MaxTravelDistance = WeaponPerkUtility.ResolveProjectileMaxTravelDistance(f, weapon, projectile);
             projectile->IsExplosiveProc = isExplosiveProc;
             projectile->IsCataclysm = isCataclysm;
 

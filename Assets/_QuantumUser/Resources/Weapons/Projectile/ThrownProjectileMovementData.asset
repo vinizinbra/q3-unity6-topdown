@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64842e4d2096b459d815e516b95b3b68, type: 3}
+  m_Name: ThrownProjectileMovementData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ThrownProjectileMovementData
+  Identifier:
+    Path: _QuantumUser/Resources/Weapons/Projectile/ThrownProjectileMovementData
+    Guid:
+      Value: 407472207802082069
+  Speed:
+    RawValue: 0
+  LaunchVelocityY:
+    RawValue: 0
+  Gravity:
+    RawValue: 1310720

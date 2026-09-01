@@ -56,7 +56,7 @@ MonoBehaviour:
     Variants:
     - {fileID: 8300000, guid: cfb556fc00e264863be70b1b6fcd0c8f, type: 3}
     - {fileID: 8300000, guid: 637fe522003644c2dba5b89444a0bcf4, type: 3}
-    - {fileID: 8300000, guid: 3c4629e1b57464c9ebbd59f6678bd3e5, type: 3}
+    - {fileID: 8300000, guid: af266a34068ef44fd92062326be4aedd, type: 3}
     PairOverrides: []
   - name: ItemPurchased  (3 variants)
     Trigger: 24
@@ -128,5 +128,107 @@ MonoBehaviour:
     - {fileID: 8300000, guid: 72db994b193cb480dbaf5b06038bbe96, type: 3}
     - {fileID: 8300000, guid: e6ff7bf0fcd71498f85289d2f5e589e8, type: 3}
     PairOverrides: []
-  testTrigger: 66
+  - name: RevivingTeammate  (0 variants, +5 ally)
+    Trigger: 55
+    Variants: []
+    PairOverrides:
+    - name: with Max  (3 variants)
+      OtherHero: 1
+      Variants:
+      - {fileID: 8300000, guid: 6f762ed706ea04557adadb729266e938, type: 3}
+      - {fileID: 8300000, guid: fa4b586b21e30447abbb6839f2224abf, type: 3}
+      - {fileID: 8300000, guid: f3c5a08d98c7944139509fddd4bb0d86, type: 3}
+    - name: with Brute  (3 variants)
+      OtherHero: 3
+      Variants:
+      - {fileID: 8300000, guid: 67369e0c860514eb98edb69c58fdbedd, type: 3}
+      - {fileID: 8300000, guid: 3979fd43eb06648cdbf935056e1ca10c, type: 3}
+      - {fileID: 8300000, guid: 4e994ce025d694b7b931476899d2cf62, type: 3}
+    - name: with Kai  (3 variants)
+      OtherHero: 4
+      Variants:
+      - {fileID: 8300000, guid: f146e222aa060483aa0afeb939c636b8, type: 3}
+      - {fileID: 8300000, guid: d4ff49f9047b8407e90e5255e141bd88, type: 3}
+      - {fileID: 8300000, guid: 5910e9f690dad44e4afacaa09ab2890a, type: 3}
+    - name: with Zara  (3 variants)
+      OtherHero: 5
+      Variants:
+      - {fileID: 8300000, guid: 072294cee60d34a2eafc2a6871e041d5, type: 3}
+      - {fileID: 8300000, guid: 6e66391ee1a7e4564b4c67789253c892, type: 3}
+      - {fileID: 8300000, guid: 880af7cc9e10847c29b4667e976ec65f, type: 3}
+    - name: with Lux  (3 variants)
+      OtherHero: 6
+      Variants:
+      - {fileID: 8300000, guid: 652582b350a2741ffb56a4f8d83b9196, type: 3}
+      - {fileID: 8300000, guid: 69d839eab6dfb45d1807440626daf602, type: 3}
+      - {fileID: 8300000, guid: 34955eb1740a2490984c60b3e0b2ad0c, type: 3}
+  - name: RevivedTeammate  (0 variants, +5 ally)
+    Trigger: 56
+    Variants: []
+    PairOverrides:
+    - name: with Max  (3 variants)
+      OtherHero: 1
+      Variants:
+      - {fileID: 8300000, guid: bb40607ee8f4640bdb8a25823e35120a, type: 3}
+      - {fileID: 8300000, guid: d36f71df38e704500bb4cf0d24ef4f90, type: 3}
+      - {fileID: 8300000, guid: 663cabc758cc948098bf49d1923c9d11, type: 3}
+    - name: with Brute  (3 variants)
+      OtherHero: 3
+      Variants:
+      - {fileID: 8300000, guid: 6afe406b1a4da42508316f6c338a7a4c, type: 3}
+      - {fileID: 8300000, guid: 5ca775077c9e4435c8a652afa9d5a3c5, type: 3}
+      - {fileID: 8300000, guid: f83e5cd1a611a4c839272b9826d4fb43, type: 3}
+    - name: with Kai  (3 variants)
+      OtherHero: 4
+      Variants:
+      - {fileID: 8300000, guid: 07b8401cf767b45da83e7a6d3f35ee08, type: 3}
+      - {fileID: 8300000, guid: 09336199dcb7349e3a36b0732770c018, type: 3}
+      - {fileID: 8300000, guid: 1f9e80ff2e99e43a696155142d3e96a6, type: 3}
+    - name: with Zara  (3 variants)
+      OtherHero: 5
+      Variants:
+      - {fileID: 8300000, guid: d9556952448184a548f0afea01c34388, type: 3}
+      - {fileID: 8300000, guid: 13ac7af4e05d743f5a9752daabb71a83, type: 3}
+      - {fileID: 8300000, guid: 731b9139e54744344bfb9d09ba8a8d34, type: 3}
+    - name: with Lux  (3 variants)
+      OtherHero: 6
+      Variants:
+      - {fileID: 8300000, guid: c4adceef4744f435dae9e04b9703495d, type: 3}
+      - {fileID: 8300000, guid: 9a686a4865f3b40528b4f81ef3b41238, type: 3}
+      - {fileID: 8300000, guid: a5649e92c383f426ab6ac6e2552a4a38, type: 3}
+  - name: AccessoryReturnedToAlly  (0 variants, +5 ally)
+    Trigger: 62
+    Variants: []
+    PairOverrides:
+    - name: with Max  (3 variants)
+      OtherHero: 1
+      Variants:
+      - {fileID: 8300000, guid: 983050749d98a45aeb50447283bec7ee, type: 3}
+      - {fileID: 8300000, guid: 026533b8c977142c4aa9c813994500f0, type: 3}
+      - {fileID: 8300000, guid: 20dfbb2f160fd4e10a12e91dbbf28048, type: 3}
+    - name: with Brute  (3 variants)
+      OtherHero: 3
+      Variants:
+      - {fileID: 8300000, guid: 2ee85fddfd7bd4e6f9a18c1f4808d1ad, type: 3}
+      - {fileID: 8300000, guid: cf537f685396c46bdbf6909680ec0b22, type: 3}
+      - {fileID: 8300000, guid: 60d4f520d3b5b46049859258aa7ba895, type: 3}
+    - name: with Kai  (3 variants)
+      OtherHero: 4
+      Variants:
+      - {fileID: 8300000, guid: 65ec35daa7ac34133b69c87d9f5902b0, type: 3}
+      - {fileID: 8300000, guid: e72e36413f6004e6eac135653cf51345, type: 3}
+      - {fileID: 8300000, guid: 033755c9dcada4cf1943b7c277c4198d, type: 3}
+    - name: with Zara  (3 variants)
+      OtherHero: 5
+      Variants:
+      - {fileID: 8300000, guid: d693e832177dd4c56ace6fa8b11f4793, type: 3}
+      - {fileID: 8300000, guid: 8f7be25c9c5124acaa7d5e5c91d327e1, type: 3}
+      - {fileID: 8300000, guid: 7016162c94451404b83dd32e9ce31a3a, type: 3}
+    - name: with Lux  (3 variants)
+      OtherHero: 6
+      Variants:
+      - {fileID: 8300000, guid: 9d1bae2d6f79d4bad97457bf2a198c45, type: 3}
+      - {fileID: 8300000, guid: 96e11bcc889df4a75bc0ff36456b4f52, type: 3}
+      - {fileID: 8300000, guid: 9fbb07f8eea72494db00ffdcd1659ed6, type: 3}
+  testTrigger: 62
   testAlly: 0

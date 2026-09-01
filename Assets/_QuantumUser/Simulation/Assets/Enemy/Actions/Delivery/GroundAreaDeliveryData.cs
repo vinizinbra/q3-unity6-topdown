@@ -37,6 +37,15 @@ namespace Quantum
         // EnterRecovering already guards against clobbering the Dead phase this sets.
         public bool SelfDestructs = false;
 
+        // 0 (the default) keeps every existing asset's exact prior behavior - FindPlayersInRadius
+        // below mimics a volumetric 3D sphere/distance check (see PlayerQueryUtility.Scan), so a
+        // player standing on an elevated ledge/platform above this slam (or down in a pit near it)
+        // can still get caught. Above zero, a hit additionally requires the ACTUAL FLOOR under the
+        // target (a real ground raycast, not raw Transform3D.Y) to be within this many units of the
+        // floor under the slam's own origin - see EnemyMovementUtility.IsWithinFlatGroundArea/
+        // ResolveGroundY.
+        public FP MaxHeightDifference = FP._0;
+
         public override bool Begin(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, EnemyActionData action, EntityRef target)
         {
             FPVector3 targetAnchor = filter.Enemy->SkillTargetPosition;
@@ -45,6 +54,9 @@ namespace Quantum
             Span<EntityRef> hits = stackalloc EntityRef[PlayerQueryUtility.MaxPlayerLayerCandidates];
 
             int hitsCount = EnemyMovementUtility.FindPlayersInRadius(f, origin, action.DamageRange, hits);
+
+            // Resolved once per slam, not per candidate - see EnemyMovementUtility.ResolveGroundY.
+            FP originGroundY = MaxHeightDifference > FP._0 ? EnemyMovementUtility.ResolveGroundY(f, origin) : default;
             // Same Dot-vs-Cos(half-arc) idiom DamageUtility's own frontal-arc check already uses
             // (see DamageUtility.cs) - cheaper than an Acos per candidate, and keeps this consistent
             // with that established pattern instead of introducing a different one.
@@ -66,6 +78,10 @@ namespace Quantum
                     continue;
 
                 FPVector3 hitPosition = hitTransform->Position;
+
+                if (MaxHeightDifference > FP._0 &&
+                    EnemyMovementUtility.IsWithinFlatGroundArea(f, origin, originGroundY, hitPosition, action.DamageRange, MaxHeightDifference) == false)
+                    continue;
 
                 if (ConeShaped == true)
                 {

@@ -253,6 +253,7 @@ MonoBehaviour:
     - IgnoreProjectile
     - Obstacle
     - Boss
+    - CharacterPreview
     - 
     - 
     - 
@@ -268,8 +269,7 @@ MonoBehaviour:
     - 
     - 
     - 
-    - 
-    LayerMatrix: ffefffffffefffffffefffffffffffffffefffffffefffffffffffffffebffffffcfffffffefffff7fe3ffffffe3ffff4860ffffff7effffffffffffff4fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    LayerMatrix: ffefffffffefffffffefffffffffffffffefffffffefffffffffffffffeaffff7fcfffffffefffff7fe3ffffffe3ffff4860ffffff7effffffffffffff4fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
   Navigation:
     DefaultNavMeshAgent:
       Id:

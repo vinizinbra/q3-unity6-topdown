@@ -221,7 +221,7 @@ namespace Quantum
             // Projectile.qtn's own comment on MaxTravelDistance.
             if (f.Unsafe.TryGetPointer<Projectile>(secondary, out var secondaryProjectile) == true)
             {
-                secondaryProjectile->MaxTravelDistance = WeaponPerkUtility.ResolveWeaponRange(f, weapon);
+                secondaryProjectile->MaxTravelDistance = WeaponPerkUtility.ResolveProjectileMaxTravelDistance(f, weapon, secondaryProjectile);
             }
         }
     }

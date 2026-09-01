@@ -1,0 +1,59 @@
+// Run-level Rift Mutation state - see docs/rift-mutations.md. Merged by the DSL compiler into the
+// same Frame.Global struct as every other global block; kept in its own file since it's the shared/
+// run-wide half of a system whose per-player half lives on CharacterStats/RiftMutationPicks.
+//
+// A Rift Mutation is either Player scope (affects only its picker - Glass Core, Heavy Arsenal) or
+// Run scope (changes shared simulation state - Greed, Overpopulation, Elite Territory, Blood Tithe,
+// Escalation). Run-scope mutations MUST apply exactly once no matter how many players are
+// offered them, which is what RunMutationPicks below enforces - RiftMutationPicks is per-entity and
+// therefore can't.
+//
+// Every modifier here is a BONUS, defaulting to its natural 0 and read as `1 + bonus`, so a run in
+// which nothing was ever picked is an exact no-op rather than needing an explicit 1 seed. That's
+// the same convention the field this block replaces (RiftShards.qtn's EnemyHealthBonusMultiplier)
+// already established. Every read goes through EncounterModifierUtility - nothing reads these
+// fields directly.
+global
+{
+    // Which Run-scope mutations this run has already applied, across ALL players. Checked and
+    // written by RiftMutationUtility.Grant/IsBlocked. Fixed array with headroom over the current
+    // 5 run-scope mutations, same convention as RiftMutationPicks/GlobalUpgradePicks.
+    array<AssetRef<RiftMutationData>>[16] RunMutationPicks;
+
+    // Enemy Max Health, baked per spawn by EnemySystem.SeedHealth via
+    // EncounterModifierUtility.ResolveEnemyHealthMultiplier. Greed +0.5, Overpopulation -0.25.
+    // A NEGATIVE total is deliberately ignored for EnemyTier.Boss - a horde mutation shouldn't
+    // quietly trivialise a boss fight - while a positive one still applies to every tier.
+    FP EnemyMaxHealthBonus;
+
+    // Enemy outgoing damage, read LIVE (not baked at spawn) by
+    // HitEffectUtility.ScaleByEnemyDamageMultiplier, so it applies to already-alive enemies the
+    // instant it's picked. Blood Tithe +0.25.
+    FP EnemyDamageBonus;
+
+    // Director spawn pressure/density. Scales all three of the Director's own levers at once
+    // (budget accrual, MaxAliveEnemies, TargetPressure) exactly the way the pre-existing
+    // SplitThreatMultiplier already does - see EncounterModifierUtility.ResolveSpawnDensityMultiplier.
+    // Overpopulation +0.40, Elite Territory -0.30.
+    FP EnemySpawnDensityBonus;
+
+    // Multiplies an EnemyGroupConfig's own Weight during CombatDirectorUtility.TrySelectGroup, but
+    // only for a group that contains an Elite-or-higher member (GroupContainsMajor). Unlike every
+    // other field here this is a raw MULTIPLIER, not a bonus - 0/unset reads as 1 - because "x2.5
+    // as likely" is how the design brief expresses it and there's no additive reading of a
+    // weighting that composes sensibly. Elite Territory 2.5.
+    FP EliteGroupWeightMultiplier;
+
+    // Team-wide Rift Shard gain, applied by RiftShardUtility.GrantAll BEFORE each player's own
+    // CharacterStats.RiftShardGainMultiplier. Deliberately run-wide rather than per-picker: both
+    // mutations that source it pair the reward with a run-wide drawback, so the reward has to reach
+    // everyone paying for it. Greed +1.0, Blood Tithe +0.75.
+    FP RiftShardGainBonus;
+
+    // Escalation - how much extra spawn density a Combat/Elite phase has ramped to by the time
+    // it ends. 0 = off (the mutation was never picked). Interpolated over the phase's own normalized
+    // progress (PhaseTimer / Duration) rather than any timer of its own, so it resets for free when
+    // SurvivalProgressionUtility.Tick zeroes PhaseTimer on a phase transition, and stays fully
+    // deterministic. Breathing/Boss phases are excluded - see ResolvePhaseRamp.
+    FP EscalationEndBonus;
+}

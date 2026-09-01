@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: 1079704276, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
   DisplayName: Uncontrolled Fury
   RankDescriptions:
-  - Every 3rd kill during Overdrive extends it by 1s, up to +3s.
-  - Every 2nd kill during Overdrive extends it by 1s, up to +5s.
-  - Every 2nd kill during Overdrive extends it by 1s, up to +7s. Vendetta kills add an uncapped +2s.
+  - 'Every <color=#FD3971>3</color>rd kill during Overdrive extends it by <color=#FD3971>1s</color>, up to <color=#FD3971>+3s</color>.'
+  - 'Every <color=#FD3971>2</color>nd kill during Overdrive extends it by <color=#FD3971>1s</color>, up to <color=#FD3971>+5s</color>.'
+  - 'Every <color=#FD3971>2</color>nd kill during Overdrive extends it by <color=#FD3971>1s</color>, up to <color=#FD3971>+7s</color>. Vendetta kills add an uncapped <color=#FD3971>+2s</color>.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

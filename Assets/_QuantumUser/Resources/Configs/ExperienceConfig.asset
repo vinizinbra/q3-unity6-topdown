@@ -111,6 +111,6 @@ MonoBehaviour:
       WeightedMode: 0
   MaxLevel: 50
   PickupRadius:
-    RawValue: 65536
+    RawValue: 131072
   OrbLifetime:
     RawValue: 3932160

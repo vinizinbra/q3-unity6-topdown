@@ -29,6 +29,11 @@ namespace QuantumUser.Editor
 
             config.BaseDurability = 3;
 
+            // Placeholder pending a real balance pass: a Filler/Swarm tap (typically 1-2 damage)
+            // should pass straight through to Health instead of costing a durability point, while a
+            // Normal-tier-or-above hit still gets blocked.
+            config.MinDamageToBlock = 3;
+
             config.MinDropOffset = FP._1;
             config.MaxDropOffset = 3;
             config.LandingSampleAttempts = 8;

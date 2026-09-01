@@ -13,10 +13,10 @@ namespace Quantum
         [SerializeField, Tooltip("Extra radius (in world units) added ON TOP of the entity's collider radius purely for the visual sprite fit-scale, so the sprite renders slightly larger than the physics footprint (e.g. radius 2 fits as if it were 2.2). Only affects the sprite scale - the collider, shadow footprint, and feet-anchor offset all still use the raw radius.")]
         private float viewRadiusPadding = 0.2f;
 
-        [SerializeField, Tooltip("Extra world-units clearance added ABOVE the measured sprite top when anchoring CharacterUiWidget (see ResolveWidgetOffset). The widget normally sits exactly at the rendered sprite's bounds top so it clears the visible body regardless of how tall/padded the art is relative to the collider; this just nudges it a little higher if needed. On top of CharacterUiWidget.worldOffset's own shared base clearance.")]
-        private float widgetSpriteTopPadding = 0f;
+        [SerializeField, Tooltip("Extra world-units clearance added ABOVE the resolved widget height (see ResolveWidgetOffset) as a guaranteed safety margin - covers sub-pixel/alpha-edge slack in the sprite's own bounds so the bar never reads as touching the art. On top of CharacterUiWidget.worldOffset's own shared base clearance.")]
+        private float widgetSpriteTopPadding = 0.25f;
 
-        [SerializeField, Tooltip("FALLBACK ONLY - used when the ViewPrefab has no measurable EnemyViewRig.ReferenceSprite so the sprite top can't be read. Multiplies the entity's collider radius (EnemyMovementUtility.ResolveEntityRadius) into CharacterUiWidget's per-character offset, the pre-sprite-bounds behavior - same slot CharView.widgetOffset hand-authors per hero.")]
+        [SerializeField, Tooltip("Multiplies the entity's collider radius (EnemyMovementUtility.ResolveEntityRadius) into a MINIMUM widget height, taken together with the measured sprite-top height in ResolveWidgetOffset (whichever is taller wins) - not just a fallback for when no sprite is measurable. A well fit-scaled sprite's own top sits at roughly 1x radius above the collider center, so this is also the floor that keeps the bar from sitting low/clipping into the body on whichever enemy types happen to under-measure via sprite bounds (e.g. a wide/landscape sprite fit-scaled by its longest side ends up shorter than a portrait one of the same radius).")]
         private float widgetRadiusOffsetMultiplier = 1f;
 
         // Tracked so DeInitialize can release the exact pooled instance/prefab pair back to
@@ -97,17 +97,29 @@ namespace Quantum
         // top of the widget's shared worldOffset base clearance). SpriteRenderer.bounds is a world-space
         // AABB that already reflects the position/scale SpawnSprite just applied, so bounds.max.y is the
         // sprite's true top in world space; measured relative to transform.position (the collider center
-        // the widget follows) it becomes the local vertical raise, plus a small authored pad. Falls back
-        // to the pre-existing collider-radius offset when no sprite is measurable.
+        // the widget follows) it becomes the local vertical raise.
+        //
+        // Taken as the MAX of that measured height and a radius-based floor, not sprite-bounds alone -
+        // different enemy art doesn't crop/pad identically, and ResolveFitScale fits a sprite's LONGEST
+        // side to the collider diameter, so a wide/landscape sprite ends up proportionally shorter than a
+        // portrait one at the same radius. Both effects can make the measured sprite top sit lower than
+        // the body actually reads on screen, which is what "bar clips into the enemy" looks like - the
+        // radius floor (roughly where a well fit-scaled sprite's own top would land) catches whichever
+        // enemy type's measurement comes in short, while a genuinely tall sprite still gets its own taller
+        // measured height rather than being clamped down to the floor. widgetSpriteTopPadding is a small
+        // guaranteed margin on top of whichever one wins, so the bar reads as clearing the body rather
+        // than just grazing it.
         private Vector3 ResolveWidgetOffset(EnemyViewRig rig, float radius)
         {
+            float radiusFloor = radius * widgetRadiusOffsetMultiplier;
+
             if (rig != null && rig.ReferenceSprite != null && rig.ReferenceSprite.sprite != null)
             {
                 float spriteTopLocalY = rig.ReferenceSprite.bounds.max.y - transform.position.y;
-                return Vector3.up * (spriteTopLocalY + widgetSpriteTopPadding);
+                return Vector3.up * (Mathf.Max(spriteTopLocalY, radiusFloor) + widgetSpriteTopPadding);
             }
 
-            return Vector3.up * (radius * widgetRadiusOffsetMultiplier);
+            return Vector3.up * (radiusFloor + widgetSpriteTopPadding);
         }
 
         // Filler is the disposable/trash tier (destroyed instantly, no lingering die animation -

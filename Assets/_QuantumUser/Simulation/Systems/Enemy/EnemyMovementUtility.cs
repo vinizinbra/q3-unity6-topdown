@@ -21,6 +21,7 @@ namespace Quantum
         private const string BossLayerName = "Boss";
         private const string IgnoreProjectileLayerName = "IgnoreProjectile";
         private const string ObstacleLayerName = "Obstacle";
+        private const string GroundNotJumpableLayerName = "GroundNotJumpable";
 
         // No static caching for any of the masks/indices below - f.Layers.GetLayerMask/
         // GetLayerIndex are cheap lookups into immutable per-match config; a static field would
@@ -63,6 +64,18 @@ namespace Quantum
         public static int GetObstacleLayerMask(Frame f)
         {
             return f.Layers.GetLayerMask(ObstacleLayerName);
+        }
+
+        // Everything a shot that hit nothing damageable is allowed to STOP on - real level
+        // geometry, and nothing else. Needed because "is this a wall" cannot be answered by
+        // EntityRef.None in this project (walls are genuinely dynamic entities, see
+        // WeaponSystem.IsHitscanTarget) and cannot be answered by the Default layer either, which
+        // Breakable props share with dropped orbs, chests, POI props and deployables. Deliberately
+        // does NOT include Player/Enemy/Boss: those are resolved as real targets before anything
+        // asks whether they block.
+        public static int GetShotBlockerLayerMask(Frame f)
+        {
+            return f.Layers.GetLayerMask(GroundLayerName, GroundNotJumpableLayerName, ObstacleLayerName);
         }
 
         // Player | IgnoreProjectile - a dashing player sits on IgnoreProjectile for the dash's
@@ -478,8 +491,12 @@ namespace Quantum
         // respectively) - BeginTraversalJump's kinematic lerp always reaches whichever landing point
         // these probes find, so one shared probe setup here is enough for every enemy that opts in.
         private static readonly FP AnkleProbeHeight = FP._0_25;
-        private static readonly FP EdgeCheckDistance = 1;
-        private static readonly FP GapScanStep = FP._0_25;
+        // internal (not private) so SmartFleeMovementData's own HasGroundAhead/TryFindGapLanding
+        // safety probes read the exact same numbers MoveInDirection's dead-end check below does -
+        // otherwise a heading it judged "safe" could still disagree with what MoveInDirection
+        // actually does with it a moment later.
+        internal static readonly FP EdgeCheckDistance = 1;
+        internal static readonly FP GapScanStep = FP._0_25;
 
         // Ankle-blocked/CliffHeight-clear dual-probe test, same shape as the player's own auto-mantle
         // (PlayerMovementProcessor.TryDetectMantle) - enemies aren't KCC entities, so this
@@ -959,11 +976,62 @@ namespace Quantum
             aim->Angle = FPMath.Atan2(delta.X, delta.Z) * FP.Rad2Deg;
         }
 
+        // EnemyActionData.IgnoreY's own doc comment already promises this ("captured target/anchor
+        // points use the enemy's own ground Y instead of the target's raw Y") but nothing in the
+        // simulation actually implemented it - only EnemyAttackVisualsView's telegraph rendering
+        // read the flag, cosmetically, for the decal shown to the player. That let a delivery like
+        // FanProjectileDeliveryData fire pellets straight at the target's real (possibly very
+        // different) elevation while its own paired telegraph rendered as a flat ground cone,
+        // producing a spread that visually diverges from its own warning indicator - worse the more
+        // pellets fan out, since every pellet inherits the same wrong elevation at once (Y-axis
+        // rotation can't change a vector's tilt from vertical). Applied once here, at every
+        // Enemy.SkillTargetPosition capture site (EnemySystem.UpdateChasing/UpdateActive,
+        // EnemyDeliveryData.OnAnticipating), so every delivery's Begin()/Tick() sees an
+        // already-flattened value with no per-delivery IgnoreY check needed - a Flying enemy (or any
+        // action authored with IgnoreY = false) opts out and keeps tracking real height unchanged.
+        public static FPVector3 ResolveIgnoreY(FPVector3 selfPosition, FPVector3 targetPosition, bool ignoreY)
+        {
+            if (ignoreY == false)
+                return targetPosition;
+
+            targetPosition.Y = selfPosition.Y;
+            return targetPosition;
+        }
+
         public static FP FlatSqrDistance(FPVector3 a, FPVector3 b)
         {
             FP dx = a.X - b.X;
             FP dz = a.Z - b.Z;
             return dx * dx + dz * dz;
+        }
+
+        // Actual floor height under a world point (via TryFindGroundHeight - the same top-down
+        // ground raycast used elsewhere for boss/enemy re-grounding), not the raw Y a Transform3D
+        // happens to carry - a capsule's own pivot/height offset, or exactly where a grenade's arc
+        // landed, doesn't necessarily match which floor an entity is actually standing on. Falls
+        // back to the position's own Y if no ground is found beneath it (e.g. over a pit) rather
+        // than failing outright.
+        public static FP ResolveGroundY(Frame f, FPVector3 position)
+        {
+            return TryFindGroundHeight(f, position, GetGroundLayerMask(f), out FP groundY) ? groundY : position.Y;
+        }
+
+        // Ground-area delivery gate shared by ranged blasts (AreaHitData/HitEffectUtility.
+        // ApplyInRadius) and melee/instant ground slams (GroundAreaDeliveryData) - flat (XZ)
+        // distance against radius, plus an explicit vertical gate comparing each side's own ACTUAL
+        // FLOOR height (see ResolveGroundY), so a target standing on a genuinely different,
+        // elevated/lowered platform isn't caught by a ground-level attack even when the raw
+        // Transform3D.Y values happen to read close. centerGroundY is the caller's own
+        // ResolveGroundY(f, center) result, resolved once per blast/slam rather than re-raycast per
+        // candidate.
+        public static bool IsWithinFlatGroundArea(Frame f, FPVector3 center, FP centerGroundY, FPVector3 targetPosition, FP radius, FP maxHeightDifference)
+        {
+            FP targetGroundY = ResolveGroundY(f, targetPosition);
+
+            if (FPMath.Abs(targetGroundY - centerGroundY) > maxHeightDifference)
+                return false;
+
+            return FlatSqrDistance(center, targetPosition) <= radius * radius;
         }
     }
 }

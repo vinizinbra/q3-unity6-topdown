@@ -15,6 +15,9 @@ namespace Quantum
         [SerializeField, Tooltip("Per-character world X/Z nudge for this shadow, stacked on top of GroundBlobConfig's global ShadowOffset. Use it to slide the blob under a sprite whose feet/pivot sit off-center, when only this one character needs correcting. Leave at zero for centered sprites.")]
         private Vector2 shadowOffset = Vector2.zero;
 
+        [SerializeField, Tooltip("Multiplies GroundBlobConfig's GroundAlpha for this shadow only, after height falloff. 1 = default (no change). Use it to fade a specific character's shadow lighter/darker than the shared baseline, e.g. a translucent/ghosted enemy.")]
+        private float shadowAlphaMultiplier = 1f;
+
         private GroundBlobHandle handle;
 
         // Read by EnemyBlobAnimationView.ApplyPose to rescale the shadow by the same shrinkMult
@@ -27,7 +30,7 @@ namespace Quantum
         private void OnEnable()
         {
             if (GroundBlobManager.Instance != null)
-                handle = GroundBlobManager.Instance.AcquireShadow(transform, baseScale, shadowOffset);
+                handle = GroundBlobManager.Instance.AcquireShadow(transform, baseScale, shadowOffset, shadowAlphaMultiplier);
         }
 
         private void OnDisable()
@@ -51,16 +54,29 @@ namespace Quantum
                 handle.BaseScale = scale;
         }
 
-        // Catches a manual edit of baseScale in the Inspector while playing - the Inspector writes
-        // straight to the serialized field, bypassing SetBaseScale, so without this the live handle
-        // (already snapshotted into GroundBlobManager's pool) would keep whatever value it had at
-        // OnEnable/last SetBaseScale call until the shadow was released and reacquired.
+        // Mirrors SetBaseScale - lets a caller (e.g. a status effect view) drive the alpha
+        // multiplier directly on the live handle instead of Release+Reacquire, which would flicker
+        // the shadow back through the pool for a frame.
+        public void SetAlphaMultiplier(float multiplier)
+        {
+            shadowAlphaMultiplier = multiplier;
+
+            if (handle != null)
+                handle.AlphaMultiplier = multiplier;
+        }
+
+        // Catches a manual edit of baseScale/shadowAlphaMultiplier in the Inspector while playing -
+        // the Inspector writes straight to the serialized field, bypassing SetBaseScale/
+        // SetAlphaMultiplier, so without this the live handle (already snapshotted into
+        // GroundBlobManager's pool) would keep whatever value it had at OnEnable/last Set call
+        // until the shadow was released and reacquired.
         private void OnValidate()
         {
             if (handle != null)
             {
                 handle.BaseScale = baseScale;
                 handle.Offset = shadowOffset;
+                handle.AlphaMultiplier = shadowAlphaMultiplier;
             }
         }
     }

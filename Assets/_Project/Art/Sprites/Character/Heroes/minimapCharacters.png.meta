@@ -139,10 +139,10 @@ TextureImporter:
       name: minimapCharactersMax
       rect:
         serializedVersion: 2
-        x: 5
-        y: 32
-        width: 96
-        height: 113
+        x: 3
+        y: 24
+        width: 112
+        height: 138
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -161,10 +161,10 @@ TextureImporter:
       name: minimapCharactersBrute
       rect:
         serializedVersion: 2
-        x: 144
-        y: 31
-        width: 84
-        height: 107
+        x: 126
+        y: 24
+        width: 112
+        height: 138
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -183,10 +183,10 @@ TextureImporter:
       name: minimapCharactersPixie
       rect:
         serializedVersion: 2
-        x: 277
-        y: 29
-        width: 98
-        height: 132
+        x: 266
+        y: 24
+        width: 112
+        height: 138
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -227,10 +227,10 @@ TextureImporter:
       name: minimapCharactersZara
       rect:
         serializedVersion: 2
-        x: 555
-        y: 29
-        width: 87
-        height: 116
+        x: 540
+        y: 18
+        width: 113
+        height: 139
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -249,10 +249,10 @@ TextureImporter:
       name: minimapCharactersKai
       rect:
         serializedVersion: 2
-        x: 671
-        y: 28
-        width: 93
-        height: 109
+        x: 660
+        y: 18
+        width: 113
+        height: 139
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -271,10 +271,10 @@ TextureImporter:
       name: minimapCharactersLux
       rect:
         serializedVersion: 2
-        x: 792
-        y: 23
-        width: 92
-        height: 105
+        x: 780
+        y: 18
+        width: 113
+        height: 139
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -310,6 +310,7 @@ TextureImporter:
       minimapCharactersMax: -514289054
       minimapCharactersPixie: 1983541522
       minimapCharactersZara: 1773360120
+      minimapCharacters_0: -1010665886
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

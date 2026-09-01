@@ -1,16 +1,11 @@
 // Rift Shard currency - PER-PLAYER wallet (CharacterStats.RiftShards, see CharacterStats.qtn),
 // not a shared Frame.Global total. A pickup credits every connected player the same base amount,
-// each scaled by their own CharacterStats.RiftShardGainMultiplier (see
+// scaled first by the run-wide Global.RiftShardGainBonus (RunMutations.qtn - Greed/Blood Tithe) and
+// then by each player's own CharacterStats.RiftShardGainMultiplier (see
 // RiftShardUtility.Grant/GrantAll, CurrencyOrbSystem) - each player then spends their own balance
-// independently (see docs/breathing-poi.md). EnemyHealthBonusMultiplier below stays a genuinely
-// shared/run-wide global - it's Greed's own difficulty-scaling side effect (a flat authored
-// constant added once per pick, see GreedMutationData), fully decoupled from the shard total's
-// value, so it's untouched by the per-player conversion.
-global
-{
-    // Greed's own difficulty-scaling side effect (enemies gain health), not currency-specific - it
-    // just has no better-fitting existing global block to live in. Starts at its natural 0 (no
-    // bonus) and is read as 1 + this wherever consumed (EnemySystem.SeedHealth), so an unseeded/
-    // never-picked run is a correct no-op rather than needing an explicit 1 seed.
-    FP EnemyHealthBonusMultiplier;
-}
+// independently (see docs/breathing-poi.md).
+//
+// This block used to also hold EnemyHealthBonusMultiplier - Greed's own difficulty-scaling side
+// effect, which never really belonged to the currency. Every run-wide encounter modifier now lives
+// together in RunMutations.qtn instead (as EnemyMaxHealthBonus, read via
+// EncounterModifierUtility), leaving this file with nothing global of its own.

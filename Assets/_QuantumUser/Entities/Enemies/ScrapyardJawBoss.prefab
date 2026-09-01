@@ -634,7 +634,7 @@ MonoBehaviour:
   isLocal: 0
   spriteRoot: {fileID: 5679338556948834654}
   viewRadiusPadding: 0.15
-  widgetSpriteTopPadding: 0
+  widgetSpriteTopPadding: 0.25
   widgetRadiusOffsetMultiplier: 1
 --- !u!114 &8020308353297223607
 MonoBehaviour:

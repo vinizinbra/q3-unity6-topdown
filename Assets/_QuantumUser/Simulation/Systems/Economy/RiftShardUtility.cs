@@ -86,8 +86,15 @@ namespace Quantum
         // scaled by THEIR OWN CharacterStats.RiftShardGainMultiplier - same "everyone gets their
         // own share, spends independently" model CoinUtility.GrantAll uses, see
         // docs/breathing-poi.md.
+        //
+        // A run-wide gain modifier (Greed/Blood Tithe, see RunMutations.qtn) is applied to the base
+        // amount FIRST, so it reaches every player equally - both mutations that source it pair the
+        // reward with a run-wide drawback, so the reward has to reach everyone paying for it. Each
+        // player's own multiplier then composes on top multiplicatively.
         public static void GrantAll(Frame f, FP baseAmount)
         {
+            FP runAmount = baseAmount * EncounterModifierUtility.ResolveRiftShardGainMultiplier(f);
+
             var filtered = f.Filter<PlayerLink>();
 
             while (filtered.Next(out EntityRef entity, out PlayerLink _))
@@ -95,7 +102,7 @@ namespace Quantum
                 if (f.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats) == false)
                     continue;
 
-                Grant(f, entity, baseAmount * stats->RiftShardGainMultiplier);
+                Grant(f, entity, runAmount * stats->RiftShardGainMultiplier);
             }
         }
 

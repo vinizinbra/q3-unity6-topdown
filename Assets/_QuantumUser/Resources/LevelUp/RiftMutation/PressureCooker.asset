@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 572061fbcb50c41e18d84135f73cc812, type: 3}
+  m_Name: PressureCooker
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.PressureCookerMutationData
+  Identifier:
+    Path: _QuantumUser/Resources/LevelUp/RiftMutation/PressureCooker
+    Guid:
+      Value: 533476228992090200
+  Icon: {fileID: 1556853703, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
+  DisplayName: Pressure Cooker
+  Rarity: 2
+  Scope: 0
+  IncompatibleWith: []
+  Description: '+<color=#FD3971>{0:0}%</color> Damage per second without taking damage, up to +<color=#FD3971>{1:0}%</color>'
+  DamagePerSecond:
+    RawValue: 1966
+  MaxDamageBonus:
+    RawValue: 19661

@@ -52,9 +52,13 @@ namespace Quantum.Editor
                 SerializedProperty animationType = property.FindPropertyRelative("AnimationType");
                 SerializedProperty duration = property.FindPropertyRelative("Duration");
                 SerializedProperty bodySprite = property.FindPropertyRelative("BodySprite");
+                SerializedProperty shakeImpact = property.FindPropertyRelative("ShakeImpact");
                 SerializedProperty particlePrefab = property.FindPropertyRelative("ParticlePrefab");
 
                 EditorGUI.PropertyField(rect, bodySprite);
+                rect.y += lineHeight;
+
+                EditorGUI.PropertyField(rect, shakeImpact);
                 rect.y += lineHeight;
 
                 string animationKey = property.propertyPath + ".animation";
@@ -168,6 +172,7 @@ namespace Quantum.Editor
                 return height;
 
             height += lineHeight; // BodySprite
+            height += lineHeight; // ShakeImpact
 
             height += lineHeight; // "Body Animation" foldout header
 
@@ -221,7 +226,7 @@ namespace Quantum.Editor
 
         // Types whose case in EnemyBlobAnimationView.UpdatePose sets rockTarget (root's own
         // rotation) - CenterPivot/PivotHeightOverride only mean anything for these; Pulse/Crouch/
-        // Inflate/Lunge/Slam/Chomp/PunchScale never rotate root at all.
+        // Inflate/Lunge/Slam/Chomp/PunchScale/Jump never rotate root at all.
         private static bool UsesRotation(AttackAnimationType type)
         {
             switch (type)
@@ -233,6 +238,7 @@ namespace Quantum.Editor
                 case AttackAnimationType.ArmSwingBack:
                 case AttackAnimationType.ArmSnap:
                 case AttackAnimationType.ArmPunch:
+                case AttackAnimationType.Dive:
                     return true;
                 default:
                     return false;
@@ -257,6 +263,8 @@ namespace Quantum.Editor
                 case AttackAnimationType.ArmSnap: return "ArmSnap";
                 case AttackAnimationType.PunchScale: return "PunchScale";
                 case AttackAnimationType.ArmPunch: return "ArmPunch";
+                case AttackAnimationType.Jump: return "Jump";
+                case AttackAnimationType.Dive: return "Dive";
                 default: return null;
             }
         }

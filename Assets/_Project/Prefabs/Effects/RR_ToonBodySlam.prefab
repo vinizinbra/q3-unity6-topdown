@@ -9643,6 +9643,7 @@ GameObject:
   - component: {fileID: 7761170180513937379}
   - component: {fileID: 3308319309734866876}
   - component: {fileID: 1045289668014702454}
+  - component: {fileID: 9035428796210433329}
   m_Layer: 0
   m_Name: RR_ToonBodySlam
   m_TagString: Untagged
@@ -14470,6 +14471,26 @@ ParticleSystemRenderer:
   m_MeshWeighting1: 1
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
+--- !u!114 &9035428796210433329
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4100224517614194508}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 287b1faaa056b45cfb4b4da18b45fa5b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ParticleSound
+  mode: 0
+  sound: {fileID: 11400000, guid: 99af50e06addb4e3a864e73d48c1b89f, type: 2}
+  loop:
+    intro: {fileID: 0}
+    loop: {fileID: 0}
+    tail: {fileID: 0}
+  volumeScale: 1
+  source: {fileID: 0}
 --- !u!1 &4929833452868114126
 GameObject:
   m_ObjectHideFlags: 0

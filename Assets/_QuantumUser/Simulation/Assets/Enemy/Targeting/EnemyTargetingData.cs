@@ -29,7 +29,7 @@ namespace Quantum
                 return false;
 
             EnemyDataAsset data = f.FindAsset(enemy->EnemyData);
-            detectionRange = data.AI.DetectionRange;
+            detectionRange = data.AI.ResolveDetectionRange();
             position = transform->Position;
             return true;
         }

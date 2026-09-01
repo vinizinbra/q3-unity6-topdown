@@ -66,6 +66,20 @@ namespace Quantum
                 targetPosition += centerOffset;
             }
 
+            // action.IgnoreY (EnemyActionData) promises a flat shot - EnemySystem/EnemyDeliveryData
+            // already flatten Enemy.SkillTargetPosition onto the enemy's own ground Y before it ever
+            // reaches here, but AimsAtTargetCenter just re-added the target's own collider centroid
+            // (which sits above its feet), which would undo that for a straight cone shot - a
+            // "ground level" Shotgunner tilting every pellet up toward center-mass instead of firing
+            // parallel to the ground. Re-flattened onto resolvedOrigin's own height (not just origin's
+            // - covers a SpawnAnchor.OnTarget/SpawnOffset.Y setup too) so delta.Y is exactly 0 below,
+            // not merely close to it. Left alone for UseArc - a lob's whole shape IS its vertical
+            // component - and harmless for Radial, which never reads targetPosition/delta at all.
+            if (action.IgnoreY == true && UseArc == false)
+            {
+                targetPosition.Y = resolvedOrigin.Y;
+            }
+
             int pelletCount = PelletCount > 0 ? PelletCount : 1;
 
             // Radial covers the full requested arc with no double-cover at the seam (step =

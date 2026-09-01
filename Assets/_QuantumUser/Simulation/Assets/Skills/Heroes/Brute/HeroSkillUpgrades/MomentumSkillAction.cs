@@ -17,6 +17,11 @@ namespace Quantum
         public FP[] ChargedMoveSpeedBonus = { FP._0_10, FP._0_20, FP.FromString("0.30") };
         public FP[] DischargeRetentionFraction = { FP.FromString("0.30"), FP.FromString("0.60"), FP._1 };
 
+        // Rank 3 only - Juggernaut refuses to expire while Brutus is sitting on a full Charge, staying
+        // live until he actually spends it (see JuggernautSkillData.Tick). A per-rank array rather than
+        // a bare rank check, so it stays authorable like every other value on this line.
+        public bool[] HoldUntilDischarge = { false, false, true };
+
         public MomentumSkillAction()
         {
             Phase = SkillActionPhase.Begin;
@@ -32,6 +37,7 @@ namespace Quantum
             upgrade->GenerationMultiplier = GenerationMultiplier[index];
             upgrade->ChargedMoveSpeedBonus = ChargedMoveSpeedBonus[index];
             upgrade->DischargeRetentionFraction = DischargeRetentionFraction[index];
+            upgrade->HoldUntilDischarge = HoldUntilDischarge[index];
         }
 
         public override void Execute(Frame f, ref SkillSystem.Filter filter, SkillSlot* slot, SkillData skill, SkillActionPhase firedPhase)

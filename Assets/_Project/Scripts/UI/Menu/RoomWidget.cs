@@ -18,7 +18,7 @@ public class RoomWidget : MonoBehaviour
     public GameObject readyObject;
     public GameObject leaderObject;
 
-    [Tooltip("Optional - shows this party member's chosen hero as a live animated preview, the same way the local player's own pick is shown. Each one costs its own camera and RenderTexture every frame, so leave it unassigned on slots that only need a name. MUST have Follow Local Selection turned OFF on the widget itself, or it will show YOUR character in every slot - and must NEVER be the local player's own main preview, which no slot owns.")]
+    [Tooltip("Optional - shows this party member's chosen hero as a live animated preview, spawned at its own spawnPoint in the menu's 3D scene, the same way the local player's own pick is shown. MUST have Follow Local Selection turned OFF on the widget itself, or it will show YOUR character in every slot - and must NEVER be the local player's own main preview, which no slot owns.")]
     public CharacterPreviewWidget characterPreview;
 
     [Tooltip("Optional - the hero's portrait, taken straight off their view prefab's own rig rather than a separately authored sprite, so it always matches the character art. Their head where they have one, otherwise their whole body (Lux is drawn as a single piece). Hidden while the slot is empty.")]
@@ -42,10 +42,15 @@ public class RoomWidget : MonoBehaviour
         if (leaderObject != null)
             leaderObject.SetActive(occupied && isLeader);
 
-        // Cleared rather than left on the last occupant: an empty slot must not keep showing the
-        // hero of whoever used to be in it. Show/Clear both no-op when nothing actually changed.
+        // Deactivated rather than just cleared when empty: characterPreview sits inside a
+        // HorizontalLayoutGroup (with other slots' previews), which skips inactive children when
+        // reflowing - so an empty slot disappearing from the row, not just going blank, falls out of
+        // that for free. Cleared too so it isn't left showing the hero of whoever used to be in it.
+        // Show/Clear both no-op when nothing actually changed.
         if (characterPreview != null)
         {
+            characterPreview.gameObject.SetActive(occupied);
+
             if (occupied)
                 characterPreview.ShowCharacterId(characterId);
             else

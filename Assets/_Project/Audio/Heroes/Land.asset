@@ -12,10 +12,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c04d8195895c42008e9658fbf433bf7, type: 3}
   m_Name: Land
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
-  clips:
-  - {fileID: 8300000, guid: 0c1b68bf47b548f49883b38e944cdaf1, type: 3}
-  - {fileID: 8300000, guid: 9b05f0ea6b76f53429c25c69757686b2, type: 3}
-  - {fileID: 8300000, guid: 4a8bc1804465de94584504f78e9a13ff, type: 3}
+  variants:
+  - clip: {fileID: 8300000, guid: 0c1b68bf47b548f49883b38e944cdaf1, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: 9b05f0ea6b76f53429c25c69757686b2, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: 4a8bc1804465de94584504f78e9a13ff, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  clips: []
   pick: 1
   layers: []
   group: 9

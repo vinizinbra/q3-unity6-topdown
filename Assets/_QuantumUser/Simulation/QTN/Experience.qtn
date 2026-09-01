@@ -15,4 +15,29 @@ global
     // and LevelUpSystem counts LevelUpTimeRemaining down each tick via f.DeltaTime.
     Boolean LevelUpScreenOpen;
     FP LevelUpTimeRemaining;
+
+    // Snapshotted at the very top of LevelUpSystem.Update, before Resolve can run this same tick -
+    // "was the screen open as of the last FULLY PUBLISHED tick" (as opposed to LevelUpScreenOpen
+    // itself, which can go true -> false -> true within a single tick when LevelUpSystem resolves
+    // one screen and ChestSystem opens a new one right after it in the same tick's system order).
+    // ChestSystem's own guard checks this alongside LevelUpScreenOpen so it never re-claims the flag
+    // until a full tick has actually published "closed" - otherwise GameplayUiController's
+    // edge-detected LevelUpScreenOpen polling never observes the transition and the new screen's
+    // window never shows, even though the simulation correctly re-paused for it (a real, visible
+    // freeze - see DebugCheatSystem.TryOpenNextPendingLevelUp's own comment, which hit and fixed the
+    // exact same hazard for its own debug chain via DebugLevelUpScreenOpenLastTick - that field is
+    // captured too late in the tick order to also protect ChestSystem, hence this separate one).
+    Boolean LevelUpScreenOpenLastTick;
+
+    // Set by BeginLevelUpScreen the instant Grant raises Level, BEFORE it even attempts to open -
+    // a durable "a plain level-up screen is owed" intent, not just a one-shot call. Grant's own
+    // Level increment is unconditional, so without this a level gained while another screen (a
+    // Chest, or a different level-up) already has LevelUpScreenOpen claimed would silently lose its
+    // whole upgrade pick forever - OpenUpgradeScreen's own re-entrancy guard would just return
+    // early with nothing rolled and nothing retried. Cleared once OpenUpgradeScreen actually gets
+    // to run for a plain (non-Chest) request - whether it opens a screen or legitimately finds
+    // every pool empty - never left set for something that was properly handled.
+    // LevelUpSystem.Update retries BeginLevelUpScreen every tick this is true, exactly the same
+    // "keep retrying while blocked" idiom ChestSystem's own top-of-Update guard already uses.
+    Boolean PendingLevelUpScreen;
 }

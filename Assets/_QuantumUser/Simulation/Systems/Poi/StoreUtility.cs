@@ -95,16 +95,15 @@ namespace Quantum
         }
 
         // Distinct weapons drawn the same uniform-without-replacement way
-        // LevelUpUtility.RollChooseWeaponOptionsFor already does. Unlike a Choose-Weapon level-up
-        // pick, three independent axes drive a Store offer's own quality (see
-        // docs/store-blacksmith.md's "Break Progression" section) rather than one shared
-        // WeaponTalentLevel: the current Breathing Break sets Weapon Level + starting perk COUNT
-        // (StoreConfig.ResolveBreakWeaponConfig/RollStorePerkCount), while the triggering player's
-        // own RuntimePlayer.Talents.WeaponLevel (the SAME persistent meta-progression stat that
-        // seeds CharacterStats.WeaponTalentLevel at spawn, see PlayerSpawnUtility.Spawn/
-        // docs/talents.md - deliberately NOT the live in-run CharacterStats.WeaponTalentLevel, which
-        // keeps climbing over a run) sets perk RARITY (StoreConfig.ResolveTalentRarityTuning/
-        // RollStorePerks).
+        // LevelUpUtility.RollChooseWeaponOptionsFor already does. Two independent axes drive a Store
+        // offer's own quality: Global.SurvivalTime sets Weapon Level + starting perk COUNT via
+        // LevelUpConfig.ResolveWeaponOfferLevel/RollWeaponOfferPerkCount - the exact same shared roll
+        // a Choose-Weapon level-up/Chest pick uses (see docs/store-blacksmith.md) - while the
+        // triggering player's own RuntimePlayer.Talents.WeaponLevel (the SAME persistent
+        // meta-progression stat that seeds CharacterStats.WeaponTalentLevel at spawn, see
+        // PlayerSpawnUtility.Spawn/docs/talents.md - deliberately NOT the live in-run
+        // CharacterStats.WeaponTalentLevel, which is pure bookkeeping now) sets perk RARITY
+        // (StoreConfig.ResolveTalentRarityTuning/RollStorePerks).
         private static void RollWeaponOffers(Frame f, EntityRef player, StoreInventory* inventory, StoreConfig config)
         {
             var offers = inventory->WeaponOffers;
@@ -123,7 +122,8 @@ namespace Quantum
             WeaponChoicePoolData pool = f.FindAsset(config.WeaponPool);
             LevelUpConfig levelUpConfig = f.FindAsset(f.RuntimeConfig.LevelUpConfig);
             byte weaponTalentLevel = ResolveWeaponLevelTalent(f, player);
-            StoreBreakWeaponConfig breakConfig = config.ResolveBreakWeaponConfig(f.Global->BreathingIndex);
+            FP survivalSeconds = f.Global->SurvivalTime;
+            byte weaponLevel = levelUpConfig.ResolveWeaponOfferLevel(survivalSeconds);
 
             int poolCount = pool.Weapons.Count;
             int slots = config.MaxWeaponOfferSlots < offers.Length ? config.MaxWeaponOfferSlots : offers.Length;
@@ -146,13 +146,13 @@ namespace Quantum
 
                 taken[roll] = true;
 
-                int perkCount = RollStorePerkCount(f, breakConfig.StartingPerkRolls);
+                int perkCount = levelUpConfig.RollWeaponOfferPerkCount(f, survivalSeconds);
                 AssetRef<WeaponPerkData>[] rolledPerks = RollStorePerks(f, levelUpConfig.WeaponPerkPool, perkCount, config,
                     weaponTalentLevel, pool.Weapons[roll]);
 
                 StoreWeaponOffer offer = default;
                 offer.WeaponData = pool.Weapons[roll];
-                offer.WeaponLevel = breakConfig.WeaponLevel;
+                offer.WeaponLevel = weaponLevel;
                 offer.RolledPerkCount = (byte)rolledPerks.Length;
 
                 var offerPerks = offer.RolledPerks;
@@ -166,28 +166,6 @@ namespace Quantum
             }
 
             inventory->WeaponOfferCount = (byte)drawn;
-        }
-
-        // Break-configured starting-perk-COUNT roll (StoreConfig.BreakWeaponConfig) - each entry in
-        // `rolls` is an INDEPENDENT Bernoulli chance (unlike LevelUpUtility.RollWeaponOption's
-        // "clamp01((weaponTalentLevel - slot) * ChancePerLevelPerSlot)" formula), so Break
-        // progression and Weapon Talent Level stay fully independent axes - see
-        // docs/store-blacksmith.md. Reuses DamageUtility.RollChance, the same RNG helper
-        // RollWeaponOption itself already calls per slot.
-        private static int RollStorePerkCount(Frame f, FP[] rolls)
-        {
-            if (rolls == null)
-                return 0;
-
-            int count = 0;
-
-            for (int i = 0; i < rolls.Length; i++)
-            {
-                if (DamageUtility.RollChance(f, rolls[i]) == true)
-                    count++;
-            }
-
-            return count;
         }
 
         // Weighted draw WITHOUT REPLACEMENT (WeightedDrawUtility) from the same WeaponPerkPool a
@@ -317,10 +295,11 @@ namespace Quantum
         // constructing a throwaway LevelUpOption from this offer's own 3 relevant fields.
         public static void BuyWeapon(Frame f, EntityRef player, StoreInteraction* interaction, int offerIndex)
         {
-            if (f.RuntimeConfig.StoreConfig.IsValid == false)
+            if (f.RuntimeConfig.StoreConfig.IsValid == false || f.RuntimeConfig.LevelUpConfig.IsValid == false)
                 return;
 
             StoreConfig config = f.FindAsset(f.RuntimeConfig.StoreConfig);
+            LevelUpConfig levelUpConfig = f.FindAsset(f.RuntimeConfig.LevelUpConfig);
             EntityRef store = interaction->Store;
 
             if (f.Unsafe.TryGetPointer<StoreInventory>(store, out var inventory) == false)
@@ -352,33 +331,17 @@ namespace Quantum
             option.Kind = LevelUpPoolKind.ChooseWeapon;
             option.WeaponData = offer.WeaponData;
             option.RolledPerkCount = offer.RolledPerkCount;
+            option.RolledWeaponLevel = offer.WeaponLevel;
 
             var optionPerks = option.RolledPerks;
             var offerPerks = offer.RolledPerks;
             for (int i = 0; i < optionPerks.Length; i++)
                 optionPerks[i] = i < offerPerks.Length ? offerPerks[i] : default;
 
-            WeaponChoiceUtility.Grant(f, player, option);
-            ApplyBreakWeaponLevel(f, player, offer.WeaponLevel, config);
+            WeaponChoiceUtility.Grant(f, player, option, levelUpConfig.WeaponLevelDamageBonusPerLevel);
             MarkPurchased(f, player, store, offerIndex, isWeaponOffer: true);
 
             Log.Debug($"[Store] {player} bought weapon offer {offerIndex} ({offer.WeaponData}) for {offer.Price} Coins, starting at Weapon Level {offer.WeaponLevel}");
-        }
-
-        // Brings a freshly-granted Store weapon up to its offer's own Break-rolled WeaponLevel -
-        // WeaponChoiceUtility.Grant always calls WeaponSystem.Equip, which resets Level back to 0
-        // (WeaponSystem.SeedStats), so this has to run AFTER Grant, not baked into the option/offer
-        // itself. Reuses WeaponSystem.AddLevel/StoreConfig.WeaponLevelUpDamageBonusPerLevel
-        // unchanged - the exact same "+5%, compounding" mechanism the guaranteed Increase-Weapon-
-        // Level offer already uses (see BuyWeaponLevelUp), so a Break-leveled Store weapon composes
-        // identically with a purchased level-up.
-        private static void ApplyBreakWeaponLevel(Frame f, EntityRef player, byte weaponLevel, StoreConfig config)
-        {
-            if (weaponLevel <= 0 || f.Unsafe.TryGetPointer<Weapon>(player, out var weapon) == false)
-                return;
-
-            for (int i = 0; i < weaponLevel; i++)
-                WeaponSystem.AddLevel(weapon, config.WeaponLevelUpDamageBonusPerLevel);
         }
 
         // Called from StoreSystem when a BuyStoreFoodCommand lands - same re-validate/spend/apply

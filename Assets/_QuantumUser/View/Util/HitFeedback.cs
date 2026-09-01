@@ -54,6 +54,8 @@ namespace QuantumUser.View.Util
         private Color coinPickupFlashColor = new Color(1f, 0.84f, 0.2f);
         [SerializeField, Tooltip("Used on FlashPickup for CurrencyType.RiftShard.")]
         private Color riftShardPickupFlashColor = new Color(1f, 0.35f, 0.75f);
+        [SerializeField, Tooltip("Used on FlashPickup for CurrencyType.Scrap - Lux's own pickup (see FlyingCurrencyManager). Warm scrap-metal orange, deliberately away from the blue/gold/pink the three currencies already occupy so a Lux hoovering Exp and Scrap at once can still tell them apart.")]
+        private Color scrapPickupFlashColor = new Color(0.95f, 0.6f, 0.25f);
         [SerializeField] private float pickupFlashDuration = 0.35f;
 
         [Header("Freeze Mark")]
@@ -369,6 +371,7 @@ namespace QuantumUser.View.Util
                 case CurrencyType.Experience: return expPickupFlashColor;
                 case CurrencyType.Coin: return coinPickupFlashColor;
                 case CurrencyType.RiftShard: return riftShardPickupFlashColor;
+                case CurrencyType.Scrap: return scrapPickupFlashColor;
                 default: return Color.white;
             }
         }

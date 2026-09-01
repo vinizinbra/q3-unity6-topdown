@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using QuantumUser.View.Util;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -33,8 +35,8 @@ public class WeaponCardWidget : MonoBehaviour
         // Quantum-free view from needing the Quantum enum).
         public int ElementIndex;
 
-        // Length == the option's own RolledPerkCount (0-3) - perkRows below hides any row past
-        // this length.
+        // Length == the option's own RolledPerkCount - the card grows a perk row per entry on
+        // demand (see EnsurePerkRows) and hides any row past this length, so no fixed ceiling.
         public PerkRowData[] Perks;
 
         // Store weapon-offer purchase affordance (see docs/store-blacksmith.md) - ShowPurchaseUi
@@ -81,7 +83,7 @@ public class WeaponCardWidget : MonoBehaviour
     private string[] elementLabels = { "Neutral", "Fire", "Ice", "Rock", "Void", "Lightning" };
     [SerializeField] private TMP_Text elementText;
 
-    [SerializeField, Tooltip("Fixed rows, one per possible rolled perk (sized to LevelUpConfig.MaxRolledPerks) - rows past the option's own RolledPerkCount are hidden.")]
+    [SerializeField, Tooltip("Authored rows. Entry 0 is the BASE - it doubles as the clone source whenever an option rolls more perks than there are authored entries, so a card only needs one row hand-placed. Any further authored entries are reused as-is before anything is instantiated. Rows past the option's own RolledPerkCount are hidden, never destroyed.")]
     private WeaponCardPerkRowWidget[] perkRows;
 
     [Header("Purchase (Store weapon offer)")]
@@ -98,6 +100,15 @@ public class WeaponCardWidget : MonoBehaviour
     [SerializeField] private Button button;
 
     public event Action<WeaponCardWidget> onClicked;
+
+    // Live rows: every authored perkRows entry first (so an already-authored card instantiates
+    // nothing), then clones of perkRows[0] appended on demand and kept for the widget's lifetime -
+    // same "clone the in-scene template into its own parent" shape ChooseWindow uses for its own
+    // cards[]/weaponCards[], just grown per-Setup rather than to a fixed count at Awake, since a
+    // card's row count is whatever that option happened to roll.
+    private readonly List<WeaponCardPerkRowWidget> _perkRows = new List<WeaponCardPerkRowWidget>();
+
+    private bool _perkRowsInitialized;
 
     private void Awake()
     {
@@ -148,14 +159,15 @@ public class WeaponCardWidget : MonoBehaviour
         }
 
         int perkCount = data.Perks?.Length ?? 0;
+        EnsurePerkRows(perkCount);
 
-        for (int i = 0; i < perkRows.Length; i++)
+        for (int i = 0; i < _perkRows.Count; i++)
         {
             bool hasPerk = i < perkCount;
-            perkRows[i].gameObject.SetActive(hasPerk);
+            _perkRows[i].gameObject.SetActive(hasPerk);
 
             if (hasPerk)
-                perkRows[i].Setup(data.Perks[i]);
+                _perkRows[i].Setup(data.Perks[i]);
         }
 
         PurchasableCardUi.Apply(data.Purchase, purchaseRoot, priceText, currencyIcon, soldOutOverlay, button, buyButton, ref interactable);
@@ -165,5 +177,51 @@ public class WeaponCardWidget : MonoBehaviour
 
         if (buyButton != null)
             buyButton.interactable = interactable;
+    }
+
+    // Grows _perkRows to at least `count`, cloning perkRows[0] into its own parent for anything the
+    // authored entries don't already cover. Deliberately never shrinks - a card is reused across
+    // rolls (ChooseWindow keeps its weaponCards[] clones alive for the whole session), so an
+    // already-grown row is cheaper to hide than to destroy and re-instantiate next roll.
+    private void EnsurePerkRows(int count)
+    {
+        if (_perkRowsInitialized == false)
+        {
+            _perkRowsInitialized = true;
+
+            if (perkRows != null)
+            {
+                for (int i = 0; i < perkRows.Length; i++)
+                {
+                    if (perkRows[i] != null)
+                        _perkRows.Add(perkRows[i]);
+                }
+            }
+        }
+
+        if (count <= _perkRows.Count)
+            return;
+
+        WeaponCardPerkRowWidget template = _perkRows.Count > 0 ? _perkRows[0] : null;
+
+        if (template == null)
+        {
+            LogHelper.Warn("WeaponCardWidget", $"{name} rolled {count} perk(s) but has no perkRows[0] " +
+                "to clone from - no perk rows will be shown. Assign at least one row.", this);
+            return;
+        }
+
+        Transform parent = template.transform.parent;
+
+        while (_perkRows.Count < count)
+        {
+            WeaponCardPerkRowWidget row = Instantiate(template, parent);
+
+            // The clone inherits whatever the template is currently showing (the previous option's
+            // first perk, or its authored placeholder) - hide it until the caller's own Setup loop
+            // fills it in this same frame, same reasoning ChooseWindow documents for its clones.
+            row.gameObject.SetActive(false);
+            _perkRows.Add(row);
+        }
     }
 }

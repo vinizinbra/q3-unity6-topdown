@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1290749914a2c4a1d8683a90d79ccc9d, type: 3}
+  m_Name: BloodMoney
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.BloodMoneyMutationData
+  Identifier:
+    Path: _QuantumUser/Resources/LevelUp/RiftMutation/BloodMoney
+    Guid:
+      Value: 454290102408607413
+  Icon: {fileID: 1120914231, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
+  DisplayName: Blood Money
+  Rarity: 3
+  Scope: 0
+  IncompatibleWith: []
+  Description: '<color=#FD3971>{0:+0;-0}%</color> Coins, but lose <color=#FD3971>{1:0}%</color> of your Coins whenever you take Health damage'
+  CoinDropMultiplier:
+    RawValue: 98304
+  CoinLossPercentOnHpDamage:
+    RawValue: 6554

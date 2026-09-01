@@ -14,10 +14,10 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
 {
     public static DamageFeedbackManager Instance;
 
-    [SerializeField, Tooltip("Played when the LOCAL player lands a critical hit - never for a teammate's crit, and never for one taken. Deliberately gated on the same resolution the crit NUMBER uses, so the sound and the number always agree about whose hit it was.\n\nA multi-pellet weapon can crit several times in one tick, so author a small cooldown on the SoundData (~0.05s) or a shotgun crit fires one sound per pellet. Untick its Spatial flag to have it read as flat UI feedback rather than something happening out in the world.")]
+    [SerializeField, SoundDataPicker, Tooltip("Played when the LOCAL player lands a critical hit - never for a teammate's crit, and never for one taken. Deliberately gated on the same resolution the crit NUMBER uses, so the sound and the number always agree about whose hit it was.\n\nA multi-pellet weapon can crit several times in one tick, so author a small cooldown on the SoundData (~0.05s) or a shotgun crit fires one sound per pellet. Untick its Spatial flag to have it read as flat UI feedback rather than something happening out in the world.")]
     private SoundData criticalHitSound;
 
-    [SerializeField, Tooltip("Played when the LOCAL player lands an ordinary (non-critical) hit - never for a teammate's, never for one taken, and never for a damage-over-time tick.\n\nThis is the single highest-frequency sound in the game: every bullet, every pellet, every enemy in an explosion. Author a cooldown on the SoundData (~0.05s) and keep the Impacts group budget tight, or a shotgun into a crowd fires dozens of copies in one tick.")]
+    [SerializeField, SoundDataPicker, Tooltip("Played when the LOCAL player lands an ordinary (non-critical) hit - never for a teammate's, never for one taken, and never for a damage-over-time tick.\n\nThis is the single highest-frequency sound in the game: every bullet, every pellet, every enemy in an explosion. Author a cooldown on the SoundData (~0.05s) and keep the Impacts group budget tight, or a shotgun into a crowd fires dozens of copies in one tick.")]
     private SoundData hitSound;
 
     [SerializeField] private DamageNumberUiWidget widgetPrefab;
@@ -112,7 +112,14 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
         if (TryResolveKind(e, out var kind) == false)
             return;
 
-        PlayImpactSound(kind, e.Position.ToUnityVector3());
+        // Deliberately NOT gated on the resolved kind: ResolveOwningPlayer collapses a sentry's hit
+        // into its deployer, which is right for the NUMBER (it is your damage) but wrong for the
+        // sound. A sentry fires continuously and unattended, so letting its impacts through the same
+        // one-shot a trigger pull uses machine-guns the highest-frequency sound in the game for as
+        // long as the sentry is alive - and it is feedback for a shot the player never took. The
+        // number stays, the audio drops.
+        if (IsSentrySource(e.Game.Frames.Predicted, e.Owner) == false)
+            PlayImpactSound(kind, e.Position.ToUnityVector3());
 
         Spawn(kind, e.Damage.AsFloat, e.Position.ToUnityVector3() + worldOffset);
     }
@@ -198,6 +205,17 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
             return sentry.Owner;
 
         return entity;
+    }
+
+    // Whether this hit came OUT of a sentry - the chassis itself (its Overload detonation) or one
+    // of its barrels (ordinary gunfire). Checked against the raw event Owner rather than
+    // ResolveOwningPlayer's result, which has already traced past both to the deploying player.
+    private static bool IsSentrySource(Frame frame, EntityRef entity)
+    {
+        if (frame == null || entity == EntityRef.None)
+            return false;
+
+        return frame.Has<SentryBarrel>(entity) == true || frame.Has<Sentry>(entity) == true;
     }
 
     private static DamageNumberKind ResolveElementalKind(ElementType element, bool taken)

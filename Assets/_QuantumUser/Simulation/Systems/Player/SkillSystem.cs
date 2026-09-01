@@ -209,6 +209,105 @@ namespace Quantum
             return applied;
         }
 
+        // EFFECTIVE charge ceiling for a slot - min(accumulated MaxStacks, hard cap).
+        //
+        // Dead Weight's cap is deliberately expressed HERE rather than by subtracting from
+        // MaxStacks, and the distinction is the whole design: MaxStacks keeps whatever upgrades
+        // accumulated into it, so an already-owned "+1 Dash Charge" stays owned and simply stops
+        // mattering, and removing the cap later would restore it exactly. Subtracting would destroy
+        // that information irreversibly and would break the moment the player owned two charges.
+        //
+        // Every point that decides AVAILABILITY reads this; nothing that RESTORES or BYPASSES a
+        // charge is affected, which is what keeps Dash-reset (Adrenaline Kick) and paid-Dash
+        // (Infinite Momentum) mechanics working under the cap - they hand back or skip the existing
+        // charge rather than raising the ceiling.
+        //
+        // 0 = uncapped, the codebase's standard convention for a ceiling field.
+        public static byte ResolveEffectiveMaxStacks(Frame f, EntityRef owner, SkillSlotId slotId, SkillSlot* slot)
+        {
+            if (slotId != SkillSlotId.DashSkill)
+                return slot->MaxStacks;
+
+            if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false || stats->DashChargeHardCap == 0)
+                return slot->MaxStacks;
+
+            return slot->MaxStacks < stats->DashChargeHardCap ? slot->MaxStacks : stats->DashChargeHardCap;
+        }
+
+        // Puts a slot straight back to fully ready - every stack restored, no cooldown remaining.
+        // Unlike ReduceCooldown (which shaves seconds), this is the "your Dash is available RIGHT
+        // NOW" primitive, added for the Accessory-block reaction (Adrenaline Kick).
+        //
+        // Deliberately IDEMPOTENT: calling it twice in one tick leaves exactly one ready slot rather
+        // than banking extra charges, so two independent sources firing on the same event need no
+        // coordination with each other.
+        //
+        // Only meaningful while Ready - a mid-activation slot arms its own cooldown in FinishSkill
+        // afterwards, which would immediately undo this.
+        //
+        // Takes owner (rather than just the skills pointer) because restoring charges has to respect
+        // any hard cap on this slot - see ResolveEffectiveMaxStacks. Without it a reset would hand
+        // back the full uncapped MaxStacks and quietly defeat Dead Weight.
+        public static void ResetCooldown(Frame f, EntityRef owner, CharacterSkills* skills, SkillSlotId slotId)
+        {
+            SkillSlot* slot = ResolveSlot(skills, slotId);
+
+            if (slot == null)
+                return;
+
+            slot->CooldownTimer = FP._0;
+            slot->CurrentStacks = ResolveEffectiveMaxStacks(f, owner, slotId, slot);
+        }
+
+        // Infinite Momentum - extra Dashes while the real one is on cooldown, paid for in Max Health.
+        // Deliberately UNLIMITED: the only thing rationing it is whether the player can still afford
+        // the price, which is what makes it read as "spend health for mobility" rather than as a
+        // second, hidden cooldown.
+        //
+        // Generic in shape (any slot, any cost source) but currently only ever granted for the Dash
+        // slot. The health cost is a DIRECT write, never DamageUtility.ApplyDamage: this is a
+        // self-inflicted price, not a hit, so it must not roll crit, proc elemental status, count as
+        // hostile damage, interrupt a revive channel, or cost an Accessory durability point.
+        private static bool TryPayEmergencyActivation(Frame f, EntityRef entity, SkillSlotId slotId)
+        {
+            if (slotId != SkillSlotId.DashSkill)
+                return false;
+
+            if (f.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats) == false)
+                return false;
+
+            if (stats->EmergencyDashHealthCost <= FP._0)
+                return false;
+
+            if (f.Unsafe.TryGetPointer<Health>(entity, out var health) == false)
+                return false;
+
+            // Health can never go below 1, so "can you pay?" means "do you have anything above that
+            // floor to spend?" - NOT "can you pay the full price and still have 1 left". Requiring
+            // the latter would refuse the Dash exactly when a player is low and needs to escape,
+            // which is the one situation this mutation exists for.
+            //
+            // This single check is also what stops it going free: at exactly 1 health the cost would
+            // clamp to nothing, so that case is refused outright rather than becoming an unlimited
+            // free Dash. Anywhere above 1, every Dash strictly reduces health, so the sequence always
+            // terminates.
+            if (health->CurrentHealth <= FP._1)
+            {
+                Log.Debug($"[Skill] {entity} cannot pay for an emergency Dash - already at {health->CurrentHealth} health");
+                return false;
+            }
+
+            FP cost = health->MaxHealth * stats->EmergencyDashHealthCost;
+
+            // Pay what you can. A player who can't cover the full price still gets the Dash and is
+            // left at 1 - spending your last sliver of health to escape is the intended fantasy, not
+            // an edge case to block.
+            health->CurrentHealth = FPMath.Max(FP._1, health->CurrentHealth - cost);
+
+            Log.Debug($"[Skill] {entity} took an emergency Dash for {cost} health -> {health->CurrentHealth}");
+            return true;
+        }
+
         // Marks a slot's *next* activation as free - added for Lux's Scrap Collector passive (10
         // Scrap pickups makes the Hero Skill's next cast cost nothing, see
         // ScrapUtility.TryGrantFreeCharge). Deliberately does not touch CurrentStacks/CooldownTimer
@@ -297,7 +396,11 @@ namespace Quantum
             if (slot->State != SkillState.Ready)
                 return;
 
-            if (slot->CurrentStacks >= slot->MaxStacks)
+            // Recovery stops at the EFFECTIVE ceiling, so a capped slot never quietly refills past
+            // what it is allowed to spend (see ResolveEffectiveMaxStacks).
+            byte effectiveMax = ResolveEffectiveMaxStacks(f, owner, slotId, slot);
+
+            if (slot->CurrentStacks >= effectiveMax)
                 return;
 
             slot->CooldownTimer -= f.DeltaTime;
@@ -307,7 +410,7 @@ namespace Quantum
 
             slot->CurrentStacks++;
 
-            if (slot->Skill != default && slot->CurrentStacks < slot->MaxStacks)
+            if (slot->Skill != default && slot->CurrentStacks < effectiveMax)
             {
                 SkillData skill = f.FindAsset(slot->Skill);
                 slot->CooldownTimer = StatUtility.GetSkillCooldown(f, owner, slotId, skill.Cooldown);
@@ -327,10 +430,20 @@ namespace Quantum
 
             bool freeCast = slot->FreeCastPending;
 
+            // Last resort before refusing the press: a paid emergency activation (Infinite
+            // Momentum's health-for-mobility Dash). Costs no stack and doesn't touch the running
+            // cooldown, so the normal recovery cycle continues underneath it untouched.
+            bool emergency = false;
+
             if (freeCast == false && slot->CurrentStacks == 0)
             {
-                Log.Debug($"[Skill] {filter.Entity} pressed a skill button with 0 stacks available");
-                return;
+                emergency = TryPayEmergencyActivation(f, filter.Entity, slotId);
+
+                if (emergency == false)
+                {
+                    Log.Debug($"[Skill] {filter.Entity} pressed a skill button with 0 stacks available");
+                    return;
+                }
             }
 
             SkillData skill = f.FindAsset(slot->Skill);
@@ -343,6 +456,12 @@ namespace Quantum
             {
                 slot->FreeCastPending = false;
                 f.Signals.OnFreeCastUsed(filter.Entity, slotId);
+            }
+            else if (emergency == true)
+            {
+                // Already paid for in health by TryPayEmergencyActivation - there is no stack to
+                // spend (there were none, that's the whole point) and deliberately no cooldown
+                // change, so the real charge still comes back exactly when it would have.
             }
             else
             {
@@ -433,7 +552,7 @@ namespace Quantum
             // TickCooldown recovers one stack at a time off a single timer (see its own comment), so
             // an activation finishing while an earlier spent charge is still mid-recovery must not
             // reset that progress.
-            if (slot->CooldownTimer <= FP._0 && slot->CurrentStacks < slot->MaxStacks)
+            if (slot->CooldownTimer <= FP._0 && slot->CurrentStacks < ResolveEffectiveMaxStacks(f, filter.Entity, slotId, slot))
             {
                 slot->CooldownTimer = StatUtility.GetSkillCooldown(f, filter.Entity, slotId, skill.Cooldown);
             }

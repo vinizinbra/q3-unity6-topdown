@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/Max_PassiveSkill/VendettaPassiveData
     Guid:
       Value: 294791046206285621
-  Description: Enemies that damage you are marked. Killing a marked enemy heals you.
+  Description: Enemies that damage you get marked - killing one heals you.
   BaseHealMultiplier:
     RawValue: 32768
   BaseMarkDuration:

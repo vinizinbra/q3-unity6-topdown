@@ -19,16 +19,16 @@ MonoBehaviour:
   Icon: {fileID: 2016768158, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
   DisplayName: Concussive Impact
   RankDescriptions:
-  - Launched enemies take 30% Juggernaut damage and are Stunned 0.75s on landing.
-  - Launched enemies take 50% Juggernaut damage and are Stunned 1s on landing, and launch force is increased by +25%.
-  - Launched enemies take 75% Juggernaut damage and are Stunned 1.25s on landing, +25% launch force, and create a 2.5m impact shockwave dealing 40% Juggernaut damage that Stuns nearby enemies. You deal +40% damage to Stunned enemies.
+  - 'Enemies launched by the discharge take <color=#FD3971>30%</color> Juggernaut damage and are Stunned <color=#FD3971>0.75s</color> on landing.'
+  - 'Launched enemies take <color=#FD3971>50%</color> Juggernaut damage, are Stunned <color=#FD3971>1s</color> on landing, and fly <color=#FD3971>25%</color> farther.'
+  - 'Launched enemies take <color=#FD3971>75%</color> damage and are Stunned <color=#FD3971>1.25s</color>, bursting a <color=#FD3971>2.5m</color> Stun shockwave. <color=#FD3971>+40%</color> damage to Stunned.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Enemies launched by Discharge take real damage when they land and hit harder walls - culminating in an impact shockwave and bonus damage against Stunned enemies.
+  Description: Enemies your discharge launches no longer land safely - they take damage on impact, are Stunned where they fall, and eventually crack the ground around them.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

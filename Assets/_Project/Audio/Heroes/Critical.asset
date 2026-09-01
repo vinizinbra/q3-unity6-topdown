@@ -12,10 +12,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c04d8195895c42008e9658fbf433bf7, type: 3}
   m_Name: Critical
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
-  clips:
-  - {fileID: 8300000, guid: 17ca46bf925562c4a8152e7c284ae028, type: 3}
-  - {fileID: 8300000, guid: 1b4c9050245e62d4ca858e9b5a9df312, type: 3}
-  - {fileID: 8300000, guid: b3a3d63505a047943bd42d8c7338e355, type: 3}
+  variants:
+  - clip: {fileID: 8300000, guid: 17ca46bf925562c4a8152e7c284ae028, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: 1b4c9050245e62d4ca858e9b5a9df312, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  - clip: {fileID: 8300000, guid: b3a3d63505a047943bd42d8c7338e355, type: 3}
+    overrideTrim: 0
+    startAt: 0
+    endAt: 0
+    overrideFade: 0
+    fadeIn: 0
+    fadeOut: 0
+  clips: []
   pick: 1
   layers: []
   group: 9
@@ -30,8 +49,8 @@ MonoBehaviour:
   loop: 0
   quieterWhenRemote: 0
   localPlayerOnly: 0
-  spatial: 0
-  cooldown: 0
+  spatial: 1
+  cooldown: 0.05
   maxConcurrent: 8
   priority: 128
   useUnscaledTime: 1

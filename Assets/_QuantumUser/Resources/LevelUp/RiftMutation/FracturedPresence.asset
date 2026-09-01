@@ -16,7 +16,9 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/FracturedPresence
     Guid:
       Value: 426847582342129630
-  Icon: {fileID: -665407752, guid: 9dcd69f213ec845fa868b0a3699cf683, type: 3}
+  Icon: {fileID: 1714405857, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
   DisplayName: Fractured Presence
   Rarity: 1
+  Scope: 0
+  IncompatibleWith: []
   Description: Enemies that remain near you become Rift-marked

@@ -22,3 +22,13 @@ component CurrencyOrb
     CurrencyOrbType Type;
     FP Value;
 }
+
+// Generic "a player collected a world collectible" hook - the one place any mechanic that cares
+// about pickup CADENCE (rather than about a specific currency) should listen.
+//
+// Fired by CurrencyOrbSystem for every CurrencyOrb type, which is deliberately the whole definition
+// of "valid collectible" here: an Accessory recovery, a Merchant purchase and a static interactable
+// all live on completely separate paths and therefore cannot reach this, so a consumer needs no
+// exclusion list of its own. A consumer that genuinely cares about WHICH currency can switch on
+// type; Scavenger Rush, today's only listener, deliberately does not.
+signal OnCollectibleCollected(EntityRef collector, CurrencyOrbType type);
