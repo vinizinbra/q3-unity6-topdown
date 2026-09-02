@@ -170,17 +170,32 @@ namespace QuantumUser.View.Managers
         {
             if (config == null) return;
 
-            for (int i = 0; i < active.Count; i++)
-                UpdateBlob(active[i]);
+            // Backward so a stale entry can be removed in place without disturbing the indices of
+            // whatever's still ahead of it in the list.
+            for (int i = active.Count - 1; i >= 0; i--)
+            {
+                if (!UpdateBlob(active[i]))
+                {
+                    // Target was destroyed without the owning HasShadow's OnDisable ever running to
+                    // Release it (e.g. the owning GameObject was destroyed directly). Reclaim the
+                    // pooled instance and drop the handle here instead of leaving a dead entry that
+                    // would otherwise throw on Target.position every frame from now on and, left
+                    // unguarded, permanently stop every blob queued after it from updating.
+                    pool.Release(active[i].GameObject);
+                    active.RemoveAt(i);
+                }
+            }
         }
 
-        private void UpdateBlob(GroundBlobHandle blob)
+        private bool UpdateBlob(GroundBlobHandle blob)
         {
+            if (blob.Target == null) return false;
+
             Vector3 origin = blob.Target.position + Vector3.up * config.RaycastHeight;
             bool hasGround = Physics.Raycast(origin, Vector3.down, out RaycastHit hit, config.RaycastHeight + config.MaxRaycastDistance, config.GroundLayer);
 
             blob.Renderer.enabled = hasGround;
-            if (!hasGround) return; // e.g. falling past the edge of the level - no floor to project onto
+            if (!hasGround) return true; // e.g. falling past the edge of the level - no floor to project onto
 
             Vector3 offset = new Vector3(config.ShadowOffset.x + blob.Offset.x, config.GroundOffset, config.ShadowOffset.y + blob.Offset.y);
             blob.GameObject.transform.SetPositionAndRotation(hit.point + offset, FlatRotation);
@@ -203,6 +218,8 @@ namespace QuantumUser.View.Managers
             Color color = blob.Renderer.color;
             color.a = maxAlpha * Mathf.Lerp(config.MinAlphaMultiplier, 1f, falloff) * blob.AlphaMultiplier;
             blob.Renderer.color = color;
+
+            return true;
         }
 
         private void Prewarm(int count)

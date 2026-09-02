@@ -18,7 +18,7 @@ MonoBehaviour:
       Value: 331501457688458675
   Name: 
   EngageRange:
-    RawValue: 131072
+    RawValue: 196608
   DamageRange:
     RawValue: 131072
   Damage:
@@ -44,7 +44,7 @@ MonoBehaviour:
   AimLockPercent:
     RawValue: 65536
   SelectionWeight: 1
-  InterruptibleDuringTelegraph: 1
+  InterruptibleDuringTelegraph: 0
   InterruptibleDuringActive: 0
   Delivery:
     Id:

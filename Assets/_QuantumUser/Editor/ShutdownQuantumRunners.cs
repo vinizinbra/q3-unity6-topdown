@@ -3,7 +3,7 @@ namespace Quantum.Editor {
   using UnityEngine;
 
   public static class ShutdownQuantumRunners {
-    [MenuItem("Tools/RiftRaiders/Shutdown Quantum Runners")]
+    [MenuItem("Tools/RiftRaiders/Utilities/Shutdown Quantum Runners")]
     private static void Shutdown() {
       if (!Application.isPlaying) {
         Debug.LogWarning("[ShutdownQuantumRunners] Not in Play Mode - nothing to shut down.");

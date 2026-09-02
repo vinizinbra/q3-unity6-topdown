@@ -38,7 +38,7 @@ namespace QuantumUser.Editor
         // Burger's is wired directly since a matching sprite already exists for exactly this.
         private const string IconSheetPath = "Assets/_Project/Art/Sprites/UI/RiftRaidersIcon1.png";
 
-        [MenuItem("Tools/RiftRaiders/Generate Store & Blacksmith Content")]
+        [MenuItem("Tools/RiftRaiders/Breathing POI/Generate Store & Blacksmith Content")]
         internal static void Generate()
         {
             CreateFolderRecursive(StoreFolderPath);

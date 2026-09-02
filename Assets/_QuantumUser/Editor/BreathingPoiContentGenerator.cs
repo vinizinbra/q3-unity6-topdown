@@ -31,7 +31,7 @@ namespace QuantumUser.Editor
         private const string RiftShardOfferingPath = SacrificeFolderPath + "/RiftShardOffering.asset";
         private const string CursedRiftConfigPath = SacrificeFolderPath + "/CursedRiftConfig.asset";
 
-        [MenuItem("Tools/RiftRaiders/Generate Breathing POI Content")]
+        [MenuItem("Tools/RiftRaiders/Breathing POI/Generate Breathing POI Content")]
         internal static void Generate()
         {
             CreateFolderRecursive(SacrificeFolderPath);

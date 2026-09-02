@@ -43,11 +43,11 @@ namespace QuantumUser.Editor
             public FP FormationRadius;
         }
 
-        // Faction defaults to Faction1 (the world's main hostile faction) - override per-member for
-        // groups whose design calls for a specific skin (e.g. M("Ranged", 3, EnemyFaction.Faction2)
+        // Faction defaults to MainFaction (the world's main hostile faction) - override per-member for
+        // groups whose design calls for a specific skin (e.g. M("Ranged", 3, EnemyFaction.RobotFaction)
         // for a security-bot patrol). Purely cosmetic (Enemy.Faction/EnemyDataAsset.FactionSkins) -
         // has no effect on an archetype with no FactionSkins authored.
-        private static MemberSpec M(string enemy, int qty, EnemyFaction faction = EnemyFaction.Faction1) => new MemberSpec { EnemyFileName = enemy, Quantity = qty, Faction = faction };
+        private static MemberSpec M(string enemy, int qty, EnemyFaction faction = EnemyFaction.MainFaction) => new MemberSpec { EnemyFileName = enemy, Quantity = qty, Faction = faction };
 
         // Composition notes: every archetype pairs a movement/threat shape with a formation pattern
         // that reads as that shape (Line for backline skirmishers, Circle for a heavy pincer,
@@ -58,7 +58,7 @@ namespace QuantumUser.Editor
         {
             // Cost 8 - same HP/attack as Swarm (a deliberate slower reskin - see Filler.asset), just
             // easier to kite/outrun while still teaching the same "don't get surrounded" read.
-            // Faction3 (Wildlife) alongside SwarmRush. Weight raised above every other group's
+            // WildLifeFaction (Wildlife) alongside SwarmRush. Weight raised above every other group's
             // (0.6-1.0) and kept in every phase's AllowedGroups (see PhaseSpecs) - as more Normal/
             // Heavy groups join the roster phase over phase, chaff's SHARE of the weighted roll
             // would otherwise shrink even though its own absolute weight never changed, reading as
@@ -66,84 +66,84 @@ namespace QuantumUser.Editor
             // to stay a large, unmistakable fraction of every purchase, not a rare treat.
             new GroupSpec
             {
-                FileName = "FillerCreep", Members = new[] { M("Filler", 8, EnemyFaction.Faction3) },
+                FileName = "FillerCreep", Members = new[] { M("Filler", 8, EnemyFaction.WildLifeFaction) },
                 Weight = FP.FromString("1.5"), MaxConcurrent = 3, SpawnPattern = GroupSpawnPattern.Cluster, FormationRadius = 3
             },
-            // Cost 8 - cheap chaff, forces movement/kiting. Faction3 (Wildlife) - a feral swarm. Same
+            // Cost 8 - cheap chaff, forces movement/kiting. WildLifeFaction (Wildlife) - a feral swarm. Same
             // raised-weight/every-phase treatment as FillerCreep above - see that entry's own comment.
             new GroupSpec
             {
-                FileName = "SwarmRush", Members = new[] { M("Swarm", 8, EnemyFaction.Faction3) },
+                FileName = "SwarmRush", Members = new[] { M("Swarm", 8, EnemyFaction.WildLifeFaction) },
                 Weight = FP.FromString("1.5"), MaxConcurrent = 3, SpawnPattern = GroupSpawnPattern.Cluster, FormationRadius = 3
             },
             // Cost 4 - scattered so their self-destruct blasts don't chain into each other; punishes
-            // players who don't spread the squad out themselves. Faction2 (Security) - reads as a
+            // players who don't spread the squad out themselves. RobotFaction (Security) - reads as a
             // self-destructing security drone rather than a feral creature.
             new GroupSpec
             {
-                FileName = "SuicideSquad", Members = new[] { M("Suicider", 4, EnemyFaction.Faction2) },
+                FileName = "SuicideSquad", Members = new[] { M("Suicider", 4, EnemyFaction.RobotFaction) },
                 Weight = FP.FromString("0.8"), MaxConcurrent = 2, SpawnPattern = GroupSpawnPattern.Scatter, FormationRadius = 4
             },
             // Cost 10 - the baseline melee brawl: bruisers up front, flankers work the sides.
-            // Faction1 (main faction) - the default raider grunt encounter.
+            // MainFaction (main faction) - the default raider grunt encounter.
             new GroupSpec
             {
-                FileName = "MeleeSkirmish", Members = new[] { M("NormalMelee", 3, EnemyFaction.Faction1), M("Flanker", 2, EnemyFaction.Faction1) },
+                FileName = "MeleeSkirmish", Members = new[] { M("NormalMelee", 3, EnemyFaction.MainFaction), M("Flanker", 2, EnemyFaction.MainFaction) },
                 Weight = 1, MaxConcurrent = 2, SpawnPattern = GroupSpawnPattern.Arc, FormationRadius = 4
             },
             // Cost 8 - a poke line with one Sniper anchoring the back for a real single-target
-            // threat behind the chip damage. Faction2 (Security) - a tactical firing line reads as
+            // threat behind the chip damage. RobotFaction (Security) - a tactical firing line reads as
             // organized defense, not a rabble.
             new GroupSpec
             {
-                FileName = "RangedSkirmish", Members = new[] { M("NormalRanged", 3, EnemyFaction.Faction2), M("Sniper", 1, EnemyFaction.Faction2) },
+                FileName = "RangedSkirmish", Members = new[] { M("NormalRanged", 3, EnemyFaction.RobotFaction), M("Sniper", 1, EnemyFaction.RobotFaction) },
                 Weight = 1, MaxConcurrent = 2, SpawnPattern = GroupSpawnPattern.Line, FormationRadius = 5
             },
-            // Cost 8 - twin dash-bruisers converging from a wide arc. Faction3 (Wildlife) - a
+            // Cost 8 - twin dash-bruisers converging from a wide arc. WildLifeFaction (Wildlife) - a
             // pouncing pack predator, not a security unit.
             new GroupSpec
             {
-                FileName = "ChargerDuo", Members = new[] { M("Charger", 2, EnemyFaction.Faction3) },
+                FileName = "ChargerDuo", Members = new[] { M("Charger", 2, EnemyFaction.WildLifeFaction) },
                 Weight = FP.FromString("0.8"), MaxConcurrent = 2, SpawnPattern = GroupSpawnPattern.Arc, FormationRadius = 5
             },
             // Cost 16 - Shielders' 80% frontal reduction forces a flank; melee escorts punish
-            // anyone who tries to just facetank the front. Faction2 (Security) - a riot-shield line
+            // anyone who tries to just facetank the front. RobotFaction (Security) - a riot-shield line
             // is the clearest "security bots" read in the whole roster.
             new GroupSpec
             {
-                FileName = "ShieldWall", Members = new[] { M("Shielder", 2, EnemyFaction.Faction2), M("NormalMelee", 2, EnemyFaction.Faction2) },
+                FileName = "ShieldWall", Members = new[] { M("Shielder", 2, EnemyFaction.RobotFaction), M("NormalMelee", 2, EnemyFaction.RobotFaction) },
                 Weight = FP.FromString("0.7"), MaxConcurrent = 1, SpawnPattern = GroupSpawnPattern.Cluster, FormationRadius = FP.FromString("3.5")
             },
             // Cost 12 - two full-circle AoE slammers on opposite sides of the fight - a real
-            // positioning check. Faction1 (main faction) - their heavy siege muscle.
+            // positioning check. MainFaction (main faction) - their heavy siege muscle.
             new GroupSpec
             {
-                FileName = "SlammerPincer", Members = new[] { M("HeavySlammer", 2, EnemyFaction.Faction1) },
+                FileName = "SlammerPincer", Members = new[] { M("HeavySlammer", 2, EnemyFaction.MainFaction) },
                 Weight = FP.FromString("0.7"), MaxConcurrent = 1, SpawnPattern = GroupSpawnPattern.Circle, FormationRadius = 5
             },
-            // Cost 16 - lobbed AoE backline behind a ranged screen. Faction2 (Security) - organized
+            // Cost 16 - lobbed AoE backline behind a ranged screen. RobotFaction (Security) - organized
             // indirect-fire support, not a raider's improvised weapon.
             new GroupSpec
             {
-                FileName = "GrenadierBarrage", Members = new[] { M("Grenadier", 2, EnemyFaction.Faction2), M("NormalRanged", 2, EnemyFaction.Faction2) },
+                FileName = "GrenadierBarrage", Members = new[] { M("Grenadier", 2, EnemyFaction.RobotFaction), M("NormalRanged", 2, EnemyFaction.RobotFaction) },
                 Weight = FP.FromString("0.7"), MaxConcurrent = 1, SpawnPattern = GroupSpawnPattern.Line, FormationRadius = 6
             },
-            // Cost 18 - jump in from random angles instead of approaching predictably. Faction3
+            // Cost 18 - jump in from random angles instead of approaching predictably. WildLifeFaction
             // (Wildlife) - an ambush predator, the clearest "wildlife" read alongside ShieldWall's
             // security read.
             new GroupSpec
             {
-                FileName = "LeaperAmbush", Members = new[] { M("LeaperEnemy", 3, EnemyFaction.Faction3) },
+                FileName = "LeaperAmbush", Members = new[] { M("LeaperEnemy", 3, EnemyFaction.WildLifeFaction) },
                 Weight = FP.FromString("0.7"), MaxConcurrent = 1, SpawnPattern = GroupSpawnPattern.Scatter, FormationRadius = 6
             },
             // Cost 20 - the late-game "everything at once" set piece: melee front, flankers on the
             // sides, a Slammer for area denial, a Sniper poking from range, a Charger closing gaps.
-            // Faction1 (main faction) - their full combined-arms push, not a mixed-faction pile-up.
+            // MainFaction (main faction) - their full combined-arms push, not a mixed-faction pile-up.
             new GroupSpec
             {
                 FileName = "FullAssault", Members = new[]
                 {
-                    M("NormalMelee", 2, EnemyFaction.Faction1), M("Flanker", 2, EnemyFaction.Faction1), M("HeavySlammer", 1, EnemyFaction.Faction1), M("Sniper", 1, EnemyFaction.Faction1), M("Charger", 1, EnemyFaction.Faction1)
+                    M("NormalMelee", 2, EnemyFaction.MainFaction), M("Flanker", 2, EnemyFaction.MainFaction), M("HeavySlammer", 1, EnemyFaction.MainFaction), M("Sniper", 1, EnemyFaction.MainFaction), M("Charger", 1, EnemyFaction.MainFaction)
                 },
                 Weight = FP.FromString("0.6"), MaxConcurrent = 1, SpawnPattern = GroupSpawnPattern.Cluster, FormationRadius = 5
             },
@@ -218,7 +218,7 @@ namespace QuantumUser.Editor
             },
         };
 
-        [MenuItem("Tools/RiftRaiders/Generate Survival Director Content")]
+        [MenuItem("Tools/RiftRaiders/Content/Generate Survival Director Content")]
         internal static void Generate()
         {
             if (AssetDatabase.IsValidFolder(GroupFolderPath) == false)

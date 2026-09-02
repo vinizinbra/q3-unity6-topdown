@@ -61,14 +61,14 @@ namespace QuantumUser.Editor
         private static MemberSpec M(string enemy, int qty, EnemyFaction faction) => new MemberSpec { EnemyFileName = enemy, Quantity = qty, Faction = faction };
 
         // Faction values here are purely cosmetic skin selectors (EnemyDataAsset.FactionSkins) -
-        // kept consistent with the codebase's existing convention (Filler -> Faction3, Melee ->
-        // Faction1, ranged -> Faction2), harmless where an archetype (Flanker, ChestEliteBrute) has
+        // kept consistent with the codebase's existing convention (Filler -> WildLifeFaction, Melee ->
+        // MainFaction, ranged -> RobotFaction), harmless where an archetype (Flanker, ChestEliteBrute) has
         // no authored skins at all.
-        private const EnemyFaction FillerFaction = EnemyFaction.Faction3;
-        private const EnemyFaction MeleeFaction = EnemyFaction.Faction1;
-        private const EnemyFaction GunnerFaction = EnemyFaction.Faction2;
-        private const EnemyFaction ShotgunnerFaction = EnemyFaction.Faction1;
-        private const EnemyFaction EliteFaction = EnemyFaction.Faction1;
+        private const EnemyFaction FillerFaction = EnemyFaction.WildLifeFaction;
+        private const EnemyFaction MeleeFaction = EnemyFaction.MainFaction;
+        private const EnemyFaction GunnerFaction = EnemyFaction.RobotFaction;
+        private const EnemyFaction ShotgunnerFaction = EnemyFaction.MainFaction;
+        private const EnemyFaction EliteFaction = EnemyFaction.MainFaction;
 
         private static readonly List<GroupSpec> GroupSpecs = new()
         {
@@ -185,7 +185,7 @@ namespace QuantumUser.Editor
             },
         };
 
-        [MenuItem("Tools/RiftRaiders/Generate Combat 1 Main Faction Content")]
+        [MenuItem("Tools/RiftRaiders/Content/Generate Combat 1 Main Faction Content")]
         internal static void Generate()
         {
             if (AssetDatabase.IsValidFolder(GroupFolderPath) == false)

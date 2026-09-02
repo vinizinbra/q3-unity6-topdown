@@ -170,6 +170,7 @@ MonoBehaviour:
   innerCornerYaw: 270
   touchGapTolerance: 0.1
   debugLogPlacement: 1
+  generateOnEnable: 0
   colliderRoot: {fileID: 0}
   visualRoot: {fileID: 0}
 --- !u!65 &1299701383131550041
@@ -220,6 +221,8 @@ MonoBehaviour:
   footprintRenderer: {fileID: 0}
   maxAcquireAttempts: 5
   acquireRetryInterval: 1
+  bakedShadow: {fileID: 0}
+  bakeShadowPrefabOverride: {fileID: 0}
 --- !u!1 &2537941809681817961
 GameObject:
   m_ObjectHideFlags: 0
@@ -14793,7 +14796,7 @@ SpriteRenderer:
   m_Size: {x: 1, y: 1}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
 --- !u!1 &4363123460443120845
 GameObject:
@@ -14884,7 +14887,7 @@ SpriteRenderer:
   m_Size: {x: 1, y: 1}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
 --- !u!1 &5903773979011623982
 GameObject:
@@ -15039,6 +15042,7 @@ MonoBehaviour:
   promptActiveDescription: 
   promptPhaseUnavailableDescription: COME BACK ON BREAK
   promptAlreadyUsedDescription: ALREADY USED
+  promptNotNeededDescription: FULL HEALTH
   promptWorldOffset: {x: 0, y: 2.5, z: 0}
 --- !u!114 &7362450186293940626
 MonoBehaviour:
@@ -15153,7 +15157,7 @@ SpriteRenderer:
   m_Size: {x: 1, y: 1}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
 --- !u!1 &8161546120763317443
 GameObject:
@@ -15622,8 +15626,29 @@ MonoBehaviour:
         Value: 328268900114127512
     AllowedConnectionSides:
       Value: 15
+    ForbiddenNeighbors:
+      Value: 125
+    ConnectedChunks:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    ConnectedChunkCount: 0
     Discovered:
       Value: 0
+    HasRespawnPoint:
+      Value: 0
+    RespawnPoint:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
 --- !u!114 &6992737075964169537
 MonoBehaviour:
   m_ObjectHideFlags: 0

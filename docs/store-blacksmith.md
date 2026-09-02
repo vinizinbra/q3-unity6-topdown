@@ -128,8 +128,18 @@ config both paths reference):
 
 ### Blacksmith
 
-- Rolls **per-player** (`BlacksmithInteraction.PerkChoices`), since eligibility depends on the
-  buyer's own currently-equipped weapon - unlike Store's shared inventory.
+- Rolls **per-player**, since eligibility depends on the buyer's own currently-equipped weapon -
+  unlike Store's shared inventory. **2026-09-01 fix:** the roll is cached for the rest of the
+  current Breathing Break in a new `BlacksmithOffer` component (`RolledAtBreathingIndex` +
+  `PerkChoices`/`PerkChoiceCount`), separate from the transient `BlacksmithInteraction` ("is the
+  window open") component - mirrors `StoreInventory.RolledAtBreathingIndex`/
+  `StoreUtility.EnsureInventoryRolled` one-for-one (see `BlacksmithUtility.EnsureOfferRolled`).
+  Previously `BlacksmithInteraction` was the ONLY place the roll lived, so removing it on Cancel
+  (or any other close) threw the roll away - reopening, including a plain walk-away-and-come-back
+  with no explicit Cancel intent, silently rerolled every time, since Blacksmith has no neutral
+  "just close" affordance the way Store's `CloseStoreCommand` does (its "CANCEL" button is the
+  only exit). Now a fresh roll only happens on the FIRST visit each Break; Cancel/reopen within
+  the same Break reads the cached `BlacksmithOffer` back out unchanged.
 - Excludes any perk already on the buyer's weapon via `LevelUpUtility.AlreadyEquipped` (promoted
   `internal` for this reuse) - confirmed with the user: Blacksmith never offers an already-owned
   perk, there is no rank-upgrade mechanic.
@@ -218,7 +228,8 @@ Choice Window already locks input - movement/weapon/Dash/Hero-Skill gated, `Game
   (`LevelUpOption.RolledWeaponLevel`, new field). `StoreUtility.cs` - `RollWeaponOffers` rewritten to
   call the shared `LevelUpConfig` methods (`RollStorePerkCount`/`ApplyBreakWeaponLevel` deleted),
   `RollStorePerks` unchanged (perk RARITY stays Store-only).
-- `Assets/_QuantumUser/Simulation/QTN/Poi/Blacksmith.qtn` - `Blacksmith`/`BlacksmithInteraction`.
+- `Assets/_QuantumUser/Simulation/QTN/Poi/Blacksmith.qtn` - `Blacksmith`/`BlacksmithInteraction`/
+  `BlacksmithOffer` (new 2026-09-01, the per-Break roll cache - see "Blacksmith" section above).
 - `Assets/_QuantumUser/Simulation/QTN/Poi/ContextInteraction.qtn` - `InteractableKind` gained
   `Store`/`Blacksmith` (append-only).
 - `Assets/_QuantumUser/Simulation/QTN/Chunk.qtn` - `ChunkType` gained `Blacksmith` (append-only;

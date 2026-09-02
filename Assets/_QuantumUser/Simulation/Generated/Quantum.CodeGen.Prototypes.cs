@@ -355,6 +355,28 @@ namespace Quantum.Prototypes {
     }
   }
   [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.BlacksmithOffer))]
+  public unsafe partial class BlacksmithOfferPrototype : ComponentPrototype<Quantum.BlacksmithOffer> {
+    public Int32 RolledAtBreathingIndex;
+    [ArrayLengthAttribute(3)]
+    public AssetRef<WeaponPerkData>[] PerkChoices = new AssetRef<WeaponPerkData>[3];
+    public Byte PerkChoiceCount;
+    partial void MaterializeUser(Frame frame, ref Quantum.BlacksmithOffer result, in PrototypeMaterializationContext context);
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.BlacksmithOffer component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.BlacksmithOffer result, in PrototypeMaterializationContext context = default) {
+        result.RolledAtBreathingIndex = this.RolledAtBreathingIndex;
+        for (int i = 0, count = PrototypeValidator.CheckLength(PerkChoices, 3, in context); i < count; ++i) {
+          *result.PerkChoices.GetPointer(i) = this.PerkChoices[i];
+        }
+        result.PerkChoiceCount = this.PerkChoiceCount;
+        MaterializeUser(frame, ref result, in context);
+    }
+  }
+  [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.BodyguardUpgrade))]
   public unsafe partial class BodyguardUpgradePrototype : ComponentPrototype<Quantum.BodyguardUpgrade> {
     public FP GuardDuration;

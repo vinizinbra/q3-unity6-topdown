@@ -448,7 +448,7 @@ namespace QuantumUser.Editor
             },
         };
 
-        [MenuItem("Tools/RiftRaiders/Generate Weapon Perk Assets")]
+        [MenuItem("Tools/RiftRaiders/Progression/Generate Weapon Perk Assets")]
         internal static void Generate()
         {
             if (AssetDatabase.IsValidFolder(FolderPath) == false)

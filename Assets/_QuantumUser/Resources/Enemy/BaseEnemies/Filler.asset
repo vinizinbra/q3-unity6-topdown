@@ -51,7 +51,7 @@ MonoBehaviour:
         RawValue: 131072
       CanClimbCliffs: 1
       CliffHeight:
-        RawValue: 65536
+        RawValue: 131072
       AffectedByGroundHazards: 0
       AffectedByShockwaves: 0
       TargetableByMelee: 1
@@ -79,7 +79,7 @@ MonoBehaviour:
     AvoidWalls: 0
     WallAvoidProbeDistance:
       RawValue: 131072
-    UseWaypointDetour: 1
+    UseWaypointDetour: 0
     WaypointArrivalDistance:
       RawValue: 13107
   AI:

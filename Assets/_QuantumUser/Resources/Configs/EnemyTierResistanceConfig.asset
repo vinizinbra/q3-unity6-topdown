@@ -29,6 +29,11 @@ MonoBehaviour:
       RawValue: 65536
     RuptureDurationMultiplier:
       RawValue: 65536
+    StunImmunityDuration:
+      RawValue: 0
+    InterruptImmunityDuration:
+      RawValue: 0
+    ImmuneToHardCC: 0
   Normal:
     KnockbackMultiplier:
       RawValue: 65536
@@ -42,23 +47,33 @@ MonoBehaviour:
       RawValue: 65536
     RuptureDurationMultiplier:
       RawValue: 65536
+    StunImmunityDuration:
+      RawValue: 0
+    InterruptImmunityDuration:
+      RawValue: 0
+    ImmuneToHardCC: 0
   Specialist:
-    KnockbackMultiplier:
-      RawValue: 52429
-    StunDurationMultiplier:
-      RawValue: 32768
-    RootDurationMultiplier:
-      RawValue: 32768
-    SlowDurationMultiplier:
-      RawValue: 32768
-    BurnDamageMultiplier:
-      RawValue: 65536
-    RuptureDurationMultiplier:
-      RawValue: 65536
-  Heavy:
     KnockbackMultiplier:
       RawValue: 39322
     StunDurationMultiplier:
+      RawValue: 32768
+    RootDurationMultiplier:
+      RawValue: 32768
+    SlowDurationMultiplier:
+      RawValue: 32768
+    BurnDamageMultiplier:
+      RawValue: 65536
+    RuptureDurationMultiplier:
+      RawValue: 65536
+    StunImmunityDuration:
+      RawValue: 131072
+    InterruptImmunityDuration:
+      RawValue: 131072
+    ImmuneToHardCC: 0
+  Heavy:
+    KnockbackMultiplier:
+      RawValue: 26214
+    StunDurationMultiplier:
       RawValue: 26214
     RootDurationMultiplier:
       RawValue: 26214
@@ -68,9 +83,14 @@ MonoBehaviour:
       RawValue: 65536
     RuptureDurationMultiplier:
       RawValue: 65536
+    StunImmunityDuration:
+      RawValue: 196608
+    InterruptImmunityDuration:
+      RawValue: 196608
+    ImmuneToHardCC: 0
   Elite:
     KnockbackMultiplier:
-      RawValue: 19661
+      RawValue: 13107
     StunDurationMultiplier:
       RawValue: 19661
     RootDurationMultiplier:
@@ -81,6 +101,11 @@ MonoBehaviour:
       RawValue: 65536
     RuptureDurationMultiplier:
       RawValue: 65536
+    StunImmunityDuration:
+      RawValue: 262144
+    InterruptImmunityDuration:
+      RawValue: 262144
+    ImmuneToHardCC: 0
   Boss:
     KnockbackMultiplier:
       RawValue: 0
@@ -94,3 +119,8 @@ MonoBehaviour:
       RawValue: 65536
     RuptureDurationMultiplier:
       RawValue: 65536
+    StunImmunityDuration:
+      RawValue: 0
+    InterruptImmunityDuration:
+      RawValue: 0
+    ImmuneToHardCC: 1

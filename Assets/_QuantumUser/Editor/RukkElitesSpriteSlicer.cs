@@ -24,7 +24,7 @@ namespace QuantumUser.Editor
             new Rect(908f, 0f, 490f, 394f),    // bottom-right: crouching
         };
 
-        [MenuItem("Tools/RiftRaiders/Slice Rukk Elites Sprite")]
+        [MenuItem("Tools/RiftRaiders/Utilities/Slice Rukk Elites Sprite")]
         public static void Slice()
         {
             var importer = AssetImporter.GetAtPath(TexturePath) as TextureImporter;

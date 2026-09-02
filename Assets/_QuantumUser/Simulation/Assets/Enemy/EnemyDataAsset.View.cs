@@ -34,7 +34,7 @@ namespace Quantum
         [Tooltip("Default/fallback visual rig prefab (EnemyViewRig + SpriteRenderers + optional weapon) instantiated as a child on spawn (EnemyView) - swap this per enemy type to change appearance without touching the shared generic sim prototype. Used as-is when FactionSkins below is empty, and as the fallback when this entity's Faction (Enemy.qtn) has no matching entry. EnemyBlobAnimationView/EnemyArmAimView/EnemyAttackVisualsView live on the generic prototype itself, not in here - they get this rig handed to them once it's instantiated. Scale is fit automatically off EnemyViewRig.ReferenceSprite's bounds, so it's PPU-independent - no need to hand-author at a specific scale.")]
         public GameObject ViewPrefab;
 
-        [Tooltip("Optional faction-specific alternate skins for this archetype (e.g. a Ranged enemy could be a Faction2 robot or a Faction3 hyena) - EnemyView picks the one matching this entity's Enemy.Faction, which is authored explicitly per-slot on the EnemyGroupConfig.GroupMemberEntry that spawned it, not randomized. Leave empty for archetypes that don't need faction variety - they always use ViewPrefab above.")]
+        [Tooltip("Optional faction-specific alternate skins for this archetype (e.g. a Ranged enemy could be a RobotFaction robot or a WildLifeFaction hyena) - EnemyView picks the one matching this entity's Enemy.Faction, which is authored explicitly per-slot on the EnemyGroupConfig.GroupMemberEntry that spawned it, not randomized. Leave empty for archetypes that don't need faction variety - they always use ViewPrefab above.")]
         public List<EnemyFactionSkin> FactionSkins;
     }
 }

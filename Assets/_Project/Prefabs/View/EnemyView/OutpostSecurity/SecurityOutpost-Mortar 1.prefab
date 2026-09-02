@@ -9801,8 +9801,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9168c542245be475f8ee71bd6733ba7c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.HasShadow
-  baseScale: 3
-  shadowOffset: {x: 0, y: 0}
+  baseScale: 6
+  shadowOffset: {x: 0, y: 0.2}
   shadowAlphaMultiplier: 1
 --- !u!1001 &2033220763431434550
 PrefabInstance:

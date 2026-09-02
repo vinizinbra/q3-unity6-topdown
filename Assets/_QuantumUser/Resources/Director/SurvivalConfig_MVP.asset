@@ -17,87 +17,20 @@ MonoBehaviour:
     Guid:
       Value: 516156630782283822
   Phases:
-  - Name: TestEnemy
-    Kind: 0
-    Duration:
-      RawValue: 65470464
-    BudgetPerPulse:
-      RawValue: 262144
-    PulseInterval:
-      RawValue: 131072
-    TargetPressure:
-      RawValue: 393216
-    MaxAliveEnemies: 6
-    AllowedGroups: []
-    AllowedEnemies:
-    - EnemyData:
-        Id:
-          Value: 441492803210562088
-      Faction: 1
-      Weight:
-        RawValue: 65470464
-      MinimumSurvivalTime:
-        RawValue: 0
-      MaximumSurvivalTime:
-        RawValue: 0
-      MaxConcurrent: 1
-    BossPrototype:
-      Id:
-        Value: 0
-    PauseDuration:
-      RawValue: 0
-    GuaranteedGroup:
-      Id:
-        Value: 0
-  - Name: Intro
+  - Name: Warm-up
     Kind: 0
     Duration:
       RawValue: 1966080
     BudgetPerPulse:
-      RawValue: 262144
+      RawValue: 196608
     PulseInterval:
       RawValue: 131072
     TargetPressure:
-      RawValue: 393216
-    MaxAliveEnemies: 6
-    AllowedGroups:
-    - Id:
-        Value: 524812044513929405
-    - Id:
-        Value: 417603092828913294
-    - Id:
-        Value: 497538020021829942
-    AllowedEnemies: []
-    BossPrototype:
-      Id:
-        Value: 0
-    PauseDuration:
-      RawValue: 0
-    GuaranteedGroup:
-      Id:
-        Value: 0
-  - Name: Gunner Introduction
-    Kind: 0
-    Duration:
-      RawValue: 2621440
-    BudgetPerPulse:
       RawValue: 327680
-    PulseInterval:
-      RawValue: 117965
-    TargetPressure:
-      RawValue: 524288
-    MaxAliveEnemies: 8
+    MaxAliveEnemies: 5
     AllowedGroups:
     - Id:
-        Value: 524812044513929405
-    - Id:
-        Value: 417603092828913294
-    - Id:
-        Value: 480773490112618743
-    - Id:
-        Value: 385603579796097465
-    - Id:
-        Value: 354292532298879105
+        Value: 447917649156750950
     AllowedEnemies: []
     BossPrototype:
       Id:
@@ -107,165 +40,24 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
-  - Name: Composition Training
+  - Name: Chaff + Melee
     Kind: 0
     Duration:
-      RawValue: 2621440
-    BudgetPerPulse:
-      RawValue: 393216
-    PulseInterval:
-      RawValue: 104858
-    TargetPressure:
-      RawValue: 655360
-    MaxAliveEnemies: 9
-    AllowedGroups:
-    - Id:
-        Value: 524812044513929405
-    - Id:
-        Value: 417603092828913294
-    - Id:
-        Value: 480773490112618743
-    - Id:
-        Value: 344598599508016682
-    - Id:
-        Value: 457814836202198574
-    - Id:
-        Value: 281908915051130829
-    AllowedEnemies: []
-    BossPrototype:
-      Id:
-        Value: 0
-    PauseDuration:
-      RawValue: 0
-    GuaranteedGroup:
-      Id:
-        Value: 0
-  - Name: Shotgunner Introduction
-    Kind: 0
-    Duration:
-      RawValue: 2293760
-    BudgetPerPulse:
-      RawValue: 458752
-    PulseInterval:
-      RawValue: 98304
-    TargetPressure:
-      RawValue: 786432
-    MaxAliveEnemies: 10
-    AllowedGroups:
-    - Id:
-        Value: 480773490112618743
-    - Id:
-        Value: 385603579796097465
-    - Id:
-        Value: 344598599508016682
-    - Id:
-        Value: 337147698527389943
-    - Id:
-        Value: 284442018633346287
-    - Id:
-        Value: 455882914467711372
-    AllowedEnemies: []
-    BossPrototype:
-      Id:
-        Value: 0
-    PauseDuration:
-      RawValue: 0
-    GuaranteedGroup:
-      Id:
-        Value: 0
-  - Name: Elite Warning
-    Kind: 0
-    Duration:
-      RawValue: 327680
-    BudgetPerPulse:
-      RawValue: 0
-    PulseInterval:
-      RawValue: 98304
-    TargetPressure:
-      RawValue: 786432
-    MaxAliveEnemies: 10
-    AllowedGroups: []
-    AllowedEnemies: []
-    BossPrototype:
-      Id:
-        Value: 0
-    PauseDuration:
-      RawValue: 0
-    GuaranteedGroup:
-      Id:
-        Value: 0
-  - Name: Elite
-    Kind: 0
-    Duration:
-      RawValue: 1966080
-    BudgetPerPulse:
-      RawValue: 262144
-    PulseInterval:
-      RawValue: 131072
-    TargetPressure:
-      RawValue: 655360
-    MaxAliveEnemies: 8
-    AllowedGroups:
-    - Id:
-        Value: 300849278935974420
-    - Id:
-        Value: 293364157271140651
-    - Id:
-        Value: 351915137281063268
-    AllowedEnemies: []
-    BossPrototype:
-      Id:
-        Value: 0
-    PauseDuration:
-      RawValue: 0
-    GuaranteedGroup:
-      Id:
-        Value: 282909460140357326
-  - Name: Breathing 1
-    Kind: 1
-    Duration:
-      RawValue: 3932160
-    BudgetPerPulse:
-      RawValue: 0
-    PulseInterval:
-      RawValue: 0
-    TargetPressure:
-      RawValue: 0
-    MaxAliveEnemies: 0
-    AllowedGroups: []
-    AllowedEnemies: []
-    BossPrototype:
-      Id:
-        Value: 0
-    PauseDuration:
-      RawValue: 0
-    GuaranteedGroup:
-      Id:
-        Value: 0
-  - Name: Escalation A
-    Kind: 0
-    Duration:
-      RawValue: 6881280
+      RawValue: 7864320
     BudgetPerPulse:
       RawValue: 589824
     PulseInterval:
-      RawValue: 131072
+      RawValue: 163840
     TargetPressure:
-      RawValue: 1048576
-    MaxAliveEnemies: 12
+      RawValue: 917504
+    MaxAliveEnemies: 10
     AllowedGroups:
-    - Id:
-        Value: 447917649156750950
     - Id:
         Value: 378279685992977141
     - Id:
         Value: 292572693417129341
     - Id:
         Value: 388273217949830135
-    - Id:
-        Value: 280673942876300681
-    - Id:
-        Value: 470557080828787548
     AllowedEnemies: []
     BossPrototype:
       Id:
@@ -275,80 +67,18 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
-  - Name: Escalation B
+  - Name: Ranged + Charger
     Kind: 0
     Duration:
-      RawValue: 6881280
-    BudgetPerPulse:
-      RawValue: 720896
-    PulseInterval:
-      RawValue: 117965
-    TargetPressure:
-      RawValue: 1310720
-    MaxAliveEnemies: 15
-    AllowedGroups:
-    - Id:
-        Value: 447917649156750950
-    - Id:
-        Value: 378279685992977141
-    - Id:
-        Value: 292572693417129341
-    - Id:
-        Value: 388273217949830135
-    - Id:
-        Value: 280673942876300681
-    - Id:
-        Value: 470557080828787548
-    - Id:
-        Value: 370388235997122058
-    - Id:
-        Value: 382754528576043205
-    AllowedEnemies: []
-    BossPrototype:
-      Id:
-        Value: 0
-    PauseDuration:
-      RawValue: 0
-    GuaranteedGroup:
-      Id:
-        Value: 0
-  - Name: Breathing 2
-    Kind: 1
-    Duration:
-      RawValue: 3932160
-    BudgetPerPulse:
-      RawValue: 0
-    PulseInterval:
-      RawValue: 0
-    TargetPressure:
-      RawValue: 0
-    MaxAliveEnemies: 0
-    AllowedGroups: []
-    AllowedEnemies: []
-    BossPrototype:
-      Id:
-        Value: 0
-    PauseDuration:
-      RawValue: 0
-    GuaranteedGroup:
-      Id:
-        Value: 0
-  - Name: Specialists A
-    Kind: 0
-    Duration:
-      RawValue: 6881280
+      RawValue: 7864320
     BudgetPerPulse:
       RawValue: 786432
     PulseInterval:
-      RawValue: 104858
+      RawValue: 131072
     TargetPressure:
-      RawValue: 1572864
-    MaxAliveEnemies: 18
+      RawValue: 1441792
+    MaxAliveEnemies: 16
     AllowedGroups:
-    - Id:
-        Value: 447917649156750950
-    - Id:
-        Value: 378279685992977141
     - Id:
         Value: 292572693417129341
     - Id:
@@ -357,14 +87,6 @@ MonoBehaviour:
         Value: 280673942876300681
     - Id:
         Value: 470557080828787548
-    - Id:
-        Value: 370388235997122058
-    - Id:
-        Value: 382754528576043205
-    - Id:
-        Value: 458901954645728951
-    - Id:
-        Value: 275582422662614925
     AllowedEnemies: []
     BossPrototype:
       Id:
@@ -374,22 +96,18 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
-  - Name: Specialists B
+  - Name: First Heavy (Slammer)
     Kind: 0
     Duration:
-      RawValue: 6881280
+      RawValue: 7864320
     BudgetPerPulse:
-      RawValue: 917504
+      RawValue: 983040
     PulseInterval:
       RawValue: 98304
     TargetPressure:
-      RawValue: 1835008
-    MaxAliveEnemies: 21
+      RawValue: 2097152
+    MaxAliveEnemies: 22
     AllowedGroups:
-    - Id:
-        Value: 447917649156750950
-    - Id:
-        Value: 378279685992977141
     - Id:
         Value: 292572693417129341
     - Id:
@@ -399,15 +117,7 @@ MonoBehaviour:
     - Id:
         Value: 470557080828787548
     - Id:
-        Value: 370388235997122058
-    - Id:
         Value: 382754528576043205
-    - Id:
-        Value: 458901954645728951
-    - Id:
-        Value: 275582422662614925
-    - Id:
-        Value: 419794267521897289
     AllowedEnemies: []
     BossPrototype:
       Id:
@@ -417,88 +127,18 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
-  - Name: Breathing 3
-    Kind: 1
-    Duration:
-      RawValue: 3932160
-    BudgetPerPulse:
-      RawValue: 0
-    PulseInterval:
-      RawValue: 0
-    TargetPressure:
-      RawValue: 0
-    MaxAliveEnemies: 0
-    AllowedGroups: []
-    AllowedEnemies: []
-    BossPrototype:
-      Id:
-        Value: 0
-    PauseDuration:
-      RawValue: 0
-    GuaranteedGroup:
-      Id:
-        Value: 0
-  - Name: Full Assault A
+  - Name: Full Roster (Endless)
     Kind: 0
     Duration:
-      RawValue: 6881280
-    BudgetPerPulse:
-      RawValue: 1048576
-    PulseInterval:
-      RawValue: 85197
-    TargetPressure:
-      RawValue: 2228224
-    MaxAliveEnemies: 24
-    AllowedGroups:
-    - Id:
-        Value: 447917649156750950
-    - Id:
-        Value: 378279685992977141
-    - Id:
-        Value: 292572693417129341
-    - Id:
-        Value: 388273217949830135
-    - Id:
-        Value: 280673942876300681
-    - Id:
-        Value: 470557080828787548
-    - Id:
-        Value: 370388235997122058
-    - Id:
-        Value: 382754528576043205
-    - Id:
-        Value: 458901954645728951
-    - Id:
-        Value: 275582422662614925
-    - Id:
-        Value: 419794267521897289
-    - Id:
-        Value: 527628414525386623
-    AllowedEnemies: []
-    BossPrototype:
-      Id:
-        Value: 0
-    PauseDuration:
       RawValue: 0
-    GuaranteedGroup:
-      Id:
-        Value: 0
-  - Name: Full Assault B
-    Kind: 0
-    Duration:
-      RawValue: 6881280
     BudgetPerPulse:
       RawValue: 1179648
     PulseInterval:
-      RawValue: 78643
+      RawValue: 65536
     TargetPressure:
-      RawValue: 2621440
-    MaxAliveEnemies: 27
+      RawValue: 2883584
+    MaxAliveEnemies: 28
     AllowedGroups:
-    - Id:
-        Value: 447917649156750950
-    - Id:
-        Value: 378279685992977141
     - Id:
         Value: 292572693417129341
     - Id:
@@ -508,65 +148,15 @@ MonoBehaviour:
     - Id:
         Value: 470557080828787548
     - Id:
-        Value: 370388235997122058
-    - Id:
         Value: 382754528576043205
     - Id:
-        Value: 458901954645728951
-    - Id:
         Value: 275582422662614925
-    - Id:
-        Value: 419794267521897289
-    - Id:
-        Value: 527628414525386623
     AllowedEnemies: []
     BossPrototype:
       Id:
         Value: 0
     PauseDuration:
       RawValue: 0
-    GuaranteedGroup:
-      Id:
-        Value: 0
-  - Name: Breathing 4
-    Kind: 1
-    Duration:
-      RawValue: 5898240
-    BudgetPerPulse:
-      RawValue: 0
-    PulseInterval:
-      RawValue: 0
-    TargetPressure:
-      RawValue: 0
-    MaxAliveEnemies: 0
-    AllowedGroups: []
-    AllowedEnemies: []
-    BossPrototype:
-      Id:
-        Value: 0
-    PauseDuration:
-      RawValue: 0
-    GuaranteedGroup:
-      Id:
-        Value: 0
-  - Name: BOSS
-    Kind: 2
-    Duration:
-      RawValue: 0
-    BudgetPerPulse:
-      RawValue: 0
-    PulseInterval:
-      RawValue: 0
-    TargetPressure:
-      RawValue: 0
-    MaxAliveEnemies: 0
-    AllowedGroups: []
-    AllowedEnemies: []
-    BossPrototype:
-      Id:
-        Value: 1314062773136615755
-    PauseDuration:
-      RawValue: 262144
     GuaranteedGroup:
       Id:
         Value: 0

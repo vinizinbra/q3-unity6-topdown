@@ -122,7 +122,7 @@ MonoBehaviour:
       RawValue: 16384
   Elite:
     MaxHealth:
-      RawValue: 19660800
+      RawValue: 39321600
     Cost:
       RawValue: 524288
     ExpValue:
@@ -148,7 +148,7 @@ MonoBehaviour:
       RawValue: 16384
   Boss:
     MaxHealth:
-      RawValue: 131072000
+      RawValue: 163840000
     Cost:
       RawValue: 1966080
     ExpValue:

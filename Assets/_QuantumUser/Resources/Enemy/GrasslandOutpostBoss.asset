@@ -59,6 +59,7 @@ MonoBehaviour:
     AnimationType: 2
     Duration: 1
     BodySprite: {fileID: -58313209, guid: 65b523ff0d70a4099bf47bb72f5a9e7a, type: 3}
+    ShakeImpact: 0
     Shake:
       Frequency: 18
       RockDegrees: 6
@@ -124,6 +125,7 @@ MonoBehaviour:
     AnimationType: 13
     Duration: 0.3
     BodySprite: {fileID: 166876696, guid: 65b523ff0d70a4099bf47bb72f5a9e7a, type: 3}
+    ShakeImpact: 0
     Shake:
       Frequency: 0
       RockDegrees: 6
@@ -189,6 +191,7 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    ShakeImpact: 0
     Shake:
       Frequency: 18
       RockDegrees: 6
@@ -254,6 +257,7 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    ShakeImpact: 0
     Shake:
       Frequency: 18
       RockDegrees: 6
@@ -438,6 +442,7 @@ MonoBehaviour:
     AnimationType: 1
     Duration: 1
     BodySprite: {fileID: 0}
+    ShakeImpact: 0
     Shake:
       Frequency: 18
       RockDegrees: 6
@@ -503,6 +508,7 @@ MonoBehaviour:
     AnimationType: 3
     Duration: 0.3
     BodySprite: {fileID: 0}
+    ShakeImpact: 0
     Shake:
       Frequency: 18
       RockDegrees: 6
@@ -568,6 +574,7 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    ShakeImpact: 0
     Shake:
       Frequency: 18
       RockDegrees: 6
@@ -633,6 +640,7 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    ShakeImpact: 0
     Shake:
       Frequency: 18
       RockDegrees: 6
@@ -784,6 +792,8 @@ MonoBehaviour:
       RawValue: 655360
     LeashRange:
       RawValue: 983040
+    DetectionRangeMultiplier:
+      RawValue: 65536
   Actions:
     BasicAction:
       Id:
@@ -1032,3 +1042,5 @@ MonoBehaviour:
   ConeAngleDegrees:
     RawValue: 5898240
   SelfDestructs: 0
+  MaxHeightDifference:
+    RawValue: 13107

@@ -95,7 +95,7 @@ namespace QuantumUser.Editor
             new PhaseSpec { Name = "Boss", Kind = SurvivalPhaseKind.Boss, Duration = 0, PauseDuration = 5 },
         };
 
-        [MenuItem("Tools/RiftRaiders/Generate Survival Director MVP Content")]
+        [MenuItem("Tools/RiftRaiders/Content/Generate Survival Director MVP Content")]
         internal static void Generate()
         {
             var survivalConfig = AssetDatabase.LoadAssetAtPath<SurvivalConfig>(SurvivalConfigPath);

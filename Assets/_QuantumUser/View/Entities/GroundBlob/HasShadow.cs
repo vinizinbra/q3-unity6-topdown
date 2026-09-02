@@ -29,6 +29,16 @@ namespace Quantum
 
         private void OnEnable()
         {
+            // Defends against a leaked handle if a prior OnEnable ever fired without a matching
+            // OnDisable in between (e.g. re-enable ordering edge case) - without this the old handle
+            // would stay orphaned in GroundBlobManager.active forever, pointed at a Target that may
+            // later be destroyed out from under it.
+            if (handle != null && GroundBlobManager.Instance != null)
+            {
+                GroundBlobManager.Instance.Release(handle);
+                handle = null;
+            }
+
             if (GroundBlobManager.Instance != null)
                 handle = GroundBlobManager.Instance.AcquireShadow(transform, baseScale, shadowOffset, shadowAlphaMultiplier);
         }

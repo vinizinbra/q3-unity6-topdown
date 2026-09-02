@@ -18,8 +18,8 @@ MonoBehaviour:
       Value: 478447216294312748
   CellSize:
     RawValue: 131072
-  GridWidth: 100
-  GridDepth: 100
+  GridWidth: 128
+  GridDepth: 128
   PlayerSpawnHeight:
     RawValue: 131072
   FallDeathHeight:
@@ -65,7 +65,7 @@ MonoBehaviour:
           Value: 1531964196362064826
       Weight:
         RawValue: 65536
-    Count: 30
+    Count: 20
     MustHave: 1
   - Type: 4
     Prototypes:

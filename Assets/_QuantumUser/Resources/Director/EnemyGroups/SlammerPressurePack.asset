@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38fb0a001dd8c4ebdb80572655771283, type: 3}
+  m_Name: SlammerPressurePack
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.EnemyGroupConfig
+  Identifier:
+    Path: _QuantumUser/Resources/Director/EnemyGroups/SlammerPressurePack
+    Guid:
+      Value: 412413256159103937
+  Members:
+  - EnemyData:
+      Id:
+        Value: 469796245454353813
+    Quantity: 1
+    Faction: 0
+  - EnemyData:
+      Id:
+        Value: 386887899629791929
+    Quantity: 3
+    Faction: 2
+  Weight:
+    RawValue: 45875
+  MinimumSurvivalTime:
+    RawValue: 0
+  MaximumSurvivalTime:
+    RawValue: 0
+  MaxConcurrent: 1
+  SpawnPattern: 0
+  FormationRadius:
+    RawValue: 262144
+  AllowsPartialSpawn: 0

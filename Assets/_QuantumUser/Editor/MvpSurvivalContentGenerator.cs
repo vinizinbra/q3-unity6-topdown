@@ -46,7 +46,7 @@ namespace QuantumUser.Editor
             public FP FormationRadius;
         }
 
-        private static MemberSpec M(string enemy, int qty, EnemyFaction faction = EnemyFaction.Faction1) => new MemberSpec { EnemyFileName = enemy, Quantity = qty, Faction = faction };
+        private static MemberSpec M(string enemy, int qty, EnemyFaction faction = EnemyFaction.MainFaction) => new MemberSpec { EnemyFileName = enemy, Quantity = qty, Faction = faction };
 
         // Only the two groups the existing roster is missing in "pure" form. Quantity is picked to
         // match the EnemyTierStatsConfig.Cost (Normal = 2) the mixed originals spent - MeleeSkirmish
@@ -55,7 +55,7 @@ namespace QuantumUser.Editor
         // a single in-roster enemy instead of a mix.
         //
         // FillerCreepMvp is a deliberate MVP-only fork of the shared FillerCreep group (same Filler
-        // x8/Faction3 composition) rather than editing FillerCreep.asset in place - FillerCreep is
+        // x8/WildLifeFaction composition) rather than editing FillerCreep.asset in place - FillerCreep is
         // also used by the main SurvivalConfig.asset, so bumping its Weight/MaxConcurrent here would
         // leak into the full-roster balance too. Weight raised 1 -> 2.5 (dominates the Phase 1 pick
         // roll against SwarmRush/MeleeOnly's Weight 1) and MaxConcurrent 2 -> 4 (twice as many
@@ -68,22 +68,22 @@ namespace QuantumUser.Editor
             // Phase 0 allows - nothing else is competing for the concurrency budget.
             new GroupSpec
             {
-                FileName = "FillerSolo", Members = new[] { M("Filler", 1, EnemyFaction.Faction3) },
+                FileName = "FillerSolo", Members = new[] { M("Filler", 1, EnemyFaction.WildLifeFaction) },
                 Weight = 1, MaxConcurrent = 0, SpawnPattern = GroupSpawnPattern.Cluster, FormationRadius = 1
             },
             new GroupSpec
             {
-                FileName = "FillerCreepMvp", Members = new[] { M("Filler", 8, EnemyFaction.Faction3) },
+                FileName = "FillerCreepMvp", Members = new[] { M("Filler", 8, EnemyFaction.WildLifeFaction) },
                 Weight = FP.FromString("2.5"), MaxConcurrent = 4, SpawnPattern = GroupSpawnPattern.Cluster, FormationRadius = 3
             },
             new GroupSpec
             {
-                FileName = "MeleeOnly", Members = new[] { M("NormalMelee", 5, EnemyFaction.Faction1) },
+                FileName = "MeleeOnly", Members = new[] { M("NormalMelee", 5, EnemyFaction.MainFaction) },
                 Weight = 1, MaxConcurrent = 2, SpawnPattern = GroupSpawnPattern.Arc, FormationRadius = 4
             },
             new GroupSpec
             {
-                FileName = "RangedOnly", Members = new[] { M("NormalRanged", 5, EnemyFaction.Faction2) },
+                FileName = "RangedOnly", Members = new[] { M("NormalRanged", 5, EnemyFaction.RobotFaction) },
                 Weight = 1, MaxConcurrent = 2, SpawnPattern = GroupSpawnPattern.Line, FormationRadius = 5
             },
         };
@@ -148,7 +148,7 @@ namespace QuantumUser.Editor
             },
         };
 
-        [MenuItem("Tools/RiftRaiders/Generate MVP Survival Content")]
+        [MenuItem("Tools/RiftRaiders/Content/Generate MVP Survival Content")]
         internal static void Generate()
         {
             if (AssetDatabase.IsValidFolder(GroupFolderPath) == false)

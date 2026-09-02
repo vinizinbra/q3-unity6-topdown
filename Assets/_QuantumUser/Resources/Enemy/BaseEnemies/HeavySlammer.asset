@@ -229,14 +229,14 @@ MonoBehaviour:
   EngageRange:
     RawValue: 131072
   DamageRange:
-    RawValue: 393216
+    RawValue: 196608
   Damage:
     RawValue: 2621440
   AnticipationTime:
     RawValue: 65536
   DirectionTracking: 0
   IgnoreY: 1
-  Origin: 1
+  Origin: 0
   DownTime:
     RawValue: 65536
   CooldownTime:
@@ -269,7 +269,7 @@ MonoBehaviour:
   AnticipationStep:
     AnimationType: 2
     Duration: 1
-    BodySprite: {fileID: 1780748329695835414, guid: 414c7fe531867433e9e397ec12cedb2e, type: 3}
+    BodySprite: {fileID: 127281841, guid: 0a8c1f724aa9b4c7d9200ed9a54a68ff, type: 3}
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -335,7 +335,7 @@ MonoBehaviour:
   BeginStep:
     AnimationType: 7
     Duration: 0.3
-    BodySprite: {fileID: -2902663509325438561, guid: 414c7fe531867433e9e397ec12cedb2e, type: 3}
+    BodySprite: {fileID: -2139617183, guid: 0a8c1f724aa9b4c7d9200ed9a54a68ff, type: 3}
     ShakeImpact: 1
     Shake:
       Frequency: 18
@@ -390,12 +390,12 @@ MonoBehaviour:
     CenterPivot: 0
     PivotHeightOverride: 0
     ParticlePrefab: {fileID: 1135367114030593087, guid: 80e93f3eee8094aa887b89d1603f7fd1, type: 3}
-    Anchor: 0
+    Anchor: 1
     Offset: {x: 0, y: -0.5, z: 0}
     Parented: 0
     AlignToEnemyDirection: 0
     RotationOffset: {x: 90, y: 0, z: 0}
-    Scale: 6
+    Scale: 3
     OverrideSortingOrder: 0
     SortingOrder: 0
   OnGoingStep:

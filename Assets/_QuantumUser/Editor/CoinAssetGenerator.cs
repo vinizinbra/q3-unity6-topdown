@@ -18,7 +18,7 @@ namespace QuantumUser.Editor
         private const string FolderPath = "Assets/_QuantumUser/Resources/Economy";
         private const string ConfigAssetPath = FolderPath + "/CoinConfig.asset";
 
-        [MenuItem("Tools/RiftRaiders/Generate Coin Assets")]
+        [MenuItem("Tools/RiftRaiders/Progression/Generate Coin Assets")]
         internal static void Generate()
         {
             if (AssetDatabase.IsValidFolder(FolderPath) == false)

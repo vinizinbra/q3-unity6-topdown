@@ -139,10 +139,10 @@ TextureImporter:
       name: RukkFiller
       rect:
         serializedVersion: 2
-        x: 133
-        y: 700
-        width: 298
-        height: 260
+        x: 120
+        y: 696
+        width: 355
+        height: 270
       alignment: 9
       pivot: {x: 0.38048002, y: -0.006150849}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -183,10 +183,10 @@ TextureImporter:
       name: RukkShotgun
       rect:
         serializedVersion: 2
-        x: 937
-        y: 698
-        width: 386
-        height: 316
+        x: 944
+        y: 691
+        width: 433
+        height: 323
       alignment: 9
       pivot: {x: 0.5190382, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -205,10 +205,10 @@ TextureImporter:
       name: RukkGUnn
       rect:
         serializedVersion: 2
-        x: 521
-        y: 699
-        width: 303
-        height: 281
+        x: 523
+        y: 686
+        width: 315
+        height: 304
       alignment: 9
       pivot: {x: 0.45, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -289,6 +289,28 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: RukkEnemies_2
+      rect:
+        serializedVersion: 2
+        x: 113
+        y: 70
+        width: 298
+        height: 260
+      alignment: 9
+      pivot: {x: 0.36851758, y: 0.011592337}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1c7e66ebb61e7454c9bbd9723ab38dc7
+      internalID: -1389478551
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
@@ -305,6 +327,7 @@ TextureImporter:
     nameFileIdTable:
       RukkEnemies_0: -1263832388
       RukkEnemies_1: -1348954919
+      RukkEnemies_2: -1389478551
       RukkEnemies_4: 432127040
       RukkEnemies_5: 1501357160
       RukkFiller: -1625532976

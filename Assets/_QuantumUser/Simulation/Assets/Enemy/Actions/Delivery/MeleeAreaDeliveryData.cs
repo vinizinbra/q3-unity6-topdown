@@ -10,7 +10,9 @@ namespace Quantum
             if (EnemyMovementUtility.TryGetTargetPosition(f, target, out FPVector3 targetPosition) == true)
             {
                 FP sqrDistance = EnemyMovementUtility.FlatSqrDistance(filter.Transform3D->Position, targetPosition);
-                FP effectiveRange = action.DamageRange + EnemyMovementUtility.ResolveEntityRadius(f, filter.Entity);
+                FP attackerRadius = EnemyMovementUtility.ResolveEntityRadius(f, filter.Entity);
+                FP targetRadius = EnemyMovementUtility.ResolveEntityRadius(f, target);
+                FP effectiveRange = action.DamageRange + (attackerRadius * FP._0_50) + (targetRadius * FP._0_50) + FP._0_10;
 
                 if (sqrDistance <= effectiveRange * effectiveRange)
                 {

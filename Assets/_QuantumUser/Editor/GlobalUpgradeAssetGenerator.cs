@@ -226,7 +226,7 @@ namespace QuantumUser.Editor
             ((CharacterStatMultiplierUpgradeData)upgrade).Multiplier = FP.FromString(value);
         }
 
-        [MenuItem("Tools/RiftRaiders/Generate Global Upgrade Assets")]
+        [MenuItem("Tools/RiftRaiders/Progression/Generate Global Upgrade Assets")]
         internal static void Generate()
         {
             if (AssetDatabase.IsValidFolder(FolderPath) == false)

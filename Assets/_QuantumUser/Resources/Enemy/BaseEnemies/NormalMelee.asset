@@ -229,6 +229,8 @@ MonoBehaviour:
   ConeAngleDegrees:
     RawValue: 5898240
   SelfDestructs: 0
+  MaxHeightDifference:
+    RawValue: 13107
 --- !u!114 &2578927753692933884
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -251,7 +253,7 @@ MonoBehaviour:
   DamageRange:
     RawValue: 98304
   Damage:
-    RawValue: 655360
+    RawValue: 524288
   AnticipationTime:
     RawValue: 26214
   DirectionTracking: 2
@@ -273,7 +275,7 @@ MonoBehaviour:
   AimLockPercent:
     RawValue: 65536
   SelectionWeight: 1
-  InterruptibleDuringTelegraph: 1
+  InterruptibleDuringTelegraph: 0
   InterruptibleDuringActive: 0
   Delivery:
     Id:

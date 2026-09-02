@@ -25,7 +25,7 @@ namespace QuantumUser.Editor
     {
         private const string ConfigPath = "Assets/_QuantumUser/Resources/Configs/ExperienceConfig.asset";
 
-        [MenuItem("Tools/RiftRaiders/Tune Experience Curve")]
+        [MenuItem("Tools/RiftRaiders/Progression/Tune Experience Curve")]
         internal static void ApplyCurve()
         {
             var config = AssetDatabase.LoadAssetAtPath<ExperienceConfig>(ConfigPath);

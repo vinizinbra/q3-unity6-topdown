@@ -6,8 +6,9 @@ namespace Quantum
     // Blacksmith's own interaction - see Blacksmith.qtn/docs/store-blacksmith.md. Mirrors
     // CursedRiftUtility's overall shape (ResolveInteractionState/TryBeginInteraction/command-driven
     // mutators), but Blacksmith is a single committed action, not a multi-stage session - roll 3
-    // perk choices, pick one (spends Coins, adds the perk to the buyer's own equipped weapon), or
-    // cancel for a free re-roll later this same Break.
+    // perk choices (cached for the rest of this Breathing Break, see BlacksmithOffer/
+    // EnsureOfferRolled), pick one (spends Coins, adds the perk to the buyer's own equipped
+    // weapon), or cancel and come back later this same Break to the exact same 3 options.
     public static unsafe class BlacksmithUtility
     {
         // Read by ContextInteractionSystem's own per-kind dispatch (radius/closest-candidate
@@ -106,9 +107,9 @@ namespace Quantum
             }
 
             BlacksmithConfig config = f.FindAsset(f.RuntimeConfig.BlacksmithConfig);
-            AssetRef<WeaponPerkData>[] rolled = RollPerkOptions(f, player, config);
+            BlacksmithOffer* offer = EnsureOfferRolled(f, player, config);
 
-            if (rolled.Length == 0)
+            if (offer->PerkChoiceCount == 0)
             {
                 Log.Debug($"[Blacksmith] {player} has no eligible perks right now - interaction skipped");
                 return;
@@ -121,12 +122,50 @@ namespace Quantum
 
             for (int i = 0; i < choices.Length; i++)
             {
+                choices[i] = i < offer->PerkChoiceCount ? offer->PerkChoices[i] : default;
+            }
+
+            interaction->PerkChoiceCount = offer->PerkChoiceCount;
+
+            Log.Debug($"[Blacksmith] {player} began an interaction with {forge} - {offer->PerkChoiceCount} perk option(s)");
+        }
+
+        // Rolls this player's own Blacksmith offer exactly once per Breathing Break - idempotent
+        // re-check against RolledAtBreathingIndex, same lazy-restock idiom
+        // StoreUtility.EnsureInventoryRolled uses for the shared StoreInventory. Called every time
+        // TryBeginInteraction runs (including a re-open after Cancel), so only the FIRST visit this
+        // Break actually rolls - every subsequent open/cancel/reopen within the same Break just
+        // reads the cached result back out, fixing what used to be a fresh reroll on every visit.
+        private static BlacksmithOffer* EnsureOfferRolled(Frame f, EntityRef player, BlacksmithConfig config)
+        {
+            // Seeded via TryGetPointer first rather than trusting AddOrGet's own zero-init, same
+            // reasoning StoreUtility.EnsureInventoryRolled documents - a fresh 0 default would
+            // silently equal BreathingIndex 0 and skip the very first roll of a run.
+            bool hasOffer = f.Unsafe.TryGetPointer<BlacksmithOffer>(player, out var offer);
+
+            if (hasOffer == false)
+            {
+                f.AddOrGet<BlacksmithOffer>(player, out offer);
+                offer->RolledAtBreathingIndex = -1;
+            }
+
+            if (offer->RolledAtBreathingIndex == f.Global->BreathingIndex)
+                return offer;
+
+            AssetRef<WeaponPerkData>[] rolled = RollPerkOptions(f, player, config);
+            var choices = offer->PerkChoices;
+
+            for (int i = 0; i < choices.Length; i++)
+            {
                 choices[i] = i < rolled.Length ? rolled[i] : default;
             }
 
-            interaction->PerkChoiceCount = (byte)rolled.Length;
+            offer->PerkChoiceCount = (byte)rolled.Length;
+            offer->RolledAtBreathingIndex = f.Global->BreathingIndex;
 
-            Log.Debug($"[Blacksmith] {player} began an interaction with {forge} - {rolled.Length} perk option(s)");
+            Log.Debug($"[Blacksmith] {player} rolled a new offer for BreathingIndex {f.Global->BreathingIndex} - {rolled.Length} perk option(s)");
+
+            return offer;
         }
 
         // Weighted draw without replacement among currently-eligible perks only - excludes anything
@@ -227,7 +266,9 @@ namespace Quantum
         // Called from BlacksmithSystem when a CancelBlacksmithCommand lands - free (PoiUsage is
         // NOT marked), same "walk away without committing" idiom Cursed Rift's pre-payment Cancel
         // offers, except Blacksmith has no payment step before the pick itself, so this is always
-        // safe to allow.
+        // safe to allow. Only closes the window (BlacksmithInteraction) - the underlying roll
+        // (BlacksmithOffer) is untouched, so reopening later this same Break shows the identical
+        // 3 options rather than rerolling.
         public static void Cancel(Frame f, EntityRef player, BlacksmithInteraction* interaction)
         {
             f.Remove<BlacksmithInteraction>(player);

@@ -128,9 +128,9 @@ namespace Quantum {
     Dead = 7,
   }
   public enum EnemyFaction : byte {
-    Faction1 = 0,
-    Faction2 = 1,
-    Faction3 = 2,
+    MainFaction = 0,
+    RobotFaction = 1,
+    WildLifeFaction = 2,
   }
   public enum EnemyLifecycleState : byte {
     Active,
@@ -2191,6 +2191,38 @@ namespace Quantum {
         serializer.Stream.Serialize(&p->PerkChoiceCount);
         FixedArray.Serialize(p->PerkChoices, serializer, Statics.SerializeAssetRef);
         EntityRef.Serialize(&p->Forge, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct BlacksmithOffer : Quantum.IComponent {
+    public const Int32 SIZE = 32;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(4)]
+    public Int32 RolledAtBreathingIndex;
+    [FieldOffset(8)]
+    [FramePrinter.FixedArrayAttribute(typeof(AssetRef<WeaponPerkData>), 3)]
+    private fixed Byte _PerkChoices_[24];
+    [FieldOffset(0)]
+    public Byte PerkChoiceCount;
+    public readonly FixedArray<AssetRef<WeaponPerkData>> PerkChoices {
+      get {
+        fixed (byte* p = _PerkChoices_) { return new FixedArray<AssetRef<WeaponPerkData>>(p, 8, 3); }
+      }
+    }
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 10007;
+        hash = hash * 31 + RolledAtBreathingIndex.GetHashCode();
+        hash = hash * 31 + HashCodeUtils.GetArrayHashCode(PerkChoices);
+        hash = hash * 31 + PerkChoiceCount.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (BlacksmithOffer*)ptr;
+        serializer.Stream.Serialize(&p->PerkChoiceCount);
+        serializer.Stream.Serialize(&p->RolledAtBreathingIndex);
+        FixedArray.Serialize(p->PerkChoices, serializer, Statics.SerializeAssetRef);
     }
   }
   [StructLayout(LayoutKind.Explicit)]
@@ -7732,6 +7764,8 @@ namespace Quantum {
       BuildSignalsArrayOnComponentRemoved<Quantum.Blacksmith>();
       BuildSignalsArrayOnComponentAdded<Quantum.BlacksmithInteraction>();
       BuildSignalsArrayOnComponentRemoved<Quantum.BlacksmithInteraction>();
+      BuildSignalsArrayOnComponentAdded<Quantum.BlacksmithOffer>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.BlacksmithOffer>();
       BuildSignalsArrayOnComponentAdded<Quantum.BodyguardUpgrade>();
       BuildSignalsArrayOnComponentRemoved<Quantum.BodyguardUpgrade>();
       BuildSignalsArrayOnComponentAdded<Quantum.BoneBreakerUpgrade>();
@@ -8307,6 +8341,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum.BitSet6), Quantum.BitSet6.SIZE);
       typeRegistry.Register(typeof(Quantum.Blacksmith), Quantum.Blacksmith.SIZE);
       typeRegistry.Register(typeof(Quantum.BlacksmithInteraction), Quantum.BlacksmithInteraction.SIZE);
+      typeRegistry.Register(typeof(Quantum.BlacksmithOffer), Quantum.BlacksmithOffer.SIZE);
       typeRegistry.Register(typeof(Quantum.BodyguardUpgrade), Quantum.BodyguardUpgrade.SIZE);
       typeRegistry.Register(typeof(Quantum.BoneBreakerUpgrade), Quantum.BoneBreakerUpgrade.SIZE);
       typeRegistry.Register(typeof(Quantum.BossArena), Quantum.BossArena.SIZE);
@@ -8571,7 +8606,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum._globals_), Quantum._globals_.SIZE);
     }
     static partial void InitComponentTypeIdGen() {
-      ComponentTypeId.Reset(ComponentTypeId.BuiltInComponentCount + 157)
+      ComponentTypeId.Reset(ComponentTypeId.BuiltInComponentCount + 158)
         .AddBuiltInComponents()
         .Add<Quantum.AccessoryEmergencyReserve>(Quantum.AccessoryEmergencyReserve.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.AccessoryGuard>(Quantum.AccessoryGuard.Serialize, null, null, ComponentFlags.None)
@@ -8586,6 +8621,7 @@ namespace Quantum {
         .Add<Quantum.BirthdayCakeUpgrade>(Quantum.BirthdayCakeUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.Blacksmith>(Quantum.Blacksmith.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.BlacksmithInteraction>(Quantum.BlacksmithInteraction.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.BlacksmithOffer>(Quantum.BlacksmithOffer.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.BodyguardUpgrade>(Quantum.BodyguardUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.BoneBreakerUpgrade>(Quantum.BoneBreakerUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.BossArena>(Quantum.BossArena.Serialize, null, null, ComponentFlags.None)

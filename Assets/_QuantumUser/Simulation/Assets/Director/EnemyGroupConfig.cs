@@ -36,7 +36,7 @@ namespace Quantum
         // Which world faction this slot's copies visually belong to (see Enemy.Faction/
         // EnemyDataAsset.FactionSkins) - purely cosmetic, authored per-slot here so encounter
         // design controls the mix directly (e.g. a "SecurityPatrol" group's Ranged members are
-        // always Faction2 robots) instead of it being randomized at spawn time.
+        // always RobotFaction robots) instead of it being randomized at spawn time.
         public EnemyFaction Faction;
     }
 

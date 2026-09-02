@@ -31,7 +31,7 @@ MonoBehaviour:
     Height:
       InitialState: 2
       FlightHeight:
-        RawValue: 196608
+        RawValue: 131072
       HoverCheckInterval:
         RawValue: 65536
       HoverSpringFrequency:
@@ -66,7 +66,7 @@ MonoBehaviour:
       Id:
         Value: 328519676567531755
     Radius:
-      RawValue: 45875
+      RawValue: 39322
     ShieldMultiplier:
       RawValue: 0
     HealthMultiplier:

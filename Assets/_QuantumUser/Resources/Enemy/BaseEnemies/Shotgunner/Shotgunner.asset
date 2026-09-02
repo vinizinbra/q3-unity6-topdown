@@ -27,7 +27,7 @@ MonoBehaviour:
       RawValue: 65536
   Stats:
     MoveSpeed:
-      RawValue: 163840
+      RawValue: 229376
     Height:
       InitialState: 0
       FlightHeight:

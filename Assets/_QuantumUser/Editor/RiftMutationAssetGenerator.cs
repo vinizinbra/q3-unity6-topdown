@@ -465,7 +465,7 @@ namespace QuantumUser.Editor
             },
         };
 
-        [MenuItem("Tools/RiftRaiders/Generate Rift Mutation Assets")]
+        [MenuItem("Tools/RiftRaiders/Progression/Generate Rift Mutation Assets")]
         internal static void Generate()
         {
             if (AssetDatabase.IsValidFolder(FolderPath) == false)

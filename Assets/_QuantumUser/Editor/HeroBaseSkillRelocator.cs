@@ -21,7 +21,7 @@ namespace QuantumUser.Editor
             ("Assets/_QuantumUser/Resources/Skills/Zara/HeroSkillUpgrades/ZaraSkillData.asset", "Assets/_QuantumUser/Resources/Skills/Zara/BaseSkill/ZaraSkillData.asset"),
         };
 
-        [MenuItem("Tools/RiftRaiders/Move Hero Base Skills Into BaseSkill Subfolder")]
+        [MenuItem("Tools/RiftRaiders/Utilities/Move Hero Base Skills Into BaseSkill Subfolder")]
         internal static void Move()
         {
             foreach (var (from, to) in Moves)

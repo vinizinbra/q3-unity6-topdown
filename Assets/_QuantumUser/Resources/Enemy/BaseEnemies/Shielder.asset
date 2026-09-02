@@ -338,7 +338,7 @@ MonoBehaviour:
     Guid:
       Value: 480468297598571757
   EnemyName: Shielder
-  Tier: 3
+  Tier: 2
   Economy:
     Persistent: 0
     SpawnProfile:
@@ -531,3 +531,5 @@ MonoBehaviour:
   ConeAngleDegrees:
     RawValue: 5898240
   SelfDestructs: 0
+  MaxHeightDifference:
+    RawValue: 0

@@ -18,7 +18,7 @@ namespace QuantumUser.Editor
         private const string ReviveFolderPath = "Assets/_QuantumUser/Resources/Revive";
         private const string ReviveConfigPath = ReviveFolderPath + "/ReviveConfig.asset";
 
-        [MenuItem("Tools/RiftRaiders/Generate Revive Content")]
+        [MenuItem("Tools/RiftRaiders/Breathing POI/Generate Revive Content")]
         internal static void Generate()
         {
             CreateFolderRecursive(ReviveFolderPath);

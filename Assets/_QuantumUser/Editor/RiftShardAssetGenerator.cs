@@ -18,7 +18,7 @@ namespace QuantumUser.Editor
         private const string FolderPath = "Assets/_QuantumUser/Resources/Economy";
         private const string ConfigAssetPath = FolderPath + "/RiftShardConfig.asset";
 
-        [MenuItem("Tools/RiftRaiders/Generate Rift Shard Assets")]
+        [MenuItem("Tools/RiftRaiders/Progression/Generate Rift Shard Assets")]
         internal static void Generate()
         {
             if (AssetDatabase.IsValidFolder(FolderPath) == false)

@@ -591,8 +591,8 @@ MonoBehaviour:
   LiveTrackingSmoothing: 15
   TelegraphPrefab: {fileID: 3870463405479579449, guid: 32f69685b31a748f18250208718eaec1, type: 3}
   SnapToGround: 1
-  LineLength: 0
-  FixedDistanceValue: 5
+  LineLength: 1
+  FixedDistanceValue: 10
   FromOffset: 0
   ToOffset: 0
   Width: 1

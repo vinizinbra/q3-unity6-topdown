@@ -20,7 +20,7 @@ namespace QuantumUser.Editor
         private const string FolderPath = "Assets/_QuantumUser/Resources/Accessory";
         private const string ConfigPath = FolderPath + "/AccessoryGuardConfig.asset";
 
-        [MenuItem("Tools/RiftRaiders/Generate Accessory Guard Content")]
+        [MenuItem("Tools/RiftRaiders/Breathing POI/Generate Accessory Guard Content")]
         internal static void Generate()
         {
             CreateFolderRecursive(FolderPath);

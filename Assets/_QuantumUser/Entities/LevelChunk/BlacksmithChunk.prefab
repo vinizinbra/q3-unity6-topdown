@@ -15057,6 +15057,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.HasShadow
   baseScale: 2.2
   shadowOffset: {x: 0, y: 0}
+  shadowAlphaMultiplier: 1
 --- !u!114 &7030559572098431504
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15537,7 +15538,17 @@ MonoBehaviour:
     AllowedConnectionSides:
       Value: 15
     ForbiddenNeighbors:
-      Value: 0
+      Value: 125
+    ConnectedChunks:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    ConnectedChunkCount: 0
     Discovered:
       Value: 0
     HasRespawnPoint:

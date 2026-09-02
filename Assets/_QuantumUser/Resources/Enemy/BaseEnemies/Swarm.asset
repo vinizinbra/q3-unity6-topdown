@@ -42,7 +42,7 @@ MonoBehaviour:
   EngageRange:
     RawValue: 65536
   DamageRange:
-    RawValue: 65536
+    RawValue: 32768
   Damage:
     RawValue: 131072
   AnticipationTime:

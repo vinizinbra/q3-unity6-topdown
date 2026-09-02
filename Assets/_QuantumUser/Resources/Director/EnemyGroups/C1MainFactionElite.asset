@@ -19,7 +19,7 @@ MonoBehaviour:
   Members:
   - EnemyData:
       Id:
-        Value: 533766507454810919
+        Value: 0
     Quantity: 1
     Faction: 0
   - EnemyData:

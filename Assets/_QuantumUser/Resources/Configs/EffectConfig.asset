@@ -47,9 +47,9 @@ MonoBehaviour:
   HasteAttackSpeedMultiplier:
     RawValue: 98304
   SmallKnockbackForce:
-    RawValue: 262144
+    RawValue: 131072
   SmallKnockbackUpwardForce:
-    RawValue: 13107
+    RawValue: 6554
   MediumKnockbackForce:
     RawValue: 524288
   MediumKnockbackUpwardForce:

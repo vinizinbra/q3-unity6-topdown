@@ -763,6 +763,19 @@ still occupy the same overlapping rect (needs splitting into two visible section
 screen to read correctly). Not yet manually verified end-to-end in-Editor, solo or co-op - see
 `docs/store-blacksmith.md`'s own "Current status" for the full checklist.
 
+**2026-09-01 bug fix: Blacksmith was rerolling its 3 perk offers on every visit, not once per
+Breathing Break.** The roll used to live only on `BlacksmithInteraction`, the transient "window is
+open" component removed on Cancel/purchase/Breathing-end - and since Blacksmith has no neutral
+"just close" affordance the way Store's `CloseStoreCommand` does (its "CANCEL" button is the only
+way to back out without buying), every non-purchase visit ended in a Cancel, which threw the roll
+away. Fixed the same way `StoreInventory.RolledAtBreathingIndex` already works for Store: a new
+per-player `BlacksmithOffer` component (`Blacksmith.qtn`) caches `PerkChoices` keyed by
+`RolledAtBreathingIndex`, read/written by a new `BlacksmithUtility.EnsureOfferRolled` (mirrors
+`StoreUtility.EnsureInventoryRolled` one-for-one) - only the FIRST visit each Break actually rolls;
+Cancel now only closes the window, leaving the cached offer intact for the rest of that Break. See
+`docs/store-blacksmith.md`'s "Blacksmith" section. Needs codegen to pick up the new `.qtn` component
+before it compiles; not yet re-verified in-Editor.
+
 ## Traversal Challenge
 
 A `ChunkType.Traversal` interactable prop turns a gap-crossing into a timed co-op puzzle: press the

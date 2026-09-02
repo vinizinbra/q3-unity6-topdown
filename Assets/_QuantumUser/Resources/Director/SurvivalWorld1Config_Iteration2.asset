@@ -1,0 +1,1938 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c27a42665b08c4be69500836aafe3379, type: 3}
+  m_Name: SurvivalWorld1Config_Iteration2
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.SurvivalConfig
+  Identifier:
+    Path: _QuantumUser/Resources/Director/SurvivalWorld1Config_Iteration2
+    Guid:
+      Value: 302035380297875657
+  Phases:
+  - Name: R1-A Warmup (0-20s)
+    Kind: 0
+    Duration:
+      RawValue: 1310720
+    BudgetPerPulse:
+      RawValue: 196608
+    PulseInterval:
+      RawValue: 262144
+    TargetPressure:
+      RawValue: 262144
+    MaxAliveEnemies: 4
+    AllowedGroups: []
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 196608
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: R1-B NormalMelee 70/30 (20-50s)
+    Kind: 0
+    Duration:
+      RawValue: 1966080
+    BudgetPerPulse:
+      RawValue: 327680
+    PulseInterval:
+      RawValue: 196608
+    TargetPressure:
+      RawValue: 524288
+    MaxAliveEnemies: 6
+    AllowedGroups: []
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 458752
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 368882078469044815
+      Faction: 0
+      Weight:
+        RawValue: 196608
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: R1-C Gunner 50/25/25 (50-85s)
+    Kind: 0
+    Duration:
+      RawValue: 2293760
+    BudgetPerPulse:
+      RawValue: 458752
+    PulseInterval:
+      RawValue: 163840
+    TargetPressure:
+      RawValue: 786432
+    MaxAliveEnemies: 9
+    AllowedGroups: []
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 327680
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 368882078469044815
+      Faction: 0
+      Weight:
+        RawValue: 163840
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 411749050168152871
+      Faction: 0
+      Weight:
+        RawValue: 163840
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: R1-D Basic Combination (85-105s)
+    Kind: 0
+    Duration:
+      RawValue: 1310720
+    BudgetPerPulse:
+      RawValue: 524288
+    PulseInterval:
+      RawValue: 144179
+    TargetPressure:
+      RawValue: 917504
+    MaxAliveEnemies: 10
+    AllowedGroups: []
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 196608
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 368882078469044815
+      Faction: 0
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 411749050168152871
+      Faction: 0
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: R1-E Flee Elite (~105s)
+    Kind: 0
+    Duration:
+      RawValue: 1638400
+    BudgetPerPulse:
+      RawValue: 131072
+    PulseInterval:
+      RawValue: 262144
+    TargetPressure:
+      RawValue: 262144
+    MaxAliveEnemies: 5
+    AllowedGroups: []
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 196608
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 368882078469044815
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 386762213504257363
+  - Name: R1-F Post-Elite - Increase Density
+    Kind: 0
+    Duration:
+      RawValue: 3276800
+    BudgetPerPulse:
+      RawValue: 655360
+    PulseInterval:
+      RawValue: 131072
+    TargetPressure:
+      RawValue: 1179648
+    MaxAliveEnemies: 13
+    AllowedGroups: []
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 196608
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 368882078469044815
+      Faction: 0
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 411749050168152871
+      Faction: 0
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: Breathing 1
+    Kind: 1
+    Duration:
+      RawValue: 3932160
+    BudgetPerPulse:
+      RawValue: 0
+    PulseInterval:
+      RawValue: 0
+    TargetPressure:
+      RawValue: 0
+    MaxAliveEnemies: 0
+    AllowedGroups: []
+    AllowedEnemies: []
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: R2-A Recap (0-20s)
+    Kind: 0
+    Duration:
+      RawValue: 1310720
+    BudgetPerPulse:
+      RawValue: 655360
+    PulseInterval:
+      RawValue: 131072
+    TargetPressure:
+      RawValue: 1048576
+    MaxAliveEnemies: 11
+    AllowedGroups: []
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 196608
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 368882078469044815
+      Faction: 0
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 411749050168152871
+      Faction: 0
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: R2-B Shotgunner - Spacing (20-45s)
+    Kind: 0
+    Duration:
+      RawValue: 1638400
+    BudgetPerPulse:
+      RawValue: 720896
+    PulseInterval:
+      RawValue: 131072
+    TargetPressure:
+      RawValue: 1179648
+    MaxAliveEnemies: 12
+    AllowedGroups: []
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 196608
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 368882078469044815
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 411749050168152871
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 275775637166140646
+      Faction: 0
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 2
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: R2-C Bot Faction Reveal (45-65s)
+    Kind: 0
+    Duration:
+      RawValue: 1310720
+    BudgetPerPulse:
+      RawValue: 786432
+    PulseInterval:
+      RawValue: 117965
+    TargetPressure:
+      RawValue: 1310720
+    MaxAliveEnemies: 13
+    AllowedGroups: []
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 368882078469044815
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 411749050168152871
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 275775637166140646
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 2
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 1
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: R2-D Charger - Read & Dodge (65-90s)
+    Kind: 0
+    Duration:
+      RawValue: 1638400
+    BudgetPerPulse:
+      RawValue: 851968
+    PulseInterval:
+      RawValue: 117965
+    TargetPressure:
+      RawValue: 1310720
+    MaxAliveEnemies: 13
+    AllowedGroups: []
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 1
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 368882078469044815
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 411749050168152871
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 275775637166140646
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 1
+    - EnemyData:
+        Id:
+          Value: 477699094528449997
+      Faction: 2
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 1
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: R2-E Swarm Reveal (90-105s)
+    Kind: 0
+    Duration:
+      RawValue: 983040
+    BudgetPerPulse:
+      RawValue: 786432
+    PulseInterval:
+      RawValue: 117965
+    TargetPressure:
+      RawValue: 1179648
+    MaxAliveEnemies: 14
+    AllowedGroups: []
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 1
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 386887899629791929
+      Faction: 2
+      Weight:
+        RawValue: 196608
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 477699094528449997
+      Faction: 2
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 1
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: R2-F Brute Elite (~105s)
+    Kind: 0
+    Duration:
+      RawValue: 1638400
+    BudgetPerPulse:
+      RawValue: 262144
+    PulseInterval:
+      RawValue: 163840
+    TargetPressure:
+      RawValue: 393216
+    MaxAliveEnemies: 9
+    AllowedGroups: []
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 196608
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 1
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 386887899629791929
+      Faction: 2
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 330810342798042849
+  - Name: R2-G Post-Elite - First Multi-Faction Combat
+    Kind: 0
+    Duration:
+      RawValue: 3276800
+    BudgetPerPulse:
+      RawValue: 1048576
+    PulseInterval:
+      RawValue: 104858
+    TargetPressure:
+      RawValue: 1703936
+    MaxAliveEnemies: 17
+    AllowedGroups:
+    - Id:
+        Value: 489787949968503162
+    - Id:
+        Value: 397996301691248979
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 1
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 368882078469044815
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 411749050168152871
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 386887899629791929
+      Faction: 2
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: Breathing 2
+    Kind: 1
+    Duration:
+      RawValue: 3932160
+    BudgetPerPulse:
+      RawValue: 0
+    PulseInterval:
+      RawValue: 0
+    TargetPressure:
+      RawValue: 0
+    MaxAliveEnemies: 0
+    AllowedGroups: []
+    AllowedEnemies: []
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: R3-A Recap (0-25s)
+    Kind: 0
+    Duration:
+      RawValue: 1638400
+    BudgetPerPulse:
+      RawValue: 983040
+    PulseInterval:
+      RawValue: 104858
+    TargetPressure:
+      RawValue: 1441792
+    MaxAliveEnemies: 15
+    AllowedGroups: []
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 196608
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 411749050168152871
+      Faction: 0
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 1
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 386887899629791929
+      Faction: 2
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 477699094528449997
+      Faction: 2
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 1
+    - EnemyData:
+        Id:
+          Value: 368882078469044815
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 275775637166140646
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 1
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: R3-B HeavySlammer - Telegraph->Reposition->Punish (25-55s)
+    Kind: 0
+    Duration:
+      RawValue: 1966080
+    BudgetPerPulse:
+      RawValue: 1114112
+    PulseInterval:
+      RawValue: 98304
+    TargetPressure:
+      RawValue: 1703936
+    MaxAliveEnemies: 17
+    AllowedGroups: []
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 196608
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 411749050168152871
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 1
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 469796245454353813
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 1
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: R3-C Turret - Acquire->Track->Telegraph->Lock->Fire->Cooldown (55-80s)
+    Kind: 0
+    Duration:
+      RawValue: 1638400
+    BudgetPerPulse:
+      RawValue: 1179648
+    PulseInterval:
+      RawValue: 98304
+    TargetPressure:
+      RawValue: 1835008
+    MaxAliveEnemies: 18
+    AllowedGroups: []
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 196608
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 411749050168152871
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 1
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 469796245454353813
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 1
+    - EnemyData:
+        Id:
+          Value: 323092086446075886
+      Faction: 1
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 1
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: R3-D HeavySlammer + Turret Combination (80-95s)
+    Kind: 0
+    Duration:
+      RawValue: 983040
+    BudgetPerPulse:
+      RawValue: 1245184
+    PulseInterval:
+      RawValue: 91750
+    TargetPressure:
+      RawValue: 1966080
+    MaxAliveEnemies: 19
+    AllowedGroups: []
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 411749050168152871
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 1
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 469796245454353813
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 1
+    - EnemyData:
+        Id:
+          Value: 323092086446075886
+      Faction: 1
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 1
+    - EnemyData:
+        Id:
+          Value: 477699094528449997
+      Faction: 2
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 1
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: R3-E Mortar - Safe Ground Changes (95-105s)
+    Kind: 0
+    Duration:
+      RawValue: 655360
+    BudgetPerPulse:
+      RawValue: 1048576
+    PulseInterval:
+      RawValue: 104858
+    TargetPressure:
+      RawValue: 1572864
+    MaxAliveEnemies: 16
+    AllowedGroups: []
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 196608
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 1
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 411749050168152871
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 469796245454353813
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 1
+    - EnemyData:
+        Id:
+          Value: 323092086446075886
+      Faction: 1
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 1
+    - EnemyData:
+        Id:
+          Value: 296950194662925891
+      Faction: 1
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 1
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: R3-F Mortar Elite (~105s)
+    Kind: 0
+    Duration:
+      RawValue: 1638400
+    BudgetPerPulse:
+      RawValue: 327680
+    PulseInterval:
+      RawValue: 163840
+    TargetPressure:
+      RawValue: 524288
+    MaxAliveEnemies: 10
+    AllowedGroups: []
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 196608
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 1
+      Weight:
+        RawValue: 196608
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 411749050168152871
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 386887899629791929
+      Faction: 2
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 524957749568643531
+  - Name: R3-G Post-Elite - Positional Combinations
+    Kind: 0
+    Duration:
+      RawValue: 3276800
+    BudgetPerPulse:
+      RawValue: 1245184
+    PulseInterval:
+      RawValue: 104858
+    TargetPressure:
+      RawValue: 1966080
+    MaxAliveEnemies: 17
+    AllowedGroups:
+    - Id:
+        Value: 279336435469820272
+    - Id:
+        Value: 450697218464883126
+    - Id:
+        Value: 453955796595467782
+    - Id:
+        Value: 285439417148146249
+    - Id:
+        Value: 308818205968031262
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 1
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 411749050168152871
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 368882078469044815
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 386887899629791929
+      Faction: 2
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: Breathing 3
+    Kind: 1
+    Duration:
+      RawValue: 3932160
+    BudgetPerPulse:
+      RawValue: 0
+    PulseInterval:
+      RawValue: 0
+    TargetPressure:
+      RawValue: 0
+    MaxAliveEnemies: 0
+    AllowedGroups: []
+    AllowedEnemies: []
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: R4-A Established Ecosystem (0-30s)
+    Kind: 0
+    Duration:
+      RawValue: 1966080
+    BudgetPerPulse:
+      RawValue: 1572864
+    PulseInterval:
+      RawValue: 85197
+    TargetPressure:
+      RawValue: 2490368
+    MaxAliveEnemies: 23
+    AllowedGroups: []
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 1
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 368882078469044815
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 411749050168152871
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 275775637166140646
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 2
+    - EnemyData:
+        Id:
+          Value: 469796245454353813
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 1
+    - EnemyData:
+        Id:
+          Value: 323092086446075886
+      Faction: 1
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 2
+    - EnemyData:
+        Id:
+          Value: 296950194662925891
+      Faction: 1
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 1
+    - EnemyData:
+        Id:
+          Value: 477699094528449997
+      Faction: 2
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 2
+    - EnemyData:
+        Id:
+          Value: 386887899629791929
+      Faction: 2
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: R4-B Advanced Combinations (30-60s)
+    Kind: 0
+    Duration:
+      RawValue: 1966080
+    BudgetPerPulse:
+      RawValue: 1572864
+    PulseInterval:
+      RawValue: 91750
+    TargetPressure:
+      RawValue: 2359296
+    MaxAliveEnemies: 21
+    AllowedGroups:
+    - Id:
+        Value: 479314598145817666
+    - Id:
+        Value: 322044823806514988
+    - Id:
+        Value: 396252586067254148
+    - Id:
+        Value: 358498362578691008
+    - Id:
+        Value: 449142474632210538
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 1
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 411749050168152871
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 386887899629791929
+      Faction: 2
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: R4-C Higher Pressure (60-85s)
+    Kind: 0
+    Duration:
+      RawValue: 1638400
+    BudgetPerPulse:
+      RawValue: 1769472
+    PulseInterval:
+      RawValue: 78643
+    TargetPressure:
+      RawValue: 2752512
+    MaxAliveEnemies: 25
+    AllowedGroups:
+    - Id:
+        Value: 479314598145817666
+    - Id:
+        Value: 322044823806514988
+    - Id:
+        Value: 396252586067254148
+    - Id:
+        Value: 358498362578691008
+    - Id:
+        Value: 449142474632210538
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 1
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 411749050168152871
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 386887899629791929
+      Faction: 2
+      Weight:
+        RawValue: 163840
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: R4-D Suicider - Threat Prioritization (85-105s)
+    Kind: 0
+    Duration:
+      RawValue: 1310720
+    BudgetPerPulse:
+      RawValue: 917504
+    PulseInterval:
+      RawValue: 131072
+    TargetPressure:
+      RawValue: 1179648
+    MaxAliveEnemies: 13
+    AllowedGroups: []
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 196608
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 1
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 368882078469044815
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 336138812978458020
+      Faction: 1
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 1
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: R4-E HeavySlammer Elite (~105s)
+    Kind: 0
+    Duration:
+      RawValue: 1638400
+    BudgetPerPulse:
+      RawValue: 393216
+    PulseInterval:
+      RawValue: 163840
+    TargetPressure:
+      RawValue: 655360
+    MaxAliveEnemies: 10
+    AllowedGroups: []
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 196608
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 1
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 519261556471960928
+  - Name: R4-F1 Final Phase A - Foundation, Positional & Heavy (130-155s)
+    Kind: 0
+    Duration:
+      RawValue: 1638400
+    BudgetPerPulse:
+      RawValue: 1048576
+    PulseInterval:
+      RawValue: 91750
+    TargetPressure:
+      RawValue: 1703936
+    MaxAliveEnemies: 16
+    AllowedGroups:
+    - Id:
+        Value: 437353888132425308
+    - Id:
+        Value: 346124224523712329
+    - Id:
+        Value: 469391117081157451
+    - Id:
+        Value: 434556276995408588
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 1
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: R4-F2 Final Phase B - Close Range, Movement & Advanced (155-180s)
+    Kind: 0
+    Duration:
+      RawValue: 1638400
+    BudgetPerPulse:
+      RawValue: 1179648
+    PulseInterval:
+      RawValue: 85197
+    TargetPressure:
+      RawValue: 1835008
+    MaxAliveEnemies: 17
+    AllowedGroups:
+    - Id:
+        Value: 370707798771800408
+    - Id:
+        Value: 468449544190822059
+    - Id:
+        Value: 297932687274592043
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 1
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: Breathing 4 (Last Breath)
+    Kind: 1
+    Duration:
+      RawValue: 5898240
+    BudgetPerPulse:
+      RawValue: 0
+    PulseInterval:
+      RawValue: 0
+    TargetPressure:
+      RawValue: 0
+    MaxAliveEnemies: 0
+    AllowedGroups: []
+    AllowedEnemies: []
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: World1Boss
+    Kind: 2
+    Duration:
+      RawValue: 0
+    BudgetPerPulse:
+      RawValue: 0
+    PulseInterval:
+      RawValue: 0
+    TargetPressure:
+      RawValue: 0
+    MaxAliveEnemies: 0
+    AllowedGroups: []
+    AllowedEnemies: []
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 327680
+    GuaranteedGroup:
+      Id:
+        Value: 0
