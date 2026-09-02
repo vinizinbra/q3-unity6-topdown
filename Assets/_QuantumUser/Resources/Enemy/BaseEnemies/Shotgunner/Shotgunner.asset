@@ -79,7 +79,7 @@ MonoBehaviour:
     AvoidWalls: 0
     WallAvoidProbeDistance:
       RawValue: 131072
-    UseWaypointDetour: 1
+    UseWaypointDetour: 0
     WaypointArrivalDistance:
       RawValue: 65536
   AI:

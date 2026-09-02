@@ -28,6 +28,39 @@ namespace Quantum
             return EnemyMovementUtility.RandomPositionInRing(f, anchor, MinRandomOffset, MaxRandomOffset);
         }
 
+        // Fires ProjectileLandingWarning for a lobbed shot, deriving its real flight time from the
+        // solved launch's own horizontal speed rather than a separately-authored guess - shared by
+        // any delivery that lobs onto a known ground point (MortarBarrageDeliveryData per shell,
+        // ProjectileDeliveryData's own UseArc/ShowLandingWarning branch), so the ground-warning
+        // telegraph (see GroundWarningTelegraphManager, View) is one shared mechanism instead of
+        // each delivery re-deriving flight time and firing its own event. No-ops (fires nothing) if
+        // origin and point coincide, velocity has no horizontal component, or radius is 0 - there's
+        // nothing meaningful to warn about.
+        protected static void FireLandingWarning(Frame f, FPVector3 origin, FPVector3 point, FPVector3 velocity, FP radius)
+        {
+            if (radius <= FP._0)
+                return;
+
+            FPVector3 flatDelta = new FPVector3(point.X - origin.X, FP._0, point.Z - origin.Z);
+            FPVector3 flatVelocity = new FPVector3(velocity.X, FP._0, velocity.Z);
+            FP flightTime = flatVelocity.Magnitude > FP._0 ? flatDelta.Magnitude / flatVelocity.Magnitude : FP._0;
+
+            if (flightTime > FP._0)
+                f.Events.ProjectileLandingWarning(point, flightTime, radius);
+        }
+
+        // A projectile's Hit only sometimes carries a meaningful blast radius (AreaHitData) - a
+        // direct-hit/pierce type has none. Reading it back here rather than authoring a second
+        // WarningRadius field on the delivery is the same "single source of truth" fix as routing
+        // the arc launch itself through the assigned ProjectileMovementData instead of duplicating
+        // LaunchAngle/Gravity (see MortarBarrageDeliveryData's own history) - the ground-warning
+        // circle can never silently drift out of sync with the real blast it's warning about.
+        // Returns 0 (FireLandingWarning's own no-op case) for anything else.
+        protected static FP ResolveWarningRadius(Frame f, AssetRef<ProjectileHitData> hit)
+        {
+            return hit.IsValid == true && f.FindAsset(hit) is AreaHitData areaHit ? areaHit.BlastRadius : FP._0;
+        }
+
         // Called before the windup timer is checked each Preparation/Telegraph tick. elapsed is the
         // fraction (0-1) of action.AnticipationTime that has passed so far this tick (pre-decrement -
         // see EnemySystem.UpdatePreparation), only meaningful when AimLock == LocksAtPercent. Override

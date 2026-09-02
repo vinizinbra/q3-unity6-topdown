@@ -22,9 +22,9 @@ MonoBehaviour:
   PredictionTime:
     RawValue: 131072
   SpawnRingRadiusMin:
-    RawValue: 786432
+    RawValue: 524288
   SpawnRingRadiusMax:
-    RawValue: 1048576
+    RawValue: 917504
   MaxPurchasesPerPulse: 3
   MaxGroupSpawnAttempts: 8
   ForbiddenSpawnChunkTypes: 0400

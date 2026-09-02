@@ -269,7 +269,7 @@ MonoBehaviour:
   AnticipationStep:
     AnimationType: 2
     Duration: 1
-    BodySprite: {fileID: 127281841, guid: 0a8c1f724aa9b4c7d9200ed9a54a68ff, type: 3}
+    BodySprite: {fileID: 983202667, guid: d2ee3b1fbe1e94f87943e96a7d2bef99, type: 3}
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -335,7 +335,7 @@ MonoBehaviour:
   BeginStep:
     AnimationType: 7
     Duration: 0.3
-    BodySprite: {fileID: -2139617183, guid: 0a8c1f724aa9b4c7d9200ed9a54a68ff, type: 3}
+    BodySprite: {fileID: 1532041238, guid: d2ee3b1fbe1e94f87943e96a7d2bef99, type: 3}
     ShakeImpact: 1
     Shake:
       Frequency: 18

@@ -91,6 +91,23 @@ public class LoadingWindow : UiWindow
     private bool _faded;
     private List<CanvasGroup> _fadeGroups;
 
+    // Android can suspend the whole process for an arbitrary length of time. PrimeTween's
+    // useUnscaledTime tweens are NOT clamped by Time.maximumDeltaTime (that only clamps the scaled
+    // Time.deltaTime), so a hand-off fade left running when the app backgrounds would otherwise wake
+    // up to a single huge unscaled delta and jump through its curve unpredictably instead of landing
+    // cleanly - reading as a flash right as the menu Canvas goes down and the world is revealed.
+    // Snap straight to the fade's own end state and finish the hand-off the same way OnComplete
+    // would have, instead of leaving that to chance.
+    private void OnApplicationPause(bool pauseStatus)
+    {
+        if (pauseStatus == true || _fadeTween.isAlive == false)
+            return;
+
+        _fadeTween.Stop();
+        ApplyFadeAlpha(0f);
+        EnterMatch();
+    }
+
     public override void Show()
     {
         // Only a genuine (re)open restarts the screen - a redundant ShowWindow<LoadingWindow>() for

@@ -365,7 +365,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Enemy/BaseEnemies/EliteHeavySlammer
     Guid:
       Value: 414697522645550537
-  EnemyName: 
+  EnemyName: Slammer
   Tier: 4
   Economy:
     Persistent: 1

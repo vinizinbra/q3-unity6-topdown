@@ -100,6 +100,10 @@ public class ChooseWindow : UiWindow
     [SerializeField, Tooltip("Extra delay stacked per card index, so cards open one after another instead of all at once.")]
     private float cardIntroStagger = 0.1f;
 
+    [Header("Debug")]
+    [SerializeField, Tooltip("Skips straight to the fully-settled end state - no dim fade, no grow/shake/impact stagger - instead of playing the intro. For the DebugStartLevelUpCount cheat, so chaining several upgrade screens back to back doesn't sit through this window's own intro each time.")]
+    private bool debugSkipIntroAnimation = false;
+
     [SerializeField, Tooltip("The dark overlay behind the whole popup - fades in first, then everything else follows.")]
     private Image dimImage;
 
@@ -235,7 +239,11 @@ public class ChooseWindow : UiWindow
     {
         ResetIntroParticles();
         base.Show();
-        PlayIntroAnimation();
+
+        if (debugSkipIntroAnimation)
+            SkipIntroAnimation();
+        else
+            PlayIntroAnimation();
     }
 
     private void ResetIntroParticles()
@@ -297,6 +305,27 @@ public class ChooseWindow : UiWindow
             weaponCardIntros[i]?.Play(at);
             PlayCardAppear(weaponCards[i] != null && weaponCards[i].gameObject.activeSelf, at);
         }
+    }
+
+    // Debug-only counterpart to PlayIntroAnimation() - see debugSkipIntroAnimation's own tooltip.
+    private void SkipIntroAnimation()
+    {
+        _dimTween.Stop();
+
+        if (dimImage != null)
+        {
+            Color color = dimImage.color;
+            color.a = _dimFullAlpha;
+            dimImage.color = color;
+        }
+
+        titleIntro?.PlayInstant();
+
+        for (int i = 0; i < cards.Length; i++)
+            cardIntros[i]?.PlayInstant();
+
+        for (int i = 0; i < weaponCards.Length; i++)
+            weaponCardIntros[i]?.PlayInstant();
     }
 
     // Scheduled through the audio system's own delay rather than a coroutine, so it shares the

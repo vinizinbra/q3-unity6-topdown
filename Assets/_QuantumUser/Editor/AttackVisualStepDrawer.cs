@@ -52,11 +52,18 @@ namespace Quantum.Editor
                 SerializedProperty animationType = property.FindPropertyRelative("AnimationType");
                 SerializedProperty duration = property.FindPropertyRelative("Duration");
                 SerializedProperty bodySprite = property.FindPropertyRelative("BodySprite");
+                SerializedProperty bodySpriteOffset = property.FindPropertyRelative("BodySpriteOffset");
                 SerializedProperty shakeImpact = property.FindPropertyRelative("ShakeImpact");
                 SerializedProperty particlePrefab = property.FindPropertyRelative("ParticlePrefab");
 
                 EditorGUI.PropertyField(rect, bodySprite);
                 rect.y += lineHeight;
+
+                if (bodySprite.objectReferenceValue != null)
+                {
+                    EditorGUI.PropertyField(rect, bodySpriteOffset);
+                    rect.y += lineHeight;
+                }
 
                 EditorGUI.PropertyField(rect, shakeImpact);
                 rect.y += lineHeight;
@@ -172,6 +179,11 @@ namespace Quantum.Editor
                 return height;
 
             height += lineHeight; // BodySprite
+
+            SerializedProperty bodySprite = property.FindPropertyRelative("BodySprite");
+            if (bodySprite.objectReferenceValue != null)
+                height += lineHeight; // BodySpriteOffset
+
             height += lineHeight; // ShakeImpact
 
             height += lineHeight; // "Body Animation" foldout header

@@ -43,4 +43,11 @@ public class EnemyUiWidgetManager : MonoBehaviour
         if (widget != null)
             Destroy(widget.gameObject);
     }
+
+    // Lets a HUD element that needs to point at a tracked enemy's own widget (e.g.
+    // TargetArrowWidget aiming at its health bar) find it without duplicating this dictionary.
+    public bool TryGetWidget(EntityRef entityRef, out CharacterUiWidget widget)
+    {
+        return _widgets.TryGetValue(entityRef, out widget);
+    }
 }

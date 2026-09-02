@@ -12,12 +12,14 @@ namespace Quantum
     // movement direction (read off KCC.Data.RealVelocity, same convention as
     // BlobAnimationView/PlayerGunAimView) but sitting at different offsets/alphas for a fading
     // chevron-trail look; the third shows up while there's a current Aim.Target (see AimSystem,
-    // same source TargetView's reticle uses) and points from the character toward it.
+    // same source TargetArrowWidget's screen-space arrow uses) and points from the character
+    // toward it - a ground-plane "which direction is my target" compass, distinct from
+    // TargetArrowWidget's own HUD arrow pointing at the target's health bar.
     // Ring/RingGlow/MovementArrow(+trail) are tinted from the hero's own CharacterData.RingColor;
     // TargetArrow keeps its own authored color, since a "you're locked on" indicator isn't a
-    // per-hero identity marker. Unlike TargetView's reticle, all these sprites always track this
-    // entity's own position, so they just stay parented under the character instead of
-    // unparenting.
+    // per-hero identity marker. Unlike TargetArrowWidget's screen-space arrow, all these sprites
+    // always track this entity's own position, so they just stay parented under the character
+    // instead of following a Canvas anchor.
     //
     // A FOURTH arrow - fully optional, off unless its sprite is assigned - points at this player's
     // own dropped Signature Accessory (see docs/accessory-guard.md). It lives here rather than in a

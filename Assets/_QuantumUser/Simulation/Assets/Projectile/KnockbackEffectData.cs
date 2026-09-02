@@ -23,6 +23,14 @@ namespace Quantum
         // how far the target flies.
         public KnockbackApplyMode ApplyMode = KnockbackApplyMode.Additive;
 
+        // Orthogonal to Tier (which only sets magnitude): whether landing this push is also allowed
+        // to cancel whatever the target enemy is currently doing (see Enemy.qtn's
+        // OnEnemyKnockedBack/EnemySystem.OnEnemyKnockedBack). Default true reproduces every existing
+        // asset's current behavior unchanged. False on the shared KnockbackSmallEffectData used by
+        // basic weapon fire - that push should read as a juicy impact without ever throwing away an
+        // enemy's windup/active attack.
+        public bool CanInterrupt = true;
+
         public override void Apply(Frame f, ref HitEffectContext context)
         {
             // Excluded here rather than upstream (see HitEffectUtility.TryBuildContext) - a blast
@@ -39,7 +47,7 @@ namespace Quantum
             config.GetKnockback(Tier, out FP force, out FP upwardForce);
 
             DamageUtility.ApplyKnockback(f, context.Target, context.PushDirection, force, upwardForce, context.Owner,
-                ApplyMode);
+                ApplyMode, CanInterrupt);
         }
     }
 }

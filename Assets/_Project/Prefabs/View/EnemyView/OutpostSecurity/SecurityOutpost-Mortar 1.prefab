@@ -4861,8 +4861,8 @@ Transform:
   m_GameObject: {fileID: 528268433944073081}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.528, y: 2.739, z: 0}
-  m_LocalScale: {x: 4, y: 4, z: 4}
+  m_LocalPosition: {x: 0.87, y: 1.98, z: 0}
+  m_LocalScale: {x: 3, y: 3, z: 3}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1488431331216489862}
@@ -9754,7 +9754,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 644828112, guid: 3d1752f50757d464f9a860260e2aaf1f, type: 3}
+  m_Sprite: {fileID: -199887510, guid: 2ccd5da319632411aa432cca9e5eeb15, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 0}
   m_FlipX: 0
   m_FlipY: 0
@@ -9801,7 +9801,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9168c542245be475f8ee71bd6733ba7c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.HasShadow
-  baseScale: 6
+  baseScale: 4.5
   shadowOffset: {x: 0, y: 0.2}
   shadowAlphaMultiplier: 1
 --- !u!1001 &2033220763431434550
@@ -9818,23 +9818,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 460164, guid: bcd34d169e9abd34bb3484f9e3ddf57c, type: 3}
       propertyPath: m_LocalScale.x
-      value: 5
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 460164, guid: bcd34d169e9abd34bb3484f9e3ddf57c, type: 3}
       propertyPath: m_LocalScale.y
-      value: 5
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 460164, guid: bcd34d169e9abd34bb3484f9e3ddf57c, type: 3}
       propertyPath: m_LocalScale.z
-      value: 5
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 460164, guid: bcd34d169e9abd34bb3484f9e3ddf57c, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.478
+      value: 0.88
       objectReference: {fileID: 0}
     - target: {fileID: 460164, guid: bcd34d169e9abd34bb3484f9e3ddf57c, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 2.686
+      value: 1.96
       objectReference: {fileID: 0}
     - target: {fileID: 460164, guid: bcd34d169e9abd34bb3484f9e3ddf57c, type: 3}
       propertyPath: m_LocalPosition.z

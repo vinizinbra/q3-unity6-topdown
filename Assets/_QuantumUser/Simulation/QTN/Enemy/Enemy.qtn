@@ -133,8 +133,14 @@ signal OnEnemyDied(EntityRef entity);
 // Fired by DamageUtility right after a knockback impulse actually lands on an Enemy - lets
 // EnemySystem open its stagger window and cancel the current action on its own terms, same split
 // as OnEnemyDied. Not fired when the impulse was dropped (kinematic body), so an enemy mid-charge
-// isn't staggered by a push it never felt.
-signal OnEnemyKnockedBack(EntityRef entity);
+// isn't staggered by a push it never felt. canInterrupt is the pushing source's own declaration
+// (see KnockbackEffectData.CanInterrupt) that this specific knockback is allowed to cancel
+// whatever the enemy is currently doing - false for a cosmetic/juice-only push (e.g. basic weapon
+// fire), composed with EnemyTierStatsConfig.CanBeInterruptedByKnockback (target-tier) and
+// EnemyActionData.InterruptibleDuringTelegraph/Active (per-action) inside EnemySystem itself. The
+// stagger window (KnockbackTimer) and EnemyStuckRecoveryUtility's own safety net still always run
+// regardless - those are physics-settle concerns, not AI-interrupt concerns.
+signal OnEnemyKnockedBack(EntityRef entity, Boolean canInterrupt);
 
 // Merges what used to be two separate concepts - the coarse Idle/Chasing/.../Dead AI state and a
 // finer-grained windup/telegraph/active-delivery phase - into one state machine at a single

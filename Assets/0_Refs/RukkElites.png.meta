@@ -183,10 +183,10 @@ TextureImporter:
       name: Rukk_03
       rect:
         serializedVersion: 2
-        x: 49
-        y: 85
-        width: 451
-        height: 405
+        x: 55
+        y: 103
+        width: 401
+        height: 359
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -205,12 +205,12 @@ TextureImporter:
       name: Rukk_04
       rect:
         serializedVersion: 2
-        x: 495
+        x: 523
         y: 76
-        width: 423
-        height: 464
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
+        width: 387
+        height: 444
+      alignment: 9
+      pivot: {x: 0.4215337, y: 0.000000051549964}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -227,10 +227,10 @@ TextureImporter:
       name: Rukk_05
       rect:
         serializedVersion: 2
-        x: 938
-        y: 71
-        width: 510
-        height: 377
+        x: 988
+        y: 68
+        width: 428
+        height: 355
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}

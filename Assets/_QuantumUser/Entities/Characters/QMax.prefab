@@ -376,6 +376,8 @@ MonoBehaviour:
         RawValue: 0
       Z:
         RawValue: 0
+    FallRespawnTimer:
+      RawValue: 0
     AirborneSource:
       Value: 0
 --- !u!114 &-3971490095111579385
@@ -613,7 +615,6 @@ MonoBehaviour:
   rotateWeaponWithTarget: 0
   rotateWeaponWithoutTarget: 1
   flipLagSpeed: 20
-  bodyFollowDuringFlip: 0.2
   enableSpeedSway: 1
   swayAmount: 0.5
   swaySpringiness: 0.5
@@ -6964,7 +6965,7 @@ SpriteRenderer:
   m_Size: {x: 0.5525, y: 0.33}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
 --- !u!114 &7446387966000570100
 MonoBehaviour:

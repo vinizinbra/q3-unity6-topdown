@@ -301,7 +301,15 @@ namespace Quantum
                 // clobbered the hop's own kinematic flag back to false on the very next tick, every
                 // tick, fighting TickTraversalJump's own position writes for the hop's whole arc.
                 // TickTraversalJump restores this itself on landing, same as the other two.
-                if (filter.Enemy->Phase != EnemyActionPhase.Active && f.Has<JuggernautExplosionPush>(filter.Entity) == false &&
+                // Also exempted: Preparation/Telegraph - UpdatePreparation drives its own kinematic
+                // flag (planted during windup, released right before Begin() runs) so a telegraphing
+                // enemy can't be shoved off its readable attack spot by another enemy's collision;
+                // without this exemption this line would stomp that back to false every tick before
+                // UpdatePreparation even runs.
+                if (filter.Enemy->Phase != EnemyActionPhase.Active &&
+                    filter.Enemy->Phase != EnemyActionPhase.Preparation &&
+                    filter.Enemy->Phase != EnemyActionPhase.Telegraph &&
+                    f.Has<JuggernautExplosionPush>(filter.Entity) == false &&
                     filter.Enemy->TraversalJumpDuration <= FP._0)
                 {
                     filter.PhysicsBody3D->IsKinematic = false;
@@ -503,7 +511,14 @@ namespace Quantum
         // Active in the first place (DamageUtility.ApplyResolvedImpulse skips a kinematic
         // PhysicsBody3D, so this signal never even fires for them then), so InterruptibleDuringActive
         // only matters once a non-kinematic multi-tick delivery exists.
-        public void OnEnemyKnockedBack(Frame f, EntityRef entity)
+        //
+        // canInterrupt is the pushing source's own declaration (KnockbackEffectData.CanInterrupt,
+        // default true) that this specific push is allowed to reach the cancel branch at all - false
+        // for a cosmetic/juice-only push (e.g. basic weapon fire). It's checked AFTER the stagger
+        // window is opened: the physics-settle window (KnockbackTimer) and the stuck-recovery safety
+        // net are independent physical concerns and stay unconditional regardless of whether this
+        // specific push is also allowed to cancel the current action.
+        public void OnEnemyKnockedBack(Frame f, EntityRef entity, QBoolean canInterrupt)
         {
             if (f.Unsafe.TryGetPointer<Enemy>(entity, out var enemy) == false)
                 return;
@@ -527,6 +542,12 @@ namespace Quantum
             }
 
             enemy->KnockbackTimer = tierStats.KnockbackRecoveryTime;
+
+            if (canInterrupt == false)
+            {
+                Log.Debug($"[Knockback] {entity} felt a cosmetic push (staggered, physics only) - source declared canInterrupt=false, action left untouched");
+                return;
+            }
 
             EnemyActionData action = EnemyDecisionUtility.ResolveAction(f, data, enemy->CurrentActionSlot);
 
@@ -744,6 +765,16 @@ namespace Quantum
             // windup instead of it staying fully planted for the telegraph.
             EnemyMovementUtility.StopMovement(f, ref filter, data);
 
+            // Same reasoning, but for POSITION rather than velocity: zeroing Velocity alone doesn't
+            // stop the physics solver from still shoving this enemy sideways if another enemy's
+            // collider overlaps it mid-windup, which reads as the telegraphed attack "cheating" -
+            // the player dodges the readable spot and gets hit anyway because a bystander bumped it.
+            // Going kinematic makes the enemy fully solid/immovable for the windup (still hittable by
+            // the player's own knockback/CC, since those are direct writes elsewhere, not solver
+            // pushes). Released right before delivery.Begin() below so the delivery itself decides
+            // Active-phase kinematic state fresh (Charge/Leap/Burrow set it back to true themselves).
+            filter.PhysicsBody3D->IsKinematic = true;
+
             EnemyActionData action = EnemyDecisionUtility.ResolveAction(f, data, filter.Enemy->CurrentActionSlot);
             EnemyDeliveryData delivery = f.FindAsset(action.Delivery);
 
@@ -773,6 +804,13 @@ namespace Quantum
 
                 return;
             }
+
+            // Release the telegraph freeze before Begin() runs - Active-phase kinematic state
+            // (Charge/Leap/Burrow set it back to true themselves inside Begin(); every other
+            // delivery wants it false, same as before this freeze existed) belongs to the delivery,
+            // not to the windup that preceded it. If Begin() finishes instantly, EnterRecovering
+            // below re-resolves this against Root anyway.
+            filter.PhysicsBody3D->IsKinematic = false;
 
             bool finished = delivery.Begin(f, ref filter, data, action, filter.Enemy->Target);
 

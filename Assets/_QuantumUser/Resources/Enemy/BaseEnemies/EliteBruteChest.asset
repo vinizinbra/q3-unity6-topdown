@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Enemy/BaseEnemies/EliteBruteChest
     Guid:
       Value: 533766507454810919
-  EnemyName: 
+  EnemyName: Brute
   Tier: 4
   Economy:
     Persistent: 1

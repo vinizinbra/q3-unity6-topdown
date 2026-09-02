@@ -140,6 +140,12 @@ namespace Quantum
         // channel already gets from _stateTimer vs. _currentStep.Duration. <= 0 = no swap pending.
         private float _bodySpriteTimeRemaining;
 
+        // Additive root.localPosition offset applied only while the swapped step sprite above is
+        // showing (same _bodySpriteTimeRemaining window) - X is mirrored by _facingSign in
+        // ApplyPose, same convention root's own scale.x already uses, so an offset authored for a
+        // right-facing pose reads correctly whichever way the enemy is actually turned.
+        private Vector3 _bodySpriteOffset;
+
         // Positive = compressed, negative = stretched. Single value - unlike the player's blob,
         // there's no separate jump-squash to keep independent from the idle/run breathing squash.
         private float _squashT;
@@ -248,13 +254,14 @@ namespace Quantum
         // Only shows for this step's own duration - QUpdate counts _bodySpriteTimeRemaining down
         // and reverts to the rest sprite once it runs out, rather than leaving the swap in place
         // until some later step (or the whole attack ending) touches it.
-        public void ApplyStepSprite(Sprite sprite, float duration)
+        public void ApplyStepSprite(Sprite sprite, float duration, Vector3 offset = default)
         {
             if (rig == null || rig.ReferenceSprite == null || sprite == null)
                 return;
 
             rig.ReferenceSprite.sprite = sprite;
             _bodySpriteTimeRemaining = duration;
+            _bodySpriteOffset = offset;
         }
 
         // Called by EnemyAttackVisualsView on the attackNoLongerActive edge (Enemy.Phase leaving
@@ -265,6 +272,7 @@ namespace Quantum
         public void ResetBodySprite()
         {
             _bodySpriteTimeRemaining = 0f;
+            _bodySpriteOffset = Vector3.zero;
 
             if (rig == null || rig.ReferenceSprite == null)
                 return;
@@ -902,6 +910,12 @@ namespace Quantum
                 var localPos = _rootBaseLocalPos;
                 localPos.y += bobOffset;
                 localPos.z += depthOffset;
+
+                // Step-sprite offset (see ApplyStepSprite) - X is authored as if always facing
+                // right and mirrored here by _facingSign, same convention scale.x uses below.
+                localPos.x += _bodySpriteOffset.x * _facingSign;
+                localPos.y += _bodySpriteOffset.y;
+                localPos.z += _bodySpriteOffset.z;
 
                 float rootVerticalMult = rootCarriesSquash == true ? verticalMult : 1f;
                 float rootHorizontalMult = rootCarriesSquash == true ? horizontalMult : 1f;

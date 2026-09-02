@@ -122,6 +122,14 @@ namespace Quantum
                         : movement.GetLaunchToTarget(f, resolvedOrigin, pelletTarget, target);
                 }
 
+                // SolveArcLaunch (the UseArc branches above) only fills Velocity/IsValid - unlike
+                // movement.GetLaunch/GetLaunchToTarget (the non-arc branches, which already set
+                // this via GetSpawnPosition), it has no opinion on where the shot leaves from.
+                // Reassigning it here unconditionally is a no-op for the non-arc branches (same
+                // value they already set) and fixes the arc ones, which otherwise default to
+                // (0,0,0) and detonate instantly against whatever geometry sits there.
+                launch.SpawnPosition = resolvedOrigin;
+
                 if (launch.IsValid == false)
                 {
                     Log.Error($"[Enemy] {filter.Entity} resolved no valid launch for fan pellet {i} toward {target} - skipped");

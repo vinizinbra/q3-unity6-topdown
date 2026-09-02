@@ -13,6 +13,8 @@ public class ScreenFadeWidget : MonoBehaviour
     [SerializeField] private CanvasGroup canvasGroup;
 
     private Tween _fadeTween;
+    private float _pendingTargetAlpha;
+    private Action _pendingOnComplete;
 
     private void Awake()
     {
@@ -26,6 +28,28 @@ public class ScreenFadeWidget : MonoBehaviour
     {
         if (Instance == this)
             Instance = null;
+    }
+
+    // Android can suspend the whole process for an arbitrary length of time. PrimeTween's
+    // useUnscaledTime tweens are NOT clamped by Time.maximumDeltaTime (that only clamps the scaled
+    // Time.deltaTime), so a fade left running when the app backgrounds would otherwise wake up to a
+    // single huge unscaled delta and jump through its curve unpredictably instead of landing cleanly
+    // - which is exactly the camera-cutaway fade BossWidget uses, so an interrupted one reads as a
+    // screen flash. Snap straight to the fade's own intended end state (and fire whatever it was
+    // supposed to do on completion) instead of leaving that to chance.
+    private void OnApplicationPause(bool pauseStatus)
+    {
+        if (pauseStatus == true || _fadeTween.isAlive == false)
+            return;
+
+        _fadeTween.Stop();
+
+        if (canvasGroup != null)
+            canvasGroup.alpha = _pendingTargetAlpha;
+
+        Action onComplete = _pendingOnComplete;
+        _pendingOnComplete = null;
+        onComplete?.Invoke();
     }
 
     // Fades to fully opaque, then calls onComplete - do the hidden hard cut (camera snap, content
@@ -43,6 +67,9 @@ public class ScreenFadeWidget : MonoBehaviour
             return;
         }
 
+        _pendingTargetAlpha = 1f;
+        _pendingOnComplete = onComplete;
+
         _fadeTween = Tween.Custom(canvasGroup.alpha, 1f, duration,
             onValueChange: v => canvasGroup.alpha = (float)v, useUnscaledTime: true)
             .OnComplete(() => onComplete?.Invoke());
@@ -54,6 +81,9 @@ public class ScreenFadeWidget : MonoBehaviour
 
         if (canvasGroup == null)
             return;
+
+        _pendingTargetAlpha = 0f;
+        _pendingOnComplete = null;
 
         _fadeTween = Tween.Custom(canvasGroup.alpha, 0f, duration,
             onValueChange: v => canvasGroup.alpha = (float)v, useUnscaledTime: true);

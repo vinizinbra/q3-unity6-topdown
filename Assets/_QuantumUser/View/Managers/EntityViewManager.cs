@@ -19,8 +19,8 @@ namespace QuantumUser.View.Managers
 
         // Generic EntityRef -> view Transform lookup, populated by EntityViewCacheInit on any
         // entity view prefab (player, enemy, projectile, etc.) - not just CharViews. Used for fast
-        // "where is entity X right now" lookups (e.g. TargetView tracking Aim.Target) instead of
-        // searching for the view each time.
+        // "where is entity X right now" lookups (e.g. MovementRingView tracking Aim.Target) instead
+        // of searching for the view each time.
         private readonly Dictionary<EntityRef, Transform> _entityTransforms = new Dictionary<EntityRef, Transform>();
         public int AllCharsCount => AllCharViews.Count();
         public int OnlinePlayerCount => _charsInGame.Count(x => !x.Value.isBot);
@@ -100,7 +100,7 @@ namespace QuantumUser.View.Managers
             _entityTransforms.Remove(entityRef);
         }
 
-        // GetValueOrDefault, not the indexer - callers like TargetView poll this every frame off a
+        // GetValueOrDefault, not the indexer - callers like MovementRingView poll this every frame off a
         // simulation-side EntityRef (e.g. Aim.Target) that can still point at an entity whose view
         // was just destroyed/unregistered (e.g. it died) for a frame or two.
         public Transform GetEntityTransform(EntityRef entityRef)

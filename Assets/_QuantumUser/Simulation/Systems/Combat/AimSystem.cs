@@ -257,8 +257,8 @@ namespace Quantum
             // Fallen off the level and waiting out its respawn delay (see EnemyFallSystem/
             // LevelConfig.FallRespawnDelay) - it's invisible and about to teleport away, so drop it
             // the same instant its own view hides (releases a sticky lock early via ResolveTarget's
-            // IsAliveTarget check, same as Dead/Invulnerable above) instead of leaving the reticle
-            // (TargetView) and auto-fire locked onto empty air until it reappears.
+            // IsAliveTarget check, same as Dead/Invulnerable above) instead of leaving the target
+            // arrow/health-bar indicator and auto-fire locked onto empty air until it reappears.
             if (FallStateUtility.IsFallPending(f, entity) == true)
                 return false;
 

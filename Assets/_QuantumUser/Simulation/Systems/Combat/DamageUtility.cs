@@ -945,8 +945,15 @@ namespace Quantum
         // callers compute their own direction and pass it in rather than this trying to infer one.
         // No-ops if both forces are <= 0, the resolved impulse is zero, the target resists the push
         // entirely, or the target has neither movement component (e.g. a static prop).
+        // canInterrupt: whether this specific push, once it lands, is allowed to cancel whatever
+        // the target enemy is currently doing (see Enemy.qtn's OnEnemyKnockedBack). Defaults true
+        // so every existing caller (Iron Shoulder, Groundbreaker, Discharge, etc.) keeps staggering
+        // exactly as before - only a source that wants a purely cosmetic/juice push (e.g.
+        // KnockbackEffectData.CanInterrupt on basic weapon fire) passes false. Has no bearing on
+        // the physical push itself, which lands identically either way.
         public static void ApplyKnockback(Frame f, EntityRef target, FPVector3 horizontalDirection, FP force,
-            FP upwardForce, EntityRef owner, KnockbackApplyMode mode = KnockbackApplyMode.Additive)
+            FP upwardForce, EntityRef owner, KnockbackApplyMode mode = KnockbackApplyMode.Additive,
+            bool canInterrupt = true)
         {
             if (force <= FP._0 && upwardForce <= FP._0)
                 return;
@@ -959,7 +966,7 @@ namespace Quantum
                 return;
             }
 
-            ApplyResolvedImpulse(f, target, ResolveImpulse(horizontalDirection, force, upwardForce) * scale, mode);
+            ApplyResolvedImpulse(f, target, ResolveImpulse(horizontalDirection, force, upwardForce) * scale, mode, canInterrupt);
         }
 
         // Same scaling/stagger/PhysicsBody-or-KCC push as ApplyKnockback, but for a caller that
@@ -968,7 +975,7 @@ namespace Quantum
         // velocity (a magnitude that matters, so it can't be run through ResolveImpulse's
         // normalize-then-scale, which would throw the magnitude away and keep only the direction).
         public static void ApplyKnockbackImpulse(Frame f, EntityRef target, FPVector3 impulse, EntityRef owner,
-            KnockbackApplyMode mode = KnockbackApplyMode.Additive)
+            KnockbackApplyMode mode = KnockbackApplyMode.Additive, bool canInterrupt = true)
         {
             FP scale = ResolveKnockbackScale(f, owner, target);
 
@@ -978,11 +985,11 @@ namespace Quantum
                 return;
             }
 
-            ApplyResolvedImpulse(f, target, impulse * scale, mode);
+            ApplyResolvedImpulse(f, target, impulse * scale, mode, canInterrupt);
         }
 
         private static void ApplyResolvedImpulse(Frame f, EntityRef target, FPVector3 impulse,
-            KnockbackApplyMode mode = KnockbackApplyMode.Additive)
+            KnockbackApplyMode mode = KnockbackApplyMode.Additive, bool canInterrupt = true)
         {
             if (impulse.SqrMagnitude <= FP._0)
                 return;
@@ -1024,10 +1031,12 @@ namespace Quantum
             }
 
             // Only once the push actually landed: EnemySystem has to stop driving this enemy's
-            // velocity for a moment or it would erase the impulse on its next tick.
+            // velocity for a moment or it would erase the impulse on its next tick. canInterrupt
+            // is passed through unchanged - EnemySystem.OnEnemyKnockedBack is what actually decides
+            // whether to cancel the enemy's current action versus just opening the stagger window.
             if (f.Has<Enemy>(target) == true)
             {
-                f.Signals.OnEnemyKnockedBack(target);
+                f.Signals.OnEnemyKnockedBack(target, canInterrupt);
             }
         }
 

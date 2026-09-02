@@ -407,7 +407,7 @@ MonoBehaviour:
       Id:
         Value: 3283391172210422552
     Radius:
-      RawValue: 65536
+      RawValue: 58982
     ShieldMultiplier:
       RawValue: 0
     HealthMultiplier:

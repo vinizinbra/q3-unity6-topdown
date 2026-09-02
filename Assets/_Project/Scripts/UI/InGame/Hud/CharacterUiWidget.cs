@@ -142,6 +142,11 @@ public class CharacterUiWidget : MonoBehaviour
     private bool _shieldBaseFillColorCaptured;
     private CanvasGroup _selfCanvasGroup;
 
+    // Anchor for a screen-space element that needs to point at THIS ENTITY'S HEALTH BAR
+    // specifically (e.g. TargetArrowWidget) rather than the widget as a whole - falls back to
+    // selfRect if healthSlider was ever left unassigned.
+    public RectTransform HealthAnchor => healthSlider != null ? (RectTransform)healthSlider.transform : selfRect;
+
     private void Awake()
     {
         _canvas = GetComponentInParent<Canvas>();

@@ -302,7 +302,7 @@ namespace Quantum
                     body->Velocity = FPVector3.Zero;
                 }
 
-                f.Signals.OnEnemyKnockedBack(target);
+                f.Signals.OnEnemyKnockedBack(target, true);
             }
         }
 

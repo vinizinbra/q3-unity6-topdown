@@ -382,6 +382,8 @@ MonoBehaviour:
       Value: 0
     StateTimer:
       RawValue: 0
+    SpawnGraceRemaining:
+      RawValue: 0
     AttackCooldownRemaining:
       RawValue: 0
     CurrentActionSlot: 0
@@ -439,10 +441,21 @@ MonoBehaviour:
         RawValue: 0
     StuckCheckTimer:
       RawValue: 0
+    FallRespawnTimer:
+      RawValue: 0
+    FallOriginPosition:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
     SkillProjectile: {fileID: 0}
     FlyingHoverCheckTimer:
       RawValue: 0
     FlyingHoverTargetHeight:
+      RawValue: 0
+    LostTimer:
       RawValue: 0
     Faction:
       Value: 0
@@ -601,7 +614,12 @@ MonoBehaviour:
       RawValue: 0
     ReactiveDamageReductionCooldownRemaining:
       RawValue: 0
-    AllyShieldRestoreCooldownRemaining:
+    AllyGuardGrantCooldownRemaining:
+      RawValue: 0
+    FreeHitGuardRemaining:
+      RawValue: 0
+    FreeHitGuardSource: {fileID: 0}
+    FreeHitGuardDuration:
       RawValue: 0
     TempOutgoingDamageRemaining:
       RawValue: 0
@@ -693,15 +711,15 @@ MonoBehaviour:
   billboardToCamera: 1
   facingDeadzone: 0.2
   idleBreatheFrequency: 1.2
-  idleBreatheAmount: 0.05
+  idleBreatheAmount: 0.025
   idleWobbleDegrees: 2
   idleWobbleSpeed: 0.3
   runReferenceSpeed: 5
   moveSpeedEpsilon: 0.15
   runStrideFrequency: 2.2
-  runSquashAmount: 0.1
-  runBounceAmount: 0.1
-  runLeanDegrees: -8
+  runSquashAmount: 0.05
+  runBounceAmount: 0.2
+  runLeanDegrees: -6
   runStepRockDegrees: 4
   dieDuration: 0.4
   dieJumpHeight: 1
@@ -726,6 +744,8 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteOffset: {x: 0, y: 0, z: 0}
+    ShakeImpact: 0
     Shake:
       Frequency: 18
       RockDegrees: 6
@@ -769,6 +789,13 @@ MonoBehaviour:
       ImpactShakeDegrees: 4
       ImpactShakeFrequency: 30
       BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
     CenterPivot: 0
     PivotHeightOverride: 0
     ParticlePrefab: {fileID: 0}
@@ -800,6 +827,9 @@ MonoBehaviour:
   sprites: []
   flashColor: {r: 1, g: 1, b: 1, a: 1}
   burnFlashColor: {r: 1, g: 0.45, b: 0.1, a: 1}
+  recoverFlashColor: {r: 0, g: 1, b: 1, a: 1}
+  blockFlashColor: {r: 0.25, g: 0.6, b: 1, a: 1}
+  freeHitGuardFlashColor: {r: 0.4, g: 0.95, b: 1, a: 1}
   frontalReducedFlashColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   restColor: {r: 1, g: 1, b: 1, a: 0}
   duration: 0.3
@@ -812,6 +842,7 @@ MonoBehaviour:
   expPickupFlashColor: {r: 0.3, g: 0.55, b: 1, a: 1}
   coinPickupFlashColor: {r: 1, g: 0.84, b: 0.2, a: 1}
   riftShardPickupFlashColor: {r: 1, g: 0.35, b: 0.75, a: 1}
+  scrapPickupFlashColor: {r: 0.95, g: 0.6, b: 0.25, a: 1}
   pickupFlashDuration: 0.35
   freezeMaterial: {fileID: 2100000, guid: b153b2878790f4feab0589455e95ac70, type: 2}
 --- !u!114 &1460262746628902169

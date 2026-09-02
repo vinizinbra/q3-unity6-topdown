@@ -86,7 +86,7 @@ MonoBehaviour:
   EngageRange:
     RawValue: 393216
   DamageRange:
-    RawValue: 196608
+    RawValue: 131072
   Damage:
     RawValue: 1966080
   AnticipationTime:
@@ -118,11 +118,12 @@ MonoBehaviour:
   Effects: []
   Telegraph:
     Id:
-      Value: 1593100491986115808
+      Value: 0
   AnticipationStep:
     AnimationType: 1
     Duration: 0.5
     BodySprite: {fileID: 0}
+    BodySpriteOffset: {x: 0, y: 0, z: 0}
     ShakeImpact: 0
     Shake:
       Frequency: 10
@@ -189,6 +190,7 @@ MonoBehaviour:
     AnimationType: 3
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteOffset: {x: 0, y: 0, z: 0}
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -255,6 +257,7 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteOffset: {x: 0, y: 0, z: 0}
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -321,6 +324,7 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteOffset: {x: 0, y: 0, z: 0}
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -400,7 +404,7 @@ MonoBehaviour:
     Guid:
       Value: 296950194662925891
   EnemyName: 
-  Tier: 1
+  Tier: 2
   Economy:
     Persistent: 0
     SpawnProfile:
@@ -587,7 +591,7 @@ MonoBehaviour:
     Guid:
       Value: 1741878077199039724
   LaunchAngle:
-    RawValue: 5242880
+    RawValue: 4587520
   Gravity:
     RawValue: 1310720
   TargetDistance:
@@ -621,7 +625,7 @@ MonoBehaviour:
   DetonateOnEnemyHit: 1
   DetonateOnAllyHit: 0
   BlastRadius:
-    RawValue: 196608
+    RawValue: 131072
   TargetMask: 0
   TriggersSpawnUpgrades: 1
   PlantedFuseTime:
@@ -668,3 +672,4 @@ MonoBehaviour:
   Gravity:
     RawValue: 1310720
   WaitForImpact: 1
+  ShowLandingWarning: 1

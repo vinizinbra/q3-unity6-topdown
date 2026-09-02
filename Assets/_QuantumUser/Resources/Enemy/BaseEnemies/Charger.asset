@@ -190,9 +190,9 @@ MonoBehaviour:
     OverrideSortingOrder: 0
     SortingOrder: 0
   OnGoingStep:
-    AnimationType: 8
+    AnimationType: 0
     Duration: 1
-    BodySprite: {fileID: 0}
+    BodySprite: {fileID: 348937486, guid: 2ccd5da319632411aa432cca9e5eeb15, type: 3}
     ShakeImpact: 0
     Shake:
       Frequency: 50
@@ -533,11 +533,8 @@ MonoBehaviour:
       Value: 578470124590582232
   SkillActions: []
   ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
-  ViewPrefab: {fileID: 8476845490732343577, guid: 3c2761d8ac252410a929c7fb71a1a880, type: 3}
-  FactionSkins:
-  - Faction: 2
-    ViewPrefab: {fileID: 8476845490732343577, guid: 319b3a4f416114624b53cb03df10a735, type: 3}
-    ScaleMultiplier: 0
+  ViewPrefab: {fileID: 8476845490732343577, guid: 319b3a4f416114624b53cb03df10a735, type: 3}
+  FactionSkins: []
 --- !u!114 &3966869393339546562
 MonoBehaviour:
   m_ObjectHideFlags: 0

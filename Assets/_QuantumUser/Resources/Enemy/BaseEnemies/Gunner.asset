@@ -592,11 +592,11 @@ MonoBehaviour:
   TelegraphPrefab: {fileID: 3870463405479579449, guid: 32f69685b31a748f18250208718eaec1, type: 3}
   SnapToGround: 1
   LineLength: 1
-  FixedDistanceValue: 10
+  FixedDistanceValue: 150
   FromOffset: 0
   ToOffset: 0
   Width: 1
-  RadiusMultiplier: 1
+  RadiusMultiplier: 3
   RotationDegreesPerSecond: 0
   GrowthDuration: 1
   FadeInDuration: 0.15
@@ -622,7 +622,7 @@ MonoBehaviour:
       Value: 1528429220434386440
   Movement:
     Id:
-      Value: 371908630583993270
+      Value: 1637224532365372608
   Hit:
     Id:
       Value: 458157697180888248

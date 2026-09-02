@@ -5,7 +5,7 @@ namespace QuantumUser.View.Managers
 {
     // Attach to any entity view prefab (player, enemy, projectile, etc.) to register its Transform
     // into EntityViewManager's generic EntityRef->Transform cache on spawn, and remove it on
-    // destroy - gives callers (e.g. TargetView tracking Aim.Target) an O(1) lookup for "where is
+    // destroy - gives callers (e.g. MovementRingView tracking Aim.Target) an O(1) lookup for "where is
     // entity X right now" instead of searching for it each time.
     public class EntityViewCacheInit : CustomQuantumEntityViewComponent
     {

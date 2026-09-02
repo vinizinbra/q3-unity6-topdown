@@ -563,6 +563,23 @@ event WeaponExplosionReleased
     FP         Radius;
 }
 
+// Fired once per lobbed shot via EnemyDeliveryData.FireLandingWarning - the View-side hook for a
+// ground-anchored landing warning at Position, timed to Duration (the shot's own real solved flight
+// time, not a separately-authored guess). Generic and delivery-agnostic - both
+// MortarBarrageDeliveryData (several shells per Begin()) and ProjectileDeliveryData's own
+// UseArc branch (a single lob, opt-in via ShowLandingWarning) fire it the same way, so any future
+// lobbed attack gets the same ground telegraph for free. Deliberately carries no EntityRef/owner -
+// several of these can be in flight independently at once, and the existing TelegraphManager pool
+// (Get/Release) already supports any number of simultaneous independent instances on its own - only
+// EnemyAttackVisualsView's own single-slot bookkeeping is limited to one telegraph at a time, not
+// the pool itself. See GroundWarningTelegraphManager (View) for the listener.
+event ProjectileLandingWarning
+{
+    FPVector3  Position;
+    FP         Duration;
+    FP         Radius;
+}
+
 // Fired by StatusEffectUtility.TryTriggerDetonation (Fire+RiftMark reaction - see
 // docs/elemental-reactions.md), NOT WeaponExplosionReleased above - unlike Cataclysm Round/
 // Explosive Sequence, this reaction wants its own distinct visual, so EffectsManager gives it a

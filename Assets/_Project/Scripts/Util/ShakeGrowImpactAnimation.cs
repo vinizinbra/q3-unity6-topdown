@@ -84,6 +84,16 @@ public class ShakeGrowImpactAnimation : MonoBehaviour
         onImpact?.Invoke();
     }
 
+    // Debug-only counterpart to Play() - skips straight to the fully-settled end state (no delay, no
+    // grow, no shake, no impact punch) but still fires onImpact, so anything gated on it (e.g.
+    // ChooseWindow's introParticles) still triggers.
+    public void PlayInstant()
+    {
+        StopAll();
+        transform.localScale = _originalScale;
+        onImpact?.Invoke();
+    }
+
     private void StopAll()
     {
         _delayTween.Stop();

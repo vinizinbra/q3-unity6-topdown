@@ -22,10 +22,10 @@ MonoBehaviour:
   DamageRange:
     RawValue: 131072
   Damage:
-    RawValue: 655360
+    RawValue: 0
   AnticipationTime:
     RawValue: 32768
-  DirectionTracking: 2
+  DirectionTracking: 1
   IgnoreY: 1
   Origin: 0
   DownTime:
@@ -40,9 +40,9 @@ MonoBehaviour:
       RawValue: 0
     HealthPercent:
       RawValue: 0
-  AimLock: 0
+  AimLock: 3
   AimLockPercent:
-    RawValue: 65536
+    RawValue: 32768
   SelectionWeight: 1
   InterruptibleDuringTelegraph: 0
   InterruptibleDuringActive: 0
@@ -54,13 +54,13 @@ MonoBehaviour:
     Id:
       Value: 2915166651702025002
   AnticipationStep:
-    AnimationType: 0
-    Duration: 0.3
+    AnimationType: 1
+    Duration: 0.5
     BodySprite: {fileID: 0}
     ShakeImpact: 0
     Shake:
-      Frequency: 18
-      RockDegrees: 6
+      Frequency: 10
+      RockDegrees: 3
     SwingBack:
       Degrees: 20
     Pulse:

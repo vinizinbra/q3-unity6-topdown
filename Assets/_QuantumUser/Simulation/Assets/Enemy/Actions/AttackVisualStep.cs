@@ -176,6 +176,8 @@ namespace Quantum
 
         [Tooltip("Optional - swaps the enemy's body SpriteRenderer (EnemyViewRig.ReferenceSprite) to this sprite for this step, independent of AnimationType. Leave empty to leave whatever sprite is currently showing untouched. Reverts to the enemy's real spawn sprite once the attack fully ends (EnemyAttackVisualsView's attackNoLongerActive edge), regardless of which step last set it.")]
         public Sprite BodySprite;
+        [Tooltip("Only applied while BodySprite above is showing (same duration/revert window) - additive root.localPosition offset, authored as if always facing right. X is mirrored by the enemy's current facing sign, same convention every other left/right-sensitive channel here uses.")]
+        public Vector3 BodySpriteOffset;
 
         [Tooltip("0 = no camera shake. Above 0, this step shakes FollowCamera from its own resolved position (self, or the step's own anchor/target if Anchor below is set to SkillTargetPosition) - attenuated by distance from the camera (FollowCamera.stepShakeFalloffRadius) and scaled by this value (FollowCamera.stepShakeAmplitudePerImpact), independent of AnimationType/particle. A distant hit on another part of the map naturally shakes little to nothing.")]
         public float ShakeImpact = 0f;

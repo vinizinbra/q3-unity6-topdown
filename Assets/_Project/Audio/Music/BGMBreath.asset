@@ -13,14 +13,7 @@ MonoBehaviour:
   m_Name: BGMBreath
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
   variants:
-  - clip: {fileID: 8300000, guid: 84a65ef6798e94b9a8c4d4607b61457f, type: 3}
-    overrideTrim: 0
-    startAt: 0
-    endAt: 0
-    overrideFade: 0
-    fadeIn: 0
-    fadeOut: 0
-  - clip: {fileID: 8300000, guid: a5fe5e506905d420e9d9ddcb2fbbd6d1, type: 3}
+  - clip: {fileID: 8300000, guid: 06b2b53f8168b480db6fdaf525dfbd59, type: 3}
     overrideTrim: 0
     startAt: 0
     endAt: 0
@@ -35,20 +28,6 @@ MonoBehaviour:
     fadeIn: 0
     fadeOut: 0
   - clip: {fileID: 8300000, guid: 36e4da9b90cbc426f854e1b08396d27f, type: 3}
-    overrideTrim: 0
-    startAt: 0
-    endAt: 0
-    overrideFade: 0
-    fadeIn: 0
-    fadeOut: 0
-  - clip: {fileID: 8300000, guid: 91e319a1f18fa4ab3b0d2d51839c82d8, type: 3}
-    overrideTrim: 0
-    startAt: 0
-    endAt: 0
-    overrideFade: 0
-    fadeIn: 0
-    fadeOut: 0
-  - clip: {fileID: 8300000, guid: c2d13fb14d34a4ee68c4d4558fc7d602, type: 3}
     overrideTrim: 0
     startAt: 0
     endAt: 0

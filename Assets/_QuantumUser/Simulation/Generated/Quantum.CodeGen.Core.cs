@@ -7678,7 +7678,7 @@ namespace Quantum {
     void OnEnemyDied(Frame f, EntityRef entity);
   }
   public unsafe partial interface ISignalOnEnemyKnockedBack : ISignal {
-    void OnEnemyKnockedBack(Frame f, EntityRef entity);
+    void OnEnemyKnockedBack(Frame f, EntityRef entity, QBoolean canInterrupt);
   }
   public unsafe partial interface ISignalOnPlayerLanded : ISignal {
     void OnPlayerLanded(Frame f, EntityRef entity, FP fallDistance, LandingSource source);
@@ -8251,12 +8251,12 @@ namespace Quantum {
           }
         }
       }
-      public void OnEnemyKnockedBack(EntityRef entity) {
+      public void OnEnemyKnockedBack(EntityRef entity, QBoolean canInterrupt) {
         var array = _f._ISignalOnEnemyKnockedBackSystems;
         for (Int32 i = 0; i < array.Length; ++i) {
           var s = array[i];
           if (_f.SystemIsEnabledInHierarchy((SystemBase)s)) {
-            s.OnEnemyKnockedBack(_f, entity);
+            s.OnEnemyKnockedBack(_f, entity, canInterrupt);
           }
         }
       }

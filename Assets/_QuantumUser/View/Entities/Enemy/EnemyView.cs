@@ -122,13 +122,13 @@ namespace Quantum
             return Vector3.up * (radiusFloor + widgetSpriteTopPadding);
         }
 
-        // Filler is the disposable/trash tier (destroyed instantly, no lingering die animation -
-        // see DamageUtility.ApplyDamage) so it skips the name callout too; Normal and above get
-        // one, even though Normal dies the same instant way Filler does. Elite gets an " Elite"
-        // suffix so it reads as a step up from a same-named Specialist/Normal variant. The asset's own
-        // name is appended in parens while running in-editor (not in a real build) so whichever
-        // specific EnemyDataAsset spawned this instance is identifiable during playtesting - useful
-        // once several assets share one EnemyName (e.g. a future per-world reskin variant).
+        // Only Elite gets a name callout now - Filler/Normal/Specialist/Heavy stay anonymous (a
+        // named threat reading as elevated only works if it's not also the label on every common
+        // enemy on screen), and Boss never reaches this method at all (skipped by the IsBoss check
+        // above in favor of its own dedicated top-screen BossWidget). The asset's own name is
+        // appended in parens while running in-editor (not in a real build) so whichever specific
+        // EnemyDataAsset spawned this instance is identifiable during playtesting - useful once
+        // several assets share one EnemyName (e.g. a future per-world reskin variant).
         private string ResolveEnemyName(QuantumGame game)
         {
             Frame frame = game.Frames.Predicted;
@@ -136,13 +136,10 @@ namespace Quantum
                 return null;
 
             EnemyDataAsset data = frame.FindAsset(enemy.EnemyData);
-            if (data == null || data.Tier == EnemyTier.Filler)
+            if (data == null || data.Tier != EnemyTier.Elite)
                 return null;
 
-            string name = string.IsNullOrEmpty(data.EnemyName) ? data.name : data.EnemyName;
-
-            if (data.Tier == EnemyTier.Elite)
-                name += " Elite";
+            string name = (string.IsNullOrEmpty(data.EnemyName) ? data.name : data.EnemyName) + " Elite";
 
             // Grayed out via TMP rich text (CharacterUiWidget's nameText) so it reads as secondary
             // debug info, not part of the actual in-game name.

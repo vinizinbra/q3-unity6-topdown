@@ -36,6 +36,15 @@ namespace Quantum
         // the instant it's thrown (EndPhase = Begin).
         public bool WaitForImpact;
 
+        // Opt-in ground telegraph at the resolved landing point (see EnemyDeliveryData.
+        // FireLandingWarning/ProjectileLandingWarning) - off by default so every existing shot keeps
+        // its exact current behavior. Meaningful for any shot with a real flight time, not just
+        // UseArc ones - a slow straight shot benefits just as much as a lob. Radius is read straight
+        // off the assigned ProjectileData's own Hit (ResolveWarningRadius - AreaHitData.BlastRadius,
+        // 0 for anything else) rather than a second authored field, so the warning circle can never
+        // silently drift out of sync with the real blast it's warning about.
+        public bool ShowLandingWarning;
+
         public override bool Begin(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, EnemyActionData action, EntityRef target)
         {
             // Enemy.SkillTargetPosition, not a fresh TryGetTargetPosition read - that field is
@@ -49,16 +58,24 @@ namespace Quantum
             FPVector3 targetPosition = filter.Enemy->SkillTargetPosition;
             FPVector3 origin = filter.Transform3D->Position;
             FPVector3 resolvedOrigin = ProjectileSpawner.ResolveSpawnOrigin(origin, targetPosition, filter.Aim->Angle, SpawnAnchor, SpawnOffset);
+            ProjectileDataAsset projectileData = f.FindAsset(ProjectileData);
 
             ProjectileLaunch launch;
 
             if (UseArc == true)
             {
                 launch = ProjectileSpawner.SolveArcLaunch(resolvedOrigin, targetPosition, LaunchAngle, Gravity);
+
+                // SolveArcLaunch only fills Velocity/IsValid - unlike ProjectileMovementData.
+                // GetLaunchToTarget (the else branch below), it has no opinion on where the shot
+                // actually leaves from. Left unset, this defaults to (0,0,0) and
+                // ProjectileSpawner.Spawn spawns the shot at world origin instead of at
+                // resolvedOrigin - it then instantly detonates against whatever geometry sits
+                // there, reading as "the projectile never appears".
+                launch.SpawnPosition = resolvedOrigin;
             }
             else
             {
-                ProjectileDataAsset projectileData = f.FindAsset(ProjectileData);
                 ProjectileMovementData movement = f.FindAsset(projectileData.Movement);
 
                 // Bullets fly into the target's body, not its feet - same AimsAtTargetCenter
@@ -90,6 +107,9 @@ namespace Quantum
             if (launch.IsValid == true)
             {
                 EntityRef projectile = ProjectileSpawner.Spawn(f, filter.Entity, ProjectileData, launch, action.Damage, target: target);
+
+                if (ShowLandingWarning == true)
+                    FireLandingWarning(f, resolvedOrigin, targetPosition, launch.Velocity, ResolveWarningRadius(f, projectileData.Hit));
 
                 if (WaitForImpact == true)
                 {

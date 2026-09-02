@@ -64,9 +64,9 @@ MonoBehaviour:
         RawValue: 327680
     Movement:
       Id:
-        Value: 328519676567531755
+        Value: 4518153565526138608
     Radius:
-      RawValue: 39322
+      RawValue: 52429
     ShieldMultiplier:
       RawValue: 0
     HealthMultiplier:

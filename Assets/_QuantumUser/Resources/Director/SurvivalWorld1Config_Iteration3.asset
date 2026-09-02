@@ -20,6 +20,60 @@ MonoBehaviour:
   - Name: R1-A Warmup (0-20s)
     Kind: 0
     Duration:
+      RawValue: 65470464
+    BudgetPerPulse:
+      RawValue: 3276800
+    PulseInterval:
+      RawValue: 262144
+    TargetPressure:
+      RawValue: 3276800
+    MaxAliveEnemies: 4
+    AllowedGroups: []
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 307956946824324804
+      Faction: 2
+      Weight:
+        RawValue: 0
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 445092933849088039
+      Faction: 0
+      Weight:
+        RawValue: 196608
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 1
+    - EnemyData:
+        Id:
+          Value: 296950194662925891
+      Faction: 1
+      Weight:
+        RawValue: 196608
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 1
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: R1-A Warmup (0-20s)
+    Kind: 0
+    Duration:
       RawValue: 1310720
     BudgetPerPulse:
       RawValue: 196608
@@ -1680,7 +1734,7 @@ MonoBehaviour:
     AllowedEnemies: []
     BossPrototype:
       Id:
-        Value: 1314062773136615755
+        Value: 0
     PauseDuration:
       RawValue: 0
     GuaranteedGroup:
@@ -1701,7 +1755,7 @@ MonoBehaviour:
     AllowedEnemies: []
     BossPrototype:
       Id:
-        Value: 0
+        Value: 1314062773136615755
     PauseDuration:
       RawValue: 327680
     GuaranteedGroup:
