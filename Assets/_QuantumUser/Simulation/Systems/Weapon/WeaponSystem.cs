@@ -710,7 +710,7 @@ namespace Quantum
                     continue;
 
                 EntityRef entity = ProjectileSpawner.Spawn(f, owner, weaponData.ProjectileData, launch, echo.Damage, DamageSource.Weapon, element: weaponData.Element);
-                ApplyProjectilePerks(f, owner, entity, weapon, false, false);
+                ApplyProjectilePerks(f, owner, entity, weapon, weaponData, false, false);
             }
         }
 
@@ -922,7 +922,7 @@ namespace Quantum
             // still being offered by every draw site - a hitscan weapon could spend a pick on a perk
             // it could never use.
             int pierces = 1;
-            int bounces = 0;
+            int bounces = weaponData.BonusBounces;
 
             if (f.Unsafe.TryGetPointer<WeaponFireTimeMods>(owner, out var mods) == true)
             {
@@ -981,6 +981,11 @@ namespace Quantum
                 FP travelled = remainingRange;
                 bool didHit = false;
                 EntityRef bounceFrom = EntityRef.None;
+
+                // Advances past every intermediate pierce point within this same segment, so each one
+                // fires its own HitscanFired leg/impact instead of only the segment's final contact -
+                // see the surviving-pierce branch below.
+                FPVector3 legOrigin = segmentOrigin;
 
                 // The entity a surviving pierce should carry the beam on FROM, level, rather than
                 // continuing to dive into the floor behind it - see the pierce block below.
@@ -1076,6 +1081,13 @@ namespace Quantum
                             break;
                         }
 
+                        // Fire this pierced enemy's own leg/impact now rather than only at the
+                        // segment's eventual terminal contact - otherwise every intermediate pierce
+                        // point along a straight (non-flattened) beam shows no impact VFX at all, only
+                        // the last one does.
+                        f.Events.HitscanFired(owner, legOrigin, endPoint, true, hitEntity);
+                        legOrigin = endPoint;
+
                         continue; // Piercing Rounds - carry on through this same segment
                     }
 
@@ -1097,9 +1109,10 @@ namespace Quantum
 
                 // Hitscan never spawns an entity (unlike Projectile, which the view tracks via
                 // ProjectileDestroyed) - this is the only view hook for a hitscan pellet's tracer/
-                // impact VFX, see HitscanViewBase and its styles. Raised per SEGMENT, so a Ricochet
-                // bounce draws its own leg of the path with no view-side changes at all.
-                f.Events.HitscanFired(owner, segmentOrigin, endPoint, didHit, segmentTarget);
+                // impact VFX, see HitscanViewBase and its styles. Raised per LEG (segmentOrigin the
+                // first time, then wherever the last intermediate pierce left off), so a Ricochet
+                // bounce or a mid-segment pierce each draw their own leg with no view-side changes.
+                f.Events.HitscanFired(owner, legOrigin, endPoint, didHit, segmentTarget);
 
                 if (isPrimaryPellet == true && didHit == false && segment == 0)
                 {
@@ -1445,7 +1458,7 @@ namespace Quantum
                 // Only pellet 0 of a volley procs Explosive Sequence/Cataclysm Round - see FireHitscan.
                 // Phantom Strike's bonus pierce is NOT pellet-0-gated - "your next shot pierces" reads
                 // as the whole shot, every pellet, not just one.
-                ApplyProjectilePerks(f, owner, entity, weapon, isExplosiveProc && i == 0, isCataclysm && i == 0, grantPierceAmount);
+                ApplyProjectilePerks(f, owner, entity, weapon, weaponData, isExplosiveProc && i == 0, isCataclysm && i == 0, grantPierceAmount);
 
                 Log.Debug($"[Weapon] Spawned pellet {i}/{pelletCount} from {owner} with velocity {launch.Velocity}");
             }
@@ -1457,8 +1470,9 @@ namespace Quantum
         // Sequence/Cataclysm Round flags (see DirectHitData for how the latter two are consumed on
         // impact). grantPierceAmount is Kai's Phantom Strike - a one-shot flat pierce bonus (1/2/99 per
         // rank) baked on top of whatever Piercing Rounds already grants, consumed once per fired shot
-        // back in Update, not per pellet.
-        private static void ApplyProjectilePerks(Frame f, EntityRef owner, EntityRef entity, Weapon* weapon, bool isExplosiveProc, bool isCataclysm, int grantPierceAmount = 0)
+        // back in Update, not per pellet. weaponData.BonusBounces is the weapon's own authored base
+        // ricochet count, added unconditionally alongside whatever the Ricochet perk grants.
+        private static void ApplyProjectilePerks(Frame f, EntityRef owner, EntityRef entity, Weapon* weapon, WeaponDataAsset weaponData, bool isExplosiveProc, bool isCataclysm, int grantPierceAmount = 0)
         {
             if (f.Unsafe.TryGetPointer<Projectile>(entity, out var projectile) == false)
                 return;
@@ -1470,6 +1484,7 @@ namespace Quantum
             }
 
             projectile->RemainingPierces += grantPierceAmount;
+            projectile->RemainingBounces += weaponData.BonusBounces;
 
             projectile->MaxTravelDistance = WeaponPerkUtility.ResolveProjectileMaxTravelDistance(f, weapon, projectile);
             projectile->IsExplosiveProc = isExplosiveProc;

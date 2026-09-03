@@ -58,6 +58,12 @@ namespace Quantum
         public ProjectileSpawnAnchor SpawnAnchor = ProjectileSpawnAnchor.OnSelf;
         public FPVector3 SpawnOffset;
 
+        // Ricochet bounces this weapon starts with, before any Ricochet perk's own BonusBounces
+        // stacks on top (WeaponSystem.ApplyProjectilePerks adds both onto Projectile.RemainingBounces) -
+        // lets a weapon be inherently bouncy (e.g. a boomerang/chain-lightning-flavored gun) with no
+        // perk required. 0 (default) is a no-op, same as every other weapon reproducing prior behavior.
+        public int BonusBounces = 0;
+
         [ExpandableAsset] public AssetRef<ProjectileDataAsset> ProjectileData;
     }
 }

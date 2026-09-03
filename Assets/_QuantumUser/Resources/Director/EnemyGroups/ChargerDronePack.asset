@@ -24,7 +24,7 @@ MonoBehaviour:
     Faction: 2
   - EnemyData:
       Id:
-        Value: 487934318549906861
+        Value: 411749050168152871
     Quantity: 1
     Faction: 1
   Weight:

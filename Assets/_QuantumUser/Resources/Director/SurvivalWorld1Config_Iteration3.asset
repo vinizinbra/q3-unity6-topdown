@@ -18,51 +18,18 @@ MonoBehaviour:
       Value: 356172470141887835
   Phases:
   - Name: R1-A Warmup (0-20s)
-    Kind: 0
+    Kind: 1
     Duration:
       RawValue: 65470464
     BudgetPerPulse:
-      RawValue: 3276800
+      RawValue: 196608
     PulseInterval:
       RawValue: 262144
     TargetPressure:
-      RawValue: 3276800
+      RawValue: 262144
     MaxAliveEnemies: 4
     AllowedGroups: []
-    AllowedEnemies:
-    - EnemyData:
-        Id:
-          Value: 307956946824324804
-      Faction: 2
-      Weight:
-        RawValue: 0
-      MinimumSurvivalTime:
-        RawValue: 0
-      MaximumSurvivalTime:
-        RawValue: 0
-      MaxConcurrent: 0
-    - EnemyData:
-        Id:
-          Value: 445092933849088039
-      Faction: 0
-      Weight:
-        RawValue: 196608
-      MinimumSurvivalTime:
-        RawValue: 0
-      MaximumSurvivalTime:
-        RawValue: 0
-      MaxConcurrent: 1
-    - EnemyData:
-        Id:
-          Value: 296950194662925891
-      Faction: 1
-      Weight:
-        RawValue: 196608
-      MinimumSurvivalTime:
-        RawValue: 0
-      MaximumSurvivalTime:
-        RawValue: 0
-      MaxConcurrent: 1
+    AllowedEnemies: []
     BossPrototype:
       Id:
         Value: 0
@@ -183,7 +150,7 @@ MonoBehaviour:
       MaxConcurrent: 0
     - EnemyData:
         Id:
-          Value: 487934318549906861
+          Value: 411749050168152871
       Faction: 1
       Weight:
         RawValue: 163840
@@ -237,7 +204,7 @@ MonoBehaviour:
       MaxConcurrent: 0
     - EnemyData:
         Id:
-          Value: 487934318549906861
+          Value: 411749050168152871
       Faction: 1
       Weight:
         RawValue: 131072
@@ -366,7 +333,7 @@ MonoBehaviour:
       MaxConcurrent: 0
     - EnemyData:
         Id:
-          Value: 487934318549906861
+          Value: 411749050168152871
       Faction: 1
       Weight:
         RawValue: 131072
@@ -441,7 +408,7 @@ MonoBehaviour:
       MaxConcurrent: 0
     - EnemyData:
         Id:
-          Value: 487934318549906861
+          Value: 411749050168152871
       Faction: 1
       Weight:
         RawValue: 131072
@@ -495,7 +462,7 @@ MonoBehaviour:
       MaxConcurrent: 0
     - EnemyData:
         Id:
-          Value: 487934318549906861
+          Value: 411749050168152871
       Faction: 1
       Weight:
         RawValue: 65536
@@ -549,7 +516,7 @@ MonoBehaviour:
       MaxConcurrent: 0
     - EnemyData:
         Id:
-          Value: 487934318549906861
+          Value: 411749050168152871
       Faction: 1
       Weight:
         RawValue: 131072
@@ -625,7 +592,7 @@ MonoBehaviour:
       MaxConcurrent: 0
     - EnemyData:
         Id:
-          Value: 487934318549906861
+          Value: 411749050168152871
       Faction: 1
       Weight:
         RawValue: 131072
@@ -765,7 +732,7 @@ MonoBehaviour:
       MaxConcurrent: 0
     - EnemyData:
         Id:
-          Value: 487934318549906861
+          Value: 411749050168152871
       Faction: 1
       Weight:
         RawValue: 131072
@@ -830,7 +797,7 @@ MonoBehaviour:
       MaxConcurrent: 0
     - EnemyData:
         Id:
-          Value: 487934318549906861
+          Value: 411749050168152871
       Faction: 1
       Weight:
         RawValue: 131072
@@ -916,7 +883,7 @@ MonoBehaviour:
       MaxConcurrent: 0
     - EnemyData:
         Id:
-          Value: 487934318549906861
+          Value: 411749050168152871
       Faction: 1
       Weight:
         RawValue: 131072
@@ -1003,7 +970,7 @@ MonoBehaviour:
       MaxConcurrent: 0
     - EnemyData:
         Id:
-          Value: 487934318549906861
+          Value: 411749050168152871
       Faction: 1
       Weight:
         RawValue: 131072
@@ -1057,7 +1024,7 @@ MonoBehaviour:
       MaxConcurrent: 0
     - EnemyData:
         Id:
-          Value: 487934318549906861
+          Value: 411749050168152871
       Faction: 1
       Weight:
         RawValue: 131072
@@ -1122,7 +1089,7 @@ MonoBehaviour:
       MaxConcurrent: 0
     - EnemyData:
         Id:
-          Value: 487934318549906861
+          Value: 411749050168152871
       Faction: 1
       Weight:
         RawValue: 131072
@@ -1219,7 +1186,7 @@ MonoBehaviour:
       MaxConcurrent: 0
     - EnemyData:
         Id:
-          Value: 487934318549906861
+          Value: 411749050168152871
       Faction: 1
       Weight:
         RawValue: 131072
@@ -1268,7 +1235,7 @@ MonoBehaviour:
       MaxConcurrent: 0
     - EnemyData:
         Id:
-          Value: 487934318549906861
+          Value: 411749050168152871
       Faction: 1
       Weight:
         RawValue: 131072
@@ -1343,7 +1310,7 @@ MonoBehaviour:
       MaxConcurrent: 0
     - EnemyData:
         Id:
-          Value: 487934318549906861
+          Value: 411749050168152871
       Faction: 1
       Weight:
         RawValue: 131072
@@ -1458,7 +1425,7 @@ MonoBehaviour:
       MaxConcurrent: 0
     - EnemyData:
         Id:
-          Value: 487934318549906861
+          Value: 411749050168152871
       Faction: 1
       Weight:
         RawValue: 131072
@@ -1512,7 +1479,7 @@ MonoBehaviour:
       MaxConcurrent: 0
     - EnemyData:
         Id:
-          Value: 487934318549906861
+          Value: 411749050168152871
       Faction: 1
       Weight:
         RawValue: 131072
@@ -1620,7 +1587,7 @@ MonoBehaviour:
       MaxConcurrent: 0
     - EnemyData:
         Id:
-          Value: 487934318549906861
+          Value: 411749050168152871
       Faction: 1
       Weight:
         RawValue: 131072
@@ -1669,7 +1636,7 @@ MonoBehaviour:
       MaxConcurrent: 0
     - EnemyData:
         Id:
-          Value: 487934318549906861
+          Value: 411749050168152871
       Faction: 1
       Weight:
         RawValue: 131072

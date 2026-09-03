@@ -34,6 +34,10 @@ namespace Quantum
         private static readonly FP DefaultDashIntervalMin = 4;
         private static readonly FP DefaultDashIntervalMax = 9;
         private static readonly FP DefaultHeroSkillEnemyRange = 12;
+        private static readonly FP DefaultFormationOffsetMin = 2;
+        private static readonly FP DefaultFormationOffsetMax = 4;
+        private static readonly FP DefaultFormationRerollIntervalMin = 5;
+        private static readonly FP DefaultFormationRerollIntervalMax = 10;
 
         // Follow distance used instead of the authored one while the target is Downed/KO. The bot
         // has to be inside the Revive Interactable's own radius (ReviveConfig) before
@@ -74,11 +78,6 @@ namespace Quantum
         // so it is not simulation state and nothing about it can desync or need rolling back.
         private static readonly FP[] LedgeDeflectionAngles = { 45, -45, 90, -90 };
 
-        // Spread: each bot parks a little further out than the one before it, keyed off its own
-        // player slot, so two bots following the same person don't grind against each other on top
-        // of the target. Cheap stand-in for real formation slots.
-        private static readonly FP PerBotSpread = FP._0_50 + FP._0_25;
-
         public override void Update(Frame f, ref Filter filter)
         {
             RuntimeConfig.BotSettings settings = f.RuntimeConfig.Bots;
@@ -91,7 +90,7 @@ namespace Quantum
             // WasPressed consumer can never see the same decision twice.
             filter.Brain->Data = default;
 
-            TickTimers(f, filter.Brain);
+            TickTimers(f, filter.Brain, settings);
 
             if (PlayerLifeStateUtility.IsIncapacitated(f, filter.Entity) == true)
                 return;
@@ -99,25 +98,70 @@ namespace Quantum
             if (TryResolveFollowTarget(f, filter.Entity, out EntityRef target, out FPVector3 targetPosition) == false)
                 return;
 
+            bool targetIncapacitated = PlayerLifeStateUtility.IsIncapacitated(f, target);
+
+            // A downed teammate needs the bot to walk to their EXACT position (inside the Revive
+            // Interactable's own radius) - a formation slot a couple of units off would otherwise
+            // strand the bot just out of range of the one interaction it actually needs to take.
+            FPVector3 followPosition = targetIncapacitated == true
+                ? targetPosition
+                : targetPosition + ResolveFormationOffset(f, target, filter.Brain);
+
             FPVector3 selfPosition = filter.Transform->Position;
-            FPVector3 delta = targetPosition - selfPosition;
+            FPVector3 delta = followPosition - selfPosition;
             delta.Y = FP._0;
             FP distance = delta.Magnitude;
-            bool targetIncapacitated = PlayerLifeStateUtility.IsIncapacitated(f, target);
 
             // Follow first, leash second: UpdateFollow is what discovers that every route to the
             // target runs off a ledge, and a bot pinned at the lip of a chasm needs the leash even
             // when the target is close enough that distance alone would never trigger it.
             bool blocked = UpdateFollow(f, ref filter, settings, delta, distance, wasMoving, targetIncapacitated);
 
-            UpdateLeash(f, ref filter, settings, targetPosition, distance, blocked);
+            UpdateLeash(f, ref filter, settings, followPosition, distance, blocked);
             UpdateSkills(f, ref filter, settings, selfPosition);
         }
 
-        private static void TickTimers(Frame f, BotBrain* brain)
+        private static void TickTimers(Frame f, BotBrain* brain, RuntimeConfig.BotSettings settings)
         {
             brain->HeroSkillTimer -= f.DeltaTime;
             brain->DashSkillTimer -= f.DeltaTime;
+
+            brain->FormationRerollTimer -= f.DeltaTime;
+
+            if (brain->FormationRerollTimer > FP._0)
+                return;
+
+            FP min = Or(settings.FormationOffsetMin, DefaultFormationOffsetMin);
+            FP max = Or(settings.FormationOffsetMax, DefaultFormationOffsetMax);
+
+            brain->FormationAngle = f.RNG->Next(FP._0, 360);
+            brain->FormationDistance = max > min ? f.RNG->Next(min, max) : min;
+            brain->FormationRerollTimer = RollInterval(f, settings.FormationRerollIntervalMin, settings.FormationRerollIntervalMax,
+                DefaultFormationRerollIntervalMin, DefaultFormationRerollIntervalMax);
+        }
+
+        // Turns this bot's own (angle, distance) formation slot into a world-space offset, resolved
+        // fresh every tick off the TARGET's current facing (Aim.Angle - the same source
+        // AimSystem/DamageUtility already treat as a player's authoritative facing) so the slot
+        // swings around as the target turns, even though the slot's own angle/distance only change
+        // when FormationRerollTimer fires. 0 degrees is directly in front of the target, 180 behind.
+        //
+        // Known simplification: a target that spins in place (aiming around without moving) drags
+        // every bot's slot around with it, so a bot can end up walking a small arc for no positional
+        // reason. Accepted rather than adding a dead zone - see docs/bots.md's own "smallest thing
+        // that works" framing.
+        private static FPVector3 ResolveFormationOffset(Frame f, EntityRef target, BotBrain* brain)
+        {
+            FP leaderAngle = FP._0;
+
+            if (f.Unsafe.TryGetPointer<Aim>(target, out Aim* aim) == true)
+            {
+                leaderAngle = aim->Angle;
+            }
+
+            FP worldAngle = leaderAngle + brain->FormationAngle;
+
+            return FPQuaternion.Euler(FP._0, worldAngle, FP._0) * FPVector3.Forward * brain->FormationDistance;
         }
 
         // The bot follows the FIRST non-bot player - lowest PlayerRef wins, so a bot always trails
@@ -210,7 +254,7 @@ namespace Quantum
         {
             FP followDistance = targetIncapacitated == true
                 ? DownedTargetFollowDistance
-                : Or(settings.FollowDistance, DefaultFollowDistance) + ResolveSpread(filter.PlayerLink->Player);
+                : Or(settings.FollowDistance, DefaultFollowDistance);
             FP slack = Or(settings.FollowSlack, DefaultFollowSlack);
 
             // Hysteresis: a bot already walking closes all the way to followDistance, but one
@@ -399,14 +443,6 @@ namespace Quantum
             return max > min ? f.RNG->Next(min, max) : min;
         }
 
-        // Each bot parks PerBotSpread further out than the previous player slot, so a party of them
-        // fans out behind the target instead of stacking.
-        private static FP ResolveSpread(PlayerRef player)
-        {
-            int index = (int)player;
-            return index > 0 ? index * PerBotSpread : FP._0;
-        }
-
         // Every FP in BotSettings treats 0 as "unauthored" - see that struct's own comment.
         private static FP Or(FP value, FP fallback)
         {
@@ -418,7 +454,6 @@ namespace Quantum
             public EntityRef Entity;
             public Transform3D* Transform;
             public BotBrain* Brain;
-            public PlayerLink* PlayerLink;
 
             // Every player avatar is a KCC entity (see PlayerMovementProcessor) - held here for the
             // leash teleport and for the grounded check the ledge probes are gated on.

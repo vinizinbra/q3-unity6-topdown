@@ -99,6 +99,7 @@ namespace Quantum
             ClearEmitters();
 
             QuantumEvent.Subscribe<EventProjectileDestroyed>(this, OnProjectileDestroyed);
+            QuantumEvent.Subscribe<EventProjectileImpacted>(this, OnProjectileImpacted);
         }
 
         private void OnDestroy()
@@ -192,14 +193,8 @@ namespace Quantum
             if (this == null)
                 return;
 
-            if (playEffect == true && _settings.DestroyEffectPrefab != null && EffectsManager.Instance != null)
-            {
-                // PlayEffect's 3-arg overload hardcodes Vector3.one (pooled instances default back
-                // to unscaled so a scaled play can't leak onto the next unscaled one drawn from the
-                // same pool) - pass the prefab's own authored scale explicitly or it always plays at 1.
-                Vector3 scale = _settings.DestroyEffectPrefab.transform.localScale;
-                EffectsManager.Instance.PlayEffect(_settings.DestroyEffectPrefab, transform.position, Quaternion.identity, scale);
-            }
+            if (playEffect == true)
+                PlayImpactEffect(transform.position);
 
             // Only on a real impact: unparents itself and finishes emitting where the shot landed.
             // A teardown/orphan cleanup deliberately leaves nothing behind - there was no impact to
@@ -208,6 +203,31 @@ namespace Quantum
                 _settings.TrailParticle.gameObject.AddComponent<ParticleGracefulStop>().StopAndDestroyWhenFinished();
 
             Destroy(gameObject);
+        }
+
+        // A pierce/ricochet the projectile SURVIVED (see DirectHitData.ApplyHit) - unlike
+        // OnProjectileDestroyed this never sets _impacting, tweens the transform, or destroys
+        // anything, since the same live projectile keeps flying past this contact. Without this the
+        // weapon's own impact particle (destroyEffectPrefab) only ever played once, at the shot's
+        // true final position - every intermediate pierce/bounce point showed nothing.
+        private void OnProjectileImpacted(EventProjectileImpacted e)
+        {
+            if (e.Entity != _entity)
+                return;
+
+            PlayImpactEffect(e.Position.ToUnityVector3());
+        }
+
+        private void PlayImpactEffect(Vector3 position)
+        {
+            if (_settings.DestroyEffectPrefab == null || EffectsManager.Instance == null)
+                return;
+
+            // PlayEffect's 3-arg overload hardcodes Vector3.one (pooled instances default back
+            // to unscaled so a scaled play can't leak onto the next unscaled one drawn from the
+            // same pool) - pass the prefab's own authored scale explicitly or it always plays at 1.
+            Vector3 scale = _settings.DestroyEffectPrefab.transform.localScale;
+            EffectsManager.Instance.PlayEffect(_settings.DestroyEffectPrefab, position, Quaternion.identity, scale);
         }
 
         private void SetVisible(bool visible)

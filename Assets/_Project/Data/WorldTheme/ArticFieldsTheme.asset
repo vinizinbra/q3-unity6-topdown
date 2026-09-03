@@ -10,37 +10,37 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 14b37ac26a6bb4ed0ad76ecfaf902300, type: 3}
-  m_Name: DesertOilFieldsTheme
+  m_Name: ArticFieldsTheme
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.WorldTheme
   worldName: 1
   enemy:
     BloodColor: {r: 0.8392157, g: 0.32156864, b: 0.32156864, a: 1}
   environment:
-    Surface: {r: 0.9254902, g: 0.7490196, b: 0.47058824, a: 1}
-    Walls: {r: 0.5660378, g: 0.21038683, b: 0.15218939, a: 1}
+    Surface: {r: 0.7122642, g: 0.9082222, b: 1, a: 1}
+    Walls: {r: 0.15294117, g: 0.32005143, b: 0.5647059, a: 1}
     Sky: {r: 0, g: 0, b: 0, a: 1}
   surface:
     Apply: 1
     SurfaceNoiseMap: {fileID: 2800000, guid: 76137f99cd9574833b59be5d00be6e40, type: 3}
-    SurfaceNoiseScale: 0.05
-    NoiseLightColor: {r: 1, g: 0.8622803, b: 0.7122642, a: 1}
-    NoiseDarkColor: {r: 1, g: 0.54440284, b: 0.4669811, a: 1}
-    SurfaceFadeColor: {r: 1, g: 0.8168131, b: 0.6179246, a: 1}
+    SurfaceNoiseScale: 0.025
+    NoiseLightColor: {r: 1, g: 1, b: 1, a: 1}
+    NoiseDarkColor: {r: 0.4666667, g: 0.80324024, b: 1, a: 1}
+    SurfaceFadeColor: {r: 1, g: 1, b: 1, a: 1}
     SurfaceFadeSteps: 2
-    EdgeLineColor: {r: 0.30588236, g: 0.09019608, b: 0.05490196, a: 1}
+    EdgeLineColor: {r: 0.05490196, g: 0.16021131, b: 0.30588236, a: 1}
     EdgeLineWidth: 0.1
   wallLine:
     Apply: 1
-    LineColor: {r: 0.45882353, g: 0.37254903, b: 0.6509804, a: 1}
+    LineColor: {r: 0.7137255, g: 0.98039216, b: 1, a: 1}
     WorldY: 0
     Thickness: 0.2
     Strength: 1
   water:
     Apply: 1
-    ShallowColor: {r: 0.23819214, g: 0.2196078, b: 0.3490196, a: 1}
-    DeepColor: {r: 0, g: 0, b: 0, a: 1}
-    GlimmerColor: {r: 0.1353684, g: 0.14702713, b: 0.16981128, a: 1}
-    FoamColor: {r: 0.45777833, g: 0.372549, b: 0.6509804, a: 1}
+    ShallowColor: {r: 0.41972235, g: 0.58487326, b: 0.6792453, a: 1}
+    DeepColor: {r: 0.4764151, g: 0.86664635, b: 1, a: 1}
+    GlimmerColor: {r: 0.37864897, g: 0.53992033, b: 0.6320754, a: 1}
+    FoamColor: {r: 0.7122642, g: 0.97924626, b: 1, a: 1}
   obstacles:
     Size1x1: []
     Size1x2: []

@@ -29,12 +29,15 @@ namespace QuantumUser.Editor
     // pass, Turret entries simply deleted) ==============================
     // RUKKS (MainFaction, 4 archetypes): RukkFiller (=Filler.asset), NormalMelee, Shotgunner,
     // HeavySlammer.
-    // SECURITY (RobotFaction, 3 archetypes - Turret removed): SecurityDrone (=DroneGunner.asset),
+    // SECURITY (RobotFaction, 3 archetypes - Turret removed): SecurityGunner (=Gunner.asset, spawned
+    // with Faction=RobotFaction so it resolves Gunner's own authored FactionSkins entry - a ground
+    // ranged unit, SecurityOutpost-Ranged 1.prefab - rather than DroneGunner.asset's flying-drone
+    // visual; same EnemyData stats/behaviour either way, purely a view swap),
     // Mortar (=MortarEnemy.asset), Suicider.
     // WILDLIFE (WildLifeFaction, 2 archetypes): Swarm, Charger.
-    // 9 normal archetypes total (4+3+2). There is no BotFiller, no Gunner.asset usage, and no Turret
-    // anywhere in this iteration - Gunner.asset/Turret.asset are untouched project assets, simply
-    // unreferenced by World 1 here (other worlds/configs may still use them freely).
+    // 9 normal archetypes total (4+3+2). There is no BotFiller and no Turret anywhere in this
+    // iteration - DroneGunner.asset/Turret.asset are untouched project assets, simply unreferenced by
+    // World 1 here (other worlds/configs may still use them freely).
     // ELITES ARE ALL RUKK (MainFaction) - unchanged from the previous pass: I2-EliteFlee/I2-
     // EliteBrute/I2-EliteHeavySlammer reused verbatim from Iteration 2 (already all-MainFaction),
     // I3-EliteMortar authored separately (all-MainFaction) rather than reusing Iteration 2's own
@@ -42,23 +45,25 @@ namespace QuantumUser.Editor
     //
     // ============================== WHAT CHANGED THIS PASS ==============================
     //   1. Turret removed entirely - no loose entry, no pack, no Run-3 introduction. Security drops
-    //      from 4 to 3 archetypes (SecurityDrone/Mortar/Suicider).
+    //      from 4 to 3 archetypes (SecurityGunner/Mortar/Suicider).
     //   2. Mortar moves from Run 3 into Run 2, taught BEFORE Charger (introduced 45-80s, right after
     //      Shotgunner) - Run 2 now teaches Shotgunner -> Mortar -> Charger, each fully isolated in
     //      time (Mortar's own intro/practice finishes at 95s, well before Charger's own intro starts
     //      at 130s, post-Elite - never simultaneous "brand new" behaviours).
     //   3. Swarm moves from Run 2 into Run 3 (25-50s, right after the Recap) - Run 3 now teaches
     //      Swarm -> HeavySlammer instead of HeavySlammer -> Turret -> Mortar.
-    //   4. Pack library rebuilt around the 9-enemy roster: ChargerDronePack, SwarmChargerPack,
+    //   4. Pack library rebuilt around the 9-enemy roster: ChargerDronePack (name kept from the
+    //      previous pass for asset continuity - its RobotFaction member is now Gunner.asset, same
+    //      SecurityGunner swap as everywhere else), SwarmChargerPack,
     //      SlammerPressurePack (HeavySlammer+Swarm), MortarPressurePack (Mortar+Filler),
-    //      MortarShotgunPack (Mortar+Shotgunner) - 5 total, every old Turret/Gunner/BotFiller pack
+    //      MortarShotgunPack (Mortar+Shotgunner) - 5 total, every old Turret/BotFiller pack
     //      (TurretSwarmPack, the old ChargerGunnerPack/HeavySlammerShotgunnerPack shape) retired.
     // Timing skeleton (180s Runs, PreElite 95-105s, Elite at 105s for 25s, Breathing/Boss structure)
     // is otherwise identical to the previous pass.
     //
     // ============================== TIER MODEL (unchanged) ==============================
     //   Tier A (chaff, free after intro): RukkFiller, NormalMelee, Swarm.
-    //   Tier B (basic/background pressure, free once learned): SecurityDrone, Shotgunner.
+    //   Tier B (basic/background pressure, free once learned): SecurityGunner, Shotgunner.
     //   Tier C (major telegraphed threats, deliberate/capped/curated): Charger, HeavySlammer,
     //   Mortar, Suicider - capped at 1 everywhere (Shotgunner, Tier B, is capped at 2 during its own
     //   introduction and stays there - never raised further, but is a step more lenient than Tier C
@@ -73,7 +78,7 @@ namespace QuantumUser.Editor
     // wasn't asked for and isn't added here. Mitigation (unchanged from the previous pass): every
     // Tier C enemy (Charger/HeavySlammer/Mortar/Suicider) is authored EITHER loose OR inside a pack,
     // NEVER both within the same phase - verified programmatically, see this generator's own commit
-    // history. SecurityDrone/Shotgunner (Tier A/B) are explicitly exempt - they're meant to mix
+    // history. SecurityGunner/Shotgunner (Tier A/B) are explicitly exempt - they're meant to mix
     // freely per the brief's own "Simple/background pressure"/"Spacing pressure" framing.
     public static class SurvivalWorld1Iteration3ContentGenerator
     {
@@ -134,8 +139,8 @@ namespace QuantumUser.Editor
             // ---- The 5 combination packs for the entire world - each maps directly onto a
             // combination named explicitly in the brief. ----
 
-            // "Charger + SecurityDrone: directional dodge while under basic ranged pressure" (Run 4).
-            new GroupSpec { FileName = "ChargerDronePack", Members = new[] { M("Charger", 1, EnemyFaction.WildLifeFaction), M("DroneGunner", 1, EnemyFaction.RobotFaction) },
+            // "Charger + SecurityGunner: directional dodge while under basic ranged pressure" (Run 4).
+            new GroupSpec { FileName = "ChargerDronePack", Members = new[] { M("Charger", 1, EnemyFaction.WildLifeFaction), M("Gunner", 1, EnemyFaction.RobotFaction) },
                 Weight = 1, MaxConcurrent = 1, SpawnPattern = GroupSpawnPattern.Arc, FormationRadius = 5 },
             // "Swarm + Charger" (Run 3 Spatial Combinations).
             new GroupSpec { FileName = "SwarmChargerPack", Members = new[] { M("Swarm", 3, EnemyFaction.WildLifeFaction), M("Charger", 1, EnemyFaction.WildLifeFaction) },
@@ -172,7 +177,7 @@ namespace QuantumUser.Editor
         {
             // =========================================================================
             // RUN 1 - FUNDAMENTALS (0:00-3:00). Pursuit + ranged pressure. New: RukkFiller,
-            // NormalMelee, SecurityDrone. Unchanged from the previous pass - Turret was never part
+            // NormalMelee, SecurityGunner. Unchanged from the previous pass - Turret was never part
             // of Run 1. Elite: FleeElite (Rukk).
             // =========================================================================
 
@@ -184,15 +189,15 @@ namespace QuantumUser.Editor
                 BudgetPerPulse = 5, PulseInterval = 3, TargetPressure = 8, MaxAliveEnemies = 6,
                 Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 7), E("NormalMelee", EnemyFaction.MainFaction, 3) } },
 
-            // SecurityDrone (DroneGunner.asset, RobotFaction) introduced - first basic ranged
+            // SecurityGunner (Gunner.asset, RobotFaction skin) introduced - first basic ranged
             // pressure AND the Security faction's own reveal, all in one beat.
-            new PhaseSpec { Name = "R1-C SecurityDrone Introduction (50-85s)", Kind = SurvivalPhaseKind.Combat, Duration = 35,
+            new PhaseSpec { Name = "R1-C SecurityGunner Introduction (50-85s)", Kind = SurvivalPhaseKind.Combat, Duration = 35,
                 BudgetPerPulse = 7, PulseInterval = FP.FromString("2.5"), TargetPressure = 12, MaxAliveEnemies = 9,
-                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 5), E("NormalMelee", EnemyFaction.MainFaction, FP.FromString("2.5")), E("DroneGunner", EnemyFaction.RobotFaction, FP.FromString("2.5")) } },
+                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 5), E("NormalMelee", EnemyFaction.MainFaction, FP.FromString("2.5")), E("Gunner", EnemyFaction.RobotFaction, FP.FromString("2.5")) } },
 
             new PhaseSpec { Name = "R1-D Fundamentals Practice (85-95s)", Kind = SurvivalPhaseKind.Combat, Duration = 10,
                 BudgetPerPulse = 8, PulseInterval = FP.FromString("2.2"), TargetPressure = 13, MaxAliveEnemies = 9,
-                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("NormalMelee", EnemyFaction.MainFaction, 2), E("DroneGunner", EnemyFaction.RobotFaction, 2) } },
+                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("NormalMelee", EnemyFaction.MainFaction, 2), E("Gunner", EnemyFaction.RobotFaction, 2) } },
 
             new PhaseSpec { Name = "R1-E PreElite (95-105s)", Kind = SurvivalPhaseKind.Combat, Duration = 10,
                 BudgetPerPulse = 4, PulseInterval = 3, TargetPressure = 8, MaxAliveEnemies = 6,
@@ -205,7 +210,7 @@ namespace QuantumUser.Editor
 
             new PhaseSpec { Name = "R1-G Fundamentals Pressure (130-180s)", Kind = SurvivalPhaseKind.Combat, Duration = 50,
                 BudgetPerPulse = 10, PulseInterval = 2, TargetPressure = 18, MaxAliveEnemies = 13,
-                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("NormalMelee", EnemyFaction.MainFaction, 2), E("DroneGunner", EnemyFaction.RobotFaction, 2) } },
+                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("NormalMelee", EnemyFaction.MainFaction, 2), E("Gunner", EnemyFaction.RobotFaction, 2) } },
 
             new PhaseSpec { Name = "Breathing 1", Kind = SurvivalPhaseKind.Breathing, Duration = 60 },
 
@@ -220,13 +225,13 @@ namespace QuantumUser.Editor
 
             new PhaseSpec { Name = "R2-A Recap (0-20s)", Kind = SurvivalPhaseKind.Combat, Duration = 20,
                 BudgetPerPulse = 10, PulseInterval = 2, TargetPressure = 16, MaxAliveEnemies = 11,
-                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("NormalMelee", EnemyFaction.MainFaction, 2), E("DroneGunner", EnemyFaction.RobotFaction, 2) } },
+                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("NormalMelee", EnemyFaction.MainFaction, 2), E("Gunner", EnemyFaction.RobotFaction, 2) } },
 
             // Shotgunner introduced (Rukk, cap 2), paired with simple surrounding enemies. NOT
             // stacked with Charger yet.
             new PhaseSpec { Name = "R2-B Shotgunner Introduction (20-45s)", Kind = SurvivalPhaseKind.Combat, Duration = 25,
                 BudgetPerPulse = 11, PulseInterval = 2, TargetPressure = 17, MaxAliveEnemies = 12,
-                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("NormalMelee", EnemyFaction.MainFaction, 1), E("DroneGunner", EnemyFaction.RobotFaction, 1), E("Shotgunner", EnemyFaction.MainFaction, 2, 2) } },
+                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("NormalMelee", EnemyFaction.MainFaction, 1), E("Gunner", EnemyFaction.RobotFaction, 1), E("Shotgunner", EnemyFaction.MainFaction, 2, 2) } },
 
             // Mortar Introduction (Security, Tier C, cap 1) - now taught FIRST (pre-Elite), swapped
             // with Charger per direct request. Tightly capped, other major telegraphs suppressed
@@ -235,12 +240,12 @@ namespace QuantumUser.Editor
             // marker -> delay -> impact -> relocate.
             new PhaseSpec { Name = "R2-C Mortar Introduction (45-80s)", Kind = SurvivalPhaseKind.Combat, Duration = 35,
                 BudgetPerPulse = 13, PulseInterval = FP.FromString("1.8"), TargetPressure = 20, MaxAliveEnemies = 13,
-                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("DroneGunner", EnemyFaction.RobotFaction, 2), E("NormalMelee", EnemyFaction.MainFaction, 1), E("MortarEnemy", EnemyFaction.RobotFaction, 2, 1) } },
+                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("Gunner", EnemyFaction.RobotFaction, 2), E("NormalMelee", EnemyFaction.MainFaction, 1), E("MortarEnemy", EnemyFaction.RobotFaction, 2, 1) } },
 
             // Mortar Practice - no new enemy, Mortar + simple known enemies.
             new PhaseSpec { Name = "R2-D Mortar Practice (80-95s)", Kind = SurvivalPhaseKind.Combat, Duration = 15,
                 BudgetPerPulse = 13, PulseInterval = FP.FromString("1.8"), TargetPressure = 19, MaxAliveEnemies = 13,
-                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 2), E("DroneGunner", EnemyFaction.RobotFaction, 2), E("NormalMelee", EnemyFaction.MainFaction, 1), E("MortarEnemy", EnemyFaction.RobotFaction, 1, 1) } },
+                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 2), E("Gunner", EnemyFaction.RobotFaction, 2), E("NormalMelee", EnemyFaction.MainFaction, 1), E("MortarEnemy", EnemyFaction.RobotFaction, 1, 1) } },
 
             // PreElite - Tier A chaff only, pressure eased.
             new PhaseSpec { Name = "R2-E PreElite (95-105s)", Kind = SurvivalPhaseKind.Combat, Duration = 10,
@@ -257,12 +262,12 @@ namespace QuantumUser.Editor
             // reduced (not zero) to keep focus on Charger, Mortar suppressed entirely.
             new PhaseSpec { Name = "R2-G Charger Introduction (130-160s)", Kind = SurvivalPhaseKind.Combat, Duration = 30,
                 BudgetPerPulse = 15, PulseInterval = FP.FromString("1.6"), TargetPressure = 22, MaxAliveEnemies = 15,
-                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("DroneGunner", EnemyFaction.RobotFaction, 2), E("NormalMelee", EnemyFaction.MainFaction, 1), E("Shotgunner", EnemyFaction.MainFaction, 1, 1), E("Charger", EnemyFaction.WildLifeFaction, 2, 1) } },
+                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("Gunner", EnemyFaction.RobotFaction, 2), E("NormalMelee", EnemyFaction.MainFaction, 1), E("Shotgunner", EnemyFaction.MainFaction, 1, 1), E("Charger", EnemyFaction.WildLifeFaction, 2, 1) } },
 
             // Charger Practice - no new enemy, Charger + simple known enemies.
             new PhaseSpec { Name = "R2-H Charger Practice (160-180s)", Kind = SurvivalPhaseKind.Combat, Duration = 20,
                 BudgetPerPulse = 15, PulseInterval = FP.FromString("1.6"), TargetPressure = 22, MaxAliveEnemies = 15,
-                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 2), E("DroneGunner", EnemyFaction.RobotFaction, 2), E("NormalMelee", EnemyFaction.MainFaction, 1), E("Charger", EnemyFaction.WildLifeFaction, 1, 1) } },
+                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 2), E("Gunner", EnemyFaction.RobotFaction, 2), E("NormalMelee", EnemyFaction.MainFaction, 1), E("Charger", EnemyFaction.WildLifeFaction, 1, 1) } },
 
             new PhaseSpec { Name = "Breathing 2", Kind = SurvivalPhaseKind.Breathing, Duration = 60 },
 
@@ -276,25 +281,25 @@ namespace QuantumUser.Editor
             new PhaseSpec { Name = "R3-A Recap (0-25s)", Kind = SurvivalPhaseKind.Combat, Duration = 25,
                 BudgetPerPulse = 16, PulseInterval = FP.FromString("1.6"), TargetPressure = 23, MaxAliveEnemies = 15,
                 Roster = new List<SegEntry> {
-                    E("Filler", EnemyFaction.MainFaction, 3), E("DroneGunner", EnemyFaction.RobotFaction, 2), E("NormalMelee", EnemyFaction.MainFaction, 1),
+                    E("Filler", EnemyFaction.MainFaction, 3), E("Gunner", EnemyFaction.RobotFaction, 2), E("NormalMelee", EnemyFaction.MainFaction, 1),
                     E("Shotgunner", EnemyFaction.MainFaction, 1, 1), E("Charger", EnemyFaction.WildLifeFaction, 1, 1), E("MortarEnemy", EnemyFaction.RobotFaction, 1, 1) } },
 
             // Swarm Introduction (Wildlife) - "available movement space can become constrained by
             // enemy density." No large telegraph needed.
             new PhaseSpec { Name = "R3-B Swarm Introduction (25-50s)", Kind = SurvivalPhaseKind.Combat, Duration = 25,
                 BudgetPerPulse = 13, PulseInterval = FP.FromString("1.8"), TargetPressure = 17, MaxAliveEnemies = 14,
-                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 2), E("DroneGunner", EnemyFaction.RobotFaction, 2), E("Swarm", EnemyFaction.WildLifeFaction, 3) } },
+                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 2), E("Gunner", EnemyFaction.RobotFaction, 2), E("Swarm", EnemyFaction.WildLifeFaction, 3) } },
 
             // HeavySlammer Introduction (Rukk, Tier C, cap 1) - read facing/wind-up -> leave frontal
             // cone -> punish recovery. Not combined with multiple other major telegraphs yet.
             new PhaseSpec { Name = "R3-C HeavySlammer Introduction (50-85s)", Kind = SurvivalPhaseKind.Combat, Duration = 35,
                 BudgetPerPulse = 18, PulseInterval = FP.FromString("1.5"), TargetPressure = 27, MaxAliveEnemies = 17,
-                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("DroneGunner", EnemyFaction.RobotFaction, 2), E("NormalMelee", EnemyFaction.MainFaction, 1), E("HeavySlammer", EnemyFaction.MainFaction, 1, 1) } },
+                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("Gunner", EnemyFaction.RobotFaction, 2), E("NormalMelee", EnemyFaction.MainFaction, 1), E("HeavySlammer", EnemyFaction.MainFaction, 1, 1) } },
 
             // HeavySlammer Practice - Slammer + simple known pressure, no new mechanic.
             new PhaseSpec { Name = "R3-D HeavySlammer Practice (85-95s)", Kind = SurvivalPhaseKind.Combat, Duration = 10,
                 BudgetPerPulse = 17, PulseInterval = FP.FromString("1.5"), TargetPressure = 25, MaxAliveEnemies = 16,
-                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("DroneGunner", EnemyFaction.RobotFaction, 2), E("HeavySlammer", EnemyFaction.MainFaction, 1, 1) } },
+                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("Gunner", EnemyFaction.RobotFaction, 2), E("HeavySlammer", EnemyFaction.MainFaction, 1, 1) } },
 
             new PhaseSpec { Name = "R3-E PreElite (95-105s)", Kind = SurvivalPhaseKind.Combat, Duration = 10,
                 BudgetPerPulse = 5, PulseInterval = FP.FromString("2.8"), TargetPressure = 9, MaxAliveEnemies = 7,
@@ -303,7 +308,7 @@ namespace QuantumUser.Editor
             // Mortar Elite - all-Rukk (I3-EliteMortar). Do not infer Security from the mechanic.
             new PhaseSpec { Name = "R3-F Mortar Elite (105-130s)", Kind = SurvivalPhaseKind.Combat, Duration = 25,
                 BudgetPerPulse = 5, PulseInterval = FP.FromString("2.5"), TargetPressure = 8, MaxAliveEnemies = 10,
-                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("DroneGunner", EnemyFaction.RobotFaction, 2) },
+                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("Gunner", EnemyFaction.RobotFaction, 2) },
                 GuaranteedGroup = "I3-EliteMortar" },
 
             // Spatial Combinations - a small number of readable pairings via SwarmChargerPack,
@@ -312,7 +317,7 @@ namespace QuantumUser.Editor
             // not also loose.
             new PhaseSpec { Name = "R3-G Spatial Combinations (130-180s)", Kind = SurvivalPhaseKind.Combat, Duration = 50,
                 BudgetPerPulse = 21, PulseInterval = FP.FromString("1.4"), TargetPressure = 32, MaxAliveEnemies = 19,
-                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 2), E("DroneGunner", EnemyFaction.RobotFaction, 2), E("NormalMelee", EnemyFaction.MainFaction, 1) },
+                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 2), E("Gunner", EnemyFaction.RobotFaction, 2), E("NormalMelee", EnemyFaction.MainFaction, 1) },
                 Groups = new[] { "SwarmChargerPack", "SlammerPressurePack", "MortarPressurePack" } },
 
             new PhaseSpec { Name = "Breathing 3", Kind = SurvivalPhaseKind.Breathing, Duration = 60 },
@@ -325,7 +330,7 @@ namespace QuantumUser.Editor
             new PhaseSpec { Name = "R4-A Established Ecosystem (0-30s)", Kind = SurvivalPhaseKind.Combat, Duration = 30,
                 BudgetPerPulse = 22, PulseInterval = FP.FromString("1.4"), TargetPressure = 34, MaxAliveEnemies = 21,
                 Roster = new List<SegEntry> {
-                    E("Filler", EnemyFaction.MainFaction, 2), E("DroneGunner", EnemyFaction.RobotFaction, 2), E("NormalMelee", EnemyFaction.MainFaction, 1),
+                    E("Filler", EnemyFaction.MainFaction, 2), E("Gunner", EnemyFaction.RobotFaction, 2), E("NormalMelee", EnemyFaction.MainFaction, 1),
                     E("Shotgunner", EnemyFaction.MainFaction, 1, 2), E("HeavySlammer", EnemyFaction.MainFaction, 1, 1), E("MortarEnemy", EnemyFaction.RobotFaction, 1, 1),
                     E("Charger", EnemyFaction.WildLifeFaction, 1, 1), E("Swarm", EnemyFaction.WildLifeFaction, 2) } },
 
@@ -335,15 +340,15 @@ namespace QuantumUser.Editor
             // Tier A/B texture.
             new PhaseSpec { Name = "R4-B Curated Combinations (30-75s)", Kind = SurvivalPhaseKind.Combat, Duration = 45,
                 BudgetPerPulse = 25, PulseInterval = FP.FromString("1.3"), TargetPressure = 40, MaxAliveEnemies = 24,
-                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 2), E("DroneGunner", EnemyFaction.RobotFaction, 2), E("NormalMelee", EnemyFaction.MainFaction, 1) },
+                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 2), E("Gunner", EnemyFaction.RobotFaction, 2), E("NormalMelee", EnemyFaction.MainFaction, 1) },
                 Groups = new[] { "ChargerDronePack", "SlammerPressurePack", "MortarShotgunPack" } },
 
             // Suicider Introduction (Security, Tier C, cap 1, the final new enemy in World 1) -
-            // suppress HeavySlammer/Mortar/Charger entirely, mostly Filler/Melee/SecurityDrone.
+            // suppress HeavySlammer/Mortar/Charger entirely, mostly Filler/Melee/SecurityGunner.
             // Lesson: target priority / immediate urgency.
             new PhaseSpec { Name = "R4-C Suicider Introduction (75-95s)", Kind = SurvivalPhaseKind.Combat, Duration = 20,
                 BudgetPerPulse = 16, PulseInterval = FP.FromString("1.8"), TargetPressure = 20, MaxAliveEnemies = 14,
-                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("DroneGunner", EnemyFaction.RobotFaction, 2), E("NormalMelee", EnemyFaction.MainFaction, 1), E("Suicider", EnemyFaction.RobotFaction, 2, 1) } },
+                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("Gunner", EnemyFaction.RobotFaction, 2), E("NormalMelee", EnemyFaction.MainFaction, 1), E("Suicider", EnemyFaction.RobotFaction, 2, 1) } },
 
             new PhaseSpec { Name = "R4-D PreElite (95-105s)", Kind = SurvivalPhaseKind.Combat, Duration = 10,
                 BudgetPerPulse = 6, PulseInterval = FP.FromString("2.8"), TargetPressure = 11, MaxAliveEnemies = 9,
@@ -360,7 +365,7 @@ namespace QuantumUser.Editor
             // change, same caveat.
             new PhaseSpec { Name = "R4-E HeavySlammer Elite (105-130s)", Kind = SurvivalPhaseKind.Combat, Duration = 25,
                 BudgetPerPulse = 6, PulseInterval = FP.FromString("2.5"), TargetPressure = 10, MaxAliveEnemies = 10,
-                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("DroneGunner", EnemyFaction.RobotFaction, 2) },
+                Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("Gunner", EnemyFaction.RobotFaction, 2) },
                 GuaranteedGroup = "I2-EliteHeavySlammer" },
 
             // Final Exam - no new enemies, the SAME 3 Run-4 packs (reused, not a new matrix),
@@ -370,7 +375,7 @@ namespace QuantumUser.Editor
             new PhaseSpec { Name = "R4-F Final Exam (130-180s)", Kind = SurvivalPhaseKind.Combat, Duration = 50,
                 BudgetPerPulse = 30, PulseInterval = 1, TargetPressure = 48, MaxAliveEnemies = 28,
                 Roster = new List<SegEntry> {
-                    E("Filler", EnemyFaction.MainFaction, 2), E("DroneGunner", EnemyFaction.RobotFaction, 2), E("NormalMelee", EnemyFaction.MainFaction, 1),
+                    E("Filler", EnemyFaction.MainFaction, 2), E("Gunner", EnemyFaction.RobotFaction, 2), E("NormalMelee", EnemyFaction.MainFaction, 1),
                     E("Swarm", EnemyFaction.WildLifeFaction, 2), E("Suicider", EnemyFaction.RobotFaction, 1, 1) },
                 Groups = new[] { "ChargerDronePack", "SlammerPressurePack", "MortarShotgunPack" } },
 

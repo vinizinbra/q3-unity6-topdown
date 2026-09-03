@@ -281,6 +281,18 @@ event ProjectileDestroyed
     AssetRef<ProjectileDataAsset> ProjectileData;
 }
 
+// Fired by DirectHitData.ApplyHit on every contact the projectile actually SURVIVES - a Piercing
+// Rounds pass-through or a Ricochet bounce - never on the terminal hit, which raises
+// ProjectileDestroyed instead. Without this, a per-weapon impact particle
+// (ProjectileView.destroyEffectPrefab) only ever plays once, at the shot's final resting point,
+// since ProjectileVisualController otherwise has no hook for "this projectile is still flying but
+// just hit something" - see ProjectileVisualController.OnProjectileImpacted.
+event ProjectileImpacted
+{
+    EntityRef  Entity;
+    FPVector3  Position;
+}
+
 // Fired once per SEGMENT from WeaponSystem.FireHitscanPellet - one per pellet of a volley, plus one
 // more for every Ricochet bounce, each beginning exactly where the previous one ended. A Hitscan
 // weapon never spawns an entity (unlike Projectile, which gets ProjectileDestroyed above), so this

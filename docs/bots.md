@@ -65,9 +65,15 @@ everyone else when an upgrade screen pauses the group.
 
 - **Follow the first player.** Lowest-`PlayerRef` non-bot wins, so a bot trails the same person all
   run rather than swapping to whoever is closest. Falls back to another bot if there is no human.
-- **Stop-and-go with hysteresis.** Parks at `FollowDistance` (+ a per-slot spread so two bots don't
-  grind against each other), and won't set off again until the target is a `FollowSlack` further
-  out. Holds `Run` past `RunDistance`.
+- **Stop-and-go with hysteresis.** Parks at `FollowDistance` and won't set off again until the
+  target is a `FollowSlack` further out. Holds `Run` past `RunDistance`.
+- **Formation slot, not the target's exact spot.** Each bot has its own randomized (angle, distance)
+  offset - resolved every tick against the target's *current* facing (`Aim.Angle`), so the slot
+  swings around as the target turns, and re-rolled to a new angle/distance only on its own
+  `[FormationRerollIntervalMin, FormationRerollIntervalMax]` timer, not every tick. This is what
+  keeps two bots following the same person from stacking on top of them or each other (replaces the
+  old fixed per-slot spread). A Downed/KO target is the one exception - the bot walks to their
+  *exact* position instead, since it needs to be inside the Revive Interactable's radius.
 - **Wall deflection, no pathfinding.** Reuses `EnemyMovementUtility.SteerAroundWalls` - the same
   deflection an `AvoidWalls` enemy gets.
 - **Ledge avoidance.** See below - the bot will not walk into a pit, and walks along the lip of one

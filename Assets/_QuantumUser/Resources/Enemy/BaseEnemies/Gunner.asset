@@ -67,6 +67,7 @@ MonoBehaviour:
   Gravity:
     RawValue: 1310720
   WaitForImpact: 0
+  ShowLandingWarning: 0
 --- !u!114 &-1635448922863863783
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -124,6 +125,7 @@ MonoBehaviour:
     AnimationType: 1
     Duration: 0.4
     BodySprite: {fileID: 0}
+    BodySpriteOffset: {x: 0, y: 0, z: 0}
     ShakeImpact: 0
     Shake:
       Frequency: 10
@@ -190,6 +192,7 @@ MonoBehaviour:
     AnimationType: 8
     Duration: 0.2
     BodySprite: {fileID: 0}
+    BodySpriteOffset: {x: 0, y: 0, z: 0}
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -256,6 +259,7 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteOffset: {x: 0, y: 0, z: 0}
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -322,6 +326,7 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteOffset: {x: 0, y: 0, z: 0}
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -450,7 +455,7 @@ MonoBehaviour:
       Id:
         Value: 328519676567531755
     Radius:
-      RawValue: 65536
+      RawValue: 55706
     ShieldMultiplier:
       RawValue: 0
     HealthMultiplier:
@@ -564,10 +569,7 @@ MonoBehaviour:
   SkillActions: []
   ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
   ViewPrefab: {fileID: 8476845490732343577, guid: 44f05a37744604650b4768c09f453d82, type: 3}
-  FactionSkins:
-  - Faction: 1
-    ViewPrefab: {fileID: 8476845490732343577, guid: 0f9bf80130ec34ffcbfcf4925f927fee, type: 3}
-    ScaleMultiplier: 0
+  FactionSkins: []
 --- !u!114 &5510490751386579581
 MonoBehaviour:
   m_ObjectHideFlags: 0

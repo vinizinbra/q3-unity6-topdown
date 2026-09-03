@@ -47552,7 +47552,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 0.5882353}
+  m_Color: {r: 0, g: 0, b: 0, a: 0.8627451}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -82967,29 +82967,37 @@ MonoBehaviour:
       RawValue: 65536
     DebugManualFireInput: 0
     DebugStartSurvivalTimeSeconds:
-      RawValue: 0
-    DebugStartLevelUpCount: 0
+      RawValue: 35061760
+    DebugStartLevelUpCount: 16
     Bots:
       FollowDistance:
         RawValue: 0
       FollowSlack:
         RawValue: 0
       RunDistance:
-        RawValue: 0
+        RawValue: 32768
       LeashDistance:
-        RawValue: 0
+        RawValue: 1678377
       LeashTimeout:
-        RawValue: 0
+        RawValue: 302121
       HeroSkillIntervalMin:
-        RawValue: 0
+        RawValue: 655360
       HeroSkillIntervalMax:
-        RawValue: 0
+        RawValue: 6488064
       DashIntervalMin:
         RawValue: 0
       DashIntervalMax:
         RawValue: 0
       HeroSkillEnemyRange:
         RawValue: 0
+      FormationOffsetMin:
+        RawValue: 65536
+      FormationOffsetMax:
+        RawValue: 131072
+      FormationRerollIntervalMin:
+        RawValue: 327680
+      FormationRerollIntervalMax:
+        RawValue: 524288
       DisableAutoLevelUpPick: 0
       DisableAutoBreathingSkipVote: 0
   UseRandomSeed: 1
@@ -82998,7 +83006,7 @@ MonoBehaviour:
   - PlayerAvatar:
       Id:
         Value: 1427283638148129588
-    PlayerNickname: Max
+    PlayerNickname: Pixie
     test:
       RawValue: 0
     IsBot: 0

@@ -199,6 +199,20 @@
             // on the timer).
             public FP HeroSkillEnemyRange;
 
+            [Header("Formation")]
+            // Each bot parks at its own random slot - an angle (relative to the follow target's
+            // CURRENT facing) plus a distance - instead of walking straight for the target's exact
+            // position, so a party of them fans out instead of stacking. Re-rolled on its own timer
+            // (below), not every tick, so a slot holds still rather than drifting. Max <= Min
+            // collapses the distance to a fixed value.
+            public FP FormationOffsetMin;
+            public FP FormationOffsetMax;
+
+            // How often each bot's own formation slot re-rolls to a new angle/distance. Max <= Min
+            // collapses to a fixed interval.
+            public FP FormationRerollIntervalMin;
+            public FP FormationRerollIntervalMax;
+
             [Header("Flow")]
             // A bot has nobody at the keyboard, so by default it takes itself out of every
             // "waiting for all players" gate instead of making the human wait out a timeout: it

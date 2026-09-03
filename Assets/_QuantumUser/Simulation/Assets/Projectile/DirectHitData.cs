@@ -38,7 +38,7 @@ namespace Quantum
             projectile->RemainingPierces = PierceCount;
         }
 
-        public override bool ApplyHit(Frame f, Projectile* projectile, EntityRef hitEntity, FPVector3 point)
+        public override bool ApplyHit(Frame f, EntityRef entity, Projectile* projectile, EntityRef hitEntity, FPVector3 point)
         {
             if (ShouldDetonate(f, projectile, hitEntity) == false)
                 return false;
@@ -64,6 +64,7 @@ namespace Quantum
             if (projectile->RemainingPierces > 0)
             {
                 TryFlattenTrajectory(f, projectile);
+                f.Events.ProjectileImpacted(entity, point);
                 return false;
             }
 
@@ -71,6 +72,7 @@ namespace Quantum
                 && TryRicochet(f, projectile, hitEntity, point) == true)
             {
                 projectile->RemainingBounces--;
+                f.Events.ProjectileImpacted(entity, point);
                 return false;
             }
 

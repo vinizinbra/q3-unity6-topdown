@@ -492,6 +492,9 @@ namespace Quantum.Prototypes {
     public FP HeroSkillTimer;
     public FP DashSkillTimer;
     public FP LeashTimer;
+    public FP FormationAngle;
+    public FP FormationDistance;
+    public FP FormationRerollTimer;
     partial void MaterializeUser(Frame frame, ref Quantum.BotBrain result, in PrototypeMaterializationContext context);
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.BotBrain component = default;
@@ -503,6 +506,9 @@ namespace Quantum.Prototypes {
         result.HeroSkillTimer = this.HeroSkillTimer;
         result.DashSkillTimer = this.DashSkillTimer;
         result.LeashTimer = this.LeashTimer;
+        result.FormationAngle = this.FormationAngle;
+        result.FormationDistance = this.FormationDistance;
+        result.FormationRerollTimer = this.FormationRerollTimer;
         MaterializeUser(frame, ref result, in context);
     }
   }

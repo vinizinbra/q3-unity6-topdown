@@ -36,8 +36,10 @@ namespace Quantum
         }
 
         // hitEntity is EntityRef.None when the projectile struck level geometry. Returns true when
-        // the projectile is spent and should be destroyed.
-        public abstract bool ApplyHit(Frame f, Projectile* projectile, EntityRef hitEntity, FPVector3 point);
+        // the projectile is spent and should be destroyed. entity is the projectile's OWN EntityRef -
+        // needed so a surviving (pierce/ricochet) hit can identify itself to the view via
+        // ProjectileImpacted, the same way Destroy() already identifies itself via ProjectileDestroyed.
+        public abstract bool ApplyHit(Frame f, EntityRef entity, Projectile* projectile, EntityRef hitEntity, FPVector3 point);
 
         // Lifetime ran out without connecting.
         public virtual void ApplyExpire(Frame f, Projectile* projectile, FPVector3 position)

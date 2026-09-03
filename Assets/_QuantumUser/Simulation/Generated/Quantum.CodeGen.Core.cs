@@ -2383,16 +2383,22 @@ namespace Quantum {
   }
   [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct BotBrain : Quantum.IComponent {
-    public const Int32 SIZE = 112;
+    public const Int32 SIZE = 136;
     public const Int32 ALIGNMENT = 8;
-    [FieldOffset(24)]
+    [FieldOffset(48)]
     public Input Data;
-    [FieldOffset(8)]
+    [FieldOffset(32)]
     public FP HeroSkillTimer;
     [FieldOffset(0)]
     public FP DashSkillTimer;
-    [FieldOffset(16)]
+    [FieldOffset(40)]
     public FP LeashTimer;
+    [FieldOffset(8)]
+    public FP FormationAngle;
+    [FieldOffset(16)]
+    public FP FormationDistance;
+    [FieldOffset(24)]
+    public FP FormationRerollTimer;
     public override readonly Int32 GetHashCode() {
       unchecked { 
         var hash = 19961;
@@ -2400,12 +2406,18 @@ namespace Quantum {
         hash = hash * 31 + HeroSkillTimer.GetHashCode();
         hash = hash * 31 + DashSkillTimer.GetHashCode();
         hash = hash * 31 + LeashTimer.GetHashCode();
+        hash = hash * 31 + FormationAngle.GetHashCode();
+        hash = hash * 31 + FormationDistance.GetHashCode();
+        hash = hash * 31 + FormationRerollTimer.GetHashCode();
         return hash;
       }
     }
     public static void Serialize(void* ptr, FrameSerializer serializer) {
         var p = (BotBrain*)ptr;
         FP.Serialize(&p->DashSkillTimer, serializer);
+        FP.Serialize(&p->FormationAngle, serializer);
+        FP.Serialize(&p->FormationDistance, serializer);
+        FP.Serialize(&p->FormationRerollTimer, serializer);
         FP.Serialize(&p->HeroSkillTimer, serializer);
         FP.Serialize(&p->LeashTimer, serializer);
         Quantum.Input.Serialize(&p->Data, serializer);

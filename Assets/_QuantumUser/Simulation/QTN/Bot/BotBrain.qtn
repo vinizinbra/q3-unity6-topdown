@@ -29,4 +29,13 @@ component BotBrain
     // steering is deliberately dumb (no pathfinding), so this is what stops a bot that walked into
     // a dead end from being lost for the rest of the run.
     FP LeashTimer;
+
+    // This bot's own formation slot, relative to its follow target's CURRENT facing (Aim.Angle) -
+    // 0 degrees is directly in front, 180 behind, re-resolved into a world offset every tick so the
+    // slot swings around as the target turns. FormationAngle/FormationDistance themselves only
+    // change when FormationRerollTimer runs out, so the slot holds still rather than drifting
+    // every tick - see BotInputSystem.ResolveFormationOffset.
+    FP FormationAngle;
+    FP FormationDistance;
+    FP FormationRerollTimer;
 }

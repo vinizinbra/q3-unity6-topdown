@@ -43,7 +43,7 @@ namespace Quantum
         // DetonateOnLevelGeometry/DetonateOnEnemyHit/ShouldDetonate/IsCombatant/Settle all live on
         // ProjectileHitData now - shared with any other hit data that wants the same fuse/pass-
         // through behavior, not just this one.
-        public override bool ApplyHit(Frame f, Projectile* projectile, EntityRef hitEntity, FPVector3 point)
+        public override bool ApplyHit(Frame f, EntityRef entity, Projectile* projectile, EntityRef hitEntity, FPVector3 point)
         {
             if (ShouldDetonate(f, projectile, hitEntity) == false)
             {

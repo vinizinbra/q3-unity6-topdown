@@ -86,7 +86,7 @@ namespace Quantum
                 {
                     FPVector3 hitPoint = ResolveHitPoint(origin, moveDelta, hit.Value);
                     bool wasGrounded = filter.Projectile->Grounded;
-                    bool isSpent = hitData.ApplyHit(f, filter.Projectile, hit.Value.Entity, hitPoint);
+                    bool isSpent = hitData.ApplyHit(f, filter.Entity, filter.Projectile, hit.Value.Entity, hitPoint);
 
                     if (isSpent == false)
                     {
