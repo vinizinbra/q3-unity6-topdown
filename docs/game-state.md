@@ -117,3 +117,25 @@ as a side effect of this refactor.
 - Undecided: does `Event` pause the whole `GameplaySystemGroup` (like `Upgrade`) or just the
   Director (like `Lobby`/intended `Boss`)? The user described both `Event` and `Boss` as "pause
   time" without specifying which shape - resolve this when either is actually built.
+
+## Current status
+
+The code compiles once codegen picks up the new `GameState.qtn`/`Events.qtn` fields.
+`Lobby`->`Survival` (via `LobbyBoundarySystem`) and `Survival`/`Lobby`<->`Upgrade` (via
+`LevelUpUtility`) are both fully wired.
+
+- **A `Breathing` `GameState` value has since been added** (see `docs/run-phase.md`) - the enum in
+  the "`GameState.qtn`" section above lists only `Lobby, Survival, Upgrade, Event, Boss`, but the
+  Breathing Phase pass added `Breathing`, and later passes added `RunFailed` (a minimal,
+  vocabulary-only "wired later" state fired once every connected player is simultaneously down with
+  no way back - see `docs/revive.md`).
+- **`Event` is still pure vocabulary only** - it mirrors the already-scaffolded
+  `RuntimePlayer.HasEvent`, with no system transitioning into or out of it.
+- **`Boss` is no longer vocabulary-only, as of 2026-08-17.** `CombatDirectorSystem.ApplyPhaseGameState`
+  now routes `SurvivalPhaseKind.Boss` to `GameState.Boss` and triggers a one-shot
+  `RunPhaseUtility.BeginBossEncounter` (teleport every player to the Boss Arena chunk, enable
+  hand-placed `BossArenaGate`-tagged colliders sealing it, spawn `SurvivalPhase.BossPrototype`) - see
+  `docs/boss-encounter.md` and `docs/run-phase.md`'s own "Boss phase trigger" section.
+- **The once-open pause question is resolved:** `Boss` does **not** pause `GameplaySystemGroup`, same
+  as `Survival`/`Breathing` - it's an active fight, not a menu.
+- **Simulation-side only so far** - no View/UI code reacts to `GameStateChanged` yet, by explicit request.

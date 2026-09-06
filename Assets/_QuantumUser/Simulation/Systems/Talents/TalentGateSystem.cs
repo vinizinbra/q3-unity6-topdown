@@ -38,7 +38,7 @@ namespace Quantum
             if (f.Global->LevelGenerated == false)
                 return;
 
-            for (int i = 0; i < f.PlayerCount; i++)
+            for (int i = 0; i < f.MaxPlayerCount; i++)
             {
                 PlayerRef player = i;
 

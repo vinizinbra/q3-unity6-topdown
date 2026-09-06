@@ -3,6 +3,17 @@
 // should be affectable.
 component StatusEffects
 {
+    // The FIRST of Fire/Ice/Rock/Lightning to ever land a baseline status on this entity (Neutral
+    // until then) - set exactly once, by ApplyBurn/ApplyIce/ApplyIntimidate/ApplyElectrified (see each
+    // one's own MarkFirstElementApplied call), and never overwritten again even if a different element
+    // lands afterward. Purely a presentation hook - HitFeedback polls this directly every frame (via
+    // StatusEffectUtility.GetFirstElementApplied) alongside the matching IsBurning/IsSlowed/
+    // IsElectrified/IsIntimidated to give the entity a rest-color tint (e.g. Fire orange, Lightning
+    // yellow, Ice cyan) WHILE that first status is still actually active, reverting to the entity's
+    // original rest color once it expires - no event needed, since the tint has to track live
+    // active/inactive state rather than a one-shot "was ever hit".
+    ElementType FirstElementApplied;
+
     // Refresh-only: reapplying always extends BurnRemaining to the new duration, but only
     // overwrites BurnDamagePerTick/BurnOwner/BurnSource when the incoming tick damage is >= the
     // current one - see StatusEffectUtility.ApplyBurn. A weak follow-up hit can't downgrade an
@@ -13,58 +24,56 @@ component StatusEffects
     EntityRef BurnOwner;
     DamageSource BurnSource;
 
-    // Rift Mark - a stackable status (0..ElementalReactionConfig.MaxStacks) only a dedicated skill/
-    // perk effect applies (RiftMarkEffectData), never a weapon's own Element roll. Landing Fire/Ice/
-    // Rock/Lightning/Void on a target with at least one stack consumes StacksConsumedPerReaction and
-    // fires that element's own reaction (see StatusEffectUtility.TryConsumeRiftMarkReaction) - the
-    // mark itself is never what triggers a reaction, only what backs one. All stacks share one
-    // duration (RiftMarkRemaining), refreshed on every reapply per RefreshDurationOnApply. See
-    // docs/elemental-reactions.md.
-    Byte RiftMarkStacks;
-    FP RiftMarkRemaining;
+    // Shock/Electrified - Lightning's baseline status (see StatusEffectUtility.ApplyElectrified/
+    // IsElectrified), applied the same way Fire->Burn/Ice->Slow are. Plain overwrite-on-reapply, no
+    // tier duration scaling - Boss stays vulnerable to this soft-CC-flavored DoT-analog the same way
+    // it stays vulnerable to Burn/Slow. See docs/elemental-reactions.md.
+    FP ElectrifiedRemaining;
 
-    // Global lockout after any Rift Mark reaction consumes a stack (ElementalReactionConfig.
-    // ReactionLockoutDuration) - stops a single proc event (or several damage callbacks from one)
-    // from consuming more than one stack, independent of each reaction's own *CooldownRemaining
-    // below. Checked-then-set atomically inside TryConsumeRiftMarkReaction.
-    FP RiftMarkReactionLockoutRemaining;
+    // Counts down from ElementalReactionConfig.JoltInterval while ElectrifiedRemaining > 0; on
+    // reaching 0, StatusEffectSystem.TickElectrified applies a Jolt (a brief Stagger, see
+    // StatusEffectUtility.ApplyStagger) and resets this back to JoltInterval. Purely deterministic,
+    // interval-based - no proc chance.
+    FP ElectrifiedJoltTimer;
+
+    // Stagger - pauses (never cancels/resets) an enemy's own Preparation/Telegraph windup timer for
+    // as long as this is > 0 (see EnemySystem.UpdatePreparation). Flat unconditional decrement, no
+    // dedicated Tick method needed - same shape as RootRemaining. Deliberately no diminishing-returns
+    // immunity window like Stun has - Shock's Jolt needs to be repeatably interruptive, an immunity
+    // window would defeat that identity.
+    FP StaggerRemaining;
 
     // One independent cooldown per elemental reaction (see docs/elemental-reactions.md) - stops a
     // fast-firing weapon from re-triggering the same reaction every single elemental-proc tick.
     // Plain countdowns, ticked in StatusEffectSystem alongside everything else; each reaction's own
     // TryTrigger* in StatusEffectUtility checks and resets its own field independently, so triggering
-    // one reaction never gates any other. Fire->Detonation, Ice->Deep Freeze, Rock->Rupture,
-    // Lightning->Overload, Void->Singularity.
-    FP DetonationCooldownRemaining;
-    FP DeepFreezeCooldownRemaining;
+    // one reaction never gates any other. Burn+Chill->Thermal Shock, Burn+Shock->Overload,
+    // Chill+Shock->Shatter - reactions are symmetric (order-independent), gated only by whichever
+    // field the firing reaction owns.
+    FP ThermalShockCooldownRemaining;
     FP OverloadCooldownRemaining;
-    FP RuptureCooldownRemaining;
-    FP SingularityCooldownRemaining;
+    FP ShatterCooldownRemaining;
 
-    // Shared per-mechanic cooldown slots for Rift Mark *applications* (Weapon Perks + Rift Mutations -
-    // see docs/rift-mutations.md/docs/weapon-perks.md), as opposed to the reaction cooldowns above -
-    // indexed by RiftMarkCooldownKey (plain C# enum, Simulation-side only, never persisted itself).
-    // Checked-then-set atomically inside RiftMarkApplicationUtility.TryConsumeCooldown, same shape as
-    // every *CooldownRemaining field on this component.
-    array<FP>[8] MarkApplicationCooldowns;
+    // Overload's own chain-continuation state - lives on the ORIGIN entity (the one that actually
+    // triggered the reaction) even as the chain's logical position moves node-to-node to OTHER
+    // entities each hop, since this is just data, not something that needs to migrate to whichever
+    // entity the chain currently sits at. Ticked by StatusEffectSystem.TickOverloadChain, advanced by
+    // StatusEffectUtility.TryAdvanceOverloadChain - see docs/elemental-reactions.md. HopsRemaining
+    // == 0 means no chain is in progress (the live-check every other consumer of this state uses).
+    FP OverloadChainHopTimer;
+    Byte OverloadChainHopsRemaining;
+    EntityRef OverloadChainOwner;
+    DamageSource OverloadChainSource;
+    FPVector3 OverloadChainPosition;
+    array<EntityRef>[8] OverloadChainVisited;
+    Byte OverloadChainVisitedCount;
 
-    // First Contact mutation - one-time-ever flag, not a cooldown (see docs/rift-mutations.md). Once
-    // true it never resets - a fresh enemy spawn gets a fresh StatusEffects component regardless.
-    Boolean FirstContactTriggered;
-
-    // Overflowing Rift mutation's own pulse cooldown - separate from MarkApplicationCooldowns above
-    // since it's triggered from inside the core apply path itself (RiftMarkApplicationUtility.
-    // ApplyRequest, when a request resolves against an already-maxed target), not by an external
-    // mechanic requesting a mark. See docs/rift-mutations.md.
-    FP OverflowingRiftCooldownRemaining;
-
-    // Fractured Presence mutation - per (player, this entity) exposure-time accumulator, same
-    // find-or-evict-soonest shape as HasteRemaining/HasteSource above but counting UP while a player
-    // stays within ElementalReactionConfig.FracturedPresenceRadius instead of counting down. Sized to
-    // 4 - one slot per concurrently-exposing player, this project's established co-op cap (matches
-    // Haste's own array size). See docs/rift-mutations.md.
-    array<EntityRef>[4] FracturedPresenceExposedBy;
-    array<FP>[4] FracturedPresenceExposureTime;
+    // The damage the chain is CURRENTLY carrying - seeded from the origin's own hit
+    // (hitDamage * OverloadInitialDamagePercent) and multiplied by OverloadChainDamagePercent every
+    // subsequent hop, so the chain decays hop over hop rather than dealing a flat number
+    // disconnected from how hard the triggering hit landed. See StatusEffectUtility.
+    // TryTriggerOverload/TryAdvanceOverloadChain.
+    FP OverloadChainCurrentDamage;
 
     // Slows movement - see StatusEffectUtility.GetSpeedMultiplier, read by PlayerMovementProcessor
     // and EnemySystem's chase movement. Plain overwrite-on-reapply.
@@ -87,12 +96,12 @@ component StatusEffects
     FP StunImmunityRemaining;
     FP InterruptImmunityRemaining;
 
-    // Ice+RiftMark's Deep Freeze reaction - stretches an enemy's own AttackPhase.Preparation/Telegraph windup
-    // (read only where EnemySystem.UpdatePreparation decrements StateTimer), not a lockout. Mirrors
-    // TimeDilationRemaining's shape (a duration + a multiplier, read at one specific timer) but
-    // targets the opposite phase - TimeDilationMultiplier is explicitly scoped to the Active-phase
-    // timer only (see that field's own comment), so this needs its own dedicated fields rather than
-    // widening TimeDilation's scope. Plain overwrite-on-reapply. See docs/elemental-reactions.md.
+    // Stretches an enemy's own AttackPhase.Preparation/Telegraph windup (read only where
+    // EnemySystem.UpdatePreparation decrements StateTimer), not a lockout - applied by FreezeEffectData,
+    // a standalone freely-authorable skill effect. Mirrors TimeDilationRemaining's shape (a duration +
+    // a multiplier, read at one specific timer) but targets the opposite phase - TimeDilationMultiplier
+    // is explicitly scoped to the Active-phase timer only (see that field's own comment), so this needs
+    // its own dedicated fields rather than widening TimeDilation's scope. Plain overwrite-on-reapply.
     FP AnticipationSlowRemaining;
     FP AnticipationSlowMultiplier;
 
@@ -102,9 +111,10 @@ component StatusEffects
     FP RootRemaining;
 
     // Multiplies incoming damage - see StatusEffectUtility.GetIncomingDamageMultiplier, applied
-    // once inside DamageUtility.ApplyDamage so every damage source respects it identically. Only
-    // ever granted by the Rock+RiftMark Rupture reaction - see docs/elemental-reactions.md. Plain
-    // overwrite-on-reapply.
+    // once inside DamageUtility.ApplyDamage so every damage source respects it identically. Granted
+    // by Brute's Groundbreaker, the Scrapjaw boss's combo-chain finish, Scrapstorm, and a wall-hit
+    // charge expose - see ApplyRupture's own callers. Plain overwrite-on-reapply (take-the-stronger/
+    // longer, see ApplyRupture).
     FP RuptureRemaining;
     FP RuptureDamageMultiplier;
 

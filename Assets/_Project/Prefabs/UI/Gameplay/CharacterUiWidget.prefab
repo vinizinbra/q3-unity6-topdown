@@ -2208,22 +2208,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZaraHudWidget
   root: {fileID: 2572825078008491462}
-  resonanceGauge:
-    root: {fileID: 2572825078008491462}
-    fillImage: {fileID: 8375828631225706749}
-    valueText: {fileID: 0}
-    glowWhenFull: 0
-    glowColor: {r: 0, g: 0, b: 0, a: 0}
-    glowIntensity: 1.5
-    glowCycleDuration: 0.8
-  remix:
-    root: {fileID: 0}
-    fillImage: {fileID: 0}
-    valueText: {fileID: 7682702531566404450}
-    glowWhenFull: 0
-    glowColor: {r: 0, g: 0, b: 0, a: 0}
-    glowIntensity: 1.5
-    glowCycleDuration: 0.8
+  flowFill: {fileID: 0}
+  buildingColor: {r: 0.4, g: 0.95, b: 1, a: 1}
+  activeColor: {r: 1, g: 0.85, b: 0.25, a: 1}
+  decayingColor: {r: 1, g: 0.35, b: 0.35, a: 1}
+  activeRoot: {fileID: 0}
 --- !u!114 &9200000000000000004
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2634,6 +2623,9 @@ MonoBehaviour:
   shieldFillImage: {fileID: 6063043334373906696}
   shieldShineColor: {r: 1, g: 1, b: 1, a: 1}
   shieldShineDuration: 0.4
+  shieldWarningThreshold: 1.5
+  shieldWarningColor: {r: 1, g: 0.55, b: 0.1, a: 1}
+  shieldWarningPulseSpeed: 6
   ammoSlider: {fileID: 6608365010020717270}
   reloadSlider: {fileID: 6204462916084350673}
   reloadPunchTarget: {fileID: 1050393977931135117}
@@ -2642,9 +2634,6 @@ MonoBehaviour:
   reloadPunchFrequency: 7
   burnIndicator:
     root: {fileID: 5612912166280188700}
-    timerText: {fileID: 0}
-  riftMarkIndicator:
-    root: {fileID: 6317470980543297231}
     timerText: {fileID: 0}
   iceIndicator:
     root: {fileID: 4665159043639552867}
@@ -2657,6 +2646,12 @@ MonoBehaviour:
     timerText: {fileID: 0}
   rootIndicator:
     root: {fileID: 7798923314152665930}
+    timerText: {fileID: 0}
+  electrifiedIndicator:
+    root: {fileID: 0}
+    timerText: {fileID: 0}
+  staggerIndicator:
+    root: {fileID: 0}
     timerText: {fileID: 0}
   ruptureIndicator:
     root: {fileID: 5832997199448785024}
@@ -2678,6 +2673,8 @@ MonoBehaviour:
     timerText: {fileID: 0}
   accessoryEquippedRoot: {fileID: 7372855254104804792}
   accessoryGuardRoot: {fileID: 8182776337000777902}
+  accessoryGuardPipTemplate: {fileID: 0}
+  accessoryGuardPipContainer: {fileID: 0}
   accessoryGuardPips:
   - {fileID: 4631582275590113581}
   - {fileID: 4591389570339410476}
@@ -2702,6 +2699,7 @@ MonoBehaviour:
   skillActiveObject: {fileID: 0}
   iconImage: {fileID: 0}
   chargeText: {fileID: 0}
+  cooldownIconAlpha: 0.5
   contextInteractionIcon: {fileID: 0}
   interactPromptRoot: {fileID: 0}
   autoBindLocalPlayerOne: 1
@@ -4231,81 +4229,6 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
---- !u!1 &6317470980543297231
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 6632639396769197323}
-  - component: {fileID: 7600303370544564491}
-  - component: {fileID: 4105419181048826591}
-  m_Layer: 5
-  m_Name: RiftMarkIcon
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &6632639396769197323
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6317470980543297231}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 7249586111599986400}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 20, y: 30}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &7600303370544564491
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6317470980543297231}
-  m_CullTransparentMesh: 1
---- !u!114 &4105419181048826591
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6317470980543297231}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 559310346, guid: fdd0cad8262a843b6983346e709a9f66, type: 3}
-  m_Type: 0
-  m_PreserveAspect: 1
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
 --- !u!1 &6600326163484443970
 GameObject:
   m_ObjectHideFlags: 0
@@ -6166,7 +6089,6 @@ RectTransform:
   - {fileID: 440631407541632875}
   - {fileID: 268762742200350917}
   - {fileID: 4531176414682811695}
-  - {fileID: 6632639396769197323}
   - {fileID: 1430835264547717825}
   - {fileID: 5930322693062883410}
   - {fileID: 3590241868293866593}

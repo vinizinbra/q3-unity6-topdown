@@ -550,8 +550,11 @@ deliberate replacement of existing behavior, not purely additive. Auto-revive-on
 needs no new `.qtn`/config/Editor authoring at all - it reuses `GameState.qtn`'s pre-existing
 `BreathingAreaSecured` field and `ReviveConfig`'s existing heal/invuln values.
 
-`Tools/RiftRaiders/Generate Revive Content` authors `ReviveConfig.asset` with tuned defaults - not
-yet run. Still needed by hand before anything works end-to-end at runtime:
+`Tools/RiftRaiders/Generate Revive Content` authors `ReviveConfig.asset` with tuned defaults.
+**Update (per CLAUDE.md):** `ReviveConfig.asset` is in fact authored and has already been used for
+live in-Editor testing - Downed/KO/self-revive were all confirmed reachable *pre-KO-removal*. The
+later teammate-hold/self-revive/KO-dead-end change itself (the KO-revival cut) has **not** been
+re-verified in-Editor yet. Still needed by hand before anything works end-to-end at runtime:
 1. Assign `RuntimeConfig.ReviveConfig` (`QuantumMenuConfig.asset`), same place every other config
    is already assigned.
 2. Add a `PlayerLifeState` component to every hero `EntityPrototype` (`Pixie`/`Brute`/`Zara`/`Kai`/

@@ -57,6 +57,9 @@ namespace Quantum
 
         protected override ProjectileLaunch SolveLaunch(Frame f, FPVector3 spawnPosition, FPVector3 target, EntityRef targetEntity)
         {
+            FPVector3 originalTarget = target;
+            bool led = false;
+
             if (PredictionTime > FP._0 && targetEntity != EntityRef.None && f.Unsafe.TryGetPointer<PhysicsBody3D>(targetEntity, out var targetBody) == true)
             {
                 // Flattened - a lob aims at the ground the target stands on (AimsAtTargetCenter is
@@ -65,10 +68,27 @@ namespace Quantum
                 // airborne target (delta.Y skewed by a fall's downward Velocity.Y), silently failing
                 // the whole shot (see SolveArcLaunch's own rise <= 0 guard) instead of just leading it.
                 FPVector3 flatVelocity = new FPVector3(targetBody->Velocity.X, FP._0, targetBody->Velocity.Z);
+
+                // Clamped to the target's own baseline speed - see ResolveLeadVelocity's own comment.
+                // Without this, a knocked-back or erratically-steering (e.g. Flying tier) target's
+                // one-tick velocity spike gets extrapolated for the shot's whole flight time, landing
+                // the lead point nowhere near where the target will plausibly be.
+                flatVelocity = ProjectileAimUtility.ResolveLeadVelocity(f, targetEntity, flatVelocity);
+
                 target = ResolveLeadTarget(spawnPosition, target, flatVelocity, LaunchAngle, Gravity);
+                led = true;
             }
 
-            return ProjectileSpawner.SolveArcLaunch(spawnPosition, target, LaunchAngle, Gravity);
+            ProjectileLaunch launch = ProjectileSpawner.SolveArcLaunch(spawnPosition, target, LaunchAngle, Gravity);
+
+            // A lead point that's still too extreme (a target right at the edge of the weapon's
+            // range, say) can push SolveArcLaunch's own rise <= 0 and fail outright - falls back to
+            // the target's real, un-led position instead of WeaponSystem.FireProjectile silently
+            // dropping the whole shot.
+            if (launch.IsValid == false && led == true)
+                launch = ProjectileSpawner.SolveArcLaunch(spawnPosition, originalTarget, LaunchAngle, Gravity);
+
+            return launch;
         }
 
         // SolveArcLaunch's own derivation makes flightTime == sqrt(2 * rise / gravity) - it grows with

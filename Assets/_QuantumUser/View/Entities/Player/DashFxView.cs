@@ -1,4 +1,5 @@
 using NaughtyAttributes;
+using QuantumUser.View.Managers;
 using QuantumUser.View.Util;
 using UnityEngine;
 
@@ -14,10 +15,11 @@ namespace Quantum
         [SerializeField, Tooltip("Motion-streak trail, emitting only while the dash is Active.")]
         private TrailRenderer trail;
 
-        [SerializeField, Tooltip("Optional one-shot burst played when the dash begins.")]
-        private ParticleSystem burst;
+        [SerializeField, Tooltip("Shared player FX config - DashBurst is played (via EffectsManager, tinted with the hero's RingColor) each time the dash begins.")]
+        private PlayerFxConfig fxConfig;
 
         private bool _active;
+        private Color _ringColor = Color.white;
 
         public override void Initialize(QuantumGame game)
         {
@@ -54,8 +56,27 @@ namespace Quantum
             if (trail != null)
                 trail.emitting = true;
 
-            if (burst != null)
-                burst.Play();
+            if (fxConfig != null && fxConfig.DashBurst.Prefab != null && EffectsManager.Instance != null)
+            {
+                Vector3 scale = fxConfig.DashBurst.Prefab.transform.localScale * fxConfig.DashBurst.ScaleMultiplier;
+                Vector3 position = ResolveCenterPosition() + fxConfig.DashBurst.ResolveWorldPositionOffset(transform);
+                EffectsManager.Instance.PlayEffect(fxConfig.DashBurst.Prefab, position, transform.rotation, scale, _ringColor);
+            }
+        }
+
+        // Dash burst spawns at the player's center (torso height) rather than feet/ground level
+        // like Jump/Grounded's bursts. EnemyMovementUtility.ResolveEntityCenter is a general
+        // Quantum-side "entity center" helper (KCC.Position + Height/2 for any KCC-driven entity,
+        // i.e. players) despite living in an enemy-named file - already reused for non-enemy
+        // entities elsewhere (see EffectsManager). Falls back to transform.position if no frame is
+        // available yet (e.g. the Play() test button pressed outside Play mode).
+        private Vector3 ResolveCenterPosition()
+        {
+            Frame f = _game != null ? _game.Frames.Verified : null;
+            if (f == null)
+                return transform.position;
+
+            return EnemyMovementUtility.ResolveEntityCenter(f, _entityRef).ToUnityVector3();
         }
 
         [Button]
@@ -73,14 +94,12 @@ namespace Quantum
             return f.Get<CharacterSkills>(entity).DashSkill.State == SkillState.Active;
         }
 
-        // Tints the trail to match MovementRingView's per-hero RingColor (see CharacterData.
-        // RingColor) instead of the flat white authored on the prefab - keeps the fade-in/out
-        // alpha keys as originally authored, only the RGB is swapped.
+        // Resolves MovementRingView's per-hero RingColor (see CharacterData.RingColor) and caches
+        // it for the burst played from Play(), plus tints the trail to match instead of the flat
+        // white authored on the prefab - keeps the fade-in/out alpha keys as originally authored,
+        // only the RGB is swapped.
         private void ApplyRingColorTint(Frame frame)
         {
-            if (trail == null)
-                return;
-
             if (frame.Has<CharacterStats>(_entityRef) == false)
                 return;
 
@@ -88,12 +107,15 @@ namespace Quantum
             if (data == null)
                 return;
 
-            Color ringColor = data.RingColor;
+            _ringColor = data.RingColor;
+
+            if (trail == null)
+                return;
 
             Gradient gradient = trail.colorGradient;
             GradientColorKey[] colorKeys = gradient.colorKeys;
             for (int i = 0; i < colorKeys.Length; i++)
-                colorKeys[i].color = ringColor;
+                colorKeys[i].color = _ringColor;
 
             gradient.SetKeys(colorKeys, gradient.alphaKeys);
             trail.colorGradient = gradient;

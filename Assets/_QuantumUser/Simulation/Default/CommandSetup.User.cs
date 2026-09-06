@@ -31,6 +31,10 @@
             factories.Add(new CancelBlacksmithCommand());
             factories.Add(new BuyAccessoryServiceCommand());
             factories.Add(new SelfReviveCommand());
+
+            // Generic cheat/debug command (View/Managers/CheatMenu.cs) - always registered so its
+            // factory index matches on every client, even builds without the CHEATS_ENABLED overlay.
+            factories.Add(new CheatCommand());
         }
     }
 }

@@ -1,3 +1,4 @@
+using Photon.Deterministic;
 using QuantumUser.View.Managers;
 using QuantumUser.View.Util;
 using UnityEngine;
@@ -59,6 +60,10 @@ namespace Quantum
         }
 
         private EnemyActionPhase? _lastEnemyPhase;
+        // See QUpdate's windupRestarted check - StateTimer counts down within one windup, so an
+        // increase while still sampled as Preparation/Telegraph both times means a brand new windup
+        // started without ever being observed as "not winding up" in between.
+        private FP? _lastStateTimer;
         private ParticleSystem _currentAnticipationIcon;
         // Real time (Time.time), not simulation ticks - EffectsManager.MinimumAnticipationIconDuration
         // is a wall-clock readability floor, so it has to be measured the same way. See
@@ -82,7 +87,6 @@ namespace Quantum
         public override void Awake()
         {
             base.Awake();
-            QuantumEvent.Subscribe<EventHitEffectApplied>(this, OnHitEffectApplied);
         }
 
         public override void OnDestroy()
@@ -103,43 +107,6 @@ namespace Quantum
             // caches it as their own "default" (see EnemyBlobAnimationView._defaultBodySprite).
             if (blobAnimationView != null)
                 blobAnimationView.ResetBodySprite();
-        }
-
-        // Fires for every hit that lands anywhere, not just this enemy's own - Owner filters down to
-        // hits this specific enemy caused. Resolves the impact particle off whichever delivery this
-        // enemy's CURRENT action is running (EnemyDeliveryData.HitImpactPrefab, see
-        // EnemyDeliveryData.View.cs) rather than off the HitEffectData that landed - a ground slam
-        // and a melee swing can share the exact same DamageEffectData underneath and still look
-        // completely different on impact this way. Deliberately doesn't require a phase edge (unlike
-        // everything in QUpdate) - a hit can land mid-Active on any tick, not just when Phase changes.
-        private void OnHitEffectApplied(EventHitEffectApplied e)
-        {
-            if (e.Owner != _entityRef)
-                return;
-
-            Frame frame = e.Game.Frames.Predicted;
-            if (frame == null || frame.Has<Enemy>(_entityRef) == false)
-                return;
-
-            // Target is EntityRef.None for a hit that lands on level geometry rather than a hero -
-            // the impact prefab is meant to represent hitting a player, not scenery.
-            if (frame.Has<PlayerLink>(e.Target) == false)
-                return;
-
-            Enemy enemy = frame.Get<Enemy>(_entityRef);
-            EnemyDataAsset enemyData = frame.FindAsset(enemy.EnemyData);
-            EnemyActionData actionData = EnemyDecisionUtility.ResolveAction(frame, enemyData, enemy.CurrentActionSlot);
-
-            if (actionData == null || actionData.Delivery.IsValid == false)
-                return;
-
-            EnemyDeliveryData delivery = frame.FindAsset(actionData.Delivery);
-
-            if (delivery.HitImpactPrefab == null)
-                return;
-
-            Vector3 worldPosition = e.Position.ToUnityVector3() + delivery.HitImpactOffset;
-            EffectsManager.Instance.PlayEffect(delivery.HitImpactPrefab, worldPosition, Quaternion.identity);
         }
 
         protected override void QUpdate(QuantumGame game)
@@ -169,10 +136,44 @@ namespace Quantum
             UpdateAnticipationIcon(frame);
 
             EnemyActionPhase? lastPhase = _lastEnemyPhase;
+            FP? lastStateTimer = _lastStateTimer;
             _lastEnemyPhase = enemyPhase;
+            _lastStateTimer = enemy.StateTimer;
 
-            if (lastPhase.HasValue == false || lastPhase == enemyPhase)
-                return; // only react on actual phase changes - nothing else below needs mid-phase reactions
+            bool wasWindingUpSample = lastPhase == EnemyActionPhase.Preparation || lastPhase == EnemyActionPhase.Telegraph;
+            bool isWindingUpSample = enemyPhase == EnemyActionPhase.Preparation || enemyPhase == EnemyActionPhase.Telegraph;
+
+            // Quantum can advance many simulation ticks between two Unity frames (see
+            // attackNoLongerActive's own comment below for the symmetric case) - if BOTH samples land
+            // in the Preparation/Telegraph window, that's not necessarily the same windup: the whole
+            // Recovery -> Cooldown -> Chasing -> next Preparation cycle can just as easily be skipped
+            // between two frames as Active -> Recovery can. StateTimer counts DOWN monotonically
+            // within one windup (EnemySystem.UpdatePreparation) - if the last sample was already
+            // winding up and this one still is, but StateTimer went UP instead of down, a brand new
+            // windup started in between and this is genuinely a different attack, not a continuation
+            // of the one already tracked. Left undetected, lastPhase == enemyPhase (or both land in
+            // the same Preparation/Telegraph bucket) keeps looking like "nothing changed" forever, so
+            // none of the spawn/clear edges below ever fire again for the new attack - the stale
+            // telegraph (and pre-shoot pose/anticipation icon) from the FIRST windup just keep
+            // getting silently re-aimed at the second one's pose instead, which is what made
+            // UpdateLiveTelegraph's own Lerp/Slerp visibly slide the old telegraph into the new one's
+            // position/rotation rather than it snapping fresh.
+            bool windupRestarted = wasWindingUpSample == true && isWindingUpSample == true
+                && lastStateTimer.HasValue == true && enemy.StateTimer > lastStateTimer.Value;
+
+            if (windupRestarted == true)
+            {
+                if (_currentTelegraph != null)
+                    ClearTelegraph(instant: true);
+
+                if (armAimView != null)
+                    armAimView.StopPreShoot();
+
+                RequestClearAnticipationIcon();
+            }
+
+            if (windupRestarted == false && (lastPhase.HasValue == false || lastPhase == enemyPhase))
+                return; // only react on actual phase changes (or a detected windup restart) - nothing else below needs mid-phase reactions
 
             EnemyActionData actionData = EnemyDecisionUtility.ResolveAction(frame, enemyData, enemy.CurrentActionSlot);
 
@@ -187,10 +188,16 @@ namespace Quantum
             // being a no-op) means the phase spends its second half as Telegraph, not Preparation,
             // so by the time Begin()/End actually fires, lastPhase is typically Telegraph already -
             // checking only for Preparation here missed that and silently killed BeginStep/EndStep.
-            bool wasWindingUp = lastPhase == EnemyActionPhase.Preparation || lastPhase == EnemyActionPhase.Telegraph;
-            bool isWindingUp = enemyPhase == EnemyActionPhase.Preparation || enemyPhase == EnemyActionPhase.Telegraph;
+            // (wasWindingUp/isWindingUp are the same buckets as wasWindingUpSample/isWindingUpSample
+            // above, just named to match this section's own established comments below.)
+            bool wasWindingUp = wasWindingUpSample;
+            bool isWindingUp = isWindingUpSample;
 
-            bool enteredAnticipating = isWindingUp == true && wasWindingUp == false;
+            // Also fires on a detected windupRestarted, on top of the normal not-winding-up ->
+            // winding-up edge - see that variable's own comment for why a restart needs to be
+            // treated exactly like a fresh entry (respawns the telegraph/pre-shoot pose/icon that
+            // windupRestarted's own block above just force-cleared).
+            bool enteredAnticipating = (isWindingUp == true && wasWindingUp == false) || windupRestarted == true;
 
             // Fires exactly once, on whichever tick windup actually ends - covers both the normal
             // path (windup -> Begin, the shot fires) AND every interrupted path (the enemy dies or
@@ -297,7 +304,7 @@ namespace Quantum
             if (step != null)
             {
                 blobAnimationView.PlayAttackStep(step);
-                blobAnimationView.ApplyStepSprite(step.BodySprite, step.Duration, step.BodySpriteOffset);
+                blobAnimationView.ApplyStepSprite(step.BodySprite, step.Duration, step.BodySpriteOffset, step.BodySpriteScale);
                 SpawnStepParticle(frame, enemy, step);
                 TriggerStepShake(frame, enemy, step);
             }
@@ -428,12 +435,19 @@ namespace Quantum
         // Reparents back onto EffectsManager itself before release - a held instance is only
         // deactivated (not destroyed) by ReleaseHeldInstance, so leaving it parented to this enemy
         // would destroy it for good the moment this enemy's own view is torn down, silently poisoning
-        // the pool with a dangling reference.
+        // the pool with a dangling reference. worldPositionStays:true here (unlike the analogous
+        // SetParent in SpawnAnticipationIcon, which deliberately wants false) - ReleaseHeldInstance
+        // only stops NEW emission (ParticleSystemStopBehavior.StopEmitting), so already-alive
+        // particles keep rendering, GameObject still active, until ReleaseWhenFinished's IsAlive()
+        // poll finally goes false - worldPositionStays:false would instantly snap that still-visible
+        // fade-out from over the enemy's head to wherever EffectsManager itself sits (its own
+        // transform is never moved, i.e. world origin), reading as the icon teleporting to (0,0,0)
+        // right as the windup ends. true keeps it fading out in place instead.
         private void ClearAnticipationIcon()
         {
             if (_currentAnticipationIcon != null && EffectsManager.Instance != null)
             {
-                _currentAnticipationIcon.transform.SetParent(EffectsManager.Instance.transform, worldPositionStays: false);
+                _currentAnticipationIcon.transform.SetParent(EffectsManager.Instance.transform, worldPositionStays: true);
                 EffectsManager.Instance.ReleaseAnticipationIconInstance(_currentAnticipationIcon);
             }
 
@@ -482,16 +496,19 @@ namespace Quantum
             _currentAnticipationIcon.transform.SetLocalPositionAndRotation(localPosition, Quaternion.identity);
         }
 
-        // Same sprite-bounds measurement EnemyView.ResolveWidgetOffset uses for the HUD
-        // nameplate/health bar - reusing it here is what makes the icon clear each enemy's actual
-        // rendered head regardless of tier/art size, with zero per-enemy tuning. No radius-floor
-        // fallback (unlike ResolveWidgetOffset) since a missing/unmeasurable sprite just means the
-        // icon renders at the collider center instead of over an empty head - visible enough to
-        // notice and fix in the Editor rather than silently wrong.
+        // Reads EnemyBlobAnimationView.HeadHeight, a baseline value cached once (before any attack
+        // step ever squashes the rig) rather than measuring rig.ReferenceSprite.bounds.max.y live -
+        // that renderer sits on root, which EnemyBlobAnimationView.ApplyPose actively
+        // squashes/scales during attack steps (including the Anticipation step this icon exists
+        // for), so a live read shrinks toward root's own base mid-windup and drags the icon down
+        // to the enemy's feet instead of staying over its head. No radius-floor fallback (unlike
+        // ResolveWidgetOffset) since a missing/unmeasurable sprite just means the icon renders at
+        // the collider center instead of over an empty head - visible enough to notice and fix in
+        // the Editor rather than silently wrong.
         private Vector3 ResolveHeadOffset()
         {
-            if (rig != null && rig.ReferenceSprite != null && rig.ReferenceSprite.sprite != null)
-                return Vector3.up * (rig.ReferenceSprite.bounds.max.y - transform.position.y);
+            if (blobAnimationView != null)
+                return Vector3.up * blobAnimationView.HeadHeight;
 
             return Vector3.zero;
         }

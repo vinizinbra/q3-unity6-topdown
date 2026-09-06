@@ -16,5 +16,6 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Zara/Zara_SharedEffects/AmplifierKnockback
     Guid:
       Value: 329298018826816869
-  Tier: 0
-  ApplyMode: 0
+  Tier: 2
+  ApplyMode: 1
+  CanInterrupt: 1

@@ -58,6 +58,22 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
         new DamageNumberStyle { Kind = DamageNumberKind.ShieldedEnemy, Color = new Color(0.6f, 0.8f, 1f), Prefix = "+" },
         new DamageNumberStyle { Kind = DamageNumberKind.HealedAlly, Color = new Color(0.55f, 0.95f, 0.55f), Prefix = "+" },
         new DamageNumberStyle { Kind = DamageNumberKind.ShieldedAlly, Color = new Color(0.5f, 0.8f, 1f), Prefix = "+" },
+
+        // Reaction procs - distinct from Burn's plain orange/CriticalDealtByMe's own orange so a proc
+        // reads as its own thing at a glance, not "a bigger burn tick"/"a crit". Bumped size like a
+        // crit (though smaller) since these are genuine finisher/combo hits, not an ordinary tick.
+        new DamageNumberStyle
+        {
+            Kind = DamageNumberKind.ThermalShockDealtByMe, Color = new Color(1f, 0.55f, 0.9f),
+            FontSizeMultiplier = 1.4f, PunchScaleMultiplier = 1.2f
+        },
+        new DamageNumberStyle { Kind = DamageNumberKind.ThermalShockTakenByMe, Color = new Color(0.85f, 0.4f, 0.75f) },
+        new DamageNumberStyle
+        {
+            Kind = DamageNumberKind.OverloadDealtByMe, Color = new Color(1f, 0.95f, 0.4f),
+            FontSizeMultiplier = 1.3f, PunchScaleMultiplier = 1.2f
+        },
+        new DamageNumberStyle { Kind = DamageNumberKind.OverloadTakenByMe, Color = new Color(0.85f, 0.8f, 0.3f) },
     };
 
     private Canvas _canvas;
@@ -165,7 +181,7 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
 
         if (IsLocalEntity(ResolveOwningPlayer(frame, e.Target)))
         {
-            kind = ResolveElementalKind(e.Element, taken: true);
+            kind = ResolveElementalKind(e.Element, e.ReactionProc, taken: true);
             return true;
         }
 
@@ -182,9 +198,9 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
             return true;
         }
 
-        // No Critical variant of Burn - a DoT tick always bypasses crit resolution (see
+        // No Critical variant of Burn/a reaction proc - both always bypass crit resolution (see
         // DamageUtility.ApplyDamage), so e.IsCritical is never true alongside a non-Neutral Element.
-        kind = e.IsCritical ? DamageNumberKind.CriticalDealtByMe : ResolveElementalKind(e.Element, taken: false);
+        kind = e.IsCritical ? DamageNumberKind.CriticalDealtByMe : ResolveElementalKind(e.Element, e.ReactionProc, taken: false);
         return true;
     }
 
@@ -218,12 +234,27 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
         return frame.Has<SentryBarrel>(entity) == true || frame.Has<Sentry>(entity) == true;
     }
 
-    private static DamageNumberKind ResolveElementalKind(ElementType element, bool taken)
+    // reactionProc (EventEntityDamaged.ReactionProc) is what actually separates Thermal Shock from a
+    // plain Burn tick here - both tag ElementType.Fire, so Element alone can't tell them apart (see
+    // that field's own comment in Events.qtn). Lightning has no periodic-tick source of its own today
+    // (Electrified's Jolt only Staggers, never damages - see StatusEffectSystem.TickElectrified), so
+    // every Lightning-tagged hit is already an Overload proc regardless of reactionProc; it's read
+    // here anyway for symmetry/future-proofing rather than assuming that stays true forever. Ice
+    // (Shatter) has no dedicated kind yet - falls through to the plain default below.
+    private static DamageNumberKind ResolveElementalKind(ElementType element, bool reactionProc, bool taken)
     {
         switch (element)
         {
-            case ElementType.Fire: return taken ? DamageNumberKind.BurnTakenByMe : DamageNumberKind.BurnDealtByMe;
-            default: return taken ? DamageNumberKind.TakenByMe : DamageNumberKind.DealtByMe;
+            case ElementType.Fire:
+                if (reactionProc == true)
+                    return taken ? DamageNumberKind.ThermalShockTakenByMe : DamageNumberKind.ThermalShockDealtByMe;
+                return taken ? DamageNumberKind.BurnTakenByMe : DamageNumberKind.BurnDealtByMe;
+
+            case ElementType.Lightning:
+                return taken ? DamageNumberKind.OverloadTakenByMe : DamageNumberKind.OverloadDealtByMe;
+
+            default:
+                return taken ? DamageNumberKind.TakenByMe : DamageNumberKind.DealtByMe;
         }
     }
 

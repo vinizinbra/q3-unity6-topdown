@@ -385,6 +385,8 @@ MonoBehaviour:
       Value: 0
     StateTimer:
       RawValue: 0
+    SpawnGraceRemaining:
+      RawValue: 0
     AttackCooldownRemaining:
       RawValue: 0
     CurrentActionSlot: 0
@@ -433,10 +435,41 @@ MonoBehaviour:
       RawValue: 0
     KnockbackTimer:
       RawValue: 0
+    PreKnockbackPosition:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
+    StuckCheckTimer:
+      RawValue: 0
+    FallRespawnTimer:
+      RawValue: 0
+    FallOriginPosition:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
     SkillProjectile: {fileID: 0}
+    PendingImpactPoint:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
+    PendingImpactTotal: 0
+    PendingImpactIndex: 0
+    PendingImpactAwaitingSpawn:
+      Value: 0
     FlyingHoverCheckTimer:
       RawValue: 0
     FlyingHoverTargetHeight:
+      RawValue: 0
+    LostTimer:
       RawValue: 0
     Faction:
       Value: 0
@@ -491,6 +524,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Quantum.Unity::Quantum.QPrototypeStatusEffects
   Prototype:
+    FirstElementApplied:
+      Value: 0
     BurnRemaining:
       RawValue: 0
     BurnTickTimer:
@@ -500,49 +535,52 @@ MonoBehaviour:
     BurnOwner: {fileID: 0}
     BurnSource:
       Value: 0
-    RiftMarkStacks: 0
-    RiftMarkRemaining:
+    ElectrifiedRemaining:
       RawValue: 0
-    RiftMarkReactionLockoutRemaining:
+    ElectrifiedJoltTimer:
       RawValue: 0
-    DetonationCooldownRemaining:
+    StaggerRemaining:
       RawValue: 0
-    DeepFreezeCooldownRemaining:
+    ThermalShockCooldownRemaining:
       RawValue: 0
     OverloadCooldownRemaining:
       RawValue: 0
-    RuptureCooldownRemaining:
+    ShatterCooldownRemaining:
       RawValue: 0
-    SingularityCooldownRemaining:
+    OverloadChainHopTimer:
       RawValue: 0
-    MarkApplicationCooldowns:
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    FirstContactTriggered:
+    OverloadChainHopsRemaining: 0
+    OverloadChainOwner: {fileID: 0}
+    OverloadChainSource:
       Value: 0
-    OverflowingRiftCooldownRemaining:
+    OverloadChainPosition:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
+    OverloadChainVisited:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    OverloadChainVisitedCount: 0
+    OverloadChainCurrentDamage:
       RawValue: 0
-    FracturedPresenceExposedBy:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    FracturedPresenceExposureTime:
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
     IceRemaining:
       RawValue: 0
     IceSpeedMultiplier:
       RawValue: 0
     StunRemaining:
+      RawValue: 0
+    StunImmunityRemaining:
+      RawValue: 0
+    InterruptImmunityRemaining:
       RawValue: 0
     AnticipationSlowRemaining:
       RawValue: 0
@@ -581,15 +619,26 @@ MonoBehaviour:
       RawValue: 0
     DamageReductionAmount:
       RawValue: 0
-    GuardianDamageReductionRemaining:
+    AuraDamageReductionRemaining:
       RawValue: 0
-    GuardianDamageReductionAmount:
+    AuraDamageReductionAmount:
       RawValue: 0
     TemporaryDamageReductionRemaining:
       RawValue: 0
     TemporaryDamageReductionAmount:
       RawValue: 0
-    GuardianReactiveCooldownRemaining:
+    ReactiveDamageReductionCooldownRemaining:
+      RawValue: 0
+    AllyGuardGrantCooldownRemaining:
+      RawValue: 0
+    FreeHitGuardRemaining:
+      RawValue: 0
+    FreeHitGuardSource: {fileID: 0}
+    FreeHitGuardDuration:
+      RawValue: 0
+    TempOutgoingDamageRemaining:
+      RawValue: 0
+    TempOutgoingDamageAmount:
       RawValue: 0
     IntimidateRemaining:
       RawValue: 0
@@ -614,6 +663,8 @@ MonoBehaviour:
     TempMoveSpeedRemaining:
       RawValue: 0
     TempMoveSpeedMultiplier:
+      RawValue: 0
+    ReviveImmunityRemaining:
       RawValue: 0
 --- !u!114 &382911034274762262
 MonoBehaviour:
@@ -708,6 +759,8 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteOffset: {x: 0, y: 0, z: 0}
+    ShakeImpact: 0
     Shake:
       Frequency: 18
       RockDegrees: 6
@@ -751,6 +804,13 @@ MonoBehaviour:
       ImpactShakeDegrees: 4
       ImpactShakeFrequency: 30
       BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
     CenterPivot: 0
     PivotHeightOverride: 0
     ParticlePrefab: {fileID: 0}
@@ -780,21 +840,30 @@ MonoBehaviour:
   executeOnlyOnLocal: 0
   isLocal: 0
   sprites: []
+  fxConfig: {fileID: 11400000, guid: 31188256ea82a4f46b281957faaa078d, type: 2}
+  mainBodySprite: {fileID: 0}
   flashColor: {r: 1, g: 1, b: 1, a: 1}
   burnFlashColor: {r: 1, g: 0.45, b: 0.1, a: 1}
+  recoverFlashColor: {r: 0, g: 1, b: 1, a: 1}
+  blockFlashColor: {r: 0.25, g: 0.6, b: 1, a: 1}
+  freeHitGuardFlashColor: {r: 0.4, g: 0.95, b: 1, a: 1}
   frontalReducedFlashColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   restColor: {r: 1, g: 1, b: 1, a: 0}
   duration: 0.2
+  joltPunchScaleStrength: {x: 0.08, y: 0.08, z: 0}
+  joltPunchScaleDuration: 0.15
+  joltPunchScaleFrequency: 20
   healFlashColor: {r: 0.4, g: 1, b: 0.4, a: 1}
   shieldFlashColor: {r: 0.4, g: 0.75, b: 1, a: 1}
   deathColor: {r: 0, g: 0, b: 0, a: 0.5}
-  riftMarkMaterial: {fileID: 2100000, guid: 7e404e068a4ff4625b9e9f6414fcfaa3, type: 2}
-  riftMarkApplicationFlashColor: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
-  riftMarkApplicationFlashDuration: 0.08
-  expPickupFlashColor: {r: 0.3, g: 0.55, b: 1, a: 1}
-  coinPickupFlashColor: {r: 1, g: 0.84, b: 0.2, a: 1}
-  riftShardPickupFlashColor: {r: 1, g: 0.35, b: 0.75, a: 1}
+  expPickupFlashColor: {r: 0.3, g: 0.55, b: 1, a: 0.35}
+  coinPickupFlashColor: {r: 1, g: 0.84, b: 0.2, a: 0.35}
+  riftShardPickupFlashColor: {r: 1, g: 0.35, b: 0.75, a: 0.35}
+  scrapPickupFlashColor: {r: 0.95, g: 0.6, b: 0.25, a: 1}
   pickupFlashDuration: 0.35
+  fireRestTint: {r: 1, g: 0.55, b: 0.2, a: 1}
+  iceRestTint: {r: 0.4, g: 0.9, b: 1, a: 1}
+  lightningRestTint: {r: 1, g: 0.9, b: 0.3, a: 1}
   freezeMaterial: {fileID: 2100000, guid: b153b2878790f4feab0589455e95ac70, type: 2}
 --- !u!114 &1460262746628902169
 MonoBehaviour:
@@ -892,7 +961,7 @@ PrefabInstance:
     - target: {fileID: 736891227221864247, guid: 5f52d98df5a844a60925a5ad01f4a4c7, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 174966615, guid: 65b523ff0d70a4099bf47bb72f5a9e7a, type: 3}
+      objectReference: {fileID: 2024807369, guid: e5b932f794bbf4380b10922fe9dd62e1, type: 3}
     - target: {fileID: 992325718291592200, guid: 5f52d98df5a844a60925a5ad01f4a4c7, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.7
@@ -951,7 +1020,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8811299158180872323, guid: 5f52d98df5a844a60925a5ad01f4a4c7, type: 3}
       propertyPath: baseScale
-      value: 5
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 8811299158180872323, guid: 5f52d98df5a844a60925a5ad01f4a4c7, type: 3}
+      propertyPath: shadowOffset.y
+      value: 0.5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

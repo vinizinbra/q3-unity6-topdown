@@ -403,7 +403,7 @@ MonoBehaviour:
   visualRoot: {fileID: 0}
   catchUpSpeedMultiplier: 2
   destroyEffectPrefab: {fileID: 6350743763286976369, guid: 3d63a7155f35f4b72ba173b63b299202, type: 3}
-  trailParticle: {fileID: 0}
+  trailParticle: {fileID: 7328869477943408433}
   minImpactDuration: 0.03
   maxImpactDuration: 0.2
   orphanTimeout: 3

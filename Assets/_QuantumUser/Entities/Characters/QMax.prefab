@@ -497,6 +497,7 @@ MonoBehaviour:
   headSquashInfluence: 0.4
   jumpHeadSquashInfluence: 0.25
   jumpSound: {fileID: 11400000, guid: c055538af98464b82a2e409c38480fa1, type: 2}
+  fxConfig: {fileID: 11400000, guid: 31188256ea82a4f46b281957faaa078d, type: 2}
   landSound: {fileID: 11400000, guid: 5250a6426a34b463ea11cbe6b0ef83bb, type: 2}
   landSoundMinImpactSpeed: 2
   landSoundFullImpactSpeed: 12
@@ -642,6 +643,7 @@ MonoBehaviour:
   - {fileID: 8109285041920275054}
   - {fileID: 3433481889556221830}
   - {fileID: 7696370092599617306}
+  fxConfig: {fileID: 11400000, guid: 31188256ea82a4f46b281957faaa078d, type: 2}
   flashColor: {r: 1, g: 1, b: 1, a: 1}
   burnFlashColor: {r: 1, g: 0.45, b: 0.1, a: 1}
   recoverFlashColor: {r: 0, g: 1, b: 1, a: 1}
@@ -656,10 +658,10 @@ MonoBehaviour:
   riftMarkMaterial: {fileID: 0}
   riftMarkApplicationFlashColor: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
   riftMarkApplicationFlashDuration: 0.08
-  expPickupFlashColor: {r: 0.2980392, g: 0.8055482, b: 1, a: 0.6862745}
-  coinPickupFlashColor: {r: 1, g: 0.84, b: 0.2, a: 0.21960784}
-  riftShardPickupFlashColor: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
-  scrapPickupFlashColor: {r: 0.95, g: 0.6, b: 0.25, a: 1}
+  expPickupFlashColor: {r: 0.2980392, g: 0.88745576, b: 1, a: 0.15686275}
+  coinPickupFlashColor: {r: 1, g: 0.84, b: 0.2, a: 0.09411765}
+  riftShardPickupFlashColor: {r: 1, g: 0.35, b: 0.75, a: 0.35}
+  scrapPickupFlashColor: {r: 0.95, g: 0.6, b: 0.25, a: 0.35}
   pickupFlashDuration: 0.35
   freezeMaterial: {fileID: 0}
 --- !u!114 &8110188611109955938
@@ -7542,7 +7544,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 1
+  m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 351ba1bc536654a439e6cb10706289de, type: 3}
   m_Color: {r: 1, g: 0.7085838, b: 0.43867922, a: 1}
@@ -7633,7 +7635,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 1
+  m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 351ba1bc536654a439e6cb10706289de, type: 3}
   m_Color: {r: 1, g: 0.7085838, b: 0.43867922, a: 1}

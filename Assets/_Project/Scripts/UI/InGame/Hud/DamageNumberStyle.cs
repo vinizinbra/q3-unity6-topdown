@@ -46,6 +46,17 @@ public enum DamageNumberKind
     // Healed/ShieldedEnemy instead).
     HealedAlly = 14,
     ShieldedAlly = 15,
+
+    // Thermal Shock/Overload's own reaction-proc damage (see EventEntityDamaged.ReactionProc in
+    // Events.qtn) - Element alone can't tell these apart from Burn's periodic tick (Fire) since both
+    // tag the same ElementType, so DamageFeedbackManager.ResolveElementalKind reads ReactionProc
+    // alongside Element to pick these over Burn's own kinds. Same Taken/Dealt split as Burn, for the
+    // same reason (a future enemy-applied reaction shouldn't need retrofitting). Shatter (Ice) has no
+    // kind of its own yet - it still falls through to the plain TakenByMe/DealtByMe default.
+    ThermalShockTakenByMe = 16,
+    ThermalShockDealtByMe = 17,
+    OverloadTakenByMe = 18,
+    OverloadDealtByMe = 19,
 }
 
 // The per-kind look, so one DamageNumberUiWidget prefab covers all of them.

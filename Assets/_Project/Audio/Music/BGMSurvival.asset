@@ -13,13 +13,6 @@ MonoBehaviour:
   m_Name: BGMSurvival
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
   variants:
-  - clip: {fileID: 8300000, guid: d9440ec1cbe3d4bf2996590ff861de49, type: 3}
-    overrideTrim: 0
-    startAt: 0
-    endAt: 0
-    overrideFade: 0
-    fadeIn: 0
-    fadeOut: 0
   - clip: {fileID: 8300000, guid: 1c6f6a45d80d64351b5b238b19ea0892, type: 3}
     overrideTrim: 0
     startAt: 0

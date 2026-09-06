@@ -208,7 +208,6 @@ namespace Quantum
             f.Remove<WeaponReloadHooks>(owner);
             f.Remove<WeaponOnKillReactions>(owner);
             f.Remove<WeaponOnCritReactions>(owner);
-            f.Remove<WeaponHitTrackingPerks>(owner);
             f.Remove<WeaponElementInfusion>(owner);
         }
 
@@ -945,10 +944,9 @@ namespace Quantum
                 FPVector3 pelletDirection = FPQuaternion.Euler(0, GetPelletAngle(i, pelletCount, weaponData.SpreadAngle), 0) * direction;
 
                 // Only pellet 0 of a volley procs Explosive Sequence/Cataclysm Round - otherwise an
-                // N-pellet shotgun would detonate N explosions off a single trigger pull - or tracks
-                // Focused Breach, same "one beam, not N" reasoning.
+                // N-pellet shotgun would detonate N explosions off a single trigger pull.
                 FireHitscanPellet(f, owner, weaponData, damage, origin, pelletDirection, range, pierces, bounces,
-                    isExplosiveProc && i == 0, isCataclysm && i == 0, isPrimaryPellet: i == 0, ref hitIndex);
+                    isExplosiveProc && i == 0, isCataclysm && i == 0, ref hitIndex);
             }
         }
 
@@ -960,13 +958,12 @@ namespace Quantum
         // wherever the path finally stops.
         private static void FireHitscanPellet(Frame f, EntityRef owner, WeaponDataAsset weaponData,
             FP damage, FPVector3 origin, FPVector3 direction, FP range, int pierces, int bounces,
-            bool isExplosiveProc, bool isCataclysm, bool isPrimaryPellet, ref byte hitIndex)
+            bool isExplosiveProc, bool isCataclysm, ref byte hitIndex)
         {
             FPVector3 segmentOrigin = origin;
             FPVector3 segmentDirection = direction;
             FP remainingRange = range;
             int remainingPierces = pierces;
-            bool trackedFocusedBreach = false;
 
             // Bounded by construction - the initial beam, plus one iteration per Ricochet bounce
             // (capped by `bounces` below), plus at most one pierce-flatten per contact that actually
@@ -1050,12 +1047,6 @@ namespace Quantum
                     endPoint = ResolveHitscanPoint(f, hitEntity, segmentOrigin, segmentDirection, distance);
                     travelled = distance;
 
-                    if (isPrimaryPellet == true && trackedFocusedBreach == false)
-                    {
-                        trackedFocusedBreach = true;
-                        TryApplyFocusedBreach(f, owner, hitEntity);
-                    }
-
                     // Level geometry ends the shot outright, whatever pierce is left - the same rule
                     // DirectHitData.ApplyHit applies to its own EntityRef.None hit, except that
                     // "geometry" here also covers the entity-backed kind (see IsHitscanTarget).
@@ -1113,11 +1104,6 @@ namespace Quantum
                 // first time, then wherever the last intermediate pierce left off), so a Ricochet
                 // bounce or a mid-segment pierce each draw their own leg with no view-side changes.
                 f.Events.HitscanFired(owner, legOrigin, endPoint, didHit, segmentTarget);
-
-                if (isPrimaryPellet == true && didHit == false && segment == 0)
-                {
-                    ResetFocusedBreach(f, owner);
-                }
 
                 FP nextRange = remainingRange - travelled;
 
@@ -1267,20 +1253,17 @@ namespace Quantum
             Log.Debug($"[Weapon] Hitscan from {owner} hit {hitEntity} for {damage} base damage");
 
             // Hitscan has no Effects list to run through HitEffectUtility (unlike ProjectileHitData/
-            // AreaDamage), so this is called directly here instead. Snapshot pre-hit Rift Mark stacks
-            // the same way HitEffectUtility.ApplyToTarget does - see
-            // HitEffectContext.PreHitRiftMarkStacks' own comment.
-            byte preHitRiftMarkStacks = StatusEffectUtility.GetRiftMarkStacks(f, hitEntity);
+            // AreaDamage), so this is called directly here instead.
             StatusEffectUtility.TryApplyElementalStatus(f, hitEntity, owner, DamageSource.Weapon,
-                weaponData.Element, damage, preHitRiftMarkStacks);
+                weaponData.Element, damage);
 
             // Element Infusion perk (WeaponElementInfusion) - hitscan has no projectile to carry
             // PerkElement on, so read it live off the owner here and apply the extra element with
-            // its own proc chance, sharing the same pre-hit Rift Mark snapshot as the base call.
+            // its own proc chance.
             if (f.Unsafe.TryGetPointer<WeaponElementInfusion>(owner, out var infusion) == true)
             {
                 StatusEffectUtility.TryApplyInfusedElement(f, hitEntity, owner, DamageSource.Weapon,
-                    infusion->Element, infusion->ProcChance, damage, preHitRiftMarkStacks);
+                    infusion->Element, infusion->ProcChance, damage);
             }
 
             ApplyHitscanQuantumRounds(f, owner, hitEntity, point, damage);
@@ -1350,73 +1333,13 @@ namespace Quantum
                 FP radius = procs->CataclysmRadius * radiusMultiplier;
                 HitEffectUtility.ApplyExplosion(f, point, radius, owner,
                     damage * procs->CataclysmDamageMultiplier, DamageSource.Weapon);
-                WeaponPerkUtility.TryApplyUnstablePayloadMarks(f, point, radius, owner);
             }
             else
             {
                 FP radius = procs->ExplosiveSequenceRadius * radiusMultiplier;
                 HitEffectUtility.ApplyExplosion(f, point, radius, owner,
                     damage * procs->ExplosiveSequenceDamageMultiplier, DamageSource.Weapon);
-                WeaponPerkUtility.TryApplyUnstablePayloadMarks(f, point, radius, owner);
             }
-        }
-
-
-        // Focused Breach (see docs/weapon-perks.md) - simulates "beam contact" as continuous same-
-        // target Hitscan hits, since this project has no dedicated Beam fire type. Losing contact (a
-        // miss, or the hit entity changing) resets progress via ResetFocusedBreach below; only pellet
-        // 0 of a volley tracks it, same "one beam, not N" reasoning FireHitscan's own
-        // Explosive Sequence/Cataclysm Round gating uses.
-        private static void TryApplyFocusedBreach(Frame f, EntityRef owner, EntityRef hitEntity)
-        {
-            if (f.Unsafe.TryGetPointer<WeaponHitTrackingPerks>(owner, out var tracking) == false || tracking->HasFocusedBreach == false)
-                return;
-
-            if (tracking->FocusedBreachTarget != hitEntity)
-            {
-                tracking->FocusedBreachTarget = hitEntity;
-                tracking->FocusedBreachContactTime = FP._0;
-            }
-
-            tracking->FocusedBreachContactTime += f.DeltaTime;
-
-            if (tracking->FocusedBreachContactTime < tracking->FocusedBreachThreshold)
-                return;
-
-            tracking->FocusedBreachContactTime = FP._0;
-
-            ElementalReactionConfig config = StatusEffectUtility.GetElementalReactionConfig(f);
-
-            if (config == null || hitEntity == EntityRef.None || f.Has<Enemy>(hitEntity) == false)
-                return;
-
-            if (f.Unsafe.TryGetPointer<StatusEffects>(hitEntity, out var status) == false)
-                return;
-
-            if (RiftMarkApplicationUtility.TryConsumeCooldown(status, RiftMarkCooldownKey.FocusedBreach, config.StandardMarkApplicationCooldown) == false)
-                return;
-
-            var request = new RiftMarkApplicationRequest
-            {
-                Source = owner,
-                Target = hitEntity,
-                HitSequence = f.Number,
-                ApplicationSource = RiftMarkApplicationSource.WeaponPerkFocusedBreach,
-                RequestedStacks = config.StacksAppliedPerApplication,
-                Owner = owner,
-                CooldownKey = RiftMarkCooldownKey.FocusedBreach,
-            };
-
-            RiftMarkApplicationUtility.ApplyRequest(f, request, config);
-        }
-
-        private static void ResetFocusedBreach(Frame f, EntityRef owner)
-        {
-            if (f.Unsafe.TryGetPointer<WeaponHitTrackingPerks>(owner, out var tracking) == false || tracking->HasFocusedBreach == false)
-                return;
-
-            tracking->FocusedBreachTarget = EntityRef.None;
-            tracking->FocusedBreachContactTime = FP._0;
         }
 
         private static void FireProjectile(Frame f, EntityRef owner, Weapon* weapon, WeaponDataAsset weaponData,

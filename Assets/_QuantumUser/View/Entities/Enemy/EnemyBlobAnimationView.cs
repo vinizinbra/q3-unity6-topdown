@@ -128,6 +128,15 @@ namespace Quantum
         // Only used when defaultCenterPivotHeight is left at 0 - see CacheBaseline.
         private float _autoCenterPivotHeight;
 
+        // World-space height of ReferenceSprite's top edge above this transform, cached once in
+        // CacheBaseline (before any attack step has squashed/scaled root) rather than read live -
+        // EnemyAttackVisualsView.ResolveHeadOffset used to read rig.ReferenceSprite.bounds.max.y
+        // live every frame, which is root's current WORLD bounds: an Anticipation step that
+        // squashes root (Crouch/Slam/Pulse etc.) shrinks that live height toward root's own base,
+        // dragging the anticipation icon down to the enemy's feet mid-windup - exactly the window
+        // this value needs to stay stable through. See HeadHeight below.
+        private float _autoHeadHeight;
+
         // Whatever ReferenceSprite's SpriteRenderer actually held at spawn (before any attack
         // swap) - cached once in CacheBaseline so ResetBodySprite always has the
         // real rest sprite to restore, regardless of what a previous pooled use of this same
@@ -146,6 +155,12 @@ namespace Quantum
         // right-facing pose reads correctly whichever way the enemy is actually turned.
         private Vector3 _bodySpriteOffset;
 
+        // Multiplies root's own base scale only while the swapped step sprite above is showing (same
+        // _bodySpriteTimeRemaining window) - same lifecycle as _bodySpriteOffset, just for scale
+        // instead of position. Vector3.one (not the default Vector3.zero) is the neutral/reverted
+        // value, since a zero scale would collapse the sprite to nothing.
+        private Vector3 _bodySpriteScale = Vector3.one;
+
         // Positive = compressed, negative = stretched. Single value - unlike the player's blob,
         // there's no separate jump-squash to keep independent from the idle/run breathing squash.
         private float _squashT;
@@ -154,6 +169,15 @@ namespace Quantum
         private float _facingSign = 1f;
         private float _wobbleSeed;
         private float _dieToppleSign = 1f;
+
+        // Driven by PunchScale (see that method) - a generic external "flinch" punch (e.g.
+        // HitFeedback's JoltTriggered reaction) composed multiplicatively into root's scale
+        // alongside punchScaleMult below, same additive-decay shape as the player's own
+        // BlobAnimationView._bodyPunchScale/PunchBodyScale. Kept fully separate from
+        // punchScaleOffset/punchScaleMult (the attack-step's own internal punch channel) so an
+        // external caller can never fight or get overwritten by whatever the enemy's current attack
+        // step is doing.
+        private Vector3 _hitPunchScale;
 
         // 0 = full size, 1 = fully shrunk - only advances once the fall (dieDuration) itself has
         // finished, so the shrink never overlaps/fights the topple.
@@ -203,6 +227,18 @@ namespace Quantum
             _shadowBaseScale = shadow != null ? shadow.BaseScale : 0f;
         }
 
+        // Generic external "flinch" punch (e.g. HitFeedback's JoltTriggered reaction) - decays
+        // _hitPunchScale back to zero via the same Tween.PunchCustom shape the player's own
+        // BlobAnimationView.PunchBodyScale uses, composed multiplicatively into root's scale in
+        // ApplyPose alongside punchScaleMult (the attack-step's own separate channel), so an external
+        // caller can never fight or get silently overwritten by whatever this enemy's current attack
+        // step is doing to its own scale.
+        public void PunchScale(Vector3 strength, float duration, float frequency)
+        {
+            Tween.PunchCustom(this, Vector3.zero, new ShakeSettings(strength, duration, frequency),
+                (view, val) => view._hitPunchScale = val);
+        }
+
         private void CacheBaseline()
         {
             if (root != null) { _rootBaseLocalPos = root.localPosition; _rootBaseScale = root.localScale; }
@@ -218,8 +254,16 @@ namespace Quantum
             if (root != null && rig != null && rig.ReferenceSprite != null)
                 _autoCenterPivotHeight = root.InverseTransformPoint(rig.ReferenceSprite.bounds.center).y;
 
+            if (rig != null && rig.ReferenceSprite != null)
+                _autoHeadHeight = rig.ReferenceSprite.bounds.max.y - transform.position.y;
+
             _defaultBodySprite = rig != null && rig.ReferenceSprite != null ? rig.ReferenceSprite.sprite : null;
         }
+
+        // Stable world-space height above this transform's own head-anchoring point, e.g. for
+        // EnemyAttackVisualsView's anticipation icon - see _autoHeadHeight above for why this
+        // needs to be baseline-cached rather than read live off ReferenceSprite mid-attack.
+        public float HeadHeight => _autoHeadHeight;
 
         // FacingSign mirrors root's own scale.x sign (+1 = right, -1 = left) - exposed so
         // EnemyArmAimView can flip its aim angle in lockstep with the body instead of deriving
@@ -254,7 +298,7 @@ namespace Quantum
         // Only shows for this step's own duration - QUpdate counts _bodySpriteTimeRemaining down
         // and reverts to the rest sprite once it runs out, rather than leaving the swap in place
         // until some later step (or the whole attack ending) touches it.
-        public void ApplyStepSprite(Sprite sprite, float duration, Vector3 offset = default)
+        public void ApplyStepSprite(Sprite sprite, float duration, Vector3 offset = default, Vector3 scale = default)
         {
             if (rig == null || rig.ReferenceSprite == null || sprite == null)
                 return;
@@ -262,6 +306,11 @@ namespace Quantum
             rig.ReferenceSprite.sprite = sprite;
             _bodySpriteTimeRemaining = duration;
             _bodySpriteOffset = offset;
+
+            // scale defaults to Vector3.zero (C# 'default' for a struct), not the Vector3.one neutral
+            // this channel actually wants - Vector3.one isn't a compile-time constant, so it can't be
+            // the parameter's own default. Treat an all-zero caller value as "unset" instead.
+            _bodySpriteScale = scale == Vector3.zero ? Vector3.one : scale;
         }
 
         // Called by EnemyAttackVisualsView on the attackNoLongerActive edge (Enemy.Phase leaving
@@ -273,6 +322,7 @@ namespace Quantum
         {
             _bodySpriteTimeRemaining = 0f;
             _bodySpriteOffset = Vector3.zero;
+            _bodySpriteScale = Vector3.one;
 
             if (rig == null || rig.ReferenceSprite == null)
                 return;
@@ -420,18 +470,23 @@ namespace Quantum
             float burrowRate = burrowRateDuration > 0f ? dt / burrowRateDuration : 1f;
             _burrowT = Mathf.MoveTowards(_burrowT, _burrowSinking ? 1f : 0f, burrowRate);
 
-            // Ice+RiftMark's Deep Freeze reaction stretches the enemy's own Preparation/Telegraph windup
-            // (StatusEffectUtility.GetAnticipationMultiplier - see EnemySystem.UpdatePreparation,
-            // which scales the simulation's own StateTimer the same way). Only while actually
-            // playing the windup step - Active/Recovery attack steps (Begin/OnGoing/End) are
-            // untouched, same scoping the simulation side already uses. Scaling dt itself here (not
-            // just the _stateTimer increment below) also slows every dt-driven lerp inside
-            // UpdatePose's AttackStep case, so the whole windup step evolves consistently, not just
-            // its Duration ramp.
+            // FreezeEffectData's anticipation-slow stretches the enemy's own Preparation/Telegraph
+            // windup (StatusEffectUtility.GetAnticipationMultiplier - see EnemySystem.UpdatePreparation,
+            // which scales the simulation's own StateTimer the same way). Stagger instead PAUSES it
+            // outright (multiplier 0) rather than slowing it - the visual counterpart of
+            // EnemySystem.UpdatePreparation skipping its own StateTimer decrement entirely while
+            // Staggered (see that method's own comment) - this local _stateTimer is a Unity-time proxy
+            // for that same simulation timer, so it needs the same pause, not just the same stretch.
+            // Only while actually playing the windup step - Active/Recovery attack steps (Begin/
+            // OnGoing/End) are untouched, same scoping the simulation side already uses. Scaling dt
+            // itself here (not just the _stateTimer increment below) also freezes/slows every
+            // dt-driven lerp inside UpdatePose's AttackStep case, so the whole windup step evolves
+            // consistently, not just its Duration ramp.
             if (_state == State.AttackStep
                 && (enemyPhase == EnemyActionPhase.Preparation || enemyPhase == EnemyActionPhase.Telegraph))
             {
-                dt *= StatusEffectUtility.GetAnticipationMultiplier(frame, _entityRef).AsFloat;
+                float staggerMultiplier = StatusEffectUtility.IsStaggered(frame, _entityRef) == true ? 0f : 1f;
+                dt *= StatusEffectUtility.GetAnticipationMultiplier(frame, _entityRef).AsFloat * staggerMultiplier;
             }
 
             // Recovery is the attack's downtime - the enemy just stands there resting, so
@@ -921,8 +976,11 @@ namespace Quantum
                 float rootHorizontalMult = rootCarriesSquash == true ? horizontalMult : 1f;
 
                 var scale = _rootBaseScale;
-                scale.x *= rootHorizontalMult * _facingSign * shrinkMult * punchScaleMult;
-                scale.y *= rootVerticalMult * shrinkMult * punchScaleMult;
+                // Step-sprite scale (see ApplyStepSprite) - same additive-channel idea as the offset
+                // above, just multiplicative; Vector3.one outside of/after a BodySprite step, so this
+                // is a no-op the rest of the time.
+                scale.x *= rootHorizontalMult * _facingSign * shrinkMult * punchScaleMult * (1f + _hitPunchScale.x) * _bodySpriteScale.x;
+                scale.y *= rootVerticalMult * shrinkMult * punchScaleMult * (1f + _hitPunchScale.y) * _bodySpriteScale.y;
                 root.localScale = scale;
 
                 float totalTilt = leanDegrees + rockDegrees;

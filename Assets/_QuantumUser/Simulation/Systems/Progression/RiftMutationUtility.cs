@@ -2,9 +2,7 @@ namespace Quantum
 {
     using System.Collections.Generic;
 
-    // Grant/offer-eligibility for BOTH the RiftMutation and RiftMarkMutation pools - the two share
-    // one catalog, one pick history and one set of rules, only their source list and weighting
-    // differ (see docs/rift-mutations.md).
+    // Grant/offer-eligibility for the RiftMutation pool (see docs/rift-mutations.md).
     public static unsafe class RiftMutationUtility
     {
         // The single grant funnel - every path in (a level-up pick, a Chest, a Cursed Rift reward,

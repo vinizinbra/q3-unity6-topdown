@@ -32,9 +32,8 @@ namespace Quantum
             StatusEffectUtility.ApplyBurn(f, context.Target, duration, damagePerTick, context.Owner, context.Source, config.TickInterval);
 
             // Directly-authored Burn (not the weapon-elemental-proc path) still needs to participate
-            // in the Rift Mark reaction check, using the same pre-hit snapshot the weapon-proc path
-            // uses - see HitEffectContext.PreHitRiftMarkStacks' own comment.
-            StatusEffectUtility.TryConsumeRiftMarkReaction(f, context.Target, context.Owner, context.Source, ElementType.Fire, context.Damage, context.PreHitRiftMarkStacks);
+            // in the elemental reaction check for its own element.
+            StatusEffectUtility.TryTriggerElementalReaction(f, context.Target, context.Owner, context.Source, ElementType.Fire, context.Damage);
         }
     }
 }

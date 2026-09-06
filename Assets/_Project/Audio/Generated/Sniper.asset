@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Sniper
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
   variants:
-  - clip: {fileID: 8300000, guid: 2569356f145680f4098de95b6b835da8, type: 3}
+  - clip: {fileID: 8300000, guid: 0652235abefb16a4d93b045b65eae82c, type: 3}
     overrideTrim: 0
     startAt: 0
     endAt: 0

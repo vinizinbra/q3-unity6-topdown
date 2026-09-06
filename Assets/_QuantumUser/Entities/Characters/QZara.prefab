@@ -490,6 +490,8 @@ MonoBehaviour:
         RawValue: 0
       Z:
         RawValue: 0
+    FallRespawnTimer:
+      RawValue: 0
     AirborneSource:
       Value: 0
 --- !u!114 &-3971490095111579385
@@ -591,6 +593,8 @@ MonoBehaviour:
   torsoFlipLagSpeed: 16
   headFlipLagSpeed: 9
   flipPivotHeight: 0.6
+  flipMidRotationSquash: 0.55
+  dashFlipSpeedUpDuration: 0.2
   landingSquashPerSpeed: 0.06
   maxLandingSquash: 0.6
   landingSpringFrequency: 6
@@ -599,11 +603,15 @@ MonoBehaviour:
   downedRoot: {fileID: 954697355508439073}
   koRoot: {fileID: 910732170708175988}
   handsRoot: {fileID: 7044975176292831187}
+  revivePunchScaleStrength: {x: 0.35, y: 0.35, z: 0}
+  revivePunchScaleDuration: 0.4
+  revivePunchScaleFrequency: 10
   squashLerpSpeed: 14
   volumePreservation: 0.6
   headSquashInfluence: 0.4
   jumpHeadSquashInfluence: 0.25
   jumpSound: {fileID: 11400000, guid: c055538af98464b82a2e409c38480fa1, type: 2}
+  fxConfig: {fileID: 11400000, guid: 31188256ea82a4f46b281957faaa078d, type: 2}
   landSound: {fileID: 11400000, guid: 5250a6426a34b463ea11cbe6b0ef83bb, type: 2}
   landSoundMinImpactSpeed: 2
   landSoundFullImpactSpeed: 12
@@ -751,6 +759,7 @@ MonoBehaviour:
   - {fileID: 3227864939283555811}
   - {fileID: 6343645197026065336}
   - {fileID: 8109971775430793504}
+  fxConfig: {fileID: 11400000, guid: 31188256ea82a4f46b281957faaa078d, type: 2}
   flashColor: {r: 1, g: 1, b: 1, a: 1}
   burnFlashColor: {r: 1, g: 0.45, b: 0.1, a: 1}
   recoverFlashColor: {r: 0, g: 1, b: 1, a: 1}
@@ -765,10 +774,10 @@ MonoBehaviour:
   riftMarkMaterial: {fileID: 0}
   riftMarkApplicationFlashColor: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
   riftMarkApplicationFlashDuration: 0.08
-  expPickupFlashColor: {r: 0.3, g: 0.55, b: 1, a: 1}
-  coinPickupFlashColor: {r: 1, g: 0.84, b: 0.2, a: 1}
-  riftShardPickupFlashColor: {r: 1, g: 0.35, b: 0.75, a: 1}
-  scrapPickupFlashColor: {r: 0.95, g: 0.6, b: 0.25, a: 1}
+  expPickupFlashColor: {r: 0.3, g: 0.55, b: 1, a: 0.35}
+  coinPickupFlashColor: {r: 1, g: 0.84, b: 0.2, a: 0.35}
+  riftShardPickupFlashColor: {r: 1, g: 0.35, b: 0.75, a: 0.35}
+  scrapPickupFlashColor: {r: 0.95, g: 0.6, b: 0.25, a: 0.35}
   pickupFlashDuration: 0.35
   freezeMaterial: {fileID: 0}
 --- !u!114 &8110188611109955938
@@ -1176,6 +1185,10 @@ MonoBehaviour:
       RawValue: 0
     ChargeOnly:
       Value: 0
+    TemporaryDuration:
+      RawValue: 0
+    ExpirationRemaining:
+      RawValue: 0
 --- !u!114 &-8007378593775083235
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1718,6 +1731,13 @@ MonoBehaviour:
   idleWobbleSquashAmount: 0.05
   idleWobbleDuration: 1
   idleWobbleEase: 4
+  idleRareWiggleOnEnable: 0
+  idleRareWiggleInterval: {x: 3, y: 8}
+  idleRareWiggleIncludeScale: 1
+  idleRareWiggleIncludeRotation: 1
+  idleRareWiggleIncludePosition: 1
+  idleRareWiggleStrengthMultiplier: 0.5
+  idleRareWiggleDurationMultiplier: 1
   scaleUseUnscaledTime: 0
   useUnscaledTime: 0
 --- !u!114 &3325889945285709183
@@ -2715,7 +2735,7 @@ ParticleSystem:
           m_PostInfinity: 2
           m_RotationOrder: 4
   EmissionModule:
-    enabled: 1
+    enabled: 0
     serializedVersion: 4
     rateOverTime:
       serializedVersion: 2
@@ -17239,6 +17259,7 @@ GameObject:
   - component: {fileID: 5149857958975482532}
   - component: {fileID: 8355088576213072732}
   - component: {fileID: 311266900484717372}
+  - component: {fileID: 7509194612614024952}
   m_Layer: 13
   m_Name: AfterBeat
   m_TagString: Untagged
@@ -17260,6 +17281,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 57279163923601318}
+  - {fileID: 7065225921696507353}
   m_Father: {fileID: 2784763235198929911}
   m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
 --- !u!198 &8355088576213072732
@@ -18085,7 +18107,7 @@ ParticleSystem:
           m_PostInfinity: 2
           m_RotationOrder: 4
   EmissionModule:
-    enabled: 1
+    enabled: 0
     serializedVersion: 4
     rateOverTime:
       serializedVersion: 2
@@ -22108,6 +22130,26 @@ ParticleSystemRenderer:
   m_MeshWeighting1: 1
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
+--- !u!114 &7509194612614024952
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7897562634451343111}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 287b1faaa056b45cfb4b4da18b45fa5b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ParticleSound
+  mode: 0
+  sound: {fileID: 11400000, guid: 3905442893c8547c183bc9ee00d34001, type: 2}
+  loop:
+    intro: {fileID: 0}
+    loop: {fileID: 0}
+    tail: {fileID: 0}
+  volumeScale: 1
+  source: {fileID: 0}
 --- !u!1 &8346953876461125139
 GameObject:
   m_ObjectHideFlags: 0
@@ -22404,6 +22446,92 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1001 &3497471436022898182
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 5149857958975482532}
+    m_Modifications:
+    - target: {fileID: 978359706153284030, guid: 2310db733a168a44c904ad784ae2e817, type: 3}
+      propertyPath: m_RenderMode
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5889882131672720307, guid: 2310db733a168a44c904ad784ae2e817, type: 3}
+      propertyPath: m_Name
+      value: VFX_ImpactStreetArt (6)
+      objectReference: {fileID: 0}
+    - target: {fileID: 5946222892867025887, guid: 2310db733a168a44c904ad784ae2e817, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5946222892867025887, guid: 2310db733a168a44c904ad784ae2e817, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5946222892867025887, guid: 2310db733a168a44c904ad784ae2e817, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5946222892867025887, guid: 2310db733a168a44c904ad784ae2e817, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5946222892867025887, guid: 2310db733a168a44c904ad784ae2e817, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5946222892867025887, guid: 2310db733a168a44c904ad784ae2e817, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5946222892867025887, guid: 2310db733a168a44c904ad784ae2e817, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5946222892867025887, guid: 2310db733a168a44c904ad784ae2e817, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5946222892867025887, guid: 2310db733a168a44c904ad784ae2e817, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5946222892867025887, guid: 2310db733a168a44c904ad784ae2e817, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5946222892867025887, guid: 2310db733a168a44c904ad784ae2e817, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5946222892867025887, guid: 2310db733a168a44c904ad784ae2e817, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5946222892867025887, guid: 2310db733a168a44c904ad784ae2e817, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6212515133825676693, guid: 2310db733a168a44c904ad784ae2e817, type: 3}
+      propertyPath: m_RenderMode
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6537270212178409620, guid: 2310db733a168a44c904ad784ae2e817, type: 3}
+      propertyPath: m_RenderMode
+      value: 2
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 2310db733a168a44c904ad784ae2e817, type: 3}
+--- !u!4 &7065225921696507353 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5946222892867025887, guid: 2310db733a168a44c904ad784ae2e817, type: 3}
+  m_PrefabInstance: {fileID: 3497471436022898182}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &5681512809393903913
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8352faa928918470fbe53d670d3cd608, type: 3}
+  m_Name: GroundBarrageDeliveryData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.GroundBarrageDeliveryData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/World1Boss/GroundBarrageDeliveryData
+    Guid:
+      Value: 407579274605739254
+  MinRandomOffset:
+    RawValue: 262144
+  MaxRandomOffset:
+    RawValue: 327680
+  Hit:
+    Id:
+      Value: 314431032119394187
+  PointCount: 5
+  AimedPointCount: 5
+  Delay:
+    RawValue: 32768
+  Stagger:
+    RawValue: 6554

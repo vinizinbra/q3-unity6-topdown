@@ -363,18 +363,18 @@ MonoBehaviour:
   shieldFillImage: {fileID: 4488453390033115892}
   shieldShineColor: {r: 1, g: 1, b: 1, a: 1}
   shieldShineDuration: 0.4
+  shieldWarningThreshold: 1.5
+  shieldWarningColor: {r: 1, g: 0.55, b: 0.1, a: 1}
+  shieldWarningPulseSpeed: 6
   ammoSlider: {fileID: 0}
   reloadSlider: {fileID: 0}
   reloadPunchTarget: {fileID: 0}
-  reloadPunchScale: 1.25
+  reloadPunchStrength: {x: 0.15, y: 1, z: 0}
   reloadPunchDuration: 0.25
-  weaponRowRect: {fileID: 0}
+  reloadPunchFrequency: 7
   burnIndicator:
     root: {fileID: 8826689006320977065}
     timerText: {fileID: 0}
-  riftMarkIndicator:
-    root: {fileID: 6705530215363780498}
-    timerText: {fileID: 4928613703449349777}
   iceIndicator:
     root: {fileID: 7901039063060672476}
     timerText: {fileID: 0}
@@ -386,6 +386,12 @@ MonoBehaviour:
     timerText: {fileID: 0}
   rootIndicator:
     root: {fileID: 6467427726018724006}
+    timerText: {fileID: 0}
+  electrifiedIndicator:
+    root: {fileID: 6705530215363780498}
+    timerText: {fileID: 0}
+  staggerIndicator:
+    root: {fileID: 0}
     timerText: {fileID: 0}
   ruptureIndicator:
     root: {fileID: 509274239073220093}
@@ -405,6 +411,14 @@ MonoBehaviour:
   juggernautChannelIndicator:
     root: {fileID: 8177022190877950102}
     timerText: {fileID: 0}
+  accessoryEquippedRoot: {fileID: 0}
+  accessoryGuardRoot: {fileID: 0}
+  accessoryGuardPipTemplate: {fileID: 0}
+  accessoryGuardPipContainer: {fileID: 0}
+  accessoryGuardPips: []
+  freeHitGuardRoot: {fileID: 0}
+  freeHitGuardFill: {fileID: 0}
+  heroWidgets: []
 --- !u!1 &1197229260045241877
 GameObject:
   m_ObjectHideFlags: 0
@@ -1894,7 +1908,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1601368260662606362
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2162,14 +2176,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
+  m_Color: {r: 1, g: 0.6443304, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 559310346, guid: fdd0cad8262a843b6983346e709a9f66, type: 3}
+  m_Sprite: {fileID: 21300000, guid: cc5e7825cb36e407cb57d2a550424c6c, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -2721,7 +2735,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &7516379548650071567
 RectTransform:
   m_ObjectHideFlags: 0

@@ -54,6 +54,14 @@ event EntityDamaged
     // every tick even when nothing is actually hitting it).
     Boolean Silent;
 
+    // True only for a reaction's own one-shot proc damage (Thermal Shock/Overload's initial hit and
+    // every chain hop/Shatter - see StatusEffectUtility's TryTrigger*/TryAdvanceOverloadChain), false
+    // for everything else INCLUDING a periodic status tick (Burn) - Element alone can't tell those
+    // two apart since both Thermal Shock and Burn tag ElementType.Fire (see Element's own comment
+    // above), so the View (DamageFeedbackManager.ResolveElementalKind) reads this alongside Element to
+    // give each reaction its own distinct floating-number color instead of a DoT tick's.
+    Boolean ReactionProc;
+
     // True when DamageUtility.ResolveFrontalDamageMultiplier actually reduced this hit (a
     // FrontalDamageReduction enemy, hit inside its facing arc) - lets HitFeedback flash a distinct
     // color instead of the normal per-element one.
@@ -335,18 +343,12 @@ event AreaDetonated
 // target is always an Enemy (see DamageUtility.TryExplodeOnDeath's only call sites), so the view
 // can still tint that shared prefab with the same EnemyDataAsset.ExplosionColor EnemyExploded
 // already uses, instead of leaving it a flat white that clashes next to a tinted death VFX.
-// RiftMarked mirrors DamageUtility.TryExplodeOnDeath's own StatusEffectUtility.IsRiftMarked check
-// (captured before the mark is cleared by death) so EffectsManager can play a visually distinct
-// blast for the ExplodeOnDeathConfig.RiftMarkRadiusMultiplier/RiftMarkDamageMultiplier-boosted
-// case, same dedicated-prefab-with-tinted-fallback pattern DetonationReleased already uses - see
-// docs/elemental-reactions.md.
 event ExplodeOnDeathDetonated
 {
     EntityRef  Owner;
     FPVector3  Position;
     FP         Radius;
     AssetRef<EnemyDataAsset> EnemyData;
-    Boolean    RiftMarked;
 }
 
 // Fired by DamageUtility.TrySentryOverload - fully independent from ExplodeOnDeathDetonated above
@@ -592,36 +594,106 @@ event ProjectileLandingWarning
     FP         Radius;
 }
 
-// Fired by StatusEffectUtility.TryTriggerDetonation (Fire+RiftMark reaction - see
-// docs/elemental-reactions.md), NOT WeaponExplosionReleased above - unlike Cataclysm Round/
-// Explosive Sequence, this reaction wants its own distinct visual, so EffectsManager gives it a
-// dedicated prefab field (detonationEffectPrefab) instead of always falling through to the
-// shared defaultAreaBlastEffect.
-event DetonationReleased
+// Fired once by RingSlamDeliveryData.Begin() - the View-side hook to draw a growing ring OUTLINE
+// (RingWaveVisualManager, a LineRenderer) alongside the existing paired Circle telegraph (which
+// only ever shows the FINAL size up front). Center is a one-time snapshot - RingSlamDeliveryData
+// freezes its own center at Begin() (SkillStartPosition) and never re-reads it, so the ring never
+// needs to track a moving anchor. Deliberately carries no radius/duration/speed - the View polls
+// Enemy.RingWaveRadius live off the frame every render frame instead of replicating Tick()'s own
+// growth formula client-side, since that formula is scaled by Void Pressure
+// (StatusEffectUtility.GetLocalTimeMultiplier) and an independently-clocked replica would drift
+// out of sync with the real hit-detection front during it. The View stops drawing once Entity's
+// own Enemy.Phase leaves Active (or the entity stops existing) - both self-heal at exactly the
+// same case (Ring successfully finishing, this same delivery being interrupted, this entity
+// dying) that Enemy.Phase already always changes away from Active for.
+event RingWaveExpanding
 {
     EntityRef  Entity;
-    FPVector3  Position;
-    FP         Radius;
+    FPVector3  Center;
+    FP         LineWidth;
 }
 
-// Fired by StatusEffectUtility.TryTriggerSingularity (Void+RiftMark reaction - see
-// docs/elemental-reactions.md) - pulls every enemy within Radius toward Position. Own dedicated
-// visual (EffectsManager.singularityEffectPrefab), same pattern as DetonationReleased above.
-event SingularityTriggered
+// Fired once by RotatingLaserDeliveryData.Begin() - the View-side hook to draw BeamCount persistent
+// LineRenderer beams (RotatingLaserVisualManager), evenly spaced around Enemy.LaserSpinAngle, each
+// tracking that angle and the entity's own live Transform3D.Position every render frame, same "poll
+// the live frame instead of replicating a Void-Pressure-scaled formula client-side" reasoning as
+// RingWaveExpanding above. Length/Width/HeightOffset are pure view tuning EXCEPT HeightOffset, which
+// must exactly match RotatingLaserDeliveryData's own HeightOffset field (the real hit-check's box is
+// centered relative to it too, see FireLaserTick) - carried here as a value rather than an asset
+// reference so the generic view manager doesn't need frame.FindAsset access to the delivery asset
+// itself just to draw at the right height/size. Same self-healing stop condition as
+// RingWaveExpanding (Entity's own Enemy.Phase leaving Active, or ceasing to exist).
+event RotatingLaserFired
 {
     EntityRef  Entity;
-    FPVector3  Position;
-    FP         Radius;
+    FP         Length;
+    FP         Width;
+    FP         HeightOffset;
+    Byte       BeamCount;
 }
 
-// Fired by RiftMarkApplicationUtility.ApplyRequest (Overflowing Rift mutation - see
-// docs/rift-mutations.md) when a Rift Mark application lands against a target already at
-// ElementalReactionConfig.MaxStacks - a small pulse instead of wasting the application. Own
-// dedicated visual (EffectsManager.overflowingRiftPulsePrefab), same pattern as
-// DetonationReleased/SingularityTriggered above, but authored deliberately restrained/low-key.
-event OverflowingRiftTriggered
+// Fired by StatusEffectSystem.TickElectrified every time Electrified's periodic Jolt actually fires
+// (see docs/elemental-reactions.md's "Shock (Electrified)" section) - a one-shot spark distinct from
+// StatusEffectsManager's own ambient electrifiedParticlePrefab/staggerParticlePrefab trackers (which
+// only show "this status is currently active", not the instant of each individual Jolt). Also fired
+// by StatusEffectUtility.TryTriggerShatter for every secondary enemy caught in the Shatter AoE (Chill+
+// Shock reaction) - it applies the same ApplyStagger primitive Jolt does, and ShatterTriggered's own
+// crack VFX only plays once at the primary/Center, so each staggered enemy still needs its own
+// feedback. Own dedicated visual (EffectsManager.joltEffectPrefab).
+event JoltTriggered
 {
-    EntityRef  Entity;
+    EntityRef  Target;
+    FPVector3  Position;
+}
+
+// Fired by StatusEffectUtility.TryTriggerThermalShock (Burn+Chill reaction - see
+// docs/elemental-reactions.md) - a single-target burst, no Radius (unlike an AoE blast). Own
+// dedicated visual (EffectsManager.thermalShockEffectPrefab), falling back to a tinted
+// defaultAreaBlastEffect the same way every other reaction's unauthored slot does.
+event ThermalShockTriggered
+{
+    EntityRef  Target;
+    FPVector3  Position;
+}
+
+// Fired by StatusEffectUtility.TryTriggerOverload (Burn+Shock reaction - see
+// docs/elemental-reactions.md) once per chain, at the origin - own dedicated visual
+// (EffectsManager.overloadOriginParticlePrefab).
+event OverloadTriggered
+{
+    EntityRef  Origin;
+    FPVector3  OriginPosition;
+}
+
+// Fired once per hop of Overload's sequential chain (A->B->C->D, never a fan-out) - see
+// StatusEffectUtility.TryTriggerOverload/TryFindNextChainTarget. Distance lets the view scale a
+// travel-particle prefab (EffectsManager.overloadTravelParticlePrefab) along the segment instead of
+// stretching a fixed-length prefab. Target carries the hop's destination EntityRef (in addition to
+// the resolved-at-the-instant-of-the-hop To position) so a travel effect that animates over more
+// than one frame can keep re-resolving the target's LIVE position instead of animating toward a
+// stale snapshot if the enemy keeps moving during the travel. Origin is the SAME entity
+// OverloadTriggered fired on (the chain's logical state always lives on the origin, even as its
+// position moves to other entities each hop - see TryAdvanceOverloadChain) - lets a view correlate
+// every hop back to the chain it belongs to, e.g. EffectsManager's persistent per-chain LineRenderer
+// (BeginOverloadChainLine/AppendOverloadChainLink), which multiple concurrent chains (each on a
+// different origin) would otherwise have no way to tell apart.
+event OverloadChainLink
+{
+    EntityRef  Origin;
+    EntityRef  Target;
+    FPVector3  From;
+    FPVector3  To;
+    FP         Distance;
+}
+
+// Fired by StatusEffectUtility.TryTriggerShatter (Chill+Shock reaction - see
+// docs/elemental-reactions.md) - an AoE control burst, Radius approximating the real
+// ShatterRadius/AreaStaggerDuration query so the view can size the effect to match. Position is the
+// reaction target (the primary, strongly-staggered entity), which never itself moves. Own dedicated
+// visual (EffectsManager.shatterEffectPrefab) - a short radial "crack", not an explosion or a pull.
+event ShatterTriggered
+{
+    EntityRef  Center;
     FPVector3  Position;
     FP         Radius;
 }

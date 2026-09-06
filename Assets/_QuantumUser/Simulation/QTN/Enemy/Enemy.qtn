@@ -99,6 +99,37 @@ component Enemy
     // the instant it's launched.
     EntityRef SkillProjectile;
 
+    // GroundBarrageDeliveryData's own state - only ONE point is ever "in flight" (telegraphed but not
+    // yet detonated) at a time, spawned one after another rather than all up front, so each later
+    // point can re-resolve the target's LIVE position instead of reusing a snapshot from Begin() (a
+    // stationary target from Point 1's telegraph would otherwise still get hit by Point 4's, several
+    // seconds later, even after actually moving away). PendingImpactPoint is that single point's
+    // resolved position; PendingImpactTotal is the total point count for this run (set once at
+    // Begin(), never changed after); PendingImpactIndex counts up from 0 as each point finishes
+    // (spawns then detonates); PendingImpactAwaitingSpawn distinguishes StateTimer's two meanings -
+    // true while counting down Stagger toward spawning PendingImpactIndex's telegraph, false while
+    // counting down Delay toward detonating the point already spawned. See that delivery's own
+    // comment for the full state machine.
+    FPVector3 PendingImpactPoint;
+    Byte PendingImpactTotal;
+    Byte PendingImpactIndex;
+    Boolean PendingImpactAwaitingSpawn;
+
+    // RingSlamDeliveryData's own Tick() writes its already-computed currentFront here every tick,
+    // purely for the View (RingWaveVisualManager) to read live - lets the growing ring OUTLINE it
+    // draws stay exactly in sync with the real hit-detection front even under Void Pressure's time
+    // dilation (StatusEffectUtility.GetLocalTimeMultiplier), which an independently-clocked
+    // client-side replica of the same growth formula would silently drift out of sync with.
+    FP RingWaveRadius;
+
+    // RotatingLaserDeliveryData's own continuously-incrementing spin angle - Tick() adds
+    // SpinSpeed * dt (also Void-Pressure-scaled, same reasoning as RingWaveRadius above) every
+    // tick for the whole spin's Duration. Independent of Aim.Angle so the beam can spin far faster
+    // than the enemy's own body-facing without dragging its sprite's rotation along with it.
+    // Degrees, never wrapped to [0,360) - FP has more than enough range for any realistic spin
+    // duration and Euler-rotation math doesn't care.
+    FP LaserSpinAngle;
+
     // EnemyHeightState.Flying-only - unused (stays at 0) for every other enemy. Counts down to the
     // next periodic ground re-check (EnemyMovementUtility.ComputeFlyingHoverVelocity), and
     // remembers the last-found target height (groundY + EnemyHeightData.FlightHeight) to spring

@@ -19,9 +19,14 @@ MonoBehaviour:
   Icon: {fileID: 1950513883, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
   DisplayName: Afterbeat
   RankDescriptions:
-  - 'Quick Tempo: dashing grants <color=#FD3971>1</color> Flow stack, and each enemy you pass through brings the next stack <color=#FD3971>0.25s</color> closer (up to <color=#FD3971>1s</color>).'
-  - 'Afterbeat: dashing grants <color=#FD3971>1</color> Flow stack and brings the next closer, and <color=#FD3971>1s</color> later a beat erupts at your starting position, damaging and knocking back nearby enemies.'
-  - 'Double Beat: beats erupt at both ends of the dash - landing either one on an enemy grants another Flow stack (once per dash).'
+  - 'Quick Tempo: dashing grants <color=#FD3971>1</color> Flow stack, and each enemy
+    you pass through brings the next stack <color=#FD3971>0.25s</color> closer (up
+    to <color=#FD3971>1s</color>).'
+  - 'Afterbeat: dashing grants <color=#FD3971>1</color> Flow stack and brings the
+    next closer, and <color=#FD3971>1s</color> later a beat erupts at your starting
+    position, damaging and knocking back nearby enemies.'
+  - 'Double Beat: beats erupt at both ends of the dash - landing either one on an
+    enemy grants another Flow stack (once per dash).'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 7
@@ -54,24 +59,25 @@ MonoBehaviour:
     ScaleByRadius: 0
     Scale: 4
     Alignment: 0
-  FlowStacksOnDash: 1
+  FlowProgressOnDash:
+    RawValue: 22938
   SweepRadius:
     RawValue: 98304
-  BuildTimeBonusPerEnemyHit:
-    RawValue: 16384
-  MaxBuildTimeBonusPerDash:
-    RawValue: 65536
+  ProgressPerEnemyHit:
+    RawValue: 6554
+  MaxProgressPerDash:
+    RawValue: 26214
   Delay:
-    RawValue: 65536
+    RawValue: 32768
   DamagePercentOfSkill:
   - RawValue: 0
-  - RawValue: 49152
-  - RawValue: 49152
+  - RawValue: 131072
+  - RawValue: 196608
   Radius:
   - RawValue: 0
-  - RawValue: 262144
-  - RawValue: 262144
+  - RawValue: 131072
+  - RawValue: 196608
   KnockbackForce:
   - RawValue: 0
-  - RawValue: 393216
-  - RawValue: 393216
+  - RawValue: 983040
+  - RawValue: 1966080

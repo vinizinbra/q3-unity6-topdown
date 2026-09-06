@@ -20,7 +20,7 @@ MonoBehaviour:
     RawValue: 0
   MaxRandomOffset:
     RawValue: 0
-  HitImpactPrefab: {fileID: 4425481775148980287, guid: 33603ad5a2a86471199b3a9641457205, type: 3}
+  HitImpactPrefab: {fileID: 0}
   HitImpactOffset: {x: 0, y: 0, z: 0}
 --- !u!114 &-3347255723034617701
 MonoBehaviour:
@@ -81,6 +81,7 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteOffset: {x: 0, y: 0, z: 0}
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -147,6 +148,7 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteOffset: {x: 0, y: 0, z: 0}
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -213,6 +215,7 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteOffset: {x: 0, y: 0, z: 0}
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -279,6 +282,7 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteOffset: {x: 0, y: 0, z: 0}
     ShakeImpact: 0
     Shake:
       Frequency: 18

@@ -44,7 +44,7 @@ MonoBehaviour:
   CriticalDamageMultiplier:
     RawValue: 98304
   ElementalChance:
-    RawValue: 6554
+    RawValue: 65536
   AttackSpeedMultiplier:
     RawValue: 65536
   ReloadSpeedMultiplier:

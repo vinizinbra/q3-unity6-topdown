@@ -345,6 +345,7 @@ SpriteAtlas:
     - e0b50ea9841b34c24b8097347136e505: 2041973262
     - e0b50ea9841b34c24b8097347136e505: -873169
     - e0b50ea9841b34c24b8097347136e505: -1213293453
+    - 09ab27b92d44c4a54a95d6d0d0b9c281: -1226521191
     - 09ab27b92d44c4a54a95d6d0d0b9c281: 1166301417
     - 09ab27b92d44c4a54a95d6d0d0b9c281: -2044957003
     - 09ab27b92d44c4a54a95d6d0d0b9c281: 1263592270
@@ -387,6 +388,7 @@ SpriteAtlas:
     - 9a944adac56bb4e8dbce2f7bab4127e3: -1648523669
     - 228419ea5721c4a0eb75647b083dc9e2: -920673730
     - 228419ea5721c4a0eb75647b083dc9e2: 408706775
+    - 228419ea5721c4a0eb75647b083dc9e2: -1970440726
     - 228419ea5721c4a0eb75647b083dc9e2: -556408755
     - 228419ea5721c4a0eb75647b083dc9e2: 1393015941
     - 228419ea5721c4a0eb75647b083dc9e2: 137817017
@@ -755,6 +757,7 @@ SpriteAtlas:
   - {fileID: 2041973262, guid: e0b50ea9841b34c24b8097347136e505, type: 3}
   - {fileID: -873169, guid: e0b50ea9841b34c24b8097347136e505, type: 3}
   - {fileID: -1213293453, guid: e0b50ea9841b34c24b8097347136e505, type: 3}
+  - {fileID: -1226521191, guid: 09ab27b92d44c4a54a95d6d0d0b9c281, type: 3}
   - {fileID: 1166301417, guid: 09ab27b92d44c4a54a95d6d0d0b9c281, type: 3}
   - {fileID: -2044957003, guid: 09ab27b92d44c4a54a95d6d0d0b9c281, type: 3}
   - {fileID: 1263592270, guid: 09ab27b92d44c4a54a95d6d0d0b9c281, type: 3}
@@ -797,6 +800,7 @@ SpriteAtlas:
   - {fileID: -1648523669, guid: 9a944adac56bb4e8dbce2f7bab4127e3, type: 3}
   - {fileID: -920673730, guid: 228419ea5721c4a0eb75647b083dc9e2, type: 3}
   - {fileID: 408706775, guid: 228419ea5721c4a0eb75647b083dc9e2, type: 3}
+  - {fileID: -1970440726, guid: 228419ea5721c4a0eb75647b083dc9e2, type: 3}
   - {fileID: -556408755, guid: 228419ea5721c4a0eb75647b083dc9e2, type: 3}
   - {fileID: 1393015941, guid: 228419ea5721c4a0eb75647b083dc9e2, type: 3}
   - {fileID: 137817017, guid: 228419ea5721c4a0eb75647b083dc9e2, type: 3}
@@ -1164,6 +1168,7 @@ SpriteAtlas:
   - PixieLobby_1
   - PixieLobby_0
   - PixieLobby_2
+  - RRSkills_0
   - RR_Sound
   - RR_Turret
   - RR_Overdrive
@@ -1206,6 +1211,7 @@ SpriteAtlas:
   - OverdriveDamage
   - RR_Magazine
   - RR_Damage
+  - RR_Square
   - RR_FireElement
   - RR_Critical
   - RR_Reload

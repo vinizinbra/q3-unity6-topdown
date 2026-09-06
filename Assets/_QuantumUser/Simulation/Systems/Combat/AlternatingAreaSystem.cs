@@ -27,6 +27,8 @@ namespace Quantum
                 filter.AreaDamage->Damage = filter.Alternating->HealAmount * ResolveEffectiveness(filter.Alternating);
                 filter.AreaDamage->TargetMask = filter.Alternating->HealTargetMask;
                 CopyEffects(filter.Alternating->HealEffects, filter.AreaDamage);
+
+                ApplySupportBeatDamage(f, filter.Entity, filter.Alternating);
             }
             else
             {
@@ -54,6 +56,27 @@ namespace Quantum
         private static FP ResolveEffectiveness(AlternatingArea* alternating)
         {
             return alternating->EffectivenessMultiplier > FP._0 ? alternating->EffectivenessMultiplier : FP._1;
+        }
+
+        // Support Beat now also chips enemies for half the Damage Beat's amount, on top of its own
+        // heal/buff to allies - the Heal branch above already claims AreaDamage->Damage/TargetMask for
+        // this tick (Players), so enemy damage can't ride the same AreaDamage application and instead
+        // fires immediately here via a direct HitEffectUtility call, same shape FireBonusPulse uses for
+        // an extra beat. Reuses DamageEffects (so a Damage Beat's knockback/on-hit VFX also lands on
+        // this half-damage tick) and doesn't touch DamagePulseCount - Bass Drop Stun should still only
+        // count genuine Damage Beats, not the Support Beat's bonus damage.
+        private static void ApplySupportBeatDamage(Frame f, EntityRef entity, AlternatingArea* alternating)
+        {
+            if (f.Unsafe.TryGetPointer<Transform3D>(entity, out var transform) == false
+                || f.Unsafe.TryGetPointer<PhysicsCollider3D>(entity, out var collider) == false)
+                return;
+
+            AreaOwnerUtility.Resolve(f, entity, out EntityRef owner, out DamageSource source, out ElementType element);
+
+            FP damage = alternating->DamageAmount * FP._0_50 * ResolveEffectiveness(alternating);
+
+            HitEffectUtility.ApplyInCollider(f, alternating->DamageEffects, transform, collider, owner, damage, source,
+                null, element, alternating->DamageMask, entity);
         }
 
         private static void CopyEffects(FixedArray<AssetRef<HitEffectData>> source, AreaDamage* areaDamage)

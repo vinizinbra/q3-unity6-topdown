@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21c69c87197b14d4687b5c75c69bd9e3, type: 3}
+  m_Name: RotatingLaserDeliveryData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.RotatingLaserDeliveryData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/World1Boss/RotatingLaserDeliveryData
+    Guid:
+      Value: 435002318726480652
+  MinRandomOffset:
+    RawValue: 0
+  MaxRandomOffset:
+    RawValue: 0
+  SpinSpeed:
+    RawValue: 5898240
+  Duration:
+    RawValue: 524288
+  StartAngle:
+    RawValue: -2949120
+  BeamLength:
+    RawValue: 1310720
+  BeamWidth:
+    RawValue: 32768
+  BeamHeight:
+    RawValue: -65536
+  HeightOffset:
+    RawValue: -65536
+  BeamCount: 3
+  TickInterval:
+    RawValue: 6554

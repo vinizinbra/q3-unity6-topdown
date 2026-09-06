@@ -18,3 +18,4 @@ MonoBehaviour:
       Value: 452814084348607209
   Tier: 1
   ApplyMode: 1
+  CanInterrupt: 0

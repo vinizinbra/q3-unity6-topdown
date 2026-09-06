@@ -28,6 +28,9 @@ namespace QuantumUser.View.Managers
         [SerializeField, Tooltip("Bypasses pooling entirely - every PlayEffect call instantiates a fresh instance and destroys it when finished, instead of reusing one from a pool. Turn on while iterating on an effect prefab so edits show up on the next play without restarting Play Mode; leave off otherwise.")]
         private bool disablePooling;
 
+        [SerializeField, Tooltip("Extra vertical nudge added on top of EnemyMovementUtility.ResolveEntityCenter's own result for every per-entity spark this manager resolves a live body-center for (see ResolveCenter) - accessory-blocked/free-hit-guard/heal/shield/revive/shield-break. Compensates for the shared player KCCSettings.Height being unusually squat (1.0 vs. the addon's own 1.75 default), without touching that physics-relevant asset directly. 0 = trust ResolveEntityCenter as-is.")]
+        private float centerHeightOffset = 0f;
+
         [Header("Area Blast")]
         [SerializeField, Tooltip("Fallback blast VFX used when the detonating AreaHitData doesn't author its own BlastEffectPrefab.")]
         private ParticleSystem defaultAreaBlastEffect;
@@ -39,29 +42,55 @@ namespace QuantumUser.View.Managers
         [SerializeField, Tooltip("Played once at BOTH affected enemies' positions whenever Kai's Undertow ascension resolves a fresh pull target (UndertowTriggered) - a small, fixed-scale impact/mark flash, separate from the ongoing tether line itself (see KaiUndertowLinksView, which polls simulation state directly rather than reacting to this event). Falls back to defaultAreaBlastEffect (at a small fixed scale) if left empty.")]
         private ParticleSystem undertowMarkEffectPrefab;
 
-        [Header("ExplodeOnDeath (Rift-Marked)")]
-        [SerializeField, Tooltip("Played on ExplodeOnDeathDetonated when e.RiftMarked is true (see docs/elemental-reactions.md and ExplodeOnDeathConfig.RiftMarkRadiusMultiplier/RiftMarkDamageMultiplier) instead of the flat defaultAreaBlastEffect every other ExplodeOnDeath kill uses, so the bigger/harder rift-boosted blast reads as visually distinct rather than just a scaled-up copy. Falls back to defaultAreaBlastEffect, tinted riftMarkedExplodeFallbackColor, if left empty - same dedicated-slot-with-tinted-fallback pattern as detonationEffectPrefab below.")]
-        private ParticleSystem riftMarkedExplodeEffectPrefab;
-        [SerializeField, Tooltip("Tint applied only when falling back to defaultAreaBlastEffect (riftMarkedExplodeEffectPrefab left empty) - matches detonationFallbackColor and the Rift Mark hot-pink #FD3971 presentation rule. Ignored once a dedicated prefab is authored.")]
-        private Color riftMarkedExplodeFallbackColor = new Color32(0xFD, 0x39, 0x71, 0xFF);
+        [Header("Shock (Jolt)")]
+        [SerializeField, Tooltip("Played on JoltTriggered - a one-shot spark every time Electrified's periodic Jolt actually fires (see docs/elemental-reactions.md's \"Shock (Electrified)\" section), distinct from StatusEffectsManager's own ambient electrifiedParticlePrefab/staggerParticlePrefab trackers (which only show the status is currently active, not the instant of each individual Jolt). Also fires once per secondary enemy staggered by Shatter's AoE (see StatusEffectUtility.TryTriggerShatter) - same ApplyStagger primitive, same spark. Falls back to defaultAreaBlastEffect, tinted joltFallbackColor, at joltScaleMultiplier, if left empty.")]
+        private ParticleSystem joltEffectPrefab;
+        [SerializeField, Tooltip("Local position offset added to e.Position before playing joltEffectPrefab (or its fallback) - e.g. to nudge the spark up toward chest/head height instead of the entity's feet-level Transform3D.")]
+        private Vector3 joltPositionOffset;
+        [SerializeField, Tooltip("Euler rotation offset applied to joltEffectPrefab (or its fallback) - this event carries no direction of its own to orient from, so this is purely an authored tilt/spin.")]
+        private Vector3 joltRotationOffset;
+        [SerializeField, Tooltip("Per-axis scale for joltEffectPrefab (or its fallback) - this event carries no radius of its own to derive a uniform scale from, and a per-axis vector lets the spark read stretched/squashed rather than only uniformly bigger or smaller.")]
+        private Vector3 joltScaleMultiplier = Vector3.one * 0.6f;
+        [SerializeField, Tooltip("Tint applied only when falling back to defaultAreaBlastEffect (joltEffectPrefab left empty) - electric yellow-white, same family as Overload's own fallback tint. Ignored once a dedicated prefab is authored.")]
+        private Color joltFallbackColor = new Color(1f, 0.95f, 0.4f);
 
-        [Header("Detonation")]
-        [SerializeField, Tooltip("Played on DetonationReleased (Fire+RiftMark reaction - see docs/elemental-reactions.md and StatusEffectUtility.TryTriggerDetonation). Falls back to defaultAreaBlastEffect, tinted detonationFallbackColor, if left empty - so it already reads distinctly hot-pink even before a bespoke prefab is authored.")]
-        private ParticleSystem detonationEffectPrefab;
-        [SerializeField, Tooltip("Tint applied only when falling back to defaultAreaBlastEffect (detonationEffectPrefab left empty) - matches the Rift Mark hot-pink #FD3971 presentation rule (purple is reserved for Void). Ignored once a dedicated prefab is authored, since that plays with its own authored color.")]
-        private Color detonationFallbackColor = new Color32(0xFD, 0x39, 0x71, 0xFF);
+        [Header("Thermal Shock (Burn + Chill)")]
+        [SerializeField, Tooltip("Played on ThermalShockTriggered (Burn+Chill reaction - see docs/elemental-reactions.md and StatusEffectUtility.TryTriggerThermalShock) at the struck enemy's own position - a brief concentrated single-target impact, not radius-scaled (the event carries no Radius). Falls back to defaultAreaBlastEffect, tinted thermalShockFallbackColor, at thermalShockEffectScale, if left empty.")]
+        private ParticleSystem thermalShockEffectPrefab;
+        [SerializeField, Tooltip("Uniform scale for thermalShockEffectPrefab (or its fallback) - this event carries no radius of its own to derive a scale from, same reasoning as projectileReflectedEffectScale.")]
+        private float thermalShockEffectScale = 1f;
+        [SerializeField, Tooltip("Tint applied only when falling back to defaultAreaBlastEffect (thermalShockEffectPrefab left empty) - orange+blue, read as a short white-hot flash. Ignored once a dedicated prefab is authored.")]
+        private Color thermalShockFallbackColor = new Color(1f, 0.55f, 0.15f);
 
-        [Header("Singularity")]
-        [SerializeField, Tooltip("Played on SingularityTriggered (Void+RiftMark reaction - see docs/elemental-reactions.md and StatusEffectUtility.TryTriggerSingularity). Falls back to defaultAreaBlastEffect, tinted singularityFallbackColor, if left empty - same pattern as detonationEffectPrefab above.")]
-        private ParticleSystem singularityEffectPrefab;
-        [SerializeField, Tooltip("Tint applied only when falling back to defaultAreaBlastEffect (singularityEffectPrefab left empty) - stays Void's own purple/dark tone rather than Rift Mark's hot-pink, since this reaction's whole identity is Void reacting, not the mark itself. Ignored once a dedicated prefab is authored.")]
-        private Color singularityFallbackColor = new Color(0.35f, 0.15f, 0.5f);
+        [Header("Overload (Burn + Shock)")]
+        [SerializeField, Tooltip("Played at e.OriginPosition on OverloadTriggered (Burn+Shock reaction - see docs/elemental-reactions.md and StatusEffectUtility.TryTriggerOverload) - the flash where the chain starts. Falls back to defaultAreaBlastEffect, tinted overloadFallbackColor, at overloadEffectScale, if left empty.")]
+        private ParticleSystem overloadOriginParticlePrefab;
+        [SerializeField, Tooltip("A LOOPING particle system that actually travels from e.From toward the target's live position on every OverloadChainLink (see TravelOverloadSegment) - played, animated over ElementalReactionConfig.OverloadChainDelay real seconds (read live off the same asset the simulation itself uses, not a separately authored view-side duration - see OnOverloadChainLink), then stopped (existing particles allowed to fade) once it arrives. Author this prefab's own Particle System with Looping enabled and Play On Awake off - PlayEffect/pooling calls Play()/Stop() explicitly. Ignored entirely if overloadChainLinePrefab is assigned. Falls back to defaultAreaBlastEffect (a plain point flash at e.To, no travel) if both are left empty.")]
+        private ParticleSystem overloadTravelParticlePrefab;
+        [SerializeField, Tooltip("Alternative to overloadTravelParticlePrefab - ONE LineRenderer (world-space) instance per chain, spanning every entity the chain has hit so far (see BeginOverloadChainLine/AppendOverloadChainLink) - positionCount tracks visited-count exactly, one point per enemy (origin included), not a travel/growth animation; a fresh hop just adds its own point immediately. Every point re-resolves its owning entity's LIVE position every frame (RunOverloadChainLine), so the whole chain visually follows if any of its enemies keep moving. Takes priority over overloadTravelParticlePrefab when assigned; not pooled (the chain is cooldown-gated and capped at 8 visited slots, nowhere near projectile-hit frequency). Leave empty to keep the traveling-particle look.")]
+        private LineRenderer overloadChainLinePrefab;
+        [SerializeField, Tooltip("Interior points inserted between each pair of CONSECUTIVE enemies in the chain, each nudged by a random perpendicular jitter (see UpdateOverloadChainLinePositions) so the beam reads as a jagged shock-lightning bolt between hops instead of a dead-straight segment. 0 disables jitter entirely. The anchor points themselves (one per enemy, incl. the origin) are NEVER jittered - only what's drawn between them.")]
+        private int overloadChainLineJitterSegments = 4;
+        [SerializeField, Tooltip("Max perpendicular random offset (world units) applied to each interior jittered point between two enemies - larger reads as a wilder/more erratic bolt, 0 collapses back to straight segments.")]
+        private float overloadChainLineJitter = 0.2f;
+        [SerializeField, Tooltip("Real seconds between re-randomizing the jitter offsets (see RunOverloadChainLine) - short (0.01-0.05s) reads as an electric crackle; anchor points still re-track their entity's live position every single frame regardless, only the JITTER shape itself refreshes on this slower timer (refreshing every frame would still look jittery, just needlessly - the crackle reads the same at a much cheaper update rate).")]
+        private float overloadChainLineJitterRefreshInterval = 0.03f;
+        [SerializeField, Tooltip("Real seconds since Overload's last hop before its chain line is considered finished and starts fading (see RunOverloadChainLine) - should comfortably exceed ElementalReactionConfig.OverloadChainDelay so a chain that's still actively hopping never times out between two hops, only once it has genuinely ended (no further target found in range, or the current end of the chain was destroyed). Ignored if overloadChainLinePrefab is left empty.")]
+        private float overloadChainLineIdleTimeout = 0.4f;
+        [SerializeField, Tooltip("Real seconds overloadChainLinePrefab's ALPHA (startColor/endColor, not width) fades to 0 once its chain is considered finished (see overloadChainLineIdleTimeout), before the instance is destroyed - purely cosmetic, all the chain's damage already landed by then. Ignored if overloadChainLinePrefab is left empty.")]
+        private float overloadChainLineFadeDuration = 0.12f;
+        [SerializeField, Tooltip("Optional - played at e.To on every OverloadChainLink for a small extra punch where the chain actually lands. Leave empty to skip entirely; overloadTravelParticlePrefab/overloadChainLinePrefab already cover the link visually on their own.")]
+        private ParticleSystem overloadImpactParticlePrefab;
+        [SerializeField, Tooltip("Uniform scale for overloadOriginParticlePrefab/overloadImpactParticlePrefab (or their fallback) - neither event carries a radius of its own, same reasoning as projectileReflectedEffectScale.")]
+        private float overloadEffectScale = 1f;
+        [SerializeField, Tooltip("Tint applied only when falling back to defaultAreaBlastEffect (overloadOriginParticlePrefab/overloadImpactParticlePrefab left empty) - electric yellow-white, kept visually distinct from Thermal Shock's orange+blue and Shatter's icy blue. Ignored once a dedicated prefab is authored.")]
+        private Color overloadFallbackColor = new Color(1f, 0.95f, 0.4f);
 
-        [Header("Overflowing Rift")]
-        [SerializeField, Tooltip("Played on OverflowingRiftTriggered (Overflowing Rift mutation - see docs/rift-mutations.md) - a small, restrained pulse when a Rift Mark application lands against an already-2-stack target, deliberately NOT comparable in strength to a full reaction VFX. Falls back to defaultAreaBlastEffect, tinted overflowingRiftFallbackColor, if left empty.")]
-        private ParticleSystem overflowingRiftPulsePrefab;
-        [SerializeField, Tooltip("Tint applied only when falling back to defaultAreaBlastEffect (overflowingRiftPulsePrefab left empty) - hot-pink, same Rift Mark color rule as detonationFallbackColor/riftMarkColor.")]
-        private Color overflowingRiftFallbackColor = new Color32(0xFD, 0x39, 0x71, 0xFF);
+        [Header("Shatter (Chill + Shock)")]
+        [SerializeField, Tooltip("Played on ShatterTriggered (Chill+Shock reaction - see docs/elemental-reactions.md and StatusEffectUtility.TryTriggerShatter) at the reaction's center (the strongly-staggered primary target, which never itself moves) - a short radial 'crack', not an explosion or a pull. Authored at a reference radius of 1 and scaled by e.Radius (the real ShatterRadius) so the visual reads at the actual gameplay extent. Falls back to defaultAreaBlastEffect, tinted shatterFallbackColor, if left empty.")]
+        private ParticleSystem shatterEffectPrefab;
+        [SerializeField, Tooltip("Tint applied only when falling back to defaultAreaBlastEffect (shatterEffectPrefab left empty) - icy blue with yellow lightning accents, read as a brief angular crack rather than an implosion/explosion. Ignored once a dedicated prefab is authored.")]
+        private Color shatterFallbackColor = new Color(0.35f, 0.7f, 1f);
 
         [Header("Groundbreaker")]
         [SerializeField, Tooltip("Played on GroundbreakerSlammed (Brute's Groundbreaker Ascension - see docs/brute-ascensions.md) at his landing point. Authored at a reference radius of 1 and scaled by e.Radius, so one prefab covers all three ranks (3 / 3 / 4.5) rather than needing three. Falls back to defaultAreaBlastEffect, tinted groundbreakerFallbackColor, if left empty - same dedicated-slot-with-tinted-fallback pattern as the reaction VFX above.")]
@@ -82,7 +111,7 @@ namespace QuantumUser.View.Managers
         [Header("Wall Slam")]
         [SerializeField, Tooltip("Played on WallSlammed at the wall CONTACT point, oriented into the surface (see WallSlamUtility) - generic and source-agnostic, so both Brute's Iron Shoulder dash and his Groundbreaker landing use it with no per-source hookup. Falls back to defaultAreaBlastEffect if left empty.")]
         private ParticleSystem wallSlamEffectPrefab;
-        [SerializeField, Tooltip("Uniform scale for wallSlamEffectPrefab when the Stun did NOT land (a hard-CC immunity window, or an ImmuneToHardCC tier - the target still hit the wall). This event carries no radius, so scale is authored rather than derived, same reasoning as meleeHitEffectScale.")]
+        [SerializeField, Tooltip("Uniform scale for wallSlamEffectPrefab when the Stun did NOT land (a hard-CC immunity window, or an ImmuneToHardCC tier - the target still hit the wall). This event carries no radius, so scale is authored rather than derived, same reasoning as selfHitEffectScale.")]
         private float wallSlamEffectScale = 1f;
         [SerializeField, Tooltip("Uniform scale used instead when the Stun genuinely LANDED - the moment that actually rewards the player (and the one that opens Groundbreaker rank 3's Exposed window), so it reads heavier than a wall contact that got resisted.")]
         private float wallSlamStunnedEffectScale = 1.6f;
@@ -101,7 +130,7 @@ namespace QuantumUser.View.Managers
         [Header("Accessory Guard")]
         [SerializeField, Tooltip("GENERIC fallback played where a BROKEN accessory's debris comes to rest (see docs/accessory-guard.md) - the durability-0 block still knocks the accessory off and flies it on the normal arc, and this is the \"it shattered\" payoff at the landing point. A hero can override it per-accessory via CharacterData.Accessory.BrokenEffectPrefab; this covers everyone who doesn't. Leave empty to skip the particle entirely; deliberately no fallback to defaultAreaBlastEffect, since an explosion reads wrong for a hat breaking.")]
         private ParticleSystem accessoryBrokenEffectPrefab;
-        [SerializeField, Tooltip("Uniform scale for accessoryBrokenEffectPrefab - this event carries no radius of its own to derive one from, same as meleeHitEffectScale.")]
+        [SerializeField, Tooltip("Uniform scale for accessoryBrokenEffectPrefab - this event carries no radius of its own to derive one from, same as selfHitEffectScale.")]
         private float accessoryBrokenEffectScale = 1f;
 
         [SerializeField, Tooltip("Played where a dropped accessory is picked back up by its owner (EventAccessoryRecovered) - the \"got it back\" payoff that closes the go-and-fetch loop. Leave empty to skip; no fallback, since a combat blast reads wrong for a pickup.")]
@@ -111,7 +140,7 @@ namespace QuantumUser.View.Managers
 
         [SerializeField, Tooltip("Played at the point of impact when the Accessory Guard eats a hit outright (EventAccessoryBlocked). Falls back to the generic melee hit spark, then to defaultAreaBlastEffect - a block IS an impact, so the normal hit VFX reads correctly here; it's the TINT below that says \"stopped\" rather than \"hurt\". Left empty, the fallback chain still gives every block a visual.")]
         private ParticleSystem accessoryBlockedEffectPrefab;
-        [SerializeField, Tooltip("Uniform scale for accessoryBlockedEffectPrefab - this event carries no radius of its own, same as meleeHitEffectScale.")]
+        [SerializeField, Tooltip("Uniform scale for accessoryBlockedEffectPrefab - this event carries no radius of its own, same as selfHitEffectScale.")]
         private float accessoryBlockedEffectScale = 1f;
         [SerializeField, Tooltip("Tint applied to the block impact. Blue by default: a blocked hit must never read as damage, and this is the same colour language the guard uses everywhere else (HitFeedback.blockFlashColor, CharacterUiWidget's guard fill). Uses the tinted PlayEffect overload, so one shared spark prefab covers both a normal hit and a block.")]
         private Color accessoryBlockedEffectColor = new Color(0.25f, 0.6f, 1f);
@@ -119,7 +148,7 @@ namespace QuantumUser.View.Managers
         [Header("Free Hit Guard")]
         [SerializeField, Tooltip("Played at the point of impact when a Free Hit Guard negates a hit (EventFreeHitGuardConsumed - Brute's Bodyguard today). Its own prefab rather than sharing the accessory block's: both are 'that hit was stopped cold', but they are different mechanics with different sources, and a player should be able to tell at a glance which one just saved them. Falls back to the generic melee hit spark, then defaultAreaBlastEffect, so a guard is never silent unauthored.")]
         private ParticleSystem freeHitGuardEffectPrefab;
-        [SerializeField, Tooltip("Uniform scale for freeHitGuardEffectPrefab - this event carries no radius of its own, same as meleeHitEffectScale.")]
+        [SerializeField, Tooltip("Uniform scale for freeHitGuardEffectPrefab - this event carries no radius of its own, same as selfHitEffectScale.")]
         private float freeHitGuardEffectScale = 1f;
 
         // Deliberately NO tint field here, unlike the accessory block above. This prefab is authored
@@ -128,11 +157,22 @@ namespace QuantumUser.View.Managers
         // colour signal is carried by the CHARACTER flash instead (HitFeedback.freeHitGuardFlashColor,
         // cyan rather than the normal white), which is the part that would otherwise read as a hit.
 
-        [Header("Melee Hit")]
-        [SerializeField, Tooltip("Played whenever a HitEffectApplied event fires from a non-enemy Owner (a player skill/weapon hitting something) - generic and source-agnostic, not per-asset. Falls back to defaultAreaBlastEffect if left empty. Enemy-caused hits are handled separately by EnemyAttackVisualsView (per-delivery HitImpactPrefab), so this only covers the previously-uncovered player-hit case.")]
-        private ParticleSystem meleeHitEffectPrefab;
-        [SerializeField, Tooltip("Uniform scale used for meleeHitEffectPrefab (or its fallback) - this event carries no radius of its own to derive a scale from.")]
-        private float meleeHitEffectScale = 1f;
+        [Header("Enemy Hit (we hit an enemy)")]
+        [SerializeField, Tooltip("Played at the impact point whenever WE (a player/ally - a non-enemy owner) land a NON-critical hit on an enemy. Driven off EventEntityDamaged - the SAME per-hit event the floating damage numbers (DamageFeedbackManager) and character hit-flash (HitFeedback) already react to - so it fires once per damage instance a bullet/melee/skill connects (including once per enemy caught in an area blast, and once per damage-over-time tick). Falls back to defaultAreaBlastEffect if left empty. Enemy-on-enemy and self-inflicted (Silent) damage never trigger it.")]
+        private ParticleSystem enemyHitEffectPrefab;
+        [SerializeField, Tooltip("Uniform scale for enemyHitEffectPrefab - EventEntityDamaged carries no radius to derive one from.")]
+        private float enemyHitEffectScale = 1f;
+
+        [SerializeField, Tooltip("Played instead of enemyHitEffectPrefab when the hit on the enemy was a CRITICAL - read straight off EventEntityDamaged.IsCritical, the exact crit the damage number shows. Falls back to enemyHitEffectPrefab, then defaultAreaBlastEffect, if left empty.")]
+        private ParticleSystem enemyCriticalHitEffectPrefab;
+        [SerializeField, Tooltip("Uniform scale for enemyCriticalHitEffectPrefab (or its fallback).")]
+        private float enemyCriticalHitEffectScale = 1f;
+
+        [Header("Self Hit (an enemy hits us)")]
+        [SerializeField, Tooltip("Played at the player's centroid when an ENEMY lands a hit on a player - one generic 'you got hit' spark for every enemy (the per-enemy EnemyDeliveryData.HitImpactPrefab path was removed in favour of this). Also stands in for a hit fully negated by the Accessory Guard / Free Hit Guard, which fire no EntityDamaged of their own (see OnAccessoryBlocked/OnFreeHitGuardConsumed). Falls back to defaultAreaBlastEffect if left empty.")]
+        private ParticleSystem selfHitEffectPrefab;
+        [SerializeField, Tooltip("Uniform scale for selfHitEffectPrefab.")]
+        private float selfHitEffectScale = 1f;
 
         [Header("Heal / Shield Grant")]
         [SerializeField, Tooltip("Played at the target whenever EntityHealed fires, from any source (PortableSpeakerSkillAction, HealEffectData, HealthRegenSystem, ...) - generic and source-agnostic, not per-asset. The floating heal number (DamageFeedbackManager) and hit-flash (HitFeedback) already cover this event too; this is just the particle. Leave empty to skip the particle - unlike the blast-style handlers above, this deliberately does NOT fall back to defaultAreaBlastEffect, since a combat blast reads wrong for a heal.")]
@@ -143,7 +183,7 @@ namespace QuantumUser.View.Managers
         private ParticleSystem shieldBreakEffectPrefab;
 
         [Header("Quantum Rounds")]
-        [SerializeField, Tooltip("Uniform scale used for QuantumRoundsTriggered's impact spark - the prefab itself is resolved per-asset off Source.ImpactEffectPrefab (see QuantumRoundsWeaponPerkData.View.cs/OnQuantumRoundsTriggered below), falling back to defaultAreaBlastEffect if that's left empty. This event carries no radius of its own to derive a scale from, same reasoning as meleeHitEffectScale/projectileReflectedEffectScale.")]
+        [SerializeField, Tooltip("Uniform scale used for QuantumRoundsTriggered's impact spark - the prefab itself is resolved per-asset off Source.ImpactEffectPrefab (see QuantumRoundsWeaponPerkData.View.cs/OnQuantumRoundsTriggered below), falling back to defaultAreaBlastEffect if that's left empty. This event carries no radius of its own to derive a scale from, same reasoning as selfHitEffectScale/projectileReflectedEffectScale.")]
         private float quantumRoundsEffectScale = 1f;
 
         [Header("Projectile Reflect")]
@@ -155,7 +195,7 @@ namespace QuantumUser.View.Managers
         [Header("Revive")]
         [SerializeField, Tooltip("Played at the target's position whenever EventPlayerRevived fires (teammate-hold, self-revive, or the auto-revive-on-secure sweep - see docs/revive.md) - generic and source-agnostic, the same for every hero, so it lives here rather than per-view (see BlobAnimationView.OnPlayerRevived for that same event's own punch-scale reaction). Leave empty to skip the particle.")]
         private ParticleSystem reviveEffectPrefab;
-        [SerializeField, Tooltip("Uniform scale for reviveEffectPrefab - this event carries no radius of its own to derive one from, same as meleeHitEffectScale.")]
+        [SerializeField, Tooltip("Uniform scale for reviveEffectPrefab - this event carries no radius of its own to derive one from, same as selfHitEffectScale.")]
         private float reviveEffectScale = 1f;
 
         [Header("Enemy Death")]
@@ -215,12 +255,14 @@ namespace QuantumUser.View.Managers
             QuantumEvent.Subscribe<EventGroundbreakerSlammed>(this, OnGroundbreakerSlammed);
             QuantumEvent.Subscribe<EventWallSlammed>(this, OnWallSlammed);
             QuantumEvent.Subscribe<EventWeaponExplosionReleased>(this, OnWeaponExplosionReleased);
-            QuantumEvent.Subscribe<EventDetonationReleased>(this, OnDetonationReleased);
-            QuantumEvent.Subscribe<EventSingularityTriggered>(this, OnSingularityTriggered);
-            QuantumEvent.Subscribe<EventOverflowingRiftTriggered>(this, OnOverflowingRiftTriggered);
+            QuantumEvent.Subscribe<EventJoltTriggered>(this, OnJoltTriggered);
+            QuantumEvent.Subscribe<EventThermalShockTriggered>(this, OnThermalShockTriggered);
+            QuantumEvent.Subscribe<EventOverloadTriggered>(this, OnOverloadTriggered);
+            QuantumEvent.Subscribe<EventOverloadChainLink>(this, OnOverloadChainLink);
+            QuantumEvent.Subscribe<EventShatterTriggered>(this, OnShatterTriggered);
             QuantumEvent.Subscribe<EventQuantumRoundsTriggered>(this, OnQuantumRoundsTriggered);
             QuantumEvent.Subscribe<EventProjectileReflected>(this, OnProjectileReflected);
-            QuantumEvent.Subscribe<EventHitEffectApplied>(this, OnHitEffectApplied);
+            QuantumEvent.Subscribe<EventEntityDamaged>(this, OnEntityDamaged);
             QuantumEvent.Subscribe<EventEntityHealed>(this, OnEntityHealed);
             QuantumEvent.Subscribe<EventEntityShielded>(this, OnEntityShielded);
             QuantumEvent.Subscribe<EventShieldBroken>(this, OnShieldBroken);
@@ -249,7 +291,10 @@ namespace QuantumUser.View.Managers
             AreaHitData hitData = frame.FindAsset(e.HitData);
             ParticleSystem prefab = hitData.BlastEffectPrefab ?? defaultAreaBlastEffect;
 
-            PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
+            // The prefab's own authored rotation (e.g. tilted flat to lie on the ground plane), not
+            // world-identity - GetPooledInstance's SetPositionAndRotation would otherwise silently
+            // discard whatever orientation the artist actually set up on it.
+            PlayEffect(prefab, e.Position.ToUnityVector3(), prefab.transform.rotation, Vector3.one * e.Radius.AsFloat);
         }
 
         // The mark can come from any hero's upgrade (see MarkExplosiveDeath/ExplodeOnDeath) - there's
@@ -260,18 +305,6 @@ namespace QuantumUser.View.Managers
         {
             Vector3 position = e.Position.ToUnityVector3();
             Vector3 scale = Vector3.one * e.Radius.AsFloat;
-
-            if (e.RiftMarked == true)
-            {
-                if (riftMarkedExplodeEffectPrefab != null)
-                {
-                    PlayEffect(riftMarkedExplodeEffectPrefab, position, Quaternion.identity, scale);
-                    return;
-                }
-
-                PlayEffect(defaultAreaBlastEffect, position, Quaternion.identity, scale, riftMarkedExplodeFallbackColor);
-                return;
-            }
 
             PlayEffect(defaultAreaBlastEffect, position, Quaternion.identity, scale);
         }
@@ -415,8 +448,8 @@ namespace QuantumUser.View.Managers
         // landing, whether or not anything was caught, so a big drop into an empty room still reads.
         // Same "no single asset to resolve a bespoke prefab from" reasoning as the reaction handlers
         // above: it's a PassiveUpgradeData, whose Apply gets no self AssetRef to travel with the event,
-        // so the prefab lives on this manager rather than per-asset (the shape Undertow/Detonation/
-        // Singularity/Overflowing Rift already use for exactly the same reason).
+        // so the prefab lives on this manager rather than per-asset (the shape Undertow/Thermal
+        // Shock/Overload/Shatter already use for exactly the same reason).
         //
         // e.Position is Brute's own landing transform, which sits at his feet - close enough for the
         // burst, but the decal is ground-probed separately so a crack can't float above a slope.
@@ -501,10 +534,27 @@ namespace QuantumUser.View.Managers
         // an impact and should hit as hard visually. The BLUE tint is what distinguishes it, via the
         // existing tinted PlayEffect overload - so one shared prefab covers both cases and they can
         // never drift apart in feel.
+        //
+        // e.Position is AccessoryGuardUtility's own ground/feet-level anchor (shared with where the
+        // knocked-off accessory collectible lands, which genuinely wants ground level) - re-resolved
+        // to e.Owner's live body CENTER here instead (see ResolveCenter below), so the impact reads
+        // on the body like every other hit spark rather than at the feet. Falls back to e.Position
+        // only if the frame/entity can't be resolved.
         private void OnAccessoryBlocked(EventAccessoryBlocked e)
         {
-            PlayNegatedHitImpact(accessoryBlockedEffectPrefab, e.Position.ToUnityVector3(),
+            Vector3 position = ResolveCenter(e.Game.Frames.Predicted, e.Owner, e.Position.ToUnityVector3());
+
+            PlayNegatedHitImpact(accessoryBlockedEffectPrefab, position,
                 accessoryBlockedEffectScale, accessoryBlockedEffectColor);
+
+            // A block IS a hit against us that just got absorbed - play the generic self-hit spark
+            // here too, explicitly and unconditionally, rather than only as PlayNegatedHitImpact's
+            // distant fallback (which only ever fires if accessoryBlockedEffectPrefab itself is
+            // empty). This is deliberately in ADDITION to the accessory-specific impact above, not a
+            // replacement for it - the accessory's own block visual and "you took a hit" both read
+            // as true at once when the accessory breaks.
+            if (selfHitEffectPrefab != null)
+                PlayEffect(selfHitEffectPrefab, position, Quaternion.identity, Vector3.one * selfHitEffectScale);
         }
 
         // Free Hit Guard (Brute's Bodyguard today - see StatusEffects.qtn) negates a hit the same way
@@ -512,12 +562,38 @@ namespace QuantumUser.View.Managers
         // OWN prefab/scale/tint rather than sharing the accessory's: they are different mechanics from
         // different sources, and which one just saved you is worth being able to read at a glance.
         // Only the plumbing below is shared.
+        //
+        // e.Position is DamageUtility's own raw Transform3D.Position (feet-level) - re-resolved to
+        // e.Target's live body CENTER here, same reasoning as OnAccessoryBlocked above.
         private void OnFreeHitGuardConsumed(EventFreeHitGuardConsumed e)
         {
+            Vector3 position = ResolveCenter(e.Game.Frames.Predicted, e.Target, e.Position.ToUnityVector3());
+
             // Untinted - plays in whatever colours its prefab was authored with. See the field's own
             // comment for why this one doesn't get a tint the way the accessory block does.
-            PlayNegatedHitImpact(freeHitGuardEffectPrefab, e.Position.ToUnityVector3(),
+            PlayNegatedHitImpact(freeHitGuardEffectPrefab, position,
                 freeHitGuardEffectScale, null);
+        }
+
+        // Shared center resolution for every per-entity spark in this file that needs to land on the
+        // BODY rather than at the feet/collider-origin. EnemyMovementUtility.ResolveEntityCenter
+        // already does this correctly for both enemies (Transform3D.Position IS their collider center
+        // by convention) and players (KCC.Position + KCCSettings.Height/2) - centerHeightOffset below
+        // is an extra tunable nudge on top of that for players specifically, since the one shared
+        // KCCSettings.Height (1.0) every hero's KCC currently uses is unusually squat next to the
+        // addon's own default (1.75), so the resolved center alone can still read close to the feet
+        // for how tall the sprites actually render. Falls back to `fallback` (the event's own raw
+        // position) only if the frame/entity can't be resolved (e.g. already destroyed this tick).
+        private Vector3 ResolveCenter(Frame frame, EntityRef entity, Vector3 fallback)
+        {
+            // Has<Transform3D>, not just Exists - EnemyMovementUtility.ResolveEntityCenter does a
+            // hard f.Get<Transform3D> internally, which throws if the entity lacks one.
+            if (frame == null || frame.Has<Transform3D>(entity) == false)
+                return fallback;
+
+            Vector3 center = EnemyMovementUtility.ResolveEntityCenter(frame, entity).ToUnityVector3();
+            center.y += centerHeightOffset;
+            return center;
         }
 
         // Shared plumbing for every "this hit was stopped cold" impact. A negated hit returns from
@@ -531,10 +607,10 @@ namespace QuantumUser.View.Managers
         // job only fights the artist.
         private void PlayNegatedHitImpact(ParticleSystem prefab, Vector3 position, float scale, Color? color)
         {
-            // Same fallback chain OnHitEffectApplied uses, one step longer - a negated hit should never
+            // Same fallback chain OnEntityDamaged uses for the self-hit case, one step longer - a negated hit should never
             // be silent just because no bespoke prefab was authored for it yet. Borrowing the ordinary
             // hit spark is fine as a stopgap: a block IS an impact and should land as hard visually.
-            ParticleSystem resolved = prefab ?? meleeHitEffectPrefab ?? defaultAreaBlastEffect;
+            ParticleSystem resolved = prefab ?? selfHitEffectPrefab ?? defaultAreaBlastEffect;
 
             if (resolved == null)
                 return;
@@ -603,61 +679,390 @@ namespace QuantumUser.View.Managers
             PlayEffect(defaultAreaBlastEffect, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
         }
 
-        // Fire+RiftMark reaction (see docs/elemental-reactions.md and
-        // StatusEffectUtility.TryTriggerDetonation) - unlike OnWeaponExplosionReleased above, this one
-        // gets its own dedicated prefab slot rather than always falling through to the shared blast,
-        // since it's meant to read as a distinct effect. Until detonationEffectPrefab is authored,
-        // falls back to defaultAreaBlastEffect tinted detonationFallbackColor via the same tinted
-        // PlayEffect overload OnEnemyExploded uses, so it's still visually distinct in the meantime.
-        private void OnDetonationReleased(EventDetonationReleased e)
+        // One-shot spark every time Electrified's periodic Jolt actually fires (see
+        // docs/elemental-reactions.md's "Shock (Electrified)" section) - distinct from
+        // StatusEffectsManager's own ambient electrifiedParticlePrefab/staggerParticlePrefab trackers,
+        // which only show a status is currently active rather than marking each individual Jolt.
+        private void OnJoltTriggered(EventJoltTriggered e)
         {
-            Vector3 position = e.Position.ToUnityVector3();
-            Vector3 scale = Vector3.one * e.Radius.AsFloat;
+            Vector3 position = e.Position.ToUnityVector3() + joltPositionOffset;
+            Quaternion rotation = Quaternion.Euler(joltRotationOffset);
 
-            if (detonationEffectPrefab != null)
+            if (joltEffectPrefab != null)
             {
-                PlayEffect(detonationEffectPrefab, position, Quaternion.identity, scale);
+                PlayEffect(joltEffectPrefab, position, rotation, joltScaleMultiplier);
                 return;
             }
 
-            PlayEffect(defaultAreaBlastEffect, position, Quaternion.identity, scale, detonationFallbackColor);
+            PlayEffect(defaultAreaBlastEffect, position, rotation, joltScaleMultiplier, joltFallbackColor);
         }
 
-        // Void+RiftMark reaction (see docs/elemental-reactions.md and
-        // StatusEffectUtility.TryTriggerSingularity) - pulls every enemy in range toward the
-        // reaction's target; this is purely the visual, the actual pull impulse already happened in
-        // simulation. Same dedicated-slot-with-tinted-fallback pattern as OnDetonationReleased above.
-        private void OnSingularityTriggered(EventSingularityTriggered e)
+        // Burn+Chill reaction (see docs/elemental-reactions.md and
+        // StatusEffectUtility.TryTriggerThermalShock) - a single-target burst at the struck enemy's
+        // own position, no radius to scale by (unlike an AoE blast). Falls back to
+        // defaultAreaBlastEffect tinted thermalShockFallbackColor at a fixed reference scale, same
+        // dedicated-slot-with-tinted-fallback pattern every other reaction VFX here uses.
+        private void OnThermalShockTriggered(EventThermalShockTriggered e)
         {
             Vector3 position = e.Position.ToUnityVector3();
-            Vector3 scale = Vector3.one * e.Radius.AsFloat;
+            Vector3 scale = Vector3.one * thermalShockEffectScale;
 
-            if (singularityEffectPrefab != null)
+            if (thermalShockEffectPrefab != null)
             {
-                PlayEffect(singularityEffectPrefab, position, Quaternion.identity, scale);
+                PlayEffect(thermalShockEffectPrefab, position, Quaternion.identity, scale);
                 return;
             }
 
-            PlayEffect(defaultAreaBlastEffect, position, Quaternion.identity, scale, singularityFallbackColor);
+            PlayEffect(defaultAreaBlastEffect, position, Quaternion.identity, scale, thermalShockFallbackColor);
         }
 
-        // Overflowing Rift mutation (see docs/rift-mutations.md and
-        // RiftMarkApplicationUtility.ApplyRequest) - fires when an application lands against a target
-        // already at max Rift Mark stacks instead of being wasted. Deliberately restrained: same
-        // dedicated-slot-with-tinted-fallback pattern as every other reaction VFX here, but callers
-        // are expected to author a small, low-key prefab, not a full reaction-strength blast.
-        private void OnOverflowingRiftTriggered(EventOverflowingRiftTriggered e)
+        // Burn+Shock reaction (see docs/elemental-reactions.md and
+        // StatusEffectUtility.TryTriggerOverload) - the flash where the chain originates, at the
+        // entity that actually triggered the reaction. The chain's subsequent hops are each their own
+        // OverloadChainLink event (see OnOverloadChainLink below), fired one every OverloadChainDelay
+        // real seconds rather than all in the same frame.
+        private void OnOverloadTriggered(EventOverloadTriggered e)
+        {
+            Vector3 position = e.OriginPosition.ToUnityVector3();
+            Vector3 scale = Vector3.one * overloadEffectScale;
+
+            if (overloadOriginParticlePrefab != null)
+                PlayEffect(overloadOriginParticlePrefab, position, Quaternion.identity, scale);
+            else
+                PlayEffect(defaultAreaBlastEffect, position, Quaternion.identity, scale, overloadFallbackColor);
+
+            if (overloadChainLinePrefab != null)
+                BeginOverloadChainLine(e.Origin, position);
+        }
+
+        // One per chain hop (see StatusEffectUtility.TryAdvanceOverloadChain/
+        // StatusEffectSystem.TickOverloadChain). If overloadChainLinePrefab is driving this chain's
+        // visual (see BeginOverloadChainLine), the hop just appends its own point to that one
+        // persistent line - no per-hop travel/growth, the line always directly connects every entity
+        // the chain has hit so far. Otherwise falls back to stretching overloadTravelParticlePrefab from
+        // e.From to e.To, or (neither authored) a plain point flash at e.To.
+        private void OnOverloadChainLink(EventOverloadChainLink e)
+        {
+            Vector3 to = e.To.ToUnityVector3();
+
+            if (overloadChainLinePrefab != null && _overloadChainLines.TryGetValue(e.Origin, out var chain))
+            {
+                AppendOverloadChainLink(chain, e.Target, to);
+
+                if (overloadImpactParticlePrefab != null)
+                    PlayEffect(overloadImpactParticlePrefab, to, Quaternion.identity, Vector3.one * overloadEffectScale);
+
+                return;
+            }
+
+            Vector3 from = e.From.ToUnityVector3();
+
+            if (overloadTravelParticlePrefab != null)
+            {
+                StartCoroutine(TravelOverloadSegment(e.Target, from, to, ResolveOverloadChainDelay(e.Game.Frames.Predicted)));
+                return;
+            }
+
+            Vector3 delta = to - from;
+            Quaternion rotation = delta.sqrMagnitude > 0.0001f
+                ? Quaternion.LookRotation(delta, Vector3.up)
+                : Quaternion.identity;
+
+            PlayEffect(defaultAreaBlastEffect, to, rotation, Vector3.one * overloadEffectScale, overloadFallbackColor);
+
+            if (overloadImpactParticlePrefab != null)
+                PlayEffect(overloadImpactParticlePrefab, to, Quaternion.identity, Vector3.one * overloadEffectScale);
+        }
+
+        // Real seconds between hops, read live off the SAME asset the simulation itself uses
+        // (RuntimeConfig.ElementalReactionConfig.OverloadChainDelay) rather than a separately authored
+        // view-side duration that could silently drift out of sync with it - a mismatch is exactly what
+        // makes one hop's travel still animating when the next hop's damage has already landed and its
+        // own link event has already fired. Only still needed by TravelOverloadSegment's own travel
+        // duration (the persistent chain line has no travel/growth phase to time).
+        private static float ResolveOverloadChainDelay(Frame frame)
+        {
+            float duration = 0.15f;
+
+            if (frame != null && frame.RuntimeConfig.ElementalReactionConfig.IsValid == true)
+            {
+                ElementalReactionConfig config = frame.FindAsset(frame.RuntimeConfig.ElementalReactionConfig);
+                if (config != null)
+                    duration = config.OverloadChainDelay.AsFloat;
+            }
+
+            return duration;
+        }
+
+        // One persistent overloadChainLinePrefab instance per Overload chain (keyed by Origin, the
+        // entity OverloadTriggered fired on) - one ANCHOR point per entity in hop order
+        // (BeginOverloadChainLine seeds anchor 0 with the origin; AppendOverloadChainLink appends one
+        // more per hop), with overloadChainLineJitterSegments jittered interior points inserted between
+        // each consecutive anchor pair so the chain reads as a jagged bolt rather than dead-straight
+        // segments (see UpdateOverloadChainLinePositions) - positionCount is anchors +
+        // (anchors-1)*jitterSegments, never a travel/growth animation: a fresh hop's anchor (and its new
+        // segment's interior points) appears immediately. RunOverloadChainLine below keeps every anchor
+        // pinned to its owning entity's live position every frame, and re-randomizes the jitter itself
+        // on a slower timer (overloadChainLineJitterRefreshInterval) for as long as the chain is still
+        // hopping, then fades and destroys the line once OverloadChainLink stops arriving (see
+        // overloadChainLineIdleTimeout) - there's no explicit "chain ended" event, since the sim itself
+        // only knows a chain stopped by HopsRemaining silently reaching 0. The fade ONLY ever starts
+        // after that idle timeout is reached - never while the chain is still actively hopping - so a
+        // still-live chain never partially fades/flickers.
+        private readonly Dictionary<EntityRef, OverloadChainLineState> _overloadChainLines = new Dictionary<EntityRef, OverloadChainLineState>();
+
+        private class OverloadChainLineState
+        {
+            public LineRenderer Line;
+            public Coroutine Coroutine;
+            public readonly List<EntityRef> Visited = new List<EntityRef>();
+            public readonly List<Vector3> LastKnownPositions = new List<Vector3>();
+
+            // One random offset (-1..1, scaled by overloadChainLineJitter and a per-segment
+            // perpendicular direction at rebuild time) per interior point across the WHOLE chain, laid
+            // out hop-major (hop 0's segments, then hop 1's, ...) - see
+            // UpdateOverloadChainLinePositions for how these turn into actual world positions.
+            public readonly List<float> JitterOffsets = new List<float>();
+
+            public float LastHopRealTime;
+            public float JitterRefreshElapsed;
+        }
+
+        private void BeginOverloadChainLine(EntityRef origin, Vector3 originPosition)
+        {
+            // A fresh trigger can stomp an in-progress chain's own sim state on the same origin
+            // (TryTriggerOverload unconditionally resets StatusEffects.OverloadChain* - see its own
+            // comment) - if that just happened, the old line's coroutine has no way to know its chain
+            // was cut short, so replace it outright rather than running two lines under one key.
+            if (_overloadChainLines.TryGetValue(origin, out var stale))
+            {
+                StopCoroutine(stale.Coroutine);
+                Destroy(stale.Line.gameObject);
+                _overloadChainLines.Remove(origin);
+            }
+
+            LineRenderer line = Instantiate(overloadChainLinePrefab);
+            line.positionCount = 1;
+            line.SetPosition(0, originPosition);
+
+            var state = new OverloadChainLineState { Line = line, LastHopRealTime = Time.time };
+            state.Visited.Add(origin);
+            state.LastKnownPositions.Add(originPosition);
+
+            _overloadChainLines[origin] = state;
+            state.Coroutine = StartCoroutine(RunOverloadChainLine(origin, state));
+        }
+
+        private void AppendOverloadChainLink(OverloadChainLineState state, EntityRef target, Vector3 initialPosition)
+        {
+            state.Visited.Add(target);
+            state.LastKnownPositions.Add(initialPosition);
+
+            int segments = Mathf.Max(0, overloadChainLineJitterSegments);
+            for (int i = 0; i < segments; i++)
+                state.JitterOffsets.Add(Random.Range(-1f, 1f));
+
+            state.Line.positionCount = ResolveOverloadChainLinePositionCount(state.Visited.Count, segments);
+            state.LastHopRealTime = Time.time;
+
+            // Rebuild immediately rather than waiting for RunOverloadChainLine's next tick - positions
+            // added by growing positionCount default to (0,0,0), which would otherwise flash the new
+            // segment at the world origin for a frame.
+            UpdateOverloadChainLinePositions(state, true, overloadChainLineJitter);
+        }
+
+        private static int ResolveOverloadChainLinePositionCount(int anchorCount, int jitterSegments)
+        {
+            return anchorCount + Mathf.Max(0, anchorCount - 1) * jitterSegments;
+        }
+
+        // Keeps every anchor of the chain's line pinned to its owning entity's live position (so the
+        // whole chain visually follows if any of its enemies keep moving), until overloadChainLineIdleTimeout
+        // real seconds pass with no new AppendOverloadChainLink call - at that point the chain is
+        // considered finished, the line's ALPHA fades to 0 over overloadChainLineFadeDuration (still
+        // live-tracking/crackling through the fade, so it doesn't freeze mid-bolt), then is destroyed.
+        // Fading alpha (startColor/endColor), not widthMultiplier - a beam shrinking thinner reads as it
+        // physically retracting/deflating, alpha dropping reads as it dissipating in place, which is
+        // what a lightning chain winding down should look like. The fade block only ever runs AFTER the
+        // idle-timeout while loop below exits - never interleaved with an active chain - so a chain
+        // that's still genuinely hopping is never seen partially fading.
+        private IEnumerator RunOverloadChainLine(EntityRef origin, OverloadChainLineState state)
+        {
+            float idleTimeout = Mathf.Max(0.05f, overloadChainLineIdleTimeout);
+            float jitterInterval = Mathf.Max(0.01f, overloadChainLineJitterRefreshInterval);
+
+            while (Time.time - state.LastHopRealTime < idleTimeout)
+            {
+                bool refreshJitter = TickJitterRefresh(state, jitterInterval);
+                UpdateOverloadChainLinePositions(state, refreshJitter, overloadChainLineJitter);
+                yield return null;
+            }
+
+            _overloadChainLines.Remove(origin);
+
+            float fade = Mathf.Max(0f, overloadChainLineFadeDuration);
+            if (fade > 0f)
+            {
+                // Captured once, faded down from whatever alpha the prefab was authored at - so a
+                // prefab authored partially-transparent still fades to fully invisible rather than
+                // snapping to some assumed starting alpha.
+                Color startColor = state.Line.startColor;
+                Color endColor = state.Line.endColor;
+                float startAlpha = startColor.a;
+                float endAlpha = endColor.a;
+                float fadeElapsed = 0f;
+
+                while (fadeElapsed < fade)
+                {
+                    fadeElapsed += Time.deltaTime;
+
+                    bool refreshJitter = TickJitterRefresh(state, jitterInterval);
+                    UpdateOverloadChainLinePositions(state, refreshJitter, overloadChainLineJitter);
+
+                    float t = fadeElapsed / fade;
+                    startColor.a = Mathf.Lerp(startAlpha, 0f, t);
+                    endColor.a = Mathf.Lerp(endAlpha, 0f, t);
+                    state.Line.startColor = startColor;
+                    state.Line.endColor = endColor;
+                    yield return null;
+                }
+            }
+
+            Destroy(state.Line.gameObject);
+        }
+
+        private static bool TickJitterRefresh(OverloadChainLineState state, float jitterInterval)
+        {
+            state.JitterRefreshElapsed += Time.deltaTime;
+
+            if (state.JitterRefreshElapsed < jitterInterval)
+                return false;
+
+            state.JitterRefreshElapsed = 0f;
+            return true;
+        }
+
+        // Rebuilds every point of the chain's LineRenderer. Anchors (one per visited entity) always
+        // re-resolve their LIVE position, every call - moving enemies must never lag. The jitter OFFSETS
+        // (state.JitterOffsets) only get re-randomized when refreshJitter is true (see
+        // overloadChainLineJitterRefreshInterval's own comment) - reusing the same offsets on the
+        // frames in between is what makes this read as a crackling bolt instead of continuously
+        // wiggling. Each interior point sits at its even fraction along the straight line between its
+        // two anchors, then nudged by its own jitter offset along a perpendicular (Cross with
+        // Vector3.up, i.e. sideways in the ground plane) to that segment's direction.
+        private static void UpdateOverloadChainLinePositions(OverloadChainLineState state, bool refreshJitter, float jitter)
+        {
+            for (int i = 0; i < state.Visited.Count; i++)
+                state.LastKnownPositions[i] = ResolveLiveTargetPosition(state.Visited[i], state.LastKnownPositions[i]);
+
+            if (refreshJitter == true)
+            {
+                for (int i = 0; i < state.JitterOffsets.Count; i++)
+                    state.JitterOffsets[i] = Random.Range(-1f, 1f);
+            }
+
+            int segments = state.Visited.Count > 1
+                ? (state.JitterOffsets.Count / (state.Visited.Count - 1))
+                : 0;
+
+            int index = 0;
+            state.Line.SetPosition(index++, state.LastKnownPositions[0]);
+
+            for (int hop = 0; hop < state.Visited.Count - 1; hop++)
+            {
+                Vector3 from = state.LastKnownPositions[hop];
+                Vector3 to = state.LastKnownPositions[hop + 1];
+                Vector3 perpendicular = Vector3.Cross(to - from, Vector3.up).normalized;
+
+                for (int s = 1; s <= segments; s++)
+                {
+                    float t = (float)s / (segments + 1);
+                    float offset = state.JitterOffsets[hop * segments + (s - 1)];
+                    Vector3 point = Vector3.Lerp(from, to, t) + perpendicular * offset * jitter;
+                    state.Line.SetPosition(index++, point);
+                }
+
+                state.Line.SetPosition(index++, to);
+            }
+        }
+
+        // Plays overloadTravelParticlePrefab as an actual traveling instance rather than a static
+        // stretch or a one-shot burst of points - starts it looping at `from`, animates its transform
+        // toward the target over `duration` real seconds, then stops emission (existing particles
+        // still fade out naturally) and fires the optional impact particle once it has genuinely
+        // arrived, before releasing the pooled instance back once it's fully finished.
+        //
+        // `target` is re-resolved to its LIVE center position every frame of the travel (falling back
+        // to the static `to` snapshot only if the target no longer exists, e.g. it died mid-travel) -
+        // animating toward a fixed snapshot instead would leave the spark arriving at wherever the
+        // enemy USED to be the instant this hop's damage landed, visibly detached from the sprite by
+        // the time it actually gets there if the enemy kept moving during the travel.
+        private IEnumerator TravelOverloadSegment(EntityRef target, Vector3 from, Vector3 to, float duration)
+        {
+            ParticleSystem instance = GetPooledInstance(overloadTravelParticlePrefab, from, Quaternion.identity, Vector3.one, out ObjectPool<ParticleSystem> pool);
+            if (instance == null)
+                yield break;
+
+            instance.Play(true);
+
+            float elapsed = 0f;
+            duration = Mathf.Max(0.01f, duration);
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                instance.transform.position = Vector3.Lerp(from, ResolveLiveTargetPosition(target, to), Mathf.Clamp01(elapsed / duration));
+                yield return null;
+            }
+
+            Vector3 finalPosition = ResolveLiveTargetPosition(target, to);
+            instance.transform.position = finalPosition;
+            instance.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+
+            if (overloadImpactParticlePrefab != null)
+                PlayEffect(overloadImpactParticlePrefab, finalPosition, Quaternion.identity, Vector3.one * overloadEffectScale);
+
+            yield return ReleaseWhenFinished(instance, pool);
+        }
+
+        // QuantumRunner.Default, not an event's own e.Game - this runs across several Unity frames
+        // inside a coroutine, well after whichever event originally triggered it has finished
+        // dispatching, same live-read idiom TelegraphGrow.ResolveAnticipationMultiplier already uses
+        // for the same reason. Falls back to the static snapshot if the runner/frame isn't available
+        // or the target has since been destroyed (e.g. died mid-travel).
+        private static Vector3 ResolveLiveTargetPosition(EntityRef target, Vector3 fallback)
+        {
+            if (target == EntityRef.None)
+                return fallback;
+
+            QuantumGame game = QuantumRunner.Default != null ? QuantumRunner.Default.Game : null;
+            Frame frame = game?.Frames.Predicted;
+
+            if (frame == null || frame.Exists(target) == false)
+                return fallback;
+
+            return EnemyMovementUtility.ResolveEntityCenter(frame, target).ToUnityVector3();
+        }
+
+        // Chill+Shock reaction (see docs/elemental-reactions.md and
+        // StatusEffectUtility.TryTriggerShatter) - an AoE control burst at the reaction's center (the
+        // strongly-staggered primary target, which never itself moves). e.Radius is the real
+        // ShatterRadius, so the effect visually approximates the actual stagger-affected area - this
+        // is purely the visual, the stagger itself already landed in simulation. Falls back to
+        // defaultAreaBlastEffect tinted shatterFallbackColor, same dedicated-slot-with-tinted-fallback
+        // pattern every other reaction VFX here uses.
+        private void OnShatterTriggered(EventShatterTriggered e)
         {
             Vector3 position = e.Position.ToUnityVector3();
             Vector3 scale = Vector3.one * e.Radius.AsFloat;
 
-            if (overflowingRiftPulsePrefab != null)
+            if (shatterEffectPrefab != null)
             {
-                PlayEffect(overflowingRiftPulsePrefab, position, Quaternion.identity, scale);
+                PlayEffect(shatterEffectPrefab, position, Quaternion.identity, scale);
                 return;
             }
 
-            PlayEffect(defaultAreaBlastEffect, position, Quaternion.identity, scale, overflowingRiftFallbackColor);
+            PlayEffect(defaultAreaBlastEffect, position, Quaternion.identity, scale, shatterFallbackColor);
         }
 
         // Same resolution as OnGroundPoundTriggered - Source always comes from exactly one
@@ -686,38 +1091,65 @@ namespace QuantumUser.View.Managers
             PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * projectileReflectedEffectScale);
         }
 
-        // Generic - fires for every HitEffectUtility.ApplyToTarget/DamageUtility hit, both enemy- and
-        // player-caused. Enemy-caused hits already get their own per-delivery impact via
-        // EnemyAttackVisualsView.OnHitEffectApplied (EnemyDeliveryData.HitImpactPrefab), which self-
-        // filters to hits it owns - this handler covers the other half (a player skill/weapon hitting
-        // something), which had no visual at all before. Skipping enemy owners here avoids playing
-        // this generic effect on top of that per-delivery one for the same hit.
+        // Generic - fires for every DamageUtility.ApplyDamage hit, both enemy- and player-dealt.
+        // Distinguishes two cases by component presence (Players/Enemies split, same convention
+        // MatchesTargetMask uses): WE hit an enemy (enemyHitEffectPrefab, or
+        // enemyCriticalHitEffectPrefab on e.IsCritical), or an ENEMY hits us
+        // (selfHitEffectPrefab - the generic "you got hit" spark that replaced the old per-delivery
+        // EnemyDeliveryData.HitImpactPrefab path once EnemyDeliveryData.View.cs was removed).
+        // Enemy-on-enemy and Silent (self-inflicted, e.g. SentryDecaySystem) damage trigger neither.
         //
-        // Also skips MultiTarget hits entirely - those come from an overlap query that can (and
-        // regularly does) catch several entities in one action, e.g. an AreaHitData bomb or Zara's
-        // area pulse. Playing this generic spark once per target hit would stack N of them on
-        // top of the action's own single dedicated blast VFX (AreaDetonated/ShockwaveReleased/...)
-        // - the exact "several generic hit effects on one area hit" bug this guard exists to
-        // prevent. A multi-target action that wants its own per-target impact needs a dedicated
-        // hookup, same as everything else in this file already gets.
-        private void OnHitEffectApplied(EventHitEffectApplied e)
+        // Unlike the old HitEffectApplied-driven version, no MultiTarget exclusion is needed -
+        // EntityDamaged already fires once per genuine damage instance (deduped via HitIndex, see
+        // that field's own comment in Events.qtn), including once per enemy caught in an area blast
+        // and once per damage-over-time tick, so every enemy an AoE catches gets its own hit spark
+        // rather than the blast's own VFX standing in for all of them.
+        private void OnEntityDamaged(EventEntityDamaged e)
         {
-            if (e.MultiTarget == true)
+            if (e.Silent == true)
+                return;
+
+            // Non-Neutral Element marks a status/reaction damage instance (Burn/Poison DOT ticks,
+            // Thermal Shock/Overload/Shatter procs - see StatusEffectSystem.TickBurn/
+            // StatusEffectUtility and Element's own comment in Events.qtn), every one of which already
+            // has its own dedicated VFX elsewhere in this file (or, for a bare Burn tick, none at all
+            // by design). Playing the generic melee/bullet hit spark on top of those either doubles
+            // the effect or, for Burn specifically, plays alone every tick and reads as an ongoing
+            // direct attack rather than a status ticking.
+            if (e.Element != ElementType.Neutral)
                 return;
 
             Frame frame = e.Game.Frames.Predicted;
             if (frame == null) return;
 
-            if (frame.Has<Enemy>(e.Owner) == true)
+            bool targetIsEnemy = frame.Has<Enemy>(e.Target);
+            bool ownerIsEnemy = frame.Has<Enemy>(e.Owner);
+
+            if (targetIsEnemy == true && ownerIsEnemy == false)
+            {
+                ParticleSystem prefab = e.IsCritical == true
+                    ? enemyCriticalHitEffectPrefab != null ? enemyCriticalHitEffectPrefab : enemyHitEffectPrefab ?? defaultAreaBlastEffect
+                    : enemyHitEffectPrefab ?? defaultAreaBlastEffect;
+                float scale = e.IsCritical == true ? enemyCriticalHitEffectScale : enemyHitEffectScale;
+
+                PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * scale);
                 return;
+            }
 
-            ParticleSystem prefab = meleeHitEffectPrefab ?? defaultAreaBlastEffect;
-
-            PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * meleeHitEffectScale);
+            if (targetIsEnemy == false && ownerIsEnemy == true)
+            {
+                // ResolveCenter, not raw e.Position - e.Position is Transform3D.Position at the
+                // moment of the hit (see Events.qtn), which for a PLAYER target is mirrored straight
+                // from KCC.Position (feet-level), unlike an enemy target where it's already the
+                // collider center by this project's own convention - see ResolveCenter's own comment.
+                ParticleSystem prefab = selfHitEffectPrefab ?? defaultAreaBlastEffect;
+                Vector3 position = ResolveCenter(frame, e.Target, e.Position.ToUnityVector3());
+                PlayEffect(prefab, position, Quaternion.identity, Vector3.one * selfHitEffectScale);
+            }
         }
 
         // Generic - fires for every EntityHealed regardless of source (regen tick, PortableSpeakerSkillAction,
-        // HealEffectData, ...), same reasoning OnHitEffectApplied uses for player hits. Position is read
+        // HealEffectData, ...), same reasoning OnEntityDamaged uses for the hit particles. Position is read
         // from the TARGET's own live Transform3D, not off the event (EntityHealed carries no position of
         // its own, unlike the hit/blast events above) - a heal always lands on an existing entity, unlike
         // a hit which can connect against level geometry. No defaultAreaBlastEffect fallback, unlike
@@ -732,7 +1164,7 @@ namespace QuantumUser.View.Managers
             if (frame == null || frame.Has<Transform3D>(e.Target) == false)
                 return;
 
-            PlayEffect(healGrantEffectPrefab, frame.Get<Transform3D>(e.Target).Position.ToUnityVector3(), Quaternion.identity);
+            PlayEffect(healGrantEffectPrefab, ResolveCenter(frame, e.Target, default), Quaternion.identity);
         }
 
         // Shield counterpart to OnEntityHealed - same shape, same no-fallback reasoning.
@@ -745,7 +1177,7 @@ namespace QuantumUser.View.Managers
             if (frame == null || frame.Has<Transform3D>(e.Target) == false)
                 return;
 
-            PlayEffect(shieldGrantEffectPrefab, frame.Get<Transform3D>(e.Target).Position.ToUnityVector3(), Quaternion.identity);
+            PlayEffect(shieldGrantEffectPrefab, ResolveCenter(frame, e.Target, default), Quaternion.identity);
         }
 
         // Generic - fires for every PlayerRevived regardless of source (teammate hold, self-revive,
@@ -761,7 +1193,7 @@ namespace QuantumUser.View.Managers
             if (frame == null || frame.Has<Transform3D>(e.Target) == false)
                 return;
 
-            PlayEffect(reviveEffectPrefab, frame.Get<Transform3D>(e.Target).Position.ToUnityVector3(), Quaternion.identity, Vector3.one * reviveEffectScale);
+            PlayEffect(reviveEffectPrefab, ResolveCenter(frame, e.Target, default), Quaternion.identity, Vector3.one * reviveEffectScale);
         }
 
         // Fired the exact tick Shield.Current crosses from >0 to <=0 (see DamageUtility.
@@ -777,7 +1209,7 @@ namespace QuantumUser.View.Managers
             if (frame == null || frame.Has<Transform3D>(e.Target) == false)
                 return;
 
-            PlayEffect(shieldBreakEffectPrefab, frame.Get<Transform3D>(e.Target).Position.ToUnityVector3(), Quaternion.identity);
+            PlayEffect(shieldBreakEffectPrefab, ResolveCenter(frame, e.Target, default), Quaternion.identity);
         }
 
         // Filler-tier enemy death replacement for the lingering die animation (EnemyBlobAnimationView

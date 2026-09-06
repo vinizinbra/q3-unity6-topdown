@@ -29,7 +29,7 @@ MonoBehaviour:
   FallDamagePercent:
     RawValue: 6554
   FallRespawnDelay:
-    RawValue: 131072
+    RawValue: 65536
   FallRespawnEdgeMargin:
     RawValue: 131072
   MinConnectionWidthCells: 2

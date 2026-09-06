@@ -139,12 +139,12 @@ TextureImporter:
       name: ZaraSpeakerNew
       rect:
         serializedVersion: 2
-        x: 27
-        y: 229
-        width: 615
-        height: 257
+        x: 52
+        y: 181
+        width: 313
+        height: 341
       alignment: 9
-      pivot: {x: 0.4949078, y: 0.6218567}
+      pivot: {x: 0.50241196, y: -0.002649436}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -161,12 +161,12 @@ TextureImporter:
       name: ZaraSpeakerNew_Lights
       rect:
         serializedVersion: 2
-        x: 28
-        y: 36
-        width: 574
-        height: 194
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+        x: 394
+        y: 219
+        width: 287
+        height: 302
+      alignment: 9
+      pivot: {x: 0.51363975, y: -0.0029409546}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []

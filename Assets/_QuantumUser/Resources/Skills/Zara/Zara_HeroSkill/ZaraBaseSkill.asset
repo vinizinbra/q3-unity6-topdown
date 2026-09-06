@@ -59,6 +59,8 @@ MonoBehaviour:
   DamageEffects:
   - Id:
       Value: 898240819200457878
+  - Id:
+      Value: 400869309667061698
 --- !u!114 &-2006467594506251827
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -76,9 +78,9 @@ MonoBehaviour:
     Guid:
       Value: 4165453436087765652
   Speed:
-    RawValue: 327680
-  LaunchVelocityY:
     RawValue: 655360
+  LaunchVelocityY:
+    RawValue: 327680
   Gravity:
     RawValue: 2621440
 --- !u!114 &-1040125361856726580

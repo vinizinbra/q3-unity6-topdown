@@ -19,7 +19,7 @@ MonoBehaviour:
   DisplayName: Pistol
   FireType: 1
   Damage:
-    RawValue: 1966080
+    RawValue: 65536
   Element: 0
   CriticalChance:
     RawValue: 13107
@@ -43,14 +43,15 @@ MonoBehaviour:
       RawValue: 0
     Z:
       RawValue: 0
+  BonusBounces: 0
   ProjectileData:
     Id:
       Value: 2052039704194794421
   ViewPrefab: {fileID: 8089491252618662435, guid: 71e454c59b0bb4e6b949d1333a8bcb33, type: 3}
   ShakeTier: 0
-  _dpsPreview: 'Burst DPS: 90
+  _dpsPreview: 'Burst DPS: 3
 
-    Sustained DPS (incl. reload): 72
+    Sustained DPS (incl. reload): 2.4
 
     Damage/min:
-    4320'
+    144'

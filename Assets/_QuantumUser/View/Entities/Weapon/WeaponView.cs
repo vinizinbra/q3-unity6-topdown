@@ -97,9 +97,9 @@ namespace Quantum
         public Transform MuzzleTransform => muzzleParticle != null ? muzzleParticle.transform : transform;
 
         // Resolved through this weapon's own transform every call - TransformPoint applies its
-        // current rotation (billboard + aim) and scale (the Y-axis flip in ApplyAim), so the
-        // grip tracks correctly however the weapon is currently facing without WeaponHandGripView
-        // needing to know anything about that.
+        // current rotation (billboard + aim + the facingFlip 180° turn in ApplyAim) and scale
+        // (always positive/uniform now), so the grip tracks correctly however the weapon is
+        // currently facing without WeaponHandGripView needing to know anything about that.
         public Vector3 RightHandGripPosition => transform.TransformPoint(anim.rightHandGrip);
         public Vector3 LeftHandGripPosition => transform.TransformPoint(anim.leftHandGrip);
 
@@ -107,25 +107,24 @@ namespace Quantum
         // authored per weapon with the grips themselves (a heavy weapon wants a different hand
         // angle/size than a pistol). Rotation is an absolute local-rotation override, scale a
         // multiplier over whatever the hand rig itself authors, so both default to "unchanged".
-        public Vector3 RightHandGripRotation => MirrorGripRotation(anim.rightHandGripRotation);
-        public Vector3 LeftHandGripRotation => MirrorGripRotation(anim.leftHandGripRotation);
+        // No flip mirroring needed here anymore - WeaponHandGripView composes this on top of
+        // weaponView.transform.rotation (hand.rotation = weaponRotation * Quaternion.Euler(this)),
+        // which already carries ApplyAim's facingFlip 180° turn, same as any other child would.
+        // A manual Z-negation here used to be required because the old flip was a bare
+        // localScale.y sign that ISN'T inherited through that multiply - now that the flip is a
+        // real rotation, doing it again here would double-mirror the grip angle.
+        public Vector3 RightHandGripRotation => anim.rightHandGripRotation;
+        public Vector3 LeftHandGripRotation => anim.leftHandGripRotation;
         public Vector3 RightHandGripScale => anim.rightHandGripScale;
         public Vector3 LeftHandGripScale => anim.leftHandGripScale;
 
         // Whether the gun is currently mirrored - PlayerGunAimView derives this from
         // BlobAnimationView.FacingSign, so it's the character's own facing, not an independently
         // computed one. Exposed for WeaponHandGripView, whose hands hang off the rig's
-        // WeaponLocator rather than the body root and so don't inherit the body's own flip.
+        // WeaponLocator rather than the body root and so don't inherit the body's own flip, and
+        // whose own hand.localScale.y mirror (a separate, still-scale-based flip of the hand mesh
+        // itself, untouched by this weapon's own switch to a rotation-based flip) still needs it.
         public bool Flipped => lastFlipped;
-
-        // Z (the screen-plane twist) mirrors while the gun is flipped, same convention Shoot()'s
-        // own rotationKick and ApplyAim's offset mirroring already use - so a grip cocked "down
-        // along the barrel" keeps reading that way when aiming left instead of flipping upward.
-        private Vector3 MirrorGripRotation(Vector3 authored)
-        {
-            if (lastFlipped == false) return authored;
-            return new Vector3(authored.x, authored.y, -authored.z);
-        }
 
         private Vector3 baseScale = Vector3.one;
         private Vector3 restLocalPosition;
@@ -216,6 +215,12 @@ namespace Quantum
         [Button("Test Shoot")]
         public void Shoot()
         {
+            // First, before any of the recoil/knockback tweens below start - UnparentAndPlay
+            // snapshots the muzzle at this weapon's CURRENT pose, and none of Shoot()'s own
+            // animation (recoilOffset, recoilRotationCurrent, knockbackPunch) has been kicked off
+            // yet at this point in the method, so there's nothing for it to catch mid-punch.
+            UnparentAndPlay();
+
             Vector2 kickDir = -lastAimDir * anim.recoilKickDistance;
             Tween.PunchCustom(this, Vector3.zero, new ShakeSettings(new Vector3(kickDir.x, kickDir.y, 0f), anim.recoilDuration, anim.recoilFrequency, asymmetryFactor: anim.recoilAsymmetry),
                 (view, val) => view.recoilOffset = new Vector2(val.x, val.y));
@@ -228,7 +233,6 @@ namespace Quantum
                 (view, val) => view.knockbackPunch = val.x);
 
             PunchCharacter();
-            PlayMuzzleParticle();
         }
 
         // Kicks this weapon's own Character Shoot Punch tuning into the shooter's BlobAnimationView
@@ -262,10 +266,53 @@ namespace Quantum
             Gizmos.DrawLine(transform.position, pivotWorld);
         }
 
-        [Button]
-        private void PlayMuzzleParticle()
+        // Cached the first time UnparentAndPlay runs - the muzzle's authored local position/
+        // rotation relative to this weapon's own root (transform), i.e. exactly where the prefab
+        // placed it. Scale is deliberately NOT cached/reapplied here - the parent.parent =
+        // .../true reparents below already preserve world scale on their own each time, and
+        // forcing localScale back to this original (relative-to-transform) value after the SECOND
+        // reparent (now relative to transform.parent, a different scale context) fought that and
+        // produced the wrong size.
+        private bool muzzleRestPoseCached;
+        private Vector3 muzzleRestLocalPosition;
+        private Quaternion muzzleRestLocalRotation;
+
+        // Re-syncs the muzzle to this weapon's CURRENT pose, then hands it up to transform.parent
+        // (the character rig's weapon socket) before playing - so it's immune to everything
+        // Shoot() does to THIS weapon's own transform afterward (recoil kick, knockback
+        // pushback/scale), without needing to track a separately-computed "clean" pose by hand.
+        //
+        // Step by step: reparenting to `transform` first (preserving world pose, same as the
+        // default Transform.parent setter always does) puts the muzzle back under a well-defined
+        // parent regardless of where the previous call last left it; writing the cached rest
+        // local pose on top then resets it to its exact authored offset from THIS weapon, which is
+        // currently sitting at its own clean aim pose (Shoot() calls this before starting any
+        // recoil/knockback tween - see its own comment). Reparenting up to transform.parent
+        // (again preserving world pose) bakes that exact world placement into a new local offset
+        // relative to the socket instead - which the recoil/knockback about to run on `transform`
+        // never touches, so the muzzle stays put through the whole shot. Play() doesn't emit
+        // synchronously (Unity processes it on its own particle update pass later this frame), but
+        // nothing moves this transform again until the NEXT shot re-syncs it, so there's no race
+        // like there would be if this reset itself back afterward.
+        private void UnparentAndPlay()
         {
             if (muzzleParticle == null) return;
+
+            Transform muzzle = muzzleParticle.transform;
+
+            if (muzzleRestPoseCached == false)
+            {
+                muzzleRestLocalPosition = muzzle.localPosition;
+                muzzleRestLocalRotation = muzzle.localRotation;
+                muzzleRestPoseCached = true;
+            }
+
+            muzzle.parent = transform;
+            muzzle.localPosition = muzzleRestLocalPosition;
+            muzzle.localRotation = muzzleRestLocalRotation;
+
+            muzzle.parent = transform.parent;
+
             muzzleParticle.Play(true);
         }
 
@@ -285,15 +332,42 @@ namespace Quantum
             if (pose.Flipped) targetOffset.x = -targetOffset.x;
             currentOffset = Vector2.Lerp(currentOffset, targetOffset, smoothT);
 
-            // baseRotation is everything EXCEPT the flip (aim/follow/recoil) - the normal rotation
-            // this weapon has always used, pivoting around the grip (transform's own origin).
-            // fullRotation adds the flip's own contribution on top. Kept separate so the position
-            // pivot-correction below only has to re-center the FLIP - see flipPivotOffset.
-            Quaternion baseRotation = pose.FacingCamera * Quaternion.Euler(0f, 0f, pose.RotationDegrees + recoilRotationCurrent);
-            Quaternion fullRotation = pose.FacingCamera * Quaternion.Euler(0f, 0f, pose.RotationDegrees + recoilRotationCurrent + pose.FlipDegrees);
+            // Facing left/right (pose.Flipped) used to mirror via a negative localScale.y instead
+            // of this - swapped for a real 180° turn around this weapon's own local X axis (the
+            // barrel/forward direction) so scale always stays positive/uniform. A negative-scale
+            // mirror inverts the matrix determinant, which every child (muzzle flash, hitscan
+            // tracers, anything spawned off this transform) also inherits and has to actively
+            // compensate for; a rotation just physically turns the weapon around like the real
+            // object it represents, so nothing downstream needs special-casing for it.
+            //
+            // MUST be X, not Y - RotationDegrees already fully encodes where to point (it's an
+            // atan2 of the actual on-screen aim direction, correct for every angle including
+            // pointing left, computed independently of pose.Flipped), same the way it always did.
+            // Composing a Y-turn (which flips local X, the forward axis, along with everything
+            // else) here adds a uniform extra 180° on top of that already-correct angle - looked
+            // fully inverted (left read as right, up as down, down as up) for every direction, not
+            // just left/right, because the "forward" reference itself flipped. Rotating around X
+            // instead leaves forward (local +X) untouched by construction - only the sprite's
+            // vertical extent (Y) and depth (Z) flip, exactly matching the old negative-Y-scale
+            // mirror's actual effect (that trick only ever reflected off-axis geometry too; the
+            // aim angle it multiplied in was already unmirrored, same as here).
+            //
+            // Composed as the rightmost (innermost) factor below - applied in this weapon's own
+            // rest-local space before the billboard/aim rotation is layered on, same convention
+            // the old scale flip used (scale is applied before rotation in Unity's local-to-world
+            // matrix too).
+            Quaternion facingFlip = pose.Flipped ? Quaternion.Euler(180f, 0f, 0f) : Quaternion.identity;
+
+            // baseRotation is everything EXCEPT the Jump Flip (aim/follow/recoil/facing) - the
+            // normal rotation this weapon has always used, pivoting around the grip (transform's
+            // own origin). fullRotation adds the Jump Flip's own contribution on top. Kept
+            // separate so the position pivot-correction below only has to re-center THAT flip -
+            // see flipPivotOffset. Not to be confused with facingFlip above (pose.Flipped, which
+            // side the weapon faces) - pose.FlipDegrees here is the unrelated 360° spin animation.
+            Quaternion baseRotation = pose.FacingCamera * Quaternion.Euler(0f, 0f, pose.RotationDegrees + recoilRotationCurrent) * facingFlip;
+            Quaternion fullRotation = pose.FacingCamera * Quaternion.Euler(0f, 0f, pose.RotationDegrees + recoilRotationCurrent + pose.FlipDegrees) * facingFlip;
 
             Vector3 scale = baseScale * (1f - knockbackPunch * anim.knockbackScalePunch);
-            scale.y *= pose.Flipped ? -1f : 1f;
             transform.localScale = scale;
 
             Vector2 totalOffset = currentOffset + pose.ExtraOffset + recoilOffset;

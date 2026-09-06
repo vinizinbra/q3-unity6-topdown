@@ -56,7 +56,7 @@ namespace Quantum
 
             if (wasReady == false)
             {
-                Log.Debug($"[LevelGen] ready to spawn players now - f.PlayerCount={f.PlayerCount}");
+                Log.Debug($"[LevelGen] ready to spawn players now - f.PlayerCount={f.MaxPlayerCount}");
             }
 
             SpawnPendingPlayers(f);
@@ -1238,7 +1238,7 @@ namespace Quantum
         {
             int spawnedCount = 0;
 
-            for (int i = 0; i < f.PlayerCount; i++)
+            for (int i = 0; i < f.MaxPlayerCount; i++)
             {
                 PlayerRef player = i;
                 RuntimePlayer runtimePlayerData = f.GetPlayerData(player);
@@ -1253,7 +1253,7 @@ namespace Quantum
                     continue;
                 }
 
-                Log.Debug($"[LevelGen] spawning pending player {player} (PlayerCount={f.PlayerCount}, avatar={runtimePlayerData.PlayerAvatar})");
+                Log.Debug($"[LevelGen] spawning pending player {player} (PlayerCount={f.MaxPlayerCount}, avatar={runtimePlayerData.PlayerAvatar})");
                 PlayerSpawnUtility.Spawn(f, player);
                 spawnedCount++;
             }

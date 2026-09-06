@@ -17,9 +17,9 @@ MonoBehaviour:
     Guid:
       Value: 1111018775685746377
   LaunchAngle:
-    RawValue: 2949120
+    RawValue: 2621440
   Gravity:
-    RawValue: 1310720
+    RawValue: 2621440
   TargetDistance:
     RawValue: 655360
   PredictionTime:
@@ -56,4 +56,4 @@ MonoBehaviour:
   SpawnDelay:
     RawValue: 0
   MaxDistance:
-    RawValue: 327680
+    RawValue: 524288

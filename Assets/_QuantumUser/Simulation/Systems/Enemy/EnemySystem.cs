@@ -271,15 +271,21 @@ namespace Quantum
             // knockback/collision impulses can't drag it down or off a wall either - exactly the
             // "stuck on the wall" look Landing Root wants. The state machine below still runs
             // (Stun aside) so an already-in-range enemy keeps attacking; only movement is pinned.
+            //
+            // Stagger shares this exact freeze - Shock's Jolt/Shatter both read as "the enemy visibly
+            // flinched and can't act for an instant", which should include not being able to keep
+            // sliding toward the player mid-stumble, not just the separate windup-timer pause
+            // UpdatePreparation applies on its own for the Preparation/Telegraph case specifically.
             bool isRooted = StatusEffectUtility.IsRooted(f, filter.Entity);
+            bool isStaggered = StatusEffectUtility.IsStaggered(f, filter.Entity);
 
-            if (isRooted == true)
+            if (isRooted == true || isStaggered == true)
             {
                 filter.PhysicsBody3D->IsKinematic = true;
                 EnemyMovementUtility.StopMovement(f, ref filter, data);
 
-                // Stun still fully freezes (state machine included) even while also Rooted - Root
-                // alone leaves attacking untouched, but Stun's own total lockdown takes precedence.
+                // Stun still fully freezes (state machine included) even while also Rooted/Staggered -
+                // neither alone touches attacking, but Stun's own total lockdown takes precedence.
                 if (StatusEffectUtility.IsStunned(f, filter.Entity) == true)
                     return;
             }
@@ -724,12 +730,12 @@ namespace Quantum
             // through to the normal chase movement below instead of committing to Preparation, so
             // the enemy keeps closing distance/repositioning and this whole check re-runs next tick.
 
-            // Unlike Stun (which short-circuits the whole state machine in Update, above), Root only
-            // pins this one case - actually walking toward the target. The inRange branch above
+            // Unlike Stun (which short-circuits the whole state machine in Update, above), Root/Stagger
+            // only pin this one case - actually walking toward the target. The inRange branch above
             // (attacking) and every other state already either don't move or zero their own
-            // movement, so a Rooted enemy already in range keeps attacking normally; it just can't
-            // close distance to get there.
-            if (StatusEffectUtility.IsRooted(f, filter.Entity) == true)
+            // movement, so a Rooted or Staggered enemy already in range keeps attacking normally; it
+            // just can't close distance to get there.
+            if (StatusEffectUtility.IsRooted(f, filter.Entity) == true || StatusEffectUtility.IsStaggered(f, filter.Entity) == true)
             {
                 EnemyMovementUtility.StopMovement(f, ref filter, data);
                 return;
@@ -783,6 +789,13 @@ namespace Quantum
                 : FP._1;
 
             delivery.OnAnticipating(f, ref filter, data, action, filter.Enemy->Target, windupElapsed);
+
+            // Stagger pauses the windup countdown itself (StateTimer left untouched this tick)
+            // without touching Phase, movement, or the rest of Update's dispatch - the attack is
+            // delayed, never canceled or reset, unlike Stun's full-method skip in Update above. See
+            // StatusEffectUtility.ApplyStagger/docs/elemental-reactions.md.
+            if (StatusEffectUtility.IsStaggered(f, filter.Entity) == true)
+                return;
 
             FP anticipationMultiplier = StatusEffectUtility.GetAnticipationMultiplier(f, filter.Entity)
                 * BossPhaseUtility.ResolveAnticipationMultiplier(f, filter.Entity, data);
@@ -880,8 +893,9 @@ namespace Quantum
         // in case the attack moved the enemy kinematically (e.g. Charge), stops movement (an attack
         // can still be moving at speed the instant it finishes), starts this attack's reuse
         // cooldown, and hands the enemy off to its stationary recovery beat. IsKinematic is
-        // restored to whatever Root currently wants, not unconditionally false - an attack finishing
-        // while still Rooted should stay pinned instead of this un-freezing it early.
+        // restored to whatever Root/Stagger currently wants, not unconditionally false - an attack
+        // finishing while still Rooted or Staggered should stay pinned instead of this un-freezing it
+        // early.
         private static void EnterRecovering(Frame f, ref Filter filter, EnemyDataAsset data, EnemyActionData action)
         {
             // A delivery can kill its own enemy while resolving (e.g. GroundAreaDeliveryData.
@@ -893,7 +907,8 @@ namespace Quantum
             if (filter.Enemy->Phase == EnemyActionPhase.Dead)
                 return;
 
-            filter.PhysicsBody3D->IsKinematic = StatusEffectUtility.IsRooted(f, filter.Entity);
+            filter.PhysicsBody3D->IsKinematic = StatusEffectUtility.IsRooted(f, filter.Entity)
+                || StatusEffectUtility.IsStaggered(f, filter.Entity);
             EnemyMovementUtility.StopMovement(f, ref filter, data);
             EnemyDecisionUtility.SetCooldownRemaining(f, filter.Entity, filter.Enemy, filter.Enemy->CurrentActionSlot, action.CooldownTime);
             filter.Enemy->StateTimer = action.DownTime;

@@ -345,6 +345,7 @@ GameObject:
   - component: {fileID: 4899901628646550216}
   - component: {fileID: 6620950844410037999}
   - component: {fileID: 8518285694595740709}
+  - component: {fileID: 881128889100112640}
   m_Layer: 7
   m_Name: CharFeedbacks
   m_TagString: Untagged
@@ -630,7 +631,7 @@ MonoBehaviour:
   executeOnlyOnLocal: 0
   isLocal: 0
   trail: {fileID: 8511868318556705673}
-  burst: {fileID: 0}
+  fxConfig: {fileID: 11400000, guid: 31188256ea82a4f46b281957faaa078d, type: 2}
 --- !u!114 &9149078610630761167
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -738,6 +739,24 @@ MonoBehaviour:
   executeOnlyOnLocal: 1
   isLocal: 0
   hurtSound: {fileID: 11400000, guid: d2888a14a311b44d4a13741249d4b1a1, type: 2}
+--- !u!114 &881128889100112640
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3806287295607464640}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0055d60b3b70f4de5bf97f6ab201e848, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Quantum.JumpFxView
+  _playerRef:
+    _index: 0
+  initialized: 0
+  executeOnlyOnLocal: 0
+  isLocal: 0
+  fxConfig: {fileID: 11400000, guid: 31188256ea82a4f46b281957faaa078d, type: 2}
 --- !u!1 &4314684724655487034
 GameObject:
   m_ObjectHideFlags: 0

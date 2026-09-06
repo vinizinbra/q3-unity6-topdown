@@ -24,6 +24,21 @@ namespace Quantum
         public FP RingExpansionSpeed = 6;
         public FP RingDuration = 1;
 
+        // 0 (the default) keeps this delivery's exact prior behavior - a pure flat (XZ) annulus,
+        // ignoring height entirely. Above zero, a hit additionally requires the ACTUAL FLOOR under
+        // the target (a real ground raycast, not raw Transform3D.Y) to be within this many units of
+        // the floor under the ring's own center - same idiom/field name as
+        // GroundAreaDeliveryData.MaxHeightDifference - so a player standing on an elevated
+        // ledge/platform above this ring (or down in a pit near it) isn't caught by a flat-distance
+        // check that has no idea they're not actually standing in it.
+        public FP MaxHeightDifference = FP._0;
+
+        // View-only - RingWaveVisualManager's LineRenderer width for the growing ring outline this
+        // fires alongside the existing Circle telegraph (which only ever shows the FINAL size up
+        // front). Has no effect on the real hit-detection band, which stays exactly whatever the
+        // outward sweep in Tick() already computes regardless of how thick the line is drawn.
+        public FP LineWidth = FP._0_25;
+
         public override bool Begin(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, EnemyActionData action, EntityRef target)
         {
             FPVector3 center = filter.Transform3D->Position;
@@ -35,6 +50,8 @@ namespace Quantum
             // Tick() reads it back every tick as the ring's frozen center.
             filter.Enemy->SkillStartPosition = center;
             filter.Enemy->StateTimer = RingDuration;
+            filter.Enemy->RingWaveRadius = InnerBlastRadius;
+            f.Events.RingWaveExpanding(filter.Entity, center, LineWidth);
             return false;
         }
 
@@ -49,6 +66,7 @@ namespace Quantum
             FP outerReach = action.DamageRange;
             FP previousFront = FPMath.Clamp(elapsedBefore * RingExpansionSpeed, FP._0, outerReach);
             FP currentFront = FPMath.Clamp(elapsedAfter * RingExpansionSpeed, FP._0, outerReach);
+            filter.Enemy->RingWaveRadius = currentFront;
 
             if (currentFront > previousFront)
             {
@@ -64,6 +82,11 @@ namespace Quantum
         private void FireRingBand(Frame f, ref EnemySystem.Filter filter, EnemyActionData action, FP innerBound, FP outerBound)
         {
             FPVector3 center = filter.Enemy->SkillStartPosition;
+
+            // Resolved once per band, not per candidate - same reasoning as
+            // GroundAreaDeliveryData's own identical comment.
+            FP centerGroundY = MaxHeightDifference > FP._0 ? EnemyMovementUtility.ResolveGroundY(f, center) : default;
+
             Span<EntityRef> hits = stackalloc EntityRef[PlayerQueryUtility.MaxPlayerLayerCandidates];
             int hitsCount = EnemyMovementUtility.FindPlayersInRadius(f, center, outerBound, hits);
             for (int i = 0; i < hitsCount; i++)
@@ -78,6 +101,10 @@ namespace Quantum
 
                 if (sqrDistance < innerBound * innerBound)
                     continue; // front hasn't reached them yet this tick (or already swept past earlier)
+
+                if (MaxHeightDifference > FP._0 &&
+                    FPMath.Abs(EnemyMovementUtility.ResolveGroundY(f, hitPosition) - centerGroundY) > MaxHeightDifference)
+                    continue; // real floor under the target is too far (vertically) from the ring's own floor
 
                 HitEffectContext context = new HitEffectContext
                 {

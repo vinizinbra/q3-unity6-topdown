@@ -249,9 +249,6 @@ namespace Quantum
         // returns a plain array and touches no qtn component, so the caller decides where the
         // result lives (CursedRiftInteraction.MutationChoices, not LevelUpChoice) and this stays
         // fully independent of Global.LevelUpScreenOpen/GameState.Upgrade/GameplaySystemGroup.
-        // Deliberately calls CollectRiftMutationCandidates only, not CollectRiftMarkMutationCandidates
-        // - Cursed Rift's reward stays scoped to the 19 "core" build-defining mutations even though
-        // RiftMarkMutation is now a separately-rollable pool elsewhere.
         public static LevelUpOption[] RollMutationOptions(Frame f, EntityRef entity, LevelUpConfig config, int choiceCount)
         {
             List<Candidate> candidates = new List<Candidate>();
@@ -317,9 +314,6 @@ namespace Quantum
 
             if (all || category == LevelUpCategory.RiftMutation)
                 CollectRiftMutationCandidates(f, entity, config, candidates, ref totalWeight);
-
-            if (all || category == LevelUpCategory.RiftMarkMutation)
-                CollectRiftMarkMutationCandidates(f, entity, config, candidates, ref totalWeight);
 
             if (all || category == LevelUpCategory.HeroSkill)
                 CollectPerHeroCandidates(f, entity, config, candidates, ref totalWeight);
@@ -427,27 +421,6 @@ namespace Quantum
                     continue;
 
                 AddCandidate(f, config, LevelUpPoolKind.RiftMutation, new AssetRef<UpgradeData>(mutationRef.Id), default, candidates, ref totalWeight);
-            }
-        }
-
-        // RiftMarkMutation is the second, independently-rollable Rift Mutation pool (see
-        // LevelUpConfig.RiftMarkMutations) - identical shape to CollectRiftMutationCandidates above,
-        // just a different list/PoolKind. Still shares RiftMutationUtility's single
-        // RiftMutationPicks component with the core pool (the two lists' assets never overlap).
-        private static void CollectRiftMarkMutationCandidates(Frame f, EntityRef entity, LevelUpConfig config, List<Candidate> candidates, ref int totalWeight)
-        {
-            for (int i = 0; i < config.RiftMarkMutations.Count; i++)
-            {
-                AssetRef<RiftMutationData> mutationRef = config.RiftMarkMutations[i];
-
-                // One gate for all three offer rules: already owned, a Run-scope mutation already
-                // applied by ANY player this run, and incompatibility with something this player
-                // already has. Both mutation collectors and the Cursed Rift reward roll share it,
-                // so a mutation filtered here is filtered everywhere.
-                if (RiftMutationUtility.IsBlocked(f, entity, mutationRef) == true)
-                    continue;
-
-                AddCandidate(f, config, LevelUpPoolKind.RiftMarkMutation, new AssetRef<UpgradeData>(mutationRef.Id), default, candidates, ref totalWeight);
             }
         }
 
@@ -804,11 +777,6 @@ namespace Quantum
                     break;
 
                 case LevelUpPoolKind.RiftMutation:
-                    RiftMutationUtility.Grant(f, entity, new AssetRef<RiftMutationData>(option.Upgrade.Id));
-                    RecordHistory(f, entity, option.Kind, option.Upgrade);
-                    break;
-
-                case LevelUpPoolKind.RiftMarkMutation:
                     RiftMutationUtility.Grant(f, entity, new AssetRef<RiftMutationData>(option.Upgrade.Id));
                     RecordHistory(f, entity, option.Kind, option.Upgrade);
                     break;

@@ -35,7 +35,7 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<Transform3D>(entity, out var transform))
             {
                 FP spawnHeight = f.FindAsset(f.RuntimeConfig.LevelConfig).PlayerSpawnHeight;
-                FPVector3 offset = GetSpawnOffset((int)player, f.PlayerCount);
+                FPVector3 offset = GetSpawnOffset((int)player, f.MaxPlayerCount);
                 transform->Position = f.Global->PlayerSpawnPosition + offset + FPVector3.Up * spawnHeight;
                 Log.Debug($"[LevelGen] spawned player {player} at {transform->Position}");
             }

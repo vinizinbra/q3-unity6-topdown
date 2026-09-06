@@ -80,46 +80,5 @@ namespace Quantum
 
             return result != EntityRef.None;
         }
-
-        // Unstable Payload (see docs/weapon-perks.md) - marks every enemy caught by a valid weapon-
-        // proc explosion (Cataclysm Round/Explosive Sequence), once each, since this overlap query
-        // only ever runs once per explosion event by construction - no cooldown needed. Runs its own
-        // overlap over the same center/radius HitEffectUtility.ApplyExplosion already used for
-        // damage, rather than threading the caught-entity list back out of that call.
-        public static void TryApplyUnstablePayloadMarks(Frame f, FPVector3 center, FP radius, EntityRef owner)
-        {
-            if (f.Unsafe.TryGetPointer<WeaponHitTrackingPerks>(owner, out var tracking) == false
-                || tracking->HasUnstablePayload == false || radius <= FP._0)
-                return;
-
-            ElementalReactionConfig config = StatusEffectUtility.GetElementalReactionConfig(f);
-
-            if (config == null)
-                return;
-
-            Shape3D sphere = Shape3D.CreateSphere(radius);
-            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
-
-            for (int i = 0; i < hits.Count; i++)
-            {
-                EntityRef candidate = hits[i].Entity;
-
-                if (f.Has<Enemy>(candidate) == false)
-                    continue;
-
-                var request = new RiftMarkApplicationRequest
-                {
-                    Source = owner,
-                    Target = candidate,
-                    HitSequence = f.Number,
-                    ApplicationSource = RiftMarkApplicationSource.WeaponPerkUnstablePayload,
-                    RequestedStacks = config.StacksAppliedPerApplication,
-                    Owner = owner,
-                    CooldownKey = RiftMarkCooldownKey.None,
-                };
-
-                RiftMarkApplicationUtility.ApplyRequest(f, request, config);
-            }
-        }
     }
 }

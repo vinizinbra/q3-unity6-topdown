@@ -571,6 +571,9 @@ PlayerSettings:
   - serializedVersion: 3
     m_BuildTarget: WebGL
     m_Formats: 05000000
+  - serializedVersion: 3
+    m_BuildTarget: iOS
+    m_Formats: 03000000
   playModeTestRunnerEnabled: 0
   runPlayModeTestAsEditModeTest: 0
   actionOnDotNetUnhandledException: 1
@@ -837,7 +840,7 @@ PlayerSettings:
   webWasm2023: 0
   webEnableSubmoduleStrippingCompatibility: 0
   scriptingDefineSymbols:
-    Android: CF_FORCE_MOBILE_MODE
+    Android: CF_FORCE_MOBILE_MODE;CHEATS_ENABLED
     EmbeddedLinux: QUANTUM_LOGLEVEL_DEBUG
     GameCoreScarlett: QUANTUM_LOGLEVEL_DEBUG
     GameCoreXboxOne: QUANTUM_LOGLEVEL_DEBUG
@@ -849,9 +852,9 @@ PlayerSettings:
     PS5: QUANTUM_LOGLEVEL_DEBUG
     QNX: QUANTUM_LOGLEVEL_DEBUG
     ReservedCFE: QUANTUM_LOGLEVEL_DEBUG
-    Standalone: DREAMTECK_SPLINES;QUANTUM_LOGLEVEL_DEBUG
+    Standalone: DREAMTECK_SPLINES;QUANTUM_LOGLEVEL_DEBUG;CHEATS_ENABLED
     VisionOS: QUANTUM_LOGLEVEL_DEBUG
-    WebGL: QUANTUM_LOGLEVEL_DEBUG
+    WebGL: QUANTUM_LOGLEVEL_DEBUG;CHEATS_ENABLED
     Windows Store Apps: CF_FORCE_MOBILE_MODE;QUANTUM_LOGLEVEL_DEBUG
     XboxOne: QUANTUM_LOGLEVEL_DEBUG
     iPhone: CF_FORCE_MOBILE_MODE;QUANTUM_LOGLEVEL_DEBUG

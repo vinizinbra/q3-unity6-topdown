@@ -53,6 +53,7 @@ namespace Quantum.Editor
                 SerializedProperty duration = property.FindPropertyRelative("Duration");
                 SerializedProperty bodySprite = property.FindPropertyRelative("BodySprite");
                 SerializedProperty bodySpriteOffset = property.FindPropertyRelative("BodySpriteOffset");
+                SerializedProperty bodySpriteScale = property.FindPropertyRelative("BodySpriteScale");
                 SerializedProperty shakeImpact = property.FindPropertyRelative("ShakeImpact");
                 SerializedProperty particlePrefab = property.FindPropertyRelative("ParticlePrefab");
 
@@ -62,6 +63,9 @@ namespace Quantum.Editor
                 if (bodySprite.objectReferenceValue != null)
                 {
                     EditorGUI.PropertyField(rect, bodySpriteOffset);
+                    rect.y += lineHeight;
+
+                    EditorGUI.PropertyField(rect, bodySpriteScale);
                     rect.y += lineHeight;
                 }
 
@@ -182,7 +186,7 @@ namespace Quantum.Editor
 
             SerializedProperty bodySprite = property.FindPropertyRelative("BodySprite");
             if (bodySprite.objectReferenceValue != null)
-                height += lineHeight; // BodySpriteOffset
+                height += lineHeight * 2; // BodySpriteOffset + BodySpriteScale
 
             height += lineHeight; // ShakeImpact
 

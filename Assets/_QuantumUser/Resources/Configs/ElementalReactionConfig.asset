@@ -16,69 +16,34 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Configs/ElementalReactionConfig
     Guid:
       Value: 491478871009097374
-  MaxStacks: 2
-  BaseDuration:
-    RawValue: 655360
-  RefreshDurationOnApply: 1
-  StacksAppliedPerApplication: 1
-  StacksConsumedPerReaction: 1
-  ReactionLockoutDuration:
-    RawValue: 49152
-  DetonationTriggerCooldown:
-    RawValue: 32768
-  DetonationDamagePercent:
-    RawValue: 65536
-  DetonationRadius:
-    RawValue: 65536
-  DeepFreezeTriggerCooldown:
+  ElectrifiedDuration:
     RawValue: 262144
-  DeepFreezeDuration:
-    RawValue: 327680
-  DeepFreezeAnticipationMultiplier:
-    RawValue: 32768
+  JoltInterval:
+    RawValue: 65536
+  JoltStaggerDuration:
+    RawValue: 6554
+  ThermalShockTriggerCooldown:
+    RawValue: 65536
+  ThermalShockDamagePercent:
+    RawValue: 131072
   OverloadTriggerCooldown:
-    RawValue: 262144
-  OverloadStunDuration:
-    RawValue: 131072
-  RuptureTriggerCooldown:
-    RawValue: 196608
-  RuptureDuration:
-    RawValue: 196608
-  RuptureDamageTakenMultiplier:
-    RawValue: 85197
-  SingularityTriggerCooldown:
-    RawValue: 262144
-  SingularityRadius:
-    RawValue: 262144
-  SingularityPullForce:
-    RawValue: 655360
-  StandardMarkApplicationCooldown:
-    RawValue: 131072
-  RiftAftershockRadius:
-    RawValue: 393216
-  HeavyHitDamageThreshold:
-    RawValue: 2621440
-  HeavyHitHealthPercentThreshold:
-    RawValue: 16384
-  CloseRangeThreshold:
-    RawValue: 262144
-  LongRangeThreshold:
-    RawValue: 786432
-  ExecutionHealthThreshold:
-    RawValue: 16384
-  FracturedPresenceRadius:
-    RawValue: 196608
-  FracturedPresenceExposureTime:
-    RawValue: 327680
-  LastStandThreshold:
-    RawValue: 3276800
-  LastStandCooldown:
-    RawValue: 524288
-  LastStandPulseRadius:
-    RawValue: 327680
-  OverflowingRiftCooldown:
     RawValue: 65536
-  OverflowingRiftPulseDamage:
-    RawValue: 327680
-  OverflowingRiftPulseRadius:
+  OverloadInitialDamagePercent:
+    RawValue: 32768
+  OverloadChainDamagePercent:
+    RawValue: 49152
+  OverloadChainRadius:
+    RawValue: 262144
+  OverloadMaxChainTargets: 3
+  OverloadChainDelay:
+    RawValue: 6554
+  ShatterTriggerCooldown:
     RawValue: 131072
+  ShatterRadius:
+    RawValue: 196608
+  ShatterPrimaryStunDuration:
+    RawValue: 98304
+  ShatterAreaStaggerDuration:
+    RawValue: 16384
+  ShatterDamage:
+    RawValue: 0

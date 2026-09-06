@@ -292,25 +292,4 @@ component CharacterStats
     // one ready Dash.
     Boolean AccessoryBlockResetsDash;
     FP AccessoryBlockSkillCooldownFraction;
-
-    // -- Rift Mark content pool (Weapon Perks live on Weapon, not here - see Weapon.qtn) --
-    // All mutation-only flags, same category as the Rift Mutation fields above - see
-    // docs/rift-mutations.md for the full roster. Evaluated by RiftMutationMarkUtility (damage-hook
-    // mutations), DashSkillData (Rift Dash), and StatusEffectSystem (Fractured Presence).
-    Boolean HasCriticalFractureMutation;
-    Boolean HasSkillFractureMutation;
-    Boolean HasRiftDashMutation;
-    Boolean HasHeavyFractureMutation;
-    Boolean HasCloseFractureMutation;
-    Boolean HasLongFractureMutation;
-    Boolean HasExecutionFractureMutation;
-    Boolean HasFirstContactMutation;
-    Boolean HasFracturedPresenceMutation;
-    Boolean HasOverflowingRiftMutation;
-    Boolean HasLastStandMutation;
-
-    // Last Stand - per-PLAYER cooldown (not per-target, so it doesn't fit
-    // StatusEffects.MarkApplicationCooldowns), ticked in StatusEffectSystem alongside everything
-    // else CharacterStats-adjacent.
-    FP LastStandCooldownRemaining;
 }

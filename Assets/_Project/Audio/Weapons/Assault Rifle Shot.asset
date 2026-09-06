@@ -39,7 +39,7 @@ MonoBehaviour:
   layers: []
   group: 4
   output: {fileID: 0}
-  volume: {x: 0.1, y: 0.1}
+  volume: {x: 0.2, y: 0.2}
   pitch: {x: 0.95, y: 1.05}
   delay: {x: 0, y: 0}
   startAt: 0

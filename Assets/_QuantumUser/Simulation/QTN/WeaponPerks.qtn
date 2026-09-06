@@ -175,13 +175,11 @@ component WeaponReloadHooks
     Boolean EmergencyReloadApplied;
 }
 
-// -- Predator Magazine / Killer Instinct / Rift Aftershock --
-// All three react to WeaponPerkReactionSystem.OnEntityKilled. KillerInstinctTimer is runtime
+// -- Predator Magazine / Killer Instinct --
+// Both react to WeaponPerkReactionSystem.OnEntityKilled. KillerInstinctTimer is runtime
 // state, ticked down in WeaponSystem.Update; the fire-rate bonus folds into the live
 // fire-cooldown read while it's > 0, same "read live, never baked" idiom the ramp pool uses -
-// restarted to KillerInstinctDuration on every kill. Rift Aftershock has no cooldown - one kill
-// transfers exactly one mark, already exactly-once by construction (OnEntityKilled fires once per
-// kill).
+// restarted to KillerInstinctDuration on every kill.
 component WeaponOnKillReactions
 {
     Boolean HasPredatorMagazine;
@@ -190,17 +188,12 @@ component WeaponOnKillReactions
     FP KillerInstinctFireRateBonus;
     FP KillerInstinctDuration;
     FP KillerInstinctTimer;
-
-    Boolean HasRiftAftershock;
 }
 
-// -- Bottomless Momentum / Critical Rebound / Critical Fracture --
-// All three react to WeaponPerkReactionSystem.OnCriticalHit. Critical Rebound fires a secondary
+// -- Bottomless Momentum / Critical Rebound --
+// Both react to WeaponPerkReactionSystem.OnCriticalHit. Critical Rebound fires a secondary
 // projectile toward the nearest other enemy from the crit's target position - no-op for a Hitscan
-// weapon (nothing to aim a secondary projectile off of), documented simplification. Critical
-// Fracture has no per-weapon cooldown field - the cooldown is target-side
-// (StatusEffects.MarkApplicationCooldowns, RiftMarkCooldownKey.CriticalFracture), shared with the
-// Rift Mutation of the same name so the two can never both stack from one crit.
+// weapon (nothing to aim a secondary projectile off of), documented simplification.
 component WeaponOnCritReactions
 {
     FP    CritAmmoRestoreChance;
@@ -209,29 +202,6 @@ component WeaponOnCritReactions
     Boolean HasCriticalRebound;
     FP      CriticalReboundRadius;
     FP      CriticalReboundDamageMultiplier;
-
-    Boolean HasCriticalFracturePerk;
-}
-
-// -- Fracture Rounds / Unstable Payload / Focused Breach -- (see docs/weapon-perks.md)
-// The remaining Rift Mark content-pool perks. FractureHitCounter counts confirmed weapon hits
-// (WeaponPerkReactionSystem.OnWeaponHitLanded - already excludes DoT-tick replays/non-weapon
-// sources), not shots fired, unlike ShotsSinceExplosiveProc above - reset when this component is
-// removed on Equip, same convention. FocusedBreachTarget/ContactTime are runtime state - tracked
-// per-weapon since only one target can be "the beam's current target" at a time; reset whenever
-// the hit entity changes or a shot misses (WeaponSystem.FireHitscan).
-component WeaponHitTrackingPerks
-{
-    Boolean HasFractureRounds;
-    Byte    FractureRoundsInterval;
-    Byte    FractureHitCounter;
-
-    Boolean HasUnstablePayload;
-
-    Boolean   HasFocusedBreach;
-    FP        FocusedBreachThreshold;
-    EntityRef FocusedBreachTarget;
-    FP        FocusedBreachContactTime;
 }
 
 // -- Element Infusion (ElementInfusionWeaponPerkData) --

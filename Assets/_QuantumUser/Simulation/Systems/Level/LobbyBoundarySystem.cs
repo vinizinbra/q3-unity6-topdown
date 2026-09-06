@@ -35,7 +35,7 @@ namespace Quantum
             if (f.Global->LevelGenerated == false)
                 return;
 
-            for (int i = 0; i < f.PlayerCount; i++)
+            for (int i = 0; i < f.MaxPlayerCount; i++)
             {
                 // Same "skip an unjoined slot, wait for every joined one" guard TalentGateSystem
                 // uses - a player who hasn't spawned yet hasn't left the lobby either.

@@ -97,8 +97,15 @@ namespace Quantum
         // own ForceMarkOnDetonate sweep (Backblast rank 3) over the exact same area this detonation
         // just damaged, without duplicating this whole multiplier chain a second time. Every other
         // caller is free to ignore the return value.
+        //
+        // hitIndex defaults 0 (every existing single-detonation caller's exact prior behavior) - see
+        // HitEffectUtility.ApplyInRadius's own comment on why this only matters to a caller that
+        // detonates the same AreaHitData more than once in one tick against overlapping areas (e.g.
+        // GroundBarrageDeliveryData, one Detonate per scattered point) and needs each call's hits kept
+        // distinct so Quantum doesn't silently collapse them.
         public FP Detonate(Frame f, EntityRef owner, DamageSource source, ElementType element, FP damage,
-            int spawnDepth, FPVector3 center, FP radiusMultiplier = default, bool allowClusterBomblets = true)
+            int spawnDepth, FPVector3 center, FP radiusMultiplier = default, bool allowClusterBomblets = true,
+            byte hitIndex = 0)
         {
             if (radiusMultiplier <= FP._0)
                 radiusMultiplier = FP._1;
@@ -122,7 +129,8 @@ namespace Quantum
             // Pixie's Chain Reaction passive (see MarkExplosiveDeath.RequiresExplosion) to decide
             // whether this hit is allowed to mark anyone at all.
             HitEffectUtility.ApplyInRadius(f, Effects, center, radius, owner,
-                damage, source, targetMask: TargetMask, isExplosion: true, maxHeightDifference: MaxHeightDifference);
+                damage, source, targetMask: TargetMask, isExplosion: true, maxHeightDifference: MaxHeightDifference,
+                hitIndex: hitIndex);
 
             f.Events.AreaDetonated(owner, center, this, radius);
 

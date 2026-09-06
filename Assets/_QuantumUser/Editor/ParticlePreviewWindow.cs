@@ -374,6 +374,11 @@ namespace QuantumUser.Editor
             _playbackSpeed = GUILayout.HorizontalSlider(_playbackSpeed, 0.1f, 3f, GUILayout.Width(100));
             GUILayout.Label($"{_playbackSpeed:0.00}x", GUILayout.Width(40));
 
+            GUILayout.Space(10);
+            GUILayout.Label("Zoom", GUILayout.Width(40));
+            _distance = GUILayout.HorizontalSlider(_distance, 0.2f, 50f, GUILayout.Width(100));
+            GUILayout.Label($"{_distance:0.0}", GUILayout.Width(35));
+
             GUILayout.FlexibleSpace();
 
             var particleCount = 0;

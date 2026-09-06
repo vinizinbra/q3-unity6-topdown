@@ -12,11 +12,11 @@ namespace Quantum
         // Rank-2-scaled counterpart to Apply above - Zara's Remix ascension (see ZaraRemixUtility)
         // calls this instead of the plain 2-arg overload so its own "strengthened" rank 2 (+duration/
         // magnitude) reads generically off whichever concrete effect got randomly picked, rather than
-        // Remix needing its own switch-on-type reimplementation of Burn/Slow/Stun/Rift Mark. Default
-        // just forwards to the plain Apply, ignoring both multipliers - every existing HitEffectData
+        // Remix needing its own switch-on-type reimplementation of Burn/Slow/Stun. Default just
+        // forwards to the plain Apply, ignoring both multipliers - every existing HitEffectData
         // subclass across every hero/weapon-perk/other-system caller is completely unaffected; only
-        // the 4 concrete effects in Remix's own pool (BurnEffectData/SlowEffectData/StunEffectData/
-        // RiftMarkEffectData) override this.
+        // the 3 concrete effects in Remix's own pool (BurnEffectData/SlowEffectData/StunEffectData)
+        // override this.
         public virtual void Apply(Frame f, ref HitEffectContext context, FP durationMultiplier, FP magnitudeMultiplier)
             => Apply(f, ref context);
     }
@@ -71,15 +71,6 @@ namespace Quantum
         // plain single-target hit (a bullet, a melee swing) - never set explicitly at most call
         // sites, so it defaults false there for free.
         public bool IsExplosion;
-
-        // Target's Rift Mark stack count as of the moment this hit started processing, captured by
-        // HitEffectUtility.ApplyToTarget/WeaponSystem.FireHitscan BEFORE anything about this hit runs
-        // (including this same hit's own Effects list). Every Rift Mark reaction-consumption check
-        // (StatusEffectUtility.TryConsumeRiftMarkReaction, called from TryApplyElementalStatus and
-        // from BurnEffectData/SlowEffectData's own guaranteed-element hooks) reads THIS instead of a
-        // live re-read, so a mark this same hit applies (via RiftMarkEffectData, elsewhere in the
-        // Effects list) can never be the one it consumes - see docs/elemental-reactions.md.
-        public byte PreHitRiftMarkStacks;
 
         // Carried from Projectile.PelletIndex - see that field's own comment for why this exists
         // (Quantum's per-tick event dedup swallowing a multi-pellet weapon's overlapping hits).

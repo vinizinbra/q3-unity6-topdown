@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bd27c6472ddf4108a0a905dc9d8a1c1, type: 3}
+  m_Name: GroundBarrageAreaHitData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.AreaHitData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/World1Boss/GroundBarrageAreaHitData
+    Guid:
+      Value: 314431032119394187
+  Effects:
+  - Id:
+      Value: 452814084348607209
+  - Id:
+      Value: 440091783757558214
+  RestOffset:
+    RawValue: -65536
+  DetonateOnLevelGeometry: 1
+  DetonateOnEnemyHit: 1
+  DetonateOnAllyHit: 0
+  BlastRadius:
+    RawValue: 131072
+  TargetMask: 0
+  TriggersSpawnUpgrades: 1
+  PlantedFuseTime:
+    RawValue: 0
+  MaxHeightDifference:
+    RawValue: 0
+  BlastEffectPrefab: {fileID: 6350743763286976369, guid: 6558f1753e1fc4a068ddc49331ed463b, type: 3}

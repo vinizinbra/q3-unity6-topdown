@@ -26,7 +26,7 @@ namespace Quantum
             }
 
             FP elapsedSeconds = f.Global->SurvivalTime;
-            int playerCount = f.PlayerCount;
+            int playerCount = f.MaxPlayerCount;
 
             FP baseHp = EnemyTierStatsConfig.Resolve(f, tier).MaxHealth;
             FP curveHp = balance.Evaluate(CurveChannel.EnemyHp, elapsedSeconds);

@@ -1,10 +1,9 @@
-// 5 real damage-dealing affinities (Neutral = no element). Fire/Ice/Rock keep their own baseline
-// status on landing (Burn/Slow/Intimidate); Void and Lightning have none - their identity is
-// hand-authored WeaponDataAsset traits instead (e.g. a Lightning gun starting with Ricochet, a Void
-// gun starting with Pierce - Void's own flavor is inward displacement/negative knockback, not a
-// status). Landing any of the 5 on a target already carrying a Rift Mark (see
-// StatusEffects.RiftMarkStacks) consumes one stack and fires that element's own reaction -
-// Fire->Detonation, Ice->Deep Freeze, Rock->Rupture, Lightning->Overload, Void->Singularity - see
+// 5 real damage-dealing affinities (Neutral = no element). Fire/Ice/Rock/Lightning each keep their
+// own baseline status on landing (Burn/Slow/Intimidate/Electrified); only Void has none - its
+// identity is a hand-authored WeaponDataAsset trait instead (a Void gun starting with Pierce, its own
+// flavor being inward displacement/negative knockback, not a status). Landing a second element whose
+// pairing status is already active on the target fires an elemental reaction immediately - Burn+Chill
+// ->Thermal Shock, Burn+Shock->Overload, Chill+Shock->Static Collapse - see
 // docs/elemental-reactions.md. Lightning appended at the end (not inserted alongside Rock/Void) to
 // avoid renumbering Void's existing ordinal in already-serialized assets.
 enum ElementType : Byte

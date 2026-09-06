@@ -60,13 +60,20 @@ namespace Quantum
         // reached via QuantumRunner.Default directly (see PlayerManager/MyLocalPlayer for the same
         // idiom) since this is a plain pooled MonoBehaviour, not a QuantumEntityViewComponent with
         // its own per-frame Frame parameter to read instead. Defaults to no slowdown (1) if the
-        // runner/frame isn't available for any reason, rather than stalling growth entirely.
+        // runner/frame isn't available for any reason, rather than stalling growth entirely. Also
+        // folds in Shock's Stagger (multiplier 0, a full pause rather than a stretch) so the ground
+        // decal doesn't keep growing to completion while EnemyBlobAnimationView's own body animation
+        // freezes for the same windup - see that component's identical IsStaggered check.
         private float ResolveAnticipationMultiplier()
         {
             QuantumGame game = QuantumRunner.Default != null ? QuantumRunner.Default.Game : null;
             Frame frame = game?.Frames.Predicted;
 
-            return frame != null ? StatusEffectUtility.GetAnticipationMultiplier(frame, _enemyEntity).AsFloat : 1f;
+            if (frame == null)
+                return 1f;
+
+            float staggerMultiplier = StatusEffectUtility.IsStaggered(frame, _enemyEntity) == true ? 0f : 1f;
+            return StatusEffectUtility.GetAnticipationMultiplier(frame, _enemyEntity).AsFloat * staggerMultiplier;
         }
 
         private Vector3 ComputeScale(float t)

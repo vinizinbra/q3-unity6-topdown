@@ -1,18 +1,21 @@
 // Minimal URP mesh-particle shader: one texture sample tinted by vertex color, lit by a cheap
 // per-VERTEX main-light + ambient term (no per-pixel lighting, no additional lights, no shadows).
 // The main-light term is quantized into a hard lit/shadow band (same _LightThreshold/_BandSoftness
-// idiom as Project/Mobile Toon Modular Level) for a toon look instead of a smooth gradient.
+// idiom as Project/Mobile Toon Modular Level) for a toon look instead of a smooth gradient. The
+// shadow band's color is an artist-set tint (_ShadowColor, same idiom as that shader's
+// _ShadowTint) rather than a darkened main light, so it can be pushed toward a cool/rim tone
+// instead of just going dim.
 Shader "Project/Mobile Particle Vertex Color"
 {
     Properties
     {
         [MainTexture] _MainTex ("Texture", 2D) = "white" {}
-        [MainColor] _TintColor ("Tint Color", Color) = (1, 1, 1, 1)
+        [MainColor] [HDR] _TintColor ("Tint Color", Color) = (1, 1, 1, 1)
 
         [Header(Toon Shading)]
         _LightThreshold ("Light Threshold", Range(0, 1)) = 0.5
         _BandSoftness ("Band Softness", Range(0.001, 0.5)) = 0.05
-        _ShadowStrength ("Shadow Strength", Range(0, 1)) = 1
+        _ShadowColor ("Shadow Color", Color) = (0.5, 0.5, 0.5, 1)
 
         [Enum(UnityEngine.Rendering.BlendMode)] _SrcBlend ("Src Blend", Float) = 5 // SrcAlpha
         [Enum(UnityEngine.Rendering.BlendMode)] _DstBlend ("Dst Blend", Float) = 10 // OneMinusSrcAlpha
@@ -24,7 +27,7 @@ Shader "Project/Mobile Particle Vertex Color"
 
         Pass
         {
-            Name "ForwardUnlit"
+            Name "ForwardLit"
             Tags { "LightMode" = "UniversalForward" }
 
             Cull Off
@@ -46,9 +49,9 @@ Shader "Project/Mobile Particle Vertex Color"
             CBUFFER_START(UnityPerMaterial)
                 float4 _MainTex_ST;
                 half4 _TintColor;
+                half4 _ShadowColor;
                 half _LightThreshold;
                 half _BandSoftness;
-                half _ShadowStrength;
             CBUFFER_END
 
             struct Attributes
@@ -88,11 +91,7 @@ Shader "Project/Mobile Particle Vertex Color"
                 half NdotL = saturate(dot(normalWS, mainLight.direction));
                 half lit = smoothstep(_LightThreshold - _BandSoftness, _LightThreshold + _BandSoftness, NdotL);
                 half3 ambient = SampleSH(normalWS);
-                // _ShadowStrength dials the dark band from full main-light (0, shadow invisible)
-                // down to ambient-only (1, darkest) - the lit band always gets the full main light.
-                half3 litTone = ambient + mainLight.color;
-                half3 shadowTone = ambient + mainLight.color * (1 - _ShadowStrength);
-                output.lighting = lerp(shadowTone, litTone, lit);
+                output.lighting = lerp(_ShadowColor.rgb, mainLight.color, lit) + ambient;
                 return output;
             }
 

@@ -879,7 +879,6 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
             case LevelUpCategory.RiftMutation: return "Rift Mutation";
             case LevelUpCategory.WeaponPerk: return "Weapon Perk";
             case LevelUpCategory.ChooseWeapon: return "Weapon";
-            case LevelUpCategory.RiftMarkMutation: return "Rift Mark Mutation";
             default: return "Chest";
         }
     }
@@ -1031,7 +1030,6 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
             case LevelUpPoolKind.WeaponPerk: return "Weapon Perk";
             case LevelUpPoolKind.GlobalUpgrade: return "Global Upgrade";
             case LevelUpPoolKind.RiftMutation: return "Rift Mutation";
-            case LevelUpPoolKind.RiftMarkMutation: return "Rift Mark Mutation";
             case LevelUpPoolKind.PassiveUpgrade: return "Passive Upgrade";
             case LevelUpPoolKind.SkillUpgrade:
                 switch (option.SkillUpgradeSlot)

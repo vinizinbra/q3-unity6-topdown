@@ -28,7 +28,7 @@ MonoBehaviour:
   volume: {x: 1, y: 1}
   pitch: {x: 0.9, y: 1}
   delay: {x: 0, y: 0}
-  startAt: 1.6
+  startAt: 0
   endAt: 0
   fadeIn: 0
   fadeOut: 0

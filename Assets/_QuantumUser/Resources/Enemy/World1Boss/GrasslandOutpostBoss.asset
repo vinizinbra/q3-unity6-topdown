@@ -1,0 +1,1056 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-6629813547056104200
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b3ffe095a046457f99f64ffca9d87e9, type: 3}
+  m_Name: MeleeEnemyActionData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.EnemyActionData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/World1Boss/GrasslandOutpostBoss|MeleeEnemyActionData
+    Guid:
+      Value: 2109095672044477464
+  Name: 
+  EngageRange:
+    RawValue: 131072
+  DamageRange:
+    RawValue: 327680
+  Damage:
+    RawValue: 2621440
+  AnticipationTime:
+    RawValue: 65536
+  DirectionTracking: 2
+  IgnoreY: 1
+  Origin: 1
+  DownTime:
+    RawValue: 65536
+  CooldownTime:
+    RawValue: 65536
+  TelegraphStartPercent:
+    RawValue: 32768
+  Trigger:
+    Type: 0
+    Radius:
+      RawValue: 0
+    HealthPercent:
+      RawValue: 0
+  AimLock: 0
+  AimLockPercent:
+    RawValue: 65536
+  SelectionWeight: 1
+  InterruptibleDuringTelegraph: 1
+  InterruptibleDuringActive: 0
+  Delivery:
+    Id:
+      Value: 1765132668224923151
+  Effects:
+  - Id:
+      Value: 440091783757558214
+  Telegraph:
+    Id:
+      Value: 2618019949837129086
+  AnticipationStep:
+    AnimationType: 2
+    Duration: 1
+    BodySprite: {fileID: -494948562, guid: e5b932f794bbf4380b10922fe9dd62e1, type: 3}
+    BodySpriteOffset: {x: 0, y: 0, z: 0}
+    BodySpriteScale: {x: 1.3, y: 1.3, z: 1.3}
+    ShakeImpact: 0
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 10
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+  BeginStep:
+    AnimationType: 13
+    Duration: 0.3
+    BodySprite: {fileID: -532138817, guid: e5b932f794bbf4380b10922fe9dd62e1, type: 3}
+    BodySpriteOffset: {x: 0, y: 0, z: 0}
+    BodySpriteScale: {x: 1.3, y: 1.3, z: 1.3}
+    ShakeImpact: 0
+    Shake:
+      Frequency: 0
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.1
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 3308319309734866876, guid: 73f6ab46adf6f4923899d8a01e54f72c, type: 3}
+    Anchor: 0
+    Offset: {x: 0, y: -1, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 90, y: 0, z: 0}
+    Scale: 5
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+  OnGoingStep:
+    AnimationType: 0
+    Duration: 0.3
+    BodySprite: {fileID: 0}
+    BodySpriteOffset: {x: 0, y: 0, z: 0}
+    BodySpriteScale: {x: 1, y: 1, z: 1}
+    ShakeImpact: 0
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+  EndStep:
+    AnimationType: 0
+    Duration: 0.3
+    BodySprite: {fileID: 0}
+    BodySpriteOffset: {x: 0, y: 0, z: 0}
+    BodySpriteScale: {x: 1, y: 1, z: 1}
+    ShakeImpact: 0
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+--- !u!114 &-4772324029257038247
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b6ef994ab1bd4c22a2debb1f013913f, type: 3}
+  m_Name: SpawnPackDeliveryData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.SpawnPackDeliveryData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/World1Boss/GrasslandOutpostBoss|SpawnPackDeliveryData
+    Guid:
+      Value: 3989910870520005681
+  MinRandomOffset:
+    RawValue: -327680
+  MaxRandomOffset:
+    RawValue: 327680
+  Composition:
+  - Id:
+      Value: 380491306257295384
+  - Id:
+      Value: 380491306257295384
+  - Id:
+      Value: 380491306257295384
+  - Id:
+      Value: 380491306257295384
+  - Id:
+      Value: 380491306257295384
+--- !u!114 &-4344459352755101082
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52edb4eefc1db48109cc7d1ac53b2f13, type: 3}
+  m_Name: MeleeDamage
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.TelegraphData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/World1Boss/GrasslandOutpostBoss|MeleeDamage
+    Guid:
+      Value: 2618019949837129086
+  Shape: 0
+  StartPhase: 0
+  EndPhase: 1
+  LiveTracking: 0
+  LiveTrackingSmoothing: 15
+  TelegraphPrefab: {fileID: 3870463405479579449, guid: b557fcfdfd0db4376ba4c16190a9008e, type: 3}
+  SnapToGround: 1
+  LineLength: 0
+  FixedDistanceValue: 5
+  FromOffset: 0
+  ToOffset: 0
+  Width: 1
+  RadiusMultiplier: 1
+  RotationDegreesPerSecond: 0
+  GrowthDuration: 1
+  FadeInDuration: 0.15
+  FadeOutDuration: 0.15
+--- !u!114 &-4134469930089841551
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b3ffe095a046457f99f64ffca9d87e9, type: 3}
+  m_Name: SpawnEnemyActionData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.EnemyActionData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/World1Boss/GrasslandOutpostBoss|SpawnEnemyActionData
+    Guid:
+      Value: 2955872858170151849
+  Name: 
+  EngageRange:
+    RawValue: 524288
+  DamageRange:
+    RawValue: 524288
+  Damage:
+    RawValue: 0
+  AnticipationTime:
+    RawValue: 32768
+  DirectionTracking: 2
+  IgnoreY: 1
+  Origin: 0
+  DownTime:
+    RawValue: 65536
+  CooldownTime:
+    RawValue: 1310720
+  TelegraphStartPercent:
+    RawValue: 32768
+  Trigger:
+    Type: 0
+    Radius:
+      RawValue: 0
+    HealthPercent:
+      RawValue: 0
+  AimLock: 0
+  AimLockPercent:
+    RawValue: 65536
+  SelectionWeight: 1
+  InterruptibleDuringTelegraph: 1
+  InterruptibleDuringActive: 0
+  Delivery:
+    Id:
+      Value: 3989910870520005681
+  Effects: []
+  Telegraph:
+    Id:
+      Value: 0
+  AnticipationStep:
+    AnimationType: 1
+    Duration: 1
+    BodySprite: {fileID: 0}
+    BodySpriteOffset: {x: 0, y: 0, z: 0}
+    BodySpriteScale: {x: 1, y: 1, z: 1}
+    ShakeImpact: 0
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+  BeginStep:
+    AnimationType: 3
+    Duration: 0.3
+    BodySprite: {fileID: 0}
+    BodySpriteOffset: {x: 0, y: 0, z: 0}
+    BodySpriteScale: {x: 1, y: 1, z: 1}
+    ShakeImpact: 0
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+  OnGoingStep:
+    AnimationType: 0
+    Duration: 0.3
+    BodySprite: {fileID: 0}
+    BodySpriteOffset: {x: 0, y: 0, z: 0}
+    BodySpriteScale: {x: 1, y: 1, z: 1}
+    ShakeImpact: 0
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+  EndStep:
+    AnimationType: 0
+    Duration: 0.3
+    BodySprite: {fileID: 0}
+    BodySpriteOffset: {x: 0, y: 0, z: 0}
+    BodySpriteScale: {x: 1, y: 1, z: 1}
+    ShakeImpact: 0
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 285c1e1a94e184b25a7f521cd7fcd913, type: 3}
+  m_Name: GrasslandOutpostBoss
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.BossDataAsset
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/World1Boss/GrasslandOutpostBoss
+    Guid:
+      Value: 464407345595852480
+  EnemyName: ScrapyardJaw
+  Tier: 5
+  Economy:
+    Persistent: 0
+    SpawnProfile:
+      Id:
+        Value: 443472774672561949
+    CostMultiplier:
+      RawValue: 65536
+  Stats:
+    MoveSpeed:
+      RawValue: 393216
+    Height:
+      InitialState: 0
+      FlightHeight:
+        RawValue: 131072
+      HoverCheckInterval:
+        RawValue: 65536
+      HoverSpringFrequency:
+        RawValue: 65536
+      HoverSpringDamping:
+        RawValue: 32768
+      CanFly: 0
+      CanBeLaunched: 0
+      CanBeGrounded: 1
+      ClimbProbeThreshold:
+        RawValue: 65536
+      GapProbeThreshold:
+        RawValue: 65536
+      ArcHeight:
+        RawValue: 131072
+      TraversalJumpSpeedMultiplier:
+        RawValue: 131072
+      CanClimbCliffs: 1
+      CliffHeight:
+        RawValue: 327680
+      AffectedByGroundHazards: 0
+      AffectedByShockwaves: 0
+      TargetableByMelee: 1
+      TargetableByProjectiles: 1
+      CanJumpGaps: 1
+      GapDistance:
+        RawValue: 327680
+      CanFallFromCliff: 1
+      FallHeight:
+        RawValue: 327680
+    Movement:
+      Id:
+        Value: 3283391172210422552
+    Radius:
+      RawValue: 98304
+    ShieldMultiplier:
+      RawValue: 0
+    HealthMultiplier:
+      RawValue: 65536
+    Traits: 
+    FrontalDamageReductionAmount:
+      RawValue: 32768
+    FrontalDamageReductionArcDegrees:
+      RawValue: 7864320
+    AvoidWalls: 0
+    WallAvoidProbeDistance:
+      RawValue: 65536
+    UseWaypointDetour: 0
+    WaypointArrivalDistance:
+      RawValue: 65536
+  AI:
+    Targeting:
+      Id:
+        Value: 2227200805678239736
+    DetectionRange:
+      RawValue: 655360
+    LeashRange:
+      RawValue: 983040
+    DetectionRangeMultiplier:
+      RawValue: 65536
+  Actions:
+    BasicAction:
+      Id:
+        Value: 0
+    SkillActions:
+    - Id:
+        Value: 460713306234689703
+  DeathLingerTime:
+    RawValue: 196608
+  ChestDrop:
+    Id:
+      Value: 0
+  ChestDropChance:
+    RawValue: 65536
+  Cost:
+    RawValue: 65536
+  Persistent: 0
+  SpawnProfile:
+    Id:
+      Value: 0
+  MoveSpeed:
+    RawValue: 196608
+  Radius:
+    RawValue: 65536
+  MaxHealth:
+    RawValue: 3276800
+  MaxShield:
+    RawValue: 0
+  ShieldRechargeDelay:
+    RawValue: 131072
+  ShieldRechargeRate:
+    RawValue: 327680
+  Traits: 
+  FrontalDamageReductionAmount:
+    RawValue: 32768
+  FrontalDamageReductionArcDegrees:
+    RawValue: 7864320
+  Height:
+    InitialState: 0
+    FlightHeight:
+      RawValue: 0
+    HoverCheckInterval:
+      RawValue: 0
+    HoverSpringFrequency:
+      RawValue: 0
+    HoverSpringDamping:
+      RawValue: 0
+    CanFly: 0
+    CanBeLaunched: 0
+    CanBeGrounded: 0
+    ClimbProbeThreshold:
+      RawValue: 0
+    GapProbeThreshold:
+      RawValue: 0
+    ArcHeight:
+      RawValue: 0
+    TraversalJumpSpeedMultiplier:
+      RawValue: 0
+    CanClimbCliffs: 0
+    CliffHeight:
+      RawValue: 0
+    AffectedByGroundHazards: 0
+    AffectedByShockwaves: 0
+    TargetableByMelee: 0
+    TargetableByProjectiles: 0
+    CanJumpGaps: 0
+    GapDistance:
+      RawValue: 0
+    CanFallFromCliff: 0
+    FallHeight:
+      RawValue: 0
+  Movement:
+    Id:
+      Value: 0
+  Targeting:
+    Id:
+      Value: 0
+  DetectionRange:
+    RawValue: 655360
+  LeashRange:
+    RawValue: 983040
+  CanBeInterruptedByKnockback: 1
+  KnockbackRecoveryTime:
+    RawValue: 16384
+  BasicAction:
+    Id:
+      Value: 0
+  SkillActions: []
+  ExplosionColor: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
+  ViewPrefab: {fileID: 0}
+  FactionSkins: []
+  Phases:
+  - EntryTrigger: 0
+    HealthPercentThreshold:
+      RawValue: 65470464
+    TimerSeconds:
+      RawValue: 65470464
+    ActionPoolSlots: 
+    MovementOverride:
+      Id:
+        Value: 0
+    HeightOverride:
+      InitialState: 0
+      FlightHeight:
+        RawValue: 0
+      HoverCheckInterval:
+        RawValue: 0
+      HoverSpringFrequency:
+        RawValue: 0
+      HoverSpringDamping:
+        RawValue: 0
+      CanFly: 0
+      CanBeLaunched: 0
+      CanBeGrounded: 0
+      ClimbProbeThreshold:
+        RawValue: 0
+      GapProbeThreshold:
+        RawValue: 0
+      ArcHeight:
+        RawValue: 0
+      TraversalJumpSpeedMultiplier:
+        RawValue: 0
+      CanClimbCliffs: 0
+      CliffHeight:
+        RawValue: 0
+      AffectedByGroundHazards: 0
+      AffectedByShockwaves: 0
+      TargetableByMelee: 0
+      TargetableByProjectiles: 0
+      CanJumpGaps: 0
+      GapDistance:
+        RawValue: 0
+      CanFallFromCliff: 0
+      FallHeight:
+        RawValue: 0
+    Modifiers:
+      MoveSpeedMultiplier:
+        RawValue: 65536
+      AnticipationMultiplier:
+        RawValue: 65536
+      DamageMultiplier:
+        RawValue: 327680
+      DamageTakenMultiplier:
+        RawValue: 131072
+  - EntryTrigger: 0
+    HealthPercentThreshold:
+      RawValue: 32768
+    TimerSeconds:
+      RawValue: 0
+    ActionPoolSlots: 
+    MovementOverride:
+      Id:
+        Value: 0
+    HeightOverride:
+      InitialState: 0
+      FlightHeight:
+        RawValue: 0
+      HoverCheckInterval:
+        RawValue: 0
+      HoverSpringFrequency:
+        RawValue: 0
+      HoverSpringDamping:
+        RawValue: 0
+      CanFly: 0
+      CanBeLaunched: 0
+      CanBeGrounded: 0
+      ClimbProbeThreshold:
+        RawValue: 0
+      GapProbeThreshold:
+        RawValue: 0
+      ArcHeight:
+        RawValue: 0
+      TraversalJumpSpeedMultiplier:
+        RawValue: 0
+      CanClimbCliffs: 0
+      CliffHeight:
+        RawValue: 0
+      AffectedByGroundHazards: 0
+      AffectedByShockwaves: 0
+      TargetableByMelee: 0
+      TargetableByProjectiles: 0
+      CanJumpGaps: 0
+      GapDistance:
+        RawValue: 0
+      CanFallFromCliff: 0
+      FallHeight:
+        RawValue: 0
+    Modifiers:
+      MoveSpeedMultiplier:
+        RawValue: 131072
+      AnticipationMultiplier:
+        RawValue: 98304
+      DamageMultiplier:
+        RawValue: 327680
+      DamageTakenMultiplier:
+        RawValue: 131072
+  GlobalActionSlots: 000000000100000002000000
+  Stagger:
+    Threshold:
+      RawValue: 0
+    RegenRate:
+      RawValue: 65536
+    OnBreakForcedAction:
+      Id:
+        Value: 0
+  ComboChains:
+  - TriggerAction:
+      Id:
+        Value: 511568960860912397
+    RepeatCount: 3
+    RetargetEachRepeat: 1
+    ExposedDurationOnFinish:
+      RawValue: 131072
+    ExposedDamageMultiplierOnFinish:
+      RawValue: 131072
+  RetargetInterval:
+    RawValue: 6554
+  Title: BEHEMOOTH
+  Subtitle: THE SCRAP GIANT
+  UiSprite: {fileID: 1281673288, guid: 88a596baa7eda40348913c5e0c802726, type: 3}
+--- !u!114 &1541344220761094991
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a553702501321444d93c6adf870f3bb9, type: 3}
+  m_Name: GroundAreaDeliveryData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.GroundAreaDeliveryData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/World1Boss/GrasslandOutpostBoss|GroundAreaDeliveryData
+    Guid:
+      Value: 1765132668224923151
+  MinRandomOffset:
+    RawValue: 0
+  MaxRandomOffset:
+    RawValue: 0
+  ConeShaped: 0
+  ConeAngleDegrees:
+    RawValue: 5898240
+  SelfDestructs: 0
+  MaxHeightDifference:
+    RawValue: 13107

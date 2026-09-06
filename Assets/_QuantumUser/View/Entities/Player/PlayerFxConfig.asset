@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd3c61973efbe4f8d90ab9cf1f47613a, type: 3}
+  m_Name: PlayerFxConfig
+  m_EditorClassIdentifier: Assembly-CSharp::Quantum.PlayerFxConfig
+  DashBurst:
+    Prefab: {fileID: 7949794408425934119, guid: 8aef01eeca7c56b48b7d99650ec01d4a, type: 3}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    ScaleMultiplier: 0.75
+    PositionOffset: {x: 0, y: 0, z: 0}
+  JumpBurst:
+    Prefab: {fileID: 2507896006552451473, guid: dbe2ea8610622df44a4a79ba99af5ddc, type: 3}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    ScaleMultiplier: 1
+    PositionOffset: {x: 0, y: 0, z: 0}
+  LandBurst:
+    Prefab: {fileID: 676453516923581567, guid: 22b3da147b81bbc4582db932cf63c8a0, type: 3}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    ScaleMultiplier: 0.5
+    PositionOffset: {x: 0, y: 0.1, z: 0}
+  LandMinImpactSpeed: 0.1
+  FlashColor: {r: 1, g: 1, b: 1, a: 1}
+  BurnFlashColor: {r: 1, g: 0.45, b: 0.1, a: 0.3254902}
+  RecoverFlashColor: {r: 0, g: 1, b: 1, a: 1}
+  BlockFlashColor: {r: 1, g: 1, b: 1, a: 1}
+  FreeHitGuardFlashColor: {r: 0.4, g: 0.95, b: 1, a: 1}
+  FrontalReducedFlashColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  RestColor: {r: 0, g: 0, b: 0, a: 0}
+  FlashDuration: 0.3
+  FireRestTint: {r: 0, g: 0, b: 0, a: 0}
+  IceRestTint: {r: 0, g: 0, b: 0, a: 0}
+  LightningRestTint: {r: 0, g: 0, b: 0, a: 0}
+  HealFlashColor: {r: 0.4, g: 1, b: 0.4, a: 1}
+  ShieldFlashColor: {r: 0.4, g: 0.75, b: 1, a: 1}
+  DeathColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
+  RiftMarkApplicationFlashColor: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
+  RiftMarkApplicationFlashDuration: 0.08
+  ExpPickupFlashColor: {r: 0.2980392, g: 1, b: 0.98432136, a: 0.35}
+  CoinPickupFlashColor: {r: 1, g: 0.7990196, b: 0, a: 0.12941177}
+  RiftShardPickupFlashColor: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 0.53333336}
+  ScrapPickupFlashColor: {r: 0.95, g: 0.6, b: 0.25, a: 0.35}
+  PickupFlashDuration: 0.35

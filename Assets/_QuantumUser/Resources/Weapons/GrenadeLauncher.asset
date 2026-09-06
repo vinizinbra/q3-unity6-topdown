@@ -43,11 +43,12 @@ MonoBehaviour:
       RawValue: 13107
     Z:
       RawValue: 0
+  BonusBounces: 0
   ProjectileData:
     Id:
       Value: 268986146537756646
   ViewPrefab: {fileID: 8089491252618662435, guid: 76663fba1fb8145d0802358c5a0b27ec, type: 3}
-  ShakeTier: 0
+  ShakeTier: 1
   _dpsPreview: 'Burst DPS: 80
 
     Sustained DPS (incl. reload): 73.6

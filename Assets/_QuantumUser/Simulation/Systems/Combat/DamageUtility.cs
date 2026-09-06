@@ -39,11 +39,15 @@ namespace Quantum
         // EntityDamaged.HitIndex) - defaults to 0 for every caller except WeaponSystem.FireHitscan's
         // pellet loop, the only place multiple identical-damage hits can land on one stationary
         // target within a single tick.
+        // reactionProc flags EntityDamaged as one of the 3 elemental reactions' own one-shot damage
+        // (Thermal Shock/Overload/Shatter - see StatusEffectUtility), not a periodic status tick -
+        // see EntityDamaged.ReactionProc's own comment in Events.qtn for why Element alone can't
+        // already tell those apart.
         public static void ApplyDamage(Frame f, EntityRef target, FP damage, EntityRef owner,
             DamageSource source = DamageSource.None, bool bypassOutgoingResolution = false,
             ElementType element = ElementType.Neutral, bool silent = false,
             bool isChainedExplosion = false, bool isExplosion = false,
-            byte hitIndex = 0)
+            byte hitIndex = 0, bool reactionProc = false)
         {
             if (f.Unsafe.TryGetPointer<Health>(target, out var health) == false)
             {
@@ -216,18 +220,6 @@ namespace Quantum
                 f.Signals.OnShieldDamageApplied(target, owner, shieldAbsorbed, source, directHit);
             }
 
-            // Rift Mutation mark-application content (Heavy/Close/Long/Execution/First Contact/Skill/
-            // Critical Fracture) - evaluated here, not via a signal, so pre-damage health/distance are
-            // both still live and every mechanic shares one deterministic priority order (see
-            // docs/rift-mutations.md's "Event resolution order"). Same bypassOutgoingResolution gate
-            // OnWeaponHitLanded above already uses to exclude DoT-tick replays.
-            if (bypassOutgoingResolution == false)
-            {
-                RiftMutationMarkUtility.EvaluateOnDamage(f, target, owner, source, remaining,
-                    health->CurrentHealth, health->MaxHealth, isCritical);
-                RiftMutationMarkUtility.EvaluateLastStand(f, target, remaining);
-            }
-
             FP healthAfter = health->CurrentHealth - remaining;
 
             // Damage dealt BEYOND what was left - captured here because CheatDeath below rewrites
@@ -257,7 +249,7 @@ namespace Quantum
                 ? targetTransform->Position
                 : FPVector3.Zero;
 
-            f.Events.EntityDamaged(target, owner, totalDamage, isCritical, element, silent, frontalMultiplier < FP._1, hitPosition, hitIndex);
+            f.Events.EntityDamaged(target, owner, totalDamage, isCritical, element, silent, reactionProc, frontalMultiplier < FP._1, hitPosition, hitIndex);
 
 
             Log.Debug($"[Damage] {target} took {remaining} to health (raw {damage}, after stats {totalDamage}) " +
@@ -470,19 +462,6 @@ namespace Quantum
             FP blastRadius = radius * config.RadiusMultiplier;
             FP damage = maxHealth * config.DamagePercent;
 
-            // Rift-Marked kills detonate bigger and harder - see docs/elemental-reactions.md for
-            // what applies a Rift Mark; this stacks with every bonus below, it's not a replacement
-            // for any of them. Captured once here (target is about to be destroyed, so this is the
-            // last point IsRiftMarked can still be read) and carried on the event so the view can
-            // play a visually distinct blast for it - see ExplodeOnDeathDetonated's own comment.
-            bool isRiftMarked = StatusEffectUtility.IsRiftMarked(f, target);
-
-            if (isRiftMarked == true)
-            {
-                blastRadius *= config.RiftMarkRadiusMultiplier;
-                damage *= config.RiftMarkDamageMultiplier;
-            }
-
             // Unstable Mixture (Pixie ascension) applies unconditionally - BonusRadiusMultiplier/
             // BonusDamageMultiplier both default to 1, so Max's Berserk is unaffected. TierRadiusMultiplier
             // only for a Specialist+ kill, RADIUS ONLY (not damage - see MarkExplosiveDeath.qtn's own
@@ -507,7 +486,7 @@ namespace Quantum
             // Flags this blast's own hits as chained, so TryMarkExplodeOnDeath only re-marks anyone
             // it also catches if Chain Reaction has been taken (see that method's own comment).
             HitEffectUtility.ApplyDamageInRadius(f, transform->Position, blastRadius, owner, damage, DamageSource.Skill, config.TargetMask, isChainedExplosion: true);
-            f.Events.ExplodeOnDeathDetonated(owner, transform->Position, blastRadius, enemyData, isRiftMarked);
+            f.Events.ExplodeOnDeathDetonated(owner, transform->Position, blastRadius, enemyData);
 
             Log.Debug($"[Damage] {target}'s marked death exploded at {transform->Position} radius {blastRadius} for {damage}");
         }
@@ -1119,13 +1098,6 @@ namespace Quantum
             // with the permanent stat and tier-resistance multipliers above rather than replacing
             // either.
             scale *= StatusEffectUtility.GetKnockbackTakenMultiplier(f, target);
-
-            // Rift-Marked targets take extra knockback, same "stacks with everything above" shape.
-            if (StatusEffectUtility.IsRiftMarked(f, target) == true &&
-                StatusEffectUtility.GetElementalReactionConfig(f) is { } reactionConfig)
-            {
-                scale *= reactionConfig.RiftMarkKnockbackMultiplier;
-            }
 
             return scale;
         }

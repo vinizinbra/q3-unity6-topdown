@@ -73,14 +73,16 @@ public class CharacterUiWidget : MonoBehaviour
 
     [Header("Status Effects")]
     [SerializeField] private StatusIndicator burnIndicator;
-    [SerializeField, Tooltip("Rift Mark does nothing by itself - timerText shows the target's current stack count as \"xN\" (not a countdown), priming it for whichever elemental reaction (Detonation/Deep Freeze/Rupture/Overload/Singularity) lands next. See docs/elemental-reactions.md.")]
-    private StatusIndicator riftMarkIndicator;
     [SerializeField] private StatusIndicator iceIndicator;
-    [SerializeField, Tooltip("Ice+RiftMark's Deep Freeze reaction - stretches the entity's own attack anticipation/windup (StatusEffectUtility.GetAnticipationMultiplier), not a lockout, so it's shown separately from Stun. See docs/elemental-reactions.md.")]
+    [SerializeField, Tooltip("Stretches the entity's own attack anticipation/windup (StatusEffectUtility.GetAnticipationMultiplier), not a lockout, so it's shown separately from Stun - applied directly by FreezeEffectData, a standalone skill effect.")]
     private StatusIndicator deepFreezeIndicator;
     [SerializeField] private StatusIndicator stunIndicator;
     [SerializeField, Tooltip("Root pins movement only (the entity can still attack), unlike Stun which freezes everything - shown separately so both can be visible at once if somehow both are active.")]
     private StatusIndicator rootIndicator;
+    [SerializeField, Tooltip("Lightning's baseline (Shock) - see StatusEffectUtility.IsElectrified. Periodically fires a Jolt (a brief Stagger) while active.")]
+    private StatusIndicator electrifiedIndicator;
+    [SerializeField, Tooltip("Brief pause of the entity's own action windup - never a full disable like Stun. Fired by Shock's own Jolt and by Shatter's primary/area application. See StatusEffectUtility.IsStaggered.")]
+    private StatusIndicator staggerIndicator;
     [SerializeField] private StatusIndicator ruptureIndicator;
     [SerializeField, Tooltip("Mirror of Rupture - reduces the entity's own outgoing damage instead of incoming. Applied to enemies by Brute's Protector Aura.")]
     private StatusIndicator intimidateIndicator;
@@ -590,11 +592,12 @@ public class CharacterUiWidget : MonoBehaviour
         bool hasStatus = frame.TryGet<StatusEffects>(_entityRef, out var status);
 
         UpdateBurn(hasStatus, status);
-        UpdateRiftMark(hasStatus, status);
         UpdateIce(hasStatus, status);
         UpdateDeepFreeze(hasStatus, status);
         UpdateStun(hasStatus, status);
         UpdateRoot(hasStatus, status);
+        UpdateElectrified(hasStatus, status);
+        UpdateStagger(hasStatus, status);
         UpdateRupture(hasStatus, status);
         UpdateIntimidate(hasStatus, status);
         UpdateGuardianAura(hasStatus, status);
@@ -608,17 +611,6 @@ public class CharacterUiWidget : MonoBehaviour
 
         if (shown)
             burnIndicator.SetTimer($"{status.BurnRemaining.AsFloat:F1}s");
-    }
-
-    private void UpdateRiftMark(bool hasStatus, StatusEffects status)
-    {
-        bool shown = hasStatus && status.RiftMarkStacks > 0;
-        riftMarkIndicator.SetShown(shown);
-
-        if (shown == false)
-            return;
-
-        riftMarkIndicator.SetTimer($"x{status.RiftMarkStacks}");
     }
 
     private void UpdateIce(bool hasStatus, StatusEffects status)
@@ -655,6 +647,24 @@ public class CharacterUiWidget : MonoBehaviour
 
         if (shown)
             rootIndicator.SetTimer($"{status.RootRemaining.AsFloat:F1}s");
+    }
+
+    private void UpdateElectrified(bool hasStatus, StatusEffects status)
+    {
+        bool shown = hasStatus && status.ElectrifiedRemaining > FP._0;
+        electrifiedIndicator.SetShown(shown);
+
+        if (shown)
+            electrifiedIndicator.SetTimer($"{status.ElectrifiedRemaining.AsFloat:F1}s");
+    }
+
+    private void UpdateStagger(bool hasStatus, StatusEffects status)
+    {
+        bool shown = hasStatus && status.StaggerRemaining > FP._0;
+        staggerIndicator.SetShown(shown);
+
+        if (shown)
+            staggerIndicator.SetTimer($"{status.StaggerRemaining.AsFloat:F1}s");
     }
 
     private void UpdateRupture(bool hasStatus, StatusEffects status)
@@ -748,10 +758,10 @@ public class CharacterUiWidget : MonoBehaviour
         TextBatchOptimizer.SetActive(component.gameObject, shown);
     }
 
-    // One per status type (Burn/RiftMark/Ice/DeepFreeze/Stun/Rupture/Intimidate) - root is whatever the Inspector wires up as
-    // that status's visual (icon, background, whatever), shown only while the status is active;
-    // timerText is optional, same as every TMP_Text elsewhere in this widget. riftMarkIndicator
-    // repurposes timerText to show stack count ("xN") instead of a countdown.
+    // One per status type (Burn/Ice/DeepFreeze/Stun/Electrified/Stagger/Rupture/Intimidate) - root
+    // is whatever the Inspector wires up as that status's visual (icon, background, whatever), shown
+    // only while the status is active; timerText is optional, same as every TMP_Text elsewhere in
+    // this widget.
     [System.Serializable]
     private class StatusIndicator
     {

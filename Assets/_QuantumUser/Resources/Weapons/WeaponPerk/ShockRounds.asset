@@ -19,7 +19,8 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Shock Rounds
   Rarity: 2
-  Description: '<color=#FD3971>{1:0}%</color> chance to apply Lightning affinity on hit (triggers Overload on Rift-Marked enemies)'
+  Description: <color=#FD3971>{1:0}%</color> chance to apply Lightning affinity on
+    hit (triggers Overload on Rift-Marked enemies)
   Element: 5
   ProcChance:
-    RawValue: 13107
+    RawValue: 65536

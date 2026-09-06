@@ -152,19 +152,6 @@ namespace QuantumUser.View
                 menu.AddButton(menu.RiftContent, "Rift Mutation", data.DisplayName, data.Icon, data.GetDescription(), granted,
                     () => SendGrantRift(mutation), null);
             }
-
-            foreach (AssetRef<RiftMutationData> mutation in config.RiftMarkMutations)
-            {
-                RiftMutationData data = frame.FindAsset(mutation);
-
-                // Same shared RiftMutationPicks/IsAlreadyPicked as the core Rift Mutation pool above
-                // - RiftMarkMutations draws from the same RiftMutationData catalog, just a different
-                // list/LevelUpPoolKind.
-                bool granted = RiftMutationUtility.IsAlreadyPicked(frame, entity, mutation);
-
-                menu.AddButton(menu.RiftMarkContent, "Rift Mark Mutation", data.DisplayName, data.Icon, data.GetDescription(), granted,
-                    () => SendGrantRift(mutation), null);
-            }
         }
 
         private void AddSkillUpgradeButton(Frame frame, EntityRef entity, AssetRef<SkillActionData> upgrade, SkillSlotId slot, string category, SkillSlot ownerSlot)

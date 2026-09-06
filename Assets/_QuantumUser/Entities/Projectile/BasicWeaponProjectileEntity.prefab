@@ -14,7 +14,6 @@ GameObject:
   - component: {fileID: -8059040250835592980}
   - component: {fileID: 6904150100474828250}
   - component: {fileID: 9000172568175392284}
-  - component: {fileID: 8435151729028434002}
   m_Layer: 10
   m_Name: BasicWeaponProjectileEntity
   m_TagString: Untagged
@@ -402,34 +401,10 @@ MonoBehaviour:
   visualRoot: {fileID: 0}
   catchUpSpeedMultiplier: 2
   destroyEffectPrefab: {fileID: 3308115373013161897, guid: 3608992ed98f542228996f9a7318c87b, type: 3}
-  trailParticle: {fileID: 0}
+  trailParticle: {fileID: 4201298072593657466}
   minImpactDuration: 0.03
   maxImpactDuration: 0.2
   orphanTimeout: 3
---- !u!114 &8435151729028434002
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8063237361760657506}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 106032ec3b5ff4b9fbca44316f2633ac, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Quantum.ProjectileElementalFxView
-  _playerRef:
-    _index: 0
-  initialized: 0
-  executeOnlyOnLocal: 0
-  isLocal: 0
-  fireParticlePrefab: {fileID: 19886636, guid: 3b671081e44be1c4aa4355e8ba6e8a5e, type: 3}
-  iceParticlePrefab: {fileID: 198454845979760178, guid: 6990d204950bbe342a79c51322ee6373, type: 3}
-  rockParticlePrefab: {fileID: 19834744, guid: d2b6665fd7333674aabe8f4394cf661d, type: 3}
-  voidParticlePrefab: {fileID: 19849784, guid: 672a9f8d9b8441b47a4cc0a5c3d60b7c, type: 3}
-  lightningParticlePrefab: {fileID: 0}
-  catchUpDuration: 0.1
-  restGracePeriod: 0.75
 --- !u!1001 &4201298072607996828
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -453,6 +428,10 @@ PrefabInstance:
     - target: {fileID: 193226, guid: 4e1790ceaba7cf84d97431c9452ca8fb, type: 3}
       propertyPath: m_Layer
       value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 193226, guid: 4e1790ceaba7cf84d97431c9452ca8fb, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 438534, guid: 4e1790ceaba7cf84d97431c9452ca8fb, type: 3}
       propertyPath: m_LocalScale.x
@@ -588,6 +567,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4e1790ceaba7cf84d97431c9452ca8fb, type: 3}
+--- !u!198 &4201298072593657466 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 19879398, guid: 4e1790ceaba7cf84d97431c9452ca8fb, type: 3}
+  m_PrefabInstance: {fileID: 4201298072607996828}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &4201298072607885978 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 438534, guid: 4e1790ceaba7cf84d97431c9452ca8fb, type: 3}

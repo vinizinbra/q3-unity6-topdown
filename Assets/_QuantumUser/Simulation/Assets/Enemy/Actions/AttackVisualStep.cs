@@ -178,6 +178,8 @@ namespace Quantum
         public Sprite BodySprite;
         [Tooltip("Only applied while BodySprite above is showing (same duration/revert window) - additive root.localPosition offset, authored as if always facing right. X is mirrored by the enemy's current facing sign, same convention every other left/right-sensitive channel here uses.")]
         public Vector3 BodySpriteOffset;
+        [Tooltip("Only applied while BodySprite above is showing (same duration/revert window) - multiplies root's own base scale, e.g. for a swapped-in sprite authored at a different reference size than the enemy's normal one. (1,1,1) = unchanged. Reverts to (1,1,1) the instant BodySprite itself reverts, same timer.")]
+        public Vector3 BodySpriteScale = Vector3.one;
 
         [Tooltip("0 = no camera shake. Above 0, this step shakes FollowCamera from its own resolved position (self, or the step's own anchor/target if Anchor below is set to SkillTargetPosition) - attenuated by distance from the camera (FollowCamera.stepShakeFalloffRadius) and scaled by this value (FollowCamera.stepShakeAmplitudePerImpact), independent of AnimationType/particle. A distant hit on another part of the map naturally shakes little to nothing.")]
         public float ShakeImpact = 0f;

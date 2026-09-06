@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bb51f48d451e4d148d492421a410eb0, type: 3}
+  m_Name: ShotgunWeapon
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.WeaponDataAsset
+  Identifier:
+    Path: _QuantumUser/Resources/Weapons/ShotgunWeapon
+    Guid:
+      Value: 457249274052612936
+  DisplayName: 
+  FireType: 1
+  Damage:
+    RawValue: 524288
+  Element: 0
+  CriticalChance:
+    RawValue: 13107
+  CriticalDamageBonus:
+    RawValue: 32768
+  FireRate:
+    RawValue: 131072
+  MagazineSize: 6
+  ReloadDuration:
+    RawValue: 45875
+  Range:
+    RawValue: 327680
+  PelletCount: 6
+  SpreadAngle:
+    RawValue: 1966080
+  SpawnAnchor: 0
+  SpawnOffset:
+    X:
+      RawValue: 0
+    Y:
+      RawValue: 0
+    Z:
+      RawValue: 0
+  BonusBounces: 0
+  ProjectileData:
+    Id:
+      Value: 2052039704194794421
+  ViewPrefab: {fileID: 8089491252618662435, guid: 0f7481ececfe745c383ff250af802c65, type: 3}
+  ShakeTier: 0
+  _dpsPreview: 'Burst DPS: 96
+
+    Sustained DPS (incl. reload): 77.8
+
+    Damage/min:
+    4670'

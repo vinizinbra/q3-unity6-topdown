@@ -25,6 +25,9 @@ public class SkillCooldownUiWidget : QuantumGlobalMonoBehaviour
     [SerializeField, Tooltip("Optional - current charge count (SkillSlot.CurrentStacks), or the seconds remaining while actively channeling a duration skill (see UpdateDurationText). Left unassigned, this feature is simply off.")]
     private TMP_Text chargeText;
 
+    [SerializeField, Range(0f, 1f), Tooltip("iconImage's alpha while this slot is on cooldown (cooldownFillImages shown) - back to 1 otherwise (ready, active, maxed stacks, revive/context-interaction redirect).")]
+    private float cooldownIconAlpha = 0.5f;
+
     [Header("Context Interaction redirect (HeroSkill slot only)")]
     [SerializeField, Tooltip("HeroSkill-slot instance only (see docs/breathing-poi.md) - shown INSTEAD of the normal skill icon/cooldown fill while this entity's own ContextInteraction.ActiveTarget is set (e.g. standing in a Cursed Rift's interaction radius during Breathing). Left unassigned, this feature is simply off - the DashSkill instance of this same widget never checks ContextInteraction at all.")]
     private Sprite contextInteractionIcon;
@@ -108,6 +111,7 @@ public class SkillCooldownUiWidget : QuantumGlobalMonoBehaviour
     // plain View code, not simulation.
     private unsafe void ShowReviveProgress(Frame frame)
     {
+        SetIconAlpha(false);
         SetShown(skillActiveObject, false);
 
         if (iconImage != null)
@@ -157,6 +161,7 @@ public class SkillCooldownUiWidget : QuantumGlobalMonoBehaviour
     // control.
     private void ShowContextInteractionIcon(Sprite icon)
     {
+        SetIconAlpha(false);
         SetShown(cooldownFillImages, false);
         SetShown(skillActiveObject, false);
 
@@ -188,6 +193,7 @@ public class SkillCooldownUiWidget : QuantumGlobalMonoBehaviour
     {
         if (skillSlot.Skill == default)
         {
+            SetIconAlpha(false);
             SetShown(cooldownFillImages, false);
             SetShown(skillActiveObject, false);
             UpdateChargeText(skillSlot);
@@ -202,6 +208,7 @@ public class SkillCooldownUiWidget : QuantumGlobalMonoBehaviour
 
             if (activeDuration > FP._0)
             {
+                SetIconAlpha(false);
                 SetShown(cooldownFillImages, false);
                 SetShown(skillActiveObject, true);
                 UpdateDurationText(skillSlot.StateTimer);
@@ -216,12 +223,24 @@ public class SkillCooldownUiWidget : QuantumGlobalMonoBehaviour
 
         if (skillSlot.CurrentStacks >= skillSlot.MaxStacks || cooldown <= FP._0)
         {
+            SetIconAlpha(false);
             SetShown(cooldownFillImages, false);
             return;
         }
 
+        SetIconAlpha(true);
         SetShown(cooldownFillImages, true);
         SetFillAmount(cooldownFillImages, (skillSlot.CooldownTimer / cooldown).AsFloat);
+    }
+
+    private void SetIconAlpha(bool onCooldown)
+    {
+        if (iconImage == null)
+            return;
+
+        Color color = iconImage.color;
+        color.a = onCooldown ? cooldownIconAlpha : 1f;
+        iconImage.color = color;
     }
 
     private static void SetFillAmount(Image[] images, float fillAmount)

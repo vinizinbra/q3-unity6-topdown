@@ -127,7 +127,7 @@ namespace Quantum
                 return FP._1;
             }
 
-            return balance.GetCoopGlobal(CoopGlobalKey.XpRequirement, f.PlayerCount);
+            return balance.GetCoopGlobal(CoopGlobalKey.XpRequirement, f.MaxPlayerCount);
         }
 
         // Single source of truth for "how much TotalExperience is needed to REACH displayLevel" -

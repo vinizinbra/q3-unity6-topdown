@@ -10,7 +10,7 @@ Global Upgrade.
 
 > A rare, non-stackable, run-wide effect that creates a new rule, synergy, or meaningful trade-off.
 
-The game's level-up pools now split into five categories:
+The game's level-up pools now split into four categories:
 
 1. **Global Upgrades** (`docs/global-upgrades.md`) - simple hero-wide numerical growth, stacks
    indefinitely (Weapon Damage +10%, Move Speed +10%, ...).
@@ -20,82 +20,55 @@ The game's level-up pools now split into five categories:
    - see `docs/level-up-upgrades.md`). Naming only - no separate `LevelUpPoolKind` value.
 4. **Rift Mutations** (this doc, "## Roster" below) - rare, non-stackable, build-defining: a one-shot
    tradeoff (Glass Core, Heavy Arsenal), a new reactive rule (Adrenaline Kick, Critical Focus), a
-   run-wide encounter/economy change (Overpopulation, Greed), or a mix. 19 entries.
-5. **Rift Mark Mutations** (this doc, "## Rift Mark content pool" below) - a second, independently-
-   rollable Rift Mutation pool: 11 mutations that all apply Rift Mark on some trigger condition
-   (Critical Fracture, Last Stand, ...). Split from Rift Mutations (its own `LevelUpPoolKind`/
-   `LevelUpCategory`/`LevelUpConfig.RiftMarkMutations` list, own weighted roll, own
-   `LevelUpConfig.LevelSequence` slot) so a designer can pace/gate the two groups independently -
-   e.g. schedule Rift Mark Mutation levels more frequently since they're smaller reactive effects,
-   Rift Mutation levels more rarely since they're rare build-defining picks.
-
-Despite being two separate pools, Rift Mutation and Rift Mark Mutation share almost everything else:
-both draw from the same `RiftMutationData` catalog, both use the same `RiftMutationPicks`/
-`RiftMutationUtility` for non-stack tracking (their assets never overlap, so one shared 32-slot pick
-history is correct for both), and Cursed Rift's own reward roll (`LevelUpUtility.RollMutationOptions`,
-see the Breathing Phase / Cursed Rift section of `CLAUDE.md`) deliberately keeps drawing **only** from
-the core Rift Mutation pool - Rift Mark Mutation is a normal level-up category only, never a Cursed
-Rift reward source.
+   run-wide encounter/economy change (Overpopulation, Greed), or a mix. 27 entries.
 
 "Non-stackable" is a **pool-wide** property here, not an opt-in per-asset cap the way
 `GlobalUpgradeData.MaxPicks` is - every `RiftMutationData` is implicitly picked at most once per
-entity (across BOTH pools), enforced by `RiftMutationPicks`/`RiftMutationUtility` below.
+entity, enforced by `RiftMutationPicks`/`RiftMutationUtility` below.
 
-**Status: all 30 designed mutations are implemented in code** - the original 14 (`RiftMutationData`
+**Status: every designed mutation in the roster below is implemented in code** - `RiftMutationData`
 is an abstract base with a real `Apply(Frame f, EntityRef entity)`, same shape as `GlobalUpgradeData`,
-dispatched generically by `RiftMutationUtility.Grant`) plus 11 more added in the same pass that built
-the **Rift Mark content pool** - see "Rift Mark content pool" below for those 11 and the Weapon Perk
-half of that same pool (`docs/weapon-perks.md`). As of 2026-08-14, the 25 are wired into two separate
-`LevelUpConfig` lists (`RiftMutations`/`RiftMarkMutations`) rather than one - see "Mechanism" below.
+dispatched generically by `RiftMutationUtility.Grant`. They are wired into a single `LevelUpConfig`
+list (`RiftMutations`) - see "Mechanism" below.
 
 ## Mechanism
 
 - **`RiftMutationData : UpgradeData`** (`Assets/_QuantumUser/Simulation/Assets/RiftMutation/
   RiftMutationData.cs` + `.View.cs`) - same `Apply`/`Description`/`DescriptionArgs`/
   `GetFormattedDescription()` shape as `GlobalUpgradeData`, but **no `MaxPicks` field** - see above.
-- **`RiftMutationPicks` component** (`LevelUp.qtn`) - `array<AssetRef<RiftMutationData>>[32]
-  Picked` (grown from `[16]` when the Rift Mark content pool's 11 mutations pushed the catalog to
-  25), this entity's full pick history, **shared across both the Rift Mutation and Rift Mark
-  Mutation pools** - not split, since both draw from the same `RiftMutationData` catalog and their
-  assets never overlap. Mirrors `GlobalUpgradePicks` but simpler (no per-entry `Count`, since every
-  mutation caps at 1).
+- **`RiftMutationPicks` component** (`LevelUp.qtn`) - `array<AssetRef<RiftMutationData>>[48]
+  Picked`, this entity's full pick history. Mirrors `GlobalUpgradePicks` but simpler (no per-entry
+  `Count`, since every mutation caps at 1).
 - **`RiftMutationUtility.cs`** - `Grant(f, entity, mutationRef)` calls `Apply`, records the pick, and
   (for a `Run`-scope mutation) records it run-wide as well. `IsBlocked(f, entity, mutationRef)` is the
   single offer-eligibility gate - already picked, run-scope duplicate, or incompatible with something
-  owned - checked by `LevelUpUtility.CollectRiftMutationCandidates`/`CollectRiftMarkMutationCandidates`
+  owned - checked by `LevelUpUtility.CollectRiftMutationCandidates`
   and re-checked by `Grant` itself so the debug-grant path is covered too. `IsAlreadyPicked` remains
-  public for the debug menu's own "already granted" display. Entirely pool-agnostic.
-- **`LevelUpConfig.RiftMutations`/`RiftMarkMutations : List<AssetRef<RiftMutationData>>`** - two
-  separate lists (added 2026-08-14, previously one flat `RiftMutations` list covering all 25) - own
-  rarity axis from `WeaponPerkPool`/`GlobalUpgrades`, but the exact same weighted draw
-  (`LevelUpConfig.GetWeight`) and the exact same All or Nothing rarity-shift/single-choice override
-  as every other pool - "rare" falls out naturally since most mutations are tagged Epic/Legendary,
-  no separate pool-frequency knob needed. `RollMutationOptions` (Cursed Rift's reward roll) only ever
-  reads `RiftMutations`, never `RiftMarkMutations` - see "What a Rift Mutation is" above.
-- **`LevelUpPoolKind.RiftMutation = 5` / `RiftMarkMutation = 7`** (`LevelUp.qtn`) - the `Kind` a
-  rolled `LevelUpOption` carries; `LevelUpUtility.GrantOption` dispatches both to the same
-  `RiftMutationUtility.Grant` call (identical grant path, only the source list/weighting differs).
-  Mirrored by `LevelUpCategory.RiftMutation = 2` / `RiftMarkMutation = 5`, the player-facing
-  "which pool does this level draw from" lock used by `LevelUpConfig.LevelSequence`/`Chest.Kind`.
+  public for the debug menu's own "already granted" display.
+- **`LevelUpConfig.RiftMutations : List<AssetRef<RiftMutationData>>`** - own rarity axis from
+  `WeaponPerkPool`/`GlobalUpgrades`, but the exact same weighted draw (`LevelUpConfig.GetWeight`) and
+  the exact same All or Nothing rarity-shift/single-choice override as every other pool - "rare" falls
+  out naturally since most mutations are tagged Epic/Legendary, no separate pool-frequency knob
+  needed. `RollMutationOptions` (Cursed Rift's reward roll) reads this same list - see "What a Rift
+  Mutation is" above.
+- **`LevelUpPoolKind.RiftMutation = 5`** (`LevelUp.qtn`) - the `Kind` a rolled `LevelUpOption`
+  carries; `LevelUpUtility.GrantOption` dispatches it to `RiftMutationUtility.Grant`.
+  Mirrored by `LevelUpCategory.RiftMutation = 2`, the player-facing "which pool does this level
+  draw from" lock used by `LevelUpConfig.LevelSequence`/`Chest.Kind`.
 - **Debug grant path** - `GrantRiftMutationCommand`/`RiftMutationSystem` (mirrors
-  `GrantGlobalUpgradeCommand`/`GlobalUpgradeSystem` exactly) let any Rift Mutation or Rift Mark
-  Mutation be tried out at runtime without a real level-up screen. Three ways in: every
-  `RiftMutationData` asset has a "Grant To Local Player" button in its own Inspector while in Play
-  Mode (`RiftMutationData.Debug.cs`, same `EditorButtonAttribute` convention as
-  `GlobalUpgradeData.Debug.cs`), the `RiftMutationDebugTrigger` component on the `DEBUGGER` GameObject
-  in `QuantumGameScene.unity` (next to the existing `GlobalUpgradeDebugTrigger`/
-  `WeaponPerkDebugTrigger`), or the "Rift Mutation"/"Rift Mark Mutation" tabs in the in-game
-  `DebugUpgradeMenuWindow` (populated by `DebugUpgradeMenuTrigger` alongside its existing Hero/
-  Global/Weapon Perk tabs - the Rift Mark tab's own `riftMarkTabButton` still needs manual scene
-  wiring, same gap the original Rift tab once had). No revert path exists (same reasoning as Global
-  Upgrades) - restart Play Mode to reset a player. **Every `DeterministicCommand` subclass must also
-  be registered in `CommandSetup.User.cs`'s `AddCommandFactoriesUser`** (`factories.Add(new
+  `GrantGlobalUpgradeCommand`/`GlobalUpgradeSystem` exactly) let any Rift Mutation be tried out at
+  runtime without a real level-up screen. Three ways in: every `RiftMutationData` asset has a
+  "Grant To Local Player" button in its own Inspector while in Play Mode (`RiftMutationData.Debug.cs`,
+  same `EditorButtonAttribute` convention as `GlobalUpgradeData.Debug.cs`), the
+  `RiftMutationDebugTrigger` component on the `DEBUGGER` GameObject in `QuantumGameScene.unity` (next
+  to the existing `GlobalUpgradeDebugTrigger`/`WeaponPerkDebugTrigger`), or the "Rift Mutation" tab in
+  the in-game `DebugUpgradeMenuWindow` (populated by `DebugUpgradeMenuTrigger` alongside its existing
+  Hero/Global/Weapon Perk tabs). No revert path exists (same reasoning as Global Upgrades) - restart
+  Play Mode to reset a player. **Every `DeterministicCommand` subclass must also be registered in
+  `CommandSetup.User.cs`'s `AddCommandFactoriesUser`** (`factories.Add(new
   GrantRiftMutationCommand())`) - Quantum's networking/replay layer can't instantiate/deserialize a
   command it has no factory for, so a missed registration here makes a Send silently do nothing at
-  runtime with no compile error to catch it. Known limitation: `RiftMutationSystem`'s debug-grant
-  path always records history as `LevelUpPoolKind.RiftMutation` regardless of which pool the granted
-  asset actually belongs to (real level-up/Chest grants are unaffected) - low-priority,
-  debug-tooling-only.
+  runtime with no compile error to catch it.
 - **`RiftMutationReactionSystem`** (`Assets/_QuantumUser/Simulation/Systems/`, registered in
   `SystemSetup.User.cs` next to `WeaponPerkReactionSystem`) - the handful of mutations that need
   more than a one-shot `CharacterStats` bake react here, off three signals:
@@ -162,63 +135,6 @@ authored** - the mechanism exists and is data-driven (see "Mutation incompatibil
 nothing in the present roster needs it.
 
 
-## Rift Mark content pool
-
-The **Rift Mark Mutation** pool (`LevelUpPoolKind.RiftMarkMutation`/
-`LevelUpCategory.RiftMarkMutation`, `LevelUpConfig.RiftMarkMutations`) - its own independently-
-rollable pool as of 2026-08-14 (previously folded into the Rift Mutation pool above). 11 mutations
-added in the same pass that built the Weapon Perk half (`docs/weapon-perks.md`) of the Rift Mark
-application content pool - see `docs/elemental-reactions.md` for what Rift Mark itself is. Every one
-of these bakes a plain `Boolean Has<X>Mutation` flag onto `CharacterStats` at pick time, same
-convention every other mutation here already uses - none of them add a tag/marker component. Not a
-Cursed Rift reward source - see "What a Rift Mutation is" above.
-
-| Mutation | Class | Rarity | Effect |
-|---|---|---|---|
-| Critical Fracture | `CriticalFractureMutationData` | Rare | Critical hits from any source (weapon or skill) apply 1 Rift Mark - `RiftMutationMarkUtility.TryCriticalFracture`, per-target cooldown (`RiftMarkCooldownKey.CriticalFracture`, shared with the Weapon Perk of the same name so the two can never both stack from one crit). |
-| Skill Fracture | `SkillFractureMutationData` | Rare | Hero Skill hits apply 1 Rift Mark - `RiftMutationMarkUtility.TrySkillFracture`, per-target cooldown so a persistent field/DoT/pulse can't reapply every tick. |
-| Rift Dash | `RiftDashMutationData` | Rare | Dashing through an enemy applies 1 Rift Mark, once per enemy per dash - the universal `DashSkillData.Tick` itself gained an overlap-sweep check (gated on the mutation flag), deduped via a fresh-per-`Begin` `RiftDashMarkTracker` component (`array<EntityRef>[8]`+count, same shape Brute's own `IronShoulderHitTracker` uses for its dash ascension). |
-| Heavy Fracture | `HeavyFractureMutationData` | Rare | Large hits apply 1 Rift Mark - `RiftMutationMarkUtility.TryHeavyFracture`/`IsHeavyHit` (pure), qualifies on either a flat damage threshold or a percent-of-target's-own-MaxHealth threshold, evaluated per resolved hit only (never aggregated), per-target cooldown. |
-| Close Fracture | `CloseFractureMutationData` | Rare | Hits against nearby enemies periodically apply Rift Mark - `RiftMutationMarkUtility.TryCloseOrLongFracture`, plain `FPVector3.Distance` (not squared) against `ElementalReactionConfig.CloseRangeThreshold`, matching `DamageUtility.ResolveRangeDamageMultiplier`'s own convention. |
-| Long Fracture | `LongFractureMutationData` | Rare | Mirror of Close Fracture, `LongRangeThreshold` instead. |
-| Execution Fracture | `ExecutionFractureMutationData` | Rare | Hitting enemies already below `ExecutionHealthThreshold` (25% MVP default) applies Rift Mark - `RiftMutationMarkUtility.TryExecutionFracture`/`IsBelowExecutionThreshold` (pure), checked against health **before** this hit's own damage, per-target cooldown. |
-| First Contact | `FirstContactMutationData` | Rare | The first valid damaging hit against a full-health enemy applies Rift Mark - `RiftMutationMarkUtility.TryFirstContact`, one-time flag (`StatusEffects.FirstContactTriggered`), not a cooldown; only ever fires if the specific hit that happens to land first against a full-health target also comes from a mutation-holding player. |
-| Last Stand | `LastStandMutationData` | Epic | Taking a large hit (`LastStandThreshold`, flat damage) releases a Rift pulse marking every nearby enemy, never the player - `RiftMutationMarkUtility.EvaluateLastStand`, called separately from the other 7 (this is the *player's own received* hit, not an enemy's), per-player cooldown (`CharacterStats.LastStandCooldownRemaining`), not per-target. |
-| Fractured Presence | `FracturedPresenceMutationData` | Rare | Enemies that remain within `FracturedPresenceRadius` of this player for `FracturedPresenceExposureTime` become Rift-marked - `RiftMutationMarkUtility.TickFracturedPresence`, called once per `StatusEffects`-bearing entity per tick from `StatusEffectSystem.Update` (not damage-hooked). Tracked per (player, enemy) pair on the enemy's own `StatusEffects.FracturedPresenceExposedBy`/`ExposureTime` 4-slot array (same find-or-evict-soonest shape `HasteRemaining`/`HasteSource` already use), per-target cooldown after applying. |
-| Overflowing Rift | `OverflowingRiftMutationData` | Epic | Applying Rift Mark to a target already at `MaxStacks` releases a small Rift pulse instead of wasting the application - `RiftMarkApplicationUtility.TryTriggerOverflowingRift`, called from *inside* `ApplyRequest` itself (not a mark-requesting mechanic like the other 10), gated by its own dedicated `StatusEffects.OverflowingRiftCooldownRemaining` (separate from the shared per-mechanic array). Stacks stay clamped, duration still refreshes, deliberately restrained (own `OverflowingRiftPulseDamage`/`Radius` fields, own `OverflowingRiftTriggered` VFX event) - never comparable in strength to a full Rift Reaction, and can't recursively re-trigger since it never calls back into `ApplyRiftMark`/`ApplyRequest`. |
-
-### Application/dedup architecture
-
-- **`RiftMarkApplicationRequest`** (`Assets/_QuantumUser/Simulation/Systems/RiftMarkApplicationUtility.cs`) -
-  a plain C# struct (Source/Target/HitSequence/ApplicationSource/RequestedStacks/Owner/CooldownKey),
-  not a persisted Quantum component - every request is collected and resolved entirely within one
-  hit's synchronous call chain (never crosses a frame boundary), same reasoning `HitEffectContext`
-  already uses for its own transient per-hit state.
-- **`RiftMarkCooldownKey`** indexes `StatusEffects.MarkApplicationCooldowns[8]` - one shared array of
-  per-target cooldown slots for CriticalFracture/SkillFracture/HeavyFracture/CloseFracture/
-  LongFracture/ExecutionFracture/FocusedBreach/FracturedPresence, all defaulting to
-  `ElementalReactionConfig.StandardMarkApplicationCooldown` (2s MVP) unless a mechanic overrides.
-  Mechanics with their own dedupe shape (Fracture Rounds' hit counter, Unstable Payload's
-  once-per-explosion-by-construction, Rift Dash's per-dash tracker, First Contact's one-time flag,
-  Last Stand's per-player cooldown, Overflowing Rift's own field) pass `RiftMarkCooldownKey.None`
-  instead.
-- **`RiftMarkApplicationUtility.TryConsumeCooldown`/`ApplyRequest`** - the shared checked-then-set
-  atomic gate (identical shape to every `*CooldownRemaining` check in `StatusEffectUtility`) plus the
-  actual `ApplyRiftMark` call + Overflowing Rift branch. This single mechanism is what makes "Weapon
-  Critical Fracture and global Critical Fracture never both stack from one crit" fall out for free -
-  both request through the same `RiftMarkCooldownKey.CriticalFracture` slot, so whichever runs first
-  within a hit wins it and the other sees it already consumed.
-- **`RiftMutationMarkUtility.EvaluateOnDamage`** - the single per-hit orchestrator for
-  First Contact/Execution/Skill/Critical(mutation)/Heavy/Close/Long Fracture, called once from
-  `DamageUtility.ApplyDamage` (after damage/crit resolve, before health is subtracted, so pre-hit
-  health/distance are both still live), gated to real combat hits (`Weapon`/`Skill` source, excluding
-  DoT-tick replays). Evaluates every qualifying mutation in a fixed, most-narrow-first priority order
-  and requests **at most one** application - "prefer one Rift Mark application per hit event" (see
-  the original design brief). A coincidental overlap between this evaluation and a *separate* Weapon
-  Perk on the same physical hit (e.g. Fracture Rounds' 6th shot also happening to be a Heavy hit) is
-  a known MVP simplification, not deduped - only Critical Fracture's perk/mutation pair is
-  guaranteed not to double-fire, via the shared cooldown key above.
-
 ## Rift Shard currency (Greed's prerequisite)
 
 Greed's "Currency ×2" needed a real currency to double - none existed anywhere in the simulation
@@ -263,14 +179,12 @@ standalone "+X% Rift Shards" Global Upgrade exists - Greed is currently the only
 ## Asset generation
 
 `Assets/_QuantumUser/Editor/RiftMutationAssetGenerator.cs` (`Tools/RiftRaiders/Generate Rift
-Mutation Assets`) authors one `.asset` instance per class in the rosters above - tuned to this doc's
+Mutation Assets`) authors one `.asset` instance per class in the roster above - tuned to this doc's
 own numbers - under `Assets/_QuantumUser/Resources/LevelUp/RiftMutation/` (created automatically if
-missing, same flat folder for both pools), and wires them into `LevelUpConfig.asset`'s two lists:
-the 14 core specs into `RiftMutations`, the 11 specs tagged `MutationSpec.RiftMarkPool = true` into
-`RiftMarkMutations`. Mirrors `GlobalUpgradeAssetGenerator.cs`/`WeaponPerkAssetGenerator.cs` exactly:
-re-running is safe, existing assets are updated in place, both lists are rebuilt from scratch each
-run. `Icon` is left unset for every asset - manual per-mutation Inspector step, same as every other
-pool's generator.
+missing), and wires them into `LevelUpConfig.asset`'s `RiftMutations` list. Mirrors
+`GlobalUpgradeAssetGenerator.cs`/`WeaponPerkAssetGenerator.cs` exactly: re-running is safe, existing
+assets are updated in place, the list is rebuilt from scratch each run. `Icon` is left unset for
+every asset - manual per-mutation Inspector step, same as every other pool's generator.
 
 ## 2026-08-27 pass - Accessory rework, run-scope mutations, generic primitives
 
@@ -279,8 +193,7 @@ system (`docs/accessory-guard.md`). Four mutations still read or wrote `Shield`,
 misleading; the pool was also almost entirely flat stat bumps, with nothing that changed how a run
 itself plays. This pass rewrote 9 mutations, deleted 2, added 7, and - the architectural half - added
 the generic primitives they all sit on. **The Shield system itself is untouched**: only Rift Mutations
-lost their Shield dependencies. The 11-mutation Rift Mark pool is functionally unchanged, but shares
-the new incompatibility filter and debug readout for free.
+lost their Shield dependencies.
 
 **Removed:** `ShieldBreakerMutationData` (its trigger, a player Shield breaking, is unreachable for
 most heroes now) and `ImpactDriveMutationData` (a strict subset of Adrenaline Kick, which already
@@ -449,9 +362,9 @@ owned mutation may list the candidate - so an exclusive pair only needs authorin
 sides, and cannot half-work because someone forgot to mirror it.
 
 `IsBlocked` is the single gate for all three offer rules (already picked, run-scope duplicate,
-incompatible) and is wired into `CollectRiftMutationCandidates`/`CollectRiftMarkMutationCandidates`,
-which covers normal level-ups, Chests and Cursed Rift's `RollMutationOptions` at once since they share
-those collectors. `Grant` re-checks it, covering the debug-grant path too.
+incompatible) and is wired into `CollectRiftMutationCandidates`, which covers normal level-ups,
+Chests and Cursed Rift's `RollMutationOptions` at once since they share that collector. `Grant`
+re-checks it, covering the debug-grant path too.
 
 **Known simplification:** the filter is against *already-owned* mutations, so two mutually exclusive
 cards can still appear on the same screen. That is harmless - only one can be picked, and the other
@@ -471,21 +384,19 @@ invisible (the mutation just quietly stops appearing).
 
 ## Current status / known simplifications
 
-Every mutation (30 - 27 core plus the 11-strong Rift Mark content pool) has a class and a
-`RiftMutationAssetGenerator` spec. **Nothing from the 2026-08-27 pass has been verified in-Editor
-yet**, and the changed `.qtn` files (`CharacterStats.qtn`, `LevelUp.qtn`, `Accessory/AccessoryGuard.qtn`,
-`RiftShards.qtn`, the new `RiftMutation/RunMutations.qtn`) need Quantum's DSL codegen to run before
-any of the new C# compiles. Outstanding:
+Every mutation in the roster above has a class and a `RiftMutationAssetGenerator` spec. **Nothing
+from the 2026-08-27 pass has been verified in-Editor yet**, and the changed `.qtn` files
+(`CharacterStats.qtn`, `LevelUp.qtn`, `Accessory/AccessoryGuard.qtn`, `RiftShards.qtn`, the new
+`RiftMutation/RunMutations.qtn`) need Quantum's DSL codegen to run before any of the new C# compiles.
+Outstanding:
 
 1. **Re-run the generator** (`Tools/RiftRaiders/Generate Rift Mutation Assets`) - it authors the 7 new
-   assets, retunes the 9 rewritten ones, wires `Scope`/`IncompatibleWith`, and rebuilds both
-   `LevelUpConfig` lists. Until it runs, the on-disk assets still describe the pre-2026-08-27 roster.
-   Then **delete `ShieldBreaker.asset` and `AllOrNothing.asset` by hand** - the generator rebuilds the
-   lists from its own specs, so both drop out of the pools automatically, but the orphaned asset files
-   remain on disk (and would now fail to resolve, since their classes are gone).
-   Re-running also repairs a pre-existing authoring bug: `LevelUpConfig.asset`'s `RiftMarkMutations`
-   currently holds **12** entries, with `HeavyFracture` duplicated where `LongFracture` should be - so
-   that mutation has had double weight and could be drawn twice in one roll.
+   assets, retunes the 9 rewritten ones, wires `Scope`/`IncompatibleWith`, and rebuilds
+   `LevelUpConfig.RiftMutations`. Until it runs, the on-disk assets still describe the
+   pre-2026-08-27 roster. Then **delete `ShieldBreaker.asset` and `AllOrNothing.asset` by hand** -
+   the generator rebuilds the list from its own specs, so both drop out of the pool automatically,
+   but the orphaned asset files remain on disk (and would now fail to resolve, since their classes
+   are gone).
 2. **A `RiftShardOrb` `EntityPrototype` and `RiftShardConfig.asset` still need Editor authoring**
    before Greed's currency half does anything at runtime - `Tools/RiftRaiders/Generate Rift Shard
    Assets` authors the config; the prototype and its `RuntimeConfig` wiring are manual, same
@@ -500,33 +411,7 @@ any of the new C# compiles. Outstanding:
 6. **Every numeric value in the 2026-08-27 pass is a decisive placeholder pending a balance pass** -
    the stagger chance/duration, the Close Quarters speed burst, Pressure Cooker's 1.75x end point, and
    the Overpopulation/Elite Territory density trades in particular.
-7. **Rift Mark content pool - no automated coverage for the Frame-dependent half** - cooldown-key
-   gating, the priority-ordered dispatch, Rift Dash's overlap sweep, and Fractured Presence's
-   exposure accumulator all need a live `StatusEffects*`/`Frame` this project has no simulation test
-   harness for; only the two genuinely pure pieces (`RiftMutationMarkUtility.IsHeavyHit`/
-   `IsBelowExecutionThreshold`) have EditMode tests
-   (`Assets/_QuantumUser/Editor/Tests/RiftMarkApplicationTests.cs`) - verify the rest manually
-   in-Editor, same gap `docs/elemental-reactions.md`'s own "Current status" already documents for the
-   core mechanic.
-8. **Cross-mechanic mark-application dedup is scoped to within each evaluation point, not global** -
-   `RiftMutationMarkUtility.EvaluateOnDamage`'s own 7 damage-hook mutations are fully deduped against
-   each other (one priority-ordered pass, at most one application), and Critical Fracture's Weapon
-   Perk/Mutation pair is deduped via a shared cooldown key, but a coincidental overlap between a
-   Weapon Perk and an *unrelated* mutation on the same physical hit isn't - see "Application/dedup
-   architecture" above.
-9. **Fractured Presence's per-tick proximity scan is O(enemies × players)**, not spatially
-   partitioned - acceptable at this project's co-op player count, would need revisiting before a
-   much larger concurrent-entity count.
-10. **`Weapon.FocusedBreachContactTime` only resets on an explicit miss or a target change**, not on a
+7. **`Weapon.FocusedBreachContactTime` only resets on an explicit miss or a target change**, not on a
    continuous per-tick decay while simply not firing - a reasonable MVP reading of "losing contact
    resets or rapidly decays progress" given Hitscan firing is already discrete, not a true
    continuous-beam decay.
-11. **Two-pool split (2026-08-14) - Editor wiring still needed**: `HeroInfoPopupWidget.riftMarkContent`
-    (the tab-hold party summary popup's new 4th list) has no null guard and needs a ScrollRect
-    Content Transform authored in the scene before this ships live, or a Rift Mark Mutation pick
-    will NRE the popup the first time it tries to render. `DebugUpgradeMenuWindow.riftMarkTabButton`
-    (the debug menu's new 5th tab) is safe to leave unwired for now - degrades to a `LogHelper.Warn`,
-    same as the original Rift tab once did. Separately, whether/where
-    `LevelUpCategory.RiftMarkMutation` appears in `LevelUpConfig.asset`'s `LevelSequence` is an
-    open design/tuning decision - the split only makes the category legally selectable, it doesn't
-    schedule it into a run.

@@ -597,6 +597,8 @@ MonoBehaviour:
         RawValue: 0
       Z:
         RawValue: 0
+    FallRespawnTimer:
+      RawValue: 0
     AirborneSource:
       Value: 0
 --- !u!114 &-3971490095111579385
@@ -699,6 +701,7 @@ MonoBehaviour:
   headFlipLagSpeed: 9
   flipPivotHeight: 0.65
   flipMidRotationSquash: 0.9
+  dashFlipSpeedUpDuration: 0.2
   landingSquashPerSpeed: 0.06
   maxLandingSquash: 1
   landingSpringFrequency: 3
@@ -707,11 +710,15 @@ MonoBehaviour:
   downedRoot: {fileID: 921315042055089785}
   koRoot: {fileID: 7270003797950095372}
   handsRoot: {fileID: 7044975176292831187}
+  revivePunchScaleStrength: {x: 0.35, y: 0.35, z: 0}
+  revivePunchScaleDuration: 0.4
+  revivePunchScaleFrequency: 10
   squashLerpSpeed: 14
   volumePreservation: 0.6
   headSquashInfluence: 0.4
   jumpHeadSquashInfluence: 0.25
   jumpSound: {fileID: 11400000, guid: c055538af98464b82a2e409c38480fa1, type: 2}
+  fxConfig: {fileID: 11400000, guid: 31188256ea82a4f46b281957faaa078d, type: 2}
   landSound: {fileID: 11400000, guid: 5250a6426a34b463ea11cbe6b0ef83bb, type: 2}
   landSoundMinImpactSpeed: 2
   landSoundFullImpactSpeed: 12
@@ -857,6 +864,7 @@ MonoBehaviour:
   - {fileID: 737691526720389762}
   - {fileID: 2122246373314282177}
   - {fileID: 2478946807483062429}
+  fxConfig: {fileID: 11400000, guid: 31188256ea82a4f46b281957faaa078d, type: 2}
   flashColor: {r: 1, g: 1, b: 1, a: 1}
   burnFlashColor: {r: 1, g: 0.45, b: 0.1, a: 1}
   recoverFlashColor: {r: 0, g: 1, b: 1, a: 1}
@@ -871,10 +879,10 @@ MonoBehaviour:
   riftMarkMaterial: {fileID: 0}
   riftMarkApplicationFlashColor: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
   riftMarkApplicationFlashDuration: 0.08
-  expPickupFlashColor: {r: 0.3, g: 0.55, b: 1, a: 1}
-  coinPickupFlashColor: {r: 1, g: 0.84, b: 0.2, a: 1}
-  riftShardPickupFlashColor: {r: 1, g: 0.35, b: 0.75, a: 1}
-  scrapPickupFlashColor: {r: 0.95, g: 0.6, b: 0.25, a: 1}
+  expPickupFlashColor: {r: 0.3, g: 0.55, b: 1, a: 0.35}
+  coinPickupFlashColor: {r: 1, g: 0.84, b: 0.2, a: 0.35}
+  riftShardPickupFlashColor: {r: 1, g: 0.35, b: 0.75, a: 0.35}
+  scrapPickupFlashColor: {r: 0.95, g: 0.6, b: 0.25, a: 0.35}
   pickupFlashDuration: 0.35
   freezeMaterial: {fileID: 0}
 --- !u!114 &8110188611109955938
@@ -1282,6 +1290,10 @@ MonoBehaviour:
       RawValue: 0
     ChargeOnly:
       Value: 0
+    TemporaryDuration:
+      RawValue: 0
+    ExpirationRemaining:
+      RawValue: 0
 --- !u!114 &7055048232240477251
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17696,7 +17708,7 @@ SpriteRenderer:
   m_Size: {x: 0.663, y: 0.396}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
 --- !u!1 &8806463423325640140
 GameObject:

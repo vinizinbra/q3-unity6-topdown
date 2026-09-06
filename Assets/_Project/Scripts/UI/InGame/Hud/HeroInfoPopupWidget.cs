@@ -7,11 +7,11 @@ using UnityEngine;
 //   1. HeroInfoWidget  - head icon, health/shield readouts, Base Skill and Passive Skill rows.
 //   2. CurrentWeaponUiWidget - the equipped weapon plus one row per granted perk.
 //   3. The upgrade history lists below - every upgrade the bound entity has picked, read off
-//      UpgradeHistory (see LevelUp.qtn/LevelUpUtility.RecordHistory), split into 4 vertical-scroll
+//      UpgradeHistory (see LevelUp.qtn/LevelUpUtility.RecordHistory), split into vertical-scroll
 //      lists by LevelUpPoolKind: hero (SkillUpgrade+PassiveUpgrade, the "Hero Ascension" nickname
-//      docs/level-up-upgrades.md uses), global (GlobalUpgrade), rift (RiftMutation), and rift mark
-//      (RiftMarkMutation - its own list/tab, not merged into rift, mirroring how those two are
-//      separate pools everywhere else).
+//      docs/level-up-upgrades.md uses), global (GlobalUpgrade), rift (RiftMutation). The riftMark
+//      list/pool below is retired (its LevelUpPoolKind value no longer exists) and stays perpetually
+//      empty - left in place rather than ripped out since it's prefab/UI-side wiring, not simulation.
 // WeaponPerk/ChooseWeapon never appear in UpgradeHistory (already visible on the weapon itself - see
 // RecordHistory's own early-out), which is exactly what section 2 above covers instead.
 //
@@ -193,9 +193,6 @@ public class HeroInfoPopupWidget : QuantumGlobalMonoBehaviour
                     break;
                 case LevelUpPoolKind.RiftMutation:
                     _riftEntries.Add(entries[i]);
-                    break;
-                case LevelUpPoolKind.RiftMarkMutation:
-                    _riftMarkEntries.Add(entries[i]);
                     break;
             }
         }

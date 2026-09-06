@@ -31,7 +31,12 @@ namespace Quantum
         {
             if (PredictionTime > FP._0 && targetEntity != EntityRef.None && f.Unsafe.TryGetPointer<PhysicsBody3D>(targetEntity, out var targetBody) == true)
             {
-                target = ResolveLeadTarget(spawnPosition, target, targetBody->Velocity, Speed);
+                // Clamped to the target's own baseline speed - see ProjectileAimUtility
+                // .ResolveLeadVelocity's own comment. Without this, a knocked-back or erratically-
+                // steering target's one-tick velocity spike gets extrapolated for the shot's whole
+                // flight time, aiming nowhere near where the target will plausibly be.
+                FPVector3 leadVelocity = ProjectileAimUtility.ResolveLeadVelocity(f, targetEntity, targetBody->Velocity);
+                target = ResolveLeadTarget(spawnPosition, target, leadVelocity, Speed);
             }
 
             FPVector3 delta = target - spawnPosition;

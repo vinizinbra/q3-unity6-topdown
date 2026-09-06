@@ -202,7 +202,7 @@ namespace Quantum
             }
 
             FP curveMultiplier = balance.Evaluate(CurveChannel.DirectorBudget, f.Global->SurvivalTime);
-            FP coopMultiplier = balance.GetCoopGlobal(CoopGlobalKey.DirectorBudget, f.PlayerCount);
+            FP coopMultiplier = balance.GetCoopGlobal(CoopGlobalKey.DirectorBudget, f.MaxPlayerCount);
 
             // Player-cluster split scaling (>=1, 1 when cohesive - see PlayerClusterDirectorUtility).
             // Since the base already applies coop(f.PlayerCount) and the split multiplier is

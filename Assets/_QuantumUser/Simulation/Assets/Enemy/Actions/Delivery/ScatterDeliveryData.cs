@@ -38,7 +38,7 @@ namespace Quantum
 
         private int ResolveCount(Frame f)
         {
-            int clamped = f.PlayerCount < 1 ? 1 : (f.PlayerCount > 4 ? 4 : f.PlayerCount);
+            int clamped = f.MaxPlayerCount < 1 ? 1 : (f.MaxPlayerCount > 4 ? 4 : f.MaxPlayerCount);
             return clamped switch { 1 => CountP1, 2 => CountP2, 3 => CountP3, _ => CountP4 };
         }
 

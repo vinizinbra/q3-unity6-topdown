@@ -1,7 +1,7 @@
 # Weapon Perks
 
 `WeaponPerkData` is the roguelite-style modifier a weapon roll (`WeaponGenerator`) or a level-up
-pick (`LevelUpUtility`, see `docs/level-up-upgrades.md`) can grant. The full ~35-perk roster
+pick (`LevelUpUtility`, see `docs/level-up-upgrades.md`) can grant. The full ~30-perk roster
 originally sketched in this doc is now implemented as code - every perk class exists under
 `Assets/_QuantumUser/Simulation/Assets/Weapon/Perks/`. Read this before touching anything
 perk-related; it covers how the system actually works, the mechanisms several perks share, and what
@@ -96,53 +96,9 @@ Editor authoring is still needed before any of this can drop or be offered at ru
 | Epic | Combat Reboot | `CombatRebootWeaponPerkData` | Magazine-empty hook (`SkillSystem.ReduceCooldown`) |
 | Legendary | Infinite Echo | `InfiniteEchoWeaponPerkData` | Pending-echo queue (every shot) |
 | Legendary | Quantum Rounds | `QuantumRoundsWeaponPerkData` | Every-hit nearby-enemy damage |
-| Rare | Fracture Rounds | `FractureRoundsWeaponPerkData` | `OnWeaponHitLanded` + hit counter (Rift Mark) |
-| Rare | Critical Fracture | `CriticalFractureWeaponPerkData` | `OnCriticalHit` reaction (Rift Mark) |
-| Rare | Unstable Payload | `UnstablePayloadWeaponPerkData` | Explosion-radius overlap (Rift Mark) |
-| Rare | Focused Breach | `FocusedBreachWeaponPerkData` | Same-target contact-time tracking (Rift Mark) |
-| Rare | Rift Aftershock | `RiftAftershockWeaponPerkData` | `OnEntityKilled` + nearest-enemy transfer (Rift Mark) |
 
 `Min Kill Tier` (the original table's last column) was dropped entirely per design direction - every
 on-kill perk (Killer Instinct, Predator Magazine) triggers on any kill, no tier gate.
-
-## Rift Mark content pool
-
-5 perks added in the same pass that built the Rift Mutation half (`docs/rift-mutations.md`) of the
-Rift Mark application content pool - see `docs/elemental-reactions.md` for what Rift Mark itself is.
-None of these fit the `HitEffectData`-list pattern `BurnEffectData`/`SlowEffectData`/
-`RiftMarkEffectData` use (`Weapon` has no such list, and every one of these needs a *conditional*
-per-hit check, not an unconditional per-asset effect) - each calls
-`StatusEffectUtility.ApplyRiftMark`/`RiftMarkApplicationUtility.ApplyRequest` directly from
-perk-reaction code instead, gated by its own baked flag (now on `WeaponHitTrackingPerks`/
-`WeaponOnCritReactions`/`WeaponOnKillReactions`, see "Weapon Perk component split" below), the same
-shape `DirectHitData.ApplyQuantumRounds`/`WeaponSystem.ApplyHitscanWeaponPerks`'s own Quantum Rounds
-branch already uses for "conditionally call a status/damage utility from perk-consuming code."
-
-- **Fracture Rounds** - `WeaponHitTrackingPerks.FractureHitCounter` increments in
-  `WeaponPerkReactionSystem.OnWeaponHitLanded` (the same signal the shared ramp pool advances on -
-  already excludes DoT-tick replays/non-weapon sources), a genuine confirmed-hit counter, not a
-  shots-fired one like `ShotsSinceExplosiveProc`. `OnWeaponHitLanded` gained a `target` parameter
-  (`Combat.qtn`) to support this - the ramp pool itself still only reads `owner`.
-- **Critical Fracture** - `WeaponPerkReactionSystem.OnCriticalHit`, shares
-  `RiftMarkCooldownKey.CriticalFracture` with the Rift Mutation of the same name so the two can never
-  both stack from one crit (see `docs/rift-mutations.md`'s "Application/dedup architecture").
-- **Unstable Payload** - hooks the two existing weapon-proc `HitEffectUtility.ApplyExplosion` call
-  sites (`DirectHitData.ApplyTerminalWeaponPerks`, `WeaponSystem.ApplyHitscanWeaponPerks`) via a new
-  `WeaponPerkUtility.TryApplyUnstablePayloadMarks` - runs its own overlap query over the same
-  center/radius the explosion's own damage already used, marking every enemy caught once each (no
-  cooldown needed - one explosion's blast loop only visits each target once by construction).
-- **Focused Breach** - simulates "beam contact" as continuous same-target Hitscan hits, since this
-  project has no dedicated Beam fire type. `WeaponHitTrackingPerks.FocusedBreachTarget`/
-  `FocusedBreachContactTime` are runtime state tracked in `WeaponSystem.FireHitscan`'s
-  hit-confirmed/missed branches (only pellet 0 of a volley tracks it, same "one beam, not N"
-  reasoning Explosive Sequence/Cataclysm Round's own pellet gating uses) - losing contact (a miss, or
-  the hit entity changing) resets progress.
-- **Rift Aftershock** - `WeaponPerkReactionSystem.OnEntityKilled`, transfers to the nearest other
-  valid enemy via `WeaponPerkUtility.TryFindNearestEnemy` within a new dedicated
-  `ElementalReactionConfig.RiftAftershockRadius` (deliberately not reusing `SingularityRadius`, which
-  has its own live reaction consumer). That utility gained a `Phase != Dead`/non-`Invulnerable` guard
-  in the same pass - it could previously select a lingering-dead or invulnerable enemy, a real edge
-  case a kill-reaction perk hits constantly.
 
 ## Element Infusion
 
@@ -160,14 +116,12 @@ Storage/flow deliberately mirrors the native element one channel over:
   already funnel through. Hitscan has no projectile, so `WeaponSystem.FireHitscan` reads the component
   live instead.
 - Applied through a new `StatusEffectUtility.TryApplyInfusedElement` - same Fire→Burn/Ice→Slow/
-  Rock→Intimidate baseline (now extracted into a shared `ApplyElementBaseline` the native path also
-  calls) plus the same Rift Mark reaction, but rolled against the perk's `ProcChance` and with **no**
-  guaranteed-burn pass (that's owner-global and already ran on the native-element call - running it
-  twice would double it). Called right after the native-element application in
-  `HitEffectUtility.ApplyToTarget` (projectile/area hits) and `WeaponSystem.FireHitscan` (hitscan),
-  sharing the same `PreHitRiftMarkStacks` snapshot so at most one Rift Mark reaction still fires per
-  hit (the native call's, if it landed one - the infused call's consume then hits the live reaction
-  lockout it set).
+  Rock→Intimidate/Lightning→Electrified baseline (now extracted into a shared `ApplyElementBaseline`
+  the native path also calls) plus the same elemental-reaction check, but rolled against the perk's
+  `ProcChance` and with **no** guaranteed-burn pass (that's owner-global and already ran on the
+  native-element call - running it twice would double it). Called right after the native-element
+  application in `HitEffectUtility.ApplyToTarget` (projectile/area hits) and `WeaponSystem.FireHitscan`
+  (hitscan) - see docs/elemental-reactions.md for how the reaction check itself works.
 
 **Only one infused element per weapon**: a second Element Infusion perk last-wins, overwriting both
 fields (chosen over a multi-element array to avoid bloating the hot `Projectile` component). Area hits
@@ -242,7 +196,7 @@ can equip at most 5 of ~18 perks that touch these fields at once (`Weapon.Perks`
 of those fields sat unused/zeroed on every weapon anyway - wasted per-entity memory and wasted bytes
 in every network/replay/checksum snapshot (Quantum serializes the whole component every tick).
 
-The fix: perk-specific state now lives on 8 small **optional** components in `WeaponPerks.qtn`,
+The fix: perk-specific state now lives on 7 small **optional** components in `WeaponPerks.qtn`,
 added via `f.AddOrGet<T>` only when a perk that needs them is actually granted, removed
 unconditionally in `WeaponSystem.SeedPerkRoster` on every re-equip - a missing component means
 exactly what a zeroed field used to mean ("this perk cluster wasn't rolled"). Only 13 always-present
@@ -258,9 +212,8 @@ fields (`WeaponData`/`Perks`/`MagazineSize`/`ReloadDuration`/`CriticalChance`/
 | `WeaponFireTimeMods` | Piercing Rounds, Ricochet, Double Tap (also holds its own `PendingDoubleTap` single-slot queue, ticked alongside `WeaponEchoState`'s) |
 | `WeaponPostImpactProcs` | Split Shot, Quantum Rounds, Explosive Sequence, Cataclysm Round |
 | `WeaponReloadHooks` | Empty Chamber, Combat Reboot, Emergency Reload |
-| `WeaponOnKillReactions` | Predator Magazine, Killer Instinct, Rift Aftershock |
-| `WeaponOnCritReactions` | Bottomless Momentum, Critical Rebound, Critical Fracture |
-| `WeaponHitTrackingPerks` | Fracture Rounds, Unstable Payload, Focused Breach |
+| `WeaponOnKillReactions` | Predator Magazine, Killer Instinct |
+| `WeaponOnCritReactions` | Bottomless Momentum, Critical Rebound |
 
 `WeaponPerkData.Apply` gained an `EntityRef owner` parameter so a perk can `f.AddOrGet<T>(owner, out
 var ptr)` for its own component - 9 perk classes that only ever touch `Weapon`'s core fields
@@ -283,25 +236,23 @@ survives the swap.
 ## Files
 
 **New QTN**: `Combat.qtn` (`OnEntityKilled`/`OnCriticalHit`/`OnWeaponHitLanded` signals -
-`OnWeaponHitLanded` later gained a `target` parameter for Fracture Rounds, see "Rift Mark content
-pool" above), `WeaponPerks.qtn` (the 8 optional perk components above, plus the `PendingEcho`/
-`PendingDoubleTapShot` structs - see "Weapon Perk component split").
+`OnWeaponHitLanded`'s `target` parameter is also read by `KaiUndertowSystem`), `WeaponPerks.qtn`
+(the 7 optional perk components above, plus the `PendingEcho`/`PendingDoubleTapShot` structs - see
+"Weapon Perk component split").
 **Edited QTN**: `Weapon.qtn` (trimmed down to its 13 core fields - every perk-specific field moved to
 `WeaponPerks.qtn`), `Projectile.qtn`
 (`RemainingBounces`/`MaxDistanceMultiplier`/`IsExplosiveProc`/`IsCataclysm`).
 **New systems**: `WeaponPerkReactionSystem.cs` (on-kill/on-crit/ramp-advance reactions, registered in
 `SystemSetup.User.cs` next to `WeaponSystem`), `WeaponPerkUtility.cs` (shared nearest-enemy query
-used by Ricochet/Quantum Rounds/Critical Rebound/Rift Aftershock, plus Unstable Payload's own overlap
-helper), `RiftMarkApplicationUtility.cs`/`RiftMutationMarkUtility.cs` (shared with
-`docs/rift-mutations.md` - the cooldown-key dedup layer every Rift Mark perk/mutation goes through).
+used by Ricochet/Quantum Rounds/Critical Rebound).
 **Edited systems**: `WeaponSystem.cs` (fire-branch live math, Double Tap, echo queue, reload hooks for
-Emergency Reload/Empty Chamber/Combat Reboot, Hitscan perk application, Focused Breach contact
-tracking, plus the whole component-split cutover - `SeedPerkRoster`, `ApplyPixieExplosiveWeapon`,
-every perk-field read site), `DirectHitData.cs` (Ricochet/Split Shot/Quantum Rounds/Explosive
-Sequence/Cataclysm Round/Unstable Payload), `ProjectileSystem.cs` (`MaxDistanceMultiplier` in
+Emergency Reload/Empty Chamber/Combat Reboot, Hitscan perk application, plus the whole
+component-split cutover - `SeedPerkRoster`, `ApplyPixieExplosiveWeapon`, every perk-field read site),
+`DirectHitData.cs` (Ricochet/Split Shot/Quantum Rounds/Explosive Sequence/Cataclysm Round),
+`ProjectileSystem.cs` (`MaxDistanceMultiplier` in
 `TryExpire`), `DamageUtility.cs` (the 3 signal dispatches), `SkillSystem.cs` (`ReduceCooldown`).
-**New perk assets**: ~32 new `WeaponPerkData` subclasses under `Assets/Weapon/Perks/`, alongside the
-original 5 (27 from the original roster + 5 from the Rift Mark content pool).
+**New perk assets**: ~27 new `WeaponPerkData` subclasses under `Assets/Weapon/Perks/`, alongside the
+original 5 (all from the original roster).
 
 ## View / presentation
 
@@ -398,10 +349,7 @@ drop (`WeaponGenerator.Roll`) can, once something actually calls it with this po
    comment) - once delayed via `DoubleTapDelay`, it replays straight down the original
    `SpawnPosition`/`AimDirection` rather than re-solving `Aim.Target`'s aim point, same simplification
    `PendingEcho` already makes for echoed shots.
-6. **Rift Mark content pool** - see `docs/rift-mutations.md`'s own "Current status" for the shared
-   caveats (no automated coverage for the Frame-dependent half, cross-mechanic dedup scoped to within
-   each evaluation point not globally, Focused Breach's contact-time reset-on-miss-only behavior).
-7. **Pellet weapons (shotguns)** - `WeaponDataAsset.PelletCount`/`SpreadAngle` fire a cone-spread
+6. **Pellet weapons (shotguns)** - `WeaponDataAsset.PelletCount`/`SpreadAngle` fire a cone-spread
    volley from one trigger pull (both `FireHitscan` and `FireProjectile` loop over
    `WeaponSystem.GetPelletAngle`), same convention as the enemy-only `FanProjectileDeliveryData`.
    `Damage` is read PER PELLET, not as the volley's total. Piercing Rounds/Ricochet/Split
@@ -411,7 +359,7 @@ drop (`WeaponGenerator.Roll`) can, once something actually calls it with this po
    N-pellet shotgun detonates once per trigger pull instead of N times. `PelletCount` of 1 (the
    default) is a no-op for every existing weapon. No `Shotgun.asset` exists yet - author one in the
    Editor by duplicating an existing `WeaponDataAsset` and tuning `PelletCount`/`SpreadAngle`/`Damage`.
-8. **Quantum Rounds has a VFX hook, unauthored** - `QuantumRoundsWeaponPerkData.ImpactEffectPrefab`
+7. **Quantum Rounds has a VFX hook, unauthored** - `QuantumRoundsWeaponPerkData.ImpactEffectPrefab`
    (its own `.View.cs` partial) is played on the chained-onto enemy via a new `QuantumRoundsTriggered`
    event/`EffectsManager.OnQuantumRoundsTriggered`, baked through a new `WeaponPostImpactProcs.
    QuantumRoundsSource` self-reference (same pattern `GroundPoundUpgrade.Source` uses) so the view can

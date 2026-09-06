@@ -53,7 +53,7 @@ namespace QuantumUser.View.Managers
             }
             if (_game != null)
             {
-                if (_charsInGame.Count == _game.Frames.Verified.PlayerCount)
+                if (_charsInGame.Count == _game.Frames.Verified.MaxPlayerCount)
                 {
                     onAllPlayersConnected?.Invoke();
                 }

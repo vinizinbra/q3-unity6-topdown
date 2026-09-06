@@ -119,8 +119,8 @@ indirection).
 enemy the pulse damages, via deterministic `f.RNG`. R2 strengthens the chosen effect(s) generically -
 `HitEffectData` gained a virtual 4-arg `Apply(f, ref context, durationMultiplier, magnitudeMultiplier)`
 overload (default forwards to the plain 2-arg `Apply`, so every other `HitEffectData` subclass across
-every hero/weapon-perk is unaffected); only `BurnEffectData`/`SlowEffectData`/`StunEffectData`/
-`RiftMarkEffectData` override it, each interpreting duration/magnitude in its own terms (Stun ignores
+every hero/weapon-perk is unaffected); only `BurnEffectData`/`SlowEffectData`/`StunEffectData`
+override it, each interpreting duration/magnitude in its own terms (Stun ignores
 magnitude - no separate axis). `ZaraRemixUtility.ApplyRemixEffect` is a thin dispatcher, not a
 switch-on-type reimplementation. Rank 3's second pick is guaranteed distinct via a simple "skip the
 first index" second draw (`ResonanceUtility.ResolveRemixEntries`) - the minimal correct primitive for

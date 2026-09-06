@@ -532,7 +532,20 @@ public class CubeVisualBuilder : MonoBehaviour
         {
             moved.size = existing.size;
             moved.center = existing.center;
-            SafeDestroy(existing);
+
+            // ChunkWallCube's [RequireComponent(typeof(BoxCollider))] blocks Unity from actually
+            // destroying this one when both sit on the same GameObject (a wall cube also authored
+            // as a visual) - DestroyImmediate would just refuse and log its own native console
+            // error every regen. Disable it instead: colliderRoot's copy above is the one that
+            // actually drives collision from here on.
+            if (GetComponent<ChunkWallCube>() != null)
+            {
+                existing.enabled = false;
+            }
+            else
+            {
+                SafeDestroy(existing);
+            }
         }
     }
 
@@ -544,7 +557,16 @@ public class CubeVisualBuilder : MonoBehaviour
             return;
         }
 
-        BoxCollider restored = gameObject.AddComponent<BoxCollider>();
+        // MoveColliderToRoot left a disabled BoxCollider on this GameObject instead of destroying
+        // it (see its own comment - ChunkWallCube requires one) - reuse and re-enable that one
+        // rather than adding a second BoxCollider alongside it.
+        BoxCollider restored = GetComponent<BoxCollider>();
+        if (restored == null)
+        {
+            restored = gameObject.AddComponent<BoxCollider>();
+        }
+
+        restored.enabled = true;
         restored.size = existing.size;
         restored.center = existing.center;
     }

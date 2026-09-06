@@ -20,7 +20,7 @@ MonoBehaviour:
   - Id:
       Value: 440091783757558214
   - Id:
-      Value: 400869309667061698
+      Value: 452814084348607209
   RestOffset:
     RawValue: 0
   DetonateOnLevelGeometry: 1
@@ -31,5 +31,7 @@ MonoBehaviour:
   TargetMask: 0
   TriggersSpawnUpgrades: 1
   PlantedFuseTime:
+    RawValue: 0
+  MaxHeightDifference:
     RawValue: 0
   BlastEffectPrefab: {fileID: 810256625517152139, guid: d3a4baf9e60ac418bad2df0df57456d0, type: 3}

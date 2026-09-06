@@ -66,11 +66,9 @@ namespace Quantum
         public FP SlowDuration = 3;
         public FP SlowSpeedMultiplier = FP._0_50;
 
-        // Generic FreezeEffectData's own knob - NOT ElementalReactionConfig's
-        // DeepFreezeDuration/DeepFreezeAnticipationMultiplier, which are dedicated to the Ice+RiftMark Deep Freeze
-        // reaction specifically. Named after the underlying StatusEffects field (AnticipationSlowRemaining/
-        // AnticipationSlowMultiplier) rather than "Freeze" so the two are never confused for the
-        // same knob at a glance. See docs/elemental-reactions.md.
+        // Generic FreezeEffectData's own knob. Named after the underlying StatusEffects field
+        // (AnticipationSlowRemaining/AnticipationSlowMultiplier) rather than "Freeze" so the two are
+        // never confused for the same knob at a glance. See docs/elemental-reactions.md.
         public FP AnticipationSlowDuration = 3;
         public FP AnticipationSlowMultiplier = FP._0_50;
 

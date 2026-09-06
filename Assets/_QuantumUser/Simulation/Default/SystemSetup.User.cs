@@ -66,6 +66,11 @@
             // that system's own gate this same tick.
             systems.Add(new DebugCheatSystem());
 
+            // Handles CheatCommand from the CheatMenu overlay - always-on and OUTSIDE
+            // GameplaySystemGroup (like DebugCheatSystem/BossPauseSystem above) so Continue/
+            // AdvancePhase still fire while the gameplay group is paused. See CheatSystem.
+            systems.Add(new CheatSystem());
+
             // Lobby Start (see docs/talents.md) - transitions Global.CurrentState from Lobby to
             // Survival once every connected, spawned player has walked outside the LobbyStart
             // chunk's own footprint (no separate boundary entity - the chunk IS the boundary).

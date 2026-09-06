@@ -19,9 +19,8 @@ namespace Quantum
         {
             context.Damage = ScaleByEnemyDamageMultiplier(f, context.Owner, context.Damage);
             context.Damage *= SkillFocusUtility.ResolveCenterFocusMultiplier(f, ref context);
-            context.PreHitRiftMarkStacks = StatusEffectUtility.GetRiftMarkStacks(f, context.Target);
-            StatusEffectUtility.TryApplyElementalStatus(f, context.Target, context.Owner, context.Source, context.Element, context.Damage, context.PreHitRiftMarkStacks);
-            StatusEffectUtility.TryApplyInfusedElement(f, context.Target, context.Owner, context.Source, context.PerkElement, context.PerkElementChance, context.Damage, context.PreHitRiftMarkStacks);
+            StatusEffectUtility.TryApplyElementalStatus(f, context.Target, context.Owner, context.Source, context.Element, context.Damage);
+            StatusEffectUtility.TryApplyInfusedElement(f, context.Target, context.Owner, context.Source, context.PerkElement, context.PerkElementChance, context.Damage);
 
             for (int i = 0; i < effects.Count; i++)
             {
@@ -38,9 +37,8 @@ namespace Quantum
         {
             context.Damage = ScaleByEnemyDamageMultiplier(f, context.Owner, context.Damage);
             context.Damage *= SkillFocusUtility.ResolveCenterFocusMultiplier(f, ref context);
-            context.PreHitRiftMarkStacks = StatusEffectUtility.GetRiftMarkStacks(f, context.Target);
-            StatusEffectUtility.TryApplyElementalStatus(f, context.Target, context.Owner, context.Source, context.Element, context.Damage, context.PreHitRiftMarkStacks);
-            StatusEffectUtility.TryApplyInfusedElement(f, context.Target, context.Owner, context.Source, context.PerkElement, context.PerkElementChance, context.Damage, context.PreHitRiftMarkStacks);
+            StatusEffectUtility.TryApplyElementalStatus(f, context.Target, context.Owner, context.Source, context.Element, context.Damage);
+            StatusEffectUtility.TryApplyInfusedElement(f, context.Target, context.Owner, context.Source, context.PerkElement, context.PerkElementChance, context.Damage);
 
             for (int i = 0; i < effects.Length; i++)
             {
@@ -67,10 +65,18 @@ namespace Quantum
         // flat (XZ) distance from center is within radius AND its height differs from center by no
         // more than this many units - see IsWithinFlatGroundArea. 0 preserves the exact prior
         // behavior (a true volumetric sphere) for every existing caller.
+        // hitIndex defaults 0 (every existing caller's exact prior behavior - a single call already
+        // produces distinct EntityDamaged events per target since Target itself differs). Only
+        // matters to a caller that detonates the SAME effects list more than once in one tick against
+        // overlapping areas (e.g. GroundBarrageDeliveryData, one Detonate per scattered point) - a
+        // target caught by two of those calls would otherwise build byte-identical EntityDamaged
+        // events (same Target/Damage/HitIndex=0/Position, since it hasn't moved within the tick) that
+        // Quantum silently collapses into one (see Events.qtn's own EntityDamaged/HitIndex comment) -
+        // same idiom WeaponSystem.FireHitscan's own ref hitIndex already uses for its pellet loop.
         public static void ApplyInRadius(Frame f, List<AssetRef<HitEffectData>> effects, FPVector3 center,
             FP radius, EntityRef owner, FP damage, DamageSource source, ElementType element = ElementType.Neutral,
             DamageTargetMask targetMask = DamageTargetMask.Both, bool isExplosion = false,
-            bool isChainedExplosion = false, FP maxHeightDifference = default)
+            bool isChainedExplosion = false, FP maxHeightDifference = default, byte hitIndex = 0)
         {
             // Pixie's Unstable Mixture - resolved once for the whole blast, before the overlap query,
             // so an empowered explosion is bigger for everyone caught rather than per-target. Scoped
@@ -103,7 +109,7 @@ namespace Quantum
                     continue;
 
                 if (TryBuildContext(f, hits[i].Entity, center, owner, damage, source, element, out var context,
-                        isExplosion: isExplosion, areaRadius: radius) == false)
+                        isExplosion: isExplosion, areaRadius: radius, hitIndex: hitIndex) == false)
                     continue;
 
                 // Pixie's Demolition Mastery (Direct Hit/Concussive Force) - only ever does anything
@@ -357,7 +363,7 @@ namespace Quantum
         // zero-sized one.
         private static bool TryBuildContext(Frame f, EntityRef target, FPVector3 center, EntityRef owner,
             FP damage, DamageSource source, ElementType element, out HitEffectContext context,
-            FPVector3? pushDirection = null, bool isExplosion = false, FP areaRadius = default)
+            FPVector3? pushDirection = null, bool isExplosion = false, FP areaRadius = default, byte hitIndex = 0)
         {
             context = default;
 
@@ -378,7 +384,8 @@ namespace Quantum
                 Element = element,
                 IsExplosion = isExplosion,
                 AreaCenter = center,
-                AreaRadius = areaRadius
+                AreaRadius = areaRadius,
+                HitIndex = hitIndex
             };
 
             return true;

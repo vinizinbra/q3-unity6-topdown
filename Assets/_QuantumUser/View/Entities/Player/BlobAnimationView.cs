@@ -1,6 +1,7 @@
 using NaughtyAttributes;
 using Photon.Deterministic;
 using PrimeTween;
+using QuantumUser.View.Managers;
 using QuantumUser.View.Util;
 using UnityEngine;
 
@@ -263,6 +264,9 @@ namespace Quantum
         [Header("Sound")]
         [SerializeField, SoundDataPicker, Tooltip("Played on EventPlayerJumped - the same event that starts the anticipation squash. Note jumping here is the AUTO-jump ledge assist (AutoJumpSystem), not a button the player pressed, so this is informational rather than input confirmation: keep it subtle. Leave empty to skip.")]
         private SoundData jumpSound;
+
+        [SerializeField, Tooltip("Shared player FX config - LandBurst is played at the exact same justLanded moment/impactSpeed as landSound below (see PlayLandBurst), gated by PlayerFxConfig.LandMinImpactSpeed. Leave empty to skip.")]
+        private PlayerFxConfig fxConfig;
 
         [SerializeField, SoundDataPicker, Tooltip("Played the frame the character regains ground, alongside the landing squash. Volume is scaled by impact speed (see landSoundMinImpactSpeed / landSoundFullImpactSpeed) so a small hop off a ledge doesn't land as hard as a long fall. Leave empty to skip.")]
         private SoundData landSound;
@@ -599,6 +603,7 @@ namespace Quantum
             {
                 float impactSpeed = Mathf.Abs(Mathf.Min(0f, verticalSpeed));
                 PlayLandSound(impactSpeed);
+                PlayLandBurst(impactSpeed);
                 _jumpSquashT = Mathf.Clamp(impactSpeed * landingSquashPerSpeed, 0f, maxLandingSquash);
                 _springVelocity = 0f;
                 _springActive = true;
@@ -850,6 +855,40 @@ namespace Quantum
             // A landing interrupts the stride, so the next footstep should be a full stride away
             // rather than firing immediately on top of the thud.
             _footstepAccumulator = 0f;
+        }
+
+        // Same justLanded call site as PlayLandSound above - reusing it here (instead of a
+        // separately-polling GroundedFxView) means this can never drift out of sync with, or
+        // simply go missing from, the landing moment landSound already fires on correctly.
+        private void PlayLandBurst(float impactSpeed)
+        {
+            if (_previewMode || fxConfig == null || fxConfig.LandBurst.Prefab == null || EffectsManager.Instance == null)
+                return;
+
+            if (impactSpeed < fxConfig.LandMinImpactSpeed)
+                return;
+
+            Quaternion rotation = transform.rotation * Quaternion.Euler(fxConfig.LandBurst.RotationOffset);
+            Vector3 scale = fxConfig.LandBurst.Prefab.transform.localScale * fxConfig.LandBurst.ScaleMultiplier;
+            Vector3 position = ResolveGroundPosition() + fxConfig.LandBurst.ResolveWorldPositionOffset(transform);
+            EffectsManager.Instance.PlayEffect(fxConfig.LandBurst.Prefab, position, rotation, scale);
+        }
+
+        // KCC.Position (mirrored onto Transform3D, which this GameObject's transform follows) is
+        // the capsule's BASE, i.e. ground/feet level, not center - see
+        // EnemyMovementUtility.ResolveEntityCenter's own +Height/2 to reach center from it. Reading
+        // it straight from simulation state here (rather than trusting transform.position) keeps
+        // this correct regardless of which GameObject in the hierarchy this component ends up on.
+        private Vector3 ResolveGroundPosition()
+        {
+            if (_game == null)
+                return transform.position;
+
+            Frame f = _game.Frames.Verified;
+            if (f == null || f.Has<Transform3D>(_entityRef) == false)
+                return transform.position;
+
+            return f.Get<Transform3D>(_entityRef).Position.ToUnityVector3();
         }
 
         // Distance-driven rather than timed: accumulate real horizontal travel and fire a step every

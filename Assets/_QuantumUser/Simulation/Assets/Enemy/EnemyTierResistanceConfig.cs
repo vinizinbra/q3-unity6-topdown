@@ -10,8 +10,22 @@ namespace Quantum
         public FP StunDurationMultiplier = FP._1;
         public FP RootDurationMultiplier = FP._1;
         public FP SlowDurationMultiplier = FP._1;
+
+        // How much of Chill's own speed reduction actually lands, independent of
+        // SlowDurationMultiplier above (which only shortens how long it lasts) - 1 = full strength,
+        // 0 = the slow is applied but has no effect on movement speed at all. Blended the same way
+        // SlowEffectData's own magnitudeMultiplier already blends a diluted Chill toward FP._1 (see
+        // StatusEffectUtility.ApplyIce), so a Boss can be Chilled for the normal duration but barely
+        // slowed by it, instead of a full Filler-strength root disguised as a slow.
+        public FP ChillForceMultiplier = FP._1;
+
         public FP BurnDamageMultiplier = FP._1;
         public FP RuptureDurationMultiplier = FP._1;
+
+        // Stagger (Shock's Jolt) taper - NOT a full immunity flag like ImmuneToHardCC below: Boss
+        // stays interruptible by Shock, just tapered, per this project's "Boss stays vulnerable to
+        // soft CC" convention and the explicit decision not to special-case any one enemy archetype.
+        public FP StaggerDurationMultiplier = FP._1;
 
         // -- Hard-CC immunity windows (generic diminishing returns) --
         // How long AFTER a hard-CC application lands before the same kind can land again on this
@@ -54,23 +68,31 @@ namespace Quantum
         {
             StunImmunityDuration = 2,
             InterruptImmunityDuration = 2,
+            StaggerDurationMultiplier = FP.FromString("0.75"),
+            ChillForceMultiplier = FP.FromString("0.75"),
         };
 
         public TierStatusResistance Heavy = new TierStatusResistance
         {
             StunImmunityDuration = 3,
             InterruptImmunityDuration = 3,
+            StaggerDurationMultiplier = FP.FromString("0.6"),
+            ChillForceMultiplier = FP.FromString("0.6"),
         };
 
         public TierStatusResistance Elite = new TierStatusResistance
         {
             StunImmunityDuration = 4,
             InterruptImmunityDuration = 4,
+            StaggerDurationMultiplier = FP._0_50,
+            ChillForceMultiplier = FP._0_50,
         };
 
         public TierStatusResistance Boss = new TierStatusResistance
         {
             ImmuneToHardCC = true,
+            StaggerDurationMultiplier = FP.FromString("0.4"),
+            ChillForceMultiplier = FP.FromString("0.4"),
         };
 
         public TierStatusResistance Get(EnemyTier tier) => tier switch

@@ -179,11 +179,14 @@ MonoBehaviour:
     RawValue: 0
   DetonateOnLevelGeometry: 1
   DetonateOnEnemyHit: 1
+  DetonateOnAllyHit: 0
   BlastRadius:
     RawValue: 131072
   TargetMask: 0
   TriggersSpawnUpgrades: 0
   PlantedFuseTime:
+    RawValue: 0
+  MaxHeightDifference:
     RawValue: 0
   BlastEffectPrefab: {fileID: 6350743763286976369, guid: 2dcb44456e58b4eb3823d152a70d114f, type: 3}
 --- !u!114 &11400000
@@ -256,13 +259,16 @@ MonoBehaviour:
     RawValue: 0
   DetonateOnLevelGeometry: 0
   DetonateOnEnemyHit: 0
+  DetonateOnAllyHit: 0
   BlastRadius:
     RawValue: 131072
   TargetMask: 0
   TriggersSpawnUpgrades: 1
   PlantedFuseTime:
     RawValue: 196608
-  BlastEffectPrefab: {fileID: 6350743763286976369, guid: 28b2273cb75be456a8a336bae2c54940, type: 3}
+  MaxHeightDifference:
+    RawValue: 0
+  BlastEffectPrefab: {fileID: 6652927088908414530, guid: ff5b9d88c376347e287e56b065f246bc, type: 3}
 --- !u!114 &2428542447498045485
 MonoBehaviour:
   m_ObjectHideFlags: 0

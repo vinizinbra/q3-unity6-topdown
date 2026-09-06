@@ -4,13 +4,11 @@ namespace Quantum
 
     // Stretches the target's own attack anticipation/windup (StatusEffectUtility.
     // ApplyAnticipationSlow/GetAnticipationMultiplier) for Duration - not a lockout, see
-    // docs/elemental-reactions.md's "Freeze: stretching anticipation, not stopping the target".
-    // Plain overwrite-on-reapply. Duration/Multiplier are read from
-    // RuntimeConfig.EffectConfig.AnticipationSlowDuration/AnticipationSlowMultiplier - deliberately
-    // NOT ElementalReactionConfig's FreezeDuration/FreezeAnticipationMultiplier, which are dedicated
-    // to the Ice+RiftMark Deep Freeze reaction and would otherwise get silently retuned by any other source using
-    // this class. Gives Freeze a freely-authorable HitEffectData the same way Stun/Root already
-    // have one, independent of the elemental reaction that normally grants it.
+    // docs/elemental-reactions.md's "Stagger: pausing, not stopping" (the same stretch-vs-stop
+    // distinction, applied to this older primitive). Plain overwrite-on-reapply. Duration/Multiplier
+    // are read from RuntimeConfig.EffectConfig.AnticipationSlowDuration/AnticipationSlowMultiplier.
+    // Gives Freeze a freely-authorable HitEffectData the same way Stun/Root already have one - any
+    // skill/perk can drop this directly, it's not tied to any one elemental reaction.
     public unsafe class FreezeEffectData : HitEffectData
     {
         public override void Apply(Frame f, ref HitEffectContext context)

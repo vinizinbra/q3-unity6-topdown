@@ -18,7 +18,7 @@ namespace Quantum
             bool canFindStones = false;
             bool hasEvent = false;
 
-            for (int i = 0; i < f.PlayerCount; i++)
+            for (int i = 0; i < f.MaxPlayerCount; i++)
             {
                 // f.PlayerCount is the fixed max slot count for this session, not how many
                 // players actually connected - GetPlayerData returns null for an unjoined slot

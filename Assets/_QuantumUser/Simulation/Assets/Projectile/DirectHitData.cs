@@ -112,14 +112,12 @@ namespace Quantum
                 FP radius = procs->CataclysmRadius * radiusMultiplier;
                 HitEffectUtility.ApplyExplosion(f, point, radius, projectile->Owner,
                     projectile->Damage * procs->CataclysmDamageMultiplier, DamageSource.Weapon);
-                WeaponPerkUtility.TryApplyUnstablePayloadMarks(f, point, radius, projectile->Owner);
             }
             else if (projectile->IsExplosiveProc == true)
             {
                 FP radius = procs->ExplosiveSequenceRadius * radiusMultiplier;
                 HitEffectUtility.ApplyExplosion(f, point, radius, projectile->Owner,
                     projectile->Damage * procs->ExplosiveSequenceDamageMultiplier, DamageSource.Weapon);
-                WeaponPerkUtility.TryApplyUnstablePayloadMarks(f, point, radius, projectile->Owner);
             }
 
             if (procs->HasSplitShot == true && projectile->SpawnDepth < MaxSplitShotDepth)

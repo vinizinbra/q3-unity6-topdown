@@ -17,17 +17,17 @@ MonoBehaviour:
     Guid:
       Value: 356172470141887835
   Phases:
-  - Name: R1-A Warmup (0-20s)
+  - Name: Breathing 1
     Kind: 1
     Duration:
-      RawValue: 65470464
+      RawValue: 3932160
     BudgetPerPulse:
-      RawValue: 196608
+      RawValue: 0
     PulseInterval:
-      RawValue: 262144
+      RawValue: 0
     TargetPressure:
-      RawValue: 262144
-    MaxAliveEnemies: 4
+      RawValue: 0
+    MaxAliveEnemies: 0
     AllowedGroups: []
     AllowedEnemies: []
     BossPrototype:
@@ -35,6 +35,27 @@ MonoBehaviour:
         Value: 0
     PauseDuration:
       RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: World1Boss
+    Kind: 2
+    Duration:
+      RawValue: 0
+    BudgetPerPulse:
+      RawValue: 0
+    PulseInterval:
+      RawValue: 0
+    TargetPressure:
+      RawValue: 0
+    MaxAliveEnemies: 0
+    AllowedGroups: []
+    AllowedEnemies: []
+    BossPrototype:
+      Id:
+        Value: 1314062773136615755
+    PauseDuration:
+      RawValue: 327680
     GuaranteedGroup:
       Id:
         Value: 0

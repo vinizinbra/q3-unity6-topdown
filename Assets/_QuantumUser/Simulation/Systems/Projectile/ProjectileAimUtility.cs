@@ -87,6 +87,34 @@ namespace Quantum
             return true;
         }
 
+        // Caps a target's live velocity to its own authored baseline speed before it feeds a lead-
+        // target extrapolation (BallisticProjectileMovementData/StraightProjectileMovementData's own
+        // ResolveLeadTarget) - without this, a hard Override-mode knockback (e.g. Brute's Iron
+        // Shoulder/Groundbreaker, ~16-20 u/s) or a Flying enemy's own erratic hover/steering velocity
+        // feeds straight into "position + velocity * flightTime" unclamped, extrapolating a lead
+        // point many meters from anywhere the target will plausibly be by the time the shot arrives
+        // (DamageUtility.PushPhysicsBody's Override branch overwrites PhysicsBody3D.Velocity outright,
+        // with nothing decaying it back down before the very next tick's shot can read it). Direction
+        // is preserved, only magnitude is capped - a target's own move speed is exactly the bound on
+        // "how far could it plausibly keep moving in a straight line." A target with no Enemy
+        // component (never reached today - every lead call site already gates on PhysicsBody3D, which
+        // the KCC-driven player doesn't have) passes the raw velocity through unchanged.
+        public static FPVector3 ResolveLeadVelocity(Frame f, EntityRef targetEntity, FPVector3 rawVelocity)
+        {
+            if (f.Unsafe.TryGetPointer<Enemy>(targetEntity, out var enemy) == false)
+                return rawVelocity;
+
+            EnemyDataAsset data = f.FindAsset(enemy->EnemyData);
+
+            FP maxSpeed = data.Stats.MoveSpeed * StatusEffectUtility.GetSpeedMultiplier(f, targetEntity)
+                * BossPhaseUtility.ResolveMoveSpeedMultiplier(f, targetEntity, data);
+
+            if (maxSpeed <= FP._0 || rawVelocity.SqrMagnitude <= maxSpeed * maxSpeed)
+                return rawVelocity;
+
+            return rawVelocity.Normalized * maxSpeed;
+        }
+
         // Pulled out of TryGetAimPoint so a caller already holding a separately-locked target
         // position (e.g. an enemy delivery's Enemy.SkillTargetPosition, frozen mid-windup by
         // AimLock - see ProjectileDeliveryData/FanProjectileDeliveryData) can add just the

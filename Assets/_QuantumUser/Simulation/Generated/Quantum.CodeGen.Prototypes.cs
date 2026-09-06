@@ -672,18 +672,6 @@ namespace Quantum.Prototypes {
     public Byte DashChargeHardCap;
     public QBoolean AccessoryBlockResetsDash;
     public FP AccessoryBlockSkillCooldownFraction;
-    public QBoolean HasCriticalFractureMutation;
-    public QBoolean HasSkillFractureMutation;
-    public QBoolean HasRiftDashMutation;
-    public QBoolean HasHeavyFractureMutation;
-    public QBoolean HasCloseFractureMutation;
-    public QBoolean HasLongFractureMutation;
-    public QBoolean HasExecutionFractureMutation;
-    public QBoolean HasFirstContactMutation;
-    public QBoolean HasFracturedPresenceMutation;
-    public QBoolean HasOverflowingRiftMutation;
-    public QBoolean HasLastStandMutation;
-    public FP LastStandCooldownRemaining;
     partial void MaterializeUser(Frame frame, ref Quantum.CharacterStats result, in PrototypeMaterializationContext context);
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.CharacterStats component = default;
@@ -765,18 +753,6 @@ namespace Quantum.Prototypes {
         result.DashChargeHardCap = this.DashChargeHardCap;
         result.AccessoryBlockResetsDash = this.AccessoryBlockResetsDash;
         result.AccessoryBlockSkillCooldownFraction = this.AccessoryBlockSkillCooldownFraction;
-        result.HasCriticalFractureMutation = this.HasCriticalFractureMutation;
-        result.HasSkillFractureMutation = this.HasSkillFractureMutation;
-        result.HasRiftDashMutation = this.HasRiftDashMutation;
-        result.HasHeavyFractureMutation = this.HasHeavyFractureMutation;
-        result.HasCloseFractureMutation = this.HasCloseFractureMutation;
-        result.HasLongFractureMutation = this.HasLongFractureMutation;
-        result.HasExecutionFractureMutation = this.HasExecutionFractureMutation;
-        result.HasFirstContactMutation = this.HasFirstContactMutation;
-        result.HasFracturedPresenceMutation = this.HasFracturedPresenceMutation;
-        result.HasOverflowingRiftMutation = this.HasOverflowingRiftMutation;
-        result.HasLastStandMutation = this.HasLastStandMutation;
-        result.LastStandCooldownRemaining = this.LastStandCooldownRemaining;
         MaterializeUser(frame, ref result, in context);
     }
   }
@@ -1175,6 +1151,12 @@ namespace Quantum.Prototypes {
     public FP FallRespawnTimer;
     public FPVector3 FallOriginPosition;
     public MapEntityId SkillProjectile;
+    public FPVector3 PendingImpactPoint;
+    public Byte PendingImpactTotal;
+    public Byte PendingImpactIndex;
+    public QBoolean PendingImpactAwaitingSpawn;
+    public FP RingWaveRadius;
+    public FP LaserSpinAngle;
     public FP FlyingHoverCheckTimer;
     public FP FlyingHoverTargetHeight;
     public FP LostTimer;
@@ -1207,6 +1189,12 @@ namespace Quantum.Prototypes {
         result.FallRespawnTimer = this.FallRespawnTimer;
         result.FallOriginPosition = this.FallOriginPosition;
         PrototypeValidator.FindMapEntity(this.SkillProjectile, in context, out result.SkillProjectile);
+        result.PendingImpactPoint = this.PendingImpactPoint;
+        result.PendingImpactTotal = this.PendingImpactTotal;
+        result.PendingImpactIndex = this.PendingImpactIndex;
+        result.PendingImpactAwaitingSpawn = this.PendingImpactAwaitingSpawn;
+        result.RingWaveRadius = this.RingWaveRadius;
+        result.LaserSpinAngle = this.LaserSpinAngle;
         result.FlyingHoverCheckTimer = this.FlyingHoverCheckTimer;
         result.FlyingHoverTargetHeight = this.FlyingHoverTargetHeight;
         result.LostTimer = this.LostTimer;
@@ -2736,24 +2724,6 @@ namespace Quantum.Prototypes {
     }
   }
   [System.SerializableAttribute()]
-  [Quantum.Prototypes.Prototype(typeof(Quantum.RiftDashMarkTracker))]
-  public unsafe class RiftDashMarkTrackerPrototype : ComponentPrototype<Quantum.RiftDashMarkTracker> {
-    [ArrayLengthAttribute(8)]
-    public MapEntityId[] MarkedEntities = new MapEntityId[8];
-    public Byte MarkedCount;
-    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
-        Quantum.RiftDashMarkTracker component = default;
-        Materialize((Frame)f, ref component, in context);
-        return f.Set(entity, component) == SetResult.ComponentAdded;
-    }
-    public void Materialize(Frame frame, ref Quantum.RiftDashMarkTracker result, in PrototypeMaterializationContext context = default) {
-        for (int i = 0, count = PrototypeValidator.CheckLength(MarkedEntities, 8, in context); i < count; ++i) {
-          PrototypeValidator.FindMapEntity(this.MarkedEntities[i], in context, out *result.MarkedEntities.GetPointer(i));
-        }
-        result.MarkedCount = this.MarkedCount;
-    }
-  }
-  [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.RiftMutationPicks))]
   public unsafe partial class RiftMutationPicksPrototype : ComponentPrototype<Quantum.RiftMutationPicks> {
     [ArrayLengthAttribute(48)]
@@ -3163,27 +3133,27 @@ namespace Quantum.Prototypes {
   [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.StatusEffects))]
   public unsafe class StatusEffectsPrototype : ComponentPrototype<Quantum.StatusEffects> {
+    public Quantum.QEnum8<ElementType> FirstElementApplied;
     public FP BurnRemaining;
     public FP BurnTickTimer;
     public FP BurnDamagePerTick;
     public MapEntityId BurnOwner;
     public Quantum.QEnum8<DamageSource> BurnSource;
-    public Byte RiftMarkStacks;
-    public FP RiftMarkRemaining;
-    public FP RiftMarkReactionLockoutRemaining;
-    public FP DetonationCooldownRemaining;
-    public FP DeepFreezeCooldownRemaining;
+    public FP ElectrifiedRemaining;
+    public FP ElectrifiedJoltTimer;
+    public FP StaggerRemaining;
+    public FP ThermalShockCooldownRemaining;
     public FP OverloadCooldownRemaining;
-    public FP RuptureCooldownRemaining;
-    public FP SingularityCooldownRemaining;
+    public FP ShatterCooldownRemaining;
+    public FP OverloadChainHopTimer;
+    public Byte OverloadChainHopsRemaining;
+    public MapEntityId OverloadChainOwner;
+    public Quantum.QEnum8<DamageSource> OverloadChainSource;
+    public FPVector3 OverloadChainPosition;
     [ArrayLengthAttribute(8)]
-    public FP[] MarkApplicationCooldowns = new FP[8];
-    public QBoolean FirstContactTriggered;
-    public FP OverflowingRiftCooldownRemaining;
-    [ArrayLengthAttribute(4)]
-    public MapEntityId[] FracturedPresenceExposedBy = new MapEntityId[4];
-    [ArrayLengthAttribute(4)]
-    public FP[] FracturedPresenceExposureTime = new FP[4];
+    public MapEntityId[] OverloadChainVisited = new MapEntityId[8];
+    public Byte OverloadChainVisitedCount;
+    public FP OverloadChainCurrentDamage;
     public FP IceRemaining;
     public FP IceSpeedMultiplier;
     public FP StunRemaining;
@@ -3236,30 +3206,28 @@ namespace Quantum.Prototypes {
         return f.Set(entity, component) == SetResult.ComponentAdded;
     }
     public void Materialize(Frame frame, ref Quantum.StatusEffects result, in PrototypeMaterializationContext context = default) {
+        result.FirstElementApplied = this.FirstElementApplied;
         result.BurnRemaining = this.BurnRemaining;
         result.BurnTickTimer = this.BurnTickTimer;
         result.BurnDamagePerTick = this.BurnDamagePerTick;
         PrototypeValidator.FindMapEntity(this.BurnOwner, in context, out result.BurnOwner);
         result.BurnSource = this.BurnSource;
-        result.RiftMarkStacks = this.RiftMarkStacks;
-        result.RiftMarkRemaining = this.RiftMarkRemaining;
-        result.RiftMarkReactionLockoutRemaining = this.RiftMarkReactionLockoutRemaining;
-        result.DetonationCooldownRemaining = this.DetonationCooldownRemaining;
-        result.DeepFreezeCooldownRemaining = this.DeepFreezeCooldownRemaining;
+        result.ElectrifiedRemaining = this.ElectrifiedRemaining;
+        result.ElectrifiedJoltTimer = this.ElectrifiedJoltTimer;
+        result.StaggerRemaining = this.StaggerRemaining;
+        result.ThermalShockCooldownRemaining = this.ThermalShockCooldownRemaining;
         result.OverloadCooldownRemaining = this.OverloadCooldownRemaining;
-        result.RuptureCooldownRemaining = this.RuptureCooldownRemaining;
-        result.SingularityCooldownRemaining = this.SingularityCooldownRemaining;
-        for (int i = 0, count = PrototypeValidator.CheckLength(MarkApplicationCooldowns, 8, in context); i < count; ++i) {
-          *result.MarkApplicationCooldowns.GetPointer(i) = this.MarkApplicationCooldowns[i];
+        result.ShatterCooldownRemaining = this.ShatterCooldownRemaining;
+        result.OverloadChainHopTimer = this.OverloadChainHopTimer;
+        result.OverloadChainHopsRemaining = this.OverloadChainHopsRemaining;
+        PrototypeValidator.FindMapEntity(this.OverloadChainOwner, in context, out result.OverloadChainOwner);
+        result.OverloadChainSource = this.OverloadChainSource;
+        result.OverloadChainPosition = this.OverloadChainPosition;
+        for (int i = 0, count = PrototypeValidator.CheckLength(OverloadChainVisited, 8, in context); i < count; ++i) {
+          PrototypeValidator.FindMapEntity(this.OverloadChainVisited[i], in context, out *result.OverloadChainVisited.GetPointer(i));
         }
-        result.FirstContactTriggered = this.FirstContactTriggered;
-        result.OverflowingRiftCooldownRemaining = this.OverflowingRiftCooldownRemaining;
-        for (int i = 0, count = PrototypeValidator.CheckLength(FracturedPresenceExposedBy, 4, in context); i < count; ++i) {
-          PrototypeValidator.FindMapEntity(this.FracturedPresenceExposedBy[i], in context, out *result.FracturedPresenceExposedBy.GetPointer(i));
-        }
-        for (int i = 0, count = PrototypeValidator.CheckLength(FracturedPresenceExposureTime, 4, in context); i < count; ++i) {
-          *result.FracturedPresenceExposureTime.GetPointer(i) = this.FracturedPresenceExposureTime[i];
-        }
+        result.OverloadChainVisitedCount = this.OverloadChainVisitedCount;
+        result.OverloadChainCurrentDamage = this.OverloadChainCurrentDamage;
         result.IceRemaining = this.IceRemaining;
         result.IceSpeedMultiplier = this.IceSpeedMultiplier;
         result.StunRemaining = this.StunRemaining;
@@ -3918,33 +3886,6 @@ namespace Quantum.Prototypes {
     }
   }
   [System.SerializableAttribute()]
-  [Quantum.Prototypes.Prototype(typeof(Quantum.WeaponHitTrackingPerks))]
-  public unsafe class WeaponHitTrackingPerksPrototype : ComponentPrototype<Quantum.WeaponHitTrackingPerks> {
-    public QBoolean HasFractureRounds;
-    public Byte FractureRoundsInterval;
-    public Byte FractureHitCounter;
-    public QBoolean HasUnstablePayload;
-    public QBoolean HasFocusedBreach;
-    public FP FocusedBreachThreshold;
-    public MapEntityId FocusedBreachTarget;
-    public FP FocusedBreachContactTime;
-    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
-        Quantum.WeaponHitTrackingPerks component = default;
-        Materialize((Frame)f, ref component, in context);
-        return f.Set(entity, component) == SetResult.ComponentAdded;
-    }
-    public void Materialize(Frame frame, ref Quantum.WeaponHitTrackingPerks result, in PrototypeMaterializationContext context = default) {
-        result.HasFractureRounds = this.HasFractureRounds;
-        result.FractureRoundsInterval = this.FractureRoundsInterval;
-        result.FractureHitCounter = this.FractureHitCounter;
-        result.HasUnstablePayload = this.HasUnstablePayload;
-        result.HasFocusedBreach = this.HasFocusedBreach;
-        result.FocusedBreachThreshold = this.FocusedBreachThreshold;
-        PrototypeValidator.FindMapEntity(this.FocusedBreachTarget, in context, out result.FocusedBreachTarget);
-        result.FocusedBreachContactTime = this.FocusedBreachContactTime;
-    }
-  }
-  [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.WeaponMagazinePositionPerks))]
   public unsafe partial class WeaponMagazinePositionPerksPrototype : ComponentPrototype<Quantum.WeaponMagazinePositionPerks> {
     public FP OpeningBurstFireRateBonus;
@@ -3977,7 +3918,6 @@ namespace Quantum.Prototypes {
     public QBoolean HasCriticalRebound;
     public FP CriticalReboundRadius;
     public FP CriticalReboundDamageMultiplier;
-    public QBoolean HasCriticalFracturePerk;
     partial void MaterializeUser(Frame frame, ref Quantum.WeaponOnCritReactions result, in PrototypeMaterializationContext context);
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.WeaponOnCritReactions component = default;
@@ -3990,7 +3930,6 @@ namespace Quantum.Prototypes {
         result.HasCriticalRebound = this.HasCriticalRebound;
         result.CriticalReboundRadius = this.CriticalReboundRadius;
         result.CriticalReboundDamageMultiplier = this.CriticalReboundDamageMultiplier;
-        result.HasCriticalFracturePerk = this.HasCriticalFracturePerk;
         MaterializeUser(frame, ref result, in context);
     }
   }
@@ -4002,7 +3941,6 @@ namespace Quantum.Prototypes {
     public FP KillerInstinctFireRateBonus;
     public FP KillerInstinctDuration;
     public FP KillerInstinctTimer;
-    public QBoolean HasRiftAftershock;
     partial void MaterializeUser(Frame frame, ref Quantum.WeaponOnKillReactions result, in PrototypeMaterializationContext context);
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.WeaponOnKillReactions component = default;
@@ -4015,7 +3953,6 @@ namespace Quantum.Prototypes {
         result.KillerInstinctFireRateBonus = this.KillerInstinctFireRateBonus;
         result.KillerInstinctDuration = this.KillerInstinctDuration;
         result.KillerInstinctTimer = this.KillerInstinctTimer;
-        result.HasRiftAftershock = this.HasRiftAftershock;
         MaterializeUser(frame, ref result, in context);
     }
   }

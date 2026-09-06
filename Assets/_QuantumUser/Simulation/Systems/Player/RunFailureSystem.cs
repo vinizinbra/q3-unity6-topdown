@@ -18,7 +18,7 @@ namespace Quantum
             if (f.Global->CurrentState == GameState.RunFailed)
                 return;
 
-            for (int i = 0; i < f.PlayerCount; i++)
+            for (int i = 0; i < f.MaxPlayerCount; i++)
             {
                 PlayerRef player = i;
 

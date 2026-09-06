@@ -19,7 +19,7 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Incendiary Rounds
   Rarity: 1
-  Description: '<color=#FD3971>{1:0}%</color> chance to Burn enemies on hit'
+  Description: <color=#FD3971>{1:0}%</color> chance to Burn enemies on hit
   Element: 1
   ProcChance:
-    RawValue: 16384
+    RawValue: 65536
