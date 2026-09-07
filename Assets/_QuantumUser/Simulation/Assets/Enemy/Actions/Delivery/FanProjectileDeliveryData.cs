@@ -80,7 +80,10 @@ namespace Quantum
                 targetPosition.Y = resolvedOrigin.Y;
             }
 
-            int pelletCount = PelletCount > 0 ? PelletCount : 1;
+            // Boss-phase Quantity scaling - see BossStatModifiers.QuantityMultiplier's own comment.
+            // FP._1 (no-op) for anything that isn't a boss currently authoring one.
+            int scaledPelletCount = FPMath.RoundToInt(PelletCount * BossPhaseUtility.ResolveQuantityMultiplier(f, filter.Entity));
+            int pelletCount = scaledPelletCount > 0 ? scaledPelletCount : 1;
 
             // Radial covers the full requested arc with no double-cover at the seam (step =
             // SpreadAngle / count); a cone instead spans strictly between its two edges (step =
@@ -136,7 +139,7 @@ namespace Quantum
                     continue;
                 }
 
-                ProjectileSpawner.Spawn(f, filter.Entity, ProjectileData, launch, action.Damage, target: target);
+                ProjectileSpawner.Spawn(f, filter.Entity, ProjectileData, ref launch, action.Damage, target: target);
                 fired++;
             }
 

@@ -20,11 +20,6 @@ MonoBehaviour:
     RawValue: -458752
   MaxRandomOffset:
     RawValue: 458752
-  HitImpactPrefab: {fileID: 4425481775148980287, guid: 33603ad5a2a86471199b3a9641457205, type: 3}
-  HitImpactOffset: {x: 0, y: 0, z: 0}
-  ProjectileData:
-    Id:
-      Value: 2938925554936299593
   SpawnAnchor: 0
   SpawnOffset:
     X:
@@ -33,10 +28,13 @@ MonoBehaviour:
       RawValue: 32768
     Z:
       RawValue: 0
+  ProjectileData:
+    Id:
+      Value: 2938925554936299593
   ShellCount: 3
-  AimedShellCount: 1
-  WarningRadius:
-    RawValue: 131072
+  AimedShellCount: 3
+  Stagger:
+    RawValue: 32768
 --- !u!114 &-1536457840295626355
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -128,6 +126,7 @@ MonoBehaviour:
     Duration: 0.3
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
+    BodySpriteScale: {x: 1, y: 1, z: 1}
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -195,6 +194,7 @@ MonoBehaviour:
     Duration: 0.3
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
+    BodySpriteScale: {x: 1, y: 1, z: 1}
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -262,6 +262,7 @@ MonoBehaviour:
     Duration: 0.3
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
+    BodySpriteScale: {x: 1, y: 1, z: 1}
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -329,6 +330,7 @@ MonoBehaviour:
     Duration: 0.3
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
+    BodySpriteScale: {x: 1, y: 1, z: 1}
     ShakeImpact: 0
     Shake:
       Frequency: 18

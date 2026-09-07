@@ -106,7 +106,10 @@ namespace Quantum
 
             if (launch.IsValid == true)
             {
-                EntityRef projectile = ProjectileSpawner.Spawn(f, filter.Entity, ProjectileData, launch, action.Damage, target: target);
+                // ref launch - Spawn's own ApplySpeedMultiplier mutates it in place (including
+                // BossPhaseUtility.ResolveProjectileSpeedMultiplier), so the FireLandingWarning call
+                // below sees the shot's REAL final velocity, not the pre-multiplier one solved above.
+                EntityRef projectile = ProjectileSpawner.Spawn(f, filter.Entity, ProjectileData, ref launch, action.Damage, target: target);
 
                 if (ShowLandingWarning == true)
                     FireLandingWarning(f, resolvedOrigin, targetPosition, launch.Velocity, ResolveWarningRadius(f, projectileData.Hit));

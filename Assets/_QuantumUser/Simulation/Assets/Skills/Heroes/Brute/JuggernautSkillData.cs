@@ -535,8 +535,12 @@ namespace Quantum
                 if (f.Has<JuggernautDischargeCooldown>(target) == true)
                     continue;
 
-                if (f.Has<Transform3D>(target) == false)
+                if (f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == false)
                     continue;
+
+                // Captured before knockback/damage so the hit VFX still lands here even if this
+                // is the killing blow (Filler/Normal tier is destroyed immediately - see below).
+                FPVector3 targetPosition = targetTransform->Position;
 
                 DamageUtility.ApplyKnockbackImpulse(f, target, impulse, owner);
                 charge->UnitsHit++;
@@ -570,6 +574,8 @@ namespace Quantum
                 }
 
                 DamageUtility.ApplyDamage(f, target, damage, owner, DamageSource.Skill);
+
+                f.Events.JuggernautDischargeHit(target, targetPosition, this);
 
                 // A Filler/Normal-tier enemy is destroyed immediately on death (see
                 // DamageUtility.ApplyDamage) - nothing left to grant a cooldown/launch state to if

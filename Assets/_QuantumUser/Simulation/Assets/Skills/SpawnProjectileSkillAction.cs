@@ -44,7 +44,7 @@ namespace Quantum
                 return;
             }
 
-            EntityRef spawned = ProjectileSpawner.Spawn(f, filter.Entity, Projectile, launch, Damage, DamageSource.Skill, target: filter.Aim->Target);
+            EntityRef spawned = ProjectileSpawner.Spawn(f, filter.Entity, Projectile, ref launch, Damage, DamageSource.Skill, target: filter.Aim->Target);
 
             Log.Debug($"[Skill] {filter.Entity} spawned {spawned} at {launch.SpawnPosition} on {firedPhase}");
         }

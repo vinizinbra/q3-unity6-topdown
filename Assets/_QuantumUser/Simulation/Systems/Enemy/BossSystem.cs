@@ -97,6 +97,16 @@ namespace Quantum
             FP damageTaken = lastHealth - health->CurrentHealth;
             filter.BossRuntimeState->LastObservedHealth = health->CurrentHealth;
 
+            // Still tracks LastObservedHealth above even while this early-outs - otherwise the
+            // damage dealt during the whole Kneel window (doubled by its own ApplyRupture) would
+            // sit undiffed and land as one lump sum the instant Kneel ends, instantly re-triggering
+            // another break. Bailing here instead just freezes StaggerMeter itself (no build, no
+            // regen-drain either) for as long as the boss is already executing its own break
+            // action, so getting hit while exposed can never queue up a second break before the
+            // first one has even finished.
+            if (IsExecutingForcedBreakAction(f, ref filter, bossData))
+                return;
+
             if (damageTaken > FP._0)
             {
                 filter.BossRuntimeState->StaggerMeter += damageTaken;
@@ -111,6 +121,30 @@ namespace Quantum
                 filter.BossRuntimeState->StaggerMeter = FP._0;
                 ForceBreakAction(f, ref filter, bossData);
             }
+        }
+
+        // True for the whole Preparation/Telegraph/Active run of OnBreakForcedAction itself - i.e.
+        // from the instant ForceBreakAction below commits to it until the delivery's own Tick()
+        // hands the boss back to Recovery. Keyed off CurrentActionSlot rather than a dedicated
+        // runtime bool so there's nothing extra to remember to clear - it just stops matching the
+        // moment EnemySystem moves the boss on to whatever comes next, the same way every other
+        // "what is this boss currently doing" check in this file already reads live state instead
+        // of a cached flag.
+        private static bool IsExecutingForcedBreakAction(Frame f, ref Filter filter, BossDataAsset bossData)
+        {
+            if (bossData.Stagger.OnBreakForcedAction.IsValid == false)
+                return false;
+
+            int skillIndex = FindSkillSlot(bossData, bossData.Stagger.OnBreakForcedAction);
+
+            if (skillIndex < 0)
+                return false;
+
+            bool isRunning = filter.Enemy->Phase == EnemyActionPhase.Preparation
+                || filter.Enemy->Phase == EnemyActionPhase.Telegraph
+                || filter.Enemy->Phase == EnemyActionPhase.Active;
+
+            return isRunning == true && filter.Enemy->CurrentActionSlot == (byte)(skillIndex + 1);
         }
 
         // Hard override - doesn't call the current delivery's EnemyDeliveryData.OnInterrupted

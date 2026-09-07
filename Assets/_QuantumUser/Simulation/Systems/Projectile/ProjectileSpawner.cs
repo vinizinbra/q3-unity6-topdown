@@ -25,8 +25,12 @@ namespace Quantum
         // spawnDepth is 0 for anything fired directly; a caller re-spawning off its own detonation
         // (AreaHitData's Fireworks/ClusterBomb) passes its own depth + 1 - see
         // AreaHitData.MaxSpawnUpgradeDepth, the hard ceiling that reads this back.
+        // launch is ref, not by-value - ApplySpeedMultiplier below mutates it in place, and a caller
+        // that goes on to fire its own landing-warning telegraph off launch.Velocity (see
+        // EnemyDeliveryData.FireLandingWarning) needs that final, post-multiplier velocity, not
+        // whatever it originally solved before this ever ran.
         public static EntityRef Spawn(Frame f, EntityRef owner, AssetRef<ProjectileDataAsset> projectileDataRef,
-            ProjectileLaunch launch, FP damage, DamageSource source = DamageSource.None,
+            ref ProjectileLaunch launch, FP damage, DamageSource source = DamageSource.None,
             SkillSlotId sourceSlot = SkillSlotId.None, EntityRef target = default,
             ElementType element = ElementType.Neutral, int spawnDepth = 0, int pelletIndex = 0)
         {
@@ -43,9 +47,13 @@ namespace Quantum
             // re-homes velocity later (HomingProjectileMovementData.UpdateVelocity) re-derives its own
             // magnitude, so this only guarantees the multiplier holds for the initial launch.
             //
-            // GetProjectileSpeedMultiplier is 1 for anything without CharacterStats (every enemy today).
+            // GetProjectileSpeedMultiplier is 1 for anything without CharacterStats (every enemy
+            // today) - BossPhaseUtility.ResolveProjectileSpeedMultiplier is the enemy-side equivalent
+            // (1 for anything that isn't a boss currently authoring one), composed alongside it here
+            // so this single call site covers both.
             ProjectileMovementData movement = f.FindAsset(projectileData.Movement);
-            movement.ApplySpeedMultiplier(ref launch, StatUtility.GetProjectileSpeedMultiplier(f, owner));
+            FP speedMultiplier = StatUtility.GetProjectileSpeedMultiplier(f, owner) * BossPhaseUtility.ResolveProjectileSpeedMultiplier(f, owner);
+            movement.ApplySpeedMultiplier(ref launch, speedMultiplier);
 
             EntityRef projectileEntity = f.Create(projectileData.Prototype);
 

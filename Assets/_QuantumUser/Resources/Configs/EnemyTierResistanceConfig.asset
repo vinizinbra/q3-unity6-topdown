@@ -25,6 +25,8 @@ MonoBehaviour:
       RawValue: 65536
     SlowDurationMultiplier:
       RawValue: 65536
+    ChillForceMultiplier:
+      RawValue: 65536
     BurnDamageMultiplier:
       RawValue: 65536
     RuptureDurationMultiplier:
@@ -44,6 +46,8 @@ MonoBehaviour:
     RootDurationMultiplier:
       RawValue: 65536
     SlowDurationMultiplier:
+      RawValue: 65536
+    ChillForceMultiplier:
       RawValue: 65536
     BurnDamageMultiplier:
       RawValue: 65536
@@ -65,6 +69,8 @@ MonoBehaviour:
       RawValue: 32768
     SlowDurationMultiplier:
       RawValue: 32768
+    ChillForceMultiplier:
+      RawValue: 49152
     BurnDamageMultiplier:
       RawValue: 65536
     RuptureDurationMultiplier:
@@ -85,6 +91,8 @@ MonoBehaviour:
       RawValue: 26214
     SlowDurationMultiplier:
       RawValue: 26214
+    ChillForceMultiplier:
+      RawValue: 39322
     BurnDamageMultiplier:
       RawValue: 65536
     RuptureDurationMultiplier:
@@ -105,6 +113,8 @@ MonoBehaviour:
       RawValue: 19661
     SlowDurationMultiplier:
       RawValue: 19661
+    ChillForceMultiplier:
+      RawValue: 32768
     BurnDamageMultiplier:
       RawValue: 65536
     RuptureDurationMultiplier:
@@ -118,13 +128,15 @@ MonoBehaviour:
     ImmuneToHardCC: 0
   Boss:
     KnockbackMultiplier:
-      RawValue: 0
+      RawValue: 13107
     StunDurationMultiplier:
       RawValue: 0
     RootDurationMultiplier:
       RawValue: 0
     SlowDurationMultiplier:
       RawValue: 65536
+    ChillForceMultiplier:
+      RawValue: 26214
     BurnDamageMultiplier:
       RawValue: 65536
     RuptureDurationMultiplier:

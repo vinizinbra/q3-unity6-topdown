@@ -56,7 +56,7 @@ GameObject:
   - component: {fileID: 3275125383435110723}
   - component: {fileID: 8664933306770135768}
   - component: {fileID: 1581274295084455462}
-  m_Layer: 15
+  m_Layer: 8
   m_Name: ScrapyardJawBoss
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -202,7 +202,7 @@ MonoBehaviour:
       IsPersistent: 1
       CompoundShapes: []
     LayerSource: 0
-    Layer: 15
+    Layer: 8
     CallbackFlags:
       Value: 0
   PhysicsBody:
@@ -465,6 +465,10 @@ MonoBehaviour:
     PendingImpactIndex: 0
     PendingImpactAwaitingSpawn:
       Value: 0
+    RingWaveRadius:
+      RawValue: 0
+    LaserSpinAngle:
+      RawValue: 0
     FlyingHoverCheckTimer:
       RawValue: 0
     FlyingHoverTargetHeight:
@@ -760,6 +764,7 @@ MonoBehaviour:
     Duration: 0.3
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
+    BodySpriteScale: {x: 1, y: 1, z: 1}
     ShakeImpact: 0
     Shake:
       Frequency: 18

@@ -19,16 +19,22 @@ MonoBehaviour:
   Icon: {fileID: -1247703252, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
   DisplayName: Aftershock
   RankDescriptions:
-  - 'Each enemy struck during Juggernaut adds <color=#FD3971>+15%</color> damage to the closing shockwave, up to <color=#FD3971>5</color> stacks.'
-  - 'Each enemy struck adds <color=#FD3971>+15%</color> damage and <color=#FD3971>+5%</color> radius to the closing shockwave, up to <color=#FD3971>5</color> stacks.'
-  - 'Each enemy struck adds <color=#FD3971>+15%</color> damage and <color=#FD3971>+5%</color> radius, up to <color=#FD3971>5</color> stacks. At <color=#FD3971>5</color> stacks a second shockwave follows in <color=#FD3971>0.5s</color>.'
+  - Each enemy struck during Juggernaut adds <color=#FD3971>+15%</color> damage to
+    the closing shockwave, up to <color=#FD3971>5</color> stacks.
+  - Each enemy struck adds <color=#FD3971>+15%</color> damage and <color=#FD3971>+5%</color>
+    radius to the closing shockwave, up to <color=#FD3971>5</color> stacks.
+  - Each enemy struck adds <color=#FD3971>+15%</color> damage and <color=#FD3971>+5%</color>
+    radius, up to <color=#FD3971>5</color> stacks. At <color=#FD3971>5</color> stacks
+    a second shockwave follows in <color=#FD3971>0.5s</color>.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Juggernaut's closing shockwave grows with every enemy you struck during the channel, so routing through a crowd before it ends is what makes the finish hurt.
+  Description: Juggernaut's closing shockwave grows with every enemy you struck during
+    the channel, so routing through a crowd before it ends is what makes the finish
+    hurt.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -69,4 +75,4 @@ MonoBehaviour:
     RawValue: 65536
   EarthquakeDelay:
     RawValue: 32768
-  BlastEffectPrefab: {fileID: 6350743763286976369, guid: 2dcb44456e58b4eb3823d152a70d114f, type: 3}
+  BlastEffectPrefab: {fileID: 6350743763286976369, guid: 28678772255de4e4e97b8aa30915b587, type: 3}

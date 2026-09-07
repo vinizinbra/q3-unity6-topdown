@@ -52,7 +52,10 @@ namespace Quantum
 
         public override bool Begin(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, EnemyActionData action, EntityRef target)
         {
-            int count = Math.Clamp(PointCount, 0, byte.MaxValue);
+            // Boss-phase Quantity scaling - see BossStatModifiers.QuantityMultiplier's own comment.
+            // FP._1 (no-op) for anything that isn't a boss currently authoring one.
+            int scaledPointCount = FPMath.RoundToInt(PointCount * BossPhaseUtility.ResolveQuantityMultiplier(f, filter.Entity));
+            int count = Math.Clamp(scaledPointCount, 0, byte.MaxValue);
 
             if (count == 0)
                 return true; // misauthored asset - nothing to wait on
@@ -131,7 +134,17 @@ namespace Quantum
                 point.Y = groundY;
 
             filter.Enemy->PendingImpactPoint = point;
-            f.Events.ProjectileLandingWarning(point, Delay, f.FindAsset(Hit).BlastRadius);
+
+            // GroundWarningTelegraphManager (View) bakes this Duration into its own real-time
+            // countdown once, at fire time - it never re-reads any live sim state afterward (unlike
+            // RingWaveVisualManager/RotatingLaserVisualManager, which poll a synced Enemy field every
+            // render frame instead). Delay itself is what Tick's own StateTimer decrement below counts
+            // down in SIM time at GetLocalTimeMultiplier's rate, so the REAL wall-clock time until this
+            // point actually detonates is Delay / that same multiplier - dividing it out here is what
+            // keeps the visual telegraph's own countdown lined up with the real detonation, whether
+            // that's sped up by a boss-phase ActiveSpeedMultiplier or slowed by Void Pressure.
+            FP realDelay = Delay / StatusEffectUtility.GetLocalTimeMultiplier(f, filter.Entity);
+            f.Events.ProjectileLandingWarning(point, realDelay, f.FindAsset(Hit).BlastRadius);
         }
 
         // action.Origin == Self already reads live every call (the enemy's own current position, not

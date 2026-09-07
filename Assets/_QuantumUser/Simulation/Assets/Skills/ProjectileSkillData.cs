@@ -71,7 +71,7 @@ namespace Quantum
             SkillSlotId sourceSlot = slot == &filter.CharacterSkills->DashSkill ? SkillSlotId.DashSkill : SkillSlotId.HeroSkill;
             FP damage = Damage * ResolveDamageMultiplier(f, filter.Entity);
             damage *= ApplyBombCharge(f, filter.Entity, sourceSlot, movement, ref launch);
-            ProjectileSpawner.Spawn(f, filter.Entity, ProjectileData, launch, damage, DamageSource.Skill, sourceSlot, filter.Aim->Target);
+            ProjectileSpawner.Spawn(f, filter.Entity, ProjectileData, ref launch, damage, DamageSource.Skill, sourceSlot, filter.Aim->Target);
             slot->ProjectilePending = true;
 
             Log.Debug($"[Skill] {filter.Entity} fired a projectile skill from {spawnPosition} with velocity {launch.Velocity}");

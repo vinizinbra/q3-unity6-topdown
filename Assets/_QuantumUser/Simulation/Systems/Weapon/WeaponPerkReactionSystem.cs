@@ -116,7 +116,7 @@ namespace Quantum
             if (launch.IsValid == false)
                 return;
 
-            EntityRef secondary = ProjectileSpawner.Spawn(f, owner, weaponData.ProjectileData, launch, reboundDamage, DamageSource.Weapon,
+            EntityRef secondary = ProjectileSpawner.Spawn(f, owner, weaponData.ProjectileData, ref launch, reboundDamage, DamageSource.Weapon,
                 target: secondaryTarget, element: weaponData.Element);
 
             // Same engagement-range cap every other weapon-fired projectile gets - see

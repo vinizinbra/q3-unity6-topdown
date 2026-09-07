@@ -805,7 +805,7 @@ MonoBehaviour:
     DetectionRange:
       RawValue: 655360
     LeashRange:
-      RawValue: 983040
+      RawValue: 3276800
     DetectionRangeMultiplier:
       RawValue: 65536
   Actions:
@@ -814,7 +814,9 @@ MonoBehaviour:
         Value: 0
     SkillActions:
     - Id:
-        Value: 460713306234689703
+        Value: 474279461032113235
+    - Id:
+        Value: 413219400190947953
   DeathLingerTime:
     RawValue: 196608
   ChestDrop:
@@ -948,13 +950,21 @@ MonoBehaviour:
         RawValue: 65536
       AnticipationMultiplier:
         RawValue: 65536
+      ActiveSpeedMultiplier:
+        RawValue: 0
+      ProjectileSpeedMultiplier:
+        RawValue: 0
+      RecoveryMultiplier:
+        RawValue: 0
+      QuantityMultiplier:
+        RawValue: 0
       DamageMultiplier:
         RawValue: 327680
       DamageTakenMultiplier:
         RawValue: 131072
   - EntryTrigger: 0
     HealthPercentThreshold:
-      RawValue: 32768
+      RawValue: 58982
     TimerSeconds:
       RawValue: 0
     ActionPoolSlots: 
@@ -999,20 +1009,28 @@ MonoBehaviour:
       MoveSpeedMultiplier:
         RawValue: 131072
       AnticipationMultiplier:
-        RawValue: 98304
-      DamageMultiplier:
-        RawValue: 327680
-      DamageTakenMultiplier:
+        RawValue: 65536
+      ActiveSpeedMultiplier:
+        RawValue: 32768
+      ProjectileSpeedMultiplier:
+        RawValue: 65536
+      RecoveryMultiplier:
+        RawValue: 65536
+      QuantityMultiplier:
         RawValue: 131072
-  GlobalActionSlots: 000000000100000002000000
+      DamageMultiplier:
+        RawValue: 65536
+      DamageTakenMultiplier:
+        RawValue: 65536
+  GlobalActionSlots: 00000000
   Stagger:
     Threshold:
-      RawValue: 0
+      RawValue: 65536000
     RegenRate:
       RawValue: 65536
     OnBreakForcedAction:
       Id:
-        Value: 0
+        Value: 413219400190947953
   ComboChains:
   - TriggerAction:
       Id:

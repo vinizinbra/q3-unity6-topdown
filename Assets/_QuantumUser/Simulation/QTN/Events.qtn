@@ -472,6 +472,18 @@ event JuggernautDischarged
     AssetRef<JuggernautSkillData> Source;
 }
 
+// Fired once per enemy actually struck inside JuggernautSkillData.Discharge - unlike
+// JuggernautDischarged above (one pulse centered on Brutus's own position), this fires at each
+// STRUCK ENEMY's own position, so the hit reads as landing on them instead of only erupting from
+// Brutus. Source resolves JuggernautSkillData.DischargeHitEffectPrefab, same
+// AssetRef-travels-with-the-event shape as JuggernautDischarged's own Source.
+event JuggernautDischargeHit
+{
+    EntityRef  Entity;
+    FPVector3  Position;
+    AssetRef<JuggernautSkillData> Source;
+}
+
 // Fired by JuggernautSkillData.End when the Aftershock Ascension is equipped - the channel
 // finishing (Duration running out) triggers a damage blast around Brutus's own position, separate
 // from the discharge pulse above (knockback only, triggered by touching an enemy while Charged, not
@@ -605,31 +617,41 @@ event ProjectileLandingWarning
 // out of sync with the real hit-detection front during it. The View stops drawing once Entity's
 // own Enemy.Phase leaves Active (or the entity stops existing) - both self-heal at exactly the
 // same case (Ring successfully finishing, this same delivery being interrupted, this entity
-// dying) that Enemy.Phase already always changes away from Active for.
+// dying) that Enemy.Phase already always changes away from Active for. Delivery is the AssetRef
+// RingWaveVisualManager resolves RingSlamDeliveryData.LineRendererPrefab off (frame.FindAsset then
+// an `is RingSlamDeliveryData` pattern match, same idiom EnemyDeliveryData.ResolveWarningRadius
+// already uses for AreaHitData) - the prefab is authored per-delivery-asset, not on the manager, so
+// different rings can use different visuals. Line width is likewise NOT carried here - it's left
+// entirely to whatever startWidth/endWidth (or width curve) is authored on that same prefab, rather
+// than being forced from a value on the delivery.
 event RingWaveExpanding
 {
     EntityRef  Entity;
     FPVector3  Center;
-    FP         LineWidth;
+    FP         HeightOffset;
+    AssetRef<EnemyDeliveryData> Delivery;
 }
 
 // Fired once by RotatingLaserDeliveryData.Begin() - the View-side hook to draw BeamCount persistent
 // LineRenderer beams (RotatingLaserVisualManager), evenly spaced around Enemy.LaserSpinAngle, each
 // tracking that angle and the entity's own live Transform3D.Position every render frame, same "poll
 // the live frame instead of replicating a Void-Pressure-scaled formula client-side" reasoning as
-// RingWaveExpanding above. Length/Width/HeightOffset are pure view tuning EXCEPT HeightOffset, which
-// must exactly match RotatingLaserDeliveryData's own HeightOffset field (the real hit-check's box is
-// centered relative to it too, see FireLaserTick) - carried here as a value rather than an asset
-// reference so the generic view manager doesn't need frame.FindAsset access to the delivery asset
-// itself just to draw at the right height/size. Same self-healing stop condition as
-// RingWaveExpanding (Entity's own Enemy.Phase leaving Active, or ceasing to exist).
+// RingWaveExpanding above. Length is pure view tuning; HeightOffset must exactly match
+// RotatingLaserDeliveryData's own HeightOffset field (the real hit-check's box is centered relative
+// to it too, see FireLaserTick). Deliberately carries no Width - BeamWidth stays a real-hitbox-only
+// field on the delivery (see its own comment); the drawn line's width is left entirely to whatever
+// startWidth/endWidth (or width curve) is authored on LineRendererPrefab instead, same as
+// RingWaveExpanding's own line width. Same self-healing stop condition as RingWaveExpanding
+// (Entity's own Enemy.Phase leaving Active, or ceasing to exist). Delivery is the AssetRef
+// RotatingLaserVisualManager resolves RotatingLaserDeliveryData.LineRendererPrefab off - same
+// reasoning/idiom as RingWaveExpanding's own Delivery field.
 event RotatingLaserFired
 {
     EntityRef  Entity;
     FP         Length;
-    FP         Width;
     FP         HeightOffset;
     Byte       BeamCount;
+    AssetRef<EnemyDeliveryData> Delivery;
 }
 
 // Fired by StatusEffectSystem.TickElectrified every time Electrified's periodic Jolt actually fires

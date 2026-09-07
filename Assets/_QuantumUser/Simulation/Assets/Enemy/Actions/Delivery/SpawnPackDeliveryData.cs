@@ -37,18 +37,30 @@ namespace Quantum
             FPVector3 anchor = action.Origin == EnemyActionOrigin.Self ? filter.Transform3D->Position : filter.Enemy->SkillTargetPosition;
             int groundLayerMask = EnemyMovementUtility.GetGroundLayerMask(f);
 
-            for (int i = 0; i < Composition.Count; i++)
+            // Boss-phase Quantity scaling - see BossStatModifiers.QuantityMultiplier's own comment.
+            // Composition is an exact, ordered roster (not a bare count), so a phase repeats the
+            // WHOLE authored roster this many times rather than fractionally scaling it - a 5-entry
+            // Composition at QuantityMultiplier 2 spawns the same 5-entry roster twice (10 total),
+            // never an approximated/partial one. FP._1 (round to 1 repeat) for anything that isn't a
+            // boss currently authoring one.
+            int repeatCount = FPMath.RoundToInt(BossPhaseUtility.ResolveQuantityMultiplier(f, filter.Entity));
+            repeatCount = repeatCount < 1 ? 1 : repeatCount;
+
+            for (int repeat = 0; repeat < repeatCount; repeat++)
             {
-                if (Composition[i].IsValid == false)
-                    continue;
+                for (int i = 0; i < Composition.Count; i++)
+                {
+                    if (Composition[i].IsValid == false)
+                        continue;
 
-                FPVector3 point = RandomizeAroundAnchor(f, anchor);
+                    FPVector3 point = RandomizeAroundAnchor(f, anchor);
 
-                FP groundY = EnemyMovementUtility.TryFindGroundHeight(f, point, groundLayerMask, out FP foundGroundY)
-                    ? foundGroundY
-                    : point.Y;
+                    FP groundY = EnemyMovementUtility.TryFindGroundHeight(f, point, groundLayerMask, out FP foundGroundY)
+                        ? foundGroundY
+                        : point.Y;
 
-                SpawnMember(f, directorConfig, new FPVector3(point.X, groundY, point.Z), Composition[i], filter.Enemy->Faction);
+                    SpawnMember(f, directorConfig, new FPVector3(point.X, groundY, point.Z), Composition[i], filter.Enemy->Faction);
+                }
             }
 
             return true;

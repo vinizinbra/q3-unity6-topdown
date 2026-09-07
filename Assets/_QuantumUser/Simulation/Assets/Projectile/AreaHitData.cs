@@ -216,7 +216,7 @@ namespace Quantum
                 if (launch.IsValid == false)
                     continue;
 
-                ProjectileSpawner.Spawn(f, owner, cluster->Projectile, launch, bombletDamage, DamageSource.Skill,
+                ProjectileSpawner.Spawn(f, owner, cluster->Projectile, ref launch, bombletDamage, DamageSource.Skill,
                     spawnDepth: childDepth);
             }
 

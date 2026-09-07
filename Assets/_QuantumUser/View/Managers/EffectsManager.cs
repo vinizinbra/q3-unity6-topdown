@@ -127,6 +127,13 @@ namespace QuantumUser.View.Managers
         public Vector3 AnticipationIconOffset => anticipationIconOffset;
         public float MinimumAnticipationIconDuration => minimumAnticipationIconDuration;
 
+        // Prefab's own authored localScale (e.g. 0.4,0.4,0.4), read straight off the source asset
+        // rather than any pooled instance - EnemyAttackVisualsView.UpdateAnticipationIcon multiplies
+        // this by the enemy's live post-tier-scale radius (same reference-radius-1 convention as
+        // groundbreakerImpactPrefab above) so a Boss's icon reads visibly bigger than a Filler's
+        // instead of every tier sharing one fixed size.
+        public Vector3 AnticipationIconBaseScale => anticipationIconEffectPrefab != null ? anticipationIconEffectPrefab.transform.localScale : Vector3.one;
+
         [Header("Accessory Guard")]
         [SerializeField, Tooltip("GENERIC fallback played where a BROKEN accessory's debris comes to rest (see docs/accessory-guard.md) - the durability-0 block still knocks the accessory off and flies it on the normal arc, and this is the \"it shattered\" payoff at the landing point. A hero can override it per-accessory via CharacterData.Accessory.BrokenEffectPrefab; this covers everyone who doesn't. Leave empty to skip the particle entirely; deliberately no fallback to defaultAreaBlastEffect, since an explosion reads wrong for a hat breaking.")]
         private ParticleSystem accessoryBrokenEffectPrefab;
@@ -247,6 +254,7 @@ namespace QuantumUser.View.Managers
             QuantumEvent.Subscribe<EventVortexImploded>(this, OnVortexImploded);
             QuantumEvent.Subscribe<EventUndertowTriggered>(this, OnUndertowTriggered);
             QuantumEvent.Subscribe<EventJuggernautDischarged>(this, OnJuggernautDischarged);
+            QuantumEvent.Subscribe<EventJuggernautDischargeHit>(this, OnJuggernautDischargeHit);
             QuantumEvent.Subscribe<EventJuggernautEndExploded>(this, OnJuggernautEndExploded);
             QuantumEvent.Subscribe<EventJuggernautLanded>(this, OnJuggernautLanded);
             QuantumEvent.Subscribe<EventEnemyExploded>(this, OnEnemyExploded);
@@ -390,6 +398,22 @@ namespace QuantumUser.View.Managers
             ParticleSystem prefab = skill.DischargeEffectPrefab ?? defaultAreaBlastEffect;
 
             PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
+        }
+
+        // Fired once per enemy actually struck by a discharge, at that enemy's own position -
+        // unlike OnJuggernautDischarged above (one pulse centered on Brutus), this is what reads as
+        // the hit landing on the target. Falls back to DischargeEffectPrefab (then the default
+        // blast) so this plays something out of the box even before a dedicated hit-spark prefab is
+        // authored on the asset.
+        private void OnJuggernautDischargeHit(EventJuggernautDischargeHit e)
+        {
+            Frame frame = e.Game.Frames.Predicted;
+            if (frame == null) return;
+
+            JuggernautSkillData skill = frame.FindAsset(e.Source);
+            ParticleSystem prefab = skill.DischargeHitEffectPrefab ?? skill.DischargeEffectPrefab ?? defaultAreaBlastEffect;
+
+            PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one);
         }
 
         // Same resolution as OnJuggernautDischarged - Source always comes from exactly one

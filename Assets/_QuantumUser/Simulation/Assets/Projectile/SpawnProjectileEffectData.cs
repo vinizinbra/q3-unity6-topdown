@@ -22,7 +22,7 @@ namespace Quantum
             if (launch.IsValid == false)
                 return;
 
-            ProjectileSpawner.Spawn(f, context.Owner, ProjectileData, launch, Damage, context.Source, target: context.Target);
+            ProjectileSpawner.Spawn(f, context.Owner, ProjectileData, ref launch, Damage, context.Source, target: context.Target);
         }
     }
 }

@@ -38,27 +38,6 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
-  - Name: World1Boss
-    Kind: 2
-    Duration:
-      RawValue: 0
-    BudgetPerPulse:
-      RawValue: 0
-    PulseInterval:
-      RawValue: 0
-    TargetPressure:
-      RawValue: 0
-    MaxAliveEnemies: 0
-    AllowedGroups: []
-    AllowedEnemies: []
-    BossPrototype:
-      Id:
-        Value: 1314062773136615755
-    PauseDuration:
-      RawValue: 327680
-    GuaranteedGroup:
-      Id:
-        Value: 0
   - Name: R1-A Warmup (0-20s)
     Kind: 0
     Duration:
@@ -185,6 +164,27 @@ MonoBehaviour:
         Value: 0
     PauseDuration:
       RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+  - Name: World1Boss
+    Kind: 2
+    Duration:
+      RawValue: 0
+    BudgetPerPulse:
+      RawValue: 0
+    PulseInterval:
+      RawValue: 0
+    TargetPressure:
+      RawValue: 0
+    MaxAliveEnemies: 0
+    AllowedGroups: []
+    AllowedEnemies: []
+    BossPrototype:
+      Id:
+        Value: 1314062773136615755
+    PauseDuration:
+      RawValue: 327680
     GuaranteedGroup:
       Id:
         Value: 0

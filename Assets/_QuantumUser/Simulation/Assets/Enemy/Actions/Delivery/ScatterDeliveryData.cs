@@ -36,16 +36,20 @@ namespace Quantum
         public int CountP3 = 1;
         public int CountP4 = 1;
 
-        private int ResolveCount(Frame f)
+        private int ResolveCount(Frame f, EntityRef entity)
         {
             int clamped = f.MaxPlayerCount < 1 ? 1 : (f.MaxPlayerCount > 4 ? 4 : f.MaxPlayerCount);
-            return clamped switch { 1 => CountP1, 2 => CountP2, 3 => CountP3, _ => CountP4 };
+            int baseCount = clamped switch { 1 => CountP1, 2 => CountP2, 3 => CountP3, _ => CountP4 };
+
+            // Boss-phase Quantity scaling - see BossStatModifiers.QuantityMultiplier's own comment.
+            // FP._1 (no-op) for anything that isn't a boss currently authoring one.
+            return FPMath.RoundToInt(baseCount * BossPhaseUtility.ResolveQuantityMultiplier(f, entity));
         }
 
         public override bool Begin(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, EnemyActionData action, EntityRef target)
         {
             FPVector3 anchor = action.Origin == EnemyActionOrigin.Self ? filter.Transform3D->Position : filter.Enemy->SkillTargetPosition;
-            int count = ResolveCount(f);
+            int count = ResolveCount(f, filter.Entity);
 
             for (int i = 0; i < count; i++)
             {

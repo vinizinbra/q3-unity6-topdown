@@ -12,14 +12,14 @@ namespace QuantumUser.View.Managers
     // independently-clocked replica would drift out of sync with it). Center is fixed at whatever
     // the event carried (RingSlamDeliveryData freezes its own center at Begin() and never re-reads
     // it either), so this never tracks the owning enemy's live position the way
-    // RotatingLaserVisualManager's beam does. Stops drawing - and destroys the line - the moment
-    // Entity's own Enemy.Phase leaves Active or the entity stops existing, which covers the ring
-    // finishing normally, this delivery being interrupted, and the entity dying, all in one check.
+    // RotatingLaserVisualManager's beam does. The prefab itself is authored per-delivery-asset
+    // (RingSlamDeliveryData.LineRendererPrefab, resolved off the event's own Delivery AssetRef) rather
+    // than a single shared field here, so different rings can look different. Stops drawing - and
+    // destroys the line - the moment Entity's own Enemy.Phase leaves Active or the entity stops
+    // existing, which covers the ring finishing normally, this delivery being interrupted, and the
+    // entity dying, all in one check.
     public class RingWaveVisualManager : MonoBehaviour
     {
-        [SerializeField, Tooltip("LineRenderer prefab this instantiates per ring - positionCount is overwritten every frame, so only material/color/texture need to be authored on it.")]
-        private LineRenderer ringLinePrefab;
-
         [SerializeField, Tooltip("Points around the circle - higher is smoother but more expensive. 48 reads as a smooth circle at any on-screen size this game's camera actually shows.")]
         private int segments = 48;
 
@@ -69,27 +69,46 @@ namespace QuantumUser.View.Managers
 
         private void OnRingWaveExpanding(EventRingWaveExpanding e)
         {
-            if (ringLinePrefab == null)
+            Frame frame = e.Game.Frames.Predicted;
+
+            // Authored per-delivery-asset (RingSlamDeliveryData.LineRendererPrefab, its own View.cs
+            // partial) rather than a single shared prefab on this manager, so different rings can use
+            // different visuals - same "AssetRef travels with the event, View resolves + pattern
+            // matches" idiom EnemyDeliveryData.ResolveWarningRadius already uses for AreaHitData.
+            LineRenderer prefab = frame != null && frame.FindAsset(e.Delivery) is RingSlamDeliveryData ringDelivery
+                ? ringDelivery.LineRendererPrefab
+                : null;
+
+            if (prefab == null)
                 return;
 
             if (_activeRings.TryGetValue(e.Entity, out var stale))
             {
                 StopCoroutine(stale.Coroutine);
-
-                if (stale.Line != null)
-                    Destroy(stale.Line.gameObject);
-
+                ResetLine(stale.Line);
                 _activeRings.Remove(e.Entity);
             }
 
             Vector3 center = SnapToGround(e.Center.ToUnityVector3());
+            center.y += e.HeightOffset.AsFloat;
 
-            LineRenderer line = Instantiate(ringLinePrefab, center, Quaternion.identity);
-            line.startWidth = e.LineWidth.AsFloat;
-            line.endWidth = e.LineWidth.AsFloat;
-            line.loop = true;
+            // Width is deliberately NOT set here - whatever startWidth/endWidth (or width curve) the
+            // prefab itself was authored with applies unmodified; the delivery has no width field of
+            // its own to override it with.
+            LineRenderer line = Instantiate(prefab, center, Quaternion.identity);
 
-            Coroutine coroutine = StartCoroutine(RunRing(e.Entity, center, line));
+            // Stays off until DrawCircle actually writes real points onto it (see RunRing) - never
+            // shows even a single frame of whatever positionCount/points the prefab happened to be
+            // authored with (or a stale leftover from a previous pooled use), rather than trying to
+            // guarantee the first real draw always lands before anything would render.
+            line.enabled = false;
+
+            // The tick this ring's own RingWaveRadius was actually (re)written on - see RunRing's own
+            // comment on why this, not just "the coroutine's first loop iteration", is the correct
+            // guard against interpolating across a reused enemy's stale leftover value.
+            int spawnTick = frame != null ? frame.Number : -1;
+
+            Coroutine coroutine = StartCoroutine(RunRing(e.Entity, center, line, spawnTick));
             _activeRings[e.Entity] = (coroutine, line);
         }
 
@@ -100,7 +119,7 @@ namespace QuantumUser.View.Managers
         // OnRingWaveExpanding's own StopCoroutine call never resumes to run this cleanup at all, so
         // reaching it here already proves nothing has replaced this entry, and removing it
         // unconditionally is safe.
-        private IEnumerator RunRing(EntityRef entity, Vector3 center, LineRenderer line)
+        private IEnumerator RunRing(EntityRef entity, Vector3 center, LineRenderer line, int spawnTick)
         {
             while (true)
             {
@@ -115,16 +134,15 @@ namespace QuantumUser.View.Managers
                 if (enemy.Phase != EnemyActionPhase.Active)
                     break;
 
-                float radius = ResolveInterpolatedRadius(game, entity, enemy.RingWaveRadius.AsFloat);
+                float radius = ResolveInterpolatedRadius(game, entity, enemy.RingWaveRadius.AsFloat, spawnTick);
                 DrawCircle(line, center, radius, segments);
+                line.enabled = true;
 
                 yield return null;
             }
 
             _activeRings.Remove(entity);
-
-            if (line != null)
-                Destroy(line.gameObject);
+            ResetLine(line);
         }
 
         // RingWaveRadius only actually changes once per SIMULATION tick, not once per render frame -
@@ -134,17 +152,39 @@ namespace QuantumUser.View.Managers
         // Blends toward the current tick's value from the PREVIOUS tick's using Game.InterpolationFactor -
         // the exact same two ingredients QuantumEntityView's own position/rotation interpolation uses
         // (see QuantumEntityView.InterpolationAlpha) - so the ring grows exactly as smoothly as
-        // everything else being rendered. Falls back to the current value alone if there's no valid
-        // previous-tick sample yet (e.g. the very first frame right after this ring spawned).
-        private static float ResolveInterpolatedRadius(QuantumGame game, EntityRef entity, float currentRadius)
+        // everything else being rendered.
+        //
+        // Guarded by spawnTick (the tick THIS ring's own RingWaveRadius was first written on, captured
+        // once in OnRingWaveExpanding), not just "is this the coroutine's first loop iteration" - that
+        // weaker guard was tried first and still glitched, because render frame rate can outpace the
+        // simulation's own tick rate: if the sim hasn't ticked again yet by the coroutine's SECOND (or
+        // Nth) iteration, PredictedPrevious.Number is still < spawnTick, meaning it's STILL a stale
+        // sample from whatever this same shared Enemy field last held - a completely different, earlier
+        // ring this same enemy fired, not a real "previous tick of THIS ring" at all. Falls back to the
+        // raw current-tick value for as long as that holds, and only starts blending once a genuine
+        // post-spawn previous tick actually exists to blend from.
+        private static float ResolveInterpolatedRadius(QuantumGame game, EntityRef entity, float currentRadius, int spawnTick)
         {
             Frame previousFrame = game.Frames.PredictedPrevious;
 
-            if (previousFrame == null || previousFrame.Exists(entity) == false)
+            if (previousFrame == null || previousFrame.Exists(entity) == false || previousFrame.Number < spawnTick)
                 return currentRadius;
 
             float previousRadius = previousFrame.Get<Enemy>(entity).RingWaveRadius.AsFloat;
             return Mathf.Lerp(previousRadius, currentRadius, game.InterpolationFactor);
+        }
+
+        // Explicit disable + zero-out rather than counting on Destroy alone - Destroy is deferred to
+        // the end of the frame, so without this the line would still be sitting there, enabled, with
+        // its last-drawn points, for whatever's left of the current frame's rendering.
+        private static void ResetLine(LineRenderer line)
+        {
+            if (line == null)
+                return;
+
+            line.enabled = false;
+            line.positionCount = 0;
+            Destroy(line.gameObject);
         }
 
         private static void DrawCircle(LineRenderer line, Vector3 center, float radius, int segments)

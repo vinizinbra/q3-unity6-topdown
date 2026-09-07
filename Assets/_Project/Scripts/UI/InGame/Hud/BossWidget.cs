@@ -39,10 +39,16 @@ public class BossWidget : QuantumGlobalMonoBehaviour
     [SerializeField] private Slider healthSlider;
     [SerializeField, Tooltip("Shows \"current/max\" (rounded to whole numbers) alongside healthSlider.")]
     private TMP_Text healthText;
-    [SerializeField, Tooltip("Shown only while the boss carries a Shield component with a Max above zero - e.g. GrasslandOutpostBoss (ShieldMultiplier = 1). A boss with no shield authored just never shows this.")]
+    [SerializeField, Tooltip("Whole shield visual group (slider + label + any background/icon) - toggled off together, unlike shieldSlider/shieldText individually, since the slider itself doesn't bound the group's other decoration. Shown only while the boss carries a Shield component with a Max above zero - e.g. GrasslandOutpostBoss (ShieldMultiplier = 1). A boss with no shield authored just never shows this.")]
+    private GameObject shieldRoot;
+    [SerializeField]
     private Slider shieldSlider;
-    [SerializeField, Tooltip("Shows \"current/max\" (rounded to whole numbers) alongside shieldSlider - shown/hidden together with it.")]
+    [SerializeField, Tooltip("Shows \"current/max\" (rounded to whole numbers) alongside shieldSlider.")]
     private TMP_Text shieldText;
+    [SerializeField, Tooltip("Whole stagger visual group (slider + any label/background/icon) - toggled off together, same reasoning as shieldRoot. Shown only while Stagger.Threshold > 0, same optional-feature gating as shieldRoot.")]
+    private GameObject staggerRoot;
+    [SerializeField, Tooltip("BossRuntimeState.StaggerMeter / BossDataAsset.Stagger.Threshold - fills as the boss takes damage, resets to empty (and freezes - see BossSystem.TickStagger) the instant it breaks into Kneel.")]
+    private Slider staggerSlider;
     [SerializeField, Tooltip("Shown once, the instant the boss entity is first found this encounter - populated from its own EnemyDataAsset if it's a BossDataAsset (Title/Subtitle/UiSprite), left as whatever's already on the prefab otherwise.")]
     private BossWindow bossWindow;
     [SerializeField, Tooltip("Duration of each fade-out/fade-in half of the camera-focus cutaway (see ScreenFadeWidget). Falls back to an instant camera snap with no fade at all if ScreenFadeWidget.Instance isn't found in the scene.")]
@@ -80,11 +86,12 @@ public class BossWidget : QuantumGlobalMonoBehaviour
         }
 
         var bosses = frame.Filter<BossRuntimeState, Health>();
-        if (bosses.Next(out EntityRef bossEntity, out _, out Health health) == false)
+        if (bosses.Next(out EntityRef bossEntity, out BossRuntimeState bossRuntimeState, out Health health) == false)
             return;
 
         UpdateHealth(health);
         UpdateShield(frame, bossEntity);
+        UpdateStagger(frame, bossEntity, bossRuntimeState);
         UpdateName(frame, bossEntity);
 
         if (_wasBoss == false)
@@ -171,8 +178,7 @@ public class BossWidget : QuantumGlobalMonoBehaviour
     {
         bool shown = frame.TryGet<Shield>(bossEntity, out var shield) && shield.Max > FP._0;
 
-        SetShown(shieldSlider, shown);
-        SetShown(shieldText, shown);
+        SetShown(shieldRoot, shown);
 
         if (shown == false)
             return;
@@ -181,6 +187,22 @@ public class BossWidget : QuantumGlobalMonoBehaviour
 
         if (shieldText != null)
             shieldText.text = $"{Mathf.RoundToInt(shield.Current.AsFloat)}/{Mathf.RoundToInt(shield.Max.AsFloat)}";
+    }
+
+    private void UpdateStagger(Frame frame, EntityRef bossEntity, BossRuntimeState bossRuntimeState)
+    {
+        if (frame.TryGet<Enemy>(bossEntity, out var enemy) == false)
+            return;
+
+        BossDataAsset bossData = frame.FindAsset(enemy.EnemyData) as BossDataAsset;
+        bool shown = bossData != null && bossData.Stagger.Threshold > FP._0;
+
+        SetShown(staggerRoot, shown);
+
+        if (shown == false)
+            return;
+
+        SetSliderValue(staggerSlider, (bossRuntimeState.StaggerMeter / bossData.Stagger.Threshold).AsFloat);
     }
 
     private void UpdateName(Frame frame, EntityRef bossEntity)

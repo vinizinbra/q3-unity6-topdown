@@ -429,6 +429,15 @@ namespace Quantum
             Log.Debug($"[Enemy] {filter.Entity} fell below FallDeathHeight={config.FallDeathHeight} " +
                       $"(Y={filter.Transform3D->Position.Y}) - killed by the fall");
 
+            // Same dedicated "vanished off the map" VFX every other fall death gets (a falling
+            // player, or a Boss/Elite/Persistent enemy via EnemyFallSystem's own identical call) -
+            // without this, a regular enemy dying to this check only ever showed the generic combat
+            // death explosion below (ApplyDamage's own FireEnemyExploded for Filler/Normal/Heavy/
+            // Specialist), which reads as "killed in a fight" rather than "fell off the level".
+            FPVector3 fallCenter = EnemyMovementUtility.ResolveEntityCenter(f, filter.Entity);
+            FP fallRadius = EnemyMovementUtility.ResolveEntityRadius(f, filter.Entity);
+            f.Events.FallDeathTriggered(filter.Entity, fallCenter, fallRadius);
+
             DamageUtility.ApplyDamage(f, filter.Entity, health->MaxHealth * 1000, EntityRef.None, bypassOutgoingResolution: true);
             return true;
         }
@@ -742,7 +751,7 @@ namespace Quantum
             }
 
             FP moveSpeed = data.Stats.MoveSpeed * StatusEffectUtility.GetSpeedMultiplier(f, filter.Entity)
-                * BossPhaseUtility.ResolveMoveSpeedMultiplier(f, filter.Entity, data);
+                * BossPhaseUtility.ResolveMoveSpeedMultiplier(f, filter.Entity);
 
             // UseWaypointDetour overrides Stats.Movement's own direction only while the direct
             // line to the target is wall-blocked - see EnemyPathfindingUtility.
@@ -798,7 +807,7 @@ namespace Quantum
                 return;
 
             FP anticipationMultiplier = StatusEffectUtility.GetAnticipationMultiplier(f, filter.Entity)
-                * BossPhaseUtility.ResolveAnticipationMultiplier(f, filter.Entity, data);
+                * BossPhaseUtility.ResolveAnticipationMultiplier(f, filter.Entity);
             filter.Enemy->StateTimer -= f.DeltaTime * anticipationMultiplier;
 
             if (filter.Enemy->StateTimer > FP._0)
@@ -862,7 +871,7 @@ namespace Quantum
 
         private static void UpdateRecovery(Frame f, ref Filter filter, EnemyDataAsset data)
         {
-            filter.Enemy->StateTimer -= f.DeltaTime;
+            filter.Enemy->StateTimer -= f.DeltaTime * BossPhaseUtility.ResolveRecoveryMultiplier(f, filter.Entity);
 
             if (filter.Enemy->StateTimer > FP._0)
                 return;

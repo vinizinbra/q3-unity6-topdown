@@ -322,6 +322,4 @@ MonoBehaviour:
     RawValue: 65536
   ShieldGainPerHit:
     RawValue: 327680
-  OvershieldCapMultiplier:
-    RawValue: 98304
-  DischargeEffectPrefab: {fileID: 6350743763286976369, guid: 2dcb44456e58b4eb3823d152a70d114f, type: 3}
+  DischargeEffectPrefab: {fileID: 3308319309734866876, guid: 73f6ab46adf6f4923899d8a01e54f72c, type: 3}

@@ -708,7 +708,7 @@ namespace Quantum
                 if (launch.IsValid == false)
                     continue;
 
-                EntityRef entity = ProjectileSpawner.Spawn(f, owner, weaponData.ProjectileData, launch, echo.Damage, DamageSource.Weapon, element: weaponData.Element);
+                EntityRef entity = ProjectileSpawner.Spawn(f, owner, weaponData.ProjectileData, ref launch, echo.Damage, DamageSource.Weapon, element: weaponData.Element);
                 ApplyProjectilePerks(f, owner, entity, weapon, weaponData, false, false);
             }
         }
@@ -1375,7 +1375,7 @@ namespace Quantum
                     continue;
                 }
 
-                EntityRef entity = ProjectileSpawner.Spawn(f, owner, weaponData.ProjectileData, launch, damage, DamageSource.Weapon,
+                EntityRef entity = ProjectileSpawner.Spawn(f, owner, weaponData.ProjectileData, ref launch, damage, DamageSource.Weapon,
                     target: target, element: weaponData.Element, pelletIndex: i);
 
                 // Only pellet 0 of a volley procs Explosive Sequence/Cataclysm Round - see FireHitscan.

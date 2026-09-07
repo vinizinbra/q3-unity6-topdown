@@ -403,7 +403,7 @@ namespace Quantum
                 if (launch.IsValid == false)
                     continue;
 
-                EntityRef shard = ProjectileSpawner.Spawn(f, owner, upgrade->Projectile, launch, upgrade->Damage, source, target: target, element: element);
+                EntityRef shard = ProjectileSpawner.Spawn(f, owner, upgrade->Projectile, ref launch, upgrade->Damage, source, target: target, element: element);
                 previousTarget = target;
 
                 // Overrides whatever the Projectile asset's own DirectHitData.PierceCount baked in at

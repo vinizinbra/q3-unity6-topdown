@@ -37,3 +37,4 @@ MonoBehaviour:
   BeamCount: 3
   TickInterval:
     RawValue: 6554
+  LineRendererPrefab: {fileID: 7405343421713513980, guid: 60a096f86730c4eab891cbd56397a144, type: 3}

@@ -23,7 +23,7 @@ namespace Quantum
     // override is needed for that, though - RotatingLaserVisualManager (View) already stops drawing
     // the moment Enemy.Phase leaves Active for any reason, the same self-healing stop condition
     // RingWaveExpanding's own View manager uses.
-    public unsafe class RotatingLaserDeliveryData : EnemyDeliveryData
+    public unsafe partial class RotatingLaserDeliveryData : EnemyDeliveryData
     {
         // Degrees/sec - positive spins clockwise (viewed from above), same rotation convention
         // FPQuaternion.Euler(0, angle, 0) uses everywhere else in this codebase.
@@ -36,7 +36,15 @@ namespace Quantum
         public FP StartAngle = 0;
 
         public FP BeamLength = 6;
+
+        // Real hit-box width only - purely gameplay, not carried to RotatingLaserVisualManager at
+        // all. The drawn line's own width is left entirely to whatever startWidth/endWidth (or width
+        // curve) is authored on LineRendererPrefab (see this delivery's own View.cs partial) instead,
+        // same "prefab controls its own visual width" idiom RingSlamDeliveryData's LineRendererPrefab
+        // uses. A visual/real mismatch here just means the drawn beam looks thinner/thicker than what
+        // actually connects - purely a look-and-feel authoring choice, not a correctness bug.
         public FP BeamWidth = 1;
+
         public FP BeamHeight = FP._1_50;
 
         // Added on top of the casting enemy's own Transform3D.Y - THE CENTER of the hit-box's
@@ -63,7 +71,7 @@ namespace Quantum
             filter.Enemy->LaserSpinAngle = filter.Aim->Angle + StartAngle;
             filter.Enemy->StateTimer = Duration;
 
-            f.Events.RotatingLaserFired(filter.Entity, BeamLength, BeamWidth, HeightOffset, (byte)System.Math.Max(1, BeamCount));
+            f.Events.RotatingLaserFired(filter.Entity, BeamLength, HeightOffset, (byte)System.Math.Max(1, BeamCount), action.Delivery);
             FireLaserTick(f, ref filter, action); // first pulse lands immediately, at windup-end
             return false;
         }

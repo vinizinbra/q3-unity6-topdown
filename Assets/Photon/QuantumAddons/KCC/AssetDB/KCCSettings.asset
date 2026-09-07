@@ -23,7 +23,7 @@ MonoBehaviour:
   Extent:
     RawValue: 1965
   CollisionLayerMask:
-    BitMask: 33345
+    BitMask: 577
   MaxPenetrationSteps: 3
   CCDRadiusMultiplier:
     RawValue: 49152

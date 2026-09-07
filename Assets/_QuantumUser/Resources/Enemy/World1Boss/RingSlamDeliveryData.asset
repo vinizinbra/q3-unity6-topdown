@@ -21,12 +21,17 @@ MonoBehaviour:
   MaxRandomOffset:
     RawValue: 0
   InnerBlastRadius:
-    RawValue: 65536
+    RawValue: 0
   RingDamagePercent:
     RawValue: 32768
   RingExpansionSpeed:
     RawValue: 655360
   RingDuration:
     RawValue: 131072
+  MaxHeightDifference:
+    RawValue: 6554
   LineWidth:
-    RawValue: 16384
+    RawValue: 131072
+  HeightOffset:
+    RawValue: 13107
+  LineRendererPrefab: {fileID: 7405343421713513980, guid: e0b9e13b71ad644b790fb94a1e1fed1f, type: 3}

@@ -376,7 +376,9 @@ namespace QuantumUser.Editor
 
             GUILayout.Space(10);
             GUILayout.Label("Zoom", GUILayout.Width(40));
-            _distance = GUILayout.HorizontalSlider(_distance, 0.2f, 50f, GUILayout.Width(100));
+            EditorGUI.BeginChangeCheck();
+            var sliderDistance = GUILayout.HorizontalSlider(Mathf.Clamp(_distance, 0.2f, 50f), 0.2f, 50f, GUILayout.Width(100));
+            if (EditorGUI.EndChangeCheck()) _distance = sliderDistance;
             GUILayout.Label($"{_distance:0.0}", GUILayout.Width(35));
 
             GUILayout.FlexibleSpace();

@@ -223,7 +223,7 @@ namespace Quantum
                     IsValid = true
                 };
 
-                EntityRef child = ProjectileSpawner.Spawn(f, projectile->Owner, projectile->ProjectileData, launch, splitDamage,
+                EntityRef child = ProjectileSpawner.Spawn(f, projectile->Owner, projectile->ProjectileData, ref launch, splitDamage,
                     DamageSource.Weapon, element: projectile->Element, spawnDepth: projectile->SpawnDepth + 1);
 
                 if (f.Unsafe.TryGetPointer<Projectile>(child, out var childProjectile) == true)

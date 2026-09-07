@@ -52,7 +52,7 @@ MonoBehaviour:
         RawValue: 46340
     Position:
       X:
-        RawValue: 491520
+        RawValue: -425984
       Y:
         RawValue: 65548
       Z:
@@ -89,18 +89,18 @@ MonoBehaviour:
       X:
         RawValue: 0
       Y:
-        RawValue: 0
+        RawValue: 46340
       Z:
         RawValue: 0
       W:
-        RawValue: 65536
+        RawValue: 46340
     Position:
       X:
-        RawValue: 425984
+        RawValue: 1081344
       Y:
         RawValue: 65548
       Z:
-        RawValue: 393216
+        RawValue: -425984
     PhysicsMaterial:
       Id:
         Value: 0
@@ -117,10 +117,10 @@ MonoBehaviour:
       Y:
         RawValue: 65536
       Z:
-        RawValue: 327680
+        RawValue: 163840
     SmoothSphereMeshCollisions: 0
     StaticData:
-      Name: VisualCube (1)
+      Name: VisualCube (5)
       Tag: Untagged
       Layer: 6
       Asset:
@@ -133,18 +133,18 @@ MonoBehaviour:
       X:
         RawValue: 0
       Y:
-        RawValue: 0
+        RawValue: 46340
       Z:
         RawValue: 0
       W:
-        RawValue: 65536
+        RawValue: 46340
     Position:
       X:
-        RawValue: 32768
+        RawValue: 1081344
       Y:
         RawValue: 65548
       Z:
-        RawValue: 360448
+        RawValue: 1015808
     PhysicsMaterial:
       Id:
         Value: 0
@@ -157,14 +157,14 @@ MonoBehaviour:
       RawValue: 0
     BoxExtents:
       X:
-        RawValue: 229376
+        RawValue: 163840
       Y:
         RawValue: 65536
       Z:
         RawValue: 163840
     SmoothSphereMeshCollisions: 0
     StaticData:
-      Name: VisualCube (4)
+      Name: VisualCube (6)
       Tag: Untagged
       Layer: 6
       Asset:
@@ -177,18 +177,18 @@ MonoBehaviour:
       X:
         RawValue: 0
       Y:
-        RawValue: 0
+        RawValue: 46340
       Z:
         RawValue: 0
       W:
-        RawValue: 65536
+        RawValue: 46340
     Position:
       X:
-        RawValue: 98304
+        RawValue: -360448
       Y:
-        RawValue: 131096
+        RawValue: 65548
       Z:
-        RawValue: 491520
+        RawValue: 1015808
     PhysicsMaterial:
       Id:
         Value: 0
@@ -203,12 +203,12 @@ MonoBehaviour:
       X:
         RawValue: 163840
       Y:
-        RawValue: 131072
+        RawValue: 65536
       Z:
         RawValue: 163840
     SmoothSphereMeshCollisions: 0
     StaticData:
-      Name: VisualCube (2)
+      Name: VisualCube (7)
       Tag: Untagged
       Layer: 6
       Asset:

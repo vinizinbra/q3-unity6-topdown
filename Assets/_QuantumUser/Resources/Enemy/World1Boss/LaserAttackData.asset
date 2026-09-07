@@ -184,15 +184,15 @@ MonoBehaviour:
       SinkAmount: 0.3
     CenterPivot: 0
     PivotHeightOverride: 0
-    ParticlePrefab: {fileID: 0}
+    ParticlePrefab: {fileID: 19839140, guid: 1ccb1978c7eca624fa51679bea0083ae, type: 3}
     Anchor: 0
     Offset: {x: 0, y: 0, z: 0}
-    Parented: 0
+    Parented: 1
     AlignToEnemyDirection: 0
     RotationOffset: {x: 0, y: 0, z: 0}
-    Scale: 1
-    OverrideSortingOrder: 0
-    SortingOrder: 0
+    Scale: 5
+    OverrideSortingOrder: 1
+    SortingOrder: -1
   OnGoingStep:
     AnimationType: 0
     Duration: 0.3

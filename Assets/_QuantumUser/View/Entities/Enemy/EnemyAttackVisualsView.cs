@@ -486,6 +486,12 @@ namespace Quantum
             float radius = EnemyMovementUtility.ResolveEntityRadius(frame, _entityRef).AsFloat;
             Vector3 scaledOffset = offset * radius;
 
+            // Icon itself scales by the same live radius, off the prefab's own authored base scale,
+            // so a Boss's exclamation mark reads bigger than a Filler's instead of every tier sharing
+            // one fixed size.
+            Vector3 baseScale = EffectsManager.Instance != null ? EffectsManager.Instance.AnticipationIconBaseScale : Vector3.one;
+            _currentAnticipationIcon.transform.localScale = baseScale * radius;
+
             // X only ever mirrors (left/right), not a full rotation - reuses
             // EnemyBlobAnimationView's own FacingSign (the exact sign its root transform's
             // localScale.x already flips by) rather than re-deriving facing here, so the icon can

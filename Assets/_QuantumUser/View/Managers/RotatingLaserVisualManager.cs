@@ -14,14 +14,14 @@ namespace QuantumUser.View.Managers
     // the real spin rate, and an independently-clocked replica would drift out of sync with it.
     // HeightOffset is likewise carried from the event rather than authored separately here, so the
     // visual can never sit at a different height than the real hit-box (see
-    // RotatingLaserDeliveryData.FireLaserTick). Stops drawing - and destroys every beam - the moment
-    // Entity's own Enemy.Phase leaves Active or the entity stops existing, which covers the spin
-    // finishing normally, this delivery being interrupted, and the entity dying, all in one check.
+    // RotatingLaserDeliveryData.FireLaserTick). The prefab itself is authored per-delivery-asset
+    // (RotatingLaserDeliveryData.LineRendererPrefab, resolved off the event's own Delivery AssetRef)
+    // rather than a single shared field here, so different lasers can look different. Stops drawing -
+    // and destroys every beam - the moment Entity's own Enemy.Phase leaves Active or the entity stops
+    // existing, which covers the spin finishing normally, this delivery being interrupted, and the
+    // entity dying, all in one check.
     public class RotatingLaserVisualManager : MonoBehaviour
     {
-        [SerializeField, Tooltip("LineRenderer prefab this instantiates per beam - positionCount/width are overwritten every frame, so only material/color/texture need to be authored on it.")]
-        private LineRenderer laserLinePrefab;
-
         // Purely cosmetic anti-Z-fighting nudge on top of the real (gameplay) HeightOffset the event
         // carries - not a second gameplay-relevant height knob, just enough to keep the line from
         // fighting a flat ground mesh sitting exactly at the beam's own height.
@@ -49,39 +49,8 @@ namespace QuantumUser.View.Managers
 
         private void OnRotatingLaserFired(EventRotatingLaserFired e)
         {
-            if (laserLinePrefab == null)
-                return;
-
-            if (_activeLasers.TryGetValue(e.Entity, out var stale))
-            {
-                StopCoroutine(stale.Coroutine);
-
-                foreach (LineRenderer staleLine in stale.Lines)
-                {
-                    if (staleLine != null)
-                        Destroy(staleLine.gameObject);
-                }
-
-                _activeLasers.Remove(e.Entity);
-            }
-
-            int beamCount = Mathf.Max(1, (int)e.BeamCount);
-            var lines = new List<LineRenderer>(beamCount);
-
-            for (int i = 0; i < beamCount; i++)
-            {
-                LineRenderer line = Instantiate(laserLinePrefab);
-                line.positionCount = 2;
-                line.startWidth = e.Width.AsFloat;
-                line.endWidth = e.Width.AsFloat;
-                lines.Add(line);
-            }
-
-            float length = e.Length.AsFloat;
-            float heightOffset = e.HeightOffset.AsFloat;
-
             // Snapped synchronously, right here, rather than leaving the very first placement to
-            // RunLaser's own loop - Instantiate above creates each line with no position at all
+            // RunLaser's own loop - Instantiate below creates each line with no position at all
             // (unlike RingWaveVisualManager, which instantiates directly at its ring's center), so
             // without this every beam would render at wherever the prefab's own transform happens to
             // sit (typically the origin) for however long it takes the coroutine to reach its first
@@ -90,6 +59,47 @@ namespace QuantumUser.View.Managers
             // QuantumRunner.Default instead).
             Frame frame = e.Game.Frames.Predicted;
 
+            // Authored per-delivery-asset (RotatingLaserDeliveryData.LineRendererPrefab, its own
+            // View.cs partial) rather than a single shared prefab on this manager, so different
+            // lasers can use different visuals - same "AssetRef travels with the event, View
+            // resolves + pattern matches" idiom EnemyDeliveryData.ResolveWarningRadius already uses
+            // for AreaHitData.
+            LineRenderer prefab = frame != null && frame.FindAsset(e.Delivery) is RotatingLaserDeliveryData laserDelivery
+                ? laserDelivery.LineRendererPrefab
+                : null;
+
+            if (prefab == null)
+                return;
+
+            if (_activeLasers.TryGetValue(e.Entity, out var stale))
+            {
+                StopCoroutine(stale.Coroutine);
+                ResetLines(stale.Lines);
+                _activeLasers.Remove(e.Entity);
+            }
+
+            int beamCount = Mathf.Max(1, (int)e.BeamCount);
+            var lines = new List<LineRenderer>(beamCount);
+
+            for (int i = 0; i < beamCount; i++)
+            {
+                // Width is deliberately NOT set here - whatever startWidth/endWidth (or width curve)
+                // the prefab itself was authored with applies unmodified. BeamWidth on the delivery
+                // is real-hitbox-only now, never carried to this event at all (see
+                // RotatingLaserDeliveryData.BeamWidth's own comment).
+                LineRenderer line = Instantiate(prefab);
+                line.positionCount = 2;
+
+                // Stays off until UpdateLaserLines actually writes real endpoints onto it - never
+                // shows even a single frame of whatever the prefab happened to be authored/left at.
+                line.enabled = false;
+
+                lines.Add(line);
+            }
+
+            float length = e.Length.AsFloat;
+            float heightOffset = e.HeightOffset.AsFloat;
+
             if (frame != null && frame.Exists(e.Entity) == true)
             {
                 Vector3 position = frame.Get<Transform3D>(e.Entity).Position.ToUnityVector3();
@@ -97,7 +107,12 @@ namespace QuantumUser.View.Managers
                 UpdateLaserLines(position + Vector3.up * (heightOffset + visualLift), angle, length, lines);
             }
 
-            Coroutine coroutine = StartCoroutine(RunLaser(e.Entity, length, heightOffset, lines));
+            // The tick this laser's own LaserSpinAngle was actually (re)written on - see RunLaser's
+            // own comment on why this, not just "the coroutine's first loop iteration", is the correct
+            // guard against interpolating across a reused enemy's stale leftover value.
+            int spawnTick = frame != null ? frame.Number : -1;
+
+            Coroutine coroutine = StartCoroutine(RunLaser(e.Entity, length, heightOffset, lines, spawnTick));
             _activeLasers[e.Entity] = (coroutine, lines);
         }
 
@@ -107,7 +122,7 @@ namespace QuantumUser.View.Managers
         // the loop) on NATURAL completion - a coroutine stopped externally via OnRotatingLaserFired's
         // own StopCoroutine call never resumes to run this cleanup at all, so reaching it here already
         // proves nothing has replaced this entry, and removing it unconditionally is safe.
-        private IEnumerator RunLaser(EntityRef entity, float length, float heightOffset, List<LineRenderer> lines)
+        private IEnumerator RunLaser(EntityRef entity, float length, float heightOffset, List<LineRenderer> lines, int spawnTick)
         {
             while (true)
             {
@@ -124,7 +139,7 @@ namespace QuantumUser.View.Managers
 
                 Vector3 position = frame.Get<Transform3D>(entity).Position.ToUnityVector3();
                 float angle = enemy.LaserSpinAngle.AsFloat;
-                ResolveInterpolated(game, entity, ref position, ref angle);
+                ResolveInterpolated(game, entity, spawnTick, ref position, ref angle);
 
                 Vector3 origin = position + Vector3.up * (heightOffset + visualLift);
                 UpdateLaserLines(origin, angle, length, lines);
@@ -133,11 +148,22 @@ namespace QuantumUser.View.Managers
             }
 
             _activeLasers.Remove(entity);
+            ResetLines(lines);
+        }
 
+        // Explicit disable + zero-out rather than counting on Destroy alone - Destroy is deferred to
+        // the end of the frame, so without this each line would still be sitting there, enabled, with
+        // its last-drawn points, for whatever's left of the current frame's rendering.
+        private static void ResetLines(List<LineRenderer> lines)
+        {
             foreach (LineRenderer line in lines)
             {
-                if (line != null)
-                    Destroy(line.gameObject);
+                if (line == null)
+                    continue;
+
+                line.enabled = false;
+                line.positionCount = 0;
+                Destroy(line.gameObject);
             }
         }
 
@@ -159,6 +185,7 @@ namespace QuantumUser.View.Managers
 
                 line.SetPosition(0, origin);
                 line.SetPosition(1, origin + direction * length);
+                line.enabled = true;
             }
         }
 
@@ -172,14 +199,23 @@ namespace QuantumUser.View.Managers
         // QuantumEntityView.InterpolationAlpha) - so the beam(s) move/spin exactly as smoothly as
         // everything else being rendered. A plain Lerp is correct for the angle too, not LerpAngle -
         // LaserSpinAngle is deliberately never wrapped to [0,360) (see Enemy.qtn's own comment), so
-        // there's no wraparound discontinuity to worry about. Leaves both untouched (the current-tick
-        // values already assigned by the caller) if there's no valid previous-tick sample yet (e.g.
-        // the very first frame right after this laser spawned).
-        private static void ResolveInterpolated(QuantumGame game, EntityRef entity, ref Vector3 position, ref float angle)
+        // there's no wraparound discontinuity to worry about within a single spin. Leaves both
+        // untouched (the current-tick values already assigned by the caller) unless a genuine
+        // post-spawn previous tick exists to blend from.
+        //
+        // Guarded by spawnTick (the tick THIS laser's own LaserSpinAngle was first written on,
+        // captured once in OnRotatingLaserFired), not just "is this the coroutine's first loop
+        // iteration" - that weaker guard was tried first and still glitched, because render frame rate
+        // can outpace the simulation's own tick rate: if the sim hasn't ticked again yet by the
+        // coroutine's SECOND (or Nth) iteration, PredictedPrevious.Number is still < spawnTick, meaning
+        // it's STILL a stale sample from whatever this same shared Enemy field last held - a
+        // completely different, earlier spin this same enemy fired (e.g. several hundred degrees
+        // around), not a real "previous tick of THIS spin" at all.
+        private static void ResolveInterpolated(QuantumGame game, EntityRef entity, int spawnTick, ref Vector3 position, ref float angle)
         {
             Frame previousFrame = game.Frames.PredictedPrevious;
 
-            if (previousFrame == null || previousFrame.Exists(entity) == false)
+            if (previousFrame == null || previousFrame.Exists(entity) == false || previousFrame.Number < spawnTick)
                 return;
 
             Vector3 previousPosition = previousFrame.Get<Transform3D>(entity).Position.ToUnityVector3();

@@ -13,7 +13,7 @@ namespace Quantum
     // tick the front sweeps past them. Always multi-tick (Begin() returns false); Tick() channels
     // until RingDuration elapses or the front reaches DamageRange. Mirrors AuraDeliveryData/
     // BeamDeliveryData's own multi-tick shape (StateTimer-driven, Void-Pressure-scaled decrement).
-    public unsafe class RingSlamDeliveryData : EnemyDeliveryData
+    public unsafe partial class RingSlamDeliveryData : EnemyDeliveryData
     {
         public FP InnerBlastRadius = 2;
 
@@ -33,11 +33,12 @@ namespace Quantum
         // check that has no idea they're not actually standing in it.
         public FP MaxHeightDifference = FP._0;
 
-        // View-only - RingWaveVisualManager's LineRenderer width for the growing ring outline this
-        // fires alongside the existing Circle telegraph (which only ever shows the FINAL size up
-        // front). Has no effect on the real hit-detection band, which stays exactly whatever the
-        // outward sweep in Tick() already computes regardless of how thick the line is drawn.
-        public FP LineWidth = FP._0_25;
+        // View-only - added on top of whatever ground height
+        // RingWaveVisualManager's own raycast snaps the ring onto, purely to lift the drawn outline a
+        // bit clear of the ground mesh (or nudge it for a stylistic float) since the real hit-check is
+        // a flat (XZ) annulus that never reads Y at all (aside from the optional MaxHeightDifference
+        // gate above, which reads real floor height, not this).
+        public FP HeightOffset = FP._0;
 
         public override bool Begin(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, EnemyActionData action, EntityRef target)
         {
@@ -51,7 +52,7 @@ namespace Quantum
             filter.Enemy->SkillStartPosition = center;
             filter.Enemy->StateTimer = RingDuration;
             filter.Enemy->RingWaveRadius = InnerBlastRadius;
-            f.Events.RingWaveExpanding(filter.Entity, center, LineWidth);
+            f.Events.RingWaveExpanding(filter.Entity, center, HeightOffset, action.Delivery);
             return false;
         }
 

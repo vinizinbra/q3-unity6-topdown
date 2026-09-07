@@ -33,6 +33,28 @@ namespace Quantum
         // way - so a faster/slower windup already drags the Telegraph flip point with it for free.
         public FP AnticipationMultiplier;
 
+        // Folded into StatusEffectUtility.GetLocalTimeMultiplier itself (see that method's own
+        // comment) rather than a separate call site - every Active-phase delivery's own StateTimer
+        // decrement already reads that one method (charge dash, leap airtime, ring-slam expansion,
+        // laser spin, beam/aura tick, ground/mortar barrage stagger, pull-grab, kneel window, burrow
+        // travel), so this scales all of them for free with zero per-delivery changes.
+        public FP ActiveSpeedMultiplier;
+
+        // Read by ProjectileSpawner.Spawn alongside the existing (player-only) StatUtility.
+        // GetProjectileSpeedMultiplier - scales an enemy-fired shell/bolt's initial launch speed via
+        // ProjectileMovementData.ApplySpeedMultiplier, same arc-preserving hook the player stat uses.
+        public FP ProjectileSpeedMultiplier;
+
+        // Read by EnemySystem.UpdateRecovery's StateTimer decrement - the Recovery/DownTime beat
+        // between one action finishing and the next being eligible, previously entirely unscaled.
+        public FP RecoveryMultiplier;
+
+        // Scales a delivery's own repeat count (ShellCount/PointCount/PelletCount/scatter Count) at
+        // the point each delivery resolves it, and SpawnPackDeliveryData's whole authored Composition
+        // roster is repeated (never fractionally scaled) this many times - see each delivery's own
+        // QuantityMultiplier usage.
+        public FP QuantityMultiplier;
+
         public FP DamageMultiplier;
         public FP DamageTakenMultiplier;
     }

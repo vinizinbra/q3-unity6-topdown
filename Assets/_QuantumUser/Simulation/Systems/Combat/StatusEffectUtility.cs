@@ -281,10 +281,16 @@ namespace Quantum
         // only ever slows an attack while it's actually executing.
         public static FP GetLocalTimeMultiplier(Frame f, EntityRef entity)
         {
-            if (f.Unsafe.TryGetPointer<StatusEffects>(entity, out var status) == false || status->TimeDilationRemaining <= FP._0)
-                return FP._1;
+            FP statusMultiplier = f.Unsafe.TryGetPointer<StatusEffects>(entity, out var status) == true && status->TimeDilationRemaining > FP._0
+                ? status->TimeDilationMultiplier
+                : FP._1;
 
-            return status->TimeDilationMultiplier;
+            // Boss-phase ActiveSpeedMultiplier composes in here rather than at each delivery's own
+            // call site (see BossStatModifiers.ActiveSpeedMultiplier's own comment) - every
+            // Active-phase delivery's StateTimer decrement already reads this one method, so this is
+            // the single funnel point for "how fast should this entity's current attack execute"
+            // regardless of whether that's a status effect (Void Pressure) or a boss phase.
+            return statusMultiplier * BossPhaseUtility.ResolveActiveSpeedMultiplier(f, entity);
         }
 
         // Applied by FreezeEffectData, a standalone freely-authorable skill effect - mirrors
