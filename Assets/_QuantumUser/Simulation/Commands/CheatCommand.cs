@@ -10,7 +10,10 @@ namespace Quantum
     {
         Pause,                  // disables GameplaySystemGroup (freezes gameplay sim)
         Continue,               // re-enables GameplaySystemGroup
-        Advance1Min,            // + 60s of SurvivalTime
+        Advance1Min,            // walks the Director's phase timeline forward by 60 real seconds
+                                 // (PhaseTimer/CurrentPhaseIndex/SurvivalTime all together, crossing
+                                 // phase boundaries as needed - see CheatSystem.AdvanceSurvivalClock)
+        Advance30Sec,           // same as Advance1Min, 30 real seconds instead of 60
         AdvancePhase,           // jump to the next SurvivalConfig.Phases[] entry
         AdvanceToNextBreathing, // jump forward to the next Breathing phase
         LevelUp,                // grant exactly enough XP to earn one level (opens the upgrade screen)
@@ -23,7 +26,12 @@ namespace Quantum
         KillAllEnemies,         // credit the sender (drops XP/coins as a normal kill would)
         HealFull,               // sender to full health
         OpenChest,              // open a Chest upgrade screen for the sender
-        Revive                  // revive every Downed/KO player
+        Revive,                 // revive every Downed/KO player
+        SetDamageToOne,         // set the sender's equipped Weapon.DamageMultiplier so live damage rounds to 1
+        ResetDamage,            // reset the sender's equipped Weapon.DamageMultiplier back to 1 (baseline)
+        ToggleManualFire,       // flip the sender's Weapon.CheatManualFire (auto-shoot off <-> on)
+        JumpToBreathing         // Amount = 1-4, the Nth Breathing-kind SurvivalConfig phase; also tops
+                                 // TotalExperience up to that breath's paired display level if under it
     }
 
     // Generic debug/cheat command. IMPORTANT: this command AND its handler (CheatSystem) compile on

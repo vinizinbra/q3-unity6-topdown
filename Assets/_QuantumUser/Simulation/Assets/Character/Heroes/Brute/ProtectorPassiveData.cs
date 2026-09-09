@@ -21,7 +21,6 @@ namespace Quantum
                 Radius = Radius,
                 IntimidateDamageMultiplier = IntimidateDamageMultiplier,
                 AllyDamageReductionAmount = FP._0,
-                IntimidateSlowMultiplier = FP._0,
                 IntimidateKnockbackTakenMultiplier = FP._1,
                 FearlessBonusVsIntimidated = FP._0,
 

@@ -19,6 +19,17 @@ namespace Quantum
             if (owner == EntityRef.None)
                 return;
 
+            // No XP drops at all while a Boss encounter is active (GameState.Boss - see
+            // RunPhaseUtility.BeginBossEncounter/docs/run-phase.md) - a boss's own spawned adds
+            // dying mid-fight would otherwise still grant XP, which (now that ExperienceUtility.
+            // Grant correctly queues one upgrade screen per level crossed instead of collapsing
+            // them - see this file's own Grant comment) can pop a level-up screen and pause
+            // GameplaySystemGroup right in the middle of the fight. Confirmed with the user: the XP
+            // those adds would have granted is simply forfeited, not banked/deferred for after the
+            // encounter - a boss fight should never be interruptible by a level-up.
+            if (f.Global->CurrentState == GameState.Boss)
+                return;
+
             if (f.Unsafe.TryGetPointer<Enemy>(target, out var enemy) == false)
                 return;
 
@@ -74,6 +85,19 @@ namespace Quantum
         // (see ExpBarUiWidget), since RequiredExperience is authored 1-indexed (its first keyframe
         // is "level 1 costs 0 exp"). So the threshold to advance past the current display level is
         // Evaluate(Level + 2) - the NEXT display level - not Evaluate(Level + 1).
+        // FIX (was: walked Global.Level straight to its final value in this same while loop, then
+        // called LevelUpUtility.BeginLevelUpScreen ONCE regardless of how many thresholds were just
+        // crossed - docs/level-up-upgrades.md documented this as a deliberate collapse, but it meant
+        // a big multi-level XP grant only ever offered ONE 3-card pick, silently discarding every
+        // upgrade the other levels earned). Global.Level now only ever advances ONE step at a time,
+        // via Global.DebugPendingLevelUps - the same queue/drain
+        // DebugCheatSystem.TryOpenNextPendingLevelUp already used for RuntimeConfig.
+        // DebugStartLevelUpCount/CheatSystem.QueuePendingLevelUpsTo - so this just PEEKS how many
+        // thresholds TotalExperience now clears (without touching Global.Level itself) and queues
+        // that many pending screens. Level itself, and the category LevelUpConfig.LevelSequence
+        // rolls for each screen, only catch up as each one is actually opened and resolved - see
+        // TryOpenNextPendingLevelUp's own comment for why that matters (per-level category cycling
+        // needs Level to genuinely BE each intermediate value while its own screen is showing).
         public static void Grant(Frame f, FP amount)
         {
             f.Global->TotalExperience += amount;
@@ -82,25 +106,23 @@ namespace Quantum
                 return;
 
             ExperienceConfig config = f.FindAsset(f.RuntimeConfig.ExperienceConfig);
-            int levelBefore = f.Global->Level;
-
             FP xpRequirementMultiplier = ResolveXpRequirementMultiplier(f);
 
-            while (f.Global->Level + 1 < config.MaxLevel
-                   && f.Global->TotalExperience >= GetRequiredExperience(config, f.Global->Level + 2, xpRequirementMultiplier))
+            int levelPeek = f.Global->Level;
+
+            while (levelPeek + 1 < config.MaxLevel
+                   && f.Global->TotalExperience >= GetRequiredExperience(config, levelPeek + 2, xpRequirementMultiplier))
             {
-                f.Global->Level++;
+                levelPeek++;
             }
 
-            Log.Debug($"[Experience] run gained {amount} exp -> {f.Global->TotalExperience} total, level {f.Global->Level + 1}");
+            int levelsGained = levelPeek - f.Global->Level;
 
-            // One screen per Grant call regardless of how many levels its while loop just covered
-            // (a single big orb crossing more than one threshold at once) - see
-            // docs/level-up-upgrades.md for why this collapses rather than queuing one screen per
-            // level gained.
-            if (f.Global->Level > levelBefore)
+            Log.Debug($"[Experience] run gained {amount} exp -> {f.Global->TotalExperience} total, {levelsGained} level(s) queued (level {f.Global->Level + 1} still current until drained)");
+
+            if (levelsGained > 0)
             {
-                LevelUpUtility.BeginLevelUpScreen(f);
+                f.Global->DebugPendingLevelUps += levelsGained;
             }
         }
 
@@ -127,7 +149,7 @@ namespace Quantum
                 return FP._1;
             }
 
-            return balance.GetCoopGlobal(CoopGlobalKey.XpRequirement, f.MaxPlayerCount);
+            return balance.GetCoopGlobal(CoopGlobalKey.XpRequirement, f.PlayerConnectedCount);
         }
 
         // Single source of truth for "how much TotalExperience is needed to REACH displayLevel" -

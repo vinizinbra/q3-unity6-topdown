@@ -139,10 +139,10 @@ TextureImporter:
       name: Rukk_01
       rect:
         serializedVersion: 2
-        x: 95
-        y: 546
-        width: 657
-        height: 526
+        x: 127
+        y: 570
+        width: 617
+        height: 488
       alignment: 9
       pivot: {x: 0.5734483, y: 0.00000011715001}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -161,10 +161,10 @@ TextureImporter:
       name: Rukk_02
       rect:
         serializedVersion: 2
-        x: 894
-        y: 544
-        width: 464
-        height: 512
+        x: 851
+        y: 565
+        width: 436
+        height: 486
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -183,10 +183,10 @@ TextureImporter:
       name: Rukk_03
       rect:
         serializedVersion: 2
-        x: 55
-        y: 103
-        width: 401
-        height: 359
+        x: 7
+        y: 171
+        width: 432
+        height: 337
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -205,10 +205,10 @@ TextureImporter:
       name: Rukk_04
       rect:
         serializedVersion: 2
-        x: 523
-        y: 76
-        width: 387
-        height: 444
+        x: 492
+        y: 154
+        width: 407
+        height: 384
       alignment: 9
       pivot: {x: 0.4215337, y: 0.000000051549964}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -227,10 +227,10 @@ TextureImporter:
       name: Rukk_05
       rect:
         serializedVersion: 2
-        x: 988
-        y: 68
-        width: 428
-        height: 355
+        x: 958
+        y: 150
+        width: 454
+        height: 313
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -259,6 +259,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
+      RukkElites_0: -2056468983
       Rukk_01: -2200405082034451777
       Rukk_02: 3791912869728078214
       Rukk_03: 2969079090545882148

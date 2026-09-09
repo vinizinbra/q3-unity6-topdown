@@ -376,6 +376,23 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
         }
     }
 
+    // Called externally (BossWidget.TriggerBossWindow) the instant the Boss reveal begins - a Cursed
+    // Rift/Store/Blacksmith window can still be open on the exact SAME tick a Breathing grace hold
+    // expires and force-closes it (RunPhaseUtility.TickBreathingGraceHold - see docs/run-phase.md)
+    // right as the very next SurvivalPhase is Boss. UpdatePoiWindow's own per-tick self-heal (above)
+    // would catch up and Hide() it a frame later regardless, but that's not soon enough to guarantee
+    // it happens before BossWidget's own QUpdate runs the SAME frame (two independent
+    // QuantumGlobalMonoBehaviours, no ordering guarantee between them) - forcing it closed
+    // immediately here removes that race instead of relying on execution order.
+    public void ForceHideAllPoiWindows()
+    {
+        for (int i = 0; i < choiceWindows.Length; i++)
+        {
+            if (choiceWindows[i] != null && choiceWindows[i].gameObject.activeSelf == true)
+                choiceWindows[i].Hide();
+        }
+    }
+
     // Store's own screen - food/utility offers listed first, weapon offers second (per the user's
     // own layout decision), both live on the SAME ChooseWindow.RefreshStore call. Subtitle shows
     // this player's own live Coin total, same "read live, never cached" idiom every other purchase

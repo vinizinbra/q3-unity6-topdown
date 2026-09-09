@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 3defc518a28524a38851c55150693a74
+guid: dec25668cd2bb4d09a77f8196c943b34
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -136,57 +136,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: HyenaMortar
+      name: WORLD1BOSS (1)_0
       rect:
         serializedVersion: 2
-        x: 739
-        y: 669
-        width: 344
-        height: 381
-      alignment: 9
-      pivot: {x: 0.54293793, y: 0.0077584274}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: db5b827a438674229accdcc591343478
-      internalID: -71217927
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: HyenaShielder
-      rect:
-        serializedVersion: 2
-        x: 1092
-        y: 636
-        width: 332
-        height: 326
-      alignment: 9
-      pivot: {x: 0.37965116, y: 0.02935454}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 55adfcdadb1884545953a845dc151e53
-      internalID: -612286824
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: HyenaCHarger
-      rect:
-        serializedVersion: 2
-        x: 40
-        y: 654
-        width: 358
-        height: 386
+        x: 8
+        y: 1344
+        width: 662
+        height: 721
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -195,118 +151,162 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c49e63c8b03924bf387a2bbc56917277
-      internalID: 1302610349
+      spriteID: 194df98162b6b4dc1b913b302388e741
+      internalID: -1822871292
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: HyenaSuicider
+      name: WORLD1BOSS (1)_1
       rect:
         serializedVersion: 2
-        x: 440
-        y: 653
-        width: 272
-        height: 295
-      alignment: 9
-      pivot: {x: 0.48186845, y: 0.018058928}
+        x: 711
+        y: 1321
+        width: 670
+        height: 636
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 0b3e1085d16fa47b082f495853ced7a6
-      internalID: 780537792
+      spriteID: f7a4b31ad37cd43e594fa80abb3c71bb
+      internalID: -756073540
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: HyenaSlammer
+      name: WORLD1BOSS (1)_2
       rect:
         serializedVersion: 2
-        x: 524
-        y: 161
-        width: 404
-        height: 412
-      alignment: 9
-      pivot: {x: 0.35362726, y: 0.003461449}
+        x: 1428
+        y: 1329
+        width: 652
+        height: 769
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 8598c0556cb1e419384352b4602c491c
-      internalID: -1784325273
+      spriteID: e76ed9c6420864960b5fb6e8004fd7f8
+      internalID: -147604254
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: HyenaSlammerArm
+      name: WORLD1BOSS (1)_3
       rect:
         serializedVersion: 2
-        x: 333
-        y: 132
-        width: 160
-        height: 322
-      alignment: 9
-      pivot: {x: 0.68979037, y: 0.8970768}
+        x: 2083
+        y: 1309
+        width: 813
+        height: 652
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 53098b6f1c5094b3abf06b1132720efa
-      internalID: -2078174943
+      spriteID: a790f0e6a86ca4a33bad5f1aed13a1a8
+      internalID: 1909996209
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: HyenaLeaper
+      name: WORLD1BOSS (1)_4
       rect:
         serializedVersion: 2
-        x: 1032
-        y: 208
-        width: 374
-        height: 372
-      alignment: 9
-      pivot: {x: 0.4659952, y: -0.009518741}
+        x: 2940
+        y: 1283
+        width: 844
+        height: 682
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 9410c70cab1d14e288e589fcc389315e
-      internalID: -656547213
+      spriteID: 2ff7a9421c5c0411e98b4f5a72a92b6d
+      internalID: 203894394
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: HyenaSummoner
+      name: WORLD1BOSS (1)_5
       rect:
         serializedVersion: 2
         x: 23
-        y: 156
-        width: 291
-        height: 398
-      alignment: 9
-      pivot: {x: 0.6153366, y: -0.00998914}
+        y: 268
+        width: 670
+        height: 909
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 08bf6021e74e1458999a9a0741d3add1
-      internalID: 414362343
+      spriteID: abf248cdf59dd4b7395b4a658baf2aba
+      internalID: -865403094
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: WORLD1BOSS (1)_6
+      rect:
+        serializedVersion: 2
+        x: 761
+        y: 255
+        width: 730
+        height: 721
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f6c03c068f20a4941a60ea9f8b7ab20d
+      internalID: -1896583010
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: WORLD1BOSS (1)_7
+      rect:
+        serializedVersion: 2
+        x: 2431
+        y: 265
+        width: 855
+        height: 807
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 72a5bf7460ad04d77aed8914de4ea276
+      internalID: -232438133
       vertices: []
       indices: 
       edges: []
@@ -315,7 +315,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: a3d51d37a9db44c3a863e32f2de41f3a
+    spriteID: 3b5d93c883a174bd7a857aae7efa3421
     internalID: 0
     vertices: []
     indices: 
@@ -325,14 +325,14 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      HyenaCHarger: 1302610349
-      HyenaLeaper: -656547213
-      HyenaMortar: -71217927
-      HyenaShielder: -612286824
-      HyenaSlammer: -1784325273
-      HyenaSlammerArm: -2078174943
-      HyenaSuicider: 780537792
-      HyenaSummoner: 414362343
+      WORLD1BOSS (1)_0: -1822871292
+      WORLD1BOSS (1)_1: -756073540
+      WORLD1BOSS (1)_2: -147604254
+      WORLD1BOSS (1)_3: 1909996209
+      WORLD1BOSS (1)_4: 203894394
+      WORLD1BOSS (1)_5: -865403094
+      WORLD1BOSS (1)_6: -1896583010
+      WORLD1BOSS (1)_7: -232438133
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

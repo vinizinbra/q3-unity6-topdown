@@ -17,7 +17,7 @@ MonoBehaviour:
     Guid:
       Value: 533983932994204390
   DownedReviveDuration:
-    RawValue: 163840
+    RawValue: 98304
   DownedBleedOutDuration:
     RawValue: 1310720
   ReviveMoveSpeedMultiplier:

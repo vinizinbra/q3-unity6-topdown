@@ -17,31 +17,12 @@ MonoBehaviour:
     Guid:
       Value: 356172470141887835
   Phases:
-  - Name: Breathing 1
-    Kind: 1
-    Duration:
-      RawValue: 3932160
-    BudgetPerPulse:
-      RawValue: 0
-    PulseInterval:
-      RawValue: 0
-    TargetPressure:
-      RawValue: 0
-    MaxAliveEnemies: 0
-    AllowedGroups: []
-    AllowedEnemies: []
-    BossPrototype:
-      Id:
-        Value: 0
-    PauseDuration:
-      RawValue: 0
-    GuaranteedGroup:
-      Id:
-        Value: 0
   - Name: R1-A Warmup (0-20s)
     Kind: 0
     Duration:
       RawValue: 1310720
+    GracePeriodDuration:
+      RawValue: 0
     BudgetPerPulse:
       RawValue: 196608
     PulseInterval:
@@ -70,10 +51,16 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
+    GuaranteedEnemyData:
+      Id:
+        Value: 0
+    GuaranteedEnemyFaction: 0
   - Name: R1-B Melee Introduction (20-50s)
     Kind: 0
     Duration:
       RawValue: 1966080
+    GracePeriodDuration:
+      RawValue: 0
     BudgetPerPulse:
       RawValue: 327680
     PulseInterval:
@@ -113,10 +100,16 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
-  - Name: R1-C SecurityDrone Introduction (50-85s)
+    GuaranteedEnemyData:
+      Id:
+        Value: 0
+    GuaranteedEnemyFaction: 0
+  - Name: R1-C SecurityGunner Introduction (50-85s)
     Kind: 0
     Duration:
       RawValue: 2293760
+    GracePeriodDuration:
+      RawValue: 0
     BudgetPerPulse:
       RawValue: 458752
     PulseInterval:
@@ -167,31 +160,16 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
-  - Name: World1Boss
-    Kind: 2
-    Duration:
-      RawValue: 0
-    BudgetPerPulse:
-      RawValue: 0
-    PulseInterval:
-      RawValue: 0
-    TargetPressure:
-      RawValue: 0
-    MaxAliveEnemies: 0
-    AllowedGroups: []
-    AllowedEnemies: []
-    BossPrototype:
-      Id:
-        Value: 1314062773136615755
-    PauseDuration:
-      RawValue: 327680
-    GuaranteedGroup:
+    GuaranteedEnemyData:
       Id:
         Value: 0
+    GuaranteedEnemyFaction: 0
   - Name: R1-D Fundamentals Practice (85-95s)
     Kind: 0
     Duration:
       RawValue: 655360
+    GracePeriodDuration:
+      RawValue: 0
     BudgetPerPulse:
       RawValue: 524288
     PulseInterval:
@@ -242,10 +220,16 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
+    GuaranteedEnemyData:
+      Id:
+        Value: 0
+    GuaranteedEnemyFaction: 0
   - Name: R1-E PreElite (95-105s)
     Kind: 0
     Duration:
       RawValue: 655360
+    GracePeriodDuration:
+      RawValue: 0
     BudgetPerPulse:
       RawValue: 262144
     PulseInterval:
@@ -285,10 +269,16 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
+    GuaranteedEnemyData:
+      Id:
+        Value: 0
+    GuaranteedEnemyFaction: 0
   - Name: R1-F Flee Elite (105-130s)
     Kind: 0
     Duration:
-      RawValue: 1638400
+      RawValue: 65536
+    GracePeriodDuration:
+      RawValue: 0
     BudgetPerPulse:
       RawValue: 131072
     PulseInterval:
@@ -316,11 +306,17 @@ MonoBehaviour:
       RawValue: 0
     GuaranteedGroup:
       Id:
-        Value: 386762213504257363
+        Value: 0
+    GuaranteedEnemyData:
+      Id:
+        Value: 441492803210562088
+    GuaranteedEnemyFaction: 0
   - Name: R1-G Fundamentals Pressure (130-180s)
     Kind: 0
     Duration:
       RawValue: 3276800
+    GracePeriodDuration:
+      RawValue: 0
     BudgetPerPulse:
       RawValue: 655360
     PulseInterval:
@@ -371,10 +367,16 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
+    GuaranteedEnemyData:
+      Id:
+        Value: 0
+    GuaranteedEnemyFaction: 0
   - Name: Breathing 1
     Kind: 1
     Duration:
       RawValue: 3932160
+    GracePeriodDuration:
+      RawValue: 0
     BudgetPerPulse:
       RawValue: 0
     PulseInterval:
@@ -392,10 +394,16 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
+    GuaranteedEnemyData:
+      Id:
+        Value: 0
+    GuaranteedEnemyFaction: 0
   - Name: R2-A Recap (0-20s)
     Kind: 0
     Duration:
       RawValue: 1310720
+    GracePeriodDuration:
+      RawValue: 0
     BudgetPerPulse:
       RawValue: 655360
     PulseInterval:
@@ -446,10 +454,16 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
+    GuaranteedEnemyData:
+      Id:
+        Value: 0
+    GuaranteedEnemyFaction: 0
   - Name: R2-B Shotgunner Introduction (20-45s)
     Kind: 0
     Duration:
       RawValue: 1638400
+    GracePeriodDuration:
+      RawValue: 0
     BudgetPerPulse:
       RawValue: 720896
     PulseInterval:
@@ -511,10 +525,16 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
-  - Name: R2-C Charger Introduction (45-80s)
+    GuaranteedEnemyData:
+      Id:
+        Value: 0
+    GuaranteedEnemyFaction: 0
+  - Name: R2-C Mortar Introduction (45-80s)
     Kind: 0
     Duration:
       RawValue: 2293760
+    GracePeriodDuration:
+      RawValue: 0
     BudgetPerPulse:
       RawValue: 851968
     PulseInterval:
@@ -529,7 +549,236 @@ MonoBehaviour:
           Value: 380491306257295384
       Faction: 0
       Weight:
+        RawValue: 196608
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 411749050168152871
+      Faction: 1
+      Weight:
         RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 368882078469044815
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 296950194662925891
+      Faction: 1
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 1
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+    GuaranteedEnemyData:
+      Id:
+        Value: 0
+    GuaranteedEnemyFaction: 0
+  - Name: R2-D Mortar Practice (80-95s)
+    Kind: 0
+    Duration:
+      RawValue: 983040
+    GracePeriodDuration:
+      RawValue: 0
+    BudgetPerPulse:
+      RawValue: 851968
+    PulseInterval:
+      RawValue: 117965
+    TargetPressure:
+      RawValue: 1245184
+    MaxAliveEnemies: 13
+    AllowedGroups: []
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 411749050168152871
+      Faction: 1
+      Weight:
+        RawValue: 131072
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 368882078469044815
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 296950194662925891
+      Faction: 1
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 1
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+    GuaranteedEnemyData:
+      Id:
+        Value: 0
+    GuaranteedEnemyFaction: 0
+  - Name: R2-E PreElite (95-105s)
+    Kind: 0
+    Duration:
+      RawValue: 655360
+    GracePeriodDuration:
+      RawValue: 0
+    BudgetPerPulse:
+      RawValue: 327680
+    PulseInterval:
+      RawValue: 183501
+    TargetPressure:
+      RawValue: 655360
+    MaxAliveEnemies: 8
+    AllowedGroups: []
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 196608
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    - EnemyData:
+        Id:
+          Value: 368882078469044815
+      Faction: 0
+      Weight:
+        RawValue: 65536
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+    GuaranteedEnemyData:
+      Id:
+        Value: 0
+    GuaranteedEnemyFaction: 0
+  - Name: R2-F Brute Elite (105-130s)
+    Kind: 3
+    Duration:
+      RawValue: 1638400
+    GracePeriodDuration:
+      RawValue: 0
+    BudgetPerPulse:
+      RawValue: 262144
+    PulseInterval:
+      RawValue: 163840
+    TargetPressure:
+      RawValue: 393216
+    MaxAliveEnemies: 9
+    AllowedGroups: []
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 196608
+      MinimumSurvivalTime:
+        RawValue: 0
+      MaximumSurvivalTime:
+        RawValue: 0
+      MaxConcurrent: 0
+    BossPrototype:
+      Id:
+        Value: 0
+    PauseDuration:
+      RawValue: 0
+    GuaranteedGroup:
+      Id:
+        Value: 0
+    GuaranteedEnemyData:
+      Id:
+        Value: 533766507454810919
+    GuaranteedEnemyFaction: 0
+  - Name: R2-G Charger Introduction (130-160s)
+    Kind: 0
+    Duration:
+      RawValue: 1966080
+    GracePeriodDuration:
+      RawValue: 0
+    BudgetPerPulse:
+      RawValue: 983040
+    PulseInterval:
+      RawValue: 104858
+    TargetPressure:
+      RawValue: 1441792
+    MaxAliveEnemies: 15
+    AllowedGroups: []
+    AllowedEnemies:
+    - EnemyData:
+        Id:
+          Value: 380491306257295384
+      Faction: 0
+      Weight:
+        RawValue: 196608
       MinimumSurvivalTime:
         RawValue: 0
       MaximumSurvivalTime:
@@ -587,17 +836,23 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
-  - Name: R2-D Charger Practice (80-95s)
+    GuaranteedEnemyData:
+      Id:
+        Value: 0
+    GuaranteedEnemyFaction: 0
+  - Name: R2-H Charger Practice (160-180s)
     Kind: 0
     Duration:
-      RawValue: 983040
+      RawValue: 1310720
+    GracePeriodDuration:
+      RawValue: 0
     BudgetPerPulse:
-      RawValue: 851968
+      RawValue: 983040
     PulseInterval:
-      RawValue: 117965
+      RawValue: 104858
     TargetPressure:
-      RawValue: 1245184
-    MaxAliveEnemies: 13
+      RawValue: 1441792
+    MaxAliveEnemies: 15
     AllowedGroups: []
     AllowedEnemies:
     - EnemyData:
@@ -652,215 +907,16 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
-  - Name: R2-E PreElite (95-105s)
-    Kind: 0
-    Duration:
-      RawValue: 655360
-    BudgetPerPulse:
-      RawValue: 327680
-    PulseInterval:
-      RawValue: 183501
-    TargetPressure:
-      RawValue: 655360
-    MaxAliveEnemies: 8
-    AllowedGroups: []
-    AllowedEnemies:
-    - EnemyData:
-        Id:
-          Value: 380491306257295384
-      Faction: 0
-      Weight:
-        RawValue: 196608
-      MinimumSurvivalTime:
-        RawValue: 0
-      MaximumSurvivalTime:
-        RawValue: 0
-      MaxConcurrent: 0
-    - EnemyData:
-        Id:
-          Value: 368882078469044815
-      Faction: 0
-      Weight:
-        RawValue: 65536
-      MinimumSurvivalTime:
-        RawValue: 0
-      MaximumSurvivalTime:
-        RawValue: 0
-      MaxConcurrent: 0
-    BossPrototype:
+    GuaranteedEnemyData:
       Id:
         Value: 0
-    PauseDuration:
-      RawValue: 0
-    GuaranteedGroup:
-      Id:
-        Value: 0
-  - Name: R2-F Brute Elite (105-130s)
-    Kind: 0
-    Duration:
-      RawValue: 1638400
-    BudgetPerPulse:
-      RawValue: 262144
-    PulseInterval:
-      RawValue: 163840
-    TargetPressure:
-      RawValue: 393216
-    MaxAliveEnemies: 9
-    AllowedGroups: []
-    AllowedEnemies:
-    - EnemyData:
-        Id:
-          Value: 380491306257295384
-      Faction: 0
-      Weight:
-        RawValue: 196608
-      MinimumSurvivalTime:
-        RawValue: 0
-      MaximumSurvivalTime:
-        RawValue: 0
-      MaxConcurrent: 0
-    BossPrototype:
-      Id:
-        Value: 0
-    PauseDuration:
-      RawValue: 0
-    GuaranteedGroup:
-      Id:
-        Value: 330810342798042849
-  - Name: R2-G Mortar Introduction (130-160s)
-    Kind: 0
-    Duration:
-      RawValue: 1966080
-    BudgetPerPulse:
-      RawValue: 983040
-    PulseInterval:
-      RawValue: 104858
-    TargetPressure:
-      RawValue: 1441792
-    MaxAliveEnemies: 15
-    AllowedGroups: []
-    AllowedEnemies:
-    - EnemyData:
-        Id:
-          Value: 380491306257295384
-      Faction: 0
-      Weight:
-        RawValue: 196608
-      MinimumSurvivalTime:
-        RawValue: 0
-      MaximumSurvivalTime:
-        RawValue: 0
-      MaxConcurrent: 0
-    - EnemyData:
-        Id:
-          Value: 411749050168152871
-      Faction: 1
-      Weight:
-        RawValue: 131072
-      MinimumSurvivalTime:
-        RawValue: 0
-      MaximumSurvivalTime:
-        RawValue: 0
-      MaxConcurrent: 0
-    - EnemyData:
-        Id:
-          Value: 368882078469044815
-      Faction: 0
-      Weight:
-        RawValue: 65536
-      MinimumSurvivalTime:
-        RawValue: 0
-      MaximumSurvivalTime:
-        RawValue: 0
-      MaxConcurrent: 0
-    - EnemyData:
-        Id:
-          Value: 296950194662925891
-      Faction: 1
-      Weight:
-        RawValue: 131072
-      MinimumSurvivalTime:
-        RawValue: 0
-      MaximumSurvivalTime:
-        RawValue: 0
-      MaxConcurrent: 1
-    BossPrototype:
-      Id:
-        Value: 0
-    PauseDuration:
-      RawValue: 0
-    GuaranteedGroup:
-      Id:
-        Value: 0
-  - Name: R2-H Mortar Practice (160-180s)
-    Kind: 0
-    Duration:
-      RawValue: 1310720
-    BudgetPerPulse:
-      RawValue: 983040
-    PulseInterval:
-      RawValue: 104858
-    TargetPressure:
-      RawValue: 1441792
-    MaxAliveEnemies: 15
-    AllowedGroups: []
-    AllowedEnemies:
-    - EnemyData:
-        Id:
-          Value: 380491306257295384
-      Faction: 0
-      Weight:
-        RawValue: 131072
-      MinimumSurvivalTime:
-        RawValue: 0
-      MaximumSurvivalTime:
-        RawValue: 0
-      MaxConcurrent: 0
-    - EnemyData:
-        Id:
-          Value: 411749050168152871
-      Faction: 1
-      Weight:
-        RawValue: 131072
-      MinimumSurvivalTime:
-        RawValue: 0
-      MaximumSurvivalTime:
-        RawValue: 0
-      MaxConcurrent: 0
-    - EnemyData:
-        Id:
-          Value: 368882078469044815
-      Faction: 0
-      Weight:
-        RawValue: 65536
-      MinimumSurvivalTime:
-        RawValue: 0
-      MaximumSurvivalTime:
-        RawValue: 0
-      MaxConcurrent: 0
-    - EnemyData:
-        Id:
-          Value: 296950194662925891
-      Faction: 1
-      Weight:
-        RawValue: 65536
-      MinimumSurvivalTime:
-        RawValue: 0
-      MaximumSurvivalTime:
-        RawValue: 0
-      MaxConcurrent: 1
-    BossPrototype:
-      Id:
-        Value: 0
-    PauseDuration:
-      RawValue: 0
-    GuaranteedGroup:
-      Id:
-        Value: 0
+    GuaranteedEnemyFaction: 0
   - Name: Breathing 2
     Kind: 1
     Duration:
       RawValue: 3932160
+    GracePeriodDuration:
+      RawValue: 0
     BudgetPerPulse:
       RawValue: 0
     PulseInterval:
@@ -878,10 +934,16 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
+    GuaranteedEnemyData:
+      Id:
+        Value: 0
+    GuaranteedEnemyFaction: 0
   - Name: R3-A Recap (0-25s)
     Kind: 0
     Duration:
       RawValue: 1638400
+    GracePeriodDuration:
+      RawValue: 0
     BudgetPerPulse:
       RawValue: 1048576
     PulseInterval:
@@ -965,10 +1027,16 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
+    GuaranteedEnemyData:
+      Id:
+        Value: 0
+    GuaranteedEnemyFaction: 0
   - Name: R3-B Swarm Introduction (25-50s)
     Kind: 0
     Duration:
       RawValue: 1638400
+    GracePeriodDuration:
+      RawValue: 0
     BudgetPerPulse:
       RawValue: 851968
     PulseInterval:
@@ -1019,10 +1087,16 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
+    GuaranteedEnemyData:
+      Id:
+        Value: 0
+    GuaranteedEnemyFaction: 0
   - Name: R3-C HeavySlammer Introduction (50-85s)
     Kind: 0
     Duration:
       RawValue: 2293760
+    GracePeriodDuration:
+      RawValue: 0
     BudgetPerPulse:
       RawValue: 1179648
     PulseInterval:
@@ -1084,10 +1158,16 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
+    GuaranteedEnemyData:
+      Id:
+        Value: 0
+    GuaranteedEnemyFaction: 0
   - Name: R3-D HeavySlammer Practice (85-95s)
     Kind: 0
     Duration:
       RawValue: 655360
+    GracePeriodDuration:
+      RawValue: 0
     BudgetPerPulse:
       RawValue: 1114112
     PulseInterval:
@@ -1138,10 +1218,16 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
+    GuaranteedEnemyData:
+      Id:
+        Value: 0
+    GuaranteedEnemyFaction: 0
   - Name: R3-E PreElite (95-105s)
     Kind: 0
     Duration:
       RawValue: 655360
+    GracePeriodDuration:
+      RawValue: 0
     BudgetPerPulse:
       RawValue: 327680
     PulseInterval:
@@ -1181,10 +1267,16 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
+    GuaranteedEnemyData:
+      Id:
+        Value: 0
+    GuaranteedEnemyFaction: 0
   - Name: R3-F Mortar Elite (105-130s)
-    Kind: 0
+    Kind: 3
     Duration:
       RawValue: 1638400
+    GracePeriodDuration:
+      RawValue: 0
     BudgetPerPulse:
       RawValue: 327680
     PulseInterval:
@@ -1223,11 +1315,17 @@ MonoBehaviour:
       RawValue: 0
     GuaranteedGroup:
       Id:
-        Value: 409342585845507320
+        Value: 0
+    GuaranteedEnemyData:
+      Id:
+        Value: 445092933849088039
+    GuaranteedEnemyFaction: 0
   - Name: R3-G Spatial Combinations (130-180s)
     Kind: 0
     Duration:
       RawValue: 3276800
+    GracePeriodDuration:
+      RawValue: 0
     BudgetPerPulse:
       RawValue: 1376256
     PulseInterval:
@@ -1284,10 +1382,16 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
+    GuaranteedEnemyData:
+      Id:
+        Value: 0
+    GuaranteedEnemyFaction: 0
   - Name: Breathing 3
     Kind: 1
     Duration:
       RawValue: 3932160
+    GracePeriodDuration:
+      RawValue: 0
     BudgetPerPulse:
       RawValue: 0
     PulseInterval:
@@ -1305,10 +1409,16 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
+    GuaranteedEnemyData:
+      Id:
+        Value: 0
+    GuaranteedEnemyFaction: 0
   - Name: R4-A Established Ecosystem (0-30s)
     Kind: 0
     Duration:
       RawValue: 1966080
+    GracePeriodDuration:
+      RawValue: 0
     BudgetPerPulse:
       RawValue: 1441792
     PulseInterval:
@@ -1414,10 +1524,16 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
+    GuaranteedEnemyData:
+      Id:
+        Value: 0
+    GuaranteedEnemyFaction: 0
   - Name: R4-B Curated Combinations (30-75s)
     Kind: 0
     Duration:
       RawValue: 2949120
+    GracePeriodDuration:
+      RawValue: 0
     BudgetPerPulse:
       RawValue: 1638400
     PulseInterval:
@@ -1474,10 +1590,16 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
+    GuaranteedEnemyData:
+      Id:
+        Value: 0
+    GuaranteedEnemyFaction: 0
   - Name: R4-C Suicider Introduction (75-95s)
     Kind: 0
     Duration:
       RawValue: 1310720
+    GracePeriodDuration:
+      RawValue: 0
     BudgetPerPulse:
       RawValue: 1048576
     PulseInterval:
@@ -1539,10 +1661,16 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
+    GuaranteedEnemyData:
+      Id:
+        Value: 0
+    GuaranteedEnemyFaction: 0
   - Name: R4-D PreElite (95-105s)
     Kind: 0
     Duration:
       RawValue: 655360
+    GracePeriodDuration:
+      RawValue: 0
     BudgetPerPulse:
       RawValue: 393216
     PulseInterval:
@@ -1582,10 +1710,16 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
+    GuaranteedEnemyData:
+      Id:
+        Value: 0
+    GuaranteedEnemyFaction: 0
   - Name: R4-E HeavySlammer Elite (105-130s)
-    Kind: 0
+    Kind: 3
     Duration:
       RawValue: 1638400
+    GracePeriodDuration:
+      RawValue: 0
     BudgetPerPulse:
       RawValue: 393216
     PulseInterval:
@@ -1624,11 +1758,17 @@ MonoBehaviour:
       RawValue: 0
     GuaranteedGroup:
       Id:
-        Value: 519261556471960928
+        Value: 0
+    GuaranteedEnemyData:
+      Id:
+        Value: 414697522645550537
+    GuaranteedEnemyFaction: 0
   - Name: R4-F Final Exam (130-180s)
     Kind: 0
     Duration:
       RawValue: 3276800
+    GracePeriodDuration:
+      RawValue: 0
     BudgetPerPulse:
       RawValue: 1966080
     PulseInterval:
@@ -1707,10 +1847,16 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
+    GuaranteedEnemyData:
+      Id:
+        Value: 0
+    GuaranteedEnemyFaction: 0
   - Name: Breathing 4 (Last Breath)
     Kind: 1
     Duration:
       RawValue: 5898240
+    GracePeriodDuration:
+      RawValue: 0
     BudgetPerPulse:
       RawValue: 0
     PulseInterval:
@@ -1728,9 +1874,15 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
+    GuaranteedEnemyData:
+      Id:
+        Value: 0
+    GuaranteedEnemyFaction: 0
   - Name: World1Boss
     Kind: 2
     Duration:
+      RawValue: 0
+    GracePeriodDuration:
       RawValue: 0
     BudgetPerPulse:
       RawValue: 0
@@ -1749,3 +1901,7 @@ MonoBehaviour:
     GuaranteedGroup:
       Id:
         Value: 0
+    GuaranteedEnemyData:
+      Id:
+        Value: 0
+    GuaranteedEnemyFaction: 0

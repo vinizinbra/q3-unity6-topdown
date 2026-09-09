@@ -749,10 +749,21 @@ Beyond the missing assets/wiring:
   records every pick across all 5 kinds; `GlobalUpgrade` still reads its own dedicated
   `GlobalUpgradePicks` back for candidate filtering, but `PassiveUpgrade` now reads `UpgradeHistory`
   itself (see the dedup bullet below) rather than getting its own Picks component.
-- **Multiple levels from one `Grant` call collapse into one screen** - if a single big exp grant
-  crosses more than one level threshold in the same `while` loop, the player still only sees
-  `ChoiceCount` (3) options total, not `3 × levelsGained`. Chosen deliberately over queuing multiple
-  sequential screens, which would be a confusing wait for a co-op-wide pause.
+- **Multiple levels from one `Grant` call now queue one screen per level** (reversed - was
+  previously a deliberate collapse into a single `ChoiceCount`-sized screen; the user reported this
+  loses the rest of the earned picks with no way to recover them, and asked for real gameplay to
+  queue like `RuntimeConfig.DebugStartLevelUpCount` already did). `ExperienceUtility.Grant` now
+  peeks how many level thresholds `TotalExperience` clears WITHOUT advancing `Global.Level` itself,
+  and adds that count to `Global.DebugPendingLevelUps` - the same queue/drain
+  `DebugCheatSystem.TryOpenNextPendingLevelUp` already used for `DebugStartLevelUpCount`/
+  `CheatSystem.QueuePendingLevelUpsTo` (`JumpToBreathing`). `Global.Level` and the screen's own
+  `LevelUpConfig.LevelSequence` category only advance one step at a time as each queued screen is
+  actually opened and resolved, so a 5-level XP grant now genuinely offers 5 sequential 3-card
+  screens (paced by the player confirming each one), not 1. The drain's own `TotalExperience`
+  write is a floor (`FPMath.Max`), not an overwrite, so a real grant's already-correct total (which
+  can carry real excess progress into the level being opened) is never clobbered down to the
+  drain's own fabricated per-level value - that overwrite is still exactly right for
+  `DebugStartLevelUpCount`, where nothing else ever set `TotalExperience` first.
 - **`PassiveUpgrade`/`GlobalUpgrade`/`WeaponPerk` candidates are now deduplicated against past picks**,
   same as `SkillUpgrade`/`RiftMutation` always were - `PassiveUpgrade` via `UpgradeHistory`
   (single-pick, filtered to `Kind == PassiveUpgrade`; judged safe to share that ledger's 32-slot

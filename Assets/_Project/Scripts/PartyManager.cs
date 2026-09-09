@@ -6,7 +6,7 @@ using Quantum;
 using QuantumUser.View.Util;
 using UnityEngine;
 
-public class PartyManager : PgSingleton<PartyManager>, IInRoomCallbacks, IMatchmakingCallbacks, IOnEventCallback
+public class PartyManager : PgSingleton<PartyManager>, IInRoomCallbacks, IMatchmakingCallbacks, IConnectionCallbacks, IOnEventCallback
 {
     public static PartyManager Instance;
 
@@ -220,6 +220,28 @@ public class PartyManager : PgSingleton<PartyManager>, IInRoomCallbacks, IMatchm
     }
 
     public void OnJoinRandomFailed(short returnCode, string message) { }
+
+    // Connection-level callbacks. The matchmaking failures above (OnJoinRoomFailed /
+    // OnCreateRoomFailed) only cover failures the server reaches far enough to report - a room that
+    // is full or missing. A connection that dies before that (network timeout, unreachable server,
+    // auth/region failure) or a hard drop while already InRoom (kick, lost link) never fires those,
+    // it fires OnDisconnected instead. Without listening for it the widget stays pinned on the
+    // Connecting panel forever, since nothing ever moves Phase off Connecting. MatchMakingConfig
+    // handles the popup + return-to-menu side; here we only need to unstick our own phase so the
+    // party widget shows the join/create panel again the moment the menu reappears.
+    public void OnDisconnected(DisconnectCause cause)
+    {
+        _autoStartWhenRoomReady = false;
+        _lastAllOthersReady = false;
+        if (Phase != PartyPhase.JoinCreateChoice)
+            SetPhase(PartyPhase.JoinCreateChoice);
+    }
+
+    public void OnConnected() { }
+    public void OnConnectedToMaster() { }
+    public void OnRegionListReceived(RegionHandler regionHandler) { }
+    public void OnCustomAuthenticationResponse(Dictionary<string, object> data) { }
+    public void OnCustomAuthenticationFailed(string debugMessage) { }
 
     public void OnLeftRoom()
     {

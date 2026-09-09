@@ -55,12 +55,19 @@ public class BossWidget : QuantumGlobalMonoBehaviour
     private float cameraFadeDuration = 0.25f;
 
     private QuantumEntityViewUpdater _entityViewUpdater;
+    private GameplayUiController _gameplayUiController;
     private bool _wasBoss;
     private bool _wasPaused;
+
+    // Set the tick the boss is first detected, cleared once its view has actually been resolved and
+    // the cutaway has fired. Kept separate from _wasBoss (which just gates "don't re-trigger this
+    // encounter") because resolving the view can take a few extra ticks online - see TryTriggerBossWindow.
+    private EntityRef _pendingBossWindowEntity;
 
     private void Awake()
     {
         _entityViewUpdater = FindFirstObjectByType<QuantumEntityViewUpdater>();
+        _gameplayUiController = FindFirstObjectByType<GameplayUiController>();
     }
 
     public override void QStart(QuantumGame game)
@@ -82,6 +89,7 @@ public class BossWidget : QuantumGlobalMonoBehaviour
         {
             _wasBoss = false;
             _wasPaused = false;
+            _pendingBossWindowEntity = EntityRef.None;
             return;
         }
 
@@ -95,9 +103,12 @@ public class BossWidget : QuantumGlobalMonoBehaviour
         UpdateName(frame, bossEntity);
 
         if (_wasBoss == false)
-            TriggerBossWindow(frame, bossEntity);
+            _pendingBossWindowEntity = bossEntity;
 
         _wasBoss = true;
+
+        if (_pendingBossWindowEntity != EntityRef.None)
+            TryTriggerBossWindow(frame);
 
         bool isPaused = frame.Global->BossPauseTimer > FP._0;
 
@@ -107,19 +118,40 @@ public class BossWidget : QuantumGlobalMonoBehaviour
         _wasPaused = isPaused;
     }
 
-    private void TriggerBossWindow(Frame frame, EntityRef bossEntity)
+    // QuantumEntityViewUpdater instantiates a spawned entity's Unity view off the verified frame,
+    // while this widget detects the boss off the predicted frame (frame.Predicted in QUpdate).
+    // Locally those are the same tick, but online prediction runs ahead of verification, so on the
+    // exact tick the boss is first detected its view can still be a few ticks from existing -
+    // GetView would return null right then. Retried every QUpdate (via _pendingBossWindowEntity)
+    // until the view actually resolves, instead of a one-shot lookup that could silently leave the
+    // camera on normal framing for the whole cutaway.
+    private void TryTriggerBossWindow(Frame frame)
     {
+        EntityRef bossEntity = _pendingBossWindowEntity;
+
         bool hasWindow = bossWindow != null;
         bool hasEnemy = frame.TryGet<Enemy>(bossEntity, out var enemy);
-        Debug.Log($"[BossWidget] TriggerBossWindow: hasWindow={hasWindow}, hasEnemy={hasEnemy}");
 
         if (hasWindow == false || hasEnemy == false)
+        {
+            _pendingBossWindowEntity = EntityRef.None;
             return;
+        }
+
+        Transform bossTransform = ResolveViewTransform(bossEntity);
+        if (bossTransform == null)
+            return;
+
+        _pendingBossWindowEntity = EntityRef.None;
+
+        // A Cursed Rift/Store/Blacksmith window can still be open on this exact tick (e.g. a
+        // Breathing grace hold expiring right as the very next phase is Boss - see
+        // RunPhaseUtility.TickBreathingGraceHold) - force it closed now rather than racing
+        // GameplayUiController's own per-tick self-heal for who runs first this frame.
+        _gameplayUiController?.ForceHideAllPoiWindows();
 
         EnemyDataAsset data = frame.FindAsset(enemy.EnemyData);
         BossDataAsset bossData = data as BossDataAsset;
-
-        Transform bossTransform = ResolveViewTransform(bossEntity);
 
         if (ScreenFadeWidget.Instance == null)
         {
@@ -144,7 +176,7 @@ public class BossWidget : QuantumGlobalMonoBehaviour
         bossWindow.Show();
     }
 
-    // No fade needed on the way back, unlike TriggerBossWindow's own cut TO the boss - confirmed
+    // No fade needed on the way back, unlike TryTriggerBossWindow's own cut TO the boss - confirmed
     // with the user. snap: false so FollowCamera's own existing Update() lerp eases it back to the
     // players naturally instead of popping instantly; the camera was already framing the arena
     // (players/boss are both right there), so there's nothing jarring here to hide behind a fade.

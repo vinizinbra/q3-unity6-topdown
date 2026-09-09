@@ -154,6 +154,12 @@
         // 0 (default) is a no-op.
         public int DebugStartLevelUpCount = 0;
 
+        // Debug-only: skips Lobby and starts the match already landed on the Nth Breathing-kind
+        // SurvivalConfig.Phases[] entry (1-4), same landing as CheatActionKind.JumpToBreathing -
+        // see DebugCheatSystem/CheatSystem.JumpToBreathing. Also queues pending level-ups up to that
+        // breath's paired display level. 0 (default) is a no-op.
+        public int DebugStartBreathIndex = 0;
+
         // Local-testing bots (see docs/bots.md) - tuning for every RuntimePlayer.IsBot slot in the
         // match. Lives here, next to the other debug knobs, rather than in its own DataAsset
         // precisely because it IS a debug tool: RuntimeConfig is already assigned in both scenes,

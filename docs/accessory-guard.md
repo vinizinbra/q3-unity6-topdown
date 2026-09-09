@@ -151,6 +151,14 @@ Three deliberate differences from a currency orb:
 - **No lifetime.** There is deliberately no `DestroyAfterTime`/`OrbLifetime` equivalent. A timer would
   silently turn a *recoverable* resource into a broken one. It waits indefinitely; it's only destroyed
   on pickup, on a Merchant restore, or when orphaned (owner gone).
+- **Constrained to the Boss chunk's own footprint while `GameState.Boss` is active.** The sealed
+  arena's floor is still one continuous piece of ground on both sides of its `BossArenaGate` walls
+  (see `docs/boss-encounter.md`), so the plain ground raycast in `ResolveLandingPosition` can't tell
+  "reachable" from "outside the seal" on its own. Ring samples that land outside
+  `LevelGenerationSystem.TryFindBossArenaChunk`'s bounds (checked via the new
+  `FallRespawnUtility.IsInsideChunkBounds`) are rejected and re-rolled like any other invalid ground
+  sample, so a hit taken near the wall can't pop the accessory somewhere the player can no longer
+  walk to.
 
 ### Spin while airborne
 

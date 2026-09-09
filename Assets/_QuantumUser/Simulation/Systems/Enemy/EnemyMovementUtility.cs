@@ -268,6 +268,13 @@ namespace Quantum
                 return;
             }
 
+            // A movement profile asks for less than full speed by returning a SHORTER-than-unit
+            // direction (magnitude in (0,1]); the heading itself is still taken from its orientation
+            // (normalized just below). Every profile that returns a unit vector reads as exactly 1
+            // here - full MoveSpeed, unchanged - so this is invisible to all of them; ChaseMovementData's
+            // arrival band is the one caller that deliberately returns a shortened vector to ease to a
+            // stop (see its own comment). Clamped so a >1 magnitude can never outrun authored MoveSpeed.
+            FP speedScale = FPMath.Clamp01(direction.Magnitude);
             FPVector2 normalized = direction.Normalized;
             bool isGrounded = data.Stats.Height.InitialState == EnemyHeightState.Grounded;
             int groundLayerMask = GetGroundLayerMask(f);
@@ -345,7 +352,7 @@ namespace Quantum
                 }
             }
 
-            FPVector3 desiredVelocity = flatDirection * speed;
+            FPVector3 desiredVelocity = flatDirection * (speed * speedScale);
             bool isFlying = data.Stats.Height.InitialState == EnemyHeightState.Flying;
 
             // Grounded/Airborne enemies only steer horizontally - vertical velocity is whatever

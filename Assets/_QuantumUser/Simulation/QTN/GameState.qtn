@@ -106,6 +106,19 @@ global
     // comment already documents, since it's what re-enables the group once this hits 0). Seeded
     // from the current SurvivalPhase's own PauseDuration - <= 0 means no pause is in progress.
     FP BossPauseTimer;
+
+    // True only while a Breathing phase's own Duration has elapsed (and the area is Encounter-
+    // cleared) but at least one connected player still has a Cursed Rift/Store/Blacksmith Choice
+    // Window open - RunPhaseUtility.TickBreathingGraceHold holds the phase transition open instead
+    // of instantly force-closing that window, for up to SurvivalPhase.GracePeriodDuration seconds
+    // (BreathingGraceTimeRemaining, below) or until every open window closes, whichever comes
+    // first. PoiInteractionLockUtility.IsInputLocked reads this to fully lock (movement/weapon/
+    // skill) every player who does NOT themselves have a window open, so nobody can wander off
+    // while a teammate finishes. See docs/run-phase.md.
+    Boolean BreathingGraceActive;
+
+    // Seconds left in the current grace hold - only meaningful while BreathingGraceActive is true.
+    FP BreathingGraceTimeRemaining;
 }
 
 // Per-player vote to end the CURRENT Breathing Break early (see docs/run-phase.md) - lazily added

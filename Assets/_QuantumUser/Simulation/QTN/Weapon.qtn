@@ -25,6 +25,12 @@ component Weapon
     FP    DamageMultiplier;
     FP    FireCooldownMultiplier;
 
+    // Cheat-only (see CheatMenu/CheatSystem): forces this weapon into the same "fire follows the
+    // held Fire input, not Aim.Target" mode as RuntimeConfig.DebugManualFireInput, but per-weapon and
+    // toggleable mid-match instead of a session-start config value - lets a cheat turn auto-shoot off
+    // and back on. Checked alongside that flag in WeaponSystem.Update.
+    bool  CheatManualFire;
+
     // Set either by Store's "Increase Weapon Level" purchase (StoreUtility.BuyWeaponLevelUp) or by a
     // freshly-rolled weapon offer's own starting Level (LevelUpOption.RolledWeaponLevel, applied via
     // WeaponChoiceUtility.Grant - see docs/store-blacksmith.md) - a per-weapon-instance counter, reset

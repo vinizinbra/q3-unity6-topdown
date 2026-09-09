@@ -163,6 +163,39 @@ namespace Quantum
         [Tooltip("How far the body sinks (local Z, not Y - same reasoning as Crouch/Slam's own SinkAmount) by the end of the dive.")] public float SinkAmount = 0.3f;
     }
 
+    // A secondary particle played alongside AttackVisualStep.ParticlePrefab on the same phase - its
+    // own fully independent copy of the primary particle's placement config (anchor/offset/parent/
+    // alignment/rotation/scale/sorting), so e.g. a muzzle flash and a separate ground-dust burst can
+    // each sit where they belong on one step. Deliberately a distinct type rather than turning
+    // AttackVisualStep.ParticlePrefab itself into an array - keeping the primary as its own single
+    // field means every existing authored asset keeps its serialized particle reference intact.
+    // Spawned by the same EnemyAttackVisualsView.SpawnParticle path the primary uses, so behavior
+    // (parenting onto the Gun, facing-relative offset, sorting override, graceful stop on the next
+    // phase edge) is identical.
+    [Serializable]
+    public class AttackVisualParticle
+    {
+        [Tooltip("Leave empty to skip this entry.")]
+        public ParticleSystem ParticlePrefab;
+        public ParticleAnchor Anchor = ParticleAnchor.OnSelf;
+        [Tooltip("Relative to the enemy's own current facing (full Aim.Angle direction, not just a left/right mirror), not raw world space - Z is forward along that facing, X is to its right, Y is world-up. Rotates with the enemy so e.g. a muzzle offset stays on the correct side no matter which way it's currently facing.")]
+        public Vector3 Offset;
+        [Tooltip("View-only - raycasts straight down against the Ground layer (same probe TelegraphData.SnapToGround uses for a telegraph decal) and spawns this particle at the real Unity ground height there instead of at the anchor's computed height. OnSelf's raw height is the entity's collider CENTER, not the ground (see EnemyView's own bottom-pivot comment), so a ground-effect particle (dust, impact ring) usually needs this on to actually sit on the visible ground rather than floating at roughly torso height. Overrides Offset's Y contribution entirely (the found ground height replaces it, doesn't add to it).")]
+        public bool SnapToGround;
+        [Tooltip("Attaches to the anchor and follows it for the phase's duration (e.g. a charge trail), instead of a one-shot burst left behind at a fixed point.")]
+        public bool Parented;
+        [Tooltip("Rotate the particle to face the enemy's current Aim direction (world-flat, same facing convention the body/arm use) instead of spawning at identity rotation. RotationOffset below is applied on top either way.")]
+        public bool AlignToEnemyDirection;
+        [Tooltip("Additional Euler rotation applied on top of the base rotation (identity, or the enemy's facing direction if AlignToEnemyDirection is on).")]
+        public Vector3 RotationOffset;
+        [Tooltip("Uniform scale multiplier applied to the particle's own authored scale. 1 = unchanged.")]
+        public float Scale = 1f;
+        [Tooltip("Forces SortingOrder below onto every ParticleSystemRenderer in the spawned instance - the root AND every child particle system - instead of leaving each at whatever it was authored with.")]
+        public bool OverrideSortingOrder;
+        [Tooltip("Sorting order applied to every ParticleSystemRenderer in the hierarchy when OverrideSortingOrder is on.")]
+        public int SortingOrder;
+    }
+
     // One phase's worth of visual configuration (body animation + optional particle) -
     // EnemyActionData.View.cs has four of these, all sharing this reusable shape. Conditional field
     // display and the "Body Animation"/"Particle" foldouts live in AttackVisualStepDrawer
@@ -211,6 +244,8 @@ namespace Quantum
         public ParticleAnchor Anchor = ParticleAnchor.OnSelf;
         [Tooltip("Relative to the enemy's own current facing (full Aim.Angle direction, not just a left/right mirror), not raw world space - Z is forward along that facing, X is to its right, Y is world-up. Rotates with the enemy so e.g. a muzzle offset stays on the correct side no matter which way it's currently facing.")]
         public Vector3 Offset;
+        [Tooltip("View-only - raycasts straight down against the Ground layer (same probe TelegraphData.SnapToGround uses for a telegraph decal) and spawns this particle at the real Unity ground height there instead of at the anchor's computed height. OnSelf's raw height is the entity's collider CENTER, not the ground (see EnemyView's own bottom-pivot comment), so a ground-effect particle (dust, impact ring) usually needs this on to actually sit on the visible ground rather than floating at roughly torso height. Overrides Offset's Y contribution entirely (the found ground height replaces it, doesn't add to it).")]
+        public bool SnapToGround;
         [Tooltip("Attaches to the anchor and follows it for the phase's duration (e.g. a charge trail), instead of a one-shot burst left behind at a fixed point.")]
         public bool Parented;
         [Tooltip("Rotate the particle to face the enemy's current Aim direction (world-flat, same facing convention the body/arm use) instead of spawning at identity rotation. RotationOffset below is applied on top either way.")]
@@ -224,5 +259,8 @@ namespace Quantum
         public bool OverrideSortingOrder;
         [Tooltip("Sorting order applied to every ParticleSystemRenderer in the hierarchy when OverrideSortingOrder is on.")]
         public int SortingOrder;
+
+        [Tooltip("Extra particles played alongside ParticlePrefab on this same phase, each with its own fully independent anchor/offset/parent/alignment/rotation/scale/sorting config. Separate from ParticlePrefab (not an array replacing it), so authoring a single-particle step keeps its existing reference untouched. Entries with a null prefab are skipped. Any Parented entry follows the enemy for this phase's duration and stops on the next phase edge, same as the primary particle.")]
+        public AttackVisualParticle[] AdditionalParticles = new AttackVisualParticle[0];
     }
 }

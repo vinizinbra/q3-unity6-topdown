@@ -18,16 +18,12 @@ MonoBehaviour:
       Value: 505319841889557397
   Icon: {fileID: 2129868926, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
   DisplayName: Iron Presence
-  Description: Enemies intimidated by your Protector Aura are worn down before they reach you - slower on the approach, easier to throw, and eventually softer to your own hits.
+  Description: Enemies intimidated by your Protector Aura are worn down before they reach you - easier to throw, and eventually softer to your own hits.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - 'Enemies inside your Protector Aura move <color=#FD3971>15%</color> slower and take <color=#FD3971>+25%</color> knockback force.'
-  - 'Enemies inside your Protector Aura move <color=#FD3971>15%</color> slower and take <color=#FD3971>+25%</color> knockback and <color=#FD3971>+20%</color> damage from you.'
-  - 'Enemies inside your Protector Aura move <color=#FD3971>25%</color> slower and take <color=#FD3971>+50%</color> knockback and <color=#FD3971>+35%</color> damage from you.'
-  SlowMultiplier:
-  - RawValue: 55706
-  - RawValue: 55706
-  - RawValue: 49152
+  - 'Enemies inside your Protector Aura take <color=#FD3971>+25%</color> knockback force.'
+  - 'Enemies inside your Protector Aura take <color=#FD3971>+25%</color> knockback and <color=#FD3971>+20%</color> damage from you.'
+  - 'Enemies inside your Protector Aura take <color=#FD3971>+50%</color> knockback and <color=#FD3971>+35%</color> damage from you.'
   KnockbackTakenMultiplier:
   - RawValue: 81920
   - RawValue: 81920

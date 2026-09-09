@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Photon.Deterministic;
 using QuantumUser.View.Managers;
 using QuantumUser.View.Util;
@@ -13,9 +14,12 @@ namespace Quantum
     // anything at Initialize - two enemies sharing the same EnemyActionData get identical visuals
     // with zero per-prefab setup beyond wiring this component up once.
     //
-    // Parented particles / the ground telegraph are tracked as single "current instance" slots
-    // (not a list) - these phases play sequentially within one attack, never overlapping, so one
-    // slot per concept is enough; a new one replaces whatever's still around from the previous edge.
+    // The ground telegraph is tracked as a single "current instance" slot - telegraph phases play
+    // sequentially within one attack, never overlapping, so one slot is enough; a new one replaces
+    // whatever's still around from the previous edge. Parented particles are a list instead: a
+    // single phase can author several particles at once (AttackVisualStep.ParticlePrefab plus its
+    // AdditionalParticles), any number of which may be Parented, so all of them are tracked together
+    // and cleared together on the next phase edge.
     //
     // Most telegraphs are a fixed decal, positioned once at spawn - but QUpdate also re-poses an
     // active TelegraphData.LiveTracking telegraph every single frame (not just on phase edges,
@@ -64,13 +68,23 @@ namespace Quantum
         // increase while still sampled as Preparation/Telegraph both times means a brand new windup
         // started without ever being observed as "not winding up" in between.
         private FP? _lastStateTimer;
+        // See QUpdate's windupRestarted check - a forced action override (BossSystem.ForceBreakAction
+        // re-entering Preparation for KneelDeliveryData) can author AnticipationTime/StateTimer as 0,
+        // which the StateTimer-increase heuristic alone can't catch (0 is never greater than whatever
+        // the interrupted windup's StateTimer already was). CurrentActionSlot changing while still
+        // sampled as winding up both times is an independent, reliable tell that a different action
+        // took over, regardless of which direction StateTimer moved.
+        private byte? _lastActionSlot;
         private ParticleSystem _currentAnticipationIcon;
         // Real time (Time.time), not simulation ticks - EffectsManager.MinimumAnticipationIconDuration
         // is a wall-clock readability floor, so it has to be measured the same way. See
         // RequestClearAnticipationIcon/UpdateAnticipationIcon.
         private float _anticipationIconSpawnTime;
         private bool _anticipationIconPendingClear;
-        private GameObject _currentParentedParticle;
+        // See class comment - a single phase can author several Parented particles at once
+        // (ParticlePrefab plus any number of AdditionalParticles entries), all tracked together and
+        // cleared together on the next phase edge.
+        private readonly List<GameObject> _currentParentedParticles = new List<GameObject>();
         private GameObject _currentTelegraph;
         private GameObject _currentTelegraphPrefab;
         private AttackPhase? _activeTelegraphStartPhase;
@@ -137,8 +151,10 @@ namespace Quantum
 
             EnemyActionPhase? lastPhase = _lastEnemyPhase;
             FP? lastStateTimer = _lastStateTimer;
+            byte? lastActionSlot = _lastActionSlot;
             _lastEnemyPhase = enemyPhase;
             _lastStateTimer = enemy.StateTimer;
+            _lastActionSlot = enemy.CurrentActionSlot;
 
             bool wasWindingUpSample = lastPhase == EnemyActionPhase.Preparation || lastPhase == EnemyActionPhase.Telegraph;
             bool isWindingUpSample = enemyPhase == EnemyActionPhase.Preparation || enemyPhase == EnemyActionPhase.Telegraph;
@@ -158,8 +174,15 @@ namespace Quantum
             // getting silently re-aimed at the second one's pose instead, which is what made
             // UpdateLiveTelegraph's own Lerp/Slerp visibly slide the old telegraph into the new one's
             // position/rotation rather than it snapping fresh.
+            // A forced action override (BossSystem.ForceBreakAction re-entering Preparation for
+            // KneelDeliveryData, whose authored AnticipationTime/StateTimer is 0) can't be caught by
+            // the StateTimer-increase check alone - 0 is never greater than whatever the interrupted
+            // windup's own StateTimer already was. CurrentActionSlot having changed underneath an
+            // unbroken Preparation/Telegraph sample is an independent, direction-agnostic tell that a
+            // different action took over, so either signal alone is enough to treat this as a restart.
             bool windupRestarted = wasWindingUpSample == true && isWindingUpSample == true
-                && lastStateTimer.HasValue == true && enemy.StateTimer > lastStateTimer.Value;
+                && ((lastStateTimer.HasValue == true && enemy.StateTimer > lastStateTimer.Value)
+                    || (lastActionSlot.HasValue == true && lastActionSlot.Value != enemy.CurrentActionSlot));
 
             if (windupRestarted == true)
             {
@@ -525,7 +548,15 @@ namespace Quantum
         // SkillTargetPosition/live-target anchor).
         private bool TryResolveStepOrigin(Frame frame, Enemy enemy, AttackVisualStep step, out Photon.Deterministic.FPVector3 origin)
         {
-            if (step.Anchor == ParticleAnchor.OnSelf)
+            return TryResolveAnchorPosition(frame, enemy, step.Anchor, out origin);
+        }
+
+        // Shared by TryResolveStepOrigin (step-level anchor, used for particles/shake) and
+        // SpawnParticle (per-entry anchor, since each AdditionalParticles entry authors its own
+        // Anchor independent of the step's primary one).
+        private bool TryResolveAnchorPosition(Frame frame, Enemy enemy, ParticleAnchor anchor, out Photon.Deterministic.FPVector3 origin)
+        {
+            if (anchor == ParticleAnchor.OnSelf)
             {
                 origin = frame.Get<Transform3D>(_entityRef).Position;
                 return true;
@@ -561,17 +592,37 @@ namespace Quantum
 
         private void SpawnStepParticle(Frame frame, Enemy enemy, AttackVisualStep step)
         {
-            // Every phase transition ends whatever parented particle (e.g. a charge trail) the
+            // Every phase transition ends whatever parented particle(s) (e.g. a charge trail) the
             // previous phase left running - phases play sequentially and never overlap (see class
             // comment), so a phase with no parented particle of its own (e.g. EndStep's one-shot
-            // impact burst) must still stop the outgoing one instead of leaving it attached to the
-            // enemy indefinitely.
+            // impact burst) must still stop the outgoing one(s) instead of leaving them attached to
+            // the enemy indefinitely.
             ClearParentedParticle();
 
-            if (step.ParticlePrefab == null)
+            SpawnParticle(frame, enemy, step.ParticlePrefab, step.Anchor, step.Offset, step.SnapToGround, step.Parented, step.AlignToEnemyDirection, step.RotationOffset, step.Scale, step.OverrideSortingOrder, step.SortingOrder);
+
+            if (step.AdditionalParticles == null)
                 return;
 
-            if (TryResolveStepOrigin(frame, enemy, step, out Photon.Deterministic.FPVector3 anchorPosition) == false)
+            foreach (AttackVisualParticle extra in step.AdditionalParticles)
+            {
+                if (extra == null || extra.ParticlePrefab == null)
+                    continue; // entry left empty on purpose - see AttackVisualParticle.ParticlePrefab's own tooltip
+
+                SpawnParticle(frame, enemy, extra.ParticlePrefab, extra.Anchor, extra.Offset, extra.SnapToGround, extra.Parented, extra.AlignToEnemyDirection, extra.RotationOffset, extra.Scale, extra.OverrideSortingOrder, extra.SortingOrder);
+            }
+        }
+
+        // Shared spawn path for both AttackVisualStep.ParticlePrefab (the primary) and each of its
+        // AdditionalParticles entries - both are just an independent anchor/offset/parent/alignment/
+        // rotation/scale/sorting config, so there's nothing primary-specific left once the fields are
+        // passed in directly instead of read off the step object.
+        private void SpawnParticle(Frame frame, Enemy enemy, ParticleSystem prefab, ParticleAnchor anchor, Vector3 offset, bool snapToGround, bool parented, bool alignToEnemyDirection, Vector3 rotationOffset, float scaleMultiplier, bool overrideSortingOrder, int sortingOrder)
+        {
+            if (prefab == null)
+                return;
+
+            if (TryResolveAnchorPosition(frame, enemy, anchor, out Photon.Deterministic.FPVector3 anchorPosition) == false)
                 return; // SkillTargetPosition but nothing valid to anchor to
 
             // Offset is authored relative to the enemy's own current facing (Z = forward along
@@ -580,39 +631,55 @@ namespace Quantum
             // adding it to the anchor is what keeps e.g. a muzzle offset on the correct side/in
             // front of the enemy regardless of which way it's actually facing.
             Quaternion directionRotation = ResolveEnemyDirectionRotation(frame);
-            Vector3 worldPosition = anchorPosition.ToUnityVector3() + directionRotation * step.Offset;
+            Vector3 worldPosition = anchorPosition.ToUnityVector3() + directionRotation * offset;
+
+            // View-only ground fit, same probe SpawnTelegraph/ComputeTelegraphPose use - OnSelf's
+            // raw anchor height is the entity's collider CENTER (see EnemyView's bottom-pivot
+            // comment), not the ground, so this replaces whatever height offset/anchor computed
+            // with the real Unity ground height directly beneath it instead.
+            if (snapToGround == true)
+                worldPosition = SnapToGround(worldPosition);
 
             // AlignToEnemyDirection gives a base rotation matching the enemy's current facing
             // (same flat Aim.Angle convention EnemyBlobAnimationView/EnemyArmAimView already use);
             // RotationOffset then applies on top either way, so a purely fixed rotation is just
             // AlignToEnemyDirection=false with the desired Euler baked into RotationOffset.
-            Quaternion baseRotation = step.AlignToEnemyDirection == true ? directionRotation : Quaternion.identity;
-            Quaternion rotation = baseRotation * Quaternion.Euler(step.RotationOffset);
+            Quaternion baseRotation = alignToEnemyDirection == true ? directionRotation : Quaternion.identity;
+            Quaternion rotation = baseRotation * Quaternion.Euler(rotationOffset);
 
             // Scale multiplies the PREFAB's own authored scale (not whatever a previous pooled
             // instance happened to be scaled to), so "1 = unchanged" holds regardless of what the
             // prefab was actually authored at.
-            Vector3 scale = step.ParticlePrefab.transform.localScale * step.Scale;
+            Vector3 scale = prefab.transform.localScale * scaleMultiplier;
 
             // Parented only actually follows when anchored OnSelf - there's no readily-available
             // live Transform for an arbitrary target entity/point from here, so
             // Parented+SkillTargetPosition falls back to a fixed-position spawn (still shown, just
             // not tracking anything).
-            if (step.Parented == true && step.Anchor == ParticleAnchor.OnSelf)
+            if (parented == true && anchor == ParticleAnchor.OnSelf)
             {
                 Transform parent = rig != null && rig.Gun != null ? rig.Gun : transform;
-                GameObject instance = Instantiate(step.ParticlePrefab.gameObject, parent);
-                instance.transform.SetLocalPositionAndRotation(step.Offset, rotation);
+                GameObject instance = Instantiate(prefab.gameObject, parent);
+
+                // SnapToGround replaces the authored local Offset with a found world height, so it
+                // needs to be placed in world space rather than parent-local - everything else about
+                // Parented (rotation, scale, following the anchor's own transform afterward) is
+                // unaffected, this only changes how the INITIAL position is set.
+                if (snapToGround == true)
+                    instance.transform.SetPositionAndRotation(worldPosition, rotation);
+                else
+                    instance.transform.SetLocalPositionAndRotation(offset, rotation);
+
                 instance.transform.localScale = scale;
-                ApplySortingOrderOverride(instance, step);
-                _currentParentedParticle = instance;
+                ApplySortingOrderOverride(instance, overrideSortingOrder, sortingOrder);
+                _currentParentedParticles.Add(instance);
                 return;
             }
 
             if (EffectsManager.Instance != null)
             {
-                int? sortingOrder = step.OverrideSortingOrder == true ? step.SortingOrder : (int?)null;
-                EffectsManager.Instance.PlayEffect(step.ParticlePrefab, worldPosition, rotation, scale, sortingOrder);
+                int? sortingOrderValue = overrideSortingOrder == true ? sortingOrder : (int?)null;
+                EffectsManager.Instance.PlayEffect(prefab, worldPosition, rotation, scale, sortingOrderValue);
             }
         }
 
@@ -620,13 +687,13 @@ namespace Quantum
         // includes inactive ones so a child that starts disabled still gets the override) - a
         // multi-emitter prefab (e.g. a burst plus a trailing ring on a child GameObject) needs every
         // sub-emitter forced to the same sorting order, not just the one on the root.
-        private static void ApplySortingOrderOverride(GameObject instance, AttackVisualStep step)
+        private static void ApplySortingOrderOverride(GameObject instance, bool overrideSortingOrder, int sortingOrder)
         {
-            if (step.OverrideSortingOrder == false)
+            if (overrideSortingOrder == false)
                 return;
 
             foreach (var renderer in instance.GetComponentsInChildren<ParticleSystemRenderer>(true))
-                renderer.sortingOrder = step.SortingOrder;
+                renderer.sortingOrder = sortingOrder;
         }
 
         // Same flat-direction formula as EnemyArmAimView.ResolveDefaultAimDirection's own Aim.Angle
@@ -941,15 +1008,18 @@ namespace Quantum
         // the next phase edge replaced this one before it was actually done.
         private void ClearParentedParticle(bool instant = false)
         {
-            if (_currentParentedParticle != null)
+            foreach (GameObject particle in _currentParentedParticles)
             {
+                if (particle == null)
+                    continue;
+
                 if (instant == true)
-                    Destroy(_currentParentedParticle);
+                    Destroy(particle);
                 else
-                    _currentParentedParticle.AddComponent<ParticleGracefulStop>().StopAndDestroyWhenFinished();
+                    particle.AddComponent<ParticleGracefulStop>().StopAndDestroyWhenFinished();
             }
 
-            _currentParentedParticle = null;
+            _currentParentedParticles.Clear();
         }
 
         // instant: true skips the fade-out (used for teardown/replacement, where either nothing

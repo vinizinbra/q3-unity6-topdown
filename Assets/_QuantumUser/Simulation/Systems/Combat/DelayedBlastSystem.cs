@@ -25,6 +25,7 @@ namespace Quantum
             FP stunDuration = filter.Blast->StunDuration;
             bool isExplosion = filter.Blast->IsExplosion;
             bool isChained = filter.Blast->IsChainedExplosion;
+            AssetRef<AftershockSkillAction> aftershockSource = filter.Blast->Source;
 
             // Removed BEFORE firing, so nothing the blast itself triggers can re-enter this entity's
             // own single pending slot mid-resolution.
@@ -46,7 +47,18 @@ namespace Quantum
                 BruteAscensionUtility.ApplyRadialStunDamage(f, position, radius, filter.Entity, FP._0, stunDuration);
             }
 
-            f.Events.WeaponExplosionReleased(filter.Entity, position, radius);
+            // Brute's Aftershock rank 3 "Earthquake" stamps its own Source so this second shockwave
+            // plays the same BlastEffectPrefab as the primary blast (via EffectsManager.
+            // OnJuggernautEndExploded) instead of the generic fallback every other DelayedBlast
+            // consumer (currently only Pixie's Unstable Mixture) gets.
+            if (aftershockSource.IsValid)
+            {
+                f.Events.JuggernautEndExploded(filter.Entity, position, radius, damage, aftershockSource);
+            }
+            else
+            {
+                f.Events.WeaponExplosionReleased(filter.Entity, position, radius);
+            }
         }
 
         public struct Filter

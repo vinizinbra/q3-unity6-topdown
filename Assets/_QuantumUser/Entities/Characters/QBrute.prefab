@@ -642,6 +642,7 @@ MonoBehaviour:
   - {fileID: 2122246373314282177}
   - {fileID: 3340209147157118240}
   fxConfig: {fileID: 11400000, guid: 31188256ea82a4f46b281957faaa078d, type: 2}
+  mainBodySprite: {fileID: 0}
   flashColor: {r: 1, g: 1, b: 1, a: 1}
   burnFlashColor: {r: 1, g: 0.45, b: 0.1, a: 1}
   recoverFlashColor: {r: 0, g: 1, b: 1, a: 1}
@@ -650,17 +651,20 @@ MonoBehaviour:
   frontalReducedFlashColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   restColor: {r: 1, g: 1, b: 1, a: 0}
   duration: 0.2
+  joltPunchScaleStrength: {x: 0.08, y: 0.08, z: 0}
+  joltPunchScaleDuration: 0.15
+  joltPunchScaleFrequency: 20
   healFlashColor: {r: 0.4, g: 1, b: 0.4, a: 1}
   shieldFlashColor: {r: 0.4, g: 0.75, b: 1, a: 1}
   deathColor: {r: 0, g: 0, b: 0, a: 0.5}
-  riftMarkMaterial: {fileID: 0}
-  riftMarkApplicationFlashColor: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
-  riftMarkApplicationFlashDuration: 0.08
   expPickupFlashColor: {r: 0.3, g: 0.55, b: 1, a: 0.35}
   coinPickupFlashColor: {r: 1, g: 0.84, b: 0.2, a: 0.35}
   riftShardPickupFlashColor: {r: 1, g: 0.35, b: 0.75, a: 0.35}
   scrapPickupFlashColor: {r: 0.95, g: 0.6, b: 0.25, a: 0.35}
   pickupFlashDuration: 0.35
+  fireRestTint: {r: 1, g: 0.55, b: 0.2, a: 1}
+  iceRestTint: {r: 0.4, g: 0.9, b: 1, a: 1}
+  lightningRestTint: {r: 1, g: 0.9, b: 0.3, a: 1}
   freezeMaterial: {fileID: 0}
 --- !u!114 &8110188611109955938
 MonoBehaviour:
@@ -1018,30 +1022,6 @@ MonoBehaviour:
       Value: 0
     AccessoryBlockSkillCooldownFraction:
       RawValue: 0
-    HasCriticalFractureMutation:
-      Value: 0
-    HasSkillFractureMutation:
-      Value: 0
-    HasRiftDashMutation:
-      Value: 0
-    HasHeavyFractureMutation:
-      Value: 0
-    HasCloseFractureMutation:
-      Value: 0
-    HasLongFractureMutation:
-      Value: 0
-    HasExecutionFractureMutation:
-      Value: 0
-    HasFirstContactMutation:
-      Value: 0
-    HasFracturedPresenceMutation:
-      Value: 0
-    HasOverflowingRiftMutation:
-      Value: 0
-    HasLastStandMutation:
-      Value: 0
-    LastStandCooldownRemaining:
-      RawValue: 0
 --- !u!114 &8215253040534427600
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1258,6 +1238,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Quantum.Unity::Quantum.QPrototypeStatusEffects
   Prototype:
+    FirstElementApplied:
+      Value: 0
     BurnRemaining:
       RawValue: 0
     BurnTickTimer:
@@ -1267,44 +1249,43 @@ MonoBehaviour:
     BurnOwner: {fileID: 0}
     BurnSource:
       Value: 0
-    RiftMarkStacks: 0
-    RiftMarkRemaining:
+    ElectrifiedRemaining:
       RawValue: 0
-    RiftMarkReactionLockoutRemaining:
+    ElectrifiedJoltTimer:
       RawValue: 0
-    DetonationCooldownRemaining:
+    StaggerRemaining:
       RawValue: 0
-    DeepFreezeCooldownRemaining:
+    ThermalShockCooldownRemaining:
       RawValue: 0
     OverloadCooldownRemaining:
       RawValue: 0
-    RuptureCooldownRemaining:
+    ShatterCooldownRemaining:
       RawValue: 0
-    SingularityCooldownRemaining:
+    OverloadChainHopTimer:
       RawValue: 0
-    MarkApplicationCooldowns:
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    FirstContactTriggered:
+    OverloadChainHopsRemaining: 0
+    OverloadChainOwner: {fileID: 0}
+    OverloadChainSource:
       Value: 0
-    OverflowingRiftCooldownRemaining:
+    OverloadChainPosition:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
+    OverloadChainVisited:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    OverloadChainVisitedCount: 0
+    OverloadChainCurrentDamage:
       RawValue: 0
-    FracturedPresenceExposedBy:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    FracturedPresenceExposureTime:
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
     IceRemaining:
       RawValue: 0
     IceSpeedMultiplier:
@@ -7468,6 +7449,68 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1001 &2806794039974090993
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1200390206960992701}
+    m_Modifications:
+    - target: {fileID: 3923150285080042461, guid: 00a2776bdd35a4eb6b1f393c84d5c74d, type: 3}
+      propertyPath: m_Name
+      value: SmokeWhiteTrail (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 3923150285080141437, guid: 00a2776bdd35a4eb6b1f393c84d5c74d, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3923150285080141437, guid: 00a2776bdd35a4eb6b1f393c84d5c74d, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3923150285080141437, guid: 00a2776bdd35a4eb6b1f393c84d5c74d, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3923150285080141437, guid: 00a2776bdd35a4eb6b1f393c84d5c74d, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 3923150285080141437, guid: 00a2776bdd35a4eb6b1f393c84d5c74d, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 3923150285080141437, guid: 00a2776bdd35a4eb6b1f393c84d5c74d, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3923150285080141437, guid: 00a2776bdd35a4eb6b1f393c84d5c74d, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3923150285080141437, guid: 00a2776bdd35a4eb6b1f393c84d5c74d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: -90
+      objectReference: {fileID: 0}
+    - target: {fileID: 3923150285080141437, guid: 00a2776bdd35a4eb6b1f393c84d5c74d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3923150285080141437, guid: 00a2776bdd35a4eb6b1f393c84d5c74d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 00a2776bdd35a4eb6b1f393c84d5c74d, type: 3}
+--- !u!4 &1189627776495928972 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3923150285080141437, guid: 00a2776bdd35a4eb6b1f393c84d5c74d, type: 3}
+  m_PrefabInstance: {fileID: 2806794039974090993}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &5467998991593724221
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7688,7 +7731,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 5292615511809375842, guid: 95a3634ae517a460cb68deae3f0770d3, type: 3}
+      insertIndex: 3
+      addedObject: {fileID: 1189627776495928972}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 95a3634ae517a460cb68deae3f0770d3, type: 3}
 --- !u!4 &1200390206960992701 stripped

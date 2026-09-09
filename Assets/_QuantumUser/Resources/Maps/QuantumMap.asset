@@ -45,6 +45,50 @@ MonoBehaviour:
       X:
         RawValue: 0
       Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
+      W:
+        RawValue: 65536
+    Position:
+      X:
+        RawValue: -655360
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: -655360
+    PhysicsMaterial:
+      Id:
+        Value: 0
+    ShapeType: 2
+    SphereRadius:
+      RawValue: 0
+    CapsuleRadius:
+      RawValue: 0
+    CapsuleHeight:
+      RawValue: 0
+    BoxExtents:
+      X:
+        RawValue: 32768
+      Y:
+        RawValue: 32768
+      Z:
+        RawValue: 32768
+    SmoothSphereMeshCollisions: 0
+    StaticData:
+      Name: BossArena
+      Tag: Untagged
+      Layer: 6
+      Asset:
+        Id:
+          Value: 0
+      IsTrigger: 0
+      ColliderIndex: 0
+      MutableMode: 0
+  - Rotation:
+      X:
+        RawValue: 0
+      Y:
         RawValue: 46340
       Z:
         RawValue: 0
@@ -83,7 +127,7 @@ MonoBehaviour:
         Id:
           Value: 0
       IsTrigger: 0
-      ColliderIndex: 0
+      ColliderIndex: 1
       MutableMode: 0
   - Rotation:
       X:
@@ -127,7 +171,7 @@ MonoBehaviour:
         Id:
           Value: 0
       IsTrigger: 0
-      ColliderIndex: 1
+      ColliderIndex: 2
       MutableMode: 0
   - Rotation:
       X:
@@ -171,7 +215,7 @@ MonoBehaviour:
         Id:
           Value: 0
       IsTrigger: 0
-      ColliderIndex: 2
+      ColliderIndex: 3
       MutableMode: 0
   - Rotation:
       X:
@@ -215,7 +259,7 @@ MonoBehaviour:
         Id:
           Value: 0
       IsTrigger: 0
-      ColliderIndex: 3
+      ColliderIndex: 4
       MutableMode: 0
   - Rotation:
       X:
@@ -259,7 +303,7 @@ MonoBehaviour:
         Id:
           Value: 0
       IsTrigger: 0
-      ColliderIndex: 4
+      ColliderIndex: 5
       MutableMode: 0
   MapEntities:
   - Components:

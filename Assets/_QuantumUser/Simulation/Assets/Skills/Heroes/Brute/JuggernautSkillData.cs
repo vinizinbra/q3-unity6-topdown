@@ -236,6 +236,7 @@ namespace Quantum
                 earthquake->StunDuration = FP._0;
                 earthquake->IsExplosion = false;
                 earthquake->IsChainedExplosion = false;
+                earthquake->Source = upgrade->Source;
             }
 
             f.Events.JuggernautEndExploded(owner, position, radius, damage, upgrade->Source);

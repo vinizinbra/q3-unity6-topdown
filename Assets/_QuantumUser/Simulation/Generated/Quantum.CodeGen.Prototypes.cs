@@ -1024,6 +1024,7 @@ namespace Quantum.Prototypes {
     public FP StunDuration;
     public QBoolean IsExplosion;
     public QBoolean IsChainedExplosion;
+    public AssetRef<AftershockSkillAction> Source;
     partial void MaterializeUser(Frame frame, ref Quantum.DelayedBlast result, in PrototypeMaterializationContext context);
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.DelayedBlast component = default;
@@ -1038,6 +1039,7 @@ namespace Quantum.Prototypes {
         result.StunDuration = this.StunDuration;
         result.IsExplosion = this.IsExplosion;
         result.IsChainedExplosion = this.IsChainedExplosion;
+        result.Source = this.Source;
         MaterializeUser(frame, ref result, in context);
     }
   }
@@ -2621,7 +2623,6 @@ namespace Quantum.Prototypes {
     public FP Radius;
     public FP IntimidateDamageMultiplier;
     public FP AllyDamageReductionAmount;
-    public FP IntimidateSlowMultiplier;
     public FP IntimidateKnockbackTakenMultiplier;
     public FP FearlessBonusVsIntimidated;
     public FP AllyKnockbackTakenMultiplier;
@@ -2639,7 +2640,6 @@ namespace Quantum.Prototypes {
         result.Radius = this.Radius;
         result.IntimidateDamageMultiplier = this.IntimidateDamageMultiplier;
         result.AllyDamageReductionAmount = this.AllyDamageReductionAmount;
-        result.IntimidateSlowMultiplier = this.IntimidateSlowMultiplier;
         result.IntimidateKnockbackTakenMultiplier = this.IntimidateKnockbackTakenMultiplier;
         result.FearlessBonusVsIntimidated = this.FearlessBonusVsIntimidated;
         result.AllyKnockbackTakenMultiplier = this.AllyKnockbackTakenMultiplier;
@@ -3789,6 +3789,7 @@ namespace Quantum.Prototypes {
     public FP CriticalDamageBonus;
     public FP DamageMultiplier;
     public FP FireCooldownMultiplier;
+    public QBoolean CheatManualFire;
     public Byte Level;
     public FP FireCooldownTimer;
     public Int32 Ammo;
@@ -3812,6 +3813,7 @@ namespace Quantum.Prototypes {
         result.CriticalDamageBonus = this.CriticalDamageBonus;
         result.DamageMultiplier = this.DamageMultiplier;
         result.FireCooldownMultiplier = this.FireCooldownMultiplier;
+        result.CheatManualFire = this.CheatManualFire;
         result.Level = this.Level;
         result.FireCooldownTimer = this.FireCooldownTimer;
         result.Ammo = this.Ammo;

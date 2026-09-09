@@ -418,7 +418,9 @@ namespace QuantumUser.View.Managers
 
         // Same resolution as OnJuggernautDischarged - Source always comes from exactly one
         // AftershockSkillAction asset (the Ascension that grants this event), which is where
-        // BlastEffectPrefab lives (see AftershockSkillAction.View.cs).
+        // BlastEffectPrefab lives (see AftershockSkillAction.View.cs). Fired twice for rank 3
+        // "Earthquake": once for the primary blast (JuggernautSkillData.End) and again for the
+        // delayed second shockwave (DelayedBlastSystem), so both play this same prefab.
         private void OnJuggernautEndExploded(EventJuggernautEndExploded e)
         {
             Frame frame = e.Game.Frames.Predicted;

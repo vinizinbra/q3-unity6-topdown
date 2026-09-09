@@ -88,6 +88,65 @@ namespace Quantum
                 Log.Debug($"[RunPhase] Breathing ended - closed {toClose.Count} open Blacksmith interaction(s)");
         }
 
+        // Called only from inside SurvivalProgressionUtility.Tick's own "phase would advance right
+        // now" branch (PhaseTimer >= Duration && encounterCleared) - never unconditionally every
+        // Breathing tick, or the grace countdown would start ticking down long before the Break is
+        // actually ending. Returns true to hold the phase open one more tick; the actual force-close
+        // still happens exactly as before, via CombatDirectorSystem.ApplyPhaseGameState's existing
+        // Cancel/Close calls, once this finally returns false and the phase transition proceeds -
+        // this method never itself touches a Choice Window component.
+        public static bool TickBreathingGraceHold(Frame f, SurvivalPhase phase)
+        {
+            // Same freeze PhaseTimer's own advance already gets from an active Traversal Challenge
+            // (see SurvivalProgressionUtility.Tick) - a grace hold shouldn't start or drain
+            // underneath one either.
+            if (f.Global->ActiveTraversalChallengeCount > 0)
+                return true;
+
+            bool anyWindowOpen = AnyConnectedPlayerHasChoiceWindowOpen(f);
+
+            if (f.Global->BreathingGraceActive == false)
+            {
+                if (anyWindowOpen == false || phase.GracePeriodDuration <= FP._0)
+                    return false; // nothing to grace - proceed exactly as today
+
+                f.Global->BreathingGraceActive = true;
+                f.Global->BreathingGraceTimeRemaining = phase.GracePeriodDuration;
+                Log.Debug($"[RunPhase] Breathing grace period started ({phase.GracePeriodDuration}s) - a Choice Window is still open");
+                return true;
+            }
+
+            f.Global->BreathingGraceTimeRemaining -= f.DeltaTime;
+
+            if (anyWindowOpen == false || f.Global->BreathingGraceTimeRemaining <= FP._0)
+            {
+                Log.Debug($"[RunPhase] Breathing grace period ended ({(anyWindowOpen ? "timed out" : "every window closed early")})");
+                f.Global->BreathingGraceActive = false;
+                f.Global->BreathingGraceTimeRemaining = FP._0;
+                return false;
+            }
+
+            return true;
+        }
+
+        // Same PlayerLink filter shape ProcessSkipVotes/AllConnectedPlayersVotedToSkip already use
+        // below - a bot never actually carries any Choice Window component (it never sends a Cursed
+        // Rift/Store/Blacksmith command), so no bot-exclusion is needed here.
+        // PoiInteractionLockUtility.HasChoiceWindowOpen is the single source of truth for which
+        // components count - a future POI Choice Window only needs updating there.
+        private static bool AnyConnectedPlayerHasChoiceWindowOpen(Frame f)
+        {
+            var filtered = f.Filter<PlayerLink>();
+
+            while (filtered.Next(out EntityRef entity, out PlayerLink _))
+            {
+                if (PoiInteractionLockUtility.HasChoiceWindowOpen(f, entity) == true)
+                    return true;
+            }
+
+            return false;
+        }
+
         // One-shot side effect for the Survival/Breathing -> Boss edge (see
         // CombatDirectorSystem.ApplyPhaseGameState) - pulls every connected player into the Boss
         // Arena, seals it, spawns the boss(es), then briefly hard-pauses (GameplaySystemGroup
@@ -283,6 +342,39 @@ namespace Quantum
             }
 
             Log.Debug($"[RunPhase] {phase.Name} guaranteed-spawned {spawnedCount} member(s) of {group.name}");
+        }
+
+        // SpawnGuaranteedGroup's single-enemy sibling - see SurvivalPhase.GuaranteedEnemyData's own
+        // comment (SurvivalConfig.cs) for the full mechanism/rationale. Same
+        // PlayerClusterDirectorUtility.GlobalCentroid anchor as SpawnGuaranteedGroup (a guaranteed
+        // spawn has no per-front "neediest front" selection to run), same major-tier chunk-
+        // connectivity gate (CombatDirectorUtility.EnemyIsMajor mirrors GroupContainsMajor for a
+        // lone enemy), just via GroupSpawnerUtility.TrySpawnEnemy - AllowedEnemies' own no-formation
+        // spawn path - instead of TrySpawnGroup.
+        public static void SpawnGuaranteedEnemy(Frame f, SurvivalPhase phase, DirectorConfig directorConfig, BalanceConfig balanceConfig)
+        {
+            if (phase.GuaranteedEnemyData.Id.IsValid == false)
+            {
+                Log.Debug($"[RunPhase] {phase.Name} entered with no GuaranteedEnemyData assigned - nothing to guarantee-spawn");
+                return;
+            }
+
+            if (PlayerClusterDirectorUtility.BuildAnchors(f, phase, directorConfig, balanceConfig, out var plan) == false)
+            {
+                Log.Error($"[RunPhase] {phase.Name}'s GuaranteedEnemyData has no players to anchor the spawn near - skipped");
+                return;
+            }
+
+            bool major = CombatDirectorUtility.EnemyIsMajor(f, phase.GuaranteedEnemyData);
+            var entry = new EnemySpawnEntry { EnemyData = phase.GuaranteedEnemyData, Faction = phase.GuaranteedEnemyFaction };
+
+            if (GroupSpawnerUtility.TrySpawnEnemy(f, entry, plan.GlobalCentroid, major, directorConfig) == false)
+            {
+                Log.Error($"[RunPhase] {phase.Name}'s GuaranteedEnemyData found no valid spawn anchor near {plan.GlobalCentroid} - nothing guaranteed-spawned this phase");
+                return;
+            }
+
+            Log.Debug($"[RunPhase] {phase.Name} guaranteed-spawned its GuaranteedEnemyData");
         }
 
         // Called every tick from CombatDirectorSystem, BEFORE SurvivalProgressionUtility.Tick -

@@ -16,4 +16,4 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Enemy/_GenericActions/GenericChaseMovement
     Guid:
       Value: 3283391172210422552
-  ApplySeparation: 0
+  ApplySeparation: 1

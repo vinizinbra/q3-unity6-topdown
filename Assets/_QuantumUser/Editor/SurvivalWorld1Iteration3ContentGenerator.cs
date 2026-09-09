@@ -38,10 +38,10 @@ namespace QuantumUser.Editor
     // 9 normal archetypes total (4+3+2). There is no BotFiller and no Turret anywhere in this
     // iteration - DroneGunner.asset/Turret.asset are untouched project assets, simply unreferenced by
     // World 1 here (other worlds/configs may still use them freely).
-    // ELITES ARE ALL RUKK (MainFaction) - unchanged from the previous pass: I2-EliteFlee/I2-
-    // EliteBrute/I2-EliteHeavySlammer reused verbatim from Iteration 2 (already all-MainFaction),
-    // I3-EliteMortar authored separately (all-MainFaction) rather than reusing Iteration 2's own
-    // RobotFaction I2-EliteMortar.
+    // ELITES ARE ALL RUKK (MainFaction) - unchanged from the previous pass: EliteFleeEnemy/
+    // EliteBruteChest/EliteHeavySlammer/EliteMortarEnemy all guarantee-spawn with
+    // GuaranteedEnemyFaction = MainFaction (Iteration 3-specific for Mortar specifically - Iteration
+    // 2's own Mortar Elite escort group was RobotFaction).
     //
     // ============================== WHAT CHANGED THIS PASS ==============================
     //   1. Turret removed entirely - no loose entry, no pack, no Run-3 introduction. Security drops
@@ -58,8 +58,24 @@ namespace QuantumUser.Editor
     //      SlammerPressurePack (HeavySlammer+Swarm), MortarPressurePack (Mortar+Filler),
     //      MortarShotgunPack (Mortar+Shotgunner) - 5 total, every old Turret/BotFiller pack
     //      (TurretSwarmPack, the old ChargerGunnerPack/HeavySlammerShotgunnerPack shape) retired.
-    // Timing skeleton (180s Runs, PreElite 95-105s, Elite at 105s for 25s, Breathing/Boss structure)
-    // is otherwise identical to the previous pass.
+    //   5. The 4 "Elite" beats are now real hard-stop gates: Kind = SurvivalPhaseKind.Elite instead
+    //      of Combat (was vocabulary-only in every prior iteration - see SurvivalConfig.cs/
+    //      docs/run-phase.md's "Elite / Boss phases"). SurvivalProgressionUtility.Tick now holds
+    //      PhaseTimer (and SurvivalTime) from advancing past Duration until that elite is dead,
+    //      mini-boss-style - a run can no longer coast past an Elite beat on the clock alone.
+    //   6. Elite escorts switched from GuaranteedGroup to GuaranteedEnemyData: the elite itself
+    //      still force-spawns the instant the phase begins (still bypasses the normal budget/
+    //      alive-cap gate, same guarantee as before - see SurvivalConfig.cs), but as a lone
+    //      EnemyDataAsset via GroupSpawnerUtility.TrySpawnEnemy, not wrapped in an EnemyGroupConfig
+    //      alongside 2 Cluster-formation Filler escorts. Any Filler texture around the elite now
+    //      comes from the phase's own normal Roster (already authored on all 4) via the regular
+    //      TryPulse budget, not a forced instant spawn. The I2-EliteFlee/I2-EliteBrute/I3-
+    //      EliteMortar/I2-EliteHeavySlammer EnemyGroupConfig assets are consequently unreferenced by
+    //      this generator now (see GroupSpecs' own comment).
+    // Timing skeleton (180s Runs, PreElite 95-105s, Elite beat starting at 105s) is otherwise
+    // identical to the previous pass - the "25s"/"-130s" in each Elite phase's own Name is now a
+    // FLOOR (Duration), not the beat's actual length, since the phase holds open past it until the
+    // elite dies; everything after it in the Run shifts later by however long that takes.
     //
     // ============================== TIER MODEL (unchanged) ==============================
     //   Tier A (chaff, free after intro): RukkFiller, NormalMelee, Swarm.
@@ -121,21 +137,16 @@ namespace QuantumUser.Editor
             public FP FormationRadius;
         }
 
-        // 9 groups total (4 Elite escorts + 5 combination packs).
+        // 5 groups total (5 combination packs). Elite escorts (I2-EliteFlee/I2-EliteBrute/
+        // I3-EliteMortar/I2-EliteHeavySlammer) are RETIRED here - the 4 Elite beats below now use
+        // SurvivalPhase.GuaranteedEnemyData (a lone EnemyDataAsset guarantee, see SurvivalConfig.cs)
+        // instead of GuaranteedGroup, so there's no EnemyGroupConfig wrapper (elite + 2 escort
+        // Filler in a Cluster formation) needed just to guarantee the elite itself spawns - any
+        // Filler texture around it now comes from the phase's own normal Roster instead of being
+        // force-spawned alongside it. Iteration 2's own generator still authors these 3 shared-name
+        // assets for its own use; this generator simply no longer references them.
         private static readonly List<GroupSpec> GroupSpecs = new()
         {
-            // ---- Guaranteed-only Elite escorts (never listed in any segment's Groups[]). ----
-            new GroupSpec { FileName = "I2-EliteFlee", Members = new[] { M("EliteFleeEnemy", 1, EnemyFaction.MainFaction), M("Filler", 2, EnemyFaction.MainFaction) },
-                Weight = 1, MaxConcurrent = 1, SpawnPattern = GroupSpawnPattern.Cluster, FormationRadius = 3 },
-            new GroupSpec { FileName = "I2-EliteBrute", Members = new[] { M("EliteBruteChest", 1, EnemyFaction.MainFaction), M("Filler", 2, EnemyFaction.MainFaction) },
-                Weight = 1, MaxConcurrent = 1, SpawnPattern = GroupSpawnPattern.Cluster, FormationRadius = 3 },
-            // All-Rukk, unlike Iteration 2's own I2-EliteMortar (RobotFaction) - see the faction
-            // mapping note above.
-            new GroupSpec { FileName = "I3-EliteMortar", Members = new[] { M("EliteMortarEnemy", 1, EnemyFaction.MainFaction), M("Filler", 2, EnemyFaction.MainFaction) },
-                Weight = 1, MaxConcurrent = 1, SpawnPattern = GroupSpawnPattern.Cluster, FormationRadius = 3 },
-            new GroupSpec { FileName = "I2-EliteHeavySlammer", Members = new[] { M("EliteHeavySlammer", 1, EnemyFaction.MainFaction), M("Filler", 2, EnemyFaction.MainFaction) },
-                Weight = 1, MaxConcurrent = 1, SpawnPattern = GroupSpawnPattern.Cluster, FormationRadius = 3 },
-
             // ---- The 5 combination packs for the entire world - each maps directly onto a
             // combination named explicitly in the brief. ----
 
@@ -170,6 +181,8 @@ namespace QuantumUser.Editor
             public List<SegEntry> Roster;
             public string[] Groups;
             public string GuaranteedGroup;
+            public string GuaranteedEnemyFileName;
+            public EnemyFaction GuaranteedEnemyFaction;
             public FP PauseDuration;
         }
 
@@ -203,10 +216,10 @@ namespace QuantumUser.Editor
                 BudgetPerPulse = 4, PulseInterval = 3, TargetPressure = 8, MaxAliveEnemies = 6,
                 Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("NormalMelee", EnemyFaction.MainFaction, 2) } },
 
-            new PhaseSpec { Name = "R1-F Flee Elite (105-130s)", Kind = SurvivalPhaseKind.Combat, Duration = 25,
+            new PhaseSpec { Name = "R1-F Flee Elite (105-130s)", Kind = SurvivalPhaseKind.Elite, Duration = 25,
                 BudgetPerPulse = 2, PulseInterval = 4, TargetPressure = 4, MaxAliveEnemies = 5,
                 Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 2) },
-                GuaranteedGroup = "I2-EliteFlee" },
+                GuaranteedEnemyFileName = "EliteFleeEnemy", GuaranteedEnemyFaction = EnemyFaction.MainFaction },
 
             new PhaseSpec { Name = "R1-G Fundamentals Pressure (130-180s)", Kind = SurvivalPhaseKind.Combat, Duration = 50,
                 BudgetPerPulse = 10, PulseInterval = 2, TargetPressure = 18, MaxAliveEnemies = 13,
@@ -252,10 +265,10 @@ namespace QuantumUser.Editor
                 BudgetPerPulse = 5, PulseInterval = FP.FromString("2.8"), TargetPressure = 10, MaxAliveEnemies = 8,
                 Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("NormalMelee", EnemyFaction.MainFaction, 1) } },
 
-            new PhaseSpec { Name = "R2-F Brute Elite (105-130s)", Kind = SurvivalPhaseKind.Combat, Duration = 25,
+            new PhaseSpec { Name = "R2-F Brute Elite (105-130s)", Kind = SurvivalPhaseKind.Elite, Duration = 25,
                 BudgetPerPulse = 4, PulseInterval = FP.FromString("2.5"), TargetPressure = 6, MaxAliveEnemies = 9,
                 Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3) },
-                GuaranteedGroup = "I2-EliteBrute" },
+                GuaranteedEnemyFileName = "EliteBruteChest", GuaranteedEnemyFaction = EnemyFaction.MainFaction },
 
             // Charger Introduction (Wildlife, Tier C, cap 1) - now taught SECOND (post-Elite),
             // swapped with Mortar. Anticipation -> trajectory -> dodge -> recovery. Shotgunner
@@ -305,11 +318,12 @@ namespace QuantumUser.Editor
                 BudgetPerPulse = 5, PulseInterval = FP.FromString("2.8"), TargetPressure = 9, MaxAliveEnemies = 7,
                 Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("NormalMelee", EnemyFaction.MainFaction, 1) } },
 
-            // Mortar Elite - all-Rukk (I3-EliteMortar). Do not infer Security from the mechanic.
-            new PhaseSpec { Name = "R3-F Mortar Elite (105-130s)", Kind = SurvivalPhaseKind.Combat, Duration = 25,
+            // Mortar Elite - all-Rukk (EliteMortarEnemy, MainFaction). Do not infer Security from
+            // the mechanic.
+            new PhaseSpec { Name = "R3-F Mortar Elite (105-130s)", Kind = SurvivalPhaseKind.Elite, Duration = 25,
                 BudgetPerPulse = 5, PulseInterval = FP.FromString("2.5"), TargetPressure = 8, MaxAliveEnemies = 10,
                 Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("Gunner", EnemyFaction.RobotFaction, 2) },
-                GuaranteedGroup = "I3-EliteMortar" },
+                GuaranteedEnemyFileName = "EliteMortarEnemy", GuaranteedEnemyFaction = EnemyFaction.MainFaction },
 
             // Spatial Combinations - a small number of readable pairings via SwarmChargerPack,
             // SlammerPressurePack and MortarPressurePack, no uncontrolled stacking. Every Tier C
@@ -363,10 +377,10 @@ namespace QuantumUser.Editor
             // reported here rather than hacked into the Director. The Elite should then escalate
             // THAT cone language (larger/stronger cone + a delayed secondary effect), also an asset
             // change, same caveat.
-            new PhaseSpec { Name = "R4-E HeavySlammer Elite (105-130s)", Kind = SurvivalPhaseKind.Combat, Duration = 25,
+            new PhaseSpec { Name = "R4-E HeavySlammer Elite (105-130s)", Kind = SurvivalPhaseKind.Elite, Duration = 25,
                 BudgetPerPulse = 6, PulseInterval = FP.FromString("2.5"), TargetPressure = 10, MaxAliveEnemies = 10,
                 Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("Gunner", EnemyFaction.RobotFaction, 2) },
-                GuaranteedGroup = "I2-EliteHeavySlammer" },
+                GuaranteedEnemyFileName = "EliteHeavySlammer", GuaranteedEnemyFaction = EnemyFaction.MainFaction },
 
             // Final Exam - no new enemies, the SAME 3 Run-4 packs (reused, not a new matrix),
             // Pressure/budget/cadence up instead of mechanics. Suicider/Swarm appear loose at low
@@ -494,6 +508,10 @@ namespace QuantumUser.Editor
                 GuaranteedGroup = string.IsNullOrEmpty(p.GuaranteedGroup)
                     ? default
                     : new AssetRef<EnemyGroupConfig>(groupsByName[p.GuaranteedGroup].Guid),
+                GuaranteedEnemyData = string.IsNullOrEmpty(p.GuaranteedEnemyFileName)
+                    ? default
+                    : LoadEnemyRef(p.GuaranteedEnemyFileName),
+                GuaranteedEnemyFaction = p.GuaranteedEnemyFaction,
                 PauseDuration = p.PauseDuration,
                 BossPrototype = p.Kind == SurvivalPhaseKind.Boss ? bossPrototypeRef : default,
             }).ToArray();

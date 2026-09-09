@@ -24,7 +24,7 @@ Shader "Project/Mobile Toon Modular Level"
         [Header(World Height Wall Line)]
         _WallLineColor ("Line Color", Color) = (0.025,0.02,0.03,1)
         _WallLineY ("World Y", Float) = 0
-        _WallLineThickness ("Thickness", Float) = 0.1
+        _WallLineThickness ("Thickness", Range(0,2)) = 0.1
         _WallLineStrength ("Strength", Range(0,1)) = 0
 
         [Header(Surface)]

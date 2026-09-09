@@ -96,6 +96,23 @@ while Boss respawns specifically at its own sealed Boss Arena's `BossSpawnPoints
 respawning it into some nearby chunk would strand it outside its own `BossArenaGate`-sealed boundary
 mid-fight.
 
+### No XP drops / level-up screens during the fight
+
+Confirmed with the user: a boss's own spawned adds still deal damage and die normally, but they must
+never be able to interrupt the fight with a level-up screen. Two independent guards, both keyed off
+`Global.CurrentState == GameState.Boss`:
+
+- `ExperienceUtility.TrySpawnDrop` refuses to spawn an `ExpOrb` at all while Boss is active - an add's
+  XP is simply forfeited, not banked/deferred for after the encounter.
+- `DebugCheatSystem.TryOpenNextPendingLevelUp` (the shared per-level upgrade-screen drain - see
+  `docs/level-up-upgrades.md`'s own "Multiple levels from one `Grant` call" entry) also refuses to open
+  a new screen while Boss is active, for whatever might already be sitting in
+  `Global.DebugPendingLevelUps` from XP collected right before the encounter began - it just holds the
+  drain (doesn't discard it) until `GameState` leaves `Boss`, then resumes normally.
+
+Both are XP/level-up-specific; a Chest opened by a talent, or any other Choice Window, is unaffected by
+either guard.
+
 ### Boss HUD (2026-08-17)
 
 View-side, the boss gets its own dedicated HUD instead of sharing the normal enemy UI:

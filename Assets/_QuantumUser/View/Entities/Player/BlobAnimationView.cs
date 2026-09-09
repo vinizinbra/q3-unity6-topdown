@@ -7,9 +7,10 @@ using UnityEngine;
 
 namespace Quantum
 {
-    // Purely cosmetic squash-and-stretch skin over the KCC-driven rigid body. Reads velocity/
-    // grounded state off the predicted frame and a PlayerJumped event for takeoff timing; never
-    // writes back to simulation state. Sits alongside CharView on the character's view prefab.
+    // Purely cosmetic squash-and-stretch skin over the KCC-driven rigid body. Reads velocity off
+    // the predicted frame, grounded state off CharView's local raycast (see the charView field's
+    // own comment), and a PlayerJumped event for takeoff timing; never writes back to simulation
+    // state. Sits alongside CharView on the character's view prefab.
     public class BlobAnimationView : CustomQuantumEntityViewComponent
     {
         [Header("Rig (assign once sprite art exists)")]
@@ -288,11 +289,19 @@ namespace Quantum
         private Vector3 _lastFootstepPosition;
         private bool _hasFootstepPosition;
 
+        // View-layer ground truth (real Physics.Raycast against the interpolated view transform),
+        // same reasoning/pattern as RunDustFxView and JuggernautView - drives landing (squash/sound/
+        // burst) off CharView.LocalIsGrounded instead of the simulation's KCC.Data.IsGrounded, so the
+        // landing beat always fires exactly when the character visually touches the ground rather
+        // than whenever the sim tick flips grounded.
+        [SerializeField] private CharView charView;
+
         public override void Awake()
         {
             base.Awake();
             CacheBaseline();
             _wobbleSeed = Random.value * 1000f;
+            charView = GetComponentInParent<CharView>();
             QuantumEvent.Subscribe<EventPlayerJumped>(this, OnPlayerJumped);
             QuantumEvent.Subscribe<EventPlayerAutoJumpedDown>(this, OnPlayerAutoJumpedDown);
             QuantumEvent.Subscribe<EventPlayerRevived>(this, OnPlayerRevived);
@@ -534,7 +543,10 @@ namespace Quantum
             bool isDashing = frame.Has<CharacterSkills>(_entityRef) == true
                 && frame.Get<CharacterSkills>(_entityRef).DashSkill.State == SkillState.Active;
 
-            Animate(velocity, kcc.Data.IsGrounded, lifeState, Time.deltaTime, isDashing, isFallPending);
+            // Local ground truth, not kcc.Data.IsGrounded - see the charView field's own comment.
+            bool isGrounded = charView != null ? charView.LocalIsGrounded : kcc.Data.IsGrounded;
+
+            Animate(velocity, isGrounded, lifeState, Time.deltaTime, isDashing, isFallPending);
         }
 
         // Drives one frame of the rig off plain values instead of a Frame, so the exact same pose

@@ -38,7 +38,7 @@ namespace Quantum
 
         private int ResolveCount(Frame f, EntityRef entity)
         {
-            int clamped = f.MaxPlayerCount < 1 ? 1 : (f.MaxPlayerCount > 4 ? 4 : f.MaxPlayerCount);
+            int clamped = f.PlayerConnectedCount < 1 ? 1 : (f.PlayerConnectedCount > 4 ? 4 : f.PlayerConnectedCount);
             int baseCount = clamped switch { 1 => CountP1, 2 => CountP2, 3 => CountP3, _ => CountP4 };
 
             // Boss-phase Quantity scaling - see BossStatModifiers.QuantityMultiplier's own comment.

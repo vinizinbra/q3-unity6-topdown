@@ -68,6 +68,22 @@ namespace Quantum
             return chunkEntity != EntityRef.None;
         }
 
+        // True when position falls within chunkEntity's own footprint - same Position-as-min-corner,
+        // inverse-rotation local-space transform TryFindNearestChunk/InsetIntoChunkBounds already
+        // use below, just a plain containment test with no clamping. Used by AccessoryGuardUtility
+        // to keep a dropped accessory's landing spot inside the sealed Boss Arena chunk rather than
+        // past its own BossArenaGate walls (see ResolveLandingPosition's own comment).
+        public static bool IsInsideChunkBounds(Frame f, EntityRef chunkEntity, FPVector3 position)
+        {
+            Chunk* chunk = f.Unsafe.GetPointer<Chunk>(chunkEntity);
+            Transform3D* chunkTransform = f.Unsafe.GetPointer<Transform3D>(chunkEntity);
+
+            FPVector3 local = FPQuaternion.Inverse(chunkTransform->Rotation) * (position - chunkTransform->Position);
+
+            return local.X >= FP._0 && local.X <= chunk->ChunkSizeWidth
+                && local.Z >= FP._0 && local.Z <= chunk->ChunkSizeDepth;
+        }
+
         // Clamps position into chunk's own local footprint, margin units away from every side -
         // caps the margin at half the chunk's own size first, so a chunk smaller than 2x margin
         // degrades to its center instead of inverting the clamp range. Works whether position is

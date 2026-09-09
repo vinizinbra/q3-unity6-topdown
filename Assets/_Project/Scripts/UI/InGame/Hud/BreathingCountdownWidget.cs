@@ -62,6 +62,8 @@ public class BreathingCountdownWidget : QuantumGlobalMonoBehaviour
     [Header("Countdown")]
     [SerializeField] private GameObject countdownRoot;
     [SerializeField] private TMP_Text countdownText;
+    [SerializeField, Tooltip("Label alongside countdownText, shown/hidden together with it - reads \"Next survival in:\" normally, or \"Waiting for players:\" during a Breathing grace hold (RunPhaseUtility.TickBreathingGraceHold, when a teammate still has a Cursed Rift/Store/Blacksmith window open past the Break's own Duration). countdownText itself keeps showing the live number either way.")]
+    private TMP_Text countdownDescriptionText;
     [SerializeField, Tooltip("Scale-up duration for the countdown, and for the skip / waiting row when it follows it in. Each keeps its own authored localScale as what it grows back to.")]
     private float revealScaleInDuration = 0.3f;
     [SerializeField] private Ease revealScaleInEase = Ease.OutBack;
@@ -163,6 +165,30 @@ public class BreathingCountdownWidget : QuantumGlobalMonoBehaviour
         // alongside it.
         if (_countdownReleased == false)
         {
+            HideSkipVoteUi();
+            return;
+        }
+
+        // A grace hold is running (RunPhaseUtility.TickBreathingGraceHold) because someone still has
+        // a Choice Window open past the Break's own Duration - countdownText keeps the same "Xs"
+        // format, just reading the grace timer instead; countdownDescriptionText swaps its label to
+        // match. Skip Vote UI is hidden entirely (voting to skip is already moot once Duration has
+        // been reached).
+        bool isGraceActive = frame.Global->BreathingGraceActive == true;
+
+        if (countdownDescriptionText != null)
+        {
+            countdownDescriptionText.text = isGraceActive ? "Waiting for players:" : "Next survival in:";
+        }
+
+        if (isGraceActive == true)
+        {
+            if (countdownText != null)
+            {
+                int graceSeconds = Mathf.CeilToInt(Mathf.Max(frame.Global->BreathingGraceTimeRemaining.AsFloat, 0f));
+                countdownText.text = $"{graceSeconds}s";
+            }
+
             HideSkipVoteUi();
             return;
         }

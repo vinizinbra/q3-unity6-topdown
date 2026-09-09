@@ -7,6 +7,9 @@ namespace Quantum
     // DebugStartLevelUpCount to start a match already deep into the Survival timeline and/or with a
     // batch of level-up screens queued back-to-back, for balance testing without playing an entire run
     // first. Both are independent no-ops at their default (0) values - see RuntimeConfig.User.cs.
+    // TryOpenNextPendingLevelUp's own drain is also reused mid-match by CheatSystem.
+    // QueuePendingLevelUpsTo (CheatActionKind.JumpToBreathing) - Global.DebugPendingLevelUps has two
+    // independent feeders now, this system only ever drains it.
     //
     // Registered outside GameplaySystemGroup (same reasoning as LevelUpSystem/ChestSystem, see
     // SystemSetup.User.cs) so it keeps reacting to Global.LevelUpScreenOpen closing even while that
@@ -41,6 +44,12 @@ namespace Quantum
         {
             if (f.RuntimeConfig.DebugStartSurvivalTimeSeconds > FP._0)
                 SkipToSurvivalTime(f, f.RuntimeConfig.DebugStartSurvivalTimeSeconds);
+
+            if (f.RuntimeConfig.DebugStartBreathIndex > 0)
+            {
+                CheatSystem.JumpToBreathing(f, f.RuntimeConfig.DebugStartBreathIndex);
+                Log.Debug($"[Debug] skipped to Breathing phase {f.RuntimeConfig.DebugStartBreathIndex}");
+            }
 
             if (f.RuntimeConfig.DebugStartLevelUpCount > 0)
             {
@@ -116,24 +125,45 @@ namespace Quantum
         // (its close-on-open-edge / _upgradeScreenClosedEarly reset never re-fires) even though the
         // simulation DID open it and correctly re-disabled GameplaySystemGroup for it - a real, visible
         // freeze (player frozen mid-air, no card UI left to click) despite the simulation itself doing
-        // exactly what it's supposed to. A real (non-debug) level-up can never hit this - a single
-        // ExperienceUtility.Grant call collapses every level gained into ONE screen, never several
-        // back-to-back - so this is purely a debug-chain hazard, fixed here rather than in the View.
+        // exactly what it's supposed to. This chain is no longer debug-exclusive: ExperienceUtility.
+        // Grant itself now queues through Global.DebugPendingLevelUps for ANY multi-level XP grant,
+        // real gameplay drops included (see that method's own comment/docs/level-up-upgrades.md) -
+        // so a big real pickup can chain several back-to-back screens here exactly like
+        // RuntimeConfig.DebugStartLevelUpCount/CheatSystem.QueuePendingLevelUpsTo already did, and
+        // this guard is load-bearing for all three sources now, not just the original debug chain.
+        //
+        // Also gated on NOT being mid-Boss-encounter (GameState.Boss) - confirmed with the user: a
+        // level-up screen popping and pausing GameplaySystemGroup in the middle of a boss fight is a
+        // terrible experience. ExperienceUtility.TrySpawnDrop already refuses to drop any XP while
+        // Boss is active, but a level or two could still be sitting queued from XP collected right
+        // before the encounter began - this simply holds the drain (doesn't discard it) until the
+        // fight ends, so those pending screens resume normally once GameState leaves Boss.
         private void TryOpenNextPendingLevelUp(Frame f)
         {
             if (f.Global->DebugPendingLevelUps <= 0
                 || f.Global->LevelUpScreenOpen == true
-                || f.Global->DebugLevelUpScreenOpenLastTick == true)
+                || f.Global->DebugLevelUpScreenOpenLastTick == true
+                || f.Global->CurrentState == GameState.Boss)
                 return;
 
             f.Global->Level++;
             f.Global->DebugPendingLevelUps--;
 
+            // FIX: was an unconditional overwrite, correct only for RuntimeConfig.
+            // DebugStartLevelUpCount's own case (TotalExperience starts at 0 there - nothing else
+            // ever set it, so fabricating a plausible value for the new Level is exactly right).
+            // Now that ExperienceUtility.Grant ALSO drains through here for a real multi-level XP
+            // grant, TotalExperience already holds the player's real, fully-earned total (including
+            // whatever excess carries into the level now being opened) - unconditionally overwriting
+            // it every drain step would silently erase that real progress each time. Max() makes the
+            // same line correct for both sources: a floor that only ever bumps TotalExperience UP to
+            // the new level's threshold, never down past what's already genuinely been earned.
             if (f.RuntimeConfig.ExperienceConfig.IsValid == true)
             {
                 ExperienceConfig config = f.FindAsset(f.RuntimeConfig.ExperienceConfig);
                 FP xpRequirementMultiplier = ExperienceUtility.ResolveXpRequirementMultiplier(f);
-                f.Global->TotalExperience = ExperienceUtility.GetRequiredExperience(config, f.Global->Level + 1, xpRequirementMultiplier);
+                FP requiredForLevel = ExperienceUtility.GetRequiredExperience(config, f.Global->Level + 1, xpRequirementMultiplier);
+                f.Global->TotalExperience = FPMath.Max(f.Global->TotalExperience, requiredForLevel);
             }
 
             LevelUpUtility.BeginLevelUpScreen(f);

@@ -27,7 +27,7 @@ MonoBehaviour:
       RawValue: 65536
   Stats:
     MoveSpeed:
-      RawValue: 393216
+      RawValue: 524288
     Height:
       InitialState: 0
       FlightHeight:
@@ -90,6 +90,10 @@ MonoBehaviour:
       RawValue: 524288
     LeashRange:
       RawValue: 983040
+    StopDistance:
+      RawValue: 0
+    StopSlowdownRange:
+      RawValue: 0
     DetectionRangeMultiplier:
       RawValue: 65536
   Actions:

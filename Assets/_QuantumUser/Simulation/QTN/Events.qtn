@@ -489,7 +489,8 @@ event JuggernautDischargeHit
 // from the discharge pulse above (knockback only, triggered by touching an enemy while Charged, not
 // by expiry). Damage applied directly via HitEffectUtility.ApplyDamageInRadius, no spawned entity -
 // Source resolves AftershockSkillAction.BlastEffectPrefab, same AssetRef-travels-with-the-event shape
-// as the rest of this session's asset-authored VFX.
+// as the rest of this session's asset-authored VFX. Also re-fired by DelayedBlastSystem for rank 3
+// "Earthquake"'s second shockwave (see DelayedBlast.Source), so both blasts play the same prefab.
 event JuggernautEndExploded
 {
     EntityRef  Entity;

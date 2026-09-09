@@ -38,8 +38,16 @@ public class PopupManager : MonoBehaviour {
 
     public void AddPopupToQueue(UiPopup popup)
     {
+        // Every popup here is a single reused instance (e.g. the one AlertPopup), so a burst of
+        // Show() calls for one logical event queues the SAME object more than once - the classic
+        // case being a failed connect firing both HandleConnectFailure ("Connection Failed") and
+        // OnDisconnected ("Disconnected"). Each redundant enqueue makes the popup pop straight back
+        // up after the player dismisses it, reading as "two alerts". Collapse duplicates: the latest
+        // Setup already overwrote the shared title/description/callback, so the one queued entry
+        // shows the most recent message.
+        if (popup == currentPopup || popupQueue.Contains(popup)) return;
         popupQueue.Add(popup);
-    }    
+    }
     
     public void ShowPopup(UiPopup uiPopup)
     {

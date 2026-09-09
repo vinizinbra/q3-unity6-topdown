@@ -158,10 +158,17 @@ Heavy Impact + old Concussive Impact + Lasting Impact + Overwhelming Force + Cru
 ### Protector (2 lines, both `PassiveUpgradeData`, mutate the existing `ProtectorAura` component)
 
 **5. Iron Presence** (`IronPresencePassiveUpgradeData`, merges old Iron Presence + Fearless)
-- Rank 1: Intimidated enemies in the aura move 15% slower, take +25% knockback force.
+- Rank 1: Intimidated enemies in the aura take +25% knockback force.
 - Rank 2: + Brute deals +20% damage to Intimidated enemies in the aura (absorbed from the old
   standalone Fearless ascension - see `ProtectorAuraUtility.GetFearlessBonusMultiplier`).
-- Rank 3: slow 25%, knockback +50%, damage bonus +35%.
+- Rank 3: knockback +50%, damage bonus +35%.
+
+> **2026-09-07: slow removed.** Iron Presence no longer slows Intimidated enemies at any rank -
+> `IntimidateSlowMultiplier` (`ProtectorAura.qtn`), `IronPresencePassiveUpgradeData.SlowMultiplier`, and
+> the `ApplyIce` call in `ProtectorAuraSystem.ApplyToEnemies` are all removed. Knockback and the
+> damage bonus vs. Intimidated are unchanged. Requires a Quantum codegen re-run (the `.qtn` field was
+> deleted) and re-running `Tools > RiftRaiders > Brute > Generate Ascension Assets` to fully clear the
+> stale `SlowMultiplier` YAML from `IronPresence.asset` (already hand-edited in the meantime).
 
 **6. Guardian** (`GuardianPassiveUpgradeData`, merges old Bulwark + Guardian - deliberately **not**
 Bodyguard, which stays its own separate Dash line)

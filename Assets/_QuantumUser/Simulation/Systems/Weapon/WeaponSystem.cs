@@ -312,7 +312,7 @@ namespace Quantum
 
             bool canFire;
 
-            if (f.RuntimeConfig.DebugManualFireInput == true
+            if ((f.RuntimeConfig.DebugManualFireInput == true || filter.Weapon->CheatManualFire == true)
                 && f.Unsafe.TryGetPointer<PlayerLink>(filter.Entity, out var playerLink) == true)
             {
                 // Debug override: replaces auto-attack entirely for a real player - firing follows

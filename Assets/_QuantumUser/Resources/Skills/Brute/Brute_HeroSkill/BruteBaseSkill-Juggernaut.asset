@@ -323,3 +323,4 @@ MonoBehaviour:
   ShieldGainPerHit:
     RawValue: 327680
   DischargeEffectPrefab: {fileID: 3308319309734866876, guid: 73f6ab46adf6f4923899d8a01e54f72c, type: 3}
+  DischargeHitEffectPrefab: {fileID: 2507896006552451473, guid: 378bc48cbdf5a4df3bd70135d583790d, type: 3}

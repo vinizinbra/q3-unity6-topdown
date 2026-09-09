@@ -27,4 +27,4 @@ MonoBehaviour:
     Z:
       RawValue: 65536
   PredictionTime:
-    RawValue: 32768
+    RawValue: 0

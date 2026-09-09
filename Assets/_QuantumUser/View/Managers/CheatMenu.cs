@@ -136,8 +136,12 @@ namespace QuantumUser.View
             GUILayout.Space(4);
             GUILayout.Label("Flow", _labelStyle);
             Row(("Pause", CheatActionKind.Pause), ("Continue", CheatActionKind.Continue));
-            Row(("+1 min", CheatActionKind.Advance1Min), ("Advance Phase", CheatActionKind.AdvancePhase));
-            Row(("Next Breathing", CheatActionKind.AdvanceToNextBreathing), ("Level Up", CheatActionKind.LevelUp));
+            Row(("+30s", CheatActionKind.Advance30Sec), ("+1 min", CheatActionKind.Advance1Min));
+            Row(("Advance Phase", CheatActionKind.AdvancePhase), ("Next Breathing", CheatActionKind.AdvanceToNextBreathing));
+            if (GUILayout.Button("Level Up", _buttonStyle))
+                Send(CheatActionKind.LevelUp);
+            BreathingRow(("Breath 1 (Lv6)", 1), ("Breath 2 (Lv12)", 2));
+            BreathingRow(("Breath 3 (Lv15)", 3), ("Breath 4 (Lv20)", 4));
 
             GUILayout.Space(4);
             GUILayout.Label("Player", _labelStyle);
@@ -146,6 +150,9 @@ namespace QuantumUser.View
             Row(("Kill All Enemies", CheatActionKind.KillAllEnemies), ("Open Chest", CheatActionKind.OpenChest));
             if (GUILayout.Button("+1000 Coins", _buttonStyle))
                 Send(CheatActionKind.GrantCoins, amount: 1000);
+            Row(("Damage = 1", CheatActionKind.SetDamageToOne), ("Reset Damage", CheatActionKind.ResetDamage));
+            if (GUILayout.Button("Toggle Auto-Shoot", _buttonStyle))
+                Send(CheatActionKind.ToggleManualFire);
 
             GUILayout.Space(4);
             GUILayout.Label("Grant", _labelStyle);
@@ -173,6 +180,18 @@ namespace QuantumUser.View
                 Send(a.action);
             if (GUILayout.Button(b.label, _buttonStyle))
                 Send(b.action);
+            GUILayout.EndHorizontal();
+        }
+
+        // Jumps straight to the Nth Breathing phase and tops the run's XP up to that phase's paired
+        // level in one command - see CheatSystem.JumpToBreathing for the level pairing/why.
+        private void BreathingRow((string label, int n) a, (string label, int n) b)
+        {
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button(a.label, _buttonStyle))
+                Send(CheatActionKind.JumpToBreathing, amount: a.n);
+            if (GUILayout.Button(b.label, _buttonStyle))
+                Send(CheatActionKind.JumpToBreathing, amount: b.n);
             GUILayout.EndHorizontal();
         }
 

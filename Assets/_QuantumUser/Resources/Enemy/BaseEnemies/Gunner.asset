@@ -48,8 +48,6 @@ MonoBehaviour:
     RawValue: 0
   MaxRandomOffset:
     RawValue: 0
-  HitImpactPrefab: {fileID: 0}
-  HitImpactOffset: {x: 0, y: 0, z: 0}
   ProjectileData:
     Id:
       Value: 2962688306719015508
@@ -126,6 +124,7 @@ MonoBehaviour:
     Duration: 0.4
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
+    BodySpriteScale: {x: 1, y: 1, z: 1}
     ShakeImpact: 0
     Shake:
       Frequency: 10
@@ -182,17 +181,20 @@ MonoBehaviour:
     ParticlePrefab: {fileID: 0}
     Anchor: 0
     Offset: {x: 0, y: 0, z: 0}
+    SnapToGround: 0
     Parented: 0
     AlignToEnemyDirection: 0
     RotationOffset: {x: 0, y: 0, z: 0}
     Scale: 1
     OverrideSortingOrder: 0
     SortingOrder: 0
+    AdditionalParticles: []
   BeginStep:
     AnimationType: 8
     Duration: 0.2
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
+    BodySpriteScale: {x: 1, y: 1, z: 1}
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -249,17 +251,20 @@ MonoBehaviour:
     ParticlePrefab: {fileID: 0}
     Anchor: 0
     Offset: {x: 0, y: 0, z: 0}
+    SnapToGround: 0
     Parented: 0
     AlignToEnemyDirection: 0
     RotationOffset: {x: 0, y: 0, z: 0}
     Scale: 1
     OverrideSortingOrder: 0
     SortingOrder: 0
+    AdditionalParticles: []
   OnGoingStep:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
+    BodySpriteScale: {x: 1, y: 1, z: 1}
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -316,17 +321,20 @@ MonoBehaviour:
     ParticlePrefab: {fileID: 0}
     Anchor: 0
     Offset: {x: 0, y: 0, z: 0}
+    SnapToGround: 0
     Parented: 0
     AlignToEnemyDirection: 0
     RotationOffset: {x: 0, y: 0, z: 0}
     Scale: 1
     OverrideSortingOrder: 0
     SortingOrder: 0
+    AdditionalParticles: []
   EndStep:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
+    BodySpriteScale: {x: 1, y: 1, z: 1}
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -383,12 +391,14 @@ MonoBehaviour:
     ParticlePrefab: {fileID: 0}
     Anchor: 0
     Offset: {x: 0, y: 0, z: 0}
+    SnapToGround: 0
     Parented: 0
     AlignToEnemyDirection: 0
     RotationOffset: {x: 0, y: 0, z: 0}
     Scale: 1
     OverrideSortingOrder: 0
     SortingOrder: 0
+    AdditionalParticles: []
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -479,6 +489,10 @@ MonoBehaviour:
       RawValue: 851968
     LeashRange:
       RawValue: 983040
+    StopDistance:
+      RawValue: 0
+    StopSlowdownRange:
+      RawValue: 0
     DetectionRangeMultiplier:
       RawValue: 65536
   Actions:
@@ -569,7 +583,10 @@ MonoBehaviour:
   SkillActions: []
   ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
   ViewPrefab: {fileID: 8476845490732343577, guid: 44f05a37744604650b4768c09f453d82, type: 3}
-  FactionSkins: []
+  FactionSkins:
+  - Faction: 1
+    ViewPrefab: {fileID: 8476845490732343577, guid: 0f9bf80130ec34ffcbfcf4925f927fee, type: 3}
+    ScaleMultiplier: 0
 --- !u!114 &5510490751386579581
 MonoBehaviour:
   m_ObjectHideFlags: 0

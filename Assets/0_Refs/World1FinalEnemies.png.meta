@@ -227,7 +227,7 @@ TextureImporter:
       name: World1FinalEnemies_4
       rect:
         serializedVersion: 2
-        x: 562
+        x: 463
         y: 368
         width: 286
         height: 230
@@ -249,10 +249,10 @@ TextureImporter:
       name: World1FinalEnemies_5
       rect:
         serializedVersion: 2
-        x: 1011
-        y: 378
-        width: 250
-        height: 192
+        x: 904
+        y: 367
+        width: 246
+        height: 208
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -333,6 +333,28 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: World1FinalEnemies_6
+      rect:
+        serializedVersion: 2
+        x: 1272
+        y: 369
+        width: 214
+        height: 220
+      alignment: 9
+      pivot: {x: 0.40845355, y: -0.006849809}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f004a4bd012bf4d8c87874d903990471
+      internalID: -1114255281
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
@@ -355,6 +377,7 @@ TextureImporter:
       World1FinalEnemies_3: 853282321
       World1FinalEnemies_4: -199887510
       World1FinalEnemies_5: 577574060
+      World1FinalEnemies_6: -1114255281
       World1FinalEnemies_7: 1480530641
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0

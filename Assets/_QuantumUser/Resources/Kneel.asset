@@ -190,9 +190,9 @@ MonoBehaviour:
     OverrideSortingOrder: 0
     SortingOrder: 0
   OnGoingStep:
-    AnimationType: 4
+    AnimationType: 0
     Duration: 3
-    BodySprite: {fileID: 351123828, guid: 2ccd5da319632411aa432cca9e5eeb15, type: 3}
+    BodySprite: {fileID: -756073540, guid: dec25668cd2bb4d09a77f8196c943b34, type: 3}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     ShakeImpact: 0

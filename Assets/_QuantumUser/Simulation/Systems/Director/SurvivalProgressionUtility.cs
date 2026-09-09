@@ -35,7 +35,13 @@ namespace Quantum
         // additionally freeze together while any Traversal Challenge is Active
         // (Global.ActiveTraversalChallengeCount > 0, see TraversalChallenge.qtn/
         // docs/traversal-challenge.md) - a challenge activated mid-Breathing must not let the
-        // Break quietly end (and Director spawning resume) underneath it.
+        // Break quietly end (and Director spawning resume) underneath it. Breathing's own phase
+        // ADVANCE (below) additionally waits on RunPhaseUtility.TickBreathingGraceHold once
+        // PhaseTimer reaches Duration - if a connected player still has a Choice Window open, the
+        // phase holds for up to SurvivalPhase.GracePeriodDuration more seconds instead of force-
+        // closing them instantly. This does NOT extend PhaseTimer/SurvivalTime's own freeze logic
+        // above (already unconditional for the whole Breathing phase) - it only gates the one
+        // ">= Duration" transition check.
         public static SurvivalPhase Tick(Frame f, SurvivalConfig config)
         {
             SurvivalPhase currentPhase = config.Phases[f.Global->CurrentPhaseIndex];
@@ -93,11 +99,20 @@ namespace Quantum
 
             if (isLastPhase == false && encounterCleared == true && f.Global->PhaseTimer >= currentPhase.Duration)
             {
-                f.Global->CurrentPhaseIndex++;
-                f.Global->PhaseTimer = FP._0;
-                f.Global->PhaseGuaranteedSpawnDone = false;
-                currentPhase = config.Phases[f.Global->CurrentPhaseIndex];
-                Log.Error($"[Director] advanced to phase {f.Global->CurrentPhaseIndex}");
+                // Breathing gets one more say before actually advancing: if a connected player still
+                // has a Cursed Rift/Store/Blacksmith Choice Window open, hold here instead - see
+                // RunPhaseUtility.TickBreathingGraceHold. Every other phase kind is unaffected.
+                bool holdForGrace = currentPhase.Kind == SurvivalPhaseKind.Breathing
+                    && RunPhaseUtility.TickBreathingGraceHold(f, currentPhase);
+
+                if (holdForGrace == false)
+                {
+                    f.Global->CurrentPhaseIndex++;
+                    f.Global->PhaseTimer = FP._0;
+                    f.Global->PhaseGuaranteedSpawnDone = false;
+                    currentPhase = config.Phases[f.Global->CurrentPhaseIndex];
+                    Log.Error($"[Director] advanced to phase {f.Global->CurrentPhaseIndex}");
+                }
             }
 
             return currentPhase;

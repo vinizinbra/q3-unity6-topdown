@@ -80,14 +80,16 @@ namespace Quantum
             bool combatActive = currentPhase.Kind == SurvivalPhaseKind.Combat || currentPhase.Kind == SurvivalPhaseKind.Elite;
             PlayerClusterDirectorUtility.UpdateRuntimeScalars(f, directorConfig, balanceConfig, combatActive);
 
-            // Fires SurvivalPhase.GuaranteedGroup exactly once per phase entry - deliberately BEFORE
-            // the Breathing/Traversal Challenge early-returns below, since a guarantee has to land
-            // regardless of whether normal TryPulse spawning is currently allowed. See
-            // RunPhaseUtility.SpawnGuaranteedGroup's own comment.
+            // Fires SurvivalPhase.GuaranteedGroup/GuaranteedEnemyData exactly once per phase entry -
+            // deliberately BEFORE the Breathing/Traversal Challenge early-returns below, since a
+            // guarantee has to land regardless of whether normal TryPulse spawning is currently
+            // allowed. Both can be authored on the same phase and fire independently - see
+            // RunPhaseUtility.SpawnGuaranteedGroup/SpawnGuaranteedEnemy's own comments.
             if (f.Global->PhaseGuaranteedSpawnDone == false)
             {
                 f.Global->PhaseGuaranteedSpawnDone = true;
                 RunPhaseUtility.SpawnGuaranteedGroup(f, currentPhase, directorConfig, balanceConfig);
+                RunPhaseUtility.SpawnGuaranteedEnemy(f, currentPhase, directorConfig, balanceConfig);
             }
 
             if (currentPhase.Kind == SurvivalPhaseKind.Breathing)

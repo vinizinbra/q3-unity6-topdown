@@ -20,10 +20,6 @@ component ProtectorAura
     // Damage Reduction from the aura until it is.
     FP AllyDamageReductionAmount;
 
-    // 0 (off) until the Iron Presence ascension sets it - the movement-speed multiplier applied to
-    // Intimidated enemies via the existing, generic StatusEffectUtility.ApplyIce.
-    FP IntimidateSlowMultiplier;
-
     // 1 (no effect) until Iron Presence raises it above 1 - reduced knockback resistance on
     // Intimidated enemies, see StatusEffectUtility.ApplyKnockbackTaken.
     FP IntimidateKnockbackTakenMultiplier;

@@ -38891,7 +38891,7 @@ GameObject:
   - component: {fileID: 6350743763286976369}
   - component: {fileID: 6081716198590185604}
   m_Layer: 0
-  m_Name: BossAttack
+  m_Name: GroundRiftBossAttack
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -56,6 +56,7 @@ namespace Quantum.Editor
                 SerializedProperty bodySpriteScale = property.FindPropertyRelative("BodySpriteScale");
                 SerializedProperty shakeImpact = property.FindPropertyRelative("ShakeImpact");
                 SerializedProperty particlePrefab = property.FindPropertyRelative("ParticlePrefab");
+                SerializedProperty additionalParticles = property.FindPropertyRelative("AdditionalParticles");
 
                 EditorGUI.PropertyField(rect, bodySprite);
                 rect.y += lineHeight;
@@ -131,6 +132,7 @@ namespace Quantum.Editor
                     {
                         SerializedProperty anchor = property.FindPropertyRelative("Anchor");
                         SerializedProperty offset = property.FindPropertyRelative("Offset");
+                        SerializedProperty snapToGround = property.FindPropertyRelative("SnapToGround");
                         SerializedProperty parented = property.FindPropertyRelative("Parented");
                         SerializedProperty alignToEnemyDirection = property.FindPropertyRelative("AlignToEnemyDirection");
                         SerializedProperty rotationOffset = property.FindPropertyRelative("RotationOffset");
@@ -141,6 +143,9 @@ namespace Quantum.Editor
                         rect.y += lineHeight;
 
                         EditorGUI.PropertyField(rect, offset);
+                        rect.y += lineHeight;
+
+                        EditorGUI.PropertyField(rect, snapToGround);
                         rect.y += lineHeight;
 
                         EditorGUI.PropertyField(rect, parented);
@@ -161,8 +166,20 @@ namespace Quantum.Editor
                         if (overrideSortingOrder.boolValue == true)
                         {
                             EditorGUI.PropertyField(rect, property.FindPropertyRelative("SortingOrder"));
+                            rect.y += lineHeight;
                         }
                     }
+
+                    // Default array drawing (not this drawer's own hand-laid field-by-field
+                    // approach) - AttackVisualParticle has no PropertyDrawer of its own, so each
+                    // element just falls back to Unity's normal struct field layout. Independent of
+                    // ParticlePrefab above (not nested under its objectReferenceValue != null check) -
+                    // AdditionalParticles is a fully separate list of extra particles, not
+                    // conditional on the primary one being set.
+                    float additionalParticlesHeight = EditorGUI.GetPropertyHeight(additionalParticles, true);
+                    Rect additionalParticlesRect = new Rect(rect.x, rect.y, rect.width, additionalParticlesHeight);
+                    EditorGUI.PropertyField(additionalParticlesRect, additionalParticles, true);
+                    rect.y += additionalParticlesHeight + EditorGUIUtility.standardVerticalSpacing;
 
                     EditorGUI.indentLevel--;
                 }
@@ -225,11 +242,14 @@ namespace Quantum.Editor
                 SerializedProperty particlePrefab = property.FindPropertyRelative("ParticlePrefab");
                 if (particlePrefab.objectReferenceValue != null)
                 {
-                    height += lineHeight * 7; // Anchor, Offset, Parented, AlignToEnemyDirection, RotationOffset, Scale, OverrideSortingOrder
+                    height += lineHeight * 8; // Anchor, Offset, SnapToGround, Parented, AlignToEnemyDirection, RotationOffset, Scale, OverrideSortingOrder
 
                     if (property.FindPropertyRelative("OverrideSortingOrder").boolValue == true)
                         height += lineHeight; // SortingOrder
                 }
+
+                SerializedProperty additionalParticles = property.FindPropertyRelative("AdditionalParticles");
+                height += EditorGUI.GetPropertyHeight(additionalParticles, true) + EditorGUIUtility.standardVerticalSpacing;
             }
 
             return height;

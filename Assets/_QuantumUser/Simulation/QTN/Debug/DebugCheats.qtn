@@ -8,9 +8,13 @@ global
     // idiom Chunk.qtn's LevelGenerated already uses.
     Boolean DebugCheatsApplied;
 
-    // How many debug-queued level-up screens are still left to open, decremented by
+    // How many debug/cheat-queued level-up screens are still left to open, decremented by
     // DebugCheatSystem each time the previous screen resolves. 0 = none pending, including the
-    // normal case where no debug cheat was configured at all.
+    // normal case where no debug cheat was configured at all. Fed by two independent sources:
+    // RuntimeConfig.DebugStartLevelUpCount (match-start only, see ApplyOnce) AND
+    // CheatSystem.QueuePendingLevelUpsTo (CheatActionKind.JumpToBreathing, any time mid-match) -
+    // both just add to this same counter, so a jump mid-run correctly queues on top of (rather than
+    // replacing) whatever's already pending.
     Int32 DebugPendingLevelUps;
 
     // Last tick's Global.LevelUpScreenOpen value - lets DebugCheatSystem require a full published

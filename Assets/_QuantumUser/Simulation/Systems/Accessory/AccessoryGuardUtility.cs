@@ -290,9 +290,24 @@ namespace Quantum
             int groundLayerMask = EnemyMovementUtility.GetGroundLayerMask(f);
             int attempts = config.LandingSampleAttempts > 0 ? config.LandingSampleAttempts : 1;
 
+            // The sealed Boss Arena is still one continuous piece of ground underneath its own
+            // BossArenaGate walls (see BossArenaGateSystem/RunPhaseUtility.BeginBossEncounter), so
+            // the ground-height check below finds solid floor on the far side just fine - the level
+            // simply keeps going there, it's just no longer reachable. Constrain candidates to the
+            // Boss chunk's own footprint (the same "chunk IS the boundary" idiom
+            // LevelGenerationSystem.TryGetLobbyStartBounds/TryFindBossArenaChunk already document)
+            // so a hit taken near the wall can never pop the accessory outside the arena the player
+            // is now stuck fighting in.
+            EntityRef bossArenaChunk = EntityRef.None;
+            bool constrainToBossArena = f.Global->CurrentState == GameState.Boss
+                && LevelGenerationSystem.TryFindBossArenaChunk(f, out bossArenaChunk);
+
             for (int i = 0; i < attempts; i++)
             {
                 FPVector3 candidate = EnemyMovementUtility.RandomPositionInRing(f, anchor, config.MinDropOffset, config.MaxDropOffset);
+
+                if (constrainToBossArena == true && FallRespawnUtility.IsInsideChunkBounds(f, bossArenaChunk, candidate) == false)
+                    continue;
 
                 if (EnemyMovementUtility.TryFindGroundHeight(f, candidate, groundLayerMask, out FP groundY) == false)
                     continue;

@@ -26,13 +26,13 @@ MonoBehaviour:
     RawValue: 0
   BaseMaxShield:
     RawValue: 1310720
-  ShieldChargeOnly: 0
+  ShieldChargeOnly: 1
   ShieldRechargeDelay:
-    RawValue: 65470464
+    RawValue: 0
   ShieldRechargeRate:
     RawValue: 0
   ShieldTemporaryDuration:
-    RawValue: 393216
+    RawValue: 196608
   DamageMultiplier:
     RawValue: 65536
   WeaponDamageMultiplier:

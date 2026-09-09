@@ -64,7 +64,15 @@ namespace Quantum
         // folds in Shock's Stagger (multiplier 0, a full pause rather than a stretch) so the ground
         // decal doesn't keep growing to completion while EnemyBlobAnimationView's own body animation
         // freezes for the same windup - see that component's identical IsStaggered check.
-        private float ResolveAnticipationMultiplier()
+        //
+        // Also folds in Global.LevelUpScreenOpen (multiplier 0) for the same reason: a Level-Up/
+        // Chest screen only ramps Time.timeScale down as client-side polish (GameplayUiController)
+        // and never actually reaches 0 until partway through that ramp - the real pause is
+        // GameplaySystemGroup being disabled, which freezes Enemy.StateTimer outright. Without this,
+        // this MonoBehaviour's own Update (driven by Time.deltaTime, not the sim) keeps advancing
+        // growth using whatever Time.timeScale currently is, so the fill can visibly finish (or keep
+        // creeping) while the enemy's real windup is fully frozen underneath it.
+        private unsafe float ResolveAnticipationMultiplier()
         {
             QuantumGame game = QuantumRunner.Default != null ? QuantumRunner.Default.Game : null;
             Frame frame = game?.Frames.Predicted;
@@ -72,8 +80,9 @@ namespace Quantum
             if (frame == null)
                 return 1f;
 
-            float staggerMultiplier = StatusEffectUtility.IsStaggered(frame, _enemyEntity) == true ? 0f : 1f;
-            return StatusEffectUtility.GetAnticipationMultiplier(frame, _enemyEntity).AsFloat * staggerMultiplier;
+            bool fullyPaused = StatusEffectUtility.IsStaggered(frame, _enemyEntity) == true || frame.Global->LevelUpScreenOpen == true;
+            float pauseMultiplier = fullyPaused == true ? 0f : 1f;
+            return StatusEffectUtility.GetAnticipationMultiplier(frame, _enemyEntity).AsFloat * pauseMultiplier;
         }
 
         private Vector3 ComputeScale(float t)

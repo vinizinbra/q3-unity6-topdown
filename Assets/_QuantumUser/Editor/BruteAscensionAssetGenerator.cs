@@ -148,15 +148,14 @@ namespace QuantumUser.Editor
             IronPresencePassiveUpgradeData ironPresence = CreateOrUpdate<IronPresencePassiveUpgradeData>($"{PassiveUpgradesFolderPath}/IronPresence.asset", asset =>
             {
                 asset.DisplayName = "Iron Presence";
-                asset.Description = "Enemies intimidated by your Protector Aura are worn down before they reach you - slower on the approach, easier to throw, and eventually softer to your own hits.";
+                asset.Description = "Enemies intimidated by your Protector Aura are worn down before they reach you - easier to throw, and eventually softer to your own hits.";
                 asset.RankDescriptions = new[]
                 {
-                    "Enemies inside your Protector Aura move 15% slower and take +25% knockback force.",
-                    "Enemies inside your Protector Aura move 15% slower and take +25% knockback and +20% damage from you.",
-                    "Enemies inside your Protector Aura move 25% slower and take +50% knockback and +35% damage from you.",
+                    "Enemies inside your Protector Aura take +25% knockback force.",
+                    "Enemies inside your Protector Aura take +25% knockback and +20% damage from you.",
+                    "Enemies inside your Protector Aura take +50% knockback and +35% damage from you.",
                 };
                 asset.MaxRank = 3;
-                asset.SlowMultiplier = new[] { FP.FromString("0.85"), FP.FromString("0.85"), FP.FromString("0.75") };
                 asset.KnockbackTakenMultiplier = new[] { FP.FromString("1.25"), FP.FromString("1.25"), FP._1_50 };
                 asset.FearlessBonusVsIntimidated = new[] { FP._0, FP.FromString("0.20"), FP.FromString("0.35") };
             });

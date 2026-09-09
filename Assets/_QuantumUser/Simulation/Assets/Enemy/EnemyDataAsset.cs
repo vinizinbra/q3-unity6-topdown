@@ -261,6 +261,21 @@ namespace Quantum
         public FP DetectionRange;
         public FP LeashRange;
 
+        // Graceful stop: how close (flat XZ distance) this enemy settles to its chase target
+        // instead of pressing right up against it. 0 (the default) keeps the old behavior - it
+        // keeps closing distance during the plain-chase fall-through until an action's own range
+        // check (EngageRange/DamageRange) fires. Above 0, the enemy eases to a halt as it reaches
+        // this distance (see StopSlowdownRange for the deceleration band and EnemySystem.
+        // UpdateChasing for where it's applied). Only affects that fall-through chase movement -
+        // an in-range attack still commits normally, since TrySelectAction runs first.
+        public FP StopDistance;
+
+        // Width of the deceleration band just outside StopDistance over which move speed ramps
+        // linearly from full (at StopDistance + this) down to 0 (at StopDistance), so the enemy
+        // eases in rather than snapping to a dead stop. <= 0 falls back to StopDistance itself (a
+        // full-length ramp). Ignored entirely when StopDistance is 0.
+        public FP StopSlowdownRange;
+
         // Tuning knob layered on top of DetectionRange, same "baseValue * multiplier, default 1"
         // convention as Stats.ShieldMultiplier/EnemyTierStatsConfig.ScaleMultiplier - lets an
         // enemy asset scale its perception range without hand-editing the flat DetectionRange

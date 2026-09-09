@@ -31,4 +31,11 @@ component DelayedBlast
     // that stops a payout blast from re-entering the mechanic that spawned it (see
     // DemolitionMasteryUtility/UnstableMixture.qtn). Only meaningful alongside IsExplosion.
     Boolean IsChainedExplosion;
+
+    // Optional - invalid/default for Pixie's Unstable Mixture (which has no bespoke VFX of its own,
+    // see EffectsManager.OnWeaponExplosionReleased). Set by Brute's Aftershock rank 3 "Earthquake" so
+    // DelayedBlastSystem can fire the same JuggernautEndExploded event the primary blast uses,
+    // resolving AftershockSkillAction.BlastEffectPrefab instead of falling back to the generic
+    // default blast VFX - see AftershockSkillAction.View.cs.
+    AssetRef<AftershockSkillAction> Source;
 }

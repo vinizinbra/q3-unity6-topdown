@@ -18,15 +18,15 @@ MonoBehaviour:
     ScaleMultiplier: 0.75
     PositionOffset: {x: 0, y: 0, z: 0}
   JumpBurst:
-    Prefab: {fileID: 2507896006552451473, guid: dbe2ea8610622df44a4a79ba99af5ddc, type: 3}
-    RotationOffset: {x: 0, y: 0, z: 0}
+    Prefab: {fileID: 307728174855334427, guid: 08598b43a1cbf43f2ba5206f25339bbf, type: 3}
+    RotationOffset: {x: 0, y: 90, z: 45}
     ScaleMultiplier: 1
     PositionOffset: {x: 0, y: 0, z: 0}
   LandBurst:
-    Prefab: {fileID: 676453516923581567, guid: 22b3da147b81bbc4582db932cf63c8a0, type: 3}
+    Prefab: {fileID: 307728174855334427, guid: 08598b43a1cbf43f2ba5206f25339bbf, type: 3}
     RotationOffset: {x: 0, y: 0, z: 0}
-    ScaleMultiplier: 0.5
-    PositionOffset: {x: 0, y: 0.1, z: 0}
+    ScaleMultiplier: 1
+    PositionOffset: {x: 0, y: -0.5, z: 0}
   LandMinImpactSpeed: 0.1
   FlashColor: {r: 1, g: 1, b: 1, a: 1}
   BurnFlashColor: {r: 1, g: 0.45, b: 0.1, a: 0.3254902}
@@ -41,7 +41,7 @@ MonoBehaviour:
   LightningRestTint: {r: 0, g: 0, b: 0, a: 0}
   HealFlashColor: {r: 0.4, g: 1, b: 0.4, a: 1}
   ShieldFlashColor: {r: 0.4, g: 0.75, b: 1, a: 1}
-  DeathColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
+  DeathColor: {r: 0, g: 0, b: 0, a: 0.20392157}
   RiftMarkApplicationFlashColor: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
   RiftMarkApplicationFlashDuration: 0.08
   ExpPickupFlashColor: {r: 0.2980392, g: 1, b: 0.98432136, a: 0.35}

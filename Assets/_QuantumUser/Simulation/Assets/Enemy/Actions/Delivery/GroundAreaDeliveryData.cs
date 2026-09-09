@@ -65,7 +65,14 @@ namespace Quantum
 
             if (ConeShaped == true)
             {
+                // Flattened onto the XZ ground plane (Y zeroed) - this is a top-down wedge, and the
+                // rest of the system (FlatSqrDistance, the Cone telegraph in
+                // EnemyAttackVisualsView.ComputeTelegraphPose) already works flat. Doing the
+                // angle-check in full 3D let any Y gap between origin (the enemy's elevated capsule
+                // pivot) and the players/target anchor tilt both vectors, so the actual hit wedge no
+                // longer matched the telegraph on screen.
                 FPVector3 delta = targetAnchor - origin;
+                delta.Y = FP._0;
                 coneDirection = delta.SqrMagnitude > FP._0 ? delta.Normalized : FPVector3.Forward;
                 coneArcCos = FPMath.Cos(ConeAngleDegrees * FP._0_50 * FP.Deg2Rad);
             }
@@ -86,6 +93,7 @@ namespace Quantum
                 if (ConeShaped == true)
                 {
                     FPVector3 toHit = hitPosition - origin;
+                    toHit.Y = FP._0; // flat wedge on the XZ plane - see coneDirection above
 
                     if (toHit.SqrMagnitude <= FP._0)
                         continue; // standing exactly on the apex - no meaningful direction to angle-check

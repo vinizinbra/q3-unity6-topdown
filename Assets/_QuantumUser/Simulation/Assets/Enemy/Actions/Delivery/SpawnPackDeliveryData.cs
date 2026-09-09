@@ -20,10 +20,31 @@ namespace Quantum
     // returns true), same as ScatterDeliveryData.
     public unsafe class SpawnPackDeliveryData : EnemyDeliveryData
     {
-        // Exact, ordered composition - e.g. [Filler,Filler,Filler,Filler,Shooter,Shooter]. Not
-        // weighted/random: a boss "calling the pack" wants a specific, readable roster every time,
-        // not an approximation of one.
+        // Exact, ordered composition - e.g. [Filler,Filler,Filler,Filler,Shooter,Shooter]. Every
+        // FULL cycle through it spawns in this exact authored order (a boss "calling the pack" wants
+        // a specific, readable roster every time) - only the trailing partial cycle (see MaxEnemies*
+        // below) picks randomly instead, since there's no "correct" authored order for half a roster.
         public List<AssetRef<EnemyDataAsset>> Composition = new();
+
+        // Total members spawned by one Begin() call, scaled by live player count - same clamped-
+        // [1,4]-then-switch idiom ScatterDeliveryData.ResolveCount already uses. This is a fill
+        // target, not just a ceiling: Composition repeats as many FULL cycles as fit, then a final
+        // PARTIAL cycle (drawn randomly, without replacement, from Composition via
+        // WeightedDrawUtility) tops up to exactly MaxEnemies - e.g. a 4-entry Composition at
+        // MaxEnemies=6 spawns the whole roster once (4) plus 2 more entries picked randomly out of
+        // those same 4. Supersedes BossPhaseUtility.QuantityMultiplier for this delivery (a boss-
+        // phase repeat count would always be capped/topped-up to MaxEnemies anyway, so authoring both
+        // would be redundant) - other deliveries (Mortar, Scatter) still read QuantityMultiplier.
+        public int MaxEnemiesP1 = 5;
+        public int MaxEnemiesP2 = 8;
+        public int MaxEnemiesP3 = 10;
+        public int MaxEnemiesP4 = 12;
+
+        private int ResolveMaxEnemies(Frame f)
+        {
+            int clamped = f.PlayerConnectedCount < 1 ? 1 : (f.PlayerConnectedCount > 4 ? 4 : f.PlayerConnectedCount);
+            return clamped switch { 1 => MaxEnemiesP1, 2 => MaxEnemiesP2, 3 => MaxEnemiesP3, _ => MaxEnemiesP4 };
+        }
 
         public override bool Begin(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, EnemyActionData action, EntityRef target)
         {
@@ -33,37 +54,54 @@ namespace Quantum
                 return true;
             }
 
+            List<AssetRef<EnemyDataAsset>> validComposition = new(Composition.Count);
+            for (int i = 0; i < Composition.Count; i++)
+            {
+                if (Composition[i].IsValid)
+                    validComposition.Add(Composition[i]);
+            }
+
+            if (validComposition.Count == 0)
+                return true;
+
             DirectorConfig directorConfig = f.FindAsset(f.RuntimeConfig.DirectorConfig);
             FPVector3 anchor = action.Origin == EnemyActionOrigin.Self ? filter.Transform3D->Position : filter.Enemy->SkillTargetPosition;
             int groundLayerMask = EnemyMovementUtility.GetGroundLayerMask(f);
+            EnemyFaction faction = filter.Enemy->Faction;
 
-            // Boss-phase Quantity scaling - see BossStatModifiers.QuantityMultiplier's own comment.
-            // Composition is an exact, ordered roster (not a bare count), so a phase repeats the
-            // WHOLE authored roster this many times rather than fractionally scaling it - a 5-entry
-            // Composition at QuantityMultiplier 2 spawns the same 5-entry roster twice (10 total),
-            // never an approximated/partial one. FP._1 (round to 1 repeat) for anything that isn't a
-            // boss currently authoring one.
-            int repeatCount = FPMath.RoundToInt(BossPhaseUtility.ResolveQuantityMultiplier(f, filter.Entity));
-            repeatCount = repeatCount < 1 ? 1 : repeatCount;
+            int maxEnemies = ResolveMaxEnemies(f);
+            int fullCycles = maxEnemies / validComposition.Count;
+            int remainder = maxEnemies % validComposition.Count;
 
-            for (int repeat = 0; repeat < repeatCount; repeat++)
+            for (int cycle = 0; cycle < fullCycles; cycle++)
             {
-                for (int i = 0; i < Composition.Count; i++)
-                {
-                    if (Composition[i].IsValid == false)
-                        continue;
+                for (int i = 0; i < validComposition.Count; i++)
+                    SpawnAtAnchor(f, directorConfig, anchor, groundLayerMask, validComposition[i], faction);
+            }
 
-                    FPVector3 point = RandomizeAroundAnchor(f, anchor);
+            if (remainder > 0)
+            {
+                List<WeightedDrawUtility.Candidate<AssetRef<EnemyDataAsset>>> candidates = new(validComposition.Count);
+                for (int i = 0; i < validComposition.Count; i++)
+                    candidates.Add(new WeightedDrawUtility.Candidate<AssetRef<EnemyDataAsset>> { Value = validComposition[i], Weight = 1 });
 
-                    FP groundY = EnemyMovementUtility.TryFindGroundHeight(f, point, groundLayerMask, out FP foundGroundY)
-                        ? foundGroundY
-                        : point.Y;
-
-                    SpawnMember(f, directorConfig, new FPVector3(point.X, groundY, point.Z), Composition[i], filter.Enemy->Faction);
-                }
+                AssetRef<EnemyDataAsset>[] picked = WeightedDrawUtility.Draw(f, candidates, remainder);
+                for (int i = 0; i < picked.Length; i++)
+                    SpawnAtAnchor(f, directorConfig, anchor, groundLayerMask, picked[i], faction);
             }
 
             return true;
+        }
+
+        private void SpawnAtAnchor(Frame f, DirectorConfig directorConfig, FPVector3 anchor, int groundLayerMask, AssetRef<EnemyDataAsset> enemyDataRef, EnemyFaction faction)
+        {
+            FPVector3 point = RandomizeAroundAnchor(f, anchor);
+
+            FP groundY = EnemyMovementUtility.TryFindGroundHeight(f, point, groundLayerMask, out FP foundGroundY)
+                ? foundGroundY
+                : point.Y;
+
+            SpawnMember(f, directorConfig, new FPVector3(point.X, groundY, point.Z), enemyDataRef, faction);
         }
 
         // Mirrors GroupSpawnerUtility.SpawnMember's exact create -> seed sequence, minus the

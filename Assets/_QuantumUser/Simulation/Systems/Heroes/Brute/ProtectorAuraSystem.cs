@@ -5,7 +5,7 @@ namespace Quantum
     using UnityEngine.Scripting;
 
     // Drives Brute's Protector Aura - continuously finds nearby enemies (Intimidate, plus Iron
-    // Presence's slow/reduced-knockback-resistance if that ascension is active) and nearby allies
+    // Presence's reduced-knockback-resistance if that ascension is active) and nearby allies
     // (Guardian's Damage Reduction, if active). Refresh-only, same idiom SentryAuraSystem already
     // uses for its own aura - reapplied every tick a target stays in range, so it decays on its own
     // the instant it leaves, no removal logic needed.
@@ -34,13 +34,8 @@ namespace Quantum
 
                 StatusEffectUtility.ApplyIntimidate(f, enemyEntity, AuraRefreshDuration, aura->IntimidateDamageMultiplier);
 
-                // Iron Presence - both off (slow at 0, resist multiplier at 1) until that ascension
-                // sets them, so this is a no-op either way until then.
-                if (aura->IntimidateSlowMultiplier > FP._0)
-                {
-                    StatusEffectUtility.ApplyIce(f, enemyEntity, AuraRefreshDuration, aura->IntimidateSlowMultiplier);
-                }
-
+                // Iron Presence - off (resist multiplier at 1) until that ascension sets it, so this
+                // is a no-op either way until then.
                 if (aura->IntimidateKnockbackTakenMultiplier > FP._1)
                 {
                     StatusEffectUtility.ApplyKnockbackTaken(f, enemyEntity, AuraRefreshDuration, aura->IntimidateKnockbackTakenMultiplier);

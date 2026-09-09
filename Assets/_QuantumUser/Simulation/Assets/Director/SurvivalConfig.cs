@@ -71,6 +71,14 @@ namespace Quantum
         public String Name;
         public SurvivalPhaseKind Kind;
         public FP Duration;
+
+        // Breathing-only, opt-in - default 0 means "no grace at all", the exact behavior every
+        // pre-existing Breathing entry already has. If, once Duration elapses and the area is
+        // Encounter-cleared, at least one connected player still has a Cursed Rift/Store/Blacksmith
+        // Choice Window open, RunPhaseUtility.TickBreathingGraceHold holds the phase open for up to
+        // this many extra seconds instead of instantly force-closing it - see docs/run-phase.md.
+        public FP GracePeriodDuration;
+
         public FP BudgetPerPulse;
         public FP PulseInterval;
         public FP TargetPressure;
@@ -85,6 +93,23 @@ namespace Quantum
         public AssetRef<EntityPrototype> BossPrototype;
         public FP PauseDuration;
         public AssetRef<EnemyGroupConfig> GuaranteedGroup;
+
+        // GuaranteedGroup's single-enemy sibling (any Kind, most useful on Elite, same as
+        // GuaranteedGroup) - guarantees ONE EnemyDataAsset spawns the instant this phase begins,
+        // with no EnemyGroupConfig asset or escort formation needed just to wrap a lone Elite/Boss
+        // pick. Reuses GroupSpawnerUtility.TrySpawnEnemy - AllowedEnemies' own no-formation,
+        // single-anchor spawn path - so it still gets the same anchor/ground/chunk-connectivity
+        // search and EnemyLifecycle bookkeeping every other Director spawn gets; it only skips
+        // CombatDirectorUtility.TrySelectSpawn's own weighted-roll/budget/alive-cap gate, exactly
+        // like GuaranteedGroup does for a whole group (see that field's own comment above for why
+        // that gate is worse than a missed spawn on an Elite phase specifically -
+        // IsEncounterCleared reads "is one currently alive," not "did one ever spawn"). Authoring
+        // both GuaranteedGroup and GuaranteedEnemyData on the same phase spawns both, independently
+        // - there's no exclusivity between them. GuaranteedEnemyFaction is read exactly like
+        // EnemySpawnEntry.Faction (a FactionSkins visual resolve only) - it does not need to match
+        // anything already listed in AllowedEnemies/AllowedGroups.
+        public AssetRef<EnemyDataAsset> GuaranteedEnemyData;
+        public EnemyFaction GuaranteedEnemyFaction;
     }
 
     // Drives SurvivalProgressionUtility.Tick. The last entry never expires - once

@@ -34,12 +34,12 @@ public class HurtOverlayUiWidget : QuantumGlobalMonoBehaviour
     [SerializeField, Tooltip("Seconds for one half of the dying blink's flash<->rest cycle - lower reads more urgent.")]
     private float dyingBlinkDuration = 0.4f;
 
-    // One (damage% -> freeze) row of the hit-stop table below.
+    // One (damage -> freeze) row of the hit-stop table below.
     [System.Serializable]
     private struct HitStopTier
     {
-        [Tooltip("Damage taken as a PERCENT of the hit target's max health (e.g. 10 = 10%).")]
-        public float DamagePercent;
+        [Tooltip("Damage taken as a flat/actual amount (final post-mitigation HP lost - not a % of max health).")]
+        public float Damage;
         [Tooltip("Screen-freeze duration, in real seconds, when a hit reaches this tier.")]
         public float Duration;
     }
@@ -48,14 +48,14 @@ public class HurtOverlayUiWidget : QuantumGlobalMonoBehaviour
     // player takes a non-Silent hit (same filter as the flash above), briefly holding
     // Time.timeScale at 0 so the whole view hitches on impact. Safe in Multiplayer: the sim is
     // server-clock authoritative, so timeScale only stalls local prediction/view for a beat and
-    // can't desync. Duration comes from the table below, keyed on the hit's damage as a % of max HP.
+    // can't desync. Duration comes from the table below, keyed on the hit's flat damage.
     [Header("Hit Stop")]
-    [SerializeField, Tooltip("Damage%-to-freeze table. A hit uses the highest tier whose DamagePercent it meets or exceeds; a hit below the smallest tier doesn't freeze at all. Rows can be in any order. Leave empty to disable hit-stop.")]
+    [SerializeField, Tooltip("Damage-to-freeze table. A hit uses the highest tier whose Damage it meets or exceeds; a hit below the smallest tier doesn't freeze at all. Rows can be in any order. Leave empty to disable hit-stop.")]
     private HitStopTier[] hitStopTiers =
     {
-        new HitStopTier { DamagePercent = 10f, Duration = 0.05f },
-        new HitStopTier { DamagePercent = 20f, Duration = 0.10f },
-        new HitStopTier { DamagePercent = 40f, Duration = 0.20f },
+        new HitStopTier { Damage = 10f, Duration = 0.05f },
+        new HitStopTier { Damage = 20f, Duration = 0.10f },
+        new HitStopTier { Damage = 40f, Duration = 0.20f },
     };
 
     [SerializeField, Tooltip("Hit-stop duration when the local player's Accessory Guard eats a hit outright (EventAccessoryBlocked - see docs/accessory-guard.md). A flat value rather than a damage% tier, since a block deals no damage to scale off; it exists so a block still SLAMS instead of passing silently. 0 disables it.")]
@@ -228,33 +228,27 @@ public class HurtOverlayUiWidget : QuantumGlobalMonoBehaviour
         Flash();
     }
 
-    // Scale the freeze to how hard the hit landed relative to THIS entity's own max HP, so a
-    // glancing chip barely stutters while a big hit really slams. Reads MaxHealth off the predicted
-    // frame (the same frame the rest of this widget already queries) - the event's Damage is the
-    // final post-mitigation number the damage numbers show, i.e. actual HP/shield lost.
+    // Scale the freeze to how hard the hit landed in flat terms - a glancing chip barely stutters
+    // while a big hit really slams. e.Damage is the final post-mitigation number the damage numbers
+    // show, i.e. actual HP/shield lost.
     private void TryTriggerHitStop(EventEntityDamaged e)
     {
-        Frame frame = e.Game.Frames.Predicted;
-        if (frame == null || frame.TryGet<Health>(e.Target, out var health) == false || health.MaxHealth <= FP._0)
-            return;
-
-        float damagePercent = (e.Damage / health.MaxHealth).AsFloat * 100f;
-        float duration = ResolveHitStopDuration(damagePercent);
+        float duration = ResolveHitStopDuration(e.Damage.AsFloat);
         TriggerHitStop(duration);
     }
 
     // Highest tier the hit reaches wins; order-independent so a designer can list rows however they
-    // like. Below every tier's DamagePercent -> 0 (no freeze), same as an empty table.
-    private float ResolveHitStopDuration(float damagePercent)
+    // like. Below every tier's Damage -> 0 (no freeze), same as an empty table.
+    private float ResolveHitStopDuration(float damage)
     {
         float duration = 0f;
-        float bestPercent = -1f;
+        float bestDamage = -1f;
 
         foreach (var tier in hitStopTiers)
         {
-            if (damagePercent >= tier.DamagePercent && tier.DamagePercent > bestPercent)
+            if (damage >= tier.Damage && tier.Damage > bestDamage)
             {
-                bestPercent = tier.DamagePercent;
+                bestDamage = tier.Damage;
                 duration = tier.Duration;
             }
         }
@@ -280,7 +274,7 @@ public class HurtOverlayUiWidget : QuantumGlobalMonoBehaviour
     }
 
     [Button]
-    private void TestHitStop() => TriggerHitStop(ResolveHitStopDuration(100f));
+    private void TestHitStop() => TriggerHitStop(ResolveHitStopDuration(float.MaxValue));
 
     [Button]
     private void Flash()

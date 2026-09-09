@@ -26,6 +26,8 @@ public class PartyHudWidget : MonoBehaviour
     private ShieldUiWidget shieldWidget;
     [SerializeField, Tooltip("Current combined damage reduction % (any source - Juggernaut's own channel, an ally's Guardian aura, etc.). Left empty, auto-populated via GetComponentInChildren.")]
     private DamageReductionUiWidget damageReductionWidget;
+    [SerializeField, Tooltip("Shows while this player has a Cursed Rift/Store/Blacksmith Choice Window open - most relevant during a Breathing grace hold (see docs/run-phase.md). Left empty, auto-populated via GetComponentInChildren.")]
+    private ChoiceWindowIndicatorUiWidget choiceWindowIndicatorWidget;
 
     [Header("Skills")]
     [SerializeField, Tooltip("Left empty, auto-populated via GetComponentsInChildren (Awake, or the Populate Children button below) - only set these manually to override which widgets belong to this slot (e.g. excluding one).")]
@@ -59,6 +61,9 @@ public class PartyHudWidget : MonoBehaviour
 
         if (damageReductionWidget == null)
             damageReductionWidget = GetComponentInChildren<DamageReductionUiWidget>(true);
+
+        if (choiceWindowIndicatorWidget == null)
+            choiceWindowIndicatorWidget = GetComponentInChildren<ChoiceWindowIndicatorUiWidget>(true);
 
         if (skillCooldownWidgets == null || skillCooldownWidgets.Length == 0)
             skillCooldownWidgets = GetComponentsInChildren<SkillCooldownUiWidget>(true);
@@ -102,6 +107,9 @@ public class PartyHudWidget : MonoBehaviour
 
         if (damageReductionWidget != null)
             damageReductionWidget.Initialize(entityRef);
+
+        if (choiceWindowIndicatorWidget != null)
+            choiceWindowIndicatorWidget.Initialize(entityRef);
 
         foreach (var widget in skillCooldownWidgets)
             widget.Initialize(entityRef);
