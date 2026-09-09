@@ -138,6 +138,8 @@ public class CharacterUiWidget : MonoBehaviour
     private Transform _followTarget;
     private Vector3 _characterOffset;
     private Tween _reloadPunchTween;
+    private Vector3 _reloadPunchRestScale;
+    private bool _reloadPunchRestScaleCaptured;
     private Coroutine _shieldShineRoutine;
     private bool _shieldWasRecharging;
     private Color _shieldBaseFillColor = Color.white;
@@ -214,10 +216,19 @@ public class CharacterUiWidget : MonoBehaviour
         if (reloadPunchTarget == null)
             return;
 
-        // Stopped rather than left to overlap - PunchScale is relative to the target's scale when it
-        // starts, so a second punch landing mid-punch would otherwise compound off an already-
-        // stretched bar and leave it permanently the wrong size.
+        if (_reloadPunchRestScaleCaptured == false)
+        {
+            _reloadPunchRestScale = reloadPunchTarget.localScale;
+            _reloadPunchRestScaleCaptured = true;
+        }
+
+        // Reset to the authored rest scale before punching again - Tween.PunchScale punches relative
+        // to the target's scale when it starts, and Stop() alone leaves the transform frozen wherever
+        // the punch was mid-flight rather than restoring it, so back-to-back reloads (short reload
+        // weapons, mid-combat refills like Full Throttle/Run & Gun) would otherwise compound off an
+        // already-stretched bar and leave it permanently, ever-increasingly the wrong size.
         _reloadPunchTween.Stop();
+        reloadPunchTarget.localScale = _reloadPunchRestScale;
         _reloadPunchTween = Tween.PunchScale(reloadPunchTarget, reloadPunchStrength, reloadPunchDuration,
             reloadPunchFrequency, useUnscaledTime: true);
     }

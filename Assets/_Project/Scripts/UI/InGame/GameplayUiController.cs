@@ -278,13 +278,35 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
 
             if (isWeaponChoice)
             {
+                LevelUpConfig levelUpConfig = frame.RuntimeConfig.LevelUpConfig.IsValid
+                    ? frame.FindAsset(frame.RuntimeConfig.LevelUpConfig)
+                    : null;
+
                 var weaponCardData = new WeaponCardWidget.CardData[choice->Options.Length];
 
                 for (int j = 0; j < choice->Options.Length; j++)
                 {
-                    weaponCardData[j] = j < choice->OptionCount
-                        ? BuildWeaponCardData(frame, choice->Options[j].WeaponData, choice->Options[j].RolledPerks, choice->Options[j].RolledPerkCount)
-                        : default;
+                    if (j >= choice->OptionCount)
+                    {
+                        weaponCardData[j] = default;
+                        continue;
+                    }
+
+                    LevelUpOption option = choice->Options[j];
+                    WeaponCardWidget.CardData data = BuildWeaponCardData(frame, option.WeaponData, option.RolledPerks, option.RolledPerkCount, option.RolledWeaponLevel);
+
+                    // Preview the SAME level-adjusted damage the pick will actually equip with - the
+                    // same ResolveLevelDamageMultiplier post-multiply BuildStoreWeaponCardData already
+                    // applies for a Store offer (see that method), otherwise the card's Damage stat
+                    // stays at the plain Level-0 base even though its own "+N" name suffix above
+                    // already advertises a higher level.
+                    if (option.RolledWeaponLevel > 0 && levelUpConfig != null)
+                    {
+                        FP multiplier = WeaponSystem.ResolveLevelDamageMultiplier(option.RolledWeaponLevel, levelUpConfig.WeaponLevelDamageBonusPerLevel);
+                        data.Damage *= multiplier.AsFloat;
+                    }
+
+                    weaponCardData[j] = data;
                 }
 
                 choiceWindows[i].RefreshWeaponChoice(title, frame.Global->LevelUpTimeRemaining.AsFloat, weaponCardData, confirmedIndex);
@@ -1024,9 +1046,10 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
         {
             HasOption = true,
             WeaponIcon = weaponData.GetIcon(),
-            // weaponLevel is 0 for a plain Choose-Weapon level-up option (no level concept there) -
-            // WithLevelSuffix no-ops in that case, so this call site is unaffected. Only a Store
-            // offer (see BuildStoreWeaponCardData) ever passes a level > 0, e.g. "Shotgun +1".
+            // weaponLevel comes from LevelUpOption.RolledWeaponLevel/StoreWeaponOffer.WeaponLevel -
+            // both Choose-Weapon/Chest and Store offers roll off the same LevelUpConfig.
+            // WeaponOfferCurve (see that field's own comment), so both can show a level > 0 here.
+            // WithLevelSuffix no-ops whenever the roll came back at 0 (e.g. early in a run).
             WeaponName = StringUtility.WithLevelSuffix(baseName, weaponLevel),
             Damage = weaponData.Damage.AsFloat,
             FireRate = weaponData.FireRate.AsFloat,

@@ -287,6 +287,14 @@ namespace Quantum
 
                 if (f.Unsafe.TryGetPointer<Enemy>(target, out var enemy) == true)
                 {
+                    // Killing-blow kill count - only owner has CharacterStats when it's a player
+                    // (an enemy-on-enemy or hazard kill has no wallet to credit, same guard shape
+                    // as Coins/RiftShards below).
+                    if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var killerStats) == true)
+                    {
+                        killerStats->MonstersKilled++;
+                    }
+
                     EnemyDataAsset data = f.FindAsset(enemy->EnemyData);
 
                     if (data.Tier == EnemyTier.Filler || data.Tier == EnemyTier.Normal|| data.Tier == EnemyTier.Heavy|| data.Tier == EnemyTier.Specialist)

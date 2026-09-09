@@ -145,72 +145,72 @@ MonoBehaviour:
     StartingPerkRolls:
     - RawValue: 13107
   - Minute: 1
-    WeaponLevel: 0
+    WeaponLevel: 1
     StartingPerkRolls:
     - RawValue: 17039
     - RawValue: 3277
   - Minute: 2
-    WeaponLevel: 1
+    WeaponLevel: 2
     StartingPerkRolls:
     - RawValue: 21627
     - RawValue: 6554
   - Minute: 3
-    WeaponLevel: 1
+    WeaponLevel: 3
     StartingPerkRolls:
     - RawValue: 25559
     - RawValue: 9830
   - Minute: 4
-    WeaponLevel: 1
+    WeaponLevel: 4
     StartingPerkRolls:
     - RawValue: 29491
     - RawValue: 13107
   - Minute: 5
-    WeaponLevel: 1
+    WeaponLevel: 5
     StartingPerkRolls:
     - RawValue: 32768
     - RawValue: 16384
     - RawValue: 3277
   - Minute: 6
-    WeaponLevel: 2
+    WeaponLevel: 6
     StartingPerkRolls:
     - RawValue: 36045
     - RawValue: 19661
     - RawValue: 6554
   - Minute: 7
-    WeaponLevel: 2
+    WeaponLevel: 7
     StartingPerkRolls:
     - RawValue: 39322
     - RawValue: 22938
     - RawValue: 9830
   - Minute: 8
-    WeaponLevel: 2
+    WeaponLevel: 8
     StartingPerkRolls:
     - RawValue: 42598
     - RawValue: 26214
     - RawValue: 13107
   - Minute: 9
-    WeaponLevel: 2
+    WeaponLevel: 9
     StartingPerkRolls:
     - RawValue: 45220
     - RawValue: 29491
     - RawValue: 16384
     - RawValue: 3277
   - Minute: 10
-    WeaponLevel: 3
+    WeaponLevel: 10
     StartingPerkRolls:
     - RawValue: 47841
     - RawValue: 32768
     - RawValue: 19661
     - RawValue: 6554
   - Minute: 11
-    WeaponLevel: 3
+    WeaponLevel: 11
     StartingPerkRolls:
     - RawValue: 49807
     - RawValue: 36045
     - RawValue: 22938
     - RawValue: 9830
   - Minute: 12
-    WeaponLevel: 3
+    WeaponLevel: 12
     StartingPerkRolls:
     - RawValue: 52429
     - RawValue: 39322

@@ -20,7 +20,7 @@ MonoBehaviour:
   FireType: 1
   Damage:
     RawValue: 1966080
-  Element: 0
+  Element: 1
   CriticalChance:
     RawValue: 13107
   CriticalDamageBonus:

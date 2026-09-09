@@ -2533,76 +2533,78 @@ namespace Quantum {
   }
   [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct CharacterStats : Quantum.IComponent {
-    public const Int32 SIZE = 512;
+    public const Int32 SIZE = 520;
     public const Int32 ALIGNMENT = 8;
-    [FieldOffset(24)]
+    [FieldOffset(32)]
     public AssetRef<CharacterData> CharacterData;
-    [FieldOffset(128)]
-    public FP DamageMultiplier;
-    [FieldOffset(488)]
-    public FP WeaponDamageMultiplier;
-    [FieldOffset(472)]
-    public FP SkillDamageMultiplier;
-    [FieldOffset(280)]
-    public FP MoveSpeedMultiplier;
-    [FieldOffset(112)]
-    public FP CriticalChance;
-    [FieldOffset(120)]
-    public FP CriticalDamageMultiplier;
-    [FieldOffset(184)]
-    public FP ElementalChance;
-    [FieldOffset(48)]
-    public FP AttackSpeedMultiplier;
-    [FieldOffset(376)]
-    public FP ReloadSpeedMultiplier;
-    [FieldOffset(368)]
-    public FP ProjectileSpeedMultiplier;
-    [FieldOffset(40)]
-    public FP AreaRadiusMultiplier;
-    [FieldOffset(288)]
-    public FP NearDamageMultiplier;
-    [FieldOffset(208)]
-    public FP FarDamageMultiplier;
-    [FieldOffset(176)]
-    public FP DashCooldownMultiplier;
-    [FieldOffset(464)]
-    public FP SkillCooldownMultiplier;
-    [FieldOffset(480)]
-    public FP SkillDurationMultiplier;
-    [FieldOffset(224)]
-    public FP KnockbackMultiplier;
-    [FieldOffset(240)]
-    public FP LifeSteal;
-    [FieldOffset(320)]
-    public FP OutgoingStatusDurationMultiplier;
-    [FieldOffset(264)]
-    public FP MaxHealthMultiplier;
-    [FieldOffset(272)]
-    public FP MaxShieldMultiplier;
-    [FieldOffset(56)]
-    public FP BonusMaxShield;
     [FieldOffset(136)]
-    public FP DamageReduction;
-    [FieldOffset(144)]
-    public FP DamageTakenMultiplier;
-    [FieldOffset(232)]
-    public FP KnockbackTakenMultiplier;
-    [FieldOffset(216)]
-    public FP HealingReceivedMultiplier;
-    [FieldOffset(344)]
-    public FP PickupRangeMultiplier;
-    [FieldOffset(248)]
-    public FP Luck;
-    [FieldOffset(200)]
-    public FP ExperienceGainMultiplier;
+    public FP DamageMultiplier;
+    [FieldOffset(496)]
+    public FP WeaponDamageMultiplier;
+    [FieldOffset(480)]
+    public FP SkillDamageMultiplier;
+    [FieldOffset(288)]
+    public FP MoveSpeedMultiplier;
+    [FieldOffset(120)]
+    public FP CriticalChance;
+    [FieldOffset(128)]
+    public FP CriticalDamageMultiplier;
+    [FieldOffset(192)]
+    public FP ElementalChance;
+    [FieldOffset(56)]
+    public FP AttackSpeedMultiplier;
     [FieldOffset(384)]
-    public FP RiftShardGainMultiplier;
-    [FieldOffset(80)]
-    public FP CoinGainMultiplier;
-    [FieldOffset(96)]
-    public FP Coins;
+    public FP ReloadSpeedMultiplier;
+    [FieldOffset(376)]
+    public FP ProjectileSpeedMultiplier;
+    [FieldOffset(48)]
+    public FP AreaRadiusMultiplier;
+    [FieldOffset(296)]
+    public FP NearDamageMultiplier;
+    [FieldOffset(216)]
+    public FP FarDamageMultiplier;
+    [FieldOffset(184)]
+    public FP DashCooldownMultiplier;
+    [FieldOffset(472)]
+    public FP SkillCooldownMultiplier;
+    [FieldOffset(488)]
+    public FP SkillDurationMultiplier;
+    [FieldOffset(232)]
+    public FP KnockbackMultiplier;
+    [FieldOffset(248)]
+    public FP LifeSteal;
+    [FieldOffset(328)]
+    public FP OutgoingStatusDurationMultiplier;
+    [FieldOffset(272)]
+    public FP MaxHealthMultiplier;
+    [FieldOffset(280)]
+    public FP MaxShieldMultiplier;
+    [FieldOffset(64)]
+    public FP BonusMaxShield;
+    [FieldOffset(144)]
+    public FP DamageReduction;
+    [FieldOffset(152)]
+    public FP DamageTakenMultiplier;
+    [FieldOffset(240)]
+    public FP KnockbackTakenMultiplier;
+    [FieldOffset(224)]
+    public FP HealingReceivedMultiplier;
+    [FieldOffset(352)]
+    public FP PickupRangeMultiplier;
+    [FieldOffset(256)]
+    public FP Luck;
+    [FieldOffset(208)]
+    public FP ExperienceGainMultiplier;
     [FieldOffset(392)]
+    public FP RiftShardGainMultiplier;
+    [FieldOffset(88)]
+    public FP CoinGainMultiplier;
+    [FieldOffset(104)]
+    public FP Coins;
+    [FieldOffset(400)]
     public FP RiftShards;
+    [FieldOffset(20)]
+    public Int32 MonstersKilled;
     [FieldOffset(9)]
     public Byte WeaponTalentLevel;
     [FieldOffset(8)]
@@ -2613,75 +2615,75 @@ namespace Quantum {
     public Byte SelfReviveCharges;
     [FieldOffset(0)]
     public Byte BurnOnHitStacks;
-    [FieldOffset(256)]
+    [FieldOffset(264)]
     public FP MagazineSizeBonus;
     [FieldOffset(16)]
     public Int32 MagazineSizeOverride;
     [FieldOffset(12)]
     public Int32 LongRangePierceBonus;
-    [FieldOffset(496)]
-    public FP WeaponStaggerChance;
     [FieldOffset(504)]
+    public FP WeaponStaggerChance;
+    [FieldOffset(512)]
     public FP WeaponStaggerDuration;
-    [FieldOffset(296)]
-    public FP NearKillMoveSpeedBonus;
     [FieldOffset(304)]
+    public FP NearKillMoveSpeedBonus;
+    [FieldOffset(312)]
     public FP NearKillMoveSpeedDuration;
-    [FieldOffset(456)]
+    [FieldOffset(464)]
     public FP SkillCenterFocusBonus;
     [FieldOffset(2)]
     public Byte CritFocusThreshold;
     [FieldOffset(1)]
     public Byte CritFocusProgress;
-    [FieldOffset(104)]
+    [FieldOffset(112)]
     public FP CritFocusCooldownReduction;
-    [FieldOffset(192)]
+    [FieldOffset(200)]
     public FP EmergencyDashHealthCost;
-    [FieldOffset(72)]
+    [FieldOffset(80)]
     public FP CoinDamagePerHundred;
-    [FieldOffset(64)]
+    [FieldOffset(72)]
     public FP CoinDamageMaxBonus;
-    [FieldOffset(160)]
-    public FP DangerPayHealthThreshold;
-    [FieldOffset(152)]
-    public FP DangerPayDamageBonus;
     [FieldOffset(168)]
+    public FP DangerPayHealthThreshold;
+    [FieldOffset(160)]
+    public FP DangerPayDamageBonus;
+    [FieldOffset(176)]
     public FP DangerPayMoveSpeedBonus;
-    [FieldOffset(312)]
+    [FieldOffset(320)]
     public FP NoSafetyNetDamageBonus;
-    [FieldOffset(352)]
-    public FP PressureCookerDamagePerSecond;
     [FieldOffset(360)]
+    public FP PressureCookerDamagePerSecond;
+    [FieldOffset(368)]
     public FP PressureCookerMaxBonus;
-    [FieldOffset(400)]
+    [FieldOffset(408)]
     public FP SafeTimeSeconds;
-    [FieldOffset(328)]
-    public FP OverkillConversion;
     [FieldOffset(336)]
+    public FP OverkillConversion;
+    [FieldOffset(344)]
     public FP OverkillRadius;
     [FieldOffset(6)]
     public Byte ScavengerRequiredPickups;
-    [FieldOffset(432)]
+    [FieldOffset(440)]
     public FP ScavengerWindow;
-    [FieldOffset(408)]
-    public FP ScavengerBuffDuration;
-    [FieldOffset(424)]
-    public FP ScavengerMoveSpeedBonus;
     [FieldOffset(416)]
+    public FP ScavengerBuffDuration;
+    [FieldOffset(432)]
+    public FP ScavengerMoveSpeedBonus;
+    [FieldOffset(424)]
     public FP ScavengerFireRateBonus;
     [FieldOffset(5)]
     public Byte ScavengerPickupCount;
-    [FieldOffset(440)]
-    public FP ScavengerWindowRemaining;
-    [FieldOffset(88)]
-    public FP CoinLossPercentOnHpDamage;
     [FieldOffset(448)]
+    public FP ScavengerWindowRemaining;
+    [FieldOffset(96)]
+    public FP CoinLossPercentOnHpDamage;
+    [FieldOffset(456)]
     public FP SecondWindHealPercent;
     [FieldOffset(3)]
     public Byte DashChargeHardCap;
-    [FieldOffset(20)]
+    [FieldOffset(24)]
     public QBoolean AccessoryBlockResetsDash;
-    [FieldOffset(32)]
+    [FieldOffset(40)]
     public FP AccessoryBlockSkillCooldownFraction;
     public override readonly Int32 GetHashCode() {
       unchecked { 
@@ -2720,6 +2722,7 @@ namespace Quantum {
         hash = hash * 31 + CoinGainMultiplier.GetHashCode();
         hash = hash * 31 + Coins.GetHashCode();
         hash = hash * 31 + RiftShards.GetHashCode();
+        hash = hash * 31 + MonstersKilled.GetHashCode();
         hash = hash * 31 + WeaponTalentLevel.GetHashCode();
         hash = hash * 31 + ShopWeaponOfferCount.GetHashCode();
         hash = hash * 31 + RerollQuantity.GetHashCode();
@@ -2777,6 +2780,7 @@ namespace Quantum {
         serializer.Stream.Serialize(&p->WeaponTalentLevel);
         serializer.Stream.Serialize(&p->LongRangePierceBonus);
         serializer.Stream.Serialize(&p->MagazineSizeOverride);
+        serializer.Stream.Serialize(&p->MonstersKilled);
         QBoolean.Serialize(&p->AccessoryBlockResetsDash, serializer);
         AssetRef.Serialize(&p->CharacterData, serializer);
         FP.Serialize(&p->AccessoryBlockSkillCooldownFraction, serializer);

@@ -14,10 +14,11 @@ using UnityEngine.UI;
 // lookup FlyingCurrencyManager/PurchasableCardUi now use for the same currencies.
 //
 // Experience stays a single shared Frame.Global total, shown with no presence check needed (same
-// as before). Coin/RiftShard are now PER-PLAYER wallets (CharacterStats.Coins/RiftShards, see
-// docs/breathing-poi.md) - this widget self-binds to the local player's own entity for those two,
-// same MyLocalPlayer.Instance.BindToSlot pattern SkillCooldownUiWidget/ShieldUiWidget already use,
-// so a Coin/RiftShard instance shows THIS local player's own balance, not a shared party total.
+// as before). Coin/RiftShard/MonsterKills are all PER-PLAYER (CharacterStats.Coins/RiftShards/
+// MonstersKilled, see docs/breathing-poi.md) - this widget self-binds to the local player's own
+// entity for those three, same MyLocalPlayer.Instance.BindToSlot pattern SkillCooldownUiWidget/
+// ShieldUiWidget already use, so an instance shows THIS local player's own value, not a shared
+// party total.
 public class CurrencyUiWidget : QuantumGlobalMonoBehaviour
 {
     [SerializeField] private CurrencyType currency;
@@ -120,6 +121,16 @@ public class CurrencyUiWidget : QuantumGlobalMonoBehaviour
                 }
 
                 total = shardStats->RiftShards;
+                return true;
+
+            case CurrencyType.MonsterKills:
+                if (frame.Unsafe.TryGetPointer<CharacterStats>(entity, out var killStats) == false)
+                {
+                    total = FP._0;
+                    return false;
+                }
+
+                total = killStats->MonstersKilled;
                 return true;
 
             default:

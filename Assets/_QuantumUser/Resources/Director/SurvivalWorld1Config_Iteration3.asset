@@ -276,7 +276,7 @@ MonoBehaviour:
   - Name: R1-F Flee Elite (105-130s)
     Kind: 0
     Duration:
-      RawValue: 65536
+      RawValue: 1638400
     GracePeriodDuration:
       RawValue: 0
     BudgetPerPulse:
@@ -376,7 +376,7 @@ MonoBehaviour:
     Duration:
       RawValue: 3932160
     GracePeriodDuration:
-      RawValue: 0
+      RawValue: 1966080
     BudgetPerPulse:
       RawValue: 0
     PulseInterval:

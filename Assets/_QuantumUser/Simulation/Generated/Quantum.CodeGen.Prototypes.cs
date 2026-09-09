@@ -632,6 +632,7 @@ namespace Quantum.Prototypes {
     public FP CoinGainMultiplier;
     public FP Coins;
     public FP RiftShards;
+    public Int32 MonstersKilled;
     public Byte WeaponTalentLevel;
     public Byte ShopWeaponOfferCount;
     public Byte RerollQuantity;
@@ -713,6 +714,7 @@ namespace Quantum.Prototypes {
         result.CoinGainMultiplier = this.CoinGainMultiplier;
         result.Coins = this.Coins;
         result.RiftShards = this.RiftShards;
+        result.MonstersKilled = this.MonstersKilled;
         result.WeaponTalentLevel = this.WeaponTalentLevel;
         result.ShopWeaponOfferCount = this.ShopWeaponOfferCount;
         result.RerollQuantity = this.RerollQuantity;

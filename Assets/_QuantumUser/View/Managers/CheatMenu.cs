@@ -35,6 +35,15 @@ namespace QuantumUser.View
             public long Id;
         }
 
+        // Fully hides the overlay - not just closing the window, the small "Cheats" toggle button
+        // too - so OnGUI draws nothing at all (e.g. for a clean screenshot/recording), toggled by
+        // HideKey without needing to touch `enabled` (which would also stop QUpdate below from
+        // running and re-detecting the key). Time.timeScale enforcement further down deliberately
+        // stays OUTSIDE this gate - an active override shouldn't silently reset back to 1x just
+        // because the overlay is hidden.
+        private const KeyCode HideKey = KeyCode.F1;
+        private bool _hidden;
+
         private bool _open;
         private bool _overrideTimeScale;
         private bool _wasOverriding;
@@ -55,8 +64,14 @@ namespace QuantumUser.View
         private GUIStyle _labelStyle;
         private GUIStyle _toggleStyle;
 
-        // QuantumGlobalMonoBehaviour requires this; the overlay does its work in OnGUI instead.
-        public override void QUpdate(QuantumGame game) { }
+        // QuantumGlobalMonoBehaviour requires this; the overlay does its work in OnGUI instead - only
+        // the hide-toggle hotkey is polled here (never redeclare Update()/LateUpdate() on a
+        // QuantumGlobalMonoBehaviour subclass, see that base class's own comment).
+        public override void QUpdate(QuantumGame game)
+        {
+            if (UnityEngine.Input.GetKeyDown(HideKey))
+                _hidden = !_hidden;
+        }
 
         private void EnsureStyles()
         {
@@ -105,6 +120,9 @@ namespace QuantumUser.View
             else if (_wasOverriding)
                 Time.timeScale = 1f;
             _wasOverriding = _overrideTimeScale;
+
+            if (_hidden)
+                return; // fully hidden - not even the small "Cheats" toggle button draws
 
             if (!_open)
             {

@@ -40,6 +40,8 @@ public class FlyingCurrencyWidget : MonoBehaviour
     private Func<Transform> _resolveTarget;
     private Action<FlyingCurrencyWidget> _onArrived;
     private Vector3 _scatterVelocity;
+    private Vector3 _lastKnownTargetPosition;
+    private bool _hasKnownTargetPosition;
     private float _elapsed;
     private bool _isPlaying;
 
@@ -53,6 +55,7 @@ public class FlyingCurrencyWidget : MonoBehaviour
         _onArrived = onArrived;
         _elapsed = 0f;
         _isPlaying = true;
+        _hasKnownTargetPosition = false;
 
         // Ground plane is XZ (see EnemyMovementUtility.RandomPositionInRing) - scatter sideways,
         // not vertically, so it reads as a pop on the top-down plane instead of a hop in place.
@@ -75,15 +78,28 @@ public class FlyingCurrencyWidget : MonoBehaviour
         }
 
         Transform target = _resolveTarget?.Invoke();
+        Vector3 targetPosition;
 
-        if (target == null)
+        if (target != null)
         {
+            targetPosition = target.position + new Vector3(0f, targetHeightOffset, 0f);
+            _lastKnownTargetPosition = targetPosition;
+            _hasKnownTargetPosition = true;
+        }
+        else if (_hasKnownTargetPosition)
+        {
+            // Collector's view went away mid-flight (death/respawn/re-init) - keep heading toward
+            // where it was last seen instead of freezing in place until maxLifetime silently ends
+            // the flight with no visible landing.
+            targetPosition = _lastKnownTargetPosition;
+        }
+        else
+        {
+            // Never resolved a target at all yet - nothing to home toward, just wait out the safety cutoff.
             if (_elapsed >= maxLifetime)
                 Finish();
             return;
         }
-
-        Vector3 targetPosition = target.position + new Vector3(0f, targetHeightOffset, 0f);
 
         float lifetimeFraction = Mathf.Clamp01(_elapsed / maxLifetime);
         float effectiveHomingSpeed = homingSpeed * Mathf.Lerp(1f, lateAggressionMultiplier, lifetimeFraction);

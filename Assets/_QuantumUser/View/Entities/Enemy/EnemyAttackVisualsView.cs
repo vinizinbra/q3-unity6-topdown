@@ -101,12 +101,31 @@ namespace Quantum
         public override void Awake()
         {
             base.Awake();
+            QuantumEvent.Subscribe<EventEntityDied>(this, OnEntityDied);
         }
 
         public override void OnDestroy()
         {
             base.OnDestroy();
             QuantumEvent.UnsubscribeListener(this);
+        }
+
+        // Fires the instant the enemy's health hits zero, same signal EnemyView uses for its
+        // health-bar widget. Needed because most enemies (Filler/Normal/Heavy/Specialist) are
+        // destroyed the same tick they die (DamageUtility.ApplyDamage) without ever passing
+        // through an observable Enemy.Phase == Dead sample - QUpdate's windup-edge detection
+        // never sees an exit-from-anticipating edge for them, so without this the icon would
+        // only disappear once the pooled view itself is torn down (DeInitialize), which can lag
+        // well behind the actual death. Only Elite/Boss enemies linger as an observable Dead
+        // phase - this covers every tier uniformly instead of relying on that difference.
+        // Bypasses RequestClearAnticipationIcon's minimum-duration floor on purpose - that floor
+        // exists for readability during a live windup, not to keep an icon hovering over a corpse.
+        private void OnEntityDied(EventEntityDied e)
+        {
+            if (e.Target != _entityRef)
+                return;
+
+            ClearAnticipationIcon();
         }
 
         public override void DeInitialize(QuantumGame game)

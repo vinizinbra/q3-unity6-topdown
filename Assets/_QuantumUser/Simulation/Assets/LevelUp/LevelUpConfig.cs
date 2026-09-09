@@ -88,21 +88,23 @@ namespace Quantum
         // INDEPENDENT Bernoulli chance for that slot - the number of successes is the rolled perk
         // count (see RollWeaponOfferPerkCount). Deliberately NOT folded into the shared BalanceConfig
         // asset - see WeaponOfferTimeAnchor's own comment above.
+        // WeaponLevel is deliberately == Minute (a flat 1:1 mapping) - StartingPerkRolls pacing is
+        // unchanged from the original curve, only the level-per-minute mapping was straightened out.
         public WeaponOfferTimeAnchor[] WeaponOfferCurve =
         {
             new() { Minute = 0, WeaponLevel = 0, StartingPerkRolls = new[] { FP._0_20 } },
-            new() { Minute = 1, WeaponLevel = 0, StartingPerkRolls = new[] { FP.FromString("0.26"), FP.FromString("0.05") } },
-            new() { Minute = 2, WeaponLevel = 1, StartingPerkRolls = new[] { FP.FromString("0.33"), FP.FromString("0.10") } },
-            new() { Minute = 3, WeaponLevel = 1, StartingPerkRolls = new[] { FP.FromString("0.39"), FP.FromString("0.15") } },
-            new() { Minute = 4, WeaponLevel = 1, StartingPerkRolls = new[] { FP.FromString("0.45"), FP._0_20 } },
-            new() { Minute = 5, WeaponLevel = 1, StartingPerkRolls = new[] { FP._0_50, FP.FromString("0.25"), FP.FromString("0.05") } },
-            new() { Minute = 6, WeaponLevel = 2, StartingPerkRolls = new[] { FP.FromString("0.55"), FP.FromString("0.30"), FP.FromString("0.10") } },
-            new() { Minute = 7, WeaponLevel = 2, StartingPerkRolls = new[] { FP.FromString("0.60"), FP.FromString("0.35"), FP.FromString("0.15") } },
-            new() { Minute = 8, WeaponLevel = 2, StartingPerkRolls = new[] { FP.FromString("0.65"), FP.FromString("0.40"), FP._0_20 } },
-            new() { Minute = 9, WeaponLevel = 2, StartingPerkRolls = new[] { FP.FromString("0.69"), FP.FromString("0.45"), FP.FromString("0.25"), FP.FromString("0.05") } },
-            new() { Minute = 10, WeaponLevel = 3, StartingPerkRolls = new[] { FP.FromString("0.73"), FP._0_50, FP.FromString("0.30"), FP.FromString("0.10") } },
-            new() { Minute = 11, WeaponLevel = 3, StartingPerkRolls = new[] { FP.FromString("0.76"), FP.FromString("0.55"), FP.FromString("0.35"), FP.FromString("0.15") } },
-            new() { Minute = 12, WeaponLevel = 3, StartingPerkRolls = new[] { FP.FromString("0.80"), FP.FromString("0.60"), FP.FromString("0.40"), FP._0_20 } },
+            new() { Minute = 1, WeaponLevel = 1, StartingPerkRolls = new[] { FP.FromString("0.26"), FP.FromString("0.05") } },
+            new() { Minute = 2, WeaponLevel = 2, StartingPerkRolls = new[] { FP.FromString("0.33"), FP.FromString("0.10") } },
+            new() { Minute = 3, WeaponLevel = 3, StartingPerkRolls = new[] { FP.FromString("0.39"), FP.FromString("0.15") } },
+            new() { Minute = 4, WeaponLevel = 4, StartingPerkRolls = new[] { FP.FromString("0.45"), FP._0_20 } },
+            new() { Minute = 5, WeaponLevel = 5, StartingPerkRolls = new[] { FP._0_50, FP.FromString("0.25"), FP.FromString("0.05") } },
+            new() { Minute = 6, WeaponLevel = 6, StartingPerkRolls = new[] { FP.FromString("0.55"), FP.FromString("0.30"), FP.FromString("0.10") } },
+            new() { Minute = 7, WeaponLevel = 7, StartingPerkRolls = new[] { FP.FromString("0.60"), FP.FromString("0.35"), FP.FromString("0.15") } },
+            new() { Minute = 8, WeaponLevel = 8, StartingPerkRolls = new[] { FP.FromString("0.65"), FP.FromString("0.40"), FP._0_20 } },
+            new() { Minute = 9, WeaponLevel = 9, StartingPerkRolls = new[] { FP.FromString("0.69"), FP.FromString("0.45"), FP.FromString("0.25"), FP.FromString("0.05") } },
+            new() { Minute = 10, WeaponLevel = 10, StartingPerkRolls = new[] { FP.FromString("0.73"), FP._0_50, FP.FromString("0.30"), FP.FromString("0.10") } },
+            new() { Minute = 11, WeaponLevel = 11, StartingPerkRolls = new[] { FP.FromString("0.76"), FP.FromString("0.55"), FP.FromString("0.35"), FP.FromString("0.15") } },
+            new() { Minute = 12, WeaponLevel = 12, StartingPerkRolls = new[] { FP.FromString("0.80"), FP.FromString("0.60"), FP.FromString("0.40"), FP._0_20 } },
         };
 
         // The damage-bonus-per-level a freshly-rolled RolledWeaponLevel > 0 is worth (see

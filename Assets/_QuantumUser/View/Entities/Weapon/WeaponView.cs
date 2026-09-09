@@ -100,8 +100,23 @@ namespace Quantum
         // current rotation (billboard + aim + the facingFlip 180° turn in ApplyAim) and scale
         // (always positive/uniform now), so the grip tracks correctly however the weapon is
         // currently facing without WeaponHandGripView needing to know anything about that.
-        public Vector3 RightHandGripPosition => transform.TransformPoint(anim.rightHandGrip);
-        public Vector3 LeftHandGripPosition => transform.TransformPoint(anim.leftHandGrip);
+        //
+        // The Z component is the one exception: per its tooltip on WeaponAnimationParams, it's
+        // purely a camera-depth sort offset ("hand renders in front of the gun sprite"), not an
+        // in-plane geometric offset that should mirror with the weapon. But facingFlip's 180°
+        // turn about local X negates local Y AND Z alike, so left un-compensated the hand's sort
+        // offset flips sign along with the weapon and the hand renders on the wrong side of the
+        // gun sprite whenever the character is flipped. Pre-negating Z here undoes exactly that
+        // one component of facingFlip's effect, leaving the authored depth sort invariant to
+        // facing while Y still mirrors correctly with the rest of the grip.
+        public Vector3 RightHandGripPosition => transform.TransformPoint(FlipInvariantZ(anim.rightHandGrip));
+        public Vector3 LeftHandGripPosition => transform.TransformPoint(FlipInvariantZ(anim.leftHandGrip));
+
+        private Vector3 FlipInvariantZ(Vector3 grip)
+        {
+            if (lastFlipped) grip.z = -grip.z;
+            return grip;
+        }
 
         // The rest of the hand pose WeaponHandGripView applies alongside the position above -
         // authored per weapon with the grips themselves (a heavy weapon wants a different hand

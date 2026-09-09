@@ -799,13 +799,13 @@ TextureImporter:
       name: RR_PlayerCard
       rect:
         serializedVersion: 2
-        x: 22
-        y: 708
-        width: 258
-        height: 145
+        x: 1
+        y: 727
+        width: 319
+        height: 100
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
-      border: {x: 129, y: 0, z: 0, w: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
@@ -1323,6 +1323,50 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: RR_DiagonalBar
+      rect:
+        serializedVersion: 2
+        x: 351
+        y: 698
+        width: 140
+        height: 19
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 20, y: 0, z: 20, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: db33cd9adf33c49a789e25d054962c13
+      internalID: -280236238
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_MinimapBorder
+      rect:
+        serializedVersion: 2
+        x: 133
+        y: 18
+        width: 57
+        height: 59
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 25, y: 25, z: 25, w: 25}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 96eaa24593f8b4095b525fc7bab16d05
+      internalID: 587510174
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
@@ -1350,6 +1394,7 @@ TextureImporter:
       RR_CircleOutline: -1046452649
       RR_Corner: -32581190
       RR_CornerBottomRight: 1985926313
+      RR_DiagonalBar: -280236238
       RR_Diamond32: -1132049541
       RR_GameTitle: 366658403
       RR_Hex16_Border: -1340261885
@@ -1384,6 +1429,7 @@ TextureImporter:
       RR_HexInGameTop: 1778298947
       RR_MenuButton: -317327699
       RR_MenuButtonBottom: 700219559
+      RR_MinimapBorder: 587510174
       RR_PlayButton: 2116157734
       RR_PlayerCard: -991539854
       RR_PopupBg: -731856986

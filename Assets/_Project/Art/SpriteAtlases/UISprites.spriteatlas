@@ -260,6 +260,7 @@ SpriteAtlas:
     - e96a2976d9cdd40e091a76f237966887: 1822548951
     - e96a2976d9cdd40e091a76f237966887: 700219559
     - e96a2976d9cdd40e091a76f237966887: -568712116
+    - e96a2976d9cdd40e091a76f237966887: -280236238
     - e96a2976d9cdd40e091a76f237966887: -167839533
     - e96a2976d9cdd40e091a76f237966887: -343386884
     - e96a2976d9cdd40e091a76f237966887: 1985926313
@@ -267,6 +268,7 @@ SpriteAtlas:
     - e96a2976d9cdd40e091a76f237966887: 1198964870
     - e96a2976d9cdd40e091a76f237966887: -1066619883
     - e96a2976d9cdd40e091a76f237966887: -1763799934
+    - e96a2976d9cdd40e091a76f237966887: 587510174
     - e96a2976d9cdd40e091a76f237966887: -548207295
     - e96a2976d9cdd40e091a76f237966887: 1372283331
     - e96a2976d9cdd40e091a76f237966887: -1495585377
@@ -672,6 +674,7 @@ SpriteAtlas:
   - {fileID: 1822548951, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
   - {fileID: 700219559, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
   - {fileID: -568712116, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
+  - {fileID: -280236238, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
   - {fileID: -167839533, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
   - {fileID: -343386884, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
   - {fileID: 1985926313, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
@@ -679,6 +682,7 @@ SpriteAtlas:
   - {fileID: 1198964870, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
   - {fileID: -1066619883, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
   - {fileID: -1763799934, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
+  - {fileID: 587510174, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
   - {fileID: -548207295, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
   - {fileID: 1372283331, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
   - {fileID: -1495585377, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
@@ -1083,6 +1087,7 @@ SpriteAtlas:
   - RR_Hex96_Top
   - RR_MenuButtonBottom
   - RR_CardRarityEpic
+  - RR_DiagonalBar
   - RR_CardRarityRare
   - RR_Hex32GreenDark
   - RR_CornerBottomRight
@@ -1090,6 +1095,7 @@ SpriteAtlas:
   - RR_CardRarityLegendary
   - RR_Hex64_Top
   - RR_Hex64_OutlineShadowInOut
+  - RR_MinimapBorder
   - RR_UpgradeTitle1
   - RR_UpgradeTitle2
   - RR_UpgradeTitle3

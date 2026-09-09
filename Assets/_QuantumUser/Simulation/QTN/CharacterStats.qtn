@@ -94,6 +94,13 @@ component CharacterStats
     FP Coins;
     FP RiftShards;
 
+    // Killing-blow counter for THIS player's own kills - incremented in DamageUtility.ApplyDamage's
+    // Enemy death branch, keyed off the killing hit's owner the same way Coins/RiftShards are, so
+    // only a hit whose owner actually has this component (a player) counts. Int32 rather than Byte
+    // (unlike WeaponTalentLevel/RerollQuantity) since a continuous-spawn run can comfortably exceed
+    // 255 kills. Per-run only, never seeded from RuntimePlayer.Talents.
+    Int32 MonstersKilled;
+
     // Choose-Weapon talent level - increments once each time this entity actually picks a
     // LevelUpCategory.ChooseWeapon option (see WeaponChoiceUtility.Grant), independent of overall
     // player level. Pure bookkeeping now - a rolled weapon offer's perk count/starting Level come

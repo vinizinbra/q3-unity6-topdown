@@ -12,10 +12,18 @@
 // would then have to be kept in sync by hand. Its HUD readout is NOT CurrencyUiWidget's job -
 // LuxHudWidget already owns that (stacks against the free-cast threshold, not a running total), so
 // CurrencyUiWidget.TryResolveTotal deliberately has no Scrap case.
+//
+// MonsterKills is the opposite shape - not a pickup at all (no orb, no FlyingCurrencyManager/
+// HitFeedback involvement), just this player's own CharacterStats.MonstersKilled running total
+// (see CharacterStats.qtn/DamageUtility.ApplyDamage's kill branch). Joins this enum purely so its
+// HUD readout reuses CurrencyUiWidget's existing per-player-wallet polling/bind/punch plumbing
+// instead of a near-duplicate widget class - CurrencyUiWidget.TryResolveTotal DOES have a case for
+// it, unlike Scrap.
 public enum CurrencyType
 {
     Experience,
     Coin,
     RiftShard,
-    Scrap
+    Scrap,
+    MonsterKills
 }
