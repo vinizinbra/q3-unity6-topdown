@@ -34,7 +34,7 @@ namespace QuantumUser.View.Util
         // Exposed as a toggle via SROptions (see LogHelper.SROptions.cs) so it can be flipped
         // without a recompile while profiling. Has no effect on Release builds, which already
         // strip Log/Warn (and their string formatting) entirely via [Conditional].
-        public static bool Disabled;
+        public static bool Disabled = true;
 
         [Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
         public static void Log(string tag, string message, Object context = null)

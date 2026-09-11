@@ -67,8 +67,11 @@ public class GameManager : MonoBehaviour
     [Button]
     public void PlayOffline()
     {
+        // The gameplay scene is loaded automatically by SessionRunner.StartAsync via the map's
+        // own Scene reference (AutoLoadSceneFromMap) - same as the online StartRunner path -
+        // so there's no manual SceneManager.LoadSceneAsync call needed here.
         isPlayingOffline = true;
-        SceneManager.LoadSceneAsync("Scenes/HeroRoyaleGameplayNewScene", LoadSceneMode.Additive);
+        MatchMakingConfig.Instance.StartOfflineRunner();
     }
 
     [Button]

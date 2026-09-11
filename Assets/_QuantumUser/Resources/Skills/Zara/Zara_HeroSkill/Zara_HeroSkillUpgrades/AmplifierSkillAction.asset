@@ -19,16 +19,16 @@ MonoBehaviour:
   Icon: {fileID: -1095911109, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
   DisplayName: Amplifier
   RankDescriptions:
-  - 'Totem Damage Beats deal <color=#FD3971>30%</color> more damage.'
-  - 'Totem Damage Beats deal <color=#FD3971>60%</color> more damage and knock enemies back.'
-  - 'Totem Damage Beats deal double damage, and every third one Stuns enemies.'
+  - "Damage Beats deal <color=#FD3971>+30%</color> Damage."
+  - "Damage bonus increases to <color=#FD3971>+60%</color>. Damage Beats also Knockback small enemies."
+  - "Damage bonus increases to <color=#FD3971>+100%</color>. Every third Damage Beat Stuns enemies."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Totem Damage Beats deal more damage.
+  Description: "Totem Damage Beats deal more damage."
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

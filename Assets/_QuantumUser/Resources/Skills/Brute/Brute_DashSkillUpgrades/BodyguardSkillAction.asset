@@ -19,23 +19,16 @@ MonoBehaviour:
   Icon: {fileID: 1060707514, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
   DisplayName: Bodyguard
   RankDescriptions:
-  - Ending a Dash gives you and allies within <color=#FD3971>3m</color> a Free Hit
-    Guard for <color=#FD3971>2.5s</color>, negating the next hit taken.
-  - Ending a Dash gives you and allies within <color=#FD3971>6m</color> a Free Hit
-    Guard for <color=#FD3971>3.5s</color>. Each hit it blocks restores <color=#FD3971>10</color>
-    Shield.
-  - Ending a Dash guards you and allies within <color=#FD3971>8m</color> for <color=#FD3971>3.5s</color>.
-    A blocked hit restores <color=#FD3971>15</color> Shield and bursts a <color=#FD3971>3m</color>
-    knockback.
+  - "After Dashing, Brute and allies within <color=#FD3971>3m</color> gain Free Hit Guard for <color=#FD3971>2.5s</color>. The next damaging hit is completely blocked."
+  - "Radius increases to <color=#FD3971>6m</color> and duration to <color=#FD3971>3.5s</color>. Whenever a Guard blocks a hit, Brute gains <color=#FD3971>10</color> Temporary Shield."
+  - "A block also grants Brute <color=#FD3971>15</color> Shield and releases a <color=#FD3971>3m</color> knockback shockwave around whoever it saved."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 4
   Interval:
     RawValue: 0
   Activated: 1
-  Description: Dash to hand out protection - you and every ally you sweep past get
-    a guard that eats the next hit outright, and at higher ranks it pays you back
-    for the save.
+  Description: "Dash to hand out protection - a guard that blocks the next hit and pays you back in Shield."
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -61,19 +54,19 @@ MonoBehaviour:
     Scale: 0.5
     Alignment: 0
   Radius:
-  - RawValue: 262144
-  - RawValue: 327680
-  - RawValue: 393216
-  GuardDuration:
-  - RawValue: 131072
-  - RawValue: 163840
   - RawValue: 196608
+  - RawValue: 393216
+  - RawValue: 524288
+  GuardDuration:
+  - RawValue: 163840
+  - RawValue: 229376
+  - RawValue: 229376
   ShieldReward:
   - RawValue: 0
   - RawValue: 655360
   - RawValue: 983040
   CooldownPerAlly:
-    RawValue: 655360
+    RawValue: 294912
   ShockwaveRadius:
     RawValue: 196608
   ShockwaveForce:

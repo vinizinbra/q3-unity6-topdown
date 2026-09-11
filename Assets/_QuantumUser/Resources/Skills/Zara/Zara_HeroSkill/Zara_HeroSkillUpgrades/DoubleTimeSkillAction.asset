@@ -19,16 +19,16 @@ MonoBehaviour:
   Icon: {fileID: 27512113, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
   DisplayName: Double Time
   RankDescriptions:
-  - 'Totem Beats occur every <color=#FD3971>0.85s</color>.'
-  - 'Totem Beats occur every <color=#FD3971>0.70s</color>.'
-  - 'Totem Beats occur every <color=#FD3971>0.5s</color>.'
+  - "Beat interval decreases from <color=#FD3971>1s</color> to <color=#FD3971>0.85s</color>."
+  - "Beat interval decreases to <color=#FD3971>0.70s</color>."
+  - "Beat interval decreases to <color=#FD3971>0.50s</color>."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Totem Beats occur more often.
+  Description: "Totem Beats occur more often."
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

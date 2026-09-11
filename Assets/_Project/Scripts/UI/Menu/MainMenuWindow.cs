@@ -33,8 +33,10 @@ public class MainMenuWindow : UiWindow
 
         if (reconnectButton != null)
             reconnectButton.onClick.AddListener(Reconnect);
-       /* quickPlayButton.onClick.AddListener(QuickPlay);
-        practiceButton.onClick.AddListener(Practice);*/
+
+        if (practiceButton != null)
+            practiceButton.onClick.AddListener(Practice);
+       /* quickPlayButton.onClick.AddListener(QuickPlay);*/
     }
 
     private void OnDestroy()
@@ -43,8 +45,10 @@ public class MainMenuWindow : UiWindow
 
         if (reconnectButton != null)
             reconnectButton.onClick.RemoveListener(Reconnect);
-       /* quickPlayButton.onClick.RemoveListener(QuickPlay);
-        practiceButton.onClick.RemoveListener(Practice);*/
+
+        if (practiceButton != null)
+            practiceButton.onClick.RemoveListener(Practice);
+       /* quickPlayButton.onClick.RemoveListener(QuickPlay);*/
     }
 
     public override void Show()

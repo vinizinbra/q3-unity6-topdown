@@ -74,11 +74,9 @@ public class InMatchWindow : UiWindow
     }
 
     public void OnLeaveClicked() {
-      // Deliberately does NOT clear the reconnect information: a co-op run is worth rejoining even
-      // when you left it on purpose (misclick, stepping away), and the offer expires on its own
-      // once PlayerTtl runs out. Only leaving the party LOBBY clears it - see
-      // PartyManager.LeaveParty.
-      MatchMakingConfig.Instance.Client.Disconnect();
+      // Routes through offline vs online correctly - see MatchMakingConfig.LeaveMatch's own
+      // comment (reconnect information is deliberately left alone for the online case).
+      MatchMakingConfig.Instance.LeaveMatch();
     }
 
     public void OnConnected() {

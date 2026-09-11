@@ -87,14 +87,28 @@ namespace Quantum
         [SerializeField, Tooltip("Particle system parented at the muzzle, restarted on every shot (e.g. an Epic Toon FX Muzzleflash prefab).")]
         private ParticleSystem muzzleParticle;
 
+        [Header("Projectile Spawn")]
+        [SerializeField, Tooltip("Empty child at the barrel tip, kept parented to this weapon - where a projectile's visual (and the ghost trail of a shot too fast to ever get a view) leaves from. Author one per weapon. Leave empty to fall back to the muzzle flash's transform, which is unreliable for this: UnparentAndPlay hands it up to the rig socket and only re-syncs it on each shot, so between shots and mid-recoil it sits wherever it last snapped.")]
+        private Transform projectileSpawnPoint;
+
         // Where a projectile's visual should actually leave from - read LIVE by ProjectileView at
-        // spawn instead of the simulation's own Projectile.SpawnPosition, which is only an
-        // approximation ("caster position + a small forward nudge + hand height", see
-        // StatUtility.GetWeaponHoldOffset/ProjectileSpawner.ResolveSpawnOrigin) never anchored to
-        // this weapon's actual authored barrel length. Falls back to this weapon's own root when no
-        // muzzleParticle is assigned, same "leave empty to draw from an approximation" convention
-        // HitscanViewBase.muzzle already uses for hitscan shots.
-        public Transform MuzzleTransform => muzzleParticle != null ? muzzleParticle.transform : transform;
+        // spawn (and by ProjectileGhostTrailManager after the fact) instead of the simulation's own
+        // Projectile.SpawnPosition, which is only an approximation ("caster position + a small
+        // forward nudge + hand height", see StatUtility.GetWeaponHoldOffset/ProjectileSpawner.
+        // ResolveSpawnOrigin) never anchored to this weapon's actual authored barrel length.
+        // Prefers the dedicated projectileSpawnPoint (see its tooltip for why the muzzle flash is
+        // only a fallback); last resort is this weapon's own root, same "leave empty to draw from an
+        // approximation" convention HitscanViewBase.muzzle already uses for hitscan shots.
+        public Transform MuzzleTransform
+        {
+            get
+            {
+                if (projectileSpawnPoint != null)
+                    return projectileSpawnPoint;
+
+                return muzzleParticle != null ? muzzleParticle.transform : transform;
+            }
+        }
 
         // Resolved through this weapon's own transform every call - TransformPoint applies its
         // current rotation (billboard + aim + the facingFlip 180° turn in ApplyAim) and scale

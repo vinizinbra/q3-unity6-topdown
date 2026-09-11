@@ -19,17 +19,16 @@ MonoBehaviour:
   Icon: {fileID: 1506874409, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
   DisplayName: Sound Boost
   RankDescriptions:
-  - 'Support Beats heal <color=#FD3971>2%</color> Max Health and grant <color=#FD3971>+15%</color> Move Speed and <color=#FD3971>+15%</color> Fire Rate.'
-  - 'Support Beats heal <color=#FD3971>2%</color> Max Health, grant <color=#FD3971>+15%</color> Move Speed and Fire Rate, and cut <color=#FD3971>0.5s</color> off allies'' skill cooldown.'
-  - 'Support Beats heal <color=#FD3971>5%</color> Max Health, grant <color=#FD3971>+15%</color> Move Speed and Fire Rate, cut <color=#FD3971>0.5s</color> off cooldowns and <color=#FD3971>+15%</color> damage.'
+  - "Support Beats heal <color=#FD3971>2%</color> Max HP and grant <color=#FD3971>+15%</color> Move Speed and Fire Rate for about <color=#FD3971>2s</color>."
+  - "Support Beats also reduce affected allies' Hero Skill cooldown by <color=#FD3971>0.5s</color>."
+  - "Support Beat healing increases to <color=#FD3971>5%</color> Max HP and grants <color=#FD3971>+15%</color> Damage for <color=#FD3971>2s</color>."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Support Beats push the whole team's tempo - stronger buffs, then Hero
-    Skill cooldown reduction, then an outgoing-damage window.
+  Description: "Support Beats push the team's tempo - stronger buffs, then cooldown reduction, then a damage window."
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

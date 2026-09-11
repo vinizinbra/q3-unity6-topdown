@@ -18,12 +18,12 @@ MonoBehaviour:
       Value: 469056453639286897
   Icon: {fileID: -1378760053, guid: 167fe127f1a734214a64d3f39af97f1f, type: 3}
   DisplayName: Event Horizon
-  Description: Grows Kai's Void Field, slowing enemy projectiles inside it and eventually the enemies themselves.
+  Description: "Grows Kai's Void Field, slowing enemy projectiles inside it and eventually the enemies themselves."
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - 'Void Field reaches <color=#FD3971>4m</color> and slows enemy projectiles inside it by <color=#FD3971>35%</color>.'
-  - 'Void Field reaches <color=#FD3971>5m</color> and slows enemy projectiles by <color=#FD3971>50%</color>.'
-  - 'Void Field slows enemy projectiles by <color=#FD3971>60%</color>, and enemies inside it attack <color=#FD3971>20%</color> slower.'
+  - "Void Field radius increases to <color=#FD3971>4m</color>. Enemy projectiles inside move at <color=#FD3971>65%</color> speed."
+  - "Radius increases to <color=#FD3971>5m</color> and enemy projectile speed is reduced to <color=#FD3971>50%</color>."
+  - "Enemy projectiles move at <color=#FD3971>40%</color> speed. Enemies inside Void Field also perform attacks <color=#FD3971>20%</color> slower, up to Specialist tier."
   Radius:
   - RawValue: 262144
   - RawValue: 327680

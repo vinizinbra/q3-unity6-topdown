@@ -392,10 +392,19 @@ per-player wallets as part of this same pass, confirmed with the user (a pickup 
 connected player the same base amount, each scaled by their own gain multiplier). See
 `docs/global-upgrades.md`'s "Economy" section for the currency system itself.
 
+Accessory Offering spends a different resource entirely: one point of the player's own Recoverable
+Accessory Guard's MAX capacity (`AccessoryGuardUtility.TrySacrificeMaxDurability`, see
+`docs/accessory-guard.md`) rather than a wallet. Only offered while the accessory is worn with at
+least one charge left (`AccessoryOfferingSacrificeData.IsEligible`). Deliberately permanent, unlike
+losing a charge to a combat block: a Merchant repair afterward can only ever buy back up to the
+new, lower `MaxDurability`, never the original - this is a genuine sacrifice, not a recoverable
+spend. Sacrificing the last point Breaks it exactly like a killing block does, except with
+`MaxDurability` also at 0 there is no Merchant service left to bring it back at all.
+
 ## Editor authoring needed
 
 1. **`SurvivalConfig.Phases[]`'s `IsBreathing` entries** (manual Inspector step - see
-   `docs/run-phase.md`), plus `CursedRiftConfig`/`SacrificePoolData` + the 3 `SacrificeDefinition`
+   `docs/run-phase.md`), plus `CursedRiftConfig`/`SacrificePoolData` + the 4 `SacrificeDefinition`
    instances, authored by `Tools/RiftRaiders/Generate Breathing POI Content`
    (`BreathingPoiContentGenerator.cs`). Still needs `RuntimeConfig.CursedRiftConfig` assigned by
    hand (`QuantumMenuConfig.asset`).
@@ -418,7 +427,7 @@ connected player the same base amount, each scaled by their own gain multiplier)
    `QPrototypeHealingShrine` swapped to the real `CursedRift`/`Interactable` components) and the
    HUD-side **`InteractionPromptWidgetManager`** scene setup (`widgetPrefab`/`widgetParent`
    assigned, an `InteractionPromptWidget` prefab built under the HUD Canvas) - neither exists yet.
-6. **Real `Icon` sprites for the 3 `SacrificeDefinition` assets** - left unassigned by the
+6. **Real `Icon` sprites for the 4 `SacrificeDefinition` assets** - left unassigned by the
    generator.
 7. **`ToastManager`** - no scene instance in the current `QuantumGameScene.unity` (a `ToastManager`
    + pooled `ToastWidget` children under a Canvas, matching `Assets/gamesceneBackup.unity`'s own old

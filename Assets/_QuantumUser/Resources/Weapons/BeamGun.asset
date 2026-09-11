@@ -16,11 +16,12 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/BeamGun
     Guid:
       Value: 405919671996400745
-  DisplayName: 
+  DisplayName: BeamGunIce
   FireType: 0
   Damage:
     RawValue: 327680
   Element: 2
+  Family: 0
   CriticalChance:
     RawValue: 0
   CriticalDamageBonus:
@@ -43,6 +44,7 @@ MonoBehaviour:
       RawValue: 0
     Z:
       RawValue: 0
+  BonusBounces: 0
   ProjectileData:
     Id:
       Value: 0

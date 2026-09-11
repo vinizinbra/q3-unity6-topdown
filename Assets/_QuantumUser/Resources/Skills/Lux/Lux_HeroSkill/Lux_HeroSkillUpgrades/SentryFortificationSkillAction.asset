@@ -19,16 +19,16 @@ MonoBehaviour:
   Icon: {fileID: 535018670, guid: 355e00907e214470bac0029f70064510, type: 3}
   DisplayName: Fortification
   RankDescriptions:
-  - 'Sentry attack range <color=#FD3971>+2</color>.'
-  - 'Shield Battery: Sentry attack range <color=#FD3971>+2</color>, and allies standing near your Sentry recover <color=#FD3971>3</color> Shield per second.'
-  - 'Fire Support: Sentry attack range <color=#FD3971>+2</color>. Allies near your Sentry recover <color=#FD3971>3</color> Shield per second and gain <color=#FD3971>+15%</color> Fire Rate and <color=#FD3971>10%</color> Damage Reduction.'
+  - "Sentry attack range increases by <color=#FD3971>2m</color>."
+  - "Allies within Sentry range gain Free Hit Guard once per Sentry."
+  - "Allies within Sentry range also gain <color=#FD3971>+15%</color> Fire Rate and <color=#FD3971>10%</color> Damage Reduction."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Your Sentry becomes a position worth holding - longer reach, then Shield, then covering fire.
+  Description: "Your Sentry becomes a position worth holding - longer reach, then covering fire."
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -57,10 +57,11 @@ MonoBehaviour:
   - RawValue: 131072
   - RawValue: 131072
   - RawValue: 131072
-  AllyShieldPerSecond:
+  GuardDuration:
   - RawValue: 0
-  - RawValue: 196608
-  - RawValue: 196608
+  - RawValue: 65536
+  - RawValue: 65536
+  GuardsPerAlly: 000101
   AuraRangeRatio:
     RawValue: 32768
   FireSupportEffect:

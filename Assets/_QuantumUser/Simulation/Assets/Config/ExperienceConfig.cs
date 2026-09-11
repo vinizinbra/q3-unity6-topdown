@@ -16,6 +16,12 @@ namespace Quantum
         // the authored keyframes.
         public int MaxLevel = 50;
 
+        // Flat difficulty knob on top of the curve - multiplies RequiredExperience.Evaluate's
+        // result before the co-op XpRequirement multiplier is applied (see ExperienceUtility.
+        // GetRequiredExperience). Lets XP be retuned without re-baking curve keyframes; 1 = curve
+        // as authored.
+        public FP DifficultyMultiplier = 1;
+
         // Base collection radius for an ExpOrb, multiplied by the collecting character's own
         // CharacterStats.PickupRangeMultiplier - see CurrencyOrbSystem.
         public FP PickupRadius = 1;

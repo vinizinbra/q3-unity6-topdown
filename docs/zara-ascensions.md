@@ -552,8 +552,9 @@ tick replaying an already-resolved magnitude is not a second connect).
 ## The three lines
 
 **Faster Tempo** (kept its name - its ROLE survived, only the resource changed)
-R1 builds 25% faster · R2 50% faster and Active worth +18% · R3 "Full Tempo" 75% faster and a further
-+10% Fire Rate while Active.
+R1 builds 25% faster · R2 50% faster and Active worth +18% · R3 "Perfect Rhythm" 75% faster and a
+further +10% Fire Rate while Active. (Renamed from "Full Tempo" once Hero Mastery introduced an SMG
+Mastery R3 Special of that same name - see docs/hero-mastery.md.)
 
 **Second Wind** (replaces Protective Rhythm)
 R1 +20% Move Speed for 1.5s when Flow breaks · R2 a hit drops the bar to a third instead of 0 ·

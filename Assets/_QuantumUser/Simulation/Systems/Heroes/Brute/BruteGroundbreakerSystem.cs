@@ -29,23 +29,52 @@ namespace Quantum
         {
         }
 
-        public void OnPlayerLanded(Frame f, EntityRef entity, FP fallDistance, LandingSource source)
+        public void OnPlayerLanded(Frame f, EntityRef entity, FP fallDistance, FP heightDelta, LandingSource source, QBoolean wasManualJump)
         {
             if (f.Unsafe.TryGetPointer<GroundbreakerUpgrade>(entity, out var groundbreaker) == false)
                 return;
 
-            // The height gate. Everything the brief rules out (ordinary movement, a same-height dash,
-            // tiny elevation changes, walking down a step or slope) reports a fall distance at or near
-            // zero and fails here - no special-casing of any of them is needed, and none of it is tied
-            // to map tiles or terrain tiers.
-            if (fallDistance < groundbreaker->MinimumFallHeight)
+            // Two independent qualifying conditions, rank 3 adds the second on top of the first
+            // rather than replacing it:
+            //   - a real drop (fallDistance >= MinimumFallHeight), same gate every rank has always had.
+            //   - (rank 3 only) a genuine same-height jump: landed within SameHeightTolerance of
+            //     takeoff, AND it was the player's own Jump input (wasManualJump), never an auto-hop/
+            //     mantle - see PlayerMovement.WasManualJump for why that distinction exists. Checked
+            //     against the signed heightDelta, not fallDistance, since fallDistance clamps a
+            //     same-height landing and an upward mantle to the same 0.
+            //
+            // Everything the brief rules out (ordinary movement, a same-height dash, tiny elevation
+            // changes, walking down a step or slope, either auto-hop path) fails both branches and is
+            // never special-cased - the fall-height gate reports ~0 for all of it, and the same-height
+            // branch is closed to anything but a manual jump.
+            bool isDrop = fallDistance >= groundbreaker->MinimumFallHeight;
+            bool isSameHeightJump = groundbreaker->SameHeightTriggerEnabled == true
+                && wasManualJump == true
+                && FPMath.Abs(heightDelta) <= groundbreaker->SameHeightTolerance;
+
+            // TEMP diagnostic - unconditional, fires on every landing regardless of whether it
+            // qualifies, so a silent failure is actually debuggable. Remove once verified in-Editor.
+            Log.Debug($"[Skill] {entity} Groundbreaker landing check: fallDistance={fallDistance} " +
+                      $"heightDelta={heightDelta} source={source} wasManualJump={wasManualJump} " +
+                      $"MinimumFallHeight={groundbreaker->MinimumFallHeight} isDrop={isDrop} " +
+                      $"SameHeightTriggerEnabled={groundbreaker->SameHeightTriggerEnabled} " +
+                      $"SameHeightTolerance={groundbreaker->SameHeightTolerance} isSameHeightJump={isSameHeightJump}");
+
+            if (isDrop == false && isSameHeightJump == false)
                 return;
 
             if (IsLandingSourceAllowed(groundbreaker->AllowedLandingSources, source) == false)
+            {
+                Log.Debug($"[Skill] {entity} Groundbreaker rejected by AllowedLandingSources mask " +
+                          $"({groundbreaker->AllowedLandingSources}) for source {source}");
                 return;
+            }
 
             if (groundbreaker->ImpactRadius <= FP._0)
+            {
+                Log.Debug($"[Skill] {entity} Groundbreaker rejected - ImpactRadius is 0 (rank not applied?)");
                 return;
+            }
 
             if (f.Unsafe.TryGetPointer<Transform3D>(entity, out var transform) == false)
                 return;

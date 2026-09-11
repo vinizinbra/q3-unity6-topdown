@@ -18,12 +18,12 @@ MonoBehaviour:
       Value: 361478584056376078
   Icon: {fileID: -361352915, guid: b217254d41b6945b1873986186a25786, type: 3}
   DisplayName: Unstable Mixture
-  Description: An explosion kill empowers your next explosion.
+  Description: "Pixie's explosion kills empower her next explosion."
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - 'Each explosion kill empowers your next blast with <color=#FD3971>+30%</color> damage and <color=#FD3971>+15%</color> radius.'
-  - 'Explosion kills bank up to <color=#FD3971>2</color> charges, empowering your next blast with up to <color=#FD3971>+60%</color> damage and <color=#FD3971>+30%</color> radius.'
-  - 'Explosion kills bank up to <color=#FD3971>2</color> charges for <color=#FD3971>+60%</color> damage and <color=#FD3971>+30%</color> radius; at <color=#FD3971>2</color> charges the blast detonates twice.'
+  - "Explosion kills bank <color=#FD3971>1</color> charge. Pixie's next explosion consumes the stored charge for <color=#FD3971>+30%</color> Damage and <color=#FD3971>+15%</color> Radius."
+  - "Pixie can store up to <color=#FD3971>2</color> charges."
+  - "Using maximum charges also creates a delayed secondary explosion."
   DamageBonusPerStack:
     RawValue: 19661
   RadiusBonusPerStack:

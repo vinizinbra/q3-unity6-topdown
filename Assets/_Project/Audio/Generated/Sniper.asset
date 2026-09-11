@@ -17,6 +17,7 @@ MonoBehaviour:
     overrideTrim: 0
     startAt: 0
     endAt: 0
+    loopStart: 0
     overrideFade: 0
     fadeIn: 0
     fadeOut: 0
@@ -30,13 +31,14 @@ MonoBehaviour:
   delay: {x: 0, y: 0}
   startAt: 0
   endAt: 0
+  loopStart: 0
   fadeIn: 0
   fadeOut: 0
   loop: 0
   quieterWhenRemote: 0
   localPlayerOnly: 0
   spatial: 1
-  cooldown: 0
+  cooldown: 0.1
   maxConcurrent: 8
   priority: 128
   useUnscaledTime: 1

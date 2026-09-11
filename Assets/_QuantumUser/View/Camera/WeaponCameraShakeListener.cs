@@ -47,7 +47,7 @@ namespace QuantumUser.View
                 return;
 
             shakeConfig.GetShake(weaponData.ShakeTier, out float amplitude, out float duration, out float frequency);
-            FollowCamera.I.Shake(amplitude, duration, frequency);
+            FollowCamera.I?.Shake(amplitude, duration, frequency);
         }
 
         [Button("Test Small")]

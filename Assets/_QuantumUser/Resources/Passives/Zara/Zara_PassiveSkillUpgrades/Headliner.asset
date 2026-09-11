@@ -18,18 +18,17 @@ MonoBehaviour:
       Value: 359104458669361970
   Icon: {fileID: 2028119123, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
   DisplayName: Headliner
-  Description: Max Flow becomes a payoff - for your damage, your Totem, and your
-    whole team.
+  Description: "Max Flow becomes a payoff - for your damage, your Totem, and your whole team."
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - 'While at Max Flow, you deal <color=#FD3971>+10%</color> damage.'
-  - 'While at Max Flow, you deal <color=#FD3971>+10%</color> damage and your Totem''s Beats are <color=#FD3971>15%</color> more effective.'
-  - 'Headliner: reaching Max Flow grants you and allies within <color=#FD3971>6m</color> <color=#FD3971>+10%</color> Move Speed and <color=#FD3971>+10%</color> Fire Rate for <color=#FD3971>3s</color> (<color=#FD3971>8s</color> cooldown).'
-  MaxFlowDamageBonus:
+  - "While Flow is Active, Zara deals <color=#FD3971>+10%</color> Damage."
+  - "While Flow is Active, Totem Beats are <color=#FD3971>15%</color> more effective."
+  - "Activating Flow grants Zara and nearby allies <color=#FD3971>+10%</color> Move Speed and Fire Rate for <color=#FD3971>3s</color>."
+  ActiveDamageBonus:
   - RawValue: 6554
   - RawValue: 6554
   - RawValue: 6554
-  MaxFlowBeatEffectiveness:
+  ActiveBeatEffectiveness:
   - RawValue: 0
   - RawValue: 9830
   - RawValue: 9830

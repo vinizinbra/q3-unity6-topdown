@@ -20,8 +20,14 @@ MonoBehaviour:
     Id:
       Value: 274665352178253875
   PerkChoiceCount: 3
-  PerkPrice:
-    RawValue: 5242880
+  CommonPerkPrice:
+    RawValue: 32768000
+  RarePerkPrice:
+    RawValue: 65536000
+  EpicPerkPrice:
+    RawValue: 114688000
+  LegendaryPerkPrice:
+    RawValue: 196608000
   BreakTuning:
   - CommonWeight: 85
     RareWeight: 15

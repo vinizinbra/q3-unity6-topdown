@@ -226,6 +226,15 @@ namespace Quantum {
     Completed,
     Failed,
   }
+  public enum WeaponFamily : byte {
+    None,
+    Pistol,
+    SMG,
+    AssaultRifle,
+    Shotgun,
+    Sniper,
+    GrenadeLauncher,
+  }
   [System.FlagsAttribute()]
   public enum ChunkConnectionSide : byte {
     Top = 1 << 0,
@@ -1111,6 +1120,8 @@ namespace Quantum {
     public QBoolean IsCataclysm;
     [FieldOffset(0)]
     public Int32 GrantPierceAmount;
+    [FieldOffset(12)]
+    public QBoolean IsFirstBullet;
     public override readonly Int32 GetHashCode() {
       unchecked { 
         var hash = 587;
@@ -1121,6 +1132,7 @@ namespace Quantum {
         hash = hash * 31 + IsExplosiveProc.GetHashCode();
         hash = hash * 31 + IsCataclysm.GetHashCode();
         hash = hash * 31 + GrantPierceAmount.GetHashCode();
+        hash = hash * 31 + IsFirstBullet.GetHashCode();
         return hash;
       }
     }
@@ -1129,6 +1141,7 @@ namespace Quantum {
         serializer.Stream.Serialize(&p->GrantPierceAmount);
         QBoolean.Serialize(&p->IsCataclysm, serializer);
         QBoolean.Serialize(&p->IsExplosiveProc, serializer);
+        QBoolean.Serialize(&p->IsFirstBullet, serializer);
         FP.Serialize(&p->Damage, serializer);
         FP.Serialize(&p->Delay, serializer);
         FPVector3.Serialize(&p->AimDirection, serializer);
@@ -2880,6 +2893,24 @@ namespace Quantum {
     }
   }
   [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct ChargedDamageBonusUpgrade : Quantum.IComponent {
+    public const Int32 SIZE = 8;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(0)]
+    public FP DamageMultiplier;
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 3671;
+        hash = hash * 31 + DamageMultiplier.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (ChargedDamageBonusUpgrade*)ptr;
+        FP.Serialize(&p->DamageMultiplier, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct CheatDeathGuard : Quantum.IComponent {
     public const Int32 SIZE = 8;
     public const Int32 ALIGNMENT = 8;
@@ -3096,6 +3127,32 @@ namespace Quantum {
     }
   }
   [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct ConditionalWeaponFireRateBonus : Quantum.IComponent {
+    public const Int32 SIZE = 16;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(0)]
+    public WeaponFamily Family;
+    [FieldOffset(8)]
+    public FP FireRateBonus;
+    [FieldOffset(4)]
+    public QBoolean Active;
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 6361;
+        hash = hash * 31 + (Byte)Family;
+        hash = hash * 31 + FireRateBonus.GetHashCode();
+        hash = hash * 31 + Active.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (ConditionalWeaponFireRateBonus*)ptr;
+        serializer.Stream.Serialize((Byte*)&p->Family);
+        QBoolean.Serialize(&p->Active, serializer);
+        FP.Serialize(&p->FireRateBonus, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct ContextInteraction : Quantum.IComponent {
     public const Int32 SIZE = 16;
     public const Int32 ALIGNMENT = 8;
@@ -3213,6 +3270,58 @@ namespace Quantum {
         FixedArray.Serialize(p->SacrificeChoices, serializer, Statics.SerializeAssetRef);
         EntityRef.Serialize(&p->Rift, serializer);
         FixedArray.Serialize(p->MutationChoices, serializer, Statics.SerializeLevelUpOption);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct DamageEchoUpgrade : Quantum.IComponent {
+    public const Int32 SIZE = 40;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(0)]
+    public ElementType RequiredElement;
+    [FieldOffset(24)]
+    public FP DamageMultiplier;
+    [FieldOffset(32)]
+    public FP Delay;
+    [FieldOffset(8)]
+    public AssetRef<DamageEchoVisualData> Visual;
+    [FieldOffset(16)]
+    public AssetRef<ProjectileHitData> EchoHit;
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 7993;
+        hash = hash * 31 + (Byte)RequiredElement;
+        hash = hash * 31 + DamageMultiplier.GetHashCode();
+        hash = hash * 31 + Delay.GetHashCode();
+        hash = hash * 31 + Visual.GetHashCode();
+        hash = hash * 31 + EchoHit.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (DamageEchoUpgrade*)ptr;
+        serializer.Stream.Serialize((Byte*)&p->RequiredElement);
+        AssetRef.Serialize(&p->Visual, serializer);
+        AssetRef.Serialize(&p->EchoHit, serializer);
+        FP.Serialize(&p->DamageMultiplier, serializer);
+        FP.Serialize(&p->Delay, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct DeadeyeUpgrade : Quantum.IComponent {
+    public const Int32 SIZE = 8;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(0)]
+    public FP DamageBonus;
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 15467;
+        hash = hash * 31 + DamageBonus.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (DeadeyeUpgrade*)ptr;
+        FP.Serialize(&p->DamageBonus, serializer);
     }
   }
   [StructLayout(LayoutKind.Explicit)]
@@ -3391,6 +3500,46 @@ namespace Quantum {
         var p = (DroppedAccessory*)ptr;
         QBoolean.Serialize(&p->Broken, serializer);
         EntityRef.Serialize(&p->Owner, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct EchoProjectile : Quantum.IComponent {
+    public const Int32 SIZE = 8;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(0)]
+    public AssetRef<DamageEchoVisualData> Visual;
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 16453;
+        hash = hash * 31 + Visual.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (EchoProjectile*)ptr;
+        AssetRef.Serialize(&p->Visual, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct ElementMastery : Quantum.IComponent {
+    public const Int32 SIZE = 16;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(0)]
+    public ElementType Element;
+    [FieldOffset(8)]
+    public FP DamageMultiplier;
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 17761;
+        hash = hash * 31 + (Byte)Element;
+        hash = hash * 31 + DamageMultiplier.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (ElementMastery*)ptr;
+        serializer.Stream.Serialize((Byte*)&p->Element);
+        FP.Serialize(&p->DamageMultiplier, serializer);
     }
   }
   [StructLayout(LayoutKind.Explicit)]
@@ -3784,6 +3933,24 @@ namespace Quantum {
     }
   }
   [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct FireWeaponExplosiveShotUpgrade : Quantum.IComponent {
+    public const Int32 SIZE = 8;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(0)]
+    public AssetRef<AreaHitData> Explosion;
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 4933;
+        hash = hash * 31 + Explosion.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (FireWeaponExplosiveShotUpgrade*)ptr;
+        AssetRef.Serialize(&p->Explosion, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct FirstStrikeMark : Quantum.IComponent {
     public const Int32 SIZE = 8;
     public const Int32 ALIGNMENT = 8;
@@ -3933,12 +4100,16 @@ namespace Quantum {
   }
   [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct GroundbreakerUpgrade : Quantum.IComponent {
-    public const Int32 SIZE = 88;
+    public const Int32 SIZE = 96;
     public const Int32 ALIGNMENT = 8;
     [FieldOffset(48)]
     public FP MinimumFallHeight;
     [FieldOffset(0)]
     public Byte AllowedLandingSources;
+    [FieldOffset(4)]
+    public QBoolean SameHeightTriggerEnabled;
+    [FieldOffset(56)]
+    public FP SameHeightTolerance;
     [FieldOffset(24)]
     public FP ImpactRadius;
     [FieldOffset(32)]
@@ -3949,23 +4120,25 @@ namespace Quantum {
     public FP ImpactDamagePercent;
     [FieldOffset(1)]
     public Byte MaxAffectedTierIndex;
-    [FieldOffset(8)]
+    [FieldOffset(12)]
     public QBoolean WallStunEnabled;
-    [FieldOffset(80)]
+    [FieldOffset(88)]
     public FP WallStunDuration;
-    [FieldOffset(72)]
+    [FieldOffset(80)]
     public FP WallCheckDistance;
-    [FieldOffset(4)]
+    [FieldOffset(8)]
     public QBoolean VulnerabilityEnabled;
-    [FieldOffset(56)]
-    public FP VulnerabilityDamageTakenModifier;
     [FieldOffset(64)]
+    public FP VulnerabilityDamageTakenModifier;
+    [FieldOffset(72)]
     public FP VulnerabilityDuration;
     public override readonly Int32 GetHashCode() {
       unchecked { 
         var hash = 2659;
         hash = hash * 31 + MinimumFallHeight.GetHashCode();
         hash = hash * 31 + AllowedLandingSources.GetHashCode();
+        hash = hash * 31 + SameHeightTriggerEnabled.GetHashCode();
+        hash = hash * 31 + SameHeightTolerance.GetHashCode();
         hash = hash * 31 + ImpactRadius.GetHashCode();
         hash = hash * 31 + KnockbackForce.GetHashCode();
         hash = hash * 31 + KnockbackUpwardForce.GetHashCode();
@@ -3984,6 +4157,7 @@ namespace Quantum {
         var p = (GroundbreakerUpgrade*)ptr;
         serializer.Stream.Serialize(&p->AllowedLandingSources);
         serializer.Stream.Serialize(&p->MaxAffectedTierIndex);
+        QBoolean.Serialize(&p->SameHeightTriggerEnabled, serializer);
         QBoolean.Serialize(&p->VulnerabilityEnabled, serializer);
         QBoolean.Serialize(&p->WallStunEnabled, serializer);
         FP.Serialize(&p->ImpactDamagePercent, serializer);
@@ -3991,6 +4165,7 @@ namespace Quantum {
         FP.Serialize(&p->KnockbackForce, serializer);
         FP.Serialize(&p->KnockbackUpwardForce, serializer);
         FP.Serialize(&p->MinimumFallHeight, serializer);
+        FP.Serialize(&p->SameHeightTolerance, serializer);
         FP.Serialize(&p->VulnerabilityDamageTakenModifier, serializer);
         FP.Serialize(&p->VulnerabilityDuration, serializer);
         FP.Serialize(&p->WallCheckDistance, serializer);
@@ -4157,6 +4332,24 @@ namespace Quantum {
     public static void Serialize(void* ptr, FrameSerializer serializer) {
         var p = (IncreaseDurationUpgrade*)ptr;
         FP.Serialize(&p->DurationBonus, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct InfernalRageUpgrade : Quantum.IComponent {
+    public const Int32 SIZE = 8;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(0)]
+    public FP DamageBonus;
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 7219;
+        hash = hash * 31 + DamageBonus.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (InfernalRageUpgrade*)ptr;
+        FP.Serialize(&p->DamageBonus, serializer);
     }
   }
   [StructLayout(LayoutKind.Explicit)]
@@ -4767,6 +4960,24 @@ namespace Quantum {
     }
   }
   [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct NeutralWeaponKnockbackBonusUpgrade : Quantum.IComponent {
+    public const Int32 SIZE = 8;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(0)]
+    public FP KnockbackBonus;
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 18329;
+        hash = hash * 31 + KnockbackBonus.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (NeutralWeaponKnockbackBonusUpgrade*)ptr;
+        FP.Serialize(&p->KnockbackBonus, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct OverdriveExtension : Quantum.IComponent {
     public const Int32 SIZE = 40;
     public const Int32 ALIGNMENT = 8;
@@ -4802,6 +5013,70 @@ namespace Quantum {
         FP.Serialize(&p->MaxExtension, serializer);
         FP.Serialize(&p->PerKillExtension, serializer);
         FP.Serialize(&p->VendettaKillExtension, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct PendingDamageEcho : Quantum.IComponent {
+    public const Int32 SIZE = 896;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(384)]
+    [FramePrinter.FixedArrayAttribute(typeof(FP), 16)]
+    private fixed Byte _DelayRemaining_[128];
+    [FieldOffset(256)]
+    [FramePrinter.FixedArrayAttribute(typeof(FP), 16)]
+    private fixed Byte _Damage_[128];
+    [FieldOffset(0)]
+    [FramePrinter.FixedArrayAttribute(typeof(AssetRef<DamageEchoVisualData>), 16)]
+    private fixed Byte _Visual_[128];
+    [FieldOffset(128)]
+    [FramePrinter.FixedArrayAttribute(typeof(AssetRef<ProjectileHitData>), 16)]
+    private fixed Byte _EchoHit_[128];
+    [FieldOffset(512)]
+    [FramePrinter.FixedArrayAttribute(typeof(FPVector3), 16)]
+    private fixed Byte _Direction_[384];
+    public readonly FixedArray<FP> DelayRemaining {
+      get {
+        fixed (byte* p = _DelayRemaining_) { return new FixedArray<FP>(p, 8, 16); }
+      }
+    }
+    public readonly FixedArray<FP> Damage {
+      get {
+        fixed (byte* p = _Damage_) { return new FixedArray<FP>(p, 8, 16); }
+      }
+    }
+    public readonly FixedArray<AssetRef<DamageEchoVisualData>> Visual {
+      get {
+        fixed (byte* p = _Visual_) { return new FixedArray<AssetRef<DamageEchoVisualData>>(p, 8, 16); }
+      }
+    }
+    public readonly FixedArray<AssetRef<ProjectileHitData>> EchoHit {
+      get {
+        fixed (byte* p = _EchoHit_) { return new FixedArray<AssetRef<ProjectileHitData>>(p, 8, 16); }
+      }
+    }
+    public readonly FixedArray<FPVector3> Direction {
+      get {
+        fixed (byte* p = _Direction_) { return new FixedArray<FPVector3>(p, 24, 16); }
+      }
+    }
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 16427;
+        hash = hash * 31 + HashCodeUtils.GetArrayHashCode(DelayRemaining);
+        hash = hash * 31 + HashCodeUtils.GetArrayHashCode(Damage);
+        hash = hash * 31 + HashCodeUtils.GetArrayHashCode(Visual);
+        hash = hash * 31 + HashCodeUtils.GetArrayHashCode(EchoHit);
+        hash = hash * 31 + HashCodeUtils.GetArrayHashCode(Direction);
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (PendingDamageEcho*)ptr;
+        FixedArray.Serialize(p->Visual, serializer, Statics.SerializeAssetRef);
+        FixedArray.Serialize(p->EchoHit, serializer, Statics.SerializeAssetRef);
+        FixedArray.Serialize(p->Damage, serializer, Statics.SerializeFP);
+        FixedArray.Serialize(p->DelayRemaining, serializer, Statics.SerializeFP);
+        FixedArray.Serialize(p->Direction, serializer, Statics.SerializeFPVector3);
     }
   }
   [StructLayout(LayoutKind.Explicit)]
@@ -4960,20 +5235,24 @@ namespace Quantum {
   }
   [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct PlayerMovement : Quantum.IComponent {
-    public const Int32 SIZE = 56;
+    public const Int32 SIZE = 72;
     public const Int32 ALIGNMENT = 8;
-    [FieldOffset(8)]
+    [FieldOffset(16)]
     public AssetRef<MovementDataAsset> MovementData;
     [FieldOffset(4)]
     public QBoolean HasAirJumped;
-    [FieldOffset(24)]
-    public FP JumpCooldownTimer;
     [FieldOffset(32)]
+    public FP JumpCooldownTimer;
+    [FieldOffset(48)]
     public FPVector3 LastGroundedPosition;
-    [FieldOffset(16)]
+    [FieldOffset(24)]
     public FP FallRespawnTimer;
     [FieldOffset(0)]
     public LandingSource AirborneSource;
+    [FieldOffset(8)]
+    public QBoolean WasManualJump;
+    [FieldOffset(40)]
+    public FP WaterEdgeHesitationTimer;
     public override readonly Int32 GetHashCode() {
       unchecked { 
         var hash = 21149;
@@ -4983,6 +5262,8 @@ namespace Quantum {
         hash = hash * 31 + LastGroundedPosition.GetHashCode();
         hash = hash * 31 + FallRespawnTimer.GetHashCode();
         hash = hash * 31 + (Byte)AirborneSource;
+        hash = hash * 31 + WasManualJump.GetHashCode();
+        hash = hash * 31 + WaterEdgeHesitationTimer.GetHashCode();
         return hash;
       }
     }
@@ -4990,9 +5271,11 @@ namespace Quantum {
         var p = (PlayerMovement*)ptr;
         serializer.Stream.Serialize((Byte*)&p->AirborneSource);
         QBoolean.Serialize(&p->HasAirJumped, serializer);
+        QBoolean.Serialize(&p->WasManualJump, serializer);
         AssetRef.Serialize(&p->MovementData, serializer);
         FP.Serialize(&p->FallRespawnTimer, serializer);
         FP.Serialize(&p->JumpCooldownTimer, serializer);
+        FP.Serialize(&p->WaterEdgeHesitationTimer, serializer);
         FPVector3.Serialize(&p->LastGroundedPosition, serializer);
     }
   }
@@ -5075,6 +5358,28 @@ namespace Quantum {
     }
   }
   [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct PointBlankUpgrade : Quantum.IComponent {
+    public const Int32 SIZE = 16;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(0)]
+    public FP DamageBonus;
+    [FieldOffset(8)]
+    public FP Range;
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 4903;
+        hash = hash * 31 + DamageBonus.GetHashCode();
+        hash = hash * 31 + Range.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (PointBlankUpgrade*)ptr;
+        FP.Serialize(&p->DamageBonus, serializer);
+        FP.Serialize(&p->Range, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct PopVelocity : Quantum.IComponent {
     public const Int32 SIZE = 40;
     public const Int32 ALIGNMENT = 8;
@@ -5117,18 +5422,62 @@ namespace Quantum {
     }
   }
   [StructLayout(LayoutKind.Explicit)]
-  public unsafe partial struct Projectile : Quantum.IComponent {
-    public const Int32 SIZE = 168;
+  public unsafe partial struct PriorityTarget : Quantum.IComponent {
+    public const Int32 SIZE = 16;
     public const Int32 ALIGNMENT = 8;
-    [FieldOffset(144)]
+    [FieldOffset(0)]
+    public EntityRef Target;
+    [FieldOffset(8)]
+    public FP Remaining;
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 18433;
+        hash = hash * 31 + Target.GetHashCode();
+        hash = hash * 31 + Remaining.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (PriorityTarget*)ptr;
+        EntityRef.Serialize(&p->Target, serializer);
+        FP.Serialize(&p->Remaining, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct PriorityTargetUpgrade : Quantum.IComponent {
+    public const Int32 SIZE = 16;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(0)]
+    public ElementType RequiredElement;
+    [FieldOffset(8)]
+    public FP Duration;
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 19993;
+        hash = hash * 31 + (Byte)RequiredElement;
+        hash = hash * 31 + Duration.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (PriorityTargetUpgrade*)ptr;
+        serializer.Stream.Serialize((Byte*)&p->RequiredElement);
+        FP.Serialize(&p->Duration, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct Projectile : Quantum.IComponent {
+    public const Int32 SIZE = 184;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(160)]
     public FPVector3 Velocity;
-    [FieldOffset(120)]
+    [FieldOffset(136)]
     public FPVector3 SpawnPosition;
-    [FieldOffset(56)]
+    [FieldOffset(72)]
     public FP Damage;
-    [FieldOffset(88)]
+    [FieldOffset(104)]
     public FP RemainingLifetime;
-    [FieldOffset(40)]
+    [FieldOffset(56)]
     public EntityRef Owner;
     [FieldOffset(32)]
     public AssetRef<ProjectileDataAsset> ProjectileData;
@@ -5136,7 +5485,7 @@ namespace Quantum {
     public Int32 RemainingPierces;
     [FieldOffset(8)]
     public Int32 RemainingBounces;
-    [FieldOffset(64)]
+    [FieldOffset(80)]
     public FP MaxDistanceMultiplier;
     [FieldOffset(24)]
     public QBoolean IsExplosiveProc;
@@ -5148,26 +5497,30 @@ namespace Quantum {
     public ElementType Element;
     [FieldOffset(4)]
     public ElementType PerkElement;
-    [FieldOffset(80)]
+    [FieldOffset(96)]
     public FP PerkElementChance;
     [FieldOffset(5)]
     public SkillSlotId SourceSlot;
-    [FieldOffset(48)]
+    [FieldOffset(64)]
     public EntityRef Target;
-    [FieldOffset(96)]
+    [FieldOffset(112)]
     public FP RemainingSpawnDelay;
     [FieldOffset(16)]
     public QBoolean Grounded;
     [FieldOffset(1)]
     public Byte SpawnDepth;
-    [FieldOffset(112)]
+    [FieldOffset(128)]
     public FP TraveledDistance;
-    [FieldOffset(72)]
+    [FieldOffset(88)]
     public FP MaxTravelDistance;
     [FieldOffset(0)]
     public Byte PelletIndex;
-    [FieldOffset(104)]
+    [FieldOffset(120)]
     public FP SpeedMultiplier;
+    [FieldOffset(48)]
+    public AssetRef<ProjectileMovementData> MovementOverride;
+    [FieldOffset(40)]
+    public AssetRef<ProjectileHitData> HitOverride;
     public override readonly Int32 GetHashCode() {
       unchecked { 
         var hash = 16141;
@@ -5195,6 +5548,8 @@ namespace Quantum {
         hash = hash * 31 + MaxTravelDistance.GetHashCode();
         hash = hash * 31 + PelletIndex.GetHashCode();
         hash = hash * 31 + SpeedMultiplier.GetHashCode();
+        hash = hash * 31 + MovementOverride.GetHashCode();
+        hash = hash * 31 + HitOverride.GetHashCode();
         return hash;
       }
     }
@@ -5212,6 +5567,8 @@ namespace Quantum {
         QBoolean.Serialize(&p->IsCataclysm, serializer);
         QBoolean.Serialize(&p->IsExplosiveProc, serializer);
         AssetRef.Serialize(&p->ProjectileData, serializer);
+        AssetRef.Serialize(&p->HitOverride, serializer);
+        AssetRef.Serialize(&p->MovementOverride, serializer);
         EntityRef.Serialize(&p->Owner, serializer);
         EntityRef.Serialize(&p->Target, serializer);
         FP.Serialize(&p->Damage, serializer);
@@ -5242,6 +5599,28 @@ namespace Quantum {
     public static void Serialize(void* ptr, FrameSerializer serializer) {
         var p = (ProjectileDamageUpgrade*)ptr;
         FP.Serialize(&p->Multiplier, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct ProjectileMovementOverride : Quantum.IComponent {
+    public const Int32 SIZE = 16;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(0)]
+    public WeaponFamily Family;
+    [FieldOffset(8)]
+    public AssetRef<ProjectileMovementData> Movement;
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 20323;
+        hash = hash * 31 + (Byte)Family;
+        hash = hash * 31 + Movement.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (ProjectileMovementOverride*)ptr;
+        serializer.Stream.Serialize((Byte*)&p->Family);
+        AssetRef.Serialize(&p->Movement, serializer);
     }
   }
   [StructLayout(LayoutKind.Explicit)]
@@ -5484,6 +5863,28 @@ namespace Quantum {
     }
     public static void Serialize(void* ptr, FrameSerializer serializer) {
         var p = (ScrapOrb*)ptr;
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct SelfFireRateOnJoltUpgrade : Quantum.IComponent {
+    public const Int32 SIZE = 16;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(8)]
+    public FP FireRateBonus;
+    [FieldOffset(0)]
+    public FP Duration;
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 5743;
+        hash = hash * 31 + FireRateBonus.GetHashCode();
+        hash = hash * 31 + Duration.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (SelfFireRateOnJoltUpgrade*)ptr;
+        FP.Serialize(&p->Duration, serializer);
+        FP.Serialize(&p->FireRateBonus, serializer);
     }
   }
   [StructLayout(LayoutKind.Explicit)]
@@ -6425,6 +6826,50 @@ namespace Quantum {
     }
   }
   [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct TargetingLinkMark : Quantum.IComponent {
+    public const Int32 SIZE = 16;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(0)]
+    public EntityRef MarkedBy;
+    [FieldOffset(8)]
+    public FP Remaining;
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 491;
+        hash = hash * 31 + MarkedBy.GetHashCode();
+        hash = hash * 31 + Remaining.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (TargetingLinkMark*)ptr;
+        EntityRef.Serialize(&p->MarkedBy, serializer);
+        FP.Serialize(&p->Remaining, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct TargetingLinkUpgrade : Quantum.IComponent {
+    public const Int32 SIZE = 16;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(8)]
+    public FP SentryDamageBonus;
+    [FieldOffset(0)]
+    public FP MarkDuration;
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 18229;
+        hash = hash * 31 + SentryDamageBonus.GetHashCode();
+        hash = hash * 31 + MarkDuration.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (TargetingLinkUpgrade*)ptr;
+        FP.Serialize(&p->MarkDuration, serializer);
+        FP.Serialize(&p->SentryDamageBonus, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct TraversalChallenge : Quantum.IComponent {
     public const Int32 SIZE = 344;
     public const Int32 ALIGNMENT = 8;
@@ -6630,6 +7075,24 @@ namespace Quantum {
     public static void Serialize(void* ptr, FrameSerializer serializer) {
         var p = (UpgradeHistory*)ptr;
         FixedArray.Serialize(p->Entries, serializer, Statics.SerializeUpgradeHistoryEntry);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct VendettaPistolUpgrade : Quantum.IComponent {
+    public const Int32 SIZE = 8;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(0)]
+    public FP DamageBonus;
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 15473;
+        hash = hash * 31 + DamageBonus.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (VendettaPistolUpgrade*)ptr;
+        FP.Serialize(&p->DamageBonus, serializer);
     }
   }
   [StructLayout(LayoutKind.Explicit)]
@@ -7026,6 +7489,56 @@ namespace Quantum {
         var p = (WeaponElementInfusion*)ptr;
         serializer.Stream.Serialize((Byte*)&p->Element);
         FP.Serialize(&p->ProcChance, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct WeaponFamilyFirstHitTracker : Quantum.IComponent {
+    public const Int32 SIZE = 40;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(8)]
+    [FramePrinter.FixedArrayAttribute(typeof(EntityRef), 4)]
+    private fixed Byte _Owner_[32];
+    [FieldOffset(0)]
+    public fixed Byte Family[4];
+    public readonly FixedArray<EntityRef> Owner {
+      get {
+        fixed (byte* p = _Owner_) { return new FixedArray<EntityRef>(p, 8, 4); }
+      }
+    }
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 6287;
+        hash = hash * 31 + HashCodeUtils.GetArrayHashCode(Owner);
+        fixed (Byte* p = Family) hash = hash * 31 + HashCodeUtils.GetArrayHashCode(p, 4);
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (WeaponFamilyFirstHitTracker*)ptr;
+        serializer.Stream.SerializeBuffer(&p->Family[0], 4);
+        FixedArray.Serialize(p->Owner, serializer, Statics.SerializeEntityRef);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct WeaponFamilyMastery : Quantum.IComponent {
+    public const Int32 SIZE = 16;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(0)]
+    public WeaponFamily Family;
+    [FieldOffset(8)]
+    public FP DamageMultiplier;
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 20393;
+        hash = hash * 31 + (Byte)Family;
+        hash = hash * 31 + DamageMultiplier.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (WeaponFamilyMastery*)ptr;
+        serializer.Stream.Serialize((Byte*)&p->Family);
+        FP.Serialize(&p->DamageMultiplier, serializer);
     }
   }
   [StructLayout(LayoutKind.Explicit)]
@@ -7597,7 +8110,7 @@ namespace Quantum {
     void OnEnemyKnockedBack(Frame f, EntityRef entity, QBoolean canInterrupt);
   }
   public unsafe partial interface ISignalOnPlayerLanded : ISignal {
-    void OnPlayerLanded(Frame f, EntityRef entity, FP fallDistance, LandingSource source);
+    void OnPlayerLanded(Frame f, EntityRef entity, FP fallDistance, FP heightDelta, LandingSource source, QBoolean wasManualJump);
   }
   public unsafe partial interface ISignalOnShieldBroken : ISignal {
     void OnShieldBroken(Frame f, EntityRef entity);
@@ -7712,6 +8225,8 @@ namespace Quantum {
       BuildSignalsArrayOnComponentRemoved<Quantum.CharacterStats>();
       BuildSignalsArrayOnComponentAdded<Quantum.ChargeHitTracking>();
       BuildSignalsArrayOnComponentRemoved<Quantum.ChargeHitTracking>();
+      BuildSignalsArrayOnComponentAdded<Quantum.ChargedDamageBonusUpgrade>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.ChargedDamageBonusUpgrade>();
       BuildSignalsArrayOnComponentAdded<Quantum.CheatDeathGuard>();
       BuildSignalsArrayOnComponentRemoved<Quantum.CheatDeathGuard>();
       BuildSignalsArrayOnComponentAdded<Quantum.Chest>();
@@ -7724,6 +8239,8 @@ namespace Quantum {
       BuildSignalsArrayOnComponentRemoved<Quantum.ConcussiveImpactUpgrade>();
       BuildSignalsArrayOnComponentAdded<Quantum.ConditionalCriticalModifier>();
       BuildSignalsArrayOnComponentRemoved<Quantum.ConditionalCriticalModifier>();
+      BuildSignalsArrayOnComponentAdded<Quantum.ConditionalWeaponFireRateBonus>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.ConditionalWeaponFireRateBonus>();
       BuildSignalsArrayOnComponentAdded<Quantum.ContextInteraction>();
       BuildSignalsArrayOnComponentRemoved<Quantum.ContextInteraction>();
       BuildSignalsArrayOnComponentAdded<Quantum.CurrencyOrb>();
@@ -7732,6 +8249,10 @@ namespace Quantum {
       BuildSignalsArrayOnComponentRemoved<Quantum.CursedRift>();
       BuildSignalsArrayOnComponentAdded<Quantum.CursedRiftInteraction>();
       BuildSignalsArrayOnComponentRemoved<Quantum.CursedRiftInteraction>();
+      BuildSignalsArrayOnComponentAdded<Quantum.DamageEchoUpgrade>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.DamageEchoUpgrade>();
+      BuildSignalsArrayOnComponentAdded<Quantum.DeadeyeUpgrade>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.DeadeyeUpgrade>();
       BuildSignalsArrayOnComponentAdded<Quantum.Decoy>();
       BuildSignalsArrayOnComponentRemoved<Quantum.Decoy>();
       BuildSignalsArrayOnComponentAdded<Quantum.DelayedBlast>();
@@ -7746,6 +8267,10 @@ namespace Quantum {
       BuildSignalsArrayOnComponentRemoved<Quantum.DoubleTimeUpgrade>();
       BuildSignalsArrayOnComponentAdded<Quantum.DroppedAccessory>();
       BuildSignalsArrayOnComponentRemoved<Quantum.DroppedAccessory>();
+      BuildSignalsArrayOnComponentAdded<Quantum.EchoProjectile>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.EchoProjectile>();
+      BuildSignalsArrayOnComponentAdded<Quantum.ElementMastery>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.ElementMastery>();
       BuildSignalsArrayOnComponentAdded<Quantum.Enemy>();
       BuildSignalsArrayOnComponentRemoved<Quantum.Enemy>();
       BuildSignalsArrayOnComponentAdded<Quantum.EnemyActionSlots>();
@@ -7766,6 +8291,8 @@ namespace Quantum {
       BuildSignalsArrayOnComponentRemoved<Quantum.ExplodeOnDestroy>();
       BuildSignalsArrayOnComponentAdded<Quantum.ExplosionOnConditionalHit>();
       BuildSignalsArrayOnComponentRemoved<Quantum.ExplosionOnConditionalHit>();
+      BuildSignalsArrayOnComponentAdded<Quantum.FireWeaponExplosiveShotUpgrade>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.FireWeaponExplosiveShotUpgrade>();
       BuildSignalsArrayOnComponentAdded<Quantum.FirstStrikeMark>();
       BuildSignalsArrayOnComponentRemoved<Quantum.FirstStrikeMark>();
       BuildSignalsArrayOnComponentAdded<Quantum.FirstStrikeUpgrade>();
@@ -7790,6 +8317,8 @@ namespace Quantum {
       BuildSignalsArrayOnComponentRemoved<Quantum.IgnitionUpgrade>();
       BuildSignalsArrayOnComponentAdded<Quantum.IncreaseDurationUpgrade>();
       BuildSignalsArrayOnComponentRemoved<Quantum.IncreaseDurationUpgrade>();
+      BuildSignalsArrayOnComponentAdded<Quantum.InfernalRageUpgrade>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.InfernalRageUpgrade>();
       BuildSignalsArrayOnComponentAdded<Quantum.InputSource>();
       BuildSignalsArrayOnComponentRemoved<Quantum.InputSource>();
       BuildSignalsArrayOnComponentAdded<Quantum.InstantDetonate>();
@@ -7838,8 +8367,12 @@ namespace Quantum {
       BuildSignalsArrayOnComponentRemoved<NavMeshPathfinder>();
       BuildSignalsArrayOnComponentAdded<NavMeshSteeringAgent>();
       BuildSignalsArrayOnComponentRemoved<NavMeshSteeringAgent>();
+      BuildSignalsArrayOnComponentAdded<Quantum.NeutralWeaponKnockbackBonusUpgrade>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.NeutralWeaponKnockbackBonusUpgrade>();
       BuildSignalsArrayOnComponentAdded<Quantum.OverdriveExtension>();
       BuildSignalsArrayOnComponentRemoved<Quantum.OverdriveExtension>();
+      BuildSignalsArrayOnComponentAdded<Quantum.PendingDamageEcho>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.PendingDamageEcho>();
       BuildSignalsArrayOnComponentAdded<Quantum.PhantomStrikeCharge>();
       BuildSignalsArrayOnComponentRemoved<Quantum.PhantomStrikeCharge>();
       BuildSignalsArrayOnComponentAdded<Quantum.PhantomStrikeUpgrade>();
@@ -7876,14 +8409,22 @@ namespace Quantum {
       BuildSignalsArrayOnComponentRemoved<Quantum.PoiActivation>();
       BuildSignalsArrayOnComponentAdded<Quantum.PoiUsage>();
       BuildSignalsArrayOnComponentRemoved<Quantum.PoiUsage>();
+      BuildSignalsArrayOnComponentAdded<Quantum.PointBlankUpgrade>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.PointBlankUpgrade>();
       BuildSignalsArrayOnComponentAdded<Quantum.PopVelocity>();
       BuildSignalsArrayOnComponentRemoved<Quantum.PopVelocity>();
       BuildSignalsArrayOnComponentAdded<Quantum.PortableSpeaker>();
       BuildSignalsArrayOnComponentRemoved<Quantum.PortableSpeaker>();
+      BuildSignalsArrayOnComponentAdded<Quantum.PriorityTarget>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.PriorityTarget>();
+      BuildSignalsArrayOnComponentAdded<Quantum.PriorityTargetUpgrade>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.PriorityTargetUpgrade>();
       BuildSignalsArrayOnComponentAdded<Quantum.Projectile>();
       BuildSignalsArrayOnComponentRemoved<Quantum.Projectile>();
       BuildSignalsArrayOnComponentAdded<Quantum.ProjectileDamageUpgrade>();
       BuildSignalsArrayOnComponentRemoved<Quantum.ProjectileDamageUpgrade>();
+      BuildSignalsArrayOnComponentAdded<Quantum.ProjectileMovementOverride>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.ProjectileMovementOverride>();
       BuildSignalsArrayOnComponentAdded<Quantum.ProjectileSlowField>();
       BuildSignalsArrayOnComponentRemoved<Quantum.ProjectileSlowField>();
       BuildSignalsArrayOnComponentAdded<Quantum.ProtectorAura>();
@@ -7900,6 +8441,8 @@ namespace Quantum {
       BuildSignalsArrayOnComponentRemoved<Quantum.RiftMutationPicks>();
       BuildSignalsArrayOnComponentAdded<Quantum.ScrapOrb>();
       BuildSignalsArrayOnComponentRemoved<Quantum.ScrapOrb>();
+      BuildSignalsArrayOnComponentAdded<Quantum.SelfFireRateOnJoltUpgrade>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.SelfFireRateOnJoltUpgrade>();
       BuildSignalsArrayOnComponentAdded<Quantum.Sentry>();
       BuildSignalsArrayOnComponentRemoved<Quantum.Sentry>();
       BuildSignalsArrayOnComponentAdded<Quantum.SentryBarrel>();
@@ -7944,6 +8487,10 @@ namespace Quantum {
       BuildSignalsArrayOnComponentRemoved<Quantum.StorePurchases>();
       BuildSignalsArrayOnComponentAdded<Quantum.StunDamageBonusUpgrade>();
       BuildSignalsArrayOnComponentRemoved<Quantum.StunDamageBonusUpgrade>();
+      BuildSignalsArrayOnComponentAdded<Quantum.TargetingLinkMark>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.TargetingLinkMark>();
+      BuildSignalsArrayOnComponentAdded<Quantum.TargetingLinkUpgrade>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.TargetingLinkUpgrade>();
       BuildSignalsArrayOnComponentAdded<Transform2D>();
       BuildSignalsArrayOnComponentRemoved<Transform2D>();
       BuildSignalsArrayOnComponentAdded<Transform2DVertical>();
@@ -7960,6 +8507,8 @@ namespace Quantum {
       BuildSignalsArrayOnComponentRemoved<Quantum.UnstableMixtureUpgrade>();
       BuildSignalsArrayOnComponentAdded<Quantum.UpgradeHistory>();
       BuildSignalsArrayOnComponentRemoved<Quantum.UpgradeHistory>();
+      BuildSignalsArrayOnComponentAdded<Quantum.VendettaPistolUpgrade>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.VendettaPistolUpgrade>();
       BuildSignalsArrayOnComponentAdded<Quantum.VendettaStrikeHitTracker>();
       BuildSignalsArrayOnComponentRemoved<Quantum.VendettaStrikeHitTracker>();
       BuildSignalsArrayOnComponentAdded<View>();
@@ -7986,6 +8535,10 @@ namespace Quantum {
       BuildSignalsArrayOnComponentRemoved<Quantum.WeaponEchoState>();
       BuildSignalsArrayOnComponentAdded<Quantum.WeaponElementInfusion>();
       BuildSignalsArrayOnComponentRemoved<Quantum.WeaponElementInfusion>();
+      BuildSignalsArrayOnComponentAdded<Quantum.WeaponFamilyFirstHitTracker>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.WeaponFamilyFirstHitTracker>();
+      BuildSignalsArrayOnComponentAdded<Quantum.WeaponFamilyMastery>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.WeaponFamilyMastery>();
       BuildSignalsArrayOnComponentAdded<Quantum.WeaponFireTimeMods>();
       BuildSignalsArrayOnComponentRemoved<Quantum.WeaponFireTimeMods>();
       BuildSignalsArrayOnComponentAdded<Quantum.WeaponMagazinePositionPerks>();
@@ -8172,12 +8725,12 @@ namespace Quantum {
           }
         }
       }
-      public void OnPlayerLanded(EntityRef entity, FP fallDistance, LandingSource source) {
+      public void OnPlayerLanded(EntityRef entity, FP fallDistance, FP heightDelta, LandingSource source, QBoolean wasManualJump) {
         var array = _f._ISignalOnPlayerLandedSystems;
         for (Int32 i = 0; i < array.Length; ++i) {
           var s = array[i];
           if (_f.SystemIsEnabledInHierarchy((SystemBase)s)) {
-            s.OnPlayerLanded(_f, entity, fallDistance, source);
+            s.OnPlayerLanded(_f, entity, fallDistance, heightDelta, source, wasManualJump);
           }
         }
       }
@@ -8271,6 +8824,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum.CharacterSkills), Quantum.CharacterSkills.SIZE);
       typeRegistry.Register(typeof(Quantum.CharacterStats), Quantum.CharacterStats.SIZE);
       typeRegistry.Register(typeof(Quantum.ChargeHitTracking), Quantum.ChargeHitTracking.SIZE);
+      typeRegistry.Register(typeof(Quantum.ChargedDamageBonusUpgrade), Quantum.ChargedDamageBonusUpgrade.SIZE);
       typeRegistry.Register(typeof(Quantum.CheatDeathGuard), Quantum.CheatDeathGuard.SIZE);
       typeRegistry.Register(typeof(Quantum.Chest), Quantum.Chest.SIZE);
       typeRegistry.Register(typeof(Quantum.Chunk), Quantum.Chunk.SIZE);
@@ -8283,6 +8837,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(ComponentTypeRef), ComponentTypeRef.SIZE);
       typeRegistry.Register(typeof(Quantum.ConcussiveImpactUpgrade), Quantum.ConcussiveImpactUpgrade.SIZE);
       typeRegistry.Register(typeof(Quantum.ConditionalCriticalModifier), Quantum.ConditionalCriticalModifier.SIZE);
+      typeRegistry.Register(typeof(Quantum.ConditionalWeaponFireRateBonus), Quantum.ConditionalWeaponFireRateBonus.SIZE);
       typeRegistry.Register(typeof(Quantum.ContextInteraction), Quantum.ContextInteraction.SIZE);
       typeRegistry.Register(typeof(Quantum.ContextInteractionState), 1);
       typeRegistry.Register(typeof(Quantum.CurrencyOrb), Quantum.CurrencyOrb.SIZE);
@@ -8290,8 +8845,10 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum.CursedRift), Quantum.CursedRift.SIZE);
       typeRegistry.Register(typeof(Quantum.CursedRiftInteraction), Quantum.CursedRiftInteraction.SIZE);
       typeRegistry.Register(typeof(Quantum.CursedRiftInteractionState), 1);
+      typeRegistry.Register(typeof(Quantum.DamageEchoUpgrade), Quantum.DamageEchoUpgrade.SIZE);
       typeRegistry.Register(typeof(Quantum.DamageSource), 1);
       typeRegistry.Register(typeof(Quantum.DamageTargetMask), 1);
+      typeRegistry.Register(typeof(Quantum.DeadeyeUpgrade), Quantum.DeadeyeUpgrade.SIZE);
       typeRegistry.Register(typeof(Quantum.Decoy), Quantum.Decoy.SIZE);
       typeRegistry.Register(typeof(Quantum.DelayedBlast), Quantum.DelayedBlast.SIZE);
       typeRegistry.Register(typeof(Quantum.DespawnIntent), Quantum.DespawnIntent.SIZE);
@@ -8304,6 +8861,8 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum.EKCCCollisionSource), 1);
       typeRegistry.Register(typeof(Quantum.EKCCIgnoreSource), 1);
       typeRegistry.Register(typeof(Quantum.EKCCProcessorSource), 1);
+      typeRegistry.Register(typeof(Quantum.EchoProjectile), Quantum.EchoProjectile.SIZE);
+      typeRegistry.Register(typeof(Quantum.ElementMastery), Quantum.ElementMastery.SIZE);
       typeRegistry.Register(typeof(Quantum.ElementType), 1);
       typeRegistry.Register(typeof(Quantum.Enemy), Quantum.Enemy.SIZE);
       typeRegistry.Register(typeof(Quantum.EnemyActionPhase), 1);
@@ -8330,6 +8889,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(FPQuaternion), FPQuaternion.SIZE);
       typeRegistry.Register(typeof(FPVector2), FPVector2.SIZE);
       typeRegistry.Register(typeof(FPVector3), FPVector3.SIZE);
+      typeRegistry.Register(typeof(Quantum.FireWeaponExplosiveShotUpgrade), Quantum.FireWeaponExplosiveShotUpgrade.SIZE);
       typeRegistry.Register(typeof(Quantum.FirstStrikeMark), Quantum.FirstStrikeMark.SIZE);
       typeRegistry.Register(typeof(Quantum.FirstStrikeUpgrade), Quantum.FirstStrikeUpgrade.SIZE);
       typeRegistry.Register(typeof(Quantum.ForceMarkOnDetonate), Quantum.ForceMarkOnDetonate.SIZE);
@@ -8351,6 +8911,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum.HudBannerKind), 1);
       typeRegistry.Register(typeof(Quantum.IgnitionUpgrade), Quantum.IgnitionUpgrade.SIZE);
       typeRegistry.Register(typeof(Quantum.IncreaseDurationUpgrade), Quantum.IncreaseDurationUpgrade.SIZE);
+      typeRegistry.Register(typeof(Quantum.InfernalRageUpgrade), Quantum.InfernalRageUpgrade.SIZE);
       typeRegistry.Register(typeof(Quantum.Input), Quantum.Input.SIZE);
       typeRegistry.Register(typeof(Quantum.InputButtons), 4);
       typeRegistry.Register(typeof(InputDirection), InputDirection.SIZE);
@@ -8396,11 +8957,13 @@ namespace Quantum {
       typeRegistry.Register(typeof(NavMeshPathfinder), NavMeshPathfinder.SIZE);
       typeRegistry.Register(typeof(NavMeshRegionMask), NavMeshRegionMask.SIZE);
       typeRegistry.Register(typeof(NavMeshSteeringAgent), NavMeshSteeringAgent.SIZE);
+      typeRegistry.Register(typeof(Quantum.NeutralWeaponKnockbackBonusUpgrade), Quantum.NeutralWeaponKnockbackBonusUpgrade.SIZE);
       typeRegistry.Register(typeof(NullableFP), NullableFP.SIZE);
       typeRegistry.Register(typeof(NullableFPVector2), NullableFPVector2.SIZE);
       typeRegistry.Register(typeof(NullableFPVector3), NullableFPVector3.SIZE);
       typeRegistry.Register(typeof(NullableNonNegativeFP), NullableNonNegativeFP.SIZE);
       typeRegistry.Register(typeof(Quantum.OverdriveExtension), Quantum.OverdriveExtension.SIZE);
+      typeRegistry.Register(typeof(Quantum.PendingDamageEcho), Quantum.PendingDamageEcho.SIZE);
       typeRegistry.Register(typeof(Quantum.PendingDoubleTapShot), Quantum.PendingDoubleTapShot.SIZE);
       typeRegistry.Register(typeof(Quantum.PendingEcho), Quantum.PendingEcho.SIZE);
       typeRegistry.Register(typeof(Quantum.PhantomStrikeCharge), Quantum.PhantomStrikeCharge.SIZE);
@@ -8430,10 +8993,14 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum.PoiUsageEntry), Quantum.PoiUsageEntry.SIZE);
       typeRegistry.Register(typeof(Quantum.PoiUsagePolicy), 1);
       typeRegistry.Register(typeof(Quantum.PoiViewState), 1);
+      typeRegistry.Register(typeof(Quantum.PointBlankUpgrade), Quantum.PointBlankUpgrade.SIZE);
       typeRegistry.Register(typeof(Quantum.PopVelocity), Quantum.PopVelocity.SIZE);
       typeRegistry.Register(typeof(Quantum.PortableSpeaker), Quantum.PortableSpeaker.SIZE);
+      typeRegistry.Register(typeof(Quantum.PriorityTarget), Quantum.PriorityTarget.SIZE);
+      typeRegistry.Register(typeof(Quantum.PriorityTargetUpgrade), Quantum.PriorityTargetUpgrade.SIZE);
       typeRegistry.Register(typeof(Quantum.Projectile), Quantum.Projectile.SIZE);
       typeRegistry.Register(typeof(Quantum.ProjectileDamageUpgrade), Quantum.ProjectileDamageUpgrade.SIZE);
+      typeRegistry.Register(typeof(Quantum.ProjectileMovementOverride), Quantum.ProjectileMovementOverride.SIZE);
       typeRegistry.Register(typeof(Quantum.ProjectileSlowField), Quantum.ProjectileSlowField.SIZE);
       typeRegistry.Register(typeof(Quantum.ProtectorAura), Quantum.ProtectorAura.SIZE);
       typeRegistry.Register(typeof(Ptr), Ptr.SIZE);
@@ -8447,6 +9014,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum.ReviveChannel), Quantum.ReviveChannel.SIZE);
       typeRegistry.Register(typeof(Quantum.RiftMutationPicks), Quantum.RiftMutationPicks.SIZE);
       typeRegistry.Register(typeof(Quantum.ScrapOrb), Quantum.ScrapOrb.SIZE);
+      typeRegistry.Register(typeof(Quantum.SelfFireRateOnJoltUpgrade), Quantum.SelfFireRateOnJoltUpgrade.SIZE);
       typeRegistry.Register(typeof(Quantum.Sentry), Quantum.Sentry.SIZE);
       typeRegistry.Register(typeof(Quantum.SentryBarrel), Quantum.SentryBarrel.SIZE);
       typeRegistry.Register(typeof(Quantum.SentryFortificationUpgrade), Quantum.SentryFortificationUpgrade.SIZE);
@@ -8480,6 +9048,8 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum.StorePurchases), Quantum.StorePurchases.SIZE);
       typeRegistry.Register(typeof(Quantum.StoreWeaponOffer), Quantum.StoreWeaponOffer.SIZE);
       typeRegistry.Register(typeof(Quantum.StunDamageBonusUpgrade), Quantum.StunDamageBonusUpgrade.SIZE);
+      typeRegistry.Register(typeof(Quantum.TargetingLinkMark), Quantum.TargetingLinkMark.SIZE);
+      typeRegistry.Register(typeof(Quantum.TargetingLinkUpgrade), Quantum.TargetingLinkUpgrade.SIZE);
       typeRegistry.Register(typeof(Transform2D), Transform2D.SIZE);
       typeRegistry.Register(typeof(Transform2DVertical), Transform2DVertical.SIZE);
       typeRegistry.Register(typeof(Transform3D), Transform3D.SIZE);
@@ -8490,6 +9060,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum.UnstableMixtureUpgrade), Quantum.UnstableMixtureUpgrade.SIZE);
       typeRegistry.Register(typeof(Quantum.UpgradeHistory), Quantum.UpgradeHistory.SIZE);
       typeRegistry.Register(typeof(Quantum.UpgradeHistoryEntry), Quantum.UpgradeHistoryEntry.SIZE);
+      typeRegistry.Register(typeof(Quantum.VendettaPistolUpgrade), Quantum.VendettaPistolUpgrade.SIZE);
       typeRegistry.Register(typeof(Quantum.VendettaStrikeHitTracker), Quantum.VendettaStrikeHitTracker.SIZE);
       typeRegistry.Register(typeof(View), View.SIZE);
       typeRegistry.Register(typeof(Quantum.Vortex), Quantum.Vortex.SIZE);
@@ -8504,6 +9075,9 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum.Weapon), Quantum.Weapon.SIZE);
       typeRegistry.Register(typeof(Quantum.WeaponEchoState), Quantum.WeaponEchoState.SIZE);
       typeRegistry.Register(typeof(Quantum.WeaponElementInfusion), Quantum.WeaponElementInfusion.SIZE);
+      typeRegistry.Register(typeof(Quantum.WeaponFamily), 1);
+      typeRegistry.Register(typeof(Quantum.WeaponFamilyFirstHitTracker), Quantum.WeaponFamilyFirstHitTracker.SIZE);
+      typeRegistry.Register(typeof(Quantum.WeaponFamilyMastery), Quantum.WeaponFamilyMastery.SIZE);
       typeRegistry.Register(typeof(Quantum.WeaponFireTimeMods), Quantum.WeaponFireTimeMods.SIZE);
       typeRegistry.Register(typeof(Quantum.WeaponMagazinePositionPerks), Quantum.WeaponMagazinePositionPerks.SIZE);
       typeRegistry.Register(typeof(Quantum.WeaponOnCritReactions), Quantum.WeaponOnCritReactions.SIZE);
@@ -8516,7 +9090,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum._globals_), Quantum._globals_.SIZE);
     }
     static partial void InitComponentTypeIdGen() {
-      ComponentTypeId.Reset(ComponentTypeId.BuiltInComponentCount + 156)
+      ComponentTypeId.Reset(ComponentTypeId.BuiltInComponentCount + 176)
         .AddBuiltInComponents()
         .Add<Quantum.AccessoryEmergencyReserve>(Quantum.AccessoryEmergencyReserve.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.AccessoryGuard>(Quantum.AccessoryGuard.Serialize, null, null, ComponentFlags.None)
@@ -8545,16 +9119,20 @@ namespace Quantum {
         .Add<Quantum.CharacterSkills>(Quantum.CharacterSkills.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.CharacterStats>(Quantum.CharacterStats.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.ChargeHitTracking>(Quantum.ChargeHitTracking.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.ChargedDamageBonusUpgrade>(Quantum.ChargedDamageBonusUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.CheatDeathGuard>(Quantum.CheatDeathGuard.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.Chest>(Quantum.Chest.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.Chunk>(Quantum.Chunk.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.ClusterBombUpgrade>(Quantum.ClusterBombUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.ConcussiveImpactUpgrade>(Quantum.ConcussiveImpactUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.ConditionalCriticalModifier>(Quantum.ConditionalCriticalModifier.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.ConditionalWeaponFireRateBonus>(Quantum.ConditionalWeaponFireRateBonus.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.ContextInteraction>(Quantum.ContextInteraction.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.CurrencyOrb>(Quantum.CurrencyOrb.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.CursedRift>(Quantum.CursedRift.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.CursedRiftInteraction>(Quantum.CursedRiftInteraction.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.DamageEchoUpgrade>(Quantum.DamageEchoUpgrade.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.DeadeyeUpgrade>(Quantum.DeadeyeUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.Decoy>(Quantum.Decoy.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.DelayedBlast>(Quantum.DelayedBlast.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.DespawnIntent>(Quantum.DespawnIntent.Serialize, null, null, ComponentFlags.None)
@@ -8562,6 +9140,8 @@ namespace Quantum {
         .Add<Quantum.DirectHitUpgrade>(Quantum.DirectHitUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.DoubleTimeUpgrade>(Quantum.DoubleTimeUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.DroppedAccessory>(Quantum.DroppedAccessory.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.EchoProjectile>(Quantum.EchoProjectile.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.ElementMastery>(Quantum.ElementMastery.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.Enemy>(Quantum.Enemy.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.EnemyActionSlots>(Quantum.EnemyActionSlots.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.EnemyCombatModifiers>(Quantum.EnemyCombatModifiers.Serialize, null, null, ComponentFlags.None)
@@ -8572,6 +9152,7 @@ namespace Quantum {
         .Add<Quantum.ExplodeOnDeath>(Quantum.ExplodeOnDeath.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.ExplodeOnDestroy>(Quantum.ExplodeOnDestroy.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.ExplosionOnConditionalHit>(Quantum.ExplosionOnConditionalHit.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.FireWeaponExplosiveShotUpgrade>(Quantum.FireWeaponExplosiveShotUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.FirstStrikeMark>(Quantum.FirstStrikeMark.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.FirstStrikeUpgrade>(Quantum.FirstStrikeUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.ForceMarkOnDetonate>(Quantum.ForceMarkOnDetonate.Serialize, null, null, ComponentFlags.None)
@@ -8584,6 +9165,7 @@ namespace Quantum {
         .Add<Quantum.HealthOrb>(Quantum.HealthOrb.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.IgnitionUpgrade>(Quantum.IgnitionUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.IncreaseDurationUpgrade>(Quantum.IncreaseDurationUpgrade.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.InfernalRageUpgrade>(Quantum.InfernalRageUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.InputSource>(Quantum.InputSource.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.InstantDetonate>(Quantum.InstantDetonate.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.Interactable>(Quantum.Interactable.Serialize, null, null, ComponentFlags.None)
@@ -8603,7 +9185,9 @@ namespace Quantum {
         .Add<Quantum.MarkExplosiveDeath>(Quantum.MarkExplosiveDeath.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.MirrorStepCooldownAccumulator>(Quantum.MirrorStepCooldownAccumulator.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.MomentumUpgrade>(Quantum.MomentumUpgrade.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.NeutralWeaponKnockbackBonusUpgrade>(Quantum.NeutralWeaponKnockbackBonusUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.OverdriveExtension>(Quantum.OverdriveExtension.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.PendingDamageEcho>(Quantum.PendingDamageEcho.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.PhantomStrikeCharge>(Quantum.PhantomStrikeCharge.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.PhantomStrikeUpgrade>(Quantum.PhantomStrikeUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.PixieBombCharge>(Quantum.PixieBombCharge.Serialize, null, null, ComponentFlags.None)
@@ -8614,10 +9198,14 @@ namespace Quantum {
         .Add<Quantum.PocketBombsUpgrade>(Quantum.PocketBombsUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.PoiActivation>(Quantum.PoiActivation.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.PoiUsage>(Quantum.PoiUsage.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.PointBlankUpgrade>(Quantum.PointBlankUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.PopVelocity>(Quantum.PopVelocity.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.PortableSpeaker>(Quantum.PortableSpeaker.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.PriorityTarget>(Quantum.PriorityTarget.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.PriorityTargetUpgrade>(Quantum.PriorityTargetUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.Projectile>(Quantum.Projectile.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.ProjectileDamageUpgrade>(Quantum.ProjectileDamageUpgrade.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.ProjectileMovementOverride>(Quantum.ProjectileMovementOverride.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.ProjectileSlowField>(Quantum.ProjectileSlowField.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.ProtectorAura>(Quantum.ProtectorAura.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.RageOverdrive>(Quantum.RageOverdrive.Serialize, null, null, ComponentFlags.None)
@@ -8626,6 +9214,7 @@ namespace Quantum {
         .Add<Quantum.ReviveChannel>(Quantum.ReviveChannel.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.RiftMutationPicks>(Quantum.RiftMutationPicks.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.ScrapOrb>(Quantum.ScrapOrb.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.SelfFireRateOnJoltUpgrade>(Quantum.SelfFireRateOnJoltUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.Sentry>(Quantum.Sentry.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.SentryBarrel>(Quantum.SentryBarrel.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.SentryFortificationUpgrade>(Quantum.SentryFortificationUpgrade.Serialize, null, null, ComponentFlags.None)
@@ -8648,11 +9237,14 @@ namespace Quantum {
         .Add<Quantum.StoreInventory>(Quantum.StoreInventory.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.StorePurchases>(Quantum.StorePurchases.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.StunDamageBonusUpgrade>(Quantum.StunDamageBonusUpgrade.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.TargetingLinkMark>(Quantum.TargetingLinkMark.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.TargetingLinkUpgrade>(Quantum.TargetingLinkUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.TraversalChallenge>(Quantum.TraversalChallenge.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.UndertowPull>(Quantum.UndertowPull.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.UndertowUpgrade>(Quantum.UndertowUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.UnstableMixtureUpgrade>(Quantum.UnstableMixtureUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.UpgradeHistory>(Quantum.UpgradeHistory.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.VendettaPistolUpgrade>(Quantum.VendettaPistolUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.VendettaStrikeHitTracker>(Quantum.VendettaStrikeHitTracker.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.Vortex>(Quantum.Vortex.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.VortexCrowdDamageUpgrade>(Quantum.VortexCrowdDamageUpgrade.Serialize, null, null, ComponentFlags.None)
@@ -8665,6 +9257,8 @@ namespace Quantum {
         .Add<Quantum.Weapon>(Quantum.Weapon.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.WeaponEchoState>(Quantum.WeaponEchoState.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.WeaponElementInfusion>(Quantum.WeaponElementInfusion.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.WeaponFamilyFirstHitTracker>(Quantum.WeaponFamilyFirstHitTracker.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.WeaponFamilyMastery>(Quantum.WeaponFamilyMastery.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.WeaponFireTimeMods>(Quantum.WeaponFireTimeMods.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.WeaponMagazinePositionPerks>(Quantum.WeaponMagazinePositionPerks.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.WeaponOnCritReactions>(Quantum.WeaponOnCritReactions.Serialize, null, null, ComponentFlags.None)
@@ -8712,6 +9306,7 @@ namespace Quantum {
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.SkillSlotId>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.SkillState>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.TraversalChallengeState>();
+      FramePrinter.EnsurePrimitiveNotStripped<Quantum.WeaponFamily>();
     }
   }
 }

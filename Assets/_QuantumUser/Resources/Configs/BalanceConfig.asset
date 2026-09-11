@@ -28,7 +28,7 @@ MonoBehaviour:
       RawValue: 65536
   - Minute: 2
     EnemyHp:
-      RawValue: 79835
+      RawValue: 81920
     EnemyDmg:
       RawValue: 72090
     DirectorBudget:
@@ -37,7 +37,7 @@ MonoBehaviour:
       RawValue: 78643
   - Minute: 4
     EnemyHp:
-      RawValue: 101283
+      RawValue: 131072
     EnemyDmg:
       RawValue: 78643
     DirectorBudget:
@@ -46,7 +46,7 @@ MonoBehaviour:
       RawValue: 91750
   - Minute: 6
     EnemyHp:
-      RawValue: 127497
+      RawValue: 196608
     EnemyDmg:
       RawValue: 88474
     DirectorBudget:
@@ -55,7 +55,7 @@ MonoBehaviour:
       RawValue: 104858
   - Minute: 8
     EnemyHp:
-      RawValue: 160861
+      RawValue: 262144
     EnemyDmg:
       RawValue: 98304
     DirectorBudget:
@@ -64,7 +64,7 @@ MonoBehaviour:
       RawValue: 117965
   - Minute: 10
     EnemyHp:
-      RawValue: 196608
+      RawValue: 327680
     EnemyDmg:
       RawValue: 104858
     DirectorBudget:
@@ -73,7 +73,7 @@ MonoBehaviour:
       RawValue: 131072
   - Minute: 12
     EnemyHp:
-      RawValue: 196608
+      RawValue: 393216
     EnemyDmg:
       RawValue: 104858
     DirectorBudget:

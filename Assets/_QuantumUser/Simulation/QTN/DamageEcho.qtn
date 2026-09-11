@@ -1,0 +1,79 @@
+// Generic secondary-shot "echo" behavior - deliberately NOT hero-specific, so any future hero/relic/
+// weapon-perk/mutation wanting "this weapon's shots are repeated a moment later, a fraction of the
+// damage" reuses this exact pair instead of a bespoke one. Kai's Neutral Mastery R3 "Ghost Shot" is
+// the first (and currently only) consumer - see DamageEchoUtility.
+//
+// An owner holding DamageEchoUpgrade has every REAL pellet/projectile the FIRST shot of a fresh
+// magazine actually launches (Element == RequiredElement) push a scheduled entry into their own
+// PendingDamageEcho queue - WeaponSystem's own fire pipeline calls DamageEchoUtility.TryScheduleEcho
+// once per pellet spawned, not DamageUtility.ApplyDamage on a landed hit, so this counts every shot
+// fired - hit or miss - rather than requiring one to connect. DamageEchoSystem ticks the queue down
+// and, on expiry, spawns a REAL echo Projectile along that pellet's own fired Direction (deliberately
+// NOT re-aiming live at execute time - same "snapshot the direction, replay it straight" idiom
+// PendingEcho/PendingDoubleTapShot already use for their own delayed replays) via
+// DamageUtility.ApplyDamage with bypassOutgoingResolution: true on whatever it eventually hits - which
+// is also what makes an echo structurally unable to schedule another echo (WeaponSystem's own fire
+// loop is the only thing that ever calls TryScheduleEcho, never reached by a projectile impact), with
+// no extra recursion flag required.
+component DamageEchoUpgrade
+{
+    ElementType RequiredElement;
+    FP DamageMultiplier;
+    FP Delay;
+
+    // Which DamageEchoVisualData a scheduled echo should carry through to its own
+    // DamageEchoTriggered event, purely for presentation (see that asset's own .View.cs partial for
+    // the actual particle field - simulation never reads anything off it). Invalid/unassigned falls
+    // back to whatever generic effect the View wires up as its own default.
+    AssetRef<DamageEchoVisualData> Visual;
+
+    // The ProjectileHitData substituted onto the spawned echo Projectile in place of whatever weapon
+    // fired it (EchoHitData is the one consumer today) - see DamageEchoSystem.SpawnEchoProjectile,
+    // which spawns using the OWNER'S CURRENTLY EQUIPPED weapon's own ProjectileDataAsset (same
+    // Prototype, same Movement - so the echo looks and flies exactly like a normal shot from whatever
+    // weapon is equipped, Grenade Launcher's arc included) via Projectile.HitOverride. Swapping just
+    // the Hit is what keeps every guarantee here true regardless of which weapon is echoed: EchoHitData
+    // never touches the normal Effects/elemental-status/proc pipeline and always calls
+    // DamageUtility.ApplyDamage with bypassOutgoingResolution: true, so a spawned echo projectile is
+    // exactly as structurally incapable of scheduling another echo (or retriggering Echo Chamber/
+    // Infinite Echo/Double Tap, which only ever fire from WeaponSystem's own fire loop, never reached
+    // by a projectile impact) - or of re-detonating a Grenade Launcher's full area explosion - as any
+    // other projectile impact. Required - with this unassigned, TryScheduleEcho still schedules but
+    // DamageEchoSystem has no Hit behavior to spawn the echo with, so nothing visible happens.
+    AssetRef<ProjectileHitData> EchoHit;
+}
+
+// Per-owner queue of currently-scheduled echoes. Fixed 16 slots - generous headroom for a multi-pellet
+// weapon (a shotgun's first shot schedules one echo PER pellet, e.g. 5 pellets = 5 queued echoes) or a
+// weapon further stacked with Double Tap (see PendingDoubleTapShot.IsFirstBullet) landing several
+// qualifying pellets inside one Delay window; a slot is claimed find-a-free-or-drop (see
+// DamageEchoUtility.ScheduleEcho), same idiom StatusEffects.Haste* already uses for its own fixed-size
+// timed-slot array. Damage[i] is the ALREADY-RESOLVED echo damage (that pellet's own pre-hit resolved
+// damage x DamageMultiplier, captured once at schedule/fire time - NOT post-crit, since crit is only
+// rolled once a shot actually connects, which scheduling no longer waits for) - DamageEchoSystem never
+// recalculates it.
+component PendingDamageEcho
+{
+    array<FP>[16] DelayRemaining;
+    array<FP>[16] Damage;
+    array<AssetRef<DamageEchoVisualData>>[16] Visual;
+    array<AssetRef<ProjectileHitData>>[16] EchoHit;
+
+    // The exact world-space direction THAT pellet was actually fired along (WeaponSystem's own
+    // resolved launch.Velocity.Normalized, spread rotation already baked in), captured at schedule
+    // time. DamageEchoSystem.SpawnEchoProjectile replays it straight from a freshly-resolved spawn
+    // origin (the owner's CURRENT weapon/position/aim, so the echo still leaves from wherever the
+    // owner physically is by the time Delay elapses) rather than re-aiming live - same "no locked
+    // target once queued" simplification PendingEcho/PendingDoubleTapShot already use for their own
+    // delayed replays, and what lets an N-pellet shot's echoes fan out the same way the original did.
+    array<FPVector3>[16] Direction;
+}
+
+// Carries a Damage Echo's own Visual asset onto the actual spawned echo Projectile entity, so
+// EchoHitData.ApplyHit can still fire DamageEchoTriggered with the right particle reference at the
+// moment it actually lands - which, once travel time is involved, is well after DamageEchoSystem
+// scheduled the spawn.
+component EchoProjectile
+{
+    AssetRef<DamageEchoVisualData> Visual;
+}

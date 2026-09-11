@@ -304,6 +304,23 @@
                 // run before StatusEffectSystem/ShieldSystem below for the same reason every other
                 // hit-resolving system does.
                 new SentryDecaySystem(),
+                // Lux's Targeting Link mark (Assault Rifle Mastery R3) - a plain refresh-duration timer,
+                // filtered on TargetingLinkMark so it costs nothing for any target Lux hasn't marked.
+                new TargetingLinkSystem(),
+                // Generic Damage Echo (Kai's Ghost Shot is the first consumer) - ticks each owner's
+                // scheduled echoes and fires them on expiry, filtered on PendingDamageEcho so it costs
+                // nothing for anyone who has never scheduled one.
+                new DamageEchoSystem(),
+                // Generic Priority Target (Lux's Neutral Focus is the first consumer) - ticks each
+                // owner's active priority target down and clears it (fires PriorityTargetCleared) on
+                // expiry/invalidity, filtered on PriorityTarget so it costs nothing for anyone who has
+                // never had one set. Ordering relative to SentryBarrelSystem (registered earlier in
+                // this list) doesn't matter for correctness - PriorityTargetUtility.
+                // TryGetValidPriorityTarget always re-validates the target live at read time, so a
+                // target that died this same tick is already correctly rejected there even before this
+                // system gets around to clearing/announcing it; this system only owns cleanup and the
+                // presentation event, never the underlying validity decision.
+                new PriorityTargetSystem(),
                 // After every hit-resolving system, so a status applied this tick starts ticking next
                 // tick, and before ShieldSystem for the same reason ShieldSystem is documented as late
                 // below - a DoT tick landing this frame must hold off shield recharge like any other hit.

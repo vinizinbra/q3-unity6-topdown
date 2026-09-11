@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.U2D;
@@ -7,12 +8,13 @@ using UnityEngine.U2D;
 /// <summary>
 /// Right-click (Project window) shortcuts on one or more Texture2D assets to add them straight into
 /// the UI or Gameplay Sprite Atlas, without going through <see cref="SpriteAtlasScannerWindow"/>.
+/// The Build Size Analyzer's "→ UI Atlas" / "→ Game Atlas" buttons reuse <see cref="AddTexturesToAtlas"/>.
 /// </summary>
 public static class AddTextureToAtlasContextMenu
 {
-    private const string AtlasFolder = "Assets/_Project/Art/SpriteAtlases";
-    private const string UiAtlasPath = AtlasFolder + "/UISprites.spriteatlas";
-    private const string GameplayAtlasPath = AtlasFolder + "/GameplaySprites.spriteatlas";
+    internal const string AtlasFolder = "Assets/_Project/Art/SpriteAtlases";
+    internal const string UiAtlasPath = AtlasFolder + "/UISprites.spriteatlas";
+    internal const string GameplayAtlasPath = AtlasFolder + "/GameplaySprites.spriteatlas";
 
     [MenuItem("Assets/Add to UI Atlas", false, 20)]
     private static void AddToUiAtlas() => AddSelectedTextures(UiAtlasPath);
@@ -34,26 +36,41 @@ public static class AddTextureToAtlasContextMenu
         if (textures.Length == 0)
             return;
 
+        AddTexturesToAtlas(atlasPath, textures);
+    }
+
+    /// <summary>
+    /// Adds the given textures to the atlas at <paramref name="atlasPath"/>, skipping ones already
+    /// packed there. Returns how many were actually added (-1 if the atlas does not exist).
+    /// </summary>
+    internal static int AddTexturesToAtlas(string atlasPath, IEnumerable<Texture2D> textures)
+    {
         var atlas = AssetDatabase.LoadAssetAtPath<SpriteAtlas>(atlasPath);
         if (atlas == null)
         {
             Debug.LogError($"[AddTextureToAtlasContextMenu] No Sprite Atlas found at '{atlasPath}'.");
-            return;
+            return -1;
         }
 
-        var existing = new System.Collections.Generic.HashSet<Object>(atlas.GetPackables());
-        Object[] texturesToAdd = textures
-            .Cast<Object>()
-            .Where(t => !existing.Contains(t))
-            .ToArray();
+        var existing = new HashSet<Object>(atlas.GetPackables());
+        Object[] candidates = textures.Where(t => t != null).Cast<Object>().Distinct().ToArray();
+        Object[] alreadyPacked = candidates.Where(existing.Contains).ToArray();
+        Object[] texturesToAdd = candidates.Except(alreadyPacked).ToArray();
+
+        if (alreadyPacked.Length > 0)
+        {
+            Debug.Log($"[AddTextureToAtlasContextMenu] Already in '{atlas.name}', skipped: " +
+                      string.Join(", ", alreadyPacked.Select(o => o.name)));
+        }
 
         if (texturesToAdd.Length == 0)
-            return;
+            return 0;
 
         atlas.Add(texturesToAdd);
         EditorUtility.SetDirty(atlas);
         AssetDatabase.SaveAssets();
 
         Debug.Log($"[AddTextureToAtlasContextMenu] Added {texturesToAdd.Length} texture(s) to '{atlas.name}'.");
+        return texturesToAdd.Length;
     }
 }

@@ -59,8 +59,20 @@ namespace Quantum
             }
 
             ProjectileDataAsset projectileData = f.FindAsset(filter.Projectile->ProjectileData);
-            ProjectileMovementData movement = f.FindAsset(projectileData.Movement);
-            ProjectileHitData hitData = f.FindAsset(projectileData.Hit);
+
+            // Prefers a per-shot override (Pixie's Rocket Conversion) over the weapon's own authored
+            // Movement - see Projectile.MovementOverride's own comment. Invalid for every projectile
+            // not spawned through that path, which falls back to exactly the prior behavior.
+            ProjectileMovementData movement = f.FindAsset(filter.Projectile->MovementOverride.IsValid
+                ? filter.Projectile->MovementOverride
+                : projectileData.Movement);
+
+            // Prefers a per-shot override (Kai's Ghost Shot) over the weapon's own authored Hit - see
+            // Projectile.HitOverride's own comment. Invalid for every projectile not spawned through
+            // that path, which falls back to exactly the prior behavior.
+            ProjectileHitData hitData = f.FindAsset(filter.Projectile->HitOverride.IsValid
+                ? filter.Projectile->HitOverride
+                : projectileData.Hit);
 
             movement.UpdateVelocity(f, filter.Transform3D->Position, filter.Projectile);
 
@@ -232,7 +244,8 @@ namespace Quantum
             if (lifetimeExpired == false && distanceReached == false)
                 return;
 
-            f.FindAsset(projectileData.Hit).ApplyExpire(f, filter.Projectile, filter.Transform3D->Position);
+            AssetRef<ProjectileHitData> hitRef = filter.Projectile->HitOverride.IsValid ? filter.Projectile->HitOverride : projectileData.Hit;
+            f.FindAsset(hitRef).ApplyExpire(f, filter.Projectile, filter.Transform3D->Position);
 
             Destroy(f, filter.Entity, filter.Projectile, filter.Transform3D->Position);
         }
@@ -333,7 +346,7 @@ namespace Quantum
         {
             ClearSourceSlot(f, projectile, position);
 
-            f.Events.ProjectileDestroyed(entity, projectile->Owner, position, projectile->ProjectileData);
+            f.Events.ProjectileDestroyed(entity, projectile->Owner, position, projectile->SpawnPosition, projectile->ProjectileData);
             f.Destroy(entity);
         }
 

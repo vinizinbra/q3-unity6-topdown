@@ -27,6 +27,9 @@ namespace Quantum
         public bool AllowJumpLandings = true;
         public bool AllowLaunchedLandings = true;
 
+        [Tooltip("Rank 3 only. How close to takeoff height (world units, either direction) still counts as landing at 'the same height' for a genuine (manual-input) jump. Only meaningful once rank >= 3 sets SameHeightTriggerEnabled.")]
+        public FP SameHeightTolerance = FP._0_50;
+
         [Header("Impact shockwave")]
         public FP[] ImpactRadius = { FP._3, FP._3, FP.FromString("4.5") };
 
@@ -75,6 +78,11 @@ namespace Quantum
             upgrade->VulnerabilityEnabled = rank >= 3;
             upgrade->VulnerabilityDamageTakenModifier = VulnerabilityDamageTakenModifier;
             upgrade->VulnerabilityDuration = VulnerabilityDuration;
+
+            // Rank 3 only - a genuine same-height jump becomes a second qualifying condition
+            // alongside the drop-height gate above, not a replacement for it.
+            upgrade->SameHeightTriggerEnabled = rank >= 3;
+            upgrade->SameHeightTolerance = SameHeightTolerance;
         }
 
         // Bitmask over LandingSource (1 << (byte)source) - three authored bools rather than a raw

@@ -156,12 +156,33 @@ Horizon rank 3 only.
 
 **8. Mirror Step** (`MirrorStepSkillAction`, repurposes `ReflectProjectilesSkillAction`)
 - R1 "Reflect": while dashing, enemy projectiles within 3m are reflected back toward their owner
-  (velocity flipped, re-owned by Kai) - Elite/Boss-owned projectiles excluded.
-- R2: radius 4.5m; reflected projectiles deal 1.5x their own damage (new - the old Reflect never
-  scaled damage at all).
-- R3 "Evasive Reflex": each successful reflection reduces Vortex's cooldown by 0.5s, capped at 2s per
-  Dash (`MirrorStepCooldownAccumulator`, a running per-dash total reset every Dash Begin - NOT reusable
-  from the old boolean-shaped `EvasiveReflexUpgrade`, which could only ever fire once per dash).
+  (velocity flipped for the initial snap, re-owned by Kai) - Elite/Boss-owned projectiles excluded. A
+  pure velocity reversal only actually connects if the shooter is still standing on the return line by
+  the time the bolt gets there, which in a real fight it usually isn't - so the reflected bolt's
+  `Target` is also set to its original owner and `MovementOverride` swapped to a dedicated
+  `HomingProjectileMovementData` asset (`MirrorStepReflectedHoming.asset`, Speed 30/TurnRate 360°/s),
+  same per-shot-override mechanism Pixie's Rocket Conversion already uses, just applied to an
+  already-live projectile instead of at spawn - so it curves in on wherever the shooter actually is
+  rather than staying committed to a fixed line. Deals a fixed 40% of
+  Kai's own Vortex Skill Damage (`KaiAscensionUtility.ResolveVortexSkillDamage`) rather than replaying
+  whatever the enemy's own shot happened to hit for - same `DamagePercent[index] * Resolve<Hero>
+  SkillDamage` idiom every other damage-dealing Ascension uses, so Skill Damage investment now actually
+  benefits a reflect. A reflected bolt also gets its `RemainingLifetime`/`TraveledDistance`/
+  `MaxTravelDistance` refreshed and scaled by `ReflectedRangeMultiplier` (1.5x) instead of keeping
+  whatever budget the original shot had left - fixes a bug where a bolt reflected late in its own
+  flight (near its own Lifetime or distance cap) expired almost immediately after reversing course, and
+  gives reflected shots more range than the original besides.
+- R2: radius 4.5m; reflected bolts against Normal-tier-and-below shooters are an instant kill (a flat
+  999999 raw Damage value routed through the normal `DamageUtility.ApplyDamage` death path - events/
+  drops/`OnEntityKilled` all fire unmodified); anything else takes 60% Skill Damage. The instant-kill
+  check reads the ORIGINAL owner's tier (resolved before Owner flips to Kai), not whoever the bolt
+  eventually connects with - a reversed-velocity shot flies back the way it came, so in practice that's
+  the same enemy it was just taken from.
+- R3 "Evasive Reflex": instant kill extends to Specialist-tier-and-below (Heavy stays un-executable at
+  every rank); anything else takes 100% Skill Damage. Each successful reflection also reduces Vortex's
+  cooldown by 0.5s, capped at 2s per Dash (`MirrorStepCooldownAccumulator`, a running per-dash total
+  reset every Dash Begin - NOT reusable from the old boolean-shaped `EvasiveReflexUpgrade`, which could
+  only ever fire once per dash).
 
 **9. Phantom Strike** (`PhantomStrikeSkillAction`, new class)
 - **Architectural correction**: moved from a `PassiveUpgradeData` reacting to

@@ -18,19 +18,19 @@ MonoBehaviour:
       Value: 271843238532602476
   Icon: {fileID: -1426688026, guid: b217254d41b6945b1873986186a25786, type: 3}
   DisplayName: Explosive Rounds
-  Description: Weapon hits can trigger a small explosion.
+  Description: "Weapon hits can trigger a small explosion."
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - '<color=#FD3971>15%</color> chance on weapon hit to explode for <color=#FD3971>20%</color> of the hit''s damage.'
-  - '<color=#FD3971>30%</color> chance on weapon hit to explode for <color=#FD3971>30%</color> of the hit''s damage.'
-  - 'Every weapon hit explodes for <color=#FD3971>40%</color> of the hit''s damage.'
+  - "Weapon hits have a <color=#FD3971>15%</color> chance to trigger a small explosion dealing <color=#FD3971>+20%</color> Damage in a <color=#FD3971>2m</color> radius."
+  - "Chance increases to <color=#FD3971>22%</color>, Damage to <color=#FD3971>+30%</color>, and radius to <color=#FD3971>2.4m</color>."
+  - "Chance increases to <color=#FD3971>30%</color> and Damage to <color=#FD3971>+40%</color>."
   ProcChance:
   - RawValue: 9830
-  - RawValue: 26214
-  - RawValue: 65536
+  - RawValue: 14418
+  - RawValue: 19661
   Radius:
-  - RawValue: 98304
   - RawValue: 131072
+  - RawValue: 157286
   - RawValue: 157286
   DamageMultiplier:
   - RawValue: 13107

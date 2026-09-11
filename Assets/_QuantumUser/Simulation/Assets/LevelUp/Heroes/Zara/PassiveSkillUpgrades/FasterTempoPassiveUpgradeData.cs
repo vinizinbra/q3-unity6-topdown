@@ -8,7 +8,10 @@ namespace Quantum
     //
     //  - Rank 1: Flow builds 25% faster.
     //  - Rank 2: 50% faster, and Active Flow is worth +18% instead of +15%.
-    //  - Rank 3 "Full Tempo": 75% faster, and Active Flow grants a further +10% Fire Rate on top.
+    //  - Rank 3 "Perfect Rhythm": 75% faster, and Active Flow grants a further +10% Fire Rate on top.
+    //
+    // Renamed from "Full Tempo" once Hero Mastery introduced an SMG Mastery R3 Special of that same
+    // name (see docs/hero-mastery.md) - purely a display-string change, no mechanics moved.
     //
     // Kept its name through the Resonance -> Flow refactor because its ROLE survived intact ("get to
     // the good state sooner"); only the resource it accelerates changed.

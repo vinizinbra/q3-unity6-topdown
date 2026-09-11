@@ -768,6 +768,7 @@ namespace Quantum
             return f.Unsafe.TryGetPointer<StatusEffects>(entity, out var status) == true && status->IceRemaining > FP._0;
         }
 
+
         public static bool HasRuptureDebuff(Frame f, EntityRef entity)
         {
             return f.Unsafe.TryGetPointer<StatusEffects>(entity, out var status) == true && status->RuptureRemaining > FP._0;
@@ -854,6 +855,15 @@ namespace Quantum
             if (source != DamageSource.Weapon || element == ElementType.Neutral || target == EntityRef.None)
                 return;
 
+            // Pixie's Incendiary Rounds (Fire Mastery R3) - every Fire-weapon hit also detonates an
+            // area explosion, guaranteed - see TryTriggerFireWeaponExplosion. Unconditional, same as
+            // Cold Blooded above, not gated behind the ElementalChance roll a few lines down (that
+            // roll only governs whether Burn itself (re)applies).
+            if (element == ElementType.Fire)
+            {
+                TryTriggerFireWeaponExplosion(f, target, owner, source, hitDamage);
+            }
+
             if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false)
                 return;
 
@@ -865,6 +875,27 @@ namespace Quantum
             TryTriggerElementalReaction(f, target, owner, source, element, hitDamage);
 
             Log.Debug($"[Status] {owner}'s {element} weapon hit applied its status to {target}");
+        }
+
+        // Pixie's Incendiary Rounds (Fire Mastery R3) - every Fire-weapon hit also detonates a real
+        // AreaHitData explosion centered on the target, guaranteed. Uses AreaHitData's own public,
+        // Projectile-agnostic Detonate overload (the same one ExplodeOnDestroyUtility uses for a
+        // planted bomb with no live Projectile*), so Direct Hit/Unstable Mixture/Pocket Bombs/Cluster
+        // Bomb all apply exactly as they would for any other genuine Pixie explosion - zero extra
+        // plumbing. No-op for any owner without the upgrade, or without an Explosion asset assigned.
+        private static void TryTriggerFireWeaponExplosion(Frame f, EntityRef target, EntityRef owner, DamageSource source, FP hitDamage)
+        {
+            if (f.Unsafe.TryGetPointer<FireWeaponExplosiveShotUpgrade>(owner, out var explosive) == false
+                || explosive->Explosion.IsValid == false)
+                return;
+
+            if (f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == false)
+                return;
+
+            AreaHitData areaHit = f.FindAsset(explosive->Explosion);
+            areaHit.Detonate(f, owner, source, ElementType.Fire, hitDamage, spawnDepth: 0, center: targetTransform->Position);
+
+            Log.Debug($"[Status] {owner}'s Incendiary Rounds detonated at {target}'s position for base damage {hitDamage}");
         }
 
         // The EXTRA element grafted on by an Element Infusion weapon perk (WeaponElementInfusion) -
@@ -925,11 +956,27 @@ namespace Quantum
                     if (reactionConfig != null)
                         ApplyElectrified(f, target, reactionConfig.ElectrifiedDuration);
 
+                    // Zara's High Voltage (Electric Mastery R3) - applying Jolt grants the OWNER
+                    // (never the target) a timed Fire Rate buff, read off whichever generic upgrade
+                    // component her own Mastery installed - no Hero == X branch here.
+                    TryTriggerSelfFireRateOnJolt(f, owner);
+
                     break;
                 }
 
                 // Void: no baseline - the caller's reaction-check still runs.
             }
+        }
+
+        // Zara's High Voltage (Electric Mastery R3) - applying Jolt grants HERSELF a timed Fire Rate
+        // buff, refreshed (not stacked) via the existing per-source Haste slot rather than a dedicated
+        // timer - source == target == owner is what makes repeat applications refresh in place.
+        private static void TryTriggerSelfFireRateOnJolt(Frame f, EntityRef owner)
+        {
+            if (f.Unsafe.TryGetPointer<SelfFireRateOnJoltUpgrade>(owner, out var selfBuff) == false)
+                return;
+
+            ApplyHaste(f, owner, owner, selfBuff->Duration, FP._1 + selfBuff->FireRateBonus);
         }
 
         // Fires immediately, order-independently, the instant a NEW external elemental application

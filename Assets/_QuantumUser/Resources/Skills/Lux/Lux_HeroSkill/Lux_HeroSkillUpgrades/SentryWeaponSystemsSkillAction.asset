@@ -19,9 +19,10 @@ MonoBehaviour:
   Icon: {fileID: 1503738143, guid: 355e00907e214470bac0029f70064510, type: 3}
   DisplayName: Weapon Systems
   RankDescriptions:
-  - Your Sentry gains a rapid Minigun alongside its Cannon.
-  - Your Sentry fires its Cannon, a rapid Minigun, and periodic explosive rockets.
-  - Your Sentry fires Cannon, Minigun, Rockets and a piercing Laser all at once.
+  - Sentry gains a Minigun.
+  - Sentry also gains a Rocket Pod.
+  - Sentry also gains a piercing Laser. Cannon, Minigun, Rockets and Laser can fire
+    together.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
@@ -58,31 +59,31 @@ MonoBehaviour:
       Value: 403402137048408789
   MinigunOffset:
     X:
-      RawValue: 26214
+      RawValue: 65536
     Y:
-      RawValue: 65536
+      RawValue: 32768
     Z:
-      RawValue: 65536
+      RawValue: -32768
   RocketWeapon:
     Id:
       Value: 282806388448616639
   RocketOffset:
     X:
-      RawValue: -58982
+      RawValue: -65536
     Y:
-      RawValue: 98304
+      RawValue: 65536
     Z:
-      RawValue: -32768
+      RawValue: -65536
   LaserWeapon:
     Id:
       Value: 509762407051158019
   LaserOffset:
     X:
-      RawValue: 58982
+      RawValue: 32768
     Y:
-      RawValue: 98304
+      RawValue: 32768
     Z:
-      RawValue: -32768
+      RawValue: 65536
   WeaponSpriteBySlot:
   - {fileID: -1988497972, guid: 11e8fcaeceabe4b3c8220e6bfa161095, type: 3}
   - {fileID: 250965891, guid: 11e8fcaeceabe4b3c8220e6bfa161095, type: 3}

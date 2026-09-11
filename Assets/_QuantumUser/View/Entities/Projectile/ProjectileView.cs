@@ -46,8 +46,10 @@ namespace Quantum
         [Header("Impact")]
         [SerializeField, Tooltip("Pooled particle prefab played (via EffectsManager) once the visual reaches its resolved hit position - hit or expired. Leave empty for no effect.")]
         private ParticleSystem destroyEffectPrefab;
-        [SerializeField, Tooltip("Trail particle child that should keep playing/fading out where the shot landed instead of being cut off mid-emission. Must be a separate child under visualRoot, not on this same GameObject. Leave empty if this projectile has no trail.")]
+        [SerializeField, Tooltip("Trail particle that should keep playing/fading out where the shot landed instead of being cut off mid-emission. Either a child under visualRoot, or the visual root's own ParticleSystem (then the whole root stays behind to fade, with its non-particle renderers/lights switched off). Leave empty if this projectile has no trail.")]
         private ParticleSystem trailParticle;
+        [SerializeField, Tooltip("TrailRenderer that should linger and fade where the shot landed instead of being cut off - same contract as trailParticle, for a ribbon-style trail. A child under visualRoot or the root's own TrailRenderer. Leave empty if this projectile has none.")]
+        private TrailRenderer trailRenderer;
         [SerializeField, Tooltip("Clamped bounds on how long the final catch-up onto the hit point can take, regardless of the projectile's last known speed - guards against a near-zero speed (e.g. an already-grounded/settled projectile) producing a near-infinite tween.")]
         private float minImpactDuration = 0.03f;
         [SerializeField]
@@ -61,6 +63,12 @@ namespace Quantum
         // Read by ProjectileElementalFxView so the elemental trail follows the visual rather than the
         // simulated entity. Falls back to this transform when there is no detached visual.
         public Transform VisualTransform => _visual != null ? _visual.transform : transform;
+
+        // Read off the PREFAB ASSET's own component by ProjectileGhostTrailManager, for a projectile
+        // that died before this view ever got created - never off a live instance.
+        public ParticleSystem TrailParticle => trailParticle;
+        public TrailRenderer TrailRenderer => trailRenderer;
+        public ParticleSystem DestroyEffectPrefab => destroyEffectPrefab;
 
         public override void Awake()
         {
@@ -76,6 +84,11 @@ namespace Quantum
         public override void Initialize(QuantumGame game)
         {
             base.Initialize(game);
+
+            // Before any early-out below: tells ProjectileGhostTrailManager this shot has a real
+            // view, so it must NOT draw its own fallback for it when the destroy event lands.
+            ProjectileVisualRegistry.Register(_entityRef);
+            LogHelper.Log("ProjFlow", $"[{_entityRef}] VIEW Initialize ({name}) frame={game.Frames.Predicted?.Number}", this);
 
             if (_visual != null)
                 return;
@@ -93,13 +106,9 @@ namespace Quantum
 
             Vector3 spawnPosition = transform.position;
             if (frame != null && frame.TryGet<Projectile>(_entityRef, out var projectile) == true)
-            {
-                spawnPosition = projectile.SpawnPosition.ToUnityVector3();
+                spawnPosition = ResolveVisualSpawnPosition(projectile.Owner, projectile.SpawnPosition.ToUnityVector3());
 
-                Transform muzzle = ResolveMuzzleTransform(projectile.Owner);
-                if (muzzle != null)
-                    spawnPosition = muzzle.position;
-            }
+            ParticleSystem echoGhostParticle = AttachEchoGhostParticle(frame, root);
 
             var settings = new ProjectileVisualController.Settings
             {
@@ -109,6 +118,8 @@ namespace Quantum
                 OrphanTimeout = orphanTimeout,
                 DestroyEffectPrefab = destroyEffectPrefab,
                 TrailParticle = trailParticle,
+                TrailRenderer = trailRenderer,
+                EchoGhostParticle = echoGhostParticle,
             };
 
             _visual = ProjectileVisualController.Detach(root, _entityRef, spawnPosition, transform.rotation, settings);
@@ -130,8 +141,14 @@ namespace Quantum
         // concluding nothing was hit.
         public override void DeInitialize(QuantumGame game)
         {
+            LogHelper.Log("ProjFlow", $"[{_entityRef}] VIEW DeInitialize hasVisual={_visual != null} frame={game?.Frames.Predicted?.Number}", this);
+
             if (_visual != null)
                 _visual.NotifyEntityGone();
+
+            // Grace-stamped, not removed: this runs in the same frame's view pass BEFORE the
+            // destroy event is dispatched, and the registry must still answer "had a view" then.
+            ProjectileVisualRegistry.MarkGone(_entityRef);
 
             _visual = null;
             base.DeInitialize(game);
@@ -173,6 +190,29 @@ namespace Quantum
                 visible: hasProjectile == false || projectile.RemainingSpawnDelay <= 0);
         }
 
+        // How far the simulation's own SpawnPosition may sit from the owner's live muzzle and still
+        // count as "this shot left the barrel". A weapon shot's SpawnPosition is only ever the caster
+        // position plus a hand/forward nudge, well within this of the real muzzle. Anything spawned
+        // mid-flight by a perk - a Split pellet or Critical Rebound at a contact point, a Cluster
+        // bomblet at a detonation, a Ghost Shot echo, a Vortex bolt - has the same Owner but leaves
+        // from wherever it was spawned, and snapping THAT onto the gun would draw it flying out of
+        // the barrel to a place it never was.
+        private const float MuzzleSnapDistance = 1.5f;
+
+        // The point a projectile's visual should start from: the owner's live muzzle when this shot
+        // actually left the weapon, otherwise the simulation's own SpawnPosition. Shared with
+        // ProjectileGhostTrailManager so a shot with and without a view starts from the same place.
+        public static Vector3 ResolveVisualSpawnPosition(EntityRef owner, Vector3 simulationSpawnPosition)
+        {
+            Transform muzzle = ResolveMuzzleTransform(owner);
+            if (muzzle == null)
+                return simulationSpawnPosition;
+
+            return (muzzle.position - simulationSpawnPosition).sqrMagnitude <= MuzzleSnapDistance * MuzzleSnapDistance
+                ? muzzle.position
+                : simulationSpawnPosition;
+        }
+
         // Shared across every ProjectileView instance rather than resolved per-spawn - a fast weapon
         // fires several of these a second, and FindFirstObjectByType is the expensive part. Unity's
         // overloaded null-check on a destroyed Object makes this self-healing across a scene
@@ -182,8 +222,9 @@ namespace Quantum
         // Resolves the firing Weapon's own live muzzle transform, or null if the owner has no
         // resolvable WeaponView (every enemy attack, or a player shot whose owner view does not
         // exist - e.g. already disconnected). See the class comment above for why this is preferred
-        // over the simulation's own Projectile.SpawnPosition.
-        private static Transform ResolveMuzzleTransform(EntityRef owner)
+        // over the simulation's own Projectile.SpawnPosition. Public for ProjectileGhostTrailManager,
+        // which needs the same muzzle for a shot that never had a view.
+        public static Transform ResolveMuzzleTransform(EntityRef owner)
         {
             if (owner == EntityRef.None)
                 return null;
@@ -202,6 +243,41 @@ namespace Quantum
             WeaponView weaponView = weaponController != null ? weaponController.CurrentWeaponView : null;
 
             return weaponView != null ? weaponView.MuzzleTransform : null;
+        }
+
+        // Generic Damage Echo hook (Kai's Ghost Shot, Neutral Mastery R3, is the first source) - any
+        // projectile entity carrying an EchoProjectile component (see DamageEcho.qtn/DamageEchoSystem.
+        // SpawnEchoProjectile) gets its own Visual's EffectPrefab (DamageEchoVisualData.View.cs)
+        // instantiated as a child of the visual root, BEFORE Detach hands root off to
+        // ProjectileVisualController - so it is picked up by that controller's own
+        // GetComponentsInChildren<ParticleSystem> scan and gets exactly the same treatment as every
+        // other particle already living under this prefab: cleared once the visual teleports onto the
+        // muzzle (no streak across that jump), hidden while RemainingSpawnDelay hasn't elapsed, and
+        // torn down along with the rest of the visual on impact/expiry - no bespoke lifecycle code
+        // needed here. No-op for a normal shot (no EchoProjectile component on the entity) or an echo
+        // whose Visual is unassigned/has no EffectPrefab configured yet. Returns the instantiated
+        // particle (or null) so the caller can hand it to ProjectileVisualController.Settings.
+        // EchoGhostParticle - without that it would be cut off mid-emission by Finish's own
+        // Destroy(gameObject) instead of fading out gracefully like TrailParticle does.
+        private ParticleSystem AttachEchoGhostParticle(Frame frame, Transform root)
+        {
+            if (frame == null || frame.TryGet<EchoProjectile>(_entityRef, out var echo) == false || echo.Visual.IsValid == false)
+                return null;
+
+            DamageEchoVisualData visual = frame.FindAsset(echo.Visual);
+            if (visual == null || visual.EffectPrefab == null)
+                return null;
+
+            ParticleSystem ghost = Instantiate(visual.EffectPrefab, root);
+            ghost.transform.localPosition = Vector3.zero;
+            ghost.transform.localRotation = Quaternion.identity;
+
+            // Explicit rather than relying on the prefab's own Play On Awake - this should always
+            // start the moment it is parented on, regardless of how that field happens to be set on
+            // whatever particle an artist drops into DamageEchoVisualData.EffectPrefab.
+            ghost.Play();
+
+            return ghost;
         }
 
         // The bullet mesh is a child in every projectile prefab here, but not always the FIRST one

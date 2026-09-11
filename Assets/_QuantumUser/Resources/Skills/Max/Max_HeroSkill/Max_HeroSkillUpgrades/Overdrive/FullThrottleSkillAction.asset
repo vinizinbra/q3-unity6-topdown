@@ -19,16 +19,16 @@ MonoBehaviour:
   Icon: {fileID: 120216522, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
   DisplayName: Full Throttle
   RankDescriptions:
-  - 'At max Rage, <color=#FD3971>+20%</color> Weapon Damage.'
-  - 'At max Rage, <color=#FD3971>+30%</color> Weapon Damage and <color=#FD3971>+50%</color> Reload Speed.'
-  - 'At max Rage, <color=#FD3971>+40%</color> Weapon Damage and instant reloads.'
+  - "At maximum Rage, gain <color=#FD3971>+20%</color> Weapon Damage."
+  - "Bonus increases to <color=#FD3971>+30%</color> Weapon Damage and <color=#FD3971>+50%</color> Reload Speed."
+  - "Weapon Damage increases to <color=#FD3971>+40%</color>. Reaching maximum Rage also instantly refills the magazine once per Overdrive."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: At max Rage, gain bonus Weapon Damage and faster reloads.
+  Description: "At max Rage, gain bonus Weapon Damage and faster reloads."
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

@@ -721,7 +721,7 @@ MonoBehaviour:
         Value: 0
     GuaranteedEnemyFaction: 0
   - Name: R2-F Brute Elite (105-130s)
-    Kind: 3
+    Kind: 0
     Duration:
       RawValue: 1638400
     GracePeriodDuration:
@@ -916,7 +916,7 @@ MonoBehaviour:
     Duration:
       RawValue: 3932160
     GracePeriodDuration:
-      RawValue: 0
+      RawValue: 1966080
     BudgetPerPulse:
       RawValue: 0
     PulseInterval:
@@ -1272,7 +1272,7 @@ MonoBehaviour:
         Value: 0
     GuaranteedEnemyFaction: 0
   - Name: R3-F Mortar Elite (105-130s)
-    Kind: 3
+    Kind: 0
     Duration:
       RawValue: 1638400
     GracePeriodDuration:
@@ -1391,7 +1391,7 @@ MonoBehaviour:
     Duration:
       RawValue: 3932160
     GracePeriodDuration:
-      RawValue: 0
+      RawValue: 1966080
     BudgetPerPulse:
       RawValue: 0
     PulseInterval:
@@ -1715,7 +1715,7 @@ MonoBehaviour:
         Value: 0
     GuaranteedEnemyFaction: 0
   - Name: R4-E HeavySlammer Elite (105-130s)
-    Kind: 3
+    Kind: 0
     Duration:
       RawValue: 1638400
     GracePeriodDuration:
@@ -1856,7 +1856,7 @@ MonoBehaviour:
     Duration:
       RawValue: 5898240
     GracePeriodDuration:
-      RawValue: 0
+      RawValue: 1966080
     BudgetPerPulse:
       RawValue: 0
     PulseInterval:

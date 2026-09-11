@@ -44,25 +44,28 @@ namespace Quantum
             return AccessoryServiceKind.Repair;
         }
 
-        // Explicit per-step prices out of AccessoryGuardConfig - deliberately no dynamic formula
-        // (see that asset's own comment). More missing durability costs more; a Broken replacement
-        // costs more than any repair, enforced by an authoring guardrail on the config itself rather
-        // than clamped at runtime.
+        // Explicit per-step prices out of StoreConfig - deliberately no dynamic formula (see that
+        // asset's own comment). More missing durability costs more; a Broken replacement costs more
+        // than any repair, enforced by an authoring guardrail on the config itself rather than
+        // clamped at runtime. Lives on StoreConfig (not AccessoryGuardConfig) since it's Store
+        // pricing, same as every other offer/service StoreConfig already prices.
         public static FP ResolvePrice(Frame f, EntityRef player)
         {
-            if (AccessoryGuardUtility.TryGetConfig(f, out AccessoryGuardConfig config) == false)
+            if (f.RuntimeConfig.StoreConfig.IsValid == false)
                 return FP._0;
 
             if (f.Unsafe.TryGetPointer<AccessoryGuard>(player, out var guard) == false)
                 return FP._0;
 
+            StoreConfig config = f.FindAsset(f.RuntimeConfig.StoreConfig);
+
             switch (ResolveService(f, player))
             {
                 case AccessoryServiceKind.Replacement:
-                    return config.BrokenReplacementCost;
+                    return config.AccessoryBrokenReplacementCost;
 
                 case AccessoryServiceKind.Repair:
-                    return config.ResolveRepairCost(AccessoryGuardUtility.GetMissingDurability(guard));
+                    return config.ResolveAccessoryRepairCost(AccessoryGuardUtility.GetMissingDurability(guard));
 
                 default:
                     return FP._0;

@@ -16,11 +16,12 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/SniperWeapon
     Guid:
       Value: 485008723038709767
-  DisplayName: 
+  DisplayName: Sniper
   FireType: 1
   Damage:
     RawValue: 6553600
   Element: 0
+  Family: 5
   CriticalChance:
     RawValue: 13107
   CriticalDamageBonus:
@@ -29,7 +30,7 @@ MonoBehaviour:
     RawValue: 65536
   MagazineSize: 4
   ReloadDuration:
-    RawValue: 65536
+    RawValue: 131072
   Range:
     RawValue: 589824
   PelletCount: 1
@@ -46,12 +47,12 @@ MonoBehaviour:
   BonusBounces: 0
   ProjectileData:
     Id:
-      Value: 2052039704194794421
+      Value: 470292578688152637
   ViewPrefab: {fileID: 8089491252618662435, guid: 376407f6a2ac5480c998b85c91c293c9, type: 3}
   ShakeTier: 0
   _dpsPreview: 'Burst DPS: 100
 
-    Sustained DPS (incl. reload): 80
+    Sustained DPS (incl. reload): 66.7
 
     Damage/min:
-    4800'
+    4000'

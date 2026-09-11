@@ -30,6 +30,18 @@ public readonly struct SoundHandle
     // True only while this exact voice is still playing this exact sound.
     public bool IsPlaying => AudioManager.IsPlaying(this);
 
+    // Current position within the clip, in seconds. -1 while not playing (handle stopped, stolen, or
+    // never valid) - checked, not just for display, since 0 is itself a valid position.
+    public float Time => AudioManager.GetTime(this);
+
+    // Seeks a playing voice - for scrubbing a playhead in an authoring/preview tool. No-ops on an
+    // invalid or no-longer-playing handle, same as every other operation here.
+    public void SetTime(float time) => AudioManager.SetTime(this, time);
+
+    // Live-updates a playing LOOP's boundaries - for dragging a loop point in an authoring tool
+    // without needing to stop and replay for every tweak. No-ops on a handle that isn't playing.
+    public void UpdateLoop(float trimEnd, float loopStart) => AudioManager.SetLoopWindow(this, trimEnd, loopStart);
+
     // Stops with a fade. Pass a negative value (the default) to use the SoundData's own authored
     // fadeOut; pass 0 for an immediate cut.
     public void Stop(float fadeOut = -1f) => AudioManager.Stop(this, fadeOut);

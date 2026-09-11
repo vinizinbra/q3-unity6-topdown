@@ -224,9 +224,9 @@ MonoBehaviour:
     Id:
       Value: 1406289943297679234
   Duration:
-    RawValue: 1966080
+    RawValue: 655360
   Range:
-    RawValue: 327680
+    RawValue: 196608
   SkillDamage:
     RawValue: 1310720
   BaselineWeapon:
@@ -234,7 +234,7 @@ MonoBehaviour:
       Value: 471208801872943650
   BaselineWeaponOffset:
     X:
-      RawValue: -26214
+      RawValue: -32768
     Y:
       RawValue: 65536
     Z:

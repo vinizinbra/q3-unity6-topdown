@@ -22,7 +22,7 @@ MonoBehaviour:
   Description: Restore 20% of your Max Health.
   ButtonLabel: BUY
   Price:
-    RawValue: 2621440
+    RawValue: 26214400
   Weight: 100
   HealPercent:
     RawValue: 13107

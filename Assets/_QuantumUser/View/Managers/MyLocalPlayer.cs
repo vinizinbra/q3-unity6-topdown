@@ -65,7 +65,7 @@ namespace QuantumUser.View
 
             _slots[slotIndex] = new LocalPlayerSlot { EntityRef = entityRef, PlayerRef = playerRef, View = view, IsSet = true };
             _game = QuantumRunner.Default.Game;
-            FollowCamera.I.AddTarget(view.viewTransform);
+            FollowCamera.I?.AddTarget(view.viewTransform);
             onLocalPlayerSetup?.Invoke(entityRef);
             onLocalPlayerRegistered?.Invoke(entityRef, slotIndex);
         }
@@ -77,7 +77,7 @@ namespace QuantumUser.View
                 if (_slots[i].IsSet == false || _slots[i].EntityRef != entityRef)
                     continue;
 
-                FollowCamera.I.RemoveTarget(_slots[i].View.viewTransform);
+                FollowCamera.I?.RemoveTarget(_slots[i].View.viewTransform);
                 _slots[i] = default;
                 onLocalPlayerUnregistered?.Invoke(entityRef, i);
             }

@@ -357,6 +357,12 @@ namespace Quantum
             bool isLastBullet = filter.Weapon->Ammo == 1;
             bool isEchoEligibleShot = filter.Weapon->MagazineSize - filter.Weapon->Ammo + 1 <= 3;
 
+            // Generic Damage Echo (Kai's Ghost Shot) gating - only the very first shot of a fresh
+            // magazine schedules any echoes, same magazine-position idiom every perk above reads off
+            // Ammo/MagazineSize rather than tracking its own shot index. See
+            // DamageEchoUtility.TryScheduleEcho's own comment for why this lives at fire time now.
+            bool isFirstBullet = filter.Weapon->Ammo == filter.Weapon->MagazineSize;
+
             f.Unsafe.TryGetPointer<WeaponPostImpactProcs>(filter.Entity, out var postImpactProcs);
             bool isExplosiveProc = ResolveExplosiveProc(f, postImpactProcs);
             bool isCataclysm = postImpactProcs != null && postImpactProcs->HasCataclysmRound == true && isLastBullet == true;
@@ -389,7 +395,7 @@ namespace Quantum
             grantPierceAmount += ResolveLongRangePierceBonus(f, filter.Entity, filter.Aim->Target, casterPosition);
 
             FireShot(f, filter.Entity, filter.Weapon, weaponData, damage, casterPosition, aimAngle, holdOffset,
-                spawnPosition, aimDirection, filter.Aim->Target, aimAtCenter, isExplosiveProc, isCataclysm, grantPierceAmount);
+                spawnPosition, aimDirection, filter.Aim->Target, aimAtCenter, isExplosiveProc, isCataclysm, grantPierceAmount, isFirstBullet);
 
             if (f.Unsafe.TryGetPointer<WeaponFireTimeMods>(filter.Entity, out var fireMods) == true
                 && fireMods->DoubleTapChance > FP._0 && DamageUtility.RollChance(f, fireMods->DoubleTapChance) == true)
@@ -409,14 +415,15 @@ namespace Quantum
                             Damage = damage,
                             IsExplosiveProc = isExplosiveProc,
                             IsCataclysm = isCataclysm,
-                            GrantPierceAmount = grantPierceAmount
+                            GrantPierceAmount = grantPierceAmount,
+                            IsFirstBullet = isFirstBullet
                         };
                     }
                 }
                 else
                 {
                     FireShot(f, filter.Entity, filter.Weapon, weaponData, damage, casterPosition, aimAngle, holdOffset,
-                        spawnPosition, aimDirection, filter.Aim->Target, aimAtCenter, isExplosiveProc, isCataclysm, grantPierceAmount);
+                        spawnPosition, aimDirection, filter.Aim->Target, aimAtCenter, isExplosiveProc, isCataclysm, grantPierceAmount, isFirstBullet);
                 }
             }
 
@@ -451,7 +458,8 @@ namespace Quantum
         // ammo/cooldown or re-roll its own proc chance.
         private static void FireShot(Frame f, EntityRef owner, Weapon* weapon, WeaponDataAsset weaponData, FP damage,
             FPVector3 casterPosition, FP aimAngle, FPVector3 holdOffset, FPVector3 spawnPosition, FPVector3 aimDirection,
-            EntityRef target, bool aimAtCenter, bool isExplosiveProc, bool isCataclysm, int grantPierceAmount = 0)
+            EntityRef target, bool aimAtCenter, bool isExplosiveProc, bool isCataclysm, int grantPierceAmount = 0,
+            bool isFirstBullet = false)
         {
             switch (weaponData.FireType)
             {
@@ -460,12 +468,12 @@ namespace Quantum
                     // pierces - see FireHitscanPellet. It used to be dropped on the floor for the same
                     // reason Piercing Rounds/Ricochet were: both perks only ever wrote Projectile
                     // fields, so a raycast that hit once and stopped could never express either.
-                    FireHitscan(f, owner, weapon, weaponData, damage, spawnPosition, aimDirection, isExplosiveProc, isCataclysm, grantPierceAmount);
+                    FireHitscan(f, owner, weapon, weaponData, damage, spawnPosition, aimDirection, isExplosiveProc, isCataclysm, grantPierceAmount, isFirstBullet);
                     break;
 
                 case WeaponFireType.Projectile:
                     FireProjectile(f, owner, weapon, weaponData, damage, casterPosition, aimAngle, holdOffset, spawnPosition, aimDirection,
-                        target, aimAtCenter, isExplosiveProc, isCataclysm, grantPierceAmount);
+                        target, aimAtCenter, isExplosiveProc, isCataclysm, grantPierceAmount, isFirstBullet);
                     break;
             }
         }
@@ -576,6 +584,17 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<WeaponOnKillReactions>(entity, out var onKill) == true && onKill->KillerInstinctTimer > FP._0)
             {
                 fireRateBonus += onKill->KillerInstinctFireRateBonus;
+            }
+
+            // Zara's Full Tempo (SMG Mastery R3) - extra Fire Rate on her own SMG while Flow is Active.
+            // Active is flipped by ZaraFlowUtility on Flow's own activation edge, not read live from
+            // ZaraFlow here, so this stays a plain hero-agnostic component read with no Zara-specific
+            // knowledge - works identically for a slow/fast/burst SMG since it only scales this weapon's
+            // own FireRate, never a shot counter.
+            if (f.Unsafe.TryGetPointer<ConditionalWeaponFireRateBonus>(entity, out var conditionalFireRate) == true
+                && conditionalFireRate->Active == true && conditionalFireRate->Family == weaponData.Family)
+            {
+                fireRateBonus += conditionalFireRate->FireRateBonus;
             }
 
             FP baseCooldown = FP._1 / weaponData.FireRate * weapon->FireCooldownMultiplier / (FP._1 + fireRateBonus);
@@ -694,7 +713,16 @@ namespace Quantum
                 return;
 
             ProjectileDataAsset projectileData = f.FindAsset(weaponData.ProjectileData);
-            ProjectileMovementData movement = f.FindAsset(projectileData.Movement);
+
+            AssetRef<ProjectileMovementData> movementOverride = default;
+
+            if (f.Unsafe.TryGetPointer<ProjectileMovementOverride>(owner, out var movementOverrideUpgrade) == true
+                && movementOverrideUpgrade->Family == weaponData.Family)
+            {
+                movementOverride = movementOverrideUpgrade->Movement;
+            }
+
+            ProjectileMovementData movement = f.FindAsset(movementOverride.IsValid ? movementOverride : projectileData.Movement);
 
             // Echoes have no locked target (see PendingEcho), so this always replays the free-aim
             // branch of FireProjectile's pellet spread - a shotgun's echo re-fires the whole volley.
@@ -708,7 +736,7 @@ namespace Quantum
                 if (launch.IsValid == false)
                     continue;
 
-                EntityRef entity = ProjectileSpawner.Spawn(f, owner, weaponData.ProjectileData, ref launch, echo.Damage, DamageSource.Weapon, element: weaponData.Element);
+                EntityRef entity = ProjectileSpawner.Spawn(f, owner, weaponData.ProjectileData, ref launch, echo.Damage, DamageSource.Weapon, element: weaponData.Element, movementOverride: movementOverride);
                 ApplyProjectilePerks(f, owner, entity, weapon, weaponData, false, false);
             }
         }
@@ -744,7 +772,7 @@ namespace Quantum
 
             FireShot(f, owner, weapon, weaponData, pending.Damage, pending.SpawnPosition, FP._0, FPVector3.Zero,
                 pending.SpawnPosition, pending.AimDirection, EntityRef.None, false, pending.IsExplosiveProc,
-                pending.IsCataclysm, pending.GrantPierceAmount);
+                pending.IsCataclysm, pending.GrantPierceAmount, pending.IsFirstBullet);
         }
 
         // Returns true while the weapon is busy reloading and can't fire this tick.
@@ -909,7 +937,8 @@ namespace Quantum
         private static readonly FP HitscanRicochetSearchRadius = 8;
 
         private static void FireHitscan(Frame f, EntityRef owner, Weapon* weapon, WeaponDataAsset weaponData,
-            FP damage, FPVector3 origin, FPVector3 direction, bool isExplosiveProc, bool isCataclysm, int grantPierceAmount = 0)
+            FP damage, FPVector3 origin, FPVector3 direction, bool isExplosiveProc, bool isCataclysm,
+            int grantPierceAmount = 0, bool isFirstBullet = false)
         {
             FP range = weaponData.Range * weapon->RangeMultiplier;
             int pelletCount = weaponData.PelletCount > 0 ? weaponData.PelletCount : 1;
@@ -947,6 +976,14 @@ namespace Quantum
                 // N-pellet shotgun would detonate N explosions off a single trigger pull.
                 FireHitscanPellet(f, owner, weaponData, damage, origin, pelletDirection, range, pierces, bounces,
                     isExplosiveProc && i == 0, isCataclysm && i == 0, ref hitIndex);
+
+                // Generic Damage Echo (Kai's Ghost Shot) - see FireProjectile's own comment; every
+                // pellet of the first shot of a fresh magazine independently schedules its own echo
+                // along that exact pellet's own fired direction, hit or miss.
+                if (isFirstBullet == true)
+                {
+                    DamageEchoUtility.TryScheduleEcho(f, owner, damage, pelletDirection);
+                }
             }
         }
 
@@ -1344,10 +1381,23 @@ namespace Quantum
 
         private static void FireProjectile(Frame f, EntityRef owner, Weapon* weapon, WeaponDataAsset weaponData,
             FP damage, FPVector3 casterPosition, FP aimAngle, FPVector3 holdOffset, FPVector3 spawnPosition, FPVector3 aimDirection,
-            EntityRef target, bool aimAtCenter, bool isExplosiveProc, bool isCataclysm, int grantPierceAmount = 0)
+            EntityRef target, bool aimAtCenter, bool isExplosiveProc, bool isCataclysm, int grantPierceAmount = 0,
+            bool isFirstBullet = false)
         {
             ProjectileDataAsset projectileData = f.FindAsset(weaponData.ProjectileData);
-            ProjectileMovementData movement = f.FindAsset(projectileData.Movement);
+
+            // Pixie's Rocket Conversion (Grenade Launcher Mastery R3) - swaps this shot's own flight
+            // path for the owner's installed override when the weapon's Family matches. See
+            // ProjectileMovementOverride.qtn.
+            AssetRef<ProjectileMovementData> movementOverride = default;
+
+            if (f.Unsafe.TryGetPointer<ProjectileMovementOverride>(owner, out var movementOverrideUpgrade) == true
+                && movementOverrideUpgrade->Family == weaponData.Family)
+            {
+                movementOverride = movementOverrideUpgrade->Movement;
+            }
+
+            ProjectileMovementData movement = f.FindAsset(movementOverride.IsValid ? movementOverride : projectileData.Movement);
 
             // A locked target is solved toward as a point rather than a direction - a lob needs the
             // real distance to land on the target instead of a fixed TargetDistance down the aim ray.
@@ -1376,12 +1426,24 @@ namespace Quantum
                 }
 
                 EntityRef entity = ProjectileSpawner.Spawn(f, owner, weaponData.ProjectileData, ref launch, damage, DamageSource.Weapon,
-                    target: target, element: weaponData.Element, pelletIndex: i);
+                    target: target, element: weaponData.Element, pelletIndex: i, movementOverride: movementOverride);
 
                 // Only pellet 0 of a volley procs Explosive Sequence/Cataclysm Round - see FireHitscan.
                 // Phantom Strike's bonus pierce is NOT pellet-0-gated - "your next shot pierces" reads
                 // as the whole shot, every pellet, not just one.
                 ApplyProjectilePerks(f, owner, entity, weapon, weaponData, isExplosiveProc && i == 0, isCataclysm && i == 0, grantPierceAmount);
+
+                // Generic Damage Echo (Kai's Ghost Shot, Neutral Mastery R3, is the first source) -
+                // every REAL pellet the FIRST shot of a fresh magazine actually launches independently
+                // schedules its own echo, mirroring this exact pellet's own fired direction (an
+                // N-pellet shotgun's first shot gets N ghost pellets fanning out the same way) - see
+                // DamageEchoUtility.TryScheduleEcho's own comment for why this is fire-time, not
+                // hit-time, and why only the first shot qualifies. NOT pellet-0-gated, unlike Explosive
+                // Sequence/Cataclysm above - every pellet of that first shot is its own echo.
+                if (isFirstBullet == true)
+                {
+                    DamageEchoUtility.TryScheduleEcho(f, owner, damage, launch.Velocity.Normalized);
+                }
 
                 Log.Debug($"[Weapon] Spawned pellet {i}/{pelletCount} from {owner} with velocity {launch.Velocity}");
             }

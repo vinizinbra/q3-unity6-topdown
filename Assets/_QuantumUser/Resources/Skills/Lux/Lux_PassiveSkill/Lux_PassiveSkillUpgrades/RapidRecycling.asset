@@ -18,12 +18,12 @@ MonoBehaviour:
       Value: 487893626376381545
   Icon: {fileID: 306343709, guid: 355e00907e214470bac0029f70064510, type: 3}
   DisplayName: Rapid Recycling
-  Description: Collected Scrap shortens your Sentry's cooldown.
+  Description: "Collected Scrap shortens your Sentry's cooldown."
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - 'Each Scrap collected removes <color=#FD3971>0.5s</color> from your Sentry''s remaining cooldown.'
-  - 'Each Scrap collected removes <color=#FD3971>1s</color> from your Sentry''s remaining cooldown.'
-  - 'Each Scrap removes <color=#FD3971>1s</color> from your Sentry''s cooldown, and earning a Fabrication Charge removes a further <color=#FD3971>3s</color>.'
+  - "Collecting Scrap reduces Sentry cooldown by <color=#FD3971>0.5s</color>."
+  - "Cooldown reduction increases to <color=#FD3971>1s</color> per Scrap."
+  - "Earning a Fabrication Charge immediately reduces Sentry cooldown by another <color=#FD3971>3s</color>."
   CooldownReductionPerPickup:
   - RawValue: 32768
   - RawValue: 65536

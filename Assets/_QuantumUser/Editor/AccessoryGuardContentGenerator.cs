@@ -42,10 +42,9 @@ namespace QuantumUser.Editor
 
             config.PickupRadius = FP._1 + FP._0_25;
 
-            // Prototype pricing (docs/accessory-guard.md): one point missing is cheap, two is
-            // noticeably worse, a total loss is worst. Explicit per-step costs, no formula.
-            config.RepairCostByMissingDurability = new[] { (FP)25, (FP)50 };
-            config.BrokenReplacementCost = 100;
+            // Merchant repair/replacement PRICING is no longer authored here - it lives on
+            // StoreConfig (see StoreBlacksmithContentGenerator.GenerateStoreConfig), since it's
+            // Store pricing, same as every other offer/service that config already prices.
 
             FinalizeAsset(config, ConfigPath, isNew);
 
@@ -73,8 +72,9 @@ namespace QuantumUser.Editor
                 "(5) raise ChooseWindow.cardCount from 3 to 4 on the scene's choiceWindows[] instance - " +
                 "the Merchant's Accessory Repair/Replacement card is appended at food-card index 3 and " +
                 "has no widget to render into below 4; " +
-                "(6) nothing else: durability, blocking, dropping, recovery and repair pricing are all " +
-                "hero-agnostic and driven entirely by the asset this generator just wrote.");
+                "(6) nothing else besides pricing (StoreConfig, see StoreBlacksmithContentGenerator): " +
+                "durability, blocking, dropping and recovery are all hero-agnostic and driven entirely " +
+                "by the asset this generator just wrote.");
         }
 
         private static T LoadOrCreate<T>(string path, out bool isNew) where T : AssetObject

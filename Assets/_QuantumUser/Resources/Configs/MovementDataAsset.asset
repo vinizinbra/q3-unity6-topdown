@@ -29,6 +29,8 @@ MonoBehaviour:
       RawValue: 0
   MaxGroundAngle:
     RawValue: 3932160
+  MaxFallSpeed:
+    RawValue: 1966080
   JumpMultiplier:
     RawValue: 65536
   DynamicGroundFriction:
@@ -57,3 +59,11 @@ MonoBehaviour:
     RawValue: 49152
   EdgeCheckDistance:
     RawValue: 65536
+  WaterCheckDistance:
+    RawValue: 131072
+  WaterMaxCrossableGap:
+    RawValue: 262144
+  WaterProbeStep:
+    RawValue: 49152
+  WaterEdgeInsistTime:
+    RawValue: 3277

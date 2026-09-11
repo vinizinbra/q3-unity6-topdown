@@ -31,6 +31,23 @@ component PlayerMovement
     // See LandingSource above. Written by AutoJumpSystem.DoJump (Jump) and
     // DamageUtility.ApplyResolvedImpulse (Launched); reset to Fall by AutoJumpSystem on landing.
     LandingSource AirborneSource;
+
+    // True only for the airtime opened by the player's own Jump input (AutoJumpSystem's
+    // input->Jump.WasPressed branch). Deliberately NOT set by either auto-hop path - not
+    // PlayerMovementProcessor's predictive ledge/mantle detection, and not AutoJumpSystem's own
+    // isOnEdge fallback - since both of those are movement assistance the player didn't ask for,
+    // including the known false-positive at chunk-cube seams. A reaction that means "the player
+    // deliberately jumped" should read this rather than AirborneSource == Jump, which today is set
+    // identically by the isOnEdge fallback too. Reset to false alongside AirborneSource on landing.
+    Boolean WasManualJump;
+
+    // Seconds the player has been continuously walking straight at an unrecoverable-fall edge (no
+    // ground ahead even on PlayerMovementProcessor's own deep WaterCheckDistance probe) with no
+    // dry-ground axis left to slide onto. Held at 0 as long as movement is anything else - real
+    // ground ahead, a survivable deeper ledge, or a diagonal that still has a safe axis to redirect
+    // along - so this only ever grows on a straight walk-in and resets the instant that stops being
+    // true. See PlayerMovementProcessor.ResolveWaterEdgeMovement.
+    FP WaterEdgeHesitationTimer;
 }
 
 // Fired from AutoJumpSystem's own wasGrounded->isGrounded edge (auto-hop/mantle, the manual jump
@@ -44,8 +61,16 @@ component PlayerMovement
 // height levels. It is also what makes the known false auto-hop at chunk-cube seams harmless to any
 // consumer: a spurious hop reports ~0 fall distance and fails any meaningful threshold.
 //
+// heightDelta is the SAME takeoff-to-landing Y difference as fallDistance, but signed and unclamped:
+// positive means landed lower than takeoff, negative means landed higher, ~0 means landed at
+// approximately the same height. fallDistance can't express "landed at the same height" on its own
+// (it clamps a same-height landing and an upward mantle to the same 0), which is why this exists
+// alongside it rather than replacing it.
+//
 // source says WHY the entity was airborne (see LandingSource), so a reaction can accept or reject
-// jumps/launches/plain falls independently rather than treating all airtime alike.
+// jumps/launches/plain falls independently rather than treating all airtime alike. wasManualJump
+// narrows "source == Jump" further down to only the player's own Jump input - see
+// PlayerMovement.WasManualJump above for why that distinction exists.
 //
 // Consumer: Brute's Groundbreaker Passive Ascension (BruteGroundbreakerSystem).
-signal OnPlayerLanded(EntityRef entity, FP fallDistance, LandingSource source);
+signal OnPlayerLanded(EntityRef entity, FP fallDistance, FP heightDelta, LandingSource source, Boolean wasManualJump);

@@ -74,12 +74,12 @@ namespace QuantumUser.Editor
                 // Static fallback for surfaces that call the plain, rank-unaware GetDescription() -
                 // e.g. HeroInfoPopupWidget's Tab-hold history list. GetDescription(int rank) (below,
                 // built from the per-rank arrays) is what every rank-aware surface actually shows.
-                asset.Description = "Juggernaut rewards staying on the move - running builds Charge faster, being Charged makes you faster still, and a discharge no longer costs you all of it.";
+                asset.Description = "Juggernaut rewards staying on the move - Charge builds faster, and a discharge no longer drains it all.";
                 asset.RankDescriptions = new[]
                 {
-                    "Juggernaut Charge builds 25% faster; being fully Charged grants +10% Move Speed. A discharge drops you to 30% Charge.",
-                    "Juggernaut Charge builds 40% faster; being fully Charged grants +20% Move Speed. A discharge drops you to 60% Charge.",
-                    "Charge builds 40% faster; full Charge grants +30% Move Speed. Discharging costs no Charge and won't end Juggernaut.",
+                    "Momentum builds <color=#FD3971>25%</color> faster during Juggernaut. Gain <color=#FD3971>+10%</color> Move Speed while Charged. Discharge leaves <color=#FD3971>30%</color> Charge.",
+                    "Momentum builds <color=#FD3971>40%</color> faster. Gain <color=#FD3971>+20%</color> Move Speed while Charged. Discharge leaves <color=#FD3971>60%</color> Charge.",
+                    "Gain <color=#FD3971>+30%</color> Move Speed while Charged. Discharge costs no Charge, and Juggernaut won't end while fully Charged.",
                 };
                 asset.GenerationMultiplier = new[] { FP.FromString("1.25"), FP.FromString("1.40"), FP.FromString("1.40") };
                 asset.ChargedMoveSpeedBonus = new[] { FP._0_10, FP._0_20, FP.FromString("0.30") };
@@ -92,12 +92,12 @@ namespace QuantumUser.Editor
                 asset.DisplayName = "Bone Breaker";
                 asset.Activated = false;
                 asset.MaxRank = 3;
-                asset.Description = "Juggernaut's discharge stops being pure knockback and starts killing - heavy bonus damage on every launch, and more still against Specialist and Heavy enemies.";
+                asset.Description = "Juggernaut's discharge stops being pure knockback and starts killing, especially tougher enemies.";
                 asset.RankDescriptions = new[]
                 {
-                    "Every Juggernaut discharge deals +30% damage on top of its knockback.",
-                    "Every Juggernaut discharge deals +60% damage on top of its knockback.",
-                    "Every discharge deals +100% damage, and Specialist and Heavy enemies take a further +30%.",
+                    "Discharge deals <color=#FD3971>+30%</color> Damage.",
+                    "Discharge deals <color=#FD3971>+60%</color> Damage.",
+                    "Discharge deals <color=#FD3971>+100%</color> Damage and <color=#FD3971>+30%</color> additional Damage to Specialist and Heavy enemies.",
                 };
                 asset.DamageMultiplierBonus = new[] { FP.FromString("0.30"), FP.FromString("0.60"), FP._1 };
                 asset.TierDamageBonus = new[] { FP._0, FP._0, FP.FromString("0.30") };
@@ -108,12 +108,12 @@ namespace QuantumUser.Editor
                 asset.DisplayName = "Aftershock";
                 asset.Activated = false;
                 asset.MaxRank = 3;
-                asset.Description = "Juggernaut's closing shockwave grows with every enemy you struck during the channel, so routing through a crowd before it ends is what makes the finish hurt.";
+                asset.Description = "Juggernaut's closing shockwave grows with every enemy you strike during the channel.";
                 asset.RankDescriptions = new[]
                 {
-                    "Each enemy struck during Juggernaut adds +15% damage to the closing shockwave, up to 5 stacks.",
-                    "Each enemy struck adds +15% damage and +5% radius to the closing shockwave, up to 5 stacks.",
-                    "Each enemy struck adds +15% damage and +5% radius, up to 5 stacks. At 5 stacks a second shockwave follows in 0.5s.",
+                    "Each enemy hit by Discharge makes the closing shockwave <color=#FD3971>15%</color> stronger, up to <color=#FD3971>5</color> enemies.",
+                    "Each enemy hit also makes the shockwave <color=#FD3971>5%</color> larger, up to <color=#FD3971>5</color> enemies.",
+                    "At <color=#FD3971>5</color> enemies hit, the shockwave repeats <color=#FD3971>0.5s</color> later for <color=#FD3971>60%</color> of its Damage.",
                 };
                 asset.StackDamagePercent = new[] { FP.FromString("0.15"), FP.FromString("0.15"), FP.FromString("0.15") };
                 asset.StackRadiusPercent = new[] { FP._0, FP.FromString("0.05"), FP.FromString("0.05") };
@@ -129,12 +129,12 @@ namespace QuantumUser.Editor
                 asset.DisplayName = "Concussive Impact";
                 asset.Activated = false;
                 asset.MaxRank = 3;
-                asset.Description = "Enemies your discharge launches no longer land safely - they take damage on impact, are Stunned where they fall, and eventually crack the ground around them.";
+                asset.Description = "Enemies your discharge launches no longer land safely - they take damage, get Stunned, and crack the ground.";
                 asset.RankDescriptions = new[]
                 {
-                    "Enemies launched by the discharge take 30% Juggernaut damage and are Stunned 0.75s on landing.",
-                    "Launched enemies take 50% Juggernaut damage, are Stunned 1s on landing, and fly 25% farther.",
-                    "Launched enemies take 75% damage and are Stunned 1.25s, bursting a 2.5m Stun shockwave. +40% damage to Stunned.",
+                    "Launched enemies take <color=#FD3971>30%</color> Juggernaut Skill Damage and are Stunned for <color=#FD3971>0.75s</color> when they land.",
+                    "<color=#FD3971>+25%</color> Knockback. Landing Damage increases to <color=#FD3971>50%</color> and Stun increases to <color=#FD3971>1s</color>.",
+                    "Landing Damage rises to <color=#FD3971>75%</color>, Stun to <color=#FD3971>1.25s</color>. Creates a <color=#FD3971>2.5m</color> shockwave (<color=#FD3971>40%</color> Damage, <color=#FD3971>1s</color> Stun). <color=#FD3971>+40%</color> Damage to Stunned.",
                 };
                 asset.LandingDamagePercent = new[] { FP.FromString("0.30"), FP._0_50, FP.FromString("0.75") };
                 asset.LandingStunDuration = new[] { FP.FromString("0.75"), FP._1, FP.FromString("1.25") };
@@ -148,12 +148,12 @@ namespace QuantumUser.Editor
             IronPresencePassiveUpgradeData ironPresence = CreateOrUpdate<IronPresencePassiveUpgradeData>($"{PassiveUpgradesFolderPath}/IronPresence.asset", asset =>
             {
                 asset.DisplayName = "Iron Presence";
-                asset.Description = "Enemies intimidated by your Protector Aura are worn down before they reach you - easier to throw, and eventually softer to your own hits.";
+                asset.Description = "Enemies intimidated by your Protector Aura are worn down before they reach you.";
                 asset.RankDescriptions = new[]
                 {
-                    "Enemies inside your Protector Aura take +25% knockback force.",
-                    "Enemies inside your Protector Aura take +25% knockback and +20% damage from you.",
-                    "Enemies inside your Protector Aura take +50% knockback and +35% damage from you.",
+                    "Intimidated enemies take <color=#FD3971>+25%</color> Knockback.",
+                    "Brute also deals <color=#FD3971>+20%</color> Damage to Intimidated enemies.",
+                    "Knockback bonus increases to <color=#FD3971>+50%</color> and Damage bonus to <color=#FD3971>+35%</color>.",
                 };
                 asset.MaxRank = 3;
                 asset.KnockbackTakenMultiplier = new[] { FP.FromString("1.25"), FP.FromString("1.25"), FP._1_50 };
@@ -163,12 +163,12 @@ namespace QuantumUser.Editor
             GuardianPassiveUpgradeData guardian = CreateOrUpdate<GuardianPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/Guardian.asset", asset =>
             {
                 asset.DisplayName = "Guardian";
-                asset.Description = "Your Protector Aura widens into a real safe zone - allies standing inside take less damage, hold their ground against knockback, and get covered when they are hit.";
+                asset.Description = "Your Protector Aura becomes a safe zone - allies inside take less damage and get covered when hit.";
                 asset.RankDescriptions = new[]
                 {
-                    "Protector Aura radius +2m, and allies inside it take 10% less damage from every source.",
-                    "Protector Aura radius +3m; allies inside take 15% less damage and 30% less knockback.",
-                    "Aura radius +3m; allies inside take 15% less damage, 30% less knockback. A hit ally gains 20% more Reduction for 2s.",
+                    "Protector radius increases by <color=#FD3971>2m</color>. Allies inside gain <color=#FD3971>10%</color> Damage Reduction.",
+                    "Radius increases by <color=#FD3971>3m</color>. Allies gain <color=#FD3971>15%</color> Damage Reduction and <color=#FD3971>+30%</color> Knockback Resistance.",
+                    "When an ally inside Protector is hit, they gain an additional <color=#FD3971>20%</color> Damage Reduction for <color=#FD3971>2s</color>.",
                 };
                 asset.MaxRank = 3;
                 asset.RadiusBonus = new[] { FP._2, FP._3, FP._3 };
@@ -186,12 +186,12 @@ namespace QuantumUser.Editor
             GroundbreakerPassiveUpgradeData groundbreaker = CreateOrUpdate<GroundbreakerPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/Groundbreaker.asset", asset =>
             {
                 asset.DisplayName = "Groundbreaker";
-                asset.Description = "Dropping from high ground turns Brute's own weight into a weapon - the landing throws everything clear, slams enemies into walls, and eventually cracks them open.";
+                asset.Description = "Landing from a height turns Brute's weight into a weapon - throwing, slamming, and cracking enemies open.";
                 asset.RankDescriptions = new[]
                 {
-                    "Landing from 2m up bursts a 3m shockwave for 20% Juggernaut damage, knocking nearby enemies clear.",
-                    "Landing from height bursts a 3m shockwave for 50% Juggernaut damage, Stunning enemies slammed into a wall.",
-                    "Landing from height bursts a 4.5m shockwave for 75% damage. Wall-slammed enemies are Stunned and Exposed 3s.",
+                    "Jumping down from a height creates a <color=#FD3971>3m</color> landing shockwave that damages and knocks enemies away.",
+                    "Heavy Landing deals more Damage and Knockback. Enemies knocked into walls are Stunned for <color=#FD3971>1s</color>.",
+                    "Also triggers on a same-height jump. Radius <color=#FD3971>4.5m</color>, Damage <color=#FD3971>75%</color>. Wall-Stunned enemies become Exposed (<color=#FD3971>+25%</color> Damage, <color=#FD3971>3s</color>).",
                 };
                 asset.MaxRank = 3;
 
@@ -201,6 +201,10 @@ namespace QuantumUser.Editor
                 asset.AllowFallLandings = true;
                 asset.AllowJumpLandings = true;
                 asset.AllowLaunchedLandings = true;
+
+                // Rank 3 only - see GroundbreakerPassiveUpgradeData/Groundbreaker.qtn. 0.5 world units
+                // either side of takeoff height, and only for a genuine (manual-input) jump.
+                asset.SameHeightTolerance = FP._0_50;
 
                 asset.ImpactRadius = new[] { FP._3, FP._3, FP.FromString("4.5") };
                 asset.KnockbackForce = new FP[] { 10, 14, FP.FromString("16.5") };
@@ -219,12 +223,12 @@ namespace QuantumUser.Editor
             {
                 asset.DisplayName = "Iron Shoulder";
                 asset.MaxRank = 3;
-                asset.Description = "Dash becomes a shoulder charge that bowls enemies over, and anything you drive into a wall takes the worst of it - eventually taking the whole room with it.";
+                asset.Description = "Dash becomes a shoulder charge that bowls enemies over and punishes anyone slammed into a wall.";
                 asset.RankDescriptions = new[]
                 {
-                    "Dash becomes a shoulder charge: enemies hit take heavy knockback, and any slammed into a wall is Stunned 1s.",
-                    "The charge also deals 60% Juggernaut damage, +50% more on a wall slam, and still Stuns what it pins there.",
-                    "The charge deals 60% damage (+50% on a wall slam) and Stuns. A wall slam bursts a 3m Stun shockwave for 80%.",
+                    "Dashing into enemies knocks them back. Enemies slammed into walls are Stunned.",
+                    "Dash collisions deal <color=#FD3971>60%</color> Juggernaut Skill Damage. Wall slams deal <color=#FD3971>+50%</color> additional Damage.",
+                    "Wall slams create a <color=#FD3971>3m</color> shockwave dealing <color=#FD3971>80%</color> Juggernaut Skill Damage and Stunning nearby enemies.",
                 };
                 asset.KnockbackTier = KnockbackTier.Strong;
                 asset.WallCheckDistance = 2;
@@ -239,12 +243,12 @@ namespace QuantumUser.Editor
             {
                 asset.DisplayName = "Bodyguard";
                 asset.MaxRank = 3;
-                asset.Description = "Dash to hand out protection - you and every ally you sweep past get a guard that eats the next hit outright, and at higher ranks it pays you back for the save.";
+                asset.Description = "Dash to hand out protection - a guard that blocks the next hit and pays you back in Shield.";
                 asset.RankDescriptions = new[]
                 {
-                    "Ending a Dash gives you and allies within 3m a Free Hit Guard for 2.5s, negating the next hit taken.",
-                    "Ending a Dash gives you and allies within 6m a Free Hit Guard for 3.5s. Each hit it blocks restores 10 Shield.",
-                    "Ending a Dash guards you and allies within 8m for 3.5s. A blocked hit restores 15 Shield and bursts a 3m knockback.",
+                    "After Dashing, Brute and allies within <color=#FD3971>3m</color> gain Free Hit Guard for <color=#FD3971>2.5s</color>. The next damaging hit is completely blocked.",
+                    "Radius increases to <color=#FD3971>6m</color> and duration to <color=#FD3971>3.5s</color>. Whenever a Guard blocks a hit, Brute gains <color=#FD3971>10</color> Temporary Shield.",
+                    "A block also grants Brute <color=#FD3971>15</color> Shield and releases a <color=#FD3971>3m</color> knockback shockwave around whoever it saved.",
                 };
 
                 // Grows every rank rather than plateauing at rank 2 (hand-tuned in the Inspector and
@@ -264,11 +268,18 @@ namespace QuantumUser.Editor
                 asset.ShockwaveForce = FP._4;
             });
 
+            // Hero Mastery (see docs/hero-mastery.md) - Shotgun (Weapon Family) + Neutral (Element),
+            // drafted through the same Passive Upgrade pool as Iron Presence/Guardian/Groundbreaker
+            // above, not a separate system. Authored in HeroMasteryAssetGenerator (shared with the
+            // other 5 heroes' own Mastery pairs and with that file's own "regenerate all 12 Mastery
+            // assets" menu item) rather than inline here, so the tuned values live in exactly one place.
+            var (shotgunMastery, neutralMastery) = HeroMasteryAssetGenerator.CreateBruteMastery();
+
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh(); // lets QuantumAssetObjectPostprocessor stamp Guid/Identifier on anything just created
 
             WireCharacterData(passive,
-                new List<PassiveUpgradeData> { ironPresence, guardian, groundbreaker },
+                new List<PassiveUpgradeData> { ironPresence, guardian, groundbreaker, shotgunMastery, neutralMastery },
                 new List<SkillActionData> { ironShoulder, bodyguard });
 
             WireJuggernautActions(new List<SkillActionData> { momentum, boneBreaker, aftershock, concussiveImpact });

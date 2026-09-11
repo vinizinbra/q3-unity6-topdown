@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b27366c1a53b480bbfcef5543d336c5, type: 3}
+  m_Name: ShotgunMastery
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ShotgunMasteryData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Brute/Brute_PassiveSkill/Brute_PassiveSkillUpgrades/ShotgunMastery
+    Guid:
+      Value: 304482774853083522
+  Icon: {fileID: -1259291986, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
+  DisplayName: Shotgun Mastery
+  Description: Brute's Shotguns hit harder - and at close range, harder still.
+  <MaxRank>k__BackingField: 3
+  RankDescriptions:
+  - +<color=#FD3971>15%</color> Shotgun Damage.
+  - +<color=#FD3971>30%</color> Shotgun Damage.
+  - +<color=#FD3971>50%</color> Shotgun Damage. Deal +<color=#FD3971>25%</color>
+    additional Shotgun Damage to nearby enemies.
+  Family: 4
+  DamageMultiplierPerRank:
+  - RawValue: 9830
+  - RawValue: 19661
+  - RawValue: 32768
+  PointBlankDamageBonus:
+    RawValue: 16384
+  PointBlankRange:
+    RawValue: 262144

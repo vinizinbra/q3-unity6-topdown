@@ -19,16 +19,16 @@ MonoBehaviour:
   Icon: {fileID: -649492913, guid: 355e00907e214470bac0029f70064510, type: 3}
   DisplayName: Relocation Protocol
   RankDescriptions:
-  - 'Dashing from within <color=#FD3971>4m</color> of your Sentry moves it to your dash destination, fully intact.'
-  - 'Dashing from within <color=#FD3971>4m</color> moves your Sentry to your destination, granting <color=#FD3971>+25%</color> Fire Rate for <color=#FD3971>2s</color> and <color=#FD3971>+1s</color> lifetime.'
-  - 'Your Sentry moves to your dash destination, immediately firing a volley and a knockback pulse at nearby enemies.'
+  - "Dashing from within <color=#FD3971>4m</color> of your Sentry moves it to the Dash destination."
+  - "The relocated Sentry gains <color=#FD3971>+25%</color> Fire Rate for <color=#FD3971>2s</color> and <color=#FD3971>+1s</color> lifetime."
+  - "The relocated Sentry immediately fires a volley and releases a radial knockback pulse at nearby enemies."
   <MaxRank>k__BackingField: 3
   Priority: 0
-  Phase: -1
+  Phase: 5
   Interval:
     RawValue: 0
   Activated: 1
-  Description: Dash while standing at your Sentry and it comes with you - fully intact.
+  Description: "Dash while standing at your Sentry and it comes with you - fully intact."
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

@@ -19,22 +19,16 @@ MonoBehaviour:
   Icon: {fileID: 1950513883, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
   DisplayName: Afterbeat
   RankDescriptions:
-  - 'Quick Tempo: dashing grants <color=#FD3971>1</color> Flow stack, and each enemy
-    you pass through brings the next stack <color=#FD3971>0.25s</color> closer (up
-    to <color=#FD3971>1s</color>).'
-  - 'Afterbeat: dashing grants <color=#FD3971>1</color> Flow stack and brings the
-    next closer, and <color=#FD3971>1s</color> later a beat erupts at your starting
-    position, damaging and knocking back nearby enemies.'
-  - 'Double Beat: beats erupt at both ends of the dash - landing either one on an
-    enemy grants another Flow stack (once per dash).'
+  - "Dashing restores <color=#FD3971>35%</color> Flow, plus additional Flow for each unique enemy dashed through."
+  - "Dashing leaves a delayed damaging Beat at the Dash starting point."
+  - "Also creates a Beat at the Dash destination. Landing on at least one enemy grants additional Flow."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 7
   Interval:
     RawValue: 0
   Activated: 1
-  Description: Dashing feeds your Flow - and eventually leaves damaging beats behind
-    you.
+  Description: "Dashing feeds your Flow - and eventually leaves damaging beats behind you."
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -68,16 +62,16 @@ MonoBehaviour:
   MaxProgressPerDash:
     RawValue: 26214
   Delay:
-    RawValue: 32768
+    RawValue: 65536
   DamagePercentOfSkill:
   - RawValue: 0
-  - RawValue: 131072
-  - RawValue: 196608
+  - RawValue: 49152
+  - RawValue: 49152
   Radius:
   - RawValue: 0
-  - RawValue: 131072
-  - RawValue: 196608
+  - RawValue: 262144
+  - RawValue: 262144
   KnockbackForce:
   - RawValue: 0
-  - RawValue: 983040
-  - RawValue: 1966080
+  - RawValue: 393216
+  - RawValue: 393216

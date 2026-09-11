@@ -1,0 +1,2133 @@
+fileFormatVersion: 2
+guid: 22d281b779f8c49dba31479e82c1cb37
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 4564611581496328278
+    second: RR_Coin
+  - first:
+      213: -829635590228529461
+    second: RR_Gem
+  - first:
+      213: 8707786324028901716
+    second: RR_Ruby
+  - first:
+      213: 6868634475704471422
+    second: RR_EnergyPotion
+  - first:
+      213: -6995720472750356834
+    second: RR_Heart
+  - first:
+      213: 8347841046329057187
+    second: RR_Shield
+  - first:
+      213: 7213855771339355948
+    second: RR_Skull
+  - first:
+      213: 386757296849771117
+    second: RR_SkullDemon
+  - first:
+      213: -6096114658787872804
+    second: RR_Blocked
+  - first:
+      213: 9200438599625884481
+    second: RR_Star
+  - first:
+      213: -3302862223752042547
+    second: RR_StarWinged
+  - first:
+      213: -8083431432237053755
+    second: RR_Medal
+  - first:
+      213: 1582613048386320424
+    second: RR_Trophy
+  - first:
+      213: -2186493312567533101
+    second: RR_GiftBox
+  - first:
+      213: 8464972537089435331
+    second: RR_Crown
+  - first:
+      213: 1151582811352267020
+    second: RR_Gear
+  - first:
+      213: 5964272730452684246
+    second: RR_Pause
+  - first:
+      213: 3166693434849592852
+    second: RR_Play
+  - first:
+      213: -5166786348826631418
+    second: RR_Stop
+  - first:
+      213: 7670849149916054248
+    second: RR_FastForward
+  - first:
+      213: 8674464291130220861
+    second: RR_Refresh
+  - first:
+      213: 8957706279899708151
+    second: RR_Swords
+  - first:
+      213: -8609023794640409156
+    second: RR_Target
+  - first:
+      213: 5449388452642997027
+    second: RR_SkullBlast
+  - first:
+      213: 493544303167807814
+    second: RR_Pistol
+  - first:
+      213: -4403627616881790053
+    second: RR_SMG
+  - first:
+      213: 4100031322551123200
+    second: RR_Shotgun
+  - first:
+      213: -595945353166185593
+    second: RR_SniperRifle
+  - first:
+      213: 7502351883000364174
+    second: RR_Grenade
+  - first:
+      213: 8003505314389362165
+    second: RR_Rocket
+  - first:
+      213: 7817556410392723951
+    second: RR_Ammo
+  - first:
+      213: 2687495060821290484
+    second: RR_Magazine
+  - first:
+      213: 7205191247277886849
+    second: RR_Medkit
+  - first:
+      213: -5076652581915949414
+    second: RR_ArmorVest
+  - first:
+      213: 8663100538509961516
+    second: RR_Boots
+  - first:
+      213: -1451549089158663006
+    second: RR_RankUp
+  - first:
+      213: -2612003503445583932
+    second: RR_XP
+  - first:
+      213: -7174493734832725423
+    second: RR_Key
+  - first:
+      213: 479436527590122689
+    second: RR_Ticket
+  - first:
+      213: -4393933993369393434
+    second: RR_MapPin
+  - first:
+      213: 2012248425565564401
+    second: RR_Chest
+  - first:
+      213: 1519560952557005819
+    second: RR_Crate
+  - first:
+      213: -9039222908629694258
+    second: RR_Crystal
+  - first:
+      213: -4590111078121047098
+    second: RR_Vortex
+  - first:
+      213: 3874456888398711489
+    second: RR_Fire
+  - first:
+      213: -867607232217750447
+    second: RR_Ice
+  - first:
+      213: 4043136501894365495
+    second: RR_Lightning
+  - first:
+      213: 4541201517414898064
+    second: RR_Poison
+  - first:
+      213: 7623245281958301799
+    second: RR_Leaf
+  - first:
+      213: 9218192266507461713
+    second: RR_WaterDrop
+  - first:
+      213: -3158864414185805081
+    second: RR_Wind
+  - first:
+      213: -6300389556507367233
+    second: RR_ExplosionOrange
+  - first:
+      213: 2709572423415212867
+    second: RR_ExplosionPink
+  - first:
+      213: 6242535781864138924
+    second: RR_ChainBroken
+  - first:
+      213: -8009277667279790420
+    second: RR_SkullDeath
+  - first:
+      213: -3036884575353590933
+    second: RR_Party
+  - first:
+      213: 2087820069580886264
+    second: RR_Handshake
+  - first:
+      213: 2966303795312825900
+    second: RR_Campfire
+  - first:
+      213: -3305586756573742292
+    second: RR_ShoppingCart
+  - first:
+      213: 1739638454579983023
+    second: RR_Anvil
+  - first:
+      213: -4639002092766707009
+    second: RR_Dice
+  - first:
+      213: -3345895772059471343
+    second: RR_Scroll
+  - first:
+      213: 756439936825480247
+    second: RR_Backpack
+  - first:
+      213: 3366014702840279664
+    second: RR_ExitDoor
+  - first:
+      213: -6024869176713398978
+    second: RiftRaiderIcons_01
+  - first:
+      213: -3201621486498736057
+    second: RiftRaiderIcons_02
+  - first:
+      213: -382416872095563631
+    second: RiftRaiderIcons_03
+  - first:
+      213: -5309663679120634231
+    second: RiftRaiderIcons_04
+  - first:
+      213: -6245472875676591454
+    second: RiftRaiderIcons_05
+  - first:
+      213: 6220145806536015611
+    second: RiftRaiderIcons_06
+  - first:
+      213: -2069653514925243654
+    second: RiftRaiderIcons_07
+  - first:
+      213: 7013778886116070125
+    second: RiftRaiderIcons_08
+  - first:
+      213: 1335650537366598802
+    second: RiftRaiderIcons_09
+  - first:
+      213: -3545765221345592314
+    second: RiftRaiderIcons_10
+  - first:
+      213: 4599459578695368197
+    second: RiftRaiderIcons_11
+  - first:
+      213: -3234936163146199684
+    second: RiftRaiderIcons_12
+  - first:
+      213: -3679136898599369435
+    second: RiftRaiderIcons_13
+  - first:
+      213: 8821427810199531071
+    second: RiftRaiderIcons_14
+  - first:
+      213: -537459906277514232
+    second: RiftRaiderIcons_15
+  - first:
+      213: 2578073897914740803
+    second: RiftRaiderIcons_16
+  - first:
+      213: 4696425735463093468
+    second: RiftRaiderIcons_17
+  - first:
+      213: -745655767988446650
+    second: RiftRaiderIcons_18
+  - first:
+      213: -2485063214397817549
+    second: RiftRaiderIcons_19
+  - first:
+      213: 5280089427719985873
+    second: RiftRaiderIcons_20
+  - first:
+      213: 2062123070780938530
+    second: RiftRaiderIcons_21
+  - first:
+      213: 8129618993723980406
+    second: RiftRaiderIcons_22
+  - first:
+      213: 6318909528705807689
+    second: RiftRaiderIcons_23
+  - first:
+      213: -6002701953852255118
+    second: RiftRaiderIcons_24
+  - first:
+      213: 5995841866587555756
+    second: RiftRaiderIcons_25
+  - first:
+      213: 2984394304735553433
+    second: RiftRaiderIcons_26
+  - first:
+      213: -2876657022975085116
+    second: RiftRaiderIcons_27
+  - first:
+      213: 5855514701275463292
+    second: RiftRaiderIcons_28
+  - first:
+      213: -827839882854393731
+    second: RiftRaiderIcons_29
+  - first:
+      213: 308635765965830505
+    second: RiftRaiderIcons_30
+  - first:
+      213: 8697063825725429879
+    second: RiftRaiderIcons_31
+  - first:
+      213: -1211265142047262134
+    second: RiftRaiderIcons_32
+  - first:
+      213: -1815710720737125356
+    second: RiftRaiderIcons_33
+  - first:
+      213: 4796166321609057760
+    second: RiftRaiderIcons_34
+  - first:
+      213: 4641293450074164742
+    second: RiftRaiderIcons_35
+  - first:
+      213: -3986950713708508816
+    second: RiftRaiderIcons_36
+  - first:
+      213: -8659300285842466476
+    second: RiftRaiderIcons_37
+  - first:
+      213: -1438242733937772311
+    second: RiftRaiderIcons_38
+  - first:
+      213: 6691378605367582264
+    second: RiftRaiderIcons_39
+  - first:
+      213: -762516537375059291
+    second: RiftRaiderIcons_40
+  - first:
+      213: -6933855906750420742
+    second: RiftRaiderIcons_41
+  - first:
+      213: -1346428842916975977
+    second: RiftRaiderIcons_42
+  - first:
+      213: -3098063958300310324
+    second: RiftRaiderIcons_43
+  - first:
+      213: -8950090633662435295
+    second: RiftRaiderIcons_44
+  - first:
+      213: -6601567528867030111
+    second: RiftRaiderIcons_45
+  - first:
+      213: -5282154439410786282
+    second: RiftRaiderIcons_46
+  - first:
+      213: 7140163433990621882
+    second: RiftRaiderIcons_47
+  - first:
+      213: -606341686196792872
+    second: RiftRaiderIcons_48
+  - first:
+      213: 2605621129036551628
+    second: RiftRaiderIcons_49
+  - first:
+      213: 7594084441564725220
+    second: RiftRaiderIcons_50
+  - first:
+      213: -3056972877252554530
+    second: RiftRaiderIcons_51
+  - first:
+      213: 5702138108256484498
+    second: RiftRaiderIcons_52
+  - first:
+      213: 6057269412134325452
+    second: RiftRaiderIcons_53
+  - first:
+      213: -9185367183605208615
+    second: RiftRaiderIcons_54
+  - first:
+      213: 2262087723185930975
+    second: RiftRaiderIcons_55
+  - first:
+      213: 6120939950591483885
+    second: RiftRaiderIcons_56
+  - first:
+      213: -5389965649572253739
+    second: RiftRaiderIcons_57
+  - first:
+      213: 7393894267768014641
+    second: RiftRaiderIcons_58
+  - first:
+      213: 522681506673467418
+    second: RiftRaiderIcons_59
+  - first:
+      213: -912389675998856936
+    second: RiftRaiderIcons_60
+  - first:
+      213: -3074226985655977165
+    second: RiftRaiderIcons_61
+  - first:
+      213: 8627572960406827539
+    second: RiftRaiderIcons_62
+  - first:
+      213: 8439203559660837685
+    second: RiftRaiderIcons_63
+  - first:
+      213: 5992121508144196245
+    second: RiftRaiderIcons_64
+  - first:
+      213: 5971010136018590225
+    second: RiftRaiderIcons_65
+  - first:
+      213: 6246113214298817768
+    second: RiftRaiderIcons_66
+  - first:
+      213: -1567364468681133869
+    second: RiftRaiderIcons_67
+  - first:
+      213: -1330064380761145711
+    second: RiftRaiderIcons_68
+  - first:
+      213: 5213106882667266238
+    second: RiftRaiderIcons_69
+  - first:
+      213: -4709646871698312880
+    second: RiftRaiderIcons_70
+  - first:
+      213: -2880136275039574518
+    second: RiftRaiderIcons_71
+  - first:
+      213: -2382913874396239657
+    second: RiftRaiderIcons_72
+  - first:
+      213: -5207061418912751656
+    second: RiftRaiderIcons_73
+  - first:
+      213: 5362993516058105349
+    second: RiftRaiderIcons_74
+  - first:
+      213: 837481417402013396
+    second: RiftRaiderIcons_75
+  - first:
+      213: 5757824555362900239
+    second: RR_Rifle
+  - first:
+      213: -5163771421274672291
+    second: RR_Launcher
+  - first:
+      213: 6646229324234635213
+    second: RR_Hourglass
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 0
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: RR_Coin
+      rect:
+        serializedVersion: 2
+        x: 14
+        y: 912
+        width: 93
+        height: 93
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 65009bc8c02c85f30800000000000000
+      internalID: 4564611581496328278
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Gem
+      rect:
+        serializedVersion: 2
+        x: 134
+        y: 908
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bce286783da8c74f0800000000000000
+      internalID: -829635590228529461
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Ruby
+      rect:
+        serializedVersion: 2
+        x: 252
+        y: 904
+        width: 106
+        height: 106
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4594fbf968548d870800000000000000
+      internalID: 8707786324028901716
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_EnergyPotion
+      rect:
+        serializedVersion: 2
+        x: 372
+        y: 901
+        width: 111
+        height: 111
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e7fcd500aaa425f50800000000000000
+      internalID: 6868634475704471422
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Heart
+      rect:
+        serializedVersion: 2
+        x: 516
+        y: 902
+        width: 101
+        height: 101
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e9689c18b453aee90800000000000000
+      internalID: -6995720472750356834
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Shield
+      rect:
+        serializedVersion: 2
+        x: 647
+        y: 905
+        width: 102
+        height: 102
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3af5edfe33d79d370800000000000000
+      internalID: 8347841046329057187
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Skull
+      rect:
+        serializedVersion: 2
+        x: 776
+        y: 911
+        width: 93
+        height: 93
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c2775977a93cc1460800000000000000
+      internalID: 7213855771339355948
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_SkullDemon
+      rect:
+        serializedVersion: 2
+        x: 900
+        y: 904
+        width: 111
+        height: 111
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d6a550d56b90e5500800000000000000
+      internalID: 386757296849771117
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Clock
+      rect:
+        serializedVersion: 2
+        x: 12
+        y: 792
+        width: 96
+        height: 96
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cdfa5e43400466ba0800000000000000
+      internalID: -6096114658787872804
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Star
+      rect:
+        serializedVersion: 2
+        x: 135
+        y: 792
+        width: 99
+        height: 99
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1434e7c09268eaf70800000000000000
+      internalID: 9200438599625884481
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_StarWinged
+      rect:
+        serializedVersion: 2
+        x: 247
+        y: 780
+        width: 126
+        height: 126
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dc7e33b8e40e922d0800000000000000
+      internalID: -3302862223752042547
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Medal
+      rect:
+        serializedVersion: 2
+        x: 386
+        y: 788
+        width: 102
+        height: 102
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5c88843b0f1e1df80800000000000000
+      internalID: -8083431432237053755
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Trophy
+      rect:
+        serializedVersion: 2
+        x: 513
+        y: 786
+        width: 106
+        height: 106
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 828f6f5be2296f510800000000000000
+      internalID: 1582613048386320424
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_GiftBox
+      rect:
+        serializedVersion: 2
+        x: 646
+        y: 792
+        width: 99
+        height: 99
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3d125a0bae308a1e0800000000000000
+      internalID: -2186493312567533101
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Crown
+      rect:
+        serializedVersion: 2
+        x: 770
+        y: 797
+        width: 106
+        height: 89
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3c627a25caf997570800000000000000
+      internalID: 8464972537089435331
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Gear
+      rect:
+        serializedVersion: 2
+        x: 906
+        y: 788
+        width: 99
+        height: 99
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c09f810377e3bff00800000000000000
+      internalID: 1151582811352267020
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Pause
+      rect:
+        serializedVersion: 2
+        x: 22
+        y: 677
+        width: 80
+        height: 80
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6dd6e22c27a55c250800000000000000
+      internalID: 5964272730452684246
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Play
+      rect:
+        serializedVersion: 2
+        x: 138
+        y: 669
+        width: 95
+        height: 95
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 41685c0b6ea52fb20800000000000000
+      internalID: 3166693434849592852
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Stop
+      rect:
+        serializedVersion: 2
+        x: 268
+        y: 676
+        width: 82
+        height: 82
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 603e9d7c033eb48b0800000000000000
+      internalID: -5166786348826631418
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_FastForward
+      rect:
+        serializedVersion: 2
+        x: 391
+        y: 671
+        width: 91
+        height: 91
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8e28a52f8a4547a60800000000000000
+      internalID: 7670849149916054248
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Refresh
+      rect:
+        serializedVersion: 2
+        x: 516
+        y: 668
+        width: 96
+        height: 96
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d31a0a14053e16870800000000000000
+      internalID: 8674464291130220861
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Swords
+      rect:
+        serializedVersion: 2
+        x: 641
+        y: 662
+        width: 105
+        height: 105
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7fa35bfc66a205c70800000000000000
+      internalID: 8957706279899708151
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Target
+      rect:
+        serializedVersion: 2
+        x: 766
+        y: 659
+        width: 113
+        height: 113
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cbda299a87a968880800000000000000
+      internalID: -8609023794640409156
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_SkullBlast
+      rect:
+        serializedVersion: 2
+        x: 894
+        y: 655
+        width: 118
+        height: 118
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 323c6e2fced10ab40800000000000000
+      internalID: 5449388452642997027
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Pistol
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 539
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6412c37cdeb69d600800000000000000
+      internalID: 493544303167807814
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_SMG
+      rect:
+        serializedVersion: 2
+        x: 108
+        y: 532
+        width: 114
+        height: 114
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b9339ac830c23e2c0800000000000000
+      internalID: -4403627616881790053
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Rifle
+      rect:
+        serializedVersion: 2
+        x: 227
+        y: 524
+        width: 134
+        height: 134
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f095d654de6e7ef40800000000000000
+      internalID: 5757824555362900239
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_SniperRifle
+      rect:
+        serializedVersion: 2
+        x: 366
+        y: 518
+        width: 148
+        height: 148
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 78b1cf6dbd6cab7f0800000000000000
+      internalID: -595945353166185593
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Launcher
+      rect:
+        serializedVersion: 2
+        x: 518
+        y: 528
+        width: 126
+        height: 126
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d53fb9d40499658b0800000000000000
+      internalID: -5163771421274672291
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Shotgun
+      rect:
+        serializedVersion: 2
+        x: 649
+        y: 515
+        width: 142
+        height: 142
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 00d72a4d3cc36e830800000000000000
+      internalID: 4100031322551123200
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Hourglass
+      rect:
+        serializedVersion: 2
+        x: 798
+        y: 539
+        width: 99
+        height: 99
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dc73ace6b562c3c50800000000000000
+      internalID: 6646229324234635213
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Ammo
+      rect:
+        serializedVersion: 2
+        x: 914
+        y: 542
+        width: 90
+        height: 90
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fe14905d22a8d7c60800000000000000
+      internalID: 7817556410392723951
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Medkit
+      rect:
+        serializedVersion: 2
+        x: 12
+        y: 423
+        width: 98
+        height: 98
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 18d80c0c34bfdf360800000000000000
+      internalID: 7205191247277886849
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_ArmorVest
+      rect:
+        serializedVersion: 2
+        x: 136
+        y: 422
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a9684debf5b1c89b0800000000000000
+      internalID: -5076652581915949414
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Boots
+      rect:
+        serializedVersion: 2
+        x: 250
+        y: 410
+        width: 121
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c29a16b6a04893870800000000000000
+      internalID: 8663100538509961516
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_RankUp
+      rect:
+        serializedVersion: 2
+        x: 393
+        y: 427
+        width: 96
+        height: 96
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2a4f7a64bcf0bdbe0800000000000000
+      internalID: -1451549089158663006
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_XP
+      rect:
+        serializedVersion: 2
+        x: 510
+        y: 414
+        width: 111
+        height: 111
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4c7dc0117ac40cbd0800000000000000
+      internalID: -2612003503445583932
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Key
+      rect:
+        serializedVersion: 2
+        x: 639
+        y: 420
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 152a704d5f31f6c90800000000000000
+      internalID: -7174493734832725423
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Ticket
+      rect:
+        serializedVersion: 2
+        x: 759
+        y: 406
+        width: 124
+        height: 124
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1c42b5f4bfc47a600800000000000000
+      internalID: 479436527590122689
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_MapPin
+      rect:
+        serializedVersion: 2
+        x: 902
+        y: 416
+        width: 108
+        height: 108
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6e624b6205c9503c0800000000000000
+      internalID: -4393933993369393434
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Chest
+      rect:
+        serializedVersion: 2
+        x: 11
+        y: 302
+        width: 102
+        height: 102
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1fdacad1841fceb10800000000000000
+      internalID: 2012248425565564401
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Crate
+      rect:
+        serializedVersion: 2
+        x: 134
+        y: 303
+        width: 102
+        height: 102
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bfbe6b7a2a0961510800000000000000
+      internalID: 1519560952557005819
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Crystal
+      rect:
+        serializedVersion: 2
+        x: 258
+        y: 304
+        width: 101
+        height: 101
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ec8cd8d08aa3e8280800000000000000
+      internalID: -9039222908629694258
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Vortex
+      rect:
+        serializedVersion: 2
+        x: 385
+        y: 308
+        width: 106
+        height: 106
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6cb720d3b46ac40c0800000000000000
+      internalID: -4590111078121047098
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Fire
+      rect:
+        serializedVersion: 2
+        x: 510
+        y: 298
+        width: 113
+        height: 113
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1ca02922306d4c530800000000000000
+      internalID: 3874456888398711489
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Ice
+      rect:
+        serializedVersion: 2
+        x: 644
+        y: 297
+        width: 109
+        height: 109
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 154e91fa1d3a5f3f0800000000000000
+      internalID: -867607232217750447
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Lightning
+      rect:
+        serializedVersion: 2
+        x: 765
+        y: 292
+        width: 120
+        height: 120
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 73144dd1a3b1c1830800000000000000
+      internalID: 4043136501894365495
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Poison
+      rect:
+        serializedVersion: 2
+        x: 902
+        y: 297
+        width: 104
+        height: 104
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 099daf248b6950f30800000000000000
+      internalID: 4541201517414898064
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Leaf
+      rect:
+        serializedVersion: 2
+        x: 15
+        y: 184
+        width: 98
+        height: 98
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7601ccab1353bc960800000000000000
+      internalID: 7623245281958301799
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_WaterDrop
+      rect:
+        serializedVersion: 2
+        x: 130
+        y: 182
+        width: 105
+        height: 105
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1542e6cb6099def70800000000000000
+      internalID: 9218192266507461713
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Wind
+      rect:
+        serializedVersion: 2
+        x: 254
+        y: 182
+        width: 106
+        height: 106
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7ea25da3d857924d0800000000000000
+      internalID: -3158864414185805081
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_ExplosionOrange
+      rect:
+        serializedVersion: 2
+        x: 379
+        y: 178
+        width: 109
+        height: 109
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fb82cc944158098a0800000000000000
+      internalID: -6300389556507367233
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_ExplosionPink
+      rect:
+        serializedVersion: 2
+        x: 506
+        y: 176
+        width: 109
+        height: 109
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 34babde53c55a9520800000000000000
+      internalID: 2709572423415212867
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_ChainBroken
+      rect:
+        serializedVersion: 2
+        x: 646
+        y: 180
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ca86daf1831f1a650800000000000000
+      internalID: 6242535781864138924
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_SkullDeath
+      rect:
+        serializedVersion: 2
+        x: 772
+        y: 186
+        width: 99
+        height: 99
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cae9156856459d090800000000000000
+      internalID: -8009277667279790420
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Party
+      rect:
+        serializedVersion: 2
+        x: 896
+        y: 174
+        width: 114
+        height: 114
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b6baf2e9191dad5d0800000000000000
+      internalID: -3036884575353590933
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Handshake
+      rect:
+        serializedVersion: 2
+        x: 9
+        y: 48
+        width: 112
+        height: 112
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8f0dc42aa4d69fc10800000000000000
+      internalID: 2087820069580886264
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Campfire
+      rect:
+        serializedVersion: 2
+        x: 118
+        y: 42
+        width: 130
+        height: 130
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c26938fe59d6a2920800000000000000
+      internalID: 2966303795312825900
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_ShoppingCart
+      rect:
+        serializedVersion: 2
+        x: 249
+        y: 49
+        width: 113
+        height: 113
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c2bbf20db523022d0800000000000000
+      internalID: -3305586756573742292
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Anvil
+      rect:
+        serializedVersion: 2
+        x: 377
+        y: 48
+        width: 123
+        height: 123
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fa279da15ff642810800000000000000
+      internalID: 1739638454579983023
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Dice
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 51
+        width: 109
+        height: 109
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fb2c854dc24fe9fb0800000000000000
+      internalID: -4639002092766707009
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Scroll
+      rect:
+        serializedVersion: 2
+        x: 636
+        y: 45
+        width: 119
+        height: 119
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 112f9eac58df091d0800000000000000
+      internalID: -3345895772059471343
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Backpack
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 48
+        width: 113
+        height: 113
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 734d6606d1a6f7a00800000000000000
+      internalID: 756439936825480247
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_ExitDoor
+      rect:
+        serializedVersion: 2
+        x: 904
+        y: 45
+        width: 118
+        height: 118
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 072798fc98c76be20800000000000000
+      internalID: 3366014702840279664
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 76b3bcc9bad974d31a7fd3b091f65850
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      RR_Ammo: 7817556410392723951
+      RR_Anvil: 1739638454579983023
+      RR_ArmorVest: -5076652581915949414
+      RR_Backpack: 756439936825480247
+      RR_Boots: 8663100538509961516
+      RR_Campfire: 2966303795312825900
+      RR_ChainBroken: 6242535781864138924
+      RR_Chest: 2012248425565564401
+      RR_Clock: -6096114658787872804
+      RR_Coin: 4564611581496328278
+      RR_Crate: 1519560952557005819
+      RR_Crown: 8464972537089435331
+      RR_Crystal: -9039222908629694258
+      RR_Dice: -4639002092766707009
+      RR_EnergyPotion: 6868634475704471422
+      RR_ExitDoor: 3366014702840279664
+      RR_ExplosionOrange: -6300389556507367233
+      RR_ExplosionPink: 2709572423415212867
+      RR_FastForward: 7670849149916054248
+      RR_Fire: 3874456888398711489
+      RR_Gear: 1151582811352267020
+      RR_Gem: -829635590228529461
+      RR_GiftBox: -2186493312567533101
+      RR_Grenade: 7502351883000364174
+      RR_Handshake: 2087820069580886264
+      RR_Heart: -6995720472750356834
+      RR_Hourglass: 6646229324234635213
+      RR_Ice: -867607232217750447
+      RR_Key: -7174493734832725423
+      RR_Launcher: -5163771421274672291
+      RR_Leaf: 7623245281958301799
+      RR_Lightning: 4043136501894365495
+      RR_Magazine: 2687495060821290484
+      RR_MapPin: -4393933993369393434
+      RR_Medal: -8083431432237053755
+      RR_Medkit: 7205191247277886849
+      RR_Party: -3036884575353590933
+      RR_Pause: 5964272730452684246
+      RR_Pistol: 493544303167807814
+      RR_Play: 3166693434849592852
+      RR_Poison: 4541201517414898064
+      RR_RankUp: -1451549089158663006
+      RR_Refresh: 8674464291130220861
+      RR_Rifle: 5757824555362900239
+      RR_Rocket: 8003505314389362165
+      RR_Ruby: 8707786324028901716
+      RR_SMG: -4403627616881790053
+      RR_Scroll: -3345895772059471343
+      RR_Shield: 8347841046329057187
+      RR_ShoppingCart: -3305586756573742292
+      RR_Shotgun: 4100031322551123200
+      RR_Skull: 7213855771339355948
+      RR_SkullBlast: 5449388452642997027
+      RR_SkullDeath: -8009277667279790420
+      RR_SkullDemon: 386757296849771117
+      RR_SniperRifle: -595945353166185593
+      RR_Star: 9200438599625884481
+      RR_StarWinged: -3302862223752042547
+      RR_Stop: -5166786348826631418
+      RR_Swords: 8957706279899708151
+      RR_Target: -8609023794640409156
+      RR_Ticket: 479436527590122689
+      RR_Trophy: 1582613048386320424
+      RR_Vortex: -4590111078121047098
+      RR_WaterDrop: 9218192266507461713
+      RR_Wind: -3158864414185805081
+      RR_XP: -2612003503445583932
+      RiftRaiderIcons_0: -863772290
+      RiftRaiderIcons_01: -6024869176713398978
+      RiftRaiderIcons_02: -3201621486498736057
+      RiftRaiderIcons_03: -382416872095563631
+      RiftRaiderIcons_04: -5309663679120634231
+      RiftRaiderIcons_05: -6245472875676591454
+      RiftRaiderIcons_06: 6220145806536015611
+      RiftRaiderIcons_07: -2069653514925243654
+      RiftRaiderIcons_08: 7013778886116070125
+      RiftRaiderIcons_09: 1335650537366598802
+      RiftRaiderIcons_10: -3545765221345592314
+      RiftRaiderIcons_11: 4599459578695368197
+      RiftRaiderIcons_12: -3234936163146199684
+      RiftRaiderIcons_13: -3679136898599369435
+      RiftRaiderIcons_14: 8821427810199531071
+      RiftRaiderIcons_15: -537459906277514232
+      RiftRaiderIcons_16: 2578073897914740803
+      RiftRaiderIcons_17: 4696425735463093468
+      RiftRaiderIcons_18: -745655767988446650
+      RiftRaiderIcons_19: -2485063214397817549
+      RiftRaiderIcons_20: 5280089427719985873
+      RiftRaiderIcons_21: 2062123070780938530
+      RiftRaiderIcons_22: 8129618993723980406
+      RiftRaiderIcons_23: 6318909528705807689
+      RiftRaiderIcons_24: -6002701953852255118
+      RiftRaiderIcons_25: 5995841866587555756
+      RiftRaiderIcons_26: 2984394304735553433
+      RiftRaiderIcons_27: -2876657022975085116
+      RiftRaiderIcons_28: 5855514701275463292
+      RiftRaiderIcons_29: -827839882854393731
+      RiftRaiderIcons_30: 308635765965830505
+      RiftRaiderIcons_31: 8697063825725429879
+      RiftRaiderIcons_32: -1211265142047262134
+      RiftRaiderIcons_33: -1815710720737125356
+      RiftRaiderIcons_34: 4796166321609057760
+      RiftRaiderIcons_35: 4641293450074164742
+      RiftRaiderIcons_36: -3986950713708508816
+      RiftRaiderIcons_37: -8659300285842466476
+      RiftRaiderIcons_38: -1438242733937772311
+      RiftRaiderIcons_39: 6691378605367582264
+      RiftRaiderIcons_40: -762516537375059291
+      RiftRaiderIcons_41: -6933855906750420742
+      RiftRaiderIcons_42: -1346428842916975977
+      RiftRaiderIcons_43: -3098063958300310324
+      RiftRaiderIcons_44: -8950090633662435295
+      RiftRaiderIcons_45: -6601567528867030111
+      RiftRaiderIcons_46: -5282154439410786282
+      RiftRaiderIcons_47: 7140163433990621882
+      RiftRaiderIcons_48: -606341686196792872
+      RiftRaiderIcons_49: 2605621129036551628
+      RiftRaiderIcons_50: 7594084441564725220
+      RiftRaiderIcons_51: -3056972877252554530
+      RiftRaiderIcons_52: 5702138108256484498
+      RiftRaiderIcons_53: 6057269412134325452
+      RiftRaiderIcons_54: -9185367183605208615
+      RiftRaiderIcons_55: 2262087723185930975
+      RiftRaiderIcons_56: 6120939950591483885
+      RiftRaiderIcons_57: -5389965649572253739
+      RiftRaiderIcons_58: 7393894267768014641
+      RiftRaiderIcons_59: 522681506673467418
+      RiftRaiderIcons_60: -912389675998856936
+      RiftRaiderIcons_61: -3074226985655977165
+      RiftRaiderIcons_62: 8627572960406827539
+      RiftRaiderIcons_63: 8439203559660837685
+      RiftRaiderIcons_64: 5992121508144196245
+      RiftRaiderIcons_65: 5971010136018590225
+      RiftRaiderIcons_66: 6246113214298817768
+      RiftRaiderIcons_67: -1567364468681133869
+      RiftRaiderIcons_68: -1330064380761145711
+      RiftRaiderIcons_69: 5213106882667266238
+      RiftRaiderIcons_70: -4709646871698312880
+      RiftRaiderIcons_71: -2880136275039574518
+      RiftRaiderIcons_72: -2382913874396239657
+      RiftRaiderIcons_73: -5207061418912751656
+      RiftRaiderIcons_74: 5362993516058105349
+      RiftRaiderIcons_75: 837481417402013396
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

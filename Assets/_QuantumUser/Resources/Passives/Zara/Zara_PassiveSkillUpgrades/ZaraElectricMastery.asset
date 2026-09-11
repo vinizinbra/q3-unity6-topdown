@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b418e9132beae4c18a7380c3f624063a, type: 3}
+  m_Name: ZaraElectricMastery
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ZaraElectricMasteryData
+  Identifier:
+    Path: _QuantumUser/Resources/Passives/Zara/Zara_PassiveSkillUpgrades/ZaraElectricMastery
+    Guid:
+      Value: 280063126688807644
+  Icon: {fileID: 597477748, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
+  DisplayName: Electric Mastery
+  Description: Electric weapons hit harder, and at rank 3, applying Jolt charges
+    Zara up too.
+  <MaxRank>k__BackingField: 3
+  RankDescriptions:
+  - +<color=#FD3971>15%</color> Electric Weapon Damage.
+  - +<color=#FD3971>30%</color> Electric Weapon Damage.
+  - +<color=#FD3971>50%</color> Electric Weapon Damage. Applying Jolt grants +<color=#FD3971>15%</color>
+    Fire Rate for <color=#FD3971>2s</color>.
+  Element: 5
+  DamageMultiplierPerRank:
+  - RawValue: 9830
+  - RawValue: 19661
+  - RawValue: 32768
+  HighVoltageFireRateBonus:
+    RawValue: 9830
+  HighVoltageDuration:
+    RawValue: 131072

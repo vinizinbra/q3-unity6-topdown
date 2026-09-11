@@ -18,12 +18,12 @@ MonoBehaviour:
       Value: 269759498164841875
   Icon: {fileID: 1059982369, guid: 355e00907e214470bac0029f70064510, type: 3}
   DisplayName: Scavenger
-  Description: More enemies drop Scrap, and more often.
+  Description: "More enemies drop Scrap, and more often."
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - 'Filler enemies can drop Scrap (<color=#FD3971>10%</color> chance).'
-  - 'Filler enemies can drop Scrap (<color=#FD3971>10%</color> chance), and all Scrap drop chances increase by about <color=#FD3971>25%</color>.'
-  - 'Every Scrap drop chance rises. Specialist, Heavy and Elite always drop at least <color=#FD3971>1</color> Scrap; Bosses drop <color=#FD3971>3</color>.'
+  - "Even Filler enemies can now drop Scrap (<color=#FD3971>10%</color> chance)."
+  - "All Scrap drop chances increase; Filler enemies now drop Scrap <color=#FD3971>13%</color> of the time."
+  - "Specialist, Heavy and Elite enemies always drop Scrap. Bosses drop <color=#FD3971>3</color> Scrap."
   DropChance:
   - RawValue: 16384
   - RawValue: 20316

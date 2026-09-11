@@ -281,11 +281,16 @@ event FallDeathTriggered
     FP        Radius;
 }
 
+// SpawnPosition mirrors HitscanFired's Origin: a projectile fast enough to be created AND destroyed
+// inside one Unity frame's tick batch never gets an entity view at all (QuantumEntityViewUpdater
+// only diffs the final Predicted/Verified frame), so this event is the only thing left to draw the
+// shot from - see ProjectileGhostTrailManager.
 event ProjectileDestroyed
 {
     EntityRef  Entity;
     EntityRef  Owner;
     FPVector3  Position;
+    FPVector3  SpawnPosition;
     AssetRef<ProjectileDataAsset> ProjectileData;
 }
 
@@ -1006,4 +1011,47 @@ event AccessoryRestored
     EntityRef Owner;
     Boolean   WasReplacement;
     Byte      Durability;
+}
+
+// Fired by DamageEchoSystem the instant a scheduled Damage Echo actually lands (target was still
+// valid - see DamageEchoUtility.ExecuteEcho; a cancelled echo, target dead/gone, fires nothing).
+// Generic, not Kai-specific - Kai's Ghost Shot (Neutral Mastery R3) is the first consumer, so the
+// view has no dedicated prefab yet; treat an unauthored slot the same way every other reaction event
+// does (fall back to a tinted generic hit/blast effect) rather than adding Kai-specific view code.
+// The normal EntityDamaged event still fires too (DamageUtility.ApplyDamage is the actual damage
+// application) - this is purely the "that hit was a supernatural echo, not the primary shot" flag for
+// presentation.
+event DamageEchoTriggered
+{
+    EntityRef Owner;
+    EntityRef Target;
+    FPVector3 Position;
+    FP        Damage;
+
+    // Which DamageEchoVisualData the granting upgrade was configured with at schedule time (see
+    // DamageEchoUpgrade.Visual/PendingDamageEcho.Visual) - resolve via frame.FindAsset(Visual) for its
+    // .View.cs EffectPrefab, same "asset carries its own presentation" pattern
+    // QuantumRoundsWeaponPerkData.View.cs/EffectsManager.OnQuantumRoundsTriggered already use. Invalid
+    // if the granting upgrade never had one configured.
+    AssetRef<DamageEchoVisualData> Visual;
+}
+
+// Generic priority-target behavior (see PriorityTarget.qtn) - fired by PriorityTargetUtility.
+// TrySetPriorityTarget the instant Owner's PriorityTarget is first set OR refreshed/replaced onto a
+// DIFFERENT Target (not re-fired every tick a target simply stays focused). Lux's Neutral Focus
+// (Neutral Mastery R3) is the first source. Presentation-only - simulation's own authoritative state
+// is the PriorityTarget component itself; this is just the "something changed, worth showing a marker"
+// signal.
+event PriorityTargetSet
+{
+    EntityRef Owner;
+    EntityRef Target;
+}
+
+// Fired by PriorityTargetSystem the instant Owner's PriorityTarget is cleared - either the configured
+// Duration expired, or Target itself became invalid (destroyed/dead) before that, whichever came first.
+event PriorityTargetCleared
+{
+    EntityRef Owner;
+    EntityRef Target;
 }

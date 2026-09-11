@@ -399,6 +399,50 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: ZaraEletricmastery
+      rect:
+        serializedVersion: 2
+        x: 36
+        y: 1101
+        width: 170
+        height: 170
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f4c597081ca8b4cc0a8ea15c6cc0251f
+      internalID: 597477748
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ZaraSmgMAstery
+      rect:
+        serializedVersion: 2
+        x: 259
+        y: 1103
+        width: 170
+        height: 170
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b59a08322402f47b2bcede387f9b4421
+      internalID: -69641096
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
@@ -425,6 +469,8 @@ TextureImporter:
       SoundBoost: 1506874409
       Totem: -1548458682
       Zara: 1534122930
+      ZaraEletricmastery: 597477748
+      ZaraSmgMAstery: -69641096
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -827,8 +827,8 @@ PlayerSettings:
   webGLLinkerTarget: 1
   webGLThreadsSupport: 0
   webGLDecompressionFallback: 0
-  webGLInitialMemorySize: 512
-  webGLMaximumMemorySize: 2048
+  webGLInitialMemorySize: 256
+  webGLMaximumMemorySize: 1024
   webGLMemoryGrowthMode: 2
   webGLMemoryLinearGrowthStep: 16
   webGLMemoryGeometricGrowthStep: 0.2
@@ -854,7 +854,7 @@ PlayerSettings:
     ReservedCFE: QUANTUM_LOGLEVEL_DEBUG
     Standalone: DREAMTECK_SPLINES;QUANTUM_LOGLEVEL_DEBUG;CHEATS_ENABLED
     VisionOS: QUANTUM_LOGLEVEL_DEBUG
-    WebGL: QUANTUM_LOGLEVEL_DEBUG;CHEATS_ENABLED
+    WebGL: 
     Windows Store Apps: CF_FORCE_MOBILE_MODE;QUANTUM_LOGLEVEL_DEBUG
     XboxOne: QUANTUM_LOGLEVEL_DEBUG
     iPhone: CF_FORCE_MOBILE_MODE;QUANTUM_LOGLEVEL_DEBUG

@@ -92,7 +92,7 @@ public class ExpBarUiWidget : QuantumGlobalMonoBehaviour
     private void UpdateLevelText(int displayLevel)
     {
         if (levelText != null)
-            levelText.text = $"Lv. {displayLevel}";
+            levelText.text = $"{displayLevel}";
     }
 
     // Only caches the real value (_targetSliderValue) for Flash() to lerp toward - does NOT touch

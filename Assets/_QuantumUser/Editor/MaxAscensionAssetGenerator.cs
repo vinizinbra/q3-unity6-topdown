@@ -75,9 +75,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Rage stops being fragile - it survives Overdrive ending, damage, and death.";
                 asset.RankDescriptions = new[]
                 {
-                    "Rage carries over between Overdrives instead of resetting.",
-                    "Rage carries over between Overdrives, and damage taken during Overdrive costs only half of it.",
-                    "Rage carries over and resists damage. Lethal damage during Overdrive leaves you at 1 Health and grants 2s immunity.",
+                    "Unused Rage is preserved when Overdrive ends and restored the next time Overdrive activates.",
+                    "Taking damage during Overdrive removes only part of Max's current Rage instead of resetting it.",
+                    "Lethal damage during Overdrive ends it instead, leaves Max at <color=#FD3971>1</color> HP, briefly Invulnerable, and resets Rage.",
                 };
                 asset.RageLossFraction = new[] { FP._1, FP._0_50, FP._0_50 };
                 asset.CheatDeathImmunityDuration = 2;
@@ -91,9 +91,9 @@ namespace QuantumUser.Editor
                 asset.Description = "At max Rage, gain bonus Weapon Damage and faster reloads.";
                 asset.RankDescriptions = new[]
                 {
-                    "At max Rage, +20% Weapon Damage.",
-                    "At max Rage, +30% Weapon Damage and +50% Reload Speed.",
-                    "At max Rage, +40% Weapon Damage and instant reloads.",
+                    "At maximum Rage, gain <color=#FD3971>+20%</color> Weapon Damage.",
+                    "Bonus increases to <color=#FD3971>+30%</color> Weapon Damage and <color=#FD3971>+50%</color> Reload Speed.",
+                    "Weapon Damage increases to <color=#FD3971>+40%</color>. Reaching maximum Rage also instantly refills the magazine once per Overdrive.",
                 };
                 asset.WeaponDamageBonus = new[] { FP.FromString("0.20"), FP.FromString("0.30"), FP.FromString("0.40") };
                 asset.ReloadSpeedBonus = new[] { FP._0, FP._0_50, FP._0_50 };
@@ -107,9 +107,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Kills during Overdrive extend it.";
                 asset.RankDescriptions = new[]
                 {
-                    "Every 3rd kill during Overdrive extends it by 1s, up to +3s.",
-                    "Every 2nd kill during Overdrive extends it by 1s, up to +5s.",
-                    "Every 2nd kill during Overdrive extends it by 1s, up to +7s. Vendetta kills add an uncapped +2s.",
+                    "Every <color=#FD3971>3</color> kills during Overdrive extends its duration by <color=#FD3971>1s</color>.",
+                    "Every <color=#FD3971>2</color> kills extends Overdrive by <color=#FD3971>1s</color>.",
+                    "Vendetta kills extend Overdrive by <color=#FD3971>2s</color> instead.",
                 };
                 asset.PerKillExtension = new FP[] { 1, 1, 1 };
                 asset.KillsPerExtension = new byte[] { 3, 2, 2 };
@@ -125,9 +125,9 @@ namespace QuantumUser.Editor
                 asset.Description = "At max Rage, every weapon hit Burns.";
                 asset.RankDescriptions = new[]
                 {
-                    "At max Rage, weapon hits guarantee Burn.",
-                    "At max Rage, weapon hits Burn, and Burning kills leave a Burning Ground patch.",
-                    "At max Rage, weapon hits Burn and Burning kills leave Burning Ground. Reaching max Rage bursts a Burn pulse.",
+                    "At maximum Rage, weapon hits always apply Burn.",
+                    "Killing a Burning enemy creates Burning Ground.",
+                    "The first time Max reaches maximum Rage during each Overdrive, release a radial Burn pulse.",
                 };
                 asset.BurnOnHitStacks = new byte[] { 1, 1, 1 };
                 asset.HasBurningGround = new[] { false, true, true };
@@ -154,9 +154,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Vendetta marks last longer, feed your Rage, and heal you.";
                 asset.RankDescriptions = new[]
                 {
-                    "Vendetta marks last 12s.",
-                    "Vendetta marks last 12s. Shield damage also marks attackers, and each Vendetta kill grants +2 Rage.",
-                    "Marks last 12s, Shield damage marks attackers, kills grant +2 Rage. Consuming a mark heals 60% of its damage.",
+                    "Vendetta marks last <color=#FD3971>12s</color>.",
+                    "Shield damage also counts toward Vendetta and Vendetta kills grant <color=#FD3971>+2</color> Rage.",
+                    "Vendetta kills heal Max for <color=#FD3971>60%</color> of the mark's damage, up to <color=#FD3971>15%</color> Max HP per kill.",
                 };
                 asset.MarkDuration = new FP[] { 12, 12, 12 };
                 asset.RageOnVendettaKill = 2;
@@ -171,9 +171,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Killing a Burning enemy spreads the fire to nearby enemies.";
                 asset.RankDescriptions = new[]
                 {
-                    "Killing a Burning enemy spreads Burn to 2 enemies within 4m.",
-                    "Killing a Burning enemy spreads a stronger Burn to 5 enemies within 6m.",
-                    "Killing a Burning enemy spreads 75% of its remaining Burn to 5 enemies within 6m.",
+                    "Killing a Burning enemy spreads Burn to nearby enemies.",
+                    "Burn spreads farther and to more enemies.",
+                    "Spread Burn carries part of the defeated enemy's remaining Burn, becoming weaker as it chains.",
                 };
                 asset.Radius = new FP[] { 4, 6, 6 };
                 asset.BurnDuration = new FP[] { 3, 4, 4 };
@@ -189,9 +189,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Burning enemies take extra crits, explode on crit, and can be executed.";
                 asset.RankDescriptions = new[]
                 {
-                    "+10% Critical Chance against Burning enemies.",
-                    "+10% Critical Chance against Burning enemies. Crits on them explode for 50% damage in 3m, up to 5 targets.",
-                    "+10% Crit Chance vs Burning enemies, whose crits explode. Execute Burning enemies below 15% Health; Elites take +25%.",
+                    "Gain <color=#FD3971>+10%</color> Crit Chance against Burning enemies.",
+                    "Hits against Burning enemies can trigger a <color=#FD3971>3m</color> explosion dealing <color=#FD3971>50%</color> Damage.",
+                    "Burning enemies below <color=#FD3971>15%</color> Health are executed. Elites and Bosses take <color=#FD3971>+25%</color> Damage instead.",
                 };
                 asset.CriticalChanceBonusVsBurning = FP._0_10;
                 asset.ExplosionRadius = 3;
@@ -211,9 +211,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Dashing reloads and grants a burst of Fire Rate.";
                 asset.RankDescriptions = new[]
                 {
-                    "Dashing restores 50% of your magazine and grants +20% Fire Rate for 2s.",
-                    "Dashing fully reloads and grants +30% Fire Rate and +15% Weapon Damage for 2s.",
-                    "Dashing fully reloads and grants +40% Fire Rate, +15% Weapon Damage and unlimited ammo for 2s.",
+                    "Dashing restores <color=#FD3971>50%</color> of the magazine and grants <color=#FD3971>+20%</color> Fire Rate for <color=#FD3971>2s</color>.",
+                    "Dashing fully reloads the magazine and grants <color=#FD3971>+30%</color> Fire Rate and <color=#FD3971>+15%</color> Weapon Damage for <color=#FD3971>2s</color>.",
+                    "Fire Rate bonus increases to <color=#FD3971>+40%</color>, Weapon Damage bonus stays at <color=#FD3971>+15%</color>, and Max consumes no ammo for <color=#FD3971>2s</color>.",
                 };
                 asset.AmmoRestoreFraction = new[] { FP._0_50, FP._1, FP._1 };
                 asset.FireRateBonus = new[] { FP._0_20, FP.FromString("0.30"), FP.FromString("0.40") };
@@ -230,9 +230,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Dashing through an enemy Burns it.";
                 asset.RankDescriptions = new[]
                 {
-                    "Dashing through an enemy guarantees Burn.",
-                    "Dashing through an enemy Burns it and marks it for Vendetta, even if it has never hit you.",
-                    "Dashing through an enemy Burns and marks it, and cuts 2s off Overdrive's cooldown or extends it by 1s.",
+                    "Enemies hit by the Dash are Burning.",
+                    "Enemies hit are also marked by Vendetta.",
+                    "Also affects Overdrive: reduces its cooldown by <color=#FD3971>2s</color> if inactive, or extends it by <color=#FD3971>1s</color> if already active.",
                 };
                 asset.Radius = FP._1_50;
                 asset.BurnDuration = 3;
@@ -241,13 +241,18 @@ namespace QuantumUser.Editor
                 asset.OverdriveDurationBonus = 1;
             });
 
+            // Hero Mastery (see docs/hero-mastery.md) - Pistol (Weapon Family) + Fire (Element),
+            // drafted through the same Passive Upgrade pool as Blood Debt/Wildfire/Flashpoint above.
+            // Authored in HeroMasteryAssetGenerator (shared across all 6 heroes) rather than inline here.
+            var (pistolMastery, maxFireMastery) = HeroMasteryAssetGenerator.CreateMaxMastery();
+
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh(); // lets QuantumAssetObjectPostprocessor stamp Guid/Identifier on anything just created
 
             WireHeroSkill(new List<SkillActionData> { lastStand, fullThrottle, uncontrolledFury, ignition });
 
             WireCharacterData(passive,
-                new List<PassiveUpgradeData> { bloodDebt, wildfire, flashpoint },
+                new List<PassiveUpgradeData> { bloodDebt, wildfire, flashpoint, pistolMastery, maxFireMastery },
                 new List<SkillActionData> { runAndGun, vendettaStrike });
 
             LogHelper.Log("MaxAscensionAssetGenerator", "Vendetta base passive + 9 Max Ascension lines authored and wired (4 Overdrive into " +

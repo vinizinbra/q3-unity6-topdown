@@ -19,16 +19,16 @@ MonoBehaviour:
   Icon: {fileID: -161778479, guid: 355e00907e214470bac0029f70064510, type: 3}
   DisplayName: Overload Core
   RankDescriptions:
-  - 'When your Sentry expires or is destroyed, it explodes for <color=#FD3971>100%</color> of Sentry Skill Damage.'
-  - 'When your Sentry is destroyed, it explodes for <color=#FD3971>175%</color> Sentry Skill Damage over <color=#FD3971>30%</color> more ground, knocking enemies back.'
-  - 'When your Sentry is destroyed, it explodes for <color=#FD3971>250%</color> Sentry Skill Damage, leaving enemies Exposed for <color=#FD3971>3s</color> (<color=#FD3971>+20%</color> damage).'
+  - "When destroyed or expired, Sentry explodes for <color=#FD3971>100%</color> Skill Damage in a <color=#FD3971>4m</color> radius."
+  - "Explosion Damage increases to <color=#FD3971>175%</color>, radius increases by <color=#FD3971>30%</color>, and enemies are strongly Knocked Back."
+  - "Explosion Damage increases to <color=#FD3971>250%</color>. Enemies hit become Exposed for <color=#FD3971>3s</color> and take <color=#FD3971>+20%</color> Damage."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Losing a Sentry stops being a loss - it detonates.
+  Description: "Losing a Sentry stops being a loss - it detonates."
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

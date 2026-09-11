@@ -157,7 +157,7 @@ namespace Quantum
         // can never drift apart again.
         public static FP GetRequiredExperience(ExperienceConfig config, int displayLevel, FP xpRequirementMultiplier)
         {
-            return config.RequiredExperience.Evaluate(displayLevel) * xpRequirementMultiplier;
+            return config.RequiredExperience.Evaluate(displayLevel) * config.DifficultyMultiplier * xpRequirementMultiplier;
         }
     }
 }

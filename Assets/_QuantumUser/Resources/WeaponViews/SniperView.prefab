@@ -4834,6 +4834,37 @@ ParticleSystemRenderer:
   m_MeshWeighting1: 1
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
+--- !u!1 &7972435520336422359
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2926836801273744337}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2926836801273744337
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7972435520336422359}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 2.79, y: 0.14, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6401525507235055035}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8089491252618662435
 GameObject:
   m_ObjectHideFlags: 0
@@ -4867,6 +4898,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2568386022275364507}
+  - {fileID: 2926836801273744337}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &9206941670624691104
@@ -4985,6 +5017,7 @@ MonoBehaviour:
   character: {fileID: 0}
   flipPivotOffset: {x: 0, y: 0, z: 0}
   muzzleParticle: {fileID: 3830326994376361660}
+  projectileSpawnPoint: {fileID: 2926836801273744337}
   fireSound: {fileID: 11400000, guid: 34f0a7b485ac44c8da13b8aa8c6e59c1, type: 2}
   reloadStartSound: {fileID: 11400000, guid: 5edaefd69c1f24edc81078b02a2b8b2a, type: 2}
   reloadReadySound: {fileID: 11400000, guid: f2fd980e55c984487af99afe28b60074, type: 2}

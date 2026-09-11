@@ -40,6 +40,9 @@ public class SoundClip
     [Tooltip("Seconds into this clip to stop. 0 (or past the clip's length) means play to the end. Only used when Override Trim is on.")]
     [Min(0f)] public float endAt;
 
+    [Tooltip("Seconds into this clip to jump back to when it loops, instead of Start At. 0 (or anything outside the Start At/End At window) loops the whole trimmed region, same as before this existed. Set higher than Start At to play an intro once and then loop only the section after it, forever. Only used when Override Trim is on AND the sound Loops.")]
+    [Min(0f)] public float loopStart;
+
     [Tooltip("ON = this clip uses the Fade In / Fade Out below instead of the sound's shared fade. For a take whose attack or tail differs from the rest of the set.")]
     public bool overrideFade;
 
@@ -131,6 +134,9 @@ public class SoundData : ScriptableObject, ISerializationCallbackReceiver
 
     [Tooltip("Stop this many seconds into the clip. 0 (or anything past the clip's length) means 'play to the end'. Combined with startAt this cuts an arbitrary sub-region out of a longer sample - and with Loop on, that sub-region is what loops.\n\nApplies to every clip that hasn't ticked Override Trim for itself.")]
     [Min(0f)] public float endAt;
+
+    [Tooltip("Seconds into the clip to jump back to when the loop repeats, instead of startAt. 0 (or anything outside the startAt/endAt window) loops the whole trimmed region - the classic case, and exactly what happens if this is left unset. Set higher than startAt to play an intro once and then loop only the section after it, forever (e.g. a song with a few bars of intro that shouldn't repeat). Only takes effect when Loop is on.\n\nApplies to every clip that hasn't ticked Override Trim for itself.")]
+    [Min(0f)] public float loopStart;
 
     [Header("Fade - shared default, per-clip overridable")]
     [Tooltip("Seconds to ramp from silence up to the rolled volume at the start of a play. 0 = start at full volume.\n\nApplies to every clip that hasn't ticked Override Fade for itself.")]
@@ -313,6 +319,18 @@ public class SoundData : ScriptableObject, ISerializationCallbackReceiver
         end = rawEnd > 0f ? Mathf.Min(rawEnd, length) : length;
         if (end <= start)
             end = length;
+    }
+
+    // Where a loop jumps back to, resolved against a specific play's already-clamped [start, end]
+    // window - separate from ResolveTrim since it needs those clamped values to fall back correctly.
+    // Unauthored (0) or out-of-range (<= start, since content before start never plays; >= end, since
+    // that would be a zero-length loop) both fall back to `start`, which reproduces exactly the old
+    // "loop the whole trimmed region" behaviour for every asset authored before this existed.
+    public float ResolveLoopStart(SoundClip variant, float start, float end)
+    {
+        var useVariant = variant != null && variant.overrideTrim;
+        var raw = useVariant ? variant.loopStart : loopStart;
+        return raw > start && raw < end ? raw : start;
     }
 
     // Same shape as ResolveTrim: the variant's fade when it overrides, the sound's shared fade

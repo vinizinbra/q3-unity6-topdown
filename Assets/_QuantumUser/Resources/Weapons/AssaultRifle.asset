@@ -21,6 +21,7 @@ MonoBehaviour:
   Damage:
     RawValue: 1179648
   Element: 0
+  Family: 3
   CriticalChance:
     RawValue: 13107
   CriticalDamageBonus:

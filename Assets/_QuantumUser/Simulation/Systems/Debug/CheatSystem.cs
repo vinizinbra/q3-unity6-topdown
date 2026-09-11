@@ -77,6 +77,14 @@ namespace Quantum
                     GlobalUpgradeUtility.Grant(f, player, new AssetRef<GlobalUpgradeData>(new AssetGuid(cmd.AssetId)));
                     break;
 
+                case CheatActionKind.GrantPassiveUpgrade:
+                    GrantPassiveUpgrade(f, player, new AssetRef<PassiveUpgradeData>(new AssetGuid(cmd.AssetId)));
+                    break;
+
+                case CheatActionKind.GrantSkillUpgrade:
+                    GrantSkillUpgrade(f, player, new AssetRef<SkillActionData>(new AssetGuid(cmd.AssetId)), (SkillSlotId)cmd.Amount);
+                    break;
+
                 case CheatActionKind.BuyAccessory:
                     AccessoryGuardUtility.Restore(f, player);
                     break;
@@ -125,6 +133,10 @@ namespace Quantum
 
                 case CheatActionKind.JumpToBreathing:
                     JumpToBreathing(f, cmd.Amount);
+                    break;
+
+                case CheatActionKind.SetupTestRun:
+                    SetupTestRun(f, player, cmd.Amount);
                     break;
             }
         }
@@ -178,6 +190,39 @@ namespace Quantum
             f.Global->SurvivalTime = SurvivalTimeAtPhaseStart(config, targetIndex);
 
             QueuePendingLevelUpsTo(f, BreathingTargetDisplayLevel[breathNumber - 1]);
+        }
+
+        // One-click "midgame test setup" combo - see CheatActionKind.SetupTestRun. JumpToBreathing
+        // above queues one Global.DebugPendingLevelUps entry per level crossed, normally drained one
+        // at a time across real ticks by DebugCheatSystem.TryOpenNextPendingLevelUp (paced that way
+        // so the View can react to each screen opening/closing in turn). This instead drains the
+        // WHOLE queue synchronously right here, in a plain loop: LevelUpUtility.Resolve already
+        // leaves every piece of state (LevelUpScreenOpen/GameplaySystemGroup/GameState) exactly how
+        // the next BeginLevelUpScreen call expects to find it, so back-to-back Begin+Resolve pairs
+        // within the same tick are safe - no screen is ever actually shown to the player, each one
+        // opens and auto-resolves (random pick among that entity's own rolled options, same as an
+        // unconfirmed player timing out - see LevelUpUtility.AutoConfirm) before the next begins.
+        private static void SetupTestRun(Frame f, EntityRef player, int breathNumber)
+        {
+            JumpToBreathing(f, breathNumber);
+
+            while (f.Global->DebugPendingLevelUps > 0)
+            {
+                f.Global->DebugPendingLevelUps--;
+                f.Global->Level++;
+                LevelUpUtility.BeginLevelUpScreen(f);
+                LevelUpUtility.Resolve(f);
+            }
+
+            // Reveals the whole minimap - MinimapWidget reads Chunk.Discovered client-side every
+            // tick and repaints automatically, so flipping it here on every chunk is the only step
+            // needed (see ChunkDiscoverySystem, which normally flips it one chunk at a time as the
+            // player physically explores).
+            var chunks = f.Filter<Chunk>();
+            while (chunks.Next(out EntityRef chunkEntity, out Chunk _))
+                f.Unsafe.GetPointer<Chunk>(chunkEntity)->Discovered = true;
+
+            CoinUtility.Grant(f, player, (FP)5000);
         }
 
         // FIX (was: GrantExperienceUpTo, which topped TotalExperience up in one lump sum and routed
@@ -379,6 +424,34 @@ namespace Quantum
                 return;
 
             WeaponSystem.Equip(f, player, weapon, weaponData);
+        }
+
+        // Mirrors PassiveUpgradeSystem's own GrantPassiveUpgradeCommand handling - Grant alone
+        // doesn't record history (unlike RiftMutationUtility.Grant/GlobalUpgradeUtility.Grant, which
+        // write their own Picks component), so without RecordHistory here a ranked Ascension (e.g. a
+        // Hero Mastery line) would always re-apply rank 1 and never advance - see
+        // PassiveUpgradeUtility.GetRank/docs/level-up-upgrades.md.
+        private static void GrantPassiveUpgrade(Frame f, EntityRef player, AssetRef<PassiveUpgradeData> upgradeRef)
+        {
+            PassiveUpgradeUtility.Grant(f, player, upgradeRef);
+            LevelUpUtility.RecordHistory(f, player, LevelUpPoolKind.PassiveUpgrade, new AssetRef<UpgradeData>(upgradeRef.Id));
+        }
+
+        // Mirrors SkillSystem.ProcessGrantUpgradeCommand (the real GrantSkillUpgradeCommand handler,
+        // used by the level-up screen/debug menu) - CheatSystem can't just send that command itself
+        // (a player can only have one command in flight per tick, and CheatCommand is what's already
+        // in flight this tick), so it calls the same SkillSystem building blocks directly instead.
+        private static void GrantSkillUpgrade(Frame f, EntityRef player, AssetRef<SkillActionData> upgradeRef, SkillSlotId slotId)
+        {
+            if (f.Unsafe.TryGetPointer<CharacterSkills>(player, out var skills) == false)
+                return;
+
+            SkillSlot* slot = SkillSystem.ResolveSlot(skills, slotId);
+            if (slot == null)
+                return;
+
+            if (SkillSystem.AddUpgrade(f, slot, upgradeRef) == true)
+                LevelUpUtility.RecordHistory(f, player, LevelUpPoolKind.SkillUpgrade, new AssetRef<UpgradeData>(upgradeRef.Id));
         }
 
         private static void KillAllEnemies(Frame f, EntityRef killer)

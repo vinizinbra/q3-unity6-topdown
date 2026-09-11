@@ -18,12 +18,12 @@ MonoBehaviour:
       Value: 369611404177242297
   Icon: {fileID: 65697102, guid: 355e00907e214470bac0029f70064510, type: 3}
   DisplayName: Field Modifications
-  Description: Scrap collected while a Sentry is deployed upgrades that Sentry, for as long as it lives.
+  Description: "Scrap collected while a Sentry is deployed upgrades that Sentry, for as long as it lives."
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - 'Scrap collected while your Sentry is active grants it <color=#FD3971>+4%</color> Damage, up to <color=#FD3971>5</color> stacks.'
-  - 'Scrap collected while your Sentry is active grants it <color=#FD3971>+4%</color> Damage and <color=#FD3971>+3%</color> Fire Rate, up to <color=#FD3971>5</color> stacks.'
-  - 'Scrap grants your active Sentry <color=#FD3971>+4%</color> Damage and <color=#FD3971>+3%</color> Fire Rate, up to <color=#FD3971>5</color> stacks. At <color=#FD3971>5</color> stacks it gains a Twin Cannon.'
+  - "Scrap collected while your Sentry is active grants it <color=#FD3971>+4%</color> Damage, up to <color=#FD3971>5</color> stacks."
+  - "Scrap also grants it <color=#FD3971>+3%</color> Fire Rate per stack, still capped at <color=#FD3971>5</color> stacks."
+  - "At <color=#FD3971>5</color> stacks, your Sentry's Cannon upgrades to a Twin Cannon."
   DamagePerStack:
   - RawValue: 2621
   - RawValue: 2621
@@ -35,4 +35,4 @@ MonoBehaviour:
   MaxStacks: 050505
   MkIIWeapon:
     Id:
-      Value: 471208801872943650
+      Value: 0

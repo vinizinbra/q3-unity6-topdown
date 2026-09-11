@@ -1,12 +1,16 @@
-// Used by GroundBlobManager and BuildingShadowManager, including 9-sliced sprites.
-// BlobShadowRendererFeature reduces raw amounts with MAX, then multiplies the scene once
-// using the shared material's color and world-space hatching. No ordinary transparent pass may also draw these sprites.
+// Cheap per-sprite blob shadow: one ordinary transparent multiply pass (Blend DstColor Zero),
+// no renderer feature, no fullscreen composite, no depth-texture request. Occlusion behind
+// opaque foreground geometry comes for free from the normal hardware depth test (ZTest LEqual
+// against the camera's own depth attachment) instead of a manually sampled depth texture.
+// Used by GroundBlobManager, BuildingShadowManager and PlayerShadow, including 9-sliced sprites.
+// Overlapping shadows compound (multiply on top of multiply) rather than unioning to one shared
+// darkness - the trade accepted for dropping the MAX-mask/composite renderer feature on mobile.
 Shader "Custom/BlobShadowSpriteMultiply"
 {
     Properties
     {
         _MainTex ("Shape Texture (see _ShapeSource)", 2D) = "white" {}
-        _ShadowColor ("Shared Shadow Color (Renderer Feature style)", Color) = (0.35, 0.35, 0.4, 1)
+        _ShadowColor ("Shadow Color", Color) = (0.35, 0.35, 0.4, 1)
         _MinShadowAmount ("Optional Contribution Cutoff", Range(0, 0.5)) = 0
         _Strength ("Strength", Range(0, 1)) = 1
 
@@ -15,7 +19,7 @@ Shader "Custom/BlobShadowSpriteMultiply"
         _ShapeCutout ("Cutout Amount (0 = as sampled, 1 = hard)", Range(0, 1)) = 0
         _ShapeThreshold ("Cutout Threshold", Range(0, 1)) = 0.5
 
-        [Header(Shared Shadow Hatching)]
+        [Header(Shadow Hatching)]
         [NoScaleOffset] _HatchMap ("Hatch Texture", 2D) = "white" {}
         _HatchScale ("Hatch Tiling (per world unit)", Float) = 0.5
         _HatchStrength ("Hatch Strength", Range(0,1)) = 0
@@ -25,14 +29,25 @@ Shader "Custom/BlobShadowSpriteMultiply"
     {
         Tags { "RenderType" = "Transparent" "RenderPipeline" = "UniversalPipeline" "Queue" = "Transparent" "IgnoreProjector" = "True" }
         ZWrite Off
-        ZTest Always // Visibility uses scene depth, also with MSAA or a reduced-resolution mask.
         Cull Off
 
-        HLSLINCLUDE
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
+        Pass
+        {
+            Name "ForwardMultiply"
+            Tags { "LightMode" = "UniversalForward" }
+            Blend DstColor Zero
+            ColorMask RGB
 
-            float4 _BlobShadowMaskSize;
+            HLSLPROGRAM
+            #pragma vertex Vert
+            #pragma fragment Frag
+            #pragma multi_compile_instancing
+
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
+            TEXTURE2D(_MainTex);
+            SAMPLER(sampler_MainTex);
+            TEXTURE2D(_HatchMap);
 
             // Sprite alpha can arrive in batched vertices, unity_SpriteColor, or the
             // instancing buffer. Multiply both sources to preserve height fading in each path.
@@ -44,9 +59,6 @@ Shader "Custom/BlobShadowSpriteMultiply"
             #else
                 #define BLOB_SPRITE_COLOR unity_SpriteColor
             #endif
-
-            TEXTURE2D(_MainTex);
-            SAMPLER(sampler_MainTex);
 
             CBUFFER_START(UnityPerMaterial)
                 half4 _ShadowColor;
@@ -71,6 +83,7 @@ Shader "Custom/BlobShadowSpriteMultiply"
             {
                 float4 positionCS : SV_POSITION;
                 float2 uv : TEXCOORD0;
+                float2 positionWSxz : TEXCOORD1;
                 half alpha : COLOR;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
                 UNITY_VERTEX_OUTPUT_STEREO
@@ -85,6 +98,7 @@ Shader "Custom/BlobShadowSpriteMultiply"
 
                 float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
                 output.positionCS = TransformWorldToHClip(positionWS);
+                output.positionWSxz = positionWS.xz;
                 output.uv = input.uv;
                 // Resolved here, not in the fragment: it is uniform across the quad, so the
                 // instanced-property access happens once per vertex instead of once per pixel.
@@ -93,48 +107,28 @@ Shader "Custom/BlobShadowSpriteMultiply"
                 return output;
             }
 
-
-            // Shape and height fade remain per sprite; color/hatching are shared at composite.
-            float ShadowAmount(Varyings input)
+            half4 Frag(Varyings input) : SV_Target
             {
-                float2 screenUv = input.positionCS.xy * _BlobShadowMaskSize.zw;
-                float sceneDepth = SampleSceneDepth(screenUv);
-                #if UNITY_REVERSED_Z
-                    clip(input.positionCS.z - sceneDepth);
-                #else
-                    clip(sceneDepth - input.positionCS.z);
-                #endif
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
                 half4 shapeTexel = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv);
                 half shape = lerp(shapeTexel.r, shapeTexel.a, _ShapeSource);
                 half hardShape = step(_ShapeThreshold, shape);
-                float amount = saturate(lerp(shape, hardShape, _ShapeCutout) * input.alpha * _Strength);
+                half amount = saturate(lerp(shape, hardShape, _ShapeCutout) * input.alpha * _Strength);
                 clip(amount - _MinShadowAmount);
-                return amount; // The R8 target supplies normal UNorm quantization.
+
+                half3 multiplier = lerp(half3(1, 1, 1), _ShadowColor.rgb, amount);
+                // World position comes from this sprite's own quad, already lying on the
+                // ground plane - no depth sample/reconstruction needed like the fullscreen
+                // composite version required.
+                if (_HatchStrength > 0.001h)
+                {
+                    half hatch = SAMPLE_TEXTURE2D(_HatchMap, sampler_LinearRepeat, input.positionWSxz * _HatchScale).r;
+                    multiplier *= lerp(1.0h, hatch, amount * _HatchStrength);
+                }
+                return half4(multiplier, 1);
             }
-
-            half4 FragMask(Varyings input) : SV_Target
-            {
-                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
-                float amount = ShadowAmount(input);
-                return half4(amount, 0, 0, 0);
-            }
-
-        ENDHLSL
-
-        Pass
-        {
-            Name "BlobShadowMask"
-            Tags { "LightMode" = "BlobShadowMask" }
-            Blend One One
-            BlendOp Max
-            ColorMask R
-            HLSLPROGRAM
-            #pragma vertex Vert
-            #pragma fragment FragMask
-            #pragma multi_compile_instancing
             ENDHLSL
         }
-
     }
 }

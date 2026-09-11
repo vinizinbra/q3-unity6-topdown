@@ -19,22 +19,16 @@ MonoBehaviour:
   Icon: {fileID: -1247703252, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
   DisplayName: Aftershock
   RankDescriptions:
-  - Each enemy struck during Juggernaut adds <color=#FD3971>+15%</color> damage to
-    the closing shockwave, up to <color=#FD3971>5</color> stacks.
-  - Each enemy struck adds <color=#FD3971>+15%</color> damage and <color=#FD3971>+5%</color>
-    radius to the closing shockwave, up to <color=#FD3971>5</color> stacks.
-  - Each enemy struck adds <color=#FD3971>+15%</color> damage and <color=#FD3971>+5%</color>
-    radius, up to <color=#FD3971>5</color> stacks. At <color=#FD3971>5</color> stacks
-    a second shockwave follows in <color=#FD3971>0.5s</color>.
+  - "Each enemy hit by Discharge makes the closing shockwave <color=#FD3971>15%</color> stronger, up to <color=#FD3971>5</color> enemies."
+  - "Each enemy hit also makes the shockwave <color=#FD3971>5%</color> larger, up to <color=#FD3971>5</color> enemies."
+  - "At <color=#FD3971>5</color> enemies hit, the shockwave repeats <color=#FD3971>0.5s</color> later for <color=#FD3971>60%</color> of its Damage."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Juggernaut's closing shockwave grows with every enemy you struck during
-    the channel, so routing through a crowd before it ends is what makes the finish
-    hurt.
+  Description: "Juggernaut's closing shockwave grows with every enemy you strike during the channel."
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

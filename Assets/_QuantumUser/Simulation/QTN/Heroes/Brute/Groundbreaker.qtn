@@ -31,6 +31,17 @@ component GroundbreakerUpgrade
     // default: the height requirement above is the real filter, not the source.
     Byte AllowedLandingSources;
 
+    // Rank 3 only ("Seismic Impact") - lets a genuine same-height jump qualify alongside a drop, not
+    // just instead of one. Requires the landing's own WasManualJump (see PlayerMovement.qtn) so
+    // neither auto-mantle path (predictive or the isOnEdge fallback) can trigger it - only the
+    // player's own Jump input counts as "a real jump" here.
+    Boolean SameHeightTriggerEnabled;
+
+    // How close to the takeoff height (in world units, both directions) still counts as "the same
+    // height" - compared against the signed heightDelta from OnPlayerLanded, not the clamped
+    // fallDistance (which can't distinguish a same-height landing from an upward mantle).
+    FP SameHeightTolerance;
+
     // -- Impact shockwave --
 
     FP ImpactRadius;

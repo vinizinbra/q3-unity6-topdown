@@ -19,16 +19,16 @@ MonoBehaviour:
   Icon: {fileID: -1558002361, guid: 167fe127f1a734214a64d3f39af97f1f, type: 3}
   DisplayName: Vortex Collapse
   RankDescriptions:
-  - 'When Vortex ends, it collapses and deals heavy damage around its center.'
-  - 'When Vortex ends, it collapses for <color=#FD3971>200%</color> Skill Damage in a larger blast.'
-  - 'Before collapsing, Vortex violently pulls enemies into its core, then detonates for massive damage.'
+  - "When Vortex expires or is destroyed, it explodes for <color=#FD3971>150%</color> Skill Damage."
+  - "Collapse deals <color=#FD3971>200%</color> Skill Damage and has <color=#FD3971>+25%</color> Radius."
+  - "Collapse deals <color=#FD3971>250%</color> Skill Damage, gains <color=#FD3971>+50%</color> Radius, and strongly pulls enemies inward immediately before exploding."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: When Vortex ends, it collapses in a heavy blast around its center.
+  Description: "When Vortex ends, it collapses in a heavy blast around its center."
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

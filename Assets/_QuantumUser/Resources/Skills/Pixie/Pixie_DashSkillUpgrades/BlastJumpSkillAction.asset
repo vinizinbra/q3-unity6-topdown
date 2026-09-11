@@ -19,16 +19,16 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Blast Jump
   RankDescriptions:
-  - 'For <color=#FD3971>2s</color> after a dash, your next Bunny Bomb flies <color=#FD3971>25%</color> faster and blasts <color=#FD3971>25%</color> wider.'
-  - 'For <color=#FD3971>2s</color> after a dash, your next Bunny Bomb flies <color=#FD3971>25%</color> faster and blasts <color=#FD3971>25%</color> wider. Dashing also cuts <color=#FD3971>1s</color> off its cooldown.'
-  - 'For <color=#FD3971>2s</color> after a dash, your Bunny Bomb is <color=#FD3971>25%</color> faster and wider. Dashing a planted bomb detonates it for <color=#FD3971>+50%</color>.'
+  - "After Dashing, the next Bunny Bomb thrown within <color=#FD3971>2s</color> travels <color=#FD3971>25%</color> faster and has <color=#FD3971>+25%</color> explosion radius."
+  - "Dashing also reduces Bunny Bomb's remaining cooldown by <color=#FD3971>1s</color>."
+  - "Dashing through your own planted Bunny Bomb detonates it for <color=#FD3971>+50%</color> Damage."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 3
   Interval:
     RawValue: 0
   Activated: 1
-  Description: Dashing supercharges your next Bunny Bomb throw.
+  Description: "Dashing supercharges your next Bunny Bomb throw."
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

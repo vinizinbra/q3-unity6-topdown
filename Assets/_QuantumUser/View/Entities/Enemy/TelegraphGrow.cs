@@ -72,6 +72,14 @@ namespace Quantum
         // this MonoBehaviour's own Update (driven by Time.deltaTime, not the sim) keeps advancing
         // growth using whatever Time.timeScale currently is, so the fill can visibly finish (or keep
         // creeping) while the enemy's real windup is fully frozen underneath it.
+        //
+        // Also folds in BossPhaseUtility.ResolveAnticipationMultiplier - EnemySystem.UpdatePreparation
+        // decrements the real Enemy.StateTimer by StatusEffectUtility.GetAnticipationMultiplier
+        // MULTIPLIED WITH this (see that call site), so a boss phase that shortens/lengthens the
+        // windup (BossStatModifiers.AnticipationMultiplier) needs to drag this growth rate along with
+        // it too - otherwise a phase with a shortened windup fires the real attack before this visual
+        // ever finishes growing to its resting scale (or a lengthened one finishes early and then just
+        // sits there fully grown for the remainder of the windup).
         private unsafe float ResolveAnticipationMultiplier()
         {
             QuantumGame game = QuantumRunner.Default != null ? QuantumRunner.Default.Game : null;
@@ -82,7 +90,9 @@ namespace Quantum
 
             bool fullyPaused = StatusEffectUtility.IsStaggered(frame, _enemyEntity) == true || frame.Global->LevelUpScreenOpen == true;
             float pauseMultiplier = fullyPaused == true ? 0f : 1f;
-            return StatusEffectUtility.GetAnticipationMultiplier(frame, _enemyEntity).AsFloat * pauseMultiplier;
+            float anticipationMultiplier = StatusEffectUtility.GetAnticipationMultiplier(frame, _enemyEntity).AsFloat
+                * BossPhaseUtility.ResolveAnticipationMultiplier(frame, _enemyEntity).AsFloat;
+            return anticipationMultiplier * pauseMultiplier;
         }
 
         private Vector3 ComputeScale(float t)

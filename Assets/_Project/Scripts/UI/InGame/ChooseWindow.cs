@@ -240,7 +240,7 @@ public class ChooseWindow : UiWindow
         ResetIntroParticles();
         base.Show();
 
-        if (debugSkipIntroAnimation)
+        if (debugSkipIntroAnimation || UpgradeScreenDebugState.SkipAnimations)
             SkipIntroAnimation();
         else
             PlayIntroAnimation();

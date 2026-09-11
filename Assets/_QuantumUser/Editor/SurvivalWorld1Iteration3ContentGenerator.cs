@@ -58,11 +58,12 @@ namespace QuantumUser.Editor
     //      SlammerPressurePack (HeavySlammer+Swarm), MortarPressurePack (Mortar+Filler),
     //      MortarShotgunPack (Mortar+Shotgunner) - 5 total, every old Turret/BotFiller pack
     //      (TurretSwarmPack, the old ChargerGunnerPack/HeavySlammerShotgunnerPack shape) retired.
-    //   5. The 4 "Elite" beats are now real hard-stop gates: Kind = SurvivalPhaseKind.Elite instead
-    //      of Combat (was vocabulary-only in every prior iteration - see SurvivalConfig.cs/
-    //      docs/run-phase.md's "Elite / Boss phases"). SurvivalProgressionUtility.Tick now holds
-    //      PhaseTimer (and SurvivalTime) from advancing past Duration until that elite is dead,
-    //      mini-boss-style - a run can no longer coast past an Elite beat on the clock alone.
+    //   5. The 4 "Elite" beats stay Kind = SurvivalPhaseKind.Combat (vocabulary-only, same as every
+    //      prior iteration - see SurvivalConfig.cs/docs/run-phase.md's "Elite / Boss phases") - NOT
+    //      the hard-stop-gate Kind.Elite. The elite still force-spawns via GuaranteedEnemyData/
+    //      GuaranteedEnemyFaction (that guarantee is independent of Kind), but
+    //      SurvivalProgressionUtility.Tick does NOT hold PhaseTimer/SurvivalTime open past Duration
+    //      for it - a run can coast past the beat on the clock alone, same as any other Combat phase.
     //   6. Elite escorts switched from GuaranteedGroup to GuaranteedEnemyData: the elite itself
     //      still force-spawns the instant the phase begins (still bypasses the normal budget/
     //      alive-cap gate, same guarantee as before - see SurvivalConfig.cs), but as a lone
@@ -73,9 +74,8 @@ namespace QuantumUser.Editor
     //      EliteMortar/I2-EliteHeavySlammer EnemyGroupConfig assets are consequently unreferenced by
     //      this generator now (see GroupSpecs' own comment).
     // Timing skeleton (180s Runs, PreElite 95-105s, Elite beat starting at 105s) is otherwise
-    // identical to the previous pass - the "25s"/"-130s" in each Elite phase's own Name is now a
-    // FLOOR (Duration), not the beat's actual length, since the phase holds open past it until the
-    // elite dies; everything after it in the Run shifts later by however long that takes.
+    // identical to the previous pass - the "25s"/"-130s" in each Elite phase's own Name is its
+    // actual Duration, same as any other Combat phase (no hold-open past it).
     //
     // ============================== TIER MODEL (unchanged) ==============================
     //   Tier A (chaff, free after intro): RukkFiller, NormalMelee, Swarm.
@@ -174,6 +174,7 @@ namespace QuantumUser.Editor
             public string Name;
             public SurvivalPhaseKind Kind;
             public FP Duration;
+            public FP GracePeriodDuration;
             public FP BudgetPerPulse;
             public FP PulseInterval;
             public FP TargetPressure;
@@ -216,7 +217,7 @@ namespace QuantumUser.Editor
                 BudgetPerPulse = 4, PulseInterval = 3, TargetPressure = 8, MaxAliveEnemies = 6,
                 Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("NormalMelee", EnemyFaction.MainFaction, 2) } },
 
-            new PhaseSpec { Name = "R1-F Flee Elite (105-130s)", Kind = SurvivalPhaseKind.Elite, Duration = 25,
+            new PhaseSpec { Name = "R1-F Flee Elite (105-130s)", Kind = SurvivalPhaseKind.Combat, Duration = 25,
                 BudgetPerPulse = 2, PulseInterval = 4, TargetPressure = 4, MaxAliveEnemies = 5,
                 Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 2) },
                 GuaranteedEnemyFileName = "EliteFleeEnemy", GuaranteedEnemyFaction = EnemyFaction.MainFaction },
@@ -225,7 +226,7 @@ namespace QuantumUser.Editor
                 BudgetPerPulse = 10, PulseInterval = 2, TargetPressure = 18, MaxAliveEnemies = 13,
                 Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("NormalMelee", EnemyFaction.MainFaction, 2), E("Gunner", EnemyFaction.RobotFaction, 2) } },
 
-            new PhaseSpec { Name = "Breathing 1", Kind = SurvivalPhaseKind.Breathing, Duration = 60 },
+            new PhaseSpec { Name = "Breathing 1", Kind = SurvivalPhaseKind.Breathing, Duration = 60, GracePeriodDuration = 30 },
 
             // =========================================================================
             // RUN 2 - MOVEMENT + FIRST TELEGRAPHS (3:00-6:00). Spacing + Mortar + Charger (Mortar
@@ -265,7 +266,7 @@ namespace QuantumUser.Editor
                 BudgetPerPulse = 5, PulseInterval = FP.FromString("2.8"), TargetPressure = 10, MaxAliveEnemies = 8,
                 Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("NormalMelee", EnemyFaction.MainFaction, 1) } },
 
-            new PhaseSpec { Name = "R2-F Brute Elite (105-130s)", Kind = SurvivalPhaseKind.Elite, Duration = 25,
+            new PhaseSpec { Name = "R2-F Brute Elite (105-130s)", Kind = SurvivalPhaseKind.Combat, Duration = 25,
                 BudgetPerPulse = 4, PulseInterval = FP.FromString("2.5"), TargetPressure = 6, MaxAliveEnemies = 9,
                 Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3) },
                 GuaranteedEnemyFileName = "EliteBruteChest", GuaranteedEnemyFaction = EnemyFaction.MainFaction },
@@ -282,7 +283,7 @@ namespace QuantumUser.Editor
                 BudgetPerPulse = 15, PulseInterval = FP.FromString("1.6"), TargetPressure = 22, MaxAliveEnemies = 15,
                 Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 2), E("Gunner", EnemyFaction.RobotFaction, 2), E("NormalMelee", EnemyFaction.MainFaction, 1), E("Charger", EnemyFaction.WildLifeFaction, 1, 1) } },
 
-            new PhaseSpec { Name = "Breathing 2", Kind = SurvivalPhaseKind.Breathing, Duration = 60 },
+            new PhaseSpec { Name = "Breathing 2", Kind = SurvivalPhaseKind.Breathing, Duration = 60, GracePeriodDuration = 30 },
 
             // =========================================================================
             // RUN 3 - SPATIAL PRESSURE (6:00-9:00). Swarm + HeavySlammer + known combinations. NO
@@ -320,7 +321,7 @@ namespace QuantumUser.Editor
 
             // Mortar Elite - all-Rukk (EliteMortarEnemy, MainFaction). Do not infer Security from
             // the mechanic.
-            new PhaseSpec { Name = "R3-F Mortar Elite (105-130s)", Kind = SurvivalPhaseKind.Elite, Duration = 25,
+            new PhaseSpec { Name = "R3-F Mortar Elite (105-130s)", Kind = SurvivalPhaseKind.Combat, Duration = 25,
                 BudgetPerPulse = 5, PulseInterval = FP.FromString("2.5"), TargetPressure = 8, MaxAliveEnemies = 10,
                 Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("Gunner", EnemyFaction.RobotFaction, 2) },
                 GuaranteedEnemyFileName = "EliteMortarEnemy", GuaranteedEnemyFaction = EnemyFaction.MainFaction },
@@ -334,7 +335,7 @@ namespace QuantumUser.Editor
                 Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 2), E("Gunner", EnemyFaction.RobotFaction, 2), E("NormalMelee", EnemyFaction.MainFaction, 1) },
                 Groups = new[] { "SwarmChargerPack", "SlammerPressurePack", "MortarPressurePack" } },
 
-            new PhaseSpec { Name = "Breathing 3", Kind = SurvivalPhaseKind.Breathing, Duration = 60 },
+            new PhaseSpec { Name = "Breathing 3", Kind = SurvivalPhaseKind.Breathing, Duration = 60, GracePeriodDuration = 30 },
 
             // =========================================================================
             // RUN 4 - TARGET PRIORITY + MASTERY (9:00-12:00). Only ONE genuinely new normal enemy:
@@ -377,7 +378,7 @@ namespace QuantumUser.Editor
             // reported here rather than hacked into the Director. The Elite should then escalate
             // THAT cone language (larger/stronger cone + a delayed secondary effect), also an asset
             // change, same caveat.
-            new PhaseSpec { Name = "R4-E HeavySlammer Elite (105-130s)", Kind = SurvivalPhaseKind.Elite, Duration = 25,
+            new PhaseSpec { Name = "R4-E HeavySlammer Elite (105-130s)", Kind = SurvivalPhaseKind.Combat, Duration = 25,
                 BudgetPerPulse = 6, PulseInterval = FP.FromString("2.5"), TargetPressure = 10, MaxAliveEnemies = 10,
                 Roster = new List<SegEntry> { E("Filler", EnemyFaction.MainFaction, 3), E("Gunner", EnemyFaction.RobotFaction, 2) },
                 GuaranteedEnemyFileName = "EliteHeavySlammer", GuaranteedEnemyFaction = EnemyFaction.MainFaction },
@@ -393,7 +394,7 @@ namespace QuantumUser.Editor
                     E("Swarm", EnemyFaction.WildLifeFaction, 2), E("Suicider", EnemyFaction.RobotFaction, 1, 1) },
                 Groups = new[] { "ChargerDronePack", "SlammerPressurePack", "MortarShotgunPack" } },
 
-            new PhaseSpec { Name = "Breathing 4 (Last Breath)", Kind = SurvivalPhaseKind.Breathing, Duration = 90 },
+            new PhaseSpec { Name = "Breathing 4 (Last Breath)", Kind = SurvivalPhaseKind.Breathing, Duration = 90, GracePeriodDuration = 30 },
 
             // =========================================================================
             // WORLD1BOSS
@@ -488,6 +489,7 @@ namespace QuantumUser.Editor
                 Name = p.Name,
                 Kind = p.Kind,
                 Duration = p.Duration,
+                GracePeriodDuration = p.GracePeriodDuration,
                 BudgetPerPulse = p.BudgetPerPulse,
                 PulseInterval = p.PulseInterval,
                 TargetPressure = p.TargetPressure,

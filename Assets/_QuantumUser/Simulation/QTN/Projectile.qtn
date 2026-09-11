@@ -106,4 +106,24 @@ component Projectile
     // nothing to revert. 1 for anything not affected (every projectile not near a field, or any
     // player-owned one - Kai's field only ever slows enemy fire).
     FP SpeedMultiplier;
+
+    // Per-shot override of ProjectileDataAsset.Movement, resolved once at spawn (see
+    // ProjectileMovementOverride.qtn/WeaponSystem.FireProjectile) and preferred every tick by
+    // ProjectileSystem.Update over the asset's own Movement - Pixie's Rocket Conversion (Grenade
+    // Launcher Mastery R3) is the first user, swapping a Grenade Launcher's ballistic arc for a fast
+    // direct flight while everything else about the shot (Hit/explosion/perks/element) stays whatever
+    // the weapon's own ProjectileDataAsset says. Invalid (the default) for every projectile not fired
+    // through that override path, which is exactly every existing spawn site unchanged.
+    AssetRef<ProjectileMovementData> MovementOverride;
+
+    // Per-shot override of ProjectileDataAsset.Hit, same shape/reasoning as MovementOverride above -
+    // resolved once at spawn and preferred every tick by ProjectileSystem over the asset's own Hit.
+    // Kai's Ghost Shot (Neutral Mastery R3, see DamageEchoSystem.SpawnEchoProjectile) is the first
+    // user: it spawns using the OWNER'S CURRENTLY EQUIPPED weapon's own ProjectileDataAsset (so the
+    // echo looks and flies exactly like a normal shot from whatever weapon Kai is holding - same
+    // Prototype, same Movement) but overrides just the Hit to EchoHitData, so the echo still only
+    // ever delivers its own pre-resolved damage with no re-triggering of that weapon's normal Effects/
+    // elemental status/procs and no risk of scheduling another echo. Invalid (the default) for every
+    // projectile not fired through that override path, which is every existing spawn site unchanged.
+    AssetRef<ProjectileHitData> HitOverride;
 }

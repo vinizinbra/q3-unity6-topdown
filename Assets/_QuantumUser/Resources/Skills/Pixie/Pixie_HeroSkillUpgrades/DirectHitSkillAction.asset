@@ -19,16 +19,16 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Direct Hit
   RankDescriptions:
-  - 'Inner <color=#FD3971>35%</color> of the blast deals <color=#FD3971>+30%</color> damage.'
-  - 'Inner <color=#FD3971>45%</color> of the blast deals <color=#FD3971>+50%</color> damage.'
-  - 'Inner <color=#FD3971>45%</color> of the blast deals <color=#FD3971>+75%</color> damage and knocks enemies back hard.'
+  - "Enemies near the center of Pixie's explosions take <color=#FD3971>+30%</color> Damage."
+  - "The high-damage center becomes larger and the bonus increases to <color=#FD3971>+50%</color>."
+  - "Bonus increases to <color=#FD3971>+75%</color>. Center hits also strongly Knockback enemies."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Enemies caught near the center of the blast take bonus damage.
+  Description: "Enemies caught near the center of the blast take bonus damage."
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

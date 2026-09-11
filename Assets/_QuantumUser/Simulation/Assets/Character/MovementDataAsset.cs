@@ -51,5 +51,33 @@ namespace Quantum
         // Auto-hop (predictive edge check, done while still grounded)
         public FP EdgeProbeDistance = FP._0_50;
         public FP EdgeCheckDistance = 1;
+
+        // Water/void edges - this project has no distinct water collider (every water body is a
+        // visual plane at LevelConfig.FallDeathHeight, mechanically the same bottomless drop as any
+        // other chunk seam), so "is this an unrecoverable fall" can't be read off what's physically
+        // down there. Instead PlayerMovementProcessor.HasSurvivableLandingAhead scans FORWARD past
+        // the edge (mirrors EnemyMovementUtility.TryFindGapLanding, the same problem bots solve for
+        // void avoidance): a narrow, jumpable river has dry land a little further out at the same
+        // probe distance a genuinely uncrossable lake does NOT, so a single straight-down probe
+        // right at the edge can't tell them apart on its own.
+        //
+        // How far down each forward sample probes.
+        public FP WaterCheckDistance = 5;
+
+        // How far past EdgeProbeDistance the forward scan keeps sampling for a landing before
+        // giving up and calling the gap uncrossable. Should comfortably cover any river/gap this
+        // character is actually meant to be able to auto-hop across; a true lake/void is wider than
+        // this everywhere along its shore.
+        public FP WaterMaxCrossableGap = 4;
+
+        // Forward step size between samples in that scan - smaller catches a narrower sliver of
+        // far shore at the cost of more raycasts per tick.
+        public FP WaterProbeStep = FP._0_75;
+
+        // How long a straight (non-redirectable) walk into an uncrossable edge is held at the edge
+        // before it is let through as a deliberate jump anyway - see
+        // PlayerMovementProcessor.ResolveWaterEdgeMovement. Long enough to read as a stop rather
+        // than a stutter, short enough that insisting doesn't feel like fighting the controls.
+        public FP WaterEdgeInsistTime = FP.FromString("0.5");
     }
 }

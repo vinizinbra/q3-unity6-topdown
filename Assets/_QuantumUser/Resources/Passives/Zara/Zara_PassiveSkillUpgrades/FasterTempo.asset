@@ -18,25 +18,25 @@ MonoBehaviour:
       Value: 423069476414731352
   Icon: {fileID: -1928859675, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
   DisplayName: Faster Tempo
-  Description: Reach Flow faster, and make every stack of it worth more.
+  Description: "Reach Flow faster, and make every stack of it worth more."
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - 'Flow builds <color=#FD3971>25%</color> faster.'
-  - 'Flow builds <color=#FD3971>50%</color> faster, and each Flow stack grants <color=#FD3971>+6%</color> Move Speed and <color=#FD3971>+6%</color> Fire Rate.'
-  - 'Full Tempo: Flow builds <color=#FD3971>75%</color> faster, and at Max Flow you gain a further <color=#FD3971>+10%</color> Fire Rate.'
+  - "Flow builds <color=#FD3971>25%</color> faster."
+  - "Flow builds <color=#FD3971>50%</color> faster and its Active Move Speed / Fire Rate bonus increases to <color=#FD3971>+18%</color>."
+  - "Flow builds <color=#FD3971>75%</color> faster and grants an additional <color=#FD3971>+10%</color> Fire Rate while Active."
   BuildRateMultiplier:
   - RawValue: 81920
   - RawValue: 98304
   - RawValue: 114688
-  MoveSpeedPerStack:
-  - RawValue: 3277
-  - RawValue: 3932
-  - RawValue: 3932
-  FireRatePerStack:
-  - RawValue: 3277
-  - RawValue: 3932
-  - RawValue: 3932
-  MaxFlowFireRateBonus:
+  MoveSpeedBonus:
+  - RawValue: 9830
+  - RawValue: 11796
+  - RawValue: 11796
+  FireRateBonus:
+  - RawValue: 9830
+  - RawValue: 11796
+  - RawValue: 11796
+  ActiveFireRateBonus:
   - RawValue: 0
   - RawValue: 0
   - RawValue: 6554

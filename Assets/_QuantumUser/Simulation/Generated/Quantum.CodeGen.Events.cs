@@ -52,7 +52,7 @@ namespace Quantum {
   public unsafe partial class Frame {
     public unsafe partial struct FrameEvents {
       static partial void GetEventTypeCountCodeGen(ref Int32 eventCount) {
-        eventCount = 81;
+        eventCount = 84;
       }
       static partial void GetParentEventIDCodeGen(Int32 eventID, ref Int32 parentEventID) {
         switch (eventID) {
@@ -141,6 +141,9 @@ namespace Quantum {
           case EventAccessoryRecovered.ID: result = typeof(EventAccessoryRecovered); return;
           case EventAccessoryBroken.ID: result = typeof(EventAccessoryBroken); return;
           case EventAccessoryRestored.ID: result = typeof(EventAccessoryRestored); return;
+          case EventDamageEchoTriggered.ID: result = typeof(EventDamageEchoTriggered); return;
+          case EventPriorityTargetSet.ID: result = typeof(EventPriorityTargetSet); return;
+          case EventPriorityTargetCleared.ID: result = typeof(EventPriorityTargetCleared); return;
           default: break;
         }
       }
@@ -315,11 +318,12 @@ namespace Quantum {
         _f.AddEvent(ev);
         return ev;
       }
-      public EventProjectileDestroyed ProjectileDestroyed(EntityRef Entity, EntityRef Owner, FPVector3 Position, AssetRef<ProjectileDataAsset> ProjectileData) {
+      public EventProjectileDestroyed ProjectileDestroyed(EntityRef Entity, EntityRef Owner, FPVector3 Position, FPVector3 SpawnPosition, AssetRef<ProjectileDataAsset> ProjectileData) {
         var ev = _f.Context.AcquireEvent<EventProjectileDestroyed>(EventProjectileDestroyed.ID);
         ev.Entity = Entity;
         ev.Owner = Owner;
         ev.Position = Position;
+        ev.SpawnPosition = SpawnPosition;
         ev.ProjectileData = ProjectileData;
         _f.AddEvent(ev);
         return ev;
@@ -770,6 +774,30 @@ namespace Quantum {
         ev.Owner = Owner;
         ev.WasReplacement = WasReplacement;
         ev.Durability = Durability;
+        _f.AddEvent(ev);
+        return ev;
+      }
+      public EventDamageEchoTriggered DamageEchoTriggered(EntityRef Owner, EntityRef Target, FPVector3 Position, FP Damage, AssetRef<DamageEchoVisualData> Visual) {
+        var ev = _f.Context.AcquireEvent<EventDamageEchoTriggered>(EventDamageEchoTriggered.ID);
+        ev.Owner = Owner;
+        ev.Target = Target;
+        ev.Position = Position;
+        ev.Damage = Damage;
+        ev.Visual = Visual;
+        _f.AddEvent(ev);
+        return ev;
+      }
+      public EventPriorityTargetSet PriorityTargetSet(EntityRef Owner, EntityRef Target) {
+        var ev = _f.Context.AcquireEvent<EventPriorityTargetSet>(EventPriorityTargetSet.ID);
+        ev.Owner = Owner;
+        ev.Target = Target;
+        _f.AddEvent(ev);
+        return ev;
+      }
+      public EventPriorityTargetCleared PriorityTargetCleared(EntityRef Owner, EntityRef Target) {
+        var ev = _f.Context.AcquireEvent<EventPriorityTargetCleared>(EventPriorityTargetCleared.ID);
+        ev.Owner = Owner;
+        ev.Target = Target;
         _f.AddEvent(ev);
         return ev;
       }
@@ -1421,6 +1449,7 @@ namespace Quantum {
     public EntityRef Entity;
     public EntityRef Owner;
     public FPVector3 Position;
+    public FPVector3 SpawnPosition;
     public AssetRef<ProjectileDataAsset> ProjectileData;
     protected EventProjectileDestroyed(Int32 id, EventFlags flags) : 
         base(id, flags) {
@@ -1442,6 +1471,7 @@ namespace Quantum {
         hash = hash * 31 + Entity.GetHashCode();
         hash = hash * 31 + Owner.GetHashCode();
         hash = hash * 31 + Position.GetHashCode();
+        hash = hash * 31 + SpawnPosition.GetHashCode();
         hash = hash * 31 + ProjectileData.GetHashCode();
         return hash;
       }
@@ -3069,6 +3099,93 @@ namespace Quantum {
         hash = hash * 31 + Owner.GetHashCode();
         hash = hash * 31 + WasReplacement.GetHashCode();
         hash = hash * 31 + Durability.GetHashCode();
+        return hash;
+      }
+    }
+  }
+  public unsafe partial class EventDamageEchoTriggered : EventBase {
+    public new const Int32 ID = 81;
+    public EntityRef Owner;
+    public EntityRef Target;
+    public FPVector3 Position;
+    public FP Damage;
+    public AssetRef<DamageEchoVisualData> Visual;
+    protected EventDamageEchoTriggered(Int32 id, EventFlags flags) : 
+        base(id, flags) {
+    }
+    public EventDamageEchoTriggered() : 
+        base(81, EventFlags.Server|EventFlags.Client) {
+    }
+    public new QuantumGame Game {
+      get {
+        return (QuantumGame)base.Game;
+      }
+      set {
+        base.Game = value;
+      }
+    }
+    public override Int32 GetHashCode() {
+      unchecked {
+        var hash = 487;
+        hash = hash * 31 + Owner.GetHashCode();
+        hash = hash * 31 + Target.GetHashCode();
+        hash = hash * 31 + Position.GetHashCode();
+        hash = hash * 31 + Damage.GetHashCode();
+        hash = hash * 31 + Visual.GetHashCode();
+        return hash;
+      }
+    }
+  }
+  public unsafe partial class EventPriorityTargetSet : EventBase {
+    public new const Int32 ID = 82;
+    public EntityRef Owner;
+    public EntityRef Target;
+    protected EventPriorityTargetSet(Int32 id, EventFlags flags) : 
+        base(id, flags) {
+    }
+    public EventPriorityTargetSet() : 
+        base(82, EventFlags.Server|EventFlags.Client) {
+    }
+    public new QuantumGame Game {
+      get {
+        return (QuantumGame)base.Game;
+      }
+      set {
+        base.Game = value;
+      }
+    }
+    public override Int32 GetHashCode() {
+      unchecked {
+        var hash = 491;
+        hash = hash * 31 + Owner.GetHashCode();
+        hash = hash * 31 + Target.GetHashCode();
+        return hash;
+      }
+    }
+  }
+  public unsafe partial class EventPriorityTargetCleared : EventBase {
+    public new const Int32 ID = 83;
+    public EntityRef Owner;
+    public EntityRef Target;
+    protected EventPriorityTargetCleared(Int32 id, EventFlags flags) : 
+        base(id, flags) {
+    }
+    public EventPriorityTargetCleared() : 
+        base(83, EventFlags.Server|EventFlags.Client) {
+    }
+    public new QuantumGame Game {
+      get {
+        return (QuantumGame)base.Game;
+      }
+      set {
+        base.Game = value;
+      }
+    }
+    public override Int32 GetHashCode() {
+      unchecked {
+        var hash = 499;
+        hash = hash * 31 + Owner.GetHashCode();
+        hash = hash * 31 + Target.GetHashCode();
         return hash;
       }
     }

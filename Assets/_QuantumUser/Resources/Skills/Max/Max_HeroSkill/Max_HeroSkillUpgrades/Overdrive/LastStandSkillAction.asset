@@ -19,16 +19,16 @@ MonoBehaviour:
   Icon: {fileID: -727180227, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
   DisplayName: Last Stand
   RankDescriptions:
-  - 'Rage carries over between Overdrives instead of resetting.'
-  - 'Rage carries over between Overdrives, and damage taken during Overdrive costs only half of it.'
-  - 'Rage carries over and resists damage. Lethal damage during Overdrive leaves you at <color=#FD3971>1</color> Health and grants <color=#FD3971>2s</color> immunity.'
+  - "Unused Rage is preserved when Overdrive ends and restored the next time Overdrive activates."
+  - "Taking damage during Overdrive removes only part of Max's current Rage instead of resetting it."
+  - "Lethal damage during Overdrive ends it instead, leaves Max at <color=#FD3971>1</color> HP, briefly Invulnerable, and resets Rage."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Rage stops being fragile - it survives Overdrive ending, damage, and death.
+  Description: "Rage stops being fragile - it survives Overdrive ending, damage, and death."
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

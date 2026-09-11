@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Project.Audio.EditorTools;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
@@ -76,9 +77,18 @@ public class SoundDataEditor : Editor
             DrawMinMax(Prop("delay"), "Start Delay", 0f, 5f);
             EditorGUILayout.PropertyField(Prop("startAt"));
             EditorGUILayout.PropertyField(Prop("endAt"));
+
+            SerializedProperty loop = Prop("loop");
+            using (new EditorGUI.DisabledScope(!loop.boolValue))
+                EditorGUILayout.PropertyField(Prop("loopStart"));
+
             EditorGUILayout.PropertyField(Prop("fadeIn"));
             EditorGUILayout.PropertyField(Prop("fadeOut"));
-            EditorGUILayout.PropertyField(Prop("loop"));
+            EditorGUILayout.PropertyField(loop);
+
+            EditorGUILayout.Space(4);
+            if (GUILayout.Button("Loop Point Editor / Crop Audio..."))
+                AudioLoopCropperWindow.Open((SoundData)target);
         });
 
         DrawSection("Limits & Routing", () =>
@@ -210,6 +220,8 @@ public class SoundDataEditor : Editor
                     EditorGUI.PropertyField(new Rect(rect.x, rect.y, rect.width, line), element.FindPropertyRelative("startAt"), new GUIContent("Start At"));
                     rect.y += line + 2f;
                     EditorGUI.PropertyField(new Rect(rect.x, rect.y, rect.width, line), element.FindPropertyRelative("endAt"), new GUIContent("End At"));
+                    rect.y += line + 2f;
+                    EditorGUI.PropertyField(new Rect(rect.x, rect.y, rect.width, line), element.FindPropertyRelative("loopStart"), new GUIContent("Loop Start"));
                 }
 
                 if (fade.boolValue)
@@ -230,7 +242,7 @@ public class SoundDataEditor : Editor
             float height = line + 4f;
 
             if (element.FindPropertyRelative("overrideTrim").boolValue)
-                height += line * 2f;
+                height += line * 3f;
 
             if (element.FindPropertyRelative("overrideFade").boolValue)
                 height += line * 2f;

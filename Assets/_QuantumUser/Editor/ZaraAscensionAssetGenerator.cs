@@ -157,9 +157,9 @@ namespace QuantumUser.Editor
                 a.Description = "Totem Damage Beats deal more damage.";
                 a.RankDescriptions = new[]
                 {
-                    "Totem Damage Beats deal 30% more damage.",
-                    "Totem Damage Beats deal 60% more damage and knock enemies back.",
-                    "Totem Damage Beats deal double damage, and every third one Stuns enemies.",
+                    "Damage Beats deal <color=#FD3971>+30%</color> Damage.",
+                    "Damage bonus increases to <color=#FD3971>+60%</color>. Damage Beats also Knockback small enemies.",
+                    "Damage bonus increases to <color=#FD3971>+100%</color>. Every third Damage Beat Stuns enemies.",
                 };
                 a.DamageBonus = new[] { FP.FromString("0.30"), FP.FromString("0.60"), FP._1 };
                 a.KnockbackEffect = amplifierKnockback;
@@ -172,12 +172,12 @@ namespace QuantumUser.Editor
                 a.DisplayName = "Sound Boost";
                 a.Activated = false;
                 a.MaxRank = 3;
-                a.Description = "Support Beats push the whole team's tempo - stronger buffs, then Hero Skill cooldown reduction, then an outgoing-damage window.";
+                a.Description = "Support Beats push the team's tempo - stronger buffs, then cooldown reduction, then a damage window.";
                 a.RankDescriptions = new[]
                 {
-                    "Support Beats heal 2% Max Health and grant +15% Move Speed and +15% Fire Rate.",
-                    "Support Beats heal 2% Max Health, grant +15% Move Speed and Fire Rate, and cut 0.5s off allies' skill cooldown.",
-                    "Support Beats heal 5% Max Health, grant +15% Move Speed and Fire Rate, cut 0.5s off cooldowns and +15% damage.",
+                    "Support Beats heal <color=#FD3971>2%</color> Max HP and grant <color=#FD3971>+15%</color> Move Speed and Fire Rate for about <color=#FD3971>2s</color>.",
+                    "Support Beats also reduce affected allies' Hero Skill cooldown by <color=#FD3971>0.5s</color>.",
+                    "Support Beat healing increases to <color=#FD3971>5%</color> Max HP and grants <color=#FD3971>+15%</color> Damage for <color=#FD3971>2s</color>.",
                 };
                 a.HealPercent = new[] { FP.FromString("0.02"), FP.FromString("0.02"), FP._0_05 };
                 a.SupportBuffEffect = new[]
@@ -223,9 +223,9 @@ namespace QuantumUser.Editor
                 a.Description = "Totem Beats occur more often.";
                 a.RankDescriptions = new[]
                 {
-                    "Totem Beats occur every 0.85s.",
-                    "Totem Beats occur every 0.70s.",
-                    "Totem Beats occur every 0.5s.",
+                    "Beat interval decreases from <color=#FD3971>1s</color> to <color=#FD3971>0.85s</color>.",
+                    "Beat interval decreases to <color=#FD3971>0.70s</color>.",
+                    "Beat interval decreases to <color=#FD3971>0.50s</color>.",
                 };
                 a.BeatInterval = new[] { FP.FromString("0.85"), FP.FromString("0.70"), FP._0_50 };
             });
@@ -238,9 +238,9 @@ namespace QuantumUser.Editor
                 a.Description = "Increase Totem Beat radius.";
                 a.RankDescriptions = new[]
                 {
-                    "Increase Totem Beat radius by 30%.",
-                    "Totem Beat radius +50%, and the Totem lasts 2s longer.",
-                    "Totem Beat radius +75% and it lasts 2s longer, opening with a Damage Beat and ending with a Healing Beat.",
+                    "Totem Beat radius increases by <color=#FD3971>30%</color>.",
+                    "Radius increases by <color=#FD3971>50%</color> and Totem duration increases by <color=#FD3971>2s</color>.",
+                    "Radius increases by <color=#FD3971>75%</color>. Totem immediately releases a Damage Beat when deployed and a Support Beat when it expires.",
                 };
                 a.RadiusBonus = new[] { FP.FromString("0.30"), FP._0_50, FP.FromString("0.75") };
                 a.DurationBonus = new[] { FP._0, FP._2, FP._2 };
@@ -254,9 +254,9 @@ namespace QuantumUser.Editor
                 a.Description = "Reach Flow faster, and make every stack of it worth more.";
                 a.RankDescriptions = new[]
                 {
-                    "Flow builds 25% faster.",
-                    "Flow builds 50% faster, and active Flow grants +18% Move Speed and +18% Fire Rate.",
-                    "Flow builds 75% faster, and active Flow grants a further +10% Fire Rate.",
+                    "Flow builds <color=#FD3971>25%</color> faster.",
+                    "Flow builds <color=#FD3971>50%</color> faster and its Active Move Speed / Fire Rate bonus increases to <color=#FD3971>+18%</color>.",
+                    "Flow builds <color=#FD3971>75%</color> faster and grants an additional <color=#FD3971>+10%</color> Fire Rate while Active.",
                 };
 
                 a.BuildRateMultiplier = new[] { FP.FromString("1.25"), FP.FromString("1.50"), FP.FromString("1.75") };
@@ -275,9 +275,9 @@ namespace QuantumUser.Editor
                 a.Description = "Recover faster when your rhythm is broken.";
                 a.RankDescriptions = new[]
                 {
-                    "When a hit breaks your Flow, gain +20% Move Speed for 1.5s.",
-                    "A hit no longer empties your Flow - it drops to a third instead, and you still gain +20% Move Speed for 1.5s.",
-                    "A hit taken while Flow is active deals 30% less damage (6s cooldown).",
+                    "When Flow breaks, gain <color=#FD3971>+20%</color> Move Speed for <color=#FD3971>1.5s</color>.",
+                    "When hit, Flow drops to one-third instead of resetting completely.",
+                    "While Flow is Active, the hit that breaks it deals <color=#FD3971>30%</color> less Damage.",
                 };
 
                 a.MoveSpeedBonus = new[] { FP._0_20, FP._0_20, FP._0_20 };
@@ -294,9 +294,9 @@ namespace QuantumUser.Editor
                 a.Description = "Max Flow becomes a payoff - for your damage, your Totem, and your whole team.";
                 a.RankDescriptions = new[]
                 {
-                    "While Flow is active, you deal +10% damage.",
-                    "While Flow is active, you deal +10% damage and your Totem's Beats are 15% more effective.",
-                    "Activating Flow grants you and allies within 6m +10% Move Speed and Fire Rate for 3s (8s cooldown).",
+                    "While Flow is Active, Zara deals <color=#FD3971>+10%</color> Damage.",
+                    "While Flow is Active, Totem Beats are <color=#FD3971>15%</color> more effective.",
+                    "Activating Flow grants Zara and nearby allies <color=#FD3971>+10%</color> Move Speed and Fire Rate for <color=#FD3971>3s</color>.",
                 };
 
                 a.ActiveDamageBonus = new[] { FP._0_10, FP._0_10, FP._0_10 };
@@ -324,9 +324,9 @@ namespace QuantumUser.Editor
                 a.Description = "Dashing feeds your Flow - and eventually leaves damaging beats behind you.";
                 a.RankDescriptions = new[]
                 {
-                    "Dashing fills a third of your Flow bar, plus more for each enemy you pass through.",
-                    "Dashing fills your Flow bar, and 1s later a beat erupts at your start point, damaging and knocking enemies back.",
-                    "Beats erupt at both ends of the dash - landing either on an enemy fills your Flow bar again (once per dash).",
+                    "Dashing restores <color=#FD3971>35%</color> Flow, plus additional Flow for each unique enemy dashed through.",
+                    "Dashing leaves a delayed damaging Beat at the Dash starting point.",
+                    "Also creates a Beat at the Dash destination. Landing on at least one enemy grants additional Flow.",
                 };
                 a.FlowProgressOnDash = FP.FromString("0.35");
                 a.SweepRadius = FP._1_50;
@@ -356,9 +356,9 @@ namespace QuantumUser.Editor
                 a.Description = "Dashing leaves behind a Portable Speaker running the same Damage/Support rhythm at half strength.";
                 a.RankDescriptions = new[]
                 {
-                    "Dashing leaves a Portable Speaker alternating Damage and Support Beats at half strength.",
-                    "Dashing leaves a Portable Speaker that lasts longer and covers a wider area; the dash also buffs nearby allies.",
-                    "The Portable Speaker inherits your Beat interval, radius and Sound Boost profile at reduced effectiveness.",
+                    "Dashing deploys a Mini Totem that produces weaker Damage and Support Beats. Maximum <color=#FD3971>1</color> active Mini Totem.",
+                    "Mini Totem duration and radius increase. Deploying one also grants nearby allies Move Speed and Fire Rate.",
+                    "Zara can have <color=#FD3971>2</color> Mini Totems active. Mini Totems also inherit the supported bonuses from Zara's Totem Ascensions.",
                 };
                 a.Prototype = speakerPrototype;
                 a.Duration = new[] { FP._3, FP._4, FP._4 };
@@ -394,11 +394,16 @@ namespace QuantumUser.Editor
                 a.MobileStageInheritanceFraction = SpeakerEffectFraction;
             });
 
+            // Hero Mastery (see docs/hero-mastery.md) - SMG (Weapon Family) + Electric (Element),
+            // drafted through the same Passive Upgrade pool as Faster Tempo/Second Wind/Headliner above.
+            // Authored in HeroMasteryAssetGenerator (shared across all 6 heroes) rather than inline here.
+            var (smgMastery, zaraElectricMastery) = HeroMasteryAssetGenerator.CreateZaraMastery();
+
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh(); // lets QuantumAssetObjectPostprocessor stamp Guid/Identifier on anything just created
 
             WireCharacterData(passive,
-                new List<PassiveUpgradeData> { fasterTempo, secondWind, headliner },
+                new List<PassiveUpgradeData> { fasterTempo, secondWind, headliner, smgMastery, zaraElectricMastery },
                 new List<SkillActionData> { afterbeat, portableSpeaker });
 
             WireTotemActions(new List<SkillActionData> { amplifier, soundBoost, doubleTime, mainStage });

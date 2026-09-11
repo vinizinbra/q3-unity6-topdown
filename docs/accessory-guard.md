@@ -31,7 +31,7 @@ Simulation:
 | File | Role |
 | --- | --- |
 | `Simulation/QTN/Accessory/AccessoryGuard.qtn` | `AccessoryGuardState` enum, per-player `AccessoryGuard`, per-collectible `DroppedAccessory` |
-| `Simulation/Assets/Config/AccessoryGuardConfig.cs` | the one tuning asset - durability, pop/pickup, repair prices. Also `AccessoryServiceKind` |
+| `Simulation/Assets/Config/AccessoryGuardConfig.cs` | the one tuning asset - durability, pop/pickup. Also `AccessoryServiceKind` |
 | `Simulation/Systems/Accessory/AccessoryGuardUtility.cs` | seed / block / spawn collectible / recover / restore |
 | `Simulation/Systems/Accessory/AccessoryGuardSystem.cs` | Airborne→Dropped landing, owner-only pickup, orphan cleanup |
 | `Simulation/Systems/Accessory/AccessoryServiceUtility.cs` | the Merchant half - which service, what price, buy it |
@@ -418,21 +418,24 @@ zero-payload command.
 | 1/3 | Repair → 3/3 | 50 |
 | 0/3 Broken | **Replace** → 3/3 | 100 |
 
-Costs live in `AccessoryGuardConfig`:
+Costs live on `StoreConfig` (not `AccessoryGuardConfig` - that asset stays Store-agnostic, durability/
+pop/pickup only, since it's referenced by both Survival and Break for the mechanic itself, while
+pricing is Store's own job like every other offer/service it prices):
 
 ```csharp
-public FP[] RepairCostByMissingDurability = { 25, 50 };  // index 0 = 1 missing, index 1 = 2 missing
-public FP  BrokenReplacementCost = 100;
+public FP[] AccessoryRepairCostByMissingDurability = { 25, 50 };  // index 0 = 1 missing, index 1 = 2 missing
+public FP  AccessoryBrokenReplacementCost = 100;
 ```
 
 An array indexed by **missing durability** rather than three named fields, so raising
-`BaseDurability` past 3 later needs one more array entry instead of a new field and a new branch.
-Past the authored range the last entry holds, the same convention `StoreConfig.BreakWeaponConfig`/
-`SurvivalConfig.Phases[]` already use. These are explicit per-step costs, **not** a formula - no
-dynamic pricing this pass.
+`AccessoryGuardConfig.BaseDurability` past 3 later needs one more array entry instead of a new field
+and a new branch. Past the authored range the last entry holds, the same convention
+`SurvivalConfig.Phases[]` already uses. These are explicit per-step costs, **not** a formula - no
+dynamic pricing this pass. `AccessoryServiceUtility.ResolvePrice` reads them off
+`f.RuntimeConfig.StoreConfig` live, the same way it already resolves the service kind.
 
 The one invariant authoring can get wrong ("more damaged → more expensive", "replacement > any
-repair") is checked by an Editor-only `OnValidate` on the config, so a designer finds out while
+repair") is checked by an Editor-only `OnValidate` on `StoreConfig`, so a designer finds out while
 typing the number rather than three Breaks into a playtest.
 
 ### Design rules this upholds
@@ -586,10 +589,10 @@ check, so a mid-run config swap can't leave a player at 4/3.
 | # | Criterion | Where |
 | --- | --- | --- |
 | 1 | 3/3 shows no repair service | `ResolveService` → `None`; `BuildAccessoryServiceCardData` returns an empty card |
-| 2 | 2/3 offers Repair to full | `ResolveService` → `Repair`, `ResolveRepairCost(1)` = 25 |
-| 3 | 1/3 offers Repair to full at higher cost | `ResolveRepairCost(2)` = 50 |
+| 2 | 2/3 offers Repair to full | `ResolveService` → `Repair`, `StoreConfig.ResolveAccessoryRepairCost(1)` = 25 |
+| 3 | 1/3 offers Repair to full at higher cost | `ResolveAccessoryRepairCost(2)` = 50 |
 | 4 | Broken offers Replacement | `CurrentDurability == 0` → `Replacement` |
-| 5 | Replacement > repair | `BrokenReplacementCost` 100, enforced by `OnValidate` |
+| 5 | Replacement > repair | `StoreConfig.AccessoryBrokenReplacementCost` 100, enforced by `OnValidate` |
 | 6 | Repair always restores to `MaxDurability` | `AccessoryGuardUtility.Restore` - no partial path exists |
 | 7 | May decline and keep current durability | nothing auto-restores; declining is a no-op |
 | 8 | Durability persists across Break/Survival | `AccessoryGuard` is written by 4 non-phase-driven places only |

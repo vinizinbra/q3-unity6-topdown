@@ -35,6 +35,29 @@ namespace Quantum
             return juggernautSkill.Damage;
         }
 
+        // "Is this Brute currently Charged" - the single shared read for anything outside
+        // JuggernautSkillData itself that needs to know (Neutral Mastery R3 "Armored Assault"'s outgoing
+        // damage bonus is the first, see DamageUtility.ResolveOutgoingDamage). MaxCharge isn't on
+        // JuggernautCharge itself (see that component's own fields) - it lives on the equipped
+        // JuggernautSkillData asset, resolved via the same CharacterStats.CharacterData ->
+        // CharacterData.HeroSkill chain ResolveJuggernautSkillDamage above already uses, so this is the
+        // first (and only) place ChargePoints >= MaxCharge is compared outside that file.
+        public static bool IsJuggernautCharged(Frame f, EntityRef owner)
+        {
+            if (f.Unsafe.TryGetPointer<JuggernautCharge>(owner, out var charge) == false)
+                return false;
+
+            if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false || stats->CharacterData.IsValid == false)
+                return false;
+
+            CharacterData data = f.FindAsset(stats->CharacterData);
+
+            if (data.HeroSkill.IsValid == false || f.FindAsset(data.HeroSkill) is not JuggernautSkillData juggernautSkill)
+                return false;
+
+            return charge->ChargePoints >= juggernautSkill.MaxCharge;
+        }
+
         // Generic "damage + stun everyone in radius" sweep - used by Concussive Impact rank 3's
         // landing shockwave and Iron Shoulder rank 3's wall-slam shockwave alike, so neither needed its
         // own copy of the same OverlapShape/Enemy-gate loop. Either damage or stunDuration can be 0 to

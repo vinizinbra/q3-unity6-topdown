@@ -41,6 +41,14 @@ namespace Quantum
             public float OrphanTimeout;
             public ParticleSystem DestroyEffectPrefab;
             public ParticleSystem TrailParticle;
+            public TrailRenderer TrailRenderer;
+
+            // Runtime-instantiated Damage Echo "ghost" particle (see ProjectileView.
+            // AttachEchoGhostParticle) - null for every normal projectile. Treated identically to
+            // TrailParticle on a real impact: already-emitted particles keep fading via
+            // ParticleGracefulStop instead of being cut off mid-emission by Finish's own
+            // Destroy(gameObject).
+            public ParticleSystem EchoGhostParticle;
         }
 
         // Floor on the catch-up rate, in world units per second. A projectile whose own speed has
@@ -98,6 +106,8 @@ namespace Quantum
             // teleport unless it is wiped once it is standing in the right place.
             ClearEmitters();
 
+            LogHelper.Log("ProjFlow", $"[{_entity}] VISUAL detached at {spawnPosition} particles={_particles.Length} trail={(settings.TrailParticle != null ? settings.TrailParticle.name : "none")} t={Time.unscaledTime:F3}", this);
+
             QuantumEvent.Subscribe<EventProjectileDestroyed>(this, OnProjectileDestroyed);
             QuantumEvent.Subscribe<EventProjectileImpacted>(this, OnProjectileImpacted);
         }
@@ -136,6 +146,7 @@ namespace Quantum
 
             if (_entityGone == true && Time.frameCount > _entityGoneFrame)
             {
+                LogHelper.Log("ProjFlow", $"[{_entity}] VISUAL entity gone, NO destroy event arrived -> Finish(no effect), trail killed with root t={Time.unscaledTime:F3}", this);
                 Finish(playEffect: false);
                 return;
             }
@@ -179,6 +190,8 @@ namespace Quantum
             if (distance > 0.0001f)
                 transform.rotation = Quaternion.LookRotation((hitPoint - transform.position).normalized, Vector3.up);
 
+            LogHelper.Log("ProjFlow", $"[{_entity}] VISUAL destroy event: dist={distance:F2} speed={_speed:F1} tween={duration:F3}s entityGone={_entityGone} t={Time.unscaledTime:F3}", this);
+
             // useUnscaledTime, unlike the flight catch-up above - this tween is the only thing that
             // will ever destroy this GameObject, so a scaled-time tween starting right as a
             // client-local choice screen ramps timeScale to 0 would stall for as long as that screen
@@ -193,16 +206,71 @@ namespace Quantum
             if (this == null)
                 return;
 
+            LogHelper.Log("ProjFlow", $"[{_entity}] VISUAL Finish playEffect={playEffect} -> trail {(playEffect && _settings.TrailParticle != null ? "handed to ParticleGracefulStop" : "destroyed with root")} t={Time.unscaledTime:F3}", this);
+
             if (playEffect == true)
                 PlayImpactEffect(transform.position);
 
             // Only on a real impact: unparents itself and finishes emitting where the shot landed.
             // A teardown/orphan cleanup deliberately leaves nothing behind - there was no impact to
             // linger over, and on a disconnect the whole scene is on its way out anyway.
-            if (playEffect == true && _settings.TrailParticle != null)
-                _settings.TrailParticle.gameObject.AddComponent<ParticleGracefulStop>().StopAndDestroyWhenFinished();
+            if (playEffect == true)
+            {
+                if (_settings.EchoGhostParticle != null)
+                    _settings.EchoGhostParticle.gameObject.AddComponent<ParticleGracefulStop>().StopAndDestroyWhenFinished();
+
+                // A trail that IS this root (e.g. SniperProjectile, whose only child is the
+                // BulletMeshSmallFire system - so ProjectileView.ResolveVisualRoot resolves the
+                // trail's own GameObject as the visual root): Destroy(gameObject) below would kill it
+                // the instant the impact tween ends, no fade at all. Instead this GameObject itself
+                // stays alive to fade out, minus everything that isn't a trail, and only this
+                // controller goes away now.
+                if (IsRoot(_settings.TrailParticle) || IsRoot(_settings.TrailRenderer))
+                {
+                    FadeOutRootAsTrail();
+                    return;
+                }
+
+                if (_settings.TrailParticle != null)
+                    _settings.TrailParticle.gameObject.AddComponent<ParticleGracefulStop>().StopAndDestroyWhenFinished();
+
+                // Skipped when it already lives under the trail particle - that one's graceful stop
+                // covers every TrailRenderer beneath it.
+                if (_settings.TrailRenderer != null &&
+                    (_settings.TrailParticle == null || _settings.TrailRenderer.transform.IsChildOf(_settings.TrailParticle.transform) == false))
+                    _settings.TrailRenderer.gameObject.AddComponent<ParticleGracefulStop>().StopAndDestroyWhenFinished();
+            }
 
             Destroy(gameObject);
+        }
+
+        private bool IsRoot(Component component)
+        {
+            return component != null && component.gameObject == gameObject;
+        }
+
+        private void FadeOutRootAsTrail()
+        {
+            foreach (Renderer r in _renderers)
+            {
+                if (r is not ParticleSystemRenderer && r is not TrailRenderer)
+                    r.enabled = false;
+            }
+
+            foreach (Light light in GetComponentsInChildren<Light>(includeInactive: true))
+                light.enabled = false;
+
+            // The root system is the bullet body itself (a mesh particle) - it must vanish at the
+            // impact, not drift on for its lifetime. Only its children (sparks/glow) get to fade;
+            // ParticleGracefulStop's own StopEmitting is then a no-op on the already-cleared root.
+            if (IsRoot(_settings.TrailParticle))
+                _settings.TrailParticle.Stop(withChildren: false, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+            // Stops every TrailRenderer under here too and lingers for its ribbon to fade.
+            gameObject.AddComponent<ParticleGracefulStop>().StopAndDestroyWhenFinished();
+
+            // OnDestroy unsubscribes the events; the GameObject outlives this component.
+            Destroy(this);
         }
 
         // A pierce/ricochet the projectile SURVIVED (see DirectHitData.ApplyHit) - unlike
@@ -236,6 +304,7 @@ namespace Quantum
                 return;
 
             _visible = visible;
+            LogHelper.Log("ProjFlow", $"[{_entity}] VISUAL SetVisible({visible}) {(visible ? "Play" : "Stop+CLEAR particles")} t={Time.unscaledTime:F3}", this);
 
             // Renderers rather than SetActive on the root: this component's own Update has to keep
             // running while a projectile sits out its ProjectileDataAsset.SpawnDelay, and an

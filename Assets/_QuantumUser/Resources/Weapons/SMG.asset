@@ -16,11 +16,12 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/SMG
     Guid:
       Value: 303582807116665979
-  DisplayName: 
+  DisplayName: SMG
   FireType: 1
   Damage:
     RawValue: 524288
   Element: 0
+  Family: 2
   CriticalChance:
     RawValue: 13107
   CriticalDamageBonus:

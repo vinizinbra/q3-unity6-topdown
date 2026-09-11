@@ -19,16 +19,16 @@ MonoBehaviour:
   Icon: {fileID: 1985923074, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
   DisplayName: Bone Breaker
   RankDescriptions:
-  - 'Every Juggernaut discharge deals <color=#FD3971>+30%</color> damage on top of its knockback.'
-  - 'Every Juggernaut discharge deals <color=#FD3971>+60%</color> damage on top of its knockback.'
-  - 'Every discharge deals <color=#FD3971>+100%</color> damage, and Specialist and Heavy enemies take a further <color=#FD3971>+30%</color>.'
+  - "Discharge deals <color=#FD3971>+30%</color> Damage."
+  - "Discharge deals <color=#FD3971>+60%</color> Damage."
+  - "Discharge deals <color=#FD3971>+100%</color> Damage and <color=#FD3971>+30%</color> additional Damage to Specialist and Heavy enemies."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Juggernaut's discharge stops being pure knockback and starts killing - heavy bonus damage on every launch, and more still against Specialist and Heavy enemies.
+  Description: "Juggernaut's discharge stops being pure knockback and starts killing, especially tougher enemies."
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

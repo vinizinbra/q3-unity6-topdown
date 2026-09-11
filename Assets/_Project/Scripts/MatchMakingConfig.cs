@@ -82,6 +82,16 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
    // - room properties, unlike cached events, are always part of the room state a rejoin receives.
    public const string PropKeyMatchStarted = "started";
 
+   // The RuntimeConfig.Seed that seeds Frame.RNG for this match, rolled ONCE by whichever client
+   // calls StartQuantumGame (always the master client - see PartyManager/WaitingForPlayersWindow)
+   // and carried to every other client via the same room-property channel as PropKeyMatchStarted.
+   // Required because every client here runs StartRunner() independently off its own LOCAL
+   // RuntimeConfig field (Seed: 0 on the scene asset, never otherwise assigned) - without this,
+   // each client would start the deterministic sim on a different (or, worse, an identical but
+   // never-randomized) seed. Room properties, not the cached StartGame event, so a reconnecting
+   // client picks up the same value too (see PropKeyMatchStarted's own comment).
+   public const string PropKeySeed = "seed";
+
    // Player's own meta-progression weapon-talent level, carried in from outside this match (e.g.
    // an account/profile screen elsewhere would be what actually raises this over time) - read here
    // right before AddPlayer and copied onto RuntimePlayer.Talents.WeaponLevel, which
@@ -597,42 +607,75 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
 
    public void StartQuantumGame()
    {
+      // See PropKeySeed - rolled once here, by the one client that calls StartQuantumGame, so
+      // every client's StartRunner() picks up the SAME value instead of each seeding its own local
+      // RuntimeConfig.Seed (which stays at its 0 scene default).
+      int seed = Guid.NewGuid().GetHashCode();
+
       // See PropKeyMatchStarted - a rejoining client never receives the cached event below, but it
       // always receives the room's properties, so this is what tells it the run is actually live.
-      Client.CurrentRoom?.SetCustomProperties(new PhotonHashtable { { PropKeyMatchStarted, true } });
+      Client.CurrentRoom?.SetCustomProperties(new PhotonHashtable
+      {
+         { PropKeyMatchStarted, true },
+         { PropKeySeed, seed }
+      });
 
       Client.OpRaiseEvent((byte)110,1,
          new RaiseEventArgs() { Receivers = ReceiverGroup.All , CachingOption = EventCaching.AddToRoomCacheGlobal},
          SendOptions.SendReliable);
    }
 
-   // Name of the additively-loaded gameplay scene (see QuantumMap.asset's Scene field). Quantum's
-   // own SDK code (QuantumCallbackHandler_UnityCallbacks in QuantumUnityRuntime.cs) unloads the
-   // previous match's copy asynchronously over several frames on a DontDestroyOnLoad host, with no
-   // memory of that cleanup carried into the next match's own tracker instance. Starting a new
-   // match before that unload finishes leaves two copies of the scene loaded at once - two Main
-   // Cameras, two AudioListeners. WaitForPreviousGameplaySceneToUnloadAsync below guards against
-   // that race instead of relying on timing to always favor us.
-   private const string GameplaySceneName = "QuantumGameScene";
+   // Quantum's own SDK code (QuantumCallbackHandler_UnityCallbacks in QuantumUnityRuntime.cs) unloads
+   // the previous match's gameplay scene asynchronously over several frames on a DontDestroyOnLoad
+   // host, with no memory of that cleanup carried into the next match's own tracker instance.
+   // Starting a new match before that unload finishes leaves two copies of the scene loaded at once -
+   // two Main Cameras, two AudioListeners. WaitForPreviousGameplaySceneToUnloadAsync below guards
+   // against that race instead of relying on timing to always favor us.
+   //
+   // Deliberately NOT keyed off a hardcoded gameplay scene name (see QuantumMap.asset's Scene field) -
+   // this project already renamed that scene once (QuantumGameScene -> GrasslandOutpostGameScene) and
+   // a name check silently stopped matching until someone noticed. Checking "is any OTHER scene
+   // loaded besides the menu" answers the same question without depending on what the gameplay scene
+   // happens to be called this week - it just has to not be the menu, which GameManager anchors (it
+   // lives at MenuScene's root and, unlike this class, is never DontDestroyOnLoad'd out of it).
    private const float GameplaySceneUnloadTimeoutSeconds = 5f;
 
    private async Task WaitForPreviousGameplaySceneToUnloadAsync()
    {
-      if (!SceneManager.GetSceneByName(GameplaySceneName).IsValid())
+      Scene stale = FindNonMenuScene();
+      if (!stale.IsValid())
          return;
 
-      LogHelper.Warn("MatchMaking", $"{GameplaySceneName} is still loaded from a previous match - waiting for it to unload before starting a new session.");
+      LogHelper.Warn("MatchMaking", $"'{stale.name}' is still loaded from a previous match - waiting for it to unload before starting a new session.");
 
       float startTime = Time.realtimeSinceStartup;
-      while (SceneManager.GetSceneByName(GameplaySceneName).IsValid())
+      while ((stale = FindNonMenuScene()).IsValid())
       {
          if (Time.realtimeSinceStartup - startTime > GameplaySceneUnloadTimeoutSeconds)
          {
-            LogHelper.Error("MatchMaking", $"{GameplaySceneName} did not unload within {GameplaySceneUnloadTimeoutSeconds}s - starting new session anyway.");
+            LogHelper.Error("MatchMaking", $"'{stale.name}' did not unload within {GameplaySceneUnloadTimeoutSeconds}s - starting new session anyway.");
             return;
          }
          await Task.Yield();
       }
+   }
+
+   // Any loaded scene other than the menu is either the current/previous match's gameplay scene.
+   // GameManager.Instance is null only if GameManager hasn't run its own Awake yet, which can't be
+   // true here - StartRunner already depends on it (ShowWindow<LoadingWindow> above) before this is
+   // ever reached.
+   private static Scene FindNonMenuScene()
+   {
+      Scene menuScene = GameManager.Instance != null ? GameManager.Instance.gameObject.scene : default;
+
+      for (int i = 0; i < SceneManager.sceneCount; i++)
+      {
+         Scene scene = SceneManager.GetSceneAt(i);
+         if (scene.IsValid() && scene.isLoaded && scene != menuScene)
+            return scene;
+      }
+
+      return default;
    }
 
    // QuantumRunner.Shutdown() is deferred to that runner's next Service() tick, not synchronous -
@@ -683,6 +726,16 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
          await WaitForPreviousGameplaySceneToUnloadAsync();
          await WaitForPreviousRunnerToShutdownAsync();
 
+         // Overwrite this client's local RuntimeConfig.Seed (0, per the scene default) with the
+         // one value every client in the room agreed on - see PropKeySeed. Left untouched (falls
+         // back to whatever RuntimeConfig.Seed already is) only if the property is somehow missing,
+         // which should never happen on the normal StartQuantumGame -> StartGame event path.
+         var roomProperties = Client?.CurrentRoom?.CustomProperties;
+         if (roomProperties != null && roomProperties.TryGetValue(PropKeySeed, out var storedSeed) && storedSeed is int seed)
+            RuntimeConfig.Seed = seed;
+         else
+            LogHelper.Warn("MatchMaking", "StartRunner: no seed found in room properties - falling back to RuntimeConfig's own local Seed.");
+
          var runtimeConfig = new QuantumUnityJsonSerializer().CloneConfig(RuntimeConfig);
 
          var sessionConfig = QuantumDeterministicSessionConfigAsset.DefaultConfig;
@@ -702,56 +755,7 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
 
          var runner = (QuantumRunner)await SessionRunner.StartAsync(sessionRunnerArguments);
 
-         // Clamp - PlayerPrefInt stores a plain int, PlayerTalents.WeaponLevel is a byte.
-         byte weaponTalentLevel = (byte)Mathf.Clamp(WeaponTalentLevelPref.Value, 0, byte.MaxValue);
-         byte rerollQuantity = (byte)Mathf.Clamp(RerollQuantityPref.Value, 0, byte.MaxValue);
-         byte shopWeaponOfferCount = (byte)Mathf.Clamp(ShopWeaponOfferCountPref.Value, 0, byte.MaxValue);
-         int startingCoins = Mathf.Max(StartingCoinsPref.Value, 0);
-         byte selfReviveCharges = (byte)Mathf.Clamp(SelfReviveChargesPref.Value, 0, byte.MaxValue);
-         TalentSaveData talents = TalentsPref.Value;
-         AssetRef<EntityPrototype> localCharacterAvatar = PartyManager.Instance.ResolveLocalCharacterAvatar();
-
-         // PlayerPrefInt has no way to tell "never saved, returned its 0 default" apart from "an
-         // account screen genuinely saved 0" (see PlayerPrefProperty.cs - .Value always returns a
-         // value, existence isn't exposed). Since nothing writes any of these prefs yet (same
-         // pre-existing gap every talent pref here has - an account/profile screen elsewhere would
-         // be what actually raises them), a strict overwrite silently stomped whatever was hand-set
-         // directly on RuntimePlayers[i].Talents in the Inspector for local testing - exactly the
-         // "set Starting Coins in the Inspector, still spawned with 0" bug. Only overwriting when
-         // the pref is actually > 0 keeps a real future write taking effect while leaving
-         // Inspector-set test values alone until then.
-         for (int i = 0; i < RuntimePlayers.Count; i++) {
-            // A bot keeps whatever PlayerAvatar was authored on its own entry (see docs/bots.md) -
-            // the whole point of filling the party with bots is watching a DIFFERENT hero than the
-            // one this client picked, so the character-select choice must not be stamped onto them.
-            if (RuntimePlayers[i].IsBot == false)
-               RuntimePlayers[i].PlayerAvatar = localCharacterAvatar;
-            if (weaponTalentLevel > 0) RuntimePlayers[i].Talents.WeaponLevel = weaponTalentLevel;
-            if (rerollQuantity > 0) RuntimePlayers[i].Talents.RerollQuantity = rerollQuantity;
-            if (shopWeaponOfferCount > 0) RuntimePlayers[i].Talents.ShopWeaponOfferCount = shopWeaponOfferCount;
-            if (startingCoins > 0) RuntimePlayers[i].Talents.StartingCoins = startingCoins;
-            if (selfReviveCharges > 0) RuntimePlayers[i].Talents.SelfReviveCharges = selfReviveCharges;
-            RuntimePlayers[i].Talents.PlayerDamageLevel = talents.PlayerDamageLevel;
-            RuntimePlayers[i].Talents.PlayerCooldownLevel = talents.PlayerCooldownLevel;
-            RuntimePlayers[i].Talents.PlayerFireRateLevel = talents.PlayerFireRateLevel;
-            RuntimePlayers[i].Talents.PlayerReloadSpeedLevel = talents.PlayerReloadSpeedLevel;
-            RuntimePlayers[i].Talents.PlayerCriticalChanceLevel = talents.PlayerCriticalChanceLevel;
-            RuntimePlayers[i].Talents.PlayerCriticalDamageLevel = talents.PlayerCriticalDamageLevel;
-            RuntimePlayers[i].Talents.PlayerMaxHealthLevel = talents.PlayerMaxHealthLevel;
-            RuntimePlayers[i].Talents.PlayerMaxShieldLevel = talents.PlayerMaxShieldLevel;
-            RuntimePlayers[i].Talents.PlayerDamageReductionLevel = talents.PlayerDamageReductionLevel;
-            RuntimePlayers[i].Talents.PlayerMoveSpeedLevel = talents.PlayerMoveSpeedLevel;
-            RuntimePlayers[i].Talents.PlayerPickupRangeLevel = talents.PlayerPickupRangeLevel;
-            RuntimePlayers[i].Talents.PlayerExperienceLevel = talents.PlayerExperienceLevel;
-            RuntimePlayers[i].Talents.HasWeaponChest = talents.HasWeaponChest;
-            RuntimePlayers[i].Talents.HasHeroChest = talents.HasHeroChest;
-            RuntimePlayers[i].Talents.HasGlobalUpgradeChest = talents.HasGlobalUpgradeChest;
-            RuntimePlayers[i].Talents.HasUnlockedRift = talents.HasUnlockedRift;
-            RuntimePlayers[i].Talents.CanFindStones = talents.CanFindStones;
-            RuntimePlayers[i].Talents.HasEvent = talents.HasEvent;
-            LogHelper.Log("CharacterSelect", $"AddPlayer(local slot {i}) - PlayerAvatar={RuntimePlayers[i].PlayerAvatar.Id.Value}");
-            runner.Game.AddPlayer(i, RuntimePlayers[i]);
-         }
+         AddLocalPlayers(runner);
 
          // Deliberately NOT ShowWindow<InMatchWindow>() here, which is what this used to do: that
          // window disables the whole menu Canvas (see InMatchWindow.Show), and at this point the
@@ -769,6 +773,145 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
             GameManager.Instance.MainMenuTab.windowManager.ShowWindow<MainMenuWindow>();
          });
       }
+   }
+
+   // Shared by StartRunner (online) and StartOfflineRunner (offline) - couch co-op talent/avatar
+   // setup is identical either way, only how the session itself is started differs.
+   //
+   // PlayerPrefInt has no way to tell "never saved, returned its 0 default" apart from "an
+   // account screen genuinely saved 0" (see PlayerPrefProperty.cs - .Value always returns a
+   // value, existence isn't exposed). Since nothing writes any of these prefs yet (same
+   // pre-existing gap every talent pref here has - an account/profile screen elsewhere would
+   // be what actually raises them), a strict overwrite silently stomped whatever was hand-set
+   // directly on RuntimePlayers[i].Talents in the Inspector for local testing - exactly the
+   // "set Starting Coins in the Inspector, still spawned with 0" bug. Only overwriting when
+   // the pref is actually > 0 keeps a real future write taking effect while leaving
+   // Inspector-set test values alone until then.
+   private void AddLocalPlayers(QuantumRunner runner)
+   {
+      // Clamp - PlayerPrefInt stores a plain int, PlayerTalents.WeaponLevel is a byte.
+      byte weaponTalentLevel = (byte)Mathf.Clamp(WeaponTalentLevelPref.Value, 0, byte.MaxValue);
+      byte rerollQuantity = (byte)Mathf.Clamp(RerollQuantityPref.Value, 0, byte.MaxValue);
+      byte shopWeaponOfferCount = (byte)Mathf.Clamp(ShopWeaponOfferCountPref.Value, 0, byte.MaxValue);
+      int startingCoins = Mathf.Max(StartingCoinsPref.Value, 0);
+      byte selfReviveCharges = (byte)Mathf.Clamp(SelfReviveChargesPref.Value, 0, byte.MaxValue);
+      TalentSaveData talents = TalentsPref.Value;
+      AssetRef<EntityPrototype> localCharacterAvatar = PartyManager.Instance.ResolveLocalCharacterAvatar();
+
+      for (int i = 0; i < RuntimePlayers.Count; i++) {
+         // A bot keeps whatever PlayerAvatar was authored on its own entry (see docs/bots.md) -
+         // the whole point of filling the party with bots is watching a DIFFERENT hero than the
+         // one this client picked, so the character-select choice must not be stamped onto them.
+         if (RuntimePlayers[i].IsBot == false)
+            RuntimePlayers[i].PlayerAvatar = localCharacterAvatar;
+         if (weaponTalentLevel > 0) RuntimePlayers[i].Talents.WeaponLevel = weaponTalentLevel;
+         if (rerollQuantity > 0) RuntimePlayers[i].Talents.RerollQuantity = rerollQuantity;
+         if (shopWeaponOfferCount > 0) RuntimePlayers[i].Talents.ShopWeaponOfferCount = shopWeaponOfferCount;
+         if (startingCoins > 0) RuntimePlayers[i].Talents.StartingCoins = startingCoins;
+         if (selfReviveCharges > 0) RuntimePlayers[i].Talents.SelfReviveCharges = selfReviveCharges;
+         RuntimePlayers[i].Talents.PlayerDamageLevel = talents.PlayerDamageLevel;
+         RuntimePlayers[i].Talents.PlayerCooldownLevel = talents.PlayerCooldownLevel;
+         RuntimePlayers[i].Talents.PlayerFireRateLevel = talents.PlayerFireRateLevel;
+         RuntimePlayers[i].Talents.PlayerReloadSpeedLevel = talents.PlayerReloadSpeedLevel;
+         RuntimePlayers[i].Talents.PlayerCriticalChanceLevel = talents.PlayerCriticalChanceLevel;
+         RuntimePlayers[i].Talents.PlayerCriticalDamageLevel = talents.PlayerCriticalDamageLevel;
+         RuntimePlayers[i].Talents.PlayerMaxHealthLevel = talents.PlayerMaxHealthLevel;
+         RuntimePlayers[i].Talents.PlayerMaxShieldLevel = talents.PlayerMaxShieldLevel;
+         RuntimePlayers[i].Talents.PlayerDamageReductionLevel = talents.PlayerDamageReductionLevel;
+         RuntimePlayers[i].Talents.PlayerMoveSpeedLevel = talents.PlayerMoveSpeedLevel;
+         RuntimePlayers[i].Talents.PlayerPickupRangeLevel = talents.PlayerPickupRangeLevel;
+         RuntimePlayers[i].Talents.PlayerExperienceLevel = talents.PlayerExperienceLevel;
+         RuntimePlayers[i].Talents.HasWeaponChest = talents.HasWeaponChest;
+         RuntimePlayers[i].Talents.HasHeroChest = talents.HasHeroChest;
+         RuntimePlayers[i].Talents.HasGlobalUpgradeChest = talents.HasGlobalUpgradeChest;
+         RuntimePlayers[i].Talents.HasUnlockedRift = talents.HasUnlockedRift;
+         RuntimePlayers[i].Talents.CanFindStones = talents.CanFindStones;
+         RuntimePlayers[i].Talents.HasEvent = talents.HasEvent;
+         LogHelper.Log("CharacterSelect", $"AddPlayer(local slot {i}) - PlayerAvatar={RuntimePlayers[i].PlayerAvatar.Id.Value}");
+         runner.Game.AddPlayer(i, RuntimePlayers[i]);
+      }
+   }
+
+   // Offline counterpart to StartRunner - starts a purely local Quantum simulation
+   // (DeterministicGameMode.Local, no Communicator/Photon room) so a match can be played and
+   // tested without any network connection at all. Reuses the exact same RuntimeConfig (map/sim
+   // config) and RuntimePlayers (couch co-op slots) Inspector setup as online play - only how the
+   // session is started differs. Mirrors QuantumRunnerLocalDebug's own local-start arguments.
+   public async void StartOfflineRunner()
+   {
+      // Same duplicate-start guard as StartRunner - see its own comment. Cleared by LeaveMatch
+      // below rather than OnDisconnected, since an offline session never connects to Photon.
+      if (_runnerStartRequested)
+      {
+         LogHelper.Warn("MatchMaking", "StartOfflineRunner: a session start is already in flight - ignoring the duplicate request.");
+         return;
+      }
+
+      _runnerStartRequested = true;
+
+      GameManager.Instance.MainMenuTab.windowManager.ShowWindow<LoadingWindow>();
+
+      try
+      {
+         await WaitForPreviousGameplaySceneToUnloadAsync();
+         await WaitForPreviousRunnerToShutdownAsync();
+
+         var runtimeConfig = new QuantumUnityJsonSerializer().CloneConfig(RuntimeConfig);
+         // No room to agree a shared seed with (see PropKeySeed) - roll it locally instead.
+         runtimeConfig.Seed = Guid.NewGuid().GetHashCode();
+
+         var sessionConfig = QuantumDeterministicSessionConfigAsset.DefaultConfig;
+         if (DisableChecksumsForRelease)
+            sessionConfig.ChecksumInterval = 0;
+
+         var sessionRunnerArguments = new SessionRunner.Arguments {
+            RunnerFactory = QuantumRunnerUnityFactory.DefaultFactory,
+            GameParameters = QuantumRunnerUnityFactory.CreateGameParameters,
+            RuntimeConfig = runtimeConfig,
+            SessionConfig = sessionConfig,
+            GameMode = DeterministicGameMode.Local,
+            PlayerCount = OverwritePlayerCount > 0 ? Math.Min(OverwritePlayerCount, Quantum.Input.MAX_COUNT) : Quantum.Input.MAX_COUNT,
+         };
+
+         var runner = (QuantumRunner)await SessionRunner.StartAsync(sessionRunnerArguments);
+
+         AddLocalPlayers(runner);
+      }
+      catch (Exception e)
+      {
+         _runnerStartRequested = false;
+         GameManager.Instance.isPlayingOffline = false;
+         LogHelper.Error("MatchMaking", $"StartOfflineRunner failed: {e}");
+         AlertPopup.Show("Error", "Failed to start offline game.", () =>
+         {
+            GameManager.Instance.MainMenuTab.windowManager.ShowWindow<MainMenuWindow>();
+         });
+      }
+   }
+
+   // Single "leave the current match, go back to the menu" entry point for both online and
+   // offline sessions. Online leaves through Client.Disconnect() exactly as before (its
+   // OnDisconnected callback tears the runner down and shows MainMenuWindow); offline has no
+   // Photon connection to disconnect from, so it has to shut the runner down and navigate back
+   // itself - see StartOfflineRunner's own comment on why _runnerStartRequested is cleared here.
+   public void LeaveMatch()
+   {
+      if (GameManager.Instance != null && GameManager.Instance.isPlayingOffline)
+      {
+         GameManager.Instance.isPlayingOffline = false;
+         _runnerStartRequested = false;
+
+         if (QuantumRunner.Default != null)
+            QuantumRunner.ShutdownAll();
+
+         GameManager.Instance.MainMenuTab.windowManager.ShowWindow<MainMenuWindow>();
+         return;
+      }
+
+      // Deliberately does NOT clear the reconnect information: a co-op run is worth rejoining
+      // even when you left it on purpose (misclick, stepping away) - see InMatchWindow's own
+      // former comment to this effect. Only leaving the party LOBBY clears it (PartyManager.LeaveParty).
+      Client.Disconnect();
    }
 
    public void OnPlayerEnteredRoom(Player newPlayer)

@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76d17b72229a045879cca0f41bd98cca, type: 3}
+  m_Name: SmgMastery
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.SmgMasteryData
+  Identifier:
+    Path: _QuantumUser/Resources/Passives/Zara/Zara_PassiveSkillUpgrades/SmgMastery
+    Guid:
+      Value: 458396613658649764
+  Icon: {fileID: -69641096, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
+  DisplayName: SMG Mastery
+  Description: Zara's SMGs hit harder, and at rank 3, fire faster while she's in
+    Flow.
+  <MaxRank>k__BackingField: 3
+  RankDescriptions:
+  - +<color=#FD3971>15%</color> SMG Damage.
+  - +<color=#FD3971>30%</color> SMG Damage.
+  - +<color=#FD3971>50%</color> SMG Damage. While Flow is Active, SMGs gain +<color=#FD3971>20%</color>
+    Fire Rate.
+  Family: 2
+  DamageMultiplierPerRank:
+  - RawValue: 9830
+  - RawValue: 19661
+  - RawValue: 32768
+  FullTempoFireRateBonus:
+    RawValue: 13107

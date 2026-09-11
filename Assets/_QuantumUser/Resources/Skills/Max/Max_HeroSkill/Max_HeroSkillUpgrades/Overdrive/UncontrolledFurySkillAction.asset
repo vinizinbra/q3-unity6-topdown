@@ -19,16 +19,16 @@ MonoBehaviour:
   Icon: {fileID: 1079704276, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
   DisplayName: Uncontrolled Fury
   RankDescriptions:
-  - 'Every <color=#FD3971>3</color>rd kill during Overdrive extends it by <color=#FD3971>1s</color>, up to <color=#FD3971>+3s</color>.'
-  - 'Every <color=#FD3971>2</color>nd kill during Overdrive extends it by <color=#FD3971>1s</color>, up to <color=#FD3971>+5s</color>.'
-  - 'Every <color=#FD3971>2</color>nd kill during Overdrive extends it by <color=#FD3971>1s</color>, up to <color=#FD3971>+7s</color>. Vendetta kills add an uncapped <color=#FD3971>+2s</color>.'
+  - "Every <color=#FD3971>3</color> kills during Overdrive extends its duration by <color=#FD3971>1s</color>."
+  - "Every <color=#FD3971>2</color> kills extends Overdrive by <color=#FD3971>1s</color>."
+  - "Vendetta kills extend Overdrive by <color=#FD3971>2s</color> instead."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Kills during Overdrive extend it.
+  Description: "Kills during Overdrive extend it."
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

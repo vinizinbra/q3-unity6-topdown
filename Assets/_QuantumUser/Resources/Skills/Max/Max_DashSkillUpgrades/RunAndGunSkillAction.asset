@@ -19,16 +19,16 @@ MonoBehaviour:
   Icon: {fileID: 1153697183, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
   DisplayName: Run & Gun
   RankDescriptions:
-  - 'Dashing restores <color=#FD3971>50%</color> of your magazine and grants <color=#FD3971>+20%</color> Fire Rate for <color=#FD3971>2s</color>.'
-  - 'Dashing fully reloads and grants <color=#FD3971>+30%</color> Fire Rate and <color=#FD3971>+15%</color> Weapon Damage for <color=#FD3971>2s</color>.'
-  - 'Dashing fully reloads and grants <color=#FD3971>+40%</color> Fire Rate, <color=#FD3971>+15%</color> Weapon Damage and unlimited ammo for <color=#FD3971>2s</color>.'
+  - "Dashing restores <color=#FD3971>50%</color> of the magazine and grants <color=#FD3971>+20%</color> Fire Rate for <color=#FD3971>2s</color>."
+  - "Dashing fully reloads the magazine and grants <color=#FD3971>+30%</color> Fire Rate and <color=#FD3971>+15%</color> Weapon Damage for <color=#FD3971>2s</color>."
+  - "Fire Rate bonus increases to <color=#FD3971>+40%</color>, Weapon Damage bonus stays at <color=#FD3971>+15%</color>, and Max consumes no ammo for <color=#FD3971>2s</color>."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 4
   Interval:
     RawValue: 0
   Activated: 1
-  Description: Dashing reloads and grants a burst of Fire Rate.
+  Description: "Dashing reloads and grants a burst of Fire Rate."
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

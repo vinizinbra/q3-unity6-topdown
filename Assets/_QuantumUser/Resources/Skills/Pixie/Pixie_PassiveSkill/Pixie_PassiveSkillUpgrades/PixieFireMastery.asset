@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ea796952ff0a4583ac2a73cc96b32b5, type: 3}
+  m_Name: PixieFireMastery
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.PixieFireMasteryData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Pixie/Pixie_PassiveSkill/Pixie_PassiveSkillUpgrades/PixieFireMastery
+    Guid:
+      Value: 338055753729455957
+  Icon: {fileID: 210433855, guid: 581823323e1d2429db2c544c4a3ddc8e, type: 3}
+  DisplayName: Fire Mastery
+  Description: Fire weapons hit harder, and at rank 3, every Fire-weapon hit also
+    detonates a small area explosion.
+  <MaxRank>k__BackingField: 3
+  RankDescriptions:
+  - +<color=#FD3971>15%</color> Fire Weapon Damage.
+  - +<color=#FD3971>30%</color> Fire Weapon Damage.
+  - +<color=#FD3971>50%</color> Fire Weapon Damage. Fire weapon hits detonate a
+    small area explosion, dealing <color=#FD3971>30%</color> Damage in a <color=#FD3971>2.5m</color>
+    radius.
+  Element: 1
+  DamageMultiplierPerRank:
+  - RawValue: 9830
+  - RawValue: 19661
+  - RawValue: 32768
+  ExplosiveShotArea:
+    Id:
+      Value: 2396181679756031288

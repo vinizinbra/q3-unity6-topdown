@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed1c0aecdc0504be78c2e4e3e00d0195, type: 3}
+  m_Name: GrenadeLauncherMastery
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.GrenadeLauncherMasteryData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Pixie/Pixie_PassiveSkill/Pixie_PassiveSkillUpgrades/GrenadeLauncherMastery
+    Guid:
+      Value: 283313560750100591
+  Icon: {fileID: -67357124, guid: 581823323e1d2429db2c544c4a3ddc8e, type: 3}
+  DisplayName: Grenade Launcher Mastery
+  Description: Pixie's Grenade Launcher hits harder, and at rank 3, fires rockets
+    instead of lobbing shells.
+  <MaxRank>k__BackingField: 3
+  RankDescriptions:
+  - +<color=#FD3971>15%</color> Grenade Launcher Damage.
+  - +<color=#FD3971>30%</color> Grenade Launcher Damage.
+  - +<color=#FD3971>50%</color> Grenade Launcher Damage. Grenades become fast, direct-flying
+    rockets that explode on impact.
+  Family: 6
+  DamageMultiplierPerRank:
+  - RawValue: 9830
+  - RawValue: 19661
+  - RawValue: 32768
+  RocketMovement:
+    Id:
+      Value: 410563266870546275

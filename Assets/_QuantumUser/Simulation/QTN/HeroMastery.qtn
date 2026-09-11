@@ -1,0 +1,144 @@
+// Hero Mastery - see docs/hero-mastery.md. Every hero has exactly one Weapon Family Mastery line and
+// one Element Mastery line, each a ranked PassiveUpgradeData drafted through the ordinary level-up
+// pool like any other Ascension (WeaponFamilyMasteryData/ElementMasteryData, see that pair's own
+// comment). Both write into ONE shared component each (a hero only ever has one Weapon Mastery and one
+// Element Mastery, so there's nothing to key by), read generically by HeroMasteryUtility - no
+// Hero == X branch anywhere in the combat pipeline.
+component WeaponFamilyMastery
+{
+    WeaponFamily Family;
+    FP DamageMultiplier;
+}
+
+component ElementMastery
+{
+    ElementType Element;
+    FP DamageMultiplier;
+}
+
+// -- R3 Specials - one small dedicated component per special, installed only at rank 3, read by name
+// at the one call site that needs it (mirrors StunDamageBonusUpgrade/FirstStrikeUpgrade's own shape). --
+
+// Brute's Shotgun Mastery R3 "Point Blank" - bonus damage to a target within Range of Brute himself,
+// checked purely by attacker-target distance (HeroMasteryUtility), so it works for every Shotgun
+// regardless of pellet count/fire rate/magazine size.
+component PointBlankUpgrade
+{
+    FP DamageBonus;
+    FP Range;
+}
+
+// Brute's Neutral Mastery R3 "Armored Assault" half 1/2 - Neutral weapon hits gain extra Knockback.
+// Read by DamageUtility.ResolveKnockbackScale off the owner's currently-equipped weapon Element, so it
+// applies to whatever knockback that hit already carries rather than adding a second push.
+component NeutralWeaponKnockbackBonusUpgrade
+{
+    FP KnockbackBonus;
+}
+
+// Brute's Neutral Mastery R3 "Armored Assault" half 2/2 - Brute's own outgoing damage is boosted while
+// he is in his EXISTING Juggernaut Charged state (BruteAscensionUtility.IsJuggernautCharged) - not
+// restricted to Neutral weapons, Shotguns, or Stunned targets, and not a second Charge resource.
+component ChargedDamageBonusUpgrade
+{
+    FP DamageMultiplier;
+}
+
+// Max's Pistol Mastery R3 "Vendetta" - bonus Pistol damage against a target carrying THIS owner's own
+// RevengeMark (the existing Vendetta mark, see Heroes/Max/Vendetta.qtn) - reuses that mark rather than
+// duplicating it.
+component VendettaPistolUpgrade
+{
+    FP DamageBonus;
+}
+
+// Max's Fire Mastery R3 "Infernal Rage" - bonus Fire-weapon damage while the owner is in Max's existing
+// Overdrive activation (component PRESENCE of RageOverdrive is what every other Overdrive Ascension
+// already reads as "an activation is running right now" - see RageOverdrive.qtn).
+component InfernalRageUpgrade
+{
+    FP DamageBonus;
+}
+
+// Kai's Sniper Mastery R3 "Deadeye" - bonus damage on the first Sniper hit this owner lands against
+// each enemy, tracked via the generic WeaponFamilyFirstHitTracker rather than a Kai-specific mark, so
+// any future Weapon Family Mastery needing the same "first hit of family X from owner Y" shape can
+// reuse it.
+component DeadeyeUpgrade
+{
+    FP DamageBonus;
+}
+
+// Generic reusable "has (owner, family) already landed a hit on this target" ledger, one instance per
+// target - a fixed 4-slot table (co-op player cap), same parallel-array idiom UpgradeHistory/
+// AreaAllyBudget/StatusEffects.Haste* already use. Family 0 (None) never occupies a real slot since no
+// WeaponFamilyMasteryData ever installs a family-scoped effect for WeaponFamily.None.
+component WeaponFamilyFirstHitTracker
+{
+    array<EntityRef>[4] Owner;
+    array<Byte>[4] Family;
+}
+
+// Pixie's Grenade Launcher Mastery R3 "Rocket Conversion" - while equipped, a Grenade Launcher's own
+// projectiles use THIS movement asset instead of ProjectileDataAsset's own (see
+// ProjectileMovementOverrideUtility/WeaponSystem.FireProjectile) - everything else about the shot
+// (Hit/explosion/perks/element) is untouched, so it stays a real Grenade Launcher shot the whole way
+// through, just flying differently. Generic mechanism, not Pixie-specific - any future Mastery/
+// Ascension that wants to swap a weapon family's flight path can install this same component.
+component ProjectileMovementOverride
+{
+    WeaponFamily Family;
+    AssetRef<ProjectileMovementData> Movement;
+}
+
+// Pixie's Fire Mastery R3 "Incendiary Rounds" - every Fire-weapon hit ALSO detonates an area
+// explosion at the target, guaranteed (not a proc chance like her separate Explosive Rounds
+// Ascension). Fully author-configurable via a real AreaHitData asset - the exact same asset type
+// Grenade Launcher's own weapon uses - rather than a bespoke Radius/DamageMultiplier pair, so a
+// designer tunes BlastRadius/TargetMask/Effects/TriggersSpawnUpgrades in the Inspector like any other
+// explosion in the game. Detonated via AreaHitData's own public, Projectile-agnostic Detonate overload
+// (StatusEffectUtility.TryTriggerFireWeaponExplosion) - Direct Hit/Unstable Mixture/Pocket Bombs all
+// apply automatically since it's a genuine AreaHitData.Detonate call, zero extra plumbing.
+component FireWeaponExplosiveShotUpgrade
+{
+    AssetRef<AreaHitData> Explosion;
+}
+
+// Zara's SMG Mastery R3 - extra Fire Rate on her own SMG while Flow is Active. Active is flipped by
+// ZaraFlowUtility on Flow's own activation edge (not read live from ZaraFlow here) so this stays a
+// plain, hero-agnostic component WeaponSystem can read with no Zara-specific knowledge at all - see
+// ConditionalWeaponFireRateBonusUtility.
+component ConditionalWeaponFireRateBonus
+{
+    WeaponFamily Family;
+    FP FireRateBonus;
+    Boolean Active;
+}
+
+// Zara's Electric Mastery R3 "High Voltage" - applying Jolt grants Zara herself a timed Fire Rate
+// buff, refreshed (not stacked) via the existing per-source Haste slots (StatusEffectUtility.
+// ApplyHaste) rather than a dedicated timer.
+component SelfFireRateOnJoltUpgrade
+{
+    FP FireRateBonus;
+    FP Duration;
+}
+
+
+// Lux's Assault Rifle Mastery R3 "Targeting Link" - enemies hit by Lux's own AR take bonus damage from
+// HER Sentries specifically (HeroMasteryUtility.GetTargetingLinkMultiplier), never from another
+// player's Sentry and never a global incoming-damage buff.
+component TargetingLinkUpgrade
+{
+    FP SentryDamageBonus;
+    FP MarkDuration;
+}
+
+// Target-side refresh-duration mark placed by an AR hit from a TargetingLinkUpgrade-holding owner -
+// ticked down and removed by TargetingLinkSystem. MarkedBy carries which specific Lux placed it (same
+// shape as FirstStrikeMark/RevengeMark) so a second Lux's AR hits don't silently credit the first.
+component TargetingLinkMark
+{
+    EntityRef MarkedBy;
+    FP Remaining;
+}

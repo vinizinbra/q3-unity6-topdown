@@ -18,12 +18,12 @@ MonoBehaviour:
       Value: 464159436060411710
   Icon: {fileID: -75756975, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
   DisplayName: Second Wind
-  Description: Recover faster when your rhythm is broken.
+  Description: "Recover faster when your rhythm is broken."
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - 'When a hit breaks your Flow, gain <color=#FD3971>+20%</color> Move Speed for <color=#FD3971>1.5s</color>.'
-  - 'A hit no longer wipes your Flow - you drop to <color=#FD3971>1</color> stack instead, and still gain <color=#FD3971>+20%</color> Move Speed for <color=#FD3971>1.5s</color>.'
-  - 'Keep the Beat: a hit taken at Max Flow deals <color=#FD3971>30%</color> less damage and drops you to <color=#FD3971>1</color> stack (<color=#FD3971>6s</color> cooldown).'
+  - "When Flow breaks, gain <color=#FD3971>+20%</color> Move Speed for <color=#FD3971>1.5s</color>."
+  - "When hit, Flow drops to one-third instead of resetting completely."
+  - "While Flow is Active, the hit that breaks it deals <color=#FD3971>30%</color> less Damage."
   MoveSpeedBonus:
   - RawValue: 13107
   - RawValue: 13107
@@ -32,7 +32,10 @@ MonoBehaviour:
   - RawValue: 98304
   - RawValue: 98304
   - RawValue: 98304
-  StacksRetainedOnHit: 000101
+  ProgressRetainedOnHit:
+  - RawValue: 0
+  - RawValue: 21627
+  - RawValue: 21627
   DamageReduction:
   - RawValue: 0
   - RawValue: 0

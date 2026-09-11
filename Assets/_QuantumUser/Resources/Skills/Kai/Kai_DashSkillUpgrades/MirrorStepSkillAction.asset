@@ -19,9 +19,12 @@ MonoBehaviour:
   Icon: {fileID: -625045729, guid: 167fe127f1a734214a64d3f39af97f1f, type: 3}
   DisplayName: Mirror Step
   RankDescriptions:
-  - 'Dashing reflects nearby enemy projectiles back toward their attackers.'
-  - 'Dashing reflects enemy projectiles from farther away and increases their reflected damage.'
-  - 'Dashing reflects nearby enemy projectiles. Each reflect cuts <color=#FD3971>0.5s</color> off Vortex''s cooldown, up to <color=#FD3971>2s</color> per dash.'
+  - While Dashing, Kai reflects nearby enemy projectiles back at their owner for
+    <color=#FD3971>40%</color> Skill Damage.
+  - Radius increases to <color=#FD3971>4.5m</color>. Instantly kills Normal enemies
+    and below; otherwise deals <color=#FD3971>60%</color> Skill Damage.
+  - Instant kill now includes Specialist enemies; otherwise deals <color=#FD3971>100%</color>
+    Skill Damage. Each reflection reduces Vortex cooldown by <color=#FD3971>0.5s</color>.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 3
@@ -57,10 +60,15 @@ MonoBehaviour:
   - RawValue: 196608
   - RawValue: 294912
   - RawValue: 294912
-  ReflectedDamageMultiplier:
-  - RawValue: 65536
-  - RawValue: 98304
-  - RawValue: 98304
+  DamagePercent:
+  - RawValue: 327680
+  - RawValue: 458752
+  - RawValue: 655360
+  ReflectedRangeMultiplier:
+    RawValue: 98304
+  ReflectedMovement:
+    Id:
+      Value: 443112952488832536
   CooldownReductionPerReflect:
   - RawValue: 0
   - RawValue: 0

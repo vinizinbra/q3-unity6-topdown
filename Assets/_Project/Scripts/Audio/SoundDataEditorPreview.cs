@@ -148,19 +148,22 @@ public static class SoundDataEditorPreview
         _nextSequenceTime = now + line.Clip.length + Mathf.Max(0f, line.Pause);
     }
 
-    // Single line, for auditioning one bank entry.
-    public static void PlayClip(SoundData settings, AudioClip clip)
+    // Single line, for auditioning one bank entry. Returns the handle so a caller that needs to
+    // track playback (a scrubbing playhead, a "mark this position" button) can poll handle.Time /
+    // handle.IsPlaying - every existing call site just discards it, which is fine, it's a plain
+    // struct.
+    public static SoundHandle PlayClip(SoundData settings, AudioClip clip)
     {
         if (clip == null)
-            return;
+            return SoundHandle.None;
 
         CancelAudition();
         CancelSequence();
 
         if (Prepare(settings) == false)
-            return;
+            return SoundHandle.None;
 
-        AudioManager.PlayPreview(settings, clip);
+        return AudioManager.PlayPreview(settings, clip);
     }
 
     public static void Stop(SoundData data)

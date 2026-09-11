@@ -18,12 +18,12 @@ MonoBehaviour:
       Value: 317035501367371776
   Icon: {fileID: -1867794150, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
   DisplayName: Flashpoint
-  Description: Burning enemies take extra crits, explode on crit, and can be executed.
+  Description: "Burning enemies take extra crits, explode on crit, and can be executed."
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - '<color=#FD3971>+10%</color> Critical Chance against Burning enemies.'
-  - '<color=#FD3971>+10%</color> Critical Chance against Burning enemies. Crits on them explode for <color=#FD3971>50%</color> damage in <color=#FD3971>3m</color>, up to <color=#FD3971>5</color> targets.'
-  - '<color=#FD3971>+10%</color> Crit Chance vs Burning enemies, whose crits explode. Execute Burning enemies below <color=#FD3971>15%</color> Health; Elites take <color=#FD3971>+25%</color>.'
+  - "Gain <color=#FD3971>+10%</color> Crit Chance against Burning enemies."
+  - "Hits against Burning enemies can trigger a <color=#FD3971>3m</color> explosion dealing <color=#FD3971>50%</color> Damage."
+  - "Burning enemies below <color=#FD3971>15%</color> Health are executed. Elites and Bosses take <color=#FD3971>+25%</color> Damage instead."
   CriticalChanceBonusVsBurning:
     RawValue: 6554
   ExplosionRadius:

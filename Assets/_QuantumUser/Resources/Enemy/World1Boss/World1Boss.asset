@@ -24,7 +24,7 @@ MonoBehaviour:
   Damage:
     RawValue: 1966080
   AnticipationTime:
-    RawValue: 78643
+    RawValue: 52429
   DirectionTracking: 2
   IgnoreY: 1
   Origin: 1
@@ -1488,7 +1488,7 @@ MonoBehaviour:
     RawValue: 6554
   Title: BEHEMOOTH
   Subtitle: THE SCRAP GIANT
-  UiSprite: {fileID: 1281673288, guid: 88a596baa7eda40348913c5e0c802726, type: 3}
+  UiSprite: {fileID: 21300000, guid: de10b170c93814767ace187f6349b2ff, type: 3}
 --- !u!114 &1541344220761094991
 MonoBehaviour:
   m_ObjectHideFlags: 0

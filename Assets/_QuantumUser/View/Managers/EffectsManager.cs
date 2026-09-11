@@ -193,6 +193,10 @@ namespace QuantumUser.View.Managers
         [SerializeField, Tooltip("Uniform scale used for QuantumRoundsTriggered's impact spark - the prefab itself is resolved per-asset off Source.ImpactEffectPrefab (see QuantumRoundsWeaponPerkData.View.cs/OnQuantumRoundsTriggered below), falling back to defaultAreaBlastEffect if that's left empty. This event carries no radius of its own to derive a scale from, same reasoning as selfHitEffectScale/projectileReflectedEffectScale.")]
         private float quantumRoundsEffectScale = 1f;
 
+        [Header("Damage Echo")]
+        [SerializeField, Tooltip("Uniform scale used for DamageEchoTriggered's impact spark - the prefab itself is resolved per-asset off Visual.EffectPrefab (see DamageEchoVisualData.View.cs/OnDamageEchoTriggered below), falling back to defaultAreaBlastEffect if that's left empty (or Visual was never assigned). Generic - not Kai-specific - Ghost Shot (Neutral Mastery R3) is the first source, any future Damage Echo granter's own configured asset plays through this same handler. This event carries no radius of its own to derive a scale from, same reasoning as quantumRoundsEffectScale.")]
+        private float damageEchoEffectScale = 1f;
+
         [Header("Projectile Reflect")]
         [SerializeField, Tooltip("Played whenever a ProjectileReflected event fires (Kai's Reflect dash ascension, see MirrorStepSkillAction) - a single point 'parry' spark at the reflected projectile's position, not radius-scaled. Falls back to defaultAreaBlastEffect (at a small fixed scale) if left empty.")]
         private ParticleSystem projectileReflectedEffectPrefab;
@@ -269,6 +273,7 @@ namespace QuantumUser.View.Managers
             QuantumEvent.Subscribe<EventOverloadChainLink>(this, OnOverloadChainLink);
             QuantumEvent.Subscribe<EventShatterTriggered>(this, OnShatterTriggered);
             QuantumEvent.Subscribe<EventQuantumRoundsTriggered>(this, OnQuantumRoundsTriggered);
+            QuantumEvent.Subscribe<EventDamageEchoTriggered>(this, OnDamageEchoTriggered);
             QuantumEvent.Subscribe<EventProjectileReflected>(this, OnProjectileReflected);
             QuantumEvent.Subscribe<EventEntityDamaged>(this, OnEntityDamaged);
             QuantumEvent.Subscribe<EventEntityHealed>(this, OnEntityHealed);
@@ -1105,6 +1110,22 @@ namespace QuantumUser.View.Managers
             ParticleSystem prefab = perk.ImpactEffectPrefab ?? defaultAreaBlastEffect;
 
             PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * quantumRoundsEffectScale);
+        }
+
+        // Generic Damage Echo (Kai's Ghost Shot, Neutral Mastery R3, is the first source) - same
+        // per-asset-configured-prefab resolution as OnQuantumRoundsTriggered above, except Visual can
+        // genuinely be unassigned (a Mastery picked before an artist configures a particle), so this
+        // checks IsValid first rather than assuming FindAsset always resolves. Point spark at the
+        // target's position, not radius-scaled - same reasoning as quantumRoundsEffectScale.
+        private void OnDamageEchoTriggered(EventDamageEchoTriggered e)
+        {
+            Frame frame = e.Game.Frames.Predicted;
+            if (frame == null) return;
+
+            DamageEchoVisualData visual = e.Visual.IsValid ? frame.FindAsset(e.Visual) : null;
+            ParticleSystem prefab = (visual != null ? visual.EffectPrefab : null) ?? defaultAreaBlastEffect;
+
+            PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * damageEchoEffectScale);
         }
 
         // Point spark for Kai's Reflect dash ascension (see MirrorStepSkillAction) - no

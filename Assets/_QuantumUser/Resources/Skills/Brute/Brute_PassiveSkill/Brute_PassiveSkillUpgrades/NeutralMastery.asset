@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dff4181bd75e541f4b5845f9769d90bc, type: 3}
+  m_Name: NeutralMastery
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.NeutralMasteryData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Brute/Brute_PassiveSkill/Brute_PassiveSkillUpgrades/NeutralMastery
+    Guid:
+      Value: 484349075653730466
+  Icon: {fileID: 1426104403, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
+  DisplayName: Neutral Mastery
+  Description: Neutral weapons hit harder - and at rank 3, Brute turns his Charge
+    into raw offense.
+  <MaxRank>k__BackingField: 3
+  RankDescriptions:
+  - +<color=#FD3971>10%</color> Neutral Weapon Damage.
+  - +<color=#FD3971>20%</color> Neutral Weapon Damage.
+  - +<color=#FD3971>40%</color> Neutral Weapon Damage. Neutral weapons gain +<color=#FD3971>30%</color>
+    Knockback, and Brute deals +<color=#FD3971>30%</color> Damage while Charged.
+  Element: 0
+  DamageMultiplierPerRank:
+  - RawValue: 6554
+  - RawValue: 13107
+  - RawValue: 26214
+  NeutralKnockbackBonus:
+    RawValue: 19661
+  ChargedDamageBonus:
+    RawValue: 19661

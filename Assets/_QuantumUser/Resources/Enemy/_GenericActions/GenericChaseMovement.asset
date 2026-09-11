@@ -17,3 +17,7 @@ MonoBehaviour:
     Guid:
       Value: 3283391172210422552
   ApplySeparation: 1
+  StopDistance:
+    RawValue: 32768
+  SlowDistance:
+    RawValue: 65536

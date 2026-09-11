@@ -1,0 +1,15 @@
+// The 6 player weapon families Hero Mastery keys off (see docs/hero-mastery.md) - independent of
+// ElementType, so a weapon is always (Family, Element) rather than the two being coupled. None is the
+// default for any WeaponDataAsset that isn't one of the 6 (Lux's sentry guns, test/basic weapons,
+// beam weapons) - Weapon Family Mastery simply never matches those, same "absent = no-op" convention
+// every optional upgrade component in this codebase already follows.
+enum WeaponFamily : Byte
+{
+    None,
+    Pistol,
+    SMG,
+    AssaultRifle,
+    Shotgun,
+    Sniper,
+    GrenadeLauncher
+}

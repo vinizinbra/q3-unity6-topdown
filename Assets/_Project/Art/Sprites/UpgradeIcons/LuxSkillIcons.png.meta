@@ -377,6 +377,50 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: LuxNeutral
+      rect:
+        serializedVersion: 2
+        x: 424
+        y: 1088
+        width: 161
+        height: 153
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a3174eb9589ce44818bb648d425c4de1
+      internalID: 1905998502
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LuxAssaultRiffle
+      rect:
+        serializedVersion: 2
+        x: 217
+        y: 1066
+        width: 157
+        height: 157
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 87021fbefa184432f9df5322c0dd0533
+      internalID: 1190936648
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
@@ -394,6 +438,8 @@ TextureImporter:
       EmergencyRepair: -1527857662
       FieldModifications: 65697102
       Fortification: 535018670
+      LuxAssaultRiffle: 1190936648
+      LuxNeutral: 1905998502
       Overclock: -937771317
       OverloadCore: -161778479
       RapidRecycling: 306343709

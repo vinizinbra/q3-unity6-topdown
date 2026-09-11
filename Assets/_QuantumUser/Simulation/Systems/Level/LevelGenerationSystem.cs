@@ -370,7 +370,20 @@ namespace Quantum
         // TryPlaceRequest/ViolatesForbiddenNeighbor), so going first would leave it with zero legal
         // anchors and it'd always fail to place. Growing every other pool entry first diversifies the
         // frontier away from Boss, giving LobbyStart real non-forbidden anchors to land on by the time
-        // its turn comes. Every other entry is shuffled so the resulting graph branches unpredictably.
+        // its turn comes.
+        //
+        // Every other entry is split into must-have and optional, each shuffled independently, then
+        // INTERLEAVED rather than grouped: optional chunks are chopped into as many batches as there
+        // are must-have chunks (sizes spread as evenly as possible, e.g. 10 optional / 4 must-have ->
+        // 2,3,2,3), and the bag alternates [optional batch][one must-have][optional batch][one
+        // must-have]... TryPlaceRequest's per-request search is exhaustive against whatever is
+        // already placed, but it's still greedy/sequential overall, so where a must-have chunk falls
+        // in the bag still matters: grouping every must-have at the very front made them anchor
+        // entirely off Boss's own limited early frontier, while grouping them at the back let optional
+        // chunks claim the one remaining spot a must-have chunk actually needed. Spreading them
+        // through the sequence instead lets each one anchor off a grid that's grown organically via
+        // optional chunks first, without ever letting a full batch of optional chunks run unchecked
+        // right before the end.
         //
         // Rebuilt from scratch every generation tick off a private RNGSession seeded with
         // Global.LevelGenSeed (NOT f.RNG, which keeps advancing as chunks are placed) - a pure
@@ -379,7 +392,8 @@ namespace Quantum
         private List<ChunkRequest> BuildShuffledBag(LevelConfig config, ref RNGSession rng, bool logDetails)
         {
             List<ChunkRequest> startRequests = new List<ChunkRequest>();
-            List<ChunkRequest> otherRequests = new List<ChunkRequest>();
+            List<ChunkRequest> mustHaveRequests = new List<ChunkRequest>();
+            List<ChunkRequest> optionalRequests = new List<ChunkRequest>();
 
             foreach (ChunkPoolEntry entry in config.ChunkPool)
             {
@@ -393,7 +407,16 @@ namespace Quantum
                     continue;
                 }
 
-                List<ChunkRequest> target = entry.Type == ChunkType.LobbyStart ? startRequests : otherRequests;
+                List<ChunkRequest> target;
+
+                if (entry.Type == ChunkType.LobbyStart)
+                {
+                    target = startRequests;
+                }
+                else
+                {
+                    target = entry.MustHave ? mustHaveRequests : optionalRequests;
+                }
 
                 for (int i = 0; i < entry.Count; i++)
                 {
@@ -410,9 +433,42 @@ namespace Quantum
                 }
             }
 
-            Shuffle(ref rng, otherRequests);
-            otherRequests.AddRange(startRequests);
-            return otherRequests;
+            Shuffle(ref rng, mustHaveRequests);
+            Shuffle(ref rng, optionalRequests);
+
+            List<ChunkRequest> bag = new List<ChunkRequest>(mustHaveRequests.Count + optionalRequests.Count + startRequests.Count);
+            InterleaveMustHave(bag, mustHaveRequests, optionalRequests);
+            bag.AddRange(startRequests);
+            return bag;
+        }
+
+        // Splits optionalRequests into mustHaveRequests.Count batches (sizes spread as evenly as
+        // possible via a running-total split, e.g. 10 into 4 -> 2,3,2,3 rather than 3,3,2,2 - no
+        // single batch ends up disproportionately large just because of rounding) and appends
+        // [batch][one must-have] pairs into bag in order. If there are no must-have requests at all,
+        // this degenerates to just appending the (already shuffled) optional requests untouched.
+        private void InterleaveMustHave(List<ChunkRequest> bag, List<ChunkRequest> mustHaveRequests, List<ChunkRequest> optionalRequests)
+        {
+            if (mustHaveRequests.Count == 0)
+            {
+                bag.AddRange(optionalRequests);
+                return;
+            }
+
+            int optionalCursor = 0;
+
+            for (int i = 0; i < mustHaveRequests.Count; i++)
+            {
+                int batchEnd = (int)((long)(i + 1) * optionalRequests.Count / mustHaveRequests.Count);
+
+                while (optionalCursor < batchEnd)
+                {
+                    bag.Add(optionalRequests[optionalCursor]);
+                    optionalCursor++;
+                }
+
+                bag.Add(mustHaveRequests[i]);
+            }
         }
 
         // Deterministic weighted roll among an entry's variants - a single Next(0, totalWeight)

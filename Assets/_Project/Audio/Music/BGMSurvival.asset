@@ -13,17 +13,19 @@ MonoBehaviour:
   m_Name: BGMSurvival
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
   variants:
-  - clip: {fileID: 8300000, guid: 1c6f6a45d80d64351b5b238b19ea0892, type: 3}
-    overrideTrim: 0
+  - clip: {fileID: 8300000, guid: 6ab1324669de441f6a6437e816f1aaf8, type: 3}
+    overrideTrim: 1
     startAt: 0
     endAt: 0
+    loopStart: 27.488987
     overrideFade: 0
     fadeIn: 0
     fadeOut: 0
-  - clip: {fileID: 8300000, guid: 94949ccb759fb460c94de91a6f919ccf, type: 3}
-    overrideTrim: 0
+  - clip: {fileID: 8300000, guid: 69845bf2b83864e0cb1d7f2dd36aba09, type: 3}
+    overrideTrim: 1
     startAt: 0
     endAt: 0
+    loopStart: 40.176212
     overrideFade: 0
     fadeIn: 0
     fadeOut: 0
@@ -37,9 +39,10 @@ MonoBehaviour:
   delay: {x: 0, y: 0}
   startAt: 0
   endAt: 0
+  loopStart: 0
   fadeIn: 2
   fadeOut: 2
-  loop: 0
+  loop: 1
   quieterWhenRemote: 0
   localPlayerOnly: 0
   spatial: 0

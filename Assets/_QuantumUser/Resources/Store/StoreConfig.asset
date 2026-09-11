@@ -21,9 +21,9 @@ MonoBehaviour:
       Value: 489069850842438477
   MaxWeaponOfferSlots: 3
   WeaponOfferBasePrice:
-    RawValue: 6553600
+    RawValue: 65536000
   WeaponOfferPricePerPerk:
-    RawValue: 1638400
+    RawValue: 16384000
   TalentRarityTuning:
   - CommonWeight: 90
     RareWeight: 10
@@ -48,8 +48,8 @@ MonoBehaviour:
   OfferWeaponLevelUp: 0
   OfferAccessoryService: 1
   WeaponLevelUpBasePrice:
-    RawValue: 6553600
+    RawValue: 65536000
   WeaponLevelUpPricePerLevel:
-    RawValue: 3276800
+    RawValue: 32768000
   WeaponLevelUpDamageBonusPerLevel:
     RawValue: 3277

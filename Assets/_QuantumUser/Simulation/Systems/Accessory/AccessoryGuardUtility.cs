@@ -147,6 +147,58 @@ namespace Quantum
             return true;
         }
 
+        // Cursed Rift's Accessory Offering price (see AccessoryOfferingSacrificeData/
+        // docs/breathing-poi.md's Cursed Rift) - a standalone PAYMENT rather than a blocked hit, no
+        // collectible pops off, no debris, no AccessoryBlocked. Deliberately permanent: unlike a
+        // combat block (TryBlock, which only ever spends CurrentDurability and is fully undone by a
+        // Merchant repair), this shrinks MaxDurability itself, so a repair from here on can only ever
+        // buy back up to whatever capacity is left - the sacrifice can never be bought back to what it
+        // was. CurrentDurability is clamped down alongside it (it can never exceed Max), which is what
+        // makes a sacrifice at full durability read as "3/3 -> 2/2" rather than "3/3 -> 2/3".
+        //
+        // Reaching 0 either way (Max or the clamped Current) Breaks it exactly like a killing block
+        // does (AccessoryBroken fires for the FX, same as TryBlock's own broken branch) - except with
+        // MaxDurability also at 0, AccessoryGuardUtility.IsAvailable/AccessoryServiceUtility.
+        // ResolveService both read that as "nothing to sell", so this is the one true "lose it forever"
+        // path: no Merchant service, ever, brings it back. The View's own visibility already polls
+        // State/MaxDurability directly, so this is purely a courtesy hook.
+        //
+        // Only ever spends while Equipped with at least one charge - an Airborne/Dropped/Broken/
+        // Disabled guard has nothing to spend (see AccessoryOfferingSacrificeData.IsEligible, which
+        // gates the option from ever being offered in that state to begin with).
+        public static bool TrySacrificeMaxDurability(Frame f, EntityRef player)
+        {
+            if (f.Unsafe.TryGetPointer<AccessoryGuard>(player, out var guard) == false)
+                return false;
+
+            if (guard->Disabled == true || guard->State != AccessoryGuardState.Equipped || guard->MaxDurability == 0)
+                return false;
+
+            guard->MaxDurability--;
+
+            if (guard->CurrentDurability > guard->MaxDurability)
+                guard->CurrentDurability = guard->MaxDurability;
+
+            if (guard->CurrentDurability == 0)
+            {
+                guard->State = AccessoryGuardState.Broken;
+
+                FPVector3 position = f.Unsafe.TryGetPointer<Transform3D>(player, out var transform)
+                    ? transform->Position
+                    : FPVector3.Zero;
+
+                f.Events.AccessoryBroken(player, position);
+
+                Log.Debug($"[Accessory] {player} permanently sacrificed their last durability point and BROKE for good (0/{guard->MaxDurability})");
+            }
+            else
+            {
+                Log.Debug($"[Accessory] {player} permanently sacrificed a durability point -> {guard->CurrentDurability}/{guard->MaxDurability}");
+            }
+
+            return true;
+        }
+
         // Generic "a would-be break is cancelled by an emergency reserve" step - see
         // AccessoryEmergencyReserve (AccessoryGuard.qtn). Deliberately knows nothing about which
         // mutation granted the reserve; any future source of one works for free.

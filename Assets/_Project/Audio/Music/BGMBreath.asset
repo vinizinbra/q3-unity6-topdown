@@ -14,9 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
   variants:
   - clip: {fileID: 8300000, guid: 06b2b53f8168b480db6fdaf525dfbd59, type: 3}
-    overrideTrim: 0
+    overrideTrim: 1
     startAt: 0
-    endAt: 0
+    endAt: 106.22399
+    loopStart: 0
     overrideFade: 0
     fadeIn: 0
     fadeOut: 0
@@ -24,6 +25,7 @@ MonoBehaviour:
     overrideTrim: 0
     startAt: 0
     endAt: 0
+    loopStart: 0
     overrideFade: 0
     fadeIn: 0
     fadeOut: 0
@@ -31,6 +33,7 @@ MonoBehaviour:
     overrideTrim: 0
     startAt: 0
     endAt: 0
+    loopStart: 0
     overrideFade: 0
     fadeIn: 0
     fadeOut: 0
@@ -44,6 +47,7 @@ MonoBehaviour:
   delay: {x: 0, y: 0}
   startAt: 0
   endAt: 0
+  loopStart: 0
   fadeIn: 2
   fadeOut: 2
   loop: 1

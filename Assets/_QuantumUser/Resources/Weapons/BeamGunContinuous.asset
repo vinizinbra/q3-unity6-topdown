@@ -16,11 +16,12 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/BeamGunContinuous
     Guid:
       Value: 280936357434517589
-  DisplayName: 
+  DisplayName: BeamGunContinuous
   FireType: 0
   Damage:
     RawValue: 65536
   Element: 0
+  Family: 0
   CriticalChance:
     RawValue: 0
   CriticalDamageBonus:
@@ -43,6 +44,7 @@ MonoBehaviour:
       RawValue: 0
     Z:
       RawValue: 0
+  BonusBounces: 0
   ProjectileData:
     Id:
       Value: 0

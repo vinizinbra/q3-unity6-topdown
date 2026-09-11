@@ -19,16 +19,16 @@ MonoBehaviour:
   Icon: {fileID: 1133475158, guid: b217254d41b6945b1873986186a25786, type: 3}
   DisplayName: Backblast
   RankDescriptions:
-  - 'Dash drops a bomb where you started, dealing <color=#FD3971>50%</color> of Bunny Bomb damage.'
-  - 'Dash drops a bomb at both ends, each dealing <color=#FD3971>50%</color> of Bunny Bomb damage.'
-  - 'Dash drops a bomb at both ends, each dealing <color=#FD3971>75%</color> damage and marking enemies hit.'
+  - "Dashing leaves a bomb at the starting point dealing <color=#FD3971>50%</color> Bunny Bomb Damage."
+  - "Also leaves a bomb at the Dash destination."
+  - "Dash bombs deal <color=#FD3971>75%</color> Bunny Bomb Damage and guarantee Chain Reaction marks on enemies hit."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 5
   Interval:
     RawValue: 0
   Activated: 1
-  Description: Dashing drops a fused bomb behind you.
+  Description: "Dashing drops a fused bomb behind you."
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

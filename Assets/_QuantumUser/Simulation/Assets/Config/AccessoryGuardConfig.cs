@@ -57,57 +57,10 @@ namespace Quantum
         // indefinitely, unlike a currency orb (CoinConfig.OrbLifetime), since losing it permanently
         // to a timer would silently turn a recoverable resource into a broken one.
 
-        [Header("Merchant Service - Repair Costs")]
-        [Tooltip("Cost to repair straight back to full, indexed by how many durability points are MISSING (element 0 = 1 missing, element 1 = 2 missing, ...). Deliberately explicit per-step costs rather than a formula - see ResolveRepairCost. Past the authored range the last entry holds, same convention StoreConfig.BreakWeaponConfig/SurvivalConfig.Phases already use.")]
-        public FP[] RepairCostByMissingDurability = { 25, 50 };
-
-        [Tooltip("Cost to REPLACE a Broken (0 durability) accessory. Must be higher than any repair cost - a total loss should never be the cheap option.")]
-        public FP BrokenReplacementCost = 100;
-
-        // Repair always restores directly to BaseDurability - this only picks WHAT that costs, never
-        // how much durability is bought (see docs/accessory-guard.md: no per-point purchases, one
-        // clear Shop decision). `missing` is always >= 1 here; a full accessory resolves to
-        // AccessoryServiceKind.None long before this is reached.
-        public FP ResolveRepairCost(int missing)
-        {
-            if (RepairCostByMissingDurability == null || RepairCostByMissingDurability.Length == 0)
-                return FP._0;
-
-            int index = missing - 1;
-            index = index < 0 ? 0 : index;
-            index = index < RepairCostByMissingDurability.Length ? index : RepairCostByMissingDurability.Length - 1;
-
-            return RepairCostByMissingDurability[index];
-        }
-
-#if UNITY_EDITOR
-        // The one invariant this asset can actually get wrong in authoring: "more damaged -> more
-        // expensive", and "replacement > any repair". Editor-only, same reasoning DirectorConfig's
-        // own authoring guardrail documents - a designer finds out while typing the number, not
-        // three Breaks into a playtest.
-        private void OnValidate()
-        {
-            if (RepairCostByMissingDurability == null)
-                return;
-
-            for (int i = 1; i < RepairCostByMissingDurability.Length; i++)
-            {
-                if (RepairCostByMissingDurability[i] >= RepairCostByMissingDurability[i - 1])
-                    continue;
-
-                Debug.LogWarning($"[AccessoryGuard] {name}: RepairCostByMissingDurability[{i}] ({RepairCostByMissingDurability[i]}) " +
-                                 $"is cheaper than [{i - 1}] ({RepairCostByMissingDurability[i - 1]}) - a MORE damaged accessory should never cost LESS to restore.", this);
-            }
-
-            for (int i = 0; i < RepairCostByMissingDurability.Length; i++)
-            {
-                if (BrokenReplacementCost > RepairCostByMissingDurability[i])
-                    continue;
-
-                Debug.LogWarning($"[AccessoryGuard] {name}: BrokenReplacementCost ({BrokenReplacementCost}) is not higher than " +
-                                 $"RepairCostByMissingDurability[{i}] ({RepairCostByMissingDurability[i]}) - replacing a broken accessory should cost more than repairing a damaged one.", this);
-            }
-        }
-#endif
+        // Merchant repair/replacement PRICING is no longer authored here - it moved to
+        // StoreConfig.AccessoryRepairCostByMissingDurability/AccessoryBrokenReplacementCost (see
+        // AccessoryServiceUtility.ResolvePrice), since it's Store pricing, same as every other
+        // offer/service StoreConfig already prices. This asset stays Store-agnostic: durability,
+        // pop/pickup - the mechanic itself, referenced by both Survival and Break.
     }
 }

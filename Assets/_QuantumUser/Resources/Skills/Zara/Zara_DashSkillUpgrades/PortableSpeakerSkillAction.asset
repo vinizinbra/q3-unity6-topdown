@@ -19,17 +19,16 @@ MonoBehaviour:
   Icon: {fileID: 1251163330, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
   DisplayName: Portable Speaker
   RankDescriptions:
-  - 'Dashing leaves a Portable Speaker alternating Damage and Support Beats at half strength.'
-  - 'Dashing leaves a Portable Speaker that lasts longer and covers a wider area; the dash also buffs nearby allies.'
-  - 'The Portable Speaker inherits your Beat interval, radius and Sound Boost profile at reduced effectiveness.'
+  - "Dashing deploys a Mini Totem that produces weaker Damage and Support Beats. Maximum <color=#FD3971>1</color> active Mini Totem."
+  - "Mini Totem duration and radius increase. Deploying one also grants nearby allies Move Speed and Fire Rate."
+  - "Zara can have <color=#FD3971>2</color> Mini Totems active. Mini Totems also inherit the supported bonuses from Zara's Totem Ascensions."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 5
   Interval:
     RawValue: 0
   Activated: 1
-  Description: Dashing leaves behind a Portable Speaker running the same Damage/Support
-    rhythm at half strength.
+  Description: "Dashing leaves behind a Portable Speaker running the same Damage/Support rhythm at half strength."
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

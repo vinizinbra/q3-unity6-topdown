@@ -29,12 +29,24 @@ namespace Quantum
         // that goes on to fire its own landing-warning telegraph off launch.Velocity (see
         // EnemyDeliveryData.FireLandingWarning) needs that final, post-multiplier velocity, not
         // whatever it originally solved before this ever ran.
+        // movementOverride (default invalid) swaps which ProjectileMovementData this specific shot uses
+        // in place of projectileData.Movement, both for this initial launch's speed scaling below and
+        // for every later tick (baked onto Projectile.MovementOverride, read by ProjectileSystem.Update)
+        // - see ProjectileMovementOverride.qtn. Invalid for every existing caller, so this is a pure
+        // opt-in with zero behavior change for anything that doesn't pass one.
+        // hitOverride (default invalid) swaps which ProjectileHitData this specific shot uses in place
+        // of projectileData.Hit, read by ProjectileSystem.Update/TryExpire every time it resolves the
+        // hit behavior - see Projectile.HitOverride's own comment. Invalid for every existing caller,
+        // same pure opt-in as movementOverride.
         public static EntityRef Spawn(Frame f, EntityRef owner, AssetRef<ProjectileDataAsset> projectileDataRef,
             ref ProjectileLaunch launch, FP damage, DamageSource source = DamageSource.None,
             SkillSlotId sourceSlot = SkillSlotId.None, EntityRef target = default,
-            ElementType element = ElementType.Neutral, int spawnDepth = 0, int pelletIndex = 0)
+            ElementType element = ElementType.Neutral, int spawnDepth = 0, int pelletIndex = 0,
+            AssetRef<ProjectileMovementData> movementOverride = default,
+            AssetRef<ProjectileHitData> hitOverride = default)
         {
             ProjectileDataAsset projectileData = f.FindAsset(projectileDataRef);
+            AssetRef<ProjectileMovementData> movementRef = movementOverride.IsValid ? movementOverride : projectileData.Movement;
 
             // Applied here, before the transform is oriented off launch.Velocity below, because for an
             // ARC movement this changes the launch DIRECTION as well as its magnitude (see
@@ -51,7 +63,7 @@ namespace Quantum
             // today) - BossPhaseUtility.ResolveProjectileSpeedMultiplier is the enemy-side equivalent
             // (1 for anything that isn't a boss currently authoring one), composed alongside it here
             // so this single call site covers both.
-            ProjectileMovementData movement = f.FindAsset(projectileData.Movement);
+            ProjectileMovementData movement = f.FindAsset(movementRef);
             FP speedMultiplier = StatUtility.GetProjectileSpeedMultiplier(f, owner) * BossPhaseUtility.ResolveProjectileSpeedMultiplier(f, owner);
             movement.ApplySpeedMultiplier(ref launch, speedMultiplier);
 
@@ -78,8 +90,11 @@ namespace Quantum
                 projectile->RemainingSpawnDelay = projectileData.SpawnDelay;
                 projectile->SpawnDepth = (byte)spawnDepth;
                 projectile->PelletIndex = (byte)pelletIndex;
+                projectile->MovementOverride = movementOverride;
+                projectile->HitOverride = hitOverride;
 
-                f.FindAsset(projectileData.Hit).Initialize(projectile);
+                AssetRef<ProjectileHitData> hitRef = hitOverride.IsValid ? hitOverride : projectileData.Hit;
+                f.FindAsset(hitRef).Initialize(projectile);
             }
 
             return projectileEntity;

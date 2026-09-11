@@ -32,6 +32,13 @@ namespace Quantum
         // (e.g. a grenade's blast) both proc it.
         public ElementType Element = ElementType.Neutral;
 
+        // Which of the 6 player weapon families this is (Pistol/SMG/AssaultRifle/Shotgun/Sniper/
+        // GrenadeLauncher), independent of Element above - Hero Mastery's Weapon Family track keys off
+        // this, its Element track off Element, and the two are never coupled (see docs/hero-mastery.md).
+        // None (default) for anything that isn't one of the 6 (Lux's sentry guns, test/basic weapons) -
+        // Weapon Family Mastery simply never matches those.
+        public WeaponFamily Family = WeaponFamily.None;
+
         public FP CriticalChance;
         public FP CriticalDamageBonus;
 

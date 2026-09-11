@@ -37,7 +37,17 @@ namespace Quantum
             filter.Transform3D->Position = position;
             filter.Transform3D->Rotation = sentryTransform->Rotation;
 
-            bool hasTarget = EnemyMovementUtility.TryFindNearestEnemy(f, position, ResolveEngagementRange(f, filter.Entity, sentry), out EntityRef target);
+            FP engagementRange = ResolveEngagementRange(f, filter.Entity, sentry);
+
+            // Generic Priority Target (Lux's Neutral Focus is the first source) - a priority override,
+            // never forced targeting: only ever wins if it ALSO sits within THIS barrel's own
+            // engagement range and passes the exact same validity rules TryFindNearestEnemy applies to
+            // every candidate it considers (see PriorityTargetUtility.TryGetValidPriorityTarget's own
+            // comment). Falls straight through to normal nearest-enemy targeting otherwise - a barrel
+            // with no priority target (or an out-of-range/invalid one) behaves exactly as before this
+            // existed.
+            bool hasTarget = PriorityTargetUtility.TryGetValidPriorityTarget(f, sentry->Owner, position, engagementRange, out EntityRef target)
+                || EnemyMovementUtility.TryFindNearestEnemy(f, position, engagementRange, out target);
 
             filter.Aim->Target = target;
 

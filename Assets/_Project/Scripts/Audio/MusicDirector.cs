@@ -30,7 +30,7 @@ public class MusicDirector : QuantumGlobalMonoBehaviour
     // frame - back off this long between attempts instead.
     private const float FailedPlayRetryDelay = 3f;
 
-    [SerializeField, SoundDataPicker, Tooltip("Played in the lobby, before anyone has walked out of the LobbyStart chunk. Leave empty for silence there.")]
+    [SerializeField, SoundDataPicker, Tooltip("Played in the lobby, before anyone has walked out of the LobbyStart chunk. Falls back to breathingMusic if left empty - the waiting-room mood is the same calm as a Breathing Break, and this way that stays true even if it's never authored separately.")]
     private SoundData lobbyMusic;
 
     [SerializeField, SoundDataPicker, Tooltip("Combat music. Also holds through the first part of a Breathing Break - see breathingMusic - and stands in for Boss if no boss track is authored.\n\nFor several combat songs rather than one, put every song in this ONE asset's Clips list, untick its Loop and set Pick to Shuffle (every song plays once before any repeats) or Random No Repeat. Each song then plays to the end and the next is rolled automatically - see the Track Gap below. Every track on this component works that way, not just this one.")]
@@ -137,7 +137,7 @@ public class MusicDirector : QuantumGlobalMonoBehaviour
         switch (frame.Global->CurrentState)
         {
             case GameState.Lobby:
-                return lobbyMusic;
+                return lobbyMusic != null ? lobbyMusic : breathingMusic;
 
             case GameState.Breathing:
                 // THE rule - see the class comment. Not secured yet means enemies are still alive,

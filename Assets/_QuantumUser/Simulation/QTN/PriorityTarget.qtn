@@ -1,0 +1,30 @@
+// Generic "preferred/priority target" behavior - deliberately NOT hero/Sentry-specific, so any future
+// hero/relic/summon/command/mark wanting "my controlled units should prefer THIS target over their own
+// normal target-selection result, while it stays in range and valid" reuses this exact pair instead of
+// a bespoke one. Lux's Neutral Mastery R3 "Neutral Focus" is the first (and currently only) consumer -
+// see PriorityTargetUtility.
+//
+// This is a PRIORITY OVERRIDE, not forced/global targeting: a consumer (SentryBarrelSystem today) only
+// ever swaps in the priority target if it ALSO passes that consumer's own normal range/validity checks
+// - see PriorityTargetUtility.TryGetValidPriorityTarget. It never makes a unit shoot outside its own
+// range, ignore its own validity rules, or stop functioning when no priority target is set.
+//
+// An owner holding PriorityTargetUpgrade has a qualifying weapon hit (Element == RequiredElement)
+// overwrite their own single PriorityTarget slot (DamageUtility.ApplyDamage's own hook, resolved right
+// after ResolveOutgoingDamage - a genuine, non-bypassed weapon hit only). Overwriting the same single
+// slot is what gives "refresh on the same target" and "replace on a different target" for free, with no
+// list/array needed - by design, an owner has at most ONE active priority target at a time.
+component PriorityTargetUpgrade
+{
+    ElementType RequiredElement;
+    FP Duration;
+}
+
+// The owner's own currently-active priority target, if any. Ticked down by PriorityTargetSystem, which
+// also clears it (and fires PriorityTargetCleared) the instant the target itself becomes invalid
+// (destroyed/dead), not only on Remaining expiry - see that system's own comment.
+component PriorityTarget
+{
+    EntityRef Target;
+    FP Remaining;
+}

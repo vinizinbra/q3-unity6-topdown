@@ -6,9 +6,9 @@ namespace QuantumUser.Editor
     using UnityEditor;
     using UnityEngine;
 
-    // Authors the Cursed Rift content that a script can actually produce - the 3 initial
-    // SacrificeDefinition instances (Blood/Coin/Rift Shard Offering), SacrificePoolData.asset
-    // (wired to all 3), and CursedRiftConfig.asset (wired to the pool) - see
+    // Authors the Cursed Rift content that a script can actually produce - the 4 initial
+    // SacrificeDefinition instances (Blood/Coin/Rift Shard/Accessory Offering), SacrificePoolData.asset
+    // (wired to all 4), and CursedRiftConfig.asset (wired to the pool) - see
     // docs/breathing-poi.md. Mirrors RiftShardAssetGenerator's own folder-creation/update-in-place
     // shape; re-running this is safe, an existing asset at the expected path is updated rather
     // than duplicated. Every number below is a decisive placeholder pending a real balance pass,
@@ -29,6 +29,7 @@ namespace QuantumUser.Editor
         private const string BloodOfferingPath = SacrificeFolderPath + "/BloodOffering.asset";
         private const string CoinOfferingPath = SacrificeFolderPath + "/CoinOffering.asset";
         private const string RiftShardOfferingPath = SacrificeFolderPath + "/RiftShardOffering.asset";
+        private const string AccessoryOfferingPath = SacrificeFolderPath + "/AccessoryOffering.asset";
         private const string CursedRiftConfigPath = SacrificeFolderPath + "/CursedRiftConfig.asset";
 
         [MenuItem("Tools/RiftRaiders/Breathing POI/Generate Breathing POI Content")]
@@ -39,18 +40,19 @@ namespace QuantumUser.Editor
             BloodOfferingSacrificeData blood = GenerateBloodOffering();
             CoinOfferingSacrificeData coin = GenerateCoinOffering();
             RiftShardOfferingSacrificeData shard = GenerateRiftShardOffering();
+            AccessoryOfferingSacrificeData accessory = GenerateAccessoryOffering();
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh(); // lets QuantumAssetObjectPostprocessor stamp Guid/Identifier on anything just created
 
-            GenerateSacrificePool(blood, coin, shard);
+            GenerateSacrificePool(blood, coin, shard, accessory);
             GenerateCursedRiftConfig();
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
             LogHelper.Log("BreathingPoiContentGenerator",
-                $"3 SacrificeDefinition instances, SacrificePoolData ({SacrificePoolPath}) and CursedRiftConfig ({CursedRiftConfigPath}) authored. " +
+                $"4 SacrificeDefinition instances, SacrificePoolData ({SacrificePoolPath}) and CursedRiftConfig ({CursedRiftConfigPath}) authored. " +
                 "Still needed by hand: " +
                 "(1) on SurvivalConfig.asset (Tools/RiftRaiders/Generate Survival Director Content), interleave a few Phases[] entries " +
                 "with Kind=Breathing (e.g. Duration=30) among the existing combat phases - that IS the whole Combat<->Breathing " +
@@ -68,7 +70,7 @@ namespace QuantumUser.Editor
                 "(6) build out PoiView's Inactive/Active/Expired child visuals on each POI's own View prefab (already wired on " +
                 "HealingShrine.prefab, PoiView referenced by CursedShrine.prefab too), and set up InteractionPromptWidgetManager " +
                 "on the HUD scene (widgetPrefab/widgetParent + an InteractionPromptWidget prefab under the Canvas) for the world-space prompt; " +
-                "(7) author real Icon sprites for the 3 SacrificeDefinition assets (Blood/Coin/RiftShard Offering) - left unassigned here.");
+                "(7) author real Icon sprites for the 4 SacrificeDefinition assets (Blood/Coin/RiftShard/Accessory Offering) - left unassigned here.");
         }
 
         private static BloodOfferingSacrificeData GenerateBloodOffering()
@@ -117,7 +119,21 @@ namespace QuantumUser.Editor
             return data;
         }
 
-        private static void GenerateSacrificePool(BloodOfferingSacrificeData blood, CoinOfferingSacrificeData coin, RiftShardOfferingSacrificeData shard)
+        private static AccessoryOfferingSacrificeData GenerateAccessoryOffering()
+        {
+            var data = LoadOrCreate<AccessoryOfferingSacrificeData>(AccessoryOfferingPath, out bool isNew);
+
+            data.DisplayName = "Accessory Offering";
+            data.TopLabel = "RUIN";
+            data.Description = "Lose 1 Accessory charge for the rest of the run.";
+            data.ButtonLabel = "SACRIFICE";
+            data.Weight = 100;
+
+            FinalizeAsset(data, AccessoryOfferingPath, isNew);
+            return data;
+        }
+
+        private static void GenerateSacrificePool(BloodOfferingSacrificeData blood, CoinOfferingSacrificeData coin, RiftShardOfferingSacrificeData shard, AccessoryOfferingSacrificeData accessory)
         {
             var pool = LoadOrCreate<SacrificePoolData>(SacrificePoolPath, out bool isNew);
 
@@ -125,7 +141,8 @@ namespace QuantumUser.Editor
             {
                 new AssetRef<SacrificeDefinition>(blood.Guid),
                 new AssetRef<SacrificeDefinition>(coin.Guid),
-                new AssetRef<SacrificeDefinition>(shard.Guid)
+                new AssetRef<SacrificeDefinition>(shard.Guid),
+                new AssetRef<SacrificeDefinition>(accessory.Guid)
             };
 
             FinalizeAsset(pool, SacrificePoolPath, isNew);

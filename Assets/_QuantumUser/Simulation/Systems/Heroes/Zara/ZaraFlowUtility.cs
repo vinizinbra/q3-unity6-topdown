@@ -69,6 +69,15 @@ namespace Quantum
 
             stats->MoveSpeedMultiplier = flow->BaseMoveSpeedMultiplier * (FP._1 + moveBonus);
             stats->AttackSpeedMultiplier = flow->BaseAttackSpeedMultiplier * (FP._1 + fireBonus);
+
+            // Full Tempo (SMG Mastery R3) - a plain, hero-agnostic component (see HeroMastery.qtn)
+            // that WeaponSystem.ResolveLiveFireCooldown reads with no knowledge of Flow at all; this is
+            // the one place that flips its Active flag, on the exact same toggle edge as every other
+            // Flow payoff above.
+            if (f.Unsafe.TryGetPointer<ConditionalWeaponFireRateBonus>(owner, out var conditionalFireRate) == true)
+            {
+                conditionalFireRate->Active = flow->IsActive;
+            }
         }
 
         // Headliner rank 1 - outgoing damage while Active, refreshed into the generic timed

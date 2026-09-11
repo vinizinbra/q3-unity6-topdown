@@ -42,14 +42,18 @@ namespace Quantum
                 // Generic landing hook (see PlayerMovement.qtn) - Brute's Groundbreaker Ascension is
                 // the only reaction gated on this today, everyone else is unaffected.
                 //
-                // Clamped at 0, so landing HIGHER than takeoff (an auto-mantle up a ledge) reports no
-                // fall at all rather than a negative one.
-                FP fallDistance = FPMath.Max(FP._0, previousGroundedY - filter.KCC->Position.Y);
-                f.Signals.OnPlayerLanded(filter.Entity, fallDistance, filter.PlayerMovement->AirborneSource);
+                // heightDelta is the signed version: positive means landed lower than takeoff,
+                // negative means landed higher, ~0 means landed near the same height. fallDistance
+                // stays the existing clamped-at-0 reading so nothing consuming it changes behavior.
+                FP heightDelta = previousGroundedY - filter.KCC->Position.Y;
+                FP fallDistance = FPMath.Max(FP._0, heightDelta);
+                f.Signals.OnPlayerLanded(filter.Entity, fallDistance, heightDelta,
+                    filter.PlayerMovement->AirborneSource, filter.PlayerMovement->WasManualJump);
 
                 // Reset AFTER the signal - the next stretch of airtime is a plain fall unless
                 // something (a jump, a launch) explicitly claims it. See LandingSource.
                 filter.PlayerMovement->AirborneSource = LandingSource.Fall;
+                filter.PlayerMovement->WasManualJump = false;
             }
 
             if (filter.PlayerMovement->JumpCooldownTimer > FP._0)
@@ -59,25 +63,29 @@ namespace Quantum
 
             bool canJump = filter.PlayerMovement->HasAirJumped == false && filter.PlayerMovement->JumpCooldownTimer <= FP._0;
 
-            // Fallback: PlayerMovementProcessor should already have caught this predictively.
+            // Fallback: PlayerMovementProcessor should already have caught this predictively. Not a
+            // manual jump - this is movement assistance triggered by the KCC's own edge detection,
+            // same as the predictive path, so it must NOT set WasManualJump (see PlayerMovement.qtn).
             if (isOnEdge == true && canJump == true)
             {
-                DoJump(f, filter.Entity, filter.KCC, filter.PlayerMovement, data);
+                DoJump(f, filter.Entity, filter.KCC, filter.PlayerMovement, data, wasManualJump: false);
                 return;
             }
 
-            // Manual jump button, for testing without needing to trigger auto-mantle/hop.
+            // Manual jump button, for testing without needing to trigger auto-mantle/hop. The only
+            // path that stamps WasManualJump true - see PlayerMovement.qtn.
             var input = PlayerInputUtility.Resolve(f, filter.Entity, filter.PlayerLink);
             if (isGrounded == true && canJump == true && input->Jump.WasPressed == true)
             {
-                DoJump(f, filter.Entity, filter.KCC, filter.PlayerMovement, data);
+                DoJump(f, filter.Entity, filter.KCC, filter.PlayerMovement, data, wasManualJump: true);
             }
         }
 
-        private static void DoJump(Frame f, EntityRef entity, KCC* kcc, PlayerMovement* movement, MovementDataAsset data)
+        private static void DoJump(Frame f, EntityRef entity, KCC* kcc, PlayerMovement* movement, MovementDataAsset data, bool wasManualJump)
         {
             kcc->Jump(FPVector3.Up * data.JumpVelocity);
             movement->AirborneSource = LandingSource.Jump;
+            movement->WasManualJump = wasManualJump;
             movement->HasAirJumped = true;
             movement->JumpCooldownTimer = data.JumpCooldownTime;
             f.Events.PlayerJumped(entity);

@@ -37,6 +37,7 @@ namespace QuantumUser.Editor
         private const string CharacterDataPath = "Assets/_QuantumUser/Resources/Characters/KaiCharacterData.asset";
         private const string VortexSkillPath = "Assets/_QuantumUser/Resources/Skills/Kai/Kai_HeroSkill/KaiVortexSkill.asset";
         private const string GenericDamageX1Path = "Assets/_QuantumUser/Resources/Enemy/_GenericActions/GenericDamageX1.asset";
+        private const string MirrorStepReflectedHomingPath = "Assets/_QuantumUser/Resources/Weapons/Projectile/MirrorStepReflectedHoming.asset";
 
         [MenuItem("Tools/RiftRaiders/Kai/Generate Ascension Assets")]
         internal static void Generate()
@@ -77,9 +78,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Vortex grows larger, pulls harder, and interrupts enemies' telegraphed attacks.";
                 asset.RankDescriptions = new[]
                 {
-                    "Vortex grows 30% larger and interrupts anticipated attacks from enemies up to Normal tier.",
-                    "Vortex grows larger and pulls harder, interrupting anticipated attacks from enemies up to Heavy tier.",
-                    "Vortex becomes a Singularity, periodically crushing enemies to its core and interrupting attacks up to Elite tier.",
+                    "Vortex pull radius increases by <color=#FD3971>30%</color> and can interrupt normal enemies.",
+                    "Radius increases by <color=#FD3971>50%</color> and pull force by <color=#FD3971>30%</color>. Vortex can interrupt Heavy enemies.",
+                    "Radius <color=#FD3971>+75%</color>, force <color=#FD3971>+50%</color>. Interrupts Elite enemies too, and periodically releases powerful gravity pulses.",
                 };
                 asset.PullRadiusMultiplier = new[] { FP.FromString("1.30"), FP.FromString("1.50"), FP.FromString("1.75") };
                 asset.PullForceMultiplier = new[] { FP._1, FP.FromString("1.30"), FP._1_50 };
@@ -101,9 +102,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Vortex damages trapped enemies, scaling up with how many are caught at once.";
                 asset.RankDescriptions = new[]
                 {
-                    "Vortex damages trapped enemies every 0.5s.",
-                    "Vortex damages trapped enemies every 0.5s, dealing 8% more per additional enemy trapped, up to +56%.",
-                    "Vortex damages trapped enemies every 0.5s, scaling with how many are trapped. Every third pulse implodes.",
+                    "Enemies trapped in Vortex take <color=#FD3971>20%</color> Vortex Skill Damage every <color=#FD3971>0.5s</color>.",
+                    "Compression deals more Damage for each additional enemy trapped inside Vortex.",
+                    "Every third Compression pulse also explodes at the Vortex center for <color=#FD3971>75%</color> Skill Damage.",
                 };
                 asset.PulseDamagePercent = FP._0_20;
                 asset.PulseTickInterval = FP._0_50;
@@ -123,9 +124,9 @@ namespace QuantumUser.Editor
                 asset.Description = "When Vortex ends, it collapses in a heavy blast around its center.";
                 asset.RankDescriptions = new[]
                 {
-                    "When Vortex ends, it collapses and deals heavy damage around its center.",
-                    "When Vortex ends, it collapses for 200% Skill Damage in a larger blast.",
-                    "Before collapsing, Vortex violently pulls enemies into its core, then detonates for massive damage.",
+                    "When Vortex expires or is destroyed, it explodes for <color=#FD3971>150%</color> Skill Damage.",
+                    "Collapse deals <color=#FD3971>200%</color> Skill Damage and has <color=#FD3971>+25%</color> Radius.",
+                    "Collapse deals <color=#FD3971>250%</color> Skill Damage, gains <color=#FD3971>+50%</color> Radius, and strongly pulls enemies inward immediately before exploding.",
                 };
                 asset.DamagePercent = new[] { FP._1_50, FP._2, FP.FromString("2.50") };
                 asset.RadiusMultiplier = new[] { FP._1, FP.FromString("1.25"), FP._1_50 };
@@ -140,9 +141,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Vortex periodically fires homing Void Shards at nearby enemies.";
                 asset.RankDescriptions = new[]
                 {
-                    "Vortex periodically fires a homing Void Shard at a nearby enemy.",
-                    "Vortex fires homing Void Shards more often, travelling farther, hitting harder and piercing 2 enemies.",
-                    "Vortex launches two powerful Void Shards with every volley, each piercing through 3 enemies.",
+                    "Vortex fires a homing Void Shard every <color=#FD3971>1s</color> dealing <color=#FD3971>30%</color> Skill Damage.",
+                    "Shards fire every <color=#FD3971>0.75s</color>, deal <color=#FD3971>40%</color> Damage, search farther, and Pierce <color=#FD3971>2</color> enemies.",
+                    "Fires <color=#FD3971>2</color> Shards per volley, each dealing <color=#FD3971>45%</color> Damage and Piercing <color=#FD3971>3</color> enemies, preferring separate targets.",
                 };
                 asset.DamagePercent = new[] { FP.FromString("0.30"), FP.FromString("0.40"), FP.FromString("0.45") };
                 asset.TickInterval = new[] { FP._1, FP.FromString("0.75"), FP.FromString("0.75") };
@@ -158,9 +159,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Grows Kai's Void Field, slowing enemy projectiles inside it and eventually the enemies themselves.";
                 asset.RankDescriptions = new[]
                 {
-                    "Void Field reaches 4m and slows enemy projectiles inside it by 35%.",
-                    "Void Field reaches 5m and slows enemy projectiles by 50%.",
-                    "Void Field slows enemy projectiles by 60%, and enemies inside it attack 20% slower.",
+                    "Void Field radius increases to <color=#FD3971>4m</color>. Enemy projectiles inside move at <color=#FD3971>65%</color> speed.",
+                    "Radius increases to <color=#FD3971>5m</color> and enemy projectile speed is reduced to <color=#FD3971>50%</color>.",
+                    "Enemy projectiles move at <color=#FD3971>40%</color> speed. Enemies inside Void Field also perform attacks <color=#FD3971>20%</color> slower, up to Specialist tier.",
                 };
                 // Absolute per-rank totals, not bonuses. Deliberately far milder than the pre-rebalance
                 // values (which reached -80% projectile speed / -40% attack speed and suppressed enemy
@@ -177,9 +178,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Weapon hits pull enemies together, eventually Binding them for bonus damage.";
                 asset.RankDescriptions = new[]
                 {
-                    "Weapon hits pull enemies toward their nearest ally.",
-                    "Weapon hits pull enemies toward their nearest ally with much greater force.",
-                    "Weapon hits pull enemies toward their nearest ally, Binding them 2s and making them take 20% more damage.",
+                    "Weapon hits pull the target toward its nearest ally.",
+                    "The pull becomes stronger, especially against Specialist and tougher enemies.",
+                    "Pulled enemies become Bound for <color=#FD3971>2s</color>. Kai deals <color=#FD3971>+20%</color> Damage to Bound enemies.",
                 };
                 asset.PullForce = new[] { FP._3, FP._6, FP._6 };
                 asset.PullDuration = new[] { FP.FromString("0.2"), FP.FromString("0.2"), FP.FromString("0.2") };
@@ -195,9 +196,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Your first hit against an enemy deals bonus damage.";
                 asset.RankDescriptions = new[]
                 {
-                    "Your first hit against an enemy deals 40% bonus damage.",
-                    "Your first hit against an enemy deals 70% bonus damage.",
-                    "Your first hit on an enemy deals +100% damage. Killing it empowers your next first hit by a further 25%.",
+                    "The first hit against each enemy deals <color=#FD3971>+40%</color> Damage.",
+                    "First Strike bonus increases to <color=#FD3971>+70%</color>.",
+                    "Bonus rises to <color=#FD3971>+100%</color>. Killing a First-Strike enemy empowers your next First Strike by <color=#FD3971>+25%</color>.",
                 };
                 asset.DamageMultiplierBonus = new[] { FP.FromString("0.40"), FP.FromString("0.70"), FP._1 };
                 asset.KillEmpowerBonus = new[] { FP._0, FP._0, FP._0_25 };
@@ -210,14 +211,25 @@ namespace QuantumUser.Editor
                 asset.Description = "Dashing reflects nearby enemy projectiles back toward their attackers.";
                 asset.RankDescriptions = new[]
                 {
-                    "Dashing reflects nearby enemy projectiles back toward their attackers.",
-                    "Dashing reflects enemy projectiles from farther away and increases their reflected damage.",
-                    "Dashing reflects nearby enemy projectiles. Each reflect cuts 0.5s off Vortex's cooldown, up to 2s per dash.",
+                    "While Dashing, Kai reflects nearby enemy projectiles back at their owner for <color=#FD3971>40%</color> Skill Damage.",
+                    "Radius increases to <color=#FD3971>4.5m</color>. Instantly kills Normal enemies and below; otherwise deals <color=#FD3971>60%</color> Skill Damage.",
+                    "Instant kill now includes Specialist enemies; otherwise deals <color=#FD3971>100%</color> Skill Damage. Each reflection reduces Vortex cooldown by <color=#FD3971>0.5s</color>.",
                 };
                 asset.Radius = new[] { FP._3, FP.FromString("4.50"), FP.FromString("4.50") };
-                asset.ReflectedDamageMultiplier = new[] { FP._1, FP._1_50, FP._1_50 };
+                asset.DamagePercent = new[] { FP.FromString("0.40"), FP.FromString("0.60"), FP._1 };
+                asset.ReflectedRangeMultiplier = FP._1_50;
                 asset.CooldownReductionPerReflect = new[] { FP._0, FP._0, FP._0_50 };
                 asset.MaxCooldownReductionPerDash = FP._2;
+
+                var reflectedHoming = AssetDatabase.LoadAssetAtPath<HomingProjectileMovementData>(MirrorStepReflectedHomingPath);
+                if (reflectedHoming == null)
+                {
+                    LogHelper.Warn("KaiAscensionAssetGenerator", $"No HomingProjectileMovementData at {MirrorStepReflectedHomingPath} - Mirror Step's reflected bolts won't home onto their target until this is assigned.");
+                }
+                else
+                {
+                    asset.ReflectedMovement = new AssetRef<ProjectileMovementData>(reflectedHoming.Guid);
+                }
             });
 
             PhantomStrikeSkillAction phantomStrike = CreateOrUpdate<PhantomStrikeSkillAction>($"{DashUpgradesFolderPath}/PhantomStrikeSkillAction.asset", asset =>
@@ -227,19 +239,24 @@ namespace QuantumUser.Editor
                 asset.Description = "After Dashing, your next weapon hit deals bonus damage and pierces extra enemies.";
                 asset.RankDescriptions = new[]
                 {
-                    "After Dashing, your next weapon hit deals 50% bonus damage and pierces one additional enemy.",
-                    "After Dashing, your next weapon hit deals 75% bonus damage and pierces two additional enemies.",
-                    "After Dashing, your next weapon hit deals double damage and gains massive Pierce.",
+                    "After Dashing, Kai's next weapon hit deals <color=#FD3971>+50%</color> Damage and gains <color=#FD3971>+1</color> Pierce.",
+                    "Bonus increases to <color=#FD3971>+75%</color> Damage and <color=#FD3971>+2</color> Pierce.",
+                    "Bonus increases to <color=#FD3971>+100%</color> Damage and gains unlimited Pierce.",
                 };
                 asset.DamageMultiplierBonus = new[] { FP.FromString("0.50"), FP.FromString("0.75"), FP._1 };
                 asset.PierceBonus = new[] { 1, 2, 99 };
             });
 
+            // Hero Mastery (see docs/hero-mastery.md) - Sniper (Weapon Family) + Ice (Element), drafted
+            // through the same Passive Upgrade pool as Event Horizon/Undertow/First Strike above.
+            // Authored in HeroMasteryAssetGenerator (shared across all 6 heroes) rather than inline here.
+            var (sniperMastery, neutralMastery) = HeroMasteryAssetGenerator.CreateKaiMastery();
+
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh(); // lets QuantumAssetObjectPostprocessor stamp Guid/Identifier on anything just created
 
             WireCharacterData(passive,
-                new List<PassiveUpgradeData> { eventHorizon, undertow, firstStrike },
+                new List<PassiveUpgradeData> { eventHorizon, undertow, firstStrike, sniperMastery, neutralMastery },
                 new List<SkillActionData> { mirrorStep, phantomStrike });
 
             WireVortexActions(new List<SkillActionData> { singularity, compression, vortexCollapse, voidShards });

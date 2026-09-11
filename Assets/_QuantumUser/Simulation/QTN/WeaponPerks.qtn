@@ -36,6 +36,11 @@ struct PendingDoubleTapShot
     // Kai's Phantom Strike (see PhantomStrikeUpgrade.PierceBonus) - a flat pierce amount rather than
     // a bool, so rank 2/3's higher bonus survives into a Double Tap's own free extra shot too.
     Int32     GrantPierceAmount;
+
+    // Snapshotted from the primary shot so a Double Tap replay of the first bullet in a fresh
+    // magazine still counts as firing "the first shot" for generic Damage Echo (Kai's Ghost Shot) -
+    // see WeaponSystem.FireDoubleTapShot/DamageEchoUtility.TryScheduleEcho.
+    Boolean   IsFirstBullet;
 }
 
 // -- Magazine-position perks (Opening Burst/Execution Rounds/Final Round/Escalating Rounds) --

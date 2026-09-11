@@ -474,6 +474,19 @@ namespace Quantum.Prototypes.Unity {
     }
   }
   [System.SerializableAttribute()]
+  public unsafe partial class PriorityTargetPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.PriorityTargetPrototype> {
+    public Quantum.QuantumEntityPrototype Target;
+    public FP Remaining;
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.PriorityTargetPrototype prototype);
+    public override Quantum.Prototypes.PriorityTargetPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.PriorityTargetPrototype();
+      converter.Convert(this.Target, out result.Target);
+      converter.Convert(this.Remaining, out result.Remaining);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
   public unsafe partial class ProjectilePrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.ProjectilePrototype> {
     public FPVector3 Velocity;
     public FPVector3 SpawnPosition;
@@ -499,6 +512,8 @@ namespace Quantum.Prototypes.Unity {
     public FP MaxTravelDistance;
     public Byte PelletIndex;
     public FP SpeedMultiplier;
+    public AssetRef<ProjectileMovementData> MovementOverride;
+    public AssetRef<ProjectileHitData> HitOverride;
     partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.ProjectilePrototype prototype);
     public override Quantum.Prototypes.ProjectilePrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
       var result = new Quantum.Prototypes.ProjectilePrototype();
@@ -526,6 +541,8 @@ namespace Quantum.Prototypes.Unity {
       converter.Convert(this.MaxTravelDistance, out result.MaxTravelDistance);
       converter.Convert(this.PelletIndex, out result.PelletIndex);
       converter.Convert(this.SpeedMultiplier, out result.SpeedMultiplier);
+      converter.Convert(this.MovementOverride, out result.MovementOverride);
+      converter.Convert(this.HitOverride, out result.HitOverride);
       ConvertUser(converter, ref result);
       return result;
     }
@@ -797,6 +814,19 @@ namespace Quantum.Prototypes.Unity {
     }
   }
   [System.SerializableAttribute()]
+  public unsafe partial class TargetingLinkMarkPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.TargetingLinkMarkPrototype> {
+    public Quantum.QuantumEntityPrototype MarkedBy;
+    public FP Remaining;
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.TargetingLinkMarkPrototype prototype);
+    public override Quantum.Prototypes.TargetingLinkMarkPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.TargetingLinkMarkPrototype();
+      converter.Convert(this.MarkedBy, out result.MarkedBy);
+      converter.Convert(this.Remaining, out result.Remaining);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
   public unsafe partial class TraversalChallengePrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.TraversalChallengePrototype> {
     public Quantum.Prototypes.PoiAvailabilityPrototype Availability;
     public FP Duration;
@@ -860,6 +890,21 @@ namespace Quantum.Prototypes.Unity {
       var result = new Quantum.Prototypes.VendettaStrikeHitTrackerPrototype();
       converter.Convert(this.HitEntities, out result.HitEntities);
       converter.Convert(this.HitCount, out result.HitCount);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
+  public unsafe partial class WeaponFamilyFirstHitTrackerPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.WeaponFamilyFirstHitTrackerPrototype> {
+    [ArrayLengthAttribute(4)]
+    public Quantum.QuantumEntityPrototype[] Owner = new Quantum.QuantumEntityPrototype[4];
+    [ArrayLengthAttribute(4)]
+    public Byte[] Family = new Byte[4];
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.WeaponFamilyFirstHitTrackerPrototype prototype);
+    public override Quantum.Prototypes.WeaponFamilyFirstHitTrackerPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.WeaponFamilyFirstHitTrackerPrototype();
+      converter.Convert(this.Owner, out result.Owner);
+      converter.Convert(this.Family, out result.Family);
       ConvertUser(converter, ref result);
       return result;
     }

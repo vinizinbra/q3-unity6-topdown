@@ -158,14 +158,14 @@ namespace Project.Audio.EditorTools
             LogHelper.Log("Audio", summary.ToString());
         }
 
-        private enum Tier { Streaming, Medium, ShortSfx }
+        internal enum Tier { Streaming, Medium, ShortSfx }
 
         // Entry point for AudioImportDefaults, so a clip added to the project tomorrow gets the
         // same treatment as the ones this tool fixed - without a second copy of the rules.
         internal static bool ApplyTo(AudioImporter importer, string path, float lengthSeconds) =>
             Apply(importer, path, Classify(path, lengthSeconds), dryRun: false) != null;
 
-        private static Tier Classify(string path, float lengthSeconds)
+        internal static Tier Classify(string path, float lengthSeconds)
         {
             // Path wins over length for music: a short loop or a stinger filed under Music is
             // still music, and streaming it keeps it out of the PCM budget either way.

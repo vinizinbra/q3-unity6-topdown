@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05f58226cd5be44af9036b19005aaaa5, type: 3}
+  m_Name: PistolMastery
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.PistolMasteryData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Max/Max_PassiveSkill/Max_PassiveSkillUpgrades/PistolMastery
+    Guid:
+      Value: 411630353775900552
+  Icon: {fileID: 501789483, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
+  DisplayName: Pistol Mastery
+  Description: Max's Pistols hit harder, and at rank 3, punish whoever he's marked
+    for Vendetta.
+  <MaxRank>k__BackingField: 3
+  RankDescriptions:
+  - +<color=#FD3971>15%</color> Pistol Damage.
+  - +<color=#FD3971>30%</color> Pistol Damage.
+  - +<color=#FD3971>50%</color> Pistol Damage. Pistols deal +<color=#FD3971>25%</color>
+    Damage to Vendetta-marked enemies.
+  Family: 1
+  DamageMultiplierPerRank:
+  - RawValue: 9830
+  - RawValue: 19661
+  - RawValue: 32768
+  VendettaDamageBonus:
+    RawValue: 16384

@@ -18,12 +18,12 @@ MonoBehaviour:
       Value: 425116734721973481
   Icon: {fileID: 1236816446, guid: b217254d41b6945b1873986186a25786, type: 3}
   DisplayName: Pocket Bombs
-  Description: Your explosions can drop a stationary Mini Bomb.
+  Description: "Your explosions can drop a stationary Mini Bomb."
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - '<color=#FD3971>15%</color> chance to drop a Mini Bomb dealing <color=#FD3971>35%</color> of Bunny Bomb damage.'
-  - '<color=#FD3971>25%</color> chance to drop a Mini Bomb dealing <color=#FD3971>45%</color> of Bunny Bomb damage.'
-  - '<color=#FD3971>35%</color> chance to drop a Mini Bomb dealing <color=#FD3971>55%</color> of Bunny Bomb damage.'
+  - "Pixie's explosions have a <color=#FD3971>15%</color> chance to leave a Mini Bomb dealing <color=#FD3971>35%</color> Bunny Bomb Damage."
+  - "Chance increases to <color=#FD3971>25%</color> and Damage to <color=#FD3971>45%</color>."
+  - "Chance increases to <color=#FD3971>35%</color> and Damage to <color=#FD3971>55%</color>."
   Chance:
   - RawValue: 9830
   - RawValue: 16384
@@ -33,7 +33,7 @@ MonoBehaviour:
   - RawValue: 29491
   - RawValue: 36045
   Fuse:
-    RawValue: 65536
+    RawValue: 26214
   MiniBombPrototype:
     Id:
       Value: 1386498296654667623

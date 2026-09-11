@@ -107,6 +107,7 @@ public class AudioManager : MonoBehaviour
         public float Duration;         // Real-time length of the trimmed region at the rolled pitch. <= 0 for an unbounded loop.
         public float TrimStart;
         public float TrimEnd;
+        public float LoopStart;        // Where ManualLoop rewinds to - TrimStart unless the sound authors a later loop point (intro-then-loop).
         public bool ManualLoop;        // Sub-region loop: AudioSource.loop can't do it, so we rewind by hand.
         public int Priority;
         public bool Unscaled;
@@ -382,7 +383,7 @@ public class AudioManager : MonoBehaviour
             // source runs off the end and stops before `time` ever reaches TrimEnd.
             if (voice.ManualLoop && (voice.Source.time >= voice.TrimEnd - 0.001f || !voice.Source.isPlaying))
             {
-                voice.Source.time = voice.TrimStart;
+                voice.Source.time = voice.LoopStart;
                 if (!voice.Source.isPlaying)
                     voice.Source.Play();
             }
@@ -598,6 +599,7 @@ public class AudioManager : MonoBehaviour
         var pitch = data.RollPitch();
         data.ResolveTrim(clip, variant, out var trimStart, out var trimEnd);
         data.ResolveFade(variant, out var fadeIn, out var fadeOut);
+        var loopStart = data.ResolveLoopStart(variant, trimStart, trimEnd);
 
         var source = voice.Source;
         source.clip = clip;
@@ -616,8 +618,10 @@ public class AudioManager : MonoBehaviour
         source.transform.position = positioned ? position : Vector3.zero;
         source.volume = 0f;
 
-        // AudioSource.loop can only loop the whole clip, so it's only usable when nothing is trimmed.
-        var wholeClip = trimStart <= 0.001f && trimEnd >= clip.length - 0.001f;
+        // AudioSource.loop can only loop the whole clip AND always rewinds to 0 - so it's only usable
+        // when nothing is trimmed AND the loop point isn't set to somewhere past the start (an intro
+        // that shouldn't repeat needs the manual rewind path below even on an untrimmed clip).
+        var wholeClip = trimStart <= 0.001f && trimEnd >= clip.length - 0.001f && loopStart <= trimStart + 0.001f;
         source.loop = data.loop && wholeClip;
         source.time = trimStart;
 
@@ -631,6 +635,7 @@ public class AudioManager : MonoBehaviour
         voice.FadeOut = fadeOut;
         voice.TrimStart = trimStart;
         voice.TrimEnd = trimEnd;
+        voice.LoopStart = loopStart;
         voice.ManualLoop = data.loop && !wholeClip;
         // Pitch changes playback rate, so the trimmed region takes less/more real time than its
         // authored length - divide it out so trim and fade land where the designer expects.
@@ -866,6 +871,47 @@ public class AudioManager : MonoBehaviour
 
     internal static bool IsPlaying(SoundHandle handle)
         => Instance != null && Instance.Resolve(handle) != null;
+
+    // Current position within the underlying clip - i.e. exactly where a sub-region loop's rewind
+    // (see Tick) leaves it, which is what makes this useful as a scrub/playhead readout. -1 for an
+    // invalid or no-longer-active handle, so a caller can tell "not currently playing" from "at 0".
+    internal static float GetTime(SoundHandle handle)
+    {
+        var voice = Instance != null ? Instance.Resolve(handle) : null;
+        return voice != null ? voice.Source.time : -1f;
+    }
+
+    // Seeks a currently-playing voice - the scrub case (dragging a playhead in an authoring tool).
+    // Deliberately NOT re-clamped against the voice's own TrimStart/TrimEnd: a tool scrubbing outside
+    // the trimmed window is doing that on purpose (previewing what's OUTSIDE the loop, to judge where
+    // the loop points should actually go), and Tick's own ManualLoop rewind still fires normally the
+    // next time playback reaches TrimEnd regardless of where a scrub left it.
+    internal static void SetTime(SoundHandle handle, float time)
+    {
+        var voice = Instance != null ? Instance.Resolve(handle) : null;
+        if (voice == null || voice.Source.clip == null)
+            return;
+
+        voice.Source.time = Mathf.Clamp(time, 0f, Mathf.Max(0f, voice.Source.clip.length - 0.001f));
+    }
+
+    // Live-updates a playing voice's loop boundaries without restarting it - what an authoring tool
+    // needs to make "drag a loop point while it's playing" actually work, instead of forcing a
+    // stop/replay for every tweak. Promotes the voice onto the manual rewind path (off AudioSource's
+    // native whole-clip loop) unconditionally: a live edit can turn a plain full-clip loop into one
+    // with an intro or back again, so the wholeClip fast path PlayInternal picked at Play time can no
+    // longer be trusted once the boundaries themselves have moved.
+    internal static void SetLoopWindow(SoundHandle handle, float trimEnd, float loopStart)
+    {
+        var voice = Instance != null ? Instance.Resolve(handle) : null;
+        if (voice == null)
+            return;
+
+        voice.TrimEnd = trimEnd;
+        voice.LoopStart = loopStart;
+        voice.ManualLoop = true;
+        voice.Source.loop = false;
+    }
 
     internal static void Stop(SoundHandle handle, float fadeOut)
     {

@@ -35,6 +35,7 @@ which one to open.
 - **Global Upgrades** — the 22-of-26 stacking hero-wide stat pool + the Coin currency economy (Coin/Rift Shard per-player wallets). → `docs/global-upgrades.md`
 - **Rift Mutations** — rare non-stackable run-wide picks, rebuilt around the Accessory. → `docs/rift-mutations.md`
 - **Weapon Perks** — ~35 roguelite weapon modifiers baked into `Weapon` at equip; ramp pool, on-kill/crit signals, post-impact procs. → `docs/weapon-perks.md`
+- **Hero Mastery** — two ranked Ascension lines per hero (Weapon Family + Element), drafted through the existing Passive Upgrade pool; rank 3 unlocks a hero-specific special effect. → `docs/hero-mastery.md`
 - **Talents (meta-progression) + Lobby Start** — permanent out-of-match unlocks on `RuntimePlayer.Talents`; `ChunkSpawnConfig` talent-gated spawns; run starts when a player leaves the LobbyStart chunk. → `docs/talents.md`
 
 ## Breathing-only POIs
@@ -76,6 +77,7 @@ which one to open.
 ## Tooling & testing
 
 - **Local-testing Bots** — `RuntimePlayer.IsBot`→`BotBrain`, sim-synthesized input; follow/void-avoidance/leash AI; bots consume no local slot (`GetLocalSlotIndex` = -1). → `docs/bots.md`
+- **Build Size Analyzer** — Editor window over `Library/LastBuild.buildreport`: size by category/asset, texture/atlas/audio/duplicate-file audits with one-click fixes, paginated lists. → `docs/build-size-analyzer.md`
 
 ## Reference docs
 

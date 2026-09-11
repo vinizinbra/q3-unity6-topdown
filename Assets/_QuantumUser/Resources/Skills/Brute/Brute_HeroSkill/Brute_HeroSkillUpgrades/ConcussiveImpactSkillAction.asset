@@ -19,16 +19,16 @@ MonoBehaviour:
   Icon: {fileID: 2016768158, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
   DisplayName: Concussive Impact
   RankDescriptions:
-  - 'Enemies launched by the discharge take <color=#FD3971>30%</color> Juggernaut damage and are Stunned <color=#FD3971>0.75s</color> on landing.'
-  - 'Launched enemies take <color=#FD3971>50%</color> Juggernaut damage, are Stunned <color=#FD3971>1s</color> on landing, and fly <color=#FD3971>25%</color> farther.'
-  - 'Launched enemies take <color=#FD3971>75%</color> damage and are Stunned <color=#FD3971>1.25s</color>, bursting a <color=#FD3971>2.5m</color> Stun shockwave. <color=#FD3971>+40%</color> damage to Stunned.'
+  - "Launched enemies take <color=#FD3971>30%</color> Juggernaut Skill Damage and are Stunned for <color=#FD3971>0.75s</color> when they land."
+  - "<color=#FD3971>+25%</color> Knockback. Landing Damage increases to <color=#FD3971>50%</color> and Stun increases to <color=#FD3971>1s</color>."
+  - "Landing Damage rises to <color=#FD3971>75%</color>, Stun to <color=#FD3971>1.25s</color>. Creates a <color=#FD3971>2.5m</color> shockwave (<color=#FD3971>40%</color> Damage, <color=#FD3971>1s</color> Stun). <color=#FD3971>+40%</color> Damage to Stunned."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Enemies your discharge launches no longer land safely - they take damage on impact, are Stunned where they fall, and eventually crack the ground around them.
+  Description: "Enemies your discharge launches no longer land safely - they take damage, get Stunned, and crack the ground."
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

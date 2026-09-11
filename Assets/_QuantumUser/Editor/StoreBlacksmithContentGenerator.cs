@@ -206,6 +206,12 @@ namespace QuantumUser.Editor
                 new WeaponTalentRarityTuning { CommonWeight = 35, RareWeight = 45, EpicWeight = 18, LegendaryWeight = 2 },
             };
 
+            // Accessory Repair/Replacement service pricing (docs/accessory-guard.md): one point
+            // missing is cheap, two is noticeably worse, a total loss is worst. Explicit per-step
+            // costs, no formula - see StoreConfig.ResolveAccessoryRepairCost.
+            config.AccessoryRepairCostByMissingDurability = new[] { (FP)25, (FP)50 };
+            config.AccessoryBrokenReplacementCost = 100;
+
             FinalizeAsset(config, StoreConfigPath, isNew);
         }
 

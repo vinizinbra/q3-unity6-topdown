@@ -150,9 +150,9 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
 
     public void Leave()
     {
-        // Same reasoning as InMatchWindow.OnLeaveClicked - quitting a run on purpose still leaves
-        // it rejoinable until PlayerTtl expires, so the reconnect information is left alone here.
-        MatchMakingConfig.Instance.Client.Disconnect();
+        // Routes through offline vs online correctly - see MatchMakingConfig.LeaveMatch's own
+        // comment (reconnect information is deliberately left alone for the online case).
+        MatchMakingConfig.Instance.LeaveMatch();
         _onLeave?.Invoke(_placement);
 
     }
@@ -221,7 +221,8 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
             // Don't show the screen right away - ease Time.timeScale down first, then reveal it
             // once the ease finishes, so the world visibly slows to a stop before the cards appear.
             _timeScaleTween.Stop();
-            _timeScaleTween = Tween.Custom(Time.timeScale, upgradeTimeScale, upgradeTimeScaleRampInDuration,
+            float rampInDuration = UpgradeScreenDebugState.SkipAnimations ? 0f : upgradeTimeScaleRampInDuration;
+            _timeScaleTween = Tween.Custom(Time.timeScale, upgradeTimeScale, rampInDuration,
                 onValueChange: v => Time.timeScale = (float)v, useUnscaledTime: true)
                 .OnComplete(() => windowManager.ShowWindow<ChooseWindow>());
         }
@@ -1201,7 +1202,8 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
         // a level-up opened) - Stop() cancels its OnComplete too, so a stale ShowWindow<
         // ChooseWindow>() can never fire after this switches back.
         _timeScaleTween.Stop();
-        _timeScaleTween = Tween.Custom(Time.timeScale, 1f, upgradeTimeScaleRampOutDuration,
+        float rampOutDuration = UpgradeScreenDebugState.SkipAnimations ? 0f : upgradeTimeScaleRampOutDuration;
+        _timeScaleTween = Tween.Custom(Time.timeScale, 1f, rampOutDuration,
             onValueChange: v => Time.timeScale = (float)v, useUnscaledTime: true);
     }
 

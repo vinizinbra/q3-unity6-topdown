@@ -16,11 +16,12 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/ShotgunWeapon
     Guid:
       Value: 457249274052612936
-  DisplayName: 
+  DisplayName: Shotgun
   FireType: 1
   Damage:
     RawValue: 524288
   Element: 0
+  Family: 4
   CriticalChance:
     RawValue: 13107
   CriticalDamageBonus:

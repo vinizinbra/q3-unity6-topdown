@@ -127,6 +127,10 @@ MonoBehaviour:
       Value: 299772149483885795
   - Id:
       Value: 492402531825067847
+  - Id:
+      Value: 304482774853083522
+  - Id:
+      Value: 484349075653730466
   Accessory:
     DisplayName: 
     CollectibleSprite: {fileID: 1022389871, guid: cf771ed30918b4a09b4a8a55f32c3a5c, type: 3}

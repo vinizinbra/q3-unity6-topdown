@@ -18,12 +18,12 @@ MonoBehaviour:
       Value: 505319841889557397
   Icon: {fileID: 2129868926, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
   DisplayName: Iron Presence
-  Description: Enemies intimidated by your Protector Aura are worn down before they reach you - easier to throw, and eventually softer to your own hits.
+  Description: "Enemies intimidated by your Protector Aura are worn down before they reach you."
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - 'Enemies inside your Protector Aura take <color=#FD3971>+25%</color> knockback force.'
-  - 'Enemies inside your Protector Aura take <color=#FD3971>+25%</color> knockback and <color=#FD3971>+20%</color> damage from you.'
-  - 'Enemies inside your Protector Aura take <color=#FD3971>+50%</color> knockback and <color=#FD3971>+35%</color> damage from you.'
+  - "Intimidated enemies take <color=#FD3971>+25%</color> Knockback."
+  - "Brute also deals <color=#FD3971>+20%</color> Damage to Intimidated enemies."
+  - "Knockback bonus increases to <color=#FD3971>+50%</color> and Damage bonus to <color=#FD3971>+35%</color>."
   KnockbackTakenMultiplier:
   - RawValue: 81920
   - RawValue: 81920

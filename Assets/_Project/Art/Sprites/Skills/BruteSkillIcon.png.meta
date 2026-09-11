@@ -342,7 +342,7 @@ TextureImporter:
         width: 270
         height: 270
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -364,7 +364,7 @@ TextureImporter:
         width: 280
         height: 280
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -373,6 +373,50 @@ TextureImporter:
       bones: []
       spriteID: 91a5b355f1ad14a40a321037c0749c94
       internalID: 1607168006
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BruteShotgunMastery
+      rect:
+        serializedVersion: 2
+        x: 47
+        y: 1168
+        width: 200
+        height: 200
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5c1839d12c40b4ec6ab4152f364f48d1
+      internalID: -1259291986
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BruteNeutralMastery
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 1170
+        width: 180
+        height: 180
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f14384041173743da85cc65a30244b94
+      internalID: 1426104403
       vertices: []
       indices: 
       edges: []
@@ -391,6 +435,8 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
+      BruteNeutralMastery: 1426104403
+      BruteShotgunMastery: -1259291986
       BruteSkillAfterShock: -1247703252
       BruteSkillBodyGuard: 1060707514
       BruteSkillBoneBreaker: 1985923074

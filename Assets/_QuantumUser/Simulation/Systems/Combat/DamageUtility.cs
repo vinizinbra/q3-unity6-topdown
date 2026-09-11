@@ -184,6 +184,17 @@ namespace Quantum
                 totalDamage = ResolveOutgoingDamage(f, owner, target, damage, source, out isCritical);
             }
 
+            // Generic Priority Target (Lux's Neutral Mastery R3 "Neutral Focus" is the first
+            // consumer) - a genuine weapon trigger pull only, not a DoT tick/reaction proc, the same
+            // "bypassOutgoingResolution == false" distinction OnWeaponHitLanded above already uses.
+            // (Kai's Neutral Mastery R3 "Ghost Shot"/generic Damage Echo used to hook in here too -
+            // it now schedules at FIRE time instead of hit time, from WeaponSystem's own pellet-spawn
+            // loop, so it counts every shot fired, hit or miss - see DamageEchoUtility's own comment.)
+            if (source == DamageSource.Weapon && bypassOutgoingResolution == false)
+            {
+                PriorityTargetUtility.TrySetPriorityTarget(f, owner, target);
+            }
+
             if (isCritical == true)
             {
                 f.Signals.OnCriticalHit(target, owner, totalDamage, source);
@@ -766,6 +777,12 @@ namespace Quantum
             damage *= StatusEffectUtility.GetOutgoingDamageMultiplier(f, owner);
             damage *= ProtectorAuraUtility.GetFearlessBonusMultiplier(f, owner, target);
 
+            // Lux's Targeting Link (Assault Rifle Mastery R3) - has to run before the CharacterStats
+            // gate below since the damage it boosts is dealt by a SentryBarrel entity, which never
+            // carries CharacterStats (same reason GetOutgoingDamageMultiplier/GetFearlessBonusMultiplier
+            // already sit up here). See HeroMasteryUtility.GetTargetingLinkMultiplier's own comment.
+            damage *= HeroMasteryUtility.GetTargetingLinkMultiplier(f, owner, target);
+
             if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false)
                 return damage;
 
@@ -849,6 +866,25 @@ namespace Quantum
                 && f.Unsafe.TryGetPointer<RevengeConfig>(owner, out var revengeConfig) == true)
             {
                 damage *= FP._1 + revengeConfig->DamageBonus;
+            }
+
+            // Brute's Neutral Mastery R3 "Armored Assault" (damage half) - bonus outgoing damage while
+            // Brute is in his EXISTING Juggernaut Charged state. Deliberately unscoped by DamageSource/
+            // element/target status - it's a Brute-wide outgoing damage modifier, not restricted to
+            // Neutral weapons, Shotguns, or Stunned targets (see BruteAscensionUtility.IsJuggernautCharged).
+            if (f.Unsafe.TryGetPointer<ChargedDamageBonusUpgrade>(owner, out var chargedBonus) == true
+                && BruteAscensionUtility.IsJuggernautCharged(f, owner) == true)
+            {
+                damage *= FP._1 + chargedBonus->DamageMultiplier;
+            }
+
+            // Hero Mastery (Weapon Family + Element, plus every R3 Special that is itself a weapon-
+            // scoped conditional damage multiplier) - one combined call so each hero's Mastery lines
+            // share a single Weapon lookup instead of installing their own TryGetPointer<Weapon> block
+            // here. See docs/hero-mastery.md.
+            if (source == DamageSource.Weapon)
+            {
+                damage *= HeroMasteryUtility.ResolveDamageMultiplier(f, owner, target);
             }
 
             FP chance = stats->CriticalChance;
@@ -1106,6 +1142,18 @@ namespace Quantum
             // with the permanent stat and tier-resistance multipliers above rather than replacing
             // either.
             scale *= StatusEffectUtility.GetKnockbackTakenMultiplier(f, target);
+
+            // Brute's Neutral Mastery R3 "Armored Assault" (knockback half) - Neutral weapon hits gain
+            // extra Knockback, read off the owner's currently-equipped weapon Element since knockback
+            // itself carries no Element/DamageSource of its own by the time it reaches here. Scoped to
+            // owners holding the upgrade, so this is a no-op for every other knockback source in the
+            // game (weapon hits are overwhelmingly what routes through ApplyKnockback for a hero anyway).
+            if (f.Unsafe.TryGetPointer<NeutralWeaponKnockbackBonusUpgrade>(owner, out var neutralKnockback) == true
+                && f.Unsafe.TryGetPointer<Weapon>(owner, out var ownerWeapon) == true && ownerWeapon->WeaponData.IsValid == true
+                && f.FindAsset(ownerWeapon->WeaponData).Element == ElementType.Neutral)
+            {
+                scale *= FP._1 + neutralKnockback->KnockbackBonus;
+            }
 
             return scale;
         }
