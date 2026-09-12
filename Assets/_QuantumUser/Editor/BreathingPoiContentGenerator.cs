@@ -154,8 +154,6 @@ namespace QuantumUser.Editor
             var config = LoadOrCreate<CursedRiftConfig>(CursedRiftConfigPath, out bool isNew);
 
             config.SacrificePool = pool != null ? new AssetRef<SacrificePoolData>(pool.Guid) : default;
-            config.SacrificeChoiceCount = 3;
-            config.MutationChoiceCount = 3;
 
             FinalizeAsset(config, CursedRiftConfigPath, isNew);
         }

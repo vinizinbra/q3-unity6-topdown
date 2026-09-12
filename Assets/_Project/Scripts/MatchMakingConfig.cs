@@ -719,10 +719,14 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
       // match that hasn't visually started yet can flash through. ConnectingWindow is no longer
       // shown here: its Photon callbacks only produced alerts that MatchMakingConfig.OnDisconnected
       // and the catch below already raise on their own.
-      GameManager.Instance.MainMenuTab.windowManager.ShowWindow<LoadingWindow>();
-
       try
       {
+         // Inside the try, not before it: if ShowWindow itself throws (e.g. some other window's
+         // Hide() blows up on a stale reference), this still has to hit the catch below so
+         // _runnerStartRequested gets reset and the player lands back on MainMenuWindow instead of
+         // being stuck on whatever was left on screen with the flag wedged true forever.
+         GameManager.Instance.MainMenuTab.windowManager.ShowWindow<LoadingWindow>();
+
          await WaitForPreviousGameplaySceneToUnloadAsync();
          await WaitForPreviousRunnerToShutdownAsync();
 
@@ -849,10 +853,13 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
 
       _runnerStartRequested = true;
 
-      GameManager.Instance.MainMenuTab.windowManager.ShowWindow<LoadingWindow>();
-
       try
       {
+         // Same reasoning as StartRunner's own comment on this: inside the try, not before it, so a
+         // throw from ShowWindow itself still hits the catch below instead of leaving
+         // _runnerStartRequested wedged true (which blocks StartRunner too - the flag is shared).
+         GameManager.Instance.MainMenuTab.windowManager.ShowWindow<LoadingWindow>();
+
          await WaitForPreviousGameplaySceneToUnloadAsync();
          await WaitForPreviousRunnerToShutdownAsync();
 

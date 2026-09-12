@@ -62,6 +62,7 @@ namespace Quantum
             // touches Health), matching the spec's own "do not restore Shield" rule for free.
             HealUtility.ApplyHeal(f, player, player, healingShrine->HealPercent);
             PoiUsageUtility.MarkUsed(f, player, shrine, healingShrine->UsagePolicy, healingShrine->CooldownDuration);
+            f.Events.HealingShrineUsed(player, shrine);
 
             Log.Debug($"[HealingShrine] {player} interacted with {shrine} - healed {healingShrine->HealPercent.AsFloat:P0} of Max Health");
         }

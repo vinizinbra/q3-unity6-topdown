@@ -54,28 +54,49 @@ public class WindowManager : MonoBehaviour
 
         LogHelper.Log("WindowManager", "Show windows =>" + typeOfAction.Name);
         UiWindow window = null;
-        
+
+        // Each window's Hide()/Show() is wrapped individually - one window throwing (e.g. a stale
+        // reference left over from a previous match) must not abort this loop partway through and
+        // strand everything already-hidden with nothing ever shown, which reads as a blank/white
+        // screen and, worse, would escape ShowWindow entirely and skip whatever try/catch the caller
+        // wrapped this call in (see MatchMakingConfig.StartRunner/StartOfflineRunner).
         foreach (var uiWindow in uiWindows)
         {
             if ( !(uiWindow is T))
             {
-                
-                uiWindow.Hide();
-                onHide?.Invoke(uiWindow);
+                try
+                {
+                    uiWindow.Hide();
+                    onHide?.Invoke(uiWindow);
+                }
+                catch (Exception e)
+                {
+                    LogHelper.Error("WindowManager", $"{uiWindow.GetType().Name}.Hide() threw - continuing so the rest of the transition still runs: {e}");
+                }
             }
         }
         foreach (var uiWindow in uiWindows)
         {
             if (uiWindow is T)
             {
-                uiWindow.Show();
-                onShow?.Invoke(uiWindow);
-                window = uiWindow;
+                try
+                {
+                    uiWindow.Show();
+                    onShow?.Invoke(uiWindow);
+                    window = uiWindow;
+                }
+                catch (Exception e)
+                {
+                    LogHelper.Error("WindowManager", $"{uiWindow.GetType().Name}.Show() threw: {e}");
+                }
             }
         }
 
+        if (window == null)
+            LogHelper.Error("WindowManager", $"ShowWindow<{typeOfAction.Name}>: no registered window of this type was found (or it threw) - nothing shown.");
+
         currentWindow = window;
         return window;
-        
+
     }
 }

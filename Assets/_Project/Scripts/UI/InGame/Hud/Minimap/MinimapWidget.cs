@@ -25,7 +25,11 @@ using UnityEngine.UI;
 // overlays (Boss/Merchant/LobbyStart - see chunkTypeSprites, a ChunkType->Sprite map rather than a
 // positional array so authoring survives ChunkType being reordered/extended; deliberately left
 // unassigned for Enemy/Traversal) sit on top as separate lightweight UI Images - cheap, since there
-// are only ever a few of these per level - plus one live marker per match player, one per currently-alive
+// are only ever a few of these per level. A chunk whose Type has a linked POI entity (Healing
+// Shrine/Cursed Rift/Store/Blacksmith - see ResolvePoiEntityForChunk/UpdateIconTints) darkens its
+// own icon (expiredIconTint) once nobody connected can currently use it, whether that's fully used
+// up or just on cooldown - PoiActivation.State.Expired already means exactly that regardless of
+// which. Plus one live marker per match player, one per currently-alive
 // Elite-tier enemy (see UpdateEliteMarkers), one per currently-alive non-Elite Persistent enemy
 // (see UpdateSpecialMarkers), and - only while GameState.Breathing hasn't yet secured the area (see
 // Global.BreathingAreaSecured) - one per every still-alive ORDINARY enemy, i.e. excluding
@@ -104,6 +108,8 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     [SerializeField, Tooltip("Icon sprite per ChunkType, keyed explicitly rather than by array position - safe to add/reorder ChunkType values without reassigning every existing entry. Leave a type out of the list (or its Sprite unassigned) to show no icon for it (e.g. Enemy, Traversal).")]
     private List<ChunkTypeSpriteEntry> chunkTypeSprites = new();
     [SerializeField] private Image iconPrefab;
+    [SerializeField, Tooltip("Multiplied against iconPrefab's own authored color (not a flat override) once a chunk's linked POI (Healing Shrine/Cursed Rift/Store/Blacksmith) has nobody connected who can currently use it - see UpdateIconTints. PoiActivation.State.Expired already covers BOTH \"fully used up\" and \"everyone's still on cooldown\" as the same value, so this one tint covers both. A Boss/LobbyStart/Enemy/Traversal chunk never resolves a linked POI, so its icon is never touched.")]
+    private Color expiredIconTint = new Color(0.45f, 0.45f, 0.45f, 1f);
     [SerializeField, Tooltip("Simple colored-dot prefab (or similar) representing one player. No per-player identity beyond position for this first pass.")]
     private RectTransform playerMarkerPrefab;
     [SerializeField, Tooltip("Marker shown for every currently-alive Elite-tier enemy (EnemyDataAsset.Tier == Elite) - same always-relevant/never-retires enemies EnemyLifecycleSystem treats specially, so they're worth calling out on the map. One generic marker for every Elite regardless of which EnemyDataAsset it is - no per-enemy-type identity, same first-pass scope as playerMarkerPrefab. Leave unassigned to disable Elite markers entirely.")]
@@ -118,6 +124,18 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     private int localSlotIndex;
 
     private readonly Dictionary<EntityRef, OverlayPair> _iconOverlays = new();
+
+    // Chunk entity -> the PoiActivation-carrying entity that lives inside its footprint (Healing
+    // Shrine/Cursed Rift/Store/Blacksmith), resolved once at icon-spawn time (see
+    // ResolvePoiEntityForChunk) - only chunks that actually resolved one are present here. Read
+    // every tick by UpdateIconTints; a chunk with no linked POI (Boss/LobbyStart/Enemy/Traversal)
+    // simply never appears in this dictionary and its icon color is never touched.
+    private readonly Dictionary<EntityRef, EntityRef> _iconPoiEntity = new();
+
+    // iconPrefab's own authored color, cached once so UpdateIconTints can restore it exactly
+    // (rather than hardcoding white) once a POI's PoiActivation.State stops being Expired.
+    private Color _iconBaseColor = Color.white;
+
     private readonly Dictionary<EntityRef, OverlayPair> _playerMarkers = new();
     private readonly HashSet<EntityRef> _seenPlayersThisFrame = new();
     private List<EntityRef> _stalePlayerBuffer;
@@ -161,6 +179,11 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         public RectTransform Mini;
         public RectTransform Full;
 
+        // Chunk icons only - the actual Image component on Mini/Full, cached at spawn so
+        // UpdateIconTints can recolor it every tick without a GetComponent call each time.
+        public Image MiniIcon;
+        public Image FullIcon;
+
         // Chunk icons only - the texel rect they were positioned from, kept so they can be placed
         // again if a map surface's own UI size changes (see RefreshIconPositionsIfResized).
         public RectInt TexelRect;
@@ -172,6 +195,15 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
 
             if (Full != null)
                 Full.gameObject.SetActive(active);
+        }
+
+        public void SetIconColor(Color color)
+        {
+            if (MiniIcon != null)
+                MiniIcon.color = color;
+
+            if (FullIcon != null)
+                FullIcon.color = color;
         }
 
         public void Destroy()
@@ -275,7 +307,10 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         // SpawnIconOverlayIfNeeded already explicitly sets its own clone's active state right
         // after instantiating (chunk.Discovered), and UpdatePlayerMarkers now does the same.
         if (iconPrefab != null)
+        {
+            _iconBaseColor = iconPrefab.color;
             iconPrefab.gameObject.SetActive(false);
+        }
 
         if (playerMarkerPrefab != null)
             playerMarkerPrefab.gameObject.SetActive(false);
@@ -301,6 +336,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
             return;
 
         UpdateChunks(frame);
+        UpdateIconTints(frame);
         RefreshIconPositionsIfResized();
         UpdatePlayerMarkers(frame);
         UpdateEliteMarkers(frame);
@@ -390,7 +426,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
                 RevealHolesAdjacentTo(entity);
 
             if (isNew)
-                SpawnIconOverlayIfNeeded(entity, chunk, _chunkTexelRects[entity]);
+                SpawnIconOverlayIfNeeded(frame, entity, chunk, transform, _chunkTexelRects[entity]);
             else if (_iconOverlays.TryGetValue(entity, out OverlayPair icon))
                 icon.SetActive(chunk.Discovered);
         }
@@ -728,21 +764,74 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     // coarse a scale (2-3 texels per chunk) can shift the painted square's actual center by up to
     // half a texel. Deriving the icon from the same rect the texture itself was painted from is
     // what keeps the two visually aligned.
-    private void SpawnIconOverlayIfNeeded(EntityRef entity, Chunk chunk, RectInt texelRect)
+    private void SpawnIconOverlayIfNeeded(Frame frame, EntityRef entity, Chunk chunk, Transform3D chunkTransform, RectInt texelRect)
     {
         Sprite specialSprite = ResolveChunkTypeSprite(chunk.Type);
         if (specialSprite == null)
             return;
 
-        var pair = new OverlayPair
-        {
-            TexelRect = texelRect,
-            Mini = SpawnIcon(mapRect, specialSprite, texelRect, 1f),
-            Full = SpawnIcon(_fullOverlayRoot, specialSprite, texelRect, fullMapOverlayScale)
-        };
+        var pair = new OverlayPair { TexelRect = texelRect };
+        pair.Mini = SpawnIcon(mapRect, specialSprite, texelRect, 1f, out pair.MiniIcon);
+        pair.Full = SpawnIcon(_fullOverlayRoot, specialSprite, texelRect, fullMapOverlayScale, out pair.FullIcon);
 
         pair.SetActive(chunk.Discovered);
         _iconOverlays[entity] = pair;
+
+        // Only chunks whose Type actually has a POI with a PoiActivation component (Healing
+        // Shrine/Cursed Rift/Store/Blacksmith) resolve one here - a Boss/LobbyStart/Enemy/
+        // Traversal chunk's icon simply never enters _iconPoiEntity, so UpdateIconTints never
+        // touches its color.
+        EntityRef poiEntity = ResolvePoiEntityForChunk(frame, chunk, chunkTransform);
+        if (poiEntity != EntityRef.None)
+            _iconPoiEntity[entity] = poiEntity;
+    }
+
+    // Finds whichever PoiActivation-carrying entity (see PoiActivationSystem - Healing Shrine/
+    // Cursed Rift/Store/Blacksmith) falls inside this chunk's own world footprint. Called once per
+    // newly-seen chunk (not every tick) - POI instances are few (a handful per level, see
+    // Poi.qtn's own comment), so a linear scan here is cheap and avoids needing any dedicated
+    // chunk<->POI authoring link.
+    private EntityRef ResolvePoiEntityForChunk(Frame frame, Chunk chunk, Transform3D chunkTransform)
+    {
+        GetWorldBounds(chunk, chunkTransform, out float minX, out float minZ, out float maxX, out float maxZ);
+
+        var pois = frame.Filter<PoiActivation, Transform3D>();
+
+        while (pois.Next(out EntityRef entity, out PoiActivation _, out Transform3D poiTransform))
+        {
+            float x = poiTransform.Position.X.AsFloat;
+            float z = poiTransform.Position.Z.AsFloat;
+
+            if (x >= minX && x <= maxX && z >= minZ && z <= maxZ)
+                return entity;
+        }
+
+        return EntityRef.None;
+    }
+
+    // Darkens a chunk's own icon once nobody connected can currently use its linked POI -
+    // PoiActivation.State collapses "fully used up" (OncePerPlayerPerBreak/PerRun) and "everyone's
+    // still on cooldown" (Cooldown policy) into the same Expired value (see
+    // PoiActivationUtility.Refresh/AnyConnectedPlayerCanUse), so this one check covers both per
+    // the user's own ask - no separate cooldown branch needed. Store is always PoiUsagePolicy.
+    // Reusable (see PoiActivationSystem's own comment), so it never resolves Expired here, which
+    // is correct - there's nothing to darken on a POI you can always walk back into.
+    private unsafe void UpdateIconTints(Frame frame)
+    {
+        foreach (var kvp in _iconPoiEntity)
+        {
+            if (frame.Unsafe.TryGetPointer<PoiActivation>(kvp.Value, out var activation) == false)
+                continue;
+
+            if (_iconOverlays.TryGetValue(kvp.Key, out OverlayPair pair) == false)
+                continue;
+
+            Color color = activation->State == PoiViewState.Expired
+                ? _iconBaseColor * expiredIconTint
+                : _iconBaseColor;
+
+            pair.SetIconColor(color);
+        }
     }
 
     // Repositions every chunk icon on whichever map surface just changed UI size - a no-op on
@@ -777,13 +866,16 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     // One icon instance on one map surface. A chunk never moves, so its position is set once here
     // and never touched again - unlike a player marker, which is repositioned every frame.
     // Null root (no full-map panel wired up) simply produces no instance.
-    private RectTransform SpawnIcon(RectTransform root, Sprite sprite, RectInt texelRect, float scale)
+    private RectTransform SpawnIcon(RectTransform root, Sprite sprite, RectInt texelRect, float scale, out Image iconImageOut)
     {
+        iconImageOut = null;
+
         if (root == null || iconPrefab == null)
             return null;
 
         Image iconImage = Instantiate(iconPrefab, root);
         iconImage.sprite = sprite;
+        iconImageOut = iconImage;
 
         var rect = iconImage.transform as RectTransform;
         rect.anchoredPosition = TexelRectCenterToMapPosition(texelRect, root);

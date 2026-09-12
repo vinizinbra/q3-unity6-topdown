@@ -10,13 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9c04d8195895c42008e9658fbf433bf7, type: 3}
-  m_Name: Rift
+  m_Name: RiftSound
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
   variants:
   - clip: {fileID: 8300000, guid: 5a119f6724024bb49971c5ca7bdfc49c, type: 3}
     overrideTrim: 0
     startAt: 0
     endAt: 0
+    loopStart: 0
     overrideFade: 0
     fadeIn: 0
     fadeOut: 0
@@ -25,11 +26,12 @@ MonoBehaviour:
   layers: []
   group: 7
   output: {fileID: 0}
-  volume: {x: 0.5, y: 0.5}
+  volume: {x: 0.2, y: 0.2}
   pitch: {x: 1, y: 1}
   delay: {x: 0, y: 0}
   startAt: 0
   endAt: 0
+  loopStart: 0
   fadeIn: 0
   fadeOut: 0
   loop: 0

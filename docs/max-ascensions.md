@@ -137,7 +137,11 @@ components - same shared-component idiom `RevengeConfig` itself already establis
 
 5. **Blood Debt** (`BloodDebtPassiveUpgradeData`, merges the old Blood Debt + Unbroken Spirit +
    Settled Score picks) - rank 1: `RevengeConfig.MarkDuration = 12`. Rank 2: `= 16`, plus grants
-   `ShieldDamageCountsForRevenge`. Rank 3: `RevengeConfig.HealMultiplier = 1.0`.
+   `ShieldDamageCountsForRevenge` - now gating both plain Shield-absorbed damage
+   (`MaxVendettaSystem.OnShieldDamageApplied`) AND a hit the Accessory Guard blocks outright
+   (`MaxVendettaSystem.OnAccessoryBlocked`, off `AccessoryGuard.qtn`'s `OnAccessoryBlocked` signal,
+   which carries the raw negated `damage` for exactly this). Rank 3: `RevengeConfig.HealMultiplier
+   = 1.0`.
 
 6. **Burning Vengeance** (`BurningVengeancePassiveUpgradeData`) - ranks 1-2 set `StatusSpreadOnDeath.
    TriggerOnVendettaKill = true` + Radius/BurnDuration/BurnIntensity/`MaxTargets` (existing mechanism,
@@ -251,10 +255,14 @@ lines unchanged in shape; the Passive half loses one line to a merge.
     `IgnitionSkillAction` each re-check `IsAtMaxRage` in their own Begin (both apply paths are latched
     and idempotent), so their effects engage immediately rather than waiting for a threshold crossing
     that already happened. `RageOverdriveUtility.EnterMaxRage` is the shared entry point.
-- **Full Throttle R3 is a one-shot refill, not a permanent state.** The `InstantReloadOverdrive` tag
-  and `WeaponSystem.IsInstantReloadOverdriven` are deleted; `FullThrottleUpgrade.HasInstantReload`
-  fires `WeaponSystem.RefillMagazine` once, on the max-Rage crossing itself, latched by `Applied`.
-  The brief explicitly rules out re-resolving this every tick.
+- **Full Throttle R3 (2026-09-12 revision): instant reload for the whole max-Rage window, not just a
+  one-shot refill.** `WeaponSystem.IsInstantReloadOverdriven` (`FullThrottleUpgrade.HasInstantReload`
+  && `RageOverdriveUtility.IsAtMaxRage`) is checked once inside `StartReload` - i.e. at the
+  reload-trigger event, not polled every simulation tick of an in-progress `ReloadTimer` - and takes
+  the same instant-top-up branch a `ReloadDuration <= 0` weapon gets. `MaxAscensionUtility.
+  ApplyFullThrottle` additionally still fires `WeaponSystem.RefillMagazine` once on the max-Rage
+  crossing itself (latched by `Applied`), so entering max Rage mid-magazine tops it up immediately
+  instead of waiting for the next empty-mag reload.
 - **One capped ledger for every Overdrive extension.** `UncontrolledFuryExtension` →
   **`OverdriveExtension`**, now added by `BerserkSkillData.Begin` itself (seeded from a new
   `BaseMaxExtension`) and removed at `End`. `OverdriveUtility.TryExtend` clamps and books against it.

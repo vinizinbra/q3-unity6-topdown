@@ -6,7 +6,7 @@ namespace Quantum
     // Cursed Rift's own interaction session - see CursedRift.qtn/docs/breathing-poi.md. Deliberately
     // a Cursed-Rift-specific interaction (not a generic transaction engine) - what's generic is
     // POI availability/usage (Poi.qtn) and the Base-Skill redirect (ContextInteraction.qtn), not
-    // this two-step sacrifice/mutation flow itself.
+    // this one-sacrifice-for-one-mutation flow itself.
     public static unsafe class CursedRiftUtility
     {
         private struct Candidate
@@ -50,59 +50,164 @@ namespace Quantum
         // Called from SkillSystem when a locked-in ContextInteraction.ActiveTarget's Base Skill
         // button is pressed. Re-validates in full (never trusts the View/target resolution alone -
         // see docs/breathing-poi.md's own "Interaction validity confirmed in deterministic Quantum
-        // simulation" requirement), rolls up to CursedRiftConfig.SacrificeChoiceCount eligible
-        // sacrifices, and opens the Sacrifice stage. A no-op (logged, not silently swallowed) if
-        // nothing is eligible - the player simply gets no interaction that tick, same as pressing a
-        // skill button with 0 charges.
+        // simulation" requirement). Reuses this (player, rift)'s already-rolled CursedRiftOffers
+        // entry if one exists and is still valid - the offer is meant to persist for the rest of
+        // the run (Cancel + reopen shows the SAME sacrifice+mutation pair), not reroll on every
+        // attempt. Only rolls a fresh sacrifice AND mutation reward (both together, nothing applied
+        // yet - see Confirm) when there's no cached offer or it's gone stale (e.g. the cached
+        // sacrifice's own eligibility changed since it was rolled). A no-op (logged, not silently
+        // swallowed) if a fresh roll comes up empty either side - the player simply gets no
+        // interaction that tick, same as pressing a skill button with 0 charges.
         public static void TryBeginInteraction(Frame f, EntityRef player, EntityRef rift)
         {
             if (CanInteract(f, player, rift) == false)
                 return;
 
-            if (f.RuntimeConfig.CursedRiftConfig.IsValid == false)
+            if (f.RuntimeConfig.CursedRiftConfig.IsValid == false || f.RuntimeConfig.LevelUpConfig.IsValid == false)
             {
-                Log.Error("[CursedRift] interaction requested but RuntimeConfig has no CursedRiftConfig assigned - ignored");
+                Log.Error("[CursedRift] interaction requested but RuntimeConfig has no CursedRiftConfig/LevelUpConfig assigned - ignored");
                 return;
             }
 
-            CursedRiftConfig config = f.FindAsset(f.RuntimeConfig.CursedRiftConfig);
+            AssetRef<SacrificeDefinition> sacrificeRef;
+            LevelUpOption mutation;
 
-            if (config.SacrificePool.IsValid == false)
+            if (TryGetCachedOffer(f, player, rift, out sacrificeRef, out mutation) &&
+                IsOfferStillValid(f, player, sacrificeRef, mutation) == true)
             {
-                Log.Error("[CursedRift] CursedRiftConfig has no SacrificePool assigned - ignored");
-                return;
+                Log.Debug($"[CursedRift] {player} reopened their persisted offer at {rift}");
             }
-
-            SacrificePoolData pool = f.FindAsset(config.SacrificePool);
-            AssetRef<SacrificeDefinition>[] rolled = RollSacrificeOptions(f, player, pool, config.SacrificeChoiceCount);
-
-            if (rolled.Length == 0)
+            else
             {
-                Log.Debug($"[CursedRift] {player} has no eligible sacrifices right now - interaction skipped");
-                return;
+                CursedRiftConfig config = f.FindAsset(f.RuntimeConfig.CursedRiftConfig);
+
+                if (config.SacrificePool.IsValid == false)
+                {
+                    Log.Error("[CursedRift] CursedRiftConfig has no SacrificePool assigned - ignored");
+                    return;
+                }
+
+                SacrificePoolData pool = f.FindAsset(config.SacrificePool);
+                AssetRef<SacrificeDefinition>[] rolledSacrifice = RollSacrificeOptions(f, player, pool, 1);
+
+                if (rolledSacrifice.Length == 0)
+                {
+                    Log.Debug($"[CursedRift] {player} has no eligible sacrifice right now - interaction skipped");
+                    return;
+                }
+
+                LevelUpConfig levelUpConfig = f.FindAsset(f.RuntimeConfig.LevelUpConfig);
+                LevelUpOption[] rolledMutation = LevelUpUtility.RollMutationOptions(f, player, levelUpConfig, 1);
+
+                if (rolledMutation.Length == 0)
+                {
+                    Log.Debug($"[CursedRift] {player} has no eligible mutation reward right now - interaction skipped");
+                    return;
+                }
+
+                sacrificeRef = rolledSacrifice[0];
+                mutation = rolledMutation[0];
+                SetCachedOffer(f, player, rift, sacrificeRef, mutation);
+
+                Log.Debug($"[CursedRift] {player} rolled a new offer at {rift} - sacrifice {sacrificeRef} for a mutation reward");
             }
 
             f.AddOrGet<CursedRiftInteraction>(player, out var interaction);
             interaction->Rift = rift;
-            interaction->State = CursedRiftInteractionState.SelectingSacrifice;
+            interaction->Sacrifice = sacrificeRef;
+            interaction->Mutation = mutation;
+        }
 
-            var choices = interaction->SacrificeChoices;
+        // Is a cached CursedRiftOfferEntry still safe to show as-is? Re-checks the exact same two
+        // gates a fresh roll already filters by (SacrificeDefinition.IsEligible,
+        // RiftMutationUtility.IsBlocked) - e.g. a cached Coin Offering goes stale the instant the
+        // player spends their last Coin at the Store in between, and should reroll rather than
+        // show an offer that can no longer actually be paid.
+        private static bool IsOfferStillValid(Frame f, EntityRef player, AssetRef<SacrificeDefinition> sacrificeRef, LevelUpOption mutation)
+        {
+            if (sacrificeRef.IsValid == false || mutation.Upgrade.IsValid == false)
+                return false;
 
-            for (int i = 0; i < choices.Length; i++)
+            SacrificeDefinition sacrifice = f.FindAsset(sacrificeRef);
+
+            if (sacrifice == null || sacrifice.IsEligible(f, player) == false)
+                return false;
+
+            if (mutation.Kind != LevelUpPoolKind.RiftMutation)
+                return false;
+
+            var mutationRef = new AssetRef<RiftMutationData>(mutation.Upgrade.Id);
+            return RiftMutationUtility.IsBlocked(f, player, mutationRef) == false;
+        }
+
+        // CursedRiftOffers is per-player, keyed by the rolling Rift's own EntityRef - same
+        // fixed-array-of-keyed-entries convention PoiUsage/RiftMutationPicks already use (see
+        // CursedRift.qtn's own comment on the 8-slot size).
+        private static bool TryGetCachedOffer(Frame f, EntityRef player, EntityRef rift, out AssetRef<SacrificeDefinition> sacrifice, out LevelUpOption mutation)
+        {
+            sacrifice = default;
+            mutation = default;
+
+            if (f.Unsafe.TryGetPointer<CursedRiftOffers>(player, out var offers) == false)
+                return false;
+
+            var entries = offers->Entries;
+
+            for (int i = 0; i < entries.Length; i++)
             {
-                choices[i] = i < rolled.Length ? rolled[i] : default;
+                if (entries[i].Rift != rift)
+                    continue;
+
+                sacrifice = entries[i].Sacrifice;
+                mutation = entries[i].Mutation;
+                return true;
             }
 
-            interaction->SacrificeChoiceCount = (byte)rolled.Length;
-            interaction->MutationChoiceCount = 0;
+            return false;
+        }
 
-            Log.Debug($"[CursedRift] {player} began an interaction with {rift} - {rolled.Length} sacrifice option(s)");
+        private static void SetCachedOffer(Frame f, EntityRef player, EntityRef rift, AssetRef<SacrificeDefinition> sacrifice, LevelUpOption mutation)
+        {
+            f.AddOrGet<CursedRiftOffers>(player, out var offers);
+            var entries = offers->Entries;
+
+            for (int i = 0; i < entries.Length; i++)
+            {
+                if (entries[i].Rift != rift && entries[i].Rift != EntityRef.None)
+                    continue;
+
+                entries[i] = new CursedRiftOfferEntry { Rift = rift, Sacrifice = sacrifice, Mutation = mutation };
+                return;
+            }
+
+            Log.Error($"[CursedRift] {player} has no free CursedRiftOffers slot for {rift} - this offer won't persist across cancel/reopen");
+        }
+
+        // Called by Confirm once the offer is actually taken - a fresh roll is due next time (e.g.
+        // a Reusable/Cooldown Rift). Cancel deliberately never calls this.
+        private static void ClearCachedOffer(Frame f, EntityRef player, EntityRef rift)
+        {
+            if (f.Unsafe.TryGetPointer<CursedRiftOffers>(player, out var offers) == false)
+                return;
+
+            var entries = offers->Entries;
+
+            for (int i = 0; i < entries.Length; i++)
+            {
+                if (entries[i].Rift != rift)
+                    continue;
+
+                entries[i] = default;
+                return;
+            }
         }
 
         // Weighted draw without replacement among currently-eligible sacrifices only - same shape
         // LevelUpUtility.RollOptionsFor/DrawWeighted uses, kept as its own small implementation
         // rather than forced through a shared generic helper since AssetRef<SacrificeDefinition>
-        // isn't a LevelUpOption (no Kind/Slot/WeaponData baggage to carry).
+        // isn't a LevelUpOption (no Kind/Slot/WeaponData baggage to carry). choiceCount is always 1
+        // today (see TryBeginInteraction) but left general - the draw-without-replacement shape
+        // costs nothing extra.
         private static AssetRef<SacrificeDefinition>[] RollSacrificeOptions(Frame f, EntityRef player, SacrificePoolData pool, int choiceCount)
         {
             List<Candidate> candidates = new List<Candidate>();
@@ -152,103 +257,33 @@ namespace Quantum
             return rolled;
         }
 
-        // Called from CursedRiftSystem when a SelectSacrificeCommand lands - clicking a sacrifice
-        // card commits immediately (applies its cost) and rolls straight into SelectingMutation,
-        // same "one click = one irreversible pick" idiom every other Choose Window screen already
-        // uses. No separate confirm step - re-validates eligibility one last time (defensive
-        // against it having become invalid between roll and click; nothing currently runs
-        // mid-interaction to actually cause that, but the check is cheap and correct either way).
-        public static void SelectSacrifice(Frame f, EntityRef player, CursedRiftInteraction* interaction, int optionIndex)
+        // Called from CursedRiftSystem when a ConfirmCursedRiftCommand lands - the single
+        // "SACRIFICE" button click, applying the rolled sacrifice's cost and granting the rolled
+        // mutation reward in the same tick, same "one click = one irreversible pick" idiom every
+        // other Choose Window screen already uses. Re-validates the sacrifice's eligibility one
+        // last time (defensive against it having become invalid between roll and click - nothing
+        // currently runs mid-interaction to actually cause that, but the check is cheap and correct
+        // either way).
+        public static void Confirm(Frame f, EntityRef player, CursedRiftInteraction* interaction)
         {
-            if (interaction->State != CursedRiftInteractionState.SelectingSacrifice)
-                return;
-
-            if (optionIndex < 0 || optionIndex >= interaction->SacrificeChoiceCount)
-            {
-                Log.Error($"[CursedRift] {player} sent SelectSacrifice OptionIndex {optionIndex}, outside 0-{interaction->SacrificeChoiceCount - 1} - ignored");
-                return;
-            }
-
-            AssetRef<SacrificeDefinition> sacrificeRef = interaction->SacrificeChoices[optionIndex];
-
-            if (sacrificeRef.IsValid == false)
-                return;
-
-            SacrificeDefinition sacrifice = f.FindAsset(sacrificeRef);
+            AssetRef<SacrificeDefinition> sacrificeRef = interaction->Sacrifice;
+            SacrificeDefinition sacrifice = sacrificeRef.IsValid ? f.FindAsset(sacrificeRef) : null;
 
             if (sacrifice == null || sacrifice.IsEligible(f, player) == false)
             {
-                Log.Debug($"[CursedRift] {player}'s selected sacrifice {sacrificeRef} is no longer eligible - selection ignored");
+                Log.Debug($"[CursedRift] {player}'s rolled sacrifice {sacrificeRef} is no longer eligible - confirm ignored");
                 return;
             }
 
             sacrifice.ApplyCost(f, player);
 
-            RollMutationChoices(f, player, interaction);
-            interaction->State = CursedRiftInteractionState.SelectingMutation;
+            LevelUpOption mutation = interaction->Mutation;
 
-            Log.Debug($"[CursedRift] {player} chose sacrifice {sacrificeRef} - payment applied, rolling mutation reward");
-        }
-
-        // Called from CursedRiftSystem when a CancelCursedRiftCommand lands - only meaningful
-        // pre-payment (SelectingSacrifice; a no-op once SelectingMutation, since SelectSacrifice
-        // above already applied the cost by then - irreversible past that point, same as any other
-        // Choose Window pick).
-        public static void Cancel(Frame f, EntityRef player, CursedRiftInteraction* interaction)
-        {
-            if (interaction->State != CursedRiftInteractionState.SelectingSacrifice)
-                return;
-
-            f.Remove<CursedRiftInteraction>(player);
-            Log.Debug($"[CursedRift] {player} cancelled their interaction before paying anything");
-        }
-
-        private static void RollMutationChoices(Frame f, EntityRef player, CursedRiftInteraction* interaction)
-        {
-            var choices = interaction->MutationChoices;
-
-            if (f.RuntimeConfig.LevelUpConfig.IsValid == false || f.RuntimeConfig.CursedRiftConfig.IsValid == false)
+            if (mutation.Kind == LevelUpPoolKind.RiftMutation && mutation.Upgrade.IsValid == true)
             {
-                Log.Error("[CursedRift] LevelUpConfig/CursedRiftConfig not assigned on RuntimeConfig - no mutation reward rolled");
-                interaction->MutationChoiceCount = 0;
-                return;
-            }
-
-            LevelUpConfig levelUpConfig = f.FindAsset(f.RuntimeConfig.LevelUpConfig);
-            CursedRiftConfig cursedRiftConfig = f.FindAsset(f.RuntimeConfig.CursedRiftConfig);
-            LevelUpOption[] rolled = LevelUpUtility.RollMutationOptions(f, player, levelUpConfig, cursedRiftConfig.MutationChoiceCount);
-
-            for (int i = 0; i < choices.Length; i++)
-            {
-                choices[i] = i < rolled.Length ? rolled[i] : default;
-            }
-
-            interaction->MutationChoiceCount = (byte)rolled.Length;
-        }
-
-        // Called from CursedRiftSystem when a SelectMutationCommand lands - grants the chosen Rift
-        // Mutation via the existing RiftMutationUtility.Grant (100% reused, zero duplication),
-        // marks this Rift consumed for this player under its own configured usage policy, and
-        // completes the interaction (component removed - its absence IS "Completed", same
-        // convention LevelUpChoice already uses).
-        public static void SelectMutation(Frame f, EntityRef player, CursedRiftInteraction* interaction, int optionIndex)
-        {
-            if (interaction->State != CursedRiftInteractionState.SelectingMutation)
-                return;
-
-            if (optionIndex < 0 || optionIndex >= interaction->MutationChoiceCount)
-            {
-                Log.Error($"[CursedRift] {player} sent SelectMutation OptionIndex {optionIndex}, outside 0-{interaction->MutationChoiceCount - 1} - ignored");
-                return;
-            }
-
-            LevelUpOption option = interaction->MutationChoices[optionIndex];
-
-            if (option.Kind == LevelUpPoolKind.RiftMutation && option.Upgrade.IsValid == true)
-            {
-                var mutationRef = new AssetRef<RiftMutationData>(option.Upgrade.Id);
+                var mutationRef = new AssetRef<RiftMutationData>(mutation.Upgrade.Id);
                 RiftMutationUtility.Grant(f, player, mutationRef);
-                LevelUpUtility.RecordHistory(f, player, LevelUpPoolKind.RiftMutation, option.Upgrade);
+                LevelUpUtility.RecordHistory(f, player, LevelUpPoolKind.RiftMutation, mutation.Upgrade);
             }
 
             EntityRef rift = interaction->Rift;
@@ -258,10 +293,21 @@ namespace Quantum
                 PoiUsageUtility.MarkUsed(f, player, rift, cursedRift->UsagePolicy);
             }
 
+            ClearCachedOffer(f, player, rift);
             f.Remove<CursedRiftInteraction>(player);
 
-            Log.Debug($"[CursedRift] {player} chose mutation option {optionIndex} - interaction complete");
+            Log.Debug($"[CursedRift] {player} confirmed the sacrifice - interaction complete");
         }
 
+        // Called from CursedRiftSystem when a CancelCursedRiftCommand lands - always meaningful now
+        // (nothing is applied until Confirm above), unlike the old two-stage flow where Cancel
+        // became a no-op once past the Sacrifice stage. Deliberately does NOT clear the cached
+        // CursedRiftOffers entry - the whole point of the cache is that reopening after a Cancel
+        // shows the exact same offer, not a fresh roll.
+        public static void Cancel(Frame f, EntityRef player, CursedRiftInteraction* interaction)
+        {
+            f.Remove<CursedRiftInteraction>(player);
+            Log.Debug($"[CursedRift] {player} cancelled their Cursed Rift interaction before paying anything");
+        }
     }
 }

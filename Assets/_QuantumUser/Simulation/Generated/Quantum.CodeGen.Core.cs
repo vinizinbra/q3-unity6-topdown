@@ -79,10 +79,6 @@ namespace Quantum {
     Coin = 1,
     RiftShard = 2,
   }
-  public enum CursedRiftInteractionState : byte {
-    SelectingSacrifice,
-    SelectingMutation,
-  }
   public enum DamageSource : byte {
     None,
     Weapon,
@@ -735,6 +731,32 @@ namespace Quantum {
     public static void Serialize(void* ptr, FrameSerializer serializer) {
         var p = (BitSet6*)ptr;
         serializer.Stream.SerializeBuffer(&p->Bits[0], 1);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct CursedRiftOfferEntry {
+    public const Int32 SIZE = 80;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(8)]
+    public EntityRef Rift;
+    [FieldOffset(0)]
+    public AssetRef<SacrificeDefinition> Sacrifice;
+    [FieldOffset(16)]
+    public LevelUpOption Mutation;
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 5431;
+        hash = hash * 31 + Rift.GetHashCode();
+        hash = hash * 31 + Sacrifice.GetHashCode();
+        hash = hash * 31 + Mutation.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (CursedRiftOfferEntry*)ptr;
+        AssetRef.Serialize(&p->Sacrifice, serializer);
+        EntityRef.Serialize(&p->Rift, serializer);
+        Quantum.LevelUpOption.Serialize(&p->Mutation, serializer);
     }
   }
   [StructLayout(LayoutKind.Explicit)]
@@ -1489,11 +1511,11 @@ namespace Quantum {
     private fixed Byte _input_[528];
     [FieldOffset(1136)]
     public BitSet6 PlayerLastConnectionState;
-    [FieldOffset(1204)]
+    [FieldOffset(1208)]
     public QBoolean LevelGenerated;
     [FieldOffset(1552)]
     public FPVector3 PlayerSpawnPosition;
-    [FieldOffset(1200)]
+    [FieldOffset(1204)]
     public QBoolean LevelGenStarted;
     [FieldOffset(1172)]
     public Int32 LevelGenSeed;
@@ -1509,17 +1531,19 @@ namespace Quantum {
     public Int32 DebugPendingLevelUps;
     [FieldOffset(1192)]
     public QBoolean DebugLevelUpScreenOpenLastTick;
+    [FieldOffset(1196)]
+    public QBoolean DebugPendingRiftMutationChoice;
     [FieldOffset(1536)]
     public FP TotalExperience;
     [FieldOffset(1164)]
     public Int32 Level;
-    [FieldOffset(1208)]
+    [FieldOffset(1212)]
     public QBoolean LevelUpScreenOpen;
     [FieldOffset(1472)]
     public FP LevelUpTimeRemaining;
-    [FieldOffset(1212)]
-    public QBoolean LevelUpScreenOpenLastTick;
     [FieldOffset(1216)]
+    public QBoolean LevelUpScreenOpenLastTick;
+    [FieldOffset(1220)]
     public QBoolean PendingLevelUpScreen;
     [FieldOffset(1144)]
     public GameState CurrentState;
@@ -1560,13 +1584,13 @@ namespace Quantum {
     public Int32 CurrentPhaseIndex;
     [FieldOffset(1496)]
     public FP PhaseTimer;
-    [FieldOffset(1220)]
+    [FieldOffset(1224)]
     public QBoolean PhaseGuaranteedSpawnDone;
     [FieldOffset(1408)]
     public FP DirectorBudget;
     [FieldOffset(1416)]
     public FP DirectorPulseTimer;
-    [FieldOffset(1196)]
+    [FieldOffset(1200)]
     public QBoolean DirectorSplitActive;
     [FieldOffset(1424)]
     public FP DirectorSplitTimer;
@@ -1576,19 +1600,19 @@ namespace Quantum {
     public FP PerEnemyXpScale;
     [FieldOffset(1480)]
     public FP PerEnemyCoinScale;
-    [FieldOffset(1248)]
+    [FieldOffset(1252)]
     public QBoolean TalentsResolved;
-    [FieldOffset(1244)]
+    [FieldOffset(1248)]
     public QBoolean SharedHasWeaponChest;
-    [FieldOffset(1236)]
-    public QBoolean SharedHasHeroChest;
-    [FieldOffset(1232)]
-    public QBoolean SharedHasGlobalUpgradeChest;
     [FieldOffset(1240)]
+    public QBoolean SharedHasHeroChest;
+    [FieldOffset(1236)]
+    public QBoolean SharedHasGlobalUpgradeChest;
+    [FieldOffset(1244)]
     public QBoolean SharedHasUnlockedRift;
-    [FieldOffset(1224)]
-    public QBoolean SharedCanFindStones;
     [FieldOffset(1228)]
+    public QBoolean SharedCanFindStones;
+    [FieldOffset(1232)]
     public QBoolean SharedHasEvent;
     [FieldOffset(1148)]
     public Int32 ActiveTraversalChallengeCount;
@@ -1629,6 +1653,7 @@ namespace Quantum {
         hash = hash * 31 + DebugCheatsApplied.GetHashCode();
         hash = hash * 31 + DebugPendingLevelUps.GetHashCode();
         hash = hash * 31 + DebugLevelUpScreenOpenLastTick.GetHashCode();
+        hash = hash * 31 + DebugPendingRiftMutationChoice.GetHashCode();
         hash = hash * 31 + TotalExperience.GetHashCode();
         hash = hash * 31 + Level.GetHashCode();
         hash = hash * 31 + LevelUpScreenOpen.GetHashCode();
@@ -1703,6 +1728,7 @@ namespace Quantum {
         QBoolean.Serialize(&p->BreathingGraceActive, serializer);
         QBoolean.Serialize(&p->DebugCheatsApplied, serializer);
         QBoolean.Serialize(&p->DebugLevelUpScreenOpenLastTick, serializer);
+        QBoolean.Serialize(&p->DebugPendingRiftMutationChoice, serializer);
         QBoolean.Serialize(&p->DirectorSplitActive, serializer);
         QBoolean.Serialize(&p->LevelGenStarted, serializer);
         QBoolean.Serialize(&p->LevelGenerated, serializer);
@@ -3224,52 +3250,52 @@ namespace Quantum {
   }
   [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct CursedRiftInteraction : Quantum.IComponent {
-    public const Int32 SIZE = 232;
+    public const Int32 SIZE = 80;
     public const Int32 ALIGNMENT = 8;
-    [FieldOffset(32)]
-    public EntityRef Rift;
-    [FieldOffset(2)]
-    public CursedRiftInteractionState State;
     [FieldOffset(8)]
-    [FramePrinter.FixedArrayAttribute(typeof(AssetRef<SacrificeDefinition>), 3)]
-    private fixed Byte _SacrificeChoices_[24];
-    [FieldOffset(1)]
-    public Byte SacrificeChoiceCount;
-    [FieldOffset(40)]
-    [FramePrinter.FixedArrayAttribute(typeof(LevelUpOption), 3)]
-    private fixed Byte _MutationChoices_[192];
+    public EntityRef Rift;
     [FieldOffset(0)]
-    public Byte MutationChoiceCount;
-    public readonly FixedArray<AssetRef<SacrificeDefinition>> SacrificeChoices {
-      get {
-        fixed (byte* p = _SacrificeChoices_) { return new FixedArray<AssetRef<SacrificeDefinition>>(p, 8, 3); }
-      }
-    }
-    public readonly FixedArray<LevelUpOption> MutationChoices {
-      get {
-        fixed (byte* p = _MutationChoices_) { return new FixedArray<LevelUpOption>(p, 64, 3); }
-      }
-    }
+    public AssetRef<SacrificeDefinition> Sacrifice;
+    [FieldOffset(16)]
+    public LevelUpOption Mutation;
     public override readonly Int32 GetHashCode() {
       unchecked { 
         var hash = 7699;
         hash = hash * 31 + Rift.GetHashCode();
-        hash = hash * 31 + (Byte)State;
-        hash = hash * 31 + HashCodeUtils.GetArrayHashCode(SacrificeChoices);
-        hash = hash * 31 + SacrificeChoiceCount.GetHashCode();
-        hash = hash * 31 + HashCodeUtils.GetArrayHashCode(MutationChoices);
-        hash = hash * 31 + MutationChoiceCount.GetHashCode();
+        hash = hash * 31 + Sacrifice.GetHashCode();
+        hash = hash * 31 + Mutation.GetHashCode();
         return hash;
       }
     }
     public static void Serialize(void* ptr, FrameSerializer serializer) {
         var p = (CursedRiftInteraction*)ptr;
-        serializer.Stream.Serialize(&p->MutationChoiceCount);
-        serializer.Stream.Serialize(&p->SacrificeChoiceCount);
-        serializer.Stream.Serialize((Byte*)&p->State);
-        FixedArray.Serialize(p->SacrificeChoices, serializer, Statics.SerializeAssetRef);
+        AssetRef.Serialize(&p->Sacrifice, serializer);
         EntityRef.Serialize(&p->Rift, serializer);
-        FixedArray.Serialize(p->MutationChoices, serializer, Statics.SerializeLevelUpOption);
+        Quantum.LevelUpOption.Serialize(&p->Mutation, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct CursedRiftOffers : Quantum.IComponent {
+    public const Int32 SIZE = 640;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(0)]
+    [FramePrinter.FixedArrayAttribute(typeof(CursedRiftOfferEntry), 8)]
+    private fixed Byte _Entries_[640];
+    public readonly FixedArray<CursedRiftOfferEntry> Entries {
+      get {
+        fixed (byte* p = _Entries_) { return new FixedArray<CursedRiftOfferEntry>(p, 80, 8); }
+      }
+    }
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 6991;
+        hash = hash * 31 + HashCodeUtils.GetArrayHashCode(Entries);
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (CursedRiftOffers*)ptr;
+        FixedArray.Serialize(p->Entries, serializer, Statics.SerializeCursedRiftOfferEntry);
     }
   }
   [StructLayout(LayoutKind.Explicit)]
@@ -8062,7 +8088,7 @@ namespace Quantum {
     }
   }
   public unsafe partial interface ISignalOnAccessoryBlocked : ISignal {
-    void OnAccessoryBlocked(Frame f, EntityRef owner, EntityRef attacker, QBoolean broken);
+    void OnAccessoryBlocked(Frame f, EntityRef owner, EntityRef attacker, FP damage, QBoolean broken);
   }
   public unsafe partial interface ISignalOnAccessoryRecovered : ISignal {
     void OnAccessoryRecovered(Frame f, EntityRef owner, EntityRef recoverer);
@@ -8249,6 +8275,8 @@ namespace Quantum {
       BuildSignalsArrayOnComponentRemoved<Quantum.CursedRift>();
       BuildSignalsArrayOnComponentAdded<Quantum.CursedRiftInteraction>();
       BuildSignalsArrayOnComponentRemoved<Quantum.CursedRiftInteraction>();
+      BuildSignalsArrayOnComponentAdded<Quantum.CursedRiftOffers>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.CursedRiftOffers>();
       BuildSignalsArrayOnComponentAdded<Quantum.DamageEchoUpgrade>();
       BuildSignalsArrayOnComponentRemoved<Quantum.DamageEchoUpgrade>();
       BuildSignalsArrayOnComponentAdded<Quantum.DeadeyeUpgrade>();
@@ -8581,12 +8609,12 @@ namespace Quantum {
       Physics3D?.Init(_globals->PhysicsState3D.MapStaticCollidersState.TrackedMap);
     }
     public unsafe partial struct FrameSignals {
-      public void OnAccessoryBlocked(EntityRef owner, EntityRef attacker, QBoolean broken) {
+      public void OnAccessoryBlocked(EntityRef owner, EntityRef attacker, FP damage, QBoolean broken) {
         var array = _f._ISignalOnAccessoryBlockedSystems;
         for (Int32 i = 0; i < array.Length; ++i) {
           var s = array[i];
           if (_f.SystemIsEnabledInHierarchy((SystemBase)s)) {
-            s.OnAccessoryBlocked(_f, owner, attacker, broken);
+            s.OnAccessoryBlocked(_f, owner, attacker, damage, broken);
           }
         }
       }
@@ -8751,11 +8779,12 @@ namespace Quantum {
     public static FrameSerializer.Delegate SerializeFP;
     public static FrameSerializer.Delegate SerializeFPVector3;
     public static FrameSerializer.Delegate SerializeWaypointNode;
-    public static FrameSerializer.Delegate SerializeLevelUpOption;
+    public static FrameSerializer.Delegate SerializeCursedRiftOfferEntry;
     public static FrameSerializer.Delegate SerializeGlobalUpgradePickEntry;
     public static FrameSerializer.Delegate SerializeKCCCollision;
     public static FrameSerializer.Delegate SerializeKCCIgnore;
     public static FrameSerializer.Delegate SerializeKCCModifier;
+    public static FrameSerializer.Delegate SerializeLevelUpOption;
     public static FrameSerializer.Delegate SerializePoiUsageEntry;
     public static FrameSerializer.Delegate SerializeStoreFoodOffer;
     public static FrameSerializer.Delegate SerializeStoreWeaponOffer;
@@ -8769,11 +8798,12 @@ namespace Quantum {
       SerializeFP = FP.Serialize;
       SerializeFPVector3 = FPVector3.Serialize;
       SerializeWaypointNode = Quantum.WaypointNode.Serialize;
-      SerializeLevelUpOption = Quantum.LevelUpOption.Serialize;
+      SerializeCursedRiftOfferEntry = Quantum.CursedRiftOfferEntry.Serialize;
       SerializeGlobalUpgradePickEntry = Quantum.GlobalUpgradePickEntry.Serialize;
       SerializeKCCCollision = Quantum.KCCCollision.Serialize;
       SerializeKCCIgnore = Quantum.KCCIgnore.Serialize;
       SerializeKCCModifier = Quantum.KCCModifier.Serialize;
+      SerializeLevelUpOption = Quantum.LevelUpOption.Serialize;
       SerializePoiUsageEntry = Quantum.PoiUsageEntry.Serialize;
       SerializeStoreFoodOffer = Quantum.StoreFoodOffer.Serialize;
       SerializeStoreWeaponOffer = Quantum.StoreWeaponOffer.Serialize;
@@ -8844,7 +8874,8 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum.CurrencyOrbType), 1);
       typeRegistry.Register(typeof(Quantum.CursedRift), Quantum.CursedRift.SIZE);
       typeRegistry.Register(typeof(Quantum.CursedRiftInteraction), Quantum.CursedRiftInteraction.SIZE);
-      typeRegistry.Register(typeof(Quantum.CursedRiftInteractionState), 1);
+      typeRegistry.Register(typeof(Quantum.CursedRiftOfferEntry), Quantum.CursedRiftOfferEntry.SIZE);
+      typeRegistry.Register(typeof(Quantum.CursedRiftOffers), Quantum.CursedRiftOffers.SIZE);
       typeRegistry.Register(typeof(Quantum.DamageEchoUpgrade), Quantum.DamageEchoUpgrade.SIZE);
       typeRegistry.Register(typeof(Quantum.DamageSource), 1);
       typeRegistry.Register(typeof(Quantum.DamageTargetMask), 1);
@@ -9090,7 +9121,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum._globals_), Quantum._globals_.SIZE);
     }
     static partial void InitComponentTypeIdGen() {
-      ComponentTypeId.Reset(ComponentTypeId.BuiltInComponentCount + 176)
+      ComponentTypeId.Reset(ComponentTypeId.BuiltInComponentCount + 177)
         .AddBuiltInComponents()
         .Add<Quantum.AccessoryEmergencyReserve>(Quantum.AccessoryEmergencyReserve.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.AccessoryGuard>(Quantum.AccessoryGuard.Serialize, null, null, ComponentFlags.None)
@@ -9131,6 +9162,7 @@ namespace Quantum {
         .Add<Quantum.CurrencyOrb>(Quantum.CurrencyOrb.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.CursedRift>(Quantum.CursedRift.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.CursedRiftInteraction>(Quantum.CursedRiftInteraction.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.CursedRiftOffers>(Quantum.CursedRiftOffers.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.DamageEchoUpgrade>(Quantum.DamageEchoUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.DeadeyeUpgrade>(Quantum.DeadeyeUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.Decoy>(Quantum.Decoy.Serialize, null, null, ComponentFlags.None)
@@ -9280,7 +9312,6 @@ namespace Quantum {
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.ChunkTypeMask>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.ContextInteractionState>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.CurrencyOrbType>();
-      FramePrinter.EnsurePrimitiveNotStripped<Quantum.CursedRiftInteractionState>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.DamageSource>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.DamageTargetMask>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.EKCCCollisionSource>();

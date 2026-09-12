@@ -97,6 +97,7 @@ public class VoiceDirector : QuantumGlobalMonoBehaviour
         QuantumEvent.Subscribe<EventAccessoryRecovered>(this, OnAccessoryRecovered);
         QuantumEvent.Subscribe<EventAccessoryBroken>(this, OnAccessoryBroken);
         QuantumEvent.Subscribe<EventAccessoryRestored>(this, OnAccessoryRestored);
+        QuantumEvent.Subscribe<EventHealingShrineUsed>(this, OnHealingShrineUsed);
     }
 
     // Everything here is a silent no-op when unassigned, so say so once at startup rather than
@@ -348,6 +349,9 @@ public class VoiceDirector : QuantumGlobalMonoBehaviour
     // ItemPurchased for the accessory card, so the two can't both fire for one click.
     private void OnAccessoryRestored(EventAccessoryRestored e)
         => Raise(e.Game, VoiceLineTrigger.AccessoryRestored, e.Owner, contextValue: e.Durability);
+
+    private void OnHealingShrineUsed(EventHealingShrineUsed e)
+        => Raise(e.Game, VoiceLineTrigger.HealingShrineUsed, e.Player);
 
     // ------------------------------------------------------------------ public entry points
     //

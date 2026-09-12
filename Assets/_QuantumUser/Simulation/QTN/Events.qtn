@@ -889,6 +889,15 @@ event ContextInteractionRejected
     EntityRef Target;
 }
 
+// Fired by HealingShrineUtility.TryInteract the instant a real press actually heals the player (the
+// successful counterpart to ContextInteractionRejected above, which covers the NotNeeded press) -
+// View-only hook, currently just VoiceDirector's HealingShrineUsed trigger.
+event HealingShrineUsed
+{
+    EntityRef Player;
+    EntityRef Shrine;
+}
+
 // Fired by TraversalChallengeUtility.TryActivate the instant a player's Base Skill press starts a
 // Traversal Challenge (see TraversalChallenge.qtn/docs/traversal-challenge.md) - View-only hook for
 // the activator's own visual swap (TraversalChallengeView) and the platform-spawn VFX. Player is

@@ -1468,7 +1468,7 @@ MonoBehaviour:
   GlobalActionSlots: 00000000010000000200000003000000
   Stagger:
     Threshold:
-      RawValue: 163840000
+      RawValue: 327680000
     RegenRate:
       RawValue: 65536
     OnBreakForcedAction:

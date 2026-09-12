@@ -1010,13 +1010,8 @@ namespace Quantum.Prototypes {
   [Quantum.Prototypes.Prototype(typeof(Quantum.CursedRiftInteraction))]
   public unsafe class CursedRiftInteractionPrototype : ComponentPrototype<Quantum.CursedRiftInteraction> {
     public MapEntityId Rift;
-    public Quantum.QEnum8<CursedRiftInteractionState> State;
-    [ArrayLengthAttribute(3)]
-    public AssetRef<SacrificeDefinition>[] SacrificeChoices = new AssetRef<SacrificeDefinition>[3];
-    public Byte SacrificeChoiceCount;
-    [ArrayLengthAttribute(3)]
-    public Quantum.Prototypes.LevelUpOptionPrototype[] MutationChoices = new Quantum.Prototypes.LevelUpOptionPrototype[3];
-    public Byte MutationChoiceCount;
+    public AssetRef<SacrificeDefinition> Sacrifice;
+    public Quantum.Prototypes.LevelUpOptionPrototype Mutation;
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.CursedRiftInteraction component = default;
         Materialize((Frame)f, ref component, in context);
@@ -1024,15 +1019,36 @@ namespace Quantum.Prototypes {
     }
     public void Materialize(Frame frame, ref Quantum.CursedRiftInteraction result, in PrototypeMaterializationContext context = default) {
         PrototypeValidator.FindMapEntity(this.Rift, in context, out result.Rift);
-        result.State = this.State;
-        for (int i = 0, count = PrototypeValidator.CheckLength(SacrificeChoices, 3, in context); i < count; ++i) {
-          *result.SacrificeChoices.GetPointer(i) = this.SacrificeChoices[i];
+        result.Sacrifice = this.Sacrifice;
+        this.Mutation.Materialize(frame, ref result.Mutation, in context);
+    }
+  }
+  [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.CursedRiftOfferEntry))]
+  public unsafe class CursedRiftOfferEntryPrototype : StructPrototype {
+    public MapEntityId Rift;
+    public AssetRef<SacrificeDefinition> Sacrifice;
+    public Quantum.Prototypes.LevelUpOptionPrototype Mutation;
+    public void Materialize(Frame frame, ref Quantum.CursedRiftOfferEntry result, in PrototypeMaterializationContext context = default) {
+        PrototypeValidator.FindMapEntity(this.Rift, in context, out result.Rift);
+        result.Sacrifice = this.Sacrifice;
+        this.Mutation.Materialize(frame, ref result.Mutation, in context);
+    }
+  }
+  [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.CursedRiftOffers))]
+  public unsafe class CursedRiftOffersPrototype : ComponentPrototype<Quantum.CursedRiftOffers> {
+    [ArrayLengthAttribute(8)]
+    public Quantum.Prototypes.CursedRiftOfferEntryPrototype[] Entries = new Quantum.Prototypes.CursedRiftOfferEntryPrototype[8];
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.CursedRiftOffers component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.CursedRiftOffers result, in PrototypeMaterializationContext context = default) {
+        for (int i = 0, count = PrototypeValidator.CheckLength(Entries, 8, in context); i < count; ++i) {
+          this.Entries[i].Materialize(frame, ref *result.Entries.GetPointer(i), in context);
         }
-        result.SacrificeChoiceCount = this.SacrificeChoiceCount;
-        for (int i = 0, count = PrototypeValidator.CheckLength(MutationChoices, 3, in context); i < count; ++i) {
-          this.MutationChoices[i].Materialize(frame, ref *result.MutationChoices.GetPointer(i), in context);
-        }
-        result.MutationChoiceCount = this.MutationChoiceCount;
     }
   }
   [System.SerializableAttribute()]

@@ -478,6 +478,16 @@ Mobile Stage does **not** add healing on top — the heal already applies at eve
 nothing left for rank 3 to inherit. It still never inherits Main Stage's bonus beats or duration, or
 Amplifier's knockback/Bass-Drop stun.
 
+## Heal is floored at 1 HP
+
+`ScaledHealEffectData.Apply` floors any non-zero `requested` heal at `FP._1` before the per-ally
+budget/headroom clamps run. Un-upgraded Speaker at 100 Max HP resolves to 0.5 HP (half of the 1%
+Totem baseline) — sub-1 heals both display as `+0` in the floating combat text and are functionally
+invisible, so the Support Beat now always restores at least 1 HP whenever it heals at all. The budget
+cap and headroom clamp still run afterward and can legitimately reduce (or zero) the final amount as
+an ally's allowance/health runs out — this floor only prevents the round-down-to-nothing case, not the
+by-design tapering.
+
 ## Watch this in playtest
 
 Zara now has **three** healing sources: the Totem's Support Beat, the Resonance Pulse (2% baseline,

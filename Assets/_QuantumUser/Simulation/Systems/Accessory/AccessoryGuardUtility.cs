@@ -101,7 +101,7 @@ namespace Quantum
                 if (TryConsumeEmergencyReserve(f, target, guard) == true)
                 {
                     f.Events.AccessoryBlocked(target, owner, damage, guard->CurrentDurability, position);
-                    f.Signals.OnAccessoryBlocked(target, owner, false);
+                    f.Signals.OnAccessoryBlocked(target, owner, damage, false);
                     return true;
                 }
 
@@ -117,7 +117,7 @@ namespace Quantum
                 if (debris == EntityRef.None)
                     f.Events.AccessoryBroken(target, position);
 
-                f.Signals.OnAccessoryBlocked(target, owner, true);
+                f.Signals.OnAccessoryBlocked(target, owner, damage, true);
 
                 Log.Debug($"[Accessory] {target} blocked {damage} and BROKE (0/{guard->MaxDurability}), debris {debris}");
                 return true;
@@ -133,7 +133,7 @@ namespace Quantum
             if (collectible == EntityRef.None)
             {
                 f.Events.AccessoryBlocked(target, owner, damage, guard->CurrentDurability, position);
-                f.Signals.OnAccessoryBlocked(target, owner, false);
+                f.Signals.OnAccessoryBlocked(target, owner, damage, false);
                 return true;
             }
 
@@ -141,7 +141,7 @@ namespace Quantum
             guard->Accessory = collectible;
 
             f.Events.AccessoryBlocked(target, owner, damage, guard->CurrentDurability, position);
-            f.Signals.OnAccessoryBlocked(target, owner, false);
+            f.Signals.OnAccessoryBlocked(target, owner, damage, false);
 
             Log.Debug($"[Accessory] {target} blocked {damage} -> {guard->CurrentDurability}/{guard->MaxDurability}, accessory popped off as {guard->Accessory}");
             return true;

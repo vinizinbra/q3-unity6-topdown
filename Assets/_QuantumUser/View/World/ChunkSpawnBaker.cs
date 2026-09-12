@@ -90,7 +90,11 @@ public class ChunkSpawnBaker : MonoBehaviour
 
             spawns.Add(new SpawnEntityWithRequirement
             {
-                Prototype = new AssetRef<EntityPrototype> { Id = guid },
+                // Each baked child becomes its own single-entry Prototypes list (Weight doesn't
+                // matter for a single entry - see WeightedEntityPrototype.Weight) - add further
+                // weighted alternatives by hand on the ChunkSpawnConfig asset afterward, same as
+                // Requirement/Chance below.
+                Prototypes = new[] { new WeightedEntityPrototype { Prototype = new AssetRef<EntityPrototype> { Id = guid } } },
                 // Local to this chunk root - TalentGateSystem spawns at (chunk Transform3D.Position +
                 // Offset), and the chunk root IS that position (chunks are min-corner pivoted, never
                 // rotated), so a child's position relative to this root is exactly that offset.
@@ -152,11 +156,27 @@ public class ChunkSpawnBaker : MonoBehaviour
 
         foreach (SpawnEntityWithRequirement spawn in targetConfig.Spawns)
         {
-            GameObject prefab = ResolveSourcePrefab(spawn.Prototype.Id);
+            if (spawn.Prototypes == null || spawn.Prototypes.Length == 0)
+            {
+                Debug.LogWarning($"[ChunkSpawnBaker] {name}: entry has no Prototypes - skipping.", this);
+                continue;
+            }
+
+            // The scene preview only shows one instance per entry - a weighted alternative added by
+            // hand on the asset (see BakeSpawns) has no separate scene representation, so only the
+            // first candidate is restored here. Re-baking after this only ever re-creates that first
+            // candidate as a fresh single-entry list; re-add any other weighted alternatives by hand.
+            if (spawn.Prototypes.Length > 1)
+            {
+                Debug.LogWarning($"[ChunkSpawnBaker] {name}: entry has {spawn.Prototypes.Length} weighted Prototypes - only restoring the first one to the scene.", this);
+            }
+
+            AssetGuid prototypeGuid = spawn.Prototypes[0].Prototype.Id;
+            GameObject prefab = ResolveSourcePrefab(prototypeGuid);
 
             if (prefab == null)
             {
-                Debug.LogWarning($"[ChunkSpawnBaker] {name}: could not resolve a source prefab for guid {spawn.Prototype.Id} - skipping.", this);
+                Debug.LogWarning($"[ChunkSpawnBaker] {name}: could not resolve a source prefab for guid {prototypeGuid} - skipping.", this);
                 continue;
             }
 

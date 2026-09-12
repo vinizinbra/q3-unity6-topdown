@@ -1,8 +1,8 @@
 # Breathing POIs (Healing Shrine, Cursed Rift)
 
 The first two Breathing-only world POIs - **Healing Shrine** (press-to-heal, one-shot, no Choice
-Window) and **Cursed Rift** (a deliberate two-step choice: sacrifice something now for a Rift
-Mutation reward, opens a full Choice Window). Read `docs/run-phase.md` first for the Combat/
+Window) and **Cursed Rift** (a deliberate choice: sacrifice something now for a Rift Mutation
+reward, one Choice Window screen showing both at once). Read `docs/run-phase.md` first for the Combat/
 Breathing state machine both POIs gate on, and `docs/choice-window-refactor.md` for the Choice
 Window Cursed Rift opens. This doc covers what's specific to the two POIs themselves, the generic
 POI availability/usage infrastructure they share, and the generic Context Interaction /
@@ -137,10 +137,10 @@ one(s), and only shows `Expired` once every connected player has used it up this
 
 ## Cursed Rift
 
-Persistent world POI. A deliberate two-step choice, so entering radius does **not** auto-trigger -
-the player must press the (redirected) Base Skill button. Never pauses anything - not the
-simulation, not `Time.timeScale`, not the Breathing timer, not other players. Only this one
-player's own movement/weapon/skill input is locked while their window is open.
+Persistent world POI. A deliberate choice, so entering radius does **not** auto-trigger - the
+player must press the (redirected) Base Skill button. Never pauses anything - not the simulation,
+not `Time.timeScale`, not the Breathing timer, not other players. Only this one player's own
+movement/weapon/skill input is locked while their window is open.
 
 ```
 component CursedRift
@@ -150,17 +150,15 @@ component CursedRift
     // Radius/Priority live on the sibling Interactable component instead - one source of truth.
 }
 
-enum CursedRiftInteractionState : Byte { SelectingSacrifice, SelectingMutation }
-
 component CursedRiftInteraction
 {
     EntityRef Rift;
-    CursedRiftInteractionState State;
-    array<AssetRef<SacrificeDefinition>>[3] SacrificeChoices;
-    Byte SacrificeChoiceCount;
-    array<LevelUpOption>[3] MutationChoices; // same shape as LevelUpChoice.Options, deliberately
-    Byte MutationChoiceCount;
+    AssetRef<SacrificeDefinition> Sacrifice;
+    LevelUpOption Mutation; // same shape as one LevelUpChoice.Options entry, deliberately
 }
+
+struct CursedRiftOfferEntry { EntityRef Rift; AssetRef<SacrificeDefinition> Sacrifice; LevelUpOption Mutation; }
+component CursedRiftOffers { array<CursedRiftOfferEntry>[8] Entries; } // per-player
 ```
 
 Per-player, found via `PlayerLink`, same "component presence = interaction in progress, absence =
@@ -168,43 +166,72 @@ completed" convention `LevelUpChoice` already uses - but **deliberately NOT `Lev
 itself**, and never touches `Global.LevelUpScreenOpen`/`GameState.Upgrade`/
 `SystemDisable<GameplaySystemGroup>`.
 
-### Flow
+### Flow - single screen (2026-09-11)
 
-No separate confirm step - clicking a sacrifice card commits immediately (applies its cost), same
-"one click = one irreversible pick" idiom every other Choice Window screen (Level-Up, Choose
-Weapon) already uses. `docs/choice-window-refactor.md` covers WHY (an earlier design had a
-`ConfirmingSacrifice` state + a bespoke 2-button confirm sub-panel; both were removed once the user
-flagged the confirm step as unnecessary new UI - Cursed Rift's screen is just two back-to-back uses
-of the same `ChooseWindow` instance Level-Up already has).
+**One roll, one screen, one button.** Originally a two-step choice (pick 1 of 3 sacrifices, then
+pick 1 of 3 mutation rewards, on two back-to-back uses of the same `ChooseWindow`) - collapsed to a
+single card per the user's own request: two 3-card screens was more friction than the choice was
+worth, and hiding the cost on a prior screen meant the player couldn't see what they were paying at
+the moment they saw the reward. Now exactly one sacrifice and one mutation are rolled together the
+instant the interaction begins, shown on ONE card (the mutation's own Icon/DisplayName/
+Description/Rarity, with the sacrifice's cost folded directly onto it via `ValuePreview` - see
+`docs/choice-window-refactor.md`), and a single "SACRIFICE" button commits both at once. No reroll
+(confirmed with the user - still a blind roll on both the cost and the reward, just no longer split
+across two clicks), and no separate confirm step, same "one click = one irreversible pick" idiom
+every other Choice Window screen (Level-Up, Choose Weapon) already uses.
 
 ```
 Press Base Skill (redirected, see Context Interaction below)
   -> CursedRiftUtility.TryBeginInteraction
-     re-validates (availability/radius/usage) fully in Quantum, rolls up to
-     CursedRiftConfig.SacrificeChoiceCount eligible sacrifices -> SelectingSacrifice
-  -> SelectSacrificeCommand{OptionIndex} -> SacrificeDefinition.ApplyCost,
-     LevelUpUtility.RollMutationOptions(...) -> SelectingMutation
-  -> SelectMutationCommand{OptionIndex} -> RiftMutationUtility.Grant (100% reused),
-     PoiUsageUtility.MarkUsed, component removed (= Completed)
+     re-validates (availability/radius/usage) fully in Quantum, rolls exactly 1 eligible sacrifice
+     AND 1 mutation reward together (bails with nothing attached if either roll is empty) ->
+     CursedRiftInteraction attached, nothing applied yet
+  -> ConfirmCursedRiftCommand -> SacrificeDefinition.ApplyCost + RiftMutationUtility.Grant (100%
+     reused) in the same tick, PoiUsageUtility.MarkUsed, component removed (= Completed)
 
-CancelCursedRiftCommand - only meaningful pre-payment (SelectingSacrifice): cancels entirely
-                          (component removed). A no-op once SelectingMutation (irreversible past
-                          that point - SelectSacrifice above already applied the cost by then).
+CancelCursedRiftCommand - always meaningful now (nothing is applied until Confirm above, unlike
+                          the old two-stage flow where it became a no-op past the Sacrifice
+                          stage): cancels entirely, component removed, nothing paid.
 ```
 
 `CursedRiftUtility.RollSacrificeOptions` is a small weighted-draw-without-replacement
 implementation (same shape as `LevelUpUtility`'s own, kept separate since
 `AssetRef<SacrificeDefinition>` isn't a `LevelUpOption`) filtered by each `SacrificeDefinition
-.IsEligible` - fills fewer than `SacrificeChoiceCount` cards if not enough sacrifices are eligible
-(e.g. a player with 0 Coins never sees Coin Offering).
+.IsEligible` - called with a draw count of 1 today, general-purpose enough to draw more if a
+future design ever wants that back.
 
 **Mutation reward reuses the exact existing pipeline** - `LevelUpUtility.RollMutationOptions(f,
 entity, config, count)` (a small additive extraction: the weighted-draw loop that used to be
 inlined in `RollOptionsFor` is now a shared `DrawWeighted` helper, zero behavior change for
-existing categories) calls the same `CollectRiftMutationCandidates` a normal level-up's
-`RiftMutation` category already uses, and respects `CharacterStats.AllOrNothingActive` the same
-way (rarity-shifted, collapsed to 1 choice) for consistency. `RiftMutationUtility.Grant` applies
-the pick unchanged - no mutation logic duplicated anywhere.
+existing categories), called with `count = 1`, calls the same `CollectRiftMutationCandidates` a
+normal level-up's `RiftMutation` category already uses, and respects `CharacterStats.
+AllOrNothingActive` the same way (rarity-shifted) for consistency. `RiftMutationUtility.Grant`
+applies the pick unchanged - no mutation logic duplicated anywhere.
+
+`CursedRiftConfig` no longer has a `SacrificeChoiceCount`/`MutationChoiceCount` - both rolls are
+hardcoded to 1 now, so there's nothing left to tune there beyond `SacrificePool` itself.
+
+### The offer persists for the rest of the run (`CursedRiftOffers`, 2026-09-11)
+
+Rolling fresh on every `TryBeginInteraction` meant Cancel-then-reopen (even seconds later) showed
+a different sacrifice+mutation pair every time - reported by the user as a bug: a Cursed Rift's
+offer should be a fixed thing you decide whether to take, not a slot machine you can spin for free
+by walking away and back. `CursedRiftOffers` (per-player, keyed by the Rift's own `EntityRef`,
+same fixed-array-of-keyed-entries convention `PoiUsage`/`RiftMutationPicks` already use - 8 slots
+for the same reason `PoiUsage`'s own array is) caches the rolled pair the first time
+`TryBeginInteraction` actually rolls one:
+
+- **Reopening** (Cancel, walk away, come back - even across Breathing Breaks) re-checks the
+  cached entry via `IsOfferStillValid` (the exact same `SacrificeDefinition.IsEligible`/
+  `RiftMutationUtility.IsBlocked` gates a fresh roll already filters by) and reuses it verbatim if
+  it still passes - so the SAME offer keeps showing until the player actually takes it. Only
+  rerolls if the cache is empty or has gone stale (e.g. a cached Coin Offering after the player
+  spent their last Coin at the Store in between - `IsEligible` would now say no, so a new sacrifice
+  gets rolled rather than showing an unpayable one).
+- **Confirm** clears the cached entry (`ClearCachedOffer`) once the offer is actually taken - a
+  `Reusable`/`Cooldown` Rift rolls a genuinely fresh offer the next time, rather than somehow
+  replaying the one that was just paid for.
+- **Cancel** deliberately never touches the cache - that's the whole point.
 
 ### `CursedRiftSystem` - why it's NOT gated like `LevelUpSystem`
 
@@ -212,12 +239,12 @@ the pick unchanged - no mutation logic duplicated anywhere.
 disables `GameplaySystemGroup`. `CursedRiftSystem` never disables anything, so it has no
 re-entrancy hazard to guard against by living outside the group or behind a flag - it's registered
 **inside** `GameplaySystemGroup` (right after `RiftMutationSystem`) and processes every
-connected player's own command every tick, unconditionally. This is what makes "Situation B" work
-for free: a Breathing Break ending mid-`SelectingMutation` (payment already committed) doesn't
-strand the player - `RunPhaseUtility.CancelUncommittedCursedRiftInteractions` (called from
-`CombatDirectorSystem` on the Breathing→Survival edge) only removes **uncommitted**
-interactions (see `docs/run-phase.md`), so a committed one just keeps being processed by
-`CursedRiftSystem` regardless of `CurrentState`, exactly as required.
+connected player's own command every tick, unconditionally. Since Confirm now applies cost and
+grants the mutation atomically in one tick (no more multi-tick "paid, reward still pending"
+window), `RunPhaseUtility.CancelUncommittedCursedRiftInteractions` (called from
+`CombatDirectorSystem` on the Breathing→Survival edge) is now an unconditional sweep - see
+`docs/run-phase.md` - every still-open `CursedRiftInteraction` is cancelled outright, never a
+partially-paid one left stranded.
 
 ### Per-player input lock (NOT a pause)
 
@@ -290,7 +317,7 @@ normal Hero Skill press-handling: if so and `HeroSkill.WasPressed`, it switches 
 button for that tick either way (a real skill cast never also fires on the same press) instead of
 sending a `DeterministicCommand` - deliberate, since this reuses the exact same
 polled-input+`WasPressed` mechanism every other skill activation already uses (the same category of
-action, not a menu-confirmation like `SelectSacrificeCommand`). Target validity is always
+action, not a menu-confirmation like `ConfirmCursedRiftCommand`). Target validity is always
 re-checked fully in Quantum by each utility's own resolver (`CursedRiftUtility.CanInteract`
 independently re-derives `ResolveInteractionState` AND re-checks Busy so it stays a safe standalone
 entry point on its own; `HealingShrineUtility.TryInteract` re-checks `ResolveInteractionState`
@@ -435,8 +462,8 @@ spend. Sacrificing the last point Breaks it exactly like a killing block does, e
    stays null and the `NotNeeded` toast silently no-ops (`?.Show(...)`), it just won't show
    anything, nothing breaks.
 8. **Manual end-to-end test not yet run**: solo pass (Breathing triggers, Shrine heals, Rift
-   redirects the Base Skill button and opens the Sacrifice screen, Cancel/Confirm/mutation-pick all
-   work, Rift doesn't re-trigger until the next Break) and a couch co-op pass (P1's window doesn't
-   affect P2's screen/movement, P2 can independently use the same Rift, a Break ending
-   mid-sacrifice-selection closes cleanly while mid-mutation-selection leaves the window open,
+   redirects the Base Skill button and opens its single sacrifice+mutation offer with the cost
+   visible on the card, Cancel/Sacrifice both work, Rift doesn't re-trigger until the next Break)
+   and a couch co-op pass (P1's window doesn't affect P2's screen/movement, P2 can independently
+   use the same Rift, a Break ending mid-offer always cancels cleanly with nothing paid,
    Coin/Rift Shard HUD numbers are genuinely independent per player after a shared pickup).

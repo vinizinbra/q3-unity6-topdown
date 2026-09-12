@@ -81,7 +81,7 @@ namespace Quantum
         // on one block leave one ready Dash, never banked extra charges.
         // broken is QBoolean, not bool - a qtn `Boolean` signal parameter generates Quantum's own
         // deterministic boolean type. It converts implicitly, so it reads normally at any use site.
-        public void OnAccessoryBlocked(Frame f, EntityRef owner, EntityRef attacker, QBoolean broken)
+        public void OnAccessoryBlocked(Frame f, EntityRef owner, EntityRef attacker, FP damage, QBoolean broken)
         {
             if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false
                 || f.Unsafe.TryGetPointer<CharacterSkills>(owner, out var skills) == false)

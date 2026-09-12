@@ -29,7 +29,8 @@ namespace Quantum
             }
 
             if (f.Unsafe.TryGetPointer<ElementMastery>(owner, out var elementMastery) == true
-                && elementMastery->Element == weaponData.Element)
+                && (elementMastery->Element == weaponData.Element
+                    || (elementMastery->Element == ElementType.Fire && HasGuaranteedBurn(f, owner) == true)))
             {
                 multiplier *= FP._1 + elementMastery->DamageMultiplier;
             }
@@ -79,12 +80,27 @@ namespace Quantum
         // Overdrive activation. Component PRESENCE of RageOverdrive is what every other Overdrive
         // Ascension already reads as "an activation is running right now" - see RageOverdrive.qtn.
         // Deliberately does not touch Rage generation - Fire Mastery only reads the state, never grants it.
+        // A Neutral weapon also qualifies while Ignition's guaranteed Burn is active (HasGuaranteedBurn) -
+        // that hit lands a Burn same as a Fire weapon's would, so it is eligible for Fire Mastery too.
         private static FP ResolveInfernalRage(Frame f, EntityRef owner, WeaponDataAsset weaponData)
         {
-            if (weaponData.Element != ElementType.Fire || f.Unsafe.TryGetPointer<InfernalRageUpgrade>(owner, out var infernalRage) == false)
+            if (f.Unsafe.TryGetPointer<InfernalRageUpgrade>(owner, out var infernalRage) == false)
+                return FP._1;
+
+            if (weaponData.Element != ElementType.Fire && HasGuaranteedBurn(f, owner) == false)
                 return FP._1;
 
             return f.Has<RageOverdrive>(owner) == true ? FP._1 + infernalRage->DamageBonus : FP._1;
+        }
+
+        // Ignition (Max's Overdrive Ascension) latches CharacterStats.BurnOnHitStacks for as long as
+        // its guaranteed-Burn window is open (see StatusEffectUtility.TryApplyGuaranteedBurn's own
+        // comment - "fires even on a Neutral weapon"). Read generically off CharacterStats rather than
+        // Max/RageOverdrive directly, so any future always-Burn effect gets the same Fire Mastery
+        // eligibility for free, with no Hero == X branch.
+        private static bool HasGuaranteedBurn(Frame f, EntityRef owner)
+        {
+            return f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == true && stats->BurnOnHitStacks != 0;
         }
 
         // Kai's Sniper Mastery R3 "Deadeye" - bonus damage on the first Sniper hit THIS owner lands

@@ -8,12 +8,10 @@ component FullThrottleUpgrade
     FP WeaponDamageBonus;
     FP ReloadSpeedBonus;
 
-    // Rank 3 - refill the magazine ONCE, at the instant max Rage is first reached. Deliberately a
-    // one-shot on the threshold crossing rather than the old "every reload is free while at max
-    // Rage" tag (InstantReloadOverdrive, deleted): that version re-resolved live on every reload
-    // attempt, which the spec explicitly rules out ("do not repeatedly instant-reload every
-    // simulation tick while Rage remains maximum - use a transition/event check"). Applied below is
-    // exactly that transition latch, so this fires once per entry into max Rage and no more.
+    // Rank 3 - every reload started while at max Rage completes instantly
+    // (WeaponSystem.IsInstantReloadOverdriven, checked once at the reload-trigger event, not polled
+    // every simulation tick), plus an immediate one-shot refill on the instant max Rage is first
+    // reached (MaxAscensionUtility.ApplyFullThrottle -> WeaponSystem.RefillMagazine).
     Boolean HasInstantReload;
 
     // Latches whether the toggle is currently applied, so entering/leaving max Rage twice in a row

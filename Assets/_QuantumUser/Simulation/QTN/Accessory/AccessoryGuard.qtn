@@ -60,13 +60,17 @@ component AccessoryGuard
 // the instant a block actually resolves - in EVERY branch (dropped / degraded-in-place / broken),
 // since from a reaction's point of view all three are "the accessory saved me". broken is true
 // only on the branch that took durability to 0 AND wasn't rescued by an emergency reserve below.
+// damage is the raw incoming amount the block fully negated (same value TryBlock was called with,
+// pre-crit/pre-mitigation, since a blocked hit never reaches any of that resolution) - added so a
+// reaction that cares about magnitude (Blood Debt's ShieldDamageCountsForRevenge, see
+// MaxVendettaSystem) doesn't need its own parallel hook.
 //
 // Deliberately ONE signal rather than the separate Blocked/Dropped/Destroyed/Recovered/Purchased
 // set a first pass might reach for: the other four moments already have View-facing events
 // (AccessoryBlocked/Landed/Recovered/Broken/Restored, Events.qtn) and no simulation consumer, and
 // this is the only one an ability can meaningfully react to. Fires strictly on a real block, so a
 // recovery, a Merchant purchase or a manual drop can never trigger a reaction wired to it.
-signal OnAccessoryBlocked(EntityRef owner, EntityRef attacker, Boolean broken);
+signal OnAccessoryBlocked(EntityRef owner, EntityRef attacker, FP damage, Boolean broken);
 
 // Generic "this player's Accessory was recovered from the world" hook, fired by
 // AccessoryGuardUtility.Recover. Deliberately NOT fired by Restore (a Merchant repair or

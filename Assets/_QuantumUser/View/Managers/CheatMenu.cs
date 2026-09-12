@@ -236,8 +236,9 @@ namespace QuantumUser.View
             // One-click combo (see CheatActionKind.SetupTestRun): jumps to Breath 4 (Lv20, the last
             // Breathing phase) same as the button above, but also auto-resolves every level-up
             // screen that jump queues instead of leaving them to click through, reveals the whole
-            // minimap, and grants 5000 coins - a fast "midgame test setup" instead of assembling it
-            // by hand every time.
+            // minimap, grants 5000 coins, and opens a real ChooseWeapon card screen immediately plus
+            // a Rift Mutation one right after it (both actually pickable, not auto-resolved) - a fast
+            // "midgame test setup" instead of assembling it by hand every time.
             CreateButton(rt, "Setup Test Run (Ph.4)", () => Send(CheatActionKind.SetupTestRun, amount: 4));
 
             // Runtime counterpart to the Editor-only "RiftRaiders/Disable Upgrade Screen Animation"

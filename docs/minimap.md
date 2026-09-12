@@ -62,6 +62,22 @@ simulation.
   with `Discovered`. Left unassigned for `Enemy`/`Traversal` in the current authoring plan, so only
   Boss/Merchant/LobbyStart get an icon; the texture alone represents every other chunk.
 
+  **Icon darkening for used-up/on-cooldown POIs** (2026-09-11): the instant a chunk's icon spawns,
+  `ResolvePoiEntityForChunk` does a one-time linear scan over every `PoiActivation`-carrying entity
+  (Healing Shrine/Cursed Rift/Store/Blacksmith - see `PoiActivationSystem`) and caches whichever one
+  falls inside that chunk's own world footprint into `_iconPoiEntity` - a Boss/LobbyStart/Enemy/
+  Traversal chunk never resolves one, so its icon is never touched by this at all. Every `QUpdate`,
+  `UpdateIconTints` reads each linked POI's own `PoiActivation.State` and multiplies
+  `expiredIconTint` onto the icon's cached base color (`iconPrefab`'s own authored color, not a
+  flat override) whenever it's `Expired`, restoring the base color otherwise. `Expired` already
+  means "no connected player can use it right now" regardless of WHY - a fully-used-up
+  `OncePerPlayerPerBreak`/`PerRun` POI and a `Cooldown` POI where every connected player is still
+  waiting both resolve to the same value (see `PoiActivationUtility.Refresh`/
+  `AnyConnectedPlayerCanUse`) - so one tint covers both "already used" and "on cooldown" per the
+  user's own ask, no separate branch needed. `Store` is always `PoiUsagePolicy.Reusable`, so it
+  never resolves `Expired` and its icon never darkens - correct, since there's nothing to darken on
+  a POI you can always walk back into.
+
   **Player markers**: one pooled `RectTransform` per **match player** (`PlayerLink` filter - local
   and remote alike, not `MyLocalPlayer.Slots`, so teammates show up too), repositioned every frame.
 

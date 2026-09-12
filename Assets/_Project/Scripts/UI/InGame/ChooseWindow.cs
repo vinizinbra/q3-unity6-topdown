@@ -7,15 +7,14 @@ using UnityEngine.Serialization;
 using QuantumUser.View.Util;
 using UnityEngine.UI;
 
-// Generic choice screen - Level-Up/Weapon-Upgrade/Chest, Cursed Rift's own Sacrifice/Mutation
-// stages, Store, and Blacksmith all drive the SAME window instance per local slot (see
+// Generic choice screen - Level-Up/Weapon-Upgrade/Chest, Cursed Rift's own single sacrifice+
+// mutation offer, Store, and Blacksmith all drive the SAME window instance per local slot (see
 // GameplayUiController), not separate copies - "type" is just which CardData/WeaponCardWidget.
 // CardData gets pushed into Refresh/RefreshWeaponChoice/RefreshStore, this class has no idea which
-// flow is currently using it. Cursed Rift's own flow is simply two back-to-back uses of this same
-// window (open showing Sacrifice cards, pick one, it refreshes in place showing Mutation cards)
-// rather than a separate confirm sub-step - clicking a card commits immediately, same "one click =
-// one irreversible pick" idiom every other screen here already uses (Store is the one exception -
-// see RefreshStore's own comment).
+// flow is currently using it. Cursed Rift's own flow is a single card (the rolled mutation reward
+// with its rolled sacrifice's cost folded onto it) - clicking it commits both cost and reward at
+// once, same "one click = one irreversible pick" idiom every other screen here already uses
+// (Store is the one exception - see RefreshStore's own comment).
 //
 // Level-Up goes through WindowManager.ShowWindow<ChooseWindow>() + a Time.timeScale ramp (a
 // whole-party pause, see GameplayUiController.UpdateUpgradeScreen); Cursed Rift/Store/Blacksmith
@@ -27,8 +26,8 @@ using UnityEngine.UI;
 // automatically, right where they left off, the moment the other player's Level-Up closes.
 //
 // Just orchestrates an array of UpgradeCardWidget children, one per LevelUpChoice.Options slot (or
-// CursedRiftInteraction.SacrificeChoices/MutationChoices/BlacksmithInteraction.PerkChoices/Store's
-// own FoodOffers - same fixed-slot shape) - this class itself has no Quantum dependency either.
+// BlacksmithInteraction.PerkChoices/Store's own FoodOffers - same fixed-slot shape; Cursed Rift
+// only ever fills slot 0) - this class itself has no Quantum dependency either.
 //
 // Also owns a parallel array of WeaponCardWidget children for a Choose-Weapon screen or Store's own
 // weapon offers (see Refresh/RefreshWeaponChoice/RefreshStore) - every screen except Store is
@@ -39,8 +38,8 @@ public class ChooseWindow : UiWindow
     // A hidden template, not a live card itself - Awake clones it cardCount times under the same
     // parent (so the scene only needs one hand-authored card) then disables the template, leaving
     // only the clones live. cardCount must match the largest fixed-size options array this window
-    // is ever driven from (3 today, shared by LevelUpChoice.Options/CursedRiftInteraction.
-    // SacrificeChoices/MutationChoices - see LevelUp.qtn/CursedRift.qtn).
+    // is ever driven from (3 today, LevelUpChoice.Options - see LevelUp.qtn). Cursed Rift only
+    // ever fills slot 0.
     [SerializeField] private UpgradeCardWidget cardPrefab;
     [SerializeField] private int cardCount = 3;
 
@@ -52,14 +51,14 @@ public class ChooseWindow : UiWindow
     [SerializeField] private TMP_Text countdownText;
 
     // "Level Up!" for a plain level-up, the rolled category's display name (e.g. "Weapon Perk")
-    // for a Chest, "CURSED RIFT"/"RIFT AWAKENED" for Cursed Rift's own two stages, or "STORE"/
-    // "BLACKSMITH" - see GameplayUiController.BuildTitle/RefreshStoreWindow/RefreshBlacksmithWindow,
-    // which own the actual wording.
+    // for a Chest, "CURSED RIFT" for Cursed Rift's own single screen, or "STORE"/"BLACKSMITH" -
+    // see GameplayUiController.BuildTitle/RefreshStoreWindow/RefreshBlacksmithWindow, which own
+    // the actual wording.
     [SerializeField] private TMP_Text titleText;
 
     // Optional - unused by the existing Level-Up/Weapon-Upgrade/Chest call sites (Refresh/
     // RefreshWeaponChoice's own `subtitle` param defaults to null there, which leaves this
-    // untouched). Cursed Rift's two stages populate it (e.g. "CHOOSE A SACRIFICE").
+    // untouched). Cursed Rift always populates it (e.g. "SACRIFICE FOR A MUTATION").
     [SerializeField] private TMP_Text subtitleText;
 
     // Shared by both card families (same button regardless of whether cards or weaponCards is
@@ -67,7 +66,7 @@ public class ChooseWindow : UiWindow
     // LevelUpUtility.RerollOptionsFor. rerollChargesText shows the player's own remaining
     // CharacterStats.RerollQuantity; the button itself is disabled at 0 (same "interactable, not
     // hidden" convention as the cards once a pick is confirmed). Hidden entirely (SetRerollButtonActive,
-    // via Refresh's allowReroll param) on Cursed Rift's own screens - reroll has no meaning there.
+    // via Refresh's allowReroll param) on Cursed Rift's own screen - reroll has no meaning there.
     [Header("Reroll")]
     [SerializeField] private Button rerollButton;
     [SerializeField] private TMP_Text rerollChargesText;
@@ -76,8 +75,8 @@ public class ChooseWindow : UiWindow
     // apply at once (RefreshWeaponChoice vs. Refresh's allowCancel are two different card families
     // - only one is ever active): "KEEP CURRENT" on a Choose-Weapon screen (declining picks
     // nothing, still counts as confirmed - see LevelUpUtility.ConfirmKeepCurrent/
-    // KeepCurrentWeaponCommand) or "CANCEL" on Cursed Rift's Sacrifice stage (the one place walking
-    // away without picking anything needs to be possible - see CancelCursedRiftCommand). Field kept
+    // KeepCurrentWeaponCommand) or "CANCEL" on Cursed Rift's own screen (the one place walking away
+    // without paying anything needs to be possible - see CancelCursedRiftCommand). Field kept
     // named secondaryButton (was keepCurrentButton before Cursed Rift needed the same button for a
     // second purpose - FormerlySerializedAs preserves the scene's existing wiring). Hidden entirely
     // for a plain Level-Up (neither call site applies there).
@@ -128,7 +127,7 @@ public class ChooseWindow : UiWindow
 
     // Raised with a card's index (0-based) when a `cards[]` (UpgradeCardWidget) entry is clicked -
     // GameplayUiController forwards this into whichever command matches the currently-active flow
-    // (SelectLevelUpUpgradeCommand/SelectSacrificeCommand/SelectMutationCommand/BuyStoreFoodCommand/
+    // (SelectLevelUpUpgradeCommand/ConfirmCursedRiftCommand/BuyStoreFoodCommand/
     // SelectBlacksmithPerkCommand - see OnCardClicked).
     public Action<int> onCardClicked;
 
@@ -146,7 +145,7 @@ public class ChooseWindow : UiWindow
 
     // Raised when secondaryButton is clicked - GameplayUiController forwards this into whichever
     // command matches the currently-active flow (KeepCurrentWeaponCommand on a Choose-Weapon
-    // screen, CancelCursedRiftCommand on Cursed Rift's Sacrifice stage - see
+    // screen, CancelCursedRiftCommand on Cursed Rift's own screen - see
     // GameplayUiController.OnSecondaryButtonClicked). No index needed either way.
     public Action onSecondaryButtonClicked;
 
@@ -364,9 +363,9 @@ public class ChooseWindow : UiWindow
     // which already rejects a second click, but disabling the buttons here avoids a dead click in
     // the first place).
     // allowReroll defaults true (reproduces the original Level-Up behavior with zero call-site
-    // changes at UpdateUpgradeScreen) - Cursed Rift passes false for BOTH its own stages
-    // (RefreshCursedRiftWindow), since redrawing options makes no sense for a Sacrifice/Mutation
-    // pick and RerollLevelUpOptionsCommand has no meaning outside a real LevelUpChoice anyway.
+    // changes at UpdateUpgradeScreen) - Cursed Rift passes false (RefreshCursedRiftWindow), since
+    // redrawing its one rolled sacrifice+mutation pair makes no sense and
+    // RerollLevelUpOptionsCommand has no meaning outside a real LevelUpChoice anyway.
     public void Refresh(string title, float timeRemaining, UpgradeCardWidget.CardData[] cardData, int? confirmedIndex, string subtitle = null, bool allowCancel = false, bool allowReroll = true)
     {
         SetCardFamilyActive(showCards: true, showWeaponCards: false);

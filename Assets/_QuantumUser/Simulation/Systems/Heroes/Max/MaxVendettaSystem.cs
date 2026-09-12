@@ -4,8 +4,9 @@ namespace Quantum
     using UnityEngine.Scripting;
 
     // Max's Vendetta passive - reacts to Combat.qtn's OnHealthDamageApplied/OnShieldDamageApplied
-    // (mark creation/refresh, damage accumulation - purely reactive, an enemy only becomes marked by
-    // actually damaging Max first) and OnEntityKilled (mark consumption, heal, and - if Burning
+    // and AccessoryGuard.qtn's OnAccessoryBlocked (mark creation/refresh, damage accumulation -
+    // purely reactive, an enemy only becomes marked by actually damaging Max first) and
+    // OnEntityKilled (mark consumption, heal, and - if Burning
     // Vengeance rank 3 is equipped - a radial fiery burst). The Overdrive-extension-on-Vendetta-kill
     // concept lives in MaxOverdriveReactionSystem now (Uncontrolled Fury rank 3's own separate
     // uncapped bonus), not here. Unfiltered - no Filter query, entities resolved directly off each
@@ -22,7 +23,7 @@ namespace Quantum
     // being hit" - Vendetta Strike (the Dash Ascension) is the one deliberate way to mark proactively.
     [Preserve]
     public unsafe class MaxVendettaSystem : SystemMainThread,
-        ISignalOnHealthDamageApplied, ISignalOnShieldDamageApplied, ISignalOnEntityKilled
+        ISignalOnHealthDamageApplied, ISignalOnShieldDamageApplied, ISignalOnAccessoryBlocked, ISignalOnEntityKilled
     {
         public override void Update(Frame f)
         {
@@ -41,6 +42,21 @@ namespace Quantum
                 return;
 
             TryAccumulate(f, target, owner, amount);
+        }
+
+        // Blood Debt rank 2 (ShieldDamageCountsForRevenge) - a hit the Accessory Guard fully
+        // negates never reaches ApplyDamage's own OnShieldDamageApplied/OnHealthDamageApplied
+        // (see DamageUtility.ApplyDamage's block-hook comment), so without this a blocked hit would
+        // build no Vendetta at all even with the upgrade equipped. Gated on the same component as
+        // plain Shield damage above - the "does chip/absorbed damage count" choice is one setting,
+        // not two. owner/attacker here are the signal's own naming (the player who got hit /
+        // the enemy that hit them) - same roles as TryAccumulate's target/owner below.
+        public void OnAccessoryBlocked(Frame f, EntityRef owner, EntityRef attacker, FP damage, QBoolean broken)
+        {
+            if (f.Unsafe.TryGetPointer<ShieldDamageCountsForRevenge>(owner, out _) == false)
+                return;
+
+            TryAccumulate(f, owner, attacker, damage);
         }
 
         // target = the Vendetta-passive holder that just took damage; owner = the attacker, which is

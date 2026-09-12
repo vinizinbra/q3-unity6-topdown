@@ -35,6 +35,11 @@ namespace Quantum
             public ChunkType Type;
             public AssetRef<EntityPrototype> Prototype;
             public bool MustHave;
+
+            // 0 = ungrouped. See ChunkPoolEntry.GroupId - a nonzero value here means a failure to
+            // place this specific request is expected/logged at Debug, not Error; only the group's
+            // aggregate shortfall (checked once, after generation finishes) is.
+            public int GroupId;
         }
 
         public override void Update(Frame f)
@@ -144,6 +149,8 @@ namespace Quantum
             }
 
             Log.Debug($"[LevelGen] grow complete - placed={placed.Count}");
+
+            VerifyGroupRequirements(config, placed);
 
             FillInnerGaps(f, config, gridOriginX, gridOriginZ, occupied);
 
@@ -395,6 +402,8 @@ namespace Quantum
             List<ChunkRequest> mustHaveRequests = new List<ChunkRequest>();
             List<ChunkRequest> optionalRequests = new List<ChunkRequest>();
 
+            HashSet<ChunkType> excludedGroupMembers = ResolveExcludedGroupMembers(config, ref rng, logDetails);
+
             foreach (ChunkPoolEntry entry in config.ChunkPool)
             {
                 if (entry.Prototypes == null || entry.Prototypes.Length == 0)
@@ -407,6 +416,11 @@ namespace Quantum
                     continue;
                 }
 
+                if (entry.GroupId != 0 && excludedGroupMembers.Contains(entry.Type))
+                {
+                    continue;
+                }
+
                 List<ChunkRequest> target;
 
                 if (entry.Type == ChunkType.LobbyStart)
@@ -415,7 +429,11 @@ namespace Quantum
                 }
                 else
                 {
-                    target = entry.MustHave ? mustHaveRequests : optionalRequests;
+                    // A grouped entry gets MustHave-tier placement priority regardless of its own
+                    // MustHave (ignored once GroupId != 0 - see ChunkPoolEntry.GroupId) so the group
+                    // has the best odds of hitting its MinRequired before optional filler crowds
+                    // the grid.
+                    target = (entry.MustHave || entry.GroupId != 0) ? mustHaveRequests : optionalRequests;
                 }
 
                 for (int i = 0; i < entry.Count; i++)
@@ -429,6 +447,7 @@ namespace Quantum
                         Type = entry.Type,
                         Prototype = prototype,
                         MustHave = entry.MustHave,
+                        GroupId = entry.GroupId,
                     });
                 }
             }
@@ -440,6 +459,73 @@ namespace Quantum
             InterleaveMustHave(bag, mustHaveRequests, optionalRequests);
             bag.AddRange(startRequests);
             return bag;
+        }
+
+        // Rolls, once per level, which ChunkPoolGroups member types sit OUT of this generation
+        // entirely - see ChunkPoolGroupRequirement. For each group: gathers every ChunkPoolEntry.
+        // Type sharing that GroupId, rolls a random target count in [MinRequired, effective max]
+        // (both clamped to the group's own member count so an over-authored value can never demand
+        // more than exists), shuffles the member list, and excludes whichever ones land past the
+        // target count. Called with the same bag rng BuildShuffledBag's own shuffles use, seeded
+        // from Global.LevelGenSeed - a pure function of (config, seed) exactly like the rest of that
+        // method, so every tick and every client rebuilds the identical exclusion set. logDetails
+        // mirrors BuildShuffledBag's own convention (only the first tick logs, so the line doesn't
+        // repeat once per generation tick).
+        private HashSet<ChunkType> ResolveExcludedGroupMembers(LevelConfig config, ref RNGSession rng, bool logDetails)
+        {
+            HashSet<ChunkType> excluded = new HashSet<ChunkType>();
+
+            if (config.ChunkPoolGroups == null)
+            {
+                return excluded;
+            }
+
+            foreach (ChunkPoolGroupRequirement requirement in config.ChunkPoolGroups)
+            {
+                if (requirement.GroupId == 0)
+                {
+                    continue;
+                }
+
+                List<ChunkType> members = new List<ChunkType>();
+
+                foreach (ChunkPoolEntry entry in config.ChunkPool)
+                {
+                    if (entry.GroupId == requirement.GroupId)
+                    {
+                        members.Add(entry.Type);
+                    }
+                }
+
+                if (members.Count == 0)
+                {
+                    continue;
+                }
+
+                int minRequired = requirement.MinRequired < 0 ? 0 : requirement.MinRequired;
+                minRequired = minRequired > members.Count ? members.Count : minRequired;
+
+                int maxAllowed = requirement.MaxRequired > 0 ? requirement.MaxRequired : members.Count;
+                maxAllowed = maxAllowed > members.Count ? members.Count : maxAllowed;
+                maxAllowed = maxAllowed < minRequired ? minRequired : maxAllowed;
+
+                // Next(min, max) is [min, max) - +1 so MaxRequired itself is a reachable outcome.
+                int targetCount = rng.Next(minRequired, maxAllowed + 1);
+
+                Shuffle(ref rng, members);
+
+                for (int i = targetCount; i < members.Count; i++)
+                {
+                    excluded.Add(members[i]);
+                }
+
+                if (logDetails)
+                {
+                    Log.Debug($"[LevelGen] group {requirement.GroupId} rolled {targetCount}/{members.Count} member types this level (min {minRequired}, max {maxAllowed})");
+                }
+            }
+
+            return excluded;
         }
 
         // Splits optionalRequests into mustHaveRequests.Count batches (sizes spread as evenly as
@@ -785,7 +871,14 @@ namespace Quantum
                 }
             }
 
-            if (request.MustHave)
+            if (request.GroupId != 0)
+            {
+                // Expected/acceptable on its own - a single group member missing only matters if
+                // the group's aggregate falls short of MinRequired, checked once after generation
+                // finishes (see VerifyGroupRequirements).
+                Log.Debug($"[LevelGen] grouped {request.Type} (group {request.GroupId}, {width}x{depth}) found no valid spot - destroying entity {entity}");
+            }
+            else if (request.MustHave)
             {
                 Log.Error($"[LevelGen] MUST-HAVE {request.Type} ({width}x{depth}) found no valid spot anywhere on the grid - destroying entity {entity}. Level will generate without a required chunk.");
             }
@@ -1035,6 +1128,56 @@ namespace Quantum
             }
 
             return null;
+        }
+
+        // Checks every LevelConfig.ChunkPoolGroups requirement against the final placed list -
+        // "at least MinRequired distinct ChunkTypes among this group's members actually placed".
+        // Runs once, after all requests in the bag have been attempted (see StepGeneration), since
+        // there's no mid-generation retry/substitution: a group member that failed to place is
+        // already destroyed (see TryPlaceRequest) by the time this runs. A shortfall is logged as
+        // an Error, same visibility a failed plain MustHave chunk already gets, so a level that
+        // can't fit enough of a group's members doesn't silently ship without them.
+        private void VerifyGroupRequirements(LevelConfig config, List<PlacedChunk> placed)
+        {
+            if (config.ChunkPoolGroups == null)
+            {
+                return;
+            }
+
+            foreach (ChunkPoolGroupRequirement requirement in config.ChunkPoolGroups)
+            {
+                if (requirement.GroupId == 0)
+                {
+                    continue;
+                }
+
+                int placedCount = 0;
+                string memberList = null;
+
+                foreach (ChunkPoolEntry entry in config.ChunkPool)
+                {
+                    if (entry.GroupId != requirement.GroupId)
+                    {
+                        continue;
+                    }
+
+                    memberList = memberList == null ? entry.Type.ToString() : $"{memberList}, {entry.Type}";
+
+                    if (FindChunkOfType(placed, entry.Type) != null)
+                    {
+                        placedCount++;
+                    }
+                }
+
+                if (placedCount < requirement.MinRequired)
+                {
+                    Log.Error($"[LevelGen] group {requirement.GroupId} ({memberList}) only placed {placedCount}/{requirement.MinRequired} required types - level will generate short of that guarantee.");
+                }
+                else
+                {
+                    Log.Debug($"[LevelGen] group {requirement.GroupId} ({memberList}) placed {placedCount}/{requirement.MinRequired} required types - OK.");
+                }
+            }
         }
 
         // Sanity check for the LobbyStart-can't-attach-to-Boss rule enforced during placement (see

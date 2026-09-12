@@ -17,9 +17,11 @@ MonoBehaviour:
     Guid:
       Value: 417168539880722853
   Spawns:
-  - Prototype:
-      Id:
-        Value: 1490237048963392359
+  - Prototypes:
+    - Prototype:
+        Id:
+          Value: 1490237048963392359
+      Weight: 1
     Offset:
       X:
         RawValue: 324403
@@ -30,9 +32,11 @@ MonoBehaviour:
     Requirement: 0
     Chance:
       RawValue: 0
-  - Prototype:
-      Id:
-        Value: 1490237048963392359
+  - Prototypes:
+    - Prototype:
+        Id:
+          Value: 1490237048963392359
+      Weight: 1
     Offset:
       X:
         RawValue: 431882
@@ -43,9 +47,11 @@ MonoBehaviour:
     Requirement: 0
     Chance:
       RawValue: 0
-  - Prototype:
-      Id:
-        Value: 1490237048963392359
+  - Prototypes:
+    - Prototype:
+        Id:
+          Value: 1490237048963392359
+      Weight: 1
     Offset:
       X:
         RawValue: 1364459
@@ -56,9 +62,11 @@ MonoBehaviour:
     Requirement: 0
     Chance:
       RawValue: 0
-  - Prototype:
-      Id:
-        Value: 1490237048963392359
+  - Prototypes:
+    - Prototype:
+        Id:
+          Value: 1490237048963392359
+      Weight: 1
     Offset:
       X:
         RawValue: 1603665
@@ -69,9 +77,11 @@ MonoBehaviour:
     Requirement: 0
     Chance:
       RawValue: 0
-  - Prototype:
-      Id:
-        Value: 1490237048963392359
+  - Prototypes:
+    - Prototype:
+        Id:
+          Value: 1490237048963392359
+      Weight: 1
     Offset:
       X:
         RawValue: 1486356
@@ -82,9 +92,11 @@ MonoBehaviour:
     Requirement: 0
     Chance:
       RawValue: 0
-  - Prototype:
-      Id:
-        Value: 1490237048963392359
+  - Prototypes:
+    - Prototype:
+        Id:
+          Value: 1490237048963392359
+      Weight: 1
     Offset:
       X:
         RawValue: 1403781
@@ -95,9 +107,11 @@ MonoBehaviour:
     Requirement: 0
     Chance:
       RawValue: 0
-  - Prototype:
-      Id:
-        Value: 1490237048963392359
+  - Prototypes:
+    - Prototype:
+        Id:
+          Value: 1490237048963392359
+      Weight: 1
     Offset:
       X:
         RawValue: 553779
@@ -108,9 +122,11 @@ MonoBehaviour:
     Requirement: 0
     Chance:
       RawValue: 0
-  - Prototype:
-      Id:
-        Value: 1490237048963392359
+  - Prototypes:
+    - Prototype:
+        Id:
+          Value: 1490237048963392359
+      Weight: 1
     Offset:
       X:
         RawValue: 443678

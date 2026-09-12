@@ -43,7 +43,45 @@ namespace Quantum
         // If true, LevelGenerationSystem treats every instance of this entry as required: it gets
         // far more placement attempts than an optional entry, and a failure to place it after that
         // is logged as an Error (not the usual Debug) so a broken layout can't slip by unnoticed.
+        // Ignored when GroupId != 0 - see GroupId below.
         public bool MustHave;
+
+        // Optional (0 = ungrouped, the default for every entry authored before this field existed).
+        // Entries sharing the same nonzero GroupId compete as a "pick N of these types, N rolled
+        // once per level between MinRequired and MaxRequired" set instead of "every entry is
+        // required" - see LevelConfig.ChunkPoolGroups. A grouped entry's own MustHave is ignored:
+        // whichever members get rolled IN still get MustHave-tier placement priority (early
+        // frontier access, before optional filler crowds the grid) so the roll has the best odds of
+        // actually landing, but a rolled-in member failing to place (space ran out) is expected/
+        // logged at Debug, not Error - only the group's aggregate shortfall against MinRequired is.
+        // e.g. Traversal/HealingShrine/CursedRift all sharing GroupId 1 with MinRequired 2/
+        // MaxRequired 3 means each generated level gets 2 OR 3 of those Breathing POIs, picked
+        // randomly, never fewer than 2.
+        public Int32 GroupId;
+    }
+
+    // One entry in LevelConfig.ChunkPoolGroups - drives LevelGenerationSystem.ResolveGroupSelections,
+    // which once per level (deterministically, off the same seeded RNG every other generation
+    // decision uses) rolls a random target count in [MinRequired, effective max] among every
+    // ChunkPoolEntry sharing this GroupId, then randomly picks that many distinct types to actually
+    // attempt - the rest are simply never turned into a placement request at all, same as if their
+    // Count were authored as 0 for this level. MaxRequired caps the roll (0 = uncapped - "as many as
+    // there are member types", the common case); both are clamped to the group's actual member
+    // count, so an over-authored value can't roll a target that could never be satisfied. After
+    // generation finishes, LevelGenerationSystem.VerifyGroupRequirements checks the FINAL placed
+    // count against MinRequired only (not the rolled target) - a shortfall there means a rolled-in
+    // member genuinely failed to find space, logged as an Error (same visibility a failed MustHave
+    // chunk already gets), not a hard failure, since retrying with a different member mid-generation
+    // isn't supported (same "log and move on" contract every other placement failure here follows).
+    [Serializable]
+    public struct ChunkPoolGroupRequirement
+    {
+        public Int32 GroupId;
+        public Int32 MinRequired;
+
+        // 0 = uncapped (roll can pick up to every member type in the group). > 0 caps the roll at
+        // this many, even if the group has more member types than that.
+        public Int32 MaxRequired;
     }
 
     public class LevelConfig : AssetObject
@@ -89,6 +127,10 @@ namespace Quantum
         public Int32 MinConnectionWidthCells = 2;
 
         public ChunkPoolEntry[] ChunkPool;
+
+        // Optional - "at least N of these types" guarantees layered on top of ChunkPool. See
+        // ChunkPoolGroupRequirement/ChunkPoolEntry.GroupId above.
+        public ChunkPoolGroupRequirement[] ChunkPoolGroups;
 
         // How many chunk requests LevelGenerationSystem places per simulation tick. Generation used
         // to run start-to-finish inside one tick, which froze the client for as long as it took to

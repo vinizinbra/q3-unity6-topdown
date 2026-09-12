@@ -83,15 +83,23 @@ No component here anymore - `SpawnEntityWithRequirement` now lives as a plain C#
 `ChunkSpawnConfig.cs` (below), referenced from `Chunk` itself.
 
 `Chest.qtn` is **not** touched by this feature at all - a talent-granted chest is just any Chest
-`EntityPrototype`, referenced by `AssetRef` from a `SpawnEntityWithRequirement.Prototype` field.
+`EntityPrototype`, referenced by `AssetRef` from one of `SpawnEntityWithRequirement.Prototypes`'
+entries.
 
 ## `ChunkSpawnConfig` (`Assets/_QuantumUser/Simulation/Assets/Config/ChunkSpawnConfig.cs`)
 
 ```csharp
 [Serializable]
-public struct SpawnEntityWithRequirement
+public struct WeightedEntityPrototype
 {
     public AssetRef<EntityPrototype> Prototype;
+    public int Weight;
+}
+
+[Serializable]
+public struct SpawnEntityWithRequirement
+{
+    public WeightedEntityPrototype[] Prototypes;
     public FPVector3 Offset;
     public SharedTalentRequirement Requirement;
     public FP Chance;
@@ -102,6 +110,18 @@ public class ChunkSpawnConfig : AssetObject
     public SpawnEntityWithRequirement[] Spawns;
 }
 ```
+
+**Update (2026-09-11): `Prototype` -> `Prototypes` (weighted list).** A single entry used to spawn
+one fixed `EntityPrototype`; now each entry carries a list of weighted alternatives and
+`TalentGateSystem.TryPickPrototype` draws one via `WeightedDrawUtility` (the same shared
+weighted-draw helper Blacksmith/Store already use). A single-entry list behaves exactly like the
+old single `Prototype` field - `WeightedEntityPrototype.Weight` only matters once a slot has more
+than one alternative, and an unauthored (`0`) `Weight` defaults to `1` rather than disabling that
+candidate, so nobody has to remember to set it for the common single-entry case. This is a
+structural change to already-authored `ChunkSpawnConfig` assets (a Unity field rename/retype, not
+migrated) - existing assets need their `Prototype` re-authored as a one-entry `Prototypes` list in
+the Inspector. `ChunkSpawnBaker.BakeSpawns` already writes the new shape (one weighted entry per
+baked child); add further alternatives to the same slot by hand on the asset afterward.
 
 `Chunk.qtn` gained one new field, `AssetRef<ChunkSpawnConfig> SpawnConfig;` (defaults
 unassigned = nothing spawns for that chunk). `TalentGateSystem` resolves every `Chunk` entity's
@@ -237,8 +257,9 @@ Once both hold: calls
 entity in the level (`ResolveSpawners`) - for each with a valid `SpawnConfig` assigned, resolves
 that `ChunkSpawnConfig` asset and iterates every entry in its `Spawns` array (`ResolveSpawn`).
 For each entry: checks `TalentUtility.IsSatisfied` against its `Requirement`, rolls `Chance`
-(`DamageUtility.RollChance`, skipped entirely if `Chance <= 0`), and if both pass, `f.Create`s
-`Prototype` positioned at that CHUNK entity's own `Transform3D.Position + Offset`, then calls
+(`DamageUtility.RollChance`, skipped entirely if `Chance <= 0`), and if both pass, weighted-picks one
+of `Prototypes` (`TryPickPrototype`) and `f.Create`s it positioned at that CHUNK entity's own
+`Transform3D.Position + Offset`, then calls
 `GroundOffsetUtility.Apply(f, spawned)` right after - same "`f.Create` -> set
 `Position` -> `GroundOffsetUtility.Apply`" pattern every other runtime-spawn path in this codebase
 already follows (`SpawnedEntitySpawner`, `CoinUtility`, `RiftShardUtility`, `ScrapUtility`,

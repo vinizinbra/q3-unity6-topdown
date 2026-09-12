@@ -219,22 +219,41 @@ namespace Quantum.Prototypes.Unity {
   [System.SerializableAttribute()]
   public unsafe partial class CursedRiftInteractionPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.CursedRiftInteractionPrototype> {
     public Quantum.QuantumEntityPrototype Rift;
-    public Quantum.QEnum8<CursedRiftInteractionState> State;
-    [ArrayLengthAttribute(3)]
-    public AssetRef<SacrificeDefinition>[] SacrificeChoices = new AssetRef<SacrificeDefinition>[3];
-    public Byte SacrificeChoiceCount;
-    [ArrayLengthAttribute(3)]
-    public Quantum.Prototypes.LevelUpOptionPrototype[] MutationChoices = new Quantum.Prototypes.LevelUpOptionPrototype[3];
-    public Byte MutationChoiceCount;
+    public AssetRef<SacrificeDefinition> Sacrifice;
+    public Quantum.Prototypes.LevelUpOptionPrototype Mutation;
     partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.CursedRiftInteractionPrototype prototype);
     public override Quantum.Prototypes.CursedRiftInteractionPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
       var result = new Quantum.Prototypes.CursedRiftInteractionPrototype();
       converter.Convert(this.Rift, out result.Rift);
-      converter.Convert(this.State, out result.State);
-      converter.Convert(this.SacrificeChoices, out result.SacrificeChoices);
-      converter.Convert(this.SacrificeChoiceCount, out result.SacrificeChoiceCount);
-      converter.Convert(this.MutationChoices, out result.MutationChoices);
-      converter.Convert(this.MutationChoiceCount, out result.MutationChoiceCount);
+      converter.Convert(this.Sacrifice, out result.Sacrifice);
+      converter.Convert(this.Mutation, out result.Mutation);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
+  public unsafe partial class CursedRiftOfferEntryPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.CursedRiftOfferEntryPrototype> {
+    public Quantum.QuantumEntityPrototype Rift;
+    public AssetRef<SacrificeDefinition> Sacrifice;
+    public Quantum.Prototypes.LevelUpOptionPrototype Mutation;
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.CursedRiftOfferEntryPrototype prototype);
+    public override Quantum.Prototypes.CursedRiftOfferEntryPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.CursedRiftOfferEntryPrototype();
+      converter.Convert(this.Rift, out result.Rift);
+      converter.Convert(this.Sacrifice, out result.Sacrifice);
+      converter.Convert(this.Mutation, out result.Mutation);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
+  public unsafe partial class CursedRiftOffersPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.CursedRiftOffersPrototype> {
+    [ArrayLengthAttribute(8)]
+    public Quantum.Prototypes.Unity.CursedRiftOfferEntryPrototype[] Entries = new Quantum.Prototypes.Unity.CursedRiftOfferEntryPrototype[8];
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.CursedRiftOffersPrototype prototype);
+    public override Quantum.Prototypes.CursedRiftOffersPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.CursedRiftOffersPrototype();
+      converter.Convert(this.Entries, out result.Entries);
       ConvertUser(converter, ref result);
       return result;
     }

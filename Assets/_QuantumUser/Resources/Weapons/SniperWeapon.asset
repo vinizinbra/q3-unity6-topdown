@@ -25,7 +25,7 @@ MonoBehaviour:
   CriticalChance:
     RawValue: 13107
   CriticalDamageBonus:
-    RawValue: 131072
+    RawValue: 65536
   FireRate:
     RawValue: 65536
   MagazineSize: 4

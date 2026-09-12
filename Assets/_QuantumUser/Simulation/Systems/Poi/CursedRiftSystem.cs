@@ -31,16 +31,12 @@ namespace Quantum
 
                 switch (command)
                 {
-                    case SelectSacrificeCommand select:
-                        CursedRiftUtility.SelectSacrifice(f, entity, interaction, select.OptionIndex);
+                    case ConfirmCursedRiftCommand:
+                        CursedRiftUtility.Confirm(f, entity, interaction);
                         break;
 
                     case CancelCursedRiftCommand:
                         CursedRiftUtility.Cancel(f, entity, interaction);
-                        break;
-
-                    case SelectMutationCommand mutation:
-                        CursedRiftUtility.SelectMutation(f, entity, interaction, mutation.OptionIndex);
                         break;
                 }
             }

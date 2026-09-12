@@ -75,12 +75,6 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
 
     private StoreCardSlot[][] _storeCardSlots;
 
-    // Cached per slot every UpdatePoiWindow tick - OnCardClicked needs to know whether a card click
-    // (while ChoiceWindowOwner.CursedRift) means "pick a sacrifice" or "pick a mutation" (both
-    // stages reuse the same 3-card grid/onCardClicked event), without re-deriving it from a fresh
-    // Quantum read inside the click handler itself.
-    private CursedRiftInteractionState[] _poiWindowStage;
-
     private void Start()
     {
         windowManager.ShowWindow<LoadingWindow>();
@@ -91,7 +85,6 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
         _secondaryButtonClickedHandlers = new Action[choiceWindows.Length];
         _windowOwner = new ChoiceWindowOwner[choiceWindows.Length];
         _storeCardSlots = new StoreCardSlot[choiceWindows.Length][];
-        _poiWindowStage = new CursedRiftInteractionState[choiceWindows.Length];
 
         for (int i = 0; i < choiceWindows.Length; i++)
         {
@@ -380,10 +373,7 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
             {
                 case ChoiceWindowOwner.CursedRift:
                     if (frame.Unsafe.TryGetPointer<CursedRiftInteraction>(entity, out var cursedRift) == true)
-                    {
-                        _poiWindowStage[i] = cursedRift->State;
                         RefreshCursedRiftWindow(frame, entity, cursedRift, choiceWindows[i]);
-                    }
                     break;
 
                 case ChoiceWindowOwner.Store:
@@ -727,68 +717,46 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
         };
     }
 
+    // Single screen now (see docs/breathing-poi.md/docs/choice-window-refactor.md) - one card
+    // showing the rolled mutation reward with its rolled sacrifice's cost folded directly onto it
+    // (ValuePreview row), one "SACRIFICE" button commits both at once. cardData is only ever
+    // length 1 - Refresh already leaves every other cards[] slot at its default (empty) state, no
+    // 3-card grid to fill anymore.
     private static unsafe void RefreshCursedRiftWindow(Frame frame, EntityRef entity, CursedRiftInteraction* interaction, ChooseWindow window)
     {
-        switch (interaction->State)
-        {
-            case CursedRiftInteractionState.SelectingSacrifice:
-            {
-                var cardData = new UpgradeCardWidget.CardData[interaction->SacrificeChoices.Length];
+        var cardData = new[] { BuildCursedRiftOfferCardData(frame, entity, interaction) };
 
-                for (int j = 0; j < interaction->SacrificeChoices.Length; j++)
-                {
-                    cardData[j] = j < interaction->SacrificeChoiceCount
-                        ? BuildSacrificeCardData(frame, entity, interaction->SacrificeChoices[j])
-                        : default;
-                }
-
-                window.Refresh("CURSED RIFT", 0f, cardData, null, subtitle: "CHOOSE A SACRIFICE", allowCancel: true, allowReroll: false);
-                break;
-            }
-
-            case CursedRiftInteractionState.SelectingMutation:
-            {
-                var cardData = new UpgradeCardWidget.CardData[interaction->MutationChoices.Length];
-
-                for (int j = 0; j < interaction->MutationChoices.Length; j++)
-                {
-                    cardData[j] = j < interaction->MutationChoiceCount
-                        ? BuildCardData(frame, entity, interaction->MutationChoices[j])
-                        : default;
-                }
-
-                // Reuses BuildCardData unchanged (internal, see its own comment) - a
-                // CursedRiftInteraction.MutationChoices entry is the exact same LevelUpOption
-                // shape a normal level-up's RiftMutation category rolls.
-                window.Refresh("RIFT AWAKENED", 0f, cardData, null, subtitle: "CHOOSE 1 MUTATION", allowCancel: false, allowReroll: false);
-                break;
-            }
-        }
+        window.Refresh("CURSED RIFT", 0f, cardData, null, subtitle: "SACRIFICE FOR A MUTATION", allowCancel: true, allowReroll: false);
     }
 
-    // Sacrifice cards are NOT UpgradeData (see SacrificeDefinition's own comment - a sacrifice
-    // isn't an upgrade) - built from the asset's own DisplayName/Icon/Description/TopLabel/
-    // ButtonLabel plus a live BuildValuePreview call (never cached, so it can't go stale between
-    // roll and pick). KindText is a flat constant, not a switch - every sacrifice is "RIFT
-    // SACRIFICE" (unlike a level-up option's KindText, which varies by Kind).
-    private static unsafe UpgradeCardWidget.CardData BuildSacrificeCardData(Frame frame, EntityRef entity, AssetRef<SacrificeDefinition> sacrificeRef)
+    // Reuses BuildCardData unchanged (internal, see its own comment) for the mutation reward's
+    // Icon/DisplayName/Description/Rarity - a CursedRiftInteraction.Mutation is the exact same
+    // LevelUpOption shape a normal level-up's RiftMutation category rolls - then layers the
+    // rolled sacrifice's own cost on top via ValuePreview/ButtonLabel, the same two fields Store's
+    // purchase cards and the old standalone Sacrifice card already used. A sacrifice isn't an
+    // UpgradeData (see SacrificeDefinition's own comment), so its cost text is built here rather
+    // than inside BuildCardData.
+    private static unsafe UpgradeCardWidget.CardData BuildCursedRiftOfferCardData(Frame frame, EntityRef entity, CursedRiftInteraction* interaction)
     {
-        if (sacrificeRef.IsValid == false)
+        if (interaction->Mutation.Upgrade.IsValid == false)
             return default;
 
-        SacrificeDefinition data = frame.FindAsset(sacrificeRef);
+        UpgradeCardWidget.CardData data = BuildCardData(frame, entity, interaction->Mutation);
 
-        return new UpgradeCardWidget.CardData
+        if (interaction->Sacrifice.IsValid == true)
         {
-            HasOption = true,
-            Icon = data.Icon,
-            DisplayName = data.DisplayName,
-            Description = data.Description,
-            KindText = "RIFT SACRIFICE",
-            TopLabelOverride = string.IsNullOrEmpty(data.TopLabel) ? "SACRIFICE" : data.TopLabel,
-            ValuePreview = data.BuildValuePreview(frame, entity),
-            ButtonLabel = string.IsNullOrEmpty(data.ButtonLabel) ? "SACRIFICE" : data.ButtonLabel
-        };
+            SacrificeDefinition sacrifice = frame.FindAsset(interaction->Sacrifice);
+
+            if (sacrifice != null)
+            {
+                // Live "before -> after" cost, never cached, so it can't go stale between roll and
+                // click - see SacrificeDefinition.BuildValuePreview's own comment.
+                data.ValuePreview = $"COST: {sacrifice.DisplayName}\n{sacrifice.BuildValuePreview(frame, entity)}";
+                data.ButtonLabel = string.IsNullOrEmpty(sacrifice.ButtonLabel) ? "SACRIFICE" : sacrifice.ButtonLabel;
+            }
+        }
+
+        return data;
     }
 
     // Card click from `cards[]` (UpgradeCardWidget family) - dispatches by _windowOwner[slotIndex]
@@ -803,10 +771,9 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
                 break;
 
             case ChoiceWindowOwner.CursedRift:
-                if (_poiWindowStage[slotIndex] == CursedRiftInteractionState.SelectingMutation)
-                    _game.SendCommand(slotIndex, new SelectMutationCommand { OptionIndex = (byte)optionIndex });
-                else
-                    _game.SendCommand(slotIndex, new SelectSacrificeCommand { OptionIndex = (byte)optionIndex });
+                // Single card now (see RefreshCursedRiftWindow) - a click always means "confirm
+                // the one rolled sacrifice+mutation pair," so optionIndex carries no meaning here.
+                _game.SendCommand(slotIndex, new ConfirmCursedRiftCommand());
                 break;
 
             case ChoiceWindowOwner.Store:
@@ -932,10 +899,10 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
     // rarity badge entirely. Stack info is the other kind-specific thing (only a capped
     // GlobalUpgradeData has it - see GlobalUpgradeData.MaxPicks/LevelUpUtility.IsCappedOut, the same
     // cap this reads back for display), so that part alone switches on Kind.
-    // internal (not private) so CursedRift's mutation-reward stage (a LevelUpOption[3] stored on
-    // CursedRiftInteraction.MutationChoices, the exact same shape LevelUpChoice.Options already
-    // is) can reuse this unchanged instead of re-deriving equivalent card-building logic - see
-    // RefreshCursedRiftWindow/docs/choice-window-refactor.md.
+    // internal (not private) so Cursed Rift's mutation reward (a single LevelUpOption stored on
+    // CursedRiftInteraction.Mutation, the exact same shape one LevelUpChoice.Options entry
+    // already is) can reuse this unchanged instead of re-deriving equivalent card-building logic -
+    // see BuildCursedRiftOfferCardData/docs/choice-window-refactor.md.
     internal static unsafe UpgradeCardWidget.CardData BuildCardData(Frame frame, EntityRef entity, LevelUpOption option)
     {
         UpgradeData data = frame.FindAsset(option.Upgrade);

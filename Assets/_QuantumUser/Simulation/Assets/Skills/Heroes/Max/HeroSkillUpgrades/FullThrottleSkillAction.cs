@@ -5,10 +5,10 @@ namespace Quantum
     // Overdrive line 2 - a Weapon Damage/Reload Speed buff active only while Overdrive is active AND
     // Rage is genuinely maxed (RageOverdriveUtility.IsAtMaxRage) - toggled exactly at that threshold
     // by RageOverdriveUtility.EnterMaxRage/ResetStacks via MaxAscensionUtility.ApplyFullThrottle/
-    // RevertFullThrottle, not active for the whole Overdrive window. Rank 3 additionally refills the
-    // magazine ONCE on that same threshold crossing (FullThrottleUpgrade.HasInstantReload ->
-    // WeaponSystem.RefillMagazine), replacing the old always-free-reload-while-maxed tag - see that
-    // component's own comment.
+    // RevertFullThrottle, not active for the whole Overdrive window. Rank 3 additionally makes every
+    // reload instant for as long as Rage stays maxed (FullThrottleUpgrade.HasInstantReload ->
+    // WeaponSystem.IsInstantReloadOverdriven), plus an immediate refill on that same threshold
+    // crossing (WeaponSystem.RefillMagazine) - see that component's own comment.
     // Fires on every Berserk Begin, same "refresh fresh off the live rank each cast" idiom Brute's
     // MomentumSkillAction already established.
     public unsafe partial class FullThrottleSkillAction : SkillActionData

@@ -24,8 +24,10 @@ namespace Quantum
             stats->ReloadSpeedMultiplier *= FP._1 + fullThrottle->ReloadSpeedBonus;
             fullThrottle->Applied = true;
 
-            // Rank 3 - a single refill on the threshold crossing itself. Applied (just latched above)
-            // is what guarantees "once per entry into max Rage", not a per-tick live condition.
+            // Rank 3 - an immediate refill on the threshold crossing itself, on top of
+            // WeaponSystem.IsInstantReloadOverdriven making every reload started for the rest of this
+            // max-Rage window instant too. Applied (just latched above) is what guarantees this
+            // particular refill fires once per entry into max Rage, not a per-tick live condition.
             if (fullThrottle->HasInstantReload == true)
             {
                 WeaponSystem.RefillMagazine(f, owner);

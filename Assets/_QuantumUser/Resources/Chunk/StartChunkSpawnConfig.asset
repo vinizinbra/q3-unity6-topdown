@@ -10,16 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ee8242cb69d344458aa9cd25a7c455b3, type: 3}
-  m_Name: GrassLandOutpostChunkSpawnConfig
+  m_Name: StartChunkSpawnConfig
   m_EditorClassIdentifier: Quantum.Simulation::Quantum.ChunkSpawnConfig
   Identifier:
-    Path: _QuantumUser/Resources/Chunk/GrassLandOutpostChunkSpawnConfig
+    Path: _QuantumUser/Resources/Chunk/StartChunkSpawnConfig
     Guid:
       Value: 360584790597004371
   Spawns:
-  - Prototype:
-      Id:
-        Value: 1463096646222268440
+  - Prototypes:
+    - Prototype:
+        Id:
+          Value: 1463096646222268440
+      Weight: 1
     Offset:
       X:
         RawValue: 131072
@@ -30,9 +32,11 @@ MonoBehaviour:
     Requirement: 3
     Chance:
       RawValue: 65536
-  - Prototype:
-      Id:
-        Value: 1321529338188975839
+  - Prototypes:
+    - Prototype:
+        Id:
+          Value: 1321529338188975839
+      Weight: 1
     Offset:
       X:
         RawValue: 262144
@@ -43,9 +47,11 @@ MonoBehaviour:
     Requirement: 2
     Chance:
       RawValue: 65536
-  - Prototype:
-      Id:
-        Value: 1329904124162659410
+  - Prototypes:
+    - Prototype:
+        Id:
+          Value: 1329904124162659410
+      Weight: 1
     Offset:
       X:
         RawValue: 393216

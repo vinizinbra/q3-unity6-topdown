@@ -69,6 +69,9 @@ internal static class VoiceContentGenerator
         (VoiceLineTrigger.AccessoryBroken,        1.00f,   0f, VoicePriority.High,     VoiceAudience.LocalOnly),
         (VoiceLineTrigger.AccessoryRestored,      0.60f,   5f, VoicePriority.Normal,   VoiceAudience.LocalOnly),
 
+        // Breathing-only, one-shot per Break per player - no heavy rate limiting needed.
+        (VoiceLineTrigger.HealingShrineUsed,       0.70f,  10f, VoicePriority.Normal,   VoiceAudience.LocalOnly),
+
         (VoiceLineTrigger.HeroExceptionalEvent,   1.00f,  20f, VoicePriority.High,     VoiceAudience.NearbyPlayers),
     };
 

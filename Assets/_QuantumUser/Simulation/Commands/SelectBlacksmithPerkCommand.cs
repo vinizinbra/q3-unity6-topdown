@@ -4,7 +4,7 @@ namespace Quantum
 
     // Sent when a player clicks one of their own rolled BlacksmithInteraction.PerkChoices cards -
     // same "index only, sim re-resolves the rest off the sender's own already-rolled state" shape
-    // as SelectSacrificeCommand. See BlacksmithUtility.SelectPerk.
+    // as SelectLevelUpUpgradeCommand. See BlacksmithUtility.SelectPerk.
     public unsafe class SelectBlacksmithPerkCommand : DeterministicCommand
     {
         public byte OptionIndex;

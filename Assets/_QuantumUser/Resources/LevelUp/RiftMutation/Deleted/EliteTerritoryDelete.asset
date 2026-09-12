@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4dd2aa25ac7c44cf5bc619a9ba0c5e98, type: 3}
-  m_Name: EliteTerritory
+  m_Name: EliteTerritoryDelete
   m_EditorClassIdentifier: Quantum.Simulation::Quantum.EliteTerritoryMutationData
   Identifier:
-    Path: _QuantumUser/Resources/LevelUp/RiftMutation/EliteTerritory
+    Path: _QuantumUser/Resources/LevelUp/RiftMutation/Deleted/EliteTerritoryDelete
     Guid:
       Value: 395063439985713636
   Icon: {fileID: 0}
@@ -21,7 +21,8 @@ MonoBehaviour:
   Rarity: 3
   Scope: 1
   IncompatibleWith: []
-  Description: '<color=#FD3971>{0:+0;-0}%</color> enemies, but Elites appear <color=#FD3971>{1:0.#}x</color> as often'
+  Description: <color=#FD3971>{0:+0;-0}%</color> enemies, but Elites appear <color=#FD3971>{1:0.#}x</color>
+    as often
   SpawnDensityBonus:
     RawValue: -19661
   EliteWeightMultiplier:

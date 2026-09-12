@@ -29,4 +29,13 @@ global
     // (player frozen mid-air, no card UI to click) even though the simulation itself is behaving
     // correctly. See DebugCheatSystem.TryOpenNextPendingLevelUp.
     Boolean DebugLevelUpScreenOpenLastTick;
+
+    // Set by CheatSystem.SetupTestRun once its auto-resolved level-up batch and immediately-opened
+    // ChooseWeapon chest screen are both done - the actual Rift Mutation choice screen can't also be
+    // opened same-tick as the weapon one (LevelUpUtility.OpenUpgradeScreen's LevelUpScreenOpen guard
+    // would just silently drop it), so this flag defers it to DebugCheatSystem's own drain, reusing
+    // DebugLevelUpScreenOpenLastTick's same "wait a full published tick after the previous screen
+    // closes" gate as TryOpenNextPendingLevelUp already does. See DebugCheatSystem.
+    // TryOpenPendingRiftMutationChoice.
+    Boolean DebugPendingRiftMutationChoice;
 }

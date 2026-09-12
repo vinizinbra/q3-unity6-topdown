@@ -242,13 +242,13 @@ namespace Quantum
             return trimmed;
         }
 
-        // "Generate N valid Rift Mutation choices for Player" - the exact request Cursed Rift's
-        // mutation-reward stage needs (see CursedRiftUtility.ConfirmSacrifice/docs/
-        // breathing-poi.md), reusing CollectRiftMutationCandidates + DrawWeighted directly rather
-        // than duplicating the mutation roll. Deliberately bypasses OpenUpgradeScreen entirely -
-        // returns a plain array and touches no qtn component, so the caller decides where the
-        // result lives (CursedRiftInteraction.MutationChoices, not LevelUpChoice) and this stays
-        // fully independent of Global.LevelUpScreenOpen/GameState.Upgrade/GameplaySystemGroup.
+        // "Generate N valid Rift Mutation choices for Player" - the exact request Cursed Rift
+        // needs (see CursedRiftUtility.TryBeginInteraction/docs/breathing-poi.md, called with N=1),
+        // reusing CollectRiftMutationCandidates + DrawWeighted directly rather than duplicating the
+        // mutation roll. Deliberately bypasses OpenUpgradeScreen entirely - returns a plain array
+        // and touches no qtn component, so the caller decides where the result lives
+        // (CursedRiftInteraction.Mutation, not LevelUpChoice) and this stays fully independent of
+        // Global.LevelUpScreenOpen/GameState.Upgrade/GameplaySystemGroup.
         public static LevelUpOption[] RollMutationOptions(Frame f, EntityRef entity, LevelUpConfig config, int choiceCount)
         {
             List<Candidate> candidates = new List<Candidate>();

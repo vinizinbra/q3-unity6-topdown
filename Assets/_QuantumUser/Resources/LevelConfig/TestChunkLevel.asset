@@ -75,7 +75,8 @@ MonoBehaviour:
       Weight:
         RawValue: 65536
     Count: 1
-    MustHave: 1
+    MustHave: 0
+    GroupId: 1
   - Type: 5
     Prototypes:
     - Prototype:
@@ -84,7 +85,8 @@ MonoBehaviour:
       Weight:
         RawValue: 65536
     Count: 1
-    MustHave: 1
+    MustHave: 0
+    GroupId: 1
   - Type: 6
     Prototypes:
     - Prototype:
@@ -93,7 +95,8 @@ MonoBehaviour:
       Weight:
         RawValue: 65536
     Count: 1
-    MustHave: 1
+    MustHave: 0
+    GroupId: 1
   - Type: 3
     Prototypes:
     - Prototype:
@@ -112,6 +115,10 @@ MonoBehaviour:
         RawValue: 65536
     Count: 1
     MustHave: 1
+  ChunkPoolGroups:
+  - GroupId: 1
+    MinRequired: 2
+    MaxRequired: 3
   ChunksPerGenerationTick: 5
   GapFillerPrototype:
     Id:

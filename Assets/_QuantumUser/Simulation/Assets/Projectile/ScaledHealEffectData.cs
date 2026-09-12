@@ -22,6 +22,14 @@ namespace Quantum
 
             FP requested = health->MaxHealth * context.Damage * HealMultiplier;
 
+            if (requested <= FP._0)
+                return;
+
+            // Floor every non-zero Support Beat heal at 1 HP - an un-upgraded Portable Speaker's
+            // halved percent (0.5% of a 100 HP hero) would otherwise resolve under a point, which
+            // both displays as "+0" in the floating combat text and is a functionally invisible heal.
+            requested = FPMath.Max(requested, FP._1);
+
             // Per-deployable-instance healing cap (Zara's "20% Max HP per Totem per ally") - a no-op
             // for any area that doesn't carry an AreaAllyBudget, which is every one that didn't opt
             // in. Once the allowance is spent this returns 0 and the Support Beat still delivers

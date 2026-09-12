@@ -1,5 +1,6 @@
 namespace Quantum
 {
+    using System.Collections.Generic;
     using Photon.Deterministic;
     using UnityEngine.Scripting;
 
@@ -86,13 +87,13 @@ namespace Quantum
             if (spawner.Chance > FP._0 && DamageUtility.RollChance(f, spawner.Chance) == false)
                 return;
 
-            if (spawner.Prototype.Id.IsValid == false)
+            if (TryPickPrototype(f, spawner.Prototypes, out AssetRef<EntityPrototype> prototype) == false)
             {
-                Log.Debug($"[Talents] {chunkEntity}'s ChunkSpawnConfig entry {index} satisfied but no Prototype assigned - skipping");
+                Log.Debug($"[Talents] {chunkEntity}'s ChunkSpawnConfig entry {index} satisfied but no Prototypes assigned - skipping");
                 return;
             }
 
-            EntityRef spawned = f.Create(spawner.Prototype);
+            EntityRef spawned = f.Create(prototype);
 
             if (f.Unsafe.TryGetPointer<Transform3D>(spawned, out var spawnedTransform))
             {
@@ -113,6 +114,42 @@ namespace Quantum
             }
 
             Log.Debug($"[Talents] {chunkEntity}'s ChunkSpawnConfig entry {index} spawned {spawned}");
+        }
+
+        // Weighted pick among a spawn entry's alternatives - reuses WeightedDrawUtility (the shared
+        // implementation new weighted draws in this codebase are meant to use) rather than
+        // hand-rolling a second cumulative-weight loop. A single-entry list (the common case)
+        // always resolves to that one entry regardless of its Weight.
+        private static bool TryPickPrototype(Frame f, WeightedEntityPrototype[] candidates, out AssetRef<EntityPrototype> prototype)
+        {
+            prototype = default;
+
+            if (candidates == null || candidates.Length == 0)
+                return false;
+
+            var weighted = new List<WeightedDrawUtility.Candidate<AssetRef<EntityPrototype>>>(candidates.Length);
+
+            for (int i = 0; i < candidates.Length; i++)
+            {
+                if (candidates[i].Prototype.Id.IsValid == false)
+                    continue;
+
+                // An unauthored (0) Weight defaults to 1 rather than soft-disabling the candidate -
+                // same "0 reads as no-op" convention SpawnEntityWithRequirement.Chance itself follows -
+                // so a single-entry list (the common case, e.g. every entry the baker writes) spawns
+                // that one entry without anyone having to remember to set a Weight at all.
+                int weight = candidates[i].Weight > 0 ? candidates[i].Weight : 1;
+
+                weighted.Add(new WeightedDrawUtility.Candidate<AssetRef<EntityPrototype>> { Value = candidates[i].Prototype, Weight = weight });
+            }
+
+            AssetRef<EntityPrototype>[] picked = WeightedDrawUtility.Draw(f, weighted, 1);
+
+            if (picked.Length == 0)
+                return false;
+
+            prototype = picked[0];
+            return true;
         }
     }
 }

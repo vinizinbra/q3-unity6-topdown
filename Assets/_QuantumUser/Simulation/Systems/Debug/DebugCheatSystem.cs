@@ -32,6 +32,7 @@ namespace Quantum
             if (f.Global->DebugCheatsApplied == true)
             {
                 TryOpenNextPendingLevelUp(f);
+                TryOpenPendingRiftMutationChoice(f);
             }
 
             // Captured AFTER TryOpenNextPendingLevelUp so it reflects this tick's final, published
@@ -186,6 +187,26 @@ namespace Quantum
             }
 
             Log.Debug($"[Debug] opened debug level-up screen ({f.Global->DebugPendingLevelUps} remaining) at level {f.Global->Level + 1}");
+        }
+
+        // Companion to TryOpenNextPendingLevelUp above, queued by CheatSystem.SetupTestRun for its
+        // Rift Mutation choice screen - same "closed AND closed a full published tick ago" gate
+        // (DebugLevelUpScreenOpenLastTick), since BeginChestScreen's own OpenUpgradeScreen guard would
+        // otherwise silently drop it while SetupTestRun's own ChooseWeapon screen (opened the same
+        // tick) is still up. `player` is unused by BeginChestScreen (it always rolls for every
+        // connected player - see that method's own comment), so EntityRef.None is fine here.
+        private void TryOpenPendingRiftMutationChoice(Frame f)
+        {
+            if (f.Global->DebugPendingRiftMutationChoice == false
+                || f.Global->LevelUpScreenOpen == true
+                || f.Global->DebugLevelUpScreenOpenLastTick == true
+                || f.Global->CurrentState == GameState.Boss)
+                return;
+
+            f.Global->DebugPendingRiftMutationChoice = false;
+            LevelUpUtility.BeginChestScreen(f, EntityRef.None, LevelUpCategory.RiftMutation);
+
+            Log.Debug("[Debug] opened deferred debug Rift Mutation choice screen");
         }
     }
 }

@@ -23,7 +23,7 @@ MonoBehaviour:
   Element: 0
   Family: 3
   CriticalChance:
-    RawValue: 13107
+    RawValue: 6554
   CriticalDamageBonus:
     RawValue: 32768
   FireRate:
@@ -44,6 +44,7 @@ MonoBehaviour:
       RawValue: 0
     Z:
       RawValue: 16384
+  BonusBounces: 0
   ProjectileData:
     Id:
       Value: 2052039704194794421

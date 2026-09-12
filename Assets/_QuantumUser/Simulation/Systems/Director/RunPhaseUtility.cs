@@ -11,23 +11,20 @@ namespace Quantum
     // something real to wait on; see CombatDirectorSystem.ApplyPhaseGameState's own comment.
     public static unsafe class RunPhaseUtility
     {
-        // Section 31 "Situation A" of the design brief: a player still SelectingSacrifice (no cost
-        // paid yet) when the Break ends has their interaction cancelled outright, no cost applied.
-        // A player who already picked a sacrifice (SelectingMutation - cost already applied by
-        // CursedRiftUtility.SelectSacrifice) is deliberately left alone and must finish -
-        // CursedRiftSystem keeps processing their commands regardless of CurrentState, so this
-        // sweep is the ONLY place Breathing's own end has any effect on an in-progress interaction.
-        // Collected into a list first rather than removed mid-filter-iteration, same precaution
-        // every other sweep in this file uses.
+        // Unconditional sweep - Cursed Rift's own interaction is now a single atomic screen
+        // (nothing is applied until CursedRiftUtility.Confirm), so there's no "cost already paid,
+        // reward still pending" mid-state left to distinguish by anymore. Same shape as
+        // CloseStoreInteractionsOnBreathingEnd below - Breathing ending mid-Cursed-Rift always
+        // cancels cleanly, no cost ever lost. Collected into a list first rather than removed
+        // mid-filter-iteration, same precaution every other sweep in this file uses.
         public static void CancelUncommittedCursedRiftInteractions(Frame f)
         {
             List<EntityRef> toCancel = new List<EntityRef>();
             var filtered = f.Filter<CursedRiftInteraction>();
 
-            while (filtered.Next(out EntityRef entity, out CursedRiftInteraction interaction))
+            while (filtered.Next(out EntityRef entity, out CursedRiftInteraction _))
             {
-                if (interaction.State == CursedRiftInteractionState.SelectingSacrifice)
-                    toCancel.Add(entity);
+                toCancel.Add(entity);
             }
 
             for (int i = 0; i < toCancel.Count; i++)
@@ -36,7 +33,7 @@ namespace Quantum
             }
 
             if (toCancel.Count > 0)
-                Log.Debug($"[RunPhase] Breathing ended - cancelled {toCancel.Count} uncommitted Cursed Rift interaction(s)");
+                Log.Debug($"[RunPhase] Breathing ended - cancelled {toCancel.Count} Cursed Rift interaction(s)");
         }
 
         // Unconditional sweep, unlike CancelUncommittedCursedRiftInteractions above - Store has no

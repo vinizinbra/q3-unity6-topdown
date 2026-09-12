@@ -112,6 +112,10 @@ public enum VoiceLineTrigger
     // which happened; nothing about the voice line needs to.
     AccessoryRestored = 64,
 
+    // ---- Breathing-only POIs. See docs/breathing-poi.md. ----
+    // A real Base Skill press that actually healed at the Healing Shrine (the NotNeeded/already-full
+    // case goes through the generic ContextInteractionRejected toast instead, not a voice line).
+    HealingShrineUsed = 70,
 
     // ---- Extension point. Keyed by a context value rather than growing this enum per mechanic. ----
     HeroExceptionalEvent = 90,

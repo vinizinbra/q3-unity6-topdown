@@ -93,7 +93,7 @@ namespace QuantumUser.Editor
                 {
                     "At maximum Rage, gain <color=#FD3971>+20%</color> Weapon Damage.",
                     "Bonus increases to <color=#FD3971>+30%</color> Weapon Damage and <color=#FD3971>+50%</color> Reload Speed.",
-                    "Weapon Damage increases to <color=#FD3971>+40%</color>. Reaching maximum Rage also instantly refills the magazine once per Overdrive.",
+                    "Weapon Damage increases to <color=#FD3971>+40%</color>. While at maximum Rage, reloads are instant.",
                 };
                 asset.WeaponDamageBonus = new[] { FP.FromString("0.20"), FP.FromString("0.30"), FP.FromString("0.40") };
                 asset.ReloadSpeedBonus = new[] { FP._0, FP._0_50, FP._0_50 };

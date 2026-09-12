@@ -19,9 +19,8 @@
             factories.Add(new SelectLevelUpUpgradeCommand());
             factories.Add(new RerollLevelUpOptionsCommand());
             factories.Add(new KeepCurrentWeaponCommand());
-            factories.Add(new SelectSacrificeCommand());
+            factories.Add(new ConfirmCursedRiftCommand());
             factories.Add(new CancelCursedRiftCommand());
-            factories.Add(new SelectMutationCommand());
             factories.Add(new SkipBreathingCommand());
             factories.Add(new BuyStoreWeaponCommand());
             factories.Add(new BuyStoreFoodCommand());

@@ -1,7 +1,9 @@
 // Cursed Rift - the first complex Breathing POI (see docs/breathing-poi.md). Persistent world
 // entity, per-player usage, deliberate interaction (not automatic like Healing Shrine) via the
-// generic Context Interaction / Base-Skill redirect (see ContextInteraction.qtn). Contains a
-// two-step irreversible choice: sacrifice something now for a Rift Mutation reward.
+// generic Context Interaction / Base-Skill redirect (see ContextInteraction.qtn). One roll (a
+// sacrifice + a mutation reward, rolled together) shown as a single screen - the sacrifice's cost
+// is shown directly on the mutation card, one "SACRIFICE" button commits both at once, no
+// separate confirm step.
 component CursedRift
 {
     PoiAvailability Availability;
@@ -12,35 +14,41 @@ component CursedRift
     // does a player need to be."
 }
 
-// SelectingSacrifice -> SelectingMutation -> (component removed on completion, no explicit
-// "Completed" value needed - its own absence IS completion, same convention LevelUpChoice's
-// presence/absence already uses). Clicking a sacrifice card commits immediately (applies its
-// cost) and rolls straight into SelectingMutation - same "one click = one irreversible pick" idiom
-// every other Choose Window screen (Level-Up, Choose Weapon) already uses; there's deliberately no
-// separate confirm step in between.
-enum CursedRiftInteractionState : Byte
-{
-    SelectingSacrifice,
-    SelectingMutation
-}
-
-// One player's own in-progress Cursed Rift transaction - attached the instant TryBeginInteraction
-// succeeds (CursedRiftUtility), removed on completion or on a pre-payment cancel. Lives on the
-// player's own character entity, same "per-player interaction state, found via PlayerLink"
-// convention LevelUpChoice already uses - but deliberately NOT LevelUpChoice itself, and never
-// touches Global.LevelUpScreenOpen/GameState.Upgrade/GameplaySystemGroup (see
-// CursedRiftSystem/docs/breathing-poi.md - Cursed Rift must not pause anything).
+// One player's own in-progress Cursed Rift offer - attached the instant TryBeginInteraction rolls
+// a sacrifice+mutation pair, removed on Confirm (cost applied + mutation granted) or Cancel
+// (nothing applied - see CursedRiftUtility). Lives on the player's own character entity, same
+// "per-player interaction state, found via PlayerLink" convention LevelUpChoice already uses - but
+// deliberately NOT LevelUpChoice itself, and never touches Global.LevelUpScreenOpen/
+// GameState.Upgrade/GameplaySystemGroup (see CursedRiftSystem/docs/breathing-poi.md - Cursed Rift
+// must not pause anything).
 component CursedRiftInteraction
 {
     EntityRef Rift;
-    CursedRiftInteractionState State;
+    AssetRef<SacrificeDefinition> Sacrifice;
 
-    array<AssetRef<SacrificeDefinition>>[3] SacrificeChoices;
-    Byte SacrificeChoiceCount; // may be < 3 if fewer than 3 sacrifices were eligible
+    // Same shape as one LevelUpChoice.Options entry - deliberately, so GameplayUiController's own
+    // BuildCardData (internal, see docs/choice-window-refactor.md) can render this completely
+    // unchanged, no separate mutation-card-building logic needed.
+    LevelUpOption Mutation;
+}
 
-    // Same array shape as LevelUpChoice.Options - deliberately, so GameplayUiController's own
-    // BuildCardData/KindText (internal, see docs/choice-window-refactor.md) can render these
-    // completely unchanged, no separate mutation-card-building logic needed.
-    array<LevelUpOption>[3] MutationChoices;
-    Byte MutationChoiceCount;
+// One already-rolled sacrifice+mutation pair a player hasn't taken yet, keyed by which Rift it
+// came from. Written the first time TryBeginInteraction rolls a fresh offer, read back on every
+// later TryBeginInteraction for the same (player, Rift) so Cancel + reopen keeps showing the SAME
+// offer instead of rerolling - the offer is meant to persist for the rest of the run, not per
+// interaction attempt, until the player actually confirms it (see CursedRiftUtility). Cleared only
+// on a successful Confirm; a Cancel deliberately leaves it untouched.
+struct CursedRiftOfferEntry
+{
+    EntityRef Rift;
+    AssetRef<SacrificeDefinition> Sacrifice;
+    LevelUpOption Mutation;
+}
+
+// Per-player, same fixed-array-of-keyed-entries convention PoiUsage/RiftMutationPicks/
+// GlobalUpgradePicks already use - 8 slots for the same reason PoiUsage's own array is 8 (see
+// Poi.qtn's own comment: "2 POI instances exist in the whole run today").
+component CursedRiftOffers
+{
+    array<CursedRiftOfferEntry>[8] Entries;
 }

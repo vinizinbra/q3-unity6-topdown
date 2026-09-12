@@ -822,14 +822,16 @@ namespace Quantum
         }
 
         // A weapon authored with ReloadDuration <= 0 gets an instant top-up plus the WeaponReloaded
-        // event, not a ReloadTimer that just happens to be very short.
+        // event, not a ReloadTimer that just happens to be very short. Max's Full Throttle rank 3
+        // (IsInstantReloadOverdriven) takes the same instant branch while at max Rage - checked once
+        // here, at the reload-trigger event, not polled every tick of an in-progress ReloadTimer.
         private static void StartReload(Frame f, EntityRef entity, Weapon* weapon)
         {
             weapon->TimeSinceFireReleased = FP._0;
 
             ApplyMagazineEmptiedPerks(f, entity);
 
-            if (weapon->ReloadDuration > FP._0)
+            if (weapon->ReloadDuration > FP._0 && IsInstantReloadOverdriven(f, entity) == false)
             {
                 weapon->ReloadTimer = StatUtility.GetReloadDuration(f, entity, weapon->ReloadDuration);
                 TryApplyEmergencyReload(f, entity);
@@ -840,6 +842,16 @@ namespace Quantum
                 weapon->Ammo = weapon->MagazineSize;
                 f.Events.WeaponReloaded(entity);
             }
+        }
+
+        // Max's Full Throttle rank 3 - every reload started while at max Rage completes instantly,
+        // for as long as Rage stays maxed (not just the instant of the threshold crossing, which
+        // MaxAscensionUtility.ApplyFullThrottle's own one-shot RefillMagazine call already covers).
+        private static bool IsInstantReloadOverdriven(Frame f, EntityRef entity)
+        {
+            return f.Unsafe.TryGetPointer<FullThrottleUpgrade>(entity, out var fullThrottle) == true
+                && fullThrottle->HasInstantReload == true
+                && RageOverdriveUtility.IsAtMaxRage(f, entity) == true;
         }
 
         // Empty Chamber/Combat Reboot - both react to the magazine emptying, not to the reload
@@ -862,7 +874,7 @@ namespace Quantum
         }
 
         // Only applied for a real (ReloadTimer-driven) reload, not the instant-reload-overdriven
-        // case just below (nothing to be mid-reload during) or the idle auto-top-up in
+        // case just above (nothing to be mid-reload during) or the idle auto-top-up in
         // UpdateReload (that's not fictionally "reloading" at all). Reverted the moment the real
         // reload actually finishes - see UpdateReload's timer-complete branch.
         private static void TryApplyEmergencyReload(Frame f, EntityRef entity)
@@ -895,9 +907,9 @@ namespace Quantum
 
         // Generic "top this entity's magazine back up right now, as if a reload had just completed" -
         // the reusable primitive behind any one-shot reload grant (Max's Full Throttle rank 3 firing
-        // once on the max-Rage crossing today). Deliberately an explicit, event-driven call rather
-        // than a live condition consulted inside StartReload, so nothing can repeat it every tick.
-        // Also cancels an in-progress reload, since the magazine is full either way.
+        // once on the max-Rage crossing itself, on top of IsInstantReloadOverdriven covering every
+        // reload for the rest of that max-Rage window). Also cancels an in-progress reload, since the
+        // magazine is full either way.
         public static void RefillMagazine(Frame f, EntityRef entity)
         {
             if (f.Unsafe.TryGetPointer<Weapon>(entity, out var weapon) == false)

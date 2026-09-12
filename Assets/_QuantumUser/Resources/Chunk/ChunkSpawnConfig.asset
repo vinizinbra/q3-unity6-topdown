@@ -17,9 +17,11 @@ MonoBehaviour:
     Guid:
       Value: 341754445872397010
   Spawns:
-  - Prototype:
-      Id:
-        Value: 1321529338188975839
+  - Prototypes:
+    - Prototype:
+        Id:
+          Value: 1321529338188975839
+      Weight: 1
     Offset:
       X:
         RawValue: 1503818

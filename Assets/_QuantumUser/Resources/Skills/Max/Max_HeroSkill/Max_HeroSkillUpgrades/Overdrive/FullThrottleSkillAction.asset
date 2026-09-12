@@ -21,7 +21,7 @@ MonoBehaviour:
   RankDescriptions:
   - "At maximum Rage, gain <color=#FD3971>+20%</color> Weapon Damage."
   - "Bonus increases to <color=#FD3971>+30%</color> Weapon Damage and <color=#FD3971>+50%</color> Reload Speed."
-  - "Weapon Damage increases to <color=#FD3971>+40%</color>. Reaching maximum Rage also instantly refills the magazine once per Overdrive."
+  - "Weapon Damage increases to <color=#FD3971>+40%</color>. While at maximum Rage, reloads are instant."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

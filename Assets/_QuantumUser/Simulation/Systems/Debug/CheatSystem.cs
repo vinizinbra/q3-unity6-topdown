@@ -223,6 +223,16 @@ namespace Quantum
                 f.Unsafe.GetPointer<Chunk>(chunkEntity)->Discovered = true;
 
             CoinUtility.Grant(f, player, (FP)5000);
+
+            // Unlike the level-ups above, these two ARE meant to be actually picked, not
+            // auto-resolved - LevelUpUtility.BeginChestScreen (the same forced-category screen Open
+            // Chest already uses) opens a real ChooseWeapon card screen right here and pauses the
+            // game for it. The Rift Mutation screen can't also open this same tick (OpenUpgradeScreen's
+            // LevelUpScreenOpen guard would just silently drop it while the weapon screen is up) so
+            // it's deferred via DebugPendingRiftMutationChoice - see DebugCheatSystem.
+            // TryOpenPendingRiftMutationChoice for the drain.
+            LevelUpUtility.BeginChestScreen(f, player, LevelUpCategory.ChooseWeapon);
+            f.Global->DebugPendingRiftMutationChoice = true;
         }
 
         // FIX (was: GrantExperienceUpTo, which topped TotalExperience up in one lump sum and routed

@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dd693bb7010264a078a35e61909fa63c, type: 3}
-  m_Name: BloodTithe
+  m_Name: BloodTitheNotSure
   m_EditorClassIdentifier: Quantum.Simulation::Quantum.BloodTitheMutationData
   Identifier:
-    Path: _QuantumUser/Resources/LevelUp/RiftMutation/BloodTithe
+    Path: _QuantumUser/Resources/LevelUp/RiftMutation/Deleted/BloodTitheNotSure
     Guid:
       Value: 528128519533753672
   Icon: {fileID: 0}
@@ -21,7 +21,8 @@ MonoBehaviour:
   Rarity: 2
   Scope: 1
   IncompatibleWith: []
-  Description: 'The whole team gains <color=#FD3971>{0:+0;-0}%</color> Rift Shards, but enemies deal <color=#FD3971>{1:+0;-0}%</color> Damage'
+  Description: The whole team gains <color=#FD3971>{0:+0;-0}%</color> Rift Shards,
+    but enemies deal <color=#FD3971>{1:+0;-0}%</color> Damage
   RiftShardGainBonus:
     RawValue: 49152
   EnemyDamageBonus:
