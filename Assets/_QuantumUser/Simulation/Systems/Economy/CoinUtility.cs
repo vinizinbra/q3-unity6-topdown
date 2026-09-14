@@ -55,7 +55,11 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<CurrencyOrb>(orb, out var currencyOrb) == true)
             {
                 currencyOrb->Type = CurrencyOrbType.Coin;
-                currencyOrb->Value = tierStats.CoinValue;
+                // Kill drops scale with the party (more spawns via CoopGlobalKey.DirectorPressure)
+                // while every wallet banks every orb, so the co-op row discounts them here. Barrel loot
+                // (BreakableUtility.TrySpawnLoot) is deliberately NOT discounted - the level has the
+                // same crates whatever the party size.
+                currencyOrb->Value = tierStats.CoinValue * ResolveCoopCoinGain(f);
             }
 
             f.AddOrGet<DestroyAfterTime>(orb, out var destroy);
@@ -64,6 +68,13 @@ namespace Quantum
 
         // Credits ONE player's own wallet (CharacterStats.Coins) directly - no gain-multiplier
         // scaling here, that's already been applied by the caller (see GrantAll below).
+        // BalanceConfig.CoopGlobalKey.CoinGain - 1x when the asset is unassigned.
+        public static FP ResolveCoopCoinGain(Frame f)
+        {
+            BalanceConfig balance = f.FindAsset(f.RuntimeConfig.BalanceConfig);
+            return balance != null ? balance.GetCoopGlobal(CoopGlobalKey.CoinGain, f.PlayerConnectedCount) : FP._1;
+        }
+
         public static void Grant(Frame f, EntityRef player, FP amount)
         {
             if (f.Unsafe.TryGetPointer<CharacterStats>(player, out var stats) == false)

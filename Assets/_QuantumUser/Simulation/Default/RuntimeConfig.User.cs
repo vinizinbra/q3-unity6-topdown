@@ -229,6 +229,16 @@
             // an unauthored (all-zero) BotSettings therefore has to mean "the sensible default".
             public bool DisableAutoLevelUpPick;
             public bool DisableAutoBreathingSkipVote;
+
+            [Header("Solo (no follow target)")]
+            // A bot with nobody left to follow (no human, no other bot - see
+            // BotInputSystem.UpdateSolo) picks its own goal instead of standing still: the nearest
+            // undiscovered Chunk, or the nearest enemy/XP orb, re-evaluated on this interval (or
+            // immediately if the current goal stops being valid).
+            public FP SoloRepickInterval;
+
+            // How far a solo bot looks for an enemy/XP orb to chase when picking a new goal.
+            public FP SoloSearchRange;
         }
 
         // The pickup entity prototypes each currency/pickup utility spawns on an eligible enemy

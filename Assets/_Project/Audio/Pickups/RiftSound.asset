@@ -38,7 +38,7 @@ MonoBehaviour:
   quieterWhenRemote: 0
   localPlayerOnly: 0
   spatial: 1
-  cooldown: 0
+  cooldown: 0.1
   maxConcurrent: 8
   priority: 128
   useUnscaledTime: 1

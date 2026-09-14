@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 7108315487778468620}
   - component: {fileID: 6671257063592409376}
   - component: {fileID: 8650884728783723831}
+  - component: {fileID: 6202662544587125855}
   m_Layer: 13
   m_Name: MaxBurningGround
   m_TagString: Untagged
@@ -453,6 +454,29 @@ MonoBehaviour:
       RawValue: 0
     TargetMask:
       Value: 0
+--- !u!114 &6202662544587125855
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2674971309769801671}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80f318d57a818436b9e4e87476dbe6b0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Quantum.Unity::Quantum.QPrototypeGroundOffset
+  Prototype:
+    Enabled:
+      Value: 1
+    Offset:
+      RawValue: 6554
+    FallGravityMultiplier:
+      RawValue: 65536
+    FloatSpeed:
+      RawValue: 0
+    FallVelocity:
+      RawValue: 0
 --- !u!1001 &1945283703376797757
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -479,7 +503,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 366398508269011731, guid: 5334360cd0cfad84bbf6855beaf10de4, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: -0.5
       objectReference: {fileID: 0}
     - target: {fileID: 366398508269011731, guid: 5334360cd0cfad84bbf6855beaf10de4, type: 3}
       propertyPath: m_LocalPosition.z

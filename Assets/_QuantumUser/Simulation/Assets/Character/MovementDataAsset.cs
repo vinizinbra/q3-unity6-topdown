@@ -61,7 +61,10 @@ namespace Quantum
         // probe distance a genuinely uncrossable lake does NOT, so a single straight-down probe
         // right at the edge can't tell them apart on its own.
         //
-        // How far down each forward sample probes.
+        // Floor on how far down each forward sample probes - PlayerMovementProcessor.
+        // HasSurvivableLandingAhead stretches this further when needed so it always reaches
+        // LevelConfig.FallDeathHeight, so a tall-but-safe drop to solid ground isn't mistaken for a
+        // bottomless void just because it's deeper than this.
         public FP WaterCheckDistance = 5;
 
         // How far past EdgeProbeDistance the forward scan keeps sampling for a landing before

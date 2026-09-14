@@ -37,12 +37,19 @@ namespace Quantum
         ToggleManualFire,       // flip the sender's Weapon.CheatManualFire (auto-shoot off <-> on)
         JumpToBreathing,        // Amount = 1-4, the Nth Breathing-kind SurvivalConfig phase; also tops
                                  // TotalExperience up to that breath's paired display level if under it
-        SetupTestRun            // Amount = 1-4, same breath number as JumpToBreathing - one-click
+        SetupTestRun,           // Amount = 1-4, same breath number as JumpToBreathing - one-click
                                  // "midgame test setup" combo: JumpToBreathing(Amount), then instead
                                  // of leaving the level-ups that jump queues to be clicked through one
                                  // at a time, auto-resolves the whole queue synchronously right here;
                                  // also reveals the whole minimap (every Chunk.Discovered = true) and
                                  // tops the sender up to 5000 coins
+        BecomeBot               // adds BotBrain to the sender's own entity (see
+                                 // PlayerSpawnUtility.ConvertToBot) - BotInputSystem takes over its
+                                 // Input the very next tick. Sim-only: the sender's camera/HUD/audio
+                                 // stay exactly as they were (CharView/MyLocalPlayer only resolve
+                                 // RuntimePlayer.IsBot once, at entity creation), and it doesn't
+                                 // survive a death/respawn (Spawn re-reads the real IsBot, still
+                                 // false) - reapply after respawning if still wanted.
     }
 
     // Generic debug/cheat command. IMPORTANT: this command AND its handler (CheatSystem) compile on

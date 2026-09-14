@@ -39,6 +39,7 @@ namespace Quantum
             SeedStats(f, owner, weapon);
             ApplyPerks(f, owner, weapon);
             ApplyPixieExplosiveWeapon(f, owner, weapon);
+            ApplyBaseTraits(f, owner, weapon, f.FindAsset(weaponDataRef));
             ApplyOwnerWeaponModifiers(f, owner, weapon);
 
             weapon->Ammo = weapon->MagazineSize;
@@ -109,6 +110,30 @@ namespace Quantum
             // brief calls out for this line. ProcCooldown is 0 unless a playtest turns it on.
             procs->ExplosiveSequenceChance = explosive->ProcChance;
             procs->ExplosiveSequenceCooldown = explosive->ProcCooldown;
+        }
+
+        // Bakes a weapon's own baseline WeaponPerkData picks (WeaponDataAsset.BaseTraits) onto
+        // Weapon exactly like ApplyPerks bakes a rolled Weapon.Perks entry - same Apply(f, owner,
+        // weapon) dispatch, just a different source list. This is what lets Double Barrel/Burst
+        // Rifle/Frost Revolver/Drum SMG/Cluster Launcher/Hellshot/Disruptor express their own
+        // signature as an ordinary WeaponPerkData asset (BurstFireWeaponPerkData/
+        // FinalRoundWeaponPerkData/SuppressiveCycleWeaponPerkData/SplitShotWeaponPerkData/
+        // ExplosiveCritWeaponPerkData/CritStunWeaponPerkData) instead of a bespoke flat field per
+        // trait on WeaponDataAsset. Re-applied unconditionally on every Equip, same as
+        // ApplyPixieExplosiveWeapon directly above - a weapon's own signature isn't a Perks[5] roll
+        // and never gets removed by SeedPerkRoster the way a rolled perk's components do (each perk
+        // class's own Apply is what decides whether re-applying idempotently is safe - every one of
+        // them either sets an absolute/Max-aggregated value or resets to a fresh idle state, same as
+        // a rolled perk re-baked on a weapon swap).
+        private static void ApplyBaseTraits(Frame f, EntityRef owner, Weapon* weapon, WeaponDataAsset weaponData)
+        {
+            var traits = weaponData.BaseTraits;
+
+            for (int i = 0; i < traits.Count; i++)
+            {
+                if (traits[i].IsValid)
+                    f.FindAsset(traits[i]).Apply(f, owner, weapon);
+            }
         }
 
         // The RIFT MUTATION stage of the weapon-stat pipeline:
@@ -209,6 +234,7 @@ namespace Quantum
             f.Remove<WeaponOnKillReactions>(owner);
             f.Remove<WeaponOnCritReactions>(owner);
             f.Remove<WeaponElementInfusion>(owner);
+            f.Remove<WeaponBurstState>(owner);
         }
 
         private static void ApplyPerks(Frame f, EntityRef owner, Weapon* weapon)
@@ -273,6 +299,23 @@ namespace Quantum
             }
         }
 
+        // Same shape as ProcessGrantPerkCommand directly above - only the debug weapon tester
+        // (View/Managers/WeaponDataDebugTrigger.cs) sends this today, reused as-is once a real
+        // pickup/Store/Choose-Weapon flow needs to equip a weapon outside of
+        // CharacterSystem.SeedWeapon's own initial-spawn call to Equip.
+        private static void ProcessEquipWeaponCommand(Frame f, ref Filter filter)
+        {
+            if (f.Unsafe.TryGetPointer<PlayerLink>(filter.Entity, out var playerLink) == false)
+                return;
+
+            if (f.GetPlayerCommand(playerLink->Player) is not EquipWeaponCommand command
+                || command.WeaponData.IsValid == false)
+                return;
+
+            Equip(f, filter.Entity, filter.Weapon, command.WeaponData);
+            Log.Debug($"[Weapon] {filter.Entity} equipped {command.WeaponData} via command");
+        }
+
         public override void Update(Frame f, ref Filter filter)
         {
             if (filter.Weapon->FireCooldownTimer > FP._0)
@@ -285,11 +328,22 @@ namespace Quantum
             // ramp decay/Killer Instinct timer/pending echoes below - none of them should freeze
             // just because the wielder is stunned or holding no input this tick.
             ProcessGrantPerkCommand(f, ref filter);
+            ProcessEquipWeaponCommand(f, ref filter);
             TickRamp(f, filter.Entity, filter.Weapon);
             TickKillerInstinct(f, filter.Entity, f.DeltaTime);
             TickPendingEchoes(f, filter.Entity, filter.Weapon, f.DeltaTime);
             TickPendingDoubleTap(f, filter.Entity, filter.Weapon, f.DeltaTime);
+            TickWeaponBurst(f, filter.Entity, filter.Weapon, f.DeltaTime);
             TickExplosiveProcCooldown(f, filter.Entity);
+
+            // A burst already in flight (Double Barrel/Burst Rifle) owns this weapon's next few
+            // ticks - its own queued shots just fired/are still counting down above, so a fresh
+            // trigger pull below can't interrupt or restack it. Same "don't stall/replace the
+            // in-flight one" reasoning PendingDoubleTap/PendingEchoes already rely on for their own
+            // single-slot queues.
+            if (f.Unsafe.TryGetPointer<WeaponBurstState>(filter.Entity, out var activeBurst) == true
+                && activeBurst->ShotsRemaining > 0)
+                return;
 
             if (StatusEffectUtility.IsStunned(f, filter.Entity) == true)
                 return;
@@ -367,6 +421,18 @@ namespace Quantum
             bool isExplosiveProc = ResolveExplosiveProc(f, postImpactProcs);
             bool isCataclysm = postImpactProcs != null && postImpactProcs->HasCataclysmRound == true && isLastBullet == true;
 
+            // Present only when BurstFireWeaponPerkData was baked into this weapon's own
+            // WeaponDataAsset.BaseTraits (WeaponSystem.ApplyBaseTraits) - absence means "this weapon
+            // doesn't burst" exactly the way every other optional perk component's absence means "not
+            // rolled". Held onto for the burst-start block further down too, not just this check.
+            f.Unsafe.TryGetPointer<WeaponBurstState>(filter.Entity, out var burstTemplate);
+
+            // Burst Rifle's 3rd-shot-always-crits - this trigger pull's shot is always burst index 0
+            // (a queued follow-up shot resolves its own index in TickWeaponBurst instead), so this
+            // only actually forces anything on a (degenerate) BurstCount == 1 weapon that also
+            // authored CritOnFinalBurstShot.
+            bool forceCritical = burstTemplate != null && burstTemplate->CritOnFinalShot && burstTemplate->BurstCount <= 1;
+
             // Read fresh off the asset every fire, not a baked stat - see Weapon.qtn - so tuning
             // WeaponDataAsset.Damage/FireRate in the Inspector applies immediately to
             // already-equipped weapons instead of only the next Equip.
@@ -395,7 +461,7 @@ namespace Quantum
             grantPierceAmount += ResolveLongRangePierceBonus(f, filter.Entity, filter.Aim->Target, casterPosition);
 
             FireShot(f, filter.Entity, filter.Weapon, weaponData, damage, casterPosition, aimAngle, holdOffset,
-                spawnPosition, aimDirection, filter.Aim->Target, aimAtCenter, isExplosiveProc, isCataclysm, grantPierceAmount, isFirstBullet);
+                spawnPosition, aimDirection, filter.Aim->Target, aimAtCenter, isExplosiveProc, isCataclysm, grantPierceAmount, isFirstBullet, forceCritical);
 
             if (f.Unsafe.TryGetPointer<WeaponFireTimeMods>(filter.Entity, out var fireMods) == true
                 && fireMods->DoubleTapChance > FP._0 && DamageUtility.RollChance(f, fireMods->DoubleTapChance) == true)
@@ -433,7 +499,39 @@ namespace Quantum
                 EnqueueEcho(echoState, spawnPosition, aimDirection, damage);
             }
 
-            filter.Weapon->FireCooldownTimer = ResolveLiveFireCooldown(f, filter.Entity, filter.Weapon, weaponData, magazineFraction);
+            // Double Barrel/Burst Rifle - this trigger pull just fired burst index 0 above; the
+            // remaining BurstCount-1 shots are queued into WeaponBurstState and fired one at a time
+            // by TickWeaponBurst, BurstDelay apart. FireCooldownTimer deliberately stays untouched
+            // here - the weapon's normal cooldown only starts once the whole burst is spent (see
+            // TickWeaponBurst), not after this first shot. BurstCount/Delay/CritOnFinalShot are
+            // BurstFireWeaponPerkData's own baked template values (burstTemplate, resolved above) -
+            // preserved here rather than re-read off WeaponDataAsset, since that's no longer where
+            // they live.
+            if (burstTemplate != null && burstTemplate->BurstCount > 1)
+            {
+                int burstCount = burstTemplate->BurstCount;
+                FP burstDelay = burstTemplate->Delay;
+                bool critOnFinalShot = burstTemplate->CritOnFinalShot;
+
+                *burstTemplate = new WeaponBurstState
+                {
+                    ShotsRemaining = burstCount - 1,
+                    NextShotIndex = 1,
+                    Timer = burstDelay,
+                    Delay = burstDelay,
+                    CritOnFinalShot = critOnFinalShot,
+                    BurstCount = burstCount,
+                    Damage = damage,
+                    IsExplosiveProc = isExplosiveProc,
+                    IsCataclysm = isCataclysm,
+                    GrantPierceAmount = grantPierceAmount,
+                    IsFirstBullet = isFirstBullet
+                };
+            }
+            else
+            {
+                filter.Weapon->FireCooldownTimer = ResolveLiveFireCooldown(f, filter.Entity, filter.Weapon, weaponData, magazineFraction);
+            }
 
             // Run & Gun rank 3 (Max Dash Ascension) - a timed window where firing doesn't consume
             // Ammo at all, rather than a bigger magazine/instant reload.
@@ -459,7 +557,7 @@ namespace Quantum
         private static void FireShot(Frame f, EntityRef owner, Weapon* weapon, WeaponDataAsset weaponData, FP damage,
             FPVector3 casterPosition, FP aimAngle, FPVector3 holdOffset, FPVector3 spawnPosition, FPVector3 aimDirection,
             EntityRef target, bool aimAtCenter, bool isExplosiveProc, bool isCataclysm, int grantPierceAmount = 0,
-            bool isFirstBullet = false)
+            bool isFirstBullet = false, bool forceCritical = false)
         {
             switch (weaponData.FireType)
             {
@@ -468,12 +566,12 @@ namespace Quantum
                     // pierces - see FireHitscanPellet. It used to be dropped on the floor for the same
                     // reason Piercing Rounds/Ricochet were: both perks only ever wrote Projectile
                     // fields, so a raycast that hit once and stopped could never express either.
-                    FireHitscan(f, owner, weapon, weaponData, damage, spawnPosition, aimDirection, isExplosiveProc, isCataclysm, grantPierceAmount, isFirstBullet);
+                    FireHitscan(f, owner, weapon, weaponData, damage, spawnPosition, aimDirection, isExplosiveProc, isCataclysm, grantPierceAmount, isFirstBullet, forceCritical);
                     break;
 
                 case WeaponFireType.Projectile:
                     FireProjectile(f, owner, weapon, weaponData, damage, casterPosition, aimAngle, holdOffset, spawnPosition, aimDirection,
-                        target, aimAtCenter, isExplosiveProc, isCataclysm, grantPierceAmount, isFirstBullet);
+                        target, aimAtCenter, isExplosiveProc, isCataclysm, grantPierceAmount, isFirstBullet, forceCritical);
                     break;
             }
         }
@@ -775,6 +873,90 @@ namespace Quantum
                 pending.IsCataclysm, pending.GrantPierceAmount, pending.IsFirstBullet);
         }
 
+        // Fires Double Barrel/Burst Rifle's queued follow-up burst shots one at a time, Delay apart -
+        // see WeaponBurstState's own comment. Unlike TickPendingDoubleTap's single FREE bonus shot,
+        // each burst shot is a REAL shot of this trigger pull: it consumes its own Ammo, can trigger
+        // a reload mid-burst (Double Barrel's 2nd shot spending the last round), and only sets
+        // FireCooldownTimer once the whole burst is spent - the burst-start block at the tail of
+        // Update deliberately leaves it untouched after the first shot.
+        private static void TickWeaponBurst(Frame f, EntityRef owner, Weapon* weapon, FP deltaTime)
+        {
+            if (f.Unsafe.TryGetPointer<WeaponBurstState>(owner, out var burst) == false || burst->ShotsRemaining <= 0)
+                return;
+
+            burst->Timer -= deltaTime;
+
+            if (burst->Timer > FP._0)
+                return;
+
+            WeaponDataAsset weaponData = f.FindAsset(weapon->WeaponData);
+
+            // Read before Ammo decrements below, same "including this shot" convention
+            // ResolveMagazineFraction's own comment documents.
+            FP magazineFraction = ResolveMagazineFraction(weapon);
+            bool forceCritical = burst->CritOnFinalShot && burst->NextShotIndex == burst->BurstCount - 1;
+
+            // Re-resolved fresh off the owner's CURRENT Transform3D/Aim every burst shot - the same
+            // block Update() uses for the primary shot - rather than replaying a spawnPosition/
+            // aimDirection frozen at the moment the burst started. A twin-stick shooter keeps moving/
+            // turning during BurstDelay, so a frozen muzzle (the PendingDoubleTapShot/PendingEcho
+            // idiom those two use for their own delayed shots) would fire from wherever the character
+            // stood when the trigger was first pulled - visibly wrong for a weapon that fires every
+            // tick, unlike Double Tap's one small bonus shot.
+            FPVector3 spawnPosition = default;
+            FPVector3 aimDirection = default;
+            Aim* aim = null;
+
+            if (f.Unsafe.TryGetPointer<Transform3D>(owner, out var transform) == true
+                && f.Unsafe.TryGetPointer<Aim>(owner, out aim) == true)
+            {
+                FPVector3 casterPosition = transform->Position;
+                FP aimAngle = aim->Angle;
+                FPVector3 flatDirection = FPQuaternion.Euler(0, aimAngle, 0) * FPVector3.Forward;
+                bool aimAtCenter = ResolveAimsAtCenter(f, weaponData);
+                FPVector3 holdOffset = StatUtility.GetWeaponHoldOffset(f, owner, aim->FacingSign);
+                spawnPosition = ProjectileSpawner.ResolveSpawnOrigin(casterPosition, casterPosition, aimAngle, weaponData.SpawnAnchor, weaponData.SpawnOffset) + holdOffset;
+                aimDirection = ProjectileAimUtility.ResolveAimDirection(f, aim->Target, spawnPosition, flatDirection, aimAtCenter);
+            }
+
+            FireShot(f, owner, weapon, weaponData, burst->Damage, spawnPosition, FP._0, FPVector3.Zero,
+                spawnPosition, aimDirection, EntityRef.None, false, burst->IsExplosiveProc,
+                burst->IsCataclysm, burst->GrantPierceAmount, burst->IsFirstBullet, forceCritical);
+
+            if (StatusEffectUtility.HasNoAmmoConsumption(f, owner) == false)
+            {
+                weapon->Ammo--;
+            }
+
+            weapon->TimeSinceFireReleased = FP._0;
+
+            if (aim != null)
+            {
+                AimSystem.NotifyFired(aim);
+            }
+
+            f.Events.PlayerFired(owner);
+
+            burst->ShotsRemaining--;
+            burst->NextShotIndex++;
+
+            if (burst->ShotsRemaining > 0)
+            {
+                burst->Timer = burst->Delay;
+            }
+            else
+            {
+                // Burst spent - the weapon's normal fire-rate cooldown starts now, same
+                // ResolveLiveFireCooldown every other shot resolves through.
+                weapon->FireCooldownTimer = ResolveLiveFireCooldown(f, owner, weapon, weaponData, magazineFraction);
+            }
+
+            if (weapon->Ammo <= 0)
+            {
+                StartReload(f, owner, weapon);
+            }
+        }
+
         // Returns true while the weapon is busy reloading and can't fire this tick.
         private static bool UpdateReload(Frame f, EntityRef entity, Weapon* weapon, bool isFiring)
         {
@@ -950,7 +1132,7 @@ namespace Quantum
 
         private static void FireHitscan(Frame f, EntityRef owner, Weapon* weapon, WeaponDataAsset weaponData,
             FP damage, FPVector3 origin, FPVector3 direction, bool isExplosiveProc, bool isCataclysm,
-            int grantPierceAmount = 0, bool isFirstBullet = false)
+            int grantPierceAmount = 0, bool isFirstBullet = false, bool forceCritical = false)
         {
             FP range = weaponData.Range * weapon->RangeMultiplier;
             int pelletCount = weaponData.PelletCount > 0 ? weaponData.PelletCount : 1;
@@ -984,10 +1166,12 @@ namespace Quantum
             {
                 FPVector3 pelletDirection = FPQuaternion.Euler(0, GetPelletAngle(i, pelletCount, weaponData.SpreadAngle), 0) * direction;
 
-                // Only pellet 0 of a volley procs Explosive Sequence/Cataclysm Round - otherwise an
-                // N-pellet shotgun would detonate N explosions off a single trigger pull.
+                // Only pellet 0 of a volley procs Explosive Sequence/Cataclysm Round/a forced crit -
+                // otherwise an N-pellet shotgun would detonate N explosions (or crit N times) off a
+                // single trigger pull. Moot for every currently-authored weapon (none combine
+                // PelletCount > 1 with CritOnFinalBurstShot), but kept consistent with the other two.
                 FireHitscanPellet(f, owner, weaponData, damage, origin, pelletDirection, range, pierces, bounces,
-                    isExplosiveProc && i == 0, isCataclysm && i == 0, ref hitIndex);
+                    isExplosiveProc && i == 0, isCataclysm && i == 0, forceCritical && i == 0, ref hitIndex);
 
                 // Generic Damage Echo (Kai's Ghost Shot) - see FireProjectile's own comment; every
                 // pellet of the first shot of a fresh magazine independently schedules its own echo
@@ -1007,7 +1191,7 @@ namespace Quantum
         // wherever the path finally stops.
         private static void FireHitscanPellet(Frame f, EntityRef owner, WeaponDataAsset weaponData,
             FP damage, FPVector3 origin, FPVector3 direction, FP range, int pierces, int bounces,
-            bool isExplosiveProc, bool isCataclysm, ref byte hitIndex)
+            bool isExplosiveProc, bool isCataclysm, bool forceCritical, ref byte hitIndex)
         {
             FPVector3 segmentOrigin = origin;
             FPVector3 segmentDirection = direction;
@@ -1102,7 +1286,7 @@ namespace Quantum
                     if (IsHitscanTarget(f, hitEntity) == false)
                         break;
 
-                    ApplyHitscanHit(f, owner, weaponData, hitEntity, endPoint, damage, ref hitIndex);
+                    ApplyHitscanHit(f, owner, weaponData, hitEntity, endPoint, damage, ref hitIndex, forceCritical);
                     segmentTarget = hitEntity;
 
                     remainingPierces--;
@@ -1291,12 +1475,12 @@ namespace Quantum
         // Ricochet made "one shot, one contact" stop being true, and internal so Critical Rebound's
         // own hitscan bounce (WeaponPerkReactionSystem) lands exactly like a normal contact does.
         internal static void ApplyHitscanHit(Frame f, EntityRef owner, WeaponDataAsset weaponData,
-            EntityRef hitEntity, FPVector3 point, FP damage, ref byte hitIndex)
+            EntityRef hitEntity, FPVector3 point, FP damage, ref byte hitIndex, bool forceCritical = false)
         {
             // hitIndex: contacts sharing a target/damage/tick would otherwise hash-collide and get
             // silently collapsed by Quantum's event dedup - see Events.qtn's comment on
             // EntityDamaged.HitIndex.
-            DamageUtility.ApplyDamage(f, hitEntity, damage, owner, DamageSource.Weapon, hitIndex: hitIndex);
+            DamageUtility.ApplyDamage(f, hitEntity, damage, owner, DamageSource.Weapon, hitIndex: hitIndex, forceCritical: forceCritical);
             hitIndex++;
 
             Log.Debug($"[Weapon] Hitscan from {owner} hit {hitEntity} for {damage} base damage");
@@ -1394,7 +1578,7 @@ namespace Quantum
         private static void FireProjectile(Frame f, EntityRef owner, Weapon* weapon, WeaponDataAsset weaponData,
             FP damage, FPVector3 casterPosition, FP aimAngle, FPVector3 holdOffset, FPVector3 spawnPosition, FPVector3 aimDirection,
             EntityRef target, bool aimAtCenter, bool isExplosiveProc, bool isCataclysm, int grantPierceAmount = 0,
-            bool isFirstBullet = false)
+            bool isFirstBullet = false, bool forceCritical = false)
         {
             ProjectileDataAsset projectileData = f.FindAsset(weaponData.ProjectileData);
 
@@ -1440,10 +1624,11 @@ namespace Quantum
                 EntityRef entity = ProjectileSpawner.Spawn(f, owner, weaponData.ProjectileData, ref launch, damage, DamageSource.Weapon,
                     target: target, element: weaponData.Element, pelletIndex: i, movementOverride: movementOverride);
 
-                // Only pellet 0 of a volley procs Explosive Sequence/Cataclysm Round - see FireHitscan.
-                // Phantom Strike's bonus pierce is NOT pellet-0-gated - "your next shot pierces" reads
-                // as the whole shot, every pellet, not just one.
-                ApplyProjectilePerks(f, owner, entity, weapon, weaponData, isExplosiveProc && i == 0, isCataclysm && i == 0, grantPierceAmount);
+                // Only pellet 0 of a volley procs Explosive Sequence/Cataclysm Round/a forced crit -
+                // see FireHitscan. Phantom Strike's bonus pierce is NOT pellet-0-gated - "your next
+                // shot pierces" reads as the whole shot, every pellet, not just one.
+                ApplyProjectilePerks(f, owner, entity, weapon, weaponData, isExplosiveProc && i == 0, isCataclysm && i == 0,
+                    grantPierceAmount, forceCritical && i == 0);
 
                 // Generic Damage Echo (Kai's Ghost Shot, Neutral Mastery R3, is the first source) -
                 // every REAL pellet the FIRST shot of a fresh magazine actually launches independently
@@ -1469,7 +1654,7 @@ namespace Quantum
         // rank) baked on top of whatever Piercing Rounds already grants, consumed once per fired shot
         // back in Update, not per pellet. weaponData.BonusBounces is the weapon's own authored base
         // ricochet count, added unconditionally alongside whatever the Ricochet perk grants.
-        private static void ApplyProjectilePerks(Frame f, EntityRef owner, EntityRef entity, Weapon* weapon, WeaponDataAsset weaponData, bool isExplosiveProc, bool isCataclysm, int grantPierceAmount = 0)
+        private static void ApplyProjectilePerks(Frame f, EntityRef owner, EntityRef entity, Weapon* weapon, WeaponDataAsset weaponData, bool isExplosiveProc, bool isCataclysm, int grantPierceAmount = 0, bool forceCritical = false)
         {
             if (f.Unsafe.TryGetPointer<Projectile>(entity, out var projectile) == false)
                 return;
@@ -1486,6 +1671,7 @@ namespace Quantum
             projectile->MaxTravelDistance = WeaponPerkUtility.ResolveProjectileMaxTravelDistance(f, weapon, projectile);
             projectile->IsExplosiveProc = isExplosiveProc;
             projectile->IsCataclysm = isCataclysm;
+            projectile->ForceCritical = forceCritical;
 
             // Element Infusion perk (WeaponElementInfusion) - carry the extra element + its own proc
             // chance to impact, applied via StatusEffectUtility.TryApplyInfusedElement alongside the

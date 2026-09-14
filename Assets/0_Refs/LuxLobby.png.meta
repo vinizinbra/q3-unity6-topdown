@@ -69,7 +69,7 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 512
+    maxTextureSize: 1024
     resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 1
@@ -139,12 +139,12 @@ TextureImporter:
       name: LuxLobby_0
       rect:
         serializedVersion: 2
-        x: 60
-        y: 969
-        width: 366
-        height: 319
+        x: 16
+        y: 804
+        width: 514
+        height: 420
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -161,12 +161,12 @@ TextureImporter:
       name: LuxLobby_1
       rect:
         serializedVersion: 2
-        x: 487
-        y: 814
+        x: 526
+        y: 797
         width: 581
         height: 548
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -184,11 +184,11 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 32
-        y: 74
+        y: 339
         width: 316
-        height: 807
+        height: 470
       alignment: 9
-      pivot: {x: 0.66323435, y: 0.016777908}
+      pivot: {x: 0.55223495, y: 0.10457725}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -205,12 +205,12 @@ TextureImporter:
       name: LuxLobby_3
       rect:
         serializedVersion: 2
-        x: 788
-        y: 60
-        width: 328
-        height: 726
+        x: 852
+        y: 25
+        width: 270
+        height: 452
       alignment: 9
-      pivot: {x: 0.40564263, y: 0.022546353}
+      pivot: {x: 0.48970222, y: 0.12158382}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -227,12 +227,12 @@ TextureImporter:
       name: LuxLobby_4
       rect:
         serializedVersion: 2
-        x: 346
-        y: 85
+        x: 350
+        y: 347
         width: 211
-        height: 701
+        height: 460
       alignment: 9
-      pivot: {x: 0.46088544, y: 0.052612163}
+      pivot: {x: 0.47066408, y: 0.07952463}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []

@@ -1,5 +1,6 @@
 namespace Quantum
 {
+    using System.Collections.Generic;
     using Photon.Deterministic;
 
     public enum WeaponFireType
@@ -72,5 +73,19 @@ namespace Quantum
         public int BonusBounces = 0;
 
         [ExpandableAsset] public AssetRef<ProjectileDataAsset> ProjectileData;
+
+        // This weapon's own baseline WeaponPerkData picks - baked at Equip
+        // (WeaponSystem.ApplyBaseTraits) exactly like a rolled Weapon.Perks entry (same
+        // Apply(f, owner, weapon) dispatch, ApplyPerks reused verbatim), just from this list instead
+        // of a random roll. Lets a weapon's own signature (Double Barrel/Burst Rifle's
+        // BurstFireWeaponPerkData; Frost Revolver's FinalRoundWeaponPerkData; Drum SMG's
+        // SuppressiveCycleWeaponPerkData; Cluster Launcher's SplitShotWeaponPerkData; Hellshot's
+        // ExplosiveCritWeaponPerkData; Disruptor's CritStunWeaponPerkData) reuse the exact same
+        // perk classes/components/reaction systems a real roll would, instead of the weapon asset
+        // growing a new flat field per signature. Doesn't count against Weapon.Perks' 5-slot roll
+        // cap - a fully-rolled weapon keeps its own signature on top of 5 more picks. Empty (default)
+        // for a weapon with no baseline signature at all (Arcshot/Slugger express theirs entirely
+        // through BonusBounces/PelletCount above - pure data, no perk needed).
+        [ExpandableAsset] public List<AssetRef<WeaponPerkData>> BaseTraits = new();
     }
 }

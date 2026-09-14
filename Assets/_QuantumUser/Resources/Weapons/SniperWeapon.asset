@@ -25,7 +25,7 @@ MonoBehaviour:
   CriticalChance:
     RawValue: 13107
   CriticalDamageBonus:
-    RawValue: 65536
+    RawValue: 131072
   FireRate:
     RawValue: 65536
   MagazineSize: 4
@@ -50,9 +50,11 @@ MonoBehaviour:
       Value: 470292578688152637
   ViewPrefab: {fileID: 8089491252618662435, guid: 376407f6a2ac5480c998b85c91c293c9, type: 3}
   ShakeTier: 0
-  _dpsPreview: 'Burst DPS: 100
+  _dpsPreview: 'Burst DPS: 120
 
-    Sustained DPS (incl. reload): 66.7
+    Sustained DPS (incl. reload): 80
 
     Damage/min:
-    4000'
+    4800
+
+    Crit dmg/shot: 200 (vs 100 normal) @ 20 % chance, x2'

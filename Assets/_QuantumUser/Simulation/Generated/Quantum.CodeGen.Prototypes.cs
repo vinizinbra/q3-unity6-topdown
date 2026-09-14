@@ -487,7 +487,7 @@ namespace Quantum.Prototypes {
   }
   [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.BotBrain))]
-  public unsafe partial class BotBrainPrototype : ComponentPrototype<Quantum.BotBrain> {
+  public unsafe class BotBrainPrototype : ComponentPrototype<Quantum.BotBrain> {
     public Quantum.Prototypes.InputPrototype Data;
     public FP HeroSkillTimer;
     public FP DashSkillTimer;
@@ -495,7 +495,17 @@ namespace Quantum.Prototypes {
     public FP FormationAngle;
     public FP FormationDistance;
     public FP FormationRerollTimer;
-    partial void MaterializeUser(Frame frame, ref Quantum.BotBrain result, in PrototypeMaterializationContext context);
+    public MapEntityId SoloTarget;
+    public FP SoloRepickTimer;
+    [ArrayLengthAttribute(16)]
+    public FPVector3[] RoutePath = new FPVector3[16];
+    public Byte RoutePathCount;
+    public Byte RoutePathCursor;
+    [ArrayLengthAttribute(32)]
+    public FPVector3[] DetourPath = new FPVector3[32];
+    public Byte DetourPathCount;
+    public Byte DetourPathCursor;
+    public Int32 StoreAttemptedAtBreathingIndex;
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.BotBrain component = default;
         Materialize((Frame)f, ref component, in context);
@@ -509,7 +519,19 @@ namespace Quantum.Prototypes {
         result.FormationAngle = this.FormationAngle;
         result.FormationDistance = this.FormationDistance;
         result.FormationRerollTimer = this.FormationRerollTimer;
-        MaterializeUser(frame, ref result, in context);
+        PrototypeValidator.FindMapEntity(this.SoloTarget, in context, out result.SoloTarget);
+        result.SoloRepickTimer = this.SoloRepickTimer;
+        for (int i = 0, count = PrototypeValidator.CheckLength(RoutePath, 16, in context); i < count; ++i) {
+          *result.RoutePath.GetPointer(i) = this.RoutePath[i];
+        }
+        result.RoutePathCount = this.RoutePathCount;
+        result.RoutePathCursor = this.RoutePathCursor;
+        for (int i = 0, count = PrototypeValidator.CheckLength(DetourPath, 32, in context); i < count; ++i) {
+          *result.DetourPath.GetPointer(i) = this.DetourPath[i];
+        }
+        result.DetourPathCount = this.DetourPathCount;
+        result.DetourPathCursor = this.DetourPathCursor;
+        result.StoreAttemptedAtBreathingIndex = this.StoreAttemptedAtBreathingIndex;
     }
   }
   [System.SerializableAttribute()]
@@ -632,7 +654,10 @@ namespace Quantum.Prototypes {
     public FP CoinGainMultiplier;
     public FP Coins;
     public FP RiftShards;
+    public FP RiftShardsEarned;
     public Int32 MonstersKilled;
+    public FP DamageDealt;
+    public Int32 TimesDowned;
     public Byte WeaponTalentLevel;
     public Byte ShopWeaponOfferCount;
     public Byte RerollQuantity;
@@ -714,7 +739,10 @@ namespace Quantum.Prototypes {
         result.CoinGainMultiplier = this.CoinGainMultiplier;
         result.Coins = this.Coins;
         result.RiftShards = this.RiftShards;
+        result.RiftShardsEarned = this.RiftShardsEarned;
         result.MonstersKilled = this.MonstersKilled;
+        result.DamageDealt = this.DamageDealt;
+        result.TimesDowned = this.TimesDowned;
         result.WeaponTalentLevel = this.WeaponTalentLevel;
         result.ShopWeaponOfferCount = this.ShopWeaponOfferCount;
         result.RerollQuantity = this.RerollQuantity;
@@ -1285,6 +1313,8 @@ namespace Quantum.Prototypes {
     public FP FlyingHoverTargetHeight;
     public FP LostTimer;
     public Quantum.QEnum8<EnemyFaction> Faction;
+    public FPVector2 FleeDirection;
+    public FP FleeCommitTimer;
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.Enemy component = default;
         Materialize((Frame)f, ref component, in context);
@@ -1323,6 +1353,8 @@ namespace Quantum.Prototypes {
         result.FlyingHoverTargetHeight = this.FlyingHoverTargetHeight;
         result.LostTimer = this.LostTimer;
         result.Faction = this.Faction;
+        result.FleeDirection = this.FleeDirection;
+        result.FleeCommitTimer = this.FleeCommitTimer;
     }
   }
   [System.SerializableAttribute()]
@@ -2795,6 +2827,7 @@ namespace Quantum.Prototypes {
     public FP MaxDistanceMultiplier;
     public QBoolean IsExplosiveProc;
     public QBoolean IsCataclysm;
+    public QBoolean ForceCritical;
     public Quantum.QEnum8<DamageSource> Source;
     public Quantum.QEnum8<ElementType> Element;
     public Quantum.QEnum8<ElementType> PerkElement;
@@ -2827,6 +2860,7 @@ namespace Quantum.Prototypes {
         result.MaxDistanceMultiplier = this.MaxDistanceMultiplier;
         result.IsExplosiveProc = this.IsExplosiveProc;
         result.IsCataclysm = this.IsCataclysm;
+        result.ForceCritical = this.ForceCritical;
         result.Source = this.Source;
         result.Element = this.Element;
         result.PerkElement = this.PerkElement;
@@ -4173,6 +4207,41 @@ namespace Quantum.Prototypes {
     }
   }
   [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.WeaponBurstState))]
+  public unsafe partial class WeaponBurstStatePrototype : ComponentPrototype<Quantum.WeaponBurstState> {
+    public Int32 ShotsRemaining;
+    public Int32 NextShotIndex;
+    public FP Timer;
+    public FP Delay;
+    public QBoolean CritOnFinalShot;
+    public Int32 BurstCount;
+    public FP Damage;
+    public QBoolean IsExplosiveProc;
+    public QBoolean IsCataclysm;
+    public Int32 GrantPierceAmount;
+    public QBoolean IsFirstBullet;
+    partial void MaterializeUser(Frame frame, ref Quantum.WeaponBurstState result, in PrototypeMaterializationContext context);
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.WeaponBurstState component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.WeaponBurstState result, in PrototypeMaterializationContext context = default) {
+        result.ShotsRemaining = this.ShotsRemaining;
+        result.NextShotIndex = this.NextShotIndex;
+        result.Timer = this.Timer;
+        result.Delay = this.Delay;
+        result.CritOnFinalShot = this.CritOnFinalShot;
+        result.BurstCount = this.BurstCount;
+        result.Damage = this.Damage;
+        result.IsExplosiveProc = this.IsExplosiveProc;
+        result.IsCataclysm = this.IsCataclysm;
+        result.GrantPierceAmount = this.GrantPierceAmount;
+        result.IsFirstBullet = this.IsFirstBullet;
+        MaterializeUser(frame, ref result, in context);
+    }
+  }
+  [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.WeaponEchoState))]
   public unsafe partial class WeaponEchoStatePrototype : ComponentPrototype<Quantum.WeaponEchoState> {
     public QBoolean HasEchoChamber;
@@ -4307,6 +4376,10 @@ namespace Quantum.Prototypes {
     public QBoolean HasCriticalRebound;
     public FP CriticalReboundRadius;
     public FP CriticalReboundDamageMultiplier;
+    public QBoolean HasExplosiveCrit;
+    public FP CriticalExplosionRadius;
+    public FP CriticalExplosionDamageMultiplier;
+    public FP CritStunDuration;
     partial void MaterializeUser(Frame frame, ref Quantum.WeaponOnCritReactions result, in PrototypeMaterializationContext context);
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.WeaponOnCritReactions component = default;
@@ -4319,6 +4392,10 @@ namespace Quantum.Prototypes {
         result.HasCriticalRebound = this.HasCriticalRebound;
         result.CriticalReboundRadius = this.CriticalReboundRadius;
         result.CriticalReboundDamageMultiplier = this.CriticalReboundDamageMultiplier;
+        result.HasExplosiveCrit = this.HasExplosiveCrit;
+        result.CriticalExplosionRadius = this.CriticalExplosionRadius;
+        result.CriticalExplosionDamageMultiplier = this.CriticalExplosionDamageMultiplier;
+        result.CritStunDuration = this.CritStunDuration;
         MaterializeUser(frame, ref result, in context);
     }
   }

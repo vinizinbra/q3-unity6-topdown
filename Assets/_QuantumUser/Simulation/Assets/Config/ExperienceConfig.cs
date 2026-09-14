@@ -28,5 +28,12 @@ namespace Quantum
 
         // How long an uncollected orb lingers before DestroyAfterTime removes it.
         public FP OrbLifetime = 30;
+
+        // Flat +damage-per-DISPLAYED-level bonus, additive (not compounding) - a level-1 player
+        // (Global.Level == 0, see ExperienceUtility.Grant's own comment on Level vs. display level)
+        // already carries +DamageBonusPerLevel, same as every other displayed-level-1 stat. Applied
+        // to every damage source (see DamageUtility.ResolveOutgoingDamage) so it scales the whole
+        // co-op run's power with the one shared Level rather than any per-weapon mechanic.
+        public FP DamageBonusPerLevel = FP.FromString("0.02");
     }
 }

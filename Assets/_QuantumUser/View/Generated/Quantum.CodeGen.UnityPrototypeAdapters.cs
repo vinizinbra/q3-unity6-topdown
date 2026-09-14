@@ -146,6 +146,49 @@ namespace Quantum.Prototypes.Unity {
     }
   }
   [System.SerializableAttribute()]
+  public unsafe partial class BotBrainPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.BotBrainPrototype> {
+    public Quantum.Prototypes.InputPrototype Data;
+    public FP HeroSkillTimer;
+    public FP DashSkillTimer;
+    public FP LeashTimer;
+    public FP FormationAngle;
+    public FP FormationDistance;
+    public FP FormationRerollTimer;
+    public Quantum.QuantumEntityPrototype SoloTarget;
+    public FP SoloRepickTimer;
+    [ArrayLengthAttribute(16)]
+    public FPVector3[] RoutePath = new FPVector3[16];
+    public Byte RoutePathCount;
+    public Byte RoutePathCursor;
+    [ArrayLengthAttribute(32)]
+    public FPVector3[] DetourPath = new FPVector3[32];
+    public Byte DetourPathCount;
+    public Byte DetourPathCursor;
+    public Int32 StoreAttemptedAtBreathingIndex;
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.BotBrainPrototype prototype);
+    public override Quantum.Prototypes.BotBrainPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.BotBrainPrototype();
+      converter.Convert(this.Data, out result.Data);
+      converter.Convert(this.HeroSkillTimer, out result.HeroSkillTimer);
+      converter.Convert(this.DashSkillTimer, out result.DashSkillTimer);
+      converter.Convert(this.LeashTimer, out result.LeashTimer);
+      converter.Convert(this.FormationAngle, out result.FormationAngle);
+      converter.Convert(this.FormationDistance, out result.FormationDistance);
+      converter.Convert(this.FormationRerollTimer, out result.FormationRerollTimer);
+      converter.Convert(this.SoloTarget, out result.SoloTarget);
+      converter.Convert(this.SoloRepickTimer, out result.SoloRepickTimer);
+      converter.Convert(this.RoutePath, out result.RoutePath);
+      converter.Convert(this.RoutePathCount, out result.RoutePathCount);
+      converter.Convert(this.RoutePathCursor, out result.RoutePathCursor);
+      converter.Convert(this.DetourPath, out result.DetourPath);
+      converter.Convert(this.DetourPathCount, out result.DetourPathCount);
+      converter.Convert(this.DetourPathCursor, out result.DetourPathCursor);
+      converter.Convert(this.StoreAttemptedAtBreathingIndex, out result.StoreAttemptedAtBreathingIndex);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
   public unsafe partial class ChargeHitTrackingPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.ChargeHitTrackingPrototype> {
     [ArrayLengthAttribute(4)]
     public Quantum.QuantumEntityPrototype[] RecentTargets = new Quantum.QuantumEntityPrototype[4];
@@ -305,6 +348,8 @@ namespace Quantum.Prototypes.Unity {
     public FP FlyingHoverTargetHeight;
     public FP LostTimer;
     public Quantum.QEnum8<EnemyFaction> Faction;
+    public FPVector2 FleeDirection;
+    public FP FleeCommitTimer;
     partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.EnemyPrototype prototype);
     public override Quantum.Prototypes.EnemyPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
       var result = new Quantum.Prototypes.EnemyPrototype();
@@ -340,6 +385,8 @@ namespace Quantum.Prototypes.Unity {
       converter.Convert(this.FlyingHoverTargetHeight, out result.FlyingHoverTargetHeight);
       converter.Convert(this.LostTimer, out result.LostTimer);
       converter.Convert(this.Faction, out result.Faction);
+      converter.Convert(this.FleeDirection, out result.FleeDirection);
+      converter.Convert(this.FleeCommitTimer, out result.FleeCommitTimer);
       ConvertUser(converter, ref result);
       return result;
     }
@@ -518,6 +565,7 @@ namespace Quantum.Prototypes.Unity {
     public FP MaxDistanceMultiplier;
     public QBoolean IsExplosiveProc;
     public QBoolean IsCataclysm;
+    public QBoolean ForceCritical;
     public Quantum.QEnum8<DamageSource> Source;
     public Quantum.QEnum8<ElementType> Element;
     public Quantum.QEnum8<ElementType> PerkElement;
@@ -547,6 +595,7 @@ namespace Quantum.Prototypes.Unity {
       converter.Convert(this.MaxDistanceMultiplier, out result.MaxDistanceMultiplier);
       converter.Convert(this.IsExplosiveProc, out result.IsExplosiveProc);
       converter.Convert(this.IsCataclysm, out result.IsCataclysm);
+      converter.Convert(this.ForceCritical, out result.ForceCritical);
       converter.Convert(this.Source, out result.Source);
       converter.Convert(this.Element, out result.Element);
       converter.Convert(this.PerkElement, out result.PerkElement);

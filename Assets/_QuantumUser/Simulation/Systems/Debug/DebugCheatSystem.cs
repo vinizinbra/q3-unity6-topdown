@@ -139,12 +139,18 @@ namespace Quantum
         // Boss is active, but a level or two could still be sitting queued from XP collected right
         // before the encounter began - this simply holds the drain (doesn't discard it) until the
         // fight ends, so those pending screens resume normally once GameState leaves Boss.
+        //
+        // Same "hold, don't discard" idiom for Global.OrbVacuumTimeRemaining > 0 - confirmed with
+        // the user: a level crossed by an orb collected mid-sweep (CurrencyOrbVacuumUtility) should
+        // only actually open its screen once EVERY leftover orb has finished landing, not the
+        // instant the threshold is crossed while the rest are still being swept in.
         private void TryOpenNextPendingLevelUp(Frame f)
         {
             if (f.Global->DebugPendingLevelUps <= 0
                 || f.Global->LevelUpScreenOpen == true
                 || f.Global->DebugLevelUpScreenOpenLastTick == true
-                || f.Global->CurrentState == GameState.Boss)
+                || f.Global->CurrentState == GameState.Boss
+                || f.Global->OrbVacuumTimeRemaining > FP._0)
                 return;
 
             f.Global->Level++;

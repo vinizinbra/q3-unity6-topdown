@@ -34,8 +34,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -32.2, y: 6.899994}
-  m_SizeDelta: {x: 312.23, y: 286.9}
+  m_AnchoredPosition: {x: -27, y: 2}
+  m_SizeDelta: {x: 192.36, y: 286.9}
   m_Pivot: {x: 0.5, y: 0.1}
 --- !u!222 &7668648678948223778
 CanvasRenderer:
@@ -312,6 +312,7 @@ GameObject:
   - component: {fileID: 3828741642810479359}
   - component: {fileID: 1491113058456216240}
   - component: {fileID: 1107709786945530384}
+  - component: {fileID: 1268579616476504040}
   m_Layer: 5
   m_Name: PixieLobby
   m_TagString: Untagged
@@ -399,6 +400,34 @@ MonoBehaviour:
   bobAmount: 1
   headInfluence: 0
   legs: []
+--- !u!114 &1268579616476504040
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6518181404652115371}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ad96e6f1d6f14521b8a530440e99c57, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GlitchWidget
+  targets:
+  - {fileID: 760535271754955558}
+  - {fileID: 7851928751252017333}
+  - {fileID: 7995870938279240753}
+  redGhostColor: {r: 1, g: 0.1, b: 0.3, a: 0.6}
+  cyanGhostColor: {r: 0.1, g: 1, b: 1, a: 0.6}
+  cooldownRange: {x: 4, y: 9}
+  burstDurationRange: {x: 0.15, y: 0.45}
+  tickInterval: 0.035
+  maxOffset: {x: 8, y: 8}
+  maxScaleJitter: {x: 0, y: 0}
+  dropoutChancePerTick: 0.15
+  dropoutAlpha: 0.2
+  glitchSound: {fileID: 11400000, guid: 2c3600d6f97dc43f8a2ed8954a0ae8d5, type: 2}
+  glitchOnEnable: 1
+  useUnscaledTime: 0
 --- !u!1 &7498317550285574150
 GameObject:
   m_ObjectHideFlags: 0

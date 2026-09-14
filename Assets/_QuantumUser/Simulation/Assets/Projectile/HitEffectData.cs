@@ -72,6 +72,11 @@ namespace Quantum
         // sites, so it defaults false there for free.
         public bool IsExplosion;
 
+        // Carried from Projectile.ForceCritical (Burst Rifle's 3rd-shot-always-crits) - passed
+        // through to DamageUtility.ApplyDamage's own forceCritical param by DamageEffectData.Apply.
+        // False for anything that isn't a forced-crit shot, never set explicitly at most call sites.
+        public bool ForceCritical;
+
         // Carried from Projectile.PelletIndex - see that field's own comment for why this exists
         // (Quantum's per-tick event dedup swallowing a multi-pellet weapon's overlapping hits).
         // 0 for anything that isn't a fanned pellet (a single-shot weapon, a skill, an AoE tick).

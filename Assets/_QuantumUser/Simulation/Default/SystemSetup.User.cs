@@ -71,6 +71,12 @@
             // AdvancePhase still fire while the gameplay group is paused. See CheatSystem.
             systems.Add(new CheatSystem());
 
+            // Handles SetTutorialPauseCommand for the solo-only HowToPlayPopup/FirstBreakPopup
+            // tutorial popups - always-on and OUTSIDE GameplaySystemGroup for the same reason as
+            // CheatSystem just above (it's the one re-enabling/disabling that group, so it can't
+            // live inside it). See TutorialSystem.
+            systems.Add(new TutorialSystem());
+
             // Lobby Start (see docs/talents.md) - transitions Global.CurrentState from Lobby to
             // Survival once every connected, spawned player has walked outside the LobbyStart
             // chunk's own footprint (no separate boundary entity - the chunk IS the boundary).
@@ -383,6 +389,12 @@
                 // check, ExplodeOnDestroy.qtn).
                 new DestroyAfterTimeSystem()
             ));
+
+            // Deliberately AFTER GameplaySystemGroup, not before like BossPauseSystem/CheatSystem/
+            // TutorialSystem above - it has nothing to re-enable, so placing it here lets it
+            // observe the boss's destruction (inside the group, this same tick) immediately
+            // instead of lagging one tick behind. See VictorySystem's own header comment.
+            systems.Add(new VictorySystem());
     }
   }
 }

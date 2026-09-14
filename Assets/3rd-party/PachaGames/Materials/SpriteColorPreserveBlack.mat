@@ -67,6 +67,7 @@ Material:
     m_Floats:
     - _BlackThreshold: 0.048
     - _BumpScale: 1
+    - _ColorizeIntensity: 0
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
@@ -88,6 +89,7 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _ColorizeColor: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _GlowColor: {r: 0.46285754, g: 0.10428016, b: 0.20673084, a: 1}
     - _OverlayColor: {r: 1, g: 0, b: 0, a: 0}

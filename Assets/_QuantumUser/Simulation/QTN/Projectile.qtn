@@ -31,6 +31,13 @@ component Projectile
     Boolean IsExplosiveProc;
     Boolean IsCataclysm;
 
+    // Forces this shot's crit roll outright (Burst Rifle's 3rd-shot-always-crits) - stamped in
+    // WeaponSystem.ApplyProjectilePerks from a forceCritical param threaded down from FireShot, read
+    // via HitEffectContext.ForceCritical (ProjectileHitData.ApplyEffects) into
+    // DamageUtility.ResolveOutgoingDamage. False (default) leaves crit resolution untouched for
+    // everything that isn't a forced-crit shot.
+    Boolean ForceCritical;
+
     // Captured at fire time and carried to impact - the shooter holds both a weapon and skills, so
     // it can't be asked which one launched this.
     DamageSource Source;

@@ -77,6 +77,7 @@ namespace Quantum
                 return;
 
             stats->RiftShards += amount;
+            stats->RiftShardsEarned += amount;
 
             Log.Debug($"[RiftShard] {player} gained {amount} -> {stats->RiftShards}");
         }

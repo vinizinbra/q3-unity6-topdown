@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bb51f48d451e4d148d492421a410eb0, type: 3}
+  m_Name: DoubleBarrel
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.WeaponDataAsset
+  Identifier:
+    Path: _QuantumUser/Resources/Weapons/DoubleBarrel
+    Guid:
+      Value: 2486713536129808273
+  DisplayName: Double Barrel
+  FireType: 1
+  Damage:
+    RawValue: 1310720
+  Element: 0
+  Family: 4
+  CriticalChance:
+    RawValue: 6554
+  CriticalDamageBonus:
+    RawValue: 98304
+  FireRate:
+    RawValue: 104858
+  MagazineSize: 8
+  ReloadDuration:
+    RawValue: 65536
+  Range:
+    RawValue: 327680
+  PelletCount: 3
+  SpreadAngle:
+    RawValue: 983040
+  SpawnAnchor: 0
+  SpawnOffset:
+    X:
+      RawValue: 0
+    Y:
+      RawValue: 0
+    Z:
+      RawValue: 0
+  BonusBounces: 0
+  ProjectileData:
+    Id:
+      Value: 2052039704194794421
+  BaseTraits:
+  - Id:
+      Value: 995703399927807295
+  ViewPrefab: {fileID: 8089491252618662435, guid: 0f7481ececfe745c383ff250af802c65, type: 3}
+  ShakeTier: 2
+  _dpsPreview: 'Burst DPS: 100.8
+
+    Sustained DPS (incl. reload): 84
+
+    Damage/min:
+    5040
+
+    Crit dmg/shot: 90 (vs 60 normal) @ 10 % chance, x1.5'

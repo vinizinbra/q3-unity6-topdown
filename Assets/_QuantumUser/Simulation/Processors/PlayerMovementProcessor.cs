@@ -207,21 +207,29 @@ namespace Quantum
         // right at the edge can't tell a narrow, jumpable river (dry land a little further out) from
         // a genuinely uncrossable lake (open water everywhere along its shore), since both look
         // identical directly below the edge. So this scans FORWARD in WaterProbeStep increments out
-        // to WaterMaxCrossableGap, testing straight down (to WaterCheckDistance) at each sample -
-        // the first one that finds ground stops the scan and counts as a safe landing, same as any
-        // ordinary ledge. Mirrors EnemyMovementUtility.TryFindGapLanding, the same problem bots
-        // solve for their own void avoidance. Only ever consulted after HasGroundAhead has already
-        // returned false.
+        // to WaterMaxCrossableGap, testing straight down at each sample - the first one that finds
+        // ground stops the scan and counts as a safe landing, same as any ordinary ledge. Mirrors
+        // EnemyMovementUtility.TryFindGapLanding, the same problem bots solve for their own void
+        // avoidance. Only ever consulted after HasGroundAhead has already returned false.
+        //
+        // Each sample's downward probe reaches at least WaterCheckDistance, but is stretched further
+        // when needed so it always reaches LevelConfig.FallDeathHeight - a tall-but-safe drop to
+        // solid ground (a terrace, a lower chunk) can sit further below the edge than
+        // WaterCheckDistance alone would ever see, and must still be found or it reads identically to
+        // a genuine bottomless void and hesitates the same way a real lake edge does. Only a probe
+        // that finds nothing all the way down to the fatal height is an actual water/void edge.
         private static bool HasSurvivableLandingAhead(KCCContext context, MovementDataAsset data, FPVector3 position, FPVector3 direction)
         {
             QueryOptions queryOptions = QueryOptions.HitStatics | QueryOptions.HitKinematics;
+            LevelConfig levelConfig = context.Frame.FindAsset(context.Frame.RuntimeConfig.LevelConfig);
 
             for (FP distance = data.EdgeProbeDistance + data.WaterProbeStep; distance <= data.WaterMaxCrossableGap; distance += data.WaterProbeStep)
             {
                 FPVector3 checkOrigin = position + direction * distance + FPVector3.Up * FP._0_10;
+                FP probeDistance = FPMath.Max(data.WaterCheckDistance, checkOrigin.Y - levelConfig.FallDeathHeight);
 
                 KCCShapeCastInfo groundCast = KCCShapeCastInfo.Get();
-                bool groundAhead = context.KCC->RayCast(context, groundCast, checkOrigin, FPVector3.Down, data.WaterCheckDistance, queryOptions);
+                bool groundAhead = context.KCC->RayCast(context, groundCast, checkOrigin, FPVector3.Down, probeDistance, queryOptions);
                 KCCShapeCastInfo.Return(groundCast);
 
                 if (groundAhead == true)

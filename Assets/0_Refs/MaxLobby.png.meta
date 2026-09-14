@@ -69,7 +69,7 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 512
+    maxTextureSize: 1024
     resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 1
@@ -139,12 +139,12 @@ TextureImporter:
       name: MaxLobby (2)_0
       rect:
         serializedVersion: 2
-        x: 505
-        y: 1059
-        width: 384
+        x: 311
+        y: 1078
+        width: 541
         height: 324
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -161,12 +161,12 @@ TextureImporter:
       name: MaxLobby (2)_1
       rect:
         serializedVersion: 2
-        x: 509
-        y: 644
-        width: 425
-        height: 425
+        x: 249
+        y: 636
+        width: 621
+        height: 450
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -183,12 +183,12 @@ TextureImporter:
       name: MaxLobby (2)_2
       rect:
         serializedVersion: 2
-        x: 514
-        y: 19
-        width: 404
-        height: 557
+        x: 181
+        y: 0
+        width: 788
+        height: 646
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []

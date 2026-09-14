@@ -15,11 +15,20 @@ namespace Quantum
     public unsafe class SmartFleeMovementData : EnemyMovementData
     {
         // Nearest-to-ideal-heading first, alternating sides, so the first safe candidate found is
-        // also the one that runs most directly away from the target. Deliberately stops short of
-        // 180 - a heading that only "works" by turning back toward the target isn't fleeing
-        // anymore, so the last resort is holding the original heading and letting MoveInDirection's
-        // own dead-end handling (climb hop / StopMovement) take over instead.
-        private static readonly FP[] DeflectionAngles = { 0, 30, -30, 60, -60, 90, -90, 120, -120, 150, -150 };
+        // also the one that runs most directly away from the target. Stops short of 180 - a
+        // heading that only "works" by turning back toward the target isn't fleeing anymore - but
+        // goes all the way out to +-165 (leaving only a narrow 30 degree cone directly behind,
+        // toward the target, unconsidered) so a genuine dead-end corner still has a shot at finding
+        // a sliver of an opening running roughly parallel to whatever's boxing the enemy in, rather
+        // than giving up as soon as the wider ±150 candidates are blocked too.
+        private static readonly FP[] DeflectionAngles = { 0, 30, -30, 60, -60, 90, -90, 120, -120, 150, -150, 165, -165 };
+
+        // Minimum time (seconds) a chosen heading is held before this can pick a different one -
+        // see Enemy.FleeDirection/FleeCommitTimer. Long enough to ride out a tick-to-tick wobble in
+        // the target's live position (which shifts "away" by a degree or two every tick even when
+        // the target itself is barely moving) without being so long the enemy visibly holds a stale
+        // heading once a real opening appears.
+        private static readonly FP CommitDuration = FP._0_33;
 
         public override FPVector2 ComputeMoveDirection(Frame f, EntityRef self, EntityRef target)
         {
@@ -57,14 +66,39 @@ namespace Quantum
             FPVector3 groundPosition = new FPVector3(transform->Position.X, groundY, transform->Position.Z);
             FP gapProbeDistance = EnemyMovementUtility.ResolveEntityRadius(f, self) + data.Stats.Height.GapProbeThreshold;
 
+            // Hold the last committed heading while it's both still within its minimum-commit
+            // window AND still actually safe AND still broadly pointed away from the target (guards
+            // against holding a stale heading once the target has circled around behind it) -
+            // otherwise a heading right on the edge of two candidates' safety verdicts (e.g. pinned
+            // in a corner with the target's position wobbling a couple degrees every tick) gets
+            // re-decided from scratch every single tick and visibly snaps between them. A genuinely
+            // new obstacle (the held heading turning unsafe) still overrides the timer immediately -
+            // this only dampens re-picking between options that are all still fine.
+            if (enemy->FleeCommitTimer > FP._0 &&
+                FPVector2.Dot(enemy->FleeDirection, away) > FP._0 &&
+                IsHeadingSafe(f, groundPosition, enemy->FleeDirection, data, gapProbeDistance, groundLayerMask) == true)
+            {
+                enemy->FleeCommitTimer -= f.DeltaTime;
+                return enemy->FleeDirection;
+            }
+
             for (int i = 0; i < DeflectionAngles.Length; i++)
             {
                 FPVector2 candidate = FPVector2.Rotate(away, DeflectionAngles[i] * FP.Deg2Rad);
 
                 if (IsHeadingSafe(f, groundPosition, candidate, data, gapProbeDistance, groundLayerMask) == true)
+                {
+                    enemy->FleeDirection = candidate;
+                    enemy->FleeCommitTimer = CommitDuration;
                     return candidate;
+                }
             }
 
+            // Truly boxed in - nothing left uncommitted so the very next tick re-scans immediately
+            // instead of holding this dead-end heading for the usual window, and MoveInDirection's
+            // own dead-end handling (climb hop / StopMovement) takes over.
+            enemy->FleeDirection = away;
+            enemy->FleeCommitTimer = FP._0;
             return away;
         }
 

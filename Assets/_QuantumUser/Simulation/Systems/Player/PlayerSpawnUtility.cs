@@ -63,14 +63,7 @@ namespace Quantum
             // auto-pick and RunPhaseUtility's Breathing skip vote all key off the component.
             if (runtimePlayer.IsBot == true)
             {
-                f.AddOrGet<BotBrain>(entity, out var brain);
-
-                // Seeded rather than left at 0, which would make every bot cast on its very first
-                // tick, all together, the instant the match starts.
-                RuntimeConfig.BotSettings bots = f.RuntimeConfig.Bots;
-                brain->HeroSkillTimer = BotInputSystem.RollHeroSkillInterval(f, bots);
-                brain->DashSkillTimer = BotInputSystem.RollDashInterval(f, bots);
-
+                ConvertToBot(f, entity);
                 Log.Debug($"[Bot] player {player} spawned as a bot ({entity})");
             }
 
@@ -78,6 +71,26 @@ namespace Quantum
             // on first Update instead, so it's correct regardless of how the entity came to exist
             // (this dynamic spawn path, or a player placed directly in a scene for testing, which
             // never runs through Spawn() at all - see that method's own comment).
+        }
+
+        // Adds BotBrain and seeds its countdowns - shared by Spawn's own IsBot check above and
+        // CheatSystem's BecomeBot cheat (see CheatCommand.cs), so both start a bot on the exact
+        // same footing instead of one drifting if a future field gets seeded in only one place.
+        internal static void ConvertToBot(Frame f, EntityRef entity)
+        {
+            f.AddOrGet<BotBrain>(entity, out var brain);
+
+            // Seeded rather than left at 0, which would make every bot cast on its very first
+            // tick, all together, the instant the match starts (or, for the cheat, the instant it
+            // fires).
+            RuntimeConfig.BotSettings bots = f.RuntimeConfig.Bots;
+            brain->HeroSkillTimer = BotInputSystem.RollHeroSkillInterval(f, bots);
+            brain->DashSkillTimer = BotInputSystem.RollDashInterval(f, bots);
+
+            // -1 rather than left at 0, which would false-match Global.BreathingIndex's own 0
+            // default and skip this bot's very first Store visit - same gotcha
+            // StoreUtility.EnsureInventoryRolled's own RolledAtBreathingIndex seed avoids.
+            brain->StoreAttemptedAtBreathingIndex = -1;
         }
 
         // Spreads players evenly around a circle centered on PlayerSpawnPosition, SpawnOffsetDistance

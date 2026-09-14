@@ -38,4 +38,47 @@ component BotBrain
     FP FormationAngle;
     FP FormationDistance;
     FP FormationRerollTimer;
+
+    // Solo behavior (no human or bot left to follow, see BotInputSystem.UpdateSolo) - a bot's own
+    // current goal while wandering: a Chunk entity it's walking into to discover it, or an
+    // Enemy/CurrencyOrb entity it's chasing down. Re-picked on SoloRepickTimer, or immediately if
+    // the current one stops being valid (chunk got discovered, enemy died, orb got collected).
+    EntityRef SoloTarget;
+    FP SoloRepickTimer;
+
+    // Macro route for a solo goal (see BotInputSystem.EnsureRoutePath/TryFindChunkRoutePath) - one
+    // waypoint per chunk crossed on the way there (each chunk's own center), walking the level's own
+    // authored Chunk.ConnectedChunks adjacency graph, plus the real target position as the final
+    // waypoint. Built PROACTIVELY the moment a solo goal needs to move (before the bot ever takes a
+    // step toward it), because a straight-line "is this direction safe" check can read "safe" for
+    // several consecutive steps into open water before ever noticing it - see DetourPath below for
+    // why that reactive check alone isn't enough. Never used by a follow target (a live player moves
+    // every tick, so a route computed against last tick's position would already be stale) - see
+    // BotInputSystem.Update, which clears this the instant a follow target exists. 16 is
+    // MaxRouteChunkWaypoints in BotInputSystem - keep them in sync.
+    array<FPVector3>[16] RoutePath;
+    Byte RoutePathCount;
+    Byte RoutePathCursor;
+
+    // A brute-force LOCAL detour around whichever single leg the bot is currently walking (a follow
+    // target directly, a RoutePath waypoint, or - if chunk routing wasn't applicable, e.g. same
+    // chunk - the solo target directly), filled in by BotInputSystem.TryFindGridPath: a BFS over a
+    // grid of raycast-down samples around the straight line to that leg's own destination, so a
+    // pond/building/other obstacle that defeats SteerToward's own single-step heuristic doesn't just
+    // strand the bot or drop the whole goal. Always reactive - only tried once SteerToward's direct
+    // route for the CURRENT leg is found blocked - and always leads back to that leg's own
+    // destination, never the far end of the whole journey, so the rest of RoutePath (if any) is left
+    // untouched. Walked waypoint by waypoint (DetourPathCursor) with the exact same steering as
+    // everything else; cleared (DetourPathCount = 0) once fully walked or if a waypoint itself later
+    // turns out blocked too. 32 is MaxGridPathWaypoints in BotInputSystem - keep them in sync.
+    array<FPVector3>[32] DetourPath;
+    Byte DetourPathCount;
+    Byte DetourPathCursor;
+
+    // Guards the Breathing Store visit to once per Break - compared directly against
+    // Global.BreathingIndex rather than a bool, the same "compare against the live index, don't
+    // reset a flag on a phase transition" idiom StorePurchaseEntry.PurchasedAtBreathingIndex
+    // already uses. Seeded to -1 at spawn (PlayerSpawnUtility) so it never false-matches
+    // BreathingIndex's own 0 default on the very first Break.
+    Int32 StoreAttemptedAtBreathingIndex;
 }

@@ -47,6 +47,11 @@ MonoBehaviour:
   FoodOfferCount: 1
   OfferWeaponLevelUp: 0
   OfferAccessoryService: 1
+  AccessoryRepairCostByMissingDurability:
+  - RawValue: 16384000
+  - RawValue: 32768000
+  AccessoryBrokenReplacementCost:
+    RawValue: 65536000
   WeaponLevelUpBasePrice:
     RawValue: 65536000
   WeaponLevelUpPricePerLevel:

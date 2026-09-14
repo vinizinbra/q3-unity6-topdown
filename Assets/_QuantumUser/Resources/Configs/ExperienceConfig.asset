@@ -109,9 +109,9 @@ MonoBehaviour:
       TangentModeLeft: 4
       TangentModeRight: 4
       WeightedMode: 0
-  MaxLevel: 25
+  MaxLevel: 30
   DifficultyMultiplier:
-    RawValue: 196608
+    RawValue: 229376
   PickupRadius:
     RawValue: 131072
   OrbLifetime:

@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bb51f48d451e4d148d492421a410eb0, type: 3}
+  m_Name: Slugger
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.WeaponDataAsset
+  Identifier:
+    Path: _QuantumUser/Resources/Weapons/Slugger
+    Guid:
+      Value: 3609125117531519115
+  DisplayName: Slugger
+  FireType: 1
+  Damage:
+    RawValue: 3604480
+  Element: 0
+  Family: 4
+  CriticalChance:
+    RawValue: 9830
+  CriticalDamageBonus:
+    RawValue: 98304
+  FireRate:
+    RawValue: 98304
+  MagazineSize: 6
+  ReloadDuration:
+    RawValue: 45875
+  Range:
+    RawValue: 524288
+  PelletCount: 1
+  SpreadAngle:
+    RawValue: 0
+  SpawnAnchor: 0
+  SpawnOffset:
+    X:
+      RawValue: 0
+    Y:
+      RawValue: 0
+    Z:
+      RawValue: 0
+  BonusBounces: 0
+  ProjectileData:
+    Id:
+      Value: 2052039704194794421
+  BaseTraits: []
+  ViewPrefab: {fileID: 8089491252618662435, guid: 0f7481ececfe745c383ff250af802c65, type: 3}
+  ShakeTier: 1
+  _dpsPreview:

@@ -194,12 +194,17 @@ namespace Quantum
             // nothing is modifying the run. See EncounterModifierUtility.
             FP density = EncounterModifierUtility.ResolveSpawnDensityMultiplier(f);
 
+            // Co-op cap scaling (BalanceConfig.CoopGlobalKey.DirectorPressure) - the budget row alone
+            // can't raise spawn throughput once the pressure target is the binding limit.
+            FP coopPressure = ResolveCoopPressure(balance, playerCount);
+            FP targetPressure = phase.TargetPressure * coopPressure;
+
             bool split = f.Global->DirectorSplitActive && playerCount > 1;
             if (split == false)
             {
                 plan.Count = 1;
                 plan.Centers = new[] { plan.GlobalCentroid };
-                plan.TargetPressure = new[] { phase.TargetPressure * ResolveSplitThreat(f) * density };
+                plan.TargetPressure = new[] { targetPressure * ResolveSplitThreat(f) * density };
                 return true;
             }
 
@@ -237,12 +242,17 @@ namespace Quantum
 
                 FP clusterBudget = GetThreatBudget(balance, size) * shareScale;
                 plan.TargetPressure[c] = (basePartyBudget > FP._0
-                    ? phase.TargetPressure * clusterBudget / basePartyBudget
-                    : phase.TargetPressure) * density;
+                    ? targetPressure * clusterBudget / basePartyBudget
+                    : targetPressure) * density;
             }
 
             return true;
         }
+
+        // 1x when BalanceConfig is unassigned, same graceful no-op CombatDirectorUtility.
+        // ResolveBudgetMultiplier applies for the budget row.
+        public static FP ResolveCoopPressure(BalanceConfig balance, int playerCount)
+            => balance != null ? balance.GetCoopGlobal(CoopGlobalKey.DirectorPressure, playerCount) : FP._1;
 
         // Sum of ResolveCost for ALL active Director enemies - used for the single cohesive front so
         // solo/grouped play keeps the Director's exact pre-cluster global-pressure gate.

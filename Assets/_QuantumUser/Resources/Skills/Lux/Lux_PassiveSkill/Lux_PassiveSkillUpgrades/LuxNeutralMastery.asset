@@ -15,7 +15,7 @@ MonoBehaviour:
   Identifier:
     Path: _QuantumUser/Resources/Skills/Lux/Lux_PassiveSkill/Lux_PassiveSkillUpgrades/LuxNeutralMastery
     Guid:
-      Value: 6739931332861504976
+      Value: 2128245314434117072
   Icon: {fileID: 1905998502, guid: 355e00907e214470bac0029f70064510, type: 3}
   DisplayName: Neutral Mastery
   Description: Neutral weapons hit harder, and at rank 3, mark enemies for her Sentries

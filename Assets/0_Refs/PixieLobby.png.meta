@@ -69,7 +69,7 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 512
+    maxTextureSize: 1024
     resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 1
@@ -139,10 +139,10 @@ TextureImporter:
       name: PixieLobby_0
       rect:
         serializedVersion: 2
-        x: 607
-        y: 1004
-        width: 415
-        height: 371
+        x: 29
+        y: 893
+        width: 469
+        height: 495
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -161,10 +161,10 @@ TextureImporter:
       name: PixieLobby_1
       rect:
         serializedVersion: 2
-        x: 594
-        y: 565
-        width: 475
-        height: 397
+        x: 0
+        y: 15
+        width: 679
+        height: 804
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -183,10 +183,10 @@ TextureImporter:
       name: PixieLobby_2
       rect:
         serializedVersion: 2
-        x: 585
-        y: 139
-        width: 414
-        height: 345
+        x: 534
+        y: 868
+        width: 552
+        height: 518
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}

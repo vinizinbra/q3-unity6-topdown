@@ -12,8 +12,9 @@ public class AlertPopup : UiPopup
     public TMP_Text description;
     [CanBeNull] public System.Action callback;
 
-    public virtual void Awake()
+    public override void Awake()
     {
+        base.Awake();
         instance = this;
     }
 
@@ -30,15 +31,21 @@ public class AlertPopup : UiPopup
     }
 
 
+    // Fires the pending callback no matter how the popup is dismissed - the OK button routes here
+    // via Callback(), but PopupManager.CloseCurrentPopup() or a future back-button/backdrop-tap
+    // handler can also call Close() directly. Every current caller's callback does something that
+    // must run (e.g. disconnecting the client after an error ack), so a close path that skipped it
+    // would leave that caller hanging.
     public override void Close()
     {
+        var pending = callback;
+        callback = null;
         base.Close();
+        pending?.Invoke();
     }
 
-    public void  Callback()
+    public void Callback()
     {
-        callback?.Invoke();
-        callback = null;
         Close();
     }
 

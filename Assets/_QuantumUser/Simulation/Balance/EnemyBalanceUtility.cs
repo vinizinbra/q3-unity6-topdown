@@ -29,7 +29,7 @@ namespace Quantum
             int playerCount = f.PlayerConnectedCount;
 
             FP baseHp = EnemyTierStatsConfig.Resolve(f, tier).MaxHealth;
-            FP curveHp = balance.Evaluate(CurveChannel.EnemyHp, elapsedSeconds);
+            FP curveHp = balance.EvaluateEnemyHp(tier, elapsedSeconds);
             FP coopHp = balance.GetCoopHp(tier, playerCount);
 
             FP curveDmg = balance.Evaluate(CurveChannel.EnemyDmg, elapsedSeconds);

@@ -34,8 +34,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 101.1, y: -450}
-  m_SizeDelta: {x: 237.6, y: 74.9}
+  m_AnchoredPosition: {x: 67.1, y: -450}
+  m_SizeDelta: {x: 180, y: 74.9}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7165888546507748262
 CanvasRenderer:
@@ -184,8 +184,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -75, y: -450}
-  m_SizeDelta: {x: 237.6, y: 74.9}
+  m_AnchoredPosition: {x: -50.1, y: -450}
+  m_SizeDelta: {x: 180, y: 74.9}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &975947474216952827
 CanvasRenderer:
@@ -259,8 +259,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -16.6, y: 18}
-  m_SizeDelta: {x: 367.7, y: 238.9}
+  m_AnchoredPosition: {x: -11.8, y: 15.6}
+  m_SizeDelta: {x: 201.6, y: 238.9}
   m_Pivot: {x: 0.5, y: 0.1}
 --- !u!222 &9156235558831855791
 CanvasRenderer:
@@ -335,8 +335,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -31.6, y: -178.4}
-  m_SizeDelta: {x: 305.3, y: 397}
+  m_AnchoredPosition: {x: -13, y: -222.5}
+  m_SizeDelta: {x: 255.79, y: 397}
   m_Pivot: {x: 0.5, y: 0.1}
 --- !u!222 &7992671723585564110
 CanvasRenderer:
@@ -388,6 +388,7 @@ GameObject:
   - component: {fileID: 8321401686146427026}
   - component: {fileID: 6079361973488674572}
   - component: {fileID: 7308812873055331858}
+  - component: {fileID: 2548011267293806621}
   m_Layer: 5
   m_Name: ZaraLobby
   m_TagString: Untagged
@@ -475,3 +476,31 @@ MonoBehaviour:
   bobAmount: 1
   headInfluence: 0
   legs: []
+--- !u!114 &2548011267293806621
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8369380886623440971}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ad96e6f1d6f14521b8a530440e99c57, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GlitchWidget
+  targets:
+  - {fileID: 5622047736428968951}
+  - {fileID: 1802130073547151026}
+  - {fileID: 4820264915784773950}
+  redGhostColor: {r: 1, g: 0.1, b: 0.3, a: 0.6}
+  cyanGhostColor: {r: 0.1, g: 1, b: 1, a: 0.6}
+  cooldownRange: {x: 4, y: 9}
+  burstDurationRange: {x: 0.15, y: 0.45}
+  tickInterval: 0.035
+  maxOffset: {x: 8, y: 8}
+  maxScaleJitter: {x: 0, y: 0}
+  dropoutChancePerTick: 0.15
+  dropoutAlpha: 0.2
+  glitchSound: {fileID: 11400000, guid: 2c3600d6f97dc43f8a2ed8954a0ae8d5, type: 2}
+  glitchOnEnable: 1
+  useUnscaledTime: 0

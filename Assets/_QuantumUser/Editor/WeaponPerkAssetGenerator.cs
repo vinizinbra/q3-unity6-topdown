@@ -25,7 +25,11 @@ namespace QuantumUser.Editor
     // render on first generation.
     public static class WeaponPerkAssetGenerator
     {
-        private const string FolderPath = "Assets/_QuantumUser/Resources/Weapon/WeaponPerk";
+        // Rollable pool perks only - a weapon's own baseline signature (BurstFireWeaponPerkData,
+        // ExplosiveCritWeaponPerkData, etc, authored straight into WeaponDataAsset.BaseTraits) lives
+        // in the sibling WeaponPerk/BaseTraits folder instead, kept out of this generator/the pool
+        // entirely since those are never meant to be drawn from a roll.
+        private const string FolderPath = "Assets/_QuantumUser/Resources/Weapons/WeaponPerk/Pool";
         private const string PoolAssetPath = FolderPath + "/WeaponPerkPoolData.asset";
 
         private class PerkSpec

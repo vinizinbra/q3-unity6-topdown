@@ -23,7 +23,7 @@ MonoBehaviour:
   Element: 0
   Family: 2
   CriticalChance:
-    RawValue: 13107
+    RawValue: 3277
   CriticalDamageBonus:
     RawValue: 32768
   FireRate:
@@ -55,4 +55,6 @@ MonoBehaviour:
     Sustained DPS (incl. reload): 68.6
 
     Damage/min:
-    4114'
+    4114
+
+    Crit dmg/shot: 8 (vs 8 normal) @ 5 % chance, x1'

@@ -61,6 +61,25 @@ namespace Quantum
             {
                 TryFireCriticalRebound(f, owner, weapon, reactions, target);
             }
+
+            // Hellshot's signature (ExplosiveCritWeaponPerkData, baked via WeaponDataAsset.BaseTraits/
+            // WeaponSystem.ApplyBaseTraits) - a crit detonates an explosion centered on the target it
+            // just landed on, same HitEffectUtility.ApplyExplosion call Cataclysm Round/Explosive
+            // Sequence already use.
+            if (reactions->HasExplosiveCrit == true
+                && f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == true)
+            {
+                HitEffectUtility.ApplyExplosion(f, targetTransform->Position, reactions->CriticalExplosionRadius,
+                    owner, damage * reactions->CriticalExplosionDamageMultiplier, DamageSource.Weapon);
+            }
+
+            // Disruptor's signature (CritStunWeaponPerkData, baked via WeaponDataAsset.BaseTraits) -
+            // a crit briefly stuns its target, via the same StatusEffectUtility.ApplyStun every
+            // other stun source calls.
+            if (reactions->CritStunDuration > FP._0)
+            {
+                StatusEffectUtility.ApplyStun(f, target, reactions->CritStunDuration, owner);
+            }
         }
 
         private static void RestoreAmmo(Weapon* weapon, int amount)

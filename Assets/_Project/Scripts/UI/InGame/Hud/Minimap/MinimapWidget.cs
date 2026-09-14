@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Quantum;
 using QuantumUser.View;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 // Node-based minimap - the static layout (one filled block per Chunk entity, at that chunk's real
@@ -22,14 +23,17 @@ using UnityEngine.UI;
 // outline reveals progressively alongside discovery, same as everything else on the map.
 //
 // FilterMode.Point (no bilinear smoothing) gives the flat, blocky look. A handful of small icon
-// overlays (Boss/Merchant/LobbyStart - see chunkTypeSprites, a ChunkType->Sprite map rather than a
-// positional array so authoring survives ChunkType being reordered/extended; deliberately left
-// unassigned for Enemy/Traversal) sit on top as separate lightweight UI Images - cheap, since there
-// are only ever a few of these per level. A chunk whose Type has a linked POI entity (Healing
-// Shrine/Cursed Rift/Store/Blacksmith - see ResolvePoiEntityForChunk/UpdateIconTints) darkens its
-// own icon (expiredIconTint) once nobody connected can currently use it, whether that's fully used
-// up or just on cooldown - PoiActivation.State.Expired already means exactly that regardless of
-// which. Plus one live marker per match player, one per currently-alive
+// overlays (Boss/Merchant/LobbyStart/Healing Shrine/Cursed Rift/Blacksmith/Traversal - see
+// chunkTypeSprites, a ChunkType->Sprite map rather than a positional array so authoring survives
+// ChunkType being reordered/extended; deliberately left unassigned for Enemy) sit on top as
+// separate lightweight UI Images - cheap, since there are only ever a few of these per level. A
+// chunk whose Type has a linked POI entity (Healing Shrine/Cursed Rift/Store/Blacksmith via
+// PoiActivation, or Traversal via its own TraversalChallenge - see ResolveEntityForChunk/
+// UpdateIconTints) darkens its own icon once it's no longer usable right now - usedIconTint for a
+// one-time-use POI that's been used up (or a Traversal Challenge that ended Completed/Failed), a
+// separate, typically darker cooldownIconTint for a Cooldown-policy POI (e.g. Healing Shrine) still
+// waiting out every connected player's cooldown - see ResolvePoiUsagePolicy for how the two get
+// told apart. Plus one live marker per match player, one per currently-alive
 // Elite-tier enemy (see UpdateEliteMarkers), one per currently-alive non-Elite Persistent enemy
 // (see UpdateSpecialMarkers), and - only while GameState.Breathing hasn't yet secured the area (see
 // Global.BreathingAreaSecured) - one per every still-alive ORDINARY enemy, i.e. excluding
@@ -61,7 +65,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     [Header("World mapping")]
     [SerializeField, Tooltip("Half-size of the known playable world - the level is authored to fit inside +-worldExtent on both X and Z (e.g. 128 for a -128..+128 world). No chunk scanning needed since this is a known constant.")]
     private float worldExtent = 128f;
-    [SerializeField, Tooltip("Center of the known playable world, in world X/Z.")]
+    [SerializeField, Tooltip("Center of the known playable world, in world X/Z - used as-is until the level finishes generating, and as the fallback if it never does. Once Global.LevelGenerated flips, EnsureCentered recomputes the EFFECTIVE center from the real generated chunks' own bounding box (see _effectiveWorldCenter) and every texel/map conversion switches to that - so a level whose actual footprint isn't centered on this authored point no longer runs its content (and outline ring) off the edge of the texture. Author this as a best guess; it only matters for the handful of ticks before generation completes.")]
     private Vector2 worldCenter = Vector2.zero;
     [SerializeField, Tooltip("World units per texel - the actual texture resolution (derived at QStart) is (worldExtent*2)/worldUnitsPerTexel. E.g. 10 means a 20x20 chunk paints as a 2x2 block.")]
     private float worldUnitsPerTexel = 10f;
@@ -96,6 +100,8 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     private Color outlineColor = Color.black;
     [SerializeField, Tooltip("Outline stroke thickness in texels. 0 = no outline computed/drawn at all.")]
     private int outlineTexels = 0;
+    [SerializeField, Tooltip("How many of outlineTexels are drawn INSIDE a chunk's own fill rather than outside it. 0 (default) is a fully OUTER stroke - hugs the solid mass from the empty side, never touches an occupied texel, so it can never cover a real chunk-to-chunk connection (see docs/minimap.md). outlineTexels is a fully INNER stroke; anything between straddles the boundary for a centered look. Keep this well below outlineTexels/chunk width - a value close to outlineTexels risks the stroke fully covering a narrow chunk or connection again, even with the connection-opening safeguard.")]
+    private int outlineInnerTexels = 0;
 
     [Serializable]
     private struct ChunkTypeSpriteEntry
@@ -105,11 +111,14 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     }
 
     [Header("Overlays")]
-    [SerializeField, Tooltip("Icon sprite per ChunkType, keyed explicitly rather than by array position - safe to add/reorder ChunkType values without reassigning every existing entry. Leave a type out of the list (or its Sprite unassigned) to show no icon for it (e.g. Enemy, Traversal).")]
+    [SerializeField, Tooltip("Icon sprite per ChunkType, keyed explicitly rather than by array position - safe to add/reorder ChunkType values without reassigning every existing entry. Leave a type out of the list (or its Sprite unassigned) to show no icon for it (e.g. Enemy).")]
     private List<ChunkTypeSpriteEntry> chunkTypeSprites = new();
     [SerializeField] private Image iconPrefab;
-    [SerializeField, Tooltip("Multiplied against iconPrefab's own authored color (not a flat override) once a chunk's linked POI (Healing Shrine/Cursed Rift/Store/Blacksmith) has nobody connected who can currently use it - see UpdateIconTints. PoiActivation.State.Expired already covers BOTH \"fully used up\" and \"everyone's still on cooldown\" as the same value, so this one tint covers both. A Boss/LobbyStart/Enemy/Traversal chunk never resolves a linked POI, so its icon is never touched.")]
-    private Color expiredIconTint = new Color(0.45f, 0.45f, 0.45f, 1f);
+    [FormerlySerializedAs("expiredIconTint")]
+    [SerializeField, Tooltip("Multiplied against iconPrefab's own authored color (not a flat override) once a chunk's linked POI (Healing Shrine/Cursed Rift/Blacksmith, or a Completed/Failed Traversal Challenge) has been fully used up - see UpdateIconTints/ResolvePoiUsagePolicy. Distinct from cooldownIconTint below, which covers the OTHER Expired case (everyone's still on a per-player Cooldown, e.g. Healing Shrine) - PoiActivation.State.Expired alone can't tell the two apart, only the POI's own PoiUsagePolicy can. A Boss/LobbyStart/Enemy chunk never resolves a linked POI, so its icon is never touched.")]
+    private Color usedIconTint = new Color(0.45f, 0.45f, 0.45f, 1f);
+    [SerializeField, Tooltip("Same as usedIconTint, but for a POI whose PoiUsagePolicy is Cooldown (e.g. Healing Shrine) instead of a one-time-use policy - lets cooldown read as a different (typically darker/blacker) shade than \"used up for the Break/run\". Store never resolves Expired at all (always Reusable), so it never uses either tint.")]
+    private Color cooldownIconTint = new Color(0.22f, 0.22f, 0.22f, 1f);
     [SerializeField, Tooltip("Simple colored-dot prefab (or similar) representing one player. No per-player identity beyond position for this first pass.")]
     private RectTransform playerMarkerPrefab;
     [SerializeField, Tooltip("Marker shown for every currently-alive Elite-tier enemy (EnemyDataAsset.Tier == Elite) - same always-relevant/never-retires enemies EnemyLifecycleSystem treats specially, so they're worth calling out on the map. One generic marker for every Elite regardless of which EnemyDataAsset it is - no per-enemy-type identity, same first-pass scope as playerMarkerPrefab. Leave unassigned to disable Elite markers entirely.")]
@@ -126,14 +135,42 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     private readonly Dictionary<EntityRef, OverlayPair> _iconOverlays = new();
 
     // Chunk entity -> the PoiActivation-carrying entity that lives inside its footprint (Healing
-    // Shrine/Cursed Rift/Store/Blacksmith), resolved once at icon-spawn time (see
-    // ResolvePoiEntityForChunk) - only chunks that actually resolved one are present here. Read
-    // every tick by UpdateIconTints; a chunk with no linked POI (Boss/LobbyStart/Enemy/Traversal)
+    // Shrine/Cursed Rift/Store/Blacksmith), resolved once it's actually found - see
+    // ResolveEntityForChunk/_pendingPoiLink. Read every tick by UpdateIconTints; a chunk with no
+    // linked POI (Boss/LobbyStart/Enemy, or a Traversal chunk - see _iconTraversalEntity instead)
     // simply never appears in this dictionary and its icon color is never touched.
     private readonly Dictionary<EntityRef, EntityRef> _iconPoiEntity = new();
 
+    // Chunk entity -> that same POI entity's own PoiUsagePolicy, cached once alongside
+    // _iconPoiEntity (see ResolvePoiUsagePolicy) since the policy never changes after authoring -
+    // lets UpdateIconTints pick usedIconTint vs cooldownIconTint without re-reading the specific
+    // HealingShrine/CursedRift/Blacksmith component every tick.
+    private readonly Dictionary<EntityRef, PoiUsagePolicy> _iconPoiUsagePolicy = new();
+
+    // Same shape as _iconPoiEntity, but for a Traversal chunk's own TraversalChallenge entity -
+    // kept separate since TraversalChallenge deliberately carries no PoiActivation (see
+    // TraversalChallenge.qtn/docs/traversal-challenge.md), so UpdateIconTints has to read its
+    // TraversalChallengeState directly instead.
+    private readonly Dictionary<EntityRef, EntityRef> _iconTraversalEntity = new();
+
+    // Chunk entity -> its own (Chunk, Transform3D) value copy, for a chunk whose Type CAN link a
+    // POI (see ChunkTypeCanLinkPoi) but hasn't resolved one YET. Needed because the POI/
+    // TraversalChallenge entity living inside a chunk is NOT created the same tick as the chunk
+    // itself - Chunk entities come from LevelGenerationSystem, but HealingShrine/CursedRift/
+    // Blacksmith/Store/TraversalChallenge are baked per-chunk-prefab spawns resolved by
+    // TalentGateSystem only after Global.LevelGenerated AND every connected player has actually
+    // spawned (see TalentGateSystem.ResolveSpawners) - several ticks later at best. Retried every
+    // QUpdate by RetryPendingPoiLinks until TryLinkPoiForChunk succeeds, then removed - so this is
+    // empty (and costs nothing) for the entire rest of the match once every POI has been found.
+    private readonly Dictionary<EntityRef, (Chunk Chunk, Transform3D Transform)> _pendingPoiLink = new();
+
+    // Scratch buffer for RetryPendingPoiLinks - can't remove from _pendingPoiLink while iterating
+    // it, same "collect then sweep" shape every stale-marker pass in this file already uses.
+    private List<EntityRef> _resolvedPoiLinkBuffer;
+
     // iconPrefab's own authored color, cached once so UpdateIconTints can restore it exactly
-    // (rather than hardcoding white) once a POI's PoiActivation.State stops being Expired.
+    // (rather than hardcoding white) once a POI's PoiActivation.State stops being Expired (or a
+    // Traversal Challenge stops being Completed/Failed).
     private Color _iconBaseColor = Color.white;
 
     private readonly Dictionary<EntityRef, OverlayPair> _playerMarkers = new();
@@ -225,6 +262,12 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     // outline. Null until ComputeLevelOutline has run.
     private bool[] _outlineMask;
 
+    // Which chunk entity owns each texel (EntityRef.None for a texel no chunk covers, e.g. an
+    // unfilled hole before ComputeHoleRegions runs) - built once alongside the occupancy mask in
+    // ComputeLevelOutline and handed to ComputeHoleRegions to find each hole's bordering chunks.
+    // Null until ComputeLevelOutline has run.
+    private EntityRef[] _chunkOwnerAt;
+
     // Enclosed empty regions (the inner holes the gap-filler fills) - computed once alongside the
     // outline. Each is painted undiscoveredColor at first and reveals (repaints to discoveredColor)
     // only once one of the chunks bordering it is Discovered, mirroring how the chunks themselves
@@ -248,6 +291,13 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     private int _textureResolution;
     private float _worldToTexelScale;
     private bool _textureDirty;
+
+    // The center every WorldToTexel/WorldToMapPosition conversion actually uses - starts as the
+    // authored worldCenter (best guess) and is overwritten exactly once, by EnsureCentered, with
+    // the real generated level's own bounding-box center once Global.LevelGenerated flips. See
+    // worldCenter's own tooltip.
+    private Vector2 _effectiveWorldCenter;
+    private bool _centered;
 
     private void Awake()
     {
@@ -274,6 +324,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     {
         _worldToTexelScale = 1f / worldUnitsPerTexel;
         _textureResolution = Mathf.Max(Mathf.CeilToInt(worldExtent * 2f * _worldToTexelScale), 1);
+        _effectiveWorldCenter = worldCenter;
 
         _texture = new Texture2D(_textureResolution, _textureResolution, TextureFormat.RGBA32, false)
         {
@@ -336,6 +387,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
             return;
 
         UpdateChunks(frame);
+        RetryPendingPoiLinks(frame);
         UpdateIconTints(frame);
         RefreshIconPositionsIfResized();
         UpdatePlayerMarkers(frame);
@@ -368,8 +420,64 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         mapRect.anchoredPosition = -WorldToMapPosition(playerWorldPos, mapRect);
     }
 
+    // Runs exactly once, the first tick Global.LevelGenerated is true (see UpdateChunks' own
+    // guard). Overwrites _effectiveWorldCenter with the real generated level's own bounding-box
+    // center (in world space, from every Chunk's GetWorldBounds) instead of the authored
+    // worldCenter guess - so a level whose actual footprint isn't centered on that authored point
+    // no longer paints its content, and the outline ring around it, past the edge of the
+    // fixed-size texture (worldExtent/_textureResolution are still fixed; this only chooses WHERE
+    // within that canvas the content lands). Falls back to the authored worldCenter (already the
+    // starting value) if somehow no chunk exists yet, rather than centering on a degenerate point.
+    private void EnsureCentered(Frame frame)
+    {
+        var chunks = frame.Filter<Chunk, Transform3D>();
+
+        bool any = false;
+        float minX = 0f, minZ = 0f, maxX = 0f, maxZ = 0f;
+
+        while (chunks.Next(out EntityRef _, out Chunk chunk, out Transform3D transform))
+        {
+            GetWorldBounds(chunk, transform, out float x0, out float z0, out float x1, out float z1);
+
+            if (any == false)
+            {
+                minX = x0;
+                maxX = x1;
+                minZ = z0;
+                maxZ = z1;
+                any = true;
+                continue;
+            }
+
+            minX = Mathf.Min(minX, x0);
+            minZ = Mathf.Min(minZ, z0);
+            maxX = Mathf.Max(maxX, x1);
+            maxZ = Mathf.Max(maxZ, z1);
+        }
+
+        if (any)
+            _effectiveWorldCenter = new Vector2((minX + maxX) * 0.5f, (minZ + maxZ) * 0.5f);
+
+        _centered = true;
+    }
+
     private unsafe void UpdateChunks(Frame frame)
     {
+        // Nothing is cached or painted until the level is centered (see EnsureCentered) - every
+        // chunk's texel rect depends on _effectiveWorldCenter, so caching even one chunk's rect
+        // before centering runs would bake in the wrong (possibly off-center) value permanently
+        // (rects are never recomputed once cached). Global.LevelGenerated means every Chunk
+        // entity/position is final (a chunk-baked POI/TraversalChallenge can still arrive later -
+        // see _pendingPoiLink - but that doesn't move any Chunk itself), so this is the earliest
+        // safe point to measure the real level's own bounding box.
+        if (_centered == false)
+        {
+            if (frame.Global->LevelGenerated == false)
+                return;
+
+            EnsureCentered(frame);
+        }
+
         EntityRef currentChunk = ResolveCurrentChunk(frame);
 
         // Pass 1: cache every newly-seen chunk's rect (and detect a Discovered flip on an
@@ -460,16 +568,31 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
 
     // Computes the level's static outline exactly once, entirely independent of Discovered state.
     // Standard edge-detection-on-a-pixel-grid: rasterize every chunk's full rect into an occupancy
-    // mask first, then mark an occupied texel as outline if any texel within outlineTexels of it
-    // (or the texture's own edge) is unoccupied. Deliberately NOT "does the whole edge of this
-    // chunk's rect touch another chunk's rect" (checked per chunk-pair before) - that treats each
-    // of a chunk's 4 sides as one monolithic decision, so a neighbor that only partially covers a
-    // shared side (smaller, offset, an L-shaped arrangement, etc.) would wrongly mark the entire
-    // side as "connected." Operating on the rasterized grid directly instead handles any chunk
-    // arrangement correctly, no per-chunk-pair adjacency logic needed. See class comment.
+    // mask first, then split outlineTexels into an outer radius (outlineTexels - outlineInnerTexels)
+    // and an inner radius (outlineInnerTexels, 0 by default) - an UNoccupied texel within outerRadius
+    // of an occupied one is outline (a ring hugging the solid mass from the empty side, never
+    // touching an occupied texel), and, only if outlineInnerTexels > 0, an OCCUPIED texel within
+    // innerRadius of an unoccupied one is ALSO outline (straddling in on top of the chunk's own fill
+    // for a centered-look stroke - see outlineInnerTexels' own tooltip).
+    //
+    // The outer half alone can never cover a real chunk-to-chunk connection: two occupied, connected
+    // chunks - full edge, partial/offset overlap, doesn't matter - have no empty texel between them
+    // for that ring to occupy. The inner half doesn't have that guarantee on its own though - at this
+    // coarse a texel resolution a chunk is only a few texels wide (see docs/minimap.md), so an inner
+    // radius can still reach across a real connection to the chunk's own unrelated far side. Any
+    // inner-marked texel that's actually a seam between two DIFFERENT chunks (found via
+    // _chunkOwnerAt) is therefore reopened by OpenChunkConnections afterward, the same way a real
+    // connection reads as open on the outer half.
+    //
+    // Deliberately NOT "does the whole edge of this chunk's rect touch another chunk's rect" (an
+    // even earlier version) - that treats each of a chunk's 4 sides as one monolithic decision, so a
+    // neighbor that only partially covers a shared side would wrongly mark the entire side as
+    // "connected." Operating on the rasterized grid directly instead handles any chunk arrangement
+    // correctly, no per-chunk-pair adjacency logic needed. See class comment.
     private void ComputeLevelOutline(Frame frame)
     {
         var occupied = new bool[_textureResolution * _textureResolution];
+        _chunkOwnerAt = new EntityRef[_textureResolution * _textureResolution];
 
         var chunks = frame.Filter<Chunk, Transform3D>();
         while (chunks.Next(out EntityRef entity, out Chunk _, out Transform3D _))
@@ -481,7 +604,11 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
             {
                 int rowOffset = y * _textureResolution;
                 for (int x = rect.x; x < rect.x + rect.width; x++)
-                    occupied[rowOffset + x] = true;
+                {
+                    int index = rowOffset + x;
+                    occupied[index] = true;
+                    _chunkOwnerAt[index] = entity;
+                }
             }
         }
 
@@ -489,7 +616,10 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         // solid mass BEFORE the outline is computed, so the outline wraps the outer boundary and
         // never draws a loop around a hole. ComputeHoleRegions also records each hole so it can
         // reveal per-adjacent-chunk discovery.
-        ComputeHoleRegions(occupied);
+        ComputeHoleRegions(occupied, _chunkOwnerAt);
+
+        int innerRadius = Mathf.Clamp(outlineInnerTexels, 0, outlineTexels);
+        int outerRadius = outlineTexels - innerRadius;
 
         _outlineMask = new bool[_textureResolution * _textureResolution];
 
@@ -498,23 +628,65 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
             for (int x = 0; x < _textureResolution; x++)
             {
                 int index = y * _textureResolution + x;
-                if (occupied[index] && IsNearUnoccupiedTexel(occupied, x, y))
+
+                if (occupied[index])
+                {
+                    if (innerRadius > 0 && IsNearUnoccupiedTexel(occupied, x, y, innerRadius))
+                        _outlineMask[index] = true;
+                }
+                else if (IsNearOccupiedTexel(occupied, x, y, outerRadius))
+                {
                     _outlineMask[index] = true;
+                }
             }
         }
+
+        if (innerRadius > 0)
+            OpenChunkConnections(occupied, innerRadius);
     }
 
-    private bool IsNearUnoccupiedTexel(bool[] occupied, int x, int y)
+    // Called only for a texel that is itself unoccupied - true if any texel within radius IS
+    // occupied, i.e. this empty texel sits on the outer stroke ring hugging the solid mass. No
+    // texture-edge special case needed (unlike IsNearUnoccupiedTexel below) - off-texture simply
+    // has no occupied neighbor there to trigger on, which is already the correct "not outline"
+    // answer for a texel out past the known world.
+    private bool IsNearOccupiedTexel(bool[] occupied, int x, int y, int radius)
     {
-        for (int dy = -outlineTexels; dy <= outlineTexels; dy++)
+        for (int dy = -radius; dy <= radius; dy++)
         {
-            for (int dx = -outlineTexels; dx <= outlineTexels; dx++)
+            int ny = y + dy;
+            if (ny < 0 || ny >= _textureResolution)
+                continue;
+
+            int rowOffset = ny * _textureResolution;
+            for (int dx = -radius; dx <= radius; dx++)
+            {
+                int nx = x + dx;
+                if (nx < 0 || nx >= _textureResolution)
+                    continue;
+
+                if (occupied[rowOffset + nx])
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Called only for a texel that is itself occupied (the outlineInnerTexels > 0 path only) - true
+    // if any texel within radius is unoccupied, or off-texture (the texture's own edge counts as
+    // unoccupied - the true outer boundary of the known world still needs its inner half drawn).
+    private bool IsNearUnoccupiedTexel(bool[] occupied, int x, int y, int radius)
+    {
+        for (int dy = -radius; dy <= radius; dy++)
+        {
+            for (int dx = -radius; dx <= radius; dx++)
             {
                 int nx = x + dx;
                 int ny = y + dy;
 
                 if (nx < 0 || nx >= _textureResolution || ny < 0 || ny >= _textureResolution)
-                    return true; // the texture's own edge counts as unoccupied
+                    return true;
 
                 if (occupied[ny * _textureResolution + nx] == false)
                     return true;
@@ -524,28 +696,80 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         return false;
     }
 
+    // Reopens the inner half of the outline (see ComputeLevelOutline) at every seam where two
+    // 4-directionally adjacent texels are owned by two DIFFERENT chunks - a real connection between
+    // them that IsNearUnoccupiedTexel's radius check can't tell apart from a chunk's own unrelated
+    // far edge at this coarse a resolution. Only ever touches OCCUPIED texels (guarded in
+    // ClearInnerOutlineNear) - the outer half is already connection-safe by construction and must
+    // never be cleared here, or a legitimate nearby exterior wall would wrongly vanish too. A texel
+    // bordering a hole (_chunkOwnerAt == None) is left untouched - holes aren't "a connected chunk".
+    private void OpenChunkConnections(bool[] occupied, int innerRadius)
+    {
+        int res = _textureResolution;
+
+        for (int y = 0; y < res; y++)
+        {
+            for (int x = 0; x < res; x++)
+            {
+                EntityRef owner = _chunkOwnerAt[y * res + x];
+                if (owner == EntityRef.None)
+                    continue;
+
+                if (x + 1 < res)
+                    OpenIfDifferentChunk(occupied, owner, x, y, x + 1, y, innerRadius);
+
+                if (y + 1 < res)
+                    OpenIfDifferentChunk(occupied, owner, x, y, x, y + 1, innerRadius);
+            }
+        }
+    }
+
+    private void OpenIfDifferentChunk(bool[] occupied, EntityRef owner, int xA, int yA, int xB, int yB, int innerRadius)
+    {
+        EntityRef neighborOwner = _chunkOwnerAt[yB * _textureResolution + xB];
+        if (neighborOwner == EntityRef.None || neighborOwner == owner)
+            return;
+
+        ClearInnerOutlineNear(occupied, xA, yA, innerRadius);
+        ClearInnerOutlineNear(occupied, xB, yB, innerRadius);
+    }
+
+    // Clears _outlineMask in a (2*radius+1) square around (cx, cy) - same neighborhood shape
+    // IsNearUnoccupiedTexel used to paint the inner half, used here in reverse. occupied[idx] == false
+    // (an outer-ring texel) is always skipped, on purpose - see OpenChunkConnections' own comment.
+    private void ClearInnerOutlineNear(bool[] occupied, int cx, int cy, int radius)
+    {
+        int res = _textureResolution;
+
+        for (int dy = -radius; dy <= radius; dy++)
+        {
+            int ny = cy + dy;
+            if (ny < 0 || ny >= res)
+                continue;
+
+            int rowOffset = ny * res;
+            for (int dx = -radius; dx <= radius; dx++)
+            {
+                int nx = cx + dx;
+                if (nx < 0 || nx >= res)
+                    continue;
+
+                int index = rowOffset + nx;
+                if (occupied[index])
+                    _outlineMask[index] = false;
+            }
+        }
+    }
+
     // Finds every enclosed empty region (an inner hole the gap-filler fills): flood-fills from the
     // texture border through empty texels ("outside"), and anything still empty afterward is a hole.
     // Each hole is marked occupied here (so the outline treats the level as one solid mass), painted
     // undiscoveredColor for now, and recorded with the chunks bordering it so RevealHolesAdjacentTo
     // can light it up once one of those chunks is Discovered. Same border-flood idea
     // LevelGenerationSystem.FillInnerGaps already uses to decide where to spawn a gap-filler.
-    private void ComputeHoleRegions(bool[] occupied)
+    private void ComputeHoleRegions(bool[] occupied, EntityRef[] chunkAt)
     {
         int res = _textureResolution;
-
-        // Which chunk owns each texel, so a hole's bordering chunks can be identified.
-        var chunkAt = new EntityRef[res * res];
-        foreach (var kv in _chunkTexelRects)
-        {
-            RectInt rect = kv.Value;
-            for (int y = rect.y; y < rect.y + rect.height; y++)
-            {
-                int rowOffset = y * res;
-                for (int x = rect.x; x < rect.x + rect.width; x++)
-                    chunkAt[rowOffset + x] = kv.Key;
-            }
-        }
 
         // Flood-fill from the border through empty texels - everything reached is "outside".
         var visited = new bool[res * res];
@@ -728,8 +952,14 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         maxZ = minZ + chunk.ChunkSizeDepth;
     }
 
-    // Paints this chunk's full fill, then - only if it's Discovered - stamps whichever of its own
-    // precomputed outline texels fall inside its rect on top, in outlineColor.
+    // Paints this chunk's full fill, then - only if it's Discovered - stamps whichever precomputed
+    // outline texels fall around it, in outlineColor. The outline is an OUTER stroke (see
+    // ComputeLevelOutline) - it lives on the unoccupied texels ringing the chunk, not inside its
+    // own rect - so this scans the rect DILATED outward by outlineTexels (clamped to the texture)
+    // rather than just the rect itself. A ring texel can border more than one chunk (e.g. near a
+    // corner); stamping it again from another neighbor's own repaint later is harmless (same
+    // color), and it staying lit once any one bordering chunk is Discovered reads naturally as "the
+    // edge of what's been explored," same spirit as the hole-region reveal below.
     private void RepaintSingleChunk(EntityRef entity, EntityRef currentChunk)
     {
         if (_chunkTexelRects.TryGetValue(entity, out RectInt texelRect) == false)
@@ -746,10 +976,15 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         if (_outlineMask == null || discovered == false)
             return;
 
-        for (int y = texelRect.y; y < texelRect.y + texelRect.height; y++)
+        int minX = Mathf.Max(0, texelRect.x - outlineTexels);
+        int minY = Mathf.Max(0, texelRect.y - outlineTexels);
+        int maxX = Mathf.Min(_textureResolution - 1, texelRect.x + texelRect.width - 1 + outlineTexels);
+        int maxY = Mathf.Min(_textureResolution - 1, texelRect.y + texelRect.height - 1 + outlineTexels);
+
+        for (int y = minY; y <= maxY; y++)
         {
             int rowOffset = y * _textureResolution;
-            for (int x = texelRect.x; x < texelRect.x + texelRect.width; x++)
+            for (int x = minX; x <= maxX; x++)
             {
                 if (_outlineMask[rowOffset + x])
                     _texture.SetPixel(x, y, outlineColor);
@@ -764,7 +999,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     // coarse a scale (2-3 texels per chunk) can shift the painted square's actual center by up to
     // half a texel. Deriving the icon from the same rect the texture itself was painted from is
     // what keeps the two visually aligned.
-    private void SpawnIconOverlayIfNeeded(Frame frame, EntityRef entity, Chunk chunk, Transform3D chunkTransform, RectInt texelRect)
+    private unsafe void SpawnIconOverlayIfNeeded(Frame frame, EntityRef entity, Chunk chunk, Transform3D chunkTransform, RectInt texelRect)
     {
         Sprite specialSprite = ResolveChunkTypeSprite(chunk.Type);
         if (specialSprite == null)
@@ -777,27 +1012,95 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         pair.SetActive(chunk.Discovered);
         _iconOverlays[entity] = pair;
 
-        // Only chunks whose Type actually has a POI with a PoiActivation component (Healing
-        // Shrine/Cursed Rift/Store/Blacksmith) resolve one here - a Boss/LobbyStart/Enemy/
-        // Traversal chunk's icon simply never enters _iconPoiEntity, so UpdateIconTints never
-        // touches its color.
-        EntityRef poiEntity = ResolvePoiEntityForChunk(frame, chunk, chunkTransform);
-        if (poiEntity != EntityRef.None)
-            _iconPoiEntity[entity] = poiEntity;
+        // The POI/TraversalChallenge entity this chunk's icon should link to almost never exists
+        // yet at this exact tick (TalentGateSystem spawns it well after this Chunk entity first
+        // becomes visible here - see _pendingPoiLink's own comment), so this first attempt is
+        // expected to fail for a brand-new chunk; RetryPendingPoiLinks keeps trying every QUpdate
+        // after that until it succeeds.
+        if (TryLinkPoiForChunk(frame, entity, chunk, chunkTransform) == false && ChunkTypeCanLinkPoi(chunk.Type))
+            _pendingPoiLink[entity] = (chunk, chunkTransform);
     }
 
-    // Finds whichever PoiActivation-carrying entity (see PoiActivationSystem - Healing Shrine/
-    // Cursed Rift/Store/Blacksmith) falls inside this chunk's own world footprint. Called once per
-    // newly-seen chunk (not every tick) - POI instances are few (a handful per level, see
-    // Poi.qtn's own comment), so a linear scan here is cheap and avoids needing any dedicated
-    // chunk<->POI authoring link.
-    private EntityRef ResolvePoiEntityForChunk(Frame frame, Chunk chunk, Transform3D chunkTransform)
+    // Boss/LobbyStart/Enemy chunks never have a linked POI at all - excluding them here is what
+    // keeps _pendingPoiLink from retrying (and scanning every POI/TraversalChallenge entity) once
+    // per QUpdate FOREVER for a chunk that will never resolve one.
+    private static bool ChunkTypeCanLinkPoi(ChunkType type)
+    {
+        return type == ChunkType.HealingShrine
+            || type == ChunkType.CursedRift
+            || type == ChunkType.Blacksmith
+            || type == ChunkType.Merchant
+            || type == ChunkType.Traversal;
+    }
+
+    // One attempt at linking entity's chunk icon to its POI/TraversalChallenge entity - true if
+    // linked just now (or already was), false if it doesn't exist in frame yet and should be
+    // retried later. Shared by SpawnIconOverlayIfNeeded's first attempt and RetryPendingPoiLinks'
+    // later ones so both go through the exact same resolution logic.
+    private unsafe bool TryLinkPoiForChunk(Frame frame, EntityRef entity, Chunk chunk, Transform3D chunkTransform)
+    {
+        // TraversalChallenge deliberately carries no PoiActivation (see TraversalChallenge.qtn), so
+        // it's resolved/tracked through its own dictionary instead of _iconPoiEntity below.
+        if (chunk.Type == ChunkType.Traversal)
+        {
+            EntityRef traversalEntity = ResolveEntityForChunk<TraversalChallenge>(frame, chunk, chunkTransform);
+            if (traversalEntity == EntityRef.None)
+                return false;
+
+            _iconTraversalEntity[entity] = traversalEntity;
+            return true;
+        }
+
+        // Only chunks whose Type actually has a POI with a PoiActivation component (Healing
+        // Shrine/Cursed Rift/Store/Blacksmith) resolve one here - a Boss/LobbyStart/Enemy chunk
+        // always returns false (correctly never linked), but ChunkTypeCanLinkPoi keeps that from
+        // ever reaching _pendingPoiLink in the first place.
+        EntityRef poiEntity = ResolveEntityForChunk<PoiActivation>(frame, chunk, chunkTransform);
+        if (poiEntity == EntityRef.None)
+            return false;
+
+        _iconPoiEntity[entity] = poiEntity;
+        _iconPoiUsagePolicy[entity] = ResolvePoiUsagePolicy(frame, chunk.Type, poiEntity);
+        return true;
+    }
+
+    // Retries every chunk icon still waiting on its POI/TraversalChallenge entity to actually exist
+    // (see _pendingPoiLink's own comment on why the first attempt at icon-spawn time so often
+    // misses). Cheap in steady state - empty once every real POI has been found, since
+    // ChunkTypeCanLinkPoi keeps non-POI chunks out of this dictionary entirely, and there are only
+    // ever a handful of POI instances per level (see Poi.qtn's own comment).
+    private unsafe void RetryPendingPoiLinks(Frame frame)
+    {
+        if (_pendingPoiLink.Count == 0)
+            return;
+
+        _resolvedPoiLinkBuffer ??= new List<EntityRef>();
+        _resolvedPoiLinkBuffer.Clear();
+
+        foreach (var kvp in _pendingPoiLink)
+        {
+            if (TryLinkPoiForChunk(frame, kvp.Key, kvp.Value.Chunk, kvp.Value.Transform))
+                _resolvedPoiLinkBuffer.Add(kvp.Key);
+        }
+
+        for (int i = 0; i < _resolvedPoiLinkBuffer.Count; i++)
+            _pendingPoiLink.Remove(_resolvedPoiLinkBuffer[i]);
+    }
+
+    // Finds whichever T-carrying entity falls inside this chunk's own world footprint - T is
+    // PoiActivation (Healing Shrine/Cursed Rift/Store/Blacksmith, see PoiActivationSystem) or
+    // TraversalChallenge, the two kinds of POI entity a chunk icon can link to. Called from
+    // TryLinkPoiForChunk, at most once per QUpdate per chunk still in _pendingPoiLink (see its own
+    // comment on why one attempt often isn't enough) - POI instances are few (a handful per level,
+    // see Poi.qtn's own comment), so a linear scan here is cheap even repeated, and avoids needing
+    // any dedicated chunk<->POI authoring link.
+    private EntityRef ResolveEntityForChunk<T>(Frame frame, Chunk chunk, Transform3D chunkTransform) where T : unmanaged, IComponent
     {
         GetWorldBounds(chunk, chunkTransform, out float minX, out float minZ, out float maxX, out float maxZ);
 
-        var pois = frame.Filter<PoiActivation, Transform3D>();
+        var filter = frame.Filter<T, Transform3D>();
 
-        while (pois.Next(out EntityRef entity, out PoiActivation _, out Transform3D poiTransform))
+        while (filter.Next(out EntityRef entity, out T _, out Transform3D poiTransform))
         {
             float x = poiTransform.Position.X.AsFloat;
             float z = poiTransform.Position.Z.AsFloat;
@@ -809,13 +1112,41 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         return EntityRef.None;
     }
 
-    // Darkens a chunk's own icon once nobody connected can currently use its linked POI -
-    // PoiActivation.State collapses "fully used up" (OncePerPlayerPerBreak/PerRun) and "everyone's
-    // still on cooldown" (Cooldown policy) into the same Expired value (see
-    // PoiActivationUtility.Refresh/AnyConnectedPlayerCanUse), so this one check covers both per
-    // the user's own ask - no separate cooldown branch needed. Store is always PoiUsagePolicy.
-    // Reusable (see PoiActivationSystem's own comment), so it never resolves Expired here, which
-    // is correct - there's nothing to darken on a POI you can always walk back into.
+    // Reads the specific POI-kind component's own PoiUsagePolicy - the field UsagePolicy itself
+    // lives on HealingShrine/CursedRift/Blacksmith individually (see Poi.qtn's own comment), not on
+    // the generic PoiActivation this method's caller otherwise treats every POI kind identically
+    // through. Cached once at icon-spawn time into _iconPoiUsagePolicy since a POI's policy is
+    // authored, never changes at runtime. Store has no PoiUsagePolicy field of its own (always
+    // Reusable - see Store.qtn/PoiActivationSystem) and never resolves Expired, so it's never asked
+    // for here in practice; Merchant/every other ChunkType falls through to the same Reusable
+    // default, which is harmless for the same reason.
+    private unsafe PoiUsagePolicy ResolvePoiUsagePolicy(Frame frame, ChunkType chunkType, EntityRef poiEntity)
+    {
+        switch (chunkType)
+        {
+            case ChunkType.HealingShrine:
+                return frame.Unsafe.TryGetPointer<HealingShrine>(poiEntity, out var shrine) ? shrine->UsagePolicy : PoiUsagePolicy.Reusable;
+            case ChunkType.CursedRift:
+                return frame.Unsafe.TryGetPointer<CursedRift>(poiEntity, out var rift) ? rift->UsagePolicy : PoiUsagePolicy.Reusable;
+            case ChunkType.Blacksmith:
+                return frame.Unsafe.TryGetPointer<Blacksmith>(poiEntity, out var forge) ? forge->UsagePolicy : PoiUsagePolicy.Reusable;
+            default:
+                return PoiUsagePolicy.Reusable;
+        }
+    }
+
+    // Darkens a chunk's own icon once its linked POI is no longer usable right now - two different
+    // shades depending on WHY, per the user's own ask:
+    //  - usedIconTint: a one-time-use policy (OncePerPlayerPerBreak/PerRun/OncePerWorld) has been
+    //    used up, or a Traversal Challenge ended Completed/Failed (both terminal, see
+    //    TraversalChallenge.qtn - there's no cooldown concept for it at all).
+    //  - cooldownIconTint: a Cooldown-policy POI (e.g. Healing Shrine) still has every connected
+    //    player on cooldown - same PoiActivation.State.Expired value as "used up" (see
+    //    PoiActivationUtility.Refresh/AnyConnectedPlayerCanUse), only the POI's own cached
+    //    PoiUsagePolicy (_iconPoiUsagePolicy) tells the two apart.
+    // Store is always PoiUsagePolicy.Reusable (see PoiActivationSystem's own comment), so it never
+    // resolves Expired here, which is correct - there's nothing to darken on a POI you can always
+    // walk back into.
     private unsafe void UpdateIconTints(Frame frame)
     {
         foreach (var kvp in _iconPoiEntity)
@@ -826,11 +1157,26 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
             if (_iconOverlays.TryGetValue(kvp.Key, out OverlayPair pair) == false)
                 continue;
 
-            Color color = activation->State == PoiViewState.Expired
-                ? _iconBaseColor * expiredIconTint
-                : _iconBaseColor;
+            Color color = _iconBaseColor;
+            if (activation->State == PoiViewState.Expired)
+            {
+                PoiUsagePolicy policy = _iconPoiUsagePolicy.TryGetValue(kvp.Key, out var cachedPolicy) ? cachedPolicy : PoiUsagePolicy.Reusable;
+                color = _iconBaseColor * (policy == PoiUsagePolicy.Cooldown ? cooldownIconTint : usedIconTint);
+            }
 
             pair.SetIconColor(color);
+        }
+
+        foreach (var kvp in _iconTraversalEntity)
+        {
+            if (frame.Unsafe.TryGetPointer<TraversalChallenge>(kvp.Value, out var challenge) == false)
+                continue;
+
+            if (_iconOverlays.TryGetValue(kvp.Key, out OverlayPair pair) == false)
+                continue;
+
+            bool usedUp = challenge->State == TraversalChallengeState.Completed || challenge->State == TraversalChallengeState.Failed;
+            pair.SetIconColor(usedUp ? _iconBaseColor * usedIconTint : _iconBaseColor);
         }
     }
 
@@ -903,15 +1249,47 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     {
         GetWorldBounds(chunk, transform, out float minX, out float minZ, out float maxX, out float maxZ);
 
-        Vector2Int min = WorldToTexel(new Vector2(minX, minZ));
-        Vector2Int max = WorldToTexel(new Vector2(maxX, maxZ));
+        int x = SnapToSharedTexel(_xBoundaries, minX, _effectiveWorldCenter.x);
+        int xEnd = SnapToSharedTexel(_xBoundaries, maxX, _effectiveWorldCenter.x);
+        int y = SnapToSharedTexel(_zBoundaries, minZ, _effectiveWorldCenter.y);
+        int yEnd = SnapToSharedTexel(_zBoundaries, maxZ, _effectiveWorldCenter.y);
 
-        int x = Mathf.Clamp(min.x, 0, _textureResolution);
-        int y = Mathf.Clamp(min.y, 0, _textureResolution);
-        int xEnd = Mathf.Clamp(max.x, 0, _textureResolution);
-        int yEnd = Mathf.Clamp(max.y, 0, _textureResolution);
+        x = Mathf.Clamp(x, 0, _textureResolution);
+        y = Mathf.Clamp(y, 0, _textureResolution);
+        xEnd = Mathf.Clamp(xEnd, 0, _textureResolution);
+        yEnd = Mathf.Clamp(yEnd, 0, _textureResolution);
 
         return new RectInt(x, y, Mathf.Max(xEnd - x, 0), Mathf.Max(yEnd - y, 0));
+    }
+
+    // Two touching chunks' shared edge (chunk A's maxX and its neighbor B's minX) is the SAME
+    // world-space boundary conceptually, but each chunk's rect is computed via a different float
+    // path (B.minX is Transform3D.Position directly; A.maxX is A.minX + ChunkSizeWidth) - tiny FP
+    // drift between those two paths can land the value on opposite sides of a texel's rounding
+    // boundary, rounding A and B one texel apart and leaving a visible false gap the outline then
+    // paints on top of (see docs/minimap.md's "Known simplification"). Fixed by snapping every
+    // boundary value to a SHARED per-axis table on first sight instead of rounding each chunk's
+    // corners independently: a later chunk whose corner is within BoundaryEpsilonTexels of an
+    // already-registered boundary reuses that exact texel, so two conceptually-equal edges always
+    // agree regardless of which path computed them or which chunk was seen first.
+    private const float BoundaryEpsilonTexels = 0.05f;
+
+    private readonly List<(float World, int Texel)> _xBoundaries = new();
+    private readonly List<(float World, int Texel)> _zBoundaries = new();
+
+    private int SnapToSharedTexel(List<(float World, int Texel)> table, float worldValue, float centerValue)
+    {
+        float epsilon = worldUnitsPerTexel * BoundaryEpsilonTexels;
+
+        for (int i = 0; i < table.Count; i++)
+        {
+            if (Mathf.Abs(table[i].World - worldValue) <= epsilon)
+                return table[i].Texel;
+        }
+
+        int texel = Mathf.RoundToInt((worldValue - centerValue) * _worldToTexelScale + _textureResolution * 0.5f);
+        table.Add((worldValue, texel));
+        return texel;
     }
 
     // "Our" current chunk - whichever chunk contains this instance's own bound local player
@@ -1299,7 +1677,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
 
     private Vector2Int WorldToTexel(Vector2 worldXZ)
     {
-        Vector2 local = worldXZ - worldCenter;
+        Vector2 local = worldXZ - _effectiveWorldCenter;
 
         return new Vector2Int(
             Mathf.RoundToInt(local.x * _worldToTexelScale + _textureResolution * 0.5f),
@@ -1311,7 +1689,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     // regardless of mapRect's own on-screen pixel size.
     private Vector2 WorldToMapPosition(Vector2 worldXZ, RectTransform root)
     {
-        Vector2 local = worldXZ - worldCenter;
+        Vector2 local = worldXZ - _effectiveWorldCenter;
         float uiScale = _worldToTexelScale * (root.rect.width / _textureResolution);
 
         return local * uiScale;

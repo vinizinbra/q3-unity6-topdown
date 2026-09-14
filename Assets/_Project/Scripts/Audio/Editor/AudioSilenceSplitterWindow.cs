@@ -105,6 +105,7 @@ namespace Project.Audio.EditorTools
             EditorPrefs.SetString(SettingsPrefsKey, JsonUtility.ToJson(_settings));
             EditorPrefs.SetString(TranscribePrefsKey, JsonUtility.ToJson(_transcribe));
             StopPlayback();
+            AudioSilenceSplitter.RestoreOriginalSettings(_data);
 
             if (_preview != null)
             {
@@ -114,6 +115,9 @@ namespace Project.Audio.EditorTools
 
         private void Load(AudioClip clip)
         {
+            StopPlayback();
+            AudioSilenceSplitter.RestoreOriginalSettings(_data);
+
             _clip = clip;
             _data = null;
             _segments.Clear();

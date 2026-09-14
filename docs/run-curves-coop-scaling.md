@@ -14,7 +14,7 @@ in `Assets/_QuantumUser/Simulation/Balance/`.
 
 A **run curve** is a 7-anchor lookup (minutes 0/2/4/6/8/10/12), linearly interpolated between
 anchors and clamped flat outside that range - so difficulty keeps ramping smoothly through a run
-and caps rather than extrapolating past 12 minutes. All 4 channels are stored as one array of
+and caps rather than extrapolating past 12 minutes. All 5 channels are stored as one array of
 `RunCurveAnchor` rows (`BalanceConfig.Curves`) - one row per anchor minute, every channel's value
 at that point in the run sitting together - rather than 4 separate parallel `FP[7]` arrays, which
 made "what's `EnemyDmg` at 6 minutes" a matter of counting index positions across unrelated fields.
@@ -34,10 +34,25 @@ via `FP`'s implicit int conversion.
 
 | Channel | Anchors (0/2/4/6/8/10/12 min) | Consumer today |
 |---|---|---|
-| `EnemyHp` | 1.0 / 1.6 / 2.5 / 3.6 / 5.0 / 6.5 / 6.5 | `EnemyBalanceUtility.ResolveEnemyStats` |
+| `EnemyHpLight` | 1.0 / 1.6 / 2.5 / 3.6 / 5.0 / 6.5 / 6.5 | `EnemyBalanceUtility.ResolveEnemyStats` (Filler / Normal) |
+| `EnemyHpHeavy` | 1.0 / 1.6 / 2.5 / 3.6 / 5.0 / 6.5 / 6.5 | `EnemyBalanceUtility.ResolveEnemyStats` (Specialist / Heavy / Elite / Boss) |
 | `EnemyDmg` | 1.0 / 1.1 / 1.2 / 1.35 / 1.5 / 1.6 / 1.6 | `EnemyBalanceUtility.ResolveEnemyStats` |
 | `DirectorBudget` | 1.0 / 1.8 / 2.8 / 4.0 / 5.5 / 7.0 / 7.0 | `CombatDirectorUtility.ResolveBudgetMultiplier` |
 | `ExpectedPlayerDps` | 1.0 / 2.0 / 3.5 / 5.5 / 9.0 / 13.5 / 13.5 | **none** - reserved, no consumer yet |
+
+(Code defaults above; the authored `BalanceConfig.asset` currently carries its own numbers -
+the asset is the source of truth, the code defaults only seed a freshly created asset.)
+
+**Why two HP curves (2026-09-12).** A single `EnemyHp` curve forced the swarm and the threats to
+ramp in lockstep: any bump that made a late-run Elite/Boss feel meaty also made Filler spongy,
+and vice-versa. The split lets the swarm's HP track player weapon DPS (kept killable so the
+kill/XP loop stays fluid) while Specialist+ can ramp steeper as the "you must respect this"
+tier. Tier -> channel is fixed in code (`BalanceConfig.GetEnemyHpChannel`: Filler/Normal ->
+Light, everything else -> Heavy) rather than authored per row, and every HP consumer goes
+through `BalanceConfig.EvaluateEnemyHp(tier, seconds)` so that mapping lives in one place. The
+`RunCurveAnchor.EnemyHpLight` field carries `[FormerlySerializedAs("EnemyHp")]`; the asset was
+also migrated on disk with `EnemyHpHeavy` seeded to the same values as Light, so behaviour is
+unchanged until the Heavy row is tuned apart.
 
 ### Co-op global multipliers (`CoopGlobalKey`, `BalanceConfig.CoopGlobal`)
 
@@ -47,16 +62,37 @@ via `FP`'s implicit int conversion.
 | `DirectorBudget` | 1.00 / 1.70 / 2.40 / 3.00 | `CombatDirectorUtility.ResolveBudgetMultiplier` |
 | `EliteFrequency` | 1.00 / 1.60 / 2.20 / 2.80 | **none** - reserved, no consumer yet |
 | `XpRequirement` | 1.00 / 1.60 / 2.20 / 2.80 | `ExperienceUtility.ResolveXpRequirementMultiplier` |
+| `DirectorPressure` | 1.00 / 1.70 / 2.40 / 3.00 | `PlayerClusterDirectorUtility.BuildAnchors` (TargetPressure), `CombatDirectorUtility.TryPulse` (MaxAliveEnemies, MaxPurchasesPerPulse) |
+| `CoinGain` | 1.00 / 0.65 / 0.50 / 0.42 | `CoinUtility.TrySpawnDrop` (enemy kill coin orb value; barrel loot is not discounted) |
 
 `docs/survival-director.md` documents "Milestone 7 (Co-op Scaling)" as "living player count →
-budget/target-pressure/cap multipliers." Only the **budget** half is implemented here - the
-`DirectorBudget` curve and co-op row are multiplied together in
-`CombatDirectorUtility.ResolveBudgetMultiplier` and applied to `phase.BudgetPerPulse` before it
-accumulates into the `DirectorBudget` global (`CombatDirectorUtility.TryPulse`). Target-pressure and
-alive-cap scaling (`SurvivalPhase.TargetPressure`/`MaxAliveEnemies`) are **not** implemented - there's
-no `CoopGlobalKey` for either yet, and no consumer.
+budget/target-pressure/cap multipliers." Both halves are implemented: the `DirectorBudget` curve and
+co-op row are multiplied together in `CombatDirectorUtility.ResolveBudgetMultiplier` and applied to
+`phase.BudgetPerPulse` before it accumulates into the `DirectorBudget` global
+(`CombatDirectorUtility.TryPulse`); the `DirectorPressure` row scales the phase's
+`TargetPressure` (cohesive front and every split-front share alike), `MaxAliveEnemies` and the
+per-pulse purchase count.
 
-`XpRequirement` has no paired run curve (unlike `EnemyHp`/`EnemyDmg`/`DirectorBudget`) - the
+**Why coins need a co-op row (2026-09-13).** A collected coin orb credits every wallet
+(`CoinUtility.GrantAll`) and kills scale with the party (`DirectorPressure`), so per-wallet income
+rises with player count - at 4P a player banked ~2.2x the solo wallet by Break 1 and could buy the
+whole Store/Blacksmith loop solo is meant to choose from. `CoinGain` scales the *kill* orb value so every
+party size lands near the solo wallet; barrel loot is left alone because the level has the same
+crates whatever the party size. Sized for kills scaling ~x1.5/x2.0/x2.4 (the pressure row's x1.7/
+x2.4/x3.0 minus `MaxConcurrent` caps and lost pulses) - tune it with the Balance Simulator's
+`BreakAfford`/`CoinsEarned` columns at `PlayerCount` 1-4.
+
+**Why the caps need their own row (2026-09-12).** Solo, the Director is already pressure-capped, not
+budget-capped - e.g. R2-C grants ~430 budget/min but `TargetPressure 20` holds only ~10-13 Filler/
+Normal enemies. Scaling only the budget row therefore changed nothing for a cohesive party: the extra
+income piled up unspent, spawn (and so kill/XP) throughput stayed at solo levels while
+`XpRequirement` climbed x1.6-2.8, and co-op runs levelled markedly slower than solo (found with the
+Balance Simulator, `docs/balance-simulator.md`). With kills now scaling roughly with the pressure row,
+`XpRequirement` is a genuine tuning knob again and probably wants to come down (order of x1.3/x1.6/
+x1.9) - re-check with the simulator before touching it. The row defaults to the budget values so the
+two can be tuned apart (denser fights vs. more total spawns).
+
+`XpRequirement` has no paired run curve (unlike `EnemyHpLight`/`EnemyHpHeavy`/`EnemyDmg`/`DirectorBudget`) - the
 per-level XP curve already lives on `ExperienceConfig.RequiredExperience`
 (`FPAnimationCurve`, X = display level), so this only needs the player-count multiplier, applied on
 top of that curve's result in `ExperienceUtility.Grant`. See docs/experience-drops.md for the
@@ -104,7 +140,7 @@ EnemyRuntimeStats ResolveEnemyStats(Frame f, EnemyTier tier)
     int playerCount = f.PlayerCount;
 
     FP baseHp  = EnemyTierStatsConfig.Resolve(f, tier).MaxHealth;
-    FP curveHp = balance.Evaluate(CurveChannel.EnemyHp, elapsedSeconds);
+    FP curveHp = balance.EvaluateEnemyHp(tier, elapsedSeconds);   // Light or Heavy channel by tier
     FP coopHp  = balance.GetCoopHp(tier, playerCount);
 
     FP curveDmg = balance.Evaluate(CurveChannel.EnemyDmg, elapsedSeconds);
@@ -127,7 +163,7 @@ healthbar or damage number changing retroactively on a living enemy would look b
 ### Worked example (acceptance check)
 
 Filler (`EnemyTierStatsConfig.Filler.MaxHealth = 20`) at `SurvivalTime = 360` (6 min, lands exactly
-on the `EnemyHp` curve's own 360s anchor - no interpolation drift), `PlayerCount = 4`:
+on the `EnemyHpLight` curve's own 360s anchor - no interpolation drift), `PlayerCount = 4`:
 `MaxHp = RoundToInt(20 × 3.6 × 1.35) = RoundToInt(97.2) = 97`.
 
 Same Filler at `SurvivalTime = 0`, `PlayerCount = 1`: `MaxHp = RoundToInt(20 × 1.0 × 1.0) = 20` -
@@ -219,7 +255,7 @@ missing-`BalanceConfig` fallback as the other two consumers.
 
 - `Assets/_QuantumUser/Simulation/Balance/BalanceConfig.cs` - `CurveChannel`/`CoopGlobalKey` enums,
   `RunCurveAnchor`/`CoopGlobalRow`/`CoopHpRow` classes, `BalanceConfig : AssetObject` (curves +
-  both co-op tables + `Evaluate`/`GetCoopGlobal`/`GetCoopHp`).
+  both co-op tables + `Evaluate`/`EvaluateEnemyHp`/`GetEnemyHpChannel`/`GetCoopGlobal`/`GetCoopHp`).
 - `Assets/_QuantumUser/Simulation/Balance/EnemyBalanceUtility.cs` - `EnemyRuntimeStats` struct,
   static `ResolveEnemyStats` (reads `EnemyTierStatsConfig.MaxHealth` as the HP baseline).
 - `Assets/_QuantumUser/Simulation/QTN/Enemy/EnemyCombatModifiers.qtn` - new component,

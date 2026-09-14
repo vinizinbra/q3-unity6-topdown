@@ -52,8 +52,11 @@ namespace Quantum
             // to take it under, since that's the whole point of the trade.
             FP splitThreat = f.Global->SplitThreatMultiplier <= FP._0 ? FP._1 : f.Global->SplitThreatMultiplier;
             FP density = EncounterModifierUtility.ResolveSpawnDensityMultiplier(f);
-            int maxAlive = FPMath.RoundToInt(phase.MaxAliveEnemies * splitThreat * density);
-            int splitFloor = FPMath.RoundToInt(phase.MaxAliveEnemies * density);
+            // Same co-op cap row BuildAnchors applied to TargetPressure - alive cap and per-pulse
+            // purchase count must grow with it or the raised target can never actually be filled.
+            FP coopPressure = PlayerClusterDirectorUtility.ResolveCoopPressure(balance, f.PlayerConnectedCount);
+            int maxAlive = FPMath.RoundToInt(phase.MaxAliveEnemies * coopPressure * splitThreat * density);
+            int splitFloor = FPMath.RoundToInt(phase.MaxAliveEnemies * coopPressure * density);
             if (maxAlive < splitFloor)
                 maxAlive = splitFloor;
             if (maxAlive < 1)
@@ -66,7 +69,7 @@ namespace Quantum
                 exhausted[i] = false;
 
             int purchases = 0;
-            int maxPurchases = directorConfig.MaxPurchasesPerPulse * plan.Count;
+            int maxPurchases = FPMath.RoundToInt(directorConfig.MaxPurchasesPerPulse * coopPressure) * plan.Count;
 
             while (purchases < maxPurchases)
             {

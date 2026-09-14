@@ -59,24 +59,54 @@ simulation.
   `TexelRectCenterToMapPosition`, NOT the chunk's raw continuous-space center - independent
   per-corner rounding at this coarse a scale can shift the painted square's actual center by up to
   half a texel, so deriving the icon from the same rect keeps the two aligned) - visibility toggles
-  with `Discovered`. Left unassigned for `Enemy`/`Traversal` in the current authoring plan, so only
-  Boss/Merchant/LobbyStart get an icon; the texture alone represents every other chunk.
+  with `Discovered`. Left unassigned for `Enemy` in the current authoring plan; `Traversal` has its
+  own authored sprite. Every other chunk (no sprite assigned) is represented by the texture alone.
 
-  **Icon darkening for used-up/on-cooldown POIs** (2026-09-11): the instant a chunk's icon spawns,
-  `ResolvePoiEntityForChunk` does a one-time linear scan over every `PoiActivation`-carrying entity
-  (Healing Shrine/Cursed Rift/Store/Blacksmith - see `PoiActivationSystem`) and caches whichever one
-  falls inside that chunk's own world footprint into `_iconPoiEntity` - a Boss/LobbyStart/Enemy/
-  Traversal chunk never resolves one, so its icon is never touched by this at all. Every `QUpdate`,
-  `UpdateIconTints` reads each linked POI's own `PoiActivation.State` and multiplies
-  `expiredIconTint` onto the icon's cached base color (`iconPrefab`'s own authored color, not a
-  flat override) whenever it's `Expired`, restoring the base color otherwise. `Expired` already
-  means "no connected player can use it right now" regardless of WHY - a fully-used-up
-  `OncePerPlayerPerBreak`/`PerRun` POI and a `Cooldown` POI where every connected player is still
-  waiting both resolve to the same value (see `PoiActivationUtility.Refresh`/
-  `AnyConnectedPlayerCanUse`) - so one tint covers both "already used" and "on cooldown" per the
-  user's own ask, no separate branch needed. `Store` is always `PoiUsagePolicy.Reusable`, so it
-  never resolves `Expired` and its icon never darkens - correct, since there's nothing to darken on
-  a POI you can always walk back into.
+  **Icon darkening for used-up/on-cooldown POIs** (2026-09-11, split into two tints + fixed the
+  spawn-order race 2026-09-13): `ResolveEntityForChunk<T>` does a linear scan over every
+  `T`-carrying entity that falls inside a chunk's own world footprint - `T` is `PoiActivation` for
+  Healing Shrine/Cursed Rift/Store/Blacksmith (see `PoiActivationSystem`), cached into
+  `_iconPoiEntity`, or `TraversalChallenge` for a `Traversal` chunk (which deliberately carries no
+  `PoiActivation` - see `docs/traversal-challenge.md`), cached separately into
+  `_iconTraversalEntity`. A Boss/LobbyStart/Enemy chunk never resolves either, so its icon is never
+  touched by this at all. Alongside `_iconPoiEntity`, `ResolvePoiUsagePolicy` also caches each POI's
+  own `PoiUsagePolicy` (read off the specific `HealingShrine`/`CursedRift`/`Blacksmith` component,
+  since `UsagePolicy` lives per-POI-kind, not on the generic `PoiActivation`) into
+  `_iconPoiUsagePolicy`.
+
+  **This resolution is NOT a same-tick, one-shot thing** - a `Chunk` entity's own POI/
+  `TraversalChallenge` entity is NOT created the same tick as the chunk (or anywhere near it): Chunk
+  entities come from `LevelGenerationSystem`, but the entities living inside them (per the chunk
+  prefab's own baked `ChunkSpawnConfig`) are only `f.Create`'d later by `TalentGateSystem.
+  ResolveSpawners`, gated on `Global.LevelGenerated` AND every connected player having actually
+  spawned - several ticks later at best. `SpawnIconOverlayIfNeeded`'s first `TryLinkPoiForChunk`
+  call (at icon-spawn time) is therefore EXPECTED to fail for a POI-capable chunk (`HealingShrine`/
+  `CursedRift`/`Blacksmith`/`Merchant`/`Traversal` - see `ChunkTypeCanLinkPoi`); it's queued into
+  `_pendingPoiLink` (chunk entity -> its own `(Chunk, Transform3D)` value copy) and retried every
+  `QUpdate` by `RetryPendingPoiLinks`, which removes it the tick it finally succeeds. Steady-state
+  cost is zero once every real POI has been found - `ChunkTypeCanLinkPoi` keeps a Boss/LobbyStart/
+  Enemy chunk out of `_pendingPoiLink` in the first place, so it's never retried forever for a chunk
+  that could never resolve one.
+
+  Every `QUpdate`, `UpdateIconTints` reads each linked POI's own `PoiActivation.State` and picks one
+  of two tints to multiply onto the icon's cached base color (`iconPrefab`'s own authored color, not
+  a flat override) whenever it's `Expired`, restoring the base color otherwise:
+  - `usedIconTint` (formerly the single `expiredIconTint`, renamed with `FormerlySerializedAs` so
+    already-authored scene values carry over) - a one-time-use policy (`OncePerPlayerPerBreak`/
+    `PerRun`/`OncePerWorld`) has been used up.
+  - `cooldownIconTint` - a `Cooldown`-policy POI (e.g. Healing Shrine) still has every connected
+    player waiting out their own cooldown.
+
+  `PoiActivation.State.Expired` alone can't tell these two apart (see
+  `PoiActivationUtility.Refresh`/`AnyConnectedPlayerCanUse` - both resolve to the same `Expired`
+  value), which is why the cached `PoiUsagePolicy` is what actually picks the tint. `Store` is
+  always `PoiUsagePolicy.Reusable`, so it never resolves `Expired` and its icon never darkens -
+  correct, since there's nothing to darken on a POI you can always walk back into.
+
+  For `_iconTraversalEntity`, `UpdateIconTints` instead reads `TraversalChallenge.State` directly
+  and applies `usedIconTint` once it's `Completed` or `Failed` (both terminal - see
+  `TraversalChallenge.qtn`) - there's no cooldown concept for Traversal Challenge at all, so
+  `cooldownIconTint` is never used for it.
 
   **Player markers**: one pooled `RectTransform` per **match player** (`PlayerLink` filter - local
   and remote alike, not `MyLocalPlayer.Slots`, so teammates show up too), repositioned every frame.
@@ -197,8 +227,8 @@ though:
    `Sprite` pair, not a positional array, so entries can be added/reordered freely; add one entry
    per `ChunkType` that should show an icon - `Boss`, `Merchant`, `LobbyStart`, `HealingShrine`,
    `CursedRift` (added 2026-08-14 for the two Breathing POI chunks, see `docs/breathing-poi.md`),
-   `Blacksmith` (see `docs/store-blacksmith.md`) - on each instance; leave `Enemy`/`Traversal` out
-   of the list (or their `Sprite` unassigned) so they show no icon.
+   `Blacksmith` (see `docs/store-blacksmith.md`), `Traversal` (see `docs/traversal-challenge.md`) -
+   on each instance; leave `Enemy` out of the list (or its `Sprite` unassigned) so it shows no icon.
 6. Set `worldExtent`/`worldCenter` to match the actual authored playable world size.
 7. Set `outlineTexels` > 0 (and consider a lower `worldUnitsPerTexel`, e.g. 5, for more texel
    headroom) to enable the level outline; leave at 0 to disable it entirely.
@@ -245,11 +275,75 @@ corner. `CubeVisualBuilder`/`QuantumEntityView`/hand-placed detail slots needed 
 already followed `Transform3D.Rotation` via normal Unity transform-hierarchy composition, they just
 never received a non-identity value before now.
 
-Separately: even with correct rotation handling, independently rounding each chunk's texel rect
-corners (`Mathf.RoundToInt` per corner, not coordinated across neighbors) can still misalign
-adjacent chunks by up to 1 texel - highly visible at the default coarse `worldUnitsPerTexel` (a
-chunk is only 2-4 texels wide). Two ways to actually fix this if it becomes a problem again: lower
-`worldUnitsPerTexel` (shrinks the error's relative size, doesn't eliminate it), or snap every
-chunk's rect to a shared, precomputed table of unique world-space boundary values instead of
-rounding each chunk's corners independently (fully eliminates it, more code). Neither is
-implemented.
+Separately (resolved 2026-09-13): even with correct rotation handling, independently rounding each
+chunk's texel rect corners (`Mathf.RoundToInt` per corner, not coordinated across neighbors) could
+misalign adjacent chunks by up to 1 texel - highly visible at the default coarse
+`worldUnitsPerTexel` (a chunk is only 2-4 texels wide), and, combined with the outline pass, made a
+real connection between two touching chunks read as a sealed wall (the phantom 1-texel gap looked
+unoccupied, so the outline pass painted right across the connection). Fixed exactly the way this
+section used to propose as the "fully eliminates it" option: `ComputeTexelRect`/`SnapToSharedTexel`
+now snap every chunk corner to a shared, incrementally-built per-axis table of world-space boundary
+values (`_xBoundaries`/`_zBoundaries`, matched within `BoundaryEpsilonTexels` of
+`worldUnitsPerTexel`) instead of rounding each chunk's corners independently - two chunks whose
+corners represent the same real-world boundary always land on the exact same texel now, regardless
+of which of the two float paths (`Position` directly vs. `Position + ChunkSize`) computed it or
+which chunk was seen first.
+
+A second, distinct cause of the same "connection reads as a wall" symptom also existed and is
+fixed alongside it, by changing what kind of stroke the outline is. It used to be an INNER stroke:
+`IsNearUnoccupiedTexel` marked an OCCUPIED texel as outline once any texel within `outlineTexels`
+was unoccupied, eating up to `outlineTexels` layers into the solid mass from every unoccupied
+neighbor. At this coarse a texel resolution that radius routinely reached all the way across a
+real connection between two touching/overlapping chunks (their shared edge sits close to each
+chunk's own unrelated far side too), painting a wall right over it - worst for a partial/offset
+overlap (a staircase layout), where most of the "shared" edge isn't actually shared. A first attempt
+patched this by punching an opening back into the mask at every seam between two different chunk
+owners (`OpenChunkConnections`/`_chunkOwnerAt`), but doing that isotropically (a full radius-sized
+square cleared around every seam texel) also ate into genuine, unrelated walls immediately flanking
+the connection - visibly worse, not better. The actual fix: the stroke is now an OUTER one.
+`IsNearOccupiedTexel` instead marks an UNOCCUPIED texel as outline once any texel within
+`outlineTexels` IS occupied - a ring hugging the solid mass from the empty side, never touching an
+occupied texel at all. Two connected, occupied chunks - full edge or partial overlap, doesn't
+matter - now simply have no empty texel between them for the stroke to occupy, so no
+special-casing is needed for connections at all. The only other change this required:
+`RepaintSingleChunk` used to stamp outline texels found strictly inside its own chunk's texel rect
+(since they used to live there); now that the ring lives just outside each chunk, it scans the
+chunk's rect dilated outward by `outlineTexels` (clamped to the texture) instead. A ring texel can
+border more than one chunk near a corner; getting stamped again later from a different neighbor's
+own repaint is harmless (same color), and it staying lit once any one bordering chunk is Discovered
+reads naturally as "the edge of what's been explored."
+
+**Centered stroke option (added 2026-09-13):** `outlineInnerTexels` (default `0`, i.e. fully outer,
+the safe default above) lets some of `outlineTexels`' total thickness straddle back onto a chunk's
+own fill for a more centered look, splitting the total into `outerRadius = outlineTexels -
+outlineInnerTexels` (the always-safe outer half above) and `innerRadius = outlineInnerTexels` (an
+`IsNearUnoccupiedTexel`-style inner half, reinstated but now radius-parametrized and off by
+default). The inner half alone does NOT have the outer half's structural connection-safety - it's
+the exact same per-texel radius check that caused the original bug, just usually run at a smaller
+radius - so `OpenChunkConnections`/`_chunkOwnerAt` from the abandoned all-inner attempt above were
+brought back, scoped correctly this time: reopening only runs against `innerRadius` (small, since
+it's normally a fraction of `outlineTexels`) and only ever clears texels where `occupied[idx]` is
+true, so it can never strip a legitimate outer-ring texel the way the original isotropic attempt
+did. Still keep `outlineInnerTexels` well below chunk width for the same reason the original inner
+stroke broke down - a value close to `outlineTexels` on a 2-4-texel-wide chunk can still cover a
+narrow connection or a whole tiny chunk outright, reopening safeguard or not.
+
+**Auto-centering (added 2026-09-14):** `worldExtent`/`worldCenter` are still fixed/authored (see
+class comment - no chunk scanning up front, by design), but `worldCenter` was only ever a guess at
+where the generated level would actually end up. When the real level's footprint wasn't centered on
+that authored point, its content - and the outline ring drawn around it - could run past the edge
+of the fixed-size texture and get clamped/clipped, since every texel coordinate is computed
+relative to `worldCenter`. `EnsureCentered` now runs exactly once, the first tick
+`Global.LevelGenerated` is true, and overwrites a new `_effectiveWorldCenter` (what
+`WorldToTexel`/`WorldToMapPosition`/`ComputeTexelRect` actually read, in place of the raw
+`worldCenter` field) with the real generated level's own bounding-box center, computed from every
+placed `Chunk`'s `GetWorldBounds`. `UpdateChunks` was changed to do nothing at all - no chunk texel
+rect is cached, nothing is painted - until this has run, since a chunk's texel rect is never
+recomputed once cached and would otherwise permanently bake in the pre-centering position for
+whichever chunks happened to be seen first. `_effectiveWorldCenter` starts equal to the authored
+`worldCenter` (used verbatim for the handful of ticks before generation completes, e.g. if a
+player's own marker needs positioning that early) and is fully overwritten, never blended, once
+`EnsureCentered` runs. This does not change the TEXTURE'S size (`worldExtent`/`worldUnitsPerTexel`
+still fix `_textureResolution` up front) - if the real level is simply larger than the authored
+`worldExtent*2` allows, centering only distributes the overflow evenly instead of eliminating it;
+`worldExtent` still needs to be authored generously enough to fit the real level.

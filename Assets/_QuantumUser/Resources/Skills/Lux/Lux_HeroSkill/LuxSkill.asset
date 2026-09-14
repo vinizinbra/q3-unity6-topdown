@@ -228,7 +228,7 @@ MonoBehaviour:
   Range:
     RawValue: 196608
   SkillDamage:
-    RawValue: 1310720
+    RawValue: 3276800
   BaselineWeapon:
     Id:
       Value: 471208801872943650

@@ -34,7 +34,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -74, y: -438}
+  m_AnchoredPosition: {x: -82, y: -421}
   m_SizeDelta: {x: 191.8, y: 82.3}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5517467177470027267
@@ -185,8 +185,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 9, y: -292.4}
-  m_SizeDelta: {x: 277.3, y: 506.8}
+  m_AnchoredPosition: {x: 14, y: -291}
+  m_SizeDelta: {x: 353.2, y: 506.8}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2169292939648423781
 CanvasRenderer:
@@ -260,7 +260,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 58, y: -422}
+  m_AnchoredPosition: {x: 99, y: -416}
   m_SizeDelta: {x: 191.8, y: 82.3}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1642468642506908425
@@ -335,8 +335,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -7.6, y: 101.8}
-  m_SizeDelta: {x: 254.3, y: 240}
+  m_AnchoredPosition: {x: 16, y: 74}
+  m_SizeDelta: {x: 211.9, y: 240}
   m_Pivot: {x: 0.5, y: 0.1}
 --- !u!222 &6385463172258754318
 CanvasRenderer:
@@ -388,6 +388,7 @@ GameObject:
   - component: {fileID: 5642423044330787095}
   - component: {fileID: 4253848152389867494}
   - component: {fileID: 8215796410385510448}
+  - component: {fileID: 6844217392264165208}
   m_Layer: 5
   m_Name: MaxLobby
   m_TagString: Untagged
@@ -475,3 +476,31 @@ MonoBehaviour:
   bobAmount: 1
   headInfluence: 0
   legs: []
+--- !u!114 &6844217392264165208
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9191534349798276892}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ad96e6f1d6f14521b8a530440e99c57, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GlitchWidget
+  targets:
+  - {fileID: 8319427464518571675}
+  - {fileID: 6270158627480528204}
+  - {fileID: 3555597522155183801}
+  redGhostColor: {r: 1, g: 0.1, b: 0.3, a: 0.6}
+  cyanGhostColor: {r: 0.1, g: 1, b: 1, a: 0.6}
+  cooldownRange: {x: 4, y: 9}
+  burstDurationRange: {x: 0.15, y: 0.45}
+  tickInterval: 0.035
+  maxOffset: {x: 8, y: 8}
+  maxScaleJitter: {x: 0, y: 0}
+  dropoutChancePerTick: 0.15
+  dropoutAlpha: 0.2
+  glitchSound: {fileID: 11400000, guid: 2c3600d6f97dc43f8a2ed8954a0ae8d5, type: 2}
+  glitchOnEnable: 1
+  useUnscaledTime: 0

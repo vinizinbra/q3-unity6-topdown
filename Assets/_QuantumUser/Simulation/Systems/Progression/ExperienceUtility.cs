@@ -159,5 +159,21 @@ namespace Quantum
         {
             return config.RequiredExperience.Evaluate(displayLevel) * config.DifficultyMultiplier * xpRequirementMultiplier;
         }
+
+        // Player-wide "base damage" scalar for the shared co-op Level, called from DamageUtility.
+        // ResolveOutgoingDamage for every damage source. Uses the DISPLAYED level (Global.Level + 1,
+        // same convention as GetRequiredExperience's displayLevel) so a fresh level-1 run already
+        // carries +DamageBonusPerLevel, not 0. Missing ExperienceConfig is a graceful no-op (1x),
+        // same precedent as ResolveXpRequirementMultiplier.
+        public static FP ResolvePlayerLevelDamageMultiplier(Frame f)
+        {
+            if (f.RuntimeConfig.ExperienceConfig.IsValid == false)
+                return FP._1;
+
+            ExperienceConfig config = f.FindAsset(f.RuntimeConfig.ExperienceConfig);
+            int displayLevel = f.Global->Level + 1;
+
+            return FP._1 + config.DamageBonusPerLevel * displayLevel;
+        }
     }
 }

@@ -230,5 +230,10 @@ MonoBehaviour:
       - {fileID: 8300000, guid: 9d1bae2d6f79d4bad97457bf2a198c45, type: 3}
       - {fileID: 8300000, guid: 96e11bcc889df4a75bc0ff36456b4f52, type: 3}
       - {fileID: 8300000, guid: 9fbb07f8eea72494db00ffdcd1659ed6, type: 3}
+  - name: HealingShrineUsed  (1 variants)
+    Trigger: 70
+    Variants:
+    - {fileID: 8300000, guid: d1677a5dd09d94726a9a2645a0ee428c, type: 3}
+    PairOverrides: []
   testTrigger: 62
   testAlly: 0

@@ -281,6 +281,21 @@ Store, Blacksmith) - `PoiAvailabilityUtility.IsAvailable`'s `Breathing` case now
 the HUD countdown stays hidden, not just from the phase boundary onward. See
 `docs/breathing-poi.md`.
 
+The same false -> true edge (`SurvivalProgressionUtility.Tick`) also triggers two cleanup effects,
+each owned by its own utility rather than by this file (which "owns pacing only"):
+`PlayerLifeStateUtility.ReviveAllIncapacitated` fully revives every still-Downed/KO player
+(one-shot), and `CurrencyOrbVacuumUtility.Begin` starts a ~1s sweep (`Global.
+OrbVacuumTimeRemaining`, ticked every frame afterward by the unconditional `CurrencyOrbVacuumUtility
+.Tick` call right below it) that collects every `CurrencyOrb` (XP/Coin/Rift Shard) still on the map
+- same `CurrencyOrbSystem.Collect` endpoint its own normal walk-into-range pickup uses
+(Grant/collected event/`OnCollectibleCollected`/destroy), just handed whichever connected player is
+nearest that orb instead of gating on `PickupRadius` at all, and spread evenly across the window
+instead of landing in the same tick - see `docs/experience-drops.md`. Picking the nearest player
+per orb is attribution only, not a homing target: Coin/Rift Shard credit every connected player's
+own wallet and Experience is one shared run total, so who "collects" a swept orb has no gameplay
+meaning. A level crossed by an orb collected mid-sweep holds its upgrade screen until the whole
+sweep finishes - see `docs/level-up-upgrades.md`.
+
 `DirectorTimelineUiWidget` (the HUD progress bar, `Assets/_Project/Scripts/UI/InGame/Hud/`) shows a
 phase-specific icon at the boundary marker where a non-Combat phase begins - resolved via
 `SpriteManager.GetSprite(SurvivalPhaseKind.ToString())` (the same name-keyed sprite-library lookup

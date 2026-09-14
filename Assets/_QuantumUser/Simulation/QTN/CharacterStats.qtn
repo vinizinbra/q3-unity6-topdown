@@ -94,12 +94,32 @@ component CharacterStats
     FP Coins;
     FP RiftShards;
 
+    // Lifetime Rift Shards credited this run, NEVER decremented by TrySpend - RiftShards above is
+    // the spendable wallet (goes down on a Cursed Rift Offering), so it can't answer "how many did
+    // I earn this run" once anything's been spent. Incremented alongside RiftShards in
+    // RiftShardUtility.Grant. Read by RunResultManager for the end-of-run summary popup.
+    FP RiftShardsEarned;
+
     // Killing-blow counter for THIS player's own kills - incremented in DamageUtility.ApplyDamage's
     // Enemy death branch, keyed off the killing hit's owner the same way Coins/RiftShards are, so
     // only a hit whose owner actually has this component (a player) counts. Int32 rather than Byte
     // (unlike WeaponTalentLevel/RerollQuantity) since a continuous-spawn run can comfortably exceed
     // 255 kills. Per-run only, never seeded from RuntimePlayer.Talents.
     Int32 MonstersKilled;
+
+    // Total damage this player has dealt to enemies this run - accumulated in
+    // DamageUtility.ApplyDamage, clamped to what the enemy actually had left so a killing blow
+    // doesn't inflate the total past the enemy's remaining Health. Only counts hits where the
+    // owner actually has this component (a player) and the target is an Enemy, same guard shape
+    // as MonstersKilled above. Per-run only, never seeded from RuntimePlayer.Talents. Read by
+    // RunResultManager for the end-of-run summary popup.
+    FP DamageDealt;
+
+    // How many times this player has entered the Downed life-state this run - incremented in
+    // PlayerLifeStateUtility.EnterDowned, which only runs once per genuine Alive -> Downed
+    // transition (see docs/revive.md). Per-run only, never seeded from RuntimePlayer.Talents. Read
+    // by RunResultManager for the end-of-run summary popup.
+    Int32 TimesDowned;
 
     // Choose-Weapon talent level - increments once each time this entity actually picks a
     // LevelUpCategory.ChooseWeapon option (see WeaponChoiceUtility.Grant), independent of overall

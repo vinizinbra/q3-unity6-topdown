@@ -60,7 +60,8 @@ namespace Quantum
                 Element = projectile->Element,
                 PerkElement = projectile->PerkElement,
                 PerkElementChance = projectile->PerkElementChance,
-                HitIndex = projectile->PelletIndex
+                HitIndex = projectile->PelletIndex,
+                ForceCritical = projectile->ForceCritical
             };
 
             HitEffectUtility.ApplyToTarget(f, Effects, ref context);

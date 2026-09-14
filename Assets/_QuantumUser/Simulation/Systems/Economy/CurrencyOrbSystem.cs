@@ -16,8 +16,11 @@ namespace Quantum
     // collector), but the actual grant - for Coin/RiftShard - broadcasts to EVERY connected
     // player's own wallet, each scaled by THEIR OWN gain multiplier (CoinUtility.GrantAll/
     // RiftShardUtility.GrantAll - see docs/breathing-poi.md; Experience stays a single shared
-    // Frame.Global total, unaffected). No magnetism/homing today, an orb just sits where it
-    // dropped until a player's own collection radius reaches it or DestroyAfterTime expires it.
+    // Frame.Global total, unaffected). No magnetism/homing - an orb just sits where it dropped
+    // until a player's own collection radius reaches it or DestroyAfterTime expires it. The one
+    // exception is CurrencyOrbVacuumUtility (Begin/Tick), started once Global.BreathingAreaSecured
+    // flips true - it sweeps every leftover orb in over its own ~1s window via the shared Collect()
+    // below, just without this system's own range check, rather than moving/homing anything.
     [Preserve]
     public unsafe class CurrencyOrbSystem : SystemMainThreadFilter<CurrencyOrbSystem.Filter>
     {
@@ -69,16 +72,25 @@ namespace Quantum
             if (collector == EntityRef.None)
                 return;
 
-            FP value = filter.CurrencyOrb->Value;
-            Grant(f, filter.CurrencyOrb->Type, collectorStats, value);
-            RaiseCollectedEvent(f, filter.CurrencyOrb->Type, collector, filter.Transform3D->Position, value);
+            Collect(f, filter.Entity, filter.CurrencyOrb, filter.Transform3D->Position, collector, collectorStats);
+        }
+
+        // The actual "an orb is collected" endpoint - both this system's own walk-into-range check
+        // above and CurrencyOrbVacuumUtility.Tick's area-secured sweep (same idea, just with no
+        // range check at all - the team already cleared the area) funnel through here, so Grant/the
+        // collected event/the generic pickup-cadence signal/destroy only ever happen in one place.
+        internal static void Collect(Frame f, EntityRef orb, CurrencyOrb* currencyOrb, FPVector3 position, EntityRef collector, CharacterStats* collectorStats)
+        {
+            FP value = currencyOrb->Value;
+            Grant(f, currencyOrb->Type, collectorStats, value);
+            RaiseCollectedEvent(f, currencyOrb->Type, collector, position, value);
 
             // Generic pickup-cadence hook (see CurrencyOrb.qtn) - fires for every currency type, and
             // only ever from here, which is what keeps Accessory recoveries and shop purchases off
             // it without any consumer needing an exclusion list.
-            f.Signals.OnCollectibleCollected(collector, filter.CurrencyOrb->Type);
+            f.Signals.OnCollectibleCollected(collector, currencyOrb->Type);
 
-            f.Destroy(filter.Entity);
+            f.Destroy(orb);
         }
 
         private static FP ResolvePickupRadius(Frame f, CurrencyOrbType type)

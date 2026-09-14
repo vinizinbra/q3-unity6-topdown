@@ -18,7 +18,9 @@ MonoBehaviour:
       Value: 503423254243386843
   Curves:
   - Minute: 0
-    EnemyHp:
+    EnemyHpLight:
+      RawValue: 65536
+    EnemyHpHeavy:
       RawValue: 65536
     EnemyDmg:
       RawValue: 65536
@@ -27,7 +29,9 @@ MonoBehaviour:
     ExpectedPlayerDps:
       RawValue: 65536
   - Minute: 2
-    EnemyHp:
+    EnemyHpLight:
+      RawValue: 65536
+    EnemyHpHeavy:
       RawValue: 81920
     EnemyDmg:
       RawValue: 72090
@@ -36,7 +40,9 @@ MonoBehaviour:
     ExpectedPlayerDps:
       RawValue: 78643
   - Minute: 4
-    EnemyHp:
+    EnemyHpLight:
+      RawValue: 98304
+    EnemyHpHeavy:
       RawValue: 131072
     EnemyDmg:
       RawValue: 78643
@@ -45,7 +51,9 @@ MonoBehaviour:
     ExpectedPlayerDps:
       RawValue: 91750
   - Minute: 6
-    EnemyHp:
+    EnemyHpLight:
+      RawValue: 98304
+    EnemyHpHeavy:
       RawValue: 196608
     EnemyDmg:
       RawValue: 88474
@@ -54,7 +62,9 @@ MonoBehaviour:
     ExpectedPlayerDps:
       RawValue: 104858
   - Minute: 8
-    EnemyHp:
+    EnemyHpLight:
+      RawValue: 131072
+    EnemyHpHeavy:
       RawValue: 262144
     EnemyDmg:
       RawValue: 98304
@@ -63,7 +73,9 @@ MonoBehaviour:
     ExpectedPlayerDps:
       RawValue: 117965
   - Minute: 10
-    EnemyHp:
+    EnemyHpLight:
+      RawValue: 163840
+    EnemyHpHeavy:
       RawValue: 327680
     EnemyDmg:
       RawValue: 104858
@@ -72,7 +84,9 @@ MonoBehaviour:
     ExpectedPlayerDps:
       RawValue: 131072
   - Minute: 12
-    EnemyHp:
+    EnemyHpLight:
+      RawValue: 196608
+    EnemyHpHeavy:
       RawValue: 393216
     EnemyDmg:
       RawValue: 104858
@@ -112,11 +126,29 @@ MonoBehaviour:
     P1:
       RawValue: 65536
     P2:
-      RawValue: 104858
+      RawValue: 98304
     P3:
-      RawValue: 144179
+      RawValue: 131072
     P4:
-      RawValue: 183501
+      RawValue: 163840
+  - Key: 4
+    P1:
+      RawValue: 65536
+    P2:
+      RawValue: 111411
+    P3:
+      RawValue: 157286
+    P4:
+      RawValue: 196608
+  - Key: 5
+    P1:
+      RawValue: 65536
+    P2:
+      RawValue: 42598
+    P3:
+      RawValue: 32768
+    P4:
+      RawValue: 27525
   CoopHp:
   - Tier: 0
     P1:

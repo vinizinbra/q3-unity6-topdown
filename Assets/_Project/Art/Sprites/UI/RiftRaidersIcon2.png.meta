@@ -166,7 +166,7 @@ TextureImporter:
         width: 114
         height: 112
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -188,7 +188,7 @@ TextureImporter:
         width: 119
         height: 107
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -210,7 +210,7 @@ TextureImporter:
         width: 109
         height: 120
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -219,6 +219,28 @@ TextureImporter:
       bones: []
       spriteID: 53d46bd00104e49bea55237d360914f0
       internalID: 804968004
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_PistolTuto
+      rect:
+        serializedVersion: 2
+        x: 1257
+        y: 618
+        width: 131
+        height: 102
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a7ece80a1482f428992f9aa4ea4f2628
+      internalID: 1256862424
       vertices: []
       indices: 
       edges: []
@@ -239,7 +261,7 @@ TextureImporter:
     nameFileIdTable:
       RR_Boss: -103353411
       RR_CLock: -1016452943
-      RiftRaidersIcon2_0: 1993361019
+      RR_PistolTuto: 1993361019
       RiftRaidersIcon2_1: -1384588125
       RiftRaidersIcon2_2: 804968004
   mipmapLimitGroupName: 

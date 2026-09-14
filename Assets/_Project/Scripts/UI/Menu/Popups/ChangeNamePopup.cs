@@ -7,8 +7,9 @@ public class ChangeNamePopup : UiPopup {
     public static ChangeNamePopup instance;
     public TMP_InputField nameInput;
     [CanBeNull] public System.Action callback;
-    public virtual void Awake()
+    public override void Awake()
     {
+        base.Awake();
         instance = this;
     }
 

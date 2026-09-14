@@ -1,5 +1,6 @@
 namespace Quantum
 {
+    using System.Collections.Generic;
     using Photon.Deterministic;
     using UnityEngine.Scripting;
 
@@ -38,6 +39,46 @@ namespace Quantum
         private static readonly FP DefaultFormationOffsetMax = 4;
         private static readonly FP DefaultFormationRerollIntervalMin = 5;
         private static readonly FP DefaultFormationRerollIntervalMax = 10;
+        private static readonly FP DefaultSoloRepickInterval = 4;
+        private static readonly FP DefaultSoloSearchRange = 20;
+
+        // Arrival distances for a solo bot's own goal (see UpdateSoloSurvival) - a Chunk needs the
+        // bot genuinely standing inside its AABB for ChunkDiscoverySystem to flip Discovered, while
+        // an XP orb only needs the bot close enough for CurrencyOrbSystem's own pickup radius to
+        // reach it. Deliberately smaller than DefaultFollowDistance, which is sized for parking near
+        // a PLAYER, not walking onto a pickup.
+        private static readonly FP SoloChunkArrivalDistance = FP._1;
+        private static readonly FP SoloOrbArrivalDistance = FP._0_50;
+
+        // Brute-force local pathfinder (see TryFindGridPath) - grid cell size, and how far past the
+        // straight line between self and target the search area extends on every side.
+        private static readonly FP GridStep = 2;
+        private static readonly FP GridSearchPadding = 4;
+
+        // How big a height jump between two ADJACENT grid cells still counts as one walkable floor
+        // rather than two disconnected ones (e.g. a real cliff edge sampled from both sides) - same
+        // spirit as LedgeMaxDropDistance, just applied cell-to-cell instead of step-to-step.
+        private static readonly FP GridStepMaxHeightDelta = 4;
+        private static readonly FP GridWaypointArrivalDistance = FP._1;
+
+        // Hard cap on how many cells one grid search will ever raycast, regardless of how far apart
+        // self/target are - a farther target coarsens the grid (bigger GridStep) rather than
+        // searching more cells, so one blocked-route event never spikes tick cost unboundedly.
+        private const int MaxGridCellsVisited = 300;
+
+        // Must match BotBrain.DetourPath's own qtn array size - a path longer than this is treated as
+        // not found (see TryFindGridPath) rather than silently truncated. TryFindGridPath now mostly
+        // reroutes a single blocked LEG of a macro chunk route (see MaxRouteChunkWaypoints/
+        // TryFindChunkRoutePath), which is normally short, but it's also the fallback for the
+        // same-chunk case and for whenever chunk routing can't resolve a containing chunk at all -
+        // TryFindGridPath scales its own step size up for a farther target to stay inside this
+        // budget regardless of which case triggered it.
+        private const int MaxGridPathWaypoints = 32;
+
+        // Must match BotBrain.RoutePath's own qtn array size - a chunk sequence longer than this is
+        // treated as not found (see TryFindChunkRoutePath). Chunk-level hops, not fine grid cells, so
+        // this only needs to cover how many chunks a realistic level asks a bot to cross in one go.
+        private const int MaxRouteChunkWaypoints = 16;
 
         // Follow distance used instead of the authored one while the target is Downed/KO. The bot
         // has to be inside the Revive Interactable's own radius (ReviveConfig) before
@@ -96,7 +137,17 @@ namespace Quantum
                 return;
 
             if (TryResolveFollowTarget(f, filter.Entity, out EntityRef target, out FPVector3 targetPosition) == false)
+            {
+                // No human or other bot left to trail - give this bot its own goal instead of
+                // standing frozen for the rest of the run. See UpdateSolo.
+                UpdateSolo(f, ref filter, settings);
+                UpdateSkills(f, ref filter, settings, filter.Transform->Position);
                 return;
+            }
+
+            // Follow mode never builds a macro RoutePath (only solo's EnsureRoutePath does) - clear
+            // any left over from a previous solo stretch so TryMoveToward can't mistake it for one.
+            ClearRoutePath(ref filter);
 
             bool targetIncapacitated = PlayerLifeStateUtility.IsIncapacitated(f, target);
 
@@ -248,8 +299,9 @@ namespace Quantum
         }
 
         // Returns true when the bot WANTED to move but every route it probed runs off a ledge -
-        // that is what promotes it to "stranded" for the leash (see UpdateLeash). Standing still
-        // because it is already close enough is not blocked.
+        // even after TryMoveToward's own brute-force detour attempt - that is what promotes it to
+        // "stranded" for the leash (see UpdateLeash). Standing still because it is already close
+        // enough is not blocked.
         private static bool UpdateFollow(Frame f, ref Filter filter, RuntimeConfig.BotSettings settings, FPVector3 delta, FP distance, bool wasMoving, bool targetIncapacitated)
         {
             FP followDistance = targetIncapacitated == true
@@ -264,13 +316,102 @@ namespace Quantum
             FP resumeDistance = wasMoving == true ? followDistance : followDistance + slack;
 
             if (distance <= resumeDistance || distance <= FP._0)
+            {
+                ClearDetourPath(ref filter);
                 return false;
+            }
 
+            bool run = distance > Or(settings.RunDistance, DefaultRunDistance);
+            FPVector3 selfPosition = filter.Transform->Position;
+            FPVector3 targetPosition = selfPosition + delta;
+
+            return TryMoveToward(f, ref filter, settings, selfPosition, targetPosition, run) == false;
+        }
+
+        // Two path tiers, checked in order:
+        //   1. DetourPath - a short-range local grid detour (see TryFindGridPath) around whatever
+        //      LEG is currently blocked. Always leads back to that leg's own destination (a
+        //      RoutePath waypoint, or targetPosition directly) - never the far end of the whole
+        //      journey - so a pond blocking one hop of a macro chunk route only reroutes THAT hop,
+        //      the rest of RoutePath is untouched.
+        //   2. RoutePath - the macro chunk-level route (see TryFindChunkRoutePath), if solo movement
+        //      built one via EnsureRoutePath. Empty for a follow target (a live player moves every
+        //      tick, so a macro route to it would be stale before it mattered) - in that case the
+        //      "leg" is just targetPosition directly, same as it always was.
+        // A blocked leg tries TryFindGridPath as tier 1 before giving up on it. Only once BOTH the
+        // current leg's direct route AND a grid search for it have failed does this report "stuck"
+        // (false) - the caller's own signal (UpdateFollow promotes it to the leash, solo wander
+        // drops the goal and picks a new one).
+        private static bool TryMoveToward(Frame f, ref Filter filter, RuntimeConfig.BotSettings settings, FPVector3 selfPosition, FPVector3 targetPosition, bool run)
+        {
+            if (filter.Brain->DetourPathCursor < filter.Brain->DetourPathCount)
+            {
+                FPVector3 waypoint = filter.Brain->DetourPath[filter.Brain->DetourPathCursor];
+                FPVector3 waypointDelta = waypoint - selfPosition;
+                waypointDelta.Y = FP._0;
+                FP waypointDistance = waypointDelta.Magnitude;
+
+                if (waypointDistance <= GridWaypointArrivalDistance)
+                {
+                    filter.Brain->DetourPathCursor++;
+                    return true;
+                }
+
+                bool waypointRun = waypointDistance > Or(settings.RunDistance, DefaultRunDistance);
+
+                if (SteerToward(f, ref filter, waypointDelta, waypointRun) == true)
+                {
+                    // Even the local detour is blocked now (something moved) - drop it and retry
+                    // fresh against the same leg target next tick rather than reporting the whole
+                    // route stuck over one transient hiccup.
+                    ClearDetourPath(ref filter);
+                }
+
+                return true;
+            }
+
+            FPVector3 legTarget = targetPosition;
+            bool legIsFinal = true;
+
+            if (filter.Brain->RoutePathCursor < filter.Brain->RoutePathCount)
+            {
+                legTarget = filter.Brain->RoutePath[filter.Brain->RoutePathCursor];
+                legIsFinal = false;
+            }
+
+            FPVector3 delta = legTarget - selfPosition;
+            delta.Y = FP._0;
+            FP legDistance = delta.Magnitude;
+
+            if (legIsFinal == false && legDistance <= GridWaypointArrivalDistance)
+            {
+                filter.Brain->RoutePathCursor++;
+                return true;
+            }
+
+            bool legRun = legIsFinal == true ? run : legDistance > Or(settings.RunDistance, DefaultRunDistance);
+
+            if (SteerToward(f, ref filter, delta, legRun) == false)
+                return true;
+
+            // This leg is blocked - try a local grid detour specifically TO this leg's own
+            // destination (a RoutePath waypoint, or targetPosition directly if there's no macro
+            // route), never the far end of the whole journey.
+            return TryFindGridPath(f, ref filter, selfPosition, legTarget);
+        }
+
+        // Shared wall-deflection + ledge-avoidance steering toward a target-relative delta - the
+        // follow, Store-walk and solo-wander paths all share the exact same "dumb" navigation
+        // budget (see docs/bots.md "Wall deflection, no pathfinding."). Writes Brain.Data directly;
+        // returns true when every direction tried runs off a ledge (the caller's own "blocked"
+        // signal - see TryMoveToward, which every direct-movement caller now goes through).
+        private static bool SteerToward(Frame f, ref Filter filter, FPVector3 delta, bool run)
+        {
             FPVector2 direction = new FPVector2(delta.X, delta.Z).Normalized;
 
             // Same wall deflection an AvoidWalls enemy gets - turns "grinding into the corner
-            // between here and the player" into "sliding along it", which is most of what keeps a
-            // pathfinding-free follow usable inside chunk geometry.
+            // between here and the target" into "sliding along it", which is most of what keeps a
+            // pathfinding-free walk usable inside chunk geometry.
             //
             // Probe from knee height, not the feet: a sphere cast starting flush with the floor
             // reports the floor itself as the obstacle (harmless - its normal has no horizontal
@@ -286,14 +427,698 @@ namespace Quantum
             // just as easily end up pointing off a ledge as the original one did.
             if (TryFindSafeDirection(f, filter.Transform->Position, filter.KCC->Data.IsGrounded, direction, out FPVector2 safeDirection) == false)
             {
-                // Nowhere to go that isn't a pit. Stand still rather than walk in - the leash is
-                // what eventually recovers the bot from here (see UpdateLeash's "blocked" case).
+                // Nowhere to go that isn't a pit.
                 return true;
             }
 
             filter.Brain->Data.Direction = safeDirection;
-            filter.Brain->Data.Run = distance > Or(settings.RunDistance, DefaultRunDistance);
+            filter.Brain->Data.Run = run;
             return false;
+        }
+
+        // A bot with nobody left to follow (TryResolveFollowTarget failed - no human, no other bot)
+        // gets its own goal instead of standing frozen: shop during a Breathing Break, otherwise
+        // hunt enemies/XP while also discovering the map. See docs/bots.md's "Solo" section.
+        private static void UpdateSolo(Frame f, ref Filter filter, RuntimeConfig.BotSettings settings)
+        {
+            if (f.Global->CurrentState == GameState.Breathing)
+            {
+                // The Store's own availability already gates on BreathingAreaSecured (see
+                // PoiAvailabilityUtility.IsAvailable) - a bot that beelined for it anyway would just
+                // stand there uselessly retrying TryBeginInteraction while enemies from the encounter
+                // are still alive. Fight instead (no exploring - map discovery isn't the point of a
+                // Breathing Break) until the area is actually secured.
+                if (f.Global->BreathingAreaSecured == true)
+                {
+                    UpdateSoloBreathing(f, ref filter, settings);
+                    return;
+                }
+
+                UpdateSoloSurvival(f, ref filter, settings, allowExploration: false);
+                return;
+            }
+
+            UpdateSoloSurvival(f, ref filter, settings, allowExploration: true);
+        }
+
+        // Walks to the Store and buys one weapon, once per Breathing Break. Bypasses the normal
+        // ContextInteraction/Command dance entirely (a bot has no screen to open a ChooseWindow
+        // on) and calls StoreUtility's own mutators directly instead - the exact same
+        // "call the utility, skip the Command" idiom LevelUpSystem.AutoPickForBots already uses via
+        // LevelUpUtility.AutoConfirm. Always attempts the purchase regardless of Coin balance;
+        // StoreUtility.BuyWeapon's own CoinUtility.TrySpend guard just no-ops if it can't afford it.
+        private static void UpdateSoloBreathing(Frame f, ref Filter filter, RuntimeConfig.BotSettings settings)
+        {
+            if (filter.Brain->StoreAttemptedAtBreathingIndex == f.Global->BreathingIndex)
+                return;
+
+            if (TryFindStore(f, out EntityRef store, out FPVector3 storePosition, out FP storeRadius) == false)
+                return;
+
+            FPVector3 selfPosition = filter.Transform->Position;
+            FPVector3 delta = storePosition - selfPosition;
+            delta.Y = FP._0;
+            FP distance = delta.Magnitude;
+
+            if (distance > storeRadius)
+            {
+                bool run = distance > Or(settings.RunDistance, DefaultRunDistance);
+                EnsureRoutePath(f, ref filter, selfPosition, storePosition);
+                TryMoveToward(f, ref filter, settings, selfPosition, storePosition, run);
+                return;
+            }
+
+            ClearRoutePath(ref filter);
+            ClearDetourPath(ref filter);
+            filter.Brain->Data.Direction = default;
+
+            StoreUtility.TryBeginInteraction(f, filter.Entity, store);
+
+            // Not open yet (e.g. StoreConfig isn't assigned, or Availability.AvailableInBreathing
+            // itself is false - UpdateSolo already confirmed BreathingAreaSecured) - leave the flag
+            // unset so the bot keeps retrying next tick instead of silently skipping the Break.
+            if (f.Unsafe.TryGetPointer<StoreInteraction>(filter.Entity, out var interaction) == false)
+                return;
+
+            filter.Brain->StoreAttemptedAtBreathingIndex = f.Global->BreathingIndex;
+
+            StoreConfig config = f.FindAsset(f.RuntimeConfig.StoreConfig);
+            int offerCount = StoreUtility.ResolveWeaponOfferCount(f, filter.Entity, store, config);
+
+            for (int i = 0; i < offerCount; i++)
+            {
+                if (StoreUtility.IsPurchased(f, filter.Entity, store, i, isWeaponOffer: true) == true)
+                    continue;
+
+                StoreUtility.BuyWeapon(f, filter.Entity, interaction, i);
+                break;
+            }
+
+            StoreUtility.Close(f, filter.Entity);
+        }
+
+        private static bool TryFindStore(Frame f, out EntityRef store, out FPVector3 position, out FP radius)
+        {
+            var stores = f.Filter<Store, Interactable, Transform3D>();
+
+            while (stores.Next(out EntityRef entity, out Store _, out Interactable interactable, out Transform3D transform))
+            {
+                store = entity;
+                position = transform.Position;
+                radius = interactable.Radius;
+                return true;
+            }
+
+            store = EntityRef.None;
+            position = default;
+            radius = default;
+            return false;
+        }
+
+        // Chase the current SoloTarget (a Chunk to discover, an enemy/XP orb to reach), re-picking
+        // it on a timer or the moment it stops being valid. allowExploration is false while in
+        // Breathing with the area not yet secured (see UpdateSolo) - fight only, don't wander off to
+        // an undiscovered chunk mid-encounter.
+        private static void UpdateSoloSurvival(Frame f, ref Filter filter, RuntimeConfig.BotSettings settings, bool allowExploration)
+        {
+            filter.Brain->SoloRepickTimer -= f.DeltaTime;
+
+            if (filter.Brain->SoloRepickTimer <= FP._0 || IsSoloTargetValid(f, filter.Brain->SoloTarget) == false)
+            {
+                RepickSoloTarget(f, ref filter, settings, allowExploration);
+                ClearRoutePath(ref filter);
+                ClearDetourPath(ref filter);
+            }
+
+            EntityRef target = filter.Brain->SoloTarget;
+
+            if (target == EntityRef.None || f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == false)
+                return;
+
+            FPVector3 selfPosition = filter.Transform->Position;
+            FPVector3 targetPosition = targetTransform->Position;
+
+            FP arrivalDistance = f.Has<Chunk>(target) == true
+                ? SoloChunkArrivalDistance
+                : f.Has<CurrencyOrb>(target) == true
+                    ? SoloOrbArrivalDistance
+                    : Or(settings.FollowDistance, DefaultFollowDistance);
+
+            FPVector3 delta = targetPosition - selfPosition;
+            delta.Y = FP._0;
+            FP distance = delta.Magnitude;
+
+            if (distance <= arrivalDistance)
+            {
+                ClearRoutePath(ref filter);
+                ClearDetourPath(ref filter);
+                return;
+            }
+
+            bool run = distance > Or(settings.RunDistance, DefaultRunDistance);
+
+            // Path-FIRST for a solo goal (see EnsureRoutePath) - insist on a verified chunk route
+            // before ever committing to a step toward it, rather than reactively discovering a
+            // blocked/unsafe route only after already walking partway into it.
+            EnsureRoutePath(f, ref filter, selfPosition, targetPosition);
+
+            if (TryMoveToward(f, ref filter, settings, selfPosition, targetPosition, run) == false)
+            {
+                // Every tier failed (route + local detour - see TryFindChunkRoutePath/
+                // TryFindGridPath) - give up on this goal entirely rather than leash-teleporting
+                // toward it (there's no "home" position to return to while solo); the next tick
+                // just picks a different one.
+                filter.Brain->SoloTarget = EntityRef.None;
+                ClearRoutePath(ref filter);
+                ClearDetourPath(ref filter);
+            }
+        }
+
+        // Makes sure a verified macro route exists before the caller ever calls TryMoveToward on a
+        // STATIONARY-ish goal (a Chunk/enemy/orb/Store, all handled by solo movement) - a no-op once
+        // one is already in progress. Deliberately NOT used by UpdateFollow: a live followed player
+        // moves every tick, so a route computed against last tick's position would already be stale
+        // by the time it mattered - that one stays reactive (TryMoveToward's own internal
+        // TryFindGridPath call, only once the direct route is actually found blocked) and leans on
+        // the leash as the existing backstop.
+        //
+        // Why this matters: SteerToward's own single-step ledge check only probes a few units ahead
+        // of THIS tick's position - a straight walk toward open water can read "safe" for several
+        // consecutive steps before the probe is finally close enough to the real edge to notice,
+        // which is exactly the false sense of safety that let a bot wade into a lake one step at a
+        // time without SteerToward ever reporting "blocked" and triggering the reactive fallback.
+        //
+        // TryFindChunkRoutePath (walking the level's own authored chunk-adjacency graph) is tried
+        // FIRST and, if it succeeds, is the ONLY thing that populates RoutePath - a route through
+        // chunks the level itself guarantees are land-connected is far more trustworthy than blindly
+        // raycasting a flat grid across the whole straight-line distance with no notion of chunk
+        // boundaries at all. TryFindGridPath (populating DetourPath directly, no RoutePath at all) is
+        // the fallback for the same-chunk case (chunk-level routing isn't meaningful over a short
+        // hop) or if chunk routing genuinely can't resolve a containing chunk for either end.
+        private static void EnsureRoutePath(Frame f, ref Filter filter, FPVector3 selfPosition, FPVector3 targetPosition)
+        {
+            if (filter.Brain->RoutePathCursor < filter.Brain->RoutePathCount)
+                return;
+
+            if (TryFindChunkRoutePath(f, ref filter, selfPosition, targetPosition) == true)
+                return;
+
+            if (filter.Brain->DetourPathCursor >= filter.Brain->DetourPathCount)
+            {
+                TryFindGridPath(f, ref filter, selfPosition, targetPosition);
+            }
+        }
+
+        private static void ClearDetourPath(ref Filter filter)
+        {
+            filter.Brain->DetourPathCount = 0;
+            filter.Brain->DetourPathCursor = 0;
+        }
+
+        private static void ClearRoutePath(ref Filter filter)
+        {
+            filter.Brain->RoutePathCount = 0;
+            filter.Brain->RoutePathCursor = 0;
+        }
+
+        // Chunk-level macro routing: BFS over Chunk.ConnectedChunks (the same land-adjacency graph
+        // CollectReachableChunks/ChunkConnectivityUtility/Director spawning already trust) from the
+        // bot's own chunk to the target's chunk, turning the resulting chunk SEQUENCE into one
+        // RoutePath waypoint per intermediate chunk's center plus the real target position as the
+        // final waypoint - so the bot actually arrives where it needs to, not just "somewhere in the
+        // right chunk". A blocked LEG of this route only ever gets a local DetourPath reroute (see
+        // TryMoveToward) - the rest of RoutePath is left untouched, so one pond inside one chunk
+        // along the way doesn't throw out the whole macro route. Declines (returns false, no path
+        // stored) when start/goal share a chunk - not a macro-routing case at all - or when either
+        // position can't be resolved to a chunk; the caller (EnsureRoutePath) falls back to the
+        // local grid BFS for those.
+        private static bool TryFindChunkRoutePath(Frame f, ref Filter filter, FPVector3 from, FPVector3 to)
+        {
+            ClearRoutePath(ref filter);
+
+            if (EnemyPathfindingUtility.TryFindContainingChunk(f, from, out EntityRef startChunk) == false
+                || EnemyPathfindingUtility.TryFindContainingChunk(f, to, out EntityRef goalChunk) == false
+                || startChunk == goalChunk)
+            {
+                return false;
+            }
+
+            var cameFrom = new Dictionary<EntityRef, EntityRef>();
+            var visited = new HashSet<EntityRef> { startChunk };
+            var queue = new Queue<EntityRef>();
+            queue.Enqueue(startChunk);
+
+            bool found = false;
+
+            while (found == false && queue.Count > 0)
+            {
+                EntityRef current = queue.Dequeue();
+
+                if (f.Unsafe.TryGetPointer<Chunk>(current, out var chunk) == false)
+                    continue;
+
+                for (int i = 0; i < chunk->ConnectedChunkCount && found == false; i++)
+                {
+                    EntityRef neighbor = chunk->ConnectedChunks[i];
+
+                    if (visited.Add(neighbor) == false)
+                        continue;
+
+                    cameFrom[neighbor] = current;
+                    queue.Enqueue(neighbor);
+
+                    if (neighbor == goalChunk)
+                        found = true;
+                }
+            }
+
+            if (found == false)
+                return false;
+
+            // Reconstruct goal -> start via cameFrom (excluding startChunk - the bot is already
+            // standing in it), then reverse into walking order. MaxRouteChunkWaypoints - 1 leaves
+            // room for the final target waypoint appended below.
+            var reversedChunks = new List<EntityRef>();
+            EntityRef walk = goalChunk;
+
+            while (walk != startChunk)
+            {
+                reversedChunks.Add(walk);
+
+                if (reversedChunks.Count >= MaxRouteChunkWaypoints || cameFrom.TryGetValue(walk, out walk) == false)
+                    return false; // longer than the buffer can hold - treat as not found
+            }
+
+            var path = filter.Brain->RoutePath;
+            int count = 0;
+
+            for (int i = reversedChunks.Count - 1; i >= 0 && count < path.Length; i--)
+            {
+                EntityRef chunkEntity = reversedChunks[i];
+
+                if (f.Unsafe.TryGetPointer<Chunk>(chunkEntity, out var chunk) == false
+                    || f.Unsafe.TryGetPointer<Transform3D>(chunkEntity, out var chunkTransform) == false)
+                {
+                    continue;
+                }
+
+                FPVector3 halfExtent = new FPVector3(chunk->ChunkSizeWidth, FP._0, chunk->ChunkSizeDepth) * FP._0_50;
+                path[count] = chunkTransform->Position + halfExtent;
+                count++;
+            }
+
+            // Final leg: the real target position, not just the goal chunk's center.
+            if (count < path.Length)
+            {
+                path[count] = to;
+                count++;
+            }
+
+            filter.Brain->RoutePathCount = (byte)count;
+            filter.Brain->RoutePathCursor = 0;
+
+            return count > 0;
+        }
+
+        // Brute-force local pathfinder: BFS over a grid of raycast-down samples around the straight
+        // line from `from` to `to`, used only once SteerToward's direct route + 5 deflection angles
+        // have already failed. Raycasts DOWN only (floor presence + a walkable height step between
+        // NEIGHBORING cells) - this is about routing around VOIDS/water (this project has no
+        // distinct water collider - see PlayerMovementProcessor's own comment, so a gap in the grid
+        // reads exactly like one), not indoor wall collision, which SteerAroundWalls already handles
+        // once the bot is actually walking a resolved waypoint. Deliberately bot-only/local: nothing
+        // here is shared with or reused by any real gameplay system.
+        //
+        // The search area is the bounding box between from/to plus GridSearchPadding on every side,
+        // coarsened (bigger GridStep) rather than grown past MaxGridCellsVisited if that box would
+        // need more cells than that - a farther target gets fewer, wider steps, not more raycasts.
+        private static bool TryFindGridPath(Frame f, ref Filter filter, FPVector3 from, FPVector3 to)
+        {
+            ClearDetourPath(ref filter);
+
+            FP minX = FPMath.Min(from.X, to.X) - GridSearchPadding;
+            FP maxX = FPMath.Max(from.X, to.X) + GridSearchPadding;
+            FP minZ = FPMath.Min(from.Z, to.Z) - GridSearchPadding;
+            FP maxZ = FPMath.Max(from.Z, to.Z) + GridSearchPadding;
+
+            // Step size scales up for a farther target so the reconstructed path can't need more
+            // hops than MaxGridPathWaypoints regardless of distance - most calls are now a single
+            // short chunk-route LEG (see TryFindChunkRoutePath/EnsureRoutePath), but this is also the
+            // fallback whenever chunk routing can't resolve a containing chunk at all, which could
+            // still be a long raw distance. Chebyshev distance (max of the two axes), not Euclidean -
+            // that's the real minimum hop count on an 8-connected grid. A little headroom (-4) is
+            // left in the divisor for the extra hops a real detour around an obstacle needs
+            // over the pure straight-line minimum.
+            FP travelX = FPMath.Abs(to.X - from.X);
+            FP travelZ = FPMath.Abs(to.Z - from.Z);
+            FP chebyshevDistance = FPMath.Max(travelX, travelZ);
+            FP minStepForBudget = chebyshevDistance / (MaxGridPathWaypoints - 4);
+
+            FP step = FPMath.Max(GridStep, minStepForBudget);
+            int width = FPMath.CeilToInt((maxX - minX) / step) + 1;
+            int depth = FPMath.CeilToInt((maxZ - minZ) / step) + 1;
+
+            // Secondary safety net - even the budget-driven step could still need too many CELLS if
+            // the target is far off to one side (a long, thin bounding box), so this still coarsens
+            // further rather than ever raycasting an unbounded number of cells.
+            while ((long)width * depth > MaxGridCellsVisited)
+            {
+                step += GridStep;
+                width = FPMath.CeilToInt((maxX - minX) / step) + 1;
+                depth = FPMath.CeilToInt((maxZ - minZ) / step) + 1;
+            }
+
+            int groundLayerMask = EnemyMovementUtility.GetGroundLayerMask(f);
+
+            (int x, int z) startCell = (FPMath.RoundToInt((from.X - minX) / step), FPMath.RoundToInt((from.Z - minZ) / step));
+            (int x, int z) goalCell = (FPMath.RoundToInt((to.X - minX) / step), FPMath.RoundToInt((to.Z - minZ) / step));
+
+            // Same coarse cell despite SteerToward already failing - whatever's blocking is finer
+            // than this grid can resolve, so there's no useful path to build here.
+            if (startCell == goalCell)
+                return false;
+
+            var groundHeight = new Dictionary<(int, int), FP> { [startCell] = from.Y };
+            var cameFrom = new Dictionary<(int, int), (int, int)>();
+            var queue = new Queue<(int, int)>();
+            queue.Enqueue(startCell);
+
+            bool found = false;
+
+            while (found == false && queue.Count > 0)
+            {
+                (int x, int z) current = queue.Dequeue();
+                FP currentGroundY = groundHeight[current];
+
+                for (int dx = -1; dx <= 1 && found == false; dx++)
+                {
+                    for (int dz = -1; dz <= 1; dz++)
+                    {
+                        if (dx == 0 && dz == 0)
+                            continue;
+
+                        (int x, int z) neighbor = (current.x + dx, current.z + dz);
+
+                        if (neighbor.x < 0 || neighbor.x >= width || neighbor.z < 0 || neighbor.z >= depth)
+                            continue;
+
+                        if (groundHeight.ContainsKey(neighbor) == true)
+                            continue;
+
+                        FPVector3 probePoint = new FPVector3(minX + step * neighbor.x, currentGroundY, minZ + step * neighbor.z);
+
+                        if (EnemyMovementUtility.TryFindGroundHeight(f, probePoint, groundLayerMask, out FP neighborGroundY) == false)
+                            continue; // void here - no floor at all within the probe
+
+                        if (FPMath.Abs(neighborGroundY - currentGroundY) > GridStepMaxHeightDelta)
+                            continue; // floor exists, but it's a disconnected level (too big a step)
+
+                        groundHeight[neighbor] = neighborGroundY;
+                        cameFrom[neighbor] = current;
+                        queue.Enqueue(neighbor);
+
+                        if (neighbor == goalCell)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (found == false)
+                return false;
+
+            // Reconstruct goal -> start via cameFrom, then reverse into walking order.
+            var reversed = new List<(int x, int z)>();
+            (int x, int z) walk = goalCell;
+
+            while (walk != startCell)
+            {
+                reversed.Add(walk);
+
+                if (reversed.Count > MaxGridPathWaypoints || cameFrom.TryGetValue(walk, out walk) == false)
+                    return false; // longer than the buffer can hold - treat as not found
+            }
+
+            var path = filter.Brain->DetourPath;
+            int count = 0;
+
+            for (int i = reversed.Count - 1; i >= 0 && count < path.Length; i--)
+            {
+                (int x, int z) cell = reversed[i];
+                path[count] = new FPVector3(minX + step * cell.x, groundHeight[cell], minZ + step * cell.z);
+                count++;
+            }
+
+            filter.Brain->DetourPathCount = (byte)count;
+            filter.Brain->DetourPathCursor = 0;
+
+            return count > 0;
+        }
+
+        private static bool IsSoloTargetValid(Frame f, EntityRef target)
+        {
+            if (target == EntityRef.None || f.Exists(target) == false)
+                return false;
+
+            // A Chunk entity never stops existing, so its own Discovered flag is what "no longer a
+            // valid goal" means.
+            if (f.Unsafe.TryGetPointer<Chunk>(target, out var chunk) == true)
+                return chunk->Discovered == false;
+
+            // An enemy lingers for its death animation (EnemyActionPhase.Dead) rather than being
+            // destroyed the instant it dies - existence alone isn't enough, or the bot would keep
+            // walking up to a corpse for that whole window instead of immediately repicking.
+            if (f.Unsafe.TryGetPointer<Enemy>(target, out var enemy) == true)
+                return enemy->Phase != EnemyActionPhase.Dead;
+
+            // An XP orb existing at all is enough (collection removes the entity).
+            return true;
+        }
+
+        // Blends exploration and combat: an Elite enemy (a rare, deliberate Director spawn - see
+        // docs/mortar-elite.md) always wins outright, map-wide, over everything else. Short of that,
+        // while allowExploration is true AND any Chunk is still undiscovered, a coin flip decides
+        // whether to prioritize discovering one or hunting an enemy/XP orb (falling back to the
+        // other if its own pick comes up empty); allowExploration false (Breathing, area not yet
+        // secured - see UpdateSolo) or a fully-discovered map means always hunt.
+        private static void RepickSoloTarget(Frame f, ref Filter filter, RuntimeConfig.BotSettings settings, bool allowExploration)
+        {
+            filter.Brain->SoloTarget = EntityRef.None;
+            filter.Brain->SoloRepickTimer = Or(settings.SoloRepickInterval, DefaultSoloRepickInterval);
+
+            FPVector3 selfPosition = filter.Transform->Position;
+
+            // Computed once and threaded through every candidate search below (see
+            // CollectReachableChunks) - null (permissive) if the bot can't be resolved to a
+            // containing chunk at all, rather than refusing to pick anything.
+            HashSet<EntityRef> reachable = EnemyPathfindingUtility.TryFindContainingChunk(f, selfPosition, out EntityRef currentChunk) == true
+                ? CollectReachableChunks(f, currentChunk)
+                : null;
+
+            if (TryFindNearestElite(f, selfPosition, reachable, out EntityRef elite) == true)
+            {
+                filter.Brain->SoloTarget = elite;
+                return;
+            }
+
+            bool fullyDiscovered = AreAllChunksDiscovered(f);
+            bool exploreFirst = allowExploration == true && fullyDiscovered == false && f.RNG->Next(FP._0, FP._1) < FP._0_50;
+
+            if (exploreFirst == true && TryFindNearestUndiscoveredChunk(f, selfPosition, reachable, out EntityRef chunk, out _) == true)
+            {
+                filter.Brain->SoloTarget = chunk;
+                return;
+            }
+
+            FP searchRange = Or(settings.SoloSearchRange, DefaultSoloSearchRange);
+
+            if (TryFindNearestCombatTarget(f, selfPosition, searchRange, reachable, out EntityRef combatTarget) == true)
+            {
+                filter.Brain->SoloTarget = combatTarget;
+                return;
+            }
+
+            if (allowExploration == true && TryFindNearestUndiscoveredChunk(f, selfPosition, reachable, out chunk, out _) == true)
+            {
+                filter.Brain->SoloTarget = chunk;
+            }
+        }
+
+        // reachable == null means "couldn't resolve a containing chunk for the bot itself" -
+        // permissive in that case (don't block picking anything just because the BOT's own position
+        // is ambiguous). A candidate whose own position doesn't resolve to any chunk (e.g. genuinely
+        // out of bounds) is also let through rather than excluded by default-false.
+        private static bool IsPositionReachable(Frame f, HashSet<EntityRef> reachable, FPVector3 position)
+        {
+            if (reachable == null)
+                return true;
+
+            if (EnemyPathfindingUtility.TryFindContainingChunk(f, position, out EntityRef chunk) == false)
+                return true;
+
+            return reachable.Contains(chunk);
+        }
+
+        private static bool AreAllChunksDiscovered(Frame f)
+        {
+            var chunks = f.Filter<Chunk>();
+
+            while (chunks.Next(out EntityRef _, out Chunk chunk))
+            {
+                if (chunk.Discovered == false)
+                    return false;
+            }
+
+            return true;
+        }
+
+        // reachable == null (bot's own chunk unresolved) means unfiltered - see RepickSoloTarget.
+        // Restricting to chunks actually reachable BY LAND matters because "nearest undiscovered
+        // chunk" is otherwise pure straight-line distance, which happily picks a chunk on the far
+        // side of a lake/void separating it from here (this project has no distinct water collider -
+        // see PlayerMovementProcessor's own comment - so walking there IS walking off a real,
+        // unrecoverable drop).
+        private static bool TryFindNearestUndiscoveredChunk(Frame f, FPVector3 selfPosition, HashSet<EntityRef> reachable, out EntityRef chunkEntity, out FPVector3 chunkCenter)
+        {
+            chunkEntity = EntityRef.None;
+            chunkCenter = default;
+            FP bestSqrDistance = default;
+
+            var chunks = f.Filter<Chunk, Transform3D>();
+
+            while (chunks.Next(out EntityRef entity, out Chunk chunk, out Transform3D transform))
+            {
+                if (chunk.Discovered == true)
+                    continue;
+
+                if (reachable != null && reachable.Contains(entity) == false)
+                    continue;
+
+                // Chunks are min-corner pivoted and never rotated (LevelGenerationSystem.
+                // CommitPlacement hard-sets Rotation to identity), so the center is a plain offset -
+                // same halfExtent idiom LevelGenerationSystem.TryGetLobbyStartBounds already uses.
+                FPVector3 halfExtent = new FPVector3(chunk.ChunkSizeWidth, FP._0, chunk.ChunkSizeDepth) * FP._0_50;
+                FPVector3 center = transform.Position + halfExtent;
+                FP sqrDistance = (center - selfPosition).SqrMagnitude;
+
+                if (chunkEntity != EntityRef.None && sqrDistance >= bestSqrDistance)
+                    continue;
+
+                chunkEntity = entity;
+                chunkCenter = center;
+                bestSqrDistance = sqrDistance;
+            }
+
+            return chunkEntity != EntityRef.None;
+        }
+
+        // BFS over Chunk.ConnectedChunks - the level's own land-adjacency graph, baked once by
+        // LevelGenerationSystem.ComputeChunkConnectivity (the same graph Director spawning already
+        // trusts via ChunkConnectivityUtility). A body of water/void between two chunks means
+        // they're never linked here, so this is what tells "nearest in a straight line" apart from
+        // "actually reachable on foot."
+        private static HashSet<EntityRef> CollectReachableChunks(Frame f, EntityRef startChunk)
+        {
+            var visited = new HashSet<EntityRef> { startChunk };
+            var queue = new Queue<EntityRef>();
+            queue.Enqueue(startChunk);
+
+            while (queue.Count > 0)
+            {
+                EntityRef current = queue.Dequeue();
+
+                if (f.Unsafe.TryGetPointer<Chunk>(current, out var chunk) == false)
+                    continue;
+
+                for (int i = 0; i < chunk->ConnectedChunkCount; i++)
+                {
+                    EntityRef neighbor = chunk->ConnectedChunks[i];
+
+                    if (visited.Add(neighbor) == true)
+                        queue.Enqueue(neighbor);
+                }
+            }
+
+            return visited;
+        }
+
+        // Map-wide (not range-limited like TryFindNearestCombatTarget) - an Elite is a rare,
+        // deliberate Director spawn (see docs/mortar-elite.md/"Elite Territory"), not something to
+        // stumble into while wandering, so a solo bot beelines for one from anywhere on the level.
+        // Same Dead/Invulnerable exclusions as EnemyMovementUtility.TryFindNearestEnemy. Reachability-
+        // filtered same as everything else - without it, an Elite stranded across water would get
+        // re-picked immediately every time SteerToward reports it blocked, looping forever instead of
+        // falling through to a normal target.
+        private static bool TryFindNearestElite(Frame f, FPVector3 selfPosition, HashSet<EntityRef> reachable, out EntityRef target)
+        {
+            target = EntityRef.None;
+            FP bestSqrDistance = default;
+
+            var enemies = f.Filter<Enemy, Transform3D>();
+
+            while (enemies.Next(out EntityRef entity, out Enemy enemy, out Transform3D transform))
+            {
+                if (enemy.Phase == EnemyActionPhase.Dead || f.Has<Invulnerable>(entity) == true)
+                    continue;
+
+                EnemyDataAsset data = f.FindAsset(enemy.EnemyData);
+
+                if (data == null || data.Tier != EnemyTier.Elite)
+                    continue;
+
+                if (IsPositionReachable(f, reachable, transform.Position) == false)
+                    continue;
+
+                FP sqrDistance = (transform.Position - selfPosition).SqrMagnitude;
+
+                if (target != EntityRef.None && sqrDistance >= bestSqrDistance)
+                    continue;
+
+                target = entity;
+                bestSqrDistance = sqrDistance;
+            }
+
+            return target != EntityRef.None;
+        }
+
+        // Nearest of {enemy, XP orb} within range - whichever is closer wins, so a bot passing an
+        // orb on its way to an enemy (or vice versa) always heads for the closer one first.
+        // Reachability-filtered same as the chunk/Elite searches.
+        private static bool TryFindNearestCombatTarget(Frame f, FPVector3 selfPosition, FP range, HashSet<EntityRef> reachable, out EntityRef target)
+        {
+            target = EntityRef.None;
+            FP bestSqrDistance = range * range;
+
+            if (EnemyMovementUtility.TryFindNearestEnemy(f, selfPosition, range, out EntityRef enemy) == true
+                && f.Unsafe.TryGetPointer<Transform3D>(enemy, out var enemyTransform) == true
+                && IsPositionReachable(f, reachable, enemyTransform->Position) == true)
+            {
+                target = enemy;
+                bestSqrDistance = (enemyTransform->Position - selfPosition).SqrMagnitude;
+            }
+
+            var orbs = f.Filter<CurrencyOrb, Transform3D>();
+
+            while (orbs.Next(out EntityRef orbEntity, out CurrencyOrb orb, out Transform3D orbTransform))
+            {
+                if (orb.Type != CurrencyOrbType.Experience)
+                    continue;
+
+                FP sqrDistance = (orbTransform.Position - selfPosition).SqrMagnitude;
+
+                if (sqrDistance >= bestSqrDistance)
+                    continue;
+
+                if (IsPositionReachable(f, reachable, orbTransform.Position) == false)
+                    continue;
+
+                target = orbEntity;
+                bestSqrDistance = sqrDistance;
+            }
+
+            return target != EntityRef.None;
         }
 
         // Void avoidance. The bot follows its target in a straight line with no pathfinding, so

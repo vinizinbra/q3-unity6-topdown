@@ -113,10 +113,10 @@ namespace QuantumUser.Editor
             UnstableMixturePassiveUpgradeData unstableMixture = CreateOrUpdate<UnstableMixturePassiveUpgradeData>($"{PassiveUpgradesFolderPath}/UnstableMixture.asset", asset =>
             {
                 asset.DisplayName = "Unstable Mixture";
-                asset.Description = "Pixie's explosion kills empower her next explosion.";
+                asset.Description = "An explosion kill empowers Pixie's next explosion, from any source.";
                 asset.RankDescriptions = new[]
                 {
-                    "Explosion kills bank <color=#FD3971>1</color> charge. Pixie's next explosion consumes the stored charge for <color=#FD3971>+30%</color> Damage and <color=#FD3971>+15%</color> Radius.",
+                    "Killing with an explosion banks <color=#FD3971>1</color> charge. Her next explosion, from any source, consumes it for <color=#FD3971>+30%</color> Damage and <color=#FD3971>+15%</color> Radius.",
                     "Pixie can store up to <color=#FD3971>2</color> charges.",
                     "Using maximum charges also creates a delayed secondary explosion.",
                 };

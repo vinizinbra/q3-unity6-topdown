@@ -259,6 +259,13 @@ namespace QuantumUser.View
             Row(rt, ("Damage = 1", CheatActionKind.SetDamageToOne), ("Reset Damage", CheatActionKind.ResetDamage));
             CreateButton(rt, "Toggle Auto-Shoot", () => Send(CheatActionKind.ToggleManualFire));
 
+            // Sim-only (see CheatActionKind.BecomeBot) - adds BotBrain to the sender's own entity so
+            // BotInputSystem drives it from the next tick, but the camera/HUD/audio stay exactly as
+            // they were (those only resolve RuntimePlayer.IsBot once, at spawn) - so you keep
+            // watching through your own camera while the bot AI (follow/solo wander/Store/combat)
+            // pilots your hero. Doesn't survive a death/respawn - press it again after respawning.
+            CreateButton(rt, "Become Bot", () => Send(CheatActionKind.BecomeBot));
+
             CreateSectionLabel(rt, "Grant");
             PickerButton(rt, "Get Weapon", Picker.Weapon);
             PickerButton(rt, "Get Rift Mutation", Picker.Mutation);

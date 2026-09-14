@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bb51f48d451e4d148d492421a410eb0, type: 3}
+  m_Name: DrumSMG
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.WeaponDataAsset
+  Identifier:
+    Path: _QuantumUser/Resources/Weapons/DrumSMG
+    Guid:
+      Value: 2827313839086280295
+  DisplayName: Drum SMG
+  FireType: 1
+  Damage:
+    RawValue: 524288
+  Element: 2
+  Family: 2
+  CriticalChance:
+    RawValue: 3277
+  CriticalDamageBonus:
+    RawValue: 65536
+  FireRate:
+    RawValue: 786432
+  MagazineSize: 30
+  ReloadDuration:
+    RawValue: 65536
+  Range:
+    RawValue: 458752
+  PelletCount: 1
+  SpreadAngle:
+    RawValue: 327680
+  SpawnAnchor: 0
+  SpawnOffset:
+    X:
+      RawValue: 0
+    Y:
+      RawValue: 0
+    Z:
+      RawValue: 16384
+  BonusBounces: 0
+  ProjectileData:
+    Id:
+      Value: 2052039704194794421
+  BaseTraits:
+  - Id:
+      Value: 2690515578728962944
+  ViewPrefab: {fileID: 8089491252618662435, guid: aa2aaf6af4cc84f7490ce00013f9c47d, type: 3}
+  ShakeTier: 0
+  _dpsPreview: 'Burst DPS: 96
+
+    Sustained DPS (incl. reload): 68.6
+
+    Damage/min:
+    4114
+
+    Crit dmg/shot: 8 (vs 8 normal) @ 5 % chance, x1'

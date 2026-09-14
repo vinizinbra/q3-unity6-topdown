@@ -195,10 +195,14 @@ component WeaponOnKillReactions
     FP KillerInstinctTimer;
 }
 
-// -- Bottomless Momentum / Critical Rebound --
-// Both react to WeaponPerkReactionSystem.OnCriticalHit. Critical Rebound fires a secondary
-// projectile toward the nearest other enemy from the crit's target position - no-op for a Hitscan
-// weapon (nothing to aim a secondary projectile off of), documented simplification.
+// -- Bottomless Momentum / Critical Rebound / Explosive Crit / Crit Stun --
+// All four react to WeaponPerkReactionSystem.OnCriticalHit, via a granted WeaponPerkData
+// (Critical Rebound) or one authored straight into a weapon's own WeaponDataAsset.BaseTraits
+// (ExplosiveCritWeaponPerkData/CritStunWeaponPerkData - Hellshot/Disruptor's own signature, see
+// WeaponSystem.ApplyBaseTraits) - both paths bake through the exact same WeaponPerkData.Apply,
+// so this component can't tell a rolled pick from a weapon's own baseline. Critical Rebound fires
+// a secondary projectile toward the nearest other enemy from the crit's target position - no-op
+// for a Hitscan weapon (nothing to aim a secondary projectile off of), documented simplification.
 component WeaponOnCritReactions
 {
     FP    CritAmmoRestoreChance;
@@ -207,6 +211,12 @@ component WeaponOnCritReactions
     Boolean HasCriticalRebound;
     FP      CriticalReboundRadius;
     FP      CriticalReboundDamageMultiplier;
+
+    Boolean HasExplosiveCrit;
+    FP      CriticalExplosionRadius;
+    FP      CriticalExplosionDamageMultiplier;
+
+    FP      CritStunDuration;
 }
 
 // -- Element Infusion (ElementInfusionWeaponPerkData) --
@@ -222,4 +232,34 @@ component WeaponElementInfusion
 {
     ElementType Element;
     FP          ProcChance;
+}
+
+// -- Sequenced burst-fire (Double Barrel, Burst Rifle) --
+// BurstCount/Delay/CritOnFinalShot are baked ONCE at Equip by BurstFireWeaponPerkData.Apply (a
+// weapon's own baseline pick, see WeaponDataAsset.BaseTraits/WeaponSystem.ApplyBaseTraits) and
+// never touched again except by WeaponSystem.Update's burst-start block re-deriving the very same
+// values into a fresh runtime state - this component's mere PRESENCE is what tells WeaponSystem
+// "this weapon bursts" (no BurstCount flag on WeaponDataAsset itself to check anymore). Distinct
+// from the simultaneous cone-spread PelletCount on WeaponDataAsset: a burst fires ShotsRemaining
+// more shots one at a time, Delay apart. SpawnPosition/AimDirection are deliberately NOT stored
+// here (unlike PendingDoubleTapShot/PendingEcho's own snapshots) - TickWeaponBurst re-resolves
+// them fresh off the owner's current Transform3D/Aim every queued shot, since a twin-stick shooter
+// keeps moving/turning across BurstDelay and a frozen muzzle position reads as visibly wrong for a
+// weapon that fires every tick. ShotsRemaining == 0 means idle (added but no burst in flight).
+// Ticked/fired in WeaponSystem.Update/TickWeaponBurst (WeaponFireType is irrelevant - both Hitscan
+// and Projectile weapons can burst).
+component WeaponBurstState
+{
+    Int32     ShotsRemaining;
+    Int32     NextShotIndex;
+    FP        Timer;
+    FP        Delay;
+    Boolean   CritOnFinalShot;
+    Int32     BurstCount;
+
+    FP        Damage;
+    Boolean   IsExplosiveProc;
+    Boolean   IsCataclysm;
+    Int32     GrantPierceAmount;
+    Boolean   IsFirstBullet;
 }

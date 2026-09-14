@@ -45,7 +45,7 @@ TextureImporter:
   compressionQuality: 50
   spriteMode: 2
   spriteExtrude: 1
-  spriteMeshType: 1
+  spriteMeshType: 0
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 100
@@ -69,7 +69,7 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 512
+    maxTextureSize: 1024
     resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 1
@@ -139,10 +139,10 @@ TextureImporter:
       name: ZaraLobby_0
       rect:
         serializedVersion: 2
-        x: 570
-        y: 964
-        width: 426
-        height: 410
+        x: 33
+        y: 621
+        width: 590
+        height: 653
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -161,10 +161,10 @@ TextureImporter:
       name: ZaraLobby_1
       rect:
         serializedVersion: 2
-        x: 518
-        y: 630
-        width: 468
-        height: 338
+        x: 0
+        y: 82
+        width: 580
+        height: 540
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -183,10 +183,10 @@ TextureImporter:
       name: ZaraLobby_2
       rect:
         serializedVersion: 2
-        x: 580
-        y: 34
-        width: 400
-        height: 586
+        x: 606
+        y: 126
+        width: 516
+        height: 761
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}

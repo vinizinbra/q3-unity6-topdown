@@ -154,6 +154,16 @@ component Enemy
     // randomized, so the same group composition always reads the same way (e.g. a SecurityPatrol
     // group's Ranged members are always RobotFaction robots, never a random mix).
     EnemyFaction Faction;
+
+    // SmartFleeMovementData's own hysteresis - the last heading it committed to and how much
+    // longer it's held before allowing itself to reconsider. Without this, re-scanning candidate
+    // headings fresh every tick from the target's live (slightly jittering) position can flip which
+    // deflection angle comes back first from one tick to the next, reading as the enemy flickering
+    // left/right instead of holding a direction. FleeCommitTimer <= 0 means "free to pick a new
+    // heading the next time ComputeMoveDirection runs"; FleeDirection is only meaningful while it's
+    // positive (or right after it hits 0, one tick before a fresh scan overwrites it).
+    FPVector2 FleeDirection;
+    FP FleeCommitTimer;
 }
 
 // Fired once by DamageUtility when an Enemy's health hits zero, right after Phase is set to

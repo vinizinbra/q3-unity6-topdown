@@ -38,8 +38,8 @@ namespace Quantum
         // Recomputed on every value change (OnValidate) and on load (OnEnable) rather than being an
         // editable field, so it can never drift out of sync with the stats above it.
         [Header("Preview")]
-        [Tooltip("Recomputed automatically - not an input. Burst ignores reload (Damage x Pellets x FireRate); Sustained folds in how long a full magazine + reload actually takes, so a small mag/long reload weapon reads lower here than its burst number alone would suggest.")]
-        [TextArea(2, 3)]
+        [Tooltip("Recomputed automatically - not an input. Burst ignores reload (Damage x Pellets x FireRate); Sustained folds in how long a full magazine + reload actually takes, so a small mag/long reload weapon reads lower here than its burst number alone would suggest. Both fold in this weapon's own CriticalChance/CriticalDamageBonus - deliberately weapon-only (no hero CharacterStats blended in, since a weapon asset alone has no equipped hero to read), so CriticalDamageBonus is read directly as the crit multiplier (Bonus 2.5 on 100 Damage = 250 on crit) rather than stacked onto a hero baseline.")]
+        [TextArea(2, 4)]
         [SerializeField]
         private string _dpsPreview;
 
@@ -60,7 +60,16 @@ namespace Quantum
             if (fireRate <= 0f)
                 return "DPS: n/a (FireRate is 0)";
 
-            float damagePerShot = Damage.AsFloat * Mathf.Max(1, PelletCount);
+            // Weapon-only (no hero CharacterStats blended in - see class-level tooltip). Multiplier
+            // is floored at 1 same as DamageUtility.ResolveDamage, so an unset/0 CriticalDamageBonus
+            // reads as "no crit bonus" (crit = normal damage) rather than a zero-damage crit.
+            float criticalChance = Mathf.Clamp01(CriticalChance.AsFloat);
+            float criticalMultiplier = Mathf.Max(1f, CriticalDamageBonus.AsFloat);
+            float expectedHitMultiplier = 1f + criticalChance * (criticalMultiplier - 1f);
+
+            float normalDamagePerShot = Damage.AsFloat * Mathf.Max(1, PelletCount);
+            float criticalDamagePerShot = normalDamagePerShot * criticalMultiplier;
+            float damagePerShot = normalDamagePerShot * expectedHitMultiplier;
             float burstDps = damagePerShot * fireRate;
 
             if (MagazineSize <= 0)
@@ -70,7 +79,7 @@ namespace Quantum
             float cycleDuration = magazineDuration + Mathf.Max(0f, ReloadDuration.AsFloat);
             float sustainedDps = damagePerShot * MagazineSize / cycleDuration;
 
-            return $"Burst DPS: {burstDps:0.#}\nSustained DPS (incl. reload): {sustainedDps:0.#}\nDamage/min: {sustainedDps * 60f:0}";
+            return $"Burst DPS: {burstDps:0.#}\nSustained DPS (incl. reload): {sustainedDps:0.#}\nDamage/min: {sustainedDps * 60f:0}\nCrit dmg/shot: {criticalDamagePerShot:0.#} (vs {normalDamagePerShot:0.#} normal) @ {criticalChance:P0} chance, x{criticalMultiplier:0.##}";
         }
     }
 }

@@ -36,11 +36,18 @@ enum GameState : Byte
                 // GameplaySystemGroup itself is NOT disabled - players must stay fully
                 // controllable to explore/use Breathing-only POIs (Healing Shrine, Cursed Rift).
 
-    RunFailed   // Vocabulary-only, same "wired later" precedent GameState.Event/pre-2026-08-17
-                // GameState.Boss already established - fired once by RunFailureSystem the instant
-                // every connected player is simultaneously Downed/KO AND every one of them has 0
-                // SelfReviveCharges left (see docs/revive.md). GameplaySystemGroup is deliberately
-                // NOT disabled here - a future Game Over screen would add that itself.
+    RunFailed,  // Fired once by RunFailureSystem the instant every connected player is
+                // simultaneously Downed/KO AND every one of them has 0 SelfReviveCharges left (see
+                // docs/revive.md). GameplaySystemGroup is deliberately NOT disabled here. Consumed
+                // by RunResultManager (View) to show the end-of-run Lose popup.
+
+    Victory     // Fired once by VictorySystem the instant the boss on the LAST authored
+                // SurvivalConfig.Phases[] entry actually dies (BossRuntimeState filter goes
+                // empty) - nothing else ever transitions CurrentState out of Boss (CombatDirector
+                // System's own Update gate excludes it entirely once entered), so this is the one
+                // place that closes that loop. GameplaySystemGroup is deliberately NOT disabled
+                // here, same as RunFailed. Consumed by RunResultManager (View) to show the
+                // end-of-run Win popup.
 }
 
 // Which single top-screen HUD banner should be showing right now, out of the (growing) set of
@@ -99,6 +106,15 @@ global
     // hostile is left. Read by BreathingCountdownWidget to gate the "AREA SECURED" banner/countdown/
     // skip-vote UI the same way.
     Boolean BreathingAreaSecured;
+
+    // Counts down from CurrencyOrbVacuumUtility.Duration (1s) to 0 the instant
+    // BreathingAreaSecured flips true - while > 0, CurrencyOrbVacuumUtility.Tick is actively
+    // sweeping every leftover CurrencyOrb (XP/Coin/Rift Shard) to its nearest player, spread evenly
+    // across whatever's left of this window rather than all in the same tick. Also held by
+    // DebugCheatSystem.TryOpenNextPendingLevelUp as one more precondition (same idiom as its own
+    // GameState.Boss gate) - a level-up screen earned mid-sweep is deliberately held, not
+    // discarded, until every orb has actually finished landing. See docs/experience-drops.md.
+    FP OrbVacuumTimeRemaining;
 
     // Counts down to 0 while GameplaySystemGroup is deliberately disabled right after
     // RunPhaseUtility.BeginBossEncounter spawns the boss(es) - ticked by the new always-on

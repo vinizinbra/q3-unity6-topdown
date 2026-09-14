@@ -168,10 +168,15 @@ yet** - the following need Editor authoring, none of it done yet:
 
 Beyond the missing assets:
 - **No magnetism/homing** - an orb sits exactly where it dropped; a player has to walk within
-  `PickupRadius * PickupRangeMultiplier` themselves. `ExpOrbSystem`'s broadphase query radius is a
-  fixed multiple (`8x`) of `ExperienceConfig.PickupRadius` as a stand-in for "large enough to catch
-  any realistic `PickupRangeMultiplier` stack" - if a build ever pushes that multiplier past ~8x,
-  widen `ExpOrbSystem.QueryRadiusScale`.
+  `PickupRadius * PickupRangeMultiplier` themselves. The one exception: the instant
+  `Global.BreathingAreaSecured` flips true, `CurrencyOrbVacuumUtility` sweeps every orb still on the
+  map (XP/Coin/Rift Shard alike) into whichever player is nearest it, via the same
+  `CurrencyOrbSystem.Collect` a normal walk-into-range pickup uses - no range check, no actual
+  movement, nothing left uncollected once an area is cleared. Spread over `Global.
+  OrbVacuumTimeRemaining` (`CurrencyOrbVacuumUtility.Duration`, 1s) rather than all in the same
+  tick - each tick collects just enough of what's currently left that, at that rate, every orb
+  still finishes within whatever's left of the window, so 3 orbs and 30 orbs both wrap up in the
+  same ~1s regardless of count. See `docs/run-phase.md`'s `BreathingAreaSecured` section.
 - **No level-up trigger** - `Frame.Global.Level` updates, but nothing reads it to grant a perk/
   skill-upgrade choice to anyone. `GrantWeaponPerkCommand`/`GrantSkillUpgradeCommand` remain
   debug-only (`WeaponPerkDebugTrigger`/`SkillUpgradeDebugTrigger`), same as before this feature.

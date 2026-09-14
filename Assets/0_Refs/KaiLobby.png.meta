@@ -69,7 +69,7 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 512
+    maxTextureSize: 1024
     resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 1
@@ -139,10 +139,10 @@ TextureImporter:
       name: KaiLobby_0
       rect:
         serializedVersion: 2
-        x: 562
-        y: 1098
-        width: 251
-        height: 240
+        x: 0
+        y: 838
+        width: 528
+        height: 514
       alignment: 9
       pivot: {x: 0.3684763, y: 0.09594066}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -161,12 +161,12 @@ TextureImporter:
       name: KaiLobby_1
       rect:
         serializedVersion: 2
-        x: 493
-        y: 523
-        width: 397
-        height: 528
+        x: 33
+        y: 0
+        width: 594
+        height: 772
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -183,12 +183,12 @@ TextureImporter:
       name: KaiLobby_2
       rect:
         serializedVersion: 2
-        x: 555
-        y: 84
-        width: 335
-        height: 431
+        x: 575
+        y: 674
+        width: 547
+        height: 724
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -197,6 +197,28 @@ TextureImporter:
       bones: []
       spriteID: d846b1af3f1ed4cd9b4ea9cc1f9ec9c7
       internalID: -1186624162
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: KaiLobby_3
+      rect:
+        serializedVersion: 2
+        x: 670
+        y: 459
+        width: 308
+        height: 200
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cade211f1a8584c95ad908c08e79be4a
+      internalID: 1561930564
       vertices: []
       indices: 
       edges: []
@@ -218,6 +240,7 @@ TextureImporter:
       KaiLobby_0: 1038944989
       KaiLobby_1: 1682154169
       KaiLobby_2: -1186624162
+      KaiLobby_3: 1561930564
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

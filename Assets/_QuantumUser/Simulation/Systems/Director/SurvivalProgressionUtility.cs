@@ -79,11 +79,23 @@ namespace Quantum
             // Edge-detected off the field's own previous-tick value (no separate flag needed) -
             // confirmed with the user: the moment the team has genuinely secured a Breathing Break
             // (not just entered one - IsEncounterCleared still has to actually clear first), every
-            // still-Downed/KO player is fully revived automatically. See
-            // PlayerLifeStateUtility.ReviveAllIncapacitated's own comment for why this lives there,
-            // not here - this file "owns pacing only" (see this class's own header comment).
+            // still-Downed/KO player is fully revived automatically, and a sweep begins that
+            // collects every CurrencyOrb (XP/Coin/Rift Shard) still left on the map rather than
+            // timing out or waiting to be walked over. See PlayerLifeStateUtility.
+            // ReviveAllIncapacitated/CurrencyOrbVacuumUtility's own comments for why each lives
+            // there, not here - this file "owns pacing only" (see this class's own header comment).
             if (isSecured == true && wasSecured == false)
+            {
                 PlayerLifeStateUtility.ReviveAllIncapacitated(f);
+                CurrencyOrbVacuumUtility.Begin(f);
+            }
+
+            // Unconditional, same as the rest of this method's own per-tick advances - a cheap
+            // single-field read/early-out whenever no sweep is in progress (the overwhelmingly
+            // common case). Ticks every frame regardless of phase/GameState so a sweep started right
+            // as Breathing began still finishes even if something else advances the phase again
+            // before its 1s window is up.
+            CurrencyOrbVacuumUtility.Tick(f);
 
             // Also frozen while any Traversal Challenge is Active, same as SurvivalTime's own freeze
             // above - without this, a Breathing Break's own end-of-Break countdown (this is what

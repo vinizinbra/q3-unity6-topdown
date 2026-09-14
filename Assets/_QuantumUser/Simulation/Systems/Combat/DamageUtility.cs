@@ -43,11 +43,14 @@ namespace Quantum
         // (Thermal Shock/Overload/Shatter - see StatusEffectUtility), not a periodic status tick -
         // see EntityDamaged.ReactionProc's own comment in Events.qtn for why Element alone can't
         // already tell those apart.
+        // forceCritical skips ResolveOutgoingDamage's own RollChance and forces isCritical true
+        // outright (Burst Rifle's 3rd-shot-always-crits, threaded via HitEffectContext.ForceCritical/
+        // WeaponSystem's own hitscan param) - no-op (false) for every other caller.
         public static void ApplyDamage(Frame f, EntityRef target, FP damage, EntityRef owner,
             DamageSource source = DamageSource.None, bool bypassOutgoingResolution = false,
             ElementType element = ElementType.Neutral, bool silent = false,
             bool isChainedExplosion = false, bool isExplosion = false,
-            byte hitIndex = 0, bool reactionProc = false)
+            byte hitIndex = 0, bool reactionProc = false, bool forceCritical = false)
         {
             if (f.Unsafe.TryGetPointer<Health>(target, out var health) == false)
             {
@@ -181,7 +184,7 @@ namespace Quantum
             }
             else
             {
-                totalDamage = ResolveOutgoingDamage(f, owner, target, damage, source, out isCritical);
+                totalDamage = ResolveOutgoingDamage(f, owner, target, damage, source, forceCritical, out isCritical);
             }
 
             // Generic Priority Target (Lux's Neutral Mastery R3 "Neutral Focus" is the first
@@ -237,6 +240,17 @@ namespace Quantum
             // healthAfter to 1, and health->CurrentHealth is clamped to 0 further down, so this is
             // the last point the excess is knowable. 0 for any non-lethal hit.
             FP overkillDamage = FPMath.Max(FP._0, -healthAfter);
+
+            // Run-summary "Damage Dealt" stat (see CharacterStats.qtn) - remaining minus overkill is
+            // exactly FPMath.Min(remaining, health->CurrentHealth), i.e. what actually landed on the
+            // enemy, so a killing blow doesn't inflate the total past what it had left. Enemy-only
+            // (mirrors MonstersKilled's own Enemy guard just below) and only when the owner actually
+            // has a wallet to accumulate into - an enemy-on-enemy or ownerless hit has no
+            // CharacterStats and is naturally excluded.
+            if (f.Has<Enemy>(target) == true && f.Unsafe.TryGetPointer<CharacterStats>(owner, out var dealerStats) == true)
+            {
+                dealerStats->DamageDealt += remaining - overkillDamage;
+            }
 
             // Too Angry to Die - a hit that would otherwise be lethal instead leaves the owner at 1
             // Health and force-ends their current Overdrive activation (see CheatDeathUtility). Only
@@ -765,7 +779,7 @@ namespace Quantum
         // shooter holds when it lands. An attacker without CharacterStats deals its damage flat -
         // no multiplier, and no crit, since there'd be nothing to multiply by.
         private static FP ResolveOutgoingDamage(Frame f, EntityRef owner, EntityRef target, FP damage, DamageSource source,
-            out bool isCritical)
+            bool forceCritical, out bool isCritical)
         {
             isCritical = false;
 
@@ -787,6 +801,11 @@ namespace Quantum
                 return damage;
 
             damage *= stats->DamageMultiplier * GetSourceMultiplier(stats, source);
+
+            // Player base damage scaling - "1 + DamageBonusPerLevel * displayed Level", the one
+            // shared co-op Level (see ExperienceUtility.ResolvePlayerLevelDamageMultiplier). Every
+            // damage source, same as DamageMultiplier just above.
+            damage *= ExperienceUtility.ResolvePlayerLevelDamageMultiplier(f);
 
             // Every LIVE, condition-dependent mutation bonus in one term (Money Talks, Danger Pay,
             // No Safety Net, Pressure Cooker) - see MutationModifierUtility. Deliberately one call
@@ -897,7 +916,13 @@ namespace Quantum
             if (source == DamageSource.Weapon && f.Unsafe.TryGetPointer<Weapon>(owner, out var weapon) == true)
             {
                 chance += weapon->CriticalChance;
-                multiplier += weapon->CriticalDamageBonus;
+
+                // Multiplicative, not additive - CriticalDamageBonus IS the weapon's crit multiplier
+                // (a Sniper authored at 3 means "x3 on crit"), not a bonus added on top of the hero's
+                // own multiplier. Floored at 1 so an unset/0 weapon (no crit bonus authored) never
+                // makes crits deal LESS than a normal hit - see WeaponDataAsset's DPS preview, which
+                // mirrors this same floor.
+                multiplier *= FPMath.Max(FP._1, weapon->CriticalDamageBonus);
             }
 
             // Max's Hot Target (Fire Mastery) - bonus Critical Chance vs a currently-Burning
@@ -909,7 +934,7 @@ namespace Quantum
                 chance += critMod->CriticalChanceBonusVsBurning;
             }
 
-            if (RollChance(f, chance) == false)
+            if (forceCritical == false && RollChance(f, chance) == false)
                 return damage;
 
             isCritical = true;

@@ -112,12 +112,28 @@ namespace Project.Audio.EditorTools
             public float[] WindowDb;
             public int WindowFrames;
             public float NoiseFloorDb;
+
+            // Set by Read() whenever it had to flip the importer to analyze the clip. Left swapped
+            // (rather than reverted on the spot) for as long as the window keeps this clip loaded,
+            // because a Streaming-tier source - anything over AudioImportOptimizer's 10s cutoff, which
+            // describes exactly the multi-take recordings this tool exists to split - can't be
+            // previewed via AudioUtil.PlayPreviewClip's start-sample overload: it seeks and fails
+            // silently, no exception, no log. DecompressOnLoad + PCM (what Read() already needs for
+            // analysis) previews fine, so the session simply stays in that state until RestoreOriginalSettings.
+            internal bool NeedsRestore;
+            internal AudioImporterSampleSettings OriginalSettings;
+            internal bool OriginalLoadInBackground;
         }
 
         // Decoding an mp3 means asking Unity's own importer for the raw samples. GetData only returns
         // anything meaningful on a DecompressOnLoad clip with its data preloaded, so we flip the
-        // importer to that, reimport, read, and put the original settings back - the caller sees no
-        // lasting change to the asset.
+        // importer to that and reimport. The original settings are NOT put back here - they're
+        // stashed on the returned ClipData for RestoreOriginalSettings to apply once the caller is
+        // done with the clip. A Streaming-tier source (anything over AudioImportOptimizer's 10s
+        // cutoff - i.e. exactly the multi-take recordings this tool exists to split) previews as
+        // silence through AudioUtil.PlayPreviewClip's start-sample overload, so the window needs the
+        // clip to stay in this DecompressOnLoad+PCM state for its whole editing session, not just
+        // for the instant of this call.
         internal static ClipData Read(AudioClip clip)
         {
             string path = AssetDatabase.GetAssetPath(clip);
@@ -129,64 +145,92 @@ namespace Project.Audio.EditorTools
             }
 
             AudioImporterSampleSettings original = importer.defaultSampleSettings;
-            bool loadInBackground = importer.loadInBackground;
+            bool originalLoadInBackground = importer.loadInBackground;
             bool needsReimport = original.loadType != AudioClipLoadType.DecompressOnLoad
                                  || !original.preloadAudioData
-                                 || loadInBackground;
+                                 || originalLoadInBackground;
 
-            try
+            if (needsReimport)
             {
-                if (needsReimport)
-                {
-                    AudioImporterSampleSettings temp = original;
-                    temp.loadType = AudioClipLoadType.DecompressOnLoad;
-                    temp.preloadAudioData = true;
-                    // PCM while we read, so silence detection isn't looking at a second generation
-                    // of codec noise sitting on top of the mp3's own.
-                    temp.compressionFormat = AudioCompressionFormat.PCM;
-                    importer.defaultSampleSettings = temp;
-                    importer.loadInBackground = false;
-                    importer.SaveAndReimport();
-                    clip = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
-                }
-
-                if (clip == null)
-                {
-                    LogHelper.Error(LogTag, $"Failed to reload '{path}' after reimport.");
-                    return null;
-                }
-
-                if (clip.loadState != AudioDataLoadState.Loaded)
-                {
-                    clip.LoadAudioData();
-                }
-
-                float[] samples = new float[clip.samples * clip.channels];
-                if (!clip.GetData(samples, 0))
-                {
-                    LogHelper.Error(LogTag, $"Could not read samples from '{path}' (load state {clip.loadState}).");
-                    return null;
-                }
-
-                ClipData data = new ClipData
-                {
-                    AssetPath = path,
-                    Samples = samples,
-                    Channels = clip.channels,
-                    Frequency = clip.frequency,
-                };
-                Analyze(data);
-                return data;
+                AudioImporterSampleSettings temp = original;
+                temp.loadType = AudioClipLoadType.DecompressOnLoad;
+                temp.preloadAudioData = true;
+                // PCM while we read, so silence detection isn't looking at a second generation
+                // of codec noise sitting on top of the mp3's own.
+                temp.compressionFormat = AudioCompressionFormat.PCM;
+                importer.defaultSampleSettings = temp;
+                importer.loadInBackground = false;
+                importer.SaveAndReimport();
+                clip = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
             }
-            finally
+
+            if (clip == null)
             {
-                if (needsReimport)
-                {
-                    importer.defaultSampleSettings = original;
-                    importer.loadInBackground = loadInBackground;
-                    importer.SaveAndReimport();
-                }
+                LogHelper.Error(LogTag, $"Failed to reload '{path}' after reimport.");
+                RevertImporter(importer, needsReimport, original, originalLoadInBackground);
+                return null;
             }
+
+            if (clip.loadState != AudioDataLoadState.Loaded)
+            {
+                clip.LoadAudioData();
+            }
+
+            float[] samples = new float[clip.samples * clip.channels];
+            if (!clip.GetData(samples, 0))
+            {
+                LogHelper.Error(LogTag, $"Could not read samples from '{path}' (load state {clip.loadState}).");
+                RevertImporter(importer, needsReimport, original, originalLoadInBackground);
+                return null;
+            }
+
+            ClipData data = new ClipData
+            {
+                AssetPath = path,
+                Samples = samples,
+                Channels = clip.channels,
+                Frequency = clip.frequency,
+                NeedsRestore = needsReimport,
+                OriginalSettings = original,
+                OriginalLoadInBackground = originalLoadInBackground,
+            };
+            Analyze(data);
+            return data;
+        }
+
+        private static void RevertImporter(AudioImporter importer, bool needsReimport, AudioImporterSampleSettings original, bool originalLoadInBackground)
+        {
+            if (!needsReimport)
+            {
+                return;
+            }
+
+            importer.defaultSampleSettings = original;
+            importer.loadInBackground = originalLoadInBackground;
+            importer.SaveAndReimport();
+        }
+
+        // Puts the source clip's import settings back the way Read() found them. Call once the
+        // caller is actually done with the clip - the window does this when switching to a
+        // different clip and when it closes; Split() does it before copying the source's settings
+        // onto the new files, so a derived split doesn't inherit the temporary PCM debug settings.
+        internal static void RestoreOriginalSettings(ClipData data)
+        {
+            if (data == null || !data.NeedsRestore)
+            {
+                return;
+            }
+
+            AudioImporter importer = AssetImporter.GetAtPath(data.AssetPath) as AudioImporter;
+            if (importer == null)
+            {
+                return;
+            }
+
+            importer.defaultSampleSettings = data.OriginalSettings;
+            importer.loadInBackground = data.OriginalLoadInBackground;
+            importer.SaveAndReimport();
+            data.NeedsRestore = false;
         }
 
         // Envelope + noise floor. Both are properties of the file alone, so this runs once per clip
@@ -446,6 +490,11 @@ namespace Project.Audio.EditorTools
 
         internal static List<string> Split(ClipData data, Settings settings, IList<Segment> segments, IList<bool> include, IList<string> names = null, IList<string> folders = null)
         {
+            // Unconditionally, before the empty-segments early-out below: SplitAll calls this once
+            // per clip, and a clip with nothing detected in it must not stay stuck in Read()'s
+            // temporary DecompressOnLoad+PCM state just because it had no segments to write.
+            RestoreOriginalSettings(data);
+
             List<string> created = new List<string>();
             if (data == null || segments == null || segments.Count == 0)
             {

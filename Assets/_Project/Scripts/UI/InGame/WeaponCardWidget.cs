@@ -134,7 +134,7 @@ public class WeaponCardWidget : MonoBehaviour
             weaponName.text = data.WeaponName;
 
         if (damageText != null)
-            damageText.text = data.Damage.ToString("0.#");
+            damageText.text = Mathf.RoundToInt(data.Damage).ToString();
 
         if (fireRateText != null)
             fireRateText.text = $"{data.FireRate:0.#}/s";

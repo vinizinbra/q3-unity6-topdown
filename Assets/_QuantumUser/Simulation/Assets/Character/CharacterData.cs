@@ -43,7 +43,11 @@ namespace Quantum
         public FP SkillDamageMultiplier = FP._1;
 
         public FP CriticalChance = FP._0_05;
-        public FP CriticalDamageMultiplier = FP._1_50;
+
+        // Neutral baseline (a crit deals normal damage until a weapon's own CriticalDamageBonus
+        // multiplies this up) - matches every hero's already-authored CharacterData asset, which
+        // this C# default had drifted out of sync with. See DamageUtility.ResolveDamage.
+        public FP CriticalDamageMultiplier = FP._1;
 
         public FP ElementalChance = FP._0;
 

@@ -9,8 +9,9 @@ public class InvitePopup : UiPopup {
     public TMP_Text description;
     [CanBeNull] public System.Action callback;
     public string from;
-    public virtual void Awake()
+    public override void Awake()
     {
+        base.Awake();
         instance = this;
     }
 

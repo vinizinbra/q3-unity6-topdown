@@ -1,0 +1,89 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 42ee285a79a8041f6a5811f3d0c2c4a6, type: 3}
+  m_Name: BalanceSimScenario
+  m_EditorClassIdentifier: Quantum.Unity.Editor::QuantumUser.Editor.BalanceSimulator.BalanceSimScenario
+  SurvivalConfig: {fileID: 11400000, guid: d669efe57d9794c32b7ea586ff85f9fa, type: 2}
+  BalanceConfig: {fileID: 11400000, guid: 1f30642d86e5a4110ac1436d62545441, type: 2}
+  ExperienceConfig: {fileID: 11400000, guid: 543f117929bcf404da04ce065c377b09, type: 2}
+  LevelUpConfig: {fileID: 11400000, guid: 70f24b1b1d01740a1ae65fceb2d08354, type: 2}
+  StoreConfig: {fileID: 11400000, guid: f06b021b01c8e46e4bbe35dd96a7f055, type: 2}
+  BlacksmithConfig: {fileID: 11400000, guid: c444d464948e64e4a992922aa7c8ee9b, type: 2}
+  EnemyTierStatsConfig: {fileID: 11400000, guid: a4d6c3c3fa9947efb1b46dde67808d52, type: 2}
+  DirectorConfig: {fileID: 11400000, guid: c3627718ea6474c15aed652b14716f0c, type: 2}
+  LifecycleConfig: {fileID: 11400000, guid: 31ae62d4ef2f540d784e5160c95c3b52, type: 2}
+  LevelConfig: {fileID: 11400000, guid: c0dce0acd1f0c4313a9d0f3da3784850, type: 2}
+  PlayerCount: 2
+  SimulateAllPlayerCounts: 1
+  Party: []
+  DurationMinutes: 12
+  TickSeconds: 0.5
+  Seeds: 50
+  BaseSeed: 86177
+  HitEfficiency: 0.7
+  SkillUseEfficiency: 0.85
+  AreaTargets: 3
+  OverkillWaste: 0.15
+  OrbPickupEfficiency:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0.95
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 6
+      value: 0.9
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 12
+      value: 0.8
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  CoopPickupBonus: 0.35
+  ChannelContactUptime: 0.5
+  LevelUpPolicy: 0
+  UnquantifiedPerkDpsValue: 0.04
+  SkillUpgradeDpsValue: 0.1
+  WeaponBuysPerBreak: 1
+  WeaponBuyThreshold: 1.15
+  BlacksmithBuysPerBreak: 2
+  AccessoryRepairsPerBreak: 1
+  FoodBuysPerBreak: 1
+  CoinReserve: 0
+  BarrelsPerEnemyChunk: 4
+  BarrelBreakFraction: 0.75
+  BarrelLoot: {fileID: 0}
+  CoinsPerBarrelOverride: 0
+  EnemyLeakFraction: 0.05
+  SpawnFailureChance: 0.1
+  EngageDistanceFraction: 0.7
+  EngageReactionSeconds: 0.75
+  StationaryEngageSeconds: 4
+  ExpectedDpsBaseline: 50

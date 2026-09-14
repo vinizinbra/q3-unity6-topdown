@@ -138,6 +138,11 @@ namespace Quantum
                 case CheatActionKind.SetupTestRun:
                     SetupTestRun(f, player, cmd.Amount);
                     break;
+
+                case CheatActionKind.BecomeBot:
+                    PlayerSpawnUtility.ConvertToBot(f, player);
+                    Log.Debug($"[Bot] player {player} became a bot via cheat");
+                    break;
             }
         }
 

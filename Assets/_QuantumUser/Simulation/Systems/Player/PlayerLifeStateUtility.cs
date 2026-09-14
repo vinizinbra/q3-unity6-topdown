@@ -28,6 +28,15 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<PlayerLifeState>(target, out var lifeState) == false)
                 return;
 
+            // Run-summary "Times Downed" stat (see CharacterStats.qtn) - this method has exactly
+            // one call site (DamageUtility's lethal-hit branch), reached only on a genuine
+            // Alive -> Downed transition, so no double-counting guard is needed beyond the
+            // early-return above.
+            if (f.Unsafe.TryGetPointer<CharacterStats>(target, out var stats) == true)
+            {
+                stats->TimesDowned++;
+            }
+
             ReviveConfig config = GetConfig(f);
 
             lifeState->State = PlayerLifeStateKind.Downed;

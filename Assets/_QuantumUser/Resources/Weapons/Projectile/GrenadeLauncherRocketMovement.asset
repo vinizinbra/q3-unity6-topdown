@@ -15,7 +15,7 @@ MonoBehaviour:
   Identifier:
     Path: _QuantumUser/Resources/Weapons/Projectile/GrenadeLauncherRocketMovement
     Guid:
-      Value: 5843222811395226074
+      Value: 1231536792967838170
   Speed:
     RawValue: 1638400
   OverrideDirection: 0

@@ -78,6 +78,7 @@ which one to open.
 
 - **Local-testing Bots** — `RuntimePlayer.IsBot`→`BotBrain`, sim-synthesized input; follow/void-avoidance/leash AI; bots consume no local slot (`GetLocalSlotIndex` = -1). → `docs/bots.md`
 - **Build Size Analyzer** — Editor window over `Library/LastBuild.buildreport`: size by category/asset, texture/atlas/audio/duplicate-file audits with one-click fixes, paginated lists. → `docs/build-size-analyzer.md`
+- **Balance Simulator** — Editor window that predicts a run per minute/per hero (level, kills, weapon/skill DPS, weapon level, coins, enemy HP/TTK, Director pressure) from the real config assets, plus `BalanceRunRecorder` to diff against a played run. → `docs/balance-simulator.md`
 
 ## Reference docs
 

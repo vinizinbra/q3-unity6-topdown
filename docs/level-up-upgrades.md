@@ -764,6 +764,11 @@ Beyond the missing assets/wiring:
   can carry real excess progress into the level being opened) is never clobbered down to the
   drain's own fabricated per-level value - that overwrite is still exactly right for
   `DebugStartLevelUpCount`, where nothing else ever set `TotalExperience` first.
+- **`TryOpenNextPendingLevelUp` also holds while `Global.OrbVacuumTimeRemaining > 0`** - same "hold,
+  don't discard" idiom as its existing `GameState.Boss` gate (see `docs/boss-encounter.md`). Once an
+  area is secured, `CurrencyOrbVacuumUtility` sweeps every leftover `CurrencyOrb` in over ~1s (see
+  `docs/experience-drops.md`); if an early orb in that sweep crosses a level threshold, the screen
+  stays queued until the WHOLE sweep finishes rather than popping mid-sweep with orbs still landing.
 - **`PassiveUpgrade`/`GlobalUpgrade`/`WeaponPerk` candidates are now deduplicated against past picks**,
   same as `SkillUpgrade`/`RiftMutation` always were - `PassiveUpgrade` via `UpgradeHistory`
   (single-pick, filtered to `Kind == PassiveUpgrade`; judged safe to share that ledger's 32-slot

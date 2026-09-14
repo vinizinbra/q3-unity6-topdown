@@ -13,6 +13,7 @@
             factories.Add(new RemoveSkillUpgradeCommand());
             factories.Add(new ClearSkillUpgradesCommand());
             factories.Add(new GrantWeaponPerkCommand());
+            factories.Add(new EquipWeaponCommand());
             factories.Add(new GrantPassiveUpgradeCommand());
             factories.Add(new GrantGlobalUpgradeCommand());
             factories.Add(new GrantRiftMutationCommand());
@@ -30,6 +31,7 @@
             factories.Add(new CancelBlacksmithCommand());
             factories.Add(new BuyAccessoryServiceCommand());
             factories.Add(new SelfReviveCommand());
+            factories.Add(new SetTutorialPauseCommand());
 
             // Generic cheat/debug command (View/Managers/CheatMenu.cs) - always registered so its
             // factory index matches on every client, even builds without the CHEATS_ENABLED overlay.
