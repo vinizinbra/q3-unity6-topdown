@@ -169,6 +169,37 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
                                matchmakingArguments.ReconnectInformation != null &&
                                !matchmakingArguments.ReconnectInformation.HasTimedOut;
 
+   // The room the party actually lives in, distinct from whatever single-use match room a run
+   // happens to be playing in (see StartMatchInNewRoom/MoveToMatchRoomAsync). Set once, when the
+   // party is first created/joined (PartyManager.BeginConnect). ReturnToPartyLobby rejoins THIS
+   // room by name specifically, not just "whatever room we were last in" - the two are the same
+   // room only while actually sitting in the lobby.
+   //
+   // Why a match needs its own room at all: Quantum's server plugin ties its deterministic-session
+   // bookkeeping (buddy-snapshot/reconnect support) to the ROOM, keyed by the persistent ClientId
+   // this project intentionally reuses across the whole app lifetime for couch-co-op slot identity
+   // (see ResolvePersistentUserId). Starting a SECOND SessionRunner in a room that already hosted a
+   // finished match gets treated by the server as a late-join into that same game and tries to
+   // request a buddy snapshot - which fails, because every client already tore its runner down when
+   // the match legitimately ended (confirmed against Photon's own docs: "the buddy snapshot process
+   // is started automatically when any client is starting its QuantumRunner... Error #13: Snapshot
+   // request failed - there is no other client in the room/game that can send a buddy snapshot").
+   // A fresh room per match sidesteps this entirely; the party room itself never runs a Quantum
+   // session at all, so it's never subject to any of this.
+   public string PartyRoomCode { get; set; }
+
+   // The UserId of whoever was party leader when the CURRENT/last match started - captured from
+   // the one client allowed to call StartMatchInNewRoom (only the leader can) and broadcast to
+   // everyone via the SyncMatchRoom event payload, so every client remembers it locally through the
+   // whole match. Needed because Photon's own MasterClientId doesn't survive the party room being
+   // destroyed/recreated (see PartyRoomCode's comment) - without this, plain default election
+   // (lowest actor number in the recreated room) hands leadership to whoever gets back first,
+   // regardless of who led before. See ReclaimLeadershipIfNeeded.
+   public string DesignatedLeaderUserId { get; private set; }
+
+   public bool IsInPartyRoom => Client != null && Client.CurrentRoom != null &&
+      string.Equals(Client.CurrentRoom.Name, PartyRoomCode, StringComparison.Ordinal);
+
    public enum MatchMakingType
    {
       CUSTOM,
@@ -369,20 +400,22 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
       try
       {
          await PerformSingleRejoinAsync(asyncConfig);
-         LogHelper.Log("MatchMaking", $"Reconnected as {Client.UserId} to room '{Client.CurrentRoom?.Name}' (match started: {HasMatchStarted})");
+         bool reconnectedIntoMatch = !string.IsNullOrEmpty(PartyRoomCode) && !IsInPartyRoom;
+         LogHelper.Log("MatchMaking", $"Reconnected as {Client.UserId} to room '{Client.CurrentRoom?.Name}' (match room: {reconnectedIntoMatch})");
 
-         // Nothing else brings the simulation back up: Photon does not re-send a room's cached
-         // events (StartGame among them) to a REJOINING actor, so the OnEvent -> StartRunner route
-         // every normal match start relies on never fires here and the player would otherwise sit
-         // on ConnectingWindow forever. StartRunner is idempotent regardless.
-         if (HasMatchStarted)
+         // Nothing else brings the simulation back up: a rejoin into the match room means a genuine
+         // mid-match reconnect (that room is single-use and only ever hosts one session - see
+         // PartyRoomCode's comment), so StartRunner has to be triggered explicitly here; it reads
+         // the seed back from PropKeySeed (see MoveToMatchRoomAsync). StartRunner is idempotent
+         // regardless.
+         if (reconnectedIntoMatch)
          {
             StartRunner();
          }
          else
          {
-            // Rejoined a party room whose run never started - land back in the party screen
-            // rather than spinning up a session the rest of the party isn't in.
+            // Rejoined the party room itself - land back in the party screen rather than spinning
+            // up a session the rest of the party isn't in.
             mainMenuTab.windowManager.ShowWindow<MainMenuWindow>();
          }
       }
@@ -592,18 +625,12 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
    // Whether the room this client is in has actually started its run (see PropKeyMatchStarted).
    // Distinguishes reconnecting INTO a live match from rejoining a party room still sitting in the
    // lobby - the latter must not start a session nobody else is in.
-   private bool HasMatchStarted
-   {
-      get
-      {
-         var properties = Client?.CurrentRoom?.CustomProperties;
-         return properties != null
-                && properties.TryGetValue(PropKeyMatchStarted, out var stored)
-                && stored is bool started
-                && started;
-      }
-   }
-  
+   //
+   // NOTE: only the legacy QUICKPLAY/WaitingForPlayersWindow path (unused by the live
+   // PartyManager-driven CUSTOM flow - see docs/party-matchmaking-report.md) still reads/writes
+   // PropKeyMatchStarted via StartQuantumGame below. The CUSTOM flow now uses a fresh, single-use
+   // match room per run (StartMatchInNewRoom/MoveToMatchRoomAsync) instead of restarting a session
+   // in a room that already hosted one - see PartyRoomCode's own comment for why that's required.
 
    public void StartQuantumGame()
    {
@@ -623,6 +650,104 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
       Client.OpRaiseEvent((byte)110,1,
          new RaiseEventArgs() { Receivers = ReceiverGroup.All , CachingOption = EventCaching.AddToRoomCacheGlobal},
          SendOptions.SendReliable);
+   }
+
+   // Leader-only. Generates a brand-new, single-use match room name + seed and broadcasts it (an
+   // uncached event - see its own reasoning below) to everyone currently in the party room, which
+   // MoveToMatchRoomAsync then carries out on every client including this one (ReceiverGroup.All
+   // includes the sender, same as the legacy StartQuantumGame's own event above). This replaces
+   // the old single-room start entirely for the party/CUSTOM flow - see PartyRoomCode's comment
+   // for why reusing one room across matches doesn't work with Quantum's session model.
+   public void StartMatchInNewRoom()
+   {
+      if (Client == null || Client.LocalPlayer == null || !Client.LocalPlayer.IsMasterClient)
+         return;
+
+      string matchRoomCode = Guid.NewGuid().ToString("N").Substring(0, 8);
+      int seed = Guid.NewGuid().GetHashCode();
+
+      // Deliberately NOT cached (unlike the old StartGame event): this room gets abandoned the
+      // moment the match ends and is never rejoined, so there's no later (re)join that should ever
+      // receive this again - caching it was exactly the bug that caused a finished match to
+      // instantly restart on return (see git history / the investigation that led here).
+      //
+      // "leader" is this client's own UserId - only the leader can reach this point at all (the
+      // IsMasterClient guard above), so it's necessarily the leader's own ID. Carried to everyone
+      // so DesignatedLeaderUserId survives the party room being destroyed/recreated after a long
+      // match - see its own comment and ReclaimLeadershipIfNeeded.
+      Client.OpRaiseEvent((byte)PhotonEventCode.SyncMatchRoom,
+         new PhotonHashtable { { "room", matchRoomCode }, { "seed", seed }, { "leader", Client.UserId } },
+         new RaiseEventArgs { Receivers = ReceiverGroup.All },
+         SendOptions.SendReliable);
+   }
+
+   // Called once this client has landed back in the party room (see PartyManager.HandleJoinedOrCreated)
+   // - hands master client status back to whoever led the party into the match that just ended, if
+   // Photon's own default election (lowest actor number in the recreated room) gave it to someone
+   // else instead. A no-op for every client except the one whose UserId matches - SetMasterClient
+   // is a CAS write against the room's current MasterClientId, safe even if called redundantly.
+   public void ReclaimLeadershipIfNeeded()
+   {
+      if (Client == null || Client.CurrentRoom == null || Client.LocalPlayer == null)
+         return;
+
+      if (string.IsNullOrEmpty(DesignatedLeaderUserId) || DesignatedLeaderUserId != Client.UserId)
+         return;
+
+      if (Client.LocalPlayer.IsMasterClient)
+         return;
+
+      Client.CurrentRoom.SetMasterClient(Client.LocalPlayer);
+   }
+
+   // Builds RoomOptions/EnterRoomArgs matching this app's matchmakingArguments (MaxPlayers,
+   // PlayerTtl/EmptyRoomTtl, the QuantumPlugin) for an ad hoc join/create outside the normal
+   // Quickplay/ConnectToRoomAsync pipeline - that pipeline always does a full (re)connect even when
+   // already connected, which is wrong for a same-session room-to-room hop while already talking to
+   // the master server. Mirrors Photon's own (private) MatchmakingArguments.BuildEnterRoomArgs.
+   private EnterRoomArgs BuildRoomArgs(string roomName)
+   {
+      return new EnterRoomArgs
+      {
+         RoomName = roomName,
+         RoomOptions = new RoomOptions
+         {
+            MaxPlayers = (byte)matchmakingArguments.MaxPlayers,
+            PlayerTtl = matchmakingArguments.PlayerTtlInSeconds * 1000,
+            EmptyRoomTtl = matchmakingArguments.EmptyRoomTtlInSeconds * 1000,
+            Plugins = matchmakingArguments.Plugins,
+         }
+      };
+   }
+
+   // Every client's reaction to StartMatchInNewRoom's event (see OnEvent below): leave the party
+   // room and join/create the fresh match room together, then start simulating immediately - no
+   // PropKeyMatchStarted/cached-event dance needed here, since this room is used for exactly one
+   // SessionRunner ever. PropKeySeed is still written (master-only) purely as a safety net for a
+   // genuine mid-match reconnect later (a real network drop while playing) - StartRunner already
+   // knows how to read it back; the seed is normally carried directly via the event payload instead.
+   private async void MoveToMatchRoomAsync(string matchRoomCode, int seed)
+   {
+      try
+      {
+         await Client.LeaveRoomAsync(becomeInactive: false);
+         await Client.JoinOrCreateRoomAsync(BuildRoomArgs(matchRoomCode));
+      }
+      catch (Exception e)
+      {
+         LogHelper.Error("MatchMaking", $"MoveToMatchRoomAsync: failed to move into match room '{matchRoomCode}': {e}");
+         AlertPopup.Show("Error", "Failed to start the match.", () =>
+         {
+            GameManager.Instance.MainMenuTab.windowManager.ShowWindow<MainMenuWindow>();
+         });
+         return;
+      }
+
+      if (Client.LocalPlayer.IsMasterClient)
+         Client.CurrentRoom?.SetCustomProperties(new PhotonHashtable { { PropKeySeed, seed } });
+
+      RuntimeConfig.Seed = seed;
+      StartRunner();
    }
 
    // Quantum's own SDK code (QuantumCallbackHandler_UnityCallbacks in QuantumUnityRuntime.cs) unloads
@@ -754,7 +879,13 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
             SessionConfig = sessionConfig,
             GameMode = DeterministicGameMode.Multiplayer,
             PlayerCount = OverwritePlayerCount > 0 ? Math.Min(OverwritePlayerCount, Quantum.Input.MAX_COUNT) : Quantum.Input.MAX_COUNT,
-            Communicator = new QuantumNetworkCommunicator(Client)
+            // ShutdownConnectionOptions.None: by default the communicator disconnects the Photon
+            // client itself whenever the runner shuts down (QuantumRunner.ShutdownAll/OnDestroy),
+            // which fired out from under ReturnToPartyLobby's own QuantumRunner.ShutdownAll() call
+            // and raced its SetLocalReady write against an already-Disconnecting client. LeaveMatch
+            // still disconnects explicitly for the real "leave the match" paths, so this only
+            // changes what happens on the runner's OWN shutdown, not on an actual leave/quit.
+            Communicator = new QuantumNetworkCommunicator(Client, ShutdownConnectionOptions.None)
          };
 
          var runner = (QuantumRunner)await SessionRunner.StartAsync(sessionRunnerArguments);
@@ -921,6 +1052,78 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
       Client.Disconnect();
    }
 
+   // Used only by RunResultPopup, where the run has already legitimately ended for everyone -
+   // unlike LeaveMatch's other two callers (GameplayUiController/InMatchWindow's mid-match quit
+   // buttons), where a live match still needs this player's input and an actual disconnect is the
+   // right call.
+   //
+   // Several same-room approaches were tried and rejected before landing on a separate match room
+   // per run (see PartyRoomCode's own comment for the root cause): a full disconnect+later
+   // reconnect is bounded by Photon Cloud's hard 300s EmptyRoomTtl cap; staying silently connected
+   // in the same room left the Quantum plugin's session bookkeeping stale ("Error #52: Snapshot
+   // upload timeout" on the next match); leave-and-rejoin (OpRejoinRoom) itself triggers the
+   // plugin's live-match snapshot machinery ("Error #13: Snapshot request failed to start"); even a
+   // plain leave+join of the SAME room hit the identical Error #13, because the trigger was never
+   // the Photon-level operation at all - it's Quantum's per-room deterministic-session state.
+   //
+   // So: leave the ephemeral MATCH room for good (never rejoined - PlayerTtl/becomeInactive don't
+   // matter here) and join-or-create the party's own room by its remembered code instead. Joining
+   // a room that never ran a Quantum session at all sidesteps the plugin entirely. A plain join
+   // creates a fresh actor, so per-player custom properties don't carry over automatically -
+   // PartyManager.OnJoinedRoom republishes the local character pick for this reason.
+   // Guards against overlapping calls - unlike LeaveMatch's plain Client.Disconnect() (harmless if
+   // called twice), a leave-then-join sequence is NOT safe to run twice concurrently: the second
+   // call's LeaveRoomAsync finds the client already out of the room (the first call already left
+   // it) and throws OperationStartException("Must be inside a room") - observed from a fast
+   // double-click on RunResultPopup's Leave/Continue button, which had no debounce of its own.
+   private bool _returningToPartyLobby;
+
+   public async void ReturnToPartyLobby()
+   {
+      if (_returningToPartyLobby)
+      {
+         LogHelper.Warn("MatchMaking", "ReturnToPartyLobby: already in progress - ignoring the duplicate request.");
+         return;
+      }
+
+      if (GameManager.Instance != null && GameManager.Instance.isPlayingOffline)
+      {
+         LeaveMatch();
+         return;
+      }
+
+      _returningToPartyLobby = true;
+      _runnerStartRequested = false;
+
+      if (QuantumRunner.Default != null)
+         QuantumRunner.ShutdownAll();
+
+      string partyRoomCode = PartyRoomCode;
+
+      try
+      {
+         await Client.LeaveRoomAsync(becomeInactive: false);
+
+         if (!string.IsNullOrEmpty(partyRoomCode))
+            await Client.JoinOrCreateRoomAsync(BuildRoomArgs(partyRoomCode));
+      }
+      catch (Exception e)
+      {
+         LogHelper.Error("MatchMaking", $"ReturnToPartyLobby: failed to return to party room '{partyRoomCode}': {e}");
+         AlertPopup.Show("Error", "Lost connection to the party.", () =>
+         {
+            GameManager.Instance.MainMenuTab.windowManager.ShowWindow<MainMenuWindow>();
+         });
+         return;
+      }
+      finally
+      {
+         _returningToPartyLobby = false;
+      }
+
+      GameManager.Instance.MainMenuTab.windowManager.ShowWindow<MainMenuWindow>();
+   }
+
    public void OnPlayerEnteredRoom(Player newPlayer)
    {
    }
@@ -949,6 +1152,7 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
       StartGame = 110,
       WaitingForPlayers = 111,
       SyncTime = 112,
+      SyncMatchRoom = 113,
    }
 
    public void OnEvent(EventData photonEvent)
@@ -959,8 +1163,14 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
          {
             Client.CurrentRoom.IsVisible = false;
          }
-         
+
          StartRunner();
+      }
+      else if (photonEvent.Code == (byte)PhotonEventCode.SyncMatchRoom)
+      {
+         var data = (PhotonHashtable)photonEvent.CustomData;
+         DesignatedLeaderUserId = (string)data["leader"];
+         MoveToMatchRoomAsync((string)data["room"], (int)data["seed"]);
       }
    }
 
@@ -988,20 +1198,21 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
          $" | instance='{(string.IsNullOrEmpty(LocalClientIdentity.InstanceId) ? "main" : LocalClientIdentity.InstanceId)}'" +
          $" | userId='{matchmakingArguments.UserId}'");
 
-      if (cause != DisconnectCause.DisconnectByClientLogic) {
-         AlertPopup.Show("Disconnected", cause.ToString(), () =>
-         {
-            var mainMenuTab = GameManager.Instance.MainMenuTab;
-            mainMenuTab.windowManager.ShowWindow<MainMenuWindow>();
-         });
-      }
-      else
-      {
-         var mainMenuTab = GameManager.Instance.MainMenuTab;
-         mainMenuTab.windowManager.ShowWindow<MainMenuWindow>();
-      }
-      
-      if( QuantumRunner.Default != null) 
+      // ShowWindow<MainMenuWindow>() has to run unconditionally, and BEFORE the alert below - it's
+      // what actually recovers the screen (WindowManager.ShowWindow hides every other window, which
+      // for InMatchWindow means Hide() re-enabling the menu Canvas it disabled in Show()). The
+      // previous ordering deferred this until the player dismissed the AlertPopup, but AlertPopup's
+      // PopupManager lives under that SAME Canvas - so for any disconnect that wasn't
+      // DisconnectByClientLogic (e.g. the client timing out from being backgrounded/idle a while -
+      // "client inactivity"), the popup asking the player to dismiss it was itself invisible and
+      // unclickable, and the match screen just stayed up forever with the menu Canvas still off.
+      var mainMenuTab = GameManager.Instance.MainMenuTab;
+      mainMenuTab.windowManager.ShowWindow<MainMenuWindow>();
+
+      if (cause != DisconnectCause.DisconnectByClientLogic)
+         AlertPopup.Show("Disconnected", cause.ToString());
+
+      if (QuantumRunner.Default != null)
          QuantumRunner.ShutdownAll();
    }
 

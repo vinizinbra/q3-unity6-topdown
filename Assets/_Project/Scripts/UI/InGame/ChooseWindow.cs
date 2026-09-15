@@ -416,6 +416,7 @@ public class ChooseWindow : UiWindow
             return;
 
         secondaryButton.gameObject.SetActive(active);
+        secondaryButton.interactable = true;
 
         if (active && _secondaryButtonText != null)
             _secondaryButtonText.text = label;

@@ -40,6 +40,12 @@ public class PartyManager : PgSingleton<PartyManager>, IInRoomCallbacks, IMatchm
     private bool _autoStartWhenRoomReady;
     private bool _lastAllOthersReady;
 
+    // Set the moment this client sees SyncMatchRoom (see OnEvent below) - everyone in the party
+    // room is about to leave it together to move into the fresh match room, so the OnPlayerLeftRoom
+    // churn that follows for whichever clients transition first is expected, not someone actually
+    // leaving the party. Cleared once this client itself lands in a room again (see OnJoinedRoom).
+    private bool _suppressRosterToasts;
+
     protected override void Awake()
     {
         base.Awake();
@@ -85,15 +91,41 @@ public class PartyManager : PgSingleton<PartyManager>, IInRoomCallbacks, IMatchm
     private void BeginConnect(string roomCode)
     {
         MatchMakingConfig.Instance.matchMakingType = MatchMakingConfig.MatchMakingType.CUSTOM;
+        // Remembered so ReturnToPartyLobby/MoveToMatchRoomAsync can tell the party's own room
+        // apart from whatever single-use match room a run is currently played in - see
+        // MatchMakingConfig.PartyRoomCode's own comment.
+        MatchMakingConfig.Instance.PartyRoomCode = roomCode;
         SetPhase(PartyPhase.Connecting);
         MatchMakingConfig.Instance.Quickplay(roomCode);
     }
 
-    public void LeaveParty()
+    // Deliberately a graceful room leave (LeaveRoomAsync, becomeInactive: false), not the old
+    // Client.Disconnect(): a full peer disconnect leaves this actor marked INACTIVE in the room
+    // (PlayerTtl > 0 here, for the reconnect feature) for up to 5 minutes instead of actually
+    // removing it, and a re-connect right after (e.g. quickly Create -> Leave -> Create again)
+    // reused the SAME underlying peer/UserId before that inactive reservation cleared - observed as
+    // Photon.Realtime.OperationException: "Found inactive UserId '...', but not rejoining
+    // (JoinMode=1)" (ErrorCode.JoinFailedFoundInactiveJoiner) on the next Connect(). A proper room
+    // leave removes the actor immediately instead of leaving a stale reservation behind, and stays
+    // connected to the master server the whole time - same pattern as ReturnToPartyLobby/
+    // MoveToMatchRoomAsync.
+    public async void LeaveParty()
     {
         MatchMakingConfig.Instance.CleanReconnectConfig();
-        MatchMakingConfig.Instance.Client?.Disconnect();
         SetPhase(PartyPhase.JoinCreateChoice);
+
+        var client = MatchMakingConfig.Instance.Client;
+        if (client == null || !client.InRoom)
+            return;
+
+        try
+        {
+            await client.LeaveRoomAsync(becomeInactive: false);
+        }
+        catch (Exception e)
+        {
+            LogHelper.Error("MatchMaking", $"LeaveParty: LeaveRoomAsync failed: {e}");
+        }
     }
 
     public void SetLocalCharacter(string characterId)
@@ -147,7 +179,7 @@ public class PartyManager : PgSingleton<PartyManager>, IInRoomCallbacks, IMatchm
     public void StartRun()
     {
         if (!IsPartyLeader) return;
-        MatchMakingConfig.Instance.StartQuantumGame();
+        MatchMakingConfig.Instance.StartMatchInNewRoom();
     }
 
     private void CheckAllReadyToast()
@@ -185,11 +217,36 @@ public class PartyManager : PgSingleton<PartyManager>, IInRoomCallbacks, IMatchm
     public void OnFriendListUpdate(List<FriendInfo> friendList) { }
 
     public void OnCreatedRoom() { }
-    public void OnJoinedRoom() => HandleJoinedOrCreated();
+
+    public void OnJoinedRoom()
+    {
+        _suppressRosterToasts = false;
+
+        // Republish on EVERY join/rejoin - the party room AND the ephemeral match room
+        // (MatchMakingConfig.MoveToMatchRoomAsync/ReturnToPartyLobby both do a genuine leave+join,
+        // never a Photon rejoin, so each one creates a brand new actor with no custom properties
+        // carried over from the last room). LocalCharacterId survives as plain local state (see its
+        // own comment) specifically so this can restore it regardless of which room this is -
+        // StartRunner's AddLocalPlayers needs this property set even when landing straight in the
+        // match room, not just for the party lobby roster display.
+        if (!string.IsNullOrEmpty(LocalCharacterId))
+            SetLocalCharacter(LocalCharacterId);
+
+        HandleJoinedOrCreated();
+    }
 
     private void HandleJoinedOrCreated()
     {
         if (!IsPartyMatchType) return;
+        // Landing in the ephemeral match room, not the party room - nothing here is party/lobby
+        // UI's business (ready state, toasts, roster) since that room never shows this UI at all.
+        if (!MatchMakingConfig.Instance.IsInPartyRoom) return;
+
+        // Hands leadership back to whoever led the party into the match that just ended, if the
+        // party room got destroyed/recreated (a long match empties it past EmptyRoomTtl) and
+        // Photon's own default election gave it to whoever got back first instead. See its own
+        // comment - a no-op for anyone except the one client whose UserId actually matches.
+        MatchMakingConfig.Instance.ReclaimLeadershipIfNeeded();
 
         SetPhase(PartyPhase.InRoom);
         _lastAllOthersReady = false;
@@ -252,6 +309,8 @@ public class PartyManager : PgSingleton<PartyManager>, IInRoomCallbacks, IMatchm
 
     public void OnPlayerEnteredRoom(Player newPlayer)
     {
+        if (!MatchMakingConfig.Instance.IsInPartyRoom) return;
+
         ToastManager.Instance?.Show($"{newPlayer.NickName} joined");
         CheckAllReadyToast();
         OnRosterChanged?.Invoke();
@@ -259,6 +318,9 @@ public class PartyManager : PgSingleton<PartyManager>, IInRoomCallbacks, IMatchm
 
     public void OnPlayerLeftRoom(Player otherPlayer)
     {
+        if (!MatchMakingConfig.Instance.IsInPartyRoom) return;
+        if (_suppressRosterToasts) return;
+
         ToastManager.Instance?.Show($"{otherPlayer.NickName} left");
         CheckAllReadyToast();
         OnRosterChanged?.Invoke();
@@ -268,15 +330,23 @@ public class PartyManager : PgSingleton<PartyManager>, IInRoomCallbacks, IMatchm
 
     public void OnPlayerPropertiesUpdate(Player targetPlayer, PhotonHashtable changedProps)
     {
+        if (!MatchMakingConfig.Instance.IsInPartyRoom) return;
+
         CheckAllReadyToast();
         OnRosterChanged?.Invoke();
     }
 
     public void OnMasterClientSwitched(Player newMasterClient)
     {
+        if (!MatchMakingConfig.Instance.IsInPartyRoom) return;
+
         CheckAllReadyToast();
         OnRosterChanged?.Invoke();
     }
 
-    public void OnEvent(EventData photonEvent) { }
+    public void OnEvent(EventData photonEvent)
+    {
+        if (photonEvent.Code == (byte)MatchMakingConfig.PhotonEventCode.SyncMatchRoom)
+            _suppressRosterToasts = true;
+    }
 }

@@ -137,4 +137,32 @@ public class CharacterCatalog : ScriptableObject
         displayName = null;
         return false;
     }
+
+    // Reverse of TryResolveRingColor's own id -> CharacterData path above - given the
+    // AssetRef<CharacterData> a running player actually has equipped (CharacterStats.CharacterData,
+    // read from the live simulation), finds which catalog entry it belongs to and returns that
+    // entry's own authored displayName. Used by RunResultManager's end-of-run team breakdown, which
+    // only ever has the CharacterData a player is running, not the catalog id it was selected from.
+    public bool TryGetDisplayNameForCharacterData(AssetRef<CharacterData> characterData, out string displayName)
+    {
+        displayName = null;
+
+        foreach (var entry in characters)
+        {
+            if (entry.viewPrefab == null)
+                continue;
+
+            var stats = entry.viewPrefab.GetComponent<QPrototypeCharacterStats>();
+            if (stats == null)
+                continue;
+
+            if (stats.Prototype.CharacterData.Id == characterData.Id)
+            {
+                displayName = entry.displayName;
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

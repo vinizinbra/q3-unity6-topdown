@@ -8,8 +8,9 @@ using UnityEngine.UI;
 // found by RunResultManager via InMatchPopupManager.Open<RunResultPopup>() and populated through
 // Setup() right after. winRoot/loseRoot are toggled by which one actually happened; everything
 // else (kill/damage/downed/Rift Shards, the optional team-damage breakdown) is shared. Both
-// buttons do the same thing (MatchMakingConfig.LeaveMatch) - see RunResultManager for why there
-// are two identical actions.
+// buttons do the same thing (MatchMakingConfig.ReturnToPartyLobby, NOT LeaveMatch - the run is
+// already over here, so this keeps the party together in the lobby instead of disconnecting
+// everyone) - see RunResultManager for why there are two identical actions.
 public class RunResultPopup : UiPopup
 {
     [Header("Win / Lose")]
@@ -28,6 +29,10 @@ public class RunResultPopup : UiPopup
     [SerializeField] private GameObject teamDamageRoot;
     [SerializeField] private Transform teamDamageContainer;
     [SerializeField] private TeamDamageWidget teamDamageWidgetPrefab;
+    // The whole team's summed damage - the common damageDealtText above is THIS CLIENT's own
+    // personal damage (see RunResultManager.ShowResult), never a team sum, so co-op needs this
+    // separate text to show the aggregate the per-player breakdown rows are each a percentage of.
+    [SerializeField] private TMP_Text teamDamageDealtText;
 
     [Header("Buttons")]
     [SerializeField] private Button backToMenuButton;
@@ -104,6 +109,9 @@ public class RunResultPopup : UiPopup
         for (int i = 0; i < teamResults.Count; i++)
             teamTotal += teamResults[i].DamageDealt;
 
+        if (teamDamageDealtText != null)
+            teamDamageDealtText.text = TeamDamageWidget.FormatCompact(teamTotal.AsFloat);
+
         var sorted = new List<PlayerResult>(teamResults);
         sorted.Sort((a, b) => b.DamageDealt.AsFloat.CompareTo(a.DamageDealt.AsFloat));
 
@@ -111,12 +119,17 @@ public class RunResultPopup : UiPopup
         {
             TeamDamageWidget row = Instantiate(teamDamageWidgetPrefab, teamDamageContainer);
             // Instantiate copies the source's active state - lets teamDamageWidgetPrefab be
-            // authored as a disabled template living right inside this same popup prefab (a
-            // separate standalone prefab asset works too, this just makes either choice safe).
+            // authored as a normal, enabled child living right inside this same popup prefab (a
+            // separate standalone prefab asset works too) rather than requiring it be manually set
+            // inactive beforehand.
             row.gameObject.SetActive(true);
             row.Setup(result.HeroName, result.DamageDealt, teamTotal, result.HeroColor);
             _spawnedRows.Add(row);
         }
+
+        // The template itself is never one of the real rows above - hide it now that every actual
+        // player's clone has been spawned, so it doesn't sit there as a stray extra row.
+        teamDamageWidgetPrefab.gameObject.SetActive(false);
     }
 
     private static string FormatTime(FP seconds)
@@ -129,6 +142,6 @@ public class RunResultPopup : UiPopup
 
     private void OnLeaveClicked()
     {
-        MatchMakingConfig.Instance.LeaveMatch();
+        MatchMakingConfig.Instance.ReturnToPartyLobby();
     }
 }

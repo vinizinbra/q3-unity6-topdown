@@ -113,8 +113,14 @@ public class MainMenuWindow : UiWindow
         {
             // Show the loading screen immediately on click, not just once StartRunner() eventually
             // runs after the room-create + StartGame event round-trip - that gap is otherwise an
-            // unresponsive-looking party screen.
-            GameManager.Instance.MainMenuTab.windowManager.ShowWindow<ConnectingWindow>();
+            // unresponsive-looking party screen. LoadingWindow, not ConnectingWindow: StartRun/
+            // QuickStartSolo now genuinely leaves the party room to move into a fresh match room
+            // (see MatchMakingConfig.MoveToMatchRoomAsync) - ConnectingWindow's IMatchmakingCallbacks.
+            // OnLeftRoom treats ANY room leave as an unexpected disconnect ("Left the room
+            // unexpectedly") and would tear the connection down over our own intentional leave.
+            // LoadingWindow doesn't register room callbacks, and StartRunner shows it again anyway
+            // once the match room is actually joined, so re-showing it here is harmless.
+            GameManager.Instance.MainMenuTab.windowManager.ShowWindow<LoadingWindow>();
             PartyManager.Instance.QuickStartSolo();
             return;
         }
@@ -123,11 +129,9 @@ public class MainMenuWindow : UiWindow
         {
             if (PartyManager.Instance.AllOthersReady())
             {
-                // Same reasoning as above - show it now, for the leader, rather than waiting on the
-                // StartGame event to round-trip back before anything visibly happens. Every other
-                // party member still gets it the moment their own client receives that event, via
-                // StartRunner() itself.
-                GameManager.Instance.MainMenuTab.windowManager.ShowWindow<ConnectingWindow>();
+                // Same reasoning as above (LoadingWindow, not ConnectingWindow) - the leader's own
+                // StartRun call leaves the party room too, which ConnectingWindow would misreport.
+                GameManager.Instance.MainMenuTab.windowManager.ShowWindow<LoadingWindow>();
                 PartyManager.Instance.StartRun();
             }
             else
@@ -143,6 +147,17 @@ public class MainMenuWindow : UiWindow
 
     private void Practice()
     {
+        // Offline mode starts a whole separate local session (MatchMakingConfig.StartOfflineRunner)
+        // alongside the still-live party room connection rather than replacing it - the party's
+        // reconnect state, ready flags, etc. keep sitting there and the click looked like it just
+        // silently did nothing. Leaving the party first is what LeaveParty already does cleanly, so
+        // point the player at it instead.
+        if (PartyManager.Instance.InParty)
+        {
+            ToastManager.Instance?.Show("Leave your party before playing offline.");
+            return;
+        }
+
         GameManager.Instance.PlayOffline();
     }
 }

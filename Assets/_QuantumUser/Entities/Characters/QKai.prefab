@@ -601,6 +601,10 @@ MonoBehaviour:
       RawValue: 0
     AirborneSource:
       Value: 0
+    WasManualJump:
+      Value: 0
+    WaterEdgeHesitationTimer:
+      RawValue: 0
 --- !u!114 &-3971490095111579385
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -724,6 +728,7 @@ MonoBehaviour:
   landSoundFullImpactSpeed: 12
   footstepSound: {fileID: 11400000, guid: f45b5bdb36bed489aba3b5ebc3737d42, type: 2}
   footstepDistance: 2.2
+  charView: {fileID: 0}
 --- !u!114 &3238834508286719383
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -774,7 +779,7 @@ MonoBehaviour:
   Prototype:
     WeaponData:
       Id:
-        Value: 486587533721559972
+        Value: 0
     Perks:
     - Id:
         Value: 0
@@ -797,6 +802,8 @@ MonoBehaviour:
       RawValue: 0
     FireCooldownMultiplier:
       RawValue: 0
+    CheatManualFire:
+      Value: 0
     Level: 0
     FireCooldownTimer:
       RawValue: 0
@@ -865,6 +872,7 @@ MonoBehaviour:
   - {fileID: 2122246373314282177}
   - {fileID: 2478946807483062429}
   fxConfig: {fileID: 11400000, guid: 31188256ea82a4f46b281957faaa078d, type: 2}
+  mainBodySprite: {fileID: 0}
   flashColor: {r: 1, g: 1, b: 1, a: 1}
   burnFlashColor: {r: 1, g: 0.45, b: 0.1, a: 1}
   recoverFlashColor: {r: 0, g: 1, b: 1, a: 1}
@@ -873,17 +881,20 @@ MonoBehaviour:
   frontalReducedFlashColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   restColor: {r: 1, g: 1, b: 1, a: 0}
   duration: 0.2
+  joltPunchScaleStrength: {x: 0.08, y: 0.08, z: 0}
+  joltPunchScaleDuration: 0.15
+  joltPunchScaleFrequency: 20
   healFlashColor: {r: 0.4, g: 1, b: 0.4, a: 1}
   shieldFlashColor: {r: 0.4, g: 0.75, b: 1, a: 1}
   deathColor: {r: 0, g: 0, b: 0, a: 0.5}
-  riftMarkMaterial: {fileID: 0}
-  riftMarkApplicationFlashColor: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
-  riftMarkApplicationFlashDuration: 0.08
   expPickupFlashColor: {r: 0.3, g: 0.55, b: 1, a: 0.35}
   coinPickupFlashColor: {r: 1, g: 0.84, b: 0.2, a: 0.35}
   riftShardPickupFlashColor: {r: 1, g: 0.35, b: 0.75, a: 0.35}
   scrapPickupFlashColor: {r: 0.95, g: 0.6, b: 0.25, a: 0.35}
   pickupFlashDuration: 0.35
+  fireRestTint: {r: 1, g: 0.55, b: 0.2, a: 1}
+  iceRestTint: {r: 0.4, g: 0.9, b: 1, a: 1}
+  lightningRestTint: {r: 1, g: 0.9, b: 0.3, a: 1}
   freezeMaterial: {fileID: 0}
 --- !u!114 &8110188611109955938
 MonoBehaviour:
@@ -1173,6 +1184,12 @@ MonoBehaviour:
       RawValue: 0
     RiftShards:
       RawValue: 0
+    RiftShardsEarned:
+      RawValue: 0
+    MonstersKilled: 0
+    DamageDealt:
+      RawValue: 0
+    TimesDowned: 0
     WeaponTalentLevel: 0
     ShopWeaponOfferCount: 0
     RerollQuantity: 0
@@ -1240,30 +1257,6 @@ MonoBehaviour:
     AccessoryBlockResetsDash:
       Value: 0
     AccessoryBlockSkillCooldownFraction:
-      RawValue: 0
-    HasCriticalFractureMutation:
-      Value: 0
-    HasSkillFractureMutation:
-      Value: 0
-    HasRiftDashMutation:
-      Value: 0
-    HasHeavyFractureMutation:
-      Value: 0
-    HasCloseFractureMutation:
-      Value: 0
-    HasLongFractureMutation:
-      Value: 0
-    HasExecutionFractureMutation:
-      Value: 0
-    HasFirstContactMutation:
-      Value: 0
-    HasFracturedPresenceMutation:
-      Value: 0
-    HasOverflowingRiftMutation:
-      Value: 0
-    HasLastStandMutation:
-      Value: 0
-    LastStandCooldownRemaining:
       RawValue: 0
 --- !u!114 &8215253040534427600
 MonoBehaviour:
@@ -1558,6 +1551,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Quantum.Unity::Quantum.QPrototypeStatusEffects
   Prototype:
+    FirstElementApplied:
+      Value: 0
     BurnRemaining:
       RawValue: 0
     BurnTickTimer:
@@ -1567,44 +1562,43 @@ MonoBehaviour:
     BurnOwner: {fileID: 0}
     BurnSource:
       Value: 0
-    RiftMarkStacks: 0
-    RiftMarkRemaining:
+    ElectrifiedRemaining:
       RawValue: 0
-    RiftMarkReactionLockoutRemaining:
+    ElectrifiedJoltTimer:
       RawValue: 0
-    DetonationCooldownRemaining:
+    StaggerRemaining:
       RawValue: 0
-    DeepFreezeCooldownRemaining:
+    ThermalShockCooldownRemaining:
       RawValue: 0
     OverloadCooldownRemaining:
       RawValue: 0
-    RuptureCooldownRemaining:
+    ShatterCooldownRemaining:
       RawValue: 0
-    SingularityCooldownRemaining:
+    OverloadChainHopTimer:
       RawValue: 0
-    MarkApplicationCooldowns:
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    FirstContactTriggered:
+    OverloadChainHopsRemaining: 0
+    OverloadChainOwner: {fileID: 0}
+    OverloadChainSource:
       Value: 0
-    OverflowingRiftCooldownRemaining:
+    OverloadChainPosition:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
+    OverloadChainVisited:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    OverloadChainVisitedCount: 0
+    OverloadChainCurrentDamage:
       RawValue: 0
-    FracturedPresenceExposedBy:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    FracturedPresenceExposureTime:
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
     IceRemaining:
       RawValue: 0
     IceSpeedMultiplier:
@@ -22796,6 +22790,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: PlayerEffects
       objectReference: {fileID: 0}
+    - target: {fileID: 4899901628646550216, guid: 95a3634ae517a460cb68deae3f0770d3, type: 3}
+      propertyPath: heroSkillSound
+      value: 
+      objectReference: {fileID: 11400000, guid: 6aee5aaf476ac4c4e87dcdafe989e947, type: 2}
     - target: {fileID: 5292615511809375842, guid: 95a3634ae517a460cb68deae3f0770d3, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

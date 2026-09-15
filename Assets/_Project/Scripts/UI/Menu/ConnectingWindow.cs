@@ -14,6 +14,14 @@ public class ConnectingWindow : UiWindow,IMatchmakingCallbacks
     public override void Show()
     {
         base.Show();
+        // Defensive dedup: if Show() is ever called twice without an intervening Hide() (two
+        // overlapping reconnect attempts, for instance), AddCallbackTarget would register this
+        // instance twice - a single later Hide()/RemoveCallbackTarget only strips ONE of those
+        // registrations, leaving this window permanently subscribed to OnLeftRoom (and everything
+        // else) for the rest of the session, silently misreporting any later, unrelated room leave
+        // as "Left the room unexpectedly". Removing first makes this idempotent no matter how many
+        // times Show() fires without a matching Hide().
+        MatchMakingConfig.Instance.Client.RemoveCallbackTarget(this);
         MatchMakingConfig.Instance.Client.AddCallbackTarget(this);
     }
 

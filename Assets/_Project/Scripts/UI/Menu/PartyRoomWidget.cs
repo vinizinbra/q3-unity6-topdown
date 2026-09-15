@@ -51,6 +51,9 @@ public class PartyRoomWidget : MonoBehaviour
         createButton.onClick.AddListener(CreateClicked);
         joinButton.onClick.AddListener(JoinClicked);
         leaveButton.onClick.AddListener(LeaveClicked);
+        // TMP_InputField's own submit event (Enter/Return while the field is focused) - lets a
+        // player type a code and hit Enter instead of having to reach for the Join button.
+        roomCodeInput.onSubmit.AddListener(HandleRoomCodeSubmit);
 
         // Character selection isn't tied to being in a room - populate/wire the dropdown once,
         // up front, so a player can pick their character on the join/create panel too, not just
@@ -65,6 +68,7 @@ public class PartyRoomWidget : MonoBehaviour
         createButton.onClick.RemoveListener(CreateClicked);
         joinButton.onClick.RemoveListener(JoinClicked);
         leaveButton.onClick.RemoveListener(LeaveClicked);
+        roomCodeInput.onSubmit.RemoveListener(HandleRoomCodeSubmit);
 
         if (PartyManager.Instance == null) return;
         PartyManager.Instance.OnPhaseChanged -= HandlePhaseChanged;
@@ -75,6 +79,14 @@ public class PartyRoomWidget : MonoBehaviour
     {
         if (connectingPanel.activeSelf)
             connectingText.text = MatchMakingConfig.Instance.Client.State.ToString();
+    }
+
+    // Ignores an empty field rather than joining with a blank code - onSubmit still fires on Enter
+    // even with nothing typed.
+    private void HandleRoomCodeSubmit(string _)
+    {
+        if (HasPendingRoomCode)
+            JoinClicked();
     }
 
     private void CreateClicked() => PartyManager.Instance.CreateParty();
@@ -148,7 +160,10 @@ public class PartyRoomWidget : MonoBehaviour
         {
             roomCodeText.text = room.Name;
             regionText.text = client.CurrentRegion.ToUpper();
-            playerCountText.text = $"{room.PlayerCount}/{room.MaxPlayers}";
+            // room.PlayerCount is a raw Players.Count - same PlayerTtl inactive-actor issue as the
+            // roster below, so it can't be used directly here either without showing a stale total.
+            int activeCount = room.Players.Count(kv => kv.Value.IsInactive == false);
+            playerCountText.text = $"{activeCount}/{room.MaxPlayers}";
         }
 
         _remotePlayers.Clear();
@@ -156,22 +171,20 @@ public class PartyRoomWidget : MonoBehaviour
         {
             foreach (var kv in room.Players)
             {
-                if (kv.Value.ActorNumber != localPlayer.ActorNumber)
+                // Rooms here run with a PlayerTtl (see MatchMakingConfig) so a reconnect can resume
+                // a dropped session - which means a player who disconnects or explicitly leaves
+                // isn't actually removed from Room.Players, just flagged IsInactive, for the whole
+                // TTL window. Without this check their row/character preview stayed put looking
+                // connected until that TTL finally expired server-side, regardless of whether they
+                // were ever coming back.
+                if (kv.Value.ActorNumber != localPlayer.ActorNumber && kv.Value.IsInactive == false)
                     _remotePlayers.Add(kv.Value);
             }
 
             _remotePlayers.Sort((a, b) => a.ActorNumber.CompareTo(b.ActorNumber));
         }
 
-        int slot = 0;
-
-        if (localPlayer != null && slot < playerWidgets.Length)
-        {
-            // The character comes from PartyManager's own mirror rather than the Photon property,
-            // which isn't written yet while there's no room to write it into - see LocalCharacterId.
-            SetupSlot(slot, DisplayNameFor(localPlayer), localPlayer, PartyManager.Instance.LocalCharacterId);
-            slot++;
-        }
+        int slot = SetupLocalSlot(localPlayer);
 
         for (int i = 0; i < _remotePlayers.Count && slot < playerWidgets.Length; i++, slot++)
         {
@@ -181,6 +194,23 @@ public class PartyRoomWidget : MonoBehaviour
         }
 
         ClearSlotsFrom(slot);
+    }
+
+    // Fills slot 0 with your own card off Client.LocalPlayer - a connection-level identity that
+    // exists as soon as you're connected to Photon at all, independent of being in any room - so
+    // the main menu shows your card while solo rather than an empty box you only populate by
+    // creating a room. Shared by RefreshRoster and ClearRoster (see its own comment for why
+    // ClearRoster needs this instead of just calling RefreshRoster). Returns the next free slot
+    // index: 1 if filled, 0 if there's no local player yet (before ever connecting).
+    private int SetupLocalSlot(Player localPlayer)
+    {
+        if (localPlayer == null || playerWidgets.Length == 0)
+            return 0;
+
+        // The character comes from PartyManager's own mirror rather than the Photon property,
+        // which isn't written yet while there's no room to write it into - see LocalCharacterId.
+        SetupSlot(0, DisplayNameFor(localPlayer), localPlayer, PartyManager.Instance.LocalCharacterId);
+        return 1;
     }
 
     private void SetupSlot(int index, string playerName, Player player, string characterId)
@@ -203,12 +233,26 @@ public class PartyRoomWidget : MonoBehaviour
         return string.IsNullOrEmpty(player.NickName) ? "You" : player.NickName;
     }
 
-    // Leaving a party doesn't empty the whole roster any more - slot 0 is still you. Rebuild it
-    // instead, which fills your own card and clears the teammate slots behind it.
+    // Deliberately does NOT call RefreshRoster/read Client.CurrentRoom's Players for the teammate
+    // slots - Disconnect()/LeaveRoom() is async, so right after LeaveParty() fires this,
+    // CurrentRoom can still briefly be the OLD room with every old party mate still marked active
+    // (nobody else's IsInactive flips just because I'm the one leaving), which would just
+    // repopulate the exact roster this is meant to clear. And because this phase change already
+    // flips Phase to JoinCreateChoice, PartyManager's later, ACCURATE OnLeftRoom/OnDisconnected
+    // never gets a second chance to retrigger it (Phase is already what it's guarding for). So:
+    // once we're leaving InRoom, there are no teammates from the UI's perspective, full stop -
+    // wipe every teammate slot, including its CharacterPreviewWidget, which parks its instantiated
+    // hero at its own stage outside this panel's hierarchy and would otherwise go on rendering
+    // former party mates in the 3D scene even with roomPanel hidden. Slot 0 still goes through
+    // SetupLocalSlot though, same as RefreshRoster - Client.LocalPlayer isn't room state, so it's
+    // not subject to the same staleness, and clearing it too would blank out the main menu's own
+    // "you, solo" card the moment the game opens (Phase starts at JoinCreateChoice).
     private void ClearRoster()
     {
         _remotePlayers.Clear();
-        RefreshRoster();
+
+        var localPlayer = MatchMakingConfig.Instance != null ? MatchMakingConfig.Instance.Client?.LocalPlayer : null;
+        ClearSlotsFrom(SetupLocalSlot(localPlayer));
     }
 
     // Setup with an empty name is a slot's "nobody here" state - it swaps to the inactive visual
