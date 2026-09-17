@@ -178,8 +178,10 @@ distinguish temporary points from `Max` — otherwise regen refills them for fre
 ### 5. Status effects
 
 Crowd Breaker needs slow/stun/root/push/pull to *be* something; Focus Fire needs an Exposed state.
-This is the status system already deferred once (see `CharacterStats.ElementalChance`, which is
-seeded but has no consumer for exactly this reason).
+This is the status system already deferred once - this doc predates it; the actual status system
+(Burn/Chill/Freeze/Shock/Stun/Root/etc.) has since shipped, see docs/elemental-reactions.md.
+(`CharacterStats.ElementalChance`, the field this section used to point to, has since been retired
+entirely - elemental status now applies unconditionally.)
 
 ## Answering "what do we add to CharacterStats?"
 

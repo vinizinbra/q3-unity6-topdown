@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed1c0aecdc0504be78c2e4e3e00d0195, type: 3}
+  m_Name: PixieHeavyMastery
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.PixieHeavyMasteryData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Pixie/Pixie_PassiveSkill/Pixie_PassiveSkillUpgrades/PixieHeavyMastery
+    Guid:
+      Value: 385832167540444458
+  Icon: {fileID: 0}
+  DisplayName: Heavy Weapon Mastery
+  Description: Pixie's Heavy weapons hit harder, and at rank 3, hit a wider area
+    - ballistic Heavy weapons also convert to direct-flying rockets.
+  <MaxRank>k__BackingField: 3
+  RankDescriptions:
+  - +<color=#FD3971>15%</color> Heavy Weapon Damage.
+  - +<color=#FD3971>30%</color> Heavy Weapon Damage.
+  - +<color=#FD3971>50%</color> Heavy Weapon Damage. Heavy weapon attacks hit in
+    a <color=#FD3971>2m</color> wider area. A ballistic Heavy weapon's shots become
+    fast, direct-flying rockets that explode on impact.
+  Weight: 2
+  DamageMultiplierPerRank:
+  - RawValue: 9830
+  - RawValue: 19661
+  - RawValue: 32768
+  RocketMovement:
+    Id:
+      Value: 1231536792967838170
+  ExtraRadius:
+    RawValue: 98304

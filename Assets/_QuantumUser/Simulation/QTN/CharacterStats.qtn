@@ -18,8 +18,6 @@ component CharacterStats
     FP CriticalChance;
     FP CriticalDamageMultiplier;
 
-    FP ElementalChance;
-
     FP AttackSpeedMultiplier;
     FP ReloadSpeedMultiplier;
 
@@ -153,8 +151,8 @@ component CharacterStats
     // Incremented/decremented by any active effect (e.g. BerserkSkillData) that guarantees Burn
     // on every weapon hit for as long as it's up - a counter rather than a bool so two overlapping
     // grants can't have one's End wipe out the other's still-active one. Checked in
-    // StatusEffectUtility.TryApplyElementalStatus, independent of the weapon's own Element and
-    // ElementalChance roll - a flat guarantee, not a proc chance.
+    // StatusEffectUtility.TryApplyElementalStatus, independent of the weapon's own Element - a flat
+    // guarantee, not a proc chance.
     Byte BurnOnHitStacks;
 
     // Rift Mutation reactive fields - all mutation-only (no CharacterData baseline, default to

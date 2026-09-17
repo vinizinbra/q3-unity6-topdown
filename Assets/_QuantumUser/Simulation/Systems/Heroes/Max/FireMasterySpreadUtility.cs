@@ -27,7 +27,7 @@ namespace Quantum
 
             for (int i = 0; i < targets.Count; i++)
             {
-                StatusEffectUtility.ApplyBurn(f, targets[i], burnDuration, burnIntensity, owner, DamageSource.Skill, config.TickInterval);
+                StatusEffectUtility.ApplyBurn(f, targets[i], burnDuration, burnIntensity, owner, DamageSource.Skill, config.TickInterval, config.BurnMaxStacks);
             }
         }
     }

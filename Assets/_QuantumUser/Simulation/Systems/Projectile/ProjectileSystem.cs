@@ -50,6 +50,14 @@ namespace Quantum
             }
         }
 
+        // A single tick's move budget can still hold more than one contact - a Pierce/Ricochet that
+        // lands within whatever distance is left over (a close bounce target, a tight cluster) needs
+        // its own swept check against that remainder, or a fast shot sails clean through it and only
+        // gets tested again next tick, from a position already several units past wherever that close
+        // target stood. Just a hard backstop - RemainingPierces/RemainingBounces already cap how many
+        // contacts a shot can actually resolve, so this should never be the thing that ends the loop.
+        private const int MaxSegmentsPerTick = 8;
+
         public override void Update(Frame f, ref Filter filter)
         {
             if (filter.Projectile->RemainingSpawnDelay > FP._0)
@@ -82,59 +90,93 @@ namespace Quantum
             FPVector3 moveDelta = filter.Projectile->Velocity * filter.Projectile->SpeedMultiplier * f.DeltaTime;
             FP travelDistance = moveDelta.Magnitude;
 
-            if (travelDistance > FP._0)
+            if (travelDistance <= FP._0)
             {
-                filter.Projectile->TraveledDistance += travelDistance;
+                TryExpire(f, ref filter);
+                return;
+            }
 
-                FPVector3 origin = filter.Transform3D->Position;
-                FPVector3 direction = moveDelta / travelDistance;
+            filter.Projectile->TraveledDistance += travelDistance;
 
-                // Excludes the IgnoreProjectile layer so a projectile passes through an entity on
-                // it instead of being consumed on contact for zero damage.
-                int hitMask = -1 & ~EnemyMovementUtility.GetIgnoreProjectileLayerMask(f);
-                Hit3D? hit = CastForHit(f, filter.Projectile->Owner, origin, direction, travelDistance, hitMask, projectileData.HitRadius);
+            FPVector3 origin = filter.Transform3D->Position;
+            FPVector3 direction = moveDelta / travelDistance;
+            FP remainingDistance = travelDistance;
 
-                if (hit.HasValue == true)
+            // Excludes the IgnoreProjectile layer so a projectile passes through an entity on it
+            // instead of being consumed on contact for zero damage.
+            int hitMask = -1 & ~EnemyMovementUtility.GetIgnoreProjectileLayerMask(f);
+
+            for (int segment = 0; segment < MaxSegmentsPerTick; segment++)
+            {
+                Hit3D? hit = CastForHit(f, filter.Projectile->Owner, origin, direction, remainingDistance, hitMask, projectileData.HitRadius);
+
+                if (hit.HasValue == false)
                 {
-                    FPVector3 hitPoint = ResolveHitPoint(origin, moveDelta, hit.Value);
-                    bool wasGrounded = filter.Projectile->Grounded;
-                    bool isSpent = hitData.ApplyHit(f, filter.Entity, filter.Projectile, hit.Value.Entity, hitPoint);
+                    Advance(filter.Transform3D, origin + direction * remainingDistance, direction);
+                    TryExpire(f, ref filter);
+                    return;
+                }
 
-                    if (isSpent == false)
-                    {
-                        // A hit that just settled it (AreaHitData.Settle, e.g. a fused bomb ignoring
-                        // level geometry) stops exactly at the hit point instead of still covering
-                        // the rest of this tick's moveDelta - otherwise it overshoots into whatever
-                        // it landed on by however far its fall speed carried it that tick, which is
-                        // enough to visibly punch through a thin floor. Anything that stays ungrounded
-                        // (a pierce) keeps the full move, since it's meant to fly on past the hit.
-                        // hitPoint is the bare raycast surface - ResolveRestOffset lifts a pivot-at-
-                        // center model back up so it visibly sits on top of the ground instead of
-                        // embedding into it.
-                        bool justGrounded = wasGrounded == false && filter.Projectile->Grounded == true;
-                        FPVector3 destination = justGrounded == true
-                            ? hitPoint + FPVector3.Up * ResolveRestOffset(f, filter.Entity, hitData)
-                            : origin + moveDelta;
+                FPVector3 hitPoint = ResolveHitPoint(origin, direction * remainingDistance, hit.Value);
+                bool wasGrounded = filter.Projectile->Grounded;
+                bool isSpent = hitData.ApplyHit(f, filter.Entity, filter.Projectile, hit.Value.Entity, hitPoint);
 
-                        Advance(filter.Transform3D, destination, direction);
-
-                        // A fused area bomb (AreaHitData.PlantedFuseTime > 0) doesn't detonate off
-                        // whatever's left of its own flight-time budget - it plants here with a
-                        // fresh, fixed fuse. See TryPlant.
-                        if (justGrounded == true && TryPlant(f, ref filter, projectileData, hitData as AreaHitData, destination))
-                            return;
-
-                        TryExpire(f, ref filter);
-                        return;
-                    }
-
+                if (isSpent == true)
+                {
                     Destroy(f, filter.Entity, filter.Projectile, hitPoint);
                     return;
                 }
 
-                Advance(filter.Transform3D, origin + moveDelta, direction);
+                // A hit that just settled it (AreaHitData.Settle, e.g. a fused bomb ignoring level
+                // geometry) stops exactly at the hit point instead of still covering the rest of this
+                // segment's distance - otherwise it overshoots into whatever it landed on by however
+                // far its fall speed carried it that tick, which is enough to visibly punch through a
+                // thin floor. hitPoint is the bare raycast surface - ResolveRestOffset lifts a pivot-
+                // at-center model back up so it visibly sits on top of the ground instead of embedding
+                // into it.
+                bool justGrounded = wasGrounded == false && filter.Projectile->Grounded == true;
+
+                if (justGrounded == true)
+                {
+                    FPVector3 restPosition = hitPoint + FPVector3.Up * ResolveRestOffset(f, filter.Entity, hitData);
+                    Advance(filter.Transform3D, restPosition, direction);
+
+                    // A fused area bomb (AreaHitData.PlantedFuseTime > 0) doesn't detonate off
+                    // whatever's left of its own flight-time budget - it plants here with a fresh,
+                    // fixed fuse. See TryPlant.
+                    if (TryPlant(f, ref filter, projectileData, hitData as AreaHitData, restPosition))
+                        return;
+
+                    TryExpire(f, ref filter);
+                    return;
+                }
+
+                // Anything that stays ungrounded (a Pierce, a Ricochet) keeps the rest of this tick's
+                // travel budget and carries on from the hit point - along the SAME direction for a
+                // Pierce (ApplyHit left Velocity untouched, so this is exactly equivalent to the old
+                // single-segment move), but along whatever new direction a Ricochet just redirected
+                // Velocity to, so that new heading gets its own swept check against the remainder
+                // instead of only starting to look next tick.
+                remainingDistance -= remainingDistance * hit.Value.CastDistanceNormalized;
+
+                FPVector3 newDirection = filter.Projectile->Velocity.SqrMagnitude > FP._0
+                    ? filter.Projectile->Velocity.Normalized
+                    : direction;
+
+                if (remainingDistance <= FP._0)
+                {
+                    Advance(filter.Transform3D, hitPoint, newDirection);
+                    TryExpire(f, ref filter);
+                    return;
+                }
+
+                origin = hitPoint;
+                direction = newDirection;
             }
 
+            // Backstop only - MaxSegmentsPerTick contacts in one tick already means every Pierce/
+            // Bounce budget is spent (or something is misconfigured); land where the last one connected.
+            Advance(filter.Transform3D, origin, direction);
             TryExpire(f, ref filter);
         }
 

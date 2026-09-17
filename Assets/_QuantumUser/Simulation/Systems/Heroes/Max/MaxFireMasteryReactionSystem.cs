@@ -179,7 +179,7 @@ namespace Quantum
                 && f.Unsafe.TryGetPointer<StatusEffects>(target, out var status) == true)
             {
                 burnDuration = FPMath.Max(burnDuration, status->BurnRemaining * spread->WildfireRetainedFraction);
-                burnIntensity = FPMath.Max(burnIntensity, status->BurnDamagePerTick * spread->WildfireRetainedFraction);
+                burnIntensity = FPMath.Max(burnIntensity, StatusEffectUtility.GetBurnDamagePerTick(status) * spread->WildfireRetainedFraction);
             }
 
             FireMasterySpreadUtility.SpreadBurn(f, transform->Position, owner, target, spread->Radius, burnDuration, burnIntensity, spread->MaxTargets);

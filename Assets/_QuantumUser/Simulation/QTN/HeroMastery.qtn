@@ -1,12 +1,12 @@
-// Hero Mastery - see docs/hero-mastery.md. Every hero has exactly one Weapon Family Mastery line and
+// Hero Mastery - see docs/hero-mastery.md. Every hero has exactly one Weapon Weight Mastery line and
 // one Element Mastery line, each a ranked PassiveUpgradeData drafted through the ordinary level-up
-// pool like any other Ascension (WeaponFamilyMasteryData/ElementMasteryData, see that pair's own
+// pool like any other Ascension (WeaponWeightMasteryData/ElementMasteryData, see that pair's own
 // comment). Both write into ONE shared component each (a hero only ever has one Weapon Mastery and one
 // Element Mastery, so there's nothing to key by), read generically by HeroMasteryUtility - no
 // Hero == X branch anywhere in the combat pipeline.
-component WeaponFamilyMastery
+component WeaponWeightMastery
 {
-    WeaponFamily Family;
+    WeaponWeight Weight;
     FP DamageMultiplier;
 }
 
@@ -19,9 +19,10 @@ component ElementMastery
 // -- R3 Specials - one small dedicated component per special, installed only at rank 3, read by name
 // at the one call site that needs it (mirrors StunDamageBonusUpgrade/FirstStrikeUpgrade's own shape). --
 
-// Brute's Shotgun Mastery R3 "Point Blank" - bonus damage to a target within Range of Brute himself,
-// checked purely by attacker-target distance (HeroMasteryUtility), so it works for every Shotgun
-// regardless of pellet count/fire rate/magazine size.
+// Brute's Heavy Mastery R3 "Point Blank" - bonus damage to a target within Range of Brute himself,
+// checked purely by attacker-target distance (HeroMasteryUtility), so it works for every Heavy weapon
+// regardless of pellet count/fire rate/magazine size - Sniper, Grenade Launcher, or any future Heavy
+// weapon, not just a Shotgun.
 component PointBlankUpgrade
 {
     FP DamageBonus;
@@ -44,10 +45,10 @@ component ChargedDamageBonusUpgrade
     FP DamageMultiplier;
 }
 
-// Max's Pistol Mastery R3 "Vendetta" - bonus Pistol damage against a target carrying THIS owner's own
-// RevengeMark (the existing Vendetta mark, see Heroes/Max/Vendetta.qtn) - reuses that mark rather than
-// duplicating it.
-component VendettaPistolUpgrade
+// Max's Light Mastery R3 "Vendetta" - bonus Light-weapon damage against a target carrying THIS owner's
+// own RevengeMark (the existing Vendetta mark, see Heroes/Max/Vendetta.qtn) - reuses that mark rather
+// than duplicating it. Works for any Light weapon (Pistol, SMG, future Light weapons), not just Pistol.
+component VendettaUpgrade
 {
     FP DamageBonus;
 }
@@ -60,35 +61,36 @@ component InfernalRageUpgrade
     FP DamageBonus;
 }
 
-// Kai's Sniper Mastery R3 "Deadeye" - bonus damage on the first Sniper hit this owner lands against
-// each enemy, tracked via the generic WeaponFamilyFirstHitTracker rather than a Kai-specific mark, so
-// any future Weapon Family Mastery needing the same "first hit of family X from owner Y" shape can
-// reuse it.
+// Kai's Heavy Mastery R3 "Deadeye" - bonus damage on the first Heavy-weapon hit this owner lands
+// against each enemy, tracked via the generic WeaponWeightFirstHitTracker rather than a Kai-specific
+// mark, so any future Weapon Weight Mastery needing the same "first hit of weight X from owner Y"
+// shape can reuse it. Per target/per owner/per weight - switching between different Heavy weapons
+// still counts as the same opener against that target (see WeaponWeightFirstHitUtility).
 component DeadeyeUpgrade
 {
     FP DamageBonus;
 }
 
-// Generic reusable "has (owner, family) already landed a hit on this target" ledger, one instance per
+// Generic reusable "has (owner, weight) already landed a hit on this target" ledger, one instance per
 // target - a fixed 4-slot table (co-op player cap), same parallel-array idiom UpgradeHistory/
-// AreaAllyBudget/StatusEffects.Haste* already use. Family 0 (None) never occupies a real slot since no
-// WeaponFamilyMasteryData ever installs a family-scoped effect for WeaponFamily.None.
-component WeaponFamilyFirstHitTracker
+// AreaAllyBudget/StatusEffects.Haste* already use.
+component WeaponWeightFirstHitTracker
 {
     array<EntityRef>[4] Owner;
-    array<Byte>[4] Family;
+    array<Byte>[4] Weight;
 }
 
-// Pixie's Grenade Launcher Mastery R3 "Rocket Conversion" - while equipped, a Grenade Launcher's own
-// projectiles use THIS movement asset instead of ProjectileDataAsset's own (see
-// ProjectileMovementOverrideUtility/WeaponSystem.FireProjectile) - everything else about the shot
-// (Hit/explosion/perks/element) is untouched, so it stays a real Grenade Launcher shot the whole way
-// through, just flying differently. Generic mechanism, not Pixie-specific - any future Mastery/
-// Ascension that wants to swap a weapon family's flight path can install this same component.
-component ProjectileMovementOverride
+// Generic "Heavy weapon attacks gain increased hit area" R3 - Pixie's Heavy Mastery installs this.
+// ExtraRadius is a flat additive world-unit bonus, read from two separate generic call sites for a
+// Weapon-sourced hit while a Heavy weapon is equipped: AreaHitData.Detonate adds it on top of an
+// attack that already has an area (its own BlastRadius), and HeavyHitAreaUtility.
+// TryExpandSingleTargetHit spawns a brand-new ExtraRadius-sized area (excluding the primary target,
+// which already took its own hit) for an attack that had none (a hitscan/DirectHitData single-target
+// hit) - see docs/hero-mastery.md's "Pixie AoE implementation principle" for why this is one expanded
+// hit area, never a second independent damage event.
+component HeavyHitAreaExpansionUpgrade
 {
-    WeaponFamily Family;
-    AssetRef<ProjectileMovementData> Movement;
+    FP ExtraRadius;
 }
 
 // Pixie's Fire Mastery R3 "Incendiary Rounds" - every Fire-weapon hit ALSO detonates an area
@@ -104,13 +106,13 @@ component FireWeaponExplosiveShotUpgrade
     AssetRef<AreaHitData> Explosion;
 }
 
-// Zara's SMG Mastery R3 - extra Fire Rate on her own SMG while Flow is Active. Active is flipped by
-// ZaraFlowUtility on Flow's own activation edge (not read live from ZaraFlow here) so this stays a
-// plain, hero-agnostic component WeaponSystem can read with no Zara-specific knowledge at all - see
-// ConditionalWeaponFireRateBonusUtility.
+// Zara's Light Mastery R3 "Full Tempo" - extra Fire Rate on her currently-equipped Light weapon while
+// Flow is Active. Active is flipped by ZaraFlowUtility on Flow's own activation edge (not read live
+// from ZaraFlow here) so this stays a plain, hero-agnostic component WeaponSystem can read with no
+// Zara-specific knowledge at all - works for Pistol, SMG, or any future Light weapon automatically.
 component ConditionalWeaponFireRateBonus
 {
-    WeaponFamily Family;
+    WeaponWeight Weight;
     FP FireRateBonus;
     Boolean Active;
 }
@@ -125,18 +127,19 @@ component SelfFireRateOnJoltUpgrade
 }
 
 
-// Lux's Assault Rifle Mastery R3 "Targeting Link" - enemies hit by Lux's own AR take bonus damage from
-// HER Sentries specifically (HeroMasteryUtility.GetTargetingLinkMultiplier), never from another
-// player's Sentry and never a global incoming-damage buff.
+// Lux's Medium Mastery R3 "Targeting Link" - enemies hit by Lux's own Medium weapon (Assault Rifle,
+// Shotgun, future Medium weapons) take bonus damage from HER Sentries specifically
+// (HeroMasteryUtility.GetTargetingLinkMultiplier), never from another player's Sentry and never a
+// global incoming-damage buff.
 component TargetingLinkUpgrade
 {
     FP SentryDamageBonus;
     FP MarkDuration;
 }
 
-// Target-side refresh-duration mark placed by an AR hit from a TargetingLinkUpgrade-holding owner -
-// ticked down and removed by TargetingLinkSystem. MarkedBy carries which specific Lux placed it (same
-// shape as FirstStrikeMark/RevengeMark) so a second Lux's AR hits don't silently credit the first.
+// Target-side refresh-duration mark placed by a Medium-weapon hit from a TargetingLinkUpgrade-holding
+// owner - ticked down and removed by TargetingLinkSystem. MarkedBy carries which specific Lux placed it
+// (same shape as FirstStrikeMark/RevengeMark) so a second Lux's hits don't silently credit the first.
 component TargetingLinkMark
 {
     EntityRef MarkedBy;

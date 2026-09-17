@@ -19,11 +19,12 @@ MonoBehaviour:
   DisplayName: Napalm Launcher
   FireType: 1
   Damage:
-    RawValue: 3932160
+    RawValue: 4587520
   Element: 1
   Family: 6
+  Weight: 2
   CriticalChance:
-    RawValue: 6554
+    RawValue: 3277
   CriticalDamageBonus:
     RawValue: 98304
   FireRate:
@@ -39,16 +40,31 @@ MonoBehaviour:
   SpawnAnchor: 0
   SpawnOffset:
     X:
-      RawValue: 32768
+      RawValue: 0
     Y:
       RawValue: 13107
     Z:
-      RawValue: 0
+      RawValue: 32768
   BonusBounces: 0
   ProjectileData:
     Id:
-      Value: 268986146537756646
+      Value: 389333577290804778
   BaseTraits: []
-  ViewPrefab: {fileID: 8089491252618662435, guid: 76663fba1fb8145d0802358c5a0b27ec, type: 3}
+  ViewPrefab: {fileID: 8089491252618662435, guid: 3974c09d732914529a9036dc5c0b3372, type: 3}
   ShakeTier: 2
-  _dpsPreview:
+  _dpsPreview: 'Burst DPS: 71.8
+
+    Sustained DPS (incl. reload): 61.5
+
+    Damage/min:
+    3690
+
+    Crit dmg/shot: 105 (vs 70 normal) @ 5 % chance, x1.5
+
+    Est. targets/shot:
+    1.5
+
+    Effective Burst DPS (all targets): 107.6
+
+    Effective Sustained DPS
+    (all targets): 92.3'

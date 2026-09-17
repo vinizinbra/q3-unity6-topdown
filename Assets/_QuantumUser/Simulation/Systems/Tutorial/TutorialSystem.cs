@@ -24,9 +24,17 @@ namespace Quantum
                 return;
 
             if (cmd.Paused)
+            {
                 f.SystemDisable<GameplaySystemGroup>();
-            else
+            }
+            else if (f.Global->LevelUpScreenOpen == false)
+            {
+                // A level-up screen can legitimately still be open (or have reopened for the next
+                // screen in a chained multi-level grant) by the time this popup closes - don't
+                // clobber its own pause; LevelUpUtility.Resolve re-enables the group itself once
+                // every chained screen is actually done.
                 f.SystemEnable<GameplaySystemGroup>();
+            }
         }
     }
 }

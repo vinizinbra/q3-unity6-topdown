@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using QuantumUser.View.Util;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 // A single Choose-Weapon option card - one per LevelUpChoice.Options entry when that screen's
@@ -23,17 +24,27 @@ public class WeaponCardWidget : MonoBehaviour
 
         // Plain floats/int, not Quantum FP - same "keep this view Quantum-free" convention as
         // UpgradeCardWidget.CardData.RarityIndex. GameplayUiController.BuildWeaponCardData reads
-        // these straight off WeaponDataAsset (Damage/FireRate/Range/MagazineSize/Element/CriticalChance).
+        // these straight off WeaponDataAsset (Damage/FireRate/CriticalDamageBonus/MagazineSize/
+        // Element/CriticalChance).
         public float Damage;
         public float FireRate;
-        public float Range;
+
+        // Weapon's own crit multiplier (WeaponDataAsset.CriticalDamageBonus, e.g. 2 = x2 damage on
+        // crit) - shown as "x{value}", not the hero's separate CharacterStats.CriticalDamageMultiplier
+        // which this card has no access to and doesn't attempt to preview.
+        public float CriticalDamageMultiplier;
         public int MagazineSize;
         public float CriticalChance;
 
-        // Index into Quantum's ElementType enum order (Neutral, Fire, Ice, Rock, Void, Lightning) -
-        // same plain-int convention as RarityIndex below, for the same reason (keeps this
-        // Quantum-free view from needing the Quantum enum).
+        // Index into Quantum's ElementType enum order (Neutral, Fire, Ice, Lightning) - same
+        // plain-int convention as RarityIndex below, for the same reason (keeps this Quantum-free
+        // view from needing the Quantum enum).
         public int ElementIndex;
+
+        // Index into Quantum's WeaponWeight enum order (Medium, Light, Heavy) - same plain-int
+        // convention as ElementIndex above, resolved the same way (weightIcon/weightSprites +
+        // weightText/weightLabels in Setup below).
+        public int WeightIndex;
 
         // Length == the option's own RolledPerkCount - the card grows a perk row per entry on
         // demand (see EnsurePerkRows) and hides any row past this length, so no fixed ceiling.
@@ -71,17 +82,28 @@ public class WeaponCardWidget : MonoBehaviour
     [Header("Stats")]
     [SerializeField] private TMP_Text damageText;
     [SerializeField] private TMP_Text fireRateText;
-    [SerializeField] private TMP_Text rangeText;
+    [SerializeField, FormerlySerializedAs("rangeText")] private TMP_Text criticalDamageMultiplierText;
     [SerializeField] private TMP_Text magazineSizeText;
     [SerializeField] private TMP_Text criticalChanceText;
 
     [SerializeField, Tooltip("Icon swapped per the weapon's element - see elementSprites.")]
     private Image elementIcon;
-    [SerializeField, Tooltip("One sprite per ElementType value, in enum order: Neutral, Fire, Ice, Rock, Void, Lightning.")]
+    [SerializeField, Tooltip("One sprite per ElementType value, in enum order: Neutral, Fire, Ice, Lightning. Rock/Void were retired - if this was already authored with 6 entries in the Inspector, re-author it down to 4 (dropping the old index-3/4 Rock/Void slots) since the serialized array won't shrink on its own.")]
     private Sprite[] elementSprites;
-    [SerializeField, Tooltip("One label per ElementType value, in enum order: Neutral, Fire, Ice, Rock, Void, Lightning.")]
-    private string[] elementLabels = { "Neutral", "Fire", "Ice", "Rock", "Void", "Lightning" };
+    [SerializeField, Tooltip("One label per ElementType value, in enum order: Neutral, Fire, Ice, Lightning. Rock/Void were retired - if this was already authored with 6 entries in the Inspector, re-author it down to 4.")]
+    private string[] elementLabels = { "Neutral", "Fire", "Ice", "Lightning" };
     [SerializeField] private TMP_Text elementText;
+
+    [SerializeField, Tooltip("TMP sprite-asset glyph name appended onto weaponName as a trailing `<sprite name=\"...\">` tag, one per ElementType value in enum order: Neutral, Fire, Ice, Lightning. Neutral is left empty on purpose - no icon for a Neutral weapon.")]
+    private string[] elementSpriteNames = { string.Empty, "FIRE", "ICE", "LIGHTNING" };
+
+    [SerializeField, Tooltip("Icon swapped per the weapon's weight class - see weightSprites.")]
+    private Image weightIcon;
+    [SerializeField, Tooltip("One sprite per WeaponWeight value, in enum order: Medium, Light, Heavy (Medium is ordinal 0/the default).")]
+    private Sprite[] weightSprites;
+    [SerializeField, Tooltip("One label per WeaponWeight value, in enum order: Medium, Light, Heavy.")]
+    private string[] weightLabels = { "Medium", "Light", "Heavy" };
+    [SerializeField] private TMP_Text weightText;
 
     [SerializeField, Tooltip("Authored rows. Entry 0 is the BASE - it doubles as the clone source whenever an option rolls more perks than there are authored entries, so a card only needs one row hand-placed. Any further authored entries are reused as-is before anything is instantiated. Rows past the option's own RolledPerkCount are hidden, never destroyed.")]
     private WeaponCardPerkRowWidget[] perkRows;
@@ -131,7 +153,7 @@ public class WeaponCardWidget : MonoBehaviour
             weaponIcon.sprite = data.WeaponIcon;
 
         if (weaponName != null)
-            weaponName.text = data.WeaponName;
+            weaponName.text = AppendElementSpriteTag(data.WeaponName, data.ElementIndex);
 
         if (damageText != null)
             damageText.text = Mathf.RoundToInt(data.Damage).ToString();
@@ -139,8 +161,8 @@ public class WeaponCardWidget : MonoBehaviour
         if (fireRateText != null)
             fireRateText.text = $"{data.FireRate:0.#}/s";
 
-        if (rangeText != null)
-            rangeText.text = data.Range.ToString("0");
+        if (criticalDamageMultiplierText != null)
+            criticalDamageMultiplierText.text = $"x{data.CriticalDamageMultiplier:0.#}";
 
         if (magazineSizeText != null)
             magazineSizeText.text = data.MagazineSize.ToString();
@@ -156,6 +178,16 @@ public class WeaponCardWidget : MonoBehaviour
         {
             bool hasElementLabel = elementLabels != null && data.ElementIndex >= 0 && data.ElementIndex < elementLabels.Length;
             elementText.text = hasElementLabel ? elementLabels[data.ElementIndex] : string.Empty;
+        }
+
+        bool hasWeightSprite = weightSprites != null && data.WeightIndex >= 0 && data.WeightIndex < weightSprites.Length;
+        if (weightIcon != null && hasWeightSprite)
+            weightIcon.sprite = weightSprites[data.WeightIndex];
+
+        if (weightText != null)
+        {
+            bool hasWeightLabel = weightLabels != null && data.WeightIndex >= 0 && data.WeightIndex < weightLabels.Length;
+            weightText.text = hasWeightLabel ? weightLabels[data.WeightIndex] : string.Empty;
         }
 
         int perkCount = data.Perks?.Length ?? 0;
@@ -177,6 +209,20 @@ public class WeaponCardWidget : MonoBehaviour
 
         if (buyButton != null)
             buyButton.interactable = interactable;
+    }
+
+    // Trailing `<sprite name="...">` tag onto the weapon's name, e.g. "Pistol <sprite name=\"IceElemental\">"
+    // - resolved via elementSpriteNames (Inspector-authored, so the glyph names can be retuned without
+    // a code change, same as elementLabels/weightLabels above). No-op (returns name unchanged) for
+    // Neutral or an out-of-range index, since elementSpriteNames[0] is deliberately left empty.
+    private string AppendElementSpriteTag(string name, int elementIndex)
+    {
+        if (elementSpriteNames == null || elementIndex < 0 || elementIndex >= elementSpriteNames.Length)
+            return name;
+
+        string spriteName = elementSpriteNames[elementIndex];
+
+        return string.IsNullOrEmpty(spriteName) ? name : $"{name} <sprite name=\"{spriteName}\">";
     }
 
     // Grows _perkRows to at least `count`, cloning perkRows[0] into its own parent for anything the

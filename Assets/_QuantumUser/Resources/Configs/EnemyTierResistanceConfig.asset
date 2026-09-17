@@ -20,7 +20,7 @@ MonoBehaviour:
     KnockbackMultiplier:
       RawValue: 65536
     StunDurationMultiplier:
-      RawValue: 65536
+      RawValue: 72090
     RootDurationMultiplier:
       RawValue: 65536
     SlowDurationMultiplier:
@@ -34,10 +34,15 @@ MonoBehaviour:
     StaggerDurationMultiplier:
       RawValue: 65536
     StunImmunityDuration:
-      RawValue: 0
+      RawValue: 49152
     InterruptImmunityDuration:
-      RawValue: 0
+      RawValue: 49152
+    FreezeDurationMultiplier:
+      RawValue: 65536
+    FreezeRecoveryDuration:
+      RawValue: 32768
     ImmuneToHardCC: 0
+    StunCancelsAction: 1
   Normal:
     KnockbackMultiplier:
       RawValue: 65536
@@ -56,15 +61,20 @@ MonoBehaviour:
     StaggerDurationMultiplier:
       RawValue: 65536
     StunImmunityDuration:
-      RawValue: 0
+      RawValue: 65536
     InterruptImmunityDuration:
-      RawValue: 0
+      RawValue: 65536
+    FreezeDurationMultiplier:
+      RawValue: 65536
+    FreezeRecoveryDuration:
+      RawValue: 49152
     ImmuneToHardCC: 0
+    StunCancelsAction: 1
   Specialist:
     KnockbackMultiplier:
       RawValue: 39322
     StunDurationMultiplier:
-      RawValue: 32768
+      RawValue: 58982
     RootDurationMultiplier:
       RawValue: 32768
     SlowDurationMultiplier:
@@ -78,15 +88,20 @@ MonoBehaviour:
     StaggerDurationMultiplier:
       RawValue: 49152
     StunImmunityDuration:
-      RawValue: 131072
+      RawValue: 81920
     InterruptImmunityDuration:
-      RawValue: 131072
+      RawValue: 81920
+    FreezeDurationMultiplier:
+      RawValue: 55706
+    FreezeRecoveryDuration:
+      RawValue: 65536
     ImmuneToHardCC: 0
+    StunCancelsAction: 1
   Heavy:
     KnockbackMultiplier:
       RawValue: 26214
     StunDurationMultiplier:
-      RawValue: 26214
+      RawValue: 52429
     RootDurationMultiplier:
       RawValue: 26214
     SlowDurationMultiplier:
@@ -100,15 +115,20 @@ MonoBehaviour:
     StaggerDurationMultiplier:
       RawValue: 65536
     StunImmunityDuration:
-      RawValue: 196608
+      RawValue: 114688
     InterruptImmunityDuration:
-      RawValue: 196608
+      RawValue: 114688
+    FreezeDurationMultiplier:
+      RawValue: 45875
+    FreezeRecoveryDuration:
+      RawValue: 98304
     ImmuneToHardCC: 0
+    StunCancelsAction: 1
   Elite:
     KnockbackMultiplier:
       RawValue: 13107
     StunDurationMultiplier:
-      RawValue: 19661
+      RawValue: 42598
     RootDurationMultiplier:
       RawValue: 19661
     SlowDurationMultiplier:
@@ -122,15 +142,20 @@ MonoBehaviour:
     StaggerDurationMultiplier:
       RawValue: 32768
     StunImmunityDuration:
-      RawValue: 262144
+      RawValue: 163840
     InterruptImmunityDuration:
-      RawValue: 262144
+      RawValue: 163840
+    FreezeDurationMultiplier:
+      RawValue: 39322
+    FreezeRecoveryDuration:
+      RawValue: 163840
     ImmuneToHardCC: 0
+    StunCancelsAction: 0
   Boss:
     KnockbackMultiplier:
       RawValue: 13107
     StunDurationMultiplier:
-      RawValue: 0
+      RawValue: 32768
     RootDurationMultiplier:
       RawValue: 0
     SlowDurationMultiplier:
@@ -144,7 +169,12 @@ MonoBehaviour:
     StaggerDurationMultiplier:
       RawValue: 26214
     StunImmunityDuration:
-      RawValue: 0
+      RawValue: 262144
     InterruptImmunityDuration:
-      RawValue: 0
+      RawValue: 262144
+    FreezeDurationMultiplier:
+      RawValue: 32768
+    FreezeRecoveryDuration:
+      RawValue: 262144
     ImmuneToHardCC: 1
+    StunCancelsAction: 0

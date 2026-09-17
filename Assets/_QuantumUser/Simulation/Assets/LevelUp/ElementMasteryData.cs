@@ -3,7 +3,7 @@ namespace Quantum
     using Photon.Deterministic;
     using UnityEngine;
 
-    // Hero Mastery - Element track (see docs/hero-mastery.md and WeaponFamilyMasteryData's own
+    // Hero Mastery - Element track (see docs/hero-mastery.md and WeaponWeightMasteryData's own
     // comment, which this mirrors exactly). Neutral Mastery is NOT a special case in code - it is
     // simply an ElementMasteryData instance with Element = Neutral and its own (weaker) authored
     // DamageMultiplierPerRank curve (10/20/40 instead of 15/30/50); the generic damage-multiplier

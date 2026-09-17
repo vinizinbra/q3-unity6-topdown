@@ -9,15 +9,18 @@ namespace Quantum
     // Armor/Shield being optional in DamageUtility.
     public static unsafe class StatusEffectUtility
     {
-        // Refresh-only: Remaining always extends to the new duration, but DamagePerTick/Owner/Source
-        // only overwrite when the incoming tick is >= the current one - a weak follow-up hit can
-        // extend an already-strong burn's timer but never downgrade its tick damage. Once Remaining
-        // has actually hit zero there's nothing to compare against, so the next application always
-        // sets fresh. tickInterval is EffectConfig.TickInterval - callers already have config
-        // resolved (see TryApplyElementalStatus/BurnEffectData), so it's threaded in rather than
-        // re-resolved here.
+        // Every qualifying Fire hit gets ITS OWN stack, potency seeded from THAT hit's own damage
+        // (see ComputeDotDamagePerTick/ComputeDotDamagePerTickWithFloor - a weak SMG tick and a
+        // strong sniper tick never blend into one generic number). All stacks share ONE duration
+        // timer - reapplying always extends BurnRemaining to the new duration (every stack expires
+        // together), and once BurnStackCount is at maxStacks a further Fire hit just refreshes that
+        // shared timer rather than replacing/strengthening an existing stack. Once Remaining has
+        // actually hit zero there's nothing to carry over, so the next application starts a fresh
+        // stack count. tickInterval/maxStacks are EffectConfig's own fields - callers already have
+        // config resolved (see TryApplyElementalStatus/BurnEffectData), so they're threaded in
+        // rather than re-resolved here.
         public static void ApplyBurn(Frame f, EntityRef target, FP duration, FP damagePerTick,
-            EntityRef owner, DamageSource source, FP tickInterval)
+            EntityRef owner, DamageSource source, FP tickInterval, int maxStacks = 5)
         {
             if (f.Unsafe.TryGetPointer<StatusEffects>(target, out var status) == false)
                 return;
@@ -29,22 +32,42 @@ namespace Quantum
 
             bool wasActive = status->BurnRemaining > FP._0;
 
-            if (wasActive == false || damagePerTick >= status->BurnDamagePerTick)
-            {
-                status->BurnDamagePerTick = damagePerTick;
-                status->BurnOwner = owner;
-                status->BurnSource = source;
-            }
-
             if (wasActive == false)
             {
                 status->BurnTickTimer = tickInterval;
+                status->BurnStackCount = 0;
             }
 
+            if (maxStacks > 5)
+                maxStacks = 5;
+
+            if (status->BurnStackCount < maxStacks)
+            {
+                status->BurnStackDamagePerTick[status->BurnStackCount] = damagePerTick;
+                status->BurnStackCount++;
+            }
+
+            status->BurnOwner = owner;
+            status->BurnSource = source;
             status->BurnRemaining = duration;
             MarkFirstElementApplied(status, ElementType.Fire);
 
-            Log.Debug($"[Status] {target} Burn refreshed to {duration}s at {status->BurnDamagePerTick}/tick (incoming {damagePerTick})");
+            Log.Debug($"[Status] {target} Burn refreshed to {duration}s ({status->BurnStackCount} stack(s), latest {damagePerTick}/tick)");
+        }
+
+        // Sum of every active Burn stack's own potency - see StatusEffects.BurnStackDamagePerTick.
+        // All stacks share BurnRemaining's single timer, so "active" here just means BurnRemaining
+        // is still counting down; StatusEffectSystem.TickBurn is the only reader.
+        public static FP GetBurnDamagePerTick(StatusEffects* status)
+        {
+            FP total = FP._0;
+
+            for (int i = 0; i < status->BurnStackCount; i++)
+            {
+                total += status->BurnStackDamagePerTick[i];
+            }
+
+            return total;
         }
 
         // Records the FIRST element to ever apply a baseline status to this entity (StatusEffects.
@@ -74,28 +97,45 @@ namespace Quantum
                 : ElementType.Neutral;
         }
 
-        // Plain overwrite-on-reapply - no equivalent "downgrade feels bad" concern for a speed
-        // multiplier as there is for Burn's tick damage.
-        public static void ApplyIce(Frame f, EntityRef target, FP duration, FP speedMultiplier)
+        // Ice/Chill - progressive stacking slow. buildupAmount is the RAW units THIS application
+        // contributes (callers derive it from their own hit's own damage - see
+        // EffectConfig.IceBuildupPerDamage - same "potency scales off the hit, not a flat generic
+        // tick" convention Burn's own per-stack potency uses), tapered by ChillForceMultiplier
+        // before being added - a Boss both resists the resulting slow AND takes proportionally
+        // longer to build toward Freeze from the same tapered value, with no separate code needed
+        // for each. One shared duration timer, refreshed by every application (see
+        // StatusEffectSystem.TickIce) - reaching 0 clears the buildup, never a per-application
+        // timer. Reaching EffectConfig.IceFreezeThreshold converts the buildup into Freeze instead
+        // (see ApplyFreeze) and resets it to 0.
+        public static void ApplyIce(Frame f, EntityRef target, FP duration, FP buildupAmount)
         {
             if (f.Unsafe.TryGetPointer<StatusEffects>(target, out var status) == false)
                 return;
 
+            // Already fully locked down - buildup holds off entirely until this Freeze ends, so a
+            // Frozen target can't also be silently racking up the NEXT Freeze's buildup while still
+            // incapacitated from this one.
+            if (status->FreezeRemaining > FP._0)
+                return;
+
+            EffectConfig config = GetEffectConfig(f);
+            FP threshold = config != null ? config.IceFreezeThreshold : 5;
+
             if (GetTierResistance(f, target) is { } resistance)
             {
                 duration *= resistance.SlowDurationMultiplier;
-
-                // Same "multiplier on the REDUCTION, not on the raw value" convention SlowEffectData's
-                // own magnitudeMultiplier already uses - a Boss's ChillForceMultiplier of 0.4 keeps
-                // 40% of however strong this particular application was (whatever speedMultiplier
-                // already is by this point, diluted or not), rather than resetting to a fixed value
-                // and losing e.g. Zara's Remix strengthening on top.
-                speedMultiplier = FP._1 - (FP._1 - speedMultiplier) * resistance.ChillForceMultiplier;
+                buildupAmount *= resistance.ChillForceMultiplier;
             }
 
             status->IceRemaining = duration;
-            status->IceSpeedMultiplier = speedMultiplier;
+            status->IceBuildup = FPMath.Min(status->IceBuildup + buildupAmount, threshold);
             MarkFirstElementApplied(status, ElementType.Ice);
+
+            if (status->IceBuildup >= threshold)
+            {
+                FP freezeDuration = config != null ? config.FreezeDuration : FP.FromString("1.5");
+                ApplyFreeze(f, target, freezeDuration);
+            }
         }
 
         // owner defaults to None for any caller that genuinely has no attacker to attribute this to
@@ -106,25 +146,26 @@ namespace Quantum
         // effect wanting to skip its own VFX on a rejected proc) doesn't need a second query. Every
         // pre-existing call site ignores it, unchanged.
         //
-        // Hard-CC diminishing returns: an enemy tier authored with a StunImmunityDuration (or with
-        // ImmuneToHardCC, i.e. Boss) rejects a Stun outright while its own window is still running -
-        // see StatusEffects.StunImmunityRemaining. Both default to 0/false, so a target with no tier
-        // resistance at all (the player, any non-Enemy) keeps the original plain
-        // overwrite-on-reapply behavior exactly.
+        // Hard-CC diminishing returns: an enemy tier authored with a StunImmunityDuration rejects a
+        // Stun outright while its own window is still running - see StatusEffects.
+        // StunImmunityRemaining. Defaults to 0, so a target with no tier resistance at all (the
+        // player, any non-Enemy) keeps the original plain overwrite-on-reapply behavior exactly.
+        // Deliberately does NOT check TierStatusResistance.ImmuneToHardCC (Root's own gate) - every
+        // tier, Boss included, is meant to be genuinely stunnable, just heavily tapered
+        // (StunDurationMultiplier) and rarely (StunImmunityDuration), rather than flatly immune.
         public static bool ApplyStun(Frame f, EntityRef target, FP duration, EntityRef owner = default)
         {
             if (f.Unsafe.TryGetPointer<StatusEffects>(target, out var status) == false)
                 return false;
 
             FP immunityWindow = FP._0;
+            bool stunCancelsAction = true;
 
             if (GetTierResistance(f, target) is { } resistance)
             {
-                if (resistance.ImmuneToHardCC == true)
-                    return false;
-
                 duration *= resistance.StunDurationMultiplier;
                 immunityWindow = resistance.StunImmunityDuration;
+                stunCancelsAction = resistance.StunCancelsAction;
             }
 
             if (immunityWindow > FP._0 && status->StunImmunityRemaining > FP._0)
@@ -137,6 +178,32 @@ namespace Quantum
                 status->StunImmunityRemaining = duration + immunityWindow;
             }
 
+            // Jolt is the View's feedback for an actual Stun landing - regardless of source (Shock's
+            // own proc, Shatter's primary, a future melee/skill Stun...), never fired just because a
+            // status was applied/refreshed. See docs/elemental-reactions.md.
+            if (f.Has<Transform3D>(target) == true)
+            {
+                f.Events.JoltTriggered(target, EnemyMovementUtility.ResolveEntityCenter(f, target));
+            }
+
+            // A landed Stun freezes EnemySystem.Update's whole per-tick dispatch (see IsStunned's own
+            // gate there) but never on its own cancels whatever action was already committed - without
+            // this, a stunned Charger/Grenadier just pauses mid-windup or mid-charge and resumes (and
+            // finishes) the instant Stun expires, reading as "Stun didn't cancel the attack" even
+            // though it visibly interrupted the enemy's movement. Gated per-tier by
+            // TierStatusResistance.StunCancelsAction (true for every tier by default, including a
+            // non-Enemy target where GetTierResistance found nothing to override) - a tier authored
+            // false still gets the freeze above, just never the cancel. Also respects
+            // InterruptibleDuringTelegraph/InterruptibleDuringActive (default false = don't bypass -
+            // Stun is a general-purpose CC landed from many sources, not a dedicated hard-CC pick like
+            // Kai's Singularity, which deliberately does bypass them) and its own separate
+            // InterruptImmunityRemaining diminishing-returns window, entirely independent of the
+            // StunImmunityRemaining one just above.
+            if (stunCancelsAction == true)
+            {
+                EnemyActionUtility.TryInterrupt(f, target);
+            }
+
             return true;
         }
 
@@ -145,14 +212,12 @@ namespace Quantum
         // EnemyActionUtility.TryInterrupt calls this as a pure check-then-consume gate rather than
         // going through an Apply* method. Returns false when the interrupt should be rejected.
         // Anything with no tier resistance, or a tier authored with InterruptImmunityDuration 0
-        // (Filler/Normal), is never gated.
+        // (Filler/Normal), is never gated. Deliberately does NOT check ImmuneToHardCC - see
+        // ApplyStun's own comment on why every tier, Boss included, can be interrupted now.
         public static bool TryConsumeInterruptImmunity(Frame f, EntityRef target)
         {
             if (GetTierResistance(f, target) is not { } resistance)
                 return true;
-
-            if (resistance.ImmuneToHardCC == true)
-                return false;
 
             if (resistance.InterruptImmunityDuration <= FP._0)
                 return true;
@@ -254,7 +319,68 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<StatusEffects>(entity, out var status) == false || status->IceRemaining <= FP._0)
                 return FP._1;
 
-            return status->IceSpeedMultiplier;
+            EffectConfig config = GetEffectConfig(f);
+            FP slowPerBuildup = config != null ? config.IceSlowPerBuildup : FP.FromString("0.08");
+
+            return FPMath.Max(FP._0, FP._1 - status->IceBuildup * slowPerBuildup);
+        }
+
+        // Freeze (Ice hard CC) - only ever reached via Ice/Chill buildup hitting
+        // EffectConfig.IceFreezeThreshold (see ApplyIce above), never applied directly by a
+        // weapon/skill. Reuses the exact same total lockout Stun does (every IsStunned gate in
+        // EnemySystem/PlayerMovementProcessor/WeaponSystem also checks IsFrozen) but stays
+        // independently queryable - see StatusEffects.FreezeRemaining's own comment. Deliberately
+        // does NOT check TierStatusResistance.ImmuneToHardCC the way ApplyStun does - Boss is meant
+        // to stay vulnerable to Freeze (just far shorter, via its own dedicated
+        // FreezeDurationMultiplier), matching this project's "Boss stays vulnerable, just tapered"
+        // convention rather than Stun's own hard immunity. Returns whether Freeze actually landed
+        // (rejected outright while FreezeRecoveryRemaining is still running - see anti-permafreeze
+        // note on that field).
+        public static bool ApplyFreeze(Frame f, EntityRef target, FP duration, EntityRef owner = default)
+        {
+            if (f.Unsafe.TryGetPointer<StatusEffects>(target, out var status) == false)
+                return false;
+
+            if (status->FreezeRecoveryRemaining > FP._0)
+                return false;
+
+            bool freezeCancelsAction = true;
+            FP recoveryWindow = FP._0;
+
+            if (GetTierResistance(f, target) is { } resistance)
+            {
+                duration *= resistance.FreezeDurationMultiplier;
+                freezeCancelsAction = resistance.StunCancelsAction;
+                recoveryWindow = resistance.FreezeRecoveryDuration;
+            }
+
+            status->FreezeRemaining = duration;
+            status->IceBuildup = FP._0;
+            status->IceRemaining = FP._0;
+
+            if (recoveryWindow > FP._0)
+            {
+                status->FreezeRecoveryRemaining = duration + recoveryWindow;
+            }
+
+            // Same "does a landed hard-CC also cancel whatever action was already committed" gate
+            // Stun uses (StatusEffectUtility.ApplyStun/TierStatusResistance.StunCancelsAction) -
+            // reused here rather than a dedicated FreezeCancelsAction flag, since it's asking the
+            // same per-tier question about a second hard-CC primitive.
+            if (freezeCancelsAction == true)
+            {
+                EnemyActionUtility.TryInterrupt(f, target);
+            }
+
+            MarkFirstElementApplied(status, ElementType.Ice);
+
+            Log.Debug($"[Status] {target} Frozen for {duration}s");
+            return true;
+        }
+
+        public static bool IsFrozen(Frame f, EntityRef entity)
+        {
+            return f.Unsafe.TryGetPointer<StatusEffects>(entity, out var status) == true && status->FreezeRemaining > FP._0;
         }
 
         // Plain overwrite-on-reapply, same as Ice - no "downgrade feels bad" concern for a slow
@@ -550,7 +676,9 @@ namespace Quantum
         }
 
         // Plain overwrite-on-reapply, same as Rupture - no "downgrade feels bad" concern for a debuff
-        // multiplier the way Burn's tick damage has.
+        // multiplier the way Burn's tick damage has. Brute's Protector Aura is the only applier now -
+        // Rock (the old weapon-elemental route into this status) was retired, see ElementType.qtn.
+        // No longer marks a first-element rest tint (that's an elemental-baseline concept only).
         public static void ApplyIntimidate(Frame f, EntityRef target, FP duration, FP damageMultiplier)
         {
             if (f.Unsafe.TryGetPointer<StatusEffects>(target, out var status) == false)
@@ -558,7 +686,6 @@ namespace Quantum
 
             status->IntimidateRemaining = duration;
             status->IntimidateDamageMultiplier = damageMultiplier;
-            MarkFirstElementApplied(status, ElementType.Rock);
         }
 
         // Read at DamageUtility.ResolveOutgoingDamage, BEFORE that method's CharacterStats gate -
@@ -830,13 +957,14 @@ namespace Quantum
             return config;
         }
 
-        // Fire->Burn/Ice->Slow/Rock->Intimidate/Lightning->Electrified/Void->nothing mapping, gated by
-        // the owner's CharacterStats.ElementalChance (same roll crit uses) - unlike the old
+        // Fire->Burn/Ice->Chill/Lightning->Electrified mapping - unlike the old
         // ElementalProcEffectData there's no separate authorable asset, just this one function.
-        // Applies whenever a Weapon-sourced hit carries a non-Neutral element and the roll succeeds;
-        // called directly from WeaponSystem.FireHitscan (hitscan has no Effects list to run this
-        // through) and from inside HitEffectUtility.ApplyToTarget, which covers both Projectile hits
-        // and AreaDamage hits (e.g. a grenade's blast) since both funnel through it already.
+        // Applies unconditionally whenever a Weapon-sourced hit carries a non-Neutral element (no
+        // roll gating it - CharacterStats.ElementalChance was retired, see docs/
+        // elemental-reactions.md); called directly from WeaponSystem.FireHitscan (hitscan has no
+        // Effects list to run this through) and from inside HitEffectUtility.ApplyToTarget, which
+        // covers both Projectile hits and AreaDamage hits (e.g. a grenade's blast) since both funnel
+        // through it already.
         //
         // After the landing element's own baseline is applied, TryTriggerElementalReaction checks
         // whether the OTHER status of a reaction pair (Burn/Chill/Electrified) is already live on the
@@ -857,18 +985,11 @@ namespace Quantum
 
             // Pixie's Incendiary Rounds (Fire Mastery R3) - every Fire-weapon hit also detonates an
             // area explosion, guaranteed - see TryTriggerFireWeaponExplosion. Unconditional, same as
-            // Cold Blooded above, not gated behind the ElementalChance roll a few lines down (that
-            // roll only governs whether Burn itself (re)applies).
+            // Cold Blooded above.
             if (element == ElementType.Fire)
             {
                 TryTriggerFireWeaponExplosion(f, target, owner, source, hitDamage);
             }
-
-            if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false)
-                return;
-
-            if (DamageUtility.RollChance(f, stats->ElementalChance) == false)
-                return;
 
             ApplyElementBaseline(f, target, owner, source, element, hitDamage, config);
 
@@ -900,8 +1021,9 @@ namespace Quantum
 
         // The EXTRA element grafted on by an Element Infusion weapon perk (WeaponElementInfusion) -
         // same baseline + reaction check as TryApplyElementalStatus, but rolled against the perk's
-        // own procChance rather than the owner's CharacterStats.ElementalChance, and with no
-        // guaranteed-burn pass (that's owner-global and already ran on this hit's base-element call -
+        // own procChance (the native path applies unconditionally now, see TryApplyElementalStatus's
+        // own comment), and with no guaranteed-burn pass (that's owner-global and already ran on this
+        // hit's base-element call -
         // running it twice would double it). Called right after the base-element application from
         // HitEffectUtility.ApplyToTarget (projectile/area hits) and WeaponSystem.FireHitscan
         // (hitscan). No-ops for a Neutral element, so a weapon without the perk pays nothing.
@@ -926,10 +1048,9 @@ namespace Quantum
             Log.Debug($"[Status] {owner}'s infused {element} hit applied its status to {target}");
         }
 
-        // The Fire->Burn/Ice->Slow/Rock->Intimidate/Lightning->Electrified landing baseline, shared by
-        // both the native-element (TryApplyElementalStatus) and perk-infused (TryApplyInfusedElement)
-        // paths so the mapping lives in one place. Void has no baseline - its identity is a
-        // hand-authored WeaponDataAsset trait, not status code (see ElementType.qtn).
+        // The Fire->Burn/Ice->Chill/Lightning->Shock landing baseline, shared by both the
+        // native-element (TryApplyElementalStatus) and perk-infused (TryApplyInfusedElement) paths
+        // so the mapping lives in one place. Rock/Void were retired - see ElementType.qtn.
         private static void ApplyElementBaseline(Frame f, EntityRef target, EntityRef owner,
             DamageSource source, ElementType element, FP hitDamage, EffectConfig config)
         {
@@ -938,15 +1059,14 @@ namespace Quantum
                 case ElementType.Fire:
                     ApplyBurn(f, target, config.BurnDuration,
                         ComputeDotDamagePerTickWithFloor(f, owner, hitDamage, config.BurnDamagePercent, config.BurnFloorPercent, config.BurnDuration, config.TickInterval),
-                        owner, source, config.TickInterval);
+                        owner, source, config.TickInterval, config.BurnMaxStacks);
                     break;
 
                 case ElementType.Ice:
-                    ApplyIce(f, target, config.SlowDuration, config.SlowSpeedMultiplier);
-                    break;
-
-                case ElementType.Rock:
-                    ApplyIntimidate(f, target, config.IntimidateDuration, config.IntimidateOutgoingDamageMultiplier);
+                    // Buildup scales off THIS hit's own damage (same convention Burn's own potency
+                    // uses just above) rather than a flat generic tick, so a fast weak weapon can't
+                    // out-buildup a slow heavy one just by firing more often.
+                    ApplyIce(f, target, config.SlowDuration, hitDamage * config.IceBuildupPerDamage);
                     break;
 
                 case ElementType.Lightning:
@@ -954,17 +1074,30 @@ namespace Quantum
                     ElementalReactionConfig reactionConfig = GetElementalReactionConfig(f);
 
                     if (reactionConfig != null)
+                    {
+                        // Shock's own baseline gameplay payoff: a further Electric hit landing on a
+                        // target that's ALREADY Shocked rolls a chance to proc the existing, generic
+                        // Stun - read BEFORE ApplyElectrified overwrites ElectrifiedRemaining below,
+                        // so a fresh (non-refresh) application never rolls. Uses the existing
+                        // Stun primitive (ApplyStun already fires Jolt on a genuine land) rather than
+                        // a bespoke "Electric Stun".
+                        bool wasAlreadyShocked = IsElectrified(f, target);
+
                         ApplyElectrified(f, target, reactionConfig.ElectrifiedDuration);
 
-                    // Zara's High Voltage (Electric Mastery R3) - applying Jolt grants the OWNER
+                        if (wasAlreadyShocked == true && DamageUtility.RollChance(f, reactionConfig.ShockStunProcChance) == true)
+                        {
+                            ApplyStun(f, target, reactionConfig.ShockStunProcDuration, owner);
+                        }
+                    }
+
+                    // Zara's High Voltage (Electric Mastery R3) - applying Shock grants the OWNER
                     // (never the target) a timed Fire Rate buff, read off whichever generic upgrade
                     // component her own Mastery installed - no Hero == X branch here.
                     TryTriggerSelfFireRateOnJolt(f, owner);
 
                     break;
                 }
-
-                // Void: no baseline - the caller's reaction-check still runs.
             }
         }
 
@@ -1274,12 +1407,12 @@ namespace Quantum
                 if (hitEntity == EntityRef.None || hitEntity == target || f.Has<Enemy>(hitEntity) == false)
                     continue;
 
+                // Stagger only, deliberately no JoltTriggered here - Jolt now means "this target was
+                // actually Stunned" (see ApplyStun), and a secondary enemy caught in the AoE is only
+                // Staggered, never Stunned. ShatterTriggered's own crack VFX still plays once at the
+                // primary/Center; the primary itself already gets Jolt for free via the ApplyStun
+                // call above.
                 ApplyStagger(f, hitEntity, config.ShatterAreaStaggerDuration, owner);
-
-                // Same Stagger primitive Shock's own Jolt applies, so it gets the same one-shot spark -
-                // ShatterTriggered's own crack VFX only plays once, at the primary/Center, and would
-                // otherwise leave every secondary enemy staggered with no visual feedback of its own.
-                f.Events.JoltTriggered(hitEntity, EnemyMovementUtility.ResolveEntityCenter(f, hitEntity));
 
                 if (config.ShatterDamage > FP._0)
                     DamageUtility.ApplyDamage(f, hitEntity, config.ShatterDamage, owner, source, bypassOutgoingResolution: true, element: ElementType.Ice, reactionProc: true);
@@ -1330,7 +1463,7 @@ namespace Quantum
             return f.Unsafe.TryGetPointer<StatusEffects>(entity, out var status) == true && status->StaggerRemaining > FP._0;
         }
 
-        // Independent of the weapon's own Element/ElementalChance roll above - BurnOnHitStacks is a
+        // Independent of the weapon's own Element above - BurnOnHitStacks is a
         // flat guarantee for as long as the granting effect is active, not a proc chance, and fires
         // even on a Neutral weapon. Returns whether it actually applied, so the caller can still fire
         // the reaction scan for this Burn even when the weapon's own Element is Neutral (which
@@ -1345,7 +1478,7 @@ namespace Quantum
 
             ApplyBurn(f, target, config.BurnDuration,
                 ComputeDotDamagePerTickWithFloor(f, owner, hitDamage, config.BurnDamagePercent, config.BurnFloorPercent, config.BurnDuration, config.TickInterval),
-                owner, source, config.TickInterval);
+                owner, source, config.TickInterval, config.BurnMaxStacks);
 
             Log.Debug($"[Status] {owner}'s guaranteed Burn applied to {target}");
             return true;

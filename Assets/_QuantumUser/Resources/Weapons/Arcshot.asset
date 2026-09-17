@@ -19,9 +19,10 @@ MonoBehaviour:
   DisplayName: Arcshot
   FireType: 1
   Damage:
-    RawValue: 5898240
-  Element: 5
+    RawValue: 4915200
+  Element: 3
   Family: 5
+  Weight: 2
   CriticalChance:
     RawValue: 13107
   CriticalDamageBonus:
@@ -30,12 +31,12 @@ MonoBehaviour:
     RawValue: 65536
   MagazineSize: 4
   ReloadDuration:
-    RawValue: 131072
+    RawValue: 65536
   Range:
     RawValue: 589824
   PelletCount: 1
   SpreadAngle:
-    RawValue: 327680
+    RawValue: 0
   SpawnAnchor: 0
   SpawnOffset:
     X:
@@ -49,6 +50,21 @@ MonoBehaviour:
     Id:
       Value: 470292578688152637
   BaseTraits: []
-  ViewPrefab: {fileID: 8089491252618662435, guid: 376407f6a2ac5480c998b85c91c293c9, type: 3}
+  ViewPrefab: {fileID: 8089491252618662435, guid: b62b219ca65f64e79865aeb29fe330b0, type: 3}
   ShakeTier: 1
-  _dpsPreview:
+  _dpsPreview: 'Burst DPS: 90
+
+    Sustained DPS (incl. reload): 72
+
+    Damage/min:
+    4320
+
+    Crit dmg/shot: 150 (vs 75 normal) @ 20 % chance, x2
+
+    Est. targets/shot:
+    1.5
+
+    Effective Burst DPS (all targets): 135
+
+    Effective Sustained DPS
+    (all targets): 108'

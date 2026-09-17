@@ -21,4 +21,4 @@ MonoBehaviour:
   MaxPicks: 3
   Description: +{0}% Crit Chance
   Chance:
-    RawValue: 3277
+    RawValue: 6554

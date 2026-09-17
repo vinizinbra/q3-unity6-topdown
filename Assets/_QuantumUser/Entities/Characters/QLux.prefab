@@ -1035,8 +1035,6 @@ MonoBehaviour:
       RawValue: 0
     CriticalDamageMultiplier:
       RawValue: 0
-    ElementalChance:
-      RawValue: 0
     AttackSpeedMultiplier:
       RawValue: 0
     ReloadSpeedMultiplier:

@@ -19,8 +19,9 @@ MonoBehaviour:
   Icon: {fileID: -663504267, guid: 017cb6454ed9743478842fb02d741366, type: 3}
   DisplayName: Cataclysm Round
   Rarity: 2
-  Description: 'Final shot becomes a massive explosive projectile (<color=#FD3971>{0:0}%</color> damage, <color=#FD3971>{1:0}m</color> radius)'
+  Description: Final shot becomes a massive explosive projectile (<color=#FD3971>{0:0}%</color>
+    damage, <color=#FD3971>{1:0}m</color> radius)
   Radius:
-    RawValue: 327680
+    RawValue: 262144
   DamageMultiplier:
     RawValue: 131072

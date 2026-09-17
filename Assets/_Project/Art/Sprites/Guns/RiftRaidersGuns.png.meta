@@ -1,0 +1,639 @@
+fileFormatVersion: 2
+guid: 90ae01af4feea41bfbf42f42c02a75f5
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 0
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 90
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: RiftRaidersGuns_0
+      rect:
+        serializedVersion: 2
+        x: 41
+        y: 705
+        width: 156
+        height: 130
+      alignment: 9
+      pivot: {x: 0.049216125, y: 0.30329496}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d1215bc8e287b4ca59b8c1d571b70e34
+      internalID: -1381782799
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftRaidersGuns_1
+      rect:
+        serializedVersion: 2
+        x: 483
+        y: 696
+        width: 216
+        height: 150
+      alignment: 9
+      pivot: {x: 0.011650792, y: 0.5106555}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: aed18e20e7ca2480b9b0a28d9a57cd63
+      internalID: 2077449762
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftRaidersGuns_2
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 699
+        width: 183
+        height: 139
+      alignment: 9
+      pivot: {x: -0.006544103, y: 0.5000004}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 297c8e8390b3e4d798f9429a07314360
+      internalID: -2037809466
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftRaidersGuns_3
+      rect:
+        serializedVersion: 2
+        x: 730
+        y: 703
+        width: 198
+        height: 133
+      alignment: 9
+      pivot: {x: 0.015686959, y: 0.5000005}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 93b8ec8e6b9c645eabc5c70b9e99928c
+      internalID: -1376600512
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftRaidersGuns_4
+      rect:
+        serializedVersion: 2
+        x: 970
+        y: 700
+        width: 217
+        height: 141
+      alignment: 9
+      pivot: {x: 0.01390139, y: 0.47733042}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9e1e6c9e17cd44fadb09a666699d4e9c
+      internalID: 332295747
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftRaidersGuns_5
+      rect:
+        serializedVersion: 2
+        x: 1226
+        y: 705
+        width: 191
+        height: 142
+      alignment: 9
+      pivot: {x: 0.039775748, y: 0.47749007}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c383b61c9b7f54f1a9befd6eda823908
+      internalID: -861589758
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftRaidersGuns_6
+      rect:
+        serializedVersion: 2
+        x: 19
+        y: 513
+        width: 212
+        height: 119
+      alignment: 9
+      pivot: {x: 0.023603367, y: 0.50000054}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f3591a0b51c4243008a3f39b80d11568
+      internalID: -1098942690
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Arcshot
+      rect:
+        serializedVersion: 2
+        x: 959
+        y: 311
+        width: 229
+        height: 125
+      alignment: 9
+      pivot: {x: 0.0044782213, y: 0.43607104}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c6c9b594108584359b8674035a94212e
+      internalID: -1722915515
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Hellshot
+      rect:
+        serializedVersion: 2
+        x: 1214
+        y: 311
+        width: 210
+        height: 129
+      alignment: 9
+      pivot: {x: 0.028140694, y: 0.42566368}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 252f38a3614544402a8267f5b7cea5c3
+      internalID: -1178918995
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Minigun
+      rect:
+        serializedVersion: 2
+        x: 991
+        y: 508
+        width: 185
+        height: 130
+      alignment: 9
+      pivot: {x: -0.009706569, y: 0.4385296}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6740db3bf4a554b7096bdc7aef973484
+      internalID: 1806625399
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Slugger
+      rect:
+        serializedVersion: 2
+        x: 240
+        y: 512
+        width: 229
+        height: 121
+      alignment: 9
+      pivot: {x: 0.026449274, y: 0.44716626}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 451b182615d404964ae4fc38b8e3d09a
+      internalID: 523131066
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_BurstRiffle
+      rect:
+        serializedVersion: 2
+        x: 484
+        y: 508
+        width: 201
+        height: 132
+      alignment: 9
+      pivot: {x: 0.030866936, y: 0.47578478}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: aec33b7d6000a4a04b65709e74a738d5
+      internalID: -2004263705
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_AutoShotgun
+      rect:
+        serializedVersion: 2
+        x: 253
+        y: 313
+        width: 201
+        height: 136
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 88bf7d1dee03b4c3b84cc86b6dbb8a20
+      internalID: 1487257687
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_IcePistol
+      rect:
+        serializedVersion: 2
+        x: 1212
+        y: 116
+        width: 202
+        height: 118
+      alignment: 9
+      pivot: {x: 0.06483746, y: 0.25620165}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8f4a427235aba4a99b060f784932cac0
+      internalID: -826440342
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_DisruptorPistol
+      rect:
+        serializedVersion: 2
+        x: 509
+        y: 116
+        width: 170
+        height: 120
+      alignment: 9
+      pivot: {x: 0.06753684, y: 0.26026472}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6df19c7c3231b4f61a6d0bade009a5aa
+      internalID: -2011141226
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Napalm
+      rect:
+        serializedVersion: 2
+        x: 34
+        y: 870
+        width: 198
+        height: 136
+      alignment: 9
+      pivot: {x: 0.0121104885, y: 0.36699003}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2a8a9369a7a0746e380f8677098c8203
+      internalID: 1880686327
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_ClusterLauncher
+      rect:
+        serializedVersion: 2
+        x: 1231
+        y: 497
+        width: 195
+        height: 148
+      alignment: 9
+      pivot: {x: 0.000040064104, y: 0.46760353}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3b4affbf968454f2ba03d84af28a108d
+      internalID: 958131526
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_UZI
+      rect:
+        serializedVersion: 2
+        x: 500
+        y: 318
+        width: 201
+        height: 127
+      alignment: 9
+      pivot: {x: 0.03881836, y: 0.21055663}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6a39ad77692ba4d289068c36431b38ea
+      internalID: 803146548
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_DrumSmgIce
+      rect:
+        serializedVersion: 2
+        x: 730
+        y: 310
+        width: 202
+        height: 133
+      alignment: 9
+      pivot: {x: 0.017365409, y: 0.48798364}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e9b751f6c999849f0aea262b7e9ceefd
+      internalID: -1736590291
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftRaidersGuns_7
+      rect:
+        serializedVersion: 2
+        x: 253
+        y: 106
+        width: 202
+        height: 136
+      alignment: 9
+      pivot: {x: 0.025277166, y: 0.40598655}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f6b828e44f972429cb446d465c12cad0
+      internalID: -549292626
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftRaidersGuns_8
+      rect:
+        serializedVersion: 2
+        x: 1040
+        y: 858
+        width: 89
+        height: 213
+      alignment: 9
+      pivot: {x: 0.13295789, y: 0.069256276}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a72991d5af25e433eb438f7d7a7a4cf6
+      internalID: -1374390215
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 1bb5e2875475344ae928b35fc5de5b8c
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      RR_Arcshot: -1722915515
+      RR_AutoShotgun: 1487257687
+      RR_BurstRiffle: -2004263705
+      RR_ClusterLauncher: 958131526
+      RR_DisruptorPistol: -2011141226
+      RR_DrumSmgIce: -1736590291
+      RR_Hellshot: -1178918995
+      RR_IcePistol: -826440342
+      RR_Minigun: 1806625399
+      RR_Napalm: 1880686327
+      RR_Slugger: 523131066
+      RR_UZI: 803146548
+      RiftRaidersGuns_0: -1381782799
+      RiftRaidersGuns_1: 2077449762
+      RiftRaidersGuns_2: -2037809466
+      RiftRaidersGuns_3: -1376600512
+      RiftRaidersGuns_4: 332295747
+      RiftRaidersGuns_5: -861589758
+      RiftRaidersGuns_6: -1098942690
+      RiftRaidersGuns_7: -549292626
+      RiftRaidersGuns_8: -1374390215
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

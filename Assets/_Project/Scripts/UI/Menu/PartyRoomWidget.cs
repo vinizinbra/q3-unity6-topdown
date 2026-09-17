@@ -43,8 +43,29 @@ public class PartyRoomWidget : MonoBehaviour
     // and player-property change, which during a busy lobby is often.
     private readonly List<Player> _remotePlayers = new List<Player>();
 
+    private bool _initialized;
+
     private void Start()
     {
+        TryInitialize();
+    }
+
+    // PartyManager is a scene singleton that assigns Instance in its own Awake - same guarantee
+    // every other PgSingleton here relies on - but if it's ever spawned/awoken after this
+    // component's own Start (e.g. bootstrapped rather than a native scene object), wiring straight
+    // into PartyManager.Instance.OnPhaseChanged here would NullReferenceException and silently
+    // abort the REST of Start() too: every button listener below it would never get wired, and
+    // slot 0 would never get its first population - permanently, since Start() only ever runs
+    // once. Retrying every frame until PartyManager.Instance actually exists costs nothing once
+    // steady-state (one null check) and self-heals instead of wedging the whole widget dead on a
+    // one-frame race - same class of bug as this codebase's other one-shot init-order traps.
+    private void TryInitialize()
+    {
+        if (_initialized || PartyManager.Instance == null)
+            return;
+
+        _initialized = true;
+
         PartyManager.Instance.OnPhaseChanged += HandlePhaseChanged;
         PartyManager.Instance.OnRosterChanged += RefreshRoster;
 
@@ -65,6 +86,8 @@ public class PartyRoomWidget : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (_initialized == false) return;
+
         createButton.onClick.RemoveListener(CreateClicked);
         joinButton.onClick.RemoveListener(JoinClicked);
         leaveButton.onClick.RemoveListener(LeaveClicked);
@@ -77,20 +100,32 @@ public class PartyRoomWidget : MonoBehaviour
 
     private void Update()
     {
+        if (_initialized == false)
+        {
+            TryInitialize();
+            return;
+        }
+
         if (connectingPanel.activeSelf)
             connectingText.text = MatchMakingConfig.Instance.Client.State.ToString();
     }
 
-    // Ignores an empty field rather than joining with a blank code - onSubmit still fires on Enter
-    // even with nothing typed.
-    private void HandleRoomCodeSubmit(string _)
-    {
-        if (HasPendingRoomCode)
-            JoinClicked();
-    }
+    // onSubmit still fires on Enter even with nothing typed - JoinClicked itself is what guards
+    // against an empty field now, so this can just defer to it instead of duplicating the check.
+    private void HandleRoomCodeSubmit(string _) => JoinClicked();
 
     private void CreateClicked() => PartyManager.Instance.CreateParty();
-    private void JoinClicked() => PartyManager.Instance.JoinParty(PendingRoomCode);
+
+    private void JoinClicked()
+    {
+        if (HasPendingRoomCode == false)
+        {
+            ToastManager.Instance?.Show("Enter a room code to join.");
+            return;
+        }
+
+        PartyManager.Instance.JoinParty(PendingRoomCode);
+    }
     private void LeaveClicked() => PartyManager.Instance.LeaveParty();
 
     private void HandlePhaseChanged(PartyManager.PartyPhase phase)
@@ -196,23 +231,31 @@ public class PartyRoomWidget : MonoBehaviour
         ClearSlotsFrom(slot);
     }
 
-    // Fills slot 0 with your own card off Client.LocalPlayer - a connection-level identity that
-    // exists as soon as you're connected to Photon at all, independent of being in any room - so
-    // the main menu shows your card while solo rather than an empty box you only populate by
-    // creating a room. Shared by RefreshRoster and ClearRoster (see its own comment for why
-    // ClearRoster needs this instead of just calling RefreshRoster). Returns the next free slot
-    // index: 1 if filled, 0 if there's no local player yet (before ever connecting).
+    // Fills slot 0 with your own card - never leaves it in the "nobody here" placeholder state
+    // every other slot can fall into, because unlike a teammate slot, this ONE doubles as the main
+    // menu's representation of your chosen hero: it must always show SOME hero, connected or not,
+    // in a room or not, even mid-race before Client.LocalPlayer is available (see TryInitialize's
+    // own comment on that race). Falls back to "You" and whatever LocalCharacterId/the catalog
+    // resolve to (CharacterPreviewWidget/RoomWidget both already fall back to the first catalog
+    // entry on their own) rather than passing through the same empty-name "nobody here" signal
+    // ClearSlotsFrom uses for every other slot. Shared by RefreshRoster and ClearRoster (see its
+    // own comment for why ClearRoster needs this instead of just calling RefreshRoster). Always
+    // returns 1 (slot 0 is always considered filled) unless there's nothing to fill it with at all.
     private int SetupLocalSlot(Player localPlayer)
     {
-        if (localPlayer == null || playerWidgets.Length == 0)
+        if (playerWidgets.Length == 0)
             return 0;
 
         // The character comes from PartyManager's own mirror rather than the Photon property,
         // which isn't written yet while there's no room to write it into - see LocalCharacterId.
-        SetupSlot(0, DisplayNameFor(localPlayer), localPlayer, PartyManager.Instance.LocalCharacterId);
+        string playerName = localPlayer != null ? DisplayNameFor(localPlayer) : "You";
+        SetupSlot(0, playerName, localPlayer, PartyManager.Instance.LocalCharacterId);
         return 1;
     }
 
+    // player is null only for slot 0 before Client.LocalPlayer is available (see SetupLocalSlot) -
+    // ready/leader have no meaning yet at that point, so they just read as false rather than the
+    // whole slot bailing out and reverting to placeholder.
     private void SetupSlot(int index, string playerName, Player player, string characterId)
     {
         if (playerWidgets[index] == null)
@@ -223,7 +266,9 @@ public class PartyRoomWidget : MonoBehaviour
         if (catalog != null)
             catalog.TryGetDisplayName(characterId, out characterDisplayName);
 
-        playerWidgets[index].Setup(playerName, PartyManager.Instance.TryGetReady(player), characterDisplayName, player.IsMasterClient, characterId);
+        bool isReady = player != null && PartyManager.Instance.TryGetReady(player);
+        bool isLeader = player != null && player.IsMasterClient;
+        playerWidgets[index].Setup(playerName, isReady, characterDisplayName, isLeader, characterId);
     }
 
     // An empty name is a slot's "nobody here" signal, so a player who hasn't set one yet would

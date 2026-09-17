@@ -1,13 +1,27 @@
 # Elemental Reactions
 
-Fire/Ice/Rock/Lightning each apply their own baseline status on landing (Burn/Slow/Intimidate/
-Electrified) - Void is the only element with no baseline, its identity living entirely in
-hand-authored `WeaponDataAsset` traits instead. Landing a second element whose pairing status is
-already active on a target fires one of 3 elemental reactions immediately - **Thermal Shock**
-(Burn+Chill), **Overload** (Burn+Shock), **Shatter** (Chill+Shock). Read this before touching
-anything `ElementType`/`StatusEffects`/`ElementalReactionConfig`-related - it's the source of truth
-for *why* the numbers and field ownership are shaped the way they are, not just what they are. See
-"Current status" at the bottom for what's actually implemented vs. still needs Editor authoring.
+Fire/Ice/Lightning each apply their own baseline status on landing (Burn/Chill/Shock). Landing a
+second element whose pairing status is already active on a target fires one of 3 elemental
+reactions immediately - **Thermal Shock** (Burn+Chill), **Overload** (Burn+Shock), **Shatter**
+(Chill+Shock). Read this before touching anything `ElementType`/`StatusEffects`/
+`ElementalReactionConfig`-related - it's the source of truth for *why* the numbers and field
+ownership are shaped the way they are, not just what they are. See "Current status" at the bottom
+for what's actually implemented vs. still needs Editor authoring.
+
+`ElementType` also used to carry Rock (Intimidate baseline) and Void (no baseline - unused flavor
+text, never actually wired to any weapon) - both were retired, see "Current status" at the bottom.
+Intimidate itself survives as Brute's Protector Aura mechanic, just no longer reachable through any
+weapon element.
+
+The three base elemental statuses are deliberately different identities, not three flavors of the
+same "debuff": **Burn** (Fire) is stackable sustained damage, **Chill** (Ice) is a progressive
+stacking slow that culminates in **Freeze** (a fourth, distinct hard-CC status), and **Shock**
+(Lightning/Electrified) is a persistent, non-damaging setup state whose only baseline payoff is a
+chance to proc the existing, generic **Stun** on a second Electric hit. None of this - Burn's
+stacks, Chill's buildup/Freeze threshold, or Shock's Stun proc - is a cross-element reaction; all
+three are single-element baseline behavior, unchanged by this doc's own "3 pairwise reactions"
+system below, which only ever fires on a SECOND, DIFFERENT element landing on a target that
+already carries the first's status.
 
 ## History
 
@@ -49,20 +63,38 @@ version of this system (the original pairwise scan and Rift Mark both consumed o
 ## Shock (Electrified)
 
 Lightning's baseline status (`StatusEffects.ElectrifiedRemaining`, applied by
-`StatusEffectUtility.ApplyElementBaseline`/`ApplyElectrified` the same way Fire→Burn/Ice→Slow are) -
+`StatusEffectUtility.ApplyElementBaseline`/`ApplyElectrified` the same way Fire→Burn/Ice→Chill are) -
 plain overwrite-on-reapply, no tier duration scaling, so Boss stays vulnerable to it the same way it
-stays vulnerable to Burn/Slow (soft CC/DoT-flavored, not hard CC).
+stays vulnerable to Burn/Chill (soft CC-flavored, not hard CC on its own).
 
-Gameplay identity: **action disruption**. While Electrified, `StatusEffectSystem.TickElectrified`
-ticks `ElectrifiedJoltTimer` down from `ElementalReactionConfig.JoltInterval`; on reaching 0 it applies
-a **Jolt** - a brief `StatusEffectUtility.ApplyStagger` (see below) of `JoltStaggerDuration` - fires
-`JoltTriggered { Target, Position }` for a one-shot spark, and resets the timer. Purely deterministic
-and interval-based, no proc chance anywhere. Shock's whole identity is a *repeatable periodic
-interrupt*, not a long stun - Stun remains the separate, stronger hard-CC primitive.
+Gameplay identity: **persistent electrical setup state**, not an automatic effect of its own - Shock
+deals no damage and does not by itself Stun. Its one baseline payoff: when a NEW Electric hit lands
+on a target that is ALREADY Electrified (read via `IsElectrified` *before* `ApplyElectrified`
+overwrites `ElectrifiedRemaining`, so a fresh, non-refresh application never rolls), it rolls
+`ElementalReactionConfig.ShockStunProcChance` (`DamageUtility.RollChance`, fully deterministic) and,
+on success, calls the existing, generic `StatusEffectUtility.ApplyStun` with
+`ElementalReactionConfig.ShockStunProcDuration` - never a bespoke "Electric Stun" status. The
+resulting Stun's actual duration/immunity/rejection still goes through `ApplyStun`'s own
+`EnemyTierResistanceConfig` lookup exactly like every other Stun source, so target tier governs how
+the STUN behaves while `ShockStunProcChance` (proc chance) stays source-owned and untouched by tier.
+This is Shock's only mechanical effect - previously Electrified drove its own periodic Stagger tick
+("Jolt"); that periodic tick has been removed (see "Jolt now means Stun" below), so Shock is now a
+pure setup condition other systems (a future weapon perk, chain lightning, cross-element reactions)
+can key off `IsElectrified`.
+
+## Jolt now means Stun, not Shock
+
+`JoltTriggered { Target, Position }` used to fire from Electrified's own periodic tick (see history
+above). It's now fired from exactly one place: `StatusEffectUtility.ApplyStun`, the instant a Stun
+genuinely LANDS (returns `true`) - regardless of source. That covers Shock's own proc above,
+Shatter's primary Stun below, and any future Stun source, with zero extra wiring at each call site.
+Jolt communicates "this target was Stunned", never "this target was Shocked" - Shock applying or
+refreshing never fires it. `EffectsManager.joltEffectPrefab` (the VFX itself) is untouched; only who
+triggers it changed.
 
 ## Stagger: pausing, not stopping
 
-A new CC primitive, distinct from both Stun (full incapacitation - state machine/movement/firing all
+A CC primitive, distinct from both Stun (full incapacitation - state machine/movement/firing all
 freeze) and Root (movement-only lockout): Stagger pauses whatever action-windup timer is currently
 counting down, without canceling or resetting the action itself, **and** pins movement for the same
 duration (sharing Root's exact freeze - kinematic body + `EnemyMovementUtility.StopMovement`, state
@@ -70,30 +102,146 @@ machine otherwise unaffected). A 0.1s Stagger landing during an attack whose win
 attack land at 0.6s instead of 0.5s - delayed, never voided - and the enemy also can't keep sliding
 toward the player mid-stumble for that same 0.1s.
 
+Today Stagger's only live trigger is Shatter's secondary AoE below (`ShatterAreaStaggerDuration`) -
+Electrified's own periodic Stagger tick (the mechanism that originally justified Stagger's
+"no diminishing-returns window" design, so Shock could stay repeatably interruptive) was removed
+along with Jolt-on-Shock (see above). The primitive itself is unchanged and stays available for any
+future short, repeatable "flinch" source.
+
 - `StatusEffects.StaggerRemaining` - flat unconditional decrement in `StatusEffectSystem`, no
   dedicated Tick method needed (nothing to clean up on expiry, same shape as `RootRemaining`).
 - `StatusEffectUtility.ApplyStagger`/`IsStaggered` - modeled on `ApplyRoot`/`IsRooted`, but folds in a
   dedicated `EnemyTierResistanceConfig.TierStatusResistance.StaggerDurationMultiplier` taper instead
   of an immunity window or `ImmuneToHardCC` check. Deliberately **no diminishing-returns immunity
-  window** the way Stun has one - Shock's Jolt needs to land repeatably to do its job as a periodic
-  interrupt; an immunity window would defeat that identity. Boss is tapered (not immune), consistent
-  with "Boss stays vulnerable to soft CC" and the explicit decision not to special-case any one enemy
-  archetype.
+  window** the way Stun has one, so a rapid burst of Stagger sources can't be defeated by one landing
+  and locking the rest out. Boss is tapered (not immune), consistent with "Boss stays vulnerable to
+  soft CC" and the explicit decision not to special-case any one enemy archetype.
 - Movement hook: `EnemySystem.Update`'s top-level Root gate (kinematic + `StopMovement`, letting the
-  state machine keep running unless also Stunned), `UpdateChasing`'s own Root re-check (stops it from
-  closing distance specifically), and `EnterRecovering`'s post-attack kinematic restore all now check
-  `IsStaggered` alongside `IsRooted` - Stagger reuses Root's exact movement-freeze plumbing rather than
-  adding a second one.
+  state machine keep running unless also Stunned/Frozen), `UpdateChasing`'s own Root re-check (stops
+  it from closing distance specifically), and `EnterRecovering`'s post-attack kinematic restore all
+  now check `IsStaggered` alongside `IsRooted` - Stagger reuses Root's exact movement-freeze plumbing
+  rather than adding a second one.
 - Windup hook: `EnemySystem.UpdatePreparation` skips only the `Enemy.StateTimer -=` line (and the
   phase-transition check immediately after it) for a staggered entity, leaving `StateTimer`/`Phase`
   completely frozen for that tick - without touching the rest of `Update`'s dispatch the way Stun's
   full-method skip does. This is a third, distinct pattern alongside the two that already existed
-  there: Stun skips the whole method; Deep Freeze's `AnticipationSlowRemaining` *multiplies* the
-  decrement rate (stretches the windup, never stops it); Stagger *skips* the decrement outright for its
-  own duration, then resumes counting from exactly where it left off. Scoped deliberately to
+  there: Stun/Freeze skip the whole method; Deep Freeze's `AnticipationSlowRemaining` *multiplies* the
+  decrement rate (stretches the windup, never stops it - an unrelated, older mechanic despite the
+  name, see "Freeze (Ice hard CC)" below for the real Freeze); Stagger *skips* the decrement outright
+  for its own duration, then resumes counting from exactly where it left off. Scoped deliberately to
   `Preparation`/`Telegraph` only (the one place in the codebase a literal pausable windup timer
   exists) - no equivalent player-side pre-action timer exists to pause (weapons only have a post-shot
   cooldown, skills have no charge-up state), so Stagger has no observable effect on a player.
+
+## Burn stacking (Fire)
+
+Burn (`StatusEffects.BurnRemaining` + up to `EffectConfig.BurnMaxStacks` (5) independent
+`BurnStackDamagePerTick` entries) is stackable sustained damage - every qualifying Fire hit either
+pushes its OWN stack (potency seeded from THAT hit's own damage via the existing
+`ComputeDotDamagePerTick`/`ComputeDotDamagePerTickWithFloor` formula, `EffectConfig.
+BurnDamagePercent` = 10% of the hit's damage per second) below the cap, or - once at the cap -
+simply refreshes the shared timer without replacing/strengthening an existing stack. All stacks
+share ONE `BurnRemaining` timer, deliberately not per-stack timers: any new Fire hit refreshes
+every stack's expiry together, and `StatusEffectSystem.TickBurn` sums every active stack
+(`StatusEffectUtility.GetBurnDamagePerTick`) into one DoT tick per `EffectConfig.TickInterval`. A
+10-damage SMG tick and a 100-damage sniper tick land as two independently-sized stacks rather than
+blending into one generic number - a weak follow-up hit can only ADD a small stack, never downgrade
+an existing strong one.
+
+`StatusEffectUtility.ApplyBurn` takes an explicit `maxStacks` parameter (every caller threads its
+own resolved `EffectConfig.BurnMaxStacks` through) rather than re-resolving the config internally -
+same "caller already has config resolved" convention `tickInterval` already used. Max's Wildfire
+spread (`MaxFireMasteryReactionSystem`) reads the dying target's live intensity via
+`GetBurnDamagePerTick`'s summed total, not a single field, so a heavily-stacked Burn spreads its
+real combined intensity onward.
+
+## Chill (Ice) buildup + Freeze
+
+Chill (`StatusEffects.IceRemaining` + `IceBuildup`) is a progressive stacking slow, migrated from
+an earlier binary "Slow" (single `IceSpeedMultiplier`, no stacks) to a buildup model: every
+qualifying Ice application contributes `EffectConfig.IceBuildupPerDamage * hitDamage` buildup units
+(same "potency scales off the hit's own damage" convention Burn's own per-stack potency uses, so a
+fast weak weapon can't out-buildup a slow heavy one just by firing more often - `IceBuildupPerDamage`
+is tuned so a ~40-damage hit, the same reference Burn's own worked example uses, contributes ~1
+unit). `StatusEffectUtility.GetSpeedMultiplier` derives the actual slow live from the buildup
+(`1 - IceBuildup * EffectConfig.IceSlowPerBuildup`, 8% per unit) rather than storing a multiplier -
+1 unit = 8% slow, 4 units = 32%. `EnemyTierResistanceConfig.TierStatusResistance.
+ChillForceMultiplier` tapers the CONTRIBUTED buildup itself (not the resulting multiplier), so a
+tapered target both resists the slow AND takes proportionally longer to build toward Freeze from
+the same hits - one taper, two effects, no extra code. One shared duration timer refreshed by every
+application (`StatusEffectSystem.TickIce`) - reaching 0 clears the buildup entirely, never a
+per-application timer.
+
+Reaching `EffectConfig.IceFreezeThreshold` (5 units) converts the buildup straight into **Freeze**
+(`StatusEffectUtility.ApplyFreeze`) instead of sitting at a 40%+ slow, and resets `IceBuildup` to 0.
+`SlowEffectData` (the freely-authorable guaranteed-Ice effect, used by skills/perks independent of
+the weapon-elemental-proc roll) feeds the exact same buildup system off `context.Damage`, so a
+directly-authored Slow and a native Ice weapon hit both build the same Chill identity rather than
+running two parallel slow systems.
+
+## Freeze (Ice hard CC)
+
+A NEW status, `StatusEffects.FreezeRemaining`, reached ONLY via Chill buildup hitting
+`IceFreezeThreshold` above - never applied directly by a weapon/skill. Reuses the exact same total
+lockout Stun does: every `IsStunned` gate in `EnemySystem`/`PlayerMovementProcessor`/`WeaponSystem`
+also checks `IsFrozen`, so a Frozen target can't move, attack, or have its state machine advance,
+without a second copy of that plumbing. Freeze stays an independently queryable status of its own
+(`StatusEffectUtility.IsFrozen`) - a future system (bonus damage vs. a Frozen target, a
+Shatter-style payoff) can tell Freeze and Stun apart even though both share the same lockout gates
+today. Also calls `EnemyActionUtility.TryInterrupt` on landing, gated by the same
+`TierStatusResistance.StunCancelsAction` flag Stun's own cancel uses (not a dedicated
+`FreezeCancelsAction` - it's the same per-tier question about a second hard-CC primitive).
+
+Neither `ApplyFreeze` nor `ApplyStun` (nor `TryConsumeInterruptImmunity`) checks
+`TierStatusResistance.ImmuneToHardCC` anymore - every tier, Boss included, is genuinely
+Stunnable/Freezable now, just heavily tapered and rarely (see the table below). `ImmuneToHardCC`
+still exists and is still `true` for Boss, but now gates ONLY `ApplyRoot` - Boss stays immune to
+being rooted in place, that guarantee is untouched; it simply no longer doubles as a blanket
+Stun/Freeze immunity flag.
+
+Both Stun and Freeze duration are expressed as a per-tier multiplier
+(`StunDurationMultiplier`/`FreezeDurationMultiplier`) of their own Normal-tier reference base
+(`ElementalReactionConfig.ShockStunProcDuration` = 1.0s, `EffectConfig.FreezeDuration` = 2.0s), and
+the re-proc/recovery cooldowns (`StunImmunityDuration`/`InterruptImmunityDuration`,
+`FreezeRecoveryDuration`) are authored directly in seconds per tier:
+
+| Tier | Stun duration | Stun re-proc cooldown | Freeze duration | Freeze recovery cooldown |
+|---|---:|---:|---:|---:|
+| Filler | 1.1s | 0.75s | 2.0s | 0.5s |
+| Normal | 1.0s | 1.0s | 2.0s | 0.75s |
+| Specialist | 0.9s | 1.25s | 1.7s | 1.0s |
+| Heavy | 0.8s | 1.75s | 1.4s | 1.5s |
+| Elite | 0.65s | 2.5s | 1.2s | 2.5s |
+| Boss | 0.5s | 4.0s | 1.0s | 4.0s |
+
+Filler deliberately is NOT identical to Normal here (unlike most other fields on that tier) - it's
+the single easiest tier to hard-CC, both in duration and how soon it can be re-CC'd. Tougher tiers
+get hit for less time per proc but also can't be re-locked back-to-back, so the same fast-firing
+Electric/Ice build reads as "frequent brief interruptions" against trash and "rare, short openings"
+against a Boss, rather than either extreme losing all identity. Since `StunDurationMultiplier` is
+the one shared per-tier taper every Stun source reads (`ApplyStun`), this table also retunes
+Shatter's own primary Stun (`ShatterPrimaryStunDuration`, 1.5s base) proportionally - and, since
+Boss is no longer flatly immune, Shatter landing on a Boss primary now actually Stuns it (tapered to
+1.5s × 0.5 = 0.75s) instead of silently doing nothing the way it used to.
+
+**Anti-permafreeze**: `StatusEffects.FreezeRecoveryRemaining`, seeded to (the applied Freeze's own
+tapered duration + `TierStatusResistance.FreezeRecoveryDuration` from the table above) the instant
+Freeze lands - same shape as `StunImmunityRemaining`'s diminishing-returns window, just
+Freeze-specific. While it's still counting down, `ApplyFreeze` rejects a new Freeze outright, but
+Chill buildup keeps accumulating and slowing normally (`ApplyIce` only refuses to add buildup while
+`FreezeRemaining` itself is still active, not during the post-Freeze recovery window) - so a fast
+Ice weapon can keep a recovering target slowed, just can't re-lock it solid again until recovery
+clears. Filler deliberately does NOT default to 0/disabled the way `StunImmunityDuration`/
+`InterruptImmunityDuration` normally would at that tier - it's the tier most exposed to a
+high-fire-rate weapon rebuilding Chill to threshold the instant a Freeze ends, so leaving it at the
+class default would read as a permanent lock rather than a CC.
+
+`freezeIndicator`/`hardFreezeParticlePrefab` are the new View slots for this status - deliberately
+NOT `deepFreezeIndicator`/`freezeParticlePrefab`, which are an unrelated, older mechanic
+(`AnticipationSlowRemaining`, a windup-stretch applied by the standalone `FreezeEffectData` skill
+effect) that happened to already claim the "Freeze" name before this status existed. No dedicated
+Freeze VFX authored yet - "code's ready, needs Editor authoring", same gap this project's other
+systems already carry.
 
 ## Reaction dispatch and priority
 
@@ -256,12 +404,13 @@ ever shipped).
   Overload's chain damage is (bypasses `HitEffectUtility`, so it can never itself trigger another
   reaction).
 - Elite/Boss get no special-cased behavior - reusing `ApplyStun`/`ApplyStagger` as-is means the
-  primary's Stun already respects Boss's `ImmuneToHardCC`/tier duration multipliers/the shared Stun
-  diminishing-returns window, and the nearby Stagger already respects `StaggerDurationMultiplier`, both
-  the same way every other consumer of those primitives does - no Shatter-specific special-casing. A
-  Boss landed as the primary simply won't be stunned (reaction still fires, nearby enemies are still
-  staggered), consistent with "don't fail the whole reaction just because the center resists part of
-  it."
+  primary's Stun already respects every tier's `StunDurationMultiplier`/`StunImmunityDuration` (see
+  the table in "Jolt now means Stun, not Shock" above), and the nearby Stagger already respects
+  `StaggerDurationMultiplier`, both the same way every other consumer of those primitives does - no
+  Shatter-specific special-casing. A Boss landed as the primary now genuinely gets Stunned too (just
+  tapered to a brief 0.75s, gated by Boss's own 4s re-proc cooldown - `ImmuneToHardCC` no longer
+  blocks Stun outright, only Root), consistent with "don't fail the whole reaction just because the
+  center resists part of it," now with less resisting than before.
 - Presentation: `EffectsManager.shatterEffectPrefab`, authored at reference radius 1 and scaled by
   `e.Radius` (the real `ShatterRadius`) so the visual reads at the actual gameplay extent. Icy blue
   with yellow lightning accents - a short angular "crack", not an implosion or explosion; no pull/
@@ -279,19 +428,20 @@ element, even if one lands afterward - only ever the first.
 
 - `StatusEffects.FirstElementApplied` (Neutral until set) - written exactly once, by a shared
   `StatusEffectUtility.MarkFirstElementApplied(status, element)` helper called at the end of each of
-  `ApplyBurn`/`ApplyIce`/`ApplyIntimidate`/`ApplyElectrified` (Rock included, even though it has no view
-  color yet - see below), regardless of which caller/path actually triggered it (a normal
-  elemental-chance roll, `TryApplyGuaranteedBurn`, a perk-infused hit, ...) - so nothing needs to
+  `ApplyBurn`/`ApplyIce`/`ApplyElectrified`, regardless of which caller/path actually triggered it (a
+  normal weapon hit, `TryApplyGuaranteedBurn`, a perk-infused hit, ...) - so nothing needs to
   remember to hook this at every individual application site. No event - `StatusEffectUtility.
   GetFirstElementApplied(f, entity)` is a plain view-facing read of the field.
-- `HitFeedback.UpdateElementalRestTint`, called every `QUpdate` (same live poll-and-toggle shape as the
-  Freeze Mark block right above it in that file), reads `GetFirstElementApplied` and, if it resolves a
-  tint (`fireRestTint`/`iceRestTint`/`lightningRestTint` - Rock has none authored, not requested),
-  checks whether THAT element's own status is still active right now (`IsBurning`/`IsSlowed`/
-  `IsElectrified`/`IsIntimidated`) and only writes `restColor` (the color every hit/heal/shield/etc.
-  flash tweens back down to - see `ApplyFlash`) on an active/inactive transition: the tint while active,
-  `_originalRestColor` (captured once in `InitializeSprites`, before any tint can touch it - also reset
-  on every pooled-enemy respawn) the moment it goes inactive. On that same transition it also actively
+- `HitFeedback.UpdateStatusRestTint`, called every `QUpdate` (same live poll-and-toggle shape as the
+  Freeze Mark material swap right above it in that file), reads `GetFirstElementApplied` and, if it
+  resolves a tint (`fireRestTint`/`iceRestTint`/`lightningRestTint`), checks whether THAT element's
+  own status is still active right now (`IsBurning`/`IsSlowed`/`IsElectrified`) and only writes
+  `restColor` (the color every
+  hit/heal/shield/etc. flash tweens back down to - see `ApplyFlash`) on an active/inactive transition:
+  the tint while active, `_originalRestColor` (captured once in `InitializeSprites`, before any tint
+  can touch it - also reset on every pooled-enemy respawn) the moment it goes inactive. The TRUE
+  hard-CC Freeze (`frozenTint`, `StatusEffectUtility.IsFrozen`) is folded into this same method with
+  top priority over the elemental tint - see "Freeze (Ice hard CC)" above. On that same transition it also actively
   stops any in-flight flash tween and repaints the sprites to the new `restColor` directly (same
   stop-then-set shape as `Die()`/`Respawn()`) - `restColor` is only ever READ by `ApplyFlash` as a
   future tween destination, so without this the sprite would stay stuck at whatever color its last
@@ -391,7 +541,7 @@ primitives with other live callers:
 ## Current status
 
 Implemented and live: `ElementType.Lightning` now applies `Electrified` as a real baseline (joining
-Fire/Ice/Rock); `StatusEffects.qtn`'s `ElectrifiedRemaining`/`ElectrifiedJoltTimer`/`StaggerRemaining`/
+Fire/Ice); `StatusEffects.qtn`'s `ElectrifiedRemaining`/`StaggerRemaining`/
 `ThermalShockCooldownRemaining`/`OverloadCooldownRemaining`/`ShatterCooldownRemaining`/`OverloadChain*`
 fields; `ElementalReactionConfig`'s full field replacement; `StatusEffectUtility`'s
 `TryTriggerElementalReaction` dispatcher and the 3 `TryTrigger*` reactions (non-consuming, cooldown-
@@ -402,7 +552,7 @@ replaced is deleted, not deprecated - see `docs/weapon-perks.md`/`docs/rift-muta
 what was cut from those two content pools. Also implemented: `EventEntityDamaged.ReactionProc` (lets
 the view tell a reaction's own proc damage apart from a periodic status tick even when both share the
 same `Element`) and the first-element rest tint (`StatusEffects.FirstElementApplied` /
-`StatusEffectUtility.GetFirstElementApplied` / `HitFeedback.UpdateElementalRestTint` - see that section
+`StatusEffectUtility.GetFirstElementApplied` / `HitFeedback.UpdateStatusRestTint` - see that section
 above).
 
 **Not done yet / known simplifications:**
@@ -420,6 +570,89 @@ above).
   order to confirm it's genuinely order-independent; re-apply within the cooldown window to confirm no
   second trigger; cluster several enemies and trigger Overload to confirm the chain hops sequentially
   (not a fan-out) with a visible delay between hops; trigger Shatter near a mixed group including a
-  Boss to confirm the primary gets a strong Stagger, nearby enemies get a short one, and the Boss is
-  tapered rather than immune; stand an enemy mid-windup and land a Jolt to confirm its attack lands
-  later rather than being canceled.
+  Boss to confirm the primary gets a brief Stun (with Jolt, tapered to Boss's own ~0.75s) and nearby
+  enemies get a short Stagger (no Jolt), and that a second Shatter within Boss's 4s Stun re-proc
+  cooldown doesn't re-Stun it while its Stagger taper still applies every time;
+  stand an enemy mid-windup and land a Shatter-area Stagger to confirm its attack lands later rather
+  than being canceled.
+
+## Current status - Burn stacking / Chill buildup / Freeze / Shock-Stun proc
+
+A later pass than the pairwise-reaction rework above, layered on top of it without touching the
+reaction dispatch/cooldowns/damage themselves (`TryTriggerElementalReaction` and all 3
+`TryTrigger*` reactions are unchanged - `IsBurning`/`IsSlowed`/`IsElectrified` still gate on the
+same `Remaining` fields they always did, so the reactions stay fully compatible with stacked
+Burn/buildup Chill).
+
+Implemented and live: Burn stacking (`BurnStackCount`/`BurnStackDamagePerTick[5]`,
+`EffectConfig.BurnMaxStacks`); Chill/Ice migrated from a flat `IceSpeedMultiplier` to buildup
+(`IceBuildup`, `EffectConfig.IceBuildupPerDamage`/`IceSlowPerBuildup`/`IceFreezeThreshold`); the new
+Freeze hard-CC status (`FreezeRemaining`/`FreezeRecoveryRemaining`, `EffectConfig.FreezeDuration`,
+`EnemyTierResistanceConfig.FreezeDurationMultiplier`/`FreezeRecoveryDuration`) reusing Stun's
+movement/action lockout gates; Shock's Stun proc (`ElementalReactionConfig.
+ShockStunProcChance`/`ShockStunProcDuration`); Jolt moved from Electrified's own periodic tick
+(removed, along with `ElectrifiedJoltTimer`/`JoltInterval`/`JoltStaggerDuration`) to firing directly
+from `ApplyStun` on any genuine Stun landing; **Boss's blanket Stun/interrupt immunity was removed**
+- `ApplyStun`/`TryConsumeInterruptImmunity` no longer check `TierStatusResistance.ImmuneToHardCC` at
+all (every tier is now Stunnable, tapered per the table in "Jolt now means Stun, not Shock" above),
+though `ImmuneToHardCC` itself survives unchanged as `ApplyRoot`'s own gate - Boss stays Root-immune.
+This is a real, intentional balance change beyond the original scope of this pass (any existing
+"bonus damage vs. Stunned target" upgrade, e.g. Brute's `StunDamageBonusUpgrade`, can now
+occasionally proc against a Boss where it never could before) - called out here since it ripples
+into every Stun source in the game, not just the new elemental ones.
+
+Also implemented: `HitFeedback.frozenTint` (a live sprite color tint while `IsFrozen`, folded into
+`UpdateStatusRestTint` with top priority over the elemental first-hit tint - see "Freeze (Ice hard
+CC)" above) and `HitFeedback.hardFreezeMaterial` (a dedicated material-swap slot, same mechanism the
+older `freezeMaterial`/AnticipationSlow "Freeze Mark" already used, own slot so the two don't
+collide - `MarkState` now has 3 states: `Normal`/`AnticipationFreeze`/`HardFreeze`). Also mirrored
+onto `PlayerFxConfig.FrozenTint` for hero-shared tuning.
+
+**Not done yet / known simplifications:**
+- **No dedicated Freeze VFX authored** - `hardFreezeParticlePrefab` (`StatusEffectsManager`)/
+  `freezeIndicator` (`CharacterUiWidget`)/`hardFreezeMaterial` (`HitFeedback`) are all wired into
+  the existing pipeline but left empty/untinted-material, same "code's ready, needs Editor
+  authoring" gap as everything else in this file - `frozenTint` is the only piece with an actual
+  authored default (a pale icy blue), since it needs no external asset.
+- **No bonus-damage-vs-Frozen, Shatter-style Freeze payoff, or Freeze-specific cross-element
+  reaction** - out of scope for this pass by design; Freeze is deliberately just the shared
+  movement/action lockout today, independently queryable (`IsFrozen`) for a future system to build
+  on.
+- **`SlowEffectData`'s magnitude semantics changed** - it used to author a flat ~50% speed
+  multiplier; it now contributes the same per-damage Chill buildup the Ice weapon-elemental path
+  does, so its exact slow strength depends on `context.Damage` rather than a fixed authored value.
+  Re-tune any skill/perk that relies on `SlowEffectData`'s old flat-50% feel in-Editor.
+- **Shatter's secondary Stagger no longer fires `JoltTriggered`** - only the primary's genuine Stun
+  does (automatically, via `ApplyStun`). Intentional (see "Jolt now means Stun, not Shock" above),
+  called out here since it's a visible feedback change to an existing reaction.
+
+## Current status - Rock/Void/ElementalChance retirement
+
+A cleanup pass, independent of the Burn/Chill/Freeze/Shock work above: `ElementType` shrank from 5
+real elements to 3 (Neutral/Fire/Ice/Lightning, ordinals renumbered - every serialized `Element:`
+value across weapon/perk/mastery `.asset` files was fixed up in the same pass, not left to drift).
+
+- **Rock removed.** Its only role was `ApplyElementBaseline`'s Rock→Intimidate mapping (via the
+  Shatter Rounds Element Infusion perk, now deleted) - Intimidate itself is untouched and survives
+  as Brute's Protector Aura mechanic, just no longer reachable through any weapon element.
+  `EffectConfig.IntimidateDuration`/`IntimidateOutgoingDamageMultiplier` stay, still read by
+  `ApplyIntimidate`.
+- **Void removed.** It never had a baseline or any real implemented trait (the `.qtn` comment's "a
+  Void gun starting with Pierce" described no asset that ever existed) - its only footprint was a
+  `voidParticlePrefab` slot on `ProjectileElementalFxView` and the Void Rounds Element Infusion perk
+  (its description referenced the long-retired Rift Mark's "Singularity" trigger, dead flavor text
+  even before this removal) - both deleted.
+- **`CharacterStats.ElementalChance` removed.** The native weapon-elemental baseline
+  (`TryApplyElementalStatus`) used to roll this before applying Fire/Ice/Lightning's baseline status
+  at all - it now applies unconditionally on every qualifying Weapon-sourced hit. The Element
+  Infusion weapon perk's own `ProcChance` (Incendiary/Cryo/Shock Rounds) is untouched and still
+  rolls independently - that's a perk-specific proc, not the retired native-element roll.
+- Deleted: `ShatterRounds`/`VoidRounds` perk assets + GUID rows in `WeaponPerkPoolData.asset`, their
+  `PerkSpec` entries in `WeaponPerkAssetGenerator.cs`, `EffectConfig.VoidDuration` (already
+  orphaned - never read by anything even before this pass).
+
+**Not done yet:** `WeaponCardWidget.elementSprites`/`elementLabels` (a UI element-icon/label
+lookup, indexed by the enum ordinal) is serialized with the OLD 6-entry data in at least one scene
+(`GrasslandOutpostGameScene.unity`) - the C# default was updated to the new 4-entry order, but a
+serialized array doesn't shrink on its own; needs a quick Editor pass to re-author it down to 4
+entries (dropping the old Rock/Void slots) or the two trailing entries will just render as unused.

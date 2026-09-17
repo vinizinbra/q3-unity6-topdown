@@ -126,6 +126,20 @@ component WeaponPostImpactProcs
     Int32   SplitShotCount;
     FP      SplitShotDamageMultiplier;
 
+    // Mirrors SplitShotWeaponPerkData's own ProjectileOverride/LaunchAngleOverride verbatim -
+    // stamped unconditionally by its Apply (see there for what Invalid/-1 mean), so this is never
+    // read before being set for real. Lives here (not read off the perk asset directly) so
+    // WeaponPerkUtility.SpawnSplitProjectiles - called from both DirectHitData and AreaHitData -
+    // never needs to know which perk asset granted Split Shot, only whether HasSplitShot is true.
+    AssetRef<ProjectileDataAsset> SplitShotProjectileOverride;
+    FP SplitShotLaunchAngleOverride;
+
+    // Total arc the fragments fan across when a real travel direction is available, centered on it -
+    // mirrors SplitShotWeaponPerkData.SplitAngle verbatim, same "stamped unconditionally, never read
+    // before being set for real" reasoning as the two fields above. See
+    // WeaponPerkUtility.SpawnSplitProjectiles.
+    FP SplitShotArcDegrees;
+
     Boolean HasQuantumRounds;
     FP      QuantumRoundsRadius;
     FP      QuantumRoundsDamageMultiplier;
@@ -221,9 +235,10 @@ component WeaponOnCritReactions
 
 // -- Element Infusion (ElementInfusionWeaponPerkData) --
 // A perk that grafts an EXTRA on-hit element onto the weapon, independent of the weapon's own
-// WeaponDataAsset.Element (which keeps flowing via Projectile.Element and rolls CharacterStats.
-// ElementalChance as before) - this one carries its own ProcChance and never overrides the native
-// element, the two apply side by side per hit. Baked once by ElementInfusionWeaponPerkData.Apply,
+// WeaponDataAsset.Element (which keeps flowing via Projectile.Element and applies unconditionally,
+// see StatusEffectUtility.TryApplyElementalStatus) - this one carries its own ProcChance and never
+// overrides the native element, the two apply side by side per hit. Baked once by
+// ElementInfusionWeaponPerkData.Apply,
 // carried to impact via Projectile.PerkElement/PerkElementChance (projectile shots) or read live off
 // this component (hitscan), and applied through StatusEffectUtility.TryApplyInfusedElement. Only one
 // extra element per weapon - a second element-infusion perk last-wins, overwriting both fields.

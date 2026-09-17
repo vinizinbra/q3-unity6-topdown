@@ -1,17 +1,37 @@
 using NaughtyAttributes;
 using PrimeTween;
 using UnityEngine;
+using UnityEngine.UI;
 
 // Drop-in PrimeTween juice for any GameObject - pickups, UI icons/cards, weapon/hit reactions, etc.
 // All effects read/restore against the local scale/rotation/position captured in Awake, so a prefab
 // can be reused straight from a pool (SetActive false/true) without drifting from its authored pose.
 public class JuicyEffects : MonoBehaviour
 {
+    [Header("Sound (on enable)")]
+    [SerializeField, SoundDataPicker, Tooltip("Played once via AudioManager.Play (flat 2D, fire-and-forget) whenever this GameObject is enabled - fires alongside whichever on-enable effects above are also turned on (Scale In/Glitch In), not tied to either one specifically. Leave unassigned for silence.")]
+    private SoundData enableSound;
+
     [Header("Scale In (on enable)")]
     [SerializeField] private bool scaleInOnEnable = true;
     [SerializeField] private float scaleInDelay = 0f;
     [SerializeField] private float scaleInDuration = 0.45f;
     [SerializeField] private Ease scaleInEase = Ease.OutBack;
+
+    [Header("Glitch In (on enable)")]
+    [SerializeField, Tooltip("Simple one-shot 'materializing' stutter, distinct from GlitchWidget (which is a heavier periodic ambient loop with RGB-split ghosts, meant for Images specifically). This one just jitters local position/scale in discrete ticks for a short burst, then settles - works on any Transform.")]
+    private bool glitchInOnEnable = false;
+    [SerializeField] private float glitchInDuration = 0.25f;
+    [SerializeField, Tooltip("Seconds between re-randomized ticks within the burst - lower reads more frantic/staticky.")]
+    private float glitchInTickInterval = 0.03f;
+    [SerializeField, Tooltip("Max local-position jitter per tick, in local units.")]
+    private Vector3 glitchInOffset = new Vector3(0.15f, 0.15f, 0f);
+    [SerializeField, Tooltip("Max scale jitter per tick, as a fraction of base scale per axis. Leave at 0 to jitter position only.")]
+    private Vector3 glitchInScaleJitter = new Vector3(0.08f, 0.08f, 0f);
+    [SerializeField, Tooltip("Optional - spawns red/cyan RGB-split ghost copies behind this Image for the burst, same look as GlitchWidget's ambient glitch. Left unassigned, auto-resolved from GetComponent<Image>() in Awake; if this GameObject has no Image either, the burst just jitters position/scale with no ghosts.")]
+    private Image glitchGhostSource;
+    [SerializeField] private Color glitchGhostRedColor = new Color(1f, 0.1f, 0.3f, 0.6f);
+    [SerializeField] private Color glitchGhostCyanColor = new Color(0.1f, 1f, 1f, 0.6f);
 
     [Header("Punch Scale")]
     [SerializeField] private Vector3 punchScaleStrength = new Vector3(0.4f, 0.4f, 0f);
@@ -57,23 +77,81 @@ public class JuicyEffects : MonoBehaviour
     private Vector3 _baseScale;
     private Vector3 _baseLocalPosition;
     private Quaternion _baseRotation;
+    private Vector2 _glitchGhostBaseAnchoredPosition;
+    private Vector3 _glitchGhostBaseScale;
 
     private Tween _scaleTween;
     private Tween _rotationTween;
     private Tween _positionTween;
     private Tween _idleRareWiggleTween;
+    private Tween _glitchInTween;
+
+    private Image _glitchRedGhost;
+    private Image _glitchCyanGhost;
 
     private void Awake()
     {
         _baseScale = transform.localScale;
         _baseLocalPosition = transform.localPosition;
         _baseRotation = transform.localRotation;
+
+        if (glitchGhostSource == null)
+            glitchGhostSource = GetComponent<Image>();
+
+        if (glitchGhostSource != null)
+        {
+            _glitchGhostBaseAnchoredPosition = glitchGhostSource.rectTransform.anchoredPosition;
+            _glitchGhostBaseScale = glitchGhostSource.rectTransform.localScale;
+            _glitchRedGhost = SpawnGlitchGhost(glitchGhostSource, "GlitchRedGhost");
+            _glitchCyanGhost = SpawnGlitchGhost(glitchGhostSource, "GlitchCyanGhost");
+            HideGlitchGhosts();
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (_glitchRedGhost != null) Destroy(_glitchRedGhost.gameObject);
+        if (_glitchCyanGhost != null) Destroy(_glitchCyanGhost.gameObject);
+    }
+
+    // Plain sprite/rect copy of source - built from scratch (not Instantiate(source.gameObject, ...))
+    // specifically so it carries no scripts, this JuicyEffects included, which would otherwise spawn
+    // its own ghosts recursively. Inserted at source's current sibling index so it ends up directly
+    // behind it (Unity UI renders later siblings on top). Same idiom as GlitchWidget.SpawnGhost.
+    private static Image SpawnGlitchGhost(Image source, string ghostName)
+    {
+        var go = new GameObject(ghostName, typeof(RectTransform), typeof(Image));
+        var rect = (RectTransform)go.transform;
+        RectTransform sourceRect = source.rectTransform;
+        rect.SetParent(sourceRect.parent, false);
+        rect.anchorMin = sourceRect.anchorMin;
+        rect.anchorMax = sourceRect.anchorMax;
+        rect.pivot = sourceRect.pivot;
+        rect.sizeDelta = sourceRect.sizeDelta;
+        rect.anchoredPosition = sourceRect.anchoredPosition;
+        rect.localScale = sourceRect.localScale;
+        rect.SetSiblingIndex(sourceRect.GetSiblingIndex());
+
+        var image = go.GetComponent<Image>();
+        image.sprite = source.sprite;
+        image.type = source.type;
+        image.preserveAspect = source.preserveAspect;
+        image.material = source.material;
+        image.raycastTarget = false;
+
+        return image;
     }
 
     private void OnEnable()
     {
+        if (enableSound != null)
+            AudioManager.Play(enableSound);
+
         if (scaleInOnEnable)
             PlayScaleIn();
+
+        if (glitchInOnEnable)
+            PlayGlitchIn();
 
         if (idleWobbleOnEnable)
             StartIdleWobble();
@@ -90,9 +168,11 @@ public class JuicyEffects : MonoBehaviour
         _rotationTween.Stop();
         _positionTween.Stop();
         _idleRareWiggleTween.Stop();
+        _glitchInTween.Stop();
         transform.localScale = _baseScale;
         transform.localRotation = _baseRotation;
         transform.localPosition = _baseLocalPosition;
+        HideGlitchGhosts();
     }
 
     [Button]
@@ -102,6 +182,82 @@ public class JuicyEffects : MonoBehaviour
         transform.localScale = Vector3.zero;
         _scaleTween = Tween.Delay(gameObject, scaleInDelay, useUnscaledTime: scaleUseUnscaledTime).OnComplete(() =>
             _scaleTween = Tween.Scale(transform, _baseScale, scaleInDuration, scaleInEase, useUnscaledTime: scaleUseUnscaledTime));
+    }
+
+    // Short burst of discrete position/scale jitter ticks, then settles back to the captured base
+    // pose - a "materializing" stutter distinct from PlayScaleIn's smooth ease. Ticks (not a smooth
+    // Shake/Punch tween) are what give it the glitch/jump-cut read rather than a wobble.
+    [Button]
+    public void PlayGlitchIn()
+    {
+        _glitchInTween.Stop();
+        float endTime = (useUnscaledTime ? Time.unscaledTime : Time.time) + glitchInDuration;
+        GlitchInTick(endTime);
+    }
+
+    private void GlitchInTick(float endTime)
+    {
+        float now = useUnscaledTime ? Time.unscaledTime : Time.time;
+        if (now >= endTime)
+        {
+            transform.localPosition = _baseLocalPosition;
+            transform.localScale = _baseScale;
+            HideGlitchGhosts();
+            return;
+        }
+
+        transform.localPosition = _baseLocalPosition + new Vector3(
+            Random.Range(-glitchInOffset.x, glitchInOffset.x),
+            Random.Range(-glitchInOffset.y, glitchInOffset.y),
+            Random.Range(-glitchInOffset.z, glitchInOffset.z));
+
+        transform.localScale = new Vector3(
+            _baseScale.x * (1f + Random.Range(-glitchInScaleJitter.x, glitchInScaleJitter.x)),
+            _baseScale.y * (1f + Random.Range(-glitchInScaleJitter.y, glitchInScaleJitter.y)),
+            _baseScale.z * (1f + Random.Range(-glitchInScaleJitter.z, glitchInScaleJitter.z)));
+
+        ApplyGlitchGhostFrame();
+
+        _glitchInTween = Tween.Delay(gameObject, glitchInTickInterval, useUnscaledTime: useUnscaledTime)
+            .OnComplete(() => GlitchInTick(endTime));
+    }
+
+    // Ghosts jitter independently from the main Image and from each other - each rolls its own
+    // random offset off the CAPTURED base anchoredPosition (not the live, already-jittering
+    // transform), so the RGB-split reads as three separate offsets rather than one image dragging
+    // two copies along with it.
+    private void ApplyGlitchGhostFrame()
+    {
+        if (_glitchRedGhost == null)
+            return;
+
+        ApplyGlitchGhost(_glitchRedGhost, glitchGhostRedColor);
+        ApplyGlitchGhost(_glitchCyanGhost, glitchGhostCyanColor);
+    }
+
+    private void ApplyGlitchGhost(Image ghost, Color color)
+    {
+        color.a *= glitchGhostSource.color.a;
+        ghost.color = color;
+        ghost.rectTransform.anchoredPosition = _glitchGhostBaseAnchoredPosition + new Vector2(
+            Random.Range(-glitchInOffset.x, glitchInOffset.x),
+            Random.Range(-glitchInOffset.y, glitchInOffset.y));
+
+        // Own independent roll off the captured base scale, same range as the main image (not a
+        // copy of the main image's rolled value) - so the ghosts stretch/squash out of sync with it
+        // and each other instead of all three scaling in lockstep, which read as one solid image.
+        ghost.rectTransform.localScale = new Vector3(
+            _glitchGhostBaseScale.x * (1f + Random.Range(-glitchInScaleJitter.x, glitchInScaleJitter.x)),
+            _glitchGhostBaseScale.y * (1f + Random.Range(-glitchInScaleJitter.y, glitchInScaleJitter.y)),
+            _glitchGhostBaseScale.z * (1f + Random.Range(-glitchInScaleJitter.z, glitchInScaleJitter.z)));
+
+        ghost.enabled = true;
+    }
+
+    private void HideGlitchGhosts()
+    {
+        if (_glitchRedGhost != null) _glitchRedGhost.enabled = false;
+        if (_glitchCyanGhost != null) _glitchCyanGhost.enabled = false;
     }
 
     [Button]

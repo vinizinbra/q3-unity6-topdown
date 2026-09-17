@@ -42,8 +42,8 @@ namespace QuantumUser.View.Managers
         [SerializeField, Tooltip("Played once at BOTH affected enemies' positions whenever Kai's Undertow ascension resolves a fresh pull target (UndertowTriggered) - a small, fixed-scale impact/mark flash, separate from the ongoing tether line itself (see KaiUndertowLinksView, which polls simulation state directly rather than reacting to this event). Falls back to defaultAreaBlastEffect (at a small fixed scale) if left empty.")]
         private ParticleSystem undertowMarkEffectPrefab;
 
-        [Header("Shock (Jolt)")]
-        [SerializeField, Tooltip("Played on JoltTriggered - a one-shot spark every time Electrified's periodic Jolt actually fires (see docs/elemental-reactions.md's \"Shock (Electrified)\" section), distinct from StatusEffectsManager's own ambient electrifiedParticlePrefab/staggerParticlePrefab trackers (which only show the status is currently active, not the instant of each individual Jolt). Also fires once per secondary enemy staggered by Shatter's AoE (see StatusEffectUtility.TryTriggerShatter) - same ApplyStagger primitive, same spark. Falls back to defaultAreaBlastEffect, tinted joltFallbackColor, at joltScaleMultiplier, if left empty.")]
+        [Header("Stun (Jolt)")]
+        [SerializeField, Tooltip("Played on JoltTriggered - a one-shot spark every time a target is ACTUALLY Stunned (StatusEffectUtility.ApplyStun), regardless of source (Shock's own proc, Shatter's primary, any future Stun source) - never fired just because Shock/Electrified was applied or refreshed (see docs/elemental-reactions.md). Distinct from StatusEffectsManager's own ambient stunParticlePrefab tracker (which only shows the status is currently active, not the instant it landed). Falls back to defaultAreaBlastEffect, tinted joltFallbackColor, at joltScaleMultiplier, if left empty.")]
         private ParticleSystem joltEffectPrefab;
         [SerializeField, Tooltip("Local position offset added to e.Position before playing joltEffectPrefab (or its fallback) - e.g. to nudge the spark up toward chest/head height instead of the entity's feet-level Transform3D.")]
         private Vector3 joltPositionOffset;
@@ -111,7 +111,7 @@ namespace QuantumUser.View.Managers
         [Header("Wall Slam")]
         [SerializeField, Tooltip("Played on WallSlammed at the wall CONTACT point, oriented into the surface (see WallSlamUtility) - generic and source-agnostic, so both Brute's Iron Shoulder dash and his Groundbreaker landing use it with no per-source hookup. Falls back to defaultAreaBlastEffect if left empty.")]
         private ParticleSystem wallSlamEffectPrefab;
-        [SerializeField, Tooltip("Uniform scale for wallSlamEffectPrefab when the Stun did NOT land (a hard-CC immunity window, or an ImmuneToHardCC tier - the target still hit the wall). This event carries no radius, so scale is authored rather than derived, same reasoning as selfHitEffectScale.")]
+        [SerializeField, Tooltip("Uniform scale for wallSlamEffectPrefab when the Stun did NOT land (still inside its own Stun re-proc cooldown - the target still hit the wall). This event carries no radius, so scale is authored rather than derived, same reasoning as selfHitEffectScale.")]
         private float wallSlamEffectScale = 1f;
         [SerializeField, Tooltip("Uniform scale used instead when the Stun genuinely LANDED - the moment that actually rewards the player (and the one that opens Groundbreaker rank 3's Exposed window), so it reads heavier than a wall contact that got resisted.")]
         private float wallSlamStunnedEffectScale = 1.6f;
@@ -525,9 +525,9 @@ namespace QuantumUser.View.Managers
         //
         // Oriented INTO the wall off e.PushDirection, so the burst sprays against the surface rather
         // than playing a symmetric puff; e.Position is already the wall contact point, not the target's
-        // own position. e.Stunned picks the heavier variant - a wall hit that got resisted by a hard-CC
-        // immunity window (or an ImmuneToHardCC tier) shouldn't read as the same payoff as one that
-        // landed, since only the landed case opens Groundbreaker rank 3's Exposed window.
+        // own position. e.Stunned picks the heavier variant - a wall hit that got resisted (still
+        // inside its own Stun re-proc cooldown) shouldn't read as the same payoff as one that landed,
+        // since only the landed case opens Groundbreaker rank 3's Exposed window.
         // Fired by AccessoryGuardSystem the moment the broken accessory's debris LANDS (not when the
         // hit was taken), so the shatter plays where the player can actually see it come apart - see
         // DroppedAccessory.Broken. Falls back to the owner's own position only when no debris ever
@@ -710,10 +710,12 @@ namespace QuantumUser.View.Managers
             PlayEffect(defaultAreaBlastEffect, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
         }
 
-        // One-shot spark every time Electrified's periodic Jolt actually fires (see
-        // docs/elemental-reactions.md's "Shock (Electrified)" section) - distinct from
-        // StatusEffectsManager's own ambient electrifiedParticlePrefab/staggerParticlePrefab trackers,
-        // which only show a status is currently active rather than marking each individual Jolt.
+        // One-shot spark every time a target is ACTUALLY Stunned (StatusEffectUtility.ApplyStun) -
+        // regardless of source (Shock's own proc, Shatter's primary, any future Stun source), never
+        // fired just because a status was applied/refreshed (see docs/elemental-reactions.md's
+        // "Shock (Electrified)" section) - distinct from StatusEffectsManager's own ambient
+        // stunParticlePrefab tracker, which only shows the status is currently active rather than
+        // marking the instant it landed.
         private void OnJoltTriggered(EventJoltTriggered e)
         {
             Vector3 position = e.Position.ToUnityVector3() + joltPositionOffset;
@@ -1369,6 +1371,34 @@ namespace QuantumUser.View.Managers
             {
                 var main = system.main;
                 main.startColor = color;
+            }
+
+            instance.Play(true);
+            StartCoroutine(ReleaseWhenFinished(instance, pool));
+        }
+
+        // Two-tone variant used by ProjectileVisualController's destroy effect - rootColor tints the
+        // prefab's own root ParticleSystem, childColor tints every OTHER ParticleSystem under it
+        // (e.g. GenericProjectileDestroy's Sparks/Glow children), so a multi-particle burst can read
+        // as two coordinated but independently authored tones instead of one flat color forced
+        // uniformly onto every system the way the single-Color overload above does. Both colors are
+        // resolved by the CALLER (falling back to each particle's own authored startColor when it has
+        // no override) rather than here, same reasoning as that overload's own pooled-instance-tint-
+        // leak comment - this always writes both explicitly, never leaves a pooled instance's stale
+        // tint on anything.
+        public void PlayEffect(ParticleSystem prefab, Vector3 position, Quaternion rotation, Vector3 scale, Color rootColor, Color childColor)
+        {
+            ParticleSystem instance = GetPooledInstance(prefab, position, rotation, scale, out ObjectPool<ParticleSystem> pool);
+            if (instance == null) return;
+
+            // GetComponentsInChildren always returns the calling object itself first, so index 0 here
+            // is the root system and every following index is a child, in hierarchy order - same
+            // includeInactive:true reasoning as the single-Color overload above.
+            ParticleSystem[] systems = instance.GetComponentsInChildren<ParticleSystem>(true);
+            for (int i = 0; i < systems.Length; i++)
+            {
+                var main = systems[i].main;
+                main.startColor = i == 0 ? rootColor : childColor;
             }
 
             instance.Play(true);

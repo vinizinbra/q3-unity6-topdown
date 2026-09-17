@@ -19,7 +19,8 @@ MonoBehaviour:
   Icon: {fileID: -1701059921, guid: 017cb6454ed9743478842fb02d741366, type: 3}
   DisplayName: Explosive Sequence
   Rarity: 1
-  Description: 'Every <color=#FD3971>{0:0}</color>th shot explodes for <color=#FD3971>{1:0}%</color> damage in a <color=#FD3971>{2:0}m</color> radius'
+  Description: Every <color=#FD3971>{0:0}</color>th shot explodes for <color=#FD3971>{1:0}%</color>
+    damage
   Interval: 5
   Radius:
     RawValue: 196608

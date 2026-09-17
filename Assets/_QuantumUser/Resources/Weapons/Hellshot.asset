@@ -22,6 +22,7 @@ MonoBehaviour:
     RawValue: 6225920
   Element: 1
   Family: 5
+  Weight: 2
   CriticalChance:
     RawValue: 13107
   CriticalDamageBonus:
@@ -51,6 +52,13 @@ MonoBehaviour:
   BaseTraits:
   - Id:
       Value: 302683831509925147
-  ViewPrefab: {fileID: 8089491252618662435, guid: 376407f6a2ac5480c998b85c91c293c9, type: 3}
+  ViewPrefab: {fileID: 8089491252618662435, guid: 63feb225eccc743de8c81ad73ef821bc, type: 3}
   ShakeTier: 2
-  _dpsPreview:
+  _dpsPreview: 'Burst DPS: 109.4
+
+    Sustained DPS (incl. reload): 76
+
+    Damage/min:
+    4560
+
+    Crit dmg/shot: 228 (vs 114 normal) @ 20 % chance, x2'

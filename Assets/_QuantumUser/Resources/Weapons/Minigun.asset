@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bb51f48d451e4d148d492421a410eb0, type: 3}
+  m_Name: Minigun
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.WeaponDataAsset
+  Identifier:
+    Path: _QuantumUser/Resources/Weapons/Minigun
+    Guid:
+      Value: 313755055993811080
+  DisplayName: Minigun
+  FireType: 1
+  Damage:
+    RawValue: 458752
+  Element: 0
+  Family: 2
+  Weight: 1
+  CriticalChance:
+    RawValue: 3277
+  CriticalDamageBonus:
+    RawValue: 98304
+  FireRate:
+    RawValue: 524288
+  MagazineSize: 100
+  ReloadDuration:
+    RawValue: 131072
+  Range:
+    RawValue: 393216
+  PelletCount: 1
+  SpreadAngle:
+    RawValue: 655360
+  SpawnAnchor: 0
+  SpawnOffset:
+    X:
+      RawValue: 0
+    Y:
+      RawValue: 0
+    Z:
+      RawValue: 16384
+  BonusBounces: 0
+  ProjectileData:
+    Id:
+      Value: 2052039704194794421
+  BaseTraits:
+  - Id:
+      Value: 2125645592162639784
+  ViewPrefab: {fileID: 8089491252618662435, guid: b58842e8faadfb6666368d7eb811d35d, type: 3}
+  ShakeTier: 0
+  _dpsPreview: 'Burst DPS: 109.1
+
+    Sustained DPS (incl. reload): 83.6
+
+    Damage/min:
+    5018
+
+    Crit dmg/shot: 10.5 (vs 7 normal) @ 5 % chance, x1.5'

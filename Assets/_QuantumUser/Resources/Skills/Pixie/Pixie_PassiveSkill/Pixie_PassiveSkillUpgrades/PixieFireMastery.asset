@@ -24,8 +24,8 @@ MonoBehaviour:
   RankDescriptions:
   - +<color=#FD3971>15%</color> Fire Weapon Damage.
   - +<color=#FD3971>30%</color> Fire Weapon Damage.
-  - +<color=#FD3971>50%</color> Fire Weapon Damage. Fire weapon hits detonate a
-    small area explosion, dealing <color=#FD3971>30%</color> Damage in a <color=#FD3971>2.5m</color>
+  - +<color=#FD3971>50%</color> Fire Weapon Damage. Fire weapon hits detonate a small
+    area explosion, dealing <color=#FD3971>30%</color> Damage in a <color=#FD3971>2.5m</color>
     radius.
   Element: 1
   DamageMultiplierPerRank:

@@ -161,7 +161,7 @@ namespace Quantum
 
                 if (burnDuration > FP._0)
                 {
-                    StatusEffectUtility.ApplyBurn(f, target, burnDuration, burnIntensity, owner, DamageSource.Skill, config.TickInterval);
+                    StatusEffectUtility.ApplyBurn(f, target, burnDuration, burnIntensity, owner, DamageSource.Skill, config.TickInterval, config.BurnMaxStacks);
                 }
             }
         }

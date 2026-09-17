@@ -41,15 +41,20 @@ namespace Quantum
         // be negligible. See StatusEffectUtility.ComputeDotDamagePerTickWithFloor.
         public FP BurnFloorPercent = FP._0_05;
 
+        // Cap on how many independent Burn stacks (see StatusEffects.BurnStackDamagePerTick) can
+        // coexist - every stack shares BurnDuration's single timer, only the per-stack potency
+        // differs. See StatusEffectUtility.ApplyBurn.
+        public int BurnMaxStacks = 5;
+
         // Void's own baseline duration - no magnitude, it does nothing by itself. See
         // docs/elemental-reactions.md - reaction-specific numbers (Explosion/Freeze/Knockback/Magma
         // Prison/Stun/Break) live on ElementalReactionConfig instead, never here, so a reaction's
         // tuning never doubles as some other effect's shared knob.
-        public FP VoidDuration = 3;
 
-        // Rock's baseline - reduces the TARGET's own outgoing damage (see
-        // StatusEffectUtility.ApplyIntimidate/GetOutgoingDamageMultiplier). Distinct from Brute's
-        // Protector Aura, which applies the same status via its own aura-authored values, not these.
+        // Reduces the TARGET's own outgoing damage (see StatusEffectUtility.ApplyIntimidate/
+        // GetOutgoingDamageMultiplier) - Brute's Protector Aura is the only applier now (the old
+        // Rock element's baseline mapping into this status was retired, see ElementType.qtn).
+        // Distinct from the Aura's own aura-authored values, not these.
         public FP IntimidateDuration = 3;
         public FP IntimidateOutgoingDamageMultiplier = FP._0_75;
 
@@ -57,14 +62,31 @@ namespace Quantum
 
         // Root - granted by the generic RootEffectData/MagmaPrisonEffectData, for any source that
         // wants to root on hit (Brute's own Juggernaut Landing Root concept was dropped in the
-        // Ascension refactor - see docs/brute-ascensions.md). The Fire+Rock Magma Prison elemental
-        // reaction that used to also grant Root (via its own dedicated
-        // ElementalReactionConfig.MagmaPrisonRootDuration) was retired when Rift Mark replaced the
-        // pairwise reaction scan - see docs/elemental-reactions.md.
+        // Ascension refactor - see docs/brute-ascensions.md).
         public FP RootDuration = 2;
 
         public FP SlowDuration = 3;
-        public FP SlowSpeedMultiplier = FP._0_50;
+
+        // Ice/Chill buildup - see StatusEffectUtility.ApplyIce/GetSpeedMultiplier. Each qualifying
+        // Ice application contributes IceBuildupPerDamage * hitDamage buildup units (same
+        // "potency scales off the hit's own damage" convention BurnDamagePercent already uses, so a
+        // fast weak weapon can't out-buildup a slow heavy one just by firing more often) -
+        // ~1 unit per 40 damage, the same reference hit BurnDamagePercent's own worked example
+        // uses. IceSlowPerBuildup is the movement-slow contributed by each whole buildup unit
+        // (1 - IceSlowPerBuildup * buildup is the resulting speed multiplier, further tapered by
+        // TierStatusResistance.ChillForceMultiplier at the moment buildup is added). Reaching
+        // IceFreezeThreshold converts the buildup into Freeze instead (see FreezeDuration below)
+        // and resets it to 0.
+        public FP IceBuildupPerDamage = FP.FromString("0.025");
+        public FP IceSlowPerBuildup = FP.FromString("0.08");
+        public FP IceFreezeThreshold = 5;
+
+        // Freeze (Ice hard CC, only ever reached via Ice/Chill buildup hitting IceFreezeThreshold
+        // above - see StatusEffectUtility.ApplyFreeze) - base duration before
+        // EnemyTierResistanceConfig.TierStatusResistance.FreezeDurationMultiplier/
+        // FreezeRecoveryDuration taper it per tier. This IS the Normal-tier value (Normal's own
+        // FreezeDurationMultiplier is 1.0) - every other tier is expressed as a ratio of it.
+        public FP FreezeDuration = FP._2;
 
         // Generic FreezeEffectData's own knob. Named after the underlying StatusEffects field
         // (AnticipationSlowRemaining/AnticipationSlowMultiplier) rather than "Freeze" so the two are

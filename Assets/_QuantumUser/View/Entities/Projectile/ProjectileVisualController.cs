@@ -49,6 +49,12 @@ namespace Quantum
             // ParticleGracefulStop instead of being cut off mid-emission by Finish's own
             // Destroy(gameObject).
             public ParticleSystem EchoGhostParticle;
+
+            // Runtime-instantiated per-weapon extra particle (WeaponDataAsset.ProjectileVisuals.
+            // ProjectileExtraParticle, see ProjectileView.AttachWeaponExtraParticle) - null unless
+            // that weapon has one configured. Same graceful-fade-on-impact treatment as
+            // EchoGhostParticle/TrailParticle, not cut off mid-emission.
+            public ParticleSystem WeaponExtraParticle;
         }
 
         // Floor on the catch-up rate, in world units per second. A projectile whose own speed has
@@ -59,6 +65,71 @@ namespace Quantum
 
         private Settings _settings;
         private EntityRef _entity;
+
+        // Extra trailing particles (ProjectileDataVisualsView's sparkTrail/glow) that need the exact
+        // same "keep fading, don't cut off mid-emission" treatment as _settings.TrailParticle, set via
+        // SetExtraTrailParticles once that sibling view has resolved which of its slots are actually
+        // enabled for this shot's weapon. Deliberately NOT part of Settings/passed at Detach time -
+        // ProjectileDataVisualsView.Initialize (which knows the enabled/disabled state) and
+        // ProjectileView.Initialize (which calls Detach) are sibling components with no guaranteed
+        // call order, so this can arrive either before or after Detach; ProjectileView buffers it and
+        // forwards it here once both are ready.
+        private ParticleSystem[] _extraTrailParticles;
+
+        // ProjectileDataVisualsView's own sprite - normally already covered for free by _renderers
+        // (GetComponentsInChildren<Renderer> below already walks the whole detached hierarchy, and
+        // SpriteRenderer is a Renderer), but registered explicitly too rather than assumed, so the
+        // sprite's own show/hide-with-SpawnDelay and destroy-exactly-at-Finish timing doesn't silently
+        // depend on it happening to live under visualRoot in every prefab's hierarchy.
+        private Renderer[] _extraRenderers;
+
+        // Per-weapon override of the shared destroyEffectPrefab's tint - ProjectileDataVisualsView
+        // sets this from WeaponDataAsset.ProjectileVisuals.ProjectileDestroyColor (alpha forced to 1)
+        // whenever a resolved WeaponData exists, so it's set for every weapon-fired shot. Null (unset
+        // - a skill, an enemy attack, anything with no ProjectileDataVisualsView/WeaponData at all)
+        // falls back to the PREFAB ASSET's own authored startColor in PlayImpactEffect, not a pooled
+        // instance's - destroyEffectPrefab is pooled and shared across every caller, weapon or not, so
+        // this must never leave a null override reading as "keep whatever the last play happened to
+        // tint it".
+        private Color? _destroyEffectColorOverride;
+
+        // Same idea, for every particle system under destroyEffectPrefab EXCEPT the root (e.g.
+        // GenericProjectileDestroy's Sparks/Glow children) - ProjectileDataVisualsView sets this from
+        // WeaponDataAsset.ProjectileVisuals.ProjectileDestroyGlowColor. Same null-falls-back-to-the-
+        // prefab-asset's-own-authored-color reasoning as _destroyEffectColorOverride.
+        private Color? _destroyEffectChildColorOverride;
+
+        // Multiplier on destroyEffectPrefab's own authored transform.localScale - ProjectileDataVisualsView
+        // sets this from WeaponDataAsset.ProjectileVisuals.ProjectileDestroyScale. Null (unset) is
+        // equivalent to (1,1,1) - PlayImpactEffect always resolves a concrete scale to pass to the
+        // pooled EffectsManager instance either way (that API has no "leave it as-is" option, unlike a
+        // per-projectile particle that just never gets its localScale touched).
+        private Vector3? _destroyEffectScaleOverride;
+
+        public void SetExtraTrailParticles(ParticleSystem[] particles)
+        {
+            _extraTrailParticles = particles;
+        }
+
+        public void SetExtraRenderers(Renderer[] renderers)
+        {
+            _extraRenderers = renderers;
+        }
+
+        public void SetDestroyEffectColorOverride(Color? color)
+        {
+            _destroyEffectColorOverride = color;
+        }
+
+        public void SetDestroyEffectChildColorOverride(Color? color)
+        {
+            _destroyEffectChildColorOverride = color;
+        }
+
+        public void SetDestroyEffectScaleOverride(Vector3? scale)
+        {
+            _destroyEffectScaleOverride = scale;
+        }
 
         private Renderer[] _renderers;
         private ParticleSystem[] _particles;
@@ -141,21 +212,24 @@ namespace Quantum
 
         private void Update()
         {
+            // Checked BEFORE the _impacting early-out below, or an impact tween that never reaches
+            // OnComplete (killed externally) would leave the visual hanging forever with nothing
+            // able to clean it up.
+            if (Time.unscaledTime - _lastPushTime > _settings.OrphanTimeout)
+            {
+                LogHelper.Warn("ProjectileVisual", $"{name}: nothing has pushed a target for " +
+                    $"{_settings.OrphanTimeout}s and no destroy event arrived - cleaning up a visual that would " +
+                    "otherwise hang in the air. Worth investigating if this shows up often.", this);
+                Finish(playEffect: false);
+                return;
+            }
+
             if (_impacting == true)
                 return; // the impact tween owns this transform now
 
             if (_entityGone == true && Time.frameCount > _entityGoneFrame)
             {
                 LogHelper.Log("ProjFlow", $"[{_entity}] VISUAL entity gone, NO destroy event arrived -> Finish(no effect), trail killed with root t={Time.unscaledTime:F3}", this);
-                Finish(playEffect: false);
-                return;
-            }
-
-            if (Time.unscaledTime - _lastPushTime > _settings.OrphanTimeout)
-            {
-                LogHelper.Warn("ProjectileVisual", $"{name}: nothing has pushed a target for " +
-                    $"{_settings.OrphanTimeout}s and no destroy event arrived - cleaning up a visual that would " +
-                    "otherwise hang in the air. Worth investigating if this shows up often.", this);
                 Finish(playEffect: false);
                 return;
             }
@@ -219,6 +293,9 @@ namespace Quantum
                 if (_settings.EchoGhostParticle != null)
                     _settings.EchoGhostParticle.gameObject.AddComponent<ParticleGracefulStop>().StopAndDestroyWhenFinished();
 
+                if (_settings.WeaponExtraParticle != null)
+                    _settings.WeaponExtraParticle.gameObject.AddComponent<ParticleGracefulStop>().StopAndDestroyWhenFinished();
+
                 // A trail that IS this root (e.g. SniperProjectile, whose only child is the
                 // BulletMeshSmallFire system - so ProjectileView.ResolveVisualRoot resolves the
                 // trail's own GameObject as the visual root): Destroy(gameObject) below would kill it
@@ -239,6 +316,15 @@ namespace Quantum
                 if (_settings.TrailRenderer != null &&
                     (_settings.TrailParticle == null || _settings.TrailRenderer.transform.IsChildOf(_settings.TrailParticle.transform) == false))
                     _settings.TrailRenderer.gameObject.AddComponent<ParticleGracefulStop>().StopAndDestroyWhenFinished();
+
+                if (_extraTrailParticles != null)
+                {
+                    foreach (ParticleSystem particle in _extraTrailParticles)
+                    {
+                        if (particle != null)
+                            particle.gameObject.AddComponent<ParticleGracefulStop>().StopAndDestroyWhenFinished();
+                    }
+                }
             }
 
             Destroy(gameObject);
@@ -247,6 +333,25 @@ namespace Quantum
         private bool IsRoot(Component component)
         {
             return component != null && component.gameObject == gameObject;
+        }
+
+        // The bullet BODY must vanish at the impact, not drift on for its lifetime; only the
+        // sparks/glow/smoke around it get to fade. "Body" is the trail's root system plus every
+        // system under it that renders a Mesh - the Epic Toon FX missiles are not consistent about
+        // where that lives: BulletMeshSmallFire's mesh IS its root, RocketMeshMissileFire's is a
+        // child named Mesh (World space, ~1s lifetime), which used to be left behind on every kill
+        // and wall hit. StopEmitting afterwards (ParticleGracefulStop/ReleaseHeldInstance) is a
+        // no-op on an already-cleared system. Shared with ProjectileGhostTrailManager.
+        public static void ClearBodyParticles(ParticleSystem trailRoot)
+        {
+            foreach (ParticleSystem system in trailRoot.GetComponentsInChildren<ParticleSystem>(includeInactive: true))
+            {
+                bool isBody = system == trailRoot
+                    || (system.TryGetComponent(out ParticleSystemRenderer renderer) && renderer.renderMode == ParticleSystemRenderMode.Mesh);
+
+                if (isBody)
+                    system.Stop(withChildren: false, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
         }
 
         private void FadeOutRootAsTrail()
@@ -260,11 +365,8 @@ namespace Quantum
             foreach (Light light in GetComponentsInChildren<Light>(includeInactive: true))
                 light.enabled = false;
 
-            // The root system is the bullet body itself (a mesh particle) - it must vanish at the
-            // impact, not drift on for its lifetime. Only its children (sparks/glow) get to fade;
-            // ParticleGracefulStop's own StopEmitting is then a no-op on the already-cleared root.
             if (IsRoot(_settings.TrailParticle))
-                _settings.TrailParticle.Stop(withChildren: false, ParticleSystemStopBehavior.StopEmittingAndClear);
+                ClearBodyParticles(_settings.TrailParticle);
 
             // Stops every TrailRenderer under here too and lingers for its ribbon to fade.
             gameObject.AddComponent<ParticleGracefulStop>().StopAndDestroyWhenFinished();
@@ -278,12 +380,29 @@ namespace Quantum
         // anything, since the same live projectile keeps flying past this contact. Without this the
         // weapon's own impact particle (destroyEffectPrefab) only ever played once, at the shot's
         // true final position - every intermediate pierce/bounce point showed nothing.
+        //
+        // Also SNAPS transform.position onto the exact hit point, not just the particle - Push (via
+        // QUpdate) already ran earlier this same Unity frame and may have moved _targetPosition past
+        // it: the entity's own Transform3D is already interpolating toward wherever it ends up AFTER
+        // a same-tick Ricochet redirect (see DirectHitData.TryRicochet/ProjectileSystem's own
+        // multi-segment tick loop), which can read as a smooth curve that cuts the corner of the
+        // real L-shaped path instead of ever visibly touching the enemy - worse the faster the shot
+        // travels, since one tick then covers more ground. Snapping here corrects for exactly that
+        // sub-tick kink; the ongoing MoveTowards catch-up (Update, unaffected by this) resumes toward
+        // the new target from this exact point on the very next frame. Rotation needs no equivalent
+        // fix - Push already ran first this frame and already turned it to the new post-redirect
+        // heading (see Projectile.Velocity, already updated by the time this event lands).
         private void OnProjectileImpacted(EventProjectileImpacted e)
         {
             if (e.Entity != _entity)
                 return;
 
-            PlayImpactEffect(e.Position.ToUnityVector3());
+            Vector3 position = e.Position.ToUnityVector3();
+
+            transform.position = position;
+            _targetPosition = position;
+
+            PlayImpactEffect(position);
         }
 
         private void PlayImpactEffect(Vector3 position)
@@ -294,8 +413,29 @@ namespace Quantum
             // PlayEffect's 3-arg overload hardcodes Vector3.one (pooled instances default back
             // to unscaled so a scaled play can't leak onto the next unscaled one drawn from the
             // same pool) - pass the prefab's own authored scale explicitly or it always plays at 1.
-            Vector3 scale = _settings.DestroyEffectPrefab.transform.localScale;
-            EffectsManager.Instance.PlayEffect(_settings.DestroyEffectPrefab, position, Quaternion.identity, scale);
+            // _destroyEffectScaleOverride multiplies onto that authored scale rather than replacing
+            // it, so (1,1,1) (unset, or explicitly set to that) always reproduces the prefab's own
+            // size exactly regardless of what it happens to be authored at.
+            Vector3 scale = Vector3.Scale(_settings.DestroyEffectPrefab.transform.localScale,
+                _destroyEffectScaleOverride ?? Vector3.one);
+
+            // Always the TINTED (two-tone) overload, never the plain one - destroyEffectPrefab (e.g.
+            // GenericProjectileDestroy) is POOLED across every projectile that uses it, weapon-fired
+            // or not. If this only tinted when an override was set, a pooled instance last played with
+            // one weapon's colors would keep bleeding that tint into a later untinted play (an enemy
+            // attack or a weapon with no override reusing the same pooled instance) forever, since the
+            // plain overload never touches startColor to reset it. Falling back to the PREFAB ASSET's
+            // own authored colors (never a pooled INSTANCE's, which may already be mutated by an
+            // earlier tinted play) when there's no per-weapon override keeps every non-opted-in
+            // caller's effect exactly as originally authored - root and child resolved independently,
+            // since GenericProjectileDestroy's Red/Blue team-color variants only have ONE child
+            // (Glow, no Sparks) while the base variant has two, so index 1 isn't always "Sparks".
+            ParticleSystem[] prefabSystems = _settings.DestroyEffectPrefab.GetComponentsInChildren<ParticleSystem>(true);
+            Color rootColor = _destroyEffectColorOverride ?? prefabSystems[0].main.startColor.color;
+            Color childColor = _destroyEffectChildColorOverride ??
+                (prefabSystems.Length > 1 ? prefabSystems[1].main.startColor.color : rootColor);
+
+            EffectsManager.Instance.PlayEffect(_settings.DestroyEffectPrefab, position, Quaternion.identity, scale, rootColor, childColor);
         }
 
         private void SetVisible(bool visible)
@@ -312,6 +452,12 @@ namespace Quantum
             // along with the visuals.
             foreach (Renderer r in _renderers)
                 r.enabled = visible;
+
+            if (_extraRenderers != null)
+            {
+                foreach (Renderer r in _extraRenderers)
+                    if (r != null) r.enabled = visible;
+            }
 
             foreach (ParticleSystem ps in _particles)
             {

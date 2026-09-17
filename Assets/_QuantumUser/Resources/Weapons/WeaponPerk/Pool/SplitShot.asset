@@ -19,7 +19,15 @@ MonoBehaviour:
   Icon: {fileID: 1242883627, guid: 017cb6454ed9743478842fb02d741366, type: 3}
   DisplayName: Split Shot
   Rarity: 1
-  Description: 'Projectile splits into <color=#FD3971>{0:0}</color> shots at <color=#FD3971>{1:0}%</color> damage after impact'
+  Description: Splits into <color=#FD3971>{0:0}</color> shots at <color=#FD3971>{1:0}%</color>
+    damage after impact
   Count: 2
   DamageMultiplier:
     RawValue: 32768
+  ProjectileOverride:
+    Id:
+      Value: 0
+  LaunchAngleOverride:
+    RawValue: -65536
+  SplitAngle:
+    RawValue: 5898240

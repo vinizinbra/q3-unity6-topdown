@@ -24,7 +24,8 @@ component StatusSpreadOnDeath
     Int32 MaxTargets;
 
     // Wildfire rank 3 - when > 0, the spread reads the dying enemy's OWN live Burn
-    // (StatusEffects.BurnRemaining/BurnDamagePerTick) scaled by this fraction instead of the flat
+    // (StatusEffects.BurnRemaining, StatusEffectUtility.GetBurnDamagePerTick's summed stacks) scaled
+    // by this fraction instead of the flat
     // authored BurnDuration/BurnIntensity above, so a fire that's already burning hot/long propagates
     // that same intensity/duration onward (scaled down) rather than resetting every jump back to the
     // base amount. 0 (the default) keeps every lower rank's flat-authored behavior unchanged. See

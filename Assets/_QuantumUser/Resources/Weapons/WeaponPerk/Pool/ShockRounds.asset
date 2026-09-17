@@ -16,11 +16,10 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/ShockRounds
     Guid:
       Value: 361375898294280482
-  Icon: {fileID: 0}
+  Icon: {fileID: -1898032036, guid: 017cb6454ed9743478842fb02d741366, type: 3}
   DisplayName: Shock Rounds
   Rarity: 2
-  Description: <color=#FD3971>{1:0}%</color> chance to apply Lightning affinity on
-    hit (triggers Overload on Rift-Marked enemies)
-  Element: 5
+  Description: Add shock into the weapon
+  Element: 3
   ProcChance:
     RawValue: 65536

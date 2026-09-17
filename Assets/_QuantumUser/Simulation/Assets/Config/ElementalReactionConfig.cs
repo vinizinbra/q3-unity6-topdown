@@ -13,22 +13,33 @@ namespace Quantum
     // StatusEffectUtility.
     //
     // [Header] groups below mark which reaction actually reads each field - all fields are read
-    // purely from StatusEffectUtility (ApplyElementBaseline/TickElectrified/TryTrigger* methods).
+    // purely from StatusEffectUtility (ApplyElementBaseline/TryTrigger* methods).
     public class ElementalReactionConfig : AssetObject
     {
-        [Header("Shock - Lightning's baseline (Electrified)")]
-        // Lightning's own baseline status, applied the same way Fire->Burn/Ice->Slow are (see
-        // StatusEffectUtility.ApplyElementBaseline). Plain overwrite-on-reapply, no tier scaling.
-        public FP ElectrifiedDuration = 4;
+        [Header("Shock - Lightning's baseline (Electrified) + Stun proc")]
+        // Lightning's own baseline status, applied the same way Fire->Burn/Ice->Chill are (see
+        // StatusEffectUtility.ApplyElementBaseline). Plain overwrite-on-reapply, no tier scaling -
+        // Shock is purely a persistent setup state, no periodic effect of its own.
+        public FP ElectrifiedDuration = 3;
 
-        // How often, while Electrified, a Jolt fires (StatusEffectUtility.TickElectrified) - purely
-        // deterministic, no proc chance.
-        public FP JoltInterval = FP._1;
+        // Rolled (StatusEffectUtility.RollChance-style determinism, see DamageUtility.RollChance)
+        // whenever a NEW Electric hit lands on a target that's ALREADY Electrified - Shock's own
+        // baseline gameplay payoff, applying the existing generic Stun (never a bespoke "Electric
+        // Stun") rather than any bespoke periodic tick. A fresh (non-refresh) Shock application
+        // never rolls this - see StatusEffectUtility.ApplyElementBaseline's Lightning case. Source-
+        // owned (not tier-owned) by design - target tier instead governs how the RESULTING Stun
+        // behaves (EnemyTierResistanceConfig.StunDurationMultiplier/StunImmunityDuration), same as
+        // every other Stun source.
+        public FP ShockStunProcChance = FP.FromString("0.12");
 
-        // Stagger duration each Jolt applies to the electrified target (see
-        // StatusEffectUtility.ApplyStagger) - short, since Shock's identity is a repeatable periodic
-        // interrupt, not a lockout.
-        public FP JoltStaggerDuration = FP.FromString("0.15");
+        // The Stun duration this proc grants, before tier duration multipliers/immunity - its own
+        // dedicated field rather than reusing EffectConfig.StunDuration, so tuning Shock's proc
+        // never silently retunes every other Stun source in the game. This IS the Normal-tier
+        // value (Normal's own StunDurationMultiplier is 1.0) - every other tier's
+        // StunDurationMultiplier is expressed as a ratio of it, so retuning this one field rescales
+        // every tier's Stun duration proportionally (Shatter's primary Stun included, since it
+        // shares the same per-tier multiplier).
+        public FP ShockStunProcDuration = FP._1;
 
         [Header("Thermal Shock - Burn + Chill")]
         public FP ThermalShockTriggerCooldown = FP.FromString("0.75");
@@ -85,8 +96,9 @@ namespace Quantum
 
         // Short Stagger on every OTHER enemy caught within ShatterRadius - deliberately much
         // shorter than the primary's, so the reaction reads as "the pack got interrupted", not "the
-        // pack got stunned solid". Reuses the same StatusEffectUtility.ApplyStagger primitive (and
-        // its tier taper) as Shock's own Jolt - no separate CC state.
+        // pack got stunned solid". Reuses the existing StatusEffectUtility.ApplyStagger primitive
+        // (and its tier taper) - no separate CC state, and no Jolt VFX (Jolt is reserved for an
+        // actual Stun landing - the primary above already gets it via ApplyStun).
         public FP ShatterAreaStaggerDuration = FP.FromString("0.25");
 
         // Optional - 0 disables (default). Shatter's identity is control, not damage; if raised

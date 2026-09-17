@@ -16,6 +16,18 @@ namespace Quantum
 
         private GroundBlobHandle handle;
 
+        // Settable at runtime so a generic prefab (one HasLight authored once) can be pointed at a
+        // per-data color instead of every variant needing its own hand-tuned prefab - see
+        // ProjectileDataVisualsView, which sets this from WeaponDataAsset.ProjectileVisuals.ProjectileLightColor.
+        // Must be set BEFORE this becomes enabled (OnEnable bakes color into the acquired handle once,
+        // via GroundBlobManager.Acquire - only alpha is re-read live afterward, see UpdateBlob), so a
+        // change here while already enabled has no visible effect until the next Acquire.
+        public Color LightColor
+        {
+            get => color;
+            set => color = value;
+        }
+
         private void OnEnable()
         {
             if (GroundBlobManager.Instance != null)

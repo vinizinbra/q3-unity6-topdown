@@ -61,6 +61,11 @@ namespace Quantum
             // multiplicatively alongside Ice's own slow, same pattern.
             targetSpeed *= StatusEffectUtility.GetTempMoveSpeedMultiplier(frame, entity);
 
+            // Weapon Weight (docs/hero-mastery.md) - Light/Heavy weapons nudge move speed ±10%,
+            // Medium is neutral. A general weapon property, not Hero Mastery, so it lives in its own
+            // utility read straight off the equipped WeaponDataAsset rather than any Mastery component.
+            targetSpeed *= WeaponWeightUtility.GetMoveSpeedMultiplier(frame, entity);
+
             // Danger Pay (Rift Mutation) - a CONDITION, not a timed buff, so it can't live in the
             // StatusEffects slots above: it has to appear and disappear the instant health crosses
             // its threshold in either direction, with nothing to expire. Evaluated fresh every
@@ -83,7 +88,8 @@ namespace Quantum
             bool incapacitated = PlayerLifeStateUtility.IsIncapacitated(frame, entity);
             bool reviving = frame.Has<ReviveChannel>(entity);
 
-            if (StatusEffectUtility.IsStunned(frame, entity) == true || StatusEffectUtility.IsRooted(frame, entity) == true
+            if (StatusEffectUtility.IsStunned(frame, entity) == true || StatusEffectUtility.IsFrozen(frame, entity) == true
+                || StatusEffectUtility.IsRooted(frame, entity) == true
                 || incapacitated == true
                 || (PoiInteractionLockUtility.IsInputLocked(frame, entity) == true && reviving == false))
             {

@@ -19,6 +19,6 @@ MonoBehaviour:
   Icon: {fileID: -424870017, guid: 017cb6454ed9743478842fb02d741366, type: 3}
   DisplayName: Infinite Echo
   Rarity: 3
-  Description: 'Every projectile repeats once after <color=#FD3971>{0:0.0}s</color>'
+  Description: Every projectile repeats after a delay
   Delay:
     RawValue: 16384

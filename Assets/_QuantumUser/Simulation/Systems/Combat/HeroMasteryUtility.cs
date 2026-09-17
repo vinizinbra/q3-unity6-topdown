@@ -2,12 +2,12 @@ namespace Quantum
 {
     using Photon.Deterministic;
 
-    // Shared resolution point for Hero Mastery (see docs/hero-mastery.md) - every hero's Weapon Family
+    // Shared resolution point for Hero Mastery (see docs/hero-mastery.md) - every hero's Weapon Weight
     // + Element Mastery damage bonuses, and every R3 Special that is itself a conditional damage
     // multiplier, read off the owner's currently-equipped Weapon in ONE place, so DamageUtility.
     // ResolveOutgoingDamage only ever needs a single call rather than one TryGetPointer block per
     // hero. No Hero == X branch anywhere here - every check is "does the owner hold this generic
-    // component, and does the currently-equipped weapon's Family/Element match".
+    // component, and does the currently-equipped weapon's Weight/Element match".
     public static unsafe class HeroMasteryUtility
     {
         // Called once per weapon-sourced hit from DamageUtility.ResolveOutgoingDamage, AFTER the
@@ -20,12 +20,28 @@ namespace Quantum
                 return FP._1;
 
             WeaponDataAsset weaponData = f.FindAsset(weapon->WeaponData);
+            FP multiplier = ResolveWeightElementMultiplier(f, owner, weaponData);
+
+            multiplier *= ResolvePointBlank(f, owner, target, weaponData);
+            multiplier *= ResolveVendettaBonus(f, owner, target, weaponData);
+            multiplier *= ResolveInfernalRage(f, owner, weaponData);
+            multiplier *= ResolveDeadeye(f, owner, target, weaponData);
+
+            ApplyTargetingLinkMark(f, owner, target, weaponData);
+
+            return multiplier;
+        }
+
+        // The flat Weapon Weight + Element Mastery term only - shared by ResolveDamageMultiplier
+        // above and the no-target baseline preview below, so the two never drift apart.
+        private static FP ResolveWeightElementMultiplier(Frame f, EntityRef owner, WeaponDataAsset weaponData)
+        {
             FP multiplier = FP._1;
 
-            if (f.Unsafe.TryGetPointer<WeaponFamilyMastery>(owner, out var familyMastery) == true
-                && familyMastery->Family != WeaponFamily.None && familyMastery->Family == weaponData.Family)
+            if (f.Unsafe.TryGetPointer<WeaponWeightMastery>(owner, out var weightMastery) == true
+                && weightMastery->Weight == weaponData.Weight)
             {
-                multiplier *= FP._1 + familyMastery->DamageMultiplier;
+                multiplier *= FP._1 + weightMastery->DamageMultiplier;
             }
 
             if (f.Unsafe.TryGetPointer<ElementMastery>(owner, out var elementMastery) == true
@@ -35,22 +51,29 @@ namespace Quantum
                 multiplier *= FP._1 + elementMastery->DamageMultiplier;
             }
 
-            multiplier *= ResolvePointBlank(f, owner, target, weaponData);
-            multiplier *= ResolveVendettaPistolBonus(f, owner, target, weaponData);
-            multiplier *= ResolveInfernalRage(f, owner, weaponData);
-            multiplier *= ResolveDeadeye(f, owner, target, weaponData);
-
-            ApplyTargetingLinkMark(f, owner, target, weaponData);
-
             return multiplier;
         }
 
-        // Brute's Shotgun Mastery R3 "Point Blank" - additional damage to a target within Range of
+        // No-target preview of ResolveDamageMultiplier's own flat Weapon Weight/Element Mastery term
+        // - skips every target-conditional R3 special (Point Blank, Vendetta, Infernal Rage, Deadeye)
+        // since there's no target to evaluate them against, and never mutates TargetingLinkMark.
+        // Public so CurrentWeaponUiWidget (View) can preview a "Current Damage" number instead of
+        // re-deriving this from WeaponWeightMastery/ElementMastery separately - see
+        // DamageUtility.ResolveBaselineDamageMultiplier, which folds this in for the Weapon source.
+        public static FP ResolveBaselineDamageMultiplier(Frame f, EntityRef owner)
+        {
+            if (f.Unsafe.TryGetPointer<Weapon>(owner, out var weapon) == false || weapon->WeaponData.IsValid == false)
+                return FP._1;
+
+            return ResolveWeightElementMultiplier(f, owner, f.FindAsset(weapon->WeaponData));
+        }
+
+        // Brute's Heavy Mastery R3 "Point Blank" - additional damage to a target within Range of
         // Brute himself. Pure attacker-target distance, no dependency on pellet count/fire rate/
-        // magazine size/a specific Shotgun implementation - works for every weapon tagged Shotgun.
+        // magazine size/a specific weapon implementation - works for every weapon tagged Heavy.
         private static FP ResolvePointBlank(Frame f, EntityRef owner, EntityRef target, WeaponDataAsset weaponData)
         {
-            if (weaponData.Family != WeaponFamily.Shotgun || f.Unsafe.TryGetPointer<PointBlankUpgrade>(owner, out var pointBlank) == false)
+            if (weaponData.Weight != WeaponWeight.Heavy || f.Unsafe.TryGetPointer<PointBlankUpgrade>(owner, out var pointBlank) == false)
                 return FP._1;
 
             if (f.Unsafe.TryGetPointer<Transform3D>(owner, out var ownerTransform) == false
@@ -62,12 +85,13 @@ namespace Quantum
             return distance <= pointBlank->Range ? FP._1 + pointBlank->DamageBonus : FP._1;
         }
 
-        // Max's Pistol Mastery R3 "Vendetta" - bonus Pistol damage against whichever enemy currently
-        // carries THIS owner's own RevengeMark (the existing Vendetta mark, Heroes/Max/Vendetta.qtn) -
-        // no duplicate mark, no dependency on fire rate/magazine size/shot count/semi-auto vs automatic.
-        private static FP ResolveVendettaPistolBonus(Frame f, EntityRef owner, EntityRef target, WeaponDataAsset weaponData)
+        // Max's Light Mastery R3 "Vendetta" - bonus Light-weapon damage against whichever enemy
+        // currently carries THIS owner's own RevengeMark (the existing Vendetta mark, Heroes/Max/
+        // Vendetta.qtn) - no duplicate mark, no dependency on fire rate/magazine size/shot count/
+        // semi-auto vs automatic. Works for Pistol, SMG, or any future Light weapon.
+        private static FP ResolveVendettaBonus(Frame f, EntityRef owner, EntityRef target, WeaponDataAsset weaponData)
         {
-            if (weaponData.Family != WeaponFamily.Pistol || f.Unsafe.TryGetPointer<VendettaPistolUpgrade>(owner, out var vendetta) == false)
+            if (weaponData.Weight != WeaponWeight.Light || f.Unsafe.TryGetPointer<VendettaUpgrade>(owner, out var vendetta) == false)
                 return FP._1;
 
             if (f.Unsafe.TryGetPointer<RevengeMark>(target, out var mark) == false || mark->MarkedBy != owner)
@@ -103,26 +127,26 @@ namespace Quantum
             return f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == true && stats->BurnOnHitStacks != 0;
         }
 
-        // Kai's Sniper Mastery R3 "Deadeye" - bonus damage on the first Sniper hit THIS owner lands
-        // against each enemy, via the generic WeaponFamilyFirstHitTracker rather than a bespoke mark -
-        // naturally coexists with Kai's own First Strike Ascension without merging their state.
+        // Kai's Heavy Mastery R3 "Deadeye" - bonus damage on the first Heavy-weapon hit THIS owner
+        // lands against each enemy, via the generic WeaponWeightFirstHitTracker rather than a bespoke
+        // mark - naturally coexists with Kai's own First Strike Ascension without merging their state.
         private static FP ResolveDeadeye(Frame f, EntityRef owner, EntityRef target, WeaponDataAsset weaponData)
         {
-            if (weaponData.Family != WeaponFamily.Sniper || f.Unsafe.TryGetPointer<DeadeyeUpgrade>(owner, out var deadeye) == false)
+            if (weaponData.Weight != WeaponWeight.Heavy || f.Unsafe.TryGetPointer<DeadeyeUpgrade>(owner, out var deadeye) == false)
                 return FP._1;
 
-            return WeaponFamilyFirstHitUtility.TryConsumeFirstHit(f, target, owner, WeaponFamily.Sniper)
+            return WeaponWeightFirstHitUtility.TryConsumeFirstHit(f, target, owner, WeaponWeight.Heavy)
                 ? FP._1 + deadeye->DamageBonus
                 : FP._1;
         }
 
-        // Lux's Assault Rifle Mastery R3 "Targeting Link" - an AR hit from a TargetingLinkUpgrade
+        // Lux's Medium Mastery R3 "Targeting Link" - a Medium-weapon hit from a TargetingLinkUpgrade
         // holder refreshes (never stacks) a duration mark on the target; the actual bonus damage is
         // read separately by GetTargetingLinkMultiplier below, since it has to reach Sentry-attributed
         // damage (owner = a SentryBarrel with no CharacterStats), not just Lux's own hits.
         private static void ApplyTargetingLinkMark(Frame f, EntityRef owner, EntityRef target, WeaponDataAsset weaponData)
         {
-            if (weaponData.Family != WeaponFamily.AssaultRifle || f.Unsafe.TryGetPointer<TargetingLinkUpgrade>(owner, out var targetingLink) == false)
+            if (weaponData.Weight != WeaponWeight.Medium || f.Unsafe.TryGetPointer<TargetingLinkUpgrade>(owner, out var targetingLink) == false)
                 return;
 
             f.AddOrGet<TargetingLinkMark>(target, out var mark);
@@ -154,21 +178,21 @@ namespace Quantum
         }
     }
 
-    // Generic reusable "has (owner, family) already landed a hit on this target" ledger - Kai's
-    // Deadeye is the first consumer, but any future Weapon Family Mastery needing the same "first hit
-    // of family X from owner Y" shape reuses this instead of a bespoke mark.
-    public static unsafe class WeaponFamilyFirstHitUtility
+    // Generic reusable "has (owner, weight) already landed a hit on this target" ledger - Kai's
+    // Deadeye is the first consumer, but any future Weapon Weight Mastery needing the same "first hit
+    // of weight X from owner Y" shape reuses this instead of a bespoke mark.
+    public static unsafe class WeaponWeightFirstHitUtility
     {
-        // True only the FIRST time this exact (owner, family) pair lands on target; false every time
+        // True only the FIRST time this exact (owner, weight) pair lands on target; false every time
         // after, until target itself is destroyed (and the tracker along with it). All 4 slots taken
         // (the co-op player cap) is treated as "already recorded" rather than overflowing.
-        public static bool TryConsumeFirstHit(Frame f, EntityRef target, EntityRef owner, WeaponFamily family)
+        public static bool TryConsumeFirstHit(Frame f, EntityRef target, EntityRef owner, WeaponWeight weight)
         {
-            f.AddOrGet<WeaponFamilyFirstHitTracker>(target, out var tracker);
+            f.AddOrGet<WeaponWeightFirstHitTracker>(target, out var tracker);
 
             for (int i = 0; i < 4; i++)
             {
-                if (tracker->Owner[i] == owner && (WeaponFamily)tracker->Family[i] == family)
+                if (tracker->Owner[i] == owner && (WeaponWeight)tracker->Weight[i] == weight)
                     return false;
             }
 
@@ -177,7 +201,7 @@ namespace Quantum
                 if (tracker->Owner[i] == EntityRef.None)
                 {
                     tracker->Owner[i] = owner;
-                    tracker->Family[i] = (byte)family;
+                    tracker->Weight[i] = (byte)weight;
                     return true;
                 }
             }

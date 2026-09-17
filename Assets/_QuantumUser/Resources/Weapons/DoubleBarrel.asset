@@ -22,6 +22,7 @@ MonoBehaviour:
     RawValue: 1310720
   Element: 0
   Family: 4
+  Weight: 0
   CriticalChance:
     RawValue: 6554
   CriticalDamageBonus:
@@ -51,7 +52,7 @@ MonoBehaviour:
   BaseTraits:
   - Id:
       Value: 995703399927807295
-  ViewPrefab: {fileID: 8089491252618662435, guid: 0f7481ececfe745c383ff250af802c65, type: 3}
+  ViewPrefab: {fileID: 8089491252618662435, guid: 18692a6e16a6044c593882a1fb05bd53, type: 3}
   ShakeTier: 2
   _dpsPreview: 'Burst DPS: 100.8
 

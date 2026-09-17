@@ -57,8 +57,6 @@ namespace Quantum
             stats->CriticalChance = data.CriticalChance;
             stats->CriticalDamageMultiplier = data.CriticalDamageMultiplier;
 
-            stats->ElementalChance = data.ElementalChance;
-
             stats->AttackSpeedMultiplier = data.AttackSpeedMultiplier;
             stats->ReloadSpeedMultiplier = data.ReloadSpeedMultiplier;
 

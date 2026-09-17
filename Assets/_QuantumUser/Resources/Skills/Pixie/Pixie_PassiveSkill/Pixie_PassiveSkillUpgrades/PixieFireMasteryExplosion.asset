@@ -25,7 +25,7 @@ MonoBehaviour:
   DetonateOnEnemyHit: 1
   DetonateOnAllyHit: 0
   BlastRadius:
-    RawValue: 98304
+    RawValue: 163840
   TargetMask: 2
   TriggersSpawnUpgrades: 1
   PlantedFuseTime:

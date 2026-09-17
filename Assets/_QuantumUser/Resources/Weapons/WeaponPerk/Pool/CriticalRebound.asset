@@ -19,7 +19,8 @@ MonoBehaviour:
   Icon: {fileID: -2050743066, guid: 017cb6454ed9743478842fb02d741366, type: 3}
   DisplayName: Critical Rebound
   Rarity: 1
-  Description: 'Crits fire a secondary projectile at <color=#FD3971>{0:0}%</color> damage within <color=#FD3971>{1:0}m</color>'
+  Description: Crits fire a secondary projectile at <color=#FD3971>{0:0}%</color>
+    damage
   Radius:
     RawValue: 524288
   DamageMultiplier:

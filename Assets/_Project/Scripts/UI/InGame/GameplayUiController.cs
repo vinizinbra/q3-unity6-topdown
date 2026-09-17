@@ -1021,10 +1021,11 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
             WeaponName = StringUtility.WithLevelSuffix(baseName, weaponLevel),
             Damage = weaponData.Damage.AsFloat,
             FireRate = weaponData.FireRate.AsFloat,
-            Range = weaponData.Range.AsFloat,
+            CriticalDamageMultiplier = weaponData.CriticalDamageBonus.AsFloat,
             MagazineSize = weaponData.MagazineSize,
             CriticalChance = weaponData.CriticalChance.AsFloat,
             ElementIndex = (int)weaponData.Element,
+            WeightIndex = (int)weaponData.Weight,
             Perks = perks
         };
     }

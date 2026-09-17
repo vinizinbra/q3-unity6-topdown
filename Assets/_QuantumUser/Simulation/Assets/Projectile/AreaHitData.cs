@@ -77,7 +77,7 @@ namespace Quantum
         private void Detonate(Frame f, Projectile* projectile, FPVector3 center)
         {
             Detonate(f, projectile->Owner, projectile->Source, projectile->Element, projectile->Damage,
-                projectile->SpawnDepth, center);
+                projectile->SpawnDepth, center, heading: projectile->Velocity);
         }
 
         // The directly-struck entity needs no special case - it's inside the radius, so the overlap
@@ -103,9 +103,16 @@ namespace Quantum
         // detonates the same AreaHitData more than once in one tick against overlapping areas (e.g.
         // GroundBarrageDeliveryData, one Detonate per scattered point) and needs each call's hits kept
         // distinct so Quantum doesn't silently collapse them.
+        //
+        // heading defaults null (every existing caller's exact prior behavior - a planted bomb/skill
+        // throw/enemy attack has no still-flying shot to speak of) - only the private Projectile*
+        // overload above passes its own live Velocity, so a grenade-launcher-style weapon's Split
+        // Shot fragments still fan around the shot's OWN travel direction (see
+        // WeaponPerkUtility.SpawnSplitProjectiles) instead of always falling back to a full-circle
+        // scatter just because this Hit happens to be an AreaHitData instead of a DirectHitData.
         public FP Detonate(Frame f, EntityRef owner, DamageSource source, ElementType element, FP damage,
             int spawnDepth, FPVector3 center, FP radiusMultiplier = default, bool allowClusterBomblets = true,
-            byte hitIndex = 0)
+            byte hitIndex = 0, FPVector3? heading = null)
         {
             if (radiusMultiplier <= FP._0)
                 radiusMultiplier = FP._1;
@@ -124,6 +131,14 @@ namespace Quantum
                 * StatUtility.GetAreaMultiplier(f, owner)
                 * ResolveBombChargeRadiusMultiplier(f, owner)
                 * radiusMultiplier;
+
+            // Heavy Mastery's "Heavy Hit Area Expansion" R3 (docs/hero-mastery.md) - a flat additive
+            // bonus, not another multiplier, added straight onto an attack that already has an area.
+            // Weapon-sourced only (a Skill/enemy-owned blast was never fired from an equipped weapon).
+            if (source == DamageSource.Weapon)
+            {
+                radius += HeavyHitAreaUtility.ResolveExtraRadius(f, owner);
+            }
 
             // isExplosion: true - a bomb detonation is a genuine area/explosive blast, read by
             // Pixie's Chain Reaction passive (see MarkExplosiveDeath.RequiresExplosion) to decide
@@ -160,6 +175,26 @@ namespace Quantum
                 && spawnDepth < MaxSpawnUpgradeDepth)
             {
                 TrySpawnClusterBomblets(f, owner, center, damage, spawnDepth + 1);
+            }
+
+            // Split Shot (WeaponPostImpactProcs.HasSplitShot) - a grenade-style weapon whose own Hit
+            // is an area blast rather than a DirectHitData has no "still-flying shot" to keep going,
+            // so this is the ONLY path that can ever spawn its fragments (WeaponPerkUtility.
+            // SpawnSplitProjectiles is a no-op without SplitShotProjectileOverride set, since there is
+            // no "parent ProjectileData" here to fall back to the way DirectHitData's own copy has).
+            // heading carries the parent grenade's own live Velocity through when this detonation
+            // came from a still-flying Projectile (see the private Detonate overload above) - a
+            // grenade launcher's shot has a perfectly real travel direction right up until it hits
+            // something, same as a DirectHitData shot does, so its fragments fan around
+            // procs->SplitShotArcDegrees centered on THAT instead of always falling back to a full
+            // circle just because this Hit happens to be an AreaHitData. Same recursion guard as the
+            // cluster bomblets above, weapon-sourced instead of skill-sourced (a Skill-owned blast has
+            // no Weapon to read WeaponPostImpactProcs off of).
+            if (source == DamageSource.Weapon && spawnDepth < MaxSpawnUpgradeDepth
+                && f.Unsafe.TryGetPointer<WeaponPostImpactProcs>(owner, out var procs) == true && procs->HasSplitShot == true
+                && f.Unsafe.TryGetPointer<Weapon>(owner, out var weapon) == true)
+            {
+                WeaponPerkUtility.SpawnSplitProjectiles(f, owner, source, element, damage, spawnDepth, center, heading, weapon, procs);
             }
 
             return radius;

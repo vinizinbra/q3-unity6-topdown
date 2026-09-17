@@ -47,6 +47,16 @@ component Projectile
     // concept, so this stays Neutral for anything not fired by WeaponSystem.
     ElementType Element;
 
+    // The firing weapon's own asset, captured at fire time (WeaponSystem/WeaponPerkReactionSystem/
+    // WeaponPerkUtility/DirectHitData each seed it through ProjectileSpawner.Spawn's weaponData param,
+    // same as Element above) rather than re-resolved off Owner's live Weapon later - the owner may
+    // have swapped weapons by the time this shot lands, and re-reading their CURRENT weapon would
+    // silently reattribute a stale shot's config to the wrong one. Invalid for anything not fired by a
+    // Weapon (a skill, an enemy attack, Kai's Ghost Shot echo) - Source distinguishes those, not this.
+    // Read only by the VIEW (WeaponDataAsset.View's sprite/particle config) - nothing in the
+    // simulation itself reads this back.
+    AssetRef<WeaponDataAsset> WeaponData;
+
     // The EXTRA element grafted on by an Element Infusion weapon perk (WeaponElementInfusion),
     // seeded at spawn in WeaponSystem.ApplyProjectilePerks and applied at impact via
     // StatusEffectUtility.TryApplyInfusedElement rolling PerkElementChance - independent of Element
@@ -114,14 +124,23 @@ component Projectile
     // player-owned one - Kai's field only ever slows enemy fire).
     FP SpeedMultiplier;
 
-    // Per-shot override of ProjectileDataAsset.Movement, resolved once at spawn (see
-    // ProjectileMovementOverride.qtn/WeaponSystem.FireProjectile) and preferred every tick by
-    // ProjectileSystem.Update over the asset's own Movement - Pixie's Rocket Conversion (Grenade
-    // Launcher Mastery R3) is the first user, swapping a Grenade Launcher's ballistic arc for a fast
-    // direct flight while everything else about the shot (Hit/explosion/perks/element) stays whatever
-    // the weapon's own ProjectileDataAsset says. Invalid (the default) for every projectile not fired
-    // through that override path, which is exactly every existing spawn site unchanged.
+    // Generic per-entity override of ProjectileDataAsset.Movement, preferred every tick by
+    // ProjectileSystem.Update over the asset's own Movement. Kai's Mirror Step (MirrorStepSkillAction)
+    // is the current user - it writes this directly onto an already-live projectile mid-flight (not at
+    // spawn) to curve a reflected bolt in on its shooter via HomingProjectileMovementData. Invalid (the
+    // default) for every projectile nothing has touched, which is every projectile by default.
     AssetRef<ProjectileMovementData> MovementOverride;
+
+    // Every entity this shot has actually hit so far (pierced through, or bounced off of) - lets a
+    // Ricochet redirect PREFER a target it hasn't already hit over one it has, instead of only ever
+    // excluding the single most-recently-hit entity (see DirectHitData.TryRicochet's own `exclude`
+    // param), which let a 2+-bounce chain ping-pong back onto an enemy it already hit two bounces
+    // ago. EntityRef.None is the empty-slot sentinel - a shot with fewer hits than slots just has
+    // trailing Nones, skipped by WeaponPerkUtility.TryFindNearestUnhitEnemy's own scan. Sized well
+    // above any realistic Pierce+Bounce total; a shot that somehow fills every slot just stops
+    // recording further hits (silently, no error) rather than needing a ring buffer for an edge
+    // case that shouldn't come up in practice.
+    array<EntityRef>[8] RecentHits;
 
     // Per-shot override of ProjectileDataAsset.Hit, same shape/reasoning as MovementOverride above -
     // resolved once at spawn and preferred every tick by ProjectileSystem over the asset's own Hit.

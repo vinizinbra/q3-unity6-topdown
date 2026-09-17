@@ -16,10 +16,10 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/IncendiaryRounds
     Guid:
       Value: 470534786904663121
-  Icon: {fileID: 0}
+  Icon: {fileID: 1536518442, guid: 017cb6454ed9743478842fb02d741366, type: 3}
   DisplayName: Incendiary Rounds
   Rarity: 1
-  Description: <color=#FD3971>{1:0}%</color> chance to Burn enemies on hit
+  Description: Adds fire element
   Element: 1
   ProcChance:
     RawValue: 65536

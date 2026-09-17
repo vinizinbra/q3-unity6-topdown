@@ -268,18 +268,18 @@ namespace QuantumUser.Editor
                 asset.ShockwaveForce = FP._4;
             });
 
-            // Hero Mastery (see docs/hero-mastery.md) - Shotgun (Weapon Family) + Neutral (Element),
+            // Hero Mastery (see docs/hero-mastery.md) - Heavy (Weapon Weight) + Neutral (Element),
             // drafted through the same Passive Upgrade pool as Iron Presence/Guardian/Groundbreaker
             // above, not a separate system. Authored in HeroMasteryAssetGenerator (shared with the
             // other 5 heroes' own Mastery pairs and with that file's own "regenerate all 12 Mastery
             // assets" menu item) rather than inline here, so the tuned values live in exactly one place.
-            var (shotgunMastery, neutralMastery) = HeroMasteryAssetGenerator.CreateBruteMastery();
+            var (heavyMastery, neutralMastery) = HeroMasteryAssetGenerator.CreateBruteMastery();
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh(); // lets QuantumAssetObjectPostprocessor stamp Guid/Identifier on anything just created
 
             WireCharacterData(passive,
-                new List<PassiveUpgradeData> { ironPresence, guardian, groundbreaker, shotgunMastery, neutralMastery },
+                new List<PassiveUpgradeData> { ironPresence, guardian, groundbreaker, heavyMastery, neutralMastery },
                 new List<SkillActionData> { ironShoulder, bodyguard });
 
             WireJuggernautActions(new List<SkillActionData> { momentum, boneBreaker, aftershock, concussiveImpact });

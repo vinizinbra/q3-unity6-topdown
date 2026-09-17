@@ -1,24 +1,46 @@
 # Hero Mastery
 
-Every hero has exactly two Mastery lines: one **Weapon Family Mastery** (fixed weapon family) and one
-**Element Mastery** (fixed element). Each has 3 ranks. Every rank adds a damage multiplier; rank 3 also
-unlocks one hero-specific "R3 Special" effect. Both lines are drafted through the ordinary level-up
-Passive Upgrade pool, exactly like any other Ascension - there is no separate Mastery UI, currency, or
-progression system.
+Every hero has exactly two Mastery lines: one **Weapon Weight Mastery** (fixed weight class - Light/
+Medium/Heavy) and one **Element Mastery** (fixed element). Each has 3 ranks. Every rank adds a damage
+multiplier; rank 3 also unlocks one hero-specific "R3 Special" effect. Both lines are drafted through
+the ordinary level-up Passive Upgrade pool, exactly like any other Ascension - there is no separate
+Mastery UI, currency, or progression system.
+
+**2026-09-16 - migrated from Weapon Family to Weapon Weight.** The Weapon Weight track replaces what
+used to be a **Weapon Family Mastery** (fixed weapon family - Brute/Shotgun, Pixie/Grenade Launcher,
+Max/Pistol, Kai/Sniper, Zara/SMG, Lux/Assault Rifle). `WeaponFamily` itself is untouched and still
+drives weapon identity/perk pools/UI/balance (see "Weapon Weight" below) - only Hero Mastery's own
+keying axis changed, to a new, independent `WeaponWeight` classification. This was a full replacement,
+not an added second system: the old 6 Family-keyed Mastery assets and their `CharacterData.
+PassiveUpgrades` wiring entries were removed outright (see "Migration" below), and every R3 Special was
+re-scoped from "this one weapon family" to "any weapon of this weight", generalizing several of them in
+the process (Point Blank/Deadeye/Heavy Hit Area Expansion now work with any Heavy weapon, not just their
+original Shotgun/Sniper/Grenade Launcher).
+
+**2026-09-16 - Pixie's R3 simplified.** The original R3 shipped as two behaviors ("Rocket Conversion"
+- converting a ballistic Heavy weapon's shots to fly straight - plus the area-hit expansion below). The
+ballistic-conversion half was cut: it only ever did anything for a Heavy weapon whose own projectile
+happened to be ballistic (in practice, only Grenade Launcher), so it read as "sometimes your shots
+become rockets" depending on which Heavy weapon was equipped - inconsistent and hard to describe on one
+card. Pixie's Heavy Mastery R3 is now just Heavy Hit Area Expansion, which scales identically across
+every Heavy weapon.
 
 ## Current status
 
 Code-complete. Not yet authored/verified in-Editor - run
 `Tools/RiftRaiders/Hero Mastery/Generate All Mastery Assets` once in the Unity Editor to create/wire
-all 12 new `.asset` files (2 per hero) into every hero's `CharacterData.PassiveUpgrades`, without
-touching any hero's other Ascension/Passive lines. Requires Quantum DSL codegen to run first (new
-`.qtn` types) - see CLAUDE.md's "Quantum `.qtn` codegen gotcha".
+all 12 `.asset` files (2 per hero) into every hero's `CharacterData.PassiveUpgrades`, without touching
+any hero's other Ascension/Passive lines. Requires Quantum DSL codegen to run first (new `WeaponWeight`
+enum + renamed/added `.qtn` components) - see CLAUDE.md's "Quantum `.qtn` codegen gotcha". The 6 old
+Weapon-Family-keyed Mastery icons (`BruteShotgunMastery`/`MaxPistolMastery`/`KaiSniperMastery` sprites in
+`UISprites.spriteatlas`) are now unused and need re-authoring/renaming for the new Heavy/Light/Heavy
+lines - not done here (art-asset only, no code dependency).
 
 ## Regenerating
 
 `HeroMasteryAssetGenerator.cs` (`Assets/_QuantumUser/Editor/`) is the single source of truth for all
 12 Mastery assets' tuned values - each `Create<Hero>Mastery()` method authors that hero's Weapon
-Family + Element pair via the same `CreateOrUpdate` idiom every other Ascension generator uses. Two
+Weight + Element pair via the same `CreateOrUpdate` idiom every other Ascension generator uses. Two
 ways to run it:
 
 - **`Tools/RiftRaiders/Hero Mastery/Generate All Mastery Assets`** - regenerates and rewires all 12
@@ -34,30 +56,39 @@ ways to run it:
 
 ## Design
 
-- **Weapon Family** (`WeaponFamily.qtn`) - a new, independent axis alongside the existing `ElementType`
-  (`ElementType.qtn`). A weapon is `(Family, Element)`, never coupled - `WeaponDataAsset.Family` is a
-  new field, hand-tagged on the 6 real player weapons (`PistolWeapon`/`SMG`/`AssaultRifle`/
-  `ShotgunWeapon`/`SniperWeapon`/`GrenadeLauncher`.asset); everything else (Lux's sentry guns, test/
-  basic weapons) stays `WeaponFamily.None` and simply never matches a Family Mastery.
-- **Element** reuses the existing `ElementType` enum (`Neutral/Fire/Ice/Rock/Void/Lightning`) - the
-  brief's "Electric" is `ElementType.Lightning`. Rock/Void have no Mastery mapped to them; nothing
-  changed about their existing baseline-status behavior.
-- **Mastery data** - two abstract base classes, `WeaponFamilyMasteryData`/`ElementMasteryData`
+- **Weapon Weight** (`WeaponWeight.qtn`) - a new, independent axis alongside the existing `WeaponFamily`
+  (`WeaponFamily.qtn`, identity/perk-pool/UI/balance - untouched) and `ElementType` (`ElementType.qtn`).
+  A weapon is `(Family, Element, Weight)`, never coupled - `WeaponDataAsset.Weight` is hand-tagged on
+  the 6 real player weapons per the default migration (`PistolWeapon`/`SMG` -> Light, `AssaultRifle`/
+  `ShotgunWeapon` -> Medium, `SniperWeapon`/`GrenadeLauncher` -> Heavy); everything else (Lux's sentry
+  guns, test/basic weapons) stays the default `WeaponWeight.Medium` and simply never matches a Light or
+  Heavy Mastery. `Medium` is the enum's ordinal-0 default deliberately, so an un-tagged weapon reads as
+  neutral rather than silently getting the Light speed bonus or Heavy penalty (see below).
+  **Move speed**: `WeaponWeightUtility.GetMoveSpeedMultiplier` (`Systems/Weapon/`) resolves the
+  equipped weapon's Weight into +10%/0%/-10% (Light/Medium/Heavy), read by `PlayerMovementProcessor.
+  BeforeMove` in the same `targetSpeed *= X.ResolveY(...)` chain every other move-speed contributor
+  (CharacterStats/StatusEffect/MutationModifier) already uses - a general weapon property, not part of
+  Hero Mastery, so it lives in its own utility rather than duplicating resolution logic inside Mastery.
+- **Element** reuses the existing `ElementType` enum (`Neutral/Fire/Ice/Lightning` - Rock/Void were
+  retired, see docs/elemental-reactions.md) - the brief's "Electric" is `ElementType.Lightning`.
+- **Mastery data** - two abstract base classes, `WeaponWeightMasteryData`/`ElementMasteryData`
   (`Assets/_QuantumUser/Simulation/Assets/LevelUp/`), both `: PassiveUpgradeData`. `MaxRank = 3`,
-  `DamageMultiplierPerRank` is a 3-entry `FP[]` (15/30/50% for a standard line - every Weapon Family
+  `DamageMultiplierPerRank` is a 3-entry `FP[]` (15/30/50% for a standard line - every Weapon Weight
   line and every non-Neutral Element line - 10/20/40% for Neutral; Neutral is NOT special-cased in
   code, it is simply an `ElementMasteryData` instance authoring a weaker curve, tuned lower because it
   always applies regardless of which weapon is equipped). Both curves are centralized as
   `HeroMasteryAssetGenerator.StandardDamageMultiplierPerRank`/`NeutralDamageMultiplierPerRank` rather
   than repeated per hero, so retuning either curve is a one-line change. `Apply(f, entity, rank)` is
-  `sealed` on both bases: it always installs the shared `WeaponFamilyMastery`/`ElementMastery` runtime
+  `sealed` on both bases: it always installs the shared `WeaponWeightMastery`/`ElementMastery` runtime
   component (`HeroMastery.qtn`) with the resolved multiplier, then calls the `protected virtual
   ApplyRank(f, entity, rank)` hook a concrete hero subclass overrides to install its own R3 Special
   component only `if (rank >= 3)` - the exact "always-installed component + an optional rank-3-only
   extra" shape `ConcussiveImpactSkillAction`/`BoneBreakerSkillAction` already use elsewhere in this
   codebase.
 - **12 concrete lines**, one pair per hero, under
-  `Assets/_QuantumUser/Simulation/Assets/LevelUp/Heroes/<Hero>/PassiveSkillUpgrades/`. Each hero's
+  `Assets/_QuantumUser/Simulation/Assets/LevelUp/Heroes/<Hero>/PassiveSkillUpgrades/`
+  (`BruteHeavyMasteryData`/`PixieHeavyMasteryData`/`MaxLightMasteryData`/`KaiHeavyMasteryData`/
+  `ZaraLightMasteryData`/`LuxMediumMasteryData`, one per hero's Weight line). Each hero's
   `Editor/<Hero>AscensionAssetGenerator.cs` authors and wires its own pair into that hero's
   `CharacterData.PassiveUpgrades` (same `CreateOrUpdate`/full-list-replace pattern every other
   Ascension line already follows) - no new pool, no new `LevelUpPoolKind`. `LevelUpUtility.
@@ -66,28 +97,68 @@ ways to run it:
 - **Damage resolution** - `HeroMasteryUtility.cs` (`Systems/Combat/`) is the single generic read point,
   called once from `DamageUtility.ResolveOutgoingDamage` (`if (source == DamageSource.Weapon) damage *=
   HeroMasteryUtility.ResolveDamageMultiplier(...)`). It resolves the owner's currently-equipped
-  `Weapon` once, then checks `WeaponFamilyMastery`/`ElementMastery` plus every R3 Special that is
+  `Weapon` once, then checks `WeaponWeightMastery`/`ElementMastery` plus every R3 Special that is
   itself a conditional multiplier (Point Blank, Vendetta bonus, Infernal Rage, Deadeye) off that same
   `WeaponDataAsset`. **No hero-identity branch anywhere in this file or in `DamageUtility`** - every
-  check is "does the owner hold this generic component, does the equipped weapon's Family/Element
+  check is "does the owner hold this generic component, does the equipped weapon's Weight/Element
   match".
 
 ## R3 Specials - implementation notes
 
 | Hero | Line | R3 Special | How |
 |---|---|---|---|
-| Brute | Shotgun | Point Blank | `PointBlankUpgrade{DamageBonus,Range}`, read in `HeroMasteryUtility.ResolvePointBlank` via plain owner-target `Transform3D` distance. No dependency on pellet count/fire rate/magazine size. |
+| Brute | Heavy | Point Blank | `PointBlankUpgrade{DamageBonus,Range}`, read in `HeroMasteryUtility.ResolvePointBlank` via plain owner-target `Transform3D` distance, gated on `weaponData.Weight == Heavy`. No dependency on pellet count/fire rate/magazine size/weapon Family - works for a Sniper or Grenade Launcher in Brute's hands exactly like a Shotgun. |
 | Brute | Neutral | Armored Assault | Two independent components: `NeutralWeaponKnockbackBonusUpgrade` (read in `DamageUtility.ResolveKnockbackScale`, gated on the owner's equipped weapon being Neutral) and `ChargedDamageBonusUpgrade` (read in `ResolveOutgoingDamage`, gated on `BruteAscensionUtility.IsJuggernautCharged` - **no Stunned-target bonus**, and no second Charge resource; reuses Juggernaut's existing `JuggernautCharge`/`MaxCharge`). |
-| Pixie | Grenade Launcher | Rocket Conversion | `ProjectileMovementOverride{Family,Movement}` - a new **generic** per-shot movement-asset override. `Projectile.MovementOverride` (new field) is resolved once at fire time (`WeaponSystem.FireProjectile`/`FireEchoProjectile`) and preferred every tick by `ProjectileSystem.Update` over `ProjectileDataAsset.Movement`. The shot's `Hit`/explosion asset, perks, and Element are all untouched - it is the same Grenade Launcher shot, just flying on `GrenadeLauncherRocketMovement.asset` (a `StraightProjectileMovementData` instance) instead of the weapon's own ballistic arc. Direct Hit needs **zero special-casing** - it only ever reads the resolved explosion center/radius (`DemolitionMasteryUtility.ApplyProximityEffects`), which a straight-line impact produces exactly like an arc's. |
+| Pixie | Heavy | Heavy Hit Area Expansion | `HeavyHitAreaExpansionUpgrade{ExtraRadius}`, gated on `weaponData.Weight == Heavy` - see "Heavy Hit Area Expansion" below for the full write-up. |
 | Pixie | Fire | Incendiary Rounds | Every Fire-weapon hit detonates a real `AreaHitData` explosion, guaranteed (not a proc chance, unlike Pixie's separate Explosive Rounds Ascension). `FireWeaponExplosiveShotUpgrade{Explosion: AssetRef<AreaHitData>}` - fully author-configured (BlastRadius/TargetMask/Effects) via the same asset type Grenade Launcher's own weapon uses, rather than bespoke fields. Triggered from `StatusEffectUtility.TryTriggerFireWeaponExplosion`, called unconditionally for every Fire-element weapon hit (`TryApplyElementalStatus`), using `AreaHitData`'s own public, Projectile-agnostic `Detonate(...)` overload - the same one `ExplodeOnDestroyUtility` uses for a planted bomb with no live `Projectile*`. Direct Hit/Unstable Mixture/Pocket Bombs/Cluster Bomb all apply automatically, zero extra plumbing. (Replaced the original "Flash Burn" design - detonating part of a Burning target's remaining Burn - which is no longer implemented.) |
-| Max | Pistol | Vendetta | `VendettaPistolUpgrade{DamageBonus}`, read in `HeroMasteryUtility.ResolveVendettaPistolBonus` against the target's existing `RevengeMark` - no duplicate mark. |
+| Max | Light | Vendetta | `VendettaUpgrade{DamageBonus}`, read in `HeroMasteryUtility.ResolveVendettaBonus` against the target's existing `RevengeMark` - no duplicate mark, gated on `weaponData.Weight == Light` so it works for a Pistol or SMG alike. |
 | Max | Fire | Infernal Rage | `InfernalRageUpgrade{DamageBonus}`, gated on `f.Has<RageOverdrive>(owner)` (component **presence** = "an Overdrive activation is running", the same convention every other Overdrive Ascension already reads). Generates no Rage. Both this bonus and the base Fire Mastery %-damage multiplier also apply on a **Neutral** weapon whenever Ignition's guaranteed Burn is active (`HeroMasteryUtility.HasGuaranteedBurn` reads `CharacterStats.BurnOnHitStacks != 0`) - that hit lands a Burn just like a Fire weapon's would, so it counts as eligible for Fire Mastery too. |
-| Kai | Sniper | Deadeye | `DeadeyeUpgrade{DamageBonus}` + a new **generic** `WeaponFamilyFirstHitTracker` component (4-slot `(Owner,Family)` ledger per target, `WeaponFamilyFirstHitUtility.TryConsumeFirstHit`) - reusable by any future "first hit of family X from owner Y" effect, deliberately separate from Kai's own `FirstStrikeMark` so the two Ascensions' state never merges. |
+| Kai | Heavy | Deadeye | `DeadeyeUpgrade{DamageBonus}` + a **generic** `WeaponWeightFirstHitTracker` component (4-slot `(Owner,Weight)` ledger per target, `WeaponWeightFirstHitUtility.TryConsumeFirstHit`) - reusable by any future "first hit of weight X from owner Y" effect, deliberately separate from Kai's own `FirstStrikeMark` so the two Ascensions' state never merges. Gated on `weaponData.Weight == Heavy`, tracked per (owner, target, Heavy) - switching between different Heavy weapons still counts as the same opener against a given enemy. |
 | Kai | Neutral | Ghost Shot | See "Ghost Shot / generic Damage Echo" below. Kai's Element Mastery was originally Ice ("Cold Blooded") - **replaced** by Neutral/Ghost Shot; Cold Blooded/`ColdBloodedUpgrade`/`ColdBloodedWindow` are no longer implemented. |
-| Zara | SMG | Full Tempo | `ConditionalWeaponFireRateBonus{Family,FireRateBonus,Active}` - a **generic** component read by `WeaponSystem.ResolveLiveFireCooldown` with zero Flow-specific knowledge. `Active` is flipped by `ZaraFlowUtility.ApplyStatBonuses` on Flow's own activation edge (the same place `FasterTempoPassiveUpgradeData`'s own Fire Rate bonus already rebakes). **Renamed** `FasterTempoPassiveUpgradeData`'s existing rank-3 nickname from "Full Tempo" to "Perfect Rhythm" to avoid colliding with this new name - cosmetic only, no mechanics moved. |
+| Zara | Light | Full Tempo | `ConditionalWeaponFireRateBonus{Weight,FireRateBonus,Active}` - a **generic** component read by `WeaponSystem.ResolveLiveFireCooldown` with zero Flow-specific knowledge, gated on `Weight == Light`. `Active` is flipped by `ZaraFlowUtility.ApplyStatBonuses` on Flow's own activation edge (the same place `FasterTempoPassiveUpgradeData`'s own Fire Rate bonus already rebakes). **Renamed** `FasterTempoPassiveUpgradeData`'s existing rank-3 nickname from "Full Tempo" to "Perfect Rhythm" to avoid colliding with this new name - cosmetic only, no mechanics moved. |
 | Zara | Electric | High Voltage | `SelfFireRateOnJoltUpgrade{FireRateBonus,Duration}`, triggered from `StatusEffectUtility.ApplyElementBaseline`'s `Lightning` case (`TryTriggerSelfFireRateOnJolt`) - applies via the existing per-source Haste slots (`StatusEffectUtility.ApplyHaste`, refresh-not-stack by construction). |
-| Lux | Assault Rifle | Targeting Link | `TargetingLinkUpgrade{SentryDamageBonus,MarkDuration}` + `TargetingLinkMark{MarkedBy,Remaining}` on the target, ticked by a new small `TargetingLinkSystem`. See "Lux multiplayer ownership" below. |
+| Lux | Medium | Targeting Link | `TargetingLinkUpgrade{SentryDamageBonus,MarkDuration}` + `TargetingLinkMark{MarkedBy,Remaining}` on the target, ticked by a small `TargetingLinkSystem`, gated on `weaponData.Weight == Medium` so it works for an Assault Rifle or Shotgun alike. See "Lux multiplayer ownership" below. |
 | Lux | Neutral | Neutral Focus | See "Neutral Focus / generic Priority Target" below. Lux's Element Mastery was originally Electric ("Overcharge" - a Sentry Fire Rate buff on Jolt) - **replaced** by Neutral/Neutral Focus; Overcharge, `SentryFireRateOnJoltUpgrade`, and `Sentry.OverchargeFireRateMultiplier`/`OverchargeRemaining` are no longer implemented. |
+
+### Heavy Hit Area Expansion
+
+Pixie's Heavy Mastery R3 is one generic behavior, gated on the owner holding a Heavy weapon - not
+hardcoded to Grenade Launcher/Sniper/any specific weapon. `HeavyHitAreaExpansionUpgrade{ExtraRadius}`
+(default 2 world units) is installed at rank 3; `HeavyHitAreaUtility` (`Systems/Combat/`) is the single
+generic read point, used two ways depending on whether the hit already had an area:
+
+- **Already-area hit** (e.g. Grenade Launcher's own `AreaHitData` explosion) - `AreaHitData.Detonate`
+  adds `HeavyHitAreaUtility.ResolveExtraRadius(f, owner)` straight onto the resolved radius (a flat
+  `+=`, not another multiplier) when `source == DamageSource.Weapon`. The primary target needs no
+  special case here - it was always going to be caught by the (now bigger) overlap query exactly
+  once, the same guarantee `AreaHitData.Detonate`'s own comment already documents for its base
+  radius, so growing the radius can never double-hit it.
+- **Single-target hit** (a hitscan contact via `WeaponSystem.ApplyHitscanHit`, or a `DirectHitData`
+  projectile hit, e.g. Sniper) - `HeavyHitAreaUtility.TryExpandSingleTargetHit` spawns a brand-new
+  `ExtraRadius`-sized area around the impact point, applying the weapon's own damage/Element to every
+  OTHER enemy caught, explicitly **excluding** the primary target (which already took its own
+  hit/status a moment earlier in the same call) - satisfying "expand the effective hit area", never
+  "a second independent explosion", with no duplicated damage/status/crit/proc for the primary
+  target. Both call sites are one-line, generic hooks with no Pixie-specific knowledge.
+
+**Removed: Ballistic Heavy Conversion ("Rocket Conversion").** An earlier iteration of this R3 also
+converted a ballistic Heavy weapon's shots to fly straight (`ProjectileMovementOverride{Movement}`,
+matched by checking the weapon's own projectile movement **by type**, `BallisticProjectileMovementData`,
+never by weapon name/Family). Cut because it only ever did anything for a Heavy weapon whose own
+projectile happened to be ballistic (in practice, only Grenade Launcher) - a Sniper in Pixie's hands got
+nothing from that half, which read as inconsistent on one card. `ProjectileMovementOverride` (the
+Mastery-installed upgrade component) is gone; the underlying generic `Projectile.MovementOverride` field
+and `ProjectileSystem.Update`'s preference logic for it are untouched and still used by Kai's Mirror Step
+(`MirrorStepSkillAction`, unrelated to Hero Mastery) to redirect a reflected bolt at runtime.
+
+**Why this shape.** The codebase has no pre-existing "expand this attack's hit radius" primitive - every
+area effect before this was its own explicit `AreaHitData` asset reference (see `AreaHitData.Detonate`'s
+own `radiusMultiplier` param, which only ever scales an *existing* area, and `StatUtility.
+GetAreaMultiplier`, a persistent multiplier for an owner's explosions generally). Neither fits a flat,
+conditional, weight-gated *additive* bonus that also has to retrofit a *non-area* attack with one from
+scratch, so `HeavyHitAreaUtility` is new, but deliberately thin: it reuses the exact same overlap-query/
+`ApplyDamage`/`TryApplyElementalStatus` primitives every other hit path already calls, rather than
+introducing a second damage-application pipeline.
 
 ### Ghost Shot / generic Damage Echo
 
@@ -142,8 +213,9 @@ owner's live position/aim/weapon offset - the same `SpawnAnchor`/`SpawnOffset`/h
 `WeaponSystem.Update` uses for a genuine shot) along the frozen `Direction` captured at schedule time,
 via `ProjectileMovementData.GetLaunch` (free-aim, no locked target - there is nothing to lock onto,
 only a fixed heading). Only `Hit` is swapped, via the generic `Projectile.HitOverride` field
-(`ProjectileSpawner.Spawn`'s `hitOverride` param, mirroring the existing `MovementOverride` mechanism
-built for Pixie's Rocket Conversion) - `ProjectileSystem` prefers `HitOverride` over `projectileData.Hit`
+(`ProjectileSpawner.Spawn`'s `hitOverride` param, the same "per-shot override, preferred every tick by
+`ProjectileSystem.Update`" shape `Projectile.MovementOverride` uses - see Kai's Mirror Step,
+`MirrorStepSkillAction`) - `ProjectileSystem` prefers `HitOverride` over `projectileData.Hit`
 every tick it resolves hit behavior. `EchoHitData` (the one `EchoHit` asset today, `GhostShotHit.asset`)
 is deliberately minimal - no `Effects` list, no elemental status application, no on-hit proc chain - it
 exists to do exactly one thing: call `DamageUtility.ApplyDamage(..., bypassOutgoingResolution: true)`
@@ -288,12 +360,40 @@ Lux's Focus Target can only ever redirect Sentries whose own `Owner` is that sam
 ## Configurable values
 
 Every per-rank damage multiplier and every R3 Special's tuning numbers (Point Blank's Range, Armored
-Assault's two bonuses, Rocket Conversion's `Speed`, Incendiary Rounds' `AreaHitData` (BlastRadius/damage %), Vendetta/Infernal
+Assault's two bonuses, Heavy Hit Area Expansion's `ExtraRadius`, Incendiary Rounds' `AreaHitData` (BlastRadius/damage %), Vendetta/Infernal
 Rage/Deadeye's bonuses, Ghost Shot's `DamageMultiplier`/`Delay`/`Visual`/`EchoHit`, Full Tempo/High Voltage's Fire Rate bonuses and
-durations, Targeting Link's bonus and mark duration, Neutral Focus's `Duration`) are plain fields on
-that hero's concrete data class, authored in its `AscensionAssetGenerator.Generate()` - none of it is
+durations, Targeting Link's bonus and mark duration, Neutral Focus's `Duration`, and the Light/Heavy
+move-speed multipliers in `WeaponWeightUtility`) are plain fields/constants on that hero's concrete data
+class or the relevant utility, authored in its `AscensionAssetGenerator.Generate()` - none of it is
 hardcoded in the resolution code. All initial values above are decisive placeholders per the design
 brief, not a balance pass.
+
+## Migration (Weapon Family -> Weapon Weight)
+
+- **No separate save/progression state existed to migrate.** Hero Mastery rank is derived live from
+  `UpgradeHistory` (ordinary per-run level-up state, see "Rank representation" in the investigation that
+  preceded this change) - it is not persisted to disk, `PlayerPrefs`, or any meta-progression system
+  (`RuntimePlayer.Talents`, etc.), so there was no player-facing save data to convert.
+- **Removed outright, not kept alongside the new system**: the 6 old Family-keyed Mastery `.asset`
+  files (`ShotgunMastery`/`GrenadeLauncherMastery`/`PistolMastery`/`SniperMastery`/`SmgMastery`/
+  `AssaultRifleMastery`) and their C# classes (`ShotgunMasteryData` etc., all `: WeaponFamilyMasteryData`
+  - that base class itself is now `WeaponWeightMasteryData`). Each old asset's stable Quantum
+  `Identifier.Guid` entry was also removed directly from its hero's `CharacterData.PassiveUpgrades` list
+  (the numeric `Id: Value:` list this project wires Ascensions through - distinct from Unity's own
+  per-file asset Guid) so no dangling/missing reference is left behind.
+- **`HeroMasteryAssetGenerator.GenerateAll()`** (`Tools/RiftRaiders/Hero Mastery/Generate All Mastery
+  Assets`) now only ever authors the 6 new Weight-keyed assets (`BruteHeavyMastery`/
+  `PixieHeavyMastery`/`MaxLightMastery`/`KaiHeavyMastery`/`ZaraLightMastery`/`LuxMediumMastery`, at new
+  paths) - running it creates and wires these fresh, exactly like every other not-yet-authored Ascension
+  in this project (see "Current status").
+- **UI needed no code changes.** `HeroInfoPopupWidget`/`HeroInfoWidget` read a Mastery line's
+  `DisplayName`/`GetDescription()`/damage preview entirely generically off whatever `PassiveUpgradeData`
+  asset is equipped - no widget hardcodes "Shotgun Mastery" or any other family/weight name, so
+  `DisplayName` changing from e.g. "Shotgun Mastery" to "Heavy Weapon Mastery" on the new asset is the
+  entire UI migration. The one non-code UI asset affected is the Mastery card icon sprites
+  (`BruteShotgunMastery`/`MaxPistolMastery`/`KaiSniperMastery` in `UISprites.spriteatlas`) - these are
+  now orphaned (the assets that referenced them by Icon are deleted) and need re-authoring for the new
+  Heavy/Light/Heavy lines by hand in the Editor; not done here, flagged as a follow-up.
 
 ## Known limitations
 
@@ -304,14 +404,17 @@ brief, not a balance pass.
   hits are the overwhelming majority of what routes through `ApplyKnockback` for a hero), but a rare
   non-weapon knockback Brute triggers (e.g. a skill) while a Neutral weapon happens to be equipped would
   also receive the bonus.
-- **Rocket Conversion's aim-at-center resolution** (`WeaponSystem.ResolveAimsAtCenter`, used once up
-  front to pick an aim point before `FireProjectile` runs) still reflects the weapon's *default*
-  Movement's `AimsAtTargetCenter`, not the override's - a minor aim-point nuance (center vs. edge), not
-  a functional break; the rocket still flies at the target.
-- **Deadeye/Targeting Link "per target" state** (`WeaponFamilyFirstHitTracker`,
+- **Deadeye/Targeting Link "per target" state** (`WeaponWeightFirstHitTracker`,
   `TargetingLinkMark`) is scoped globally per target, not per-co-op-lobby-vs-per-owner beyond their own
   4-slot/`MarkedBy` scoping - acceptable given the existing player cap, called out here rather than
   silently assumed.
+- **Heavy Hit Area Expansion's secondary hits don't run through Demolition Mastery/Chain Reaction.**
+  `HeavyHitAreaUtility.TryExpandSingleTargetHit`'s secondary damage calls `DamageUtility.ApplyDamage`
+  directly rather than going through `AreaHitData.Detonate`'s `isExplosion: true` path, so Pixie's Direct
+  Hit/Concussive Force proximity bonuses and Chain Reaction's explosive-death marking never apply to
+  those secondary targets (only to the primary hit, and to an already-area attack's own expanded
+  radius, which DOES go through `Detonate`). Deliberate, to keep this new generic mechanic isolated from
+  Pixie's other Grenade-Launcher-specific systems rather than silently layering onto them.
 - **Ghost Shot does NOT compose with Echo Chamber/Infinite Echo**, unlike an earlier hit-based design
   that explicitly did - see "Ghost Shot / generic Damage Echo"'s own paragraph on this. Double Tap's
   own replay still composes (`PendingDoubleTapShot.IsFirstBullet`).

@@ -22,10 +22,11 @@ MonoBehaviour:
     RawValue: 6553600
   Element: 0
   Family: 5
+  Weight: 2
   CriticalChance:
     RawValue: 13107
   CriticalDamageBonus:
-    RawValue: 131072
+    RawValue: 163840
   FireRate:
     RawValue: 65536
   MagazineSize: 4
@@ -48,13 +49,27 @@ MonoBehaviour:
   ProjectileData:
     Id:
       Value: 470292578688152637
+  BaseTraits: []
   ViewPrefab: {fileID: 8089491252618662435, guid: 376407f6a2ac5480c998b85c91c293c9, type: 3}
   ShakeTier: 0
-  _dpsPreview: 'Burst DPS: 120
+  ProjectileSprite: {fileID: 21300000, guid: 908a3d942f3c645319e0d768d7cc3f2f, type: 3}
+  ProjectileSpriteRotationOffset: 0
+  ProjectileColor: {r: 1, g: 0.78030473, b: 0.4292453, a: 0.70980394}
+  ProjectileScale: {x: 0.7, y: 0.5, z: 0.5}
+  EnableProjectileSparkTrail: 1
+  ProjectileSparkTrailColor: {r: 1, g: 0.6813616, b: 0.2588235, a: 0.43137255}
+  ProjectileSparkTrailScale: {x: 1, y: 1, z: 1}
+  ProjectileSparkTrailLifetimeOverride: 0.7
+  EnableProjectileGlow: 1
+  ProjectileGlowColor: {r: 1, g: 0.81539816, b: 0, a: 0.34117648}
+  ProjectileGlowScale: {x: 2, y: 2, z: 2}
+  EnableProjectileLight: 1
+  ProjectileLightColor: {r: 1, g: 0.80784315, b: 0.46666667, a: 0.43137255}
+  _dpsPreview: 'Burst DPS: 130
 
-    Sustained DPS (incl. reload): 80
+    Sustained DPS (incl. reload): 86.7
 
     Damage/min:
-    4800
+    5200
 
-    Crit dmg/shot: 200 (vs 100 normal) @ 20 % chance, x2'
+    Crit dmg/shot: 250 (vs 100 normal) @ 20 % chance, x2.5'

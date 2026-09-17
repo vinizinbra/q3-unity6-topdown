@@ -14,27 +14,29 @@ component StatusEffects
     // active/inactive state rather than a one-shot "was ever hit".
     ElementType FirstElementApplied;
 
-    // Refresh-only: reapplying always extends BurnRemaining to the new duration, but only
-    // overwrites BurnDamagePerTick/BurnOwner/BurnSource when the incoming tick damage is >= the
-    // current one - see StatusEffectUtility.ApplyBurn. A weak follow-up hit can't downgrade an
-    // already-strong burn, only extend it.
+    // Burn (Fire) - up to EffectConfig.BurnMaxStacks independent potency contributions
+    // (BurnStackDamagePerTick, each seeded from the hit that landed it - see
+    // StatusEffectUtility.ComputeDotDamagePerTick) sharing ONE shared duration timer. Every
+    // qualifying Fire hit either pushes a new stack (below the cap) or, once at the cap, simply
+    // refreshes the shared timer - all stacks always expire together, refreshed to full duration by
+    // any new application. Deliberately no per-stack timers (see StatusEffectSystem.TickBurn) -
+    // keeps this one readable countdown, same as every other plain-overwrite status in this file.
+    // See StatusEffectUtility.ApplyBurn.
     FP BurnRemaining;
     FP BurnTickTimer;
-    FP BurnDamagePerTick;
+    Byte BurnStackCount;
+    array<FP>[5] BurnStackDamagePerTick;
     EntityRef BurnOwner;
     DamageSource BurnSource;
 
     // Shock/Electrified - Lightning's baseline status (see StatusEffectUtility.ApplyElectrified/
-    // IsElectrified), applied the same way Fire->Burn/Ice->Slow are. Plain overwrite-on-reapply, no
-    // tier duration scaling - Boss stays vulnerable to this soft-CC-flavored DoT-analog the same way
-    // it stays vulnerable to Burn/Slow. See docs/elemental-reactions.md.
+    // IsElectrified), applied the same way Fire->Burn/Ice->Chill are. Plain overwrite-on-reapply, no
+    // tier duration scaling - Boss stays vulnerable to this the same way it stays vulnerable to
+    // Burn/Chill. Purely a setup state now - a further Electric hit landing while this is already
+    // active rolls ElementalReactionConfig.ShockStunProcChance to proc the existing, generic Stun
+    // (see StatusEffectUtility.ApplyElementBaseline's Lightning case) rather than ticking any
+    // periodic effect of its own. See docs/elemental-reactions.md.
     FP ElectrifiedRemaining;
-
-    // Counts down from ElementalReactionConfig.JoltInterval while ElectrifiedRemaining > 0; on
-    // reaching 0, StatusEffectSystem.TickElectrified applies a Jolt (a brief Stagger, see
-    // StatusEffectUtility.ApplyStagger) and resets this back to JoltInterval. Purely deterministic,
-    // interval-based - no proc chance.
-    FP ElectrifiedJoltTimer;
 
     // Stagger - pauses (never cancels/resets) an enemy's own Preparation/Telegraph windup timer for
     // as long as this is > 0 (see EnemySystem.UpdatePreparation). Flat unconditional decrement, no
@@ -75,10 +77,38 @@ component StatusEffects
     // TryTriggerOverload/TryAdvanceOverloadChain.
     FP OverloadChainCurrentDamage;
 
-    // Slows movement - see StatusEffectUtility.GetSpeedMultiplier, read by PlayerMovementProcessor
-    // and EnemySystem's chase movement. Plain overwrite-on-reapply.
+    // Ice/Chill - progressive stacking slow. Every qualifying Ice application adds buildup (see
+    // EffectConfig.IceBuildupPerDamage, scaled off the hit's own damage the same way Burn's potency
+    // is, so a fast weak weapon can't out-buildup a slow heavy one just by firing more often),
+    // capped at EffectConfig.IceFreezeThreshold - reaching the cap converts straight into Freeze
+    // instead (see StatusEffectUtility.ApplyIce) and resets this back to 0. One shared duration
+    // timer, refreshed by every application - reaching 0 clears the buildup (see
+    // StatusEffectSystem.TickIce), never a per-application timer. See
+    // StatusEffectUtility.GetSpeedMultiplier, read by PlayerMovementProcessor and EnemySystem's
+    // chase movement.
     FP IceRemaining;
-    FP IceSpeedMultiplier;
+    FP IceBuildup;
+
+    // Freeze (Ice hard CC, reached only via Ice/Chill buildup hitting EffectConfig.
+    // IceFreezeThreshold - see StatusEffectUtility.ApplyIce/ApplyFreeze) - freezes the state
+    // machine/movement/firing entirely, the exact same total lockout Stun does (every IsStunned
+    // gate in EnemySystem/PlayerMovementProcessor/WeaponSystem also checks IsFrozen), but stays an
+    // independently queryable status of its own - a future system (bonus damage vs a Frozen target,
+    // a dedicated Shatter-style payoff) can tell Freeze and Stun apart even though both currently
+    // reuse the same lockout plumbing. Unlike Stun, NOT gated by TierStatusResistance.
+    // ImmuneToHardCC - Boss stays vulnerable to Freeze (just far shorter), its own dedicated
+    // FreezeDurationMultiplier tapering it instead. Plain overwrite-on-reapply, except rejected
+    // outright while FreezeRecoveryRemaining is still counting down just below.
+    FP FreezeRemaining;
+
+    // Anti-permafreeze: while > 0, a NEW Freeze application is rejected outright (Ice buildup can
+    // still accumulate and slow the target in the meantime, it just can't re-trigger Freeze until
+    // this clears) - same diminishing-returns shape as StunImmunityRemaining below, seeded to
+    // (the applied Freeze's own duration + that tier's authored TierStatusResistance.
+    // FreezeRecoveryDuration) the instant Freeze lands, so the gap is measured from the end of the
+    // Freeze, not its start. Stays 0 forever for anything with no tier resistance (the player, any
+    // non-Enemy), same as StunImmunityRemaining. See StatusEffectUtility.ApplyFreeze.
+    FP FreezeRecoveryRemaining;
 
     // Freezes the state machine/movement/firing entirely - see StatusEffectUtility.IsStunned, read
     // by EnemySystem, PlayerMovementProcessor and WeaponSystem. Plain overwrite-on-reapply.

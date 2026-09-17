@@ -74,7 +74,7 @@ namespace Quantum
                 if (TryMarkProcced(f, filter.Entity, target) == false)
                     continue;
 
-                StatusEffectUtility.ApplyBurn(f, target, BurnDuration, BurnIntensity, filter.Entity, DamageSource.Skill, effectConfig.TickInterval);
+                StatusEffectUtility.ApplyBurn(f, target, BurnDuration, BurnIntensity, filter.Entity, DamageSource.Skill, effectConfig.TickInterval, effectConfig.BurnMaxStacks);
                 f.AddOrGet<CanApplyBurn>(filter.Entity, out _);
 
                 if (rank >= 2 && f.Unsafe.TryGetPointer<RevengeConfig>(filter.Entity, out var config) == true)

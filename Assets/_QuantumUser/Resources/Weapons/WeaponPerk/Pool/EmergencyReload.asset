@@ -19,7 +19,8 @@ MonoBehaviour:
   Icon: {fileID: -1231575849, guid: 017cb6454ed9743478842fb02d741366, type: 3}
   DisplayName: Emergency Reload
   Rarity: 1
-  Description: 'Gain <color=#FD3971>{0:+0;-0}%</color> Move Speed and <color=#FD3971>{1:+0;-0}%</color> Damage Reduction while reloading'
+  Description: Gain <color=#FD3971>{0:+0;-0}%</color> Move Speed Damage Reduction
+    on reload
   MoveSpeedBonus:
     RawValue: 13107
   DamageReduction:

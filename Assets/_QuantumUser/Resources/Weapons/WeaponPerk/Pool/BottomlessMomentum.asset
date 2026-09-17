@@ -19,7 +19,7 @@ MonoBehaviour:
   Icon: {fileID: -1308015637, guid: 017cb6454ed9743478842fb02d741366, type: 3}
   DisplayName: Bottomless Momentum
   Rarity: 2
-  Description: '<color=#FD3971>{0:0}%</color> chance for crits to restore <color=#FD3971>{1:0}</color> ammo'
+  Description: Crits restore <color=#FD3971>{1:0}</color> ammo
   Chance:
-    RawValue: 32768
+    RawValue: 65536
   Amount: 1

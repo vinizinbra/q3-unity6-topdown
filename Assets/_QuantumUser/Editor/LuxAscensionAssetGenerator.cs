@@ -287,11 +287,11 @@ namespace QuantumUser.Editor
                 asset.HotDropKnockbackForce = 8;
             });
 
-            // Hero Mastery (see docs/hero-mastery.md) - Assault Rifle (Weapon Family) + Electric
-            // (Element), drafted through the same Passive Upgrade pool as Scavenger/Rapid Recycling/
-            // Field Modifications above. Authored in HeroMasteryAssetGenerator (shared across all 6
-            // heroes) rather than inline here.
-            var (assaultRifleMastery, neutralMastery) = HeroMasteryAssetGenerator.CreateLuxMastery();
+            // Hero Mastery (see docs/hero-mastery.md) - Medium (Weapon Weight) + Neutral (Element),
+            // drafted through the same Passive Upgrade pool as Scavenger/Rapid Recycling/Field
+            // Modifications above. Authored in HeroMasteryAssetGenerator (shared across all 6 heroes)
+            // rather than inline here.
+            var (mediumMastery, neutralMastery) = HeroMasteryAssetGenerator.CreateLuxMastery();
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh(); // lets QuantumAssetObjectPostprocessor stamp Guid/Identifier on anything just created
@@ -300,7 +300,7 @@ namespace QuantumUser.Editor
             WireHeroSkill(new List<SkillActionData> { weaponSystems, overclock, fortification, overloadCore });
 
             WireCharacterData(passive,
-                new List<PassiveUpgradeData> { scavenger, rapidRecycling, fieldModifications, assaultRifleMastery, neutralMastery },
+                new List<PassiveUpgradeData> { scavenger, rapidRecycling, fieldModifications, mediumMastery, neutralMastery },
                 new List<SkillActionData> { emergencyRepair, relocationProtocol });
 
             LogHelper.Log("LuxAscensionAssetGenerator", "Scrap Collector passive + 9 Lux Ascension lines authored and wired (4 Sentry lines into " +

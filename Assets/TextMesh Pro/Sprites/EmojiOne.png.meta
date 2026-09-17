@@ -401,13 +401,13 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: EmojiOne_11
+      name: HeavyWeapon
       rect:
         serializedVersion: 2
-        x: 384
-        y: 128
-        width: 128
-        height: 128
+        x: 402
+        y: 148
+        width: 96
+        height: 79
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -467,15 +467,15 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: EmojiOne_5
+      name: LightWeapon
       rect:
         serializedVersion: 2
-        x: 256
-        y: 0
-        width: 128
-        height: 128
+        x: 269
+        y: 17
+        width: 111
+        height: 86
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -497,7 +497,7 @@ TextureImporter:
         width: 128
         height: 128
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -506,6 +506,28 @@ TextureImporter:
       bones: []
       spriteID: f7235c763afe4434e8bb666750a41096
       internalID: 21300028
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MediumWeapon
+      rect:
+        serializedVersion: 2
+        x: 408
+        y: 23
+        width: 96
+        height: 80
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 83c479dcfc20e4975ae064d56cfb89f3
+      internalID: 12202352
       vertices: []
       indices: 
       edges: []
@@ -527,18 +549,19 @@ TextureImporter:
       EmojiOne_0: 21300000
       EmojiOne_1: 21300002
       EmojiOne_10: 21300018
-      EmojiOne_11: 21300020
       EmojiOne_12: 21300022
       EmojiOne_13: 21300024
       EmojiOne_14: 21300028
       EmojiOne_2: 21300004
       EmojiOne_3: 21300006
       EmojiOne_4: 21300008
-      EmojiOne_5: 21300026
       EmojiOne_6: 21300010
       EmojiOne_7: 21300012
       EmojiOne_8: 21300014
       EmojiOne_9: 21300016
+      HeavyWeapon: 21300020
+      LightWeapon: 21300026
+      MediumWeapon: 12202352
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

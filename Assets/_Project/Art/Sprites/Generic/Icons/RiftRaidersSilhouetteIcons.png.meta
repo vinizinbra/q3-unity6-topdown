@@ -1,0 +1,2502 @@
+fileFormatVersion: 2
+guid: a02266f6788124f2c81288519716adbe
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 0
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: RR_Icon_Play
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 915
+        width: 49
+        height: 58
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 46f463a7126d14610800000000000000
+      internalID: 1603798381593251684
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Heroes
+      rect:
+        serializedVersion: 2
+        x: 133
+        y: 916
+        width: 49
+        height: 58
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aa8703a21a48562b0800000000000000
+      internalID: -5591917534578181974
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Weapons
+      rect:
+        serializedVersion: 2
+        x: 224
+        y: 918
+        width: 67
+        height: 46
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 16a666701842ac010800000000000000
+      internalID: 1209819586495933025
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Loadout
+      rect:
+        serializedVersion: 2
+        x: 333
+        y: 916
+        width: 51
+        height: 56
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2b5980020f4e58650800000000000000
+      internalID: 6234640979145037234
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Upgrades
+      rect:
+        serializedVersion: 2
+        x: 428
+        y: 917
+        width: 54
+        height: 60
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8d2d758dc71ac77d0800000000000000
+      internalID: -2919280900865273128
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Catalog
+      rect:
+        serializedVersion: 2
+        x: 522
+        y: 918
+        width: 70
+        height: 51
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f8abad352c9825a80800000000000000
+      internalID: -8479563680661718385
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_News
+      rect:
+        serializedVersion: 2
+        x: 631
+        y: 917
+        width: 57
+        height: 54
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b776a702ad83630f0800000000000000
+      internalID: -1137659346365552773
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Settings
+      rect:
+        serializedVersion: 2
+        x: 729
+        y: 914
+        width: 58
+        height: 59
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e724b12b06146f560800000000000000
+      internalID: 7347131725662339710
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Party
+      rect:
+        serializedVersion: 2
+        x: 852
+        y: 914
+        width: 77
+        height: 57
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b7e2c7018a92e6f00800000000000000
+      internalID: 1111871959814909563
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Leader
+      rect:
+        serializedVersion: 2
+        x: 967
+        y: 914
+        width: 46
+        height: 63
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1347206a4633c4da0800000000000000
+      internalID: -5959331699543083983
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_InviteFriend
+      rect:
+        serializedVersion: 2
+        x: 1061
+        y: 917
+        width: 63
+        height: 53
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7d846096d92513bb0800000000000000
+      internalID: -4958090878732842793
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Friend
+      rect:
+        serializedVersion: 2
+        x: 1155
+        y: 917
+        width: 59
+        height: 49
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dc5b362b88586c1f0800000000000000
+      internalID: -1024985043025283635
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Avatar
+      rect:
+        serializedVersion: 2
+        x: 1257
+        y: 914
+        width: 44
+        height: 60
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7072d0499bd79ee40800000000000000
+      internalID: 5686214240538273543
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Mail
+      rect:
+        serializedVersion: 2
+        x: 1348
+        y: 920
+        width: 62
+        height: 44
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 13e3d2f3bbd0bf330800000000000000
+      internalID: 3745602612958674481
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Chat
+      rect:
+        serializedVersion: 2
+        x: 1448
+        y: 914
+        width: 53
+        height: 54
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eb2d87841d746c560800000000000000
+      internalID: 7333628007409046206
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Back
+      rect:
+        serializedVersion: 2
+        x: 33
+        y: 774
+        width: 57
+        height: 53
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f7a804102dcf41a80800000000000000
+      internalID: -8496888618046944641
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Close
+      rect:
+        serializedVersion: 2
+        x: 140
+        y: 774
+        width: 56
+        height: 54
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 619b35d906c15c650800000000000000
+      internalID: 6252434858955749654
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Confirm
+      rect:
+        serializedVersion: 2
+        x: 243
+        y: 776
+        width: 61
+        height: 48
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e8026572b8da8cd10800000000000000
+      internalID: 2146156035614056590
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Lock
+      rect:
+        serializedVersion: 2
+        x: 358
+        y: 772
+        width: 46
+        height: 61
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c6a1587490f548250800000000000000
+      internalID: 5945981901495147116
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Unlock
+      rect:
+        serializedVersion: 2
+        x: 460
+        y: 773
+        width: 57
+        height: 60
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 16d58497219c7d9c0800000000000000
+      internalID: -3902429470911865503
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Search
+      rect:
+        serializedVersion: 2
+        x: 566
+        y: 771
+        width: 60
+        height: 58
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7a85d6f7ab4adb200800000000000000
+      internalID: 197495079582914727
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Filter
+      rect:
+        serializedVersion: 2
+        x: 674
+        y: 772
+        width: 56
+        height: 55
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 96b0d7274e5ba6660800000000000000
+      internalID: 7379910932177947497
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Edit
+      rect:
+        serializedVersion: 2
+        x: 777
+        y: 770
+        width: 61
+        height: 62
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dcf04b20add1b09a0800000000000000
+      internalID: -6265881634370482227
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Delete
+      rect:
+        serializedVersion: 2
+        x: 886
+        y: 772
+        width: 50
+        height: 60
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5326e39bc321a8d10800000000000000
+      internalID: 2128533825901191733
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Refresh
+      rect:
+        serializedVersion: 2
+        x: 991
+        y: 772
+        width: 57
+        height: 58
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a0c5492ccdf4629f0800000000000000
+      internalID: -493619299574588406
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Copy
+      rect:
+        serializedVersion: 2
+        x: 1102
+        y: 775
+        width: 56
+        height: 55
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3b82038812dfe95d0800000000000000
+      internalID: -3053725176850011981
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Info
+      rect:
+        serializedVersion: 2
+        x: 1212
+        y: 774
+        width: 54
+        height: 56
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 27a5f0f23ee7e4370800000000000000
+      internalID: 8308717876757355122
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Warning
+      rect:
+        serializedVersion: 2
+        x: 1321
+        y: 773
+        width: 68
+        height: 59
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 105ba97da7d1481b0800000000000000
+      internalID: -5655362818630044415
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Gift
+      rect:
+        serializedVersion: 2
+        x: 1445
+        y: 771
+        width: 59
+        height: 62
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0d1dd6d3136adadb0800000000000000
+      internalID: -4778980899156012592
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_InviteParty
+      rect:
+        serializedVersion: 2
+        x: 34
+        y: 625
+        width: 64
+        height: 56
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1bc56f651f2655710800000000000000
+      internalID: 1681358824578374833
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Kick
+      rect:
+        serializedVersion: 2
+        x: 135
+        y: 625
+        width: 63
+        height: 56
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e08eefe86eb0f0930800000000000000
+      internalID: 4111518069682006030
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Ready
+      rect:
+        serializedVersion: 2
+        x: 234
+        y: 625
+        width: 63
+        height: 56
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: be8eb43bf8e1b6a80800000000000000
+      internalID: -8472644671430203157
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_NotReady
+      rect:
+        serializedVersion: 2
+        x: 331
+        y: 625
+        width: 60
+        height: 58
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 13dd090b99ce92890800000000000000
+      internalID: -7482189161062933199
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Mic
+      rect:
+        serializedVersion: 2
+        x: 435
+        y: 623
+        width: 41
+        height: 60
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eb462920de445e000800000000000000
+      internalID: 64533554407826622
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Mute
+      rect:
+        serializedVersion: 2
+        x: 525
+        y: 623
+        width: 51
+        height: 60
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2f65a7b2db3138800800000000000000
+      internalID: 613355677451704050
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_RoomCode
+      rect:
+        serializedVersion: 2
+        x: 621
+        y: 626
+        width: 65
+        height: 55
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 42674c189cb0fa740800000000000000
+      internalID: 5165360257710716452
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Crown
+      rect:
+        serializedVersion: 2
+        x: 723
+        y: 626
+        width: 65
+        height: 56
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ba8d4d532711db380800000000000000
+      internalID: -8953981301915592533
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Achievement
+      rect:
+        serializedVersion: 2
+        x: 823
+        y: 624
+        width: 59
+        height: 57
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 48341d2eeb593ad50800000000000000
+      internalID: 6747401313812824964
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Daily
+      rect:
+        serializedVersion: 2
+        x: 928
+        y: 626
+        width: 53
+        height: 55
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 735379acbadaf89d0800000000000000
+      internalID: -2769804292459645641
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Reward
+      rect:
+        serializedVersion: 2
+        x: 1021
+        y: 618
+        width: 56
+        height: 66
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2565a44d88d491fc0800000000000000
+      internalID: -3523699983368169902
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Coin
+      rect:
+        serializedVersion: 2
+        x: 1142
+        y: 622
+        width: 56
+        height: 55
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 54e9f41c81e945440800000000000000
+      internalID: 4923734121782419013
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Premium
+      rect:
+        serializedVersion: 2
+        x: 1237
+        y: 624
+        width: 70
+        height: 54
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7e5697555761ebce0800000000000000
+      internalID: -1387646941982530073
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Xp
+      rect:
+        serializedVersion: 2
+        x: 1341
+        y: 628
+        width: 63
+        height: 47
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1611452634c8a11b0800000000000000
+      internalID: -5685077358561455775
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_LevelUp
+      rect:
+        serializedVersion: 2
+        x: 1443
+        y: 622
+        width: 55
+        height: 60
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f7572d8600dd02c40800000000000000
+      internalID: 5485627339965625727
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Health
+      rect:
+        serializedVersion: 2
+        x: 33
+        y: 475
+        width: 61
+        height: 54
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 554e46df621c63e30800000000000000
+      internalID: 4482982852298073173
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Armor
+      rect:
+        serializedVersion: 2
+        x: 136
+        y: 475
+        width: 53
+        height: 54
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7d04a76cfc83c37f0800000000000000
+      internalID: -631567382699425577
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Damage
+      rect:
+        serializedVersion: 2
+        x: 226
+        y: 474
+        width: 65
+        height: 65
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 99b639007f425b160800000000000000
+      internalID: 7040574235748821913
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Target
+      rect:
+        serializedVersion: 2
+        x: 326
+        y: 471
+        width: 67
+        height: 66
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e455514e4ef7e25e0800000000000000
+      internalID: -1932466569039489714
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Enemy
+      rect:
+        serializedVersion: 2
+        x: 435
+        y: 475
+        width: 55
+        height: 57
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f3d61860cb0b7e520800000000000000
+      internalID: 2731346020632980799
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Boss
+      rect:
+        serializedVersion: 2
+        x: 532
+        y: 473
+        width: 71
+        height: 65
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fb7647cc417b065f0800000000000000
+      internalID: -765410636695574593
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_EnemiesKilled
+      rect:
+        serializedVersion: 2
+        x: 651
+        y: 474
+        width: 55
+        height: 59
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c28de1eaf2c2dfd50800000000000000
+      internalID: 6772617997931436076
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Downed
+      rect:
+        serializedVersion: 2
+        x: 758
+        y: 474
+        width: 64
+        height: 53
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6ff2bc3d86791d140800000000000000
+      internalID: 4742738359083544566
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Revived
+      rect:
+        serializedVersion: 2
+        x: 861
+        y: 474
+        width: 90
+        height: 58
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fb142a06f00f79370800000000000000
+      internalID: 8329389984681443775
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Cooldown
+      rect:
+        serializedVersion: 2
+        x: 994
+        y: 474
+        width: 53
+        height: 65
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6424b9e016e2e52a0800000000000000
+      internalID: -6746904197362662842
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_FireRate
+      rect:
+        serializedVersion: 2
+        x: 1110
+        y: 475
+        width: 50
+        height: 57
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 290f838214b60c4c0800000000000000
+      internalID: -4269294519155363694
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Reload
+      rect:
+        serializedVersion: 2
+        x: 1214
+        y: 473
+        width: 62
+        height: 63
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a1b2e37b71bebe450800000000000000
+      internalID: 6119243005804030746
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Crit
+      rect:
+        serializedVersion: 2
+        x: 1332
+        y: 473
+        width: 58
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6aa7216c280d1d7a0800000000000000
+      internalID: -6354068339155633498
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Pierce
+      rect:
+        serializedVersion: 2
+        x: 1440
+        y: 471
+        width: 58
+        height: 67
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2e059f9f4b50d4e80800000000000000
+      internalID: -8192885872270946078
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Perk
+      rect:
+        serializedVersion: 2
+        x: 34
+        y: 323
+        width: 57
+        height: 57
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 27addda993bf328f0800000000000000
+      internalID: -566332903288612238
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Mutation
+      rect:
+        serializedVersion: 2
+        x: 138
+        y: 323
+        width: 57
+        height: 59
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f3471813afe9858f0800000000000000
+      internalID: -551516156943305665
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Relic
+      rect:
+        serializedVersion: 2
+        x: 253
+        y: 321
+        width: 41
+        height: 67
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8028eb7d464ad6e30800000000000000
+      internalID: 4498432355836264968
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Skill
+      rect:
+        serializedVersion: 2
+        x: 351
+        y: 321
+        width: 56
+        height: 63
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 240de4ac1465c17b0800000000000000
+      internalID: -5252228224853815230
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Passive
+      rect:
+        serializedVersion: 2
+        x: 449
+        y: 319
+        width: 65
+        height: 65
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 130307f22ee09d560800000000000000
+      internalID: 7338913432398213169
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Item
+      rect:
+        serializedVersion: 2
+        x: 556
+        y: 326
+        width: 52
+        height: 56
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e7ab3f7ed15d91e30800000000000000
+      internalID: 4474842029191576190
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Equipment
+      rect:
+        serializedVersion: 2
+        x: 661
+        y: 323
+        width: 48
+        height: 60
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b9e3e5669e6a5d440800000000000000
+      internalID: 4960054085993512603
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Inventory
+      rect:
+        serializedVersion: 2
+        x: 775
+        y: 323
+        width: 60
+        height: 60
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 51d54c1d5502acfa0800000000000000
+      internalID: -5779771618812994283
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_World
+      rect:
+        serializedVersion: 2
+        x: 944
+        y: 323
+        width: 63
+        height: 59
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f00803d6c6746db70800000000000000
+      internalID: 8923398242695151631
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Map
+      rect:
+        serializedVersion: 2
+        x: 1057
+        y: 327
+        width: 64
+        height: 50
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 043608923dc7ad590800000000000000
+      internalID: -7648663770759142592
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Biome
+      rect:
+        serializedVersion: 2
+        x: 1171
+        y: 325
+        width: 99
+        height: 55
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 86ef18c0ab6301ae0800000000000000
+      internalID: -1580703296505381272
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_PointOfInterest
+      rect:
+        serializedVersion: 2
+        x: 1333
+        y: 322
+        width: 46
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 87333cb6be01584f0800000000000000
+      internalID: -827236353241304200
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_BossPoi
+      rect:
+        serializedVersion: 2
+        x: 1440
+        y: 324
+        width: 56
+        height: 63
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 70435f62a8e356ee0800000000000000
+      internalID: -1268538956954913785
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Fire
+      rect:
+        serializedVersion: 2
+        x: 37
+        y: 183
+        width: 45
+        height: 55
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 37ddd083392807720800000000000000
+      internalID: 2841914933683019123
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Ice
+      rect:
+        serializedVersion: 2
+        x: 121
+        y: 184
+        width: 47
+        height: 51
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 82da32a47c5e7a9d0800000000000000
+      internalID: -2762987202263405272
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Electric
+      rect:
+        serializedVersion: 2
+        x: 203
+        y: 183
+        width: 45
+        height: 58
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 49fa95becc48ac0b0800000000000000
+      internalID: -5707603562081964140
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Void
+      rect:
+        serializedVersion: 2
+        x: 287
+        y: 184
+        width: 52
+        height: 52
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 256613227c3a18b30800000000000000
+      internalID: 4287888395900905042
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Poison
+      rect:
+        serializedVersion: 2
+        x: 375
+        y: 185
+        width: 39
+        height: 52
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 01e1cc8980fe6a660800000000000000
+      internalID: 7396862258204909072
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Bleed
+      rect:
+        serializedVersion: 2
+        x: 455
+        y: 185
+        width: 36
+        height: 51
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c64cbf73742ed0b90800000000000000
+      internalID: -7273909027623680916
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Light
+      rect:
+        serializedVersion: 2
+        x: 523
+        y: 182
+        width: 60
+        height: 57
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1d233b773707dd7f0800000000000000
+      internalID: -586188735256513839
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Dark
+      rect:
+        serializedVersion: 2
+        x: 613
+        y: 186
+        width: 48
+        height: 47
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 22119d72dded1f690800000000000000
+      internalID: -7570024457195417310
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Wind
+      rect:
+        serializedVersion: 2
+        x: 691
+        y: 186
+        width: 59
+        height: 48
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ada8758c3211dcf10800000000000000
+      internalID: 2291506630784158426
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Neutral
+      rect:
+        serializedVersion: 2
+        x: 779
+        y: 184
+        width: 46
+        height: 52
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a32b7d060d91ffaa0800000000000000
+      internalID: -6125148585431944646
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_WifiOn
+      rect:
+        serializedVersion: 2
+        x: 882
+        y: 187
+        width: 60
+        height: 44
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3d631c3ebb804b530800000000000000
+      internalID: 3869727582891095763
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_WifiOff
+      rect:
+        serializedVersion: 2
+        x: 977
+        y: 182
+        width: 62
+        height: 52
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5f1b503f82bf7a560800000000000000
+      internalID: 7325099472235901429
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Reconnect
+      rect:
+        serializedVersion: 2
+        x: 1076
+        y: 184
+        width: 52
+        height: 52
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cc415784e7c62d4a0800000000000000
+      internalID: -6570069616742820660
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_PlayOffline
+      rect:
+        serializedVersion: 2
+        x: 1163
+        y: 185
+        width: 48
+        height: 48
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3ebc0b84cab78d6b0800000000000000
+      internalID: -5271327383953028125
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Controller
+      rect:
+        serializedVersion: 2
+        x: 1254
+        y: 186
+        width: 66
+        height: 47
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b39a36502f7987b20800000000000000
+      internalID: 3132420606564477243
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Keyboard
+      rect:
+        serializedVersion: 2
+        x: 1356
+        y: 191
+        width: 63
+        height: 39
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 04a57f395a5634280800000000000000
+      internalID: -9060286263512835520
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Mobile
+      rect:
+        serializedVersion: 2
+        x: 1462
+        y: 186
+        width: 34
+        height: 54
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3a62a9170d8436ae0800000000000000
+      internalID: -1557320986043734365
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_SoundOn
+      rect:
+        serializedVersion: 2
+        x: 38
+        y: 51
+        width: 47
+        height: 49
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 37c6cb773c31fc4b0800000000000000
+      internalID: -5418090096455029645
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_SoundOff
+      rect:
+        serializedVersion: 2
+        x: 137
+        y: 51
+        width: 55
+        height: 49
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 74a9d90a75a477eb0800000000000000
+      internalID: -4722223944057382329
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_MusicOn
+      rect:
+        serializedVersion: 2
+        x: 236
+        y: 55
+        width: 41
+        height: 45
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b2202b11b4d017b60800000000000000
+      internalID: 7741983850497180203
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_MusicOff
+      rect:
+        serializedVersion: 2
+        x: 331
+        y: 54
+        width: 48
+        height: 47
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 582c0ecac68422fd0800000000000000
+      internalID: -2368250822449380731
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Fullscreen
+      rect:
+        serializedVersion: 2
+        x: 429
+        y: 54
+        width: 50
+        height: 47
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9a907a1f2b7fddb50800000000000000
+      internalID: 6619719375234992553
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Lamp
+      rect:
+        serializedVersion: 2
+        x: 557
+        y: 51
+        width: 42
+        height: 47
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e6ea546b1c417a670800000000000000
+      internalID: 8549825239805439598
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Favorite
+      rect:
+        serializedVersion: 2
+        x: 646
+        y: 52
+        width: 52
+        height: 49
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 28524a1ece52a1fa0800000000000000
+      internalID: -5829305068349545086
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Stats
+      rect:
+        serializedVersion: 2
+        x: 742
+        y: 53
+        width: 46
+        height: 48
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a5bda68f752f40cb0800000000000000
+      internalID: -4898524035028427942
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_CloudSave
+      rect:
+        serializedVersion: 2
+        x: 858
+        y: 54
+        width: 63
+        height: 43
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1d85990bd04d82cc0800000000000000
+      internalID: -3735502735641323311
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Save
+      rect:
+        serializedVersion: 2
+        x: 981
+        y: 52
+        width: 49
+        height: 47
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 329b4e178d6f8f010800000000000000
+      internalID: 1222998708315273507
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Help
+      rect:
+        serializedVersion: 2
+        x: 1093
+        y: 51
+        width: 50
+        height: 50
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 283c840c17e83d7c0800000000000000
+      internalID: -4047735020867501182
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Notification
+      rect:
+        serializedVersion: 2
+        x: 1213
+        y: 51
+        width: 44
+        height: 50
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e4c13f5594e543dc0800000000000000
+      internalID: -3660196928077751218
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Timer
+      rect:
+        serializedVersion: 2
+        x: 1338
+        y: 51
+        width: 39
+        height: 50
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3e4bef21d24cc6280800000000000000
+      internalID: -9048641853422914333
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Icon_Exit
+      rect:
+        serializedVersion: 2
+        x: 1449
+        y: 52
+        width: 51
+        height: 49
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e05967b72d9aca620800000000000000
+      internalID: 2786788990915089678
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      RR_Icon_Achievement: 6747401313812824964
+      RR_Icon_Armor: -631567382699425577
+      RR_Icon_Avatar: 5686214240538273543
+      RR_Icon_Back: -8496888618046944641
+      RR_Icon_Biome: -1580703296505381272
+      RR_Icon_Bleed: -7273909027623680916
+      RR_Icon_Boss: -765410636695574593
+      RR_Icon_BossPoi: -1268538956954913785
+      RR_Icon_Catalog: -8479563680661718385
+      RR_Icon_Chat: 7333628007409046206
+      RR_Icon_Close: 6252434858955749654
+      RR_Icon_CloudSave: -3735502735641323311
+      RR_Icon_Coin: 4923734121782419013
+      RR_Icon_Confirm: 2146156035614056590
+      RR_Icon_Controller: 3132420606564477243
+      RR_Icon_Cooldown: -6746904197362662842
+      RR_Icon_Copy: -3053725176850011981
+      RR_Icon_Crit: -6354068339155633498
+      RR_Icon_Crown: -8953981301915592533
+      RR_Icon_Daily: -2769804292459645641
+      RR_Icon_Damage: 7040574235748821913
+      RR_Icon_Dark: -7570024457195417310
+      RR_Icon_Delete: 2128533825901191733
+      RR_Icon_Downed: 4742738359083544566
+      RR_Icon_Edit: -6265881634370482227
+      RR_Icon_Electric: -5707603562081964140
+      RR_Icon_EnemiesKilled: 6772617997931436076
+      RR_Icon_Enemy: 2731346020632980799
+      RR_Icon_Equipment: 4960054085993512603
+      RR_Icon_Exit: 2786788990915089678
+      RR_Icon_Favorite: -5829305068349545086
+      RR_Icon_Filter: 7379910932177947497
+      RR_Icon_Fire: 2841914933683019123
+      RR_Icon_FireRate: -4269294519155363694
+      RR_Icon_Friend: -1024985043025283635
+      RR_Icon_Fullscreen: 6619719375234992553
+      RR_Icon_Gift: -4778980899156012592
+      RR_Icon_Health: 4482982852298073173
+      RR_Icon_Help: -4047735020867501182
+      RR_Icon_Heroes: -5591917534578181974
+      RR_Icon_Ice: -2762987202263405272
+      RR_Icon_Info: 8308717876757355122
+      RR_Icon_Inventory: -5779771618812994283
+      RR_Icon_InviteFriend: -4958090878732842793
+      RR_Icon_InviteParty: 1681358824578374833
+      RR_Icon_Item: 4474842029191576190
+      RR_Icon_Keyboard: -9060286263512835520
+      RR_Icon_Kick: 4111518069682006030
+      RR_Icon_Lamp: 8549825239805439598
+      RR_Icon_Leader: -5959331699543083983
+      RR_Icon_LevelUp: 5485627339965625727
+      RR_Icon_Light: -586188735256513839
+      RR_Icon_Loadout: 6234640979145037234
+      RR_Icon_Lock: 5945981901495147116
+      RR_Icon_Mail: 3745602612958674481
+      RR_Icon_Map: -7648663770759142592
+      RR_Icon_Mic: 64533554407826622
+      RR_Icon_Mobile: -1557320986043734365
+      RR_Icon_MusicOff: -2368250822449380731
+      RR_Icon_MusicOn: 7741983850497180203
+      RR_Icon_Mutation: -551516156943305665
+      RR_Icon_Mute: 613355677451704050
+      RR_Icon_Neutral: -6125148585431944646
+      RR_Icon_News: -1137659346365552773
+      RR_Icon_NotReady: -7482189161062933199
+      RR_Icon_Notification: -3660196928077751218
+      RR_Icon_Party: 1111871959814909563
+      RR_Icon_Passive: 7338913432398213169
+      RR_Icon_Perk: -566332903288612238
+      RR_Icon_Pierce: -8192885872270946078
+      RR_Icon_Play: 1603798381593251684
+      RR_Icon_PlayOffline: -5271327383953028125
+      RR_Icon_PointOfInterest: -827236353241304200
+      RR_Icon_Poison: 7396862258204909072
+      RR_Icon_Premium: -1387646941982530073
+      RR_Icon_Ready: -8472644671430203157
+      RR_Icon_Reconnect: -6570069616742820660
+      RR_Icon_Refresh: -493619299574588406
+      RR_Icon_Relic: 4498432355836264968
+      RR_Icon_Reload: 6119243005804030746
+      RR_Icon_Revived: 8329389984681443775
+      RR_Icon_Reward: -3523699983368169902
+      RR_Icon_RoomCode: 5165360257710716452
+      RR_Icon_Save: 1222998708315273507
+      RR_Icon_Search: 197495079582914727
+      RR_Icon_Settings: 7347131725662339710
+      RR_Icon_Skill: -5252228224853815230
+      RR_Icon_SoundOff: -4722223944057382329
+      RR_Icon_SoundOn: -5418090096455029645
+      RR_Icon_Stats: -4898524035028427942
+      RR_Icon_Target: -1932466569039489714
+      RR_Icon_Timer: -9048641853422914333
+      RR_Icon_Unlock: -3902429470911865503
+      RR_Icon_Upgrades: -2919280900865273128
+      RR_Icon_Void: 4287888395900905042
+      RR_Icon_Warning: -5655362818630044415
+      RR_Icon_Weapons: 1209819586495933025
+      RR_Icon_WifiOff: 7325099472235901429
+      RR_Icon_WifiOn: 3869727582891095763
+      RR_Icon_Wind: 2291506630784158426
+      RR_Icon_World: 8923398242695151631
+      RR_Icon_Xp: -5685077358561455775
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -68,9 +68,15 @@ public class InMatchTutorialManager : QuantumGlobalMonoBehaviour
         // Also held off while orbs are still being vacuumed in right after the area secures
         // (Global.OrbVacuumTimeRemaining) - that sweep can itself cross an XP threshold and open
         // the level-up screen a moment after BreathingAreaSecured flips, before CurrentState has
-        // even reached Upgrade yet this tick.
+        // even reached Upgrade yet this tick. AND while a multi-level XP grant still has more
+        // chained screens queued (Global.DebugPendingLevelUps) - DebugCheatSystem.
+        // TryOpenNextPendingLevelUp drains one level per screen, leaving a real one-tick gap
+        // between screens where LevelUpScreenOpen is briefly false and CurrentState briefly
+        // reverts to Breathing; without this check FirstBreakPopup could open in that gap and end
+        // up stacked on top of the next chained level-up screen.
         bool upgradePending = frame.Global->CurrentState == GameState.Upgrade
-            || frame.Global->OrbVacuumTimeRemaining.AsFloat > 0f;
+            || frame.Global->OrbVacuumTimeRemaining.AsFloat > 0f
+            || frame.Global->DebugPendingLevelUps > 0;
 
         if (upgradePending)
             return;

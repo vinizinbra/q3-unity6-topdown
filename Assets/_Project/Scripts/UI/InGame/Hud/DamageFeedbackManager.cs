@@ -236,10 +236,10 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
 
     // reactionProc (EventEntityDamaged.ReactionProc) is what actually separates Thermal Shock from a
     // plain Burn tick here - both tag ElementType.Fire, so Element alone can't tell them apart (see
-    // that field's own comment in Events.qtn). Lightning has no periodic-tick source of its own today
-    // (Electrified's Jolt only Staggers, never damages - see StatusEffectSystem.TickElectrified), so
-    // every Lightning-tagged hit is already an Overload proc regardless of reactionProc; it's read
-    // here anyway for symmetry/future-proofing rather than assuming that stays true forever. Ice
+    // that field's own comment in Events.qtn). Lightning has no periodic-tick damage source of its
+    // own (Electrified is a pure setup state - see docs/elemental-reactions.md), so every
+    // Lightning-tagged hit is already an Overload proc regardless of reactionProc; it's read here
+    // anyway for symmetry/future-proofing rather than assuming that stays true forever. Ice
     // (Shatter) has no dedicated kind yet - falls through to the plain default below.
     private static DamageNumberKind ResolveElementalKind(ElementType element, bool reactionProc, bool taken)
     {

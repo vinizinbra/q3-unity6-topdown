@@ -59,6 +59,16 @@ namespace Quantum
 
         private ProjectileVisualController _visual;
 
+        // Buffered until _visual exists - see RegisterExtraTrailParticles/RegisterExtraRenderers/
+        // RegisterDestroyEffectColor/RegisterDestroyEffectChildColor/RegisterDestroyEffectScale below.
+        // Nothing pending is the common case (no caller registered anything), so this is only
+        // forwarded once actually set.
+        private ParticleSystem[] _pendingExtraTrailParticles;
+        private Renderer[] _pendingExtraRenderers;
+        private Color? _pendingDestroyEffectColor;
+        private Color? _pendingDestroyEffectChildColor;
+        private Vector3? _pendingDestroyEffectScale;
+
         // Where the bullet actually IS on screen, which is not this GameObject during the catch-up.
         // Read by ProjectileElementalFxView so the elemental trail follows the visual rather than the
         // simulated entity. Falls back to this transform when there is no detached visual.
@@ -109,6 +119,7 @@ namespace Quantum
                 spawnPosition = ResolveVisualSpawnPosition(projectile.Owner, projectile.SpawnPosition.ToUnityVector3());
 
             ParticleSystem echoGhostParticle = AttachEchoGhostParticle(frame, root);
+            ParticleSystem weaponExtraParticle = AttachWeaponExtraParticle(frame, root);
 
             var settings = new ProjectileVisualController.Settings
             {
@@ -120,9 +131,25 @@ namespace Quantum
                 TrailParticle = trailParticle,
                 TrailRenderer = trailRenderer,
                 EchoGhostParticle = echoGhostParticle,
+                WeaponExtraParticle = weaponExtraParticle,
             };
 
             _visual = ProjectileVisualController.Detach(root, _entityRef, spawnPosition, transform.rotation, settings);
+
+            if (_pendingExtraTrailParticles != null)
+                _visual.SetExtraTrailParticles(_pendingExtraTrailParticles);
+
+            if (_pendingExtraRenderers != null)
+                _visual.SetExtraRenderers(_pendingExtraRenderers);
+
+            if (_pendingDestroyEffectColor.HasValue)
+                _visual.SetDestroyEffectColorOverride(_pendingDestroyEffectColor);
+
+            if (_pendingDestroyEffectChildColor.HasValue)
+                _visual.SetDestroyEffectChildColorOverride(_pendingDestroyEffectChildColor);
+
+            if (_pendingDestroyEffectScale.HasValue)
+                _visual.SetDestroyEffectScaleOverride(_pendingDestroyEffectScale);
 
             // Straight away, not only from the next QUpdate: this hands over the entity's real
             // position and speed on the very frame the view appears, so a projectile that dies the
@@ -278,6 +305,93 @@ namespace Quantum
             ghost.Play();
 
             return ghost;
+        }
+
+        // Optional per-weapon extra particle (WeaponDataAsset.ProjectileVisuals.ProjectileExtraParticle)
+        // instantiated as a child of the visual root, BEFORE Detach hands root off to
+        // ProjectileVisualController - same shape and same reasoning as AttachEchoGhostParticle above
+        // (picked up for free by that controller's own GetComponentsInChildren<ParticleSystem> scan,
+        // returned so the caller can hand it to Settings.WeaponExtraParticle for graceful-fade-on-
+        // impact instead of being cut off mid-emission). No-op for anything not fired by a Weapon (no
+        // resolvable WeaponData) or a weapon with none configured.
+        private ParticleSystem AttachWeaponExtraParticle(Frame frame, Transform root)
+        {
+            if (frame == null || frame.TryGet<Projectile>(_entityRef, out var projectile) == false)
+                return null;
+
+            WeaponDataAsset weaponData = frame.FindAsset(projectile.WeaponData);
+            ParticleSystem prefab = weaponData?.ProjectileVisuals.ProjectileExtraParticle;
+            if (prefab == null)
+                return null;
+
+            ParticleSystem instance = Instantiate(prefab, root);
+            instance.transform.localPosition = Vector3.zero;
+            instance.transform.localRotation = Quaternion.identity;
+            instance.transform.localScale = weaponData.ProjectileVisuals.ProjectileExtraParticleScale;
+
+            // Explicit rather than relying on the prefab's own Play On Awake - same reasoning as
+            // AttachEchoGhostParticle's own Play() call.
+            instance.Play();
+
+            return instance;
+        }
+
+        // Lets a sibling view (ProjectileDataVisualsView's sparkTrail/glow) give its own trailing
+        // particles the exact same graceful-fade timing _visual already gives TrailParticle - stopped
+        // only once the impact tween actually reaches the resolved hit point, not the instant the raw
+        // EventProjectileDestroyed fires (well before that, particularly on a laggy catch-up). Called
+        // from ProjectileDataVisualsView.Initialize, whose own order relative to this component's
+        // Initialize is not guaranteed - buffered here and forwarded to _visual once Detach has run,
+        // whichever order that ends up being.
+        public void RegisterExtraTrailParticles(ParticleSystem[] particles)
+        {
+            if (_visual != null)
+                _visual.SetExtraTrailParticles(particles);
+            else
+                _pendingExtraTrailParticles = particles;
+        }
+
+        // Same buffering, for a sibling view's own Renderer (ProjectileDataVisualsView's sprite) -
+        // see the field-level comment on ProjectileVisualController._extraRenderers for why this is
+        // registered explicitly instead of assumed to already live under visualRoot.
+        public void RegisterExtraRenderers(Renderer[] renderers)
+        {
+            if (_visual != null)
+                _visual.SetExtraRenderers(renderers);
+            else
+                _pendingExtraRenderers = renderers;
+        }
+
+        // Same buffering, for a sibling view's per-weapon override of destroyEffectPrefab's tint
+        // (WeaponDataAsset.ProjectileVisuals.ProjectileDestroyColor) - see ProjectileVisualController.
+        // _destroyEffectColorOverride's own comment for why this always plays through the tinted
+        // overload regardless.
+        public void RegisterDestroyEffectColor(Color color)
+        {
+            if (_visual != null)
+                _visual.SetDestroyEffectColorOverride(color);
+            else
+                _pendingDestroyEffectColor = color;
+        }
+
+        // Same buffering, for every particle system under destroyEffectPrefab EXCEPT the root - see
+        // ProjectileVisualController._destroyEffectChildColorOverride's own comment.
+        public void RegisterDestroyEffectChildColor(Color color)
+        {
+            if (_visual != null)
+                _visual.SetDestroyEffectChildColorOverride(color);
+            else
+                _pendingDestroyEffectChildColor = color;
+        }
+
+        // Same buffering, for a per-weapon multiplier on destroyEffectPrefab's own authored scale -
+        // see ProjectileVisualController._destroyEffectScaleOverride's own comment.
+        public void RegisterDestroyEffectScale(Vector3 scale)
+        {
+            if (_visual != null)
+                _visual.SetDestroyEffectScaleOverride(scale);
+            else
+                _pendingDestroyEffectScale = scale;
         }
 
         // The bullet mesh is a child in every projectile prefab here, but not always the FIRST one

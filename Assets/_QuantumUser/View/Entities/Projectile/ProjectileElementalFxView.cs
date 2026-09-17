@@ -5,8 +5,8 @@ using UnityEngine;
 
 namespace Quantum
 {
-    // Generic per-element trailing particle for any non-Neutral projectile (Fire/Ice/Rock/Void/
-    // Lightning - see ElementType.qtn and Projectile.Element). Sibling of ProjectileView, not merged into it -
+    // Generic per-element trailing particle for any non-Neutral projectile (Fire/Ice/Lightning -
+    // see ElementType.qtn and Projectile.Element). Sibling of ProjectileView, not merged into it -
     // same one-MonoBehaviour-per-visual-concern split EnemyAllyLinkView uses.
     //
     // The held particle instance lives under EffectsManager's own hierarchy (see
@@ -24,10 +24,6 @@ namespace Quantum
         private ParticleSystem fireParticlePrefab;
         [SerializeField]
         private ParticleSystem iceParticlePrefab;
-        [SerializeField]
-        private ParticleSystem rockParticlePrefab;
-        [SerializeField]
-        private ParticleSystem voidParticlePrefab;
         [SerializeField]
         private ParticleSystem lightningParticlePrefab;
 
@@ -142,8 +138,6 @@ namespace Quantum
             {
                 case ElementType.Fire: return fireParticlePrefab;
                 case ElementType.Ice: return iceParticlePrefab;
-                case ElementType.Rock: return rockParticlePrefab;
-                case ElementType.Void: return voidParticlePrefab;
                 case ElementType.Lightning: return lightningParticlePrefab;
                 default: return null; // Neutral - no elemental particle
             }

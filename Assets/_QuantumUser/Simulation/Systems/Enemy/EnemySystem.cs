@@ -78,6 +78,7 @@ namespace Quantum
             SeedWaypointPath(f, entity, data);
             SeedChargeHitTracking(f, entity, data);
             SeedSpawnGrace(f, entity);
+            SeedLeadVelocitySample(f, entity);
         }
 
         // See SpawnGraceDuration's own comment. Unconditional - every enemy carries the shared
@@ -89,6 +90,20 @@ namespace Quantum
                 return;
 
             enemy->SpawnGraceRemaining = SpawnGraceDuration;
+        }
+
+        // See Enemy.LeadAverageVelocity's own comment. Unconditional, same reasoning as
+        // SeedSpawnGrace above - seeds the window's starting position to where this enemy actually
+        // spawned, so the first refresh (EnemyMovementUtility.TickLeadVelocitySample) measures a
+        // real displacement instead of one from the world origin (Enemy's zero-initialized default).
+        private static void SeedLeadVelocitySample(Frame f, EntityRef entity)
+        {
+            if (f.Unsafe.TryGetPointer<Enemy>(entity, out var enemy) == false
+                || f.Unsafe.TryGetPointer<Transform3D>(entity, out var transform) == false)
+                return;
+
+            enemy->LeadSamplePosition = transform->Position;
+            enemy->LeadSampleTimer = EnemyMovementUtility.LeadVelocitySampleWindow;
         }
 
         // UseWaypointDetour (EnemyPathfindingUtility.TryGetDetourDirection) needs somewhere to
@@ -254,6 +269,7 @@ namespace Quantum
             filter.PhysicsBody3D->GravityScale = data.Stats.Height.InitialState == EnemyHeightState.Flying ? FP._0 : FP._1;
 
             TickAttackCooldown(f, ref filter);
+            EnemyMovementUtility.TickLeadVelocitySample(f, filter.Enemy, filter.Transform3D);
 
             // Before ANY movement work below (including TickKnockbackRecovery's own early-out, since
             // a push can bury an enemy mid-stagger): if a knockback drove this enemy inside level
@@ -284,9 +300,10 @@ namespace Quantum
                 filter.PhysicsBody3D->IsKinematic = true;
                 EnemyMovementUtility.StopMovement(f, ref filter, data);
 
-                // Stun still fully freezes (state machine included) even while also Rooted/Staggered -
-                // neither alone touches attacking, but Stun's own total lockdown takes precedence.
-                if (StatusEffectUtility.IsStunned(f, filter.Entity) == true)
+                // Stun/Freeze still fully freeze (state machine included) even while also
+                // Rooted/Staggered - neither alone touches attacking, but a hard-CC's own total
+                // lockdown takes precedence.
+                if (StatusEffectUtility.IsStunned(f, filter.Entity) == true || StatusEffectUtility.IsFrozen(f, filter.Entity) == true)
                     return;
             }
             else
@@ -324,11 +341,11 @@ namespace Quantum
                 if (TickKnockbackRecovery(f, ref filter, data) == true)
                     return;
 
-                // Unlike knockback recovery, there's no impulse to preserve here, so Stun stops the
-                // enemy outright instead of just leaving velocity alone - see StatusEffectUtility.
-                // Decrementing StunRemaining is StatusEffectSystem's job, not this system's; this
-                // only reads it.
-                if (StatusEffectUtility.IsStunned(f, filter.Entity) == true)
+                // Unlike knockback recovery, there's no impulse to preserve here, so Stun/Freeze stop
+                // the enemy outright instead of just leaving velocity alone - see StatusEffectUtility.
+                // Decrementing StunRemaining/FreezeRemaining is StatusEffectSystem's job, not this
+                // system's; this only reads them.
+                if (StatusEffectUtility.IsStunned(f, filter.Entity) == true || StatusEffectUtility.IsFrozen(f, filter.Entity) == true)
                 {
                     EnemyMovementUtility.StopMovement(f, ref filter, data);
                     return;

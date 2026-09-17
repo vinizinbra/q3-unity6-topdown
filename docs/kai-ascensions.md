@@ -161,8 +161,9 @@ Horizon rank 3 only.
   the time the bolt gets there, which in a real fight it usually isn't - so the reflected bolt's
   `Target` is also set to its original owner and `MovementOverride` swapped to a dedicated
   `HomingProjectileMovementData` asset (`MirrorStepReflectedHoming.asset`, Speed 30/TurnRate 360°/s),
-  same per-shot-override mechanism Pixie's Rocket Conversion already uses, just applied to an
-  already-live projectile instead of at spawn - so it curves in on wherever the shooter actually is
+  via the generic `Projectile.MovementOverride` field (preferred every tick by
+  `ProjectileSystem.Update` over the asset's own `Movement`), written directly onto an already-live
+  projectile instead of at spawn - so it curves in on wherever the shooter actually is
   rather than staying committed to a fixed line. Deals a fixed 40% of
   Kai's own Vortex Skill Damage (`KaiAscensionUtility.ResolveVortexSkillDamage`) rather than replaying
   whatever the enemy's own shot happened to hit for - same `DamagePercent[index] * Resolve<Hero>

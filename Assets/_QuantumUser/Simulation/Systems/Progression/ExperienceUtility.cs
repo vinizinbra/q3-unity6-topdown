@@ -108,7 +108,13 @@ namespace Quantum
             ExperienceConfig config = f.FindAsset(f.RuntimeConfig.ExperienceConfig);
             FP xpRequirementMultiplier = ResolveXpRequirementMultiplier(f);
 
-            int levelPeek = f.Global->Level;
+            // Peek from Level + DebugPendingLevelUps, not Level alone - Level only catches up once a
+            // pending screen is actually opened/resolved (TryOpenNextPendingLevelUp), so a second
+            // Grant landing before that drain would otherwise re-peek from the same stale Level and
+            // re-queue levels already sitting in the pending count (e.g. crossing into level 10 once,
+            // then collecting more orbs before opening that screen, kept re-queuing "level 10" again).
+            int alreadyQueuedLevel = f.Global->Level + f.Global->DebugPendingLevelUps;
+            int levelPeek = alreadyQueuedLevel;
 
             while (levelPeek + 1 < config.MaxLevel
                    && f.Global->TotalExperience >= GetRequiredExperience(config, levelPeek + 2, xpRequirementMultiplier))
@@ -116,7 +122,7 @@ namespace Quantum
                 levelPeek++;
             }
 
-            int levelsGained = levelPeek - f.Global->Level;
+            int levelsGained = levelPeek - alreadyQueuedLevel;
 
             Log.Debug($"[Experience] run gained {amount} exp -> {f.Global->TotalExperience} total, {levelsGained} level(s) queued (level {f.Global->Level + 1} still current until drained)");
 

@@ -157,10 +157,9 @@ namespace Quantum
 
             LogHelper.Log("ProjFlow", $"GHOST release {trail.name}: particles={trail.particleCount} alive={trail.IsAlive(true)} t={Time.unscaledTime:F3}", this);
 
-            // Same as ProjectileVisualController.FadeOutRootAsTrail: the root system is the bullet
-            // body and must vanish at the impact; ReleaseHeldInstance then only lets the children
-            // (sparks/glow) fade before the instance goes back to the pool.
-            trail.Stop(withChildren: false, ParticleSystemStopBehavior.StopEmittingAndClear);
+            // Same rule as the normal path: the bullet body vanishes at the impact, ReleaseHeldInstance
+            // then only lets the sparks/glow/smoke fade before the instance goes back to the pool.
+            ProjectileVisualController.ClearBodyParticles(trail);
 
             if (EffectsManager.Instance != null)
                 EffectsManager.Instance.ReleaseHeldInstance(template, trail);
@@ -260,15 +259,26 @@ namespace Quantum
             if (_templates.TryGetValue(dataRef.Id, out Template cached))
                 return cached;
 
-            Template template = default;
             ProjectileView view = ResolvePrefabView(dataRef);
 
-            if (view != null)
-                template = new Template(view.TrailParticle, view.TrailRenderer, view.DestroyEffectPrefab);
-            else
+            // A null view is NOT cached - only a resolved-but-empty-fielded one is. ResolvePrefabView
+            // can legitimately return null from a transient lazy-load race (QuantumEntityViewUpdater.
+            // LoadMissingPrefab, entityView.Prefab still null the first time this asset's very first
+            // point-blank kill resolves it) - caching that miss "forever" used to mean every later
+            // point-blank kill of this SAME ProjectileDataAsset drew nothing too, even once the prefab
+            // was fully loaded, since a hit/kill in the same tick as spawn (see the class comment)
+            // always lands in this exact resolution path. A view that resolves fine but simply has no
+            // DestroyEffectPrefab/trails configured (a weapon that intentionally has no impact VFX) is
+            // still cached as before - that's not a race, retrying it would only repeat the warning
+            // and the 3-asset lookup chain for no benefit.
+            if (view == null)
+            {
                 LogHelper.Warn("ProjectileGhostTrail", $"No ProjectileView prefab resolvable for projectile data {dataRef.Id} - " +
-                    "a shot of this type that dies before its view exists will draw nothing.", this);
+                    "a shot of this type that dies before its view exists will draw nothing this time. Not cached, will retry next time.", this);
+                return default;
+            }
 
+            Template template = new Template(view.TrailParticle, view.TrailRenderer, view.DestroyEffectPrefab);
             _templates[dataRef.Id] = template;
             return template;
         }

@@ -17,11 +17,7 @@ MonoBehaviour:
     Guid:
       Value: 491478871009097374
   ElectrifiedDuration:
-    RawValue: 262144
-  JoltInterval:
-    RawValue: 65536
-  JoltStaggerDuration:
-    RawValue: 6554
+    RawValue: 196608
   ThermalShockTriggerCooldown:
     RawValue: 65536
   ThermalShockDamagePercent:

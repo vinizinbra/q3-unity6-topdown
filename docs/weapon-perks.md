@@ -104,9 +104,10 @@ on-kill perk (Killer Instinct, Predator Magazine) triggers on any kill, no tier 
 
 `ElementInfusionWeaponPerkData` grafts an **extra** on-hit element onto the weapon, on top of - never
 replacing - the weapon's own `WeaponDataAsset.Element`. The native element keeps flowing through
-`Projectile.Element` and rolls the owner's shared `CharacterStats.ElementalChance` exactly as before;
-the infused element carries its **own** authored `ProcChance` and rolls independently, so a Neutral
-weapon gains an element and an already-elemental weapon can land two statuses side by side on one hit.
+`Projectile.Element` and applies unconditionally (see docs/elemental-reactions.md - the old
+`CharacterStats.ElementalChance` roll gating it was retired); the infused element carries its
+**own** authored `ProcChance` and rolls independently, so a Neutral weapon gains an element and an
+already-elemental weapon can land two statuses side by side on one hit.
 
 Storage/flow deliberately mirrors the native element one channel over:
 - Baked once by `Apply` into a new optional `WeaponElementInfusion` component (`Element` + `ProcChance`),
@@ -115,8 +116,8 @@ Storage/flow deliberately mirrors the native element one channel over:
   `WeaponSystem.ApplyProjectilePerks` - the single post-spawn seeding point both projectile fire sites
   already funnel through. Hitscan has no projectile, so `WeaponSystem.FireHitscan` reads the component
   live instead.
-- Applied through a new `StatusEffectUtility.TryApplyInfusedElement` - same Fire→Burn/Ice→Slow/
-  Rock→Intimidate/Lightning→Electrified baseline (now extracted into a shared `ApplyElementBaseline`
+- Applied through a new `StatusEffectUtility.TryApplyInfusedElement` - same Fire→Burn/Ice→Chill/
+  Lightning→Electrified baseline (now extracted into a shared `ApplyElementBaseline`
   the native path also calls) plus the same elemental-reaction check, but rolled against the perk's
   `ProcChance` and with **no** guaranteed-burn pass (that's owner-global and already ran on the
   native-element call - running it twice would double it). Called right after the native-element
@@ -129,8 +130,10 @@ fields (chosen over a multi-element array to avoid bloating the hot `Projectile`
 they no-op for free - the infused element reaches only the direct projectile/hitscan hit, same reach
 the native `WeaponDataAsset.Element` already had.
 
-`WeaponPerkAssetGenerator` authors one infusion `.asset` per real element (Incendiary/Cryo/Shatter/
-Void/Shock Rounds - Neutral excluded) and wires them into `WeaponPerkPoolData` alongside the rest.
+`WeaponPerkAssetGenerator` authors one infusion `.asset` per real element (Incendiary/Cryo/Shock
+Rounds - Neutral excluded; Rock/Void's own Shatter/Void Rounds were deleted when those elements
+were retired, see docs/elemental-reactions.md) and wires them into `WeaponPerkPoolData` alongside
+the rest.
 
 ## Design decisions made while implementing
 

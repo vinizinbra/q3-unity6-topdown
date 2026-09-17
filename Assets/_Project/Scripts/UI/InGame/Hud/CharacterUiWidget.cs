@@ -74,14 +74,16 @@ public class CharacterUiWidget : MonoBehaviour
     [Header("Status Effects")]
     [SerializeField] private StatusIndicator burnIndicator;
     [SerializeField] private StatusIndicator iceIndicator;
-    [SerializeField, Tooltip("Stretches the entity's own attack anticipation/windup (StatusEffectUtility.GetAnticipationMultiplier), not a lockout, so it's shown separately from Stun - applied directly by FreezeEffectData, a standalone skill effect.")]
+    [SerializeField, Tooltip("Stretches the entity's own attack anticipation/windup (StatusEffectUtility.GetAnticipationMultiplier), not a lockout, so it's shown separately from Stun - applied directly by FreezeEffectData, a standalone skill effect. Unrelated, older mechanic to freezeIndicator below despite the name - predates it.")]
     private StatusIndicator deepFreezeIndicator;
     [SerializeField] private StatusIndicator stunIndicator;
     [SerializeField, Tooltip("Root pins movement only (the entity can still attack), unlike Stun which freezes everything - shown separately so both can be visible at once if somehow both are active.")]
     private StatusIndicator rootIndicator;
-    [SerializeField, Tooltip("Lightning's baseline (Shock) - see StatusEffectUtility.IsElectrified. Periodically fires a Jolt (a brief Stagger) while active.")]
+    [SerializeField, Tooltip("The TRUE hard-CC Freeze - see StatusEffectUtility.IsFrozen/StatusEffects.FreezeRemaining. Reached only via Ice/Chill buildup hitting its threshold; freezes movement/attacking/action-start entirely, the same total lockout Stun applies. Distinct from deepFreezeIndicator above (an older, unrelated windup-stretch mechanic).")]
+    private StatusIndicator freezeIndicator;
+    [SerializeField, Tooltip("Lightning's baseline (Shock) - see StatusEffectUtility.IsElectrified. A persistent setup state with no periodic effect of its own; a further Electric hit on an already-Shocked target rolls a chance to proc the existing Stun instead (see docs/elemental-reactions.md).")]
     private StatusIndicator electrifiedIndicator;
-    [SerializeField, Tooltip("Brief pause of the entity's own action windup - never a full disable like Stun. Fired by Shock's own Jolt and by Shatter's primary/area application. See StatusEffectUtility.IsStaggered.")]
+    [SerializeField, Tooltip("Brief pause of the entity's own action windup - never a full disable like Stun. Fired only by Shatter's primary/area application now (no longer by Shock's own periodic tick - removed, see docs/elemental-reactions.md). See StatusEffectUtility.IsStaggered.")]
     private StatusIndicator staggerIndicator;
     [SerializeField] private StatusIndicator ruptureIndicator;
     [SerializeField, Tooltip("Mirror of Rupture - reduces the entity's own outgoing damage instead of incoming. Applied to enemies by Brute's Protector Aura.")]
@@ -606,6 +608,7 @@ public class CharacterUiWidget : MonoBehaviour
         UpdateIce(hasStatus, status);
         UpdateDeepFreeze(hasStatus, status);
         UpdateStun(hasStatus, status);
+        UpdateFreeze(hasStatus, status);
         UpdateRoot(hasStatus, status);
         UpdateElectrified(hasStatus, status);
         UpdateStagger(hasStatus, status);
@@ -621,7 +624,7 @@ public class CharacterUiWidget : MonoBehaviour
         burnIndicator.SetShown(shown);
 
         if (shown)
-            burnIndicator.SetTimer($"{status.BurnRemaining.AsFloat:F1}s");
+            burnIndicator.SetTimer($"x{status.BurnStackCount}");
     }
 
     private void UpdateIce(bool hasStatus, StatusEffects status)
@@ -630,7 +633,7 @@ public class CharacterUiWidget : MonoBehaviour
         iceIndicator.SetShown(shown);
 
         if (shown)
-            iceIndicator.SetTimer($"{status.IceRemaining.AsFloat:F1}s");
+            iceIndicator.SetTimer($"x{status.IceBuildup.AsFloat:F0}");
     }
 
     private void UpdateDeepFreeze(bool hasStatus, StatusEffects status)
@@ -649,6 +652,15 @@ public class CharacterUiWidget : MonoBehaviour
 
         if (shown)
             stunIndicator.SetTimer($"{status.StunRemaining.AsFloat:F1}s");
+    }
+
+    private void UpdateFreeze(bool hasStatus, StatusEffects status)
+    {
+        bool shown = hasStatus && status.FreezeRemaining > FP._0;
+        freezeIndicator.SetShown(shown);
+
+        if (shown)
+            freezeIndicator.SetTimer($"{status.FreezeRemaining.AsFloat:F1}s");
     }
 
     private void UpdateRoot(bool hasStatus, StatusEffects status)
@@ -769,7 +781,7 @@ public class CharacterUiWidget : MonoBehaviour
         TextBatchOptimizer.SetActive(component.gameObject, shown);
     }
 
-    // One per status type (Burn/Ice/DeepFreeze/Stun/Electrified/Stagger/Rupture/Intimidate) - root
+    // One per status type (Burn/Ice/DeepFreeze/Stun/Freeze/Electrified/Stagger/Rupture/Intimidate) - root
     // is whatever the Inspector wires up as that status's visual (icon, background, whatever), shown
     // only while the status is active; timerText is optional, same as every TMP_Text elsewhere in
     // this widget.

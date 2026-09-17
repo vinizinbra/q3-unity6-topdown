@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0123213f65ef94118a5bf68de0222938, type: 3}
+  m_Name: KaiHeavyMastery
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.KaiHeavyMasteryData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Kai/Kai_PassiveUpgrades/Kai_PassiveSkillUpgrades/KaiHeavyMastery
+    Guid:
+      Value: 449995147557023149
+  Icon: {fileID: 0}
+  DisplayName: Heavy Weapon Mastery
+  Description: Kai's Heavy weapons hit harder, and the opening shot on a fresh target
+    hits hardest.
+  <MaxRank>k__BackingField: 3
+  RankDescriptions:
+  - +<color=#FD3971>15%</color> Heavy Weapon Damage.
+  - +<color=#FD3971>30%</color> Heavy Weapon Damage.
+  - +<color=#FD3971>50%</color> Heavy Weapon Damage. The first Heavy-weapon hit against
+    each enemy deals +<color=#FD3971>30%</color> Damage.
+  Weight: 2
+  DamageMultiplierPerRank:
+  - RawValue: 9830
+  - RawValue: 19661
+  - RawValue: 32768
+  DeadeyeDamageBonus:
+    RawValue: 19661

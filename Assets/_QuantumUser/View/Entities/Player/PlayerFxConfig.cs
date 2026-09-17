@@ -74,12 +74,16 @@ namespace Quantum
         public float FlashDuration = 0.2f;
 
         [Header("Elemental First-Hit Rest Tint")]
-        [Tooltip("While StatusEffects.FirstElementApplied (the FIRST of Fire/Ice/Rock/Lightning to ever land its baseline status on this entity) is Fire AND Burn is still actually active, RestColor is live-overridden to this (see HitFeedback.UpdateElementalRestTint) - reverts to the original RestColor the instant Burn expires. Rock has no entry (not requested yet) - HitFeedback.ResolveElementRestTint returns null for it and simply leaves RestColor untouched.")]
+        [Tooltip("While StatusEffects.FirstElementApplied (the FIRST of Fire/Ice/Lightning to ever land its baseline status on this entity) is Fire AND Burn is still actually active, RestColor is live-overridden to this (see HitFeedback.UpdateStatusRestTint) - reverts to the original RestColor the instant Burn expires (or to FrozenTint below, if Freeze is also active - Freeze always wins).")]
         public Color FireRestTint = new Color(1f, 0.55f, 0.2f);
         [Tooltip("Same as FireRestTint, for Element == Ice.")]
         public Color IceRestTint = new Color(0.4f, 0.9f, 1f);
         [Tooltip("Same as FireRestTint, for Element == Lightning.")]
         public Color LightningRestTint = new Color(1f, 0.9f, 0.3f);
+
+        [Header("Freeze (hard CC) Rest Tint")]
+        [Tooltip("Live rest-tint override while StatusEffects.FreezeRemaining is active (the TRUE hard-CC Freeze, reached via Ice/Chill buildup) - see HitFeedback.UpdateStatusRestTint. Takes priority over the elemental first-hit tint above whenever both would apply.")]
+        public Color FrozenTint = new Color(0.55f, 0.85f, 1f);
 
         [Header("Heal / Shield Flash")]
         [Tooltip("Used on EventEntityHealed.")]

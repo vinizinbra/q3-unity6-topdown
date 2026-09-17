@@ -1,0 +1,13 @@
+// Independent weapon classification axis, alongside WeaponFamily (identity/perks/UI/balance) and
+// ElementType - a weapon is (Family, Element, Weight), never coupled. WeaponDataAsset.Weight is the
+// single source of truth; nothing infers Weight from Family at runtime (see WeaponDataAsset.cs).
+//
+// Medium is the enum's default (ordinal 0) deliberately - a weapon asset that hasn't been explicitly
+// tagged yet reads as the neutral middle tier (0% move speed, matches no Hero Weight Mastery) rather
+// than silently granting the Light speed bonus or Heavy penalty.
+enum WeaponWeight : Byte
+{
+    Medium,
+    Light,
+    Heavy
+}

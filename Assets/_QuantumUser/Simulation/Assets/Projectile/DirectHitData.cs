@@ -28,11 +28,6 @@ namespace Quantum
 
         private static readonly FP RicochetSearchRadius = 8;
 
-        // Total arc the fragments fan across, centered on the parent shot's own heading at impact -
-        // narrower than a full circle so they read as a forward burst continuing the original shot's
-        // path, not an omnidirectional splatter.
-        private static readonly FP SplitShotArcDegrees = 90;
-
         public override void Initialize(Projectile* projectile)
         {
             projectile->RemainingPierces = PierceCount;
@@ -44,6 +39,14 @@ namespace Quantum
                 return false;
 
             ApplyEffects(f, projectile, hitEntity, point, projectile->Velocity.Normalized);
+
+            // Heavy Mastery's "Heavy Hit Area Expansion" R3 (docs/hero-mastery.md) - a single-target
+            // hit gains a brand-new area around the impact point, excluding hitEntity (which just took
+            // its own hit above via ApplyEffects) so nobody is ever double-hit.
+            if (hitEntity != EntityRef.None && projectile->Source == DamageSource.Weapon)
+            {
+                HeavyHitAreaUtility.TryExpandSingleTargetHit(f, projectile->Owner, hitEntity, point, projectile->Element, projectile->Damage);
+            }
 
             // Level geometry stops the shot however much pierce is left - weapon-perk procs that
             // don't need a living target (Explosive Sequence/Cataclysm Round) still trigger here,
@@ -58,6 +61,11 @@ namespace Quantum
             {
                 ApplyQuantumRounds(f, projectile, hitEntity, point);
             }
+
+            // Recorded regardless of what happens next (pierce continues, bounces off, or this is
+            // the terminal hit) - see Projectile.RecentHits' own comment. A later bounce's own search
+            // reads this to prefer a target that isn't already in here.
+            WeaponPerkUtility.RecordHit(projectile, hitEntity);
 
             projectile->RemainingPierces--;
 
@@ -90,7 +98,7 @@ namespace Quantum
         // this specific shot is actually done flying, weapon-sourced only (a skill/enemy projectile
         // reusing DirectHitData never carries these - they read 0/false off an owner with no
         // Weapon, or off a Weapon that never rolled them).
-        private static void ApplyTerminalWeaponPerks(Frame f, Projectile* projectile, FPVector3 point)
+        private void ApplyTerminalWeaponPerks(Frame f, Projectile* projectile, FPVector3 point)
         {
             if (projectile->Source != DamageSource.Weapon
                 || f.Unsafe.TryGetPointer<Weapon>(projectile->Owner, out var weapon) == false)
@@ -168,16 +176,27 @@ namespace Quantum
 
         // Redirects toward the nearest other enemy instead of terminating - no-ops (falls through
         // to a normal terminal hit) if nothing else is nearby, rather than reflecting off an
-        // arbitrary normal this hit-data has no surface information to compute anyway.
+        // arbitrary normal this hit-data has no surface information to compute anyway. Aims at the
+        // same collider-center point a normal shot does (ProjectileAimUtility.TryGetAimPoint) rather
+        // than the target's raw Transform3D.Position - that raw position sits at the target's
+        // ground pivot, so redirecting straight at it reproduces the muzzle-height dive documented
+        // above for Pierce, just freshly introduced at the bounce instead of levelled out by it.
+        //
+        // Prefers a target this shot hasn't already hit (Projectile.RecentHits) over one it has, so a
+        // multi-bounce chain spreads across different enemies instead of ping-ponging between the
+        // same two once each bounce's own single-entity exclude (hitEntity, the one it just came
+        // FROM) stops being the only enemy nearby.
         private static bool TryRicochet(Frame f, Projectile* projectile, EntityRef hitEntity, FPVector3 point)
         {
-            if (WeaponPerkUtility.TryFindNearestEnemy(f, point, RicochetSearchRadius, hitEntity, out var target) == false)
+            if (WeaponPerkUtility.TryFindNearestUnhitEnemy(f, point, RicochetSearchRadius, hitEntity, projectile->RecentHits, out var target) == false)
                 return false;
 
-            if (f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == false)
+            bool aimAtCenter = ProjectileAimUtility.ResolveAimsAtCenter(f, projectile->ProjectileData);
+
+            if (ProjectileAimUtility.TryGetAimPoint(f, target, aimAtCenter, out FPVector3 aimPoint) == false)
                 return false;
 
-            FPVector3 direction = targetTransform->Position - point;
+            FPVector3 direction = aimPoint - point;
 
             if (direction.SqrMagnitude <= FP._0)
                 return false;
@@ -185,28 +204,68 @@ namespace Quantum
             projectile->Velocity = direction.Normalized * projectile->Velocity.Magnitude;
             projectile->Target = target;
 
+            // A bounce redirects toward a target found anywhere within RicochetSearchRadius of the
+            // impact point - unlike Pierce, which just keeps flying the SAME direction it already
+            // budgeted for, this is a fresh short-range engagement in a potentially unrelated
+            // direction, and TraveledDistance/RemainingLifetime never reset on their own. Without
+            // this, a shot that already spent most of its MaxTravelDistance/RemainingLifetime closing
+            // in on the first target has nothing left to actually cover the distance to a second
+            // bounce target before ProjectileSystem.TryExpire kills it mid-flight - it retargets, then
+            // simply vanishes before connecting, reading as "the bounce only ever happens once" even
+            // with multiple BonusBounces stacked. Only extends an ALREADY-capped budget (<= 0 means no
+            // cap exists at all for this weapon - see ProjectileSystem.TryExpire's own convention -
+            // and adding to that would wrongly impose one). Guaranteeing exactly RicochetSearchRadius
+            // more of both, at this shot's own (unchanged) speed, covers the worst case: the found
+            // target sitting right at the search sphere's edge.
+            if (projectile->MaxTravelDistance > FP._0)
+            {
+                projectile->MaxTravelDistance += RicochetSearchRadius;
+            }
+
+            if (projectile->Velocity.Magnitude > FP._0)
+            {
+                projectile->RemainingLifetime += RicochetSearchRadius / projectile->Velocity.Magnitude;
+            }
+
             return true;
         }
 
-        // Fans evenly across SplitShotArcDegrees centered on the parent's travel direction, starting
-        // from a randomized offset within that arc (same Fisher-Yates-adjacent "don't look identical
-        // every time" idiom AreaHitData's TrySpawnClusterBomblets uses) - children are spawned via
-        // ProjectileSpawner.Spawn directly rather than through WeaponSystem.FireProjectile, so they
-        // don't re-roll Bonus­Pierce/Bounces/Explosive Sequence/Cataclysm themselves (a bare,
-        // un-perked repeat of the base shot at reduced damage), only capped recursion
-        // (MaxSplitShotDepth) and MaxTravelDistance (WeaponPerkUtility.ResolveProjectileMaxTravelDistance,
-        // same as every other weapon-fired projectile - see Projectile.qtn) carry over.
-        private static void SpawnSplitProjectiles(Frame f, Projectile* projectile, FPVector3 point, Weapon* weapon, WeaponPostImpactProcs* procs)
+        // Fans evenly across procs->SplitShotArcDegrees centered on the parent's travel direction,
+        // starting from a randomized offset within that arc (same Fisher-Yates-adjacent
+        // "don't look identical every time" idiom AreaHitData's TrySpawnClusterBomblets uses) -
+        // children are spawned via ProjectileSpawner.Spawn directly rather than through
+        // WeaponSystem.FireProjectile, so they don't re-roll BonusPierce/Bounces/Explosive Sequence/
+        // Cataclysm themselves (a bare, un-perked repeat of the base shot at reduced damage), only
+        // capped recursion (MaxSplitShotDepth) and MaxTravelDistance
+        // (WeaponPerkUtility.ResolveProjectileMaxTravelDistance, same as every other weapon-fired
+        // projectile - see Projectile.qtn) carry over.
+        //
+        // procs->SplitShotProjectileOverride delegates entirely to WeaponPerkUtility.
+        // SpawnSplitProjectiles instead (shared with AreaHitData.Detonate, which has no "parent
+        // ProjectileData" of its own to fall back to and so can ONLY ever use the override path) -
+        // everything below this is the exact flat, un-overridden behavior every existing
+        // SplitShot-capable Hit asset has always had, kept as DirectHitData's own local fallback
+        // since it depends on the parent projectile's own live Velocity/ProjectileData, something
+        // an AreaHitData blast simply doesn't have.
+        private void SpawnSplitProjectiles(Frame f, Projectile* projectile, FPVector3 point, Weapon* weapon, WeaponPostImpactProcs* procs)
         {
+            if (procs->SplitShotProjectileOverride.IsValid == true)
+            {
+                WeaponPerkUtility.SpawnSplitProjectiles(f, projectile->Owner, DamageSource.Weapon, projectile->Element,
+                    projectile->Damage, projectile->SpawnDepth, point, projectile->Velocity, weapon, procs);
+                return;
+            }
+
             int count = procs->SplitShotCount;
 
             if (count <= 0)
                 return;
 
-            FP step = count > 1 ? SplitShotArcDegrees / (count - 1) : FP._0;
+            FP arcDegrees = procs->SplitShotArcDegrees;
+            FP step = count > 1 ? arcDegrees / (count - 1) : FP._0;
             FPVector3 heading = projectile->Velocity.Normalized;
             FP headingAngle = FPMath.Atan2(heading.X, heading.Z) * FP.Rad2Deg;
-            FP baseAngle = headingAngle - SplitShotArcDegrees / 2 + f.RNG->Next(0, step);
+            FP baseAngle = headingAngle - arcDegrees / 2 + f.RNG->Next(0, step);
             FP splitDamage = projectile->Damage * procs->SplitShotDamageMultiplier;
             FP speed = projectile->Velocity.Magnitude;
             FP maxTravelDistance = WeaponPerkUtility.ResolveProjectileMaxTravelDistance(f, weapon, projectile);
@@ -224,7 +283,7 @@ namespace Quantum
                 };
 
                 EntityRef child = ProjectileSpawner.Spawn(f, projectile->Owner, projectile->ProjectileData, ref launch, splitDamage,
-                    DamageSource.Weapon, element: projectile->Element, spawnDepth: projectile->SpawnDepth + 1);
+                    DamageSource.Weapon, element: projectile->Element, spawnDepth: projectile->SpawnDepth + 1, weaponData: weapon->WeaponData);
 
                 if (f.Unsafe.TryGetPointer<Projectile>(child, out var childProjectile) == true)
                 {

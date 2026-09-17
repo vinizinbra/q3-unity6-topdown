@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 719ff875afb1a45758209860762cefb8, type: 3}
+  m_Name: LuxMediumMastery
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.LuxMediumMasteryData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Lux/Lux_PassiveSkill/Lux_PassiveSkillUpgrades/LuxMediumMastery
+    Guid:
+      Value: 498921966915144410
+  Icon: {fileID: 0}
+  DisplayName: Medium Weapon Mastery
+  Description: Lux's Medium weapons hit harder, and at rank 3, paint targets for
+    her Sentries to finish.
+  <MaxRank>k__BackingField: 3
+  RankDescriptions:
+  - +<color=#FD3971>15%</color> Medium Weapon Damage.
+  - +<color=#FD3971>30%</color> Medium Weapon Damage.
+  - +<color=#FD3971>50%</color> Medium Weapon Damage. Enemies hit by Lux's Medium
+    weapon take +<color=#FD3971>25%</color> Damage from her Sentry.
+  Weight: 0
+  DamageMultiplierPerRank:
+  - RawValue: 9830
+  - RawValue: 19661
+  - RawValue: 32768
+  TargetingLinkSentryDamageBonus:
+    RawValue: 16384
+  TargetingLinkMarkDuration:
+    RawValue: 262144

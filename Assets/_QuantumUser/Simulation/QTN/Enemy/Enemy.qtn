@@ -164,6 +164,20 @@ component Enemy
     // positive (or right after it hits 0, one tick before a fresh scan overwrites it).
     FPVector2 FleeDirection;
     FP FleeCommitTimer;
+
+    // A NET-displacement average velocity, refreshed every EnemyMovementUtility.
+    // LeadVelocitySampleWindow seconds (not every tick) - what ProjectileAimUtility.
+    // ResolveLeadVelocity actually leads a shot with, instead of this tick's raw
+    // PhysicsBody3D.Velocity. An enemy whose heading flips back and forth fast enough to read as
+    // "high velocity, going nowhere" (erratic steering, SmartFleeMovementData's own dodging, a
+    // Flying enemy's hover) has that cancel out here - two opposite pushes over the same window
+    // net close to zero - where an instantaneous sample or even an exponential smoothing of it
+    // never fully would. LeadSampleTimer counts down to the next refresh; LeadSamplePosition is
+    // where this enemy stood at the START of the window currently being measured, seeded to its
+    // spawn position so the very first window has a real baseline instead of the origin.
+    FPVector3 LeadAverageVelocity;
+    FPVector3 LeadSamplePosition;
+    FP LeadSampleTimer;
 }
 
 // Fired once by DamageUtility when an Enemy's health hits zero, right after Phase is set to

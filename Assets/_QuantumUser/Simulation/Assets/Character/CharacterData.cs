@@ -49,8 +49,6 @@ namespace Quantum
         // this C# default had drifted out of sync with. See DamageUtility.ResolveDamage.
         public FP CriticalDamageMultiplier = FP._1;
 
-        public FP ElementalChance = FP._0;
-
         public FP AttackSpeedMultiplier = FP._1;
         public FP ReloadSpeedMultiplier = FP._1;
 

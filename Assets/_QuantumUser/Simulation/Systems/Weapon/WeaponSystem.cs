@@ -345,7 +345,7 @@ namespace Quantum
                 && activeBurst->ShotsRemaining > 0)
                 return;
 
-            if (StatusEffectUtility.IsStunned(f, filter.Entity) == true)
+            if (StatusEffectUtility.IsStunned(f, filter.Entity) == true || StatusEffectUtility.IsFrozen(f, filter.Entity) == true)
                 return;
 
             // Downed/KO can't fire either (see docs/revive.md) - checked separately from the POI
@@ -684,13 +684,13 @@ namespace Quantum
                 fireRateBonus += onKill->KillerInstinctFireRateBonus;
             }
 
-            // Zara's Full Tempo (SMG Mastery R3) - extra Fire Rate on her own SMG while Flow is Active.
-            // Active is flipped by ZaraFlowUtility on Flow's own activation edge, not read live from
-            // ZaraFlow here, so this stays a plain hero-agnostic component read with no Zara-specific
-            // knowledge - works identically for a slow/fast/burst SMG since it only scales this weapon's
-            // own FireRate, never a shot counter.
+            // Zara's Full Tempo (Light Mastery R3) - extra Fire Rate on her own Light weapon while Flow
+            // is Active. Active is flipped by ZaraFlowUtility on Flow's own activation edge, not read
+            // live from ZaraFlow here, so this stays a plain hero-agnostic component read with no
+            // Zara-specific knowledge - works identically for Pistol/SMG/any future Light weapon since
+            // it only scales this weapon's own FireRate, never a shot counter.
             if (f.Unsafe.TryGetPointer<ConditionalWeaponFireRateBonus>(entity, out var conditionalFireRate) == true
-                && conditionalFireRate->Active == true && conditionalFireRate->Family == weaponData.Family)
+                && conditionalFireRate->Active == true && conditionalFireRate->Weight == weaponData.Weight)
             {
                 fireRateBonus += conditionalFireRate->FireRateBonus;
             }
@@ -811,16 +811,7 @@ namespace Quantum
                 return;
 
             ProjectileDataAsset projectileData = f.FindAsset(weaponData.ProjectileData);
-
-            AssetRef<ProjectileMovementData> movementOverride = default;
-
-            if (f.Unsafe.TryGetPointer<ProjectileMovementOverride>(owner, out var movementOverrideUpgrade) == true
-                && movementOverrideUpgrade->Family == weaponData.Family)
-            {
-                movementOverride = movementOverrideUpgrade->Movement;
-            }
-
-            ProjectileMovementData movement = f.FindAsset(movementOverride.IsValid ? movementOverride : projectileData.Movement);
+            ProjectileMovementData movement = f.FindAsset(projectileData.Movement);
 
             // Echoes have no locked target (see PendingEcho), so this always replays the free-aim
             // branch of FireProjectile's pellet spread - a shotgun's echo re-fires the whole volley.
@@ -834,7 +825,7 @@ namespace Quantum
                 if (launch.IsValid == false)
                     continue;
 
-                EntityRef entity = ProjectileSpawner.Spawn(f, owner, weaponData.ProjectileData, ref launch, echo.Damage, DamageSource.Weapon, element: weaponData.Element, movementOverride: movementOverride);
+                EntityRef entity = ProjectileSpawner.Spawn(f, owner, weaponData.ProjectileData, ref launch, echo.Damage, DamageSource.Weapon, element: weaponData.Element, weaponData: weapon->WeaponData);
                 ApplyProjectilePerks(f, owner, entity, weapon, weaponData, false, false);
             }
         }
@@ -1500,6 +1491,11 @@ namespace Quantum
             }
 
             ApplyHitscanQuantumRounds(f, owner, hitEntity, point, damage);
+
+            // Heavy Mastery's "Heavy Hit Area Expansion" R3 (docs/hero-mastery.md) - a single-target
+            // hitscan contact gains a brand-new area around the impact point, excluding hitEntity
+            // (which just took its own hit above) so nobody is ever double-hit.
+            HeavyHitAreaUtility.TryExpandSingleTargetHit(f, owner, hitEntity, point, weaponData.Element, damage);
         }
 
 
@@ -1581,19 +1577,7 @@ namespace Quantum
             bool isFirstBullet = false, bool forceCritical = false)
         {
             ProjectileDataAsset projectileData = f.FindAsset(weaponData.ProjectileData);
-
-            // Pixie's Rocket Conversion (Grenade Launcher Mastery R3) - swaps this shot's own flight
-            // path for the owner's installed override when the weapon's Family matches. See
-            // ProjectileMovementOverride.qtn.
-            AssetRef<ProjectileMovementData> movementOverride = default;
-
-            if (f.Unsafe.TryGetPointer<ProjectileMovementOverride>(owner, out var movementOverrideUpgrade) == true
-                && movementOverrideUpgrade->Family == weaponData.Family)
-            {
-                movementOverride = movementOverrideUpgrade->Movement;
-            }
-
-            ProjectileMovementData movement = f.FindAsset(movementOverride.IsValid ? movementOverride : projectileData.Movement);
+            ProjectileMovementData movement = f.FindAsset(projectileData.Movement);
 
             // A locked target is solved toward as a point rather than a direction - a lob needs the
             // real distance to land on the target instead of a fixed TargetDistance down the aim ray.
@@ -1622,7 +1606,7 @@ namespace Quantum
                 }
 
                 EntityRef entity = ProjectileSpawner.Spawn(f, owner, weaponData.ProjectileData, ref launch, damage, DamageSource.Weapon,
-                    target: target, element: weaponData.Element, pelletIndex: i, movementOverride: movementOverride);
+                    target: target, element: weaponData.Element, pelletIndex: i, weaponData: weapon->WeaponData);
 
                 // Only pellet 0 of a volley procs Explosive Sequence/Cataclysm Round/a forced crit -
                 // see FireHitscan. Phantom Strike's bonus pierce is NOT pellet-0-gated - "your next

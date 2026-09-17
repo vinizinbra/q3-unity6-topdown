@@ -65,12 +65,20 @@ namespace Quantum
             // Hellshot's signature (ExplosiveCritWeaponPerkData, baked via WeaponDataAsset.BaseTraits/
             // WeaponSystem.ApplyBaseTraits) - a crit detonates an explosion centered on the target it
             // just landed on, same HitEffectUtility.ApplyExplosion call Cataclysm Round/Explosive
-            // Sequence already use.
+            // Sequence already use. excludeTarget: target - this fires from ISignalOnCriticalHit,
+            // which DamageUtility.ApplyDamage raises mid-resolution of the crit's OWN direct hit,
+            // before that call has mutated Health or run its death branch. Without excluding target,
+            // the blast's own overlap query would re-catch that same still-"alive" entity and
+            // re-enter ApplyDamage on it before the outer call finishes, double-firing the kill/drop
+            // branch (was dropping 2 chests off one kill on any tier that lingers instead of
+            // destroying immediately - Elite/Specialist/Boss). The target already took the full
+            // direct-hit damage; this explosion's job is splashing whoever else is nearby.
             if (reactions->HasExplosiveCrit == true
                 && f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == true)
             {
                 HitEffectUtility.ApplyExplosion(f, targetTransform->Position, reactions->CriticalExplosionRadius,
-                    owner, damage * reactions->CriticalExplosionDamageMultiplier, DamageSource.Weapon);
+                    owner, damage * reactions->CriticalExplosionDamageMultiplier, DamageSource.Weapon,
+                    excludeTarget: target);
             }
 
             // Disruptor's signature (CritStunWeaponPerkData, baked via WeaponDataAsset.BaseTraits) -
@@ -136,7 +144,7 @@ namespace Quantum
                 return;
 
             EntityRef secondary = ProjectileSpawner.Spawn(f, owner, weaponData.ProjectileData, ref launch, reboundDamage, DamageSource.Weapon,
-                target: secondaryTarget, element: weaponData.Element);
+                target: secondaryTarget, element: weaponData.Element, weaponData: weapon->WeaponData);
 
             // Same engagement-range cap every other weapon-fired projectile gets - see
             // Projectile.qtn's own comment on MaxTravelDistance.

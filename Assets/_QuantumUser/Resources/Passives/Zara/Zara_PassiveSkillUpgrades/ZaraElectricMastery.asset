@@ -26,7 +26,7 @@ MonoBehaviour:
   - +<color=#FD3971>30%</color> Electric Weapon Damage.
   - +<color=#FD3971>50%</color> Electric Weapon Damage. Applying Jolt grants +<color=#FD3971>15%</color>
     Fire Rate for <color=#FD3971>2s</color>.
-  Element: 5
+  Element: 3
   DamageMultiplierPerRank:
   - RawValue: 9830
   - RawValue: 19661

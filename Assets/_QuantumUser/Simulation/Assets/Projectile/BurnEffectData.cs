@@ -29,7 +29,7 @@ namespace Quantum
             FP damagePerTick = StatusEffectUtility.ComputeDotDamagePerTickWithFloor(f, context.Owner, context.Damage,
                 config.BurnDamagePercent, config.BurnFloorPercent, config.BurnDuration, config.TickInterval) * magnitudeMultiplier;
 
-            StatusEffectUtility.ApplyBurn(f, context.Target, duration, damagePerTick, context.Owner, context.Source, config.TickInterval);
+            StatusEffectUtility.ApplyBurn(f, context.Target, duration, damagePerTick, context.Owner, context.Source, config.TickInterval, config.BurnMaxStacks);
 
             // Directly-authored Burn (not the weapon-elemental-proc path) still needs to participate
             // in the elemental reaction check for its own element.

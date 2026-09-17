@@ -43,8 +43,6 @@ MonoBehaviour:
     RawValue: 3277
   CriticalDamageMultiplier:
     RawValue: 65536
-  ElementalChance:
-    RawValue: 6554
   AttackSpeedMultiplier:
     RawValue: 65536
   ReloadSpeedMultiplier:
@@ -128,9 +126,9 @@ MonoBehaviour:
   - Id:
       Value: 359104458669361970
   - Id:
-      Value: 458396613658649764
-  - Id:
       Value: 280063126688807644
+  - Id:
+      Value: 327452508261145297
   Accessory:
     DisplayName: 
     CollectibleSprite: {fileID: -1306266345, guid: f664891c957894bd1ba05f39cf427393, type: 3}

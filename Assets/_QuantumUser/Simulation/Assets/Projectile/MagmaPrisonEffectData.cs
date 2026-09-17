@@ -32,7 +32,7 @@ namespace Quantum
             FP burnDuration = StatusEffectUtility.ScaleDuration(f, context.Owner, context.Source, config.BurnDuration);
             FP damagePerTick = StatusEffectUtility.ComputeDotDamagePerTickWithFloor(f, context.Owner, context.Damage,
                 config.BurnDamagePercent, config.BurnFloorPercent, config.BurnDuration, config.TickInterval);
-            StatusEffectUtility.ApplyBurn(f, context.Target, burnDuration, damagePerTick, context.Owner, context.Source, config.TickInterval);
+            StatusEffectUtility.ApplyBurn(f, context.Target, burnDuration, damagePerTick, context.Owner, context.Source, config.TickInterval, config.BurnMaxStacks);
 
             Log.Debug($"[Effect] MagmaPrisonEffectData applied to {context.Target} - Root {rootDuration}s, Burn {burnDuration}s at {damagePerTick}/tick");
         }

@@ -22,15 +22,16 @@ MonoBehaviour:
     RawValue: 917504
   Element: 1
   Family: 3
+  Weight: 0
   CriticalChance:
     RawValue: 6554
   CriticalDamageBonus:
     RawValue: 98304
   FireRate:
     RawValue: 262144
-  MagazineSize: 30
+  MagazineSize: 24
   ReloadDuration:
-    RawValue: 117965
+    RawValue: 32768
   Range:
     RawValue: 458752
   PelletCount: 1
@@ -51,6 +52,13 @@ MonoBehaviour:
   BaseTraits:
   - Id:
       Value: 1012407766220755518
-  ViewPrefab: {fileID: 8089491252618662435, guid: ccf62474dfed0407d8c8101bec7d3763, type: 3}
+  ViewPrefab: {fileID: 8089491252618662435, guid: 6f4ffe10c74894c0aac255e42405a441, type: 3}
   ShakeTier: 1
-  _dpsPreview:
+  _dpsPreview: 'Burst DPS: 119.2
+
+    Sustained DPS (incl. reload): 102
+
+    Damage/min:
+    6118
+
+    Crit dmg/shot: 21 (vs 14 normal) @ 10 % chance, x1.5'

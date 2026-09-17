@@ -16,7 +16,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &5707741485887611793
 Transform:
   m_ObjectHideFlags: 0
@@ -392,6 +392,8 @@ MonoBehaviour:
       Value: 0
     IsCataclysm:
       Value: 0
+    ForceCritical:
+      Value: 0
     Source:
       Value: 0
     Element:
@@ -481,7 +483,7 @@ MonoBehaviour:
   iceParticlePrefab: {fileID: 198454845979760178, guid: 6990d204950bbe342a79c51322ee6373, type: 3}
   rockParticlePrefab: {fileID: 19834744, guid: d2b6665fd7333674aabe8f4394cf661d, type: 3}
   voidParticlePrefab: {fileID: 19849784, guid: 672a9f8d9b8441b47a4cc0a5c3d60b7c, type: 3}
-  lightningParticlePrefab: {fileID: 0}
+  lightningParticlePrefab: {fileID: 9186021651541148684, guid: e2d869d20e6c44ead9bd6dcaf7faf142, type: 3}
   catchUpDuration: 0.1
   restGracePeriod: 0.75
 --- !u!1001 &3791626291154969627
@@ -496,9 +498,17 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 147564, guid: 4e1790ceaba7cf84d97431c9452ca8fb, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 163240, guid: 4e1790ceaba7cf84d97431c9452ca8fb, type: 3}
       propertyPath: m_Layer
       value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 163240, guid: 4e1790ceaba7cf84d97431c9452ca8fb, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 193226, guid: 4e1790ceaba7cf84d97431c9452ca8fb, type: 3}
       propertyPath: m_Name
@@ -835,7 +845,7 @@ TrailRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3791626291154786001}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1

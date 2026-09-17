@@ -241,10 +241,10 @@ namespace QuantumUser.Editor
                 asset.OverdriveDurationBonus = 1;
             });
 
-            // Hero Mastery (see docs/hero-mastery.md) - Pistol (Weapon Family) + Fire (Element),
-            // drafted through the same Passive Upgrade pool as Blood Debt/Wildfire/Flashpoint above.
-            // Authored in HeroMasteryAssetGenerator (shared across all 6 heroes) rather than inline here.
-            var (pistolMastery, maxFireMastery) = HeroMasteryAssetGenerator.CreateMaxMastery();
+            // Hero Mastery (see docs/hero-mastery.md) - Light (Weapon Weight) + Fire (Element), drafted
+            // through the same Passive Upgrade pool as Blood Debt/Wildfire/Flashpoint above. Authored
+            // in HeroMasteryAssetGenerator (shared across all 6 heroes) rather than inline here.
+            var (lightMastery, maxFireMastery) = HeroMasteryAssetGenerator.CreateMaxMastery();
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh(); // lets QuantumAssetObjectPostprocessor stamp Guid/Identifier on anything just created
@@ -252,7 +252,7 @@ namespace QuantumUser.Editor
             WireHeroSkill(new List<SkillActionData> { lastStand, fullThrottle, uncontrolledFury, ignition });
 
             WireCharacterData(passive,
-                new List<PassiveUpgradeData> { bloodDebt, wildfire, flashpoint, pistolMastery, maxFireMastery },
+                new List<PassiveUpgradeData> { bloodDebt, wildfire, flashpoint, lightMastery, maxFireMastery },
                 new List<SkillActionData> { runAndGun, vendettaStrike });
 
             LogHelper.Log("MaxAscensionAssetGenerator", "Vendetta base passive + 9 Max Ascension lines authored and wired (4 Overdrive into " +

@@ -16,9 +16,34 @@ namespace QuantumUser.View.Util
         [SerializeField, Tooltip("Below this speed (world units/sec) the roll angle is held instead of snapping toward zero-velocity noise - the sprite still keeps billboarding to the camera.")]
         private float minSpeed = 0.01f;
 
+        // Settable at runtime so a generic prefab (one BillboardVelocityAlignedSprite authored once)
+        // can be pointed at a per-data rotation offset instead of every variant needing its own
+        // hand-tuned prefab - see ProjectileDataVisualsView, which sets this from
+        // ProjectileDataAsset.View.SpriteRotationOffset on spawn.
+        public float AngleOffset
+        {
+            get => angleOffset;
+            set => angleOffset = value;
+        }
+
         private Vector3 _previousPosition;
         private bool _hasPreviousPosition;
         private float _rollAngle;
+
+        // Optional direct feed (world units/sec), set every tick by a caller that already has the
+        // real simulation velocity on hand - ProjectileDataVisualsView.QUpdate, reading Projectile.
+        // Velocity - bypassing the frame-to-frame position-delta estimate below entirely. That
+        // estimate needs at least one settled frame of real on-screen movement to derive a heading
+        // from, which reads as a brief lag right after spawn and through ProjectileVisualController's
+        // own catch-up ramp; a true velocity is available immediately, so there's no reason to wait on
+        // it. Null (the default) falls back to the position-delta estimate, unchanged for every other
+        // user of this component (KCC, a tween, ... nothing that isn't a Quantum projectile has one).
+        private Vector3? _velocityOverride;
+
+        public void SetVelocityOverride(Vector3? velocity)
+        {
+            _velocityOverride = velocity;
+        }
 
         private void Awake()
         {
@@ -30,6 +55,13 @@ namespace QuantumUser.View.Util
         {
             if (cameraTransform == null)
                 return;
+
+            if (_velocityOverride.HasValue)
+            {
+                UpdateRollAngle(_velocityOverride.Value);
+                Billboard();
+                return;
+            }
 
             if (_hasPreviousPosition == false)
             {

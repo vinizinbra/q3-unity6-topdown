@@ -56,7 +56,7 @@ namespace QuantumUser.View.Util
         [SerializeField, HideIf(nameof(HasFxConfig))] private float duration = 0.1f;
 
         [Header("Jolt")]
-        [SerializeField, Tooltip("Punch-scale strength played on EventJoltTriggered, via EnemyBlobAnimationView.PunchScale (enemy-only - see _enemyBlobAnimationView's own comment). Small by design - a brief flinch, not a big hit reaction. No color flash accompanies it - the first-element rest tint already shows Electrified is active for the whole duration (see UpdateElementalRestTint), so a separate per-Jolt flash on top was redundant (and, before that tint's own color was tuned, visually indistinguishable from it to the point of reading as a stuck flash).")]
+        [SerializeField, Tooltip("Punch-scale strength played on EventJoltTriggered - fired whenever a Stun genuinely lands (StatusEffectUtility.ApplyStun), regardless of source, not tied to Electrified anymore - see docs/elemental-reactions.md. Via EnemyBlobAnimationView.PunchScale (enemy-only - see _enemyBlobAnimationView's own comment). Small by design - a brief flinch, not a big hit reaction. No color flash accompanies it - a landed Stun is already brief enough that a punch-scale reads clearly on its own without a redundant color flash on top.")]
         private Vector3 joltPunchScaleStrength = new Vector3(0.08f, 0.08f, 0f);
         [SerializeField] private float joltPunchScaleDuration = 0.15f;
         [SerializeField] private float joltPunchScaleFrequency = 20f;
@@ -85,18 +85,25 @@ namespace QuantumUser.View.Util
         [SerializeField, HideIf(nameof(HasFxConfig))] private float pickupFlashDuration = 0.35f;
 
         [Header("Elemental First-Hit Rest Tint")]
-        [SerializeField, HideIf(nameof(HasFxConfig)), Tooltip("While StatusEffects.FirstElementApplied (the FIRST of Fire/Ice/Rock/Lightning to ever land a baseline status on this entity - see that field's own comment) is Fire AND Burn is still actually active, restColor is live-overridden to this (see UpdateElementalRestTint) - reverts back to this entity's own original rest color the instant Burn expires. Rock has no entry here (not requested) - it's simply left unhandled, restColor untouched. Ignored (hidden) once Fx Config above is assigned - see ApplyFxConfig.")]
+        [SerializeField, HideIf(nameof(HasFxConfig)), Tooltip("While StatusEffects.FirstElementApplied (the FIRST of Fire/Ice/Lightning to ever land a baseline status on this entity - see that field's own comment) is Fire AND Burn is still actually active, restColor is live-overridden to this (see UpdateStatusRestTint) - reverts back to this entity's own original rest color the instant Burn expires. Ignored (hidden) once Fx Config above is assigned - see ApplyFxConfig.")]
         private Color fireRestTint = new Color(1f, 0.55f, 0.2f);
         [SerializeField, HideIf(nameof(HasFxConfig)), Tooltip("Same as fireRestTint, for Element == Ice.")]
         private Color iceRestTint = new Color(0.4f, 0.9f, 1f);
         [SerializeField, HideIf(nameof(HasFxConfig)), Tooltip("Same as fireRestTint, for Element == Lightning.")]
         private Color lightningRestTint = new Color(1f, 0.9f, 0.3f);
 
+        [Header("Freeze (hard CC) Rest Tint")]
+        [SerializeField, HideIf(nameof(HasFxConfig)), Tooltip("Live rest-tint override while StatusEffects.FreezeRemaining is active (StatusEffectUtility.IsFrozen) - the TRUE hard-CC Freeze (movement/attack/action lockout reached via Ice/Chill buildup), distinct from the AnticipationSlow-driven freezeMaterial below (an older, unrelated windup-stretch mechanic that happened to claim the \"Freeze\" name first). Reverts to this entity's own original rest color, or back to whatever elemental first-hit tint should be showing, the instant Freeze ends - see UpdateStatusRestTint. Takes priority over the elemental first-hit tint above whenever both would apply, since full incapacitation reads as the more significant state. Applied as a plain sprite color tint (no material/shader swap needed), same mechanism restColor already uses everywhere else in this file - no new Freeze material/shader asset required.")]
+        private Color frozenTint = new Color(0.55f, 0.85f, 1f);
+
         [Header("Freeze Mark")]
-        [SerializeField, Tooltip("StatusEffects.AnticipationSlowRemaining - see StatusEffectUtility.IsAnticipationSlowed (applied directly by FreezeEffectData, a standalone skill effect).")]
+        [SerializeField, Tooltip("StatusEffects.AnticipationSlowRemaining - see StatusEffectUtility.IsAnticipationSlowed (applied directly by FreezeEffectData, a standalone skill effect). An older, unrelated mechanic to hardFreezeMaterial below despite the name - predates it.")]
         private Material freezeMaterial;
 
-        private enum MarkState { Normal, Freeze }
+        [SerializeField, Tooltip("StatusEffects.FreezeRemaining - see StatusEffectUtility.IsFrozen. The TRUE hard-CC Freeze (movement/attack/action lockout reached via Ice/Chill buildup) - same material-swap mechanism as freezeMaterial above, own dedicated slot so the two don't collide. Takes priority over freezeMaterial if both were somehow active at once. No material authored yet - falls back to the sprite's original material, same as every other one-shot VFX slot in this project still needing Editor authoring.")]
+        private Material hardFreezeMaterial;
+
+        private enum MarkState { Normal, AnticipationFreeze, HardFreeze }
 
         // Keyed by SpriteRenderer instance (not by this component) because the renderers live on
         // the pooled ViewPrefab (see ViewPrefabPool) while HitFeedback itself is a fresh instance
@@ -114,9 +121,14 @@ namespace QuantumUser.View.Util
         // elemental tint can touch it - QUpdate reverts restColor back to this the moment
         // StatusEffects.FirstElementApplied's own status (Burn/Ice/Electrified/Intimidate) goes
         // inactive, so a recycled pooled enemy or a status that has genuinely worn off never leaves
-        // the tint stuck on. See the "Elemental First-Hit Rest Tint" block below.
+        // the tint stuck on. See UpdateStatusRestTint below.
         private Color _originalRestColor;
         private bool _elementalTintActive;
+
+        // Tracks StatusEffectUtility.IsFrozen separately from the elemental tint above - see
+        // UpdateStatusRestTint's own priority ordering (Frozen beats the elemental tint, which
+        // beats the original rest color).
+        private bool _frozenActive;
 
         private Tween[] _tweens;
 
@@ -188,6 +200,7 @@ namespace QuantumUser.View.Util
             fireRestTint = fxConfig.FireRestTint;
             iceRestTint = fxConfig.IceRestTint;
             lightningRestTint = fxConfig.LightningRestTint;
+            frozenTint = fxConfig.FrozenTint;
             healFlashColor = fxConfig.HealFlashColor;
             shieldFlashColor = fxConfig.ShieldFlashColor;
             deathColor = fxConfig.DeathColor;
@@ -226,6 +239,7 @@ namespace QuantumUser.View.Util
             // over from the previous occupant's own elemental tint.
             _originalRestColor = restColor;
             _elementalTintActive = false;
+            _frozenActive = false;
 
             // Force-restores every sprite to its baked-original material on spawn - not just a
             // read, a write - so a pooled ViewPrefab that got recycled while still Frozen (see
@@ -248,6 +262,9 @@ namespace QuantumUser.View.Util
 
         // Freeze is a material swap, not a tween - the status is either active or it isn't, so
         // sprites just jump to the matching material and back rather than easing a color.
+        // HardFreeze (the real hard-CC) takes priority over AnticipationFreeze if both were
+        // somehow active at once - see StatusEffects.FreezeRemaining/AnticipationSlowRemaining's
+        // own comments for why they're unrelated but similarly-named mechanics.
         protected override void QUpdate(QuantumGame game)
         {
             if (_dead || sprites == null)
@@ -257,42 +274,51 @@ namespace QuantumUser.View.Util
             if (frame == null)
                 return;
 
-            UpdateElementalRestTint(frame);
+            UpdateStatusRestTint(frame);
 
-            MarkState state = freezeMaterial != null && StatusEffectUtility.IsAnticipationSlowed(frame, _entityRef)
-                ? MarkState.Freeze
-                : MarkState.Normal;
+            MarkState state;
+            if (hardFreezeMaterial != null && StatusEffectUtility.IsFrozen(frame, _entityRef) == true)
+                state = MarkState.HardFreeze;
+            else if (freezeMaterial != null && StatusEffectUtility.IsAnticipationSlowed(frame, _entityRef) == true)
+                state = MarkState.AnticipationFreeze;
+            else
+                state = MarkState.Normal;
 
             if (state == _markState)
                 return;
 
             _markState = state;
-            Material material = state == MarkState.Freeze ? freezeMaterial : null;
+            Material material = state switch
+            {
+                MarkState.HardFreeze => hardFreezeMaterial,
+                MarkState.AnticipationFreeze => freezeMaterial,
+                _ => null,
+            };
+
             for (var i = 0; i < sprites.Length; i++)
                 sprites[i].sharedMaterial = material != null ? material : _originalMaterials[i];
         }
 
-        // Same live poll-and-toggle shape as the Freeze block above, for the SAME reason - a status
-        // (Burn/Ice/Electrified/Intimidate) is either active or it isn't, and restColor should track
-        // that live rather than getting permanently stuck once first set. ElementType.Rock resolves no
-        // tint (ResolveElementRestTint returns null - not requested), so IsElementStatusActive is never
-        // even reached for it below; this only ever activates for Fire/Ice/Lightning.
-        private void UpdateElementalRestTint(Frame frame)
+        // Same live poll-and-toggle shape QUpdate's own material swap uses, for the SAME reason - a
+        // status is either active or it isn't, and restColor should track that live rather than
+        // getting permanently stuck once first set. Priority: Frozen (the true hard-CC) beats the
+        // elemental first-hit tint (Burn/Ice/Electrified/Intimidate), which beats the entity's own
+        // original rest color - so ending Freeze while, say, Burn is still active correctly falls
+        // back to fireRestTint rather than straight to _originalRestColor.
+        private void UpdateStatusRestTint(Frame frame)
         {
+            bool frozen = StatusEffectUtility.IsFrozen(frame, _entityRef);
+
             ElementType element = StatusEffectUtility.GetFirstElementApplied(frame, _entityRef);
-            if (element == ElementType.Neutral)
+            Color? elementTint = element == ElementType.Neutral ? null : ResolveElementRestTint(element);
+            bool elementActive = elementTint.HasValue == true && IsElementStatusActive(frame, _entityRef, element);
+
+            if (frozen == _frozenActive && elementActive == _elementalTintActive)
                 return;
 
-            Color? tint = ResolveElementRestTint(element);
-            if (tint.HasValue == false)
-                return;
-
-            bool active = IsElementStatusActive(frame, _entityRef, element);
-            if (active == _elementalTintActive)
-                return;
-
-            _elementalTintActive = active;
-            restColor = active ? tint.Value : _originalRestColor;
+            _frozenActive = frozen;
+            _elementalTintActive = elementActive;
+            restColor = frozen ? frozenTint : elementActive ? elementTint.Value : _originalRestColor;
 
             // restColor is only ever READ by ApplyFlash as a future tween destination - reassigning
             // the field alone doesn't repaint anything already sitting on screen. Without actively
@@ -314,7 +340,6 @@ namespace QuantumUser.View.Util
                 case ElementType.Fire: return StatusEffectUtility.IsBurning(frame, entity);
                 case ElementType.Ice: return StatusEffectUtility.IsSlowed(frame, entity);
                 case ElementType.Lightning: return StatusEffectUtility.IsElectrified(frame, entity);
-                case ElementType.Rock: return StatusEffectUtility.IsIntimidated(frame, entity);
                 default: return false;
             }
         }
@@ -331,8 +356,7 @@ namespace QuantumUser.View.Util
             FlashDamage(color);
         }
 
-        // Fire/Ice/Lightning only - see UpdateElementalRestTint. Rock has no tint authored (not
-        // requested), so it resolves null and IsElementStatusActive is never reached for it.
+        // Fire/Ice/Lightning only - see UpdateStatusRestTint.
         private Color? ResolveElementRestTint(ElementType element)
         {
             switch (element)

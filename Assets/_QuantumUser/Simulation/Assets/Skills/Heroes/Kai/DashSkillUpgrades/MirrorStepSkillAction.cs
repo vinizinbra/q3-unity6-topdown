@@ -37,10 +37,10 @@ namespace Quantum
         public FP ReflectedRangeMultiplier = FP._1_50;
 
         // Swapped onto the reflected bolt's MovementOverride in place of a straight velocity flip -
-        // same "per-shot override, preferred every tick by ProjectileSystem.Update over the asset's
-        // own Movement" mechanism Pixie's Rocket Conversion (Grenade Launcher Mastery R3) already uses
-        // to swap flight behavior, just applied to an already-live projectile instead of at spawn. A
-        // pure reversal only connects if the shooter happens to still be standing on the return line,
+        // Projectile.MovementOverride is a generic per-entity field, preferred every tick by
+        // ProjectileSystem.Update over the asset's own Movement; this writes it directly onto an
+        // already-live projectile (ProjectileSpawner.Spawn has no part in this - the bolt already
+        // exists). A pure reversal only connects if the shooter happens to still be standing on the return line,
         // which in a real fight it usually isn't by the time the bolt gets there - undermining the
         // very instant-kill payoff rank 2/3 add. Retargeting at the shooter's live position instead
         // (via Target, re-read every tick by HomingProjectileMovementData) makes the reflect actually

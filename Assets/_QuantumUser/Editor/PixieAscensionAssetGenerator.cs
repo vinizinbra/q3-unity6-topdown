@@ -235,16 +235,16 @@ namespace QuantumUser.Editor
                 asset.DetonationDamageBonus = FP._0_50;
             });
 
-            // Hero Mastery (see docs/hero-mastery.md) - Grenade Launcher (Weapon Family) + Fire
-            // (Element), drafted through the same Passive Upgrade pool as the lines above. Authored in
+            // Hero Mastery (see docs/hero-mastery.md) - Heavy (Weapon Weight) + Fire (Element), drafted
+            // through the same Passive Upgrade pool as the lines above. Authored in
             // HeroMasteryAssetGenerator (shared across all 6 heroes) rather than inline here.
-            var (grenadeLauncherMastery, fireMastery) = HeroMasteryAssetGenerator.CreatePixieMastery();
+            var (heavyMastery, fireMastery) = HeroMasteryAssetGenerator.CreatePixieMastery();
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh(); // lets QuantumAssetObjectPostprocessor stamp Guid/Identifier on anything just created
 
             WireCharacterData(passive,
-                new List<PassiveUpgradeData> { pocketBombs, unstableMixture, explosiveRounds, grenadeLauncherMastery, fireMastery },
+                new List<PassiveUpgradeData> { pocketBombs, unstableMixture, explosiveRounds, heavyMastery, fireMastery },
                 new List<SkillActionData> { backblast, hotFuse, blastJump });
 
             WireBaseSkill(new List<SkillActionData> { clusterBomb, birthdayCake, directHit });

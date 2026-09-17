@@ -1,4 +1,6 @@
+using Photon.Deterministic;
 using Quantum;
+using TMPro;
 using UnityEngine;
 
 // "Who am I playing" block at the top of HeroInfoPopupWidget - head icon, health/shield readouts,
@@ -29,6 +31,16 @@ public class HeroInfoWidget : QuantumGlobalMonoBehaviour
     private UpgradeWidget baseSkillWidget;
     [SerializeField, Tooltip("Icon/name/description of this hero's innate passive (CharacterData.Passive).")]
     private UpgradeWidget passiveSkillWidget;
+
+    [Header("Weapon Stats")]
+    [SerializeField, Tooltip("weaponData.Damage * Weapon.DamageMultiplier (perks/base traits already baked in) * DamageUtility.ResolveBaselineDamageMultiplier - this build's current baseline hit damage, no target/crit/magazine-position bonuses. Optional - left unassigned to skip. See RefreshWeaponStats.")]
+    private TMP_Text currentDamageText;
+
+    [SerializeField, Tooltip("Current elemental effect magnitude for the equipped weapon's own Element, mirroring exactly what StatusEffectUtility.ApplyElementBaseline computes from that same baseline hit damage - Burn tick damage (Fire) or Chill buildup as a % of the Freeze threshold per hit (Ice). Hidden for a Neutral weapon or no weapon; Lightning/Shock has no build-scaled magnitude to preview, so it shows a static label. See RefreshWeaponStats.")]
+    private TMP_Text currentElementalText;
+
+    [SerializeField, Tooltip("Current Critical Chance/Multiplier via DamageUtility.ResolveBaselineCritical - \"x{multiplier} | {chance}%\", the pipe tinted with the standard #FD3971 inline highlight. Skips Hot Target's bonus vs a Burning target since there's no target here. Optional - left unassigned to skip. See RefreshWeaponStats.")]
+    private TMP_Text currentCriticalText;
 
     [SerializeField] private EntityRef _entityRef;
 
@@ -68,6 +80,103 @@ public class HeroInfoWidget : QuantumGlobalMonoBehaviour
 
         UpdateBaseSkill(frame);
         UpdatePassive(frame);
+        RefreshWeaponStats(frame);
+    }
+
+    // "Current Damage"/"Current Elemental"/"Current Critical" - the equipped weapon's actual current
+    // numbers, folding in every build-wide multiplier that currently affects them (CharacterStats,
+    // Hero Mastery, weapon perks) without needing a target. See DamageUtility.
+    // ResolveBaselineDamageMultiplier/ResolveBaselineCritical's own comments for exactly what's
+    // included vs skipped (target-conditional specials, crit roll, magazine-position perk bonuses).
+    private void RefreshWeaponStats(Frame frame)
+    {
+        if (currentDamageText == null && currentElementalText == null && currentCriticalText == null)
+            return;
+
+        if (frame.TryGet<Weapon>(_entityRef, out var weapon) == false || weapon.WeaponData.IsValid == false)
+        {
+            SetActive(currentDamageText, false);
+            SetActive(currentElementalText, false);
+            SetActive(currentCriticalText, false);
+            return;
+        }
+
+        WeaponDataAsset weaponData = frame.FindAsset(weapon.WeaponData);
+        FP baseDamage = weaponData.Damage * weapon.DamageMultiplier;
+
+        if (currentDamageText != null)
+        {
+            SetActive(currentDamageText, true);
+            FP finalDamage = baseDamage * DamageUtility.ResolveBaselineDamageMultiplier(frame, _entityRef, DamageSource.Weapon);
+            currentDamageText.text = Mathf.RoundToInt(finalDamage.AsFloat).ToString();
+        }
+
+        if (currentElementalText != null)
+            RefreshElemental(frame, baseDamage, weaponData.Element);
+
+        if (currentCriticalText != null)
+        {
+            SetActive(currentCriticalText, true);
+            DamageUtility.ResolveBaselineCritical(frame, _entityRef, DamageSource.Weapon, out FP chance, out FP multiplier);
+            currentCriticalText.text = $"x{multiplier.AsFloat:0.#} <color=#FD3971>|</color> {Mathf.RoundToInt(chance.AsFloat * 100f)}%";
+        }
+    }
+
+    // Mirrors StatusEffectUtility.ApplyElementBaseline's own per-element formulas exactly (see that
+    // method) rather than a hand-picked approximation, so this can never show a number the sim
+    // wouldn't actually land. Note this means a Fire/Element Mastery damage bonus does NOT move this
+    // number - ApplyElementBaseline is fed the pre-CharacterStats-multiplier hit damage in the real
+    // sim too (see DamageUtility.ResolveOutgoingDamage/HeroMasteryUtility.ResolveDamageMultiplier's
+    // own DamageSource.Weapon gate), a real gap between "final landed damage" and "elemental base"
+    // worth revisiting as its own balance change rather than papering over here.
+    private void RefreshElemental(Frame frame, FP baseDamage, ElementType element)
+    {
+        if (element == ElementType.Neutral)
+        {
+            SetActive(currentElementalText, false);
+            return;
+        }
+
+        EffectConfig config = StatusEffectUtility.GetEffectConfig(frame);
+
+        if (config == null)
+        {
+            SetActive(currentElementalText, false);
+            return;
+        }
+
+        SetActive(currentElementalText, true);
+
+        switch (element)
+        {
+            case ElementType.Fire:
+                FP tickDamage = StatusEffectUtility.ComputeDotDamagePerTickWithFloor(frame, _entityRef, baseDamage,
+                    config.BurnDamagePercent, config.BurnFloorPercent, config.BurnDuration, config.TickInterval);
+                currentElementalText.text = $"{Mathf.RoundToInt(tickDamage.AsFloat)} Burn/tick";
+                break;
+
+            case ElementType.Ice:
+                FP buildupFraction = FPMath.Clamp(baseDamage * config.IceBuildupPerDamage / config.IceFreezeThreshold, FP._0, FP._1);
+                currentElementalText.text = $"{Mathf.RoundToInt(buildupFraction.AsFloat * 100f)}% Chill/hit";
+                break;
+
+            case ElementType.Lightning:
+                // Shock/Electrified is a setup state, not a DoT - its baseline has no magnitude to
+                // scale (see StatusEffectUtility.ApplyElementBaseline's Lightning case), so there's no
+                // build-scaled number to preview here, only that this weapon applies it.
+                currentElementalText.text = "Shock on hit";
+                break;
+
+            default:
+                SetActive(currentElementalText, false);
+                break;
+        }
+    }
+
+    private static void SetActive(TMP_Text text, bool active)
+    {
+        if (text != null && text.gameObject.activeSelf != active)
+            text.gameObject.SetActive(active);
     }
 
     private void UpdateBaseSkill(Frame frame)

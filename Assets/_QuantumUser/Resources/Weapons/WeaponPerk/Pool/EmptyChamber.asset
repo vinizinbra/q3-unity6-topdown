@@ -19,7 +19,7 @@ MonoBehaviour:
   Icon: {fileID: 901284195, guid: 017cb6454ed9743478842fb02d741366, type: 3}
   DisplayName: Empty Chamber
   Rarity: 1
-  Description: 'Empty magazine releases a shockwave that knocks back enemies within <color=#FD3971>{0:0}m</color>'
+  Description: Empty magazine releases a shockwave
   Radius:
     RawValue: 262144
   Knockback:

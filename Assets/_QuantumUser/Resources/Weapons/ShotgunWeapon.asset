@@ -22,10 +22,11 @@ MonoBehaviour:
     RawValue: 524288
   Element: 0
   Family: 4
+  Weight: 2
   CriticalChance:
-    RawValue: 13107
+    RawValue: 6554
   CriticalDamageBonus:
-    RawValue: 32768
+    RawValue: 98304
   FireRate:
     RawValue: 131072
   MagazineSize: 6
@@ -48,11 +49,14 @@ MonoBehaviour:
   ProjectileData:
     Id:
       Value: 2052039704194794421
+  BaseTraits: []
   ViewPrefab: {fileID: 8089491252618662435, guid: 0f7481ececfe745c383ff250af802c65, type: 3}
-  ShakeTier: 0
-  _dpsPreview: 'Burst DPS: 96
+  ShakeTier: 1
+  _dpsPreview: 'Burst DPS: 100.8
 
-    Sustained DPS (incl. reload): 77.8
+    Sustained DPS (incl. reload): 81.7
 
     Damage/min:
-    4670'
+    4904
+
+    Crit dmg/shot: 72 (vs 48 normal) @ 10 % chance, x1.5'

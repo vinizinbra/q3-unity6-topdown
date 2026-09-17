@@ -1053,5 +1053,32 @@ namespace Quantum
 
             return FlatSqrDistance(center, targetPosition) <= radius * radius;
         }
+
+        // How often Enemy.LeadAverageVelocity is refreshed - short enough that a real directional
+        // change (a chased target actually turning to run a different way) still shows up quickly,
+        // long enough that a back-and-forth fast enough to read as "high velocity, going nowhere"
+        // (erratic steering, dodging, hover) nets close to zero within a single window instead of
+        // leaking through. A decisive placeholder, not a measured value - retune if a specific
+        // enemy's lead still reads wrong against a recorded run.
+        public static readonly FP LeadVelocitySampleWindow = FP._0_50;
+
+        // Refreshes Enemy.LeadAverageVelocity once every LeadVelocitySampleWindow seconds from the
+        // NET displacement over that window, rather than every tick from the instantaneous
+        // PhysicsBody3D.Velocity ProjectileAimUtility.ResolveLeadVelocity used to read directly -
+        // see Enemy.LeadAverageVelocity's own comment for why that cancels out fast direction
+        // reversals a raw or even exponentially-smoothed sample never fully would. Called
+        // unconditionally every tick (same as EnemySystem.TickAttackCooldown) so an enemy nobody is
+        // currently aiming at still has a fresh, correct average the instant something does.
+        public static void TickLeadVelocitySample(Frame f, Enemy* enemy, Transform3D* transform)
+        {
+            enemy->LeadSampleTimer -= f.DeltaTime;
+
+            if (enemy->LeadSampleTimer > FP._0)
+                return;
+
+            enemy->LeadAverageVelocity = (transform->Position - enemy->LeadSamplePosition) / LeadVelocitySampleWindow;
+            enemy->LeadSamplePosition = transform->Position;
+            enemy->LeadSampleTimer = LeadVelocitySampleWindow;
+        }
     }
 }

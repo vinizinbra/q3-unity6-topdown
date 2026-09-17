@@ -19,9 +19,10 @@ MonoBehaviour:
   DisplayName: Cluster Launcher
   FireType: 1
   Damage:
-    RawValue: 4587520
+    RawValue: 1638400
   Element: 0
   Family: 6
+  Weight: 2
   CriticalChance:
     RawValue: 6554
   CriticalDamageBonus:
@@ -51,15 +52,21 @@ MonoBehaviour:
   BaseTraits:
   - Id:
       Value: 860393226091315607
-  - Id:
-      Value: 2434823414340016374
-  ViewPrefab: {fileID: 8089491252618662435, guid: 76663fba1fb8145d0802358c5a0b27ec, type: 3}
+  ViewPrefab: {fileID: 8089491252618662435, guid: eaa1b1517782e4c3885b4a0b96fdf7c5, type: 3}
   ShakeTier: 1
-  _dpsPreview: 'Burst DPS: 73.5
+  _dpsPreview: 'Burst DPS: 57.7
 
-    Sustained DPS (incl. reload): 63
+    Sustained DPS (incl. reload): 49.5
 
     Damage/min:
-    3780
+    2970
 
-    Crit dmg/shot: 105 (vs 70 normal) @ 10 % chance, x1.5'
+    Crit dmg/shot: 82.5 (vs 55 normal) @ 10 % chance, x1.5
+
+    Est. targets/shot:
+    2.5
+
+    Effective Burst DPS (all targets): 144.4
+
+    Effective Sustained DPS
+    (all targets): 123.7'

@@ -39,6 +39,7 @@ MonoBehaviour:
   FireRestTint: {r: 0, g: 0, b: 0, a: 0}
   IceRestTint: {r: 0, g: 0, b: 0, a: 0}
   LightningRestTint: {r: 0, g: 0, b: 0, a: 0}
+  FrozenTint: {r: 0.55, g: 0.85, b: 1, a: 0.6117647}
   HealFlashColor: {r: 0.4, g: 1, b: 0.4, a: 1}
   ShieldFlashColor: {r: 0.4, g: 0.75, b: 1, a: 1}
   DeathColor: {r: 0, g: 0, b: 0, a: 0.20392157}

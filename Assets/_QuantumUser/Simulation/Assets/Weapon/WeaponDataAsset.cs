@@ -23,22 +23,27 @@ namespace Quantum
 
         public FP Damage = 10;
 
-        // ElementalChance-gated (CharacterStats.ElementalChance, same roll crit uses) - a Weapon-
-        // sourced hit with a non-Neutral Element that rolls a hit applies its matching baseline
-        // status (Fire->Burn, Ice->Slow, Rock->Intimidate; Electric/Void have none of their own -
-        // their identity lives in hand-authored weapon traits like Pierce/Ricochet instead) and, if
-        // the target already carries a Rift Mark, consumes a stack to trigger that element's own
-        // reaction - see StatusEffectUtility.TryApplyElementalStatus and docs/elemental-reactions.md.
-        // Carried through Projectile/AreaOwner so a weapon's projectile hits and its spawned areas
-        // (e.g. a grenade's blast) both proc it.
+        // A Weapon-sourced hit with a non-Neutral Element applies its matching baseline status
+        // unconditionally (Fire->Burn, Ice->Chill, Lightning->Shock) and, if the target already
+        // carries the OTHER status of a reaction pair, fires that pairwise reaction immediately -
+        // see StatusEffectUtility.TryApplyElementalStatus and docs/elemental-reactions.md. Carried
+        // through Projectile/AreaOwner so a weapon's projectile hits and its spawned areas (e.g. a
+        // grenade's blast) both proc it.
         public ElementType Element = ElementType.Neutral;
 
         // Which of the 6 player weapon families this is (Pistol/SMG/AssaultRifle/Shotgun/Sniper/
-        // GrenadeLauncher), independent of Element above - Hero Mastery's Weapon Family track keys off
-        // this, its Element track off Element, and the two are never coupled (see docs/hero-mastery.md).
-        // None (default) for anything that isn't one of the 6 (Lux's sentry guns, test/basic weapons) -
-        // Weapon Family Mastery simply never matches those.
+        // GrenadeLauncher) - identity/perk-pool/UI/balance classification, independent of Element and
+        // Weight below and never coupled to either (see docs/hero-mastery.md). None (default) for
+        // anything that isn't one of the 6 (Lux's sentry guns, test/basic weapons).
         public WeaponFamily Family = WeaponFamily.None;
+
+        // Which weight class this weapon belongs to - the axis Hero Mastery's Weapon Weight track keys
+        // off (see docs/hero-mastery.md) and that WeaponWeightUtility.GetMoveSpeedMultiplier reads for
+        // the generic Light/Medium/Heavy move-speed modifier (docs/hero-mastery.md's "Initial Weight
+        // Behavior"). Independent of Family - explicit per weapon asset, never inferred from Family at
+        // runtime, so a future weapon can freely be any (Family, Weight) combination. Medium (default)
+        // is the neutral tier for anything not yet explicitly tagged.
+        public WeaponWeight Weight = WeaponWeight.Medium;
 
         public FP CriticalChance;
         public FP CriticalDamageBonus;

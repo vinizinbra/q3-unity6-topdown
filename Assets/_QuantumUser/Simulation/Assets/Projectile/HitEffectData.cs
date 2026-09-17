@@ -7,6 +7,19 @@ namespace Quantum
     // decides who is caught; effects decide what happens to each of them.
     public abstract unsafe class HitEffectData : AssetObject
     {
+        // False (the default, every existing effect - damage, knockback, a status) means "run once
+        // PER TARGET a multi-target overlap query caught" - HitEffectUtility.ApplyToTarget's normal
+        // shape. True (SpawnEntityEffectData only, today) means this effect describes something that
+        // exists once per BLAST regardless of how many targets it also happened to catch - a
+        // lingering hazard spawned at the blast's own center, not once per target at each target's
+        // own position. Without this, a blast that caught 3 enemies would spawn 3 stacked copies of
+        // the hazard (each independently ticking its own damage) at 3 different, essentially random
+        // positions - see HitEffectUtility.ApplyBlastLevelEffects, which is what actually applies an
+        // effect flagged true here, exactly once, whether the overlap query caught 0, 1, or many
+        // targets. Irrelevant for a guaranteed single-connect hit (ApplyToTarget's multiTarget=false
+        // path) - that already only ever calls Apply once regardless.
+        public virtual bool AppliesOncePerBlast => false;
+
         public abstract void Apply(Frame f, ref HitEffectContext context);
 
         // Rank-2-scaled counterpart to Apply above - Zara's Remix ascension (see ZaraRemixUtility)

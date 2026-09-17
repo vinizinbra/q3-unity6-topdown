@@ -153,8 +153,8 @@ namespace Quantum
                 groundbreaker->WallStunDuration, out bool stunned);
 
             // Gated on the Stun genuinely LANDING, not merely on a wall being there - so an enemy
-            // inside a hard-CC immunity window, or a tier authored ImmuneToHardCC, correctly gets
-            // neither half. This is also the whole "damage window" rule: Exposed is never applied to
+            // still inside its own Stun re-proc cooldown correctly gets neither half. This is also
+            // the whole "damage window" rule: Exposed is never applied to
             // everyone caught in the shockwave, only to whoever the landing actually slammed into a
             // wall, so the reward is for positioning and knockback angle rather than for landing near
             // a crowd.

@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b27366c1a53b480bbfcef5543d336c5, type: 3}
+  m_Name: BruteHeavyMastery
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.BruteHeavyMasteryData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Brute/Brute_PassiveSkill/Brute_PassiveSkillUpgrades/BruteHeavyMastery
+    Guid:
+      Value: 426348791454513788
+  Icon: {fileID: 0}
+  DisplayName: Heavy Weapon Mastery
+  Description: Brute's Heavy weapons hit harder - and at close range, harder still.
+  <MaxRank>k__BackingField: 3
+  RankDescriptions:
+  - +<color=#FD3971>15%</color> Heavy Weapon Damage.
+  - +<color=#FD3971>30%</color> Heavy Weapon Damage.
+  - +<color=#FD3971>50%</color> Heavy Weapon Damage. Deal +<color=#FD3971>25%</color>
+    additional Heavy Weapon Damage to nearby enemies.
+  Weight: 2
+  DamageMultiplierPerRank:
+  - RawValue: 9830
+  - RawValue: 19661
+  - RawValue: 32768
+  PointBlankDamageBonus:
+    RawValue: 16384
+  PointBlankRange:
+    RawValue: 262144

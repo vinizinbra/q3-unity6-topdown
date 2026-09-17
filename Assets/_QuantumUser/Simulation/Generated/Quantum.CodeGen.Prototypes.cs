@@ -627,7 +627,6 @@ namespace Quantum.Prototypes {
     public FP MoveSpeedMultiplier;
     public FP CriticalChance;
     public FP CriticalDamageMultiplier;
-    public FP ElementalChance;
     public FP AttackSpeedMultiplier;
     public FP ReloadSpeedMultiplier;
     public FP ProjectileSpeedMultiplier;
@@ -712,7 +711,6 @@ namespace Quantum.Prototypes {
         result.MoveSpeedMultiplier = this.MoveSpeedMultiplier;
         result.CriticalChance = this.CriticalChance;
         result.CriticalDamageMultiplier = this.CriticalDamageMultiplier;
-        result.ElementalChance = this.ElementalChance;
         result.AttackSpeedMultiplier = this.AttackSpeedMultiplier;
         result.ReloadSpeedMultiplier = this.ReloadSpeedMultiplier;
         result.ProjectileSpeedMultiplier = this.ProjectileSpeedMultiplier;
@@ -967,7 +965,7 @@ namespace Quantum.Prototypes {
   [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.ConditionalWeaponFireRateBonus))]
   public unsafe partial class ConditionalWeaponFireRateBonusPrototype : ComponentPrototype<Quantum.ConditionalWeaponFireRateBonus> {
-    public Quantum.QEnum8<WeaponFamily> Family;
+    public Quantum.QEnum8<WeaponWeight> Weight;
     public FP FireRateBonus;
     public QBoolean Active;
     partial void MaterializeUser(Frame frame, ref Quantum.ConditionalWeaponFireRateBonus result, in PrototypeMaterializationContext context);
@@ -977,7 +975,7 @@ namespace Quantum.Prototypes {
         return f.Set(entity, component) == SetResult.ComponentAdded;
     }
     public void Materialize(Frame frame, ref Quantum.ConditionalWeaponFireRateBonus result, in PrototypeMaterializationContext context = default) {
-        result.Family = this.Family;
+        result.Weight = this.Weight;
         result.FireRateBonus = this.FireRateBonus;
         result.Active = this.Active;
         MaterializeUser(frame, ref result, in context);
@@ -1315,6 +1313,9 @@ namespace Quantum.Prototypes {
     public Quantum.QEnum8<EnemyFaction> Faction;
     public FPVector2 FleeDirection;
     public FP FleeCommitTimer;
+    public FPVector3 LeadAverageVelocity;
+    public FPVector3 LeadSamplePosition;
+    public FP LeadSampleTimer;
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.Enemy component = default;
         Materialize((Frame)f, ref component, in context);
@@ -1355,6 +1356,9 @@ namespace Quantum.Prototypes {
         result.Faction = this.Faction;
         result.FleeDirection = this.FleeDirection;
         result.FleeCommitTimer = this.FleeCommitTimer;
+        result.LeadAverageVelocity = this.LeadAverageVelocity;
+        result.LeadSamplePosition = this.LeadSamplePosition;
+        result.LeadSampleTimer = this.LeadSampleTimer;
     }
   }
   [System.SerializableAttribute()]
@@ -1767,6 +1771,21 @@ namespace Quantum.Prototypes {
     }
     public void Materialize(Frame frame, ref Quantum.HealthOrb result, in PrototypeMaterializationContext context = default) {
         result.HealPercent = this.HealPercent;
+        MaterializeUser(frame, ref result, in context);
+    }
+  }
+  [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.HeavyHitAreaExpansionUpgrade))]
+  public unsafe partial class HeavyHitAreaExpansionUpgradePrototype : ComponentPrototype<Quantum.HeavyHitAreaExpansionUpgrade> {
+    public FP ExtraRadius;
+    partial void MaterializeUser(Frame frame, ref Quantum.HeavyHitAreaExpansionUpgrade result, in PrototypeMaterializationContext context);
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.HeavyHitAreaExpansionUpgrade component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.HeavyHitAreaExpansionUpgrade result, in PrototypeMaterializationContext context = default) {
+        result.ExtraRadius = this.ExtraRadius;
         MaterializeUser(frame, ref result, in context);
     }
   }
@@ -2830,6 +2849,7 @@ namespace Quantum.Prototypes {
     public QBoolean ForceCritical;
     public Quantum.QEnum8<DamageSource> Source;
     public Quantum.QEnum8<ElementType> Element;
+    public AssetRef<WeaponDataAsset> WeaponData;
     public Quantum.QEnum8<ElementType> PerkElement;
     public FP PerkElementChance;
     public Quantum.QEnum8<SkillSlotId> SourceSlot;
@@ -2842,6 +2862,8 @@ namespace Quantum.Prototypes {
     public Byte PelletIndex;
     public FP SpeedMultiplier;
     public AssetRef<ProjectileMovementData> MovementOverride;
+    [ArrayLengthAttribute(8)]
+    public MapEntityId[] RecentHits = new MapEntityId[8];
     public AssetRef<ProjectileHitData> HitOverride;
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.Projectile component = default;
@@ -2863,6 +2885,7 @@ namespace Quantum.Prototypes {
         result.ForceCritical = this.ForceCritical;
         result.Source = this.Source;
         result.Element = this.Element;
+        result.WeaponData = this.WeaponData;
         result.PerkElement = this.PerkElement;
         result.PerkElementChance = this.PerkElementChance;
         result.SourceSlot = this.SourceSlot;
@@ -2875,6 +2898,9 @@ namespace Quantum.Prototypes {
         result.PelletIndex = this.PelletIndex;
         result.SpeedMultiplier = this.SpeedMultiplier;
         result.MovementOverride = this.MovementOverride;
+        for (int i = 0, count = PrototypeValidator.CheckLength(RecentHits, 8, in context); i < count; ++i) {
+          PrototypeValidator.FindMapEntity(this.RecentHits[i], in context, out *result.RecentHits.GetPointer(i));
+        }
         result.HitOverride = this.HitOverride;
     }
   }
@@ -2890,23 +2916,6 @@ namespace Quantum.Prototypes {
     }
     public void Materialize(Frame frame, ref Quantum.ProjectileDamageUpgrade result, in PrototypeMaterializationContext context = default) {
         result.Multiplier = this.Multiplier;
-        MaterializeUser(frame, ref result, in context);
-    }
-  }
-  [System.SerializableAttribute()]
-  [Quantum.Prototypes.Prototype(typeof(Quantum.ProjectileMovementOverride))]
-  public unsafe partial class ProjectileMovementOverridePrototype : ComponentPrototype<Quantum.ProjectileMovementOverride> {
-    public Quantum.QEnum8<WeaponFamily> Family;
-    public AssetRef<ProjectileMovementData> Movement;
-    partial void MaterializeUser(Frame frame, ref Quantum.ProjectileMovementOverride result, in PrototypeMaterializationContext context);
-    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
-        Quantum.ProjectileMovementOverride component = default;
-        Materialize((Frame)f, ref component, in context);
-        return f.Set(entity, component) == SetResult.ComponentAdded;
-    }
-    public void Materialize(Frame frame, ref Quantum.ProjectileMovementOverride result, in PrototypeMaterializationContext context = default) {
-        result.Family = this.Family;
-        result.Movement = this.Movement;
         MaterializeUser(frame, ref result, in context);
     }
   }
@@ -3472,11 +3481,12 @@ namespace Quantum.Prototypes {
     public Quantum.QEnum8<ElementType> FirstElementApplied;
     public FP BurnRemaining;
     public FP BurnTickTimer;
-    public FP BurnDamagePerTick;
+    public Byte BurnStackCount;
+    [ArrayLengthAttribute(5)]
+    public FP[] BurnStackDamagePerTick = new FP[5];
     public MapEntityId BurnOwner;
     public Quantum.QEnum8<DamageSource> BurnSource;
     public FP ElectrifiedRemaining;
-    public FP ElectrifiedJoltTimer;
     public FP StaggerRemaining;
     public FP ThermalShockCooldownRemaining;
     public FP OverloadCooldownRemaining;
@@ -3491,7 +3501,9 @@ namespace Quantum.Prototypes {
     public Byte OverloadChainVisitedCount;
     public FP OverloadChainCurrentDamage;
     public FP IceRemaining;
-    public FP IceSpeedMultiplier;
+    public FP IceBuildup;
+    public FP FreezeRemaining;
+    public FP FreezeRecoveryRemaining;
     public FP StunRemaining;
     public FP StunImmunityRemaining;
     public FP InterruptImmunityRemaining;
@@ -3545,11 +3557,13 @@ namespace Quantum.Prototypes {
         result.FirstElementApplied = this.FirstElementApplied;
         result.BurnRemaining = this.BurnRemaining;
         result.BurnTickTimer = this.BurnTickTimer;
-        result.BurnDamagePerTick = this.BurnDamagePerTick;
+        result.BurnStackCount = this.BurnStackCount;
+        for (int i = 0, count = PrototypeValidator.CheckLength(BurnStackDamagePerTick, 5, in context); i < count; ++i) {
+          *result.BurnStackDamagePerTick.GetPointer(i) = this.BurnStackDamagePerTick[i];
+        }
         PrototypeValidator.FindMapEntity(this.BurnOwner, in context, out result.BurnOwner);
         result.BurnSource = this.BurnSource;
         result.ElectrifiedRemaining = this.ElectrifiedRemaining;
-        result.ElectrifiedJoltTimer = this.ElectrifiedJoltTimer;
         result.StaggerRemaining = this.StaggerRemaining;
         result.ThermalShockCooldownRemaining = this.ThermalShockCooldownRemaining;
         result.OverloadCooldownRemaining = this.OverloadCooldownRemaining;
@@ -3565,7 +3579,9 @@ namespace Quantum.Prototypes {
         result.OverloadChainVisitedCount = this.OverloadChainVisitedCount;
         result.OverloadChainCurrentDamage = this.OverloadChainCurrentDamage;
         result.IceRemaining = this.IceRemaining;
-        result.IceSpeedMultiplier = this.IceSpeedMultiplier;
+        result.IceBuildup = this.IceBuildup;
+        result.FreezeRemaining = this.FreezeRemaining;
+        result.FreezeRecoveryRemaining = this.FreezeRecoveryRemaining;
         result.StunRemaining = this.StunRemaining;
         result.StunImmunityRemaining = this.StunImmunityRemaining;
         result.InterruptImmunityRemaining = this.InterruptImmunityRemaining;
@@ -3954,21 +3970,6 @@ namespace Quantum.Prototypes {
     }
   }
   [System.SerializableAttribute()]
-  [Quantum.Prototypes.Prototype(typeof(Quantum.VendettaPistolUpgrade))]
-  public unsafe partial class VendettaPistolUpgradePrototype : ComponentPrototype<Quantum.VendettaPistolUpgrade> {
-    public FP DamageBonus;
-    partial void MaterializeUser(Frame frame, ref Quantum.VendettaPistolUpgrade result, in PrototypeMaterializationContext context);
-    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
-        Quantum.VendettaPistolUpgrade component = default;
-        Materialize((Frame)f, ref component, in context);
-        return f.Set(entity, component) == SetResult.ComponentAdded;
-    }
-    public void Materialize(Frame frame, ref Quantum.VendettaPistolUpgrade result, in PrototypeMaterializationContext context = default) {
-        result.DamageBonus = this.DamageBonus;
-        MaterializeUser(frame, ref result, in context);
-    }
-  }
-  [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.VendettaStrikeHitTracker))]
   public unsafe class VendettaStrikeHitTrackerPrototype : ComponentPrototype<Quantum.VendettaStrikeHitTracker> {
     [ArrayLengthAttribute(8)]
@@ -3984,6 +3985,21 @@ namespace Quantum.Prototypes {
           PrototypeValidator.FindMapEntity(this.HitEntities[i], in context, out *result.HitEntities.GetPointer(i));
         }
         result.HitCount = this.HitCount;
+    }
+  }
+  [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.VendettaUpgrade))]
+  public unsafe partial class VendettaUpgradePrototype : ComponentPrototype<Quantum.VendettaUpgrade> {
+    public FP DamageBonus;
+    partial void MaterializeUser(Frame frame, ref Quantum.VendettaUpgrade result, in PrototypeMaterializationContext context);
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.VendettaUpgrade component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.VendettaUpgrade result, in PrototypeMaterializationContext context = default) {
+        result.DamageBonus = this.DamageBonus;
+        MaterializeUser(frame, ref result, in context);
     }
   }
   [System.SerializableAttribute()]
@@ -4283,44 +4299,6 @@ namespace Quantum.Prototypes {
     }
   }
   [System.SerializableAttribute()]
-  [Quantum.Prototypes.Prototype(typeof(Quantum.WeaponFamilyFirstHitTracker))]
-  public unsafe class WeaponFamilyFirstHitTrackerPrototype : ComponentPrototype<Quantum.WeaponFamilyFirstHitTracker> {
-    [ArrayLengthAttribute(4)]
-    public MapEntityId[] Owner = new MapEntityId[4];
-    [ArrayLengthAttribute(4)]
-    public Byte[] Family = new Byte[4];
-    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
-        Quantum.WeaponFamilyFirstHitTracker component = default;
-        Materialize((Frame)f, ref component, in context);
-        return f.Set(entity, component) == SetResult.ComponentAdded;
-    }
-    public void Materialize(Frame frame, ref Quantum.WeaponFamilyFirstHitTracker result, in PrototypeMaterializationContext context = default) {
-        for (int i = 0, count = PrototypeValidator.CheckLength(Owner, 4, in context); i < count; ++i) {
-          PrototypeValidator.FindMapEntity(this.Owner[i], in context, out *result.Owner.GetPointer(i));
-        }
-        for (int i = 0, count = PrototypeValidator.CheckLength(Family, 4, in context); i < count; ++i) {
-          result.Family[i] = this.Family[i];
-        }
-    }
-  }
-  [System.SerializableAttribute()]
-  [Quantum.Prototypes.Prototype(typeof(Quantum.WeaponFamilyMastery))]
-  public unsafe partial class WeaponFamilyMasteryPrototype : ComponentPrototype<Quantum.WeaponFamilyMastery> {
-    public Quantum.QEnum8<WeaponFamily> Family;
-    public FP DamageMultiplier;
-    partial void MaterializeUser(Frame frame, ref Quantum.WeaponFamilyMastery result, in PrototypeMaterializationContext context);
-    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
-        Quantum.WeaponFamilyMastery component = default;
-        Materialize((Frame)f, ref component, in context);
-        return f.Set(entity, component) == SetResult.ComponentAdded;
-    }
-    public void Materialize(Frame frame, ref Quantum.WeaponFamilyMastery result, in PrototypeMaterializationContext context = default) {
-        result.Family = this.Family;
-        result.DamageMultiplier = this.DamageMultiplier;
-        MaterializeUser(frame, ref result, in context);
-    }
-  }
-  [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.WeaponFireTimeMods))]
   public unsafe partial class WeaponFireTimeModsPrototype : ComponentPrototype<Quantum.WeaponFireTimeMods> {
     public Int32 BonusPierce;
@@ -4428,6 +4406,9 @@ namespace Quantum.Prototypes {
     public QBoolean HasSplitShot;
     public Int32 SplitShotCount;
     public FP SplitShotDamageMultiplier;
+    public AssetRef<ProjectileDataAsset> SplitShotProjectileOverride;
+    public FP SplitShotLaunchAngleOverride;
+    public FP SplitShotArcDegrees;
     public QBoolean HasQuantumRounds;
     public FP QuantumRoundsRadius;
     public FP QuantumRoundsDamageMultiplier;
@@ -4452,6 +4433,9 @@ namespace Quantum.Prototypes {
         result.HasSplitShot = this.HasSplitShot;
         result.SplitShotCount = this.SplitShotCount;
         result.SplitShotDamageMultiplier = this.SplitShotDamageMultiplier;
+        result.SplitShotProjectileOverride = this.SplitShotProjectileOverride;
+        result.SplitShotLaunchAngleOverride = this.SplitShotLaunchAngleOverride;
+        result.SplitShotArcDegrees = this.SplitShotArcDegrees;
         result.HasQuantumRounds = this.HasQuantumRounds;
         result.QuantumRoundsRadius = this.QuantumRoundsRadius;
         result.QuantumRoundsDamageMultiplier = this.QuantumRoundsDamageMultiplier;
@@ -4520,6 +4504,44 @@ namespace Quantum.Prototypes {
         result.EmergencyReloadMoveSpeedBonus = this.EmergencyReloadMoveSpeedBonus;
         result.EmergencyReloadDamageReduction = this.EmergencyReloadDamageReduction;
         result.EmergencyReloadApplied = this.EmergencyReloadApplied;
+        MaterializeUser(frame, ref result, in context);
+    }
+  }
+  [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.WeaponWeightFirstHitTracker))]
+  public unsafe class WeaponWeightFirstHitTrackerPrototype : ComponentPrototype<Quantum.WeaponWeightFirstHitTracker> {
+    [ArrayLengthAttribute(4)]
+    public MapEntityId[] Owner = new MapEntityId[4];
+    [ArrayLengthAttribute(4)]
+    public Byte[] Weight = new Byte[4];
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.WeaponWeightFirstHitTracker component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.WeaponWeightFirstHitTracker result, in PrototypeMaterializationContext context = default) {
+        for (int i = 0, count = PrototypeValidator.CheckLength(Owner, 4, in context); i < count; ++i) {
+          PrototypeValidator.FindMapEntity(this.Owner[i], in context, out *result.Owner.GetPointer(i));
+        }
+        for (int i = 0, count = PrototypeValidator.CheckLength(Weight, 4, in context); i < count; ++i) {
+          result.Weight[i] = this.Weight[i];
+        }
+    }
+  }
+  [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.WeaponWeightMastery))]
+  public unsafe partial class WeaponWeightMasteryPrototype : ComponentPrototype<Quantum.WeaponWeightMastery> {
+    public Quantum.QEnum8<WeaponWeight> Weight;
+    public FP DamageMultiplier;
+    partial void MaterializeUser(Frame frame, ref Quantum.WeaponWeightMastery result, in PrototypeMaterializationContext context);
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.WeaponWeightMastery component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.WeaponWeightMastery result, in PrototypeMaterializationContext context = default) {
+        result.Weight = this.Weight;
+        result.DamageMultiplier = this.DamageMultiplier;
         MaterializeUser(frame, ref result, in context);
     }
   }

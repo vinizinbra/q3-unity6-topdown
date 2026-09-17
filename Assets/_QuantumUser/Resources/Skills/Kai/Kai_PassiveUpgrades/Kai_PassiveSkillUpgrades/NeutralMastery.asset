@@ -35,10 +35,10 @@ MonoBehaviour:
   GhostShotDamageMultiplier:
     RawValue: 32768
   GhostShotDelay:
-    RawValue: 6554
+    RawValue: 13107
   GhostShotVisual:
     Id:
       Value: 2103037388534081780
   GhostShotHit:
     Id:
-      Value: 370428340957100369
+      Value: 3300644183098806284

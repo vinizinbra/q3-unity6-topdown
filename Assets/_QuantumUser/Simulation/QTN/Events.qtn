@@ -660,14 +660,12 @@ event RotatingLaserFired
     AssetRef<EnemyDeliveryData> Delivery;
 }
 
-// Fired by StatusEffectSystem.TickElectrified every time Electrified's periodic Jolt actually fires
-// (see docs/elemental-reactions.md's "Shock (Electrified)" section) - a one-shot spark distinct from
-// StatusEffectsManager's own ambient electrifiedParticlePrefab/staggerParticlePrefab trackers (which
-// only show "this status is currently active", not the instant of each individual Jolt). Also fired
-// by StatusEffectUtility.TryTriggerShatter for every secondary enemy caught in the Shatter AoE (Chill+
-// Shock reaction) - it applies the same ApplyStagger primitive Jolt does, and ShatterTriggered's own
-// crack VFX only plays once at the primary/Center, so each staggered enemy still needs its own
-// feedback. Own dedicated visual (EffectsManager.joltEffectPrefab).
+// Fired by StatusEffectUtility.ApplyStun every time a Stun genuinely LANDS, regardless of source
+// (Shock's own proc against an already-Shocked target, Shatter's primary, any future Stun source) -
+// never fired just because Shock/Electrified was applied or refreshed (see docs/
+// elemental-reactions.md's "Shock (Electrified)" section). A one-shot spark distinct from
+// StatusEffectsManager's own ambient stunParticlePrefab tracker (which only shows "this status is
+// currently active", not the instant it landed). Own dedicated visual (EffectsManager.joltEffectPrefab).
 event JoltTriggered
 {
     EntityRef  Target;

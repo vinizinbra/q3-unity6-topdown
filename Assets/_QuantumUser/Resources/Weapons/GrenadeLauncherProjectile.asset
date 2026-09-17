@@ -23,7 +23,7 @@ MonoBehaviour:
   TargetDistance:
     RawValue: 655360
   PredictionTime:
-    RawValue: 0
+    RawValue: 32768
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -42,7 +42,7 @@ MonoBehaviour:
       Value: 268986146537756646
   Prototype:
     Id:
-      Value: 1289801711717108447
+      Value: 1455361847502541940
   Movement:
     Id:
       Value: 1111018775685746377

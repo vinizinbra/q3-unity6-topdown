@@ -394,16 +394,16 @@ namespace QuantumUser.Editor
                 a.MobileStageInheritanceFraction = SpeakerEffectFraction;
             });
 
-            // Hero Mastery (see docs/hero-mastery.md) - SMG (Weapon Family) + Electric (Element),
+            // Hero Mastery (see docs/hero-mastery.md) - Light (Weapon Weight) + Electric (Element),
             // drafted through the same Passive Upgrade pool as Faster Tempo/Second Wind/Headliner above.
             // Authored in HeroMasteryAssetGenerator (shared across all 6 heroes) rather than inline here.
-            var (smgMastery, zaraElectricMastery) = HeroMasteryAssetGenerator.CreateZaraMastery();
+            var (lightMastery, zaraElectricMastery) = HeroMasteryAssetGenerator.CreateZaraMastery();
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh(); // lets QuantumAssetObjectPostprocessor stamp Guid/Identifier on anything just created
 
             WireCharacterData(passive,
-                new List<PassiveUpgradeData> { fasterTempo, secondWind, headliner, smgMastery, zaraElectricMastery },
+                new List<PassiveUpgradeData> { fasterTempo, secondWind, headliner, lightMastery, zaraElectricMastery },
                 new List<SkillActionData> { afterbeat, portableSpeaker });
 
             WireTotemActions(new List<SkillActionData> { amplifier, soundBoost, doubleTime, mainStage });

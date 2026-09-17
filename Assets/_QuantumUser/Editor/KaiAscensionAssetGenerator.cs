@@ -247,16 +247,17 @@ namespace QuantumUser.Editor
                 asset.PierceBonus = new[] { 1, 2, 99 };
             });
 
-            // Hero Mastery (see docs/hero-mastery.md) - Sniper (Weapon Family) + Ice (Element), drafted
-            // through the same Passive Upgrade pool as Event Horizon/Undertow/First Strike above.
-            // Authored in HeroMasteryAssetGenerator (shared across all 6 heroes) rather than inline here.
-            var (sniperMastery, neutralMastery) = HeroMasteryAssetGenerator.CreateKaiMastery();
+            // Hero Mastery (see docs/hero-mastery.md) - Heavy (Weapon Weight) + Neutral (Element),
+            // drafted through the same Passive Upgrade pool as Event Horizon/Undertow/First Strike
+            // above. Authored in HeroMasteryAssetGenerator (shared across all 6 heroes) rather than
+            // inline here.
+            var (heavyMastery, neutralMastery) = HeroMasteryAssetGenerator.CreateKaiMastery();
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh(); // lets QuantumAssetObjectPostprocessor stamp Guid/Identifier on anything just created
 
             WireCharacterData(passive,
-                new List<PassiveUpgradeData> { eventHorizon, undertow, firstStrike, sniperMastery, neutralMastery },
+                new List<PassiveUpgradeData> { eventHorizon, undertow, firstStrike, heavyMastery, neutralMastery },
                 new List<SkillActionData> { mirrorStep, phantomStrike });
 
             WireVortexActions(new List<SkillActionData> { singularity, compression, vortexCollapse, voidShards });

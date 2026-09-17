@@ -24,14 +24,12 @@ MonoBehaviour:
     RawValue: 6554
   BurnFloorPercent:
     RawValue: 3277
-  VoidDuration:
-    RawValue: 196608
   IntimidateDuration:
     RawValue: 196608
   IntimidateOutgoingDamageMultiplier:
     RawValue: 49152
   StunDuration:
-    RawValue: 65536
+    RawValue: 131072
   RootDuration:
     RawValue: 131072
   SlowDuration:

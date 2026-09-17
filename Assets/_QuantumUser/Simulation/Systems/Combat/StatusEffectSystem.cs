@@ -18,11 +18,13 @@ namespace Quantum
             StatusEffects* status = filter.StatusEffects;
 
             TickBurn(f, filter.Entity, status);
-            TickElectrified(f, filter.Entity, status);
+            TickIce(f, status);
             TickOverloadChain(f, filter.Entity, status);
 
-            status->IceRemaining -= f.DeltaTime;
+            status->ElectrifiedRemaining -= f.DeltaTime;
             status->StunRemaining -= f.DeltaTime;
+            status->FreezeRemaining -= f.DeltaTime;
+            status->FreezeRecoveryRemaining -= f.DeltaTime;
             status->RootRemaining -= f.DeltaTime;
             status->RuptureRemaining -= f.DeltaTime;
             status->ShieldRegenRemaining -= f.DeltaTime;
@@ -64,31 +66,19 @@ namespace Quantum
             }
         }
 
-        // Shock/Electrified (Lightning's baseline) - ticks the status duration and, independently,
-        // the Jolt interval timer while it's active; on the interval lapsing, applies a brief Stagger
-        // (see StatusEffectUtility.ApplyStagger) and resets the interval. Purely deterministic,
-        // no proc chance.
-        private static void TickElectrified(Frame f, EntityRef entity, StatusEffects* status)
+        // Ice/Chill - ticks the shared buildup-duration timer (ElectrifiedRemaining's own flat
+        // decrement lives in the caller's plain list above; Chill needs its own dedicated method
+        // purely to clear IceBuildup back to 0 the instant the timer actually expires, not just
+        // stop counting - see StatusEffects.IceBuildup's own comment).
+        private static void TickIce(Frame f, StatusEffects* status)
         {
-            if (status->ElectrifiedRemaining <= FP._0)
+            if (status->IceRemaining <= FP._0)
                 return;
 
-            status->ElectrifiedRemaining -= f.DeltaTime;
-            status->ElectrifiedJoltTimer -= f.DeltaTime;
+            status->IceRemaining -= f.DeltaTime;
 
-            if (status->ElectrifiedJoltTimer > FP._0)
-                return;
-
-            ElementalReactionConfig config = StatusEffectUtility.GetElementalReactionConfig(f);
-            status->ElectrifiedJoltTimer += config != null ? config.JoltInterval : FP._1;
-
-            if (config != null)
-                StatusEffectUtility.ApplyStagger(f, entity, config.JoltStaggerDuration);
-
-            // ResolveEntityCenter, not raw Transform3D.Position - that's the ground/feet anchor for
-            // most enemies, not the visual body center a VFX should spawn at.
-            if (f.Has<Transform3D>(entity) == true)
-                f.Events.JoltTriggered(entity, EnemyMovementUtility.ResolveEntityCenter(f, entity));
+            if (status->IceRemaining <= FP._0)
+                status->IceBuildup = FP._0;
         }
 
         // Overload's chain propagates over real simulated time instead of resolving instantly in one
@@ -167,10 +157,13 @@ namespace Quantum
             EffectConfig config = StatusEffectUtility.GetEffectConfig(f);
             status->BurnTickTimer += config != null ? config.TickInterval : FP._0_50;
 
-            DamageUtility.ApplyDamage(f, entity, status->BurnDamagePerTick, status->BurnOwner,
+            // Every active stack's own potency, summed - see StatusEffectUtility.GetBurnDamagePerTick.
+            FP damagePerTick = StatusEffectUtility.GetBurnDamagePerTick(status);
+
+            DamageUtility.ApplyDamage(f, entity, damagePerTick, status->BurnOwner,
                 status->BurnSource, bypassOutgoingResolution: true, element: ElementType.Fire);
 
-            Log.Debug($"[Status] {entity} Burn ticked for {status->BurnDamagePerTick} ({status->BurnRemaining}s remaining)");
+            Log.Debug($"[Status] {entity} Burn ticked for {damagePerTick} across {status->BurnStackCount} stack(s) ({status->BurnRemaining}s remaining)");
         }
 
         public struct Filter

@@ -22,6 +22,7 @@ MonoBehaviour:
     RawValue: 1966080
   Element: 0
   Family: 1
+  Weight: 1
   CriticalChance:
     RawValue: 13107
   CriticalDamageBonus:
@@ -48,11 +49,33 @@ MonoBehaviour:
   ProjectileData:
     Id:
       Value: 2052039704194794421
+  BaseTraits: []
   ViewPrefab: {fileID: 8089491252618662435, guid: 71e454c59b0bb4e6b949d1333a8bcb33, type: 3}
   ShakeTier: 0
-  _dpsPreview: 'Burst DPS: 90
+  ProjectileVisuals:
+    ProjectileSprite: {fileID: 21300000, guid: 908a3d942f3c645319e0d768d7cc3f2f, type: 3}
+    ProjectileSpriteRotationOffset: 0
+    ProjectileColor: {r: 0, g: 1.1362009, b: 2, a: 1}
+    ProjectileScale: {x: 1, y: 1, z: 1}
+    EnableProjectileSparkTrail: 1
+    ProjectileSparkTrailColor: {r: 0, g: 0.5552087, b: 1, a: 1}
+    ProjectileSparkTrailScale: {x: 1, y: 1, z: 1}
+    ProjectileSparkTrailLifetimeOverride: 0
+    EnableProjectileGlow: 1
+    ProjectileGlowColor: {r: 0.6179246, g: 0.8141184, b: 1, a: 0.1764706}
+    ProjectileGlowScale: {x: 1, y: 1, z: 1}
+    EnableProjectileLight: 1
+    ProjectileLightColor: {r: 1, g: 1, b: 1, a: 1}
+    ProjectileDestroyColor: {r: 0, g: 1.245172, b: 2, a: 1}
+    ProjectileDestroyGlowColor: {r: 0, g: 0.8518257, b: 1, a: 1}
+    ProjectileDestroyScale: {x: 1, y: 1, z: 1}
+    ProjectileExtraParticle: {fileID: 0}
+    ProjectileExtraParticleScale: {x: 1, y: 1, z: 1}
+  _dpsPreview: 'Burst DPS: 99
 
-    Sustained DPS (incl. reload): 72
+    Sustained DPS (incl. reload): 79.2
 
     Damage/min:
-    4320'
+    4752
+
+    Crit dmg/shot: 45 (vs 30 normal) @ 20 % chance, x1.5'

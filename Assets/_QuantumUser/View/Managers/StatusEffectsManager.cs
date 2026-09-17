@@ -44,7 +44,7 @@ namespace QuantumUser.View.Managers
         [SerializeField, Tooltip("Local offset from HitFeedback.BodyRoot's own pivot (bottom-pivoted for an enemy - NOT collider center like the unparented statuses below). Re-tune in-Editor.")]
         private Vector3 slowOffset;
 
-        [SerializeField, Tooltip("StatusEffects.AnticipationSlowRemaining - see StatusEffectUtility.IsAnticipationSlowed. Applied directly by FreezeEffectData (a standalone skill effect) - stretches attack windups, not a lockout, so it's separate from Stun.")]
+        [SerializeField, Tooltip("StatusEffects.AnticipationSlowRemaining - see StatusEffectUtility.IsAnticipationSlowed. Applied directly by FreezeEffectData (a standalone skill effect) - stretches attack windups, not a lockout, so it's separate from Stun AND from the true hard-CC Freeze below (unrelated, older mechanic - name predates it).")]
         private ParticleSystem freezeParticlePrefab;
         [SerializeField, Tooltip("Local offset from the entity center, in reference-diameter-1 units (scaled by the entity's own scale, same convention as the prefab itself).")]
         private Vector3 freezeOffset;
@@ -54,12 +54,17 @@ namespace QuantumUser.View.Managers
         [SerializeField, Tooltip("Local offset from the entity center, in reference-diameter-1 units (scaled by the entity's own scale, same convention as the prefab itself).")]
         private Vector3 stunOffset;
 
-        [SerializeField, Tooltip("StatusEffects.ElectrifiedRemaining - see StatusEffectUtility.IsElectrified. Lightning's baseline (Shock) - periodically fires a Jolt (a brief Stagger) while active. See docs/elemental-reactions.md. Parented onto the entity's own HitFeedback.BodyRoot - see ParentedStatusSlotTracker.")]
+        [SerializeField, Tooltip("StatusEffects.FreezeRemaining - see StatusEffectUtility.IsFrozen. The TRUE hard-CC Freeze (Ice/Chill buildup reaching threshold) - distinct from the older AnticipationSlow-driven freezeParticlePrefab above, which is a windup-stretch, not a lockout. No dedicated Freeze VFX authored yet - this slot just plugs it into the existing pipeline.")]
+        private ParticleSystem hardFreezeParticlePrefab;
+        [SerializeField, Tooltip("Local offset from the entity center, in reference-diameter-1 units (scaled by the entity's own scale, same convention as the prefab itself).")]
+        private Vector3 hardFreezeOffset;
+
+        [SerializeField, Tooltip("StatusEffects.ElectrifiedRemaining - see StatusEffectUtility.IsElectrified. Lightning's baseline (Shock) - a persistent setup state with no periodic effect of its own; a further Electric hit on an already-Shocked target rolls a chance to proc the existing Stun instead (see docs/elemental-reactions.md). Parented onto the entity's own HitFeedback.BodyRoot - see ParentedStatusSlotTracker.")]
         private ParticleSystem electrifiedParticlePrefab;
         [SerializeField, Tooltip("Local offset from HitFeedback.BodyRoot's own pivot (bottom-pivoted for an enemy - NOT collider center like the unparented statuses below). Re-tune in-Editor.")]
         private Vector3 electrifiedOffset;
 
-        [SerializeField, Tooltip("StatusEffects.StaggerRemaining - see StatusEffectUtility.IsStaggered. Brief pause of the target's own action windup, never a full disable like Stun - naturally pulses once per Jolt tick (JoltStaggerDuration is short) and once per Shatter's own primary/area application, with no extra event needed for that per-application pulse.")]
+        [SerializeField, Tooltip("StatusEffects.StaggerRemaining - see StatusEffectUtility.IsStaggered. Brief pause of the target's own action windup, never a full disable like Stun - pulses once per Shatter's own area application. No longer fed by Shock's own periodic tick (removed - see docs/elemental-reactions.md).")]
         private ParticleSystem staggerParticlePrefab;
         [SerializeField, Tooltip("Local offset from the entity center, in reference-diameter-1 units (scaled by the entity's own scale, same convention as the prefab itself).")]
         private Vector3 staggerOffset;
@@ -98,6 +103,7 @@ namespace QuantumUser.View.Managers
         private readonly ParentedStatusSlotTracker _slow = new();
         private readonly StatusSlotTracker _freeze = new();
         private readonly StatusSlotTracker _stun = new();
+        private readonly StatusSlotTracker _hardFreeze = new();
         private readonly ParentedStatusSlotTracker _electrified = new();
         private readonly StatusSlotTracker _stagger = new();
         private readonly StatusSlotTracker _root = new();
@@ -150,6 +156,7 @@ namespace QuantumUser.View.Managers
                 _slow.Update(slowParticlePrefab, entity, StatusEffectUtility.IsSlowed(frame, entity), host, slowOffset);
                 _freeze.Update(freezeParticlePrefab, entity, StatusEffectUtility.IsAnticipationSlowed(frame, entity), center, scale, freezeOffset);
                 _stun.Update(stunParticlePrefab, entity, StatusEffectUtility.IsStunned(frame, entity), center, scale, stunOffset);
+                _hardFreeze.Update(hardFreezeParticlePrefab, entity, StatusEffectUtility.IsFrozen(frame, entity), center, scale, hardFreezeOffset);
                 _electrified.Update(electrifiedParticlePrefab, entity, StatusEffectUtility.IsElectrified(frame, entity), host, electrifiedOffset);
                 _stagger.Update(staggerParticlePrefab, entity, StatusEffectUtility.IsStaggered(frame, entity), center, scale, staggerOffset);
                 _root.Update(rootParticlePrefab, entity, StatusEffectUtility.IsRooted(frame, entity), center, scale, rootOffset);
@@ -173,6 +180,7 @@ namespace QuantumUser.View.Managers
             _slow.EndFrame(slowParticlePrefab);
             _freeze.EndFrame(freezeParticlePrefab);
             _stun.EndFrame(stunParticlePrefab);
+            _hardFreeze.EndFrame(hardFreezeParticlePrefab);
             _electrified.EndFrame(electrifiedParticlePrefab);
             _stagger.EndFrame(staggerParticlePrefab);
             _root.EndFrame(rootParticlePrefab);

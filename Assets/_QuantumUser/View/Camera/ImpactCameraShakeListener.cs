@@ -33,7 +33,7 @@ namespace QuantumUser.View
         [Header("Wall slam")]
         [SerializeField, Tooltip("Turn off to drop the wall-slam shake entirely. Worth doing if Iron Shoulder's dash (which can slam several enemies in one sweep) ends up feeling noisy - FollowCamera.Shake already ignores a weaker shake while a stronger one runs, so they don't compound, but they do re-trigger.")]
         private bool shakeOnWallSlam = true;
-        [SerializeField, Tooltip("Used when the Stun did NOT land - the target hit the wall but resisted (hard-CC immunity window, or an ImmuneToHardCC tier). Deliberately lighter than the stunned case.")]
+        [SerializeField, Tooltip("Used when the Stun did NOT land - the target hit the wall but resisted (still inside its own Stun re-proc cooldown). Deliberately lighter than the stunned case.")]
         private float wallSlamAmplitude = 0.12f;
         [SerializeField, Tooltip("Used when the Stun genuinely landed - the moment that actually pays off, and the one that opens Groundbreaker rank 3's Exposed window.")]
         private float wallSlamStunnedAmplitude = 0.2f;

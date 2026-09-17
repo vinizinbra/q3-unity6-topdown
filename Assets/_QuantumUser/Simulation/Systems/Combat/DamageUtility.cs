@@ -287,6 +287,21 @@ namespace Quantum
 
             if (health->CurrentHealth <= FP._0)
             {
+                // Reentrancy guard - a signal raised above (OnCriticalHit, OnExplosionCriticalHit) can
+                // synchronously call back into ApplyDamage on this SAME target before this call's own
+                // health mutation above has even run (e.g. ExplosiveCritWeaponPerkData's crit-explosion,
+                // see HitEffectUtility.ApplyDamageInRadius's excludeTarget - fixed at its one known
+                // source, but this is the actual invariant: once a kill has been resolved once, for ANY
+                // reason, resolving it again must be a no-op). If a nested call already destroyed this
+                // target outright, or flipped a lingering Enemy to Dead, this outer call's own death
+                // branch must not re-run and double-fire EntityDied/OnEntityKilled/every on-kill drop
+                // (XP, Scrap, Rift Shard, Coin, chest) for what is still just the one kill.
+                if (f.Exists(target) == false)
+                    return;
+
+                if (f.Unsafe.TryGetPointer<Enemy>(target, out var alreadyDeadEnemy) == true && alreadyDeadEnemy->Phase == EnemyActionPhase.Dead)
+                    return;
+
                 f.Events.EntityDied(target, owner);
                 f.Signals.OnEntityKilled(target, owner, source);
 
@@ -906,24 +921,7 @@ namespace Quantum
                 damage *= HeroMasteryUtility.ResolveDamageMultiplier(f, owner, target);
             }
 
-            FP chance = stats->CriticalChance;
-            FP multiplier = stats->CriticalDamageMultiplier;
-
-            // Weapon-only, same as GetSourceMultiplier above - a weapon's own crit bonus is a
-            // property of that weapon, not the character, so a Skill hit (a thrown bomb, a firework)
-            // rolls off CharacterStats alone rather than inheriting whatever gun happens to be
-            // equipped.
-            if (source == DamageSource.Weapon && f.Unsafe.TryGetPointer<Weapon>(owner, out var weapon) == true)
-            {
-                chance += weapon->CriticalChance;
-
-                // Multiplicative, not additive - CriticalDamageBonus IS the weapon's crit multiplier
-                // (a Sniper authored at 3 means "x3 on crit"), not a bonus added on top of the hero's
-                // own multiplier. Floored at 1 so an unset/0 weapon (no crit bonus authored) never
-                // makes crits deal LESS than a normal hit - see WeaponDataAsset's DPS preview, which
-                // mirrors this same floor.
-                multiplier *= FPMath.Max(FP._1, weapon->CriticalDamageBonus);
-            }
+            ResolveCriticalTerms(f, owner, stats, source, out FP chance, out FP multiplier);
 
             // Max's Hot Target (Fire Mastery) - bonus Critical Chance vs a currently-Burning
             // target, read live rather than baked into CharacterStats.CriticalChance. See
@@ -943,6 +941,77 @@ namespace Quantum
             return damage * multiplier;
         }
 
+        // No-target preview of ResolveOutgoingDamage's own flat/always-on multiplier terms -
+        // CharacterStats scaling, level scaling, live Rift Mutation/temp-buff bonuses, and Hero
+        // Mastery's flat Weapon Family/Element bonus - with every target-conditional term (range
+        // falloff, Point Blank/Vendetta/Deadeye/Infernal Rage specials, Stun/Bound/RevengeMark/
+        // Cremation bonuses) and crit skipped, since there's no target to evaluate them against.
+        // Read-only, unlike ResolveOutgoingDamage - never mutates FirstStrikeMark/TargetingLinkMark.
+        //
+        // Public so CurrentWeaponUiWidget (View) can preview a "Current Damage" number instead of
+        // re-deriving this pipeline separately - same reasoning ResolveDamageReduction is public for
+        // DamageReductionUiWidget.
+        public static FP ResolveBaselineDamageMultiplier(Frame f, EntityRef owner, DamageSource source)
+        {
+            FP multiplier = StatusEffectUtility.GetOutgoingDamageMultiplier(f, owner);
+
+            if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false)
+                return multiplier;
+
+            multiplier *= stats->DamageMultiplier * GetSourceMultiplier(stats, source);
+            multiplier *= ExperienceUtility.ResolvePlayerLevelDamageMultiplier(f);
+            multiplier *= MutationModifierUtility.ResolveLiveDamageMultiplier(f, owner, stats);
+            multiplier *= StatusEffectUtility.GetTempOutgoingDamageMultiplier(f, owner);
+
+            if (source == DamageSource.Weapon)
+            {
+                multiplier *= StatusEffectUtility.GetTemporaryWeaponDamageMultiplier(f, owner);
+                multiplier *= HeroMasteryUtility.ResolveBaselineDamageMultiplier(f, owner);
+            }
+
+            return multiplier;
+        }
+
+        // Critical Chance/Multiplier's own CharacterStats + weapon-crit-bonus term, shared by
+        // ResolveOutgoingDamage above (which layers Hot Target's target-conditional bonus vs a
+        // Burning target on top) and the no-target preview below.
+        private static void ResolveCriticalTerms(Frame f, EntityRef owner, CharacterStats* stats, DamageSource source, out FP chance, out FP multiplier)
+        {
+            chance = stats->CriticalChance;
+            multiplier = stats->CriticalDamageMultiplier;
+
+            // Weapon-only, same as GetSourceMultiplier above - a weapon's own crit bonus is a
+            // property of that weapon, not the character, so a Skill hit (a thrown bomb, a firework)
+            // rolls off CharacterStats alone rather than inheriting whatever gun happens to be
+            // equipped.
+            if (source == DamageSource.Weapon && f.Unsafe.TryGetPointer<Weapon>(owner, out var weapon) == true)
+            {
+                chance += weapon->CriticalChance;
+
+                // Multiplicative, not additive - CriticalDamageBonus IS the weapon's crit multiplier
+                // (a Sniper authored at 3 means "x3 on crit"), not a bonus added on top of the hero's
+                // own multiplier. Floored at 1 so an unset/0 weapon (no crit bonus authored) never
+                // makes crits deal LESS than a normal hit - see WeaponDataAsset's DPS preview, which
+                // mirrors this same floor.
+                multiplier *= FPMath.Max(FP._1, weapon->CriticalDamageBonus);
+            }
+        }
+
+        // No-target preview of the same Critical Chance/Multiplier ResolveOutgoingDamage rolls with -
+        // skips Hot Target's bonus vs a Burning target since there's no target to check against.
+        // (FP._0, FP._1) for an entity with no CharacterStats. Public so CurrentWeaponUiWidget (View)
+        // can preview a "Current Critical" stat instead of re-deriving this pipeline separately.
+        public static void ResolveBaselineCritical(Frame f, EntityRef owner, DamageSource source, out FP chance, out FP multiplier)
+        {
+            chance = FP._0;
+            multiplier = FP._1;
+
+            if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false)
+                return;
+
+            ResolveCriticalTerms(f, owner, stats, source, out chance, out multiplier);
+        }
+
         // Stacks on top of DamageMultiplier rather than replacing it, so a build that raises both
         // its global and its weapon damage gets both.
         private static FP GetSourceMultiplier(CharacterStats* stats, DamageSource source)
@@ -955,8 +1024,8 @@ namespace Quantum
             }
         }
 
-        // Public so StatusEffectUtility.TryApplyElementalStatus can reuse the exact same roll for
-        // ElementalChance instead of duplicating this logic.
+        // Public so other systems (weapon perk ProcChance, StatusEffectUtility's Shock Stun proc,
+        // ...) can reuse the exact same roll instead of duplicating this logic.
         public static bool RollChance(Frame f, FP chance)
         {
             if (chance <= FP._0)

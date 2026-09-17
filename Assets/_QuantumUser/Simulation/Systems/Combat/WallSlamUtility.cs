@@ -35,9 +35,9 @@ namespace Quantum
         private const QueryOptions WallQueryOptions = QueryOptions.HitStatics | QueryOptions.HitKinematics;
 
         // Returns whether a wall was actually found in the push direction. `stunned` additionally
-        // reports whether the Stun genuinely LANDED - those differ whenever the target is inside a
-        // hard-CC immunity window or is a tier authored ImmuneToHardCC (see
-        // EnemyTierResistanceConfig/StatusEffectUtility.ApplyStun), which is exactly the distinction a
+        // reports whether the Stun genuinely LANDED - those differ whenever the target is still
+        // inside its own Stun re-proc cooldown (see EnemyTierResistanceConfig.StunImmunityDuration/
+        // StatusEffectUtility.ApplyStun), which is exactly the distinction a
         // caller needs when it gates a further reward on the stun rather than on the wall (Brute's
         // Groundbreaker rank 3 Exposed window). A caller that only cares about the wall - Iron
         // Shoulder's damage bonus - can ignore it.

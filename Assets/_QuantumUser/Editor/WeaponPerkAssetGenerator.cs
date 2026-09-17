@@ -377,33 +377,9 @@ namespace QuantumUser.Editor
             },
             new PerkSpec
             {
-                Type = typeof(ElementInfusionWeaponPerkData), FileName = "ShatterRounds",
-                DisplayName = "Shatter Rounds", Rarity = UpgradeRarity.Rare,
-                Description = "{1:0}% chance to Intimidate enemies on hit",
-                Configure = p =>
-                {
-                    var d = (ElementInfusionWeaponPerkData)p;
-                    d.Element = ElementType.Rock;
-                    d.ProcChance = FP.FromString("0.25");
-                }
-            },
-            new PerkSpec
-            {
-                Type = typeof(ElementInfusionWeaponPerkData), FileName = "VoidRounds",
-                DisplayName = "Void Rounds", Rarity = UpgradeRarity.Epic,
-                Description = "{1:0}% chance to apply Void affinity on hit (triggers Singularity on Rift-Marked enemies)",
-                Configure = p =>
-                {
-                    var d = (ElementInfusionWeaponPerkData)p;
-                    d.Element = ElementType.Void;
-                    d.ProcChance = FP.FromString("0.2");
-                }
-            },
-            new PerkSpec
-            {
                 Type = typeof(ElementInfusionWeaponPerkData), FileName = "ShockRounds",
                 DisplayName = "Shock Rounds", Rarity = UpgradeRarity.Epic,
-                Description = "{1:0}% chance to apply Lightning affinity on hit (triggers Overload on Rift-Marked enemies)",
+                Description = "{1:0}% chance to apply Shock on hit (triggers Overload against a Burning enemy)",
                 Configure = p =>
                 {
                     var d = (ElementInfusionWeaponPerkData)p;

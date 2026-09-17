@@ -1,17 +1,17 @@
-// 5 real damage-dealing affinities (Neutral = no element). Fire/Ice/Rock/Lightning each keep their
-// own baseline status on landing (Burn/Slow/Intimidate/Electrified); only Void has none - its
-// identity is a hand-authored WeaponDataAsset trait instead (a Void gun starting with Pierce, its own
-// flavor being inward displacement/negative knockback, not a status). Landing a second element whose
-// pairing status is already active on the target fires an elemental reaction immediately - Burn+Chill
-// ->Thermal Shock, Burn+Shock->Overload, Chill+Shock->Static Collapse - see
-// docs/elemental-reactions.md. Lightning appended at the end (not inserted alongside Rock/Void) to
-// avoid renumbering Void's existing ordinal in already-serialized assets.
+// 3 real damage-dealing affinities (Neutral = no element). Fire/Ice/Lightning each keep their own
+// baseline status on landing (Burn/Chill/Shock). Landing a second element whose pairing status is
+// already active on the target fires an elemental reaction immediately - Burn+Chill->Thermal Shock,
+// Burn+Shock->Overload, Chill+Shock->Shatter - see docs/elemental-reactions.md.
+//
+// Rock (Intimidate baseline) and Void (no baseline, a hand-authored WeaponDataAsset flavor that was
+// never actually wired to any weapon) were retired - full renumber, every serialized Element: value
+// across weapon/perk/mastery assets was fixed up in the same pass, see docs/elemental-reactions.md's
+// "Current status". Intimidate itself survives as Brute's Protector Aura mechanic - it's just no
+// longer reachable through any weapon element.
 enum ElementType : Byte
 {
     Neutral,
     Fire,
     Ice,
-    Rock,
-    Void,
     Lightning
 }

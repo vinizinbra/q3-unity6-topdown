@@ -17,6 +17,7 @@ MonoBehaviour:
     overrideTrim: 0
     startAt: 0
     endAt: 0
+    loopStart: 0
     overrideFade: 0
     fadeIn: 0
     fadeOut: 0
@@ -24,6 +25,7 @@ MonoBehaviour:
     overrideTrim: 0
     startAt: 0
     endAt: 0
+    loopStart: 0
     overrideFade: 0
     fadeIn: 0
     fadeOut: 0
@@ -31,6 +33,7 @@ MonoBehaviour:
     overrideTrim: 0
     startAt: 0
     endAt: 0
+    loopStart: 0
     overrideFade: 0
     fadeIn: 0
     fadeOut: 0
@@ -39,11 +42,12 @@ MonoBehaviour:
   layers: []
   group: 9
   output: {fileID: 0}
-  volume: {x: 0.1, y: 0.1}
+  volume: {x: 0.2, y: 0.2}
   pitch: {x: 0.95, y: 1.05}
   delay: {x: 0, y: 0}
   startAt: 0
   endAt: 0
+  loopStart: 0
   fadeIn: 0
   fadeOut: 0
   loop: 0

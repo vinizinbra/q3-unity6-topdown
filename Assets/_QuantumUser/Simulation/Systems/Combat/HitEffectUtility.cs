@@ -27,7 +27,17 @@ namespace Quantum
                 if (effects[i].IsValid == false)
                     continue;
 
-                f.FindAsset(effects[i]).Apply(f, ref context);
+                HitEffectData effect = f.FindAsset(effects[i]);
+
+                // A once-per-blast effect (a spawned lingering hazard) only ever fires through
+                // ApplyBlastLevelEffects below - see AppliesOncePerBlast's own comment. Only relevant
+                // when multiTarget is true (an overlap query calling this once per target caught); a
+                // guaranteed single-connect hit already only reaches this once regardless, so it runs
+                // every effect normally.
+                if (multiTarget == true && effect.AppliesOncePerBlast == true)
+                    continue;
+
+                effect.Apply(f, ref context);
             }
 
             f.Events.HitEffectApplied(context.Owner, context.Target, context.Position, multiTarget);
@@ -45,10 +55,69 @@ namespace Quantum
                 if (effects[i].IsValid == false)
                     continue;
 
-                f.FindAsset(effects[i]).Apply(f, ref context);
+                HitEffectData effect = f.FindAsset(effects[i]);
+
+                // See the List<> overload's own comment just above.
+                if (multiTarget == true && effect.AppliesOncePerBlast == true)
+                    continue;
+
+                effect.Apply(f, ref context);
             }
 
             f.Events.HitEffectApplied(context.Owner, context.Target, context.Position, multiTarget);
+        }
+
+        // Applies just the AppliesOncePerBlast effects (a spawned lingering hazard) exactly once per
+        // blast, anchored at the blast's own center/radius rather than any one target's position -
+        // called once from ApplyInRadius/ApplyInShape below regardless of how many entities (0, 1, or
+        // many) the overlap query actually caught, so a blast landing on empty ground still leaves
+        // its hazard behind, and one that catches several enemies doesn't leave several stacked,
+        // independently-ticking copies of it scattered at essentially random positions. No-ops
+        // without at least one AppliesOncePerBlast effect in the list, so a normal damage/knockback-
+        // only Effects list pays nothing extra for this.
+        private static void ApplyBlastLevelEffects(Frame f, List<AssetRef<HitEffectData>> effects, FPVector3 center,
+            EntityRef owner, FP damage, DamageSource source, ElementType element, bool isExplosion, FP areaRadius, byte hitIndex)
+        {
+            bool any = false;
+
+            for (int i = 0; i < effects.Count; i++)
+            {
+                if (effects[i].IsValid == true && f.FindAsset(effects[i]).AppliesOncePerBlast == true)
+                {
+                    any = true;
+                    break;
+                }
+            }
+
+            if (any == false)
+                return;
+
+            HitEffectContext context = new HitEffectContext
+            {
+                Owner = owner,
+                Target = EntityRef.None,
+                Position = center,
+                Damage = ScaleByEnemyDamageMultiplier(f, owner, damage),
+                Source = source,
+                Element = element,
+                IsExplosion = isExplosion,
+                AreaCenter = center,
+                AreaRadius = areaRadius,
+                HitIndex = hitIndex
+            };
+
+            for (int i = 0; i < effects.Count; i++)
+            {
+                if (effects[i].IsValid == false)
+                    continue;
+
+                HitEffectData effect = f.FindAsset(effects[i]);
+
+                if (effect.AppliesOncePerBlast == true)
+                {
+                    effect.Apply(f, ref context);
+                }
+            }
         }
 
         // For a blast with no entity behind it - the projectile that carried it is already gone, so
@@ -123,6 +192,8 @@ namespace Quantum
 
                 ApplyToTarget(f, effects, ref context, multiTarget: true);
             }
+
+            ApplyBlastLevelEffects(f, effects, center, owner, damage, source, element, isExplosion, radius, hitIndex);
         }
 
         // Ground-area delivery gate (see ApplyInRadius's own comment) - in place of the volumetric
@@ -157,6 +228,11 @@ namespace Quantum
 
                 ApplyToTarget(f, effects, ref context, multiTarget: true);
             }
+
+            // No single radius for a swept shape (same "no meaningful area" reading ApplyInCollider's
+            // own comment already uses for a non-Sphere collider) - a once-per-blast effect still
+            // fires exactly once, anchored at center.
+            ApplyBlastLevelEffects(f, effects, center, owner, damage, source, element, false, FP._0, 0);
         }
 
         // For an area that exists as an entity - its own collider is the shape, so what hurts is
@@ -245,9 +321,18 @@ namespace Quantum
         // isChainedExplosion feeds DamageUtility.ApplyDamage's own TryMarkExplodeOnDeath call (Pixie's
         // Chain Reaction ascension) - see that method's own comment. Defaults false, so every existing
         // caller is unaffected.
+        // excludeTarget skips one specific entity on top of the always-skipped owner - for a blast
+        // fired mid-resolution of that same entity's own killing hit (ExplosiveCrit's crit-triggered
+        // explosion, see WeaponPerkReactionSystem.OnCriticalHit), before DamageUtility.ApplyDamage has
+        // mutated its Health/run its death branch yet. Without this, the blast's own OverlapShape
+        // re-catches that same target and re-enters ApplyDamage on it while its outer call is still
+        // mid-flight, double-firing EntityDied/OnEntityKilled and every on-kill drop (chest included)
+        // for one kill. Defaults to EntityRef.None so every existing caller (Cataclysm Round/Explosive
+        // Sequence, which fire AFTER their own triggering ApplyDamage call has already returned, so
+        // re-catching that target is legitimate splash on an already-resolved hit) is unaffected.
         public static void ApplyDamageInRadius(Frame f, FPVector3 center, FP radius, EntityRef owner, FP damage,
             DamageSource source, DamageTargetMask targetMask = DamageTargetMask.Both,
-            bool isChainedExplosion = false, bool isExplosion = false)
+            bool isChainedExplosion = false, bool isExplosion = false, EntityRef excludeTarget = default)
         {
             // Pixie's Unstable Mixture - the effects-free counterpart of ApplyInRadius's own identical
             // hook. Same non-chained gate, same once-per-blast placement.
@@ -265,7 +350,7 @@ namespace Quantum
             {
                 EntityRef target = hits[i].Entity;
 
-                if (target == EntityRef.None || target == owner)
+                if (target == EntityRef.None || target == owner || target == excludeTarget)
                     continue;
 
                 if (MatchesTargetMask(f, target, targetMask) == false)
@@ -335,11 +420,11 @@ namespace Quantum
         // even if nothing was actually caught, so it still reads visually against an empty room -
         // same convention ApplyShockwave/AreaDetonated already follow.
         public static void ApplyExplosion(Frame f, FPVector3 center, FP radius, EntityRef owner, FP damage,
-            DamageSource source, DamageTargetMask targetMask = DamageTargetMask.Enemies)
+            DamageSource source, DamageTargetMask targetMask = DamageTargetMask.Enemies, EntityRef excludeTarget = default)
         {
             // Hardcoded true, not a caller param - anything calling ApplyExplosion at all (weapon-perk
             // explosions) is definitionally a genuine explosion.
-            ApplyDamageInRadius(f, center, radius, owner, damage, source, targetMask, isExplosion: true);
+            ApplyDamageInRadius(f, center, radius, owner, damage, source, targetMask, isExplosion: true, excludeTarget: excludeTarget);
             f.Events.WeaponExplosionReleased(owner, center, radius);
 
             // Demolition Mastery's Pocket Bombs (Pixie's own Hero Trait pool) reacts to this - see

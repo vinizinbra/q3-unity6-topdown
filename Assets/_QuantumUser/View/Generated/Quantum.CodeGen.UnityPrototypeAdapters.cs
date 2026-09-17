@@ -350,6 +350,9 @@ namespace Quantum.Prototypes.Unity {
     public Quantum.QEnum8<EnemyFaction> Faction;
     public FPVector2 FleeDirection;
     public FP FleeCommitTimer;
+    public FPVector3 LeadAverageVelocity;
+    public FPVector3 LeadSamplePosition;
+    public FP LeadSampleTimer;
     partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.EnemyPrototype prototype);
     public override Quantum.Prototypes.EnemyPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
       var result = new Quantum.Prototypes.EnemyPrototype();
@@ -387,6 +390,9 @@ namespace Quantum.Prototypes.Unity {
       converter.Convert(this.Faction, out result.Faction);
       converter.Convert(this.FleeDirection, out result.FleeDirection);
       converter.Convert(this.FleeCommitTimer, out result.FleeCommitTimer);
+      converter.Convert(this.LeadAverageVelocity, out result.LeadAverageVelocity);
+      converter.Convert(this.LeadSamplePosition, out result.LeadSamplePosition);
+      converter.Convert(this.LeadSampleTimer, out result.LeadSampleTimer);
       ConvertUser(converter, ref result);
       return result;
     }
@@ -568,6 +574,7 @@ namespace Quantum.Prototypes.Unity {
     public QBoolean ForceCritical;
     public Quantum.QEnum8<DamageSource> Source;
     public Quantum.QEnum8<ElementType> Element;
+    public AssetRef<WeaponDataAsset> WeaponData;
     public Quantum.QEnum8<ElementType> PerkElement;
     public FP PerkElementChance;
     public Quantum.QEnum8<SkillSlotId> SourceSlot;
@@ -580,6 +587,8 @@ namespace Quantum.Prototypes.Unity {
     public Byte PelletIndex;
     public FP SpeedMultiplier;
     public AssetRef<ProjectileMovementData> MovementOverride;
+    [ArrayLengthAttribute(8)]
+    public Quantum.QuantumEntityPrototype[] RecentHits = new Quantum.QuantumEntityPrototype[8];
     public AssetRef<ProjectileHitData> HitOverride;
     partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.ProjectilePrototype prototype);
     public override Quantum.Prototypes.ProjectilePrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
@@ -598,6 +607,7 @@ namespace Quantum.Prototypes.Unity {
       converter.Convert(this.ForceCritical, out result.ForceCritical);
       converter.Convert(this.Source, out result.Source);
       converter.Convert(this.Element, out result.Element);
+      converter.Convert(this.WeaponData, out result.WeaponData);
       converter.Convert(this.PerkElement, out result.PerkElement);
       converter.Convert(this.PerkElementChance, out result.PerkElementChance);
       converter.Convert(this.SourceSlot, out result.SourceSlot);
@@ -610,6 +620,7 @@ namespace Quantum.Prototypes.Unity {
       converter.Convert(this.PelletIndex, out result.PelletIndex);
       converter.Convert(this.SpeedMultiplier, out result.SpeedMultiplier);
       converter.Convert(this.MovementOverride, out result.MovementOverride);
+      converter.Convert(this.RecentHits, out result.RecentHits);
       converter.Convert(this.HitOverride, out result.HitOverride);
       ConvertUser(converter, ref result);
       return result;
@@ -705,11 +716,12 @@ namespace Quantum.Prototypes.Unity {
     public Quantum.QEnum8<ElementType> FirstElementApplied;
     public FP BurnRemaining;
     public FP BurnTickTimer;
-    public FP BurnDamagePerTick;
+    public Byte BurnStackCount;
+    [ArrayLengthAttribute(5)]
+    public FP[] BurnStackDamagePerTick = new FP[5];
     public Quantum.QuantumEntityPrototype BurnOwner;
     public Quantum.QEnum8<DamageSource> BurnSource;
     public FP ElectrifiedRemaining;
-    public FP ElectrifiedJoltTimer;
     public FP StaggerRemaining;
     public FP ThermalShockCooldownRemaining;
     public FP OverloadCooldownRemaining;
@@ -724,7 +736,9 @@ namespace Quantum.Prototypes.Unity {
     public Byte OverloadChainVisitedCount;
     public FP OverloadChainCurrentDamage;
     public FP IceRemaining;
-    public FP IceSpeedMultiplier;
+    public FP IceBuildup;
+    public FP FreezeRemaining;
+    public FP FreezeRecoveryRemaining;
     public FP StunRemaining;
     public FP StunImmunityRemaining;
     public FP InterruptImmunityRemaining;
@@ -775,11 +789,11 @@ namespace Quantum.Prototypes.Unity {
       converter.Convert(this.FirstElementApplied, out result.FirstElementApplied);
       converter.Convert(this.BurnRemaining, out result.BurnRemaining);
       converter.Convert(this.BurnTickTimer, out result.BurnTickTimer);
-      converter.Convert(this.BurnDamagePerTick, out result.BurnDamagePerTick);
+      converter.Convert(this.BurnStackCount, out result.BurnStackCount);
+      converter.Convert(this.BurnStackDamagePerTick, out result.BurnStackDamagePerTick);
       converter.Convert(this.BurnOwner, out result.BurnOwner);
       converter.Convert(this.BurnSource, out result.BurnSource);
       converter.Convert(this.ElectrifiedRemaining, out result.ElectrifiedRemaining);
-      converter.Convert(this.ElectrifiedJoltTimer, out result.ElectrifiedJoltTimer);
       converter.Convert(this.StaggerRemaining, out result.StaggerRemaining);
       converter.Convert(this.ThermalShockCooldownRemaining, out result.ThermalShockCooldownRemaining);
       converter.Convert(this.OverloadCooldownRemaining, out result.OverloadCooldownRemaining);
@@ -793,7 +807,9 @@ namespace Quantum.Prototypes.Unity {
       converter.Convert(this.OverloadChainVisitedCount, out result.OverloadChainVisitedCount);
       converter.Convert(this.OverloadChainCurrentDamage, out result.OverloadChainCurrentDamage);
       converter.Convert(this.IceRemaining, out result.IceRemaining);
-      converter.Convert(this.IceSpeedMultiplier, out result.IceSpeedMultiplier);
+      converter.Convert(this.IceBuildup, out result.IceBuildup);
+      converter.Convert(this.FreezeRemaining, out result.FreezeRemaining);
+      converter.Convert(this.FreezeRecoveryRemaining, out result.FreezeRecoveryRemaining);
       converter.Convert(this.StunRemaining, out result.StunRemaining);
       converter.Convert(this.StunImmunityRemaining, out result.StunImmunityRemaining);
       converter.Convert(this.InterruptImmunityRemaining, out result.InterruptImmunityRemaining);
@@ -963,16 +979,16 @@ namespace Quantum.Prototypes.Unity {
     }
   }
   [System.SerializableAttribute()]
-  public unsafe partial class WeaponFamilyFirstHitTrackerPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.WeaponFamilyFirstHitTrackerPrototype> {
+  public unsafe partial class WeaponWeightFirstHitTrackerPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.WeaponWeightFirstHitTrackerPrototype> {
     [ArrayLengthAttribute(4)]
     public Quantum.QuantumEntityPrototype[] Owner = new Quantum.QuantumEntityPrototype[4];
     [ArrayLengthAttribute(4)]
-    public Byte[] Family = new Byte[4];
-    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.WeaponFamilyFirstHitTrackerPrototype prototype);
-    public override Quantum.Prototypes.WeaponFamilyFirstHitTrackerPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
-      var result = new Quantum.Prototypes.WeaponFamilyFirstHitTrackerPrototype();
+    public Byte[] Weight = new Byte[4];
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.WeaponWeightFirstHitTrackerPrototype prototype);
+    public override Quantum.Prototypes.WeaponWeightFirstHitTrackerPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.WeaponWeightFirstHitTrackerPrototype();
       converter.Convert(this.Owner, out result.Owner);
-      converter.Convert(this.Family, out result.Family);
+      converter.Convert(this.Weight, out result.Weight);
       ConvertUser(converter, ref result);
       return result;
     }
