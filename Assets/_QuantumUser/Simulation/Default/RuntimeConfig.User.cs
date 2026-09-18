@@ -17,9 +17,10 @@
         // upgrade) - see ExplodeOnDeathConfig and DamageUtility.TryExplodeOnDeath.
         public AssetRef<ExplodeOnDeathConfig> ExplodeOnDeathConfig;
 
-        // Shared balance tuning for every status effect (Burn/Stun/Slow/Haste/Intimidate) - see
-        // EffectConfig, the matching EffectData classes, StatusEffectUtility.TryApplyElementalStatus
-        // and SentryAuraSystem.
+        // Shared balance tuning for every element-independent status effect (Stun/Root/
+        // AnticipationSlow/Haste/Intimidate/Knockback) - see EffectConfig, the matching EffectData
+        // classes, and SentryAuraSystem. Fire/Ice's own baselines (Burn/Chill+Freeze) live on
+        // ElementalReactionConfig below instead.
         public AssetRef<EffectConfig> EffectConfig;
 
         // Balance tuning for the 6 elemental reactions (Explosion/Freeze/Knockback/Magma
@@ -229,6 +230,13 @@
             // an unauthored (all-zero) BotSettings therefore has to mean "the sensible default".
             public bool DisableAutoLevelUpPick;
             public bool DisableAutoBreathingSkipVote;
+
+            // Same "take the bot out of a waiting-for-all-players gate" reasoning as
+            // DisableAutoBreathingSkipVote above, for Optional Team Challenge's own unanimous-Ready
+            // requirement (see TeamChallengeUtility.TryReadyUp) - a bot has nobody to walk it into
+            // the Ready/Cancel Area and press Interact, so it auto-Readies instead of silently
+            // blocking a human party from ever reaching unanimity.
+            public bool DisableAutoTeamChallengeReady;
 
             [Header("Solo (no follow target)")]
             // A bot with nobody left to follow (no human, no other bot - see

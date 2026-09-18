@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1d6d7320bfd84a49a62bd7d22879f14, type: 3}
+  m_Name: TeamChallengeConfig
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.TeamChallengeConfig
+  Identifier:
+    Path: _QuantumUser/Resources/Poi/TeamChallenge/TeamChallengeConfig
+    Guid:
+      Value: 424066015427806987
+  ChallengePool:
+  - Id:
+      Value: 357052466296367727
+  - Id:
+      Value: 466326594858510456
+  - Id:
+      Value: 469807075581237661
+  ReadyCancelRadius:
+    RawValue: 491520
+  CountdownDuration:
+    RawValue: 196608

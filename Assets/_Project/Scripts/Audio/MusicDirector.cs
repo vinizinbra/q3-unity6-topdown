@@ -9,7 +9,7 @@ using UnityEngine;
 // even begin until they're gone, and Global.BreathingAreaSecured is what flips once the area is
 // actually clear. Switching on the state alone would drop the music into a calm track while the
 // player is still being shot at. So combat music holds until secured, always - the same gate
-// BreathingCountdownWidget uses to decide when to show AREA SECURED.
+// BreathingWidget uses to decide when to show AREA SECURED.
 //
 // Everything else is a plain lookup, and a state with no track authored simply fades the music out
 // rather than holding the previous one, so a half-authored setup is obvious rather than subtly wrong.

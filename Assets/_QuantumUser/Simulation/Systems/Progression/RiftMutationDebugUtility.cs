@@ -51,11 +51,15 @@ namespace Quantum
             {
                 builder.Append($"  critical focus: {stats->CritFocusProgress}/{stats->CritFocusThreshold} crits (-{stats->CritFocusCooldownReduction}s on trigger)\n");
                 builder.Append($"  emergency dash: {DescribeEmergencyDash(f, entity, stats)}\n");
-                builder.Append($"  skill: damage x{stats->SkillDamageMultiplier}, cooldown rate x{stats->SkillCooldownMultiplier}, area x{stats->AreaRadiusMultiplier}, center focus +{stats->SkillCenterFocusBonus}\n");
+                builder.Append($"  skill: damage x{stats->SkillDamageMultiplier}, cooldown rate x{stats->SkillCooldownMultiplier}\n");
+                builder.Append($"  focused power: {DescribeFocusedPower(stats)}\n");
                 builder.Append($"  money talks: {DescribeMoneyTalks(stats)}\n");
                 builder.Append($"  danger pay: {DescribeDangerPay(f, entity, stats)}\n");
                 builder.Append($"  pressure cooker: {DescribePressureCooker(stats)}\n");
                 builder.Append($"  no safety net: {DescribeNoSafetyNet(f, entity, stats)}\n");
+                builder.Append($"  bro mutation: {DescribeBroMutation(f, entity, stats)}\n");
+                builder.Append($"  boss destroyer: {DescribeBossDestroyer(stats)}\n");
+                builder.Append($"  executioner: {DescribeExecutioner(stats)}\n");
                 builder.Append($"  scavenger rush: {DescribeScavenger(stats)}\n");
                 builder.Append($"  overkill: {DescribeOverkill(stats)}\n");
                 builder.Append($"  blood money: {DescribeBloodMoney(stats)}\n");
@@ -226,11 +230,79 @@ namespace Quantum
 
         private static string DescribeScavenger(CharacterStats* stats)
         {
-            if (stats->ScavengerRequiredPickups == 0)
+            if (stats->ScavengerBuffDuration <= 0)
                 return "not granted";
 
-            return $"{stats->ScavengerPickupCount}/{stats->ScavengerRequiredPickups} pickups, " +
-                   $"{stats->ScavengerWindowRemaining}s left in window (of {stats->ScavengerWindow}s)";
+            return $"destroying a Barrel grants +{stats->ScavengerMoveSpeedBonus * 100}% move speed, " +
+                   $"+{stats->ScavengerFireRateBonus * 100}% fire rate for {stats->ScavengerBuffDuration}s";
+        }
+
+        // Skill damage/cooldown scaling replaced by a crit-commitment tradeoff - see
+        // DamageUtility.ResolveOutgoingDamage's non-crit return path and ResolveCriticalTerms.
+        private static string DescribeFocusedPower(CharacterStats* stats)
+        {
+            if (stats->FocusedPowerNonCritDamagePenalty <= 0 && stats->FocusedPowerCritDamageBonus <= 0)
+                return "not granted";
+
+            return $"-{stats->FocusedPowerNonCritDamagePenalty * 100}% non-crit damage, " +
+                   $"+{stats->FocusedPowerCritDamageBonus} crit multiplier add-on";
+        }
+
+        // Live - depends on how many OTHER connected players currently also hold this mutation.
+        private static string DescribeBroMutation(Frame f, EntityRef entity, CharacterStats* stats)
+        {
+            if (stats->BroMutationBaseDamageBonus <= 0)
+                return "not granted";
+
+            int otherOwners = 0;
+            var players = f.Filter<PlayerLink, CharacterStats>();
+
+            while (players.Next(out EntityRef other, out PlayerLink _, out CharacterStats otherStats))
+            {
+                if (other != entity && otherStats.BroMutationBaseDamageBonus > 0)
+                {
+                    otherOwners++;
+                }
+            }
+
+            FP totalBonus = stats->BroMutationBaseDamageBonus + otherOwners * stats->BroMutationPerOwnerDamageBonus;
+
+            return $"+{totalBonus * 100}% all damage right now ({otherOwners} other owner(s) in run, " +
+                   $"base +{stats->BroMutationBaseDamageBonus * 100}%, +{stats->BroMutationPerOwnerDamageBonus * 100}% per owner)";
+        }
+
+        private static string DescribeBossDestroyer(CharacterStats* stats)
+        {
+            if (stats->BossDestroyerHeavyDamageBonus <= 0 && stats->BossDestroyerLightDamagePenalty <= 0)
+                return "not granted";
+
+            return $"+{stats->BossDestroyerHeavyDamageBonus * 100}% vs Heavy/Elite/Boss, " +
+                   $"-{stats->BossDestroyerLightDamagePenalty * 100}% vs Filler/Normal/Specialist";
+        }
+
+        private static string DescribeExecutioner(CharacterStats* stats)
+        {
+            var thresholds = stats->ExecutionThresholds;
+            bool any = false;
+
+            for (int i = 0; i < thresholds.Length; i++)
+            {
+                if (thresholds[i] > 0)
+                {
+                    any = true;
+                    break;
+                }
+            }
+
+            if (any == false)
+                return "not granted";
+
+            return $"executes below (Filler {thresholds[(int)EnemyTier.Filler] * 100}%, " +
+                   $"Normal {thresholds[(int)EnemyTier.Normal] * 100}%, " +
+                   $"Specialist {thresholds[(int)EnemyTier.Specialist] * 100}%, " +
+                   $"Heavy {thresholds[(int)EnemyTier.Heavy] * 100}%, " +
+                   $"Elite {thresholds[(int)EnemyTier.Elite] * 100}%, " +
+                   $"Boss {thresholds[(int)EnemyTier.Boss] * 100}%) HP";
         }
 
         private static string DescribeOverkill(CharacterStats* stats)
@@ -252,9 +324,11 @@ namespace Quantum
 
         private static string DescribeSecondWind(CharacterStats* stats)
         {
-            return stats->SecondWindHealPercent <= 0
-                ? "not granted"
-                : $"heals {stats->SecondWindHealPercent * 100}% max health per accessory recovery";
+            if (stats->SecondWindHealPercent <= 0 && stats->SecondWindMoveSpeedBonus <= 0)
+                return "not granted";
+
+            return $"heals {stats->SecondWindHealPercent * 100}% max health and grants +{stats->SecondWindMoveSpeedBonus * 100}% " +
+                   $"move speed for {stats->SecondWindMoveSpeedDuration}s per accessory recovery";
         }
 
         // The one readout the spec explicitly asks to distinguish: the CALCULATED ceiling (what

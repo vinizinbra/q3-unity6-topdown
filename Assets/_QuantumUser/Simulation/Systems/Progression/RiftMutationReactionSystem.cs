@@ -14,7 +14,7 @@ namespace Quantum
     [Preserve]
     public unsafe class RiftMutationReactionSystem : SystemMainThread, ISignalOnCriticalHit, ISignalOnEntityKilled,
         ISignalOnAccessoryBlocked, ISignalOnAccessoryRecovered, ISignalOnHealthDamageApplied, ISignalOnShieldDamageApplied,
-        ISignalOnCollectibleCollected
+        ISignalOnDestructibleBroken
     {
         public override void Update(Frame f)
         {
@@ -112,11 +112,50 @@ namespace Quantum
         // ApplyDamage long before this fires, so neither can be triggered by a block.
         public void OnHealthDamageApplied(Frame f, EntityRef target, EntityRef owner, FP amount, DamageSource source, QBoolean directHit)
         {
-            if (f.Unsafe.TryGetPointer<CharacterStats>(target, out var stats) == false)
+            if (f.Unsafe.TryGetPointer<CharacterStats>(target, out var stats) == true)
+            {
+                ResetPressureCooker(f, target, stats);
+                ApplyBloodMoneyLoss(f, target, stats);
+            }
+
+            // Executioner - keyed off the OWNER's own stats (whoever dealt THIS hit), not the
+            // target's, so only damage this mutation's holder personally lands can trigger their own
+            // execution check (see TryApplyExecutioner's own comment).
+            TryApplyExecutioner(f, target, owner, source);
+        }
+
+        // Executioner - a hit that leaves an enemy below ITS OWN tier's threshold immediately
+        // finishes it off, through the exact same kill pipeline a lethal hit resolves through (see
+        // DamageUtility.TryExecute/ResolveDeath) - normal kill attribution, drops, on-kill signals,
+        // weapon perks, everything. Only ever reacts to damage whose OWNER is this mutation's holder:
+        // a teammate's hit bringing the SAME enemy below the threshold fires this same signal with a
+        // different owner, whose own CharacterStats (if they don't hold Executioner) has every
+        // ExecutionThresholds entry at 0 and is skipped below - so an enemy can only ever be executed
+        // by damage this player personally dealt, never by "someone else brought it low enough".
+        private static void TryApplyExecutioner(Frame f, EntityRef target, EntityRef owner, DamageSource source)
+        {
+            if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false)
                 return;
 
-            ResetPressureCooker(f, target, stats);
-            ApplyBloodMoneyLoss(f, target, stats);
+            if (f.Unsafe.TryGetPointer<Enemy>(target, out var enemy) == false)
+                return;
+
+            if (f.Unsafe.TryGetPointer<Health>(target, out var health) == false
+                || health->CurrentHealth <= FP._0 || health->MaxHealth <= FP._0)
+                return;
+
+            EnemyDataAsset data = f.FindAsset(enemy->EnemyData);
+            FP threshold = stats->ExecutionThresholds[(int)data.Tier];
+
+            if (threshold <= FP._0)
+                return;
+
+            if (health->CurrentHealth / health->MaxHealth >= threshold)
+                return;
+
+            Log.Debug($"[RiftMutation] Executioner: {owner} executed {target} ({data.Tier} below {threshold * 100}% HP)");
+
+            DamageUtility.TryExecute(f, target, owner, source);
         }
 
         // Pressure Cooker also resets on a Shield-only hit. Deliberately a DIFFERENT rule from Blood
@@ -169,61 +208,52 @@ namespace Quantum
         // buying a replacement.
         public void OnAccessoryRecovered(Frame f, EntityRef owner, EntityRef recoverer)
         {
-            if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false
-                || stats->SecondWindHealPercent <= FP._0)
+            if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false)
                 return;
 
-            if (f.Unsafe.TryGetPointer<Health>(owner, out var health) == false)
-                return;
-
-            FP heal = health->MaxHealth * stats->SecondWindHealPercent;
-
-            HealUtility.ApplyFlatHeal(f, owner, owner, health, heal);
-
-            Log.Debug($"[RiftMutation] Second Wind: {owner} healed {heal} on accessory recovery (returned by {recoverer})");
-        }
-
-        // Scavenger Rush - a burst of pickups pays out in speed. Counts ANY collectible: the signal
-        // only ever fires from the currency-orb path, so Accessory recoveries, shop purchases and
-        // static interactables are excluded structurally rather than by an exclusion list here.
-        public void OnCollectibleCollected(Frame f, EntityRef collector, CurrencyOrbType type)
-        {
-            if (f.Unsafe.TryGetPointer<CharacterStats>(collector, out var stats) == false
-                || stats->ScavengerRequiredPickups == 0
-                || stats->ScavengerWindow <= FP._0)
-                return;
-
-            // The FIRST pickup opens the window; every later one inside it just counts. The window is
-            // deliberately NOT refreshed per pickup - "5 within 3 seconds" has to mean a real burst,
-            // and refreshing would let an indefinitely slow trickle eventually qualify.
-            if (stats->ScavengerWindowRemaining <= FP._0)
+            if (f.Unsafe.TryGetPointer<Health>(owner, out var health) == true && stats->SecondWindHealPercent > FP._0)
             {
-                stats->ScavengerPickupCount = 0;
-                stats->ScavengerWindowRemaining = stats->ScavengerWindow;
+                FP heal = health->MaxHealth * stats->SecondWindHealPercent;
+
+                HealUtility.ApplyFlatHeal(f, owner, owner, health, heal);
+
+                Log.Debug($"[RiftMutation] Second Wind: {owner} healed {heal} on accessory recovery (returned by {recoverer})");
             }
 
-            stats->ScavengerPickupCount++;
+            // Second Wind's Move Speed half - rides the generic timed-buff slot, so recovering again
+            // while it's still up REFRESHES the duration rather than stacking it (ApplyTempMoveSpeed
+            // overwrites on reapply).
+            if (stats->SecondWindMoveSpeedBonus > FP._0 && stats->SecondWindMoveSpeedDuration > FP._0)
+            {
+                StatusEffectUtility.ApplyTempMoveSpeed(f, owner, stats->SecondWindMoveSpeedDuration, FP._1 + stats->SecondWindMoveSpeedBonus);
+            }
+        }
 
-            if (stats->ScavengerPickupCount < stats->ScavengerRequiredPickups)
+        // Scavenger Rush - destroying ANY Breakable (barrel, crate, breakable wall - no distinction)
+        // pays out in speed, for whoever broke it. Reacts to the generic OnDestructibleBroken signal
+        // rather than checking a specific prefab, so any current or future Breakable triggers this
+        // for free. Signal-driven, not polled - BreakableUtility.TryBreak only fires this the instant
+        // a Breakable actually breaks.
+        public void OnDestructibleBroken(Frame f, EntityRef entity, EntityRef owner)
+        {
+            if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false || stats->ScavengerBuffDuration <= FP._0)
                 return;
 
-            stats->ScavengerPickupCount = 0;
-            stats->ScavengerWindowRemaining = FP._0;
-
             // Rides the generic timed-buff slots rather than a bespoke timer, so it follows the
-            // project's normal behaviour: ApplyTempMoveSpeed overwrites, and ApplyHaste refreshes
-            // its own per-source slot - i.e. re-triggering extends rather than stacking.
+            // project's normal behaviour: ApplyTempMoveSpeed overwrites, and ApplyHaste refreshes its
+            // own per-source slot - i.e. destroying another barrel while the buff is up EXTENDS it
+            // rather than stacking.
             if (stats->ScavengerMoveSpeedBonus > FP._0)
             {
-                StatusEffectUtility.ApplyTempMoveSpeed(f, collector, stats->ScavengerBuffDuration, FP._1 + stats->ScavengerMoveSpeedBonus);
+                StatusEffectUtility.ApplyTempMoveSpeed(f, owner, stats->ScavengerBuffDuration, FP._1 + stats->ScavengerMoveSpeedBonus);
             }
 
             if (stats->ScavengerFireRateBonus > FP._0)
             {
-                StatusEffectUtility.ApplyHaste(f, collector, collector, stats->ScavengerBuffDuration, FP._1 + stats->ScavengerFireRateBonus);
+                StatusEffectUtility.ApplyHaste(f, owner, owner, stats->ScavengerBuffDuration, FP._1 + stats->ScavengerFireRateBonus);
             }
 
-            Log.Debug($"[RiftMutation] Scavenger Rush triggered for {collector} - buff for {stats->ScavengerBuffDuration}s");
+            Log.Debug($"[RiftMutation] Scavenger Rush triggered for {owner} - {entity} destroyed, buff for {stats->ScavengerBuffDuration}s");
         }
     }
 }

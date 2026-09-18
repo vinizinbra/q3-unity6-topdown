@@ -3,7 +3,7 @@ namespace Quantum
     using Photon.Deterministic;
 
     // Per-player, per-tick bookkeeping for the Rift Mutations that need a real clock (Pressure
-    // Cooker's safe-time streak, Scavenger Rush's collection window).
+    // Cooker's safe-time streak).
     //
     // Deliberately NOT a system of its own: StatusEffectSystem already iterates exactly the set of
     // entities these apply to (every player carries StatusEffects and CharacterStats), and it is
@@ -18,7 +18,6 @@ namespace Quantum
         public static void Tick(Frame f, EntityRef entity, CharacterStats* stats)
         {
             TickPressureCooker(f, stats);
-            TickScavengerWindow(f, entity, stats);
         }
 
         // Pressure Cooker - accumulates uninterrupted time. Reset to 0 by the damage reactions, not
@@ -39,23 +38,6 @@ namespace Quantum
                 return;
 
             stats->SafeTimeSeconds += f.DeltaTime;
-        }
-
-        // Scavenger Rush - the collection window closing. The counter is incremented by the pickup
-        // reaction; this is only the deadline running out, which resets the streak so a slow trickle
-        // of pickups can never accumulate into a trigger.
-        private static void TickScavengerWindow(Frame f, EntityRef entity, CharacterStats* stats)
-        {
-            if (stats->ScavengerWindowRemaining <= FP._0)
-                return;
-
-            stats->ScavengerWindowRemaining -= f.DeltaTime;
-
-            if (stats->ScavengerWindowRemaining > FP._0)
-                return;
-
-            stats->ScavengerWindowRemaining = FP._0;
-            stats->ScavengerPickupCount = 0;
         }
     }
 }

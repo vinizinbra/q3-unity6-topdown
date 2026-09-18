@@ -38,7 +38,7 @@ using UnityEngine.UI;
 // (see UpdateSpecialMarkers), and - only while GameState.Breathing hasn't yet secured the area (see
 // Global.BreathingAreaSecured) - one per every still-alive ORDINARY enemy, i.e. excluding
 // Elite/Persistent (see UpdateClearEnemyMarkers), matching the "CLEAR ALL ENEMIES..." state
-// BreathingCountdownWidget shows during the same window. Elite/Special are the same
+// BreathingWidget shows during the same window. Elite/Special are the same
 // always-relevant, never-retiring enemies EnemyLifecycleSystem singles out (EnemyDataAsset.Tier ==
 // Elite / Economy.Persistent == true), so calling them out on the map follows the same reasoning;
 // Special is deliberately its own marker prefab rather than reusing eliteMarkerPrefab, since a
@@ -125,7 +125,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     private RectTransform eliteMarkerPrefab;
     [SerializeField, Tooltip("Marker shown for every currently-alive Persistent, non-Elite enemy (EnemyDataAsset.Economy.Persistent == true and Tier != Elite) - the same always-relevant/never-retires treatment EnemyLifecycleSystem gives Elites, but for a persistent enemy that isn't actually an Elite (e.g. a boss's summoned add). One generic marker regardless of which EnemyDataAsset it is, same first-pass scope as eliteMarkerPrefab. Leave unassigned to disable Special markers entirely.")]
     private RectTransform specialMarkerPrefab;
-    [SerializeField, Tooltip("Marker shown for EVERY currently-alive enemy (no Tier/Persistent filter) while GameState.Breathing hasn't yet secured the area (Global.BreathingAreaSecured == false) - the same 'CLEAR ALL ENEMIES...' window BreathingCountdownWidget shows. Torn down the instant an enemy dies/expires, or the instant the area secures/GameState leaves Breathing, whichever comes first. Leave unassigned to disable Clear-Enemy markers entirely.")]
+    [SerializeField, Tooltip("Marker shown for EVERY currently-alive enemy (no Tier/Persistent filter) while GameState.Breathing hasn't yet secured the area (Global.BreathingAreaSecured == false) - the same 'CLEAR ALL ENEMIES...' window BreathingWidget shows. Torn down the instant an enemy dies/expires, or the instant the area secures/GameState leaves Breathing, whichever comes first. Leave unassigned to disable Clear-Enemy markers entirely.")]
     private RectTransform clearEnemyMarkerPrefab;
 
     [Header("Local player")]
@@ -1579,7 +1579,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     // One marker per every currently-alive ORDINARY enemy - excluding Elite/Persistent, which
     // already get their own Elite/Special marker above (see UpdateEliteMarkers/UpdateSpecialMarkers)
     // - but only while the area isn't yet secured (GameState.Breathing && !BreathingAreaSecured -
-    // the same "CLEAR ALL ENEMIES..." window BreathingCountdownWidget shows). Outside that window
+    // the same "CLEAR ALL ENEMIES..." window BreathingWidget shows). Outside that window
     // every existing marker is torn down immediately, not left to the normal stale sweep - covers
     // both "the area just secured" (enemies gone, sweep would have caught it anyway) and "GameState
     // left Breathing some other way while enemies were still up" (sweep alone wouldn't catch that).

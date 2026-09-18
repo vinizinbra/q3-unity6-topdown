@@ -4948,6 +4948,7 @@ MonoBehaviour:
   executeOnlyOnLocal: 0
   isLocal: 0
   anim:
+    AttackAnimationType: 1
     rightOffset: {x: 0, y: -0.1}
     upOffset: {x: 0.2, y: 0}
     downOffset: {x: 0.1, y: 0.2}
@@ -4964,6 +4965,13 @@ MonoBehaviour:
     recoilAsymmetry: 0.3
     knockbackDistance: 0.1
     knockbackScalePunch: 0.3
+    swingRotationAngle: -180
+    swingAnticipationAngle: -45
+    swingAnticipationDuration: 0.08
+    swingOutDuration: 0.1
+    swingReturnDuration: 0.15
+    swingLungeDistance: 0.08
+    swingScalePunch: 0.15
     shakePositionHead:
       Strength: {x: 0, y: 0.04, z: 0}
       Duration: 0.2
@@ -4987,10 +4995,12 @@ MonoBehaviour:
   character: {fileID: 0}
   flipPivotOffset: {x: 0, y: 0, z: 0}
   muzzleParticle: {fileID: 5244902348536965228}
+  chargeParticle: {fileID: 0}
   projectileSpawnPoint: {fileID: 9059055816394726473}
-  fireSound: {fileID: 11400000, guid: d301e42244f7749f38e4e0d5d6bf6a50, type: 2}
-  reloadStartSound: {fileID: 11400000, guid: 5edaefd69c1f24edc81078b02a2b8b2a, type: 2}
-  reloadReadySound: {fileID: 11400000, guid: f2fd980e55c984487af99afe28b60074, type: 2}
+  fireSound: {fileID: 0}
+  anticipationSound: {fileID: 11400000, guid: f3122149636de4ba08bcee825af8b396, type: 2}
+  reloadStartSound: {fileID: 0}
+  reloadReadySound: {fileID: 0}
 --- !u!1 &8222052937328513918
 GameObject:
   m_ObjectHideFlags: 0

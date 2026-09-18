@@ -14,12 +14,27 @@ namespace Quantum
         public float Frequency = 20f;
     }
 
+    // Which "shot fired" animation WeaponView.OnPlayerFired plays - Shoot (default, every
+    // existing gun) kicks the three recoil/knockback punches below; Swing (melee weapons) kicks
+    // the Melee Swing punch instead. Default is Shoot so every already-authored WeaponView (which
+    // has never had this field, and so deserializes it as the enum's 0 value) keeps behaving
+    // exactly as before.
+    public enum WeaponAttackAnimationType
+    {
+        Shoot,
+        Swing
+    }
+
     // Every weapon-specific animation tuning value WeaponView reads, grouped into one
     // serializable field so the whole set can be right-click Copy'd on one WeaponView and
     // Paste'd onto another's, instead of copying the whole component.
     [System.Serializable]
     public class WeaponAnimationParams
     {
+        [Header("Attack Animation")]
+        [Tooltip("Shoot (default) plays the recoil/knockback punches below on every EventPlayerFired. Swing plays the Melee Swing punch instead - use this for melee weapons.")]
+        public WeaponAttackAnimationType AttackAnimationType = WeaponAttackAnimationType.Shoot;
+
         [Header("Position Offset")]
         [Tooltip("Screen-space offset (right, up) blended in while aiming directly right. Mirrored automatically when flipped/aiming left.")]
         public Vector2 rightOffset;
@@ -59,6 +74,22 @@ namespace Quantum
         public float knockbackDistance = 0.1f;
         [Range(0f, 1f), Tooltip("Fraction the gun squashes down in scale at the peak of the knockback punch.")]
         public float knockbackScalePunch = 0.1f;
+
+        [Header("Melee Swing (used when Attack Animation Type = Swing, instead of the Shoot Recoil/Knockback above)")]
+        [Tooltip("Degrees the weapon swings through on each attack (the actual slash, e.g. 180 for a full overhead swing), auto-mirrored by facing so it always swings the same way on screen.")]
+        public float swingRotationAngle = 90f;
+        [Tooltip("Degrees the weapon winds back BEFORE swinging forward, opposite the swing direction - the anticipation (e.g. a bat cocking back before it hits). 4 keyframes total: rest -> this wind-up -> the swing angle above -> back to rest. 0 disables the wind-up (straight rest -> swing angle -> rest).")]
+        public float swingAnticipationAngle = 15f;
+        [Tooltip("How long the wind-up (rest to the anticipation angle) takes. Keep this at least ~0.08 - much shorter and it's only 1-2 frames long and reads as not happening at all.")]
+        public float swingAnticipationDuration = 0.08f;
+        [Tooltip("How long the forward slash (anticipation angle to the swing angle) takes - keep this shorter than the wind-up/return for a fast, punchy hit.")]
+        public float swingOutDuration = 0.1f;
+        [Tooltip("How long the swing takes to ease back to rest after reaching its peak angle.")]
+        public float swingReturnDuration = 0.15f;
+        [Tooltip("Screen-space distance the weapon lunges forward along the current aim direction at the peak of the swing - the melee equivalent of recoilKickDistance, but forward instead of a kickback.")]
+        public float swingLungeDistance = 0.08f;
+        [Tooltip("Fractional scale-up punch at the peak of the swing (e.g. 0.15 briefly enlarges the weapon 15%) for extra hit impact. 0 disables it.")]
+        public float swingScalePunch = 0.15f;
 
         [Header("Character Shoot Punch (kicked into the shooter's own BlobAnimationView, not this weapon's transform - tune per weapon since a shotgun should knock the body around more than a pistol)")]
         [Tooltip("Head position kick, local space (e.g. (0, 0.04, 0) nods the head up).")]

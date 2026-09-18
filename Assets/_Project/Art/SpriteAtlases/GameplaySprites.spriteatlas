@@ -113,7 +113,12 @@ SpriteAtlas:
     - 0834c70075a594256baf631058a4cd4f: 1399481532
     - 0834c70075a594256baf631058a4cd4f: 251389045
     - 0834c70075a594256baf631058a4cd4f: -596520283
+    - 0834c70075a594256baf631058a4cd4f: -1783365348
+    - 0834c70075a594256baf631058a4cd4f: 1112030810
+    - 0834c70075a594256baf631058a4cd4f: 291590725
     - 0834c70075a594256baf631058a4cd4f: -952962950
+    - 0834c70075a594256baf631058a4cd4f: 1334521870
+    - 0834c70075a594256baf631058a4cd4f: 499975236
     - 0834c70075a594256baf631058a4cd4f: -676380532
     - 0834c70075a594256baf631058a4cd4f: -1065694264
     - 0834c70075a594256baf631058a4cd4f: -821545347
@@ -373,7 +378,12 @@ SpriteAtlas:
   - {fileID: 1399481532, guid: 0834c70075a594256baf631058a4cd4f, type: 3}
   - {fileID: 251389045, guid: 0834c70075a594256baf631058a4cd4f, type: 3}
   - {fileID: -596520283, guid: 0834c70075a594256baf631058a4cd4f, type: 3}
+  - {fileID: -1783365348, guid: 0834c70075a594256baf631058a4cd4f, type: 3}
+  - {fileID: 1112030810, guid: 0834c70075a594256baf631058a4cd4f, type: 3}
+  - {fileID: 291590725, guid: 0834c70075a594256baf631058a4cd4f, type: 3}
   - {fileID: -952962950, guid: 0834c70075a594256baf631058a4cd4f, type: 3}
+  - {fileID: 1334521870, guid: 0834c70075a594256baf631058a4cd4f, type: 3}
+  - {fileID: 499975236, guid: 0834c70075a594256baf631058a4cd4f, type: 3}
   - {fileID: -676380532, guid: 0834c70075a594256baf631058a4cd4f, type: 3}
   - {fileID: -1065694264, guid: 0834c70075a594256baf631058a4cd4f, type: 3}
   - {fileID: -821545347, guid: 0834c70075a594256baf631058a4cd4f, type: 3}
@@ -632,7 +642,12 @@ SpriteAtlas:
   - RR_CursedRiftActive
   - RR_GunSmithInactive
   - RR_Traversal
+  - RiftRaiders_POI_4
+  - RiftRaiders_POI_2
+  - RiftRaiders_POI_3
   - RR_HealingActive
+  - RiftRaiders_POI_0
+  - RiftRaiders_POI_1
   - Closed
   - RR_HealingInactive
   - RR_CursedRiftInactive

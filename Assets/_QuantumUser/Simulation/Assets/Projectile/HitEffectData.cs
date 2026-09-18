@@ -96,8 +96,10 @@ namespace Quantum
         public byte HitIndex;
 
         // The spatial extent of the hit that produced this context, for any effect that wants to
-        // care WHERE within a blast a target was caught - see SkillFocusUtility (Focused Power's
-        // damage-toward-the-center falloff).
+        // care WHERE within a blast a target was caught. Currently unconsumed (Focused Power, the
+        // effect this was originally built for, was reworked into a crit-commitment tradeoff that no
+        // longer reads it - see docs/rift-mutations.md) but left in place as generic context plumbing
+        // for a future distance-from-center effect.
         //
         // Set only by the radius/shape/collider overlap paths in HitEffectUtility. AreaRadius stays
         // 0 for every direct hit and every single-target skill, and 0 is the explicit "this hit has

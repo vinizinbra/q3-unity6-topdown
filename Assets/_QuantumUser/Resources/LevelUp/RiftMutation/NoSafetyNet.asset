@@ -21,6 +21,6 @@ MonoBehaviour:
   Rarity: 3
   Scope: 0
   IncompatibleWith: []
-  Description: '+<color=#FD3971>{0:0}%</color> Damage while your Accessory is not on your head'
+  Description: +{0:0}% Damage while your Accessory is not on your head
   DamageBonus:
-    RawValue: 32768
+    RawValue: 49152

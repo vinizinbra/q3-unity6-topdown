@@ -1,9 +1,8 @@
 namespace Quantum
 {
     // See Poi.qtn's own comment for the overall design. This is the ONLY place PoiAvailability is
-    // interpreted against Global.CurrentState (and, for Breathing, Global.BreathingAreaSecured too)
-    // - a POI system just calls IsAvailable with its own component's field, never branches on
-    // GameState/BreathingAreaSecured itself.
+    // interpreted against Global.CurrentState - a POI system just calls IsAvailable with its own
+    // component's field, never branches on GameState itself.
     public static class PoiAvailabilityUtility
     {
         public static unsafe bool IsAvailable(Frame f, PoiAvailability availability)
@@ -12,15 +11,15 @@ namespace Quantum
             {
                 case GameState.Survival: return availability.AvailableInCombat;
 
-                // Also gated on Global.BreathingAreaSecured - the area isn't actually "secured"
-                // just because the phase boundary was crossed (see SurvivalProgressionUtility.
-                // IsEncounterCleared/docs/run-phase.md); a Healing Shrine/Cursed Rift/Store/
-                // Blacksmith shouldn't be usable while an enemy (usually an Economy.Persistent one
-                // still fighting - non-persistent ones are force-cleared the same tick) is still
-                // alive.
-                case GameState.Breathing: return availability.AvailableInBreathing && f.Global->BreathingAreaSecured;
+                // No separate BreathingAreaSecured check needed here anymore - GameState.Breathing
+                // itself now only ever starts once the area is secured (see CombatDirectorSystem.
+                // ResolveDesiredState), so a Healing Shrine/Cursed Rift/Store/Blacksmith being
+                // reachable at all already implies enemies are cleared. The "phase boundary crossed
+                // but not yet secured" window reads as plain Survival instead (never available), not
+                // Breathing.
+                case GameState.Breathing: return availability.AvailableInBreathing;
 
-                default: return false; // Lobby/Upgrade/Event/Boss - never available
+                default: return false; // Lobby/Upgrade/Event/Boss/TeamChallenge/TraversalChallenge - never available
             }
         }
     }

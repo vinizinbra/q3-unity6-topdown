@@ -6,11 +6,11 @@ using UnityEngine;
 
 // Always-visible HUD banner, shown only during the LAST Breathing Break before the run's Boss
 // phase, once Global.BreathingTimeRemaining drops to warningThreshold or below - confirmed with
-// the user. The normal "NEXT ASSAULT" countdown (BreathingCountdownWidget) doesn't distinguish
+// the user. The normal "NEXT ASSAULT" countdown (BreathingWidget) doesn't distinguish
 // which Breathing Break is playing, so this is a separate widget layered on top specifically for
 // the pre-boss beat, not a modification to that one. No simulation changes needed - this reads
 // entirely off existing Global state (CurrentState/BreathingTimeRemaining/CurrentPhaseIndex) plus
-// SurvivalConfig, same "peek at the next phase's own Kind" check DirectorTimelineUiWidget's own
+// SurvivalConfig, same "peek at the next phase's own Kind" check SurvivalWidget's own
 // marker-skip logic already does, just from the View side instead of baked into a one-time pass.
 public class BossWarningWidget : QuantumGlobalMonoBehaviour
 {
@@ -84,7 +84,7 @@ public class BossWarningWidget : QuantumGlobalMonoBehaviour
 
     // Fades in rather than an instant SetActive snap - useUnscaledTime so it stays responsive
     // regardless of any client-local Time.timeScale ramp, same reasoning
-    // BreathingCountdownWidget's own ShowAreaSecured already documents.
+    // BreathingWidget's own ShowAreaSecured already documents.
     private void Show()
     {
         _fadeTween.Stop();

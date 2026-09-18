@@ -73,8 +73,6 @@ MonoBehaviour:
   - Id:
       Value: 534224374613054322
   - Id:
-      Value: 514921480666595401
-  - Id:
       Value: 533573372186029248
   - Id:
       Value: 455787944400972856
@@ -84,8 +82,6 @@ MonoBehaviour:
       Value: 524350525567682883
   - Id:
       Value: 410312301915607199
-  - Id:
-      Value: 395350068690393966
   - Id:
       Value: 302357521748849114
   - Id:
@@ -104,6 +100,20 @@ MonoBehaviour:
       Value: 533476228992090200
   - Id:
       Value: 536002132847580972
+  - Id:
+      Value: 510355816574474916
+  - Id:
+      Value: 504440168474951502
+  - Id:
+      Value: 405307750412691849
+  - Id:
+      Value: 468788215678846842
+  - Id:
+      Value: 504848770889323916
+  - Id:
+      Value: 392115235866985160
+  - Id:
+      Value: 514021944172634289
   LevelSequence: 000001
   WeaponChoicePool:
     Id:

@@ -21,7 +21,8 @@ MonoBehaviour:
   Rarity: 3
   Scope: 0
   IncompatibleWith: []
-  Description: '<color=#FD3971>{0:+0;-0}%</color> Coins, but lose <color=#FD3971>{1:0}%</color> of your Coins whenever you take Health damage'
+  Description: '{0:+0;-0}% Coins, but lose {1:0}% of your Coins whenever you take
+    Health damage'
   CoinDropMultiplier:
     RawValue: 98304
   CoinLossPercentOnHpDamage:

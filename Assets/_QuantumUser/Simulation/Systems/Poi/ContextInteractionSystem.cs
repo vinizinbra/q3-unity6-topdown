@@ -106,6 +106,7 @@ namespace Quantum
                 case InteractableKind.Store: return StoreUtility.ResolveInteractionState(f, player, poi);
                 case InteractableKind.Blacksmith: return BlacksmithUtility.ResolveInteractionState(f, player, poi);
                 case InteractableKind.TraversalChallenge: return TraversalChallengeUtility.ResolveInteractionState(f, player, poi);
+                case InteractableKind.TeamChallenge: return TeamChallengeUtility.ResolveInteractionState(f, player, poi);
                 case InteractableKind.Revive: return ReviveUtility.ResolveInteractionState(f, player, poi);
                 default: return ContextInteractionState.None;
             }

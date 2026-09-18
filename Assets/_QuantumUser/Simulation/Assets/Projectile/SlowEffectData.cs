@@ -3,7 +3,7 @@ namespace Quantum
     using Photon.Deterministic;
 
     // Ice/Chill - adds buildup toward the stacking slow (see StatusEffectUtility.ApplyIce), same
-    // buildup-per-damage formula the Ice weapon-elemental-proc path uses (EffectConfig.
+    // buildup-per-damage formula the Ice weapon-elemental-proc path uses (ElementalReactionConfig.
     // IceBuildupPerDamage * context.Damage), so a directly-authored Slow effect and a native Ice
     // weapon hit both feed the exact same Chill identity rather than two different slow systems.
     // Read by PlayerMovementProcessor and EnemySystem's chase movement via
@@ -23,7 +23,7 @@ namespace Quantum
             if (context.Target == EntityRef.None)
                 return;
 
-            EffectConfig config = StatusEffectUtility.GetEffectConfig(f);
+            ElementalReactionConfig config = StatusEffectUtility.GetElementalReactionConfig(f);
 
             if (config == null)
                 return;

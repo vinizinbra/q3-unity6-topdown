@@ -16,14 +16,6 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Configs/EffectConfig
     Guid:
       Value: 522287310210420591
-  TickInterval:
-    RawValue: 65536
-  BurnDuration:
-    RawValue: 196608
-  BurnDamagePercent:
-    RawValue: 6554
-  BurnFloorPercent:
-    RawValue: 3277
   IntimidateDuration:
     RawValue: 196608
   IntimidateOutgoingDamageMultiplier:
@@ -32,8 +24,6 @@ MonoBehaviour:
     RawValue: 131072
   RootDuration:
     RawValue: 131072
-  SlowDuration:
-    RawValue: 196608
   SlowSpeedMultiplier:
     RawValue: 32768
   AnticipationSlowDuration:

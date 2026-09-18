@@ -40,7 +40,41 @@ namespace Quantum
             // Pressure Cooker - the longer you go untouched, the harder you hit.
             multiplier *= FP._1 + ResolvePressureCookerBonus(stats);
 
+            // Bro Mutation - passive co-op synergy, no combat coordination required. Recomputed live
+            // (never baked at pick time) since a teammate picking this up LATER has to retroactively
+            // raise everyone who already holds it too.
+            if (stats->BroMutationBaseDamageBonus > FP._0)
+            {
+                int otherOwners = CountOtherBroMutationOwners(f, owner);
+                multiplier *= FP._1 + stats->BroMutationBaseDamageBonus + otherOwners * stats->BroMutationPerOwnerDamageBonus;
+            }
+
             return multiplier;
+        }
+
+        // Ownership count, not proximity - every connected player who also carries a non-zero
+        // BroMutationBaseDamageBonus (i.e. also owns Bro Mutation), alive or not, excluding the
+        // player being resolved for. A plain PlayerLink+CharacterStats scan rather than reading
+        // RiftMutationPicks/AssetRef directly - Bro Mutation grants no other field, so "do I have the
+        // baseline bonus set" already IS "do I own it", the same one-field-is-the-marker idiom every
+        // other Rift Mutation in this file already uses.
+        private static int CountOtherBroMutationOwners(Frame f, EntityRef owner)
+        {
+            int count = 0;
+            var players = f.Filter<PlayerLink, CharacterStats>();
+
+            while (players.Next(out EntityRef entity, out PlayerLink _, out CharacterStats otherStats))
+            {
+                if (entity == owner)
+                    continue;
+
+                if (otherStats.BroMutationBaseDamageBonus > FP._0)
+                {
+                    count++;
+                }
+            }
+
+            return count;
         }
 
         // Danger Pay's condition, shared by the damage path above and the movement path

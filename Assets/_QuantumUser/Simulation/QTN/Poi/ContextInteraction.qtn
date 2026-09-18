@@ -16,6 +16,10 @@ enum InteractableKind : Byte
     Blacksmith,
     TraversalChallenge,
 
+    // Optional Team Challenge (see TeamChallenge.qtn) - the small Interaction Area press either
+    // Readies the team up or, once RewardAvailable, atomically claims the shared reward.
+    TeamChallenge,
+
     // A Downed/KO player's own entity (see docs/revive.md) - the only InteractableKind whose
     // candidate is a PLAYER, not a static world POI. Always outranks every other kind regardless
     // of distance (see InteractableKindUtility.GetPriorityTier), so a nearby dying teammate is

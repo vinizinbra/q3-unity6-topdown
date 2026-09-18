@@ -42,6 +42,18 @@ namespace Quantum
                 return FP._0; // already at full health
 
             health->CurrentHealth += applied;
+
+            // Cursed Survival's own 1 HP pin (see CursedSurvivalUtility.ApplyCurse) - the single
+            // funnel every heal source (Healing Shrine, regen, effects) goes through, so clamping
+            // here structurally prevents "heal past 1 HP" rather than relying on every heal source
+            // to know about the curse. Adjusts `applied` BEFORE the event fires so the reported heal
+            // amount is already correct, not the pre-clamp request.
+            if (f.Has<CursedSurvivalOverride>(target) == true && health->CurrentHealth > FP._1)
+            {
+                applied -= health->CurrentHealth - FP._1;
+                health->CurrentHealth = FP._1;
+            }
+
             f.Events.EntityHealed(target, owner, applied);
 
             Log.Debug($"[Heal] {target} healed for {applied} -> {health->CurrentHealth}/{health->MaxHealth}");

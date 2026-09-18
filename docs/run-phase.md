@@ -65,7 +65,7 @@ Cursed Rift - see `docs/breathing-poi.md`). Read this doc first if you haven't;
   tier). Since nothing force-clears on entry anymore (see above), this hold is what actually does
   the work of keeping the Break's own countdown from starting while enemies are still around,
   `Economy.Persistent` or not.
-  `BreathingCountdownWidget`'s "AREA SECURED" banner/countdown/skip-vote UI all wait for this too,
+  `BreathingWidget`'s "AREA SECURED" banner/countdown/skip-vote UI all wait for this too,
   so the HUD never claims the area is secured while something hostile is still alive.
 
 ## `GameState.qtn`
@@ -94,7 +94,7 @@ component BreathingSkipVote
 
 `BreathingTimeRemaining` is maintained by `CombatDirectorSystem` every tick as the current
 `SurvivalPhase.Duration` minus `Global.PhaseTimer` (purely a cheap client-facing convenience value
-- `BreathingCountdownWidget` reads it directly with no asset lookup of its own). `BreathingIndex`
+- `BreathingWidget` reads it directly with no asset lookup of its own). `BreathingIndex`
 is 0-based, incremented once each Breathing→Survival transition completes - the reset key
 `PoiUsagePolicy.OncePerPlayerPerBreak` (and now `BreathingSkipVote`'s own `VotedAtBreathingIndex`
 too) compares against (see `docs/breathing-poi.md`'s "Generic POI availability/usage
@@ -229,12 +229,16 @@ Update:
 ```
 
 `ApplyPhaseGameState` computes `desiredState = currentPhase.Kind == Breathing ? Breathing :
-Survival` (Boss/Elite both map to `Survival` - they're vocabulary/pacing distinctions for the
-Director's own timeline, not a `GameState` transition of their own); if it differs from
-`Global.CurrentState`, runs the one-shot transition side effect leaving Breathing
-(`RunPhaseUtility.CancelUncommittedCursedRiftInteractions` + `CloseStoreInteractionsOnBreathingEnd`
-+ `CloseBlacksmithInteractionsOnBreathingEnd` + `BreathingIndex++` - entering Breathing has NO side
-effect here, see above) and calls `GameStateUtility.SetState` - then always refreshes
+Survival` (Boss now gets its own real transition too, see `docs/boss-encounter.md` - Elite still
+maps to `Survival`, a vocabulary/pacing distinction for the Director's own timeline only); if it
+differs from **`Global.CombatPhaseState`** (as of the Announcer/event-driven-HUD pass - previously
+compared directly against `Global.CurrentState`, before `TeamChallenge`/`TraversalChallenge` became
+overlay values that could also occupy `CurrentState`; see `docs/game-state.md`), runs the one-shot
+transition side effect leaving Breathing (`RunPhaseUtility.CancelUncommittedCursedRiftInteractions`
++ `CloseStoreInteractionsOnBreathingEnd` + `CloseBlacksmithInteractionsOnBreathingEnd` +
+`BreathingIndex++` - entering Breathing has NO side effect here, see above), updates
+`CombatPhaseState`, then a separate `ApplyEffectiveState` step resolves the challenge-overlay-
+inclusive `Global.CurrentState` via `GameStateUtility.SetState` - then always refreshes
 `BreathingTimeRemaining`.
 
 ## Elite / Boss phases (and Breathing's own encounter-clear hold)
@@ -275,10 +279,25 @@ when the phase boundary is crossed, `Economy.Persistent` or not, has to be kille
 fall `Irrelevant` long enough to naturally `Retire` (`EnemyLifecycleSystem`, unaffected by
 `GameState`) before the Break's own countdown starts.
 
+**As of the Announcer/event-driven-HUD pass, `Global.CurrentState` doesn't become `GameState.
+Breathing` until this hold actually clears.** `CombatDirectorSystem.ResolveDesiredState` now takes
+`BreathingAreaSecured` as a second input: while the phase has reached its Breathing boundary but the
+area isn't secured yet, `CurrentState` stays `GameState.Survival` (confirmed with the user - that
+window is still "Survival, just not spawning," not its own state) - `GameState.Breathing` now always
+implies the area is already secured. A new `Global.CurrentPhaseKind` (mirrored every tick by
+`SurvivalProgressionUtility.Tick`, same field this section already describes) is what lets
+`BotInputSystem`/`SurvivalWidget` still tell "we've reached a Breathing-kind phase" apart
+from "and it's secured" now that `GameState` itself no longer carries that distinction.
+`SurvivalWidget` shows the "CLEAR ALL ENEMIES" prompt for that window directly
+(`CurrentPhaseKind == Breathing && BreathingAreaSecured == false`) - it used to be
+`BreathingWidget`'s own `notSecuredRoot`, moved here since that widget only shows once
+`GameState.Breathing` itself is reached (i.e. always-secured now, see `docs/announcer.md`).
+
 `Global.BreathingAreaSecured` also gates every Breathing-only POI (Healing Shrine, Cursed Rift,
-Store, Blacksmith) - `PoiAvailabilityUtility.IsAvailable`'s `Breathing` case now checks
-`AvailableInBreathing && BreathingAreaSecured`, so a POI stays dormant/unusable for the same window
-the HUD countdown stays hidden, not just from the phase boundary onward. See
+Store, Blacksmith) - `PoiAvailabilityUtility.IsAvailable`'s `Breathing` case is simply
+`AvailableInBreathing` now (the separate `&& BreathingAreaSecured` check is redundant now that
+reaching `GameState.Breathing` at all already implies it), so a POI stays dormant/unusable for the
+same window the HUD countdown stays hidden, not just from the phase boundary onward. See
 `docs/breathing-poi.md`.
 
 The same false -> true edge (`SurvivalProgressionUtility.Tick`) also triggers two cleanup effects,
@@ -296,7 +315,7 @@ own wallet and Experience is one shared run total, so who "collects" a swept orb
 meaning. A level crossed by an orb collected mid-sweep holds its upgrade screen until the whole
 sweep finishes - see `docs/level-up-upgrades.md`.
 
-`DirectorTimelineUiWidget` (the HUD progress bar, `Assets/_Project/Scripts/UI/InGame/Hud/`) shows a
+`SurvivalWidget` (the HUD progress bar, `Assets/_Project/Scripts/UI/InGame/Hud/`) shows a
 phase-specific icon at the boundary marker where a non-Combat phase begins - resolved via
 `SpriteManager.GetSprite(SurvivalPhaseKind.ToString())` (the same name-keyed sprite-library lookup
 `CurrencyUiWidget`/`PurchasableCardUi` already use). No dedicated `SpriteConfigSO` subclass needed -
@@ -316,9 +335,11 @@ Entering a `Boss`-`Kind` phase is the one `SurvivalPhaseKind` that gets its own 
 (`Breathing -> Breathing`, `Boss -> Boss`, everything else -> `Survival`, unchanged for
 `Combat`/`Elite`) and calls `RunPhaseUtility.BeginBossEncounter` on the exact tick the state is
 about to become `Boss`, mirroring the same one-shot-per-edge shape already used for the Breathing
-sweep in that same method. `CombatDirectorSystem`'s own outer gate (`CurrentState != Survival &&
-!= Breathing`) already excludes any other state from `CombatDirectorUtility.TryPulse` - so wiring
-`Boss` in here is what stops normal Director spawning entirely once the fight begins, confirmed
+sweep in that same method. `CombatDirectorSystem`'s own outer gate (widened as of the Announcer/event-driven-HUD pass to admit
+`TeamChallenge`/`TraversalChallenge` too, alongside `Survival`/`Breathing` - see
+`docs/game-state.md` - but still excluding `Boss`) already excludes `Boss` from
+`CombatDirectorUtility.TryPulse` - so wiring `Boss` in here is what stops normal Director spawning
+entirely once the fight begins, confirmed
 with the user (only the boss itself, and whatever its own abilities spawn, should be active during
 the encounter). `GameState.Boss` does **not** pause `GameplaySystemGroup`, same as
 `Survival`/`Breathing` - the whole point is an active, playable fight, not a menu-style pause.
@@ -439,7 +460,7 @@ nearest-chunk fallback could strand it outside its own `BossArenaGate`-sealed bo
    `BreathingPoiContentGenerator`'s own comment for why: that generator fully replaces `Phases[]`
    each run, so anything inserted by a second script would get silently wiped out next time it
    runs).
-2. **`BreathingCountdownWidget`** (View, `Assets/_Project/Scripts/UI/InGame/Hud/`) - "AREA
+2. **`BreathingWidget`** (View, `Assets/_Project/Scripts/UI/InGame/Hud/`) - "AREA
    SECURED" + "NEXT ASSAULT 00:30" HUD element, wired on the scene HUD prefab (`skipButton`/
    `waitingRoot`/`waitingText` are wired in `Assets/gamesceneBackup.unity`, the live working
    scene - `QuantumGameScene.unity` itself is a step behind and still only has the base
@@ -472,7 +493,7 @@ nearest-chunk fallback could strand it outside its own `BossArenaGate`-sealed bo
    pointing `AllowedGroups` at a group containing only `EnemyTier.Elite` enemies (no such group
    exists yet either), before the encounter-hold mechanic has anything to actually hold on.
    `SurvivalConfig_MVP.asset` does already end on a `Boss` entry (see below).
-4. **`DirectorTimelineUiWidget`'s phase icons** - no sprites named `"Breathing"`/`"Boss"`/`"Elite"`
+4. **`SurvivalWidget`'s phase icons** - no sprites named `"Breathing"`/`"Boss"`/`"Elite"`
    exist yet in any `SpriteConfigSO` registered on the scene's `SpriteManager` (reuse the existing
    `SpriteConfigCurrency` asset - no new subclass needed), and `markerPrefab` needs a child `Image`
    added and assigned to a `DirectorPhaseMarkerWidget` component's `Icon` field.

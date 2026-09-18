@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f1fceb612d424a11957ed041d636461, type: 3}
+  m_Name: FlawlessHunt
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ChallengeDefinition
+  Identifier:
+    Path: _QuantumUser/Resources/Poi/TeamChallenge/FlawlessHunt
+    Guid:
+      Value: 466326594858510456
+  Type: 1
+  DisplayName: FLAWLESS HUNT
+  Description: Kill 15 enemies without any Raider losing HP.
+  Duration:
+    RawValue: 0
+  KillTarget: 15
+  BudgetPerPulse:
+    RawValue: 2621440
+  PulseInterval:
+    RawValue: 262144
+  TargetPressure:
+    RawValue: 1638400
+  MaxAliveEnemies: 10
+  AllowedGroups:
+  - Id:
+      Value: 292572693417129341
+  AllowedEnemies: []
+  Rules:
+  - Icon: {fileID: -103353411, guid: d9bb3bd610ed442fe983639e2c3f95fb, type: 3}
+    Text: 15
+    ScaleTextWithKillTarget: 1
+  - Icon: {fileID: -6995720472750356834, guid: 22d281b779f8c49dba31479e82c1cb37, type: 3}
+    Text: 100%
+    ScaleTextWithKillTarget: 0

@@ -18,7 +18,6 @@ namespace Quantum
         public static void ApplyToTarget(Frame f, List<AssetRef<HitEffectData>> effects, ref HitEffectContext context, bool multiTarget = false)
         {
             context.Damage = ScaleByEnemyDamageMultiplier(f, context.Owner, context.Damage);
-            context.Damage *= SkillFocusUtility.ResolveCenterFocusMultiplier(f, ref context);
             StatusEffectUtility.TryApplyElementalStatus(f, context.Target, context.Owner, context.Source, context.Element, context.Damage);
             StatusEffectUtility.TryApplyInfusedElement(f, context.Target, context.Owner, context.Source, context.PerkElement, context.PerkElementChance, context.Damage);
 
@@ -46,7 +45,6 @@ namespace Quantum
         public static void ApplyToTarget(Frame f, FixedArray<AssetRef<HitEffectData>> effects, ref HitEffectContext context, bool multiTarget = false)
         {
             context.Damage = ScaleByEnemyDamageMultiplier(f, context.Owner, context.Damage);
-            context.Damage *= SkillFocusUtility.ResolveCenterFocusMultiplier(f, ref context);
             StatusEffectUtility.TryApplyElementalStatus(f, context.Target, context.Owner, context.Source, context.Element, context.Damage);
             StatusEffectUtility.TryApplyInfusedElement(f, context.Target, context.Owner, context.Source, context.PerkElement, context.PerkElementChance, context.Damage);
 
@@ -442,10 +440,9 @@ namespace Quantum
         // (DamageEffectData, BurnEffectData, KnockbackEffectData) check context.Target != context.Owner
         // themselves instead.
         // areaRadius describes the spatial extent this hit covered, for effects that care where
-        // within it a target was caught (see HitEffectContext.AreaRadius/SkillFocusUtility). Left at
-        // its 0 default by any caller that has no single meaningful radius - a swept volume, a
-        // non-spherical area collider - which reads as "no meaningful area" rather than as a
-        // zero-sized one.
+        // within it a target was caught (see HitEffectContext.AreaRadius). Left at its 0 default by
+        // any caller that has no single meaningful radius - a swept volume, a non-spherical area
+        // collider - which reads as "no meaningful area" rather than as a zero-sized one.
         private static bool TryBuildContext(Frame f, EntityRef target, FPVector3 center, EntityRef owner,
             FP damage, DamageSource source, ElementType element, out HitEffectContext context,
             FPVector3? pushDirection = null, bool isExplosion = false, FP areaRadius = default, byte hitIndex = 0)

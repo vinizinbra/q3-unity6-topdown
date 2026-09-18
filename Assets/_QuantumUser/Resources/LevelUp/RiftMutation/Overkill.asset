@@ -21,7 +21,7 @@ MonoBehaviour:
   Rarity: 2
   Scope: 0
   IncompatibleWith: []
-  Description: 'Damage beyond a killed enemy''s health explodes for <color=#FD3971>{0:0}%</color> of the excess'
+  Description: Damage beyond a killed enemy's health explodes for {0:0}% of the excess
   OverkillConversion:
     RawValue: 32768
   ExplosionRadius:

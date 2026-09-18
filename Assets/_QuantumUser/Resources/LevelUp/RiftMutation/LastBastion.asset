@@ -21,6 +21,6 @@ MonoBehaviour:
   Rarity: 3
   Scope: 0
   IncompatibleWith: []
-  Description: '+<color=#FD3971>{0:0}%</color> Max Health, but you no longer have an Accessory'
+  Description: +{0:0}% Max Health, but you no longer have an Accessory
   HealthMultiplier:
     RawValue: 131072

@@ -19229,7 +19229,6 @@ GameObject:
   - component: {fileID: 7393441180478434901}
   - component: {fileID: 7748195033525551905}
   - component: {fileID: 9199265407262050627}
-  - component: {fileID: 3252432663942020725}
   - component: {fileID: 4724026707207944512}
   m_Layer: 0
   m_Name: TraversalActivator
@@ -19693,33 +19692,6 @@ MonoBehaviour:
     - {fileID: 0}
     - {fileID: 0}
     - {fileID: 0}
---- !u!114 &3252432663942020725
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3241963764557833621}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 12970ddfec93f42f095f63e6308955c5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Quantum.PoiView
-  _playerRef:
-    _index: 0
-  initialized: 0
-  executeOnlyOnLocal: 0
-  isLocal: 0
-  inactiveVisual: {fileID: 0}
-  activeVisual: {fileID: 4082201144294158327}
-  expiredVisual: {fileID: 0}
-  activeParticles: {fileID: 0}
-  promptTitle: INTERACT
-  promptActiveDescription: 
-  promptPhaseUnavailableDescription: COME BACK ON BREAK
-  promptAlreadyUsedDescription: ALREADY USED
-  promptNotNeededDescription: FULL HEALTH
-  promptWorldOffset: {x: 0, y: 4.5, z: 0}
 --- !u!114 &4724026707207944512
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19737,10 +19709,21 @@ MonoBehaviour:
   initialized: 0
   executeOnlyOnLocal: 0
   isLocal: 0
+  promptTitle: TRAVERSAL CHALLENGE
+  promptActiveDescription: Beat the course. Claim the prize
+  promptPhaseUnavailableDescription: COME BACK ON BREAK
+  promptAlreadyUsedDescription: ALREADY USED
+  promptNotNeededDescription: FULL HEALTH
+  promptWorldOffset: {x: 0, y: 2.5, z: 0}
+  promptRewardIcon: {fileID: 793603354, guid: 9500f48424b214942acfffa7912cb6be, type: 3}
+  promptRewardText: Rift Mutation
   idleVisual: {fileID: 4082201144294158327}
   activeVisual: {fileID: 4082201144294158327}
   completedVisual: {fileID: 557661819088810500}
   failedVisual: {fileID: 2017346380519075845}
+  activePromptDescription: CHALLENGE IN PROGRESS
+  completedPromptDescription: CHALLENGE COMPLETE
+  failedPromptDescription: CHALLENGE FAILED
 --- !u!1 &3832481463473005096
 GameObject:
   m_ObjectHideFlags: 0
@@ -29467,3 +29450,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.HasShadow
   baseScale: 0.5
   shadowOffset: {x: 0, y: 0}
+  shadowAlphaMultiplier: 1

@@ -138,4 +138,36 @@ The code compiles once codegen picks up the new `GameState.qtn`/`Events.qtn` fie
   `docs/boss-encounter.md` and `docs/run-phase.md`'s own "Boss phase trigger" section.
 - **The once-open pause question is resolved:** `Boss` does **not** pause `GameplaySystemGroup`, same
   as `Survival`/`Breathing` - it's an active fight, not a menu.
-- **Simulation-side only so far** - no View/UI code reacts to `GameStateChanged` yet, by explicit request.
+- **`TeamChallenge`/`TraversalChallenge` were added as of the Announcer/event-driven-HUD pass** -
+  overlay values, not real phases: entered/cleared every tick by
+  `CombatDirectorSystem.ApplyEffectiveState` (Boss > TeamChallenge > TraversalChallenge >
+  `Global.CombatPhaseState`, the same resolution order the old, now-deleted `HudBannerKind` field
+  used). `Global.CombatPhaseState` was added alongside them - the REAL Survival/Breathing/Boss
+  phase, immune to either overlay, written only by `ApplyPhaseGameState` - so that method's own
+  one-shot Breathing-exit/Boss-entry side effects only fire on a genuine phase change, never
+  spuriously when a challenge starts or ends mid-Breathing. `GameplaySystemGroup` stays fully
+  enabled for both new values, unlike `Upgrade`/the Boss-encounter pause - a Team/Traversal
+  Challenge never stops the rest of the team from playing normally elsewhere. See
+  `docs/optional-team-challenge.md`/`docs/traversal-challenge.md`.
+- **View code now reacts to `GameStateChanged`** - the "no View code reacts to it yet, by explicit
+  request" scoping from this doc's original pass no longer holds. `GameStateGatedWidget`
+  (`Assets/_Project/Scripts/UI/InGame/Hud/GameStateGatedWidget.cs`) is a shared base class 5 HUD
+  widgets (`BossWidget`, `TeamChallengeWidget`, `TraversalChallengeWidget`,
+  `BreathingWidget`, `SurvivalWidget`) now extend, subscribing to the event instead of each
+  independently polling `Global.CurrentState`/the old `Global.HudBanner` every tick - each one only
+  answers "am I the state this represents," with no delay/wait-for-announcer coordination.
+  `AnnouncerManager` (`Assets/_Project/Scripts/UI/Common/AnnouncerManager.cs`) subscribes to the
+  same event independently to decide "does this specific transition deserve a banner" (see
+  `docs/announcer.md`) - the two compose without either needing to know about the other.
+- **`GameState.Breathing` now only starts once the area is SECURED** (confirmed with the user,
+  follow-up to the pass above): `CombatDirectorSystem.ResolveDesiredState` takes
+  `Global.BreathingAreaSecured` as a second input - while the timeline has reached a Breathing phase
+  boundary but enemies are still being cleared, `CombatPhaseState`/`CurrentState` both stay
+  `GameState.Survival` (spawning/`SurvivalTime` are already paused via
+  `SurvivalProgressionUtility.Tick`'s own freeze logic regardless of GameState, so nothing about
+  pacing changes). A new `Global.CurrentPhaseKind` (mirrored every tick by that same `Tick` method)
+  is what lets `BotInputSystem`/`SurvivalWidget` still tell "we've reached a Breathing-kind
+  phase" apart from "and it's secured," now that `GameState` no longer carries that distinction -
+  see `docs/run-phase.md`. `PoiAvailabilityUtility`'s own `Breathing` case simplifies to just
+  `AvailableInBreathing` (the separate `BreathingAreaSecured` check is now redundant - reaching
+  `GameState.Breathing` at all already implies it).

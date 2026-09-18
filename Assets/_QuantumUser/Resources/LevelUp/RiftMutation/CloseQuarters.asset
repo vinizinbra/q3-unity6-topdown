@@ -21,7 +21,8 @@ MonoBehaviour:
   Rarity: 1
   Scope: 0
   IncompatibleWith: []
-  Description: '<color=#FD3971>{0:+0;-0}%</color> Damage up close, <color=#FD3971>{1:+0;-0}%</color> at range. Close kills grant <color=#FD3971>{2:+0;-0}%</color> Move Speed for <color=#FD3971>{3:0.#}s</color>.'
+  Description: '{0:+0;-0}% Damage up close, {1:+0;-0}% at range. Close kills grant
+    {2:+0;-0}% Move Speed for {3:0.#}s.'
   NearMultiplier:
     RawValue: 98304
   FarMultiplier:

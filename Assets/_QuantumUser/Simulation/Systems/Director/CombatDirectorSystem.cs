@@ -33,13 +33,21 @@ namespace Quantum
             if (PlayerSpawnUtility.IsReadyToSpawn(f) == false)
                 return;
 
-            // Progression (and therefore Breathing) now runs through BOTH Survival and Breathing -
-            // Breathing is just a phase in the same timeline, so it can't be excluded by this gate
-            // the way it used to be. Lobby (LobbyBoundarySystem hasn't resolved yet) and Upgrade
-            // (GameplaySystemGroup itself is disabled, so this wouldn't even tick, but this stays
-            // explicit rather than relying on that alone) both keep the timeline paused; Event/Boss
-            // will too once either is actually wired. See GameState.qtn.
-            if (f.Global->CurrentState != GameState.Survival && f.Global->CurrentState != GameState.Breathing)
+            // Progression (and therefore Breathing) runs through Survival/Breathing AND while a
+            // TeamChallenge/TraversalChallenge overlay is showing (the real phase underneath is
+            // still Survival or Breathing either way - see Global.CombatPhaseState).
+            // SurvivalProgressionUtility.Tick freezes ITSELF via ActiveTraversalChallengeCount/
+            // ActiveTeamChallengeCount, but it must still be CALLED, or the whole Director (and
+            // CurrencyOrbVacuumUtility.Tick/PlayerLifeStateUtility.ReviveAllIncapacitated, which
+            // "tick every frame regardless of phase") stop dead the instant CurrentState becomes an
+            // overlay value. Lobby/Upgrade keep the timeline paused, same as before. Boss is
+            // deliberately excluded too, unchanged - once entered, ApplyPhaseGameState/
+            // ApplyEffectiveState stop being called at all until the run leaves Boss (Victory). See
+            // GameState.qtn.
+            GameState cs = f.Global->CurrentState;
+
+            if (cs != GameState.Survival && cs != GameState.Breathing
+                && cs != GameState.TeamChallenge && cs != GameState.TraversalChallenge)
                 return;
 
             if (f.RuntimeConfig.SurvivalConfig.Id.IsValid == false ||
@@ -102,7 +110,16 @@ namespace Quantum
             if (f.Global->ActiveTraversalChallengeCount > 0)
                 return;
 
-            CombatDirectorUtility.TryPulse(f, currentPhase, directorConfig, lifecycleConfig, balanceConfig);
+            // Same standalone-counter pause for Optional Team Challenge - a DEDICATED counter, not
+            // shared with ActiveTraversalChallengeCount above, since the two are unrelated triggers
+            // (see TeamChallenge.qtn's own comment). Challenge encounters spawn through
+            // TeamChallengeUtility.BeginChallengeActive directly (via GroupSpawnerUtility, bypassing
+            // TryPulse entirely) - only normal Director purchases are gated here.
+            if (f.Global->ActiveTeamChallengeCount > 0)
+                return;
+
+            CombatDirectorUtility.TryPulse(f, currentPhase, directorConfig, lifecycleConfig, balanceConfig,
+                &f.Global->DirectorPulseTimer, &f.Global->DirectorBudget);
         }
 
         // Keeps Global.CurrentState in sync with whichever phase is now in effect, and runs the
@@ -111,7 +128,7 @@ namespace Quantum
         // CursedRift/Store/Blacksmith sweep and BeginBossEncounter below must NOT re-run every
         // tick, hence the explicit compare before either). Also maintains
         // Global.BreathingTimeRemaining (the current phase's own Duration minus PhaseTimer) purely
-        // as a cheap client-facing convenience value - BreathingCountdownWidget reads it directly
+        // as a cheap client-facing convenience value - BreathingWidget reads it directly
         // with no asset lookup.
         //
         // Entering Breathing deliberately has NO side effect here anymore - enemies are left alone
@@ -127,9 +144,14 @@ namespace Quantum
         // whole point is an active, playable fight.
         private static void ApplyPhaseGameState(Frame f, SurvivalPhase currentPhase)
         {
-            GameState desiredState = ResolveDesiredState(currentPhase.Kind);
+            GameState desiredState = ResolveDesiredState(currentPhase.Kind, f.Global->BreathingAreaSecured);
 
-            if (f.Global->CurrentState != desiredState)
+            // Compared against CombatPhaseState (the real phase), NOT CurrentState - CurrentState
+            // can currently read TeamChallenge/TraversalChallenge (see ApplyEffectiveState below),
+            // and comparing against that directly would spuriously refire these side effects every
+            // time a challenge overlay starts or ends mid-Breathing, even though the real phase
+            // never actually changed. See GameState.qtn's own CombatPhaseState comment.
+            if (f.Global->CombatPhaseState != desiredState)
             {
                 if (desiredState != GameState.Breathing)
                 {
@@ -144,7 +166,7 @@ namespace Quantum
                     RunPhaseUtility.BeginBossEncounter(f, currentPhase);
                 }
 
-                GameStateUtility.SetState(f, desiredState);
+                f.Global->CombatPhaseState = desiredState;
 
                 Log.Debug($"[RunPhase] entered {desiredState} (SurvivalPhase index {f.Global->CurrentPhaseIndex})");
             }
@@ -153,35 +175,51 @@ namespace Quantum
                 ? FPMath.Max(FP._0, currentPhase.Duration - f.Global->PhaseTimer)
                 : FP._0;
 
-            ApplyHudBanner(f);
+            ApplyEffectiveState(f);
         }
 
-        // Resolves the single top-screen HUD banner every tick this method runs (i.e. every tick
-        // while CurrentState is Survival/Breathing - see this class's own Update gate; once Boss is
-        // entered this stops being called at all until the run leaves Boss, but by then HudBanner is
-        // already correctly latched to Boss and nothing else can touch it in the meantime, same
-        // "computed once, holds" reasoning ApplyPhaseGameState's own Boss transition already relies
-        // on for GameStateUtility.SetState itself). See HudBannerKind's own comment (GameState.qtn)
-        // for the full "why not just reuse GameState" reasoning and resolution order.
-        private static void ApplyHudBanner(Frame f)
+        // Resolves Global.CurrentState's overlay every tick this method runs (i.e. every tick this
+        // class's own Update gate lets through) - the ONE place GameStateUtility.SetState is called
+        // for Survival/Breathing/Boss/TeamChallenge/TraversalChallenge (Lobby/Upgrade/RunFailed/
+        // Victory remain owned by their own systems, untouched). Resolution order (most specific/
+        // urgent wins): Boss > TeamChallenge > TraversalChallenge > whatever CombatPhaseState
+        // actually is. See GameState.qtn's own TeamChallenge/TraversalChallenge comments.
+        private static void ApplyEffectiveState(Frame f)
         {
-            if (f.Global->CurrentState == GameState.Boss)
-                f.Global->HudBanner = HudBannerKind.Boss;
-            else if (f.Global->ActiveTraversalChallengeCount > 0)
-                f.Global->HudBanner = HudBannerKind.TraversalChallenge;
-            else
-                f.Global->HudBanner = HudBannerKind.DirectorTimeline;
+            GameState effective =
+                f.Global->CombatPhaseState == GameState.Boss ? GameState.Boss
+                // Live State check, not just ActiveTeamChallengeCount > 0 - that counter only
+                // increments once ChallengeActive truly begins (Survival keeps running normally
+                // through the Starting countdown, see docs' own "STARTING THE CHALLENGE"), but the
+                // countdown itself still needs this same overlay to show in. See
+                // TeamChallengeUtility.AnyBannerActive.
+                : TeamChallengeUtility.AnyBannerActive(f) ? GameState.TeamChallenge
+                : f.Global->ActiveTraversalChallengeCount > 0 ? GameState.TraversalChallenge
+                : f.Global->CombatPhaseState;
+
+            GameStateUtility.SetState(f, effective);
         }
 
         // Combat/Elite both still map to Survival, unchanged from before - only Breathing/Boss get
         // their own dedicated GameState. Elite doesn't get one: it only holds PhaseTimer via
         // SurvivalProgressionUtility.IsEncounterCleared, no teleport/border/spawn trigger of its
         // own like Boss has.
-        private static GameState ResolveDesiredState(SurvivalPhaseKind kind)
+        //
+        // Breathing only resolves to GameState.Breathing once the area is actually SECURED - while
+        // the phase has reached a Breathing boundary but enemies are still being cleared, this stays
+        // GameState.Survival (confirmed with the user: that "mopping up" moment should still read as
+        // Survival, just with spawning/SurvivalTime already paused - see SurvivalProgressionUtility.
+        // Tick's own freeze logic, which doesn't care what GameState is). The "CLEAR ALL ENEMIES"
+        // prompt for that window lives on SurvivalWidget now, reading Global.
+        // CurrentPhaseKind == Breathing && BreathingAreaSecured == false directly, since GameState
+        // itself no longer distinguishes it. This also means GameState.Breathing now ALWAYS implies
+        // BreathingAreaSecured == true - BreathingWidget/BotInputSystem/
+        // PoiAvailabilityUtility all rely on that invariant instead of re-checking the flag.
+        private static GameState ResolveDesiredState(SurvivalPhaseKind kind, bool breathingAreaSecured)
         {
             switch (kind)
             {
-                case SurvivalPhaseKind.Breathing: return GameState.Breathing;
+                case SurvivalPhaseKind.Breathing: return breathingAreaSecured ? GameState.Breathing : GameState.Survival;
                 case SurvivalPhaseKind.Boss: return GameState.Boss;
                 default: return GameState.Survival;
             }

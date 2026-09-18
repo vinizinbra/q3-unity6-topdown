@@ -16,7 +16,7 @@ namespace Quantum
         // together), and once BurnStackCount is at maxStacks a further Fire hit just refreshes that
         // shared timer rather than replacing/strengthening an existing stack. Once Remaining has
         // actually hit zero there's nothing to carry over, so the next application starts a fresh
-        // stack count. tickInterval/maxStacks are EffectConfig's own fields - callers already have
+        // stack count. tickInterval/maxStacks are ElementalReactionConfig's own fields - callers already have
         // config resolved (see TryApplyElementalStatus/BurnEffectData), so they're threaded in
         // rather than re-resolved here.
         public static void ApplyBurn(Frame f, EntityRef target, FP duration, FP damagePerTick,
@@ -99,14 +99,14 @@ namespace Quantum
 
         // Ice/Chill - progressive stacking slow. buildupAmount is the RAW units THIS application
         // contributes (callers derive it from their own hit's own damage - see
-        // EffectConfig.IceBuildupPerDamage - same "potency scales off the hit, not a flat generic
-        // tick" convention Burn's own per-stack potency uses), tapered by ChillForceMultiplier
+        // ElementalReactionConfig.IceBuildupPerDamage - same "potency scales off the hit, not a flat
+        // generic tick" convention Burn's own per-stack potency uses), tapered by ChillForceMultiplier
         // before being added - a Boss both resists the resulting slow AND takes proportionally
         // longer to build toward Freeze from the same tapered value, with no separate code needed
         // for each. One shared duration timer, refreshed by every application (see
         // StatusEffectSystem.TickIce) - reaching 0 clears the buildup, never a per-application
-        // timer. Reaching EffectConfig.IceFreezeThreshold converts the buildup into Freeze instead
-        // (see ApplyFreeze) and resets it to 0.
+        // timer. Reaching ElementalReactionConfig.IceFreezeThreshold converts the buildup into Freeze
+        // instead (see ApplyFreeze) and resets it to 0.
         public static void ApplyIce(Frame f, EntityRef target, FP duration, FP buildupAmount)
         {
             if (f.Unsafe.TryGetPointer<StatusEffects>(target, out var status) == false)
@@ -118,7 +118,7 @@ namespace Quantum
             if (status->FreezeRemaining > FP._0)
                 return;
 
-            EffectConfig config = GetEffectConfig(f);
+            ElementalReactionConfig config = GetElementalReactionConfig(f);
             FP threshold = config != null ? config.IceFreezeThreshold : 5;
 
             if (GetTierResistance(f, target) is { } resistance)
@@ -319,14 +319,14 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<StatusEffects>(entity, out var status) == false || status->IceRemaining <= FP._0)
                 return FP._1;
 
-            EffectConfig config = GetEffectConfig(f);
+            ElementalReactionConfig config = GetElementalReactionConfig(f);
             FP slowPerBuildup = config != null ? config.IceSlowPerBuildup : FP.FromString("0.08");
 
             return FPMath.Max(FP._0, FP._1 - status->IceBuildup * slowPerBuildup);
         }
 
         // Freeze (Ice hard CC) - only ever reached via Ice/Chill buildup hitting
-        // EffectConfig.IceFreezeThreshold (see ApplyIce above), never applied directly by a
+        // ElementalReactionConfig.IceFreezeThreshold (see ApplyIce above), never applied directly by a
         // weapon/skill. Reuses the exact same total lockout Stun does (every IsStunned gate in
         // EnemySystem/PlayerMovementProcessor/WeaponSystem also checks IsFrozen) but stays
         // independently queryable - see StatusEffects.FreezeRemaining's own comment. Deliberately
@@ -903,7 +903,7 @@ namespace Quantum
 
         // Shared "X% of the triggering hit, spread across tickInterval-spaced ticks over duration"
         // formula - used by BurnEffectData and TryApplyElementalStatus's Fire case so those callers
-        // don't each re-derive it. tickInterval is always EffectConfig.TickInterval - threaded in
+        // don't each re-derive it. tickInterval is always ElementalReactionConfig.TickInterval - threaded in
         // rather than read off a static, so this stays a pure function of its arguments.
         public static FP ComputeDotDamagePerTick(FP hitDamage, FP damagePercent, FP duration, FP tickInterval)
         {
@@ -928,9 +928,9 @@ namespace Quantum
             return FPMath.Max(damagePerTick, floorPerTick);
         }
 
-        // Single resolve point for RuntimeConfig.EffectConfig - every EffectData class and both
-        // elemental-proc helpers below go through this instead of each repeating the null/log check,
-        // same shape as GetTierResistance above.
+        // Single resolve point for RuntimeConfig.EffectConfig - every non-Fire/Ice EffectData class
+        // goes through this instead of each repeating the null/log check, same shape as
+        // GetTierResistance above.
         public static EffectConfig GetEffectConfig(Frame f)
         {
             EffectConfig config = f.FindAsset(f.RuntimeConfig.EffectConfig);
@@ -972,7 +972,7 @@ namespace Quantum
         public static void TryApplyElementalStatus(Frame f, EntityRef target, EntityRef owner,
             DamageSource source, ElementType element, FP hitDamage)
         {
-            EffectConfig config = GetEffectConfig(f);
+            ElementalReactionConfig config = GetElementalReactionConfig(f);
 
             if (config == null)
                 return;
@@ -1033,7 +1033,7 @@ namespace Quantum
             if (source != DamageSource.Weapon || element == ElementType.Neutral || target == EntityRef.None)
                 return;
 
-            EffectConfig config = GetEffectConfig(f);
+            ElementalReactionConfig config = GetElementalReactionConfig(f);
 
             if (config == null)
                 return;
@@ -1052,7 +1052,7 @@ namespace Quantum
         // native-element (TryApplyElementalStatus) and perk-infused (TryApplyInfusedElement) paths
         // so the mapping lives in one place. Rock/Void were retired - see ElementType.qtn.
         private static void ApplyElementBaseline(Frame f, EntityRef target, EntityRef owner,
-            DamageSource source, ElementType element, FP hitDamage, EffectConfig config)
+            DamageSource source, ElementType element, FP hitDamage, ElementalReactionConfig config)
         {
             switch (element)
             {
@@ -1071,24 +1071,19 @@ namespace Quantum
 
                 case ElementType.Lightning:
                 {
-                    ElementalReactionConfig reactionConfig = GetElementalReactionConfig(f);
+                    // Shock's own baseline gameplay payoff: a further Electric hit landing on a
+                    // target that's ALREADY Shocked rolls a chance to proc the existing, generic
+                    // Stun - read BEFORE ApplyElectrified overwrites ElectrifiedRemaining below,
+                    // so a fresh (non-refresh) application never rolls. Uses the existing
+                    // Stun primitive (ApplyStun already fires Jolt on a genuine land) rather than
+                    // a bespoke "Electric Stun".
+                    bool wasAlreadyShocked = IsElectrified(f, target);
 
-                    if (reactionConfig != null)
+                    ApplyElectrified(f, target, config.ElectrifiedDuration);
+
+                    if (wasAlreadyShocked == true && DamageUtility.RollChance(f, config.ShockStunProcChance) == true)
                     {
-                        // Shock's own baseline gameplay payoff: a further Electric hit landing on a
-                        // target that's ALREADY Shocked rolls a chance to proc the existing, generic
-                        // Stun - read BEFORE ApplyElectrified overwrites ElectrifiedRemaining below,
-                        // so a fresh (non-refresh) application never rolls. Uses the existing
-                        // Stun primitive (ApplyStun already fires Jolt on a genuine land) rather than
-                        // a bespoke "Electric Stun".
-                        bool wasAlreadyShocked = IsElectrified(f, target);
-
-                        ApplyElectrified(f, target, reactionConfig.ElectrifiedDuration);
-
-                        if (wasAlreadyShocked == true && DamageUtility.RollChance(f, reactionConfig.ShockStunProcChance) == true)
-                        {
-                            ApplyStun(f, target, reactionConfig.ShockStunProcDuration, owner);
-                        }
+                        ApplyStun(f, target, config.ShockStunProcDuration, owner);
                     }
 
                     // Zara's High Voltage (Electric Mastery R3) - applying Shock grants the OWNER
@@ -1161,14 +1156,14 @@ namespace Quantum
                     if (IsBurning(f, target) == true)
                         TryTriggerThermalShock(f, status, config, target, owner, source, hitDamage);
                     else if (IsElectrified(f, target) == true)
-                        TryTriggerShatter(f, status, config, target, owner, source);
+                        TryTriggerShatter(f, status, config, target, owner, source, hitDamage);
                     break;
 
                 case ElementType.Lightning:
                     if (IsBurning(f, target) == true)
                         TryTriggerOverload(f, status, config, target, owner, source, hitDamage);
                     else if (IsSlowed(f, target) == true)
-                        TryTriggerShatter(f, status, config, target, owner, source);
+                        TryTriggerShatter(f, status, config, target, owner, source, hitDamage);
                     break;
             }
         }
@@ -1190,7 +1185,16 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<Transform3D>(target, out _) == false)
                 return false;
 
+            if (DamageUtility.RollChance(f, config.ThermalShockProcChance) == false)
+                return false;
+
             status->ThermalShockCooldownRemaining = config.ThermalShockTriggerCooldown;
+
+            // ResolveEntityCenter, not raw Transform3D.Position - that's the ground/feet anchor for
+            // most enemies, not the visual body center a VFX should spawn at. Resolved BEFORE
+            // ApplyDamage below, since that hit can itself kill (and f.Destroy) the target - reading
+            // its Transform3D afterward would throw instead of just missing the VFX.
+            FPVector3 position = EnemyMovementUtility.ResolveEntityCenter(f, target);
 
             // A percent of the triggering hit's own damage, same DamagePercent-off-the-triggering-hit
             // convention Overload/Burn/Rupture already use, rather than a flat number disconnected
@@ -1198,9 +1202,7 @@ namespace Quantum
             FP damage = hitDamage * config.ThermalShockDamagePercent;
             DamageUtility.ApplyDamage(f, target, damage, owner, source, bypassOutgoingResolution: true, element: ElementType.Fire, reactionProc: true);
 
-            // ResolveEntityCenter, not raw Transform3D.Position - that's the ground/feet anchor for
-            // most enemies, not the visual body center a VFX should spawn at.
-            f.Events.ThermalShockTriggered(target, EnemyMovementUtility.ResolveEntityCenter(f, target));
+            f.Events.ThermalShockTriggered(target, position);
 
             Log.Debug($"[Status] {target} Burn+Chill triggered Thermal Shock");
             return true;
@@ -1224,7 +1226,18 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<Transform3D>(target, out _) == false)
                 return false;
 
+            if (DamageUtility.RollChance(f, config.OverloadProcChance) == false)
+                return false;
+
             status->OverloadCooldownRemaining = config.OverloadTriggerCooldown;
+
+            // ResolveEntityCenter, not raw transform->Position - see TryTriggerThermalShock's own
+            // comment. Resolved BEFORE ApplyDamage below, since the origin's own hit can itself kill
+            // (and f.Destroy) the target - reading its Transform3D afterward would throw instead of
+            // just missing the VFX. The chain's own OverloadChainPosition uses the same center so
+            // every hop's travel-particle segment lines up with each enemy's actual body, not their
+            // feet.
+            FPVector3 originCenter = EnemyMovementUtility.ResolveEntityCenter(f, target);
 
             // A percent of the triggering hit's own damage, same DamagePercent-off-the-triggering-hit
             // convention Burn/Rupture already use - not a flat number disconnected from how hard the
@@ -1234,10 +1247,6 @@ namespace Quantum
             FP initialDamage = hitDamage * config.OverloadInitialDamagePercent;
             DamageUtility.ApplyDamage(f, target, initialDamage, owner, source, bypassOutgoingResolution: true, element: ElementType.Lightning, reactionProc: true);
 
-            // ResolveEntityCenter, not raw transform->Position - see TryTriggerThermalShock's own
-            // comment. The chain's own OverloadChainPosition uses the same center so every hop's
-            // travel-particle segment lines up with each enemy's actual body, not their feet.
-            FPVector3 originCenter = EnemyMovementUtility.ResolveEntityCenter(f, target);
             f.Events.OverloadTriggered(target, originCenter);
 
             status->OverloadChainOwner = owner;
@@ -1367,18 +1376,19 @@ namespace Quantum
         // Thermal Shock's "point" and Overload's "line/chain" - no pull, no knockback, no new
         // displacement mechanic. The entity that triggered it (the reaction target) becomes the
         // center and never itself moves; it gets a full Stun (the one enemy that actually landed the
-        // combo takes the hardest hit), every other valid enemy caught in ShatterRadius gets a SHORT
-        // Stagger via StatusEffectUtility.ApplyStagger (tier taper included for free) - the pack
-        // around it is interrupted, not fully disabled, only the primary is. Reusing ApplyStun as-is
-        // means Boss immunity/tier duration multipliers/the shared Stun diminishing-returns window all
-        // apply automatically to the primary with no Shatter-specific special-casing - if the primary
+        // combo takes the hardest hit), every other valid enemy caught in ShatterRadius gets ONE hit's
+        // worth of Ice buildup (the same ApplyIce a normal Ice hit would contribute, scaled off this
+        // hit's own damage) instead of a Stagger - the pack around it is slowed/pushed toward Freeze,
+        // not interrupted; only the primary is hard-disabled. Reusing ApplyStun as-is means Boss
+        // immunity/tier duration multipliers/the shared Stun diminishing-returns window all apply
+        // automatically to the primary with no Shatter-specific special-casing - if the primary
         // happens to be a Boss its own Stun simply won't land, but the reaction still fires and nearby
-        // enemies are still staggered. ShatterDamage is optional/0 by default - Shatter's identity is
-        // control, not damage. Statuses are PERSISTENT CONDITIONS, not consumed by the reaction -
-        // Chill/Electrified both keep ticking down on their own timers, and the cooldown above (not
-        // status removal) throttles repeat procs. See docs/elemental-reactions.md.
+        // enemies still get their Ice buildup. ShatterDamage is optional/0 by default - Shatter's
+        // identity is control, not damage. Statuses are PERSISTENT CONDITIONS, not consumed by the
+        // reaction - Chill/Electrified both keep ticking down on their own timers, and the cooldown
+        // above (not status removal) throttles repeat procs. See docs/elemental-reactions.md.
         private static bool TryTriggerShatter(Frame f, StatusEffects* status, ElementalReactionConfig config,
-            EntityRef target, EntityRef owner, DamageSource source)
+            EntityRef target, EntityRef owner, DamageSource source, FP hitDamage)
         {
             if (status->ShatterCooldownRemaining > FP._0)
                 return false;
@@ -1386,16 +1396,21 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<Transform3D>(target, out _) == false)
                 return false;
 
+            if (DamageUtility.RollChance(f, config.ShatterProcChance) == false)
+                return false;
+
             status->ShatterCooldownRemaining = config.ShatterTriggerCooldown;
+
+            // ResolveEntityCenter, not raw Transform3D.Position - see TryTriggerThermalShock's own
+            // comment. Resolved BEFORE ApplyStun/ApplyDamage below - ShatterDamage (optional) can
+            // itself kill (and f.Destroy) the target, and reading its Transform3D afterward would
+            // throw instead of just skipping the AoE.
+            FPVector3 center = EnemyMovementUtility.ResolveEntityCenter(f, target);
 
             ApplyStun(f, target, config.ShatterPrimaryStunDuration, owner);
 
             if (config.ShatterDamage > FP._0)
                 DamageUtility.ApplyDamage(f, target, config.ShatterDamage, owner, source, bypassOutgoingResolution: true, element: ElementType.Ice, reactionProc: true);
-
-            // ResolveEntityCenter, not raw Transform3D.Position - see TryTriggerThermalShock's own
-            // comment.
-            FPVector3 center = EnemyMovementUtility.ResolveEntityCenter(f, target);
 
             Shape3D sphere = Shape3D.CreateSphere(config.ShatterRadius);
             var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
@@ -1407,12 +1422,13 @@ namespace Quantum
                 if (hitEntity == EntityRef.None || hitEntity == target || f.Has<Enemy>(hitEntity) == false)
                     continue;
 
-                // Stagger only, deliberately no JoltTriggered here - Jolt now means "this target was
-                // actually Stunned" (see ApplyStun), and a secondary enemy caught in the AoE is only
-                // Staggered, never Stunned. ShatterTriggered's own crack VFX still plays once at the
-                // primary/Center; the primary itself already gets Jolt for free via the ApplyStun
-                // call above.
-                ApplyStagger(f, hitEntity, config.ShatterAreaStaggerDuration, owner);
+                // Ice buildup only, deliberately no JoltTriggered here - Jolt now means "this target
+                // was actually Stunned" (see ApplyStun), and a secondary enemy caught in the AoE only
+                // gets pushed toward Freeze, never Stunned. ShatterTriggered's own crack VFX still
+                // plays once at the primary/Center; the primary itself already gets Jolt for free via
+                // the ApplyStun call above. Ice's own SlowDuration/IceBuildupPerDamage now live on
+                // this same ElementalReactionConfig (config) - no separate EffectConfig lookup needed.
+                ApplyIce(f, hitEntity, config.SlowDuration, hitDamage * config.IceBuildupPerDamage);
 
                 if (config.ShatterDamage > FP._0)
                     DamageUtility.ApplyDamage(f, hitEntity, config.ShatterDamage, owner, source, bypassOutgoingResolution: true, element: ElementType.Ice, reactionProc: true);
@@ -1468,7 +1484,7 @@ namespace Quantum
         // even on a Neutral weapon. Returns whether it actually applied, so the caller can still fire
         // the reaction scan for this Burn even when the weapon's own Element is Neutral (which
         // otherwise short-circuits before ever reaching TryTriggerElementalReaction).
-        private static bool TryApplyGuaranteedBurn(Frame f, EntityRef target, EntityRef owner, DamageSource source, FP hitDamage, EffectConfig config)
+        private static bool TryApplyGuaranteedBurn(Frame f, EntityRef target, EntityRef owner, DamageSource source, FP hitDamage, ElementalReactionConfig config)
         {
             if (source != DamageSource.Weapon || target == EntityRef.None)
                 return false;

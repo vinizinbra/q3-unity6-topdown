@@ -3,19 +3,69 @@ namespace Quantum
     using Photon.Deterministic;
     using UnityEngine;
 
-    // Global balance tuning for Shock/Electrified (Lightning's baseline) and the 3 elemental
-    // reactions it forms with Fire/Ice (see docs/elemental-reactions.md) - parallel to EffectConfig,
-    // but deliberately separate from it: every field here is elemental-reaction-domain-owned, none of
-    // them reused from EffectConfig's own Burn/Stun/Root/etc fields, even where a reaction's effect
-    // reuses an existing status (Static Collapse applies Stagger) - those existing fields already
-    // have other live consumers, so borrowing them would silently couple an unrelated skill's tuning
-    // to a reaction's. Referenced via RuntimeConfig.ElementalReactionConfig, read by
-    // StatusEffectUtility.
+    // Global balance tuning for Fire/Ice/Lightning's own baselines (Burn/Chill+Freeze/Electrified)
+    // and the 3 elemental reactions they form with each other (see docs/elemental-reactions.md) -
+    // parallel to EffectConfig, but deliberately separate from it: every field here is
+    // elemental-domain-owned, none of them reused from EffectConfig's own Stun/Root/etc fields, even
+    // where a reaction's effect reuses an existing status (Static Collapse applies Stagger) - those
+    // existing fields already have other live consumers, so borrowing them would silently couple an
+    // unrelated skill's tuning to a reaction's. Referenced via RuntimeConfig.ElementalReactionConfig,
+    // read by StatusEffectUtility.
     //
-    // [Header] groups below mark which reaction actually reads each field - all fields are read
-    // purely from StatusEffectUtility (ApplyElementBaseline/TryTrigger* methods).
+    // Burn is DoT: total damage dealt over Duration is HitDamage * DamagePercent, spread evenly
+    // across TickInterval-spaced ticks - see StatusEffectUtility.ComputeDotDamagePerTick.
+    //
+    // [Header] groups below mark which baseline/reaction actually reads each field - all fields are
+    // read purely from StatusEffectUtility (ApplyElementBaseline/ApplyBurn/ApplyIce/TryTrigger*
+    // methods).
     public class ElementalReactionConfig : AssetObject
     {
+        [Header("Burn - Fire's baseline")]
+        // Shared DoT cadence for Burn - not stored per-instance, since nothing here needs a
+        // different tick rate per proc. A status applied fresh ticks for the first time
+        // TickInterval seconds later, not immediately. See StatusEffectUtility.ApplyBurn
+        // (timer seeding) and ComputeDotDamagePerTick (ticks = Duration / TickInterval).
+        public FP TickInterval = FP._0_50;
+
+        public FP BurnDuration = 3;
+        public FP BurnDamagePercent = FP._0_10;
+
+        // Minimum total Burn damage over BurnDuration, as a percent of the OWNER's own MaxHealth,
+        // spread across ticks the same way BurnDamagePercent is - whichever of the two (hit-based or
+        // this floor) is bigger wins. Covers a hit that dealt 0 direct damage (a knockback-only proc,
+        // a heal pulse) as well as a real but small hit whose BurnDamagePercent share would otherwise
+        // be negligible. See StatusEffectUtility.ComputeDotDamagePerTickWithFloor.
+        public FP BurnFloorPercent = FP._0_05;
+
+        // Cap on how many independent Burn stacks (see StatusEffects.BurnStackDamagePerTick) can
+        // coexist - every stack shares BurnDuration's single timer, only the per-stack potency
+        // differs. See StatusEffectUtility.ApplyBurn.
+        public int BurnMaxStacks = 5;
+
+        [Header("Chill/Ice - Ice's baseline + Freeze")]
+        public FP SlowDuration = 3;
+
+        // Ice/Chill buildup - see StatusEffectUtility.ApplyIce/GetSpeedMultiplier. Each qualifying
+        // Ice application contributes IceBuildupPerDamage * hitDamage buildup units (same
+        // "potency scales off the hit's own damage" convention BurnDamagePercent already uses, so a
+        // fast weak weapon can't out-buildup a slow heavy one just by firing more often) -
+        // ~1 unit per 40 damage, the same reference hit BurnDamagePercent's own worked example
+        // uses. IceSlowPerBuildup is the movement-slow contributed by each whole buildup unit
+        // (1 - IceSlowPerBuildup * buildup is the resulting speed multiplier, further tapered by
+        // TierStatusResistance.ChillForceMultiplier at the moment buildup is added). Reaching
+        // IceFreezeThreshold converts the buildup into Freeze instead (see FreezeDuration below)
+        // and resets it to 0.
+        public FP IceBuildupPerDamage = FP.FromString("0.025");
+        public FP IceSlowPerBuildup = FP.FromString("0.08");
+        public FP IceFreezeThreshold = 5;
+
+        // Freeze (Ice hard CC, only ever reached via Ice/Chill buildup hitting IceFreezeThreshold
+        // above - see StatusEffectUtility.ApplyFreeze) - base duration before
+        // EnemyTierResistanceConfig.TierStatusResistance.FreezeDurationMultiplier/
+        // FreezeRecoveryDuration taper it per tier. This IS the Normal-tier value (Normal's own
+        // FreezeDurationMultiplier is 1.0) - every other tier is expressed as a ratio of it.
+        public FP FreezeDuration = FP._2;
+
         [Header("Shock - Lightning's baseline (Electrified) + Stun proc")]
         // Lightning's own baseline status, applied the same way Fire->Burn/Ice->Chill are (see
         // StatusEffectUtility.ApplyElementBaseline). Plain overwrite-on-reapply, no tier scaling -
@@ -44,6 +94,11 @@ namespace Quantum
         [Header("Thermal Shock - Burn + Chill")]
         public FP ThermalShockTriggerCooldown = FP.FromString("0.75");
 
+        // Rolled (DamageUtility.RollChance) once per qualifying hit, before the cooldown is consumed
+        // - a failed roll doesn't burn the cooldown, so the very next qualifying hit gets another
+        // shot at it. 1 (always procs) for now; placeholder until tuned.
+        public FP ThermalShockProcChance = FP._1;
+
         // The reaction's own burst - a PERCENT of the triggering weapon/skill hit's own damage
         // (hitDamage), same DamagePercent-off-the-triggering-hit convention Overload/Burn/Rupture
         // already use, rather than a flat number disconnected from how hard the hit that actually
@@ -55,6 +110,10 @@ namespace Quantum
 
         [Header("Overload - Burn + Shock")]
         public FP OverloadTriggerCooldown = FP._1;
+
+        // Same rolled-before-cooldown-consumed convention as ThermalShockProcChance above. 1 (always
+        // procs) for now; placeholder until tuned.
+        public FP OverloadProcChance = FP._1;
 
         // Origin's own hit - a PERCENT of the triggering weapon/skill hit's own damage (hitDamage),
         // same DamagePercent-off-the-triggering-hit convention Burn/Rupture already use, rather than
@@ -87,19 +146,16 @@ namespace Quantum
         public FP ShatterTriggerCooldown = FP._1;
         public FP ShatterRadius = 4;
 
+        // Same rolled-before-cooldown-consumed convention as ThermalShockProcChance above. 1 (always
+        // procs) for now; placeholder until tuned.
+        public FP ShatterProcChance = FP._1;
+
         // Full Stun on the entity that actually triggered the reaction (the center) - unlike every
-        // other Shatter effect (nearby enemies only get a short Stagger), the primary itself is hard
-        // disabled. Reuses StatusEffectUtility.ApplyStun as-is, so Boss immunity/tier duration
+        // other Shatter effect (nearby enemies only get Ice buildup, not a Stun), the primary itself
+        // is hard disabled. Reuses StatusEffectUtility.ApplyStun as-is, so Boss immunity/tier duration
         // multipliers/the shared Stun diminishing-returns window all apply automatically - no
         // Shatter-specific special-casing needed.
         public FP ShatterPrimaryStunDuration = FP.FromString("1.5");
-
-        // Short Stagger on every OTHER enemy caught within ShatterRadius - deliberately much
-        // shorter than the primary's, so the reaction reads as "the pack got interrupted", not "the
-        // pack got stunned solid". Reuses the existing StatusEffectUtility.ApplyStagger primitive
-        // (and its tier taper) - no separate CC state, and no Jolt VFX (Jolt is reserved for an
-        // actual Stun landing - the primary above already gets it via ApplyStun).
-        public FP ShatterAreaStaggerDuration = FP.FromString("0.25");
 
         // Optional - 0 disables (default). Shatter's identity is control, not damage; if raised
         // above 0 this flat amount hits every affected enemy (primary + nearby) uniformly, applied

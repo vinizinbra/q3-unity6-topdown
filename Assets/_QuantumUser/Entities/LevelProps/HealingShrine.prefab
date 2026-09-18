@@ -26,7 +26,7 @@ Transform:
   m_GameObject: {fileID: 645061532357269840}
   serializedVersion: 2
   m_LocalRotation: {x: 0.38268346, y: 0, z: 0, w: 0.9238795}
-  m_LocalPosition: {x: 0, y: 0, z: -0.5}
+  m_LocalPosition: {x: 0, y: -0.2, z: -0.5}
   m_LocalScale: {x: 0.5, y: 0.5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -117,7 +117,7 @@ Transform:
   m_GameObject: {fileID: 1338488018086348289}
   serializedVersion: 2
   m_LocalRotation: {x: 0.38268346, y: 0, z: 0, w: 0.9238795}
-  m_LocalPosition: {x: 0, y: 0, z: -0.5}
+  m_LocalPosition: {x: 0, y: -0.2, z: -0.5}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -209,7 +209,7 @@ Transform:
   m_GameObject: {fileID: 6815906967267946437}
   serializedVersion: 2
   m_LocalRotation: {x: 0.38268346, y: 0, z: 0, w: 0.9238795}
-  m_LocalPosition: {x: 0, y: 0, z: -0.5}
+  m_LocalPosition: {x: 0, y: -0.2, z: -0.5}
   m_LocalScale: {x: 0.5, y: 0.5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -308,7 +308,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 4, y: 1.45, z: 4}
-  m_LocalScale: {x: 2, y: 2, z: 2}
+  m_LocalScale: {x: 1.6, y: 1.6, z: 1.6}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7553367519627053543}
@@ -678,16 +678,18 @@ MonoBehaviour:
   initialized: 0
   executeOnlyOnLocal: 0
   isLocal: 0
+  promptTitle: Healing Shrine
+  promptActiveDescription: Give something up. Take something back.
+  promptPhaseUnavailableDescription: Restore health
+  promptAlreadyUsedDescription: ALREADY USED
+  promptNotNeededDescription: FULL HEALTH
+  promptWorldOffset: {x: 0, y: 2.25, z: 0}
+  promptRewardIcon: {fileID: 0}
+  promptRewardText: 
   inactiveVisual: {fileID: 645061532357269840}
   activeVisual: {fileID: 1338488018086348289}
   expiredVisual: {fileID: 6815906967267946437}
   activeParticles: {fileID: 1675641575376398030}
-  promptTitle: Healing Shrine
-  promptActiveDescription: 
-  promptPhaseUnavailableDescription: COME BACK ON BREAK
-  promptAlreadyUsedDescription: ALREADY USED
-  promptNotNeededDescription: FULL HEALTH
-  promptWorldOffset: {x: 0, y: 4, z: 0}
 --- !u!114 &2300076770923516874
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -718,8 +720,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9168c542245be475f8ee71bd6733ba7c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.HasShadow
-  baseScale: 2.2
+  baseScale: 2.5
   shadowOffset: {x: 0, y: 0}
+  shadowAlphaMultiplier: 1
 --- !u!1001 &1675641575356612756
 PrefabInstance:
   m_ObjectHideFlags: 0

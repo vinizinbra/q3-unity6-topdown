@@ -287,104 +287,155 @@ namespace Quantum
 
             if (health->CurrentHealth <= FP._0)
             {
-                // Reentrancy guard - a signal raised above (OnCriticalHit, OnExplosionCriticalHit) can
-                // synchronously call back into ApplyDamage on this SAME target before this call's own
-                // health mutation above has even run (e.g. ExplosiveCritWeaponPerkData's crit-explosion,
-                // see HitEffectUtility.ApplyDamageInRadius's excludeTarget - fixed at its one known
-                // source, but this is the actual invariant: once a kill has been resolved once, for ANY
-                // reason, resolving it again must be a no-op). If a nested call already destroyed this
-                // target outright, or flipped a lingering Enemy to Dead, this outer call's own death
-                // branch must not re-run and double-fire EntityDied/OnEntityKilled/every on-kill drop
-                // (XP, Scrap, Rift Shard, Coin, chest) for what is still just the one kill.
-                if (f.Exists(target) == false)
-                    return;
+                ResolveDeath(f, target, owner, source, overkillDamage, isChainedExplosion, isExplosion);
+            }
+        }
 
-                if (f.Unsafe.TryGetPointer<Enemy>(target, out var alreadyDeadEnemy) == true && alreadyDeadEnemy->Phase == EnemyActionPhase.Dead)
-                    return;
+        // The shared kill-resolution tail - everything that happens once a target's Health has
+        // actually reached 0, whether that came from this call's own hit above or from a direct
+        // execution (see TryExecute below, Executioner's own kill pipeline). Pulled out of ApplyDamage
+        // so an execution gets the exact same EntityDied/OnEntityKilled signal, on-kill drops
+        // (XP/Scrap/Rift Shard/Coin/Chest), tier-based death handling and weapon-perk/mutation
+        // reactions a normal lethal hit resolves through - never a second, hand-duplicated copy of
+        // this logic.
+        private static void ResolveDeath(Frame f, EntityRef target, EntityRef owner, DamageSource source,
+            FP overkillDamage, bool isChainedExplosion, bool isExplosion)
+        {
+            // Reentrancy guard - a signal raised above (OnCriticalHit, OnExplosionCriticalHit) can
+            // synchronously call back into ApplyDamage on this SAME target before this call's own
+            // health mutation above has even run (e.g. ExplosiveCritWeaponPerkData's crit-explosion,
+            // see HitEffectUtility.ApplyDamageInRadius's excludeTarget - fixed at its one known
+            // source, but this is the actual invariant: once a kill has been resolved once, for ANY
+            // reason, resolving it again must be a no-op). If a nested call already destroyed this
+            // target outright, or flipped a lingering Enemy to Dead, this outer call's own death
+            // branch must not re-run and double-fire EntityDied/OnEntityKilled/every on-kill drop
+            // (XP, Scrap, Rift Shard, Coin, chest) for what is still just the one kill. This is also
+            // what makes TryExecute safe to call synchronously from OnHealthDamageApplied, still
+            // inside the very ApplyDamage call whose hit triggered the execution.
+            if (f.Exists(target) == false)
+                return;
 
-                f.Events.EntityDied(target, owner);
-                f.Signals.OnEntityKilled(target, owner, source);
+            if (f.Unsafe.TryGetPointer<Enemy>(target, out var alreadyDeadEnemy) == true && alreadyDeadEnemy->Phase == EnemyActionPhase.Dead)
+                return;
 
-                // Overkill - re-deals a fraction of the excess damage as a blast at the corpse.
-                // Raised AFTER the kill signal/event so normal kill attribution, drops and on-kill
-                // reactions all resolve against the original hit first.
-                OverkillUtility.TryDetonate(f, target, owner, source, overkillDamage, isChainedExplosion);
+            f.Events.EntityDied(target, owner);
+            f.Signals.OnEntityKilled(target, owner, source);
 
-                // Pixie's Unstable Mixture - banks a stack when a GENUINE (non-chained) explosion
-                // gets a kill, empowering her next explosion. Scoped by the same isExplosion/
-                // isChainedExplosion pair every other explosion-source rule here uses, which is what
-                // stops a chain reaction from farming its own stacks (see UnstableMixture.qtn).
-                if (isExplosion == true && isChainedExplosion == false)
+            // Overkill - re-deals a fraction of the excess damage as a blast at the corpse.
+            // Raised AFTER the kill signal/event so normal kill attribution, drops and on-kill
+            // reactions all resolve against the original hit first.
+            OverkillUtility.TryDetonate(f, target, owner, source, overkillDamage, isChainedExplosion);
+
+            // Pixie's Unstable Mixture - banks a stack when a GENUINE (non-chained) explosion
+            // gets a kill, empowering her next explosion. Scoped by the same isExplosion/
+            // isChainedExplosion pair every other explosion-source rule here uses, which is what
+            // stops a chain reaction from farming its own stacks (see UnstableMixture.qtn).
+            if (isExplosion == true && isChainedExplosion == false)
+            {
+                DemolitionMasteryUtility.OnExplosionKill(f, owner);
+            }
+
+            ExperienceUtility.TrySpawnDrop(f, target, owner);
+            ScrapUtility.TrySpawnDrop(f, target, owner);
+            RiftShardUtility.TrySpawnDrop(f, target, owner);
+            CoinUtility.TrySpawnDrop(f, target, owner);
+            EnemyChestDropUtility.TrySpawnDrop(f, target);
+
+            if (f.Unsafe.TryGetPointer<Enemy>(target, out var enemy) == true)
+            {
+                // Killing-blow kill count - only owner has CharacterStats when it's a player
+                // (an enemy-on-enemy or hazard kill has no wallet to credit, same guard shape
+                // as Coins/RiftShards below).
+                if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var killerStats) == true)
                 {
-                    DemolitionMasteryUtility.OnExplosionKill(f, owner);
+                    killerStats->MonstersKilled++;
                 }
 
-                ExperienceUtility.TrySpawnDrop(f, target, owner);
-                ScrapUtility.TrySpawnDrop(f, target, owner);
-                RiftShardUtility.TrySpawnDrop(f, target, owner);
-                CoinUtility.TrySpawnDrop(f, target, owner);
-                EnemyChestDropUtility.TrySpawnDrop(f, target);
+                EnemyDataAsset data = f.FindAsset(enemy->EnemyData);
+                FP maxHealth = f.Unsafe.TryGetPointer<Health>(target, out var targetHealth) ? targetHealth->MaxHealth : FP._0;
 
-                if (f.Unsafe.TryGetPointer<Enemy>(target, out var enemy) == true)
+                if (data.Tier == EnemyTier.Filler || data.Tier == EnemyTier.Normal|| data.Tier == EnemyTier.Heavy|| data.Tier == EnemyTier.Specialist)
                 {
-                    // Killing-blow kill count - only owner has CharacterStats when it's a player
-                    // (an enemy-on-enemy or hazard kill has no wallet to credit, same guard shape
-                    // as Coins/RiftShards below).
-                    if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var killerStats) == true)
-                    {
-                        killerStats->MonstersKilled++;
-                    }
-
-                    EnemyDataAsset data = f.FindAsset(enemy->EnemyData);
-
-                    if (data.Tier == EnemyTier.Filler || data.Tier == EnemyTier.Normal|| data.Tier == EnemyTier.Heavy|| data.Tier == EnemyTier.Specialist)
-                    {
-                        FireEnemyExploded(f, target, enemy->EnemyData);
-                        TryExplodeOnDeath(f, owner, target, EnemyMovementUtility.ResolveEntityRadius(f, target), health->MaxHealth, enemy->EnemyData);
-                        f.Destroy(target);
-                    }
-                    else
-                    {
-                        enemy->Phase = EnemyActionPhase.Dead;
-                        enemy->StateTimer = data.DeathLingerTime;
-
-                        f.Signals.OnEnemyDied(target);
-                        TryExplodeOnDeath(f, owner, target, EnemyMovementUtility.ResolveEntityRadius(f, target), health->MaxHealth, enemy->EnemyData);
-                    }
-                }
-                else if (f.Has<PlayerLink>(target) == true)
-                {
-                    // A lethal hit on a player no longer instantly heals/teleports them (the old
-                    // RespawnPlayer behavior) - it downs them in place instead (see
-                    // PlayerLifeStateUtility.EnterDowned/docs/revive.md). The entity is never
-                    // destroyed either way, so CharacterStats/Weapon/CharacterSkills/LevelUpChoice/
-                    // GlobalUpgradePicks/RiftMutationPicks/UpgradeHistory all still ride on it
-                    // untouched.
-                    PlayerLifeStateUtility.EnterDowned(f, target);
+                    FireEnemyExploded(f, target, enemy->EnemyData);
+                    TryExplodeOnDeath(f, owner, target, EnemyMovementUtility.ResolveEntityRadius(f, target), maxHealth, enemy->EnemyData);
+                    f.Destroy(target);
                 }
                 else
                 {
-                    // A Breakable prop (barrel/crate/breakable wall) is NOT destroyed on death - it
-                    // breaks in place (flips Broken, disables its collider, drops its loot table) so
-                    // its View can show a broken state. TryBreak returns true only for an unbroken
-                    // Breakable, in which case we leave the entity alive; anything else falls through
-                    // to the normal sentry/explode/destroy handling below unchanged. See
-                    // BreakableUtility.
-                    if (BreakableUtility.TryBreak(f, target, owner) == true)
-                        return;
+                    enemy->Phase = EnemyActionPhase.Dead;
+                    enemy->StateTimer = data.DeathLingerTime;
 
-                    TrySentryOverload(f, owner, target);
-
-                    // ExplodeOnDestroy (see ExplodeOnDestroy.qtn) - the damage-death counterpart to
-                    // DestroyAfterTimeSystem's own trigger, so a damageable Mini Bomb (Health seeded
-                    // to 1, a Decoy tag drawing enemy aggro, a real trap) detonates the instant an
-                    // enemy actually kills it, not just when its fuse times out. No-op for anything
-                    // without the component, same as every other optional check in this branch.
-                    ExplodeOnDestroyUtility.TryDetonate(f, target);
-
-                    f.Destroy(target);
+                    f.Signals.OnEnemyDied(target);
+                    TryExplodeOnDeath(f, owner, target, EnemyMovementUtility.ResolveEntityRadius(f, target), maxHealth, enemy->EnemyData);
                 }
             }
+            else if (f.Has<PlayerLink>(target) == true)
+            {
+                // A lethal hit on a player no longer instantly heals/teleports them (the old
+                // RespawnPlayer behavior) - it downs them in place instead (see
+                // PlayerLifeStateUtility.EnterDowned/docs/revive.md). The entity is never
+                // destroyed either way, so CharacterStats/Weapon/CharacterSkills/LevelUpChoice/
+                // GlobalUpgradePicks/RiftMutationPicks/UpgradeHistory all still ride on it
+                // untouched.
+                PlayerLifeStateUtility.EnterDowned(f, target);
+            }
+            else
+            {
+                // A Breakable prop (barrel/crate/breakable wall) is NOT destroyed on death - it
+                // breaks in place (flips Broken, disables its collider, drops its loot table) so
+                // its View can show a broken state. TryBreak returns true only for an unbroken
+                // Breakable, in which case we leave the entity alive; anything else falls through
+                // to the normal sentry/explode/destroy handling below unchanged. See
+                // BreakableUtility.
+                if (BreakableUtility.TryBreak(f, target, owner) == true)
+                    return;
+
+                TrySentryOverload(f, owner, target);
+
+                // ExplodeOnDestroy (see ExplodeOnDestroy.qtn) - the damage-death counterpart to
+                // DestroyAfterTimeSystem's own trigger, so a damageable Mini Bomb (Health seeded
+                // to 1, a Decoy tag drawing enemy aggro, a real trap) detonates the instant an
+                // enemy actually kills it, not just when its fuse times out. No-op for anything
+                // without the component, same as every other optional check in this branch.
+                ExplodeOnDestroyUtility.TryDetonate(f, target);
+
+                f.Destroy(target);
+            }
+        }
+
+        // Generic deterministic execution request (Executioner, docs/rift-mutations.md - see
+        // RiftMutationReactionSystem.OnHealthDamageApplied) - NOT mutation-specific, so any future
+        // "instantly finish this off" source can call it as-is. Finishes an Enemy through the exact
+        // same kill pipeline a lethal hit resolves through (ResolveDeath above: EntityDied/
+        // OnEntityKilled, every on-kill drop, tier-based death handling), but skips straight to 0
+        // Health instead of dealing damage - a threshold execution has to be a GUARANTEED kill, and
+        // routing it through ApplyDamage's own Armor/Shield mitigation could silently turn it into
+        // just another hit that doesn't finish the job.
+        //
+        // Safe to call synchronously from inside another ApplyDamage call still resolving on this
+        // same target (see ResolveDeath's own reentrancy guard) - that's exactly how Executioner
+        // reaches it, from the very OnHealthDamageApplied signal the triggering hit raised.
+        public static void TryExecute(Frame f, EntityRef target, EntityRef attacker, DamageSource source = DamageSource.None)
+        {
+            if (f.Unsafe.TryGetPointer<Health>(target, out var health) == false || health->CurrentHealth <= FP._0)
+                return;
+
+            if (f.Has<Enemy>(target) == false)
+                return;
+
+            // Bypasses Shield entirely rather than "dealing a lot of damage" - Shield absorbing it
+            // away would silently turn a guaranteed execution into a shrug. Armor has no separate
+            // pool to bypass (it only reduces a damage NUMBER), so there's nothing else to clear.
+            if (f.Unsafe.TryGetPointer<Shield>(target, out var shield) == true)
+            {
+                shield->Current = FP._0;
+            }
+
+            health->CurrentHealth = FP._0;
+
+            Log.Debug($"[Damage] {target} executed by {attacker}");
+
+            ResolveDeath(f, target, attacker, source, FP._0, false, false);
         }
 
         // Unstable Mixture (Pixie ascension) - the single resolution point for her explosion radius
@@ -473,7 +524,10 @@ namespace Quantum
         // with the dying enemy's REAL collider radius (EnemyMovementUtility.ResolveEntityRadius).
         // Source travels with the event so EffectsManager can resolve this enemy type's own
         // ExplosionColor (EnemyDataAsset.View.cs) without this needing to know anything about VFX.
-        private static void FireEnemyExploded(Frame f, EntityRef target, AssetRef<EnemyDataAsset> dataRef)
+        // Internal (not private) so TeamChallengeUtility.KillWithoutRewards can play the exact same
+        // death visual for a non-damage-driven kill (challenge start/cleanup wipe) without
+        // duplicating this one-line event fire.
+        internal static void FireEnemyExploded(Frame f, EntityRef target, AssetRef<EnemyDataAsset> dataRef)
         {
             if (f.Unsafe.TryGetPointer<Transform3D>(target, out var transform) == false)
                 return;
@@ -740,6 +794,27 @@ namespace Quantum
             return FPMath.Lerp(stats->NearDamageMultiplier, stats->FarDamageMultiplier, t);
         }
 
+        // Attacker-side, target-TIER-conditional - Boss Destroyer's trade of trash-clear for
+        // heavy-hitter damage. Reads the target's own EnemyDataAsset.Tier generically, so any
+        // current or future enemy is covered by its tier alone, with no per-enemy-type list anywhere.
+        // Both fields default to 0 (off), same "0 = no bonus" convention as every other mutation-only
+        // CharacterStats field, so a player without the mutation skips the Enemy lookup entirely.
+        private static FP ResolveTargetTierDamageMultiplier(Frame f, EntityRef target, CharacterStats* stats)
+        {
+            if (stats->BossDestroyerHeavyDamageBonus <= FP._0 && stats->BossDestroyerLightDamagePenalty <= FP._0)
+                return FP._1;
+
+            if (f.Unsafe.TryGetPointer<Enemy>(target, out var enemy) == false)
+                return FP._1;
+
+            EnemyDataAsset data = f.FindAsset(enemy->EnemyData);
+
+            if (data.Tier == EnemyTier.Heavy || data.Tier == EnemyTier.Elite || data.Tier == EnemyTier.Boss)
+                return FP._1 + stats->BossDestroyerHeavyDamageBonus;
+
+            return FP._1 - stats->BossDestroyerLightDamagePenalty;
+        }
+
         // "Is the current Shield big enough to soak this hit on its own?" - the one thing the
         // Accessory Guard gate above needs to know. A target with no Shield component (or an empty
         // one) never covers anything, so it always falls through to the accessory.
@@ -828,6 +903,7 @@ namespace Quantum
             // many conditional mutations the roster grows. Exactly 1 for a player holding none.
             damage *= MutationModifierUtility.ResolveLiveDamageMultiplier(f, owner, stats);
             damage *= ResolveRangeDamageMultiplier(f, owner, target, stats);
+            damage *= ResolveTargetTierDamageMultiplier(f, target, stats);
 
             // Generic timed outgoing-damage buff (Zara's Power Chord Support Beat) - unlike the
             // Weapon-scoped buff just below, this applies to every DamageSource, so a tempo-support
@@ -933,7 +1009,12 @@ namespace Quantum
             }
 
             if (forceCritical == false && RollChance(f, chance) == false)
-                return damage;
+            {
+                // Focused Power - the crit-commitment tradeoff's other half. A flat fraction off
+                // every NON-critical hit, so the mutation is weak without enough Crit Chance to
+                // actually reach the multiplier bonus below, and strong once a build has it. 0 = off.
+                return damage * (FP._1 - stats->FocusedPowerNonCritDamagePenalty);
+            }
 
             isCritical = true;
             Log.Debug($"[Damage] {owner} crit for x{multiplier}");
@@ -995,6 +1076,13 @@ namespace Quantum
                 // mirrors this same floor.
                 multiplier *= FPMath.Max(FP._1, weapon->CriticalDamageBonus);
             }
+
+            // Focused Power - a flat ADD-ON to the crit multiplier (base 2.0x -> 3.0x for the default
+            // +1.0), not a Crit Chance grant. Additive rather than multiplicative so it composes
+            // predictably with the weapon's own multiplicative bonus above. 0 = off. Folded in here
+            // (not ResolveOutgoingDamage's own crit branch) so the no-target "Current Critical"
+            // preview (ResolveBaselineCritical) reflects it too, same as the weapon bonus just above.
+            multiplier += stats->FocusedPowerCritDamageBonus;
         }
 
         // No-target preview of the same Critical Chance/Multiplier ResolveOutgoingDamage rolls with -

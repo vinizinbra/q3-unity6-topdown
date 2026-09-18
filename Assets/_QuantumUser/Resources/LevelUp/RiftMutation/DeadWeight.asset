@@ -21,7 +21,8 @@ MonoBehaviour:
   Rarity: 3
   Scope: 0
   IncompatibleWith: []
-  Description: '+<color=#FD3971>{0:0}%</color> Weapon Damage, but only <color=#FD3971>{1:0}</color> Dash charge and <color=#FD3971>{2:+0;-0}%</color> Dash Cooldown'
+  Description: +{0:0}% Weapon Damage, but only {1:0} Dash charge and {2:+0;-0}% Dash
+    Cooldown
   WeaponDamageBonus:
     RawValue: 32768
   DashChargeHardCap: 1

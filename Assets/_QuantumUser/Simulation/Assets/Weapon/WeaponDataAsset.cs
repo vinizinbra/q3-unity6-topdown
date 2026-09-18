@@ -54,6 +54,17 @@ namespace Quantum
         // actual time-between-shots (1 / FireRate) before applying those multipliers/bonuses.
         public FP FireRate = 4;
 
+        // Wind-up BEFORE a shot actually leaves, in seconds - WeaponSystem.Update holds the shot
+        // until this elapses (Weapon.AnticipationTimer/IsAnticipating), then fires exactly as
+        // before. 0 (default, every weapon today) is a complete no-op - the anticipation branch in
+        // WeaponSystem.Update is never entered, so an unauthored weapon fires the instant canFire
+        // and FireCooldownTimer allow it, same as before this field existed. Author this on a
+        // melee weapon (its View plays the wind-up swing for this long, then the attack swing -
+        // see WeaponView.OnWeaponAnticipationStarted) or a charge-shot gun (charge particle plays
+        // for this long, see WeaponView's chargeParticle). Folded into the DPS preview below
+        // (BuildDpsPreview) as extra time per shot, same as ReloadDuration is per magazine.
+        public FP AnticipationTime = 0;
+
         public int MagazineSize = 12;
         public FP ReloadDuration = 1;
 

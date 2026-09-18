@@ -2,20 +2,17 @@ namespace Quantum
 {
     using Photon.Deterministic;
 
-    // Rewards hoovering up a burst of drops: collect enough collectibles fast enough and you get a
-    // short window of speed and fire rate.
+    // Rewards clearing the environment: destroying ANY Breakable (barrel, crate, breakable wall - no
+    // distinction) grants the destroyer a short burst of Move Speed and Fire Rate.
     //
-    // "Valid collectible" is defined by which signal this listens to, not by a list of item types -
-    // OnCollectibleCollected fires only from the currency-orb pickup path, so Accessory recoveries,
-    // Merchant purchases and static interactables are excluded structurally and can never be
-    // accidentally included by a future pickup type landing in the wrong category.
+    // Reacts to the generic OnDestructibleBroken signal (Breakable.qtn), not any one specific prefab
+    // or prop type - RiftMutationReactionSystem.OnDestructibleBroken fires this for any current or
+    // future Breakable.
     //
-    // The payoff rides the generic timed-buff slots, so it follows the project's normal refresh
-    // behaviour rather than inventing a stacking rule of its own.
+    // The payoff rides the generic timed-buff slots, so destroying another barrel while the buff is
+    // still up REFRESHES its duration rather than stacking it.
     public unsafe class ScavengerRushMutationData : RiftMutationData
     {
-        public byte RequiredPickups = 5;
-        public FP CollectionWindow = FP._0;
         public FP BuffDuration = FP._0;
         public FP MoveSpeedBonus = FP._0;
         public FP FireRateBonus = FP._0;
@@ -25,8 +22,6 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats) == false)
                 return;
 
-            stats->ScavengerRequiredPickups = RequiredPickups < 1 ? (byte)1 : RequiredPickups;
-            stats->ScavengerWindow = FPMath.Max(stats->ScavengerWindow, CollectionWindow);
             stats->ScavengerBuffDuration = FPMath.Max(stats->ScavengerBuffDuration, BuffDuration);
             stats->ScavengerMoveSpeedBonus = FPMath.Max(stats->ScavengerMoveSpeedBonus, MoveSpeedBonus);
             stats->ScavengerFireRateBonus = FPMath.Max(stats->ScavengerFireRateBonus, FireRateBonus);
@@ -34,8 +29,6 @@ namespace Quantum
 
         protected override object[] DescriptionArgs => new object[]
         {
-            RequiredPickups,
-            CollectionWindow.AsFloat,
             MoveSpeedBonus.AsFloat * 100f,
             FireRateBonus.AsFloat * 100f,
             BuffDuration.AsFloat

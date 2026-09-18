@@ -14,7 +14,7 @@ component StatusEffects
     // active/inactive state rather than a one-shot "was ever hit".
     ElementType FirstElementApplied;
 
-    // Burn (Fire) - up to EffectConfig.BurnMaxStacks independent potency contributions
+    // Burn (Fire) - up to ElementalReactionConfig.BurnMaxStacks independent potency contributions
     // (BurnStackDamagePerTick, each seeded from the hit that landed it - see
     // StatusEffectUtility.ComputeDotDamagePerTick) sharing ONE shared duration timer. Every
     // qualifying Fire hit either pushes a new stack (below the cap) or, once at the cap, simply
@@ -78,18 +78,18 @@ component StatusEffects
     FP OverloadChainCurrentDamage;
 
     // Ice/Chill - progressive stacking slow. Every qualifying Ice application adds buildup (see
-    // EffectConfig.IceBuildupPerDamage, scaled off the hit's own damage the same way Burn's potency
-    // is, so a fast weak weapon can't out-buildup a slow heavy one just by firing more often),
-    // capped at EffectConfig.IceFreezeThreshold - reaching the cap converts straight into Freeze
-    // instead (see StatusEffectUtility.ApplyIce) and resets this back to 0. One shared duration
-    // timer, refreshed by every application - reaching 0 clears the buildup (see
+    // ElementalReactionConfig.IceBuildupPerDamage, scaled off the hit's own damage the same way
+    // Burn's potency is, so a fast weak weapon can't out-buildup a slow heavy one just by firing
+    // more often), capped at ElementalReactionConfig.IceFreezeThreshold - reaching the cap converts
+    // straight into Freeze instead (see StatusEffectUtility.ApplyIce) and resets this back to 0. One
+    // shared duration timer, refreshed by every application - reaching 0 clears the buildup (see
     // StatusEffectSystem.TickIce), never a per-application timer. See
     // StatusEffectUtility.GetSpeedMultiplier, read by PlayerMovementProcessor and EnemySystem's
     // chase movement.
     FP IceRemaining;
     FP IceBuildup;
 
-    // Freeze (Ice hard CC, reached only via Ice/Chill buildup hitting EffectConfig.
+    // Freeze (Ice hard CC, reached only via Ice/Chill buildup hitting ElementalReactionConfig.
     // IceFreezeThreshold - see StatusEffectUtility.ApplyIce/ApplyFreeze) - freezes the state
     // machine/movement/firing entirely, the exact same total lockout Stun does (every IsStunned
     // gate in EnemySystem/PlayerMovementProcessor/WeaponSystem also checks IsFrozen), but stays an

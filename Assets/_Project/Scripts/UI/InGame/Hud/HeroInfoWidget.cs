@@ -137,7 +137,7 @@ public class HeroInfoWidget : QuantumGlobalMonoBehaviour
             return;
         }
 
-        EffectConfig config = StatusEffectUtility.GetEffectConfig(frame);
+        ElementalReactionConfig config = StatusEffectUtility.GetElementalReactionConfig(frame);
 
         if (config == null)
         {

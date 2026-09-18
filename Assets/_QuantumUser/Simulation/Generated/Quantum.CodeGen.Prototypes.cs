@@ -669,7 +669,8 @@ namespace Quantum.Prototypes {
     public FP WeaponStaggerDuration;
     public FP NearKillMoveSpeedBonus;
     public FP NearKillMoveSpeedDuration;
-    public FP SkillCenterFocusBonus;
+    public FP FocusedPowerNonCritDamagePenalty;
+    public FP FocusedPowerCritDamageBonus;
     public Byte CritFocusThreshold;
     public Byte CritFocusProgress;
     public FP CritFocusCooldownReduction;
@@ -685,18 +686,22 @@ namespace Quantum.Prototypes {
     public FP SafeTimeSeconds;
     public FP OverkillConversion;
     public FP OverkillRadius;
-    public Byte ScavengerRequiredPickups;
-    public FP ScavengerWindow;
     public FP ScavengerBuffDuration;
     public FP ScavengerMoveSpeedBonus;
     public FP ScavengerFireRateBonus;
-    public Byte ScavengerPickupCount;
-    public FP ScavengerWindowRemaining;
     public FP CoinLossPercentOnHpDamage;
     public FP SecondWindHealPercent;
+    public FP SecondWindMoveSpeedBonus;
+    public FP SecondWindMoveSpeedDuration;
     public Byte DashChargeHardCap;
     public QBoolean AccessoryBlockResetsDash;
     public FP AccessoryBlockSkillCooldownFraction;
+    public FP BroMutationBaseDamageBonus;
+    public FP BroMutationPerOwnerDamageBonus;
+    public FP BossDestroyerHeavyDamageBonus;
+    public FP BossDestroyerLightDamagePenalty;
+    [ArrayLengthAttribute(6)]
+    public FP[] ExecutionThresholds = new FP[6];
     partial void MaterializeUser(Frame frame, ref Quantum.CharacterStats result, in PrototypeMaterializationContext context);
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.CharacterStats component = default;
@@ -753,7 +758,8 @@ namespace Quantum.Prototypes {
         result.WeaponStaggerDuration = this.WeaponStaggerDuration;
         result.NearKillMoveSpeedBonus = this.NearKillMoveSpeedBonus;
         result.NearKillMoveSpeedDuration = this.NearKillMoveSpeedDuration;
-        result.SkillCenterFocusBonus = this.SkillCenterFocusBonus;
+        result.FocusedPowerNonCritDamagePenalty = this.FocusedPowerNonCritDamagePenalty;
+        result.FocusedPowerCritDamageBonus = this.FocusedPowerCritDamageBonus;
         result.CritFocusThreshold = this.CritFocusThreshold;
         result.CritFocusProgress = this.CritFocusProgress;
         result.CritFocusCooldownReduction = this.CritFocusCooldownReduction;
@@ -769,18 +775,23 @@ namespace Quantum.Prototypes {
         result.SafeTimeSeconds = this.SafeTimeSeconds;
         result.OverkillConversion = this.OverkillConversion;
         result.OverkillRadius = this.OverkillRadius;
-        result.ScavengerRequiredPickups = this.ScavengerRequiredPickups;
-        result.ScavengerWindow = this.ScavengerWindow;
         result.ScavengerBuffDuration = this.ScavengerBuffDuration;
         result.ScavengerMoveSpeedBonus = this.ScavengerMoveSpeedBonus;
         result.ScavengerFireRateBonus = this.ScavengerFireRateBonus;
-        result.ScavengerPickupCount = this.ScavengerPickupCount;
-        result.ScavengerWindowRemaining = this.ScavengerWindowRemaining;
         result.CoinLossPercentOnHpDamage = this.CoinLossPercentOnHpDamage;
         result.SecondWindHealPercent = this.SecondWindHealPercent;
+        result.SecondWindMoveSpeedBonus = this.SecondWindMoveSpeedBonus;
+        result.SecondWindMoveSpeedDuration = this.SecondWindMoveSpeedDuration;
         result.DashChargeHardCap = this.DashChargeHardCap;
         result.AccessoryBlockResetsDash = this.AccessoryBlockResetsDash;
         result.AccessoryBlockSkillCooldownFraction = this.AccessoryBlockSkillCooldownFraction;
+        result.BroMutationBaseDamageBonus = this.BroMutationBaseDamageBonus;
+        result.BroMutationPerOwnerDamageBonus = this.BroMutationPerOwnerDamageBonus;
+        result.BossDestroyerHeavyDamageBonus = this.BossDestroyerHeavyDamageBonus;
+        result.BossDestroyerLightDamagePenalty = this.BossDestroyerLightDamagePenalty;
+        for (int i = 0, count = PrototypeValidator.CheckLength(ExecutionThresholds, 6, in context); i < count; ++i) {
+          *result.ExecutionThresholds.GetPointer(i) = this.ExecutionThresholds[i];
+        }
         MaterializeUser(frame, ref result, in context);
     }
   }
@@ -1075,6 +1086,23 @@ namespace Quantum.Prototypes {
         for (int i = 0, count = PrototypeValidator.CheckLength(Entries, 8, in context); i < count; ++i) {
           this.Entries[i].Materialize(frame, ref *result.Entries.GetPointer(i), in context);
         }
+    }
+  }
+  [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.CursedSurvivalOverride))]
+  public unsafe class CursedSurvivalOverridePrototype : ComponentPrototype<Quantum.CursedSurvivalOverride> {
+    public MapEntityId Poi;
+    public FP PreviousCurrentHealth;
+    public QBoolean PreviousAccessoryDisabled;
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.CursedSurvivalOverride component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.CursedSurvivalOverride result, in PrototypeMaterializationContext context = default) {
+        PrototypeValidator.FindMapEntity(this.Poi, in context, out result.Poi);
+        result.PreviousCurrentHealth = this.PreviousCurrentHealth;
+        result.PreviousAccessoryDisabled = this.PreviousAccessoryDisabled;
     }
   }
   [System.SerializableAttribute()]
@@ -3826,6 +3854,78 @@ namespace Quantum.Prototypes {
     }
   }
   [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.TeamChallenge))]
+  public unsafe partial class TeamChallengePrototype : ComponentPrototype<Quantum.TeamChallenge> {
+    public Quantum.Prototypes.PoiAvailabilityPrototype Availability;
+    public AssetRef<TeamChallengeConfig> Config;
+    public Quantum.QEnum8<TeamChallengeState> State;
+    public AssetRef<ChallengeDefinition> SelectedChallenge;
+    public FP RemainingCountdown;
+    public FP RemainingChallengeTime;
+    public Int32 KillCount;
+    public Int32 KillTarget;
+    public FP PulseBudget;
+    public FP PulseTimer;
+    partial void MaterializeUser(Frame frame, ref Quantum.TeamChallenge result, in PrototypeMaterializationContext context);
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.TeamChallenge component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.TeamChallenge result, in PrototypeMaterializationContext context = default) {
+        this.Availability.Materialize(frame, ref result.Availability, in context);
+        result.Config = this.Config;
+        result.State = this.State;
+        result.SelectedChallenge = this.SelectedChallenge;
+        result.RemainingCountdown = this.RemainingCountdown;
+        result.RemainingChallengeTime = this.RemainingChallengeTime;
+        result.KillCount = this.KillCount;
+        result.KillTarget = this.KillTarget;
+        result.PulseBudget = this.PulseBudget;
+        result.PulseTimer = this.PulseTimer;
+        MaterializeUser(frame, ref result, in context);
+    }
+  }
+  [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.TeamChallengeParticipant))]
+  public unsafe class TeamChallengeParticipantPrototype : ComponentPrototype<Quantum.TeamChallengeParticipant> {
+    public MapEntityId Poi;
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.TeamChallengeParticipant component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.TeamChallengeParticipant result, in PrototypeMaterializationContext context = default) {
+        PrototypeValidator.FindMapEntity(this.Poi, in context, out result.Poi);
+    }
+  }
+  [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.TeamChallengeReady))]
+  public unsafe class TeamChallengeReadyPrototype : ComponentPrototype<Quantum.TeamChallengeReady> {
+    public MapEntityId Poi;
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.TeamChallengeReady component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.TeamChallengeReady result, in PrototypeMaterializationContext context = default) {
+        PrototypeValidator.FindMapEntity(this.Poi, in context, out result.Poi);
+    }
+  }
+  [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.TeamChallengeSpawn))]
+  public unsafe class TeamChallengeSpawnPrototype : ComponentPrototype<Quantum.TeamChallengeSpawn> {
+    public MapEntityId Poi;
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.TeamChallengeSpawn component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.TeamChallengeSpawn result, in PrototypeMaterializationContext context = default) {
+        PrototypeValidator.FindMapEntity(this.Poi, in context, out result.Poi);
+    }
+  }
+  [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.TraversalChallenge))]
   public unsafe class TraversalChallengePrototype : ComponentPrototype<Quantum.TraversalChallenge> {
     public Quantum.Prototypes.PoiAvailabilityPrototype Availability;
@@ -4194,6 +4294,8 @@ namespace Quantum.Prototypes {
     public Int32 Ammo;
     public FP ReloadTimer;
     public FP TimeSinceFireReleased;
+    public QBoolean IsAnticipating;
+    public FP AnticipationTimer;
     public FP RangeMultiplier;
     partial void MaterializeUser(Frame frame, ref Quantum.Weapon result, in PrototypeMaterializationContext context);
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
@@ -4218,6 +4320,8 @@ namespace Quantum.Prototypes {
         result.Ammo = this.Ammo;
         result.ReloadTimer = this.ReloadTimer;
         result.TimeSinceFireReleased = this.TimeSinceFireReleased;
+        result.IsAnticipating = this.IsAnticipating;
+        result.AnticipationTimer = this.AnticipationTimer;
         result.RangeMultiplier = this.RangeMultiplier;
         MaterializeUser(frame, ref result, in context);
     }

@@ -471,16 +471,18 @@ MonoBehaviour:
   initialized: 0
   executeOnlyOnLocal: 0
   isLocal: 0
+  promptTitle: CURSED RIFT
+  promptActiveDescription: 'Sacrifice something for a Rift Mutation '
+  promptPhaseUnavailableDescription: <sprite name="LOCK">COME BACK ON BREAK
+  promptAlreadyUsedDescription: ALREADY USED
+  promptNotNeededDescription: FULL HEALTH
+  promptWorldOffset: {x: 0, y: 2.5, z: 0}
+  promptRewardIcon: {fileID: 0}
+  promptRewardText: 
   inactiveVisual: {fileID: 8238532030038942845}
   activeVisual: {fileID: 7509153086039784236}
   expiredVisual: {fileID: 2607701242798346984}
   activeParticles: {fileID: 7919454677989923811}
-  promptTitle: CURSED RIFT
-  promptActiveDescription: 
-  promptPhaseUnavailableDescription: COME BACK ON BREAK
-  promptAlreadyUsedDescription: ALREADY USED
-  promptNotNeededDescription: FULL HEALTH
-  promptWorldOffset: {x: 0, y: 4, z: 0}
 --- !u!114 &7439316740367262986
 MonoBehaviour:
   m_ObjectHideFlags: 0

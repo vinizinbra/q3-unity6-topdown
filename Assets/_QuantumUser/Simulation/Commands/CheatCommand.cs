@@ -34,6 +34,9 @@ namespace Quantum
         Revive,                 // revive every Downed/KO player
         SetDamageToOne,         // set the sender's equipped Weapon.DamageMultiplier so live damage rounds to 1
         ResetDamage,            // reset the sender's equipped Weapon.DamageMultiplier back to 1 (baseline)
+        DamagePlayer,           // AssetId = target player's 0-based PlayerRef index, Amount = damage
+                                 // dealt to that player's Health (owner-less, bypasses friendly fire/
+                                 // Invulnerable the same way self-damage does)
         ToggleManualFire,       // flip the sender's Weapon.CheatManualFire (auto-shoot off <-> on)
         JumpToBreathing,        // Amount = 1-4, the Nth Breathing-kind SurvivalConfig phase; also tops
                                  // TotalExperience up to that breath's paired display level if under it
@@ -43,13 +46,18 @@ namespace Quantum
                                  // at a time, auto-resolves the whole queue synchronously right here;
                                  // also reveals the whole minimap (every Chunk.Discovered = true) and
                                  // tops the sender up to 5000 coins
-        BecomeBot               // adds BotBrain to the sender's own entity (see
+        BecomeBot,              // adds BotBrain to the sender's own entity (see
                                  // PlayerSpawnUtility.ConvertToBot) - BotInputSystem takes over its
                                  // Input the very next tick. Sim-only: the sender's camera/HUD/audio
                                  // stay exactly as they were (CharView/MyLocalPlayer only resolve
                                  // RuntimePlayer.IsBot once, at entity creation), and it doesn't
                                  // survive a death/respawn (Spawn re-reads the real IsBot, still
                                  // false) - reapply after respawning if still wanted.
+        RevealMap               // sets every Chunk.Discovered = true (see CheatSystem.RevealAllChunks) -
+                                 // MinimapWidget reads that flag client-side every tick and repaints
+                                 // automatically, so this alone is enough to paint the whole level.
+                                 // Same effect SetupTestRun already includes as part of its own combo;
+                                 // this is that one piece standalone.
     }
 
     // Generic debug/cheat command. IMPORTANT: this command AND its handler (CheatSystem) compile on

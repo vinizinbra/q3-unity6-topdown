@@ -137,28 +137,15 @@ namespace QuantumUser.Editor
             },
             new MutationSpec
             {
-                Type = typeof(UltimateCommitmentMutationData), FileName = "UltimateCommitment",
-                DisplayName = "Ultimate Commitment", Rarity = UpgradeRarity.Epic,
-                Description = "{0:+0;-0}% Hero Skill Damage, {1:+0;-0}% Hero Skill Cooldown",
-                Configure = p =>
-                {
-                    var mutation = (UltimateCommitmentMutationData)p;
-                    mutation.SkillDamageMultiplier = 2;
-                    // A RATE (StatUtility.GetSkillCooldown divides by it), so halving the rate is
-                    // what doubles the actual cooldown duration the brief asks for.
-                    mutation.SkillCooldownRateMultiplier = FP._0_50;
-                }
-            },
-            new MutationSpec
-            {
                 Type = typeof(FocusedPowerMutationData), FileName = "FocusedPower",
                 DisplayName = "Focused Power", Rarity = UpgradeRarity.Epic,
-                Description = "{0:+0;-0}% Skill Area, but Skill Damage rises to {1:+0;-0}% at the center of the effect",
+                Description = "Non-critical hits deal {0:0}% less damage, but Critical Hits gain +{1:0}% Critical Damage",
                 Configure = p =>
                 {
                     var mutation = (FocusedPowerMutationData)p;
-                    mutation.SkillAreaMultiplier = FP._0_50;
-                    mutation.CenterDamageBonus = FP.FromString("1.5");
+                    mutation.NonCritDamagePenalty = FP.FromString("0.30");
+                    // A flat ADD-ON to the crit multiplier (2.0x -> 3.0x), not a Crit Chance grant.
+                    mutation.CritDamageBonus = FP._1;
                 }
             },
             new MutationSpec
@@ -201,18 +188,6 @@ namespace QuantumUser.Editor
             },
             new MutationSpec
             {
-                Type = typeof(SparePartsMutationData), FileName = "SpareParts",
-                DisplayName = "Spare Parts", Rarity = UpgradeRarity.Epic,
-                Description = "Once per run, a destroyed Accessory instantly returns with {0:0} durability",
-                Configure = p =>
-                {
-                    var mutation = (SparePartsMutationData)p;
-                    mutation.Charges = 1;
-                    mutation.RestoreDurability = 2;
-                }
-            },
-            new MutationSpec
-            {
                 Type = typeof(DangerPayMutationData), FileName = "DangerPay",
                 DisplayName = "Danger Pay", Rarity = UpgradeRarity.Epic,
                 Description = "Below {0:0}% Health: +{1:0}% Damage and +{2:0}% Move Speed",
@@ -240,12 +215,10 @@ namespace QuantumUser.Editor
             {
                 Type = typeof(ScavengerRushMutationData), FileName = "ScavengerRush",
                 DisplayName = "Scavenger Rush", Rarity = UpgradeRarity.Rare,
-                Description = "Collect {0:0} pickups within {1:0.#}s: +{2:0}% Move Speed and +{3:0}% Fire Rate for {4:0.#}s",
+                Description = "Destroying a breakable object grants +{0:0}% Move Speed and +{1:0}% Fire Rate for {2:0.#}s",
                 Configure = p =>
                 {
                     var mutation = (ScavengerRushMutationData)p;
-                    mutation.RequiredPickups = 5;
-                    mutation.CollectionWindow = 3;
                     mutation.BuffDuration = 4;
                     mutation.MoveSpeedBonus = FP.FromString("0.30");
                     mutation.FireRateBonus = FP.FromString("0.30");
@@ -274,8 +247,14 @@ namespace QuantumUser.Editor
             {
                 Type = typeof(SecondWindMutationData), FileName = "SecondWind",
                 DisplayName = "Second Wind", Rarity = UpgradeRarity.Epic,
-                Description = "Recovering your Accessory heals {0:0}% of Max Health",
-                Configure = p => ((SecondWindMutationData)p).HealPercentMaxHp = FP.FromString("0.05")
+                Description = "Recovering your Accessory heals {0:0}% of Max Health and grants +{1:0}% Move Speed for {2:0.#}s",
+                Configure = p =>
+                {
+                    var mutation = (SecondWindMutationData)p;
+                    mutation.HealPercentMaxHp = FP.FromString("0.10");
+                    mutation.MoveSpeedBonus = FP.FromString("0.20");
+                    mutation.MoveSpeedDuration = 4;
+                }
             },
             new MutationSpec
             {
@@ -361,6 +340,46 @@ namespace QuantumUser.Editor
                 Description = "Enemies spawn faster and faster as each Survival phase goes on, up to {0:0.##}x by its end",
                 Scope = MutationScope.Run,
                 Configure = p => ((EscalationMutationData)p).EndOfPhaseDensityBonus = FP.FromString("0.75")
+            },
+            new MutationSpec
+            {
+                Type = typeof(BroMutationData), FileName = "BroMutation",
+                DisplayName = "Bro Mutation", Rarity = UpgradeRarity.Epic,
+                Description = "+{0:0}% All Damage, +{1:0}% more for every OTHER Raider who also owns Bro Mutation",
+                Configure = p =>
+                {
+                    var mutation = (BroMutationData)p;
+                    mutation.BaseDamageBonus = FP.FromString("0.15");
+                    mutation.PerOtherOwnerDamageBonus = FP.FromString("0.10");
+                }
+            },
+            new MutationSpec
+            {
+                Type = typeof(BossDestroyerMutationData), FileName = "BossDestroyer",
+                DisplayName = "Boss Destroyer", Rarity = UpgradeRarity.Epic,
+                Description = "+{0:0}% Damage against Heavy/Elite/Boss enemies, -{1:0}% against Filler/Normal/Specialist",
+                Configure = p =>
+                {
+                    var mutation = (BossDestroyerMutationData)p;
+                    mutation.HeavyTierDamageBonus = FP.FromString("0.40");
+                    mutation.LightTierDamagePenalty = FP.FromString("0.20");
+                }
+            },
+            new MutationSpec
+            {
+                Type = typeof(ExecutionerMutationData), FileName = "Executioner",
+                DisplayName = "Executioner", Rarity = UpgradeRarity.Epic,
+                Description = "Your damage instantly finishes off enemies below {0:0}% Health ({1:0}% for Heavy/Elite, {2:0}% for Boss)",
+                Configure = p =>
+                {
+                    var mutation = (ExecutionerMutationData)p;
+                    mutation.FillerThreshold = FP.FromString("0.15");
+                    mutation.NormalThreshold = FP.FromString("0.15");
+                    mutation.SpecialistThreshold = FP.FromString("0.15");
+                    mutation.HeavyThreshold = FP.FromString("0.08");
+                    mutation.EliteThreshold = FP.FromString("0.08");
+                    mutation.BossThreshold = FP.FromString("0.03");
+                }
             },
         };
 

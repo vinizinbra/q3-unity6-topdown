@@ -21,10 +21,8 @@ MonoBehaviour:
   Rarity: 1
   Scope: 0
   IncompatibleWith: []
-  Description: 'Collect <color=#FD3971>{0:0}</color> pickups within <color=#FD3971>{1:0.#}s</color>: +<color=#FD3971>{2:0}%</color> Move Speed and +<color=#FD3971>{3:0}%</color> Fire Rate for <color=#FD3971>{4:0.#}s</color>'
-  RequiredPickups: 5
-  CollectionWindow:
-    RawValue: 196608
+  Description: Destroying a breakable object grants +{0:0}% Move Speed and +{1:0}%
+    Fire Rate for {2:0.#}s
   BuffDuration:
     RawValue: 262144
   MoveSpeedBonus:

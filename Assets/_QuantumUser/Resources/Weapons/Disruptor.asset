@@ -54,19 +54,25 @@ MonoBehaviour:
       Value: 709407342776753319
   ViewPrefab: {fileID: 8089491252618662435, guid: 09e565567a97340b39901b790f4c1bc6, type: 3}
   ShakeTier: 0
-  ProjectileSprite: {fileID: 21300000, guid: 908a3d942f3c645319e0d768d7cc3f2f, type: 3}
-  ProjectileSpriteRotationOffset: 0
-  ProjectileColor: {r: 1, g: 0.91207904, b: 0.5518868, a: 1}
-  ProjectileScale: {x: 0.5, y: 0.4, z: 0.5}
-  EnableProjectileSparkTrail: 1
-  ProjectileSparkTrailColor: {r: 1, g: 0.8039216, b: 0, a: 0.57254905}
-  ProjectileSparkTrailScale: {x: 1, y: 1, z: 1}
-  ProjectileSparkTrailLifetimeOverride: 0
-  EnableProjectileGlow: 1
-  ProjectileGlowColor: {r: 1, g: 0.8039216, b: 0, a: 0.57254905}
-  ProjectileGlowScale: {x: 2, y: 2, z: 2}
-  EnableProjectileLight: 1
-  ProjectileLightColor: {r: 1, g: 0.8039216, b: 0, a: 0.57254905}
+  ProjectileVisuals:
+    ProjectileSprite: {fileID: 1303106859, guid: 8a17d688bdd9e47c68bbdfc6beba17e1, type: 3}
+    ProjectileSpriteRotationOffset: 0
+    ProjectileColor: {r: 1.8867924, g: 1.2323867, b: 0, a: 1}
+    ProjectileScale: {x: 1, y: 1, z: 1}
+    EnableProjectileSparkTrail: 1
+    ProjectileSparkTrailColor: {r: 1, g: 0.653165, b: 0, a: 1}
+    ProjectileSparkTrailScale: {x: 1, y: 1, z: 1}
+    ProjectileSparkTrailLifetimeOverride: 0
+    EnableProjectileGlow: 1
+    ProjectileGlowColor: {r: 1.8867924, g: 0.856329, b: 0, a: 0.19215687}
+    ProjectileGlowScale: {x: 1, y: 1, z: 1}
+    EnableProjectileLight: 1
+    ProjectileLightColor: {r: 1.8867924, g: 0.7804011, b: 0, a: 1}
+    ProjectileDestroyColor: {r: 1.8867924, g: 0.856329, b: 0, a: 1}
+    ProjectileDestroyGlowColor: {r: 1.8867924, g: 0.856329, b: 0, a: 0.19215687}
+    ProjectileDestroyScale: {x: 1, y: 1, z: 1}
+    ProjectileExtraParticle: {fileID: 0}
+    ProjectileExtraParticleScale: {x: 1, y: 1, z: 1}
   _dpsPreview: 'Burst DPS: 92.4
 
     Sustained DPS (incl. reload): 73.9

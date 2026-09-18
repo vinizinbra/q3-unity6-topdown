@@ -25,17 +25,22 @@ public class InteractionPromptWidgetManager : MonoBehaviour
         widgetPrefab.gameObject.SetActive(false);
     }
 
-    public void SpawnWidget(EntityRef entityRef, QuantumGame game, Transform followTarget, string title,
+    // Returns the spawned (or already-existing, on a redundant call) widget so a caller like
+    // InteractionPromptPoiView can hold onto it and push further live state onto it later (e.g.
+    // TeamChallengeView.SetDescriptionOverride) - previously void, since no caller needed the
+    // instance back before InteractionPromptPoiView existed.
+    public InteractionPromptWidget SpawnWidget(EntityRef entityRef, QuantumGame game, Transform followTarget, string title,
         string activeDescription, string phaseUnavailableDescription, string alreadyUsedDescription, string notNeededDescription,
-        Vector3 worldOffset = default, string occupiedDescription = "")
+        Vector3 worldOffset = default, string occupiedDescription = "", Sprite rewardIcon = null, string rewardText = "")
     {
-        if (_widgets.ContainsKey(entityRef))
-            return;
+        if (_widgets.TryGetValue(entityRef, out var existing))
+            return existing;
 
         var widget = Instantiate(widgetPrefab, widgetParent);
-        widget.Setup(game, entityRef, followTarget, title, activeDescription, phaseUnavailableDescription, alreadyUsedDescription, notNeededDescription, worldOffset, occupiedDescription);
+        widget.Setup(game, entityRef, followTarget, title, activeDescription, phaseUnavailableDescription, alreadyUsedDescription, notNeededDescription, worldOffset, occupiedDescription, rewardIcon, rewardText);
         widget.gameObject.SetActive(true);
         _widgets.Add(entityRef, widget);
+        return widget;
     }
 
     public void DespawnWidget(EntityRef entityRef)

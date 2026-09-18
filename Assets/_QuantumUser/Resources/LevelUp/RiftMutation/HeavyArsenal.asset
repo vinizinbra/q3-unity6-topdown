@@ -21,7 +21,8 @@ MonoBehaviour:
   Rarity: 2
   Scope: 0
   IncompatibleWith: []
-  Description: '<color=#FD3971>{0:+0;-0}%</color> Weapon Damage, <color=#FD3971>{1:+0;-0}%</color> Fire Rate. Shots knock back and stagger.'
+  Description: '{0:+0;-0}% Weapon Damage, {1:+0;-0}% Fire Rate. Shots knock back
+    and stagger.'
   DamageMultiplier:
     RawValue: 104858
   FireRateMultiplier:

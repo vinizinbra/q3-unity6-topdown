@@ -154,7 +154,7 @@ namespace Quantum
             if (status->BurnTickTimer > FP._0)
                 return;
 
-            EffectConfig config = StatusEffectUtility.GetEffectConfig(f);
+            ElementalReactionConfig config = StatusEffectUtility.GetElementalReactionConfig(f);
             status->BurnTickTimer += config != null ? config.TickInterval : FP._0_50;
 
             // Every active stack's own potency, summed - see StatusEffectUtility.GetBurnDamagePerTick.

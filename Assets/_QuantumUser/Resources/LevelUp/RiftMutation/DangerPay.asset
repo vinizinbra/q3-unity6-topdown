@@ -21,7 +21,7 @@ MonoBehaviour:
   Rarity: 2
   Scope: 0
   IncompatibleWith: []
-  Description: 'Below <color=#FD3971>{0:0}%</color> Health: +<color=#FD3971>{1:0}%</color> Damage and +<color=#FD3971>{2:0}%</color> Move Speed'
+  Description: 'Below {0:0}% Health: +{1:0}% Damage and +{2:0}% Move Speed'
   HealthThreshold:
     RawValue: 26214
   DamageBonus:

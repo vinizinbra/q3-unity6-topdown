@@ -53,7 +53,7 @@ namespace Quantum
                 return;
             }
 
-            EffectConfig effectConfig = StatusEffectUtility.GetEffectConfig(f);
+            ElementalReactionConfig effectConfig = StatusEffectUtility.GetElementalReactionConfig(f);
 
             if (effectConfig == null)
                 return;

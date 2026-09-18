@@ -560,16 +560,18 @@ MonoBehaviour:
   initialized: 0
   executeOnlyOnLocal: 0
   isLocal: 0
+  promptTitle: STORE
+  promptActiveDescription: Burgers. Guns. Supplies.
+  promptPhaseUnavailableDescription: <sprite name="LOCK"> COME BACK ON BREAK
+  promptAlreadyUsedDescription: ALREADY USED
+  promptNotNeededDescription: 
+  promptWorldOffset: {x: 0, y: 2.5, z: 0}
+  promptRewardIcon: {fileID: 0}
+  promptRewardText: 
   inactiveVisual: {fileID: 8238532030038942845}
   activeVisual: {fileID: 7509153086039784236}
   expiredVisual: {fileID: 0}
   activeParticles: {fileID: 0}
-  promptTitle: STORE
-  promptActiveDescription: 
-  promptPhaseUnavailableDescription: COME BACK ON BREAK
-  promptAlreadyUsedDescription: ALREADY USED
-  promptNotNeededDescription: 
-  promptWorldOffset: {x: 0, y: 4, z: 0}
 --- !u!114 &5248127204028200748
 MonoBehaviour:
   m_ObjectHideFlags: 0

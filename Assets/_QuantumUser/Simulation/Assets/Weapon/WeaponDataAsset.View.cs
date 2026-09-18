@@ -39,7 +39,6 @@ namespace Quantum
 
         [Tooltip("Enables ProjectileDataVisualsView's spark trail particle slot and tints it. Off (no spark trail) by default.")]
         public bool EnableProjectileSparkTrail;
-        [ColorUsage(true, true)]
         public Color ProjectileSparkTrailColor = Color.white;
         [Tooltip("Scale applied to the spark trail particle's transform.localScale. (1,1,1) leaves its own authored size untouched.")]
         public Vector3 ProjectileSparkTrailScale = Vector3.one;
@@ -48,14 +47,12 @@ namespace Quantum
 
         [Tooltip("Enables ProjectileDataVisualsView's glow particle slot and tints it. Off (no glow) by default.")]
         public bool EnableProjectileGlow;
-        [ColorUsage(true, true)]
         public Color ProjectileGlowColor = Color.white;
         [Tooltip("Scale applied to the glow particle's transform.localScale. (1,1,1) leaves its own authored size untouched.")]
         public Vector3 ProjectileGlowScale = Vector3.one;
 
         [Tooltip("Enables ProjectileDataVisualsView's HasLight ground blob and tints it. Off (no ground light) by default.")]
         public bool EnableProjectileLight;
-        [ColorUsage(true, true)]
         public Color ProjectileLightColor = Color.white;
 
         // Fed (alpha forced to 1) into the shared destroyEffectPrefab's own ROOT/CHILD particle tint
@@ -65,10 +62,8 @@ namespace Quantum
         // flight.
         [Header("Destroy Effect (generic destroyEffectPrefab, e.g. GenericProjectileDestroy)")]
         [Tooltip("Tint applied to destroyEffectPrefab's own ROOT ParticleSystem. White leaves it exactly as authored on the prefab.")]
-        [ColorUsage(true, true)]
         public Color ProjectileDestroyColor = Color.white;
         [Tooltip("Tint applied to every CHILD ParticleSystem under destroyEffectPrefab (e.g. GenericProjectileDestroy's Sparks/Glow). White leaves them exactly as authored on the prefab.")]
-        [ColorUsage(true, true)]
         public Color ProjectileDestroyGlowColor = Color.white;
         [Tooltip("Multiplier on destroyEffectPrefab's own authored transform.localScale. (1,1,1) leaves it exactly as authored on the prefab.")]
         public Vector3 ProjectileDestroyScale = Vector3.one;
@@ -105,6 +100,17 @@ namespace Quantum
 
         [Tooltip("Camera shake tier applied (to the local player only) each time this weapon fires - see WeaponCameraShakeListener/CameraShakeConfig.")]
         public WeaponShakeTier ShakeTier = WeaponShakeTier.Small;
+
+        // No fire-sound field lives here (unlike ShakeTier) - this file compiles into the
+        // Quantum.Simulation assembly (see Assets/_QuantumUser/Simulation/Quantum.Simulation.asmref),
+        // which only references core UnityEngine modules plus a short precompiled-DLL allowlist, never
+        // Assembly-CSharp - SoundData/EntitySound/AudioManager (Assets/_Project/Scripts/Audio) live
+        // there and are unreachable from here. Since WeaponDataAsset's base partial declaration is
+        // ALSO compiled into Quantum.Simulation, no partial piece of it can ever hold a SoundData
+        // reference - a C# partial type's parts must all share one assembly. ShakeTier gets away with
+        // it only because it's a plain enum; the real numbers live on the separate CameraShakeConfig
+        // asset instead. The weapon's fire sound follows the same shape: see WeaponView.fireSound,
+        // resolved and played directly by the per-prefab view instead.
 
         [Header("Projectile Visuals")]
         public ProjectileVisualsConfig ProjectileVisuals = new ProjectileVisualsConfig();
@@ -167,6 +173,14 @@ namespace Quantum
             if (fireRate <= 0f)
                 return "DPS: n/a (FireRate is 0)";
 
+            // Anticipation is a wind-up BEFORE each shot (WeaponSystem.Update holds the shot until
+            // Weapon.AnticipationTimer elapses, then fires) - so it adds flat seconds to every
+            // shot's own cycle, same shape as ReloadDuration adding flat seconds per MAGAZINE
+            // below. 0 (unauthored, every weapon today) makes effectiveFireRate == fireRate
+            // exactly, a complete no-op for every existing weapon's preview.
+            float anticipationTime = Mathf.Max(0f, AnticipationTime.AsFloat);
+            float effectiveFireRate = 1f / (1f / fireRate + anticipationTime);
+
             // Weapon-only (no hero CharacterStats blended in - see class-level tooltip). Multiplier
             // is floored at 1 same as DamageUtility.ResolveDamage, so an unset/0 CriticalDamageBonus
             // reads as "no crit bonus" (crit = normal damage) rather than a zero-damage crit.
@@ -175,16 +189,21 @@ namespace Quantum
             float normalDamagePerShot = damage * Mathf.Max(1, PelletCount) * perShotFactor;
             float criticalDamagePerShot = normalDamagePerShot * criticalMultiplier;
             float damagePerShot = normalDamagePerShot * expectedHitMultiplier;
-            float burstDps = damagePerShot * fireRate;
+            float burstDps = damagePerShot * effectiveFireRate;
 
             if (magazineSize <= 0)
                 return $"Burst DPS: {burstDps:0.#} (MagazineSize is 0 - can never fire)";
 
-            float magazineDuration = magazineSize / fireRate;
+            float magazineDuration = magazineSize / effectiveFireRate;
             float cycleDuration = magazineDuration + reloadDuration;
             float sustainedDps = damagePerShot * magazineSize / cycleDuration;
 
             string preview = $"Burst DPS: {burstDps:0.#}\nSustained DPS (incl. reload): {sustainedDps:0.#}\nDamage/min: {sustainedDps * 60f:0}\nCrit dmg/shot: {criticalDamagePerShot:0.#} (vs {normalDamagePerShot:0.#} normal) @ {criticalChance:P0} chance, x{criticalMultiplier:0.##}";
+
+            if (anticipationTime > 0f)
+            {
+                preview += $"\nAnticipation: {anticipationTime:0.##}s/shot (folded into DPS above)";
+            }
 
             // Only shown for a weapon that can actually hit more than one enemy per shot - the single-
             // target numbers above stay the fair baseline to compare every weapon against; this is the

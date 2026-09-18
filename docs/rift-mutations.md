@@ -20,7 +20,7 @@ The game's level-up pools now split into four categories:
    - see `docs/level-up-upgrades.md`). Naming only - no separate `LevelUpPoolKind` value.
 4. **Rift Mutations** (this doc, "## Roster" below) - rare, non-stackable, build-defining: a one-shot
    tradeoff (Glass Core, Heavy Arsenal), a new reactive rule (Adrenaline Kick, Critical Focus), a
-   run-wide encounter/economy change (Overpopulation, Greed), or a mix. 27 entries.
+   run-wide encounter/economy change (Overpopulation, Greed), or a mix. 28 entries.
 
 "Non-stackable" is a **pool-wide** property here, not an opt-in per-asset cap the way
 `GlobalUpgradeData.MaxPicks` is - every `RiftMutationData` is implicitly picked at most once per
@@ -92,8 +92,12 @@ list (`RiftMutations`) - see "Mechanism" below.
 ## Roster
 
 The **Rift Mutation** pool (`LevelUpPoolKind.RiftMutation`/`LevelUpCategory.RiftMutation`,
-`LevelUpConfig.RiftMutations`) - 27 entries, the pool Cursed Rift's reward roll draws from
-exclusively. Rewritten and expanded 2026-08-27 - see "2026-08-27 pass" below for what changed and why.
+`LevelUpConfig.RiftMutations`) - 28 entries (23 `Player`-scope + 5 `Run`-scope), the pool Cursed
+Rift's reward roll draws from exclusively. Rewritten and expanded 2026-08-27 - see "2026-08-27 pass"
+below for what changed and why. Ultimate Commitment/Spare Parts removed, Focused Power/Scavenger
+Rush/Second Wind reworked, and Bro Mutation/Boss Destroyer/Executioner added in a later pass - see
+"2026-09-17 pass" below. That pass only touched `Player`-scope mutations; the 5 `Run`-scope ones
+(Greed/Overpopulation/Elite Territory/Blood Tithe/Escalation) were out of scope and are unchanged.
 
 `Scope` is `Player` unless stated - a `Run` mutation changes shared simulation state and is applied
 exactly once per run no matter how many players are offered it (see "Player vs Run scope" below).
@@ -107,21 +111,22 @@ exactly once per run no matter how many players are offered it (see "Player vs R
 | One in the Chamber | `OneInTheChamberMutationData` | Legendary | Player | `CharacterStats.MagazineSizeOverride = 1` + `WeaponDamageMultiplier` x5. The override beats any magazine bonus, so it still means exactly one round alongside Bullet Storm. Both halves survive a weapon swap - the previous implementation wrote `Weapon.MagazineSize`/`WeaponMagazinePositionPerks` directly and was silently wiped by the next pickup. |
 | Close Quarters | `CloseQuartersMutationData` | Rare | Player | +50% damage within 5 units / -30% beyond 10 (`DamageUtility.ResolveRangeDamageMultiplier`, lerped between) + a close KILL grants +20% Move Speed for 2s (`RiftMutationReactionSystem.OnEntityKilled` -> `StatusEffectUtility.ApplyTempMoveSpeed`, which overwrites on reapply, so repeat kills refresh rather than stack). |
 | Longshot | `LongshotMutationData` | Rare | Player | Up to +50% damage at range / -25% within 5 units, **plus +1 Pierce on a shot taken beyond 10 units**. Deliberately not Close Quarters' mirror: the pierce makes distance a different way to shoot, not the same play inverted. Granted per SHOT at fire time (`WeaponSystem.ResolveLongRangePierceBonus`), since pierce belongs to the projectile/hitscan walk, not to an individual hit. |
-| Ultimate Commitment | `UltimateCommitmentMutationData` | Epic | Player | `SkillDamageMultiplier` x2 / `SkillCooldownMultiplier` x0.5 - that field is a *rate* (`StatUtility.GetSkillCooldown` divides by it), so halving it doubles the actual cooldown duration. Hero-Skill-scoped; Dash has its own field. |
-| Focused Power | `FocusedPowerMutationData` | Epic | Player | `AreaRadiusMultiplier` x0.5 + `SkillCenterFocusBonus` 1.5 - skill damage climbs to +150% at the exact center of an area, falling to none at the rim. See "Skill center focus" below. |
+| Focused Power | `FocusedPowerMutationData` | Epic | Player | A crit-commitment tradeoff, not an area effect: -30% damage on non-critical hits, +1.0 flat add-on to the Critical Damage multiplier (e.g. base 2.0x -> 3.0x) on critical ones - **not** a Crit Chance grant. Weak without enough Crit Chance to reach it, strong with. Both halves are generic terms in `DamageUtility`'s own crit resolution (`ResolveOutgoingDamage`'s non-crit return path, `ResolveCriticalTerms`), so any damage source with a normal crit roll is covered. |
 | Infinite Momentum | `InfiniteMomentumMutationData` | Epic | Player | While Dash is on cooldown, keep Dashing for 5% of Max Health each time - **unlimited**, refused only at exactly 1 health (the floor) - below full price you still get the Dash and are left at 1, since spending your last sliver to escape is the point. Direct health write, never `DamageUtility.ApplyDamage`. A fraction of MAX health, so the cost stays meaningful against any build - including Glass Core's halved pool. |
 | Critical Focus | `CriticalFocusMutationData` | Epic | Player | Every 3 crits, -1s on BOTH Hero Skill and Dash. A deterministic crit COUNT (`CharacterStats.CritFocusProgress`), reset on trigger - not a hidden real-time internal cooldown. DoT-tick replays are excluded for free, since `OnCriticalHit` only fires from the real resolution path. |
 | Adrenaline Kick | `AdrenalineKickMutationData` | Epic | Player | An Accessory block resets Dash AND cuts 50% off the Hero Skill's **remaining** cooldown (8s left -> 4s left), not off its base. Replaces Shield Breaker, whose trigger (a player Shield breaking) became unreachable for most heroes. Reacts to `OnAccessoryBlocked`, which fires ONLY on a genuine block - never on recovery, purchase or a non-block destruction. |
-| Spare Parts | `SparePartsMutationData` | Epic | Player | Once per run, a destroyed Accessory instantly returns with 2 durability, bypassing the wait-for-Breathing rule. Backed by the generic `AccessoryEmergencyReserve` component; nothing ever refills `Charges`, so "once per run, not reset at a Break, not re-armed by a repair" is structural rather than policed. |
 | Danger Pay | `DangerPayMutationData` | Epic | Player | Below 40% Max Health: +35% ALL damage, +20% Move Speed. A live CONDITION, not a timed buff - `MutationModifierUtility.IsInDanger` is re-evaluated at every damage resolution and every movement tick, so healing back over the line removes both halves immediately with nothing to expire. |
 | Overkill | `OverkillMutationData` | Epic | Player | Damage dealt beyond a killed enemy's remaining health detonates at the corpse for 50% of the excess (radius 3). The excess needed no new plumbing - `DamageUtility`'s unclamped post-hit health already IS it; it is only captured before Cheat Death rewrites it. See "Overkill recursion" below. |
-| Scavenger Rush | `ScavengerRushMutationData` | Rare | Player | 5 collectibles within 3s grants +30% Move Speed and +30% Fire Rate for 4s. Listens to the generic `OnCollectibleCollected`, which fires only from the currency-orb path - so Accessory recoveries, Merchant purchases and static interactables are excluded structurally, not by a list. Buff rides the shared timed-buff slots, so it refreshes rather than stacks. |
+| Scavenger Rush | `ScavengerRushMutationData` | Rare | Player | Destroying ANY Breakable (barrel, crate, breakable wall - no distinction) grants the destroyer +30% Move Speed and +30% Fire Rate for 4s. Reacts to the generic `OnDestructibleBroken` signal (`Breakable.qtn`), not any one specific prefab or prop type. Buff rides the shared timed-buff slots, so destroying another one while it's up refreshes rather than stacks it. |
 | Blood Money | `BloodMoneyMutationData` | Legendary | Player | +50% Coins, but lose 10% of your CURRENT Coins whenever you actually lose health. The gain half rides the per-player `CoinGainMultiplier` rather than scaling the world drop - coin drops are shared in co-op, so scaling the drop would hand the mutation to the whole team. The loss reacts to `OnHealthDamageApplied`, so an Accessory-blocked hit and a Shield-only hit both cost nothing. |
 | No Safety Net | `NoSafetyNetMutationData` | Legendary | Player | +75% ALL damage while the Accessory is Airborne/Dropped/Broken. Tracks no state of its own - reads `AccessoryGuard.State` via `AccessoryGuardUtility.IsExposed` at every hit. Deliberately inert (and unofferable) for a player whose Accessory was removed by Last Bastion, which would otherwise be a permanent free bonus. |
-| Second Wind | `SecondWindMutationData` | Epic | Player | Recovering your Accessory heals 5% Max Health. Reacts to `OnAccessoryRecovered`, which fires only on a real world recovery - so a Merchant repair/replacement never heals, re-touching the collectible can't farm it, and a teammate returning it heals the OWNER. Once per drop cycle falls out of the guard's own state machine. |
+| Second Wind | `SecondWindMutationData` | Epic | Player | Recovering your Accessory heals 10% Max Health AND grants +20% Move Speed for 4s. Reacts to `OnAccessoryRecovered`, which fires only on a real world recovery - so a Merchant repair/replacement never heals/buffs, re-touching the collectible can't farm it, and a teammate returning it heals/buffs the OWNER. The Move Speed half rides the shared timed-buff slot, so recovering again while it's up refreshes rather than stacks it. |
 | Dead Weight | `DeadWeightMutationData` | Legendary | Player | +50% Weapon Damage, Dash hard-capped at 1 charge, Dash cooldown x1.5. The cap is `min(MaxStacks, cap)` at every availability read, never a subtraction - see "Dead Weight hard cap" below. |
 | Pressure Cooker | `PressureCookerMutationData` | Epic | Player | +3% ALL damage per full second without taking damage, capped at +30%; any real hit resets it. Counter is `CharacterStats.SafeTimeSeconds`, advanced off `f.DeltaTime` in `MutationTimerUtility` - deterministic, never a View timer. An Accessory block leaves the streak intact (it never reaches a damage signal); **a Shield-only hit DOES reset it**, by explicit request - this deviates from the original brief, which asked for Shield-only hits to be ignored. |
 | Money Talks | `MoneyTalksMutationData` | Epic | Player | +5% ALL damage per full 100 Coins currently carried, capped at +40% (800 Coins). Resolved **live** per hit by `CoinUtility.ResolveDamageBonus` from `DamageUtility.ResolveOutgoingDamage` - never baked at pick time, because the point is that it climbs as you save and drops the moment you spend at the Store. Stepped per whole 100 so the next breakpoint is a number the player can aim at. |
+| Bro Mutation | `BroMutationData` | Epic | Player | +15% ALL damage, +10% MORE for every OTHER Raider in the run who also owns Bro Mutation (2 owners -> +25% each, 3 -> +35%, 4 -> +45%). Counted by ownership alone (a live `PlayerLink`+`CharacterStats` scan, `MutationModifierUtility.CountOtherBroMutationOwners`), never proximity or being alive. Resolved live, not baked, so a teammate picking it up LATER retroactively raises everyone who already holds it. Passive co-op synergy needing no combat coordination. |
+| Boss Destroyer | `BossDestroyerMutationData` | Epic | Player | +40% damage against Heavy/Elite/Boss, -20% against Filler/Normal/Specialist. Reads the target's own `EnemyDataAsset.Tier` generically (`DamageUtility.ResolveTargetTierDamageMultiplier`, attacker-side, next to the Close Quarters/Longshot range term) - no per-enemy-type list, any current or future enemy is covered by its tier alone. |
+| Executioner | `ExecutionerMutationData` | Epic | Player | After this player's own damage lands on an enemy, if what it has left falls below its OWN tier's HP% threshold (15% Filler/Normal/Specialist, 8% Heavy/Elite, 3% Boss), it is immediately finished off - through the exact same kill pipeline a lethal hit resolves through (`DamageUtility.TryExecute`/`ResolveDeath`, the tail of `ApplyDamage`'s death handling pulled out for reuse - see "Executioner / generic execution pipeline" below). Only ever reacts to damage whose OWNER holds this mutation; a teammate's hit bringing the same enemy below threshold can never trigger it. |
 | Greed | `GreedMutationData` | Legendary | **Run** | +100% Rift Shards for the whole team (`Global.RiftShardGainBonus`, applied by `RiftShardUtility.GrantAll` before each player's own multiplier) + `Global.EnemyMaxHealthBonus` +50%. Team-wide reward because the drawback is team-wide. |
 | Overpopulation | `OverpopulationMutationData` | Epic | **Run** | Spawn density +40% / enemy Max Health -25%. Bosses are exempt from the penalty - not by a check in the mutation, but because `ResolveEnemyHealthMultiplier` ignores a *negative* run-wide bonus for `EnemyTier.Boss` as a general rule. |
 | Elite Territory | `EliteTerritoryMutationData` | Legendary | **Run** | Spawn density -30% / Elite-bearing groups weighted x2.5. Pure spawn *selection* weighting via `EncounterModifierUtility.ResolveGroupWeightMultiplier` reusing `CombatDirectorUtility.GroupContainsMajor` - nothing substitutes or upgrades enemy types. Boss spawning is untouched (a Boss phase never pulses). |
@@ -382,36 +387,127 @@ single most useful line here, since an incompatibility or run-scope duplicate is
 invisible (the mutation just quietly stops appearing).
 
 
+## 2026-09-17 pass - removals, three reworks, three additions
+
+Scoped to the `Player`-scope half of the pool only - the 5 `Run`-scope mutations (Greed/
+Overpopulation/Elite Territory/Blood Tithe/Escalation) are untouched. Removed 2 Player-scope
+mutations and added 3, moving the pool from 27 to 28 entries overall (22 -> 23 Player-scope); also
+reworked three existing Player-scope mutations away from mechanisms that had grown awkward - all
+reusing existing generic primitives rather than introducing mutation-specific simulation systems.
+
+**Removed:** `UltimateCommitmentMutationData` (a flat Skill Damage/Cooldown tradeoff with no
+identity of its own once Focused Power existed) and `SparePartsMutationData` (the once-per-run
+Accessory comeback). Both `.cs` classes, their `RiftMutationAssetGenerator` specs and their `.asset`
+files are gone, and their two numeric `Id.Value` entries were removed from `LevelUpConfig.asset`'s
+own `RiftMutations` list by hand (the same list a live Editor session would otherwise need to
+rebuild via `Tools/RiftRaiders/Generate Rift Mutation Assets`). The generic `AccessoryEmergencyReserve`
+component Spare Parts was built on is left untouched - still a reusable primitive, just currently
+unused.
+
+**Reworked - Focused Power:** dropped the Skill-area-radius/center-focus mechanic entirely
+(`SkillCenterFocusBonus`, `SkillFocusUtility.cs`, and its two call sites in `HitEffectUtility.
+ApplyToTarget` are gone) for a crit-commitment tradeoff: `CharacterStats.
+FocusedPowerNonCritDamagePenalty` (-30%) is applied in `DamageUtility.ResolveOutgoingDamage`'s
+non-crit return path, and `FocusedPowerCritDamageBonus` (+1.0) is added directly onto the resolved
+crit multiplier inside `ResolveCriticalTerms` - which is also why the no-target "Current Critical"
+preview (`ResolveBaselineCritical`) picks it up for free, same as the weapon's own crit bonus.
+`HitEffectContext.AreaCenter`/`AreaRadius` are left in place as generic, currently-unconsumed
+context plumbing for a future distance-from-center effect.
+
+**Reworked - Scavenger Rush:** dropped the "N collectibles within a window" mechanic
+(`ScavengerRequiredPickups`/`ScavengerWindow`/`ScavengerPickupCount`/`ScavengerWindowRemaining` and
+`MutationTimerUtility.TickScavengerWindow` are gone) for "destroy ANY Breakable" - a barrel, a crate,
+a breakable wall, with no distinction between them. This needed one new generic primitive:
+`Breakable.qtn` gained `signal OnDestructibleBroken(entity, owner)`, fired by
+`BreakableUtility.TryBreak` right alongside the existing View-only `BreakableBroken` event - unlike
+that event, a signal reaches simulation-side reactions. `RiftMutationReactionSystem.
+OnDestructibleBroken` reacts to every break unconditionally, reusing the exact same
+`ApplyTempMoveSpeed`/`ApplyHaste` calls (and the same `ScavengerMoveSpeedBonus`/`ScavengerFireRateBonus`/
+`ScavengerBuffDuration` fields) the old pickup-burst version already had. `owner` on both of
+`Breakable`'s trigger points (`DamageUtility.ApplyDamage`'s non-Enemy death branch,
+`BreakableFocusSystem`'s dwell-break) was already threaded through, so no per-prop authoring is
+needed anywhere - an earlier draft of this pass gated the signal on a `DestructibleCategory.Barrel`
+tag (barrels only); that gate was removed by explicit request in favor of "any Breakable".
+
+**Reworked - Second Wind:** unchanged heal-on-recovery half (retuned 5% -> 10%), plus a new Move
+Speed burst (`SecondWindMoveSpeedBonus`/`SecondWindMoveSpeedDuration`) applied from the same
+`OnAccessoryRecovered` reaction via `StatusEffectUtility.ApplyTempMoveSpeed` - refreshes on
+reapply, exactly like every other timed buff in this pool.
+
+**Added - Bro Mutation:** the pool's first mutation whose own strength depends on what OTHER
+players hold. `CharacterStats.BroMutationBaseDamageBonus`/`BroMutationPerOwnerDamageBonus` are the
+only two fields it writes; live resolution happens in `MutationModifierUtility.
+ResolveLiveDamageMultiplier` via a new `CountOtherBroMutationOwners` helper - a plain
+`f.Filter<PlayerLink, CharacterStats>()` scan counting anyone else whose own
+`BroMutationBaseDamageBonus` is set (the field IS the ownership marker, same idiom the rest of this
+file already uses - no `RiftMutationPicks`/`AssetRef` lookup needed). Deliberately live rather than
+baked at pick time, since a second player picking it up later has to retroactively raise the first
+player's bonus too.
+
+**Added - Boss Destroyer:** attacker-side, target-EnemyTier-conditional All Damage swing -
+`CharacterStats.BossDestroyerHeavyDamageBonus`/`BossDestroyerLightDamagePenalty`, resolved by a new
+`DamageUtility.ResolveTargetTierDamageMultiplier(f, target, stats)` sitting right next to
+`ResolveRangeDamageMultiplier` (same attacker+target-dependent shape Close Quarters/Longshot already
+established) and called from the same spot in `ResolveOutgoingDamage`. Reads `EnemyDataAsset.Tier`
+generically - no per-enemy-type list anywhere.
+
+**Added - Executioner / generic execution pipeline:** the one addition that touched shared combat
+code beyond a new resolver. `DamageUtility.ApplyDamage`'s entire post-death block (EntityDied/
+OnEntityKilled, Overkill, every on-kill drop, the Enemy/PlayerLink/Breakable tier branching) was
+pulled out, unchanged, into a new private `ResolveDeath(f, target, owner, source, overkillDamage,
+isChainedExplosion, isExplosion)` - `ApplyDamage` itself now just calls it when `Health` reaches 0.
+A new public `DamageUtility.TryExecute(f, target, attacker, source)` bypasses Shield (zeroes
+`Current`) and sets `Health.CurrentHealth = 0` directly - skipping Armor/Shield mitigation entirely,
+since a threshold execution has to be a GUARANTEED kill - then calls the same `ResolveDeath`, so an
+execution fires every kill signal/drop/tier-branch a normal lethal hit would.
+`RiftMutationReactionSystem.OnHealthDamageApplied` calls `TryExecute` for Executioner
+(`CharacterStats.ExecutionThresholds`, an `array<FP>[6]` indexed by `(int)EnemyTier`) keyed off the
+signal's own `owner` - so only damage this mutation's holder personally dealt can ever trigger their
+own execution check, never a teammate's hit on the same enemy. This reaction fires from INSIDE the
+triggering `ApplyDamage` call, still before ITS OWN death branch runs - safe only because
+`ResolveDeath`'s pre-existing reentrancy guard (`f.Exists(target)` / already-`Dead`-phase check,
+originally written for `OnCriticalHit`'s own nested-call hazard) already covers exactly this case.
+
 ## Current status / known simplifications
 
 Every mutation in the roster above has a class and a `RiftMutationAssetGenerator` spec. **Nothing
-from the 2026-08-27 pass has been verified in-Editor yet**, and the changed `.qtn` files
-(`CharacterStats.qtn`, `LevelUp.qtn`, `Accessory/AccessoryGuard.qtn`, `RiftShards.qtn`, the new
-`RiftMutation/RunMutations.qtn`) need Quantum's DSL codegen to run before any of the new C# compiles.
-Outstanding:
+from the 2026-08-27 or 2026-09-17 passes has been verified in-Editor yet**, and the changed `.qtn`
+files (`CharacterStats.qtn`, `LevelUp.qtn`, `Accessory/AccessoryGuard.qtn`, `RiftShards.qtn`,
+`RiftMutation/RunMutations.qtn`, `Breakable.qtn`) need Quantum's DSL codegen to run before any of the
+new/changed C# compiles. Outstanding:
 
-1. **Re-run the generator** (`Tools/RiftRaiders/Generate Rift Mutation Assets`) - it authors the 7 new
-   assets, retunes the 9 rewritten ones, wires `Scope`/`IncompatibleWith`, and rebuilds
-   `LevelUpConfig.RiftMutations`. Until it runs, the on-disk assets still describe the
-   pre-2026-08-27 roster. Then **delete `ShieldBreaker.asset` and `AllOrNothing.asset` by hand** -
-   the generator rebuilds the list from its own specs, so both drop out of the pool automatically,
-   but the orphaned asset files remain on disk (and would now fail to resolve, since their classes
-   are gone).
-2. **A `RiftShardOrb` `EntityPrototype` and `RiftShardConfig.asset` still need Editor authoring**
+1. **Re-run the generator** (`Tools/RiftRaiders/Generate Rift Mutation Assets`) - it authors the 3 new
+   2026-09-17 assets (Bro Mutation/Boss Destroyer/Executioner), retunes the 3 reworked ones (Focused
+   Power/Scavenger Rush/Second Wind), and rebuilds `LevelUpConfig.RiftMutations` from its own specs -
+   Ultimate Commitment/Spare Parts are already gone from that spec list and from
+   `LevelUpConfig.asset`'s serialized `RiftMutations` (removed by hand alongside this pass), but their
+   two orphaned `.asset` files were also already deleted, unlike the 2026-08-27 pass's
+   ShieldBreaker/AllOrNothing precedent (which left deletion as a manual post-regenerate step). Until
+   the generator runs, the on-disk Focused Power/Scavenger Rush/Second Wind assets still describe
+   their PRE-2026-09-17 numbers.
+2. **No per-prop authoring needed for Scavenger Rush** - `OnDestructibleBroken` fires for every
+   `Breakable` unconditionally (barrels, crates, breakable walls alike), so it works the instant the
+   generator re-runs, with nothing to set on `BreakableBarrel (1).prefab` or any other prop.
+3. **A `RiftShardOrb` `EntityPrototype` and `RiftShardConfig.asset` still need Editor authoring**
    before Greed's currency half does anything at runtime - `Tools/RiftRaiders/Generate Rift Shard
    Assets` authors the config; the prototype and its `RuntimeConfig` wiring are manual, same
    documented gap `ScrapOrbPrototype` has today.
-3. **Every asset's `Icon` is unset** - needs manual per-mutation sprite assignment.
-4. **The distance thresholds behind Close Quarters/Longshot (5/10 units) are a placeholder**, not a
+4. **Every asset's `Icon` is unset** - needs manual per-mutation sprite assignment.
+5. **The distance thresholds behind Close Quarters/Longshot (5/10 units) are a placeholder**, not a
    tuned design number - same category as several proc magnitudes across the Weapon Perk roster. They
    are now `internal` on `DamageUtility` and shared by Longshot's pierce and Close Quarters' kill
    burst, so retuning them moves all three together.
-5. **Mutual exclusion is authored per pair, and filters against already-OWNED mutations only** - see
+6. **Mutual exclusion is authored per pair, and filters against already-OWNED mutations only** - see
    "Mutation incompatibility" above. Two incompatible cards can still share one screen.
-6. **Every numeric value in the 2026-08-27 pass is a decisive placeholder pending a balance pass** -
+7. **Every numeric value in the 2026-08-27 pass is a decisive placeholder pending a balance pass** -
    the stagger chance/duration, the Close Quarters speed burst, Pressure Cooker's 1.75x end point, and
    the Overpopulation/Elite Territory density trades in particular.
-7. **`Weapon.FocusedBreachContactTime` only resets on an explicit miss or a target change**, not on a
+8. **`Weapon.FocusedBreachContactTime` only resets on an explicit miss or a target change**, not on a
    continuous per-tick decay while simply not firing - a reasonable MVP reading of "losing contact
    resets or rapidly decays progress" given Hitscan firing is already discrete, not a true
    continuous-beam decay.
+9. **Every numeric value in the 2026-09-17 pass is also a decisive placeholder pending a balance
+   pass** - Focused Power's -30%/+1.0 split, Bro Mutation's 15%/10% stacking curve, Boss Destroyer's
+   +40%/-20% swing, and Executioner's six per-tier thresholds in particular. Executioner especially
+   deserves live-run testing: a Boss's 3% threshold is a much smaller effective HP window than a
+   Filler's 15% once tuned against real weapon DPS.

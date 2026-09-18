@@ -21,7 +21,7 @@ MonoBehaviour:
   Rarity: 2
   Scope: 0
   IncompatibleWith: []
-  Description: '+<color=#FD3971>{0:0}%</color> Damage per second without taking damage, up to +<color=#FD3971>{1:0}%</color>'
+  Description: +{0:0}% Damage per second without taking damage, up to +{1:0}%
   DamagePerSecond:
     RawValue: 1966
   MaxDamageBonus:

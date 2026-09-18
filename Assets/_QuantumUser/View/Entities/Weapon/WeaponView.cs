@@ -87,8 +87,12 @@ namespace Quantum
         [SerializeField, Tooltip("Particle system parented at the muzzle, restarted on every shot (e.g. an Epic Toon FX Muzzleflash prefab).")]
         private ParticleSystem muzzleParticle;
 
+        [Header("Charge Effect (optional - Shoot weapons only, played while WeaponDataAsset.AnticipationTime winds up)")]
+        [SerializeField, Tooltip("Started (Play) on EventWeaponAnticipationStarted, stopped (Stop, StopEmitting - lets already-spawned particles fade out naturally instead of vanishing) the moment the shot actually fires - a started wind-up always resolves into a shot, so this always gets its matching Stop. Never touched for a weapon with AnticipationTime 0 (no anticipation event is ever raised) or for a Swing weapon (AnticipateSwing/ReleaseSwing play instead). Leave empty for no charge effect.")]
+        private ParticleSystem chargeParticle;
+
         [Header("Projectile Spawn")]
-        [SerializeField, Tooltip("Empty child at the barrel tip, kept parented to this weapon - where a projectile's visual (and the ghost trail of a shot too fast to ever get a view) leaves from. Author one per weapon. Leave empty to fall back to the muzzle flash's transform, which is unreliable for this: UnparentAndPlay hands it up to the rig socket and only re-syncs it on each shot, so between shots and mid-recoil it sits wherever it last snapped.")]
+        [SerializeField, Tooltip("Empty child at the barrel tip, kept parented to this weapon - where a projectile's visual (and the ghost trail of a shot too fast to ever get a view) leaves from. Author one per weapon. Leave empty to fall back to the muzzle flash's transform, which is unreliable for this: SyncMuzzleTransform hands it up to the rig socket and only re-syncs it on each attack, so between attacks and mid-recoil/mid-swing it sits wherever it last snapped.")]
         private Transform projectileSpawnPoint;
 
         // Where a projectile's visual should actually leave from - read LIVE by ProjectileView at
@@ -164,10 +168,23 @@ namespace Quantum
         private Vector2 recoilOffset;
         private float recoilRotationCurrent;
         private float knockbackPunch;
+        private float swingScalePunchCurrent;
+        private Sequence swingSequence;
+
+        // Set on EventWeaponAnticipationStarted, cleared on EventPlayerFired - tells OnPlayerFired
+        // whether THIS shot already played its wind-up (so it should only play the release half:
+        // ReleaseSwing/stop-charge-and-Shoot) or never anticipated at all (AnticipationTime 0 -
+        // play the full combined Swing()/Shoot() exactly as before anticipation existed). A started
+        // wind-up is never cancelled (see WeaponSystem.Update's own comment), so this is always
+        // cleared by a matching EventPlayerFired, never left stuck true.
+        private bool isAnticipating;
 
         [Header("Sound")]
-        [SerializeField, SoundDataPicker, Tooltip("Played once per shot, on the same EventPlayerFired that drives the recoil kick. Author its pitch/volume variance and cooldown on the SoundData itself - a fast weapon fires many times a second, so the Group budget (Weapons) is what stops a sustained burst turning to mush. Leave empty for a silent weapon.")]
+        [SerializeField, SoundDataPicker, Tooltip("Played once per shot, on the same EventPlayerFired that drives the recoil kick. Author its pitch/volume variance and cooldown on the SoundData itself - a fast weapon fires many times a second, so the Group budget (Weapons) is what stops a sustained burst turning to mush. Leave empty for a silent weapon. Lives here rather than on WeaponDataAsset - that asset compiles into the Quantum.Simulation assembly, which can't reference SoundData (Assembly-CSharp) at all.")]
         private SoundData fireSound;
+
+        [SerializeField, SoundDataPicker, Tooltip("Played once when a wind-up begins (EventWeaponAnticipationStarted) - only ever raised for a weapon with WeaponDataAsset.AnticipationTime > 0, so this is silent/unused on every weapon without one authored. Leave empty for no anticipation sound.")]
+        private SoundData anticipationSound;
 
         [SerializeField, SoundDataPicker, Tooltip("Played the moment a reload BEGINS - the magazine-out/rack sound. Detected from Weapon.ReloadTimer going positive rather than an event, since the simulation only raises an event when a reload COMPLETES (WeaponSystem.StartReload is silent). Leave empty to skip.")]
         private SoundData reloadStartSound;
@@ -188,6 +205,7 @@ namespace Quantum
 
             QuantumEvent.Subscribe<EventPlayerFired>(this, OnPlayerFired);
             QuantumEvent.Subscribe<EventWeaponReloaded>(this, OnWeaponReloaded);
+            QuantumEvent.Subscribe<EventWeaponAnticipationStarted>(this, OnWeaponAnticipationStarted);
         }
 
         public override void OnDestroy()
@@ -197,7 +215,11 @@ namespace Quantum
 
             // Shoot()'s recoil kicks (Tween.PunchCustom(this, ...)) are frequently still decaying
             // when the owner dies mid-shot - without this, PrimeTween logs a stack-trace-capturing
-            // error per orphaned tween every time that happens.
+            // error per orphaned tween every time that happens. swingSequence.Stop() must run
+            // FIRST - if a swing is still mid-flight, its windUp/swingOut/swingBack legs are
+            // 'nested' inside it, and Tween.StopAll(this) alone can't touch a nested tween (see
+            // Swing()'s own comment on this exact trap).
+            swingSequence.Stop();
             Tween.StopAll(this);
         }
 
@@ -221,8 +243,56 @@ namespace Quantum
             if (fireSound != null)
                 EntitySound.PlayAttached(fireSound, transform, _entityRef);
 
-            Shoot();
+            if (isAnticipating)
+            {
+                // This shot already played its wind-up (OnWeaponAnticipationStarted below) - only
+                // play the release half, continuing from wherever that wind-up currently sits
+                // (ReleaseSwing) rather than replaying it from scratch.
+                isAnticipating = false;
+
+                if (anim.AttackAnimationType == WeaponAttackAnimationType.Swing)
+                {
+                    ReleaseSwing();
+                }
+                else
+                {
+                    if (chargeParticle != null)
+                        chargeParticle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+
+                    Shoot();
+                }
+
+                return;
+            }
+
+            // No anticipation happened for this shot (WeaponDataAsset.AnticipationTime is 0 - the
+            // default for every weapon today) - play the full combined animation exactly as before
+            // anticipation existed.
+            if (anim.AttackAnimationType == WeaponAttackAnimationType.Swing)
+                Swing();
+            else
+                Shoot();
         }
+
+        private void OnWeaponAnticipationStarted(EventWeaponAnticipationStarted e)
+        {
+            if (e.Entity != _entityRef) return;
+
+            isAnticipating = true;
+
+            if (anticipationSound != null)
+                EntitySound.PlayAttached(anticipationSound, transform, _entityRef);
+
+            if (anim.AttackAnimationType == WeaponAttackAnimationType.Swing)
+            {
+                AnticipateSwing();
+            }
+            else if (chargeParticle != null)
+            {
+                chargeParticle.Play(true);
+            }
+        }
+
 
         private void OnWeaponReloaded(EventWeaponReloaded e)
         {
@@ -244,11 +314,17 @@ namespace Quantum
         [Button("Test Shoot")]
         public void Shoot()
         {
-            // First, before any of the recoil/knockback tweens below start - UnparentAndPlay
+            // First, before any of the recoil/knockback tweens below start - SyncMuzzleTransform
             // snapshots the muzzle at this weapon's CURRENT pose, and none of Shoot()'s own
             // animation (recoilOffset, recoilRotationCurrent, knockbackPunch) has been kicked off
             // yet at this point in the method, so there's nothing for it to catch mid-punch.
-            UnparentAndPlay();
+            SyncMuzzleTransform();
+
+            // The gun-only flash - Swing()/AnticipateSwing()/ReleaseSwing() all sync the muzzle
+            // transform too (a melee weapon's underlying hit can still be a Hitscan/Projectile
+            // spawned from it), but only an actual Shoot() ever plays it.
+            if (muzzleParticle != null)
+                muzzleParticle.Play(true);
 
             Vector2 kickDir = -lastAimDir * anim.recoilKickDistance;
             Tween.PunchCustom(this, Vector3.zero, new ShakeSettings(new Vector3(kickDir.x, kickDir.y, 0f), anim.recoilDuration, anim.recoilFrequency, asymmetryFactor: anim.recoilAsymmetry),
@@ -260,6 +336,128 @@ namespace Quantum
 
             Tween.PunchCustom(this, Vector3.zero, new ShakeSettings(new Vector3(1f, 0f, 0f), anim.recoilDuration, anim.recoilFrequency, asymmetryFactor: anim.recoilAsymmetry),
                 (view, val) => view.knockbackPunch = val.x);
+
+            PunchCharacter();
+        }
+
+        // Melee equivalent of Shoot() above, played instead of it when anim.AttackAnimationType
+        // is Swing (see WeaponAnimationParams' own comment on the enum). Deliberately reuses the
+        // exact same recoilOffset/recoilRotationCurrent fields Shoot() punches - ApplyAim already
+        // composes whatever is in them into the final pose every frame with no notion of where
+        // they came from, so this needs no changes to ApplyAim's OWN math, only a separate
+        // swingScalePunchCurrent folded into its scale line (see ApplyAim's own comment on it).
+        // Leaves knockbackPunch untouched (stays 0) - the depth push reads as gun recoil, not a
+        // blade swing.
+        //
+        // Unlike Shoot()'s three independent PunchCustom kicks (each a symmetric 0 -> peak -> 0
+        // decay), a swing is an explicit anticipation animation - 4 keyframes (rest -> wind-up ->
+        // peak -> rest), each leg its own Tween.Custom chained into one Sequence so the timing and
+        // easing of the wind-up, the slash itself, and the settle-back are independently tunable
+        // (WeaponAnimationParams' own Melee Swing fields) rather than derived from a single
+        // decay curve.
+        [Button("Test Swing")]
+        public void Swing()
+        {
+            // Cancels any still-running swing from a previous attack so a fast weapon always
+            // starts a clean new swing instead of fighting a decaying one - Shoot()'s punches get
+            // away with skipping this only because they're independent per-shot decays, not a
+            // multi-leg sequence that would otherwise visibly jump mid-chain. MUST stop the
+            // Sequence itself, not Tween.StopAll(this) - windUp/swingOut/swingBack below are
+            // 'nested' inside it once chained, and PrimeTween logs an error and REFUSES to
+            // manipulate a nested tween directly (see Sequence.Chain's own doc comment: "Use
+            // Stop()/Complete()/... of the parent animation instead"). Calling StopAll(this) here
+            // was exactly that mistake - it silently failed to cancel the previous swing's
+            // rotation chain every time, leaving it running concurrently and stomping this new
+            // swing's own anticipation write a frame or two later, which is why the wind-up never
+            // visibly showed up on repeated swings.
+            swingSequence.Stop();
+            Tween.StopAll(this);
+
+            SyncMuzzleTransform();
+
+            float dir = lastFlipped ? -1f : 1f;
+            float anticipationAngle = -anim.swingAnticipationAngle * dir;
+            float peakAngle = anim.swingRotationAngle * dir;
+
+            Tween windUp = Tween.Custom(this, 0f, anticipationAngle, anim.swingAnticipationDuration,
+                (view, val) => view.recoilRotationCurrent = val, Ease.OutSine);
+            Tween swingOut = Tween.Custom(this, anticipationAngle, peakAngle, anim.swingOutDuration,
+                (view, val) => view.recoilRotationCurrent = val, Ease.InQuad);
+            Tween swingBack = Tween.Custom(this, peakAngle, 0f, anim.swingReturnDuration,
+                (view, val) => view.recoilRotationCurrent = val, Ease.OutQuad);
+
+            swingSequence = Sequence.Create(windUp).Chain(swingOut).Chain(swingBack);
+
+            PlaySwingImpact(anim.swingAnticipationDuration + anim.swingOutDuration + anim.swingReturnDuration);
+        }
+
+        // Plays ONLY the wind-up leg, then holds at the anticipation angle - Tween.Custom simply
+        // stops calling its onValueChange once done, and recoilRotationCurrent stays at whatever
+        // it last wrote, so the weapon visibly stays 'cocked back' until ReleaseSwing takes over -
+        // always eventually does, since a started wind-up is never cancelled (see
+        // WeaponSystem.Update's own comment). Triggered by EventWeaponAnticipationStarted (see
+        // WeaponView.OnWeaponAnticipationStarted), which is only ever raised for a weapon with
+        // WeaponDataAsset.AnticipationTime > 0 - a weapon without one authored never calls this,
+        // and gets the original combined Swing() above instead.
+        public void AnticipateSwing()
+        {
+            swingSequence.Stop();
+            Tween.StopAll(this);
+
+            SyncMuzzleTransform();
+
+            float dir = lastFlipped ? -1f : 1f;
+            float anticipationAngle = -anim.swingAnticipationAngle * dir;
+
+            Tween windUp = Tween.Custom(this, 0f, anticipationAngle, anim.swingAnticipationDuration,
+                (view, val) => view.recoilRotationCurrent = val, Ease.OutSine);
+
+            swingSequence = Sequence.Create(windUp);
+        }
+
+        // The attack half of a swing that already anticipated (EventPlayerFired arriving while
+        // isAnticipating - see OnPlayerFired). Starts from recoilRotationCurrent's CURRENT value
+        // rather than assuming the wind-up fully finished - the simulation's own AnticipationTime
+        // and this weapon's own swingAnticipationDuration are two independently-tuned numbers, and
+        // if the sim's timer completes first this picks up mid-wind-up with no visible pop instead
+        // of snapping to the assumed anticipation angle.
+        public void ReleaseSwing()
+        {
+            swingSequence.Stop();
+            Tween.StopAll(this);
+
+            SyncMuzzleTransform();
+
+            float dir = lastFlipped ? -1f : 1f;
+            float peakAngle = anim.swingRotationAngle * dir;
+            float startAngle = recoilRotationCurrent;
+
+            Tween swingOut = Tween.Custom(this, startAngle, peakAngle, anim.swingOutDuration,
+                (view, val) => view.recoilRotationCurrent = val, Ease.InQuad);
+            Tween swingBack = Tween.Custom(this, peakAngle, 0f, anim.swingReturnDuration,
+                (view, val) => view.recoilRotationCurrent = val, Ease.OutQuad);
+
+            swingSequence = Sequence.Create(swingOut).Chain(swingBack);
+
+            PlaySwingImpact(anim.swingOutDuration + anim.swingReturnDuration);
+        }
+
+        // Shared "impact" flourish - lunge + optional scale punch + character punch - used by both
+        // the combined Swing() and ReleaseSwing()'s attack half. Timed to the duration of whichever
+        // legs are actually about to play (the full swing, or just out+back when a wind-up already
+        // ran), a single 0 -> peak -> 0 punch (like Shoot()'s own kicks) reading fine for "the
+        // weapon pushes forward/grows as it hits, then eases back" without its own keyframes.
+        private void PlaySwingImpact(float impactDuration)
+        {
+            Vector2 lungeDir = lastAimDir * anim.swingLungeDistance;
+            Tween.PunchCustom(this, Vector3.zero, new ShakeSettings(new Vector3(lungeDir.x, lungeDir.y, 0f), impactDuration, 1f, asymmetryFactor: 0.85f),
+                (view, val) => view.recoilOffset = new Vector2(val.x, val.y));
+
+            if (anim.swingScalePunch > 0f)
+            {
+                Tween.PunchCustom(this, Vector3.zero, new ShakeSettings(new Vector3(anim.swingScalePunch, 0f, 0f), impactDuration, 1f, asymmetryFactor: 0.85f),
+                    (view, val) => view.swingScalePunchCurrent = val.x);
+            }
 
             PunchCharacter();
         }
@@ -295,7 +493,7 @@ namespace Quantum
             Gizmos.DrawLine(transform.position, pivotWorld);
         }
 
-        // Cached the first time UnparentAndPlay runs - the muzzle's authored local position/
+        // Cached the first time SyncMuzzleTransform runs - the muzzle's authored local position/
         // rotation relative to this weapon's own root (transform), i.e. exactly where the prefab
         // placed it. Scale is deliberately NOT cached/reapplied here - the parent.parent =
         // .../true reparents below already preserve world scale on their own each time, and
@@ -307,23 +505,24 @@ namespace Quantum
         private Quaternion muzzleRestLocalRotation;
 
         // Re-syncs the muzzle to this weapon's CURRENT pose, then hands it up to transform.parent
-        // (the character rig's weapon socket) before playing - so it's immune to everything
-        // Shoot() does to THIS weapon's own transform afterward (recoil kick, knockback
-        // pushback/scale), without needing to track a separately-computed "clean" pose by hand.
+        // (the character rig's weapon socket) - so it's immune to everything Shoot() does to THIS
+        // weapon's own transform afterward (recoil kick, knockback pushback/scale), without
+        // needing to track a separately-computed "clean" pose by hand. Deliberately does NOT play
+        // muzzleParticle itself - that's a gun-only flash, only Shoot() triggers it (see its own
+        // call site) - but every attack method still calls this first, since MuzzleTransform (a
+        // Swing weapon's projectile/hitscan hit can still spawn from here, same as a Shoot one)
+        // needs an accurate, un-recoiled position regardless of whether anything visibly flashes.
         //
         // Step by step: reparenting to `transform` first (preserving world pose, same as the
         // default Transform.parent setter always does) puts the muzzle back under a well-defined
         // parent regardless of where the previous call last left it; writing the cached rest
         // local pose on top then resets it to its exact authored offset from THIS weapon, which is
-        // currently sitting at its own clean aim pose (Shoot() calls this before starting any
-        // recoil/knockback tween - see its own comment). Reparenting up to transform.parent
-        // (again preserving world pose) bakes that exact world placement into a new local offset
-        // relative to the socket instead - which the recoil/knockback about to run on `transform`
-        // never touches, so the muzzle stays put through the whole shot. Play() doesn't emit
-        // synchronously (Unity processes it on its own particle update pass later this frame), but
-        // nothing moves this transform again until the NEXT shot re-syncs it, so there's no race
-        // like there would be if this reset itself back afterward.
-        private void UnparentAndPlay()
+        // currently sitting at its own clean aim pose (every caller runs this before starting any
+        // recoil/knockback/swing tween - see each one's own comment). Reparenting up to
+        // transform.parent (again preserving world pose) bakes that exact world placement into a
+        // new local offset relative to the socket instead - which the recoil/knockback/swing about
+        // to run on `transform` never touches, so the muzzle stays put through the whole attack.
+        private void SyncMuzzleTransform()
         {
             if (muzzleParticle == null) return;
 
@@ -341,8 +540,6 @@ namespace Quantum
             muzzle.localRotation = muzzleRestLocalRotation;
 
             muzzle.parent = transform.parent;
-
-            muzzleParticle.Play(true);
         }
 
         public void ApplyAim(in AimPose pose, float smoothT)
@@ -396,7 +593,9 @@ namespace Quantum
             Quaternion baseRotation = pose.FacingCamera * Quaternion.Euler(0f, 0f, pose.RotationDegrees + recoilRotationCurrent) * facingFlip;
             Quaternion fullRotation = pose.FacingCamera * Quaternion.Euler(0f, 0f, pose.RotationDegrees + recoilRotationCurrent + pose.FlipDegrees) * facingFlip;
 
-            Vector3 scale = baseScale * (1f - knockbackPunch * anim.knockbackScalePunch);
+            // swingScalePunchCurrent stays 0 for every Shoot weapon (only Swing() ever writes to
+            // it) so this multiplier is a no-op (1) there - purely additive for melee.
+            Vector3 scale = baseScale * (1f - knockbackPunch * anim.knockbackScalePunch) * (1f + swingScalePunchCurrent);
             transform.localScale = scale;
 
             Vector2 totalOffset = currentOffset + pose.ExtraOffset + recoilOffset;

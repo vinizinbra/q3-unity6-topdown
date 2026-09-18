@@ -25,11 +25,13 @@ every spawned platform is destroyed and the challenge settles on `Failed` - **pe
 one-attempt-per-run contract as `Completed`** (confirmed with the user) - `SurvivalTime`/spawning
 resume the same way. One attempt per activator per run, whichever way it goes.
 
-`TraversalChallengeActivated`/`Completed`/`Failed` each also fire a `ToastManager` popup
-("TRAVERSAL CHALLENGE STARTED"/"COMPLETE"/"FAILED") on **every connected client**, not just
-whoever triggered it - wired in `TraversalChallengeWidget.Awake`, unfiltered unlike
-`InteractionPromptWidget`'s own per-local-player toast, since this is whole-team awareness (same
-reasoning the countdown banner itself already documents), not personal feedback.
+`TraversalChallengeActivated`/`Completed`/`Failed` each also fire a shared `AnnouncerManager` banner
+("TRAVERSAL CHALLENGE STARTED"/"COMPLETE"/"FAILED", see `docs/announcer.md`) on **every connected
+client**, not just whoever triggered it - wired in `TraversalChallengeWidget.Awake`, unfiltered
+unlike `InteractionPromptWidget`'s own per-local-player toast, since this is whole-team awareness
+(same reasoning the countdown banner itself already documents), not personal feedback. Originally a
+`ToastManager` popup; moved to the same big-banner `AnnouncerManager` `TeamChallengeWidget`'s own
+STARTED/COMPLETE/FAILED announcements already use, for the same dramatic weight.
 
 ## Why this design, not something else
 
@@ -75,12 +77,33 @@ reasoning the countdown banner itself already documents), not personal feedback.
   -10) unconditionally, every tick, and respawn them at the chunk's own baked `Chunk.RespawnPoint` -
   `TraversalChunk.prefab` already has one authored. This only actually triggers once the real gap
   geometry is deep enough, which needs verifying in-Editor (see "Editor authoring needed" below).
-- **`PoiView` (the current, generic POI view) is reused as-is on the activator**, purely for its
-  free Base-Skill prompt-widget wiring off the sibling `Interactable` - it silently no-ops on its
-  own Inactive/Active/Expired visuals since this entity deliberately carries no `PoiActivation`
-  component (that state shape assumes per-player usage tracking, which this POI has none of). A
-  small dedicated `TraversalChallengeView` handles the real Idle/Active/Completed/Failed 3D visual
-  swap, reading `TraversalChallenge.State` directly.
+- **`TraversalChallengeView` extends the shared `InteractionPromptPoiView` base directly**, purely
+  for its free Base-Skill prompt-widget wiring off the sibling `Interactable` - NOT the generic
+  `PoiView` (which also owns `PoiActivation`-driven Inactive/Active/Expired visuals, meaningless
+  here since this entity deliberately carries no `PoiActivation` component - that state shape
+  assumes per-player usage tracking, which this POI has none of). Originally this was `PoiView`
+  placed alongside a sibling `TraversalChallengeView`; the two classes separately declaring their
+  own "Active Visual" field read as one duplicate/conflicting Inspector slot (only
+  `TraversalChallengeView`'s ever did anything - `PoiView`'s own QUpdate silently no-ops with no
+  `PoiActivation` present), so `InteractionPromptPoiView` was split out of `PoiView` and
+  `TraversalChallengeView`/`TeamChallengeView` (`docs/optional-team-challenge.md`) both extend it
+  directly instead - no sibling `PoiView` needed on either prefab anymore. `TraversalChallengeView`
+  reads `TraversalChallenge.State` directly for its own Idle/Active/Completed/Failed 3D visual
+  swap.
+- **The reward preview (the chest waiting on the far side) reuses `InteractionPromptPoiView`'s own
+  generic `promptRewardIcon`/`promptRewardText` fields verbatim** (see
+  `docs/optional-team-challenge.md`, which introduced them) rather than a Traversal-Challenge-
+  specific field - this POI has no config asset of its own (every tuning value is authored directly
+  on the instance's `QPrototypeTraversalChallenge`, see the file map), and the reward here never
+  varies by anything live anyway (it's always the same chest), so the same constant, Setup-time,
+  per-instance Inspector field the shared base already exposes for Optional Team Challenge covers
+  it for free with zero new plumbing.
+- **`TraversalChallengeView` also pushes a per-`TraversalChallengeState` description override**
+  (`SetDescriptionOverride`, "CHALLENGE IN PROGRESS"/"CHALLENGE COMPLETE"/"CHALLENGE FAILED") onto
+  its own `InteractionPromptWidget` for the same reason `TeamChallengeView` does (see
+  `docs/optional-team-challenge.md`): `TraversalChallengeUtility.ResolveInteractionState` collapses
+  Active/Completed/Failed all into the single generic `AlreadyUsed` `ContextInteractionState`
+  bucket, so the plain `promptAlreadyUsedDescription` text alone can't tell them apart.
 - **The countdown itself is a single, always-present, whole-team HUD banner
   (`TraversalChallengeWidget`)**, not a per-entity world-following widget. This was tried first as a
   manager-pooled widget anchored to the activator's own world Transform (the
@@ -88,25 +111,31 @@ reasoning the countdown banner itself already documents), not personal feedback.
   effect is global for the whole team, so a floating marker only visible to whoever's actually
   looking at that spot in the level is wrong - every player needs to see the countdown regardless of
   where they are (e.g. the teammate still fighting elsewhere). Instead it's one shared instance
-  under the HUD, same idiom `BreathingCountdownWidget` already uses for "NEXT ASSAULT 00:30" -
+  under the HUD, same idiom `BreathingWidget` already uses for "NEXT ASSAULT 00:30" -
   polls `Global.TraversalChallengeTimeRemaining` (a cheap client-facing convenience value written by
   `TraversalChallengeSystem` every tick a challenge is Active, same role `Global.BreathingTimeRemaining`
   already plays) every `QUpdate`, no per-entity following needed.
-- **Shown only while `Global.HudBanner == HudBannerKind.TraversalChallenge`** - a shared, single
-  "which top banner owns the screen right now" value (`HudBannerKind`, `GameState.qtn`), resolved
-  once a tick by `CombatDirectorSystem.ApplyHudBanner` and also read by `BossWidget`/
-  `DirectorTimelineUiWidget`/`BreathingCountdownWidget`, so all four stay mutually exclusive without
-  each independently re-deriving its own condition off `GameState`/`ActiveTraversalChallengeCount`.
-  Resolution order: Boss beats TraversalChallenge beats the DirectorTimeline default - the more
-  specific/urgent thing always wins over the passive ambient one, not an arbitrary fixed ranking.
-  Deliberately a NEW field, not a new value on `GameState` itself - `GameState` gates real
-  simulation behavior (`PoiAvailabilityUtility`, `CombatDirectorSystem`'s own spawn gate,
-  `GameplaySystemGroup` disables), and a Traversal Challenge being Active must never change what
-  `GameState` the match is actually in (other players keep fighting normally elsewhere). This is
-  also exactly why `BreathingCountdownWidget` needs its own explicit `HudBanner` check rather than
-  just trusting `GameState` - a Traversal Challenge can be activated mid-Breathing-Break
-  (`AvailableInBreathing=true`) without `CurrentState` ever leaving `Breathing`, so without it both
-  banners would show stacked on screen at once.
+- **Shown only while `Global.CurrentState == GameState.TraversalChallenge`.** This used to be a
+  separate `HudBannerKind`/`Global.HudBanner` field, deliberately kept out of `GameState` for
+  exactly the collateral-damage reason above (`PoiAvailabilityUtility`/`CombatDirectorSystem`'s
+  spawn gate/`GameplaySystemGroup` disables all key off `GameState`, and a Traversal Challenge must
+  not disturb any of them elsewhere in the level). Folded into `GameState` anyway as part of the
+  Announcer/event-driven-HUD pass (confirmed with the user), once `Global.CombatPhaseState` was
+  introduced to take over `GameState`'s old "real phase" job: `CombatDirectorSystem.
+  ApplyPhaseGameState` now writes the real Survival/Breathing/Boss phase to `CombatPhaseState`
+  (its own Breathing-exit-side-effect compare is scoped to that field, immune to this overlay), and
+  a new `ApplyEffectiveState` resolves `Global.CurrentState` every tick (Boss > TeamChallenge >
+  TraversalChallenge > `CombatPhaseState`) - the exact same resolution order and multi-instance-safe
+  live-scan approach `HudBannerKind` always used, just now landing in the one field every consumer
+  (HUD widgets included) already reads, with a real `GameStateChanged` event to react to instead of
+  polling. `PoiAvailabilityUtility`'s existing `default: return false` already covers
+  `TeamChallenge`/`TraversalChallenge` for free (POIs go unavailable during a challenge, same as
+  during `Boss`/`Upgrade` - confirmed acceptable with the user), and neither new value disables
+  `GameplaySystemGroup`, so the rest of the team keeps playing normally exactly as before. This also
+  means `BreathingWidget` no longer needs its own explicit exclusion check - `CurrentState`
+  is simply never `Breathing` while this overlay is active, so a Traversal Challenge activated
+  mid-Breathing-Break (`AvailableInBreathing=true`) can no longer show stacked with it. See
+  `docs/game-state.md`/`docs/announcer.md`.
 
 ## File map
 
@@ -132,9 +161,14 @@ reasoning the countdown banner itself already documents), not personal feedback.
   `TraversalChallengeCompleted`/`TraversalChallengeFailed`.
 - `Assets/_QuantumUser/Simulation/Default/SystemSetup.User.cs` - `TraversalChallengeSystem`
   registered inside `GameplaySystemGroup`, right after `PoiActivationSystem`.
-- `Assets/_QuantumUser/View/Entities/Poi/TraversalChallengeView.cs` - new, small View companion
-  (Idle/Active/Completed/Failed 3D visuals only), placed alongside the existing `PoiView` on the
-  activator prefab.
+- `Assets/_QuantumUser/View/Entities/Poi/TraversalChallengeView.cs` - Idle/Active/Completed/Failed
+  3D visuals + per-`TraversalChallengeState` prompt description override; extends
+  `InteractionPromptPoiView` directly (no sibling `PoiView` needed on this prefab).
+- `Assets/_QuantumUser/View/Entities/Poi/InteractionPromptPoiView.cs` - shared base extracted out of
+  `PoiView` (see `docs/optional-team-challenge.md`'s file map for the full rationale), owning the
+  world-space Base-Skill prompt (title/per-state description/reward preview) with no dependency on
+  `PoiActivation` - `PoiView` extends this and adds only its own `PoiActivation`-driven visuals;
+  `TraversalChallengeView`/`TeamChallengeView` extend it directly instead.
 - `Assets/_QuantumUser/View/Entities/Poi/TraversalPlatformView.cs` - View companion for the platform
   entity itself (`TraversalPlatform.prefab`, spawned/destroyed via `SpawnedPlatforms[]` above), not
   the activator. On spawn: reads its `visualCollider`'s world bounds center (before
@@ -150,13 +184,15 @@ reasoning the countdown banner itself already documents), not personal feedback.
   unlike `ChestView`/`SentryView`'s own tweened-but-still-parented children, this one has to be off
   the entity's hierarchy for its whole lifetime, not just at the moment of destruction.
 - `Assets/_Project/Scripts/UI/InGame/Hud/TraversalChallengeWidget.cs` - single always-present HUD
-  countdown banner, same idiom `BreathingCountdownWidget` already uses - not per-entity, reads
-  `Global.HudBanner`/`TraversalChallengeTimeRemaining` directly.
-- `Assets/_QuantumUser/Simulation/QTN/GameState.qtn` - new `HudBannerKind` enum + `Global.HudBanner`,
-  shared by `TraversalChallengeWidget`/`BossWidget`/`DirectorTimelineUiWidget`/
-  `BreathingCountdownWidget`.
-- `Assets/_QuantumUser/Simulation/Systems/Director/CombatDirectorSystem.cs` - new
-  `ApplyHudBanner`, called from `ApplyPhaseGameState` every tick, resolves `Global.HudBanner`.
+  countdown banner, same idiom `BreathingWidget` already uses - not per-entity, extends
+  `GameStateGatedWidget` (see `docs/announcer.md`), reads `Global.TraversalChallengeTimeRemaining`
+  directly for its own countdown text.
+- `Assets/_QuantumUser/Simulation/QTN/GameState.qtn` - `GameState` gained `TeamChallenge`/
+  `TraversalChallenge` values plus `Global.CombatPhaseState`; the old `HudBannerKind` enum/
+  `Global.HudBanner` field is gone. See `docs/game-state.md`.
+- `Assets/_QuantumUser/Simulation/Systems/Director/CombatDirectorSystem.cs` - `ApplyEffectiveState`
+  (was `ApplyHudBanner`), called from `ApplyPhaseGameState` every tick, resolves
+  `Global.CurrentState`'s overlay.
 
 ## Current status
 
@@ -166,7 +202,12 @@ Nothing is authored yet, so nothing spawns at runtime until the following is don
 1. Create `TraversalChallengeActivator.prefab` (`Assets/_QuantumUser/Entities/LevelProps/`) -
    mirror `HealingShrine.prefab`'s structure: solid non-trigger `QuantumEntityPrototype.
    PhysicsCollider`, `QPrototypeInteractable{Kind=TraversalChallenge, Radius≈3}`,
-   `QPrototypeTraversalChallenge{...}`, plus both `PoiView` and `TraversalChallengeView`.
+   `QPrototypeTraversalChallenge{...}`, and `TraversalChallengeView` alone - **no sibling `PoiView`
+   component**, `TraversalChallengeView` extends `InteractionPromptPoiView` directly and supplies
+   the Base-Skill prompt itself (see "Why this design" above). Assign the inherited
+   `promptTitle`/description fields, `promptRewardIcon`/`promptRewardText` (e.g. a chest icon +
+   "CHEST") for the reward preview row, and optionally the 3 per-state `...PromptDescription`
+   overrides (defaults are already sensible).
 2. `TraversalPlatform.prefab` `EntityPrototype` exists (solid ground-layer collider, no gameplay
    component) - verify its physics layer matches the level's real ground/floor layer. Still needs,
    by hand in the Editor: attach the new `TraversalPlatformView` to the root and assign
@@ -192,7 +233,7 @@ Nothing is authored yet, so nothing spawns at runtime until the following is don
 6. Verify in-Editor that the real gap between the activator and the checkpoint drops a player below
    `LevelConfig.FallDeathHeight` if a mid-bridge platform is destroyed while they're standing on it.
 7. Wire a `TraversalChallengeWidget` scene instance under the HUD (`GameplayWindow`, alongside
-   `BreathingCountdownWidget`) with its `root`/`countdownText` assigned - doesn't exist in-scene
+   `BreathingWidget`) with its `root`/`countdownText` assigned - doesn't exist in-scene
    yet, so no countdown banner shows anywhere until this is built.
 
 Not yet manually verified end-to-end in-Editor, solo or co-op.

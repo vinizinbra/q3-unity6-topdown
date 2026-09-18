@@ -131,6 +131,10 @@ namespace Quantum
                         weaponToToggle->CheatManualFire = !weaponToToggle->CheatManualFire;
                     break;
 
+                case CheatActionKind.DamagePlayer:
+                    DamagePlayerAtIndex(f, (int)cmd.AssetId, (FP)cmd.Amount);
+                    break;
+
                 case CheatActionKind.JumpToBreathing:
                     JumpToBreathing(f, cmd.Amount);
                     break;
@@ -142,6 +146,10 @@ namespace Quantum
                 case CheatActionKind.BecomeBot:
                     PlayerSpawnUtility.ConvertToBot(f, player);
                     Log.Debug($"[Bot] player {player} became a bot via cheat");
+                    break;
+
+                case CheatActionKind.RevealMap:
+                    RevealAllChunks(f);
                     break;
             }
         }
@@ -219,13 +227,7 @@ namespace Quantum
                 LevelUpUtility.Resolve(f);
             }
 
-            // Reveals the whole minimap - MinimapWidget reads Chunk.Discovered client-side every
-            // tick and repaints automatically, so flipping it here on every chunk is the only step
-            // needed (see ChunkDiscoverySystem, which normally flips it one chunk at a time as the
-            // player physically explores).
-            var chunks = f.Filter<Chunk>();
-            while (chunks.Next(out EntityRef chunkEntity, out Chunk _))
-                f.Unsafe.GetPointer<Chunk>(chunkEntity)->Discovered = true;
+            RevealAllChunks(f);
 
             CoinUtility.Grant(f, player, (FP)5000);
 
@@ -467,6 +469,37 @@ namespace Quantum
 
             if (SkillSystem.AddUpgrade(f, slot, upgradeRef) == true)
                 LevelUpUtility.RecordHistory(f, player, LevelUpPoolKind.SkillUpgrade, new AssetRef<UpgradeData>(upgradeRef.Id));
+        }
+
+        // Targets a specific player by 0-based PlayerRef index (not the sender) - PlayerRef has no
+        // direct index-to-EntityRef lookup, so this scans PlayerLink like every other system that
+        // needs to resolve a player index (e.g. LevelGenerationSystem's per-player loops). owner:
+        // EntityRef.None mirrors EnemyFallSystem/PlayerFallSystem's own self-damage calls, which
+        // DamageUtility.ApplyDamage needs to bypass its player-vs-player friendly-fire guard.
+        private static void DamagePlayerAtIndex(Frame f, int playerIndex, FP damage)
+        {
+            PlayerRef target = playerIndex;
+            var players = f.Filter<PlayerLink>();
+            while (players.Next(out EntityRef entity, out PlayerLink link))
+            {
+                if (link.Player != target)
+                    continue;
+
+                DamageUtility.ApplyDamage(f, entity, damage, EntityRef.None, bypassOutgoingResolution: true);
+                break;
+            }
+        }
+
+        // Reveals the whole minimap - MinimapWidget reads Chunk.Discovered client-side every tick
+        // and repaints automatically, so flipping it here on every chunk is the only step needed
+        // (see ChunkDiscoverySystem, which normally flips it one chunk at a time as the player
+        // physically explores). Shared by the standalone RevealMap cheat and SetupTestRun's own
+        // combo (see CheatActionKind.SetupTestRun).
+        private static void RevealAllChunks(Frame f)
+        {
+            var chunks = f.Filter<Chunk>();
+            while (chunks.Next(out EntityRef chunkEntity, out Chunk _))
+                f.Unsafe.GetPointer<Chunk>(chunkEntity)->Discovered = true;
         }
 
         private static void KillAllEnemies(Frame f, EntityRef killer)

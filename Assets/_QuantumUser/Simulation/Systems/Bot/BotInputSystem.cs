@@ -441,7 +441,13 @@ namespace Quantum
         // hunt enemies/XP while also discovering the map. See docs/bots.md's "Solo" section.
         private static void UpdateSolo(Frame f, ref Filter filter, RuntimeConfig.BotSettings settings)
         {
-            if (f.Global->CurrentState == GameState.Breathing)
+            // CurrentPhaseKind, not CombatPhaseState/CurrentState - a bot's shop-vs-fight decision
+            // must track the REAL phase boundary regardless of whether the area is secured yet
+            // (GameState.Breathing itself now only starts once BreathingAreaSecured is true, see
+            // CombatDirectorSystem.ResolveDesiredState) and immune to a TeamChallenge/
+            // TraversalChallenge overlay elsewhere in the level (see GameState.qtn's own
+            // CombatPhaseState comment).
+            if (f.Global->CurrentPhaseKind == SurvivalPhaseKind.Breathing)
             {
                 // The Store's own availability already gates on BreathingAreaSecured (see
                 // PoiAvailabilityUtility.IsAvailable) - a bot that beelined for it anyway would just

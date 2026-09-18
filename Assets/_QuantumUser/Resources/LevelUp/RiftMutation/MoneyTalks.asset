@@ -21,9 +21,8 @@ MonoBehaviour:
   Rarity: 2
   Scope: 0
   IncompatibleWith: []
-  Description: +<color=#FD3971>{0:0.#}%</color> Damage per <color=#FD3971>{1:0}</color>
-    Coins you are carrying, up to +<color=#FD3971>{2:0}%</color>
+  Description: +{0:0.#}% Damage per {1:0} Coins you are carrying, up to +{2:0}%
   DamagePerHundredCoins:
-    RawValue: 1311
+    RawValue: 3277
   MaxDamageBonus:
     RawValue: 26214

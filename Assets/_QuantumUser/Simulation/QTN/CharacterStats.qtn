@@ -192,11 +192,13 @@ component CharacterStats
     FP NearKillMoveSpeedBonus;
     FP NearKillMoveSpeedDuration;
 
-    // Focused Power: how much extra damage a Skill area hit deals at its exact CENTER, falling
-    // linearly to none at the rim (0 = off). Applied generically by SkillFocusUtility from inside
-    // HitEffectUtility.ApplyToTarget - a skill with no meaningful spatial area reports
-    // HitEffectContext.AreaRadius == 0 and is untouched, so this needs no per-hero handling.
-    FP SkillCenterFocusBonus;
+    // Focused Power: a crit-commitment tradeoff, not an area effect - EVERY non-critical hit deals
+    // less damage (a fraction subtracted, applied in DamageUtility.ResolveOutgoingDamage's non-crit
+    // return path), while a critical hit's damage multiplier gets a flat ADD-ON (not a Crit Chance
+    // grant - see ResolveCriticalTerms). 0 = off for both, so a player without the mutation pays
+    // exactly the pre-existing math.
+    FP FocusedPowerNonCritDamagePenalty;
+    FP FocusedPowerCritDamageBonus;
 
     // Critical Focus: every CritFocusThreshold critical hits, refund CritFocusCooldownReduction
     // seconds on BOTH Hero Skill and Dash, then reset the counter. A deterministic crit COUNT, not
@@ -271,17 +273,14 @@ component CharacterStats
     FP OverkillRadius;
 
     // -- Scavenger Rush --
-    // Collect RequiredPickups collectibles within Window seconds to gain a timed Move Speed + Fire
-    // Rate buff. PickupCount/WindowRemaining are the live counter and its deadline, ticked in
-    // StatusEffectSystem; the buff itself rides the generic StatusEffectUtility temp-buff slots
-    // rather than a bespoke timer, so it refreshes rather than stacks like every other buff here.
-    Byte ScavengerRequiredPickups;
-    FP ScavengerWindow;
+    // Destroying ANY Breakable (barrel, crate, breakable wall - no distinction - see
+    // RiftMutationReactionSystem.OnDestructibleBroken/Breakable.qtn) grants a timed Move Speed + Fire
+    // Rate buff to whoever broke it. The buff itself rides the generic StatusEffectUtility temp-buff
+    // slots rather than a bespoke timer, so destroying another one while it's up REFRESHES the
+    // duration instead of stacking it.
     FP ScavengerBuffDuration;
     FP ScavengerMoveSpeedBonus;
     FP ScavengerFireRateBonus;
-    Byte ScavengerPickupCount;
-    FP ScavengerWindowRemaining;
 
     // -- Blood Money --
     // Fraction of CURRENT Coins lost whenever this player actually loses HP. Reacts to
@@ -292,11 +291,15 @@ component CharacterStats
     FP CoinLossPercentOnHpDamage;
 
     // -- Second Wind --
-    // Fraction of Max Health healed when this player's own Accessory is RECOVERED from the world.
-    // One recovery is one heal by construction, since the guard's state machine only passes through
-    // Recovered once per drop; a Merchant repair/replacement goes through Restore instead and is
-    // deliberately not a recovery.
+    // Fraction of Max Health healed when this player's own Accessory is RECOVERED from the world,
+    // plus a timed Move Speed burst on the same trigger. One recovery is one heal/buff by
+    // construction, since the guard's state machine only passes through Recovered once per drop; a
+    // Merchant repair/replacement goes through Restore instead and is deliberately not a recovery.
+    // The Move Speed half rides the generic StatusEffectUtility temp-buff slot, so recovering again
+    // while it's still up REFRESHES the duration rather than stacking it.
     FP SecondWindHealPercent;
+    FP SecondWindMoveSpeedBonus;
+    FP SecondWindMoveSpeedDuration;
 
     // -- Dead Weight --
     // Hard ceiling on the Dash slot's usable charges (0 = no cap). Deliberately a CAP rather than a
@@ -317,4 +320,26 @@ component CharacterStats
     // one ready Dash.
     Boolean AccessoryBlockResetsDash;
     FP AccessoryBlockSkillCooldownFraction;
+
+    // Bro Mutation: passive co-op synergy needing no combat coordination. Base is this player's own
+    // flat All Damage bonus (0 = off); PerOwner is added again for every OTHER Raider in the run who
+    // ALSO owns this mutation, counted live by ownership alone (RiftMutationPicks), never by
+    // proximity or aliveness - see MutationModifierUtility.ResolveLiveDamageMultiplier. Deliberately
+    // live rather than baked at pick time: a teammate picking this up later has to retroactively
+    // raise everyone who already holds it too.
+    FP BroMutationBaseDamageBonus;
+    FP BroMutationPerOwnerDamageBonus;
+
+    // Boss Destroyer: attacker-side, target-tier-conditional All Damage swing - reads the target's
+    // own EnemyDataAsset.Tier generically (DamageUtility.ResolveTargetTierDamageMultiplier), so any
+    // enemy is covered by its tier alone with no per-enemy-type list. Both 0 = off.
+    FP BossDestroyerHeavyDamageBonus;
+    FP BossDestroyerLightDamagePenalty;
+
+    // Executioner: per-EnemyTier HP% threshold (indexed by (int)EnemyTier - see
+    // EnemyDataAsset.cs) below which this player's own damage immediately finishes an enemy off,
+    // through the same kill pipeline a lethal hit resolves through (DamageUtility.TryExecute). 0 =
+    // off for that tier. Checked only against damage whose OWNER holds this mutation - see
+    // RiftMutationReactionSystem.OnHealthDamageApplied.
+    array<FP>[6] ExecutionThresholds;
 }

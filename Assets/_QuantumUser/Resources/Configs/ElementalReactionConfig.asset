@@ -16,14 +16,28 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Configs/ElementalReactionConfig
     Guid:
       Value: 491478871009097374
+  TickInterval:
+    RawValue: 65536
+  BurnDuration:
+    RawValue: 196608
+  BurnDamagePercent:
+    RawValue: 6554
+  BurnFloorPercent:
+    RawValue: 3277
+  SlowDuration:
+    RawValue: 196608
   ElectrifiedDuration:
     RawValue: 196608
-  ThermalShockTriggerCooldown:
+  ShockStunProcChance:
+    RawValue: 7864
+  ShockStunProcDuration:
     RawValue: 65536
+  ThermalShockTriggerCooldown:
+    RawValue: 98304
   ThermalShockDamagePercent:
     RawValue: 131072
   OverloadTriggerCooldown:
-    RawValue: 65536
+    RawValue: 196608
   OverloadInitialDamagePercent:
     RawValue: 32768
   OverloadChainDamagePercent:
@@ -34,12 +48,10 @@ MonoBehaviour:
   OverloadChainDelay:
     RawValue: 6554
   ShatterTriggerCooldown:
-    RawValue: 131072
+    RawValue: 262144
   ShatterRadius:
     RawValue: 196608
   ShatterPrimaryStunDuration:
     RawValue: 98304
-  ShatterAreaStaggerDuration:
-    RawValue: 16384
   ShatterDamage:
     RawValue: 0

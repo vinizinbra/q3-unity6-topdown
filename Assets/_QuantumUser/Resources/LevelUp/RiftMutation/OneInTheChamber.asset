@@ -21,7 +21,8 @@ MonoBehaviour:
   Rarity: 3
   Scope: 0
   IncompatibleWith: []
-  Description: 'Magazine Size becomes <color=#FD3971>{0:0}</color>, but that round deals <color=#FD3971>{1:+0;-0}%</color> Weapon Damage'
+  Description: Magazine Size becomes {0:0}, but that round deals {1:+0;-0}% Weapon
+    Damage
   MagazineSize: 1
   DamageMultiplier:
     RawValue: 327680

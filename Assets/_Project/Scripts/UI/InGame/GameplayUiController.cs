@@ -874,20 +874,7 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
     // its specific category, since each Chest is authored to exactly one in the Editor.
     private static unsafe string BuildTitle(LevelUpChoice* choice)
     {
-        return choice->FromChest ? GetCategoryDisplayName(choice->Category) : "Level Up!";
-    }
-
-    private static string GetCategoryDisplayName(LevelUpCategory category)
-    {
-        switch (category)
-        {
-            case LevelUpCategory.HeroSkill: return "Hero Skill";
-            case LevelUpCategory.GlobalUpgrade: return "Global Upgrade";
-            case LevelUpCategory.RiftMutation: return "Rift Mutation";
-            case LevelUpCategory.WeaponPerk: return "Weapon Perk";
-            case LevelUpCategory.ChooseWeapon: return "Weapon";
-            default: return "Chest";
-        }
+        return choice->FromChest ? LevelUpCategoryUtility.GetDisplayName(choice->Category) : "Level Up!";
     }
 
     // WeaponPerkData/SkillActionData/GlobalUpgradeData/PassiveUpgradeData/RiftMutationData all

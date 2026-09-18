@@ -21,7 +21,8 @@ MonoBehaviour:
   Rarity: 1
   Scope: 0
   IncompatibleWith: []
-  Description: 'Up to <color=#FD3971>{0:+0;-0}%</color> Damage at range and +<color=#FD3971>{1:0}</color> Pierce on distant shots, <color=#FD3971>{2:+0;-0}%</color> up close'
+  Description: Up to {0:+0;-0}% Damage at range and +{1:0} Pierce on distant shots,
+    {2:+0;-0}% up close
   FarMultiplier:
     RawValue: 98304
   NearMultiplier:

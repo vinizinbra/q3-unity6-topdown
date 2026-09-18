@@ -1,3 +1,4 @@
+using System;
 using PrimeTween;
 using Photon.Deterministic;
 using Quantum;
@@ -46,6 +47,24 @@ public class InteractionPromptWidget : MonoBehaviour
     [SerializeField, Tooltip("Title shown instead of \"REVIVE\" when the Downed entity this widget follows is one of THIS client's own local players - they're not the one pressing anything, they're the one being picked up.")]
     private string selfDownedTitle = "BEING REVIVED";
 
+    [Header("Challenge Area (Optional Team Challenge - see docs)")]
+    [SerializeField, Tooltip("Shown only while the followed entity is a Team Challenge POI currently WaitingForTeam. Left unassigned, this feature is simply off.")]
+    private GameObject challengeArea;
+    [SerializeField, Tooltip("One slot per possible active Raider, sized to the game's max party size - shown/hidden every frame by the LIVE connected-player count, each toggled Ready/idle by its own live TeamChallengeReady state.")]
+    private ChallengeReadyIconWidget[] challengeReadyIcons;
+
+    [Header("Challenge Rules (Optional Team Challenge - see docs)")]
+    [SerializeField, Tooltip("Shown only while the followed entity is a Team Challenge POI currently Available or WaitingForTeam - hidden once the attempt actually starts (nothing left to decide). Left unassigned, this feature is simply off.")]
+    private GameObject rulesArea;
+    [SerializeField, Tooltip("Fixed pool sized to the most rows any single ChallengeDefinition.Rules will ever author - shown/hidden every frame by however many rows the LIVE rolled challenge (TeamChallenge.SelectedChallenge) actually has, each filled in via IconTextRowWidget.Setup.")]
+    private IconTextRowWidget[] ruleRows;
+
+    [Header("Reward Preview (any POI kind - see docs)")]
+    [SerializeField, Tooltip("Shown for the lifetime of this widget whenever Setup was given a non-empty reward icon/text - constant, same as titleText, no live state involved. Left unassigned, this feature is simply off.")]
+    private GameObject rewardArea;
+    [SerializeField]
+    private IconTextRowWidget rewardRow;
+
     [Header("Scale In/Out")]
     [SerializeField, Tooltip("Springy pop on entering range - matches ColliderVisualScaleView/DamageNumberUiWidget's own default.")]
     private float scaleInDuration = 0.2f;
@@ -73,6 +92,13 @@ public class InteractionPromptWidget : MonoBehaviour
     // prompt/path anymore), in which case the generic per-ContextInteractionState description
     // (ResolveDescription) takes over instead.
     private string _bleedOutDescription = string.Empty;
+    // Set by an owning View (e.g. TeamChallengeView) whose own sim state has no
+    // ContextInteractionState equivalent of its own (Starting/ChallengeActive/RewardAvailable/
+    // Completed/Failed all collapse into the generic Available/AlreadyUsed buckets via
+    // TeamChallengeUtility.ResolveInteractionState) - takes priority over the generic per-state
+    // text below whenever non-empty, same "second source can override the plain per-state text"
+    // idiom _bleedOutDescription already establishes for Revive. See SetDescriptionOverride.
+    private string _descriptionOverride = string.Empty;
     private bool _isShown;
     // Whether the entity this widget follows is one of THIS client's own local players - i.e. we're
     // rendering the DOWNED player's own view of their revive, not a nearby reviver's. Refreshed
@@ -126,7 +152,7 @@ public class InteractionPromptWidget : MonoBehaviour
     // is ever enabled" ordering CharacterUiWidget's own Setup relies on.
     public void Setup(QuantumGame game, EntityRef entityRef, Transform followTarget, string title,
         string activeDescription, string phaseUnavailableDescription, string alreadyUsedDescription, string notNeededDescription,
-        Vector3 worldOffset = default, string occupiedDescription = "")
+        Vector3 worldOffset = default, string occupiedDescription = "", Sprite rewardIcon = null, string rewardText = "")
     {
         _game = game;
         _entityRef = entityRef;
@@ -140,6 +166,7 @@ public class InteractionPromptWidget : MonoBehaviour
         _occupiedDescription = occupiedDescription;
 
         SetTitle(title);
+        ApplyReward(rewardIcon, rewardText);
 
         _isShown = false;
 
@@ -165,6 +192,31 @@ public class InteractionPromptWidget : MonoBehaviour
             titleText.text = title;
     }
 
+    // Called by an owning View (e.g. TeamChallengeView.QUpdate, on its own state changing) to push
+    // a live, state-specific description that takes priority over the generic per-
+    // ContextInteractionState text (ResolveDescription) whenever non-empty - see
+    // _descriptionOverride's own comment for why some POI kinds need this. Pass empty/null to
+    // clear it and fall back to the generic text again (e.g. Available/WaitingForTeam, which the
+    // generic text + rules/ready area already cover well).
+    public void SetDescriptionOverride(string description)
+    {
+        _descriptionOverride = description ?? string.Empty;
+    }
+
+    // Set once here, never touched again afterward - constant for this POI instance's whole
+    // lifetime, same as SetTitle above (see PoiView.promptRewardIcon/promptRewardText). Shown
+    // whenever either half was actually authored, so a POI kind that never passes these (every kind
+    // besides Optional Team Challenge/Traversal Challenge today) simply never shows this row.
+    private void ApplyReward(Sprite rewardIcon, string rewardText)
+    {
+        bool hasReward = rewardIcon != null || string.IsNullOrEmpty(rewardText) == false;
+
+        SetActive(rewardArea, hasReward);
+
+        if (hasReward)
+            rewardRow?.Setup(rewardIcon, rewardText);
+    }
+
     private unsafe void LateUpdate()
     {
         if (_game == null || _followTarget == null)
@@ -177,6 +229,15 @@ public class InteractionPromptWidget : MonoBehaviour
         // own Interactable, see PlayerLifeStateUtility.EnterKO, despawning this whole widget via
         // ReviveInteractionPromptView's own edge-detect before this could ever run for it).
         RefreshReviveTitle();
+
+        // Optional Team Challenge's own per-player ready row (see docs) - independent of the
+        // Revive/generic-state branches below, same "runs every frame, hides itself for every
+        // non-matching POI kind" shape RefreshReviveTitle already follows.
+        RefreshChallengeArea();
+
+        // Optional Team Challenge's own rules breakdown (see docs) - same independent, hides-itself
+        // shape as RefreshChallengeArea above.
+        RefreshRulesArea();
 
         // Revive (see docs/revive.md) - checked BEFORE the generic ContextInteraction-driven
         // switch below and returns early when handled. ContextInteraction.ActiveTarget is fully
@@ -229,6 +290,105 @@ public class InteractionPromptWidget : MonoBehaviour
     {
         int seconds = Mathf.Max(0, Mathf.CeilToInt(secondsRemaining.AsFloat));
         return $"{seconds}s";
+    }
+
+    // Only ever non-empty for a TeamChallenge-kind POI - shown from the moment the prompt itself
+    // would show for it (Available, before anyone has readied up yet) through WaitingForTeam, so a
+    // player can see the roster fill in from the very start rather than it appearing only once
+    // someone else has already committed. Hidden for every other POI kind or Team Challenge state
+    // (Starting/ChallengeActive/RewardAvailable/Completed - nothing left to ready up for), same
+    // guaranteed-choke-point convention RefreshReviveTitle's own early-return already establishes
+    // for its own Revive-only elements. challengeReadyIcons is a FIXED pool (sized in the Editor to
+    // the game's max party size) - shown slots scale with the LIVE connected-player count
+    // (TeamChallengeUtility.GetReadyStates), not with however many are currently Ready, so a
+    // Raider's own slot doesn't visually disappear the instant they ready up.
+    private unsafe void RefreshChallengeArea()
+    {
+        if (challengeArea == null)
+            return;
+
+        Frame frame = _game.Frames.Predicted;
+
+        bool shown = frame.Unsafe.TryGetPointer<TeamChallenge>(_entityRef, out var challenge) == true
+            && (challenge->State == TeamChallengeState.Available || challenge->State == TeamChallengeState.WaitingForTeam);
+
+        SetActive(challengeArea, shown);
+
+        if (shown == false || challengeReadyIcons == null || challengeReadyIcons.Length == 0)
+            return;
+
+        Span<bool> readyStates = stackalloc bool[challengeReadyIcons.Length];
+        int activeCount = TeamChallengeUtility.GetReadyStates(frame, _entityRef, readyStates);
+
+        for (int i = 0; i < challengeReadyIcons.Length; i++)
+        {
+            if (challengeReadyIcons[i] == null)
+                continue;
+
+            bool iconShown = i < activeCount;
+            SetActive(challengeReadyIcons[i].gameObject, iconShown);
+
+            if (iconShown)
+                challengeReadyIcons[i].SetReady(readyStates[i]);
+        }
+    }
+
+    // Only ever non-empty for a TeamChallenge-kind POI, same Available/WaitingForTeam window
+    // RefreshChallengeArea's own readout uses (once ChallengeActive begins there's nothing left to
+    // decide) - reads the live, already-rolled ChallengeDefinition.Rules (see
+    // TeamChallengeUtility.EnsureChallengeRolled/ResolveActiveDescription's own precedent for
+    // reading SelectedChallenge this way) so the icon+text breakdown always matches whichever
+    // objective was actually rolled for this attempt, not a generic placeholder. ruleRows is a
+    // FIXED pool (sized in the Editor to the most rows any one ChallengeDefinition authors) - shown
+    // slots scale with however many rows the live rolled challenge actually has.
+    private unsafe void RefreshRulesArea()
+    {
+        if (rulesArea == null)
+            return;
+
+        Frame frame = _game.Frames.Predicted;
+
+        bool shown = frame.Unsafe.TryGetPointer<TeamChallenge>(_entityRef, out var challenge) == true
+            && (challenge->State == TeamChallengeState.Available || challenge->State == TeamChallengeState.WaitingForTeam);
+
+        ChallengeRuleEntry[] rules = null;
+        ChallengeDefinition definition = null;
+
+        if (shown)
+        {
+            definition = frame.FindAsset(challenge->SelectedChallenge);
+            rules = definition?.Rules;
+            shown = rules != null && rules.Length > 0;
+        }
+
+        SetActive(rulesArea, shown);
+
+        if (shown == false || ruleRows == null || ruleRows.Length == 0)
+            return;
+
+        for (int i = 0; i < ruleRows.Length; i++)
+        {
+            if (ruleRows[i] == null)
+                continue;
+
+            bool rowShown = i < rules.Length;
+            SetActive(ruleRows[i].gameObject, rowShown);
+
+            if (rowShown)
+                ruleRows[i].Setup(rules[i].Icon, ResolveRuleText(frame, definition, rules[i]));
+        }
+    }
+
+    // ChallengeRuleEntry.ScaleTextWithKillTarget rows are a format string ("Kill {0} enemies...")
+    // rather than plain text - substitutes the SAME live co-op-scaled kill target
+    // TeamChallengeUtility.ResolveKillTarget will actually commit to at BeginChallengeActive, so
+    // the rules-area preview always matches reality instead of showing a flat, un-scaled count.
+    private unsafe string ResolveRuleText(Frame frame, ChallengeDefinition definition, ChallengeRuleEntry rule)
+    {
+        if (rule.ScaleTextWithKillTarget == false || definition == null)
+            return rule.Text;
+
+        return string.Format(rule.Text, TeamChallengeUtility.ResolveKillTarget(frame, definition));
     }
 
     // Returns true if there is a live Revive channel on this entity THIS client should be showing -
@@ -349,12 +509,19 @@ public class InteractionPromptWidget : MonoBehaviour
             || state == ContextInteractionState.NotNeeded
             || state == ContextInteractionState.Occupied;
 
-        // Downed's live bleed-out countdown (see RefreshReviveTitle) takes priority over the plain
-        // per-state description whenever it's non-empty - a nearby teammate should always see the
-        // clock, whether they're simply in range (Available) or someone else already claimed the
-        // revive (Occupied).
+        // Priority: Downed's live bleed-out countdown (see RefreshReviveTitle) first - a nearby
+        // teammate should always see the clock, whether they're simply in range (Available) or
+        // someone else already claimed the revive (Occupied) - then a View-pushed
+        // _descriptionOverride (e.g. TeamChallengeView's own Starting/ChallengeActive/
+        // RewardAvailable/Completed/Failed text), then the generic per-state text.
         if (shown)
-            ApplyDescription(string.IsNullOrEmpty(_bleedOutDescription) == false ? _bleedOutDescription : ResolveDescription(state, player));
+        {
+            string description = string.IsNullOrEmpty(_bleedOutDescription) == false ? _bleedOutDescription
+                : string.IsNullOrEmpty(_descriptionOverride) == false ? _descriptionOverride
+                : ResolveDescription(state, player);
+
+            ApplyDescription(description);
+        }
 
         SetShown(shown);
     }
@@ -363,13 +530,38 @@ public class InteractionPromptWidget : MonoBehaviour
     {
         switch (state)
         {
-            case ContextInteractionState.Available: return _activeDescription;
+            case ContextInteractionState.Available: return ResolveActiveDescription();
             case ContextInteractionState.PhaseUnavailable: return _phaseUnavailableDescription;
             case ContextInteractionState.AlreadyUsed: return ResolveAlreadyUsedDescription(player);
             case ContextInteractionState.NotNeeded: return _notNeededDescription;
             case ContextInteractionState.Occupied: return _occupiedDescription;
             default: return string.Empty;
         }
+    }
+
+    // Only ever an override for a TeamChallenge-kind POI - reads the live, already-rolled
+    // ChallengeDefinition.Description (see TeamChallengeUtility.EnsureChallengeRolled, which
+    // guarantees SelectedChallenge is valid well before a player could ever be standing here
+    // reading this) so the Available-state prompt describes the ACTUAL challenge a Raider is about
+    // to opt the team into, not a generic "press to interact". Falls back to the plain authored
+    // _activeDescription for every other POI kind (and for the - practically unreachable - case
+    // SelectedChallenge somehow isn't valid yet).
+    private unsafe string ResolveActiveDescription()
+    {
+        if (_game != null)
+        {
+            Frame frame = _game.Frames.Predicted;
+
+            if (frame.Unsafe.TryGetPointer<TeamChallenge>(_entityRef, out var challenge) == true)
+            {
+                ChallengeDefinition definition = frame.FindAsset(challenge->SelectedChallenge);
+
+                if (definition != null && string.IsNullOrEmpty(definition.Description) == false)
+                    return definition.Description;
+            }
+        }
+
+        return _activeDescription;
     }
 
     // AlreadyUsed covers both "used up this Break/Run" (PoiUsagePolicy.OncePerPlayerPerBreak/

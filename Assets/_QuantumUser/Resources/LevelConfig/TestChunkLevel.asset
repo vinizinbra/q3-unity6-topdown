@@ -43,6 +43,7 @@ MonoBehaviour:
         RawValue: 65536
     Count: 1
     MustHave: 1
+    GroupId: 0
   - Type: 1
     Prototypes:
     - Prototype:
@@ -67,6 +68,7 @@ MonoBehaviour:
         RawValue: 65536
     Count: 20
     MustHave: 0
+    GroupId: 0
   - Type: 4
     Prototypes:
     - Prototype:
@@ -106,6 +108,7 @@ MonoBehaviour:
         RawValue: 65536
     Count: 1
     MustHave: 1
+    GroupId: 0
   - Type: 7
     Prototypes:
     - Prototype:
@@ -115,6 +118,17 @@ MonoBehaviour:
         RawValue: 65536
     Count: 1
     MustHave: 1
+    GroupId: 0
+  - Type: 4
+    Prototypes:
+    - Prototype:
+        Id:
+          Value: 1384762268564954585
+      Weight:
+        RawValue: 65536
+    Count: 1
+    MustHave: 1
+    GroupId: 0
   ChunkPoolGroups:
   - GroupId: 1
     MinRequired: 2

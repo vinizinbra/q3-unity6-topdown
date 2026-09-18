@@ -126,20 +126,24 @@ View-side, the boss gets its own dedicated HUD instead of sharing the normal ene
   already has `ShieldMultiplier = 1` authored), so `BossWidget`'s shield bar needed no new
   simulation-side work.
 
-**Shared HUD banner (2026-08-18).** `BossWidget`/`DirectorTimelineUiWidget`/`TraversalChallengeWidget`
-(see `docs/traversal-challenge.md`) all read one shared `Global.HudBanner` (`HudBannerKind`,
-`GameState.qtn`) instead of each independently re-deriving "am I the one that should show" off
-`GameState`/`ActiveTraversalChallengeCount` themselves - resolved once a tick by
-`CombatDirectorSystem.ApplyHudBanner` (Boss beats TraversalChallenge beats the DirectorTimeline
-default), so the three always stay mutually exclusive on-screen even though a Traversal Challenge
-deliberately never changes `GameState` itself. Every widget still polls `Global` directly every
-`QUpdate`, same idiom `BreathingCountdownWidget` already uses - deliberately still not the
-`GameStateChanged` event.
+**Shared HUD banner (2026-08-18, updated for the Announcer/event-driven-HUD pass).**
+`BossWidget`/`SurvivalWidget`/`TeamChallengeWidget`/`TraversalChallengeWidget`/
+`BreathingWidget` (see `docs/traversal-challenge.md`/`docs/optional-team-challenge.md`) all
+read the single `Global.CurrentState` (`GameState`, `GameState.qtn`) instead of each independently
+re-deriving "am I the one that should show" - `TeamChallenge`/`TraversalChallenge` are now real
+`GameState` values (originally a separate `HudBannerKind`/`Global.HudBanner` field), resolved once a
+tick by `CombatDirectorSystem.ApplyEffectiveState` (Boss beats TeamChallenge beats TraversalChallenge
+beats the real underlying phase, `Global.CombatPhaseState`), so all five always stay mutually
+exclusive on-screen even though a Team/Traversal Challenge deliberately never changes the *real*
+phase. All five now extend the shared `GameStateGatedWidget` base
+(`Assets/_Project/Scripts/UI/InGame/Hud/GameStateGatedWidget.cs`) and react to the real
+`GameStateChanged` event instead of polling `Global` every `QUpdate` - see `docs/announcer.md` and
+`docs/game-state.md`.
 
 **`BossWarningWidget`** (`Assets/_Project/Scripts/UI/InGame/Hud/BossWarningWidget.cs`, View-only) shows
 a "BOSS APPROACHING" HUD banner + countdown - but only during the LAST `Breathing` phase before `Boss`
 (peeked via `SurvivalConfig.Phases[CurrentPhaseIndex + 1].Kind == Boss`, same idiom
-`DirectorTimelineUiWidget`'s own marker-skip logic already uses) and only once
+`SurvivalWidget`'s own marker-skip logic already uses) and only once
 `Global.BreathingTimeRemaining` drops to its own `warningThreshold` (10s default) - confirmed with the
 user, the boss encounter itself stays fully automatic (SurvivalConfig-driven), this is purely a
 heads-up layered on the pre-existing countdown, not a new pause/trigger stage.
@@ -207,7 +211,7 @@ authored yet:
 - `SurvivalConfig_MVP.asset`'s `Boss` phase's `BossPrototype` is unassigned (no real boss
   `EntityPrototype` exists yet).
 - `BossWidget` needs Editor wiring before it shows anything: a scene panel (name text/HP slider/shield
-  slider) doesn't exist yet, and `DirectorTimelineUiWidget`'s new `visualRoot` field needs its existing
+  slider) doesn't exist yet, and `SurvivalWidget`'s new `visualRoot` field needs its existing
   slider/text/marker children wrapped under one new child container and assigned to it (its script
   currently sits directly on `DirectorTimelineWidget`, so `visualRoot` can't just be that same
   GameObject - see the field's own tooltip).

@@ -88,7 +88,7 @@ namespace Quantum
     {
         // Stun/Freeze duration are both expressed as a per-tier multiplier of their own Normal-tier
         // reference base (ElementalReactionConfig.ShockStunProcDuration = 1.0s,
-        // EffectConfig.FreezeDuration = 2.0s respectively - see each field's own comment), so Normal
+        // ElementalReactionConfig.FreezeDuration = 2.0s respectively - see each field's own comment), so Normal
         // needs its multipliers set to exactly 1.0 alongside every other tier below rather than
         // relying on the class default, purely for readability at a glance - functionally identical
         // to leaving them unset. Filler intentionally does NOT mirror Normal here (unlike most other

@@ -275,11 +275,34 @@ namespace Quantum
                 return redirected;
             }
 
+            // Traversal chunks (docs/traversal-challenge.md) author an intentionally uncrossable-
+            // looking gap on purpose - the temp platforms ARE the crossing, so holding the player at
+            // its edge like an accidental water/void fall would just fight the puzzle. Checked here
+            // (not earlier) so this only pays for a nearest-chunk scan on the already-rare tick a
+            // real edge with no landing/reroute was found, same as every other reactive, not per-
+            // tick, use of FallRespawnUtility.TryFindNearestChunk.
+            if (IsInTraversalChunk(context.Frame, position) == true)
+            {
+                movement->WaterEdgeHesitationTimer = FP._0;
+                return moveDirection;
+            }
+
             movement->WaterEdgeHesitationTimer += context.Frame.DeltaTime;
             if (movement->WaterEdgeHesitationTimer < data.WaterEdgeInsistTime)
                 return default;
 
             return moveDirection;
+        }
+
+        // Nearest chunk, not strict containment - this is checked right at a gap's own edge, the one
+        // place containment is least reliable (see FallRespawnUtility.TryFindNearestChunk's own
+        // comment / the chunk-seam-gap lesson it documents).
+        private static bool IsInTraversalChunk(Frame f, FPVector3 position)
+        {
+            if (FallRespawnUtility.TryFindNearestChunk(f, position, out EntityRef chunkEntity) == false)
+                return false;
+
+            return f.Unsafe.GetPointer<Chunk>(chunkEntity)->Type == ChunkType.Traversal;
         }
 
         // Diagonal input against a water edge: the X-only and Z-only components of the same

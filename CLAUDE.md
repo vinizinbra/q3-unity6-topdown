@@ -44,6 +44,7 @@ which one to open.
 - **Choice Window Refactor** — `UpgradeWindow`→`ChooseWindow` generalization reused by Cursed Rift/Store/Blacksmith (one shared instance); per-player Coin/Rift-Shard wallets. → `docs/choice-window-refactor.md`
 - **Store & Blacksmith** — two Breathing-only Coin POIs reusing ChooseWindow + weapon/perk/currency systems; shared SurvivalTime weapon-offer curve; per-Break Blacksmith roll cache. → `docs/store-blacksmith.md`
 - **Traversal Challenge** — timed co-op gap-crossing puzzle; global spawn/timer pause via a standalone counter (not GameState); permanent platforms; shared HUD banner. → `docs/traversal-challenge.md`
+- **Optional Team Challenge** — voluntary whole-team Survival interruption (Kill Rush/Flawless Hunt/Cursed Survival) behind unanimous Ready-up; own `ActiveTeamChallengeCount` pause counter; reuses `BeginChestScreen` for the shared Rift Mutation reward claim. → `docs/optional-team-challenge.md`
 
 ## Combat & defense systems
 
@@ -69,6 +70,7 @@ which one to open.
 
 ## UI / View / presentation
 
+- **Announcer** — shared `AnnouncerManager` slide-in title banner (fade+slide, hold, fade+slide out) for rare whole-team moments (Area Secured, Survival Started, Team Challenge Started/Complete/Failed), replacing three near-duplicate copies of the same animation. → `docs/announcer.md`
 - **Hero Info Popup (Tab-hold)** — `HeroInfoPopupWidget` shows a full "what I'm running" readout by composing existing widgets. → `docs/hero-info-popup.md`
 - **Minimap** — node-based minimap baked into one painted `Texture2D`: per-chunk fills, level outline, POI icons, player/enemy markers. → `docs/minimap.md`
 - **Environment Details** — View-only hand-placed ground/wall detail slots; runtime only picks whether/which themed sprite shows, deterministically seeded. → `docs/environment-details.md`

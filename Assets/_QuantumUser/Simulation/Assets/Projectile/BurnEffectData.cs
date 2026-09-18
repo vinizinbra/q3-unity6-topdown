@@ -3,8 +3,9 @@ namespace Quantum
     using Photon.Deterministic;
 
     // Refresh-only DoT - see StatusEffectUtility.ApplyBurn for what happens when this lands on an
-    // already-burning target. Duration/DamagePercent are read from the shared RuntimeConfig.EffectConfig
-    // rather than authored here, so every source of Burn hits identically (same reasoning as HasteEffectData).
+    // already-burning target. Duration/DamagePercent are read from the shared
+    // RuntimeConfig.ElementalReactionConfig rather than authored here, so every source of Burn hits
+    // identically (same reasoning as HasteEffectData).
     public unsafe class BurnEffectData : HitEffectData
     {
         public override void Apply(Frame f, ref HitEffectContext context) => Apply(f, ref context, FP._1, FP._1);
@@ -20,7 +21,7 @@ namespace Quantum
             if (context.Target == EntityRef.None || context.Target == context.Owner)
                 return;
 
-            EffectConfig config = StatusEffectUtility.GetEffectConfig(f);
+            ElementalReactionConfig config = StatusEffectUtility.GetElementalReactionConfig(f);
 
             if (config == null)
                 return;

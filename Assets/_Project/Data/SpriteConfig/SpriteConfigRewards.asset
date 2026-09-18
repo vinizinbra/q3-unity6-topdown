@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f55bc226f73b439eb41bb466adeaeaa, type: 3}
+  m_Name: SpriteConfigRewards
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteConfigCurrency
+  sprites:
+  - name: RiftMutation
+    sprite: {fileID: 793603354, guid: 9500f48424b214942acfffa7912cb6be, type: 3}
+  - name: WeaponChest
+    sprite: {fileID: -1192908521, guid: 0cf0582dba7bf45ba9963b3b841d95a6, type: 3}
+  - name: WeaponPerkChest
+    sprite: {fileID: -1902865858, guid: 9500f48424b214942acfffa7912cb6be, type: 3}
+  - name: HeroChest
+    sprite: {fileID: -1519127137, guid: 9500f48424b214942acfffa7912cb6be, type: 3}

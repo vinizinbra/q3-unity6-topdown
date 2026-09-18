@@ -21,6 +21,11 @@ MonoBehaviour:
   Rarity: 2
   Scope: 0
   IncompatibleWith: []
-  Description: 'Recovering your Accessory heals <color=#FD3971>{0:0}%</color> of Max Health'
+  Description: Recovering your Accessory heals {0:0}% of Max Health and grants +{1:0}%
+    Move Speed for {2:0.#}s
   HealPercentMaxHp:
-    RawValue: 3277
+    RawValue: 6554
+  MoveSpeedBonus:
+    RawValue: 13107
+  MoveSpeedDuration:
+    RawValue: 262144

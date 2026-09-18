@@ -46,6 +46,8 @@ namespace Quantum
             weapon->FireCooldownTimer = FP._0;
             weapon->ReloadTimer = FP._0;
             weapon->TimeSinceFireReleased = FP._0;
+            weapon->IsAnticipating = false;
+            weapon->AnticipationTimer = FP._0;
 
             // Generic View hook - see Events.qtn's own comment on why this fires unconditionally
             // for every equip path rather than each caller raising its own event.
@@ -323,6 +325,15 @@ namespace Quantum
                 filter.Weapon->FireCooldownTimer -= f.DeltaTime;
             }
 
+            // Counted down the same way as FireCooldownTimer above, just gating the FRONT of a
+            // shot instead of the back - see the canFire block below and Weapon.qtn's own comment
+            // on IsAnticipating. Only ever nonzero for a weapon with WeaponDataAsset.AnticipationTime
+            // > 0, so this is a no-op for every weapon that hasn't authored one.
+            if (filter.Weapon->AnticipationTimer > FP._0)
+            {
+                filter.Weapon->AnticipationTimer -= f.DeltaTime;
+            }
+
             // Processed unconditionally, ahead of the stun/input early-outs below - a granted perk
             // shouldn't wait on the recipient being able to act this tick. Same reasoning for the
             // ramp decay/Killer Instinct timer/pending echoes below - none of them should freeze
@@ -387,10 +398,37 @@ namespace Quantum
             if (UpdateReload(f, filter.Entity, filter.Weapon, canFire))
                 return;
 
-            if (canFire == false || filter.Weapon->FireCooldownTimer > FP._0)
+            // A wind-up already in flight is never cancelled - not by releasing Fire, not by
+            // losing the aim target - it always resolves into a shot once AnticipationTimer
+            // elapses (even if canFire has since gone false again by then). canFire only gates
+            // STARTING a fresh wind-up, checked below once IsAnticipating is confirmed false.
+            if (filter.Weapon->IsAnticipating == false && canFire == false)
+                return;
+
+            if (filter.Weapon->IsAnticipating == false && filter.Weapon->FireCooldownTimer > FP._0)
                 return;
 
             WeaponDataAsset weaponData = f.FindAsset(filter.Weapon->WeaponData);
+
+            // Anticipation gate - see Weapon.qtn's own comment on IsAnticipating/AnticipationTimer.
+            // A weapon with AnticipationTime <= 0 (every weapon today) never sets IsAnticipating,
+            // so this whole block is skipped and firing proceeds exactly as it always has.
+            if (filter.Weapon->IsAnticipating == true)
+            {
+                if (filter.Weapon->AnticipationTimer > FP._0)
+                    return; // still winding up - ticked down at the top of Update
+
+                filter.Weapon->IsAnticipating = false;
+                // Wind-up just completed this tick - fall through and fire below, regardless of
+                // canFire's CURRENT value (see this block's own comment above).
+            }
+            else if (weaponData.AnticipationTime > FP._0)
+            {
+                filter.Weapon->IsAnticipating = true;
+                filter.Weapon->AnticipationTimer = weaponData.AnticipationTime;
+                f.Events.WeaponAnticipationStarted(filter.Entity);
+                return;
+            }
 
             FPVector3 casterPosition = filter.Transform3D->Position;
             FP aimAngle = filter.Aim->Angle;

@@ -26,5 +26,5 @@ MonoBehaviour:
   DetonateOnLevelGeometry: 1
   DetonateOnEnemyHit: 1
   DetonateOnAllyHit: 0
-  PierceCount: 1
+  PierceCount: 0
   FlattenTrajectoryOnPierce: 1

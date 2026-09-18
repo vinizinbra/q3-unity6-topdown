@@ -21,6 +21,7 @@ MonoBehaviour:
   Rarity: 2
   Scope: 0
   IncompatibleWith: []
-  Description: 'When your Accessory blocks a hit, reset Dash and cut <color=#FD3971>{0:0}%</color> off your remaining Hero Skill cooldown'
+  Description: When your Accessory blocks a hit, reset Dash and cut {0:0}% off your
+    remaining Hero Skill cooldown
   SkillCooldownFraction:
     RawValue: 32768

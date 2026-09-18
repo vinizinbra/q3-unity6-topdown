@@ -652,16 +652,18 @@ MonoBehaviour:
   initialized: 0
   executeOnlyOnLocal: 0
   isLocal: 0
+  promptTitle: Blacksmith
+  promptActiveDescription: Give your weapon an edge
+  promptPhaseUnavailableDescription: <sprite name="LOCK"> COME BACK ON BREAK
+  promptAlreadyUsedDescription: ALREADY USED
+  promptNotNeededDescription: 
+  promptWorldOffset: {x: 0, y: 2.5, z: 0}
+  promptRewardIcon: {fileID: 0}
+  promptRewardText: 
   inactiveVisual: {fileID: 8238532030038942845}
   activeVisual: {fileID: 7509153086039784236}
   expiredVisual: {fileID: 5065427649110896399}
   activeParticles: {fileID: 0}
-  promptTitle: Blacksmith
-  promptActiveDescription: 
-  promptPhaseUnavailableDescription: COME BACK ON BREAK
-  promptAlreadyUsedDescription: ALREADY USED
-  promptNotNeededDescription: 
-  promptWorldOffset: {x: 0, y: 4, z: 0}
 --- !u!114 &5248127204028200748
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -895,10 +897,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0723c21be28454a039f7ffebd04176e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::JuicyEffects
+  enableSound: {fileID: 0}
   scaleInOnEnable: 0
   scaleInDelay: 0
   scaleInDuration: 0.45
   scaleInEase: 27
+  glitchInOnEnable: 0
+  glitchInDuration: 0.25
+  glitchInTickInterval: 0.03
+  glitchInOffset: {x: 0.15, y: 0.15, z: 0}
+  glitchInScaleJitter: {x: 0.08, y: 0.08, z: 0}
+  glitchGhostSource: {fileID: 0}
+  glitchGhostRedColor: {r: 1, g: 0.1, b: 0.3, a: 0.6}
+  glitchGhostCyanColor: {r: 0.1, g: 1, b: 1, a: 0.6}
   punchScaleStrength: {x: 0.4, y: 0.4, z: 0}
   punchScaleDuration: 0.4
   punchScaleFrequency: 16
@@ -912,6 +923,13 @@ MonoBehaviour:
   idleWobbleSquashAmount: 0.05
   idleWobbleDuration: 0.5
   idleWobbleEase: 4
+  idleRareWiggleOnEnable: 0
+  idleRareWiggleInterval: {x: 3, y: 8}
+  idleRareWiggleIncludeScale: 1
+  idleRareWiggleIncludeRotation: 1
+  idleRareWiggleIncludePosition: 1
+  idleRareWiggleStrengthMultiplier: 0.5
+  idleRareWiggleDurationMultiplier: 1
   scaleUseUnscaledTime: 0
   useUnscaledTime: 0
 --- !u!1 &4102342307413880968

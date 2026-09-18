@@ -21,7 +21,8 @@ MonoBehaviour:
   Rarity: 2
   Scope: 0
   IncompatibleWith: []
-  Description: 'Every <color=#FD3971>{0:0}</color> Critical Hits, reduce Hero Skill and Dash cooldowns by <color=#FD3971>{1:0.#}s</color>'
+  Description: Every {0:0} Critical Hits, reduce Hero Skill and Dash cooldowns by
+    {1:0.#}s
   CritsRequired: 3
   CooldownReduction:
     RawValue: 65536

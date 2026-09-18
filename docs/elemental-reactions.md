@@ -102,11 +102,13 @@ machine otherwise unaffected). A 0.1s Stagger landing during an attack whose win
 attack land at 0.6s instead of 0.5s - delayed, never voided - and the enemy also can't keep sliding
 toward the player mid-stumble for that same 0.1s.
 
-Today Stagger's only live trigger is Shatter's secondary AoE below (`ShatterAreaStaggerDuration`) -
-Electrified's own periodic Stagger tick (the mechanism that originally justified Stagger's
-"no diminishing-returns window" design, so Shock could stay repeatably interruptive) was removed
-along with Jolt-on-Shock (see above). The primitive itself is unchanged and stays available for any
-future short, repeatable "flinch" source.
+Stagger currently has **no live trigger** - Shatter's secondary AoE used to apply it
+(`ShatterAreaStaggerDuration`, now removed) but was changed to Ice buildup instead (see "Shatter"
+below), and Electrified's own periodic Stagger tick (the mechanism that originally justified
+Stagger's "no diminishing-returns window" design, so Shock could stay repeatably interruptive) was
+removed along with Jolt-on-Shock (see above). The primitive itself (`StatusEffectUtility.
+ApplyStagger`, `StatusEffects.StaggerRemaining`) is unchanged and stays available for any future
+short, repeatable "flinch" source.
 
 - `StatusEffects.StaggerRemaining` - flat unconditional decrement in `StatusEffectSystem`, no
   dedicated Tick method needed (nothing to clean up on expiry, same shape as `RootRemaining`).
@@ -135,21 +137,21 @@ future short, repeatable "flinch" source.
 
 ## Burn stacking (Fire)
 
-Burn (`StatusEffects.BurnRemaining` + up to `EffectConfig.BurnMaxStacks` (5) independent
+Burn (`StatusEffects.BurnRemaining` + up to `ElementalReactionConfig.BurnMaxStacks` (5) independent
 `BurnStackDamagePerTick` entries) is stackable sustained damage - every qualifying Fire hit either
 pushes its OWN stack (potency seeded from THAT hit's own damage via the existing
-`ComputeDotDamagePerTick`/`ComputeDotDamagePerTickWithFloor` formula, `EffectConfig.
+`ComputeDotDamagePerTick`/`ComputeDotDamagePerTickWithFloor` formula, `ElementalReactionConfig.
 BurnDamagePercent` = 10% of the hit's damage per second) below the cap, or - once at the cap -
 simply refreshes the shared timer without replacing/strengthening an existing stack. All stacks
 share ONE `BurnRemaining` timer, deliberately not per-stack timers: any new Fire hit refreshes
 every stack's expiry together, and `StatusEffectSystem.TickBurn` sums every active stack
-(`StatusEffectUtility.GetBurnDamagePerTick`) into one DoT tick per `EffectConfig.TickInterval`. A
+(`StatusEffectUtility.GetBurnDamagePerTick`) into one DoT tick per `ElementalReactionConfig.TickInterval`. A
 10-damage SMG tick and a 100-damage sniper tick land as two independently-sized stacks rather than
 blending into one generic number - a weak follow-up hit can only ADD a small stack, never downgrade
 an existing strong one.
 
 `StatusEffectUtility.ApplyBurn` takes an explicit `maxStacks` parameter (every caller threads its
-own resolved `EffectConfig.BurnMaxStacks` through) rather than re-resolving the config internally -
+own resolved `ElementalReactionConfig.BurnMaxStacks` through) rather than re-resolving the config internally -
 same "caller already has config resolved" convention `tickInterval` already used. Max's Wildfire
 spread (`MaxFireMasteryReactionSystem`) reads the dying target's live intensity via
 `GetBurnDamagePerTick`'s summed total, not a single field, so a heavily-stacked Burn spreads its
@@ -159,12 +161,12 @@ real combined intensity onward.
 
 Chill (`StatusEffects.IceRemaining` + `IceBuildup`) is a progressive stacking slow, migrated from
 an earlier binary "Slow" (single `IceSpeedMultiplier`, no stacks) to a buildup model: every
-qualifying Ice application contributes `EffectConfig.IceBuildupPerDamage * hitDamage` buildup units
+qualifying Ice application contributes `ElementalReactionConfig.IceBuildupPerDamage * hitDamage` buildup units
 (same "potency scales off the hit's own damage" convention Burn's own per-stack potency uses, so a
 fast weak weapon can't out-buildup a slow heavy one just by firing more often - `IceBuildupPerDamage`
 is tuned so a ~40-damage hit, the same reference Burn's own worked example uses, contributes ~1
 unit). `StatusEffectUtility.GetSpeedMultiplier` derives the actual slow live from the buildup
-(`1 - IceBuildup * EffectConfig.IceSlowPerBuildup`, 8% per unit) rather than storing a multiplier -
+(`1 - IceBuildup * ElementalReactionConfig.IceSlowPerBuildup`, 8% per unit) rather than storing a multiplier -
 1 unit = 8% slow, 4 units = 32%. `EnemyTierResistanceConfig.TierStatusResistance.
 ChillForceMultiplier` tapers the CONTRIBUTED buildup itself (not the resulting multiplier), so a
 tapered target both resists the slow AND takes proportionally longer to build toward Freeze from
@@ -172,7 +174,7 @@ the same hits - one taper, two effects, no extra code. One shared duration timer
 application (`StatusEffectSystem.TickIce`) - reaching 0 clears the buildup entirely, never a
 per-application timer.
 
-Reaching `EffectConfig.IceFreezeThreshold` (5 units) converts the buildup straight into **Freeze**
+Reaching `ElementalReactionConfig.IceFreezeThreshold` (5 units) converts the buildup straight into **Freeze**
 (`StatusEffectUtility.ApplyFreeze`) instead of sitting at a 40%+ slow, and resets `IceBuildup` to 0.
 `SlowEffectData` (the freely-authorable guaranteed-Ice effect, used by skills/perks independent of
 the weapon-elemental-proc roll) feeds the exact same buildup system off `context.Damage`, so a
@@ -201,7 +203,7 @@ Stun/Freeze immunity flag.
 
 Both Stun and Freeze duration are expressed as a per-tier multiplier
 (`StunDurationMultiplier`/`FreezeDurationMultiplier`) of their own Normal-tier reference base
-(`ElementalReactionConfig.ShockStunProcDuration` = 1.0s, `EffectConfig.FreezeDuration` = 2.0s), and
+(`ElementalReactionConfig.ShockStunProcDuration` = 1.0s, `ElementalReactionConfig.FreezeDuration` = 2.0s), and
 the re-proc/recovery cooldowns (`StunImmunityDuration`/`InterruptImmunityDuration`,
 `FreezeRecoveryDuration`) are authored directly in seconds per tier:
 
@@ -308,7 +310,13 @@ crowd around them.
   true`, tagged `ElementType.Fire` + `reactionProc: true`), fires
   `ThermalShockTriggered { Target, Position }`. `reactionProc` (→ `EventEntityDamaged.ReactionProc`) is
   what actually lets the view tell this apart from a plain Burn tick - both tag the same `Fire`
-  element, so `Element` alone can't (see that field's own comment).
+  element, so `Element` alone can't (see that field's own comment). `Position` is resolved
+  (`EnemyMovementUtility.ResolveEntityCenter`) BEFORE the `ApplyDamage` call, not after - that hit is
+  frequently the killing blow, and `ApplyDamage` synchronously `f.Destroy`s common-tier enemies; a
+  destroyed entity has no `Transform3D` left, so resolving the center afterward silently threw and
+  skipped the event entirely (the bug behind "Thermal Shock VFX doesn't show when the kill is
+  lethal"). Overload's `originCenter`/Shatter's `center` follow the same before-not-after ordering
+  for the same reason.
 - Presentation: `EffectsManager.thermalShockEffectPrefab` (orange+blue, "a short white-hot flash"),
   falling back to a tinted `defaultAreaBlastEffect` at a fixed reference scale (the event carries no
   radius - this is a point effect, not an area one). Its floating damage number gets its own dedicated
@@ -396,28 +404,30 @@ ever shipped).
   reaction target) becomes the center and **never itself moves** - it gets a full
   `StatusEffectUtility.ApplyStun` (`ShatterPrimaryStunDuration`), the one enemy that actually landed
   the combo taking the hardest hit. Every other valid enemy caught in `ShatterRadius`
-  (`f.Physics3D.OverlapShape`, center excluded) gets `ShatterAreaStaggerDuration` (a SHORT
-  `ApplyStagger`, the same primitive Shock's own Jolt uses) - the pack around the primary is
-  interrupted, not fully disabled; only the primary itself is hard-disabled.
+  (`f.Physics3D.OverlapShape`, center excluded) gets ONE hit's worth of Ice buildup instead - the
+  same `StatusEffectUtility.ApplyIce` a normal Ice hit contributes (`ElementalReactionConfig.SlowDuration` +
+  `hitDamage * ElementalReactionConfig.IceBuildupPerDamage`, scaled off the hit that triggered the reaction) -
+  so the pack around the primary gets slowed/pushed toward Freeze, not interrupted; only the primary
+  itself is hard-disabled (Stunned). This replaced an earlier short `ApplyStagger` on nearby enemies.
 - `ShatterDamage` is optional, 0 by default - Shatter's identity is control, not damage. When raised
   above 0 it hits every affected enemy (primary + nearby) uniformly, applied the same raw way
   Overload's chain damage is (bypasses `HitEffectUtility`, so it can never itself trigger another
   reaction).
-- Elite/Boss get no special-cased behavior - reusing `ApplyStun`/`ApplyStagger` as-is means the
+- Elite/Boss get no special-cased behavior - reusing `ApplyStun`/`ApplyIce` as-is means the
   primary's Stun already respects every tier's `StunDurationMultiplier`/`StunImmunityDuration` (see
-  the table in "Jolt now means Stun, not Shock" above), and the nearby Stagger already respects
-  `StaggerDurationMultiplier`, both the same way every other consumer of those primitives does - no
-  Shatter-specific special-casing. A Boss landed as the primary now genuinely gets Stunned too (just
-  tapered to a brief 0.75s, gated by Boss's own 4s re-proc cooldown - `ImmuneToHardCC` no longer
-  blocks Stun outright, only Root), consistent with "don't fail the whole reaction just because the
-  center resists part of it," now with less resisting than before.
+  the table in "Jolt now means Stun, not Shock" above), and the nearby Ice buildup already respects
+  `ChillForceMultiplier`/`SlowDurationMultiplier`, both the same way every other consumer of those
+  primitives does - no Shatter-specific special-casing. A Boss landed as the primary now genuinely
+  gets Stunned too (just tapered to a brief 0.75s, gated by Boss's own 4s re-proc cooldown -
+  `ImmuneToHardCC` no longer blocks Stun outright, only Root), consistent with "don't fail the whole
+  reaction just because the center resists part of it," now with less resisting than before.
 - Presentation: `EffectsManager.shatterEffectPrefab`, authored at reference radius 1 and scaled by
   `e.Radius` (the real `ShatterRadius`) so the visual reads at the actual gameplay extent. Icy blue
   with yellow lightning accents - a short angular "crack", not an implosion or explosion; no pull/
   vortex visual, no persistent cloud. `ShatterTriggered` only plays this once, at the primary/Center -
-  every secondary enemy caught in the AoE also fires its own `JoltTriggered { Target, Position }` (the
-  same one-shot spark Shock's own Jolt uses, since the AoE Stagger is the same `ApplyStagger`
-  primitive), so each one gets its own hit feedback rather than only the primary reading as affected.
+  nearby enemies get no Jolt (that's reserved for an actual Stun landing, see "Jolt now means Stun"
+  above) since they're only getting Ice buildup, not Stunned; each still reads via its own Ice/Chill
+  status VFX rather than only the primary reading as affected.
 
 ## First-element rest tint
 
@@ -472,9 +482,14 @@ to that system).
 | `ElectrifiedDuration` | Lightning's baseline duration |
 | `JoltInterval` | Seconds between Jolts while Electrified |
 | `JoltStaggerDuration` | Stagger duration each Jolt applies |
-| `ThermalShockTriggerCooldown`/`ThermalShockDamagePercent` | Burn+Chill reaction |
-| `OverloadTriggerCooldown`/`OverloadInitialDamagePercent`/`OverloadChainDamagePercent`/`OverloadChainRadius`/`OverloadMaxChainTargets`/`OverloadChainDelay` | Burn+Shock reaction |
-| `ShatterTriggerCooldown`/`ShatterRadius`/`ShatterPrimaryStunDuration`/`ShatterAreaStaggerDuration`/`ShatterDamage` | Chill+Shock reaction |
+| `ThermalShockTriggerCooldown`/`ThermalShockDamagePercent`/`ThermalShockProcChance` | Burn+Chill reaction |
+| `OverloadTriggerCooldown`/`OverloadInitialDamagePercent`/`OverloadChainDamagePercent`/`OverloadChainRadius`/`OverloadMaxChainTargets`/`OverloadChainDelay`/`OverloadProcChance` | Burn+Shock reaction |
+| `ShatterTriggerCooldown`/`ShatterRadius`/`ShatterPrimaryStunDuration`/`ShatterDamage`/`ShatterProcChance` | Chill+Shock reaction (nearby enemies' Ice buildup comes from `ElementalReactionConfig.SlowDuration`/`IceBuildupPerDamage`, not a Shatter-specific field) |
+
+Each reaction also rolls its own `*ProcChance` (`DamageUtility.RollChance`) once per qualifying hit,
+**before** its own cooldown is consumed - a failed roll doesn't burn the cooldown, so the very next
+qualifying hit gets another shot at it. All three default to 1 (always procs) as a placeholder,
+pending a real balance pass.
 
 All data-driven, no hardcoded numbers in code. MVP placeholder defaults (~0.75-1.0s cooldowns) are
 decisive starting points, not final balance.
@@ -656,3 +671,22 @@ lookup, indexed by the enum ordinal) is serialized with the OLD 6-entry data in 
 (`GrasslandOutpostGameScene.unity`) - the C# default was updated to the new 4-entry order, but a
 serialized array doesn't shrink on its own; needs a quick Editor pass to re-author it down to 4
 entries (dropping the old Rock/Void slots) or the two trailing entries will just render as unused.
+
+## Current status - Burn/Chill baseline moved onto ElementalReactionConfig
+
+Fire's Burn baseline (`TickInterval`/`BurnDuration`/`BurnDamagePercent`/`BurnFloorPercent`/
+`BurnMaxStacks`) and Ice's Chill+Freeze baseline (`SlowDuration`/`IceBuildupPerDamage`/
+`IceSlowPerBuildup`/`IceFreezeThreshold`/`FreezeDuration`) moved from `EffectConfig` onto
+`ElementalReactionConfig`, joining Lightning's `ElectrifiedDuration`/Shock's Stun-proc fields that
+already lived there - all 3 elements' own baselines are now on the one elemental-domain config,
+consistent with each other, and `EffectConfig` is left holding only genuinely
+element-independent knobs (Intimidate/Stun/Root/AnticipationSlow/Haste/Knockback). Every read site
+(`StatusEffectUtility`'s `ApplyIce`/`GetSpeedMultiplier`/`ApplyElementBaseline`/
+`TryApplyGuaranteedBurn`/`TryTriggerShatter`, `StatusEffectSystem.TickBurn`, `BurnEffectData`/
+`SlowEffectData`/`MagmaPrisonEffectData`, and Max's `FireMasterySpreadUtility`/
+`MaxAscensionUtility`/`VendettaStrikeSkillAction`) now resolves `ElementalReactionConfig` instead
+(`MagmaPrisonEffectData` resolves both, since it still needs `EffectConfig.RootDuration` too).
+`ApplyElementBaseline`'s own signature changed from `EffectConfig` to `ElementalReactionConfig`,
+which let its Lightning case drop a redundant second `GetElementalReactionConfig` lookup it used to
+do internally - it now just reuses the same `config` its caller already resolved. No behavior
+change; the values themselves (and their comments/tuning) moved as-is.

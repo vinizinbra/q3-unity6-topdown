@@ -21,7 +21,8 @@ MonoBehaviour:
   Rarity: 2
   Scope: 0
   IncompatibleWith: []
-  Description: '<color=#FD3971>{0:+0;-0}%</color> Fire Rate, <color=#FD3971>{1:+0;-0}%</color> Magazine Size, <color=#FD3971>{2:+0;-0}%</color> Weapon Damage, <color=#FD3971>{3:+0;-0}%</color> Reload Speed'
+  Description: '{0:+0;-0}% Fire Rate, {1:+0;-0}% Magazine Size, {2:+0;-0}% Weapon
+    Damage, {3:+0;-0}% Reload Speed'
   FireRateMultiplier:
     RawValue: 98304
   MagazineSizeBonus:

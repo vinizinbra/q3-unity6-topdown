@@ -21,7 +21,8 @@ MonoBehaviour:
   Rarity: 3
   Scope: 1
   IncompatibleWith: []
-  Description: 'The whole team gains <color=#FD3971>{0:+0;-0}%</color> Rift Shards, but every enemy gains <color=#FD3971>{1:+0;-0}%</color> Max Health'
+  Description: The whole team gains {0:+0;-0}% Rift Shards, but every enemy gains
+    {1:+0;-0}% Max Health
   RiftShardGainBonus:
     RawValue: 65536
   EnemyHealthBonus:

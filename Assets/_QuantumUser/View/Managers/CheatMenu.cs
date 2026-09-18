@@ -259,6 +259,12 @@ namespace QuantumUser.View
             Row(rt, ("Damage = 1", CheatActionKind.SetDamageToOne), ("Reset Damage", CheatActionKind.ResetDamage));
             CreateButton(rt, "Toggle Auto-Shoot", () => Send(CheatActionKind.ToggleManualFire));
 
+            // Player 2 = 0-based PlayerRef index 1 (see CheatActionKind.DamagePlayer) - fixed 50
+            // damage per click, same "one hardcoded value per button" shape as "+1000 Coins" above.
+            CreateButton(rt, "Damage P2 (-50)", () => Send(CheatActionKind.DamagePlayer, assetId: 1, amount: 50));
+
+            CreateButton(rt, "Reveal Map", () => Send(CheatActionKind.RevealMap));
+
             // Sim-only (see CheatActionKind.BecomeBot) - adds BotBrain to the sender's own entity so
             // BotInputSystem drives it from the next tick, but the camera/HUD/audio stay exactly as
             // they were (those only resolve RuntimePlayer.IsBot once, at spawn) - so you keep

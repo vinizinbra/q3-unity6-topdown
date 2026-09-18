@@ -100,7 +100,7 @@ namespace Quantum
             if (template.HasTrail == false || delta.sqrMagnitude < 0.0001f)
             {
                 LogHelper.Log("ProjFlow", $"[{e.Entity}] GHOST impact only: hasTrail={template.HasTrail} dist={delta.magnitude:F2}", this);
-                PlayImpact(template.Impact, end);
+                PlayImpact(template.Impact, end, e.WeaponData);
                 return;
             }
 
@@ -117,7 +117,8 @@ namespace Quantum
             // Independent of either trail's own tween so the impact plays exactly once however many
             // trails this prefab has.
             ParticleSystem impact = template.Impact;
-            Tween.Delay(ghostFlightDuration, () => PlayImpact(impact, end), useUnscaledTime: true);
+            AssetRef<WeaponDataAsset> weaponData = e.WeaponData;
+            Tween.Delay(ghostFlightDuration, () => PlayImpact(impact, end, weaponData), useUnscaledTime: true);
         }
 
         private void SpawnGhostParticle(EntityRef entity, ParticleSystem template, Vector3 start, Quaternion rotation, Vector3 end)
@@ -229,14 +230,35 @@ namespace Quantum
             return instance;
         }
 
-        private static void PlayImpact(ParticleSystem impact, Vector3 position)
+        // Same resolution ProjectileVisualController.PlayImpactEffect uses for a shot that DID get a
+        // view - this ghost path never has a live ProjectileVisualController to read per-weapon
+        // overrides off, so it resolves them fresh from WeaponDataAsset.ProjectileVisuals each time
+        // instead (null - Invalid weaponData, e.g. a skill or enemy attack - reproduces the prefab's
+        // own authored colors/scale exactly, same as PlayDestroyEffect's own no-override fallback).
+        private static void PlayImpact(ParticleSystem impact, Vector3 position, AssetRef<WeaponDataAsset> weaponDataRef)
         {
-            if (impact == null || EffectsManager.Instance == null)
-                return;
+            WeaponDataAsset weaponData = weaponDataRef.IsValid ? QuantumUnityDB.GetGlobalAsset(weaponDataRef) : null;
 
-            // Same call as ProjectileVisualController.PlayImpactEffect - the authored scale has to be
-            // passed explicitly or the pooled instance plays at 1.
-            EffectsManager.Instance.PlayEffect(impact, position, Quaternion.identity, impact.transform.localScale);
+            Color? rootColor = null;
+            Color? childColor = null;
+            Vector3? scale = null;
+
+            if (weaponData != null)
+            {
+                ProjectileVisualsConfig visuals = weaponData.ProjectileVisuals;
+
+                Color root = visuals.ProjectileDestroyColor;
+                root.a = 1f;
+                rootColor = root;
+
+                Color child = visuals.ProjectileDestroyGlowColor;
+                child.a = 1f;
+                childColor = child;
+
+                scale = visuals.ProjectileDestroyScale;
+            }
+
+            ProjectileVisualController.PlayDestroyEffect(impact, position, rootColor, childColor, scale);
         }
 
         // Diagnostic: reports when the pooled instance actually goes inactive (pool release) or is

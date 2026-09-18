@@ -18,7 +18,7 @@ namespace Quantum
         public static void SpreadBurn(Frame f, FPVector3 center, EntityRef owner, EntityRef exclude,
             FP radius, FP burnDuration, FP burnIntensity, int maxTargets)
         {
-            EffectConfig config = StatusEffectUtility.GetEffectConfig(f);
+            ElementalReactionConfig config = StatusEffectUtility.GetElementalReactionConfig(f);
 
             if (config == null)
                 return;

@@ -41,45 +41,59 @@ enum GameState : Byte
                 // docs/revive.md). GameplaySystemGroup is deliberately NOT disabled here. Consumed
                 // by RunResultManager (View) to show the end-of-run Lose popup.
 
-    Victory     // Fired once by VictorySystem the instant the boss on the LAST authored
+    Victory,    // Fired once by VictorySystem the instant the boss on the LAST authored
                 // SurvivalConfig.Phases[] entry actually dies (BossRuntimeState filter goes
                 // empty) - nothing else ever transitions CurrentState out of Boss (CombatDirector
                 // System's own Update gate excludes it entirely once entered), so this is the one
                 // place that closes that loop. GameplaySystemGroup is deliberately NOT disabled
                 // here, same as RunFailed. Consumed by RunResultManager (View) to show the
                 // end-of-run Win popup.
+
+    TeamChallenge,      // An overlay on top of whatever Global.CombatPhaseState actually is
+                        // (almost always Survival, but can also be Breathing) - entered the
+                        // instant CombatDirectorSystem.ApplyEffectiveState sees
+                        // TeamChallengeUtility.AnyBannerActive(f) == true (Starting or
+                        // ChallengeActive), cleared the instant it isn't. GameplaySystemGroup
+                        // stays fully enabled; only Director purchases pause
+                        // (Global.ActiveTeamChallengeCount, unchanged). See
+                        // docs/optional-team-challenge.md.
+
+    TraversalChallenge  // Same overlay shape as TeamChallenge above, entered while
+                        // Global.ActiveTraversalChallengeCount > 0. See docs/traversal-challenge.md.
 }
 
-// Which single top-screen HUD banner should be showing right now, out of the (growing) set of
-// always-present global banners that would otherwise compete for the same screen real estate -
-// DirectorTimelineUiWidget (the match-clock bar), BossWidget (boss HP/shield), and
-// TraversalChallengeWidget (the crossing countdown, see docs/traversal-challenge.md) all now read
-// this ONE resolved value instead of each independently re-deriving "am I the one that should show"
-// off GameState/ActiveTraversalChallengeCount themselves - previously BossWidget/
-// DirectorTimelineUiWidget each duplicated the same `CurrentState == GameState.Boss` check to stay
-// mutually exclusive, which doesn't scale to a 3rd (or more) contender. Resolved once, every tick,
-// by CombatDirectorSystem.ApplyPhaseGameState - NOT a new value on GameState itself, deliberately:
-// GameState gates real simulation behavior (PoiAvailabilityUtility, CombatDirectorSystem's own
-// spawn gate, GameplaySystemGroup disables, ...), and a Traversal Challenge being Active must NOT
-// change what GameState the match is actually in (other players keep fighting normally elsewhere -
-// see docs/traversal-challenge.md) - this is purely a presentation-layer "who currently owns the
-// banner slot" concern, kept fully separate from that.
-enum HudBannerKind : Byte
-{
-    DirectorTimeline, // default - shown whenever nothing more specific is happening
-    TraversalChallenge,
-    Boss
-}
+// Resolution order CombatDirectorSystem.ApplyEffectiveState uses when more than one of the above
+// could apply at once (most specific/urgent wins): Boss > TeamChallenge > TraversalChallenge >
+// whatever Global.CombatPhaseState actually is - Boss always wins since nothing else can be
+// meaningfully showing during a hard-paused boss reveal; TeamChallenge is placed ahead of
+// TraversalChallenge only because the two aren't expected to ever overlap in practice, not for any
+// deeper reason. This used to be a separate HudBannerKind/Global.HudBanner field, deliberately kept
+// out of GameState because GameState gates real simulation behavior (PoiAvailabilityUtility,
+// CombatDirectorSystem's own spawn gate, GameplaySystemGroup disables, ...) that a Traversal/Team
+// Challenge must not disturb elsewhere in the level. Folded into GameState anyway (confirmed with
+// the user) so the 5 top-screen HUD widgets can react to the real GameStateChanged event instead of
+// each independently polling a separate field every tick - see Global.CombatPhaseState below for
+// how the real simulation-gating concerns are still kept safe.
 
 global
 {
+    // The effective, presentation-facing state - what every HUD widget and every OTHER GameState
+    // consumer (PoiAvailabilityUtility, etc.) should read. Boss/TeamChallenge/TraversalChallenge
+    // resolution happens here (CombatDirectorSystem.ApplyEffectiveState); Lobby/Upgrade/RunFailed/
+    // Victory are written directly by their own owning systems, unaffected by any overlay.
     GameState CurrentState;
 
-    // Resolved every tick by CombatDirectorSystem.ApplyPhaseGameState - see HudBannerKind's own
-    // comment for the resolution order (Boss beats TraversalChallenge beats DirectorTimeline, the
-    // more specific/urgent thing always wins over the passive default) and why this is a dedicated
-    // field rather than reusing CurrentState itself.
-    HudBannerKind HudBanner;
+    // The REAL Survival Director phase - Survival/Breathing/Boss only, immune to any
+    // TeamChallenge/TraversalChallenge overlay. Written exclusively by
+    // CombatDirectorSystem.ApplyPhaseGameState, whose own one-shot-transition side effects
+    // (CancelUncommittedCursedRiftInteractions/CloseStoreInteractionsOnBreathingEnd/
+    // CloseBlacksmithInteractionsOnBreathingEnd/BreathingIndex++/BeginBossEncounter) are gated on
+    // THIS field, not CurrentState - otherwise a Team/Traversal Challenge starting or ending mid-
+    // Breathing would spuriously refire them even though the real phase never left Breathing.
+    // Read CurrentState for everything else; this field exists only for that one internal compare
+    // plus BotInputSystem's own Breathing-shop check, which needs the real phase regardless of any
+    // challenge overlay elsewhere in the level.
+    GameState CombatPhaseState;
 
     // Set by LevelUpUtility.OpenUpgradeScreen right before switching CurrentState to Upgrade,
     // read back by Resolve to restore exactly the state that was interrupted - see GameState.

@@ -1,3 +1,22 @@
+// Combat is a normal Director-spawning phase; Breathing turns the entry into a Breathing Break
+// instead (see docs/run-phase.md). Was a plain Boolean IsBreathing - promoted to an enum since
+// "what kind of phase is this" reads clearer in the Inspector/logs than a bare bool, and left
+// room for exactly this: Boss/Elite. Both behave like Combat for SurvivalProgressionUtility.Tick
+// purposes (SurvivalTime keeps advancing, only Breathing freezes it - see Tick's own comment) -
+// they exist so far purely as a vocabulary/authoring distinction the HUD can key off
+// (DirectorTimelineUiWidget shows a phase-specific icon for anything other than Combat), not a
+// gameplay behavior change to CombatDirectorSystem/CombatDirectorUtility yet. A real DSL enum (not
+// hand-written C#, see SurvivalConfig.cs's own comment) specifically so Global.CurrentPhaseKind
+// below can exist - Quantum's asset types (SurvivalPhase.Kind's own declared type) don't need DSL
+// declarations, but a Global FIELD of that type does.
+enum SurvivalPhaseKind : Byte
+{
+    Combat,
+    Breathing,
+    Boss,
+    Elite
+}
+
 // Match-wide Survival Director state - merged by the DSL compiler into the same Frame.Global
 // struct as Chunk.qtn's global block (kept in its own file since it's conceptually unrelated to
 // level generation). Driven entirely by CombatDirectorSystem (SurvivalProgressionUtility.Tick +
@@ -10,6 +29,16 @@ global
     FP SurvivalTime;
     Int32 CurrentPhaseIndex;
     FP PhaseTimer;
+
+    // The current phase's own Kind (Combat/Breathing/Elite/Boss), mirrored here every tick by
+    // SurvivalProgressionUtility.Tick purely as a cheap convenience read - avoids BotInputSystem
+    // (per-bot, every tick) and View code needing their own SurvivalConfig asset lookup just to
+    // answer "is the timeline currently sitting on a Breathing-kind phase boundary" (distinct from
+    // Global.CurrentState == GameState.Breathing, which since the Announcer/event-driven-HUD pass
+    // only becomes true once BreathingAreaSecured is ALSO true - see GameState.qtn's own comment
+    // and CombatDirectorSystem.ResolveDesiredState). Combined with BreathingAreaSecured == false,
+    // this is what "the phase has reached Breathing but enemies are still being cleared" means.
+    SurvivalPhaseKind CurrentPhaseKind;
 
     // Reset to false by SurvivalProgressionUtility.Tick the moment CurrentPhaseIndex changes;
     // consumed by CombatDirectorSystem.Update to fire SurvivalPhase.GuaranteedGroup exactly once

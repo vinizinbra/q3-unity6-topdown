@@ -1,3 +1,4 @@
+using System;
 using PrimeTween;
 using UnityEngine;
 
@@ -17,6 +18,12 @@ public abstract class AppearSlide : MonoBehaviour
     // true  = slide vertically (appear moving UP from below, hide continuing up);
     // false = slide horizontally (appear moving right from the left, hide continuing right).
     protected abstract bool IsVertical { get; }
+
+    // Raised once Hide()'s slide/fade has fully finished and the GameObject has just been
+    // deactivated - lets a caller (e.g. AnnouncerManager) know when it's safe to treat this
+    // reveal as completely off-screen, rather than only when the hold timer that triggered Hide()
+    // started.
+    public event Action Hidden;
 
     // Optional continuous idle motion applied only while the panel is settled (after the appear
     // slide finishes, until the hide slide starts) - a subtle sine wobble so a shown banner doesn't
@@ -162,7 +169,11 @@ public abstract class AppearSlide : MonoBehaviour
 
         _slideTween = TweenAxisTo(RestAxis + outDistance, outDuration, outEase);
         _fadeTween = FadeTo(0f, outDuration, outEase)
-            .OnComplete(() => gameObject.SetActive(false));
+            .OnComplete(() =>
+            {
+                gameObject.SetActive(false);
+                Hidden?.Invoke();
+            });
     }
 
     private float RestAxis => IsVertical ? _rest.y : _rest.x;

@@ -21,7 +21,7 @@ MonoBehaviour:
   Rarity: 3
   Scope: 0
   IncompatibleWith: []
-  Description: 'Accessory durability x<color=#FD3971>{0:0.#}</color>, but <color=#FD3971>{1:+0;-0}%</color> Max Health'
+  Description: Accessory durability x{0:0.#}, but {1:+0;-0}% Max Health
   DurabilityMultiplier:
     RawValue: 131072
   HealthMultiplier:

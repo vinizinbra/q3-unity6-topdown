@@ -95,9 +95,9 @@ namespace Quantum
         public static bool TickBreathingGraceHold(Frame f, SurvivalPhase phase)
         {
             // Same freeze PhaseTimer's own advance already gets from an active Traversal Challenge
-            // (see SurvivalProgressionUtility.Tick) - a grace hold shouldn't start or drain
-            // underneath one either.
-            if (f.Global->ActiveTraversalChallengeCount > 0)
+            // or Optional Team Challenge (see SurvivalProgressionUtility.Tick) - a grace hold
+            // shouldn't start or drain underneath either one.
+            if (f.Global->ActiveTraversalChallengeCount > 0 || f.Global->ActiveTeamChallengeCount > 0)
                 return true;
 
             bool anyWindowOpen = AnyConnectedPlayerHasChoiceWindowOpen(f);

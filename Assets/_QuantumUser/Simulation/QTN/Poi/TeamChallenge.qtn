@@ -1,0 +1,123 @@
+// Optional Team Challenge - a world-shared, one-shot POI the WHOLE co-op team can voluntarily
+// interrupt Survival to attempt (see docs/breathing-poi.md's POI family, and the Traversal
+// Challenge precedent this mirrors). Like TraversalChallenge.qtn, this deliberately does NOT use
+// Poi.qtn's PoiUsagePolicy/PoiUsage (a per-player usage-count mechanism) or plug into
+// PoiActivationSystem/PoiViewState - re-triggerability here is governed entirely by this
+// component's own State, since the whole point is one shared attempt for the whole team, not a
+// per-player repeatable interaction.
+
+// The 3 initial challenge objectives - see ChallengeDefinition.cs/ChallengeObjectiveUtility.cs.
+// Deliberately one generic runtime evaluates all three rather than one system each - only the
+// success/failure hook differs per type (see ChallengeObjectiveUtility/TeamChallengeReactionSystem).
+enum ChallengeType : Byte
+{
+    KillRush,
+    FlawlessHunt,
+    CursedSurvival
+}
+
+enum TeamChallengeState : Byte
+{
+    Available,        // nobody Ready - small Interaction Area press = Ready up
+    WaitingForTeam,   // >=1 Raider Ready, not unanimous - Survival runs completely normally
+    Starting,         // unanimous Ready reached, activation locked, optional 3-2-1 countdown
+    ChallengeActive,  // objective running; Global.ActiveTeamChallengeCount > 0
+    RewardAvailable,  // succeeded, unclaimed - small Interaction Area press = Claim (ANY Raider)
+
+    // Terminal, one attempt only - the two outcomes are DISTINCT values (not one shared
+    // "Completed" the View has to disambiguate some other way), same "own value per outcome"
+    // convention TraversalChallengeState already uses for its own Completed/Failed.
+    Completed, // SUCCESS - the shared reward was claimed (TeamChallengeUtility.TryClaimReward)
+    Failed     // the challenge itself failed - no reward (TeamChallengeUtility.End(success:false))
+}
+
+component TeamChallenge
+{
+    PoiAvailability Availability;
+    AssetRef<TeamChallengeConfig> Config;
+    TeamChallengeState State;
+
+    // Rolled once, on the Available->WaitingForTeam edge (see TeamChallengeUtility.TryReadyUp) -
+    // deterministic (f.RNG), never re-rolled for the lifetime of this attempt.
+    AssetRef<ChallengeDefinition> SelectedChallenge;
+
+    FP RemainingCountdown;    // Starting only
+    FP RemainingChallengeTime; // ChallengeActive only; 0 = no timeout authored for this Type
+
+    // Team-shared counters for KillRush/FlawlessHunt - see TeamChallengeReactionSystem.OnEntityKilled.
+    Int32 KillCount;
+    Int32 KillTarget; // cached from SelectedChallenge.KillTarget at BeginChallengeActive
+
+    // The challenge's own encounter is paced through the EXACT SAME budget/pressure/purchase
+    // algorithm normal Survival phases use (CombatDirectorUtility.TryPulse), fed from
+    // ChallengeDefinition's own phase-shaped fields (BudgetPerPulse/PulseInterval/AllowedGroups/
+    // AllowedEnemies/...) instead of SurvivalConfig.Phases[] - these are this challenge's own,
+    // separate budget/pulse-timer pool, mirroring Global.DirectorBudget/DirectorPulseTimer exactly
+    // but never shared with them (the normal Director is paused throughout ChallengeActive anyway
+    // via Global.ActiveTeamChallengeCount, so there is no live purchase to conflict with - keeping
+    // a separate pool just means resuming Survival afterward doesn't inherit a leftover challenge
+    // budget, and starting a challenge doesn't inherit leftover Survival budget either).
+    FP PulseBudget;
+    FP PulseTimer;
+}
+
+global
+{
+    // Same "counter, not bool" shape as TraversalChallenge.qtn's own ActiveTraversalChallengeCount
+    // - a DEDICATED counter, not shared with Traversal Challenge's own, since the two pauses are
+    // conceptually unrelated triggers (ending one must never affect the other's own freeze).
+    // Incremented on Starting->ChallengeActive, decremented (clamped at 0) on every terminal
+    // ChallengeActive exit (success/fail/interruption). Checked at the exact same call sites
+    // ActiveTraversalChallengeCount already is - see SurvivalProgressionUtility.Tick,
+    // RunPhaseUtility.TickBreathingGraceHold, CombatDirectorSystem.Update.
+    Int32 ActiveTeamChallengeCount;
+
+    // Cheap client-facing convenience value, same role as Global.TraversalChallengeTimeRemaining -
+    // written by TeamChallengeSystem every tick a challenge is Starting/ChallengeActive.
+    FP TeamChallengeTimeRemaining;
+}
+
+// Presence = this player is currently Ready for `Poi` (same "presence, not a field value, is the
+// signal" idiom as GameState.qtn's own BreathingSkipVote). Added by TeamChallengeUtility.
+// TryReadyUp, removed by TeamChallengeSystem the tick this player leaves
+// TeamChallengeConfig.ReadyCancelRadius, on disconnect (a disconnected player simply stops
+// counting toward the live "required" recount - see TeamChallengeUtility's own comment), or once
+// the challenge actually Starts (converted into TeamChallengeParticipant below).
+component TeamChallengeReady
+{
+    EntityRef Poi;
+}
+
+// Snapshot of "this Raider was Ready when the team went unanimous, so they're actually IN this
+// attempt." Added at Starting (converted from TeamChallengeReady), removed at every terminal
+// ChallengeActive exit. Flawless Hunt's real-HP-loss check and Cursed Survival's curse
+// apply/restore both key off THIS, not live TeamChallengeReady (which no longer exists once the
+// attempt has actually Started) - a player who joins the Ready area mid-ChallengeActive (they
+// were never part of the unanimous vote) never becomes a participant this attempt.
+component TeamChallengeParticipant
+{
+    EntityRef Poi;
+}
+
+// Reversible Cursed Survival snapshot - added only for TeamChallengeParticipant entities when
+// SelectedChallenge.Type == CursedSurvival begins (see CursedSurvivalUtility.ApplyCurse), removed
+// (and restored) at every terminal exit (CursedSurvivalUtility.RestoreCurse). Deliberately does
+// NOT snapshot AccessoryGuard.CurrentDurability/MaxDurability/State - the curse only ever flips
+// AccessoryGuard.Disabled (which AccessoryGuardUtility.TryBlock already hard-gates on), and never
+// itself mutates durability/State, so there is nothing else to snapshot or restore.
+component CursedSurvivalOverride
+{
+    EntityRef Poi;
+    FP PreviousCurrentHealth;
+    Boolean PreviousAccessoryDisabled;
+}
+
+// Tag on every enemy spawned FOR this specific challenge instance's own objective (via
+// GroupSpawnerUtility, same pipeline/co-op scaling as any normal Survival spawn - see
+// TeamChallengeUtility.BeginChallengeActive). Scopes KillRush/FlawlessHunt's kill-counting and
+// end-of-challenge cleanup to "enemies THIS challenge spawned," without ever touching a normal
+// Director-spawned enemy.
+component TeamChallengeSpawn
+{
+    EntityRef Poi;
+}

@@ -135,6 +135,11 @@
                 // Rift Mutation roster (Critical Focus, Infinite Momentum, Shield Breaker). See
                 // docs/rift-mutations.md.
                 new RiftMutationReactionSystem(),
+                // Optional Team Challenge's own reaction half - Kill Rush/Flawless Hunt's shared
+                // team kill counter (Combat.qtn's OnEntityKilled) and Flawless Hunt's real-HP-loss
+                // failure (OnHealthDamageApplied) - same signal-driven, no-ordering-dependency shape
+                // as RiftMutationReactionSystem just above. See TeamChallenge.qtn.
+                new TeamChallengeReactionSystem(),
                 // Max's Overdrive Ascension reactions - Uncontrolled Fury's capped per-N-kills
                 // extension (Vendetta kills included), Ignition rank 2's Burning Ground drop, Blood
                 // Debt rank 2's Rage refund, and Rage's own loss-on-damage. MUST run BEFORE
@@ -377,6 +382,10 @@
                 // SurvivalProgressionUtility much earlier in this same list. See
                 // docs/traversal-challenge.md.
                 new TraversalChallengeSystem(),
+                // Ticks each Optional Team Challenge POI's own WaitingForTeam/Starting/ChallengeActive
+                // state - same "lives inside this group, own global pause counter" shape as
+                // TraversalChallengeSystem just above. See TeamChallenge.qtn.
+                new TeamChallengeSystem(),
                 // After every hit-resolving system above (this tick's Enemy.Phase is fully settled, so
                 // a same-tick combat death is correctly excluded from retirement/refund) and before
                 // DestroyAfterTimeSystem, preserving that system's own "must be last" invariant since

@@ -139,7 +139,7 @@ namespace Quantum
             if (radius <= FP._0)
                 return;
 
-            EffectConfig config = StatusEffectUtility.GetEffectConfig(f);
+            ElementalReactionConfig config = StatusEffectUtility.GetElementalReactionConfig(f);
 
             if (config == null)
                 return;

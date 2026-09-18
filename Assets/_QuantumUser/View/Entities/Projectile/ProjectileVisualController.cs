@@ -407,35 +407,43 @@ namespace Quantum
 
         private void PlayImpactEffect(Vector3 position)
         {
-            if (_settings.DestroyEffectPrefab == null || EffectsManager.Instance == null)
+            PlayDestroyEffect(_settings.DestroyEffectPrefab, position,
+                _destroyEffectColorOverride, _destroyEffectChildColorOverride, _destroyEffectScaleOverride);
+        }
+
+        // Shared with ProjectileGhostTrailManager.PlayImpact - a shot whose view never existed (see
+        // that class's own comment) has no ProjectileVisualController instance to read overrides off,
+        // but needs the EXACT same resolution logic so its destroy effect reads identically to a shot
+        // that did get a view. Each override is independently nullable rather than one combined
+        // "resolved config" - a caller may have only some of the three (or, for the ghost path, none
+        // at all if the shot carries no WeaponData).
+        //
+        // Always the TINTED (two-tone) overload, never the plain one - destroyPrefab (e.g.
+        // GenericProjectileDestroy) is POOLED across every projectile that uses it, weapon-fired or
+        // not. If this only tinted when an override was set, a pooled instance last played with one
+        // weapon's colors would keep bleeding that tint into a later untinted play (an enemy attack or
+        // a weapon with no override reusing the same pooled instance) forever, since the plain overload
+        // never touches startColor to reset it. Falling back to the PREFAB ASSET's own authored colors
+        // (never a pooled INSTANCE's, which may already be mutated by an earlier tinted play) when
+        // there's no per-weapon override keeps every non-opted-in caller's effect exactly as originally
+        // authored - root and child resolved independently, since GenericProjectileDestroy's Red/Blue
+        // team-color variants only have ONE child (Glow, no Sparks) while the base variant has two, so
+        // index 1 isn't always "Sparks". Scale multiplies onto the prefab's own authored
+        // transform.localScale rather than replacing it, so an unset override (or one explicitly set
+        // to (1,1,1)) always reproduces the prefab's own size exactly.
+        public static void PlayDestroyEffect(ParticleSystem destroyPrefab, Vector3 position,
+            Color? rootColorOverride, Color? childColorOverride, Vector3? scaleOverride)
+        {
+            if (destroyPrefab == null || EffectsManager.Instance == null)
                 return;
 
-            // PlayEffect's 3-arg overload hardcodes Vector3.one (pooled instances default back
-            // to unscaled so a scaled play can't leak onto the next unscaled one drawn from the
-            // same pool) - pass the prefab's own authored scale explicitly or it always plays at 1.
-            // _destroyEffectScaleOverride multiplies onto that authored scale rather than replacing
-            // it, so (1,1,1) (unset, or explicitly set to that) always reproduces the prefab's own
-            // size exactly regardless of what it happens to be authored at.
-            Vector3 scale = Vector3.Scale(_settings.DestroyEffectPrefab.transform.localScale,
-                _destroyEffectScaleOverride ?? Vector3.one);
-
-            // Always the TINTED (two-tone) overload, never the plain one - destroyEffectPrefab (e.g.
-            // GenericProjectileDestroy) is POOLED across every projectile that uses it, weapon-fired
-            // or not. If this only tinted when an override was set, a pooled instance last played with
-            // one weapon's colors would keep bleeding that tint into a later untinted play (an enemy
-            // attack or a weapon with no override reusing the same pooled instance) forever, since the
-            // plain overload never touches startColor to reset it. Falling back to the PREFAB ASSET's
-            // own authored colors (never a pooled INSTANCE's, which may already be mutated by an
-            // earlier tinted play) when there's no per-weapon override keeps every non-opted-in
-            // caller's effect exactly as originally authored - root and child resolved independently,
-            // since GenericProjectileDestroy's Red/Blue team-color variants only have ONE child
-            // (Glow, no Sparks) while the base variant has two, so index 1 isn't always "Sparks".
-            ParticleSystem[] prefabSystems = _settings.DestroyEffectPrefab.GetComponentsInChildren<ParticleSystem>(true);
-            Color rootColor = _destroyEffectColorOverride ?? prefabSystems[0].main.startColor.color;
-            Color childColor = _destroyEffectChildColorOverride ??
+            ParticleSystem[] prefabSystems = destroyPrefab.GetComponentsInChildren<ParticleSystem>(true);
+            Color rootColor = rootColorOverride ?? prefabSystems[0].main.startColor.color;
+            Color childColor = childColorOverride ??
                 (prefabSystems.Length > 1 ? prefabSystems[1].main.startColor.color : rootColor);
+            Vector3 scale = Vector3.Scale(destroyPrefab.transform.localScale, scaleOverride ?? Vector3.one);
 
-            EffectsManager.Instance.PlayEffect(_settings.DestroyEffectPrefab, position, Quaternion.identity, scale, rootColor, childColor);
+            EffectsManager.Instance.PlayEffect(destroyPrefab, position, Quaternion.identity, scale, rootColor, childColor);
         }
 
         private void SetVisible(bool visible)

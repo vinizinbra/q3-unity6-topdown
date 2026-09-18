@@ -65,7 +65,7 @@ namespace QuantumUser.Editor
                 "it directly, no second window), wire a subtitleText (TMP_Text) - secondaryButton needs no new work, it's the same " +
                 "already-wired button Choose-Weapon's Keep Current uses, now also doubling as Cursed Rift's Cancel - and on its own " +
                 "cardPrefab wire a valuePreviewText (TMP_Text) and buttonLabelText (TMP_Text, can point at the card's own existing " +
-                "baked button label) - none of these 3 fields exist on the scene instance yet; also wire BreathingCountdownWidget on the scene HUD prefab; " +
+                "baked button label) - none of these 3 fields exist on the scene instance yet; also wire BreathingWidget on the scene HUD prefab; " +
                 "(5) wire SkillCooldownUiWidget's new contextInteractionIcon/interactPromptRoot fields on the HeroSkill-slot instance; " +
                 "(6) build out PoiView's Inactive/Active/Expired child visuals on each POI's own View prefab (already wired on " +
                 "HealingShrine.prefab, PoiView referenced by CursedShrine.prefab too), and set up InteractionPromptWidgetManager " +

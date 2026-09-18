@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f1fceb612d424a11957ed041d636461, type: 3}
+  m_Name: CursedSurvival
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ChallengeDefinition
+  Identifier:
+    Path: _QuantumUser/Resources/Poi/TeamChallenge/CursedSurvival
+    Guid:
+      Value: 469807075581237661
+  Type: 2
+  DisplayName: CURSED SURVIVAL
+  Description: Everyone is pinned to 1 HP with no Accessory - survive 20 seconds.
+  Duration:
+    RawValue: 1310720
+  KillTarget: 0
+  BudgetPerPulse:
+    RawValue: 3276800
+  PulseInterval:
+    RawValue: 65536
+  TargetPressure:
+    RawValue: 1966080
+  MaxAliveEnemies: 12
+  AllowedGroups:
+  - Id:
+      Value: 457814836202198574
+  - Id:
+      Value: 497538020021829942
+  - Id:
+      Value: 497538020021829942
+  - Id:
+      Value: 527628414525386623
+  AllowedEnemies: []
+  Rules:
+  - Icon: {fileID: -6995720472750356834, guid: 22d281b779f8c49dba31479e82c1cb37, type: 3}
+    Text: 1
+    ScaleTextWithKillTarget: 0
+  - Icon: {fileID: 8347841046329057187, guid: 22d281b779f8c49dba31479e82c1cb37, type: 3}
+    Text: '-'
+    ScaleTextWithKillTarget: 0
+  - Icon: {fileID: -1016452943, guid: d9bb3bd610ed442fe983639e2c3f95fb, type: 3}
+    Text: 20s
+    ScaleTextWithKillTarget: 0

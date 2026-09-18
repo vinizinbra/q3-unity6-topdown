@@ -13,20 +13,29 @@ namespace Quantum
     // (BalanceConfig.GetCoopGlobal(DirectorBudget, n)) reused verbatim as "GetThreatBudget(n)": a
     // cluster of n players requests exactly what a normal n-player party would, summed across
     // clusters and capped by DirectorConfig.MaxSplitThreatMultiplier. Nothing here is hardcoded to
-    // 4 players - every formula reads a live cluster size. All working sets are stackalloc'd, so the
-    // per-tick scalar update never touches the heap; only the per-pulse anchor plan allocates.
+    // 4 players - every formula reads a live cluster size. All working sets are stackalloc'd or
+    // reused static scratch buffers, so no per-pulse allocation touches the heap.
     public static unsafe class PlayerClusterDirectorUtility
     {
         // Quantum.Input.MAX_COUNT.
         public const int MaxPlayers = 4;
 
+        // BuildAnchors runs every Director pulse (every phase.PulseInterval, ~seconds) plus once per
+        // guaranteed-spawn call - frequent enough that a fresh `new FPVector3[]`/`new FP[]` per call
+        // showed up as a periodic GC.Alloc spike in profiling. Cluster count can never exceed
+        // MaxPlayers, so these two buffers are allocated once and reused - safe because every
+        // BuildAnchors caller fully consumes its `plan` synchronously before returning, and Quantum's
+        // systems never re-enter BuildAnchors mid-consumption within the same tick.
+        private static readonly FPVector3[] _anchorCentersBuffer = new FPVector3[MaxPlayers];
+        private static readonly FP[] _anchorTargetPressureBuffer = new FP[MaxPlayers];
+
         // This pulse's spawn fronts. Cohesive (or <=1 player) is Count==1 at the party centroid,
         // byte-identical to the pre-cluster Director.
         public struct AnchorPlan
         {
-            public int Count;                 // spawn fronts this pulse
-            public FPVector3[] Centers;       // predicted center per front
-            public FP[] TargetPressure;       // per-front pressure target (sums to phase.TargetPressure * SplitThreatMultiplier)
+            public int Count;                 // spawn fronts this pulse - only indices [0, Count) of Centers/TargetPressure are valid
+            public FPVector3[] Centers;       // predicted center per front - the SHARED _anchorCentersBuffer, not an owned array; read before the next BuildAnchors call
+            public FP[] TargetPressure;       // per-front pressure target (sums to phase.TargetPressure * SplitThreatMultiplier) - the SHARED _anchorTargetPressureBuffer, same caveat as Centers
             public FPVector3 GlobalCentroid;  // where major (Elite+) groups anchor, never per-front
         }
 
@@ -203,8 +212,10 @@ namespace Quantum
             if (split == false)
             {
                 plan.Count = 1;
-                plan.Centers = new[] { plan.GlobalCentroid };
-                plan.TargetPressure = new[] { targetPressure * ResolveSplitThreat(f) * density };
+                plan.Centers = _anchorCentersBuffer;
+                plan.Centers[0] = plan.GlobalCentroid;
+                plan.TargetPressure = _anchorTargetPressureBuffer;
+                plan.TargetPressure[0] = targetPressure * ResolveSplitThreat(f) * density;
                 return true;
             }
 
@@ -220,8 +231,8 @@ namespace Quantum
             FP shareScale = requested > FP._0 ? finalTotal / requested : FP._1; // proportional scale-down when over the cap
 
             plan.Count = clusterCount;
-            plan.Centers = new FPVector3[clusterCount];
-            plan.TargetPressure = new FP[clusterCount];
+            plan.Centers = _anchorCentersBuffer;
+            plan.TargetPressure = _anchorTargetPressureBuffer;
 
             for (int c = 0; c < clusterCount; c++)
             {

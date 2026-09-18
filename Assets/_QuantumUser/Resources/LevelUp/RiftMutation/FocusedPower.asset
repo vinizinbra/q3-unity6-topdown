@@ -21,8 +21,9 @@ MonoBehaviour:
   Rarity: 2
   Scope: 0
   IncompatibleWith: []
-  Description: '<color=#FD3971>{0:+0;-0}%</color> Skill Area, but Skill Damage rises to <color=#FD3971>{1:+0;-0}%</color> at the center of the effect'
-  SkillAreaMultiplier:
-    RawValue: 32768
-  CenterDamageBonus:
-    RawValue: 98304
+  Description: Non-critical hits deal {0:0}% less damage, but Critical Hits gain
+    +{1:0}% Critical Damage
+  NonCritDamagePenalty:
+    RawValue: 19661
+  CritDamageBonus:
+    RawValue: 65536

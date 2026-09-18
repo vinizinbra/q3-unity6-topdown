@@ -4,21 +4,12 @@ namespace Quantum
     using System.Collections.Generic;
     using Photon.Deterministic;
 
-    // Combat is a normal Director-spawning phase; Breathing turns the entry into a Breathing Break
-    // instead (see docs/run-phase.md). Was a plain Boolean IsBreathing - promoted to an enum since
-    // "what kind of phase is this" reads clearer in the Inspector/logs than a bare bool, and left
-    // room for exactly this: Boss/Elite. Both behave like Combat for SurvivalProgressionUtility.Tick
-    // purposes (SurvivalTime keeps advancing, only Breathing freezes it - see Tick's own comment) -
-    // they exist so far purely as a vocabulary/authoring distinction the HUD can key off
-    // (DirectorTimelineUiWidget shows a phase-specific icon for anything other than Combat), not a
-    // gameplay behavior change to CombatDirectorSystem/CombatDirectorUtility yet.
-    public enum SurvivalPhaseKind
-    {
-        Combat,
-        Breathing,
-        Boss,
-        Elite
-    }
+    // SurvivalPhaseKind moved to a real DSL enum (Assets/_QuantumUser/Simulation/QTN/Director/
+    // SurvivalDirector.qtn) as of the Announcer/event-driven-HUD pass - Global.CurrentPhaseKind
+    // needed a Global field of this type, which requires the DSL compiler to know the type, and a
+    // plain hand-written C# enum here (as it was before) is invisible to it. Functionally identical
+    // either way - Unity's Inspector serializes a DSL-generated enum exactly like a hand-written
+    // one - see that .qtn file's own comment for the per-value meaning.
 
     // One phase of the survival curve - capped at exactly the values SurvivalProgressionUtility/
     // CombatDirectorUtility need, so balancing this system stays a matter of tuning six named

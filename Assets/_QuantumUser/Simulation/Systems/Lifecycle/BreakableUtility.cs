@@ -38,6 +38,7 @@ namespace Quantum
             TrySpawnLoot(f, entity, position);
 
             f.Events.BreakableBroken(entity, position);
+            f.Signals.OnDestructibleBroken(entity, owner);
 
             return true;
         }

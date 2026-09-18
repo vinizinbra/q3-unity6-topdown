@@ -81,6 +81,10 @@ namespace Quantum
                         TraversalChallengeUtility.TryActivate(f, filter.Entity, context->ActiveTarget);
                         break;
 
+                    case InteractableKind.TeamChallenge:
+                        TeamChallengeUtility.TryInteract(f, filter.Entity, context->ActiveTarget);
+                        break;
+
                     case InteractableKind.Revive:
                         ReviveUtility.TryBeginInteraction(f, filter.Entity, context->ActiveTarget);
                         break;

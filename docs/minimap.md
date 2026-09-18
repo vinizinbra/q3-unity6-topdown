@@ -136,7 +136,7 @@ simulation.
   own Elite/Special marker above, so a single enemy never shows two markers at once - but ONLY while
   `GameState.CurrentState == Breathing` AND `Global.BreathingAreaSecured == false` - the same "CLEAR
   ALL ENEMIES..." window
-  `BreathingCountdownWidget`'s `notSecuredRoot` shows (see `docs/run-phase.md`'s "Elite / Boss
+  `BreathingWidget`'s `notSecuredRoot` shows (see `docs/run-phase.md`'s "Elite / Boss
   phases" section - Breathing holds `PhaseTimer` open until every alive enemy is gone, mirrored into
   `BreathingAreaSecured`). Outside that window every existing marker is torn down immediately
   (not left to the stale sweep) - covers both "the area just secured" and "`GameState` left

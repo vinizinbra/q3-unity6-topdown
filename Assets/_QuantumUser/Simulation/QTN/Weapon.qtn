@@ -49,6 +49,16 @@ component Weapon
     FP    ReloadTimer;
     FP    TimeSinceFireReleased;
 
+    // -- Anticipation (WeaponDataAsset.AnticipationTime) --
+    // A wind-up gate BEFORE a shot actually fires - counted down here exactly like
+    // FireCooldownTimer (see WeaponSystem.Update), but on the FRONT of the shot instead of the
+    // back. IsAnticipating is a separate bool (not just "AnticipationTimer > 0") because the timer
+    // reaching <=0 has to mean two different things WeaponSystem.Update can't tell apart from the
+    // value alone: "never started" (fire immediately, the every-weapon-today default) vs "just
+    // finished winding up" (fire NOW, this tick). See WeaponSystem.Update's own comment.
+    bool  IsAnticipating;
+    FP    AnticipationTimer;
+
     // -- Long Barrel (RangeMultiplierWeaponPerkData) --
     // Scales WeaponDataAsset.Range - directly in WeaponSystem.FireHitscan for a Hitscan weapon, and
     // via WeaponPerkUtility.ResolveWeaponRange into Projectile.MaxTravelDistance (seeded at fire

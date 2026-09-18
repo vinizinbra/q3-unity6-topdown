@@ -20,13 +20,20 @@ public class InMatchTutorialManager : QuantumGlobalMonoBehaviour
 
     // Edge-detects Global.BreathingAreaSecured flipping true during the run's FIRST Breathing Break
     // only (BreathingIndex == 0) - see QUpdate. FirstBreakPopup is meant to show once the enemies
-    // are actually cleared (the "AREA SECURED" moment BreathingCountdownWidget's own banner reacts
+    // are actually cleared (the "AREA SECURED" moment BreathingWidget's own banner reacts
     // to), not the instant the phase merely becomes Breathing, since enemies are deliberately left
     // alive when a Breathing Break begins (see docs/run-phase.md).
     private bool _firstBreakAreaWasSecured;
 
+    // Set the first time the area-secured edge ever arms _firstBreakDelayTimer, never cleared - a
+    // Team/Traversal Challenge overlay starting or ending during the run's first Breathing Break
+    // can flip Global.CurrentState away from and back to Breathing (see GameState.qtn's own
+    // TeamChallenge/TraversalChallenge comments), which would otherwise re-trigger
+    // _firstBreakAreaWasSecured's rising edge and re-arm the popup a second time.
+    private bool _firstBreakPopupArmedOrShown;
+
     // Counts down once the area-secured edge fires, so the popup doesn't pop up on top of/racing
-    // BreathingCountdownWidget's own "AREA SECURED" banner reveal - 0 means no delay pending.
+    // BreathingWidget's own "AREA SECURED" banner reveal - 0 means no delay pending.
     // Unscaled, same reasoning every other popup/HUD timer in this codebase uses.
     private const float FirstBreakDelaySeconds = 2f;
     private float _firstBreakDelayTimer;
@@ -52,8 +59,11 @@ public class InMatchTutorialManager : QuantumGlobalMonoBehaviour
         bool isFirstBreathing = frame.Global->CurrentState == GameState.Breathing && frame.Global->BreathingIndex == 0;
         bool secured = isFirstBreathing && frame.Global->BreathingAreaSecured;
 
-        if (secured && _firstBreakAreaWasSecured == false && IsSolo(frame))
+        if (secured && _firstBreakAreaWasSecured == false && IsSolo(frame) && _firstBreakPopupArmedOrShown == false)
+        {
             _firstBreakDelayTimer = FirstBreakDelaySeconds;
+            _firstBreakPopupArmedOrShown = true;
+        }
 
         _firstBreakAreaWasSecured = secured;
 

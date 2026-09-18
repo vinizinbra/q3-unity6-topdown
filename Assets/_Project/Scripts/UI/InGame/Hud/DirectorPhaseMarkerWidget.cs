@@ -1,11 +1,11 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-// Sits on DirectorTimelineUiWidget's markerPrefab - explicit serialized reference to the phase icon
+// Sits on SurvivalWidget's markerPrefab - explicit serialized reference to the phase icon
 // Image, instead of GetComponentInChildren<Image> guessing which Image under the prefab is the icon
 // (the marker's own tick/line visual is often an Image too, so a blind search could grab that one).
 //
-// Three run-relative states, driven each frame by DirectorTimelineUiWidget from the current phase:
+// Three run-relative states, driven each frame by SurvivalWidget from the current phase:
 //   Before  - the run hasn't reached this phase yet (beforeColor).
 //   Reached - the run is currently in this phase (reachedColor + an idle scale wiggle).
 //   Passed  - the run has moved past this phase (passedColor).
@@ -30,7 +30,7 @@ public class DirectorPhaseMarkerWidget : MonoBehaviour
     [SerializeField, Tooltip("Pulses per second.")]
     private float wiggleFrequency = 2f;
 
-    // Set by DirectorTimelineUiWidget.SpawnMarker - the index into SurvivalConfig.Phases of the phase
+    // Set by SurvivalWidget.SpawnMarker - the index into SurvivalConfig.Phases of the phase
     // this marker represents, so the widget can compare it against Global.CurrentPhaseIndex.
     public int PhaseIndex { get; set; }
 

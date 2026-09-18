@@ -5,19 +5,17 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// Dedicated top-screen boss-fight HUD, shown only while Global.HudBanner == HudBannerKind.Boss -
+// Dedicated top-screen boss-fight HUD, shown only while Global.CurrentState == GameState.Boss -
 // takes over as the boss's only HP/shield display. EnemyView skips EnemyUiWidgetManager.SpawnWidget
 // entirely for EnemyTier.Boss (see its own comment), so the boss gets no floating CharacterUiWidget
-// of its own; DirectorTimelineUiWidget/TraversalChallengeWidget both read that exact same shared
-// HudBanner value (resolved once a tick by CombatDirectorSystem.ApplyHudBanner - see GameState.qtn's
-// own HudBannerKind comment), so all three stay mutually exclusive across the whole match without
-// each independently re-deriving "am I the one that should show."
+// of its own; SurvivalWidget/TraversalChallengeWidget/TeamChallengeWidget all react to that same
+// GameState (TeamChallenge/TraversalChallenge folded in alongside Boss - see GameState.qtn's own
+// comments), so all stay mutually exclusive across the whole match without each independently
+// re-deriving "am I the one that should show."
 //
 // Single shared instance for the whole HUD (not per-local-player-slot) - same "always exists,
-// self-governs visibility" shape BreathingCountdownWidget/DirectorTimelineUiWidget already use.
-// Polls Global.CurrentState every QUpdate rather than subscribing to the GameStateChanged event -
-// no View code reacts to that event yet, by explicit request (see CLAUDE.md's Game State section),
-// and this keeps that true.
+// self-governs visibility" shape BreathingWidget/SurvivalWidget already use. Extends
+// GameStateGatedWidget, reacting to the real GameStateChanged event instead of polling.
 //
 // Also triggers the full-screen BossWindow reveal (see BossWindow.cs) the instant the boss entity
 // is first found after GameState.Boss begins - piggybacked here rather than a separate trigger
@@ -31,10 +29,8 @@ using UnityEngine.UI;
 // Global.BossPauseTimer (see RunPhaseUtility.BeginBossEncounter/GameState.qtn) counts down to 0 -
 // fade out -> clear the focus override, resuming normal multi-player framing -> fade in, right as
 // GameplaySystemGroup re-enables and the fight actually becomes playable.
-public class BossWidget : QuantumGlobalMonoBehaviour
+public class BossWidget : GameStateGatedWidget
 {
-    [SerializeField, Tooltip("Container for the widget's visible children - toggled off outside GameState.Boss. Must be a CHILD GameObject, not the GameObject this script itself lives on, since QUpdate stops firing once its own GameObject is disabled.")]
-    private GameObject root;
     [SerializeField] private TMP_Text nameText;
     [SerializeField] private Slider healthSlider;
     [SerializeField, Tooltip("Shows \"current/max\" (rounded to whole numbers) alongside healthSlider.")]
@@ -64,35 +60,27 @@ public class BossWidget : QuantumGlobalMonoBehaviour
     // encounter") because resolving the view can take a few extra ticks online - see TryTriggerBossWindow.
     private EntityRef _pendingBossWindowEntity;
 
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         _entityViewUpdater = FindFirstObjectByType<QuantumEntityViewUpdater>();
         _gameplayUiController = FindFirstObjectByType<GameplayUiController>();
     }
 
-    public override void QStart(QuantumGame game)
+    protected override bool IsActive(GameState currentGameState) => currentGameState == GameState.Boss;
+
+    protected override void OnShownChanged(bool shown, GameState currentGameState)
     {
-    }
-
-    public override void QLateUpdate(QuantumGame game)
-    {
-    }
-
-    public override unsafe void QUpdate(QuantumGame game)
-    {
-        Frame frame = game.Frames.Predicted;
-        bool isBoss = frame.Global->HudBanner == HudBannerKind.Boss;
-
-        SetShown(root, isBoss);
-
-        if (isBoss == false)
-        {
-            _wasBoss = false;
-            _wasPaused = false;
-            _pendingBossWindowEntity = EntityRef.None;
+        if (shown == true)
             return;
-        }
 
+        _wasBoss = false;
+        _wasPaused = false;
+        _pendingBossWindowEntity = EntityRef.None;
+    }
+
+    protected override unsafe void OnActiveQUpdate(Frame frame)
+    {
         var bosses = frame.Filter<BossRuntimeState, Health>();
         if (bosses.Next(out EntityRef bossEntity, out BossRuntimeState bossRuntimeState, out Health health) == false)
             return;
@@ -255,14 +243,6 @@ public class BossWidget : QuantumGlobalMonoBehaviour
             return;
 
         slider.value = value;
-    }
-
-    private static void SetShown(GameObject go, bool shown)
-    {
-        if (go == null || go.activeSelf == shown)
-            return;
-
-        go.SetActive(shown);
     }
 
     private static void SetShown(Component component, bool shown)

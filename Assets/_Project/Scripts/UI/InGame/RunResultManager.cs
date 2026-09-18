@@ -122,7 +122,11 @@ public class RunResultManager : QuantumGlobalMonoBehaviour
     // exact lookup should be verified against a real networked (non-solo) session before trusting
     // it - if it ever mismatches, this silently falls back to the hero name rather than showing a
     // wrong player's nickname.
-    private static string ResolvePlayerLabel(PlayerRef playerRef, AssetRef<CharacterData> characterData)
+    //
+    // internal, not private - reused by TeamChallengeWidget for its own "[HeroName] activated a
+    // Rift Challenge" toast (see docs' Optional Team Challenge), the same "proper player/hero
+    // display name" this popup already resolves - no reason for a second, divergent implementation.
+    internal static string ResolvePlayerLabel(PlayerRef playerRef, AssetRef<CharacterData> characterData)
     {
         string heroName = "Hero";
 

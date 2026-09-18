@@ -302,6 +302,21 @@ namespace Quantum.Prototypes.Unity {
     }
   }
   [System.SerializableAttribute()]
+  public unsafe partial class CursedSurvivalOverridePrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.CursedSurvivalOverridePrototype> {
+    public Quantum.QuantumEntityPrototype Poi;
+    public FP PreviousCurrentHealth;
+    public QBoolean PreviousAccessoryDisabled;
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.CursedSurvivalOverridePrototype prototype);
+    public override Quantum.Prototypes.CursedSurvivalOverridePrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.CursedSurvivalOverridePrototype();
+      converter.Convert(this.Poi, out result.Poi);
+      converter.Convert(this.PreviousCurrentHealth, out result.PreviousCurrentHealth);
+      converter.Convert(this.PreviousAccessoryDisabled, out result.PreviousAccessoryDisabled);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
   public unsafe partial class DroppedAccessoryPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.DroppedAccessoryPrototype> {
     public Quantum.QuantumEntityPrototype Owner;
     public QBoolean Broken;
@@ -906,6 +921,39 @@ namespace Quantum.Prototypes.Unity {
       var result = new Quantum.Prototypes.TargetingLinkMarkPrototype();
       converter.Convert(this.MarkedBy, out result.MarkedBy);
       converter.Convert(this.Remaining, out result.Remaining);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
+  public unsafe partial class TeamChallengeParticipantPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.TeamChallengeParticipantPrototype> {
+    public Quantum.QuantumEntityPrototype Poi;
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.TeamChallengeParticipantPrototype prototype);
+    public override Quantum.Prototypes.TeamChallengeParticipantPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.TeamChallengeParticipantPrototype();
+      converter.Convert(this.Poi, out result.Poi);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
+  public unsafe partial class TeamChallengeReadyPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.TeamChallengeReadyPrototype> {
+    public Quantum.QuantumEntityPrototype Poi;
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.TeamChallengeReadyPrototype prototype);
+    public override Quantum.Prototypes.TeamChallengeReadyPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.TeamChallengeReadyPrototype();
+      converter.Convert(this.Poi, out result.Poi);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
+  public unsafe partial class TeamChallengeSpawnPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.TeamChallengeSpawnPrototype> {
+    public Quantum.QuantumEntityPrototype Poi;
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.TeamChallengeSpawnPrototype prototype);
+    public override Quantum.Prototypes.TeamChallengeSpawnPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.TeamChallengeSpawnPrototype();
+      converter.Convert(this.Poi, out result.Poi);
       ConvertUser(converter, ref result);
       return result;
     }

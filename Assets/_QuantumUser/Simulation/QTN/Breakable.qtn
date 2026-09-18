@@ -1,3 +1,12 @@
+// Fired by BreakableUtility.TryBreak the instant ANY Breakable flips to Broken (a barrel, a crate, a
+// breakable wall - no distinction), alongside the View-only BreakableBroken event - unlike that
+// event, this reaches simulation-side reactions (Quantum dispatches signals synchronously to every
+// ISignalOnDestructibleBroken system). See Scavenger Rush (docs/rift-mutations.md), which reacts to
+// any Breakable broken, not one specific prefab. owner is whoever dealt the breaking hit (or focused
+// it down - see BreakableFocusSystem), same attribution DamageUtility already threads through every
+// other kill/hit signal.
+signal OnDestructibleBroken(EntityRef entity, EntityRef owner);
+
 // A world-placed destructible prop (barrel/crate/breakable wall) that the player can shoot. Unlike
 // every other damageable non-enemy in this codebase (Mini Bomb/Decoy/Sentry, which f.Destroy the
 // instant Health reaches 0), a Breakable is NOT destroyed on death - it persists so its View can

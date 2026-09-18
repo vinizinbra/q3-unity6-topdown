@@ -1,4 +1,3 @@
-using QuantumUser.View.Util;
 using UnityEngine;
 
 namespace Quantum
@@ -21,7 +20,6 @@ namespace Quantum
     {
         private ParticleSystem[] _systems;
         private bool _stopping;
-        private float _stopTime;
 
         // TrailRenderer point ages run on scaled time, so this is Time.time, not unscaled.
         private float _trailLingerUntil;
@@ -32,7 +30,6 @@ namespace Quantum
                 return;
 
             _stopping = true;
-            _stopTime = Time.unscaledTime;
             transform.SetParent(null, worldPositionStays: true);
 
             _systems = GetComponentsInChildren<ParticleSystem>(includeInactive: true);
@@ -46,14 +43,6 @@ namespace Quantum
                 longestTrail = Mathf.Max(longestTrail, trail.time);
             }
             _trailLingerUntil = Time.time + longestTrail;
-
-            LogHelper.Log("ProjFlow", $"GracefulStop {name}: stop emitting, systems={_systems.Length} trailLinger={longestTrail:F2}s active={gameObject.activeInHierarchy} t={_stopTime:F3}", this);
-        }
-
-        private void OnDestroy()
-        {
-            if (_stopping == true)
-                LogHelper.Log("ProjFlow", $"GracefulStop {name}: destroyed after {Time.unscaledTime - _stopTime:F3}s", this);
         }
 
         private void Update()

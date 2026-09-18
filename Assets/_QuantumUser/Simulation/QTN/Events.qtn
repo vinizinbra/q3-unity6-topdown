@@ -30,6 +30,17 @@ event PlayerFired
     EntityRef Entity;
 }
 
+// Raised once, the instant a shot's wind-up begins (WeaponDataAsset.AnticipationTime > 0 only -
+// see WeaponSystem.Update) - never raised at all for a weapon with no anticipation configured, so
+// every already-authored weapon's View never sees this event and behaves exactly as before. Once
+// raised, a wind-up is never cancelled (not by releasing Fire, not by losing the aim target) - it
+// always resolves into a PlayerFired event once the wind-up completes, so there is deliberately no
+// corresponding "cancelled" event.
+event WeaponAnticipationStarted
+{
+    EntityRef Entity;
+}
+
 event WeaponReloaded
 {
     EntityRef Entity;
@@ -292,6 +303,13 @@ event ProjectileDestroyed
     FPVector3  Position;
     FPVector3  SpawnPosition;
     AssetRef<ProjectileDataAsset> ProjectileData;
+
+    // Mirrors Projectile.WeaponData's own comment - the firing weapon's asset, Invalid for anything
+    // not fired by a Weapon. Read by ProjectileGhostTrailManager (a shot with no view ever created,
+    // see that class's own comment) to tint its destroy effect the same way ProjectileVisualController
+    // already does for a shot that DID get a view - without this the event carried no way to resolve
+    // WeaponDataAsset.ProjectileVisuals at all, so a ghost-path impact always played untinted.
+    AssetRef<WeaponDataAsset> WeaponData;
 }
 
 // Fired by DirectHitData.ApplyHit on every contact the projectile actually SURVIVES - a Piercing
@@ -922,6 +940,43 @@ event TraversalChallengeCompleted
 event TraversalChallengeFailed
 {
     EntityRef Challenge;
+}
+
+// Fired by TeamChallengeUtility.TryReadyUp the instant the FIRST Raider Readies up for an
+// Optional Team Challenge (see TeamChallenge.qtn) - the Available->WaitingForTeam edge only, never
+// re-fired for a 2nd/3rd/4th Raider readying (the X/Y HUD counter handles that). Player is who
+// pressed it - TeamChallengeWidget uses this to tell the activator ("Waiting for other Raiders to
+// activate") apart from every other connected client ("[HeroName] activated a Rift Challenge").
+event TeamChallengeActivated
+{
+    EntityRef Poi;
+    EntityRef Player;
+}
+
+// Fired by TeamChallengeUtility.BeginChallengeActive the instant the countdown ends and the
+// objective actually begins (Starting->ChallengeActive) - View-only hook for the whole-team
+// "CHALLENGE STARTED" animated banner (TeamChallengeWidget), distinct from TeamChallengeActivated
+// above (which fires much earlier, on the very first Ready press).
+event TeamChallengeStarted
+{
+    EntityRef Poi;
+}
+
+// Fired by TeamChallengeUtility.End the instant a Team Challenge succeeds - View-only hook for the
+// whole-team "CHALLENGE COMPLETE" toast (TeamChallengeWidget). State is already RewardAvailable by
+// the time this fires.
+event TeamChallengeCompleted
+{
+    EntityRef Poi;
+}
+
+// Fired by TeamChallengeUtility.End the instant a Team Challenge fails (timeout, a Flawless Hunt
+// HP loss, or a Cursed Survival incapacitation) - View-only hook for the whole-team
+// "CHALLENGE FAILED" toast (TeamChallengeWidget). State is already Completed by the time this
+// fires - one attempt only, no retry.
+event TeamChallengeFailed
+{
+    EntityRef Poi;
 }
 
 // Fired by PlayerLifeStateUtility.EnterDowned the instant a player's Health hits 0 (see
