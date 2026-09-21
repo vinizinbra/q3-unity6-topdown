@@ -139,10 +139,10 @@ TextureImporter:
       name: MaxLobby (2)_0
       rect:
         serializedVersion: 2
-        x: 311
-        y: 1078
-        width: 541
-        height: 324
+        x: 318
+        y: 1090
+        width: 496
+        height: 312
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}

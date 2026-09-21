@@ -156,8 +156,24 @@ MonoBehaviour:
   subtitle: {fileID: 838375100}
   timerLabel: {fileID: 0}
   audioSource: {fileID: 38395501}
+  faceImage: {fileID: 1346401146}
+  showSpeakerName: 1
+  speakers:
+  - Speaker: 1
+    DisplayName: Max
+    NameColor: {r: 1, g: 0.6, b: 0.25, a: 1}
+    Face: {fileID: 1362212329, guid: 7d02a15dca2e248b1b3ce872710b7b0c, type: 3}
+  - Speaker: 2
+    DisplayName: Pixie
+    NameColor: {r: 1, g: 0.45, b: 0.72, a: 1}
+    Face: {fileID: -873169, guid: e0b50ea9841b34c24b8097347136e505, type: 3}
+  - Speaker: 3
+    DisplayName: Brute
+    NameColor: {r: 0.35, g: 0.65, b: 1, a: 1}
+    Face: {fileID: -263415970, guid: 70e0c33dd75e14260ac5969139c6e271, type: 3}
   steps:
   - Name: Intro-01-GuysTheRiftHeartWasDestroyed
+    Speaker: 1
     Sprite: {fileID: 21300000, guid: 22b8290cf64284e889dba4be4f8432dd, type: 3}
     Transition: 0
     TransitionDuration: 0.4
@@ -171,14 +187,15 @@ MonoBehaviour:
     TrimEnd: 1.5
     estimatedSilenceEnd: 1.5579818
     suggestedTrimEnd: 1.4579818
-    Subtitle: 'MAX: Guys! The Rift Heart was destroyed! \nIts shards are scattered
-      all over the galaxy!'
+    Subtitle: Guys! The Rift Heart was destroyed! \nIts shards are scattered all
+      over the galaxy!
     ExtraTime: 0
     StartDelay: 0
     MergeWithPreviousAudio: 0
     MergeOverlap: 1
     Duration: 4.3
   - Name: Intro-02-RiftWhat
+    Speaker: 3
     Sprite: {fileID: 21300000, guid: b44e2b73a547a4afeb30007309ac1ae4, type: 3}
     Transition: 0
     TransitionDuration: 0.4
@@ -192,13 +209,14 @@ MonoBehaviour:
     TrimEnd: 0.75
     estimatedSilenceEnd: 0.8514739
     suggestedTrimEnd: 0.7514739
-    Subtitle: 'BRUTE: ...Rift what?'
+    Subtitle: ...Rift what?
     ExtraTime: 0
     StartDelay: 0
     MergeWithPreviousAudio: 0
     MergeOverlap: 1
     Duration: 1.49
   - Name: Intro-03-OkayLetMeExplain
+    Speaker: 1
     Sprite: {fileID: 21300000, guid: a3f919f09e763468ea6b93ae55221688, type: 3}
     Transition: 1
     TransitionDuration: 0.2
@@ -212,13 +230,14 @@ MonoBehaviour:
     TrimEnd: 0
     estimatedSilenceEnd: 0.16494331
     suggestedTrimEnd: 0.064943306
-    Subtitle: 'MAX: ...Okay Let me explain...'
+    Subtitle: ...Okay Let me explain...
     ExtraTime: 0
     StartDelay: 0
     MergeWithPreviousAudio: 0
     MergeOverlap: 1
     Duration: 2
   - Name: Intro-04-ThisIsTheRiftHeart
+    Speaker: 1
     Sprite: {fileID: 21300000, guid: 1a56e630321954dada4e83a310980d8d, type: 3}
     Transition: 3
     TransitionDuration: 0.1
@@ -232,13 +251,14 @@ MonoBehaviour:
     TrimEnd: 0
     estimatedSilenceEnd: 0.21328798
     suggestedTrimEnd: 0.11328798
-    Subtitle: 'MAX: This is the rift heart, it kept all worlds connected'
+    Subtitle: This is the rift heart, it kept all worlds connected
     ExtraTime: 0
     StartDelay: 0
     MergeWithPreviousAudio: 0
     MergeOverlap: 1
     Duration: 3.7
   - Name: Intro-05-ThenSomeIdiotBrokeIt
+    Speaker: 1
     Sprite: {fileID: 21300000, guid: 7ff4ed5795bcf47f199724ada036331e, type: 3}
     Transition: 3
     TransitionDuration: 0.1
@@ -252,13 +272,14 @@ MonoBehaviour:
     TrimEnd: 0.2
     estimatedSilenceEnd: 0.293356
     suggestedTrimEnd: 0.193356
-    Subtitle: 'MAX: Then Some idiot broke it'
+    Subtitle: Then Some idiot broke it
     ExtraTime: 0
     StartDelay: 0
     MergeWithPreviousAudio: 0
     MergeOverlap: 1
     Duration: 1.64
   - Name: Intro-06-AndItsShardsChangedEverything
+    Speaker: 1
     Sprite: {fileID: 21300000, guid: 6d1ccfd98c1e74463b9cd06671bca9f8, type: 3}
     Transition: 3
     TransitionDuration: 0.1
@@ -272,13 +293,14 @@ MonoBehaviour:
     TrimEnd: 0.05
     estimatedSilenceEnd: 0.15793651
     suggestedTrimEnd: 0.057936512
-    Subtitle: 'MAX: And its shards changed everything they touch'
+    Subtitle: And its shards changed everything they touch
     ExtraTime: 0
     StartDelay: 0
     MergeWithPreviousAudio: 0
     MergeOverlap: 1
     Duration: 2.3700001
   - Name: Intro-07-ButIfYouAreStrongEnough
+    Speaker: 1
     Sprite: {fileID: 21300000, guid: a1b98a2de62b0471899a4921b50bc916, type: 3}
     Transition: 3
     TransitionDuration: 0.1
@@ -292,13 +314,14 @@ MonoBehaviour:
     TrimEnd: 0
     estimatedSilenceEnd: 0.07029478
     suggestedTrimEnd: 0
-    Subtitle: 'MAX: But if you are strong enough to control one'
+    Subtitle: But if you are strong enough to control one
     ExtraTime: 0
     StartDelay: 0
     MergeWithPreviousAudio: 0
     MergeOverlap: 1
     Duration: 1.92
   - Name: Intro-08-YouGetStronger
+    Speaker: 1
     Sprite: {fileID: 21300000, guid: a1b98a2de62b0471899a4921b50bc916, type: 3}
     Transition: 0
     TransitionDuration: 0.1
@@ -312,13 +335,14 @@ MonoBehaviour:
     TrimEnd: 0
     estimatedSilenceEnd: 0.123832196
     suggestedTrimEnd: 0.023832195
-    Subtitle: 'MAX: YOU GET STRONGER'
+    Subtitle: YOU GET STRONGER
     ExtraTime: 0
     StartDelay: 0
     MergeWithPreviousAudio: 0
     MergeOverlap: 1
     Duration: 1.06
   - Name: Intro-09-AndNowTheWholeGalaxyWantsThem
+    Speaker: 1
     Sprite: {fileID: 21300000, guid: 7c889c9ddd4504ecf8130ad7bc9296a6, type: 3}
     Transition: 3
     TransitionDuration: 0.1
@@ -332,13 +356,14 @@ MonoBehaviour:
     TrimEnd: 3.2
     estimatedSilenceEnd: 3.3202722
     suggestedTrimEnd: 3.2202723
-    Subtitle: 'MAX: and now the whole galaxy wants them'
+    Subtitle: and now the whole galaxy wants them
     ExtraTime: 0
     StartDelay: 0
     MergeWithPreviousAudio: 0
     MergeOverlap: 1
     Duration: 2.634898
   - Name: Intro-10-SoWeGetThereFirst
+    Speaker: 1
     Sprite: {fileID: 21300000, guid: fbd839ee1494d40a8a33ae5c2a8dfe70, type: 3}
     Transition: 3
     TransitionDuration: 0.1
@@ -352,13 +377,14 @@ MonoBehaviour:
     TrimEnd: 1.1
     estimatedSilenceEnd: 1.2150114
     suggestedTrimEnd: 1.1150113
-    Subtitle: 'MAX: So we get there first!'
+    Subtitle: So we get there first!
     ExtraTime: 0
     StartDelay: 0
     MergeWithPreviousAudio: 0
     MergeOverlap: 1
     Duration: 1.66
   - Name: Intro-11-AndSaveTheGalaxy
+    Speaker: 3
     Sprite: {fileID: 21300000, guid: 402c3c585abfe41e88ba09b60289a795, type: 3}
     Transition: 0
     TransitionDuration: 0.4
@@ -372,13 +398,14 @@ MonoBehaviour:
     TrimEnd: 1.35
     estimatedSilenceEnd: 1.384059
     suggestedTrimEnd: 1.2840589
-    Subtitle: 'BRUTE: And SAVE THE GALAXY!'
+    Subtitle: And SAVE THE GALAXY!
     ExtraTime: 0
     StartDelay: 0
     MergeWithPreviousAudio: 0
     MergeOverlap: 1
     Duration: 2.0500002
   - Name: Intro-12-WeKeepThem
+    Speaker: 1
     Sprite: {fileID: 21300000, guid: a3f919f09e763468ea6b93ae55221688, type: 3}
     Transition: 0
     TransitionDuration: 0.4
@@ -392,13 +419,14 @@ MonoBehaviour:
     TrimEnd: 0
     estimatedSilenceEnd: 0.17637189
     suggestedTrimEnd: 0.076371886
-    Subtitle: 'MAX: We keep them'
+    Subtitle: We keep them
     ExtraTime: 0
     StartDelay: 0
     MergeWithPreviousAudio: 0
     MergeOverlap: 1
     Duration: 1.14
   - Name: Intro-13-WeTakeTheShards
+    Speaker: 1
     Sprite: {fileID: 21300000, guid: 92909c662ef1f46edbed6e396364f909, type: 3}
     Transition: 0
     TransitionDuration: 0.1
@@ -412,13 +440,14 @@ MonoBehaviour:
     TrimEnd: 0
     estimatedSilenceEnd: 0.30968255
     suggestedTrimEnd: 0.20968255
-    Subtitle: 'MAX: We take the shards... Get Stronger... GET RICH!'
+    Subtitle: We take the shards... Get Stronger... GET RICH!
     ExtraTime: 0
     StartDelay: 0
     MergeWithPreviousAudio: 0
     MergeOverlap: 1
     Duration: 3.34
   - Name: Intro-14-AndIGetToUseMyNewBombs
+    Speaker: 2
     Sprite: {fileID: 21300000, guid: 4a8ef93aaadff4f6cbdafed6783050ec, type: 3}
     Transition: 0
     TransitionDuration: 0.4
@@ -432,13 +461,14 @@ MonoBehaviour:
     TrimEnd: 0.1
     estimatedSilenceEnd: 0.1352381
     suggestedTrimEnd: 0.035238095
-    Subtitle: 'PIXIE: And I get to use my new bombs???'
+    Subtitle: And I get to use my new bombs???
     ExtraTime: 0
     StartDelay: 0
     MergeWithPreviousAudio: 0
     MergeOverlap: 1
     Duration: 1.86
   - Name: Intro-15-ObviouslyWhoIsReady
+    Speaker: 1
     Sprite: {fileID: 21300000, guid: e6a1fbe7aea06412ea53ccc7f5593e35, type: 3}
     Transition: 0
     TransitionDuration: 0.1
@@ -452,13 +482,14 @@ MonoBehaviour:
     TrimEnd: 0
     estimatedSilenceEnd: 0.065986395
     suggestedTrimEnd: 0
-    Subtitle: 'MAX: Obviously! Who is ready?'
+    Subtitle: Obviously! Who is ready?
     ExtraTime: 0
     StartDelay: 0
     MergeWithPreviousAudio: 0
     MergeOverlap: 1
     Duration: 1.72
   - Name: Intro-16-LetsRaid
+    Speaker: 3
     Sprite: {fileID: 21300000, guid: add0bb1583ae34ff5840b68207ef95ba, type: 3}
     Transition: 0
     TransitionDuration: 0.2
@@ -472,22 +503,23 @@ MonoBehaviour:
     TrimEnd: 0
     estimatedSilenceEnd: 0.10147392
     suggestedTrimEnd: 0.0014739186
-    Subtitle: 'ALL: LETS RAID!'
+    Subtitle: LETS RAID!
     ExtraTime: 0
     StartDelay: 0
     MergeWithPreviousAudio: 0
     MergeOverlap: 0
-    Duration: 1.4442858
+    Duration: 0.94428575
   fallbackDuration: 2
   initialDelay: 0.5
   allowSkip: 1
   skipButton: {fileID: 733015833}
   replayStepsBack: 2
-  totalDuration: 36.829185
+  totalDuration: 36.329185
   fadeImage: {fileID: 812626898}
   fadeColor: {r: 1, g: 1, b: 1, a: 1}
   fadeInDuration: 1
   fadeDuration: 1
+  fadeOutLeadTime: 0.5
   loadNextScene: 1
   nextSceneName: MenuScene
   onFinished:
@@ -522,12 +554,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.CanvasScaler
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 1
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -569,9 +601,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 691969185}
-  - {fileID: 1330496270}
-  - {fileID: 764065941}
-  - {fileID: 733015836}
+  - {fileID: 1796378852}
   - {fileID: 812626900}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -677,6 +707,95 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!1 &565802397
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 565802398}
+  - component: {fileID: 565802401}
+  - component: {fileID: 565802400}
+  - component: {fileID: 565802399}
+  m_Layer: 5
+  m_Name: Baloon (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &565802398
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 565802397}
+  m_LocalRotation: {x: 0, y: 0, z: 0.01745245, w: 0.99984777}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1796378852}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 2}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchoredPosition: {x: 0, y: 50}
+  m_SizeDelta: {x: 1000, y: 150}
+  m_Pivot: {x: 0.5, y: 0}
+--- !u!114 &565802399
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 565802397}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31a19414c41e5ae4aae2af33fee712f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Mask
+  m_ShowMaskGraphic: 1
+--- !u!114 &565802400
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 565802397}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: -1970440726, guid: 228419ea5721c4a0eb75647b083dc9e2, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 0.2
+--- !u!222 &565802401
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 565802397}
+  m_CullTransparentMesh: 1
 --- !u!1 &691969184
 GameObject:
   m_ObjectHideFlags: 0
@@ -689,7 +808,7 @@ GameObject:
   - component: {fileID: 691969187}
   - component: {fileID: 691969186}
   m_Layer: 5
-  m_Name: Intro (2)
+  m_Name: BlackBg
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -860,13 +979,13 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 733015832}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1301304905}
-  m_Father: {fileID: 38395500}
+  m_Father: {fileID: 1796378852}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
@@ -885,7 +1004,7 @@ GameObject:
   - component: {fileID: 764065943}
   - component: {fileID: 764065942}
   m_Layer: 5
-  m_Name: Image
+  m_Name: Baloon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -898,18 +1017,19 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 764065940}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 838375099}
-  m_Father: {fileID: 38395500}
+  - {fileID: 1346401144}
+  m_Father: {fileID: 1796378852}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 100}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchoredPosition: {x: 0, y: 50}
+  m_SizeDelta: {x: 977.85, y: 150}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &764065942
 MonoBehaviour:
@@ -931,8 +1051,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -1013606453, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
-  m_Type: 1
+  m_Sprite: {fileID: -1970440726, guid: 228419ea5721c4a0eb75647b083dc9e2, type: 3}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -940,7 +1060,7 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
+  m_PixelsPerUnitMultiplier: 0.5
 --- !u!222 &764065943
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1019,10 +1139,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 38395500}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1280, y: 720}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &817513459
 GameObject:
@@ -1391,12 +1511,12 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1330496269}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 38395500}
+  m_Father: {fileID: 1796378852}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -1440,6 +1560,250 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1330496269}
+  m_CullTransparentMesh: 1
+--- !u!1 &1346401143
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1346401144}
+  - component: {fileID: 1346401145}
+  - component: {fileID: 1346401146}
+  m_Layer: 5
+  m_Name: Face
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1346401144
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1346401143}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 764065941}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0.5}
+  m_AnchorMax: {x: 0, y: 0.5}
+  m_AnchoredPosition: {x: -185.32, y: 35}
+  m_SizeDelta: {x: 350, y: 300}
+  m_Pivot: {x: 0, y: 0.5}
+--- !u!222 &1346401145
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1346401143}
+  m_CullTransparentMesh: 1
+--- !u!114 &1346401146
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1346401143}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 1362212329, guid: 7d02a15dca2e248b1b3ce872710b7b0c, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 1
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!1 &1556256725
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1556256726}
+  - component: {fileID: 1556256729}
+  - component: {fileID: 1556256728}
+  - component: {fileID: 1556256727}
+  m_Layer: 5
+  m_Name: Baloon (2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1556256726
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1556256725}
+  m_LocalRotation: {x: 0, y: 0, z: 0.008726558, w: 0.999962}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1796378852}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 1}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchoredPosition: {x: -1.7451782, y: 114.7}
+  m_SizeDelta: {x: 1020, y: 200}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1556256727
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1556256725}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31a19414c41e5ae4aae2af33fee712f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Mask
+  m_ShowMaskGraphic: 1
+--- !u!114 &1556256728
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1556256725}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: -1970440726, guid: 228419ea5721c4a0eb75647b083dc9e2, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 0.2
+--- !u!222 &1556256729
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1556256725}
+  m_CullTransparentMesh: 1
+--- !u!1 &1796378851
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1796378852}
+  - component: {fileID: 1796378854}
+  - component: {fileID: 1796378853}
+  m_Layer: 5
+  m_Name: SafeArea
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1796378852
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1796378851}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1330496270}
+  - {fileID: 1556256726}
+  - {fileID: 565802398}
+  - {fileID: 764065941}
+  - {fileID: 733015836}
+  m_Father: {fileID: 38395500}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1796378853
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1796378851}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1796378854
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1796378851}
   m_CullTransparentMesh: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

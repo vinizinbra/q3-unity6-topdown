@@ -24,11 +24,37 @@ public class IntroSequence : MonoBehaviour
     // opposite side.
     public enum ImageTransition { Cut, Fade, SlideFromLeft, SlideFromRight, SlideFromTop, SlideFromBottom }
 
+    // Who says a step's line. Drives the coloured name tag in the subtitle and the face shown beside
+    // it. None = narration/no tag and no face; All = a group line (tag only unless it has a face).
+    public enum IntroSpeaker { None, Max, Pixie, Brute, All }
+
+    // One speaker's look: how their name reads in the subtitle and which face is shown.
+    [Serializable]
+    public class SpeakerProfile
+    {
+        public IntroSpeaker Speaker;
+        [Tooltip("Shown in the name tag, e.g. 'Max' -> [Max]. Empty = the enum name.")]
+        public string DisplayName;
+        [Tooltip("Colour of the name tag in the subtitle (only the tag is coloured, not the line).")]
+        public Color NameColor = Color.white;
+        [Tooltip("Face shown in the Face Image while this speaker talks. Empty = the Face Image is hidden for them.")]
+        public Sprite Face;
+
+        public SpeakerProfile(IntroSpeaker speaker, string displayName, Color nameColor)
+        {
+            Speaker = speaker;
+            DisplayName = displayName;
+            NameColor = nameColor;
+        }
+    }
+
     [Serializable]
     public class Step
     {
         [Tooltip("Editor-only label so the list reads well in the Inspector.")]
         public string Name;
+        [Tooltip("Who says this line. Adds the coloured [Name] tag to the subtitle and shows their face. Write the subtitle WITHOUT the name - the tag is added automatically.")]
+        public IntroSpeaker Speaker;
         [Tooltip("Sprite shown while this step plays. Empty = keep the previous step's sprite.")]
         public Sprite Sprite;
         [Tooltip("How this step's Sprite replaces the previous one. Ignored when the step has no Sprite.")]
@@ -83,6 +109,14 @@ public class IntroSequence : MonoBehaviour
     private TMP_Text timerLabel;
     [SerializeField, Tooltip("Plays each step's clip. Add one to this GameObject if left empty.")]
     private AudioSource audioSource;
+
+    [Header("Speakers")]
+    [SerializeField, Tooltip("Optional. Shows the current speaker's face (from the profile below). Hidden while the speaker has no face. Put it next to the subtitle - the whole GameObject is toggled, so a frame or background under it hides with it.")]
+    private Image faceImage;
+    [SerializeField, Tooltip("Prefix the subtitle with the speaker's coloured [Name] tag. Turn off to show only the line (the face still shows).")]
+    private bool showSpeakerName = true;
+    [SerializeField, Tooltip("Name, colour and face per speaker. Steps pick one with their Speaker field.")]
+    private SpeakerProfile[] speakers = DefaultSpeakers();
 
     [Header("Steps")]
     [SerializeField] private Step[] steps;
@@ -297,6 +331,64 @@ public class IntroSequence : MonoBehaviour
         return steps != null && index == steps.Length - 1;
     }
 
+    // Orangeish Max, pinkish Pixie, blueish Brute - the defaults a fresh component (or one saved
+    // before this field existed) starts with; every value is editable in the Inspector.
+    private static SpeakerProfile[] DefaultSpeakers()
+    {
+        return new[]
+        {
+            new SpeakerProfile(IntroSpeaker.Max, "Max", new Color(1f, 0.60f, 0.25f)),
+            new SpeakerProfile(IntroSpeaker.Pixie, "Pixie", new Color(1f, 0.45f, 0.72f)),
+            new SpeakerProfile(IntroSpeaker.Brute, "Brute", new Color(0.35f, 0.65f, 1f)),
+            new SpeakerProfile(IntroSpeaker.All, "All", Color.white),
+        };
+    }
+
+    private SpeakerProfile FindSpeaker(IntroSpeaker speaker)
+    {
+        if (speaker == IntroSpeaker.None || speakers == null)
+            return null;
+
+        for (int i = 0; i < speakers.Length; i++)
+        {
+            if (speakers[i] != null && speakers[i].Speaker == speaker)
+                return speakers[i];
+        }
+
+        return null;
+    }
+
+    // "<color=#FF9A40>[Max]</color> line". Only the tag is coloured. No tag on an empty line, for a
+    // step with no speaker/profile, or with Show Speaker Name off.
+    private string FormatSubtitle(Step step)
+    {
+        string text = step.Subtitle ?? string.Empty;
+        if (text.Length == 0 || showSpeakerName == false)
+            return text;
+
+        SpeakerProfile profile = FindSpeaker(step.Speaker);
+        if (profile == null)
+            return text;
+
+        string name = string.IsNullOrEmpty(profile.DisplayName) ? profile.Speaker.ToString() : profile.DisplayName;
+        return $"<color=#{ColorUtility.ToHtmlStringRGB(profile.NameColor)}>[{name}]</color> {text}";
+    }
+
+    // Shows the speaker's face, or hides the whole Face Image object when there isn't one.
+    private void ApplyFace(IntroSpeaker speaker)
+    {
+        if (faceImage == null)
+            return;
+
+        SpeakerProfile profile = FindSpeaker(speaker);
+        Sprite face = profile != null ? profile.Face : null;
+
+        if (face != null)
+            faceImage.sprite = face;
+
+        faceImage.gameObject.SetActive(face != null);
+    }
+
     private void OnDestroy()
     {
         if (skipButton != null)
@@ -321,6 +413,8 @@ public class IntroSequence : MonoBehaviour
 
         if (subtitle != null)
             subtitle.text = string.Empty;
+
+        ApplyFace(IntroSpeaker.None);
 
         if (image != null)
         {
@@ -456,6 +550,8 @@ public class IntroSequence : MonoBehaviour
         if (subtitle != null)
             subtitle.text = string.Empty;
 
+        ApplyFace(IntroSpeaker.None);
+
         SetFadeAlpha(0f);
 
         if (image == null)
@@ -521,6 +617,8 @@ public class IntroSequence : MonoBehaviour
         if (subtitle != null)
             subtitle.text = string.Empty;
 
+        ApplyFace(IntroSpeaker.None);
+
         // Nothing left to skip past this point - the fade-out is short and plays out in full.
         SetSkipButtonActive(false);
 
@@ -551,7 +649,9 @@ public class IntroSequence : MonoBehaviour
         BeginImageEffects(index, step);
 
         if (subtitle != null)
-            subtitle.text = step.Subtitle ?? string.Empty;
+            subtitle.text = FormatSubtitle(step);
+
+        ApplyFace(step.Speaker);
 
         StepStarted?.Invoke(index, step);
 
