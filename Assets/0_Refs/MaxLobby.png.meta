@@ -139,10 +139,10 @@ TextureImporter:
       name: MaxLobby (2)_0
       rect:
         serializedVersion: 2
-        x: 318
-        y: 1090
-        width: 496
-        height: 312
+        x: 386
+        y: 1012
+        width: 412
+        height: 390
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -162,9 +162,9 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 249
-        y: 636
-        width: 621
-        height: 450
+        y: 551
+        width: 557
+        height: 496
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -183,10 +183,10 @@ TextureImporter:
       name: MaxLobby (2)_2
       rect:
         serializedVersion: 2
-        x: 181
-        y: 0
-        width: 788
-        height: 646
+        x: 214
+        y: 25
+        width: 674
+        height: 526
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
