@@ -18,24 +18,52 @@ MonoBehaviour:
       Value: 466326594858510456
   Type: 1
   DisplayName: FLAWLESS HUNT
-  Description: Kill 15 enemies without any Raider losing HP.
+  Description: Kill 30 enemies without any Raider losing HP.
   Duration:
     RawValue: 0
-  KillTarget: 15
+  KillTarget: 30
   BudgetPerPulse:
-    RawValue: 2621440
+    RawValue: 393216
   PulseInterval:
-    RawValue: 262144
+    RawValue: 32768
   TargetPressure:
-    RawValue: 1638400
-  MaxAliveEnemies: 10
+    RawValue: 1441792
+  MaxAliveEnemies: 22
   AllowedGroups:
   - Id:
       Value: 292572693417129341
-  AllowedEnemies: []
+  - Id:
+      Value: 322880711141323354
+  - Id:
+      Value: 354292532298879105
+  - Id:
+      Value: 408930992928326011
+  AllowedEnemies:
+  - EnemyData:
+      Id:
+        Value: 386887899629791929
+    Faction: 0
+    Weight:
+      RawValue: 196608
+    MinimumSurvivalTime:
+      RawValue: 0
+    MaximumSurvivalTime:
+      RawValue: 0
+    MaxConcurrent: 0
+  - EnemyData:
+      Id:
+        Value: 411749050168152871
+    Faction: 0
+    Weight:
+      RawValue: 131072
+    MinimumSurvivalTime:
+      RawValue: 0
+    MaximumSurvivalTime:
+      RawValue: 0
+    MaxConcurrent: 0
   Rules:
   - Icon: {fileID: -103353411, guid: d9bb3bd610ed442fe983639e2c3f95fb, type: 3}
-    Text: 15
+    Text: '{0}'
     ScaleTextWithKillTarget: 1
   - Icon: {fileID: -6995720472750356834, guid: 22d281b779f8c49dba31479e82c1cb37, type: 3}
     Text: 100%

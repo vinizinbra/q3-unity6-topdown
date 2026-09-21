@@ -255,6 +255,31 @@ this index carries - see the root `CLAUDE.md`'s codegen gotcha):
 
 Not yet manually verified end-to-end in-Editor.
 
+## Encounter density tuning
+
+The challenge encounter is paced by `CombatDirectorUtility.TryPulse`, so refill speed is set by
+three `ChallengeDefinition` fields, not by any challenge-specific code:
+
+- `PulseInterval` - the worst-case wait before the next purchase after a kill. It was 3-4s, which
+  read as "kill everything, then stand around". Now **0.5s** on all three; `BudgetPerPulse` was
+  scaled down to match (~12-16 budget/s), so supply still comfortably exceeds the kill rate.
+- `MaxAliveEnemies` vs. group size - `SwarmRush` is 8 enemies, so a cap of 10-15 only ever fit ONE
+  group at a time and it emptied completely before the next could be bought. Caps are now 32 (Kill
+  Rush) / 22 (Flawless Hunt) / 18 (Cursed Survival).
+- `AllowedEnemies` - each definition now also lists a lone `Swarm` (cost 1), so the Director can
+  top up one enemy at a time instead of waiting to afford a whole group.
+- **Enemy mix** - every definition now mixes swarm and ranged: groups `SwarmRush`,
+  `RangedSkirmish` (3 Gunner + Sniper) and `C1DoubleGunner`, plus a Turret+Swarm pack
+  (`I2-R4B-SwarmTurretPack` for Kill Rush/Cursed, `TurretSwarmPack` for Flawless Hunt), and lone
+  `Swarm` + `Gunner` in `AllowedEnemies`. Kill Rush keeps `C1MeleePair`; Cursed Survival keeps its
+  original `C1Gunline`/`C1MeleePair`/`FullAssault`. Group weights live on the group assets, so
+  shifting the ratio per challenge means listing a group twice (or editing the `AllowedEnemies` weight).
+
+Kill targets were raised (Kill Rush 20 -> 40 in 30s, Flawless Hunt 15 -> 30). Numbers are decisive
+placeholders - re-tune after a played run. Rule rows with `ScaleTextWithKillTarget` are a
+`string.Format` template and must use `{0}` (they previously held a hard-coded number, so the
+prompt never reflected the real co-op-scaled target).
+
 ## Known simplifications
 
 - All of a `ChallengeDefinition`'s `SpawnGroups` spawn together, all at once, at `ChallengeActive`

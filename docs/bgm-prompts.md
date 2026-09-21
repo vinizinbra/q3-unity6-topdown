@@ -198,8 +198,9 @@ add them to that asset.
 
 Both are overlay states on top of the combat phase ([optional-team-challenge.md](optional-team-challenge.md),
 [traversal-challenge.md](traversal-challenge.md)), and `MusicDirector` gives each its own track:
-`GameState.TeamChallenge` (from the Starting countdown until the challenge ends) plays
-`teamChallengeMusic`; `GameState.TraversalChallenge` (while a Traversal Challenge is Active) plays
+`GameState.TeamChallenge` plays `teamChallengeMusic`, but only once the challenge is truly active
+(`Global.ActiveTeamChallengeCount > 0`, i.e. after the 3-2-1 countdown and the enemy wipe - the
+Starting countdown keeps the underlying phase's music); `GameState.TraversalChallenge` (while a Traversal Challenge is Active) plays
 `traversalChallengeMusic`. If a slot is left empty it falls back to the music the underlying phase
 would play (`CombatPhaseState`, so Survival/Boss/Breathing-when-secured), never silence. When the
 overlay ends the director crossfades back to that phase's track.

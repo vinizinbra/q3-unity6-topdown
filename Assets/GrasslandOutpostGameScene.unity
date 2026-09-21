@@ -29900,7 +29900,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 145, y: -30}
-  m_SizeDelta: {x: 0, y: 80}
+  m_SizeDelta: {x: 58.18, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &415895276
 MonoBehaviour:
@@ -33800,11 +33800,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 22434980, guid: 219488329a9fc36498c8e424075f5a1c, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 400
+      value: 300
       objectReference: {fileID: 0}
     - target: {fileID: 22434980, guid: 219488329a9fc36498c8e424075f5a1c, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 400
+      value: 300
       objectReference: {fileID: 0}
     - target: {fileID: 22434980, guid: 219488329a9fc36498c8e424075f5a1c, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -48166,7 +48166,7 @@ MonoBehaviour:
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: -500}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -110179,6 +110179,8 @@ MonoBehaviour:
   survivalMusic: {fileID: 11400000, guid: 19833b29a2b234044b553ebb14978a06, type: 2}
   breathingMusic: {fileID: 11400000, guid: 4b43a293351a144fc86a9922129d4d45, type: 2}
   bossMusic: {fileID: 11400000, guid: c21e4ea8cee64ed8821ea0df9e0ac0ce, type: 2}
+  teamChallengeMusic: {fileID: 11400000, guid: eef9f64b8a80747c991479facfd271f4, type: 2}
+  traversalChallengeMusic: {fileID: 11400000, guid: cd97ea944b3404995b47d099ecb69904, type: 2}
   crossfadeDuration: 2
   trackGap: {x: 1.5, y: 3}
 --- !u!114 &1373663330
@@ -125799,7 +125801,7 @@ MonoBehaviour:
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: -500}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -129883,7 +129885,7 @@ MonoBehaviour:
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: -500}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -168003,7 +168005,7 @@ MonoBehaviour:
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: -500}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:

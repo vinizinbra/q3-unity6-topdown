@@ -42,7 +42,7 @@ public class MusicDirector : QuantumGlobalMonoBehaviour
     [SerializeField, SoundDataPicker, Tooltip("Boss encounter music. Falls back to survivalMusic if left empty, so a boss fight is never silent just because this wasn't authored.")]
     private SoundData bossMusic;
 
-    [SerializeField, SoundDataPicker, Tooltip("Optional Team Challenge music (GameState.TeamChallenge - from the moment the Starting countdown begins until the challenge ends). Falls back to whatever the underlying phase would play (usually survivalMusic) if left empty, so the challenge is never silent just because this wasn't authored.")]
+    [SerializeField, SoundDataPicker, Tooltip("Optional Team Challenge music. Starts only once the challenge is truly active (after the 3-2-1 countdown and the enemy wipe), not during the Starting countdown, and lasts until the challenge ends. Falls back to whatever the underlying phase would play (usually survivalMusic) if left empty, so the challenge is never silent just because this wasn't authored.")]
     private SoundData teamChallengeMusic;
 
     [SerializeField, SoundDataPicker, Tooltip("Traversal Challenge music (GameState.TraversalChallenge - while any Traversal Challenge is Active). Falls back to whatever the underlying phase would play if left empty.")]
@@ -151,7 +151,13 @@ public class MusicDirector : QuantumGlobalMonoBehaviour
                 return ResolveCombatPhaseTrack(frame, frame.Global->CurrentState);
 
             case GameState.TeamChallenge:
-                return teamChallengeMusic != null ? teamChallengeMusic : ResolveCombatPhaseTrack(frame, frame.Global->CombatPhaseState);
+                // GameState.TeamChallenge already begins at the Starting countdown, but the song waits
+                // for ActiveTeamChallengeCount > 0, which only increments at ChallengeActive - i.e.
+                // after the 3-2-1 and the wipe of every leftover enemy. Until then the underlying
+                // phase's music keeps playing.
+                return teamChallengeMusic != null && frame.Global->ActiveTeamChallengeCount > 0
+                    ? teamChallengeMusic
+                    : ResolveCombatPhaseTrack(frame, frame.Global->CombatPhaseState);
 
             case GameState.TraversalChallenge:
                 return traversalChallengeMusic != null ? traversalChallengeMusic : ResolveCombatPhaseTrack(frame, frame.Global->CombatPhaseState);

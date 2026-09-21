@@ -19709,7 +19709,7 @@ MonoBehaviour:
   initialized: 0
   executeOnlyOnLocal: 0
   isLocal: 0
-  promptTitle: TRAVERSAL CHALLENGE
+  promptTitle: PLATFORM CHALLENGE
   promptActiveDescription: Beat the course. Claim the prize
   promptPhaseUnavailableDescription: COME BACK ON BREAK
   promptAlreadyUsedDescription: ALREADY USED

@@ -23,22 +23,50 @@ MonoBehaviour:
     RawValue: 1310720
   KillTarget: 0
   BudgetPerPulse:
-    RawValue: 3276800
+    RawValue: 458752
   PulseInterval:
-    RawValue: 65536
+    RawValue: 32768
   TargetPressure:
-    RawValue: 1966080
-  MaxAliveEnemies: 12
+    RawValue: 2359296
+  MaxAliveEnemies: 18
   AllowedGroups:
   - Id:
       Value: 457814836202198574
   - Id:
-      Value: 497538020021829942
+      Value: 292572693417129341
+  - Id:
+      Value: 322880711141323354
+  - Id:
+      Value: 354292532298879105
+  - Id:
+      Value: 479314598145817666
   - Id:
       Value: 497538020021829942
   - Id:
       Value: 527628414525386623
-  AllowedEnemies: []
+  AllowedEnemies:
+  - EnemyData:
+      Id:
+        Value: 386887899629791929
+    Faction: 0
+    Weight:
+      RawValue: 131072
+    MinimumSurvivalTime:
+      RawValue: 0
+    MaximumSurvivalTime:
+      RawValue: 0
+    MaxConcurrent: 0
+  - EnemyData:
+      Id:
+        Value: 411749050168152871
+    Faction: 0
+    Weight:
+      RawValue: 131072
+    MinimumSurvivalTime:
+      RawValue: 0
+    MaximumSurvivalTime:
+      RawValue: 0
+    MaxConcurrent: 0
   Rules:
   - Icon: {fileID: -6995720472750356834, guid: 22d281b779f8c49dba31479e82c1cb37, type: 3}
     Text: 1

@@ -18,24 +18,54 @@ MonoBehaviour:
       Value: 357052466296367727
   Type: 0
   DisplayName: KILL RUSH
-  Description: Kill 20 enemies before the timer runs out.
+  Description: Kill 40 enemies before the timer runs out.
   Duration:
     RawValue: 1966080
-  KillTarget: 20
+  KillTarget: 40
   BudgetPerPulse:
-    RawValue: 3932160
+    RawValue: 524288
   PulseInterval:
-    RawValue: 196608
+    RawValue: 32768
   TargetPressure:
-    RawValue: 2621440
-  MaxAliveEnemies: 15
+    RawValue: 2359296
+  MaxAliveEnemies: 32
   AllowedGroups:
   - Id:
       Value: 292572693417129341
-  AllowedEnemies: []
+  - Id:
+      Value: 322880711141323354
+  - Id:
+      Value: 354292532298879105
+  - Id:
+      Value: 479314598145817666
+  - Id:
+      Value: 497538020021829942
+  AllowedEnemies:
+  - EnemyData:
+      Id:
+        Value: 386887899629791929
+    Faction: 0
+    Weight:
+      RawValue: 196608
+    MinimumSurvivalTime:
+      RawValue: 0
+    MaximumSurvivalTime:
+      RawValue: 0
+    MaxConcurrent: 0
+  - EnemyData:
+      Id:
+        Value: 411749050168152871
+    Faction: 0
+    Weight:
+      RawValue: 131072
+    MinimumSurvivalTime:
+      RawValue: 0
+    MaximumSurvivalTime:
+      RawValue: 0
+    MaxConcurrent: 0
   Rules:
   - Icon: {fileID: -103353411, guid: d9bb3bd610ed442fe983639e2c3f95fb, type: 3}
-    Text: "20\x03"
+    Text: "{0}\x03"
     ScaleTextWithKillTarget: 1
   - Icon: {fileID: -1016452943, guid: d9bb3bd610ed442fe983639e2c3f95fb, type: 3}
     Text: 30s
