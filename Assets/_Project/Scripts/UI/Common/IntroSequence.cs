@@ -118,6 +118,20 @@ public class IntroSequence : MonoBehaviour
     [SerializeField, Tooltip("Name, colour and face per speaker. Steps pick one with their Speaker field.")]
     private SpeakerProfile[] speakers = DefaultSpeakers();
 
+    [Header("Balloon")]
+    [SerializeField, Tooltip("Root of the WHOLE speech balloon (bubble, text, face...). It pops in and shakes every time a step's audio starts, so everything under it moves and fades together. Needs a CanvasGroup on it (added automatically if missing). Its Pivot is the point it pops out from - put it at the middle of the bubble. Leave empty for no balloon animation.")]
+    private RectTransform balloonRoot;
+    [SerializeField, Range(0.1f, 1f), Tooltip("Scale the balloon starts its pop from (1 = no scale pop).")]
+    private float balloonStartScale = 0.6f;
+    [SerializeField, Min(0f), Tooltip("Seconds the pop-in takes (scale overshoots slightly, alpha fades in over the first part of it). 0 = appears instantly.")]
+    private float balloonPopDuration = 0.25f;
+    [SerializeField, Range(0f, 50f), Tooltip("Shake strength in canvas units (pixels at 1:1), hitting the moment the balloon pops and fading out. 0 = no shake.")]
+    private float balloonShakeStrength = 8f;
+    [SerializeField, Min(0f), Tooltip("Seconds the shake lasts.")]
+    private float balloonShakeDuration = 0.3f;
+    [SerializeField, Tooltip("Hide the balloon while a step has no subtitle.")]
+    private bool hideBalloonWithoutText = true;
+
     [Header("Steps")]
     [SerializeField] private Step[] steps;
 
@@ -194,6 +208,14 @@ public class IntroSequence : MonoBehaviour
     private RectTransform _backRect;
     private float _backZoom = 1f;
     private Vector2 _backZoomPivot = CenterPivot;
+
+    // Balloon pop/shake - one per-frame state, set by BeginBalloon and evaluated in UpdateBalloon.
+    private CanvasGroup _balloonGroup;
+    private Vector2 _balloonRestPosition;
+    private Vector3 _balloonRestScale;
+    private float _balloonStart;
+    private float _balloonSeed;
+    private bool _balloonShown;
 
     private ImageTransition _transition;
     private float _transitionStart;
@@ -374,6 +396,77 @@ public class IntroSequence : MonoBehaviour
         return $"<color=#{ColorUtility.ToHtmlStringRGB(profile.NameColor)}>[{name}]</color> {text}";
     }
 
+    private void ClearSpeaker()
+    {
+        ApplyFace(IntroSpeaker.None);
+        _balloonShown = false;
+    }
+
+    // Captures the balloon's authored pose - the rest every pop settles back to - and makes sure it
+    // has a CanvasGroup to fade as one piece (rather than fading each image/text separately).
+    private void InitBalloon()
+    {
+        if (balloonRoot == null)
+            return;
+
+        _balloonGroup = balloonRoot.GetComponent<CanvasGroup>();
+        if (_balloonGroup == null)
+            _balloonGroup = balloonRoot.gameObject.AddComponent<CanvasGroup>();
+
+        _balloonRestPosition = balloonRoot.anchoredPosition;
+        _balloonRestScale = balloonRoot.localScale;
+        _balloonGroup.alpha = 0f;
+    }
+
+    // Restarts the pop + shake. Timed to the AUDIO (step start + StartDelay), so the balloon lands
+    // with the voice; until then it stays hidden, and it pops afresh on EVERY step, even when the
+    // same character keeps talking.
+    private void BeginBalloon(Step step)
+    {
+        if (balloonRoot == null)
+            return;
+
+        _balloonShown = hideBalloonWithoutText == false || string.IsNullOrEmpty(step.Subtitle) == false;
+        _balloonStart = Time.unscaledTime + step.StartDelay;
+        _balloonSeed = UnityEngine.Random.value * 100f;
+    }
+
+    private void UpdateBalloon()
+    {
+        if (balloonRoot == null || _balloonGroup == null)
+            return;
+
+        float t = Time.unscaledTime - _balloonStart;
+        if (_balloonShown == false || t < 0f)
+        {
+            _balloonGroup.alpha = 0f;
+            return;
+        }
+
+        float k = balloonPopDuration > 0f ? Mathf.Clamp01(t / balloonPopDuration) : 1f;
+
+        // Ease-out-back: overshoots a touch past full size, then settles - reads as a pop.
+        float back = k - 1f;
+        float eased = 1f + 2.70158f * back * back * back + 1.70158f * back * back;
+        float scale = Mathf.LerpUnclamped(balloonStartScale, 1f, eased);
+
+        // Fully opaque by 40% of the pop, so it never looks half-faded while it is still growing.
+        _balloonGroup.alpha = Mathf.Clamp01(k / 0.4f);
+
+        Vector2 shake = Vector2.zero;
+        if (balloonShakeStrength > 0f && balloonShakeDuration > 0f && t < balloonShakeDuration)
+        {
+            float amplitude = balloonShakeStrength * (1f - t / balloonShakeDuration);
+            float sample = Time.unscaledTime * ShakeFrequency;
+            shake = new Vector2(
+                (Mathf.PerlinNoise(_balloonSeed, sample) - 0.5f) * 2f,
+                (Mathf.PerlinNoise(_balloonSeed + 37f, sample) - 0.5f) * 2f) * amplitude;
+        }
+
+        balloonRoot.localScale = _balloonRestScale * scale;
+        balloonRoot.anchoredPosition = _balloonRestPosition + shake;
+    }
+
     // Shows the speaker's face, or hides the whole Face Image object when there isn't one.
     private void ApplyFace(IntroSpeaker speaker)
     {
@@ -414,7 +507,8 @@ public class IntroSequence : MonoBehaviour
         if (subtitle != null)
             subtitle.text = string.Empty;
 
-        ApplyFace(IntroSpeaker.None);
+        InitBalloon();
+        ClearSpeaker();
 
         if (image != null)
         {
@@ -550,7 +644,7 @@ public class IntroSequence : MonoBehaviour
         if (subtitle != null)
             subtitle.text = string.Empty;
 
-        ApplyFace(IntroSpeaker.None);
+        ClearSpeaker();
 
         SetFadeAlpha(0f);
 
@@ -617,7 +711,7 @@ public class IntroSequence : MonoBehaviour
         if (subtitle != null)
             subtitle.text = string.Empty;
 
-        ApplyFace(IntroSpeaker.None);
+        ClearSpeaker();
 
         // Nothing left to skip past this point - the fade-out is short and plays out in full.
         SetSkipButtonActive(false);
@@ -652,6 +746,7 @@ public class IntroSequence : MonoBehaviour
             subtitle.text = FormatSubtitle(step);
 
         ApplyFace(step.Speaker);
+        BeginBalloon(step);
 
         StepStarted?.Invoke(index, step);
 
@@ -808,6 +903,9 @@ public class IntroSequence : MonoBehaviour
     // Composes slide + zoom + shake into the image's position/scale/alpha for this frame.
     private void LateUpdate()
     {
+        // Independent of the picture: the balloon animates even with no image assigned.
+        UpdateBalloon();
+
         if (image == null || _rect == null)
             return;
 
