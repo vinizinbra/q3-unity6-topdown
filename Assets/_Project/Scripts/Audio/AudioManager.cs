@@ -184,6 +184,10 @@ public class AudioManager : MonoBehaviour
         LoadVolumes();
         while (_voices.Count < initialVoices)
             CreateVoice();
+
+        // Startup snapshot for platform-specific silence (e.g. WebGL): a saved volume that loaded as
+        // 0, a paused listener, or an output rate the browser reported as 0 all read as "no sound".
+        LogHelper.Log(LogTag, $"Initialized: platform={Application.platform} outputRate={AudioSettings.outputSampleRate} master={masterVolume:0.00} music={musicVolume:0.00} sfx={sfxVolume:0.00} listenerPaused={AudioListener.pause} listenerVolume={AudioListener.volume:0.00} voices={_voices.Count} persistVolumes={persistVolumes}", this);
     }
 
     private void OnValidate() => SyncGroupSettings();
@@ -607,7 +611,10 @@ public class AudioManager : MonoBehaviour
 
         var voice = manager.AcquireVoice(data);
         if (voice == null)
+        {
+            LogHelper.Warn(LogTag, $"'{data.name}' dropped - no free voice (group {data.group}, {manager._voices.Count}/{manager.maxVoices} voices).", data);
             return SoundHandle.None;
+        }
 
         var pitch = data.RollPitch();
         data.ResolveTrim(clip, variant, out var trimStart, out var trimEnd);

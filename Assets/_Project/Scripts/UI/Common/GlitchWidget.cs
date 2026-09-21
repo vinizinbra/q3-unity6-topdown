@@ -1,5 +1,6 @@
 using NaughtyAttributes;
 using PrimeTween;
+using QuantumUser.View.Util;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -192,7 +193,14 @@ public class GlitchWidget : MonoBehaviour
         _tickTween.Stop();
 
         if (glitchSound != null)
-            AudioManager.Play(glitchSound);
+        {
+            SoundHandle handle = AudioManager.Play(glitchSound);
+
+            // WebGL diagnostic: handle.IsValid=false with a manager present means the play was
+            // dropped (cooldown / no voice / no clips); valid but silent points at the browser
+            // (suspended AudioContext before a user gesture, listener paused, volumes at 0).
+            LogHelper.Log("Glitch", $"'{name}' played '{glitchSound.name}': handleValid={handle.IsValid} manager={(AudioManager.Instance != null)} listenerPaused={AudioListener.pause} listenerVolume={AudioListener.volume:0.00} sfxVolume={AudioManager.SfxVolume:0.00} master={AudioManager.MasterVolume:0.00}", this);
+        }
 
         float burstDuration = Random.Range(burstDurationRange.x, burstDurationRange.y);
         float endTime = (useUnscaledTime ? Time.unscaledTime : Time.time) + burstDuration;

@@ -108,15 +108,17 @@ namespace Quantum
         {
             base.Awake();
 
-            if (cameraTransform == null && Camera.main != null)
-                cameraTransform = Camera.main.transform;
+            Camera worldCamera = FollowCamera.WorldCamera;
+
+            if (cameraTransform == null && worldCamera != null)
+                cameraTransform = worldCamera.transform;
 
             // Real Camera component (not just its transform) - needed to WorldToScreenPoint the
             // actual weapon/target positions below instead of approximating with a direction-vector
             // projection through the camera's basis vectors.
             aimCamera = cameraTransform != null ? cameraTransform.GetComponentInParent<Camera>() : null;
             if (aimCamera == null)
-                aimCamera = Camera.main;
+                aimCamera = worldCamera;
 
             // Mirrors CustomQuantumEntityViewComponent's own entityView lookup - the gun is
             // often parented under a socket/bone that isn't a direct ancestor chain up to the

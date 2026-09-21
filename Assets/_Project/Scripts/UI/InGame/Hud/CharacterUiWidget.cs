@@ -173,7 +173,6 @@ public class CharacterUiWidget : MonoBehaviour
         _entityRef = entityRef;
         _followTarget = followTarget;
         _characterOffset = characterOffset;
-        _worldCamera = Camera.main;
 
         if (heroWidgets == null || heroWidgets.Length == 0)
             heroWidgets = GetComponentsInChildren<HeroHudWidget>(true);
@@ -454,6 +453,10 @@ public class CharacterUiWidget : MonoBehaviour
     private void FollowTarget()
     {
         Vector3 widgetPosition = _followTarget.position + worldOffset + _characterOffset;
+
+        // Resolved lazily (not once in Setup) - see InteractionPromptWidget.FollowTarget.
+        if (_worldCamera == null)
+            _worldCamera = FollowCamera.WorldCamera;
 
         // The ammo/reload row is a plain child of selfRect and rides along with it - no world
         // tracking of its own, so its authored layout position inside the widget is what shows.

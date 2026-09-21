@@ -56,7 +56,13 @@ namespace Quantum
             // EntityViewManager's online/bot head counts.
             isBot = QuantumHelper.IsBotPlayer(_playerRef);
 
-            if (QuantumHelper.IsLocalPlayer(_playerRef))
+            bool isLocal = QuantumHelper.IsLocalPlayer(_playerRef);
+
+            // Online-vs-offline diagnostic: every local-slot-driven HUD (interaction prompts, skill
+            // HUD binding) depends on this resolving - see QuantumHelper.GetLocalSlotIndex.
+            LogHelper.Log("LocalPlayer", $"CharView.Initialize {_entityRef} player={_playerRef}: local={isLocal} slot={QuantumHelper.GetLocalSlotIndex(_playerRef)} bot={isBot} runnerLocalPlayers={game.GetLocalPlayers().Count}", this);
+
+            if (isLocal)
             {
                 isLocalPlayer = true;
                 MyLocalPlayer.Instance.Register(_entityRef, _playerRef, this);

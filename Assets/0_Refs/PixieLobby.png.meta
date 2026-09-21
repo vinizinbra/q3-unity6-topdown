@@ -139,10 +139,10 @@ TextureImporter:
       name: PixieLobby_0
       rect:
         serializedVersion: 2
-        x: 29
-        y: 893
-        width: 469
-        height: 495
+        x: 0
+        y: 844
+        width: 603
+        height: 576
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -164,7 +164,7 @@ TextureImporter:
         x: 0
         y: 15
         width: 679
-        height: 804
+        height: 825
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -183,9 +183,9 @@ TextureImporter:
       name: PixieLobby_2
       rect:
         serializedVersion: 2
-        x: 534
+        x: 603
         y: 868
-        width: 552
+        width: 483
         height: 518
       alignment: 0
       pivot: {x: 0.5, y: 0.5}

@@ -89,13 +89,13 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
         widgetPrefab.gameObject.SetActive(false);
     }
 
-    // Camera, pool and subscription all wait for QStart rather than Awake - Camera.main and the
+    // Camera, pool and subscription all wait for QStart rather than Awake - the FollowCamera and the
     // canvas have to resolve before a pooled widget can be handed them, and no damage event can
     // reach us before the first verified frame anyway.
     public override void QStart(QuantumGame game)
     {
         _canvas = widgetParent.GetComponentInParent<Canvas>();
-        _worldCamera = Camera.main;
+        _worldCamera = FollowCamera.WorldCamera;
         _pool = CreatePool();
 
         Prewarm(prewarmCount);

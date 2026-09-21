@@ -3,6 +3,7 @@ using PrimeTween;
 using Photon.Deterministic;
 using Quantum;
 using QuantumUser.View;
+using QuantumUser.View.Util;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -100,6 +101,10 @@ public class InteractionPromptWidget : MonoBehaviour
     // idiom _bleedOutDescription already establishes for Revive. See SetDescriptionOverride.
     private string _descriptionOverride = string.Empty;
     private bool _isShown;
+    // Diagnostics only - see the LogHelper calls in FollowTarget/UpdateFromState.
+    private ContextInteractionState _loggedState = ContextInteractionState.None;
+    private bool _loggedNoLocalPlayer;
+    private bool _loggedProjectionFailure;
     // Whether the entity this widget follows is one of THIS client's own local players - i.e. we're
     // rendering the DOWNED player's own view of their revive, not a nearby reviver's. Refreshed
     // every frame in RefreshReviveTitle (local slots are bound asynchronously, so this can't be
@@ -158,7 +163,6 @@ public class InteractionPromptWidget : MonoBehaviour
         _entityRef = entityRef;
         _followTarget = followTarget;
         _worldOffset = worldOffset;
-        _worldCamera = Camera.main;
         _activeDescription = activeDescription;
         _phaseUnavailableDescription = phaseUnavailableDescription;
         _alreadyUsedDescription = alreadyUsedDescription;
@@ -467,8 +471,20 @@ public class InteractionPromptWidget : MonoBehaviour
     {
         Vector3 worldPosition = _followTarget.position + _worldOffset;
 
+        // Resolved lazily (not once in Setup): the widget can be spawned before the gameplay camera
+        // exists/is enabled, and a camera captured then would stay null/stale for the widget's life.
+        if (_worldCamera == null)
+            _worldCamera = FollowCamera.WorldCamera;
+
         if (UIHelper.TryWorldToAnchoredPosition(selfRect, _canvas, _worldCamera, worldPosition, out var anchoredPosition))
+        {
             selfRect.anchoredPosition = anchoredPosition;
+        }
+        else if (_loggedProjectionFailure == false)
+        {
+            _loggedProjectionFailure = true;
+            LogHelper.Warn("Prompt", $"{_entityRef} can't project to screen: camera={(_worldCamera != null ? _worldCamera.name : "NULL")} canvas={(_canvas != null ? _canvas.name : "NULL")} parentIsRect={selfRect.parent is RectTransform} followCamera={(FollowCamera.I != null)}", this);
+        }
     }
 
     // Reads whichever LOCAL player currently has this entity as their own ContextInteraction.
@@ -478,6 +494,21 @@ public class InteractionPromptWidget : MonoBehaviour
     {
         ContextInteractionState state = ContextInteractionState.None;
         EntityRef player = EntityRef.None;
+
+        // The prompt only ever shows off a LOCAL player's own ContextInteraction - if no local slot is
+        // bound, it silently never shows. Logged once per stretch so it can be told apart from "no
+        // POI in range" (online-vs-offline diagnostic, see CharView.Initialize's own log).
+        bool haveLocalPlayer = MyLocalPlayer.Instance != null && MyLocalPlayer.Instance.AnyLocalPlayerSetup;
+
+        if (haveLocalPlayer == false && _loggedNoLocalPlayer == false)
+        {
+            _loggedNoLocalPlayer = true;
+            LogHelper.Warn("Prompt", $"{_entityRef} has no bound local player (MyLocalPlayer={(MyLocalPlayer.Instance != null)}) - prompt can't show yet.", this);
+        }
+        else if (haveLocalPlayer == true)
+        {
+            _loggedNoLocalPlayer = false;
+        }
 
         if (MyLocalPlayer.Instance != null)
         {
@@ -499,6 +530,15 @@ public class InteractionPromptWidget : MonoBehaviour
                     break;
                 }
             }
+        }
+
+        // Edge-triggered (only on a change), so standing near a POI logs a couple of lines, not one
+        // per frame. A POI that never logs a transition out of None while the player is on top of it
+        // means the sim never resolved it as this player's ActiveTarget.
+        if (state != _loggedState)
+        {
+            LogHelper.Log("Prompt", $"{_entityRef} '{(titleText != null ? titleText.text : "?")}' state {_loggedState} -> {state} (player={player})", this);
+            _loggedState = state;
         }
 
         // Busy (this player already has the real Choice Window open) hides the world prompt

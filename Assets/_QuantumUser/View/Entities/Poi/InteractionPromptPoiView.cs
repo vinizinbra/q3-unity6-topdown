@@ -53,7 +53,14 @@ namespace Quantum
         {
             base.Initialize(game);
 
-            if (game.Frames.Verified.Has<Interactable>(_entityRef) == true)
+            bool hasInteractable = game.Frames.Verified.Has<Interactable>(_entityRef);
+
+            // Checked ONCE here and never again - so if Interactable isn't on the entity yet at the
+            // moment its view is created, this POI never gets a prompt. Logged to see which side of
+            // that a given run lands on (online vs offline view-creation timing can differ).
+            LogHelper.Log("Prompt", $"{name} {_entityRef} Initialize: hasInteractable={hasInteractable} manager={(InteractionPromptWidgetManager.Instance != null)}", this);
+
+            if (hasInteractable == true)
             {
                 PromptWidget = InteractionPromptWidgetManager.Instance?.SpawnWidget(_entityRef, game, transform, promptTitle,
                     promptActiveDescription, promptPhaseUnavailableDescription, promptAlreadyUsedDescription,

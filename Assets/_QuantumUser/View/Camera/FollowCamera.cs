@@ -27,6 +27,29 @@ public class FollowCamera : MonoBehaviour
 
     public static FollowCamera I;
 
+    // The gameplay Camera component this script sits on. Every world<->screen projection in the HUD
+    // (world-tracking widgets, damage numbers, aim math) goes through WorldCamera below rather than
+    // Camera.main: Camera.main is a tag lookup that returns whichever enabled MainCamera-tagged camera
+    // Unity finds first, so a second tagged camera (menu/preview/leftover from another scene) would
+    // silently hijack the projection and park every widget off-screen. This is the one camera the
+    // game actually renders the match through.
+    private Camera _viewCamera;
+    public Camera ViewCamera => _viewCamera != null ? _viewCamera : (_viewCamera = GetComponent<Camera>());
+
+    // The camera to project world positions with. Falls back to Camera.main only when there is no
+    // FollowCamera at all (menu, preview rigs) - never when one exists, so gameplay can't pick a
+    // different camera than the one following the players.
+    public static Camera WorldCamera
+    {
+        get
+        {
+            if (I != null && I.ViewCamera != null)
+                return I.ViewCamera;
+
+            return Camera.main;
+        }
+    }
+
     public Vector3 offset;
     public float speed;
 

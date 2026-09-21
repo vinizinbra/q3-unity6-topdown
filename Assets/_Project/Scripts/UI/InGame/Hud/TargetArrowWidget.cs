@@ -268,7 +268,7 @@ public class TargetArrowWidget : QuantumGlobalMonoBehaviour
             return false;
 
         if (_worldCamera == null)
-            _worldCamera = Camera.main;
+            _worldCamera = FollowCamera.WorldCamera;
 
         if (_worldCamera == null)
             return false;
