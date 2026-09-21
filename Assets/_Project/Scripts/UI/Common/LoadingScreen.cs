@@ -29,6 +29,18 @@ public class LoadingScreen : MonoBehaviour
     // Scene loads report progress only up to 0.9 while allowSceneActivation is held false.
     private const float ActivationProgress = 0.9f;
 
+    // The new scene's Awake/Start (or a menu being rebuilt behind a Cover) can hitch the first frames
+    // after the swap for a good fraction of a second. Time.unscaledDeltaTime is the RAW length of the
+    // previous frame, so one such frame used to eat the entire fade-out in a single step - the screen
+    // just vanished instead of fading. Two defences:
+    //   - a fade advances by at most MaxFadeStep per frame, and
+    //   - the fade-out only starts once CalmFramesNeeded frames in a row were faster than CalmFrameTime
+    //     (or SettleTimeout has passed, so a permanently slow device still gets its fade).
+    private const float MaxFadeStep = 1f / 20f;
+    private const float CalmFrameTime = 1f / 20f;
+    private const int CalmFramesNeeded = 3;
+    private const float SettleTimeout = 2f;
+
     private static LoadingScreen _instance;
 
     // Always a REAL null when the prefab is missing - never a destroyed object - so callers can
@@ -166,8 +178,9 @@ public class LoadingScreen : MonoBehaviour
         while (load.isDone == false)
             yield return null;
 
-        // One extra frame so the new scene's Awake/Start have run before the screen lifts.
-        yield return null;
+        // Let the new scene's Awake/Start (and its first layout passes) finish hitching before the
+        // screen starts to lift - see MaxFadeStep.
+        yield return WaitForSettledFrames();
         yield return FadeTo(0f, fadeOutDuration);
         Deactivate();
     }
@@ -207,8 +220,35 @@ public class LoadingScreen : MonoBehaviour
         }
 
         SetProgress(1f);
+
+        // The menu behind the screen has just been shown/rebuilt and the gameplay scene torn down -
+        // same hitch risk as after a scene swap.
+        yield return WaitForSettledFrames();
         yield return FadeTo(0f, fadeOutDuration);
         Deactivate();
+    }
+
+    // Waits until CalmFramesNeeded consecutive frames were quick, so the fade that follows is not
+    // played across a hitch. Bounded by SettleTimeout. Logs what it saw, which is how to tell a
+    // hitch from some other reason for a missing fade.
+    private IEnumerator WaitForSettledFrames()
+    {
+        float startedAt = Time.unscaledTime;
+        float worst = 0f;
+        int calm = 0;
+        int frames = 0;
+
+        while (calm < CalmFramesNeeded && Time.unscaledTime - startedAt < SettleTimeout)
+        {
+            yield return null;
+
+            float frame = Time.unscaledDeltaTime;
+            worst = Mathf.Max(worst, frame);
+            calm = frame <= CalmFrameTime ? calm + 1 : 0;
+            frames++;
+        }
+
+        LogHelper.Log("LoadingScreen", $"Fade-out starting after {frames} frame(s) / {Time.unscaledTime - startedAt:F2}s of settling (slowest frame {worst * 1000f:F0}ms).");
     }
 
     // No condition = met. A throwing condition counts as met, so a bug in it can't strand the screen.
@@ -240,7 +280,7 @@ public class LoadingScreen : MonoBehaviour
         float elapsed = 0f;
         while (elapsed < duration)
         {
-            elapsed += Time.unscaledDeltaTime;
+            elapsed += Mathf.Min(Time.unscaledDeltaTime, MaxFadeStep);
             canvasGroup.alpha = Mathf.Lerp(from, target, Mathf.Clamp01(elapsed / duration));
             yield return null;
         }

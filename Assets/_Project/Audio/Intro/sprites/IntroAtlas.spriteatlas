@@ -1,0 +1,113 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!687078895 &4343727234628468602
+SpriteAtlas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: IntroAtlas
+  m_EditorData:
+    serializedVersion: 2
+    textureSettings:
+      serializedVersion: 2
+      anisoLevel: 1
+      compressionQuality: 50
+      maxTextureSize: 2048
+      textureCompression: 0
+      filterMode: 1
+      generateMipMaps: 0
+      readable: 0
+      crunchedCompression: 0
+      sRGB: 1
+    platformSettings:
+    - serializedVersion: 4
+      m_BuildTarget: DefaultTexturePlatform
+      m_MaxTextureSize: 2048
+      m_ResizeAlgorithm: 0
+      m_TextureFormat: -1
+      m_TextureCompression: 1
+      m_CompressionQuality: 100
+      m_CrunchedCompression: 1
+      m_AllowsAlphaSplitting: 0
+      m_Overridden: 0
+      m_IgnorePlatformSupport: 0
+      m_AndroidETC2FallbackOverride: 0
+      m_ForceMaximumCompressionQuality_BC6H_BC7: 0
+    packingSettings:
+      serializedVersion: 2
+      padding: 4
+      blockOffset: 1
+      allowAlphaSplitting: 0
+      enableRotation: 1
+      enableTightPacking: 1
+      enableAlphaDilation: 0
+    secondaryTextureSettings: {}
+    variantMultiplier: 1
+    packables:
+    - {fileID: 2800000, guid: add0bb1583ae34ff5840b68207ef95ba, type: 3}
+    - {fileID: 2800000, guid: 22b8290cf64284e889dba4be4f8432dd, type: 3}
+    - {fileID: 2800000, guid: b44e2b73a547a4afeb30007309ac1ae4, type: 3}
+    - {fileID: 2800000, guid: a3f919f09e763468ea6b93ae55221688, type: 3}
+    - {fileID: 2800000, guid: 1a56e630321954dada4e83a310980d8d, type: 3}
+    - {fileID: 2800000, guid: 7ff4ed5795bcf47f199724ada036331e, type: 3}
+    - {fileID: 2800000, guid: 6d1ccfd98c1e74463b9cd06671bca9f8, type: 3}
+    - {fileID: 2800000, guid: a1b98a2de62b0471899a4921b50bc916, type: 3}
+    - {fileID: 2800000, guid: 7c889c9ddd4504ecf8130ad7bc9296a6, type: 3}
+    - {fileID: 2800000, guid: fbd839ee1494d40a8a33ae5c2a8dfe70, type: 3}
+    - {fileID: 2800000, guid: 402c3c585abfe41e88ba09b60289a795, type: 3}
+    - {fileID: 2800000, guid: 92909c662ef1f46edbed6e396364f909, type: 3}
+    - {fileID: 2800000, guid: 4a8ef93aaadff4f6cbdafed6783050ec, type: 3}
+    - {fileID: 2800000, guid: e6a1fbe7aea06412ea53ccc7f5593e35, type: 3}
+    bindAsDefault: 1
+    isAtlasV2: 0
+    cachedData: {fileID: 0}
+    packedSpriteRenderDataKeys:
+    - 1a56e630321954dada4e83a310980d8d: 21300000
+    - a3f919f09e763468ea6b93ae55221688: 21300000
+    - b44e2b73a547a4afeb30007309ac1ae4: 21300000
+    - add0bb1583ae34ff5840b68207ef95ba: 21300000
+    - 92909c662ef1f46edbed6e396364f909: 21300000
+    - 7ff4ed5795bcf47f199724ada036331e: 21300000
+    - e6a1fbe7aea06412ea53ccc7f5593e35: 21300000
+    - 402c3c585abfe41e88ba09b60289a795: 21300000
+    - 6d1ccfd98c1e74463b9cd06671bca9f8: 21300000
+    - 4a8ef93aaadff4f6cbdafed6783050ec: 21300000
+    - 22b8290cf64284e889dba4be4f8432dd: 21300000
+    - a1b98a2de62b0471899a4921b50bc916: 21300000
+    - 7c889c9ddd4504ecf8130ad7bc9296a6: 21300000
+    - fbd839ee1494d40a8a33ae5c2a8dfe70: 21300000
+  m_MasterAtlas: {fileID: 0}
+  m_PackedSprites:
+  - {fileID: 21300000, guid: 1a56e630321954dada4e83a310980d8d, type: 3}
+  - {fileID: 21300000, guid: a3f919f09e763468ea6b93ae55221688, type: 3}
+  - {fileID: 21300000, guid: b44e2b73a547a4afeb30007309ac1ae4, type: 3}
+  - {fileID: 21300000, guid: add0bb1583ae34ff5840b68207ef95ba, type: 3}
+  - {fileID: 21300000, guid: 92909c662ef1f46edbed6e396364f909, type: 3}
+  - {fileID: 21300000, guid: 7ff4ed5795bcf47f199724ada036331e, type: 3}
+  - {fileID: 21300000, guid: e6a1fbe7aea06412ea53ccc7f5593e35, type: 3}
+  - {fileID: 21300000, guid: 402c3c585abfe41e88ba09b60289a795, type: 3}
+  - {fileID: 21300000, guid: 6d1ccfd98c1e74463b9cd06671bca9f8, type: 3}
+  - {fileID: 21300000, guid: 4a8ef93aaadff4f6cbdafed6783050ec, type: 3}
+  - {fileID: 21300000, guid: 22b8290cf64284e889dba4be4f8432dd, type: 3}
+  - {fileID: 21300000, guid: a1b98a2de62b0471899a4921b50bc916, type: 3}
+  - {fileID: 21300000, guid: 7c889c9ddd4504ecf8130ad7bc9296a6, type: 3}
+  - {fileID: 21300000, guid: fbd839ee1494d40a8a33ae5c2a8dfe70, type: 3}
+  m_PackedSpriteNamesToIndex:
+  - Intro-04-ThisIsTheRiftHeart
+  - Intro-03-OkayLetMeExplain
+  - Intro-02-RiftWhat
+  - Intro-16-LetsRaid
+  - Intro-13-WeTakeTheShards
+  - Intro-05-ThenSomeIdiotBrokeIt
+  - Intro-15-ObviouslyWhoIsReady
+  - Intro-11-AndSaveTheGalaxy
+  - Intro-06-AndItsShardsChangedEverything
+  - Intro-14-AndIGetToUseMyNewBombs
+  - Intro-01-GuysTheRiftHeartWasDestroyed
+  - Intro-07-ButIfYouAreStrongEnough
+  - Intro-09-AndNowTheWholeGalaxyWantsThem
+  - Intro-10-SoWeGetThereFirst
+  m_RenderDataMap: {}
+  m_Tag: IntroAtlas
+  m_IsVariant: 0

@@ -112,6 +112,8 @@ public class IntroSequence : MonoBehaviour
     private float fadeInDuration = 1f;
     [SerializeField, Min(0f), Tooltip("Seconds to fade TO Fade Color after the last step. Included in the computed total duration.")]
     private float fadeDuration = 1f;
+    [SerializeField, Min(0f), Tooltip("Starts the fade-out this many seconds BEFORE the last step ends, so it begins while the final line's tail is still playing instead of waiting for the audio and padding to finish. 0 = wait for the last step to finish completely. The last step's audio is not cut, and its computed Duration is shortened by this amount.")]
+    private float fadeOutLeadTime = 0.5f;
 
     [Header("When Finished")]
     [SerializeField, Tooltip("Turn OFF to skip the scene load entirely - handy while tuning the intro, so it doesn't jump to the menu at the end. Finished/onFinished still fire.")]
@@ -281,7 +283,18 @@ public class IntroSequence : MonoBehaviour
         if (NextStepMerges(index) == true)
             return Mathf.Max(0f, audioLength - steps[index + 1].MergeOverlap);
 
-        return audioLength + step.ExtraTime;
+        float hold = audioLength + step.ExtraTime;
+
+        // The last step hands over to the fade-out early (fadeOutLeadTime), overlapping its own tail.
+        if (IsLastStep(index) == true && fadeImage != null)
+            hold = Mathf.Max(0f, hold - fadeOutLeadTime);
+
+        return hold;
+    }
+
+    private bool IsLastStep(int index)
+    {
+        return steps != null && index == steps.Length - 1;
     }
 
     private void OnDestroy()
@@ -557,8 +570,12 @@ public class IntroSequence : MonoBehaviour
             yield return WaitOrSkip(HoldTime(index));
         }
 
-        // Keep the tail running only on a natural hand-off into a merging step; a skip cuts it.
-        if (_skipRequested == true || _skipAllRequested == true || NextStepMerges(index) == false)
+        // Keep the tail running only on a natural hand-off into a merging step - or, for the last
+        // step, into the early fade-out - and let a skip cut it.
+        bool keepTail = NextStepMerges(index) == true
+            || (IsLastStep(index) == true && fadeImage != null && fadeOutLeadTime > 0f);
+
+        if (_skipRequested == true || _skipAllRequested == true || keepTail == false)
             audioSource.Stop();
     }
 
