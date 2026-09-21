@@ -1032,7 +1032,43 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
    // OnDisconnected callback tears the runner down and shows MainMenuWindow); offline has no
    // Photon connection to disconnect from, so it has to shut the runner down and navigate back
    // itself - see StartOfflineRunner's own comment on why _runnerStartRequested is cleared here.
+   //
+   // The generic loading screen goes up FIRST and only then does the teardown start (offline
+   // shutdown, or Client.Disconnect() whose OnDisconnected callback shuts the runner down) - so the
+   // player never watches the match being torn apart - and stays up until the runner is gone and the
+   // gameplay scene has finished unloading. A second click while it is already up is ignored.
    public void LeaveMatch()
+   {
+      if (SceneLoader.IsBusy)
+         return;
+
+      if (IsInMatch())
+      {
+         SceneLoader.Cover(PerformLeaveMatch, IsMatchTeardownComplete);
+         return;
+      }
+
+      PerformLeaveMatch();
+   }
+
+   // True while the in-match window is the one on screen, i.e. there is actually a match to tear
+   // down. OnDisconnected also fires for disconnects that happen in the menu (party lobby, failed
+   // connect), which must NOT raise a loading screen.
+   private static bool IsInMatch()
+   {
+      MainMenuTab tab = GameManager.Instance != null ? GameManager.Instance.MainMenuTab : null;
+      return tab != null && tab.windowManager != null && tab.windowManager.currentWindow is InMatchWindow;
+   }
+
+   // The runner is shut down AND Quantum's own map-unload coroutine has taken the gameplay scene
+   // out (QuantumGame.Dispose starts it) - what the loading screen waits for before lifting.
+   private static bool IsMatchTeardownComplete()
+   {
+      return QuantumRunner.Default == null
+         && UnityEngine.SceneManagement.SceneManager.GetSceneByName(GameManager.GameplaySceneName).isLoaded == false;
+   }
+
+   private void PerformLeaveMatch()
    {
       if (GameManager.Instance != null && GameManager.Instance.isPlayingOffline)
       {
@@ -1050,6 +1086,28 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
       // even when you left it on purpose (misclick, stepping away) - see InMatchWindow's own
       // former comment to this effect. Only leaving the party LOBBY clears it (PartyManager.LeaveParty).
       Client.Disconnect();
+   }
+
+   // Offline-only "start this run over": shuts the runner down (the Quantum SDK unloads the gameplay
+   // scene as part of that) and immediately starts a fresh offline session, which reloads it.
+   // StartOfflineRunner already does the rest of the work - it shows LoadingWindow (which takes the
+   // menu Canvas back up over the dying match) and waits for the old scene to finish unloading and
+   // the old runner to deregister before creating the new one, so nothing needs sequencing here
+   // beyond clearing its duplicate-start guard first. isPlayingOffline is deliberately left true.
+   public void RestartOfflineMatch()
+   {
+      if (GameManager.Instance == null || GameManager.Instance.isPlayingOffline == false)
+      {
+         LogHelper.Warn("MatchMaking", "RestartOfflineMatch: not playing offline - ignoring.");
+         return;
+      }
+
+      _runnerStartRequested = false;
+
+      if (QuantumRunner.Default != null)
+         QuantumRunner.ShutdownAll();
+
+      StartOfflineRunner();
    }
 
    // Used only by RunResultPopup, where the run has already legitimately ended for everyone -
@@ -1078,7 +1136,27 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
    // double-click on RunResultPopup's Leave/Continue button, which had no debounce of its own.
    private bool _returningToPartyLobby;
 
-   public async void ReturnToPartyLobby()
+   //
+   // Covered by the generic loading screen like LeaveMatch: screen first, then the teardown, held
+   // until the async leave/join has finished AND the gameplay scene is gone.
+   public void ReturnToPartyLobby()
+   {
+      if (_returningToPartyLobby || SceneLoader.IsBusy)
+      {
+         LogHelper.Warn("MatchMaking", "ReturnToPartyLobby: already in progress - ignoring the duplicate request.");
+         return;
+      }
+
+      if (IsInMatch())
+      {
+         SceneLoader.Cover(ReturnToPartyLobbyNow, () => _returningToPartyLobby == false && IsMatchTeardownComplete());
+         return;
+      }
+
+      ReturnToPartyLobbyNow();
+   }
+
+   private async void ReturnToPartyLobbyNow()
    {
       if (_returningToPartyLobby)
       {
@@ -1086,9 +1164,10 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
          return;
       }
 
+      // Already behind the loading screen (if there is a match), so no second cover here.
       if (GameManager.Instance != null && GameManager.Instance.isPlayingOffline)
       {
-         LeaveMatch();
+         PerformLeaveMatch();
          return;
       }
 
@@ -1198,6 +1277,21 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
          $" | instance='{(string.IsNullOrEmpty(LocalClientIdentity.InstanceId) ? "main" : LocalClientIdentity.InstanceId)}'" +
          $" | userId='{matchmakingArguments.UserId}'");
 
+      // A disconnect with a match on screen and no cover already up (server eviction, client
+      // timeout, plugin disconnect - anything that didn't come through LeaveMatch, which covers
+      // itself) still gets the loading screen BEFORE the teardown below starts. A disconnect
+      // that arrives while LeaveMatch's cover is up, or one that happens in the menu, runs directly.
+      if (SceneLoader.IsBusy == false && IsInMatch())
+      {
+         SceneLoader.Cover(() => ReturnToMenuAfterDisconnect(cause), IsMatchTeardownComplete);
+         return;
+      }
+
+      ReturnToMenuAfterDisconnect(cause);
+   }
+
+   private void ReturnToMenuAfterDisconnect(DisconnectCause cause)
+   {
       // ShowWindow<MainMenuWindow>() has to run unconditionally, and BEFORE the alert below - it's
       // what actually recovers the screen (WindowManager.ShowWindow hides every other window, which
       // for InMatchWindow means Hide() re-enabling the menu Canvas it disabled in Show()). The

@@ -43,6 +43,12 @@ public class AudioManager : MonoBehaviour
     [SerializeField, Tooltip("Saves master and per-group volumes to PlayerPrefs (same ObscuredPrefs-backed PlayerPrefFloat every other setting in this project uses) and reloads them on startup, so an options slider sticks between sessions. Turn OFF while tuning the mix if a previously-saved value keeps overriding what you author here.")]
     private bool persistVolumes = true;
 
+    // The two player-facing options sliders. Kept as category multipliers ON TOP of the per-group
+    // buses rather than driving them, so moving "SFX" never overwrites the authored balance between
+    // Sfx/Ambience/Ui/Voice - Music is its own category, everything else counts as SFX.
+    private float musicVolume = 1f;
+    private float sfxVolume = 1f;
+
     [Header("Groups")]
     [SerializeField, Tooltip("One row per SoundGroup value, indexed by that value - the table auto-resizes when the enum changes, so rows never drift out of alignment. Holds each group's volume bus AND its shared voice budget.")]
     private GroupSettings[] groups = System.Array.Empty<GroupSettings>();
@@ -136,6 +142,8 @@ public class AudioManager : MonoBehaviour
     // (scene loads, the Edit Mode preview rig) rather than re-hitting storage each time.
     private static PlayerPrefFloat _masterVolumePref;
     private static PlayerPrefFloat[] _groupVolumePrefs;
+    private static PlayerPrefFloat _musicVolumePref;
+    private static PlayerPrefFloat _sfxVolumePref;
     private static bool _quitting;
 
     // ------------------------------------------------------------------ lifecycle
@@ -216,6 +224,11 @@ public class AudioManager : MonoBehaviour
 
         for (var i = 0; i < groups.Length; i++)
             groups[i].Volume = Mathf.Clamp01(GroupPref((SoundGroup)i, groups[i].Volume).Value);
+
+        _musicVolumePref ??= new PlayerPrefFloat("audio_volume_category_music", 1f);
+        _sfxVolumePref ??= new PlayerPrefFloat("audio_volume_category_sfx", 1f);
+        musicVolume = Mathf.Clamp01(_musicVolumePref.Value);
+        sfxVolume = Mathf.Clamp01(_sfxVolumePref.Value);
     }
 
     private static PlayerPrefFloat GroupPref(SoundGroup group, float authoredDefault)
@@ -471,7 +484,7 @@ public class AudioManager : MonoBehaviour
     private float ResolveBusVolume(SoundData data)
     {
         var group = data != null ? data.group : SoundGroup.Sfx;
-        return ResolveGroup(group).Volume * masterVolume;
+        return ResolveGroup(group).Volume * masterVolume * (group == SoundGroup.Music ? musicVolume : sfxVolume);
     }
 
     // ------------------------------------------------------------------ play
@@ -1074,6 +1087,47 @@ public class AudioManager : MonoBehaviour
         }
     }
 
+    // Options-menu sliders - see the musicVolume/sfxVolume field comment. Getters resolve the
+    // manager (rather than defaulting to 1) because the value is loaded from prefs in
+    // EnsureInitialized, and a slider opened before any sound has played would otherwise show 1.
+    public static float MusicVolume
+    {
+        get => Resolve() is { } manager ? manager.musicVolume : 1f;
+        set
+        {
+            var manager = Resolve();
+            if (manager == null)
+                return;
+
+            manager.musicVolume = Mathf.Clamp01(value);
+
+            if (manager.persistVolumes)
+            {
+                _musicVolumePref ??= new PlayerPrefFloat("audio_volume_category_music", 1f);
+                _musicVolumePref.Value = manager.musicVolume;
+            }
+        }
+    }
+
+    public static float SfxVolume
+    {
+        get => Resolve() is { } manager ? manager.sfxVolume : 1f;
+        set
+        {
+            var manager = Resolve();
+            if (manager == null)
+                return;
+
+            manager.sfxVolume = Mathf.Clamp01(value);
+
+            if (manager.persistVolumes)
+            {
+                _sfxVolumePref ??= new PlayerPrefFloat("audio_volume_category_sfx", 1f);
+                _sfxVolumePref.Value = manager.sfxVolume;
+            }
+        }
+    }
+
     public static void SetGroupVolume(SoundGroup group, float volume)
     {
         var manager = Resolve();
@@ -1142,6 +1196,8 @@ public class AudioManager : MonoBehaviour
     private void ResetSavedVolumes()
     {
         PlayerPrefs.DeleteKey("audio_volume_master");
+        PlayerPrefs.DeleteKey("audio_volume_category_music");
+        PlayerPrefs.DeleteKey("audio_volume_category_sfx");
         foreach (SoundGroup group in System.Enum.GetValues(typeof(SoundGroup)))
             PlayerPrefs.DeleteKey($"audio_volume_{group}");
 
@@ -1149,6 +1205,8 @@ public class AudioManager : MonoBehaviour
 
         _masterVolumePref = null;
         _groupVolumePrefs = null;
+        _musicVolumePref = null;
+        _sfxVolumePref = null;
 
         LogHelper.Log(LogTag, "Saved volumes cleared - authored values apply on next load.", this);
     }

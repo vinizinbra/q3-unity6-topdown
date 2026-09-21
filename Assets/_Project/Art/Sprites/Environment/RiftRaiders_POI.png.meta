@@ -381,10 +381,10 @@ TextureImporter:
       name: RiftRaiders_POI_0
       rect:
         serializedVersion: 2
-        x: 34
-        y: 1338
-        width: 237
-        height: 237
+        x: 27
+        y: 1270
+        width: 341
+        height: 357
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -403,10 +403,10 @@ TextureImporter:
       name: RiftRaiders_POI_1
       rect:
         serializedVersion: 2
-        x: 320
-        y: 1340
-        width: 246
-        height: 240
+        x: 377
+        y: 1266
+        width: 309
+        height: 312
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -425,10 +425,10 @@ TextureImporter:
       name: RiftRaiders_POI_2
       rect:
         serializedVersion: 2
-        x: 612
-        y: 1340
-        width: 242
-        height: 225
+        x: 727
+        y: 1266
+        width: 337
+        height: 342
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -447,10 +447,10 @@ TextureImporter:
       name: RiftRaiders_POI_3
       rect:
         serializedVersion: 2
-        x: 901
-        y: 1338
-        width: 248
-        height: 239
+        x: 727
+        y: 1266
+        width: 337
+        height: 342
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -469,10 +469,10 @@ TextureImporter:
       name: RiftRaiders_POI_4
       rect:
         serializedVersion: 2
-        x: 1200
-        y: 1330
-        width: 242
-        height: 218
+        x: 1092
+        y: 1274
+        width: 335
+        height: 298
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}

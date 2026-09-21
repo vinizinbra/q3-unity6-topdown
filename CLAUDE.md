@@ -74,7 +74,8 @@ which one to open.
 - **Hero Info Popup (Tab-hold)** — `HeroInfoPopupWidget` shows a full "what I'm running" readout by composing existing widgets. → `docs/hero-info-popup.md`
 - **Minimap** — node-based minimap baked into one painted `Texture2D`: per-chunk fills, level outline, POI icons, player/enemy markers. → `docs/minimap.md`
 - **Environment Details** — View-only hand-placed ground/wall detail slots; runtime only picks whether/which themed sprite shows, deterministically seeded. → `docs/environment-details.md`
-- **Loading / Generating Level Screen** — menu-side `LoadingWindow` covers the whole match start (connect→generate→enter), then fades and hands off to `InMatchWindow`. → `docs/loading-screen.md`
+- **In-Match Settings Popup** — Escape-toggled pause-style popup: SFX/Music sliders (`AudioManager` category multipliers), Disconnect, offline-only Restart (`RestartOfflineMatch` shuts the runner down and restarts the offline session, reloading the scene). → `docs/in-match-settings.md`
+- **Loading / Generating Level Screen** — menu-side `LoadingWindow` covers the whole match start (connect→generate→enter), then fades and hands off to `InMatchWindow`. Also the generic transition screen: self-instantiated persistent `LoadingScreen` prefab behind `SceneLoader.Load/Cover` (2s minimum; Game→Menu covers *before* teardown starts and holds until the gameplay scene has unloaded) for Intro→Menu and Game→Menu. → `docs/loading-screen.md`
 
 ## Tooling & testing
 

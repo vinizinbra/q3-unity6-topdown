@@ -143,3 +143,82 @@ One leftover: `Assets/gamesceneBackup.unity` contains a `LoadingScreen` GameObje
 `QuantumGameScene`, which is why the old screen never appeared in a real match). Both old scripts are
 deleted, so that object is now a missing-script reference in that backup scene only - delete the
 GameObject if that scene is ever opened again.
+
+---
+
+# Generic transition loading screen (`SceneLoader` / `LoadingScreen`)
+
+A SECOND, unrelated screen from the match-start `LoadingWindow` above. That one covers a Quantum session
+starting inside the already-loaded menu and reads real level-generation progress; it stays in the menu
+on purpose. This one covers the transitions the game owns outright, where no session exists:
+
+```
+PachaSplash -> Intro -> [generic loading] -> Menu -> (match start: LoadingWindow) -> Game
+Game -> leave -> [generic loading] -> Menu
+```
+
+## Why a self-instantiated, persistent prefab
+
+- **Not in any scene.** A screen living in a scene can't cover that scene's own unload, and would need
+  placing in every scene that transitions. `LoadingScreen.Instance` Instantiates
+  `Resources/LoadingScreen` on first use and marks it `DontDestroyOnLoad`, so it survives the swap it
+  covers and works from any scene - including pressing Play from an arbitrary scene in the Editor.
+- **Its own root Canvas, sortingOrder 32000**, above every HUD/menu/popup canvas (incl. `LoadingWindow`'s
+  999). No `EventSystem` and no camera inside it (the scenes own those); it blocks input through its
+  `CanvasGroup`/raycast-target background instead.
+- **Saved inactive**, so it costs nothing while idle; `Activate()` turns it on before its coroutine
+  starts (a coroutine can't start on an inactive object).
+
+## API - callers only ever use `SceneLoader`
+
+| Call | Use |
+| --- | --- |
+| `SceneLoader.Load("MenuScene")` | Single-scene load behind the screen. Fade in -> `LoadSceneAsync` with `allowSceneActivation = false` -> swap only once the scene is ready **and** the minimum has elapsed -> one settle frame -> fade out. |
+| `SceneLoader.Cover(action, holdUntil)` | For a transition with **no scene load**: fade in, run `action` on the first fully covered frame - so the screen is always up BEFORE the teardown starts - hold to the minimum **and** until `holdUntil()` is true (optional), fade out. This is what "leave match -> menu" needs, because the menu scene never unloads. `holdUntil` covers work the action only *starts* (Quantum's async scene unload); it is bounded by `LoadingScreen.maximumHoldDuration` (10s) so a stuck condition can't trap the player. |
+| `SceneLoader.IsBusy` | Static, never spawns the prefab. Debounces a second Leave click and tells an already-covered disconnect from one that still needs its own cover. |
+
+Both take an optional per-call `minimumDuration`; the default is **2s**, measured from the start of the
+fade-in (`LoadingScreen.minimumDuration`). If the prefab is missing or a scene name isn't in Build
+Settings the facade falls back to a plain unmasked load / runs the action directly and logs - a bad
+setup can never trap the player behind the screen. A second request while busy is ignored (scene load)
+or run directly (cover).
+
+## Files
+
+| File | Role |
+| --- | --- |
+| `Assets/_Project/Scripts/UI/Common/LoadingScreen.cs` | The component + lazy singleton, both routines, optional progress bar/label. |
+| `Assets/_Project/Scripts/UI/Common/SceneLoader.cs` | Static facade with the fallbacks. |
+| `Assets/Resources/LoadingScreen.prefab` | The visuals - built from `Assets/LoadingCanvas.unity`. Restyle freely; only the root `LoadingScreen` + `CanvasGroup` matter. |
+
+`IntroSequence` now hands off to the menu through `SceneLoader.Load`.
+
+## Leaving a match (Game -> Menu)
+
+Wired in `MatchMakingConfig`, and the ORDER is the point: **the screen goes up first, then the teardown
+starts, and it lifts only once the runner is gone and the gameplay scene has finished unloading**
+(`IsMatchTeardownComplete`: `QuantumRunner.Default == null` and `GameManager.GameplaySceneName` not
+loaded - Quantum's `QuantumGame.Dispose` starts the map-unload coroutine itself).
+
+| Path | What happens |
+| --- | --- |
+| `LeaveMatch()` (InMatchWindow / GameplayUiController Leave) | `SceneLoader.Cover(PerformLeaveMatch, IsMatchTeardownComplete)`. `PerformLeaveMatch` is the old body verbatim - offline shuts the runner down and shows `MainMenuWindow`; online calls `Client.Disconnect()`, whose `OnDisconnected` then runs *under* the cover. A second click while busy is ignored. |
+| `OnDisconnected` (eviction, timeout, plugin disconnect) | If a match is on screen and no cover is up, it covers itself first, then runs `ReturnToMenuAfterDisconnect` (the old body verbatim, incl. the alert). Under `LeaveMatch`'s cover, or in the menu, it runs directly. |
+| `ReturnToPartyLobby()` (RunResultPopup) | Covered like `LeaveMatch`, held until the async leave/join finishes (`_returningToPartyLobby == false`) **and** the scene is gone. Its offline branch calls `PerformLeaveMatch` directly - it is already covered. |
+
+`IsInMatch()` (= the in-match window is the current one under `MainMenuTab`'s `WindowManager`) is the
+guard that keeps `OnDisconnected` from raising a 2s screen for disconnects that happen in the menu
+(party lobby, failed connect).
+
+## Status (2026-09-21)
+
+- **Wired:** Intro -> Menu (`IntroSequence`), and Game -> Menu via `LeaveMatch`, `OnDisconnected`,
+  `ReturnToPartyLobby`. Compiles clean.
+- **Untested in Play Mode.** The prefab was verified by loading it (wired, inactive, no camera/EventSystem
+  inside) and the code compiles, but no transition has been run end to end - in particular that the
+  gameplay scene reports `isLoaded == false` only once its unload really is done, and how the menu
+  looks the moment the screen lifts.
+- The prefab's `CanvasScaler` was Constant Pixel Size in `LoadingCanvas.unity`; it is now Scale With
+  Screen Size 1920x1080 (match width) like the other canvases - identical at 1080p.
+- `progressFill` / `progressLabel` are optional and unassigned; the prefab only has the pulsing logo and
+  "LOADING..." text.

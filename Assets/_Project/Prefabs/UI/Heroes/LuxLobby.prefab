@@ -329,7 +329,7 @@ RectTransform:
   m_GameObject: {fileID: 1623904066032058302}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1.5}
+  m_LocalScale: {x: 0.6, y: 0.6, z: 1.5}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3714902702642128803}
@@ -455,6 +455,7 @@ MonoBehaviour:
   dropoutAlpha: 0.2
   glitchSound: {fileID: 11400000, guid: 2c3600d6f97dc43f8a2ed8954a0ae8d5, type: 2}
   glitchOnEnable: 1
+  playFirstGlitchOnEnable: 1
   useUnscaledTime: 0
 --- !u!1 &1997761353769844194
 GameObject:

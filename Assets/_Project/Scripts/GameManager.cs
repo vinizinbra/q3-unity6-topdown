@@ -7,6 +7,11 @@ using UnityEngine.SceneManagement;
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
+
+    // The additively loaded gameplay scene (Quantum loads/unloads it with the session). Shared so
+    // "has the match scene finished unloading" checks don't each hardcode the string.
+    public const string GameplaySceneName = "HeroRoyaleGameplayNewScene";
+
     public TabGroup bottomMenu;
     public bool isPlayingOffline = false;
     public MainMenuTab MainMenuTab;
@@ -51,7 +56,7 @@ public class GameManager : MonoBehaviour
 
     private void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, LoadSceneMode arg1)
     {
-        if (scene.name == "HeroRoyaleGameplayNewScene")
+        if (scene.name == GameplaySceneName)
         {
             _gameplayScene = scene;
             SetInGameTab();

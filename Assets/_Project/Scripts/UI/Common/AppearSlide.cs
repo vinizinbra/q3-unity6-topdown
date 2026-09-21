@@ -37,13 +37,13 @@ public abstract class AppearSlide : MonoBehaviour
     [SerializeField] private RectTransform rect;
 
     [Header("Appear (in)")]
-    [SerializeField, Tooltip("How far along the axis the panel starts before sliding into its rest position (anchored-position units, i.e. pixels at 1:1 canvas scale).")]
+    [SerializeField, Tooltip("How far BEHIND its rest position the panel starts (left for Horizontally, below for Vertically), in anchored-position units (pixels at 1:1 canvas scale). Only the magnitude matters - the sign is ignored, so the direction can never be flipped by authoring a negative value.")]
     private float inDistance = 40f;
     [SerializeField] private float inDuration = 0.3f;
     [SerializeField] private Ease inEase = Ease.OutCubic;
 
     [Header("Hide (out)")]
-    [SerializeField, Tooltip("How far past its rest position the panel continues while sliding out.")]
+    [SerializeField, Tooltip("How far PAST its rest position the panel continues while sliding out (right for Horizontally, up for Vertically). Only the magnitude matters - the sign is ignored.")]
     private float outDistance = 40f;
     [SerializeField] private float outDuration = 0.3f;
     [SerializeField] private Ease outEase = Ease.InCubic;
@@ -129,7 +129,7 @@ public abstract class AppearSlide : MonoBehaviour
         _fadeTween.Stop();
         StopWiggle();
 
-        SetAxis(RestAxis - inDistance);
+        SetAxis(RestAxis - Mathf.Abs(inDistance));
         SetAlpha(0f);
 
         // Idle wiggle only kicks in once the panel has settled at rest, so it never fights the
@@ -167,7 +167,7 @@ public abstract class AppearSlide : MonoBehaviour
         _fadeTween.Stop();
         StopWiggle();
 
-        _slideTween = TweenAxisTo(RestAxis + outDistance, outDuration, outEase);
+        _slideTween = TweenAxisTo(RestAxis + Mathf.Abs(outDistance), outDuration, outEase);
         _fadeTween = FadeTo(0f, outDuration, outEase)
             .OnComplete(() =>
             {

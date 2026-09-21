@@ -121,11 +121,25 @@ public class InMatchPopupManager : MonoBehaviour {
         }
     }
 
+    // Opens the settings popup - also the target for a HUD gear button's onClick.
+    public void OpenSettings() => Open<InMatchSettingsPopup>();
+
     private void Update()
     {
         if (currentPopup == null && popupQueue.Count > 0)
         {
             ShowPopup(popupQueue[0]);
+        }
+
+        // Escape toggles settings, but only over an otherwise empty stage - it never dismisses or
+        // stacks on top of some other popup (a tutorial popup's Close also unpauses the sim, so
+        // Escape must not be a way to skip it).
+        if (UnityEngine.Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (currentPopup is InMatchSettingsPopup)
+                CloseCurrentPopup();
+            else if (HasPendingPopups == false)
+                OpenSettings();
         }
     }
 

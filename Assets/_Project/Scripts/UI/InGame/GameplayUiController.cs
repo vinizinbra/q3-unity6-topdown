@@ -21,6 +21,8 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
     [SerializeField] private WindowManager windowManager;
     [SerializeField] private TMP_Text lives;
     [SerializeField] private TMP_Text rtt;
+    [SerializeField, Tooltip("Optional HUD button that opens the in-match settings popup - listener is added in Start.")]
+    private UnityEngine.UI.Button settingsButton;
 
     [SerializeField, FormerlySerializedAs("upgradeWindows"),
      Tooltip("One per local player slot - choiceWindows[0] for slot 0, choiceWindows[1] for slot 1, etc. Unused slots (no 2nd local player) can be left null. " +
@@ -79,6 +81,9 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
     {
         windowManager.ShowWindow<LoadingWindow>();
 
+        if (settingsButton != null)
+            settingsButton.onClick.AddListener(OpenSettings);
+
         _cardClickedHandlers = new Action<int>[choiceWindows.Length];
         _weaponCardClickedHandlers = new Action<int>[choiceWindows.Length];
         _rerollClickedHandlers = new Action[choiceWindows.Length];
@@ -114,6 +119,9 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
         _timeScaleTween.Stop();
         Time.timeScale = 1f;
 
+        if (settingsButton != null)
+            settingsButton.onClick.RemoveListener(OpenSettings);
+
         if (_cardClickedHandlers == null)
             return;
 
@@ -148,6 +156,12 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
         MatchMakingConfig.Instance.LeaveMatch();
         _onLeave?.Invoke(_placement);
 
+    }
+
+    // Target for a HUD settings button's onClick - forwards to the scene-local popup manager.
+    public void OpenSettings()
+    {
+        InMatchPopupManager.instance?.OpenSettings();
     }
 
     public override void QStart(QuantumGame game)
