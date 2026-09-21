@@ -162,9 +162,9 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 526
-        y: 797
+        y: 708
         width: 581
-        height: 548
+        height: 637
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -183,10 +183,10 @@ TextureImporter:
       name: LuxLobby_2
       rect:
         serializedVersion: 2
-        x: 32
-        y: 339
-        width: 316
-        height: 470
+        x: 9
+        y: 50
+        width: 339
+        height: 650
       alignment: 9
       pivot: {x: 0.55223495, y: 0.10457725}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -205,12 +205,12 @@ TextureImporter:
       name: LuxLobby_3
       rect:
         serializedVersion: 2
-        x: 852
-        y: 25
-        width: 270
-        height: 452
+        x: 963
+        y: 54
+        width: 298
+        height: 601
       alignment: 9
-      pivot: {x: 0.48970222, y: 0.12158382}
+      pivot: {x: 0.40661743, y: 0.097552374}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -227,10 +227,10 @@ TextureImporter:
       name: LuxLobby_4
       rect:
         serializedVersion: 2
-        x: 350
-        y: 347
-        width: 211
-        height: 460
+        x: 647
+        y: 91
+        width: 305
+        height: 524
       alignment: 9
       pivot: {x: 0.47066408, y: 0.07952463}
       border: {x: 0, y: 0, z: 0, w: 0}

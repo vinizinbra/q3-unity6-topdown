@@ -139,8 +139,8 @@ TextureImporter:
       name: BruteLobby_0
       rect:
         serializedVersion: 2
-        x: 13
-        y: 388
+        x: 5
+        y: 0
         width: 350
         height: 430
       alignment: 0
@@ -161,9 +161,9 @@ TextureImporter:
       name: BruteLobby_1
       rect:
         serializedVersion: 2
-        x: 361
-        y: 290
-        width: 629
+        x: 39
+        y: 409
+        width: 646
         height: 615
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -183,9 +183,9 @@ TextureImporter:
       name: BruteLobby_2
       rect:
         serializedVersion: 2
-        x: 979
-        y: 92
-        width: 557
+        x: 910
+        y: 65
+        width: 584
         height: 804
       alignment: 0
       pivot: {x: 0.5, y: 0.5}

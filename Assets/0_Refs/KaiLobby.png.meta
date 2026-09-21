@@ -139,10 +139,10 @@ TextureImporter:
       name: KaiLobby_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 838
-        width: 528
-        height: 514
+        x: 74
+        y: 925
+        width: 491
+        height: 477
       alignment: 9
       pivot: {x: 0.3684763, y: 0.09594066}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -161,10 +161,10 @@ TextureImporter:
       name: KaiLobby_1
       rect:
         serializedVersion: 2
-        x: 33
-        y: 0
+        x: 12
+        y: 52
         width: 594
-        height: 772
+        height: 869
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -183,10 +183,10 @@ TextureImporter:
       name: KaiLobby_2
       rect:
         serializedVersion: 2
-        x: 575
-        y: 674
-        width: 547
-        height: 724
+        x: 608
+        y: 38
+        width: 514
+        height: 813
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -206,7 +206,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 670
-        y: 459
+        y: 940
         width: 308
         height: 200
       alignment: 0

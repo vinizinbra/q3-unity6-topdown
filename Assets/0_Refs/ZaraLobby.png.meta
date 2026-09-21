@@ -139,13 +139,13 @@ TextureImporter:
       name: ZaraLobby_0
       rect:
         serializedVersion: 2
-        x: 33
-        y: 621
-        width: 590
-        height: 653
+        x: 573
+        y: 0
+        width: 549
+        height: 551
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      border: {x: 5, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
@@ -162,8 +162,8 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 82
-        width: 580
+        y: 0
+        width: 571
         height: 540
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -183,10 +183,10 @@ TextureImporter:
       name: ZaraLobby_2
       rect:
         serializedVersion: 2
-        x: 606
-        y: 126
-        width: 516
-        height: 761
+        x: 481
+        y: 562
+        width: 641
+        height: 840
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
