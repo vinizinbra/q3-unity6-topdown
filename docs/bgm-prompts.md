@@ -26,6 +26,8 @@ side is plain `SoundData` assets (see "Where the tracks live" below).
 | Breathing | `Assets/_Project/Audio/Music/BGMBreath.asset` | `Assets/_Project/Audio/Music/Music/BreathMusic/` | `MusicDirector.breathingMusic` |
 | Survival | `Assets/_Project/Audio/Music/BGMSurvival.asset` | `Assets/_Project/Audio/Music/Music/SurvivalMusic/` | `MusicDirector.survivalMusic` |
 | Boss | `Assets/_Project/Audio/Music/BGMBoss.asset` | `Assets/_Project/Audio/Music/Music/BossMusic/` (create when the first clip lands) | `MusicDirector.bossMusic` |
+| Team Challenge (`GameState.TeamChallenge`) | not created yet (candidate clips in `Assets/_Project/Audio/Music/Music/Challenge/`) | `Challenge/` | `MusicDirector.teamChallengeMusic` |
+| Traversal Challenge (`GameState.TraversalChallenge`) | not created yet (candidate clips in `Assets/_Project/Audio/Music/Music/Challenge/`) | `Challenge/` | `MusicDirector.traversalChallengeMusic` |
 | In-match Lobby (`GameState.Lobby`) | reuses `BGMBreath.asset` | - | `MusicDirector.lobbyMusic` |
 | Main Menu | `Assets/_Project/Audio/Music/BGMMenu.asset` | `Assets/_Project/Audio/Music/Music/MenuMusic/` (create when the first clip lands) | `MenuMusicPlayer.music` (in `MenuScene.unity`) |
 
@@ -191,6 +193,20 @@ Target: ~108-116 BPM, driving and tense, no climax-and-release - it holds until 
 None yet - `Assets/_Project/Audio/Music/BGMBoss.asset` has an empty `variants` list. Generate from
 the prompt above, drop the clips in a new `Assets/_Project/Audio/Music/Music/BossMusic/` folder, and
 add them to that asset.
+
+## Team Challenge / Traversal Challenge
+
+Both are overlay states on top of the combat phase ([optional-team-challenge.md](optional-team-challenge.md),
+[traversal-challenge.md](traversal-challenge.md)), and `MusicDirector` gives each its own track:
+`GameState.TeamChallenge` (from the Starting countdown until the challenge ends) plays
+`teamChallengeMusic`; `GameState.TraversalChallenge` (while a Traversal Challenge is Active) plays
+`traversalChallengeMusic`. If a slot is left empty it falls back to the music the underlying phase
+would play (`CombatPhaseState`, so Survival/Boss/Breathing-when-secured), never silence. When the
+overlay ends the director crossfades back to that phase's track.
+
+The prompts used for these are **not recorded yet** - paste them here when next used. Traversal is a
+timed puzzle (tense but not combat-heavy); Team Challenge is a voluntary high-stakes fight, so it
+should sit above Survival in intensity.
 
 ## Lobby / Menu
 

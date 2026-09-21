@@ -42,6 +42,12 @@ public class MusicDirector : QuantumGlobalMonoBehaviour
     [SerializeField, SoundDataPicker, Tooltip("Boss encounter music. Falls back to survivalMusic if left empty, so a boss fight is never silent just because this wasn't authored.")]
     private SoundData bossMusic;
 
+    [SerializeField, SoundDataPicker, Tooltip("Optional Team Challenge music (GameState.TeamChallenge - from the moment the Starting countdown begins until the challenge ends). Falls back to whatever the underlying phase would play (usually survivalMusic) if left empty, so the challenge is never silent just because this wasn't authored.")]
+    private SoundData teamChallengeMusic;
+
+    [SerializeField, SoundDataPicker, Tooltip("Traversal Challenge music (GameState.TraversalChallenge - while any Traversal Challenge is Active). Falls back to whatever the underlying phase would play if left empty.")]
+    private SoundData traversalChallengeMusic;
+
     [SerializeField, Tooltip("Seconds the OUTGOING track takes to fade out. The incoming track's own fade-in is authored on its SoundData (Fade In), so a true crossfade wants both set - roughly matching values feel best.")]
     private float crossfadeDuration = 2f;
 
@@ -140,6 +146,32 @@ public class MusicDirector : QuantumGlobalMonoBehaviour
                 return lobbyMusic != null ? lobbyMusic : breathingMusic;
 
             case GameState.Breathing:
+            case GameState.Boss:
+            case GameState.Survival:
+                return ResolveCombatPhaseTrack(frame, frame.Global->CurrentState);
+
+            case GameState.TeamChallenge:
+                return teamChallengeMusic != null ? teamChallengeMusic : ResolveCombatPhaseTrack(frame, frame.Global->CombatPhaseState);
+
+            case GameState.TraversalChallenge:
+                return traversalChallengeMusic != null ? traversalChallengeMusic : ResolveCombatPhaseTrack(frame, frame.Global->CombatPhaseState);
+
+            default:
+                // Upgrade pauses the gameplay systems mid-phase and RunFailed/Event are transient or
+                // unwired - none of them should reach in and change the music, so whatever was
+                // playing keeps playing and resumes correctly once the state returns.
+                return _current;
+        }
+    }
+
+    // The music of the combat phase itself. Team/Traversal Challenge are overlays on top of
+    // Global.CombatPhaseState (see GameState.qtn), so an unauthored challenge track resolves through
+    // here with that underlying state and simply keeps sounding like the phase it interrupted.
+    private unsafe SoundData ResolveCombatPhaseTrack(Frame frame, GameState phase)
+    {
+        switch (phase)
+        {
+            case GameState.Breathing:
                 // THE rule - see the class comment. Not secured yet means enemies are still alive,
                 // which means this is still combat however the state enum labels it.
                 return frame.Global->BreathingAreaSecured == true ? breathingMusic : survivalMusic;
@@ -147,14 +179,8 @@ public class MusicDirector : QuantumGlobalMonoBehaviour
             case GameState.Boss:
                 return bossMusic != null ? bossMusic : survivalMusic;
 
-            case GameState.Survival:
-                return survivalMusic;
-
             default:
-                // Upgrade pauses the gameplay systems mid-phase and RunFailed/Event are transient or
-                // unwired - none of them should reach in and change the music, so whatever was
-                // playing keeps playing and resumes correctly once the state returns.
-                return _current;
+                return survivalMusic;
         }
     }
 }
