@@ -79,8 +79,17 @@ public class GameBuilder : MonoBehaviour
 
         return sceneList.ToArray();
     }
+    // Development build on purpose: LogHelper.Log/Warn are [Conditional("DEVELOPMENT_BUILD")], so a
+    // release WebGL build prints none of them and the browser console is empty of diagnostics. Also
+    // the entry point LanBuildServerWindow's "Build WebGL" button calls. Use "Build/WebGL (Release)"
+    // for the shippable, stripped build.
     [MenuItem("Build/WebGL")]
-    public static void PerformWebBuild()
+    public static void PerformWebBuild() => BuildWeb(BuildOptions.Development);
+
+    [MenuItem("Build/WebGL (Release)")]
+    public static void PerformWebReleaseBuild() => BuildWeb(BuildOptions.None);
+
+    private static void BuildWeb(BuildOptions options)
     {
         BuildPlayerOptions bpo = new BuildPlayerOptions();
 
@@ -92,7 +101,7 @@ public class GameBuilder : MonoBehaviour
         bpo.locationPathName = "build/WebGl/";
         
         bpo.target = BuildTarget.WebGL;
-        bpo.options = BuildOptions.None;
+        bpo.options = options;
         BuildReport report = BuildPipeline.BuildPlayer(bpo);
         BuildSummary summary = report.summary;
         PlayerSettings.WebGL.initialMemorySize = 512;
