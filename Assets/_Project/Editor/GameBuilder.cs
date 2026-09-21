@@ -79,17 +79,18 @@ public class GameBuilder : MonoBehaviour
 
         return sceneList.ToArray();
     }
-    // Development build on purpose: LogHelper.Log/Warn are [Conditional("DEVELOPMENT_BUILD")], so a
-    // release WebGL build prints none of them and the browser console is empty of diagnostics. Also
-    // the entry point LanBuildServerWindow's "Build WebGL" button calls. Use "Build/WebGL (Release)"
-    // for the shippable, stripped build.
+    // Diagnostic build: a RELEASE player (no Development flag - the Development WebGL TLS module
+    // in Unity 6000.3.6f1 fails to link with "undefined symbol unitytls_ssl_set_client_transport_id")
+    // with the RR_DIAG_LOGS define, which re-enables LogHelper.Log/Warn so the browser console isn't
+    // empty. Also the entry point LanBuildServerWindow's and TeamCity's "Build WebGL" call.
+    // "Build/WebGL (Release)" is the same build without the log define, for shipping.
     [MenuItem("Build/WebGL")]
-    public static void PerformWebBuild() => BuildWeb(BuildOptions.Development);
+    public static void PerformWebBuild() => BuildWeb(BuildOptions.None, withDiagLogs: true);
 
     [MenuItem("Build/WebGL (Release)")]
-    public static void PerformWebReleaseBuild() => BuildWeb(BuildOptions.None);
+    public static void PerformWebReleaseBuild() => BuildWeb(BuildOptions.None, withDiagLogs: false);
 
-    private static void BuildWeb(BuildOptions options)
+    private static void BuildWeb(BuildOptions options, bool withDiagLogs)
     {
         BuildPlayerOptions bpo = new BuildPlayerOptions();
 
@@ -102,6 +103,7 @@ public class GameBuilder : MonoBehaviour
         
         bpo.target = BuildTarget.WebGL;
         bpo.options = options;
+        if (withDiagLogs) bpo.extraScriptingDefines = new[] { "RR_DIAG_LOGS" };
         BuildReport report = BuildPipeline.BuildPlayer(bpo);
         BuildSummary summary = report.summary;
         PlayerSettings.WebGL.initialMemorySize = 512;

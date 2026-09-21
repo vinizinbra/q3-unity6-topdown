@@ -105,6 +105,9 @@ public class InteractionPromptWidget : MonoBehaviour
     private ContextInteractionState _loggedState = ContextInteractionState.None;
     private bool _loggedNoLocalPlayer;
     private bool _loggedProjectionFailure;
+    private bool _loggedGateSkip;
+    private bool _loggedFirstTick;
+    private bool _loggedException;
     // Whether the entity this widget follows is one of THIS client's own local players - i.e. we're
     // rendering the DOWNED player's own view of their revive, not a nearby reviver's. Refreshed
     // every frame in RefreshReviveTitle (local slots are bound asynchronously, so this can't be
@@ -221,11 +224,56 @@ public class InteractionPromptWidget : MonoBehaviour
             rewardRow?.Setup(rewardIcon, rewardText);
     }
 
-    private unsafe void LateUpdate()
+    private void OnEnable()
+    {
+        LogHelper.Log("Prompt", $"{_entityRef} widget enabled (game={(_game != null)} followTarget={(_followTarget != null)} visualRoot={(visualRoot != null)} canvas={(_canvas != null ? _canvas.name : "NULL")})", this);
+    }
+
+    private void OnDisable()
+    {
+        LogHelper.Log("Prompt", $"{_entityRef} widget disabled", this);
+    }
+
+    // Wrapper only for diagnostics: an exception thrown anywhere in the per-frame update below would
+    // silently stop UpdateFromState from ever running (so the prompt never shows and no state log
+    // ever prints) - logged once, then rethrown so behavior is unchanged.
+    private void LateUpdate()
     {
         if (_game == null || _followTarget == null)
-            return;
+        {
+            if (_loggedGateSkip == false)
+            {
+                _loggedGateSkip = true;
+                LogHelper.Warn("Prompt", $"{_entityRef} LateUpdate skipped: game={(_game != null)} followTarget={(_followTarget != null)} (destroyed?)", this);
+            }
 
+            return;
+        }
+
+        if (_loggedFirstTick == false)
+        {
+            _loggedFirstTick = true;
+            LogHelper.Log("Prompt", $"{_entityRef} first LateUpdate tick (activeInHierarchy={gameObject.activeInHierarchy} followPos={_followTarget.position})", this);
+        }
+
+        try
+        {
+            Tick();
+        }
+        catch (Exception e)
+        {
+            if (_loggedException == false)
+            {
+                _loggedException = true;
+                LogHelper.Error("Prompt", $"{_entityRef} update threw - prompt can never show: {e}", this);
+            }
+
+            throw;
+        }
+    }
+
+    private unsafe void Tick()
+    {
         FollowTarget();
 
         // Applies the Downed title/color and live bleed-out countdown every frame this entity's
@@ -503,7 +551,7 @@ public class InteractionPromptWidget : MonoBehaviour
         if (haveLocalPlayer == false && _loggedNoLocalPlayer == false)
         {
             _loggedNoLocalPlayer = true;
-            LogHelper.Warn("Prompt", $"{_entityRef} has no bound local player (MyLocalPlayer={(MyLocalPlayer.Instance != null)}) - prompt can't show yet.", this);
+            LogHelper.Warn("Prompt", $"{_entityRef} has no bound local player (MyLocalPlayer={(MyLocalPlayer.Instance != null)} slots={(MyLocalPlayer.Instance != null ? MyLocalPlayer.Instance.Slots.Count : -1)}) - prompt can't show yet.", this);
         }
         else if (haveLocalPlayer == true)
         {
@@ -670,8 +718,18 @@ public class InteractionPromptWidget : MonoBehaviour
     // match-wide, consistent with Cursed Rift's own "doesn't pause for anyone" design.
     private void SetShown(bool shown)
     {
-        if (_isShown == shown || visualRoot == null)
+        if (visualRoot == null)
+        {
+            if (shown)
+                LogHelper.Warn("Prompt", $"{_entityRef} wants to show but visualRoot is not assigned on the widget prefab", this);
+
             return;
+        }
+
+        if (_isShown == shown)
+            return;
+
+        LogHelper.Log("Prompt", $"{_entityRef} '{(titleText != null ? titleText.text : "?")}' {(shown ? "SHOW" : "HIDE")} (visualRoot active={visualRoot.activeSelf} scale={visualRoot.transform.localScale} pos={selfRect.anchoredPosition})", this);
 
         _isShown = shown;
         _scaleTween.Stop();

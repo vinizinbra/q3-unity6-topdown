@@ -68,7 +68,8 @@ namespace Quantum
             if (e.Owner != _entityRef)
                 return;
 
-            WeaponDataAsset weaponData = _game.Frames.Verified.FindAsset(e.WeaponData);
+            WeaponDataAsset weaponData = _game.Frames.Predicted.FindAsset(e.WeaponData);
+            _weaponResolved = true;
             SpawnWeaponView(weaponData);
         }
 
@@ -81,19 +82,40 @@ namespace Quantum
             if (torsoFollow == null)
                 torsoFollow = transform.root.GetComponentInChildren<BlobAnimationView>();
 
-            Frame frame = game.Frames.Verified;
+            _positionResolved = false;
+            _weaponResolved = false;
+            TryResolveFromSim(game);
+        }
 
-            if (frame.Has<CharacterStats>(_entityRef))
+        // Read off the PREDICTED frame (what the view is created from - Verified can lag a few ticks
+        // online and miss these components) and retried from QUpdate until both have landed. The
+        // Weapon read is guarded: an unguarded Get on a missing component threw and left the
+        // character with no weapon view at all.
+        private bool _positionResolved;
+        private bool _weaponResolved;
+
+        private void TryResolveFromSim(QuantumGame game)
+        {
+            Frame frame = game.Frames.Predicted;
+
+            if (_positionResolved == false && frame.Has<CharacterStats>(_entityRef))
             {
                 CharacterStats stats = frame.Get<CharacterStats>(_entityRef);
                 CharacterData characterData = frame.FindAsset(stats.CharacterData);
                 restWeaponPosition = characterData.WeaponPosition.ToUnityVector3();
                 hasWeaponPosition = true;
+                _positionResolved = true;
             }
 
-            AssetRef<WeaponDataAsset> weaponDataRef = frame.Get<Weapon>(_entityRef).WeaponData;
-            WeaponDataAsset weaponData = frame.FindAsset(weaponDataRef);
-            SpawnWeaponView(weaponData);
+            // _weaponResolved is also set by OnWeaponEquipped, so a re-equip that lands before this
+            // retry succeeds is never overwritten by the older cold read.
+            if (_weaponResolved == false && frame.Has<Weapon>(_entityRef))
+            {
+                AssetRef<WeaponDataAsset> weaponDataRef = frame.Get<Weapon>(_entityRef).WeaponData;
+                WeaponDataAsset weaponData = frame.FindAsset(weaponDataRef);
+                _weaponResolved = true;
+                SpawnWeaponView(weaponData);
+            }
         }
 
         public override void DeInitialize(QuantumGame game)
@@ -136,6 +158,9 @@ namespace Quantum
 
         protected override void QUpdate(QuantumGame game)
         {
+            if (_positionResolved == false || _weaponResolved == false)
+                TryResolveFromSim(game);
+
             // Hides the whole weapon locator (weaponSocket / MainChar's WeaponLocator - and therefore
             // the gun plus anything else parented under it) while Downed/KO (see docs/revive.md) -
             // can't fire anyway (WeaponSystem's own IsIncapacitated gate), and a collapsed character

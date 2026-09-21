@@ -24,7 +24,7 @@ namespace Quantum
         public override void Initialize(QuantumGame game)
         {
             base.Initialize(game);
-            ApplyRingColorTint(game.Frames.Verified);
+            ApplyRingColorTint(game.Frames.Predicted);
         }
 
         public override void DeInitialize(QuantumGame game)

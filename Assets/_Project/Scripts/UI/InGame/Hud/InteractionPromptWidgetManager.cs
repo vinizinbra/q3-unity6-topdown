@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Quantum;
+using QuantumUser.View.Util;
 using UnityEngine;
 
 // Spawns/despawns one InteractionPromptWidget per Interactable POI entity, parented under
@@ -40,6 +41,8 @@ public class InteractionPromptWidgetManager : MonoBehaviour
         widget.Setup(game, entityRef, followTarget, title, activeDescription, phaseUnavailableDescription, alreadyUsedDescription, notNeededDescription, worldOffset, occupiedDescription, rewardIcon, rewardText);
         widget.gameObject.SetActive(true);
         _widgets.Add(entityRef, widget);
+
+        LogHelper.Log("Prompt", $"Spawned widget for {entityRef} '{title}': activeInHierarchy={widget.gameObject.activeInHierarchy} parent={(widgetParent != null ? widgetParent.name : "NULL")} parentActive={(widgetParent != null && widgetParent.gameObject.activeInHierarchy)} total={_widgets.Count}", widget);
         return widget;
     }
 
@@ -48,6 +51,7 @@ public class InteractionPromptWidgetManager : MonoBehaviour
         if (_widgets.TryGetValue(entityRef, out var widget) == false)
             return;
 
+        LogHelper.Log("Prompt", $"Despawning widget for {entityRef}", widget);
         _widgets.Remove(entityRef);
 
         if (widget != null)

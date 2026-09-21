@@ -89,9 +89,12 @@ public abstract class CustomQuantumEntityViewComponent : MonoBehaviour
     {
         _game = game;
         _entityRef = entityView.EntityRef;
-        if (_game.Frames.Verified.Has<PlayerLink>(_entityRef))
+        // PREDICTED, not Verified: the view is created off the predicted frame, and online a fresh
+        // entity only reaches the verified frame a few ticks later - a Verified read here can miss
+        // PlayerLink and leave _playerRef default (breaking local-player detection downstream).
+        if (_game.Frames.Predicted.Has<PlayerLink>(_entityRef))
         {
-            var playerLink = _game.Frames.Verified.Get<PlayerLink>(_entityRef);
+            var playerLink = _game.Frames.Predicted.Get<PlayerLink>(_entityRef);
             _playerRef = playerLink.Player;
         }
         initialized = true;

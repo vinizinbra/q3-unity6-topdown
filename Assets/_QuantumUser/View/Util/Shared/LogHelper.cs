@@ -36,14 +36,14 @@ namespace QuantumUser.View.Util
         // strip Log/Warn (and their string formatting) entirely via [Conditional].
         public static bool Disabled = false;
 
-        [Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD"), Conditional("RR_DIAG_LOGS")]
         public static void Log(string tag, string message, Object context = null)
         {
             if (Disabled) return;
             Debug.Log(Format(tag, message), context);
         }
 
-        [Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD"), Conditional("RR_DIAG_LOGS")]
         public static void Warn(string tag, string message, Object context = null)
         {
             if (Disabled) return;

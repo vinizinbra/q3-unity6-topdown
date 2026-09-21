@@ -254,7 +254,7 @@ namespace Quantum
             if (isLocalPlayer == false)
                 return;
 
-            CharacterData characterData = ResolveCharacterData(game.Frames.Verified);
+            CharacterData characterData = ResolveCharacterData(game.Frames.Predicted);
 
             Color ringColor = ResolveRingColor(characterData);
             _baseRingColor = new Color(ringColor.r, ringColor.g, ringColor.b, _baseRingAlpha);

@@ -27,12 +27,24 @@ namespace Quantum
         [SerializeField, Tooltip("At or above this, highValueVisual shows.")]
         private FP highValueThreshold = 10;
 
-        public override unsafe void Initialize(QuantumGame game)
+        // Read off the PREDICTED frame (the frame the view is created from - Verified can lag a few
+        // ticks online and miss the component) and retried from QUpdate until it lands.
+        private bool _tierApplied;
+
+        public override void Initialize(QuantumGame game)
         {
             base.Initialize(game);
 
-            if (game.Frames.Verified.Unsafe.TryGetPointer<CurrencyOrb>(_entityRef, out var currencyOrb) == false)
+            _tierApplied = false;
+            TryApplyTier(game);
+        }
+
+        private unsafe void TryApplyTier(QuantumGame game)
+        {
+            if (game.Frames.Predicted.Unsafe.TryGetPointer<CurrencyOrb>(_entityRef, out var currencyOrb) == false)
                 return;
+
+            _tierApplied = true;
 
             FP value = currencyOrb->Value;
 
@@ -46,6 +58,8 @@ namespace Quantum
 
         protected override void QUpdate(QuantumGame game)
         {
+            if (_tierApplied == false)
+                TryApplyTier(game);
         }
 
         private static void SetShown(GameObject go, bool shown)

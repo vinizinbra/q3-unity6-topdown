@@ -48,24 +48,46 @@ namespace Quantum
         // description on top of the generic per-ContextInteractionState text via
         // InteractionPromptWidget.SetDescriptionOverride.
         protected InteractionPromptWidget PromptWidget { get; private set; }
+        private bool _promptResolved;
 
         public override void Initialize(QuantumGame game)
         {
             base.Initialize(game);
 
-            bool hasInteractable = game.Frames.Verified.Has<Interactable>(_entityRef);
+            TrySpawnPrompt(game, isRetry: false);
+        }
 
-            // Checked ONCE here and never again - so if Interactable isn't on the entity yet at the
-            // moment its view is created, this POI never gets a prompt. Logged to see which side of
-            // that a given run lands on (online vs offline view-creation timing can differ).
-            LogHelper.Log("Prompt", $"{name} {_entityRef} Initialize: hasInteractable={hasInteractable} manager={(InteractionPromptWidgetManager.Instance != null)}", this);
+        // Checked against the PREDICTED frame, not Verified: online, a freshly created entity exists
+        // in the predicted frame a few ticks before the verified one catches up, so a Verified read
+        // right at view creation says "no Interactable" and this POI would never get a prompt (offline
+        // has no such gap, which is why it only failed online). Also retried every frame from LateUpdate
+        // until it lands, as a safety net for any other ordering where the component shows up later.
+        private void TrySpawnPrompt(QuantumGame game, bool isRetry)
+        {
+            bool hasInteractable = game.Frames.Predicted.Has<Interactable>(_entityRef);
 
-            if (hasInteractable == true)
+            if (isRetry == false || hasInteractable == true)
             {
-                PromptWidget = InteractionPromptWidgetManager.Instance?.SpawnWidget(_entityRef, game, transform, promptTitle,
-                    promptActiveDescription, promptPhaseUnavailableDescription, promptAlreadyUsedDescription,
-                    promptNotNeededDescription, promptWorldOffset, rewardIcon: ResolveRewardIcon(), rewardText: ResolveRewardText());
+                LogHelper.Log("Prompt", $"{name} {_entityRef} {(isRetry ? "late-resolved" : "Initialize")}: hasInteractable={hasInteractable} manager={(InteractionPromptWidgetManager.Instance != null)}", this);
             }
+
+            if (hasInteractable == false)
+                return;
+
+            _promptResolved = true;
+            PromptWidget = InteractionPromptWidgetManager.Instance?.SpawnWidget(_entityRef, game, transform, promptTitle,
+                promptActiveDescription, promptPhaseUnavailableDescription, promptAlreadyUsedDescription,
+                promptNotNeededDescription, promptWorldOffset, rewardIcon: ResolveRewardIcon(), rewardText: ResolveRewardText());
+        }
+
+        // LateUpdate, not Update: CustomQuantumEntityViewComponent already declares a private Update()
+        // that drives QUpdate, and a same-named one here would shadow it so Unity never calls it.
+        private void LateUpdate()
+        {
+            if (_promptResolved == true || _game == null || _entityRef == EntityRef.None)
+                return;
+
+            TrySpawnPrompt(_game, isRetry: true);
         }
 
         // Overridable so a subclass whose reward is a fixed, known constant (e.g. TeamChallengeView's
@@ -82,6 +104,7 @@ namespace Quantum
         {
             InteractionPromptWidgetManager.Instance?.DespawnWidget(_entityRef);
             PromptWidget = null;
+            _promptResolved = false;
 
             base.DeInitialize(game);
         }

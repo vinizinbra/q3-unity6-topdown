@@ -25,7 +25,6 @@ namespace Quantum
 
             if (directorConfig.EnemyPrototype.Id.IsValid == false)
             {
-                Log.Error("[Spawner] DirectorConfig.EnemyPrototype not assigned - cannot spawn any group");
                 return false;
             }
 
@@ -33,14 +32,10 @@ namespace Quantum
 
             if (memberCount == 0)
             {
-                Log.Error($"[Spawner] {group.name} has no Members/Quantity authored - nothing to spawn");
                 return false;
             }
 
             int groundLayerMask = EnemyMovementUtility.GetGroundLayerMask(f);
-            int noGroundCount = 0;
-            int disconnectedChunkCount = 0;
-            int invalidFormationCount = 0;
 
             // Each attempt is a fresh, independent anchor - no per-member retry/relaxation within
             // an attempt (see DirectorConfig.MaxGroupSpawnAttempts's own comment). A formation
@@ -51,7 +46,6 @@ namespace Quantum
 
                 if (EnemyMovementUtility.TryFindGroundHeight(f, candidateAnchor, groundLayerMask, out FP anchorGroundY) == false)
                 {
-                    noGroundCount++;
                     continue; // no floor under this ring position at all - try another anchor
                 }
 
@@ -59,23 +53,19 @@ namespace Quantum
 
                 if (isMajorGroup && ChunkConnectivityUtility.IsConnectedToNearestPlayer(f, anchor) == false)
                 {
-                    disconnectedChunkCount++;
                     continue; // close in world-space, but not reachable from the nearest player's own chunk
                 }
 
                 if (TryValidateFormation(f, group, memberCount, anchor, anchorGroundY, groundLayerMask, directorConfig, out FPVector3[] memberPositions, out AssetRef<EnemyDataAsset>[] memberData, out EnemyFaction[] memberFaction) == false)
                 {
-                    invalidFormationCount++;
                     continue; // one or more members didn't fit here - discard this whole anchor
                 }
 
-                Log.Error($"[Spawner] {group.name} anchor found at attempt {attempt} ({anchor}) - spawning {memberCount} member(s)");
                 CreateGroup(f, groupRef, directorConfig, memberPositions, memberData, memberFaction);
                 spawnedCount = memberCount;
                 return true;
             }
 
-            Log.Error($"[Spawner] {group.name} found no valid anchor after {directorConfig.MaxGroupSpawnAttempts} attempts near {predictedCombatCenter} - {noGroundCount} had no ground, {disconnectedChunkCount} landed in a disconnected chunk, {invalidFormationCount} had an invalid formation (see [Spawner] member-rejection logs above for why)");
             return false;
         }
 
@@ -90,13 +80,11 @@ namespace Quantum
         {
             if (directorConfig.EnemyPrototype.Id.IsValid == false)
             {
-                Log.Error("[Spawner] DirectorConfig.EnemyPrototype not assigned - cannot spawn a direct enemy");
                 return false;
             }
 
             if (entry.EnemyData.Id.IsValid == false)
             {
-                Log.Error("[Spawner] EnemySpawnEntry has no EnemyData assigned - nothing to spawn");
                 return false;
             }
 
@@ -104,15 +92,11 @@ namespace Quantum
 
             if (data == null || data.Economy.SpawnProfile.Id.IsValid == false)
             {
-                Log.Error($"[Spawner] {entry.EnemyData} has no SpawnProfile assigned - cannot place it directly");
                 return false;
             }
 
             EnemySpawnProfile profile = f.FindAsset(data.Economy.SpawnProfile);
             int groundLayerMask = EnemyMovementUtility.GetGroundLayerMask(f);
-            int noGroundCount = 0;
-            int disconnectedChunkCount = 0;
-            int invalidCount = 0;
 
             for (int attempt = 0; attempt < directorConfig.MaxGroupSpawnAttempts; attempt++)
             {
@@ -120,7 +104,6 @@ namespace Quantum
 
                 if (EnemyMovementUtility.TryFindGroundHeight(f, candidateAnchor, groundLayerMask, out FP anchorGroundY) == false)
                 {
-                    noGroundCount++;
                     continue;
                 }
 
@@ -128,22 +111,18 @@ namespace Quantum
 
                 if (isMajor && ChunkConnectivityUtility.IsConnectedToNearestPlayer(f, anchor) == false)
                 {
-                    disconnectedChunkCount++;
                     continue;
                 }
 
                 if (TryValidateMember(f, data.name, 0, anchor, anchorGroundY, profile, groundLayerMask, directorConfig, out FPVector3 groundedPosition) == false)
                 {
-                    invalidCount++;
                     continue;
                 }
 
-                Log.Error($"[Spawner] {data.name} direct spawn anchor found at attempt {attempt} ({anchor})");
                 SpawnMember(f, default, directorConfig, groundedPosition, entry.EnemyData, entry.Faction);
                 return true;
             }
 
-            Log.Error($"[Spawner] {data.name} direct spawn found no valid anchor after {directorConfig.MaxGroupSpawnAttempts} attempts near {predictedCombatCenter} - {noGroundCount} had no ground, {disconnectedChunkCount} landed in a disconnected chunk, {invalidCount} failed placement");
             return false;
         }
 
@@ -169,7 +148,6 @@ namespace Quantum
             {
                 if (member.EnemyData.Id.IsValid == false)
                 {
-                    Log.Error($"[Spawner] {group.name} has a Member with no EnemyData assigned - rejecting the whole group");
                     return false;
                 }
 
@@ -177,7 +155,6 @@ namespace Quantum
 
                 if (data.Economy.SpawnProfile.Id.IsValid == false)
                 {
-                    Log.Error($"[Spawner] {data.name} has no SpawnProfile assigned - rejecting {group.name}");
                     return false;
                 }
 
@@ -210,7 +187,6 @@ namespace Quantum
             if (EnemyMovementUtility.TryFindGroundHeight(f, horizontalCandidate, groundLayerMask, out FP groundY) == false)
             {
                 groundedPosition = default;
-                Log.Error($"[Spawner] {dataName} slot {slot} rejected - no ground under {horizontalCandidate}");
                 return false;
             }
 
@@ -218,19 +194,16 @@ namespace Quantum
 
             if (ValidateHeightRule(profile, groundY, anchorGroundY) == false)
             {
-                Log.Error($"[Spawner] {dataName} slot {slot} rejected - height difference {groundY - anchorGroundY} outside [{profile.MinimumHeightDifference}, {profile.MaximumHeightDifference}] for {profile.SpawnCategory}");
                 return false;
             }
 
             if (IsInForbiddenChunk(f, groundedPosition, directorConfig, out ChunkType forbiddenType))
             {
-                Log.Error($"[Spawner] {dataName} slot {slot} rejected - {groundedPosition} falls inside a {forbiddenType} chunk (DirectorConfig.ForbiddenSpawnChunkTypes)");
                 return false;
             }
 
             if (HasClearance(f, groundedPosition, profile) == false)
             {
-                Log.Error($"[Spawner] {dataName} slot {slot} rejected - no clearance at {groundedPosition} (blocked by player/enemy/obstacle)");
                 return false;
             }
 
@@ -328,7 +301,6 @@ namespace Quantum
 
             if (f.Unsafe.TryGetPointer<Enemy>(entity, out var enemy) == false)
             {
-                Log.Error("[Spawner] DirectorConfig.EnemyPrototype has no Enemy component - destroying spawned entity");
                 f.Destroy(entity);
                 return;
             }
@@ -346,7 +318,6 @@ namespace Quantum
                 lifecycle->SourceGroup = groupRef;
             }
 
-            Log.Error($"[Spawner] spawned {entity} ({data?.name ?? "NULL EnemyDataAsset"}) at {position}");
         }
     }
 }

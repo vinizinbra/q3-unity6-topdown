@@ -237,13 +237,24 @@ namespace Quantum
             muzzleParticle.Play(true);
         }
 
+        // Read off the PREDICTED frame and retried from QUpdate until SentryBarrel is there - Verified
+        // can lag the view's creation by a few ticks online.
+        private bool _barrelResolved;
+
         public override void Initialize(QuantumGame game)
         {
             base.Initialize(game);
 
-            if (game.Frames.Verified.TryGet<SentryBarrel>(_entityRef, out var barrel) == false)
+            _barrelResolved = false;
+            TryResolveBarrel(game);
+        }
+
+        private void TryResolveBarrel(QuantumGame game)
+        {
+            if (game.Frames.Predicted.TryGet<SentryBarrel>(_entityRef, out var barrel) == false)
                 return;
 
+            _barrelResolved = true;
             SlotIndex = barrel.SlotIndex;
 
             if (barrel.Source.IsValid == false || spriteRenderer == null)
@@ -253,7 +264,7 @@ namespace Quantum
             // SLOT rather than per asset - see SentryWeaponSystemsSkillAction.View.cs. Slot 0 (the
             // baseline Cannon) has no granting asset at all, which the Source.IsValid check above
             // already filtered out.
-            SentryWeaponSystemsSkillAction source = game.Frames.Verified.FindAsset(barrel.Source);
+            SentryWeaponSystemsSkillAction source = game.Frames.Predicted.FindAsset(barrel.Source);
             Sprite weaponSprite = source.GetWeaponSprite(barrel.SlotIndex);
 
             if (weaponSprite != null)
@@ -264,6 +275,9 @@ namespace Quantum
 
         protected override void QUpdate(QuantumGame game)
         {
+            if (_barrelResolved == false)
+                TryResolveBarrel(game);
+
             if (cameraTransform == null) return;
 
             Frame frame = game.Frames.Predicted;
