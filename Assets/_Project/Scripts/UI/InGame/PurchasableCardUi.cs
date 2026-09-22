@@ -9,24 +9,15 @@ using UnityEngine.UI;
 // that split.
 public static class PurchasableCardUi
 {
-    // chooseButton/buyButton are mutually exclusive - a purchase card (ShowPurchaseUi) hides the
-    // card's normal "CHOOSE" button entirely and shows a dedicated Buy button in its place, rather
-    // than just relabeling the same button; every non-purchase card (Level-Up/Choose-Weapon/Cursed
-    // Rift) keeps showing chooseButton exactly as before, buyButton never appears. Both fire the
-    // SAME onClicked event (wired in UpgradeCardWidget/WeaponCardWidget's own Awake) - the
-    // downstream command dispatch (GameplayUiController) doesn't care which literal button was
-    // clicked, only which card/slot.
+    // One button, always active/selectable - a purchase card (ShowPurchaseUi) just layers a
+    // price/currency/sold-out row (purchaseRoot) on top of it, it doesn't swap in a second Button.
+    // The label itself already reads "BUY" for a purchase card via CardData.ButtonLabel (see
+    // UpgradeCardWidget/WeaponCardWidget.Setup) - this only owns the purchase row's own visuals.
     public static void Apply(PurchasableCardState state, GameObject purchaseRoot, TMP_Text priceText,
-        Image currencyIcon, GameObject soldOutOverlay, Button chooseButton, Button buyButton, ref bool interactable)
+        Image currencyIcon, GameObject soldOutOverlay, ref bool interactable)
     {
         if (purchaseRoot != null)
             purchaseRoot.SetActive(state.ShowPurchaseUi);
-
-        if (chooseButton != null)
-            chooseButton.gameObject.SetActive(state.ShowPurchaseUi == false);
-
-        if (buyButton != null)
-            buyButton.gameObject.SetActive(state.ShowPurchaseUi);
 
         if (state.ShowPurchaseUi == false)
             return;

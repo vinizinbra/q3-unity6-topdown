@@ -93,6 +93,10 @@ namespace Quantum
                     CoinUtility.Grant(f, player, (FP)cmd.Amount);
                     break;
 
+                case CheatActionKind.SpendCoins:
+                    CoinUtility.TrySpend(f, player, (FP)cmd.Amount);
+                    break;
+
                 case CheatActionKind.ToggleGodMode:
                     if (f.Has<Invulnerable>(player))
                         f.Remove<Invulnerable>(player);

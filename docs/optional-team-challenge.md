@@ -276,7 +276,14 @@ three `ChallengeDefinition` fields, not by any challenge-specific code:
   shifting the ratio per challenge means listing a group twice (or editing the `AllowedEnemies` weight).
 
 Kill targets were raised (Kill Rush 20 -> 40 in 30s, Flawless Hunt 15 -> 30). Numbers are decisive
-placeholders - re-tune after a played run. Rule rows with `ScaleTextWithKillTarget` are a
+placeholders - re-tune after a played run.
+
+Follow-up: the enemy-mix pass above (more ranged/swarm groups + lone Swarm/Gunner top-ups) pushed
+this too far the other way - overpopulated. Pulled `TargetPressure`/`MaxAliveEnemies`/
+`BudgetPerPulse` back down without giving up the fast `PulseInterval` (still ~0.6s, up slightly
+from 0.5s to space purchases out a little): Kill Rush 36->24 pressure / 32->22 cap, Flawless Hunt
+22->16 pressure / 22->16 cap, Cursed Survival 36->24 pressure / 18->13 cap. Kill targets/timers
+unchanged. Re-tune again after a played run - this is still a placeholder guess, not measured. Rule rows with `ScaleTextWithKillTarget` are a
 `string.Format` template and must use `{0}` (they previously held a hard-coded number, so the
 prompt never reflected the real co-op-scaled target).
 

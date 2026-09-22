@@ -64,6 +64,16 @@ public class UiPopup : MonoBehaviour
         hide = false;
         gameObject.SetActive(true);
         onShow?.Invoke();
+
+        AutoSelectFirstInteractable();
+    }
+
+    // Same gamepad/joystick default-selection convention as UiWindow.AutoSelectFirstInteractable -
+    // see its own comment. Deferred one frame so a subclass's own Show() override (e.g.
+    // InMatchSettingsPopup toggling restartButton after base.Show()) finishes first.
+    protected virtual void AutoSelectFirstInteractable()
+    {
+        StartCoroutine(UiSelectionUtility.SelectFirstInteractableNextFrame(this));
     }
 
     public virtual void Update()

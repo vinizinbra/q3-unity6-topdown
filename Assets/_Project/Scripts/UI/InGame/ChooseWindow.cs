@@ -3,6 +3,7 @@ using NaughtyAttributes;
 using PrimeTween;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.Serialization;
 using QuantumUser.View.Util;
 using UnityEngine.UI;
@@ -161,6 +162,16 @@ public class ChooseWindow : UiWindow
     private float _dimFullAlpha = 1f;
     private Tween _dimTween;
 
+    // Refresh/RefreshWeaponChoice/RefreshStore all run every QUpdate tick (see their own comments),
+    // but the gamepad/joystick default selection should only be forced once per Show() - otherwise
+    // it would steal focus back every tick even after the player has already navigated elsewhere.
+    private bool _hasAutoSelectedThisShow;
+
+    // Whichever card's own Selectable was clicked most recently - see ReselectIfNoLongerInteractable's
+    // own comment for why this is tracked explicitly instead of reading back
+    // EventSystem.current.currentSelectedGameObject.
+    private Selectable _lastClickedSelectable;
+
     private void Awake()
     {
         if (dimImage != null)
@@ -186,9 +197,10 @@ public class ChooseWindow : UiWindow
         for (int i = 0; i < cards.Length; i++)
         {
             int index = i; // capture by value, not by the loop variable
-            cards[i].onClicked += _ =>
+            cards[i].onClicked += clickedCard =>
             {
                 PlayCardChoose();
+                _lastClickedSelectable = clickedCard.ActiveSelectable;
                 onCardClicked?.Invoke(index);
             };
         }
@@ -211,9 +223,10 @@ public class ChooseWindow : UiWindow
         for (int i = 0; i < weaponCards.Length; i++)
         {
             int index = i; // capture by value, not by the loop variable
-            weaponCards[i].onClicked += _ =>
+            weaponCards[i].onClicked += clickedCard =>
             {
                 PlayCardChoose();
+                _lastClickedSelectable = clickedCard.ActiveSelectable;
                 onWeaponCardClicked?.Invoke(index);
             };
         }
@@ -238,12 +251,19 @@ public class ChooseWindow : UiWindow
     {
         ResetIntroParticles();
         base.Show();
+        _hasAutoSelectedThisShow = false;
 
         if (debugSkipIntroAnimation || UpgradeScreenDebugState.SkipAnimations)
             SkipIntroAnimation();
         else
             PlayIntroAnimation();
     }
+
+    // UiWindow's own generic first-Selectable-in-hierarchy scan isn't precise enough here (this
+    // window has two mutually-exclusive card families plus reroll/secondary action buttons) -
+    // SelectFirstInteractableOnce (driven by Refresh, once real card data is live) already handles
+    // it more specifically.
+    protected override void AutoSelectFirstInteractable() { }
 
     private void ResetIntroParticles()
     {
@@ -382,6 +402,16 @@ public class ChooseWindow : UiWindow
             UpgradeCardWidget.CardData data = i < cardData.Length ? cardData[i] : default;
             cards[i].Setup(data, interactable);
         }
+
+        SelectFirstInteractableOnce();
+
+        // Every card here normally locks together via the shared `interactable` above (a one-shot
+        // pick), but a purchase card (e.g. a Blacksmith perk offer - see BuildPerkOfferCardData)
+        // also factors its own CanAfford into interactable independently of confirmedIndex, so one
+        // card can go non-interactable on its own while siblings stay pickable. secondaryButton
+        // (Cancel/Keep Current) is the fallback for when that leaves every card non-interactable
+        // at once - it's still a valid, always-safe target even though the window is about to close.
+        UiSelectionUtility.ReselectIfNoLongerInteractable(_lastClickedSelectable, transform, secondaryButton);
     }
 
     // Same shape as Refresh above, for a screen whose options are all LevelUpPoolKind.ChooseWeapon
@@ -408,6 +438,8 @@ public class ChooseWindow : UiWindow
 
         if (secondaryButton != null)
             secondaryButton.interactable = interactable;
+
+        SelectFirstInteractableOnce();
     }
 
     private void SetSecondaryButtonActive(bool active, string label)
@@ -523,5 +555,81 @@ public class ChooseWindow : UiWindow
             WeaponCardWidget.CardData data = i < weaponData.Length ? weaponData[i] : default;
             weaponCards[i].Setup(data, interactable: true);
         }
+
+        SelectFirstInteractableOnce();
+
+        // Store stays open across multiple purchases (see this method's own comment) - a purchase
+        // that just disabled the currently-selected card's own button (sold out/can no longer
+        // afford) must not leave gamepad/joystick focus stuck on it. secondaryButton ("CLOSE") is
+        // the fallback for when every offer ends up sold out/unaffordable at once.
+        UiSelectionUtility.ReselectIfNoLongerInteractable(_lastClickedSelectable, transform, secondaryButton);
+    }
+
+    // Gives gamepad/joystick navigation a default selection the instant this window opens, instead
+    // of leaving EventSystem.current.currentSelectedGameObject at whatever it was before (often
+    // null, which means the stick does nothing until the player nudges it once). Only ever selects
+    // once per Show() - see _hasAutoSelectedThisShow's own comment - since Refresh/RefreshWeaponChoice/
+    // RefreshStore all run every QUpdate tick and would otherwise yank focus back here even after
+    // the player has already navigated elsewhere.
+    private void SelectFirstInteractableOnce()
+    {
+        if (_hasAutoSelectedThisShow || EventSystem.current == null)
+            return;
+
+        Selectable target = ResolveDefaultTarget();
+
+        if (target == null)
+            return;
+
+        // Marked done immediately even though the actual EventSystem selection below may still be
+        // waiting on the target card's own intro animation (see UiSelectionUtility) - otherwise the
+        // next QUpdate's Refresh() would call this again and double-subscribe to that animation's
+        // Finished event.
+        _hasAutoSelectedThisShow = true;
+        UiSelectionUtility.SelectFirstInteractable(target);
+    }
+
+    // First interactable card (either family), or the screen's own guaranteed escape hatch
+    // (secondaryButton - Close/Cancel/Keep Current) when no card is affordable/pickable at all
+    // (e.g. opening Store/Blacksmith with no money). Shared by SelectFirstInteractableOnce (on
+    // open) and the recovery check below (nav input with nothing selected).
+    private Selectable ResolveDefaultTarget()
+    {
+        Selectable target = FindFirstInteractable(cards) ?? FindFirstInteractable(weaponCards);
+
+        if (target == null && secondaryButton != null && secondaryButton.interactable && secondaryButton.gameObject.activeInHierarchy)
+            target = secondaryButton;
+
+        return target;
+    }
+
+    private static Selectable FindFirstInteractable(UpgradeCardWidget[] cardWidgets)
+    {
+        foreach (UpgradeCardWidget card in cardWidgets)
+        {
+            if (card == null || card.gameObject.activeInHierarchy == false)
+                continue;
+
+            Selectable selectable = card.ActiveSelectable;
+            if (selectable != null && selectable.gameObject.activeInHierarchy && selectable.interactable)
+                return selectable;
+        }
+
+        return null;
+    }
+
+    private static Selectable FindFirstInteractable(WeaponCardWidget[] cardWidgets)
+    {
+        foreach (WeaponCardWidget card in cardWidgets)
+        {
+            if (card == null || card.gameObject.activeInHierarchy == false)
+                continue;
+
+            Selectable selectable = card.ActiveSelectable;
+            if (selectable != null && selectable.gameObject.activeInHierarchy && selectable.interactable)
+                return selectable;
+        }
+
+        return null;
     }
 }

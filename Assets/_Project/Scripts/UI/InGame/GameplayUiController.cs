@@ -668,6 +668,7 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
     private static unsafe WeaponCardWidget.CardData BuildStoreWeaponCardData(Frame frame, EntityRef entity, EntityRef store, int offerIndex, StoreWeaponOffer offer, StoreConfig config)
     {
         WeaponCardWidget.CardData data = BuildWeaponCardData(frame, offer.WeaponData, offer.RolledPerks, offer.RolledPerkCount, offer.WeaponLevel);
+        data.ButtonLabel = "BUY";
 
         // Preview the SAME level-adjusted damage the offer will actually equip with (WeaponSystem.
         // ResolveLevelDamageMultiplier - the same compounding step WeaponSystem.AddLevel itself
@@ -720,6 +721,7 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
             Description = data.GetDescription(),
             RarityIndex = (int)data.Rarity,
             KindText = "Weapon Perk",
+            ButtonLabel = "BUY",
             Purchase = new PurchasableCardState
             {
                 ShowPurchaseUi = true,

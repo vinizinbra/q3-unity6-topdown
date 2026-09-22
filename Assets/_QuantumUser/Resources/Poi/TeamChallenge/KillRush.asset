@@ -23,12 +23,12 @@ MonoBehaviour:
     RawValue: 1966080
   KillTarget: 40
   BudgetPerPulse:
-    RawValue: 524288
+    RawValue: 393216
   PulseInterval:
-    RawValue: 32768
+    RawValue: 39322
   TargetPressure:
-    RawValue: 2359296
-  MaxAliveEnemies: 32
+    RawValue: 1572864
+  MaxAliveEnemies: 22
   AllowedGroups:
   - Id:
       Value: 292572693417129341

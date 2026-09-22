@@ -105,18 +105,18 @@ public class UpgradeCardWidget : MonoBehaviour
     private Image currencyIcon;
     [SerializeField, Tooltip("Overlay shown when CardData.Purchase.IsSoldOut is true - the card stays visible/de-emphasized rather than being removed.")]
     private GameObject soldOutOverlay;
-    [SerializeField, Tooltip("Shown INSTEAD of the card's normal `button` (\"CHOOSE\") whenever CardData.Purchase.ShowPurchaseUi is true - the two are mutually exclusive. Fires the same onClicked event as `button`.")]
-    private Button buyButton;
 
     public event Action<UpgradeCardWidget> onClicked;
+
+    // A single button for the whole card - Setup drives its label ("CHOOSE"/"BUY"/"SACRIFICE" via
+    // CardData.ButtonLabel) and the purchaseRoot overlay, it never swaps in a second Selectable.
+    // Used by ChooseWindow to give gamepad/joystick navigation a default selection.
+    public Selectable ActiveSelectable => button;
 
     private void Awake()
     {
         if (button != null)
             button.onClick.AddListener(() => onClicked?.Invoke(this));
-
-        if (buyButton != null)
-            buyButton.onClick.AddListener(() => onClicked?.Invoke(this));
     }
 
     public void Setup(CardData data, bool interactable)
@@ -209,12 +209,9 @@ public class UpgradeCardWidget : MonoBehaviour
         if (stackText != null)
             stackText.text = showStacks ? $"{data.CurrentStacks}/{data.MaxStacks}" : string.Empty;
 
-        PurchasableCardUi.Apply(data.Purchase, purchaseRoot, priceText, currencyIcon, soldOutOverlay, button, buyButton, ref interactable);
+        PurchasableCardUi.Apply(data.Purchase, purchaseRoot, priceText, currencyIcon, soldOutOverlay, ref interactable);
 
         if (button != null)
             button.interactable = interactable;
-
-        if (buyButton != null)
-            buyButton.interactable = interactable;
     }
 }

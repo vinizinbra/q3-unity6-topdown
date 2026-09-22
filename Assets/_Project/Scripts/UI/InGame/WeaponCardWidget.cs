@@ -53,6 +53,11 @@ public class WeaponCardWidget : MonoBehaviour
         // Store weapon-offer purchase affordance (see docs/store-blacksmith.md) - ShowPurchaseUi
         // defaults false, so the existing Choose-Weapon level-up call site is unaffected.
         public PurchasableCardState Purchase;
+
+        // Overrides the card's baked button label (e.g. "BUY" for a Store weapon offer) - same
+        // convention as UpgradeCardWidget.CardData.ButtonLabel. Empty (default) resets to
+        // defaultButtonLabel, so a reused card slot never keeps a stale label from last time.
+        public string ButtonLabel;
     }
 
     [Serializable]
@@ -116,12 +121,19 @@ public class WeaponCardWidget : MonoBehaviour
     private Image currencyIcon;
     [SerializeField, Tooltip("Overlay shown when CardData.Purchase.IsSoldOut is true - the card stays visible/de-emphasized rather than being removed.")]
     private GameObject soldOutOverlay;
-    [SerializeField, Tooltip("Shown INSTEAD of the card's normal `button` (\"CHOOSE\") whenever CardData.Purchase.ShowPurchaseUi is true - the two are mutually exclusive. Fires the same onClicked event as `button`.")]
-    private Button buyButton;
 
     [SerializeField] private Button button;
+    [SerializeField, Tooltip("The button's own label text - set to CardData.ButtonLabel when non-empty, otherwise reset to defaultButtonLabel every Setup so a reused card slot can't keep a stale label from whatever kind was shown on it last.")]
+    private TMP_Text buttonLabelText;
+    [SerializeField, Tooltip("Fallback buttonLabelText value whenever CardData.ButtonLabel is empty.")]
+    private string defaultButtonLabel = "CHOOSE";
 
     public event Action<WeaponCardWidget> onClicked;
+
+    // A single button for the whole card - Setup drives its label ("CHOOSE"/"BUY" via
+    // CardData.ButtonLabel) and the purchaseRoot overlay, it never swaps in a second Selectable.
+    // Used by ChooseWindow to give gamepad/joystick navigation a default selection.
+    public Selectable ActiveSelectable => button;
 
     // Live rows: every authored perkRows entry first (so an already-authored card instantiates
     // nothing), then clones of perkRows[0] appended on demand and kept for the widget's lifetime -
@@ -136,9 +148,6 @@ public class WeaponCardWidget : MonoBehaviour
     {
         if (button != null)
             button.onClick.AddListener(() => onClicked?.Invoke(this));
-
-        if (buyButton != null)
-            buyButton.onClick.AddListener(() => onClicked?.Invoke(this));
     }
 
     public void Setup(CardData data, bool interactable)
@@ -154,6 +163,9 @@ public class WeaponCardWidget : MonoBehaviour
 
         if (weaponName != null)
             weaponName.text = AppendElementSpriteTag(data.WeaponName, data.ElementIndex);
+
+        if (buttonLabelText != null)
+            buttonLabelText.text = string.IsNullOrEmpty(data.ButtonLabel) ? defaultButtonLabel : data.ButtonLabel;
 
         if (damageText != null)
             damageText.text = Mathf.RoundToInt(data.Damage).ToString();
@@ -202,13 +214,10 @@ public class WeaponCardWidget : MonoBehaviour
                 _perkRows[i].Setup(data.Perks[i]);
         }
 
-        PurchasableCardUi.Apply(data.Purchase, purchaseRoot, priceText, currencyIcon, soldOutOverlay, button, buyButton, ref interactable);
+        PurchasableCardUi.Apply(data.Purchase, purchaseRoot, priceText, currencyIcon, soldOutOverlay, ref interactable);
 
         if (button != null)
             button.interactable = interactable;
-
-        if (buyButton != null)
-            buyButton.interactable = interactable;
     }
 
     // Trailing `<sprite name="...">` tag onto the weapon's name, e.g. "Pistol <sprite name=\"IceElemental\">"

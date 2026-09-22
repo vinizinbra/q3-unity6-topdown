@@ -27,6 +27,8 @@ namespace Quantum
                                  // 2 = HeroSkill) - covers both Dash Skill and Hero Skill upgrades
         BuyAccessory,           // restore the sender's Accessory Guard to full
         GrantCoins,             // Amount = coins granted to the sender
+        SpendCoins,             // Amount = coins spent from the sender's own wallet; no-op if the
+                                 // sender can't afford it (see CoinUtility.TrySpend)
         ToggleGodMode,          // add/remove the sender's Invulnerable tag
         KillAllEnemies,         // credit the sender (drops XP/coins as a normal kill would)
         HealFull,               // sender to full health

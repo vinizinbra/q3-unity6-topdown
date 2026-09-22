@@ -1,3 +1,4 @@
+using System;
 using NaughtyAttributes;
 using PrimeTween;
 using UnityEngine;
@@ -37,6 +38,12 @@ public class ShakeGrowImpactAnimation : MonoBehaviour
     [SerializeField] private float impactDuration = 0.3f;
     [SerializeField, Tooltip("Fires the instant this object lands (after growDuration) - wire a one-shot particle burst's Play() here for an impact explosion, same UnityEvent pattern as JuicyGameobject's onShow/onHide.")]
     private UnityEvent onImpact;
+
+    // Code-side counterpart to onImpact, fired at the same moment (grow has landed, impact punch is
+    // cosmetic on top of an already-settled object) - lets a caller (e.g. UiSelectionUtility) defer
+    // gamepad/joystick focus until this object actually looks interactable, without needing an
+    // Inspector-wired UnityEvent hookup per instance.
+    public event Action Finished;
 
     private Vector3 _originalScale;
 
@@ -82,6 +89,7 @@ public class ShakeGrowImpactAnimation : MonoBehaviour
         _impactShakeTween = Tween.ShakeLocalPosition(transform, impactShakeStrength, impactDuration, useUnscaledTime: useUnscaledTime);
         _impactRotationTween = Tween.ShakeLocalRotation(transform, impactRotationStrength, impactDuration, useUnscaledTime: useUnscaledTime);
         onImpact?.Invoke();
+        Finished?.Invoke();
     }
 
     // Debug-only counterpart to Play() - skips straight to the fully-settled end state (no delay, no
@@ -92,6 +100,7 @@ public class ShakeGrowImpactAnimation : MonoBehaviour
         StopAll();
         transform.localScale = _originalScale;
         onImpact?.Invoke();
+        Finished?.Invoke();
     }
 
     private void StopAll()

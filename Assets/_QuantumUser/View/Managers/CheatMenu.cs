@@ -173,6 +173,7 @@ namespace QuantumUser.View
             img.color = ButtonBg;
             Button btn = rt.gameObject.AddComponent<Button>();
             btn.targetGraphic = img;
+            btn.navigation = new UnityEngine.UI.Navigation { mode = UnityEngine.UI.Navigation.Mode.None };
             btn.onClick.AddListener(() =>
             {
                 _open = true;
@@ -256,6 +257,7 @@ namespace QuantumUser.View
             Row(rt, ("God Mode", CheatActionKind.ToggleGodMode), ("Revive All", CheatActionKind.Revive));
             Row(rt, ("Kill All Enemies", CheatActionKind.KillAllEnemies), ("Open Chest", CheatActionKind.OpenChest));
             CreateButton(rt, "+1000 Coins", () => Send(CheatActionKind.GrantCoins, amount: 1000));
+            CreateButton(rt, "Spend 500 Coins", () => Send(CheatActionKind.SpendCoins, amount: 500));
             Row(rt, ("Damage = 1", CheatActionKind.SetDamageToOne), ("Reset Damage", CheatActionKind.ResetDamage));
             CreateButton(rt, "Toggle Auto-Shoot", () => Send(CheatActionKind.ToggleManualFire));
 
@@ -763,6 +765,7 @@ namespace QuantumUser.View
             img.color = ButtonBg;
             Button btn = rt.gameObject.AddComponent<Button>();
             btn.targetGraphic = img;
+            btn.navigation = new UnityEngine.UI.Navigation { mode = UnityEngine.UI.Navigation.Mode.None };
             if (onClick != null)
                 btn.onClick.AddListener(() => onClick());
 
@@ -794,6 +797,7 @@ namespace QuantumUser.View
             bg.color = ButtonBg;
             Button btn = rt.gameObject.AddComponent<Button>();
             btn.targetGraphic = bg;
+            btn.navigation = new UnityEngine.UI.Navigation { mode = UnityEngine.UI.Navigation.Mode.None };
             if (onClick != null)
                 btn.onClick.AddListener(() => onClick());
 
