@@ -25,6 +25,13 @@ public class InMatchPopupManager : MonoBehaviour {
 
     private readonly Stack<UiPopup> popupStack = new();
 
+    // Raw guess (Unity's "commonly assumed" JoystickButton7 = Start on an Xbox-style pad) - this
+    // project's own Bluetooth pad has already proven to deviate from that assumed order elsewhere
+    // (see QuantumDebugInput's own GamepadDash/Jump/Skill/SwitchTarget/Fire comment), so verify/
+    // correct this against a real device via the CheatMenu's "Gamepad Hardware Tester" toggle
+    // before trusting it, especially in a WebGL build (different backend than the Editor again).
+    private const KeyCode GamepadStart = KeyCode.JoystickButton7;
+
     public int popupOnTopCount => popupStack.Count;
     public bool HasPendingPopups => currentPopup != null || popupQueue.Count > 0;
 
@@ -131,10 +138,10 @@ public class InMatchPopupManager : MonoBehaviour {
             ShowPopup(popupQueue[0]);
         }
 
-        // Escape toggles settings, but only over an otherwise empty stage - it never dismisses or
-        // stacks on top of some other popup (a tutorial popup's Close also unpauses the sim, so
-        // Escape must not be a way to skip it).
-        if (UnityEngine.Input.GetKeyDown(KeyCode.Escape))
+        // Escape (keyboard) / Start (gamepad) toggles settings, but only over an otherwise empty
+        // stage - it never dismisses or stacks on top of some other popup (a tutorial popup's
+        // Close also unpauses the sim, so this must not be a way to skip it).
+        if (UnityEngine.Input.GetKeyDown(KeyCode.Escape) || UnityEngine.Input.GetKeyDown(GamepadStart))
         {
             if (currentPopup is InMatchSettingsPopup)
                 CloseCurrentPopup();
