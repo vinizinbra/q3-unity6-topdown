@@ -77,13 +77,12 @@ namespace Quantum {
       // CF2Input is reserved for keyboard + on-screen mobile touch controls (Control Freak 2's own
       // Input Rig binds both to the same virtual "Horizontal"/"Vertical"/KeyCode targets), so a
       // touch build gets the same code path as desktop keyboard for free.
-      float xGamepad = UnityEngine.Input.GetAxis("GamepadHorizontal");
-      float xMobile = CF2Input.GetAxis("Horizontal");
-      float x = Mathf.Abs(xGamepad) > 0.01f ? xGamepad : xMobile;
-
-      float yGamepad = UnityEngine.Input.GetAxis("GamepadVertical");
-      float yMobile = CF2Input.GetAxis("Vertical");
-      float y = Mathf.Abs(yGamepad) > 0.01f ? yGamepad : yMobile;
+      float x = CF2Input.GetAxis("Horizontal") ;
+      float y = CF2Input.GetAxis("Vertical");
+      if(Mathf.Abs(x) < 0.1f && Mathf.Abs(y) < 0.1f) {
+        x = UnityEngine.Input.GetAxis("GamepadHorizontal");
+        y = UnityEngine.Input.GetAxis("GamepadVertical");
+      }
       bool shiftHeld = UnityEngine.Input.GetKey(GamepadDash) || CF2Input.GetKey(UnityEngine.KeyCode.LeftShift) || CF2Input.GetKey(UnityEngine.KeyCode.RightShift);
       bool jump = UnityEngine.Input.GetKey(GamepadJump) || CF2Input.GetKey(UnityEngine.KeyCode.Space);
       bool fire = UnityEngine.Input.GetKey(GamepadFire) || UnityEngine.Input.GetMouseButton(0);

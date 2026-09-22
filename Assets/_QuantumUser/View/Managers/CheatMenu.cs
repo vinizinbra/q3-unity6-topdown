@@ -5,6 +5,7 @@
 // understands the command if some other client sends it.
 #if CHEATS_ENABLED
 using System.Collections.Generic;
+using ControlFreak2.DebugUtils;
 using Quantum;
 using QuantumUser.View.Util;
 using TMPro;
@@ -103,6 +104,11 @@ namespace QuantumUser.View
         private const float WindowWidth = 360f;
 
         private CheatMenuTimeScaleEnforcer _enforcer;
+
+        // Spawned on first toggle-on, not at BuildUi() time - most sessions never touch this, no
+        // reason to pay GamepadHardwareTester's OnGUI cost (raw Input.GetAxisRaw/GetKey polling
+        // every joystick/axis/button every frame) when it's not actually open.
+        private GamepadHardwareTester _gamepadTester;
 
         private void Awake()
         {
@@ -250,6 +256,28 @@ namespace QuantumUser.View
             CreateToggle(rt, "Skip Upgrade Screen Animations", UpgradeScreenDebugState.SkipAnimations, v =>
             {
                 UpgradeScreenDebugState.SkipAnimations = v;
+            }, out _);
+
+            CreateSectionLabel(rt, "Input");
+
+            // Raw axis/button overlay (Control Freak 2's own diagnostic tool) - reads
+            // Input.GetAxisRaw/GetKey directly rather than through any of this project's own
+            // gamepad mapping, so it shows what a connected pad ACTUALLY reports on this platform.
+            // Built for exactly the WebGL-vs-Editor mapping mismatch a Bluetooth pad can hit
+            // (browsers read gamepads through the HTML5 Gamepad API, not Unity's native joystick
+            // backend, so axis/button numbers aren't guaranteed to match what QuantumDebugInput's
+            // own GamepadDash/Jump/Skill/SwitchTarget/Fire constants were tuned against in the
+            // Editor) - open this in the actual WebGL build to read off the real numbers.
+            CreateToggle(rt, "Gamepad Hardware Tester (raw axis/button overlay)", false, v =>
+            {
+                if (_gamepadTester == null)
+                {
+                    GameObject go = new GameObject("GamepadHardwareTester");
+                    go.transform.SetParent(transform, false);
+                    _gamepadTester = go.AddComponent<GamepadHardwareTester>();
+                }
+
+                _gamepadTester.gameObject.SetActive(v);
             }, out _);
 
             CreateSectionLabel(rt, "Player");
