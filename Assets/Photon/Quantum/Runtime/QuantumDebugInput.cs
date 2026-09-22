@@ -62,11 +62,9 @@ namespace Quantum {
     // Named Input Manager buttons (ProjectSettings/InputManager.asset) instead of raw JoystickButton
     // KeyCodes - each one's actual "joystick button N" mapping is configured there (Project Settings
     // > Input Manager), not hardcoded here, so it can be re-pointed at a different physical button
-    // without touching code. Current defaults: GamepadDash=0, GamepadJump=2, GamepadSkill=2 (shares
-    // GamepadJump's default button - re-point one of them in Input Manager if that overlap isn't
-    // intended), GamepadSwitchTarget=3, GamepadFire=5.
+    // without touching code. Current defaults: GamepadDash=0, GamepadSkill=2, GamepadSwitchTarget=3,
+    // GamepadFire=5.
     private const string GamepadDash = "GamepadDash";
-    private const string GamepadJump = "GamepadJump";
     private const string GamepadSkill = "GamepadSkill";
     private const string GamepadSwitchTarget = "GamepadSwitchTarget";
     private const string GamepadFire = "GamepadFire";
@@ -87,7 +85,6 @@ namespace Quantum {
         y = UnityEngine.Input.GetAxis("GamepadVertical");
       }
       bool shiftHeld = UnityEngine.Input.GetButton(GamepadDash) || CF2Input.GetKey(UnityEngine.KeyCode.LeftShift) || CF2Input.GetKey(UnityEngine.KeyCode.RightShift);
-      bool jump = UnityEngine.Input.GetButton(GamepadJump) || CF2Input.GetKey(UnityEngine.KeyCode.Space);
       bool fire = UnityEngine.Input.GetButton(GamepadFire) || UnityEngine.Input.GetMouseButton(0);
       bool switchTarget = UnityEngine.Input.GetButton(GamepadSwitchTarget) || CF2Input.GetKey(UnityEngine.KeyCode.Tab);
       bool skill2 = UnityEngine.Input.GetButton(GamepadSkill) || CF2Input.GetKey(UnityEngine.KeyCode.E);
@@ -98,7 +95,6 @@ namespace Quantum {
       // DashSkill.WasPressed triggers the dash on the tap edge - both read off the same held key.
       i.Run = shiftHeld;
       i.DashSkill = shiftHeld;
-      i.Jump = jump;
       i.Fire = fire;
       i.SwitchTarget = switchTarget;
       i.HeroSkill = skill2;
@@ -111,7 +107,6 @@ namespace Quantum {
       float x = (UnityEngine.Input.GetKey(UnityEngine.KeyCode.RightArrow) ? 1f : 0f) - (UnityEngine.Input.GetKey(UnityEngine.KeyCode.LeftArrow) ? 1f : 0f);
       float y = (UnityEngine.Input.GetKey(UnityEngine.KeyCode.UpArrow) ? 1f : 0f) - (UnityEngine.Input.GetKey(UnityEngine.KeyCode.DownArrow) ? 1f : 0f);
       bool dash = UnityEngine.Input.GetKey(UnityEngine.KeyCode.Keypad0);
-      bool jump = UnityEngine.Input.GetKey(UnityEngine.KeyCode.RightControl);
       bool fire = UnityEngine.Input.GetKey(UnityEngine.KeyCode.Keypad1);
       bool switchTarget = UnityEngine.Input.GetKey(UnityEngine.KeyCode.KeypadEnter);
       bool skill2 = UnityEngine.Input.GetKey(UnityEngine.KeyCode.Keypad2);
@@ -121,7 +116,6 @@ namespace Quantum {
       // Same Run/DashSkill sharing as player one, mapped to the dash key instead of Shift.
       i.Run = dash;
       i.DashSkill = dash;
-      i.Jump = jump;
       i.Fire = fire;
       i.SwitchTarget = switchTarget;
       i.HeroSkill = skill2;
