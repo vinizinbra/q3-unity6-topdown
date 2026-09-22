@@ -481,6 +481,7 @@ SpriteAtlas:
     - 4afdbc8ba755f45c69639d7d40484c83: 21300000
     - 534d18fb848e14f3cba55332d14c7b18: -676951800
     - 534d18fb848e14f3cba55332d14c7b18: -471965082
+    - 534d18fb848e14f3cba55332d14c7b18: -1345782853
     - 534d18fb848e14f3cba55332d14c7b18: 1682154169
     - 534d18fb848e14f3cba55332d14c7b18: 1038944989
     - 534d18fb848e14f3cba55332d14c7b18: 1561930564
@@ -981,6 +982,7 @@ SpriteAtlas:
   - {fileID: 21300000, guid: 4afdbc8ba755f45c69639d7d40484c83, type: 3}
   - {fileID: -676951800, guid: 534d18fb848e14f3cba55332d14c7b18, type: 3}
   - {fileID: -471965082, guid: 534d18fb848e14f3cba55332d14c7b18, type: 3}
+  - {fileID: -1345782853, guid: 534d18fb848e14f3cba55332d14c7b18, type: 3}
   - {fileID: 1682154169, guid: 534d18fb848e14f3cba55332d14c7b18, type: 3}
   - {fileID: 1038944989, guid: 534d18fb848e14f3cba55332d14c7b18, type: 3}
   - {fileID: 1561930564, guid: 534d18fb848e14f3cba55332d14c7b18, type: 3}
@@ -1480,6 +1482,7 @@ SpriteAtlas:
   - BorderFrame_Round18_Transparent
   - KaiLobby_5
   - KaiLobby_4
+  - KaiLobby_6
   - KaiLobby_1
   - KaiLobby_0
   - KaiLobby_3

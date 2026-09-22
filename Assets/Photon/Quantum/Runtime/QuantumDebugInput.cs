@@ -59,15 +59,36 @@ namespace Quantum {
       return false;
     }
 
+    // Raw JoystickButton indices as this specific Xbox One pad actually reports them over
+    // Bluetooth (confirmed live via GamepadHardwareTester + in-game testing) - NOT Unity's commonly
+    // assumed 0=A/1=B/2=X/3=Y/4=LB/5=RB order. Confirmed: A=1, B=2, X=4. LB/RB/Y are still guesses.
+    private const UnityEngine.KeyCode GamepadDash = UnityEngine.KeyCode.JoystickButton1;   // A
+    private const UnityEngine.KeyCode GamepadJump = UnityEngine.KeyCode.JoystickButton2;   // B
+    private const UnityEngine.KeyCode GamepadSkill = UnityEngine.KeyCode.JoystickButton4;  // X
+    private const UnityEngine.KeyCode GamepadSwitchTarget = UnityEngine.KeyCode.JoystickButton3; // guess
+    private const UnityEngine.KeyCode GamepadFire = UnityEngine.KeyCode.JoystickButton5;   // guess
+
     private Quantum.Input PollPlayerOneInput() {
       Quantum.Input i = new Quantum.Input();
-      float x = CF2Input.GetAxis("Horizontal");
-      float y = CF2Input.GetAxis("Vertical");
-      bool shiftHeld = CF2Input.GetButton("Dash") || CF2Input.GetKey(UnityEngine.KeyCode.LeftShift) || CF2Input.GetKey(UnityEngine.KeyCode.RightShift);
-      bool jump = CF2Input.GetKey(UnityEngine.KeyCode.Space);
-      bool fire = UnityEngine.Input.GetMouseButton(0);
-      bool switchTarget = CF2Input.GetKey(UnityEngine.KeyCode.Tab);
-      bool skill2 = CF2Input.GetButton("Skill")|| CF2Input.GetKey(UnityEngine.KeyCode.E);
+      // Real gamepad hardware reads through plain UnityEngine.Input - GamepadHorizontal/
+      // GamepadVertical pin joyNum:1 in the Input Manager to dodge the "any joystick" multi-device
+      // aggregation quirk this Bluetooth pad hits at joyNum:0 (see ProjectSettings/InputManager.asset
+      // and GamepadDash/Jump/Skill/SwitchTarget/Fire's own raw JoystickButton mapping below).
+      // CF2Input is reserved for keyboard + on-screen mobile touch controls (Control Freak 2's own
+      // Input Rig binds both to the same virtual "Horizontal"/"Vertical"/KeyCode targets), so a
+      // touch build gets the same code path as desktop keyboard for free.
+      float xGamepad = UnityEngine.Input.GetAxis("GamepadHorizontal");
+      float xMobile = CF2Input.GetAxis("Horizontal");
+      float x = Mathf.Abs(xGamepad) > 0.01f ? xGamepad : xMobile;
+
+      float yGamepad = UnityEngine.Input.GetAxis("GamepadVertical");
+      float yMobile = CF2Input.GetAxis("Vertical");
+      float y = Mathf.Abs(yGamepad) > 0.01f ? yGamepad : yMobile;
+      bool shiftHeld = UnityEngine.Input.GetKey(GamepadDash) || CF2Input.GetKey(UnityEngine.KeyCode.LeftShift) || CF2Input.GetKey(UnityEngine.KeyCode.RightShift);
+      bool jump = UnityEngine.Input.GetKey(GamepadJump) || CF2Input.GetKey(UnityEngine.KeyCode.Space);
+      bool fire = UnityEngine.Input.GetKey(GamepadFire) || UnityEngine.Input.GetMouseButton(0);
+      bool switchTarget = UnityEngine.Input.GetKey(GamepadSwitchTarget) || CF2Input.GetKey(UnityEngine.KeyCode.Tab);
+      bool skill2 = UnityEngine.Input.GetKey(GamepadSkill) || CF2Input.GetKey(UnityEngine.KeyCode.E);
 
       Vector2 worldDirection = ApplyCameraYaw(x, y);
       i.Direction = new FPVector2(worldDirection.x.ToFP(), worldDirection.y.ToFP());

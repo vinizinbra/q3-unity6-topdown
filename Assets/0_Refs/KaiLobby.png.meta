@@ -139,10 +139,10 @@ TextureImporter:
       name: KaiLobby_0
       rect:
         serializedVersion: 2
-        x: 74
-        y: 925
-        width: 491
-        height: 477
+        x: 761
+        y: 751
+        width: 291
+        height: 331
       alignment: 9
       pivot: {x: 0.3684763, y: 0.09594066}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -161,10 +161,10 @@ TextureImporter:
       name: KaiLobby_1
       rect:
         serializedVersion: 2
-        x: 12
-        y: 52
-        width: 594
-        height: 869
+        x: 0
+        y: 471
+        width: 646
+        height: 931
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -183,10 +183,10 @@ TextureImporter:
       name: KaiLobby_2
       rect:
         serializedVersion: 2
-        x: 608
-        y: 38
-        width: 514
-        height: 813
+        x: 629
+        y: 0
+        width: 493
+        height: 733
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -205,10 +205,10 @@ TextureImporter:
       name: KaiLobby_3
       rect:
         serializedVersion: 2
-        x: 670
-        y: 940
-        width: 190
-        height: 115
+        x: 864
+        y: 872
+        width: 258
+        height: 216
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -227,12 +227,12 @@ TextureImporter:
       name: KaiLobby_4
       rect:
         serializedVersion: 2
-        x: 869
-        y: 1005
-        width: 212
-        height: 336
+        x: 897
+        y: 1080
+        width: 225
+        height: 261
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -249,12 +249,12 @@ TextureImporter:
       name: KaiLobby_5
       rect:
         serializedVersion: 2
-        x: 573
-        y: 1082
-        width: 151
+        x: 639
+        y: 1103
+        width: 260
         height: 290
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -263,6 +263,28 @@ TextureImporter:
       bones: []
       spriteID: 699dc0b4e98cd4ac7b2108be3cb7aad8
       internalID: -676951800
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: KaiLobby_6
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 633
+        height: 415
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2cb6d89a787304688b8b0fbac15db4c0
+      internalID: -1345782853
       vertices: []
       indices: 
       edges: []
@@ -287,6 +309,7 @@ TextureImporter:
       KaiLobby_3: 1561930564
       KaiLobby_4: -471965082
       KaiLobby_5: -676951800
+      KaiLobby_6: -1345782853
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
