@@ -25,12 +25,12 @@ public class InMatchPopupManager : MonoBehaviour {
 
     private readonly Stack<UiPopup> popupStack = new();
 
-    // Raw guess (Unity's "commonly assumed" JoystickButton7 = Start on an Xbox-style pad) - this
-    // project's own Bluetooth pad has already proven to deviate from that assumed order elsewhere
-    // (see QuantumDebugInput's own GamepadDash/Jump/Skill/SwitchTarget/Fire comment), so verify/
-    // correct this against a real device via the CheatMenu's "Gamepad Hardware Tester" toggle
-    // before trusting it, especially in a WebGL build (different backend than the Editor again).
-    private const KeyCode GamepadStart = KeyCode.JoystickButton7;
+    // Named Input Manager button (ProjectSettings/InputManager.asset, default "joystick button 7")
+    // instead of a raw JoystickButton KeyCode - re-point it at a different physical button from
+    // Project Settings > Input Manager if it doesn't match Start on a given pad, no code change
+    // needed. See QuantumDebugInput's own GamepadDash/Jump/Skill/SwitchTarget/Fire for the same
+    // pattern.
+    private const string OpenInMatchSettings = "OpenInMatchSettings";
 
     public int popupOnTopCount => popupStack.Count;
     public bool HasPendingPopups => currentPopup != null || popupQueue.Count > 0;
@@ -138,10 +138,10 @@ public class InMatchPopupManager : MonoBehaviour {
             ShowPopup(popupQueue[0]);
         }
 
-        // Escape (keyboard) / Start (gamepad) toggles settings, but only over an otherwise empty
-        // stage - it never dismisses or stacks on top of some other popup (a tutorial popup's
-        // Close also unpauses the sim, so this must not be a way to skip it).
-        if (UnityEngine.Input.GetKeyDown(KeyCode.Escape) || UnityEngine.Input.GetKeyDown(GamepadStart))
+        // Escape (keyboard) / Start (gamepad, OpenInMatchSettings) toggles settings, but only over
+        // an otherwise empty stage - it never dismisses or stacks on top of some other popup (a
+        // tutorial popup's Close also unpauses the sim, so this must not be a way to skip it).
+        if (UnityEngine.Input.GetKeyDown(KeyCode.Escape) || UnityEngine.Input.GetButtonDown(OpenInMatchSettings))
         {
             if (currentPopup is InMatchSettingsPopup)
                 CloseCurrentPopup();

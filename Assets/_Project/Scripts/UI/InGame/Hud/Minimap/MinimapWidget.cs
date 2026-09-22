@@ -299,6 +299,12 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     private Vector2 _effectiveWorldCenter;
     private bool _centered;
 
+    // Named Input Manager button (ProjectSettings/InputManager.asset, default "joystick button 6")
+    // for opening/closing the full-map panel from a gamepad, same toggle toggleButton's onClick
+    // drives from a mouse/touch click - see ToggleFullMap. Re-point it at a different physical
+    // button from Project Settings > Input Manager, no code change needed.
+    private const string OpenMiniMapToggle = "OpenMiniMapToggle";
+
     private void Awake()
     {
         if (toggleButton != null)
@@ -395,6 +401,12 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         UpdateSpecialMarkers(frame);
         UpdateClearEnemyMarkers(frame);
         CenterOnLocalPlayer(frame);
+
+        // Gated to slot 0 - the only local player slot QuantumDebugInput ever reads a gamepad
+        // button for (PollPlayerOneInput; PollPlayerTwoInput is keyboard-only) - so a second local
+        // player's own widget instance never reacts to the first player's gamepad press too.
+        if (localSlotIndex == 0 && UnityEngine.Input.GetButtonDown(OpenMiniMapToggle))
+            ToggleFullMap();
     }
 
     // Shifts the whole content layer (mapRect - texture, icons, and markers all live under it) so

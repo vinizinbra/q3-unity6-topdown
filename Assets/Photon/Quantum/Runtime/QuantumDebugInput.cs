@@ -59,21 +59,24 @@ namespace Quantum {
       return false;
     }
 
-    // Raw JoystickButton indices as this specific Xbox One pad actually reports them over
-    // Bluetooth (confirmed live via GamepadHardwareTester + in-game testing) - NOT Unity's commonly
-    // assumed 0=A/1=B/2=X/3=Y/4=LB/5=RB order. Confirmed: A=1, B=2, X=4. LB/RB/Y are still guesses.
-    private const UnityEngine.KeyCode GamepadDash = UnityEngine.KeyCode.JoystickButton1;   // A
-    private const UnityEngine.KeyCode GamepadJump = UnityEngine.KeyCode.JoystickButton2;   // B
-    private const UnityEngine.KeyCode GamepadSkill = UnityEngine.KeyCode.JoystickButton4;  // X
-    private const UnityEngine.KeyCode GamepadSwitchTarget = UnityEngine.KeyCode.JoystickButton3; // guess
-    private const UnityEngine.KeyCode GamepadFire = UnityEngine.KeyCode.JoystickButton5;   // guess
+    // Named Input Manager buttons (ProjectSettings/InputManager.asset) instead of raw JoystickButton
+    // KeyCodes - each one's actual "joystick button N" mapping is configured there (Project Settings
+    // > Input Manager), not hardcoded here, so it can be re-pointed at a different physical button
+    // without touching code. Current defaults: GamepadDash=0, GamepadJump=2, GamepadSkill=2 (shares
+    // GamepadJump's default button - re-point one of them in Input Manager if that overlap isn't
+    // intended), GamepadSwitchTarget=3, GamepadFire=5.
+    private const string GamepadDash = "GamepadDash";
+    private const string GamepadJump = "GamepadJump";
+    private const string GamepadSkill = "GamepadSkill";
+    private const string GamepadSwitchTarget = "GamepadSwitchTarget";
+    private const string GamepadFire = "GamepadFire";
 
     private Quantum.Input PollPlayerOneInput() {
       Quantum.Input i = new Quantum.Input();
       // Real gamepad hardware reads through plain UnityEngine.Input - GamepadHorizontal/
       // GamepadVertical pin joyNum:1 in the Input Manager to dodge the "any joystick" multi-device
       // aggregation quirk this Bluetooth pad hits at joyNum:0 (see ProjectSettings/InputManager.asset
-      // and GamepadDash/Jump/Skill/SwitchTarget/Fire's own raw JoystickButton mapping below).
+      // and GamepadDash/Jump/Skill/SwitchTarget/Fire's own named-button mapping below).
       // CF2Input is reserved for keyboard + on-screen mobile touch controls (Control Freak 2's own
       // Input Rig binds both to the same virtual "Horizontal"/"Vertical"/KeyCode targets), so a
       // touch build gets the same code path as desktop keyboard for free.
@@ -83,11 +86,11 @@ namespace Quantum {
         x = UnityEngine.Input.GetAxis("GamepadHorizontal");
         y = UnityEngine.Input.GetAxis("GamepadVertical");
       }
-      bool shiftHeld = UnityEngine.Input.GetKey(GamepadDash) || CF2Input.GetKey(UnityEngine.KeyCode.LeftShift) || CF2Input.GetKey(UnityEngine.KeyCode.RightShift);
-      bool jump = UnityEngine.Input.GetKey(GamepadJump) || CF2Input.GetKey(UnityEngine.KeyCode.Space);
-      bool fire = UnityEngine.Input.GetKey(GamepadFire) || UnityEngine.Input.GetMouseButton(0);
-      bool switchTarget = UnityEngine.Input.GetKey(GamepadSwitchTarget) || CF2Input.GetKey(UnityEngine.KeyCode.Tab);
-      bool skill2 = UnityEngine.Input.GetKey(GamepadSkill) || CF2Input.GetKey(UnityEngine.KeyCode.E);
+      bool shiftHeld = UnityEngine.Input.GetButton(GamepadDash) || CF2Input.GetKey(UnityEngine.KeyCode.LeftShift) || CF2Input.GetKey(UnityEngine.KeyCode.RightShift);
+      bool jump = UnityEngine.Input.GetButton(GamepadJump) || CF2Input.GetKey(UnityEngine.KeyCode.Space);
+      bool fire = UnityEngine.Input.GetButton(GamepadFire) || UnityEngine.Input.GetMouseButton(0);
+      bool switchTarget = UnityEngine.Input.GetButton(GamepadSwitchTarget) || CF2Input.GetKey(UnityEngine.KeyCode.Tab);
+      bool skill2 = UnityEngine.Input.GetButton(GamepadSkill) || CF2Input.GetKey(UnityEngine.KeyCode.E);
 
       Vector2 worldDirection = ApplyCameraYaw(x, y);
       i.Direction = new FPVector2(worldDirection.x.ToFP(), worldDirection.y.ToFP());
