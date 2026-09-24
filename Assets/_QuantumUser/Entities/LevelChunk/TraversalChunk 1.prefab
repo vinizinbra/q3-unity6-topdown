@@ -11,9 +11,9 @@ GameObject:
   - component: {fileID: 184925770715370175}
   - component: {fileID: 7873777479064264451}
   - component: {fileID: 8459172900651875094}
-  - component: {fileID: 8881723092185268468}
   - component: {fileID: 1299701383131550041}
   - component: {fileID: 9064542417526933472}
+  - component: {fileID: 7482177784351851543}
   m_Layer: 6
   m_Name: VisualCube
   m_TagString: Untagged
@@ -93,53 +93,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &8881723092185268468
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1709235890584439881}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: daba73f92aa71491c9e216478e479056, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CubeVisualBuilder
-  edgePrefabs:
-  - {fileID: 1433387614537848497, guid: 380235c01054a4bfca869e16ee4bcc11, type: 3}
-  - {fileID: 7614468081444443852, guid: a000042ddce014ec1b25e039e9e975f5, type: 3}
-  - {fileID: 970526433092363996, guid: 8b96a2e919886469d9ab20704e7aee74, type: 3}
-  - {fileID: 3734518529458459224, guid: 6689d4d0437b940adb806926290352bc, type: 3}
-  - {fileID: 7551599550734247072, guid: 281d737bf1e824aabae68c39f229a4e8, type: 3}
-  - {fileID: 6700042185931365227, guid: e1c85f33d0d324c0d867af092de5bb18, type: 3}
-  - {fileID: 147576706118549172, guid: b406ef9427bc04c2ca75511ee734f6a1, type: 3}
-  - {fileID: 73819991260933395, guid: 97aac4a0d469b48188820ea657ddd959, type: 3}
-  edgeYaw: 270
-  edgeScaleOverlap: 0.2
-  avoidNearWallDetails: 0
-  detailAvoidRadius: 0
-  outerCornerPrefabs:
-  - {fileID: 4366759823961815167, guid: a38e8ce5d76d2426e9b58f0ba065998e, type: 3}
-  - {fileID: 8588932187785433069, guid: 285d34824f0944809a05eab4bbb808ca, type: 3}
-  - {fileID: 6059179439221544273, guid: 2c2d81eef1c3d4ce190f843c24b65f71, type: 3}
-  - {fileID: 5294279402883879360, guid: d947221740be5459f940466e394f6f5a, type: 3}
-  - {fileID: 4752783851932848897, guid: ca30db78546924f5ebcea7d2198ee081, type: 3}
-  - {fileID: 8430317907516972576, guid: 5d91888625c2b48c2abb9c2ad0e433de, type: 3}
-  - {fileID: 2730532409627958449, guid: 72e274acf18fe47db81b9b559f0a209d, type: 3}
-  - {fileID: 4344072999799160864, guid: 5de7fb19616844d7dbb8d1a0ce52cf4d, type: 3}
-  outerCornerYaw: 270
-  centerPrefabs:
-  - {fileID: 6563126074884931429, guid: 3a65b22d1b0ef49a48028e5a13dd890a, type: 3}
-  centerYaw: 0
-  centerScaleMargin: 1.9
-  innerCornerPrefabs:
-  - {fileID: 482466050895093880, guid: 937fbbc1614d54bd88832a93baf558df, type: 3}
-  innerCornerYaw: 270
-  touchGapTolerance: 0.1
-  debugLogPlacement: 0
-  generateOnEnable: 0
-  colliderRoot: {fileID: 0}
-  visualRoot: {fileID: 0}
 --- !u!65 &1299701383131550041
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -173,6 +126,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 333594bbb5f4445419e59fdae4798824, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChunkWallCube
+--- !u!114 &7482177784351851543
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1709235890584439881}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed4546a3f32fc4e5992a5d34eb4321e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TilesetPlatformBuilder
+  tileset: {fileID: 11400000, guid: 2c5f0111590354eadb5216adea1533b9, type: 2}
+  autoGenerate: 0
+  mergeWithNeighbours: 1
+  cellSize: 1
+  mergeTolerance: 0.05
+  variationSeed: 0
+  generatedRoot: {fileID: 0}
+  host: {fileID: 0}
+  members: []
+  hiddenRenderers: []
 --- !u!1 &2217992963430117663
 GameObject:
   m_ObjectHideFlags: 0
@@ -184,10 +159,10 @@ GameObject:
   - component: {fileID: 1429666821668565437}
   - component: {fileID: 7887973240363952358}
   - component: {fileID: 558581831827310827}
-  - component: {fileID: 2307068352581975951}
   - component: {fileID: 8695442619279912851}
   - component: {fileID: 7254655714886529074}
   - component: {fileID: 1076883674942040453}
+  - component: {fileID: 1727430108571230555}
   m_Layer: 6
   m_Name: VisualCube (9)
   m_TagString: Untagged
@@ -267,53 +242,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &2307068352581975951
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2217992963430117663}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: daba73f92aa71491c9e216478e479056, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CubeVisualBuilder
-  edgePrefabs:
-  - {fileID: 1433387614537848497, guid: 380235c01054a4bfca869e16ee4bcc11, type: 3}
-  - {fileID: 7614468081444443852, guid: a000042ddce014ec1b25e039e9e975f5, type: 3}
-  - {fileID: 970526433092363996, guid: 8b96a2e919886469d9ab20704e7aee74, type: 3}
-  - {fileID: 3734518529458459224, guid: 6689d4d0437b940adb806926290352bc, type: 3}
-  - {fileID: 7551599550734247072, guid: 281d737bf1e824aabae68c39f229a4e8, type: 3}
-  - {fileID: 6700042185931365227, guid: e1c85f33d0d324c0d867af092de5bb18, type: 3}
-  - {fileID: 147576706118549172, guid: b406ef9427bc04c2ca75511ee734f6a1, type: 3}
-  - {fileID: 73819991260933395, guid: 97aac4a0d469b48188820ea657ddd959, type: 3}
-  edgeYaw: 270
-  edgeScaleOverlap: 0.2
-  avoidNearWallDetails: 0
-  detailAvoidRadius: 0
-  outerCornerPrefabs:
-  - {fileID: 4366759823961815167, guid: a38e8ce5d76d2426e9b58f0ba065998e, type: 3}
-  - {fileID: 8588932187785433069, guid: 285d34824f0944809a05eab4bbb808ca, type: 3}
-  - {fileID: 6059179439221544273, guid: 2c2d81eef1c3d4ce190f843c24b65f71, type: 3}
-  - {fileID: 5294279402883879360, guid: d947221740be5459f940466e394f6f5a, type: 3}
-  - {fileID: 4752783851932848897, guid: ca30db78546924f5ebcea7d2198ee081, type: 3}
-  - {fileID: 8430317907516972576, guid: 5d91888625c2b48c2abb9c2ad0e433de, type: 3}
-  - {fileID: 2730532409627958449, guid: 72e274acf18fe47db81b9b559f0a209d, type: 3}
-  - {fileID: 4344072999799160864, guid: 5de7fb19616844d7dbb8d1a0ce52cf4d, type: 3}
-  outerCornerYaw: 270
-  centerPrefabs:
-  - {fileID: 6563126074884931429, guid: 3a65b22d1b0ef49a48028e5a13dd890a, type: 3}
-  centerYaw: 0
-  centerScaleMargin: 1.9
-  innerCornerPrefabs:
-  - {fileID: 482466050895093880, guid: 937fbbc1614d54bd88832a93baf558df, type: 3}
-  innerCornerYaw: 270
-  touchGapTolerance: 0.1
-  debugLogPlacement: 0
-  generateOnEnable: 0
-  colliderRoot: {fileID: 0}
-  visualRoot: {fileID: 0}
 --- !u!65 &8695442619279912851
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -362,6 +290,30 @@ MonoBehaviour:
   footprintRenderer: {fileID: 558581831827310827}
   maxAcquireAttempts: 5
   acquireRetryInterval: 1
+  bakedShadow: {fileID: 0}
+  bakeShadowPrefabOverride: {fileID: 0}
+--- !u!114 &1727430108571230555
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2217992963430117663}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed4546a3f32fc4e5992a5d34eb4321e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TilesetPlatformBuilder
+  tileset: {fileID: 11400000, guid: 2c5f0111590354eadb5216adea1533b9, type: 2}
+  autoGenerate: 0
+  mergeWithNeighbours: 1
+  cellSize: 1
+  mergeTolerance: 0.05
+  variationSeed: 0
+  generatedRoot: {fileID: 0}
+  host: {fileID: 0}
+  members: []
+  hiddenRenderers: []
 --- !u!1 &2588846583440560901
 GameObject:
   m_ObjectHideFlags: 0
@@ -373,10 +325,10 @@ GameObject:
   - component: {fileID: 8453615147836330584}
   - component: {fileID: 6553477575839230978}
   - component: {fileID: 6376268145286619357}
-  - component: {fileID: 3442692128226303238}
   - component: {fileID: 3263875452221699154}
   - component: {fileID: 4622573304980952706}
   - component: {fileID: 2217608245091223901}
+  - component: {fileID: 3453603916229586848}
   m_Layer: 6
   m_Name: VisualCube (8)
   m_TagString: Untagged
@@ -456,53 +408,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &3442692128226303238
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2588846583440560901}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: daba73f92aa71491c9e216478e479056, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CubeVisualBuilder
-  edgePrefabs:
-  - {fileID: 1433387614537848497, guid: 380235c01054a4bfca869e16ee4bcc11, type: 3}
-  - {fileID: 7614468081444443852, guid: a000042ddce014ec1b25e039e9e975f5, type: 3}
-  - {fileID: 970526433092363996, guid: 8b96a2e919886469d9ab20704e7aee74, type: 3}
-  - {fileID: 3734518529458459224, guid: 6689d4d0437b940adb806926290352bc, type: 3}
-  - {fileID: 7551599550734247072, guid: 281d737bf1e824aabae68c39f229a4e8, type: 3}
-  - {fileID: 6700042185931365227, guid: e1c85f33d0d324c0d867af092de5bb18, type: 3}
-  - {fileID: 147576706118549172, guid: b406ef9427bc04c2ca75511ee734f6a1, type: 3}
-  - {fileID: 73819991260933395, guid: 97aac4a0d469b48188820ea657ddd959, type: 3}
-  edgeYaw: 270
-  edgeScaleOverlap: 0.2
-  avoidNearWallDetails: 0
-  detailAvoidRadius: 0
-  outerCornerPrefabs:
-  - {fileID: 4366759823961815167, guid: a38e8ce5d76d2426e9b58f0ba065998e, type: 3}
-  - {fileID: 8588932187785433069, guid: 285d34824f0944809a05eab4bbb808ca, type: 3}
-  - {fileID: 6059179439221544273, guid: 2c2d81eef1c3d4ce190f843c24b65f71, type: 3}
-  - {fileID: 5294279402883879360, guid: d947221740be5459f940466e394f6f5a, type: 3}
-  - {fileID: 4752783851932848897, guid: ca30db78546924f5ebcea7d2198ee081, type: 3}
-  - {fileID: 8430317907516972576, guid: 5d91888625c2b48c2abb9c2ad0e433de, type: 3}
-  - {fileID: 2730532409627958449, guid: 72e274acf18fe47db81b9b559f0a209d, type: 3}
-  - {fileID: 4344072999799160864, guid: 5de7fb19616844d7dbb8d1a0ce52cf4d, type: 3}
-  outerCornerYaw: 270
-  centerPrefabs:
-  - {fileID: 6563126074884931429, guid: 3a65b22d1b0ef49a48028e5a13dd890a, type: 3}
-  centerYaw: 0
-  centerScaleMargin: 1.9
-  innerCornerPrefabs:
-  - {fileID: 482466050895093880, guid: 937fbbc1614d54bd88832a93baf558df, type: 3}
-  innerCornerYaw: 270
-  touchGapTolerance: 0.1
-  debugLogPlacement: 0
-  generateOnEnable: 0
-  colliderRoot: {fileID: 0}
-  visualRoot: {fileID: 0}
 --- !u!65 &3263875452221699154
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -551,6 +456,30 @@ MonoBehaviour:
   footprintRenderer: {fileID: 6376268145286619357}
   maxAcquireAttempts: 5
   acquireRetryInterval: 1
+  bakedShadow: {fileID: 0}
+  bakeShadowPrefabOverride: {fileID: 0}
+--- !u!114 &3453603916229586848
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2588846583440560901}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed4546a3f32fc4e5992a5d34eb4321e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TilesetPlatformBuilder
+  tileset: {fileID: 11400000, guid: 2c5f0111590354eadb5216adea1533b9, type: 2}
+  autoGenerate: 0
+  mergeWithNeighbours: 1
+  cellSize: 1
+  mergeTolerance: 0.05
+  variationSeed: 0
+  generatedRoot: {fileID: 0}
+  host: {fileID: 0}
+  members: []
+  hiddenRenderers: []
 --- !u!1 &2613697530039209108
 GameObject:
   m_ObjectHideFlags: 0
@@ -562,10 +491,10 @@ GameObject:
   - component: {fileID: 4387498626053032601}
   - component: {fileID: 3164767282858722262}
   - component: {fileID: 6622499184740728076}
-  - component: {fileID: 3480171993925395473}
   - component: {fileID: 4220568361646608979}
   - component: {fileID: 7692450588451941736}
   - component: {fileID: 7031132893902498870}
+  - component: {fileID: 5707574272388900483}
   m_Layer: 6
   m_Name: VisualCube (10)
   m_TagString: Untagged
@@ -645,53 +574,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &3480171993925395473
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2613697530039209108}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: daba73f92aa71491c9e216478e479056, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CubeVisualBuilder
-  edgePrefabs:
-  - {fileID: 1433387614537848497, guid: 380235c01054a4bfca869e16ee4bcc11, type: 3}
-  - {fileID: 7614468081444443852, guid: a000042ddce014ec1b25e039e9e975f5, type: 3}
-  - {fileID: 970526433092363996, guid: 8b96a2e919886469d9ab20704e7aee74, type: 3}
-  - {fileID: 3734518529458459224, guid: 6689d4d0437b940adb806926290352bc, type: 3}
-  - {fileID: 7551599550734247072, guid: 281d737bf1e824aabae68c39f229a4e8, type: 3}
-  - {fileID: 6700042185931365227, guid: e1c85f33d0d324c0d867af092de5bb18, type: 3}
-  - {fileID: 147576706118549172, guid: b406ef9427bc04c2ca75511ee734f6a1, type: 3}
-  - {fileID: 73819991260933395, guid: 97aac4a0d469b48188820ea657ddd959, type: 3}
-  edgeYaw: 270
-  edgeScaleOverlap: 0.2
-  avoidNearWallDetails: 0
-  detailAvoidRadius: 0
-  outerCornerPrefabs:
-  - {fileID: 4366759823961815167, guid: a38e8ce5d76d2426e9b58f0ba065998e, type: 3}
-  - {fileID: 8588932187785433069, guid: 285d34824f0944809a05eab4bbb808ca, type: 3}
-  - {fileID: 6059179439221544273, guid: 2c2d81eef1c3d4ce190f843c24b65f71, type: 3}
-  - {fileID: 5294279402883879360, guid: d947221740be5459f940466e394f6f5a, type: 3}
-  - {fileID: 4752783851932848897, guid: ca30db78546924f5ebcea7d2198ee081, type: 3}
-  - {fileID: 8430317907516972576, guid: 5d91888625c2b48c2abb9c2ad0e433de, type: 3}
-  - {fileID: 2730532409627958449, guid: 72e274acf18fe47db81b9b559f0a209d, type: 3}
-  - {fileID: 4344072999799160864, guid: 5de7fb19616844d7dbb8d1a0ce52cf4d, type: 3}
-  outerCornerYaw: 270
-  centerPrefabs:
-  - {fileID: 6563126074884931429, guid: 3a65b22d1b0ef49a48028e5a13dd890a, type: 3}
-  centerYaw: 0
-  centerScaleMargin: 1.9
-  innerCornerPrefabs:
-  - {fileID: 482466050895093880, guid: 937fbbc1614d54bd88832a93baf558df, type: 3}
-  innerCornerYaw: 270
-  touchGapTolerance: 0.1
-  debugLogPlacement: 0
-  generateOnEnable: 0
-  colliderRoot: {fileID: 0}
-  visualRoot: {fileID: 0}
 --- !u!65 &4220568361646608979
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -740,6 +622,30 @@ MonoBehaviour:
   footprintRenderer: {fileID: 6622499184740728076}
   maxAcquireAttempts: 5
   acquireRetryInterval: 1
+  bakedShadow: {fileID: 0}
+  bakeShadowPrefabOverride: {fileID: 0}
+--- !u!114 &5707574272388900483
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2613697530039209108}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed4546a3f32fc4e5992a5d34eb4321e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TilesetPlatformBuilder
+  tileset: {fileID: 11400000, guid: 2c5f0111590354eadb5216adea1533b9, type: 2}
+  autoGenerate: 0
+  mergeWithNeighbours: 1
+  cellSize: 1
+  mergeTolerance: 0.05
+  variationSeed: 0
+  generatedRoot: {fileID: 0}
+  host: {fileID: 0}
+  members: []
+  hiddenRenderers: []
 --- !u!1 &2916372221036251853
 GameObject:
   m_ObjectHideFlags: 0
@@ -831,7 +737,7 @@ SpriteRenderer:
   m_Size: {x: 2.46, y: 1.78}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
 --- !u!114 &6653199077965923018
 MonoBehaviour:
@@ -859,6 +765,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.HasShadow
   baseScale: 0.5
   shadowOffset: {x: 0, y: 0}
+  shadowAlphaMultiplier: 1
 --- !u!1 &3396919128048187410
 GameObject:
   m_ObjectHideFlags: 0
@@ -870,10 +777,10 @@ GameObject:
   - component: {fileID: 8877872209448444976}
   - component: {fileID: 4677684973010129812}
   - component: {fileID: 5536473359621087649}
-  - component: {fileID: 8616577302663592242}
   - component: {fileID: 1749881530140234939}
   - component: {fileID: 3251537081066686023}
   - component: {fileID: 3203287360214709912}
+  - component: {fileID: 6144064412252213453}
   m_Layer: 6
   m_Name: VisualCube (11)
   m_TagString: Untagged
@@ -953,53 +860,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &8616577302663592242
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3396919128048187410}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: daba73f92aa71491c9e216478e479056, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CubeVisualBuilder
-  edgePrefabs:
-  - {fileID: 1433387614537848497, guid: 380235c01054a4bfca869e16ee4bcc11, type: 3}
-  - {fileID: 7614468081444443852, guid: a000042ddce014ec1b25e039e9e975f5, type: 3}
-  - {fileID: 970526433092363996, guid: 8b96a2e919886469d9ab20704e7aee74, type: 3}
-  - {fileID: 3734518529458459224, guid: 6689d4d0437b940adb806926290352bc, type: 3}
-  - {fileID: 7551599550734247072, guid: 281d737bf1e824aabae68c39f229a4e8, type: 3}
-  - {fileID: 6700042185931365227, guid: e1c85f33d0d324c0d867af092de5bb18, type: 3}
-  - {fileID: 147576706118549172, guid: b406ef9427bc04c2ca75511ee734f6a1, type: 3}
-  - {fileID: 73819991260933395, guid: 97aac4a0d469b48188820ea657ddd959, type: 3}
-  edgeYaw: 270
-  edgeScaleOverlap: 0.2
-  avoidNearWallDetails: 0
-  detailAvoidRadius: 0
-  outerCornerPrefabs:
-  - {fileID: 4366759823961815167, guid: a38e8ce5d76d2426e9b58f0ba065998e, type: 3}
-  - {fileID: 8588932187785433069, guid: 285d34824f0944809a05eab4bbb808ca, type: 3}
-  - {fileID: 6059179439221544273, guid: 2c2d81eef1c3d4ce190f843c24b65f71, type: 3}
-  - {fileID: 5294279402883879360, guid: d947221740be5459f940466e394f6f5a, type: 3}
-  - {fileID: 4752783851932848897, guid: ca30db78546924f5ebcea7d2198ee081, type: 3}
-  - {fileID: 8430317907516972576, guid: 5d91888625c2b48c2abb9c2ad0e433de, type: 3}
-  - {fileID: 2730532409627958449, guid: 72e274acf18fe47db81b9b559f0a209d, type: 3}
-  - {fileID: 4344072999799160864, guid: 5de7fb19616844d7dbb8d1a0ce52cf4d, type: 3}
-  outerCornerYaw: 270
-  centerPrefabs:
-  - {fileID: 6563126074884931429, guid: 3a65b22d1b0ef49a48028e5a13dd890a, type: 3}
-  centerYaw: 0
-  centerScaleMargin: 1.9
-  innerCornerPrefabs:
-  - {fileID: 482466050895093880, guid: 937fbbc1614d54bd88832a93baf558df, type: 3}
-  innerCornerYaw: 270
-  touchGapTolerance: 0.1
-  debugLogPlacement: 0
-  generateOnEnable: 0
-  colliderRoot: {fileID: 0}
-  visualRoot: {fileID: 0}
 --- !u!65 &1749881530140234939
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1048,6 +908,30 @@ MonoBehaviour:
   footprintRenderer: {fileID: 5536473359621087649}
   maxAcquireAttempts: 5
   acquireRetryInterval: 1
+  bakedShadow: {fileID: 0}
+  bakeShadowPrefabOverride: {fileID: 0}
+--- !u!114 &6144064412252213453
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3396919128048187410}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed4546a3f32fc4e5992a5d34eb4321e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TilesetPlatformBuilder
+  tileset: {fileID: 11400000, guid: 2c5f0111590354eadb5216adea1533b9, type: 2}
+  autoGenerate: 0
+  mergeWithNeighbours: 1
+  cellSize: 1
+  mergeTolerance: 0.05
+  variationSeed: 0
+  generatedRoot: {fileID: 0}
+  host: {fileID: 0}
+  members: []
+  hiddenRenderers: []
 --- !u!1 &4233769103029687401
 GameObject:
   m_ObjectHideFlags: 0
@@ -1092,10 +976,10 @@ GameObject:
   - component: {fileID: 6322038043963893718}
   - component: {fileID: 1398245573609785076}
   - component: {fileID: 6336056849046595742}
-  - component: {fileID: 5464437539797977813}
   - component: {fileID: 4516693483868083480}
   - component: {fileID: 7985544808898069724}
   - component: {fileID: 150810944141505294}
+  - component: {fileID: 4866223314182522284}
   m_Layer: 6
   m_Name: VisualCube (14)
   m_TagString: Untagged
@@ -1175,53 +1059,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &5464437539797977813
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4470649076718546349}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: daba73f92aa71491c9e216478e479056, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CubeVisualBuilder
-  edgePrefabs:
-  - {fileID: 1433387614537848497, guid: 380235c01054a4bfca869e16ee4bcc11, type: 3}
-  - {fileID: 7614468081444443852, guid: a000042ddce014ec1b25e039e9e975f5, type: 3}
-  - {fileID: 970526433092363996, guid: 8b96a2e919886469d9ab20704e7aee74, type: 3}
-  - {fileID: 3734518529458459224, guid: 6689d4d0437b940adb806926290352bc, type: 3}
-  - {fileID: 7551599550734247072, guid: 281d737bf1e824aabae68c39f229a4e8, type: 3}
-  - {fileID: 6700042185931365227, guid: e1c85f33d0d324c0d867af092de5bb18, type: 3}
-  - {fileID: 147576706118549172, guid: b406ef9427bc04c2ca75511ee734f6a1, type: 3}
-  - {fileID: 73819991260933395, guid: 97aac4a0d469b48188820ea657ddd959, type: 3}
-  edgeYaw: 270
-  edgeScaleOverlap: 0.2
-  avoidNearWallDetails: 0
-  detailAvoidRadius: 0
-  outerCornerPrefabs:
-  - {fileID: 4366759823961815167, guid: a38e8ce5d76d2426e9b58f0ba065998e, type: 3}
-  - {fileID: 8588932187785433069, guid: 285d34824f0944809a05eab4bbb808ca, type: 3}
-  - {fileID: 6059179439221544273, guid: 2c2d81eef1c3d4ce190f843c24b65f71, type: 3}
-  - {fileID: 5294279402883879360, guid: d947221740be5459f940466e394f6f5a, type: 3}
-  - {fileID: 4752783851932848897, guid: ca30db78546924f5ebcea7d2198ee081, type: 3}
-  - {fileID: 8430317907516972576, guid: 5d91888625c2b48c2abb9c2ad0e433de, type: 3}
-  - {fileID: 2730532409627958449, guid: 72e274acf18fe47db81b9b559f0a209d, type: 3}
-  - {fileID: 4344072999799160864, guid: 5de7fb19616844d7dbb8d1a0ce52cf4d, type: 3}
-  outerCornerYaw: 270
-  centerPrefabs:
-  - {fileID: 6563126074884931429, guid: 3a65b22d1b0ef49a48028e5a13dd890a, type: 3}
-  centerYaw: 0
-  centerScaleMargin: 1.9
-  innerCornerPrefabs:
-  - {fileID: 482466050895093880, guid: 937fbbc1614d54bd88832a93baf558df, type: 3}
-  innerCornerYaw: 270
-  touchGapTolerance: 0.1
-  debugLogPlacement: 0
-  generateOnEnable: 0
-  colliderRoot: {fileID: 0}
-  visualRoot: {fileID: 0}
 --- !u!65 &4516693483868083480
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1270,6 +1107,30 @@ MonoBehaviour:
   footprintRenderer: {fileID: 6336056849046595742}
   maxAcquireAttempts: 5
   acquireRetryInterval: 1
+  bakedShadow: {fileID: 0}
+  bakeShadowPrefabOverride: {fileID: 0}
+--- !u!114 &4866223314182522284
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4470649076718546349}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed4546a3f32fc4e5992a5d34eb4321e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TilesetPlatformBuilder
+  tileset: {fileID: 11400000, guid: 2c5f0111590354eadb5216adea1533b9, type: 2}
+  autoGenerate: 0
+  mergeWithNeighbours: 1
+  cellSize: 1
+  mergeTolerance: 0.05
+  variationSeed: 0
+  generatedRoot: {fileID: 0}
+  host: {fileID: 0}
+  members: []
+  hiddenRenderers: []
 --- !u!1 &5462762993883868046
 GameObject:
   m_ObjectHideFlags: 0
@@ -1281,10 +1142,10 @@ GameObject:
   - component: {fileID: 907152292408114592}
   - component: {fileID: 1467083053663874525}
   - component: {fileID: 1719325195319913921}
-  - component: {fileID: 1533290642492231495}
   - component: {fileID: 5093150584340328009}
   - component: {fileID: 7527947046245879179}
   - component: {fileID: 1871294984465782351}
+  - component: {fileID: 5355275152632303907}
   m_Layer: 6
   m_Name: VisualCube (13)
   m_TagString: Untagged
@@ -1364,53 +1225,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &1533290642492231495
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5462762993883868046}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: daba73f92aa71491c9e216478e479056, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CubeVisualBuilder
-  edgePrefabs:
-  - {fileID: 1433387614537848497, guid: 380235c01054a4bfca869e16ee4bcc11, type: 3}
-  - {fileID: 7614468081444443852, guid: a000042ddce014ec1b25e039e9e975f5, type: 3}
-  - {fileID: 970526433092363996, guid: 8b96a2e919886469d9ab20704e7aee74, type: 3}
-  - {fileID: 3734518529458459224, guid: 6689d4d0437b940adb806926290352bc, type: 3}
-  - {fileID: 7551599550734247072, guid: 281d737bf1e824aabae68c39f229a4e8, type: 3}
-  - {fileID: 6700042185931365227, guid: e1c85f33d0d324c0d867af092de5bb18, type: 3}
-  - {fileID: 147576706118549172, guid: b406ef9427bc04c2ca75511ee734f6a1, type: 3}
-  - {fileID: 73819991260933395, guid: 97aac4a0d469b48188820ea657ddd959, type: 3}
-  edgeYaw: 270
-  edgeScaleOverlap: 0.2
-  avoidNearWallDetails: 0
-  detailAvoidRadius: 0
-  outerCornerPrefabs:
-  - {fileID: 4366759823961815167, guid: a38e8ce5d76d2426e9b58f0ba065998e, type: 3}
-  - {fileID: 8588932187785433069, guid: 285d34824f0944809a05eab4bbb808ca, type: 3}
-  - {fileID: 6059179439221544273, guid: 2c2d81eef1c3d4ce190f843c24b65f71, type: 3}
-  - {fileID: 5294279402883879360, guid: d947221740be5459f940466e394f6f5a, type: 3}
-  - {fileID: 4752783851932848897, guid: ca30db78546924f5ebcea7d2198ee081, type: 3}
-  - {fileID: 8430317907516972576, guid: 5d91888625c2b48c2abb9c2ad0e433de, type: 3}
-  - {fileID: 2730532409627958449, guid: 72e274acf18fe47db81b9b559f0a209d, type: 3}
-  - {fileID: 4344072999799160864, guid: 5de7fb19616844d7dbb8d1a0ce52cf4d, type: 3}
-  outerCornerYaw: 270
-  centerPrefabs:
-  - {fileID: 6563126074884931429, guid: 3a65b22d1b0ef49a48028e5a13dd890a, type: 3}
-  centerYaw: 0
-  centerScaleMargin: 1.9
-  innerCornerPrefabs:
-  - {fileID: 482466050895093880, guid: 937fbbc1614d54bd88832a93baf558df, type: 3}
-  innerCornerYaw: 270
-  touchGapTolerance: 0.1
-  debugLogPlacement: 0
-  generateOnEnable: 0
-  colliderRoot: {fileID: 0}
-  visualRoot: {fileID: 0}
 --- !u!65 &5093150584340328009
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1459,6 +1273,30 @@ MonoBehaviour:
   footprintRenderer: {fileID: 1719325195319913921}
   maxAcquireAttempts: 5
   acquireRetryInterval: 1
+  bakedShadow: {fileID: 0}
+  bakeShadowPrefabOverride: {fileID: 0}
+--- !u!114 &5355275152632303907
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5462762993883868046}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed4546a3f32fc4e5992a5d34eb4321e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TilesetPlatformBuilder
+  tileset: {fileID: 11400000, guid: 2c5f0111590354eadb5216adea1533b9, type: 2}
+  autoGenerate: 0
+  mergeWithNeighbours: 1
+  cellSize: 1
+  mergeTolerance: 0.05
+  variationSeed: 0
+  generatedRoot: {fileID: 0}
+  host: {fileID: 0}
+  members: []
+  hiddenRenderers: []
 --- !u!1 &5598080251413888602
 GameObject:
   m_ObjectHideFlags: 0
@@ -1470,10 +1308,10 @@ GameObject:
   - component: {fileID: 1532036889031041291}
   - component: {fileID: 3963463097741930916}
   - component: {fileID: 2854508046195517232}
-  - component: {fileID: 766062408265929362}
   - component: {fileID: 6220690287848680134}
   - component: {fileID: 3898729051173157177}
   - component: {fileID: 2174546181729907810}
+  - component: {fileID: 7901631881106091401}
   m_Layer: 6
   m_Name: VisualCube (12)
   m_TagString: Untagged
@@ -1553,53 +1391,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &766062408265929362
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5598080251413888602}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: daba73f92aa71491c9e216478e479056, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CubeVisualBuilder
-  edgePrefabs:
-  - {fileID: 1433387614537848497, guid: 380235c01054a4bfca869e16ee4bcc11, type: 3}
-  - {fileID: 7614468081444443852, guid: a000042ddce014ec1b25e039e9e975f5, type: 3}
-  - {fileID: 970526433092363996, guid: 8b96a2e919886469d9ab20704e7aee74, type: 3}
-  - {fileID: 3734518529458459224, guid: 6689d4d0437b940adb806926290352bc, type: 3}
-  - {fileID: 7551599550734247072, guid: 281d737bf1e824aabae68c39f229a4e8, type: 3}
-  - {fileID: 6700042185931365227, guid: e1c85f33d0d324c0d867af092de5bb18, type: 3}
-  - {fileID: 147576706118549172, guid: b406ef9427bc04c2ca75511ee734f6a1, type: 3}
-  - {fileID: 73819991260933395, guid: 97aac4a0d469b48188820ea657ddd959, type: 3}
-  edgeYaw: 270
-  edgeScaleOverlap: 0.2
-  avoidNearWallDetails: 0
-  detailAvoidRadius: 0
-  outerCornerPrefabs:
-  - {fileID: 4366759823961815167, guid: a38e8ce5d76d2426e9b58f0ba065998e, type: 3}
-  - {fileID: 8588932187785433069, guid: 285d34824f0944809a05eab4bbb808ca, type: 3}
-  - {fileID: 6059179439221544273, guid: 2c2d81eef1c3d4ce190f843c24b65f71, type: 3}
-  - {fileID: 5294279402883879360, guid: d947221740be5459f940466e394f6f5a, type: 3}
-  - {fileID: 4752783851932848897, guid: ca30db78546924f5ebcea7d2198ee081, type: 3}
-  - {fileID: 8430317907516972576, guid: 5d91888625c2b48c2abb9c2ad0e433de, type: 3}
-  - {fileID: 2730532409627958449, guid: 72e274acf18fe47db81b9b559f0a209d, type: 3}
-  - {fileID: 4344072999799160864, guid: 5de7fb19616844d7dbb8d1a0ce52cf4d, type: 3}
-  outerCornerYaw: 270
-  centerPrefabs:
-  - {fileID: 6563126074884931429, guid: 3a65b22d1b0ef49a48028e5a13dd890a, type: 3}
-  centerYaw: 0
-  centerScaleMargin: 1.9
-  innerCornerPrefabs:
-  - {fileID: 482466050895093880, guid: 937fbbc1614d54bd88832a93baf558df, type: 3}
-  innerCornerYaw: 270
-  touchGapTolerance: 0.1
-  debugLogPlacement: 0
-  generateOnEnable: 0
-  colliderRoot: {fileID: 0}
-  visualRoot: {fileID: 0}
 --- !u!65 &6220690287848680134
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1648,6 +1439,30 @@ MonoBehaviour:
   footprintRenderer: {fileID: 2854508046195517232}
   maxAcquireAttempts: 5
   acquireRetryInterval: 1
+  bakedShadow: {fileID: 0}
+  bakeShadowPrefabOverride: {fileID: 0}
+--- !u!114 &7901631881106091401
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5598080251413888602}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed4546a3f32fc4e5992a5d34eb4321e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TilesetPlatformBuilder
+  tileset: {fileID: 11400000, guid: 2c5f0111590354eadb5216adea1533b9, type: 2}
+  autoGenerate: 0
+  mergeWithNeighbours: 1
+  cellSize: 1
+  mergeTolerance: 0.05
+  variationSeed: 0
+  generatedRoot: {fileID: 0}
+  host: {fileID: 0}
+  members: []
+  hiddenRenderers: []
 --- !u!1 &6115749516927412273
 GameObject:
   m_ObjectHideFlags: 0
@@ -1659,10 +1474,10 @@ GameObject:
   - component: {fileID: 2972052385068763407}
   - component: {fileID: 7032722914723992600}
   - component: {fileID: 67993763822311127}
-  - component: {fileID: 6962854261038063703}
   - component: {fileID: 5764486476167381614}
   - component: {fileID: 8967219424262393551}
   - component: {fileID: 7880001599352092529}
+  - component: {fileID: 1652278101945895438}
   m_Layer: 6
   m_Name: VisualCube (1)
   m_TagString: Untagged
@@ -1742,53 +1557,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &6962854261038063703
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6115749516927412273}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: daba73f92aa71491c9e216478e479056, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CubeVisualBuilder
-  edgePrefabs:
-  - {fileID: 1433387614537848497, guid: 380235c01054a4bfca869e16ee4bcc11, type: 3}
-  - {fileID: 7614468081444443852, guid: a000042ddce014ec1b25e039e9e975f5, type: 3}
-  - {fileID: 970526433092363996, guid: 8b96a2e919886469d9ab20704e7aee74, type: 3}
-  - {fileID: 3734518529458459224, guid: 6689d4d0437b940adb806926290352bc, type: 3}
-  - {fileID: 7551599550734247072, guid: 281d737bf1e824aabae68c39f229a4e8, type: 3}
-  - {fileID: 6700042185931365227, guid: e1c85f33d0d324c0d867af092de5bb18, type: 3}
-  - {fileID: 147576706118549172, guid: b406ef9427bc04c2ca75511ee734f6a1, type: 3}
-  - {fileID: 73819991260933395, guid: 97aac4a0d469b48188820ea657ddd959, type: 3}
-  edgeYaw: 270
-  edgeScaleOverlap: 0.2
-  avoidNearWallDetails: 0
-  detailAvoidRadius: 0
-  outerCornerPrefabs:
-  - {fileID: 4366759823961815167, guid: a38e8ce5d76d2426e9b58f0ba065998e, type: 3}
-  - {fileID: 8588932187785433069, guid: 285d34824f0944809a05eab4bbb808ca, type: 3}
-  - {fileID: 6059179439221544273, guid: 2c2d81eef1c3d4ce190f843c24b65f71, type: 3}
-  - {fileID: 5294279402883879360, guid: d947221740be5459f940466e394f6f5a, type: 3}
-  - {fileID: 4752783851932848897, guid: ca30db78546924f5ebcea7d2198ee081, type: 3}
-  - {fileID: 8430317907516972576, guid: 5d91888625c2b48c2abb9c2ad0e433de, type: 3}
-  - {fileID: 2730532409627958449, guid: 72e274acf18fe47db81b9b559f0a209d, type: 3}
-  - {fileID: 4344072999799160864, guid: 5de7fb19616844d7dbb8d1a0ce52cf4d, type: 3}
-  outerCornerYaw: 270
-  centerPrefabs:
-  - {fileID: 6563126074884931429, guid: 3a65b22d1b0ef49a48028e5a13dd890a, type: 3}
-  centerYaw: 0
-  centerScaleMargin: 1.9
-  innerCornerPrefabs:
-  - {fileID: 482466050895093880, guid: 937fbbc1614d54bd88832a93baf558df, type: 3}
-  innerCornerYaw: 270
-  touchGapTolerance: 0.1
-  debugLogPlacement: 0
-  generateOnEnable: 0
-  colliderRoot: {fileID: 0}
-  visualRoot: {fileID: 0}
 --- !u!65 &5764486476167381614
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1837,6 +1605,30 @@ MonoBehaviour:
   footprintRenderer: {fileID: 67993763822311127}
   maxAcquireAttempts: 5
   acquireRetryInterval: 1
+  bakedShadow: {fileID: 0}
+  bakeShadowPrefabOverride: {fileID: 0}
+--- !u!114 &1652278101945895438
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6115749516927412273}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed4546a3f32fc4e5992a5d34eb4321e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TilesetPlatformBuilder
+  tileset: {fileID: 11400000, guid: 2c5f0111590354eadb5216adea1533b9, type: 2}
+  autoGenerate: 0
+  mergeWithNeighbours: 1
+  cellSize: 1
+  mergeTolerance: 0.05
+  variationSeed: 0
+  generatedRoot: {fileID: 0}
+  host: {fileID: 0}
+  members: []
+  hiddenRenderers: []
 --- !u!1 &6736795995662789965
 GameObject:
   m_ObjectHideFlags: 0
@@ -2045,10 +1837,10 @@ GameObject:
   - component: {fileID: 2104948516975709276}
   - component: {fileID: 930386986167627805}
   - component: {fileID: 8759386006865265704}
-  - component: {fileID: 4225964908619895264}
   - component: {fileID: 4521032829177456284}
   - component: {fileID: 1051547774935226370}
   - component: {fileID: 1498222141561401754}
+  - component: {fileID: 6582641217039038480}
   m_Layer: 6
   m_Name: VisualCube (7)
   m_TagString: Untagged
@@ -2128,53 +1920,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &4225964908619895264
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7394707183724506774}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: daba73f92aa71491c9e216478e479056, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CubeVisualBuilder
-  edgePrefabs:
-  - {fileID: 1433387614537848497, guid: 380235c01054a4bfca869e16ee4bcc11, type: 3}
-  - {fileID: 7614468081444443852, guid: a000042ddce014ec1b25e039e9e975f5, type: 3}
-  - {fileID: 970526433092363996, guid: 8b96a2e919886469d9ab20704e7aee74, type: 3}
-  - {fileID: 3734518529458459224, guid: 6689d4d0437b940adb806926290352bc, type: 3}
-  - {fileID: 7551599550734247072, guid: 281d737bf1e824aabae68c39f229a4e8, type: 3}
-  - {fileID: 6700042185931365227, guid: e1c85f33d0d324c0d867af092de5bb18, type: 3}
-  - {fileID: 147576706118549172, guid: b406ef9427bc04c2ca75511ee734f6a1, type: 3}
-  - {fileID: 73819991260933395, guid: 97aac4a0d469b48188820ea657ddd959, type: 3}
-  edgeYaw: 270
-  edgeScaleOverlap: 0.2
-  avoidNearWallDetails: 0
-  detailAvoidRadius: 0
-  outerCornerPrefabs:
-  - {fileID: 4366759823961815167, guid: a38e8ce5d76d2426e9b58f0ba065998e, type: 3}
-  - {fileID: 8588932187785433069, guid: 285d34824f0944809a05eab4bbb808ca, type: 3}
-  - {fileID: 6059179439221544273, guid: 2c2d81eef1c3d4ce190f843c24b65f71, type: 3}
-  - {fileID: 5294279402883879360, guid: d947221740be5459f940466e394f6f5a, type: 3}
-  - {fileID: 4752783851932848897, guid: ca30db78546924f5ebcea7d2198ee081, type: 3}
-  - {fileID: 8430317907516972576, guid: 5d91888625c2b48c2abb9c2ad0e433de, type: 3}
-  - {fileID: 2730532409627958449, guid: 72e274acf18fe47db81b9b559f0a209d, type: 3}
-  - {fileID: 4344072999799160864, guid: 5de7fb19616844d7dbb8d1a0ce52cf4d, type: 3}
-  outerCornerYaw: 270
-  centerPrefabs:
-  - {fileID: 6563126074884931429, guid: 3a65b22d1b0ef49a48028e5a13dd890a, type: 3}
-  centerYaw: 0
-  centerScaleMargin: 1.9
-  innerCornerPrefabs:
-  - {fileID: 482466050895093880, guid: 937fbbc1614d54bd88832a93baf558df, type: 3}
-  innerCornerYaw: 270
-  touchGapTolerance: 0.1
-  debugLogPlacement: 0
-  generateOnEnable: 0
-  colliderRoot: {fileID: 0}
-  visualRoot: {fileID: 0}
 --- !u!65 &4521032829177456284
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2223,6 +1968,30 @@ MonoBehaviour:
   footprintRenderer: {fileID: 8759386006865265704}
   maxAcquireAttempts: 5
   acquireRetryInterval: 1
+  bakedShadow: {fileID: 0}
+  bakeShadowPrefabOverride: {fileID: 0}
+--- !u!114 &6582641217039038480
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7394707183724506774}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed4546a3f32fc4e5992a5d34eb4321e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TilesetPlatformBuilder
+  tileset: {fileID: 11400000, guid: 2c5f0111590354eadb5216adea1533b9, type: 2}
+  autoGenerate: 0
+  mergeWithNeighbours: 1
+  cellSize: 1
+  mergeTolerance: 0.05
+  variationSeed: 0
+  generatedRoot: {fileID: 0}
+  host: {fileID: 0}
+  members: []
+  hiddenRenderers: []
 --- !u!1 &7679472307801411374
 GameObject:
   m_ObjectHideFlags: 0
@@ -2365,16 +2134,18 @@ MonoBehaviour:
   initialized: 0
   executeOnlyOnLocal: 0
   isLocal: 0
-  inactiveVisual: {fileID: 0}
-  activeVisual: {fileID: 0}
-  expiredVisual: {fileID: 0}
-  activeParticles: {fileID: 0}
   promptTitle: INTERACT
   promptActiveDescription: 
   promptPhaseUnavailableDescription: COME BACK ON BREAK
   promptAlreadyUsedDescription: ALREADY USED
   promptNotNeededDescription: FULL HEALTH
   promptWorldOffset: {x: 0, y: 2.5, z: 0}
+  promptRewardIcon: {fileID: 0}
+  promptRewardText: 
+  inactiveVisual: {fileID: 0}
+  activeVisual: {fileID: 0}
+  expiredVisual: {fileID: 0}
+  activeParticles: {fileID: 0}
 --- !u!114 &2335953104896763899
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3097,6 +2868,16 @@ MonoBehaviour:
       Value: 8
     ForbiddenNeighbors:
       Value: 0
+    ConnectedChunks:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    ConnectedChunkCount: 0
     Discovered:
       Value: 0
     HasRespawnPoint:
@@ -3330,3 +3111,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.HasShadow
   baseScale: 2
   shadowOffset: {x: 0, y: 0}
+  shadowAlphaMultiplier: 1

@@ -89,8 +89,12 @@ MonoBehaviour:
     RawValue: 65536
   CoinGainMultiplier:
     RawValue: 65536
+  DisplayName: Lux
+  Description: An engineer who lets a turret do the fighting. Deploy the Sentry,
+    collect Scrap from the fallout, and rebuild it into whatever the fight needs.
   RingColor: {r: 1, g: 0.7065829, b: 0.3443396, a: 1}
   PawnSprite: {fileID: 1035773666, guid: b49db0c0e58ba4e9b8349764e5b8d384, type: 3}
+  UIHead: {fileID: 98873902, guid: 45a55c99be7c3435e9fc005925fa8aa8, type: 3}
   WeaponPosition:
     X:
       RawValue: 0

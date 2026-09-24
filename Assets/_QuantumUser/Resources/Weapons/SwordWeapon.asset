@@ -19,7 +19,7 @@ MonoBehaviour:
   DisplayName: Pistol
   FireType: 1
   Damage:
-    RawValue: 1966080
+    RawValue: 3276800
   Element: 0
   Family: 1
   Weight: 1
@@ -28,7 +28,7 @@ MonoBehaviour:
   CriticalDamageBonus:
     RawValue: 98304
   FireRate:
-    RawValue: 196608
+    RawValue: 131072
   AnticipationTime:
     RawValue: 3277
   MagazineSize: 1
@@ -73,21 +73,14 @@ MonoBehaviour:
     ProjectileDestroyScale: {x: 1, y: 1, z: 1}
     ProjectileExtraParticle: {fileID: 0}
     ProjectileExtraParticleScale: {x: 1, y: 1, z: 1}
-  _dpsPreview: 'Burst DPS: 86.1
+  _dpsPreview: 'Burst DPS: 100
 
-    Sustained DPS (incl. reload): 86.1
+    Sustained DPS (incl. reload): 100
 
     Damage/min:
-    5165
+    6000
 
-    Crit dmg/shot: 45 (vs 30 normal) @ 20 % chance, x1.5
+    Crit dmg/shot: 75 (vs 50 normal) @ 20 % chance, x1.5
 
     Anticipation:
-    0.05s/shot (folded into DPS above)
-
-    Est. targets/shot: 5.5
-
-    Effective
-    Burst DPS (all targets): 473.5
-
-    Effective Sustained DPS (all targets): 473.5'
+    0.05s/shot (folded into DPS above)'

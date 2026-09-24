@@ -89,8 +89,12 @@ MonoBehaviour:
     RawValue: 65536
   CoinGainMultiplier:
     RawValue: 65536
+  DisplayName: Max
+  Description: A berserker who gets more dangerous the angrier he gets - Overdrive
+    redlines his fire rate and speed, and he refuses to go down easy.
   RingColor: {r: 0.98039216, g: 0.47066006, b: 0.023529401, a: 1}
   PawnSprite: {fileID: -514289054, guid: b49db0c0e58ba4e9b8349764e5b8d384, type: 3}
+  UIHead: {fileID: 1362212329, guid: 7d02a15dca2e248b1b3ce872710b7b0c, type: 3}
   WeaponPosition:
     X:
       RawValue: 0

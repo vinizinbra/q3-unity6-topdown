@@ -55,6 +55,12 @@ namespace Quantum
             // that weapon has one configured. Same graceful-fade-on-impact treatment as
             // EchoGhostParticle/TrailParticle, not cut off mid-emission.
             public ParticleSystem WeaponExtraParticle;
+
+            // Floor on the impact tween, on top of MinImpactDuration - 0 for a live view (its trails
+            // already drew during the catch-up). ProjectileGhostTrailManager sets it for a shot
+            // that never had a view, whose whole flight IS this tween: rate-over-distance trails
+            // need a few rendered frames of movement or they emit nothing at all.
+            public float MinFlightDuration;
         }
 
         // Floor on the catch-up rate, in world units per second. A projectile whose own speed has
@@ -243,13 +249,24 @@ namespace Quantum
 
         private void OnProjectileDestroyed(EventProjectileDestroyed e)
         {
-            if (e.Entity != _entity || _impacting == true)
+            if (e.Entity != _entity)
+                return;
+
+            BeginImpact(e.Position.ToUnityVector3(), _speed);
+        }
+
+        // Flies the visual onto its resolved hit point, plays the impact and lets the trail fade.
+        // The destroy event's path for a live view; called directly by ProjectileGhostTrailManager
+        // for a shot that never had one (its visual starts at the muzzle, the event already fired).
+        public void BeginImpact(Vector3 hitPoint, float speed)
+        {
+            if (_impacting == true)
                 return;
 
             _impacting = true;
+            _speed = speed;
             SetVisible(true);
 
-            Vector3 hitPoint = e.Position.ToUnityVector3();
             float distance = Vector3.Distance(transform.position, hitPoint);
 
             // Covers the whole remaining gap - the visual is behind by however much of the catch-up
@@ -260,6 +277,8 @@ namespace Quantum
             float duration = _speed > 0.0001f
                 ? Mathf.Clamp(distance / _speed, _settings.MinImpactDuration, _settings.MaxImpactDuration)
                 : _settings.MinImpactDuration;
+
+            duration = Mathf.Max(duration, _settings.MinFlightDuration);
 
             if (distance > 0.0001f)
                 transform.rotation = Quaternion.LookRotation((hitPoint - transform.position).normalized, Vector3.up);

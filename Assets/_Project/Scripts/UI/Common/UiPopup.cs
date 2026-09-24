@@ -20,11 +20,23 @@ public class UiPopup : MonoBehaviour
     public bool hide;
     public float hideSpeed = 10;
 
-    // Set by whoever opens this popup (see PopupManager.ShowPopupOnTop) to opt a specific instance
-    // out of any future "tap outside / back button" dismissal - PopupManager.CloseCurrentPopup()
-    // already respects this, callers just need to route dismiss input through it instead of calling
-    // Close() directly.
-    public bool blockExternalClose;
+    // Opt-in: popups close only through their own buttons unless this is ticked (or a subclass
+    // overrides CloseOnDimClickByDefault, like InMatchSettingsPopup). PopupManager.CloseCurrentPopup()
+    // - the dim/backdrop click and back button - respects CanCloseOnDimClick, so route dismiss input
+    // through it instead of calling Close() directly.
+    [Tooltip("If ticked, clicking the dim background (or back button) closes this popup.")]
+    [SerializeField] private bool closeOnDimClick;
+
+    protected virtual bool CloseOnDimClickByDefault => closeOnDimClick;
+
+    // Per-show override set by whoever opens the popup (ShowPopupOnTop / Open<T> / AddPopupToQueue
+    // with an explicit value); null = use the default above. Cleared on close so it never leaks
+    // into the next time this reused instance is shown.
+    private bool? closeOnDimClickOverride;
+
+    public bool CanCloseOnDimClick => closeOnDimClickOverride ?? CloseOnDimClickByDefault;
+
+    public void SetCloseOnDimClickOverride(bool? value) => closeOnDimClickOverride = value;
 
     // public virtual, not private - a subclass with its own Awake (AlertPopup/ChangeNamePopup/
     // InvitePopup) MUST call base.Awake() or this wiring silently never happens (standard Unity
@@ -45,6 +57,7 @@ public class UiPopup : MonoBehaviour
     public virtual void Close()
     {
         hide = true;
+        closeOnDimClickOverride = null;
         onClose?.Invoke();
     }
 
@@ -55,6 +68,7 @@ public class UiPopup : MonoBehaviour
         hide = false;
         canvasGroup.alpha = 0;
         gameObject.SetActive(false);
+        closeOnDimClickOverride = null;
         onClose?.Invoke();
     }
 

@@ -1,0 +1,122 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f02bf106b04cd445ebe7292424ae5bf1, type: 3}
+  m_Name: ArcticCliffTileset
+  m_EditorClassIdentifier: Assembly-CSharp::TilesetDefinition
+  tilingMode: 1
+  mergeCenters: 1
+  material: {fileID: 2100000, guid: abed306901bae4d4387c26876e763b0a, type: 2}
+  modelPrefix: ArcticCliff_
+  useInnerCorners: 1
+  maxEdgeLength: 3
+  maxEdgeStretch: 1.5
+  pieces:
+  - Key: Center
+    Model: {fileID: 919132149155446097, guid: d1bd3c38a3a914ef6b7e3058c7fadd14, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 08b29f0d2673e4ddfb294769377987c7, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: bd13a0f42ac484e82a57b514965739a3, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 6b2e14bf4122546778b4c98bc98b5758, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: ce3e4a1392fd64a0dbfb82399f28ac0e, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: e83bdcf61089d4db89e1108831de4c37, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 620deb033e91b4e6f812a4ad42a492ab, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 0b0a09f4a538846f5980e617417928df, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: e8b89134b6e51442d93ad6f4d03c72a5, type: 3}
+    Weight: 1
+    NoStretch: 1
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 3842980b9089e4ffd9cca54b57675319, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 38a7a106c9c214bfa9c46d5f2575dbe8, type: 3}
+    Weight: 1
+    NoStretch: 1
+  - Key: Corner
+    Model: {fileID: 919132149155446097, guid: 5b9666693eee348c18ef4adbb63c8bef, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Corner
+    Model: {fileID: 919132149155446097, guid: a72c9c9b68a9342d89e87644fb04d134, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: InnerCorner
+    Model: {fileID: 919132149155446097, guid: 9fca403d2c5f447a48dd660517ed7d81, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: InnerCorner
+    Model: {fileID: 919132149155446097, guid: 45beb08fb280847e390ad05c80de3afa, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 545b2ebac943e415488e8ef8b7205ee9, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 3e18e682b12164967a77ccea2765f7ec, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 231273a2d53c44a98b82a73a3f3e3db8, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: d12bab6c351ea4202a89f9db86bedbe8, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 3f5fc62d99fe2421786d12741caa26b1, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 0a63e46ae37574ca0888b96d93d27d93, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 780d077bd3aa94b178cbcfe17ac4efa4, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 2dc818596a87243ecb94e485bbe90d0e, type: 3}
+    Weight: 1
+    NoStretch: 1
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 191366a8b68df49abae2db1af2381dcf, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 65dedcd80bb2141c0a6367042afbca3a, type: 3}
+    Weight: 1
+    NoStretch: 1

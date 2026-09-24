@@ -388,7 +388,7 @@ namespace Quantum
         {
             ClearSourceSlot(f, projectile, position);
 
-            f.Events.ProjectileDestroyed(entity, projectile->Owner, position, projectile->SpawnPosition, projectile->ProjectileData, projectile->WeaponData);
+            f.Events.ProjectileDestroyed(entity, projectile->Owner, position, projectile->SpawnPosition, projectile->ProjectileData, projectile->WeaponData, projectile->Velocity.Magnitude);
             f.Destroy(entity);
         }
 

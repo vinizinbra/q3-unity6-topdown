@@ -1,7 +1,4 @@
-using System.Collections;
 using System.Collections.Generic;
-using PrimeTween;
-using QuantumUser.View.Managers;
 using QuantumUser.View.Util;
 using UnityEngine;
 
@@ -11,58 +8,40 @@ namespace Quantum
     //
     // QuantumEntityViewUpdater only diffs views against the FINAL Predicted/Verified frame of each
     // Unity frame's tick batch, so a bullet fast enough to be created and destroyed inside that batch
-    // (or inside a resimulation of a remote player's late-arriving input) never exists as far as the
-    // view layer is concerned: ProjectileView.Initialize never runs, ProjectileVisualController is
-    // never created, and the shot is simply invisible. The destroy event still fires, though -
-    // QuantumGame dispatches every tick's events after the view pass - and it now carries everything
-    // needed to draw the shot after the fact: where it left from, where it landed, and which
-    // ProjectileDataAsset it was.
+    // (a point-blank hit at 20 ticks/s, a frame hitch, or a remote player's late-arriving shot that
+    // lives and dies entirely inside a resimulation) never exists as far as the view layer is
+    // concerned: ProjectileView.Initialize never runs, and the shot is simply invisible. The destroy
+    // event still fires, though - QuantumGame dispatches every tick's events after the view pass -
+    // and it carries everything needed to draw the shot after the fact: where it left from, where it
+    // landed, how fast it was going, and which ProjectileDataAsset/WeaponDataAsset it was.
     //
-    // For such a shot this plays ONLY the projectile prefab's own trail(s) - its trailParticle
-    // (pooled through EffectsManager) and/or its trailRenderer (pooled here) - fully restarted at the
-    // muzzle so nothing from a previous pooled life streaks across, flies them to the hit point over
-    // ghostFlightDuration, plays the prefab's impact effect, and lets them fade. Shots that DID get a
-    // view are left entirely to ProjectileVisualController - ProjectileVisualRegistry is what tells
-    // the two cases apart.
+    // For such a shot this instantiates a copy of the projectile prefab's own visual root - the exact
+    // same object a live ProjectileView would have detached - and hands it to the same
+    // ProjectileVisualController, starting at the muzzle and going straight into BeginImpact. So a
+    // shot with no view gets the same mesh, trails, impact effect, per-weapon tint and graceful trail
+    // fade as one that had a view. (This used to fly only a pooled copy of the trail particle for two
+    // frames, which in practice emitted nothing at all - the bullet body is a single burst and the
+    // trails emit by distance.) Shots that DID get a view are left entirely to their own
+    // ProjectileVisualController - ProjectileVisualRegistry is what tells the two cases apart.
     //
     // Known, accepted: a PREDICTED destroy that later rolls back (the entity actually survives) shows
     // a ghost and then the real bullet - unavoidable without a verified-only event. A re-dispatch of
     // the same destroy (a mispredicted position) is filtered by the registry, so each shot gets one
-    // trail and one impact at most.
+    // visual and one impact at most.
     //
-    // Out of scope by design: the elemental trail (ProjectileElementalFxView reads
-    // Projectile.Element off the live entity; the event carries no element) and pierce/ricochet
+    // Out of scope by design: the sibling views that read a live entity (ProjectileElementalFxView's
+    // elemental trail, ProjectileDataVisualsView's sprite/sparkTrail) and pierce/ricochet
     // EventProjectileImpacted points (no entity, no view). Lives on the EffectsManager GameObject in
     // QuantumGameScene.
     public class ProjectileGhostTrailManager : MonoBehaviour
     {
-        [SerializeField, Tooltip("Seconds the ghost trail takes from the muzzle to the hit point for a shot whose view never existed. Frame-rate independent; 0.033 is about two frames at 60fps - fast enough to read as a near-instant bullet, slow enough that the trail actually draws a streak.")]
-        private float ghostFlightDuration = 0.033f;
-
-        private readonly struct Template
-        {
-            public readonly ParticleSystem Trail;
-            public readonly TrailRenderer Line;
-            public readonly ParticleSystem Impact;
-
-            public Template(ParticleSystem trail, TrailRenderer line, ParticleSystem impact)
-            {
-                Trail = trail;
-                Line = line;
-                Impact = impact;
-            }
-
-            public bool HasTrail => Trail != null || Line != null;
-        }
+        [SerializeField, Tooltip("Minimum seconds the ghost visual takes from the muzzle to the hit point for a shot whose view never existed, on top of the prefab's own distance/speed clamp. Its rate-over-distance trails need a few rendered frames of movement to emit anything; ~0.06 is about four frames at 60fps.")]
+        private float ghostFlightDuration = 0.06f;
 
         // Resolving ProjectileDataAsset -> EntityPrototype -> EntityView -> prefab -> ProjectileView
-        // walks three asset lookups; cached per data asset, misses included, so a fast weapon doesn't
-        // repeat it (or re-warn) on every shot.
-        private readonly Dictionary<AssetGuid, Template> _templates = new();
-
-        // EffectsManager only pools ParticleSystems, so TrailRenderer ghosts are pooled here - same
-        // "reuse the first inactive copy, else grow by one" shape as HitscanViewBase.Acquire.
-        private readonly Dictionary<TrailRenderer, List<TrailRenderer>> _linePools = new();
+        // walks three asset lookups; cached per data asset so a fast weapon doesn't repeat it (or
+        // re-warn) on every shot.
+        private readonly Dictionary<AssetGuid, ProjectileView> _templates = new();
 
         private void Awake()
         {
@@ -87,224 +66,137 @@ namespace Quantum
             // class comment) is dropped even if something below early-outs.
             ProjectileVisualRegistry.MarkGone(e.Entity);
 
-            if (EffectsManager.Instance == null)
-                return;
-
-            Template template = ResolveTemplate(e.ProjectileData);
+            ProjectileView template = ResolveTemplate(e.ProjectileData);
+            Transform templateRoot = template != null ? template.VisualRootTemplate : null;
 
             Vector3 end = e.Position.ToUnityVector3();
             Vector3 simSpawn = e.SpawnPosition.ToUnityVector3();
             Vector3 start = ProjectileView.ResolveVisualSpawnPosition(e.Owner, simSpawn);
 
+            WeaponDataAsset weaponData = e.WeaponData.IsValid ? QuantumUnityDB.GetGlobalAsset(e.WeaponData) : null;
+
+            if (templateRoot == null)
+            {
+                // Nothing to fly - still land the impact so the hit reads.
+                if (template != null)
+                    PlayImpactOnly(template.DestroyEffectPrefab, end, weaponData);
+                return;
+            }
+
             Vector3 delta = end - start;
-            if (template.HasTrail == false || delta.sqrMagnitude < 0.0001f)
+            Quaternion rotation = delta.sqrMagnitude > 0.0001f
+                ? Quaternion.LookRotation(delta.normalized, Vector3.up)
+                : templateRoot.rotation;
+
+            LogHelper.Log("ProjFlow", $"[{e.Entity}] GHOST spawn visual={templateRoot.name} origin={(start == simSpawn ? "SpawnPosition" : "muzzle")} start={start} end={end} dist={delta.magnitude:F2} speed={e.Speed.AsFloat:F1} t={Time.unscaledTime:F3}", this);
+
+            GameObject instance = Instantiate(templateRoot.gameObject, start, rotation);
+            Transform root = instance.transform;
+
+            ParticleSystem weaponExtraParticle = ProjectileView.AttachWeaponExtraParticle(weaponData, root);
+
+            // BuildSettings on the PREFAB ASSET points its trail references into the asset - remap
+            // them onto the same objects inside this copy.
+            ProjectileVisualController.Settings settings = template.BuildSettings(null, weaponExtraParticle);
+            settings.TrailParticle = RemapInto(templateRoot, root, settings.TrailParticle);
+            settings.TrailRenderer = RemapInto(templateRoot, root, settings.TrailRenderer);
+            settings.MinFlightDuration = ghostFlightDuration;
+
+            ProjectileVisualController visual = ProjectileVisualController.Detach(root, e.Entity, start, rotation, settings);
+            ApplyWeaponImpactOverrides(visual, weaponData);
+            visual.BeginImpact(end, e.Speed.AsFloat);
+        }
+
+        // Same per-weapon destroy-effect resolution ProjectileDataVisualsView registers on a live
+        // view's controller - read straight off WeaponDataAsset.ProjectileVisuals here, since there
+        // is no sibling view to do it. No weaponData (a skill or enemy attack) leaves every override
+        // unset, which reproduces the prefab's own authored colors/scale.
+        private static void ApplyWeaponImpactOverrides(ProjectileVisualController visual, WeaponDataAsset weaponData)
+        {
+            if (weaponData == null)
+                return;
+
+            ProjectileVisualsConfig visuals = weaponData.ProjectileVisuals;
+
+            Color root = visuals.ProjectileDestroyColor;
+            root.a = 1f;
+            visual.SetDestroyEffectColorOverride(root);
+
+            Color child = visuals.ProjectileDestroyGlowColor;
+            child.a = 1f;
+            visual.SetDestroyEffectChildColorOverride(child);
+
+            visual.SetDestroyEffectScaleOverride(visuals.ProjectileDestroyScale);
+        }
+
+        private static void PlayImpactOnly(ParticleSystem impact, Vector3 position, WeaponDataAsset weaponData)
+        {
+            if (weaponData == null)
             {
-                LogHelper.Log("ProjFlow", $"[{e.Entity}] GHOST impact only: hasTrail={template.HasTrail} dist={delta.magnitude:F2}", this);
-                PlayImpact(template.Impact, end, e.WeaponData);
+                ProjectileVisualController.PlayDestroyEffect(impact, position, null, null, null);
                 return;
             }
 
-            Quaternion rotation = Quaternion.LookRotation(delta.normalized, Vector3.up);
+            ProjectileVisualsConfig visuals = weaponData.ProjectileVisuals;
+            Color root = visuals.ProjectileDestroyColor;
+            root.a = 1f;
+            Color child = visuals.ProjectileDestroyGlowColor;
+            child.a = 1f;
 
-            LogHelper.Log("ProjFlow", $"[{e.Entity}] GHOST spawn particle={(template.Trail != null ? template.Trail.name : "none")} line={(template.Line != null ? template.Line.name : "none")} origin={(start == simSpawn ? "SpawnPosition" : "muzzle")} start={start} end={end} dist={delta.magnitude:F2} dur={ghostFlightDuration}s t={Time.unscaledTime:F3}", this);
-
-            if (template.Trail != null)
-                SpawnGhostParticle(e.Entity, template.Trail, start, rotation, end);
-
-            if (template.Line != null)
-                SpawnGhostLine(template.Line, start, rotation, end);
-
-            // Independent of either trail's own tween so the impact plays exactly once however many
-            // trails this prefab has.
-            ParticleSystem impact = template.Impact;
-            AssetRef<WeaponDataAsset> weaponData = e.WeaponData;
-            Tween.Delay(ghostFlightDuration, () => PlayImpact(impact, end, weaponData), useUnscaledTime: true);
+            ProjectileVisualController.PlayDestroyEffect(impact, position, root, child, visuals.ProjectileDestroyScale);
         }
 
-        private void SpawnGhostParticle(EntityRef entity, ParticleSystem template, Vector3 start, Quaternion rotation, Vector3 end)
+        // Finds the counterpart of a component under templateRoot inside a fresh Instantiate of it, by
+        // walking the same child-index path. Null if the component doesn't live under templateRoot at
+        // all - it then simply isn't part of the ghost's visual.
+        private static T RemapInto<T>(Transform templateRoot, Transform instanceRoot, T component) where T : Component
         {
-            ParticleSystem trail = EffectsManager.Instance.GetHeldInstance(template);
-            if (trail == null)
-                return;
+            if (component == null)
+                return null;
 
-            StartCoroutine(WatchLifetime(entity, trail, Time.unscaledTime));
-
-            // The pool activates the instance before handing it over, so a Play-On-Awake trail may
-            // already have emitted at wherever it was last parked. Move first, then restart the whole
-            // system from t=0 - that is the "completely resimulate it at the muzzle" step, and it
-            // wipes anything emitted before the move.
-            trail.transform.SetPositionAndRotation(start, rotation);
-            trail.Simulate(0f, withChildren: true, restart: true);
-            trail.Play(withChildren: true);
-
-            // useUnscaledTime, same as ProjectileVisualController's impact tween: this is what
-            // releases the held instance, and a client-local timeScale ramp (Level-Up screen) must
-            // not be able to stall it.
-            Tween.Position(trail.transform, end, ghostFlightDuration, Ease.Linear, useUnscaledTime: true)
-                .OnComplete(() => StartCoroutine(ReleaseParticleAfterSimulation(template, trail)));
-        }
-
-        // One frame late on purpose. OnComplete runs during Update, BEFORE this frame's particle
-        // simulation, and the projectile trails here emit by rate-over-distance: stopping emission
-        // right there means the move that just landed the transform on the hit point is never
-        // simulated with emission on. At high frame rates the earlier tween frames had already
-        // emitted, so it went unnoticed; at 30fps (or any hitch) the tween completes on its very
-        // first update, nothing was ever emitted, IsAlive is already false and the instance is
-        // pooled without having drawn a single particle. Yielding once lets the system simulate the
-        // final start->end delta first - Unity spreads rate-over-distance particles along it.
-        private IEnumerator ReleaseParticleAfterSimulation(ParticleSystem template, ParticleSystem trail)
-        {
-            yield return null;
-
-            LogHelper.Log("ProjFlow", $"GHOST release {trail.name}: particles={trail.particleCount} alive={trail.IsAlive(true)} t={Time.unscaledTime:F3}", this);
-
-            // Same rule as the normal path: the bullet body vanishes at the impact, ReleaseHeldInstance
-            // then only lets the sparks/glow/smoke fade before the instance goes back to the pool.
-            ProjectileVisualController.ClearBodyParticles(trail);
-
-            if (EffectsManager.Instance != null)
-                EffectsManager.Instance.ReleaseHeldInstance(template, trail);
-        }
-
-        private void SpawnGhostLine(TrailRenderer template, Vector3 start, Quaternion rotation, Vector3 end)
-        {
-            TrailRenderer line = AcquireLine(template);
-
-            // Clear AFTER the move - a re-activated pooled ribbon still holds its last position and
-            // would otherwise draw a segment from wherever it was parked straight to the muzzle. This
-            // is the TrailRenderer counterpart of the particle's Simulate(0)/Play restart.
-            line.transform.SetPositionAndRotation(start, rotation);
-            line.Clear();
-            line.emitting = true;
-
-            Tween.Position(line.transform, end, ghostFlightDuration, Ease.Linear, useUnscaledTime: true)
-                .OnComplete(() => StartCoroutine(RetireLine(line)));
-        }
-
-        // Emitting is switched off one frame late for the same reason as the particle release:
-        // TrailRenderer adds its points in the render step, after the tween's OnComplete, so the
-        // final position has to be alive for one frame to become a vertex. The ribbon then fades on
-        // scaled time (that is what TrailRenderer ages its points with) and the instance goes back
-        // to the pool once nothing of it is left to see.
-        private IEnumerator RetireLine(TrailRenderer line)
-        {
-            yield return null;
-
-            line.emitting = false;
-
-            yield return new WaitForSeconds(line.time);
-
-            if (line == null)
-                yield break;
-
-            line.Clear();
-            line.gameObject.SetActive(false);
-        }
-
-        private TrailRenderer AcquireLine(TrailRenderer template)
-        {
-            if (_linePools.TryGetValue(template, out List<TrailRenderer> pool) == false)
+            var path = new List<int>();
+            Transform current = component.transform;
+            while (current != templateRoot)
             {
-                pool = new List<TrailRenderer>();
-                _linePools.Add(template, pool);
+                if (current == null)
+                    return null;
+
+                path.Add(current.GetSiblingIndex());
+                current = current.parent;
             }
 
-            for (int i = pool.Count - 1; i >= 0; i--)
-            {
-                if (pool[i] == null)
-                {
-                    pool.RemoveAt(i);
-                    continue;
-                }
+            Transform target = instanceRoot;
+            for (int i = path.Count - 1; i >= 0; i--)
+                target = target.GetChild(path[i]);
 
-                if (pool[i].gameObject.activeSelf == false)
-                {
-                    pool[i].gameObject.SetActive(true);
-                    return pool[i];
-                }
-            }
-
-            TrailRenderer instance = Instantiate(template, transform);
-            instance.gameObject.SetActive(true);
-            pool.Add(instance);
-            return instance;
+            return target.GetComponent<T>();
         }
 
-        // Same resolution ProjectileVisualController.PlayImpactEffect uses for a shot that DID get a
-        // view - this ghost path never has a live ProjectileVisualController to read per-weapon
-        // overrides off, so it resolves them fresh from WeaponDataAsset.ProjectileVisuals each time
-        // instead (null - Invalid weaponData, e.g. a skill or enemy attack - reproduces the prefab's
-        // own authored colors/scale exactly, same as PlayDestroyEffect's own no-override fallback).
-        private static void PlayImpact(ParticleSystem impact, Vector3 position, AssetRef<WeaponDataAsset> weaponDataRef)
+        // A null view is NOT cached - ResolvePrefabView can legitimately return null from a transient
+        // lazy-load race (QuantumEntityViewUpdater.LoadMissingPrefab, entityView.Prefab still null the
+        // first time this asset resolves), and caching that miss would make every later ghost of the
+        // same ProjectileDataAsset draw nothing too, even once the prefab is loaded.
+        private ProjectileView ResolveTemplate(AssetRef<ProjectileDataAsset> dataRef)
         {
-            WeaponDataAsset weaponData = weaponDataRef.IsValid ? QuantumUnityDB.GetGlobalAsset(weaponDataRef) : null;
+            if (_templates.TryGetValue(dataRef.Id, out ProjectileView cached))
+                return cached;
 
-            Color? rootColor = null;
-            Color? childColor = null;
-            Vector3? scale = null;
-
-            if (weaponData != null)
+            ProjectileView view = ResolvePrefabView(dataRef);
+            if (view == null)
             {
-                ProjectileVisualsConfig visuals = weaponData.ProjectileVisuals;
-
-                Color root = visuals.ProjectileDestroyColor;
-                root.a = 1f;
-                rootColor = root;
-
-                Color child = visuals.ProjectileDestroyGlowColor;
-                child.a = 1f;
-                childColor = child;
-
-                scale = visuals.ProjectileDestroyScale;
+                LogHelper.Warn("ProjectileGhostTrail", $"No ProjectileView prefab resolvable for projectile data {dataRef.Id} - " +
+                    "a shot of this type that dies before its view exists will draw nothing this time. Not cached, will retry next time.", this);
+                return null;
             }
 
-            ProjectileVisualController.PlayDestroyEffect(impact, position, rootColor, childColor, scale);
-        }
-
-        // Diagnostic: reports when the pooled instance actually goes inactive (pool release) or is
-        // destroyed, with the elapsed time since spawn.
-        private IEnumerator WatchLifetime(EntityRef entity, ParticleSystem trail, float spawnTime)
-        {
-            while (trail != null && trail.gameObject.activeInHierarchy)
-                yield return null;
-
-            float elapsed = Time.unscaledTime - spawnTime;
-            LogHelper.Log("ProjFlow", $"[{entity}] GHOST {(trail == null ? "instance DESTROYED" : "instance pooled (inactive)")} after {elapsed:F3}s", this);
+            _templates[dataRef.Id] = view;
+            return view;
         }
 
         // Same chain QuantumEntityViewUpdater itself walks to instantiate a view, just started from
         // the data asset instead of a live entity's View component: the projectile prefab has
         // QuantumEntityPrototype + QuantumEntityView on the same object, and baking appends a
         // ViewPrototype pointing at that self view to the prototype's component set.
-        private Template ResolveTemplate(AssetRef<ProjectileDataAsset> dataRef)
-        {
-            if (_templates.TryGetValue(dataRef.Id, out Template cached))
-                return cached;
-
-            ProjectileView view = ResolvePrefabView(dataRef);
-
-            // A null view is NOT cached - only a resolved-but-empty-fielded one is. ResolvePrefabView
-            // can legitimately return null from a transient lazy-load race (QuantumEntityViewUpdater.
-            // LoadMissingPrefab, entityView.Prefab still null the first time this asset's very first
-            // point-blank kill resolves it) - caching that miss "forever" used to mean every later
-            // point-blank kill of this SAME ProjectileDataAsset drew nothing too, even once the prefab
-            // was fully loaded, since a hit/kill in the same tick as spawn (see the class comment)
-            // always lands in this exact resolution path. A view that resolves fine but simply has no
-            // DestroyEffectPrefab/trails configured (a weapon that intentionally has no impact VFX) is
-            // still cached as before - that's not a race, retrying it would only repeat the warning
-            // and the 3-asset lookup chain for no benefit.
-            if (view == null)
-            {
-                LogHelper.Warn("ProjectileGhostTrail", $"No ProjectileView prefab resolvable for projectile data {dataRef.Id} - " +
-                    "a shot of this type that dies before its view exists will draw nothing this time. Not cached, will retry next time.", this);
-                return default;
-            }
-
-            Template template = new Template(view.TrailParticle, view.TrailRenderer, view.DestroyEffectPrefab);
-            _templates[dataRef.Id] = template;
-            return template;
-        }
-
         private static ProjectileView ResolvePrefabView(AssetRef<ProjectileDataAsset> dataRef)
         {
             ProjectileDataAsset data = QuantumUnityDB.GetGlobalAsset(dataRef);

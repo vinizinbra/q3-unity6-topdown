@@ -11,14 +11,17 @@ namespace Quantum
     // moment ago - Unity recomputes local scale to compensate for the parent change - so the visual
     // doesn't jump or resize the instant this runs, it just stops inheriting the wrapper's scale
     // going forward.
-    [RequireComponent(typeof(CubeVisualBuilder))]
+    // Works with either visual builder on the same GameObject (chunk prefabs now use
+    // TilesetPlatformBuilder; some scenes still use CubeVisualBuilder).
     public class SkipScaledParent : MonoBehaviour
     {
         private CubeVisualBuilder cubeVisualBuilder;
+        private TilesetPlatformBuilder tilesetBuilder;
 
         private void Awake()
         {
             cubeVisualBuilder = GetComponent<CubeVisualBuilder>();
+            tilesetBuilder = GetComponent<TilesetPlatformBuilder>();
         }
 
         // LateUpdate, not Awake - the wrapper's scale isn't resolved yet at instantiation time.
@@ -53,7 +56,10 @@ namespace Quantum
                 // localScale here that matches the true final world size, so re-running Generate()
                 // now (it resets its own previous output first) rebuilds against the correct size
                 // instead of leaving the first, wrong-sized pass in the scene.
-                cubeVisualBuilder.Generate();
+                if (cubeVisualBuilder != null)
+                    cubeVisualBuilder.Generate();
+                if (tilesetBuilder != null)
+                    tilesetBuilder.Generate();
 
                 // One-shot: disable immediately after the single reparent+regenerate rather than
                 // waiting for a future frame's parent==scale-1 check to disable. The reparent is a

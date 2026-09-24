@@ -17,8 +17,14 @@ using UnityEngine;
 public class HeroInfoWidget : QuantumGlobalMonoBehaviour
 {
     [Header("Identity")]
-    [SerializeField, Tooltip("Head snapshot off the bound entity's own CharView - see PlayerPortraitUiWidget.")]
+    [SerializeField, Tooltip("Authored CharacterData.UIHead portrait, falling back to a live rig snapshot - see PlayerPortraitUiWidget.")]
     private PlayerPortraitUiWidget portraitWidget;
+
+    [SerializeField, Tooltip("This hero's display name (CharacterData.DisplayName), falling back to the asset's own file name if unauthored - same convention as the Base/Passive Skill rows below. Optional - left unassigned, this label is simply absent.")]
+    private TMP_Text heroNameText;
+
+    [SerializeField, Tooltip("This hero's short flavor/summary blurb (CharacterData.Description). Optional - left unassigned (or unauthored on the asset), this row is simply absent.")]
+    private TMP_Text heroDescriptionText;
 
     [Header("Vitals")]
     [SerializeField, Tooltip("Assign only its healthText for a plain readout - the Slider is optional.")]
@@ -49,6 +55,7 @@ public class HeroInfoWidget : QuantumGlobalMonoBehaviour
     // so the first QUpdate after a bind always renders once.
     private AssetRef<SkillData> _shownBaseSkill;
     private AssetRef<PassiveData> _shownPassive;
+    private AssetRef<CharacterData> _shownCharacterData;
 
     public void Initialize(EntityRef entityRef)
     {
@@ -63,6 +70,7 @@ public class HeroInfoWidget : QuantumGlobalMonoBehaviour
     {
         _shownBaseSkill = default;
         _shownPassive = default;
+        _shownCharacterData = default;
 
         if (portraitWidget != null)
             portraitWidget.Initialize(_entityRef);
@@ -78,6 +86,7 @@ public class HeroInfoWidget : QuantumGlobalMonoBehaviour
     {
         Frame frame = game.Frames.Predicted;
 
+        UpdateHeroName(frame);
         UpdateBaseSkill(frame);
         UpdatePassive(frame);
         RefreshWeaponStats(frame);
@@ -177,6 +186,31 @@ public class HeroInfoWidget : QuantumGlobalMonoBehaviour
     {
         if (text != null && text.gameObject.activeSelf != active)
             text.gameObject.SetActive(active);
+    }
+
+    private void UpdateHeroName(Frame frame)
+    {
+        if (heroNameText == null && heroDescriptionText == null)
+            return;
+
+        AssetRef<CharacterData> characterData = frame.TryGet<CharacterStats>(_entityRef, out var stats) ? stats.CharacterData : default;
+
+        if (characterData == _shownCharacterData)
+            return;
+
+        _shownCharacterData = characterData;
+
+        CharacterData data = characterData.IsValid ? frame.FindAsset(characterData) : null;
+
+        if (heroNameText != null)
+            heroNameText.text = data != null ? ResolveName(data.DisplayName, data.name, "CharacterData") : string.Empty;
+
+        if (heroDescriptionText != null)
+        {
+            string description = data != null ? data.Description : string.Empty;
+            heroDescriptionText.gameObject.SetActive(string.IsNullOrEmpty(description) == false);
+            heroDescriptionText.text = description;
+        }
     }
 
     private void UpdateBaseSkill(Frame frame)

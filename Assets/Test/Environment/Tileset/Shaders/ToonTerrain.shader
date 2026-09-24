@@ -9,6 +9,7 @@
 //              -> one-directional fade: the surface starts at the grass outline in _FadeColor and
 //              fades into the surface texture going inward (_EdgeFadeStart/End), broken up by noise.
 //      COLOR.rgb = wall tint per row (terrain) or albedo (props), COLOR.a = 1 for props.
+//      Props with UV0.x = -1 are EMISSIVE (neon): unlit COLOR.rgb * _EmissionStrength (HDR, bloom-ready).
 //  - Toon lighting (stepped main light + tinted shadow, received shadows) and hand-drawn style
 //    hatching in the shadows, applied as a MULTIPLY: in _HatchTex black = ink, white = nothing.
 //    R = single lines (mid shadow), G = cross lines (deep shadow); a grayscale texture works too
@@ -18,15 +19,16 @@ Shader "RiftRaiders/Test/ToonTerrain"
     Properties
     {
         [Header(Surface)]
-        _SurfaceTex ("Surface Texture (RGB, A = edge noise)", 2D) = "white" {}
-        _SurfaceTint ("Surface Tint", Color) = (1, 1, 1, 1)
+        _SurfaceTex ("Surface Texture (GRAYSCALE: white = Light, black = Dark; A = edge noise)", 2D) = "white" {}
+        _SurfaceLightColor ("Surface Light Color", Color) = (0.72, 0.76, 0.29, 1)
+        _SurfaceDarkColor ("Surface Dark Color", Color) = (0.6, 0.66, 0.22, 1)
         _SurfaceScale ("Surface World Size (m per tile)", Float) = 4
 
         [Header(Wall)]
-        _WallTex ("Wall Texture", 2D) = "white" {}
-        _WallTint ("Wall Tint", Color) = (1, 1, 1, 1)
+        _WallTex ("Wall Texture (GRAYSCALE: white = Light, black = Dark)", 2D) = "white" {}
+        _WallLightColor ("Wall Light Color", Color) = (0.39, 0.28, 0.49, 1)
+        _WallDarkColor ("Wall Dark Color", Color) = (0.3, 0.21, 0.4, 1)
         _WallScale ("Wall World Size (m per tile)", Float) = 3
-        _TriplanarSharpness ("Triplanar Blend Sharpness", Range(1, 16)) = 6
 
         [Header(Wall To Surface Fade)]
         _EdgeFadeStart ("Fade Start (0 = at the outline)", Range(0, 1)) = 0
@@ -43,12 +45,30 @@ Shader "RiftRaiders/Test/ToonTerrain"
         _BorderOutlineWidth ("Grass Border Width (px)", Range(0, 10)) = 1.5
         _BorderOutlineStrength ("Grass Border Strength", Range(0, 1)) = 0
 
+        [Header(Water Depth Height Gradient)]
+        _GradientBottomColor ("Bottom Color (unlit, at Start Y and below)", Color) = (0.45, 0.83, 0.99, 1)
+        _GradientTopColor ("Top Tint (at Start Y + Distance)", Color) = (1, 1, 1, 1)
+        _GradientStartY ("Start Y (fully Bottom Color)", Float) = -3
+        _GradientDistance ("Distance (back to normal shading)", Float) = 3
+        _GradientStrength ("Gradient Strength", Range(0, 1)) = 0
+
+        [Header(Water Line On Walls)]
+        _WallLineColor ("Line Color", Color) = (0.025, 0.02, 0.03, 1)
+        _WallLineY ("World Y", Float) = 0
+        _WallLineThickness ("Thickness", Float) = 0.1
+        _WallLineStrength ("Strength", Range(0, 1)) = 0
+
         [Header(Toon Lighting)]
         _ShadowTint ("Shadow Tint", Color) = (0.55, 0.52, 0.72, 1)
         _ShadowThreshold ("Light/Shadow Threshold", Range(0, 1)) = 0.5
         _ShadowSoftness ("Light/Shadow Softness", Range(0.001, 0.5)) = 0.04
         _CastShadowStrength ("Received Shadow Strength", Range(0, 1)) = 1
         _AmbientStrength ("Ambient Strength", Range(0, 2)) = 0.35
+
+        [Header(Emission)]
+        _EmissionStrength ("Neon Emission Strength (props with UV0.x = -1)", Range(0, 10)) = 3
+        _EmissionMinY ("Emission Min World Y (below = no glow, e.g. under water)", Float) = -1000
+        _EmissionOffColor ("Emissive Below Min Y Color (A = strength, 0 = shaded like a prop)", Color) = (0, 0, 0, 1)
 
         [Header(Hatching)]
         [NoScaleOffset] _HatchTex ("Hatch Texture (multiply: black = ink, white = none; R single, G cross)", 2D) = "white" {}
@@ -58,7 +78,7 @@ Shader "RiftRaiders/Test/ToonTerrain"
         _Hatch1Threshold ("Single Lines From Darkness", Range(0, 1)) = 0.45
         _Hatch2Threshold ("Cross Lines From Darkness", Range(0, 1)) = 0.75
         _HatchSoftness ("Hatch Fade In", Range(0.001, 0.5)) = 0.08
-        _HatchScale ("Hatch World Size (m per tile)", Float) = 2
+        _HatchScale ("Hatch World Size (m per tile)", Float) = 6
         [Toggle(_HATCH_SCREENSPACE)] _HatchScreenSpace ("Hatch In Screen Space", Float) = 0
         _HatchScreenScale ("Hatch Screen Tiling", Float) = 6
     }
@@ -73,11 +93,21 @@ Shader "RiftRaiders/Test/ToonTerrain"
         CBUFFER_START(UnityPerMaterial)
             float4 _SurfaceTex_ST;
             float4 _WallTex_ST;
-            half4 _SurfaceTint;
+            half4 _SurfaceLightColor;
+            half4 _SurfaceDarkColor;
             float _SurfaceScale;
-            half4 _WallTint;
+            half4 _GradientBottomColor;
+            half4 _GradientTopColor;
+            float _GradientStartY;
+            float _GradientDistance;
+            float _GradientStrength;
+            half4 _WallLineColor;
+            float _WallLineY;
+            float _WallLineThickness;
+            float _WallLineStrength;
+            half4 _WallLightColor;
+            half4 _WallDarkColor;
             float _WallScale;
-            float _TriplanarSharpness;
             float _EdgeFadeStart;
             float _EdgeFadeEnd;
             float _EdgeFadeNoise;
@@ -90,6 +120,9 @@ Shader "RiftRaiders/Test/ToonTerrain"
             float _BorderOutlineWidth;
             float _BorderOutlineStrength;
             float _SurfaceHatchScale;
+            float _EmissionStrength;
+            float _EmissionMinY;
+            half4 _EmissionOffColor;
             half4 _ShadowTint;
             float _ShadowThreshold;
             float _ShadowSoftness;
@@ -143,6 +176,7 @@ Shader "RiftRaiders/Test/ToonTerrain"
                 float2 data : TEXCOORD2;
                 half4 color : TEXCOORD3;
                 half fogFactor : TEXCOORD4;
+                half3 ambient : TEXCOORD5;   // SH ambient, evaluated per vertex (cheaper than per pixel)
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
@@ -158,14 +192,17 @@ Shader "RiftRaiders/Test/ToonTerrain"
                 o.data = input.uv;
                 o.color = input.color;
                 o.fogFactor = ComputeFogFactor(pos.positionCS.z);
+                o.ambient = SampleSH(o.normalWS);
                 return o;
             }
 
-            half3 Triplanar(TEXTURE2D_PARAM(tex, samp), float3 p, float3 w)
+            // World-space projection from the face's dominant axis: ONE texture read instead of a
+            // 3-read triplanar blend. Tiles are flat-shaded facets (one normal per face), so the
+            // projection only ever switches at a facet crease, where there is already a hard edge.
+            float2 PlanarUV(float3 p, float3 n)
             {
-                return SAMPLE_TEXTURE2D(tex, samp, p.zy).rgb * w.x
-                     + SAMPLE_TEXTURE2D(tex, samp, p.xz).rgb * w.y
-                     + SAMPLE_TEXTURE2D(tex, samp, p.xy).rgb * w.z;
+                float3 a = abs(n);
+                return a.x > a.z ? (a.x > a.y ? p.zy : p.xz) : (a.z > a.y ? p.xy : p.xz);
             }
 
             // Anti-aliased line on every integer of t, `widthPx` wide on screen.
@@ -182,23 +219,33 @@ Shader "RiftRaiders/Test/ToonTerrain"
                 float3 N = normalize(input.normalWS);
                 half isProp = input.color.a;
 
-                // --- albedo: wall (triplanar) fading into surface (top-down), both in world space
-                float3 tw = pow(abs(N), _TriplanarSharpness);
-                tw /= max(dot(tw, 1.0), 1e-4);
-                half3 wall = Triplanar(TEXTURE2D_ARGS(_WallTex, sampler_WallTex), P / _WallScale, tw) * _WallTint.rgb * input.color.rgb;
-                half4 surfSample = SAMPLE_TEXTURE2D(_SurfaceTex, sampler_SurfaceTex, P.xz / _SurfaceScale);
-                half3 surface = surfSample.rgb * _SurfaceTint.rgb;
-
+                // --- albedo: a pixel is EITHER wall/rim (outside the grass outline) OR surface (inside),
+                // never a blend, so only one of the two textures is read (grayscale, mapped between the
+                // material's Dark and Light colours).
+                //
                 // One-directional fade, outside -> inside: everything outside the grass outline (cliff
                 // face, rock rim) is plain wall; the surface starts AT the outline (strata coordinate 6)
                 // in full fade colour and fades into the surface texture going inward over
                 // _EdgeFadeStart.._EdgeFadeEnd (UV0.y = distance into the grass). Nothing before the outline.
                 half w = step(5.98, input.data.x);                       // 1 = inside the grass outline
-                float fade = input.data.y + (surfSample.a - 0.5) * _EdgeFadeNoise * saturate(input.data.y * 4.0);
-                half inward = smoothstep(_EdgeFadeStart, max(_EdgeFadeEnd, _EdgeFadeStart + 1e-3), fade);
-                half3 top = lerp(surface, lerp(_FadeColor.rgb, surface, inward), _FadeColor.a);
-                half3 terrain = lerp(wall, top, w);
+                float2 planarUV = PlanarUV(P, N);
+                half3 terrain;
+                [branch] if (w > 0.5)
+                {
+                    half4 surfSample = SAMPLE_TEXTURE2D(_SurfaceTex, sampler_SurfaceTex, P.xz / _SurfaceScale);
+                    half3 surface = lerp(_SurfaceDarkColor.rgb, _SurfaceLightColor.rgb, surfSample.r);
+                    float fade = input.data.y + (surfSample.a - 0.5) * _EdgeFadeNoise * saturate(input.data.y * 4.0);
+                    half inward = smoothstep(_EdgeFadeStart, max(_EdgeFadeEnd, _EdgeFadeStart + 1e-3), fade);
+                    terrain = lerp(surface, lerp(_FadeColor.rgb, surface, inward), _FadeColor.a);
+                }
+                else
+                {
+                    half wallGray = SAMPLE_TEXTURE2D(_WallTex, sampler_WallTex, planarUV / _WallScale).r;
+                    terrain = lerp(_WallDarkColor.rgb, _WallLightColor.rgb, wallGray) * input.color.rgb;
+                }
                 half3 albedo = lerp(terrain, input.color.rgb, isProp);
+
+
 
                 // --- toon main light (+ received shadows)
                 #if defined(_MAIN_LIGHT_SHADOWS_SCREEN)
@@ -213,7 +260,7 @@ Shader "RiftRaiders/Test/ToonTerrain"
                 lit *= smoothstep(0.5 - _ShadowSoftness, 0.5 + _ShadowSoftness, shadowAtten);
 
                 half3 color = albedo * lerp(_ShadowTint.rgb, 1.0, lit) * mainLight.color;
-                color += albedo * SampleSH(N) * _AmbientStrength;
+                color += albedo * input.ambient * _AmbientStrength;
 
                 // --- hatching: single lines in mid shadow, cross lines in deep shadow
                 float darkness = 1.0 - saturate(ndl) * shadowAtten;
@@ -221,7 +268,7 @@ Shader "RiftRaiders/Test/ToonTerrain"
                     float2 suv = GetNormalizedScreenSpaceUV(input.positionCS) * float2(_ScreenParams.x / _ScreenParams.y, 1.0) * _HatchScreenScale;
                     half2 hatch = SAMPLE_TEXTURE2D(_HatchTex, sampler_HatchTex, suv).rg;
                 #else
-                    half2 hatch = Triplanar(TEXTURE2D_ARGS(_HatchTex, sampler_HatchTex), P / _HatchScale, tw).rg;
+                    half2 hatch = SAMPLE_TEXTURE2D(_HatchTex, sampler_HatchTex, planarUV / _HatchScale).rg;
                 #endif
                 half2 ink = 1.0 - hatch;   // black = ink, white = paper (nothing)
                 half h1 = ink.x * smoothstep(_Hatch1Threshold, _Hatch1Threshold + _HatchSoftness, darkness);
@@ -239,6 +286,31 @@ Shader "RiftRaiders/Test/ToonTerrain"
                 half strength = lerp(lerp(_StrataOutlineStrength, _RimOutlineStrength, isTop), _BorderOutlineStrength, isBorder) * step(0.5, n);
                 half outline = IntegerLine(t, width) * strength * (1.0 - isProp) * _OutlineColor.a;
                 color = lerp(color, _OutlineColor.rgb, outline);
+
+                // --- emissive props (neon tubes/signs/lit windows): unlit, HDR so bloom picks them up.
+                // Only above Emission Min Y - below it (under water) they're shaded like any prop.
+                // Before the water depth/line so those still cover them.
+                half emissiveProp = isProp * step(input.data.x, -0.5);
+                half above = step(_EmissionMinY, P.y);
+                color = lerp(color, input.color.rgb * _EmissionStrength, emissiveProp * above);
+                // below the cutoff: switched-off tubes read as a flat colour (black by default)
+                color = lerp(color, _EmissionOffColor.rgb, emissiveProp * (1.0 - above) * _EmissionOffColor.a);
+
+                // --- water depth: below Start Y the final colour is the flat, UNLIT Bottom colour (no
+                // shading, shadow, hatch or outline - it melts into the water / background); it blends
+                // back to the normal shaded colour (x Top tint) by Start Y + Distance.
+                float gt = saturate((P.y - _GradientStartY) / max(abs(_GradientDistance), 1e-4));
+                half3 depthColor = lerp(_GradientBottomColor.rgb, color * _GradientTopColor.rgb, gt);
+                color = lerp(color, depthColor, _GradientStrength);
+
+                // --- water line: one continuous, pixel-stable band at a world height, walls only. Drawn
+                // on top of lighting/hatching/outlines, so shadows never darken it.
+                float lineDistance = abs(P.y - _WallLineY);
+                float lineHalf = max(_WallLineThickness * 0.5, 0.0);
+                float lineAA = max(fwidth(P.y), 1e-4);
+                half wallLine = (1.0 - w) * (1.0 - smoothstep(lineHalf, lineHalf + lineAA, lineDistance));
+                color = lerp(color, _WallLineColor.rgb, wallLine * saturate(_WallLineStrength) * _WallLineColor.a);
+
 
                 color = MixFog(color, input.fogFactor);
                 return half4(color, 1.0);

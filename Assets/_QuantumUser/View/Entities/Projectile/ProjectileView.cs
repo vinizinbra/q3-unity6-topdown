@@ -80,6 +80,11 @@ namespace Quantum
         public TrailRenderer TrailRenderer => trailRenderer;
         public ParticleSystem DestroyEffectPrefab => destroyEffectPrefab;
 
+        // Same "read off the PREFAB ASSET" contract: ProjectileGhostTrailManager instantiates a copy
+        // of this for a shot whose view never existed. ResolveVisualRoot only reads the serialized
+        // field and the child hierarchy, so it is safe on an asset.
+        public Transform VisualRootTemplate => ResolveVisualRoot();
+
         public override void Awake()
         {
             base.Awake();
@@ -121,18 +126,7 @@ namespace Quantum
             ParticleSystem echoGhostParticle = AttachEchoGhostParticle(frame, root);
             ParticleSystem weaponExtraParticle = AttachWeaponExtraParticle(frame, root);
 
-            var settings = new ProjectileVisualController.Settings
-            {
-                CatchUpSpeedMultiplier = catchUpSpeedMultiplier,
-                MinImpactDuration = minImpactDuration,
-                MaxImpactDuration = maxImpactDuration,
-                OrphanTimeout = orphanTimeout,
-                DestroyEffectPrefab = destroyEffectPrefab,
-                TrailParticle = trailParticle,
-                TrailRenderer = trailRenderer,
-                EchoGhostParticle = echoGhostParticle,
-                WeaponExtraParticle = weaponExtraParticle,
-            };
+            ProjectileVisualController.Settings settings = BuildSettings(echoGhostParticle, weaponExtraParticle);
 
             _visual = ProjectileVisualController.Detach(root, _entityRef, spawnPosition, transform.rotation, settings);
 
@@ -179,6 +173,25 @@ namespace Quantum
 
             _visual = null;
             base.DeInitialize(game);
+        }
+
+        // Shared with ProjectileGhostTrailManager, which calls it on the PREFAB ASSET's component.
+        // The trail references then point into the asset, which is what the ghost path wants: it
+        // remaps them onto its own instantiated copy (see ProjectileGhostTrailManager.RemapInto).
+        public ProjectileVisualController.Settings BuildSettings(ParticleSystem echoGhostParticle, ParticleSystem weaponExtraParticle)
+        {
+            return new ProjectileVisualController.Settings
+            {
+                CatchUpSpeedMultiplier = catchUpSpeedMultiplier,
+                MinImpactDuration = minImpactDuration,
+                MaxImpactDuration = maxImpactDuration,
+                OrphanTimeout = orphanTimeout,
+                DestroyEffectPrefab = destroyEffectPrefab,
+                TrailParticle = trailParticle,
+                TrailRenderer = trailRenderer,
+                EchoGhostParticle = echoGhostParticle,
+                WeaponExtraParticle = weaponExtraParticle,
+            };
         }
 
         protected override void QUpdate(QuantumGame game)
@@ -319,7 +332,13 @@ namespace Quantum
             if (frame == null || frame.TryGet<Projectile>(_entityRef, out var projectile) == false)
                 return null;
 
-            WeaponDataAsset weaponData = frame.FindAsset(projectile.WeaponData);
+            return AttachWeaponExtraParticle(frame.FindAsset(projectile.WeaponData), root);
+        }
+
+        // Entity-free half of the above - also used by ProjectileGhostTrailManager, which only has
+        // the destroy event's WeaponData to go on.
+        public static ParticleSystem AttachWeaponExtraParticle(WeaponDataAsset weaponData, Transform root)
+        {
             ParticleSystem prefab = weaponData?.ProjectileVisuals.ProjectileExtraParticle;
             if (prefab == null)
                 return null;

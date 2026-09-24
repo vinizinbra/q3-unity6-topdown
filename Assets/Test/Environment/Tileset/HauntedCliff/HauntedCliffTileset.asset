@@ -1,0 +1,122 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f02bf106b04cd445ebe7292424ae5bf1, type: 3}
+  m_Name: HauntedCliffTileset
+  m_EditorClassIdentifier: Assembly-CSharp::TilesetDefinition
+  tilingMode: 1
+  mergeCenters: 1
+  material: {fileID: 2100000, guid: e041df902ad034817a27692f6aaace49, type: 2}
+  modelPrefix: HauntedCliff_
+  useInnerCorners: 1
+  maxEdgeLength: 3
+  maxEdgeStretch: 1.5
+  pieces:
+  - Key: Center
+    Model: {fileID: 919132149155446097, guid: de4f862f9bba946b196420b93d70856b, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: a923dfb037f2d43d3942afd3a4131805, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: dbbd6069b09be41d195da79d884bba81, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 2adbf585356fc480ba9632f9440518fa, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: c2e7b2d9330f64229b27628e5d2f107c, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 7e0ff606cd2cb4de29a652021ee7d84b, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 1fbd3d66f42fd438eb0f79f479207ba7, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: ebfc5aef5e73b4fcb8ffacc76dc81d81, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 9eda29d76a33246648ab57114b572e8e, type: 3}
+    Weight: 1
+    NoStretch: 1
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 47c45d89ba5fd46109eeb73608a8c78d, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: fdb53405acc2a494f93d0f6a4bc070fb, type: 3}
+    Weight: 1
+    NoStretch: 1
+  - Key: Corner
+    Model: {fileID: 919132149155446097, guid: 7ff974ab7ccd041578209c57534f6ee5, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Corner
+    Model: {fileID: 919132149155446097, guid: 4428d9591acc440bbbd987a4fbcbc1f2, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: InnerCorner
+    Model: {fileID: 919132149155446097, guid: e55eee5677ada4a398929fca1f19ee7e, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: InnerCorner
+    Model: {fileID: 919132149155446097, guid: c9c49c3bce6a3476a8ef8b996ed11f48, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 56baef3cdd0274a6abab3535b766a254, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 23d56dec53edb44e9b5be19839907952, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: f390120ddd2024236a981447247bf545, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 33fe704ebe6014708824edbc8a85d13e, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 00320cb72228143e3891265465dda1bb, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 6b740382cc4dd4b818e2108201e4ecd5, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: cd8daac06cf164602991696395494c25, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 3c3776264b05e43baa2de7749c56c265, type: 3}
+    Weight: 1
+    NoStretch: 1
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 04b4e547fcc974e898bd523ae09d7673, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: b07d1084838a0441abae6823c767c482, type: 3}
+    Weight: 1
+    NoStretch: 1

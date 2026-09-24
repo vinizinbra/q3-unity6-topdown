@@ -375,7 +375,7 @@ MonoBehaviour:
   initialized: 0
   executeOnlyOnLocal: 0
   isLocal: 0
-  cubeVisualBuilder: {fileID: 40034310884730462}
+  cubeVisualBuilder: {fileID: 8442137513210814263}
   visualCollider: {fileID: 1042002844703497043}
   riseDistance: 4
   riseDuration: 0.35
@@ -395,10 +395,10 @@ GameObject:
   - component: {fileID: 5773373231126612759}
   - component: {fileID: 8463837126424150384}
   - component: {fileID: 4959216670235837303}
-  - component: {fileID: 40034310884730462}
   - component: {fileID: 1042002844703497043}
   - component: {fileID: 8419207684791955034}
   - component: {fileID: 8041154025980903769}
+  - component: {fileID: 8442137513210814263}
   m_Layer: 6
   m_Name: VisualCube (15)
   m_TagString: Untagged
@@ -478,53 +478,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &40034310884730462
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5866539230942344104}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: daba73f92aa71491c9e216478e479056, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CubeVisualBuilder
-  edgePrefabs:
-  - {fileID: 1433387614537848497, guid: 380235c01054a4bfca869e16ee4bcc11, type: 3}
-  - {fileID: 7614468081444443852, guid: a000042ddce014ec1b25e039e9e975f5, type: 3}
-  - {fileID: 970526433092363996, guid: 8b96a2e919886469d9ab20704e7aee74, type: 3}
-  - {fileID: 3734518529458459224, guid: 6689d4d0437b940adb806926290352bc, type: 3}
-  - {fileID: 7551599550734247072, guid: 281d737bf1e824aabae68c39f229a4e8, type: 3}
-  - {fileID: 6700042185931365227, guid: e1c85f33d0d324c0d867af092de5bb18, type: 3}
-  - {fileID: 147576706118549172, guid: b406ef9427bc04c2ca75511ee734f6a1, type: 3}
-  - {fileID: 73819991260933395, guid: 97aac4a0d469b48188820ea657ddd959, type: 3}
-  edgeYaw: 270
-  edgeScaleOverlap: 0.2
-  avoidNearWallDetails: 0
-  detailAvoidRadius: 0
-  outerCornerPrefabs:
-  - {fileID: 4366759823961815167, guid: a38e8ce5d76d2426e9b58f0ba065998e, type: 3}
-  - {fileID: 8588932187785433069, guid: 285d34824f0944809a05eab4bbb808ca, type: 3}
-  - {fileID: 6059179439221544273, guid: 2c2d81eef1c3d4ce190f843c24b65f71, type: 3}
-  - {fileID: 5294279402883879360, guid: d947221740be5459f940466e394f6f5a, type: 3}
-  - {fileID: 4752783851932848897, guid: ca30db78546924f5ebcea7d2198ee081, type: 3}
-  - {fileID: 8430317907516972576, guid: 5d91888625c2b48c2abb9c2ad0e433de, type: 3}
-  - {fileID: 2730532409627958449, guid: 72e274acf18fe47db81b9b559f0a209d, type: 3}
-  - {fileID: 4344072999799160864, guid: 5de7fb19616844d7dbb8d1a0ce52cf4d, type: 3}
-  outerCornerYaw: 270
-  centerPrefabs:
-  - {fileID: 6563126074884931429, guid: 3a65b22d1b0ef49a48028e5a13dd890a, type: 3}
-  centerYaw: 0
-  centerScaleMargin: 1.9
-  innerCornerPrefabs:
-  - {fileID: 482466050895093880, guid: 937fbbc1614d54bd88832a93baf558df, type: 3}
-  innerCornerYaw: 270
-  touchGapTolerance: 0.1
-  debugLogPlacement: 0
-  generateOnEnable: 0
-  colliderRoot: {fileID: 0}
-  visualRoot: {fileID: 0}
 --- !u!65 &1042002844703497043
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -573,3 +526,27 @@ MonoBehaviour:
   footprintRenderer: {fileID: 4959216670235837303}
   maxAcquireAttempts: 5
   acquireRetryInterval: 1
+  bakedShadow: {fileID: 0}
+  bakeShadowPrefabOverride: {fileID: 0}
+--- !u!114 &8442137513210814263
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5866539230942344104}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed4546a3f32fc4e5992a5d34eb4321e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TilesetPlatformBuilder
+  tileset: {fileID: 11400000, guid: 2c5f0111590354eadb5216adea1533b9, type: 2}
+  autoGenerate: 2
+  mergeWithNeighbours: 0
+  cellSize: 1
+  mergeTolerance: 0.05
+  variationSeed: 0
+  generatedRoot: {fileID: 0}
+  host: {fileID: 0}
+  members: []
+  hiddenRenderers: []

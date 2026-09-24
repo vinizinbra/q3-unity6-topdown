@@ -91,11 +91,21 @@ namespace Quantum
         public FP CoinGainMultiplier = FP._1;
 
         [Header("View")]
+        [Tooltip("This hero's display name, read straight off the equipped entity's own CharacterData (e.g. HeroInfoWidget) rather than needing a catalog id lookup - CharacterCatalog.Entry.displayName is the pre-match/menu-side equivalent, keyed by catalog id instead of a live entity. Left unassigned, name labels fall back to this asset's own file name.")]
+        public string DisplayName;
+
+        [TextArea(2, 4)]
+        [Tooltip("Short flavor/summary blurb for this hero (1-2 sentences) shown in HeroInfoWidget's optional description row - e.g. the Hero Intro popup. Left unassigned, the row is simply absent.")]
+        public string Description;
+
         [Tooltip("Tint for the local player's ground ring/glow/movement-arrow (see MovementRingView) - lets each hero's \"this is you\" marker read as their own color.")]
         public Color RingColor = Color.white;
 
         [Tooltip("Sprite used to represent this hero on the minimap's player marker (see MinimapWidget). Left unassigned, the marker keeps its prefab's default sprite.")]
         public Sprite PawnSprite;
+
+        [Tooltip("Dedicated flat head portrait for UI (party HUD, Hero Info, Hero Intro popup) - authored to read cleanly at a fixed head-on angle, unlike the live rig's head sprite, which can be mid-pose/mid-animation. Left unassigned, PlayerPortraitUiWidget falls back to snapshotting the live rig's head sprite the way it always has.")]
+        public Sprite UIHead;
 
         [Header("Positioning")]
         [Tooltip("Where this character holds its weapon, added on top of the weapon's own SpawnOffset (see WeaponDataAsset) - e.g. a taller hero's hand sits higher than the authored weapon offset alone accounts for. X is authored as a positive \"facing right\" magnitude and mirrored to negative while facing left (both in the view socket and in sim - see WeaponViewController and StatUtility.GetWeaponHoldOffset), rather than rotating continuously with aim angle the way SpawnOffset does.")]

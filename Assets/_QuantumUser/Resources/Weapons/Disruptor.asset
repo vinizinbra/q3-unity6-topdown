@@ -29,6 +29,8 @@ MonoBehaviour:
     RawValue: 98304
   FireRate:
     RawValue: 196608
+  AnticipationTime:
+    RawValue: 0
   MagazineSize: 6
   ReloadDuration:
     RawValue: 32768
@@ -58,7 +60,7 @@ MonoBehaviour:
     ProjectileSprite: {fileID: 1303106859, guid: 8a17d688bdd9e47c68bbdfc6beba17e1, type: 3}
     ProjectileSpriteRotationOffset: 0
     ProjectileColor: {r: 1.8867924, g: 1.2323867, b: 0, a: 1}
-    ProjectileScale: {x: 1, y: 1, z: 1}
+    ProjectileScale: {x: 0.5, y: 0.5, z: 0.5}
     EnableProjectileSparkTrail: 1
     ProjectileSparkTrailColor: {r: 1, g: 0.653165, b: 0, a: 1}
     ProjectileSparkTrailScale: {x: 1, y: 1, z: 1}

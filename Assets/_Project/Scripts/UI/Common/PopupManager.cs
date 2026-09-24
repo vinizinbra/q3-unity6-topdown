@@ -63,17 +63,19 @@ public class PopupManager : MonoBehaviour {
     }
 
     // Safe entry point for a backdrop-tap or back-button handler: no-ops while the current popup
-    // opted out via blockExternalClose instead of every caller having to check that flag itself.
+    // didn't opt in via UiPopup.CanCloseOnDimClick instead of every caller having to check that flag itself.
     public void CloseCurrentPopup()
     {
-        if (currentPopup != null && !currentPopup.blockExternalClose)
+        if (currentPopup != null && currentPopup.CanCloseOnDimClick)
             currentPopup.Close();
     }
 
     // Shows `popup` above whatever is currently open without closing it - the pushed popup is just
     // deactivated (no onClose, no queue advance) and reactivated once `popup` closes. Use for
     // nested modals, e.g. a confirmation dialog opened from within a settings popup.
-    public void ShowPopupOnTop(UiPopup popup, bool blockExternalClose = false)
+    // closeOnDimClick: null keeps the popup's own default (UiPopup.CanCloseOnDimClick); true/false
+    // overrides it for this show only.
+    public void ShowPopupOnTop(UiPopup popup, bool? closeOnDimClick = null)
     {
         if (currentPopup != null)
         {
@@ -81,7 +83,7 @@ public class PopupManager : MonoBehaviour {
             currentPopup.gameObject.SetActive(false);
         }
 
-        popup.blockExternalClose = blockExternalClose;
+        popup.SetCloseOnDimClickOverride(closeOnDimClick);
         currentPopup = popup;
         popup.transform.SetAsLastSibling();
         ShowDim();
@@ -89,8 +91,9 @@ public class PopupManager : MonoBehaviour {
         popup.Show();
     }
 
-    public void AddPopupToQueue(UiPopup popup)
+    public void AddPopupToQueue(UiPopup popup, bool? closeOnDimClick = null)
     {
+        if (closeOnDimClick.HasValue) popup.SetCloseOnDimClickOverride(closeOnDimClick);
         // Every popup here is a single reused instance (e.g. the one AlertPopup), so a burst of
         // Show() calls for one logical event queues the SAME object more than once - the classic
         // case being a failed connect firing both HandleConnectFailure ("Connection Failed") and

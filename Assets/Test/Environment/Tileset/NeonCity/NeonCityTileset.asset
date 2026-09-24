@@ -1,0 +1,74 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f02bf106b04cd445ebe7292424ae5bf1, type: 3}
+  m_Name: NeonCityTileset
+  m_EditorClassIdentifier: Assembly-CSharp::TilesetDefinition
+  tilingMode: 1
+  mergeCenters: 1
+  material: {fileID: 2100000, guid: 56f3d667f16614767a79d99403b283ca, type: 2}
+  modelPrefix: NeonCity_
+  useInnerCorners: 1
+  maxEdgeLength: 3
+  maxEdgeStretch: 1.5
+  pieces:
+  - Key: Center
+    Model: {fileID: 919132149155446097, guid: 8177def1d0a5d4f45b12affafd78e1da, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 80703edb6f1024cb0b3d62405e604d9e, type: 3}
+    Weight: 3
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 72b5ffcda77794ca498cc0ec7b37b9b9, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 34fb5e3d6baea41eda8e72e42418848f, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 712e67558a9474f59bc1ba59be8e938a, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: ef2464f1752c14fe88239fb8ac3d20ed, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 44f509c2930ed4051a68cfd25aea2eb9, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: ff360ccf645dc4b3b85da96f98054e9d, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 3e88d36ec2754498a981699c560fbef5, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Corner
+    Model: {fileID: 919132149155446097, guid: a4b120e7efa5c467ebd74b7191d9d2f1, type: 3}
+    Weight: 2
+    NoStretch: 0
+  - Key: Corner
+    Model: {fileID: 919132149155446097, guid: ff334decafbd145d1a63980bd9157013, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: InnerCorner
+    Model: {fileID: 919132149155446097, guid: 8b0a0e714ad484892af680eba7ea99f8, type: 3}
+    Weight: 2
+    NoStretch: 0
+  - Key: InnerCorner
+    Model: {fileID: 919132149155446097, guid: d45c098ba04e5450fa721667993b4ccf, type: 3}
+    Weight: 1
+    NoStretch: 0

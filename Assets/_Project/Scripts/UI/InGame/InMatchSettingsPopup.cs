@@ -17,6 +17,9 @@ public class InMatchSettingsPopup : UiPopup
     [SerializeField, Tooltip("Hidden unless the match is being played offline.")]
     private Button restartButton;
 
+    // The only popup a dim-background click (or Escape/Start) is allowed to dismiss.
+    protected override bool CloseOnDimClickByDefault => true;
+
     public override void Awake()
     {
         base.Awake();

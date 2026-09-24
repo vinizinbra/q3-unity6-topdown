@@ -89,8 +89,12 @@ MonoBehaviour:
     RawValue: 65536
   CoinGainMultiplier:
     RawValue: 65536
+  DisplayName: Brute
+  Description: The wall the team hides behind. Juggernaut smashes through the front
+    line while Protector's aura keeps everyone nearby standing.
   RingColor: {r: 0, g: 0.51824737, b: 1, a: 1}
   PawnSprite: {fileID: 185576927, guid: b49db0c0e58ba4e9b8349764e5b8d384, type: 3}
+  UIHead: {fileID: -263415970, guid: 70e0c33dd75e14260ac5969139c6e271, type: 3}
   WeaponPosition:
     X:
       RawValue: 0

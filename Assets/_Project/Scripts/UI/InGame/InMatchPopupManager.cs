@@ -70,11 +70,13 @@ public class InMatchPopupManager : MonoBehaviour {
 
     public void CloseCurrentPopup()
     {
-        if (currentPopup != null && !currentPopup.blockExternalClose)
+        if (currentPopup != null && currentPopup.CanCloseOnDimClick)
             currentPopup.Close();
     }
 
-    public void ShowPopupOnTop(UiPopup popup, bool blockExternalClose = false)
+    // closeOnDimClick: null keeps the popup's own default (UiPopup.CanCloseOnDimClick); true/false
+    // overrides it for this show only.
+    public void ShowPopupOnTop(UiPopup popup, bool? closeOnDimClick = null)
     {
         if (currentPopup != null)
         {
@@ -82,7 +84,7 @@ public class InMatchPopupManager : MonoBehaviour {
             currentPopup.gameObject.SetActive(false);
         }
 
-        popup.blockExternalClose = blockExternalClose;
+        popup.SetCloseOnDimClickOverride(closeOnDimClick);
         currentPopup = popup;
         popup.transform.SetAsLastSibling();
         ShowDim();
@@ -90,8 +92,9 @@ public class InMatchPopupManager : MonoBehaviour {
         popup.Show();
     }
 
-    public void AddPopupToQueue(UiPopup popup)
+    public void AddPopupToQueue(UiPopup popup, bool? closeOnDimClick = null)
     {
+        if (closeOnDimClick.HasValue) popup.SetCloseOnDimClickOverride(closeOnDimClick);
         if (popup == currentPopup || popupQueue.Contains(popup)) return;
         popupQueue.Add(popup);
     }
@@ -100,13 +103,13 @@ public class InMatchPopupManager : MonoBehaviour {
     // (see InMatchTutorialManager) - looks it up in `popups` (populated once in Awake from
     // GetComponentsInChildren), so T must actually be a child of this manager. Returns null (and
     // queues nothing) if no such popup is registered.
-    public T Open<T>() where T : UiPopup
+    public T Open<T>(bool? closeOnDimClick = null) where T : UiPopup
     {
         foreach (var popup in popups)
         {
             if (popup is T typed)
             {
-                AddPopupToQueue(popup);
+                AddPopupToQueue(popup, closeOnDimClick);
                 return typed;
             }
         }

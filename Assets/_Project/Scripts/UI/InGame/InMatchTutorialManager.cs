@@ -2,19 +2,21 @@ using Quantum;
 using QuantumUser.View;
 using UnityEngine;
 
-// Solo-only tutorial popups (HowToPlayPopup/FirstBreakPopup) - pure local/View decision: the sim
-// dispatches nothing tutorial-specific, this manager reacts to already-existing sim state/events,
-// checks solo (human players only - bots don't count, see IsSolo) and opens the matching popup by
-// TYPE via InMatchPopupManager.Open<T>, sending SetTutorialPauseCommand(Paused = true) itself right
-// after - each popup then unpauses itself on close (see TutorialPopup.Close). Whether a popup
-// should be skipped because it's already been seen (PlayerPrefs) is a later addition, not
-// implemented yet.
+// Solo-only tutorial popups (HowToPlayPopup/FirstBreakPopup/HeroIntroPopup) - pure local/View
+// decision: the sim dispatches nothing tutorial-specific, this manager reacts to already-existing
+// sim state/events, checks solo (human players only - bots don't count, see IsSolo) and opens the
+// matching popup by TYPE via InMatchPopupManager.Open<T>, sending SetTutorialPauseCommand(Paused =
+// true) itself right after - each popup then unpauses itself on close (see TutorialPopup.Close).
+// HeroIntroPopup additionally skips itself per-hero once "Don't Show This Again" has been used for
+// the local player's currently equipped CharacterData (see HeroIntroPopup.HasBeenSeen) - the other
+// two tutorial popups have no such skip yet.
 public class InMatchTutorialManager : QuantumGlobalMonoBehaviour
 {
     // Set once each popup's own trigger condition fires, cleared once it's actually opened - kept
     // pending (instead of opening immediately) while GameState.Upgrade is active, so a level-up/
     // Chest Choice Window in progress is never fought over/covered by a tutorial popup. Re-checked
     // every tick, so it opens the moment that window closes rather than being skipped outright.
+    private bool _heroIntroPending;
     private bool _howToPlayPending;
     private bool _firstBreakPending;
 
@@ -91,6 +93,18 @@ public class InMatchTutorialManager : QuantumGlobalMonoBehaviour
         if (upgradePending)
             return;
 
+        // Checked/opened first (ahead of How To Play) so the hero intro reads as the very first
+        // thing a solo player sees - if it's skipped (already seen for this hero), How To Play below
+        // still opens the same tick, no gap. Only cleared once TryOpenHeroIntro actually resolves
+        // (opened or correctly skipped) - the local player's entity/CharacterStats can legitimately
+        // not be registered/seeded yet on the very tick GameState first flips to Survival, and
+        // clearing the flag regardless would silently drop the popup for the rest of the run instead
+        // of retrying a tick later.
+        if (_heroIntroPending && TryOpenHeroIntro(frame))
+        {
+            _heroIntroPending = false;
+        }
+
         if (_howToPlayPending)
         {
             _howToPlayPending = false;
@@ -116,6 +130,7 @@ public class InMatchTutorialManager : QuantumGlobalMonoBehaviour
         if (IsSolo(_game.Frames.Predicted) == false)
             return;
 
+        _heroIntroPending = true;
         _howToPlayPending = true;
     }
 
@@ -123,6 +138,40 @@ public class InMatchTutorialManager : QuantumGlobalMonoBehaviour
     {
         InMatchPopupManager.instance.Open<T>();
         TutorialPopup.SendPause(true);
+    }
+
+    // Separate from the generic Open<T> above since HeroIntroPopup needs its entity bound
+    // (HeroInfoWidget.Initialize) and needs the per-hero "already seen" check run BEFORE opening -
+    // both require the local player's entity/CharacterData, which is why this is deferred to QUpdate
+    // (like every other pending flag here) rather than resolved back in OnGameStateChanged, where
+    // the entity may not have finished spawning yet.
+    //
+    // Returns false while the local player's entity/CharacterStats isn't resolvable YET - the caller
+    // (QUpdate) keeps _heroIntroPending set and retries next tick instead of silently dropping the
+    // popup for the rest of the run. Returns true once the decision is actually made, whether that's
+    // opening the popup or correctly skipping it (already seen for this hero).
+    private bool TryOpenHeroIntro(Frame frame)
+    {
+        if (MyLocalPlayer.Instance == null || MyLocalPlayer.Instance.IsLocalPlayerSetup == false)
+            return false;
+
+        EntityRef entityRef = MyLocalPlayer.Instance.EntityRef;
+
+        if (frame.TryGet<CharacterStats>(entityRef, out var stats) == false)
+            return false;
+
+        if (HeroIntroPopup.HasBeenSeen(stats.CharacterData) == false)
+        {
+            HeroIntroPopup popup = InMatchPopupManager.instance.Open<HeroIntroPopup>();
+
+            if (popup != null)
+            {
+                popup.Setup(entityRef, stats.CharacterData);
+                TutorialPopup.SendPause(true);
+            }
+        }
+
+        return true;
     }
 
     // Human players only - bots don't count against solo (see docs/bots.md: a person testing

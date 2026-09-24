@@ -65,6 +65,8 @@ public static class TilesetAutotiler
     public const string CenterKey = "Center";
     public const string EdgeKey = "Edge";
     public const string CornerKey = "Corner";
+    // Optional 2-long straight wall (DualGrid), used for Edge run segments of 2+ cells (see MergeEdges).
+    public const string EdgeLongKey = "Edge2";
 
     // Dual-grid quarter mask around a vertex, clockwise so RotateMask also rotates it: NE, SE, SW, NW.
     public const int QuarterNE = 1, QuarterSE = 2, QuarterSW = 4, QuarterNW = 8;
@@ -88,6 +90,8 @@ public static class TilesetAutotiler
         public int Rotation;
         // Footprint in tiles (> 1 only for merged Centers).
         public Vector2Int Size;
+        // Along-wall stretch of an Edge/Edge2 covering more cells than its native length (0 = 1).
+        public float Stretch;
         // Stable per-tile coordinate used to pick a variant.
         public Vector2Int Seed;
     }
@@ -95,10 +99,116 @@ public static class TilesetAutotiler
     // Rotates a side/vertex mask one 90deg clockwise step: N->E->S->W, NE->SE->SW->NW.
     public static int RotateMask(int mask) => ((mask << 1) | (mask >> 3)) & 15;
 
-    public static List<Placement> Solve(HashSet<Vector2Int> cells, Mode mode, bool useInnerCorners = true, bool mergeCenters = true)
+    public static List<Placement> Solve(HashSet<Vector2Int> cells, Mode mode, bool useInnerCorners = true, bool mergeCenters = true, EdgeRunOptions edgeRuns = default)
     {
         var placements = mode == Mode.DualGrid ? SolveDualGrid(cells) : SolvePerCell(cells, useInnerCorners);
+        if (edgeRuns.Enabled && mode == Mode.DualGrid)
+            placements = MergeEdges(placements, edgeRuns);
         return mergeCenters ? MergeCenters(placements) : placements;
+    }
+
+    // Direction a canonical Edge runs along (+X) after `rotation` clockwise steps: +X, -Z, -X, +Z.
+    private static Vector2Int EdgeDirection(int rotation)
+    {
+        switch (rotation & 3)
+        {
+            case 0: return new Vector2Int(1, 0);
+            case 1: return new Vector2Int(0, -1);
+            case 2: return new Vector2Int(-1, 0);
+            default: return new Vector2Int(0, 1);
+        }
+    }
+
+    // How straight Edge runs are split (DualGrid). Every run is cut into segments of 1..MaxLength
+    // cells; each segment is ONE edge model stretched along the wall to cover it (the cells it covers
+    // are skipped), so walls get pieces of different lengths instead of a regular 1-unit rhythm.
+    // A segment of L cells uses Edge2 (native 2 long) when HasLong and L >= 2, else Edge (native 1);
+    // L is only allowed if L / native <= MaxStretch. The split is a stable hash of the run.
+    public struct EdgeRunOptions
+    {
+        public bool HasLong;
+        public int MaxLength;
+        public float MaxStretch;
+
+        public bool Enabled => HasLong || (MaxLength > 1 && MaxStretch > 1f);
+    }
+
+    // Weight of picking a segment of this many cells (index = length); longer pieces preferred.
+    private static readonly float[] SegmentWeights = { 0f, 0.2f, 1f, 0.8f, 0.4f, 0.25f, 0.15f };
+
+    public static List<Placement> MergeEdges(List<Placement> placements, EdgeRunOptions options)
+    {
+        var result = new List<Placement>(placements.Count);
+        var edges = new Dictionary<(Vector2Int, int), Placement>();
+        foreach (var p in placements)
+        {
+            if (p.Key == EdgeKey)
+                edges[(Vector2Int.RoundToInt(p.Position), p.Rotation)] = p;
+            else
+                result.Add(p);
+        }
+
+        var run = new List<Vector2Int>();
+        foreach (var ((vertex, rotation), _) in edges)
+        {
+            var dir = EdgeDirection(rotation);
+            if (edges.ContainsKey((vertex - dir, rotation)))
+                continue; // not the start of its run
+
+            run.Clear();
+            for (var v = vertex; edges.ContainsKey((v, rotation)); v += dir)
+                run.Add(v);
+
+            var rng = (uint)(vertex.x * 73856093 ^ vertex.y * 19349663 ^ rotation * 83492791) | 1u;
+            for (var i = 0; i < run.Count;)
+            {
+                var length = PickSegment(run.Count - i, options, ref rng);
+                var native = options.HasLong && length >= 2 ? 2 : 1;
+                result.Add(new Placement
+                {
+                    Key = native == 2 ? EdgeLongKey : EdgeKey,
+                    // segment covers vertices i .. i+length-1 -> pivot in the middle
+                    Position = (Vector2)(run[i] + run[i + length - 1]) * 0.5f,
+                    Rotation = rotation,
+                    Size = Vector2Int.one,
+                    Stretch = length / (float)native,
+                    Seed = run[i],
+                });
+                i += length;
+            }
+        }
+
+        return result;
+    }
+
+    private static int PickSegment(int remaining, EdgeRunOptions o, ref uint rng)
+    {
+        var total = 0f;
+        var max = Mathf.Min(remaining, Mathf.Min(o.MaxLength, SegmentWeights.Length - 1));
+        for (var l = 1; l <= max; l++)
+            total += Allowed(l, o) ? SegmentWeights[l] : 0f;
+
+        // xorshift32
+        rng ^= rng << 13;
+        rng ^= rng >> 17;
+        rng ^= rng << 5;
+        var roll = (rng & 0xffffff) / (float)0x1000000 * total;
+        for (var l = max; l >= 1; l--)
+        {
+            if (!Allowed(l, o))
+                continue;
+            roll -= SegmentWeights[l];
+            if (roll <= 0f)
+                return l;
+        }
+
+        return 1;
+    }
+
+    private static bool Allowed(int length, EdgeRunOptions o)
+    {
+        var native = o.HasLong && length >= 2 ? 2 : 1;
+        return length == 1 || length / (float)native <= o.MaxStretch + 1e-4f;
     }
 
     public static List<Placement> SolveDualGrid(HashSet<Vector2Int> cells)

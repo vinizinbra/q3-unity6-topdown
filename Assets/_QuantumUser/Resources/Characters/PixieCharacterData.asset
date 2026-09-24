@@ -89,8 +89,12 @@ MonoBehaviour:
     RawValue: 65536
   CoinGainMultiplier:
     RawValue: 65536
+  DisplayName: Pixie
+  Description: A gremlin with a bomb bag. Bunny Bomb chains explosions into more
+    explosions, and even her decoys are rigged to blow.
   RingColor: {r: 1, g: 0.3254717, b: 0.64922184, a: 1}
   PawnSprite: {fileID: 1983541522, guid: b49db0c0e58ba4e9b8349764e5b8d384, type: 3}
+  UIHead: {fileID: -873169, guid: e0b50ea9841b34c24b8097347136e505, type: 3}
   WeaponPosition:
     X:
       RawValue: 0

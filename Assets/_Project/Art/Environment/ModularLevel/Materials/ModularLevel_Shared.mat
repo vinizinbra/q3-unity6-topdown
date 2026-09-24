@@ -67,7 +67,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _GlobalNoiseMap:
-        m_Texture: {fileID: 2800000, guid: 8bb75cad668df4ebfb4c3d7d80a39c8a, type: 3}
+        m_Texture: {fileID: 2800000, guid: 49c025f8ca5024b05a432fd25c905fe1, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _HatchMap:
@@ -144,7 +144,7 @@ Material:
     - _FresnelPower: 8
     - _FresnelStrength: 0.45
     - _GlobalNoiseNeutral: 0.32
-    - _GlobalNoiseScale: 0.05
+    - _GlobalNoiseScale: 0.04
     - _GlobalNoiseStrength: 0.9
     - _GlossMapScale: 0
     - _Glossiness: 0
@@ -189,7 +189,7 @@ Material:
     - _SurfaceAOStrength: 0.633
     - _SurfaceFadeExpansion: 0
     - _SurfaceFadeQuantize: 1
-    - _SurfaceFadeSteps: 3
+    - _SurfaceFadeSteps: 2
     - _SurfaceFadeStrength: 0.573
     - _SurfaceFresnelStrength: 1
     - _SurfaceLineWidth: 0.1
@@ -205,7 +205,7 @@ Material:
     - _WallDisplacementBottomReach: 0.01
     - _WallFresnelStrength: 1
     - _WallLineStrength: 1
-    - _WallLineThickness: 0.1
+    - _WallLineThickness: 0.2
     - _WallLineY: 0
     - _WallOuterGlowStrength: 0.461
     - _WallOutlineStrength: 1
@@ -226,17 +226,17 @@ Material:
     - _GlobalNoiseOffset: {r: 0, g: 0, b: 0, a: 0}
     - _GradientBottomColor: {r: 0.8396226, g: 0.8396226, b: 0.8396226, a: 1}
     - _GradientTopColor: {r: 1, g: 1, b: 1, a: 1}
-    - _HeightFogColor: {r: 0.4509804, g: 0.827451, b: 0.99215686, a: 1}
+    - _HeightFogColor: {r: 0.34509805, g: 0.7372549, b: 0.5245793, a: 1}
     - _InkColor: {r: 0, g: 0, b: 0, a: 1}
     - _OutlineColor: {r: 1, g: 1, b: 1, a: 0}
     - _RimInkColor: {r: 0.025, g: 0.02, b: 0.03, a: 1}
     - _ShadowTint: {r: 0.5879761, g: 0.62670416, b: 0.6886792, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
-    - _SurfaceColor: {r: 0.6745098, g: 0.7137255, b: 0.2784314, a: 1}
-    - _SurfaceEdgeColor: {r: 0.84044045, g: 0.8867924, b: 0.3722855, a: 1}
-    - _SurfaceLineColor: {r: 0, g: 0, b: 0, a: 1}
+    - _SurfaceColor: {r: 0.2938768, g: 0.3430491, b: 0.49056602, a: 1}
+    - _SurfaceEdgeColor: {r: 0.6035511, g: 0.6907429, b: 0.9339623, a: 0.1764706}
+    - _SurfaceLineColor: {r: 0.45723566, g: 0.52213126, b: 0.7075472, a: 1}
     - _ToonSpecColor: {r: 1, g: 1, b: 1, a: 1}
-    - _WallColor: {r: 0.39201742, g: 0.2806604, b: 0.5, a: 1}
-    - _WallLineColor: {r: 1, g: 1, b: 1, a: 1}
+    - _WallColor: {r: 0.11454253, g: 0.14722764, b: 0.24528301, a: 1}
+    - _WallLineColor: {r: 0.6933962, g: 1, b: 0.834434, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

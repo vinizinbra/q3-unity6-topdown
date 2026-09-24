@@ -118,14 +118,19 @@ ever needed again.
   `_HeightFogColor`/`_HeightFogTopY`/`_HeightFogFalloff`/`_HeightFogStrength` properties) - that
   level shader itself is opaque and mesh-oriented (custom vertex-color-encoded wall/surface role, no
   alpha blending) and would render broken garbage if assigned directly to a `SpriteRenderer`.
-  `EnvironmentManager` gained a `detailSpriteMaterial` field (a `Material` using this shader)
-  alongside its existing `levelMaterial`, kept in sync automatically every `Load()`
-  (`ApplyDetailSpriteHeightFog`) - Color from the same `environment.Sky` the level material gets, and
-  TopY/Falloff/Strength copied straight from `levelMaterial`'s own current values, so there's nothing
-  to keep in sync by hand across the two separate Material assets. Applied to wall slots only, via
+  `EnvironmentManager` has a `detailSpriteMaterial` field (a `Material` using this shader). Its fog
+  values are authored on that Material (the old automatic sync from `levelMaterial` was removed with
+  the level-Material blocks, 2026-09-24). Applied to wall slots only, via
   `renderer.sharedMaterial` (never `.material`, which would silently instantiate a per-renderer copy
   and defeat the whole "one Material, tinted once" point) - ground slots keep whatever material the
   artist assigned by hand when placing them.
+- **Water opacity per world:** `WorldWaterTheme.Opacity` drives `_WaterOpacity` (0 = keep material). Water
+  alpha-blends over the background, so dark water (DesertOilFields oil) needs 1; every theme sets a
+  value because the water Material is shared.
+- **3D tileset per world:** `WorldTheme.Tileset` swaps the chunk cubes' tileset; the level look lives on
+  each tileset's own material. The old level-Material blocks (Surface/Walls colours, Surface noise,
+  Wall Line, height-fog sync, Bake/Capture buttons) were removed 2026-09-24 - see
+  `docs/tileset-builder.md` (Per-world tileset).
 - **`EnvironmentManager.Instance`/`CurrentTheme`/`DetailSpriteMaterial`**
   (`Assets/_QuantumUser/View/World/EnvironmentManager.cs`) - small additions so there's one place to
   ask "which `WorldTheme` is currently active" and "what Material do wall detail slots use." Nothing

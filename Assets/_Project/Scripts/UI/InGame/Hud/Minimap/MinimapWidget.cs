@@ -305,6 +305,15 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     // button from Project Settings > Input Manager, no code change needed.
     private const string OpenMiniMapToggle = "OpenMiniMapToggle";
 
+    // Named Input Manager Joystick Axis (default: 13th axis, any joystick) - R2 on most Android
+    // Bluetooth pads (e.g. MOGA Pro 2) is an analog trigger axis, not a button, so it can't live on
+    // OpenMiniMapToggle. Which axis number a given pad uses varies - re-point it in Project Settings
+    // > Input Manager if R2 doesn't respond. Treated as a press on the rising edge past the
+    // threshold, so holding the trigger toggles once rather than every frame.
+    private const string OpenMiniMapTrigger = "OpenMiniMapTrigger";
+    private const float TriggerPressThreshold = 0.5f;
+    private bool _triggerHeld;
+
     private void Awake()
     {
         if (toggleButton != null)
@@ -405,7 +414,11 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         // Gated to slot 0 - the only local player slot QuantumDebugInput ever reads a gamepad
         // button for (PollPlayerOneInput; PollPlayerTwoInput is keyboard-only) - so a second local
         // player's own widget instance never reacts to the first player's gamepad press too.
-        if (localSlotIndex == 0 && UnityEngine.Input.GetButtonDown(OpenMiniMapToggle))
+        bool triggerDown = UnityEngine.Input.GetAxisRaw(OpenMiniMapTrigger) > TriggerPressThreshold;
+        bool triggerPressed = triggerDown && _triggerHeld == false;
+        _triggerHeld = triggerDown;
+
+        if (localSlotIndex == 0 && (UnityEngine.Input.GetButtonDown(OpenMiniMapToggle) || triggerPressed))
             ToggleFullMap();
     }
 

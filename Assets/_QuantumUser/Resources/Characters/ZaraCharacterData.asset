@@ -89,8 +89,12 @@ MonoBehaviour:
     RawValue: 65536
   CoinGainMultiplier:
     RawValue: 65536
+  DisplayName: Zara
+  Description: A combat DJ who keeps the team alive on the beat - Totem alternates
+    damage and healing, and Resonance turns a good set into a burst of power.
   RingColor: {r: 0.21226418, g: 0.9914017, b: 1, a: 1}
   PawnSprite: {fileID: 1773360120, guid: b49db0c0e58ba4e9b8349764e5b8d384, type: 3}
+  UIHead: {fileID: -39329904, guid: 7982f90655cda4f9ea8dfade1b2a2786, type: 3}
   WeaponPosition:
     X:
       RawValue: 0

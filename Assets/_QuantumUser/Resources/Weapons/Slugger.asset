@@ -29,6 +29,8 @@ MonoBehaviour:
     RawValue: 98304
   FireRate:
     RawValue: 117965
+  AnticipationTime:
+    RawValue: 0
   MagazineSize: 6
   ReloadDuration:
     RawValue: 45875
@@ -52,6 +54,25 @@ MonoBehaviour:
   BaseTraits: []
   ViewPrefab: {fileID: 8089491252618662435, guid: 0ea013cafc72642928256769e9b3f9a0, type: 3}
   ShakeTier: 2
+  ProjectileVisuals:
+    ProjectileSprite: {fileID: 0}
+    ProjectileSpriteRotationOffset: 0
+    ProjectileColor: {r: 0.4198113, g: 0.8259668, b: 1, a: 1}
+    ProjectileScale: {x: 1, y: 1, z: 1}
+    EnableProjectileSparkTrail: 1
+    ProjectileSparkTrailColor: {r: 0.41960785, g: 0.827451, b: 1, a: 1}
+    ProjectileSparkTrailScale: {x: 1, y: 1, z: 1}
+    ProjectileSparkTrailLifetimeOverride: 0
+    EnableProjectileGlow: 1
+    ProjectileGlowColor: {r: 0.41960785, g: 0.827451, b: 1, a: 1}
+    ProjectileGlowScale: {x: 1, y: 1, z: 1}
+    EnableProjectileLight: 1
+    ProjectileLightColor: {r: 0.41960785, g: 0.827451, b: 1, a: 1}
+    ProjectileDestroyColor: {r: 0.41960785, g: 0.827451, b: 1, a: 1}
+    ProjectileDestroyGlowColor: {r: 1, g: 1, b: 1, a: 1}
+    ProjectileDestroyScale: {x: 1, y: 1, z: 1}
+    ProjectileExtraParticle: {fileID: 0}
+    ProjectileExtraParticleScale: {x: 1, y: 1, z: 1}
   _dpsPreview: 'Burst DPS: 106.4
 
     Sustained DPS (incl. reload): 88

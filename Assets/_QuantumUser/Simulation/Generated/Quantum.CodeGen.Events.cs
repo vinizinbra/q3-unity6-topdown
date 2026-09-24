@@ -330,7 +330,7 @@ namespace Quantum {
         _f.AddEvent(ev);
         return ev;
       }
-      public EventProjectileDestroyed ProjectileDestroyed(EntityRef Entity, EntityRef Owner, FPVector3 Position, FPVector3 SpawnPosition, AssetRef<ProjectileDataAsset> ProjectileData, AssetRef<WeaponDataAsset> WeaponData) {
+      public EventProjectileDestroyed ProjectileDestroyed(EntityRef Entity, EntityRef Owner, FPVector3 Position, FPVector3 SpawnPosition, AssetRef<ProjectileDataAsset> ProjectileData, AssetRef<WeaponDataAsset> WeaponData, FP Speed) {
         var ev = _f.Context.AcquireEvent<EventProjectileDestroyed>(EventProjectileDestroyed.ID);
         ev.Entity = Entity;
         ev.Owner = Owner;
@@ -338,6 +338,7 @@ namespace Quantum {
         ev.SpawnPosition = SpawnPosition;
         ev.ProjectileData = ProjectileData;
         ev.WeaponData = WeaponData;
+        ev.Speed = Speed;
         _f.AddEvent(ev);
         return ev;
       }
@@ -1522,6 +1523,7 @@ namespace Quantum {
     public FPVector3 SpawnPosition;
     public AssetRef<ProjectileDataAsset> ProjectileData;
     public AssetRef<WeaponDataAsset> WeaponData;
+    public FP Speed;
     protected EventProjectileDestroyed(Int32 id, EventFlags flags) : 
         base(id, flags) {
     }
@@ -1545,6 +1547,7 @@ namespace Quantum {
         hash = hash * 31 + SpawnPosition.GetHashCode();
         hash = hash * 31 + ProjectileData.GetHashCode();
         hash = hash * 31 + WeaponData.GetHashCode();
+        hash = hash * 31 + Speed.GetHashCode();
         return hash;
       }
     }

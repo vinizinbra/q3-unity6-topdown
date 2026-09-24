@@ -29,6 +29,8 @@ MonoBehaviour:
     RawValue: 98304
   FireRate:
     RawValue: 104858
+  AnticipationTime:
+    RawValue: 0
   MagazineSize: 8
   ReloadDuration:
     RawValue: 65536
@@ -54,11 +56,30 @@ MonoBehaviour:
       Value: 995703399927807295
   ViewPrefab: {fileID: 8089491252618662435, guid: 18692a6e16a6044c593882a1fb05bd53, type: 3}
   ShakeTier: 2
-  _dpsPreview: 'Burst DPS: 100.8
+  ProjectileVisuals:
+    ProjectileSprite: {fileID: 0}
+    ProjectileSpriteRotationOffset: 0
+    ProjectileColor: {r: 1, g: 0.44493103, b: 0, a: 1}
+    ProjectileScale: {x: 1, y: 1, z: 1}
+    EnableProjectileSparkTrail: 0
+    ProjectileSparkTrailColor: {r: 1, g: 0.44313726, b: 0, a: 1}
+    ProjectileSparkTrailScale: {x: 1, y: 1, z: 1}
+    ProjectileSparkTrailLifetimeOverride: 0
+    EnableProjectileGlow: 0
+    ProjectileGlowColor: {r: 1, g: 0.44313726, b: 0, a: 1}
+    ProjectileGlowScale: {x: 1, y: 1, z: 1}
+    EnableProjectileLight: 0
+    ProjectileLightColor: {r: 1, g: 0.44313726, b: 0, a: 1}
+    ProjectileDestroyColor: {r: 1, g: 0.72267026, b: 0.4009434, a: 1}
+    ProjectileDestroyGlowColor: {r: 1, g: 0.8135035, b: 0.6650944, a: 1}
+    ProjectileDestroyScale: {x: 1, y: 1, z: 1}
+    ProjectileExtraParticle: {fileID: 0}
+    ProjectileExtraParticleScale: {x: 1, y: 1, z: 1}
+  _dpsPreview: 'Burst DPS: 162.6
 
-    Sustained DPS (incl. reload): 84
+    Sustained DPS (incl. reload): 122.9
 
     Damage/min:
-    5040
+    7376
 
     Crit dmg/shot: 90 (vs 60 normal) @ 10 % chance, x1.5'

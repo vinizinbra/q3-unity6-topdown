@@ -7,26 +7,23 @@ namespace Quantum
     // View companion for a Traversal Challenge platform (TraversalChallenge.qtn/
     // docs/traversal-challenge.md) - f.Create/f.Destroy'd at runtime, no gameplay component of its
     // own. cubeVisualBuilder's pivot sits at its own min corner, not its center (see
-    // CubeVisualBuilder's own class comment - "assumes each cube's pivot sits at its bottom min
-    // corner"), so animating it directly would shake/sink asymmetrically from that corner instead
-    // of looking centered. Solves it by creating a runtime pivot Transform (parentless from the
-    // start, never a child of the Quantum entity) positioned at visualCollider.bounds.center (read
-    // BEFORE Generate() runs - Generate() destroys and recreates that collider component, so the
-    // reference goes stale the instant it's called), then moving cubeVisualBuilder's whole
-    // GameObject off the entity root and onto that pivot (SetParent(..., worldPositionStays: true) -
-    // this also happens to correct cubeVisualBuilder's own transform.localScale from the entity
-    // root's authored (1,1,1)-under-a-(4,4,4)-scaled-parent down to a plain (4,4,4) it can read
-    // directly, so Generate()'s own grid-size math needs no separate manual fix). Fully detaching the
+    // TilesetPlatformBuilder's class comment), so animating it directly would shake/sink
+    // asymmetrically from that corner instead of looking centered. Solves it by creating a runtime
+    // pivot Transform (parentless from the start, never a child of the Quantum entity) positioned at
+    // visualCollider.bounds.center, then moving cubeVisualBuilder's whole GameObject off the entity
+    // root and onto that pivot (SetParent(..., worldPositionStays: true)) before Generate() - the
+    // tiles are parented to the nearest unscaled ancestor, i.e. this pivot, so they ride its
+    // rise/shake/sink tweens. Fully detaching the
     // visual from the entity root - not just animating a child in place - matters because
     // QuantumEntityView destroys/pools the entity's own GameObject the instant f.Destroy fires in the
     // simulation, which would otherwise kill this pivot (and any in-flight tween on it) before the
     // destroy animation ever gets to play.
     public class TraversalPlatformView : CustomQuantumEntityViewComponent
     {
-        [SerializeField, Tooltip("The child CubeVisualBuilder that generates this platform's real mesh (e.g. the 'VisualCube' child) - its own generateOnEnable is left off, Generate() is called explicitly here instead so it always runs exactly once per spawn regardless of pooling.")]
-        private CubeVisualBuilder cubeVisualBuilder;
+        [SerializeField, Tooltip("The child TilesetPlatformBuilder that generates this platform's real mesh (e.g. the 'VisualCube' child) - its auto-generate is Manual, Generate() is called explicitly here instead so it always runs exactly once per spawn regardless of pooling.")]
+        private TilesetPlatformBuilder cubeVisualBuilder;
 
-        [SerializeField, Tooltip("The BoxCollider sitting on cubeVisualBuilder's own GameObject before Generate() runs - read once for its world-space bounds.center (the platform's true geometric center), since cubeVisualBuilder's own transform is a corner pivot, not a center one.")]
+        [SerializeField, Tooltip("The BoxCollider sitting on cubeVisualBuilder's own GameObject - read once for its world-space bounds.center (the platform's true geometric center), since cubeVisualBuilder's own transform is a corner pivot, not a center one.")]
         private BoxCollider visualCollider;
 
         [SerializeField] private float riseDistance = 2f;

@@ -45,6 +45,13 @@ public class ShakeGrowImpactAnimation : MonoBehaviour
     // Inspector-wired UnityEvent hookup per instance.
     public event Action Finished;
 
+    // True from Play() until the very last tween (impact punch/shake included) ends - wider than
+    // Finished, which fires when the impact STARTS while PunchScale is still writing localScale.
+    // SelectableScaleWidget holds off on this while true so two tweens never fight over the scale.
+    public bool IsPlaying =>
+        _delayTween.isAlive || _growTween.isAlive || _openShakeTween.isAlive || _openShakeRotationTween.isAlive ||
+        _impactPunchTween.isAlive || _impactShakeTween.isAlive || _impactRotationTween.isAlive;
+
     private Vector3 _originalScale;
 
     private Tween _delayTween;

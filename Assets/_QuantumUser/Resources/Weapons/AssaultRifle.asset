@@ -29,6 +29,8 @@ MonoBehaviour:
     RawValue: 98304
   FireRate:
     RawValue: 360448
+  AnticipationTime:
+    RawValue: 0
   MagazineSize: 25
   ReloadDuration:
     RawValue: 32768
@@ -53,7 +55,7 @@ MonoBehaviour:
   ViewPrefab: {fileID: 8089491252618662435, guid: ccf62474dfed0407d8c8101bec7d3763, type: 3}
   ShakeTier: 0
   ProjectileVisuals:
-    ProjectileSprite: {fileID: 0}
+    ProjectileSprite: {fileID: 57386854, guid: 8a17d688bdd9e47c68bbdfc6beba17e1, type: 3}
     ProjectileSpriteRotationOffset: 0
     ProjectileColor: {r: 1.8867924, g: 0.7804011, b: 0, a: 1}
     ProjectileScale: {x: 1, y: 1, z: 1}

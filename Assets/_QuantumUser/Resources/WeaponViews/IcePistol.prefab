@@ -187,7 +187,7 @@ ParticleSystem:
       serializedVersion: 2
       minMaxState: 0
       minColor: {r: 1, g: 1, b: 1, a: 1}
-      maxColor: {r: 1, g: 0.5434172, b: 0.18396229, a: 0.6862745}
+      maxColor: {r: 0.18431371, g: 0.82368606, b: 1, a: 0.6862745}
       maxGradient:
         serializedVersion: 2
         key0: {r: 1, g: 1, b: 1, a: 1}
@@ -4947,6 +4947,7 @@ MonoBehaviour:
   executeOnlyOnLocal: 0
   isLocal: 0
   anim:
+    AttackAnimationType: 0
     rightOffset: {x: 0, y: -0.1}
     upOffset: {x: 0.2, y: 0}
     downOffset: {x: 0.1, y: 0.2}
@@ -4963,6 +4964,13 @@ MonoBehaviour:
     recoilAsymmetry: 0.3
     knockbackDistance: 0.1
     knockbackScalePunch: 0.3
+    swingRotationAngle: 90
+    swingAnticipationAngle: 15
+    swingAnticipationDuration: 0.08
+    swingOutDuration: 0.1
+    swingReturnDuration: 0.15
+    swingLungeDistance: 0.08
+    swingScalePunch: 0.15
     shakePositionHead:
       Strength: {x: 0, y: 0.04, z: 0}
       Duration: 0.2
@@ -4986,8 +4994,10 @@ MonoBehaviour:
   character: {fileID: 0}
   flipPivotOffset: {x: 0, y: 0, z: 0}
   muzzleParticle: {fileID: 5244902348536965228}
+  chargeParticle: {fileID: 0}
   projectileSpawnPoint: {fileID: 0}
   fireSound: {fileID: 11400000, guid: d301e42244f7749f38e4e0d5d6bf6a50, type: 2}
+  anticipationSound: {fileID: 0}
   reloadStartSound: {fileID: 11400000, guid: 5edaefd69c1f24edc81078b02a2b8b2a, type: 2}
   reloadReadySound: {fileID: 11400000, guid: f2fd980e55c984487af99afe28b60074, type: 2}
 --- !u!1001 &303472922385924277
@@ -5009,6 +5019,18 @@ PrefabInstance:
     - target: {fileID: 512805140819994886, guid: 87b42b4cc52580f43a3a2885348d4653, type: 3}
       propertyPath: InitialModule.startLifetime.scalar
       value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 512805140819994886, guid: 87b42b4cc52580f43a3a2885348d4653, type: 3}
+      propertyPath: InitialModule.startColor.maxColor.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 512805140819994886, guid: 87b42b4cc52580f43a3a2885348d4653, type: 3}
+      propertyPath: InitialModule.startColor.maxColor.g
+      value: 0.8504868
+      objectReference: {fileID: 0}
+    - target: {fileID: 512805140819994886, guid: 87b42b4cc52580f43a3a2885348d4653, type: 3}
+      propertyPath: InitialModule.startColor.maxColor.r
+      value: 0.5613208
       objectReference: {fileID: 0}
     - target: {fileID: 2074211772315599135, guid: 87b42b4cc52580f43a3a2885348d4653, type: 3}
       propertyPath: m_SortingOrder
@@ -5037,6 +5059,18 @@ PrefabInstance:
     - target: {fileID: 5548300490710395097, guid: 87b42b4cc52580f43a3a2885348d4653, type: 3}
       propertyPath: InitialModule.startLifetime.scalar
       value: 0.15
+      objectReference: {fileID: 0}
+    - target: {fileID: 5548300490710395097, guid: 87b42b4cc52580f43a3a2885348d4653, type: 3}
+      propertyPath: InitialModule.startColor.maxColor.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5548300490710395097, guid: 87b42b4cc52580f43a3a2885348d4653, type: 3}
+      propertyPath: InitialModule.startColor.maxColor.g
+      value: 0.54118204
+      objectReference: {fileID: 0}
+    - target: {fileID: 5548300490710395097, guid: 87b42b4cc52580f43a3a2885348d4653, type: 3}
+      propertyPath: InitialModule.startColor.maxColor.r
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6293866305370594211, guid: 87b42b4cc52580f43a3a2885348d4653, type: 3}
       propertyPath: m_Name

@@ -310,6 +310,11 @@ event ProjectileDestroyed
     // already does for a shot that DID get a view - without this the event carried no way to resolve
     // WeaponDataAsset.ProjectileVisuals at all, so a ghost-path impact always played untinted.
     AssetRef<WeaponDataAsset> WeaponData;
+
+    // The projectile's live speed at the moment it ended (Velocity magnitude). A shot with no view
+    // has no ProjectileView to read a speed off, so ProjectileGhostTrailManager times its flight
+    // from this - the same distance/speed clamp the live path uses.
+    FP Speed;
 }
 
 // Fired by DirectHitData.ApplyHit on every contact the projectile actually SURVIVES - a Piercing

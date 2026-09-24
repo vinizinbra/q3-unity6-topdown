@@ -5,9 +5,9 @@ namespace Quantum.Editor
 
     // Palette preview for WorldTheme, drawn above its normal Inspector fields - a 2x2 "surface"
     // square with a 3-dot blood splash in the middle (Enemy.BloodColor, the death VFX/decal tint -
-    // see EffectsManager.OnEnemyExploded), a 2x1 "wall" band underneath, fading from Walls color
-    // into Sky color at the bottom (mirrors the level shader's actual Height Fog blend - see
-    // EnvironmentManager - which gets strongest at low world height).
+    // see EffectsManager.OnEnemyExploded), a 2x1 "wall" band underneath, fading from the wall colour
+    // into Sky at the bottom (like the ToonTerrain water depth fade). Surface/wall colours come from
+    // the theme's tileset Material (Surface/Wall Light Color) - that's where each biome's look lives.
     //
     // Lives under View/World/Editor (no covering asmdef/asmref) rather than QuantumUser/Editor -
     // WorldTheme.cs itself has no asmref either, so it compiles into the default Assembly-CSharp
@@ -45,6 +45,16 @@ namespace Quantum.Editor
             DrawPalettePreview(theme);
         }
 
+        private static readonly int SurfaceLightColorId = Shader.PropertyToID("_SurfaceLightColor");
+        private static readonly int WallLightColorId = Shader.PropertyToID("_WallLightColor");
+
+        private static Color MaterialColor(WorldTheme theme, int id)
+        {
+            TilesetDefinition tileset = theme.Tileset.Tileset;
+            Material material = tileset != null ? tileset.Material : null;
+            return material != null && material.HasProperty(id) ? material.GetColor(id) : Color.gray;
+        }
+
         private static void DrawPalettePreview(WorldTheme theme)
         {
             WorldEnvironmentTheme environment = theme.Environment;
@@ -54,11 +64,11 @@ namespace Quantum.Editor
             float x = area.x + (area.width - PreviewWidth) * 0.5f;
 
             Rect surfaceRect = new Rect(x, area.y, PreviewWidth, SurfaceHeight);
-            EditorGUI.DrawRect(surfaceRect, environment.Surface);
+            EditorGUI.DrawRect(surfaceRect, MaterialColor(theme, SurfaceLightColorId));
             DrawDeathSplash(surfaceRect.center, bloodColor);
 
             Rect wallsRect = new Rect(x, surfaceRect.yMax, PreviewWidth, WallsHeight);
-            DrawVerticalGradient(wallsRect, environment.Walls, environment.Sky);
+            DrawVerticalGradient(wallsRect, MaterialColor(theme, WallLightColorId), environment.Sky);
         }
 
         // Three uneven circles clustered off-center - reads more like an actual splash than three

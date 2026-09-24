@@ -123,6 +123,10 @@ public class CharacterUiWidget : MonoBehaviour
     [SerializeField, Tooltip("Image with Image Type = Filled, drained as the guard's timer runs down (1 = just granted, 0 = about to lapse). Needs StatusEffects.FreeHitGuardDuration as its denominator, which is exactly why the simulation stores it - every OTHER timed status here only shows a countdown NUMBER, so this is the first one that had to know what 'full' was.")]
     private Image freeHitGuardFill;
 
+    [Header("Context Interaction")]
+    [SerializeField, Tooltip("Shown only while this entity can interact with a nearby POI right now (ContextInteraction.State == Available) - same check SkillCooldownUiWidget uses to swap the Hero Skill button to its interact icon. Left unassigned to skip; self-hides for every entity without a ContextInteraction (enemies, sentries). See docs/breathing-poi.md.")]
+    private GameObject contextInteractionRoot;
+
     [SerializeField, Tooltip("Per-hero resource readouts (Brute/Max/Zara/Lux) authored as children of this widget - left empty, auto-populated via GetComponentsInChildren in Setup. Each one self-hides unless the entity this widget follows actually carries that hero's own components, so the single shared prefab keeps serving every hero AND every enemy. This is the only place they live: the party HUD deliberately shows none of them.")]
     private HeroHudWidget[] heroWidgets;
 
@@ -268,6 +272,7 @@ public class CharacterUiWidget : MonoBehaviour
         UpdateRevengeMark(frame);
         UpdateAccessoryGuard(frame);
         UpdateFreeHitGuard(frame);
+        UpdateContextInteraction(frame);
         UpdateHeroWidgets(frame);
     }
 
@@ -414,6 +419,20 @@ public class CharacterUiWidget : MonoBehaviour
         freeHitGuardFill.fillAmount = status.FreeHitGuardDuration > FP._0
             ? Mathf.Clamp01((status.FreeHitGuardRemaining / status.FreeHitGuardDuration).AsFloat)
             : 1f;
+    }
+
+    // Available (not merely "a POI is nearby") - same rule as the Hero Skill button's interact swap,
+    // so this only shows when pressing the button would actually do something.
+    private void UpdateContextInteraction(Frame frame)
+    {
+        if (contextInteractionRoot == null)
+            return;
+
+        bool available = frame.TryGet<ContextInteraction>(_entityRef, out var context)
+            && context.State == ContextInteractionState.Available;
+
+        if (contextInteractionRoot.activeSelf != available)
+            contextInteractionRoot.SetActive(available);
     }
 
     private void UpdateHeroWidgets(Frame frame)

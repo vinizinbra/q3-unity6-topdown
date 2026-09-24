@@ -39,19 +39,24 @@ Material:
     m_Floats:
     - _AmbientStrength: 0.35
     - _BorderOutlineStrength: 1
-    - _BorderOutlineWidth: 2.62
+    - _BorderOutlineWidth: 5
     - _CastShadowStrength: 1
-    - _EdgeFadeEnd: 0
-    - _EdgeFadeNoise: 0
-    - _EdgeFadeStart: 0.379
+    - _EdgeFadeEnd: 1
+    - _EdgeFadeNoise: 0.683
+    - _EdgeFadeStart: 0.71
+    - _EmissionMinY: -1000
+    - _EmissionStrength: 3
     - _FadeColorPosition: 0.5
     - _FadeColorWidth: 1
-    - _Hatch1Threshold: 0.6
+    - _GradientDistance: 2
+    - _GradientStartY: -3.22
+    - _GradientStrength: 1
+    - _Hatch1Threshold: 0.428
     - _Hatch2Threshold: 0.82
-    - _HatchScale: 2
+    - _HatchScale: 4
     - _HatchScreenScale: 6
     - _HatchScreenSpace: 0
-    - _HatchSoftness: 0.08
+    - _HatchSoftness: 0.331
     - _HatchStrength: 1
     - _RimOutlineStrength: 0
     - _RimOutlineWidth: 10
@@ -59,17 +64,29 @@ Material:
     - _ShadowThreshold: 0.5
     - _StrataOutlineStrength: 1
     - _StrataOutlineWidth: 8
-    - _SurfaceHatchScale: 0.143
-    - _SurfaceScale: 5
+    - _SurfaceHatchScale: 0.405
+    - _SurfaceScale: 12
+    - _SurfaceStrength: 0.7
     - _TriplanarSharpness: 6
+    - _WallLineStrength: 1
+    - _WallLineThickness: 0.1
+    - _WallLineY: 0
     - _WallScale: 3
     m_Colors:
     - _EdgeTint: {r: 1, g: 1, b: 1, a: 1}
-    - _FadeColor: {r: 1, g: 1, b: 1, a: 0.14901961}
+    - _EmissionOffColor: {r: 0, g: 0, b: 0, a: 1}
+    - _FadeColor: {r: 0.8742384, g: 0.9245283, b: 0.34451762, a: 0.5019608}
+    - _GradientBottomColor: {r: 0.4509804, g: 0.827451, b: 0.99215686, a: 1}
+    - _GradientTopColor: {r: 1, g: 1, b: 1, a: 1}
     - _HatchColor: {r: 0.11999995, g: 0.07999996, b: 0.15999997, a: 1}
     - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
     - _ShadowTint: {r: 0.54999995, g: 0.52, b: 0.72, a: 1}
-    - _SurfaceTint: {r: 0.6745098, g: 0.7137255, b: 0.2784314, a: 1}
+    - _SurfaceDarkColor: {r: 0.4213558, g: 0.46226418, b: 0, a: 1}
+    - _SurfaceLightColor: {r: 0.72, g: 0.76, b: 0.28999996, a: 1}
+    - _SurfaceTint: {r: 0.7133442, g: 0.754717, b: 0.29547882, a: 1}
+    - _WallDarkColor: {r: 0.364, g: 0.259, b: 0.453, a: 1}
+    - _WallLightColor: {r: 0.392, g: 0.28, b: 0.486, a: 1}
+    - _WallLineColor: {r: 1, g: 1, b: 1, a: 1}
     - _WallTint: {r: 0.39215687, g: 0.28235295, b: 0.5019608, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

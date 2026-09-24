@@ -1,0 +1,83 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bb51f48d451e4d148d492421a410eb0, type: 3}
+  m_Name: HitScanTemp
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.WeaponDataAsset
+  Identifier:
+    Path: _QuantumUser/Resources/Weapons/HitScanTemp
+    Guid:
+      Value: 464991042954090439
+  DisplayName: 
+  FireType: 0
+  Damage:
+    RawValue: 65536
+  Element: 0
+  Family: 0
+  Weight: 0
+  CriticalChance:
+    RawValue: 0
+  CriticalDamageBonus:
+    RawValue: 0
+  FireRate:
+    RawValue: 327680
+  AnticipationTime:
+    RawValue: 0
+  MagazineSize: 80
+  ReloadDuration:
+    RawValue: 65536
+  Range:
+    RawValue: 524288
+  PelletCount: 1
+  SpreadAngle:
+    RawValue: 1966080
+  SpawnAnchor: 0
+  SpawnOffset:
+    X:
+      RawValue: 0
+    Y:
+      RawValue: 0
+    Z:
+      RawValue: 0
+  BonusBounces: 0
+  ProjectileData:
+    Id:
+      Value: 0
+  BaseTraits: []
+  ViewPrefab: {fileID: 8089491252618662435, guid: 1ce0d7eaa8b024bf49857a9011c7347b, type: 3}
+  ShakeTier: 0
+  ProjectileVisuals:
+    ProjectileSprite: {fileID: 0}
+    ProjectileSpriteRotationOffset: 0
+    ProjectileColor: {r: 1, g: 1, b: 1, a: 1}
+    ProjectileScale: {x: 1, y: 1, z: 1}
+    EnableProjectileSparkTrail: 0
+    ProjectileSparkTrailColor: {r: 1, g: 1, b: 1, a: 1}
+    ProjectileSparkTrailScale: {x: 1, y: 1, z: 1}
+    ProjectileSparkTrailLifetimeOverride: 0
+    EnableProjectileGlow: 0
+    ProjectileGlowColor: {r: 1, g: 1, b: 1, a: 1}
+    ProjectileGlowScale: {x: 1, y: 1, z: 1}
+    EnableProjectileLight: 0
+    ProjectileLightColor: {r: 1, g: 1, b: 1, a: 1}
+    ProjectileDestroyColor: {r: 1, g: 1, b: 1, a: 1}
+    ProjectileDestroyGlowColor: {r: 1, g: 1, b: 1, a: 1}
+    ProjectileDestroyScale: {x: 1, y: 1, z: 1}
+    ProjectileExtraParticle: {fileID: 0}
+    ProjectileExtraParticleScale: {x: 1, y: 1, z: 1}
+  _dpsPreview: 'Burst DPS: 5
+
+    Sustained DPS (incl. reload): 4.7
+
+    Damage/min:
+    282
+
+    Crit dmg/shot: 1 (vs 1 normal) @ 0 % chance, x1'

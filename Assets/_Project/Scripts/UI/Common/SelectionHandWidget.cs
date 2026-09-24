@@ -19,6 +19,7 @@ public class SelectionHandWidget : MonoBehaviour
     private int overrideSortingOrder = 300;
 
     private Canvas _ownCanvas;
+    private Vector3 _baseScale;
 
     private void Reset()
     {
@@ -31,6 +32,8 @@ public class SelectionHandWidget : MonoBehaviour
         _ownCanvas = gameObject.AddComponent<Canvas>();
         _ownCanvas.overrideSorting = true;
         _ownCanvas.sortingOrder = overrideSortingOrder;
+
+        _baseScale = rectTransform.localScale;
     }
 
     private void LateUpdate()
@@ -55,7 +58,14 @@ public class SelectionHandWidget : MonoBehaviour
             return;
         }
 
+        // Only Selectables that give their own scale feedback get the hand - anything else (e.g. a
+        // bare Button with no SelectableScaleWidget) collapses the hand to zero scale and stops it
+        // catching clicks, so it can't sit over and block that target.
+        bool hasScale = selected.GetComponent<SelectableScaleWidget>() != null;
+
         SetVisible(true);
+        SetInteractable(hasScale);
+        rectTransform.localScale = hasScale ? _baseScale : Vector3.zero;
         rectTransform.position = target.position;
     }
 
@@ -63,5 +73,11 @@ public class SelectionHandWidget : MonoBehaviour
     {
         if (image != null)
             image.enabled = visible;
+    }
+
+    private void SetInteractable(bool interactable)
+    {
+        if (image != null)
+            image.raycastTarget = interactable;
     }
 }
