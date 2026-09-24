@@ -1,0 +1,3 @@
+# Regenerable outputs of the build scripts (preview renders, .blend snapshots) - not versioned.
+*.png
+*.blend
