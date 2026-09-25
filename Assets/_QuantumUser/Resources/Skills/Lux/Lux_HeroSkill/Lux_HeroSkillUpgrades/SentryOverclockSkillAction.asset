@@ -20,8 +20,8 @@ MonoBehaviour:
   DisplayName: Overclock
   RankDescriptions:
   - "Sentry gains <color=#FD3971>+25%</color> Fire Rate."
-  - "Fire Rate increases to <color=#FD3971>+40%</color> and Sentry lifetime increases by <color=#FD3971>2s</color>."
-  - "Fire Rate increases to <color=#FD3971>+50%</color>. During its final <color=#FD3971>3s</color>, Sentry gains an additional <color=#FD3971>+100%</color> Fire Rate."
+  - "Sentry gains <color=#FD3971>+40%</color> Fire Rate and <color=#FD3971>+2s</color> lifetime."
+  - "Sentry gains <color=#FD3971>+50%</color> Fire Rate and <color=#FD3971>+2s</color> lifetime. In its final <color=#FD3971>3s</color>, it gains another <color=#FD3971>+100%</color> Fire Rate."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

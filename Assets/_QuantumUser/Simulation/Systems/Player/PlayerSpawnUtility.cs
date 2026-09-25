@@ -11,7 +11,7 @@ namespace Quantum
         // physics broadphase until the next physics step - spawning a player (gravity/KCC already
         // active) immediately can let them fall through geometry that technically exists but isn't
         // collidable yet. Waiting this long after LevelGenerated flips true gives it time to settle.
-        private static readonly FP SpawnDelaySeconds = FP._1;
+        public static readonly FP SpawnDelaySeconds = FP._1;
 
         // All players share the same PlayerSpawnPosition - spread them around it so they don't
         // spawn stacked on top of each other.

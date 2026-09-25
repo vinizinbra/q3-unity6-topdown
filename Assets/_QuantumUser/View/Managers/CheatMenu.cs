@@ -101,7 +101,11 @@ namespace QuantumUser.View
         private GameObject _sidePanelGo;
         private CheatMenuDragHandle _dragHandle;
 
-        private const float WindowWidth = 360f;
+        private const float WindowWidth = 480f;
+
+        // Buttons per row in every ButtonGrid section (Flow/Player/Grant). Long labels auto-shrink
+        // (see CreateButton) rather than wrapping, so bumping this only needs WindowWidth widened.
+        private const int GridColumns = 3;
 
         private CheatMenuTimeScaleEnforcer _enforcer;
 
@@ -233,12 +237,18 @@ namespace QuantumUser.View
             CreateButton(speedRow, "10x", () => SetTimeScale(10f));
 
             CreateSectionLabel(rt, "Flow");
-            Row(rt, ("Pause", CheatActionKind.Pause), ("Continue", CheatActionKind.Continue));
-            Row(rt, ("+30s", CheatActionKind.Advance30Sec), ("+1 min", CheatActionKind.Advance1Min));
-            Row(rt, ("Advance Phase", CheatActionKind.AdvancePhase), ("Next Breathing", CheatActionKind.AdvanceToNextBreathing));
-            CreateButton(rt, "Level Up", () => Send(CheatActionKind.LevelUp));
-            BreathingRow(rt, ("Breath 1 (Lv6)", 1), ("Breath 2 (Lv12)", 2));
-            BreathingRow(rt, ("Breath 3 (Lv15)", 3), ("Breath 4 (Lv20)", 4));
+            ButtonGrid flow = new ButtonGrid(rt, GridColumns);
+            GridButton(flow, "Pause", CheatActionKind.Pause);
+            GridButton(flow, "Continue", CheatActionKind.Continue);
+            GridButton(flow, "Level Up", CheatActionKind.LevelUp);
+            GridButton(flow, "+30s", CheatActionKind.Advance30Sec);
+            GridButton(flow, "+1 min", CheatActionKind.Advance1Min);
+            GridButton(flow, "Advance Phase", CheatActionKind.AdvancePhase);
+            GridButton(flow, "Next Breathing", CheatActionKind.AdvanceToNextBreathing);
+            BreathingButton(flow, "Breath 1 (Lv6)", 1);
+            BreathingButton(flow, "Breath 2 (Lv12)", 2);
+            BreathingButton(flow, "Breath 3 (Lv15)", 3);
+            BreathingButton(flow, "Breath 4 (Lv20)", 4);
 
             // One-click combo (see CheatActionKind.SetupTestRun): jumps to Breath 4 (Lv20, the last
             // Breathing phase) same as the button above, but also auto-resolves every level-up
@@ -246,7 +256,8 @@ namespace QuantumUser.View
             // minimap, grants 5000 coins, and opens a real ChooseWeapon card screen immediately plus
             // a Rift Mutation one right after it (both actually pickable, not auto-resolved) - a fast
             // "midgame test setup" instead of assembling it by hand every time.
-            CreateButton(rt, "Setup Test Run (Ph.4)", () => Send(CheatActionKind.SetupTestRun, amount: 4));
+            CreateButton(flow.Next(), "Setup Test Run (Ph.4)", () => Send(CheatActionKind.SetupTestRun, amount: 4));
+            flow.Close();
 
             // Runtime counterpart to the Editor-only "RiftRaiders/Disable Upgrade Screen Animation"
             // main-toolbar button - flips one static flag (UpgradeScreenDebugState.SkipAnimations)
@@ -281,32 +292,40 @@ namespace QuantumUser.View
             }, out _);
 
             CreateSectionLabel(rt, "Player");
-            Row(rt, ("Buy Accessory", CheatActionKind.BuyAccessory), ("Heal Full", CheatActionKind.HealFull));
-            Row(rt, ("God Mode", CheatActionKind.ToggleGodMode), ("Revive All", CheatActionKind.Revive));
-            Row(rt, ("Kill All Enemies", CheatActionKind.KillAllEnemies), ("Open Chest", CheatActionKind.OpenChest));
-            CreateButton(rt, "+1000 Coins", () => Send(CheatActionKind.GrantCoins, amount: 1000));
-            CreateButton(rt, "Spend 500 Coins", () => Send(CheatActionKind.SpendCoins, amount: 500));
-            Row(rt, ("Damage = 1", CheatActionKind.SetDamageToOne), ("Reset Damage", CheatActionKind.ResetDamage));
-            CreateButton(rt, "Toggle Auto-Shoot", () => Send(CheatActionKind.ToggleManualFire));
+            ButtonGrid player = new ButtonGrid(rt, GridColumns);
+            GridButton(player, "Buy Accessory", CheatActionKind.BuyAccessory);
+            GridButton(player, "Heal Full", CheatActionKind.HealFull);
+            GridButton(player, "God Mode", CheatActionKind.ToggleGodMode);
+            GridButton(player, "Revive All", CheatActionKind.Revive);
+            GridButton(player, "Kill All Enemies", CheatActionKind.KillAllEnemies);
+            GridButton(player, "Open Chest", CheatActionKind.OpenChest);
+            CreateButton(player.Next(), "+1000 Coins", () => Send(CheatActionKind.GrantCoins, amount: 1000));
+            CreateButton(player.Next(), "Spend 500 Coins", () => Send(CheatActionKind.SpendCoins, amount: 500));
+            GridButton(player, "Damage = 1", CheatActionKind.SetDamageToOne);
+            GridButton(player, "Reset Damage", CheatActionKind.ResetDamage);
+            GridButton(player, "Toggle Auto-Shoot", CheatActionKind.ToggleManualFire);
 
             // Player 2 = 0-based PlayerRef index 1 (see CheatActionKind.DamagePlayer) - fixed 50
             // damage per click, same "one hardcoded value per button" shape as "+1000 Coins" above.
-            CreateButton(rt, "Damage P2 (-50)", () => Send(CheatActionKind.DamagePlayer, assetId: 1, amount: 50));
+            CreateButton(player.Next(), "Damage P2 (-50)", () => Send(CheatActionKind.DamagePlayer, assetId: 1, amount: 50));
 
-            CreateButton(rt, "Reveal Map", () => Send(CheatActionKind.RevealMap));
+            GridButton(player, "Reveal Map", CheatActionKind.RevealMap);
 
             // Sim-only (see CheatActionKind.BecomeBot) - adds BotBrain to the sender's own entity so
             // BotInputSystem drives it from the next tick, but the camera/HUD/audio stay exactly as
             // they were (those only resolve RuntimePlayer.IsBot once, at spawn) - so you keep
             // watching through your own camera while the bot AI (follow/solo wander/Store/combat)
             // pilots your hero. Doesn't survive a death/respawn - press it again after respawning.
-            CreateButton(rt, "Become Bot", () => Send(CheatActionKind.BecomeBot));
+            GridButton(player, "Become Bot", CheatActionKind.BecomeBot);
+            player.Close();
 
             CreateSectionLabel(rt, "Grant");
-            PickerButton(rt, "Get Weapon", Picker.Weapon);
-            PickerButton(rt, "Get Rift Mutation", Picker.Mutation);
-            PickerButton(rt, "Grant Global Upgrade", Picker.GlobalUpgrade);
-            PickerButton(rt, "Grant Hero Upgrade", Picker.HeroUpgrade);
+            ButtonGrid grant = new ButtonGrid(rt, GridColumns);
+            PickerButton(grant.Next(), "Get Weapon", Picker.Weapon);
+            PickerButton(grant.Next(), "Get Rift Mutation", Picker.Mutation);
+            PickerButton(grant.Next(), "Grant Global Upgrade", Picker.GlobalUpgrade);
+            PickerButton(grant.Next(), "Grant Hero Upgrade", Picker.HeroUpgrade);
+            grant.Close();
         }
 
         private void BuildHeader(Transform parent)
@@ -363,20 +382,54 @@ namespace QuantumUser.View
             _enforcer.Scale = _timeScale;
         }
 
-        private void Row(Transform parent, (string label, CheatActionKind action) a, (string label, CheatActionKind action) b)
+        // Flows buttons left-to-right into rows of `columns`, opening a new CreateRow whenever the
+        // current one fills. Close() pads the last partial row with invisible spacers so its buttons
+        // keep the same width as the full rows above instead of stretching across the whole window.
+        private class ButtonGrid
         {
-            Transform row = CreateRow(parent);
-            CreateButton(row, a.label, () => Send(a.action));
-            CreateButton(row, b.label, () => Send(b.action));
+            private readonly Transform _parent;
+            private readonly int _columns;
+            private Transform _row;
+            private int _count;
+
+            public ButtonGrid(Transform parent, int columns)
+            {
+                _parent = parent;
+                _columns = columns;
+            }
+
+            public Transform Next()
+            {
+                if (_row == null || _count == _columns)
+                {
+                    _row = CreateRow(_parent);
+                    _count = 0;
+                }
+
+                _count++;
+                return _row;
+            }
+
+            public void Close()
+            {
+                if (_row == null)
+                    return;
+
+                for (; _count < _columns; _count++)
+                    CreateRect(_row, "Spacer").gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+            }
+        }
+
+        private void GridButton(ButtonGrid grid, string label, CheatActionKind action)
+        {
+            CreateButton(grid.Next(), label, () => Send(action));
         }
 
         // Jumps straight to the Nth Breathing phase and tops the run's XP up to that phase's paired
         // level in one command - see CheatSystem.JumpToBreathing for the level pairing/why.
-        private void BreathingRow(Transform parent, (string label, int n) a, (string label, int n) b)
+        private void BreathingButton(ButtonGrid grid, string label, int n)
         {
-            Transform row = CreateRow(parent);
-            CreateButton(row, a.label, () => Send(CheatActionKind.JumpToBreathing, amount: a.n));
-            CreateButton(row, b.label, () => Send(CheatActionKind.JumpToBreathing, amount: b.n));
+            CreateButton(grid.Next(), label, () => Send(CheatActionKind.JumpToBreathing, amount: n));
         }
 
         private void PickerButton(Transform parent, string label, Picker picker)
@@ -797,7 +850,13 @@ namespace QuantumUser.View
             if (onClick != null)
                 btn.onClick.AddListener(() => onClick());
 
-            CreateStretchedLabel(CreateRect(rt, "Text"), label, 17, Color.white, FontStyles.Normal, TextAlignmentOptions.Center);
+            // Auto-sized down (never up past 17) so long labels still fit a 3-column grid cell.
+            TMP_Text text = CreateStretchedLabel(CreateRect(rt, "Text"), label, 17, Color.white, FontStyles.Normal, TextAlignmentOptions.Center);
+            text.enableAutoSizing = true;
+            text.fontSizeMin = 11;
+            text.fontSizeMax = 17;
+            text.enableWordWrapping = false;
+            text.margin = new Vector4(4, 0, 4, 0);
 
             LayoutElement le = rt.gameObject.AddComponent<LayoutElement>();
             le.minHeight = 36;

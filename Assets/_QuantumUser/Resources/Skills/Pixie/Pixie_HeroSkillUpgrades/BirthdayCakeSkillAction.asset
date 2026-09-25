@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: 1776201555, guid: b217254d41b6945b1873986186a25786, type: 3}
   DisplayName: Birthday Cake
   RankDescriptions:
-  - "After landing, Bunny Bomb becomes a Decoy for <color=#FD3971>1s</color> before exploding."
-  - "Decoy duration increases to <color=#FD3971>1.5s</color> and explosion radius increases by <color=#FD3971>25%</color>."
-  - "The explosion also deals <color=#FD3971>+30%</color> Damage."
+  - "A landed Bunny Bomb becomes a Decoy for <color=#FD3971>1s</color> before exploding."
+  - "A landed Bunny Bomb becomes a Decoy for <color=#FD3971>1.5s</color> before exploding with <color=#FD3971>+25%</color> radius."
+  - "A landed Bunny Bomb becomes a Decoy for <color=#FD3971>1.5s</color> before exploding with <color=#FD3971>+25%</color> radius and <color=#FD3971>+30%</color> Damage."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

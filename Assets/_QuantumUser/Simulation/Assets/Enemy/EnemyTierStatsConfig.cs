@@ -47,6 +47,17 @@ namespace Quantum
         // CanBeInterruptedByKnockback is true.
         public bool CanBeInterruptedByKnockback = true;
         public FP KnockbackRecoveryTime = FP._0_25;
+
+        // How long every projectile hit stops this tier from walking (Enemy.HitStaggerTimer -
+        // movement only, attacks/windups untouched). 0 = never staggered by hits.
+        public FP HitStaggerDuration = FP._0_10;
+
+        // Seconds after a flinch (knockback window or projectile hit stagger) ends before a hit
+        // stagger or cosmetic push (canInterrupt=false) may open another - Enemy.StaggerImmuneTimer. Under
+        // sustained fire an enemy flinches for KnockbackRecoveryTime, then walks/attacks for this
+        // long, instead of being held in place by a high-fire-rate weapon. Real knockback
+        // (canInterrupt true) ignores it.
+        public FP StaggerCooldown = FP.FromString("0.4");
     }
 
     // Global per-tier baseline for stats that would otherwise need hand-tuning on every single

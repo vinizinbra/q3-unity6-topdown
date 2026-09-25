@@ -186,8 +186,8 @@ namespace Quantum
             WeaponTalentRarityTuning tuning = config.ResolveTalentRarityTuning(weaponTalentLevel);
 
             // The offer's own weapon, not the buyer's current one - these perks are rolled onto the
-            // weapon being sold. See WeaponPerkData.SupportsFireType.
-            WeaponFireType fireType = WeaponGenerator.ResolveFireType(f, weaponRef);
+            // weapon being sold. See WeaponPerkData.SupportsWeapon.
+            WeaponPerkTarget target = WeaponPerkTarget.Resolve(f, weaponRef);
 
             List<WeightedDrawUtility.Candidate<AssetRef<WeaponPerkData>>> candidates = new List<WeightedDrawUtility.Candidate<AssetRef<WeaponPerkData>>>();
 
@@ -200,7 +200,7 @@ namespace Quantum
 
                 WeaponPerkData data = f.FindAsset(perkRef);
 
-                if (data.SupportsFireType(fireType) == false)
+                if (data.SupportsWeapon(target) == false)
                     continue;
 
                 int weight = tuning.GetWeight(data.Rarity);

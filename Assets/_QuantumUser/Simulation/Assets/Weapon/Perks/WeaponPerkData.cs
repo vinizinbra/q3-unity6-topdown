@@ -18,13 +18,19 @@ namespace Quantum
 
         public abstract void Apply(Frame f, EntityRef owner, Weapon* weapon);
 
-        // Whether this perk can express itself at all on a weapon of the given fire type - checked
-        // by every draw site (WeaponGenerator/LevelUpUtility/StoreUtility/BlacksmithUtility) so a
-        // perk that would do nothing is never offered rather than being a wasted pick. Almost every
-        // perk either bakes into Weapon's own stats or reacts to a hit and works on both fire types,
-        // so the default is true; SplitShotWeaponPerkData is the one that overrides it - see there
-        // for why it, unlike Piercing Rounds/Ricochet/Critical Rebound, has no hitscan reading.
-        public virtual bool SupportsFireType(WeaponFireType fireType) => true;
+        // Whether this perk can express itself at all on the given weapon - checked by every draw
+        // site (WeaponGenerator/LevelUpUtility/StoreUtility/BlacksmithUtility, all through
+        // WeaponPerkEligibility) so a perk that would do nothing is never offered rather than being a
+        // wasted pick. Almost every perk either bakes into Weapon's own stats or reacts to a hit and
+        // works everywhere, so the default is true; the per-contact perks that only DirectHitData/
+        // hitscan read (see WeaponPerkTarget.HasDirectHit) and Split Shot override it.
+        public virtual bool SupportsWeapon(in WeaponPerkTarget target) => true;
+
+        // True when `owned`, already on the weapon, makes this perk a dead pick - Infinite Echo
+        // already echoes every shot Echo Chamber would, and a second Element Infusion just overwrites
+        // the first. Checked in both directions by WeaponPerkEligibility, so only one side of a pair
+        // needs to override it.
+        public virtual bool ConflictsWith(WeaponPerkData owned) => false;
 
         public override string GetDescription() => GetFormattedDescription();
     }

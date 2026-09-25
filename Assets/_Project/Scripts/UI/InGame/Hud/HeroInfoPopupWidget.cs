@@ -23,6 +23,15 @@ using UnityEngine;
 // PartyHistoryUpgradeContainer.
 public class HeroInfoPopupWidget : QuantumGlobalMonoBehaviour
 {
+    // Named Input Manager button (ProjectSettings/InputManager.asset, default "joystick button 6" -
+    // Select/Back) held alongside Tab - re-point it in Project Settings > Input Manager if it doesn't
+    // match Select on a given pad. Same pattern as InMatchPopupManager's OpenInMatchSettings (Start).
+    private static readonly string OpenHeroInfo = Quantum.GamepadInputNames.Get("OpenHeroInfo");
+
+    // Android Back (KeyCode.Escape) toggles instead of holds: a pad's Select arrives as Back on
+    // Android (MOGA Pro 2) and fires down+up in the same frame, so GetKey never reads it as held.
+    private bool _toggledOpen;
+
     [SerializeField] private GameObject root;
 
     [Header("Hero")]
@@ -114,7 +123,10 @@ public class HeroInfoPopupWidget : QuantumGlobalMonoBehaviour
         // Update()) since QuantumGlobalMonoBehaviour already owns Update() itself and forwards
         // here; redeclaring Update() in a subclass fights that base wrapper. Fully-qualified:
         // Quantum.Input (this file's "using Quantum;") also has this name.
-        bool held = UnityEngine.Input.GetKey(KeyCode.Tab);
+        if (Application.isMobilePlatform && UnityEngine.Input.GetKeyDown(KeyCode.Escape))
+            _toggledOpen = !_toggledOpen;
+
+        bool held = _toggledOpen || UnityEngine.Input.GetKey(KeyCode.Tab) || UnityEngine.Input.GetButton(OpenHeroInfo);
 
         if (held != _shown)
         {

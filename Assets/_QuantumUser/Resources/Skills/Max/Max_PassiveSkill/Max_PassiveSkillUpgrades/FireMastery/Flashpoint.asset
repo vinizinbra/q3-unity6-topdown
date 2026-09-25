@@ -22,8 +22,8 @@ MonoBehaviour:
   <MaxRank>k__BackingField: 3
   RankDescriptions:
   - "Gain <color=#FD3971>+10%</color> Crit Chance against Burning enemies."
-  - "Hits against Burning enemies can trigger a <color=#FD3971>3m</color> explosion dealing <color=#FD3971>50%</color> Damage."
-  - "Burning enemies below <color=#FD3971>15%</color> Health are executed. Elites and Bosses take <color=#FD3971>+25%</color> Damage instead."
+  - "Gain <color=#FD3971>+10%</color> Crit Chance against Burning enemies. Hitting them can trigger a <color=#FD3971>3m</color> explosion dealing <color=#FD3971>50%</color> Damage."
+  - "<color=#FD3971>+10%</color> Crit Chance vs Burning enemies, and hits can trigger a <color=#FD3971>3m</color> explosion (<color=#FD3971>50%</color> Damage). Burning enemies below <color=#FD3971>15%</color> Health are executed; Elites and Bosses take <color=#FD3971>+25%</color> Damage instead."
   CriticalChanceBonusVsBurning:
     RawValue: 6554
   ExplosionRadius:

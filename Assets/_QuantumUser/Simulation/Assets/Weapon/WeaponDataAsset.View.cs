@@ -44,6 +44,22 @@ namespace Quantum
         public Vector3 ProjectileSparkTrailScale = Vector3.one;
         [Tooltip("Overrides the spark trail particle's Main.Start Lifetime (seconds a spawned particle lives before fading). 0 (the default) leaves its own authored lifetime untouched.")]
         public float ProjectileSparkTrailLifetimeOverride;
+        [Tooltip("Overrides the spark trail particle's Emission.Rate over Distance (particles spawned per world unit travelled - needs the particle's Simulation Space set to World). 0 (the default) leaves its own authored rate untouched.")]
+        public float ProjectileSparkTrailRateOverDistanceOverride;
+
+        [Tooltip("Enables the projectile prefab's ribbon trail (ProjectileView.trailRenderer) and applies the settings below. Off (trail hidden) by default. No-op on a prefab with no TrailRenderer assigned.")]
+        public bool EnableProjectileTrail;
+        [Tooltip("Seconds a trail point lasts before it disappears (TrailRenderer.time) - i.e. how long the ribbon is. 0 leaves the prefab's own authored time untouched.")]
+        public float ProjectileTrailTime;
+        [Tooltip("Trail thickness (TrailRenderer.widthMultiplier) - scales the prefab's own authored width curve, so its taper shape is kept. 0 leaves the prefab's own authored width untouched.")]
+        public float ProjectileTrailWidth;
+        [Tooltip("Colour along the ribbon, head (left) to tail (right) - TrailRenderer.colorGradient. Fade alpha to 0 on the right for a soft tail. HDR, so values above 1 bloom.")]
+        [GradientUsage(true)]
+        public Gradient ProjectileTrailColor = new Gradient
+        {
+            colorKeys = new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+            alphaKeys = new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0f, 1f) },
+        };
 
         [Tooltip("Enables ProjectileDataVisualsView's glow particle slot and tints it. Off (no glow) by default.")]
         public bool EnableProjectileGlow;

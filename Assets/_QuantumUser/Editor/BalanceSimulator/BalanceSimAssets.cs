@@ -100,6 +100,23 @@ namespace QuantumUser.Editor.BalanceSimulator
             return missing.Count == 0;
         }
 
+        // Editor-side twin of WeaponPerkTarget.Resolve(Frame, ...) - same Frame-free From() half.
+        public WeaponPerkTarget ResolvePerkTarget(WeaponDataAsset data)
+        {
+            if (data == null)
+                return WeaponPerkTarget.Default;
+
+            ProjectileHitData hit = null;
+
+            if (data.FireType == WeaponFireType.Projectile)
+            {
+                ProjectileDataAsset projectile = Resolve(data.ProjectileData);
+                hit = projectile != null ? Resolve(projectile.Hit) : null;
+            }
+
+            return WeaponPerkTarget.From(data, hit);
+        }
+
         public T Resolve<T>(AssetRef<T> assetRef) where T : AssetObject
         {
             if (assetRef.Id.IsValid == false)

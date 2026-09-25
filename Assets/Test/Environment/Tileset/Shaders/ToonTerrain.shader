@@ -24,6 +24,14 @@ Shader "RiftRaiders/Test/ToonTerrain"
         _SurfaceDarkColor ("Surface Dark Color", Color) = (0.6, 0.66, 0.22, 1)
         _SurfaceScale ("Surface World Size (m per tile)", Float) = 4
 
+        [Header(Raised Surface (height tint))]
+        // Surfaces above Raised From Y use their own Light/Dark pair (e.g. walkable floor = stone, raised
+        // blocks = moss) so height reads at a glance. Strength 0 = off.
+        _RaisedLightColor ("Raised Surface Light Color", Color) = (0.2, 0.55, 0.5, 1)
+        _RaisedDarkColor ("Raised Surface Dark Color", Color) = (0.12, 0.35, 0.36, 1)
+        _RaisedFromY ("Raised From World Y", Float) = 1.5
+        _RaisedStrength ("Raised Tint Strength", Range(0, 1)) = 0
+
         [Header(Wall)]
         _WallTex ("Wall Texture (GRAYSCALE: white = Light, black = Dark)", 2D) = "white" {}
         _WallLightColor ("Wall Light Color", Color) = (0.39, 0.28, 0.49, 1)
@@ -95,6 +103,10 @@ Shader "RiftRaiders/Test/ToonTerrain"
             float4 _WallTex_ST;
             half4 _SurfaceLightColor;
             half4 _SurfaceDarkColor;
+            half4 _RaisedLightColor;
+            half4 _RaisedDarkColor;
+            float _RaisedFromY;
+            half _RaisedStrength;
             float _SurfaceScale;
             half4 _GradientBottomColor;
             half4 _GradientTopColor;
@@ -233,7 +245,9 @@ Shader "RiftRaiders/Test/ToonTerrain"
                 [branch] if (w > 0.5)
                 {
                     half4 surfSample = SAMPLE_TEXTURE2D(_SurfaceTex, sampler_SurfaceTex, P.xz / _SurfaceScale);
-                    half3 surface = lerp(_SurfaceDarkColor.rgb, _SurfaceLightColor.rgb, surfSample.r);
+                    half raised = saturate((P.y - _RaisedFromY) * 8.0) * _RaisedStrength;
+                    half3 surface = lerp(lerp(_SurfaceDarkColor.rgb, _RaisedDarkColor.rgb, raised),
+                                         lerp(_SurfaceLightColor.rgb, _RaisedLightColor.rgb, raised), surfSample.r);
                     float fade = input.data.y + (surfSample.a - 0.5) * _EdgeFadeNoise * saturate(input.data.y * 4.0);
                     half inward = smoothstep(_EdgeFadeStart, max(_EdgeFadeEnd, _EdgeFadeStart + 1e-3), fade);
                     terrain = lerp(surface, lerp(_FadeColor.rgb, surface, inward), _FadeColor.a);

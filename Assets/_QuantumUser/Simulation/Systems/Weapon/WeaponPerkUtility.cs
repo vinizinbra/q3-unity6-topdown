@@ -53,7 +53,8 @@ namespace Quantum
         // across a full randomized circle instead - same idiom AreaHitData's own Pixie Cluster Bomb
         // bomblets already use - since a blast has no meaningful travel direction to fan around.
         public static void SpawnSplitProjectiles(Frame f, EntityRef owner, DamageSource source, ElementType element,
-            FP damage, int spawnDepth, FPVector3 point, FPVector3? heading, Weapon* weapon, WeaponPostImpactProcs* procs)
+            FP damage, int spawnDepth, FPVector3 point, FPVector3? heading, Weapon* weapon, WeaponPostImpactProcs* procs,
+            EntityRef splitFrom = default)
         {
             if (procs->SplitShotProjectileOverride.IsValid == false)
                 return;
@@ -134,6 +135,9 @@ namespace Quantum
                 if (f.Unsafe.TryGetPointer<Projectile>(child, out var childProjectile) == true)
                 {
                     childProjectile->MaxTravelDistance = maxTravelDistance;
+
+                    // Spawned on splitFrom's surface - see DirectHitData.SpawnSplitProjectiles.
+                    childProjectile->LastHit = splitFrom;
                 }
             }
         }

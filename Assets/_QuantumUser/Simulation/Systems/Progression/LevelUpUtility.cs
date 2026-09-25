@@ -331,21 +331,13 @@ namespace Quantum
             WeaponPerkPoolData pool = f.FindAsset(config.WeaponPerkPool);
             f.Unsafe.TryGetPointer<Weapon>(entity, out var weapon);
 
-            // Perks that can do nothing on THIS weapon's fire type are excluded for the same reason
-            // an already-equipped one is: it would just be a dead card. See
-            // WeaponPerkData.SupportsFireType.
-            WeaponFireType fireType = weapon != null
-                ? WeaponGenerator.ResolveFireType(f, weapon->WeaponData)
-                : WeaponFireType.Projectile;
-
+            // Already on the weapon, can do nothing on THIS weapon, or made redundant by a perk it
+            // already has - all just dead cards. See WeaponPerkEligibility.
             for (int i = 0; i < pool.Perks.Count; i++)
             {
                 AssetRef<WeaponPerkData> perkRef = pool.Perks[i];
 
-                if (weapon != null && AlreadyEquipped(weapon, perkRef) == true)
-                    continue;
-
-                if (perkRef.IsValid == true && f.FindAsset(perkRef).SupportsFireType(fireType) == false)
+                if (WeaponPerkEligibility.IsEligible(f, perkRef, weapon) == false)
                     continue;
 
                 AddCandidate(f, config, LevelUpPoolKind.WeaponPerk, new AssetRef<UpgradeData>(perkRef.Id), default, candidates, ref totalWeight);
@@ -612,7 +604,7 @@ namespace Quantum
             if (perkCount > 0 && config.WeaponPerkPool.IsValid == true)
             {
                 int drawn = WeaponGenerator.DrawDistinctPerks(f, config.WeaponPerkPool, perkCount, option.RolledPerks,
-                    WeaponGenerator.ResolveFireType(f, weaponRef));
+                    WeaponPerkTarget.Resolve(f, weaponRef));
                 option.RolledPerkCount = (byte)drawn;
             }
 

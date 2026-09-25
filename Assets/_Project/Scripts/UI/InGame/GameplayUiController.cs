@@ -79,7 +79,7 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
 
     private void Start()
     {
-        windowManager.ShowWindow<LoadingWindow>();
+        windowManager.ShowWindow<EmptyWindow>();
 
         if (settingsButton != null)
             settingsButton.onClick.AddListener(OpenSettings);
@@ -486,11 +486,16 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
                 : default;
         }
 
-        string subtitle = frame.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats) == true
-            ? $"YOUR COINS: {stats->Coins.AsFloat:0}"
-            : null;
+        window.RefreshStore("STORE", foodData, weaponData, BuildCoinWalletSubtitle(frame, entity));
+    }
 
-        window.RefreshStore("STORE", foodData, weaponData, subtitle);
+    // "YOUR COINS: 120 <coin icon>" - the Store/Blacksmith subtitle. The trailing TMP sprite tag
+    // resolves against the subtitle text's sprite asset (glyph named "COIN").
+    private static unsafe string BuildCoinWalletSubtitle(Frame frame, EntityRef entity)
+    {
+        return frame.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats) == true
+            ? $"YOUR COINS: {stats->Coins.AsFloat:0} <sprite name=\"COIN\">"
+            : null;
     }
 
     // Blacksmith's own screen - a single homogeneous UpgradeCardWidget family, structurally
@@ -511,7 +516,7 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
                 : default;
         }
 
-        window.Refresh("BLACKSMITH", 0f, cardData, null, subtitle: "CHOOSE A PERK TO ADD", allowCancel: true, allowReroll: false);
+        window.Refresh("BLACKSMITH", 0f, cardData, null, subtitle: BuildCoinWalletSubtitle(frame, entity), allowCancel: true, allowReroll: false);
     }
 
     // Store food/utility card - mirrors BuildSacrificeCardData's own shape (reads the offer asset's
@@ -1157,17 +1162,15 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
 
     private void CloseUpgradeScreen()
     {
-        // VERIFY IN EDITOR: GameplayWindow holds the per-player HUD widgets and looks like the
-        // intended "back to normal play" window, but nothing in code shows it explicitly today
-        // (it may just be the scene's default-active window under this WindowManager) - adjust
-        // this call if that's not the case.
+        // EmptyWindow is the game scene's "no screen open" state - the HUD itself lives outside
+        // this WindowManager, so this is really just the sweep that hides every other window.
         //
-        // This ALSO hides every choiceWindows[] instance, this player's own included, regardless of
+        // This hides every choiceWindows[] instance, this player's own included, regardless of
         // whether IT was the one that triggered this Level-Up (WindowManager.ShowWindow<T>() hides
         // every window not of type T) - if this player was mid-Cursed-Rift/Store/Blacksmith,
         // UpdatePoiWindow re-shows their own screen again next tick (see its own comment) since
         // their own interaction component was never touched by any of this.
-        windowManager.ShowWindow<GameplayWindow>();
+        windowManager.ShowWindow<EmptyWindow>();
 
         // Stops the ramp-down above if it hadn't finished yet (e.g. a Chest closing right after
         // a level-up opened) - Stop() cancels its OnComplete too, so a stale ShowWindow<

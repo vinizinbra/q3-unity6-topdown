@@ -77,9 +77,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Juggernaut rewards staying on the move - Charge builds faster, and a discharge no longer drains it all.";
                 asset.RankDescriptions = new[]
                 {
-                    "Momentum builds <color=#FD3971>25%</color> faster during Juggernaut. Gain <color=#FD3971>+10%</color> Move Speed while Charged. Discharge leaves <color=#FD3971>30%</color> Charge.",
-                    "Momentum builds <color=#FD3971>40%</color> faster. Gain <color=#FD3971>+20%</color> Move Speed while Charged. Discharge leaves <color=#FD3971>60%</color> Charge.",
-                    "Gain <color=#FD3971>+30%</color> Move Speed while Charged. Discharge costs no Charge, and Juggernaut won't end while fully Charged.",
+                    "During Juggernaut, Momentum builds <color=#FD3971>25%</color> faster. While Charged, gain <color=#FD3971>+10%</color> Move Speed. Discharge keeps <color=#FD3971>30%</color> of your Charge.",
+                    "During Juggernaut, Momentum builds <color=#FD3971>40%</color> faster. While Charged, gain <color=#FD3971>+20%</color> Move Speed. Discharge keeps <color=#FD3971>60%</color> of your Charge.",
+                    "During Juggernaut, Momentum builds <color=#FD3971>40%</color> faster. While Charged, gain <color=#FD3971>+30%</color> Move Speed. Discharge costs no Charge, and Juggernaut won't end while fully Charged.",
                 };
                 asset.GenerationMultiplier = new[] { FP.FromString("1.25"), FP.FromString("1.40"), FP.FromString("1.40") };
                 asset.ChargedMoveSpeedBonus = new[] { FP._0_10, FP._0_20, FP.FromString("0.30") };
@@ -111,9 +111,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Juggernaut's closing shockwave grows with every enemy you strike during the channel.";
                 asset.RankDescriptions = new[]
                 {
-                    "Each enemy hit by Discharge makes the closing shockwave <color=#FD3971>15%</color> stronger, up to <color=#FD3971>5</color> enemies.",
-                    "Each enemy hit also makes the shockwave <color=#FD3971>5%</color> larger, up to <color=#FD3971>5</color> enemies.",
-                    "At <color=#FD3971>5</color> enemies hit, the shockwave repeats <color=#FD3971>0.5s</color> later for <color=#FD3971>60%</color> of its Damage.",
+                    "Each enemy hit by Discharge makes Juggernaut's closing shockwave <color=#FD3971>+15%</color> stronger, up to <color=#FD3971>5</color> enemies.",
+                    "Each enemy hit by Discharge makes Juggernaut's closing shockwave <color=#FD3971>+15%</color> stronger and <color=#FD3971>+5%</color> larger, up to <color=#FD3971>5</color> enemies.",
+                    "Each enemy hit by Discharge makes Juggernaut's closing shockwave <color=#FD3971>+15%</color> stronger and <color=#FD3971>+5%</color> larger, up to <color=#FD3971>5</color>. At <color=#FD3971>5</color> enemies, it repeats <color=#FD3971>0.5s</color> later for <color=#FD3971>60%</color> Damage.",
                 };
                 asset.StackDamagePercent = new[] { FP.FromString("0.15"), FP.FromString("0.15"), FP.FromString("0.15") };
                 asset.StackRadiusPercent = new[] { FP._0, FP.FromString("0.05"), FP.FromString("0.05") };
@@ -132,9 +132,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Enemies your discharge launches no longer land safely - they take damage, get Stunned, and crack the ground.";
                 asset.RankDescriptions = new[]
                 {
-                    "Launched enemies take <color=#FD3971>30%</color> Juggernaut Skill Damage and are Stunned for <color=#FD3971>0.75s</color> when they land.",
-                    "<color=#FD3971>+25%</color> Knockback. Landing Damage increases to <color=#FD3971>50%</color> and Stun increases to <color=#FD3971>1s</color>.",
-                    "Landing Damage rises to <color=#FD3971>75%</color>, Stun to <color=#FD3971>1.25s</color>. Creates a <color=#FD3971>2.5m</color> shockwave (<color=#FD3971>40%</color> Damage, <color=#FD3971>1s</color> Stun). <color=#FD3971>+40%</color> Damage to Stunned.",
+                    "Enemies launched by Discharge take <color=#FD3971>30%</color> Juggernaut Skill Damage and are Stunned for <color=#FD3971>0.75s</color> when they land.",
+                    "Discharge has <color=#FD3971>+25%</color> Knockback. Launched enemies take <color=#FD3971>50%</color> Juggernaut Skill Damage and are Stunned for <color=#FD3971>1s</color> when they land.",
+                    "Discharge has <color=#FD3971>+25%</color> Knockback. Launched enemies take <color=#FD3971>75%</color> Juggernaut Skill Damage, are Stunned for <color=#FD3971>1.25s</color>, and land with a <color=#FD3971>2.5m</color> shockwave (<color=#FD3971>40%</color> Damage, <color=#FD3971>1s</color> Stun). Stunned enemies take <color=#FD3971>+40%</color> Damage.",
                 };
                 asset.LandingDamagePercent = new[] { FP.FromString("0.30"), FP._0_50, FP.FromString("0.75") };
                 asset.LandingStunDuration = new[] { FP.FromString("0.75"), FP._1, FP.FromString("1.25") };
@@ -151,9 +151,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Enemies intimidated by your Protector Aura are worn down before they reach you.";
                 asset.RankDescriptions = new[]
                 {
-                    "Intimidated enemies take <color=#FD3971>+25%</color> Knockback.",
-                    "Brute also deals <color=#FD3971>+20%</color> Damage to Intimidated enemies.",
-                    "Knockback bonus increases to <color=#FD3971>+50%</color> and Damage bonus to <color=#FD3971>+35%</color>.",
+                    "Enemies Intimidated by your Protector Aura take <color=#FD3971>+25%</color> Knockback.",
+                    "Enemies Intimidated by your Protector Aura take <color=#FD3971>+25%</color> Knockback and <color=#FD3971>+20%</color> Damage from Brute.",
+                    "Enemies Intimidated by your Protector Aura take <color=#FD3971>+50%</color> Knockback and <color=#FD3971>+35%</color> Damage from Brute.",
                 };
                 asset.MaxRank = 3;
                 asset.KnockbackTakenMultiplier = new[] { FP.FromString("1.25"), FP.FromString("1.25"), FP._1_50 };
@@ -166,9 +166,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Your Protector Aura becomes a safe zone - allies inside take less damage and get covered when hit.";
                 asset.RankDescriptions = new[]
                 {
-                    "Protector radius increases by <color=#FD3971>2m</color>. Allies inside gain <color=#FD3971>10%</color> Damage Reduction.",
-                    "Radius increases by <color=#FD3971>3m</color>. Allies gain <color=#FD3971>15%</color> Damage Reduction and <color=#FD3971>+30%</color> Knockback Resistance.",
-                    "When an ally inside Protector is hit, they gain an additional <color=#FD3971>20%</color> Damage Reduction for <color=#FD3971>2s</color>.",
+                    "Protector Aura radius <color=#FD3971>+2m</color>. Allies inside take <color=#FD3971>10%</color> less Damage.",
+                    "Protector Aura radius <color=#FD3971>+3m</color>. Allies inside take <color=#FD3971>15%</color> less Damage and <color=#FD3971>30%</color> less Knockback.",
+                    "Protector Aura radius <color=#FD3971>+3m</color>. Allies inside take <color=#FD3971>15%</color> less Damage and <color=#FD3971>30%</color> less Knockback. When hit, an ally takes another <color=#FD3971>20%</color> less Damage for <color=#FD3971>2s</color>.",
                 };
                 asset.MaxRank = 3;
                 asset.RadiusBonus = new[] { FP._2, FP._3, FP._3 };
@@ -189,9 +189,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Landing from a height turns Brute's weight into a weapon - throwing, slamming, and cracking enemies open.";
                 asset.RankDescriptions = new[]
                 {
-                    "Jumping down from a height creates a <color=#FD3971>3m</color> landing shockwave that damages and knocks enemies away.",
-                    "Heavy Landing deals more Damage and Knockback. Enemies knocked into walls are Stunned for <color=#FD3971>1s</color>.",
-                    "Also triggers on a same-height jump. Radius <color=#FD3971>4.5m</color>, Damage <color=#FD3971>75%</color>. Wall-Stunned enemies become Exposed (<color=#FD3971>+25%</color> Damage, <color=#FD3971>3s</color>).",
+                    "Dropping down from a height creates a <color=#FD3971>3m</color> shockwave that deals <color=#FD3971>20%</color> Damage and knocks enemies away.",
+                    "Dropping down from a height creates a <color=#FD3971>3m</color> shockwave that deals <color=#FD3971>50%</color> Damage and strong Knockback. Enemies knocked into walls are Stunned for <color=#FD3971>1s</color>.",
+                    "Dropping from a height or jumping creates a <color=#FD3971>4.5m</color> shockwave that deals <color=#FD3971>75%</color> Damage and strong Knockback. Enemies knocked into walls are Stunned for <color=#FD3971>1s</color> and take <color=#FD3971>+25%</color> Damage for <color=#FD3971>3s</color>.",
                 };
                 asset.MaxRank = 3;
 
@@ -226,9 +226,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Dash becomes a shoulder charge that bowls enemies over and punishes anyone slammed into a wall.";
                 asset.RankDescriptions = new[]
                 {
-                    "Dashing into enemies knocks them back. Enemies slammed into walls are Stunned.",
-                    "Dash collisions deal <color=#FD3971>60%</color> Juggernaut Skill Damage. Wall slams deal <color=#FD3971>+50%</color> additional Damage.",
-                    "Wall slams create a <color=#FD3971>3m</color> shockwave dealing <color=#FD3971>80%</color> Juggernaut Skill Damage and Stunning nearby enemies.",
+                    "Dashing into enemies knocks them back. Enemies slammed into walls are Stunned for <color=#FD3971>1s</color>.",
+                    "Dashing into enemies deals <color=#FD3971>60%</color> Juggernaut Skill Damage and knocks them back. Enemies slammed into walls take <color=#FD3971>+50%</color> Damage and are Stunned for <color=#FD3971>1s</color>.",
+                    "Dashing into enemies deals <color=#FD3971>60%</color> Juggernaut Skill Damage and knocks them back. Wall slams deal <color=#FD3971>+50%</color> Damage, Stun for <color=#FD3971>1s</color>, and release a <color=#FD3971>3m</color> shockwave (<color=#FD3971>80%</color> Damage, Stun).",
                 };
                 asset.KnockbackTier = KnockbackTier.Strong;
                 asset.WallCheckDistance = 2;
@@ -246,9 +246,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Dash to hand out protection - a guard that blocks the next hit and pays you back in Shield.";
                 asset.RankDescriptions = new[]
                 {
-                    "After Dashing, Brute and allies within <color=#FD3971>3m</color> gain Free Hit Guard for <color=#FD3971>2.5s</color>. The next damaging hit is completely blocked.",
-                    "Radius increases to <color=#FD3971>6m</color> and duration to <color=#FD3971>3.5s</color>. Whenever a Guard blocks a hit, Brute gains <color=#FD3971>10</color> Temporary Shield.",
-                    "A block also grants Brute <color=#FD3971>15</color> Shield and releases a <color=#FD3971>3m</color> knockback shockwave around whoever it saved.",
+                    "After Dashing, Brute and allies within <color=#FD3971>3m</color> gain a Guard for <color=#FD3971>2.5s</color> that fully blocks the next damaging hit.",
+                    "After Dashing, Brute and allies within <color=#FD3971>6m</color> gain a Guard for <color=#FD3971>3.5s</color> that fully blocks the next damaging hit. Each block gives Brute <color=#FD3971>10</color> Shield.",
+                    "After Dashing, Brute and allies within <color=#FD3971>8m</color> gain a Guard for <color=#FD3971>3.5s</color> that fully blocks the next damaging hit. Each block gives Brute <color=#FD3971>15</color> Shield and knocks back enemies within <color=#FD3971>3m</color>.",
                 };
 
                 // Grows every rank rather than plateauing at rank 2 (hand-tuned in the Inspector and

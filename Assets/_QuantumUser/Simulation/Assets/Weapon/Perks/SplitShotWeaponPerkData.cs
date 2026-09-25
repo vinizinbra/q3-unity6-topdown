@@ -40,7 +40,12 @@ namespace Quantum
         // Rounds/Ricochet/Critical Rebound all had an honest instant-hit reading and were given one;
         // "the bullet splits into more bullets" does not, so it is filtered out of the draw instead
         // of being silently dead.
-        public override bool SupportsFireType(WeaponFireType fireType) => fireType == WeaponFireType.Projectile;
+        //
+        // An AreaHitData launcher only splits when an override projectile is set (AreaHitData.
+        // Detonate has no parent ProjectileData flight to repeat), so without one it's filtered there
+        // too.
+        public override bool SupportsWeapon(in WeaponPerkTarget target) =>
+            target.FireType == WeaponFireType.Projectile && (target.HasDirectHit == true || ProjectileOverride.IsValid == true);
 
         public override void Apply(Frame f, EntityRef owner, Weapon* weapon)
         {
@@ -49,13 +54,16 @@ namespace Quantum
             procs->SplitShotCount = procs->SplitShotCount > Count ? procs->SplitShotCount : Count;
             procs->SplitShotDamageMultiplier = FPMath.Max(procs->SplitShotDamageMultiplier, DamageMultiplier);
 
-            // No Max-merge for these two - only one Split Shot source is ever meaningfully in play
-            // on a given weapon today, and "which of two different overrides wins" has no sensible
-            // answer anyway. Stamped unconditionally so WeaponPostImpactProcs always mirrors this
-            // asset's own authored value rather than sitting at its zero-initialized default.
-            procs->SplitShotProjectileOverride = ProjectileOverride;
-            procs->SplitShotLaunchAngleOverride = LaunchAngleOverride;
-            procs->SplitShotArcDegrees = SplitAngle;
+            // Only a Split Shot that actually authors an override writes one. Cluster Launcher bakes
+            // its bomblet split as a base trait, and a pool Split Shot (no override) picked on top of
+            // it at a level-up/Blacksmith used to stamp the override back to invalid - after which
+            // AreaHitData spawned no bomblets at all until the next Equip.
+            if (ProjectileOverride.IsValid == true || procs->SplitShotProjectileOverride.IsValid == false)
+            {
+                procs->SplitShotProjectileOverride = ProjectileOverride;
+                procs->SplitShotLaunchAngleOverride = LaunchAngleOverride;
+                procs->SplitShotArcDegrees = SplitAngle;
+            }
         }
 
         protected override object[] DescriptionArgs => new object[] { Count, DamageMultiplier.AsFloat * 100f };

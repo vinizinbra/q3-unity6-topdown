@@ -28,7 +28,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SurfaceTex:
-        m_Texture: {fileID: 2800000, guid: d0765384f7d1548dd9e2fa4eef7d32ed, type: 3}
+        m_Texture: {fileID: 2800000, guid: f27daf45842ed49f4a79a4685deed3c7, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _WallTex:
@@ -81,7 +81,7 @@ Material:
     - _HatchColor: {r: 0.08, g: 0.08, b: 0.14, a: 1}
     - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
     - _ShadowTint: {r: 0.5, g: 0.52, b: 0.66, a: 1}
-    - _SurfaceDarkColor: {r: 0.628738, g: 0.6333017, b: 0.6698113, a: 1}
+    - _SurfaceDarkColor: {r: 0.3994749, g: 0.40346774, b: 0.4433962, a: 1}
     - _SurfaceLightColor: {r: 0.68, g: 0.69, b: 0.73, a: 1}
     - _SurfaceTint: {r: 0.972549, g: 0.66687006, b: 0.3333333, a: 1}
     - _WallDarkColor: {r: 0.3, g: 0.31, b: 0.38, a: 1}

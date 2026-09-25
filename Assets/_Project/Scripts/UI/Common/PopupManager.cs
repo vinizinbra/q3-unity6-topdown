@@ -149,16 +149,20 @@ public class PopupManager : MonoBehaviour {
     void ShowDim()
     {
         if (dimBg == null) return;
-        dimBg.raycastTarget = true;
         dimTween.Stop();
+        dimBg.gameObject.SetActive(true);
+        dimBg.raycastTarget = true;
         dimTween = Tween.Alpha(dimBg, dimBg.color.a, dimAlpha, dimFadeDuration, useUnscaledTime: true);
     }
 
+    // Fades out, then deactivates the dim once fully hidden. A ShowDim during the fade Stop()s this
+    // tween, which skips OnComplete, so the dim stays active.
     void HideDim()
     {
         if (dimBg == null) return;
-        dimBg.raycastTarget = false;
         dimTween.Stop();
-        dimTween = Tween.Alpha(dimBg, dimBg.color.a, 0f, dimFadeDuration, useUnscaledTime: true);
+        dimBg.raycastTarget = false;
+        dimTween = Tween.Alpha(dimBg, dimBg.color.a, 0f, dimFadeDuration, useUnscaledTime: true)
+            .OnComplete(dimBg, img => img.gameObject.SetActive(false));
     }
 }

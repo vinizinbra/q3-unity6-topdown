@@ -142,6 +142,15 @@ component Projectile
     // case that shouldn't come up in practice.
     array<EntityRef>[8] RecentHits;
 
+    // The entity this shot's most recent SURVIVED contact was on (a Pierce or a Ricochet) -
+    // ProjectileSystem.CastForHit skips it. After a pierce the next cast starts right on that
+    // enemy's surface (or, with HitRadius > 0, overlapping it for a tick or two while it passes
+    // through), so without this the shot re-hit the same enemy at distance ~0 and spent its extra
+    // pierce on it - Piercing Rounds read as doing nothing (and double-hit the first target). Only
+    // the last one, not all of RecentHits: a multi-bounce Ricochet may legitimately return to an
+    // enemy it hit two contacts ago.
+    EntityRef LastHit;
+
     // Per-shot override of ProjectileDataAsset.Hit, same shape/reasoning as MovementOverride above -
     // resolved once at spawn and preferred every tick by ProjectileSystem over the asset's own Hit.
     // Kai's Ghost Shot (Neutral Mastery R3, see DamageEchoSystem.SpawnEchoProjectile) is the first

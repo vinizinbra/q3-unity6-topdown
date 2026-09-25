@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Blast Jump
   RankDescriptions:
-  - "After Dashing, the next Bunny Bomb thrown within <color=#FD3971>2s</color> travels <color=#FD3971>25%</color> faster and has <color=#FD3971>+25%</color> explosion radius."
-  - "Dashing also reduces Bunny Bomb's remaining cooldown by <color=#FD3971>1s</color>."
-  - "Dashing through your own planted Bunny Bomb detonates it for <color=#FD3971>+50%</color> Damage."
+  - "After Dashing, your next Bunny Bomb thrown within <color=#FD3971>2s</color> flies <color=#FD3971>25%</color> faster with <color=#FD3971>+25%</color> explosion radius."
+  - "Dashing cuts Bunny Bomb's cooldown by <color=#FD3971>1s</color>. Your next Bunny Bomb thrown within <color=#FD3971>2s</color> flies <color=#FD3971>25%</color> faster with <color=#FD3971>+25%</color> explosion radius."
+  - "Dashing cuts Bunny Bomb's cooldown by <color=#FD3971>1s</color>, and your next throw within <color=#FD3971>2s</color> flies <color=#FD3971>25%</color> faster with <color=#FD3971>+25%</color> radius. Dashing through your own Bunny Bomb detonates it for <color=#FD3971>+50%</color> Damage."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 3

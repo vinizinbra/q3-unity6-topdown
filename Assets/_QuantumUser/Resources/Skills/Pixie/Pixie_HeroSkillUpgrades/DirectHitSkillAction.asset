@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Direct Hit
   RankDescriptions:
-  - "Enemies near the center of Pixie's explosions take <color=#FD3971>+30%</color> Damage."
-  - "The high-damage center becomes larger and the bonus increases to <color=#FD3971>+50%</color>."
-  - "Bonus increases to <color=#FD3971>+75%</color>. Center hits also strongly Knockback enemies."
+  - "Enemies in the inner <color=#FD3971>35%</color> of Pixie's explosions take <color=#FD3971>+30%</color> Damage."
+  - "Enemies in the inner <color=#FD3971>45%</color> of Pixie's explosions take <color=#FD3971>+50%</color> Damage."
+  - "Enemies in the inner <color=#FD3971>45%</color> of Pixie's explosions take <color=#FD3971>+75%</color> Damage and are strongly knocked back."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

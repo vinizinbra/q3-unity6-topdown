@@ -22,8 +22,8 @@ MonoBehaviour:
   <MaxRank>k__BackingField: 3
   RankDescriptions:
   - "Flow builds <color=#FD3971>25%</color> faster."
-  - "Flow builds <color=#FD3971>50%</color> faster and its Active Move Speed / Fire Rate bonus increases to <color=#FD3971>+18%</color>."
-  - "Flow builds <color=#FD3971>75%</color> faster and grants an additional <color=#FD3971>+10%</color> Fire Rate while Active."
+  - "Flow builds <color=#FD3971>50%</color> faster. While Flow is Active, gain <color=#FD3971>+18%</color> Move Speed and Fire Rate."
+  - "Flow builds <color=#FD3971>75%</color> faster. While Flow is Active, gain <color=#FD3971>+18%</color> Move Speed and <color=#FD3971>+28%</color> Fire Rate."
   BuildRateMultiplier:
   - RawValue: 81920
   - RawValue: 98304

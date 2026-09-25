@@ -19,12 +19,9 @@ MonoBehaviour:
   Icon: {fileID: -625045729, guid: 167fe127f1a734214a64d3f39af97f1f, type: 3}
   DisplayName: Mirror Step
   RankDescriptions:
-  - While Dashing, Kai reflects nearby enemy projectiles back at their owner for
-    <color=#FD3971>40%</color> Skill Damage.
-  - Radius increases to <color=#FD3971>4.5m</color>. Instantly kills Normal enemies
-    and below; otherwise deals <color=#FD3971>60%</color> Skill Damage.
-  - Instant kill now includes Specialist enemies; otherwise deals <color=#FD3971>100%</color>
-    Skill Damage. Each reflection reduces Vortex cooldown by <color=#FD3971>0.5s</color>.
+  - "While Dashing, enemy projectiles within <color=#FD3971>3m</color> are reflected at their owner for <color=#FD3971>40%</color> Skill Damage."
+  - "While Dashing, enemy projectiles within <color=#FD3971>4.5m</color> are reflected at their owner. Normal and weaker enemies die instantly; others take <color=#FD3971>60%</color> Skill Damage."
+  - "While Dashing, enemy projectiles within <color=#FD3971>4.5m</color> are reflected. Specialist and weaker enemies die instantly; others take <color=#FD3971>100%</color> Skill Damage. Each reflect cuts Vortex cooldown by <color=#FD3971>0.5s</color>."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 3

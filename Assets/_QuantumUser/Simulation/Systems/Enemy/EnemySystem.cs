@@ -494,6 +494,12 @@ namespace Quantum
         // LevelConfig.FallDeathHeight regardless of state.
         private static bool TickKnockbackRecovery(Frame f, ref Filter filter, EnemyDataAsset data)
         {
+            if (filter.Enemy->StaggerImmuneTimer > FP._0)
+                filter.Enemy->StaggerImmuneTimer -= f.DeltaTime;
+
+            if (filter.Enemy->HitStaggerTimer > FP._0)
+                filter.Enemy->HitStaggerTimer -= f.DeltaTime;
+
             if (filter.Enemy->KnockbackTimer > FP._0)
             {
                 filter.Enemy->KnockbackTimer -= f.DeltaTime;
@@ -550,6 +556,27 @@ namespace Quantum
         // window is opened: the physics-settle window (KnockbackTimer) and the stuck-recovery safety
         // net are independent physical concerns and stay unconditional regardless of whether this
         // specific push is also allowed to cancel the current action.
+        // Every projectile hit's "game feel" flinch (called from ProjectileHitData.ApplyEffects): the
+        // enemy stops walking for its tier's HitStaggerDuration - nothing else, windups and attacks
+        // keep running. Shares StaggerImmuneTimer with knockback, so a high-fire-rate weapon flinches
+        // an enemy once per HitStaggerDuration + StaggerCooldown instead of holding it in place, and a
+        // knockback's own flinch window counts as the stagger. 0 duration (Heavy+ by default) = immune.
+        public static void TryApplyHitStagger(Frame f, EntityRef target)
+        {
+            if (f.Unsafe.TryGetPointer<Enemy>(target, out var enemy) == false
+                || enemy->Phase == EnemyActionPhase.Dead
+                || enemy->StaggerImmuneTimer > FP._0)
+                return;
+
+            TierStats tierStats = EnemyTierStatsConfig.Resolve(f, f.FindAsset(enemy->EnemyData).Tier);
+
+            if (tierStats == null || tierStats.HitStaggerDuration <= FP._0)
+                return;
+
+            enemy->HitStaggerTimer = tierStats.HitStaggerDuration;
+            enemy->StaggerImmuneTimer = tierStats.HitStaggerDuration + tierStats.StaggerCooldown;
+        }
+
         public void OnEnemyKnockedBack(Frame f, EntityRef entity, QBoolean canInterrupt)
         {
             if (f.Unsafe.TryGetPointer<Enemy>(entity, out var enemy) == false)
@@ -573,7 +600,14 @@ namespace Quantum
                 return;
             }
 
+            // Stagger cooldown - a cosmetic push can't re-open the window while the enemy is still
+            // immune from its last flinch - knockback or projectile hit stagger (see Enemy.StaggerImmuneTimer). The impulse itself already
+            // landed; the AI simply resumes and overwrites it next tick.
+            if (canInterrupt == false && enemy->StaggerImmuneTimer > FP._0)
+                return;
+
             enemy->KnockbackTimer = tierStats.KnockbackRecoveryTime;
+            enemy->StaggerImmuneTimer = tierStats.KnockbackRecoveryTime + tierStats.StaggerCooldown;
 
             if (canInterrupt == false)
             {
@@ -761,7 +795,10 @@ namespace Quantum
             // (attacking) and every other state already either don't move or zero their own
             // movement, so a Rooted or Staggered enemy already in range keeps attacking normally; it
             // just can't close distance to get there.
-            if (StatusEffectUtility.IsRooted(f, filter.Entity) == true || StatusEffectUtility.IsStaggered(f, filter.Entity) == true)
+            // A projectile hit stagger (HitStaggerTimer, see TryApplyHitStagger) pins the same way -
+            // walking only.
+            if (StatusEffectUtility.IsRooted(f, filter.Entity) == true || StatusEffectUtility.IsStaggered(f, filter.Entity) == true
+                || filter.Enemy->HitStaggerTimer > FP._0)
             {
                 EnemyMovementUtility.StopMovement(f, ref filter, data);
                 return;

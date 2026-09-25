@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: 1251163330, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
   DisplayName: Portable Speaker
   RankDescriptions:
-  - "Dashing deploys a Mini Totem that produces weaker Damage and Support Beats. Maximum <color=#FD3971>1</color> active Mini Totem."
-  - "Mini Totem duration and radius increase. Deploying one also grants nearby allies Move Speed and Fire Rate."
-  - "Zara can have <color=#FD3971>2</color> Mini Totems active. Mini Totems also inherit the supported bonuses from Zara's Totem Ascensions."
+  - "Dashing drops a Mini Totem for <color=#FD3971>3s</color> that plays half-strength Damage and Support Beats. Max <color=#FD3971>1</color> at a time."
+  - "Dashing drops a Mini Totem for <color=#FD3971>4s</color> with <color=#FD3971>+30%</color> radius that plays half-strength Beats and boosts nearby allies' Move Speed and Fire Rate. Max <color=#FD3971>1</color> at a time."
+  - "Dashing drops a Mini Totem for <color=#FD3971>4s</color> with <color=#FD3971>+30%</color> radius that plays half-strength Beats, boosts nearby allies, and gets your Totem upgrades. Max <color=#FD3971>2</color> at a time."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 5

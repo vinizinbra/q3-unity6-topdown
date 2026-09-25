@@ -1,0 +1,210 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f02bf106b04cd445ebe7292424ae5bf1, type: 3}
+  m_Name: MoonV2Tileset
+  m_EditorClassIdentifier: Assembly-CSharp::TilesetDefinition
+  tilingMode: 1
+  mergeCenters: 1
+  material: {fileID: 2100000, guid: 9f7885f32207f469db895adab6ff0349, type: 2}
+  modelPrefix: MoonV2_
+  useInnerCorners: 1
+  groundScatter: []
+  groundDensity: 0.06
+  rooftopScatter: []
+  rooftopDensity: 0.3
+  rooftopEdgeProps: []
+  rooftopEdgeChance: 0.5
+  wallScatter:
+  - Model: {fileID: 919132149155446097, guid: 48fdb8558d2974575bf1aef9a9ecb694, type: 3}
+    Weight: 2
+    ScaleRange: {x: 1, y: 1.3}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+  - Model: {fileID: 919132149155446097, guid: 9712742f29e994b8a90d847cba51fd64, type: 3}
+    Weight: 1.5
+    ScaleRange: {x: 1, y: 1.2}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+  - Model: {fileID: 919132149155446097, guid: 97d66f04424734463849be72d8c6d1dd, type: 3}
+    Weight: 1.5
+    ScaleRange: {x: 1, y: 1.2}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+  - Model: {fileID: 919132149155446097, guid: f3bb7af51683946f3b8f675e1c020e65, type: 3}
+    Weight: 2
+    ScaleRange: {x: 1, y: 1.3}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+  - Model: {fileID: 919132149155446097, guid: 6a745dc71b80641eaba7e284c4e154ca, type: 3}
+    Weight: 1
+    ScaleRange: {x: 0.9, y: 1.2}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+  - Model: {fileID: 919132149155446097, guid: 2e8833b52cdba4922b94245537a1bc92, type: 3}
+    Weight: 1
+    ScaleRange: {x: 1, y: 1.2}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+  - Model: {fileID: 919132149155446097, guid: c6d20f630893741abb7de6798a1317ca, type: 3}
+    Weight: 1.5
+    ScaleRange: {x: 0.9, y: 1.1}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+  - Model: {fileID: 919132149155446097, guid: b1fad3d265964424ba7197adcee841c1, type: 3}
+    Weight: 1
+    ScaleRange: {x: 1, y: 1.1}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+  - Model: {fileID: 919132149155446097, guid: fc05fa0877c1c49cbae3c30f67739f00, type: 3}
+    Weight: 1
+    ScaleRange: {x: 1, y: 1.2}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+  - Model: {fileID: 919132149155446097, guid: 4b8ff919113544e499ba5f3cb97f21b1, type: 3}
+    Weight: 1.2
+    ScaleRange: {x: 0.9, y: 1.1}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+  - Model: {fileID: 919132149155446097, guid: 1ab3c53c01b4f46928a646cd06029682, type: 3}
+    Weight: 1.5
+    ScaleRange: {x: 0.9, y: 1.1}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+  - Model: {fileID: 919132149155446097, guid: 28bbba8b324da4cdea6a584f831eac2d, type: 3}
+    Weight: 2.5
+    ScaleRange: {x: 0.9, y: 1.15}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+  - Model: {fileID: 919132149155446097, guid: 44f753f3750724831ab5bf9ec5e481eb, type: 3}
+    Weight: 2.5
+    ScaleRange: {x: 0.9, y: 1.15}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+  wallDensity: 0.45
+  wallPropAvoidBand: {x: 0, y: 0}
+  wallPropAvoidMargin: 0.04
+  maxEdgeLength: 3
+  maxEdgeStretch: 1.5
+  pieces:
+  - Key: Center
+    Model: {fileID: 919132149155446097, guid: 98654fc5b35764448b517fd33016bf51, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: f083cb4c2db584d0cbb4a5ec019cce88, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: fdfd2e908dc574f82ae0b34d16da632c, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 7a9d15580d87b4abfa00e6dafa8bd06a, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 23668921f73c24ebe8807507b77f78a4, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: c293dee082c3b42e8b9d5e1f65619dd4, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 4eac7f69588af475fb9191599d2ea60a, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 81fb0e0f2b20241318d229011a56cdab, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: b3342d21b997d46b5a62f6803b5840bf, type: 3}
+    Weight: 1
+    NoStretch: 1
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 61a153e0fe151457382a99acee2155c9, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: ed2586990d87946a29da0c005d62e045, type: 3}
+    Weight: 1
+    NoStretch: 1
+  - Key: Corner
+    Model: {fileID: 919132149155446097, guid: b0bc8ed168b474b0c8993df107946670, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Corner
+    Model: {fileID: 919132149155446097, guid: 9779a4631c0e04269af41d6852e6c201, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: InnerCorner
+    Model: {fileID: 919132149155446097, guid: dd46d9ad0a01747609ad065068d641a8, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: InnerCorner
+    Model: {fileID: 919132149155446097, guid: fb12735e6384c4ae9b2c5788277bd9a6, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 5bd5be89e1eee409593e9b0fe9e89f3c, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 44027cf1968a8427f8f0437aa46548c3, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 75c6c71f9231d4f1895124ed4f15ff20, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: d545e9feecbef45dc92620435d232bc8, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 2d3f84acb0a6640b886364aa0040bc6e, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 5a3d1614449b845d09eb20cd01f1806d, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: a6f8fd7ee2a134f4598f532f81b9e9d5, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 7a9b60e44bc304f33be5c32a1716b58f, type: 3}
+    Weight: 1
+    NoStretch: 1
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: d06787056230d4b8292a319ce85627e3, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 6b6d25bc6c86447888fc9798658ee19c, type: 3}
+    Weight: 1
+    NoStretch: 1

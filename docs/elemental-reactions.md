@@ -85,11 +85,12 @@ can key off `IsElectrified`.
 ## Jolt now means Stun, not Shock
 
 `JoltTriggered { Target, Position }` used to fire from Electrified's own periodic tick (see history
-above). It's now fired from exactly one place: `StatusEffectUtility.ApplyStun`, the instant a Stun
-genuinely LANDS (returns `true`) - regardless of source. That covers Shock's own proc above,
-Shatter's primary Stun below, and any future Stun source, with zero extra wiring at each call site.
-Jolt communicates "this target was Stunned", never "this target was Shocked" - Shock applying or
-refreshing never fires it. `EffectsManager.joltEffectPrefab` (the VFX itself) is untouched; only who
+above). It's now fired from exactly one place: the Lightning branch of
+`StatusEffectUtility.ApplyElementBaseline`, when the Electric weapon's Shock Stun proc genuinely LANDS
+(`ApplyStun` returns `true`). `ApplyStun` itself no longer fires it, so every other Stun source
+(Shatter's primary, Brute/Kai/melee/skill stuns, Crit Stun...) stays Jolt-free - Jolt reads as "the
+Electric proc Stunned this target", never a generic stun, and never "this target was Shocked" -
+Shock applying or refreshing never fires it. `EffectsManager.joltEffectPrefab` (the VFX itself) is untouched; only who
 triggers it changed.
 
 ## Stagger: pausing, not stopping
@@ -585,7 +586,7 @@ above).
   order to confirm it's genuinely order-independent; re-apply within the cooldown window to confirm no
   second trigger; cluster several enemies and trigger Overload to confirm the chain hops sequentially
   (not a fan-out) with a visible delay between hops; trigger Shatter near a mixed group including a
-  Boss to confirm the primary gets a brief Stun (with Jolt, tapered to Boss's own ~0.75s) and nearby
+  Boss to confirm the primary gets a brief Stun (no Jolt, tapered to Boss's own ~0.75s) and nearby
   enemies get a short Stagger (no Jolt), and that a second Shatter within Boss's 4s Stun re-proc
   cooldown doesn't re-Stun it while its Stagger taper still applies every time;
   stand an enemy mid-windup and land a Shatter-area Stagger to confirm its attack lands later rather

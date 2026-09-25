@@ -46,6 +46,13 @@ namespace Quantum
             // GameState.qtn.
             GameState cs = f.Global->CurrentState;
 
+            // Real run clock for the end-of-run popup (see Global.RunTime) - counted BEFORE the
+            // early-out below so Boss is included; Lobby hasn't started the run yet, and
+            // Victory/RunFailed have ended it.
+            if (cs != GameState.Lobby && cs != GameState.Upgrade
+                && cs != GameState.Victory && cs != GameState.RunFailed)
+                f.Global->RunTime += f.DeltaTime;
+
             if (cs != GameState.Survival && cs != GameState.Breathing
                 && cs != GameState.TeamChallenge && cs != GameState.TraversalChallenge)
                 return;

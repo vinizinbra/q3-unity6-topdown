@@ -20,8 +20,6 @@ MonoBehaviour:
     RawValue: 0
   MaxRandomOffset:
     RawValue: 0
-  HitImpactPrefab: {fileID: 0}
-  HitImpactOffset: {x: 0, y: 0, z: 0}
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -70,7 +68,7 @@ MonoBehaviour:
       ArcHeight:
         RawValue: 32768
       TraversalJumpSpeedMultiplier:
-        RawValue: 65536
+        RawValue: 131072
       CanClimbCliffs: 1
       CliffHeight:
         RawValue: 327680
@@ -112,6 +110,10 @@ MonoBehaviour:
       RawValue: 851968
     LeashRange:
       RawValue: 983040
+    StopDistance:
+      RawValue: 0
+    StopSlowdownRange:
+      RawValue: 0
     DetectionRangeMultiplier:
       RawValue: 65536
   Actions:
@@ -223,8 +225,6 @@ MonoBehaviour:
     RawValue: 0
   MaxRandomOffset:
     RawValue: 0
-  HitImpactPrefab: {fileID: 0}
-  HitImpactOffset: {x: 0, y: 0, z: 0}
   ConeShaped: 0
   ConeAngleDegrees:
     RawValue: 5898240
@@ -291,6 +291,7 @@ MonoBehaviour:
     Duration: 0.4
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
+    BodySpriteScale: {x: 1, y: 1, z: 1}
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -347,17 +348,20 @@ MonoBehaviour:
     ParticlePrefab: {fileID: 0}
     Anchor: 0
     Offset: {x: 0, y: 0, z: 0}
+    SnapToGround: 0
     Parented: 0
     AlignToEnemyDirection: 0
     RotationOffset: {x: 0, y: 0, z: 0}
     Scale: 1
     OverrideSortingOrder: 0
     SortingOrder: 0
+    AdditionalParticles: []
   BeginStep:
     AnimationType: 7
     Duration: 0.3
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
+    BodySpriteScale: {x: 1, y: 1, z: 1}
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -414,17 +418,20 @@ MonoBehaviour:
     ParticlePrefab: {fileID: 0}
     Anchor: 0
     Offset: {x: 0, y: 0.5, z: 0}
+    SnapToGround: 0
     Parented: 0
     AlignToEnemyDirection: 1
     RotationOffset: {x: 90, y: 0, z: 0}
     Scale: 1
     OverrideSortingOrder: 0
     SortingOrder: 0
+    AdditionalParticles: []
   OnGoingStep:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
+    BodySpriteScale: {x: 1, y: 1, z: 1}
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -481,17 +488,20 @@ MonoBehaviour:
     ParticlePrefab: {fileID: 0}
     Anchor: 0
     Offset: {x: 0, y: 0, z: 0}
+    SnapToGround: 0
     Parented: 0
     AlignToEnemyDirection: 0
     RotationOffset: {x: 0, y: 0, z: 0}
     Scale: 1
     OverrideSortingOrder: 0
     SortingOrder: 0
+    AdditionalParticles: []
   EndStep:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
+    BodySpriteScale: {x: 1, y: 1, z: 1}
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -548,9 +558,11 @@ MonoBehaviour:
     ParticlePrefab: {fileID: 0}
     Anchor: 0
     Offset: {x: 0, y: 0, z: 0}
+    SnapToGround: 0
     Parented: 0
     AlignToEnemyDirection: 0
     RotationOffset: {x: 0, y: 0, z: 0}
     Scale: 1
     OverrideSortingOrder: 0
     SortingOrder: 0
+    AdditionalParticles: []

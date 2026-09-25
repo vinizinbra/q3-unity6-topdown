@@ -54,7 +54,8 @@ using UnityEngine.UI;
 // free - but icons and player markers are real UI objects, so each surface gets its own clone of
 // each, held together in an OverlayPair and driven in lockstep. The only per-surface difference is
 // the rect their positions are computed against (the two draw the same texture at different UI
-// sizes) plus fullMapOverlayScale. Fully self-contained (reads
+// sizes) plus fullMapOverlayScale. Opening/closing the full-map panel is FullMapWidget's job, not
+// this one's - it only paints into fullMapImage. Fully self-contained (reads
 // game.Frames.Predicted every QUpdate, same "no external driving" shape as StatusEffectsManager)
 // except for localSlotIndex, needed to know which local player's current chunk to highlight - every
 // instance otherwise runs the identical frame query regardless of which split-screen slot it lives
@@ -75,18 +76,12 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     private RectTransform mapRect;
     [SerializeField, Tooltip("Displays the procedurally-painted map texture - should be sized to fill mapRect.")]
     private RawImage mapImage;
-    [SerializeField, Tooltip("Optional - a second RawImage (e.g. the Tab-key full-map panel) shown the WHOLE level at once, unpanned/unmasked. Gets the exact same live texture as mapImage, so it updates automatically with no extra work. Leave unassigned if you only want the small minimap.")]
+    [SerializeField, Tooltip("Optional - a second RawImage (the full-map panel, shown/hidden by FullMapWidget) showing the WHOLE level at once, unpanned/unmasked. Gets the exact same live texture as mapImage, so it updates automatically with no extra work. Leave unassigned if you only want the small minimap.")]
     private RawImage fullMapImage;
     [SerializeField, Tooltip("Optional content layer for the full-map panel's own icon/player overlays - square, centered (0.5, 0.5) pivot, same size as fullMapImage. Left unassigned, fullMapImage's own RectTransform is used, which is correct as long as it's square and center-pivoted. Only matters when fullMapImage is assigned.")]
     private RectTransform fullMapRect;
     [SerializeField, Tooltip("Uniform scale applied to the full-map panel's own icon/player overlay clones - the big map is usually drawn much larger than the minimap, so its markers often want to be bigger (or smaller) than the shared prefab's authored size.")]
     private float fullMapOverlayScale = 1f;
-
-    [Header("Toggle")]
-    [SerializeField, Tooltip("Clicking this (e.g. a Button covering the minimap's own corner rect) toggles fullMapPanel - lets the minimap act as the button that opens/closes the big map. Leave unassigned to disable click-to-toggle (the panel can still be shown/hidden by other means).")]
-    private UnityEngine.UI.Button toggleButton;
-    [SerializeField, Tooltip("Root shown/hidden by toggleButton - typically a backdrop plus fullMapImage/fullMapRect, carrying a JuicyGameobject (PachaGames.Runtime) so opening/closing scales in/out instead of an instant snap. Its starting active state (usually inactive) is left exactly as authored - only click toggling ever flips it. Leave unassigned to look for a JuicyGameobject on fullMapImage's own GameObject instead.")]
-    private JuicyGameobject fullMapPanel;
 
     [Header("Colors")]
     [SerializeField] private Color undiscoveredColor = new Color(0.12f, 0.12f, 0.12f, 1f);
@@ -119,6 +114,14 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     private Color usedIconTint = new Color(0.45f, 0.45f, 0.45f, 1f);
     [SerializeField, Tooltip("Same as usedIconTint, but for a POI whose PoiUsagePolicy is Cooldown (e.g. Healing Shrine) instead of a one-time-use policy - lets cooldown read as a different (typically darker/blacker) shade than \"used up for the Break/run\". Store never resolves Expired at all (always Reusable), so it never uses either tint.")]
     private Color cooldownIconTint = new Color(0.22f, 0.22f, 0.22f, 1f);
+    [SerializeField, Tooltip("Minimap only (never the full-map panel): a POI icon that's still usable (not tinted by usedIconTint/cooldownIconTint) is clamped to the edge of mapRect's parent (the masked viewport) whenever its real spot is off-screen, along the line from the viewport center toward it - so the player can still read which way it is. Used-up POIs and non-POI icons (Boss/LobbyStart) stay at their real spot and get clipped by the mask as before. See PinActiveIconsToViewportEdge.")]
+    private bool pinActivePoisToEdge = true;
+    [SerializeField, Tooltip("Extra inset (UI units) between a pinned icon and the viewport's edge, on top of the icon's own half-size (which is always inset so the icon never gets half-clipped by the mask).")]
+    private float edgePinPadding = 2f;
+    [SerializeField, Tooltip("Pin to a circle (radius = half the viewport's smaller side) instead of the viewport's rectangle - turn on if the minimap's mask is round.")]
+    private bool circularViewport = false;
+    [SerializeField, Range(0f, 1f), Tooltip("Alpha multiplier applied to a POI icon while it's actually pinned to the viewport edge (its real spot is off-screen) - reads as \"over there\" rather than \"right here\". Back to full alpha the moment its real spot is inside the viewport again.")]
+    private float edgePinnedAlpha = 0.5f;
     [SerializeField, Tooltip("Simple colored-dot prefab (or similar) representing one player. No per-player identity beyond position for this first pass.")]
     private RectTransform playerMarkerPrefab;
     [SerializeField, Tooltip("Marker shown for every currently-alive Elite-tier enemy (EnemyDataAsset.Tier == Elite) - same always-relevant/never-retires enemies EnemyLifecycleSystem treats specially, so they're worth calling out on the map. One generic marker for every Elite regardless of which EnemyDataAsset it is - no per-enemy-type identity, same first-pass scope as playerMarkerPrefab. Leave unassigned to disable Elite markers entirely.")]
@@ -225,6 +228,10 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         // again if a map surface's own UI size changes (see RefreshIconPositionsIfResized).
         public RectInt TexelRect;
 
+        // Chunk icons only - set every tick by UpdateIconTints: true while the linked POI is still
+        // usable (untinted), which is what PinActiveIconsToViewportEdge keys off.
+        public bool PinToEdge;
+
         public void SetActive(bool active)
         {
             if (Mini != null)
@@ -298,42 +305,6 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     // worldCenter's own tooltip.
     private Vector2 _effectiveWorldCenter;
     private bool _centered;
-
-    // Named Input Manager button (ProjectSettings/InputManager.asset, default "joystick button 6")
-    // for opening/closing the full-map panel from a gamepad, same toggle toggleButton's onClick
-    // drives from a mouse/touch click - see ToggleFullMap. Re-point it at a different physical
-    // button from Project Settings > Input Manager, no code change needed.
-    private const string OpenMiniMapToggle = "OpenMiniMapToggle";
-
-    // Named Input Manager Joystick Axis (default: 13th axis, any joystick) - R2 on most Android
-    // Bluetooth pads (e.g. MOGA Pro 2) is an analog trigger axis, not a button, so it can't live on
-    // OpenMiniMapToggle. Which axis number a given pad uses varies - re-point it in Project Settings
-    // > Input Manager if R2 doesn't respond. Treated as a press on the rising edge past the
-    // threshold, so holding the trigger toggles once rather than every frame.
-    private const string OpenMiniMapTrigger = "OpenMiniMapTrigger";
-    private const float TriggerPressThreshold = 0.5f;
-    private bool _triggerHeld;
-
-    private void Awake()
-    {
-        if (toggleButton != null)
-            toggleButton.onClick.AddListener(ToggleFullMap);
-    }
-
-    // Flips fullMapPanel's own current active state via JuicyGameobject.SetActive (scale in/out
-    // instead of an instant snap) - reads gameObject.activeSelf live rather than tracking a
-    // separate open/closed bool, so whatever active state it's authored with in the Editor (and
-    // anything else that later shows/hides it) stays the source of truth.
-    private void ToggleFullMap()
-    {
-        JuicyGameobject panel = fullMapPanel != null
-            ? fullMapPanel
-            : (fullMapImage != null ? fullMapImage.GetComponent<JuicyGameobject>() : null);
-        if (panel == null)
-            return;
-
-        panel.SetActive(panel.gameObject.activeSelf == false);
-    }
 
     public override void QStart(QuantumGame game)
     {
@@ -410,16 +381,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         UpdateSpecialMarkers(frame);
         UpdateClearEnemyMarkers(frame);
         CenterOnLocalPlayer(frame);
-
-        // Gated to slot 0 - the only local player slot QuantumDebugInput ever reads a gamepad
-        // button for (PollPlayerOneInput; PollPlayerTwoInput is keyboard-only) - so a second local
-        // player's own widget instance never reacts to the first player's gamepad press too.
-        bool triggerDown = UnityEngine.Input.GetAxisRaw(OpenMiniMapTrigger) > TriggerPressThreshold;
-        bool triggerPressed = triggerDown && _triggerHeld == false;
-        _triggerHeld = triggerDown;
-
-        if (localSlotIndex == 0 && (UnityEngine.Input.GetButtonDown(OpenMiniMapToggle) || triggerPressed))
-            ToggleFullMap();
+        PinActiveIconsToViewportEdge();
     }
 
     // Shifts the whole content layer (mapRect - texture, icons, and markers all live under it) so
@@ -1190,6 +1152,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
             }
 
             pair.SetIconColor(color);
+            pair.PinToEdge = activation->State != PoiViewState.Expired;
         }
 
         foreach (var kvp in _iconTraversalEntity)
@@ -1202,7 +1165,73 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
 
             bool usedUp = challenge->State == TraversalChallengeState.Completed || challenge->State == TraversalChallengeState.Failed;
             pair.SetIconColor(usedUp ? _iconBaseColor * usedIconTint : _iconBaseColor);
+            pair.PinToEdge = usedUp == false;
         }
+    }
+
+    // Runs right after CenterOnLocalPlayer (mapRect has already panned this tick). Every minimap
+    // chunk icon is re-placed from its real texel spot; a PinToEdge one whose real spot falls
+    // outside the masked viewport (mapRect's parent) is pulled back onto the viewport's edge along
+    // the viewport-center->icon direction, so it stays visible as a direction hint. Only a handful
+    // of icons exist per level, so re-placing all of them every tick is cheap and keeps the
+    // unpinned case trivially correct (an icon that just got used snaps back to its real spot).
+    private void PinActiveIconsToViewportEdge()
+    {
+        if (mapRect == null || _iconOverlays.Count == 0)
+            return;
+
+        var viewport = mapRect.parent as RectTransform;
+
+        foreach (var pair in _iconOverlays.Values)
+        {
+            if (pair.Mini == null)
+                continue;
+
+            Vector2 natural = TexelRectCenterToMapPosition(pair.TexelRect, mapRect);
+            if (pinActivePoisToEdge == false || pair.PinToEdge == false || viewport == null)
+            {
+                pair.Mini.anchoredPosition = natural;
+                continue;
+            }
+
+            Vector2 inViewport = viewport.InverseTransformPoint(mapRect.TransformPoint(natural));
+            Vector2 iconHalfSize = Vector2.Scale(pair.Mini.rect.size, pair.Mini.localScale) * 0.5f;
+            float inset = Mathf.Max(iconHalfSize.x, iconHalfSize.y) + edgePinPadding;
+            Vector2 pinned = ClampInsideViewport(inViewport, viewport.rect, inset);
+
+            pair.Mini.anchoredPosition = mapRect.InverseTransformPoint(viewport.TransformPoint(pinned));
+
+            // UpdateIconTints rewrites every linked icon's full color earlier this same tick, so
+            // fading on top of it here never compounds and un-fades by itself once unpinned.
+            if (pinned != inViewport && pair.MiniIcon != null)
+            {
+                Color color = pair.MiniIcon.color;
+                color.a *= edgePinnedAlpha;
+                pair.MiniIcon.color = color;
+            }
+        }
+    }
+
+    // Scales the offset from the viewport's center down (never per-axis clamps it, which would
+    // bend the direction) until it fits inside the viewport shrunk by inset - a point already
+    // inside is returned unchanged.
+    private Vector2 ClampInsideViewport(Vector2 point, Rect viewRect, float inset)
+    {
+        Vector2 center = viewRect.center;
+        Vector2 offset = point - center;
+        float halfWidth = viewRect.width * 0.5f - inset;
+        float halfHeight = viewRect.height * 0.5f - inset;
+        if (halfWidth <= 0f || halfHeight <= 0f)
+            return center;
+
+        if (circularViewport)
+        {
+            float radius = Mathf.Min(halfWidth, halfHeight);
+            return offset.sqrMagnitude > radius * radius ? center + offset.normalized * radius : point;
+        }
+
+        float overshoot = Mathf.Max(Mathf.Abs(offset.x) / halfWidth, Mathf.Abs(offset.y) / halfHeight);
+        return overshoot > 1f ? center + offset / overshoot : point;
     }
 
     // Repositions every chunk icon on whichever map surface just changed UI size - a no-op on

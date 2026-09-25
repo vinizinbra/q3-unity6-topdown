@@ -4,7 +4,7 @@ A pause-menu style `UiPopup` opened mid-match: SFX slider, Music slider, Restart
 
 ## Behavior
 
-- **Open:** Escape, via `InMatchPopupManager.Update`, or any button wired to `InMatchPopupManager.OpenSettings`.
+- **Open:** Escape (desktop only - on mobile Escape is Android Back, which toggles the Hero Info popup) or gamepad Start (`OpenInMatchSettings`: `joystick button 10` on Android pads, alt `7`), via `InMatchPopupManager.Update`, or any button wired to `InMatchPopupManager.OpenSettings`.
   Escape only opens it over an *empty* popup stage and closes it again when it is the current popup - it
   never dismisses or stacks over another popup (a tutorial popup's `Close` also unpauses the sim, so Escape
   must not be a way to skip one).

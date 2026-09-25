@@ -82,9 +82,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Enemies caught near the center of the blast take bonus damage.";
                 asset.RankDescriptions = new[]
                 {
-                    "Enemies near the center of Pixie's explosions take <color=#FD3971>+30%</color> Damage.",
-                    "The high-damage center becomes larger and the bonus increases to <color=#FD3971>+50%</color>.",
-                    "Bonus increases to <color=#FD3971>+75%</color>. Center hits also strongly Knockback enemies.",
+                    "Enemies in the inner <color=#FD3971>35%</color> of Pixie's explosions take <color=#FD3971>+30%</color> Damage.",
+                    "Enemies in the inner <color=#FD3971>45%</color> of Pixie's explosions take <color=#FD3971>+50%</color> Damage.",
+                    "Enemies in the inner <color=#FD3971>45%</color> of Pixie's explosions take <color=#FD3971>+75%</color> Damage and are strongly knocked back.",
                 };
                 asset.MaxRank = 3;
                 asset.InnerRadiusFraction = new[] { FP.FromString("0.35"), FP.FromString("0.45"), FP.FromString("0.45") };
@@ -100,9 +100,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Your explosions can drop a stationary Mini Bomb.";
                 asset.RankDescriptions = new[]
                 {
-                    "Pixie's explosions have a <color=#FD3971>15%</color> chance to leave a Mini Bomb dealing <color=#FD3971>35%</color> Bunny Bomb Damage.",
-                    "Chance increases to <color=#FD3971>25%</color> and Damage to <color=#FD3971>45%</color>.",
-                    "Chance increases to <color=#FD3971>35%</color> and Damage to <color=#FD3971>55%</color>.",
+                    "Pixie's explosions have a <color=#FD3971>15%</color> chance to drop a Mini Bomb dealing <color=#FD3971>35%</color> Bunny Bomb Damage.",
+                    "Pixie's explosions have a <color=#FD3971>25%</color> chance to drop a Mini Bomb dealing <color=#FD3971>45%</color> Bunny Bomb Damage.",
+                    "Pixie's explosions have a <color=#FD3971>35%</color> chance to drop a Mini Bomb dealing <color=#FD3971>55%</color> Bunny Bomb Damage.",
                 };
                 asset.MaxRank = 3;
                 asset.Chance = new[] { FP.FromString("0.15"), FP.FromString("0.25"), FP.FromString("0.35") };
@@ -116,9 +116,9 @@ namespace QuantumUser.Editor
                 asset.Description = "An explosion kill empowers Pixie's next explosion, from any source.";
                 asset.RankDescriptions = new[]
                 {
-                    "Killing with an explosion banks <color=#FD3971>1</color> charge. Her next explosion, from any source, consumes it for <color=#FD3971>+30%</color> Damage and <color=#FD3971>+15%</color> Radius.",
-                    "Pixie can store up to <color=#FD3971>2</color> charges.",
-                    "Using maximum charges also creates a delayed secondary explosion.",
+                    "Explosion kills store <color=#FD3971>1</color> charge. Pixie's next explosion uses it for <color=#FD3971>+30%</color> Damage and <color=#FD3971>+15%</color> Radius.",
+                    "Explosion kills store up to <color=#FD3971>2</color> charges. Pixie's next explosion uses them for <color=#FD3971>+30%</color> Damage and <color=#FD3971>+15%</color> Radius per charge.",
+                    "Explosion kills store up to <color=#FD3971>2</color> charges. Pixie's next explosion uses them for <color=#FD3971>+30%</color> Damage and <color=#FD3971>+15%</color> Radius per charge. Using <color=#FD3971>2</color> charges adds a second explosion <color=#FD3971>0.5s</color> later.",
                 };
                 asset.MaxRank = 3;
                 asset.DamageBonusPerStack = FP.FromString("0.30");
@@ -135,9 +135,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Weapon hits can trigger a small explosion.";
                 asset.RankDescriptions = new[]
                 {
-                    "Weapon hits have a <color=#FD3971>15%</color> chance to trigger a small explosion dealing <color=#FD3971>+20%</color> Damage in a <color=#FD3971>2m</color> radius.",
-                    "Chance increases to <color=#FD3971>22%</color>, Damage to <color=#FD3971>+30%</color>, and radius to <color=#FD3971>2.4m</color>.",
-                    "Chance increases to <color=#FD3971>30%</color> and Damage to <color=#FD3971>+40%</color>.",
+                    "Weapon hits have a <color=#FD3971>15%</color> chance to trigger a <color=#FD3971>2m</color> explosion dealing <color=#FD3971>+20%</color> Damage.",
+                    "Weapon hits have a <color=#FD3971>22%</color> chance to trigger a <color=#FD3971>2.4m</color> explosion dealing <color=#FD3971>+30%</color> Damage.",
+                    "Weapon hits have a <color=#FD3971>30%</color> chance to trigger a <color=#FD3971>2.4m</color> explosion dealing <color=#FD3971>+40%</color> Damage.",
                 };
                 asset.MaxRank = 3;
                 asset.ProcChance = new[] { FP.FromString("0.15"), FP.FromString("0.22"), FP.FromString("0.30") };
@@ -160,9 +160,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Bunny Bomb scatters bomblets when it explodes.";
                 asset.RankDescriptions = new[]
                 {
-                    "A thrown Bunny Bomb releases <color=#FD3971>2</color> bomblets when it explodes, each dealing <color=#FD3971>40%</color> Damage.",
-                    "Releases <color=#FD3971>3</color> bomblets dealing <color=#FD3971>45%</color> Damage each.",
-                    "Releases <color=#FD3971>4</color> bomblets dealing <color=#FD3971>50%</color> Damage each.",
+                    "Bunny Bomb releases <color=#FD3971>2</color> bomblets when it explodes, each dealing <color=#FD3971>40%</color> Damage.",
+                    "Bunny Bomb releases <color=#FD3971>3</color> bomblets when it explodes, each dealing <color=#FD3971>45%</color> Damage.",
+                    "Bunny Bomb releases <color=#FD3971>4</color> bomblets when it explodes, each dealing <color=#FD3971>50%</color> Damage.",
                 };
                 asset.Count = new byte[] { 2, 3, 4 };
                 asset.DamagePercent = new[] { FP.FromString("0.40"), FP.FromString("0.45"), FP.FromString("0.50") };
@@ -176,9 +176,9 @@ namespace QuantumUser.Editor
                 asset.Description = "A landed Bunny Bomb becomes a Decoy before it blows.";
                 asset.RankDescriptions = new[]
                 {
-                    "After landing, Bunny Bomb becomes a Decoy for <color=#FD3971>1s</color> before exploding.",
-                    "Decoy duration increases to <color=#FD3971>1.5s</color> and explosion radius increases by <color=#FD3971>25%</color>.",
-                    "The explosion also deals <color=#FD3971>+30%</color> Damage.",
+                    "A landed Bunny Bomb becomes a Decoy for <color=#FD3971>1s</color> before exploding.",
+                    "A landed Bunny Bomb becomes a Decoy for <color=#FD3971>1.5s</color> before exploding with <color=#FD3971>+25%</color> radius.",
+                    "A landed Bunny Bomb becomes a Decoy for <color=#FD3971>1.5s</color> before exploding with <color=#FD3971>+25%</color> radius and <color=#FD3971>+30%</color> Damage.",
                 };
                 asset.TauntDuration = new[] { FP._1, FP.FromString("1.5"), FP.FromString("1.5") };
                 asset.TauntRadiusMultiplier = new[] { FP._1, FP.FromString("1.25"), FP.FromString("1.25") };
@@ -192,9 +192,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Dashing drops a fused bomb behind you.";
                 asset.RankDescriptions = new[]
                 {
-                    "Dashing leaves a bomb at the starting point dealing <color=#FD3971>50%</color> Bunny Bomb Damage.",
-                    "Also leaves a bomb at the Dash destination.",
-                    "Dash bombs deal <color=#FD3971>75%</color> Bunny Bomb Damage and guarantee Chain Reaction marks on enemies hit.",
+                    "Dashing drops a bomb at your starting point that explodes for <color=#FD3971>50%</color> Bunny Bomb Damage.",
+                    "Dashing drops a bomb at your start and end points, each exploding for <color=#FD3971>50%</color> Bunny Bomb Damage.",
+                    "Dashing drops a bomb at your start and end points, each exploding for <color=#FD3971>75%</color> Bunny Bomb Damage. Enemies hit are always marked to explode on death.",
                 };
                 asset.Fuse = FP._1;
                 asset.DamagePercent = new[] { FP.FromString("0.50"), FP.FromString("0.50"), FP.FromString("0.75") };
@@ -207,9 +207,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Dashing empowers your next Bunny Bomb.";
                 asset.RankDescriptions = new[]
                 {
-                    "After Dashing, the next Bunny Bomb thrown within <color=#FD3971>3s</color> deals <color=#FD3971>+30%</color> Damage.",
-                    "The empowered Bunny Bomb also gains <color=#FD3971>+30%</color> Radius.",
-                    "Damage bonus increases to <color=#FD3971>+60%</color>. A direct hit detonates the empowered Bunny Bomb instantly.",
+                    "After Dashing, your next Bunny Bomb thrown within <color=#FD3971>3s</color> deals <color=#FD3971>+30%</color> Damage.",
+                    "After Dashing, your next Bunny Bomb thrown within <color=#FD3971>3s</color> deals <color=#FD3971>+30%</color> Damage with <color=#FD3971>+30%</color> Radius.",
+                    "After Dashing, your next Bunny Bomb thrown within <color=#FD3971>3s</color> deals <color=#FD3971>+60%</color> Damage with <color=#FD3971>+30%</color> Radius, and explodes instantly on a direct hit.",
                 };
                 asset.Window = 3;
                 asset.DamageMultiplier = new[] { FP.FromString("1.30"), FP.FromString("1.30"), FP.FromString("1.60") };
@@ -223,9 +223,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Dashing supercharges your next Bunny Bomb throw.";
                 asset.RankDescriptions = new[]
                 {
-                    "After Dashing, the next Bunny Bomb thrown within <color=#FD3971>2s</color> travels <color=#FD3971>25%</color> faster and has <color=#FD3971>+25%</color> explosion radius.",
-                    "Dashing also reduces Bunny Bomb's remaining cooldown by <color=#FD3971>1s</color>.",
-                    "Dashing through your own planted Bunny Bomb detonates it for <color=#FD3971>+50%</color> Damage.",
+                    "After Dashing, your next Bunny Bomb thrown within <color=#FD3971>2s</color> flies <color=#FD3971>25%</color> faster with <color=#FD3971>+25%</color> explosion radius.",
+                    "Dashing cuts Bunny Bomb's cooldown by <color=#FD3971>1s</color>. Your next Bunny Bomb thrown within <color=#FD3971>2s</color> flies <color=#FD3971>25%</color> faster with <color=#FD3971>+25%</color> explosion radius.",
+                    "Dashing cuts Bunny Bomb's cooldown by <color=#FD3971>1s</color>, and your next throw within <color=#FD3971>2s</color> flies <color=#FD3971>25%</color> faster with <color=#FD3971>+25%</color> radius. Dashing through your own Bunny Bomb detonates it for <color=#FD3971>+50%</color> Damage.",
                 };
                 asset.Window = 2;
                 asset.ProjectileSpeedMultiplier = new[] { FP._1_25, FP._1_25, FP._1_25 };

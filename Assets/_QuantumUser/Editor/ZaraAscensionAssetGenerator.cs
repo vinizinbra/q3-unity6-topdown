@@ -157,9 +157,9 @@ namespace QuantumUser.Editor
                 a.Description = "Totem Damage Beats deal more damage.";
                 a.RankDescriptions = new[]
                 {
-                    "Damage Beats deal <color=#FD3971>+30%</color> Damage.",
-                    "Damage bonus increases to <color=#FD3971>+60%</color>. Damage Beats also Knockback small enemies.",
-                    "Damage bonus increases to <color=#FD3971>+100%</color>. Every third Damage Beat Stuns enemies.",
+                    "Totem Damage Beats deal <color=#FD3971>+30%</color> Damage.",
+                    "Totem Damage Beats deal <color=#FD3971>+60%</color> Damage and knock back small enemies.",
+                    "Totem Damage Beats deal <color=#FD3971>+100%</color> Damage and knock back small enemies. Every third Damage Beat Stuns.",
                 };
                 a.DamageBonus = new[] { FP.FromString("0.30"), FP.FromString("0.60"), FP._1 };
                 a.KnockbackEffect = amplifierKnockback;
@@ -175,9 +175,9 @@ namespace QuantumUser.Editor
                 a.Description = "Support Beats push the team's tempo - stronger buffs, then cooldown reduction, then a damage window.";
                 a.RankDescriptions = new[]
                 {
-                    "Support Beats heal <color=#FD3971>2%</color> Max HP and grant <color=#FD3971>+15%</color> Move Speed and Fire Rate for about <color=#FD3971>2s</color>.",
-                    "Support Beats also reduce affected allies' Hero Skill cooldown by <color=#FD3971>0.5s</color>.",
-                    "Support Beat healing increases to <color=#FD3971>5%</color> Max HP and grants <color=#FD3971>+15%</color> Damage for <color=#FD3971>2s</color>.",
+                    "Totem Support Beats heal <color=#FD3971>2%</color> Max HP and give <color=#FD3971>+15%</color> Move Speed and Fire Rate for <color=#FD3971>2s</color>.",
+                    "Totem Support Beats heal <color=#FD3971>2%</color> Max HP, cut Hero Skill cooldown by <color=#FD3971>0.5s</color>, and give <color=#FD3971>+15%</color> Move Speed and Fire Rate for <color=#FD3971>2s</color>.",
+                    "Totem Support Beats heal <color=#FD3971>5%</color> Max HP, cut Hero Skill cooldown by <color=#FD3971>0.5s</color>, and give <color=#FD3971>+15%</color> Move Speed, Fire Rate and Damage for <color=#FD3971>2s</color>.",
                 };
                 a.HealPercent = new[] { FP.FromString("0.02"), FP.FromString("0.02"), FP._0_05 };
                 a.SupportBuffEffect = new[]
@@ -223,9 +223,9 @@ namespace QuantumUser.Editor
                 a.Description = "Totem Beats occur more often.";
                 a.RankDescriptions = new[]
                 {
-                    "Beat interval decreases from <color=#FD3971>1s</color> to <color=#FD3971>0.85s</color>.",
-                    "Beat interval decreases to <color=#FD3971>0.70s</color>.",
-                    "Beat interval decreases to <color=#FD3971>0.50s</color>.",
+                    "Totem Beats play every <color=#FD3971>0.85s</color> instead of every <color=#FD3971>1s</color>.",
+                    "Totem Beats play every <color=#FD3971>0.7s</color> instead of every <color=#FD3971>1s</color>.",
+                    "Totem Beats play every <color=#FD3971>0.5s</color> instead of every <color=#FD3971>1s</color>.",
                 };
                 a.BeatInterval = new[] { FP.FromString("0.85"), FP.FromString("0.70"), FP._0_50 };
             });
@@ -238,9 +238,9 @@ namespace QuantumUser.Editor
                 a.Description = "Increase Totem Beat radius.";
                 a.RankDescriptions = new[]
                 {
-                    "Totem Beat radius increases by <color=#FD3971>30%</color>.",
-                    "Radius increases by <color=#FD3971>50%</color> and Totem duration increases by <color=#FD3971>2s</color>.",
-                    "Radius increases by <color=#FD3971>75%</color>. Totem immediately releases a Damage Beat when deployed and a Support Beat when it expires.",
+                    "Totem Beat radius <color=#FD3971>+30%</color>.",
+                    "Totem Beat radius <color=#FD3971>+50%</color> and Totem lasts <color=#FD3971>+2s</color>.",
+                    "Totem Beat radius <color=#FD3971>+75%</color> and Totem lasts <color=#FD3971>+2s</color>. It plays a Damage Beat when placed and a Support Beat when it expires.",
                 };
                 a.RadiusBonus = new[] { FP.FromString("0.30"), FP._0_50, FP.FromString("0.75") };
                 a.DurationBonus = new[] { FP._0, FP._2, FP._2 };
@@ -255,8 +255,8 @@ namespace QuantumUser.Editor
                 a.RankDescriptions = new[]
                 {
                     "Flow builds <color=#FD3971>25%</color> faster.",
-                    "Flow builds <color=#FD3971>50%</color> faster and its Active Move Speed / Fire Rate bonus increases to <color=#FD3971>+18%</color>.",
-                    "Flow builds <color=#FD3971>75%</color> faster and grants an additional <color=#FD3971>+10%</color> Fire Rate while Active.",
+                    "Flow builds <color=#FD3971>50%</color> faster. While Flow is Active, gain <color=#FD3971>+18%</color> Move Speed and Fire Rate.",
+                    "Flow builds <color=#FD3971>75%</color> faster. While Flow is Active, gain <color=#FD3971>+18%</color> Move Speed and <color=#FD3971>+28%</color> Fire Rate.",
                 };
 
                 a.BuildRateMultiplier = new[] { FP.FromString("1.25"), FP.FromString("1.50"), FP.FromString("1.75") };
@@ -276,8 +276,8 @@ namespace QuantumUser.Editor
                 a.RankDescriptions = new[]
                 {
                     "When Flow breaks, gain <color=#FD3971>+20%</color> Move Speed for <color=#FD3971>1.5s</color>.",
-                    "When hit, Flow drops to one-third instead of resetting completely.",
-                    "While Flow is Active, the hit that breaks it deals <color=#FD3971>30%</color> less Damage.",
+                    "Getting hit keeps <color=#FD3971>1/3</color> of your Flow instead of resetting it. When Flow breaks, gain <color=#FD3971>+20%</color> Move Speed for <color=#FD3971>1.5s</color>.",
+                    "Getting hit keeps <color=#FD3971>1/3</color> of your Flow, and the hit that breaks Active Flow deals <color=#FD3971>30%</color> less Damage. When Flow breaks, gain <color=#FD3971>+20%</color> Move Speed for <color=#FD3971>1.5s</color>.",
                 };
 
                 a.MoveSpeedBonus = new[] { FP._0_20, FP._0_20, FP._0_20 };
@@ -295,8 +295,8 @@ namespace QuantumUser.Editor
                 a.RankDescriptions = new[]
                 {
                     "While Flow is Active, Zara deals <color=#FD3971>+10%</color> Damage.",
-                    "While Flow is Active, Totem Beats are <color=#FD3971>15%</color> more effective.",
-                    "Activating Flow grants Zara and nearby allies <color=#FD3971>+10%</color> Move Speed and Fire Rate for <color=#FD3971>3s</color>.",
+                    "While Flow is Active, Zara deals <color=#FD3971>+10%</color> Damage and Totem Beats are <color=#FD3971>15%</color> stronger.",
+                    "While Flow is Active, Zara deals <color=#FD3971>+10%</color> Damage and Totem Beats are <color=#FD3971>15%</color> stronger. Activating Flow gives Zara and nearby allies <color=#FD3971>+10%</color> Move Speed and Fire Rate for <color=#FD3971>3s</color>.",
                 };
 
                 a.ActiveDamageBonus = new[] { FP._0_10, FP._0_10, FP._0_10 };
@@ -324,9 +324,9 @@ namespace QuantumUser.Editor
                 a.Description = "Dashing feeds your Flow - and eventually leaves damaging beats behind you.";
                 a.RankDescriptions = new[]
                 {
-                    "Dashing restores <color=#FD3971>35%</color> Flow, plus additional Flow for each unique enemy dashed through.",
-                    "Dashing leaves a delayed damaging Beat at the Dash starting point.",
-                    "Also creates a Beat at the Dash destination. Landing on at least one enemy grants additional Flow.",
+                    "Dashing restores <color=#FD3971>35%</color> Flow, plus more for each enemy you Dash through.",
+                    "Dashing restores <color=#FD3971>35%</color> Flow, plus more per enemy Dashed through. A damaging Beat hits your starting point <color=#FD3971>1s</color> later.",
+                    "Dashing restores <color=#FD3971>35%</color> Flow, plus more per enemy hit. Damaging Beats hit your start and end points <color=#FD3971>1s</color> later.",
                 };
                 a.FlowProgressOnDash = FP.FromString("0.35");
                 a.SweepRadius = FP._1_50;
@@ -356,9 +356,9 @@ namespace QuantumUser.Editor
                 a.Description = "Dashing leaves behind a Portable Speaker running the same Damage/Support rhythm at half strength.";
                 a.RankDescriptions = new[]
                 {
-                    "Dashing deploys a Mini Totem that produces weaker Damage and Support Beats. Maximum <color=#FD3971>1</color> active Mini Totem.",
-                    "Mini Totem duration and radius increase. Deploying one also grants nearby allies Move Speed and Fire Rate.",
-                    "Zara can have <color=#FD3971>2</color> Mini Totems active. Mini Totems also inherit the supported bonuses from Zara's Totem Ascensions.",
+                    "Dashing drops a Mini Totem for <color=#FD3971>3s</color> that plays half-strength Damage and Support Beats. Max <color=#FD3971>1</color> at a time.",
+                    "Dashing drops a Mini Totem for <color=#FD3971>4s</color> with <color=#FD3971>+30%</color> radius that plays half-strength Beats and boosts nearby allies' Move Speed and Fire Rate. Max <color=#FD3971>1</color> at a time.",
+                    "Dashing drops a Mini Totem for <color=#FD3971>4s</color> with <color=#FD3971>+30%</color> radius that plays half-strength Beats, boosts nearby allies, and gets your Totem upgrades. Max <color=#FD3971>2</color> at a time.",
                 };
                 a.Prototype = speakerPrototype;
                 a.Duration = new[] { FP._3, FP._4, FP._4 };

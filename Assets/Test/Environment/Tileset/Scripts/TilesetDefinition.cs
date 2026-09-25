@@ -41,6 +41,85 @@ public class TilesetDefinition : ScriptableObject
     [SerializeField, Tooltip("Place the 2x2 rounded inner corner where the layout allows it. Off = sharp per-cell inner corners everywhere.")]
     private bool useInnerCorners = true;
 
+    [Serializable]
+    public struct ScatterEntry
+    {
+        public GameObject Model;
+        [Tooltip("Relative chance among the entries of the same list (<= 0 counts as 1).")]
+        public float Weight;
+        [Tooltip("Uniform scale range (0,0 = 1).")]
+        public Vector2 ScaleRange;
+        [Tooltip("Free yaw + small position jitter (rocks, tufts). Off = yaw in 90 degree steps, centred (containers, machines).")]
+        public bool AnyYaw;
+        [Range(1, 2), Tooltip("Cells the prop needs (2 = long prop like a container; needs a free neighbour cell).")]
+        public int Cells;
+        [Tooltip("Wall props only: stands at the wall FOOT (platform bottom, only where that ground is visible) instead of being embedded in the face.")]
+        public bool Foot;
+    }
+
+    [Header("Surface scatter (props on top of platforms, see TilesetPlatformBuilder.SurfaceDecor)")]
+    [SerializeField, Tooltip("Small walk-through decoration for walkable floors: rocks, tufts, cables. Nothing that looks solid.")]
+    private List<ScatterEntry> groundScatter = new();
+    [SerializeField, Range(0f, 1f), Tooltip("Chance per interior cell of a walkable floor to get one ground prop.")]
+    private float groundDensity = 0.06f;
+    [SerializeField, Tooltip("Props for raised blocks players can't walk on: containers, machines, antennas, crates...")]
+    private List<ScatterEntry> rooftopScatter = new();
+    [SerializeField, Range(0f, 1f), Tooltip("Chance per interior cell of a raised block to get one rooftop prop.")]
+    private float rooftopDensity = 0.3f;
+    [SerializeField, Tooltip("Props placed along a raised block's edges (e.g. fence segments), 1 unit long along local X, facing like the edge tile.")]
+    private List<ScatterEntry> rooftopEdgeProps = new();
+    [SerializeField, Range(0f, 1f), Tooltip("Chance per edge tile of a raised block to get an edge prop.")]
+    private float rooftopEdgeChance = 0.5f;
+
+    [SerializeField, Tooltip("Props embedded in wall faces (tyres, skulls, pipes...) or standing at the wall foot (Foot). Authored facing -Z, pivot at the mount point, lowest point at height 0. Real size - not stretched with the wall.")]
+    private List<ScatterEntry> wallScatter = new();
+    [SerializeField, Range(0f, 1f), Tooltip("Chance per wall edge tile to get one wall prop.")]
+    private float wallDensity = 0.3f;
+
+    [SerializeField, Tooltip("Band of the wall (fraction of wall height, 0 = foot, 1 = top) wall props must never overlap - e.g. a neon trim baked into the wall profile. (0,0) = none.")]
+    private Vector2 wallPropAvoidBand = Vector2.zero;
+    [SerializeField, Tooltip("Extra world-unit gap kept between a prop and the avoid band.")]
+    private float wallPropAvoidMargin = 0.04f;
+
+    public Vector2 WallPropAvoidBand => wallPropAvoidBand;
+    public float WallPropAvoidMargin => wallPropAvoidMargin;
+    public IReadOnlyList<ScatterEntry> WallScatter => wallScatter;
+    public float WallDensity => wallDensity;
+    public IReadOnlyList<ScatterEntry> GroundScatter => groundScatter;
+    public float GroundDensity => groundDensity;
+    public IReadOnlyList<ScatterEntry> RooftopScatter => rooftopScatter;
+    public float RooftopDensity => rooftopDensity;
+    public IReadOnlyList<ScatterEntry> RooftopEdgeProps => rooftopEdgeProps;
+    public float RooftopEdgeChance => rooftopEdgeChance;
+
+    // Weighted, deterministic pick from a scatter list (null entry = empty list).
+    public static bool PickScatter(IReadOnlyList<ScatterEntry> list, int hash, out ScatterEntry picked)
+    {
+        picked = default;
+        var total = 0f;
+        foreach (var e in list)
+        {
+            if (e.Model != null)
+                total += e.Weight > 0f ? e.Weight : 1f;
+        }
+
+        if (total <= 0f)
+            return false;
+
+        var roll = (hash & 0x7fffffff) / (float)int.MaxValue * total;
+        foreach (var e in list)
+        {
+            if (e.Model == null)
+                continue;
+            picked = e;
+            roll -= e.Weight > 0f ? e.Weight : 1f;
+            if (roll <= 0f)
+                return true;
+        }
+
+        return picked.Model != null;
+    }
+
     [SerializeField, Tooltip("DualGrid: longest straight wall segment (in cells) one stretched edge piece may cover. 1 = no stretching.")]
     private int maxEdgeLength = 3;
 

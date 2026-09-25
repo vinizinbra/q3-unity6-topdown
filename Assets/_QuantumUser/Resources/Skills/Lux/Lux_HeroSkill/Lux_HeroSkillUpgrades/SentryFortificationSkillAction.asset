@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: 535018670, guid: 355e00907e214470bac0029f70064510, type: 3}
   DisplayName: Fortification
   RankDescriptions:
-  - "Sentry attack range increases by <color=#FD3971>2m</color>."
-  - "Allies within Sentry range gain Free Hit Guard once per Sentry."
-  - "Allies within Sentry range also gain <color=#FD3971>+15%</color> Fire Rate and <color=#FD3971>10%</color> Damage Reduction."
+  - "Sentry attack range <color=#FD3971>+2m</color>."
+  - "Sentry attack range <color=#FD3971>+2m</color>. Allies in its range get a Guard that blocks one hit (once per Sentry)."
+  - "Sentry attack range <color=#FD3971>+2m</color>. Allies in its range get a Guard that blocks one hit (once per Sentry), <color=#FD3971>+15%</color> Fire Rate and <color=#FD3971>10%</color> Damage Reduction."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

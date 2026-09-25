@@ -56,10 +56,14 @@ component ZaraFlow
     // the same reason BuildDuration is - "it empties in 3 seconds" is what a designer actually tunes.
     FP DecayDuration;
 
-    // Captured ONCE at seed so the bonus can be rebaked from a clean baseline every time Flow toggles,
-    // instead of multiplying the live value and compounding.
-    FP BaseMoveSpeedMultiplier;
-    FP BaseAttackSpeedMultiplier;
+    // Exactly what Flow itself last ADDED to CharacterStats' Move/Attack Speed multipliers, so a
+    // toggle takes back only its own contribution and never compounds. It used to rebake both stats
+    // from a baseline captured once at seed instead - which silently wiped every OTHER change made to
+    // them afterwards on the next toggle (a Move/Fire Rate Global Upgrade, Bullet Storm/Heavy
+    // Arsenal, Emergency Reload's mid-reload bonus - that last one then got subtracted from the
+    // rebaked value on reload end, leaving her permanently slower).
+    FP AppliedMoveSpeedDelta;
+    FP AppliedAttackSpeedDelta;
 
     // -- Faster Tempo (Ascension line A) --
 

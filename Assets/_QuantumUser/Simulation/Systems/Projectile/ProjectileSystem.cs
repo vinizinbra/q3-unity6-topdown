@@ -108,7 +108,7 @@ namespace Quantum
 
             for (int segment = 0; segment < MaxSegmentsPerTick; segment++)
             {
-                Hit3D? hit = CastForHit(f, filter.Projectile->Owner, origin, direction, remainingDistance, hitMask, projectileData.HitRadius);
+                Hit3D? hit = CastForHit(f, filter.Projectile->Owner, filter.Projectile->LastHit, origin, direction, remainingDistance, hitMask, projectileData.HitRadius);
 
                 if (hit.HasValue == false)
                 {
@@ -125,6 +125,13 @@ namespace Quantum
                 {
                     Destroy(f, filter.Entity, filter.Projectile, hitPoint);
                     return;
+                }
+
+                // Survived the contact (Pierce/Ricochet) - don't let the very next cast, which starts
+                // on this entity's surface, count it again. See Projectile.LastHit.
+                if (hit.Value.Entity != EntityRef.None)
+                {
+                    filter.Projectile->LastHit = hit.Value.Entity;
                 }
 
                 // A hit that just settled it (AreaHitData.Settle, e.g. a fused bomb ignoring level
@@ -197,7 +204,7 @@ namespace Quantum
         // unit or so of a shot's flight could register nothing at all, so an enemy standing point-blank
         // was simply never hit. Same nearest-first walk over an -All query
         // WeaponSystem.FireHitscanPellet already does, for exactly this reason.
-        private static Hit3D? CastForHit(Frame f, EntityRef owner, FPVector3 origin, FPVector3 direction, FP travelDistance, int hitMask, FP hitRadius)
+        private static Hit3D? CastForHit(Frame f, EntityRef owner, EntityRef lastHit, FPVector3 origin, FPVector3 direction, FP travelDistance, int hitMask, FP hitRadius)
         {
             HitCollection3D hits;
 
@@ -222,6 +229,9 @@ namespace Quantum
             for (int i = 0; i < hits.Count; i++)
             {
                 if (IsValidHitTarget(f, owner, hits[i].Entity) == false)
+                    continue;
+
+                if (lastHit != EntityRef.None && hits[i].Entity == lastHit)
                     continue;
 
                 FP distance = hits[i].CastDistanceNormalized;

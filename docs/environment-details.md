@@ -127,6 +127,20 @@ ever needed again.
 - **Water opacity per world:** `WorldWaterTheme.Opacity` drives `_WaterOpacity` (0 = keep material). Water
   alpha-blends over the background, so dark water (DesertOilFields oil) needs 1; every theme sets a
   value because the water Material is shared.
+- **Cloud floor instead of water (2026-09-25):** `WorldWaterTheme.SurfaceMaterial` swaps the water quad's
+  material per world (EnvironmentManager finds the renderers using a `waterMaterials` entry once and restores the
+  original for worlds without an override). `Project/CloudFog` (`View/Rendering/Shaders/CloudFog.shader`) is the
+  mobile cloud sea: alpha-blended like the lake (Gaps/Mid/Tops opacity per band, so building walls below show through), 2 reads of one 256px R8 tileable cloud texture
+  (`Art/Environment/CloudFog/CloudNoise.png` puffs / `CloudNoise_Difference.png` cartoon "difference clouds" - |fbm A - fbm B| inverted, blurred, soft-posterized into 3 plateaus; generator `Tileset/Source~/make_cloud_texture.py <out> [puffs|difference]`; import as Single Channel R8 with **Channel = Red** - Unity's default Alpha reads a constant 1 from these alpha-less PNGs) with all UVs
+  computed per vertex, Deep/Mid/Top toon bands via saturate ramps, optional `_ShoreField` use (`shader_feature_local`, runtime-baked by WaterShoreBaker): Edge Fade (clouds thin out within N m of the buildings -> volumetric height-fog look) + cliff billows, `Height Offset` lowers the floor so walls fade into it (match the tileset
+  material's water-depth gradient: bottom = Deep Color, start = cloud height). NeonFloodDistrict uses
+  `CloudFog_Neon` (height -1.2; soft bands (sharpness 5), gaps 0.2 / mid 0.6 / tops 0.85, edge fade 2.5 m to 0.1; NeonCityV4 wall line off, gradient -2.5 -> +0.8 so walls dissolve into the fog with depth).
+- **Starfield floor (2026-09-25):** `Project/Starfield` (`View/Rendering/Shaders/Starfield.shader`), same
+  Surface Material slot + shore-field edge fade as CloudFog: two star layers from one RG texture
+  (`Art/Environment/Starfield/StarField.png`, R = star, G = twinkle phase; generator
+  `Tileset/Source~/make_star_texture.py`) with camera parallax (0 = world, 1 = camera) so stars feel infinitely
+  far, triangle-wave twinkle, slow nebula from CloudNoise_Difference; all UVs per vertex, 4 reads. Moon theme
+  uses `Starfield_Moon` (height -1.2, Sky = Space Color 0.03/0.04/0.1).
 - **3D tileset per world:** `WorldTheme.Tileset` swaps the chunk cubes' tileset; the level look lives on
   each tileset's own material. The old level-Material blocks (Surface/Walls colours, Surface noise,
   Wall Line, height-fog sync, Bake/Capture buttons) were removed 2026-09-24 - see

@@ -65,6 +65,11 @@ public class GameManager : MonoBehaviour
 
     void SetInGameTab()
     {
+        // A disconnect can land while the gameplay scene is still loading and already have put the
+        // menu back (MatchMakingConfig.ReturnToMenuAfterDisconnect) - hiding the Canvas now would
+        // leave that menu invisible.
+        if (MainMenuTab != null && MainMenuTab.windowManager != null && MainMenuTab.windowManager.currentWindow is MainMenuWindow)
+            return;
         if (menuCanvas != null)
             menuCanvas.enabled = false;
     }

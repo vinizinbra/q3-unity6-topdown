@@ -14,6 +14,12 @@ namespace Quantum
     {
         [ExpandableAsset] public AssetRef<ProjectileDataAsset> ProjectileData;
 
+        // Per-action "these shots fly faster/slower" (1 = the movement's own authored speed), passed
+        // to ProjectileSpawner.Spawn and applied through the movement's own ApplySpeedMultiplier -
+        // an arc still lands on its point, just sooner. Lets enemies share one ProjectileDataAsset
+        // at different speeds. The landing warning reads the final scaled velocity (ref launch).
+        public FP ProjectileSpeedMultiplier = 1;
+
         public ProjectileSpawnAnchor SpawnAnchor = ProjectileSpawnAnchor.OnSelf;
         public FPVector3 SpawnOffset;
 
@@ -109,7 +115,8 @@ namespace Quantum
                 // ref launch - Spawn's own ApplySpeedMultiplier mutates it in place (including
                 // BossPhaseUtility.ResolveProjectileSpeedMultiplier), so the FireLandingWarning call
                 // below sees the shot's REAL final velocity, not the pre-multiplier one solved above.
-                EntityRef projectile = ProjectileSpawner.Spawn(f, filter.Entity, ProjectileData, ref launch, action.Damage, target: target);
+                EntityRef projectile = ProjectileSpawner.Spawn(f, filter.Entity, ProjectileData, ref launch, action.Damage, target: target,
+                    speedMultiplier: ProjectileSpeedMultiplier);
 
                 if (ShowLandingWarning == true)
                     FireLandingWarning(f, resolvedOrigin, targetPosition, launch.Velocity, ResolveWarningRadius(f, projectileData.Hit));

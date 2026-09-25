@@ -101,9 +101,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Bolts additional weapon systems onto your Sentry, one per rank.";
                 asset.RankDescriptions = new[]
                 {
-                    "Sentry gains a Minigun.",
-                    "Sentry also gains a Rocket Pod.",
-                    "Sentry also gains a piercing Laser. Cannon, Minigun, Rockets and Laser can fire together.",
+                    "Sentry gains a Minigun alongside its Cannon.",
+                    "Sentry gains a Minigun and a Rocket Pod alongside its Cannon.",
+                    "Sentry gains a Minigun, a Rocket Pod and a piercing Laser, all firing alongside its Cannon.",
                 };
                 asset.MinigunWeapon = LoadWeapon(MinigunPath);
                 asset.MinigunOffset = new FPVector3(FP._0_50, FP._0_50, FP._0_50);
@@ -122,8 +122,8 @@ namespace QuantumUser.Editor
                 asset.RankDescriptions = new[]
                 {
                     "Sentry gains <color=#FD3971>+25%</color> Fire Rate.",
-                    "Fire Rate increases to <color=#FD3971>+40%</color> and Sentry lifetime increases by <color=#FD3971>2s</color>.",
-                    "Fire Rate increases to <color=#FD3971>+50%</color>. During its final <color=#FD3971>3s</color>, Sentry gains an additional <color=#FD3971>+100%</color> Fire Rate.",
+                    "Sentry gains <color=#FD3971>+40%</color> Fire Rate and <color=#FD3971>+2s</color> lifetime.",
+                    "Sentry gains <color=#FD3971>+50%</color> Fire Rate and <color=#FD3971>+2s</color> lifetime. In its final <color=#FD3971>3s</color>, it gains another <color=#FD3971>+100%</color> Fire Rate.",
                 };
                 asset.FireRateMultiplier = new[] { FP._1_25, FP.FromString("1.40"), FP._1_50 };
                 asset.DurationBonus = new FP[] { 0, 2, 2 };
@@ -139,9 +139,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Your Sentry becomes a position worth holding - longer reach, then covering fire.";
                 asset.RankDescriptions = new[]
                 {
-                    "Sentry attack range increases by <color=#FD3971>2m</color>.",
-                    "Allies within Sentry range gain Free Hit Guard once per Sentry.",
-                    "Allies within Sentry range also gain <color=#FD3971>+15%</color> Fire Rate and <color=#FD3971>10%</color> Damage Reduction.",
+                    "Sentry attack range <color=#FD3971>+2m</color>.",
+                    "Sentry attack range <color=#FD3971>+2m</color>. Allies in its range get a Guard that blocks one hit (once per Sentry).",
+                    "Sentry attack range <color=#FD3971>+2m</color>. Allies in its range get a Guard that blocks one hit (once per Sentry), <color=#FD3971>+15%</color> Fire Rate and <color=#FD3971>10%</color> Damage Reduction.",
                 };
                 asset.RangeBonus = new FP[] { 2, 2, 2 };
 
@@ -169,8 +169,8 @@ namespace QuantumUser.Editor
                 asset.RankDescriptions = new[]
                 {
                     "When destroyed or expired, Sentry explodes for <color=#FD3971>100%</color> Skill Damage in a <color=#FD3971>4m</color> radius.",
-                    "Explosion Damage increases to <color=#FD3971>175%</color>, radius increases by <color=#FD3971>30%</color>, and enemies are strongly Knocked Back.",
-                    "Explosion Damage increases to <color=#FD3971>250%</color>. Enemies hit become Exposed for <color=#FD3971>3s</color> and take <color=#FD3971>+20%</color> Damage.",
+                    "When destroyed or expired, Sentry explodes for <color=#FD3971>175%</color> Skill Damage in a <color=#FD3971>5.2m</color> radius, strongly knocking enemies back.",
+                    "When destroyed or expired, Sentry explodes for <color=#FD3971>250%</color> Skill Damage in a <color=#FD3971>5.2m</color> radius, knocking enemies back. Enemies hit take <color=#FD3971>+20%</color> Damage for <color=#FD3971>3s</color>.",
                 };
                 asset.DamagePercent = new[] { FP._1, FP.FromString("1.75"), FP.FromString("2.50") };
                 asset.BaseRadius = FP._4;
@@ -189,9 +189,9 @@ namespace QuantumUser.Editor
                 asset.Description = "More enemies drop Scrap, and more often.";
                 asset.RankDescriptions = new[]
                 {
-                    "Even Filler enemies can now drop Scrap (<color=#FD3971>10%</color> chance).",
-                    "All Scrap drop chances increase; Filler enemies now drop Scrap <color=#FD3971>13%</color> of the time.",
-                    "Specialist, Heavy and Elite enemies always drop Scrap. Bosses drop <color=#FD3971>3</color> Scrap.",
+                    "Filler enemies can drop Scrap too (<color=#FD3971>10%</color> chance).",
+                    "Enemies drop Scrap <color=#FD3971>31%</color> of the time; Filler enemies <color=#FD3971>13%</color>.",
+                    "Enemies drop Scrap <color=#FD3971>31%</color> of the time; Filler enemies <color=#FD3971>13%</color>. Specialist, Heavy and Elite enemies always drop Scrap, and Bosses drop <color=#FD3971>3</color>.",
                 };
                 asset.DropChance = new[] { FP._0_25, FP.FromString("0.31"), FP.FromString("0.31") };
                 asset.FillerDropChance = new[] { FP._0_10, FP.FromString("0.13"), FP.FromString("0.13") };
@@ -207,9 +207,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Collected Scrap shortens your Sentry's cooldown.";
                 asset.RankDescriptions = new[]
                 {
-                    "Collecting Scrap reduces Sentry cooldown by <color=#FD3971>0.5s</color>.",
-                    "Cooldown reduction increases to <color=#FD3971>1s</color> per Scrap.",
-                    "Earning a Fabrication Charge immediately reduces Sentry cooldown by another <color=#FD3971>3s</color>.",
+                    "Each Scrap collected cuts Sentry cooldown by <color=#FD3971>0.5s</color>.",
+                    "Each Scrap collected cuts Sentry cooldown by <color=#FD3971>1s</color>.",
+                    "Each Scrap collected cuts Sentry cooldown by <color=#FD3971>1s</color>. Earning a Fabrication Charge (every <color=#FD3971>10</color> Scrap) cuts another <color=#FD3971>3s</color>.",
                 };
                 asset.CooldownReductionPerPickup = new[] { FP._0_50, FP._1, FP._1 };
                 asset.CooldownReductionOnCharge = new FP[] { 0, 0, 3 };
@@ -222,9 +222,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Scrap collected while a Sentry is deployed upgrades that Sentry, for as long as it lives.";
                 asset.RankDescriptions = new[]
                 {
-                    "Scrap collected while your Sentry is active grants it <color=#FD3971>+4%</color> Damage, up to <color=#FD3971>5</color> stacks.",
-                    "Scrap also grants it <color=#FD3971>+3%</color> Fire Rate per stack, still capped at <color=#FD3971>5</color> stacks.",
-                    "At <color=#FD3971>5</color> stacks, your Sentry's Cannon upgrades to a Twin Cannon.",
+                    "Scrap collected while your Sentry is out gives it <color=#FD3971>+4%</color> Damage, up to <color=#FD3971>5</color> stacks.",
+                    "Scrap collected while your Sentry is out gives it <color=#FD3971>+4%</color> Damage and <color=#FD3971>+3%</color> Fire Rate, up to <color=#FD3971>5</color> stacks.",
+                    "Scrap collected while your Sentry is out gives it <color=#FD3971>+4%</color> Damage and <color=#FD3971>+3%</color> Fire Rate, up to <color=#FD3971>5</color> stacks. At <color=#FD3971>5</color> stacks, its Cannon becomes a Twin Cannon.",
                 };
                 asset.DamagePerStack = new[] { FP.FromString("0.04"), FP.FromString("0.04"), FP.FromString("0.04") };
                 asset.FireRatePerStack = new[] { FP._0, FP.FromString("0.03"), FP.FromString("0.03") };
@@ -248,8 +248,8 @@ namespace QuantumUser.Editor
                 asset.RankDescriptions = new[]
                 {
                     "Ending a Dash within <color=#FD3971>6m</color> of your Sentry repairs <color=#FD3971>30%</color> of its Max Health.",
-                    "Also extends Sentry lifetime by <color=#FD3971>2s</color>.",
-                    "Also grants Sentry <color=#FD3971>+50%</color> Fire Rate for <color=#FD3971>2s</color>.",
+                    "Ending a Dash within <color=#FD3971>6m</color> of your Sentry repairs <color=#FD3971>30%</color> of its Max Health and adds <color=#FD3971>2s</color> to its lifetime.",
+                    "Ending a Dash within <color=#FD3971>6m</color> of your Sentry repairs <color=#FD3971>30%</color> of its Max Health, adds <color=#FD3971>2s</color> to its lifetime, and gives it <color=#FD3971>+50%</color> Fire Rate for <color=#FD3971>2s</color>.",
                 };
                 asset.Range = FP._6;
                 asset.RepairFraction = new[] { FP.FromString("0.30"), FP.FromString("0.30"), FP.FromString("0.30") };
@@ -270,9 +270,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Dash while standing at your Sentry and it comes with you - fully intact.";
                 asset.RankDescriptions = new[]
                 {
-                    "Dashing from within <color=#FD3971>4m</color> of your Sentry moves it to the Dash destination.",
-                    "The relocated Sentry gains <color=#FD3971>+25%</color> Fire Rate for <color=#FD3971>2s</color> and <color=#FD3971>+1s</color> lifetime.",
-                    "The relocated Sentry immediately fires a volley and releases a radial knockback pulse at nearby enemies.",
+                    "Dashing from within <color=#FD3971>4m</color> of your Sentry moves it to where you land.",
+                    "Dashing from within <color=#FD3971>4m</color> of your Sentry moves it to where you land. It gains <color=#FD3971>+25%</color> Fire Rate for <color=#FD3971>2s</color> and <color=#FD3971>+1s</color> lifetime.",
+                    "Dashing from within <color=#FD3971>4m</color> of your Sentry moves it to where you land. It gains <color=#FD3971>+25%</color> Fire Rate for <color=#FD3971>2s</color> and <color=#FD3971>+1s</color> lifetime, then fires a volley and knocks back nearby enemies.",
                 };
                 asset.PickupRange = FP._4;
                 asset.TempFireRateMultiplier = new[] { FP._1, FP._1_25, FP._1_25 };

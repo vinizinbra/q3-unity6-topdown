@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: 1060707514, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
   DisplayName: Bodyguard
   RankDescriptions:
-  - "After Dashing, Brute and allies within <color=#FD3971>3m</color> gain Free Hit Guard for <color=#FD3971>2.5s</color>. The next damaging hit is completely blocked."
-  - "Radius increases to <color=#FD3971>6m</color> and duration to <color=#FD3971>3.5s</color>. Whenever a Guard blocks a hit, Brute gains <color=#FD3971>10</color> Temporary Shield."
-  - "A block also grants Brute <color=#FD3971>15</color> Shield and releases a <color=#FD3971>3m</color> knockback shockwave around whoever it saved."
+  - "After Dashing, Brute and allies within <color=#FD3971>3m</color> gain a Guard for <color=#FD3971>2.5s</color> that fully blocks the next damaging hit."
+  - "After Dashing, Brute and allies within <color=#FD3971>6m</color> gain a Guard for <color=#FD3971>3.5s</color> that fully blocks the next damaging hit. Each block gives Brute <color=#FD3971>10</color> Shield."
+  - "After Dashing, Brute and allies within <color=#FD3971>8m</color> gain a Guard for <color=#FD3971>3.5s</color> that fully blocks the next damaging hit. Each block gives Brute <color=#FD3971>15</color> Shield and knocks back enemies within <color=#FD3971>3m</color>."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 4

@@ -933,12 +933,22 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
       TalentSaveData talents = TalentsPref.Value;
       AssetRef<EntityPrototype> localCharacterAvatar = PartyManager.Instance.ResolveLocalCharacterAvatar();
 
+      // The Inspector-authored PlayerNickname on these entries is never the real player's name
+      // (it was leaking e.g. "pixie" onto every hero's CharacterUiWidget). Online, the first
+      // human slot takes this client's Photon nickname; offline and extra couch co-op slots get
+      // none, so CharView falls back to the hero's name.
+      string localNickname = GameManager.Instance.isPlayingOffline ? null : Client?.NickName;
+
       for (int i = 0; i < RuntimePlayers.Count; i++) {
          // A bot keeps whatever PlayerAvatar was authored on its own entry (see docs/bots.md) -
          // the whole point of filling the party with bots is watching a DIFFERENT hero than the
          // one this client picked, so the character-select choice must not be stamped onto them.
          if (RuntimePlayers[i].IsBot == false)
+         {
             RuntimePlayers[i].PlayerAvatar = localCharacterAvatar;
+            RuntimePlayers[i].PlayerNickname = localNickname;
+            localNickname = null;
+         }
          if (weaponTalentLevel > 0) RuntimePlayers[i].Talents.WeaponLevel = weaponTalentLevel;
          if (rerollQuantity > 0) RuntimePlayers[i].Talents.RerollQuantity = rerollQuantity;
          if (shopWeaponOfferCount > 0) RuntimePlayers[i].Talents.ShopWeaponOfferCount = shopWeaponOfferCount;
@@ -1041,6 +1051,8 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
    {
       if (SceneLoader.IsBusy)
          return;
+
+      _pendingDisconnectReason = null;
 
       if (IsInMatch())
       {
@@ -1290,6 +1302,15 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
       ReturnToMenuAfterDisconnect(cause);
    }
 
+   // Set by InMatchWindow right before it disconnects on the player's behalf (plugin disconnect,
+   // start timeout), so the alert explaining why can be shown once the menu Canvas is back up.
+   private string _pendingDisconnectReason;
+
+   public void SetPendingDisconnectReason(string reason)
+   {
+      _pendingDisconnectReason = reason;
+   }
+
    private void ReturnToMenuAfterDisconnect(DisconnectCause cause)
    {
       // ShowWindow<MainMenuWindow>() has to run unconditionally, and BEFORE the alert below - it's
@@ -1303,8 +1324,13 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
       var mainMenuTab = GameManager.Instance.MainMenuTab;
       mainMenuTab.windowManager.ShowWindow<MainMenuWindow>();
 
-      if (cause != DisconnectCause.DisconnectByClientLogic)
+      // A pending reason means the disconnect was client-initiated (DisconnectByClientLogic) but not
+      // chosen by the player - e.g. InMatchWindow reacting to a Quantum plugin disconnect.
+      if (!string.IsNullOrEmpty(_pendingDisconnectReason))
+         AlertPopup.Show("Disconnected", _pendingDisconnectReason);
+      else if (cause != DisconnectCause.DisconnectByClientLogic)
          AlertPopup.Show("Disconnected", cause.ToString());
+      _pendingDisconnectReason = null;
 
       if (QuantumRunner.Default != null)
          QuantumRunner.ShutdownAll();

@@ -20,8 +20,8 @@ MonoBehaviour:
   DisplayName: Phantom Strike
   RankDescriptions:
   - "After Dashing, Kai's next weapon hit deals <color=#FD3971>+50%</color> Damage and gains <color=#FD3971>+1</color> Pierce."
-  - "Bonus increases to <color=#FD3971>+75%</color> Damage and <color=#FD3971>+2</color> Pierce."
-  - "Bonus increases to <color=#FD3971>+100%</color> Damage and gains unlimited Pierce."
+  - "After Dashing, Kai's next weapon hit deals <color=#FD3971>+75%</color> Damage and gains <color=#FD3971>+2</color> Pierce."
+  - "After Dashing, Kai's next weapon hit deals <color=#FD3971>+100%</color> Damage and pierces every enemy."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

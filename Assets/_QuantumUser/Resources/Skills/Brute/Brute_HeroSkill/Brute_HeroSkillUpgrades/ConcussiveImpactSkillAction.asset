@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: 2016768158, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
   DisplayName: Concussive Impact
   RankDescriptions:
-  - "Launched enemies take <color=#FD3971>30%</color> Juggernaut Skill Damage and are Stunned for <color=#FD3971>0.75s</color> when they land."
-  - "<color=#FD3971>+25%</color> Knockback. Landing Damage increases to <color=#FD3971>50%</color> and Stun increases to <color=#FD3971>1s</color>."
-  - "Landing Damage rises to <color=#FD3971>75%</color>, Stun to <color=#FD3971>1.25s</color>. Creates a <color=#FD3971>2.5m</color> shockwave (<color=#FD3971>40%</color> Damage, <color=#FD3971>1s</color> Stun). <color=#FD3971>+40%</color> Damage to Stunned."
+  - "Enemies launched by Discharge take <color=#FD3971>30%</color> Juggernaut Skill Damage and are Stunned for <color=#FD3971>0.75s</color> when they land."
+  - "Discharge has <color=#FD3971>+25%</color> Knockback. Launched enemies take <color=#FD3971>50%</color> Juggernaut Skill Damage and are Stunned for <color=#FD3971>1s</color> when they land."
+  - "Discharge has <color=#FD3971>+25%</color> Knockback. Launched enemies take <color=#FD3971>75%</color> Juggernaut Skill Damage, are Stunned for <color=#FD3971>1.25s</color>, and land with a <color=#FD3971>2.5m</color> shockwave (<color=#FD3971>40%</color> Damage, <color=#FD3971>1s</color> Stun). Stunned enemies take <color=#FD3971>+40%</color> Damage."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

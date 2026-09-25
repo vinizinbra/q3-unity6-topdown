@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: -1095911109, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
   DisplayName: Amplifier
   RankDescriptions:
-  - "Damage Beats deal <color=#FD3971>+30%</color> Damage."
-  - "Damage bonus increases to <color=#FD3971>+60%</color>. Damage Beats also Knockback small enemies."
-  - "Damage bonus increases to <color=#FD3971>+100%</color>. Every third Damage Beat Stuns enemies."
+  - "Totem Damage Beats deal <color=#FD3971>+30%</color> Damage."
+  - "Totem Damage Beats deal <color=#FD3971>+60%</color> Damage and knock back small enemies."
+  - "Totem Damage Beats deal <color=#FD3971>+100%</color> Damage and knock back small enemies. Every third Damage Beat Stuns."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

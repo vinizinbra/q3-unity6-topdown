@@ -63,11 +63,13 @@ namespace Quantum {
     // KeyCodes - each one's actual "joystick button N" mapping is configured there (Project Settings
     // > Input Manager), not hardcoded here, so it can be re-pointed at a different physical button
     // without touching code. Current defaults: GamepadDash=0, GamepadSkill=2, GamepadSwitchTarget=3,
-    // GamepadFire=5.
-    private const string GamepadDash = "GamepadDash";
-    private const string GamepadSkill = "GamepadSkill";
-    private const string GamepadSwitchTarget = "GamepadSwitchTarget";
-    private const string GamepadFire = "GamepadFire";
+    // GamepadFire=5. GamepadInputNames swaps in the "Editor"-prefixed Xbox 360 set in the macOS Editor.
+    private static readonly string GamepadDash = GamepadInputNames.Get("GamepadDash");
+    private static readonly string GamepadSkill = GamepadInputNames.Get("GamepadSkill");
+    private static readonly string GamepadSwitchTarget = GamepadInputNames.Get("GamepadSwitchTarget");
+    private static readonly string GamepadFire = GamepadInputNames.Get("GamepadFire");
+    private static readonly string GamepadHorizontal = GamepadInputNames.Get("GamepadHorizontal");
+    private static readonly string GamepadVertical = GamepadInputNames.Get("GamepadVertical");
 
     private Quantum.Input PollPlayerOneInput() {
       Quantum.Input i = new Quantum.Input();
@@ -78,11 +80,11 @@ namespace Quantum {
       // CF2Input is reserved for keyboard + on-screen mobile touch controls (Control Freak 2's own
       // Input Rig binds both to the same virtual "Horizontal"/"Vertical"/KeyCode targets), so a
       // touch build gets the same code path as desktop keyboard for free.
-      float x = CF2Input.GetAxis("Horizontal") ;
-      float y = CF2Input.GetAxis("Vertical");
+      float x = CF2Input.GetAxis("Horizontal")*2 ;
+      float y = CF2Input.GetAxis("Vertical")*2;
       if(Mathf.Abs(x) < 0.1f && Mathf.Abs(y) < 0.1f) {
-        x = UnityEngine.Input.GetAxis("GamepadHorizontal");
-        y = UnityEngine.Input.GetAxis("GamepadVertical");
+        x = UnityEngine.Input.GetAxis(GamepadHorizontal);
+        y = UnityEngine.Input.GetAxis(GamepadVertical);
       }
       bool shiftHeld = UnityEngine.Input.GetButton(GamepadDash) || CF2Input.GetKey(UnityEngine.KeyCode.LeftShift) || CF2Input.GetKey(UnityEngine.KeyCode.RightShift);
       bool fire = UnityEngine.Input.GetButton(GamepadFire) || UnityEngine.Input.GetMouseButton(0);

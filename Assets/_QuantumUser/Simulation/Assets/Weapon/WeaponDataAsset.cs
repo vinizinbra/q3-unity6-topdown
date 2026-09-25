@@ -79,8 +79,23 @@ namespace Quantum
         // Full cone width in degrees, meaningless while PelletCount <= 1.
         public FP SpreadAngle;
 
+        // Inaccuracy, not a pellet fan: each shot/pellet (projectile or hitscan) gets its own random
+        // yaw in [-x, x] degrees on top of its fixed SpreadAngle slot (WeaponSystem.GetShotAngle) -
+        // a Minigun's wobble vs a Shotgun's authored cone. Unlike RandomSideOffset this does rotate
+        // a locked-target shot off its target, so it can miss. 0 (default) = perfectly accurate,
+        // and no RNG roll consumed.
+        public FP RandomSpreadAngle;
+
         public ProjectileSpawnAnchor SpawnAnchor = ProjectileSpawnAnchor.OnSelf;
         public FPVector3 SpawnOffset;
+
+        // Max random sideways shift of each projectile's spawn point, along the shot's own right
+        // (perpendicular to its heading, flat) - a fresh roll in [-x, x] per projectile
+        // (WeaponSystem.ResolveSideOffset), so a Minigun's stream doesn't leave from one exact point.
+        // A shot at a locked target still converges on it (only the origin moves); a free-aimed
+        // shot keeps its heading, so it flies a parallel lane. 0 (default) = no offset, and no RNG
+        // roll consumed.
+        public FP RandomSideOffset;
 
         // Ricochet bounces this weapon starts with, before any Ricochet perk's own BonusBounces
         // stacks on top (WeaponSystem.ApplyProjectilePerks adds both onto Projectile.RemainingBounces) -
@@ -89,6 +104,17 @@ namespace Quantum
         public int BonusBounces = 0;
 
         [ExpandableAsset] public AssetRef<ProjectileDataAsset> ProjectileData;
+
+        // Per-weapon "this gun's shots fly faster/slower" (1 = the movement's own authored speed),
+        // folded into ProjectileSpawner.Spawn's speed multiplier alongside the owner's
+        // CharacterStats.ProjectileSpeedMultiplier - so it goes through each movement's own
+        // ApplySpeedMultiplier (an arc lands where it was aimed, just sooner) instead of every
+        // movement subclass growing a per-weapon Speed override. Lets two weapons share one
+        // ProjectileDataAsset/Movement at different speeds. Only the weapon's own root shot reads
+        // it (spawnDepth 0) - split children inherit the already-scaled velocity. A homing movement
+        // re-derives its magnitude every tick (HomingProjectileMovementData.UpdateVelocity), so there
+        // it only holds for the launch - same limitation the stat multiplier already has.
+        public FP ProjectileSpeedMultiplier = 1;
 
         // This weapon's own baseline WeaponPerkData picks - baked at Equip
         // (WeaponSystem.ApplyBaseTraits) exactly like a rolled Weapon.Perks entry (same

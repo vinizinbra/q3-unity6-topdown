@@ -21,9 +21,9 @@ MonoBehaviour:
   Description: "Scrap collected while a Sentry is deployed upgrades that Sentry, for as long as it lives."
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - "Scrap collected while your Sentry is active grants it <color=#FD3971>+4%</color> Damage, up to <color=#FD3971>5</color> stacks."
-  - "Scrap also grants it <color=#FD3971>+3%</color> Fire Rate per stack, still capped at <color=#FD3971>5</color> stacks."
-  - "At <color=#FD3971>5</color> stacks, your Sentry's Cannon upgrades to a Twin Cannon."
+  - "Scrap collected while your Sentry is out gives it <color=#FD3971>+4%</color> Damage, up to <color=#FD3971>5</color> stacks."
+  - "Scrap collected while your Sentry is out gives it <color=#FD3971>+4%</color> Damage and <color=#FD3971>+3%</color> Fire Rate, up to <color=#FD3971>5</color> stacks."
+  - "Scrap collected while your Sentry is out gives it <color=#FD3971>+4%</color> Damage and <color=#FD3971>+3%</color> Fire Rate, up to <color=#FD3971>5</color> stacks. At <color=#FD3971>5</color> stacks, its Cannon becomes a Twin Cannon."
   DamagePerStack:
   - RawValue: 2621
   - RawValue: 2621

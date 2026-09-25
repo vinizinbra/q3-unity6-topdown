@@ -16,7 +16,7 @@ MonoBehaviour:
   enemy:
     BloodColor: {r: 0.75, g: 0.1, b: 0.12, a: 1}
   environment:
-    Sky: {r: 0.05, g: 0.06, b: 0.12, a: 1}
+    Sky: {r: 0.03, g: 0.04, b: 0.1, a: 1}
   water:
     Apply: 1
     ShallowColor: {r: 0.3, g: 0.36, b: 0.55, a: 1}
@@ -24,8 +24,9 @@ MonoBehaviour:
     GlimmerColor: {r: 0.75, g: 0.82, b: 1, a: 1}
     FoamColor: {r: 0.85, g: 0.9, b: 1, a: 1}
     Opacity: 0.8
+    SurfaceMaterial: {fileID: 2100000, guid: 9ad01d7eac43043fb820a6c7ce43f8e7, type: 2}
   tileset:
-    Tileset: {fileID: 11400000, guid: 8930bd65466c64e49b683f3cb440cc2d, type: 2}
+    Tileset: {fileID: 11400000, guid: 493bb4e1557a547c9adb5ee39b53bf15, type: 2}
   obstacles:
     Size1x1: []
     Size1x2: []

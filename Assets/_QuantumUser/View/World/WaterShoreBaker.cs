@@ -1,5 +1,6 @@
 using NaughtyAttributes;
 using Photon.Deterministic;
+using Quantum.Physics3D;
 using Quantum;
 using QuantumUser.View;
 using QuantumUser.View.Util;
@@ -42,13 +43,65 @@ public class WaterShoreBaker : QuantumGlobalMonoBehaviour
     [SerializeField, Tooltip("World Y the downward ground probe originates near (the probe covers +-20 around it). Keep close to the level's floor height; 0 is fine for a near-flat level.")]
     private float probeHeightY = 0f;
 
+    [Header("Load-time budget")]
+    [SerializeField, Tooltip("Main-thread milliseconds the collider probe pass may spend per frame. The pass runs once, right as the level finishes generating - i.e. behind the loading screen - and done in one go it was the single biggest frame of the whole match start (~0.8s for ~29k probes). Spread over frames, the loading bar keeps animating and shows the bake's real progress (see BakeProgress). Rebake ignores this and runs to completion.")]
+    private float probeBudgetMs = 10f;
+    [SerializeField, Tooltip("Per-frame probe budget while a loading screen is covering the game (see IsLoadingScreenUp). Behind it only the loading bar has to keep animating, so the bake can take much bigger slices and finish sooner - which matters on slow mobile devices, where the loading screen waits for this bake before handing off.")]
+    private float coveredProbeBudgetMs = 30f;
+
+    // Set by LoadingWindow while it's up. Lives here rather than being read off the window, so this
+    // View-side baker never depends on a menu type.
+    public static bool IsLoadingScreenUp { get; set; }
+
+    // Matches EnemyMovementUtility.TryFindGroundHeight's own +-20 probe range.
+    private const float ProbeHalfRange = 20f;
+    private const QueryOptions ProbeQueryOptions = QueryOptions.HitStatics | QueryOptions.HitKinematics | QueryOptions.HitDynamics;
+
     private Texture2D _field;
     private int _res;
     private bool _baked;
 
+    // In-progress bake, carried across frames. _probeRow < 0 = not started yet.
+    private bool[] _candidate;
+    private bool[] _land;
+    private int _probeRow = -1;
+
     // Cached IDs - Shader.SetGlobal* every re-bake, but resolve the property IDs once.
     private static readonly int ShoreFieldId = Shader.PropertyToID("_ShoreField");
     private static readonly int ShoreFieldParamsId = Shader.PropertyToID("_ShoreFieldParams");
+
+    private static WaterShoreBaker _active;
+
+    // True while a baker exists in the loaded scene and hasn't produced its field yet - read by
+    // LoadingWindow, whose bar would otherwise hit "world built" before the probe pass has run. No
+    // baker in the scene = nothing pending.
+    public static bool IsBakePending => _active != null && _active._baked == false;
+
+    // 0..1 progress of the (time-sliced) probe pass, for LoadingWindow's bar. 1 with no baker.
+    public static float BakeProgress
+    {
+        get
+        {
+            if (_active == null || _active._baked)
+                return 1f;
+
+            if (_active._probeRow < 0 || _active._res <= 0)
+                return 0f;
+
+            return Mathf.Clamp01(_active._probeRow / (float)_active._res);
+        }
+    }
+
+    private void Awake()
+    {
+        _active = this;
+    }
+
+    private void OnDestroy()
+    {
+        if (_active == this)
+            _active = null;
+    }
 
     public override void QUpdate(QuantumGame game)
     {
@@ -58,14 +111,19 @@ public class WaterShoreBaker : QuantumGlobalMonoBehaviour
         // Same gate as MinimapWidget's outline: baking off a partially-populated chunk set would
         // lock in a wrong coastline forever, since it only ever runs once. See docs/minimap.md.
         Frame frame = game.Frames.Verified ?? game.Frames.Predicted;
-        if (frame != null && Bake(frame))
+        if (frame == null)
+            return;
+
+        UnityEngine.Profiling.Profiler.BeginSample("WaterShoreBaker.Bake");
+        if (StepBake(frame, IsLoadingScreenUp ? coveredProbeBudgetMs : probeBudgetMs))
             _baked = true;
+        UnityEngine.Profiling.Profiler.EndSample();
     }
 
     // Re-run the bake against the current live frame - lets worldUnitsPerTexel/maxShoreDistanceWorld/
     // probe settings be tweaked in Play Mode and seen immediately (same live-iteration idea
     // ChunkDetailScatter.Regenerate / LakeVisualBuilder.Generate expose). Play Mode only - there's no
-    // frame to probe in Edit Mode.
+    // frame to probe in Edit Mode. Runs to completion in one go, unlike the load-time bake.
     [Button("Rebake Shore Field")]
     public void Rebake()
     {
@@ -76,52 +134,88 @@ public class WaterShoreBaker : QuantumGlobalMonoBehaviour
         }
 
         Frame frame = _game.Frames.Verified ?? _game.Frames.Predicted;
-        if (frame != null && Bake(frame))
+        if (frame == null)
+            return;
+
+        _probeRow = -1;
+        if (StepBake(frame, float.PositiveInfinity))
             _baked = true;
     }
 
-    private unsafe bool Bake(Frame frame)
+    // Advances the bake by up to budgetMs of probing; true once the field is built and published.
+    // Every step probes whatever frame is current - the level's colliders are static once
+    // generated, so which frame a given row was probed against doesn't matter.
+    private unsafe bool StepBake(Frame frame, float budgetMs)
     {
-        if (frame.Global->LevelGenerated == false)
-            return false;
+        if (_probeRow < 0)
+        {
+            if (frame.Global->LevelGenerated == false)
+                return false;
 
-        float scale = 1f / worldUnitsPerTexel;
-        _res = Mathf.Max(Mathf.CeilToInt(worldExtent * 2f * scale), 1);
-
-        // 1. Rasterize every chunk footprint into a candidate grid - the OUTER bound of where land
-        //    can be (chunks are min-corner pivoted, never rotated - same as MinimapWidget). Colliders
-        //    live inside the footprint, so anything outside every footprint is guaranteed water and
-        //    never needs probing.
-        var candidate = new bool[_res * _res];
-        var chunks = frame.Filter<Chunk, Transform3D>();
-        while (chunks.Next(out EntityRef _, out Chunk chunk, out Transform3D transform))
-            RasterizeFootprint(chunk, transform, candidate, scale);
+            BeginBake(frame);
+        }
 
         // 2. Refine to actual land. With the collider test, a candidate texel is land only if a
         //    Ground collider is under it, so interior holes fall through to water. Probing only
         //    candidate texels keeps the raycast count ~ land area, not the whole grid.
-        bool[] land;
         if (useColliderTest)
         {
-            land = new bool[_res * _res];
             int groundMask = EnemyMovementUtility.GetGroundLayerMask(frame);
-            for (int y = 0; y < _res; y++)
+            long budgetTicks = float.IsPositiveInfinity(budgetMs)
+                ? long.MaxValue
+                : (long)(budgetMs * 0.001 * System.Diagnostics.Stopwatch.Frequency);
+            long start = System.Diagnostics.Stopwatch.GetTimestamp();
+
+            while (_probeRow < _res)
             {
-                int row = y * _res;
+                int row = _probeRow * _res;
                 for (int x = 0; x < _res; x++)
                 {
-                    if (candidate[row + x] && IsSolidGround(frame, x, y, groundMask))
-                        land[row + x] = true;
+                    if (_candidate[row + x] && IsSolidGround(frame, x, _probeRow, groundMask))
+                        _land[row + x] = true;
                 }
+
+                _probeRow++;
+
+                if (System.Diagnostics.Stopwatch.GetTimestamp() - start >= budgetTicks)
+                    break;
             }
+
+            if (_probeRow < _res)
+                return false;
         }
         else
         {
-            land = candidate;
+            _land = _candidate;
+            _probeRow = _res;
         }
 
+        FinishBake();
+        return true;
+    }
+
+    // 1. Rasterize every chunk footprint into a candidate grid - the OUTER bound of where land can
+    //    be (chunks are min-corner pivoted, never rotated - same as MinimapWidget). Colliders live
+    //    inside the footprint, so anything outside every footprint is guaranteed water and never
+    //    needs probing.
+    private void BeginBake(Frame frame)
+    {
+        float scale = 1f / worldUnitsPerTexel;
+        _res = Mathf.Max(Mathf.CeilToInt(worldExtent * 2f * scale), 1);
+
+        _candidate = new bool[_res * _res];
+        var chunks = frame.Filter<Chunk, Transform3D>();
+        while (chunks.Next(out EntityRef _, out Chunk chunk, out Transform3D transform))
+            RasterizeFootprint(chunk, transform, _candidate, scale);
+
+        _land = new bool[_res * _res];
+        _probeRow = 0;
+    }
+
+    private void FinishBake()
+    {
         // 3. Chamfer distance transform: distance (in texels) from each water cell to nearest land.
-        float[] dist = ChamferDistanceToLand(land);
+        float[] dist = ChamferDistanceToLand(_land);
 
         // 4. Encode saturate(worldDist / maxShoreDistanceWorld) into R8.
         _field = new Texture2D(_res, _res, TextureFormat.R8, false)
@@ -146,18 +240,35 @@ public class WaterShoreBaker : QuantumGlobalMonoBehaviour
         Shader.SetGlobalVector(ShoreFieldParamsId,
             new Vector4(worldCenter.x, worldCenter.y, worldExtent * 2f, maxShoreDistanceWorld));
 
-        return true;
+        _candidate = null;
+        _land = null;
     }
 
     // Downward ground probe at this texel's world-center - true if a Ground collider is under it.
-    // Reuses the exact query every enemy/boss spawn uses to find the floor (see EnemyMovementUtility),
-    // so "solid here" means the same thing to the water field as it does to the simulation.
+    // A single closest-hit Raycast rather than EnemyMovementUtility.TryFindGroundHeight's
+    // RaycastAll + Sort: that allocates a hit collection on the frame heap per call, which across
+    // ~29k probes cost more than the raycasts themselves (plus a matching Free spike on the next
+    // simulated tick). Same range, mask and options, so "solid here" still means what it means to
+    // the simulation. The one thing TryFindGroundHeight also does - skipping enemies/players - only
+    // matters if one is standing over the texel, so that rare case falls back to it.
     private bool IsSolidGround(Frame frame, int tx, int ty, int groundMask)
     {
         float worldX = (tx + 0.5f - _res * 0.5f) * worldUnitsPerTexel + worldCenter.x;
         float worldZ = (ty + 0.5f - _res * 0.5f) * worldUnitsPerTexel + worldCenter.y;
-        FPVector3 probe = new Vector3(worldX, probeHeightY, worldZ).ToFPVector3();
-        return EnemyMovementUtility.TryFindGroundHeight(frame, probe, groundMask, out _);
+        FPVector3 origin = new Vector3(worldX, probeHeightY + ProbeHalfRange, worldZ).ToFPVector3();
+
+        Hit3D? hit = frame.Physics3D.Raycast(origin, FPVector3.Down, FP.FromFloat_UNSAFE(ProbeHalfRange * 2f), groundMask, ProbeQueryOptions);
+        if (hit.HasValue == false)
+            return false;
+
+        EntityRef hitEntity = hit.Value.Entity;
+        if (hitEntity != EntityRef.None && (frame.Has<Enemy>(hitEntity) || frame.Has<PlayerLink>(hitEntity)))
+        {
+            FPVector3 probe = new Vector3(worldX, probeHeightY, worldZ).ToFPVector3();
+            return EnemyMovementUtility.TryFindGroundHeight(frame, probe, groundMask, out _);
+        }
+
+        return true;
     }
 
     private void RasterizeFootprint(Chunk chunk, Transform3D transform, bool[] land, float scale)

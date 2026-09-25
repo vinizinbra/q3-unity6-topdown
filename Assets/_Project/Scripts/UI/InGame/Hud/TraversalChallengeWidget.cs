@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine;
 
 // Always-visible, whole-team HUD banner for an Active Traversal Challenge (see
-// docs/traversal-challenge.md) - lives under the normal HUD (GameplayWindow), same idiom
+// docs/traversal-challenge.md) - lives under the normal HUD, same idiom
 // BreathingWidget already uses for "NEXT ASSAULT 00:30". Deliberately NOT a per-entity
 // world-following widget (an earlier version tried that and was corrected - a floating marker
 // anchored to the activator's own world Transform would only be visible to whichever player is

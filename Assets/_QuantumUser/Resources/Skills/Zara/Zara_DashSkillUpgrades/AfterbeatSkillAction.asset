@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: 1950513883, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
   DisplayName: Afterbeat
   RankDescriptions:
-  - "Dashing restores <color=#FD3971>35%</color> Flow, plus additional Flow for each unique enemy dashed through."
-  - "Dashing leaves a delayed damaging Beat at the Dash starting point."
-  - "Also creates a Beat at the Dash destination. Landing on at least one enemy grants additional Flow."
+  - "Dashing restores <color=#FD3971>35%</color> Flow, plus more for each enemy you Dash through."
+  - "Dashing restores <color=#FD3971>35%</color> Flow, plus more per enemy Dashed through. A damaging Beat hits your starting point <color=#FD3971>1s</color> later."
+  - "Dashing restores <color=#FD3971>35%</color> Flow, plus more per enemy hit. Damaging Beats hit your start and end points <color=#FD3971>1s</color> later."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 7

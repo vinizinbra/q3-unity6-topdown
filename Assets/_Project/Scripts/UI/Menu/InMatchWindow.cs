@@ -5,6 +5,7 @@ using Photon.Deterministic;
 using Photon.Realtime;
 using Quantum;
 using Quantum.Demo;
+using QuantumUser.View.Util;
 using UnityEngine;
 
 public class InMatchWindow : UiWindow
@@ -41,14 +42,13 @@ public class InMatchWindow : UiWindow
     public void Update() {
       
       if (QuantumRunner.Default != null && QuantumRunner.Default.HasGameStartTimedOut) {
-        AlertPopup.Show("Error", "Game start timed out", () => {
-          MatchMakingConfig.Instance.Client.Disconnect();
-        });
+        DisconnectWithReason("Game start timed out");
       }
     }
 
     public override void Show() {
       base.Show();
+      _disconnectRequested = false;
       _frameSnapshot = null;
       _frameSnapshotNumber = 0;
       _frameSnapshotTimeout = 0.0f;
@@ -68,9 +68,22 @@ public class InMatchWindow : UiWindow
     }
 
     private void OnCallbackPluginDisconnect(string reason) {
-      AlertPopup.Show("Plugin Disconnect", reason, () => {
-        MatchMakingConfig.Instance.Client.Disconnect();
-      });
+      DisconnectWithReason(reason);
+    }
+
+    // Disconnects immediately instead of gating it behind an AlertPopup: this window disables the
+    // menu Canvas that PopupManager lives under, so a popup raised here is invisible and unclickable
+    // and the match screen would stay up forever (e.g. the Quantum plugin dropping an inactive client
+    // after the app sat in the background). The reason is stashed and shown by
+    // MatchMakingConfig.ReturnToMenuAfterDisconnect once the menu (and its Canvas) is back.
+    private bool _disconnectRequested;
+
+    private void DisconnectWithReason(string reason) {
+      if (_disconnectRequested) return;
+      _disconnectRequested = true;
+      LogHelper.Warn("MatchMaking", $"InMatchWindow disconnecting: {reason}");
+      MatchMakingConfig.Instance.SetPendingDisconnectReason(reason);
+      MatchMakingConfig.Instance.Client?.Disconnect();
     }
 
     public void OnLeaveClicked() {

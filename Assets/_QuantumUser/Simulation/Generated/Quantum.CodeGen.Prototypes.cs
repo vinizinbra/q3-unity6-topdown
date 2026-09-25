@@ -1324,6 +1324,8 @@ namespace Quantum.Prototypes {
     public FPVector3 TraversalJumpPendingDestination;
     public FP TraversalJumpPendingSpeed;
     public FP KnockbackTimer;
+    public FP HitStaggerTimer;
+    public FP StaggerImmuneTimer;
     public FPVector3 PreKnockbackPosition;
     public FP StuckCheckTimer;
     public FP FallRespawnTimer;
@@ -1367,6 +1369,8 @@ namespace Quantum.Prototypes {
         result.TraversalJumpPendingDestination = this.TraversalJumpPendingDestination;
         result.TraversalJumpPendingSpeed = this.TraversalJumpPendingSpeed;
         result.KnockbackTimer = this.KnockbackTimer;
+        result.HitStaggerTimer = this.HitStaggerTimer;
+        result.StaggerImmuneTimer = this.StaggerImmuneTimer;
         result.PreKnockbackPosition = this.PreKnockbackPosition;
         result.StuckCheckTimer = this.StuckCheckTimer;
         result.FallRespawnTimer = this.FallRespawnTimer;
@@ -2520,26 +2524,28 @@ namespace Quantum.Prototypes {
   }
   [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.PendingDoubleTapShot))]
-  public unsafe partial class PendingDoubleTapShotPrototype : StructPrototype {
+  public unsafe class PendingDoubleTapShotPrototype : StructPrototype {
     public FP Delay;
     public FPVector3 SpawnPosition;
     public FPVector3 AimDirection;
+    public MapEntityId Target;
+    public QBoolean AimAtCenter;
     public FP Damage;
     public QBoolean IsExplosiveProc;
     public QBoolean IsCataclysm;
     public Int32 GrantPierceAmount;
     public QBoolean IsFirstBullet;
-    partial void MaterializeUser(Frame frame, ref Quantum.PendingDoubleTapShot result, in PrototypeMaterializationContext context);
     public void Materialize(Frame frame, ref Quantum.PendingDoubleTapShot result, in PrototypeMaterializationContext context = default) {
         result.Delay = this.Delay;
         result.SpawnPosition = this.SpawnPosition;
         result.AimDirection = this.AimDirection;
+        PrototypeValidator.FindMapEntity(this.Target, in context, out result.Target);
+        result.AimAtCenter = this.AimAtCenter;
         result.Damage = this.Damage;
         result.IsExplosiveProc = this.IsExplosiveProc;
         result.IsCataclysm = this.IsCataclysm;
         result.GrantPierceAmount = this.GrantPierceAmount;
         result.IsFirstBullet = this.IsFirstBullet;
-        MaterializeUser(frame, ref result, in context);
     }
   }
   [System.SerializableAttribute()]
@@ -2892,6 +2898,7 @@ namespace Quantum.Prototypes {
     public AssetRef<ProjectileMovementData> MovementOverride;
     [ArrayLengthAttribute(8)]
     public MapEntityId[] RecentHits = new MapEntityId[8];
+    public MapEntityId LastHit;
     public AssetRef<ProjectileHitData> HitOverride;
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.Projectile component = default;
@@ -2929,6 +2936,7 @@ namespace Quantum.Prototypes {
         for (int i = 0, count = PrototypeValidator.CheckLength(RecentHits, 8, in context); i < count; ++i) {
           PrototypeValidator.FindMapEntity(this.RecentHits[i], in context, out *result.RecentHits.GetPointer(i));
         }
+        PrototypeValidator.FindMapEntity(this.LastHit, in context, out result.LastHit);
         result.HitOverride = this.HitOverride;
     }
   }
@@ -4335,11 +4343,8 @@ namespace Quantum.Prototypes {
     public FP Delay;
     public QBoolean CritOnFinalShot;
     public Int32 BurstCount;
-    public FP Damage;
-    public QBoolean IsExplosiveProc;
-    public QBoolean IsCataclysm;
+    public FP DamageBonusMultiplier;
     public Int32 GrantPierceAmount;
-    public QBoolean IsFirstBullet;
     partial void MaterializeUser(Frame frame, ref Quantum.WeaponBurstState result, in PrototypeMaterializationContext context);
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.WeaponBurstState component = default;
@@ -4353,11 +4358,8 @@ namespace Quantum.Prototypes {
         result.Delay = this.Delay;
         result.CritOnFinalShot = this.CritOnFinalShot;
         result.BurstCount = this.BurstCount;
-        result.Damage = this.Damage;
-        result.IsExplosiveProc = this.IsExplosiveProc;
-        result.IsCataclysm = this.IsCataclysm;
+        result.DamageBonusMultiplier = this.DamageBonusMultiplier;
         result.GrantPierceAmount = this.GrantPierceAmount;
-        result.IsFirstBullet = this.IsFirstBullet;
         MaterializeUser(frame, ref result, in context);
     }
   }
@@ -4367,8 +4369,8 @@ namespace Quantum.Prototypes {
     public QBoolean HasEchoChamber;
     public QBoolean HasInfiniteEcho;
     public FP EchoDelay;
-    [ArrayLengthAttribute(3)]
-    public Quantum.Prototypes.PendingEchoPrototype[] PendingEchoes = new Quantum.Prototypes.PendingEchoPrototype[3];
+    [ArrayLengthAttribute(8)]
+    public Quantum.Prototypes.PendingEchoPrototype[] PendingEchoes = new Quantum.Prototypes.PendingEchoPrototype[8];
     partial void MaterializeUser(Frame frame, ref Quantum.WeaponEchoState result, in PrototypeMaterializationContext context);
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.WeaponEchoState component = default;
@@ -4379,7 +4381,7 @@ namespace Quantum.Prototypes {
         result.HasEchoChamber = this.HasEchoChamber;
         result.HasInfiniteEcho = this.HasInfiniteEcho;
         result.EchoDelay = this.EchoDelay;
-        for (int i = 0, count = PrototypeValidator.CheckLength(PendingEchoes, 3, in context); i < count; ++i) {
+        for (int i = 0, count = PrototypeValidator.CheckLength(PendingEchoes, 8, in context); i < count; ++i) {
           this.PendingEchoes[i].Materialize(frame, ref *result.PendingEchoes.GetPointer(i), in context);
         }
         MaterializeUser(frame, ref result, in context);
@@ -4404,13 +4406,12 @@ namespace Quantum.Prototypes {
   }
   [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.WeaponFireTimeMods))]
-  public unsafe partial class WeaponFireTimeModsPrototype : ComponentPrototype<Quantum.WeaponFireTimeMods> {
+  public unsafe class WeaponFireTimeModsPrototype : ComponentPrototype<Quantum.WeaponFireTimeMods> {
     public Int32 BonusPierce;
     public Int32 BonusBounces;
     public FP DoubleTapChance;
     public FP DoubleTapDelay;
     public Quantum.Prototypes.PendingDoubleTapShotPrototype PendingDoubleTap;
-    partial void MaterializeUser(Frame frame, ref Quantum.WeaponFireTimeMods result, in PrototypeMaterializationContext context);
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.WeaponFireTimeMods component = default;
         Materialize((Frame)f, ref component, in context);
@@ -4422,7 +4423,6 @@ namespace Quantum.Prototypes {
         result.DoubleTapChance = this.DoubleTapChance;
         result.DoubleTapDelay = this.DoubleTapDelay;
         this.PendingDoubleTap.Materialize(frame, ref result.PendingDoubleTap, in context);
-        MaterializeUser(frame, ref result, in context);
     }
   }
   [System.SerializableAttribute()]
@@ -4458,6 +4458,7 @@ namespace Quantum.Prototypes {
     public QBoolean HasCriticalRebound;
     public FP CriticalReboundRadius;
     public FP CriticalReboundDamageMultiplier;
+    public QBoolean ReboundInProgress;
     public QBoolean HasExplosiveCrit;
     public FP CriticalExplosionRadius;
     public FP CriticalExplosionDamageMultiplier;
@@ -4474,6 +4475,7 @@ namespace Quantum.Prototypes {
         result.HasCriticalRebound = this.HasCriticalRebound;
         result.CriticalReboundRadius = this.CriticalReboundRadius;
         result.CriticalReboundDamageMultiplier = this.CriticalReboundDamageMultiplier;
+        result.ReboundInProgress = this.ReboundInProgress;
         result.HasExplosiveCrit = this.HasExplosiveCrit;
         result.CriticalExplosionRadius = this.CriticalExplosionRadius;
         result.CriticalExplosionDamageMultiplier = this.CriticalExplosionDamageMultiplier;
@@ -4710,8 +4712,8 @@ namespace Quantum.Prototypes {
     public FP MovementInputThreshold;
     public FP StationaryGrace;
     public FP DecayDuration;
-    public FP BaseMoveSpeedMultiplier;
-    public FP BaseAttackSpeedMultiplier;
+    public FP AppliedMoveSpeedDelta;
+    public FP AppliedAttackSpeedDelta;
     public FP BuildRateMultiplier;
     public FP ActiveFireRateBonus;
     public FP SecondWindMoveSpeedBonus;
@@ -4745,8 +4747,8 @@ namespace Quantum.Prototypes {
         result.MovementInputThreshold = this.MovementInputThreshold;
         result.StationaryGrace = this.StationaryGrace;
         result.DecayDuration = this.DecayDuration;
-        result.BaseMoveSpeedMultiplier = this.BaseMoveSpeedMultiplier;
-        result.BaseAttackSpeedMultiplier = this.BaseAttackSpeedMultiplier;
+        result.AppliedMoveSpeedDelta = this.AppliedMoveSpeedDelta;
+        result.AppliedAttackSpeedDelta = this.AppliedAttackSpeedDelta;
         result.BuildRateMultiplier = this.BuildRateMultiplier;
         result.ActiveFireRateBonus = this.ActiveFireRateBonus;
         result.SecondWindMoveSpeedBonus = this.SecondWindMoveSpeedBonus;

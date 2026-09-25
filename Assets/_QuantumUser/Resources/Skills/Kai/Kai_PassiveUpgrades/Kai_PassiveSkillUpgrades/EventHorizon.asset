@@ -21,9 +21,9 @@ MonoBehaviour:
   Description: "Grows Kai's Void Field, slowing enemy projectiles inside it and eventually the enemies themselves."
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - "Void Field radius increases to <color=#FD3971>4m</color>. Enemy projectiles inside move at <color=#FD3971>65%</color> speed."
-  - "Radius increases to <color=#FD3971>5m</color> and enemy projectile speed is reduced to <color=#FD3971>50%</color>."
-  - "Enemy projectiles move at <color=#FD3971>40%</color> speed. Enemies inside Void Field also perform attacks <color=#FD3971>20%</color> slower, up to Specialist tier."
+  - "Void Field radius becomes <color=#FD3971>4m</color>. Enemy projectiles inside move at <color=#FD3971>65%</color> speed."
+  - "Void Field radius becomes <color=#FD3971>5m</color>. Enemy projectiles inside move at <color=#FD3971>50%</color> speed."
+  - "Void Field radius becomes <color=#FD3971>5m</color>. Enemy projectiles inside move at <color=#FD3971>40%</color> speed, and enemies up to Specialist attack <color=#FD3971>20%</color> slower."
   Radius:
   - RawValue: 262144
   - RawValue: 327680

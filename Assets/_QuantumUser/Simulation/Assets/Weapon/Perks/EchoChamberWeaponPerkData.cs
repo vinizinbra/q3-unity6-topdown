@@ -10,6 +10,10 @@ namespace Quantum
     {
         public FP Delay = FP._0_50;
 
+        // Infinite Echo already echoes every shot, these first 3 included - nothing left for this
+        // one to add.
+        public override bool ConflictsWith(WeaponPerkData owned) => owned is InfiniteEchoWeaponPerkData;
+
         public override void Apply(Frame f, EntityRef owner, Weapon* weapon)
         {
             f.AddOrGet<WeaponEchoState>(owner, out var echo);

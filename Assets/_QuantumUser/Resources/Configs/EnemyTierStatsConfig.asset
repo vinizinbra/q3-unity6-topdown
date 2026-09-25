@@ -24,7 +24,7 @@ MonoBehaviour:
     ExpValue:
       RawValue: 65536
     ScaleMultiplier:
-      RawValue: 26214
+      RawValue: 22938
     RiftShardValue:
       RawValue: 65536
     RiftShardDropChance:
@@ -42,6 +42,10 @@ MonoBehaviour:
     CanBeInterruptedByKnockback: 1
     KnockbackRecoveryTime:
       RawValue: 13107
+    HitStaggerDuration:
+      RawValue: 6554
+    StaggerCooldown:
+      RawValue: 26214
   Normal:
     MaxHealth:
       RawValue: 3932160
@@ -68,6 +72,10 @@ MonoBehaviour:
     CanBeInterruptedByKnockback: 1
     KnockbackRecoveryTime:
       RawValue: 6554
+    HitStaggerDuration:
+      RawValue: 6554
+    StaggerCooldown:
+      RawValue: 26214
   Specialist:
     MaxHealth:
       RawValue: 9175040
@@ -94,6 +102,10 @@ MonoBehaviour:
     CanBeInterruptedByKnockback: 1
     KnockbackRecoveryTime:
       RawValue: 3277
+    HitStaggerDuration:
+      RawValue: 6554
+    StaggerCooldown:
+      RawValue: 26214
   Heavy:
     MaxHealth:
       RawValue: 13107200
@@ -120,6 +132,10 @@ MonoBehaviour:
     CanBeInterruptedByKnockback: 0
     KnockbackRecoveryTime:
       RawValue: 16384
+    HitStaggerDuration:
+      RawValue: 0
+    StaggerCooldown:
+      RawValue: 26214
   Elite:
     MaxHealth:
       RawValue: 65536000
@@ -146,6 +162,10 @@ MonoBehaviour:
     CanBeInterruptedByKnockback: 0
     KnockbackRecoveryTime:
       RawValue: 16384
+    HitStaggerDuration:
+      RawValue: 0
+    StaggerCooldown:
+      RawValue: 26214
   Boss:
     MaxHealth:
       RawValue: 327680000
@@ -172,3 +192,7 @@ MonoBehaviour:
     CanBeInterruptedByKnockback: 0
     KnockbackRecoveryTime:
       RawValue: 16384
+    HitStaggerDuration:
+      RawValue: 0
+    StaggerCooldown:
+      RawValue: 26214

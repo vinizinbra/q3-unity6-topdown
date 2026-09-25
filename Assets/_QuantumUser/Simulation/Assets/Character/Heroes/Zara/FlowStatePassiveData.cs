@@ -58,12 +58,11 @@ namespace Quantum
                 StationaryGrace = StationaryGrace,
                 DecayDuration = DecayDuration,
 
-                // Captured once, here, so every later toggle rebakes the bonus from a clean baseline
-                // instead of compounding off an already-buffed value. CharacterStats has already been
-                // seeded from CharacterData by the time a Passive is applied (see CharacterSystem's own
-                // ordering), so these are her true unbuffed multipliers.
-                BaseMoveSpeedMultiplier = stats->MoveSpeedMultiplier,
-                BaseAttackSpeedMultiplier = stats->AttackSpeedMultiplier,
+                // Nothing applied yet - see ZaraFlow.AppliedMoveSpeedDelta. Seeded together with
+                // CharacterStats (CharacterSystem applies the passive right after SeedStats), so the
+                // two can't start out of step.
+                AppliedMoveSpeedDelta = FP._0,
+                AppliedAttackSpeedDelta = FP._0,
 
                 // Every Ascension-owned field starts off - Faster Tempo / Second Wind / Headliner each
                 // turn on their own half. Written explicitly rather than left to zero-init so the full

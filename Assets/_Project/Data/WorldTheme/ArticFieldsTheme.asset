@@ -24,8 +24,9 @@ MonoBehaviour:
     GlimmerColor: {r: 0.37864897, g: 0.53992033, b: 0.6320754, a: 1}
     FoamColor: {r: 0.7122642, g: 0.97924626, b: 1, a: 1}
     Opacity: 0.6
+    SurfaceMaterial: {fileID: 0}
   tileset:
-    Tileset: {fileID: 11400000, guid: 813ca55d09e3c4b1d876dc1b59722388, type: 2}
+    Tileset: {fileID: 11400000, guid: 5997ebed04376478aaea1f25498defc5, type: 2}
   obstacles:
     Size1x1: []
     Size1x2: []

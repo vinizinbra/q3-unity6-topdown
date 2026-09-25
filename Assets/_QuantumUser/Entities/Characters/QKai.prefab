@@ -812,6 +812,10 @@ MonoBehaviour:
       RawValue: 0
     TimeSinceFireReleased:
       RawValue: 0
+    IsAnticipating:
+      Value: 0
+    AnticipationTimer:
+      RawValue: 0
     RangeMultiplier:
       RawValue: 0
 --- !u!114 &8550683189489077900
@@ -895,7 +899,9 @@ MonoBehaviour:
   fireRestTint: {r: 1, g: 0.55, b: 0.2, a: 1}
   iceRestTint: {r: 0.4, g: 0.9, b: 1, a: 1}
   lightningRestTint: {r: 1, g: 0.9, b: 0.3, a: 1}
+  frozenTint: {r: 0.55, g: 0.85, b: 1, a: 1}
   freezeMaterial: {fileID: 0}
+  hardFreezeMaterial: {fileID: 0}
 --- !u!114 &8110188611109955938
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1205,7 +1211,9 @@ MonoBehaviour:
       RawValue: 0
     NearKillMoveSpeedDuration:
       RawValue: 0
-    SkillCenterFocusBonus:
+    FocusedPowerNonCritDamagePenalty:
+      RawValue: 0
+    FocusedPowerCritDamageBonus:
       RawValue: 0
     CritFocusThreshold: 0
     CritFocusProgress: 0
@@ -1235,27 +1243,40 @@ MonoBehaviour:
       RawValue: 0
     OverkillRadius:
       RawValue: 0
-    ScavengerRequiredPickups: 0
-    ScavengerWindow:
-      RawValue: 0
     ScavengerBuffDuration:
       RawValue: 0
     ScavengerMoveSpeedBonus:
       RawValue: 0
     ScavengerFireRateBonus:
       RawValue: 0
-    ScavengerPickupCount: 0
-    ScavengerWindowRemaining:
-      RawValue: 0
     CoinLossPercentOnHpDamage:
       RawValue: 0
     SecondWindHealPercent:
+      RawValue: 0
+    SecondWindMoveSpeedBonus:
+      RawValue: 0
+    SecondWindMoveSpeedDuration:
       RawValue: 0
     DashChargeHardCap: 0
     AccessoryBlockResetsDash:
       Value: 0
     AccessoryBlockSkillCooldownFraction:
       RawValue: 0
+    BroMutationBaseDamageBonus:
+      RawValue: 0
+    BroMutationPerOwnerDamageBonus:
+      RawValue: 0
+    BossDestroyerHeavyDamageBonus:
+      RawValue: 0
+    BossDestroyerLightDamagePenalty:
+      RawValue: 0
+    ExecutionThresholds:
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
 --- !u!114 &8215253040534427600
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1555,14 +1576,17 @@ MonoBehaviour:
       RawValue: 0
     BurnTickTimer:
       RawValue: 0
-    BurnDamagePerTick:
-      RawValue: 0
+    BurnStackCount: 0
+    BurnStackDamagePerTick:
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
     BurnOwner: {fileID: 0}
     BurnSource:
       Value: 0
     ElectrifiedRemaining:
-      RawValue: 0
-    ElectrifiedJoltTimer:
       RawValue: 0
     StaggerRemaining:
       RawValue: 0
@@ -1599,7 +1623,11 @@ MonoBehaviour:
       RawValue: 0
     IceRemaining:
       RawValue: 0
-    IceSpeedMultiplier:
+    IceBuildup:
+      RawValue: 0
+    FreezeRemaining:
+      RawValue: 0
+    FreezeRecoveryRemaining:
       RawValue: 0
     StunRemaining:
       RawValue: 0
@@ -1918,10 +1946,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0723c21be28454a039f7ffebd04176e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::JuicyEffects
+  enableSound: {fileID: 0}
   scaleInOnEnable: 0
   scaleInDelay: 0
   scaleInDuration: 0.45
   scaleInEase: 27
+  glitchInOnEnable: 0
+  glitchInDuration: 0.25
+  glitchInTickInterval: 0.03
+  glitchInOffset: {x: 0.15, y: 0.15, z: 0}
+  glitchInScaleJitter: {x: 0.08, y: 0.08, z: 0}
+  glitchGhostSource: {fileID: 0}
+  glitchGhostRedColor: {r: 1, g: 0.1, b: 0.3, a: 0.6}
+  glitchGhostCyanColor: {r: 0.1, g: 1, b: 1, a: 0.6}
   punchScaleStrength: {x: 0.4, y: 0.4, z: 0}
   punchScaleDuration: 0.4
   punchScaleFrequency: 16
@@ -2151,7 +2188,7 @@ ParticleSystem:
     startLifetime:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 0.3
+      scalar: 0.2
       minScalar: 0.1
       maxCurve:
         serializedVersion: 2
@@ -2258,7 +2295,7 @@ ParticleSystem:
       serializedVersion: 2
       minMaxState: 0
       minColor: {r: 1, g: 1, b: 1, a: 1}
-      maxColor: {r: 0.6862745, g: 0.61960787, b: 1, a: 1}
+      maxColor: {r: 0.6862745, g: 0.61960787, b: 1, a: 0.6509804}
       maxGradient:
         serializedVersion: 2
         key0: {r: 1, g: 1, b: 1, a: 1}
@@ -2646,7 +2683,7 @@ ParticleSystem:
     gravityModifier:
       serializedVersion: 2
       minMaxState: 0
-      scalar: -0.3
+      scalar: -1
       minScalar: 0
       maxCurve:
         serializedVersion: 2
@@ -3345,7 +3382,7 @@ ParticleSystem:
         serializedVersion: 2
         key0: {r: 1, g: 1, b: 1, a: 0}
         key1: {r: 1, g: 1, b: 1, a: 1}
-        key2: {r: 0.6627451, g: 0.31764707, b: 1, a: 0.89117646}
+        key2: {r: 0.6627451, g: 0.31764707, b: 1, a: 0}
         key3: {r: 0, g: 0, b: 0, a: 0}
         key4: {r: 0, g: 0, b: 0, a: 0}
         key5: {r: 0, g: 0, b: 0, a: 0}
@@ -3361,16 +3398,16 @@ ParticleSystem:
         ctime7: 0
         atime0: 0
         atime1: 6746
-        atime2: 47995
+        atime2: 65535
         atime3: 65535
-        atime4: 0
-        atime5: 0
+        atime4: 65535
+        atime5: 65535
         atime6: 0
         atime7: 0
         m_Mode: 0
         m_ColorSpace: 0
         m_NumColorKeys: 2
-        m_NumAlphaKeys: 4
+        m_NumAlphaKeys: 3
       minGradient:
         serializedVersion: 2
         key0: {r: 1, g: 1, b: 1, a: 1}
@@ -4117,7 +4154,7 @@ ParticleSystem:
     m_Curve:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 0.3
+      scalar: 0.6
       minScalar: 0
       maxCurve:
         serializedVersion: 2
@@ -7268,7 +7305,7 @@ ParticleSystem:
     startLifetime:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 0.3
+      scalar: 0.2
       minScalar: 0.1
       maxCurve:
         serializedVersion: 2
@@ -7375,7 +7412,7 @@ ParticleSystem:
       serializedVersion: 2
       minMaxState: 0
       minColor: {r: 1, g: 1, b: 1, a: 1}
-      maxColor: {r: 0.6862745, g: 0.61960787, b: 1, a: 1}
+      maxColor: {r: 0.6862745, g: 0.61960787, b: 1, a: 0.6509804}
       maxGradient:
         serializedVersion: 2
         key0: {r: 1, g: 1, b: 1, a: 1}
@@ -7763,7 +7800,7 @@ ParticleSystem:
     gravityModifier:
       serializedVersion: 2
       minMaxState: 0
-      scalar: -0.3
+      scalar: -1
       minScalar: 0
       maxCurve:
         serializedVersion: 2
@@ -8462,7 +8499,7 @@ ParticleSystem:
         serializedVersion: 2
         key0: {r: 1, g: 1, b: 1, a: 0}
         key1: {r: 1, g: 1, b: 1, a: 1}
-        key2: {r: 0.6627451, g: 0.31764707, b: 1, a: 0.89117646}
+        key2: {r: 0.6627451, g: 0.31764707, b: 1, a: 0}
         key3: {r: 0, g: 0, b: 0, a: 0}
         key4: {r: 0, g: 0, b: 0, a: 0}
         key5: {r: 0, g: 0, b: 0, a: 0}
@@ -8478,16 +8515,16 @@ ParticleSystem:
         ctime7: 0
         atime0: 0
         atime1: 6746
-        atime2: 47995
+        atime2: 65535
         atime3: 65535
-        atime4: 0
-        atime5: 0
+        atime4: 65535
+        atime5: 65535
         atime6: 0
         atime7: 0
         m_Mode: 0
         m_ColorSpace: 0
         m_NumColorKeys: 2
-        m_NumAlphaKeys: 4
+        m_NumAlphaKeys: 3
       minGradient:
         serializedVersion: 2
         key0: {r: 1, g: 1, b: 1, a: 1}
@@ -9234,7 +9271,7 @@ ParticleSystem:
     m_Curve:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 0.3
+      scalar: 0.6
       minScalar: 0
       maxCurve:
         serializedVersion: 2

@@ -48,6 +48,8 @@ public class HeroIntroPopup : TutorialPopup
 
     public static bool HasBeenSeen(AssetRef<CharacterData> characterData)
     {
+        //TODO added for a playtest on 25/09/2026 remove afterwards
+        return false;
         return characterData.IsValid && new PlayerPrefBool(SeenKey(characterData), false).Value;
     }
 

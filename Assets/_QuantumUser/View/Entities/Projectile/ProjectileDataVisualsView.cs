@@ -5,8 +5,9 @@ using UnityEngine;
 namespace Quantum
 {
     // Generic per-WEAPON look for a fired shot: a billboard sprite (rotation offset only) plus two
-    // optional particles (spark trail, glow) whose enabled state and color come from
-    // WeaponDataAsset.ProjectileVisuals instead of being hand-authored per prefab. Sibling of
+    // optional particles (spark trail, glow) and ProjectileView's own ribbon TrailRenderer, whose
+    // enabled state and look come from WeaponDataAsset.ProjectileVisuals instead of being
+    // hand-authored per prefab. Sibling of
     // ProjectileView, not merged into it - same one-MonoBehaviour-per-visual-concern split
     // ProjectileElementalFxView uses.
     //
@@ -43,7 +44,7 @@ namespace Quantum
         private SpriteRenderer sprite;
 
         [Header("Particles - leave 'Play On Awake' off, this drives them explicitly")]
-        [SerializeField, Tooltip("Enabled/disabled, tinted, scaled and lifetime-overridden from WeaponDataAsset.ProjectileVisuals (EnableProjectileSparkTrail/ProjectileSparkTrailColor/ProjectileSparkTrailScale/ProjectileSparkTrailLifetimeOverride). Faded out gracefully (not cut off) on a real impact. Leave empty if this prefab has no spark trail slot.")]
+        [SerializeField, Tooltip("Enabled/disabled, tinted, scaled, lifetime- and emission-overridden from WeaponDataAsset.ProjectileVisuals (EnableProjectileSparkTrail/ProjectileSparkTrailColor/ProjectileSparkTrailScale/ProjectileSparkTrailLifetimeOverride/ProjectileSparkTrailRateOverDistanceOverride). Faded out gracefully (not cut off) on a real impact. Leave empty if this prefab has no spark trail slot.")]
         private ParticleSystem sparkTrail;
         [SerializeField, Tooltip("Enabled/disabled, tinted and scaled from WeaponDataAsset.ProjectileVisuals (EnableProjectileGlow/ProjectileGlowColor/ProjectileGlowScale). Faded out gracefully (not cut off) on a real impact. Leave empty if this prefab has no glow slot.")]
         private ParticleSystem glow;
@@ -79,9 +80,10 @@ namespace Quantum
             LogHelper.Log("ProjFlow", $"[{_entityRef}] DataVisuals: weaponData={weaponData.name} sprite={(sprite != null)} sparkTrail={(sparkTrail != null)}(enable={visuals.EnableProjectileSparkTrail}) glow={(glow != null)}(enable={visuals.EnableProjectileGlow}) light={(light != null)}(enable={visuals.EnableProjectileLight})", this);
 
             ApplySprite(visuals);
-            ApplyParticle(sparkTrail, visuals.EnableProjectileSparkTrail, visuals.ProjectileSparkTrailColor, visuals.ProjectileSparkTrailScale, visuals.ProjectileSparkTrailLifetimeOverride);
-            ApplyParticle(glow, visuals.EnableProjectileGlow, visuals.ProjectileGlowColor, visuals.ProjectileGlowScale, lifetimeOverride: 0f);
+            ApplyParticle(sparkTrail, visuals.EnableProjectileSparkTrail, visuals.ProjectileSparkTrailColor, visuals.ProjectileSparkTrailScale, visuals.ProjectileSparkTrailLifetimeOverride, visuals.ProjectileSparkTrailRateOverDistanceOverride);
+            ApplyParticle(glow, visuals.EnableProjectileGlow, visuals.ProjectileGlowColor, visuals.ProjectileGlowScale, lifetimeOverride: 0f, rateOverDistanceOverride: 0f);
             ApplyLight(visuals);
+            ApplyTrail(visuals);
 
             RegisterWithProjectileView(visuals);
         }
@@ -143,7 +145,7 @@ namespace Quantum
             _billboard.AngleOffset = visuals.ProjectileSpriteRotationOffset;
         }
 
-        private static void ApplyParticle(ParticleSystem particle, bool enable, Color color, Vector3 scale, float lifetimeOverride)
+        private static void ApplyParticle(ParticleSystem particle, bool enable, Color color, Vector3 scale, float lifetimeOverride, float rateOverDistanceOverride)
         {
             if (particle == null)
                 return;
@@ -160,7 +162,39 @@ namespace Quantum
             if (lifetimeOverride > 0f)
                 main.startLifetime = lifetimeOverride;
 
+            if (rateOverDistanceOverride > 0f)
+            {
+                ParticleSystem.EmissionModule emission = particle.emission;
+                emission.rateOverDistance = rateOverDistanceOverride;
+            }
+
             particle.Play(withChildren: false);
+        }
+
+        // Configures ProjectileView's existing trailRenderer slot rather than a second one of this
+        // component's own - that slot already gets the graceful fade-out on impact (ParticleGracefulStop
+        // in ProjectileVisualController.Finish) and the show/hide + clear-on-spawn handling, so there's
+        // nothing extra to register. Toggled via TrailRenderer.enabled, never SetActive: the trail may
+        // sit on the visual root itself, and the controller already owns `emitting`.
+        private void ApplyTrail(ProjectileVisualsConfig visuals)
+        {
+            ProjectileView projectileView = GetComponent<ProjectileView>();
+            TrailRenderer trail = projectileView != null ? projectileView.TrailRenderer : null;
+            if (trail == null)
+                return;
+
+            trail.enabled = visuals.EnableProjectileTrail;
+            if (visuals.EnableProjectileTrail == false)
+                return;
+
+            if (visuals.ProjectileTrailTime > 0f)
+                trail.time = visuals.ProjectileTrailTime;
+
+            if (visuals.ProjectileTrailWidth > 0f)
+                trail.widthMultiplier = visuals.ProjectileTrailWidth;
+
+            if (visuals.ProjectileTrailColor != null)
+                trail.colorGradient = visuals.ProjectileTrailColor;
         }
 
         private void ApplyLight(ProjectileVisualsConfig visuals)

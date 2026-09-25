@@ -24,17 +24,21 @@ using UnityEngine.UI;
 // instead, and this window shows InMatchWindow itself once the local hero is genuinely standing in
 // the world - so the menu Canvas goes down exactly once there's something worth looking at.
 //
-// Progress is real, not faked, for the stage that actually takes time: LevelGenerationSystem spreads
-// generation over many ticks and publishes its own cursor/total on Global (see Chunk.qtn's own
-// comment naming this screen as their consumer). The two stages either side of it have no countable
-// work, so they crawl toward their band's end instead - the bar is monotonic throughout, since a
-// loading bar that goes backwards reads as a bug even when the underlying numbers are honest.
+// Progress is a weighted sum of pieces, weighted by what actually COSTS time, not by what's easy to
+// count. The simulation's own generation cursor (Global.LevelGenCursor/LevelGenTotal) is real but
+// nearly free - a few ticks - so it only owns a sliver. The expensive part is the View building the
+// world those ticks describe: instantiating every chunk prefab (tiles, colliders, detail scatter),
+// then the WaterShoreBaker probe pass (the single biggest cost when measured - time-sliced for that reason), so "chunk entities that have a live view" is what
+// gets the bulk of the bar. Only the session/scene load has nothing to count and crawls. The bar is
+// monotonic throughout, since a loading bar that goes backwards reads as a bug even when the
+// underlying numbers are honest.
 public class LoadingWindow : UiWindow
 {
     private enum LoadingStage
     {
         Connecting,
         GeneratingLevel,
+        BuildingWorld,
         Entering,
     }
 
@@ -44,7 +48,7 @@ public class LoadingWindow : UiWindow
     private GameObject[] fadeWithScreen;
 
     [Header("Readout")]
-    [SerializeField, Tooltip("Stage label - CONNECTING / GENERATING LEVEL / ENTERING THE RIFT. Left unassigned to skip.")]
+    [SerializeField, Tooltip("Stage label - CONNECTING / GENERATING LEVEL / BUILDING WORLD / ENTERING THE RIFT. Left unassigned to skip.")]
     private TMP_Text statusText;
     [SerializeField, Tooltip("Percentage readout, e.g. \"42%\". Left unassigned to skip.")]
     private TMP_Text percentText;
@@ -59,6 +63,7 @@ public class LoadingWindow : UiWindow
     [Header("Labels")]
     [SerializeField] private string connectingLabel = "CONNECTING";
     [SerializeField] private string generatingLabel = "GENERATING LEVEL";
+    [SerializeField] private string buildingLabel = "BUILDING WORLD";
     [SerializeField] private string enteringLabel = "ENTERING THE RIFT";
 
     [Header("Timing")]
@@ -68,19 +73,29 @@ public class LoadingWindow : UiWindow
     private float maximumDisplayDuration = 45f;
     [SerializeField] private float fadeOutDuration = 0.45f;
     [SerializeField] private Ease fadeOutEase = Ease.InQuad;
-    [SerializeField, Tooltip("How fast the bar eases toward its true value, in bar units per second - purely cosmetic smoothing on top of the real progress.")]
-    private float barFillSpeed = 1.5f;
-    [SerializeField, Tooltip("How fast the two countless stages (connecting, entering) creep toward the end of their own band, in bar units per second.")]
-    private float crawlSpeed = 0.15f;
+    [SerializeField, Tooltip("How fast the bar eases toward its true value, in bar units per second - purely cosmetic smoothing on top of the real progress. Keep it high enough (~3) that real progress reads as progress rather than as a fixed-length animation.")]
+    private float barFillSpeed = 3f;
+    [SerializeField, Tooltip("Rate (per second) the countless connecting/scene-load piece closes the gap toward ~95% of itself. Asymptotic, so a slow scene load keeps creeping instead of stalling at a hard cap.")]
+    private float connectingCrawlRate = 0.6f;
+    [SerializeField, Tooltip("Any single frame longer than this (seconds) while the screen is up is logged with the current stage and counts - the main-thread spikes the bar can't animate through. 0 disables.")]
+    private float spikeLogThreshold = 0.05f;
 
-    // Band each stage owns on the bar. Generation is the only stage with countable work, so it gets
-    // the bulk of the bar; the other two exist so the bar is already moving before/after it.
-    private const float ConnectingBandEnd = 0.15f;
-    private const float GeneratingBandEnd = 0.85f;
+    // Share of the bar each piece owns, by measured cost (Editor Profiler, see docs/loading-screen.md) -
+    // the shore bake outweighed instantiating every chunk view. Sums to 1.
+    private const float ConnectingWeight = 0.10f;
+    private const float GeneratingWeight = 0.10f;
+    private const float BuildingWeight = 0.35f;
+    private const float BakeWeight = 0.30f;
+    private const float EnteringWeight = 0.15f;
+    private const float ConnectingCrawlCap = 0.95f;
+
+    private static QuantumEntityViewUpdater _viewUpdater;
 
     private bool _handingOff;
     private float _elapsed;
     private float _crawl;
+    private int _chunkViewsBuilt;
+    private int _chunkViewsExpected;
     private float _target;
     private float _displayed;
     private float _tipTimer;
@@ -115,6 +130,7 @@ public class LoadingWindow : UiWindow
         bool wasHidden = gameObject.activeSelf == false;
 
         base.Show();
+        WaterShoreBaker.IsLoadingScreenUp = true;
 
         if (wasHidden == true)
             ResetToStart();
@@ -142,6 +158,7 @@ public class LoadingWindow : UiWindow
             _faded = false;
         }
 
+        WaterShoreBaker.IsLoadingScreenUp = false;
         base.Hide();
     }
 
@@ -161,6 +178,11 @@ public class LoadingWindow : UiWindow
         ApplyStatus(stage);
         ApplyProgress(deltaTime);
         ApplyTip(deltaTime);
+
+        // Main-thread spikes are exactly what a bar can't animate through (it freezes, then jumps),
+        // so name them - this is how to see which piece is actually worth time-slicing.
+        if (spikeLogThreshold > 0f && deltaTime > spikeLogThreshold)
+            LogHelper.Warn("Loading", $"{deltaTime * 1000f:0}ms frame in stage {stage} (chunk views {_chunkViewsBuilt}/{_chunkViewsExpected}, bar {_target:0.00}, {_elapsed:0.0}s in)", this);
 
         if (_elapsed < minimumDisplayDuration)
             return;
@@ -184,8 +206,16 @@ public class LoadingWindow : UiWindow
     //
     // Falls back to the simulation's own readiness gate for a client with no local player at all -
     // without it a spectator would sit behind this screen until the failsafe timeout.
+    //
+    // Also holds for the shore-field bake: it's time-sliced (WaterShoreBaker.probeBudgetMs), so on a
+    // slow device it can still be running when the hero appears - lifting the screen then would
+    // reveal water with no shoreline foam, which then pops in. No baker in the scene = not pending.
+    // The maximumDisplayDuration failsafe still applies, so a stuck bake can't trap the player.
     private bool IsWorldReady(Frame frame)
     {
+        if (WaterShoreBaker.IsBakePending == true)
+            return false;
+
         if (MyLocalPlayer.Instance != null && MyLocalPlayer.Instance.AnyLocalPlayerSetup == true)
             return true;
 
@@ -204,42 +234,92 @@ public class LoadingWindow : UiWindow
         return runner.Game.Frames.Predicted;
     }
 
+    // Fills _target from the weighted pieces (see the class comment) and returns the stage named by
+    // the first piece that isn't done yet.
     private unsafe LoadingStage ResolveStage(Frame frame, float deltaTime)
     {
         if (frame == null)
         {
-            _target = Crawl(0f, ConnectingBandEnd, deltaTime);
+            // Session start + gameplay scene load: nothing to count, so close the gap asymptotically
+            // - a slow load keeps visibly creeping rather than parking at a hard cap.
+            _crawl += (ConnectingCrawlCap - _crawl) * (1f - Mathf.Exp(-connectingCrawlRate * deltaTime));
+            _target = ConnectingWeight * _crawl;
             return LoadingStage.Connecting;
         }
 
-        if (frame.Global->LevelGenerated == false)
-        {
-            int total = frame.Global->LevelGenTotal;
-            int cursor = frame.Global->LevelGenCursor;
+        bool levelGenerated = frame.Global->LevelGenerated;
+        int genTotal = frame.Global->LevelGenTotal;
 
-            // Total is only published once the first generation tick has built its request bag, so
-            // until then this stage has nothing to count either and crawls like the others.
-            _target = total > 0
-                ? Mathf.Lerp(ConnectingBandEnd, GeneratingBandEnd, Mathf.Clamp01(cursor / (float)total))
-                : Crawl(ConnectingBandEnd, GeneratingBandEnd, deltaTime);
+        // Total is only published on the first generation tick, so until then it's just 0.
+        float generating = levelGenerated ? 1f
+            : genTotal > 0 ? Mathf.Clamp01(frame.Global->LevelGenCursor / (float)genTotal) : 0f;
+        float building = ResolveChunkViewProgress(frame, levelGenerated, genTotal);
+        // Time-sliced over frames (see WaterShoreBaker.probeBudgetMs), so this is real, visible progress.
+        float baked = levelGenerated ? WaterShoreBaker.BakeProgress : 0f;
+        float entering = ResolveEnteringProgress(frame, levelGenerated);
 
+        _target = ConnectingWeight
+                  + GeneratingWeight * generating
+                  + BuildingWeight * building
+                  + BakeWeight * baked
+                  + EnteringWeight * entering;
+
+        if (levelGenerated == false)
             return LoadingStage.GeneratingLevel;
-        }
 
-        _target = PlayerSpawnUtility.IsReadyToSpawn(frame)
-            ? 1f
-            : Crawl(GeneratingBandEnd, 1f, deltaTime);
+        if (building < 1f || baked < 1f)
+            return LoadingStage.BuildingWorld;
 
         return LoadingStage.Entering;
     }
 
-    // Advances a stage that has no countable work toward the end of its own band. Kept in its own
-    // accumulator (rather than reusing the displayed value) so entering a stage never rewinds the bar.
-    private float Crawl(float bandStart, float bandEnd, float deltaTime)
+    // Chunk entities whose prefab view actually exists, over how many there will be. This is the
+    // real cost of a match start - the sim places a chunk in a fraction of a tick, the View then has
+    // to instantiate its whole prefab. Only entities carrying a View component count (a chunk with no
+    // view asset would otherwise never complete). Until generation finishes the denominator is at
+    // least LevelGenTotal, so views keeping pace with a half-generated level can't read as done;
+    // FillInnerGaps adds chunks past that total on the last tick, which the live count picks up.
+    private unsafe float ResolveChunkViewProgress(Frame frame, bool levelGenerated, int genTotal)
     {
-        _crawl = Mathf.Max(_crawl, bandStart);
-        _crawl = Mathf.MoveTowards(_crawl, bandEnd, crawlSpeed * deltaTime);
-        return _crawl;
+        if (_viewUpdater == null)
+            _viewUpdater = FindFirstObjectByType<QuantumEntityViewUpdater>();
+
+        int withView = 0;
+        int built = 0;
+
+        var chunks = frame.Filter<Chunk>();
+        while (chunks.Next(out EntityRef entity, out Chunk _))
+        {
+            if (frame.Has<View>(entity) == false)
+                continue;
+
+            withView++;
+
+            if (_viewUpdater != null && _viewUpdater.GetView(entity) != null)
+                built++;
+        }
+
+        _chunkViewsBuilt = built;
+        _chunkViewsExpected = levelGenerated ? withView : Mathf.Max(withView, genTotal);
+
+        if (_chunkViewsExpected == 0)
+            return levelGenerated ? 1f : 0f;
+
+        return Mathf.Clamp01(built / (float)_chunkViewsExpected);
+    }
+
+    // The spawn settle delay (real sim time, PlayerSpawnUtility.SpawnDelaySeconds) fills the first
+    // part; the local hero's view registering - the hand-off condition itself - fills the rest.
+    private unsafe float ResolveEnteringProgress(Frame frame, bool levelGenerated)
+    {
+        if (levelGenerated == false)
+            return 0f;
+
+        if (MyLocalPlayer.Instance != null && MyLocalPlayer.Instance.AnyLocalPlayerSetup == true)
+            return 1f;
+
+        float settle = frame.Global->TimeSinceLevelGenerated.AsFloat / PlayerSpawnUtility.SpawnDelaySeconds.AsFloat;
+        return 0.7f * Mathf.Clamp01(settle);
     }
 
     private void ApplyStatus(LoadingStage stage)
@@ -259,6 +339,7 @@ public class LoadingWindow : UiWindow
         {
             LoadingStage.Connecting => connectingLabel,
             LoadingStage.GeneratingLevel => generatingLabel,
+            LoadingStage.BuildingWorld => buildingLabel,
             _ => enteringLabel,
         };
 
@@ -416,6 +497,8 @@ public class LoadingWindow : UiWindow
         _handingOff = false;
         _elapsed = 0f;
         _crawl = 0f;
+        _chunkViewsBuilt = 0;
+        _chunkViewsExpected = 0;
         _target = 0f;
         _displayed = 0f;
         _tipTimer = 0f;

@@ -17,7 +17,7 @@ public class RunResultPopup : UiPopup
     [SerializeField] private GameObject winRoot;
     [SerializeField] private GameObject loseRoot;
     [SerializeField] private TMP_Text clearTimeText;    // winRoot only - total time of the run
-    [SerializeField] private TMP_Text timeSurvivedText; // loseRoot only - Global.SurvivalTime
+    [SerializeField] private TMP_Text timeSurvivedText; // loseRoot only - Global.RunTime
 
     [Header("Common stats")]
     [SerializeField] private TMP_Text enemiesKilledText;

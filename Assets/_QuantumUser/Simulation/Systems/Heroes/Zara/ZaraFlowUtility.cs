@@ -45,8 +45,10 @@ namespace Quantum
             SetProgress(f, owner, flow, flow->Progress + amount);
         }
 
-        // Rebakes Move Speed / Fire Rate from the SEPARATELY CAPTURED baselines rather than multiplying
-        // the live values, so repeated toggles can never compound.
+        // Takes back whatever Flow last added to Move Speed / Fire Rate, then adds the bonus for its
+        // current state as a fraction of what's there now - so repeated toggles can never compound,
+        // and every other source's change to the same stats (upgrades, mutations, Emergency Reload)
+        // survives a toggle. See ZaraFlow.AppliedMoveSpeedDelta.
         //
         // Deliberately writes CharacterStats rather than refreshing the shared timed StatusEffects
         // slots every tick: those are take-the-stronger/overwrite, so Flow living there would silently
@@ -67,8 +69,14 @@ namespace Quantum
                 fireBonus = flow->FireRateBonus + flow->ActiveFireRateBonus;
             }
 
-            stats->MoveSpeedMultiplier = flow->BaseMoveSpeedMultiplier * (FP._1 + moveBonus);
-            stats->AttackSpeedMultiplier = flow->BaseAttackSpeedMultiplier * (FP._1 + fireBonus);
+            stats->MoveSpeedMultiplier -= flow->AppliedMoveSpeedDelta;
+            stats->AttackSpeedMultiplier -= flow->AppliedAttackSpeedDelta;
+
+            flow->AppliedMoveSpeedDelta = stats->MoveSpeedMultiplier * moveBonus;
+            flow->AppliedAttackSpeedDelta = stats->AttackSpeedMultiplier * fireBonus;
+
+            stats->MoveSpeedMultiplier += flow->AppliedMoveSpeedDelta;
+            stats->AttackSpeedMultiplier += flow->AppliedAttackSpeedDelta;
 
             // Full Tempo (SMG Mastery R3) - a plain, hero-agnostic component (see HeroMastery.qtn)
             // that WeaponSystem.ResolveLiveFireCooldown reads with no knowledge of Flow at all; this is

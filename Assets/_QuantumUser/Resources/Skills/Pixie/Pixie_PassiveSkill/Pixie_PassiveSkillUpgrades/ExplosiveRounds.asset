@@ -21,9 +21,9 @@ MonoBehaviour:
   Description: "Weapon hits can trigger a small explosion."
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - "Weapon hits have a <color=#FD3971>15%</color> chance to trigger a small explosion dealing <color=#FD3971>+20%</color> Damage in a <color=#FD3971>2m</color> radius."
-  - "Chance increases to <color=#FD3971>22%</color>, Damage to <color=#FD3971>+30%</color>, and radius to <color=#FD3971>2.4m</color>."
-  - "Chance increases to <color=#FD3971>30%</color> and Damage to <color=#FD3971>+40%</color>."
+  - "Weapon hits have a <color=#FD3971>15%</color> chance to trigger a <color=#FD3971>2m</color> explosion dealing <color=#FD3971>+20%</color> Damage."
+  - "Weapon hits have a <color=#FD3971>22%</color> chance to trigger a <color=#FD3971>2.4m</color> explosion dealing <color=#FD3971>+30%</color> Damage."
+  - "Weapon hits have a <color=#FD3971>30%</color> chance to trigger a <color=#FD3971>2.4m</color> explosion dealing <color=#FD3971>+40%</color> Damage."
   ProcChance:
   - RawValue: 9830
   - RawValue: 14418

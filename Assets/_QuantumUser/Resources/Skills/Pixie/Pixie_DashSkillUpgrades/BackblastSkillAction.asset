@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: 1133475158, guid: b217254d41b6945b1873986186a25786, type: 3}
   DisplayName: Backblast
   RankDescriptions:
-  - "Dashing leaves a bomb at the starting point dealing <color=#FD3971>50%</color> Bunny Bomb Damage."
-  - "Also leaves a bomb at the Dash destination."
-  - "Dash bombs deal <color=#FD3971>75%</color> Bunny Bomb Damage and guarantee Chain Reaction marks on enemies hit."
+  - "Dashing drops a bomb at your starting point that explodes for <color=#FD3971>50%</color> Bunny Bomb Damage."
+  - "Dashing drops a bomb at your start and end points, each exploding for <color=#FD3971>50%</color> Bunny Bomb Damage."
+  - "Dashing drops a bomb at your start and end points, each exploding for <color=#FD3971>75%</color> Bunny Bomb Damage. Enemies hit are always marked to explode on death."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 5

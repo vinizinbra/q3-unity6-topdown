@@ -22,8 +22,8 @@ MonoBehaviour:
   <MaxRank>k__BackingField: 3
   RankDescriptions:
   - "When Flow breaks, gain <color=#FD3971>+20%</color> Move Speed for <color=#FD3971>1.5s</color>."
-  - "When hit, Flow drops to one-third instead of resetting completely."
-  - "While Flow is Active, the hit that breaks it deals <color=#FD3971>30%</color> less Damage."
+  - "Getting hit keeps <color=#FD3971>1/3</color> of your Flow instead of resetting it. When Flow breaks, gain <color=#FD3971>+20%</color> Move Speed for <color=#FD3971>1.5s</color>."
+  - "Getting hit keeps <color=#FD3971>1/3</color> of your Flow, and the hit that breaks Active Flow deals <color=#FD3971>30%</color> less Damage. When Flow breaks, gain <color=#FD3971>+20%</color> Move Speed for <color=#FD3971>1.5s</color>."
   MoveSpeedBonus:
   - RawValue: 13107
   - RawValue: 13107

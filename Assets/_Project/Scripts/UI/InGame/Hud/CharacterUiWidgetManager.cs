@@ -3,7 +3,7 @@ using Quantum;
 using UnityEngine;
 
 // Spawns/despawns one CharacterUiWidget per character entity, parented under widgetParent
-// (the HUD canvas' player-widget slot, e.g. GameplayWindow's playerUiWidgetParent).
+// (the HUD canvas' player-widget slot).
 public class CharacterUiWidgetManager : MonoBehaviour
 {
     public static CharacterUiWidgetManager Instance;

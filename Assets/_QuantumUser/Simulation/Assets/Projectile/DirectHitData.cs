@@ -30,7 +30,10 @@ namespace Quantum
 
         public override void Initialize(Projectile* projectile)
         {
-            projectile->RemainingPierces = PierceCount;
+            // Floored at 1 - ApplyHit spends one per contact and stops at 0, so an authored 0 used to
+            // mean the SAME as 1 for the base shot but silently ate the first point of every bonus
+            // pierce baked on top (Piercing Rounds, Phantom Strike, Longshot).
+            projectile->RemainingPierces = System.Math.Max(1, PierceCount);
         }
 
         public override bool ApplyHit(Frame f, EntityRef entity, Projectile* projectile, EntityRef hitEntity, FPVector3 point)
@@ -84,7 +87,7 @@ namespace Quantum
                 return false;
             }
 
-            ApplyTerminalWeaponPerks(f, projectile, point);
+            ApplyTerminalWeaponPerks(f, projectile, point, hitEntity);
             return true;
         }
 
@@ -98,7 +101,10 @@ namespace Quantum
         // this specific shot is actually done flying, weapon-sourced only (a skill/enemy projectile
         // reusing DirectHitData never carries these - they read 0/false off an owner with no
         // Weapon, or off a Weapon that never rolled them).
-        private void ApplyTerminalWeaponPerks(Frame f, Projectile* projectile, FPVector3 point)
+        //
+        // hitEntity is the enemy the shot ended on (None for level geometry/expiry) - Split Shot's
+        // children are spawned on its surface and must not count it as their own first contact.
+        private void ApplyTerminalWeaponPerks(Frame f, Projectile* projectile, FPVector3 point, EntityRef hitEntity = default)
         {
             if (projectile->Source != DamageSource.Weapon
                 || f.Unsafe.TryGetPointer<Weapon>(projectile->Owner, out var weapon) == false)
@@ -130,7 +136,7 @@ namespace Quantum
 
             if (procs->HasSplitShot == true && projectile->SpawnDepth < MaxSplitShotDepth)
             {
-                SpawnSplitProjectiles(f, projectile, point, weapon, procs);
+                SpawnSplitProjectiles(f, projectile, point, weapon, procs, hitEntity);
             }
         }
 
@@ -247,12 +253,17 @@ namespace Quantum
         // SplitShot-capable Hit asset has always had, kept as DirectHitData's own local fallback
         // since it depends on the parent projectile's own live Velocity/ProjectileData, something
         // an AreaHitData blast simply doesn't have.
-        private void SpawnSplitProjectiles(Frame f, Projectile* projectile, FPVector3 point, Weapon* weapon, WeaponPostImpactProcs* procs)
+        //
+        // Children start ON splitFrom's surface (the hit point), and with a HitRadius sphere their
+        // first cast overlaps it - without LastHit they re-hit the enemy the parent just finished on,
+        // landing two half-damage hits on it instead of splitting to anyone else.
+        private void SpawnSplitProjectiles(Frame f, Projectile* projectile, FPVector3 point, Weapon* weapon, WeaponPostImpactProcs* procs,
+            EntityRef splitFrom)
         {
             if (procs->SplitShotProjectileOverride.IsValid == true)
             {
                 WeaponPerkUtility.SpawnSplitProjectiles(f, projectile->Owner, DamageSource.Weapon, projectile->Element,
-                    projectile->Damage, projectile->SpawnDepth, point, projectile->Velocity, weapon, procs);
+                    projectile->Damage, projectile->SpawnDepth, point, projectile->Velocity, weapon, procs, splitFrom);
                 return;
             }
 
@@ -288,6 +299,7 @@ namespace Quantum
                 if (f.Unsafe.TryGetPointer<Projectile>(child, out var childProjectile) == true)
                 {
                     childProjectile->MaxTravelDistance = maxTravelDistance;
+                    childProjectile->LastHit = splitFrom;
                 }
             }
         }

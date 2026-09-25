@@ -22,8 +22,8 @@ MonoBehaviour:
   <MaxRank>k__BackingField: 3
   RankDescriptions:
   - "Vendetta marks last <color=#FD3971>12s</color>."
-  - "Shield damage also counts toward Vendetta and Vendetta kills grant <color=#FD3971>+2</color> Rage."
-  - "Vendetta kills heal Max for <color=#FD3971>60%</color> of the mark's damage, up to <color=#FD3971>15%</color> Max HP per kill."
+  - "Vendetta marks last <color=#FD3971>12s</color> and Shield damage counts toward them. Vendetta kills grant <color=#FD3971>+2</color> Rage."
+  - "Vendetta marks last <color=#FD3971>12s</color> and Shield damage counts toward them. Vendetta kills grant <color=#FD3971>+2</color> Rage and heal <color=#FD3971>60%</color> of the mark's damage (max <color=#FD3971>15%</color> Max HP)."
   MarkDuration:
   - RawValue: 786432
   - RawValue: 786432

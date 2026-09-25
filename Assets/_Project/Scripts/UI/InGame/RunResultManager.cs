@@ -104,7 +104,9 @@ public class RunResultManager : QuantumGlobalMonoBehaviour
             riftShardsEarned = localStats->RiftShardsEarned;
         }
 
-        FP runTime = frame.Global->SurvivalTime;
+        // Not SurvivalTime - that's the combat-only curve clock (frozen through Breathing/Elite
+        // holds/challenges, never ticked during Boss), so it read well short of the real run.
+        FP runTime = frame.Global->RunTime;
 
         RunResultPopup popup = InMatchPopupManager.instance.Open<RunResultPopup>();
         popup?.Setup(won, enemiesKilled, damageDealt, timesDowned, riftShardsEarned, runTime, teamResults);

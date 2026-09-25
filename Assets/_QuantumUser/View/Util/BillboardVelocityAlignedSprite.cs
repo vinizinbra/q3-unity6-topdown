@@ -70,6 +70,14 @@ namespace QuantumUser.View.Util
                 return;
             }
 
+            // deltaTime can be 0 (timeScale 0 / paused frames) - dividing would yield NaN, which
+            // poisons _rollAngle and makes Quaternion.Euler assert every frame after.
+            if (Time.deltaTime <= 0f)
+            {
+                Billboard();
+                return;
+            }
+
             Vector3 velocity = (transform.position - _previousPosition) / Time.deltaTime;
             _previousPosition = transform.position;
 
@@ -86,7 +94,9 @@ namespace QuantumUser.View.Util
             if (screenDir.sqrMagnitude < 0.0001f)
                 return;
 
-            _rollAngle = Mathf.Atan2(screenDir.y, screenDir.x) * Mathf.Rad2Deg + angleOffset;
+            float angle = Mathf.Atan2(screenDir.y, screenDir.x) * Mathf.Rad2Deg + angleOffset;
+            if (float.IsFinite(angle))
+                _rollAngle = angle;
         }
 
         private void Billboard()

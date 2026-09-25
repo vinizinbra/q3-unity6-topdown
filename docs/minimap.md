@@ -108,6 +108,18 @@ simulation.
   `TraversalChallenge.qtn`) - there's no cooldown concept for Traversal Challenge at all, so
   `cooldownIconTint` is never used for it.
 
+  **Edge-pinning active POIs** (2026-09-25, minimap only): `UpdateIconTints` also sets
+  `OverlayPair.PinToEdge` - true whenever the icon is NOT tinted (POI not `Expired`, Traversal not
+  `Completed`/`Failed`). `PinActiveIconsToViewportEdge` runs right after `CenterOnLocalPlayer` and
+  re-places every Mini icon from its texel spot; a pinned one whose spot is outside the masked
+  viewport (`mapRect`'s parent) is scaled back along the viewport-center→icon direction until it
+  sits inside the viewport inset by the icon's half-size + `edgePinPadding`, so a far-away POI
+  still reads as a direction hint. While actually clamped, the Mini icon's alpha is multiplied by
+  `edgePinnedAlpha` (on top of the color `UpdateIconTints` rewrote earlier that tick, so it never
+  compounds and restores itself once back in view). `circularViewport` switches to a round clamp for a round mask;
+  `pinActivePoisToEdge` turns it off. Undiscovered icons stay hidden (not pinned), and
+  Boss/LobbyStart icons are never pinned since they link no POI.
+
   **Player markers**: one pooled `RectTransform` per **match player** (`PlayerLink` filter - local
   and remote alike, not `MyLocalPlayer.Slots`, so teammates show up too), repositioned every frame.
 
@@ -158,18 +170,23 @@ simulation.
   position/size, clips whatever overflows) that defines the actual visible viewport - the standard
   "content pans, mask stays put" technique.
 
-  **Toggle** (`toggleButton`/`fullMapPanel`, optional): clicking `toggleButton` flips `fullMapPanel`
-  (a `JuicyGameobject` -
-  `Assets/3rd-party/PachaGames/Scripts/Runtime/Util/JuicyGameobject.cs` - or one found on
-  `fullMapImage`'s own `GameObject` if `fullMapPanel` is unassigned) active/inactive via its own
-  `SetActive`, which scales from zero and activates on `Show`/`SetActive(true)` and scales to zero
-  THEN deactivates on `Hide`/`SetActive(false)`, instead of an instant on/off snap - lets the corner
-  minimap itself act as the button that opens/closes the big map, no input-system binding needed.
-  Reads the panel's own live `gameObject.activeSelf` rather than tracking a separate open/closed
-  bool, so its authored starting state (normally inactive) and anything else that shows/hides it
-  later stay the source of truth. `toggleButton` is wired in `Awake` (not `QStart`) since it's plain
-  Unity UI, not simulation-driven. Leave `toggleButton` unassigned to disable click-to-toggle
-  entirely - the panel can still be opened by whatever else drives its active state.
+  **Toggle — `FullMapWidget`** (`Hud/Minimap/FullMapWidget.cs`): opening/closing the big map is no
+  longer `MinimapWidget`'s job - it was split out (along with the full map's own `MapInfo` panel,
+  previously nested inside the Tab-hold Hero Info tab) so a quick mid-fight map glance doesn't also
+  bring up the whole stats readout. Same shape as `HeroInfoPopupWidget`: it only owns showing/hiding
+  its `root`, while `MinimapWidget` keeps painting into `fullMapImage`/`fullMapRect` (the shared
+  texture + `OverlayPair` clones). A **toggle**, not a hold, driven by `toggleKey` (default `M`), R2
+  (`OpenMiniMapTrigger` Input Manager axis - the 12th axis on Android pads like the MOGA Pro 2; L2
+  is the 13th), the `OpenMiniMapToggle` gamepad button (unbound by default - Select went to the Hero Info popup), and clicking any of `toggleButtons` (the
+  corner minimap's own `Button`). Shows/hides through `root`'s `JuicyGameobject` if it has one
+  (scale in/out), else a plain `SetActive`. `closeButtons` only ever close it (the `CLOSE` button
+  under `MapInfo`). While open, every `CanvasGroup` in `hideWhileShown` (the corner `MiniMapRoot`)
+  goes to alpha 0 / no raycasts and comes back on close - a `CanvasGroup`, not `SetActive`, because
+  `MinimapWidget` lives under the corner map and also paints the full map, so deactivating it would
+  freeze the big map too. It reads `root`'s live active state (minus a
+  JuicyGameobject mid-hide) rather than tracking a bool. Must sit on an always-active GameObject,
+  never on `root` itself - `QUpdate` doesn't run on an inactive GameObject. Scene: on
+  `Canvas/Windows` next to `HeroInfoPopupWidget`, `root` = `Canvas/Overlay/MapInfo`.
 
   **Full-map panel** (`fullMapImage`, optional): a second surface showing the WHOLE level at once,
   unpanned/unmasked (e.g. a Tab-key panel). The *texture* is literally shared - both `RawImage`s
@@ -237,13 +254,11 @@ though:
    layer of the same size over it and assign that instead. Tune `fullMapOverlayScale` so the
    shared icon/marker templates read at the right size on the bigger surface (they're clones of
    the same prefabs the minimap uses, so their authored size is minimap-sized).
-9. To let the corner minimap itself open/close the full-map panel: add a `Button` (e.g. covering
-   the minimap's own masked viewport rect, `Image` + `Raycast Target` on) and assign it to
-   `toggleButton`; add a `JuicyGameobject` component to the panel's root (backdrop +
-   `fullMapImage`/`fullMapRect`, whatever should show/hide together) and assign IT to
-   `fullMapPanel`, leaving that root **inactive** in the scene by default so the big map starts
-   closed. An `EventSystem` must exist in the scene for the click to register, same as any other
-   Unity UI `Button`.
+9. To open/close the full-map panel: put the panel's root (backdrop + `fullMapImage`/`fullMapRect`,
+   optionally with a `JuicyGameobject` for scale in/out) **inactive** in the scene, add a
+   `FullMapWidget` to an always-active GameObject and assign that root to its `root`. For
+   click-to-toggle, add a `Button` over the minimap's masked viewport (`Image` + `Raycast Target`
+   on) and add it to `FullMapWidget.toggleButtons` - an `EventSystem` must exist in the scene.
 
 Not yet manually verified end-to-end in-Editor.
 

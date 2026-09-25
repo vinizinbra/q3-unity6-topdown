@@ -22,8 +22,8 @@ MonoBehaviour:
   <MaxRank>k__BackingField: 3
   RankDescriptions:
   - "The first hit against each enemy deals <color=#FD3971>+40%</color> Damage."
-  - "First Strike bonus increases to <color=#FD3971>+70%</color>."
-  - "Bonus rises to <color=#FD3971>+100%</color>. Killing a First-Strike enemy empowers your next First Strike by <color=#FD3971>+25%</color>."
+  - "The first hit against each enemy deals <color=#FD3971>+70%</color> Damage."
+  - "The first hit against each enemy deals <color=#FD3971>+100%</color> Damage. Killing that enemy adds <color=#FD3971>+25%</color> to your next first hit."
   DamageMultiplierBonus:
   - RawValue: 26214
   - RawValue: 45875

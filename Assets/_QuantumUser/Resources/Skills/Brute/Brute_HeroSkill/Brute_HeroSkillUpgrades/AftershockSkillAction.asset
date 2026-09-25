@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: -1247703252, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
   DisplayName: Aftershock
   RankDescriptions:
-  - "Each enemy hit by Discharge makes the closing shockwave <color=#FD3971>15%</color> stronger, up to <color=#FD3971>5</color> enemies."
-  - "Each enemy hit also makes the shockwave <color=#FD3971>5%</color> larger, up to <color=#FD3971>5</color> enemies."
-  - "At <color=#FD3971>5</color> enemies hit, the shockwave repeats <color=#FD3971>0.5s</color> later for <color=#FD3971>60%</color> of its Damage."
+  - "Each enemy hit by Discharge makes Juggernaut's closing shockwave <color=#FD3971>+15%</color> stronger, up to <color=#FD3971>5</color> enemies."
+  - "Each enemy hit by Discharge makes Juggernaut's closing shockwave <color=#FD3971>+15%</color> stronger and <color=#FD3971>+5%</color> larger, up to <color=#FD3971>5</color> enemies."
+  - "Each enemy hit by Discharge makes Juggernaut's closing shockwave <color=#FD3971>+15%</color> stronger and <color=#FD3971>+5%</color> larger, up to <color=#FD3971>5</color>. At <color=#FD3971>5</color> enemies, it repeats <color=#FD3971>0.5s</color> later for <color=#FD3971>60%</color> Damage."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

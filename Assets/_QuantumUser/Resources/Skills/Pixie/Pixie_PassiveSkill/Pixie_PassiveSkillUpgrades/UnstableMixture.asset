@@ -21,9 +21,9 @@ MonoBehaviour:
   Description: "Pixie's explosion kills empower her next explosion."
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - "Explosion kills bank <color=#FD3971>1</color> charge. Pixie's next explosion consumes the stored charge for <color=#FD3971>+30%</color> Damage and <color=#FD3971>+15%</color> Radius."
-  - "Pixie can store up to <color=#FD3971>2</color> charges."
-  - "Using maximum charges also creates a delayed secondary explosion."
+  - "Explosion kills store <color=#FD3971>1</color> charge. Pixie's next explosion uses it for <color=#FD3971>+30%</color> Damage and <color=#FD3971>+15%</color> Radius."
+  - "Explosion kills store up to <color=#FD3971>2</color> charges. Pixie's next explosion uses them for <color=#FD3971>+30%</color> Damage and <color=#FD3971>+15%</color> Radius per charge."
+  - "Explosion kills store up to <color=#FD3971>2</color> charges. Pixie's next explosion uses them for <color=#FD3971>+30%</color> Damage and <color=#FD3971>+15%</color> Radius per charge. Using <color=#FD3971>2</color> charges adds a second explosion <color=#FD3971>0.5s</color> later."
   DamageBonusPerStack:
     RawValue: 19661
   RadiusBonusPerStack:

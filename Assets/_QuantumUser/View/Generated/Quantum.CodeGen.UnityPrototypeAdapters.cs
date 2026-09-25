@@ -348,6 +348,8 @@ namespace Quantum.Prototypes.Unity {
     public FPVector3 TraversalJumpPendingDestination;
     public FP TraversalJumpPendingSpeed;
     public FP KnockbackTimer;
+    public FP HitStaggerTimer;
+    public FP StaggerImmuneTimer;
     public FPVector3 PreKnockbackPosition;
     public FP StuckCheckTimer;
     public FP FallRespawnTimer;
@@ -388,6 +390,8 @@ namespace Quantum.Prototypes.Unity {
       converter.Convert(this.TraversalJumpPendingDestination, out result.TraversalJumpPendingDestination);
       converter.Convert(this.TraversalJumpPendingSpeed, out result.TraversalJumpPendingSpeed);
       converter.Convert(this.KnockbackTimer, out result.KnockbackTimer);
+      converter.Convert(this.HitStaggerTimer, out result.HitStaggerTimer);
+      converter.Convert(this.StaggerImmuneTimer, out result.StaggerImmuneTimer);
       converter.Convert(this.PreKnockbackPosition, out result.PreKnockbackPosition);
       converter.Convert(this.StuckCheckTimer, out result.StuckCheckTimer);
       converter.Convert(this.FallRespawnTimer, out result.FallRespawnTimer);
@@ -517,6 +521,35 @@ namespace Quantum.Prototypes.Unity {
     }
   }
   [System.SerializableAttribute()]
+  public unsafe partial class PendingDoubleTapShotPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.PendingDoubleTapShotPrototype> {
+    public FP Delay;
+    public FPVector3 SpawnPosition;
+    public FPVector3 AimDirection;
+    public Quantum.QuantumEntityPrototype Target;
+    public QBoolean AimAtCenter;
+    public FP Damage;
+    public QBoolean IsExplosiveProc;
+    public QBoolean IsCataclysm;
+    public Int32 GrantPierceAmount;
+    public QBoolean IsFirstBullet;
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.PendingDoubleTapShotPrototype prototype);
+    public override Quantum.Prototypes.PendingDoubleTapShotPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.PendingDoubleTapShotPrototype();
+      converter.Convert(this.Delay, out result.Delay);
+      converter.Convert(this.SpawnPosition, out result.SpawnPosition);
+      converter.Convert(this.AimDirection, out result.AimDirection);
+      converter.Convert(this.Target, out result.Target);
+      converter.Convert(this.AimAtCenter, out result.AimAtCenter);
+      converter.Convert(this.Damage, out result.Damage);
+      converter.Convert(this.IsExplosiveProc, out result.IsExplosiveProc);
+      converter.Convert(this.IsCataclysm, out result.IsCataclysm);
+      converter.Convert(this.GrantPierceAmount, out result.GrantPierceAmount);
+      converter.Convert(this.IsFirstBullet, out result.IsFirstBullet);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
   public unsafe partial class PlayerLifeStatePrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.PlayerLifeStatePrototype> {
     public Quantum.QEnum8<PlayerLifeStateKind> State;
     public FP BleedOutRemaining;
@@ -604,6 +637,7 @@ namespace Quantum.Prototypes.Unity {
     public AssetRef<ProjectileMovementData> MovementOverride;
     [ArrayLengthAttribute(8)]
     public Quantum.QuantumEntityPrototype[] RecentHits = new Quantum.QuantumEntityPrototype[8];
+    public Quantum.QuantumEntityPrototype LastHit;
     public AssetRef<ProjectileHitData> HitOverride;
     partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.ProjectilePrototype prototype);
     public override Quantum.Prototypes.ProjectilePrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
@@ -636,6 +670,7 @@ namespace Quantum.Prototypes.Unity {
       converter.Convert(this.SpeedMultiplier, out result.SpeedMultiplier);
       converter.Convert(this.MovementOverride, out result.MovementOverride);
       converter.Convert(this.RecentHits, out result.RecentHits);
+      converter.Convert(this.LastHit, out result.LastHit);
       converter.Convert(this.HitOverride, out result.HitOverride);
       ConvertUser(converter, ref result);
       return result;
@@ -1022,6 +1057,25 @@ namespace Quantum.Prototypes.Unity {
       var result = new Quantum.Prototypes.VendettaStrikeHitTrackerPrototype();
       converter.Convert(this.HitEntities, out result.HitEntities);
       converter.Convert(this.HitCount, out result.HitCount);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
+  public unsafe partial class WeaponFireTimeModsPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.WeaponFireTimeModsPrototype> {
+    public Int32 BonusPierce;
+    public Int32 BonusBounces;
+    public FP DoubleTapChance;
+    public FP DoubleTapDelay;
+    public Quantum.Prototypes.Unity.PendingDoubleTapShotPrototype PendingDoubleTap;
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.WeaponFireTimeModsPrototype prototype);
+    public override Quantum.Prototypes.WeaponFireTimeModsPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.WeaponFireTimeModsPrototype();
+      converter.Convert(this.BonusPierce, out result.BonusPierce);
+      converter.Convert(this.BonusBounces, out result.BonusBounces);
+      converter.Convert(this.DoubleTapChance, out result.DoubleTapChance);
+      converter.Convert(this.DoubleTapDelay, out result.DoubleTapDelay);
+      converter.Convert(this.PendingDoubleTap, out result.PendingDoubleTap);
       ConvertUser(converter, ref result);
       return result;
     }

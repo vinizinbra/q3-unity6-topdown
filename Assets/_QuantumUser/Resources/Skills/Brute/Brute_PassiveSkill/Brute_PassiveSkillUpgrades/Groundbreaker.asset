@@ -21,9 +21,9 @@ MonoBehaviour:
   Description: "Landing from a height turns Brute's weight into a weapon - throwing, slamming, and cracking enemies open."
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - "Jumping down from a height creates a <color=#FD3971>3m</color> landing shockwave that damages and knocks enemies away."
-  - "Heavy Landing deals more Damage and Knockback. Enemies knocked into walls are Stunned for <color=#FD3971>1s</color>."
-  - "Also triggers on a same-height jump. Radius <color=#FD3971>4.5m</color>, Damage <color=#FD3971>75%</color>. Wall-Stunned enemies become Exposed (<color=#FD3971>+25%</color> Damage, <color=#FD3971>3s</color>)."
+  - "Dropping down from a height creates a <color=#FD3971>3m</color> shockwave that deals <color=#FD3971>20%</color> Damage and knocks enemies away."
+  - "Dropping down from a height creates a <color=#FD3971>3m</color> shockwave that deals <color=#FD3971>50%</color> Damage and strong Knockback. Enemies knocked into walls are Stunned for <color=#FD3971>1s</color>."
+  - "Dropping from a height or jumping creates a <color=#FD3971>4.5m</color> shockwave that deals <color=#FD3971>75%</color> Damage and strong Knockback. Enemies knocked into walls are Stunned for <color=#FD3971>1s</color> and take <color=#FD3971>+25%</color> Damage for <color=#FD3971>3s</color>."
   MinimumFallHeight:
     RawValue: 32768
   AllowFallLandings: 1

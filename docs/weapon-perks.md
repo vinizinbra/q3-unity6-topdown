@@ -60,7 +60,7 @@ Editor authoring is still needed before any of this can drop or be offered at ru
   (see "Hitscan pierce, ricochet and rebound" at the end of this doc); Echo Chamber/Infinite Echo
   already replayed through `FireHitscan`. **Split Shot is the only Projectile-only perk left**, and
   it is now filtered out of the draw for a Hitscan weapon rather than being offered as a dead pick -
-  see `WeaponPerkData.SupportsFireType`.
+  see `WeaponPerkData.SupportsWeapon` (the 2026-09-24 audit section at the end of this doc).
 
 ## Roster and mechanism
 
@@ -148,12 +148,13 @@ the rest.
 - **Double Tap's extra shot is offset by `DoubleTapDelay` (default 0.1s, `WeaponPerkAssetGenerator`)
   instead of firing the same tick as the primary shot** - added so the two are audibly/visibly two
   separate shots rather than one instantaneous double-damage burst. Queued into
-  `WeaponFireTimeMods.PendingDoubleTap` (a single slot, unlike `WeaponEchoState.PendingEchoes`' `[3]`
+  `WeaponFireTimeMods.PendingDoubleTap` (a single slot, unlike `WeaponEchoState.PendingEchoes`' `[8]`
   - Double Tap only ever queues one extra shot per primary shot) and ticked down/fired in
   `WeaponSystem.Update`/`TickPendingDoubleTap`, same FP-seconds countdown `TickPendingEchoes` uses. A
-  second proc landing while one is already pending is silently dropped rather than replacing it -
-  same "don't stall/replace the older one" precedent `EnqueueEcho` already uses for its own queue -
-  acceptable since `DoubleTapDelay` is meant to stay well under the weapon's own fire cooldown.
+  second proc landing while one is already pending fires the older one immediately and queues the new
+  one, so a weapon faster than `DoubleTapDelay` (SMG, BeamGun) loses no procs (it used to silently
+  drop them). The queued shot keeps the primary shot's `Target`/`AimAtCenter` and re-resolves the
+  muzzle when it fires, so a lobbed shot still lands on the target.
 
 ## Dynamic projectile range
 
@@ -333,7 +334,7 @@ drop (`WeaponGenerator.Roll`) can, once something actually calls it with this po
    finish nor a `ProjectileData` to spawn children from. Every draw site
    (`WeaponGenerator.DrawDistinctPerks`, `LevelUpUtility.CollectWeaponPerkCandidates`/
    `RollWeaponOption`, `StoreUtility.RollStorePerks`, `BlacksmithUtility.RollPerkOptions`) now asks
-   `WeaponPerkData.SupportsFireType` and skips it, so it can't be rolled onto a weapon it would do
+   `WeaponPerkData.SupportsWeapon` and skips it, so it can't be rolled onto a weapon it would do
    nothing on. Piercing Rounds/Ricochet/Critical Rebound were listed here too until 2026-08-21 - all
    three now work on Hitscan, see the section at the end of this doc.
 4. **Split Shot's children are bare repeats, not full re-rolls** - a split projectile is spawned
@@ -466,3 +467,64 @@ Not changed, deliberately: the remainder of the tick a projectile pierces on sti
 heading (`ProjectileSystem` resolves its destination before the hit is applied - the same thing it
 already does for a Ricochet redirect, and a fraction of a unit at any real projectile speed); and a
 levelled shot still stops on walls and still spends its normal range/lifetime budget.
+
+## Pierce re-hitting the same enemy (2026-09-24)
+
+Piercing Rounds on a **projectile** weapon could spend its bonus pierce on the enemy it had just
+passed through. After a hit the shot survives, `ProjectileSystem.Update` starts the next cast from
+the hit point, which is on that enemy's surface. A `HitRadius > 0` sphere cast (several projectiles
+use 0.01/0.1/0.25) overlaps the enemy there, and a plain raycast can too depending on FP rounding.
+Either way the same enemy got hit again at distance ~0, so a `PierceCount 1` + 1 shot was used up on
+its first target: two damage instances on that target, nothing on the enemy behind it.
+
+Fix: `Projectile.LastHit` (new `.qtn` field) records the entity of the most recent hit the shot
+survived (a pierce or a bounce), and `CastForHit` skips it. Only the most recent entity is skipped,
+not all of `RecentHits`, because a Ricochet chain may come back to an enemy it hit two contacts
+earlier. The hitscan path didn't have this bug. It walks one `RaycastAll` per segment and restarts
+a pierce from inside the collider centre, where a ray can't report that collider.
+
+The bigger cause turned out to be data. `GenericDirectHitDataWithWeakKnockback.asset` (the Hit on
+`BasicProjectile`/`SniperProjectile`, so nearly every player projectile weapon) had been changed to
+`PierceCount: 0`. `ApplyHit` spends one pierce per contact, so a base of 0 plus Piercing Rounds' +1
+still ended on the first enemy. `DirectHitData.Initialize` now floors `PierceCount` at 1.
+
+## Perk pool audit fixes (2026-09-24)
+
+A pass over all 33 pool perks. What changed:
+
+- **`WeaponPerkData.SupportsWeapon(in WeaponPerkTarget)`** replaces `SupportsFireType`. `WeaponPerkTarget`
+  also carries `HasDirectHit` (a `DirectHitData` projectile or any hitscan) and the weapon's `Element`.
+  Piercing Rounds, Ricochet, Quantum Rounds, Explosive Sequence, Cataclysm Round and Element Infusion
+  need a direct hit, because only `DirectHitData`/the hitscan walk read them. They were being offered
+  on the AreaHitData launchers (Grenade/Cluster/Napalm), where they did nothing. Split Shot needs a
+  projectile weapon with a direct hit or its own override projectile.
+- **`WeaponPerkData.ConflictsWith`** plus **`WeaponPerkEligibility.IsEligible`**. Every draw site
+  (WeaponGenerator, LevelUpUtility, StoreUtility, BlacksmithUtility, and the Balance Simulator's mirror)
+  now goes through this one check: already owned, `SupportsWeapon`, conflicts. Echo Chamber conflicts
+  with Infinite Echo, and a second Element Infusion conflicts with the first. Blacksmith re-checks it
+  in `SelectPerk`, before taking Coins, because its offer is cached per Break and the player may have
+  bought a different Store weapon since.
+- **Hollow Point** floors `CriticalDamageBonus` at 1 before adding, matching the floor
+  `DamageUtility` applies when it reads the value.
+- **Split Shot**: children get `Projectile.LastHit` set to the enemy they split off, so they don't
+  re-hit it. A Split Shot with no override no longer wipes an existing override, such as Cluster
+  Launcher's bomblets.
+- **Critical Rebound**: a `WeaponOnCritReactions.ReboundInProgress` latch stops a hitscan rebound from
+  rebounding again synchronously. That used to recurse without limit. The projectile rebound launches
+  from collider centre to collider centre, with `LastHit` set to the crit target.
+- **Burst weapons**: `WeaponBurstState` keeps only the trigger-pull state (Phantom Strike's damage
+  factor and pierce). Each burst shot resolves its own magazine-position damage, last bullet,
+  Explosive Sequence counter and Cataclysm, and rolls Double Tap and echoes per bullet
+  (`QueueFollowUpShots`). A burst ends as soon as the magazine is empty, so it no longer fires at
+  Ammo -1 or calls `StartReload` twice.
+- **Echo queue** is 8 slots (was 3). Fast weapons were dropping echoes.
+- **Hitscan Ricochet** bounces from and to collider centres, and prefers enemies it hasn't hit yet.
+- **Element Infusion** is never applied onto a weapon that already has the same element.
+- **Emergency Reload**: the card text now includes its damage-reduction number. Zara's Flow no longer
+  overwrites it (see docs/zara-ascensions.md).
+
+Not changed: Napalm Launcher's native element still doesn't reach its blast (`AreaHitData.Detonate`
+doesn't pass `element` on to `ApplyInRadius`). Passing it through would also turn on Pixie's Fire-weapon
+explosion path, where every Fire hit triggers another explosion, so it needs a recursion guard first.
+Cataclysm Round and Final Round trigger on every attack of a 1-round magazine, and a Double Tap copy
+of the last bullet explodes twice with Cataclysm. Both are left as they are.

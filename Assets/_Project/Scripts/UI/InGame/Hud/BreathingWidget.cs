@@ -5,7 +5,7 @@ using TMPro;
 using UnityEngine;
 
 // Always-visible HUD element for a Breathing Break (see docs/run-phase.md) - lives under the normal
-// HUD (GameplayWindow), NEVER hidden by the Cursed Rift Choice Window, so it stays visible "behind"
+// HUD, NEVER hidden by the Cursed Rift Choice Window, so it stays visible "behind"
 // it. Owns the countdownRoot + "NEXT ASSAULT mm:ss" countdown (the ONE genuinely dynamic label
 // here), plus the Skip Vote button/waiting swap - shown immediately once this widget becomes
 // shown, no delay, no announcer awareness. The "AREA SECURED" banner (AnnouncerManager, see

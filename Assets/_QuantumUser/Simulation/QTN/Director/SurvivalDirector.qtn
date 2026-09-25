@@ -27,6 +27,14 @@ enum SurvivalPhaseKind : Byte
 global
 {
     FP SurvivalTime;
+
+    // Real elapsed run time (Lobby exit -> Victory/RunFailed), for the end-of-run popup only.
+    // Unlike SurvivalTime (combat-only: frozen through Breathing, Elite holds, challenges, and
+    // never ticked during Boss), this advances every unpaused tick of an active run. Ticked by
+    // CombatDirectorSystem, which lives inside GameplaySystemGroup, so level-up/Chest screens,
+    // the Boss reveal pause and tutorial pauses are excluded automatically.
+    FP RunTime;
+
     Int32 CurrentPhaseIndex;
     FP PhaseTimer;
 

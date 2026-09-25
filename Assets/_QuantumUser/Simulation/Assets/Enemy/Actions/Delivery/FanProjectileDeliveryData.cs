@@ -21,6 +21,12 @@ namespace Quantum
     {
         [ExpandableAsset] public AssetRef<ProjectileDataAsset> ProjectileData;
 
+        // Per-action "these shots fly faster/slower" (1 = the movement's own authored speed), passed
+        // to ProjectileSpawner.Spawn and applied through the movement's own ApplySpeedMultiplier -
+        // an arc still lands on its point, just sooner. Lets enemies share one ProjectileDataAsset
+        // at different speeds. The landing warning reads the final scaled velocity (ref launch).
+        public FP ProjectileSpeedMultiplier = 1;
+
         public ProjectileSpawnAnchor SpawnAnchor = ProjectileSpawnAnchor.OnSelf;
         public FPVector3 SpawnOffset;
 
@@ -139,7 +145,8 @@ namespace Quantum
                     continue;
                 }
 
-                ProjectileSpawner.Spawn(f, filter.Entity, ProjectileData, ref launch, action.Damage, target: target);
+                ProjectileSpawner.Spawn(f, filter.Entity, ProjectileData, ref launch, action.Damage, target: target,
+                    speedMultiplier: ProjectileSpeedMultiplier);
                 fired++;
             }
 

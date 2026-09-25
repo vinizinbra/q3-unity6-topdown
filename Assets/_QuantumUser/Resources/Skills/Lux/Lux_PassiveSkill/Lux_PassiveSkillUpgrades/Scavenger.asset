@@ -21,9 +21,9 @@ MonoBehaviour:
   Description: "More enemies drop Scrap, and more often."
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - "Even Filler enemies can now drop Scrap (<color=#FD3971>10%</color> chance)."
-  - "All Scrap drop chances increase; Filler enemies now drop Scrap <color=#FD3971>13%</color> of the time."
-  - "Specialist, Heavy and Elite enemies always drop Scrap. Bosses drop <color=#FD3971>3</color> Scrap."
+  - "Filler enemies can drop Scrap too (<color=#FD3971>10%</color> chance)."
+  - "Enemies drop Scrap <color=#FD3971>31%</color> of the time; Filler enemies <color=#FD3971>13%</color>."
+  - "Enemies drop Scrap <color=#FD3971>31%</color> of the time; Filler enemies <color=#FD3971>13%</color>. Specialist, Heavy and Elite enemies always drop Scrap, and Bosses drop <color=#FD3971>3</color>."
   DropChance:
   - RawValue: 16384
   - RawValue: 20316

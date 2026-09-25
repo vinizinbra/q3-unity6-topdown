@@ -140,9 +140,9 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 36
-        y: 687
-        width: 283
-        height: 261
+        y: 685
+        width: 281
+        height: 263
       alignment: 9
       pivot: {x: 0.44142437, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -161,10 +161,10 @@ TextureImporter:
       name: World1FinalEnemies_1
       rect:
         serializedVersion: 2
-        x: 359
-        y: 690
-        width: 335
-        height: 281
+        x: 318
+        y: 679
+        width: 382
+        height: 317
       alignment: 9
       pivot: {x: 0.4370213, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}

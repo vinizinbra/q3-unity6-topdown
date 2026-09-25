@@ -40,11 +40,15 @@ namespace Quantum
         // of projectileData.Hit, read by ProjectileSystem.Update/TryExpire every time it resolves the
         // hit behavior - see Projectile.HitOverride's own comment. Invalid for every existing caller,
         // a pure opt-in with zero behavior change for anything that doesn't pass one.
+        // speedMultiplier (default 0 = none) is a caller-authored per-shot speed factor - an enemy
+        // delivery's own ProjectileSpeedMultiplier (ProjectileDeliveryData/FanProjectileDeliveryData/
+        // MortarBarrageDeliveryData) - composed with the stat/boss/weapon multipliers below.
         public static EntityRef Spawn(Frame f, EntityRef owner, AssetRef<ProjectileDataAsset> projectileDataRef,
             ref ProjectileLaunch launch, FP damage, DamageSource source = DamageSource.None,
             SkillSlotId sourceSlot = SkillSlotId.None, EntityRef target = default,
             ElementType element = ElementType.Neutral, int spawnDepth = 0, int pelletIndex = 0,
-            AssetRef<ProjectileHitData> hitOverride = default, AssetRef<WeaponDataAsset> weaponData = default)
+            AssetRef<ProjectileHitData> hitOverride = default, AssetRef<WeaponDataAsset> weaponData = default,
+            FP speedMultiplier = default)
         {
             ProjectileDataAsset projectileData = f.FindAsset(projectileDataRef);
 
@@ -64,8 +68,22 @@ namespace Quantum
             // (1 for anything that isn't a boss currently authoring one), composed alongside it here
             // so this single call site covers both.
             ProjectileMovementData movement = f.FindAsset(projectileData.Movement);
-            FP speedMultiplier = StatUtility.GetProjectileSpeedMultiplier(f, owner) * BossPhaseUtility.ResolveProjectileSpeedMultiplier(f, owner);
-            movement.ApplySpeedMultiplier(ref launch, speedMultiplier);
+            FP totalSpeedMultiplier = StatUtility.GetProjectileSpeedMultiplier(f, owner) * BossPhaseUtility.ResolveProjectileSpeedMultiplier(f, owner);
+
+            if (speedMultiplier > FP._0)
+                totalSpeedMultiplier *= speedMultiplier;
+
+            // The firing weapon's own ProjectileSpeedMultiplier - root shots only, since a split
+            // child (DirectHitData.SpawnSplitProjectiles) copies its parent's already-scaled speed.
+            if (weaponData.IsValid == true && spawnDepth == 0)
+            {
+                FP weaponSpeedMultiplier = f.FindAsset(weaponData).ProjectileSpeedMultiplier;
+
+                if (weaponSpeedMultiplier > FP._0)
+                    totalSpeedMultiplier *= weaponSpeedMultiplier;
+            }
+
+            movement.ApplySpeedMultiplier(ref launch, totalSpeedMultiplier);
 
             EntityRef projectileEntity = f.Create(projectileData.Prototype);
 

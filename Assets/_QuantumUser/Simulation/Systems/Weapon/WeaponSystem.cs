@@ -483,11 +483,13 @@ namespace Quantum
             // local reused for both FireShot calls below), same as every other multiplier baked in
             // above this point. A flat amount (not a bool) so rank 2/3's higher PierceBonus survives.
             int grantPierceAmount = 0;
+            FP damageBonusMultiplier = FP._1;
 
             if (f.Has<PhantomStrikeCharge>(filter.Entity) == true
                 && f.Unsafe.TryGetPointer<PhantomStrikeUpgrade>(filter.Entity, out var phantomStrike) == true)
             {
-                damage *= FP._1 + phantomStrike->DamageMultiplierBonus;
+                damageBonusMultiplier = FP._1 + phantomStrike->DamageMultiplierBonus;
+                damage *= damageBonusMultiplier;
                 grantPierceAmount = phantomStrike->PierceBonus;
                 f.Remove<PhantomStrikeCharge>(filter.Entity);
             }
@@ -501,41 +503,9 @@ namespace Quantum
             FireShot(f, filter.Entity, filter.Weapon, weaponData, damage, casterPosition, aimAngle, holdOffset,
                 spawnPosition, aimDirection, filter.Aim->Target, aimAtCenter, isExplosiveProc, isCataclysm, grantPierceAmount, isFirstBullet, forceCritical);
 
-            if (f.Unsafe.TryGetPointer<WeaponFireTimeMods>(filter.Entity, out var fireMods) == true
-                && fireMods->DoubleTapChance > FP._0 && DamageUtility.RollChance(f, fireMods->DoubleTapChance) == true)
-            {
-                if (fireMods->DoubleTapDelay > FP._0)
-                {
-                    // Silently dropped if one's already pending (a rapid-fire weapon outrunning
-                    // DoubleTapDelay) rather than overwriting it - same "don't stall/replace the
-                    // older one" precedent EnqueueEcho already uses for its own queue.
-                    if (fireMods->PendingDoubleTap.Delay <= FP._0)
-                    {
-                        fireMods->PendingDoubleTap = new PendingDoubleTapShot
-                        {
-                            Delay = fireMods->DoubleTapDelay,
-                            SpawnPosition = spawnPosition,
-                            AimDirection = aimDirection,
-                            Damage = damage,
-                            IsExplosiveProc = isExplosiveProc,
-                            IsCataclysm = isCataclysm,
-                            GrantPierceAmount = grantPierceAmount,
-                            IsFirstBullet = isFirstBullet
-                        };
-                    }
-                }
-                else
-                {
-                    FireShot(f, filter.Entity, filter.Weapon, weaponData, damage, casterPosition, aimAngle, holdOffset,
-                        spawnPosition, aimDirection, filter.Aim->Target, aimAtCenter, isExplosiveProc, isCataclysm, grantPierceAmount, isFirstBullet);
-                }
-            }
-
-            if (f.Unsafe.TryGetPointer<WeaponEchoState>(filter.Entity, out var echoState) == true
-                && (echoState->HasInfiniteEcho == true || (echoState->HasEchoChamber == true && isEchoEligibleShot == true)))
-            {
-                EnqueueEcho(echoState, spawnPosition, aimDirection, damage);
-            }
+            QueueFollowUpShots(f, filter.Entity, filter.Weapon, weaponData, damage, casterPosition, aimAngle, holdOffset,
+                spawnPosition, aimDirection, filter.Aim->Target, aimAtCenter, isExplosiveProc, isCataclysm, grantPierceAmount,
+                isFirstBullet, isEchoEligibleShot);
 
             // Double Barrel/Burst Rifle - this trigger pull just fired burst index 0 above; the
             // remaining BurstCount-1 shots are queued into WeaponBurstState and fired one at a time
@@ -559,11 +529,8 @@ namespace Quantum
                     Delay = burstDelay,
                     CritOnFinalShot = critOnFinalShot,
                     BurstCount = burstCount,
-                    Damage = damage,
-                    IsExplosiveProc = isExplosiveProc,
-                    IsCataclysm = isCataclysm,
-                    GrantPierceAmount = grantPierceAmount,
-                    IsFirstBullet = isFirstBullet
+                    DamageBonusMultiplier = damageBonusMultiplier,
+                    GrantPierceAmount = grantPierceAmount
                 };
             }
             else
@@ -587,6 +554,61 @@ namespace Quantum
 
             Log.Debug($"[Weapon] {filter.Entity} fired {weaponData.FireType} from {spawnPosition}, " +
                 $"ammo={filter.Weapon->Ammo}/{filter.Weapon->MagazineSize}");
+        }
+
+        // Double Tap and Echo Chamber/Infinite Echo off one REAL shot - shared by the trigger-pull shot
+        // in Update and every follow-up burst shot in TickWeaponBurst, so a Burst Rifle rolls/echoes
+        // per bullet like every other weapon instead of only on its first. Never called for a Double
+        // Tap or echo replay itself, so neither can chain.
+        private static void QueueFollowUpShots(Frame f, EntityRef owner, Weapon* weapon, WeaponDataAsset weaponData, FP damage,
+            FPVector3 casterPosition, FP aimAngle, FPVector3 holdOffset, FPVector3 spawnPosition, FPVector3 aimDirection,
+            EntityRef target, bool aimAtCenter, bool isExplosiveProc, bool isCataclysm, int grantPierceAmount,
+            bool isFirstBullet, bool isEchoEligibleShot)
+        {
+            if (f.Unsafe.TryGetPointer<WeaponFireTimeMods>(owner, out var fireMods) == true
+                && fireMods->DoubleTapChance > FP._0 && DamageUtility.RollChance(f, fireMods->DoubleTapChance) == true)
+            {
+                if (fireMods->DoubleTapDelay > FP._0)
+                {
+                    // A weapon firing faster than DoubleTapDelay (SMG, BeamGun) can proc again while
+                    // the last one is still waiting - fire that one now instead of dropping the new
+                    // proc, so no proc is ever lost; it just lands a little early.
+                    if (fireMods->PendingDoubleTap.Delay > FP._0)
+                    {
+                        PendingDoubleTapShot older = fireMods->PendingDoubleTap;
+                        fireMods->PendingDoubleTap = default;
+                        FireDoubleTapShot(f, owner, weapon, older);
+
+                        if (f.Unsafe.TryGetPointer<WeaponFireTimeMods>(owner, out fireMods) == false)
+                            return;
+                    }
+
+                    fireMods->PendingDoubleTap = new PendingDoubleTapShot
+                    {
+                        Delay = fireMods->DoubleTapDelay,
+                        SpawnPosition = spawnPosition,
+                        AimDirection = aimDirection,
+                        Target = target,
+                        AimAtCenter = aimAtCenter,
+                        Damage = damage,
+                        IsExplosiveProc = isExplosiveProc,
+                        IsCataclysm = isCataclysm,
+                        GrantPierceAmount = grantPierceAmount,
+                        IsFirstBullet = isFirstBullet
+                    };
+                }
+                else
+                {
+                    FireShot(f, owner, weapon, weaponData, damage, casterPosition, aimAngle, holdOffset,
+                        spawnPosition, aimDirection, target, aimAtCenter, isExplosiveProc, isCataclysm, grantPierceAmount, isFirstBullet);
+                }
+            }
+
+            if (f.Unsafe.TryGetPointer<WeaponEchoState>(owner, out var echoState) == true
+                && (echoState->HasInfiniteEcho == true || (echoState->HasEchoChamber == true && isEchoEligibleShot == true)))
+            {
+                EnqueueEcho(echoState, spawnPosition, aimDirection, damage);
+            }
         }
 
         // Shared by the primary shot and Double Tap's free extra shot - both fire identically
@@ -857,8 +879,8 @@ namespace Quantum
 
             for (int i = 0; i < pelletCount; i++)
             {
-                FPVector3 pelletDirection = FPQuaternion.Euler(0, GetPelletAngle(i, pelletCount, weaponData.SpreadAngle), 0) * echo.Direction;
-                ProjectileLaunch launch = movement.GetLaunch(f, echo.Position, pelletDirection);
+                FPVector3 pelletDirection = FPQuaternion.Euler(0, GetShotAngle(f, weaponData, i, pelletCount), 0) * echo.Direction;
+                ProjectileLaunch launch = movement.GetLaunch(f, echo.Position + ResolveSideOffset(f, weaponData, pelletDirection), pelletDirection);
 
                 if (launch.IsValid == false)
                     continue;
@@ -889,17 +911,54 @@ namespace Quantum
 
         // Replays Double Tap's queued shot through the normal FireShot path (unlike FireEcho, which
         // duplicates FireProjectile/FireHitscan) so IsExplosiveProc/IsCataclysm/GrantPierceAmount still
-        // apply exactly like they would have firing synchronously - only the target lock is dropped,
-        // same "no locked target" simplification PendingEcho already uses, since spawnPosition/
-        // aimDirection are already fully resolved and target/aimAtCenter would just make
-        // FireProjectile re-solve an aim point off wherever the target is by the time this fires.
+        // apply exactly like they would have firing synchronously. The muzzle is re-resolved off
+        // where the owner stands NOW and aimed at the primary shot's own target when it still exists
+        // - a lobbed shot needs the real target point, not a direction (see FireProjectile). Falls
+        // back to the snapshotted SpawnPosition/AimDirection, target-free, when it can't.
         private static void FireDoubleTapShot(Frame f, EntityRef owner, Weapon* weapon, PendingDoubleTapShot pending)
         {
             WeaponDataAsset weaponData = f.FindAsset(weapon->WeaponData);
 
+            EntityRef target = f.Exists(pending.Target) == true ? pending.Target : EntityRef.None;
+
+            if (TryResolveMuzzle(f, owner, weaponData, target, pending.AimAtCenter, out FPVector3 casterPosition, out FP aimAngle,
+                    out FPVector3 holdOffset, out FPVector3 spawnPosition, out FPVector3 aimDirection) == true)
+            {
+                FireShot(f, owner, weapon, weaponData, pending.Damage, casterPosition, aimAngle, holdOffset,
+                    spawnPosition, aimDirection, target, pending.AimAtCenter, pending.IsExplosiveProc,
+                    pending.IsCataclysm, pending.GrantPierceAmount, pending.IsFirstBullet);
+                return;
+            }
+
             FireShot(f, owner, weapon, weaponData, pending.Damage, pending.SpawnPosition, FP._0, FPVector3.Zero,
                 pending.SpawnPosition, pending.AimDirection, EntityRef.None, false, pending.IsExplosiveProc,
                 pending.IsCataclysm, pending.GrantPierceAmount, pending.IsFirstBullet);
+        }
+
+        // The same muzzle/aim block Update() resolves for a trigger-pull shot, off the owner's CURRENT
+        // Transform3D/Aim, toward `target` (None = the owner's own facing). False when the owner has
+        // no Transform3D/Aim to resolve from.
+        private static bool TryResolveMuzzle(Frame f, EntityRef owner, WeaponDataAsset weaponData, EntityRef target, bool aimAtCenter,
+            out FPVector3 casterPosition, out FP aimAngle, out FPVector3 holdOffset, out FPVector3 spawnPosition, out FPVector3 aimDirection)
+        {
+            casterPosition = default;
+            aimAngle = default;
+            holdOffset = default;
+            spawnPosition = default;
+            aimDirection = default;
+
+            if (f.Unsafe.TryGetPointer<Transform3D>(owner, out var transform) == false
+                || f.Unsafe.TryGetPointer<Aim>(owner, out var aim) == false)
+                return false;
+
+            casterPosition = transform->Position;
+            aimAngle = aim->Angle;
+            FPVector3 flatDirection = FPQuaternion.Euler(0, aimAngle, 0) * FPVector3.Forward;
+            holdOffset = StatUtility.GetWeaponHoldOffset(f, owner, aim->FacingSign);
+            spawnPosition = ProjectileSpawner.ResolveSpawnOrigin(casterPosition, casterPosition, aimAngle, weaponData.SpawnAnchor, weaponData.SpawnOffset) + holdOffset;
+            aimDirection = ProjectileAimUtility.ResolveAimDirection(f, target, spawnPosition, flatDirection, aimAtCenter);
+
+            return true;
         }
 
         // Fires Double Barrel/Burst Rifle's queued follow-up burst shots one at a time, Delay apart -
@@ -913,44 +972,74 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<WeaponBurstState>(owner, out var burst) == false || burst->ShotsRemaining <= 0)
                 return;
 
-            burst->Timer -= deltaTime;
-
-            if (burst->Timer > FP._0)
-                return;
-
             WeaponDataAsset weaponData = f.FindAsset(weapon->WeaponData);
 
             // Read before Ammo decrements below, same "including this shot" convention
             // ResolveMagazineFraction's own comment documents.
             FP magazineFraction = ResolveMagazineFraction(weapon);
-            bool forceCritical = burst->CritOnFinalShot && burst->NextShotIndex == burst->BurstCount - 1;
 
-            // Re-resolved fresh off the owner's CURRENT Transform3D/Aim every burst shot - the same
-            // block Update() uses for the primary shot - rather than replaying a spawnPosition/
-            // aimDirection frozen at the moment the burst started. A twin-stick shooter keeps moving/
-            // turning during BurstDelay, so a frozen muzzle (the PendingDoubleTapShot/PendingEcho
-            // idiom those two use for their own delayed shots) would fire from wherever the character
-            // stood when the trigger was first pulled - visibly wrong for a weapon that fires every
-            // tick, unlike Double Tap's one small bonus shot.
-            FPVector3 spawnPosition = default;
-            FPVector3 aimDirection = default;
-            Aim* aim = null;
-
-            if (f.Unsafe.TryGetPointer<Transform3D>(owner, out var transform) == true
-                && f.Unsafe.TryGetPointer<Aim>(owner, out aim) == true)
+            // A burst never fires past an empty magazine. MagazineSize is normally a multiple of
+            // BurstCount, but an ammo refund (Predator Magazine, Bottomless Momentum) or a magazine
+            // perk knocks the two out of step - and the burst used to keep going regardless, firing
+            // at Ammo -1 and calling StartReload a second time (Empty Chamber/Combat Reboot twice,
+            // reload timer restarted). The shot that emptied it already started the reload. Checked
+            // before the timer so an in-flight burst never holds the reload up (Update skips
+            // UpdateReload while ShotsRemaining > 0).
+            if (weapon->Ammo <= 0 || weapon->ReloadTimer > FP._0)
             {
-                FPVector3 casterPosition = transform->Position;
-                FP aimAngle = aim->Angle;
-                FPVector3 flatDirection = FPQuaternion.Euler(0, aimAngle, 0) * FPVector3.Forward;
-                bool aimAtCenter = ResolveAimsAtCenter(f, weaponData);
-                FPVector3 holdOffset = StatUtility.GetWeaponHoldOffset(f, owner, aim->FacingSign);
-                spawnPosition = ProjectileSpawner.ResolveSpawnOrigin(casterPosition, casterPosition, aimAngle, weaponData.SpawnAnchor, weaponData.SpawnOffset) + holdOffset;
-                aimDirection = ProjectileAimUtility.ResolveAimDirection(f, aim->Target, spawnPosition, flatDirection, aimAtCenter);
+                burst->ShotsRemaining = 0;
+                weapon->FireCooldownTimer = ResolveLiveFireCooldown(f, owner, weapon, weaponData, magazineFraction);
+                return;
             }
 
-            FireShot(f, owner, weapon, weaponData, burst->Damage, spawnPosition, FP._0, FPVector3.Zero,
-                spawnPosition, aimDirection, EntityRef.None, false, burst->IsExplosiveProc,
-                burst->IsCataclysm, burst->GrantPierceAmount, burst->IsFirstBullet, forceCritical);
+            burst->Timer -= deltaTime;
+
+            if (burst->Timer > FP._0)
+                return;
+
+            bool forceCritical = burst->CritOnFinalShot && burst->NextShotIndex == burst->BurstCount - 1;
+
+            // Each burst shot is a real bullet, so everything magazine-driven is resolved for THIS
+            // one - the same block Update() runs for the trigger-pull shot. See WeaponBurstState.
+            bool isLastBullet = weapon->Ammo == 1;
+            bool isFirstBullet = weapon->Ammo == weapon->MagazineSize;
+            bool isEchoEligibleShot = weapon->MagazineSize - weapon->Ammo + 1 <= 3;
+
+            f.Unsafe.TryGetPointer<WeaponPostImpactProcs>(owner, out var postImpactProcs);
+            bool isExplosiveProc = ResolveExplosiveProc(f, postImpactProcs);
+            bool isCataclysm = postImpactProcs != null && postImpactProcs->HasCataclysmRound == true && isLastBullet == true;
+
+            FP damage = ResolveLiveDamage(f, owner, weaponData.Damage * weapon->DamageMultiplier, magazineFraction, isLastBullet)
+                * burst->DamageBonusMultiplier;
+
+            // Re-resolved fresh off the owner's CURRENT Transform3D/Aim every burst shot rather than
+            // replaying a muzzle frozen at the moment the burst started - a twin-stick shooter keeps
+            // moving/turning during BurstDelay. Aimed at the live target the same way the trigger-pull
+            // shot is, so a lobbed or homing burst lands on it rather than flying free.
+            EntityRef target = EntityRef.None;
+            bool aimAtCenter = ResolveAimsAtCenter(f, weaponData);
+            Aim* aim = null;
+
+            if (f.Unsafe.TryGetPointer<Aim>(owner, out aim) == true)
+            {
+                target = aim->Target;
+            }
+
+            TryResolveMuzzle(f, owner, weaponData, target, aimAtCenter, out FPVector3 casterPosition, out FP aimAngle,
+                out FPVector3 holdOffset, out FPVector3 spawnPosition, out FPVector3 aimDirection);
+
+            FireShot(f, owner, weapon, weaponData, damage, casterPosition, aimAngle, holdOffset,
+                spawnPosition, aimDirection, target, aimAtCenter, isExplosiveProc,
+                isCataclysm, burst->GrantPierceAmount, isFirstBullet, forceCritical);
+
+            QueueFollowUpShots(f, owner, weapon, weaponData, damage, casterPosition, aimAngle, holdOffset,
+                spawnPosition, aimDirection, target, aimAtCenter, isExplosiveProc, isCataclysm, burst->GrantPierceAmount,
+                isFirstBullet, isEchoEligibleShot);
+
+            // FireShot/QueueFollowUpShots can add/remove components on the owner - re-fetch before
+            // writing the burst's own state back.
+            if (f.Unsafe.TryGetPointer<WeaponBurstState>(owner, out burst) == false)
+                return;
 
             if (StatusEffectUtility.HasNoAmmoConsumption(f, owner) == false)
             {
@@ -959,7 +1048,7 @@ namespace Quantum
 
             weapon->TimeSinceFireReleased = FP._0;
 
-            if (aim != null)
+            if (f.Unsafe.TryGetPointer<Aim>(owner, out aim) == true)
             {
                 AimSystem.NotifyFired(aim);
             }
@@ -982,6 +1071,14 @@ namespace Quantum
 
             if (weapon->Ammo <= 0)
             {
+                // Nothing left to fire - end the burst here rather than letting its next queued shot
+                // find an empty magazine (see the guard above).
+                if (burst->ShotsRemaining > 0)
+                {
+                    burst->ShotsRemaining = 0;
+                    weapon->FireCooldownTimer = ResolveLiveFireCooldown(f, owner, weapon, weaponData, magazineFraction);
+                }
+
                 StartReload(f, owner, weapon);
             }
         }
@@ -1193,7 +1290,7 @@ namespace Quantum
 
             for (int i = 0; i < pelletCount; i++)
             {
-                FPVector3 pelletDirection = FPQuaternion.Euler(0, GetPelletAngle(i, pelletCount, weaponData.SpreadAngle), 0) * direction;
+                FPVector3 pelletDirection = FPQuaternion.Euler(0, GetShotAngle(f, weaponData, i, pelletCount), 0) * direction;
 
                 // Only pellet 0 of a volley procs Explosive Sequence/Cataclysm Round/a forced crit -
                 // otherwise an N-pellet shotgun would detonate N explosions (or crit N times) off a
@@ -1233,6 +1330,13 @@ namespace Quantum
             // so neither continuation can loop forever however the target search resolves.
             int usedBounces = 0;
             int maxSegments = bounces + pierces + 1;
+
+            // Every enemy this pellet has damaged so far - the hitscan twin of Projectile.RecentHits,
+            // so a multi-bounce Ricochet prefers a fresh target over ping-ponging between two (see
+            // WeaponPerkUtility.TryFindNearestUnhitEnemy). Same 8-slot cap and silent overflow.
+            const int maxRecordedHits = 8;
+            EntityRef* pelletHits = stackalloc EntityRef[maxRecordedHits];
+            int pelletHitCount = 0;
 
             for (int segment = 0; segment < maxSegments; segment++)
             {
@@ -1318,6 +1422,11 @@ namespace Quantum
                     ApplyHitscanHit(f, owner, weaponData, hitEntity, endPoint, damage, ref hitIndex, forceCritical);
                     segmentTarget = hitEntity;
 
+                    if (pelletHitCount < maxRecordedHits)
+                    {
+                        pelletHits[pelletHitCount++] = hitEntity;
+                    }
+
                     remainingPierces--;
 
                     if (remainingPierces > 0)
@@ -1354,8 +1463,15 @@ namespace Quantum
                 // contiguous for the views that stitch legs together on their own ChainTolerance
                 // (ParticleHitscanView/ContinuousHitscanView), and puts the contact at body height,
                 // which is where the beam actually passed through.
-                if (flattenFrom != EntityRef.None
-                    && ProjectileAimUtility.TryGetAimPoint(f, flattenFrom, aimAtCenter: true, out FPVector3 pierceCenter) == true)
+                //
+                // Same for a contact a Ricochet may bounce off: the bounce leaves from that enemy's
+                // centre (see TryFindRicochetTarget), so the leg into it has to end there too.
+                EntityRef continueFrom = flattenFrom != EntityRef.None
+                    ? flattenFrom
+                    : (bounceFrom != EntityRef.None && usedBounces < bounces ? bounceFrom : EntityRef.None);
+
+                if (continueFrom != EntityRef.None
+                    && ProjectileAimUtility.TryGetAimPoint(f, continueFrom, aimAtCenter: true, out FPVector3 pierceCenter) == true)
                 {
                     endPoint = pierceCenter;
                 }
@@ -1391,7 +1507,8 @@ namespace Quantum
                 // remaining engagement range across the bounce, the same way a ricocheting projectile
                 // keeps spending its own MaxTravelDistance budget rather than getting a fresh one.
                 if (bounceFrom != EntityRef.None && usedBounces < bounces && nextRange > FP._0
-                    && TryFindRicochetTarget(f, endPoint, bounceFrom, out var targetPosition) == true)
+                    && TryFindRicochetTarget(f, endPoint, bounceFrom,
+                        new FixedArray<EntityRef>((byte*)pelletHits, sizeof(EntityRef), maxRecordedHits), out var targetPosition) == true)
                 {
                     FPVector3 toTarget = targetPosition - endPoint;
 
@@ -1485,12 +1602,21 @@ namespace Quantum
             return (EnemyMovementUtility.GetShotBlockerLayerMask(f) & (1 << collider->Layer)) != 0;
         }
 
-        private static bool TryFindRicochetTarget(Frame f, FPVector3 point, EntityRef exclude, out FPVector3 targetPosition)
+        // Aims at the new target's collider CENTRE (the bounce itself leaves from the last target's
+        // centre - see FireHitscanPellet), same as DirectHitData.TryRicochet. It used to go
+        // transform-to-transform, i.e. feet to feet, a ground-level ray that grazed the capsule bottom
+        // or the floor. Prefers a target this pellet hasn't already hit, same as the projectile
+        // version.
+        private static bool TryFindRicochetTarget(Frame f, FPVector3 point, EntityRef exclude, FixedArray<EntityRef> recentHits,
+            out FPVector3 targetPosition)
         {
             targetPosition = default;
 
-            if (WeaponPerkUtility.TryFindNearestEnemy(f, point, HitscanRicochetSearchRadius, exclude, out var target) == false)
+            if (WeaponPerkUtility.TryFindNearestUnhitEnemy(f, point, HitscanRicochetSearchRadius, exclude, recentHits, out var target) == false)
                 return false;
+
+            if (ProjectileAimUtility.TryGetAimPoint(f, target, aimAtCenter: true, out targetPosition) == true)
+                return true;
 
             if (f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == false)
                 return false;
@@ -1536,6 +1662,33 @@ namespace Quantum
             HeavyHitAreaUtility.TryExpandSingleTargetHit(f, owner, hitEntity, point, weaponData.Element, damage);
         }
 
+
+        // WeaponDataAsset.RandomSideOffset: a random shift in [-x, x] along direction's flat right
+        // vector. Zero (and no RNG consumed) when unauthored or direction has no horizontal part.
+        private static FPVector3 ResolveSideOffset(Frame f, WeaponDataAsset weaponData, FPVector3 direction)
+        {
+            if (weaponData.RandomSideOffset <= FP._0)
+                return FPVector3.Zero;
+
+            FPVector3 right = FPVector3.Cross(FPVector3.Up, new FPVector3(direction.X, FP._0, direction.Z));
+
+            if (right.SqrMagnitude <= FP._0)
+                return FPVector3.Zero;
+
+            return right.Normalized * f.RNG->Next(-weaponData.RandomSideOffset, weaponData.RandomSideOffset);
+        }
+
+        // Pellet i's fixed SpreadAngle slot plus WeaponDataAsset.RandomSpreadAngle's per-shot random
+        // yaw. No RNG consumed while RandomSpreadAngle is unauthored.
+        private static FP GetShotAngle(Frame f, WeaponDataAsset weaponData, int index, int pelletCount)
+        {
+            FP angle = GetPelletAngle(index, pelletCount, weaponData.SpreadAngle);
+
+            if (weaponData.RandomSpreadAngle > FP._0)
+                angle += f.RNG->Next(-weaponData.RandomSpreadAngle, weaponData.RandomSpreadAngle);
+
+            return angle;
+        }
 
         // Cone spread around the aim direction, same convention as
         // FanProjectileDeliveryData.Begin's non-Radial branch: pellet 0 sits at -SpreadAngle/2, the
@@ -1631,11 +1784,14 @@ namespace Quantum
 
             for (int i = 0; i < pelletCount; i++)
             {
-                FPQuaternion pelletRotation = FPQuaternion.Euler(0, GetPelletAngle(i, pelletCount, weaponData.SpreadAngle), 0);
+                FPQuaternion pelletRotation = FPQuaternion.Euler(0, GetShotAngle(f, weaponData, i, pelletCount), 0);
+
+                FPVector3 pelletDelta = hasAimPoint ? pelletRotation * delta : pelletRotation * aimDirection;
+                FPVector3 sideOffset = ResolveSideOffset(f, weaponData, pelletDelta);
 
                 ProjectileLaunch launch = hasAimPoint
-                    ? movement.GetLaunchToTarget(f, resolvedOrigin, resolvedOrigin + pelletRotation * delta, target)
-                    : movement.GetLaunch(f, spawnPosition, pelletRotation * aimDirection);
+                    ? movement.GetLaunchToTarget(f, resolvedOrigin + sideOffset, resolvedOrigin + pelletDelta, target)
+                    : movement.GetLaunch(f, spawnPosition + sideOffset, pelletDelta);
 
                 if (launch.IsValid == false)
                 {

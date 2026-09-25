@@ -232,7 +232,7 @@ Nothing is authored yet, so nothing spawns at runtime until the following is don
    `TraversalChunk.asset`'s `Spawns[]`, harmlessly re-baking the existing chest entry too).
 6. Verify in-Editor that the real gap between the activator and the checkpoint drops a player below
    `LevelConfig.FallDeathHeight` if a mid-bridge platform is destroyed while they're standing on it.
-7. Wire a `TraversalChallengeWidget` scene instance under the HUD (`GameplayWindow`, alongside
+7. Wire a `TraversalChallengeWidget` scene instance under the HUD (alongside
    `BreathingWidget`) with its `root`/`countdownText` assigned - doesn't exist in-scene
    yet, so no countdown banner shows anywhere until this is built.
 

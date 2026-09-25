@@ -35,6 +35,19 @@ public class TilesetPlatformBuilder : MonoBehaviour
         Manual,
     }
 
+    // What gets scattered on top of this cube's platforms (tileset's scatter lists).
+    //   Auto    : Ground if the platform's bottom is below groundBelowY (a floor rising out of the pits -
+    //             walkable), else Rooftop (a raised block players can't walk on).
+    //   Ground  : small walk-through props only (rocks, tufts, cables).
+    //   Rooftop : big props + edge props (containers, machines, fences).
+    public enum SurfaceDecor
+    {
+        Auto,
+        None,
+        Ground,
+        Rooftop,
+    }
+
     [SerializeField, Required] private TilesetDefinition tileset;
 
     [SerializeField, Tooltip("OnStart = batched build after the level finished spawning (chunk cubes). OnEnable = every (re)activation, for pooled objects. Manual = only when Generate() is called.")]
@@ -51,6 +64,18 @@ public class TilesetPlatformBuilder : MonoBehaviour
 
     [SerializeField, Tooltip("Moves every generated tile on Y (keeps its height). Slightly negative so the tile tops sit just under the cube top and don't z-fight with anything authored exactly at it (ground decals, shadows, other surfaces). The host's value is used.")]
     private float verticalOffset = -0.02f;
+
+    [SerializeField, Tooltip("Props scattered on top of the platform (see SurfaceDecor). The host's value is used.")]
+    private SurfaceDecor surfaceDecor = SurfaceDecor.Auto;
+
+    [SerializeField, Tooltip("Auto decor: platforms whose bottom is below this world Y count as walkable floors (Ground), others as raised blocks (Rooftop).")]
+    private float groundBelowY = -0.5f;
+
+    [SerializeField, Tooltip("Direction the gameplay camera looks along on XZ (it's fixed: rot 45,0,0 -> +Z). Wall props go mostly on walls facing the camera: full chance facing it, half on side walls, none on walls facing away (never seen).")]
+    private Vector3 cameraViewDirection = Vector3.forward;
+
+    [SerializeField, Tooltip("Embedded wall props never go below this world Y (keeps them above the water line on floors dropping into the pits).")]
+    private float wallPropMinY = 0.05f;
 
     [SerializeField, Tooltip("Changes which variant each tile picks. Same seed + same layout = same result (the host's seed is used).")]
     private int variationSeed;
@@ -148,6 +173,12 @@ public class TilesetPlatformBuilder : MonoBehaviour
         }
 
         var cluster = FindCluster(candidates);
+
+        // every cube's box, for the wall-prop ground test (a foot prop only spawns where some cube's top
+        // surface is actually under it - not under bridges or over pits)
+        groundBoxes.Clear();
+        foreach (var c in candidates)
+            groundBoxes.Add(WorldBox(c));
         foreach (var member in cluster)
         {
             if (member.host != null)
@@ -180,6 +211,7 @@ public class TilesetPlatformBuilder : MonoBehaviour
         generatedRoot = CreateGeneratedRoot();
         var platformCount = 0;
         var pieceCount = 0;
+        var platformEdges = new List<(TilesetAutotiler.Placement placement, float bottom)>();
         foreach (var platform in SplitPlatforms(cells))
         {
             var platformRoot = new GameObject($"Platform_{platformCount++} ({platform.Count} cells)").transform;
@@ -212,8 +244,16 @@ public class TilesetPlatformBuilder : MonoBehaviour
                 {
                     if (SpawnPiece(placement, origin, bottom, top, platformRoot, template))
                         pieceCount++;
+                    if (placement.Key == TilesetAutotiler.EdgeKey || placement.Key == TilesetAutotiler.EdgeLongKey)
+                        platformEdges.Add((placement, bottom));
                 }
             }
+
+            var platformBottom = float.MaxValue;
+            foreach (var c in platform)
+                platformBottom = Mathf.Min(platformBottom, cells[c].Bottom);
+            ScatterSurface(set, platform, origin, top, platformBottom, platformRoot, template, platformEdges);
+            platformEdges.Clear();
         }
 
         members.Clear();
@@ -392,6 +432,282 @@ public class TilesetPlatformBuilder : MonoBehaviour
         if (Mathf.Abs(fx - x) > 0.05f || Mathf.Abs(fz - z) > 0.05f)
             LogHelper.Warn(LogTag, $"{context.name}: bound {world} is off the {cellSize} grid of {name} - snapped to cell ({x}, {z})", context);
         return new Vector2Int(x, z);
+    }
+
+    // Deterministic props on top of one platform. Interior cells only (all 8 neighbours solid), so
+    // nothing sits on the lip / fade border; at most one prop per cell; a 2-cell prop also claims a
+    // free interior neighbour. Everything is keyed by WORLD cell coordinates, so the same layout gives
+    // the same props no matter which cube hosts the cluster.
+    private void ScatterSurface(TilesetDefinition set, List<Vector2Int> platform, Vector3 origin, float top, float platformBottom,
+        Transform parent, GameObject template, List<(TilesetAutotiler.Placement placement, float bottom)> edges)
+    {
+        var mode = surfaceDecor;
+        if (mode == SurfaceDecor.Auto)
+            mode = platformBottom < groundBelowY ? SurfaceDecor.Ground : SurfaceDecor.Rooftop;
+        if (mode == SurfaceDecor.None)
+            return;
+
+        ScatterWalls(set, origin, top, parent, template, edges);
+
+        var list = mode == SurfaceDecor.Ground ? set.GroundScatter : set.RooftopScatter;
+        var density = mode == SurfaceDecor.Ground ? set.GroundDensity : set.RooftopDensity;
+        var solid = new HashSet<Vector2Int>(platform);
+        var ox = Mathf.RoundToInt(origin.x / cellSize);
+        var oz = Mathf.RoundToInt(origin.z / cellSize);
+
+        bool Interior(Vector2Int c)
+        {
+            for (var dx = -1; dx <= 1; dx++)
+            for (var dz = -1; dz <= 1; dz++)
+            {
+                if (!solid.Contains(new Vector2Int(c.x + dx, c.y + dz)))
+                    return false;
+            }
+
+            return true;
+        }
+
+        int Hash(Vector2Int c, int salt)
+        {
+            unchecked
+            {
+                var h = (c.x + ox) * 73856093 ^ (c.y + oz) * 19349663 ^ salt * 83492791 ^ variationSeed * 2654435;
+                h ^= h >> 13;
+                h *= 0x5bd1e995;
+                h ^= h >> 15;
+                return h;
+            }
+        }
+
+        float U(int h) => (h & 0xffffff) / (float)0x1000000;
+
+        if (list.Count > 0 && density > 0f)
+        {
+            var sorted = new List<Vector2Int>(platform);
+            sorted.Sort((a, b) => a.y != b.y ? a.y.CompareTo(b.y) : a.x.CompareTo(b.x));
+            var used = new HashSet<Vector2Int>();
+            foreach (var c in sorted)
+            {
+                if (used.Contains(c) || !Interior(c) || U(Hash(c, 1)) >= density)
+                    continue;
+                if (!TilesetDefinition.PickScatter(list, Hash(c, 2), out var entry))
+                    continue;
+
+                var pos = new Vector2(c.x + 0.5f, c.y + 0.5f);
+                var yaw = 90f * (Hash(c, 3) & 3);
+                if (entry.Cells >= 2)
+                {
+                    var alongX = (Hash(c, 4) & 1) == 0;
+                    var n = c + (alongX ? Vector2Int.right : Vector2Int.up);
+                    if (used.Contains(n) || !Interior(n))
+                        continue;
+                    used.Add(n);
+                    pos += alongX ? new Vector2(0.5f, 0f) : new Vector2(0f, 0.5f);
+                    yaw = (alongX ? 0f : 90f) + 180f * (Hash(c, 5) & 1);
+                }
+                else if (entry.AnyYaw)
+                {
+                    pos += new Vector2(U(Hash(c, 6)) - 0.5f, U(Hash(c, 7)) - 0.5f) * 0.5f;
+                    yaw = U(Hash(c, 8)) * 360f;
+                }
+
+                used.Add(c);
+                var scale = entry.ScaleRange == Vector2.zero ? 1f : Mathf.Lerp(entry.ScaleRange.x, entry.ScaleRange.y, U(Hash(c, 9)));
+                SpawnProp(entry.Model, new Vector3(origin.x + pos.x * cellSize, top + verticalOffset, origin.z + pos.y * cellSize), yaw, scale, parent, template);
+            }
+        }
+
+        // Edge props (fences) along a raised block's rim: each Edge/Edge2 tile's own pivot + facing,
+        // pushed inward (+Z in the edge's canonical frame, the solid side) so they stand on the top.
+        if (mode == SurfaceDecor.Rooftop && set.RooftopEdgeProps.Count > 0 && set.RooftopEdgeChance > 0f)
+        {
+            foreach (var (e, _) in edges)
+            {
+                var cell = Vector2Int.RoundToInt(e.Position * 2f);   // unique key per placement (half cells)
+                if (U(Hash(cell, 11)) >= set.RooftopEdgeChance)
+                    continue;
+                if (!TilesetDefinition.PickScatter(set.RooftopEdgeProps, Hash(cell, 12), out var entry))
+                    continue;
+
+                var rot = Quaternion.Euler(0f, 90f * e.Rotation, 0f);
+                var inward = rot * new Vector3(0f, 0f, 0.3f * cellSize);
+                var length = (e.Key == TilesetAutotiler.EdgeLongKey ? 2f : 1f) * (e.Stretch > 0f ? e.Stretch : 1f);
+                var pos = new Vector3(origin.x + e.Position.x * cellSize, top + verticalOffset, origin.z + e.Position.y * cellSize) + inward;
+                var go = SpawnProp(entry.Model, pos, 90f * e.Rotation, 1f, parent, template);
+                if (go != null)
+                    go.transform.localScale = new Vector3(go.transform.localScale.x * length * 0.9f, go.transform.localScale.y, go.transform.localScale.z);
+            }
+        }
+    }
+
+    // Wall props: one chance per Edge/Edge2 tile. Embedded props go into the face at a height in the
+    // band below the lip (the upper ~2 units of the wall, where the camera actually sees it); the
+    // pivot is pushed into the wall by the face's inset at that height (walls tuck in toward the
+    // foot) plus a little, so the prop looks stuck in the dirt. Foot props stand at the tile's
+    // bottom, only where that ground is visible (not on floors dropping into the pits).
+    private void ScatterWalls(TilesetDefinition set, Vector3 origin, float top, Transform parent, GameObject template,
+        List<(TilesetAutotiler.Placement placement, float bottom)> edges)
+    {
+        if (set.WallScatter.Count == 0 || set.WallDensity <= 0f)
+            return;
+
+        foreach (var (e, bottom) in edges)
+        {
+            // one chance per CELL of wall length (merged Edge2 / stretched pieces cover 2-3 cells), each in
+            // its own slot along the piece, so density doesn't depend on how the walls got merged
+            var length = (e.Key == TilesetAutotiler.EdgeLongKey ? 2f : 1f) * (e.Stretch > 0f ? e.Stretch : 1f);
+            var slots = Mathf.Max(1, Mathf.RoundToInt(length));
+            var key = Vector2Int.RoundToInt(e.Position * 2f);
+            var outward = Quaternion.Euler(0f, 90f * e.Rotation, 0f) * Vector3.back;
+            var view = new Vector3(cameraViewDirection.x, 0f, cameraViewDirection.z).normalized;
+            var facing = -Vector3.Dot(outward, view);            // 1 = faces the camera, -1 = faces away
+            var chance = set.WallDensity * (facing > 0.5f ? 1f : facing > -0.5f ? 0.5f : 0f);
+            if (chance <= 0f)
+                continue;
+
+            for (var slot = 0; slot < slots; slot++)
+            unchecked
+            {
+                var h0 = (key.x + Mathf.RoundToInt(origin.x / cellSize) * 2) * 73856093 ^ (key.y + Mathf.RoundToInt(origin.z / cellSize) * 2) * 19349663 ^ variationSeed * 2654435 ^ slot * 40503;
+                float U(int salt) { var h = h0 ^ salt * 83492791; h ^= h >> 13; h *= 0x5bd1e995; h ^= h >> 15; return (h & 0xffffff) / (float)0x1000000; }
+                if (U(21) >= chance)
+                    continue;
+                if (!TilesetDefinition.PickScatter(set.WallScatter, (int)(U(22) * int.MaxValue), out var entry))
+                    continue;
+
+                var along = -length * 0.5f + (slot + 0.5f) * (length / slots) + (U(23) - 0.5f) * 0.3f;
+                along = Mathf.Clamp(along, -length * 0.5f + 0.3f, length * 0.5f - 0.3f);
+                var scale = entry.ScaleRange == Vector2.zero ? 1f : Mathf.Lerp(entry.ScaleRange.x, entry.ScaleRange.y, U(25));
+                var propHeight = PropHeight(entry.Model) * scale;
+
+                // keep-out band on the wall (e.g. a neon trim baked into the wall profile), in world Y
+                var band = set.WallPropAvoidBand;
+                var hasBand = band.y > band.x;
+                var bandLo = bottom + (top - bottom) * band.x - set.WallPropAvoidMargin;
+                var bandHi = bottom + (top - bottom) * band.y + set.WallPropAvoidMargin;
+
+                float y, inset;
+                if (entry.Foot)
+                {
+                    if (bottom < groundBelowY)
+                        continue;
+                    y = bottom;
+                    inset = 0.1f;
+                    if (hasBand && y + propHeight > bandLo)
+                    {
+                        // shrink to fit under the band; skip if that would make it too small to read
+                        var fit = (bandLo - y) / Mathf.Max(propHeight, 1e-4f);
+                        if (fit < 0.7f)
+                            continue;
+                        scale *= fit;
+                        propHeight *= fit;
+                    }
+                }
+                else
+                {
+                    var hi = top - 0.55f;
+                    var lo = Mathf.Max(Mathf.Max(bottom + 0.1f, top - 2.2f), wallPropMinY);
+                    if (hasBand)
+                    {
+                        // candidate ranges for the prop's BASE: fully below the band, or fully above it
+                        var belowHi = Mathf.Min(hi, bandLo - propHeight);
+                        var aboveLo = Mathf.Max(lo, bandHi);
+                        var aboveHi = Mathf.Min(hi, top - 0.08f - propHeight);
+                        var belowOk = belowHi >= lo;
+                        var aboveOk = aboveHi >= aboveLo;
+                        if (!belowOk && !aboveOk)
+                            continue;
+                        var useAbove = aboveOk && (!belowOk || U(27) < (aboveHi - aboveLo) / (aboveHi - aboveLo + belowHi - lo + 1e-4f));
+                        y = useAbove ? Mathf.Lerp(aboveLo, aboveHi, U(24)) : Mathf.Lerp(lo, belowHi, U(24));
+                    }
+                    else
+                    {
+                        if (hi < lo)
+                            continue;
+                        y = Mathf.Lerp(lo, hi, U(24));
+                    }
+                    var f = Mathf.Clamp01((y - bottom) / Mathf.Max(top - bottom, 0.01f));
+                    inset = 0.02f + 0.12f * (1f - f) + 0.015f;   // wall face inset at this height + a bit (embedded)
+                }
+
+                var rot = Quaternion.Euler(0f, 90f * e.Rotation, 0f);
+                var pos = new Vector3(origin.x + e.Position.x * cellSize, y, origin.z + e.Position.y * cellSize)
+                          + rot * new Vector3(along * cellSize, 0f, inset * cellSize);
+
+                // foot props stand OUT in front of the wall (-Z in the edge frame): only spawn if there is
+                // ground there at the wall's foot height (bridges, overhangs and pit edges have none) -
+                // tested at both ends of the prop's footprint so it can't hang half over an edge
+                if (entry.Foot)
+                {
+                    var front = rot * Vector3.back;
+                    var side = rot * Vector3.right;
+                    var probe = pos + front * (0.3f * cellSize);
+                    if (!HasGroundAt(probe + side * 0.2f, y) || !HasGroundAt(probe - side * 0.2f, y))
+                        continue;
+                }
+
+                SpawnProp(entry.Model, pos, 90f * e.Rotation + (U(26) - 0.5f) * 20f, scale, parent, template);
+            }
+        }
+    }
+
+    private readonly List<Bounds> groundBoxes = new();
+
+    // Is there a walkable top surface at (x, z) at height y? Some cube whose XZ footprint contains the
+    // point and whose top is within a few cm of y.
+    private bool HasGroundAt(Vector3 p, float y)
+    {
+        foreach (var b in groundBoxes)
+        {
+            if (p.x > b.min.x && p.x < b.max.x && p.z > b.min.z && p.z < b.max.z && Mathf.Abs(b.max.y - y) < 0.12f)
+                return true;
+        }
+
+        return false;
+    }
+
+    // Height of a prop model above its pivot (mesh bounds top x model scale), cached per model.
+    private static readonly Dictionary<GameObject, float> propHeights = new();
+
+    private static float PropHeight(GameObject model)
+    {
+        if (propHeights.TryGetValue(model, out var h))
+            return h;
+
+        h = 0f;
+        foreach (var mf in model.GetComponentsInChildren<MeshFilter>(true))
+        {
+            if (mf.sharedMesh == null)
+                continue;
+            var b = mf.sharedMesh.bounds;
+            var m = mf.transform.localToWorldMatrix;   // prefab asset: root at origin
+            for (var i = 0; i < 8; i++)
+            {
+                var c = new Vector3((i & 1) != 0 ? b.max.x : b.min.x, (i & 2) != 0 ? b.max.y : b.min.y, (i & 4) != 0 ? b.max.z : b.min.z);
+                h = Mathf.Max(h, m.MultiplyPoint3x4(c).y);
+            }
+        }
+
+        propHeights[model] = h;
+        return h;
+    }
+
+        private GameObject SpawnProp(GameObject model, Vector3 position, float yaw, float scale, Transform parent, GameObject template)
+    {
+        GameObject go;
+#if UNITY_EDITOR
+        if (!Application.isPlaying && PrefabUtility.IsPartOfPrefabAsset(model))
+            go = (GameObject)PrefabUtility.InstantiatePrefab(model, parent);
+        else
+#endif
+            go = Instantiate(model, parent);
+
+        go.transform.SetPositionAndRotation(position, Quaternion.Euler(0f, yaw, 0f) * model.transform.localRotation);
+        go.transform.localScale = model.transform.localScale * scale;
+        go.name = model.name;
+        foreach (var child in go.GetComponentsInChildren<Transform>(true))
+            child.gameObject.layer = template.layer;
+        return go;
     }
 
     // Highest bottom among the solid cells a unit placement covers (the 1x1 square around its pivot:

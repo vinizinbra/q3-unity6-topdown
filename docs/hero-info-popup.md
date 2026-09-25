@@ -1,5 +1,9 @@
 # Hero Info Popup (Tab-hold)
 
+Shown while Tab (keyboard) or the `OpenHeroInfo` Input Manager button (`joystick button 6`) is held.
+On mobile, Android Back (`KeyCode.Escape`) *toggles* it instead - an Android pad's Select (MOGA Pro 2)
+arrives as Back with down+up in the same frame, so it can never read as held.
+
 The Tab-hold overlay, previously `UpgradePopupWidget` (a pure upgrade-history list), is now
 `HeroInfoPopupWidget`: a full "everything I'm currently running" readout for one player. Renamed in
 place (same `.cs.meta` GUID, so the existing scene component and every wired field survived the

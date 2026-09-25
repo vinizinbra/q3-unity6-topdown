@@ -37,6 +37,10 @@ namespace Quantum
 
         // Single source of truth for "which WorldTheme is currently active" - consumed by
         // ChunkDetailScatter (and anything else that needs the live theme).
+        // Renderers that showed a waterMaterials entry when first looked up, with that original material -
+        // WorldWaterTheme.SurfaceMaterial swaps onto these and a world without an override restores them.
+        private readonly System.Collections.Generic.List<(Renderer renderer, Material original)> waterRenderers = new();
+
         public static EnvironmentManager Instance { get; private set; }
         public WorldTheme CurrentTheme { get; private set; }
         public Material DetailSpriteMaterial => detailSpriteMaterial;
@@ -80,6 +84,7 @@ namespace Quantum
             TilesetPlatformBuilder.SetTilesetOverride(theme.Tileset.Tileset, rebuild: true);
 
             ApplyWater(theme.Water);
+            ApplyWaterSurface(theme.Water.SurfaceMaterial);
             ApplyBloodColor(theme.Enemy.BloodColor);
         }
 
@@ -96,6 +101,27 @@ namespace Quantum
 
             if (Application.isPlaying)
                 LogHelper.Warn("EnvironmentManager", "No EffectsManager.Instance yet - this world's blood color was not applied to death VFX.", this);
+        }
+
+        // Swaps the water surface's material for the theme's override (sea of clouds etc.), or restores
+        // the original water material. Renderers are found once, by which of them use a waterMaterials
+        // entry, so no scene wiring is needed.
+        private void ApplyWaterSurface(Material surface)
+        {
+            if (waterRenderers.Count == 0 && waterMaterials != null)
+            {
+                foreach (Renderer r in FindObjectsByType<Renderer>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                {
+                    if (r.sharedMaterial != null && System.Array.IndexOf(waterMaterials, r.sharedMaterial) >= 0)
+                        waterRenderers.Add((r, r.sharedMaterial));
+                }
+            }
+
+            foreach (var (r, original) in waterRenderers)
+            {
+                if (r != null)
+                    r.sharedMaterial = surface != null ? surface : original;
+            }
         }
 
         private void ApplyWater(WorldWaterTheme water)

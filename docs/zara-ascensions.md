@@ -577,10 +577,13 @@ R3 "Headliner" ACTIVATING Flow grants her and allies within 6m +10% Move Speed /
 
 ## Three implementation decisions worth knowing
 
-**Flow's own bonus writes `CharacterStats`, not the timed status slots.** It rebakes Move Speed / Fire
-Rate from `BaseMoveSpeedMultiplier`/`BaseAttackSpeedMultiplier` (captured once at seed) on the on/off
-TOGGLE only - never as the bar moves - so repeated toggles can never compound and the per-tick cost is
-nothing. Had Flow used the shared timed slots
+**Flow's own bonus writes `CharacterStats`, not the timed status slots.** On each on/off toggle (never
+as the bar moves), it removes what it last added to Move Speed / Fire Rate
+(`ZaraFlow.AppliedMoveSpeedDelta`/`AppliedAttackSpeedDelta`) and adds the bonus for its new state.
+Repeated toggles can't compound, and the per-tick cost is nothing. (It used to rebuild both stats from a
+baseline captured once at seed. That wiped every later change to them on the next toggle, including
+move/fire-rate upgrades, Bullet Storm/Heavy Arsenal and Emergency Reload, and Emergency Reload then left
+her permanently 0.2 slower. Fixed 2026-09-24.) Had Flow used the shared timed slots
 instead, Headliner's own Hype buff - which *does* use them, take-the-stronger - would silently have
 stopped stacking on top of it.
 

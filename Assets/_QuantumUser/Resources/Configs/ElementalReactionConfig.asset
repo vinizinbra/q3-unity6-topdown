@@ -24,8 +24,17 @@ MonoBehaviour:
     RawValue: 6554
   BurnFloorPercent:
     RawValue: 3277
+  BurnMaxStacks: 5
   SlowDuration:
     RawValue: 196608
+  IceBuildupPerDamage:
+    RawValue: 3277
+  IceSlowPerBuildup:
+    RawValue: 5243
+  IceFreezeThreshold:
+    RawValue: 327680
+  FreezeDuration:
+    RawValue: 131072
   ElectrifiedDuration:
     RawValue: 196608
   ShockStunProcChance:
@@ -34,10 +43,14 @@ MonoBehaviour:
     RawValue: 65536
   ThermalShockTriggerCooldown:
     RawValue: 98304
+  ThermalShockProcChance:
+    RawValue: 65536
   ThermalShockDamagePercent:
     RawValue: 131072
   OverloadTriggerCooldown:
     RawValue: 196608
+  OverloadProcChance:
+    RawValue: 65536
   OverloadInitialDamagePercent:
     RawValue: 32768
   OverloadChainDamagePercent:
@@ -51,6 +64,8 @@ MonoBehaviour:
     RawValue: 262144
   ShatterRadius:
     RawValue: 196608
+  ShatterProcChance:
+    RawValue: 65536
   ShatterPrimaryStunDuration:
     RawValue: 98304
   ShatterDamage:

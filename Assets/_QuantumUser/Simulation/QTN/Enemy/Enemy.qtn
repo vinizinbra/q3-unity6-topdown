@@ -68,6 +68,19 @@ component Enemy
     // EnemyDataAsset.KnockbackRecoveryTime.
     FP KnockbackTimer;
 
+    // Projectile-hit stagger: while > 0 the enemy stops WALKING (chase movement only - its attack
+    // windup, attacks and every other state run untouched). Opened by EnemySystem.TryApplyHitStagger
+    // from every DirectHitData hit, sized by the tier's HitStaggerDuration. Movement-only, not the
+    // StatusEffects.StaggerRemaining status (which also pauses windups and pins the body kinematic).
+    FP HitStaggerTimer;
+
+    // Shared hit-reaction cooldown: counts down from the moment a flinch opens (a knockback window
+    // or a projectile hit stagger) plus the tier's StaggerCooldown. While > 0, neither a hit stagger
+    // nor a cosmetic push (canInterrupt false) can open a new one - without this, any weapon hitting
+    // faster than the flinch re-opened it every hit and held the enemy in place indefinitely. A real
+    // knockback (canInterrupt true) ignores it. See EnemySystem.OnEnemyKnockedBack/TryApplyHitStagger.
+    FP StaggerImmuneTimer;
+
     // Anti-"shoved into the scenery" safety net - see EnemyStuckRecoveryUtility. A hard enough
     // knockback (Brute's Iron Shoulder pushes at 20 u/s, his Groundbreaker at up to 16.5) can drive
     // an enemy far enough into a chunk's compound collider in one physics step that the solver

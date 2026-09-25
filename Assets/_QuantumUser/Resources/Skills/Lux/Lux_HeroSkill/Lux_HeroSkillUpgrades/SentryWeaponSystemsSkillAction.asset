@@ -19,10 +19,9 @@ MonoBehaviour:
   Icon: {fileID: 1503738143, guid: 355e00907e214470bac0029f70064510, type: 3}
   DisplayName: Weapon Systems
   RankDescriptions:
-  - Sentry gains a Minigun.
-  - Sentry also gains a Rocket Pod.
-  - Sentry also gains a piercing Laser. Cannon, Minigun, Rockets and Laser can fire
-    together.
+  - "Sentry gains a Minigun alongside its Cannon."
+  - "Sentry gains a Minigun and a Rocket Pod alongside its Cannon."
+  - "Sentry gains a Minigun, a Rocket Pod and a piercing Laser, all firing alongside its Cannon."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

@@ -172,12 +172,16 @@ namespace QuantumUser.Editor.BalanceSimulator
 
         private IEnumerable<WeaponPerkData> PerkCandidates(WeaponPerkPoolData pool, SimPlayer player)
         {
-            WeaponFireType fireType = player.Weapon.Data != null ? player.Weapon.Data.FireType : WeaponFireType.Projectile;
+            WeaponPerkTarget target = assets.ResolvePerkTarget(player.Weapon.Data);
 
             foreach (AssetRef<WeaponPerkData> perkRef in pool.Perks)
             {
                 WeaponPerkData perk = assets.Resolve(perkRef);
-                if (perk == null || player.Weapon.HasPerk(perk) || perk.SupportsFireType(fireType) == false)
+                if (perk == null || player.Weapon.HasPerk(perk) || perk.SupportsWeapon(target) == false)
+                    continue;
+
+                // Mirrors WeaponPerkEligibility's conflict check.
+                if (player.Weapon.Perks.Exists(owned => perk.ConflictsWith(owned) || owned.ConflictsWith(perk)))
                     continue;
 
                 yield return perk;
@@ -312,10 +316,11 @@ namespace QuantumUser.Editor.BalanceSimulator
             if (perkCount > 0 && perkPool != null)
             {
                 var available = new List<WeaponPerkData>();
+                WeaponPerkTarget target = assets.ResolvePerkTarget(data);
                 foreach (AssetRef<WeaponPerkData> perkRef in perkPool.Perks)
                 {
                     WeaponPerkData perk = assets.Resolve(perkRef);
-                    if (perk != null && perk.SupportsFireType(data.FireType))
+                    if (perk != null && perk.SupportsWeapon(target))
                         available.Add(perk);
                 }
 

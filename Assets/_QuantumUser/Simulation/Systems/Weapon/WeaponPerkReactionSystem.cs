@@ -57,9 +57,14 @@ namespace Quantum
                 RestoreAmmo(weapon, reactions->CritAmmoRestoreAmount);
             }
 
-            if (reactions->HasCriticalRebound == true)
+            if (reactions->HasCriticalRebound == true && reactions->ReboundInProgress == false)
             {
                 TryFireCriticalRebound(f, owner, weapon, reactions, target);
+
+                // A nested hit may have added/removed components and moved this one - re-fetch
+                // before reading anything else off it below.
+                if (f.Unsafe.TryGetPointer<WeaponOnCritReactions>(owner, out reactions) == false)
+                    return;
             }
 
             // Hellshot's signature (ExplosiveCritWeaponPerkData, baked via WeaponDataAsset.BaseTraits/
@@ -127,7 +132,17 @@ namespace Quantum
                 // itself, so there is nothing for it to collide with in Quantum's per-tick event
                 // dedup (see Events.qtn's EntityDamaged.HitIndex).
                 byte hitIndex = 0;
+                reactions->ReboundInProgress = true;
                 WeaponSystem.ApplyHitscanHit(f, owner, weaponData, secondaryTarget, secondaryTransform->Position, reboundDamage, ref hitIndex);
+
+                if (f.Unsafe.TryGetPointer<WeaponOnCritReactions>(owner, out var latch) == true)
+                {
+                    latch->ReboundInProgress = false;
+                }
+
+                if (f.Unsafe.TryGetPointer<Transform3D>(primaryTarget, out primaryTransform) == false
+                    || f.Unsafe.TryGetPointer<Transform3D>(secondaryTarget, out secondaryTransform) == false)
+                    return;
 
                 // The only view hook a hitscan shot has - draws the bounce from the crit's own target
                 // to the second one, same as FireHitscanPellet raises one per Ricochet segment.
@@ -138,7 +153,18 @@ namespace Quantum
             ProjectileDataAsset projectileData = f.FindAsset(weaponData.ProjectileData);
             ProjectileMovementData movement = f.FindAsset(projectileData.Movement);
 
-            ProjectileLaunch launch = movement.GetLaunchToTarget(f, primaryTransform->Position, secondaryTransform->Position, secondaryTarget);
+            // Collider centre to collider centre, same as DirectHitData.TryRicochet - both raw
+            // positions are ground pivots, and a feet-to-feet launch skims the floor (a HitRadius
+            // sphere touches it immediately) instead of reaching the second enemy.
+            bool aimAtCenter = ProjectileAimUtility.ResolveAimsAtCenter(f, weaponData.ProjectileData);
+            FPVector3 from = ProjectileAimUtility.TryGetAimPoint(f, primaryTarget, true, out FPVector3 primaryCenter)
+                ? primaryCenter
+                : primaryTransform->Position;
+            FPVector3 to = ProjectileAimUtility.TryGetAimPoint(f, secondaryTarget, aimAtCenter, out FPVector3 secondaryAim)
+                ? secondaryAim
+                : secondaryTransform->Position;
+
+            ProjectileLaunch launch = movement.GetLaunchToTarget(f, from, to, secondaryTarget);
 
             if (launch.IsValid == false)
                 return;
@@ -151,6 +177,17 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<Projectile>(secondary, out var secondaryProjectile) == true)
             {
                 secondaryProjectile->MaxTravelDistance = WeaponPerkUtility.ResolveProjectileMaxTravelDistance(f, weapon, secondaryProjectile);
+
+                // Launched from inside the crit target's collider - don't let its first cast count
+                // that same enemy again. See Projectile.LastHit.
+                secondaryProjectile->LastHit = primaryTarget;
+
+                // Element Infusion reaches the bounce too, matching the hitscan branch above.
+                if (f.Unsafe.TryGetPointer<WeaponElementInfusion>(owner, out var infusion) == true)
+                {
+                    secondaryProjectile->PerkElement = infusion->Element;
+                    secondaryProjectile->PerkElementChance = infusion->ProcChance;
+                }
             }
         }
     }

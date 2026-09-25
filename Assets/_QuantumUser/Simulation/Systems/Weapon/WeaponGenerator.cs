@@ -27,21 +27,7 @@ namespace Quantum
         private static void DrawPerks(Frame f, Weapon* weapon, AssetRef<WeaponDataAsset> weaponDataRef,
             AssetRef<WeaponPerkPoolData> poolRef, int perkCount)
         {
-            DrawDistinctPerks(f, poolRef, perkCount, weapon->Perks, ResolveFireType(f, weaponDataRef));
-        }
-
-        // A perk that can't express itself on this weapon's fire type is never drawn (see
-        // WeaponPerkData.SupportsFireType). An unresolvable weapon falls back to Projectile, the
-        // permissive case - every perk in the pool works there, so a missing asset can only ever
-        // cost a perk that would have been filtered, never a perk that should have been offered.
-        public static WeaponFireType ResolveFireType(Frame f, AssetRef<WeaponDataAsset> weaponDataRef)
-        {
-            if (weaponDataRef.IsValid == false)
-                return WeaponFireType.Projectile;
-
-            WeaponDataAsset data = f.FindAsset(weaponDataRef);
-
-            return data != null ? data.FireType : WeaponFireType.Projectile;
+            DrawDistinctPerks(f, poolRef, perkCount, weapon->Perks, WeaponPerkTarget.Resolve(f, weaponDataRef));
         }
 
         // Weighted draw without replacement into `perks[0..slots)`, where slots = min(perkCount,
@@ -52,7 +38,7 @@ namespace Quantum
         // not-yet-equipped Choose-Weapon candidate's rolled perks) - same shape, different
         // destination buffer.
         public static int DrawDistinctPerks(Frame f, AssetRef<WeaponPerkPoolData> poolRef, int perkCount,
-            FixedArray<AssetRef<WeaponPerkData>> perks, WeaponFireType fireType)
+            FixedArray<AssetRef<WeaponPerkData>> perks, WeaponPerkTarget target)
         {
             if (poolRef.IsValid == false)
                 return 0;
@@ -68,20 +54,24 @@ namespace Quantum
                 return 0;
 
             bool* taken = stackalloc bool[pool.Perks.Count];
-            int totalWeight = 0;
-
-            for (int i = 0; i < pool.Perks.Count; i++)
-            {
-                int weight = GetWeight(f, pool, i, fireType);
-
-                if (weight > 0)
-                    totalWeight += weight;
-            }
-
             int drawn = 0;
 
-            for (int slot = 0; slot < slots && totalWeight > 0; slot++)
+            for (int slot = 0; slot < slots; slot++)
             {
+                // Re-totalled every slot rather than only subtracting the drawn weight - a drawn perk
+                // can also make a DIFFERENT one ineligible (WeaponPerkData.ConflictsWith, checked
+                // against the slots filled so far).
+                int totalWeight = 0;
+
+                for (int i = 0; i < pool.Perks.Count; i++)
+                {
+                    if (taken[i] == false)
+                        totalWeight += GetWeight(f, pool, i, target, perks);
+                }
+
+                if (totalWeight <= 0)
+                    break;
+
                 int roll = f.RNG->Next(0, totalWeight);
                 int cursor = 0;
 
@@ -90,7 +80,7 @@ namespace Quantum
                     if (taken[i])
                         continue;
 
-                    int weight = GetWeight(f, pool, i, fireType);
+                    int weight = GetWeight(f, pool, i, target, perks);
 
                     if (weight <= 0)
                         continue;
@@ -101,7 +91,6 @@ namespace Quantum
                         continue;
 
                     taken[i] = true;
-                    totalWeight -= weight;
                     perks[slot] = pool.Perks[i];
                     drawn++;
                     break;
@@ -112,19 +101,15 @@ namespace Quantum
             return drawn;
         }
 
-        // Weight 0 is already the pool's own "not drawable" signal, so an unsupported perk reuses it
+        // Weight 0 is already the pool's own "not drawable" signal, so an ineligible perk reuses it
         // rather than needing its own skip at every loop that reads this.
-        private static int GetWeight(Frame f, WeaponPerkPoolData pool, int index, WeaponFireType fireType)
+        private static int GetWeight(Frame f, WeaponPerkPoolData pool, int index, in WeaponPerkTarget target,
+            FixedArray<AssetRef<WeaponPerkData>> perks)
         {
-            if (pool.Perks[index].IsValid == false)
+            if (WeaponPerkEligibility.IsEligible(f, pool.Perks[index], target, perks) == false)
                 return 0;
 
-            WeaponPerkData perk = f.FindAsset(pool.Perks[index]);
-
-            if (perk.SupportsFireType(fireType) == false)
-                return 0;
-
-            return pool.GetWeight(perk.Rarity);
+            return pool.GetWeight(f.FindAsset(pool.Perks[index]).Rarity);
         }
     }
 }

@@ -21,9 +21,9 @@ MonoBehaviour:
   Description: "Collected Scrap shortens your Sentry's cooldown."
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - "Collecting Scrap reduces Sentry cooldown by <color=#FD3971>0.5s</color>."
-  - "Cooldown reduction increases to <color=#FD3971>1s</color> per Scrap."
-  - "Earning a Fabrication Charge immediately reduces Sentry cooldown by another <color=#FD3971>3s</color>."
+  - "Each Scrap collected cuts Sentry cooldown by <color=#FD3971>0.5s</color>."
+  - "Each Scrap collected cuts Sentry cooldown by <color=#FD3971>1s</color>."
+  - "Each Scrap collected cuts Sentry cooldown by <color=#FD3971>1s</color>. Earning a Fabrication Charge (every <color=#FD3971>10</color> Scrap) cuts another <color=#FD3971>3s</color>."
   CooldownReductionPerPickup:
   - RawValue: 32768
   - RawValue: 65536

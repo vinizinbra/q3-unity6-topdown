@@ -100,12 +100,23 @@ namespace Quantum
 
         // The player widget shows the PLAYER's own name, not the hero's - RuntimePlayer.PlayerNickname
         // (a Quantum built-in, set at connect from the Photon nickname; empty for a bot unless
-        // authored, e.g. HeroQuickPlayToolbar). Null/empty simply hides the name label (see
-        // CharacterUiWidget.Setup), so no hero-name fallback is applied.
+        // authored, e.g. HeroQuickPlayToolbar). With no nickname it falls back to the hero's name
+        // (CharacterData.DisplayName, then the asset's file name - same convention as HeroInfoWidget).
         private string ResolvePlayerName(QuantumGame game)
         {
-            RuntimePlayer playerData = game.Frames.Predicted.GetPlayerData(_playerRef);
-            return playerData != null ? playerData.PlayerNickname : null;
+            Frame frame = game.Frames.Predicted;
+            RuntimePlayer playerData = frame.GetPlayerData(_playerRef);
+            if (playerData != null && string.IsNullOrEmpty(playerData.PlayerNickname) == false)
+                return playerData.PlayerNickname;
+
+            if (frame.TryGet<CharacterStats>(_entityRef, out var stats) == false || stats.CharacterData.IsValid == false)
+                return null;
+
+            CharacterData data = frame.FindAsset(stats.CharacterData);
+            if (data == null)
+                return null;
+
+            return string.IsNullOrEmpty(data.DisplayName) ? data.name : data.DisplayName;
         }
     }
 }

@@ -20,8 +20,8 @@ MonoBehaviour:
   DisplayName: Ignition
   RankDescriptions:
   - "At maximum Rage, weapon hits always apply Burn."
-  - "Killing a Burning enemy creates Burning Ground."
-  - "The first time Max reaches maximum Rage during each Overdrive, release a radial Burn pulse."
+  - "At maximum Rage, weapon hits always apply Burn. Killing a Burning enemy leaves Burning Ground."
+  - "At maximum Rage, weapon hits always apply Burn. Killing a Burning enemy leaves Burning Ground. Reaching max Rage in Overdrive releases a <color=#FD3971>4m</color> Burn pulse (once per Overdrive)."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 3

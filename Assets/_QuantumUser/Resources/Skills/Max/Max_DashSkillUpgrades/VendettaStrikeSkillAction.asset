@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: -1480122659, guid: 9a944adac56bb4e8dbce2f7bab4127e3, type: 3}
   DisplayName: Vendetta Strike
   RankDescriptions:
-  - "Enemies hit by the Dash are Burning."
-  - "Enemies hit are also marked by Vendetta."
-  - "Also affects Overdrive: reduces its cooldown by <color=#FD3971>2s</color> if inactive, or extends it by <color=#FD3971>1s</color> if already active."
+  - "Enemies you Dash through start Burning."
+  - "Enemies you Dash through start Burning and are marked by Vendetta."
+  - "Enemies you Dash through start Burning and are marked by Vendetta. Dashing also cuts Overdrive's cooldown by <color=#FD3971>2s</color>, or extends an active Overdrive by <color=#FD3971>1s</color>."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 2

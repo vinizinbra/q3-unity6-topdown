@@ -683,9 +683,10 @@ event RotatingLaserFired
     AssetRef<EnemyDeliveryData> Delivery;
 }
 
-// Fired by StatusEffectUtility.ApplyStun every time a Stun genuinely LANDS, regardless of source
-// (Shock's own proc against an already-Shocked target, Shatter's primary, any future Stun source) -
-// never fired just because Shock/Electrified was applied or refreshed (see docs/
+// Fired by StatusEffectUtility.ApplyElementBaseline only when an Electric hit's Shock Stun proc
+// (against an already-Shocked target) genuinely LANDS - NOT by ApplyStun, so other Stun sources
+// (Shatter, melee/skill stuns...) never fire it, and never just because Shock/Electrified was applied
+// or refreshed (see docs/
 // elemental-reactions.md's "Shock (Electrified)" section). A one-shot spark distinct from
 // StatusEffectsManager's own ambient stunParticlePrefab tracker (which only shows "this status is
 // currently active", not the instant it landed). Own dedicated visual (EffectsManager.joltEffectPrefab).

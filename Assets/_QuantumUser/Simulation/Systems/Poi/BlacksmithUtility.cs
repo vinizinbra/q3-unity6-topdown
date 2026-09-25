@@ -56,7 +56,7 @@ namespace Quantum
             {
                 AssetRef<WeaponPerkData> perkRef = pool.Perks[i];
 
-                if (perkRef.IsValid == true && LevelUpUtility.AlreadyEquipped(weapon, perkRef) == false)
+                if (WeaponPerkEligibility.IsEligible(f, perkRef, weapon) == true)
                     return true;
             }
 
@@ -185,21 +185,17 @@ namespace Quantum
             WeaponPerkPoolData pool = f.FindAsset(config.PerkPool);
             BlacksmithBreakTuning tuning = config.ResolveBreakTuning(f.Global->BreathingIndex);
 
-            // Same exclusion as an already-owned perk: a perk that can do nothing on this weapon's
-            // fire type would be a dead purchase. See WeaponPerkData.SupportsFireType.
-            WeaponFireType fireType = WeaponGenerator.ResolveFireType(f, weapon->WeaponData);
-
+            // Same exclusions as a level-up draw: already owned, can do nothing on this weapon, or
+            // made redundant by a perk it already has would each be a dead purchase. See
+            // WeaponPerkEligibility.
             for (int i = 0; i < pool.Perks.Count; i++)
             {
                 AssetRef<WeaponPerkData> perkRef = pool.Perks[i];
 
-                if (perkRef.IsValid == false || LevelUpUtility.AlreadyEquipped(weapon, perkRef) == true)
+                if (WeaponPerkEligibility.IsEligible(f, perkRef, weapon) == false)
                     continue;
 
                 WeaponPerkData data = f.FindAsset(perkRef);
-
-                if (data.SupportsFireType(fireType) == false)
-                    continue;
 
                 int weight = tuning.GetWeight(data.Rarity);
 
@@ -231,6 +227,17 @@ namespace Quantum
 
             if (f.RuntimeConfig.BlacksmithConfig.IsValid == false)
                 return;
+
+            // The offer is cached per Break (see RollOffer), so the weapon it was rolled for may have
+            // been swapped since - a Store purchase in the same Break. Re-check against the weapon
+            // actually held now, before any Coins move, rather than selling a perk it already has
+            // (a doubled additive bake) or one it can't use.
+            if (f.Unsafe.TryGetPointer<Weapon>(player, out var heldWeapon) == false
+                || WeaponPerkEligibility.IsEligible(f, perkRef, heldWeapon) == false)
+            {
+                Log.Debug($"[Blacksmith] {player} picked {perkRef}, no longer eligible for the weapon they now hold - ignored");
+                return;
+            }
 
             BlacksmithConfig config = f.FindAsset(f.RuntimeConfig.BlacksmithConfig);
             WeaponPerkData perkData = f.FindAsset(perkRef);

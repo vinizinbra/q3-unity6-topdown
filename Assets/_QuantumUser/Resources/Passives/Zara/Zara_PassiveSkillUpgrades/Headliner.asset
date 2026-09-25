@@ -22,8 +22,8 @@ MonoBehaviour:
   <MaxRank>k__BackingField: 3
   RankDescriptions:
   - "While Flow is Active, Zara deals <color=#FD3971>+10%</color> Damage."
-  - "While Flow is Active, Totem Beats are <color=#FD3971>15%</color> more effective."
-  - "Activating Flow grants Zara and nearby allies <color=#FD3971>+10%</color> Move Speed and Fire Rate for <color=#FD3971>3s</color>."
+  - "While Flow is Active, Zara deals <color=#FD3971>+10%</color> Damage and Totem Beats are <color=#FD3971>15%</color> stronger."
+  - "While Flow is Active, Zara deals <color=#FD3971>+10%</color> Damage and Totem Beats are <color=#FD3971>15%</color> stronger. Activating Flow gives Zara and nearby allies <color=#FD3971>+10%</color> Move Speed and Fire Rate for <color=#FD3971>3s</color>."
   ActiveDamageBonus:
   - RawValue: 6554
   - RawValue: 6554

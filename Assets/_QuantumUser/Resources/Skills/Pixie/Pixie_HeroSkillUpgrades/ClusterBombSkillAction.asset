@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: -1580156667, guid: b217254d41b6945b1873986186a25786, type: 3}
   DisplayName: Cluster Bomb
   RankDescriptions:
-  - "A thrown Bunny Bomb releases <color=#FD3971>2</color> bomblets when it explodes, each dealing <color=#FD3971>40%</color> Damage."
-  - "Releases <color=#FD3971>3</color> bomblets dealing <color=#FD3971>45%</color> Damage each."
-  - "Releases <color=#FD3971>4</color> bomblets dealing <color=#FD3971>50%</color> Damage each."
+  - "Bunny Bomb releases <color=#FD3971>2</color> bomblets when it explodes, each dealing <color=#FD3971>40%</color> Damage."
+  - "Bunny Bomb releases <color=#FD3971>3</color> bomblets when it explodes, each dealing <color=#FD3971>45%</color> Damage."
+  - "Bunny Bomb releases <color=#FD3971>4</color> bomblets when it explodes, each dealing <color=#FD3971>50%</color> Damage."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

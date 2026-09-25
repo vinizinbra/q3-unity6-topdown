@@ -65,6 +65,12 @@ namespace Quantum
             };
 
             HitEffectUtility.ApplyToTarget(f, Effects, ref context);
+
+            // Every projectile hit staggers (stops walking briefly) - see EnemySystem.TryApplyHitStagger.
+            // After the effects, so a knockback in Effects opens its own flinch window first and this
+            // simply finds the enemy already on cooldown.
+            if (target != EntityRef.None && target != projectile->Owner)
+                EnemySystem.TryApplyHitStagger(f, target);
         }
 
         // InstantDetonate (an upgrade - see Heroes/Pixie/HotFuseSkillAction) overrides

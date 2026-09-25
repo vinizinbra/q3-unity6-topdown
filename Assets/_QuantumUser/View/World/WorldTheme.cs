@@ -8,13 +8,16 @@ namespace Quantum
 {
     // Worlds that have a WorldTheme + tileset. Values are EXPLICIT because Unity serializes the number:
     // never renumber an entry (every authored WorldTheme would silently switch world) - a new world
-    // takes the next unused number. 4-10 are free (unbuilt worlds removed 2026-09-24).
+    // takes the next unused number. 7-10 are free (unbuilt worlds removed 2026-09-24).
     public enum WorldThemeName
     {
         GrasslandOutpost = 0,
         DesertOilFields = 1, // aka Desert Oil Kingdom
         NeonFloodDistrict = 2,
         Haunted = 3, // Dracula castle (Castlevania style)
+        Zaun = 4, // Arcane-style undercity (neon suburb)
+        FeudalJapan = 5, // old Japanese style (ishigaki, lanterns, sakura)
+        Inferno = 6, // hellish volcano (basalt, lava, obsidian spikes)
         AlienPlanet = 11,
         Moon = 12,
         ArcticFields = 13,
@@ -61,6 +64,9 @@ namespace Quantum
 
         [Range(0f, 1f), Tooltip("_WaterOpacity. The water alpha-blends over whatever is behind it, so below 1 the background always bleeds through and dark water (oil) can't get truly dark - use 1 for exact colours. 0 = leave the Material's value. The water Material is shared, so give every world a value or the previous world's opacity sticks.")]
         public float Opacity;
+
+        [Tooltip("Optional: replaces the water surface's material in this world (e.g. a Project/CloudFog material for a sea of clouds instead of water). Empty = the normal water material, coloured by the fields above. The colours above are NOT applied to an override - it's authored on its own material.")]
+        public Material SurfaceMaterial;
     }
 
     // The world's 3D level tileset (TilesetPlatformBuilder, docs/tileset-builder.md): which

@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: -727180227, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
   DisplayName: Last Stand
   RankDescriptions:
-  - "Unused Rage is preserved when Overdrive ends and restored the next time Overdrive activates."
-  - "Taking damage during Overdrive removes only part of Max's current Rage instead of resetting it."
-  - "Lethal damage during Overdrive ends it instead, leaves Max at <color=#FD3971>1</color> HP, briefly Invulnerable, and resets Rage."
+  - "When Overdrive ends, unused Rage is saved and restored the next time you activate it."
+  - "Unused Rage is saved between Overdrives. Taking damage during Overdrive costs only <color=#FD3971>50%</color> of your Rage."
+  - "Unused Rage is saved between Overdrives. Taking damage during Overdrive costs only <color=#FD3971>50%</color> of your Rage. Lethal damage ends Overdrive instead, leaving you at <color=#FD3971>1</color> HP and Invulnerable for <color=#FD3971>2s</color>."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

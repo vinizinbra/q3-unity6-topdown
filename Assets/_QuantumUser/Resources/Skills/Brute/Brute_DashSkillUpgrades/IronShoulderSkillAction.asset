@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: 937128853, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
   DisplayName: Iron Shoulder
   RankDescriptions:
-  - "Dashing into enemies knocks them back. Enemies slammed into walls are Stunned."
-  - "Dash collisions deal <color=#FD3971>60%</color> Juggernaut Skill Damage. Wall slams deal <color=#FD3971>+50%</color> additional Damage."
-  - "Wall slams create a <color=#FD3971>3m</color> shockwave dealing <color=#FD3971>80%</color> Juggernaut Skill Damage and Stunning nearby enemies."
+  - "Dashing into enemies knocks them back. Enemies slammed into walls are Stunned for <color=#FD3971>1s</color>."
+  - "Dashing into enemies deals <color=#FD3971>60%</color> Juggernaut Skill Damage and knocks them back. Enemies slammed into walls take <color=#FD3971>+50%</color> Damage and are Stunned for <color=#FD3971>1s</color>."
+  - "Dashing into enemies deals <color=#FD3971>60%</color> Juggernaut Skill Damage and knocks them back. Wall slams deal <color=#FD3971>+50%</color> Damage, Stun for <color=#FD3971>1s</color>, and release a <color=#FD3971>3m</color> shockwave (<color=#FD3971>80%</color> Damage, Stun)."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 6

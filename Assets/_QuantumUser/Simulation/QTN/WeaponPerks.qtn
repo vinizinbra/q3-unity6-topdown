@@ -19,9 +19,10 @@ struct PendingEcho
 
 // A single free extra shot queued by Double Tap - see WeaponFireTimeMods.PendingDoubleTap. Delay
 // counts down the same FP-seconds way PendingEcho.Delay does; Delay <= 0 means "nothing pending".
-// Like an echo, it has no locked target once queued - replayed straight down
-// SpawnPosition/AimDirection rather than re-resolving wherever Aim.Target has moved to by the time
-// it fires. IsExplosiveProc/IsCataclysm/GrantPierceAmount are snapshotted from the primary shot so
+// Target/AimAtCenter keep the primary shot's lock: WeaponSystem.FireDoubleTapShot re-resolves the
+// muzzle off the owner's current Transform3D/Aim and aims at that same target if it still exists
+// (a lobbed Grenade/Napalm shot used to fly to a fixed free-aim distance and miss), falling back to
+// SpawnPosition/AimDirection when it can't. IsExplosiveProc/IsCataclysm/GrantPierceAmount are snapshotted from the primary shot so
 // the delayed shot still mirrors its already-resolved proc flags (see docs/weapon-perks.md's Double
 // Tap simplification) instead of losing them the way an echo does.
 struct PendingDoubleTapShot
@@ -29,6 +30,8 @@ struct PendingDoubleTapShot
     FP        Delay;
     FPVector3 SpawnPosition;
     FPVector3 AimDirection;
+    EntityRef Target;
+    Boolean   AimAtCenter;
     FP        Damage;
     Boolean   IsExplosiveProc;
     Boolean   IsCataclysm;
@@ -86,7 +89,9 @@ component WeaponEchoState
     Boolean HasEchoChamber;
     Boolean HasInfiniteEcho;
     FP      EchoDelay;
-    array<PendingEcho>[3] PendingEchoes;
+    // 8, not 3: a fast weapon fires several shots inside one EchoDelay (BeamGun at 15/s against a
+    // 0.25s delay is 4), and 3 slots silently dropped every echo past the third.
+    array<PendingEcho>[8] PendingEchoes;
 }
 
 // -- Piercing Rounds / Ricochet / Double Tap --
@@ -226,6 +231,12 @@ component WeaponOnCritReactions
     FP      CriticalReboundRadius;
     FP      CriticalReboundDamageMultiplier;
 
+    // Re-entrancy latch for a HITSCAN rebound, which lands synchronously inside OnCriticalHit -
+    // before the crit's own target has lost any Health. A rebound that crit again bounced straight
+    // back to the first target and so on, unbounded (a stack overflow at 100% crit chance). Set
+    // around that nested hit so a rebound can never itself rebound in the same call.
+    Boolean ReboundInProgress;
+
     Boolean HasExplosiveCrit;
     FP      CriticalExplosionRadius;
     FP      CriticalExplosionDamageMultiplier;
@@ -272,9 +283,11 @@ component WeaponBurstState
     Boolean   CritOnFinalShot;
     Int32     BurstCount;
 
-    FP        Damage;
-    Boolean   IsExplosiveProc;
-    Boolean   IsCataclysm;
+    // Only what belongs to the TRIGGER PULL carries across the burst - Kai's Phantom Strike (its
+    // damage factor and bonus pierce, consumed once for the whole pull). Everything magazine-driven
+    // (damage from the magazine-position perks, Final Round/Cataclysm's last bullet, the Explosive
+    // Sequence counter) is re-resolved per burst shot in TickWeaponBurst: each one is a real bullet,
+    // and freezing shot 0's values meant a burst could never land on the magazine's actual last round.
+    FP        DamageBonusMultiplier;
     Int32     GrantPierceAmount;
-    Boolean   IsFirstBullet;
 }

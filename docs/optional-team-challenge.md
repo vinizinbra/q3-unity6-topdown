@@ -245,7 +245,7 @@ this index carries - see the root `CLAUDE.md`'s codegen gotcha):
    - a `rulesArea` GameObject holding M `IconTextRowWidget` slots (M = the most rows any one
      `ChallengeDefinition.Rules` authors), assigned to `ruleRows`.
    - a `rewardArea` GameObject holding one `IconTextRowWidget`, assigned to `rewardRow`.
-4. Wire a `TeamChallengeWidget` scene instance under the HUD (`GameplayWindow`, alongside
+4. Wire a `TeamChallengeWidget` scene instance under the HUD (alongside
    `TraversalChallengeWidget`/`BreathingWidget`) with `root`/`titleText`/`objectiveText`
    assigned, plus an `AnnouncementBannerWidget` instance (`root`/`canvasGroup`/`text` assigned,
    same rect/canvas-group shape `BreathingWidget`'s own "AREA SECURED" banner uses) wired

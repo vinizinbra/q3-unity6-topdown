@@ -21,9 +21,9 @@ MonoBehaviour:
   Description: "Weapon hits pull enemies together, eventually Binding them for bonus damage."
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - "Weapon hits pull the target toward its nearest ally."
-  - "The pull becomes stronger, especially against Specialist and tougher enemies."
-  - "Pulled enemies become Bound for <color=#FD3971>2s</color>. Kai deals <color=#FD3971>+20%</color> Damage to Bound enemies."
+  - "Weapon hits pull the target toward the nearest other enemy."
+  - "Weapon hits strongly pull the target toward the nearest other enemy, even harder on tougher enemies."
+  - "Weapon hits strongly pull the target toward the nearest other enemy and Bind it for <color=#FD3971>2s</color>. Kai deals <color=#FD3971>+20%</color> Damage to Bound enemies."
   PullForce:
   - RawValue: 196608
   - RawValue: 393216

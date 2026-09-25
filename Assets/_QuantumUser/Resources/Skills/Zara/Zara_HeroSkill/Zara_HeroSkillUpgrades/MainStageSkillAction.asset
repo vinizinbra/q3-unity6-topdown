@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: -1158149854, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
   DisplayName: Main Stage
   RankDescriptions:
-  - "Totem Beat radius increases by <color=#FD3971>30%</color>."
-  - "Radius increases by <color=#FD3971>50%</color> and Totem duration increases by <color=#FD3971>2s</color>."
-  - "Radius increases by <color=#FD3971>75%</color>. Totem immediately releases a Damage Beat when deployed and a Support Beat when it expires."
+  - "Totem Beat radius <color=#FD3971>+30%</color>."
+  - "Totem Beat radius <color=#FD3971>+50%</color> and Totem lasts <color=#FD3971>+2s</color>."
+  - "Totem Beat radius <color=#FD3971>+75%</color> and Totem lasts <color=#FD3971>+2s</color>. It plays a Damage Beat when placed and a Support Beat when it expires."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

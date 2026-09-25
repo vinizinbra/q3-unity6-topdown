@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: 1506874409, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
   DisplayName: Sound Boost
   RankDescriptions:
-  - "Support Beats heal <color=#FD3971>2%</color> Max HP and grant <color=#FD3971>+15%</color> Move Speed and Fire Rate for about <color=#FD3971>2s</color>."
-  - "Support Beats also reduce affected allies' Hero Skill cooldown by <color=#FD3971>0.5s</color>."
-  - "Support Beat healing increases to <color=#FD3971>5%</color> Max HP and grants <color=#FD3971>+15%</color> Damage for <color=#FD3971>2s</color>."
+  - "Totem Support Beats heal <color=#FD3971>2%</color> Max HP and give <color=#FD3971>+15%</color> Move Speed and Fire Rate for <color=#FD3971>2s</color>."
+  - "Totem Support Beats heal <color=#FD3971>2%</color> Max HP, cut Hero Skill cooldown by <color=#FD3971>0.5s</color>, and give <color=#FD3971>+15%</color> Move Speed and Fire Rate for <color=#FD3971>2s</color>."
+  - "Totem Support Beats heal <color=#FD3971>5%</color> Max HP, cut Hero Skill cooldown by <color=#FD3971>0.5s</color>, and give <color=#FD3971>+15%</color> Move Speed, Fire Rate and Damage for <color=#FD3971>2s</color>."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1

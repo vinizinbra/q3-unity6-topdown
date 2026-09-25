@@ -109,15 +109,24 @@ Material:
     - _DstBlendAlpha: 0
     - _EmissionEnabled: 0
     - _EnvironmentReflections: 1
-    - _FacetSteps: 3
+    - _FacetSteps: 1
     - _FlipbookMode: 0
-    - _FoamDistance: 0.06
+    - _FoamBreakup: 0.355
+    - _FoamDashSize: 0.12
+    - _FoamDistance: 0.05
+    - _FoamEdgeSoftness: 2
+    - _FoamFrameRate: 0
+    - _FoamLineWidth: 0.111
     - _FoamNoiseScale: 2
+    - _FoamPixelSize: 0
+    - _FoamRingWidth: 0.174
     - _FoamRippleFrequency: 2
     - _FoamRippleSpeed: 1.5
     - _FoamRippleStrength: 0.381
     - _FoamSharpness: 5.02
-    - _FoamSpeed: 1
+    - _FoamSpeed: -1
+    - _FoamSurge: 0.007
+    - _FoamSurgeSpeed: 1.29
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossinessSource: 0
@@ -137,6 +146,8 @@ Material:
     - _ReceiveShadows: 0
     - _Shininess: 0
     - _ShoreFieldFoam: 1
+    - _ShoreSteps: 3
+    - _ShoreTintStrength: 1
     - _Smoothness: 0.5
     - _SmoothnessSource: 0
     - _SmoothnessTextureChannel: 0

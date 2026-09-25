@@ -67,21 +67,40 @@ window only ever raised alerts that `OnDisconnected` and `StartRunner`'s own `ca
 
 ## Stages and progress
 
-The bar is split into three bands, and is monotonic by construction (`ApplyProgress` only ever eases
-upward) - a loading bar that goes backwards reads as a bug even when the numbers behind it are honest.
+The bar is a **weighted sum of pieces, weighted by real cost**, and is monotonic by construction
+(`ApplyProgress` only ever eases upward) - a loading bar that goes backwards reads as a bug even when
+the numbers behind it are honest.
 
-| Stage | Band | Source |
+Why not just the generation cursor (the first version gave it 70% of the bar): the simulation places
+the whole level in a handful of ticks (`TestChunkLevel`: ~27 requests at `ChunksPerGenerationTick` 5
+= ~6 ticks, ~0.1s), so that band was really a fixed ~0.5s animation. The time actually goes to the
+**View** building what those ticks describe (instantiating every chunk prefab), the one-shot
+`WaterShoreBaker` probe pass, the spawn settle delay, and the hero view. All of it runs on the main
+thread, so a bar that doesn't measure it freezes and then jumps.
+
+| Piece | Weight | Source |
 | --- | --- | --- |
-| `CONNECTING` | 0 → 0.15 | No predicted frame yet (session starting, gameplay scene loading). Crawls. |
-| `GENERATING LEVEL` | 0.15 → 0.85 | **Real**: `Global.LevelGenCursor / Global.LevelGenTotal`. Crawls only until `LevelGenTotal` is published on the first generation tick. |
-| `ENTERING THE RIFT` | 0.85 → 1 | `PlayerSpawnUtility.IsReadyToSpawn`. Crawls until it's true. |
+| Session / scene load (`CONNECTING`) | 0.10 | No predicted frame yet. Asymptotic crawl (`connectingCrawlRate`) toward 95% of the piece. |
+| Sim generation (`GENERATING LEVEL`) | 0.10 | `Global.LevelGenCursor / LevelGenTotal`. |
+| Chunk views (`BUILDING WORLD`) | 0.35 | Chunk entities (with a `View` component) whose view exists in `QuantumEntityViewUpdater`, over `max(count, LevelGenTotal)` until `LevelGenerated`. |
+| World bakes (`BUILDING WORLD`) | 0.30 | `WaterShoreBaker.BakeProgress` (time-sliced probe pass; no baker in the scene = done). |
+| Hero (`ENTERING THE RIFT`) | 0.15 | 70% from `TimeSinceLevelGenerated / PlayerSpawnUtility.SpawnDelaySeconds`, 100% at `AnyLocalPlayerSetup`. |
 
-Crawling stages advance on their own accumulator rather than on the displayed value, so entering a
-stage can never rewind the bar. Every stage change also logs one `LogHelper` line, so a genuine hang
-is diagnosable from the log rather than from squinting at a bar that stopped moving.
+The label is the first unfinished piece. The bar itself never gates the hand-off, but the hand-off
+also waits for `WaterShoreBaker.IsBakePending == false` (see Hand-off condition): the bake is
+time-sliced, and on a slow mobile device it outlasted the 1s spawn settle, so the screen lifted onto
+water that had no shoreline foam yet. While `LoadingWindow` is up it sets `WaterShoreBaker.IsLoadingScreenUp`, and the
+baker then uses `coveredProbeBudgetMs` (30ms) instead of `probeBudgetMs` (10ms), because behind the screen only
+the bar needs to stay smooth. The baker has no dependency on the window: without one it simply bakes
+at the normal budget during gameplay. Every stage change logs one `LogHelper` line, and **every frame
+longer than `spikeLogThreshold` (50ms) logs a warning** with the stage and chunk-view counts. That is
+how to find which piece is worth time-slicing (e.g. splitting `WaterShoreBaker`'s probe loop across
+frames, or lowering `ChunksPerGenerationTick` so chunk views instantiate over more frames). The bake
+is also wrapped in a `WaterShoreBaker.Bake` profiler sample.
 
 ## Hand-off condition
 
+Shore-field bake finished (`WaterShoreBaker.IsBakePending == false`; no baker = not pending) **and**
 `MyLocalPlayer.Instance.AnyLocalPlayerSetup` - a local hero that exists **and** has registered its
 view (`MyLocalPlayer.Register` runs off `CharView`), so this is true only once there is genuinely
 something on screen to look at, not merely once the entity was created in the simulation. A client
@@ -133,7 +152,21 @@ authored. Two arrays are left for you to fill by hand, since both are scene-spec
 Screen` (the menu background object(s) that must fade out with this screen - without them the fade
 reveals the main menu rather than the game) and `Tips` (a rotating hint line; empty hides it).
 
-## Current status (2026-08-26)
+## Current status (2026-09-24)
+
+Progress model reworked to be View-driven (above). Compiles in the live Editor.
+
+**Measured (Editor Profiler, one offline match start):** the spikes were `WaterShoreBaker.Bake` ~665ms,
+plus ~152ms of Quantum `UnsafeUtility.Free` on the next tick releasing the ~29k per-probe `RaycastAll`
+hit collections (together ~0.8s in ONE frame, about 2/3 of the real load). The rest was the Quantum
+session start ~115ms, `LevelGenerationSystem` 32ms, scene integration ~52ms, chunk view instantiation
+23ms + 42ms (cheap), and the `TilesetBuildQueue` flush 72ms (after hand-off). A 440ms `EditorLoop`
+frame is Editor-only. Fix: the bake now uses one closest-hit `Raycast` per texel and is time-sliced
+(`probeBudgetMs`, 10ms/frame; bar weights now building 0.35 / bake 0.30). Its real progress (`WaterShoreBaker.BakeProgress`) drives the bake
+piece of the bar. Not re-profiled yet. `MenuScene` still serializes `barFillSpeed: 1.5`; set it to ~3 on the `LoadingWindow` so
+real progress isn't smoothed into a fixed animation.
+
+### Earlier status (2026-08-26)
 
 Code complete, compiles against existing types only. Nothing in the menu scene yet - the builder has
 not been run. Not yet verified in-Editor.

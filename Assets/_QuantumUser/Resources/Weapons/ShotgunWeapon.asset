@@ -39,6 +39,8 @@ MonoBehaviour:
   PelletCount: 6
   SpreadAngle:
     RawValue: 1966080
+  RandomSpreadAngle:
+    RawValue: 0
   SpawnAnchor: 0
   SpawnOffset:
     X:
@@ -47,10 +49,14 @@ MonoBehaviour:
       RawValue: 0
     Z:
       RawValue: 0
+  RandomSideOffset:
+    RawValue: 0
   BonusBounces: 0
   ProjectileData:
     Id:
-      Value: 2052039704194794421
+      Value: 377404559310112910
+  ProjectileSpeedMultiplier:
+    RawValue: 65536
   BaseTraits: []
   ViewPrefab: {fileID: 8089491252618662435, guid: 0f7481ececfe745c383ff250af802c65, type: 3}
   ShakeTier: 1
@@ -63,6 +69,40 @@ MonoBehaviour:
     ProjectileSparkTrailColor: {r: 0, g: 0.5552087, b: 1, a: 1}
     ProjectileSparkTrailScale: {x: 1, y: 1, z: 1}
     ProjectileSparkTrailLifetimeOverride: 0
+    ProjectileSparkTrailRateOverDistanceOverride: 0
+    EnableProjectileTrail: 0
+    ProjectileTrailTime: 0
+    ProjectileTrailWidth: 0
+    ProjectileTrailColor:
+      serializedVersion: 2
+      key0: {r: 1, g: 1, b: 1, a: 1}
+      key1: {r: 1, g: 1, b: 1, a: 0}
+      key2: {r: 0, g: 0, b: 0, a: 0}
+      key3: {r: 0, g: 0, b: 0, a: 0}
+      key4: {r: 0, g: 0, b: 0, a: 0}
+      key5: {r: 0, g: 0, b: 0, a: 0}
+      key6: {r: 0, g: 0, b: 0, a: 0}
+      key7: {r: 0, g: 0, b: 0, a: 0}
+      ctime0: 0
+      ctime1: 65535
+      ctime2: 0
+      ctime3: 0
+      ctime4: 0
+      ctime5: 0
+      ctime6: 0
+      ctime7: 0
+      atime0: 0
+      atime1: 65535
+      atime2: 0
+      atime3: 0
+      atime4: 0
+      atime5: 0
+      atime6: 0
+      atime7: 0
+      m_Mode: 0
+      m_ColorSpace: -1
+      m_NumColorKeys: 2
+      m_NumAlphaKeys: 2
     EnableProjectileGlow: 1
     ProjectileGlowColor: {r: 0.6179246, g: 0.8141184, b: 1, a: 0.1764706}
     ProjectileGlowScale: {x: 1, y: 1, z: 1}

@@ -30,7 +30,7 @@ public class InMatchPopupManager : MonoBehaviour {
     // Project Settings > Input Manager if it doesn't match Start on a given pad, no code change
     // needed. See QuantumDebugInput's own GamepadDash/Jump/Skill/SwitchTarget/Fire for the same
     // pattern.
-    private const string OpenInMatchSettings = "OpenInMatchSettings";
+    private static readonly string OpenInMatchSettings = Quantum.GamepadInputNames.Get("OpenInMatchSettings");
 
     public int popupOnTopCount => popupStack.Count;
     public bool HasPendingPopups => currentPopup != null || popupQueue.Count > 0;
@@ -144,7 +144,11 @@ public class InMatchPopupManager : MonoBehaviour {
         // Escape (keyboard) / Start (gamepad, OpenInMatchSettings) toggles settings, but only over
         // an otherwise empty stage - it never dismisses or stacks on top of some other popup (a
         // tutorial popup's Close also unpauses the sim, so this must not be a way to skip it).
-        if (UnityEngine.Input.GetKeyDown(KeyCode.Escape) || UnityEngine.Input.GetButtonDown(OpenInMatchSettings))
+        // Desktop only for Escape: on a phone, Escape IS Android Back - which is also what a
+        // Bluetooth pad's Select sends (MOGA Pro 2) - and that toggles HeroInfoPopupWidget instead.
+        bool escapeOpensSettings = Application.isMobilePlatform == false;
+
+        if ((escapeOpensSettings && UnityEngine.Input.GetKeyDown(KeyCode.Escape)) || UnityEngine.Input.GetButtonDown(OpenInMatchSettings))
         {
             if (currentPopup is InMatchSettingsPopup)
                 CloseCurrentPopup();
@@ -173,16 +177,20 @@ public class InMatchPopupManager : MonoBehaviour {
     void ShowDim()
     {
         if (dimBg == null) return;
-        dimBg.raycastTarget = true;
         dimTween.Stop();
+        dimBg.gameObject.SetActive(true);
+        dimBg.raycastTarget = true;
         dimTween = Tween.Alpha(dimBg, dimBg.color.a, dimAlpha, dimFadeDuration, useUnscaledTime: true);
     }
 
+    // Fades out, then deactivates the dim once fully hidden. A ShowDim during the fade Stop()s this
+    // tween, which skips OnComplete, so the dim stays active.
     void HideDim()
     {
         if (dimBg == null) return;
-        dimBg.raycastTarget = false;
         dimTween.Stop();
-        dimTween = Tween.Alpha(dimBg, dimBg.color.a, 0f, dimFadeDuration, useUnscaledTime: true);
+        dimBg.raycastTarget = false;
+        dimTween = Tween.Alpha(dimBg, dimBg.color.a, 0f, dimFadeDuration, useUnscaledTime: true)
+            .OnComplete(dimBg, img => img.gameObject.SetActive(false));
     }
 }

@@ -178,14 +178,6 @@ namespace Quantum
                 status->StunImmunityRemaining = duration + immunityWindow;
             }
 
-            // Jolt is the View's feedback for an actual Stun landing - regardless of source (Shock's
-            // own proc, Shatter's primary, a future melee/skill Stun...), never fired just because a
-            // status was applied/refreshed. See docs/elemental-reactions.md.
-            if (f.Has<Transform3D>(target) == true)
-            {
-                f.Events.JoltTriggered(target, EnemyMovementUtility.ResolveEntityCenter(f, target));
-            }
-
             // A landed Stun freezes EnemySystem.Update's whole per-tick dispatch (see IsStunned's own
             // gate there) but never on its own cancels whatever action was already committed - without
             // this, a stunned Charger/Grenadier just pauses mid-windup or mid-charge and resumes (and
@@ -1075,15 +1067,19 @@ namespace Quantum
                     // target that's ALREADY Shocked rolls a chance to proc the existing, generic
                     // Stun - read BEFORE ApplyElectrified overwrites ElectrifiedRemaining below,
                     // so a fresh (non-refresh) application never rolls. Uses the existing
-                    // Stun primitive (ApplyStun already fires Jolt on a genuine land) rather than
-                    // a bespoke "Electric Stun".
+                    // Stun primitive rather than a bespoke "Electric Stun". Jolt is fired HERE, only
+                    // when this Electric proc's Stun genuinely lands - never from ApplyStun itself, so
+                    // every other Stun source (Shatter, melee/skill stuns...) stays Jolt-free.
                     bool wasAlreadyShocked = IsElectrified(f, target);
 
                     ApplyElectrified(f, target, config.ElectrifiedDuration);
 
                     if (wasAlreadyShocked == true && DamageUtility.RollChance(f, config.ShockStunProcChance) == true)
                     {
-                        ApplyStun(f, target, config.ShockStunProcDuration, owner);
+                        if (ApplyStun(f, target, config.ShockStunProcDuration, owner) == true && f.Has<Transform3D>(target) == true)
+                        {
+                            f.Events.JoltTriggered(target, EnemyMovementUtility.ResolveEntityCenter(f, target));
+                        }
                     }
 
                     // Zara's High Voltage (Electric Mastery R3) - applying Shock grants the OWNER
@@ -1422,11 +1418,10 @@ namespace Quantum
                 if (hitEntity == EntityRef.None || hitEntity == target || f.Has<Enemy>(hitEntity) == false)
                     continue;
 
-                // Ice buildup only, deliberately no JoltTriggered here - Jolt now means "this target
-                // was actually Stunned" (see ApplyStun), and a secondary enemy caught in the AoE only
-                // gets pushed toward Freeze, never Stunned. ShatterTriggered's own crack VFX still
-                // plays once at the primary/Center; the primary itself already gets Jolt for free via
-                // the ApplyStun call above. Ice's own SlowDuration/IceBuildupPerDamage now live on
+                // Ice buildup only, no JoltTriggered - Jolt is reserved for the Electric weapon's own
+                // Shock Stun proc (see ApplyElementBaseline), and a secondary enemy caught in the AoE
+                // only gets pushed toward Freeze, never Stunned. ShatterTriggered's own crack VFX
+                // plays once at the primary/Center (the primary's Stun above no longer fires Jolt). Ice's own SlowDuration/IceBuildupPerDamage now live on
                 // this same ElementalReactionConfig (config) - no separate EffectConfig lookup needed.
                 ApplyIce(f, hitEntity, config.SlowDuration, hitDamage * config.IceBuildupPerDamage);
 
