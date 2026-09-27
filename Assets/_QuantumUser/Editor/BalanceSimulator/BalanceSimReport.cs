@@ -19,6 +19,7 @@ namespace QuantumUser.Editor.BalanceSimulator
         HpNormal, HpHeavy, HpElite, TtkNormal, TtkHeavy, TtkElite,
         KillsPerMin, SpawnsPerMin, PressureFill, IdlePct, BossHp, BossTtk,
         BreakCoins, BreakLoopCost, BreakAfford, LoopCostToDate, LoopAfford, OrbPickup,
+        Players,
     }
 
     public class MinuteRow
@@ -96,13 +97,13 @@ namespace QuantumUser.Editor.BalanceSimulator
         public static string ToCsv(List<HeroResult> results)
         {
             var sb = new StringBuilder();
-            sb.Append("Hero,Phase,Weapon,Players,").AppendLine(string.Join(",", ColumnNames));
+            sb.Append("Hero,Phase,Weapon,").AppendLine(string.Join(",", ColumnNames));
 
             foreach (HeroResult hero in results)
             {
                 foreach (MinuteRow row in hero.Rows)
                 {
-                    sb.Append(Escape(hero.HeroName)).Append(',').Append(Escape(row.Phase)).Append(',').Append(Escape(row.Weapon)).Append(',').Append(hero.PlayerCount);
+                    sb.Append(Escape(hero.HeroName)).Append(',').Append(Escape(row.Phase)).Append(',').Append(Escape(row.Weapon));
                     for (int c = 0; c < MinuteRow.ColumnCount; c++)
                         sb.Append(',').Append(row.V[c].ToString("0.###", CultureInfo.InvariantCulture));
                     sb.AppendLine();

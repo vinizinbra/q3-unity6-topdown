@@ -19,7 +19,7 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Energy Drink
   TopLabel: SPEED
-  Description: +50% Move Speed for 20 seconds.
+  Description: +30% Move Speed for 20 seconds.
   ButtonLabel: BUY
   Price:
     RawValue: 1966080
@@ -27,4 +27,4 @@ MonoBehaviour:
   Duration:
     RawValue: 1310720
   SpeedMultiplier:
-    RawValue: 98304
+    RawValue: 85197

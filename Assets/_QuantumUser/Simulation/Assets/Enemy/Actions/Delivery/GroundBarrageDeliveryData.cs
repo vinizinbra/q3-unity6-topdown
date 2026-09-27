@@ -143,8 +143,12 @@ namespace Quantum
             // point actually detonates is Delay / that same multiplier - dividing it out here is what
             // keeps the visual telegraph's own countdown lined up with the real detonation, whether
             // that's sped up by a boss-phase ActiveSpeedMultiplier or slowed by Void Pressure.
+            //
+            // Owner = this enemy (not EntityRef.None like a lobbed shell) - nothing is in flight here,
+            // this enemy's own Tick is what detonates the point, so the View drops the warning as soon
+            // as that can no longer happen on schedule (stunned/frozen, interrupted, dead).
             FP realDelay = Delay / StatusEffectUtility.GetLocalTimeMultiplier(f, filter.Entity);
-            f.Events.ProjectileLandingWarning(point, realDelay, f.FindAsset(Hit).BlastRadius);
+            f.Events.ProjectileLandingWarning(point, realDelay, f.FindAsset(Hit).BlastRadius, filter.Entity);
         }
 
         // action.Origin == Self already reads live every call (the enemy's own current position, not

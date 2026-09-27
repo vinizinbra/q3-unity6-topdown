@@ -30,6 +30,7 @@ namespace QuantumUser.View.Balance
             "HpNormal", "HpHeavy", "HpElite", "TtkNormal", "TtkHeavy", "TtkElite",
             "KillsPerMin", "SpawnsPerMin", "PressureFill", "IdlePct", "BossHp", "BossTtk",
             "BreakCoins", "BreakLoopCost", "BreakAfford", "LoopCostToDate", "LoopAfford", "OrbPickup",
+            "Players",
         };
 
         private static readonly Dictionary<string, int> ColumnIndex = BuildIndex();
@@ -46,11 +47,17 @@ namespace QuantumUser.View.Balance
             public double Kills;
             public double[] KillsByTier = new double[6];
             public double DamageThisSample;
+            public double LastDamageDealt;
+            public bool DamageDealtSeen;
             public double CoinsEarned;
             public double CoinsSpent;
             public double LastCoins;
             public bool CoinsSeen;
         }
+
+        // Tier of every enemy seen alive - EntityDied arrives after most tiers are destroyed (same
+        // tick), so the tier can't be read off the frame at death.
+        private readonly Dictionary<EntityRef, EnemyTier> enemyTiers = new();
 
         private readonly Dictionary<EntityRef, PlayerTrack> players = new();
         private readonly List<string> lines = new();
@@ -65,6 +72,7 @@ namespace QuantumUser.View.Balance
         private double spawnedThisSample;
         private double idleFrames;
         private double activeFrames;
+        private double activeSeconds;
         private int previousAlive;
         private string filePath;
 
@@ -105,8 +113,10 @@ namespace QuantumUser.View.Balance
             spawnedThisSample = 0;
             idleFrames = 0;
             activeFrames = 0;
+            activeSeconds = 0;
             previousAlive = 0;
             sampledStart = false;
+            enemyTiers.Clear();
 
             string folder = Path.GetFullPath(Path.Combine(Application.dataPath, "../Library/BalanceSim"));
             Directory.CreateDirectory(folder);
@@ -134,10 +144,12 @@ namespace QuantumUser.View.Balance
 
         private void OnSimulateFinished(Frame f)
         {
-            if (f == null || f.Global->CurrentState == GameState.Lobby || f.Global->LevelUpScreenOpen)
+            // Verified frames only: per-frame deltas below would double count across online rollbacks.
+            if (f == null || f.IsVerified == false || f.Global->CurrentState == GameState.Lobby || f.Global->LevelUpScreenOpen)
                 return;
 
             TrackPlayers(f);
+            TrackEnemyTiers(f);
 
             int alive = f.ComponentCount<Enemy>();
             spawnedThisSample += Math.Max(0, alive - previousAlive);
@@ -147,9 +159,12 @@ namespace QuantumUser.View.Balance
             if (breathing == false)
             {
                 activeFrames++;
+                activeSeconds += f.DeltaTime.AsDouble;
                 if (alive == 0)
                     idleFrames++;
             }
+
+            TrackWalletsAndDamage(f, breathing);
 
             if (sampledStart == false)
             {
@@ -194,35 +209,78 @@ namespace QuantumUser.View.Balance
             }
         }
 
+        private void TrackEnemyTiers(Frame f)
+        {
+            var enemies = f.Filter<Enemy>();
+            while (enemies.Next(out EntityRef entity, out Enemy enemy))
+            {
+                if (enemyTiers.ContainsKey(entity))
+                    continue;
+
+                EnemyDataAsset data = f.FindAsset(enemy.EnemyData);
+                if (data != null)
+                    enemyTiers[entity] = data.Tier;
+            }
+        }
+
+        // Coins: per-frame wallet change (income and a Break's spending can't cancel inside a sample).
+        // Damage: CharacterStats.DamageDealt (enemy-only, overkill removed - DamageUtility) over
+        // non-Breathing frames; skill-spawned owners (sentries, vortices) have no CharacterStats and
+        // are added from EntityDamaged instead (see OnEntityDamaged).
+        private void TrackWalletsAndDamage(Frame f, bool breathing)
+        {
+            foreach (PlayerTrack track in players.Values)
+            {
+                if (f.Unsafe.TryGetPointer<CharacterStats>(track.Entity, out var stats) == false)
+                    continue;
+
+                double coins = stats->Coins.AsDouble;
+                if (track.CoinsSeen)
+                {
+                    double delta = coins - track.LastCoins;
+                    if (delta > 0) track.CoinsEarned += delta; else track.CoinsSpent -= delta;
+                }
+                track.LastCoins = coins;
+                track.CoinsSeen = true;
+
+                double dealt = stats->DamageDealt.AsDouble;
+                if (track.DamageDealtSeen && breathing == false)
+                    track.DamageThisSample += Math.Max(0, dealt - track.LastDamageDealt);
+                track.LastDamageDealt = dealt;
+                track.DamageDealtSeen = true;
+            }
+        }
+
+        // Only enemies (barrels, sentries, Mini Bombs also raise EntityDied) killed by a player -
+        // ownerless void deaths drop no XP (ExperienceUtility) and aren't kills either.
         private void OnEntityDied(EventEntityDied e)
         {
-            if (players.ContainsKey(e.Target))
+            if (enemyTiers.TryGetValue(e.Target, out EnemyTier tier) == false)
+                return;
+
+            enemyTiers.Remove(e.Target);
+
+            if (players.TryGetValue(ResolveOwner(e.Game.Frames.Verified, e.Owner), out PlayerTrack track) == false)
                 return;
 
             partyKills++;
             sampleKills++;
-
-            Frame f = e.Game.Frames.Verified;
-
-            if (players.TryGetValue(ResolveOwner(f, e.Owner), out PlayerTrack track) == false)
-                return;
-
             track.Kills++;
-
-            if (f != null && f.Exists(e.Target) && f.Unsafe.TryGetPointer<Enemy>(e.Target, out var enemy))
-            {
-                EnemyDataAsset data = f.FindAsset(enemy->EnemyData);
-                if (data != null)
-                    track.KillsByTier[(int)data.Tier]++;
-            }
+            track.KillsByTier[(int)tier]++;
         }
 
+        // Only damage from a skill-spawned entity the hero owns - the hero's own hits are already in
+        // CharacterStats.DamageDealt. Enemy targets only; includes overkill (not knowable here).
         private void OnEntityDamaged(EventEntityDamaged e)
         {
-            if (e.Silent || players.ContainsKey(e.Target))
+            if (e.Silent || players.ContainsKey(e.Owner) || enemyTiers.ContainsKey(e.Target) == false)
                 return;
 
-            if (players.TryGetValue(ResolveOwner(e.Game.Frames.Verified, e.Owner), out PlayerTrack track))
+            Frame f = e.Game.Frames.Verified;
+            if (f != null && f.Global->CurrentState == GameState.Breathing)
+                return;
+
+            if (players.TryGetValue(ResolveOwner(f, e.Owner), out PlayerTrack track))
                 track.DamageThisSample += e.Damage.AsDouble;
         }
 
@@ -251,7 +309,8 @@ namespace QuantumUser.View.Balance
             double hpNormal = EffectiveHp(balance, tiers, EnemyTier.Normal, survivalTime, playerCount);
             double hpHeavy = EffectiveHp(balance, tiers, EnemyTier.Heavy, survivalTime, playerCount);
             double hpElite = EffectiveHp(balance, tiers, EnemyTier.Elite, survivalTime, playerCount);
-            double interval = Math.Max(1, sampleIntervalSeconds);
+            // Realised DPS over the time actually spent fighting (Breathing frames excluded).
+            double interval = Math.Max(1, activeSeconds);
             double partyDps = 0;
             foreach (PlayerTrack t in players.Values)
                 partyDps += t.DamageThisSample / interval;
@@ -266,8 +325,10 @@ namespace QuantumUser.View.Balance
                     pressure += data.ResolveCost(f).AsDouble;
             }
 
+            // Same co-op scaled target the Director fills (PlayerClusterDirectorUtility).
+            double coopPressure = balance != null ? balance.GetCoopGlobal(CoopGlobalKey.DirectorPressure, playerCount).AsDouble : 1;
             double targetPressure = survival != null && survival.Phases.Length > 0
-                ? survival.Phases[Mathf.Clamp(f.Global->CurrentPhaseIndex, 0, survival.Phases.Length - 1)].TargetPressure.AsDouble
+                ? survival.Phases[Mathf.Clamp(f.Global->CurrentPhaseIndex, 0, survival.Phases.Length - 1)].TargetPressure.AsDouble * coopPressure
                 : 0;
 
             foreach (PlayerTrack track in players.Values)
@@ -279,13 +340,6 @@ namespace QuantumUser.View.Balance
                 if (f.Unsafe.TryGetPointer<CharacterStats>(track.Entity, out var stats))
                 {
                     coins = stats->Coins.AsDouble;
-                    if (track.CoinsSeen)
-                    {
-                        double delta = coins - track.LastCoins;
-                        if (delta > 0) track.CoinsEarned += delta; else track.CoinsSpent -= delta;
-                    }
-                    track.LastCoins = coins;
-                    track.CoinsSeen = true;
 
                     if (f.Unsafe.TryGetPointer<Weapon>(track.Entity, out var weapon))
                     {
@@ -295,7 +349,7 @@ namespace QuantumUser.View.Balance
                         for (int i = 0; i < weapon->Perks.Length; i++)
                             if (weapon->Perks[i].IsValid)
                                 perks++;
-                        weaponDps = TheoreticalWeaponDps(data, weapon, stats);
+                        weaponDps = TheoreticalWeaponDps(f, track.Entity, data, weapon);
                     }
                 }
 
@@ -336,6 +390,7 @@ namespace QuantumUser.View.Balance
                 // Every non-boss enemy kill drops one XP orb (ExperienceUtility.TrySpawnDrop), so
                 // collected / kills is the share that didn't expire on the ground.
                 Set(row, "OrbPickup", sampleKills > 0 ? Math.Min(1, sampleXpOrbsCollected / sampleKills) : 0);
+                Set(row, "Players", playerCount);
 
                 var sb = new StringBuilder();
                 sb.Append(Escape(track.Hero)).Append(',').Append(Escape(phase)).Append(',').Append(Escape(weaponName));
@@ -351,25 +406,48 @@ namespace QuantumUser.View.Balance
             spawnedThisSample = 0;
             idleFrames = 0;
             activeFrames = 0;
+            activeSeconds = 0;
             Flush();
         }
 
-        // Same formula as BalanceSimulator's SimWeapon.Dps with HitEfficiency 1 - the "if every shot
-        // landed" ceiling, to compare against the measured TotalDps.
-        private static double TheoreticalWeaponDps(WeaponDataAsset data, Weapon* weapon, CharacterStats* stats)
+        // "If every shot landed" ceiling, same model as BalanceSimulator's SimWeapon.Dps with
+        // HitEfficiency 1: crit/damage terms from the game's own no-target previews
+        // (DamageUtility.ResolveBaselineDamageMultiplier/ResolveBaselineCritical - level bonus, Mastery,
+        // multiplicative crit), fire/reload through StatUtility, and every wait rounded to whole ticks
+        // with the reload overlapping the last shot's cooldown (WeaponSystem's timers). Ramp/magazine-
+        // position perks and procs aren't included.
+        private static double TheoreticalWeaponDps(Frame f, EntityRef owner, WeaponDataAsset data, Weapon* weapon)
         {
             if (data == null)
                 return 0;
 
-            double fireRate = Math.Max(0.01, data.FireRate.AsDouble);
-            double cooldown = 1 / fireRate * weapon->FireCooldownMultiplier.AsDouble / Math.Max(0.01, stats->AttackSpeedMultiplier.AsDouble);
+            double tick = f.DeltaTime.AsDouble;
+            double Wait(double seconds) => Math.Max(1, Math.Ceiling(seconds / tick - 1e-6)) * tick;
+
+            FP baseCooldown = FP._1 / data.FireRate * weapon->FireCooldownMultiplier;
+            double cooldown = StatUtility.GetFireCooldown(f, owner, baseCooldown).AsDouble;
+            double reload = weapon->ReloadDuration > FP._0 ? StatUtility.GetReloadDuration(f, owner, weapon->ReloadDuration).AsDouble : 0;
             double magazine = Math.Max(1, weapon->MagazineSize);
-            double reload = weapon->ReloadDuration.AsDouble / Math.Max(0.01, stats->ReloadSpeedMultiplier.AsDouble);
-            double shotsPerSecond = magazine / (magazine * cooldown + reload);
-            double critChance = Math.Clamp(stats->CriticalChance.AsDouble + weapon->CriticalChance.AsDouble, 0, 1);
-            double critMultiplier = stats->CriticalDamageMultiplier.AsDouble + weapon->CriticalDamageBonus.AsDouble;
+
+            int burstCount = 1;
+            double burstDelay = 0;
+            if (f.Unsafe.TryGetPointer<WeaponBurstState>(owner, out var burst) && burst->BurstCount > 1)
+            {
+                burstCount = burst->BurstCount;
+                burstDelay = burst->Delay.AsDouble;
+            }
+
+            double pulls = Math.Ceiling(magazine / burstCount);
+            double cycle = (magazine - pulls) * Wait(burstDelay) + (pulls - 1) * Wait(cooldown);
+            double reloadWait = reload > 0 ? (Math.Ceiling(reload / tick - 1e-6) + (burstCount > 1 ? 0 : 1)) * tick : 0;
+            cycle += Math.Max(reloadWait, Wait(cooldown));
+            double shotsPerSecond = magazine / cycle;
+
+            DamageUtility.ResolveBaselineCritical(f, owner, DamageSource.Weapon, out FP critChance, out FP critMultiplier);
+            double critFactor = 1 + Math.Clamp(critChance.AsDouble, 0, 1) * (critMultiplier.AsDouble - 1);
             double hit = Math.Max(1, data.PelletCount) * data.Damage.AsDouble * weapon->DamageMultiplier.AsDouble
-                         * stats->DamageMultiplier.AsDouble * stats->WeaponDamageMultiplier.AsDouble * (1 + critChance * (critMultiplier - 1));
+                         * DamageUtility.ResolveBaselineDamageMultiplier(f, owner, DamageSource.Weapon).AsDouble * critFactor;
+
             return hit * shotsPerSecond;
         }
 

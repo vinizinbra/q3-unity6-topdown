@@ -118,12 +118,21 @@ namespace Quantum
             if (anyWindowOpen == false || f.Global->BreathingGraceTimeRemaining <= FP._0)
             {
                 Log.Debug($"[RunPhase] Breathing grace period ended ({(anyWindowOpen ? "timed out" : "every window closed early")})");
-                f.Global->BreathingGraceActive = false;
-                f.Global->BreathingGraceTimeRemaining = FP._0;
+                ClearBreathingGrace(f);
                 return false;
             }
 
             return true;
+        }
+
+        // Also called by the cheat/debug phase jumps (CheatSystem/DebugCheatSystem), which move
+        // CurrentPhaseIndex directly without going through TickBreathingGraceHold - otherwise a
+        // grace hold in flight would leave BreathingGraceActive stuck on (HUD stuck on
+        // "Waiting for players:").
+        public static void ClearBreathingGrace(Frame f)
+        {
+            f.Global->BreathingGraceActive = false;
+            f.Global->BreathingGraceTimeRemaining = FP._0;
         }
 
         // Same PlayerLink filter shape ProcessSkipVotes/AllConnectedPlayersVotedToSkip already use

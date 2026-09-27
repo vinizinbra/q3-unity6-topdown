@@ -87,9 +87,9 @@ MonoBehaviour:
       Id:
         Value: 2227200805678239736
     DetectionRange:
-      RawValue: 524288
+      RawValue: 458752
     LeashRange:
-      RawValue: 983040
+      RawValue: 655360
     StopDistance:
       RawValue: 0
     StopSlowdownRange:

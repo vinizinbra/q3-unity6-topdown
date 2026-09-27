@@ -21,6 +21,10 @@ namespace Quantum
     {
         private static readonly FP ArrivalTolerance = FP._0_01;
 
+        // Profiler marker for the per-entity ground raycast (see SimProfilerMarker). Compiled out of
+        // Release players.
+        private static readonly SimProfilerMarker FindGroundMarker = new SimProfilerMarker("GroundSettleSystem.FindGround");
+
         public override void Update(Frame f, ref Filter filter)
         {
             if (filter.GroundOffset->Enabled == false)
@@ -40,7 +44,11 @@ namespace Quantum
             // Deliberately silent rather than an error: a prop authored out over a hole would
             // otherwise spam every tick, and falling into the void is strictly worse than hovering.
             // Actors have their own real answer to this (PlayerFallSystem/EnemyFallSystem).
-            if (EnemyMovementUtility.TryFindGroundHeight(f, filter.Transform3D->Position, groundLayerMask, out FP groundY, filter.Entity) == false)
+            FindGroundMarker.Begin();
+            bool hasGround = EnemyMovementUtility.TryFindGroundHeight(f, filter.Transform3D->Position, groundLayerMask, out FP groundY, filter.Entity);
+            FindGroundMarker.End();
+
+            if (hasGround == false)
                 return;
 
             FP targetY = groundY + GroundOffsetUtility.ResolveGroundClearance(f, filter.Entity) + filter.GroundOffset->Offset;

@@ -13,7 +13,7 @@ namespace Quantum
     // width/height scale and a random tilt/yaw (not just Y-scale/Y-rotation - that read as too
     // uniform for a jagged spike row) so the row doesn't look like a mechanically identical repeat,
     // seeded from RuntimeConfig.Seed + this entity's own index so every client/split-screen instance
-    // agrees (same determinism convention ChunkDetailScatter already uses). Markers are spawned
+    // agrees. Markers are spawned
     // under a dedicated identity-scale root next to the gate, NOT under this entity's own transform
     // - a hand-placed BossArenaGate box is often authored with a non-uniform scale (e.g. 10x1x1) to
     // stretch its collider footprint along the corridor, and reparenting a rotated child under that
@@ -167,7 +167,7 @@ namespace Quantum
 
             // Deterministic per-gate stream (not UnityEngine.Random, which isn't seedable the same
             // way across clients) - every client/split-screen instance rolls the identical sequence
-            // of yaw/scale values, same convention ChunkDetailScatter already uses.
+            // of yaw/scale values.
             var rng = new System.Random(CombineSeed(f.RuntimeConfig.Seed, _entityRef.Index));
 
             var tiltRange = new Vector2(-randomTiltRange, randomTiltRange);
@@ -224,8 +224,7 @@ namespace Quantum
         }
 
         // Manual deterministic combine - NOT HashCode.Combine, which mixes in a per-process random
-        // seed by design and would give a different layout on every client (see ChunkDetailScatter's
-        // own CombineSeed for the same reasoning).
+        // seed by design and would give a different layout on every client.
         private static int CombineSeed(int seed, int entityIndex)
         {
             unchecked

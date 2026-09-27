@@ -38,9 +38,9 @@ namespace QuantumUser.Editor.BalanceSimulator
             { Col.SpawnedMin, "Enemies the Director spawned during this minute" },
             { Col.Alive, "Enemies alive at the end of the minute" },
             { Col.Budget, "Unspent DirectorBudget - large values mean spawns are capped by MaxAlive/TargetPressure, not budget" },
-            { Col.WeaponDps, "Sustained weapon DPS incl. reloads x HitEfficiency" },
+            { Col.WeaponDps, "Sustained weapon DPS incl. reloads x HitEfficiency. Actual = the recorder's every-shot-lands ceiling x this scenario's HitEfficiency, so the pair compares like for like" },
             { Col.SkillDps, "Expected skill DPS x SkillUseEfficiency" },
-            { Col.TotalDps, "Weapon + skill DPS" },
+            { Col.TotalDps, "Weapon + skill DPS. Actual = damage that landed on enemies (overkill removed) / seconds outside Breathing" },
             { Col.ExpectedDps, "BalanceConfig.ExpectedPlayerDps curve x ExpectedDpsBaseline" },
             { Col.DpsRatio, "TotalDps / ExpectedDps - >1 the player is ahead of the design curve" },
             { Col.WeaponLevel, "Weapon.Level (Choose Weapon / Store offers follow WeaponOfferCurve)" },
@@ -66,6 +66,7 @@ namespace QuantumUser.Editor.BalanceSimulator
             { Col.LoopCostToDate, "Sum of the full-loop prices of every Break so far" },
             { Col.LoopAfford, "CoinsEarned / LoopCostToDate - on the last row: could the whole run have bought everything at every Break?" },
             { Col.OrbPickup, "Share of dropped orbs collected. Predicted = scenario OrbPickupEfficiency curve; actual (recorder) = XP orbs collected / enemy kills that minute" },
+            { Col.Players, "Party size of the run - a recorded CSV only attaches to the matching Players tab" },
         };
 
         [MenuItem("Tools/RiftRaiders/Balance/Balance Simulator")]
@@ -442,8 +443,25 @@ namespace QuantumUser.Editor.BalanceSimulator
                 string key = actual.Keys.FirstOrDefault(k => string.Equals(k, hero.HeroName, StringComparison.OrdinalIgnoreCase))
                              ?? actual.Keys.FirstOrDefault(k => hero.HeroName.StartsWith(k, StringComparison.OrdinalIgnoreCase) || k.StartsWith(hero.HeroName, StringComparison.OrdinalIgnoreCase));
 
-                if (key != null)
-                    hero.Actual = new Dictionary<int, MinuteRow>(actual[key]);
+                if (key == null)
+                    continue;
+
+                foreach (KeyValuePair<int, MinuteRow> entry in actual[key])
+                {
+                    // Players 0 = a CSV recorded before the column existed - attach everywhere.
+                    int players = (int)Math.Round(entry.Value[Col.Players]);
+                    if (players > 0 && players != hero.PlayerCount)
+                        continue;
+
+                    MinuteRow row = entry.Value;
+                    if (scenario != null)
+                    {
+                        row = new MinuteRow { Phase = row.Phase, Weapon = row.Weapon, V = (double[])row.V.Clone() };
+                        row[Col.WeaponDps] *= scenario.HitEfficiency;
+                    }
+
+                    hero.Actual[entry.Key] = row;
+                }
             }
         }
     }

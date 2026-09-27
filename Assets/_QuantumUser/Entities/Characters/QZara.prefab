@@ -586,6 +586,7 @@ MonoBehaviour:
   skateboardAngleApexDegrees: 0
   skateboardAngleDownDegrees: -15
   skateboardSpeedThreshold: 10
+  skateboardDeck: {fileID: 5950866833420020253}
   useFlip: 0
   jumpFlipDuration: 0.5
   invertFlipDirection: 0

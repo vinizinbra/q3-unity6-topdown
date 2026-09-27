@@ -67,7 +67,7 @@ MonoBehaviour:
     EnemyHpHeavy:
       RawValue: 262144
     EnemyDmg:
-      RawValue: 98304
+      RawValue: 111411
     DirectorBudget:
       RawValue: 360448
     ExpectedPlayerDps:
@@ -78,7 +78,7 @@ MonoBehaviour:
     EnemyHpHeavy:
       RawValue: 327680
     EnemyDmg:
-      RawValue: 104858
+      RawValue: 124518
     DirectorBudget:
       RawValue: 458752
     ExpectedPlayerDps:
@@ -89,7 +89,7 @@ MonoBehaviour:
     EnemyHpHeavy:
       RawValue: 393216
     EnemyDmg:
-      RawValue: 104858
+      RawValue: 131072
     DirectorBudget:
       RawValue: 458752
     ExpectedPlayerDps:

@@ -343,6 +343,11 @@ MonoBehaviour:
   mergeWithNeighbours: 1
   cellSize: 1
   mergeTolerance: 0.05
+  verticalOffset: -0.02
+  surfaceDecor: 0
+  groundBelowY: -0.5
+  cameraViewDirection: {x: 0, y: 0, z: 1}
+  wallPropMinY: 0.05
   variationSeed: 0
   generatedRoot: {fileID: 0}
   host: {fileID: 0}
@@ -726,7 +731,7 @@ MonoBehaviour:
         CapsuleRadius:
           RawValue: 32768
         CapsuleHeight:
-          RawValue: 131072
+          RawValue: 655360
         PositionOffset:
           X:
             RawValue: 393216

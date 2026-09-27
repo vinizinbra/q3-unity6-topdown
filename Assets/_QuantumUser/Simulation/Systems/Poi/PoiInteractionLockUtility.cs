@@ -34,15 +34,11 @@ namespace Quantum
 
         public static bool IsInputLocked(Frame f, EntityRef entity)
         {
-            if (HasChoiceWindowOpen(f, entity) == true || f.Has<ReviveChannel>(entity) == true)
-                return true;
-
-            // A Breathing grace period is running (RunPhaseUtility.TickBreathingGraceHold - see
-            // GameState.qtn's own BreathingGraceActive comment) and this entity does NOT itself have
-            // a Choice Window open - a bystander, fully locked via this same shared check every call
-            // site above already uses, so they can't wander off while a teammate finishes. A player
-            // who DOES have a window open already returned true above.
-            return f.Global->BreathingGraceActive == true && HasChoiceWindowOpen(f, entity) == false;
+            // Deliberately does NOT read Global.BreathingGraceActive - a Breathing grace hold
+            // (RunPhaseUtility.TickBreathingGraceHold) only delays the phase transition; teammates
+            // without a window of their own keep full control while they wait (confirmed with the
+            // user - locking them read as a random freeze in online co-op).
+            return HasChoiceWindowOpen(f, entity) == true || f.Has<ReviveChannel>(entity) == true;
         }
     }
 }

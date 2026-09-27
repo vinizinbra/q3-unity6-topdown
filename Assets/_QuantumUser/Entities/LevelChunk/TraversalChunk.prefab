@@ -143,6 +143,11 @@ MonoBehaviour:
   mergeWithNeighbours: 1
   cellSize: 1
   mergeTolerance: 0.05
+  verticalOffset: -0.02
+  surfaceDecor: 0
+  groundBelowY: -0.5
+  cameraViewDirection: {x: 0, y: 0, z: 1}
+  wallPropMinY: 0.05
   variationSeed: 0
   generatedRoot: {fileID: 0}
   host: {fileID: 0}
@@ -309,6 +314,11 @@ MonoBehaviour:
   mergeWithNeighbours: 1
   cellSize: 1
   mergeTolerance: 0.05
+  verticalOffset: -0.02
+  surfaceDecor: 0
+  groundBelowY: -0.5
+  cameraViewDirection: {x: 0, y: 0, z: 1}
+  wallPropMinY: 0.05
   variationSeed: 0
   generatedRoot: {fileID: 0}
   host: {fileID: 0}
@@ -475,6 +485,11 @@ MonoBehaviour:
   mergeWithNeighbours: 1
   cellSize: 1
   mergeTolerance: 0.05
+  verticalOffset: -0.02
+  surfaceDecor: 0
+  groundBelowY: -0.5
+  cameraViewDirection: {x: 0, y: 0, z: 1}
+  wallPropMinY: 0.05
   variationSeed: 0
   generatedRoot: {fileID: 0}
   host: {fileID: 0}
@@ -641,6 +656,11 @@ MonoBehaviour:
   mergeWithNeighbours: 1
   cellSize: 1
   mergeTolerance: 0.05
+  verticalOffset: -0.02
+  surfaceDecor: 0
+  groundBelowY: -0.5
+  cameraViewDirection: {x: 0, y: 0, z: 1}
+  wallPropMinY: 0.05
   variationSeed: 0
   generatedRoot: {fileID: 0}
   host: {fileID: 0}
@@ -927,6 +947,11 @@ MonoBehaviour:
   mergeWithNeighbours: 1
   cellSize: 1
   mergeTolerance: 0.05
+  verticalOffset: -0.02
+  surfaceDecor: 0
+  groundBelowY: -0.5
+  cameraViewDirection: {x: 0, y: 0, z: 1}
+  wallPropMinY: 0.05
   variationSeed: 0
   generatedRoot: {fileID: 0}
   host: {fileID: 0}
@@ -1126,6 +1151,11 @@ MonoBehaviour:
   mergeWithNeighbours: 1
   cellSize: 1
   mergeTolerance: 0.05
+  verticalOffset: -0.02
+  surfaceDecor: 0
+  groundBelowY: -0.5
+  cameraViewDirection: {x: 0, y: 0, z: 1}
+  wallPropMinY: 0.05
   variationSeed: 0
   generatedRoot: {fileID: 0}
   host: {fileID: 0}
@@ -1292,6 +1322,11 @@ MonoBehaviour:
   mergeWithNeighbours: 1
   cellSize: 1
   mergeTolerance: 0.05
+  verticalOffset: -0.02
+  surfaceDecor: 0
+  groundBelowY: -0.5
+  cameraViewDirection: {x: 0, y: 0, z: 1}
+  wallPropMinY: 0.05
   variationSeed: 0
   generatedRoot: {fileID: 0}
   host: {fileID: 0}
@@ -1458,6 +1493,11 @@ MonoBehaviour:
   mergeWithNeighbours: 1
   cellSize: 1
   mergeTolerance: 0.05
+  verticalOffset: -0.02
+  surfaceDecor: 0
+  groundBelowY: -0.5
+  cameraViewDirection: {x: 0, y: 0, z: 1}
+  wallPropMinY: 0.05
   variationSeed: 0
   generatedRoot: {fileID: 0}
   host: {fileID: 0}
@@ -1624,6 +1664,11 @@ MonoBehaviour:
   mergeWithNeighbours: 1
   cellSize: 1
   mergeTolerance: 0.05
+  verticalOffset: -0.02
+  surfaceDecor: 0
+  groundBelowY: -0.5
+  cameraViewDirection: {x: 0, y: 0, z: 1}
+  wallPropMinY: 0.05
   variationSeed: 0
   generatedRoot: {fileID: 0}
   host: {fileID: 0}
@@ -1987,6 +2032,11 @@ MonoBehaviour:
   mergeWithNeighbours: 1
   cellSize: 1
   mergeTolerance: 0.05
+  verticalOffset: -0.02
+  surfaceDecor: 0
+  groundBelowY: -0.5
+  cameraViewDirection: {x: 0, y: 0, z: 1}
+  wallPropMinY: 0.05
   variationSeed: 0
   generatedRoot: {fileID: 0}
   host: {fileID: 0}
@@ -2172,7 +2222,6 @@ GameObject:
   - component: {fileID: -2848952897361901041}
   - component: {fileID: 8210870479245787991}
   - component: {fileID: 4163189865522279029}
-  - component: {fileID: 2063398748656932978}
   - component: {fileID: 3680369470019981608}
   - component: {fileID: 3767519068762119187}
   m_Layer: 6
@@ -2949,23 +2998,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb052885c941b4bf298c2fea34456e77, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChunkCompoundColliderBuilder
---- !u!114 &2063398748656932978
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8161546120763317443}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 94cfbc0f8c3964697b13e8ebe4d749db, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Quantum.ChunkDetailScatter
-  _playerRef:
-    _index: 0
-  initialized: 0
-  executeOnlyOnLocal: 0
-  isLocal: 0
 --- !u!114 &3680369470019981608
 MonoBehaviour:
   m_ObjectHideFlags: 0

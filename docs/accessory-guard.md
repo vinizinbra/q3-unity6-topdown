@@ -373,8 +373,7 @@ exact drift this codebase has already been bitten by more than once.
   Unauthored heroes keep whatever the prefab baked in rather than blanking out, the same
   `keepPlaceholderWhenUnauthored` default the pickup itself uses.
 - **The icon is normalised to a fixed world size** - `1x1` world units multiplied by
-  `accessoryIconScale`, with the sprite's own pixel size and PPU divided out (the same job
-  `ChunkDetailScatter.ResolveUnitScale` does for hand-placed detail props). One hero's accessory art
+  `accessoryIconScale`, with the sprite's own pixel size and PPU divided out. One hero's accessory art
   has no idea how big another's is, so without this the pointer would change size per hero for no
   design reason. It REPLACES the prefab's scale on that sprite rather than multiplying it; `0` opts out
   and keeps the prefab's own.

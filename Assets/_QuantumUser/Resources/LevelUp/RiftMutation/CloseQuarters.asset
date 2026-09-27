@@ -28,6 +28,6 @@ MonoBehaviour:
   FarMultiplier:
     RawValue: 45875
   KillMoveSpeedBonus:
-    RawValue: 13107
+    RawValue: 9830
   KillMoveSpeedDuration:
     RawValue: 131072

@@ -19,7 +19,7 @@ MonoBehaviour:
   Duration:
     RawValue: 131072
   MoveSpeedBonus:
-    RawValue: 4915
+    RawValue: 3277
   FireRateBonus:
     RawValue: 4915
   OutgoingDamageBonus:

@@ -35,10 +35,10 @@ using UnityEngine.UI;
 // waiting out every connected player's cooldown - see ResolvePoiUsagePolicy for how the two get
 // told apart. Plus one live marker per match player, one per currently-alive
 // Elite-tier enemy (see UpdateEliteMarkers), one per currently-alive non-Elite Persistent enemy
-// (see UpdateSpecialMarkers), and - only while GameState.Breathing hasn't yet secured the area (see
+// (see UpdateSpecialMarkers), and - only while a Breathing phase hasn't yet secured the area (see
 // Global.BreathingAreaSecured) - one per every still-alive ORDINARY enemy, i.e. excluding
 // Elite/Persistent (see UpdateClearEnemyMarkers), matching the "CLEAR ALL ENEMIES..." state
-// BreathingWidget shows during the same window. Elite/Special are the same
+// SurvivalWidget shows during the same window. Elite/Special are the same
 // always-relevant, never-retiring enemies EnemyLifecycleSystem singles out (EnemyDataAsset.Tier ==
 // Elite / Economy.Persistent == true), so calling them out on the map follows the same reasoning;
 // Special is deliberately its own marker prefab rather than reusing eliteMarkerPrefab, since a
@@ -87,6 +87,10 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     [SerializeField] private Color undiscoveredColor = new Color(0.12f, 0.12f, 0.12f, 1f);
     [SerializeField] private Color discoveredColor = new Color(0.55f, 0.55f, 0.55f, 1f);
     [SerializeField] private Color currentColor = new Color(1f, 0.85f, 0.2f, 1f);
+    [SerializeField, Tooltip("Enclosed inner holes the gap-filler fills (see ComputeHoleRegions), before any bordering chunk is Discovered.")]
+    private Color holeUndiscoveredColor = new Color(0.12f, 0.12f, 0.12f, 1f);
+    [SerializeField, Tooltip("Enclosed inner holes the gap-filler fills, once revealed by a bordering Discovered chunk. Standing on one still uses currentColor.")]
+    private Color holeDiscoveredColor = new Color(0.55f, 0.55f, 0.55f, 1f);
     [SerializeField, Tooltip("Texels outside every chunk's footprint - transparent by default so the map only shows the level's actual shape.")]
     private Color backgroundColor = new Color(0f, 0f, 0f, 0f);
 
@@ -128,7 +132,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     private RectTransform eliteMarkerPrefab;
     [SerializeField, Tooltip("Marker shown for every currently-alive Persistent, non-Elite enemy (EnemyDataAsset.Economy.Persistent == true and Tier != Elite) - the same always-relevant/never-retires treatment EnemyLifecycleSystem gives Elites, but for a persistent enemy that isn't actually an Elite (e.g. a boss's summoned add). One generic marker regardless of which EnemyDataAsset it is, same first-pass scope as eliteMarkerPrefab. Leave unassigned to disable Special markers entirely.")]
     private RectTransform specialMarkerPrefab;
-    [SerializeField, Tooltip("Marker shown for EVERY currently-alive enemy (no Tier/Persistent filter) while GameState.Breathing hasn't yet secured the area (Global.BreathingAreaSecured == false) - the same 'CLEAR ALL ENEMIES...' window BreathingWidget shows. Torn down the instant an enemy dies/expires, or the instant the area secures/GameState leaves Breathing, whichever comes first. Leave unassigned to disable Clear-Enemy markers entirely.")]
+    [SerializeField, Tooltip("Marker shown for EVERY currently-alive enemy (no Tier/Persistent filter) while a Breathing phase hasn't yet secured the area (CurrentPhaseKind == Breathing && Global.BreathingAreaSecured == false) - the same 'CLEAR ALL ENEMIES...' window SurvivalWidget shows. Torn down the instant an enemy dies/expires, or the instant the area secures/GameState leaves Breathing, whichever comes first. Leave unassigned to disable Clear-Enemy markers entirely.")]
     private RectTransform clearEnemyMarkerPrefab;
 
     [Header("Local player")]
@@ -276,7 +280,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     private EntityRef[] _chunkOwnerAt;
 
     // Enclosed empty regions (the inner holes the gap-filler fills) - computed once alongside the
-    // outline. Each is painted undiscoveredColor at first and reveals (repaints to discoveredColor)
+    // outline. Each is painted holeUndiscoveredColor at first and reveals (repaints to holeDiscoveredColor)
     // only once one of the chunks bordering it is Discovered, mirroring how the chunks themselves
     // reveal. Null until ComputeLevelOutline has run. See ComputeHoleRegions/RevealHolesAdjacentTo.
     private List<HoleRegion> _holeRegions;
@@ -751,7 +755,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     // Finds every enclosed empty region (an inner hole the gap-filler fills): flood-fills from the
     // texture border through empty texels ("outside"), and anything still empty afterward is a hole.
     // Each hole is marked occupied here (so the outline treats the level as one solid mass), painted
-    // undiscoveredColor for now, and recorded with the chunks bordering it so RevealHolesAdjacentTo
+    // holeUndiscoveredColor for now, and recorded with the chunks bordering it so RevealHolesAdjacentTo
     // can light it up once one of those chunks is Discovered. Same border-flood idea
     // LevelGenerationSystem.FillInnerGaps already uses to decide where to spawn a gap-filler.
     private void ComputeHoleRegions(bool[] occupied, EntityRef[] chunkAt)
@@ -814,7 +818,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
             {
                 occupied[idx] = true;
                 _holeTexelToRegion[idx] = region;
-                _texture.SetPixel(idx % res, idx / res, undiscoveredColor);
+                _texture.SetPixel(idx % res, idx / res, holeUndiscoveredColor);
             }
         }
 
@@ -863,7 +867,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         queue.Enqueue(idx);
     }
 
-    // Reveals (repaints undiscoveredColor -> discoveredColor) every not-yet-revealed hole region the
+    // Reveals (repaints holeUndiscoveredColor -> holeDiscoveredColor) every not-yet-revealed hole region the
     // just-discovered chunk borders. Idempotent via the Revealed flag, so it's safe to call on every
     // repaint of a discovered chunk. No-op until ComputeHoleRegions has run.
     private void RevealHolesAdjacentTo(EntityRef discoveredChunk)
@@ -875,18 +879,18 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         {
             // Already-revealed regions are skipped - which also means a hole the player is currently
             // standing on (Revealed set by UpdateCurrentHole) never gets its live currentColor
-            // stomped back to discoveredColor here.
+            // stomped back to holeDiscoveredColor here.
             if (region.Revealed || region.AdjacentChunks.Contains(discoveredChunk) == false)
                 continue;
 
             region.Revealed = true;
-            PaintHoleRegion(region, discoveredColor);
+            PaintHoleRegion(region, holeDiscoveredColor);
             _textureDirty = true;
         }
     }
 
     // Highlights (currentColor) the hole region the local player is currently standing on, reverting
-    // the one just left back to discoveredColor. A gap-filler isn't a Chunk, so ResolveCurrentChunk
+    // the one just left back to holeDiscoveredColor. A gap-filler isn't a Chunk, so ResolveCurrentChunk
     // returns None while on a hole and the normal current-chunk highlight can't cover this case.
     private void UpdateCurrentHole(Frame frame)
     {
@@ -895,7 +899,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
             return;
 
         if (_currentHoleRegion != null)
-            PaintHoleRegion(_currentHoleRegion, discoveredColor);
+            PaintHoleRegion(_currentHoleRegion, holeDiscoveredColor);
 
         _currentHoleRegion = current;
 
@@ -1632,11 +1636,11 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
 
     // One marker per every currently-alive ORDINARY enemy - excluding Elite/Persistent, which
     // already get their own Elite/Special marker above (see UpdateEliteMarkers/UpdateSpecialMarkers)
-    // - but only while the area isn't yet secured (GameState.Breathing && !BreathingAreaSecured -
-    // the same "CLEAR ALL ENEMIES..." window BreathingWidget shows). Outside that window
+    // - but only while a Breathing phase's area isn't yet secured (CurrentPhaseKind == Breathing &&
+    // !BreathingAreaSecured - the same "CLEAR ALL ENEMIES..." window SurvivalWidget shows). Outside that window
     // every existing marker is torn down immediately, not left to the normal stale sweep - covers
     // both "the area just secured" (enemies gone, sweep would have caught it anyway) and "GameState
-    // left Breathing some other way while enemies were still up" (sweep alone wouldn't catch that).
+    // left the phase some other way while enemies were still up" (sweep alone wouldn't catch that).
     // Ordinary enemies aren't Persistent, so unlike Elite/Special they can expire via
     // EnemyLifecycleSystem's own Irrelevant->Retired timeout (f.Destroy - see
     // CombatDirectorUtility.RetireEnemy) with no signal; the seen/stale-sweep below tears their
@@ -1644,7 +1648,11 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     // (Phase == Dead) is handled.
     private unsafe void UpdateClearEnemyMarkers(Frame frame)
     {
-        bool clearingWindow = frame.Global->CurrentState == GameState.Breathing
+        // An uncleared Breathing phase still reads as GameState.Survival (GameState.Breathing only
+        // starts once the area is secured - see CombatDirectorSystem.ResolveDesiredState), so the
+        // window is detected off CurrentPhaseKind instead, same as SurvivalWidget's clearEnemiesRoot.
+        bool clearingWindow = frame.Global->CurrentState == GameState.Survival
+            && frame.Global->CurrentPhaseKind == SurvivalPhaseKind.Breathing
             && frame.Global->BreathingAreaSecured == false;
 
         if (clearingWindow == false)

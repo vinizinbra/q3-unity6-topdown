@@ -8,6 +8,11 @@ namespace Quantum
     [Preserve]
     public unsafe class ProjectileSystem : SystemMainThreadFilter<ProjectileSystem.Filter>
     {
+        // Per-stage profiler markers (see SimProfilerMarker). Compiled out of Release players.
+        private static readonly SimProfilerMarker UpdateVelocityMarker = new SimProfilerMarker("ProjectileSystem.UpdateVelocity");
+        private static readonly SimProfilerMarker CastMarker = new SimProfilerMarker("ProjectileSystem.CastForHit");
+        private static readonly SimProfilerMarker ApplyHitMarker = new SimProfilerMarker("ProjectileSystem.ApplyHit");
+
         // Called from PlayerLifeStateUtility.EnterDowned - a player entity is never itself destroyed
         // (Alive/Downed/KO all keep the same entity alive, see docs/revive.md), so there's no
         // entity-destruction signal a projectile could hook cleanup off of the way it might for an
@@ -82,7 +87,9 @@ namespace Quantum
                 ? filter.Projectile->HitOverride
                 : projectileData.Hit);
 
+            UpdateVelocityMarker.Begin();
             movement.UpdateVelocity(f, filter.Transform3D->Position, filter.Projectile);
+            UpdateVelocityMarker.End();
 
             // SpeedMultiplier (see Projectile.qtn) only ever scales this tick's actual displacement,
             // never the stored Velocity itself - VoidFieldSystem recomputes it fresh every tick, so
@@ -108,7 +115,9 @@ namespace Quantum
 
             for (int segment = 0; segment < MaxSegmentsPerTick; segment++)
             {
+                CastMarker.Begin();
                 Hit3D? hit = CastForHit(f, filter.Projectile->Owner, filter.Projectile->LastHit, origin, direction, remainingDistance, hitMask, projectileData.HitRadius);
+                CastMarker.End();
 
                 if (hit.HasValue == false)
                 {
@@ -119,7 +128,9 @@ namespace Quantum
 
                 FPVector3 hitPoint = ResolveHitPoint(origin, direction * remainingDistance, hit.Value);
                 bool wasGrounded = filter.Projectile->Grounded;
+                ApplyHitMarker.Begin();
                 bool isSpent = hitData.ApplyHit(f, filter.Entity, filter.Projectile, hit.Value.Entity, hitPoint);
+                ApplyHitMarker.End();
 
                 if (isSpent == true)
                 {

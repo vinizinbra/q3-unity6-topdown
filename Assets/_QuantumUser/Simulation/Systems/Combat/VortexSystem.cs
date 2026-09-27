@@ -84,7 +84,7 @@ namespace Quantum
 
             FPVector3 center = filter.Transform3D->Position;
             Shape3D sphere = Shape3D.CreateSphere(radius);
-            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
+            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, EnemyMovementUtility.GetEnemyLayerMask(f), QueryOptions.HitAll);
 
             int caughtCount = 0;
 
@@ -325,7 +325,7 @@ namespace Quantum
         private static void PullAllInRadius(Frame f, FPVector3 center, FP radius, FP force)
         {
             Shape3D sphere = Shape3D.CreateSphere(radius);
-            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
+            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, EnemyMovementUtility.GetEnemyLayerMask(f), QueryOptions.HitAll);
 
             for (int i = 0; i < hits.Count; i++)
             {
@@ -434,7 +434,7 @@ namespace Quantum
                 return false;
 
             Shape3D sphere = Shape3D.CreateSphere(radius);
-            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
+            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, EnemyMovementUtility.GetEnemyLayerMask(f), QueryOptions.HitAll);
 
             FP nearestSqrDistance = FP.MaxValue;
 

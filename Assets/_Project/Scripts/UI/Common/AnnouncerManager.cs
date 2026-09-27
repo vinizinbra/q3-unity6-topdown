@@ -90,6 +90,7 @@ public class AnnouncerManager : MonoBehaviour
     }
 
     private bool _isPlaying;
+    private bool _eliteAnnouncementPending;
     private Action _pendingComplete;
     private float _hideTimer;
 
@@ -102,6 +103,7 @@ public class AnnouncerManager : MonoBehaviour
             slide.Hidden += OnHidden;
 
         QuantumEvent.Subscribe<EventGameStateChanged>(this, OnGameStateChanged);
+        QuantumEvent.Subscribe<EventEliteSpawned>(this, OnEliteSpawned);
     }
 
     // Defensive: the banner must start hidden regardless of how the scene authored the slide
@@ -151,6 +153,19 @@ public class AnnouncerManager : MonoBehaviour
         {
             Announce("SURVIVAL MODE STARTED");
         }
+    }
+
+    // Raised by EnemySystem.SeedFromEnemyData for every Elite-tier spawn, whatever the spawn route.
+    // Coalesced: a group or SpawnPack can bring several Elites in the same tick, and one banner per
+    // member would queue a wall of identical announcements - so while an elite banner is still
+    // playing or queued, further elite spawns are folded into it.
+    private void OnEliteSpawned(EventEliteSpawned e)
+    {
+        if (_eliteAnnouncementPending == true)
+            return;
+
+        _eliteAnnouncementPending = true;
+        Announce("ELITE INCOMING", () => _eliteAnnouncementPending = false);
     }
 
     // Unscaled, matching every other HUD banner timer in this codebase - a Level-Up screen can ramp

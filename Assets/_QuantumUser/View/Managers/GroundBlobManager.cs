@@ -155,6 +155,7 @@ namespace QuantumUser.View.Managers
             var handle = new GroundBlobHandle
             {
                 GameObject = instance,
+                Transform = instance.transform,
                 Renderer = renderer,
                 Target = target,
                 BaseScale = baseScale,
@@ -191,16 +192,20 @@ namespace QuantumUser.View.Managers
         {
             if (blob.Target == null) return false;
 
-            Vector3 origin = blob.Target.position + Vector3.up * config.RaycastHeight;
+            // Target position read once - every Transform property access is a native call, and this
+            // loop runs for every active blob every frame.
+            Vector3 targetPosition = blob.Target.position;
+            Vector3 origin = targetPosition + Vector3.up * config.RaycastHeight;
             bool hasGround = Physics.Raycast(origin, Vector3.down, out RaycastHit hit, config.RaycastHeight + config.MaxRaycastDistance, config.GroundLayer);
 
             blob.Renderer.enabled = hasGround;
             if (!hasGround) return true; // e.g. falling past the edge of the level - no floor to project onto
 
+            Vector3 hitPoint = hit.point;
             Vector3 offset = new Vector3(config.ShadowOffset.x + blob.Offset.x, config.GroundOffset, config.ShadowOffset.y + blob.Offset.y);
-            blob.GameObject.transform.SetPositionAndRotation(hit.point + offset, FlatRotation);
+            blob.Transform.SetPositionAndRotation(hitPoint + offset, FlatRotation);
 
-            float height = Mathf.Max(0f, blob.Target.position.y - hit.point.y);
+            float height = Mathf.Max(0f, targetPosition.y - hitPoint.y);
             float t = config.MaxHeightForFalloff > 0f ? Mathf.Clamp01(height / config.MaxHeightForFalloff) : 0f;
             float falloff = config.HeightFalloffCurve.Evaluate(t); // 1 = full size/alpha at ground, eases toward 0 with height
 
@@ -212,7 +217,7 @@ namespace QuantumUser.View.Managers
             float lossyScale = blob.Target.lossyScale.x;
             float shadowMultiplier = blob.IsLight ? 1f : config.ShadowScaleMultiplier;
             float scale = blob.BaseScale * lossyScale * shadowMultiplier * Mathf.Lerp(config.MinScaleMultiplier, 1f, falloff);
-            blob.GameObject.transform.localScale = new Vector3(scale, scale, scale);
+            blob.Transform.localScale = new Vector3(scale, scale, scale);
 
             float maxAlpha = blob.IsLight ? config.LightAlpha : config.GroundAlpha;
             Color color = blob.Renderer.color;
@@ -237,6 +242,7 @@ namespace QuantumUser.View.Managers
     public sealed class GroundBlobHandle
     {
         internal GameObject GameObject;
+        internal Transform Transform; // GameObject.transform, cached - read twice per blob per frame
         internal SpriteRenderer Renderer;
         internal Transform Target;
         internal float BaseScale;

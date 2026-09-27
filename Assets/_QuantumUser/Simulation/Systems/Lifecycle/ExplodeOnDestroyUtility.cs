@@ -137,7 +137,7 @@ namespace Quantum
                 return;
 
             Shape3D sphere = Shape3D.CreateSphere(radius);
-            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
+            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, EnemyMovementUtility.GetEnemyLayerMask(f), QueryOptions.HitAll);
             ExplodeOnDeathConfig config = f.FindAsset(f.RuntimeConfig.ExplodeOnDeathConfig);
 
             for (int i = 0; i < hits.Count; i++)

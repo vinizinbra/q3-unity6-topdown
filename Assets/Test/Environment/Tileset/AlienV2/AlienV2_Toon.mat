@@ -58,6 +58,8 @@ Material:
     - _HatchScreenSpace: 0
     - _HatchSoftness: 0.08
     - _HatchStrength: 0.5
+    - _PropLineStrength: 1
+    - _PropLineWidth: 2
     - _RaisedFromY: 1.5
     - _RaisedStrength: 1
     - _RimOutlineStrength: 0

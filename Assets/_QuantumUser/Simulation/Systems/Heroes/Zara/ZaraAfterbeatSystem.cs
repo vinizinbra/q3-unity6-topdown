@@ -60,7 +60,7 @@ namespace Quantum
                 return;
 
             Shape3D sphere = Shape3D.CreateSphere(radius);
-            var hits = f.Physics3D.OverlapShape(position, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
+            var hits = f.Physics3D.OverlapShape(position, FPQuaternion.Identity, sphere, EnemyMovementUtility.GetEnemyLayerMask(f), QueryOptions.HitAll);
 
             int enemiesHit = 0;
 

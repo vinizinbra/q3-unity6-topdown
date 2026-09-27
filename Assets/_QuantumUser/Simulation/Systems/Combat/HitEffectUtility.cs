@@ -11,7 +11,7 @@ namespace Quantum
     public static unsafe class HitEffectUtility
     {
         // multiTarget defaults false (a guaranteed single-connect hit, e.g. ProjectileHitData's own
-        // impact) - see HitEffectApplied's own comment. The three overlap-query methods below
+        // impact). The three overlap-query methods below
         // (ApplyInRadius/ApplyInShape/ApplyInCollider) always pass true, since an overlap query can
         // always catch more than one entity even when this particular call happens to connect with
         // just one.
@@ -39,7 +39,6 @@ namespace Quantum
                 effect.Apply(f, ref context);
             }
 
-            f.Events.HitEffectApplied(context.Owner, context.Target, context.Position, multiTarget);
         }
 
         public static void ApplyToTarget(Frame f, FixedArray<AssetRef<HitEffectData>> effects, ref HitEffectContext context, bool multiTarget = false)
@@ -62,7 +61,6 @@ namespace Quantum
                 effect.Apply(f, ref context);
             }
 
-            f.Events.HitEffectApplied(context.Owner, context.Target, context.Position, multiTarget);
         }
 
         // Applies just the AppliesOncePerBlast effects (a spawned lingering hazard) exactly once per
@@ -159,7 +157,7 @@ namespace Quantum
             // ground-area cutoff is IsWithinFlatGroundArea below, not this query shape.
             FP queryRadius = maxHeightDifference > FP._0 ? radius + maxHeightDifference : radius;
             Shape3D sphere = Shape3D.CreateSphere(queryRadius);
-            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
+            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, ResolveQueryLayerMask(f, targetMask), QueryOptions.HitAll);
 
             // Resolved once per blast, not per candidate - see EnemyMovementUtility.ResolveGroundY.
             FP centerGroundY = maxHeightDifference > FP._0 ? EnemyMovementUtility.ResolveGroundY(f, center) : default;
@@ -249,7 +247,7 @@ namespace Quantum
         {
             // Takes the transform and shape by value, and applies the shape's own local offset
             // relative to it - so a collider authored off-center overlaps where it actually sits.
-            var hits = f.Physics3D.OverlapShape(*transform, collider->Shape, -1, QueryOptions.HitAll);
+            var hits = f.Physics3D.OverlapShape(*transform, collider->Shape, ResolveQueryLayerMask(f, targetMask), QueryOptions.HitAll);
 
             Log.Debug($"[Effect] {owner}'s area at {transform->Position} caught {hits.Count} shapes " +
                       $"(pushDirection {(pushDirection.HasValue ? pushDirection.Value.ToString() : "radial")})");
@@ -297,6 +295,20 @@ namespace Quantum
             return damage * modifiers->DamageMultiplier * EncounterModifierUtility.ResolveEnemyDamageMultiplier(f);
         }
 
+        // Physics layer mask matching MatchesTargetMask, so an Enemies/Players-only query skips level
+        // geometry, bullets and pickups in the broadphase instead of filtering them out one by one.
+        // Both stays -1: it also has to reach damageables that aren't players or enemies (e.g. a
+        // hittable bomb), which don't share one known layer.
+        private static int ResolveQueryLayerMask(Frame f, DamageTargetMask mask)
+        {
+            switch (mask)
+            {
+                case DamageTargetMask.Players: return EnemyMovementUtility.GetPlayerIncludingDashingLayerMask(f);
+                case DamageTargetMask.Enemies: return EnemyMovementUtility.GetEnemyLayerMask(f);
+                default: return -1;
+            }
+        }
+
         // Both (the default) matches this codebase's behavior before this concept existed - no
         // filtering at all. Players/Enemies check component presence rather than e.g. a side/team
         // field, since that's already exactly how the rest of the codebase tells the two apart
@@ -340,7 +352,7 @@ namespace Quantum
             }
 
             Shape3D sphere = Shape3D.CreateSphere(radius);
-            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
+            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, ResolveQueryLayerMask(f, targetMask), QueryOptions.HitAll);
 
             Log.Debug($"[Effect] {owner}'s blast at {center} radius {radius} caught {hits.Count} shapes");
 
@@ -391,7 +403,7 @@ namespace Quantum
             DamageTargetMask targetMask = DamageTargetMask.Enemies, AssetRef<HitEffectData> effect = default)
         {
             Shape3D sphere = Shape3D.CreateSphere(radius);
-            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
+            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, ResolveQueryLayerMask(f, targetMask), QueryOptions.HitAll);
 
             for (int i = 0; i < hits.Count; i++)
             {

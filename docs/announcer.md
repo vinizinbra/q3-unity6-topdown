@@ -105,6 +105,14 @@ screen at the same time, and that's fine.
 - **`AnnouncerManager` itself** - "AREA SECURED" and "SURVIVAL MODE STARTED", off `GameStateChanged`
   directly (see above). Neither `BreathingWidget` nor `SurvivalWidget` reference `AnnouncerManager`
   at all anymore.
+- **`AnnouncerManager` itself** - "ELITE INCOMING", off `EventEliteSpawned` (`Events.qtn`). Raised
+  by `EnemySystem.SeedFromEnemyData` whenever the seeded `EnemyDataAsset.Tier == Elite` - that method
+  is the one seeding path every spawn route shares (Director group/direct purchase, phase
+  `GuaranteedGroup`, prototype-baked enemies, `SpawnPackDeliveryData` summons), so no spawner needs
+  to know about it. Coalesced via `_eliteAnnouncementPending` (set on announce, cleared in
+  `onComplete`): several Elites spawning together, or while the banner is still up/queued, produce
+  one banner, not a queue of duplicates. The event also carries `EnemyData` in case a later pass
+  wants the Elite's `EnemyName` in the text.
 - **`TeamChallengeWidget`** - `Announce("CHALLENGE STARTED"/"CHALLENGE COMPLETE"/"CHALLENGE
   FAILED")` on its own matching Quantum events (`EventTeamChallengeStarted`/`Completed`/`Failed`) -
   these are NOT GameState transitions (they're tied to a specific challenge's own lifecycle, not a
@@ -137,7 +145,9 @@ rather than a real generalization.
 
 ## Current status
 
-Code compiles; no `.qtn` change, so no codegen dependency.
+The Elite announcement added `EliteSpawned` to `Events.qtn` - Quantum codegen must run before
+`EnemySystem`/`AnnouncerManager` compile (see the codegen gotcha in `CLAUDE.md`). Everything else is
+plain C#.
 
 ### Editor authoring needed
 

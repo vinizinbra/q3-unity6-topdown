@@ -109,6 +109,8 @@ namespace QuantumUser.Editor.BalanceSimulator
                 Stats = SimStats.From(hero),
                 Weapon = SimWeapon.Create(assets.Resolve(hero.StartingWeapon), 0, levelBonus, assets),
                 Skill = BalanceSimSkillModel.Evaluate(hero, assets, scenario),
+                DamageBonusPerLevel = D(assets.Experience.DamageBonusPerLevel),
+                TickSeconds = assets.SimTickSeconds,
             }).ToArray();
 
             var rows = new List<MinuteRow>[playerCount];
@@ -205,6 +207,7 @@ namespace QuantumUser.Editor.BalanceSimulator
                     row[Col.LoopCostToDate] = p.LoopCostToDate;
                     row[Col.LoopAfford] = p.LoopCostToDate > 0 ? p.CoinsEarned / p.LoopCostToDate : 0;
                     row[Col.OrbPickup] = PickupEfficiency();
+                    row[Col.Players] = playerCount;
                     rows[i].Add(row);
                 }
 
@@ -226,13 +229,21 @@ namespace QuantumUser.Editor.BalanceSimulator
                 // credit EVERY wallet (CoinUtility.GrantAll), each scaled by that player's own multiplier.
                 // Orbs that expire before anyone reaches them (OrbLifetime) are lost - a per-orb roll
                 // against the survival-minute pickup efficiency curve.
-                if (rng.Chance(PickupEfficiency()) == false)
-                    return;
+                double pickup = PickupEfficiency();
 
-                SimPlayer finder = players[rng.Next(playerCount)];
-                totalXp += enemy.Exp * finder.Stats.ExperienceGainMultiplier;
+                // Elite chests (EnemyChestDropUtility.TrySpawnDrop): an extra forced-category pick
+                // for every player (BeginChestScreen). Chests don't expire, so no pickup roll.
+                LevelUpCategory? chestKind = assets.ResolveChestKind(enemy.Data);
+                if (chestKind.HasValue && rng.Chance(D(enemy.Data.ChestDropChance)))
+                {
+                    foreach (SimPlayer p in players)
+                        policy.OnChest(p, chestKind.Value, director.SurvivalTime);
+                }
 
-                if (rng.Chance(enemy.CoinChance))
+                // Coin orbs are separate from the XP orb and expire sooner (30s vs 60s).
+                bool coinCollected = rng.Chance(enemy.CoinChance) && rng.Chance(pickup * Math.Clamp(scenario.CoinPickupFactor, 0, 1));
+
+                if (coinCollected)
                 {
                     foreach (SimPlayer p in players)
                     {
@@ -242,11 +253,22 @@ namespace QuantumUser.Editor.BalanceSimulator
                     }
                 }
 
+                if (rng.Chance(pickup) == false)
+                    return;
+
+                SimPlayer finder = players[rng.Next(playerCount)];
+                totalXp += enemy.Exp * finder.Stats.ExperienceGainMultiplier;
+
                 while (displayLevel < assets.Experience.MaxLevel && totalXp >= RequiredXp(displayLevel + 1))
                 {
                     displayLevel++;
                     foreach (SimPlayer p in players)
-                        policy.OnLevelUp(p, displayLevel - 1, director.SurvivalTime);
+                    {
+                        p.DisplayLevel = displayLevel;
+                        // LevelUpUtility.OpenUpgradeScreen rolls for Global.Level + 1 after the
+                        // increment - the new displayed level (first level-up = 2 -> LevelSequence[1]).
+                        policy.OnLevelUp(p, displayLevel, director.SurvivalTime);
+                    }
                 }
             }
 
@@ -311,12 +333,14 @@ namespace QuantumUser.Editor.BalanceSimulator
                     double areaFill = Math.Min(1, targets.Count / Math.Max(1, scenario.AreaTargets));
                     var shares = new double[playerCount];
                     double budget = 0;
+                    double partyDps = 0;
 
                     for (int i = 0; i < playerCount; i++)
                     {
                         SimPlayer p = players[i];
                         double dps = p.WeaponDps(scenario) + p.SkillDps(scenario) * (p.Skill.UsesArea ? areaFill : 1);
                         shares[i] = dps;
+                        partyDps += dps;
                         budget += dps * dt;
                     }
 
@@ -328,7 +352,7 @@ namespace QuantumUser.Editor.BalanceSimulator
                         if (target.Hp <= budget)
                         {
                             budget -= target.Hp;
-                            budget *= 1 - scenario.OverkillWaste;
+                            budget -= scenario.RetargetSeconds * partyDps / playerCount;
                             OnKill(target, PickByShare(rng, shares));
                         }
                         else

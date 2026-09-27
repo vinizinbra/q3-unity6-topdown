@@ -642,8 +642,7 @@ namespace Quantum
         }
 
         // Normalises the icon to 1x1 world units * accessoryIconScale regardless of the sprite's own
-        // pixel size and PPU - the same job ChunkDetailScatter.ResolveUnitScale does for hand-placed
-        // detail props, and for the same reason: one hero's accessory art has no idea how big another
+        // pixel size and PPU: one hero's accessory art has no idea how big another
         // hero's is, so without this the pointer changes size per hero for no design reason.
         //
         // Also captures the sprite's pivot->centre offset at that final scale, since a sprite imported

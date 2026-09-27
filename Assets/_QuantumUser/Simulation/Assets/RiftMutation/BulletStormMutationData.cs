@@ -8,8 +8,8 @@ namespace Quantum
     // The magazine half goes through CharacterStats.MagazineSizeBonus rather than writing
     // Weapon.MagazineSize directly, because that field is BAKED at equip and would be wiped by the
     // player's next weapon pickup. WeaponSystem.ApplyOwnerWeaponModifiers re-applies it as a stage
-    // of every Equip; calling it here too is what makes the pick take effect on the weapon already
-    // in hand instead of only on the next one.
+    // of every Equip; WeaponSystem.AddMagazineSizeBonus rescales the weapon already in hand without
+    // re-applying a bonus it already carries (e.g. from Magazine Size Global Upgrade picks).
     //
     // ReloadSpeedMultiplier is a RATE (StatUtility.GetReloadDuration divides by it), so a value
     // below 1 correctly makes reloading take LONGER - which is the drawback, not a typo.
@@ -28,12 +28,7 @@ namespace Quantum
             stats->AttackSpeedMultiplier = FPMath.Max(FP._0, stats->AttackSpeedMultiplier * FireRateMultiplier);
             stats->WeaponDamageMultiplier = FPMath.Max(FP._0, stats->WeaponDamageMultiplier * DamageMultiplier);
             stats->ReloadSpeedMultiplier = FPMath.Max(FP._0, stats->ReloadSpeedMultiplier * ReloadSpeedMultiplier);
-            stats->MagazineSizeBonus += MagazineSizeBonus;
-
-            if (f.Unsafe.TryGetPointer<Weapon>(entity, out var weapon) == true)
-            {
-                WeaponSystem.ApplyOwnerWeaponModifiers(f, entity, weapon);
-            }
+            WeaponSystem.AddMagazineSizeBonus(f, entity, MagazineSizeBonus);
         }
 
         protected override object[] DescriptionArgs => new object[]

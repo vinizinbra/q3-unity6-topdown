@@ -118,6 +118,43 @@ namespace Quantum
             return velocity.Normalized * maxSpeed;
         }
 
+        // Enemy-side counterpart to the movements' own PredictionTime lead, which only reads
+        // PhysicsBody3D and so never leads the KCC-driven player. An enemy delivery (Projectile/Fan/
+        // MortarBarrage LeadFactor) passes the launch it already solved toward aimPoint; the flat
+        // flight time read off that launch shifts aimPoint along the target's flat velocity, scaled
+        // by leadFactor (1 = full lead, 0.5 = halfway - partial lead keeps a strafing player
+        // dodgeable) and capped at maxLeadDistance so a dash/knockback velocity spike can't throw the
+        // shot across the map. The caller re-solves onto the returned point. Uses the target's
+        // velocity at fire time, not at AimLock, so stopping or reversing at the lock still dodges.
+        public static FPVector3 LeadAimPoint(Frame f, EntityRef target, FPVector3 origin, FPVector3 aimPoint,
+            FPVector3 launchVelocity, FP leadFactor, FP maxLeadDistance)
+        {
+            if (leadFactor <= FP._0 || target == EntityRef.None)
+                return aimPoint;
+
+            FPVector3 targetVelocity;
+
+            if (f.Unsafe.TryGetPointer<KCC>(target, out var kcc) == true)
+                targetVelocity = kcc->Data.RealVelocity;
+            else if (f.Unsafe.TryGetPointer<PhysicsBody3D>(target, out var body) == true)
+                targetVelocity = ResolveLeadVelocity(f, target, body->Velocity);
+            else
+                return aimPoint;
+
+            FP flatSpeed = new FPVector3(launchVelocity.X, FP._0, launchVelocity.Z).Magnitude;
+
+            if (flatSpeed <= FP._0)
+                return aimPoint;
+
+            FP flightTime = new FPVector3(aimPoint.X - origin.X, FP._0, aimPoint.Z - origin.Z).Magnitude / flatSpeed;
+            FPVector3 offset = new FPVector3(targetVelocity.X, FP._0, targetVelocity.Z) * (flightTime * leadFactor);
+
+            if (maxLeadDistance > FP._0 && offset.SqrMagnitude > maxLeadDistance * maxLeadDistance)
+                offset = offset.Normalized * maxLeadDistance;
+
+            return aimPoint + offset;
+        }
+
         // Pulled out of TryGetAimPoint so a caller already holding a separately-locked target
         // position (e.g. an enemy delivery's Enemy.SkillTargetPosition, frozen mid-windup by
         // AimLock - see ProjectileDeliveryData/FanProjectileDeliveryData) can add just the

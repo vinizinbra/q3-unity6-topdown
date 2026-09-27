@@ -37,7 +37,9 @@ simulation.
   repaints only that one chunk's own sub-rect (`undiscoveredColor`/`discoveredColor`) - never the
   whole texture. The current chunk (see below) paints `currentColor` instead, reverting the
   previous one back to `discoveredColor`. Multiple paints in the same tick batch into one
-  `Texture2D.Apply()` call. Steady state (nothing changed) costs just a handful of comparisons,
+  `Texture2D.Apply()` call. Enclosed inner holes (the gap-filler regions from `ComputeHoleRegions`)
+  use their own `holeUndiscoveredColor`/`holeDiscoveredColor` instead, so they can read differently
+  from real chunks; standing on one still paints `currentColor`. Steady state (nothing changed) costs just a handful of comparisons,
   not per-frame pixel work.
 
   **Level outline** (`ComputeLevelOutline`): computed exactly once, gated on `Global.LevelGenerated`
@@ -146,13 +148,15 @@ simulation.
   **Clear-Enemy markers** (`UpdateClearEnemyMarkers`): one pooled marker per every currently-alive
   ORDINARY enemy - excluding `Tier == Elite`/`Economy.Persistent == true`, which already get their
   own Elite/Special marker above, so a single enemy never shows two markers at once - but ONLY while
-  `GameState.CurrentState == Breathing` AND `Global.BreathingAreaSecured == false` - the same "CLEAR
-  ALL ENEMIES..." window
-  `BreathingWidget`'s `notSecuredRoot` shows (see `docs/run-phase.md`'s "Elite / Boss
+  `CurrentState == Survival` AND `CurrentPhaseKind == Breathing` AND `Global.BreathingAreaSecured ==
+  false` - the same "CLEAR ALL ENEMIES..." window `SurvivalWidget`'s `clearEnemiesRoot` shows. (An
+  uncleared Breathing phase stays `GameState.Survival` - `GameState.Breathing` only starts once the
+  area is secured, see `CombatDirectorSystem.ResolveDesiredState`. The old `CurrentState == Breathing`
+  check silently stopped matching after that change and was fixed 2026-09-26.) (See `docs/run-phase.md`'s "Elite / Boss
   phases" section - Breathing holds `PhaseTimer` open until every alive enemy is gone, mirrored into
   `BreathingAreaSecured`). Outside that window every existing marker is torn down immediately
-  (not left to the stale sweep) - covers both "the area just secured" and "`GameState` left
-  Breathing some other way while enemies were still up." Ordinary enemies aren't Persistent, so
+  (not left to the stale sweep) - covers both "the area just secured" and "the phase
+  ended some other way while enemies were still up." Ordinary enemies aren't Persistent, so
   unlike Elite/Special they can expire via `EnemyLifecycleSystem`'s own `Irrelevant -> Retired`
   timeout (`f.Destroy`, see `CombatDirectorUtility.RetireEnemy`) with no signal to react to - the
   same seen/stale-sweep pooling shape every marker pass here uses is what tears its marker down the

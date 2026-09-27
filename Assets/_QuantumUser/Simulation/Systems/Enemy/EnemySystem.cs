@@ -25,6 +25,26 @@ namespace Quantum
     [Preserve]
     public unsafe class EnemySystem : SystemMainThreadFilter<EnemySystem.Filter>, ISignalOnEnemyDied, ISignalOnEnemyKnockedBack, ISignalOnEntityPrototypeMaterialized
     {
+        // Per-stage profiler markers (see SimProfilerMarker) - split this system's per-enemy cost in
+        // the Unity Profiler. Compiled out of Release players.
+        private static readonly SimProfilerMarker FallCheckMarker = new SimProfilerMarker("EnemySystem.FallCheck");
+        private static readonly SimProfilerMarker SetupMarker = new SimProfilerMarker("EnemySystem.Setup");
+        private static readonly SimProfilerMarker StuckRecoveryMarker = new SimProfilerMarker("EnemySystem.StuckRecovery");
+        private static readonly SimProfilerMarker StatusQueryMarker = new SimProfilerMarker("EnemySystem.StatusQuery");
+        private static readonly SimProfilerMarker KnockbackMarker = new SimProfilerMarker("EnemySystem.KnockbackRecovery");
+        private static readonly SimProfilerMarker IdleMarker = new SimProfilerMarker("EnemySystem.Idle");
+        private static readonly SimProfilerMarker ChasingMarker = new SimProfilerMarker("EnemySystem.Chasing");
+        private static readonly SimProfilerMarker PreparationMarker = new SimProfilerMarker("EnemySystem.Preparation");
+        private static readonly SimProfilerMarker ActiveMarker = new SimProfilerMarker("EnemySystem.Active");
+        private static readonly SimProfilerMarker RecoveryMarker = new SimProfilerMarker("EnemySystem.Recovery");
+        private static readonly SimProfilerMarker ResolveTargetMarker = new SimProfilerMarker("EnemySystem.ResolveTarget");
+        private static readonly SimProfilerMarker TraversalJumpMarker = new SimProfilerMarker("EnemySystem.Chasing.TraversalJump");
+        private static readonly SimProfilerMarker DecoyMarker = new SimProfilerMarker("EnemySystem.Chasing.Decoy");
+        private static readonly SimProfilerMarker SelectActionMarker = new SimProfilerMarker("EnemySystem.Chasing.SelectAction");
+        private static readonly SimProfilerMarker DetourMarker = new SimProfilerMarker("EnemySystem.Chasing.Detour");
+        private static readonly SimProfilerMarker MoveDirectionMarker = new SimProfilerMarker("EnemySystem.Chasing.MoveDirection");
+        private static readonly SimProfilerMarker MoveMarker = new SimProfilerMarker("EnemySystem.Chasing.Move");
+
         // How long every enemy sits inert right after spawning before its AI state machine starts
         // running at all - see Enemy.SpawnGraceRemaining's own comment and the gate in Update below.
         // A flat global value, not per-EnemyDataAsset - this is about masking spawn-frame jank (an
@@ -79,6 +99,11 @@ namespace Quantum
             SeedChargeHitTracking(f, entity, data);
             SeedSpawnGrace(f, entity);
             SeedLeadVelocitySample(f, entity);
+
+            // Here rather than in any one spawner - every spawn route funnels through this method,
+            // so an Elite announces regardless of how it entered the world.
+            if (data.Tier == EnemyTier.Elite && f.Unsafe.TryGetPointer<Enemy>(entity, out var enemy))
+                f.Events.EliteSpawned(entity, enemy->EnemyData);
         }
 
         // See SpawnGraceDuration's own comment. Unconditional - every enemy carries the shared
@@ -251,6 +276,23 @@ namespace Quantum
 
         public override void Update(Frame f, ref Filter filter)
         {
+            // Scopes EnemyMovementUtility's IsGrounded memo to this one enemy's update - the same
+            // ground probe gets asked 2-3 times below (knockback recovery, movement, some movement
+            // profiles) and this makes it one raycast. finally, so an exception can't leave it live.
+            EnemyMovementUtility.BeginGroundMemo(filter.Entity);
+
+            try
+            {
+                UpdateEnemy(f, ref filter);
+            }
+            finally
+            {
+                EnemyMovementUtility.EndGroundMemo();
+            }
+        }
+
+        private void UpdateEnemy(Frame f, ref Filter filter)
+        {
             // Dead is a terminal state (set by DamageUtility, not looped back into from here) -
             // skip the rest of the AI entirely so a corpse doesn't keep chasing/attacking during
             // its DeathLingerTime countdown. GravityScale is still applied below so a dead flying
@@ -261,22 +303,32 @@ namespace Quantum
                 return;
             }
 
-            if (CheckFallDeath(f, ref filter) == true)
+            FallCheckMarker.Begin();
+            bool fellToDeath = CheckFallDeath(f, ref filter);
+            FallCheckMarker.End();
+
+            if (fellToDeath == true)
                 return;
 
+            SetupMarker.Begin();
             EnemyDataAsset data = f.FindAsset(filter.Enemy->EnemyData);
 
             filter.PhysicsBody3D->GravityScale = data.Stats.Height.InitialState == EnemyHeightState.Flying ? FP._0 : FP._1;
 
             TickAttackCooldown(f, ref filter);
             EnemyMovementUtility.TickLeadVelocitySample(f, filter.Enemy, filter.Transform3D);
+            SetupMarker.End();
 
             // Before ANY movement work below (including TickKnockbackRecovery's own early-out, since
             // a push can bury an enemy mid-stagger): if a knockback drove this enemy inside level
             // geometry, put it back where it was standing when it got hit. No-ops entirely unless
             // this specific enemy was knocked back in the last few seconds - see
             // EnemyStuckRecoveryUtility for why this is a recovery rather than a clamp on knockback.
-            if (EnemyStuckRecoveryUtility.Tick(f, filter.Entity, filter.Enemy, filter.Transform3D, filter.PhysicsBody3D) == true)
+            StuckRecoveryMarker.Begin();
+            bool recoveredFromStuck = EnemyStuckRecoveryUtility.Tick(f, filter.Entity, filter.Enemy, filter.Transform3D, filter.PhysicsBody3D);
+            StuckRecoveryMarker.End();
+
+            if (recoveredFromStuck == true)
                 return;
 
             // Root takes priority over TickKnockbackRecovery's own "still airborne" gate below - a
@@ -292,8 +344,10 @@ namespace Quantum
             // flinched and can't act for an instant", which should include not being able to keep
             // sliding toward the player mid-stumble, not just the separate windup-timer pause
             // UpdatePreparation applies on its own for the Preparation/Telegraph case specifically.
+            StatusQueryMarker.Begin();
             bool isRooted = StatusEffectUtility.IsRooted(f, filter.Entity);
             bool isStaggered = StatusEffectUtility.IsStaggered(f, filter.Entity);
+            StatusQueryMarker.End();
 
             if (isRooted == true || isStaggered == true)
             {
@@ -338,7 +392,11 @@ namespace Quantum
                     filter.PhysicsBody3D->IsKinematic = false;
                 }
 
-                if (TickKnockbackRecovery(f, ref filter, data) == true)
+                KnockbackMarker.Begin();
+                bool recoveringFromKnockback = TickKnockbackRecovery(f, ref filter, data);
+                KnockbackMarker.End();
+
+                if (recoveringFromKnockback == true)
                     return;
 
                 // Unlike knockback recovery, there's no impulse to preserve here, so Stun/Freeze stop
@@ -365,24 +423,34 @@ namespace Quantum
             switch (filter.Enemy->Phase)
             {
                 case EnemyActionPhase.Idle:
+                    IdleMarker.Begin();
                     UpdateIdle(f, ref filter, data);
+                    IdleMarker.End();
                     break;
 
                 case EnemyActionPhase.Chasing:
+                    ChasingMarker.Begin();
                     UpdateChasing(f, ref filter, data);
+                    ChasingMarker.End();
                     break;
 
                 case EnemyActionPhase.Preparation:
                 case EnemyActionPhase.Telegraph:
+                    PreparationMarker.Begin();
                     UpdatePreparation(f, ref filter, data);
+                    PreparationMarker.End();
                     break;
 
                 case EnemyActionPhase.Active:
+                    ActiveMarker.Begin();
                     UpdateActive(f, ref filter, data);
+                    ActiveMarker.End();
                     break;
 
                 case EnemyActionPhase.Recovery:
+                    RecoveryMarker.Begin();
                     UpdateRecovery(f, ref filter, data);
+                    RecoveryMarker.End();
                     break;
             }
         }
@@ -700,6 +768,14 @@ namespace Quantum
         // first, else whatever the profile picks.
         private static EntityRef ResolveInitialTarget(Frame f, ref Filter filter, EnemyDataAsset data)
         {
+            ResolveTargetMarker.Begin();
+            EntityRef target = ResolveInitialTargetUnprofiled(f, ref filter, data);
+            ResolveTargetMarker.End();
+            return target;
+        }
+
+        private static EntityRef ResolveInitialTargetUnprofiled(Frame f, ref Filter filter, EnemyDataAsset data)
+        {
             if (EnemyMovementUtility.TryFindNearestDecoy(f, filter.Transform3D->Position, data.AI.ResolveDetectionRange(), out EntityRef decoyTarget) == true)
                 return decoyTarget;
 
@@ -721,7 +797,11 @@ namespace Quantum
             // specifically while a hop is in progress - permanently freezing the enemy in place.
             // Ticking it here first, before any of the checks below, guarantees it always lands
             // cleanly (which resets IsKinematic itself) no matter what happens to the target.
-            if (EnemyMovementUtility.TickTraversalJump(f, ref filter, data) == true)
+            TraversalJumpMarker.Begin();
+            bool isTraversalJumping = EnemyMovementUtility.TickTraversalJump(f, ref filter, data);
+            TraversalJumpMarker.End();
+
+            if (isTraversalJumping == true)
                 return;
 
             // Enemy.Target is otherwise fully sticky through Chasing (see this method's own header
@@ -746,7 +826,11 @@ namespace Quantum
             // EnemyMovementUtility.TryFindNearestDecoy. Preparation/Telegraph/Active are
             // deliberately not covered - an enemy already committed to a windup/attack doesn't
             // retarget mid-attack.
-            if (EnemyMovementUtility.TryFindNearestDecoy(f, selfPosition, data.AI.ResolveDetectionRange(), out EntityRef decoyTarget) == true && decoyTarget != filter.Enemy->Target)
+            DecoyMarker.Begin();
+            bool foundDecoy = EnemyMovementUtility.TryFindNearestDecoy(f, selfPosition, data.AI.ResolveDetectionRange(), out EntityRef decoyTarget);
+            DecoyMarker.End();
+
+            if (foundDecoy == true && decoyTarget != filter.Enemy->Target)
             {
                 Log.Debug($"[Enemy] {filter.Entity} retargeting {filter.Enemy->Target} -> decoy {decoyTarget} (max aggro)");
                 filter.Enemy->Target = decoyTarget;
@@ -763,8 +847,12 @@ namespace Quantum
                 return;
             }
 
-            if (EnemyDecisionUtility.TrySelectAction(f, filter.Entity, filter.Enemy, data, targetPosition, sqrDistance, out EnemyActionData action, out int slot) == true &&
-                f.FindAsset(action.Delivery).CanBegin(f, ref filter, data, action, filter.Enemy->Target) == true)
+            SelectActionMarker.Begin();
+            bool beginAction = EnemyDecisionUtility.TrySelectAction(f, filter.Entity, filter.Enemy, data, targetPosition, sqrDistance, out EnemyActionData action, out int slot) == true &&
+                f.FindAsset(action.Delivery).CanBegin(f, ref filter, data, action, filter.Enemy->Target) == true;
+            SelectActionMarker.End();
+
+            if (beginAction == true)
             {
                 filter.Enemy->CurrentActionSlot = (byte)slot;
                 filter.Enemy->StateTimer = action.AnticipationTime;
@@ -811,15 +899,25 @@ namespace Quantum
             // line to the target is wall-blocked - see EnemyPathfindingUtility.
             // TryGetDetourDirection. Clear line-of-sight, no detour authored, or no route found
             // all fall through to the normal Stats.Movement-computed direction below unchanged.
-            if (data.Stats.UseWaypointDetour == false ||
-                EnemyPathfindingUtility.TryGetDetourDirection(f, filter.Entity, data, selfPosition, targetPosition, out FPVector2 direction) == false)
+            FPVector2 direction = default;
+
+            DetourMarker.Begin();
+            bool isDetouring = data.Stats.UseWaypointDetour == true &&
+                EnemyPathfindingUtility.TryGetDetourDirection(f, filter.Entity, data, selfPosition, targetPosition, out direction) == true;
+            DetourMarker.End();
+
+            if (isDetouring == false)
             {
+                MoveDirectionMarker.Begin();
                 direction = data.Stats.Movement.IsValid == true
                     ? f.FindAsset(data.Stats.Movement).ComputeMoveDirection(f, filter.Entity, filter.Enemy->Target)
                     : default;
+                MoveDirectionMarker.End();
             }
 
+            MoveMarker.Begin();
             EnemyMovementUtility.MoveInDirection(f, ref filter, data, direction, moveSpeed);
+            MoveMarker.End();
         }
 
         // Drives both Preparation and Telegraph off the same single windup timer - Telegraph is

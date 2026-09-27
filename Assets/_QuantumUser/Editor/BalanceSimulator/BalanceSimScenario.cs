@@ -42,6 +42,8 @@ namespace QuantumUser.Editor.BalanceSimulator
         public int Seeds = 20;
         [Tooltip("First RNG seed of the batch (runs use BaseSeed .. BaseSeed+Seeds-1). Change it to see a different set of runs.")]
         public int BaseSeed = 0;
+        [Tooltip("Round every weapon fire/burst/reload wait up to whole Quantum ticks (SessionConfig UpdateFPS), like WeaponSystem's timers do. Off = continuous timing (the old model) for A/B.")]
+        public bool QuantizeWeaponTimers = true;
 
         [Header("Player skill")]
         [Tooltip("Share of theoretical weapon DPS that actually lands (accuracy x trigger uptime).")]
@@ -50,12 +52,14 @@ namespace QuantumUser.Editor.BalanceSimulator
         [Range(0f, 1f)] public float SkillUseEfficiency = 0.85f;
         [Tooltip("Enemies an area skill hits on average when enough are alive.")]
         public float AreaTargets = 3f;
-        [Tooltip("Fraction of the remaining tick damage lost every time a kill happens (overkill / retargeting).")]
-        [Range(0f, 1f)] public float OverkillWaste = 0.15f;
+        [Tooltip("Seconds of one player's DPS lost per kill (overkill on the last hit + turning to the next target). A fixed per-kill cost, so it doesn't depend on TickSeconds.")]
+        public float RetargetSeconds = 0.15f;
         [Tooltip("Share of dropped orbs (XP and kill coins) actually collected before they expire (ExperienceConfig.OrbLifetime 30s, 1m pickup radius), by survival minute. Late-run kiting leaves more behind. Calibrate against the recorder's OrbPickup column.")]
         public AnimationCurve OrbPickupEfficiency = new AnimationCurve(new Keyframe(0f, 0.95f), new Keyframe(6f, 0.9f), new Keyframe(12f, 0.8f));
         [Tooltip("Every extra player shrinks the share of orbs left behind by this fraction (more bodies covering the ground): loss = (1 - curve) x (1 - this)^(players - 1).")]
         [Range(0f, 1f)] public float CoopPickupBonus = 0.35f;
+        [Tooltip("Coin orbs expire after CoinConfig.OrbLifetime (30s) vs XP's 60s, so more are left behind: coin pickup share = XP pickup share x this. Calibrate against CoinsEarned.")]
+        [Range(0f, 1f)] public float CoinPickupFactor = 0.9f;
         [Tooltip("For sustained-contact channels (Brute's Juggernaut): share of the channel during which AreaTargets enemies are actually in contact and being re-hit. Knockback pushes them out, so well below 1.")]
         [Range(0f, 1f)] public float ChannelContactUptime = 0.5f;
 

@@ -303,7 +303,7 @@ MonoBehaviour:
   ActiveMoveSpeedBonus:
     RawValue: 3277
   ChargedMoveSpeedBonus:
-    RawValue: 13107
+    RawValue: 9830
   KnockbackRadius:
     RawValue: 98304
   KnockbackForce:

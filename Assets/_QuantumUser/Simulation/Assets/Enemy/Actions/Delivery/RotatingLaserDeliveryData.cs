@@ -127,7 +127,7 @@ namespace Quantum
                 Shape3D box = Shape3D.CreateBox(new FPVector3(BeamWidth, BeamHeight, BeamLength) / 2);
                 FPQuaternion rotation = FPQuaternion.LookRotation(direction, FPVector3.Up);
 
-                var hits = f.Physics3D.OverlapShape(center, rotation, box, -1, QueryOptions.HitAll);
+                var hits = f.Physics3D.OverlapShape(center, rotation, box, EnemyMovementUtility.GetPlayerIncludingDashingLayerMask(f), QueryOptions.HitAll);
 
                 for (int i = 0; i < hits.Count; i++)
                 {

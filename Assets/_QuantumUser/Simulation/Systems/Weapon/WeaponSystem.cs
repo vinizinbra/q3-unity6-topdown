@@ -7,6 +7,11 @@ namespace Quantum
     [Preserve]
     public unsafe class WeaponSystem : SystemMainThreadFilter<WeaponSystem.Filter>, ISignalOnComponentAdded<Weapon>
     {
+        // Per-stage profiler markers (see SimProfilerMarker). Compiled out of Release players.
+        private static readonly SimProfilerMarker TicksMarker = new SimProfilerMarker("WeaponSystem.Ticks");
+        private static readonly SimProfilerMarker FireShotMarker = new SimProfilerMarker("WeaponSystem.FireShot");
+        private static readonly SimProfilerMarker FollowUpShotsMarker = new SimProfilerMarker("WeaponSystem.FollowUpShots");
+
         // Covers a weapon authored straight onto a prototype (e.g. a Sentry barrel's WeaponData,
         // baked in ApplyWeaponUpgrade); a rolled drop calls Equip itself (see WeaponGenerator) once
         // it has filled in Perks. A hero's own prototype now leaves WeaponData empty on purpose -
@@ -41,6 +46,7 @@ namespace Quantum
             ApplyPixieExplosiveWeapon(f, owner, weapon);
             ApplyBaseTraits(f, owner, weapon, f.FindAsset(weaponDataRef));
             ApplyOwnerWeaponModifiers(f, owner, weapon);
+            ApplyOwnerWeaponRange(f, owner, weapon);
 
             weapon->Ammo = weapon->MagazineSize;
             weapon->FireCooldownTimer = FP._0;
@@ -180,6 +186,46 @@ namespace Quantum
             {
                 weapon->Ammo = weapon->MagazineSize;
             }
+        }
+
+        // Mid-run grant of CharacterStats.MagazineSizeBonus (Magazine Size Global Upgrade, Bullet
+        // Storm). Future equips pick the new total up through ApplyOwnerWeaponModifiers; the weapon
+        // already in hand is rescaled by new/old factor rather than re-running that stage, which
+        // would apply the bonus it already carries a second time. Skipped under an absolute
+        // override (One in the Chamber), same precedence ApplyOwnerWeaponModifiers gives it.
+        public static void AddMagazineSizeBonus(Frame f, EntityRef owner, FP bonus)
+        {
+            if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false)
+                return;
+
+            FP previousFactor = FP._1 + stats->MagazineSizeBonus;
+            stats->MagazineSizeBonus += bonus;
+
+            if (stats->MagazineSizeOverride > 0 || f.Unsafe.TryGetPointer<Weapon>(owner, out var weapon) == false
+                || previousFactor <= FP._0)
+                return;
+
+            int scaled = FPMath.RoundToInt(weapon->MagazineSize * (FP._1 + stats->MagazineSizeBonus) / previousFactor);
+            weapon->MagazineSize = scaled < 1 ? 1 : scaled;
+
+            if (weapon->Ammo > weapon->MagazineSize)
+            {
+                weapon->Ammo = weapon->MagazineSize;
+            }
+        }
+
+        // Weapon Range Global Upgrade's owner-level multiplier (CharacterStats.WeaponRangeMultiplier),
+        // folded onto the freshly seeded Weapon.RangeMultiplier on top of perks (Long Barrel).
+        // Equip-only on purpose: unlike ApplyOwnerWeaponModifiers (also called mid-run by One in the
+        // Chamber) it multiplies, so re-running it on the weapon in hand would apply it twice -
+        // WeaponRangeUpgradeData scales the in-hand weapon itself. 0 = not seeded, treated as 1.
+        private static void ApplyOwnerWeaponRange(Frame f, EntityRef owner, Weapon* weapon)
+        {
+            if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false
+                || stats->WeaponRangeMultiplier <= FP._0)
+                return;
+
+            weapon->RangeMultiplier *= stats->WeaponRangeMultiplier;
         }
 
         // Optional per-weapon internal cooldown between explosive procs - only ticks when something
@@ -338,6 +384,7 @@ namespace Quantum
             // shouldn't wait on the recipient being able to act this tick. Same reasoning for the
             // ramp decay/Killer Instinct timer/pending echoes below - none of them should freeze
             // just because the wielder is stunned or holding no input this tick.
+            TicksMarker.Begin();
             ProcessGrantPerkCommand(f, ref filter);
             ProcessEquipWeaponCommand(f, ref filter);
             TickRamp(f, filter.Entity, filter.Weapon);
@@ -346,6 +393,7 @@ namespace Quantum
             TickPendingDoubleTap(f, filter.Entity, filter.Weapon, f.DeltaTime);
             TickWeaponBurst(f, filter.Entity, filter.Weapon, f.DeltaTime);
             TickExplosiveProcCooldown(f, filter.Entity);
+            TicksMarker.End();
 
             // A burst already in flight (Double Barrel/Burst Rifle) owns this weapon's next few
             // ticks - its own queued shots just fired/are still counting down above, so a fresh
@@ -500,12 +548,16 @@ namespace Quantum
             // Measured against the current aim target, the same thing the shot is being aimed at.
             grantPierceAmount += ResolveLongRangePierceBonus(f, filter.Entity, filter.Aim->Target, casterPosition);
 
+            FireShotMarker.Begin();
             FireShot(f, filter.Entity, filter.Weapon, weaponData, damage, casterPosition, aimAngle, holdOffset,
                 spawnPosition, aimDirection, filter.Aim->Target, aimAtCenter, isExplosiveProc, isCataclysm, grantPierceAmount, isFirstBullet, forceCritical);
+            FireShotMarker.End();
 
+            FollowUpShotsMarker.Begin();
             QueueFollowUpShots(f, filter.Entity, filter.Weapon, weaponData, damage, casterPosition, aimAngle, holdOffset,
                 spawnPosition, aimDirection, filter.Aim->Target, aimAtCenter, isExplosiveProc, isCataclysm, grantPierceAmount,
                 isFirstBullet, isEchoEligibleShot);
+            FollowUpShotsMarker.End();
 
             // Double Barrel/Burst Rifle - this trigger pull just fired burst index 0 above; the
             // remaining BurstCount-1 shots are queued into WeaponBurstState and fired one at a time

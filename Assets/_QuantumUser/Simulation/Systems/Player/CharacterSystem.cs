@@ -80,6 +80,7 @@ namespace Quantum
             stats->HealingReceivedMultiplier = data.HealingReceivedMultiplier;
 
             stats->PickupRangeMultiplier = data.PickupRangeMultiplier;
+            stats->WeaponRangeMultiplier = FP._1;
             stats->Luck = data.Luck;
             stats->ExperienceGainMultiplier = data.ExperienceGainMultiplier;
             stats->RiftShardGainMultiplier = data.RiftShardGainMultiplier;

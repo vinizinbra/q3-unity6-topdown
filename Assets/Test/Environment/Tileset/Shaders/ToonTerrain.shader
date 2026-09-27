@@ -46,6 +46,8 @@ Shader "RiftRaiders/Test/ToonTerrain"
 
         [Header(Texture Outlines)]
         _OutlineColor ("Outline Color (A = opacity)", Color) = (0.17, 0.11, 0.08, 1)
+        _PropLineWidth ("Prop Edge Lines Width (px)", Range(0, 6)) = 1.6
+        _PropLineStrength ("Prop Edge Lines Strength", Range(0, 1)) = 1
         _StrataOutlineWidth ("Rock Ledge Lines Width (px)", Range(0, 8)) = 1.8
         _StrataOutlineStrength ("Rock Ledge Lines Strength", Range(0, 1)) = 0.85
         _RimOutlineWidth ("Cliff Top Edge Width (px)", Range(0, 10)) = 1.8
@@ -131,6 +133,8 @@ Shader "RiftRaiders/Test/ToonTerrain"
             float _RimOutlineStrength;
             float _BorderOutlineWidth;
             float _BorderOutlineStrength;
+            float _PropLineWidth;
+            float _PropLineStrength;
             float _SurfaceHatchScale;
             float _EmissionStrength;
             float _EmissionMinY;
@@ -176,6 +180,8 @@ Shader "RiftRaiders/Test/ToonTerrain"
                 float4 positionOS : POSITION;
                 float3 normalOS : NORMAL;
                 float2 uv : TEXCOORD0;
+                float2 uv1 : TEXCOORD1;   // props: feature-edge barycentrics b0, b1
+                float2 uv2 : TEXCOORD2;   // props: b2, y = 1 when the mesh has edge data
                 half4 color : COLOR;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
@@ -189,6 +195,7 @@ Shader "RiftRaiders/Test/ToonTerrain"
                 half4 color : TEXCOORD3;
                 half fogFactor : TEXCOORD4;
                 half3 ambient : TEXCOORD5;   // SH ambient, evaluated per vertex (cheaper than per pixel)
+                float4 edge : TEXCOORD6;     // xyz = feature-edge barycentrics, w = has edge data
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
@@ -202,6 +209,7 @@ Shader "RiftRaiders/Test/ToonTerrain"
                 o.positionWS = pos.positionWS;
                 o.normalWS = TransformObjectToWorldNormal(input.normalOS);
                 o.data = input.uv;
+                o.edge = float4(input.uv1, input.uv2);
                 o.color = input.color;
                 o.fogFactor = ComputeFogFactor(pos.positionCS.z);
                 o.ambient = SampleSH(o.normalWS);
@@ -225,6 +233,19 @@ Shader "RiftRaiders/Test/ToonTerrain"
                 return saturate(widthPx * 0.5 - d + 0.5);
             }
 
+            // PERFORMANCE (mobile, 2026-09-27): this fragment covers almost every pixel of the screen, and
+            // on low-end Android swapping it for a flat per-vertex colour recovered the ~3 ms of GPU the
+            // busier areas were over budget. Everything below that would be computed and then thrown away
+            // is skipped instead - with identical output:
+            //  - props (isProp, constant per mesh) never read/shade the terrain albedo they used to discard;
+            //  - the hatch texture is only read where darkness can actually produce ink (below the lower
+            //    threshold both smoothsteps are exactly 0) - sampled with derivatives taken OUTSIDE the
+            //    branch so mip selection is unchanged;
+            //  - prop edge lines only on meshes with edge data (edge.w, constant per mesh), emissive only on
+            //    emissive props, raised tint / water gradient only when their strength is on;
+            //  - colour maths in half; world position, UVs and derivatives stay float.
+            // Rule for new code here: fwidth / ddx / implicit-mip sampling only outside branches, or in
+            // branches whose condition is constant per mesh or per material (quad-uniform).
             half4 Frag(Varyings input) : SV_Target
             {
                 float3 P = input.positionWS;
@@ -241,25 +262,33 @@ Shader "RiftRaiders/Test/ToonTerrain"
                 // _EdgeFadeStart.._EdgeFadeEnd (UV0.y = distance into the grass). Nothing before the outline.
                 half w = step(5.98, input.data.x);                       // 1 = inside the grass outline
                 float2 planarUV = PlanarUV(P, N);
-                half3 terrain;
-                [branch] if (w > 0.5)
+                half3 albedo = input.color.rgb;                          // props: the vertex colour, as is
+                [branch] if (isProp < 1.0h)
                 {
-                    half4 surfSample = SAMPLE_TEXTURE2D(_SurfaceTex, sampler_SurfaceTex, P.xz / _SurfaceScale);
-                    half raised = saturate((P.y - _RaisedFromY) * 8.0) * _RaisedStrength;
-                    half3 surface = lerp(lerp(_SurfaceDarkColor.rgb, _RaisedDarkColor.rgb, raised),
-                                         lerp(_SurfaceLightColor.rgb, _RaisedLightColor.rgb, raised), surfSample.r);
-                    float fade = input.data.y + (surfSample.a - 0.5) * _EdgeFadeNoise * saturate(input.data.y * 4.0);
-                    half inward = smoothstep(_EdgeFadeStart, max(_EdgeFadeEnd, _EdgeFadeStart + 1e-3), fade);
-                    terrain = lerp(surface, lerp(_FadeColor.rgb, surface, inward), _FadeColor.a);
+                    half3 terrain;
+                    [branch] if (w > 0.5)
+                    {
+                        half4 surfSample = SAMPLE_TEXTURE2D(_SurfaceTex, sampler_SurfaceTex, P.xz / _SurfaceScale);
+                        half3 surfaceDark = _SurfaceDarkColor.rgb;
+                        half3 surfaceLight = _SurfaceLightColor.rgb;
+                        [branch] if (_RaisedStrength > 0.0h)
+                        {
+                            half raised = saturate((P.y - _RaisedFromY) * 8.0) * _RaisedStrength;
+                            surfaceDark = lerp(surfaceDark, _RaisedDarkColor.rgb, raised);
+                            surfaceLight = lerp(surfaceLight, _RaisedLightColor.rgb, raised);
+                        }
+                        half3 surface = lerp(surfaceDark, surfaceLight, surfSample.r);
+                        half fade = input.data.y + (surfSample.a - 0.5h) * _EdgeFadeNoise * saturate(input.data.y * 4.0h);
+                        half inward = smoothstep(_EdgeFadeStart, max(_EdgeFadeEnd, _EdgeFadeStart + 1e-3h), fade);
+                        terrain = lerp(surface, lerp(_FadeColor.rgb, surface, inward), _FadeColor.a);
+                    }
+                    else
+                    {
+                        half wallGray = SAMPLE_TEXTURE2D(_WallTex, sampler_WallTex, planarUV / _WallScale).r;
+                        terrain = lerp(_WallDarkColor.rgb, _WallLightColor.rgb, wallGray) * input.color.rgb;
+                    }
+                    albedo = lerp(terrain, input.color.rgb, isProp);
                 }
-                else
-                {
-                    half wallGray = SAMPLE_TEXTURE2D(_WallTex, sampler_WallTex, planarUV / _WallScale).r;
-                    terrain = lerp(_WallDarkColor.rgb, _WallLightColor.rgb, wallGray) * input.color.rgb;
-                }
-                half3 albedo = lerp(terrain, input.color.rgb, isProp);
-
-
 
                 // --- toon main light (+ received shadows)
                 #if defined(_MAIN_LIGHT_SHADOWS_SCREEN)
@@ -268,54 +297,79 @@ Shader "RiftRaiders/Test/ToonTerrain"
                     float4 shadowCoord = TransformWorldToShadowCoord(P);
                 #endif
                 Light mainLight = GetMainLight(shadowCoord);
-                float ndl = dot(N, mainLight.direction);
-                float shadowAtten = lerp(1.0, mainLight.shadowAttenuation, _CastShadowStrength);
-                float lit = smoothstep(_ShadowThreshold - _ShadowSoftness, _ShadowThreshold + _ShadowSoftness, ndl * 0.5 + 0.5);
-                lit *= smoothstep(0.5 - _ShadowSoftness, 0.5 + _ShadowSoftness, shadowAtten);
+                half ndl = dot(N, mainLight.direction);
+                half shadowAtten = lerp(1.0h, mainLight.shadowAttenuation, _CastShadowStrength);
+                half lit = smoothstep(_ShadowThreshold - _ShadowSoftness, _ShadowThreshold + _ShadowSoftness, ndl * 0.5h + 0.5h);
+                lit *= smoothstep(0.5h - _ShadowSoftness, 0.5h + _ShadowSoftness, shadowAtten);
 
-                half3 color = albedo * lerp(_ShadowTint.rgb, 1.0, lit) * mainLight.color;
+                half3 color = albedo * lerp(_ShadowTint.rgb, 1.0h, lit) * mainLight.color;
                 color += albedo * input.ambient * _AmbientStrength;
 
                 // --- hatching: single lines in mid shadow, cross lines in deep shadow
-                float darkness = 1.0 - saturate(ndl) * shadowAtten;
+                half darkness = 1.0h - saturate(ndl) * shadowAtten;
                 #if defined(_HATCH_SCREENSPACE)
-                    float2 suv = GetNormalizedScreenSpaceUV(input.positionCS) * float2(_ScreenParams.x / _ScreenParams.y, 1.0) * _HatchScreenScale;
-                    half2 hatch = SAMPLE_TEXTURE2D(_HatchTex, sampler_HatchTex, suv).rg;
+                    float2 hatchUV = GetNormalizedScreenSpaceUV(input.positionCS) * float2(_ScreenParams.x / _ScreenParams.y, 1.0) * _HatchScreenScale;
                 #else
-                    half2 hatch = SAMPLE_TEXTURE2D(_HatchTex, sampler_HatchTex, planarUV / _HatchScale).rg;
+                    float2 hatchUV = planarUV / _HatchScale;
                 #endif
-                half2 ink = 1.0 - hatch;   // black = ink, white = paper (nothing)
-                half h1 = ink.x * smoothstep(_Hatch1Threshold, _Hatch1Threshold + _HatchSoftness, darkness);
-                half h2 = ink.y * smoothstep(_Hatch2Threshold, _Hatch2Threshold + _HatchSoftness, darkness);
-                half hatchAmount = _HatchStrength * lerp(_SurfaceHatchScale, 1.0, 1.0 - w);   // strong on walls, light on grass
-                // multiply shadow: full ink multiplies by the ink colour, paper leaves the colour untouched
-                color *= lerp(1.0, _HatchColor.rgb, saturate(max(h1, h2)) * hatchAmount * _HatchColor.a);
+                float2 hatchDdx = ddx(hatchUV);
+                float2 hatchDdy = ddy(hatchUV);
+                half hatchAmount = _HatchStrength * lerp(_SurfaceHatchScale, 1.0h, 1.0h - w);   // strong on walls, light on grass
+                [branch] if (darkness > min(_Hatch1Threshold, _Hatch2Threshold) && hatchAmount * _HatchColor.a > 0.0h)
+                {
+                    half2 hatch = SAMPLE_TEXTURE2D_GRAD(_HatchTex, sampler_HatchTex, hatchUV, hatchDdx, hatchDdy).rg;
+                    half2 ink = 1.0h - hatch;   // black = ink, white = paper (nothing)
+                    half h1 = ink.x * smoothstep(_Hatch1Threshold, _Hatch1Threshold + _HatchSoftness, darkness);
+                    half h2 = ink.y * smoothstep(_Hatch2Threshold, _Hatch2Threshold + _HatchSoftness, darkness);
+                    // multiply shadow: full ink multiplies by the ink colour, paper leaves the colour untouched
+                    color *= lerp(1.0h, _HatchColor.rgb, saturate(max(h1, h2)) * hatchAmount * _HatchColor.a);
+                }
 
                 // --- texture-level outlines on the terrain (rock ledges, cliff top, grass border)
+                // (IntegerLine's fwidth stays outside any per-pixel branch - see the rule above.)
                 float t = input.data.x;
-                float n = round(t);
-                half isTop = step(4.5, n);      // 5 = cliff top edge
-                half isBorder = step(5.5, n);   // 6 = grass border
+                half n = round(t);
+                half isTop = step(4.5h, n);      // 5 = cliff top edge
+                half isBorder = step(5.5h, n);   // 6 = grass border
                 half width = lerp(lerp(_StrataOutlineWidth, _RimOutlineWidth, isTop), _BorderOutlineWidth, isBorder);
-                half strength = lerp(lerp(_StrataOutlineStrength, _RimOutlineStrength, isTop), _BorderOutlineStrength, isBorder) * step(0.5, n);
-                half outline = IntegerLine(t, width) * strength * (1.0 - isProp) * _OutlineColor.a;
+                half strength = lerp(lerp(_StrataOutlineStrength, _RimOutlineStrength, isTop), _BorderOutlineStrength, isBorder) * step(0.5h, n);
+                half outline = IntegerLine(t, width) * strength * (1.0h - isProp) * _OutlineColor.a;
                 color = lerp(color, _OutlineColor.rgb, outline);
 
                 // --- emissive props (neon tubes/signs/lit windows): unlit, HDR so bloom picks them up.
                 // Only above Emission Min Y - below it (under water) they're shaded like any prop.
                 // Before the water depth/line so those still cover them.
-                half emissiveProp = isProp * step(input.data.x, -0.5);
-                half above = step(_EmissionMinY, P.y);
-                color = lerp(color, input.color.rgb * _EmissionStrength, emissiveProp * above);
-                // below the cutoff: switched-off tubes read as a flat colour (black by default)
-                color = lerp(color, _EmissionOffColor.rgb, emissiveProp * (1.0 - above) * _EmissionOffColor.a);
+                [branch] if (isProp > 0.0h && input.data.x <= -0.5)
+                {
+                    half emissiveProp = isProp;
+                    half above = step(_EmissionMinY, P.y);
+                    color = lerp(color, input.color.rgb * _EmissionStrength, emissiveProp * above);
+                    // below the cutoff: switched-off tubes read as a flat colour (black by default)
+                    color = lerp(color, _EmissionOffColor.rgb, emissiveProp * (1.0h - above) * _EmissionOffColor.a);
+                }
+
+                // --- prop edge lines: the prop generator bakes barycentrics per triangle corner, set to 1 for
+                // edges that are NOT features, so a coordinate only reaches 0 on a real crease / border. Drawn
+                // pixel-wide like the platform's texture outlines (no hull, no post). w = 0 on meshes without it
+                // (every terrain tile) - constant per mesh, so the fwidth inside this branch is safe.
+                [branch] if (input.edge.w > 0.0)
+                {
+                    float3 eb = input.edge.xyz;
+                    float3 epx = eb / max(fwidth(eb), 1e-5);
+                    float emin = min(epx.x, min(epx.y, epx.z));
+                    half propLine = saturate(_PropLineWidth * 0.5 - emin + 0.5) * saturate(input.edge.w) * _PropLineStrength * _OutlineColor.a;
+                    color = lerp(color, _OutlineColor.rgb, propLine);
+                }
 
                 // --- water depth: below Start Y the final colour is the flat, UNLIT Bottom colour (no
                 // shading, shadow, hatch or outline - it melts into the water / background); it blends
                 // back to the normal shaded colour (x Top tint) by Start Y + Distance.
-                float gt = saturate((P.y - _GradientStartY) / max(abs(_GradientDistance), 1e-4));
-                half3 depthColor = lerp(_GradientBottomColor.rgb, color * _GradientTopColor.rgb, gt);
-                color = lerp(color, depthColor, _GradientStrength);
+                [branch] if (_GradientStrength > 0.0)
+                {
+                    half gt = saturate((P.y - _GradientStartY) / max(abs(_GradientDistance), 1e-4));
+                    half3 depthColor = lerp(_GradientBottomColor.rgb, color * _GradientTopColor.rgb, gt);
+                    color = lerp(color, depthColor, _GradientStrength);
+                }
 
                 // --- water line: one continuous, pixel-stable band at a world height, walls only. Drawn
                 // on top of lighting/hatching/outlines, so shadows never darken it.

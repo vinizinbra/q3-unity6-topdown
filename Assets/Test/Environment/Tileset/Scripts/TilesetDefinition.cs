@@ -55,6 +55,10 @@ public class TilesetDefinition : ScriptableObject
         public int Cells;
         [Tooltip("Wall props only: stands at the wall FOOT (platform bottom, only where that ground is visible) instead of being embedded in the face.")]
         public bool Foot;
+        [Tooltip("Wall runs only: the module used on SIDE walls (its baked outline is drawn for that view). Empty = Model.")]
+        public GameObject SideModel;
+        [Tooltip("Foot props that stand clear of the wall (lamp poles, cones, tents): ignore the wall's avoid band, so they may be taller than the wall body.")]
+        public bool FreeStanding;
     }
 
     [Header("Surface scatter (props on top of platforms, see TilesetPlatformBuilder.SurfaceDecor)")]
@@ -81,6 +85,84 @@ public class TilesetDefinition : ScriptableObject
     [SerializeField, Tooltip("Extra world-unit gap kept between a prop and the avoid band.")]
     private float wallPropAvoidMargin = 0.04f;
 
+    [SerializeField, Tooltip("Extra world-unit push INTO the wall for embedded wall props (for profiles whose wall body is recessed under a cap, e.g. NeonCityV5).")]
+    private float wallPropInset = 0f;
+
+    [SerializeField, Tooltip("How much deeper (world units, at the wall foot) embedded wall props / runs sit than at the top - follows an undercut cliff face that tucks in toward its foot. 0 for straight built walls (Neo-Favela), so flat props like graffiti stay on the face.")]
+    private float wallPropSlope = 0.12f;
+
+    // A continuous modular run along a straight wall (pipeline, cable tray, fence...): 1-cell modules
+    // laid side by side at one height, capped at both ends. Modules are authored 1 unit long along X
+    // (-0.5..0.5), facing -Z, pivot on the wall face; End pieces are authored as the run's +X end and
+    // mirrored for the other one. Runs follow the wall around corners that have a Corner / InnerCorner
+    // module (never onto walls facing away from the camera).
+    [Serializable]
+    public class WallRunSet
+    {
+        public string Name;
+        [Tooltip("Plain middle modules (weighted).")]
+        public List<ScatterEntry> Straight = new();
+        [Tooltip("Decorated middle modules - valves, gauges, boxes (weighted).")]
+        public List<ScatterEntry> Decorated = new();
+        [Range(0f, 1f), Tooltip("Chance a middle cell uses a Decorated module.")]
+        public float DecoratedChance = 0.35f;
+        [Min(0), Tooltip("Minimum plain cells between two Decorated modules.")]
+        public int DecoratedSpacing = 2;
+        [Tooltip("End that turns into the wall / a wall box (+X end).")]
+        public GameObject EndWall;
+        public GameObject EndWallSide;
+        [Tooltip("End that turns DOWN (+X end); its downward part ends at the model pivot height, at DropX.")]
+        public GameObject EndDown;
+        public GameObject EndDownSide;
+        [Tooltip("Vertical module under EndDown, authored 0..1 tall at DropX and stretched to reach the ground.")]
+        public GameObject Drop;
+        public GameObject DropSide;
+        [Tooltip("Optional base where the Drop meets the ground (flange, sand heap).")]
+        public GameObject DropFoot;
+        [Tooltip("Wraps a convex corner, authored in the Corner tile's frame (NE quarter solid, in from +X, out to +Z). Empty = runs stop at convex corners.")]
+        public GameObject Corner;
+        [Tooltip("Corner variant used when the corner's -X wall (not the -Z one) faces the camera (baked outline for that view). Empty = Corner.")]
+        public GameObject CornerXFront;
+        [Tooltip("Follows a concave corner, authored in the InnerCorner tile's frame (SW quarter empty, in from -X, out to -Z). Empty = runs stop at inner corners.")]
+        public GameObject InnerCorner;
+        public GameObject InnerCornerXFront;
+
+        // "_Side" / "XFront" variants carry the baked outline for side walls; fall back to the base module
+        public static GameObject Pick(GameObject front, GameObject side, bool isSide) => isSide && side != null ? side : front;
+        [Tooltip("Where the Drop sits along X in the End module's frame (for the ground check).")]
+        public float DropX = 0.3f;
+        [Range(0f, 1f), Tooltip("Chance an end turns down to the ground (only where there is ground); otherwise EndWall.")]
+        public float DownEndChance = 0.7f;
+        [Tooltip("Authored height of the run's centreline above the module pivot.")]
+        public float CenterHeight = 0.2f;
+        [Tooltip("Run centreline this far below the platform top (world units).")]
+        public float BelowTop = 0.45f;
+        [Tooltip("With a tileset avoid band (e.g. NeonCityV5's cap slab), the centreline also stays at least this far below the band's lower edge (world units).")]
+        public float BandClearance = 0.3f;
+        [Tooltip("Walls lower than this (top - bottom) get no run.")]
+        public float MinWallHeight = 0.9f;
+        [Range(0f, 1f), Tooltip("Chance per free stretch of a camera-facing straight wall to start a run (half on side walls).")]
+        public float Chance = 0.5f;
+        [Tooltip("Run length range in cells (ends included).")]
+        public Vector2Int Length = new(3, 8);
+        [Min(1), Tooltip("Minimum empty cells between two runs on the same wall.")]
+        public int MinGap = 2;
+        [Tooltip("Extra push into the wall (world units).")]
+        public float Inset;
+        [Tooltip("Modules stand on the ground in front of the wall (street lights every few cells...) instead of on the wall face: pivot at the wall foot, only where there is ground; the wall height / band settings are ignored. Leave Straight's model empty and use Decorated (+ DecoratedSpacing) for evenly spaced items.")]
+        public bool Foot;
+        [Tooltip("Only on walls facing the camera (flat things read edge-on on side walls - clotheslines).")]
+        public bool FrontOnly;
+        [Tooltip("Foot runs: how high above the wall foot a spawned item blocks the wall props of its cell (a low sandbag trench leaves room for props above it; a pole blocks the whole cell).")]
+        public float FootReserveHeight = 99f;
+    }
+
+    [SerializeField, Tooltip("Continuous modular runs along straight walls (pipelines, cables, fences). Wall props keep out of the cells/height they cover.")]
+    private List<WallRunSet> wallRuns = new();
+
+    public IReadOnlyList<WallRunSet> WallRuns => wallRuns;
+    public float WallPropInset => wallPropInset;
+    public float WallPropSlope => wallPropSlope;
     public Vector2 WallPropAvoidBand => wallPropAvoidBand;
     public float WallPropAvoidMargin => wallPropAvoidMargin;
     public IReadOnlyList<ScatterEntry> WallScatter => wallScatter;

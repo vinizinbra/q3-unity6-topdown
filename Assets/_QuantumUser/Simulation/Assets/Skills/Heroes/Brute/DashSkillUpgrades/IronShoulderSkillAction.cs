@@ -89,7 +89,7 @@ namespace Quantum
             Shape3D box = Shape3D.CreateBox(new FPVector3(Width, Height, Length) / 2);
             FPQuaternion rotation = FPQuaternion.LookRotation(direction, FPVector3.Up);
 
-            var hits = f.Physics3D.OverlapShape(center, rotation, box, -1, QueryOptions.HitAll);
+            var hits = f.Physics3D.OverlapShape(center, rotation, box, EnemyMovementUtility.GetEnemyLayerMask(f), QueryOptions.HitAll);
 
             int rank = System.Math.Max(1, SkillUpgradeUtility.GetRank(f, filter.Entity, selfRef));
             int index = System.Math.Clamp(rank, 1, (int)MaxRank) - 1;
@@ -108,8 +108,7 @@ namespace Quantum
                 DamageUtility.ApplyKnockback(f, hitEntity, direction, force, upwardForce, filter.Entity,
                     KnockbackApplyMode.Override);
 
-                if (f.Unsafe.TryGetPointer<Transform3D>(hitEntity, out var hitTransform))
-                    f.Events.HitEffectApplied(filter.Entity, hitEntity, hitTransform->Position, true);
+                f.Unsafe.TryGetPointer<Transform3D>(hitEntity, out var hitTransform);
 
                 bool hitWall = WallSlamUtility.TryWallSlam(f, hitEntity, filter.Entity, direction, WallCheckDistance, StunDuration, out _);
 

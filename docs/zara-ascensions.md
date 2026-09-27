@@ -269,7 +269,7 @@ deliver Move Speed / Fire Rate / cooldown reduction — only the HP half switche
 
 - **Amplifier** — unchanged (+30% / +60% + knockback / +100% + Bass Drop stun every 3rd Damage Beat).
   Bass Drop's stuns now automatically respect the generic per-tier CC immunity window.
-- **Sound Boost** (replaces Healing Chorus) — R1: heal 2% Max HP, +15% Move Speed / +15% Fire Rate.
+- **Sound Boost** (replaces Healing Chorus) — R1: heal 2% Max HP, +10% Move Speed / +15% Fire Rate.
   R2: every Support Beat also reduces affected allies' **remaining Hero Skill cooldown** by 0.5s.
   R3 "Power Chord": heal 5% Max HP and +15% **outgoing damage** for 2s.
   - The cooldown reduction is the new generic `ModifyRemainingCooldownEffectData` — remaining-cooldown
@@ -525,7 +525,7 @@ on.** Flow belongs to ZARA, never to her Totem.
 | | |
 |---|---|
 | Fill | `Progress` 0 → 1 over **2.5s** of continuous meaningful movement |
-| Active | `IsActive` flips true the moment the bar lands; worth **+15% Move Speed and +15% Fire Rate** |
+| Active | `IsActive` flips true the moment the bar lands; worth **+10% Move Speed and +15% Fire Rate** |
 | Movement | Player **input** (`Input.Direction` past `MovementInputThreshold`) or an active Dash |
 | Stationary grace | **1.25s** - the bar is simply held, costs nothing |
 | Decay | past grace, the full bar drains over **4.5s**; a single moving tick stops it dead |
@@ -567,7 +567,7 @@ further +10% Fire Rate while Active. (Renamed from "Full Tempo" once Hero Master
 Mastery R3 Special of that same name - see docs/hero-mastery.md.)
 
 **Second Wind** (replaces Protective Rhythm)
-R1 +20% Move Speed for 1.5s when Flow breaks · R2 a hit drops the bar to a third instead of 0 ·
+R1 +15% Move Speed for 1.5s when Flow breaks · R2 a hit drops the bar to a third instead of 0 ·
 R3 "Keep the Beat" a hit taken while Active deals 30% less damage, 6s cooldown.
 
 **Headliner** (replaces Remix)

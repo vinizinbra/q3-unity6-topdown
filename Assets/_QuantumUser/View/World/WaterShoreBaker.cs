@@ -122,7 +122,7 @@ public class WaterShoreBaker : QuantumGlobalMonoBehaviour
 
     // Re-run the bake against the current live frame - lets worldUnitsPerTexel/maxShoreDistanceWorld/
     // probe settings be tweaked in Play Mode and seen immediately (same live-iteration idea
-    // ChunkDetailScatter.Regenerate / LakeVisualBuilder.Generate expose). Play Mode only - there's no
+    // LakeVisualBuilder.Generate exposes). Play Mode only - there's no
     // frame to probe in Edit Mode. Runs to completion in one go, unlike the load-time bake.
     [Button("Rebake Shore Field")]
     public void Rebake()

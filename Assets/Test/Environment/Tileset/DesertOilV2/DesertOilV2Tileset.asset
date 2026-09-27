@@ -30,111 +30,289 @@ MonoBehaviour:
     AnyYaw: 0
     Cells: 1
     Foot: 0
+    SideModel: {fileID: 0}
   - Model: {fileID: 919132149155446097, guid: 71b2f75d73af3476babc8cc4d0cd8ac6, type: 3}
     Weight: 1.5
     ScaleRange: {x: 0.9, y: 1.2}
     AnyYaw: 0
     Cells: 1
     Foot: 0
+    SideModel: {fileID: 0}
   - Model: {fileID: 919132149155446097, guid: 03648ab35e01f41219c4bb817d59b10e, type: 3}
-    Weight: 2
+    Weight: 1.5
     ScaleRange: {x: 1, y: 1.3}
     AnyYaw: 0
     Cells: 1
     Foot: 0
+    SideModel: {fileID: 0}
   - Model: {fileID: 919132149155446097, guid: d66340b07068442468ce20d63c20e8cd, type: 3}
     Weight: 1.5
     ScaleRange: {x: 1, y: 1.3}
     AnyYaw: 0
     Cells: 1
     Foot: 0
+    SideModel: {fileID: 0}
   - Model: {fileID: 919132149155446097, guid: 099a74c2a5d5d42ff8ee4555c0959c60, type: 3}
     Weight: 1
     ScaleRange: {x: 1, y: 1.2}
     AnyYaw: 0
     Cells: 1
     Foot: 0
+    SideModel: {fileID: 0}
   - Model: {fileID: 919132149155446097, guid: d76f196d2a7214dbc896a298695b1195, type: 3}
     Weight: 1
     ScaleRange: {x: 1, y: 1.3}
     AnyYaw: 0
     Cells: 1
     Foot: 0
+    SideModel: {fileID: 0}
   - Model: {fileID: 919132149155446097, guid: 0998458fb0da44e93b49b4795bed40d4, type: 3}
     Weight: 1
     ScaleRange: {x: 1, y: 1.3}
     AnyYaw: 0
     Cells: 1
     Foot: 0
+    SideModel: {fileID: 0}
   - Model: {fileID: 919132149155446097, guid: 43297590cf81d4ed3afda80d72a3eb26, type: 3}
     Weight: 1.5
     ScaleRange: {x: 1, y: 1.2}
     AnyYaw: 0
     Cells: 1
     Foot: 1
+    SideModel: {fileID: 0}
   - Model: {fileID: 919132149155446097, guid: e50c32e8581074f37bee66a00898b6f4, type: 3}
     Weight: 1.5
     ScaleRange: {x: 0.9, y: 1.1}
     AnyYaw: 0
     Cells: 1
     Foot: 1
+    SideModel: {fileID: 0}
   - Model: {fileID: 919132149155446097, guid: dfdc7a7d027f54f35aeac40ed2387506, type: 3}
     Weight: 1.5
     ScaleRange: {x: 0.9, y: 1.1}
     AnyYaw: 0
     Cells: 1
     Foot: 1
+    SideModel: {fileID: 0}
   - Model: {fileID: 919132149155446097, guid: e4bed6541a27b4c81b3a3acdb2235f4c, type: 3}
     Weight: 1
     ScaleRange: {x: 0.9, y: 1.1}
     AnyYaw: 0
     Cells: 1
     Foot: 1
+    SideModel: {fileID: 0}
   - Model: {fileID: 919132149155446097, guid: 4872b8cb5612f4efca4c2bb5f4a606ea, type: 3}
     Weight: 1
     ScaleRange: {x: 0.9, y: 1.1}
     AnyYaw: 0
     Cells: 1
     Foot: 1
+    SideModel: {fileID: 0}
   - Model: {fileID: 919132149155446097, guid: 2ffe10e374178414898ddafac4d5c3bb, type: 3}
     Weight: 1.2
     ScaleRange: {x: 0.9, y: 1.1}
     AnyYaw: 0
     Cells: 1
     Foot: 1
+    SideModel: {fileID: 0}
   - Model: {fileID: 919132149155446097, guid: e2669bb1cbce442d5b199b05583e0dd7, type: 3}
     Weight: 1
     ScaleRange: {x: 0.9, y: 1.1}
     AnyYaw: 0
     Cells: 1
     Foot: 1
+    SideModel: {fileID: 0}
   - Model: {fileID: 919132149155446097, guid: 67997c6b93a8a47e58de3d6fd704bca1, type: 3}
-    Weight: 2.5
+    Weight: 1.5
     ScaleRange: {x: 0.9, y: 1.15}
     AnyYaw: 0
     Cells: 1
     Foot: 1
+    SideModel: {fileID: 0}
   - Model: {fileID: 919132149155446097, guid: 196bdcd9950dd4411ac92315a046abe4, type: 3}
-    Weight: 2.5
+    Weight: 1.5
     ScaleRange: {x: 0.9, y: 1.15}
     AnyYaw: 0
     Cells: 1
     Foot: 1
+    SideModel: {fileID: 0}
   - Model: {fileID: 919132149155446097, guid: d5349dbcb20b544859409add1d1d7d17, type: 3}
     Weight: 1.5
     ScaleRange: {x: 0.9, y: 1.2}
     AnyYaw: 0
     Cells: 1
     Foot: 1
+    SideModel: {fileID: 0}
   - Model: {fileID: 919132149155446097, guid: 4ff6c435c77b64e428fea23dc48d9bdd, type: 3}
     Weight: 1.5
     ScaleRange: {x: 0.9, y: 1.2}
     AnyYaw: 0
     Cells: 1
     Foot: 1
+    SideModel: {fileID: 0}
+  - Model: {fileID: 919132149155446097, guid: 37893f01a7ce846738ea839f7108a1ab, type: 3}
+    Weight: 2
+    ScaleRange: {x: 0.9, y: 1.1}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+  - Model: {fileID: 919132149155446097, guid: ee7be9cac01d44c6387a8a5b5acad499, type: 3}
+    Weight: 1.5
+    ScaleRange: {x: 0.9, y: 1.1}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+  - Model: {fileID: 919132149155446097, guid: 9fcbdf2d63ac1478083400ddab123c7f, type: 3}
+    Weight: 1.5
+    ScaleRange: {x: 0.9, y: 1.1}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+  - Model: {fileID: 919132149155446097, guid: 47a9e87f916ab43c08c992395774f464, type: 3}
+    Weight: 1.5
+    ScaleRange: {x: 0.9, y: 1.1}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+  - Model: {fileID: 919132149155446097, guid: f6db9bfdc3aae46baa0873ea7f8189b0, type: 3}
+    Weight: 1
+    ScaleRange: {x: 0.9, y: 1.1}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+  - Model: {fileID: 919132149155446097, guid: 0bbdef637af454f23bf06f206fade5fe, type: 3}
+    Weight: 1.5
+    ScaleRange: {x: 0.9, y: 1.1}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 0}
+  - Model: {fileID: 919132149155446097, guid: 2a6f3d0306d3a4629906ef1b1f9de797, type: 3}
+    Weight: 1.5
+    ScaleRange: {x: 0.9, y: 1.1}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 0}
+  - Model: {fileID: 919132149155446097, guid: fe9471f760a054a6d9cad884d24cee3e, type: 3}
+    Weight: 1.5
+    ScaleRange: {x: 0.9, y: 1.1}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 0}
+  - Model: {fileID: 919132149155446097, guid: e1aa1f133c9724109a0ec28a24cb104b, type: 3}
+    Weight: 1.5
+    ScaleRange: {x: 0.9, y: 1.1}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 0}
+  - Model: {fileID: 919132149155446097, guid: 4919b9c0a40c3421bb302aa995d0694e, type: 3}
+    Weight: 1.5
+    ScaleRange: {x: 0.9, y: 1.1}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 0}
+  - Model: {fileID: 919132149155446097, guid: d3602f6571cd44d2cab7bf608d1a0e68, type: 3}
+    Weight: 1.5
+    ScaleRange: {x: 0.9, y: 1.1}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 0}
+  - Model: {fileID: 919132149155446097, guid: 2d7be5074ada84679b664e6e0f0620bf, type: 3}
+    Weight: 1
+    ScaleRange: {x: 0.9, y: 1.1}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 0}
   wallDensity: 0.4
   wallPropAvoidBand: {x: 0, y: 0}
   wallPropAvoidMargin: 0.04
+  wallPropInset: 0
+  wallRuns:
+  - Name: Pipeline
+    Straight:
+    - Model: {fileID: 919132149155446097, guid: 6827a69aa24894c388ab7876cd3a71d3, type: 3}
+      Weight: 5
+      ScaleRange: {x: 0, y: 0}
+      AnyYaw: 0
+      Cells: 1
+      Foot: 0
+      SideModel: {fileID: 919132149155446097, guid: e3250fa3c73164b8a9e6955bc4cd8465, type: 3}
+    - Model: {fileID: 919132149155446097, guid: 710080465ba3745e8907221ade08e063, type: 3}
+      Weight: 1.5
+      ScaleRange: {x: 0, y: 0}
+      AnyYaw: 0
+      Cells: 1
+      Foot: 0
+      SideModel: {fileID: 919132149155446097, guid: 9ab2280f860394f9193476dc62a2fa57, type: 3}
+    - Model: {fileID: 919132149155446097, guid: 542881c87688e42418480285d58ae456, type: 3}
+      Weight: 1.5
+      ScaleRange: {x: 0, y: 0}
+      AnyYaw: 0
+      Cells: 1
+      Foot: 0
+      SideModel: {fileID: 919132149155446097, guid: 05375ea3da4344c329e774b4fb407769, type: 3}
+    Decorated:
+    - Model: {fileID: 919132149155446097, guid: e141452c2e87f4cb48c8bdf141f919b1, type: 3}
+      Weight: 2
+      ScaleRange: {x: 0, y: 0}
+      AnyYaw: 0
+      Cells: 1
+      Foot: 0
+      SideModel: {fileID: 919132149155446097, guid: 689370caff6a648c7915cd992df317a4, type: 3}
+    - Model: {fileID: 919132149155446097, guid: b7ad55e53aa354c96a604ca0cb7e15e8, type: 3}
+      Weight: 1.5
+      ScaleRange: {x: 0, y: 0}
+      AnyYaw: 0
+      Cells: 1
+      Foot: 0
+      SideModel: {fileID: 919132149155446097, guid: 6d3eb20fb06f548ebacd0c58289d1bcf, type: 3}
+    - Model: {fileID: 919132149155446097, guid: 2a7a5bac683704117959601d77afff87, type: 3}
+      Weight: 1.2
+      ScaleRange: {x: 0, y: 0}
+      AnyYaw: 0
+      Cells: 1
+      Foot: 0
+      SideModel: {fileID: 919132149155446097, guid: ea80151d9673e49639106063fd9a46fc, type: 3}
+    - Model: {fileID: 919132149155446097, guid: 9c94f5d13f9414e62890f08cb81cb847, type: 3}
+      Weight: 1
+      ScaleRange: {x: 0, y: 0}
+      AnyYaw: 0
+      Cells: 1
+      Foot: 0
+      SideModel: {fileID: 919132149155446097, guid: 7eafa0ee744fc496ab7bb0a1227ad84c, type: 3}
+    DecoratedChance: 0.22
+    DecoratedSpacing: 3
+    EndWall: {fileID: 919132149155446097, guid: f11875a7b58b14d079ee2bfde81a9813, type: 3}
+    EndWallSide: {fileID: 919132149155446097, guid: ad26bae5ba15a4f87a7ebbfc10810c28, type: 3}
+    EndDown: {fileID: 919132149155446097, guid: 48affe8978aff47ca9f4330af401e639, type: 3}
+    EndDownSide: {fileID: 919132149155446097, guid: f35813cab1ea745fb80eed53a9a53f52, type: 3}
+    Drop: {fileID: 919132149155446097, guid: 4d2164f975706449bbcdd7b4482c7737, type: 3}
+    DropSide: {fileID: 919132149155446097, guid: 1003053b538e34e80a457b4d59e64473, type: 3}
+    DropFoot: {fileID: 919132149155446097, guid: cd2990fb348014598b66411b71d7677f, type: 3}
+    Corner: {fileID: 919132149155446097, guid: 28041f6706bfb41b1a90ad6763a9b5e3, type: 3}
+    CornerXFront: {fileID: 919132149155446097, guid: 49302d0c647f64c0f98d10b25c2d99d8, type: 3}
+    InnerCorner: {fileID: 919132149155446097, guid: fe6b673d3c6e2465ca41d537bfd5dd91, type: 3}
+    InnerCornerXFront: {fileID: 919132149155446097, guid: d347fca3163474b73b7df17a3603e95f, type: 3}
+    DropX: 0.3
+    DownEndChance: 0.7
+    CenterHeight: 0.2
+    BelowTop: 0.45
+    MinWallHeight: 0.9
+    Chance: 0.5
+    Length: {x: 3, y: 10}
+    MinGap: 2
+    Inset: 0
   maxEdgeLength: 3
   maxEdgeStretch: 1.5
   pieces:

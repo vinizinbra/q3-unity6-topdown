@@ -43,6 +43,14 @@ public class CharacterUiWidget : MonoBehaviour
     [Header("Health")]
     [SerializeField] private Slider healthSlider;
     [SerializeField] private TMP_Text healthText;
+    [SerializeField, Tooltip("Fill graphic of healthSlider; tinted by the low-health thresholds below. Auto-resolved from healthSlider.fillRect if left unassigned.")]
+    private Image healthFillImage;
+    [SerializeField, Tooltip("Heroes only (entities with PlayerLink) - enemies and sentries keep their authored fill color. At or below this health fraction the fill turns healthLowColor.")]
+    private float healthLowThreshold = 0.5f;
+    [SerializeField] private Color healthLowColor = new Color(1f, 0.85f, 0.1f);
+    [SerializeField, Tooltip("Heroes only. At or below this health fraction the fill turns healthCriticalColor.")]
+    private float healthCriticalThreshold = 0.25f;
+    [SerializeField] private Color healthCriticalColor = new Color(0.95f, 0.15f, 0.15f);
 
     [Header("Shield")]
     [SerializeField, Tooltip("Shown only while the entity carries a Shield component with a Max above zero.")]
@@ -150,6 +158,12 @@ public class CharacterUiWidget : MonoBehaviour
     private bool _shieldWasRecharging;
     private Color _shieldBaseFillColor = Color.white;
     private bool _shieldBaseFillColorCaptured;
+    private Color _healthBaseFillColor = Color.white;
+    private bool _healthBaseFillColorCaptured;
+    private int _lastHealthText = int.MinValue;
+    private int _lastHealthMaxText = int.MinValue;
+    private int _lastShieldText = int.MinValue;
+    private int _lastShieldMaxText = int.MinValue;
     private CanvasGroup _selfCanvasGroup;
 
     // Anchor for a screen-space element that needs to point at THIS ENTITY'S HEALTH BAR
@@ -488,8 +502,37 @@ public class CharacterUiWidget : MonoBehaviour
         if (frame.TryGet<Health>(_entityRef, out var health) == false || health.MaxHealth <= FP._0)
             return;
 
-        SetSliderValue(healthSlider, (health.CurrentHealth / health.MaxHealth).AsFloat);
-        SetValueText(healthText, health.CurrentHealth, health.MaxHealth);
+        float fraction = (health.CurrentHealth / health.MaxHealth).AsFloat;
+
+        SetSliderValue(healthSlider, fraction);
+        SetValueText(healthText, health.CurrentHealth, health.MaxHealth, ref _lastHealthText, ref _lastHealthMaxText);
+
+        if (frame.Has<PlayerLink>(_entityRef) == true)
+            UpdateHealthFillColor(fraction);
+    }
+
+    // Heroes only (see UpdateHealth) - one shared prefab serves enemies too, whose bars keep the
+    // authored fill color. Captures that authored color once so a healed hero goes back to it.
+    private void UpdateHealthFillColor(float fraction)
+    {
+        if (healthFillImage == null && healthSlider != null && healthSlider.fillRect != null)
+            healthFillImage = healthSlider.fillRect.GetComponent<Image>();
+
+        if (healthFillImage == null)
+            return;
+
+        if (_healthBaseFillColorCaptured == false)
+        {
+            _healthBaseFillColor = healthFillImage.color;
+            _healthBaseFillColorCaptured = true;
+        }
+
+        if (fraction <= healthCriticalThreshold)
+            healthFillImage.color = healthCriticalColor;
+        else if (fraction <= healthLowThreshold)
+            healthFillImage.color = healthLowColor;
+        else
+            healthFillImage.color = _healthBaseFillColor;
     }
 
     private void UpdateShield(Frame frame)
@@ -506,7 +549,7 @@ public class CharacterUiWidget : MonoBehaviour
         }
 
         SetSliderValue(shieldSlider, (shield.Current / shield.Max).AsFloat);
-        SetValueText(shieldText, shield.Current, shield.Max);
+        SetValueText(shieldText, shield.Current, shield.Max, ref _lastShieldText, ref _lastShieldMaxText);
 
         // Mirrors ShieldSystem's own recharge condition, so the shine fires exactly on the tick
         // the sim starts adding Current back rather than on an approximation of it.
@@ -640,103 +683,103 @@ public class CharacterUiWidget : MonoBehaviour
         UpdateJuggernautChannel(frame);
     }
 
-    private void UpdateBurn(bool hasStatus, StatusEffects status)
+    private void UpdateBurn(bool hasStatus, in StatusEffects status)
     {
         bool shown = hasStatus && status.BurnRemaining > FP._0;
         burnIndicator.SetShown(shown);
 
         if (shown)
-            burnIndicator.SetTimer($"x{status.BurnStackCount}");
+            burnIndicator.SetCount(status.BurnStackCount);
     }
 
-    private void UpdateIce(bool hasStatus, StatusEffects status)
+    private void UpdateIce(bool hasStatus, in StatusEffects status)
     {
         bool shown = hasStatus && status.IceRemaining > FP._0;
         iceIndicator.SetShown(shown);
 
         if (shown)
-            iceIndicator.SetTimer($"x{status.IceBuildup.AsFloat:F0}");
+            iceIndicator.SetCount(Mathf.RoundToInt(status.IceBuildup.AsFloat));
     }
 
-    private void UpdateDeepFreeze(bool hasStatus, StatusEffects status)
+    private void UpdateDeepFreeze(bool hasStatus, in StatusEffects status)
     {
         bool shown = hasStatus && status.AnticipationSlowRemaining > FP._0;
         deepFreezeIndicator.SetShown(shown);
 
         if (shown)
-            deepFreezeIndicator.SetTimer($"{status.AnticipationSlowRemaining.AsFloat:F1}s");
+            deepFreezeIndicator.SetSeconds(status.AnticipationSlowRemaining);
     }
 
-    private void UpdateStun(bool hasStatus, StatusEffects status)
+    private void UpdateStun(bool hasStatus, in StatusEffects status)
     {
         bool shown = hasStatus && status.StunRemaining > FP._0;
         stunIndicator.SetShown(shown);
 
         if (shown)
-            stunIndicator.SetTimer($"{status.StunRemaining.AsFloat:F1}s");
+            stunIndicator.SetSeconds(status.StunRemaining);
     }
 
-    private void UpdateFreeze(bool hasStatus, StatusEffects status)
+    private void UpdateFreeze(bool hasStatus, in StatusEffects status)
     {
         bool shown = hasStatus && status.FreezeRemaining > FP._0;
         freezeIndicator.SetShown(shown);
 
         if (shown)
-            freezeIndicator.SetTimer($"{status.FreezeRemaining.AsFloat:F1}s");
+            freezeIndicator.SetSeconds(status.FreezeRemaining);
     }
 
-    private void UpdateRoot(bool hasStatus, StatusEffects status)
+    private void UpdateRoot(bool hasStatus, in StatusEffects status)
     {
         bool shown = hasStatus && status.RootRemaining > FP._0;
         rootIndicator.SetShown(shown);
 
         if (shown)
-            rootIndicator.SetTimer($"{status.RootRemaining.AsFloat:F1}s");
+            rootIndicator.SetSeconds(status.RootRemaining);
     }
 
-    private void UpdateElectrified(bool hasStatus, StatusEffects status)
+    private void UpdateElectrified(bool hasStatus, in StatusEffects status)
     {
         bool shown = hasStatus && status.ElectrifiedRemaining > FP._0;
         electrifiedIndicator.SetShown(shown);
 
         if (shown)
-            electrifiedIndicator.SetTimer($"{status.ElectrifiedRemaining.AsFloat:F1}s");
+            electrifiedIndicator.SetSeconds(status.ElectrifiedRemaining);
     }
 
-    private void UpdateStagger(bool hasStatus, StatusEffects status)
+    private void UpdateStagger(bool hasStatus, in StatusEffects status)
     {
         bool shown = hasStatus && status.StaggerRemaining > FP._0;
         staggerIndicator.SetShown(shown);
 
         if (shown)
-            staggerIndicator.SetTimer($"{status.StaggerRemaining.AsFloat:F1}s");
+            staggerIndicator.SetSeconds(status.StaggerRemaining);
     }
 
-    private void UpdateRupture(bool hasStatus, StatusEffects status)
+    private void UpdateRupture(bool hasStatus, in StatusEffects status)
     {
         bool shown = hasStatus && status.RuptureRemaining > FP._0;
         ruptureIndicator.SetShown(shown);
 
         if (shown)
-            ruptureIndicator.SetTimer($"{status.RuptureRemaining.AsFloat:F1}s");
+            ruptureIndicator.SetSeconds(status.RuptureRemaining);
     }
 
-    private void UpdateIntimidate(bool hasStatus, StatusEffects status)
+    private void UpdateIntimidate(bool hasStatus, in StatusEffects status)
     {
         bool shown = hasStatus && status.IntimidateRemaining > FP._0;
         intimidateIndicator.SetShown(shown);
 
         if (shown)
-            intimidateIndicator.SetTimer($"{status.IntimidateRemaining.AsFloat:F1}s");
+            intimidateIndicator.SetSeconds(status.IntimidateRemaining);
     }
 
-    private void UpdateGuardianAura(bool hasStatus, StatusEffects status)
+    private void UpdateGuardianAura(bool hasStatus, in StatusEffects status)
     {
         bool shown = hasStatus && status.AuraDamageReductionRemaining > FP._0;
         guardianAuraIndicator.SetShown(shown);
 
         if (shown)
-            guardianAuraIndicator.SetTimer($"{status.AuraDamageReductionRemaining.AsFloat:F1}s");
+            guardianAuraIndicator.SetSeconds(status.AuraDamageReductionRemaining);
     }
 
     // Not part of StatusEffects - JuggernautCharge is added at Begin/removed at End (see
@@ -756,7 +799,7 @@ public class CharacterUiWidget : MonoBehaviour
         explodeOnDeathIndicator.SetShown(shown);
 
         if (shown)
-            explodeOnDeathIndicator.SetTimer($"{explode.Remaining.AsFloat:F1}s");
+            explodeOnDeathIndicator.SetSeconds(explode.Remaining);
     }
 
     // Own component, not part of StatusEffects - see Vendetta.qtn/MaxVendettaSystem. RevengeMark is
@@ -771,16 +814,27 @@ public class CharacterUiWidget : MonoBehaviour
         revengeMarkIndicator.SetShown(shown);
 
         if (shown)
-            revengeMarkIndicator.SetTimer($"{mark.RemainingDuration.AsFloat:F1}s");
+            revengeMarkIndicator.SetSeconds(mark.RemainingDuration);
     }
 
     // Ceil rather than round, so a surviving sliver of health never reads as a dead "0".
-    private static void SetValueText(TMP_Text text, FP current, FP max)
+    // Only rewrites the label when a displayed number changes (lastCurrent/lastMax are this label's
+    // cache) - it runs every frame per widget, and a fresh string each time meant GC plus a TMP mesh
+    // rebuild for nothing. SetText(format, ...) formats without allocating.
+    private static void SetValueText(TMP_Text text, FP current, FP max, ref int lastCurrent, ref int lastMax)
     {
         if (text == null)
             return;
 
-        text.text = $"{Mathf.CeilToInt(current.AsFloat)}/{Mathf.CeilToInt(max.AsFloat)}";
+        int currentValue = Mathf.CeilToInt(current.AsFloat);
+        int maxValue = Mathf.CeilToInt(max.AsFloat);
+
+        if (currentValue == lastCurrent && maxValue == lastMax)
+            return;
+
+        lastCurrent = currentValue;
+        lastMax = maxValue;
+        text.SetText("{0:0}/{1:0}", currentValue, maxValue);
     }
 
     private static void SetSliderValue(Slider slider, float value)
@@ -818,10 +872,32 @@ public class CharacterUiWidget : MonoBehaviour
             TextBatchOptimizer.SetActive(root, shown);
         }
 
-        public void SetTimer(string text)
+        // Last value written to timerText (tenths of a second, or a count), so the label is only
+        // rewritten when the number it shows actually changes. These run every frame for every
+        // visible indicator on every widget - rebuilding the string each time was pure GC + TMP
+        // mesh regeneration. TMP's SetText(format, value) formats without allocating.
+        [System.NonSerialized] private int _lastValue = int.MinValue;
+
+        public void SetSeconds(FP remaining)
         {
-            if (timerText != null)
-                timerText.text = text;
+            if (timerText == null)
+                return;
+
+            int tenths = Mathf.RoundToInt(remaining.AsFloat * 10f);
+            if (tenths == _lastValue)
+                return;
+
+            _lastValue = tenths;
+            timerText.SetText("{0:1}s", tenths / 10f);
+        }
+
+        public void SetCount(int count)
+        {
+            if (timerText == null || count == _lastValue)
+                return;
+
+            _lastValue = count;
+            timerText.SetText("x{0:0}", count);
         }
     }
 }

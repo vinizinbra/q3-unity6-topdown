@@ -27,6 +27,12 @@ namespace Quantum
         // at different speeds. The landing warning reads the final scaled velocity (ref launch).
         public FP ProjectileSpeedMultiplier = 1;
 
+        // Same as ProjectileDeliveryData's own fields - see there. Every pellet gets the range
+        // multiplier; the lead shifts the fan's centre once, so all pellets rotate around it.
+        public FP ProjectileMaxDistanceMultiplier = 1;
+        public FP LeadFactor;
+        public FP MaxLeadDistance = 4;
+
         public ProjectileSpawnAnchor SpawnAnchor = ProjectileSpawnAnchor.OnSelf;
         public FPVector3 SpawnOffset;
 
@@ -88,6 +94,21 @@ namespace Quantum
 
             // Boss-phase Quantity scaling - see BossStatModifiers.QuantityMultiplier's own comment.
             // FP._1 (no-op) for anything that isn't a boss currently authoring one.
+            // Radial fans don't aim at anything, so there's nothing to lead. One trial solve toward
+            // the un-led centre supplies the flight time.
+            if (LeadFactor > FP._0 && Radial == false)
+            {
+                ProjectileLaunch trial = UseArc == true
+                    ? ProjectileSpawner.SolveArcLaunch(resolvedOrigin, targetPosition, LaunchAngle, Gravity)
+                    : movement.GetLaunchToTarget(f, resolvedOrigin, targetPosition, target);
+
+                if (trial.IsValid == true)
+                {
+                    targetPosition = ProjectileAimUtility.LeadAimPoint(f, target, resolvedOrigin, targetPosition,
+                        trial.Velocity * ProjectileSpeedMultiplier, LeadFactor, MaxLeadDistance);
+                }
+            }
+
             int scaledPelletCount = FPMath.RoundToInt(PelletCount * BossPhaseUtility.ResolveQuantityMultiplier(f, filter.Entity));
             int pelletCount = scaledPelletCount > 0 ? scaledPelletCount : 1;
 
@@ -145,8 +166,12 @@ namespace Quantum
                     continue;
                 }
 
-                ProjectileSpawner.Spawn(f, filter.Entity, ProjectileData, ref launch, action.Damage, target: target,
+                EntityRef pellet = ProjectileSpawner.Spawn(f, filter.Entity, ProjectileData, ref launch, action.Damage, target: target,
                     speedMultiplier: ProjectileSpeedMultiplier);
+
+                if (f.Unsafe.TryGetPointer<Projectile>(pellet, out var spawned) == true)
+                    spawned->MaxDistanceMultiplier = ProjectileMaxDistanceMultiplier;
+
                 fired++;
             }
 

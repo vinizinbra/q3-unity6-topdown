@@ -22,6 +22,6 @@ MonoBehaviour:
   Description: Gain <color=#FD3971>{0:+0;-0}%</color> Move Speed and <color=#FD3971>{1:0}%</color> Damage Reduction while reloading
     on reload
   MoveSpeedBonus:
-    RawValue: 13107
+    RawValue: 9830
   DamageReduction:
     RawValue: 13107

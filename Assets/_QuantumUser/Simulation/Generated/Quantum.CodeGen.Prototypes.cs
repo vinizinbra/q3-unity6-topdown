@@ -664,6 +664,7 @@ namespace Quantum.Prototypes {
     public Byte BurnOnHitStacks;
     public FP MagazineSizeBonus;
     public Int32 MagazineSizeOverride;
+    public FP WeaponRangeMultiplier;
     public Int32 LongRangePierceBonus;
     public FP WeaponStaggerChance;
     public FP WeaponStaggerDuration;
@@ -753,6 +754,7 @@ namespace Quantum.Prototypes {
         result.BurnOnHitStacks = this.BurnOnHitStacks;
         result.MagazineSizeBonus = this.MagazineSizeBonus;
         result.MagazineSizeOverride = this.MagazineSizeOverride;
+        result.WeaponRangeMultiplier = this.WeaponRangeMultiplier;
         result.LongRangePierceBonus = this.LongRangePierceBonus;
         result.WeaponStaggerChance = this.WeaponStaggerChance;
         result.WeaponStaggerDuration = this.WeaponStaggerDuration;

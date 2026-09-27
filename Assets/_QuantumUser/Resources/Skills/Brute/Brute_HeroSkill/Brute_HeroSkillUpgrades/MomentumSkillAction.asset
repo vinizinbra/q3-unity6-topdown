@@ -20,8 +20,8 @@ MonoBehaviour:
   DisplayName: Momentum
   RankDescriptions:
   - "During Juggernaut, Momentum builds <color=#FD3971>25%</color> faster. While Charged, gain <color=#FD3971>+10%</color> Move Speed. Discharge keeps <color=#FD3971>30%</color> of your Charge."
-  - "During Juggernaut, Momentum builds <color=#FD3971>40%</color> faster. While Charged, gain <color=#FD3971>+20%</color> Move Speed. Discharge keeps <color=#FD3971>60%</color> of your Charge."
-  - "During Juggernaut, Momentum builds <color=#FD3971>40%</color> faster. While Charged, gain <color=#FD3971>+30%</color> Move Speed. Discharge costs no Charge, and Juggernaut won't end while fully Charged."
+  - "During Juggernaut, Momentum builds <color=#FD3971>40%</color> faster. While Charged, gain <color=#FD3971>+15%</color> Move Speed. Discharge keeps <color=#FD3971>60%</color> of your Charge."
+  - "During Juggernaut, Momentum builds <color=#FD3971>40%</color> faster. While Charged, gain <color=#FD3971>+20%</color> Move Speed. Discharge costs no Charge, and Juggernaut won't end while fully Charged."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
@@ -59,8 +59,8 @@ MonoBehaviour:
   - RawValue: 91750
   ChargedMoveSpeedBonus:
   - RawValue: 6554
+  - RawValue: 9830
   - RawValue: 13107
-  - RawValue: 19661
   DischargeRetentionFraction:
   - RawValue: 19661
   - RawValue: 39322

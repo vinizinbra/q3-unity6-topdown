@@ -150,7 +150,7 @@ namespace Quantum
                 return false;
 
             Shape3D sphere = Shape3D.CreateSphere(radius);
-            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
+            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, EnemyMovementUtility.GetEnemyLayerMask(f), QueryOptions.HitAll);
 
             FP closestSqrDistance = FP.MaxValue;
 
@@ -202,7 +202,7 @@ namespace Quantum
                 return false;
 
             Shape3D sphere = Shape3D.CreateSphere(radius);
-            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
+            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, EnemyMovementUtility.GetEnemyLayerMask(f), QueryOptions.HitAll);
 
             FP closestFreshSqrDistance = FP.MaxValue;
             EntityRef closestFresh = EntityRef.None;

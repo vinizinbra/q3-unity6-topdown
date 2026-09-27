@@ -67,10 +67,13 @@ Almost every piece already existed, just not combined the way this attack needs:
   pre-existing single-shot `MortarEnemy` can opt into the exact same ground telegraph
   `MortarBarrageDeliveryData` uses instead of (or alongside) its old caster-anchored windup Circle.
 - **`ProjectileLandingWarning`** (`Assets/_QuantumUser/Simulation/QTN/Events.qtn`) - a new, generic
-  event carrying only `Position`/`Duration`/`Radius` (deliberately no `EntityRef` owner - several fire
-  independently at once, and nothing downstream needs to know which enemy sent them). Named after the
+  event carrying `Position`/`Duration`/`Radius`/`Owner`. `Owner` is `EntityRef.None` for a real
+  lobbed shell (`FireLandingWarning` - once launched it lands regardless of the caster, so the warning
+  always runs its full flight time); `GroundBarrageDeliveryData` passes its caster, since that enemy's
+  own Active `Tick` is what detonates the point - the View drops such a warning early the moment the
+  caster is stunned/frozen, leaves Active (interrupted) or dies. Named after the
   mechanism, not the enemy - any future delivery can fire it directly
-  (`f.Events.ProjectileLandingWarning(point, authoredDuration, radius)`) for a delayed ground impact
+  (`f.Events.ProjectileLandingWarning(point, authoredDuration, radius, owner)`) for a delayed ground impact
   that isn't a projectile at all (e.g. a boss dropping a volley of telegraphed spikes), skipping
   `FireLandingWarning`'s flight-time derivation entirely when the duration is just an authored fuse.
 - **`GroundWarningTelegraphManager`**
@@ -80,8 +83,11 @@ Almost every piece already existed, just not combined the way this attack needs:
   to `Radius`, snaps it onto the real Unity ground (`Physics.Raycast` against the `Ground` layer, same
   fix `EnemyAttackVisualsView.SnapToGround` already uses - see "Bugs found"), and calls the exact same
   `TelegraphFade.Initialize(...)` (fade in, optional child `TelegraphGrow` fill animation) that
-  `EnemyAttackVisualsView` already uses for a caster's own windup telegraph - then schedules
-  `FadeOutAndRelease()` after `Duration` via a coroutine. No simulation-side entity/component at all.
+  `EnemyAttackVisualsView` already uses for a caster's own windup telegraph - then tracks the instance
+  and calls `FadeOutAndRelease()` after `Duration` (or earlier, for an owner-bound warning whose owner
+  can no longer detonate it - see `Owner` above). Tracked per instance in `Update`, not a coroutine, so
+  an early release can't leave a stale timer that later fades out a pooled reuse. No simulation-side
+  entity/component at all.
 
 ## Current status / what's still needed
 
@@ -153,14 +159,36 @@ documented in the project `CLAUDE.md`. To make a real Mortar Elite:
   mismatch projects onto screen as a visible XZ offset. Fixed by adding the identical real-
   `Physics.Raycast`-against-the-`Ground`-layer snap before positioning the marker.
 
+## Enemy aim lead & range multiplier (2026-09-26)
+
+Added to all three enemy projectile deliveries (`ProjectileDeliveryData`, `FanProjectileDeliveryData`,
+`MortarBarrageDeliveryData`) during the World 1 difficulty pass. Defaults leave every existing asset
+unchanged.
+
+- **`ProjectileMaxDistanceMultiplier`** (default 1) - written onto the spawned
+  `Projectile.MaxDistanceMultiplier`, the same field `ProjectileSystem.TryExpire` already reads for
+  the Long Barrel weapon perk. Lets enemies share one `ProjectileDataAsset` at different ranges (Gunner
+  and Shotgunner share `RangedProjectileDataAsset`). No effect on a projectile with `MaxDistance` 0.
+- **`LeadFactor`** (default 0 = off) / **`MaxLeadDistance`** (default 4) - lead a moving target via
+  `ProjectileAimUtility.LeadAimPoint`. The movements' own `PredictionTime` lead only reads
+  `PhysicsBody3D`, so it never led the KCC-driven player; this one reads `KCC.Data.RealVelocity`.
+  Flight time comes from the un-led launch (scaled by `ProjectileSpeedMultiplier`), the offset is
+  `flat velocity × flight time × LeadFactor`, capped at `MaxLeadDistance`, then the shot is re-solved
+  onto the led point (falling back to the un-led shot if an arc solve fails). Velocity is read at fire
+  time, not at AimLock, so stopping or reversing at the lock still dodges. Fan: leads the fan centre
+  once (not for `Radial`). Barrage: aimed shells only; scattered shells stay around the real position.
+
+Authored values: Gunner 0.6, Shotgunner 0.4, Grenadier 0.5, Elite Mortar 0.5.
+
 ## Known simplification
 
 `AimedShellCount` shells land exactly on `Enemy.SkillTargetPosition` as captured whenever
 `AimLock`/`OnAnticipating` last updated it during the windup (`LocksAtTelegraphEnd`, the default,
 tracks all the way up to the instant `Begin()` fires - the latest this framework's aim-lock timing
-options allow). It does not predict/lead the target's future position - by the time the shell's own
-(real, arc-derived) flight time elapses, a target that kept moving normally will usually no longer be
-standing there, which is the intended fairness contract, not a bug to fix.
+options allow). By default it does not predict/lead the target's future position - by the time the
+shell's own (real, arc-derived) flight time elapses, a target that kept moving normally will usually no
+longer be standing there. Leading is opt-in per asset via `LeadFactor` (see "Enemy aim lead & range
+multiplier" below); `EliteMortarEnemy` now uses 0.5 on its aimed shells.
 
 `GroundWarningTelegraphManager`'s countdown (the coroutine timing `FadeOutAndRelease`) runs on plain
 real time (`WaitForSeconds`), not tied to the enemy's own anticipation-slow multiplier the way

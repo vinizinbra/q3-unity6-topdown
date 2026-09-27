@@ -255,7 +255,7 @@ namespace Quantum
         private void ApplyEndExplosionPush(Frame f, EntityRef owner, FPVector3 center, FP radius, FP pushDuration)
         {
             Shape3D blastShape = Shape3D.CreateSphere(radius);
-            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, blastShape, -1, QueryOptions.HitAll);
+            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, blastShape, EnemyMovementUtility.GetEnemyLayerMask(f), QueryOptions.HitAll);
 
             for (int i = 0; i < hits.Count; i++)
             {
@@ -454,7 +454,7 @@ namespace Quantum
 
             FPVector3 center = filter.Transform3D->Position;
             Shape3D contactShape = Shape3D.CreateSphere(contactRadius);
-            var contactHits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, contactShape, -1, QueryOptions.HitAll);
+            var contactHits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, contactShape, EnemyMovementUtility.GetEnemyLayerMask(f), QueryOptions.HitAll);
 
             bool touchedEnemy = false;
 
@@ -513,7 +513,7 @@ namespace Quantum
             // 1x for anyone without it.
             FP blastRadius = KnockbackRadius * StatUtility.GetAreaMultiplier(f, owner);
             Shape3D blastShape = Shape3D.CreateSphere(blastRadius);
-            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, blastShape, -1, QueryOptions.HitAll);
+            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, blastShape, EnemyMovementUtility.GetEnemyLayerMask(f), QueryOptions.HitAll);
 
             // Only looked up/resolved once per discharge, not per target - neither changes target to
             // target.

@@ -146,14 +146,32 @@ namespace QuantumUser.Editor.BalanceSimulator
             => D(assets.Balance.Evaluate(CurveChannel.DirectorBudget, FP.FromFloat_UNSAFE((float)SurvivalTime)))
                * D(assets.Balance.GetCoopGlobal(CoopGlobalKey.DirectorBudget, playerCount));
 
+        // CombatDirectorUtility.TryPulse resets the timer to PulseInterval (no remainder) and counts it
+        // down once per 20 Hz game tick, so a pulse really lands every ceil(interval / tick) ticks.
+        // The sim steps coarser (scenario.TickSeconds), so it carries the remainder instead of
+        // resetting - otherwise every interval rounded up to the sim tick (1.6 s -> 2.0 s at 0.5 s).
         private void TryPulse(SurvivalPhase phase, double dt)
         {
             PulseTimer -= dt;
 
-            if (PulseTimer > 0)
-                return;
+            while (PulseTimer <= 0)
+            {
+                PulseTimer += GameTickInterval(D(phase.PulseInterval));
+                Pulse(phase);
+            }
+        }
 
-            PulseTimer = Math.Max(dt, D(phase.PulseInterval));
+        private double GameTickInterval(double seconds)
+        {
+            double tick = assets.GameTickSeconds;
+            if (tick <= 0)
+                return Math.Max(0.05, seconds);
+
+            return Math.Max(1, Math.Ceiling(seconds / tick - 1e-6)) * tick;
+        }
+
+        private void Pulse(SurvivalPhase phase)
+        {
             double granted = D(phase.BudgetPerPulse) * BudgetMultiplier;
             Budget += granted;
             BudgetGranted += granted;

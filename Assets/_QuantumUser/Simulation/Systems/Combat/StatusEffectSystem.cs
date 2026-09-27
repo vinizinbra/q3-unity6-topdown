@@ -13,14 +13,30 @@ namespace Quantum
     [Preserve]
     public unsafe class StatusEffectSystem : SystemMainThreadFilter<StatusEffectSystem.Filter>
     {
+        // Per-stage profiler markers (see SimProfilerMarker). Compiled out of Release players.
+        private static readonly SimProfilerMarker BurnMarker = new SimProfilerMarker("StatusEffectSystem.Burn");
+        private static readonly SimProfilerMarker IceMarker = new SimProfilerMarker("StatusEffectSystem.Ice");
+        private static readonly SimProfilerMarker OverloadChainMarker = new SimProfilerMarker("StatusEffectSystem.OverloadChain");
+        private static readonly SimProfilerMarker TimersMarker = new SimProfilerMarker("StatusEffectSystem.Timers");
+        private static readonly SimProfilerMarker PlayerTimersMarker = new SimProfilerMarker("StatusEffectSystem.PlayerTimers");
+
         public override void Update(Frame f, ref Filter filter)
         {
             StatusEffects* status = filter.StatusEffects;
 
+            BurnMarker.Begin();
             TickBurn(f, filter.Entity, status);
-            TickIce(f, status);
-            TickOverloadChain(f, filter.Entity, status);
+            BurnMarker.End();
 
+            IceMarker.Begin();
+            TickIce(f, status);
+            IceMarker.End();
+
+            OverloadChainMarker.Begin();
+            TickOverloadChain(f, filter.Entity, status);
+            OverloadChainMarker.End();
+
+            TimersMarker.Begin();
             status->ElectrifiedRemaining -= f.DeltaTime;
             status->StunRemaining -= f.DeltaTime;
             status->FreezeRemaining -= f.DeltaTime;
@@ -52,6 +68,9 @@ namespace Quantum
             status->TempMoveSpeedRemaining -= f.DeltaTime;
 
             TickHaste(f, status);
+            TimersMarker.End();
+
+            PlayerTimersMarker.Begin();
             TickCheatDeathImmunity(f, filter.Entity, status);
             TickReviveImmunity(f, filter.Entity, status);
 
@@ -64,6 +83,8 @@ namespace Quantum
                 // Rift Mutation per-player timers, on the same reused iteration for the same reason.
                 MutationTimerUtility.Tick(f, filter.Entity, stats);
             }
+
+            PlayerTimersMarker.End();
         }
 
         // Ice/Chill - ticks the shared buildup-duration timer (ElectrifiedRemaining's own flat

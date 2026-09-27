@@ -1,30 +1,47 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using TMPro;
+using Unity.Profiling;
 using UnityEngine;
-using UnityEngine.UI;
- 
+
 public class FpsCounter : MonoBehaviour
 {
 	public TMP_Text Text;
- 
-	private Dictionary<int, string> CachedNumberStrings = new();
+
+	private const int MaxDisplayedFps = 300;
+
 	private int[] _frameRateSamples;
-	private int _cacheNumbersAmount = 300;
 	private int _averageFromAmount = 30;
 	private int _averageCounter = 0;
 	private int _currentAveraged;
- 
+
+	// Unity's own render counters (the same ones the Profiler's Rendering module shows), read at
+	// runtime - lets you see on device whether an area that drops frames is also heavier to draw.
+	// Last frame's values; a recorder whose counter isn't available on this player stays !Valid and
+	// its line is simply left out.
+	private ProfilerRecorder _setPassRecorder;
+	private ProfilerRecorder _trianglesRecorder;
+
 	void Awake()
 	{
-		// Cache strings and create array
-		{
-			for (int i = 0; i < _cacheNumbersAmount; i++) {
-				CachedNumberStrings[i] = i.ToString();
-			}
-			_frameRateSamples = new int[_averageFromAmount];
-		}
+		_frameRateSamples = new int[_averageFromAmount];
+
+		// The label was sized for "FPS 60" alone (200 wide, top-right anchored) - the stats line is
+		// drawn smaller (see Update) and must not wrap, or it breaks onto a third line / off-screen.
+		Text.textWrappingMode = TextWrappingModes.NoWrap;
 	}
+
+	void OnEnable()
+	{
+		_setPassRecorder = ProfilerRecorder.StartNew(ProfilerCategory.Render, "SetPass Calls Count");
+		_trianglesRecorder = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Triangles Count");
+	}
+
+	void OnDisable()
+	{
+		_setPassRecorder.Dispose();
+		_trianglesRecorder.Dispose();
+	}
+
 	void Update()
 	{
 		// Sample
@@ -32,19 +49,19 @@ public class FpsCounter : MonoBehaviour
 			var currentFrame = (int)Math.Round(1f / Time.smoothDeltaTime); // If your game modifies Time.timeScale, use unscaledDeltaTime and smooth manually (or not).
 			_frameRateSamples[_averageCounter] = currentFrame;
 		}
- 
+
 		// Average
 		{
 			var average = 0f;
- 
+
 			foreach (var frameRate in _frameRateSamples) {
 				average += frameRate;
 			}
- 
+
 			_currentAveraged = (int)Math.Round(average / _averageFromAmount);
 			_averageCounter = (_averageCounter + 1) % _averageFromAmount;
 		}
- 
+
 		// Assign to UI
 		{
 			switch (_currentAveraged)
@@ -57,17 +74,16 @@ public class FpsCounter : MonoBehaviour
 					break;
 				default:
 					Text.color = Color.red;
-					break;	
+					break;
 			}
-			
-			Text.text = $"FPS "+_currentAveraged switch
-			{
-				var x when x >= 0 && x < _cacheNumbersAmount => CachedNumberStrings[x],
-				var x when x >= _cacheNumbersAmount => $"> {_cacheNumbersAmount}",
-				var x when x < 0 => "< 0",
-				_ => "?"
-			};
-			
+
+			int fps = Mathf.Clamp(_currentAveraged, 0, MaxDisplayedFps);
+
+			// SetText(format, values) formats without allocating a string every frame.
+			if (_setPassRecorder.Valid && _trianglesRecorder.Valid)
+				Text.SetText("FPS {0}\n<size=55%>SP {1}  Tris {2:1}k</size>", fps, _setPassRecorder.LastValue, _trianglesRecorder.LastValue / 1000f);
+			else
+				Text.SetText("FPS {0}", fps);
 		}
 	}
 }

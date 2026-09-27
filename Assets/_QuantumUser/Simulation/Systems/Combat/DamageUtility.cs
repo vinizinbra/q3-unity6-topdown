@@ -629,7 +629,7 @@ namespace Quantum
             if (overload->KnockbackForce > FP._0 || overload->ExposedDamageTakenBonus > FP._0)
             {
                 Shape3D sphere = Shape3D.CreateSphere(overload->Radius);
-                var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
+                var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, EnemyMovementUtility.GetEnemyLayerMask(f), QueryOptions.HitAll);
 
                 for (int i = 0; i < hits.Count; i++)
                 {

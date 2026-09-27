@@ -2670,7 +2670,7 @@ namespace Quantum {
   }
   [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct CharacterStats : Quantum.IComponent {
-    public const Int32 SIZE = 616;
+    public const Int32 SIZE = 624;
     public const Int32 ALIGNMENT = 8;
     [FieldOffset(32)]
     public AssetRef<CharacterData> CharacterData;
@@ -2760,11 +2760,13 @@ namespace Quantum {
     public FP MagazineSizeBonus;
     [FieldOffset(12)]
     public Int32 MagazineSizeOverride;
+    [FieldOffset(600)]
+    public FP WeaponRangeMultiplier;
     [FieldOffset(8)]
     public Int32 LongRangePierceBonus;
-    [FieldOffset(600)]
-    public FP WeaponStaggerChance;
     [FieldOffset(608)]
+    public FP WeaponStaggerChance;
+    [FieldOffset(616)]
     public FP WeaponStaggerDuration;
     [FieldOffset(400)]
     public FP NearKillMoveSpeedBonus;
@@ -2887,6 +2889,7 @@ namespace Quantum {
         hash = hash * 31 + BurnOnHitStacks.GetHashCode();
         hash = hash * 31 + MagazineSizeBonus.GetHashCode();
         hash = hash * 31 + MagazineSizeOverride.GetHashCode();
+        hash = hash * 31 + WeaponRangeMultiplier.GetHashCode();
         hash = hash * 31 + LongRangePierceBonus.GetHashCode();
         hash = hash * 31 + WeaponStaggerChance.GetHashCode();
         hash = hash * 31 + WeaponStaggerDuration.GetHashCode();
@@ -3008,6 +3011,7 @@ namespace Quantum {
         FP.Serialize(&p->SkillDamageMultiplier, serializer);
         FP.Serialize(&p->SkillDurationMultiplier, serializer);
         FP.Serialize(&p->WeaponDamageMultiplier, serializer);
+        FP.Serialize(&p->WeaponRangeMultiplier, serializer);
         FP.Serialize(&p->WeaponStaggerChance, serializer);
         FP.Serialize(&p->WeaponStaggerDuration, serializer);
     }

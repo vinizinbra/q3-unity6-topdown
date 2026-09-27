@@ -148,38 +148,25 @@ event ShieldBroken
     EntityRef Target;
 }
 
-// Fired once per HitEffectUtility.ApplyToTarget call that actually connects (see that method) -
-// generic across every delivery/skill/projectile that funnels through it, unlike EntityDamaged/
-// EntityHealed which only cover their own specific effect. Owner lets each attacking enemy's own
-// EnemyAttackVisualsView filter to hits IT caused and resolve the hit-impact particle off whichever
-// delivery it's currently running (EnemyDeliveryData.HitImpactPrefab, see EnemyDeliveryData.View.cs)
-// - the visual belongs to what triggered the hit (a ground slam vs. a melee swing), not to the
-// HitEffectData describing what the hit numerically does, since the same DamageEffectData can be
-// reused by deliveries that should look completely different on impact.
-//
-// MultiTarget is true whenever this connect came from an overlap query that can catch more than
-// one entity in one action (ApplyInRadius/ApplyInShape/ApplyInCollider, plus a couple of manual
-// per-target loops - IronShoulderSkillAction), false for a guaranteed
-// single-connect hit (a projectile striking its one target). Lets a generic per-hit VIEW reaction
-// (EffectsManager.OnHitEffectApplied's meleeHitEffectPrefab) skip itself for a multi-target action -
-// that already gets (or should get) its own single dedicated blast VFX
-// (AreaDetonated/ShockwaveReleased/...), so playing this generic spark once per target hit as well
-// stacks N redundant particles on top of it. Deliberately NOT the same thing as
-// HitEffectContext.IsExplosion (a narrower gameplay flag - only Pixie's own bombs opt in, feeds
-// Chain Reaction's Instability marking) - this is a broader "could this be more than one target"
-// signal for VIEW dedup, not a gameplay concept.
-event HitEffectApplied
+// synced: enemy entity views are Verified-bound (QuantumEntityView.BindBehaviour), so they're
+// only torn down once the death reaches the verified frame. A plain event fires on the predicted
+// frame instead - online that plays the VFX/state change before the body disappears, and a
+// mispredicted kill plays it for an enemy that then keeps living. synced keeps both on the same frame.
+synced event EntityDied
 {
-    EntityRef Owner;
     EntityRef Target;
-    FPVector3 Position;
-    Boolean   MultiTarget;
+    EntityRef Owner;
 }
 
-event EntityDied
+// Fired by EnemySystem.SeedFromEnemyData for any enemy whose EnemyDataAsset.Tier == Elite - that
+// method is the one seeding path every spawn route shares (Director purchase, Boss/Elite phase
+// guaranteed spawn, prototype-baked, SpawnPack summons), so this covers all of them. View-only hook
+// for AnnouncerManager's "ELITE INCOMING" banner (see docs/announcer.md). EnemyData carried
+// explicitly so the view can read EnemyName without resolving the (possibly already dead) entity.
+event EliteSpawned
 {
-    EntityRef Target;
-    EntityRef Owner;
+    EntityRef Entity;
+    AssetRef<EnemyDataAsset> EnemyData;
 }
 
 // Fired by GroundAreaDeliveryData.Begin() right before it self-destructs its own owner
@@ -198,7 +185,8 @@ event EntityDied
 // destroyed - same reasoning EntityDamaged's own hitPosition capture already documents. Action is
 // looked up fresh via frame.FindAsset in the view instead (that's static asset data, safe
 // regardless of whether the raising entity still exists).
-event EnemySelfDestructBeginVisual
+// synced - see EntityDied.
+synced event EnemySelfDestructBeginVisual
 {
     EntityRef Entity;
     FPVector3 Position;
@@ -371,7 +359,8 @@ event AreaDetonated
 // target is always an Enemy (see DamageUtility.TryExplodeOnDeath's only call sites), so the view
 // can still tint that shared prefab with the same EnemyDataAsset.ExplosionColor EnemyExploded
 // already uses, instead of leaving it a flat white that clashes next to a tinted death VFX.
-event ExplodeOnDeathDetonated
+// synced - see EntityDied.
+synced event ExplodeOnDeathDetonated
 {
     EntityRef  Owner;
     FPVector3  Position;
@@ -623,16 +612,23 @@ event WeaponExplosionReleased
 // time, not a separately-authored guess). Generic and delivery-agnostic - both
 // MortarBarrageDeliveryData (several shells per Begin()) and ProjectileDeliveryData's own
 // UseArc branch (a single lob, opt-in via ShowLandingWarning) fire it the same way, so any future
-// lobbed attack gets the same ground telegraph for free. Deliberately carries no EntityRef/owner -
-// several of these can be in flight independently at once, and the existing TelegraphManager pool
-// (Get/Release) already supports any number of simultaneous independent instances on its own - only
-// EnemyAttackVisualsView's own single-slot bookkeeping is limited to one telegraph at a time, not
-// the pool itself. See GroundWarningTelegraphManager (View) for the listener.
+// lobbed attack gets the same ground telegraph for free. Several of these can be in flight
+// independently at once - the existing TelegraphManager pool (Get/Release) already supports any
+// number of simultaneous independent instances on its own. See GroundWarningTelegraphManager (View)
+// for the listener.
+//
+// Owner is EntityRef.None for a real lobbed shell (FireLandingWarning) - once launched it lands no
+// matter what happens to whoever fired it, so its warning must stay up for the full flight time.
+// A delivery whose detonation is still driven by its caster's own Active phase (GroundBarrageDelivery-
+// Data - no projectile, the enemy's own Tick detonates it) passes the caster instead, so the View can
+// drop the warning the moment that caster is stunned/frozen, interrupted out of Active, or dies -
+// otherwise the circle sat on the ground for a detonation that was never going to come.
 event ProjectileLandingWarning
 {
     FPVector3  Position;
     FP         Duration;
     FP         Radius;
+    EntityRef  Owner;
 }
 
 // Fired once by RingSlamDeliveryData.Begin() - the View-side hook to draw a growing ring OUTLINE
@@ -809,7 +805,8 @@ event SentryBarrelSpawned
 // uses). Source resolves EnemyDataAsset.ExplosionColor (EnemyDataAsset.View.cs) so each enemy
 // type can tint the blast differently - the VFX prefab itself is shared across all enemy types
 // (EffectsManager.deathEffect), unlike AreaHitData/JuggernautX's per-asset BlastEffectPrefab.
-event EnemyExploded
+// synced - see EntityDied.
+synced event EnemyExploded
 {
     EntityRef              Entity;
     FPVector3              Position;

@@ -2,6 +2,7 @@ namespace QuantumUser.Editor.BalanceSimulator
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using Quantum;
     using static BalanceSimAssets;
 
@@ -32,7 +33,9 @@ namespace QuantumUser.Editor.BalanceSimulator
         public double CoinGainMultiplier = 1;
         public double MaxHealthMultiplier = 1;
         public double DamageTakenMultiplier = 1;
-        public double MagazineMultiplier = 1;
+        // CharacterStats.MagazineSizeBonus - additive (0 = none), applied on top of the weapon's
+        // own perk-adjusted magazine by WeaponSystem.ApplyOwnerWeaponModifiers on every equip.
+        public double MagazineSizeBonus;
         public double MaxHealth;
         public double MaxShield;
 
@@ -68,7 +71,7 @@ namespace QuantumUser.Editor.BalanceSimulator
                 case WeaponDamageUpgradeData: WeaponDamageMultiplier *= m; return true;
                 case FireRateUpgradeData: AttackSpeedMultiplier *= m; return true;
                 case ReloadSpeedUpgradeData: ReloadSpeedMultiplier *= m; return true;
-                case MagazineSizeUpgradeData mag: MagazineMultiplier *= D(mag.Multiplier); return true;
+                case MagazineSizeUpgradeData mag: MagazineSizeBonus += D(mag.Multiplier) - 1; return true;
                 case CriticalChanceUpgradeData crit: CriticalChance += D(crit.Chance); return true;
                 case CriticalDamageUpgradeData: CriticalDamageMultiplier *= m; return true;
                 case SkillDamageUpgradeData: SkillDamageMultiplier *= m; return true;
@@ -96,6 +99,10 @@ namespace QuantumUser.Editor.BalanceSimulator
         public double MagazineSize;
         public double ReloadDuration;
         public double UnquantifiedBonus;
+
+        // Seconds per Quantum tick (SessionConfig UpdateFPS) every fire/burst/reload wait is rounded
+        // up to - 0 = continuous timing. See MagazineCycleSeconds.
+        public double TickSeconds;
 
         // Quantified WeaponDataAsset.BaseTraits contributions - a weapon's OWN authored
         // WeaponPerkData picks (WeaponSystem.ApplyBaseTraits), resolved in Create below via
@@ -138,6 +145,7 @@ namespace QuantumUser.Editor.BalanceSimulator
                 CriticalDamageBonus = D(data.CriticalDamageBonus),
                 MagazineSize = data.MagazineSize,
                 ReloadDuration = D(data.ReloadDuration),
+                TickSeconds = assets?.SimTickSeconds ?? 0,
             };
 
             for (int i = 0; i < level; i++)
@@ -210,7 +218,7 @@ namespace QuantumUser.Editor.BalanceSimulator
                     FireCooldownMultiplier /= Math.Max(0.01, D(p.FireRateMultiplier));
                     break;
                 case CriticalChanceWeaponPerkData p: CriticalChance += D(p.Chance); break;
-                case CriticalDamageWeaponPerkData p: CriticalDamageBonus += D(p.Bonus); break;
+                case CriticalDamageWeaponPerkData p: CriticalDamageBonus = Math.Max(1, CriticalDamageBonus) + D(p.Bonus); break;
                 case MagazineMultiplierWeaponPerkData p: MagazineSize = Math.Max(1, Math.Round(MagazineSize * D(p.Multiplier))); break;
                 case ReloadSpeedWeaponPerkData p: ReloadDuration /= Math.Max(0.01, D(p.Multiplier)); break;
                 case FinalRoundWeaponPerkData p: FinalRoundBonus += D(p.DamageBonus); break;
@@ -276,21 +284,19 @@ namespace QuantumUser.Editor.BalanceSimulator
 
             // Double Barrel/Burst Rifle's own baseline BurstFireWeaponPerkData - BurstCount shots
             // leave BurstDelay apart per trigger pull, and only the LAST one pays the full
-            // FireCooldownTimer (WeaponSystem.Update's burst-start block/TickWeaponBurst) - so the
-            // average per-shot cadence blends the two instead of treating every shot as its own full
-            // cooldown. BurstCount <= 1 (every weapon without that trait) collapses to the plain
-            // `cooldown` above, completely unaffected.
+            // FireCooldownTimer (WeaponSystem.Update's burst-start block/TickWeaponBurst).
             int burstCount = Math.Max(1, BurstCount);
-            double effectiveCooldown = burstCount <= 1
-                ? cooldown
-                : ((burstCount - 1) * BurstDelay + cooldown) / burstCount;
-
-            double magazine = Math.Max(1, Math.Round(MagazineSize * stats.MagazineMultiplier));
-            double reload = ReloadDuration / Math.Max(0.01, stats.ReloadSpeedMultiplier) / (1 + reloadBonus);
-            double shotsPerSecond = magazine / (magazine * effectiveCooldown + reload);
+            double magazine = Math.Max(1, Math.Round(MagazineSize * (1 + stats.MagazineSizeBonus)));
+            double reload = ReloadDuration > 0
+                ? ReloadDuration / Math.Max(0.01, stats.ReloadSpeedMultiplier) / (1 + reloadBonus)
+                : 0;
+            double shotsPerSecond = magazine / MagazineCycleSeconds(magazine, burstCount, cooldown, reload);
 
             double critChance = Math.Clamp(stats.CriticalChance + CriticalChance, 0, 1);
-            double critMultiplier = stats.CriticalDamageMultiplier + CriticalDamageBonus;
+            // Multiplicative, weapon term floored at 1 - DamageUtility.ResolveCriticalTerms. Every
+            // hero authors CriticalDamageMultiplier 1, so the weapon's own bonus IS the crit multiplier
+            // (an SMG's 0.5 means crits deal no extra damage at all).
+            double critMultiplier = stats.CriticalDamageMultiplier * Math.Max(1, CriticalDamageBonus);
 
             // Burst Rifle's 3rd-shot-always-crits - one of every BurstCount shots skips the roll
             // entirely (DamageUtility.ResolveOutgoingDamage's forceCritical), the rest still roll
@@ -332,22 +338,75 @@ namespace QuantumUser.Editor.BalanceSimulator
             return hit * shotsPerSecond;
         }
 
+        // One full magazine, first shot to the first shot of the next magazine. Mirrors
+        // WeaponSystem's timers: each wait is set fresh when it starts (no remainder carried) and
+        // counted down once per tick, so it lasts a whole number of ticks, at least one. That makes
+        // fast weapons fire slower than their FireRate (12/s -> 10/s at 20 Hz), and it's why a small
+        // Fire Rate bonus can add nothing until it crosses a tick boundary. The reload starts on the
+        // magazine's last shot, so it overlaps that shot's cooldown rather than following it. A
+        // single-shot weapon starts it after UpdateReload already ran that tick and can't fire on
+        // the tick it completes (+1 tick); a burst's last shot starts it inside TickWeaponBurst,
+        // before UpdateReload runs the same tick.
+        private double MagazineCycleSeconds(double magazine, int burstCount, double cooldown, double reload)
+        {
+            double pulls = Math.Ceiling(magazine / burstCount);
+            double cycle = (magazine - pulls) * Wait(BurstDelay) + (pulls - 1) * Wait(cooldown);
+
+            if (reload <= 0)
+                return cycle + Wait(cooldown);
+
+            double reloadWait = TickSeconds > 0
+                ? (Math.Ceiling(reload / TickSeconds - 1e-6) + (burstCount > 1 ? 0 : 1)) * TickSeconds
+                : reload;
+
+            return cycle + Math.Max(reloadWait, Wait(cooldown));
+        }
+
+        private double Wait(double seconds) => TickSeconds > 0
+            ? Math.Max(1, Math.Ceiling(seconds / TickSeconds - 1e-6)) * TickSeconds
+            : seconds;
+
         // Bare asset DPS with no character multipliers (used for sentry/skill-mounted weapons).
         // No BalanceSimAssets to resolve BaseTraits with, so a sentry/skill-mounted weapon's own
         // baseline traits (none currently author any) don't factor in here - same reach a rolled
         // Weapon.Perks pick already doesn't have on this path either.
-        public static double BaseDps(WeaponDataAsset data) => Create(data, 0, 0).Dps(new SimStats { CriticalDamageMultiplier = 1.5 });
+        public static double BaseDps(WeaponDataAsset data, double tickSeconds, double fireRateMultiplier = 1)
+        {
+            // A sentry barrel has no CharacterStats, so it never crits (ResolveOutgoingDamage's gate).
+            // fireRateMultiplier = Overclock/Redline (SentryBarrelSystem.ResolveFireRateMultiplier),
+            // which scales the barrel's fire cooldown like AttackSpeedMultiplier - tick rounding included.
+            SimWeapon weapon = Create(data, 0, 0);
+            weapon.TickSeconds = tickSeconds;
+            weapon.CriticalChance = 0;
+            return weapon.Dps(new SimStats { CriticalDamageMultiplier = 1, AttackSpeedMultiplier = Math.Max(0.01, fireRateMultiplier) });
+        }
     }
 
     public class SkillEstimate
     {
         public string Model = "none";
+
+        // The hero's OWN skill damage per cast (crits, level bonus): FlatDamage + DurationScaledDamage.
+        // Skill-mounted weapons (Lux's sentry) are kept separately in MountedWeapons.
         public double DamagePerActivation;
         public double Cooldown = 1;
         public double ActiveDuration;
+        public bool UsesArea;
+
+        // Part of DamagePerActivation dealt by a Skill-source spawned entity over its lifetime (Zara's
+        // totem beats) - stretched by SkillDurationMultiplier (SpawnedEntitySpawner), unlike impacts.
+        public double DurationScaledDamage;
+
+        // Juggernaut/Berserk: the slot stays Active for ChannelDuration and the cooldown only arms at
+        // FinishSkill, so a cycle is cooldown + channel (not max of the two). SkillDurationMultiplier
+        // doesn't touch the channel (slot StateTimer).
+        public bool IsChannel;
+        public double ChannelDuration;
+
+        // Berserk's buff while active (raw, not uptime-scaled - SimPlayer.BuffUptime is live so Skill
+        // Cooldown picks count).
         public double WeaponFireRateBonus;
         public double WeaponReloadBonus;
-        public bool UsesArea;
 
         // "Skill Damage" basis every percent-of-basis Ascension scales off (KaiAscensionUtility.
         // ResolveVortexSkillDamage & friends): ProjectileSkillData.Damage / JuggernautSkillData.Damage /
@@ -357,15 +416,34 @@ namespace QuantumUser.Editor.BalanceSimulator
         public double TickDamage;
         public double TickInterval;
         public double TickWindow;
-        public double MountedWeaponDamage;
-        public double BuffUptime;
+
+        // Juggernaut: enemy hits per cast (area x channel / per-enemy discharge cooldown x contact uptime).
+        public double HitsPerActivation;
+
+        // Kai: seconds between vortex pull pulses (VortexSystem, prefab Vortex.TickInterval rounded to
+        // game ticks) - what Compression's Implosion counts, not the 0.5s damage pulse.
+        public double PullPulseInterval;
+
+        // Skill-mounted weapons (Lux sentry barrels) and how long the entity carrying them lives.
+        public List<WeaponDataAsset> MountedWeapons = new();
+        public double MountedLifetime;
     }
 
+    // Cumulative value of an Ascension line at one rank; the policy applies next - current.
     public struct UpgradeValue
     {
-        public double SkillDamage;
-        public double WeaponBonus;
-        public bool Quantified => SkillDamage > 0 || WeaponBonus > 0;
+        public bool Modelled;               // the action type has a case - a 0 delta is a real 0
+        public double SkillDamage;          // own damage per cast
+        public double ScaledSkillDamage;    // own damage per cast stretched by SkillDurationMultiplier
+        public double WeaponBonus;          // weapon damage bonus while the Berserk buff is up
+        public List<WeaponDataAsset> MountedWeapons; // barrels unlocked so far (Weapon Systems)
+        public double MountedFireRate;      // Overclock (1 = none)
+        public double MountedDurationBonus; // Overclock rank 2+
+        public double RedlineSeconds;       // Overclock rank 3
+        public double RedlineFireRate;
+
+        public bool Quantified => SkillDamage > 0 || ScaledSkillDamage > 0 || WeaponBonus > 0
+                                  || (MountedWeapons != null && MountedWeapons.Count > 0) || MountedFireRate > 1 || MountedDurationBonus > 0;
     }
 
     public class SimPlayer
@@ -377,7 +455,36 @@ namespace QuantumUser.Editor.BalanceSimulator
         public SkillEstimate Skill;
         public double SkillUpgradeBonus;
         public double SkillUpgradeDamage;
+        public double SkillUpgradeScaledDamage;
         public double WeaponBuffBonus;
+
+        // Sentry upgrades (Lux): extra barrels plus Overclock's fire rate / lifetime / Redline, all
+        // folded into mounted DPS live so tick rounding of the barrels' fire rate applies.
+        public List<WeaponDataAsset> UpgradeMountedWeapons = new();
+        public double MountedFireRate = 1;
+        public double MountedDurationBonus;
+        public double RedlineSeconds;
+        public double RedlineFireRate = 1;
+
+        // Weapon timer tick (BalanceSimAssets.SimTickSeconds) for mounted barrels.
+        public double TickSeconds;
+
+        // ExperienceUtility.ResolvePlayerLevelDamageMultiplier - 1 + DamageBonusPerLevel x the shared
+        // displayed Level, on every hero-dealt hit (weapon and skill alike).
+        public int DisplayLevel = 1;
+        public double DamageBonusPerLevel;
+
+        // Hero Mastery (WeaponWeightMasteryData/ElementMasteryData): the latest rank's total bonus,
+        // applied to weapon hits only while the equipped weapon matches - see
+        // HeroMasteryUtility.ResolveWeightElementMultiplier. Ignores Fire Mastery's Neutral-weapon
+        // exception under Ignition's guaranteed Burn and every rank-3 conditional special.
+        public bool HasWeightMastery;
+        public WeaponWeight MasteryWeight;
+        public double WeightMasteryBonus;
+        public bool HasElementMastery;
+        public ElementType MasteryElement;
+        public double ElementMasteryBonus;
+
         public double Coins;
         public double CoinsEarned;
         public double CoinsSpent;
@@ -403,23 +510,81 @@ namespace QuantumUser.Editor.BalanceSimulator
             c.GlobalPicks = new Dictionary<GlobalUpgradeData, int>(GlobalPicks);
             c.SkillRanks = new Dictionary<UpgradeData, int>(SkillRanks);
             c.PickLog = new List<string>(PickLog);
+            c.UpgradeMountedWeapons = new List<WeaponDataAsset>(UpgradeMountedWeapons);
             return c;
         }
 
-        public double WeaponDps(BalanceSimScenario scenario)
-            => Weapon.Dps(Stats, Skill.WeaponFireRateBonus, Skill.WeaponReloadBonus) * (1 + WeaponBuffBonus) * scenario.HitEfficiency;
+        public double LevelDamageMultiplier => 1 + DamageBonusPerLevel * DisplayLevel;
 
-        // Skill hits skip weapon crit but keep CharacterStats crit (DamageUtility:890-901).
-        public double SkillDps(BalanceSimScenario scenario)
+        public double MasteryMultiplier
         {
-            double perActivation = Skill.DamagePerActivation + SkillUpgradeDamage;
-            if (perActivation <= 0)
+            get
+            {
+                if (Weapon.Data == null)
+                    return 1;
+
+                double multiplier = 1;
+                if (HasWeightMastery && Weapon.Data.Weight == MasteryWeight)
+                    multiplier *= 1 + WeightMasteryBonus;
+                if (HasElementMastery && Weapon.Data.Element == MasteryElement)
+                    multiplier *= 1 + ElementMasteryBonus;
+                return multiplier;
+            }
+        }
+
+        private double SkillCooldown => Skill.Cooldown / Math.Max(0.01, Stats.SkillCooldownMultiplier);
+
+        // Share of time a channel buff (Berserk) is up: channel / (channel + cooldown).
+        public double BuffUptime => Skill.IsChannel && Skill.ChannelDuration > 0
+            ? Skill.ChannelDuration / (Skill.ChannelDuration + SkillCooldown)
+            : 0;
+
+        public double WeaponDps(BalanceSimScenario scenario)
+        {
+            double uptime = BuffUptime;
+            return Weapon.Dps(Stats, Skill.WeaponFireRateBonus * uptime, Skill.WeaponReloadBonus * uptime)
+                   * (1 + WeaponBuffBonus * uptime) * LevelDamageMultiplier * MasteryMultiplier * scenario.HitEfficiency;
+        }
+
+        // Damage per cast from skill-mounted weapons (before the baked skill multiplier).
+        private double MountedDamagePerCast()
+        {
+            if (Skill.MountedWeapons.Count == 0 && UpgradeMountedWeapons.Count == 0)
                 return 0;
 
-            double cooldown = Skill.Cooldown / Math.Max(0.01, Stats.SkillCooldownMultiplier);
-            double cycle = Math.Max(cooldown, Skill.ActiveDuration * Stats.SkillDurationMultiplier);
+            double lifetime = Skill.MountedLifetime * Stats.SkillDurationMultiplier + MountedDurationBonus;
+            double redline = Math.Min(RedlineSeconds, lifetime);
+            double damage = 0;
+
+            foreach (WeaponDataAsset weapon in Skill.MountedWeapons.Concat(UpgradeMountedWeapons))
+            {
+                double dps = SimWeapon.BaseDps(weapon, TickSeconds, MountedFireRate);
+                double redlineDps = redline > 0 ? SimWeapon.BaseDps(weapon, TickSeconds, MountedFireRate * RedlineFireRate) : dps;
+                damage += dps * (lifetime - redline) + redlineDps * redline;
+            }
+
+            return damage;
+        }
+
+        // Skill hits skip weapon crit but keep CharacterStats crit (DamageUtility.ResolveCriticalTerms).
+        // Skill-mounted weapons (Lux's sentry barrels) fire as their own entity with no
+        // CharacterStats: they get the baked DamageMultiplier x SkillDamageMultiplier
+        // (StatUtility.GetSkillDamageMultiplier) but no crit and no level bonus.
+        public double SkillDps(BalanceSimScenario scenario)
+        {
+            double durationMultiplier = Stats.SkillDurationMultiplier;
+            double flat = Skill.DamagePerActivation - Skill.DurationScaledDamage + SkillUpgradeDamage;
+            double scaled = (Skill.DurationScaledDamage + SkillUpgradeScaledDamage) * durationMultiplier;
+            double own = Math.Max(0, flat + scaled);
+            double mounted = MountedDamagePerCast();
+
+            if (own + mounted <= 0)
+                return 0;
+
+            double cycle = SkillCooldown + (Skill.IsChannel ? Skill.ChannelDuration : 0);
             double critFactor = 1 + Math.Clamp(Stats.CriticalChance, 0, 1) * (Stats.CriticalDamageMultiplier - 1);
-            double damage = perActivation * Stats.DamageMultiplier * Stats.SkillDamageMultiplier * critFactor * (1 + SkillUpgradeBonus);
+            double damage = (own * critFactor * LevelDamageMultiplier + mounted)
+                            * Stats.DamageMultiplier * Stats.SkillDamageMultiplier * (1 + SkillUpgradeBonus);
 
             return damage / Math.Max(0.1, cycle) * scenario.SkillUseEfficiency;
         }

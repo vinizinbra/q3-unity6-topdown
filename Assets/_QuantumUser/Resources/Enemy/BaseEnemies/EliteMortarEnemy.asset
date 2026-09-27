@@ -31,7 +31,15 @@ MonoBehaviour:
   ProjectileData:
     Id:
       Value: 2938925554936299593
-  ShellCount: 3
+  ProjectileSpeedMultiplier:
+    RawValue: 65536
+  ProjectileMaxDistanceMultiplier:
+    RawValue: 65536
+  LeadFactor:
+    RawValue: 32768
+  MaxLeadDistance:
+    RawValue: 262144
+  ShellCount: 5
   AimedShellCount: 3
   Stagger:
     RawValue: 32768
@@ -90,7 +98,7 @@ MonoBehaviour:
   DamageRange:
     RawValue: 196608
   Damage:
-    RawValue: 655360
+    RawValue: 1638400
   AnticipationTime:
     RawValue: 32768
   DirectionTracking: 2
@@ -99,7 +107,7 @@ MonoBehaviour:
   DownTime:
     RawValue: 32768
   CooldownTime:
-    RawValue: 131072
+    RawValue: 85197
   TelegraphStartPercent:
     RawValue: 32768
   Trigger:
@@ -183,12 +191,14 @@ MonoBehaviour:
     ParticlePrefab: {fileID: 0}
     Anchor: 0
     Offset: {x: 0, y: 0, z: 0}
+    SnapToGround: 0
     Parented: 0
     AlignToEnemyDirection: 0
     RotationOffset: {x: 0, y: 0, z: 0}
     Scale: 1
     OverrideSortingOrder: 0
     SortingOrder: 0
+    AdditionalParticles: []
   BeginStep:
     AnimationType: 0
     Duration: 0.3
@@ -251,12 +261,14 @@ MonoBehaviour:
     ParticlePrefab: {fileID: 0}
     Anchor: 0
     Offset: {x: 0, y: 0, z: 0}
+    SnapToGround: 0
     Parented: 0
     AlignToEnemyDirection: 0
     RotationOffset: {x: 0, y: 0, z: 0}
     Scale: 1
     OverrideSortingOrder: 0
     SortingOrder: 0
+    AdditionalParticles: []
   OnGoingStep:
     AnimationType: 0
     Duration: 0.3
@@ -319,12 +331,14 @@ MonoBehaviour:
     ParticlePrefab: {fileID: 0}
     Anchor: 0
     Offset: {x: 0, y: 0, z: 0}
+    SnapToGround: 0
     Parented: 0
     AlignToEnemyDirection: 0
     RotationOffset: {x: 0, y: 0, z: 0}
     Scale: 1
     OverrideSortingOrder: 0
     SortingOrder: 0
+    AdditionalParticles: []
   EndStep:
     AnimationType: 0
     Duration: 0.3
@@ -387,12 +401,14 @@ MonoBehaviour:
     ParticlePrefab: {fileID: 0}
     Anchor: 0
     Offset: {x: 0, y: 0, z: 0}
+    SnapToGround: 0
     Parented: 0
     AlignToEnemyDirection: 0
     RotationOffset: {x: 0, y: 0, z: 0}
     Scale: 1
     OverrideSortingOrder: 0
     SortingOrder: 0
+    AdditionalParticles: []
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -483,6 +499,10 @@ MonoBehaviour:
       RawValue: 1966080
     LeashRange:
       RawValue: 65470464
+    StopDistance:
+      RawValue: 0
+    StopSlowdownRange:
+      RawValue: 0
     DetectionRangeMultiplier:
       RawValue: 65536
   Actions:

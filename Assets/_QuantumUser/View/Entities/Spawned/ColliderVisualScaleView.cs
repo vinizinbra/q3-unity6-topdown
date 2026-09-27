@@ -51,7 +51,8 @@ namespace Quantum
 
             // Predicted rather than Verified: a spawn created this tick has no verified frame yet,
             // and waiting for one would show it at its authored size first.
-            if (game.Frames.Predicted.TryGet<PhysicsCollider3D>(_entityRef, out PhysicsCollider3D collider) == false)
+            Frame frame = game.Frames.Predicted;
+            if (frame.TryGet<PhysicsCollider3D>(_entityRef, out PhysicsCollider3D collider) == false)
                 return;
 
             _applied = true;
@@ -62,7 +63,7 @@ namespace Quantum
                 return;
             }
 
-            if (TryGetWorldSize(collider.Shape, out Vector3 worldSize) == false)
+            if (TryGetWorldSize(frame, collider.Shape, out Vector3 worldSize) == false)
             {
                 LogHelper.Error("ColliderVisualScaleView", $"'{name}' has a {collider.Shape.Type} collider, which has no size to read.", this);
                 return;
@@ -84,10 +85,13 @@ namespace Quantum
             }
         }
 
-        private static bool TryGetWorldSize(Shape3D shape, out Vector3 size)
+        private static bool TryGetWorldSize(Frame frame, Shape3D shape, out Vector3 size)
         {
             switch (shape.Type)
             {
+                case Shape3DType.Compound:
+                    return TryGetCompoundBoxesSize(frame, shape, out size);
+
                 case Shape3DType.Box:
                     // Box extents are half-sizes.
                     size = shape.Box.Extents.ToUnityVector3() * 2f;
@@ -107,6 +111,34 @@ namespace Quantum
                     size = Vector3.one;
                     return false;
             }
+        }
+
+        // The union of the compound's child boxes (e.g. WallChunk's floor slab + wall block), so one
+        // wrapper holding every layer's cube resizes as a whole. Rotation is ignored - these are
+        // axis-aligned chunk cubes; any non-Box child counts as unreadable.
+        private static unsafe bool TryGetCompoundBoxesSize(Frame frame, Shape3D shape, out Vector3 size)
+        {
+            size = Vector3.one;
+
+            if (shape.Compound.GetShapes(frame, out Shape3D* shapes, out int count) == false)
+                return false;
+
+            Vector3 min = Vector3.positiveInfinity;
+            Vector3 max = Vector3.negativeInfinity;
+
+            for (int i = 0; i < count; i++)
+            {
+                if (shapes[i].Type != Shape3DType.Box)
+                    return false;
+
+                Vector3 center = shapes[i].LocalTransform.Position.ToUnityVector3();
+                Vector3 extents = shapes[i].Box.Extents.ToUnityVector3();
+                min = Vector3.Min(min, center - extents);
+                max = Vector3.Max(max, center + extents);
+            }
+
+            size = max - min;
+            return true;
         }
 
         // An unset unit size is far likelier than an author meaning zero, which would divide the

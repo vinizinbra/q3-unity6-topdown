@@ -23,9 +23,6 @@ namespace Quantum
         private static readonly int FoamColorId = Shader.PropertyToID("_FoamColor");
         private static readonly int WaterOpacityId = Shader.PropertyToID("_WaterOpacity");
 
-        [SerializeField, Tooltip("Shared Material (Project/Detail Sprite Height Fog shader) ChunkDetailScatter assigns to wall detail sprites.")]
-        private Material detailSpriteMaterial;
-
         [SerializeField, Tooltip("Every Material that should take this world's water colours/opacity (Project/LakeShader). All of them get the SAME values, so only assign Materials meant to look alike. Leave empty on a world with no water.")]
         private Material[] waterMaterials;
 
@@ -35,15 +32,13 @@ namespace Quantum
         [SerializeField, Tooltip("Applied on Awake if set, so a theme can be previewed without whatever will eventually call Load() for the current world.")]
         [Expandable] private WorldTheme initialTheme;
 
-        // Single source of truth for "which WorldTheme is currently active" - consumed by
-        // ChunkDetailScatter (and anything else that needs the live theme).
+        // Single source of truth for "which WorldTheme is currently active" (CurrentTheme below).
         // Renderers that showed a waterMaterials entry when first looked up, with that original material -
         // WorldWaterTheme.SurfaceMaterial swaps onto these and a world without an override restores them.
         private readonly System.Collections.Generic.List<(Renderer renderer, Material original)> waterRenderers = new();
 
         public static EnvironmentManager Instance { get; private set; }
         public WorldTheme CurrentTheme { get; private set; }
-        public Material DetailSpriteMaterial => detailSpriteMaterial;
 
         private void Awake()
         {

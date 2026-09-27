@@ -62,7 +62,7 @@ namespace Quantum
 
             // Skill Area - see StatUtility.GetAreaMultiplier.
             Shape3D sphere = Shape3D.CreateSphere(Radius * StatUtility.GetAreaMultiplier(f, filter.Entity));
-            var hits = f.Physics3D.OverlapShape(filter.Transform3D->Position, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
+            var hits = f.Physics3D.OverlapShape(filter.Transform3D->Position, FPQuaternion.Identity, sphere, EnemyMovementUtility.GetEnemyLayerMask(f), QueryOptions.HitAll);
 
             for (int i = 0; i < hits.Count; i++)
             {

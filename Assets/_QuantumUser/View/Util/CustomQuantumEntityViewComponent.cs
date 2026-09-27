@@ -71,6 +71,11 @@ public abstract class CustomQuantumEntityViewComponent : MonoBehaviour
 
     public virtual void OnDestroy()
     {
+        // Start() subscribes every view instance; without this every destroyed enemy/projectile view
+        // leaked a handler, growing the delegate list (and its per-spawn copy cost) over a run.
+        if (MyLocalPlayer.Instance != null)
+            MyLocalPlayer.Instance.onLocalPlayerSetup -= OnLocalPlayerSetup;
+
         if (entityView)
         {
             entityView.OnEntityInstantiated.RemoveListener(Initialize);

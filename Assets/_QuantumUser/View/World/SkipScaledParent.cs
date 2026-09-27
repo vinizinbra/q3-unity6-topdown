@@ -56,10 +56,13 @@ namespace Quantum
                 // localScale here that matches the true final world size, so re-running Generate()
                 // now (it resets its own previous output first) rebuilds against the correct size
                 // instead of leaving the first, wrong-sized pass in the scene.
+                // The tileset rebuild is queued, not run here: a gap filler's floor slab merges into the
+                // level-wide floor cluster, so building immediately would rebuild that whole floor once
+                // per gap run - the queue flushes every run spawned in the same few frames in one pass.
                 if (cubeVisualBuilder != null)
                     cubeVisualBuilder.Generate();
                 if (tilesetBuilder != null)
-                    tilesetBuilder.Generate();
+                    TilesetBuildQueue.Enqueue(tilesetBuilder);
 
                 // One-shot: disable immediately after the single reparent+regenerate rather than
                 // waiting for a future frame's parent==scale-1 check to disable. The reparent is a

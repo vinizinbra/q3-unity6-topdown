@@ -155,7 +155,32 @@ namespace Quantum
                 case CheatActionKind.RevealMap:
                     RevealAllChunks(f);
                     break;
+
+                case CheatActionKind.ExtendBreathing:
+                    ExtendBreathing(f, cmd.Amount);
+                    break;
             }
+        }
+
+        // Only while the current SurvivalConfig phase is a Breathing Break: pulls PhaseTimer back by
+        // `seconds`, so the Break ends that much later (SurvivalProgressionUtility ends it once
+        // PhaseTimer >= Duration). PhaseTimer is allowed to go negative - clamping at 0 would make the
+        // button do nothing early in a Break. SurvivalTime is untouched (it's frozen during Breathing
+        // anyway), and BreathingTimeRemaining (Duration - PhaseTimer) just reads larger on the HUD.
+        private static void ExtendBreathing(Frame f, int seconds)
+        {
+            if (seconds <= 0)
+                return;
+
+            SurvivalConfig config = f.FindAsset(f.RuntimeConfig.SurvivalConfig);
+            if (config == null || config.Phases == null)
+                return;
+
+            int index = f.Global->CurrentPhaseIndex;
+            if (index < 0 || index >= config.Phases.Length || config.Phases[index].Kind != SurvivalPhaseKind.Breathing)
+                return;
+
+            f.Global->PhaseTimer -= (FP)seconds;
         }
 
         // Breath 1-4 map onto the 1st-4th Breathing-kind entry in SurvivalConfig.Phases[] (indices
@@ -199,6 +224,7 @@ namespace Quantum
             f.Global->CurrentPhaseIndex = targetIndex;
             f.Global->PhaseTimer = FP._0;
             f.Global->PhaseGuaranteedSpawnDone = false;
+            RunPhaseUtility.ClearBreathingGrace(f);
 
             // Bidirectional (no forward-only guard), unlike AdvancePhase/AdvanceToNextBreathing's own
             // use of this same formula - a cheat that jumps BACK to an earlier Breathing phase should
@@ -340,6 +366,7 @@ namespace Quantum
                 f.Global->CurrentPhaseIndex++;
                 f.Global->PhaseTimer = FP._0;
                 f.Global->PhaseGuaranteedSpawnDone = false;
+                RunPhaseUtility.ClearBreathingGrace(f);
             }
         }
 
@@ -377,6 +404,7 @@ namespace Quantum
             f.Global->CurrentPhaseIndex++;
             f.Global->PhaseTimer = FP._0;
             f.Global->PhaseGuaranteedSpawnDone = false;
+            RunPhaseUtility.ClearBreathingGrace(f);
 
             // Forward-only guard, same as AdvanceToNextBreathing below - AdvancePhase only ever
             // steps CurrentPhaseIndex forward by exactly 1, so this should always be moving
@@ -411,6 +439,7 @@ namespace Quantum
             f.Global->CurrentPhaseIndex = index;
             f.Global->PhaseTimer = FP._0;
             f.Global->PhaseGuaranteedSpawnDone = false;
+            RunPhaseUtility.ClearBreathingGrace(f);
 
             // Move the run clock forward to match the jump, so difficulty curves and the HUD survival
             // timer line up with the target phase. Guarded so it only ever moves forward, never

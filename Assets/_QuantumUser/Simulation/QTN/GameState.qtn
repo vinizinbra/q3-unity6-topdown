@@ -142,9 +142,9 @@ global
     // Window open - RunPhaseUtility.TickBreathingGraceHold holds the phase transition open instead
     // of instantly force-closing that window, for up to SurvivalPhase.GracePeriodDuration seconds
     // (BreathingGraceTimeRemaining, below) or until every open window closes, whichever comes
-    // first. PoiInteractionLockUtility.IsInputLocked reads this to fully lock (movement/weapon/
-    // skill) every player who does NOT themselves have a window open, so nobody can wander off
-    // while a teammate finishes. See docs/run-phase.md.
+    // first. Only delays the phase transition - teammates without a window of their own keep
+    // full control meanwhile (PoiInteractionLockUtility.IsInputLocked does NOT read this). See
+    // docs/run-phase.md.
     Boolean BreathingGraceActive;
 
     // Seconds left in the current grace hold - only meaningful while BreathingGraceActive is true.

@@ -48,6 +48,12 @@ namespace Quantum
         // at different speeds. The landing warning reads the final scaled velocity (ref launch).
         public FP ProjectileSpeedMultiplier = 1;
 
+        // Same as ProjectileDeliveryData's own fields - see there. The lead applies to aimed shells
+        // only; scattered shells keep landing around the target's real position.
+        public FP ProjectileMaxDistanceMultiplier = 1;
+        public FP LeadFactor;
+        public FP MaxLeadDistance = 4;
+
         public int ShellCount = 3;
 
         // How many of ShellCount fire straight at the anchor unrandomized rather than through
@@ -153,6 +159,21 @@ namespace Quantum
             // chasing the target's movement from a point that isn't even on them.
             ProjectileLaunch launch = movement.GetLaunchToTarget(f, origin, point, EntityRef.None);
 
+            // Opt-in lead for aimed shells (LeadFactor, default 0) - unlike the movement's own
+            // PredictionTime above, this one is scoped to the aimed shell and reads the player's KCC.
+            if (LeadFactor > FP._0 && shellIndex < aimedCount && launch.IsValid == true)
+            {
+                FPVector3 ledPoint = ProjectileAimUtility.LeadAimPoint(f, target, origin, point,
+                    launch.Velocity * ProjectileSpeedMultiplier, LeadFactor, MaxLeadDistance);
+                ProjectileLaunch ledLaunch = movement.GetLaunchToTarget(f, origin, ledPoint, EntityRef.None);
+
+                if (ledLaunch.IsValid == true)
+                {
+                    launch = ledLaunch;
+                    point = ledPoint;
+                }
+            }
+
             if (launch.IsValid == false)
             {
                 Log.Error($"[Enemy] {filter.Entity} resolved no valid mortar launch toward {point} - shell {shellIndex} skipped");
@@ -162,8 +183,12 @@ namespace Quantum
             // ref launch - Spawn's own ApplySpeedMultiplier mutates it in place (including
             // BossPhaseUtility.ResolveProjectileSpeedMultiplier), so the FireLandingWarning call
             // below sees the shell's REAL final velocity, not the pre-multiplier one it solved above.
-            ProjectileSpawner.Spawn(f, filter.Entity, ProjectileData, ref launch, action.Damage, target: EntityRef.None,
+            EntityRef shell = ProjectileSpawner.Spawn(f, filter.Entity, ProjectileData, ref launch, action.Damage, target: EntityRef.None,
                 speedMultiplier: ProjectileSpeedMultiplier);
+
+            if (f.Unsafe.TryGetPointer<Projectile>(shell, out var spawned) == true)
+                spawned->MaxDistanceMultiplier = ProjectileMaxDistanceMultiplier;
+
             FireLandingWarning(f, origin, point, launch.Velocity, warningRadius);
         }
 

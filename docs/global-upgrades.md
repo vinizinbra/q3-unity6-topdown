@@ -58,10 +58,10 @@ a parallel do-nothing `CharacterStats` field.
 | Weapon Damage | `WeaponDamageUpgradeData` | `CharacterStats.WeaponDamageMultiplier` | ✅ |
 | Fire Rate | `FireRateUpgradeData` | `CharacterStats.AttackSpeedMultiplier` | ✅ |
 | Reload Speed | `ReloadSpeedUpgradeData` | `CharacterStats.ReloadSpeedMultiplier` | ✅ |
-| Magazine Size | `MagazineSizeUpgradeData` | `Weapon.MagazineSize` (same field as `MagazineMultiplierWeaponPerkData`) | ✅ |
+| Magazine Size | `MagazineSizeUpgradeData` | `CharacterStats.MagazineSizeBonus` += Multiplier - 1 (additive per pick) via `WeaponSystem.AddMagazineSizeBonus`, re-applied on every equip. Used to write `Weapon.MagazineSize` directly and was wiped by the next weapon pickup. | ✅ |
 | Critical Chance | `CriticalChanceUpgradeData` | `CharacterStats.CriticalChance` (flat add) | ✅ |
 | Critical Damage | `CriticalDamageUpgradeData` | `CharacterStats.CriticalDamageMultiplier` | ✅ |
-| Weapon Range | `WeaponRangeUpgradeData` | `Weapon.RangeMultiplier` (same field as `RangeMultiplierWeaponPerkData`) | ✅ |
+| Weapon Range | `WeaponRangeUpgradeData` | `Weapon.RangeMultiplier` (stacks with `RangeMultiplierWeaponPerkData`) and `CharacterStats.WeaponRangeMultiplier`, re-applied on every equip by `WeaponSystem.ApplyOwnerWeaponRange`. Used to be wiped by the next weapon pickup. | ✅ |
 | Projectile Speed | `ProjectileSpeedUpgradeData` | `CharacterStats.ProjectileSpeedMultiplier` | ✅ (known limitation on homing projectiles - see "What changed" below) |
 
 ### Hero

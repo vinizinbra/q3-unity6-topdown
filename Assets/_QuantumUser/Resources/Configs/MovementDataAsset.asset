@@ -17,9 +17,9 @@ MonoBehaviour:
     Guid:
       Value: 296538771877913518
   WalkSpeed:
-    RawValue: 393216
+    RawValue: 360448
   RunSpeed:
-    RawValue: 393216
+    RawValue: 360448
   Gravity:
     X:
       RawValue: 0

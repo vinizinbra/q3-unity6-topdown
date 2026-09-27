@@ -165,7 +165,15 @@ namespace Quantum
                     RunPhaseUtility.CancelUncommittedCursedRiftInteractions(f);
                     RunPhaseUtility.CloseStoreInteractionsOnBreathingEnd(f);
                     RunPhaseUtility.CloseBlacksmithInteractionsOnBreathingEnd(f);
-                    f.Global->BreathingIndex++;
+
+                    // Only a Break actually ending counts (see GameState.qtn's BreathingIndex comment).
+                    // CombatPhaseState starts at Lobby, so without this check the run's first
+                    // Lobby->Survival switch bumped it and the first Break ran at index 1, skipping
+                    // BlacksmithConfig.BreakTuning[0] entirely.
+                    if (f.Global->CombatPhaseState == GameState.Breathing)
+                    {
+                        f.Global->BreathingIndex++;
+                    }
                 }
 
                 if (desiredState == GameState.Boss)

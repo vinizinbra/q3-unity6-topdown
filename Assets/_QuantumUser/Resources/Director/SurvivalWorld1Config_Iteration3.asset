@@ -1042,8 +1042,8 @@ MonoBehaviour:
     PulseInterval:
       RawValue: 117965
     TargetPressure:
-      RawValue: 1114112
-    MaxAliveEnemies: 14
+      RawValue: 917504
+    MaxAliveEnemies: 12
     AllowedGroups: []
     AllowedEnemies:
     - EnemyData:
@@ -1102,8 +1102,8 @@ MonoBehaviour:
     PulseInterval:
       RawValue: 98304
     TargetPressure:
-      RawValue: 1769472
-    MaxAliveEnemies: 17
+      RawValue: 1441792
+    MaxAliveEnemies: 14
     AllowedGroups: []
     AllowedEnemies:
     - EnemyData:
@@ -1173,8 +1173,8 @@ MonoBehaviour:
     PulseInterval:
       RawValue: 98304
     TargetPressure:
-      RawValue: 1638400
-    MaxAliveEnemies: 16
+      RawValue: 1376256
+    MaxAliveEnemies: 13
     AllowedGroups: []
     AllowedEnemies:
     - EnemyData:
@@ -1332,7 +1332,7 @@ MonoBehaviour:
       RawValue: 91750
     TargetPressure:
       RawValue: 2097152
-    MaxAliveEnemies: 19
+    MaxAliveEnemies: 17
     AllowedGroups:
     - Id:
         Value: 424504409457314950
@@ -1539,8 +1539,8 @@ MonoBehaviour:
     PulseInterval:
       RawValue: 85197
     TargetPressure:
-      RawValue: 2621440
-    MaxAliveEnemies: 24
+      RawValue: 2359296
+    MaxAliveEnemies: 20
     AllowedGroups:
     - Id:
         Value: 277181120842021654
@@ -1605,8 +1605,8 @@ MonoBehaviour:
     PulseInterval:
       RawValue: 117965
     TargetPressure:
-      RawValue: 1310720
-    MaxAliveEnemies: 14
+      RawValue: 1114112
+    MaxAliveEnemies: 12
     AllowedGroups: []
     AllowedEnemies:
     - EnemyData:
@@ -1772,10 +1772,10 @@ MonoBehaviour:
     BudgetPerPulse:
       RawValue: 1966080
     PulseInterval:
-      RawValue: 65536
+      RawValue: 85197
     TargetPressure:
-      RawValue: 3145728
-    MaxAliveEnemies: 28
+      RawValue: 2621440
+    MaxAliveEnemies: 22
     AllowedGroups:
     - Id:
         Value: 277181120842021654

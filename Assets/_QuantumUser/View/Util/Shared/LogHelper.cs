@@ -34,7 +34,14 @@ namespace QuantumUser.View.Util
         // Exposed as a toggle via SROptions (see LogHelper.SROptions.cs) so it can be flipped
         // without a recompile while profiling. Has no effect on Release builds, which already
         // strip Log/Warn (and their string formatting) entirely via [Conditional].
+        // Defaults to off on device: a Development Build pays for a script stack trace per log
+        // (profiled at ~60ms per logging frame, 1-4s spikes on Android), which swamps profiling.
+        // Flip it back on from the SRDebugger Options panel when device logs are needed.
+#if UNITY_EDITOR
         public static bool Disabled = false;
+#else
+        public static bool Disabled = true;
+#endif
 
         [Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD"), Conditional("RR_DIAG_LOGS")]
         public static void Log(string tag, string message, Object context = null)

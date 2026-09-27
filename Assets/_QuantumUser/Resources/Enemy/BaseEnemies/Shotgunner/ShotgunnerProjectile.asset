@@ -20,11 +20,17 @@ MonoBehaviour:
     RawValue: 0
   MaxRandomOffset:
     RawValue: 0
-  HitImpactPrefab: {fileID: 4425481775148980287, guid: 33603ad5a2a86471199b3a9641457205, type: 3}
-  HitImpactOffset: {x: 0, y: 0, z: 0}
   ProjectileData:
     Id:
       Value: 2962688306719015508
+  ProjectileSpeedMultiplier:
+    RawValue: 117965
+  ProjectileMaxDistanceMultiplier:
+    RawValue: 78643
+  LeadFactor:
+    RawValue: 26214
+  MaxLeadDistance:
+    RawValue: 262144
   SpawnAnchor: 0
   SpawnOffset:
     X:
@@ -35,7 +41,7 @@ MonoBehaviour:
       RawValue: 32768
   PelletCount: 6
   SpreadAngle:
-    RawValue: 3932160
+    RawValue: 2621440
   Radial: 0
   UseArc: 0
   LaunchAngle:

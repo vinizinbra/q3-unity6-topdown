@@ -672,6 +672,14 @@ MonoBehaviour:
   ProjectileData:
     Id:
       Value: 2938925554936299593
+  ProjectileSpeedMultiplier:
+    RawValue: 65536
+  ProjectileMaxDistanceMultiplier:
+    RawValue: 65536
+  LeadFactor:
+    RawValue: 32768
+  MaxLeadDistance:
+    RawValue: 262144
   SpawnAnchor: 0
   SpawnOffset:
     X:

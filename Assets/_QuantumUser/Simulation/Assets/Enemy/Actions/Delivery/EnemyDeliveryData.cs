@@ -46,7 +46,7 @@ namespace Quantum
             FP flightTime = flatVelocity.Magnitude > FP._0 ? flatDelta.Magnitude / flatVelocity.Magnitude : FP._0;
 
             if (flightTime > FP._0)
-                f.Events.ProjectileLandingWarning(point, flightTime, radius);
+                f.Events.ProjectileLandingWarning(point, flightTime, radius, EntityRef.None);
         }
 
         // A projectile's Hit only sometimes carries a meaningful blast radius (AreaHitData) - a

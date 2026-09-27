@@ -206,7 +206,8 @@ config both paths reference):
 `ContextInteractionSystem`'s own Busy check - the same 4 call sites `CursedRiftUtility.IsInputLocked`
 used to serve alone. A player mid-Store/Blacksmith is locked exactly the same way a Cursed Rift
 Choice Window already locks input - movement/weapon/Dash/Hero-Skill gated, `GameplaySystemGroup`/
-`Time.timeScale` untouched, everyone else keeps playing normally.
+`Time.timeScale` untouched, everyone else keeps playing normally. This includes a Breathing grace hold
+(`docs/run-phase.md`): teammates are never input-locked while waiting on someone's open window.
 
 ## File map
 

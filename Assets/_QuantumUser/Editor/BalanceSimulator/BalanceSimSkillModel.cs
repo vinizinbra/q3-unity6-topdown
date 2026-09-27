@@ -29,21 +29,25 @@ namespace QuantumUser.Editor.BalanceSimulator
                 case BerserkSkillData berserk:
                 {
                     double duration = D(berserk.Duration);
-                    double uptime = Math.Clamp(duration / Math.Max(duration, est.Cooldown), 0, 1);
-                    est.BuffUptime = uptime;
-                    est.WeaponFireRateBonus = D(berserk.FireRateBonus) * uptime;
-                    est.WeaponReloadBonus = D(berserk.ReloadSpeedBonus) * uptime;
-                    est.Model = $"Berserk buff (+{D(berserk.FireRateBonus):P0} fire rate, {uptime:P0} uptime)";
+                    est.IsChannel = true;
+                    est.ChannelDuration = duration;
+                    est.WeaponFireRateBonus = D(berserk.FireRateBonus);
+                    est.WeaponReloadBonus = D(berserk.ReloadSpeedBonus);
+                    double uptime = duration / (duration + est.Cooldown);
+                    est.Model = $"Berserk buff (+{D(berserk.FireRateBonus):P0} fire rate, {uptime:P0} base uptime = {duration:0.#}s / ({duration:0.#}s + {est.Cooldown:0.#}s cooldown))";
                     AddGenericActions(skill, assets, scenario, est, area, 1);
                     return est;
                 }
                 case JuggernautSkillData jug:
                 {
                     double discharges = area * D(jug.Duration) / Math.Max(0.5, D(jug.DischargeCooldownPerEnemy)) * scenario.ChannelContactUptime;
+                    est.IsChannel = true;
+                    est.ChannelDuration = D(jug.Duration);
+                    est.HitsPerActivation = discharges;
                     est.Basis = D(jug.Damage);
                     est.DamagePerActivation = D(jug.Damage) * discharges;
                     est.UsesArea = true;
-                    est.Model = $"Juggernaut ({discharges:0.#} discharge hits x {D(jug.Damage)} @ {scenario.ChannelContactUptime:P0} contact uptime)";
+                    est.Model = $"Juggernaut ({discharges:0.#} discharge hits x {D(jug.Damage)} @ {scenario.ChannelContactUptime:P0} contact uptime, cycle = channel + cooldown)";
                     AddGenericActions(skill, assets, scenario, est, area, discharges);
                     return est;
                 }
@@ -69,8 +73,10 @@ namespace QuantumUser.Editor.BalanceSimulator
                         }
                     }
 
+                    // Only DamageEffectData (or SpawnVortexEffectData's own impact) applies damage on
+                    // hit - a spawn-only DirectHit (Zara's totem) deals none.
                     if (effectMultiplier <= 0)
-                        effectMultiplier = 1;
+                        effectMultiplier = effects.Exists(e => e is SpawnVortexEffectData) ? 1 : 0;
 
                     double targets = isArea ? area : 1;
                     est.Basis = D(projectile.Damage);
@@ -85,19 +91,30 @@ namespace QuantumUser.Editor.BalanceSimulator
                         {
                             case SpawnAlternatingAreaEffectData alt:
                             {
+                                // Beats alternate Damage / Support (AlternatingAreaSystem) and a Support
+                                // beat only chips for half DamageAmount - 0.75 of a beat on average.
                                 double duration = D(alt.Duration);
                                 double ticks = duration / Math.Max(0.1, D(alt.TickInterval));
-                                est.TickDamage = D(alt.DamageAmount) * ticks * area;
+                                est.TickDamage = D(alt.DamageAmount) * 0.75 * ticks * area;
                                 est.TickInterval = D(alt.TickInterval);
                                 est.TickWindow = duration;
                                 est.DamagePerActivation += est.TickDamage;
+                                est.DurationScaledDamage += est.TickDamage;
                                 est.ActiveDuration = Math.Max(est.ActiveDuration, duration);
                                 model += "+AlternatingArea";
                                 break;
                             }
                             case SpawnEntityEffectData spawn:
                                 est.ActiveDuration = Math.Max(est.ActiveDuration, D(spawn.Duration));
-                                model += spawn is SpawnVortexEffectData ? "+Vortex" : "+Entity";
+                                if (spawn is SpawnVortexEffectData)
+                                {
+                                    est.PullPulseInterval = ResolvePullPulseInterval(spawn, assets);
+                                    model += "+Vortex";
+                                }
+                                else
+                                {
+                                    model += "+Entity";
+                                }
                                 break;
                         }
                     }
@@ -120,6 +137,10 @@ namespace QuantumUser.Editor.BalanceSimulator
         {
             var extras = new List<string>();
 
+            // SkillSystem.InvokeActions skips the whole Actions list unless CheckActions is set.
+            if (skill.CheckActions == false)
+                return;
+
             foreach (AssetRef<SkillActionData> actionRef in skill.Actions)
             {
                 SkillActionData action = assets.Resolve(actionRef);
@@ -135,9 +156,8 @@ namespace QuantumUser.Editor.BalanceSimulator
                     if (duration <= 0)
                         continue;
 
-                    double mounted = SimWeapon.BaseDps(weapon) * duration;
-                    est.DamagePerActivation += mounted;
-                    est.MountedWeaponDamage += mounted;
+                    est.MountedWeapons.Add(weapon);
+                    est.MountedLifetime = Math.Max(est.MountedLifetime, duration);
                     est.ActiveDuration = Math.Max(est.ActiveDuration, duration);
                     extras.Add($"{weapon.name} x{duration:0.#}s");
                 }
@@ -182,24 +202,29 @@ namespace QuantumUser.Editor.BalanceSimulator
             double window = est.ActiveDuration;
             double F(string name) => Field(action, name, rank);
 
+            value.Modelled = true;
+
             switch (action.GetType().Name)
             {
-                // -- Kai
+                // -- Kai (vortex lifetime is stretched by SkillDurationMultiplier -> Scaled)
                 case "CompressionSkillAction":
                 {
                     double pulses = window / Math.Max(0.1, F("PulseTickInterval"));
                     double crowd = 1 + F("CrowdPerEnemyBonus") * Math.Min(area - 1, F("CrowdMaxCount"));
-                    value.SkillDamage = basis * F("PulseDamagePercent") * pulses * area * crowd;
+                    value.ScaledSkillDamage = basis * F("PulseDamagePercent") * pulses * area * crowd;
+
+                    // Implosion counts the vortex's PULL pulses (VortexSystem), not the damage pulse.
                     double nth = F("ImplosionEveryNthPulse");
+                    double pullInterval = est.PullPulseInterval > 0 ? est.PullPulseInterval : Math.Max(0.1, F("PulseTickInterval"));
                     if (nth > 0)
-                        value.SkillDamage += basis * F("ImplosionDamagePercent") * (pulses / nth) * area * crowd;
+                        value.ScaledSkillDamage += basis * F("ImplosionDamagePercent") * (window / pullInterval / nth) * area * crowd;
                     break;
                 }
                 case "VoidShardsSkillAction":
                 {
                     double ticks = window / Math.Max(0.1, F("TickInterval"));
                     double targets = Math.Max(1, F("ShardCount")) * Math.Min(area, Math.Max(1, F("PierceCount")));
-                    value.SkillDamage = basis * F("DamagePercent") * ticks * targets;
+                    value.ScaledSkillDamage = basis * F("DamagePercent") * ticks * targets;
                     break;
                 }
                 case "VortexCollapseSkillAction":
@@ -211,63 +236,73 @@ namespace QuantumUser.Editor.BalanceSimulator
                     value.SkillDamage = basis * F("DamagePercent") * Math.Max(1, F("Count")) * area;
                     break;
                 case "DirectHitSkillAction":
-                    value.SkillDamage = est.ImpactDamage * F("DamageMultiplierBonus");
+                {
+                    // Only targets inside InnerRadiusFraction of the blast get it
+                    // (DemolitionMasteryUtility) - area share ~ fraction squared.
+                    double inner = F("InnerRadiusFraction");
+                    value.SkillDamage = est.ImpactDamage * F("DamageMultiplierBonus") * inner * inner;
                     break;
+                }
                 case "BirthdayCakeSkillAction":
-                    value.SkillDamage = est.ImpactDamage * F("BonusDamageMultiplier");
+                    // HasBonusDamage = rank >= 3 (BirthdayCakeSkillAction.Apply).
+                    value.SkillDamage = rank >= 3 ? est.ImpactDamage * F("BonusDamageMultiplier") : 0;
                     break;
 
-                // -- Brute
+                // -- Brute (HitsPerActivation = discharge hits per cast)
                 case "BoneBreakerSkillAction":
                     value.SkillDamage = est.DamagePerActivation * (F("DamageMultiplierBonus") + F("TierDamageBonus") * 0.3);
                     break;
                 case "AftershockSkillAction":
                 {
-                    double stacks = Math.Min(area, Math.Max(1, F("MaxStacks")));
-                    value.SkillDamage = basis * area * (1 + F("StackDamagePercent") * stacks);
+                    // Stacks = every unit knocked back this cast (JuggernautCharge.UnitsHit).
+                    double stacks = Math.Min(Math.Max(1, est.HitsPerActivation), Math.Max(1, F("MaxStacks")));
+                    double aftershock = basis * (1 + F("StackDamagePercent") * stacks);
+                    value.SkillDamage = aftershock * area;
                     double threshold = F("EarthquakeStackThreshold");
                     if (threshold > 0 && stacks >= threshold)
-                        value.SkillDamage += basis * F("EarthquakeDamagePercent") * area;
+                        value.SkillDamage += aftershock * F("EarthquakeDamagePercent") * area;
                     break;
                 }
                 case "ConcussiveImpactSkillAction":
-                    value.SkillDamage = basis * (F("LandingDamagePercent") + F("ShockwaveDamagePercent")) * area;
+                    // Every discharge hit launches its enemy; each landing deals landing + shockwave.
+                    value.SkillDamage = basis * (F("LandingDamagePercent") + F("ShockwaveDamagePercent")) * Math.Max(1, est.HitsPerActivation);
                     break;
 
-                // -- Max
+                // -- Max (applied x live Berserk uptime; assumes max Rage the whole Overdrive)
                 case "FullThrottleSkillAction":
-                    value.WeaponBonus = F("WeaponDamageBonus") * est.BuffUptime;
+                    value.WeaponBonus = F("WeaponDamageBonus");
                     break;
 
-                // -- Zara
+                // -- Zara (totem beats: stretched by SkillDurationMultiplier)
                 case "AmplifierSkillAction":
-                    value.SkillDamage = est.DamagePerActivation * F("DamageBonus");
+                    value.ScaledSkillDamage = est.DamagePerActivation * F("DamageBonus");
                     break;
                 case "DoubleTimeSkillAction":
                     if (est.TickInterval > 0)
-                        value.SkillDamage = est.TickDamage * (est.TickInterval / Math.Max(0.1, F("BeatInterval")) - 1);
+                        value.ScaledSkillDamage = est.TickDamage * (est.TickInterval / Math.Max(0.1, F("BeatInterval")) - 1);
                     break;
                 case "MainStageSkillAction":
                     if (est.TickWindow > 0)
-                        value.SkillDamage = est.TickDamage * F("DurationBonus") / est.TickWindow;
+                        value.ScaledSkillDamage = est.TickDamage * F("DurationBonus") / est.TickWindow;
                     break;
 
-                // -- Lux
+                // -- Lux (barrels fire as their own entity - SimPlayer folds these in live)
                 case "SentryWeaponSystemsSkillAction":
                 {
-                    int slot = 0;
+                    value.MountedWeapons = new List<WeaponDataAsset>();
                     foreach (WeaponDataAsset weapon in GetWeapons(action, assets))
                     {
-                        if (slot++ >= rank)
+                        if (value.MountedWeapons.Count >= rank)
                             break;
-                        value.SkillDamage += SimWeapon.BaseDps(weapon) * window;
+                        value.MountedWeapons.Add(weapon);
                     }
                     break;
                 }
                 case "SentryOverclockSkillAction":
-                    value.SkillDamage = est.MountedWeaponDamage * (F("FireRateMultiplier") - 1);
-                    if (window > 0)
-                        value.SkillDamage += est.MountedWeaponDamage * F("DurationBonus") / window;
+                    value.MountedFireRate = Math.Max(1, F("FireRateMultiplier"));
+                    value.MountedDurationBonus = F("DurationBonus");
+                    value.RedlineSeconds = F("RedlineThreshold");
+                    value.RedlineFireRate = Math.Max(1, D(((SentryOverclockSkillAction)action).RedlineFireRateMultiplier));
                     break;
                 case "SentryOverloadCoreSkillAction":
                     value.SkillDamage = basis * F("DamagePercent") * area;
@@ -275,9 +310,11 @@ namespace QuantumUser.Editor.BalanceSimulator
 
                 default:
                 {
+                    value.Modelled = false;
                     double percent = F("DamagePercent");
                     if (percent > 0)
                     {
+                        value.Modelled = true;
                         double interval = F("TickInterval");
                         double ticks = interval > 0 && window > 0 ? window / interval : 1;
                         value.SkillDamage = basis * percent * ticks * area;
@@ -287,6 +324,7 @@ namespace QuantumUser.Editor.BalanceSimulator
             }
 
             value.SkillDamage = Math.Max(0, value.SkillDamage);
+            value.ScaledSkillDamage = Math.Max(0, value.ScaledSkillDamage);
             value.WeaponBonus = Math.Max(0, value.WeaponBonus);
             return value;
         }
@@ -309,6 +347,25 @@ namespace QuantumUser.Editor.BalanceSimulator
                 case byte[] bytes: return bytes.Length == 0 ? 0 : bytes[Math.Clamp(rank - 1, 0, bytes.Length - 1)];
                 default: return 0;
             }
+        }
+
+        // VortexSystem's pull pulse: TickTimer reset to the prefab's Vortex.TickInterval on a pulse and
+        // decremented on the ticks after, so a pulse lands every ceil(interval / tick) + 1 game ticks.
+        private static double ResolvePullPulseInterval(SpawnEntityEffectData spawn, BalanceSimAssets assets)
+        {
+            EntityPrototype prototype = assets.Resolve(spawn.Prototype);
+            UnityEngine.GameObject prefab = prototype != null ? BalanceSimAssets.FindPrefabFor(prototype) : null;
+            var vortex = prefab != null ? prefab.GetComponent<QPrototypeVortex>() : null;
+
+            if (vortex == null)
+            {
+                assets.Warnings.Add($"'{spawn.name}' vortex prefab has no QPrototypeVortex - Implosion uses the damage pulse");
+                return 0;
+            }
+
+            double interval = D(vortex.Prototype.TickInterval);
+            double tick = assets.GameTickSeconds;
+            return tick > 0 ? (Math.Ceiling(interval / tick - 1e-6) + 1) * tick : Math.Max(0.05, interval);
         }
 
         private static IEnumerable<WeaponDataAsset> GetWeapons(SkillActionData action, BalanceSimAssets assets)

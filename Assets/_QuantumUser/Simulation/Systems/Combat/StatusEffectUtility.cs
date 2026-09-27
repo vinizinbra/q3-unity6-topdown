@@ -1320,7 +1320,7 @@ namespace Quantum
             int visitedCount = status->OverloadChainVisitedCount;
 
             Shape3D sphere = Shape3D.CreateSphere(radius);
-            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
+            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, EnemyMovementUtility.GetEnemyLayerMask(f), QueryOptions.HitAll);
 
             FP closestSqrDistance = FP.MaxValue;
 
@@ -1409,7 +1409,7 @@ namespace Quantum
                 DamageUtility.ApplyDamage(f, target, config.ShatterDamage, owner, source, bypassOutgoingResolution: true, element: ElementType.Ice, reactionProc: true);
 
             Shape3D sphere = Shape3D.CreateSphere(config.ShatterRadius);
-            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
+            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, EnemyMovementUtility.GetEnemyLayerMask(f), QueryOptions.HitAll);
 
             for (int i = 0; i < hits.Count; i++)
             {

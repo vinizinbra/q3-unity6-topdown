@@ -777,24 +777,81 @@ namespace Quantum
         // A merged run's entity is sized dynamically at spawn time, so unlike a real placed chunk
         // it has to be center-pivoted - FootprintCenterToWorld, not CellToWorld. Only X/Z extents
         // are touched; Y (wall height) is left exactly as authored on the prototype, so the artist
-        // only ever has to get the height right once. Logs and leaves the entity at its authored
-        // size if the prototype's collider isn't a Box, so a mismatched prototype is obvious rather
-        // than silently spawning at the wrong size everywhere.
+        // only ever has to get the height right once. The collider is either a single Box or a
+        // Compound of Boxes (WallChunk: a floor slab at floor height, so the tileset merges it into
+        // the surrounding floors, plus the wall block on top) - every box is stretched the same way.
+        // Logs and leaves the entity at its authored size for any other shape, so a mismatched
+        // prototype is obvious rather than silently spawning at the wrong size everywhere.
         private void SpawnGapFillerRun(Frame f, LevelConfig config, int gridOriginX, int gridOriginZ, int originX, int originZ, int width, int depth)
         {
             EntityRef entity = f.Create(config.GapFillerPrototype);
             PlacedChunk run = new PlacedChunk { OriginX = originX, OriginZ = originZ, Width = width, Depth = depth };
             f.Unsafe.GetPointer<Transform3D>(entity)->Position = FootprintCenterToWorld(config, gridOriginX, gridOriginZ, run);
 
-            if (f.Unsafe.TryGetPointer<PhysicsCollider3D>(entity, out PhysicsCollider3D* collider) == false || collider->Shape.Type != Shape3DType.Box)
-            {
-                Log.Error($"[LevelGen] GapFillerPrototype has no Box PhysicsCollider3D - entity {entity} spawned at its authored size instead of the {width}x{depth} cell run it's meant to cover");
-                return;
-            }
-
             FP halfWidth = (FP)width * config.CellSize * FP._0_50;
             FP halfDepth = (FP)depth * config.CellSize * FP._0_50;
-            collider->Shape.Box.Extents = new FPVector3(halfWidth, collider->Shape.Box.Extents.Y, halfDepth);
+
+            if (f.Unsafe.TryGetPointer<PhysicsCollider3D>(entity, out PhysicsCollider3D* collider))
+            {
+                if (collider->Shape.Type == Shape3DType.Box)
+                {
+                    StretchBox(&collider->Shape, halfWidth, halfDepth);
+                    return;
+                }
+
+                if (collider->Shape.Type == Shape3DType.Compound && StretchCompoundBoxes(f, &collider->Shape, halfWidth, halfDepth))
+                {
+                    return;
+                }
+            }
+
+            Log.Error($"[LevelGen] GapFillerPrototype has no Box (or Compound-of-Box) PhysicsCollider3D - entity {entity} spawned at its authored size instead of the {width}x{depth} cell run it's meant to cover");
+        }
+
+        // Rebuilt through Shape3D.CreateBox rather than writing Extents in place, so the box's own
+        // BroadRadius follows the new size. X/Z offset scales with the footprint (a box authored off
+        // centre stays proportionally off centre); Y offset/extent and rotation are kept.
+        private void StretchBox(Shape3D* shape, FP halfWidth, FP halfDepth)
+        {
+            FPVector3 extents = shape->Box.Extents;
+            FPVector3 offset = shape->LocalTransform.Position;
+            FP scaleX = extents.X > FP._0 ? halfWidth / extents.X : FP._1;
+            FP scaleZ = extents.Z > FP._0 ? halfDepth / extents.Z : FP._1;
+            var userTag = shape->UserTag;
+
+            *shape = Shape3D.CreateBox(
+                new FPVector3(halfWidth, extents.Y, halfDepth),
+                new FPVector3(offset.X * scaleX, offset.Y, offset.Z * scaleZ),
+                shape->LocalTransform.Rotation);
+            shape->UserTag = userTag;
+        }
+
+        // Every child must be a Box - the prototype is authored as one full-footprint box per
+        // layer, so anything else is a mis-authored prefab. ResetCompoundMeta then recomputes the
+        // compound's own broad radius/centroid, which would otherwise still describe the 1-cell
+        // authored size and let the broadphase skip contacts near the stretched edges.
+        private bool StretchCompoundBoxes(Frame f, Shape3D* compound, FP halfWidth, FP halfDepth)
+        {
+            if (compound->Compound.GetShapes(f, out Shape3D* shapes, out int count) == false)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < count; i++)
+            {
+                if (shapes[i].Type != Shape3DType.Box)
+                {
+                    return false;
+                }
+            }
+
+            for (int i = 0; i < count; i++)
+            {
+                StretchBox(shapes + i, halfWidth, halfDepth);
+            }
+
+            compound->Compound.ResetCompoundMeta(f);
+            return true;
         }
 
         // Shared by both the outer-border seeding loop and the BFS expansion below - marks a cell

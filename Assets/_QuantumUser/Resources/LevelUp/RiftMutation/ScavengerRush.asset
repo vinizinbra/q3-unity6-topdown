@@ -26,6 +26,6 @@ MonoBehaviour:
   BuffDuration:
     RawValue: 262144
   MoveSpeedBonus:
-    RawValue: 19661
+    RawValue: 13107
   FireRateBonus:
     RawValue: 19661

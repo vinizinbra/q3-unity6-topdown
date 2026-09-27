@@ -52,7 +52,8 @@ and steps the run analytically. Nothing in `Assets/_QuantumUser/Simulation` chan
   its own `Stats.MoveSpeed`; until then it counts toward Director pressure but can't be damaged.
   This is what keeps the Director from re-buying every pulse the way instant kills would.
 - **XP** - `TierStats.ExpValue` per kill x collector's `ExperienceGainMultiplier` into one shared total,
-  each orb subject to the `OrbPickupEfficiency` curve (orbs expire after `ExperienceConfig.OrbLifetime`);
+  each orb subject to the `OrbPickupEfficiency` curve (orbs expire after `ExperienceConfig.OrbLifetime`,
+  60 s); kill coin orbs roll separately at that share x `CoinPickupFactor` (coins expire after 30 s);
   level thresholds `ExperienceConfig.RequiredExperience.Evaluate(level) x DifficultyMultiplier x
   CoopGlobal(XpRequirement)` (`ExperienceUtility.GetRequiredExperience`).
 - **Coins** - `TierStats.CoinValue` with `CoinDropChance` per kill; a collected coin orb credits
@@ -65,32 +66,66 @@ and steps the run analytically. Nothing in `Assets/_QuantumUser/Simulation` chan
   barrel's `BreakLootData` drop (`BreakableUtility.TrySpawnLoot`; first drop with >= 50% chance), x
   `BarrelBreakFraction`, spread evenly over the survival minutes. `BarrelsPerEnemyChunk` > 0
   overrides the per-chunk count. The window status line shows the resolved figures per chunk.
-- **Weapon DPS** - `WeaponSystem.ResolveFireCooldown` + `StatUtility.GetFireCooldown` +
-  `DamageUtility.ResolveOutgoingDamage`: sustained fire incl. reloads, pellets, weapon + character
-  crit, `Weapon.DamageMultiplier` (perks + `WeaponSystem.AddLevel` compounding), x `HitEfficiency`.
-- **Skill DPS** - expected damage per activation / max(cooldown / `SkillCooldownMultiplier`, active
-  duration) x `DamageMultiplier x SkillDamageMultiplier` x character crit x `SkillUseEfficiency`.
-  Dedicated models: `BerserkSkillData` (Max) = weapon fire-rate/reload buff with
-  `Duration/Cooldown` uptime; `JuggernautSkillData` (Brute) = `Damage` per discharge x `AreaTargets`
-  x `Duration/DischargeCooldownPerEnemy` x `ChannelContactUptime`; `ProjectileSkillData` = `Damage` x (area? `AreaTargets`)
-  plus `SpawnAlternatingAreaEffectData` ticks (Zara) and spawned-entity durations (Kai vortex). All
-  **Activated** actions on the skill add: any mounted `AssetRef<WeaponDataAsset>` (Lux sentry) as
-  weapon DPS x duration, and any `Damage`/`DamageAmount` field x ticks x `AreaTargets`. The table's
-  "Skill model" line says which path was used.
+- **Weapon DPS** - `WeaponSystem.ResolveLiveFireCooldown` + `StatUtility.GetFireCooldown` +
+  `DamageUtility.ResolveOutgoingDamage`: sustained fire incl. reloads, pellets, crit, `Weapon.DamageMultiplier`
+  (perks + `WeaponSystem.AddLevel` compounding), the player-level bonus
+  (`ExperienceConfig.DamageBonusPerLevel` x displayed Level, weapon and skill alike), Hero Mastery
+  (Weapon Weight / Element lines, while the equipped weapon matches), x `HitEfficiency`.
+  - **Crit** is `CharacterStats.CriticalDamageMultiplier x max(1, Weapon.CriticalDamageBonus)`, multiplicative
+    (`ResolveCriticalTerms`). Heroes author 1.0, so the weapon's bonus IS the multiplier.
+  - **Magazine cycle** (`SimWeapon.MagazineCycleSeconds`): the reload starts on the last shot and overlaps
+    its cooldown. Every wait (fire cooldown, burst delay, reload) is rounded up to whole Quantum ticks
+    (SessionConfig `UpdateFPS`, 20 = 0.05 s), because `WeaponSystem` sets each timer fresh (no carried
+    remainder) and counts it down once per tick. Fast weapons land well under their `FireRate` (12/s ->
+    10/s) and a small Fire Rate bonus can be worth nothing until it crosses a tick boundary. The scenario's
+    `QuantizeWeaponTimers` switches this off for A/B.
+- **Skill DPS** - damage per cast / cycle x `DamageMultiplier x SkillDamageMultiplier` x character crit
+  x level bonus x `SkillUseEfficiency`.
+  - **Cycle** = cooldown / `SkillCooldownMultiplier`, plus the channel for `JuggernautSkillData`/
+    `BerserkSkillData`: the slot stays Active for `Duration` and `SkillSystem.FinishSkill` only arms the
+    cooldown when it ends. Projectile skills finish at release, so their spawned entity lives during
+    the cooldown.
+  - **Skill Duration** only stretches Skill-source spawned entities (`SpawnedEntitySpawner`: Kai's
+    vortex, Zara's totem, Lux's sentry) - it scales their tick/pulse/barrel damage, never the cycle, and
+    doesn't touch a channel.
+  - Skill-mounted weapons (Lux's sentries) get neither crit nor the level bonus: a barrel has no
+    `CharacterStats`, only the baked `StatUtility.GetSkillDamageMultiplier`. Their DPS is recomputed
+    live through `SimWeapon.BaseDps` (tick rounding included) with Overclock's fire rate, extra
+    lifetime and Redline.
+  - Dedicated models: `BerserkSkillData` (Max) = weapon fire-rate/reload buff at channel / (channel +
+    cooldown) uptime, read live; `JuggernautSkillData` (Brute) = `Damage` per discharge x `AreaTargets`
+    x `Duration/DischargeCooldownPerEnemy` x `ChannelContactUptime`; `ProjectileSkillData` = `Damage` x
+    (area? `AreaTargets`) - only when the hit carries a `DamageEffectData` (or is a vortex) - plus
+    `SpawnAlternatingAreaEffectData` beats (Zara: Damage/Support alternate, Support deals half, so 0.75
+    of `DamageAmount` per beat). All **Activated** actions on the skill (only when
+    `SkillData.CheckActions`) add any mounted `AssetRef<WeaponDataAsset>` (Lux sentry) and any
+    `Damage`/`DamageAmount` field x ticks x `AreaTargets`. The table's "Skill model" line says which
+    path was used.
 - **Skill Ascension ranks** - `BalanceSimSkillModel.EvaluateUpgrade` values each rank of a hero-skill
   action from its rank-indexed fields against the skill's basis (`ProjectileSkillData.Damage`,
   `JuggernautSkillData.Damage`, `SpawnSentrySkillAction.SkillDamage`): Kai Compression/Void Shards/
-  Collapse (percent x pulses x targets), Pixie Cluster Bomb/Direct Hit/Birthday Cake, Brute Bone
-  Breaker/Aftershock/Concussive Impact, Max Full Throttle (weapon damage x Berserk uptime), Zara
-  Amplifier/Double Time/Main Stage, Lux Weapon Systems/Overclock/Overload Core; unknown actions use a
-  generic `DamagePercent` rule. A rank with no quantifiable effect (Singularity, Momentum, Last
-  Stand...) falls back to the flat `SkillUpgradeDpsValue`. Kai's baseline vortex therefore shows ~0
+  Collapse (percent x pulses x targets; Compression's rank-3 Implosion counts the vortex's *pull*
+  pulses - prefab `Vortex.TickInterval` 0.05 s -> every 2 game ticks - not the damage pulse), Pixie
+  Cluster Bomb / Direct Hit (x `InnerRadiusFraction`^2 - only the blast's inner area qualifies) /
+  Birthday Cake (bonus from rank 3 only), Brute Bone Breaker / Aftershock (stacks = every unit hit this
+  cast, Earthquake = the stacked blast x its percent) / Concussive Impact (per discharge hit), Max Full
+  Throttle (weapon damage while Overdrive, assumes max Rage), Zara Amplifier/Double Time/Main Stage,
+  Lux Weapon Systems (extra barrels) / Overclock (fire rate, lifetime, Redline) / Overload Core; unknown
+  actions use a generic `DamagePercent` rule. A modelled action whose rank adds nothing stays at 0;
+  only unmodelled ranks (Singularity, Momentum, Last Stand...) fall back to the flat
+  `SkillUpgradeDpsValue`. Kai's baseline vortex therefore shows ~0
   skill DPS until Compression/Collapse/Shards are picked - that is the authored design, not a bug.
-- **Level-ups** - category from `LevelUpConfig.LevelSequence[(level-1) % count]`, `ChoiceCount` cards
+- **Level-ups** - category from `LevelUpConfig.LevelSequence[(level-1) % count]` where `level` is the new
+  displayed level (`Global.Level + 1` after the increment, so the first level-up reads index 1),
+  `ChoiceCount` cards
   drawn weighted by rarity (`LevelUpConfig.GetWeight`) from the same pools `LevelUpUtility` collects
   (weapon perks not equipped + fire-type match, Global Upgrades under `MaxPicks`, hero
   skill/dash/passive ranks), Choose Weapon = best of 3 pool weapons at the `WeaponOfferCurve`
-  level/perk count (keep current if none is better).
+  level/perk count (keep current if none is better). Weight-0 perks are never drawn; Choose Weapon
+  offers drop perks conflicting with one already rolled (Store offers don't, same as the game).
+- **Elite chests** - an enemy with `ChestDrop` (6 Elites, 100%) gives every player one extra pick in the
+  chest's forced category (`Chest.Kind` read off the prototype prefab), same roll as a level-up. Rift
+  Mutation chests are logged, not simulated.
 - **Breathing Break shopping** - the designed per-Break loop, in order, each only if affordable
   (`CoinReserve` kept): **1 weapon** - one Store offer (fresh account: `ShopWeaponOfferCount` 0),
   rolled like `StoreUtility.RollWeaponOffers` (`WeaponOfferCurve` level, Bernoulli perk slots, talent
@@ -109,7 +144,8 @@ and steps the run analytically. Nothing in `Assets/_QuantumUser/Simulation` chan
 | `HitEfficiency` | share of theoretical weapon DPS that lands | 0.7 |
 | `SkillUseEfficiency` | share of theoretical skill DPS that lands | 0.85 |
 | `AreaTargets` | enemies an AoE hits when enough are alive | 3 |
-| `OverkillWaste` | tick damage lost per kill (overkill/retarget) | 0.15 |
+| `RetargetSeconds` | seconds of one player's DPS lost per kill (overkill + retarget) - fixed per kill, so independent of `TickSeconds` | 0.15 s |
+| `CoinPickupFactor` | coin orbs expire sooner (30 s vs 60 s): coin pickup share = XP share x this | 0.9 |
 | `OrbPickupEfficiency` (curve by survival minute), `CoopPickupBonus` | share of XP/kill-coin orbs collected before `OrbLifetime` expires (solo); each extra player shrinks the loss by the bonus | 0.95 → 0.9 (6 min) → 0.8 (12 min); 0.35 |
 | `ChannelContactUptime` | share of a contact channel (Juggernaut) with `AreaTargets` enemies actually in contact | 0.5 |
 | `UnquantifiedPerkDpsValue` | DPS worth of a perk the sim can't quantify (procs, pierce...) | +4% |
@@ -122,13 +158,20 @@ and steps the run analytically. Nothing in `Assets/_QuantumUser/Simulation` chan
 
 ## Known simplifications
 
-- Cohesive party only: no cluster-split fronts, no encounter modifiers, no rift mutations.
+- Cohesive party only: no cluster-split fronts, no encounter modifiers, no rift mutations (so Rift
+  Mutation chests and the mixed-fallback roll's mutation cards are skipped). Co-op Store stock is rolled
+  per player (the game shares one inventory per Break).
+- `IsEligible` overrides (Flashpoint needs a Burn source, Dash Charge's cap) need a `Frame`, so they
+  aren't mirrored.
+- Juggernaut discharges are `AreaTargets` x channel / per-enemy cooldown x `ChannelContactUptime`; the
+  real limit is the charge meter (10 m of travel per discharge) and Momentum, which isn't modelled.
 - Player survivability is not simulated (no deaths/revives); enemy damage output is reported only
   through the `EnemyDmg` curve implicitly via HP/TTK, not as incoming DPS.
 - Global Upgrades that don't touch DPS/economy (move speed, regen, pickup radius, dash) are picked
   only when they win the roll, and have no simulated effect. `HeroSkillCharge`/`DashCharge` ignored.
 - Perk procs, elemental reactions, hero passives, Ascension effects and Accessory Guard are not
-  modelled beyond the flat knobs above.
+  modelled beyond the flat knobs above. Hero Mastery's flat damage bonus is modelled; its rank-3
+  specials and Fire Mastery's Neutral-weapon-under-Ignition exception are not.
 - Focus-fire: party damage always goes to the lowest-HP enemy first.
 - Rows are keyed on `SurvivalTime`, so a Breathing Break's shopping shows up as the jump between two
   rows. After `DurationMinutes` the run still plays out a trailing Breathing Break so a Boss phase
@@ -140,7 +183,16 @@ and steps the run analytically. Nothing in `Assets/_QuantumUser/Simulation` chan
 1. Add `BalanceRunRecorder` to any GameObject in the game scene (`AutoStart` on) - or call
    `StartRecording` from its `[Button]`. It writes `Library/BalanceSim/actual_<date>.csv` every
    minute of `SurvivalTime` (Breathing Breaks, Lobby and level-up screens don't advance it, matching
-   the simulator's rows).
+   the simulator's rows). What it measures:
+   - kills: only `Enemy` targets killed by a player (tier cached while alive - most tiers are destroyed
+     before the synced `EntityDied` arrives);
+   - `TotalDps`: `CharacterStats.DamageDealt` (enemy-only, overkill removed) plus skill-spawned owners'
+     `EntityDamaged`, over seconds outside Breathing;
+   - `WeaponDps`: every-shot-lands ceiling from the game's own `ResolveBaselineDamageMultiplier`/
+     `ResolveBaselineCritical`, tick-rounded - the window multiplies it by `HitEfficiency` to pair it;
+   - coins: per-frame wallet change, so Break shopping doesn't cancel income;
+   - `PressureFill` uses the co-op pressure row; `Players` = party size, and a loaded CSV only attaches
+     to the matching Players tab.
 2. In the window, run the same scenario, then **Load Actual CSV**. Compare columns show
    `predicted / actual / delta`, coloured green (<15%), yellow (<35%), red.
 3. Tune `HitEfficiency`/`SkillUseEfficiency` until minute 1-3 DPS matches; the remaining deltas are
@@ -173,7 +225,7 @@ Verified/found so far by comparing against play:
 - Co-op levelled slower than solo because only the Director *budget* scaled with player count while
   its pressure/alive caps didn't - fixed with `CoopGlobalKey.DirectorPressure`
   (`docs/run-curves-coop-scaling.md`); `XpRequirement` now wants re-tuning downward.
-- Kai's baseline vortex has no damage beyond its 12 impact (by design); Brute's Juggernaut is a
+- Kai's baseline vortex has no damage beyond its 20 impact (by design); Brute's Juggernaut is a
   contact channel (`ChannelContactUptime`); `LuxSentryLaser.asset` has `Damage 0` (unauthored
   placeholder), so Weapon Systems R3 is currently a no-op in game and in the sim.
 

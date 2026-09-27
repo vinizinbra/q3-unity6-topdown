@@ -60,7 +60,7 @@ MonoBehaviour:
   FireRateBonus:
     RawValue: 32768
   MoveSpeedBonus:
-    RawValue: 16384
+    RawValue: 13107
   ReloadSpeedBonus:
     RawValue: 19661
   MaxRageStacks: 10

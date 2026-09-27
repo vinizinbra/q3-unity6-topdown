@@ -20,6 +20,17 @@ namespace Quantum
         // at different speeds. The landing warning reads the final scaled velocity (ref launch).
         public FP ProjectileSpeedMultiplier = 1;
 
+        // Per-action "these shots reach further/shorter" (1 = the ProjectileDataAsset's own
+        // MaxDistance), written onto the spawned Projectile.MaxDistanceMultiplier - same field
+        // ProjectileSystem.TryExpire already reads for weapon range perks. Lets enemies share one
+        // ProjectileDataAsset at different ranges. No effect on a projectile with MaxDistance 0.
+        public FP ProjectileMaxDistanceMultiplier = 1;
+
+        // Leads a moving target (see ProjectileAimUtility.LeadAimPoint) - 0 (the default) fires at
+        // the locked aim point exactly as before. 1 = full lead, lower = partial lead.
+        public FP LeadFactor;
+        public FP MaxLeadDistance = 4;
+
         public ProjectileSpawnAnchor SpawnAnchor = ProjectileSpawnAnchor.OnSelf;
         public FPVector3 SpawnOffset;
 
@@ -66,6 +77,61 @@ namespace Quantum
             FPVector3 resolvedOrigin = ProjectileSpawner.ResolveSpawnOrigin(origin, targetPosition, filter.Aim->Angle, SpawnAnchor, SpawnOffset);
             ProjectileDataAsset projectileData = f.FindAsset(ProjectileData);
 
+            FPVector3 lockedPosition = targetPosition;
+            ProjectileLaunch launch = SolveLaunch(f, action, projectileData, resolvedOrigin, ref targetPosition, target);
+
+            // Re-solved onto the led point from the un-led launch's own flight time, scaled by this
+            // action's speed multiplier since that's the speed the shot will actually fly at. The
+            // offset goes onto the locked point, not the solved one - SolveLaunch re-adds the
+            // collider centroid itself.
+            if (LeadFactor > FP._0 && launch.IsValid == true)
+            {
+                FPVector3 leadOffset = ProjectileAimUtility.LeadAimPoint(f, target, resolvedOrigin, targetPosition,
+                    launch.Velocity * ProjectileSpeedMultiplier, LeadFactor, MaxLeadDistance) - targetPosition;
+                FPVector3 ledPosition = lockedPosition + leadOffset;
+                ProjectileLaunch ledLaunch = SolveLaunch(f, action, projectileData, resolvedOrigin, ref ledPosition, target);
+
+                // An extreme lead can fail the arc solve (rise <= 0) - keep the un-led shot then.
+                if (ledLaunch.IsValid == true)
+                {
+                    launch = ledLaunch;
+                    targetPosition = ledPosition;
+                }
+            }
+
+            if (launch.IsValid == true)
+            {
+                // ref launch - Spawn's own ApplySpeedMultiplier mutates it in place (including
+                // BossPhaseUtility.ResolveProjectileSpeedMultiplier), so the FireLandingWarning call
+                // below sees the shot's REAL final velocity, not the pre-multiplier one solved above.
+                EntityRef projectile = ProjectileSpawner.Spawn(f, filter.Entity, ProjectileData, ref launch, action.Damage, target: target,
+                    speedMultiplier: ProjectileSpeedMultiplier);
+
+                if (f.Unsafe.TryGetPointer<Projectile>(projectile, out var spawned) == true)
+                    spawned->MaxDistanceMultiplier = ProjectileMaxDistanceMultiplier;
+
+                if (ShowLandingWarning == true)
+                    FireLandingWarning(f, resolvedOrigin, targetPosition, launch.Velocity, ResolveWarningRadius(f, projectileData.Hit));
+
+                if (WaitForImpact == true)
+                {
+                    filter.Enemy->SkillProjectile = projectile;
+                    return false;
+                }
+            }
+            else
+            {
+                Log.Error($"[Enemy] {filter.Entity} resolved no valid launch toward {target} - nothing fired");
+            }
+
+            return true;
+        }
+
+        // targetPosition is ref because the straight branch folds the target's collider centroid
+        // (and IgnoreY flattening) into it - the landing warning must read that same final point.
+        private ProjectileLaunch SolveLaunch(Frame f, EnemyActionData action, ProjectileDataAsset projectileData,
+            FPVector3 resolvedOrigin, ref FPVector3 targetPosition, EntityRef target)
+        {
             ProjectileLaunch launch;
 
             if (UseArc == true)
@@ -110,29 +176,7 @@ namespace Quantum
                 launch = movement.GetLaunchToTarget(f, resolvedOrigin, targetPosition, target);
             }
 
-            if (launch.IsValid == true)
-            {
-                // ref launch - Spawn's own ApplySpeedMultiplier mutates it in place (including
-                // BossPhaseUtility.ResolveProjectileSpeedMultiplier), so the FireLandingWarning call
-                // below sees the shot's REAL final velocity, not the pre-multiplier one solved above.
-                EntityRef projectile = ProjectileSpawner.Spawn(f, filter.Entity, ProjectileData, ref launch, action.Damage, target: target,
-                    speedMultiplier: ProjectileSpeedMultiplier);
-
-                if (ShowLandingWarning == true)
-                    FireLandingWarning(f, resolvedOrigin, targetPosition, launch.Velocity, ResolveWarningRadius(f, projectileData.Hit));
-
-                if (WaitForImpact == true)
-                {
-                    filter.Enemy->SkillProjectile = projectile;
-                    return false;
-                }
-            }
-            else
-            {
-                Log.Error($"[Enemy] {filter.Entity} resolved no valid launch toward {target} - nothing fired");
-            }
-
-            return true;
+            return launch;
         }
 
         // Only reached when WaitForImpact is true. Enemy.SkillProjectile is deliberately left

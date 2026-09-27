@@ -75,6 +75,9 @@ namespace Quantum
         // sampled as winding up both times is an independent, reliable tell that a different action
         // took over, regardless of which direction StateTimer moved.
         private byte? _lastActionSlot;
+        // True while the enemy is Stunned/Frozen and its attack visuals have been torn down for it -
+        // see QUpdate's hard-CC block. Cleared on the first sample after the CC ends.
+        private bool _suppressedByHardCC;
         private ParticleSystem _currentAnticipationIcon;
         // Real time (Time.time), not simulation ticks - EffectsManager.MinimumAnticipationIconDuration
         // is a wall-clock readability floor, so it has to be measured the same way. See
@@ -131,6 +134,7 @@ namespace Quantum
         public override void DeInitialize(QuantumGame game)
         {
             base.DeInitialize(game);
+            _suppressedByHardCC = false;
             ClearAnticipationIcon();
             ClearParentedParticle(instant: true);
             ClearTelegraph(instant: true);
@@ -178,6 +182,40 @@ namespace Quantum
             bool wasWindingUpSample = lastPhase == EnemyActionPhase.Preparation || lastPhase == EnemyActionPhase.Telegraph;
             bool isWindingUpSample = enemyPhase == EnemyActionPhase.Preparation || enemyPhase == EnemyActionPhase.Telegraph;
 
+            // Stun/Freeze halts EnemySystem's whole dispatch - the windup either gets cancelled
+            // outright (StatusEffectUtility.ApplyStun -> EnemyActionUtility.TryInterrupt) or, for a
+            // non-interruptible action / a tier inside its interrupt-immunity window, just sits
+            // paused in Preparation/Telegraph/Active until the CC wears off. Either way the telegraph
+            // no longer describes an attack that's about to land, so tear down every attack visual the
+            // instant CC is observed and skip all edge handling while it lasts (the _last* samples
+            // above still advance, so a cancel -> Recovery happening underneath never replays as a
+            // bogus firedBegin/BeginStep/Fire() once CC ends). If the enemy comes out of CC still
+            // winding up (the paused, non-cancelled case), resumedFromHardCC below feeds
+            // windupRestarted, so the telegraph/icon/pre-shoot respawn fresh for the remaining windup
+            // (SpawnTelegraph grows over the live StateTimer). A cancelled windup just spawns its
+            // telegraph normally on the enemy's next real attack.
+            bool hardCCd = StatusEffectUtility.IsStunned(frame, _entityRef) == true || StatusEffectUtility.IsFrozen(frame, _entityRef) == true;
+
+            if (hardCCd == true)
+            {
+                if (_suppressedByHardCC == false)
+                {
+                    _suppressedByHardCC = true;
+
+                    ClearTelegraph();
+                    ClearParentedParticle();
+                    ClearAnticipationIcon();
+
+                    if (armAimView != null)
+                        armAimView.StopPreShoot();
+                }
+
+                return;
+            }
+
+            bool resumedFromHardCC = _suppressedByHardCC;
+            _suppressedByHardCC = false;
+
             // Quantum can advance many simulation ticks between two Unity frames (see
             // attackNoLongerActive's own comment below for the symmetric case) - if BOTH samples land
             // in the Preparation/Telegraph window, that's not necessarily the same windup: the whole
@@ -201,7 +239,8 @@ namespace Quantum
             // different action took over, so either signal alone is enough to treat this as a restart.
             bool windupRestarted = wasWindingUpSample == true && isWindingUpSample == true
                 && ((lastStateTimer.HasValue == true && enemy.StateTimer > lastStateTimer.Value)
-                    || (lastActionSlot.HasValue == true && lastActionSlot.Value != enemy.CurrentActionSlot));
+                    || (lastActionSlot.HasValue == true && lastActionSlot.Value != enemy.CurrentActionSlot)
+                    || resumedFromHardCC == true);
 
             if (windupRestarted == true)
             {

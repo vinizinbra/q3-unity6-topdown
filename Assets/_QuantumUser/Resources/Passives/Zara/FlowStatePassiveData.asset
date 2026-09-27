@@ -22,7 +22,7 @@ MonoBehaviour:
   BuildDuration:
     RawValue: 163840
   MoveSpeedBonus:
-    RawValue: 9830
+    RawValue: 6554
   FireRateBonus:
     RawValue: 9830
   MovementInputThreshold:

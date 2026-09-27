@@ -249,6 +249,12 @@ namespace QuantumUser.View
             BreathingButton(flow, "Breath 2 (Lv12)", 2);
             BreathingButton(flow, "Breath 3 (Lv15)", 3);
             BreathingButton(flow, "Breath 4 (Lv20)", 4);
+            // Only does anything during a Breathing Break (see CheatActionKind.ExtendBreathing) - e.g.
+            // to walk the map enemy-free for longer while profiling.
+            CreateButton(flow.Next(), "Break +60s", () => Send(CheatActionKind.ExtendBreathing, amount: 60));
+            // Quantum SDK's own stats overlay (Resources/QuantumStats): ping, predicted frames (how deep
+            // every rollback resimulates), input offset, simulate time - view-only, no command sent.
+            CreateButton(flow.Next(), "Quantum Stats", ToggleQuantumStats);
 
             // One-click combo (see CheatActionKind.SetupTestRun): jumps to Breath 4 (Lv20, the last
             // Breathing phase) same as the button above, but also auto-resolves every level-up
@@ -268,6 +274,20 @@ namespace QuantumUser.View
             {
                 UpgradeScreenDebugState.SkipAnimations = v;
             }, out _);
+
+            // Render A/B: hide the barbed-wire wall run (~960 tris per cell, mostly sub-pixel) to check on
+            // device whether an area's GPU cost comes from it (see docs/performance.md). Applies to what's
+            // spawned when toggled - chunks built later aren't affected until toggled again.
+            CreateSectionLabel(rt, "Rendering");
+            CreateToggle(rt, "Hide Barbed Wire", false, v => SetTilesetDecorHidden(v, "_Run_Wire"), out _);
+            CreateToggle(rt, "Hide All Wall Runs", false, v => SetTilesetDecorHidden(v, "_Run_"), out _);
+            CreateToggle(rt, "Hide Wall Props", false, v => SetTilesetDecorHidden(v, "_Prop_"), out _);
+            // Upper bound of the terrain's own GPU cost (ToonTerrain tiles): whatever is behind them
+            // (water/void) gets drawn instead, so it's a ceiling, not an exact figure.
+            CreateToggle(rt, "Hide Terrain Tiles", false, v => SetTilesetDecorHidden(v, "_Center", "_Edge", "_Corner"), out _);
+            // Swaps every ToonTerrain material (tiles AND V2 props) for a per-vertex-lit debug shader whose
+            // fragment is a single colour - the ceiling of what optimizing ToonTerrain could win.
+            CreateToggle(rt, "Simple Terrain Shader", false, SetSimpleTerrainShader, out _);
 
             CreateSectionLabel(rt, "Input");
 
@@ -772,6 +792,130 @@ namespace QuantumUser.View
                     : upgradeRef.Id.Value.ToString();
                 into.Add(new AssetEntry { Name = name, Id = upgradeRef.Id.Value, Icon = upgrade?.Icon, Description = upgrade?.GetDescription(), Action = action });
             }
+        }
+
+        // TilesetPlatformBuilder names every tile / wall prop / run instance (and its wrapper) after its
+        // model - "<Biome>_Center|Edge|Corner|InnerCorner ...", "<Biome>_Prop_*", "<Biome>_Run_*" - under a
+        // "<host>_TilesetVisual" root, so a marker is matched on the renderer's own object or any parent
+        // up to that root. Debug-only, one scene scan per toggle.
+        private static void SetTilesetDecorHidden(bool hidden, params string[] markers)
+        {
+            int count = 0;
+
+            foreach (Renderer renderer in FindObjectsByType<Renderer>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (IsTilesetDecor(renderer.transform, markers) == false)
+                    continue;
+
+                renderer.enabled = hidden == false;
+                count++;
+            }
+
+            LogHelper.Log("CheatMenu", $"{(hidden ? "hid" : "showed")} {count} tileset '{string.Join("|", markers)}' renderers");
+        }
+
+        private static bool IsTilesetDecor(Transform transform, string[] markers)
+        {
+            for (Transform current = transform; current != null; current = current.parent)
+            {
+                string name = current.name;
+
+                if (name.EndsWith("_TilesetVisual"))
+                    return false;
+
+                foreach (string marker in markers)
+                {
+                    if (name.Contains(marker))
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        private const string ToonTerrainShaderName = "RiftRaiders/Test/ToonTerrain";
+        private static readonly Dictionary<Renderer, Material[]> ToonTerrainOriginals = new Dictionary<Renderer, Material[]>();
+        private static readonly Dictionary<Material, Material> SimpleTerrainReplacements = new Dictionary<Material, Material>();
+
+        private static void SetSimpleTerrainShader(bool simple)
+        {
+            if (simple == false)
+            {
+                foreach (KeyValuePair<Renderer, Material[]> original in ToonTerrainOriginals)
+                {
+                    if (original.Key != null)
+                        original.Key.sharedMaterials = original.Value;
+                }
+
+                LogHelper.Log("CheatMenu", $"restored ToonTerrain on {ToonTerrainOriginals.Count} renderers");
+                ToonTerrainOriginals.Clear();
+                return;
+            }
+
+            Material template = Resources.Load<Material>("Debug/DebugSimpleVertexLit");
+            if (template == null)
+            {
+                LogHelper.Warn("CheatMenu", "Resources/Debug/DebugSimpleVertexLit.mat missing - can't swap the terrain shader");
+                return;
+            }
+
+            int count = 0;
+
+            foreach (Renderer renderer in FindObjectsByType<Renderer>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (ToonTerrainOriginals.ContainsKey(renderer) == true)
+                    continue;
+
+                Material[] materials = renderer.sharedMaterials;
+                Material[] swapped = null;
+
+                for (int i = 0; i < materials.Length; i++)
+                {
+                    Material material = materials[i];
+                    if (material == null || material.shader == null || material.shader.name != ToonTerrainShaderName)
+                        continue;
+
+                    swapped ??= (Material[])materials.Clone();
+                    swapped[i] = GetSimpleTerrainReplacement(material, template);
+                }
+
+                if (swapped == null)
+                    continue;
+
+                ToonTerrainOriginals[renderer] = materials;
+                renderer.sharedMaterials = swapped;
+                count++;
+            }
+
+            LogHelper.Log("CheatMenu", $"swapped ToonTerrain -> simple on {count} renderers");
+        }
+
+        // One debug material per original, tinted with the biome's grass colour (what dominates a
+        // top-down view) so the level stays readable; props keep their vertex colours (see the shader).
+        private static Material GetSimpleTerrainReplacement(Material original, Material template)
+        {
+            if (SimpleTerrainReplacements.TryGetValue(original, out Material replacement) == true && replacement != null)
+                return replacement;
+
+            replacement = new Material(template) { name = $"{original.name} (debug simple)" };
+
+            if (original.HasProperty("_SurfaceLightColor") == true)
+                replacement.SetColor("_BaseColor", original.GetColor("_SurfaceLightColor"));
+
+            SimpleTerrainReplacements[original] = replacement;
+            return replacement;
+        }
+
+        private bool _quantumStatsShown;
+
+        private void ToggleQuantumStats()
+        {
+            _quantumStatsShown = !_quantumStatsShown;
+
+            if (_quantumStatsShown == true)
+                QuantumStats.Show();
+            else
+                QuantumStats.Hide();
         }
 
         private void Send(CheatActionKind action, long assetId = 0, int amount = 0)

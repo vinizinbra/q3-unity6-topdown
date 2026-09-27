@@ -73,8 +73,8 @@ namespace Quantum {
           case EventVendettaRevengeHealed.ID: result = typeof(EventVendettaRevengeHealed); return;
           case EventEntityShielded.ID: result = typeof(EventEntityShielded); return;
           case EventShieldBroken.ID: result = typeof(EventShieldBroken); return;
-          case EventHitEffectApplied.ID: result = typeof(EventHitEffectApplied); return;
           case EventEntityDied.ID: result = typeof(EventEntityDied); return;
+          case EventEliteSpawned.ID: result = typeof(EventEliteSpawned); return;
           case EventEnemySelfDestructBeginVisual.ID: result = typeof(EventEnemySelfDestructBeginVisual); return;
           case EventAlternatingAreaPulsed.ID: result = typeof(EventAlternatingAreaPulsed); return;
           case EventAreaDamageTicked.ID: result = typeof(EventAreaDamageTicked); return;
@@ -240,23 +240,23 @@ namespace Quantum {
         _f.AddEvent(ev);
         return ev;
       }
-      public EventHitEffectApplied HitEffectApplied(EntityRef Owner, EntityRef Target, FPVector3 Position, QBoolean MultiTarget) {
-        var ev = _f.Context.AcquireEvent<EventHitEffectApplied>(EventHitEffectApplied.ID);
-        ev.Owner = Owner;
-        ev.Target = Target;
-        ev.Position = Position;
-        ev.MultiTarget = MultiTarget;
-        _f.AddEvent(ev);
-        return ev;
-      }
       public EventEntityDied EntityDied(EntityRef Target, EntityRef Owner) {
+        if (_f.IsPredicted) return null;
         var ev = _f.Context.AcquireEvent<EventEntityDied>(EventEntityDied.ID);
         ev.Target = Target;
         ev.Owner = Owner;
         _f.AddEvent(ev);
         return ev;
       }
+      public EventEliteSpawned EliteSpawned(EntityRef Entity, AssetRef<EnemyDataAsset> EnemyData) {
+        var ev = _f.Context.AcquireEvent<EventEliteSpawned>(EventEliteSpawned.ID);
+        ev.Entity = Entity;
+        ev.EnemyData = EnemyData;
+        _f.AddEvent(ev);
+        return ev;
+      }
       public EventEnemySelfDestructBeginVisual EnemySelfDestructBeginVisual(EntityRef Entity, FPVector3 Position, FP FacingAngle, AssetRef<EnemyActionData> Action) {
+        if (_f.IsPredicted) return null;
         var ev = _f.Context.AcquireEvent<EventEnemySelfDestructBeginVisual>(EventEnemySelfDestructBeginVisual.ID);
         ev.Entity = Entity;
         ev.Position = Position;
@@ -369,6 +369,7 @@ namespace Quantum {
         return ev;
       }
       public EventExplodeOnDeathDetonated ExplodeOnDeathDetonated(EntityRef Owner, FPVector3 Position, FP Radius, AssetRef<EnemyDataAsset> EnemyData) {
+        if (_f.IsPredicted) return null;
         var ev = _f.Context.AcquireEvent<EventExplodeOnDeathDetonated>(EventExplodeOnDeathDetonated.ID);
         ev.Owner = Owner;
         ev.Position = Position;
@@ -529,11 +530,12 @@ namespace Quantum {
         _f.AddEvent(ev);
         return ev;
       }
-      public EventProjectileLandingWarning ProjectileLandingWarning(FPVector3 Position, FP Duration, FP Radius) {
+      public EventProjectileLandingWarning ProjectileLandingWarning(FPVector3 Position, FP Duration, FP Radius, EntityRef Owner) {
         var ev = _f.Context.AcquireEvent<EventProjectileLandingWarning>(EventProjectileLandingWarning.ID);
         ev.Position = Position;
         ev.Duration = Duration;
         ev.Radius = Radius;
+        ev.Owner = Owner;
         _f.AddEvent(ev);
         return ev;
       }
@@ -635,6 +637,7 @@ namespace Quantum {
         return ev;
       }
       public EventEnemyExploded EnemyExploded(EntityRef Entity, FPVector3 Position, FP Radius, AssetRef<EnemyDataAsset> Source) {
+        if (_f.IsPredicted) return null;
         var ev = _f.Context.AcquireEvent<EventEnemyExploded>(EventEnemyExploded.ID);
         ev.Entity = Entity;
         ev.Position = Position;
@@ -1179,17 +1182,15 @@ namespace Quantum {
       }
     }
   }
-  public unsafe partial class EventHitEffectApplied : EventBase {
+  public unsafe partial class EventEntityDied : EventBase {
     public new const Int32 ID = 13;
-    public EntityRef Owner;
     public EntityRef Target;
-    public FPVector3 Position;
-    public QBoolean MultiTarget;
-    protected EventHitEffectApplied(Int32 id, EventFlags flags) : 
+    public EntityRef Owner;
+    protected EventEntityDied(Int32 id, EventFlags flags) : 
         base(id, flags) {
     }
-    public EventHitEffectApplied() : 
-        base(13, EventFlags.Server|EventFlags.Client) {
+    public EventEntityDied() : 
+        base(13, EventFlags.Server|EventFlags.Client|EventFlags.Synced) {
     }
     public new QuantumGame Game {
       get {
@@ -1202,22 +1203,20 @@ namespace Quantum {
     public override Int32 GetHashCode() {
       unchecked {
         var hash = 97;
-        hash = hash * 31 + Owner.GetHashCode();
         hash = hash * 31 + Target.GetHashCode();
-        hash = hash * 31 + Position.GetHashCode();
-        hash = hash * 31 + MultiTarget.GetHashCode();
+        hash = hash * 31 + Owner.GetHashCode();
         return hash;
       }
     }
   }
-  public unsafe partial class EventEntityDied : EventBase {
+  public unsafe partial class EventEliteSpawned : EventBase {
     public new const Int32 ID = 14;
-    public EntityRef Target;
-    public EntityRef Owner;
-    protected EventEntityDied(Int32 id, EventFlags flags) : 
+    public EntityRef Entity;
+    public AssetRef<EnemyDataAsset> EnemyData;
+    protected EventEliteSpawned(Int32 id, EventFlags flags) : 
         base(id, flags) {
     }
-    public EventEntityDied() : 
+    public EventEliteSpawned() : 
         base(14, EventFlags.Server|EventFlags.Client) {
     }
     public new QuantumGame Game {
@@ -1231,8 +1230,8 @@ namespace Quantum {
     public override Int32 GetHashCode() {
       unchecked {
         var hash = 101;
-        hash = hash * 31 + Target.GetHashCode();
-        hash = hash * 31 + Owner.GetHashCode();
+        hash = hash * 31 + Entity.GetHashCode();
+        hash = hash * 31 + EnemyData.GetHashCode();
         return hash;
       }
     }
@@ -1247,7 +1246,7 @@ namespace Quantum {
         base(id, flags) {
     }
     public EventEnemySelfDestructBeginVisual() : 
-        base(15, EventFlags.Server|EventFlags.Client) {
+        base(15, EventFlags.Server|EventFlags.Client|EventFlags.Synced) {
     }
     public new QuantumGame Game {
       get {
@@ -1653,7 +1652,7 @@ namespace Quantum {
         base(id, flags) {
     }
     public EventExplodeOnDeathDetonated() : 
-        base(29, EventFlags.Server|EventFlags.Client) {
+        base(29, EventFlags.Server|EventFlags.Client|EventFlags.Synced) {
     }
     public new QuantumGame Game {
       get {
@@ -2217,6 +2216,7 @@ namespace Quantum {
     public FPVector3 Position;
     public FP Duration;
     public FP Radius;
+    public EntityRef Owner;
     protected EventProjectileLandingWarning(Int32 id, EventFlags flags) : 
         base(id, flags) {
     }
@@ -2237,6 +2237,7 @@ namespace Quantum {
         hash = hash * 31 + Position.GetHashCode();
         hash = hash * 31 + Duration.GetHashCode();
         hash = hash * 31 + Radius.GetHashCode();
+        hash = hash * 31 + Owner.GetHashCode();
         return hash;
       }
     }
@@ -2601,7 +2602,7 @@ namespace Quantum {
         base(id, flags) {
     }
     public EventEnemyExploded() : 
-        base(61, EventFlags.Server|EventFlags.Client) {
+        base(61, EventFlags.Server|EventFlags.Client|EventFlags.Synced) {
     }
     public new QuantumGame Game {
       get {

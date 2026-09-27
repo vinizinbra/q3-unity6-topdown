@@ -1,0 +1,579 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f02bf106b04cd445ebe7292424ae5bf1, type: 3}
+  m_Name: FavelaTileset
+  m_EditorClassIdentifier: Assembly-CSharp::TilesetDefinition
+  tilingMode: 1
+  mergeCenters: 1
+  material: {fileID: 2100000, guid: f290804cfc30d4699aeeac1e017c056e, type: 2}
+  modelPrefix: Favela_
+  useInnerCorners: 1
+  groundScatter: []
+  groundDensity: 0.07
+  rooftopScatter: []
+  rooftopDensity: 0.35
+  rooftopEdgeProps: []
+  rooftopEdgeChance: 0.45
+  wallScatter:
+  - Model: {fileID: 919132149155446097, guid: f717effe4097642e9b6568225911b035, type: 3}
+    Weight: 1.5
+    ScaleRange: {x: 1.4, y: 1.8}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: 20bb6ac2aa21b45d3a16a9543b471cd0, type: 3}
+    Weight: 1.5
+    ScaleRange: {x: 1.4, y: 1.8}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: 1d4799dba1d0f46dc8bc373336cc363f, type: 3}
+    Weight: 1.5
+    ScaleRange: {x: 1.4, y: 1.8}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: e76b348959b024b3098437693ed22978, type: 3}
+    Weight: 1.2
+    ScaleRange: {x: 1.4, y: 1.8}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: 8de9965beb4f7471ba70c85d6f6f79f4, type: 3}
+    Weight: 2.5
+    ScaleRange: {x: 1.3, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: 862cf56cf963d483e8a0e43dcf6420fc, type: 3}
+    Weight: 2
+    ScaleRange: {x: 1.3, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: cfe51ca1584384cba9b85186bacd064f, type: 3}
+    Weight: 2
+    ScaleRange: {x: 1.3, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: aa014379c74574d1e87a65b869927e8d, type: 3}
+    Weight: 1.5
+    ScaleRange: {x: 1.3, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: 281603ae79f0a4a668aa2c1142ed41bc, type: 3}
+    Weight: 1.2
+    ScaleRange: {x: 1.3, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: fe3f6d650967a46d0979f819e7e8ea4f, type: 3}
+    Weight: 1.2
+    ScaleRange: {x: 1.3, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: 656402430b6804f8994936751723e1df, type: 3}
+    Weight: 1.2
+    ScaleRange: {x: 1.3, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: e5f14419dd046430591fa69033774a59, type: 3}
+    Weight: 1
+    ScaleRange: {x: 1.3, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: bd05fb3fe7a32442c986dc82570f3973, type: 3}
+    Weight: 2
+    ScaleRange: {x: 1.3, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: e97d7588126404e81b1440ea839d3f3e, type: 3}
+    Weight: 1.5
+    ScaleRange: {x: 1.3, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: c1214399ef2544ae290660e720c93652, type: 3}
+    Weight: 1.5
+    ScaleRange: {x: 1.3, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: b619dd25690d44e8db20598d353e8c71, type: 3}
+    Weight: 1.2
+    ScaleRange: {x: 1.3, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: 30d42fc65796746949e31902425bc5a8, type: 3}
+    Weight: 1.5
+    ScaleRange: {x: 1.3, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: e3ef226e3321d4fd996dcc1818aa32cb, type: 3}
+    Weight: 1
+    ScaleRange: {x: 1.3, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: 847b076531d6541bf827f56ea04999d4, type: 3}
+    Weight: 1.2
+    ScaleRange: {x: 1.3, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: b6e66bebc827041ec8c55812cc904e8a, type: 3}
+    Weight: 1.5
+    ScaleRange: {x: 1.3, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: 70aa6124371d9468c90d63cb8097223c, type: 3}
+    Weight: 2
+    ScaleRange: {x: 1.3, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: d36a01b0108064e86b139724cd427ff9, type: 3}
+    Weight: 1.2
+    ScaleRange: {x: 1.3, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: 2556b68f653f340a6ac9ee610f123be5, type: 3}
+    Weight: 1.2
+    ScaleRange: {x: 1.3, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: f62b2f0799fc74a34a200c798548dbdd, type: 3}
+    Weight: 2
+    ScaleRange: {x: 1.2, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: d9a57ec93411d42a88217d8ef6f73583, type: 3}
+    Weight: 2
+    ScaleRange: {x: 1.2, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: e9d2e6586f8e84cabae918a18755a735, type: 3}
+    Weight: 2
+    ScaleRange: {x: 1.2, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: bff994602fca84914bb902dc7d1235b0, type: 3}
+    Weight: 2
+    ScaleRange: {x: 1.2, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: e71bc1504dca442ee942434df11896a8, type: 3}
+    Weight: 2
+    ScaleRange: {x: 1.2, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: d4517e76f69f845aa96a81d7dae9cb28, type: 3}
+    Weight: 2
+    ScaleRange: {x: 1.2, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: 0105b879b086e4348b0984a1f74b3680, type: 3}
+    Weight: 2
+    ScaleRange: {x: 1.2, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  - Model: {fileID: 919132149155446097, guid: 352f3dee3428a4a9f981c79556ba2114, type: 3}
+    Weight: 2
+    ScaleRange: {x: 1.2, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+  wallDensity: 0.5
+  wallPropAvoidBand: {x: 0.84, y: 1}
+  wallPropAvoidMargin: 0.02
+  wallPropInset: 0.025
+  wallPropSlope: 0
+  wallRuns:
+  - Name: Gambiarra
+    Straight:
+    - Model: {fileID: 919132149155446097, guid: ecc6f2688b0dd4bd19dfc72d28ed5ef0, type: 3}
+      Weight: 3
+      ScaleRange: {x: 0, y: 0}
+      AnyYaw: 0
+      Cells: 1
+      Foot: 0
+      SideModel: {fileID: 919132149155446097, guid: 4ef0c4d71c32140d78f57215eb2bc931, type: 3}
+      FreeStanding: 0
+    - Model: {fileID: 919132149155446097, guid: 6c57f5af1b6794acea44c6d56a90908b, type: 3}
+      Weight: 2
+      ScaleRange: {x: 0, y: 0}
+      AnyYaw: 0
+      Cells: 1
+      Foot: 0
+      SideModel: {fileID: 919132149155446097, guid: e8775a5d431d348faaf64a7f3eea0717, type: 3}
+      FreeStanding: 0
+    - Model: {fileID: 919132149155446097, guid: e70278728961c438d92e38806a89c360, type: 3}
+      Weight: 2
+      ScaleRange: {x: 0, y: 0}
+      AnyYaw: 0
+      Cells: 1
+      Foot: 0
+      SideModel: {fileID: 919132149155446097, guid: c2bd8d5cc9d744df09c6eeb4d8a0b3bd, type: 3}
+      FreeStanding: 0
+    - Model: {fileID: 919132149155446097, guid: 50f095929bb404b6ba798636021d699d, type: 3}
+      Weight: 1.5
+      ScaleRange: {x: 0, y: 0}
+      AnyYaw: 0
+      Cells: 1
+      Foot: 0
+      SideModel: {fileID: 919132149155446097, guid: 04456bb6f4f9e4985a33395593a9b573, type: 3}
+      FreeStanding: 0
+    Decorated:
+    - Model: {fileID: 919132149155446097, guid: 5732b996f3898435c8817092fa2eafc5, type: 3}
+      Weight: 1.5
+      ScaleRange: {x: 0, y: 0}
+      AnyYaw: 0
+      Cells: 1
+      Foot: 0
+      SideModel: {fileID: 919132149155446097, guid: 81090463734224734a5a13f52d7c5c7b, type: 3}
+      FreeStanding: 0
+    - Model: {fileID: 919132149155446097, guid: 2eaec768d1c964e1f93e3eee1b98dfa3, type: 3}
+      Weight: 1.2
+      ScaleRange: {x: 0, y: 0}
+      AnyYaw: 0
+      Cells: 1
+      Foot: 0
+      SideModel: {fileID: 919132149155446097, guid: ba15c6fc9a95b404ea4a48b4a24f2ed0, type: 3}
+      FreeStanding: 0
+    - Model: {fileID: 919132149155446097, guid: a522e3f1ee07346b0aa5722331fdc788, type: 3}
+      Weight: 1
+      ScaleRange: {x: 0, y: 0}
+      AnyYaw: 0
+      Cells: 1
+      Foot: 0
+      SideModel: {fileID: 919132149155446097, guid: ab6d86d9f159843c39ee5ed1df540ce7, type: 3}
+      FreeStanding: 0
+    - Model: {fileID: 919132149155446097, guid: adcc748e5998547618585ecaf8663e06, type: 3}
+      Weight: 1
+      ScaleRange: {x: 0, y: 0}
+      AnyYaw: 0
+      Cells: 1
+      Foot: 0
+      SideModel: {fileID: 919132149155446097, guid: e3373ed0b23324744a7f57309636cbb3, type: 3}
+      FreeStanding: 0
+    - Model: {fileID: 919132149155446097, guid: e2e5daf1e9838401ea4b66ad369623a0, type: 3}
+      Weight: 1.2
+      ScaleRange: {x: 0, y: 0}
+      AnyYaw: 0
+      Cells: 1
+      Foot: 0
+      SideModel: {fileID: 919132149155446097, guid: cd5c40c222721427eb2b767d8d9bf504, type: 3}
+      FreeStanding: 0
+    DecoratedChance: 0.35
+    DecoratedSpacing: 2
+    EndWall: {fileID: 919132149155446097, guid: 5540dbb6a01fd4adcb4abad882f6ccd6, type: 3}
+    EndWallSide: {fileID: 919132149155446097, guid: 69a537c6cb38f49e0b94d524322bdce7, type: 3}
+    EndDown: {fileID: 919132149155446097, guid: d4a6fdd0fc58245ac9e5d666e7aa22db, type: 3}
+    EndDownSide: {fileID: 919132149155446097, guid: 20d981106b4264faa9908901a3ddae9a, type: 3}
+    Drop: {fileID: 919132149155446097, guid: a832333f91e494af89eee1377bbc1b66, type: 3}
+    DropSide: {fileID: 919132149155446097, guid: 82b3ffbdeb71342a98b309a28ae36a72, type: 3}
+    DropFoot: {fileID: 919132149155446097, guid: 554f68178e5ee4232a94717b35206e7f, type: 3}
+    Corner: {fileID: 919132149155446097, guid: 2eeef0f1f0135479f811ee912171e4b0, type: 3}
+    CornerXFront: {fileID: 919132149155446097, guid: 9d6c97336ef0a46a4b16d62fb15e04ba, type: 3}
+    InnerCorner: {fileID: 919132149155446097, guid: 87a1ffd085ce040f0b6550fc5c68bfbb, type: 3}
+    InnerCornerXFront: {fileID: 919132149155446097, guid: 7c818c66f89bb40468f45e2c986c00cd, type: 3}
+    DropX: 0.3
+    DownEndChance: 0.6
+    CenterHeight: 0.3
+    BelowTop: 0.35
+    BandClearance: 0.12
+    MinWallHeight: 0.8
+    Chance: 0.3
+    Length: {x: 3, y: 8}
+    MinGap: 2
+    Inset: 0
+    Foot: 0
+    FrontOnly: 0
+  - Name: Varal
+    Straight:
+    - Model: {fileID: 919132149155446097, guid: bab31d8419341440199b46ced896d875, type: 3}
+      Weight: 0.3
+      ScaleRange: {x: 0, y: 0}
+      AnyYaw: 0
+      Cells: 1
+      Foot: 0
+      SideModel: {fileID: 0}
+      FreeStanding: 0
+    - Model: {fileID: 919132149155446097, guid: 5c969dde248f3478caaf66799ae232cc, type: 3}
+      Weight: 2
+      ScaleRange: {x: 0, y: 0}
+      AnyYaw: 0
+      Cells: 1
+      Foot: 0
+      SideModel: {fileID: 0}
+      FreeStanding: 0
+    - Model: {fileID: 919132149155446097, guid: fca94e0a97b6347869805f1bd55b9532, type: 3}
+      Weight: 2
+      ScaleRange: {x: 0, y: 0}
+      AnyYaw: 0
+      Cells: 1
+      Foot: 0
+      SideModel: {fileID: 0}
+      FreeStanding: 0
+    Decorated: []
+    DecoratedChance: 0
+    DecoratedSpacing: 0
+    EndWall: {fileID: 919132149155446097, guid: 4b0bca93dad524b8dab5cda21eeb207a, type: 3}
+    EndWallSide: {fileID: 0}
+    EndDown: {fileID: 0}
+    EndDownSide: {fileID: 0}
+    Drop: {fileID: 0}
+    DropSide: {fileID: 0}
+    DropFoot: {fileID: 0}
+    Corner: {fileID: 0}
+    CornerXFront: {fileID: 0}
+    InnerCorner: {fileID: 0}
+    InnerCornerXFront: {fileID: 0}
+    DropX: 0.3
+    DownEndChance: 0
+    CenterHeight: 0.46
+    BelowTop: 0.1
+    BandClearance: 0.05
+    MinWallHeight: 1
+    Chance: 0.2
+    Length: {x: 3, y: 5}
+    MinGap: 3
+    Inset: 0
+    Foot: 0
+    FrontOnly: 1
+  - Name: Postes
+    Straight:
+    - Model: {fileID: 0}
+      Weight: 1
+      ScaleRange: {x: 0, y: 0}
+      AnyYaw: 0
+      Cells: 1
+      Foot: 0
+      SideModel: {fileID: 0}
+      FreeStanding: 0
+    Decorated:
+    - Model: {fileID: 919132149155446097, guid: d5b61eb0b9ef2427e8b5bb44d0eef363, type: 3}
+      Weight: 1
+      ScaleRange: {x: 0, y: 0}
+      AnyYaw: 0
+      Cells: 1
+      Foot: 0
+      SideModel: {fileID: 919132149155446097, guid: 858a821f17bc14e2d9ada004fc48c0a2, type: 3}
+      FreeStanding: 0
+    DecoratedChance: 1
+    DecoratedSpacing: 5
+    EndWall: {fileID: 0}
+    EndWallSide: {fileID: 0}
+    EndDown: {fileID: 0}
+    EndDownSide: {fileID: 0}
+    Drop: {fileID: 0}
+    DropSide: {fileID: 0}
+    DropFoot: {fileID: 0}
+    Corner: {fileID: 0}
+    CornerXFront: {fileID: 0}
+    InnerCorner: {fileID: 0}
+    InnerCornerXFront: {fileID: 0}
+    DropX: 0.3
+    DownEndChance: 0
+    CenterHeight: 0
+    BelowTop: 0
+    BandClearance: 0
+    MinWallHeight: 0
+    Chance: 0.8
+    Length: {x: 3, y: 16}
+    MinGap: 1
+    Inset: 0
+    Foot: 1
+    FrontOnly: 0
+  maxEdgeLength: 3
+  maxEdgeStretch: 1.5
+  pieces:
+  - Key: Center
+    Model: {fileID: 919132149155446097, guid: e3ba95a2189c64b30ac1738ec90dc651, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 034fa74a0f5894583ba35a05a898ffba, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 9824da6eb88f449c99bc776f6248fafb, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 06d1db7915a41463c81d58f598cd96b3, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 5705630a9de0e4ad083fb07126456bc8, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 3e1e9d6cda2d444b5bbeffed923f0617, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: c66c6daf54b2a406dad1060ff0443b29, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 498ed33de1b3a4d5c900274b75966733, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 7998674c460b14695b2b26b1b061a417, type: 3}
+    Weight: 1
+    NoStretch: 1
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: 541770eeeb9794627be0f6703a17aa8c, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge
+    Model: {fileID: 919132149155446097, guid: e667df65710f7470eb575686c42e244c, type: 3}
+    Weight: 1
+    NoStretch: 1
+  - Key: Corner
+    Model: {fileID: 919132149155446097, guid: 6492a25bf9211420cb3604f031e9ccca, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Corner
+    Model: {fileID: 919132149155446097, guid: fab9a28d0f920447996a4b160adfd146, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: InnerCorner
+    Model: {fileID: 919132149155446097, guid: 8d83f758e15fc4510a6fd911a7c6f6a5, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: InnerCorner
+    Model: {fileID: 919132149155446097, guid: 0bb7d4c0ddb474104921f1d5a3143794, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: d4ba4eead8cf44c27914dece643e16a1, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 8df819e080f16450aa3a26b7b983b753, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 7d08a7600a8294120a658eaf6bd5b0ef, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: d903513ce573348c1a93c45ecc48df20, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 94be0b40c05384243a8d41be70950979, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 852d0b5f4aa144721a344622c7c8e271, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 90002285334da4bb8a016ed393ea1f67, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 33d426a7d627b4da3991c579ffc65898, type: 3}
+    Weight: 1
+    NoStretch: 1
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 2db2a50968fe9452e9d4f72730a59729, type: 3}
+    Weight: 1
+    NoStretch: 0
+  - Key: Edge2
+    Model: {fileID: 919132149155446097, guid: 2c586749d91554531958ddbb6c2c0884, type: 3}
+    Weight: 1
+    NoStretch: 1

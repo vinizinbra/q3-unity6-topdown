@@ -26,7 +26,7 @@ MonoBehaviour:
     Opacity: 0.6
     SurfaceMaterial: {fileID: 2100000, guid: e0ad10362397d4e4fb76ee0429b81787, type: 2}
   tileset:
-    Tileset: {fileID: 11400000, guid: 06f599abbc16f4515b4dfbbc8477acc6, type: 2}
+    Tileset: {fileID: 11400000, guid: 614de6ea81664437bb71065842a286df, type: 2}
   obstacles:
     Size1x1: []
     Size1x2: []

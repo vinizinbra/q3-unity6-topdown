@@ -83,9 +83,9 @@ Max via `ShieldUtility.ApplyFlatShield`.
   `JuggernautSkillData.AdvanceCharge`); +10% Move Speed while Charged (`ChargedMoveSpeedBonus`, folded
   into `ResolveChargedMoveSpeedBonus`); after Discharge, Charge only resets down to 30% instead of
   fully draining (`DischargeRetentionFraction` - see `JuggernautSkillData.TryDischarge`).
-- Rank 2: 40% faster; +20% Move Speed while Charged; Discharge resets down to 60% instead of fully
+- Rank 2: 40% faster; +15% Move Speed while Charged; Discharge resets down to 60% instead of fully
   draining.
-- Rank 3: 40% faster (same as rank 2); +30% Move Speed while Charged; Discharge no longer resets
+- Rank 3: 40% faster (same as rank 2); +20% Move Speed while Charged; Discharge no longer resets
   Charge at all (`DischargeRetentionFraction` 100%); **and Juggernaut refuses to expire while Brutus
   is still sitting on a full Charge** (`HoldUntilDischarge`) - if `Duration` runs out while
   `ChargePoints >= MaxCharge`, `JuggernautSkillData.Tick` returns `false` instead of finishing, so the

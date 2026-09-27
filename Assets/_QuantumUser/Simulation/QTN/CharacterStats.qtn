@@ -171,6 +171,11 @@ component CharacterStats
     FP MagazineSizeBonus;
     Int32 MagazineSizeOverride;
 
+    // Weapon Range Global Upgrade: owner-level multiplier (seeded 1) folded into
+    // Weapon.RangeMultiplier by ApplyOwnerWeaponModifiers on every equip - Weapon.RangeMultiplier is
+    // reset by SeedStats, so writing only the weapon was lost on the next pickup.
+    FP WeaponRangeMultiplier;
+
     // Longshot: extra pierces granted to a shot fired at a target beyond DamageUtility's own far
     // range threshold. Resolved once per SHOT at fire time (WeaponSystem.Update), not per target -
     // pierce is a property of the projectile/hitscan walk, not of any individual hit - and fed into

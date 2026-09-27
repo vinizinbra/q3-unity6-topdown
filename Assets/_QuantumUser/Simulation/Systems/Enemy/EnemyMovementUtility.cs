@@ -852,6 +852,60 @@ namespace Quantum
         // grounded, so a caller that forgets to check the bool back still gets something harmless.
         public static bool IsGrounded(Frame f, EntityRef entity, FPVector3 position, int layerMask, out FP groundY)
         {
+            // Same enemy, same tick, same position, same mask -> same raycast, same answer: reuse it.
+            // EnemySystem.Update asks this question 2-3 times per enemy per tick (TickKnockbackRecovery,
+            // MoveInDirection, SmartFlee's direction) and every rollback resim repeats all of them.
+            if (_groundMemoActive == true && _groundMemoValid == true && entity == _groundMemoEntity
+                && layerMask == _groundMemoLayerMask && position == _groundMemoPosition)
+            {
+                groundY = _groundMemoY;
+                return _groundMemoGrounded;
+            }
+
+            bool grounded = IsGroundedUncached(f, entity, position, layerMask, out groundY);
+
+            if (_groundMemoActive == true && entity == _groundMemoEntity)
+            {
+                _groundMemoValid = true;
+                _groundMemoLayerMask = layerMask;
+                _groundMemoPosition = position;
+                _groundMemoGrounded = grounded;
+                _groundMemoY = groundY;
+            }
+
+            return grounded;
+        }
+
+        // Per-enemy IsGrounded memo, only live between BeginGroundMemo/EndGroundMemo (EnemySystem.Update
+        // wraps each enemy's whole update in them), so it can never outlive the one entity/tick it was
+        // filled for - including across rollback resims of the same frame number. Plain statics are
+        // safe because no simulation system in this project runs threaded (all SystemMainThread*).
+        // Deterministic: a hit only reuses the result of the identical query made moments earlier in
+        // the same entity's update, with nothing in between that moves this entity or rebuilds the
+        // physics scene.
+        private static bool _groundMemoActive;
+        private static bool _groundMemoValid;
+        private static EntityRef _groundMemoEntity;
+        private static int _groundMemoLayerMask;
+        private static FPVector3 _groundMemoPosition;
+        private static bool _groundMemoGrounded;
+        private static FP _groundMemoY;
+
+        public static void BeginGroundMemo(EntityRef entity)
+        {
+            _groundMemoActive = true;
+            _groundMemoValid = false;
+            _groundMemoEntity = entity;
+        }
+
+        public static void EndGroundMemo()
+        {
+            _groundMemoActive = false;
+            _groundMemoValid = false;
+        }
+
+        private static bool IsGroundedUncached(Frame f, EntityRef entity, FPVector3 position, int layerMask, out FP groundY)
+        {
             FP probeDistance = GroundContactTolerance;
 
             if (f.Unsafe.TryGetPointer<PhysicsCollider3D>(entity, out var collider) == true)

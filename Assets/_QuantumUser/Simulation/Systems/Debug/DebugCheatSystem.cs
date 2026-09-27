@@ -102,6 +102,7 @@ namespace Quantum
             f.Global->CurrentPhaseIndex = phaseIndex;
             f.Global->PhaseTimer = FPMath.Max(FP._0, targetSurvivalTime - combatTimeBeforePhase);
             f.Global->SurvivalTime = targetSurvivalTime;
+            RunPhaseUtility.ClearBreathingGrace(f);
 
             GameStateUtility.SetState(f, GameState.Survival);
 

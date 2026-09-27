@@ -17,6 +17,11 @@ namespace Quantum
     [Preserve]
     public unsafe class EnemyLifecycleSystem : SystemMainThreadFilter<EnemyLifecycleSystem.Filter>
     {
+        // Per-stage profiler markers (see SimProfilerMarker). Compiled out of Release players.
+        private static readonly SimProfilerMarker RecentCombatMarker = new SimProfilerMarker("EnemyLifecycleSystem.RecentCombat");
+        private static readonly SimProfilerMarker AdvanceStateMarker = new SimProfilerMarker("EnemyLifecycleSystem.AdvanceState");
+        private static readonly SimProfilerMarker RetireMarker = new SimProfilerMarker("EnemyLifecycleSystem.Retire");
+
         public override void Update(Frame f, ref Filter filter)
         {
             // A combat kill is already EnemySystem/DamageUtility's own path (OnEnemyDied,
@@ -32,12 +37,19 @@ namespace Quantum
             LifecycleConfig lifecycleConfig = f.FindAsset(f.RuntimeConfig.LifecycleConfig);
             EnemyDataAsset data = f.FindAsset(filter.Enemy->EnemyData);
 
+            RecentCombatMarker.Begin();
             UpdateRecentCombat(f, ref filter, lifecycleConfig);
+            RecentCombatMarker.End();
+
+            AdvanceStateMarker.Begin();
             AdvanceState(f, ref filter, data, lifecycleConfig);
+            AdvanceStateMarker.End();
 
             if (filter.EnemyLifecycle->State == EnemyLifecycleState.Retired)
             {
+                RetireMarker.Begin();
                 Retire(f, ref filter, data, lifecycleConfig);
+                RetireMarker.End();
             }
         }
 

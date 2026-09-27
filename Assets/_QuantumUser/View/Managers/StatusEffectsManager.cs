@@ -13,7 +13,9 @@ namespace QuantumUser.View.Managers
     // pair for as long as StatusEffectUtility reports that status active. An instance is released
     // the instant it's no longer seen active in a frame's filter pass - that covers both a status
     // naturally expiring/being healed AND the entity itself disappearing from the filter entirely
-    // (death, disconnect), since both look identical here: "not seen this frame". Works for any
+    // (destroy, disconnect), since both look identical here: "not seen this frame". A dead enemy
+    // still lingering as a corpse (EnemyActionPhase.Dead) is skipped outright, so it counts as
+    // "not seen" the tick it dies instead of keeping e.g. Stun stars until despawn. Works for any
     // entity with StatusEffects, not just enemies - e.g. ShieldRegen/Haste are ally buffs.
     //
     // Two positioning schemes coexist here:
@@ -146,6 +148,11 @@ namespace QuantumUser.View.Managers
             var filtered = frame.Filter<StatusEffects>();
             while (filtered.Next(out EntityRef entity, out StatusEffects _))
             {
+                // A dead enemy lingers in the filter for its DeathLingerTime corpse window - skip it
+                // so EndFrame treats it as "not seen" and releases every status on it immediately.
+                if (IsDeadEnemy(frame, entity))
+                    continue;
+
                 Vector3 center = EnemyMovementUtility.ResolveEntityCenter(frame, entity).ToUnityVector3();
                 // Prefabs are authored at a reference diameter of 1 (radius 0.5), so this scales by
                 // the full diameter, not just the radius.
@@ -170,6 +177,9 @@ namespace QuantumUser.View.Managers
             var explodeMarked = frame.Filter<ExplodeOnDeath>();
             while (explodeMarked.Next(out EntityRef entity, out ExplodeOnDeath _))
             {
+                if (IsDeadEnemy(frame, entity))
+                    continue;
+
                 Vector3 center = EnemyMovementUtility.ResolveEntityCenter(frame, entity).ToUnityVector3();
                 float scale = EnemyMovementUtility.ResolveEntityRadius(frame, entity).AsFloat * 2f;
 
@@ -190,6 +200,11 @@ namespace QuantumUser.View.Managers
             _explodeMark.EndFrame(explodeMarkParticlePrefab);
 
             PruneHostCache();
+        }
+
+        private static bool IsDeadEnemy(Frame frame, EntityRef entity)
+        {
+            return frame.TryGet(entity, out Enemy enemy) && enemy.Phase == EnemyActionPhase.Dead;
         }
 
         // Resolves (and caches) this entity's HitFeedback - the single source for both BodyRoot

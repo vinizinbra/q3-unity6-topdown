@@ -55,11 +55,14 @@ namespace Quantum
                                  // RuntimePlayer.IsBot once, at entity creation), and it doesn't
                                  // survive a death/respawn (Spawn re-reads the real IsBot, still
                                  // false) - reapply after respawning if still wanted.
-        RevealMap               // sets every Chunk.Discovered = true (see CheatSystem.RevealAllChunks) -
+        RevealMap,              // sets every Chunk.Discovered = true (see CheatSystem.RevealAllChunks) -
                                  // MinimapWidget reads that flag client-side every tick and repaints
                                  // automatically, so this alone is enough to paint the whole level.
                                  // Same effect SetupTestRun already includes as part of its own combo;
                                  // this is that one piece standalone.
+        ExtendBreathing         // Amount = seconds added to the CURRENT Breathing Break; no-op outside
+                                 // Breathing. Pulls PhaseTimer back by Amount (may go negative), so the
+                                 // Break lasts that much longer from now - see CheatSystem.ExtendBreathing.
     }
 
     // Generic debug/cheat command. IMPORTANT: this command AND its handler (CheatSystem) compile on

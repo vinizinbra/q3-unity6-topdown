@@ -73,7 +73,6 @@ which one to open.
 - **Announcer** — shared `AnnouncerManager` slide-in title banner (fade+slide, hold, fade+slide out) for rare whole-team moments (Area Secured, Survival Started, Team Challenge Started/Complete/Failed), replacing three near-duplicate copies of the same animation. → `docs/announcer.md`
 - **Hero Info Popup (Tab-hold)** — `HeroInfoPopupWidget` shows a full "what I'm running" readout by composing existing widgets. → `docs/hero-info-popup.md`
 - **Minimap** — node-based minimap baked into one painted `Texture2D`: per-chunk fills, level outline, POI icons, player/enemy markers. → `docs/minimap.md`
-- **Environment Details** — View-only hand-placed ground/wall detail slots; runtime only picks whether/which themed sprite shows, deterministically seeded. → `docs/environment-details.md`
 - **In-Match Settings Popup** — Escape-toggled pause-style popup: SFX/Music sliders (`AudioManager` category multipliers), Disconnect, offline-only Restart (`RestartOfflineMatch` shuts the runner down and restarts the offline session, reloading the scene). → `docs/in-match-settings.md`
 - **Loading / Generating Level Screen** — menu-side `LoadingWindow` covers the whole match start (connect→generate→enter), then fades and hands off to `InMatchWindow`. Also the generic transition screen: self-instantiated persistent `LoadingScreen` prefab behind `SceneLoader.Load/Cover` (2s minimum; Game→Menu covers *before* teardown starts and holds until the gameplay scene has unloaded) for Intro→Menu and Game→Menu. → `docs/loading-screen.md`
 
@@ -82,6 +81,7 @@ which one to open.
 - **Local-testing Bots** — `RuntimePlayer.IsBot`→`BotBrain`, sim-synthesized input; follow/void-avoidance/leash AI; bots consume no local slot (`GetLocalSlotIndex` = -1). → `docs/bots.md`
 - **Build Size Analyzer** — Editor window over `Library/LastBuild.buildreport`: size by category/asset, texture/atlas/audio/duplicate-file audits with one-click fixes, paginated lists. → `docs/build-size-analyzer.md`
 - **Tileset Platform Builder** — turns grid-aligned level cubes into autotiled cartoon platforms (dual-grid Center/Edge/Corner/InnerCorner + weighted variants, merged stretched Centers, Y scaled to cube height) with the shared `ToonTerrain` shader (world-space textures, texture-level outlines, one-directional outline→surface fade, multiply hatching); Blender generators in `Source~/`. Per-cube, collision-merged (across chunks) replacement for `CubeVisualBuilder`, used by all LevelChunk prefabs. → `docs/tileset-builder.md`
+- **Mobile Performance** — on-device profiling workflow (USB/ADB, no Deep Profile, logs off on device, reading the Profiler via `unity cmd eval`), findings, and the prioritized improvement backlog with per-item plans. → `docs/performance.md`
 - **Balance Simulator** — Editor window that predicts a run per minute/per hero (level, kills, weapon/skill DPS, weapon level, coins, enemy HP/TTK, Director pressure) from the real config assets, plus `BalanceRunRecorder` to diff against a played run. → `docs/balance-simulator.md`
 
 ## Reference docs

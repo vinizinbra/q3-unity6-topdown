@@ -246,6 +246,8 @@ public class TilesetPlatformBuilder : MonoBehaviour
                         pieceCount++;
                     if (placement.Key == TilesetAutotiler.EdgeKey || placement.Key == TilesetAutotiler.EdgeLongKey)
                         platformEdges.Add((placement, bottom));
+                    else if (placement.Key == TilesetAutotiler.CornerKey || placement.Key == TilesetAutotiler.InnerCornerKey)
+                        platformCorners.Add((placement, bottom));
                 }
             }
 
@@ -254,6 +256,7 @@ public class TilesetPlatformBuilder : MonoBehaviour
                 platformBottom = Mathf.Min(platformBottom, cells[c].Bottom);
             ScatterSurface(set, platform, origin, top, platformBottom, platformRoot, template, platformEdges);
             platformEdges.Clear();
+            platformCorners.Clear();
         }
 
         members.Clear();
@@ -447,6 +450,10 @@ public class TilesetPlatformBuilder : MonoBehaviour
         if (mode == SurfaceDecor.None)
             return;
 
+        runReserved.Clear();
+        runCellsTaken.Clear();
+        footCellsTaken.Clear();
+        ScatterWallRuns(set, origin, top, parent, template, edges);
         ScatterWalls(set, origin, top, parent, template, edges);
 
         var list = mode == SurfaceDecor.Ground ? set.GroundScatter : set.RooftopScatter;
@@ -593,11 +600,11 @@ public class TilesetPlatformBuilder : MonoBehaviour
                         continue;
                     y = bottom;
                     inset = 0.1f;
-                    if (hasBand && y + propHeight > bandLo)
+                    if (hasBand && !entry.FreeStanding && y + propHeight > bandLo)
                     {
                         // shrink to fit under the band; skip if that would make it too small to read
                         var fit = (bandLo - y) / Mathf.Max(propHeight, 1e-4f);
-                        if (fit < 0.7f)
+                        if (fit < MinFitScale)
                             continue;
                         scale *= fit;
                         propHeight *= fit;
@@ -616,7 +623,17 @@ public class TilesetPlatformBuilder : MonoBehaviour
                         var belowOk = belowHi >= lo;
                         var aboveOk = aboveHi >= aboveLo;
                         if (!belowOk && !aboveOk)
-                            continue;
+                        {
+                            // short wall: shrink the prop into the space under the band (e.g. a poster on
+                            // a 1-unit Neon wall), skip if it would get too small to read
+                            var fit = (bandLo - lo) / Mathf.Max(propHeight, 1e-4f);
+                            if (fit < MinFitScale)
+                                continue;
+                            scale *= fit;
+                            propHeight *= fit;
+                            belowHi = lo;
+                            belowOk = true;
+                        }
                         var useAbove = aboveOk && (!belowOk || U(27) < (aboveHi - aboveLo) / (aboveHi - aboveLo + belowHi - lo + 1e-4f));
                         y = useAbove ? Mathf.Lerp(aboveLo, aboveHi, U(24)) : Mathf.Lerp(lo, belowHi, U(24));
                     }
@@ -627,10 +644,16 @@ public class TilesetPlatformBuilder : MonoBehaviour
                         y = Mathf.Lerp(lo, hi, U(24));
                     }
                     var f = Mathf.Clamp01((y - bottom) / Mathf.Max(top - bottom, 0.01f));
-                    inset = 0.02f + 0.12f * (1f - f) + 0.015f;   // wall face inset at this height + a bit (embedded)
+                    inset = 0.02f + set.WallPropSlope * (1f - f) + 0.015f + set.WallPropInset;   // wall face inset at this height + a bit (embedded)
                 }
 
                 var rot = Quaternion.Euler(0f, 90f * e.Rotation, 0f);
+
+                // a wall run (pipeline...) already covers this cell at this height
+                var slotCenter = e.Position + EdgeAlong(e.Rotation) * (-length * 0.5f + (slot + 0.5f) * (length / slots));
+                if (runReserved.TryGetValue(RunCellKey(origin, slotCenter), out var taken) && y < taken.y && y + propHeight > taken.x)
+                    continue;
+
                 var pos = new Vector3(origin.x + e.Position.x * cellSize, y, origin.z + e.Position.y * cellSize)
                           + rot * new Vector3(along * cellSize, 0f, inset * cellSize);
 
@@ -650,6 +673,397 @@ public class TilesetPlatformBuilder : MonoBehaviour
             }
         }
     }
+
+    // Wall runs: a straight wall line is every edge cell with the same facing, the same wall-plane
+    // coordinate and the same bottom; consecutive cells along it (no corner between) form a stretch
+    // runs are laid on. Runs reserve their cells' height band (world Y lo..hi) from the wall props.
+    private readonly Dictionary<Vector2Int, Vector2> runReserved = new();
+    // Cells already taken by an earlier wall run on this platform: later (non-foot) run sets skip them, so
+    // e.g. a clothesline never lands on the same wall as the cable tangle (order = the tileset's list order).
+    private readonly HashSet<Vector2Int> runCellsTaken = new();
+    // Cells a foot run already put something on (trench, pole): later foot runs skip them.
+    private readonly HashSet<Vector2Int> footCellsTaken = new();
+
+    private static Vector2 EdgeAlong(int rotation)
+    {
+        var a = Quaternion.Euler(0f, 90f * rotation, 0f) * Vector3.right;
+        return new Vector2(a.x, a.z);
+    }
+
+    private Vector2Int RunCellKey(Vector3 origin, Vector2 cellCenter) =>
+        Vector2Int.RoundToInt(new Vector2(origin.x / cellSize + cellCenter.x, origin.z / cellSize + cellCenter.y) * 2f);
+
+    private readonly List<(TilesetAutotiler.Placement placement, float bottom)> platformCorners = new();
+
+    // One wall cell a run can occupy: an edge cell, or a convex / concave corner tile joining two lines.
+    private struct RunSlot
+    {
+        public Vector2 Center;     // grid vertex (cell units)
+        public int Rotation;
+        public int Kind;           // 0 = edge, 1 = convex corner, 2 = inner corner
+        public float Facing;       // wall-prop style facing factor (1 front, 0.5 side)
+    }
+
+    private class RunStretch
+    {
+        public int Rotation;
+        public float Facing;
+        public List<Vector2> Cells;   // sorted along the wall's +X
+        public int Next = -1;         // stretch this one continues into through NextCorner
+        public RunSlot NextCorner;
+        public bool HasIncoming;
+    }
+
+    // local tile offset -> grid offset for a tile rotated by 90 * rotation (same yaw as the models)
+    private static Vector2 RotateLocal(Vector2 local, int rotation)
+    {
+        var w = Quaternion.Euler(0f, 90f * rotation, 0f) * new Vector3(local.x, 0f, local.y);
+        return new Vector2(w.x, w.z);
+    }
+
+    private void ScatterWallRuns(TilesetDefinition set, Vector3 origin, float top, Transform parent, GameObject template,
+        List<(TilesetAutotiler.Placement placement, float bottom)> edges)
+    {
+        if (set.WallRuns.Count == 0)
+            return;
+
+        // split every edge (merged / stretched ones cover several cells) into unit cells, grouped by line
+        var lines = new Dictionary<(int rot, int perp, int bottom), List<(int t, Vector2 center)>>();
+        foreach (var (e, bottom) in edges)
+        {
+            var length = (e.Key == TilesetAutotiler.EdgeLongKey ? 2f : 1f) * (e.Stretch > 0f ? e.Stretch : 1f);
+            var n = Mathf.Max(1, Mathf.RoundToInt(length));
+            var rotation = ((e.Rotation % 4) + 4) % 4;
+            var along = EdgeAlong(rotation);
+            var outward = new Vector2(along.y, -along.x);
+            for (var s = 0; s < n; s++)
+            {
+                var c = e.Position + along * (-length * 0.5f + (s + 0.5f) * (length / n));
+                var key = (rotation, Mathf.RoundToInt(Vector2.Dot(c, outward) * 2f), Mathf.RoundToInt(bottom * 1000f));
+                if (!lines.TryGetValue(key, out var list))
+                    lines[key] = list = new List<(int, Vector2)>();
+                list.Add((Mathf.RoundToInt(Vector2.Dot(c, along) * 2f), c));
+            }
+        }
+
+        // consecutive stretches per line (a gap in t = a corner / notch in between), per bottom
+        var view = new Vector3(cameraViewDirection.x, 0f, cameraViewDirection.z).normalized;
+        var byBottom = new Dictionary<int, List<RunStretch>>();
+        foreach (var (key, cellsOnLine) in lines)
+        {
+            var facing = -Vector3.Dot(Quaternion.Euler(0f, 90f * key.rot, 0f) * Vector3.back, view);
+            var facingFactor = facing > 0.5f ? 1f : facing > -0.5f ? 0.5f : 0f;
+            if (facingFactor <= 0f)
+                continue;                                    // never seen: no runs, and runs don't turn onto it
+            cellsOnLine.Sort((a, b) => a.t.CompareTo(b.t));
+            if (!byBottom.TryGetValue(key.bottom, out var stretches))
+                byBottom[key.bottom] = stretches = new List<RunStretch>();
+            var start = 0;
+            for (var i = 1; i <= cellsOnLine.Count; i++)
+            {
+                if (i < cellsOnLine.Count && cellsOnLine[i].t - cellsOnLine[i - 1].t == 2)
+                    continue;
+                var cells = new List<Vector2>();
+                for (var j = start; j < i; j++)
+                    cells.Add(cellsOnLine[j].center);
+                stretches.Add(new RunStretch { Rotation = key.rot, Facing = facingFactor, Cells = cells });
+                start = i;
+            }
+        }
+
+        var ox = Mathf.RoundToInt(origin.x / cellSize);
+        var oz = Mathf.RoundToInt(origin.z / cellSize);
+        for (var r = 0; r < set.WallRuns.Count; r++)
+        {
+            var run = set.WallRuns[r];
+            foreach (var (bottomKey, stretches) in byBottom)
+            {
+                var bottom = bottomKey / 1000f;
+                foreach (var chain in BuildRunChains(run, stretches, bottomKey))
+                    LayRuns(run, r, chain, bottom, top, origin, ox, oz, parent, template, set);
+            }
+        }
+    }
+
+    // Links the stretches of one bottom through the corner tiles the run has a module for, and returns
+    // every chain as one slot list running along the walls' +X (so End modules keep their meaning).
+    private List<List<RunSlot>> BuildRunChains(TilesetDefinition.WallRunSet run, List<RunStretch> stretches, int bottomKey)
+    {
+        foreach (var st in stretches)
+        {
+            st.Next = -1;
+            st.HasIncoming = false;
+        }
+
+        var firstAt = new Dictionary<(int rot, Vector2Int cell), int>();
+        var lastAt = new Dictionary<(int rot, Vector2Int cell), int>();
+        for (var i = 0; i < stretches.Count; i++)
+        {
+            var st = stretches[i];
+            firstAt[(st.Rotation, Vector2Int.RoundToInt(st.Cells[0] * 2f))] = i;
+            lastAt[(st.Rotation, Vector2Int.RoundToInt(st.Cells[st.Cells.Count - 1] * 2f))] = i;
+        }
+
+        foreach (var (c, bottom) in platformCorners)
+        {
+            if (Mathf.RoundToInt(bottom * 1000f) != bottomKey)
+                continue;
+            var rot = ((c.Rotation % 4) + 4) % 4;
+            var rotSide = (rot + 1) % 4;
+            var convex = c.Key == TilesetAutotiler.CornerKey;
+            if (convex ? run.Corner == null : run.InnerCorner == null)
+                continue;
+
+            // convex (NE solid): the -X-facing wall (rot+1) runs INTO the corner, the -Z wall (rot) leaves it.
+            // concave (SW empty): the -Z wall (rot) runs into it, the -X wall (rot+1) leaves it.
+            int from, to;
+            bool ok;
+            if (convex)
+                ok = lastAt.TryGetValue((rotSide, Vector2Int.RoundToInt((c.Position + RotateLocal(new Vector2(0f, 1f), rot)) * 2f)), out from)
+                     & firstAt.TryGetValue((rot, Vector2Int.RoundToInt((c.Position + RotateLocal(new Vector2(1f, 0f), rot)) * 2f)), out to);
+            else
+                ok = lastAt.TryGetValue((rot, Vector2Int.RoundToInt((c.Position + RotateLocal(new Vector2(-1f, 0f), rot)) * 2f)), out from)
+                     & firstAt.TryGetValue((rotSide, Vector2Int.RoundToInt((c.Position + RotateLocal(new Vector2(0f, -1f), rot)) * 2f)), out to);
+            if (!ok || from == to)
+                continue;
+
+            stretches[from].Next = to;
+            stretches[from].NextCorner = new RunSlot
+            {
+                Center = c.Position, Rotation = rot, Kind = convex ? 1 : 2,
+                Facing = Mathf.Min(stretches[from].Facing, stretches[to].Facing),
+            };
+            stretches[to].HasIncoming = true;
+        }
+
+        var chains = new List<List<RunSlot>>();
+        var used = new HashSet<int>();
+        void Walk(int head)
+        {
+            var slots = new List<RunSlot>();
+            for (var i = head; i >= 0 && used.Add(i); i = stretches[i].Next)
+            {
+                var st = stretches[i];
+                foreach (var cell in st.Cells)
+                    slots.Add(new RunSlot { Center = cell, Rotation = st.Rotation, Kind = 0, Facing = st.Facing });
+                if (st.Next >= 0 && !used.Contains(st.Next))
+                    slots.Add(st.NextCorner);
+            }
+            chains.Add(slots);
+        }
+
+        for (var i = 0; i < stretches.Count; i++)
+        {
+            if (!stretches[i].HasIncoming)
+                Walk(i);
+        }
+        for (var i = 0; i < stretches.Count; i++)     // closed loops (no head): start anywhere
+        {
+            if (!used.Contains(i))
+                Walk(i);
+        }
+        return chains;
+    }
+
+    private void LayRuns(TilesetDefinition.WallRunSet run, int runIndex, List<RunSlot> slots, float bottom, float top,
+        Vector3 origin, int ox, int oz, Transform parent, GameObject template, TilesetDefinition set)
+    {
+        if (run.Straight.Count == 0 || top - bottom < run.MinWallHeight)
+            return;
+        float y, inset;
+        if (run.Foot)
+        {
+            // standing on the street in front of the wall (same foot rules as the foot props)
+            if (bottom < groundBelowY)
+                return;
+            y = bottom + run.CenterHeight;
+            inset = 0.1f + run.Inset;
+        }
+        else
+        {
+            y = top - run.BelowTop;
+            var avoid = set.WallPropAvoidBand;
+            if (avoid.y > avoid.x)                           // stay under the tileset's keep-out band (cap slab, trim)
+                y = Mathf.Min(y, bottom + (top - bottom) * avoid.x - set.WallPropAvoidMargin - run.BandClearance);
+            // the whole module (centreline minus what hangs under it - clothes, boxes) must clear the water line
+            if (y - run.CenterHeight < wallPropMinY || y - 0.15f < bottom)
+                return;
+            var f = Mathf.Clamp01((y - bottom) / Mathf.Max(top - bottom, 0.01f));
+            inset = 0.02f + set.WallPropSlope * (1f - f) + 0.015f + set.WallPropInset + run.Inset;
+        }
+
+        var minLen = Mathf.Max(2, run.Length.x);
+        var maxLen = Mathf.Max(minLen, run.Length.y);
+
+        var cursor = 0;
+        while (slots.Count - cursor >= minLen)
+        {
+            if (slots[cursor].Kind != 0)                     // runs start and end on straight wall
+            {
+                cursor++;
+                continue;
+            }
+
+            var k = Vector2Int.RoundToInt(slots[cursor].Center * 2f);
+            unchecked
+            {
+                var h0 = (k.x + ox * 2) * 73856093 ^ (k.y + oz * 2) * 19349663 ^ variationSeed * 2654435 ^ (runIndex + 1) * 7919 ^ slots[cursor].Rotation * 104729;
+                float U(int salt) { var h = h0 ^ salt * 83492791; h ^= h >> 13; h *= 0x5bd1e995; h ^= h >> 15; return (h & 0xffffff) / (float)0x1000000; }
+
+                if (U(1) >= run.Chance * slots[cursor].Facing)
+                {
+                    cursor += minLen;
+                    continue;
+                }
+
+                var len = Mathf.Min(slots.Count - cursor, Mathf.RoundToInt(Mathf.Lerp(minLen, maxLen, U(2))));
+                while (len > 2 && slots[cursor + len - 1].Kind != 0)
+                    len--;
+                if (len < 2 || slots[cursor + len - 1].Kind != 0)
+                {
+                    cursor++;
+                    continue;
+                }
+
+                var cells = slots.GetRange(cursor, len);
+                if (!run.Foot)
+                {
+                    var blocked = false;
+                    foreach (var cell in cells)
+                        blocked |= runCellsTaken.Contains(RunCellKey(origin, cell.Center)) || (run.FrontOnly && cell.Facing < 1f);
+                    if (blocked)
+                    {
+                        cursor++;                                    // another run already owns part of this wall
+                        continue;
+                    }
+                    foreach (var cell in cells)
+                        runCellsTaken.Add(RunCellKey(origin, cell.Center));
+                }
+                cursor += len + Mathf.Max(1, run.MinGap);
+
+                var sinceDecorated = run.DecoratedSpacing;
+                for (var i = 0; i < cells.Count; i++)
+                {
+                    var slot = cells[i];
+                    var c = slot.Center;
+                    var rotation = slot.Rotation;
+                    var rot = Quaternion.Euler(0f, 90f * rotation, 0f);
+                    var cellKey = RunCellKey(origin, c);
+                    var band = new Vector2(y - run.CenterHeight - 0.05f, y + 0.35f);
+
+                    var side = slot.Facing < 1f;                         // side wall: the "_Side" outline variants
+                    if (slot.Kind != 0)
+                    {
+                        // corner tiles: pivot on the vertex, pushed in along BOTH walls by the inset; the
+                        // XFront variant when the corner's -Z wall (= line `rotation`) is not the one facing us
+                        var xFront = FacingFactor(rotation) < 1f;
+                        var cornerModel = slot.Kind == 1
+                            ? TilesetDefinition.WallRunSet.Pick(run.Corner, run.CornerXFront, xFront)
+                            : TilesetDefinition.WallRunSet.Pick(run.InnerCorner, run.InnerCornerXFront, xFront);
+                        var cornerBase = new Vector3(origin.x + c.x * cellSize, 0f, origin.z + c.y * cellSize) + rot * new Vector3(inset * cellSize, 0f, inset * cellSize);
+                        SpawnRunPiece(cornerModel, cornerBase + Vector3.up * (y - run.CenterHeight), 90f * rotation, Vector3.one, parent, template);
+                        sinceDecorated++;
+                        continue;
+                    }
+
+                    var basePos = new Vector3(origin.x + c.x * cellSize, 0f, origin.z + c.y * cellSize) + rot * new Vector3(0f, 0f, inset * cellSize);
+                    var pivot = basePos + Vector3.up * (y - run.CenterHeight);
+
+                    var isEnd = !run.Foot && (i == 0 || i == cells.Count - 1);
+                    if (run.Foot && (i == 0 || i == cells.Count - 1))
+                        continue;                                    // spaced items never sit on the stretch ends
+                    if (isEnd)
+                    {
+                        var mirror = i == 0 ? -1f : 1f;                  // End modules are authored as the +X end
+                        var sideDir = rot * Vector3.right * mirror;
+                        var dropPos = basePos + sideDir * (run.DropX * cellSize);
+                        var probe = dropPos + rot * Vector3.back * (0.3f * cellSize);
+                        var down = run.EndDown != null && run.Drop != null && bottom >= groundBelowY
+                                   && U(10 + i) < run.DownEndChance
+                                   && HasGroundAt(probe + sideDir * 0.1f, bottom) && HasGroundAt(probe - sideDir * 0.1f, bottom);
+                        if (down)
+                        {
+                            SpawnRunPiece(TilesetDefinition.WallRunSet.Pick(run.EndDown, run.EndDownSide, side), pivot, 90f * rotation, new Vector3(mirror, 1f, 1f), parent, template);
+                            var dropHeight = pivot.y - bottom;
+                            if (dropHeight > 0.01f)
+                                SpawnRunPiece(TilesetDefinition.WallRunSet.Pick(run.Drop, run.DropSide, side), new Vector3(basePos.x, bottom, basePos.z), 90f * rotation, new Vector3(mirror, dropHeight, 1f), parent, template);
+                            if (run.DropFoot != null)
+                                SpawnRunPiece(run.DropFoot, new Vector3(basePos.x, bottom, basePos.z), 90f * rotation, new Vector3(mirror, 1f, 1f), parent, template);
+                            band.x = bottom - 1f;                         // the drop blocks the whole cell below
+                        }
+                        else
+                        {
+                            var end = run.EndWall != null
+                                ? TilesetDefinition.WallRunSet.Pick(run.EndWall, run.EndWallSide, side)
+                                : PickRunModule(run.Straight, U(20 + i), side);
+                            SpawnRunPiece(end, pivot, 90f * rotation, new Vector3(mirror, 1f, 1f), parent, template);
+                        }
+                    }
+                    else
+                    {
+                        // decorated modules keep clear of corners (their parts would clip the corner wall)
+                        var nearCorner = (i > 0 && cells[i - 1].Kind != 0) || (i < cells.Count - 1 && cells[i + 1].Kind != 0);
+                        var decorate = run.Decorated.Count > 0 && !nearCorner && sinceDecorated >= run.DecoratedSpacing
+                                       && U(30 + i) < run.DecoratedChance;
+                        var model = decorate ? PickRunModule(run.Decorated, U(60 + i), side) : PickRunModule(run.Straight, U(90 + i), side);
+                        sinceDecorated = decorate ? 0 : sinceDecorated + 1;
+                        if (run.Foot)
+                        {
+                            // only where the street is really there (not over a bridge / pit edge); the item
+                            // blocks the whole cell for the wall props, empty cells block nothing
+                            var probe = basePos + rot * Vector3.back * (0.35f * cellSize);
+                            if (model == null || !HasGroundAt(probe, bottom) || runCellsTaken.Contains(cellKey) || footCellsTaken.Contains(cellKey))
+                                continue;                            // no street here, a wall run would be hidden behind it, or another foot run is there
+                            band = new Vector2(bottom - 1f, Mathf.Min(top + 1f, bottom + run.FootReserveHeight));
+                        }
+                        if (!SpawnRunPiece(model, pivot, 90f * rotation, Vector3.one, parent, template))
+                            continue;
+                        if (run.Foot)
+                            footCellsTaken.Add(cellKey);
+                    }
+
+                    runReserved[cellKey] = runReserved.TryGetValue(cellKey, out var prev)
+                        ? new Vector2(Mathf.Min(prev.x, band.x), Mathf.Max(prev.y, band.y))
+                        : band;
+                }
+            }
+        }
+    }
+
+    private static GameObject PickRunModule(List<TilesetDefinition.ScatterEntry> list, float u, bool side)
+    {
+        TilesetDefinition.PickScatter(list, (int)(u * int.MaxValue), out var entry);
+        return TilesetDefinition.WallRunSet.Pick(entry.Model, entry.SideModel, side);
+    }
+
+    // 1 = wall facing the camera, 0.5 = side wall, 0 = facing away (same rule as the wall props)
+    private float FacingFactor(int rotation)
+    {
+        var view = new Vector3(cameraViewDirection.x, 0f, cameraViewDirection.z).normalized;
+        var facing = -Vector3.Dot(Quaternion.Euler(0f, 90f * rotation, 0f) * Vector3.back, view);
+        return facing > 0.5f ? 1f : facing > -0.5f ? 0.5f : 0f;
+    }
+
+    // Run modules must line up exactly: no jitter, no random scale. A wrapper carries the mirror /
+    // vertical stretch in world-aligned axes, so it works whatever axis conversion the model import has.
+    private bool SpawnRunPiece(GameObject model, Vector3 position, float yaw, Vector3 scale, Transform parent, GameObject template)
+    {
+        if (model == null)
+            return false;
+        var wrapper = new GameObject(model.name).transform;
+        wrapper.SetParent(parent, false);
+        wrapper.SetPositionAndRotation(position, Quaternion.Euler(0f, yaw, 0f));
+        wrapper.localScale = scale;
+        wrapper.gameObject.layer = template.layer;
+        var go = SpawnProp(model, position, yaw, 1f, wrapper, template);
+        go.transform.localPosition = Vector3.zero;
+        go.transform.localRotation = model.transform.localRotation;
+        go.transform.localScale = model.transform.localScale;
+        return true;
+    }
+
+    // Smallest scale a wall prop may be shrunk to so it fits under a wall's avoid band (short walls).
+    private const float MinFitScale = 0.55f;
 
     private readonly List<Bounds> groundBoxes = new();
 

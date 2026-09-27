@@ -89,6 +89,40 @@ namespace Quantum
         [SerializeField, Tooltip("Vertical speed magnitude that separates rising/apex/falling for the skateboard angle above. Below this on either side of 0 counts as the apex.")]
         private float skateboardSpeedThreshold = 2f;
 
+        [Header("Skateboard Ollie (every jump - needs skateboardDeck; skipped while the body Jump Flip is playing)")]
+        [SerializeField, Tooltip("The board sprite itself, posed around its OWN pivot for the ollie/trick - separate from skateboard above, which tilts around the hip-height pivot the board hangs off (spinning that would swing the board around like a pendulum instead of flipping it in place). Leave empty to disable ollies and tricks.")]
+        private Transform skateboardDeck;
+        [SerializeField, Tooltip("Nose-up Z angle the tail pop snaps the deck to at takeoff. Positive = nose up while facing right (root's own scale.x flip mirrors it for left).")]
+        private float ollieAngleDegrees = 35f;
+        [SerializeField, Tooltip("Deck-local point the pop pivots around - the tail. The deck stays pinned there while the nose swings up, like a real tail hitting the ground. Deck sprite is ~0.34 long, pivot centered: flip X's sign if the nose pops the wrong end.")]
+        private Vector2 ollieTailPivot = new Vector2(-0.15f, -0.04f);
+        [SerializeField, Tooltip("Seconds for the tail snap from flat to ollieAngleDegrees - short and sharp, it's the 'pop'.")]
+        private float olliePopDuration = 0.07f;
+        [SerializeField, Tooltip("Seconds for the front-foot drag to level the deck back out after the pop.")]
+        private float ollieLevelDuration = 0.2f;
+        [SerializeField, Tooltip("How far (deck-parent local units) the deck rises toward the feet over the ollie and settles back - the board 'sticking' to the tucked feet.")]
+        private float ollieLift = 0.05f;
+        [SerializeField, Tooltip("Crouch pre-load: during the jump anticipation the tail dips this many degrees (nose-down) before the pop snaps it the other way. 0 = flat crouch.")]
+        private float ollieCrouchAngleDegrees = -6f;
+
+        [Header("Skateboard Trick (flip played after the ollie's pop)")]
+        [SerializeField, Range(0f, 1f), Tooltip("Chance a jump adds a flip trick on top of the ollie. 0 = plain ollies only.")]
+        private float skateboardTrickChance = 1f;
+        [SerializeField, Tooltip("One is picked at random per jump. Each entry's spin is the total local Euler rotation the deck turns through over the trick: X = kickflip/heelflip (flip along the board's length - reads as the flat sprite folding edge-on and back), Y = shove-it (board spins flat, foreshortening sideways), Z = spin in the screen plane.")]
+        private SkateboardTrick[] skateboardTricks =
+        {
+            new SkateboardTrick { name = "Kickflip", spinDegrees = new Vector3(360f, 0f, 0f) },
+            new SkateboardTrick { name = "Heelflip", spinDegrees = new Vector3(-360f, 0f, 0f) },
+            new SkateboardTrick { name = "Shove-it", spinDegrees = new Vector3(0f, 360f, 0f) },
+            new SkateboardTrick { name = "Tre Flip", spinDegrees = new Vector3(360f, 360f, 0f) },
+        };
+        [SerializeField, Tooltip("Seconds for the whole trick, starting right after the ollie's pop. Keep it shorter than a normal jump's airtime so the board is caught before landing.")]
+        private float skateboardTrickDuration = 0.65f;
+        [SerializeField, Tooltip("How far (deck-parent local units) the board drops away from the feet at the trick's midpoint before being caught back - the board 'leaving the feet' is most of what sells a flip trick.")]
+        private float skateboardTrickDropDistance = 0.12f;
+        [SerializeField, Tooltip("Seconds to finish a trick still spinning when the character lands - keeps spinning forward to completion (never unwinds), just fast, same idea as dashFlipSpeedUpDuration.")]
+        private float skateboardTrickCatchDuration = 0.08f;
+
         [Header("Jump Flip (auto-hop DOWN off a ledge only - see EventPlayerAutoJumpedDown; a mantle-up or a manual/button jump never triggers this)")]
         [SerializeField, Tooltip("Unchecked = auto-hop-down plays exactly like any other jump (anticipation squash only, no tumble) - the same fallback a mantle/manual jump already gets.")]
         private bool useFlip = true;
@@ -138,6 +172,13 @@ namespace Quantum
 
         private enum RunStyle { Run, Rollerblade, Heavy }
 
+        [System.Serializable]
+        private struct SkateboardTrick
+        {
+            public string name;
+            public Vector3 spinDegrees;
+        }
+
         private enum State { Idle, Run, Anticipate, Air, Landing }
         private State _state = State.Idle;
         private float _stateTimer;
@@ -150,6 +191,17 @@ namespace Quantum
         private float _legAngleT;
         private Quaternion _skateboardBaseRot;
         private float _skateboardAngleT;
+        private Quaternion _skateboardDeckBaseRot;
+        private Vector3 _skateboardDeckBasePos;
+        // Skateboard ollie + trick - armed by any jump event (BeginJumpAnticipation), crouch-dipped
+        // during Anticipate, popped at the actual takeoff (Anticipate -> Air). The ollie runs pop
+        // (_olliePopU 0->1) then level-out (_ollieLevelU 0->1); a rolled trick (_trickPending) starts
+        // the moment the pop completes, like a real flip flicked off the popped board.
+        // _trickT runs 0->1; _deckCatching = landed mid-ollie/trick, finishing fast (skateboardTrickCatchDuration).
+        private bool _trickArmed, _ollieActive, _trickPending, _trickActive, _deckCatching;
+        private float _olliePopU, _ollieLevelU, _ollieCrouchT;
+        private float _trickT;
+        private Vector3 _trickSpin;
         private Vector3 _headBaseLocalPos, _torsoBaseLocalPos;
         private Vector3 _rootBaseLocalPos, _rootBaseScale;
         // Nothing else writes head rotation (unlike legs/torso), so this is only ever the punch's
@@ -364,6 +416,7 @@ namespace Quantum
             if (legLeft != null) { legLeft.localPosition = _legLeftBasePos; legLeft.localRotation = _legLeftBaseRot; legLeft.localScale = _legLeftBaseScale; }
             if (legRight != null) { legRight.localPosition = _legRightBasePos; legRight.localRotation = _legRightBaseRot; legRight.localScale = _legRightBaseScale; }
             if (skateboard != null) { skateboard.localRotation = _skateboardBaseRot; }
+            if (skateboardDeck != null) { skateboardDeck.localRotation = _skateboardDeckBaseRot; skateboardDeck.localPosition = _skateboardDeckBasePos; }
         }
 
         private void CacheBaseline()
@@ -374,6 +427,7 @@ namespace Quantum
             if (legLeft != null) { _legLeftBasePos = legLeft.localPosition; _legLeftBaseRot = legLeft.localRotation; _legLeftBaseScale = legLeft.localScale; }
             if (legRight != null) { _legRightBasePos = legRight.localPosition; _legRightBaseRot = legRight.localRotation; _legRightBaseScale = legRight.localScale; }
             if (skateboard != null) { _skateboardBaseRot = skateboard.localRotation; }
+            if (skateboardDeck != null) { _skateboardDeckBaseRot = skateboardDeck.localRotation; _skateboardDeckBasePos = skateboardDeck.localPosition; }
         }
 
         private void OnPlayerJumped(EventPlayerJumped e)
@@ -426,6 +480,7 @@ namespace Quantum
             _springVelocity = 0f;
             _springActive = false;
             CancelFlip();
+            CancelSkateboardTrick();
             ApplyBaselineTransforms();
 
             PunchBodyScale(revivePunchScaleStrength, revivePunchScaleDuration, revivePunchScaleFrequency);
@@ -457,6 +512,111 @@ namespace Quantum
             _stateTimer = 0f;
             _springActive = false;
             _jumpSquashT = anticipationSquash; // instant, held - no easing into it
+            _trickArmed = true;
+        }
+
+        private void CancelSkateboardTrick()
+        {
+            _trickArmed = false;
+            _ollieActive = false;
+            _trickPending = false;
+            _trickActive = false;
+            _deckCatching = false;
+            _olliePopU = 0f;
+            _ollieLevelU = 0f;
+            _trickT = 0f;
+        }
+
+        // Called at takeoff (Anticipate -> Air). No ollie/trick while the body Jump Flip is tumbling -
+        // the board already rides along with root's own spin, and both at once reads as noise.
+        private void TryStartOllie()
+        {
+            bool armed = _trickArmed;
+            _trickArmed = false;
+            if (armed == false || skateboardDeck == null || _flipActive)
+                return;
+
+            _ollieActive = true;
+            _olliePopU = 0f;
+            _ollieLevelU = 0f;
+            _deckCatching = false;
+            _trickActive = false;
+            _trickPending = skateboardTricks != null && skateboardTricks.Length > 0 && Random.value < skateboardTrickChance;
+        }
+
+        private void UpdateSkateboardDeck(float dt)
+        {
+            if (skateboardDeck == null)
+                return;
+
+            // Crouch pre-load eases in only while the jump is winding up, and back out otherwise
+            // (the pop takes over from wherever it got to - see the angle blend below).
+            float crouchTarget = _state == State.Anticipate && _trickArmed ? 1f : 0f;
+            _ollieCrouchT = Mathf.Lerp(_ollieCrouchT, crouchTarget, 1f - Mathf.Exp(-squashLerpSpeed * 2f * dt));
+
+            float ollieAngle = 0f;
+            float lift = 0f;
+            if (_ollieActive)
+            {
+                if (_olliePopU < 1f)
+                {
+                    _olliePopU = Mathf.MoveTowards(_olliePopU, 1f, dt / Mathf.Max(0.01f, olliePopDuration));
+                    if (_olliePopU >= 1f && _trickPending)
+                    {
+                        _trickPending = false;
+                        _trickSpin = skateboardTricks[Random.Range(0, skateboardTricks.Length)].spinDegrees;
+                        _trickT = 0f;
+                        _trickActive = true;
+                    }
+                }
+                else
+                {
+                    float levelDuration = _deckCatching ? skateboardTrickCatchDuration : ollieLevelDuration;
+                    _ollieLevelU = Mathf.MoveTowards(_ollieLevelU, 1f, dt / Mathf.Max(0.01f, levelDuration));
+                }
+
+                // Pop: ease-out snap up to full angle. Level: smoothstep back to flat.
+                float pop = 1f - (1f - _olliePopU) * (1f - _olliePopU);
+                float level = _ollieLevelU * _ollieLevelU * (3f - 2f * _ollieLevelU);
+                ollieAngle = ollieAngleDegrees * pop * (1f - level);
+
+                float total = Mathf.Max(0.01f, olliePopDuration + ollieLevelDuration);
+                float progress = (_olliePopU * olliePopDuration + _ollieLevelU * ollieLevelDuration) / total;
+                lift = Mathf.Sin(progress * Mathf.PI) * ollieLift;
+
+                if (_ollieLevelU >= 1f)
+                {
+                    _ollieActive = false;
+                    _trickPending = false;
+                }
+            }
+            ollieAngle += ollieCrouchAngleDegrees * _ollieCrouchT;
+
+            if (_trickActive)
+            {
+                float duration = _deckCatching ? skateboardTrickCatchDuration : skateboardTrickDuration;
+                _trickT = Mathf.MoveTowards(_trickT, 1f, dt / Mathf.Max(0.01f, duration));
+                if (_trickT >= 1f)
+                    _trickActive = false;
+            }
+            if (_ollieActive == false && _trickActive == false)
+                _deckCatching = false;
+
+            // Gentle ease-out quad: near-even spin speed so each rotation reads clearly, only
+            // slowing a little into the catch (a cubic front-loaded the spin into a blur).
+            float eased = 1f - (1f - _trickT) * (1f - _trickT);
+            Vector3 spin = _trickActive ? _trickSpin * eased : Vector3.zero;
+            // Arc away from the feet and back (0 at start and end, deepest mid-trick).
+            float drop = _trickActive ? Mathf.Sin(_trickT * Mathf.PI) * skateboardTrickDropDistance : 0f;
+
+            // Ollie rotates around the tail, not the deck's own center: offset position so the tail
+            // point stays where it was. The trick spin then rotates around the deck's center on top.
+            Quaternion ollieRot = Quaternion.Euler(0f, 0f, ollieAngle);
+            Vector3 tail = Vector3.Scale(skateboardDeck.localScale, ollieTailPivot);
+            Vector3 pivotCompensation = _skateboardDeckBaseRot * tail - _skateboardDeckBaseRot * (ollieRot * tail);
+
+            skateboardDeck.localRotation = _skateboardDeckBaseRot * ollieRot * Quaternion.Euler(spin);
+            skateboardDeck.localPosition = _skateboardDeckBasePos + pivotCompensation + Vector3.up * (lift - drop);
         }
 
         // Five independent punches, each called by WeaponView.Shoot() with that weapon's own
@@ -620,6 +780,13 @@ namespace Quantum
                 _springVelocity = 0f;
                 _springActive = true;
                 _state = DetermineGroundedState(horizontalSpeed);
+                _trickArmed = false; // landed before takeoff ever happened - don't fire on a later walk-off
+                _trickPending = false;
+                if (_ollieActive || _trickActive)
+                {
+                    _deckCatching = true;
+                    _olliePopU = 1f; // a landing mid-pop skips straight to the (fast) level-out
+                }
             }
             else if (_state == State.Anticipate)
             {
@@ -629,6 +796,7 @@ namespace Quantum
                     _jumpSquashT = -takeoffStretch; // instant pop, no easing
                     _state = State.Air;
                     _springActive = false;
+                    TryStartOllie();
                 }
             }
             else if (isGrounded == false)
@@ -804,6 +972,7 @@ namespace Quantum
             _headFlipLagDegrees = _headFlipProgress * 360f * _flipSign - _flipDegrees;
 
             ApplyPose(_leanT, rockTarget, bobTarget, upperBodyBobTarget);
+            UpdateSkateboardDeck(dt);
 
             _wasGrounded = isGrounded;
         }

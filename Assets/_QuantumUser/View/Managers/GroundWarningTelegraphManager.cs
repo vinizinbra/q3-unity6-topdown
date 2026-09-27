@@ -1,11 +1,11 @@
 namespace QuantumUser.View.Managers
 {
-    using System.Collections;
+    using System.Collections.Generic;
     using Quantum;
     using UnityEngine;
 
     // Generic ground-landing-warning telegraph, decoupled from any specific enemy entity - listens
-    // for EventProjectileLandingWarning (Position/Duration/Radius only, no owner) and pulls an instance
+    // for EventProjectileLandingWarning (Position/Duration/Radius, plus an optional Owner) and pulls an instance
     // straight from TelegraphManager's pool, exactly the way EnemyAttackVisualsView does for a
     // caster's own windup telegraph (same TelegraphFade/TelegraphGrow prefab shape) - the only
     // difference is there's no owning enemy and no single-slot bookkeeping, since TelegraphManager's
@@ -14,11 +14,23 @@ namespace QuantumUser.View.Managers
     // event only carries a point/duration/radius, so any future "several things are about to happen
     // at ground points, with a fair warning first" attack (a boss dropping a volley of spikes, an
     // AoE barrage with no real projectile at all) can fire the exact same event directly
-    // (f.Events.ProjectileLandingWarning(point, authoredFuseTime, radius) - no flight-time math
+    // (f.Events.ProjectileLandingWarning(point, authoredFuseTime, radius, owner) - no flight-time math
     // needed when the duration is just an authored fuse) instead of building its own marker/telegraph
     // plumbing from scratch.
+    //
+    // Owner-bound warnings (EventProjectileLandingWarning.Owner != None - GroundBarrageDeliveryData,
+    // whose caster's own Active Tick is what detonates the point) are also dropped early the moment
+    // that owner can no longer detonate on schedule: stunned/frozen, interrupted out of Active, dead
+    // or gone. Ownerless ones (a real lobbed shell already in flight) always run their full Duration.
     public class GroundWarningTelegraphManager : MonoBehaviour
     {
+        private struct ActiveWarning
+        {
+            public TelegraphFade Fade;
+            public EntityRef Owner;
+            public float FadeOutTime;
+        }
+
         [SerializeField, Tooltip("Prefab pulled from TelegraphManager's pool - must carry a TelegraphFade on its root (same shape as any other TelegraphPrefab), optionally with a child TelegraphGrow for a fill-in animation.")]
         private GameObject warningTelegraphPrefab;
 
@@ -42,6 +54,11 @@ namespace QuantumUser.View.Managers
                 return _groundLayerMask.Value;
             }
         }
+
+        // Tracked per instance rather than a fire-and-forget coroutine - an owner-bound warning can be
+        // faded out early (see UpdateOwnerBound), and a coroutine still holding that pooled
+        // TelegraphFade would later fade out whatever unrelated warning reused the instance.
+        private readonly List<ActiveWarning> _active = new List<ActiveWarning>();
 
         private void OnEnable()
         {
@@ -81,15 +98,51 @@ namespace QuantumUser.View.Managers
             }
 
             fade.Initialize(warningTelegraphPrefab, fadeInDuration, fadeOutDuration, duration, EntityRef.None);
-            StartCoroutine(FadeOutAfter(fade, duration));
+
+            _active.Add(new ActiveWarning
+            {
+                Fade = fade,
+                Owner = e.Owner,
+                FadeOutTime = Time.time + Mathf.Max(duration - fadeOutDuration, 0f),
+            });
         }
 
-        private IEnumerator FadeOutAfter(TelegraphFade fade, float duration)
+        private void Update()
         {
-            yield return new WaitForSeconds(Mathf.Max(duration - fadeOutDuration, 0f));
+            if (_active.Count == 0)
+                return;
 
-            if (fade != null)
-                fade.FadeOutAndRelease();
+            QuantumGame game = QuantumRunner.Default != null ? QuantumRunner.Default.Game : null;
+            Frame frame = game?.Frames.Predicted;
+
+            for (int i = _active.Count - 1; i >= 0; i--)
+            {
+                ActiveWarning warning = _active[i];
+
+                bool expired = Time.time >= warning.FadeOutTime;
+                bool ownerCancelled = warning.Owner != EntityRef.None && frame != null && CanOwnerStillDetonate(frame, warning.Owner) == false;
+
+                if (expired == false && ownerCancelled == false)
+                    continue;
+
+                if (warning.Fade != null)
+                    warning.Fade.FadeOutAndRelease();
+
+                _active.RemoveAt(i);
+            }
+        }
+
+        // The owner's own Active Tick is the only thing that detonates an owner-bound point - any of
+        // these means that detonation isn't coming on schedule anymore (or at all).
+        private static bool CanOwnerStillDetonate(Frame frame, EntityRef owner)
+        {
+            if (frame.TryGet(owner, out Enemy enemy) == false)
+                return false;
+
+            if (enemy.Phase != EnemyActionPhase.Active)
+                return false;
+
+            return StatusEffectUtility.IsStunned(frame, owner) == false && StatusEffectUtility.IsFrozen(frame, owner) == false;
         }
 
         // Real UnityEngine.Physics raycast, not Quantum's - purely a view-layer placement fix, same

@@ -72,7 +72,8 @@ reading any other delta as a balance signal**:
 | `SkillUseEfficiency` | casting on cooldown x targets actually hit | per-hero skill feel |
 | `AreaTargets` | enemies an AoE hits | crowd density in the phase being tuned |
 | `ChannelContactUptime` | Juggernaut-style contact channels (knockback pushes enemies out) | Brute run |
-| `OverkillWaste` | damage lost per kill / retarget | kills-per-minute delta |
+| `RetargetSeconds` | damage lost per kill (overkill + retarget), fixed per kill | kills-per-minute delta |
+| `CoinPickupFactor` | coin orbs expire sooner than XP orbs (30 s vs 60 s) | `CoinsEarned` delta |
 | `OrbPickupEfficiency` curve, `CoopPickupBonus` | XP/coin orbs left to expire (30 s lifetime, 1 m radius), worse late while kiting; loss shrinks per extra player | recorder `OrbPickup` = XP orbs collected / kills per minute, at each player count |
 | `EngageDistanceFraction`, `EngageReactionSeconds`, `StationaryEngageSeconds` | walk-in before a spawn can be shot (ring radius / enemy `MoveSpeed`) | `SpawnsPerMin` + `Alive` deltas |
 | `SpawnFailureChance` | Director purchases that find no anchor (rest of pulse forfeited) | `SpawnsPerMin` vs `Budget` piling up |
@@ -97,7 +98,9 @@ fight not simulated.
 `BalanceSimSkillModel.Evaluate` reads the **base** skill: `ProjectileSkillData` (impact x
 `AreaTargets` if the hit is `AreaHitData`, plus `SpawnAlternatingAreaEffectData` ticks, plus spawned
 entity durations), `JuggernautSkillData` (discharges x `ChannelContactUptime`), `BerserkSkillData`
-(no damage - a weapon fire-rate/reload buff at `Duration/Cooldown` uptime), everything else generic.
+(no damage - a weapon fire-rate/reload buff at `Duration/(Duration+Cooldown)` uptime, read live),
+everything else generic. Channel skills cycle on cooldown + channel (`FinishSkill` arms the cooldown).
+`SkillDurationMultiplier` only stretches spawned-entity damage (`DurationScaledDamage`, mounted barrels).
 Then every **Activated** action in `SkillData.Actions` adds mounted `AssetRef<WeaponDataAsset>` DPS x
 duration (Lux sentry) and any `Damage`/`DamageAmount` field x ticks x targets.
 
@@ -105,7 +108,9 @@ duration (Lux sentry) and any `Damage`/`DamageAmount` field x ticks x targets.
 skill's basis (`est.Basis` = `ProjectileSkillData.Damage` / `JuggernautSkillData.Damage` /
 `SpawnSentrySkillAction.SkillDamage`). It switches on the action **type name** (so renames degrade to
 the generic `DamagePercent` rule instead of breaking). Ranks with nothing quantifiable fall back to
-`SkillUpgradeDpsValue`. The pick log prints `+N/cast` for quantified ranks.
+`SkillUpgradeDpsValue` only when the action has no case (`UpgradeValue.Modelled` false) - a modelled
+rank worth 0 stays 0. Lux's barrel upgrades return weapons/fire-rate values that `SimPlayer` folds into
+mounted DPS live. The pick log prints `+N/cast` for quantified ranks.
 
 Facts that surprised us (verified from the assets, keep in mind before "fixing" the sim):
 - **Non-Activated actions are Ascension picks**, Activated ones are baseline
@@ -114,6 +119,13 @@ Facts that surprised us (verified from the assets, keep in mind before "fixing" 
   (`KaiVortexSkill.asset` has six).
 - Kai's baseline vortex deals only its 12 impact; all damage is in Compression/Void Shards/Collapse.
 - Brute's Juggernaut is a 30/s-per-enemy contact channel, hence the uptime knob.
+- Weapon timing is tick-quantized: SessionConfig `UpdateFPS` is 20, and WeaponSystem sets its
+  cooldown/burst/reload timers fresh (no remainder), so every wait is a whole number of 0.05 s ticks
+  (12/s fires at 10/s, the Lux sentry minigun's 15/s at 10/s). The reload overlaps the last shot's
+  cooldown. Crit is `CharacterStats.CriticalDamageMultiplier (1.0 on every hero) x max(1, weapon
+  bonus)`, multiplicative. `ExperienceConfig.DamageBonusPerLevel` (+2%/displayed level, code default,
+  not serialized in the asset) scales every hero hit. Hero Mastery is +15/30/50% weapon damage per
+  line on a matching weapon, not a skill-DPS rank.
 - Lux: `LuxSentryLaser.asset` has `Damage 0` (placeholder, see `docs/lux-ascensions.md`), so Weapon
   Systems R3 adds nothing until it's authored. Every authored enemy has `Stats.ShieldMultiplier 0`.
 - Coins are shared like XP: a collected coin orb goes to EVERY wallet (`CurrencyOrbSystem.Grant` ->
@@ -170,9 +182,15 @@ stricter than Roslyn about `Math.Max(int, byte)` ambiguity - cast bytes to int.
   yellow box lists `BalanceSimAssets.Warnings` instead - check it before blaming the model.
 - `AssetRef` resolution goes through `QuantumUnityDB.GetGlobalAssetEditorInstance`; nested sub-assets
   (`Path: ...|Name`) resolve fine, dangling GUIDs return null and are skipped.
-- `BreathingIndex` is 0 for the first Break (the game increments it when a Break *ends*), so
+- `BreathingIndex` is 0 for the first Break (the game increments it when a Break *ends* - fixed
+  2026-09-26; before, the Lobby->Survival switch bumped it and the first Break ran at 1), so
   `BlacksmithConfig.BreakTuning[0]` is the first Break.
-- `GetCategoryForLevel` receives `Global.Level` *after* the increment: the first level-up is level 1,
-  index 0 of `LevelSequence` (currently HeroSkill, HeroSkill, GlobalUpgrade).
+- `GetCategoryForLevel` receives `Global.Level + 1` *after* the increment: the first level-up is
+  level 2, index 1 of `LevelSequence` (currently HeroSkill, HeroSkill, GlobalUpgrade -> HS, GU, HS, ...).
+- Director pulses: the game resets `DirectorPulseTimer` to the interval each 0.05 s tick (no
+  remainder); the sim rounds the interval to game ticks and carries the remainder across its coarser
+  `TickSeconds`, otherwise every interval would round up to the sim step.
+- Elite chests: `EnemyDataAsset.ChestDrop` -> prototype prefab -> `QPrototypeChest.Kind`
+  (`BalanceSimAssets.ResolveChestKind`).
 - The recorder maps skill-spawned damage owners (sentries, vortices) back to the hero through
   `AreaOwner.Owner`; damage with `Silent` set is ignored.

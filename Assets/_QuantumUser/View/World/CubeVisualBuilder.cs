@@ -18,23 +18,6 @@ public class CubeVisualBuilder : MonoBehaviour
     [Tooltip("Extra length (world units) added on top of an edge piece's along-the-wall stretch, so a run of N cells scales to N + this instead of exactly N - closes small seams between neighboring pieces.")]
     [SerializeField] private float edgeScaleOverlap = 0.2f;
 
-    [Tooltip("If true, forces edgePrefabs[0]/outerCornerPrefabs[0] (instead of a random pick) for any edge run/outer corner within detailAvoidRadius of a WallTopDetailSlot/WallMidDetailSlot anywhere in this prefab (searched from transform.root, so slots don't need to be direct children of this specific cube) - keeps the wall plain there so its own baked texture/detail doesn't clash with a hand-placed decal. No separate prefab to assign - element 0 of each existing list is simply treated as 'the plain one'. Leave false to skip this check entirely (default: today's exact random-pick behavior, zero cost). Never affects the center slab.")]
-    [SerializeField] private bool avoidNearWallDetails;
-
-    [Tooltip("World-unit radius around a WallTopDetailSlot/WallMidDetailSlot within which an edge run/outer corner is forced to element 0. Only matters if avoidNearWallDetails is true.")]
-    [SerializeField] private float detailAvoidRadius = 1f;
-
-    // Whether a WallTopDetailSlot/WallMidDetailSlot GameObject exists is NOT enough to know whether
-    // it'll actually show a sprite - that's a runtime, seeded roll ChunkDetailScatter alone resolves
-    // (and on a lifecycle this class has no reliable ordering against - Start() here vs. Quantum's
-    // own OnEntityInstantiated timing there). So this cube never guesses: when HasDetailAvoidance is
-    // true, Start() below skips its own auto-Generate() entirely and waits to be told - set this
-    // list to the world positions that actually ended up shown, then call Generate() - which is
-    // exactly what ChunkDetailScatter.TryGenerate does, once, right after it finishes resolving every
-    // wall slot in this chunk.
-    public List<Vector3> ShownDetailPositions { get; set; } = new List<Vector3>();
-    public bool HasDetailAvoidance => avoidNearWallDetails;
-
     [SerializeField] private List<GameObject> outerCornerPrefabs;
     [SerializeField] private float outerCornerYaw;
 
@@ -51,10 +34,10 @@ public class CubeVisualBuilder : MonoBehaviour
     [Tooltip("Two same-height cubes whose facing sides are within this distance (world units) but don't actually overlap still read as one open space: the edge run facing the gap opens into a floor piece instead of a wall, though their outer corners stay as corners.")]
     [SerializeField] private float touchGapTolerance = 0.1f;
 
-    [Tooltip("Temporary diagnostic: logs every spawned piece's yaw/position math (local vs. world) - see docs/environment-details.md rotation investigation. Off by default to avoid log spam.")]
+    [Tooltip("Temporary diagnostic: logs every spawned piece's yaw/position math (local vs. world) (rotation investigation). Off by default to avoid log spam.")]
     [SerializeField] private bool debugLogPlacement;
 
-    [Tooltip("If true, Generate() fires from OnEnable() instead of the usual Start()-driven auto-generate below - for a runtime-spawned/pooled instance (e.g. a Traversal Challenge platform, f.Create/f.Destroy'd and possibly recycled through a view pool via SetActive) whose GameObject can be reactivated without Start() ever running again, since Unity only calls Start() once per object lifetime regardless of how many times it's since been disabled/re-enabled. Default false reproduces today's exact Start()-only behavior for every hand-placed chunk wall cube - flip this on only for a prefab that's actually spawned/recycled at runtime. Start() below skips its own auto-Generate() entirely when this is set (same as HasDetailAvoidance already does), so a fresh instantiate doesn't generate twice - OnEnable() fires before Start() on first activation either way, so nothing is missed.")]
+    [Tooltip("If true, Generate() fires from OnEnable() instead of the usual Start()-driven auto-generate below - for a runtime-spawned/pooled instance (e.g. a Traversal Challenge platform, f.Create/f.Destroy'd and possibly recycled through a view pool via SetActive) whose GameObject can be reactivated without Start() ever running again, since Unity only calls Start() once per object lifetime regardless of how many times it's since been disabled/re-enabled. Default false reproduces today's exact Start()-only behavior for every hand-placed chunk wall cube - flip this on only for a prefab that's actually spawned/recycled at runtime. Start() below skips its own auto-Generate() entirely when this is set, so a fresh instantiate doesn't generate twice - OnEnable() fires before Start() on first activation either way, so nothing is missed.")]
     [SerializeField] private bool generateOnEnable;
 
     [SerializeField, HideInInspector] private Transform colliderRoot;
@@ -84,27 +67,10 @@ public class CubeVisualBuilder : MonoBehaviour
     // in there and does nothing.
     public void Start()
     {
-        // Deferred to OnEnable() instead - see generateOnEnable's own comment above. Skipped here
-        // for the same reason HasDetailAvoidance is skipped just below: without this, a freshly
-        // instantiated, active object would generate twice (OnEnable always runs before Start on
+        // Deferred to OnEnable() instead - see generateOnEnable's own comment above. Without this,
+        // a freshly instantiated, active object would generate twice (OnEnable always runs before Start on
         // first activation, so nothing is missed by leaving this out of Start entirely).
         if (generateOnEnable)
-        {
-            return;
-        }
-
-        // Waits for an explicit ChunkDetailScatter.Generate() call instead - see
-        // ShownDetailPositions/HasDetailAvoidance's own comment above for why.
-        //
-        // Known gap: if this cube is ALSO merged with a non-avoidance neighbor, that neighbor's own
-        // normal Start() still draws this cube's cells too (DrawMergingNeighbors calls
-        // neighbor.PlaceGrid on every cluster member, this one included) before ChunkDetailScatter
-        // ever gets a chance to set ShownDetailPositions - so the avoidance check would see an empty
-        // list and do nothing for that first pass, and the later explicit Generate() call would then
-        // redraw the whole cluster a second time. Not handled here - this game's actual usage is one
-        // room-spanning, non-merged box per room (see docs/environment-details.md), so it doesn't
-        // come up in practice; avoid combining detail avoidance with a merged cube elsewhere.
-        if (HasDetailAvoidance)
         {
             return;
         }
@@ -647,8 +613,7 @@ public class CubeVisualBuilder : MonoBehaviour
 
         if ((maxX || minX) && (maxZ || minZ))
         {
-            bool nearDetail = avoidNearWallDetails && outerCornerPrefabs.Count > 0 && IsNearShownDetail(worldPosition);
-            GameObject prefab = nearDetail ? outerCornerPrefabs[0] : PickVariant(outerCornerPrefabs);
+            GameObject prefab = PickVariant(outerCornerPrefabs);
             if (debugLogPlacement)
             {
                 LogHelper.Log("CubeVisualBuilder", $"  -> OUTER CORNER at {worldPosition} on '{name}' | east={eastOccupied} west={westOccupied} north={northOccupied} south={southOccupied} | mergingNeighbors={DescribeNeighbors(mergingNeighbors)}", this);
@@ -762,43 +727,8 @@ public class CubeVisualBuilder : MonoBehaviour
         }
 
         Vector3 runCenter = localPosition + localStepDirection * ((width - 1) * 0.5f);
-        // Checked against the run's own center (where SpawnAt below actually places it), not
-        // worldPosition (the run's starting cell) - a run up to MaxEdgeWidth cells wide can have its
-        // center sit up to 1 unit away from where it starts, which silently pushed detail checks
-        // outside a modest detailAvoidRadius for wider runs while single-cell corners (no such
-        // offset) still worked.
-        Vector3 runCenterWorld = targetVisualRoot.TransformPoint(runCenter);
-        bool nearDetail = avoidNearWallDetails && edgePrefabs.Count > 0 && IsNearShownDetail(runCenterWorld);
-        GameObject prefab = nearDetail ? edgePrefabs[0] : PickVariant(edgePrefabs);
+        GameObject prefab = PickVariant(edgePrefabs);
         SpawnAt(prefab, runCenter, targetVisualRoot, WorldYawToLocal(targetVisualRoot, EdgeYaw(onXSide, maxX, maxZ) + edgeYaw), footprintZ: width + edgeScaleOverlap);
-    }
-
-    // XZ-only distance against ShownDetailPositions (only ever non-empty once ChunkDetailScatter has
-    // explicitly set it and called Generate() - see that field's own comment) - deliberately ignores
-    // Y. worldPosition here is always at this cube's own local Y origin (its bottom pivot, per this
-    // class's documented convention), while a hand-placed WallTopDetailSlot/WallMidDetailSlot sits
-    // wherever the artist actually put it on the wall surface, typically well above that - comparing
-    // full 3D distance would silently fail this check almost everywhere over a real height mismatch,
-    // even when a detail is perfectly aligned with a wall segment horizontally, which is really all
-    // "near this part of the wall" should mean here. Both call sites (PlaceEdgeRun/PlaceCell) share
-    // this same check and the same avoidNearWallDetails toggle - there's only one "is avoidance on"
-    // switch now, not a per-shape one.
-    private bool IsNearShownDetail(Vector3 worldPosition)
-    {
-        float radiusSq = detailAvoidRadius * detailAvoidRadius;
-
-        foreach (Vector3 detailPosition in ShownDetailPositions)
-        {
-            float dx = worldPosition.x - detailPosition.x;
-            float dz = worldPosition.z - detailPosition.z;
-
-            if (dx * dx + dz * dz <= radiusSq)
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     // Same classification as PlaceCell's edge check above, run against a cell further along the

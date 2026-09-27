@@ -21,6 +21,7 @@ namespace Quantum
         AlienPlanet = 11,
         Moon = 12,
         ArcticFields = 13,
+        NeoFavela = 14, // futuristic Brazilian favela (brick + plaster houses, gambiarra cables)
     }
 
     [Serializable]
@@ -90,36 +91,6 @@ namespace Quantum
         public List<Sprite> Size2x2;
     }
 
-    // Ground/wall cosmetic prop pools for this world - see docs/environment-details.md. The
-    // artist hand-places GroundDetailSlot/WallTopDetailSlot/WallMidDetailSlot GameObjects (position/
-    // rotation/WorldSize authored directly in the chunk prefab, a placeholder Sprite assigned for
-    // preview); ChunkDetailScatter deterministically rolls whether each placed slot shows anything
-    // at all (the per-type *Chance field), and if so which sprite from these plain Sprite lists
-    // (equal probability, no per-sprite weight), then rescales to that slot's own WorldSize; the
-    // picked sprite's own pixel size/PPU is normalized away first
-    // (ChunkDetailScatter.ResolveUnitScale), so swapping sprites never changes how big a slot reads
-    // in the scene. Wall is split into Top/Mid (not one WallDetails pool) since a wall prop near its
-    // top (vents, cracks) usually doesn't suit its middle/base (moss, pipes, scuffs) and vice versa -
-    // both still get EnvironmentManager.DetailSpriteMaterial's height fog.
-    [Serializable]
-    public struct WorldDetailTheme
-    {
-        public List<Sprite> GroundDetails;
-
-        [Range(0f, 1f), Tooltip("Chance a placed GroundDetailSlot actually shows a sprite at all - 0 hides every ground slot, 1 always shows one.")]
-        public float GroundDetailChance;
-
-        public List<Sprite> WallTopDetails;
-
-        [Range(0f, 1f), Tooltip("Chance a placed WallTopDetailSlot actually shows a sprite at all - 0 hides every wall-top slot, 1 always shows one.")]
-        public float WallTopDetailChance;
-
-        public List<Sprite> WallMidDetails;
-
-        [Range(0f, 1f), Tooltip("Chance a placed WallMidDetailSlot actually shows a sprite at all - 0 hides every wall-mid slot, 1 always shows one.")]
-        public float WallMidDetailChance;
-    }
-
     // Cosmetic-only per-world config - plain ScriptableObject, not AssetObject, since none of this
     // needs to be deterministic/Quantum-visible.
     [CreateAssetMenu(fileName = "WorldTheme", menuName = "Quantum/View/World Theme")]
@@ -131,7 +102,6 @@ namespace Quantum
         [SerializeField] private WorldWaterTheme water;
         [SerializeField] private WorldTilesetTheme tileset;
         [SerializeField] private WorldObstacleTheme obstacles;
-        [SerializeField] private WorldDetailTheme details;
 
         public WorldThemeName WorldName => worldName;
         public WorldEnemyTheme Enemy => enemy;
@@ -139,8 +109,6 @@ namespace Quantum
         public WorldWaterTheme Water => water;
         public WorldTilesetTheme Tileset => tileset;
         public WorldObstacleTheme Obstacles => obstacles;
-
-        public WorldDetailTheme Details => details;
 
         // Debug-only shortcut for previewing this specific theme from its own asset Inspector,
         // without going through EnvironmentManager's own initialTheme field - finds whichever
@@ -156,23 +124,6 @@ namespace Quantum
             }
 
             environmentManager.Load(this);
-        }
-
-        // Debug-only: re-rolls every already-spawned chunk's ground/wall detail slots in the open
-        // scene at once, so tuning Details (chance/scale range/sprite lists) doesn't require
-        // restarting Play Mode or clicking each chunk's own ChunkDetailScatter.Regenerate individually.
-        [Button("Regenerate All Chunk Details (Debug)")]
-        private void RegenerateAllChunkDetails()
-        {
-            ChunkDetailScatter[] scatterers = FindObjectsByType<ChunkDetailScatter>(FindObjectsSortMode.None);
-            if (scatterers.Length == 0)
-            {
-                LogHelper.Warn("WorldTheme", "No ChunkDetailScatter instances found in the open scene.");
-                return;
-            }
-
-            foreach (ChunkDetailScatter scatterer in scatterers)
-                scatterer.Regenerate();
         }
     }
 }

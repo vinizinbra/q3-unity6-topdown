@@ -89,7 +89,7 @@ namespace Quantum
             FP damage = groundbreaker->ImpactDamagePercent * BruteAscensionUtility.ResolveJuggernautSkillDamage(f, entity);
 
             Shape3D sphere = Shape3D.CreateSphere(impactRadius);
-            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, -1, QueryOptions.HitAll);
+            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, EnemyMovementUtility.GetEnemyLayerMask(f), QueryOptions.HitAll);
 
             int caught = 0;
 

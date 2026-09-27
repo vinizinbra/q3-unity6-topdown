@@ -51,6 +51,14 @@ MonoBehaviour:
   ProjectileData:
     Id:
       Value: 2962688306719015508
+  ProjectileSpeedMultiplier:
+    RawValue: 111411
+  ProjectileMaxDistanceMultiplier:
+    RawValue: 98304
+  LeadFactor:
+    RawValue: 19661
+  MaxLeadDistance:
+    RawValue: 262144
   SpawnAnchor: 0
   SpawnOffset:
     X:
@@ -97,7 +105,7 @@ MonoBehaviour:
   DownTime:
     RawValue: 13107
   CooldownTime:
-    RawValue: 117965
+    RawValue: 78643
   TelegraphStartPercent:
     RawValue: 32768
   Trigger:
@@ -463,7 +471,7 @@ MonoBehaviour:
         RawValue: 327680
     Movement:
       Id:
-        Value: 328519676567531755
+        Value: 440946917374813270
     Radius:
       RawValue: 55706
     ShieldMultiplier:

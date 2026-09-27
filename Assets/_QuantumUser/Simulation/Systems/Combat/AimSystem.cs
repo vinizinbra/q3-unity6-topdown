@@ -31,6 +31,9 @@ namespace Quantum
     [Preserve]
     public unsafe class AimSystem : SystemMainThreadFilter<AimSystem.Filter>
     {
+        // Profiler marker for the enemy query (see SimProfilerMarker). Compiled out of Release players.
+        private static readonly SimProfilerMarker ResolveTargetMarker = new SimProfilerMarker("AimSystem.ResolveTarget");
+
         private static readonly FP MinSpeed = FP._0_10;
         private static readonly FP FallbackTargetRange = 12;
         private static readonly FP TargetLockDuration = 1;
@@ -55,7 +58,9 @@ namespace Quantum
             }
 
             FPVector3 selfPosition = filter.Transform3D->Position;
+            ResolveTargetMarker.Begin();
             EntityRef target = ResolveTarget(f, filter.Entity, filter.Aim, selfPosition);
+            ResolveTargetMarker.End();
             filter.Aim->Target = target;
 
             if (target != EntityRef.None && f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == true)

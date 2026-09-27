@@ -10,6 +10,10 @@
 // time offset) is therefore computed per VERTEX and interpolated - exact, since linear interpolation
 // of a linear function is the function itself - leaving the fragment with a non-dependent texture
 // read, triangle waves instead of sin(), and half-precision foam math with no branches.
+//
+// Open-water detail (_WATER_DETAIL): sun sparkles drawn as tiny procedural "sprites",
+// one per world-space grid cell - cell = floor(uv), a cheap R2 hash per cell picks position, lifetime
+// phase and whether it shows at all. Same rules: grid UVs are per-vertex, no sin(), no step()/if.
 Shader "Project/LakeShader"
 {
     Properties
@@ -28,6 +32,18 @@ Shader "Project/LakeShader"
         [Header(Glimmer)]
         _HighlightColor ("Glimmer Color", Color) = (0.65, 0.95, 1, 1)
         _HighlightStrength ("Glimmer Strength", Range(0, 1)) = 0.15
+
+        [Header(Open Water Detail)]
+        [Toggle(_WATER_DETAIL)] _WaterDetail ("Enable Sparkles", Float) = 1
+        _WindAngle ("Sparkle Drift Angle (degrees)", Range(0, 360)) = 30
+        _SparkleDrift ("Sparkle Drift Speed (world/s)", Range(0, 2)) = 0.12
+        _SparkleColor ("Sparkle Color", Color) = (1, 1, 1, 1)
+        _SparkleStrength ("Sparkle Strength", Range(0, 1)) = 0.9
+        _SparkleCellSize ("Sparkle Spacing (world)", Range(0.2, 4)) = 0.9
+        _SparkleDensity ("Sparkle Density", Range(0, 1)) = 0.3
+        _SparkleSize ("Sparkle Size (of cell)", Range(0.02, 0.6)) = 0.3
+        _SparkleGlow ("Sparkle Glow", Range(0, 1)) = 0.35
+        _SparkleRate ("Sparkle Twinkle Rate", Range(0, 3)) = 0.7
 
         [Header(Low Poly Waves)]
         _WaveHeight ("Wave Height", Range(0, 0.5)) = 0.05
@@ -52,7 +68,7 @@ Shader "Project/LakeShader"
 
         [Header(Pixel Art Look)]
         _FoamEdgeSoftness ("Foam Edge Softness (0 = hard pixel edges, 1 = ~1px anti-aliased)", Range(0, 2)) = 1
-        _FoamFrameRate ("Foam Frame Rate (0 = smooth)", Range(0, 30)) = 10
+        _FoamFrameRate ("Animation Frame Rate - foam, sparkles (0 = smooth)", Range(0, 30)) = 10
     }
 
     SubShader
@@ -80,6 +96,7 @@ Shader "Project/LakeShader"
             // Both stages: the vertex shader writes the shore UV / foam interpolants the fragment reads.
             // A _fragment-only keyword compiles a vertex variant without them -> Metal pipeline error.
             #pragma shader_feature_local _SHOREFIELD_FOAM
+            #pragma shader_feature_local _WATER_DETAIL
             #pragma multi_compile_instancing
 
             // Only Core (transforms + _Time + texture macros). No Lighting.hlsl, no shadows, no depth.
@@ -121,6 +138,15 @@ Shader "Project/LakeShader"
                 half _ShoreTintStrength;
                 half _FoamFrameRate;
                 half _FoamEdgeSoftness;
+                half4 _SparkleColor;
+                float _WindAngle;
+                float _SparkleDrift;
+                float _SparkleCellSize;
+                float _SparkleRate;
+                half _SparkleStrength;
+                half _SparkleDensity;
+                half _SparkleSize;
+                half _SparkleGlow;
             CBUFFER_END
 
             struct Attributes
@@ -141,6 +167,10 @@ Shader "Project/LakeShader"
                 // x = ring time offset (already frac'd), y = shore field value -> normalized foam gap.
                 float2 foamConst : TEXCOORD2;
 #endif
+#if defined(_WATER_DETAIL)
+                // xy = sparkle grid UV (drifting), z = sparkle cycle phase (time only).
+                float3 detailUV : TEXCOORD3;
+#endif
                 UNITY_VERTEX_INPUT_INSTANCE_ID
                 UNITY_VERTEX_OUTPUT_STEREO
             };
@@ -154,6 +184,22 @@ Shader "Project/LakeShader"
             half Tri01(float cycles)
             {
                 return (half)abs(frac(cycles) * 2.0 - 1.0);
+            }
+
+            // Cheap per-cell hash (R2 low-discrepancy sequence) - no sin(). Float in, so large cell
+            // indices don't lose precision.
+            float CellHash(float2 cell, float2 k)
+            {
+                return frac(cell.x * k.x + cell.y * k.y);
+            }
+
+            // Animation clock shared by foam and detail - optionally stepped to a pixel-art frame rate.
+            float SteppedTime()
+            {
+                float time = _Time.y;
+                if (_FoamFrameRate > 0.0)
+                    time = floor(time * _FoamFrameRate) / _FoamFrameRate;
+                return time;
             }
 
             Varyings Vert(Attributes input)
@@ -181,9 +227,7 @@ Shader "Project/LakeShader"
 
 #if defined(_SHOREFIELD_FOAM)
                 // Stepped foam clock (pixel-art frame rate). Per vertex, so it costs nothing per pixel.
-                float foamTime = _Time.y;
-                if (_FoamFrameRate > 0.0)
-                    foamTime = floor(foamTime * _FoamFrameRate) / _FoamFrameRate;
+                float foamTime = SteppedTime();
 
                 // Surge phase drifts along the coast so the whole shoreline doesn't breathe in unison.
                 output.wavePhases.w = (positionWS.x * 0.31 + positionWS.z * 0.23 + foamTime * _FoamSurgeSpeed) * INV_TWO_PI;
@@ -194,6 +238,17 @@ Shader "Project/LakeShader"
                 // frac here keeps the fragment's half-precision ring math small as _Time grows.
                 output.foamConst.x = frac(foamTime * _FoamSpeed);
                 output.foamConst.y = _ShoreFieldParams.w / max(_FoamDistance, 0.001);
+#endif
+
+#if defined(_WATER_DETAIL)
+                // Sparkles drift slowly along the wind direction - one sincos per vertex.
+                float detailTime = SteppedTime();
+                float windSin, windCos;
+                sincos(radians(_WindAngle), windSin, windCos);
+                float2 drift = float2(windSin, windCos) * (detailTime * _SparkleDrift);
+
+                output.detailUV.xy = (positionWS.xz - drift) / _SparkleCellSize;
+                output.detailUV.z = detailTime * _SparkleRate;
 #endif
 
                 output.positionCS = TransformWorldToHClip(positionWS);
@@ -216,6 +271,42 @@ Shader "Project/LakeShader"
                 // Fake specular: a bright crest on the pattern peaks, no light/normal needed.
                 half glimmer = smoothstep(0.86h, 0.98h, n) * _HighlightStrength;
                 waterColor = lerp(waterColor, _HighlightColor.rgb, glimmer);
+
+                half detailMask = 0.0h;
+
+#if defined(_WATER_DETAIL)
+                // One screen-pixel in sparkle-grid units -> ~1px anti-aliased edges.
+                half sparkleAA = max((half)fwidth(input.detailUV.x), 0.0005h);
+
+                // --- Sun sparkles: a tiny 4-point star per cell that pops for a short part of its cycle.
+                //     More likely on the bright parts of the pattern so glints cluster and drift with it.
+                float2 sparkleCell = floor(input.detailUV.xy);
+                half2 sparkleLocal = (half2)(frac(input.detailUV.xy) - 0.5);
+                half sh1 = (half)CellHash(sparkleCell, float2(0.3183099, 0.7548776));
+                half sh2 = (half)CellHash(sparkleCell, float2(0.7182818, 0.1415926));
+                half sh3 = (half)CellHash(sparkleCell, float2(0.5698403, 0.4142135));
+
+                half sparkleLife = Tri01(input.detailUV.z + sh1);
+                // Top third of the cycle, eased so it swells in and out rather than blinking.
+                half sparklePop = saturate(sparkleLife * 3.0h - 2.0h);
+                sparklePop = sparklePop * (2.0h - sparklePop);
+                half2 sd = abs(sparkleLocal - (half2(sh2, sh3) - 0.5h) * 0.6h);
+                half radius = _SparkleSize * 0.5h * sparklePop;
+                // Volume: solid diamond core + long thin cross rays + a soft diamond glow around it.
+                half diamond = sd.x + sd.y;
+                half core = saturate((radius * 0.35h - diamond) / sparkleAA);
+                half rays = max(saturate((radius - (sd.x + sd.y * 5.0h)) / sparkleAA),
+                                saturate((radius - (sd.y + sd.x * 5.0h)) / sparkleAA));
+                half glow = saturate(1.0h - diamond / max(radius * 0.9h, 0.001h)) * _SparkleGlow;
+                half star = max(max(core, rays), glow);
+                half sparkleChance = _SparkleDensity * (0.5h + n);
+                half sh4 = (half)frac(sh1 * 13.7h + sh2 * 5.3h);
+                star *= saturate((sh4 + sparkleChance - 1.0h) * 64.0h);
+                star *= _SparkleStrength;
+                waterColor = lerp(waterColor, _SparkleColor.rgb, star);
+
+                detailMask = star;
+#endif
 
                 half foamMask = 0.0h;
 
@@ -256,7 +347,7 @@ Shader "Project/LakeShader"
                 waterColor = lerp(waterColor, _FoamColor.rgb, foamMask);
 #endif
 
-                half opacity = saturate(max(_WaterOpacity, max(foamMask, glimmer)));
+                half opacity = saturate(max(_WaterOpacity, max(max(foamMask, detailMask), glimmer)));
                 return half4(waterColor, opacity);
             }
             ENDHLSL

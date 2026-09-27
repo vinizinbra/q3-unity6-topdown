@@ -175,6 +175,19 @@ full 30s or was skipped after 5.
   until `BreathingAreaSecured` flips true, at which point the phase ends immediately (no remaining
   countdown to wait out) instead of running the rest of its `Duration`.
 
+## Breathing grace hold
+
+`SurvivalPhase.GracePeriodDuration` (Breathing-only, 0 = off; World 1 ships 30s). When a Break's
+`Duration` elapses (or a unanimous skip vote ends it) while a connected player still has a Cursed
+Rift/Store/Blacksmith Choice Window open, `RunPhaseUtility.TickBreathingGraceHold` holds the phase
+transition for up to that many seconds (`Global.BreathingGraceActive`/`BreathingGraceTimeRemaining`),
+ending early once every window closes; `BreathingWidget` reads "Waiting for players:" meanwhile.
+
+The hold **only delays the phase transition**. Teammates without a window of their own keep full
+control (2026-09-25: the earlier bystander input lock via `PoiInteractionLockUtility.IsInputLocked`
+was removed - in online co-op it read as a random freeze). Cheat/debug phase jumps call
+`RunPhaseUtility.ClearBreathingGrace` so the flag can't stay stuck on.
+
 ## `SurvivalConfig.cs`
 
 ```csharp

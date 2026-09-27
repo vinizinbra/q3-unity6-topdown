@@ -145,9 +145,12 @@ namespace Quantum
         // Optional - GrowLevel's frontier-based placement has no way to guarantee full coverage,
         // so it can leave scattered single-cell pockets fully enclosed by chunks. If assigned,
         // LevelGenerationSystem.FillInnerGaps spawns one of these at every such cell once
-        // generation finishes. Must have a Transform3D (its Position is set on spawn) and should
-        // be sized to fill exactly one CellSize x CellSize cell (e.g. a 2x2 wall prefab when
-        // CellSize=2). Left unassigned, inner gaps are simply left as open floor, same as today.
+        // generation finishes. Must have a Transform3D (its Position is set on spawn) and a Box or
+        // Compound-of-Box collider sized to fill exactly one CellSize x CellSize cell (e.g. a 2x2
+        // wall prefab when CellSize=2) - every box gets stretched over the merged run. WallChunk is
+        // a Compound: a floor slab at floor height (so the tileset merges it into the neighbouring
+        // floors instead of leaving a seam) + the wall block on top. Left unassigned, inner gaps
+        // are simply left as open floor, same as today.
         public AssetRef<EntityPrototype> GapFillerPrototype;
     }
 }

@@ -36,6 +36,14 @@ namespace QuantumUser.Editor.BalanceSimulator
         public List<GlobalUpgradeData> GlobalUpgrades = new();
         public List<CharacterData> AllHeroes = new();
 
+        // Quantum's f.DeltaTime (1 / SessionConfig UpdateFPS), 0 if SessionConfig is missing. Director
+        // pulses and skill spawn timers always round to it.
+        public double GameTickSeconds;
+
+        // GameTickSeconds for WeaponSystem's fire/burst/reload timers, or 0 when the scenario opts out
+        // of weapon tick quantization (QuantizeWeaponTimers).
+        public double SimTickSeconds;
+
         private readonly Dictionary<AssetGuid, AssetObject> cache = new();
 
         // Valid AssetRefs that did not resolve - surfaced by the window, since LogHelper is silent by default.
@@ -74,6 +82,17 @@ namespace QuantumUser.Editor.BalanceSimulator
             }
 
             a.CountBarrels(scenario);
+
+            int updateFps = QuantumDeterministicSessionConfigAsset.Global != null
+                ? QuantumDeterministicSessionConfigAsset.Global.Config.UpdateFPS
+                : 0;
+
+            if (updateFps > 0)
+                a.GameTickSeconds = D(FP._1 / updateFps);
+            else
+                a.Warnings.Add("SessionConfig UpdateFPS not found - game timers use continuous timing");
+
+            a.SimTickSeconds = scenario.QuantizeWeaponTimers ? a.GameTickSeconds : 0;
 
             a.AllHeroes = AssetDatabase.FindAssets("t:CharacterData", new[] { "Assets/_QuantumUser/Resources/Characters" })
                 .Select(guid => AssetDatabase.LoadAssetAtPath<CharacterData>(AssetDatabase.GUIDToAssetPath(guid)))
@@ -332,7 +351,7 @@ namespace QuantumUser.Editor.BalanceSimulator
 
         // A prefab-backed prototype's editor instance sits at "XEntityPrototype.qprototype" next to
         // "X.prefab"; fall back to a name search when the instance carries no asset path.
-        private static UnityEngine.GameObject FindPrefabFor(EntityPrototype prototype)
+        public static UnityEngine.GameObject FindPrefabFor(EntityPrototype prototype)
         {
             string path = AssetDatabase.GetAssetPath(prototype);
 
@@ -356,6 +375,33 @@ namespace QuantumUser.Editor.BalanceSimulator
             }
 
             return null;
+        }
+
+        private readonly Dictionary<EnemyDataAsset, LevelUpCategory?> chestKinds = new();
+
+        // EnemyDataAsset.ChestDrop's Chest.Kind (EnemyChestDropUtility.TrySpawnDrop -> the chest's
+        // BeginChestScreen forced category), read off the prototype prefab's QPrototypeChest. Null =
+        // this enemy drops no chest, or its prototype didn't resolve (warned once).
+        public LevelUpCategory? ResolveChestKind(EnemyDataAsset enemy)
+        {
+            if (enemy == null || enemy.ChestDrop.IsValid == false)
+                return null;
+
+            if (chestKinds.TryGetValue(enemy, out LevelUpCategory? cached))
+                return cached;
+
+            LevelUpCategory? kind = null;
+            EntityPrototype prototype = Resolve(enemy.ChestDrop);
+            UnityEngine.GameObject prefab = prototype != null ? FindPrefabFor(prototype) : null;
+            var chest = prefab != null ? prefab.GetComponent<QPrototypeChest>() : null;
+
+            if (chest != null)
+                kind = (LevelUpCategory)chest.Prototype.Kind;
+            else
+                Warnings.Add($"'{enemy.name}' ChestDrop has no resolvable QPrototypeChest - its chest pick is not simulated");
+
+            chestKinds[enemy] = kind;
+            return kind;
         }
 
         public TierStats Tier(EnemyTier tier) => Tiers.Get(tier);

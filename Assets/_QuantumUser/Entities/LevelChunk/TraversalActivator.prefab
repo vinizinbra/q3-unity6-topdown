@@ -19386,12 +19386,12 @@ MonoBehaviour:
         Y:
           RawValue: 0
         Z:
-          RawValue: 0
+          RawValue: 28180
       BoxExtents:
         X:
-          RawValue: 32768
+          RawValue: 19661
         Y:
-          RawValue: 32768
+          RawValue: 327680
         Z:
           RawValue: 32768
       RotationOffset:

@@ -32,8 +32,8 @@ namespace QuantumUser.Editor.BalanceSimulator
 
         // ---------------------------------------------------------------- level-ups
 
-        // `level` is Global.Level after the increment (1 for the first level-up), same value
-        // LevelUpUtility.GetCategoryForLevel receives.
+        // `level` is Global.Level + 1 after the increment (2 for the first level-up), the same value
+        // LevelUpUtility.OpenUpgradeScreen passes to GetCategoryForLevel.
         public void OnLevelUp(SimPlayer player, int level, double survivalTime)
         {
             LevelUpConfig config = assets.LevelUp;
@@ -43,10 +43,29 @@ namespace QuantumUser.Editor.BalanceSimulator
                 category = config.LevelSequence[(level - 1) % config.LevelSequence.Count];
 
             player.LevelUpsTaken++;
+            RollAndPick(player, category, survivalTime, $"L{level}");
+        }
+
+        // Elite chest (LevelUpUtility.BeginChestScreen): the same roll with a forced category.
+        // Rift Mutations aren't modelled, so a Rift Mutation chest only logs.
+        public void OnChest(SimPlayer player, LevelUpCategory kind, double survivalTime)
+        {
+            if (kind == LevelUpCategory.RiftMutation)
+            {
+                player.PickLog.Add("Chest RiftMutation: not simulated");
+                return;
+            }
+
+            RollAndPick(player, kind, survivalTime, "Chest");
+        }
+
+        private void RollAndPick(SimPlayer player, LevelUpCategory? category, double survivalTime, string context)
+        {
+            LevelUpConfig config = assets.LevelUp;
 
             if (category == LevelUpCategory.ChooseWeapon)
             {
-                ChooseWeapon(player, survivalTime, $"L{level}");
+                ChooseWeapon(player, survivalTime, context);
                 return;
             }
 
@@ -60,7 +79,7 @@ namespace QuantumUser.Editor.BalanceSimulator
 
             int choiceCount = Math.Min(3, Math.Max(1, config.ChoiceCount));
             List<Candidate> rolled = DrawWeighted(candidates, choiceCount);
-            Pick(player, rolled, $"L{level} {category?.ToString() ?? "Any"}");
+            Pick(player, rolled, $"{context} {category?.ToString() ?? "Any"}");
         }
 
         private List<Candidate> Collect(SimPlayer player, LevelUpCategory? category)
@@ -134,18 +153,32 @@ namespace QuantumUser.Editor.BalanceSimulator
                     continue;
 
                 UpgradeData u = upgrade;
-                UpgradeValue delta = default;
+                UpgradeValue next = default;
+                UpgradeValue current = default;
                 string label = $"{u.name} ({kind})";
 
                 if (u is SkillActionData action)
                 {
-                    UpgradeValue next = BalanceSimSkillModel.EvaluateUpgrade(action, rank + 1, player.Skill, scenario, assets);
-                    UpgradeValue current = rank > 0 ? BalanceSimSkillModel.EvaluateUpgrade(action, rank, player.Skill, scenario, assets) : default;
-                    delta.SkillDamage = Math.Max(0, next.SkillDamage - current.SkillDamage);
-                    delta.WeaponBonus = Math.Max(0, next.WeaponBonus - current.WeaponBonus);
+                    next = BalanceSimSkillModel.EvaluateUpgrade(action, rank + 1, player.Skill, scenario, assets);
+                    current = rank > 0 ? BalanceSimSkillModel.EvaluateUpgrade(action, rank, player.Skill, scenario, assets) : default;
 
-                    if (delta.Quantified)
-                        label += delta.SkillDamage > 0 ? $" +{delta.SkillDamage:0}/cast" : $" +{delta.WeaponBonus:P0} weapon";
+                    double castDelta = next.SkillDamage + next.ScaledSkillDamage - current.SkillDamage - current.ScaledSkillDamage;
+                    if (castDelta > 0)
+                        label += $" +{castDelta:0}/cast";
+                    else if (next.WeaponBonus > current.WeaponBonus)
+                        label += $" +{next.WeaponBonus - current.WeaponBonus:P0} weapon while Overdrive";
+                    else if (next.MountedWeapons != null || next.MountedFireRate > 1)
+                        label += " (sentry)";
+                    else if (next.Modelled)
+                        label += " +0 modelled";
+                }
+                else if (u is WeaponWeightMasteryData weightMastery)
+                {
+                    label += $" {weightMastery.Weight} weapons +{MasteryRankBonus(weightMastery.DamageMultiplierPerRank, rank + 1):P0}";
+                }
+                else if (u is ElementMasteryData elementMastery)
+                {
+                    label += $" {elementMastery.Element} weapons +{MasteryRankBonus(elementMastery.DamageMultiplierPerRank, rank + 1):P0}";
                 }
 
                 list.Add(new Candidate
@@ -154,20 +187,62 @@ namespace QuantumUser.Editor.BalanceSimulator
                     Weight = weight,
                     Apply = pl =>
                     {
-                        if (delta.Quantified)
+                        int nextRank = (pl.SkillRanks.TryGetValue(u, out int held) ? held : 0) + 1;
+
+                        if (u is WeaponWeightMasteryData weightLine)
                         {
-                            pl.SkillUpgradeDamage += delta.SkillDamage;
-                            pl.WeaponBuffBonus += delta.WeaponBonus;
+                            pl.HasWeightMastery = true;
+                            pl.MasteryWeight = weightLine.Weight;
+                            pl.WeightMasteryBonus = MasteryRankBonus(weightLine.DamageMultiplierPerRank, nextRank);
+                        }
+                        else if (u is ElementMasteryData elementLine)
+                        {
+                            pl.HasElementMastery = true;
+                            pl.MasteryElement = elementLine.Element;
+                            pl.ElementMasteryBonus = MasteryRankBonus(elementLine.DamageMultiplierPerRank, nextRank);
+                        }
+                        else if (next.Modelled)
+                        {
+                            pl.SkillUpgradeDamage += Math.Max(0, next.SkillDamage - current.SkillDamage);
+                            pl.SkillUpgradeScaledDamage += Math.Max(0, next.ScaledSkillDamage - current.ScaledSkillDamage);
+                            pl.WeaponBuffBonus += Math.Max(0, next.WeaponBonus - current.WeaponBonus);
+
+                            if (next.MountedWeapons != null)
+                            {
+                                foreach (WeaponDataAsset barrel in next.MountedWeapons)
+                                {
+                                    if (current.MountedWeapons == null || current.MountedWeapons.Contains(barrel) == false)
+                                        pl.UpgradeMountedWeapons.Add(barrel);
+                                }
+                            }
+
+                            // Overclock: one line per hero, rank values are totals.
+                            if (next.MountedFireRate > 0)
+                            {
+                                pl.MountedFireRate = next.MountedFireRate;
+                                pl.MountedDurationBonus = next.MountedDurationBonus;
+                                pl.RedlineSeconds = next.RedlineSeconds;
+                                pl.RedlineFireRate = next.RedlineFireRate;
+                            }
                         }
                         else
                         {
                             pl.SkillUpgradeBonus += scenario.SkillUpgradeDpsValue;
                         }
 
-                        pl.SkillRanks[u] = (pl.SkillRanks.TryGetValue(u, out int n) ? n : 0) + 1;
+                        pl.SkillRanks[u] = nextRank;
                     },
                 });
             }
+        }
+
+        // Mastery arrays hold each rank's cumulative total, same clamp as their own Apply(rank).
+        private static double MasteryRankBonus(FP[] perRank, int rank)
+        {
+            if (perRank == null || perRank.Length == 0)
+                return 0;
+
+            return D(perRank[Math.Clamp(rank, 1, perRank.Length) - 1]);
         }
 
         private IEnumerable<WeaponPerkData> PerkCandidates(WeaponPerkPoolData pool, SimPlayer player)
@@ -327,8 +402,16 @@ namespace QuantumUser.Editor.BalanceSimulator
                 for (int i = 0; i < perkCount && available.Count > 0; i++)
                 {
                     WeaponPerkData perk = DrawPerk(available, p => rarityWeight != null ? rarityWeight(p.Rarity) : perkPool.GetWeight(p.Rarity));
+                    if (perk == null)
+                        break;
+
                     available.Remove(perk);
                     weapon.AddPerk(perk, scenario.UnquantifiedPerkDpsValue);
+
+                    // Choose Weapon (WeaponGenerator.DrawDistinctPerks) drops perks that conflict with
+                    // one already rolled; Store offers (StoreUtility.RollStorePerks) don't.
+                    if (rarityWeight == null)
+                        available.RemoveAll(other => perk.ConflictsWith(other) || other.ConflictsWith(perk));
                 }
             }
 
@@ -439,11 +522,13 @@ namespace QuantumUser.Editor.BalanceSimulator
             return cost;
         }
 
+        // Weight <= 0 perks can never be drawn (BlacksmithUtility.RollPerkOptions/StoreUtility/
+        // WeaponGenerator skip them) - null once nothing drawable is left, and the caller stops.
         private WeaponPerkData DrawPerk(List<WeaponPerkData> available, Func<WeaponPerkData, int> weightOf)
         {
             double total = available.Sum(p => Math.Max(0, weightOf(p)));
             if (total <= 0)
-                return available[rng.Next(available.Count)];
+                return null;
 
             double roll = rng.Next01() * total;
             double cumulative = 0;
@@ -607,6 +692,9 @@ namespace QuantumUser.Editor.BalanceSimulator
             for (int i = 0; i < forge.PerkChoiceCount && available.Count > 0; i++)
             {
                 WeaponPerkData perk = DrawPerk(available, p => tuning.GetWeight(p.Rarity));
+                if (perk == null)
+                    break;
+
                 available.Remove(perk);
                 offers.Add(perk);
             }
