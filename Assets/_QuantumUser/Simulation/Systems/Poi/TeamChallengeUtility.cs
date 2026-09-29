@@ -280,6 +280,12 @@ namespace Quantum
             if (challenge->RemainingCountdown > FP._0)
             {
                 challenge->State = TeamChallengeState.Starting;
+
+                // Clear the map the moment the team commits, not only once the countdown ends - the
+                // countdown should read as the calm before the challenge, not a few more seconds of
+                // the old fight. CombatDirectorSystem also holds its pulses while Starting (via
+                // AnyBannerActive), so nothing new walks in before BeginChallengeActive's own wipe.
+                WipeAliveEnemies(f);
                 Log.Debug($"[TeamChallenge] {poi} - unanimous Ready ({ready}/{required}), counting down {challenge->RemainingCountdown}s");
             }
             else
@@ -318,6 +324,8 @@ namespace Quantum
             // The Elite-alive gate above only ever stops NEW readies/starts - nothing already
             // forces existing Survival enemies off the map, so without this they'd keep fighting
             // players right through what's meant to read as its own clean, isolated encounter.
+            // Normally already done at the start of the Starting countdown (TryBeginStarting); this
+            // second pass covers CountdownDuration <= 0 and anything that appeared mid-countdown.
             WipeAliveEnemies(f);
 
             ChallengeDefinition definition = f.FindAsset(challenge->SelectedChallenge);
@@ -436,10 +444,11 @@ namespace Quantum
         }
 
         // Live check for whether ANY Team Challenge POI is currently Starting or ChallengeActive -
-        // used only by CombatDirectorSystem.ApplyEffectiveState, since Global.ActiveTeamChallengeCount
-        // itself only increments once ChallengeActive truly begins (Survival keeps running normally
-        // through the Starting countdown - see docs' own "STARTING THE CHALLENGE"), but the
-        // countdown itself still needs this same GameState.TeamChallenge overlay to show in.
+        // used by CombatDirectorSystem (ApplyEffectiveState's overlay, and holding Director pulses),
+        // since Global.ActiveTeamChallengeCount itself only increments once ChallengeActive truly
+        // begins (the Survival clock keeps running through the Starting countdown - see docs' own
+        // "STARTING THE CHALLENGE"), but the countdown still needs the GameState.TeamChallenge
+        // overlay, and must not spawn new enemies into the map TryBeginStarting just wiped.
         public static bool AnyBannerActive(Frame f)
         {
             var filtered = f.Filter<TeamChallenge>();
@@ -540,8 +549,8 @@ namespace Quantum
             return false;
         }
 
-        // Wipes every enemy still standing in the world the instant ChallengeActive begins (see
-        // BeginChallengeActive) - normal Survival enemies would otherwise keep fighting players
+        // Wipes every enemy still standing in the world the instant the Starting countdown begins
+        // (TryBeginStarting) and again when ChallengeActive begins (BeginChallengeActive) - normal Survival enemies would otherwise keep fighting players
         // right through what's meant to read as a clean, isolated challenge encounter. Also reused
         // by DestroyChallengeSpawns above for the challenge's OWN leftover enemies at End.
         private static void WipeAliveEnemies(Frame f)

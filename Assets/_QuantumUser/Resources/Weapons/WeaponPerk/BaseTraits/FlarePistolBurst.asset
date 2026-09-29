@@ -23,6 +23,6 @@ MonoBehaviour:
     damage
   Interval: 3
   Radius:
-    RawValue: 163840
+    RawValue: 98304
   DamageMultiplier:
     RawValue: 65536

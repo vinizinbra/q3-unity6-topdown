@@ -1508,7 +1508,7 @@ TextureImporter:
         width: 48
         height: 30
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 20, y: 0, z: 20, w: 0}
       customData: 
       outline: []
@@ -1517,6 +1517,28 @@ TextureImporter:
       bones: []
       spriteID: 4609374a3cbad43b1a732f4afc9c3142
       internalID: 1143825037
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_WhiteSquare
+      rect:
+        serializedVersion: 2
+        x: 1003
+        y: 1003
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 4, y: 4, z: 4, w: 4}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cf0f85a2e512a4930af24387069b8127
+      internalID: -1530443230
       vertices: []
       indices: 
       edges: []
@@ -1599,6 +1621,7 @@ TextureImporter:
       RR_UpgradeTitle1: -548207295
       RR_UpgradeTitle2: 1372283331
       RR_UpgradeTitle3: -1495585377
+      RR_WhiteSquare: -1530443230
       RiftRaidersUI_0: 1241658224
       RiftRaidersUI_1: 1143825037
   mipmapLimitGroupName: 

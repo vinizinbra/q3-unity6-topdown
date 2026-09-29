@@ -1,4 +1,5 @@
 using System;
+using Quantum;
 using TMPro;
 using Unity.Profiling;
 using UnityEngine;
@@ -79,9 +80,20 @@ public class FpsCounter : MonoBehaviour
 
 			int fps = Mathf.Clamp(_currentAveraged, 0, MaxDisplayedFps);
 
+			// Round-trip ping of the running Quantum session (same source as Photon's own QuantumStats) -
+			// only while a match is actually online; offline/Practice and the menu have no ping to show.
+			var session = QuantumRunner.Default != null ? QuantumRunner.Default.Game?.Session : null;
+			bool online = session != null && session.IsOnline;
+			int ping = online ? session.Stats.Ping : 0;
+
 			// SetText(format, values) formats without allocating a string every frame.
-			if (_setPassRecorder.Valid && _trianglesRecorder.Valid)
+			bool stats = _setPassRecorder.Valid && _trianglesRecorder.Valid;
+			if (stats && online)
+				Text.SetText("FPS {0}\n<size=55%>SP {1}  Tris {2:1}k\nPing {3}ms</size>", fps, _setPassRecorder.LastValue, _trianglesRecorder.LastValue / 1000f, ping);
+			else if (stats)
 				Text.SetText("FPS {0}\n<size=55%>SP {1}  Tris {2:1}k</size>", fps, _setPassRecorder.LastValue, _trianglesRecorder.LastValue / 1000f);
+			else if (online)
+				Text.SetText("FPS {0}\n<size=55%>Ping {1}ms</size>", fps, ping);
 			else
 				Text.SetText("FPS {0}", fps);
 		}

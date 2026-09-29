@@ -675,8 +675,15 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
       // IsMasterClient guard above), so it's necessarily the leader's own ID. Carried to everyone
       // so DesignatedLeaderUserId survives the party room being destroyed/recreated after a long
       // match - see its own comment and ReclaimLeadershipIfNeeded.
+      //
+      // "difficulty"/"nightmare" are the leader's own main-menu pick (MainMenuWindow's difficulty
+      // dropdown writes them onto this client's RuntimeConfig) - carried so every client clones the
+      // same tier into its RuntimeConfig instead of each using its own local dropdown.
       Client.OpRaiseEvent((byte)PhotonEventCode.SyncMatchRoom,
-         new PhotonHashtable { { "room", matchRoomCode }, { "seed", seed }, { "leader", Client.UserId } },
+         new PhotonHashtable {
+            { "room", matchRoomCode }, { "seed", seed }, { "leader", Client.UserId },
+            { "difficulty", (int)RuntimeConfig.Difficulty }, { "nightmare", RuntimeConfig.NightmareLevel }
+         },
          new RaiseEventArgs { Receivers = ReceiverGroup.All },
          SendOptions.SendReliable);
    }
@@ -1261,6 +1268,10 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
       {
          var data = (PhotonHashtable)photonEvent.CustomData;
          DesignatedLeaderUserId = (string)data["leader"];
+         if (data.TryGetValue("difficulty", out var difficulty) && difficulty is int tier)
+            RuntimeConfig.Difficulty = (DifficultyTier)tier;
+         if (data.TryGetValue("nightmare", out var nightmare) && nightmare is int nightmareLevel)
+            RuntimeConfig.NightmareLevel = nightmareLevel;
          MoveToMatchRoomAsync((string)data["room"], (int)data["seed"]);
       }
    }

@@ -192,6 +192,12 @@ public class TeamChallengeWidget : GameStateGatedWidget
             if (titleText != null)
                 titleText.text = "STARTING";
 
+            // Nothing to track yet - without this the progress readout shows whatever it last held
+            // (the authored placeholder text, or a previous challenge's final "20 / 20") until the
+            // first ChallengeActive tick overwrites it.
+            if (objectiveText != null)
+                objectiveText.text = string.Empty;
+
             if (countdownText != null)
             {
                 int seconds = Mathf.CeilToInt(Mathf.Max(challenge.RemainingCountdown.AsFloat, 0f));

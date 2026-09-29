@@ -121,8 +121,10 @@ namespace Quantum
             // shared with ActiveTraversalChallengeCount above, since the two are unrelated triggers
             // (see TeamChallenge.qtn's own comment). Challenge encounters spawn through
             // TeamChallengeUtility.BeginChallengeActive directly (via GroupSpawnerUtility, bypassing
-            // TryPulse entirely) - only normal Director purchases are gated here.
-            if (f.Global->ActiveTeamChallengeCount > 0)
+            // TryPulse entirely) - only normal Director purchases are gated here. AnyBannerActive
+            // extends the hold over the Starting countdown too: the map is wiped the moment the team
+            // commits (TeamChallengeUtility.TryBeginStarting), so the countdown stays empty.
+            if (f.Global->ActiveTeamChallengeCount > 0 || TeamChallengeUtility.AnyBannerActive(f))
                 return;
 
             CombatDirectorUtility.TryPulse(f, currentPhase, directorConfig, lifecycleConfig, balanceConfig,

@@ -27,6 +27,10 @@ public class PartyRoomWidget : MonoBehaviour
     public TMP_Text playerCountText;
     public RoomWidget[] playerWidgets;
     public TMP_Dropdown characterDropdown;
+    [Tooltip("Optional - steps characterDropdown back one hero, wrapping around.")]
+    public Button previousCharacterButton;
+    [Tooltip("Optional - steps characterDropdown forward one hero, wrapping around.")]
+    public Button nextCharacterButton;
     public Button leaveButton;
 
     // The room code the player has typed but not acted on yet. Exposed so the main menu's single
@@ -76,6 +80,11 @@ public class PartyRoomWidget : MonoBehaviour
         // player type a code and hit Enter instead of having to reach for the Join button.
         roomCodeInput.onSubmit.AddListener(HandleRoomCodeSubmit);
 
+        if (previousCharacterButton != null)
+            previousCharacterButton.onClick.AddListener(PreviousCharacterClicked);
+        if (nextCharacterButton != null)
+            nextCharacterButton.onClick.AddListener(NextCharacterClicked);
+
         // Character selection isn't tied to being in a room - populate/wire the dropdown once,
         // up front, so a player can pick their character on the join/create panel too, not just
         // after joining. Previously this ran every time HandlePhaseChanged(InRoom) fired, which
@@ -92,6 +101,11 @@ public class PartyRoomWidget : MonoBehaviour
         joinButton.onClick.RemoveListener(JoinClicked);
         leaveButton.onClick.RemoveListener(LeaveClicked);
         roomCodeInput.onSubmit.RemoveListener(HandleRoomCodeSubmit);
+
+        if (previousCharacterButton != null)
+            previousCharacterButton.onClick.RemoveListener(PreviousCharacterClicked);
+        if (nextCharacterButton != null)
+            nextCharacterButton.onClick.RemoveListener(NextCharacterClicked);
 
         if (PartyManager.Instance == null) return;
         PartyManager.Instance.OnPhaseChanged -= HandlePhaseChanged;
@@ -165,6 +179,20 @@ public class PartyRoomWidget : MonoBehaviour
 
         characterDropdown.SetValueWithoutNotify(0);
         PartyManager.Instance.SetLocalCharacter(catalog.characters[0].id);
+    }
+
+    private void PreviousCharacterClicked() => StepCharacter(-1);
+
+    private void NextCharacterClicked() => StepCharacter(1);
+
+    // Goes through the dropdown's own value setter (notifying), so the arrows and the dropdown can
+    // never disagree - OnCharacterDropdownChanged stays the single path that applies a pick.
+    private void StepCharacter(int direction)
+    {
+        int count = characterDropdown.options.Count;
+        if (count == 0) return;
+
+        characterDropdown.value = ((characterDropdown.value + direction) % count + count) % count;
     }
 
     private void OnCharacterDropdownChanged(int index)

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Playtime.Core;
 using Quantum;
 using Quantum.Demo;
 using TMPro;
@@ -27,6 +28,14 @@ public class MainMenuWindow : UiWindow
     [Tooltip("Optional - the party panel that owns the room-code field. While a code is typed there and this player isn't already in a party, the Play button becomes Join and joins that room instead of starting a run. Left unassigned, Play behaves exactly as before.")]
     public PartyRoomWidget partyRoom;
 
+    [Header("Difficulty")]
+    [Tooltip("Optional - Easy/Medium/Hard/Nightmare 1..maxNightmareLevel. Writes MatchMakingConfig.RuntimeConfig.Difficulty/NightmareLevel; in a party only the leader's pick is used (carried in the match-start event), so it's read-only for everyone else.")]
+    public TMP_Dropdown difficultyDropdown;
+    public int maxNightmareLevel = 10;
+
+    // Dropdown index, not tier - Nightmare N is index 2 + N. Remembered across sessions.
+    private static readonly PlayerPrefInt DifficultyIndexPref = new PlayerPrefInt("menu_difficulty_index", (int)DifficultyTier.Medium);
+
     private void Start()
     {
         playButton.onClick.AddListener(PlayButtonClicked);
@@ -37,6 +46,8 @@ public class MainMenuWindow : UiWindow
         if (practiceButton != null)
             practiceButton.onClick.AddListener(Practice);
        /* quickPlayButton.onClick.AddListener(QuickPlay);*/
+
+        InitializeDifficultyDropdown();
     }
 
     private void OnDestroy()
@@ -49,6 +60,49 @@ public class MainMenuWindow : UiWindow
         if (practiceButton != null)
             practiceButton.onClick.RemoveListener(Practice);
        /* quickPlayButton.onClick.RemoveListener(QuickPlay);*/
+
+        if (difficultyDropdown != null)
+            difficultyDropdown.onValueChanged.RemoveListener(OnDifficultyChanged);
+    }
+
+    private void InitializeDifficultyDropdown()
+    {
+        if (difficultyDropdown == null)
+            return;
+
+        var options = new List<string> { "Easy", "Medium", "Hard" };
+        for (int level = 1; level <= maxNightmareLevel; level++)
+            options.Add(DifficultyConfig.GetDisplayName(DifficultyTier.Nightmare, level));
+
+        difficultyDropdown.ClearOptions();
+        difficultyDropdown.AddOptions(options);
+        difficultyDropdown.onValueChanged.AddListener(OnDifficultyChanged);
+
+        int index = Mathf.Clamp(DifficultyIndexPref.Value, 0, options.Count - 1);
+        difficultyDropdown.SetValueWithoutNotify(index);
+        ApplyDifficulty(index);
+    }
+
+    private void OnDifficultyChanged(int index)
+    {
+        DifficultyIndexPref.Value = index;
+        ApplyDifficulty(index);
+    }
+
+    // Written straight onto the RuntimeConfig StartRunner/StartOfflineRunner clone, so it covers
+    // solo, party and offline starts alike.
+    private void ApplyDifficulty(int index)
+    {
+        var config = matchMakingConfig != null ? matchMakingConfig.RuntimeConfig : MatchMakingConfig.Instance.RuntimeConfig;
+        if (index <= (int)DifficultyTier.Hard)
+        {
+            config.Difficulty = (DifficultyTier)index;
+        }
+        else
+        {
+            config.Difficulty = DifficultyTier.Nightmare;
+            config.NightmareLevel = index - (int)DifficultyTier.Hard;
+        }
     }
 
     public override void Show()
@@ -66,6 +120,15 @@ public class MainMenuWindow : UiWindow
             bool canReconnect = MatchMakingConfig.Instance.CanReconnect;
             if (reconnectButton.gameObject.activeSelf != canReconnect)
                 reconnectButton.gameObject.SetActive(canReconnect);
+        }
+
+        // Only the leader's pick is sent with the match start, so a teammate's dropdown would be a
+        // control that silently does nothing.
+        if (difficultyDropdown != null)
+        {
+            bool canPickDifficulty = PartyManager.Instance.InParty == false || PartyManager.Instance.IsPartyLeader;
+            if (difficultyDropdown.interactable != canPickDifficulty)
+                difficultyDropdown.interactable = canPickDifficulty;
         }
 
         if (ShouldOfferJoin)

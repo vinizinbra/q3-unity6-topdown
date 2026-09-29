@@ -12,7 +12,8 @@ Every currently required Raider (connected, not Downed/KO) must press Interact i
 Interaction Area to Ready up, then stay inside the larger Ready/Cancel Area
 (`TeamChallengeConfig.ReadyCancelRadius`) - leaving it cancels that Raider's own Ready with no
 timeout. Survival runs completely normally while waiting. Once every required Raider is
-simultaneously Ready, activation locks in (no more cancelling), an optional
+simultaneously Ready, activation locks in (no more cancelling), every enemy alive is wiped (same
+no-reward wipe described below) and Director spawning holds, an optional
 `TeamChallengeConfig.CountdownDuration` counts down, then `ChallengeActive` begins: Survival's
 timer/spawning pause via `Global.ActiveTeamChallengeCount` (a dedicated counter, same shape as
 `Global.ActiveTraversalChallengeCount`, never shared with it), the rolled `ChallengeDefinition`'s
@@ -28,7 +29,8 @@ attempt only, no retries, no reward.
 Readying up (and re-checked every tick while `WaitingForTeam`, in case one spawns after everyone
 already readied) is blocked while any `EnemyTier.Elite` enemy is alive anywhere in the map - the
 encounter is meant to read as its own clean, isolated fight, not one that starts on top of an
-ongoing Elite fight. The instant `ChallengeActive` begins, every enemy still alive in the world
+ongoing Elite fight. The instant the team commits (`TryBeginStarting`, start of the `Starting`
+countdown) - and again, as a safety net, when `ChallengeActive` begins - every enemy still alive in the world
 (normal Survival spawns, not this challenge's own) is wiped - same death VFX a normal kill plays
 (`DamageUtility.FireEnemyExploded`/the Dead-phase corpse linger), but with the entire on-kill
 pipeline skipped (no `EntityDied`/`OnEntityKilled`, no XP/Scrap/RiftShard/Coin/Chest drops, no
@@ -53,7 +55,10 @@ from both `BeginChallengeActive`'s wipe and `DestroyChallengeSpawns`) - they use
   freeze. Checked at the exact same call sites `ActiveTraversalChallengeCount` already is
   (`SurvivalProgressionUtility.Tick`'s two clock advances, `RunPhaseUtility.TickBreathingGraceHold`,
   `CombatDirectorSystem.Update`'s spawn gate), incremented only once `ChallengeActive` truly begins
-  (not at `Starting`) - Survival keeps running normally through the countdown, per spec.
+  (not at `Starting`) - the Survival clock keeps running through the countdown, per spec. Director
+  *spawning* is the exception: `CombatDirectorSystem.Update` also holds its pulses while any
+  challenge is `Starting` (`TeamChallengeUtility.AnyBannerActive`), because the map is wiped the
+  moment the team commits (see below) and the countdown must stay empty.
 - **No co-op scaling of its own.** `ChallengeDefinition.SpawnGroups` references the existing
   `EnemyGroupConfig` asset type directly and spawns via `GroupSpawnerUtility.TrySpawnGroup` - the
   exact same call every normal Survival encounter uses, which already resolves final enemy stats

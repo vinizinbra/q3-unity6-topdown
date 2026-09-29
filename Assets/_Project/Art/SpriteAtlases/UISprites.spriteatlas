@@ -117,6 +117,7 @@ SpriteAtlas:
     - {fileID: 2800000, guid: 68736e5c651f542e397a01c80da8cac1, type: 3}
     - {fileID: 2800000, guid: c58ccfcb12d3a4f8ebf9f78241ba3147, type: 3}
     - {fileID: 2800000, guid: 3dfe46eb5c23a4a7dbc33a4883ca514c, type: 3}
+    - {fileID: 2800000, guid: 86e37e3bccad84abaa2ed194f5ecaf6e, type: 3}
     bindAsDefault: 1
     isAtlasV2: 0
     cachedData: {fileID: 0}
@@ -305,6 +306,7 @@ SpriteAtlas:
     - e96a2976d9cdd40e091a76f237966887: -2119640919
     - e96a2976d9cdd40e091a76f237966887: -878071093
     - e96a2976d9cdd40e091a76f237966887: -109343418
+    - e96a2976d9cdd40e091a76f237966887: -1530443230
     - e96a2976d9cdd40e091a76f237966887: -1147070994
     - e96a2976d9cdd40e091a76f237966887: -645992890
     - e96a2976d9cdd40e091a76f237966887: 422311931
@@ -476,6 +478,7 @@ SpriteAtlas:
     - 228419ea5721c4a0eb75647b083dc9e2: -26652818
     - 177751fae61c24a1cbc711d6727a2a50: 21300000
     - aef3b7fadd3d24073a9cc22e7923e065: 21300000
+    - 86e37e3bccad84abaa2ed194f5ecaf6e: 21300000
     - 4afdbc8ba755f45c69639d7d40484c83: 21300000
     - c58ccfcb12d3a4f8ebf9f78241ba3147: 21300000
     - 3dfe46eb5c23a4a7dbc33a4883ca514c: 21300000
@@ -793,6 +796,7 @@ SpriteAtlas:
   - {fileID: -2119640919, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
   - {fileID: -878071093, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
   - {fileID: -109343418, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
+  - {fileID: -1530443230, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
   - {fileID: -1147070994, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
   - {fileID: -645992890, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
   - {fileID: 422311931, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
@@ -964,6 +968,7 @@ SpriteAtlas:
   - {fileID: -26652818, guid: 228419ea5721c4a0eb75647b083dc9e2, type: 3}
   - {fileID: 21300000, guid: 177751fae61c24a1cbc711d6727a2a50, type: 3}
   - {fileID: 21300000, guid: aef3b7fadd3d24073a9cc22e7923e065, type: 3}
+  - {fileID: 21300000, guid: 86e37e3bccad84abaa2ed194f5ecaf6e, type: 3}
   - {fileID: 21300000, guid: 4afdbc8ba755f45c69639d7d40484c83, type: 3}
   - {fileID: 21300000, guid: c58ccfcb12d3a4f8ebf9f78241ba3147, type: 3}
   - {fileID: 21300000, guid: 3dfe46eb5c23a4a7dbc33a4883ca514c, type: 3}
@@ -1280,6 +1285,7 @@ SpriteAtlas:
   - RR_Hex64_OutlineShadowIn
   - RR_Hex32_Outline
   - RR_Hex96WhiteBorderBlack
+  - RR_WhiteSquare
   - RR_Subtitle
   - RR_Hex16_OutlineShadowInOut
   - RR_64_PinkButton
@@ -1451,6 +1457,7 @@ SpriteAtlas:
   - RR_FireRate
   - BorderFrame_Flag_White_BgGradient
   - PictoIcon_Skull
+  - ToastGradient
   - BorderFrame_Round18_Transparent
   - PictoIcon_Critical_1
   - PictoIcon_Crown_1
