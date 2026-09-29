@@ -101,7 +101,7 @@ namespace QuantumUser.View
         private GameObject _sidePanelGo;
         private CheatMenuDragHandle _dragHandle;
 
-        private const float WindowWidth = 480f;
+        private const float WindowWidth = 560f;
         private const float ColumnGap = 12f;
 
         // Buttons per row in every ButtonGrid section (Flow/Player/Grant). Long labels auto-shrink
@@ -178,7 +178,7 @@ namespace QuantumUser.View
             rt.anchorMin = rt.anchorMax = new Vector2(0, 1);
             rt.pivot = new Vector2(0, 1);
             rt.anchoredPosition = new Vector2(10, -110);
-            rt.sizeDelta = new Vector2(120, 38);
+            rt.sizeDelta = new Vector2(140, 48);
 
             Image img = rt.gameObject.AddComponent<Image>();
             img.color = ButtonBg;
@@ -191,7 +191,7 @@ namespace QuantumUser.View
                 UpdateOpenState();
             });
 
-            CreateStretchedLabel(CreateRect(rt, "Text"), "Cheats", 17, Color.white, FontStyles.Bold, TextAlignmentOptions.Center);
+            CreateStretchedLabel(CreateRect(rt, "Text"), "Cheats", 20, Color.white, FontStyles.Bold, TextAlignmentOptions.Center);
 
             _toggleButtonGo = rt.gameObject;
         }
@@ -1075,7 +1075,7 @@ namespace QuantumUser.View
             hlg.childForceExpandWidth = true;
             hlg.childControlHeight = true;
             hlg.childForceExpandHeight = true;
-            rt.gameObject.AddComponent<LayoutElement>().minHeight = 30;
+            rt.gameObject.AddComponent<LayoutElement>().minHeight = 48;
             return rt;
         }
 
@@ -1119,17 +1119,17 @@ namespace QuantumUser.View
             if (onClick != null)
                 btn.onClick.AddListener(() => onClick());
 
-            // Auto-sized down (never up past 17) so long labels still fit a 3-column grid cell.
-            TMP_Text text = CreateStretchedLabel(CreateRect(rt, "Text"), label, 17, Color.white, FontStyles.Normal, TextAlignmentOptions.Center);
+            // Auto-sized down (never up past 20) so long labels still fit a 3-column grid cell.
+            TMP_Text text = CreateStretchedLabel(CreateRect(rt, "Text"), label, 20, Color.white, FontStyles.Normal, TextAlignmentOptions.Center);
             text.enableAutoSizing = true;
-            text.fontSizeMin = 11;
-            text.fontSizeMax = 17;
+            text.fontSizeMin = 13;
+            text.fontSizeMax = 20;
             text.enableWordWrapping = false;
             text.margin = new Vector4(4, 0, 4, 0);
 
             LayoutElement le = rt.gameObject.AddComponent<LayoutElement>();
-            le.minHeight = 36;
-            le.preferredHeight = 36;
+            le.minHeight = 48;
+            le.preferredHeight = 48;
             if (preferredWidth.HasValue)
                 le.preferredWidth = preferredWidth.Value;
             else
