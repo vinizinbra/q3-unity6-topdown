@@ -160,6 +160,20 @@ matches the cube collider (GrassCliff: raycast-based per 2.5 cm slice, robust to
 
 ## ToonTerrain shader (`Tileset/Shaders/ToonTerrain.shader`)
 
+**Mobile port: `Tileset/Shaders/ToonTerrainMobile.shader`** (`RiftRaiders/Mobile/ToonTerrainMobile`,
+2026-09-27) - identical Properties + cbuffer layout, so a ToonTerrain material can switch shader and keep
+every value. Toon light, ambient and hatch weights per VERTEX (exact on the flat-shaded tiles), UVs /
+water ramp / water-line distance interpolated, one albedo read, hatch read only on faces that can get
+ink, no shadow variants. Rendered side by side with the pre-optimization ToonTerrain at the gameplay
+angle: 5 of 630k pixels differ by <=10/255. Gives up: received shadows (Mobile URP has them off), and on
+smooth-normal props the toon step / hatch mapping resolve per vertex. ToonTerrain itself also had its
+fragment trimmed the same day (identical output). See `docs/performance.md`.
+**Default since 2026-09-28: all 20 biome `*_Toon.mat` materials use ToonTerrainMobile** (only the
+shader reference changed; values untouched). Safe everywhere because the game scene's directional light
+casts no shadows, so received shadows (the one thing it drops) never showed. It has no ShadowCaster
+pass. New biomes copy an existing `*_Toon.mat`, so they inherit it. `ToonTerrain.shader` stays as the
+reference / for scenes that need received shadows. The Edge Fade Noise feature was removed from both.
+
 One material per tileset, shared by every tile. World-space surface texture (top-down) and a single-read
 dominant-axis wall texture, so nothing stretches when tiles are scaled/stretched. Mesh data baked by the generators:
 
@@ -226,6 +240,40 @@ RUN + arrow): coloured tube, white-hot core, soft halo that fades out before the
 makes `NeonCityV5_Prop_Graffiti_01..08` (neon5 build), slot remapped to `NeonCityV5_Graffiti.mat` = URP Unlit
 TRANSPARENT alpha blend (queue 3000, no ZWrite, cull off - clip would cut the halo off); weight 0.8 each, scale
 1.3-1.6. V5 `wallPropSlope` = 0 (its recessed body is vertical), so flat props sit on the face.
+**Arctic runs** (2026-09-28, from a winter reference sheet; generator `arctic2_runs()`): `IcicleBand` (universal,
+chance 0.4) - snow coat over the lip (`coat()`, same technique as the Alien slime: top layer with a wavy inner edge,
+wrap, short face sheet, silhouette ink cords) + a band of chunky icicles (`crystal` pointing down, 1.8x / 1.9x);
+`SnowCornice` (0.3) - thicker overhanging scalloped cornice, one icicle; `FrozenCable` (0.15, BelowTop 0.2) - orange
+cable sagging between dark clamps, snow ridge on top, icicles under it, ends in a snow-capped junction box;
+`IceFracture` (0.08, BelowTop 0.35) - jagged dark-blue crack with a pale core and small branches. All with corners
+(convex on the real chamfer lip) and `_Side` / `_XFront` variants. The old `Icicles` prop is weight 0.4 now. The Icicle Band is ONE object (`iced_coat()`): the snow sheet's lower edge IS the icicles - a
+zig-zag of 5 wide triangular teeth per cell (snow white above, ice blue in the teeth, tips leaning on the undercut
+rock), outlined ONLY outside (the snow's floor edge + the zig-zag) with cords at the platform outline weight
+(`INK_R` 0.0075); separate pyramid icicles are still used under the cable / cornice; the cable is chunky (r 0.05, bigger clamps / snow). ArcticV2 and MoonV2
+props now bake edge lines too (they were built without `feature_lines`; Moon skips the glowing meteorite).
+
+**Alien runs + mushroom v2** (2026-09-28, from a reference sheet; generator `alien2_runs()`): the biome language is
+a pink slime band as the MAIN continuous detail, a cyan crystal seam + an organic root line as rare accents.
+`SlimeBand` (chance 0.35) - goo COVERING the lip (not a hanging band - the first try read as cables):
+`goo()` extrudes a cross-section along the plan line - a layer on the top edge with a wavy inner edge reaching onto
+the floor, wrapping over the corner into a face sheet with fat lobes (equal at both cell borders), tapered
+surface-of-revolution drips with a round drop, glossy flecks; run ends taper to nothing; corners follow the plan
+path. Placed with `BelowTop` 0 / `CenterHeight` 0.5 (module lip = the platform top). Its outline is a thin
+near-black cord (`INKLINE`) along the wavy floor edge and the lower edge - only the silhouette, no line through the
+goo at the lip crease; module joints are open (no cap faces) and soft. Convex corner goo: the path is walked backwards (goo() takes the
+outward normal on the path's right) and its diagonal sits at x + z = 0.36 - the tile's real chamfer lip is at
+~0.43 and the builder shifts corner modules in by the run inset along BOTH walls (+0.07 in x + z); on CORNER_R the
+goo was hidden under the chamfer top. `CrystalSeam` (0.1) - at the lip: dark
+channel + ONE continuous glowing cyan vein (a dashed vein read as broken bits) with small crystal nubs, a crystal or two poking up per module (`Straight` / `Straight_B`), a big
+5-crystal outcrop as the decorated module, ends at a crystal. `RootLine` (0.1) - organic alien vine: a thick vine wandering up/down/out and swelling at its knots
+(`tube(..., radii=)` variable radius), a thin vine braided around it (integer turns per cell), drooping tendrils that
+curl into spirals, some with glowing pink bulbs, small leaves; every module starts/ends at the same height, depth and
+radius so they chain; ends dive tapering into the rock. All three at the
+lip (`BelowTop` 0.06), with corners and `_Side` / `_XFront` ink variants. New `Piece.soft_edges` + `tube(...,
+soft_caps=True)`: end-cap rings are never inked, so run modules join without a seam line. Mushroom v2 (`lathe()`
+surfaces of revolution): tapered pale stem, dark gills, smooth domed cap with a darker rolled rim and flat light
+spots on the dome top. The old lime `SlimeDrips` prop is now weight 0.5 (clashes with the pink band).
+
 **Outpost runs + survivor paint** (2026-09-27, generator `outpost_runs()` + `graffiti_quads(z=-0.07)` in
 `outpost_props()`): `BarbedWire` - a concertina helix (black, r 2.4 cm, 8-sided so only the silhouette is inked; phase 0 at every cell border, 5 turns/cell, loop radius 7.5 cm, so modules chain)
 right under the cliff lip, rusty angle-iron stakes; decorated tin-can alarm / torn rag / red X warning plate; ends
@@ -241,6 +289,25 @@ neon letters use the same jitter as tube outlines. Survivor spray paint:
 skull + crossbones stencil, day tally, NO FOOD, searched X-in-circle, HELP, GO ->; ragged spray edge, overspray,
 drips; cream / red; letters / tally / X drawn stroke by stroke from a shaky hand alphabet `HAND` via `hand_text` / `hand_symbol`, not a font), `GrassOutpostV2_Graffiti.mat` (copy of the Favela clip material), weight 0.8 each, 7 cm off
 the (undercut, natural) rock face.
+
+**Ground features + water-edge props** (2026-09-28): `TilesetDefinition.groundFeatures` (`GroundFeature`: Model, Size in
+cells, Margin, Chance) - one big floor piece per Ground platform, on the free Size rectangle (+ margin, both
+orientations) closest to the platform centroid, never under a higher block (`CoveredAbove`); its cells are marked
+used for the floor scatter. Favela `Campinho` = `Favela_Prop_Pitch` (7 x 4 dirt pitch, painted lines, low goals, a
+ball; `Piece.clamp = False`). `ScatterEntry.WaterEdge` wall props only spawn on walls whose bottom is below
+`waterLevelY` (base platforms dropping into the water, never raised blocks) and are placed with height 0 at the
+water line - Favela `ValaoOutlet` (manilha pouring green sewage into the canal, foam). Favela greenery / street pass: `PlantPots`, `BananaPlant`, `WallPlant`, `BeerCrates` (engradados with bottle tops),
+`Stall_Yellow` / `Stall_Red` (awning over the back half so the table + goods read from above, plastic chair) at 1.5-2x,
+reboco-paint patches weight 0.6, corrugated 0.5, wallDensity 0.6; `Trepadeira` run (first in the list, chance 0.4):
+big leafy clumps draped over the lip + strands with leaf clusters. The Campinho is painted straight on the floor
+(no dirt base, worn off-white lines) so it doesn't grab attention. A concrete + brick big-zone
+wall mix was tried for the Favela and rejected (map read more confusing) - the brick + small plaster version stays.
+
+**Flat wall props** (2026-09-28): `ScatterEntry.FrontOnly` keeps flat decals (runes, drips, graffiti, paint, posters)
+off side walls, where they read edge-on and look buried - set on those entries in AlienV2 / Favela / NeonCityV5 /
+GrassOutpostV2. Embedded wall props never poke above the lip any more (shrink to fit, down to MinFitScale, else
+skip). Alien runes / slime drips sit 7 cm proud on a dark stone backing (the natural rock bulges). Crystal seam
+convex corner follows the real chamfer lip like the slime corner.
 
 **Run coexistence** (2026-09-26): wall runs of one platform claim their cells (`runCellsTaken`, in the tileset's list
 order) - a later non-foot run never lands on a wall stretch an earlier one owns (Favela: Varal avoids the Gambiarra;

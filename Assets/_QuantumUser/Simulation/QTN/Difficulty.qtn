@@ -1,0 +1,35 @@
+// Difficulty tier (Easy/Medium/Hard/Nightmare N) - see docs/difficulty.md. Picked on
+// RuntimeConfig.Difficulty/NightmareLevel, resolved ONCE by DifficultySystem.OnInit from
+// DifficultyConfig into the Global snapshot below, then read through DifficultyUtility - nothing reads
+// DifficultyConfig per hit/per spawn.
+enum DifficultyTier
+{
+    Easy,
+    Medium,
+    Hard,
+    Nightmare
+}
+
+// Every field is a MULTIPLIER (1 = Medium = the pre-difficulty tuning). Speed fields are tick-rate
+// multipliers (>1 = a shorter windup/recovery), matching how EnemySystem already consumes
+// BossPhaseUtility's own Anticipation/Recovery multipliers.
+struct DifficultySnapshot
+{
+    DifficultyTier Tier;
+    Int32 NightmareLevel;
+    FP EnemyHpLight;
+    FP EnemyHpHeavy;
+    FP EnemyDamage;
+    FP SpawnDensity;
+    FP EliteWeight;
+    FP AnticipationSpeed;
+    FP RecoverySpeed;
+    FP EnemyProjectileSpeed;
+    FP EnemyProjectileLead;
+    FP EnemyMoveSpeed;
+}
+
+global
+{
+    DifficultySnapshot Difficulty;
+}

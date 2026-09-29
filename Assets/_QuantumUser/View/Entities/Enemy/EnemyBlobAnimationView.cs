@@ -486,7 +486,10 @@ namespace Quantum
                 && (enemyPhase == EnemyActionPhase.Preparation || enemyPhase == EnemyActionPhase.Telegraph))
             {
                 float staggerMultiplier = StatusEffectUtility.IsStaggered(frame, _entityRef) == true ? 0f : 1f;
-                dt *= StatusEffectUtility.GetAnticipationMultiplier(frame, _entityRef).AsFloat * staggerMultiplier;
+                // Difficulty's windup speed too (DifficultyUtility) - the sim folds it into the same
+                // StateTimer decrement, so the body windup must keep pace with it.
+                dt *= StatusEffectUtility.GetAnticipationMultiplier(frame, _entityRef).AsFloat * staggerMultiplier
+                    * DifficultyUtility.Get(frame, DifficultyChannel.AnticipationSpeed).AsFloat;
             }
 
             // Recovery is the attack's downtime - the enemy just stands there resting, so

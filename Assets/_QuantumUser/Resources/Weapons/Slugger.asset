@@ -59,6 +59,7 @@ MonoBehaviour:
     RawValue: 65536
   BaseTraits: []
   ViewPrefab: {fileID: 8089491252618662435, guid: 0ea013cafc72642928256769e9b3f9a0, type: 3}
+  Description: 'Heavy slugs that hit hard and knock enemies back.'
   ShakeTier: 2
   ProjectileVisuals:
     ProjectileSprite: {fileID: 0}

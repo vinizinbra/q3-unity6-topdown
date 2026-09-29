@@ -94,6 +94,12 @@ namespace Quantum {
     Players,
     Enemies,
   }
+  public enum DifficultyTier : int {
+    Easy,
+    Medium,
+    Hard,
+    Nightmare,
+  }
   public enum EKCCCollisionSource : byte {
     None = 0,
     Entity = 1,
@@ -779,6 +785,68 @@ namespace Quantum {
         AssetRef.Serialize(&p->Sacrifice, serializer);
         EntityRef.Serialize(&p->Rift, serializer);
         Quantum.LevelUpOption.Serialize(&p->Mutation, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct DifficultySnapshot {
+    public const Int32 SIZE = 88;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(0)]
+    public DifficultyTier Tier;
+    [FieldOffset(4)]
+    public Int32 NightmareLevel;
+    [FieldOffset(40)]
+    public FP EnemyHpLight;
+    [FieldOffset(32)]
+    public FP EnemyHpHeavy;
+    [FieldOffset(24)]
+    public FP EnemyDamage;
+    [FieldOffset(80)]
+    public FP SpawnDensity;
+    [FieldOffset(16)]
+    public FP EliteWeight;
+    [FieldOffset(8)]
+    public FP AnticipationSpeed;
+    [FieldOffset(72)]
+    public FP RecoverySpeed;
+    [FieldOffset(64)]
+    public FP EnemyProjectileSpeed;
+    [FieldOffset(56)]
+    public FP EnemyProjectileLead;
+    [FieldOffset(48)]
+    public FP EnemyMoveSpeed;
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 1297;
+        hash = hash * 31 + (Int32)Tier;
+        hash = hash * 31 + NightmareLevel.GetHashCode();
+        hash = hash * 31 + EnemyHpLight.GetHashCode();
+        hash = hash * 31 + EnemyHpHeavy.GetHashCode();
+        hash = hash * 31 + EnemyDamage.GetHashCode();
+        hash = hash * 31 + SpawnDensity.GetHashCode();
+        hash = hash * 31 + EliteWeight.GetHashCode();
+        hash = hash * 31 + AnticipationSpeed.GetHashCode();
+        hash = hash * 31 + RecoverySpeed.GetHashCode();
+        hash = hash * 31 + EnemyProjectileSpeed.GetHashCode();
+        hash = hash * 31 + EnemyProjectileLead.GetHashCode();
+        hash = hash * 31 + EnemyMoveSpeed.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (DifficultySnapshot*)ptr;
+        serializer.Stream.Serialize((Int32*)&p->Tier);
+        serializer.Stream.Serialize(&p->NightmareLevel);
+        FP.Serialize(&p->AnticipationSpeed, serializer);
+        FP.Serialize(&p->EliteWeight, serializer);
+        FP.Serialize(&p->EnemyDamage, serializer);
+        FP.Serialize(&p->EnemyHpHeavy, serializer);
+        FP.Serialize(&p->EnemyHpLight, serializer);
+        FP.Serialize(&p->EnemyMoveSpeed, serializer);
+        FP.Serialize(&p->EnemyProjectileLead, serializer);
+        FP.Serialize(&p->EnemyProjectileSpeed, serializer);
+        FP.Serialize(&p->RecoverySpeed, serializer);
+        FP.Serialize(&p->SpawnDensity, serializer);
     }
   }
   [StructLayout(LayoutKind.Explicit)]
@@ -1514,7 +1582,7 @@ namespace Quantum {
   }
   [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct _globals_ {
-    public const Int32 SIZE = 1608;
+    public const Int32 SIZE = 1696;
     public const Int32 ALIGNMENT = 8;
     [FieldOffset(0)]
     public AssetRef<Map> Map;
@@ -1563,6 +1631,8 @@ namespace Quantum {
     public QBoolean DebugLevelUpScreenOpenLastTick;
     [FieldOffset(1200)]
     public QBoolean DebugPendingRiftMutationChoice;
+    [FieldOffset(1608)]
+    public DifficultySnapshot Difficulty;
     [FieldOffset(1568)]
     public FP TotalExperience;
     [FieldOffset(1168)]
@@ -1694,6 +1764,7 @@ namespace Quantum {
         hash = hash * 31 + DebugPendingLevelUps.GetHashCode();
         hash = hash * 31 + DebugLevelUpScreenOpenLastTick.GetHashCode();
         hash = hash * 31 + DebugPendingRiftMutationChoice.GetHashCode();
+        hash = hash * 31 + Difficulty.GetHashCode();
         hash = hash * 31 + TotalExperience.GetHashCode();
         hash = hash * 31 + Level.GetHashCode();
         hash = hash * 31 + LevelUpScreenOpen.GetHashCode();
@@ -1816,6 +1887,7 @@ namespace Quantum {
         FP.Serialize(&p->TotalExperience, serializer);
         FP.Serialize(&p->TraversalChallengeTimeRemaining, serializer);
         FPVector3.Serialize(&p->PlayerSpawnPosition, serializer);
+        Quantum.DifficultySnapshot.Serialize(&p->Difficulty, serializer);
     }
   }
   [StructLayout(LayoutKind.Explicit)]
@@ -7840,6 +7912,24 @@ namespace Quantum {
     }
   }
   [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct WeaponConditionalDamage : Quantum.IComponent {
+    public const Int32 SIZE = 8;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(0)]
+    public FP BurningTargetDamageBonus;
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 14071;
+        hash = hash * 31 + BurningTargetDamageBonus.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (WeaponConditionalDamage*)ptr;
+        FP.Serialize(&p->BurningTargetDamageBonus, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct WeaponEchoState : Quantum.IComponent {
     public const Int32 SIZE = 528;
     public const Int32 ALIGNMENT = 8;
@@ -7899,18 +7989,26 @@ namespace Quantum {
   }
   [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct WeaponFireTimeMods : Quantum.IComponent {
-    public const Int32 SIZE = 120;
+    public const Int32 SIZE = 136;
     public const Int32 ALIGNMENT = 8;
     [FieldOffset(4)]
     public Int32 BonusPierce;
     [FieldOffset(0)]
     public Int32 BonusBounces;
-    [FieldOffset(8)]
-    public FP DoubleTapChance;
-    [FieldOffset(16)]
-    public FP DoubleTapDelay;
     [FieldOffset(24)]
+    public FP DoubleTapChance;
+    [FieldOffset(32)]
+    public FP DoubleTapDelay;
+    [FieldOffset(40)]
     public PendingDoubleTapShot PendingDoubleTap;
+    [FieldOffset(12)]
+    public Int32 ChainShotInterval;
+    [FieldOffset(8)]
+    public Int32 ChainShotBounces;
+    [FieldOffset(16)]
+    public Int32 ShotsSinceChainShot;
+    [FieldOffset(20)]
+    public QBoolean ChainShotArmed;
     public override readonly Int32 GetHashCode() {
       unchecked { 
         var hash = 5477;
@@ -7919,6 +8017,10 @@ namespace Quantum {
         hash = hash * 31 + DoubleTapChance.GetHashCode();
         hash = hash * 31 + DoubleTapDelay.GetHashCode();
         hash = hash * 31 + PendingDoubleTap.GetHashCode();
+        hash = hash * 31 + ChainShotInterval.GetHashCode();
+        hash = hash * 31 + ChainShotBounces.GetHashCode();
+        hash = hash * 31 + ShotsSinceChainShot.GetHashCode();
+        hash = hash * 31 + ChainShotArmed.GetHashCode();
         return hash;
       }
     }
@@ -7926,6 +8028,10 @@ namespace Quantum {
         var p = (WeaponFireTimeMods*)ptr;
         serializer.Stream.Serialize(&p->BonusBounces);
         serializer.Stream.Serialize(&p->BonusPierce);
+        serializer.Stream.Serialize(&p->ChainShotBounces);
+        serializer.Stream.Serialize(&p->ChainShotInterval);
+        serializer.Stream.Serialize(&p->ShotsSinceChainShot);
+        QBoolean.Serialize(&p->ChainShotArmed, serializer);
         FP.Serialize(&p->DoubleTapChance, serializer);
         FP.Serialize(&p->DoubleTapDelay, serializer);
         Quantum.PendingDoubleTapShot.Serialize(&p->PendingDoubleTap, serializer);
@@ -8988,6 +9094,8 @@ namespace Quantum {
       BuildSignalsArrayOnComponentRemoved<Quantum.Weapon>();
       BuildSignalsArrayOnComponentAdded<Quantum.WeaponBurstState>();
       BuildSignalsArrayOnComponentRemoved<Quantum.WeaponBurstState>();
+      BuildSignalsArrayOnComponentAdded<Quantum.WeaponConditionalDamage>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.WeaponConditionalDamage>();
       BuildSignalsArrayOnComponentAdded<Quantum.WeaponEchoState>();
       BuildSignalsArrayOnComponentRemoved<Quantum.WeaponEchoState>();
       BuildSignalsArrayOnComponentAdded<Quantum.WeaponElementInfusion>();
@@ -9324,6 +9432,8 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum.DelayedBlast), Quantum.DelayedBlast.SIZE);
       typeRegistry.Register(typeof(Quantum.DespawnIntent), Quantum.DespawnIntent.SIZE);
       typeRegistry.Register(typeof(Quantum.DestroyAfterTime), Quantum.DestroyAfterTime.SIZE);
+      typeRegistry.Register(typeof(Quantum.DifficultySnapshot), Quantum.DifficultySnapshot.SIZE);
+      typeRegistry.Register(typeof(Quantum.DifficultyTier), 4);
       typeRegistry.Register(typeof(Quantum.DirectHitUpgrade), Quantum.DirectHitUpgrade.SIZE);
       typeRegistry.Register(typeof(DistanceJoint), DistanceJoint.SIZE);
       typeRegistry.Register(typeof(DistanceJoint3D), DistanceJoint3D.SIZE);
@@ -9550,6 +9660,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum.WaypointNode), Quantum.WaypointNode.SIZE);
       typeRegistry.Register(typeof(Quantum.Weapon), Quantum.Weapon.SIZE);
       typeRegistry.Register(typeof(Quantum.WeaponBurstState), Quantum.WeaponBurstState.SIZE);
+      typeRegistry.Register(typeof(Quantum.WeaponConditionalDamage), Quantum.WeaponConditionalDamage.SIZE);
       typeRegistry.Register(typeof(Quantum.WeaponEchoState), Quantum.WeaponEchoState.SIZE);
       typeRegistry.Register(typeof(Quantum.WeaponElementInfusion), Quantum.WeaponElementInfusion.SIZE);
       typeRegistry.Register(typeof(Quantum.WeaponFamily), 1);
@@ -9568,7 +9679,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum._globals_), Quantum._globals_.SIZE);
     }
     static partial void InitComponentTypeIdGen() {
-      ComponentTypeId.Reset(ComponentTypeId.BuiltInComponentCount + 183)
+      ComponentTypeId.Reset(ComponentTypeId.BuiltInComponentCount + 184)
         .AddBuiltInComponents()
         .Add<Quantum.AccessoryEmergencyReserve>(Quantum.AccessoryEmergencyReserve.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.AccessoryGuard>(Quantum.AccessoryGuard.Serialize, null, null, ComponentFlags.None)
@@ -9740,6 +9851,7 @@ namespace Quantum {
         .Add<Quantum.VortexInterruptConfig>(Quantum.VortexInterruptConfig.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.Weapon>(Quantum.Weapon.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.WeaponBurstState>(Quantum.WeaponBurstState.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.WeaponConditionalDamage>(Quantum.WeaponConditionalDamage.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.WeaponEchoState>(Quantum.WeaponEchoState.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.WeaponElementInfusion>(Quantum.WeaponElementInfusion.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.WeaponFireTimeMods>(Quantum.WeaponFireTimeMods.Serialize, null, null, ComponentFlags.None)
@@ -9768,6 +9880,7 @@ namespace Quantum {
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.CurrencyOrbType>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.DamageSource>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.DamageTargetMask>();
+      FramePrinter.EnsurePrimitiveNotStripped<Quantum.DifficultyTier>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.EKCCCollisionSource>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.EKCCIgnoreSource>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.EKCCProcessorSource>();

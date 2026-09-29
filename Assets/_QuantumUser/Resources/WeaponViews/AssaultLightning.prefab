@@ -4917,7 +4917,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -549292626, guid: 90ae01af4feea41bfbf42f42c02a75f5, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 2833deae7b6464b889c2faf62941e907, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -4945,6 +4945,7 @@ MonoBehaviour:
   executeOnlyOnLocal: 0
   isLocal: 0
   anim:
+    AttackAnimationType: 0
     rightOffset: {x: -0.1, y: -0.1}
     upOffset: {x: 0.1, y: -0.1}
     downOffset: {x: 0.1, y: 0.5}
@@ -4961,6 +4962,13 @@ MonoBehaviour:
     recoilAsymmetry: 0.3
     knockbackDistance: 0.1
     knockbackScalePunch: 0.1
+    swingRotationAngle: 90
+    swingAnticipationAngle: 15
+    swingAnticipationDuration: 0.08
+    swingOutDuration: 0.1
+    swingReturnDuration: 0.15
+    swingLungeDistance: 0.08
+    swingScalePunch: 0.15
     shakePositionHead:
       Strength: {x: 0, y: 0.04, z: 0}
       Duration: 0.1
@@ -4984,8 +4992,10 @@ MonoBehaviour:
   character: {fileID: 0}
   flipPivotOffset: {x: 0, y: 0, z: 0}
   muzzleParticle: {fileID: 5049125598854652786}
+  chargeParticle: {fileID: 0}
   projectileSpawnPoint: {fileID: 0}
   fireSound: {fileID: 11400000, guid: 8b93f5ad5f7964b1cbdad6a63618f84c, type: 2}
+  anticipationSound: {fileID: 0}
   reloadStartSound: {fileID: 11400000, guid: 5edaefd69c1f24edc81078b02a2b8b2a, type: 2}
   reloadReadySound: {fileID: 11400000, guid: f2fd980e55c984487af99afe28b60074, type: 2}
 --- !u!1001 &787458259852921771

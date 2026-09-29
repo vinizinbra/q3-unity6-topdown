@@ -91,7 +91,8 @@ namespace Quantum
             bool fullyPaused = StatusEffectUtility.IsStaggered(frame, _enemyEntity) == true || frame.Global->LevelUpScreenOpen == true;
             float pauseMultiplier = fullyPaused == true ? 0f : 1f;
             float anticipationMultiplier = StatusEffectUtility.GetAnticipationMultiplier(frame, _enemyEntity).AsFloat
-                * BossPhaseUtility.ResolveAnticipationMultiplier(frame, _enemyEntity).AsFloat;
+                * BossPhaseUtility.ResolveAnticipationMultiplier(frame, _enemyEntity).AsFloat
+                * DifficultyUtility.Get(frame, DifficultyChannel.AnticipationSpeed).AsFloat; // difficulty tier's windup speed, same reason
             return anticipationMultiplier * pauseMultiplier;
         }
 

@@ -7,7 +7,7 @@
 //              each group (ledges / cliff top / grass border) has its own width + strength.
 //      UV0.y = surface weight: 0 on the wall / at the grass border, 1 once inside the grass
 //              -> one-directional fade: the surface starts at the grass outline in _FadeColor and
-//              fades into the surface texture going inward (_EdgeFadeStart/End), broken up by noise.
+//              fades into the surface texture going inward (_EdgeFadeStart/End).
 //      COLOR.rgb = wall tint per row (terrain) or albedo (props), COLOR.a = 1 for props.
 //      Props with UV0.x = -1 are EMISSIVE (neon): unlit COLOR.rgb * _EmissionStrength (HDR, bloom-ready).
 //  - Toon lighting (stepped main light + tinted shadow, received shadows) and hand-drawn style
@@ -19,7 +19,7 @@ Shader "RiftRaiders/Test/ToonTerrain"
     Properties
     {
         [Header(Surface)]
-        _SurfaceTex ("Surface Texture (GRAYSCALE: white = Light, black = Dark; A = edge noise)", 2D) = "white" {}
+        _SurfaceTex ("Surface Texture (GRAYSCALE: white = Light, black = Dark)", 2D) = "white" {}
         _SurfaceLightColor ("Surface Light Color", Color) = (0.72, 0.76, 0.29, 1)
         _SurfaceDarkColor ("Surface Dark Color", Color) = (0.6, 0.66, 0.22, 1)
         _SurfaceScale ("Surface World Size (m per tile)", Float) = 4
@@ -41,7 +41,6 @@ Shader "RiftRaiders/Test/ToonTerrain"
         [Header(Wall To Surface Fade)]
         _EdgeFadeStart ("Fade Start (0 = at the outline)", Range(0, 1)) = 0
         _EdgeFadeEnd ("Fade End (how far inward it fades)", Range(0, 1)) = 0.4
-        _EdgeFadeNoise ("Fade Noise (uses Surface A)", Range(0, 1)) = 0.2
         _FadeColor ("Fade Color at the outline (A = strength)", Color) = (0.55, 0.42, 0.25, 1)
 
         [Header(Texture Outlines)]
@@ -124,7 +123,6 @@ Shader "RiftRaiders/Test/ToonTerrain"
             float _WallScale;
             float _EdgeFadeStart;
             float _EdgeFadeEnd;
-            float _EdgeFadeNoise;
             half4 _FadeColor;
             half4 _OutlineColor;
             float _StrataOutlineWidth;
@@ -278,7 +276,7 @@ Shader "RiftRaiders/Test/ToonTerrain"
                             surfaceLight = lerp(surfaceLight, _RaisedLightColor.rgb, raised);
                         }
                         half3 surface = lerp(surfaceDark, surfaceLight, surfSample.r);
-                        half fade = input.data.y + (surfSample.a - 0.5h) * _EdgeFadeNoise * saturate(input.data.y * 4.0h);
+                        half fade = input.data.y;
                         half inward = smoothstep(_EdgeFadeStart, max(_EdgeFadeEnd, _EdgeFadeStart + 1e-3h), fade);
                         terrain = lerp(surface, lerp(_FadeColor.rgb, surface, inward), _FadeColor.a);
                     }

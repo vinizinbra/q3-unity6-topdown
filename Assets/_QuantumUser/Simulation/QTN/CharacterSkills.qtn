@@ -102,3 +102,20 @@ signal OnFreeCastUsed(EntityRef entity, SkillSlotId slotId);
 // OnFreeCastUsed above - RiftMutationReactionSystem is today's only listener (Infinite Momentum's
 // dash-consumes-shield reaction, gated to SkillSlotId.DashSkill there).
 signal OnSkillActivated(EntityRef entity, SkillSlotId slotId);
+
+// Fired by SkillSystem.TryBegin when a press is refused for having no stack (and no free cast or
+// emergency activation to fall back on) - purely View feedback, see SkillStatusLabelWidget.
+event SkillNotReady
+{
+    EntityRef Entity;
+    SkillSlotId Slot;
+}
+
+// Fired by SkillSystem.TickCooldown when a slot recovers from 0 stacks to 1 - the moment it goes
+// from unusable to usable. Later recoveries (1 -> 2 on a multi-charge slot) don't fire; the skill
+// was already ready. Purely View feedback, see SkillStatusLabelWidget.
+event SkillReady
+{
+    EntityRef Entity;
+    SkillSlotId Slot;
+}

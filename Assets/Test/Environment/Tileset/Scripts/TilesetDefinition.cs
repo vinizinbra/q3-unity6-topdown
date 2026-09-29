@@ -59,6 +59,10 @@ public class TilesetDefinition : ScriptableObject
         public GameObject SideModel;
         [Tooltip("Foot props that stand clear of the wall (lamp poles, cones, tents): ignore the wall's avoid band, so they may be taller than the wall body.")]
         public bool FreeStanding;
+        [Tooltip("Wall props only: only on walls facing the camera (flat decals - runes, paint, drips - read edge-on and look buried on side walls).")]
+        public bool FrontOnly;
+        [Tooltip("Wall props only: only on walls that drop into the water / void (wall bottom below 0 - base platforms, never raised blocks), placed right at the water line (model height 0 = the water surface). E.g. a sewage outlet pouring into the canal.")]
+        public bool WaterEdge;
     }
 
     [Header("Surface scatter (props on top of platforms, see TilesetPlatformBuilder.SurfaceDecor)")]
@@ -139,6 +143,8 @@ public class TilesetDefinition : ScriptableObject
         public float BelowTop = 0.45f;
         [Tooltip("With a tileset avoid band (e.g. NeonCityV5's cap slab), the centreline also stays at least this far below the band's lower edge (world units).")]
         public float BandClearance = 0.3f;
+        [Tooltip("Ignore the tileset's avoid band: the run sits on / spills over the cap itself (vines draping over a laje).")]
+        public bool OverBand;
         [Tooltip("Walls lower than this (top - bottom) get no run.")]
         public float MinWallHeight = 0.9f;
         [Range(0f, 1f), Tooltip("Chance per free stretch of a camera-facing straight wall to start a run (half on side walls).")]
@@ -156,6 +162,27 @@ public class TilesetDefinition : ScriptableObject
         [Tooltip("Foot runs: how high above the wall foot a spawned item blocks the wall props of its cell (a low sandbag trench leaves room for props above it; a pole blocks the whole cell).")]
         public float FootReserveHeight = 99f;
     }
+
+    // One big decal-like piece on a walkable floor's open centre (a football pitch, helipad, plaza...): placed on the
+    // free Size rectangle closest to the platform centre, at most once per platform, Ground platforms only.
+    [Serializable]
+    public class GroundFeature
+    {
+        public string Name;
+        [Tooltip("Authored centred on its pivot, Size.x units along X and Size.y along Z (1 unit = 1 cell).")]
+        public GameObject Model;
+        [Tooltip("Footprint in cells (X by Z). The builder also tries it rotated 90 degrees.")]
+        public Vector2Int Size = new(7, 4);
+        [Min(0), Tooltip("Free cells required around the footprint (keeps it off the walls).")]
+        public int Margin = 1;
+        [Range(0f, 1f), Tooltip("Chance per platform that has room for it.")]
+        public float Chance = 0.6f;
+    }
+
+    [SerializeField, Tooltip("Big floor pieces for open areas of walkable floors (football pitch...). Ground platforms only.")]
+    private List<GroundFeature> groundFeatures = new();
+
+    public IReadOnlyList<GroundFeature> GroundFeatures => groundFeatures;
 
     [SerializeField, Tooltip("Continuous modular runs along straight walls (pipelines, cables, fences). Wall props keep out of the cells/height they cover.")]
     private List<WallRunSet> wallRuns = new();

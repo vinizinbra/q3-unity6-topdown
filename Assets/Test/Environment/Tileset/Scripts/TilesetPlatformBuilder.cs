@@ -77,6 +77,9 @@ public class TilesetPlatformBuilder : MonoBehaviour
     [SerializeField, Tooltip("Embedded wall props never go below this world Y (keeps them above the water line on floors dropping into the pits).")]
     private float wallPropMinY = 0.05f;
 
+    [SerializeField, Tooltip("World Y of the water / void surface: WaterEdge wall props (sewage outlets...) are placed with their pivot here, only on walls whose bottom is below it.")]
+    private float waterLevelY = 0f;
+
     [SerializeField, Tooltip("Changes which variant each tile picks. Same seed + same layout = same result (the host's seed is used).")]
     private int variationSeed;
 
@@ -488,11 +491,14 @@ public class TilesetPlatformBuilder : MonoBehaviour
 
         float U(int h) => (h & 0xffffff) / (float)0x1000000;
 
+        var used = new HashSet<Vector2Int>();
+        if (mode == SurfaceDecor.Ground)
+            PlaceGroundFeatures(set, platform, solid, origin, top, parent, template, used, Hash, U);
+
         if (list.Count > 0 && density > 0f)
         {
             var sorted = new List<Vector2Int>(platform);
             sorted.Sort((a, b) => a.y != b.y ? a.y.CompareTo(b.y) : a.x.CompareTo(b.x));
-            var used = new HashSet<Vector2Int>();
             foreach (var c in sorted)
             {
                 if (used.Contains(c) || !Interior(c) || U(Hash(c, 1)) >= density)
@@ -581,6 +587,10 @@ public class TilesetPlatformBuilder : MonoBehaviour
                     continue;
                 if (!TilesetDefinition.PickScatter(set.WallScatter, (int)(U(22) * int.MaxValue), out var entry))
                     continue;
+                if (entry.FrontOnly && facing <= 0.5f)
+                    continue;
+                if (entry.WaterEdge && (entry.Foot || bottom >= waterLevelY || top - waterLevelY < propHeightOf(entry)))
+                    continue;                                    // base platforms dropping into the water only
 
                 var along = -length * 0.5f + (slot + 0.5f) * (length / slots) + (U(23) - 0.5f) * 0.3f;
                 along = Mathf.Clamp(along, -length * 0.5f + 0.3f, length * 0.5f - 0.3f);
@@ -609,6 +619,11 @@ public class TilesetPlatformBuilder : MonoBehaviour
                         scale *= fit;
                         propHeight *= fit;
                     }
+                }
+                else if (entry.WaterEdge)
+                {
+                    y = waterLevelY;                             // model height 0 = the water surface
+                    inset = 0.02f + set.WallPropSlope * (1f - Mathf.Clamp01((y - bottom) / Mathf.Max(top - bottom, 0.01f))) + 0.015f + set.WallPropInset;
                 }
                 else
                 {
@@ -643,6 +658,21 @@ public class TilesetPlatformBuilder : MonoBehaviour
                             continue;
                         y = Mathf.Lerp(lo, hi, U(24));
                     }
+                    // never poke above the lip (low walls): shrink to fit, or skip when it would get too small
+                    if (y + propHeight > top - 0.04f)
+                    {
+                        var fitTop = (top - 0.04f - y) / Mathf.Max(propHeight, 1e-4f);
+                        if (fitTop < MinFitScale)
+                        {
+                            y = Mathf.Max(lo, top - 0.04f - propHeight * MinFitScale);
+                            fitTop = (top - 0.04f - y) / Mathf.Max(propHeight, 1e-4f);
+                            if (fitTop < MinFitScale || y + propHeight * fitTop > top - 0.04f + 1e-3f)
+                                continue;
+                        }
+                        fitTop = Mathf.Min(1f, fitTop);
+                        scale *= fitTop;
+                        propHeight *= fitTop;
+                    }
                     var f = Mathf.Clamp01((y - bottom) / Mathf.Max(top - bottom, 0.01f));
                     inset = 0.02f + set.WallPropSlope * (1f - f) + 0.015f + set.WallPropInset;   // wall face inset at this height + a bit (embedded)
                 }
@@ -672,6 +702,83 @@ public class TilesetPlatformBuilder : MonoBehaviour
                 SpawnProp(entry.Model, pos, 90f * e.Rotation + (U(26) - 0.5f) * 20f, scale, parent, template);
             }
         }
+    }
+
+    // Big floor pieces (football pitch...): the free footprint (+ margin) closest to the platform's centroid, both
+    // orientations, one feature per platform at most; its cells are marked used so the floor scatter avoids them.
+    private void PlaceGroundFeatures(TilesetDefinition set, List<Vector2Int> platform, HashSet<Vector2Int> solid, Vector3 origin,
+        float top, Transform parent, GameObject template, HashSet<Vector2Int> used,
+        System.Func<Vector2Int, int, int> hash, System.Func<int, float> u)
+    {
+        if (set.GroundFeatures.Count == 0 || platform.Count == 0)
+            return;
+        var centroid = Vector2.zero;
+        foreach (var c in platform)
+            centroid += new Vector2(c.x + 0.5f, c.y + 0.5f);
+        centroid /= platform.Count;
+        var min = platform[0]; var max = platform[0];
+        foreach (var c in platform)
+        {
+            min = Vector2Int.Min(min, c);
+            max = Vector2Int.Max(max, c);
+        }
+        var key = new Vector2Int(Mathf.RoundToInt(centroid.x), Mathf.RoundToInt(centroid.y));
+
+        for (var fi = 0; fi < set.GroundFeatures.Count; fi++)
+        {
+            var feat = set.GroundFeatures[fi];
+            if (feat.Model == null || u(hash(key, 700 + fi)) >= feat.Chance)
+                continue;
+            var best = float.MaxValue; var bestPos = Vector2.zero; var bestRot = false;
+            foreach (var rotated in new[] { false, true })
+            {
+                var sx = rotated ? feat.Size.y : feat.Size.x;
+                var sz = rotated ? feat.Size.x : feat.Size.y;
+                for (var x0 = min.x; x0 + sx - 1 <= max.x; x0++)
+                for (var z0 = min.y; z0 + sz - 1 <= max.y; z0++)
+                {
+                    var ok = true;
+                    for (var x = x0 - feat.Margin; ok && x < x0 + sx + feat.Margin; x++)
+                    for (var z = z0 - feat.Margin; ok && z < z0 + sz + feat.Margin; z++)
+                    {
+                        var c = new Vector2Int(x, z);
+                        if (!solid.Contains(c) || used.Contains(c) || CoveredAbove(origin, c, top))
+                            ok = false;
+                    }
+                    if (!ok)
+                        continue;
+                    var centre = new Vector2(x0 + sx * 0.5f, z0 + sz * 0.5f);
+                    var d = (centre - centroid).sqrMagnitude;
+                    if (d < best)
+                    {
+                        best = d; bestPos = centre; bestRot = rotated;
+                    }
+                }
+            }
+            if (best == float.MaxValue)
+                continue;
+            var fsx = bestRot ? feat.Size.y : feat.Size.x;
+            var fsz = bestRot ? feat.Size.x : feat.Size.y;
+            for (var x = Mathf.RoundToInt(bestPos.x - fsx * 0.5f); x < Mathf.RoundToInt(bestPos.x + fsx * 0.5f); x++)
+            for (var z = Mathf.RoundToInt(bestPos.y - fsz * 0.5f); z < Mathf.RoundToInt(bestPos.y + fsz * 0.5f); z++)
+                used.Add(new Vector2Int(x, z));
+            var go = SpawnProp(feat.Model, new Vector3(origin.x + bestPos.x * cellSize, top + verticalOffset, origin.z + bestPos.y * cellSize),
+                bestRot ? 90f : 0f, cellSize, parent, template);
+            go.name = feat.Model.name;
+            return;                                               // one big feature per platform
+        }
+    }
+
+    // Is this floor cell under a higher block (a raised platform standing on the floor)?
+    private bool CoveredAbove(Vector3 origin, Vector2Int c, float top)
+    {
+        var p = new Vector3(origin.x + (c.x + 0.5f) * cellSize, 0f, origin.z + (c.y + 0.5f) * cellSize);
+        foreach (var b in groundBoxes)
+        {
+            if (b.max.y > top + 0.1f && p.x > b.min.x - 0.05f && p.x < b.max.x + 0.05f && p.z > b.min.z - 0.05f && p.z < b.max.z + 0.05f)
+                return true;
+        }
+        return false;
     }
 
     // Wall runs: a straight wall line is every edge cell with the same facing, the same wall-plane
@@ -883,7 +990,7 @@ public class TilesetPlatformBuilder : MonoBehaviour
         {
             y = top - run.BelowTop;
             var avoid = set.WallPropAvoidBand;
-            if (avoid.y > avoid.x)                           // stay under the tileset's keep-out band (cap slab, trim)
+            if (avoid.y > avoid.x && !run.OverBand)          // stay under the tileset's keep-out band (cap slab, trim)
                 y = Mathf.Min(y, bottom + (top - bottom) * avoid.x - set.WallPropAvoidMargin - run.BandClearance);
             // the whole module (centreline minus what hangs under it - clothes, boxes) must clear the water line
             if (y - run.CenterHeight < wallPropMinY || y - 0.15f < bottom)
@@ -1061,6 +1168,9 @@ public class TilesetPlatformBuilder : MonoBehaviour
         go.transform.localScale = model.transform.localScale;
         return true;
     }
+
+    private static float propHeightOf(TilesetDefinition.ScatterEntry e) =>
+        PropHeight(e.Model) * (e.ScaleRange == Vector2.zero ? 1f : e.ScaleRange.x);
 
     // Smallest scale a wall prop may be shrunk to so it fits under a wall's avoid band (short walls).
     private const float MinFitScale = 0.55f;

@@ -1220,6 +1220,38 @@ namespace Quantum.Prototypes {
     }
   }
   [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.DifficultySnapshot))]
+  public unsafe partial class DifficultySnapshotPrototype : StructPrototype {
+    public Quantum.QEnum32<DifficultyTier> Tier;
+    public Int32 NightmareLevel;
+    public FP EnemyHpLight;
+    public FP EnemyHpHeavy;
+    public FP EnemyDamage;
+    public FP SpawnDensity;
+    public FP EliteWeight;
+    public FP AnticipationSpeed;
+    public FP RecoverySpeed;
+    public FP EnemyProjectileSpeed;
+    public FP EnemyProjectileLead;
+    public FP EnemyMoveSpeed;
+    partial void MaterializeUser(Frame frame, ref Quantum.DifficultySnapshot result, in PrototypeMaterializationContext context);
+    public void Materialize(Frame frame, ref Quantum.DifficultySnapshot result, in PrototypeMaterializationContext context = default) {
+        result.Tier = this.Tier;
+        result.NightmareLevel = this.NightmareLevel;
+        result.EnemyHpLight = this.EnemyHpLight;
+        result.EnemyHpHeavy = this.EnemyHpHeavy;
+        result.EnemyDamage = this.EnemyDamage;
+        result.SpawnDensity = this.SpawnDensity;
+        result.EliteWeight = this.EliteWeight;
+        result.AnticipationSpeed = this.AnticipationSpeed;
+        result.RecoverySpeed = this.RecoverySpeed;
+        result.EnemyProjectileSpeed = this.EnemyProjectileSpeed;
+        result.EnemyProjectileLead = this.EnemyProjectileLead;
+        result.EnemyMoveSpeed = this.EnemyMoveSpeed;
+        MaterializeUser(frame, ref result, in context);
+    }
+  }
+  [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.DirectHitUpgrade))]
   public unsafe partial class DirectHitUpgradePrototype : ComponentPrototype<Quantum.DirectHitUpgrade> {
     public FP InnerRadiusFraction;
@@ -4366,6 +4398,21 @@ namespace Quantum.Prototypes {
     }
   }
   [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.WeaponConditionalDamage))]
+  public unsafe partial class WeaponConditionalDamagePrototype : ComponentPrototype<Quantum.WeaponConditionalDamage> {
+    public FP BurningTargetDamageBonus;
+    partial void MaterializeUser(Frame frame, ref Quantum.WeaponConditionalDamage result, in PrototypeMaterializationContext context);
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.WeaponConditionalDamage component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.WeaponConditionalDamage result, in PrototypeMaterializationContext context = default) {
+        result.BurningTargetDamageBonus = this.BurningTargetDamageBonus;
+        MaterializeUser(frame, ref result, in context);
+    }
+  }
+  [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.WeaponEchoState))]
   public unsafe partial class WeaponEchoStatePrototype : ComponentPrototype<Quantum.WeaponEchoState> {
     public QBoolean HasEchoChamber;
@@ -4414,6 +4461,10 @@ namespace Quantum.Prototypes {
     public FP DoubleTapChance;
     public FP DoubleTapDelay;
     public Quantum.Prototypes.PendingDoubleTapShotPrototype PendingDoubleTap;
+    public Int32 ChainShotInterval;
+    public Int32 ChainShotBounces;
+    public Int32 ShotsSinceChainShot;
+    public QBoolean ChainShotArmed;
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.WeaponFireTimeMods component = default;
         Materialize((Frame)f, ref component, in context);
@@ -4425,6 +4476,10 @@ namespace Quantum.Prototypes {
         result.DoubleTapChance = this.DoubleTapChance;
         result.DoubleTapDelay = this.DoubleTapDelay;
         this.PendingDoubleTap.Materialize(frame, ref result.PendingDoubleTap, in context);
+        result.ChainShotInterval = this.ChainShotInterval;
+        result.ChainShotBounces = this.ChainShotBounces;
+        result.ShotsSinceChainShot = this.ShotsSinceChainShot;
+        result.ChainShotArmed = this.ChainShotArmed;
     }
   }
   [System.SerializableAttribute()]

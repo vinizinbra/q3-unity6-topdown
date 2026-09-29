@@ -21,6 +21,8 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
     [SerializeField] private WindowManager windowManager;
     [SerializeField] private TMP_Text lives;
     [SerializeField] private TMP_Text rtt;
+    [SerializeField, Tooltip("Optional HUD label showing the tier this match is played on (e.g. \"Hard\", \"Nightmare 3\") - set once in QStart.")]
+    private TMP_Text difficultyLabel;
     [SerializeField, Tooltip("Optional HUD button that opens the in-match settings popup - listener is added in Start.")]
     private UnityEngine.UI.Button settingsButton;
 
@@ -166,7 +168,19 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
 
     public override void QStart(QuantumGame game)
     {
+        UpdateDifficultyLabel(game);
+    }
 
+    // Read off RuntimeConfig rather than the Global.Difficulty snapshot - the snapshot stays all-zero
+    // (Tier reads Easy) when no DifficultyConfig is assigned, while the match actually plays as
+    // Medium, so the config is the one source that always names the tier being played.
+    private void UpdateDifficultyLabel(QuantumGame game)
+    {
+        if (difficultyLabel == null)
+            return;
+
+        RuntimeConfig config = game.Frames.Predicted.RuntimeConfig;
+        difficultyLabel.text = DifficultyConfig.GetDisplayName(config.Difficulty, config.NightmareLevel);
     }
 
     public override unsafe void QUpdate(QuantumGame game)
@@ -1027,6 +1041,7 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
             // WeaponOfferCurve (see that field's own comment), so both can show a level > 0 here.
             // WithLevelSuffix no-ops whenever the roll came back at 0 (e.g. early in a run).
             WeaponName = StringUtility.WithLevelSuffix(baseName, weaponLevel),
+            Description = weaponData.Description,
             Damage = weaponData.Damage.AsFloat,
             FireRate = weaponData.FireRate.AsFloat,
             CriticalDamageMultiplier = weaponData.CriticalDamageBonus.AsFloat,

@@ -138,6 +138,9 @@ public class CharacterUiWidget : MonoBehaviour
     [SerializeField, Tooltip("Per-hero resource readouts (Brute/Max/Zara/Lux) authored as children of this widget - left empty, auto-populated via GetComponentsInChildren in Setup. Each one self-hides unless the entity this widget follows actually carries that hero's own components, so the single shared prefab keeps serving every hero AND every enemy. This is the only place they live: the party HUD deliberately shows none of them.")]
     private HeroHudWidget[] heroWidgets;
 
+    [SerializeField, Tooltip("Floating \"Skill not ready\"/\"Skill ready\"/\"Dash ready\" callout - event-driven, see SkillStatusLabelWidget. Auto-resolved from children if left unassigned; left absent entirely (e.g. on an enemy-only prefab), this feature is simply off.")]
+    private SkillStatusLabelWidget skillStatusLabel;
+
     private Canvas _canvas;
     private Camera _worldCamera;
     private QuantumGame _game;
@@ -194,6 +197,12 @@ public class CharacterUiWidget : MonoBehaviour
 
         if (heroWidgets == null || heroWidgets.Length == 0)
             heroWidgets = GetComponentsInChildren<HeroHudWidget>(true);
+
+        if (skillStatusLabel == null)
+            skillStatusLabel = GetComponentInChildren<SkillStatusLabelWidget>(true);
+
+        if (skillStatusLabel != null)
+            skillStatusLabel.Setup(game, entityRef);
 
         SetShown(nameText, string.IsNullOrEmpty(displayName) == false);
         if (nameText != null)

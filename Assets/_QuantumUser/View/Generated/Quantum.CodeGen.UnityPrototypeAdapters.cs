@@ -1068,6 +1068,10 @@ namespace Quantum.Prototypes.Unity {
     public FP DoubleTapChance;
     public FP DoubleTapDelay;
     public Quantum.Prototypes.Unity.PendingDoubleTapShotPrototype PendingDoubleTap;
+    public Int32 ChainShotInterval;
+    public Int32 ChainShotBounces;
+    public Int32 ShotsSinceChainShot;
+    public QBoolean ChainShotArmed;
     partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.WeaponFireTimeModsPrototype prototype);
     public override Quantum.Prototypes.WeaponFireTimeModsPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
       var result = new Quantum.Prototypes.WeaponFireTimeModsPrototype();
@@ -1076,6 +1080,10 @@ namespace Quantum.Prototypes.Unity {
       converter.Convert(this.DoubleTapChance, out result.DoubleTapChance);
       converter.Convert(this.DoubleTapDelay, out result.DoubleTapDelay);
       converter.Convert(this.PendingDoubleTap, out result.PendingDoubleTap);
+      converter.Convert(this.ChainShotInterval, out result.ChainShotInterval);
+      converter.Convert(this.ChainShotBounces, out result.ChainShotBounces);
+      converter.Convert(this.ShotsSinceChainShot, out result.ShotsSinceChainShot);
+      converter.Convert(this.ChainShotArmed, out result.ChainShotArmed);
       ConvertUser(converter, ref result);
       return result;
     }

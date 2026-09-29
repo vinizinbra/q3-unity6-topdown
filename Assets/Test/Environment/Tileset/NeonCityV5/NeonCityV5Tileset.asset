@@ -32,6 +32,7 @@ MonoBehaviour:
     Foot: 0
     SideModel: {fileID: 0}
     FreeStanding: 0
+    FrontOnly: 1
   - Model: {fileID: 919132149155446097, guid: b5c21e1ee7b664069bd813b2c8655ed0, type: 3}
     Weight: 2
     ScaleRange: {x: 1.5, y: 1.7}
@@ -40,6 +41,7 @@ MonoBehaviour:
     Foot: 0
     SideModel: {fileID: 0}
     FreeStanding: 0
+    FrontOnly: 1
   - Model: {fileID: 919132149155446097, guid: c3175ba6ec10745a9bd20bda0472a084, type: 3}
     Weight: 1.5
     ScaleRange: {x: 1.5, y: 1.7}
@@ -48,6 +50,7 @@ MonoBehaviour:
     Foot: 0
     SideModel: {fileID: 0}
     FreeStanding: 0
+    FrontOnly: 0
   - Model: {fileID: 919132149155446097, guid: c47c2cf317d1c49869eda3c4e08f2fa5, type: 3}
     Weight: 1.5
     ScaleRange: {x: 1.5, y: 1.7}
@@ -56,6 +59,7 @@ MonoBehaviour:
     Foot: 0
     SideModel: {fileID: 0}
     FreeStanding: 0
+    FrontOnly: 0
   - Model: {fileID: 919132149155446097, guid: 8b7270a714bcd410eb25cb32109e3059, type: 3}
     Weight: 1
     ScaleRange: {x: 1.5, y: 1.7}
@@ -64,6 +68,7 @@ MonoBehaviour:
     Foot: 0
     SideModel: {fileID: 0}
     FreeStanding: 0
+    FrontOnly: 0
   - Model: {fileID: 919132149155446097, guid: df2eabac8bcd64435adcaa9243906315, type: 3}
     Weight: 1.5
     ScaleRange: {x: 1.5, y: 1.7}
@@ -72,6 +77,7 @@ MonoBehaviour:
     Foot: 1
     SideModel: {fileID: 0}
     FreeStanding: 0
+    FrontOnly: 0
   - Model: {fileID: 919132149155446097, guid: 3f5a48ecf99fa477cb3f7d33f239db5c, type: 3}
     Weight: 2
     ScaleRange: {x: 1.5, y: 1.7}
@@ -80,6 +86,7 @@ MonoBehaviour:
     Foot: 1
     SideModel: {fileID: 0}
     FreeStanding: 0
+    FrontOnly: 0
   - Model: {fileID: 919132149155446097, guid: 6e8e8631ec1a94e298842b170b9f6865, type: 3}
     Weight: 1
     ScaleRange: {x: 1.5, y: 1.7}
@@ -88,6 +95,7 @@ MonoBehaviour:
     Foot: 1
     SideModel: {fileID: 0}
     FreeStanding: 0
+    FrontOnly: 0
   - Model: {fileID: 919132149155446097, guid: adf83a2fe3dd94823b6e0adb5a3e4900, type: 3}
     Weight: 1.5
     ScaleRange: {x: 1.5, y: 1.7}
@@ -96,6 +104,7 @@ MonoBehaviour:
     Foot: 1
     SideModel: {fileID: 0}
     FreeStanding: 0
+    FrontOnly: 0
   - Model: {fileID: 919132149155446097, guid: 898aba10d4f23435a9725e2f0bcf907b, type: 3}
     Weight: 1.5
     ScaleRange: {x: 1.5, y: 1.7}
@@ -104,6 +113,7 @@ MonoBehaviour:
     Foot: 1
     SideModel: {fileID: 0}
     FreeStanding: 0
+    FrontOnly: 0
   - Model: {fileID: 919132149155446097, guid: a5abf62f37df143cc9c0b9a9912a4ace, type: 3}
     Weight: 1.2
     ScaleRange: {x: 1.5, y: 1.7}
@@ -112,6 +122,7 @@ MonoBehaviour:
     Foot: 1
     SideModel: {fileID: 0}
     FreeStanding: 0
+    FrontOnly: 0
   - Model: {fileID: 919132149155446097, guid: 687298ebe927746d3ae0ecf6b312fa0d, type: 3}
     Weight: 1.5
     ScaleRange: {x: 1.5, y: 1.7}
@@ -120,6 +131,7 @@ MonoBehaviour:
     Foot: 1
     SideModel: {fileID: 0}
     FreeStanding: 0
+    FrontOnly: 0
   - Model: {fileID: 919132149155446097, guid: d4bd18680005c471c82195d0addc23a7, type: 3}
     Weight: 0.8
     ScaleRange: {x: 1.5, y: 1.7}
@@ -128,6 +140,7 @@ MonoBehaviour:
     Foot: 1
     SideModel: {fileID: 0}
     FreeStanding: 1
+    FrontOnly: 0
   - Model: {fileID: 919132149155446097, guid: a5bd07947ec58411fa77bde831b55520, type: 3}
     Weight: 1.2
     ScaleRange: {x: 1.5, y: 1.7}
@@ -136,6 +149,7 @@ MonoBehaviour:
     Foot: 1
     SideModel: {fileID: 0}
     FreeStanding: 1
+    FrontOnly: 0
   - Model: {fileID: 919132149155446097, guid: 12be11cc5fc704581bee12b6322ee559, type: 3}
     Weight: 1.5
     ScaleRange: {x: 1.5, y: 1.7}
@@ -144,6 +158,7 @@ MonoBehaviour:
     Foot: 1
     SideModel: {fileID: 0}
     FreeStanding: 0
+    FrontOnly: 0
   - Model: {fileID: 919132149155446097, guid: 18656b9ef31274983822479ce6954d00, type: 3}
     Weight: 1.5
     ScaleRange: {x: 1.5, y: 1.7}
@@ -152,6 +167,7 @@ MonoBehaviour:
     Foot: 1
     SideModel: {fileID: 0}
     FreeStanding: 0
+    FrontOnly: 0
   - Model: {fileID: 919132149155446097, guid: f894c04b98df3408f9de999d3acb4151, type: 3}
     Weight: 2
     ScaleRange: {x: 1.5, y: 1.7}
@@ -160,6 +176,7 @@ MonoBehaviour:
     Foot: 0
     SideModel: {fileID: 0}
     FreeStanding: 0
+    FrontOnly: 0
   - Model: {fileID: 919132149155446097, guid: b76088a036aee4af4bdd25632e816409, type: 3}
     Weight: 2
     ScaleRange: {x: 1.5, y: 1.7}
@@ -168,6 +185,7 @@ MonoBehaviour:
     Foot: 0
     SideModel: {fileID: 0}
     FreeStanding: 0
+    FrontOnly: 0
   - Model: {fileID: 919132149155446097, guid: 26294605369c64ab1b0269cb57045d3f, type: 3}
     Weight: 2
     ScaleRange: {x: 1.3, y: 1.6}
@@ -176,6 +194,7 @@ MonoBehaviour:
     Foot: 0
     SideModel: {fileID: 0}
     FreeStanding: 0
+    FrontOnly: 1
   - Model: {fileID: 919132149155446097, guid: 85dc42fd067a34bd9ab81041801e03d6, type: 3}
     Weight: 2
     ScaleRange: {x: 1.3, y: 1.6}
@@ -184,6 +203,7 @@ MonoBehaviour:
     Foot: 0
     SideModel: {fileID: 0}
     FreeStanding: 0
+    FrontOnly: 1
   - Model: {fileID: 919132149155446097, guid: b496c8bd8220042eaa1babb0d1c79b2a, type: 3}
     Weight: 2
     ScaleRange: {x: 1.3, y: 1.6}
@@ -192,6 +212,7 @@ MonoBehaviour:
     Foot: 0
     SideModel: {fileID: 0}
     FreeStanding: 0
+    FrontOnly: 1
   - Model: {fileID: 919132149155446097, guid: 1a23eca32392e436f8edc2fbb2d4373e, type: 3}
     Weight: 2
     ScaleRange: {x: 1.3, y: 1.6}
@@ -200,6 +221,7 @@ MonoBehaviour:
     Foot: 0
     SideModel: {fileID: 0}
     FreeStanding: 0
+    FrontOnly: 1
   - Model: {fileID: 919132149155446097, guid: 613fa01a26fb54105b3a9cca64bd9d44, type: 3}
     Weight: 2
     ScaleRange: {x: 1.3, y: 1.6}
@@ -208,6 +230,7 @@ MonoBehaviour:
     Foot: 0
     SideModel: {fileID: 0}
     FreeStanding: 0
+    FrontOnly: 1
   - Model: {fileID: 919132149155446097, guid: 44613cdac44e94e6c8c7ca6c3c9ff6dd, type: 3}
     Weight: 2
     ScaleRange: {x: 1.3, y: 1.6}
@@ -216,6 +239,7 @@ MonoBehaviour:
     Foot: 0
     SideModel: {fileID: 0}
     FreeStanding: 0
+    FrontOnly: 1
   - Model: {fileID: 919132149155446097, guid: 3eb43ea0b425d4cc79e0a99731722702, type: 3}
     Weight: 2
     ScaleRange: {x: 1.3, y: 1.6}
@@ -224,6 +248,7 @@ MonoBehaviour:
     Foot: 0
     SideModel: {fileID: 0}
     FreeStanding: 0
+    FrontOnly: 1
   - Model: {fileID: 919132149155446097, guid: 4cd915280ab7f482bb01c7b8dd9766a0, type: 3}
     Weight: 2
     ScaleRange: {x: 1.3, y: 1.6}
@@ -232,6 +257,7 @@ MonoBehaviour:
     Foot: 0
     SideModel: {fileID: 0}
     FreeStanding: 0
+    FrontOnly: 1
   wallDensity: 0.55
   wallPropAvoidBand: {x: 0.72, y: 1}
   wallPropAvoidMargin: 0.04
@@ -248,6 +274,7 @@ MonoBehaviour:
       Foot: 0
       SideModel: {fileID: 919132149155446097, guid: c63a87d9df56d49e8838ed89bb1c6720, type: 3}
       FreeStanding: 0
+      FrontOnly: 0
     - Model: {fileID: 919132149155446097, guid: dc03587b15b1b40e4bfcd4cbff333a2d, type: 3}
       Weight: 2
       ScaleRange: {x: 0, y: 0}
@@ -256,6 +283,7 @@ MonoBehaviour:
       Foot: 0
       SideModel: {fileID: 919132149155446097, guid: 26f8fd1ae75334447afc85c04ae57e59, type: 3}
       FreeStanding: 0
+      FrontOnly: 0
     Decorated:
     - Model: {fileID: 919132149155446097, guid: 971a21d6f071f4a1f983a2de7253a072, type: 3}
       Weight: 1.5
@@ -265,6 +293,7 @@ MonoBehaviour:
       Foot: 0
       SideModel: {fileID: 919132149155446097, guid: a5748effa24f4420781eae114cd5237d, type: 3}
       FreeStanding: 0
+      FrontOnly: 0
     - Model: {fileID: 919132149155446097, guid: fd26fc53b6a3c49c284934616f644144, type: 3}
       Weight: 1.5
       ScaleRange: {x: 0, y: 0}
@@ -273,6 +302,7 @@ MonoBehaviour:
       Foot: 0
       SideModel: {fileID: 919132149155446097, guid: 13bcfc0ac23474a929bc3de1e0da3a33, type: 3}
       FreeStanding: 0
+      FrontOnly: 0
     - Model: {fileID: 919132149155446097, guid: 03720fce842e6436fb9f36510e5d372e, type: 3}
       Weight: 1.2
       ScaleRange: {x: 0, y: 0}
@@ -281,6 +311,7 @@ MonoBehaviour:
       Foot: 0
       SideModel: {fileID: 919132149155446097, guid: a76513b1b880c4ef58edb2610ad6c00e, type: 3}
       FreeStanding: 0
+      FrontOnly: 0
     DecoratedChance: 0.25
     DecoratedSpacing: 3
     EndWall: {fileID: 919132149155446097, guid: d9fa2f15c46e9462999eca7554064419, type: 3}
@@ -305,6 +336,8 @@ MonoBehaviour:
     MinGap: 2
     Inset: 0
     Foot: 0
+    FrontOnly: 0
+    FootReserveHeight: 99
   - Name: NeonPink
     Straight:
     - Model: {fileID: 919132149155446097, guid: ecc13ae37e34a4ca4b71223d51d91a0a, type: 3}
@@ -315,6 +348,7 @@ MonoBehaviour:
       Foot: 0
       SideModel: {fileID: 0}
       FreeStanding: 0
+      FrontOnly: 0
     Decorated: []
     DecoratedChance: 0
     DecoratedSpacing: 0
@@ -340,6 +374,8 @@ MonoBehaviour:
     MinGap: 3
     Inset: 0
     Foot: 0
+    FrontOnly: 0
+    FootReserveHeight: 99
   - Name: NeonCyan
     Straight:
     - Model: {fileID: 919132149155446097, guid: da874c1245a1241f292a96c935377ede, type: 3}
@@ -350,6 +386,7 @@ MonoBehaviour:
       Foot: 0
       SideModel: {fileID: 0}
       FreeStanding: 0
+      FrontOnly: 0
     Decorated: []
     DecoratedChance: 0
     DecoratedSpacing: 0
@@ -375,6 +412,8 @@ MonoBehaviour:
     MinGap: 3
     Inset: 0
     Foot: 0
+    FrontOnly: 0
+    FootReserveHeight: 99
   - Name: StreetLights
     Straight:
     - Model: {fileID: 0}
@@ -385,6 +424,7 @@ MonoBehaviour:
       Foot: 0
       SideModel: {fileID: 0}
       FreeStanding: 0
+      FrontOnly: 0
     Decorated:
     - Model: {fileID: 919132149155446097, guid: 0d892d91de21f4ebbb9b867bfe294fb4, type: 3}
       Weight: 1
@@ -394,6 +434,7 @@ MonoBehaviour:
       Foot: 0
       SideModel: {fileID: 919132149155446097, guid: c5c316d7969174b558edb0a46d3a47f7, type: 3}
       FreeStanding: 0
+      FrontOnly: 0
     DecoratedChance: 1
     DecoratedSpacing: 3
     EndWall: {fileID: 0}
@@ -418,6 +459,8 @@ MonoBehaviour:
     MinGap: 1
     Inset: 0
     Foot: 1
+    FrontOnly: 0
+    FootReserveHeight: 99
   maxEdgeLength: 3
   maxEdgeStretch: 1.5
   pieces:

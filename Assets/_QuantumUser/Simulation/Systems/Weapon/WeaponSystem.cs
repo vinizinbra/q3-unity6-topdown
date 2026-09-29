@@ -283,6 +283,7 @@ namespace Quantum
             f.Remove<WeaponOnCritReactions>(owner);
             f.Remove<WeaponElementInfusion>(owner);
             f.Remove<WeaponBurstState>(owner);
+            f.Remove<WeaponConditionalDamage>(owner);
         }
 
         private static void ApplyPerks(Frame f, EntityRef owner, Weapon* weapon)
@@ -549,8 +550,10 @@ namespace Quantum
             grantPierceAmount += ResolveLongRangePierceBonus(f, filter.Entity, filter.Aim->Target, casterPosition);
 
             FireShotMarker.Begin();
+            ArmChainShot(f, filter.Entity);
             FireShot(f, filter.Entity, filter.Weapon, weaponData, damage, casterPosition, aimAngle, holdOffset,
                 spawnPosition, aimDirection, filter.Aim->Target, aimAtCenter, isExplosiveProc, isCataclysm, grantPierceAmount, isFirstBullet, forceCritical);
+            DisarmChainShot(f, filter.Entity);
             FireShotMarker.End();
 
             FollowUpShotsMarker.Begin();
@@ -810,6 +813,31 @@ namespace Quantum
             FP baseCooldown = FP._1 / weaponData.FireRate * weapon->FireCooldownMultiplier / (FP._1 + fireRateBonus);
 
             return StatUtility.GetFireCooldown(f, entity, baseCooldown);
+        }
+
+        // Storm Chain's shot counter - same "every real shot advances it, hit or miss" rule as
+        // ResolveExplosiveProc below. Arms WeaponFireTimeMods.ChainShotArmed for exactly the one
+        // FireShot call it wraps; DisarmChainShot clears it right after.
+        private static void ArmChainShot(Frame f, EntityRef owner)
+        {
+            if (f.Unsafe.TryGetPointer<WeaponFireTimeMods>(owner, out var mods) == false || mods->ChainShotInterval <= 0)
+                return;
+
+            mods->ShotsSinceChainShot++;
+
+            if (mods->ShotsSinceChainShot < mods->ChainShotInterval)
+                return;
+
+            mods->ShotsSinceChainShot = 0;
+            mods->ChainShotArmed = true;
+        }
+
+        private static void DisarmChainShot(Frame f, EntityRef owner)
+        {
+            if (f.Unsafe.TryGetPointer<WeaponFireTimeMods>(owner, out var mods) == true)
+            {
+                mods->ChainShotArmed = false;
+            }
         }
 
         // Explosive Sequence's own shot counter - every shot fired (hitscan or projectile) advances
@@ -1080,9 +1108,11 @@ namespace Quantum
             TryResolveMuzzle(f, owner, weaponData, target, aimAtCenter, out FPVector3 casterPosition, out FP aimAngle,
                 out FPVector3 holdOffset, out FPVector3 spawnPosition, out FPVector3 aimDirection);
 
+            ArmChainShot(f, owner);
             FireShot(f, owner, weapon, weaponData, damage, casterPosition, aimAngle, holdOffset,
                 spawnPosition, aimDirection, target, aimAtCenter, isExplosiveProc,
                 isCataclysm, burst->GrantPierceAmount, isFirstBullet, forceCritical);
+            DisarmChainShot(f, owner);
 
             QueueFollowUpShots(f, owner, weapon, weaponData, damage, casterPosition, aimAngle, holdOffset,
                 spawnPosition, aimDirection, target, aimAtCenter, isExplosiveProc, isCataclysm, burst->GrantPierceAmount,
@@ -1328,6 +1358,11 @@ namespace Quantum
             {
                 pierces += mods->BonusPierce;
                 bounces += mods->BonusBounces;
+
+                if (mods->ChainShotArmed == true)
+                {
+                    bounces += mods->ChainShotBounces;
+                }
             }
 
             // Kai's Phantom Strike - a one-shot flat pierce bonus consumed once per fired shot, on
@@ -1893,6 +1928,11 @@ namespace Quantum
             {
                 projectile->RemainingPierces += mods->BonusPierce;
                 projectile->RemainingBounces += mods->BonusBounces;
+
+                if (mods->ChainShotArmed == true)
+                {
+                    projectile->RemainingBounces += mods->ChainShotBounces;
+                }
             }
 
             projectile->RemainingPierces += grantPierceAmount;

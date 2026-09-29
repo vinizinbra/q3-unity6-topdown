@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: ArcticV2_Toon
-  m_Shader: {fileID: 4800000, guid: 7e15f81c31cc5438e8cba73e4395e40a, type: 3}
+  m_Shader: {fileID: 4800000, guid: c2dbcf3e0aa964dfe9aa16b1e46b0cee, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -58,6 +58,10 @@ Material:
     - _HatchScreenSpace: 0
     - _HatchSoftness: 0.08
     - _HatchStrength: 1
+    - _PropLineStrength: 1
+    - _PropLineWidth: 1.6
+    - _RaisedFromY: 1.5
+    - _RaisedStrength: 0
     - _RimOutlineStrength: 0
     - _RimOutlineWidth: 10
     - _ShadowSoftness: 0.04
@@ -80,6 +84,8 @@ Material:
     - _GradientTopColor: {r: 1, g: 1, b: 1, a: 1}
     - _HatchColor: {r: 0.1, g: 0.16, b: 0.32, a: 1}
     - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
+    - _RaisedDarkColor: {r: 0.11999995, g: 0.34999996, b: 0.35999998, a: 1}
+    - _RaisedLightColor: {r: 0.19999996, g: 0.54999995, b: 0.5, a: 1}
     - _ShadowTint: {r: 0.56, g: 0.66, b: 0.86, a: 1}
     - _SurfaceDarkColor: {r: 0.70848167, g: 0.75900453, b: 0.8207547, a: 1}
     - _SurfaceLightColor: {r: 0.81470275, g: 0.83865255, b: 0.8679245, a: 1}

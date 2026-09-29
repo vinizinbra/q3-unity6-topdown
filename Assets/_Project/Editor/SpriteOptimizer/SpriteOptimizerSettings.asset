@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8057b25c961445e7b324eaa9e496384, type: 3}
+  m_Name: SpriteOptimizerSettings
+  m_EditorClassIdentifier: Assembly-CSharp-Editor::Project.EditorTools.SpriteOptimizer.SpriteOptimizerSettings
+  Atlases:
+  - Atlas: {fileID: 4343727234628468602, guid: 8e61ef1c9314d4db9a34941be8cfbb5e, type: 2}
+    Context: 2
+    Primary: 1
+  - Atlas: {fileID: 4343727234628468602, guid: 11da54cdda8544d7bb5cce45c96ad2ee, type: 2}
+    Context: 1
+    Primary: 1
+  - Atlas: {fileID: 4343727234628468602, guid: 8b26844b5ed8b4c74a95da9af065f559, type: 2}
+    Context: 3
+    Primary: 0
+  ExcludedUsageFolders:
+  - Assets/3rd-party
+  - Assets/Photon
+  - Assets/Plugins
+  - Assets/TextMesh Pro
+  - Assets/Samples
+  - Assets/0_Refs
+  - Assets/_Delete
+  ScanAllScenes: 0
+  UiDuplicateFolder: Assets/_Project/Art/Sprites/_AtlasSplit/UI
+  GameplayDuplicateFolder: Assets/_Project/Art/Sprites/_AtlasSplit/Gameplay
+  FieldRules: []
+  TextureOverrides:
+  - Texture: {fileID: 2800000, guid: cf771ed30918b4a09b4a8a55f32c3a5c, type: 3}
+    Context: 1
+  - Texture: {fileID: 2800000, guid: 880bd387938f44bbdafc175461537c46, type: 3}
+    Context: 2
+  - Texture: {fileID: 2800000, guid: f664891c957894bd1ba05f39cf427393, type: 3}
+    Context: 2
+  - Texture: {fileID: 2800000, guid: b49db0c0e58ba4e9b8349764e5b8d384, type: 3}
+    Context: 1
+  - Texture: {fileID: 2800000, guid: 9500f48424b214942acfffa7912cb6be, type: 3}
+    Context: 2
+  - Texture: {fileID: 2800000, guid: babf8bf5c1b784e07bb668d455b33d8d, type: 3}
+    Context: 2
+  - Texture: {fileID: 2800000, guid: 88a2b3728ffc2417a840df84c7e12928, type: 3}
+    Context: 2
+  - Texture: {fileID: 2800000, guid: 42575e5623f17440fa06a862f89be50a, type: 3}
+    Context: 2
+  - Texture: {fileID: 2800000, guid: e7a641611c1e34b8c94669f1d2b0719d, type: 3}
+    Context: 2
+  - Texture: {fileID: 2800000, guid: eda5b8655ed784c759e37da9c720d68e, type: 3}
+    Context: 2
+  - Texture: {fileID: 2800000, guid: bb4a43d4fa3bc48fd8ed381c2a665ce4, type: 3}
+    Context: 2
+  - Texture: {fileID: 2800000, guid: 37dc1b74d174f44df89a9b0c7abf60dd, type: 3}
+    Context: 2

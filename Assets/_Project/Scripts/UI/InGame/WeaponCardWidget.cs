@@ -22,6 +22,9 @@ public class WeaponCardWidget : MonoBehaviour
         public Sprite WeaponIcon;
         public string WeaponName;
 
+        // WeaponDataAsset.Description - the weapon's one-line identity blurb. Empty hides descriptionText.
+        public string Description;
+
         // Plain floats/int, not Quantum FP - same "keep this view Quantum-free" convention as
         // UpgradeCardWidget.CardData.RarityIndex. GameplayUiController.BuildWeaponCardData reads
         // these straight off WeaponDataAsset (Damage/FireRate/CriticalDamageBonus/MagazineSize/
@@ -81,6 +84,8 @@ public class WeaponCardWidget : MonoBehaviour
     [SerializeField] private GameObject root;
     [SerializeField] private Image weaponIcon;
     [SerializeField] private TMP_Text weaponName;
+    [SerializeField, Tooltip("Shows CardData.Description (WeaponDataAsset.Description). Hidden when the weapon has none authored. Optional.")]
+    private TMP_Text descriptionText;
 
     // A fixed set (every weapon has all of these), unlike Perks below - no per-row widget needed,
     // same "just a handful of static fields" shape as UpgradeCardWidget's rarityText/kindText.
@@ -121,6 +126,8 @@ public class WeaponCardWidget : MonoBehaviour
     private Image currencyIcon;
     [SerializeField, Tooltip("Overlay shown when CardData.Purchase.IsSoldOut is true - the card stays visible/de-emphasized rather than being removed.")]
     private GameObject soldOutOverlay;
+    [SerializeField, Tooltip("Gray look for the Buy button while the offer can't be afforded or is sold out - see PurchaseButtonStyle.")]
+    private PurchaseButtonStyle buyButtonStyle = new PurchaseButtonStyle();
 
     [SerializeField] private Button button;
     [SerializeField, Tooltip("The button's own label text - set to CardData.ButtonLabel when non-empty, otherwise reset to defaultButtonLabel every Setup so a reused card slot can't keep a stale label from whatever kind was shown on it last.")]
@@ -163,6 +170,13 @@ public class WeaponCardWidget : MonoBehaviour
 
         if (weaponName != null)
             weaponName.text = AppendElementSpriteTag(data.WeaponName, data.ElementIndex);
+
+        if (descriptionText != null)
+        {
+            bool hasDescription = string.IsNullOrEmpty(data.Description) == false;
+            descriptionText.gameObject.SetActive(hasDescription);
+            descriptionText.text = hasDescription ? data.Description : string.Empty;
+        }
 
         if (buttonLabelText != null)
             buttonLabelText.text = string.IsNullOrEmpty(data.ButtonLabel) ? defaultButtonLabel : data.ButtonLabel;
@@ -214,7 +228,7 @@ public class WeaponCardWidget : MonoBehaviour
                 _perkRows[i].Setup(data.Perks[i]);
         }
 
-        PurchasableCardUi.Apply(data.Purchase, purchaseRoot, priceText, currencyIcon, soldOutOverlay, ref interactable);
+        PurchasableCardUi.Apply(data.Purchase, purchaseRoot, priceText, currencyIcon, soldOutOverlay, ref interactable, buyButtonStyle);
 
         if (button != null)
             button.interactable = interactable;

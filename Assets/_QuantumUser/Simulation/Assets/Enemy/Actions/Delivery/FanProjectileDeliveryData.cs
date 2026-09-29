@@ -104,8 +104,12 @@ namespace Quantum
 
                 if (trial.IsValid == true)
                 {
+                    // Difficulty scales the lead itself and (with the boss phase) the real flight
+                    // speed - see DifficultyUtility.ScaleEnemyLead/ResolveEnemyShotSpeed.
+                    DifficultyUtility.ScaleEnemyLead(f, LeadFactor, MaxLeadDistance, out FP leadFactor, out FP maxLeadDistance);
                     targetPosition = ProjectileAimUtility.LeadAimPoint(f, target, resolvedOrigin, targetPosition,
-                        trial.Velocity * ProjectileSpeedMultiplier, LeadFactor, MaxLeadDistance);
+                        trial.Velocity * DifficultyUtility.ResolveEnemyShotSpeed(f, filter.Entity, ProjectileSpeedMultiplier),
+                        leadFactor, maxLeadDistance);
                 }
             }
 

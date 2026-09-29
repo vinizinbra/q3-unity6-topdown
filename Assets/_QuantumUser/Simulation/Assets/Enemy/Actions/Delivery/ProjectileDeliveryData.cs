@@ -86,8 +86,12 @@ namespace Quantum
             // collider centroid itself.
             if (LeadFactor > FP._0 && launch.IsValid == true)
             {
+                // Difficulty scales the lead itself and (with the boss phase) the real flight speed -
+                // see DifficultyUtility.ScaleEnemyLead/ResolveEnemyShotSpeed.
+                DifficultyUtility.ScaleEnemyLead(f, LeadFactor, MaxLeadDistance, out FP leadFactor, out FP maxLeadDistance);
                 FPVector3 leadOffset = ProjectileAimUtility.LeadAimPoint(f, target, resolvedOrigin, targetPosition,
-                    launch.Velocity * ProjectileSpeedMultiplier, LeadFactor, MaxLeadDistance) - targetPosition;
+                    launch.Velocity * DifficultyUtility.ResolveEnemyShotSpeed(f, filter.Entity, ProjectileSpeedMultiplier),
+                    leadFactor, maxLeadDistance) - targetPosition;
                 FPVector3 ledPosition = lockedPosition + leadOffset;
                 ProjectileLaunch ledLaunch = SolveLaunch(f, action, projectileData, resolvedOrigin, ref ledPosition, target);
 

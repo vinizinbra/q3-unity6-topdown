@@ -61,6 +61,7 @@ MonoBehaviour:
   - Id:
       Value: 479467527841019262
   ViewPrefab: {fileID: 8089491252618662435, guid: 60095a189c6174f8b8ca2b8a875257a9, type: 3}
+  Description: 'Fires two bullets per trigger pull.'
   ShakeTier: 0
   ProjectileVisuals:
     ProjectileSprite: {fileID: 57386854, guid: 8a17d688bdd9e47c68bbdfc6beba17e1, type: 3}

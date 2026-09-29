@@ -10,6 +10,10 @@
         {
             systems.Add(new LevelGenerationSystem());
 
+            // One-shot OnInit only - resolves RuntimeConfig.Difficulty into Global.Difficulty before
+            // any enemy can spawn. See docs/difficulty.md.
+            systems.Add(new DifficultySystem());
+
             // Moved out of the pausable GameplaySystemGroup below (see LevelUpUtility/LevelUpSystem)
             // - must keep reacting to ISignalOnEntityPrototypeMaterialized even while an upgrade
             // screen is open, or a player who spawns mid-screen never gets CharacterStats/Health/

@@ -129,6 +129,13 @@ A single `BalanceConfig` asset holds the run curves and both co-op multiplier ta
 rather than one `AssetObject` per table - keeps `RuntimeConfig` down to one `AssetRef` for this
 whole feature instead of accumulating a new one per lookup table.
 
+### Difficulty tier on top
+
+The selected difficulty tier (`docs/difficulty.md`) composes on top of everything here:
+**base × run curve × co-op × Rift Mutations × difficulty**. It is applied inside
+`EncounterModifierUtility` (HP, damage, spawn density, elite weight) and at the enemy timing seams,
+never by editing these curves/rows, so Medium (1x) leaves every number in this doc untouched.
+
 ## `ResolveEnemyStats`
 
 ```csharp

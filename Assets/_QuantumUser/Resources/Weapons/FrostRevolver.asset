@@ -53,6 +53,7 @@ MonoBehaviour:
   - Id:
       Value: 2965355236263187082
   ViewPrefab: {fileID: 8089491252618662435, guid: 27954d8e1207646e198acc84147bf76c, type: 3}
+  Description: 'The last bullet in the chamber deals bonus damage.'
   ShakeTier: 1
   ProjectileVisuals:
     ProjectileSprite: {fileID: -1971064935, guid: 8a17d688bdd9e47c68bbdfc6beba17e1, type: 3}

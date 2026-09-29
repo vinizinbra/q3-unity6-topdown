@@ -893,7 +893,8 @@ namespace Quantum
             }
 
             FP moveSpeed = data.Stats.MoveSpeed * StatusEffectUtility.GetSpeedMultiplier(f, filter.Entity)
-                * BossPhaseUtility.ResolveMoveSpeedMultiplier(f, filter.Entity);
+                * BossPhaseUtility.ResolveMoveSpeedMultiplier(f, filter.Entity)
+                * DifficultyUtility.Get(f, DifficultyChannel.EnemyMoveSpeed);
 
             // UseWaypointDetour overrides Stats.Movement's own direction only while the direct
             // line to the target is wall-blocked - see EnemyPathfindingUtility.
@@ -959,7 +960,8 @@ namespace Quantum
                 return;
 
             FP anticipationMultiplier = StatusEffectUtility.GetAnticipationMultiplier(f, filter.Entity)
-                * BossPhaseUtility.ResolveAnticipationMultiplier(f, filter.Entity);
+                * BossPhaseUtility.ResolveAnticipationMultiplier(f, filter.Entity)
+                * DifficultyUtility.Get(f, DifficultyChannel.AnticipationSpeed);
             filter.Enemy->StateTimer -= f.DeltaTime * anticipationMultiplier;
 
             if (filter.Enemy->StateTimer > FP._0)
@@ -1023,7 +1025,8 @@ namespace Quantum
 
         private static void UpdateRecovery(Frame f, ref Filter filter, EnemyDataAsset data)
         {
-            filter.Enemy->StateTimer -= f.DeltaTime * BossPhaseUtility.ResolveRecoveryMultiplier(f, filter.Entity);
+            filter.Enemy->StateTimer -= f.DeltaTime * BossPhaseUtility.ResolveRecoveryMultiplier(f, filter.Entity)
+                * DifficultyUtility.Get(f, DifficultyChannel.RecoverySpeed);
 
             if (filter.Enemy->StateTimer > FP._0)
                 return;

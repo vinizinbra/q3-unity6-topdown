@@ -677,7 +677,7 @@ MonoBehaviour:
   ProjectileMaxDistanceMultiplier:
     RawValue: 65536
   LeadFactor:
-    RawValue: 32768
+    RawValue: 26214
   MaxLeadDistance:
     RawValue: 262144
   SpawnAnchor: 0

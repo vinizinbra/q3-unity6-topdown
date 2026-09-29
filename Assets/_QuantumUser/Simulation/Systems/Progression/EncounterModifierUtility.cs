@@ -7,7 +7,9 @@ namespace Quantum
     // (Greed/Overpopulation/Elite Territory/Blood Tithe/Escalation, see
     // docs/rift-mutations.md), but deliberately mutation-agnostic: any future run modifier - a
     // difficulty setting, a world event, a Cursed Rift outcome - can write the same fields and
-    // every consumer below picks it up for free.
+    // every consumer below picks it up for free. The difficulty tier (DifficultyUtility) is the one
+    // exception: it compounds rather than adds, so it multiplies in here as its own factor instead.
+    // See docs/difficulty.md.
     //
     // Every field is a BONUS defaulting to 0, so an untouched run returns exactly 1 from all of
     // these and the Director/enemy/economy code paths behave bit-for-bit as they did before this
@@ -26,10 +28,14 @@ namespace Quantum
         {
             FP bonus = f.Global->EnemyMaxHealthBonus;
 
-            if (tier == EnemyTier.Boss && bonus < FP._0)
-                return FP._1;
+            // Difficulty is its own multiplicative factor (never folded into the additive bonus), so
+            // the negative-bonus boss exemption stays scoped to mutations - Easy still softens bosses.
+            FP difficulty = DifficultyUtility.GetEnemyHp(f, tier);
 
-            return FPMath.Max(FP._0, FP._1 + bonus);
+            if (tier == EnemyTier.Boss && bonus < FP._0)
+                return difficulty;
+
+            return FPMath.Max(FP._0, FP._1 + bonus) * difficulty;
         }
 
         // Read LIVE (every hit) rather than baked at spawn, so picking Blood Tithe mid-fight makes
@@ -38,7 +44,7 @@ namespace Quantum
         // every enemy delivery type ultimately goes through.
         public static FP ResolveEnemyDamageMultiplier(Frame f)
         {
-            return FPMath.Max(FP._0, FP._1 + f.Global->EnemyDamageBonus);
+            return FPMath.Max(FP._0, FP._1 + f.Global->EnemyDamageBonus) * DifficultyUtility.Get(f, DifficultyChannel.EnemyDamage);
         }
 
         // How much more (or less) the Director should be spawning right now. Applied to all THREE
@@ -52,7 +58,7 @@ namespace Quantum
         {
             FP density = FPMath.Max(FP._0, FP._1 + f.Global->EnemySpawnDensityBonus);
 
-            return density * ResolvePhaseRamp(f);
+            return density * ResolvePhaseRamp(f) * DifficultyUtility.Get(f, DifficultyChannel.SpawnDensity);
         }
 
         // Escalation - 1.0 at the start of a combat phase climbing to 1 + EscalationEndBonus
@@ -121,12 +127,16 @@ namespace Quantum
 
         private static FP ResolveWeightMultiplier(Frame f, bool isMajor)
         {
+            if (isMajor == false)
+                return FP._1;
+
+            // Elite Territory's own multiplier (0 = unpicked) composed with the difficulty's.
             FP multiplier = f.Global->EliteGroupWeightMultiplier;
 
             if (multiplier <= FP._0)
-                return FP._1;
+                multiplier = FP._1;
 
-            return isMajor ? multiplier : FP._1;
+            return multiplier * DifficultyUtility.Get(f, DifficultyChannel.EliteWeight);
         }
 
         // Team-wide Rift Shard gain, applied by RiftShardUtility.GrantAll BEFORE each player's own

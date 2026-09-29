@@ -102,6 +102,7 @@ namespace QuantumUser.View
         private CheatMenuDragHandle _dragHandle;
 
         private const float WindowWidth = 480f;
+        private const float ColumnGap = 12f;
 
         // Buttons per row in every ButtonGrid section (Flow/Player/Grant). Long labels auto-shrink
         // (see CreateButton) rather than wrapping, so bumping this only needs WindowWidth widened.
@@ -222,6 +223,67 @@ namespace QuantumUser.View
 
             BuildHeader(rt);
 
+            BuildTabBar(rt);
+
+            BuildRunTab(CreateTabPage(rt, Tab.Run));
+            BuildPlayerTab(CreateTabPage(rt, Tab.Player));
+            BuildLootTab(CreateTabPage(rt, Tab.Loot));
+            BuildEnemiesTab(CreateTabPage(rt, Tab.Enemies));
+            BuildWorldTab(CreateTabPage(rt, Tab.World));
+            BuildDebugTab(CreateTabPage(rt, Tab.Debug));
+
+            SelectTab(_tab);
+        }
+
+        // --- Tabs: one page per category, only the selected one active, so the window's ContentSizeFitter
+        // sizes it to that page alone instead of every cheat stacked on screen at once.
+        private enum Tab { Run, Player, Loot, Enemies, World, Debug }
+
+        private static readonly Color TabSelectedBg = new Color(0.25f, 0.45f, 0.75f, 1f);
+        private readonly Dictionary<Tab, GameObject> _tabPages = new Dictionary<Tab, GameObject>();
+        private readonly Dictionary<Tab, Image> _tabButtonImages = new Dictionary<Tab, Image>();
+        private Tab _tab = Tab.Run;
+
+        private void BuildTabBar(Transform parent)
+        {
+            Transform row = CreateRow(parent);
+
+            foreach (Tab tab in (Tab[])System.Enum.GetValues(typeof(Tab)))
+            {
+                Tab captured = tab;
+                Button button = CreateButton(row, tab.ToString(), () => SelectTab(captured));
+                _tabButtonImages[tab] = (Image)button.targetGraphic;
+            }
+        }
+
+        private Transform CreateTabPage(Transform parent, Tab tab)
+        {
+            RectTransform page = CreateRect(parent, $"Tab_{tab}");
+            VerticalLayoutGroup vlg = page.gameObject.AddComponent<VerticalLayoutGroup>();
+            vlg.spacing = 4;
+            vlg.childControlWidth = true;
+            vlg.childForceExpandWidth = true;
+            vlg.childControlHeight = true;
+            vlg.childForceExpandHeight = false;
+
+            _tabPages[tab] = page.gameObject;
+            return page;
+        }
+
+        private void SelectTab(Tab tab)
+        {
+            _tab = tab;
+
+            foreach (KeyValuePair<Tab, GameObject> page in _tabPages)
+                page.Value.SetActive(page.Key == tab);
+
+            foreach (KeyValuePair<Tab, Image> button in _tabButtonImages)
+                button.Value.color = button.Key == tab ? TabSelectedBg : ButtonBg;
+        }
+
+        // Time scale, phase / Breathing jumps, run setup.
+        private void BuildRunTab(Transform rt)
+        {
             CreateSectionLabel(rt, "Time scale");
             _overrideToggle = CreateToggle(rt, TimeScaleLabelText(), false, v =>
             {
@@ -240,7 +302,6 @@ namespace QuantumUser.View
             ButtonGrid flow = new ButtonGrid(rt, GridColumns);
             GridButton(flow, "Pause", CheatActionKind.Pause);
             GridButton(flow, "Continue", CheatActionKind.Continue);
-            GridButton(flow, "Level Up", CheatActionKind.LevelUp);
             GridButton(flow, "+30s", CheatActionKind.Advance30Sec);
             GridButton(flow, "+1 min", CheatActionKind.Advance1Min);
             GridButton(flow, "Advance Phase", CheatActionKind.AdvancePhase);
@@ -252,9 +313,6 @@ namespace QuantumUser.View
             // Only does anything during a Breathing Break (see CheatActionKind.ExtendBreathing) - e.g.
             // to walk the map enemy-free for longer while profiling.
             CreateButton(flow.Next(), "Break +60s", () => Send(CheatActionKind.ExtendBreathing, amount: 60));
-            // Quantum SDK's own stats overlay (Resources/QuantumStats): ping, predicted frames (how deep
-            // every rollback resimulates), input offset, simulate time - view-only, no command sent.
-            CreateButton(flow.Next(), "Quantum Stats", ToggleQuantumStats);
 
             // One-click combo (see CheatActionKind.SetupTestRun): jumps to Breath 4 (Lv20, the last
             // Breathing phase) same as the button above, but also auto-resolves every level-up
@@ -274,20 +332,107 @@ namespace QuantumUser.View
             {
                 UpgradeScreenDebugState.SkipAnimations = v;
             }, out _);
+        }
 
-            // Render A/B: hide the barbed-wire wall run (~960 tris per cell, mostly sub-pixel) to check on
-            // device whether an area's GPU cost comes from it (see docs/performance.md). Applies to what's
-            // spawned when toggled - chunks built later aren't affected until toggled again.
-            CreateSectionLabel(rt, "Rendering");
-            CreateToggle(rt, "Hide Barbed Wire", false, v => SetTilesetDecorHidden(v, "_Run_Wire"), out _);
-            CreateToggle(rt, "Hide All Wall Runs", false, v => SetTilesetDecorHidden(v, "_Run_"), out _);
-            CreateToggle(rt, "Hide Wall Props", false, v => SetTilesetDecorHidden(v, "_Prop_"), out _);
-            // Upper bound of the terrain's own GPU cost (ToonTerrain tiles): whatever is behind them
-            // (water/void) gets drawn instead, so it's a ceiling, not an exact figure.
-            CreateToggle(rt, "Hide Terrain Tiles", false, v => SetTilesetDecorHidden(v, "_Center", "_Edge", "_Corner"), out _);
-            // Swaps every ToonTerrain material (tiles AND V2 props) for a per-vertex-lit debug shader whose
-            // fragment is a single colour - the ceiling of what optimizing ToonTerrain could win.
-            CreateToggle(rt, "Simple Terrain Shader", false, SetSimpleTerrainShader, out _);
+        // The local player's own hero.
+        private void BuildPlayerTab(Transform rt)
+        {
+            ButtonGrid player = new ButtonGrid(rt, GridColumns);
+            GridButton(player, "Buy Accessory", CheatActionKind.BuyAccessory);
+            GridButton(player, "Heal Full", CheatActionKind.HealFull);
+            GridButton(player, "God Mode", CheatActionKind.ToggleGodMode);
+            GridButton(player, "Revive All", CheatActionKind.Revive);
+            GridButton(player, "Damage = 1", CheatActionKind.SetDamageToOne);
+            GridButton(player, "Reset Damage", CheatActionKind.ResetDamage);
+            GridButton(player, "Toggle Auto-Shoot", CheatActionKind.ToggleManualFire);
+
+            // Player 2 = 0-based PlayerRef index 1 (see CheatActionKind.DamagePlayer) - fixed 50
+            // damage per click, same "one hardcoded value per button" shape as "+1000 Coins" (Loot tab).
+            CreateButton(player.Next(), "Damage P2 (-50)", () => Send(CheatActionKind.DamagePlayer, assetId: 1, amount: 50));
+
+            // Sim-only (see CheatActionKind.BecomeBot) - adds BotBrain to the sender's own entity so
+            // BotInputSystem drives it from the next tick, but the camera/HUD/audio stay exactly as
+            // they were (those only resolve RuntimePlayer.IsBot once, at spawn) - so you keep
+            // watching through your own camera while the bot AI (follow/solo wander/Store/combat)
+            // pilots your hero. Doesn't survive a death/respawn - press it again after respawning.
+            GridButton(player, "Become Bot", CheatActionKind.BecomeBot);
+            player.Close();
+        }
+
+        // XP, currencies, chests and every grant picker.
+        private void BuildLootTab(Transform rt)
+        {
+            CreateSectionLabel(rt, "Progression");
+            ButtonGrid loot = new ButtonGrid(rt, GridColumns);
+            GridButton(loot, "Level Up", CheatActionKind.LevelUp);
+            GridButton(loot, "Open Chest", CheatActionKind.OpenChest);
+            CreateButton(loot.Next(), "+1000 Coins", () => Send(CheatActionKind.GrantCoins, amount: 1000));
+            CreateButton(loot.Next(), "Spend 500 Coins", () => Send(CheatActionKind.SpendCoins, amount: 500));
+            loot.Close();
+
+            CreateSectionLabel(rt, "Grant");
+            ButtonGrid grant = new ButtonGrid(rt, GridColumns);
+            PickerButton(grant.Next(), "Get Weapon", Picker.Weapon);
+            PickerButton(grant.Next(), "Get Rift Mutation", Picker.Mutation);
+            PickerButton(grant.Next(), "Grant Global Upgrade", Picker.GlobalUpgrade);
+            PickerButton(grant.Next(), "Grant Hero Upgrade", Picker.HeroUpgrade);
+            grant.Close();
+        }
+
+        private void BuildEnemiesTab(Transform rt)
+        {
+            ButtonGrid enemies = new ButtonGrid(rt, GridColumns);
+            GridButton(enemies, "Kill All Enemies", CheatActionKind.KillAllEnemies);
+            enemies.Close();
+        }
+
+        // Biome switch (view-only, local: EnvironmentManager.Load swaps sky / water / blood colour and
+        // rebuilds every chunk with the theme's tileset) + map reveal.
+        private void BuildWorldTab(Transform rt)
+        {
+            CreateSectionLabel(rt, "Biome");
+            ButtonGrid biomes = new ButtonGrid(rt, GridColumns);
+            WorldThemeCheatList themeList = Resources.Load<WorldThemeCheatList>("Debug/WorldThemeCheatList");
+
+            if (themeList != null && themeList.Themes != null)
+            {
+                foreach (WorldTheme theme in themeList.Themes)
+                {
+                    if (theme == null)
+                        continue;
+
+                    WorldTheme captured = theme;
+                    CreateButton(biomes.Next(), theme.name.Replace("Theme", ""), () => LoadWorldTheme(captured));
+                }
+            }
+            biomes.Close();
+
+            CreateSectionLabel(rt, "Map");
+            ButtonGrid map = new ButtonGrid(rt, GridColumns);
+            GridButton(map, "Reveal Map", CheatActionKind.RevealMap);
+            map.Close();
+        }
+
+        private static void LoadWorldTheme(WorldTheme theme)
+        {
+            if (EnvironmentManager.Instance == null)
+            {
+                LogHelper.Warn("CheatMenu", "no EnvironmentManager in the scene - can't switch biome");
+                return;
+            }
+
+            EnvironmentManager.Instance.Load(theme);
+        }
+
+        // Network stats, input diagnostics and every render / GPU-profiling control (docs/performance.md).
+        private void BuildDebugTab(Transform rt)
+        {
+            CreateSectionLabel(rt, "Network");
+            ButtonGrid network = new ButtonGrid(rt, GridColumns);
+            // Quantum SDK's own stats overlay (Resources/QuantumStats): ping, predicted frames (how deep
+            // every rollback resimulates), input offset, simulate time - view-only, no command sent.
+            CreateButton(network.Next(), "Quantum Stats", ToggleQuantumStats);
+            network.Close();
 
             CreateSectionLabel(rt, "Input");
 
@@ -311,41 +456,33 @@ namespace QuantumUser.View
                 _gamepadTester.gameObject.SetActive(v);
             }, out _);
 
-            CreateSectionLabel(rt, "Player");
-            ButtonGrid player = new ButtonGrid(rt, GridColumns);
-            GridButton(player, "Buy Accessory", CheatActionKind.BuyAccessory);
-            GridButton(player, "Heal Full", CheatActionKind.HealFull);
-            GridButton(player, "God Mode", CheatActionKind.ToggleGodMode);
-            GridButton(player, "Revive All", CheatActionKind.Revive);
-            GridButton(player, "Kill All Enemies", CheatActionKind.KillAllEnemies);
-            GridButton(player, "Open Chest", CheatActionKind.OpenChest);
-            CreateButton(player.Next(), "+1000 Coins", () => Send(CheatActionKind.GrantCoins, amount: 1000));
-            CreateButton(player.Next(), "Spend 500 Coins", () => Send(CheatActionKind.SpendCoins, amount: 500));
-            GridButton(player, "Damage = 1", CheatActionKind.SetDamageToOne);
-            GridButton(player, "Reset Damage", CheatActionKind.ResetDamage);
-            GridButton(player, "Toggle Auto-Shoot", CheatActionKind.ToggleManualFire);
+            CreateSectionLabel(rt, "Rendering");
+            // Swaps every ToonTerrain material (tiles AND V2 props) for a per-vertex-lit debug shader whose
+            // fragment is a single colour - the ceiling of what optimizing ToonTerrain could win.
+            CreateToggle(rt, "Simple Terrain Shader", false, v => SwapToonTerrain(v ? GetSimpleTerrainReplacement : null), out _);
 
-            // Player 2 = 0-based PlayerRef index 1 (see CheatActionKind.DamagePlayer) - fixed 50
-            // damage per click, same "one hardcoded value per button" shape as "+1000 Coins" above.
-            CreateButton(player.Next(), "Damage P2 (-50)", () => Send(CheatActionKind.DamagePlayer, assetId: 1, amount: 50));
+            // Per-feature cost of the terrain shader (ToonTerrainMobile): each toggle skips one feature
+            // through a global uniform, to see on device which one is worth cheapening.
+            CreateSectionLabel(rt, "Terrain Cost");
+            CreateToggle(rt, "No Albedo Texture", false, v => Shader.SetGlobalFloat("_TTDebugNoAlbedo", v ? 1f : 0f), out _);
+            CreateToggle(rt, "No Hatching", false, v => Shader.SetGlobalFloat("_TTDebugNoHatch", v ? 1f : 0f), out _);
+            CreateToggle(rt, "No Terrain Outlines", false, v => Shader.SetGlobalFloat("_TTDebugNoOutlines", v ? 1f : 0f), out _);
+            CreateToggle(rt, "No Prop Edge Lines", false, v => Shader.SetGlobalFloat("_TTDebugNoPropLines", v ? 1f : 0f), out _);
+            CreateToggle(rt, "No Water Ramp/Line", false, v => Shader.SetGlobalFloat("_TTDebugNoWater", v ? 1f : 0f), out _);
 
-            GridButton(player, "Reveal Map", CheatActionKind.RevealMap);
+            // Fewer pixels overall - the other lever for a pixel-bound GPU.
+            ButtonGrid renderScale = new ButtonGrid(rt, GridColumns);
+            foreach (float scale in new[] { 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 1f })
+                CreateButton(renderScale.Next(), $"Scale {scale:0.0}", () => SetRenderScale(scale));
+            renderScale.Close();
 
-            // Sim-only (see CheatActionKind.BecomeBot) - adds BotBrain to the sender's own entity so
-            // BotInputSystem drives it from the next tick, but the camera/HUD/audio stay exactly as
-            // they were (those only resolve RuntimePlayer.IsBot once, at spawn) - so you keep
-            // watching through your own camera while the bot AI (follow/solo wander/Store/combat)
-            // pilots your hero. Doesn't survive a death/respawn - press it again after respawning.
-            GridButton(player, "Become Bot", CheatActionKind.BecomeBot);
-            player.Close();
-
-            CreateSectionLabel(rt, "Grant");
-            ButtonGrid grant = new ButtonGrid(rt, GridColumns);
-            PickerButton(grant.Next(), "Get Weapon", Picker.Weapon);
-            PickerButton(grant.Next(), "Get Rift Mutation", Picker.Mutation);
-            PickerButton(grant.Next(), "Grant Global Upgrade", Picker.GlobalUpgrade);
-            PickerButton(grant.Next(), "Grant Hero Upgrade", Picker.HeroUpgrade);
-            grant.Close();
+            // How the lower-res image is stretched back to the screen - the whole 3D camera (hero
+            // included) is affected by render scale, not just the terrain. FSR sharpens.
+            ButtonGrid upscale = new ButtonGrid(rt, GridColumns);
+            CreateButton(upscale.Next(), "Up: Linear", () => SetUpscalingFilter(UnityEngine.Rendering.Universal.UpscalingFilterSelection.Linear));
+            CreateButton(upscale.Next(), "Up: Point", () => SetUpscalingFilter(UnityEngine.Rendering.Universal.UpscalingFilterSelection.Point));
+            CreateButton(upscale.Next(), "Up: FSR", () => SetUpscalingFilter(UnityEngine.Rendering.Universal.UpscalingFilterSelection.FSR));
+            upscale.Close();
         }
 
         private void BuildHeader(Transform parent)
@@ -484,7 +621,7 @@ namespace QuantumUser.View
             rt.anchorMin = rt.anchorMax = new Vector2(0, 1);
             rt.pivot = new Vector2(0, 1);
             rt.sizeDelta = new Vector2(380, 560);
-            rt.anchoredPosition = _windowRect.anchoredPosition + new Vector2(WindowWidth + 12, 0);
+            rt.anchoredPosition = _windowRect.anchoredPosition + new Vector2(WindowWidth + ColumnGap, 0);
 
             Image bg = rt.gameObject.AddComponent<Image>();
             bg.color = WindowBg;
@@ -794,68 +931,26 @@ namespace QuantumUser.View
             }
         }
 
-        // TilesetPlatformBuilder names every tile / wall prop / run instance (and its wrapper) after its
-        // model - "<Biome>_Center|Edge|Corner|InnerCorner ...", "<Biome>_Prop_*", "<Biome>_Run_*" - under a
-        // "<host>_TilesetVisual" root, so a marker is matched on the renderer's own object or any parent
-        // up to that root. Debug-only, one scene scan per toggle.
-        private static void SetTilesetDecorHidden(bool hidden, params string[] markers)
-        {
-            int count = 0;
-
-            foreach (Renderer renderer in FindObjectsByType<Renderer>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-            {
-                if (IsTilesetDecor(renderer.transform, markers) == false)
-                    continue;
-
-                renderer.enabled = hidden == false;
-                count++;
-            }
-
-            LogHelper.Log("CheatMenu", $"{(hidden ? "hid" : "showed")} {count} tileset '{string.Join("|", markers)}' renderers");
-        }
-
-        private static bool IsTilesetDecor(Transform transform, string[] markers)
-        {
-            for (Transform current = transform; current != null; current = current.parent)
-            {
-                string name = current.name;
-
-                if (name.EndsWith("_TilesetVisual"))
-                    return false;
-
-                foreach (string marker in markers)
-                {
-                    if (name.Contains(marker))
-                        return true;
-                }
-            }
-
-            return false;
-        }
-
-        private const string ToonTerrainShaderName = "RiftRaiders/Test/ToonTerrain";
+        // Every biome material uses the mobile terrain shader since 2026-09-28 (see docs/tileset-builder.md).
+        private const string ToonTerrainShaderName = "RiftRaiders/Mobile/ToonTerrainMobile";
         private static readonly Dictionary<Renderer, Material[]> ToonTerrainOriginals = new Dictionary<Renderer, Material[]>();
         private static readonly Dictionary<Material, Material> SimpleTerrainReplacements = new Dictionary<Material, Material>();
 
-        private static void SetSimpleTerrainShader(bool simple)
+        // Swaps every ToonTerrain material in the scene for replacementFor(original); null just restores the
+        // originals. Any previous swap is undone first, so toggling never stacks swaps.
+        private static void SwapToonTerrain(System.Func<Material, Material> replacementFor)
         {
-            if (simple == false)
+            foreach (KeyValuePair<Renderer, Material[]> original in ToonTerrainOriginals)
             {
-                foreach (KeyValuePair<Renderer, Material[]> original in ToonTerrainOriginals)
-                {
-                    if (original.Key != null)
-                        original.Key.sharedMaterials = original.Value;
-                }
-
-                LogHelper.Log("CheatMenu", $"restored ToonTerrain on {ToonTerrainOriginals.Count} renderers");
-                ToonTerrainOriginals.Clear();
-                return;
+                if (original.Key != null)
+                    original.Key.sharedMaterials = original.Value;
             }
 
-            Material template = Resources.Load<Material>("Debug/DebugSimpleVertexLit");
-            if (template == null)
+            ToonTerrainOriginals.Clear();
+
+            if (replacementFor == null)
             {
-                LogHelper.Warn("CheatMenu", "Resources/Debug/DebugSimpleVertexLit.mat missing - can't swap the terrain shader");
+                LogHelper.Log("CheatMenu", "restored ToonTerrain materials");
                 return;
             }
 
@@ -863,9 +958,6 @@ namespace QuantumUser.View
 
             foreach (Renderer renderer in FindObjectsByType<Renderer>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
-                if (ToonTerrainOriginals.ContainsKey(renderer) == true)
-                    continue;
-
                 Material[] materials = renderer.sharedMaterials;
                 Material[] swapped = null;
 
@@ -875,8 +967,12 @@ namespace QuantumUser.View
                     if (material == null || material.shader == null || material.shader.name != ToonTerrainShaderName)
                         continue;
 
+                    Material replacement = replacementFor(material);
+                    if (replacement == null)
+                        continue;
+
                     swapped ??= (Material[])materials.Clone();
-                    swapped[i] = GetSimpleTerrainReplacement(material, template);
+                    swapped[i] = replacement;
                 }
 
                 if (swapped == null)
@@ -887,15 +983,22 @@ namespace QuantumUser.View
                 count++;
             }
 
-            LogHelper.Log("CheatMenu", $"swapped ToonTerrain -> simple on {count} renderers");
+            LogHelper.Log("CheatMenu", $"swapped ToonTerrain on {count} renderers");
         }
 
         // One debug material per original, tinted with the biome's grass colour (what dominates a
         // top-down view) so the level stays readable; props keep their vertex colours (see the shader).
-        private static Material GetSimpleTerrainReplacement(Material original, Material template)
+        private static Material GetSimpleTerrainReplacement(Material original)
         {
             if (SimpleTerrainReplacements.TryGetValue(original, out Material replacement) == true && replacement != null)
                 return replacement;
+
+            Material template = Resources.Load<Material>("Debug/DebugSimpleVertexLit");
+            if (template == null)
+            {
+                LogHelper.Warn("CheatMenu", "Resources/Debug/DebugSimpleVertexLit.mat missing - can't swap the terrain shader");
+                return null;
+            }
 
             replacement = new Material(template) { name = $"{original.name} (debug simple)" };
 
@@ -904,6 +1007,28 @@ namespace QuantumUser.View
 
             SimpleTerrainReplacements[original] = replacement;
             return replacement;
+        }
+
+        // Device only: in the Editor this would write into the URP asset itself (it's a shared asset,
+        // not a runtime copy), so it just logs there.
+        private static void SetRenderScale(float scale)
+        {
+#if UNITY_EDITOR
+            LogHelper.Warn("CheatMenu", $"render scale {scale} ignored in the Editor (would modify the URP asset) - use it on device");
+#else
+            if (UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline is UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset urp)
+                urp.renderScale = scale;
+#endif
+        }
+
+        private static void SetUpscalingFilter(UnityEngine.Rendering.Universal.UpscalingFilterSelection filter)
+        {
+#if UNITY_EDITOR
+            LogHelper.Warn("CheatMenu", $"upscaling filter {filter} ignored in the Editor (would modify the URP asset) - use it on device");
+#else
+            if (UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline is UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset urp)
+                urp.upscalingFilter = filter;
+#endif
         }
 
         private bool _quantumStatsShown;
@@ -1193,6 +1318,7 @@ namespace QuantumUser.View
                 Target.anchoredPosition += delta;
             if (Target2 != null)
                 Target2.anchoredPosition += delta;
+
         }
     }
 }

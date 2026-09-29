@@ -103,6 +103,10 @@ namespace Quantum
         [Tooltip("Prefab instantiated under the player's weapon socket to represent this weapon - must have a WeaponView component. WeaponViewController resolves this directly, no separate catalog/lookup needed.")]
         public GameObject ViewPrefab;
 
+        [Tooltip("Short player-facing blurb for this weapon's identity/signature trait (e.g. 'Critical hits stun enemies'). Keep it one line - read by weapon offer cards.")]
+        [TextArea(2, 4)]
+        public string Description;
+
         // A Choose-Weapon level-up/Chest card (WeaponCardWidget) needs an icon, but every weapon
         // already has a real world sprite authored on ViewPrefab's own root SpriteRenderer (see
         // e.g. BasicWeapon.prefab) - reusing that instead of a second hand-authored Icon field
@@ -308,6 +312,14 @@ namespace Quantum
                     case BurstFireWeaponPerkData p:
                         burstCount = p.BurstCount;
                         burstDelay = p.BurstDelay.AsFloat;
+                        break;
+                    case StormChainWeaponPerkData p:
+                        // Only 1 in Interval shots ricochets - a fractional extra hit opportunity.
+                        estimatedTargets += (float)p.Bounces / Mathf.Max(1, p.Interval) * EstimatedExtraTargetConnectChance;
+                        break;
+                    case KindlingWeaponPerkData p:
+                        // Same Burn-uptime placeholder as the Balance Simulator (BalanceSimModel.BurnUptime*).
+                        perShotFactor *= 1f + p.DamageBonus.AsFloat * (Element == ElementType.Fire ? 0.9f : 0.3f);
                         break;
                 }
             }

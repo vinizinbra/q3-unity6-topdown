@@ -55,6 +55,7 @@ MonoBehaviour:
   - Id:
       Value: 860393226091315607
   ViewPrefab: {fileID: 8089491252618662435, guid: eaa1b1517782e4c3885b4a0b96fdf7c5, type: 3}
+  Description: 'Grenades split into 3 bomblets on impact.'
   ShakeTier: 1
   ProjectileVisuals:
     ProjectileSprite: {fileID: 0}

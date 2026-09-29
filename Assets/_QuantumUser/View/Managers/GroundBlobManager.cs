@@ -35,6 +35,15 @@ namespace QuantumUser.View.Managers
         private Material lightMaterial;
         [SerializeField, Tooltip("Instances created up front so the first few blob-owners spawning don't pay an Instantiate cost. The pool still grows past this on demand.")]
         private int prewarmCount = 8;
+        // Separate sorting orders per role so every shadow draws together, then every light, before any
+        // character/VFX sprite. With one shared order (the prefab's -1) the transparent pass sorted them by
+        // distance and alternated shadow / light / shadow..., and each switch between the two materials
+        // broke the batch (Frame Debugger: 18 shadows = 18 draws). Both stay below DeathDecal (-2), VFX
+        // (-1) and characters (0+) - they're flat on the ground.
+        [SerializeField, Tooltip("Sorting order of blobs acting as SHADOWS. Keep it below lights and every ground decal/VFX so all shadows batch into one draw.")]
+        private int shadowSortingOrder = -4;
+        [SerializeField, Tooltip("Sorting order of blobs acting as LIGHTS (different material than shadows, so they batch separately).")]
+        private int lightSortingOrder = -3;
 
         private ObjectPool<GameObject> pool;
         private readonly List<GroundBlobHandle> active = new List<GroundBlobHandle>();
@@ -151,6 +160,8 @@ namespace QuantumUser.View.Managers
             color.g = tint.g;
             color.b = tint.b;
             renderer.color = color;
+            // Pooled instances switch role between shadow and light, so the order is rewritten every time.
+            renderer.sortingOrder = isLight ? lightSortingOrder : shadowSortingOrder;
 
             var handle = new GroundBlobHandle
             {

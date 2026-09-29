@@ -51,6 +51,7 @@ MonoBehaviour:
       Value: 2052039704194794421
   BaseTraits: []
   ViewPrefab: {fileID: 8089491252618662435, guid: 71e454c59b0bb4e6b949d1333a8bcb33, type: 3}
+  Description: 'Accurate sidearm with a high critical chance.'
   ShakeTier: 0
   ProjectileVisuals:
     ProjectileSprite: {fileID: 21300000, guid: 908a3d942f3c645319e0d768d7cc3f2f, type: 3}

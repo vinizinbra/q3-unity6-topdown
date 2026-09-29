@@ -55,6 +55,7 @@ MonoBehaviour:
   - Id:
       Value: 1012407766220755518
   ViewPrefab: {fileID: 8089491252618662435, guid: 6f4ffe10c74894c0aac255e42405a441, type: 3}
+  Description: 'Fires 3-round bursts. The last shot always crits.'
   ShakeTier: 1
   ProjectileVisuals:
     ProjectileSprite: {fileID: 57386854, guid: 8a17d688bdd9e47c68bbdfc6beba17e1, type: 3}

@@ -122,6 +122,17 @@ namespace QuantumUser.Editor.BalanceSimulator
         public double CritExplosionMultiplier;
         public int ExplosiveSequenceInterval;
         public double ExplosiveSequenceDamageMultiplier;
+        public int ChainShotInterval;
+        public int ChainShotBounces;
+        public double BurningTargetDamageBonus;
+
+        // Decisive placeholders, not measured: a ricochet only pays off if another enemy is there to
+        // catch it (same 0.5 as WeaponDataAsset's DPS preview), and a Fire weapon keeps its own
+        // target Burning almost permanently (native element applies on every hit) while anything
+        // else relies on a teammate/perk to light it.
+        public const double ChainBounceConnectChance = 0.5;
+        public const double BurnUptimeFireWeapon = 0.9;
+        public const double BurnUptimeOtherWeapon = 0.3;
 
         public const int MaxPerks = 5;
         public bool HasFreeSlot => Perks.Count < MaxPerks;
@@ -253,6 +264,11 @@ namespace QuantumUser.Editor.BalanceSimulator
                     ExplosiveSequenceDamageMultiplier = Math.Max(ExplosiveSequenceDamageMultiplier, D(p.DamageMultiplier));
                     break;
                 case CritStunWeaponPerkData: break; // crowd control only - no DPS contribution to quantify
+                case StormChainWeaponPerkData p:
+                    ChainShotInterval = ChainShotInterval <= 0 ? p.Interval : Math.Min(ChainShotInterval, p.Interval);
+                    ChainShotBounces += p.Bounces;
+                    break;
+                case KindlingWeaponPerkData p: BurningTargetDamageBonus += D(p.DamageBonus); break;
                 default: UnquantifiedBonus += unquantifiedValue; break;
             }
         }
@@ -331,9 +347,20 @@ namespace QuantumUser.Editor.BalanceSimulator
                 ? 1 + ExplosiveSequenceDamageMultiplier / ExplosiveSequenceInterval
                 : 1;
 
+            // Storm Rifle's own baseline StormChainWeaponPerkData - 1/Interval of shots ricochet
+            // ChainShotBounces extra times, each credited at ChainBounceConnectChance.
+            double chainShotFactor = ChainShotInterval > 0
+                ? 1 + (double)ChainShotBounces / ChainShotInterval * ChainBounceConnectChance
+                : 1;
+
+            // Ember SMG's own baseline KindlingWeaponPerkData - bonus only while the target Burns.
+            double burnUptime = Data.Element == ElementType.Fire ? BurnUptimeFireWeapon : BurnUptimeOtherWeapon;
+            double kindlingFactor = 1 + BurningTargetDamageBonus * burnUptime;
+
             double hit = Math.Max(1, Data.PelletCount) * D(Data.Damage) * DamageMultiplier
                          * stats.DamageMultiplier * stats.WeaponDamageMultiplier * critFactor * (1 + UnquantifiedBonus)
-                         * finalRoundFactor * splitShotFactor * critExplosionFactor * rampDamageFactor * explosiveSequenceFactor;
+                         * finalRoundFactor * splitShotFactor * critExplosionFactor * rampDamageFactor * explosiveSequenceFactor
+                         * chainShotFactor * kindlingFactor;
 
             return hit * shotsPerSecond;
         }

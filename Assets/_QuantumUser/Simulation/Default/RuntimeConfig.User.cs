@@ -53,6 +53,19 @@
         // docs/run-curves-coop-scaling.md.
         public AssetRef<BalanceConfig> BalanceConfig;
 
+        [Header("Difficulty")]
+        // Easy/Medium/Hard/Nightmare N - multipliers composed on top of BalanceConfig/co-op/Rift
+        // Mutations, resolved once at match init into Global.Difficulty by DifficultySystem. Medium is
+        // the pre-difficulty tuning (all 1x). Set in the Inspector for now; the lobby selector will
+        // write these two before CloneConfig. See DifficultyConfig and docs/difficulty.md.
+        public DifficultyTier Difficulty = DifficultyTier.Medium;
+
+        // Only read when Difficulty == Nightmare (clamped >= 1). Nightmare N = Hard x per-channel
+        // growth^N, so Nightmare 1 is already harder than Hard.
+        public int NightmareLevel = 1;
+
+        public AssetRef<DifficultyConfig> DifficultyConfig;
+
         [Header("Survival Director")]
         // Survival Director tuning - see SurvivalConfig/DirectorConfig/LifecycleConfig and
         // CombatDirectorSystem/EnemyLifecycleSystem.

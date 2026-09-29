@@ -17,7 +17,7 @@ MonoBehaviour:
     Guid:
       Value: 1637224532365372608
   Speed:
-    RawValue: 393216
+    RawValue: 65536
   OverrideDirection: 0
   Direction:
     X:
@@ -52,7 +52,7 @@ MonoBehaviour:
     Id:
       Value: 2962688306719015508
   ProjectileSpeedMultiplier:
-    RawValue: 111411
+    RawValue: 550500
   ProjectileMaxDistanceMultiplier:
     RawValue: 98304
   LeadFactor:

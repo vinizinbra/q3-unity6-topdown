@@ -108,7 +108,8 @@ namespace Quantum
             EnemyDataAsset data = f.FindAsset(enemy->EnemyData);
 
             FP maxSpeed = data.Stats.MoveSpeed * StatusEffectUtility.GetSpeedMultiplier(f, targetEntity)
-                * BossPhaseUtility.ResolveMoveSpeedMultiplier(f, targetEntity);
+                * BossPhaseUtility.ResolveMoveSpeedMultiplier(f, targetEntity)
+                * DifficultyUtility.Get(f, DifficultyChannel.EnemyMoveSpeed);
 
             FPVector3 velocity = enemy->LeadAverageVelocity;
 

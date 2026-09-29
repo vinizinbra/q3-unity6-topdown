@@ -916,6 +916,13 @@ namespace Quantum
             if (source == DamageSource.Weapon)
             {
                 damage *= StatusEffectUtility.GetTemporaryWeaponDamageMultiplier(f, owner);
+
+                // Kindling (Fire SMG's signature) - bonus vs a Burning target, see KindlingWeaponPerkData.
+                if (f.Unsafe.TryGetPointer<WeaponConditionalDamage>(owner, out var conditional) == true
+                    && StatusEffectUtility.IsBurning(f, target) == true)
+                {
+                    damage *= FP._1 + conditional->BurningTargetDamageBonus;
+                }
             }
 
             // Max's Cremation (Flashpoint rank 3) - Elite/Boss can't be executed, so a Burning one

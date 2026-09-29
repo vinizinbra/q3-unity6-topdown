@@ -53,6 +53,7 @@ MonoBehaviour:
       Value: 2052039704194794421
   BaseTraits: []
   ViewPrefab: {fileID: 8089491252618662435, guid: aa2aaf6af4cc84f7490ce00013f9c47d, type: 3}
+  Description: 'Sprays bullets at a blistering fire rate.'
   ShakeTier: 0
   ProjectileVisuals:
     ProjectileSprite: {fileID: 57386854, guid: 8a17d688bdd9e47c68bbdfc6beba17e1, type: 3}

@@ -41,7 +41,8 @@ There is no separate detail-sprite system any more (Environment Details was remo
 
 - Authored facing -Z, pivot on the wall face at the prop's lowest point; embedded ~3 cm proud, foot 5 cm out.
 - `P(name)` sets `pc.feature_lines = name not in NO_LINES` -> baked ink lines (creases > `FEATURE_ANGLE` 50 deg).
-  Skip lines on glowing / flat smears / very thin things.
+  Skip lines on glowing / flat smears / very thin things. EVERY `<biome>_props()` must do this - Arctic / Moon were built
+  without it and had no outlines until 2026-09-28.
 - Real size; check scale reads at the gameplay camera (Neon props are 1.5-1.7x).
 - Built (straight) walls: set tileset `wallPropSlope` 0 (default 0.12 follows undercut cliffs and buries
   flat props on straight walls). Keep-out band (`wallPropAvoidBand`) for caps/trims; props shrink to fit
@@ -57,6 +58,12 @@ There is no separate detail-sprite system any more (Environment Details was remo
 - **Ink on tubes**: smooth tubes have no crease -> use `Piece.tube(..., view=V)` (silhouette edges inked) and
   generate `_Side` (view `(1,0,-1)`) + corner `_XFront` variants, assigned to `SideModel` / `*Side` / `*XFront`.
   Tubes must have >= 8 sides (6 sides = 60 deg > 50 -> EVERY facet inked -> patchy black).
+  Pass `soft_caps=True` (or add to `Piece.soft_edges`) for module ends, else every cell joint shows an ink ring.
+  Sheets / coatings (slime): extrude a cross-section along the plan (`goo()` in alien2_runs), open soft joints.
+  Baked edge flags on long flat strips can lose one face in the FBX import (the line then only shows on the hidden
+  side) - for a sheet's silhouette draw the ink as geometry: a thin near-black tube along the edge (`INKLINE`).
+  Organic round things: `lathe()` (alien2_props). A "band" hanging under the lip reads as a CABLE - coatings must
+  sit on / wrap the lip (BelowTop 0).
 - Foot runs (`Foot = true`): street items every N cells = empty Straight + item in Decorated (chance 1,
   `DecoratedSpacing`); continuous foot runs (trench) use `FootReserveHeight`.
 - Coexistence is automatic: runs claim cells in list order (later wall runs avoid them), foot items skip
@@ -83,6 +90,8 @@ over the wildstyle rework - show both and let them pick. Quads sit 3.5 cm off bu
 - Preview scene `Assets/Test/Environment/Tileset/TilesetPreview.unity` (real camera/light/water/shore field):
   pick a theme on `TilesetPreview` -> Apply Theme. Clear generated tiles before saving the scene.
 - Judge at the gameplay camera first, then close-ups; count spawns per type to check frequencies.
+- Show the user: copy each round's renders to `Recordings/TilesetRenders/` (gitignored) and `open` them (Preview) -
+  chat image / file links don't open for them.
 
 ## Editor traps
 

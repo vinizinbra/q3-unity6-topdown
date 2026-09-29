@@ -163,8 +163,12 @@ namespace Quantum
             // PredictionTime above, this one is scoped to the aimed shell and reads the player's KCC.
             if (LeadFactor > FP._0 && shellIndex < aimedCount && launch.IsValid == true)
             {
+                // Difficulty scales the lead itself and (with the boss phase) the real flight speed -
+                // see DifficultyUtility.ScaleEnemyLead/ResolveEnemyShotSpeed.
+                DifficultyUtility.ScaleEnemyLead(f, LeadFactor, MaxLeadDistance, out FP leadFactor, out FP maxLeadDistance);
                 FPVector3 ledPoint = ProjectileAimUtility.LeadAimPoint(f, target, origin, point,
-                    launch.Velocity * ProjectileSpeedMultiplier, LeadFactor, MaxLeadDistance);
+                    launch.Velocity * DifficultyUtility.ResolveEnemyShotSpeed(f, filter.Entity, ProjectileSpeedMultiplier),
+                    leadFactor, maxLeadDistance);
                 ProjectileLaunch ledLaunch = movement.GetLaunchToTarget(f, origin, ledPoint, EntityRef.None);
 
                 if (ledLaunch.IsValid == true)

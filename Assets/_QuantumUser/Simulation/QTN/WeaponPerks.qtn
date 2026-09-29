@@ -108,6 +108,15 @@ component WeaponFireTimeMods
     FP    DoubleTapChance;
     FP    DoubleTapDelay;
     PendingDoubleTapShot PendingDoubleTap;
+
+    // Storm Chain (Storm Rifle's signature) - every ChainShotInterval-th real shot gets
+    // ChainShotBounces extra ricochets. ShotsSinceChainShot is runtime state advanced by
+    // WeaponSystem.ArmChainShot; ChainShotArmed is true only for the duration of that one shot's
+    // FireShot call (read by FireHitscan/ApplyProjectilePerks), so Double Tap/echo replays never bounce.
+    Int32   ChainShotInterval;
+    Int32   ChainShotBounces;
+    Int32   ShotsSinceChainShot;
+    Boolean ChainShotArmed;
 }
 
 // -- Split Shot / Quantum Rounds / Explosive Sequence / Cataclysm Round --
@@ -290,4 +299,14 @@ component WeaponBurstState
     // and freezing shot 0's values meant a burst could never land on the magazine's actual last round.
     FP        DamageBonusMultiplier;
     Int32     GrantPierceAmount;
+}
+
+// -- Target-conditional weapon damage (Fire SMG's Kindling) --
+// Bonus multiplier on a landed weapon hit against a currently-Burning target, baked once by
+// KindlingWeaponPerkData.Apply and read live in DamageUtility.ResolveOutgoingDamage (so Burn DoT
+// ticks, which bypass outgoing resolution, never amplify themselves). Removed on every re-equip in
+// WeaponSystem.SeedPerkRoster, same as every other perk cluster here.
+component WeaponConditionalDamage
+{
+    FP BurningTargetDamageBonus;
 }

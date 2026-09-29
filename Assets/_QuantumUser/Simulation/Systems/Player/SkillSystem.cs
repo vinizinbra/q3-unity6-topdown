@@ -414,6 +414,9 @@ namespace Quantum
 
             slot->CurrentStacks++;
 
+            if (slot->CurrentStacks == 1)
+                f.Events.SkillReady(owner, slotId);
+
             if (slot->Skill != default && slot->CurrentStacks < effectiveMax)
             {
                 SkillData skill = f.FindAsset(slot->Skill);
@@ -446,6 +449,7 @@ namespace Quantum
                 if (emergency == false)
                 {
                     Log.Debug($"[Skill] {filter.Entity} pressed a skill button with 0 stacks available");
+                    f.Events.SkillNotReady(filter.Entity, slotId);
                     return;
                 }
             }

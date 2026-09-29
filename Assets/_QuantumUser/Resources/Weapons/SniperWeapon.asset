@@ -59,6 +59,7 @@ MonoBehaviour:
     RawValue: 131072
   BaseTraits: []
   ViewPrefab: {fileID: 8089491252618662435, guid: 376407f6a2ac5480c998b85c91c293c9, type: 3}
+  Description: 'Slow, devastating shots that knock enemies back.'
   ShakeTier: 0
   ProjectileVisuals:
     ProjectileSprite: {fileID: 57386854, guid: 8a17d688bdd9e47c68bbdfc6beba17e1, type: 3}

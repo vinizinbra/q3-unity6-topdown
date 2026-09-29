@@ -243,7 +243,7 @@ main thread waiting ~4–5.6 ms on the GPU (present ~5–6 ms vs ~1.3) and **tri
 Suspect: the GrassOutpostV2 **BarbedWire** wall run — a concertina helix (5 turns/cell × 12
 rings/turn × 8-sided tube, radius 2.4 cm) ≈ **960 tris per cell**, ~2–3 px wide at the gameplay
 camera → nearly all sub-pixel triangles (worst case for mobile GPUs; median prop = 108 tris).
-Wire left as authored (Chance 0.18). **A/B on device: CheatMenu → Rendering → "Hide Barbed Wire"**
+Wire left as authored (Chance 0.18). A/B on device was done with a (since removed) "Hide Barbed Wire" toggle
 (disables renderers of `*_Run_Wire*` instances under `*_TilesetVisual`; chunks built after the toggle
 need it re-toggled). If the 50-fps areas return to 60 with it hidden, rebuild it cheaply: alpha-clipped textured ribbon (ink baked in, mips with Preserve Coverage; stakes/cans/
 sign stay geometry), or at least `tube(segs=4)` + 6 rings/turn in `build_grasscliff_autotiles.py`
@@ -253,7 +253,7 @@ sign stay geometry), or at least `tube(segs=4)` + 6 rings/turn in `build_grasscl
 Rendering → **"Simple Terrain Shader"** (swaps every `RiftRaiders/Test/ToonTerrain` material for
 `RiftRaiders/Debug/SimpleVertexLit`, per-vertex lit, flat fragment; `Resources/Debug/DebugSimpleVertexLit.mat`)
 **fixes the drop** → the area drop is ToonTerrain's per-pixel cost (it covers nearly the whole screen:
-tiles + V2 props). Other A/B toggles kept: Hide Barbed Wire / All Wall Runs / Wall Props / Terrain Tiles.
+tiles + V2 props). The Hide Wire / Runs / Props / Terrain Tiles toggles used for this were removed afterwards.
 
 **ToonTerrain fragment optimized (same output):** props skip the terrain albedo they discarded; the
 hatch texture is only read where `darkness > min(Hatch1, Hatch2)` (below, both smoothsteps are exactly
@@ -263,6 +263,55 @@ water gradient only when active; colour maths in `half`. GrassOutpostV2_Toon has
 on (gradient, wall line, border + 8 px strata outlines, hatch), so skipping disabled features alone
 wouldn't have helped. Needs a device re-measure vs the Simple shader ceiling; next levers if still
 short: per-vertex `ndl`/lit for the flat-shaded tiles, cheaper outlines, render scale 0.7 on low-end.
+
+**`ToonTerrainMobile` (2026-09-27):** separate mobile shader, same Properties/cbuffer — lighting +
+ambient collapse to one per-vertex multiplier (albedo factors out), hatch weights per vertex, all
+position-linear terms interpolated, no shadow variants; fragment = one albedo read + hatch read on
+shadowed faces + pixel-width lines. Visual diff vs pre-optimization ToonTerrain (PreviewRenderUtility,
+gameplay camera, tiles + props + wire): 5/630k pixels differ, max 10/255. A/B on device via CheatMenu →
+Rendering → "Mobile Terrain Shader" (material copies with only the shader swapped). If it holds 60 fps
+and looks right, switch the biome `*_Toon.mat` materials to it (PC keeps ToonTerrain if it needs
+received shadows — e.g. a mobile-only material swap at startup, or per-platform materials).
+
+**Device result:** Mobile shader improved fps but the Simple (flat) shader is still faster. Textures are
+not the issue (grass.png doubles as surface + wall, hatch 1254² → 512 compressed on Android, bilinear,
+no aniso, mips). Remaining cost is fragment ALU. Measure per feature on device: CheatMenu → Debug tab →
+**"Terrain Cost (Mobile shader only)"** toggles (globals `_TTDebugNoAlbedo / NoHatch / NoOutlines /
+NoPropLines / NoWater`, uniform branches, ~free at 0) + **render scale 0.6 / 0.7 / 0.8 / 1.0** buttons
+(device only - in the Editor it would write the URP asset). The water-line `fwidth` now only runs when
+the line is on.
+
+**Device result (2026-09-28):** in a 55-fps spot, turning off ANY one of albedo / outlines / prop lines /
+water alone reached 60 (hatching helped least) → cost is the sum, not one feature. Second mobile pass,
+all exact early-outs (render diff vs pre-optimization ToonTerrain unchanged: 5/630k px, max 10/255):
+- terrain outlines: pixel distance to the nearest line first (derivative outside the branch); the
+  width/strength selection only runs within `max(width)/2 + 0.5` px of a line - elsewhere it's 0;
+- water gradient: full ramp only inside the band; above it (ground and most of the walls - GrassOutpost
+  band is Y -3.22..-1.22) it's `color *= lerp(1, Top, S)`;
+- water line: smoothstep/lerp only on wall pixels within `lineHalf + AA` of the line;
+- raised tint only when `_RaisedStrength > 0`; hatch derivatives only when hatching is on.
+- All shader passes together: **~+4 fps** on device (2026-09-28).
+- Render scale 0.6 was tried as the Mobile default and **reverted to 0.8**: render scale applies to the
+  whole 3D camera (hero, enemies, VFX - only screen-space UI is exempt), and the hero visibly degraded.
+  CheatMenu → Debug tab now also switches the upscaling filter (Linear / Point / FSR, device only) to test
+  e.g. 0.7 + FSR before touching the default again.
+
+**Shipped 2026-09-28:** every biome material (20) now uses `ToonTerrainMobile` (see
+docs/tileset-builder.md). CheatMenu's "Mobile Terrain Shader" swap and its Resources material were
+removed; "Simple Terrain Shader" + "Terrain Cost" now operate on the mobile shader.
+
+### 3e. Frame Debugger findings — blob shadow/light batching fixed (2026-09-28)
+
+Frame Debugger is readable from the Editor via reflection (`UnityEditorInternal.FrameDebuggerInternal.
+FrameDebuggerUtility`: `GetFrameEvents`, `limit`, async `GetFrameEventData` - select an event, wait an
+editor update, then read shader/pass/verts/batch-break cause). Editor Play Mode capture, 100 events:
+the whole opaque world is **1 ToonTerrain SRP batch** (56 draws, 45k verts); the rest is transparent
+SpriteRenderers + UI. Blob **shadows (18) and blob lights (Sprites/Default, 4-vert quads) alternated**
+shadow/light/shadow... - same prefab sorting order (-1), so the transparent pass sorted them by
+distance and every material switch broke the batch. Fix: `GroundBlobManager` sets
+`shadowSortingOrder` (-4) / `lightSortingOrder` (-3) on every Acquire (pooled instances switch role) →
+all shadows batch, then all lights, below DeathDecal (-2), VFX (-1) and characters (0+). Also seen:
+`Sprites/Default` isn't SRP-Batcher compatible; UI/Default and TMP text alternate per widget (→ 3d).
 
 ### 3d. UI cost / popup drop — TODO (separate from the area drop)
 

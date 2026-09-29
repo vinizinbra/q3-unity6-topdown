@@ -23,6 +23,7 @@ which one to open.
 
 - **Survival Director** — continuous-spawn combat pacing (progression/director/spawner/lifecycle) deciding when, where, and what to spawn. → `docs/survival-director.md`
 - **Run Curves & Co-op Scaling** — time-based difficulty curves + player-count scaling for enemy HP/damage, DirectorBudget, and XP requirement (`BalanceConfig`). → `docs/run-curves-coop-scaling.md`
+- **Difficulty Tiers** — Easy/Medium/Hard/Nightmare N (`RuntimeConfig.Difficulty`/`NightmareLevel`) via `DifficultyConfig`, snapshotted into `Global.Difficulty`; multiplies enemy HP/damage, density, elite weight, windup/recovery, enemy projectile speed/lead, move speed on top of the balance stack. Nightmare = Hard × growth^N. → `docs/difficulty.md`
 - **Game State** — `Global.CurrentState` match-flow state machine (`GameState` enum) replacing ad hoc phase booleans; thin `SetState` + `GameStateChanged` event. → `docs/game-state.md`
 - **Breathing Phase & Run-Phase State Machine** — repeating Breathing Breaks as `SurvivalConfig.Phases[]` entries; independent SurvivalTime/PhaseTimer clocks; skip-vote; encounter-clear hold. → `docs/run-phase.md`
 - **Boss Encounter** — SurvivalConfig Boss phase teleports/seals the arena, spawns the boss, hard-pauses over a reveal card + camera cutaway; dedicated Boss HUD. → `docs/boss-encounter.md`
@@ -81,6 +82,7 @@ which one to open.
 - **Local-testing Bots** — `RuntimePlayer.IsBot`→`BotBrain`, sim-synthesized input; follow/void-avoidance/leash AI; bots consume no local slot (`GetLocalSlotIndex` = -1). → `docs/bots.md`
 - **Build Size Analyzer** — Editor window over `Library/LastBuild.buildreport`: size by category/asset, texture/atlas/audio/duplicate-file audits with one-click fixes, paginated lists. → `docs/build-size-analyzer.md`
 - **Tileset Platform Builder** — turns grid-aligned level cubes into autotiled cartoon platforms (dual-grid Center/Edge/Corner/InnerCorner + weighted variants, merged stretched Centers, Y scaled to cube height) with the shared `ToonTerrain` shader (world-space textures, texture-level outlines, one-directional outline→surface fade, multiply hatching); Blender generators in `Source~/`. Per-cube, collision-merged (across chunks) replacement for `CubeVisualBuilder`, used by all LevelChunk prefabs. → `docs/tileset-builder.md`
+- **Sprite Atlas Optimizer** — Tools ▸ RiftRaiders ▸ Optimize (UI/Gameplay/Conflicts tabs): usage scan tags every sprite UI or Gameplay, flags missing/wrong/multi-atlas/shared/split/unused packables, per-context Sync, Duplicate & reassign for sprites used by both, play-mode recorder for code-assigned sprites. → `docs/sprite-atlas-optimizer.md`
 - **Mobile Performance** — on-device profiling workflow (USB/ADB, no Deep Profile, logs off on device, reading the Profiler via `unity cmd eval`), findings, and the prioritized improvement backlog with per-item plans. → `docs/performance.md`
 - **Balance Simulator** — Editor window that predicts a run per minute/per hero (level, kills, weapon/skill DPS, weapon level, coins, enemy HP/TTK, Director pressure) from the real config assets, plus `BalanceRunRecorder` to diff against a played run. → `docs/balance-simulator.md`
 

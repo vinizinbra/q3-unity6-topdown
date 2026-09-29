@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -14,10 +15,13 @@ public static class PurchasableCardUi
     // The label itself already reads "BUY" for a purchase card via CardData.ButtonLabel (see
     // UpgradeCardWidget/WeaponCardWidget.Setup) - this only owns the purchase row's own visuals.
     public static void Apply(PurchasableCardState state, GameObject purchaseRoot, TMP_Text priceText,
-        Image currencyIcon, GameObject soldOutOverlay, ref bool interactable)
+        Image currencyIcon, GameObject soldOutOverlay, ref bool interactable, PurchaseButtonStyle buyButtonStyle = null)
     {
         if (purchaseRoot != null)
             purchaseRoot.SetActive(state.ShowPurchaseUi);
+
+        // Reset every Setup (not just when purchasable) so a reused card slot never keeps a stale gray.
+        buyButtonStyle?.Apply(state.ShowPurchaseUi && (state.CanAfford == false || state.IsSoldOut));
 
         if (state.ShowPurchaseUi == false)
             return;
@@ -34,5 +38,40 @@ public static class PurchasableCardUi
         // Disabled, NOT hidden - an unaffordable or sold-out offer stays visible so co-op players
         // can see what's on offer even if they personally can't (or already did) buy it right now.
         interactable = interactable && state.CanAfford && state.IsSoldOut == false;
+    }
+}
+
+// Swaps the Buy button's Image to a gray look while the offer can't be bought (unaffordable or sold
+// out), restoring the authored sprite/color otherwise. The originals are captured on first use, so
+// whatever is authored on the Image in the Inspector stays the "can buy" look.
+[Serializable]
+public class PurchaseButtonStyle
+{
+    [Tooltip("The Buy button's background Image (e.g. the green BuyButton). Leave empty to disable the gray swap.")]
+    public Image Image;
+
+    [Tooltip("Optional sprite swapped in while unaffordable/sold out. Empty keeps the authored sprite and only applies UnaffordableColor - note a colored sprite tinted gray still reads as a darker version of that color, so a neutral/white sprite here gives a true gray.")]
+    public Sprite UnaffordableSprite;
+
+    public Color UnaffordableColor = new Color(0.55f, 0.55f, 0.55f, 1f);
+
+    private bool _captured;
+    private Sprite _defaultSprite;
+    private Color _defaultColor;
+
+    public void Apply(bool unavailable)
+    {
+        if (Image == null)
+            return;
+
+        if (_captured == false)
+        {
+            _captured = true;
+            _defaultSprite = Image.sprite;
+            _defaultColor = Image.color;
+        }
+
+        Image.sprite = unavailable && UnaffordableSprite != null ? UnaffordableSprite : _defaultSprite;
+        Image.color = unavailable ? UnaffordableColor : _defaultColor;
     }
 }

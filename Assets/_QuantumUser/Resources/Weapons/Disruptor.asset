@@ -55,6 +55,7 @@ MonoBehaviour:
   - Id:
       Value: 709407342776753319
   ViewPrefab: {fileID: 8089491252618662435, guid: 09e565567a97340b39901b790f4c1bc6, type: 3}
+  Description: 'Critical hits stun enemies.'
   ShakeTier: 0
   ProjectileVisuals:
     ProjectileSprite: {fileID: 1303106859, guid: 8a17d688bdd9e47c68bbdfc6beba17e1, type: 3}

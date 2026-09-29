@@ -53,6 +53,7 @@ MonoBehaviour:
       Value: 268986146537756646
   BaseTraits: []
   ViewPrefab: {fileID: 8089491252618662435, guid: 76663fba1fb8145d0802358c5a0b27ec, type: 3}
+  Description: 'Lobs grenades that explode on impact.'
   ShakeTier: 1
   ProjectileVisuals:
     ProjectileSprite: {fileID: 0}

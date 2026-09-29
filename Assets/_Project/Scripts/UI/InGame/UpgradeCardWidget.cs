@@ -105,6 +105,8 @@ public class UpgradeCardWidget : MonoBehaviour
     private Image currencyIcon;
     [SerializeField, Tooltip("Overlay shown when CardData.Purchase.IsSoldOut is true - the card stays visible/de-emphasized rather than being removed.")]
     private GameObject soldOutOverlay;
+    [SerializeField, Tooltip("Gray look for the Buy button while the offer can't be afforded or is sold out - see PurchaseButtonStyle.")]
+    private PurchaseButtonStyle buyButtonStyle = new PurchaseButtonStyle();
 
     public event Action<UpgradeCardWidget> onClicked;
 
@@ -209,7 +211,7 @@ public class UpgradeCardWidget : MonoBehaviour
         if (stackText != null)
             stackText.text = showStacks ? $"{data.CurrentStacks}/{data.MaxStacks}" : string.Empty;
 
-        PurchasableCardUi.Apply(data.Purchase, purchaseRoot, priceText, currencyIcon, soldOutOverlay, ref interactable);
+        PurchasableCardUi.Apply(data.Purchase, purchaseRoot, priceText, currencyIcon, soldOutOverlay, ref interactable, buyButtonStyle);
 
         if (button != null)
             button.interactable = interactable;

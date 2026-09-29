@@ -1,0 +1,134 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9faa71bce5011418a8ddfc7b6da5a0ce, type: 3}
+  m_Name: DifficultyConfig
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.DifficultyConfig
+  Identifier:
+    Path: _QuantumUser/Resources/Configs/DifficultyConfig
+    Guid:
+      Value: 375077487635899393
+  Easy:
+    EnemyHpLight:
+      RawValue: 45875
+    EnemyHpHeavy:
+      RawValue: 45875
+    EnemyDamage:
+      RawValue: 39322
+    SpawnDensity:
+      RawValue: 52429
+    EliteWeight:
+      RawValue: 45875
+    AnticipationSpeed:
+      RawValue: 52429
+    RecoverySpeed:
+      RawValue: 55706
+    EnemyProjectileSpeed:
+      RawValue: 55706
+    EnemyProjectileLead:
+      RawValue: 32768
+    EnemyMoveSpeed:
+      RawValue: 62259
+  Medium:
+    EnemyHpLight:
+      RawValue: 65536
+    EnemyHpHeavy:
+      RawValue: 65536
+    EnemyDamage:
+      RawValue: 65536
+    SpawnDensity:
+      RawValue: 65536
+    EliteWeight:
+      RawValue: 65536
+    AnticipationSpeed:
+      RawValue: 65536
+    RecoverySpeed:
+      RawValue: 65536
+    EnemyProjectileSpeed:
+      RawValue: 65536
+    EnemyProjectileLead:
+      RawValue: 65536
+    EnemyMoveSpeed:
+      RawValue: 65536
+  Hard:
+    EnemyHpLight:
+      RawValue: 88474
+    EnemyHpHeavy:
+      RawValue: 95027
+    EnemyDamage:
+      RawValue: 85197
+    SpawnDensity:
+      RawValue: 75366
+    EliteWeight:
+      RawValue: 85197
+    AnticipationSpeed:
+      RawValue: 75366
+    RecoverySpeed:
+      RawValue: 72090
+    EnemyProjectileSpeed:
+      RawValue: 75366
+    EnemyProjectileLead:
+      RawValue: 78643
+    EnemyMoveSpeed:
+      RawValue: 68813
+  NightmareGrowth:
+  - Channel: 0
+    PerLevel:
+      RawValue: 78643
+    Cap:
+      RawValue: 0
+  - Channel: 1
+    PerLevel:
+      RawValue: 81920
+    Cap:
+      RawValue: 0
+  - Channel: 2
+    PerLevel:
+      RawValue: 75366
+    Cap:
+      RawValue: 0
+  - Channel: 3
+    PerLevel:
+      RawValue: 69468
+    Cap:
+      RawValue: 104858
+  - Channel: 4
+    PerLevel:
+      RawValue: 75366
+    Cap:
+      RawValue: 196608
+  - Channel: 5
+    PerLevel:
+      RawValue: 68813
+    Cap:
+      RawValue: 98304
+  - Channel: 6
+    PerLevel:
+      RawValue: 68813
+    Cap:
+      RawValue: 91750
+  - Channel: 7
+    PerLevel:
+      RawValue: 68813
+    Cap:
+      RawValue: 98304
+  - Channel: 8
+    PerLevel:
+      RawValue: 68813
+    Cap:
+      RawValue: 104858
+  - Channel: 9
+    PerLevel:
+      RawValue: 67502
+    Cap:
+      RawValue: 81920
+  MaxMultiplier:
+    RawValue: 655360000

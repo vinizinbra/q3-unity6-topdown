@@ -528,3 +528,37 @@ doesn't pass `element` on to `ApplyInRadius`). Passing it through would also tur
 explosion path, where every Fire hit triggers another explosion, so it needs a recursion guard first.
 Cataclysm Round and Final Round trigger on every attack of a 1-round magazine, and a Double Tap copy
 of the last bullet explodes twice with Cataclysm. Both are left as they are.
+
+## Elemental weapon batch + Kindling (2026-09-28)
+
+Six elemental weapons added to `WeaponChoicePoolData` (now 23 entries; Flare Pistol added after, so every element has a Pistol) to fill element coverage
+(Fire was 1 weapon, Ice/Lightning 2 each). Each weapon's signature is a `BaseTraits` perk, and every
+`WeaponDataAsset` now carries a one-line player-facing `Description` (`WeaponDataAsset.View.cs`)
+naming it. Offer cards don't read `Description` yet.
+
+| Weapon | Element / Family | Signature (BaseTraits asset) |
+|---|---|---|
+| Dragon's Breath (`DragonsBreath`) | Fire / Shotgun | Scorching Pellets, +1 Pierce (`DragonsBreathPierce`, a `PiercingRoundsWeaponPerkData`) |
+| Frostbite (`Frostbite`) | Ice / Sniper | Deep Freeze, crit stuns 1s (`FrostbiteCritFreeze`, a `CritStunWeaponPerkData`, mechanically a stun) |
+| Ember SMG (`EmberSMG`) | Fire / SMG | Kindling, +30% vs Burning (`EmberSMGKindling`, **new** `KindlingWeaponPerkData`) |
+| Flare Pistol (`FlarePistol`) | Fire / Pistol | Flare Burst, every 3rd shot explodes for 100% within 2.5m (`FlarePistolBurst`, an `ExplosiveSequenceWeaponPerkData`); Damage 25 (Pistol is 30) so sustained DPS matches Frost Revolver (88) |
+| Napalm Launcher (existing, now pooled) | Fire / Grenade Launcher | Burning ground from its own `NapalmAreaHit` (no perk) |
+| Storm Rifle (`AssaultRifleLightning`, existing, now pooled) | Lightning / Assault Rifle | Storm Chain, every 4th shot +2 ricochets (`StormRifleChain`, **new** `StormChainWeaponPerkData`; the asset's own `BonusBounces` is now 0) |
+
+The first three are stat clones of Shotgun/Sniper/SMG (same ViewPrefab), with projectile colours
+borrowed from Hellshot (fire) / Frost Revolver (ice). Balance isn't tuned yet.
+
+**Kindling** bakes `WeaponConditionalDamage.BurningTargetDamageBonus` (additive across stacks) and is
+read in `DamageUtility.ResolveOutgoingDamage`'s Weapon-only block when
+`StatusEffectUtility.IsBurning(target)`. Burn ticks bypass outgoing resolution, so they never amplify
+themselves. Removed in `WeaponSystem.SeedPerkRoster`. The DPS preview and Balance Simulator credit it
+as `1 + DamageBonus x BurnUptime` (placeholder uptime 0.9 on a Fire weapon, 0.3 otherwise -
+`BalanceSimModel.BurnUptime*`).
+
+**Storm Chain** stores `ChainShotInterval`/`ChainShotBounces`/`ShotsSinceChainShot`/`ChainShotArmed` on
+`WeaponFireTimeMods`. `WeaponSystem.ArmChainShot`/`DisarmChainShot` wrap the two real-shot `FireShot`
+calls (trigger pull in `Update`, each burst shot in `TickWeaponBurst`), so every real shot advances the
+counter, hit or miss. The Nth shot's `FireHitscan`/`ApplyProjectilePerks` add `ChainShotBounces` on top
+of Ricochet/`BonusBounces`. Double Tap and echo replays fire outside that window and never chain. The DPS preview adds
+`Bounces / Interval x 0.5` to its est. targets/shot; the Balance Simulator applies the same as a
+damage factor (`chainShotFactor`, 0.5 = `ChainBounceConnectChance`).
