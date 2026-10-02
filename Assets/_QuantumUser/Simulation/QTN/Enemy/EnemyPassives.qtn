@@ -1,0 +1,9 @@
+// Every EnemyPassiveData currently applied to this enemy - both the ones authored on its
+// EnemyDataAsset.Passives and any rolled onto it at spawn (planned: random Elite passive packs).
+// Recorded so the View can show them (elite name/icons) and so a roller can skip duplicates or
+// incompatible picks. Added on demand by EnemyPassiveUtility.Apply - never authored.
+component EnemyPassives
+{
+    array<AssetRef<EnemyPassiveData>>[8] Applied;
+    Byte Count;
+}

@@ -97,7 +97,7 @@ namespace QuantumUser.Editor
 
         private static readonly Dictionary<string, string> EnemyPathOverrides = new()
         {
-            { "Shotgunner", $"{EnemyFolder}/Shotgunner/Shotgunner.asset" },
+            { "Shotgunner", $"{EnemyFolder}/Shotgunner/W1-Shotgunner.asset" },
         };
 
         private class SegEntry
@@ -637,7 +637,7 @@ namespace QuantumUser.Editor
         {
             string path = EnemyPathOverrides.TryGetValue(fileName, out string overridePath)
                 ? overridePath
-                : $"{EnemyFolder}/{fileName}.asset";
+                : $"{EnemyFolder}/W1-{fileName}.asset";
 
             var asset = AssetDatabase.LoadAssetAtPath<EnemyDataAsset>(path);
 

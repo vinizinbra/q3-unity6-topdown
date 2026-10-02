@@ -59,7 +59,7 @@ MonoBehaviour:
     RawValue: 65536
   BaseTraits: []
   ViewPrefab: {fileID: 8089491252618662435, guid: 0f7481ececfe745c383ff250af802c65, type: 3}
-  Description: 'Blasts a wide spread of pellets that knock enemies back.'
+  Description: Blasts a wide spread of pellets that knock enemies back.
   ShakeTier: 1
   ProjectileVisuals:
     ProjectileSprite: {fileID: 21300000, guid: 908a3d942f3c645319e0d768d7cc3f2f, type: 3}

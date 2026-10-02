@@ -66,6 +66,7 @@ namespace Quantum
             status->NoAmmoConsumptionRemaining -= f.DeltaTime;
             status->BoundRemaining -= f.DeltaTime;
             status->TempMoveSpeedRemaining -= f.DeltaTime;
+            status->StickySlowRemaining -= f.DeltaTime;
 
             TickHaste(f, status);
             TimersMarker.End();

@@ -322,6 +322,15 @@ component StatusEffects
     FP TempMoveSpeedRemaining;
     FP TempMoveSpeedMultiplier;
 
+    // Ground-hazard slow (World 2 Tar Launcher's tar puddle - an AreaDamage carrying a
+    // StickySlowEffectData) - see StatusEffectUtility.ApplyStickySlow/GetStickySlowMultiplier. Kept
+    // apart from Ice so a puddle never builds toward Freeze or feeds elemental reactions, and apart
+    // from TempMoveSpeed so it can't overwrite an Energy Drink buff. Strongest-wins, no stacking:
+    // standing in two puddles slows like one. The puddle re-applies a short Duration every tick, so
+    // leaving it restores speed almost at once.
+    FP StickySlowRemaining;
+    FP StickySlowMultiplier;
+
     // Post-revive grace window (see docs/revive.md/PlayerLifeStateUtility.Revive) - a second,
     // independent reason the Invulnerable tag is present alongside CheatDeathImmunityRemaining
     // above, same "own dedicated field, never a shared slot" convention this file already

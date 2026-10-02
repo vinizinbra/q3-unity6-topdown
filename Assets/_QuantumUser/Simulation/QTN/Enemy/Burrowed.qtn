@@ -1,7 +1,18 @@
-// Tag - present while an enemy is mid-BurrowDeliveryData (dive/travel/resurface), so the view can
+// Present while an enemy is mid-BurrowDeliveryData (dive/travel/resurface), so the view can
 // hide/show the rig off this alone instead of reaching into which delivery is currently active.
 // Always added/removed together with Invulnerable by BurrowDeliveryData, but kept as its own
 // component so a future unrelated Invulnerable source doesn't also hide the enemy's sprite.
 component Burrowed
 {
+    // The collider layer the enemy had before diving - BurrowDeliveryData parks it on DeadEnemy
+    // (collides with Ground/Obstacle only) so it passes through other enemies and players while
+    // underground, then restores this on resurface.
+    Byte PreviousLayer;
+
+    // BurrowDeliveryData's own runtime state for this burrow - see its Tick.
+    Byte Stage;          // 0 Dive, 1 Travel, 2 Resurface
+    FP MoveSpeed;        // resolved at Begin (BurrowMoveSpeed, or distance / TravelDuration)
+    FP TravelElapsed;    // seconds spent in Travel so far
+    FP RetargetAt;       // TravelElapsed at which RetargetAtPercent fires
+    Boolean Retargeted;  // RetargetAtPercent fires at most once per burrow
 }

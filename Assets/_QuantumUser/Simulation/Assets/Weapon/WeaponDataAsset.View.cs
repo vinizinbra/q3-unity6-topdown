@@ -132,6 +132,31 @@ namespace Quantum
         // asset instead. The weapon's fire sound follows the same shape: see WeaponView.fireSound,
         // resolved and played directly by the per-prefab view instead.
 
+        // Per-shot ramp (a ramp perk with SuppressiveCycleWeaponPerkData.AdvancePerShot, e.g. Auto
+        // Shotgun) is deterministic - shot i (0-based) fires with min(i + 1, maxStacks) stacks
+        // (WeaponSystem.AdvanceRampOnShot runs before FireShot, and the cooldown to the next shot
+        // is read after it). Averaged over one magazine fired from 0 stacks, i.e. a fresh
+        // engagement. Shared by this DPS preview and the Balance Simulator (BalanceSimModel.SimWeapon)
+        // so the two can't drift. Per-HIT ramps still use the half-max-stacks placeholder instead,
+        // since how often hits land isn't something either model knows.
+        public static void PerShotRampFactors(int magazine, float maxStacks, float damageBonusPerStack,
+            float fireRateBonusPerStack, out float damageFactor, out float fireRateFactor)
+        {
+            int shots = Mathf.Max(1, magazine);
+            float damageSum = 0f;
+            float timeSum = 0f;
+
+            for (int i = 0; i < shots; i++)
+            {
+                float stacks = Mathf.Min(i + 1, maxStacks);
+                damageSum += 1f + stacks * damageBonusPerStack;
+                timeSum += 1f / (1f + stacks * fireRateBonusPerStack);
+            }
+
+            damageFactor = damageSum / shots;
+            fireRateFactor = shots / timeSum;
+        }
+
         [Header("Projectile Visuals")]
         public ProjectileVisualsConfig ProjectileVisuals = new ProjectileVisualsConfig();
 
@@ -155,6 +180,21 @@ namespace Quantum
             _dpsPreview = BuildDpsPreview();
         }
 
+        // Called by WeaponDpsPreviewRefresher (Editor) when something this preview reads from ANOTHER
+        // asset changes - a BaseTraits perk, its ProjectileData/Hit - since OnValidate only fires for
+        // edits to this weapon asset itself. Returns true when the text actually changed, so the
+        // caller only dirties weapons whose numbers moved.
+        public bool RefreshDpsPreview()
+        {
+            string preview = BuildDpsPreview();
+
+            if (preview == _dpsPreview)
+                return false;
+
+            _dpsPreview = preview;
+            return true;
+        }
+
         private string BuildDpsPreview()
         {
             float damage = Damage.AsFloat;
@@ -165,13 +205,14 @@ namespace Quantum
             float criticalMultiplier = Mathf.Max(1f, CriticalDamageBonus.AsFloat);
             float perShotFactor = 1f;
             float estimatedTargets = 1f;
+            string unmodelledTraits = null;
 
 #if UNITY_EDITOR
             // QuantumUnityDB.GetGlobalAssetEditorInstance only exists in-Editor (see its own "use in
             // OnValidate etc." doc comment - Quantum.Simulation must still compile for a headless
             // dedicated-server build, which has no Unity asset database to resolve BaseTraits against).
             ApplyBaseTraits(ref damage, ref fireRate, ref magazineSize, ref reloadDuration,
-                ref criticalChance, ref criticalMultiplier, ref perShotFactor, ref estimatedTargets);
+                ref criticalChance, ref criticalMultiplier, ref perShotFactor, ref estimatedTargets, ref unmodelledTraits);
             ApplyProjectileHitTargets(ref estimatedTargets);
 
             // The weapon's OWN authored baseline (WeaponDataAsset.BonusBounces - "Ricochet bounces
@@ -233,6 +274,11 @@ namespace Quantum
                 preview += $"\nEst. targets/shot: {estimatedTargets:0.#}\nEffective Burst DPS (all targets): {burstDps * estimatedTargets:0.#}\nEffective Sustained DPS (all targets): {sustainedDps * estimatedTargets:0.#}";
             }
 
+            if (unmodelledTraits != null)
+            {
+                preview += $"\nNot in DPS (unmodelled traits): {unmodelledTraits}";
+            }
+
             return preview;
         }
 
@@ -260,13 +306,15 @@ namespace Quantum
         private const float EstimatedExtraTargetConnectChance = 0.5f;
 
         private void ApplyBaseTraits(ref float damage, ref float fireRate, ref int magazineSize, ref float reloadDuration,
-            ref float criticalChance, ref float criticalMultiplier, ref float perShotFactor, ref float estimatedTargets)
+            ref float criticalChance, ref float criticalMultiplier, ref float perShotFactor, ref float estimatedTargets,
+            ref string unmodelledTraits)
         {
             int burstCount = 1;
             float burstDelay = 0f;
             float rampMaxStacks = 0f;
             float rampDamageBonusPerStack = 0f;
             float rampFireRateBonusPerStack = 0f;
+            bool rampAdvancesPerShot = false;
             int extraHitOpportunities = 0;
 
             for (int i = 0; i < BaseTraits.Count; i++)
@@ -274,7 +322,9 @@ namespace Quantum
                 if (BaseTraits[i].IsValid == false)
                     continue;
 
-                switch (QuantumUnityDB.GetGlobalAssetEditorInstance(BaseTraits[i]))
+                WeaponPerkData trait = QuantumUnityDB.GetGlobalAssetEditorInstance(BaseTraits[i]);
+
+                switch (trait)
                 {
                     case DamageMultiplierWeaponPerkData p: damage *= p.Multiplier.AsFloat; break;
                     case FireRateWeaponPerkData p: fireRate *= Mathf.Max(0.01f, p.Multiplier.AsFloat); break;
@@ -303,6 +353,7 @@ namespace Quantum
                     case SuppressiveCycleWeaponPerkData p:
                         rampMaxStacks = Mathf.Max(rampMaxStacks, p.MaxStacks);
                         rampFireRateBonusPerStack += p.FireRateBonusPerStack.AsFloat;
+                        rampAdvancesPerShot |= p.AdvancePerShot;
                         break;
                     case OverchargeCycleWeaponPerkData p:
                         rampMaxStacks = Mathf.Max(rampMaxStacks, p.MaxStacks);
@@ -321,10 +372,25 @@ namespace Quantum
                         // Same Burn-uptime placeholder as the Balance Simulator (BalanceSimModel.BurnUptime*).
                         perShotFactor *= 1f + p.DamageBonus.AsFloat * (Element == ElementType.Fire ? 0.9f : 0.3f);
                         break;
+                    case null:
+                        break;
+                    default:
+                        // Listed in the preview so a trait missing from this switch is visible
+                        // instead of silently reading as "no DPS effect".
+                        string traitName = string.IsNullOrEmpty(trait.DisplayName) ? trait.name : trait.DisplayName;
+                        unmodelledTraits = unmodelledTraits == null ? traitName : unmodelledTraits + ", " + traitName;
+                        break;
                 }
             }
 
-            if (rampMaxStacks > 0f)
+            if (rampMaxStacks > 0f && rampAdvancesPerShot)
+            {
+                PerShotRampFactors(magazineSize, rampMaxStacks, rampDamageBonusPerStack, rampFireRateBonusPerStack,
+                    out float rampDamageFactor, out float rampFireRateFactor);
+                perShotFactor *= rampDamageFactor;
+                fireRate *= rampFireRateFactor;
+            }
+            else if (rampMaxStacks > 0f)
             {
                 perShotFactor *= 1f + rampMaxStacks * rampDamageBonusPerStack * 0.5f;
                 fireRate *= 1f + rampMaxStacks * rampFireRateBonusPerStack * 0.5f;

@@ -63,6 +63,10 @@ public class TilesetDefinition : ScriptableObject
         public bool FrontOnly;
         [Tooltip("Wall props only: only on walls that drop into the water / void (wall bottom below 0 - base platforms, never raised blocks), placed right at the water line (model height 0 = the water surface). E.g. a sewage outlet pouring into the canal.")]
         public bool WaterEdge;
+        [Min(0), Tooltip("Surface scatter only: at most this many per platform / building top (0 = no limit) - e.g. 1 antenna per roof.")]
+        public int MaxPerPlatform;
+        [Range(0f, 1f), Tooltip("Surface scatter only: chance a platform allows this entry at all (0 = always) - makes it rare per building, not per cell.")]
+        public float PlatformChance;
     }
 
     [Header("Surface scatter (props on top of platforms, see TilesetPlatformBuilder.SurfaceDecor)")]
@@ -95,6 +99,9 @@ public class TilesetDefinition : ScriptableObject
     [SerializeField, Tooltip("How much deeper (world units, at the wall foot) embedded wall props / runs sit than at the top - follows an undercut cliff face that tucks in toward its foot. 0 for straight built walls (Neo-Favela), so flat props like graffiti stay on the face.")]
     private float wallPropSlope = 0.12f;
 
+    [SerializeField, Tooltip("How far the tile profile rises ABOVE the cube top, as a fraction of the tile height (e.g. Favela's 2% brick coping). Tiles are Y-scaled to the wall height, so this becomes TopRaise x wall height in the world; OverBand runs (vines on the lip) are lifted by it so they stay on top of the coping.")]
+    private float topRaise;
+
     // A continuous modular run along a straight wall (pipeline, cable tray, fence...): 1-cell modules
     // laid side by side at one height, capped at both ends. Modules are authored 1 unit long along X
     // (-0.5..0.5), facing -Z, pivot on the wall face; End pieces are authored as the run's +X end and
@@ -115,6 +122,8 @@ public class TilesetDefinition : ScriptableObject
         [Tooltip("End that turns into the wall / a wall box (+X end).")]
         public GameObject EndWall;
         public GameObject EndWallSide;
+        [Tooltip("Optional hand-made -X end (the run's START). Empty = EndWall mirrored (x scale -1) - fine for symmetric modules, wrong for diagonal stripes.")]
+        public GameObject EndWallStart;
         [Tooltip("End that turns DOWN (+X end); its downward part ends at the model pivot height, at DropX.")]
         public GameObject EndDown;
         public GameObject EndDownSide;
@@ -145,6 +154,8 @@ public class TilesetDefinition : ScriptableObject
         public float BandClearance = 0.3f;
         [Tooltip("Ignore the tileset's avoid band: the run sits on / spills over the cap itself (vines draping over a laje).")]
         public bool OverBand;
+        [Tooltip("Layers on top of other wall runs: neither blocked by nor blocking their cells (e.g. metal edge trim at the lip over a pipeline).")]
+        public bool Overlay;
         [Tooltip("Walls lower than this (top - bottom) get no run.")]
         public float MinWallHeight = 0.9f;
         [Range(0f, 1f), Tooltip("Chance per free stretch of a camera-facing straight wall to start a run (half on side walls).")]
@@ -159,6 +170,10 @@ public class TilesetDefinition : ScriptableObject
         public bool Foot;
         [Tooltip("Only on walls facing the camera (flat things read edge-on on side walls - clotheslines).")]
         public bool FrontOnly;
+        [Tooltip("Only on walls that drop below the water line (the map rim / abyss edges), never on raised blocks inside the play area - e.g. a safety railing.")]
+        public bool AbyssOnly;
+        [Tooltip("Only on raised blocks (walls whose bottom is at / above the water line), never on the base platforms dropping into the water - their tall walls stretch the tile (and any profile detail on top) with the height.")]
+        public bool RaisedOnly;
         [Tooltip("Foot runs: how high above the wall foot a spawned item blocks the wall props of its cell (a low sandbag trench leaves room for props above it; a pole blocks the whole cell).")]
         public float FootReserveHeight = 99f;
     }
@@ -188,8 +203,29 @@ public class TilesetDefinition : ScriptableObject
     private List<WallRunSet> wallRuns = new();
 
     public IReadOnlyList<WallRunSet> WallRuns => wallRuns;
+
+    [SerializeField, Tooltip("FACADE props on walls that drop below the water line (lit windows of a sky building under the platforms): rows below Facade Top Y, one chance per wall cell per row, aligned in columns. Authored like embedded wall props (facing -Z, pivot at the lowest point). Real size.")]
+    private List<ScatterEntry> facadeScatter = new();
+    [SerializeField, Range(0f, 1f), Tooltip("Chance per wall cell per row.")]
+    private float facadeDensity = 0.5f;
+    [SerializeField, Tooltip("World Y of the top row's top edge.")]
+    private float facadeTopY = -0.3f;
+    [SerializeField, Min(0.1f), Tooltip("Vertical distance between facade rows (world units).")]
+    private float facadeRowStep = 0.6f;
+    [SerializeField, Min(1), Tooltip("Max rows (the wall's own bottom also stops them).")]
+    private int facadeRows = 3;
+    [SerializeField, Tooltip("Random offset per facade piece: x = along the wall (fraction of a cell), y = up / down (world units). (0,0) = neat rows and columns.")]
+    private Vector2 facadeJitter = Vector2.zero;
+
+    public IReadOnlyList<ScatterEntry> FacadeScatter => facadeScatter;
+    public float FacadeDensity => facadeDensity;
+    public float FacadeTopY => facadeTopY;
+    public float FacadeRowStep => facadeRowStep;
+    public int FacadeRows => facadeRows;
+    public Vector2 FacadeJitter => facadeJitter;
     public float WallPropInset => wallPropInset;
     public float WallPropSlope => wallPropSlope;
+    public float TopRaise => topRaise;
     public Vector2 WallPropAvoidBand => wallPropAvoidBand;
     public float WallPropAvoidMargin => wallPropAvoidMargin;
     public IReadOnlyList<ScatterEntry> WallScatter => wallScatter;

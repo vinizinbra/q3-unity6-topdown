@@ -61,7 +61,7 @@ MonoBehaviour:
   - Id:
       Value: 302683831509925147
   ViewPrefab: {fileID: 8089491252618662435, guid: 63feb225eccc743de8c81ad73ef821bc, type: 3}
-  Description: 'Critical hits explode, damaging nearby enemies.'
+  Description: Critical hits explode, damaging nearby enemies.
   ShakeTier: 2
   ProjectileVisuals:
     ProjectileSprite: {fileID: -34060622, guid: 8a17d688bdd9e47c68bbdfc6beba17e1, type: 3}

@@ -551,6 +551,7 @@ namespace Quantum
 
             FireShotMarker.Begin();
             ArmChainShot(f, filter.Entity);
+            AdvanceRampOnShot(f, filter.Entity);
             FireShot(f, filter.Entity, filter.Weapon, weaponData, damage, casterPosition, aimAngle, holdOffset,
                 spawnPosition, aimDirection, filter.Aim->Target, aimAtCenter, isExplosiveProc, isCataclysm, grantPierceAmount, isFirstBullet, forceCritical);
             DisarmChainShot(f, filter.Entity);
@@ -832,6 +833,18 @@ namespace Quantum
             mods->ChainShotArmed = true;
         }
 
+        // Per-shot ramp (WeaponRampState.RampAdvancesPerShot) - same two real-shot call sites as
+        // ArmChainShot, so echoes/follow-ups never advance it. The per-hit ramp is advanced in
+        // WeaponPerkReactionSystem.OnWeaponHitLanded instead.
+        private static void AdvanceRampOnShot(Frame f, EntityRef owner)
+        {
+            if (f.Unsafe.TryGetPointer<WeaponRampState>(owner, out var ramp) == true
+                && ramp->RampAdvancesPerShot == true && ramp->RampStacks < ramp->RampMaxStacks)
+            {
+                ramp->RampStacks++;
+            }
+        }
+
         private static void DisarmChainShot(Frame f, EntityRef owner)
         {
             if (f.Unsafe.TryGetPointer<WeaponFireTimeMods>(owner, out var mods) == true)
@@ -1109,6 +1122,7 @@ namespace Quantum
                 out FPVector3 holdOffset, out FPVector3 spawnPosition, out FPVector3 aimDirection);
 
             ArmChainShot(f, owner);
+            AdvanceRampOnShot(f, owner);
             FireShot(f, owner, weapon, weaponData, damage, casterPosition, aimAngle, holdOffset,
                 spawnPosition, aimDirection, target, aimAtCenter, isExplosiveProc,
                 isCataclysm, burst->GrantPierceAmount, isFirstBullet, forceCritical);

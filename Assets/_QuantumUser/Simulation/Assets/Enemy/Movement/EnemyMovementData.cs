@@ -21,5 +21,10 @@ namespace Quantum
         // (EnemyMovementUtility.MoveInDirection) apply speed and write velocity; height/altitude is a
         // separate concern (EnemyHeightData), not something this vector encodes.
         public abstract FPVector2 ComputeMoveDirection(Frame f, EntityRef self, EntityRef target);
+
+        // True: the enemy is pinned in place - other enemies/players can't push it and knockback
+        // doesn't move it. EnemySystem.SeedFromEnemyData tags it Anchored and AnchoredSystem keeps its
+        // body kinematic every tick (the enemy state machine flips IsKinematic in many places).
+        public virtual bool IsKinematic => false;
     }
 }

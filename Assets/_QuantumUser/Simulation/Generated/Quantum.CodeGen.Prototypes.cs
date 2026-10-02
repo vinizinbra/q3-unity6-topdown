@@ -196,6 +196,21 @@ namespace Quantum.Prototypes {
     }
   }
   [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.Anchored))]
+  public unsafe partial class AnchoredPrototype : ComponentPrototype<Quantum.Anchored> {
+    public QBoolean Placed;
+    partial void MaterializeUser(Frame frame, ref Quantum.Anchored result, in PrototypeMaterializationContext context);
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.Anchored component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.Anchored result, in PrototypeMaterializationContext context = default) {
+        result.Placed = this.Placed;
+        MaterializeUser(frame, ref result, in context);
+    }
+  }
+  [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.AreaAllyBudget))]
   public unsafe class AreaAllyBudgetPrototype : ComponentPrototype<Quantum.AreaAllyBudget> {
     [ArrayLengthAttribute(4)]
@@ -573,8 +588,12 @@ namespace Quantum.Prototypes {
   [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.Burrowed))]
   public unsafe partial class BurrowedPrototype : ComponentPrototype<Quantum.Burrowed> {
-    [HideInInspector()]
-    public Int32 _empty_prototype_dummy_field_;
+    public Byte PreviousLayer;
+    public Byte Stage;
+    public FP MoveSpeed;
+    public FP TravelElapsed;
+    public FP RetargetAt;
+    public QBoolean Retargeted;
     partial void MaterializeUser(Frame frame, ref Quantum.Burrowed result, in PrototypeMaterializationContext context);
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.Burrowed component = default;
@@ -582,6 +601,12 @@ namespace Quantum.Prototypes {
         return f.Set(entity, component) == SetResult.ComponentAdded;
     }
     public void Materialize(Frame frame, ref Quantum.Burrowed result, in PrototypeMaterializationContext context = default) {
+        result.PreviousLayer = this.PreviousLayer;
+        result.Stage = this.Stage;
+        result.MoveSpeed = this.MoveSpeed;
+        result.TravelElapsed = this.TravelElapsed;
+        result.RetargetAt = this.RetargetAt;
+        result.Retargeted = this.Retargeted;
         MaterializeUser(frame, ref result, in context);
     }
   }
@@ -1484,6 +1509,26 @@ namespace Quantum.Prototypes {
     }
   }
   [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.EnemyPassives))]
+  public unsafe partial class EnemyPassivesPrototype : ComponentPrototype<Quantum.EnemyPassives> {
+    [ArrayLengthAttribute(8)]
+    public AssetRef<EnemyPassiveData>[] Applied = new AssetRef<EnemyPassiveData>[8];
+    public Byte Count;
+    partial void MaterializeUser(Frame frame, ref Quantum.EnemyPassives result, in PrototypeMaterializationContext context);
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.EnemyPassives component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.EnemyPassives result, in PrototypeMaterializationContext context = default) {
+        for (int i = 0, count = PrototypeValidator.CheckLength(Applied, 8, in context); i < count; ++i) {
+          *result.Applied.GetPointer(i) = this.Applied[i];
+        }
+        result.Count = this.Count;
+        MaterializeUser(frame, ref result, in context);
+    }
+  }
+  [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.EnemySequenceState))]
   public unsafe partial class EnemySequenceStatePrototype : ComponentPrototype<Quantum.EnemySequenceState> {
     public Byte CurrentStepIndex;
@@ -1737,6 +1782,31 @@ namespace Quantum.Prototypes {
         result.FallGravityMultiplier = this.FallGravityMultiplier;
         result.FloatSpeed = this.FloatSpeed;
         result.FallVelocity = this.FallVelocity;
+        MaterializeUser(frame, ref result, in context);
+    }
+  }
+  [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.GroundTrail))]
+  public unsafe partial class GroundTrailPrototype : ComponentPrototype<Quantum.GroundTrail> {
+    public AssetRef<EntityPrototype> Prototype;
+    public FP SpawnDistance;
+    public FP Duration;
+    public FP Scale;
+    public FPVector3 LastDropPosition;
+    public QBoolean HasLastDrop;
+    partial void MaterializeUser(Frame frame, ref Quantum.GroundTrail result, in PrototypeMaterializationContext context);
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.GroundTrail component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.GroundTrail result, in PrototypeMaterializationContext context = default) {
+        result.Prototype = this.Prototype;
+        result.SpawnDistance = this.SpawnDistance;
+        result.Duration = this.Duration;
+        result.Scale = this.Scale;
+        result.LastDropPosition = this.LastDropPosition;
+        result.HasLastDrop = this.HasLastDrop;
         MaterializeUser(frame, ref result, in context);
     }
   }
@@ -3617,6 +3687,8 @@ namespace Quantum.Prototypes {
     public FP BoundRemaining;
     public FP TempMoveSpeedRemaining;
     public FP TempMoveSpeedMultiplier;
+    public FP StickySlowRemaining;
+    public FP StickySlowMultiplier;
     public FP ReviveImmunityRemaining;
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.StatusEffects component = default;
@@ -3698,6 +3770,8 @@ namespace Quantum.Prototypes {
         result.BoundRemaining = this.BoundRemaining;
         result.TempMoveSpeedRemaining = this.TempMoveSpeedRemaining;
         result.TempMoveSpeedMultiplier = this.TempMoveSpeedMultiplier;
+        result.StickySlowRemaining = this.StickySlowRemaining;
+        result.StickySlowMultiplier = this.StickySlowMultiplier;
         result.ReviveImmunityRemaining = this.ReviveImmunityRemaining;
     }
   }
@@ -4624,6 +4698,7 @@ namespace Quantum.Prototypes {
     public FP RampDamageBonusPerStack;
     public FP RampFireRateBonusPerStack;
     public FP RampDecayGrace;
+    public QBoolean RampAdvancesPerShot;
     partial void MaterializeUser(Frame frame, ref Quantum.WeaponRampState result, in PrototypeMaterializationContext context);
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.WeaponRampState component = default;
@@ -4636,6 +4711,7 @@ namespace Quantum.Prototypes {
         result.RampDamageBonusPerStack = this.RampDamageBonusPerStack;
         result.RampFireRateBonusPerStack = this.RampFireRateBonusPerStack;
         result.RampDecayGrace = this.RampDecayGrace;
+        result.RampAdvancesPerShot = this.RampAdvancesPerShot;
         MaterializeUser(frame, ref result, in context);
     }
   }

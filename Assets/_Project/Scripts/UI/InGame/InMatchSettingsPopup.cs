@@ -2,8 +2,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 // Pause-menu style settings popup, opened mid-match through InMatchPopupManager (Escape, or any
-// button wired to InMatchPopupManager.OpenSettings). Music/SFX sliders drive AudioManager's two
-// persisted category volumes - see AudioManager.MusicVolume - so there is nothing to save here.
+// button wired to InMatchPopupManager.OpenSettings). Music/SFX/Voice sliders drive AudioManager's three
+// persisted category volumes (shared with MenuSettingsPopup) - see AudioManager.MusicVolume - so there is nothing to save here.
 //
 // Disconnect goes through MatchMakingConfig.LeaveMatch, which already routes offline vs online (see
 // its own comment). Restart only makes sense for a purely local session - an online run is a shared
@@ -13,6 +13,7 @@ public class InMatchSettingsPopup : UiPopup
 {
     [SerializeField] private Slider sfxSlider;
     [SerializeField] private Slider musicSlider;
+    [SerializeField] private Slider voiceSlider;
     [SerializeField] private Button disconnectButton;
     [SerializeField, Tooltip("Hidden unless the match is being played offline.")]
     private Button restartButton;
@@ -29,6 +30,9 @@ public class InMatchSettingsPopup : UiPopup
 
         if (musicSlider != null)
             musicSlider.onValueChanged.AddListener(OnMusicChanged);
+
+        if (voiceSlider != null)
+            voiceSlider.onValueChanged.AddListener(OnVoiceChanged);
 
         if (disconnectButton != null)
             disconnectButton.onClick.AddListener(OnDisconnectClicked);
@@ -48,6 +52,9 @@ public class InMatchSettingsPopup : UiPopup
         if (musicSlider != null)
             musicSlider.SetValueWithoutNotify(AudioManager.MusicVolume);
 
+        if (voiceSlider != null)
+            voiceSlider.SetValueWithoutNotify(AudioManager.VoiceVolume);
+
         if (restartButton != null)
             restartButton.gameObject.SetActive(GameManager.Instance != null && GameManager.Instance.isPlayingOffline);
     }
@@ -55,6 +62,8 @@ public class InMatchSettingsPopup : UiPopup
     private static void OnSfxChanged(float value) => AudioManager.SfxVolume = value;
 
     private static void OnMusicChanged(float value) => AudioManager.MusicVolume = value;
+
+    private static void OnVoiceChanged(float value) => AudioManager.VoiceVolume = value;
 
     private void OnDisconnectClicked()
     {

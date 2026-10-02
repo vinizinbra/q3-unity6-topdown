@@ -359,6 +359,7 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
       }
       try
       {
+         PhotonRegionSettings.ApplyTo(connectionArguments.PhotonSettings);
          await Client.ConnectToRoomAsync(connectionArguments);
          LogHelper.Log("MatchMaking", Client.UserId);
       }
@@ -1283,6 +1284,7 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
 
    public void OnConnectedToMaster()
    {
+      PhotonRegionSettings.RememberConnectedRegion(Client.CurrentRegion);
    }
 
    public void OnDisconnected(DisconnectCause cause)

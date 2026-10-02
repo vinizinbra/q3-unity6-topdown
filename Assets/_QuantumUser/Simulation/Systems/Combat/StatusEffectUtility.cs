@@ -1517,6 +1517,33 @@ namespace Quantum
             return status->TempMoveSpeedMultiplier;
         }
 
+        // Ground-hazard slow (tar puddle) - see StatusEffects.StickySlowRemaining. Strongest-wins
+        // while active, so overlapping puddles never stack; duration refreshes to the longer one.
+        public static void ApplyStickySlow(Frame f, EntityRef target, FP duration, FP multiplier)
+        {
+            if (f.Unsafe.TryGetPointer<StatusEffects>(target, out var status) == false)
+                return;
+
+            if (status->StickySlowRemaining > FP._0)
+            {
+                status->StickySlowMultiplier = FPMath.Min(status->StickySlowMultiplier, multiplier);
+                status->StickySlowRemaining = FPMath.Max(status->StickySlowRemaining, duration);
+                return;
+            }
+
+            status->StickySlowRemaining = duration;
+            status->StickySlowMultiplier = multiplier;
+        }
+
+        // Read by PlayerMovementProcessor - composes multiplicatively with the other speed sources.
+        public static FP GetStickySlowMultiplier(Frame f, EntityRef entity)
+        {
+            if (f.Unsafe.TryGetPointer<StatusEffects>(entity, out var status) == false || status->StickySlowRemaining <= FP._0)
+                return FP._1;
+
+            return status->StickySlowMultiplier;
+        }
+
         // Scales a status's duration by the owner's CharacterStats.OutgoingStatusDurationMultiplier,
         // but only for DamageSource.Skill - that field's own doc comment (CharacterStats.qtn) already
         // scopes it to skill-spawned effects, so every status effect asset reuses that exact

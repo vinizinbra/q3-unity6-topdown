@@ -2,6 +2,7 @@ namespace Quantum
 {
     using System;
     using Photon.Deterministic;
+    using UnityEngine.Serialization;
 
     // Where BurrowDeliveryData resurfaces relative to the target. TowardTarget scatters around the
     // target's own live position (the original ambush behavior - RandomizeAroundAnchor's ring keeps
@@ -27,17 +28,31 @@ namespace Quantum
     // escape rather than a random reposition.
     public unsafe class BurrowDeliveryData : EnemyDeliveryData
     {
+        private const string BurrowedLayerName = "DeadEnemy";
+
         public FP DiveDuration = FP._0_50;
 
-        // Fixed Travel time, used only when TravelSpeed <= 0 (the default - every existing
-        // BurrowDeliveryData asset keeps its exact current behavior). See TravelSpeed.
+        // Underground move speed (units/second). Travel is real movement toward the destination at
+        // this speed every tick - not a timed interpolation - so changing the destination mid-way
+        // (RetargetAtPercent) just steers it, never snaps it. Formerly TravelSpeed.
+        [FormerlySerializedAs("TravelSpeed")]
+        public FP BurrowMoveSpeed = 5;
+
+        // Fallback only when BurrowMoveSpeed <= 0: the speed is then derived once at Begin() as
+        // distance / TravelDuration, so the first leg takes this long.
         public FP TravelDuration = FP._1;
 
-        // > 0 switches Travel from a fixed duration to distance / TravelSpeed, so a short hop and a
-        // long cross-arena relocation take proportionally different times instead of both taking
-        // TravelDuration regardless of how far they actually go. Only Travel scales this way - Dive/
-        // Resurface are in-place vertical sink/rise, not distance-dependent.
-        public FP TravelSpeed;
+        // Hard cap on time spent traveling underground (<= 0 = no cap). Needed once the destination
+        // can keep moving - DirectionTracking = UpdateTargetDirectionWhileActive re-points it at the
+        // live target every tick, and a target as fast as BurrowMoveSpeed is never caught. On timeout
+        // it resurfaces right where it is, provided there's ground there (otherwise it keeps going
+        // until there is, rather than popping up over a void).
+        public FP MaxTravelDuration = 3;
+
+        // Travel ends this far (flat) short of the destination, on the side it approached from - so a
+        // homing burrow (UpdateTargetDirectionWhileActive) surfaces beside the target instead of
+        // directly beneath it. 0 = lands exactly on the destination.
+        public FP ArriveDistance;
 
         public FP ResurfaceDuration = FP._0_50;
 
@@ -69,16 +84,11 @@ namespace Quantum
         private static readonly FP FallbackScatterMin = 1;
         private static readonly FP FallbackScatterMax = 4;
 
-        // Re-samples the anchor (ResolveAnchor - the target's live position, or a freshly-recomputed
-        // flee point) exactly ONCE, the tick elapsed crosses this fraction (0-1) of the total Dive+
-        // Travel+Resurface duration, and re-scatters/re-grounds Enemy.SkillTargetPosition from it -
-        // same "single checkpoint, not continuous tracking" idiom EnemyActionData.AimLockPercent uses
-        // for the windup, just applied to the Active phase instead (AimLock/OnAnticipating stop being
-        // consulted the instant Begin() runs, so they can't cover this on their own). <= 0 (default)
-        // never retargets - every existing asset keeps its original one-shot-at-Begin destination.
-        // Author it to land inside the Travel phase (between DiveDuration and DiveDuration+Travel, as
-        // a fraction of the total) so the position snap this can cause happens while the enemy is
-        // still fully hidden underground, not mid-Dive/Resurface where it's visible.
+        // Re-samples the anchor (ResolveAnchor - the target's LIVE position, or a freshly-recomputed
+        // flee point) exactly ONCE, after this fraction (0-1) of the first leg's estimated travel time
+        // (distance / speed at Begin), and steers toward a fresh scattered destination from there.
+        // Speed-based travel means this never snaps the enemy. <= 0 (default) never retargets.
+        // Only ever fires underground, mid-Travel.
         public FP RetargetAtPercent;
 
         // True: the instant it finishes resurfacing, hits every player within action.DamageRange of
@@ -87,24 +97,35 @@ namespace Quantum
         // all, matching this delivery's original behavior - action.Effects/Damage go unused.
         public bool AttackOnResurface;
 
-        private FP ResolveTravelDuration(FPVector3 start, FPVector3 destination)
+        private FP ResolveMoveSpeed(FPVector3 start, FPVector3 destination)
         {
-            if (TravelSpeed <= FP._0)
-                return TravelDuration;
+            if (BurrowMoveSpeed > FP._0)
+                return BurrowMoveSpeed;
 
-            return FPVector3.Distance(start, destination) / TravelSpeed;
+            FP distance = FlatDistance(start, destination);
+            return TravelDuration > FP._0 && distance > FP._0 ? distance / TravelDuration : FP._1 * 1000;
         }
 
-        private FPVector3 ResolveAnchor(ref EnemySystem.Filter filter)
+        private static FP FlatDistance(FPVector3 a, FPVector3 b)
+        {
+            FPVector3 delta = b - a;
+            delta.Y = FP._0;
+            return delta.Magnitude;
+        }
+
+        // targetPosition is passed in rather than read off Enemy.SkillTargetPosition: Begin() overwrites
+        // that field with the chosen DESTINATION, so a mid-travel retarget reading it back would
+        // scatter around the previous landing spot instead of the target (two stacked scatters -
+        // read as the burrow surfacing at random spots).
+        private FPVector3 ResolveAnchor(ref EnemySystem.Filter filter, FPVector3 targetPosition)
         {
             if (RelocationDirection == BurrowRelocationDirection.TowardTarget)
-                return filter.Enemy->SkillTargetPosition;
+                return targetPosition;
 
             // Same flee-direction idiom FleeMovementData.ComputeMoveDirection uses (self minus
             // target, XZ-only) - anchored FleeDistance out so the ring scatter below still lands
             // generally away from the target instead of centered back on it.
             FPVector3 selfPosition = filter.Transform3D->Position;
-            FPVector3 targetPosition = filter.Enemy->SkillTargetPosition;
             FPVector3 delta = new FPVector3(selfPosition.X - targetPosition.X, FP._0, selfPosition.Z - targetPosition.Z);
             FPVector3 fleeDirection = delta.SqrMagnitude > FP._0 ? delta.Normalized : FPVector3.Forward;
 
@@ -174,16 +195,16 @@ namespace Quantum
         // an unresolved point, so a bad roll reads as "dive and pop back up in place" instead of the
         // enemy vanishing into a void. Non-Grounded enemies (Flying) skip the ground requirement
         // entirely, same as the original behavior.
-        private FPVector3 ResolveDestination(Frame f, EnemyDataAsset data, ref EnemySystem.Filter filter, FP fallbackY)
+        private FPVector3 ResolveDestination(Frame f, EnemyDataAsset data, ref EnemySystem.Filter filter, FP fallbackY, FPVector3 targetPosition)
         {
             if (data.Stats.Height.InitialState != EnemyHeightState.Grounded)
             {
-                FPVector3 raw = RandomizeAroundAnchor(f, ResolveAnchor(ref filter));
+                FPVector3 raw = RandomizeAroundAnchor(f, ResolveAnchor(ref filter, targetPosition));
                 return new FPVector3(raw.X, fallbackY, raw.Z);
             }
 
             int groundLayerMask = EnemyMovementUtility.GetGroundLayerMask(f);
-            FPVector3 anchor = ResolveAnchor(ref filter);
+            FPVector3 anchor = ResolveAnchor(ref filter, targetPosition);
 
             // The straight-line-from-here check (IsPathClear) uses the enemy's LIVE position, not
             // just its Begin()-time start - correct for both call sites: at Begin() this IS the
@@ -225,6 +246,7 @@ namespace Quantum
                 }
             }
 
+            Log.Debug($"[Enemy] {filter.Entity} burrow found no clear landing spot near {anchor} - resurfacing in place");
             return new FPVector3(selfPosition.X, fallbackY, selfPosition.Z);
         }
 
@@ -232,95 +254,156 @@ namespace Quantum
         {
             filter.Enemy->SkillStartPosition = filter.Transform3D->Position;
 
-            // SkillTargetPosition is already the target's raw position (established by
-            // OnAnticipating/UpdateChasing). ResolveAnchor (called inside ResolveDestination) picks
-            // TowardTarget (that raw position) or AwayFromTarget (a flee point derived from it);
-            // either way the result is scattered via the base class's own randomization (same as
-            // ScatterDeliveryData) and re-rolled until it clears IsClearLandingSpot, falling back to
-            // the enemy's own current position if nothing valid turns up - see ResolveDestination.
-            FPVector3 destination = ResolveDestination(f, data, ref filter, filter.Enemy->SkillStartPosition.Y);
+            // SkillTargetPosition is the target's position locked during the windup. ResolveAnchor
+            // picks TowardTarget (that position) or AwayFromTarget (a flee point derived from it);
+            // either way it's scattered and re-rolled until clear - see ResolveDestination. From here
+            // on SkillTargetPosition holds the DESTINATION, not the target.
+            FPVector3 destination = ResolveDestination(f, data, ref filter, filter.Enemy->SkillStartPosition.Y, filter.Enemy->SkillTargetPosition);
 
             filter.Enemy->SkillTargetPosition = destination;
-            filter.Enemy->StateTimer = DiveDuration + ResolveTravelDuration(filter.Enemy->SkillStartPosition, destination) + ResurfaceDuration;
+            filter.Enemy->StateTimer = DiveDuration;
             filter.PhysicsBody3D->IsKinematic = true;
 
             f.Add<Invulnerable>(filter.Entity);
             f.Add<Burrowed>(filter.Entity);
 
-            return false;
-        }
-
-        public override bool Tick(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, EnemyActionData action, EntityRef target)
-        {
-            FPVector3 start = filter.Enemy->SkillStartPosition;
-            FPVector3 destination = filter.Enemy->SkillTargetPosition;
-            FP travelDuration = ResolveTravelDuration(start, destination);
-            FP totalDuration = DiveDuration + travelDuration + ResurfaceDuration;
-
-            FP timerBeforeTick = filter.Enemy->StateTimer;
-            FP elapsedBefore = FPMath.Clamp(totalDuration - timerBeforeTick, FP._0, totalDuration);
-
-            // Same Void Pressure (Kai) time-dilation reasoning as LeapDeliveryData.Tick - only the
-            // Active phase is stretched, not the windup.
-            filter.Enemy->StateTimer = timerBeforeTick - f.DeltaTime * StatusEffectUtility.GetLocalTimeMultiplier(f, filter.Entity);
-
-            FP elapsed = FPMath.Clamp(totalDuration - filter.Enemy->StateTimer, FP._0, totalDuration);
-
-            if (RetargetAtPercent > FP._0)
+            if (f.Unsafe.TryGetPointer<Burrowed>(filter.Entity, out var burrowed) == true)
             {
-                FP retargetElapsed = RetargetAtPercent * totalDuration;
+                FP speed = ResolveMoveSpeed(filter.Enemy->SkillStartPosition, destination);
+                burrowed->Stage = StageDive;
+                burrowed->MoveSpeed = speed;
+                burrowed->TravelElapsed = FP._0;
+                burrowed->RetargetAt = RetargetAtPercent * FlatDistance(filter.Enemy->SkillStartPosition, destination) / speed;
+                burrowed->Retargeted = false;
 
-                if (elapsedBefore < retargetElapsed && elapsed >= retargetElapsed)
+                // Off the Enemy layer while underground - otherwise the kinematic body still shoves
+                // other enemies and players aside along its travel path (DeadEnemy collides with
+                // Ground/Obstacle only, and enemy queries use the Enemy|Boss mask so it stays
+                // untargetable). Restored on resurface.
+                if (f.Unsafe.TryGetPointer<PhysicsCollider3D>(filter.Entity, out var collider) == true)
                 {
-                    destination = ResolveDestination(f, data, ref filter, start.Y);
-                    filter.Enemy->SkillTargetPosition = destination;
-
-                    travelDuration = ResolveTravelDuration(start, destination);
-                    totalDuration = DiveDuration + travelDuration + ResurfaceDuration;
-
-                    // Re-anchors StateTimer so the elapsed-so-far fraction survives the total-
-                    // duration change (Speed mode's travel time depends on distance, which just
-                    // changed by retargeting) - without this, elapsed/StateTimer would otherwise
-                    // jump discontinuously on the very next tick.
-                    filter.Enemy->StateTimer = FPMath.Max(totalDuration - elapsed, FP._0);
+                    burrowed->PreviousLayer = (byte)collider->Layer;
+                    collider->Layer = (byte)f.Layers.GetLayerIndex(BurrowedLayerName);
                 }
             }
 
-            if (elapsed < DiveDuration)
+            return false;
+        }
+
+        // Landing height comes from the real ground under it, not from the destination's own Y - with
+        // UpdateTargetDirectionWhileActive the destination is the raw target position (and with
+        // IgnoreY, the enemy's own sunk height), which would end the rise underground.
+        private void BeginResurface(Frame f, ref EnemySystem.Filter filter, Burrowed* burrowed, FPVector3 landing)
+        {
+            if (EnemyMovementUtility.TryFindGroundHeight(f, landing, EnemyMovementUtility.GetGroundLayerMask(f), out FP groundY) == true)
+                landing.Y = groundY;
+
+            filter.Enemy->SkillStartPosition = landing;
+            filter.Transform3D->Position = new FPVector3(landing.X, landing.Y - DiveDepth, landing.Z);
+            burrowed->Stage = StageResurface;
+            filter.Enemy->StateTimer = ResurfaceDuration;
+        }
+
+        private const byte StageDive = 0;
+        private const byte StageTravel = 1;
+        private const byte StageResurface = 2;
+
+        // Dive (timed sink in place) -> Travel (moves underground at BurrowMoveSpeed until it reaches
+        // the destination) -> Resurface (timed rise). Dive/Resurface run off Enemy.StateTimer; Travel
+        // has no duration at all, it simply ends on arrival.
+        public override bool Tick(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, EnemyActionData action, EntityRef target)
+        {
+            if (f.Unsafe.TryGetPointer<Burrowed>(filter.Entity, out var burrowed) == false)
+                return true;
+
+            // Same Void Pressure (Kai) time-dilation reasoning as LeapDeliveryData.Tick - only the
+            // Active phase is stretched, not the windup.
+            FP dt = f.DeltaTime * StatusEffectUtility.GetLocalTimeMultiplier(f, filter.Entity);
+            FPVector3 start = filter.Enemy->SkillStartPosition;
+            FPVector3 destination = filter.Enemy->SkillTargetPosition;
+
+            if (burrowed->Stage == StageDive)
             {
-                // Diving - sinks straight down in place, hasn't started traveling yet.
-                FP t = DiveDuration > FP._0 ? FPMath.Clamp01(elapsed / DiveDuration) : FP._1;
+                filter.Enemy->StateTimer -= dt;
+                FP t = DiveDuration > FP._0 ? FPMath.Clamp01(FP._1 - filter.Enemy->StateTimer / DiveDuration) : FP._1;
                 filter.Transform3D->Position = new FPVector3(start.X, start.Y - DiveDepth * t, start.Z);
+
+                if (filter.Enemy->StateTimer <= FP._0)
+                    burrowed->Stage = StageTravel;
+
+                return false;
             }
-            else if (elapsed < DiveDuration + travelDuration)
+
+            if (burrowed->Stage == StageTravel)
             {
-                // Traveling underground - fully sunk, moving from the takeoff spot to the resolved
-                // destination. Y is held at each point's own -DiveDepth rather than lerped, so a
-                // takeoff/landing height difference doesn't read as tunneling at an angle (it's
-                // invisible anyway, but Resurface below still needs a clean start point).
-                FP t = travelDuration > FP._0 ? FPMath.Clamp01((elapsed - DiveDuration) / travelDuration) : FP._1;
-                FPVector3 flat = FPVector3.Lerp(start, destination, t);
-                FP depth = FPMath.Lerp(start.Y - DiveDepth, destination.Y - DiveDepth, t);
-                filter.Transform3D->Position = new FPVector3(flat.X, depth, flat.Z);
+                burrowed->TravelElapsed += dt;
+
+                // Once, underground: steer toward a fresh spot around the target's LIVE position (see
+                // ResolveAnchor). No live target (it died/left) keeps the original destination.
+                if (RetargetAtPercent > FP._0 && burrowed->Retargeted == false &&
+                    burrowed->TravelElapsed >= burrowed->RetargetAt &&
+                    f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == true)
+                {
+                    burrowed->Retargeted = true;
+                    destination = ResolveDestination(f, data, ref filter, filter.Transform3D->Position.Y + DiveDepth, targetTransform->Position);
+                    filter.Enemy->SkillTargetPosition = destination;
+                }
+
+                // Real movement: step flat toward the destination at MoveSpeed, stopping ArriveDistance
+                // short of it. Height is irrelevant while hidden - BeginResurface snaps the landing
+                // point to the real ground.
+                FPVector3 current = filter.Transform3D->Position;
+                FPVector3 toDestination = new FPVector3(destination.X - current.X, FP._0, destination.Z - current.Z);
+                FP flatDistance = toDestination.Magnitude;
+                FP remaining = flatDistance - ArriveDistance;
+                FP step = burrowed->MoveSpeed * dt;
+                FPVector3 direction = flatDistance > FP._0 ? toDestination / flatDistance : FPVector3.Zero;
+
+                if (remaining > step)
+                {
+                    filter.Transform3D->Position = current + direction * step;
+
+                    if (MaxTravelDuration <= FP._0 || burrowed->TravelElapsed < MaxTravelDuration)
+                        return false;
+
+                    // Out of time - surface here if there's ground, else keep going (see MaxTravelDuration).
+                    // Probed from surface height - it's DiveDepth underground right now, and a ray
+                    // starting inside the ground would never report it.
+                    FPVector3 here = filter.Transform3D->Position + new FPVector3(FP._0, DiveDepth, FP._0);
+                    if (EnemyMovementUtility.TryFindGroundHeight(f, here, EnemyMovementUtility.GetGroundLayerMask(f), out FP groundY) == false)
+                        return false;
+
+                    BeginResurface(f, ref filter, burrowed, new FPVector3(here.X, groundY, here.Z));
+                    return false;
+                }
+
+                // Arrived (or already inside ArriveDistance): land ArriveDistance short, on the approach side.
+                FPVector3 landing = current + direction * FPMath.Max(remaining, FP._0);
+                BeginResurface(f, ref filter, burrowed, new FPVector3(landing.X, destination.Y, landing.Z));
+                return false;
             }
-            else
-            {
-                // Resurfacing - already at destination XZ, rising from -DiveDepth back to real
-                // ground level.
-                FP t = ResurfaceDuration > FP._0
-                    ? FPMath.Clamp01((elapsed - DiveDuration - travelDuration) / ResurfaceDuration)
-                    : FP._1;
-                filter.Transform3D->Position = new FPVector3(destination.X, destination.Y - DiveDepth * (FP._1 - t), destination.Z);
-            }
+
+            // Resurfacing - at the landing point locked by BeginResurface (SkillStartPosition, free
+            // after the Dive), rising from -DiveDepth back to real ground level. Not read off
+            // SkillTargetPosition: with UpdateTargetDirectionWhileActive that keeps following the
+            // target, which would slide the enemy sideways while it rises.
+            destination = filter.Enemy->SkillStartPosition;
+            filter.Enemy->StateTimer -= dt;
+            FP rise = ResurfaceDuration > FP._0 ? FPMath.Clamp01(FP._1 - filter.Enemy->StateTimer / ResurfaceDuration) : FP._1;
+            filter.Transform3D->Position = new FPVector3(destination.X, destination.Y - DiveDepth * (FP._1 - rise), destination.Z);
 
             if (filter.Enemy->StateTimer > FP._0)
                 return false;
 
             filter.Transform3D->Position = destination;
 
+            if (f.Unsafe.TryGetPointer<PhysicsCollider3D>(filter.Entity, out var collider) == true)
+            {
+                collider->Layer = burrowed->PreviousLayer;
+            }
+
             f.Remove<Invulnerable>(filter.Entity);
             f.Remove<Burrowed>(filter.Entity);
-
             if (AttackOnResurface == true)
             {
                 // Same FindPlayersInRadius + HitEffectUtility.ApplyToTarget idiom

@@ -1,0 +1,24 @@
+// Drops a copy of Prototype on the ground every SpawnDistance the entity travels (flat XZ) - an oil
+// slick, a fire trail, a tar line. Generic, not enemy-specific: anything with a Transform3D can carry
+// it. Enemies get it through GroundTrailPassiveData (see EnemyPassiveData); what each dropped piece
+// then does (slow, burn, ...) is the dropped prototype's own AreaDamage, same as any SpawnedEntity.
+// Ticked by GroundTrailSystem; pauses while the carrier is Burrowed or dead.
+component GroundTrail
+{
+    AssetRef<EntityPrototype> Prototype;
+
+    // Flat distance travelled between drops. Together with the carrier's speed and Duration this
+    // sets how many pieces are alive at once (speed / SpawnDistance * Duration) - keep it modest.
+    FP SpawnDistance;
+
+    // Lifetime of each dropped piece (SpawnedEntitySpawner's DestroyAfterTime).
+    FP Duration;
+
+    // Uniform size of each dropped piece - see SpawnedEntitySpawner.ApplySpawnScale.
+    FP Scale;
+
+    // Runtime only. HasLastDrop false = first tick just records the position, so a freshly spawned
+    // carrier doesn't drop a piece at wherever it was created.
+    FPVector3 LastDropPosition;
+    Boolean HasLastDrop;
+}

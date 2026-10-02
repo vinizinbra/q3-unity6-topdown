@@ -116,6 +116,7 @@ namespace QuantumUser.Editor.BalanceSimulator
         public double RampMaxStacks;
         public double RampFireRateBonusPerStack;
         public double RampDamageBonusPerStack;
+        public bool RampAdvancesPerShot;
         public int SplitShotCount;
         public double SplitShotMultiplier;
         public double CritExplosionRadius;
@@ -248,6 +249,7 @@ namespace QuantumUser.Editor.BalanceSimulator
                 case SuppressiveCycleWeaponPerkData p:
                     RampMaxStacks = Math.Max(RampMaxStacks, p.MaxStacks);
                     RampFireRateBonusPerStack += D(p.FireRateBonusPerStack);
+                    RampAdvancesPerShot |= p.AdvancePerShot;
                     break;
                 case OverchargeCycleWeaponPerkData p:
                     RampMaxStacks = Math.Max(RampMaxStacks, p.MaxStacks);
@@ -291,9 +293,20 @@ namespace QuantumUser.Editor.BalanceSimulator
             // while firing and resets on any pause (WeaponSystem.TickRamp), so a sustained-fire DPS
             // figure can't just use the max stack bonus. Half of max is a decisive, not-fitted
             // placeholder for "mostly ramped up during a sustained burst" - calibrate against a
-            // recorded Drum SMG run if this ever matters for real balance work.
+            // recorded Drum SMG run if this ever matters for real balance work. A per-shot ramp
+            // (Auto Shotgun) is deterministic instead - averaged exactly over one magazine via the
+            // same WeaponDataAsset.PerShotRampFactors the Inspector DPS preview uses.
+            double magazine = Math.Max(1, Math.Round(MagazineSize * (1 + stats.MagazineSizeBonus)));
             double rampFireRateBonus = RampMaxStacks * RampFireRateBonusPerStack * 0.5;
             double rampDamageFactor = 1 + RampMaxStacks * RampDamageBonusPerStack * 0.5;
+
+            if (RampAdvancesPerShot && RampMaxStacks > 0)
+            {
+                WeaponDataAsset.PerShotRampFactors((int)magazine, (float)RampMaxStacks, (float)RampDamageBonusPerStack,
+                    (float)RampFireRateBonusPerStack, out float perShotDamageFactor, out float perShotFireRateFactor);
+                rampDamageFactor = perShotDamageFactor;
+                rampFireRateBonus = perShotFireRateFactor - 1;
+            }
 
             double fireRate = Math.Max(0.01, D(Data.FireRate));
             double cooldown = 1 / fireRate * FireCooldownMultiplier / (1 + fireRateBonus + rampFireRateBonus) / Math.Max(0.01, stats.AttackSpeedMultiplier);
@@ -302,7 +315,6 @@ namespace QuantumUser.Editor.BalanceSimulator
             // leave BurstDelay apart per trigger pull, and only the LAST one pays the full
             // FireCooldownTimer (WeaponSystem.Update's burst-start block/TickWeaponBurst).
             int burstCount = Math.Max(1, BurstCount);
-            double magazine = Math.Max(1, Math.Round(MagazineSize * (1 + stats.MagazineSizeBonus)));
             double reload = ReloadDuration > 0
                 ? ReloadDuration / Math.Max(0.01, stats.ReloadSpeedMultiplier) / (1 + reloadBonus)
                 : 0;

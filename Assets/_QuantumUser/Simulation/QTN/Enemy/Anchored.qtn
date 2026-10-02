@@ -1,0 +1,9 @@
+// This enemy is pinned in place (its Stats.Movement is kinematic, e.g. StationaryMovementData).
+// Added at spawn by EnemySystem.SeedFromEnemyData; enforced every tick by AnchoredSystem.
+component Anchored
+{
+    // Runtime - set once AnchoredSystem has lifted it onto the ground. Spawners place an enemy's
+    // pivot AT ground height and rely on physics depenetration to push a dynamic body up; a
+    // kinematic one never moves on its own, so it would stay half-buried.
+    Boolean Placed;
+}

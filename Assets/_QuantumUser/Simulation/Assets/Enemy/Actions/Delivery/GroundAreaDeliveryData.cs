@@ -2,6 +2,7 @@ namespace Quantum
 {
     using System;
     using Photon.Deterministic;
+    using Quantum.Physics3D;
 
     // Instant area effect - unlike LeapDeliveryData, no movement first; hits everyone within
     // DamageRange the instant the windup ends. Always instant (Begin() returns true).
@@ -36,6 +37,15 @@ namespace Quantum
         // a Filler-tier enemy) rather than a shortcut - see DamageUtility.ApplyDamage. EnemySystem.
         // EnterRecovering already guards against clobbering the Dead phase this sets.
         public bool SelfDestructs = false;
+
+        // SelfDestructs only - killed by damage before its own windup could trigger it, the enemy
+        // still goes off (see TryDetonateOnKilled, called from DamageUtility.ResolveDeath) instead
+        // of just dying quietly. Same Damage/DamageRange/Effects as its own attack, but that blast
+        // catches whoever's in range on EITHER side (KilledDetonationTargets) - shooting a
+        // Suicider next to its pack is the point. Kept separate from the self-triggered blast in
+        // Begin() below, which still only ever hits players.
+        public bool DetonateWhenKilled = true;
+        public DamageTargetMask KilledDetonationTargets = DamageTargetMask.Both;
 
         // 0 (the default) keeps every existing asset's exact prior behavior - FindPlayersInRadius
         // below mimics a volumetric 3D sphere/distance check (see PlayerQueryUtility.Scan), so a
@@ -115,8 +125,15 @@ namespace Quantum
                     Element = ElementType.Neutral,
                 };
 
-                HitEffectUtility.ApplyToTarget(f, action.Effects, ref context);
+                // multiTarget: once-per-blast effects (a lingering hazard) are applied once at the
+                // origin below, not once per player caught at each player's feet.
+                HitEffectUtility.ApplyToTarget(f, action.Effects, ref context, multiTarget: true);
             }
+
+            // Once per slam/blast at its origin, even when it caught nobody - e.g. the Fuel Runner's
+            // sticky oil splash. No-op for an Effects list without AppliesOncePerBlast entries.
+            HitEffectUtility.ApplyBlastLevelEffects(f, action.Effects, origin, filter.Entity, action.Damage,
+                DamageSource.None, ElementType.Neutral, SelfDestructs, action.DamageRange, 0);
 
             if (SelfDestructs == true && f.Unsafe.TryGetPointer<Health>(filter.Entity, out var health) == true)
             {
@@ -138,6 +155,105 @@ namespace Quantum
             }
 
             return true;
+        }
+
+        // Called from DamageUtility.ResolveDeath for every dying enemy, before it's destroyed (the
+        // Transform3D is still valid). Finds the first action slot whose delivery is a
+        // SelfDestructs + DetonateWhenKilled GroundArea and detonates it at the corpse - no new
+        // authoring on the enemy asset, the Suicider's own attack IS the death blast.
+        //
+        // owner == EntityRef.None is the self-destruct's own overkill ApplyDamage in Begin() above
+        // (it already dealt its blast), and also a fall/void death (CheckFallDeath) - neither
+        // should detonate a second time. Chains are safe: a Suicider caught by another's blast
+        // dies and goes off in turn, and ApplyDamage's own CurrentHealth <= 0 guard stops it
+        // re-killing a corpse that's already resolved.
+        public static void TryDetonateOnKilled(Frame f, EntityRef enemy, EntityRef killer, EnemyDataAsset data)
+        {
+            if (killer == EntityRef.None)
+                return;
+
+            int slotCount = 1 + (data.Actions.SkillActions != null ? data.Actions.SkillActions.Count : 0);
+
+            for (int slot = 0; slot < slotCount; slot++)
+            {
+                EnemyActionData action = EnemyDecisionUtility.ResolveAction(f, data, slot);
+
+                if (action == null || action.Delivery.IsValid == false)
+                    continue;
+
+                if (f.FindAsset(action.Delivery) is not GroundAreaDeliveryData delivery ||
+                    delivery.SelfDestructs == false || delivery.DetonateWhenKilled == false)
+                    continue;
+
+                delivery.DetonateAtCorpse(f, enemy, action, EnemyDecisionUtility.ResolveActionRef(data, slot));
+                return;
+            }
+        }
+
+        private void DetonateAtCorpse(Frame f, EntityRef enemy, EnemyActionData action, AssetRef<EnemyActionData> actionRef)
+        {
+            if (f.Unsafe.TryGetPointer<Transform3D>(enemy, out var transform) == false)
+                return;
+
+            FPVector3 origin = transform->Position;
+
+            // Player mask WITHOUT the dashing layer, same as Begin()'s FindPlayersInRadius - a dash
+            // still dodges this. Enemies layer added for the friendly-fire half.
+            int layerMask = 0;
+            if (KilledDetonationTargets != DamageTargetMask.Enemies)
+                layerMask |= EnemyMovementUtility.GetPlayerLayerMask(f);
+            if (KilledDetonationTargets != DamageTargetMask.Players)
+                layerMask |= EnemyMovementUtility.GetEnemyLayerMask(f);
+
+            var hits = f.Physics3D.OverlapShape(origin, FPQuaternion.Identity, Shape3D.CreateSphere(action.DamageRange), layerMask, QueryOptions.HitAll);
+
+            FP originGroundY = MaxHeightDifference > FP._0 ? EnemyMovementUtility.ResolveGroundY(f, origin) : default;
+
+            for (int i = 0; i < hits.Count; i++)
+            {
+                EntityRef hitEntity = hits[i].Entity;
+
+                if (hitEntity == enemy || hitEntity == EntityRef.None)
+                    continue;
+
+                if (f.Has<PlayerLink>(hitEntity) == false && f.Has<Enemy>(hitEntity) == false)
+                    continue;
+
+                if (f.Unsafe.TryGetPointer<Transform3D>(hitEntity, out var hitTransform) == false)
+                    continue;
+
+                FPVector3 hitPosition = hitTransform->Position;
+
+                if (MaxHeightDifference > FP._0 &&
+                    EnemyMovementUtility.IsWithinFlatGroundArea(f, origin, originGroundY, hitPosition, action.DamageRange, MaxHeightDifference) == false)
+                    continue;
+
+                // Owner stays the dying enemy (not the killer) so the enemy damage scaling applies
+                // exactly as it would to its own self-triggered blast, and so a player never ends up
+                // "owning" damage dealt to another player.
+                HitEffectContext context = new HitEffectContext
+                {
+                    Owner = enemy,
+                    Target = hitEntity,
+                    Position = hitPosition,
+                    PushDirection = hitPosition - origin,
+                    Damage = action.Damage,
+                    Source = DamageSource.None,
+                    Element = ElementType.Neutral,
+                };
+
+                HitEffectUtility.ApplyToTarget(f, action.Effects, ref context, multiTarget: true);
+            }
+
+            // Same once-per-blast hazard as the self-triggered blast in Begin() - dying to damage
+            // still leaves it behind.
+            HitEffectUtility.ApplyBlastLevelEffects(f, action.Effects, origin, enemy, action.Damage,
+                DamageSource.None, ElementType.Neutral, true, action.DamageRange, 0);
+
+            // Always raised here, whatever the tier - a damage death never passes through Begin()'s
+            // Phase edge, so EnemyAttackVisualsView never plays BeginStep (the explosion) on its own.
+            FP facing = f.Unsafe.TryGetPointer<Aim>(enemy, out var aim) ? aim->Angle : FP._0;
+            f.Events.EnemySelfDestructBeginVisual(enemy, origin, facing, actionRef);
         }
     }
 }

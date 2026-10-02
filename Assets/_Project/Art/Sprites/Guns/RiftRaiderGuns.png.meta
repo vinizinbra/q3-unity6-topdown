@@ -334,7 +334,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: RiftRaiderGuns_9
+      name: RR_Gun_SMG
       rect:
         serializedVersion: 2
         x: 279
@@ -369,6 +369,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
+      RR_Gun_SMG: -1176836910
       RiftRaiderGuns_0: 594587684
       RiftRaiderGuns_1: -150514098
       RiftRaiderGuns_2: 867337609
@@ -378,7 +379,6 @@ TextureImporter:
       RiftRaiderGuns_6: 753197400
       RiftRaiderGuns_7: -921319893
       RiftRaiderGuns_8: -721613061
-      RiftRaiderGuns_9: -1176836910
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -44,7 +44,7 @@ public static class InMatchSettingsPopupBuilder
         panel.transform.SetParent(rootGo.transform, false);
         var panelRect = (RectTransform)panel.transform;
         panelRect.anchorMin = panelRect.anchorMax = panelRect.pivot = new Vector2(0.5f, 0.5f);
-        panelRect.sizeDelta = new Vector2(760f, 640f);
+        panelRect.sizeDelta = new Vector2(760f, 730f);
         panel.GetComponent<Image>().color = new Color(0.08f, 0.09f, 0.13f, 0.97f);
 
         var layout = panel.GetComponent<VerticalLayoutGroup>();
@@ -61,6 +61,7 @@ public static class InMatchSettingsPopupBuilder
 
         Slider sfx = CreateSliderRow(panel.transform, "Sfx", "SFX", font);
         Slider music = CreateSliderRow(panel.transform, "Music", "MUSIC", font);
+        Slider voice = CreateSliderRow(panel.transform, "Voice", "VOICE", font);
 
         Button restart = CreateButton(panel.transform, "RestartButton", "RESTART", font, new Color(0.2f, 0.45f, 0.75f, 1f));
         Button disconnect = CreateButton(panel.transform, "DisconnectButton", "DISCONNECT", font, new Color(0.75f, 0.25f, 0.25f, 1f));
@@ -71,6 +72,7 @@ public static class InMatchSettingsPopupBuilder
         serialized.FindProperty("closeButton").objectReferenceValue = close;
         serialized.FindProperty("sfxSlider").objectReferenceValue = sfx;
         serialized.FindProperty("musicSlider").objectReferenceValue = music;
+        serialized.FindProperty("voiceSlider").objectReferenceValue = voice;
         serialized.FindProperty("disconnectButton").objectReferenceValue = disconnect;
         serialized.FindProperty("restartButton").objectReferenceValue = restart;
         serialized.ApplyModifiedPropertiesWithoutUndo();
@@ -85,7 +87,7 @@ public static class InMatchSettingsPopupBuilder
         Debug.Log("[InMatchSettingsPopup] built and wired under InMatchPopupManager. Escape opens/closes it in a match; wire a HUD button's onClick to InMatchPopupManager.OpenSettings for a clickable entry point.", rootGo);
     }
 
-    private static TMP_FontAsset ResolveFont()
+    internal static TMP_FontAsset ResolveFont()
     {
         // Same idea as LoadingWindowBuilder: reuse whatever the scene's UI already uses.
         foreach (var text in Object.FindObjectsByType<TextMeshProUGUI>(FindObjectsInactive.Include, FindObjectsSortMode.None))
@@ -97,7 +99,7 @@ public static class InMatchSettingsPopupBuilder
         return TMP_Settings.defaultFontAsset;
     }
 
-    private static Slider CreateSliderRow(Transform parent, string name, string label, TMP_FontAsset font)
+    internal static Slider CreateSliderRow(Transform parent, string name, string label, TMP_FontAsset font)
     {
         var row = new GameObject(name + "Row", typeof(RectTransform), typeof(HorizontalLayoutGroup));
         row.transform.SetParent(parent, false);
@@ -161,7 +163,7 @@ public static class InMatchSettingsPopupBuilder
         return slider;
     }
 
-    private static Button CreateButton(Transform parent, string name, string label, TMP_FontAsset font, Color color)
+    internal static Button CreateButton(Transform parent, string name, string label, TMP_FontAsset font, Color color)
     {
         var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
         go.transform.SetParent(parent, false);
@@ -191,7 +193,7 @@ public static class InMatchSettingsPopupBuilder
         return image;
     }
 
-    private static TMP_Text CreateText(Transform parent, string name, string content, float size, TMP_FontAsset font, FontStyles style)
+    internal static TMP_Text CreateText(Transform parent, string name, string content, float size, TMP_FontAsset font, FontStyles style)
     {
         var go = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
         go.transform.SetParent(parent, false);
@@ -210,7 +212,7 @@ public static class InMatchSettingsPopupBuilder
         return text;
     }
 
-    private static void SetHeight(GameObject go, float height)
+    internal static void SetHeight(GameObject go, float height)
     {
         var element = go.GetComponent<LayoutElement>();
         if (element == null)
@@ -219,7 +221,7 @@ public static class InMatchSettingsPopupBuilder
         element.preferredHeight = height;
     }
 
-    private static void Stretch(RectTransform rect)
+    internal static void Stretch(RectTransform rect)
     {
         rect.anchorMin = Vector2.zero;
         rect.anchorMax = Vector2.one;

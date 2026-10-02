@@ -48,14 +48,14 @@ using UnityEngine.UI;
 // CombatDirectorUtility.RetireEnemy) with zero signal - the same seen/stale-sweep pooling every
 // marker pass here already uses is what tears theirs down the instant that happens, same as a kill.
 //
-// TWO map surfaces share this one widget: the panned/masked minimap (mapRect) and an optional
-// full-map panel (fullMapImage/fullMapRect) showing the whole level at once. The TEXTURE is
-// literally shared - both RawImages point at the same Texture2D, so painting updates both for
-// free - but icons and player markers are real UI objects, so each surface gets its own clone of
-// each, held together in an OverlayPair and driven in lockstep. The only per-surface difference is
-// the rect their positions are computed against (the two draw the same texture at different UI
-// sizes) plus fullMapOverlayScale. Opening/closing the full-map panel is FullMapWidget's job, not
-// this one's - it only paints into fullMapImage. Fully self-contained (reads
+// ONE map surface with two states (see UpdateExpandState): Collapsed is the panned/masked corner
+// minimap following the local player; Expanded grows the same frame (frameRect) to expandedSize
+// around its own authored pivot (OutBack tween) and zooms mapRect so the whole generated level
+// fits the viewport, centered in it.
+// Toggled by clicking the map (toggleButtons), toggleKey, R2 (OpenMiniMapTrigger) or the
+// OpenMiniMapToggle gamepad button; collapseButtons only ever collapse. Icons/markers live under
+// mapRect, so they're counter-scaled against its zoom (see ApplyOverlayScale) to keep their
+// authored size (times expandedOverlayScale while expanded). Fully self-contained (reads
 // game.Frames.Predicted every QUpdate, same "no external driving" shape as StatusEffectsManager)
 // except for localSlotIndex, needed to know which local player's current chunk to highlight - every
 // instance otherwise runs the identical frame query regardless of which split-screen slot it lives
@@ -76,12 +76,28 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     private RectTransform mapRect;
     [SerializeField, Tooltip("Displays the procedurally-painted map texture - should be sized to fill mapRect.")]
     private RawImage mapImage;
-    [SerializeField, Tooltip("Optional - a second RawImage (the full-map panel, shown/hidden by FullMapWidget) showing the WHOLE level at once, unpanned/unmasked. Gets the exact same live texture as mapImage, so it updates automatically with no extra work. Leave unassigned if you only want the small minimap.")]
-    private RawImage fullMapImage;
-    [SerializeField, Tooltip("Optional content layer for the full-map panel's own icon/player overlays - square, centered (0.5, 0.5) pivot, same size as fullMapImage. Left unassigned, fullMapImage's own RectTransform is used, which is correct as long as it's square and center-pivoted. Only matters when fullMapImage is assigned.")]
-    private RectTransform fullMapRect;
-    [SerializeField, Tooltip("Uniform scale applied to the full-map panel's own icon/player overlay clones - the big map is usually drawn much larger than the minimap, so its markers often want to be bigger (or smaller) than the shared prefab's authored size.")]
-    private float fullMapOverlayScale = 1f;
+
+    [Header("Expand / collapse")]
+    [SerializeField, Tooltip("The minimap's outer frame (border + masked viewport) - resized to expandedSize when expanded, keeping its authored anchors/pivot/position, so it grows out from its own pivot corner. Moved to last sibling while expanded so it draws over the HUD elements next to it.")]
+    private RectTransform frameRect;
+    [SerializeField, Tooltip("frameRect's size (UI units) while expanded.")]
+    private Vector2 expandedSize = new Vector2(1000f, 800f);
+    [SerializeField, Tooltip("Seconds for the collapse <-> expand tween (unscaled time - works while the sim is paused).")]
+    private float expandDuration = 0.35f;
+    [SerializeField, Tooltip("OutBack overshoot amount for the frame's size tween - 0 is a plain ease-out, the classic default is 1.70158.")]
+    private float expandOvershoot = 1.70158f;
+    [SerializeField, Tooltip("Gap (UI units) kept between the level's bounding box and the viewport's edge when expanded.")]
+    private float expandedPadding = 24f;
+    [SerializeField, Tooltip("Icon/marker size multiplier while expanded, relative to their authored (minimap) size.")]
+    private float expandedOverlayScale = 1f;
+    [SerializeField, Tooltip("Shown only while expanded (e.g. a close button, a dim backdrop). Uses a JuicyGameobject on each if present.")]
+    private GameObject[] showWhileExpanded;
+    [SerializeField, Tooltip("Buttons that toggle expanded/collapsed on click - e.g. the Button on the masked viewport.")]
+    private UnityEngine.UI.Button[] toggleButtons;
+    [SerializeField, Tooltip("Buttons that only ever collapse the map - e.g. a close button inside showWhileExpanded.")]
+    private UnityEngine.UI.Button[] collapseButtons;
+    [SerializeField, Tooltip("Keyboard key that toggles expanded/collapsed.")]
+    private KeyCode toggleKey = KeyCode.M;
 
     [Header("Colors")]
     [SerializeField] private Color undiscoveredColor = new Color(0.12f, 0.12f, 0.12f, 1f);
@@ -118,11 +134,11 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     private Color usedIconTint = new Color(0.45f, 0.45f, 0.45f, 1f);
     [SerializeField, Tooltip("Same as usedIconTint, but for a POI whose PoiUsagePolicy is Cooldown (e.g. Healing Shrine) instead of a one-time-use policy - lets cooldown read as a different (typically darker/blacker) shade than \"used up for the Break/run\". Store never resolves Expired at all (always Reusable), so it never uses either tint.")]
     private Color cooldownIconTint = new Color(0.22f, 0.22f, 0.22f, 1f);
-    [SerializeField, Tooltip("Minimap only (never the full-map panel): a POI icon that's still usable (not tinted by usedIconTint/cooldownIconTint) is clamped to the edge of mapRect's parent (the masked viewport) whenever its real spot is off-screen, along the line from the viewport center toward it - so the player can still read which way it is. Used-up POIs and non-POI icons (Boss/LobbyStart) stay at their real spot and get clipped by the mask as before. See PinActiveIconsToViewportEdge.")]
+    [SerializeField, Tooltip("A POI icon that's still usable (not tinted by usedIconTint/cooldownIconTint) is clamped to the edge of mapRect's parent (the masked viewport) whenever its real spot is off-screen, along the line from the viewport center toward it - so the player can still read which way it is. Used-up POIs and non-POI icons (Boss/LobbyStart) stay at their real spot and get clipped by the mask as before. See PinActiveIconsToViewportEdge.")]
     private bool pinActivePoisToEdge = true;
     [SerializeField, Tooltip("Extra inset (UI units) between a pinned icon and the viewport's edge, on top of the icon's own half-size (which is always inset so the icon never gets half-clipped by the mask).")]
     private float edgePinPadding = 2f;
-    [SerializeField, Tooltip("Pin to a circle (radius = half the viewport's smaller side) instead of the viewport's rectangle - turn on if the minimap's mask is round.")]
+    [SerializeField, Tooltip("Pin to a circle (radius = half the viewport's smaller side) instead of the viewport's rectangle - turn on if the collapsed minimap's mask is round (the expanded state always pins to the rectangle).")]
     private bool circularViewport = false;
     [SerializeField, Range(0f, 1f), Tooltip("Alpha multiplier applied to a POI icon while it's actually pinned to the viewport edge (its real spot is off-screen) - reads as \"over there\" rather than \"right here\". Back to full alpha the moment its real spot is inside the viewport again.")]
     private float edgePinnedAlpha = 0.5f;
@@ -139,7 +155,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     [SerializeField, Tooltip("Which local player slot's current chunk this instance highlights (MyLocalPlayer.Slots index) - 0 for the first local player's own HUD instance, 1 for a second couch co-op player's.")]
     private int localSlotIndex;
 
-    private readonly Dictionary<EntityRef, OverlayPair> _iconOverlays = new();
+    private readonly Dictionary<EntityRef, MapOverlay> _iconOverlays = new();
 
     // Chunk entity -> the PoiActivation-carrying entity that lives inside its footprint (Healing
     // Shrine/Cursed Rift/Store/Blacksmith), resolved once it's actually found - see
@@ -180,56 +196,37 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     // Traversal Challenge stops being Completed/Failed).
     private Color _iconBaseColor = Color.white;
 
-    private readonly Dictionary<EntityRef, OverlayPair> _playerMarkers = new();
+    private readonly Dictionary<EntityRef, MapOverlay> _playerMarkers = new();
     private readonly HashSet<EntityRef> _seenPlayersThisFrame = new();
     private List<EntityRef> _stalePlayerBuffer;
 
     // Same seen/stale-sweep shape as the player markers above, keyed by enemy EntityRef instead of
     // PlayerLink - see UpdateEliteMarkers.
-    private readonly Dictionary<EntityRef, OverlayPair> _eliteMarkers = new();
+    private readonly Dictionary<EntityRef, MapOverlay> _eliteMarkers = new();
     private readonly HashSet<EntityRef> _seenElitesThisFrame = new();
     private List<EntityRef> _staleEliteBuffer;
 
     // Same shape again for Persistent non-Elite enemies - see UpdateSpecialMarkers.
-    private readonly Dictionary<EntityRef, OverlayPair> _specialMarkers = new();
+    private readonly Dictionary<EntityRef, MapOverlay> _specialMarkers = new();
     private readonly HashSet<EntityRef> _seenSpecialsThisFrame = new();
     private List<EntityRef> _staleSpecialBuffer;
 
     // Same shape again for every alive enemy while the area isn't yet secured - see
     // UpdateClearEnemyMarkers.
-    private readonly Dictionary<EntityRef, OverlayPair> _clearEnemyMarkers = new();
+    private readonly Dictionary<EntityRef, MapOverlay> _clearEnemyMarkers = new();
     private readonly HashSet<EntityRef> _seenClearEnemiesThisFrame = new();
     private List<EntityRef> _staleClearEnemyBuffer;
 
-    // Resolved once in QStart - the full-map panel's own content layer (fullMapRect, or
-    // fullMapImage's own RectTransform). Null whenever no full-map panel is wired up, which is
-    // what every Full == null check below keys off.
-    private RectTransform _fullOverlayRoot;
-
-    // Last UI width each map surface was seen at. A chunk icon is positioned once at spawn, so a
-    // surface that was laid out later (the full-map panel is typically inactive until first opened,
-    // and can be zero-sized until then) would otherwise leave every icon stuck at its stale spot.
-    // Player markers need none of this - they're repositioned every frame anyway.
-    private float _lastMiniWidth = -1f;
-    private float _lastFullWidth = -1f;
-
-    // An overlay element (chunk-type icon or player marker) exists once per map surface: Mini
-    // under mapRect (panned/masked), Full under _fullOverlayRoot (whole level at once). Both are
-    // clones of the same prefab driven in lockstep from the same data - the ONLY difference is
-    // which rect their position is computed against, since the two surfaces map the same texture
-    // at different UI sizes. Full is null when no full-map panel exists.
-    private sealed class OverlayPair
+    // One overlay element (chunk-type icon or marker) under mapRect.
+    private sealed class MapOverlay
     {
-        public RectTransform Mini;
-        public RectTransform Full;
+        public RectTransform Rect;
 
-        // Chunk icons only - the actual Image component on Mini/Full, cached at spawn so
-        // UpdateIconTints can recolor it every tick without a GetComponent call each time.
-        public Image MiniIcon;
-        public Image FullIcon;
+        // Chunk icons only - the actual Image component, cached at spawn so UpdateIconTints can
+        // recolor it every tick without a GetComponent call each time.
+        public Image Icon;
 
-        // Chunk icons only - the texel rect they were positioned from, kept so they can be placed
-        // again if a map surface's own UI size changes (see RefreshIconPositionsIfResized).
+        // Chunk icons only - the texel rect it's positioned from (see PinActiveIconsToViewportEdge).
         public RectInt TexelRect;
 
         // Chunk icons only - set every tick by UpdateIconTints: true while the linked POI is still
@@ -238,31 +235,60 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
 
         public void SetActive(bool active)
         {
-            if (Mini != null)
-                Mini.gameObject.SetActive(active);
-
-            if (Full != null)
-                Full.gameObject.SetActive(active);
+            if (Rect != null)
+                Rect.gameObject.SetActive(active);
         }
 
         public void SetIconColor(Color color)
         {
-            if (MiniIcon != null)
-                MiniIcon.color = color;
-
-            if (FullIcon != null)
-                FullIcon.color = color;
+            if (Icon != null)
+                Icon.color = color;
         }
 
         public void Destroy()
         {
-            if (Mini != null)
-                UnityEngine.Object.Destroy(Mini.gameObject);
-
-            if (Full != null)
-                UnityEngine.Object.Destroy(Full.gameObject);
+            if (Rect != null)
+                UnityEngine.Object.Destroy(Rect.gameObject);
         }
     }
+
+    // Named Input Manager button (ProjectSettings/InputManager.asset) for toggling from a gamepad -
+    // unbound by default (Select opens HeroInfoPopupWidget's OpenHeroInfo; R2 below still toggles
+    // the map). Assign a button in Project Settings > Input Manager, no code change.
+    private static readonly string OpenMiniMapToggle = Quantum.GamepadInputNames.Get("OpenMiniMapToggle");
+
+    // Named Input Manager Joystick Axis (default: 12th axis, any joystick) - R2 on most Android
+    // Bluetooth pads (e.g. MOGA Pro 2; L2 is the 13th) is an analog trigger axis, not a button, so
+    // it can't live on OpenMiniMapToggle. Rising edge past TriggerPressThreshold, so holding the
+    // trigger toggles once rather than every frame.
+    private static readonly string OpenMiniMapTrigger = Quantum.GamepadInputNames.Get("OpenMiniMapTrigger");
+    private const float TriggerPressThreshold = 0.5f;
+    private bool _triggerHeld;
+
+    // Expand state - _expandTarget is what the player asked for. Each toggle restarts a tween
+    // (_tweenP 0 -> 1) from wherever _expandAmount currently is (_tweenStart) toward the target;
+    // _expandAmount is the OutBack-eased result (0 = collapsed, 1 = expanded, briefly overshooting
+    // past either end). _expandAmount01 is the same value clamped, for everything but the frame
+    // size - the zoom already follows the frame's own overshoot, so it shouldn't bounce twice.
+    private bool _expandTarget;
+    private float _tweenStart;
+    private float _tweenP = 1f;
+    private float _expandAmount;
+    private float _expandAmount01;
+
+    // frameRect's authored size and sibling index, restored once it's fully collapsed again.
+    private Vector2 _collapsedFrameSize;
+    private int _frameHomeSiblingIndex;
+
+    // mapRect's authored scale (the collapsed zoom) and its current uniform zoom factor.
+    private float _collapsedMapScale = 1f;
+    private float _mapScale = 1f;
+
+    // The generated level's world-space bounding-box size, measured by EnsureCentered - what the
+    // expanded zoom fits to the viewport.
+    private Vector2 _levelWorldSize;
+
+    public bool IsExpanded => _expandTarget;
 
     // Cached per-chunk texel rect (computed once, on first sight) plus last-known Discovered value.
     private readonly Dictionary<EntityRef, RectInt> _chunkTexelRects = new();
@@ -331,15 +357,10 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         if (mapImage != null)
             mapImage.texture = _texture;
 
-        // Same live texture on the full-map panel - it draws the whole level unpanned, updating in
-        // lockstep with the minimap since both point at the same Texture2D (Apply mutates it in place).
-        // Icons/markers are NOT shared this way (they're real UI objects, not texture content), so
-        // the panel gets its own parallel set parented under _fullOverlayRoot - see OverlayPair.
-        if (fullMapImage != null)
-        {
-            fullMapImage.texture = _texture;
-            _fullOverlayRoot = fullMapRect != null ? fullMapRect : fullMapImage.rectTransform;
-        }
+        _collapsedMapScale = mapRect.localScale.x;
+        _mapScale = _collapsedMapScale;
+
+        InitExpandState();
 
         // iconPrefab/playerMarkerPrefab are scene template objects living under this same widget,
         // not Project-window prefab assets - Instantiate() clones them, but the template itself
@@ -379,36 +400,209 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         UpdateChunks(frame);
         RetryPendingPoiLinks(frame);
         UpdateIconTints(frame);
-        RefreshIconPositionsIfResized();
+        PollToggleInput();
+        UpdateExpandState();
         UpdatePlayerMarkers(frame);
         UpdateEliteMarkers(frame);
         UpdateSpecialMarkers(frame);
         UpdateClearEnemyMarkers(frame);
+        ApplyOverlayScale();
         CenterOnLocalPlayer(frame);
         PinActiveIconsToViewportEdge();
     }
 
     // Shifts the whole content layer (mapRect - texture, icons, and markers all live under it) so
-    // this instance's own local player's map position always lands at mapRect's parent's origin.
-    // Expects mapRect to be nested inside a separate masked container (fixed position/size, not
-    // touched here) that clips whatever of mapRect overflows it - the standard "content pans,
-    // viewport mask stays put" minimap technique. The texture itself is never re-baked for this;
-    // only mapRect's own anchoredPosition moves.
+    // this instance's own local player's map position always lands at mapRect's parent's origin
+    // while collapsed, blending toward the level's own center (mapRect's local origin, since
+    // _effectiveWorldCenter IS the level's bounding-box center) as it expands. Expects mapRect to
+    // be nested inside a masked container that clips whatever of mapRect overflows it - the
+    // standard "content pans, viewport mask stays put" minimap technique. The texture itself is
+    // never re-baked for this; only mapRect's own anchoredPosition (and zoom, see
+    // UpdateExpandState) changes.
     private void CenterOnLocalPlayer(Frame frame)
     {
+        if (TryGetLocalPlayerWorldPos(frame, out Vector2 playerWorldPos))
+            _lastPlayerMapPos = WorldToMapPosition(playerWorldPos);
+
+        mapRect.anchoredPosition = -_lastPlayerMapPos * (_mapScale * (1f - _expandAmount01));
+    }
+
+    private Vector2 _lastPlayerMapPos;
+
+    private bool TryGetLocalPlayerWorldPos(Frame frame, out Vector2 worldPos)
+    {
+        worldPos = default;
+
         if (MyLocalPlayer.Instance == null)
-            return;
+            return false;
 
         var slots = MyLocalPlayer.Instance.Slots;
         if (localSlotIndex < 0 || localSlotIndex >= slots.Count || slots[localSlotIndex].IsSet == false)
-            return;
+            return false;
 
         EntityRef playerEntity = slots[localSlotIndex].EntityRef;
         if (frame.TryGet<Transform3D>(playerEntity, out Transform3D playerTransform) == false)
+            return false;
+
+        worldPos = new Vector2(playerTransform.Position.X.AsFloat, playerTransform.Position.Z.AsFloat);
+        return true;
+    }
+
+    // Standard OutBack: overshoots past 1 by an amount set by overshoot, then settles.
+    private static float OutBack(float t, float overshoot)
+    {
+        float u = t - 1f;
+        return 1f + u * u * ((overshoot + 1f) * u + overshoot);
+    }
+
+    // ---- Expand / collapse -------------------------------------------------------------------
+
+    private void InitExpandState()
+    {
+        AddListeners(toggleButtons, ToggleExpanded);
+        AddListeners(collapseButtons, Collapse);
+        SetShowWhileExpanded(false, instant: true);
+
+        if (frameRect == null)
             return;
 
-        Vector2 playerWorldPos = new Vector2(playerTransform.Position.X.AsFloat, playerTransform.Position.Z.AsFloat);
-        mapRect.anchoredPosition = -WorldToMapPosition(playerWorldPos, mapRect);
+        _collapsedFrameSize = frameRect.rect.size;
+        _frameHomeSiblingIndex = frameRect.GetSiblingIndex();
+    }
+
+    private static void AddListeners(UnityEngine.UI.Button[] buttons, UnityEngine.Events.UnityAction action)
+    {
+        if (buttons == null)
+            return;
+
+        foreach (UnityEngine.UI.Button button in buttons)
+        {
+            if (button != null)
+                button.onClick.AddListener(action);
+        }
+    }
+
+    // Pure visual toggle, polled from QUpdate rather than a raw Update() - see
+    // HeroInfoPopupWidget.QUpdate. Fully-qualified: Quantum.Input also has this name.
+    private void PollToggleInput()
+    {
+        bool triggerDown = UnityEngine.Input.GetAxisRaw(OpenMiniMapTrigger) > TriggerPressThreshold;
+        bool triggerPressed = triggerDown && _triggerHeld == false;
+        _triggerHeld = triggerDown;
+
+        if (triggerPressed || UnityEngine.Input.GetButtonDown(OpenMiniMapToggle) || UnityEngine.Input.GetKeyDown(toggleKey))
+            ToggleExpanded();
+    }
+
+    public void ToggleExpanded()
+    {
+        SetExpanded(_expandTarget == false);
+    }
+
+    public void Collapse()
+    {
+        SetExpanded(false);
+    }
+
+    public void SetExpanded(bool expanded)
+    {
+        if (_expandTarget == expanded)
+            return;
+
+        _expandTarget = expanded;
+        _tweenStart = _expandAmount;
+        _tweenP = 0f;
+        SetShowWhileExpanded(expanded, instant: false);
+
+        if (expanded && frameRect != null)
+            frameRect.SetAsLastSibling();
+    }
+
+    private void SetShowWhileExpanded(bool shown, bool instant)
+    {
+        if (showWhileExpanded == null)
+            return;
+
+        foreach (GameObject go in showWhileExpanded)
+        {
+            if (go == null)
+                continue;
+
+            if (instant == false && go.TryGetComponent(out JuicyGameobject juicy))
+                juicy.SetActive(shown);
+            else
+                go.SetActive(shown);
+        }
+    }
+
+    // Advances the tween, resizes frameRect between its authored size and expandedSize (anchors,
+    // pivot and position untouched, so it grows out from its own pivot corner), and sets mapRect's
+    // zoom: the authored (collapsed) scale blending to whatever fits the whole generated level
+    // inside the viewport. Once fully collapsed frameRect goes back to its authored sibling index.
+    private void UpdateExpandState()
+    {
+        bool animating = _tweenP < 1f;
+        if (animating)
+        {
+            _tweenP = expandDuration > 0f ? Mathf.Min(1f, _tweenP + Time.unscaledDeltaTime / expandDuration) : 1f;
+
+            float target = _expandTarget ? 1f : 0f;
+            _expandAmount = Mathf.LerpUnclamped(_tweenStart, target, OutBack(_tweenP, expandOvershoot));
+            _expandAmount01 = Mathf.Clamp01(_expandAmount);
+
+            if (frameRect != null)
+            {
+                Vector2 size = Vector2.LerpUnclamped(_collapsedFrameSize, expandedSize, _expandAmount);
+                frameRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, size.x);
+                frameRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, size.y);
+
+                if (_tweenP >= 1f && _expandTarget == false)
+                    frameRect.SetSiblingIndex(_frameHomeSiblingIndex);
+            }
+        }
+
+        _mapScale = _expandAmount01 > 0f ? Mathf.Lerp(_collapsedMapScale, ComputeExpandedMapScale(), _expandAmount01) : _collapsedMapScale;
+        mapRect.localScale = new Vector3(_mapScale, _mapScale, 1f);
+    }
+
+    // mapRect zoom that fits the generated level's bounding box (EnsureCentered) inside the
+    // viewport (mapRect's parent), minus expandedPadding - measured against the viewport's CURRENT
+    // size, so the zoom tracks the frame as it grows. Before the level exists, fits the whole texture.
+    private float ComputeExpandedMapScale()
+    {
+        var viewport = mapRect.parent as RectTransform;
+        if (viewport == null)
+            return _collapsedMapScale;
+
+        float uiPerWorld = _worldToTexelScale * (mapRect.rect.width / _textureResolution);
+        Vector2 content = _levelWorldSize.x > 0f && _levelWorldSize.y > 0f ? _levelWorldSize * uiPerWorld : mapRect.rect.size;
+
+        Vector2 view = viewport.rect.size - Vector2.one * (expandedPadding * 2f);
+        float fit = Mathf.Min(view.x / content.x, view.y / content.y);
+        return Mathf.Max(fit, 0.01f);
+    }
+
+    // Icons/markers are children of mapRect, so its zoom would scale them too - counter-scale so
+    // they keep their authored size collapsed, blending to expandedOverlayScale as it expands.
+    private void ApplyOverlayScale()
+    {
+        float scale = Mathf.Lerp(1f, expandedOverlayScale, _expandAmount01) * _collapsedMapScale / _mapScale;
+        var localScale = new Vector3(scale, scale, 1f);
+
+        ApplyOverlayScale(_iconOverlays, localScale);
+        ApplyOverlayScale(_playerMarkers, localScale);
+        ApplyOverlayScale(_eliteMarkers, localScale);
+        ApplyOverlayScale(_specialMarkers, localScale);
+        ApplyOverlayScale(_clearEnemyMarkers, localScale);
+    }
+
+    private static void ApplyOverlayScale(Dictionary<EntityRef, MapOverlay> overlays, Vector3 localScale)
+    {
+        foreach (MapOverlay overlay in overlays.Values)
+        {
+            if (overlay.Rect != null)
+                overlay.Rect.localScale = localScale;
+        }
     }
 
     // Runs exactly once, the first tick Global.LevelGenerated is true (see UpdateChunks' own
@@ -447,7 +641,10 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         }
 
         if (any)
+        {
             _effectiveWorldCenter = new Vector2((minX + maxX) * 0.5f, (minZ + maxZ) * 0.5f);
+            _levelWorldSize = new Vector2(maxX - minX, maxZ - minZ);
+        }
 
         _centered = true;
     }
@@ -526,7 +723,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
 
             if (isNew)
                 SpawnIconOverlayIfNeeded(frame, entity, chunk, transform, _chunkTexelRects[entity]);
-            else if (_iconOverlays.TryGetValue(entity, out OverlayPair icon))
+            else if (_iconOverlays.TryGetValue(entity, out MapOverlay icon))
                 icon.SetActive(chunk.Discovered);
         }
 
@@ -996,9 +1193,8 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         if (specialSprite == null)
             return;
 
-        var pair = new OverlayPair { TexelRect = texelRect };
-        pair.Mini = SpawnIcon(mapRect, specialSprite, texelRect, 1f, out pair.MiniIcon);
-        pair.Full = SpawnIcon(_fullOverlayRoot, specialSprite, texelRect, fullMapOverlayScale, out pair.FullIcon);
+        var pair = new MapOverlay { TexelRect = texelRect };
+        pair.Rect = SpawnIcon(specialSprite, texelRect, out pair.Icon);
 
         pair.SetActive(chunk.Discovered);
         _iconOverlays[entity] = pair;
@@ -1145,7 +1341,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
             if (frame.Unsafe.TryGetPointer<PoiActivation>(kvp.Value, out var activation) == false)
                 continue;
 
-            if (_iconOverlays.TryGetValue(kvp.Key, out OverlayPair pair) == false)
+            if (_iconOverlays.TryGetValue(kvp.Key, out MapOverlay pair) == false)
                 continue;
 
             Color color = _iconBaseColor;
@@ -1164,7 +1360,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
             if (frame.Unsafe.TryGetPointer<TraversalChallenge>(kvp.Value, out var challenge) == false)
                 continue;
 
-            if (_iconOverlays.TryGetValue(kvp.Key, out OverlayPair pair) == false)
+            if (_iconOverlays.TryGetValue(kvp.Key, out MapOverlay pair) == false)
                 continue;
 
             bool usedUp = challenge->State == TraversalChallengeState.Completed || challenge->State == TraversalChallengeState.Failed;
@@ -1188,30 +1384,43 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
 
         foreach (var pair in _iconOverlays.Values)
         {
-            if (pair.Mini == null)
+            if (pair.Rect == null)
                 continue;
 
-            Vector2 natural = TexelRectCenterToMapPosition(pair.TexelRect, mapRect);
+            Vector2 natural = TexelRectCenterToMapPosition(pair.TexelRect);
             if (pinActivePoisToEdge == false || pair.PinToEdge == false || viewport == null)
             {
-                pair.Mini.anchoredPosition = natural;
+                pair.Rect.anchoredPosition = natural;
                 continue;
             }
 
+            // Icon size in viewport units - its own counter-scale times mapRect's zoom.
             Vector2 inViewport = viewport.InverseTransformPoint(mapRect.TransformPoint(natural));
-            Vector2 iconHalfSize = Vector2.Scale(pair.Mini.rect.size, pair.Mini.localScale) * 0.5f;
+            Vector2 iconHalfSize = Vector2.Scale(pair.Rect.rect.size, pair.Rect.localScale) * (0.5f * _mapScale);
             float inset = Mathf.Max(iconHalfSize.x, iconHalfSize.y) + edgePinPadding;
             Vector2 pinned = ClampInsideViewport(inViewport, viewport.rect, inset);
 
-            pair.Mini.anchoredPosition = mapRect.InverseTransformPoint(viewport.TransformPoint(pinned));
+            // A degenerate viewport (not laid out yet, e.g. first frames on device) or a NaN from a
+            // zero-scale transform would park the icon at the center or nowhere - show it at its
+            // real spot instead.
+            Vector2 placed = mapRect.InverseTransformPoint(viewport.TransformPoint(pinned));
+            if (viewport.rect.width <= 0f || viewport.rect.height <= 0f
+                || float.IsNaN(placed.x) || float.IsNaN(placed.y)
+                || float.IsInfinity(placed.x) || float.IsInfinity(placed.y))
+            {
+                pair.Rect.anchoredPosition = natural;
+                continue;
+            }
+
+            pair.Rect.anchoredPosition = placed;
 
             // UpdateIconTints rewrites every linked icon's full color earlier this same tick, so
             // fading on top of it here never compounds and un-fades by itself once unpinned.
-            if (pinned != inViewport && pair.MiniIcon != null)
+            if (pinned != inViewport && pair.Icon != null)
             {
-                Color color = pair.MiniIcon.color;
+                Color color = pair.Icon.color;
                 color.a *= edgePinnedAlpha;
-                pair.MiniIcon.color = color;
+                pair.Icon.color = color;
             }
         }
     }
@@ -1228,7 +1437,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         if (halfWidth <= 0f || halfHeight <= 0f)
             return center;
 
-        if (circularViewport)
+        if (circularViewport && _expandAmount01 <= 0f)
         {
             float radius = Mathf.Min(halfWidth, halfHeight);
             return offset.sqrMagnitude > radius * radius ? center + offset.normalized * radius : point;
@@ -1238,52 +1447,21 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         return overshoot > 1f ? center + offset / overshoot : point;
     }
 
-    // Repositions every chunk icon on whichever map surface just changed UI size - a no-op on
-    // every frame neither surface resized (the overwhelmingly common case), which is why this is
-    // cheap enough to poll every QUpdate rather than react to a resize event. Matters because an
-    // icon is positioned once at spawn: the full-map panel is typically inactive (and possibly
-    // zero-sized) until the player first opens it.
-    private void RefreshIconPositionsIfResized()
-    {
-        float miniWidth = mapRect != null ? mapRect.rect.width : 0f;
-        float fullWidth = _fullOverlayRoot != null ? _fullOverlayRoot.rect.width : 0f;
-
-        bool miniResized = Mathf.Approximately(miniWidth, _lastMiniWidth) == false;
-        bool fullResized = Mathf.Approximately(fullWidth, _lastFullWidth) == false;
-
-        if (miniResized == false && fullResized == false)
-            return;
-
-        _lastMiniWidth = miniWidth;
-        _lastFullWidth = fullWidth;
-
-        foreach (var pair in _iconOverlays.Values)
-        {
-            if (miniResized && pair.Mini != null)
-                pair.Mini.anchoredPosition = TexelRectCenterToMapPosition(pair.TexelRect, mapRect);
-
-            if (fullResized && pair.Full != null)
-                pair.Full.anchoredPosition = TexelRectCenterToMapPosition(pair.TexelRect, _fullOverlayRoot);
-        }
-    }
-
-    // One icon instance on one map surface. A chunk never moves, so its position is set once here
-    // and never touched again - unlike a player marker, which is repositioned every frame.
-    // Null root (no full-map panel wired up) simply produces no instance.
-    private RectTransform SpawnIcon(RectTransform root, Sprite sprite, RectInt texelRect, float scale, out Image iconImageOut)
+    // One chunk icon under mapRect - its position is (re)placed every frame by
+    // PinActiveIconsToViewportEdge, this just gives it a sensible first spot.
+    private RectTransform SpawnIcon(Sprite sprite, RectInt texelRect, out Image iconImageOut)
     {
         iconImageOut = null;
 
-        if (root == null || iconPrefab == null)
+        if (iconPrefab == null)
             return null;
 
-        Image iconImage = Instantiate(iconPrefab, root);
+        Image iconImage = Instantiate(iconPrefab, mapRect);
         iconImage.sprite = sprite;
         iconImageOut = iconImage;
 
         var rect = iconImage.transform as RectTransform;
-        rect.anchoredPosition = TexelRectCenterToMapPosition(texelRect, root);
-        rect.localScale = Vector3.one * scale;
+        rect.anchoredPosition = TexelRectCenterToMapPosition(texelRect);
 
         return rect;
     }
@@ -1389,13 +1567,9 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         {
             _seenPlayersThisFrame.Add(entity);
 
-            if (_playerMarkers.TryGetValue(entity, out OverlayPair marker) == false)
+            if (_playerMarkers.TryGetValue(entity, out MapOverlay marker) == false)
             {
-                marker = new OverlayPair
-                {
-                    Mini = SpawnPlayerMarker(frame, entity, mapRect, 1f),
-                    Full = SpawnPlayerMarker(frame, entity, _fullOverlayRoot, fullMapOverlayScale)
-                };
+                marker = new MapOverlay { Rect = SpawnPlayerMarker(frame, entity) };
 
                 marker.SetActive(true); // templates themselves are disabled - see QStart
                 _playerMarkers[entity] = marker;
@@ -1403,13 +1577,8 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
 
             var worldPos = new Vector2(transform.Position.X.AsFloat, transform.Position.Z.AsFloat);
 
-            // The two surfaces show the same world at different UI sizes, so each marker's own
-            // position is resolved against its own root rather than shared.
-            if (marker.Mini != null)
-                marker.Mini.anchoredPosition = WorldToMapPosition(worldPos, mapRect);
-
-            if (marker.Full != null)
-                marker.Full.anchoredPosition = WorldToMapPosition(worldPos, _fullOverlayRoot);
+            if (marker.Rect != null)
+                marker.Rect.anchoredPosition = WorldToMapPosition(worldPos);
         }
 
         // Releases any marker whose player wasn't seen this frame (disconnected) - same
@@ -1426,7 +1595,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         {
             foreach (var entity in _stalePlayerBuffer)
             {
-                if (_playerMarkers.TryGetValue(entity, out OverlayPair marker))
+                if (_playerMarkers.TryGetValue(entity, out MapOverlay marker))
                     marker.Destroy();
 
                 _playerMarkers.Remove(entity);
@@ -1442,15 +1611,12 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     // way PlayerNumberUiWidget resolves RingColor - via the entity's CharacterStats.CharacterData
     // asset. Sprite lives on the marker's own Image, or a child one (so the marker prefab can hold
     // other decoration alongside the sprite). No-op if any link is missing.
-    // One player marker instance on one map surface. Null root (no full-map panel wired up)
-    // simply produces no instance.
-    private RectTransform SpawnPlayerMarker(Frame frame, EntityRef entity, RectTransform root, float scale)
+    private RectTransform SpawnPlayerMarker(Frame frame, EntityRef entity)
     {
-        if (root == null || playerMarkerPrefab == null)
+        if (playerMarkerPrefab == null)
             return null;
 
-        RectTransform marker = Instantiate(playerMarkerPrefab, root);
-        marker.localScale = Vector3.one * scale;
+        RectTransform marker = Instantiate(playerMarkerPrefab, mapRect);
 
         // Hero pick is fixed for a player's lifetime, so resolve the pawn sprite once at marker
         // creation - not every frame. Left unassigned on CharacterData, the marker simply keeps
@@ -1498,13 +1664,9 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
 
             _seenElitesThisFrame.Add(entity);
 
-            if (_eliteMarkers.TryGetValue(entity, out OverlayPair marker) == false)
+            if (_eliteMarkers.TryGetValue(entity, out MapOverlay marker) == false)
             {
-                marker = new OverlayPair
-                {
-                    Mini = SpawnEliteMarker(mapRect, 1f),
-                    Full = SpawnEliteMarker(_fullOverlayRoot, fullMapOverlayScale)
-                };
+                marker = new MapOverlay { Rect = SpawnMarker(eliteMarkerPrefab) };
 
                 marker.SetActive(true); // template itself is disabled - see QStart
                 _eliteMarkers[entity] = marker;
@@ -1512,11 +1674,8 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
 
             var worldPos = new Vector2(transform.Position.X.AsFloat, transform.Position.Z.AsFloat);
 
-            if (marker.Mini != null)
-                marker.Mini.anchoredPosition = WorldToMapPosition(worldPos, mapRect);
-
-            if (marker.Full != null)
-                marker.Full.anchoredPosition = WorldToMapPosition(worldPos, _fullOverlayRoot);
+            if (marker.Rect != null)
+                marker.Rect.anchoredPosition = WorldToMapPosition(worldPos);
         }
 
         // Releases any marker whose Elite wasn't seen this frame (died or was destroyed).
@@ -1532,7 +1691,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         {
             foreach (var entity in _staleEliteBuffer)
             {
-                if (_eliteMarkers.TryGetValue(entity, out OverlayPair marker))
+                if (_eliteMarkers.TryGetValue(entity, out MapOverlay marker))
                     marker.Destroy();
 
                 _eliteMarkers.Remove(entity);
@@ -1544,18 +1703,14 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         _seenElitesThisFrame.Clear();
     }
 
-    // One Elite marker instance on one map surface. Null root (no full-map panel wired up) simply
-    // produces no instance - same shape as SpawnPlayerMarker, minus the per-entity pawn sprite (an
-    // Elite has no hero identity to tint by) - shows whatever sprite eliteMarkerPrefab's own Image
-    // is authored with as-is.
-    private RectTransform SpawnEliteMarker(RectTransform root, float scale)
+    // One Elite/Special/Clear-Enemy marker - shows whatever sprite the template's own Image is
+    // authored with as-is (no per-entity identity, unlike SpawnPlayerMarker's pawn sprite).
+    private RectTransform SpawnMarker(RectTransform prefab)
     {
-        if (root == null || eliteMarkerPrefab == null)
+        if (prefab == null)
             return null;
 
-        RectTransform marker = Instantiate(eliteMarkerPrefab, root);
-        marker.localScale = Vector3.one * scale;
-        return marker;
+        return Instantiate(prefab, mapRect);
     }
 
     // One marker per currently-alive Persistent, non-Elite enemy - identical shape to
@@ -1577,13 +1732,9 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
 
             _seenSpecialsThisFrame.Add(entity);
 
-            if (_specialMarkers.TryGetValue(entity, out OverlayPair marker) == false)
+            if (_specialMarkers.TryGetValue(entity, out MapOverlay marker) == false)
             {
-                marker = new OverlayPair
-                {
-                    Mini = SpawnSpecialMarker(mapRect, 1f),
-                    Full = SpawnSpecialMarker(_fullOverlayRoot, fullMapOverlayScale)
-                };
+                marker = new MapOverlay { Rect = SpawnMarker(specialMarkerPrefab) };
 
                 marker.SetActive(true); // template itself is disabled - see QStart
                 _specialMarkers[entity] = marker;
@@ -1591,11 +1742,8 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
 
             var worldPos = new Vector2(transform.Position.X.AsFloat, transform.Position.Z.AsFloat);
 
-            if (marker.Mini != null)
-                marker.Mini.anchoredPosition = WorldToMapPosition(worldPos, mapRect);
-
-            if (marker.Full != null)
-                marker.Full.anchoredPosition = WorldToMapPosition(worldPos, _fullOverlayRoot);
+            if (marker.Rect != null)
+                marker.Rect.anchoredPosition = WorldToMapPosition(worldPos);
         }
 
         // Releases any marker whose Special enemy wasn't seen this frame (died or was destroyed).
@@ -1611,7 +1759,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         {
             foreach (var entity in _staleSpecialBuffer)
             {
-                if (_specialMarkers.TryGetValue(entity, out OverlayPair marker))
+                if (_specialMarkers.TryGetValue(entity, out MapOverlay marker))
                     marker.Destroy();
 
                 _specialMarkers.Remove(entity);
@@ -1621,17 +1769,6 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         }
 
         _seenSpecialsThisFrame.Clear();
-    }
-
-    // One Special marker instance on one map surface - same shape as SpawnEliteMarker.
-    private RectTransform SpawnSpecialMarker(RectTransform root, float scale)
-    {
-        if (root == null || specialMarkerPrefab == null)
-            return null;
-
-        RectTransform marker = Instantiate(specialMarkerPrefab, root);
-        marker.localScale = Vector3.one * scale;
-        return marker;
     }
 
     // One marker per every currently-alive ORDINARY enemy - excluding Elite/Persistent, which
@@ -1680,13 +1817,9 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
 
             _seenClearEnemiesThisFrame.Add(entity);
 
-            if (_clearEnemyMarkers.TryGetValue(entity, out OverlayPair marker) == false)
+            if (_clearEnemyMarkers.TryGetValue(entity, out MapOverlay marker) == false)
             {
-                marker = new OverlayPair
-                {
-                    Mini = SpawnClearEnemyMarker(mapRect, 1f),
-                    Full = SpawnClearEnemyMarker(_fullOverlayRoot, fullMapOverlayScale)
-                };
+                marker = new MapOverlay { Rect = SpawnMarker(clearEnemyMarkerPrefab) };
 
                 marker.SetActive(true); // template itself is disabled - see QStart
                 _clearEnemyMarkers[entity] = marker;
@@ -1694,11 +1827,8 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
 
             var worldPos = new Vector2(transform.Position.X.AsFloat, transform.Position.Z.AsFloat);
 
-            if (marker.Mini != null)
-                marker.Mini.anchoredPosition = WorldToMapPosition(worldPos, mapRect);
-
-            if (marker.Full != null)
-                marker.Full.anchoredPosition = WorldToMapPosition(worldPos, _fullOverlayRoot);
+            if (marker.Rect != null)
+                marker.Rect.anchoredPosition = WorldToMapPosition(worldPos);
         }
 
         // Releases any marker whose enemy wasn't seen this frame (died or expired/retired).
@@ -1714,7 +1844,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         {
             foreach (var entity in _staleClearEnemyBuffer)
             {
-                if (_clearEnemyMarkers.TryGetValue(entity, out OverlayPair marker))
+                if (_clearEnemyMarkers.TryGetValue(entity, out MapOverlay marker))
                     marker.Destroy();
 
                 _clearEnemyMarkers.Remove(entity);
@@ -1724,17 +1854,6 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         }
 
         _seenClearEnemiesThisFrame.Clear();
-    }
-
-    // One Clear-Enemy marker instance on one map surface - same shape as SpawnEliteMarker.
-    private RectTransform SpawnClearEnemyMarker(RectTransform root, float scale)
-    {
-        if (root == null || clearEnemyMarkerPrefab == null)
-            return null;
-
-        RectTransform marker = Instantiate(clearEnemyMarkerPrefab, root);
-        marker.localScale = Vector3.one * scale;
-        return marker;
     }
 
     private Vector2Int WorldToTexel(Vector2 worldXZ)
@@ -1749,10 +1868,10 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     // UI-local position (mapRect space) for the icon overlays/player markers - chains the same
     // world-to-texel scale through to UI units, so everything lines up with the painted texture
     // regardless of mapRect's own on-screen pixel size.
-    private Vector2 WorldToMapPosition(Vector2 worldXZ, RectTransform root)
+    private Vector2 WorldToMapPosition(Vector2 worldXZ)
     {
         Vector2 local = worldXZ - _effectiveWorldCenter;
-        float uiScale = _worldToTexelScale * (root.rect.width / _textureResolution);
+        float uiScale = _worldToTexelScale * (mapRect.rect.width / _textureResolution);
 
         return local * uiScale;
     }
@@ -1760,11 +1879,11 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     // UI-local position (mapRect space) for the center of an already-computed texel rect - see
     // SpawnIconOverlayIfNeeded's own comment for why this, not WorldToMapPosition, is what icons
     // need to line up with the painted square.
-    private Vector2 TexelRectCenterToMapPosition(RectInt texelRect, RectTransform root)
+    private Vector2 TexelRectCenterToMapPosition(RectInt texelRect)
     {
         float texelCenterX = texelRect.x + texelRect.width * 0.5f;
         float texelCenterY = texelRect.y + texelRect.height * 0.5f;
-        float uiScale = root.rect.width / _textureResolution;
+        float uiScale = mapRect.rect.width / _textureResolution;
 
         return new Vector2(
             (texelCenterX - _textureResolution * 0.5f) * uiScale,

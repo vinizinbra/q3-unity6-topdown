@@ -48,8 +48,8 @@ Material:
     - _EmissionStrength: 3
     - _FadeColorPosition: 0.5
     - _FadeColorWidth: 1
-    - _GradientDistance: 2
-    - _GradientStartY: -3.22
+    - _GradientDistance: 3.14
+    - _GradientStartY: -2.98
     - _GradientStrength: 1
     - _Hatch1Threshold: 0.6
     - _Hatch2Threshold: 0.82
@@ -80,7 +80,7 @@ Material:
     - _EdgeTint: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionOffColor: {r: 0, g: 0, b: 0, a: 1}
     - _FadeColor: {r: 1, g: 0.9, b: 0.62, a: 0.5}
-    - _GradientBottomColor: {r: 0.12156863, g: 0.10980392, b: 0.1882353, a: 1}
+    - _GradientBottomColor: {r: 0.7058824, g: 0.7137255, b: 0.92156863, a: 1}
     - _GradientTopColor: {r: 1, g: 1, b: 1, a: 1}
     - _HatchColor: {r: 0.2, g: 0.1, b: 0.1, a: 1}
     - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
@@ -92,7 +92,7 @@ Material:
     - _SurfaceTint: {r: 0.972549, g: 0.66687006, b: 0.3333333, a: 1}
     - _WallDarkColor: {r: 0.442, g: 0.095, b: 0.025, a: 1}
     - _WallLightColor: {r: 0.485, g: 0.123, b: 0.046, a: 1}
-    - _WallLineColor: {r: 0.45882353, g: 0.37254903, b: 0.6509804, a: 1}
+    - _WallLineColor: {r: 0.45882344, g: 0.372549, b: 0.6509804, a: 0}
     - _WallTint: {r: 0.5660378, g: 0.21038683, b: 0.15218939, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

@@ -123,4 +123,7 @@ MonoBehaviour:
     Damage/min:
     5200
 
-    Crit dmg/shot: 250 (vs 100 normal) @ 20 % chance, x2.5'
+    Crit dmg/shot: 250 (vs 100 normal) @ 20 % chance, x2.5
+
+    Not in
+    DPS (unmodelled traits): Deep Freeze'

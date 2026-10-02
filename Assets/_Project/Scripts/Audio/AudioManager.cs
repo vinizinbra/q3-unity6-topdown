@@ -43,11 +43,12 @@ public class AudioManager : MonoBehaviour
     [SerializeField, Tooltip("Saves master and per-group volumes to PlayerPrefs (same ObscuredPrefs-backed PlayerPrefFloat every other setting in this project uses) and reloads them on startup, so an options slider sticks between sessions. Turn OFF while tuning the mix if a previously-saved value keeps overriding what you author here.")]
     private bool persistVolumes = true;
 
-    // The two player-facing options sliders. Kept as category multipliers ON TOP of the per-group
+    // The three player-facing options sliders. Kept as category multipliers ON TOP of the per-group
     // buses rather than driving them, so moving "SFX" never overwrites the authored balance between
-    // Sfx/Ambience/Ui/Voice - Music is its own category, everything else counts as SFX.
+    // Sfx/Ambience/Ui/... - Music and Voice are their own categories, everything else counts as SFX.
     private float musicVolume = 1f;
     private float sfxVolume = 1f;
+    private float voiceVolume = 1f;
 
     [Header("Groups")]
     [SerializeField, Tooltip("One row per SoundGroup value, indexed by that value - the table auto-resizes when the enum changes, so rows never drift out of alignment. Holds each group's volume bus AND its shared voice budget.")]
@@ -144,6 +145,7 @@ public class AudioManager : MonoBehaviour
     private static PlayerPrefFloat[] _groupVolumePrefs;
     private static PlayerPrefFloat _musicVolumePref;
     private static PlayerPrefFloat _sfxVolumePref;
+    private static PlayerPrefFloat _voiceVolumePref;
     private static bool _quitting;
 
     // ------------------------------------------------------------------ lifecycle
@@ -187,7 +189,7 @@ public class AudioManager : MonoBehaviour
 
         // Startup snapshot for platform-specific silence (e.g. WebGL): a saved volume that loaded as
         // 0, a paused listener, or an output rate the browser reported as 0 all read as "no sound".
-        LogHelper.Log(LogTag, $"Initialized: platform={Application.platform} outputRate={AudioSettings.outputSampleRate} master={masterVolume:0.00} music={musicVolume:0.00} sfx={sfxVolume:0.00} listenerPaused={AudioListener.pause} listenerVolume={AudioListener.volume:0.00} voices={_voices.Count} persistVolumes={persistVolumes}", this);
+        LogHelper.Log(LogTag, $"Initialized: platform={Application.platform} outputRate={AudioSettings.outputSampleRate} master={masterVolume:0.00} music={musicVolume:0.00} sfx={sfxVolume:0.00} voice={voiceVolume:0.00} listenerPaused={AudioListener.pause} listenerVolume={AudioListener.volume:0.00} voices={_voices.Count} persistVolumes={persistVolumes}", this);
     }
 
     private void OnValidate() => SyncGroupSettings();
@@ -231,8 +233,10 @@ public class AudioManager : MonoBehaviour
 
         _musicVolumePref ??= new PlayerPrefFloat("audio_volume_category_music", 1f);
         _sfxVolumePref ??= new PlayerPrefFloat("audio_volume_category_sfx", 1f);
+        _voiceVolumePref ??= new PlayerPrefFloat("audio_volume_category_voice", 1f);
         musicVolume = Mathf.Clamp01(_musicVolumePref.Value);
         sfxVolume = Mathf.Clamp01(_sfxVolumePref.Value);
+        voiceVolume = Mathf.Clamp01(_voiceVolumePref.Value);
     }
 
     private static PlayerPrefFloat GroupPref(SoundGroup group, float authoredDefault)
@@ -488,7 +492,17 @@ public class AudioManager : MonoBehaviour
     private float ResolveBusVolume(SoundData data)
     {
         var group = data != null ? data.group : SoundGroup.Sfx;
-        return ResolveGroup(group).Volume * masterVolume * (group == SoundGroup.Music ? musicVolume : sfxVolume);
+        return ResolveGroup(group).Volume * masterVolume * ResolveCategoryVolume(group);
+    }
+
+    private float ResolveCategoryVolume(SoundGroup group)
+    {
+        switch (group)
+        {
+            case SoundGroup.Music: return musicVolume;
+            case SoundGroup.Voice: return voiceVolume;
+            default: return sfxVolume;
+        }
     }
 
     // ------------------------------------------------------------------ play
@@ -1094,7 +1108,7 @@ public class AudioManager : MonoBehaviour
         }
     }
 
-    // Options-menu sliders - see the musicVolume/sfxVolume field comment. Getters resolve the
+    // Options-menu sliders - see the musicVolume/sfxVolume/voiceVolume field comment. Getters resolve the
     // manager (rather than defaulting to 1) because the value is loaded from prefs in
     // EnsureInitialized, and a slider opened before any sound has played would otherwise show 1.
     public static float MusicVolume
@@ -1131,6 +1145,25 @@ public class AudioManager : MonoBehaviour
             {
                 _sfxVolumePref ??= new PlayerPrefFloat("audio_volume_category_sfx", 1f);
                 _sfxVolumePref.Value = manager.sfxVolume;
+            }
+        }
+    }
+
+    public static float VoiceVolume
+    {
+        get => Resolve() is { } manager ? manager.voiceVolume : 1f;
+        set
+        {
+            var manager = Resolve();
+            if (manager == null)
+                return;
+
+            manager.voiceVolume = Mathf.Clamp01(value);
+
+            if (manager.persistVolumes)
+            {
+                _voiceVolumePref ??= new PlayerPrefFloat("audio_volume_category_voice", 1f);
+                _voiceVolumePref.Value = manager.voiceVolume;
             }
         }
     }
@@ -1205,6 +1238,7 @@ public class AudioManager : MonoBehaviour
         PlayerPrefs.DeleteKey("audio_volume_master");
         PlayerPrefs.DeleteKey("audio_volume_category_music");
         PlayerPrefs.DeleteKey("audio_volume_category_sfx");
+        PlayerPrefs.DeleteKey("audio_volume_category_voice");
         foreach (SoundGroup group in System.Enum.GetValues(typeof(SoundGroup)))
             PlayerPrefs.DeleteKey($"audio_volume_{group}");
 
@@ -1214,6 +1248,7 @@ public class AudioManager : MonoBehaviour
         _groupVolumePrefs = null;
         _musicVolumePref = null;
         _sfxVolumePref = null;
+        _voiceVolumePref = null;
 
         LogHelper.Log(LogTag, "Saved volumes cleared - authored values apply on next load.", this);
     }

@@ -1,0 +1,126 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bb51f48d451e4d148d492421a410eb0, type: 3}
+  m_Name: AutoShotgun
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.WeaponDataAsset
+  Identifier:
+    Path: _QuantumUser/Resources/Weapons/AutoShotgun
+    Guid:
+      Value: 312916777594469653
+  DisplayName: Auto Shotgun
+  FireType: 1
+  Damage:
+    RawValue: 262144
+  Element: 0
+  Family: 4
+  Weight: 2
+  CriticalChance:
+    RawValue: 6554
+  CriticalDamageBonus:
+    RawValue: 98304
+  FireRate:
+    RawValue: 196608
+  AnticipationTime:
+    RawValue: 0
+  MagazineSize: 12
+  ReloadDuration:
+    RawValue: 52429
+  Range:
+    RawValue: 327680
+  PelletCount: 5
+  SpreadAngle:
+    RawValue: 1638400
+  RandomSpreadAngle:
+    RawValue: 0
+  SpawnAnchor: 0
+  SpawnOffset:
+    X:
+      RawValue: 0
+    Y:
+      RawValue: 0
+    Z:
+      RawValue: 0
+  RandomSideOffset:
+    RawValue: 0
+  BonusBounces: 0
+  ProjectileData:
+    Id:
+      Value: 377404559310112910
+  ProjectileSpeedMultiplier:
+    RawValue: 65536
+  BaseTraits:
+  - Id:
+      Value: 378431156895708510
+  ViewPrefab: {fileID: 8089491252618662435, guid: b0b99c9739778459f88630cb6c240b94, type: 3}
+  Description: Fire rate ramps up with every shot while you keep firing.
+  ShakeTier: 1
+  ProjectileVisuals:
+    ProjectileSprite: {fileID: 21300000, guid: 908a3d942f3c645319e0d768d7cc3f2f, type: 3}
+    ProjectileSpriteRotationOffset: 0
+    ProjectileColor: {r: 0, g: 0.7893717, b: 3.2958229, a: 1}
+    ProjectileScale: {x: 1, y: 1, z: 1}
+    EnableProjectileSparkTrail: 1
+    ProjectileSparkTrailColor: {r: 0, g: 0.5552087, b: 1, a: 1}
+    ProjectileSparkTrailScale: {x: 1, y: 1, z: 1}
+    ProjectileSparkTrailLifetimeOverride: 0
+    ProjectileSparkTrailRateOverDistanceOverride: 0
+    EnableProjectileTrail: 0
+    ProjectileTrailTime: 0
+    ProjectileTrailWidth: 0
+    ProjectileTrailColor:
+      serializedVersion: 2
+      key0: {r: 1, g: 1, b: 1, a: 1}
+      key1: {r: 1, g: 1, b: 1, a: 0}
+      key2: {r: 0, g: 0, b: 0, a: 0}
+      key3: {r: 0, g: 0, b: 0, a: 0}
+      key4: {r: 0, g: 0, b: 0, a: 0}
+      key5: {r: 0, g: 0, b: 0, a: 0}
+      key6: {r: 0, g: 0, b: 0, a: 0}
+      key7: {r: 0, g: 0, b: 0, a: 0}
+      ctime0: 0
+      ctime1: 65535
+      ctime2: 0
+      ctime3: 0
+      ctime4: 0
+      ctime5: 0
+      ctime6: 0
+      ctime7: 0
+      atime0: 0
+      atime1: 65535
+      atime2: 0
+      atime3: 0
+      atime4: 0
+      atime5: 0
+      atime6: 0
+      atime7: 0
+      m_Mode: 0
+      m_ColorSpace: -1
+      m_NumColorKeys: 2
+      m_NumAlphaKeys: 2
+    EnableProjectileGlow: 1
+    ProjectileGlowColor: {r: 0.6179246, g: 0.8141184, b: 1, a: 0.1764706}
+    ProjectileGlowScale: {x: 1, y: 1, z: 1}
+    EnableProjectileLight: 1
+    ProjectileLightColor: {r: 1, g: 1, b: 1, a: 1}
+    ProjectileDestroyColor: {r: 0, g: 0.47592783, b: 1, a: 1}
+    ProjectileDestroyGlowColor: {r: 0.4719206, g: 0.74446374, b: 0.990566, a: 1}
+    ProjectileDestroyScale: {x: 1, y: 1, z: 1}
+    ProjectileExtraParticle: {fileID: 0}
+    ProjectileExtraParticleScale: {x: 1, y: 1, z: 1}
+  _dpsPreview: 'Burst DPS: 111
+
+    Sustained DPS (incl. reload): 82.1
+
+    Damage/min:
+    4924
+
+    Crit dmg/shot: 30 (vs 20 normal) @ 10 % chance, x1.5'

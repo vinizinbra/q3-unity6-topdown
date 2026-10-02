@@ -30,12 +30,18 @@ global
     // correctly. See DebugCheatSystem.TryOpenNextPendingLevelUp.
     Boolean DebugLevelUpScreenOpenLastTick;
 
-    // Set by CheatSystem.SetupTestRun once its auto-resolved level-up batch and immediately-opened
-    // ChooseWeapon chest screen are both done - the actual Rift Mutation choice screen can't also be
-    // opened same-tick as the weapon one (LevelUpUtility.OpenUpgradeScreen's LevelUpScreenOpen guard
+    // How many Rift Mutation choice screens CheatSystem.SetupTestRun still has queued (0/0/1/2 for
+    // Breath 1-4, see its MutationChoicesPerBreath) once its auto-resolved level-up batch and
+    // immediately-opened ChooseWeapon chest screen are both done - a Rift Mutation choice screen can't
+    // also be opened same-tick as the weapon one (or as the previous mutation one) (LevelUpUtility.OpenUpgradeScreen's LevelUpScreenOpen guard
     // would just silently drop it), so this flag defers it to DebugCheatSystem's own drain, reusing
     // DebugLevelUpScreenOpenLastTick's same "wait a full published tick after the previous screen
-    // closes" gate as TryOpenNextPendingLevelUp already does. See DebugCheatSystem.
-    // TryOpenPendingRiftMutationChoice.
-    Boolean DebugPendingRiftMutationChoice;
+    // closes" gate as TryOpenNextPendingLevelUp already does, one screen per drain. See
+    // DebugCheatSystem.TryOpenPendingRiftMutationChoice.
+    Int32 DebugPendingRiftMutationChoices;
+
+    // Set by CheatActionKind.ToggleDirectorSpawns. While true, CombatDirectorSystem skips both
+    // TryPulse and the phase-guaranteed spawns (a phase entered while disabled never fires its
+    // guarantee, even after re-enabling) - the phase timeline itself keeps advancing as normal.
+    Boolean DebugDirectorSpawnsDisabled;
 }

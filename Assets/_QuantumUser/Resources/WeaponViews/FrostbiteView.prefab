@@ -187,7 +187,7 @@ ParticleSystem:
       serializedVersion: 2
       minMaxState: 0
       minColor: {r: 1, g: 1, b: 1, a: 1}
-      maxColor: {r: 1, g: 0.5434172, b: 0.18396229, a: 0.6862745}
+      maxColor: {r: 0.3, g: 0.92, b: 1, a: 0.686}
       maxGradient:
         serializedVersion: 2
         key0: {r: 1, g: 1, b: 1, a: 1}
@@ -4859,7 +4859,7 @@ Transform:
   m_GameObject: {fileID: 7972435520336422359}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.79, y: 0.14, z: 0}
+  m_LocalPosition: {x: 2.66, y: 0.58699995, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4950,7 +4950,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 4c6312a70517b4c58ae077e8f4ddd2a9, type: 3}
+  m_Sprite: {fileID: 1812220742, guid: 90ae01af4feea41bfbf42f42c02a75f5, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -5027,7 +5027,7 @@ MonoBehaviour:
   muzzleParticle: {fileID: 3830326994376361660}
   chargeParticle: {fileID: 0}
   projectileSpawnPoint: {fileID: 2926836801273744337}
-  fireSound: {fileID: 11400000, guid: 34f0a7b485ac44c8da13b8aa8c6e59c1, type: 2}
+  fireSound: {fileID: 11400000, guid: 8f1162f242c3541fd8e1f41d930c647f, type: 2}
   anticipationSound: {fileID: 0}
   reloadStartSound: {fileID: 11400000, guid: 5edaefd69c1f24edc81078b02a2b8b2a, type: 2}
   reloadReadySound: {fileID: 11400000, guid: f2fd980e55c984487af99afe28b60074, type: 2}
@@ -5161,6 +5161,18 @@ PrefabInstance:
       propertyPath: InitialModule.startLifetime.scalar
       value: 0.3
       objectReference: {fileID: 0}
+    - target: {fileID: 512805140819994886, guid: 87b42b4cc52580f43a3a2885348d4653, type: 3}
+      propertyPath: InitialModule.startColor.maxColor.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 512805140819994886, guid: 87b42b4cc52580f43a3a2885348d4653, type: 3}
+      propertyPath: InitialModule.startColor.maxColor.g
+      value: 0.97
+      objectReference: {fileID: 0}
+    - target: {fileID: 512805140819994886, guid: 87b42b4cc52580f43a3a2885348d4653, type: 3}
+      propertyPath: InitialModule.startColor.maxColor.r
+      value: 0.8
+      objectReference: {fileID: 0}
     - target: {fileID: 2074211772315599135, guid: 87b42b4cc52580f43a3a2885348d4653, type: 3}
       propertyPath: m_SortingOrder
       value: 2
@@ -5189,6 +5201,18 @@ PrefabInstance:
       propertyPath: InitialModule.startLifetime.scalar
       value: 0.15
       objectReference: {fileID: 0}
+    - target: {fileID: 5548300490710395097, guid: 87b42b4cc52580f43a3a2885348d4653, type: 3}
+      propertyPath: InitialModule.startColor.maxColor.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5548300490710395097, guid: 87b42b4cc52580f43a3a2885348d4653, type: 3}
+      propertyPath: InitialModule.startColor.maxColor.g
+      value: 0.78
+      objectReference: {fileID: 0}
+    - target: {fileID: 5548300490710395097, guid: 87b42b4cc52580f43a3a2885348d4653, type: 3}
+      propertyPath: InitialModule.startColor.maxColor.r
+      value: 0.1
+      objectReference: {fileID: 0}
     - target: {fileID: 6293866305370594211, guid: 87b42b4cc52580f43a3a2885348d4653, type: 3}
       propertyPath: m_Name
       value: Muzzle_Classic_01 (1)
@@ -5207,11 +5231,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6517613040681261310, guid: 87b42b4cc52580f43a3a2885348d4653, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 3.47
+      value: 3.3400002
       objectReference: {fileID: 0}
     - target: {fileID: 6517613040681261310, guid: 87b42b4cc52580f43a3a2885348d4653, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.07
+      value: 0.51699996
       objectReference: {fileID: 0}
     - target: {fileID: 6517613040681261310, guid: 87b42b4cc52580f43a3a2885348d4653, type: 3}
       propertyPath: m_LocalPosition.z

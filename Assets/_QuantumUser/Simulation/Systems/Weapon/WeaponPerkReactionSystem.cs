@@ -19,6 +19,7 @@ namespace Quantum
         public void OnWeaponHitLanded(Frame f, EntityRef target, EntityRef owner)
         {
             if (f.Unsafe.TryGetPointer<WeaponRampState>(owner, out var ramp) == true
+                && ramp->RampAdvancesPerShot == false
                 && ramp->RampMaxStacks > 0 && ramp->RampStacks < ramp->RampMaxStacks)
             {
                 ramp->RampStacks++;

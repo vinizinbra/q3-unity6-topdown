@@ -103,12 +103,20 @@ namespace Quantum
             if (f.Global->PhaseGuaranteedSpawnDone == false)
             {
                 f.Global->PhaseGuaranteedSpawnDone = true;
-                RunPhaseUtility.SpawnGuaranteedGroup(f, currentPhase, directorConfig, balanceConfig);
-                RunPhaseUtility.SpawnGuaranteedEnemy(f, currentPhase, directorConfig, balanceConfig);
+
+                if (f.Global->DebugDirectorSpawnsDisabled == false)
+                {
+                    RunPhaseUtility.SpawnGuaranteedGroup(f, currentPhase, directorConfig, balanceConfig);
+                    RunPhaseUtility.SpawnGuaranteedEnemy(f, currentPhase, directorConfig, balanceConfig);
+                }
             }
 
             if (currentPhase.Kind == SurvivalPhaseKind.Breathing)
                 return; // no Director spawning during a Breathing phase
+
+            // Cheat-only spawn freeze (CheatActionKind.ToggleDirectorSpawns) - see DebugCheats.qtn.
+            if (f.Global->DebugDirectorSpawnsDisabled)
+                return;
 
             // No Director spawning while any Traversal Challenge is Active either - a standalone
             // counter independent of GameState/SurvivalPhaseKind (mirrors Global.BossPauseTimer's own

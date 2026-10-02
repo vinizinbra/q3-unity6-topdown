@@ -159,7 +159,68 @@ namespace Quantum
                 case CheatActionKind.ExtendBreathing:
                     ExtendBreathing(f, cmd.Amount);
                     break;
+
+                case CheatActionKind.SpawnEnemy:
+                    SpawnEnemy(f, player, new AssetRef<EnemyDataAsset>(new AssetGuid(cmd.AssetId)), cmd.Amount);
+                    break;
+
+                case CheatActionKind.ToggleDirectorSpawns:
+                    f.Global->DebugDirectorSpawnsDisabled = !f.Global->DebugDirectorSpawnsDisabled;
+                    Log.Debug($"[Cheat] Director spawns {(f.Global->DebugDirectorSpawnsDisabled ? "disabled" : "enabled")}");
+                    break;
             }
+        }
+
+        private static readonly FP SpawnEnemyMinRadius = FP._4;
+        private static readonly FP SpawnEnemyMaxRadius = FP._6;
+
+        // Spawns `count` of one EnemyDataAsset in a ring around the sender, ground-snapped. Same
+        // create -> seed sequence as SpawnPackDeliveryData.SpawnMember, also WITHOUT EnemyLifecycle,
+        // so test enemies never count toward Director pressure or get retired as Irrelevant.
+        private static void SpawnEnemy(Frame f, EntityRef player, AssetRef<EnemyDataAsset> enemyDataRef, int count)
+        {
+            EnemyDataAsset data = f.FindAsset(enemyDataRef);
+            if (data == null || f.RuntimeConfig.DirectorConfig.Id.IsValid == false)
+            {
+                Log.Error("[Cheat] SpawnEnemy: invalid EnemyDataAsset or RuntimeConfig.DirectorConfig unassigned - nothing spawned");
+                return;
+            }
+
+            if (f.Unsafe.TryGetPointer<Transform3D>(player, out var playerTransform) == false)
+                return;
+
+            DirectorConfig directorConfig = f.FindAsset(f.RuntimeConfig.DirectorConfig);
+            int groundLayerMask = EnemyMovementUtility.GetGroundLayerMask(f);
+            FPVector3 anchor = playerTransform->Position;
+
+            if (count <= 0)
+                count = 1;
+
+            for (int i = 0; i < count; i++)
+            {
+                FP angle = f.RNG->Next(FP._0, FP.PiTimes2);
+                FP radius = f.RNG->Next(SpawnEnemyMinRadius, SpawnEnemyMaxRadius);
+                FPVector3 point = anchor + new FPVector3(FPMath.Cos(angle) * radius, FP._0, FPMath.Sin(angle) * radius);
+
+                if (EnemyMovementUtility.TryFindGroundHeight(f, point, groundLayerMask, out FP groundY))
+                    point.Y = groundY;
+
+                EntityRef entity = f.Create(directorConfig.EnemyPrototype);
+                if (f.Unsafe.TryGetPointer<Enemy>(entity, out var enemy) == false)
+                {
+                    Log.Error("[Cheat] DirectorConfig.EnemyPrototype has no Enemy component - destroying spawned enemy");
+                    f.Destroy(entity);
+                    return;
+                }
+
+                enemy->EnemyData = enemyDataRef;
+                enemy->Faction = EnemyFaction.MainFaction;
+                f.Unsafe.GetPointer<Transform3D>(entity)->Position = point;
+
+                EnemySystem.SeedFromEnemyData(f, entity, data);
+            }
+
+            Log.Debug($"[Cheat] spawned {count}x {data.name} around {player}");
         }
 
         // Only while the current SurvivalConfig phase is a Breathing Break: pulls PhaseTimer back by
@@ -245,8 +306,15 @@ namespace Quantum
         // within the same tick are safe - no screen is ever actually shown to the player, each one
         // opens and auto-resolves (random pick among that entity's own rolled options, same as an
         // unconfirmed player timing out - see LevelUpUtility.AutoConfirm) before the next begins.
+        // Rift Mutation choice screens SetupTestRun queues per breath (index = breathNumber - 1) -
+        // mirrors roughly how many a real run has picked by then.
+        private static readonly int[] MutationChoicesPerBreath = { 0, 0, 1, 2 };
+
         private static void SetupTestRun(Frame f, EntityRef player, int breathNumber)
         {
+            if (breathNumber < 1 || breathNumber > MutationChoicesPerBreath.Length)
+                return;
+
             JumpToBreathing(f, breathNumber);
 
             while (f.Global->DebugPendingLevelUps > 0)
@@ -261,15 +329,15 @@ namespace Quantum
 
             CoinUtility.Grant(f, player, (FP)5000);
 
-            // Unlike the level-ups above, these two ARE meant to be actually picked, not
-            // auto-resolved - LevelUpUtility.BeginChestScreen (the same forced-category screen Open
-            // Chest already uses) opens a real ChooseWeapon card screen right here and pauses the
-            // game for it. The Rift Mutation screen can't also open this same tick (OpenUpgradeScreen's
-            // LevelUpScreenOpen guard would just silently drop it while the weapon screen is up) so
-            // it's deferred via DebugPendingRiftMutationChoice - see DebugCheatSystem.
-            // TryOpenPendingRiftMutationChoice for the drain.
+            // Unlike the level-ups above, these ARE meant to be actually picked, not auto-resolved -
+            // LevelUpUtility.BeginChestScreen (the same forced-category screen Open Chest already
+            // uses) opens a real ChooseWeapon card screen right here and pauses the game for it. The
+            // Rift Mutation screens (0/0/1/2 for Breath 1-4) can't also open this same tick
+            // (OpenUpgradeScreen's LevelUpScreenOpen guard would just silently drop them while the
+            // weapon screen is up) so they're deferred via DebugPendingRiftMutationChoices - see
+            // DebugCheatSystem.TryOpenPendingRiftMutationChoice for the drain.
             LevelUpUtility.BeginChestScreen(f, player, LevelUpCategory.ChooseWeapon);
-            f.Global->DebugPendingRiftMutationChoice = true;
+            f.Global->DebugPendingRiftMutationChoices = MutationChoicesPerBreath[breathNumber - 1];
         }
 
         // FIX (was: GrantExperienceUpTo, which topped TotalExperience up in one lump sum and routed

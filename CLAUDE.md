@@ -59,6 +59,10 @@ which one to open.
 - **Mortar Elite / Random-Scatter Barrage** — `MortarBarrageDeliveryData` lobs many arc shells (some aimed, some scattered) with a generic per-shell ground-warning telegraph. → `docs/mortar-elite.md`
 - **Explode-On-Destroy / Mini Bomb** — generic `ExplodeOnDestroy` component detonates an entity on timed expiry or damage-death; also enables decoy traps. **Do not redirect Pixie's Cluster Charge onto Mini Bomb again without being asked.** → `docs/explode-on-destroy.md`
 
+- **Enemy Passives** — reusable `EnemyPassiveData` assets on `EnemyDataAsset.Passives` (recorded on `EnemyPassives`, single entry `EnemyPassiveUtility.Apply`) — groundwork for random Elite passive packs; first one: `GroundTrail` (Fuel Runner oil trail) + shared `StickySlow` ground hazards. → `docs/enemy-passives.md`
+
+- **World 2 Enemy Roster** — 12 W2 enemies (BlackMoles / DesertSecurity / Wildlife), each a guid-independent clone of a W1 base (`W2-*` assets, placeholder view variants); Dune Crusher cone slam, Scarab Nest spawner. → `docs/world2-enemies.md`
+
 ## Heroes — Ascensions
 
 - **Hero Ascension Balance Pass (2026-08-20)** — all 6 heroes normalized to 9×3; shared generic primitives (WallSlam, aura-DR slot, AreaAllyBudget, DelayedBlast, etc.), deviations, skill-area audit. Read this first for cross-cutting hero architecture. → `docs/hero-ascension-balance-pass.md`
@@ -73,8 +77,9 @@ which one to open.
 
 - **Announcer** — shared `AnnouncerManager` slide-in title banner (fade+slide, hold, fade+slide out) for rare whole-team moments (Area Secured, Survival Started, Team Challenge Started/Complete/Failed), replacing three near-duplicate copies of the same animation. → `docs/announcer.md`
 - **Hero Info Popup (Tab-hold)** — `HeroInfoPopupWidget` shows a full "what I'm running" readout by composing existing widgets. → `docs/hero-info-popup.md`
-- **Minimap** — node-based minimap baked into one painted `Texture2D`: per-chunk fills, level outline, POI icons, player/enemy markers. → `docs/minimap.md`
-- **In-Match Settings Popup** — Escape-toggled pause-style popup: SFX/Music sliders (`AudioManager` category multipliers), Disconnect, offline-only Restart (`RestartOfflineMatch` shuts the runner down and restarts the offline session, reloading the scene). → `docs/in-match-settings.md`
+- **Minimap** — node-based minimap baked into one painted `Texture2D`: per-chunk fills, level outline, POI icons, player/enemy markers; one surface that expands (click/M/R2) from the panned corner view to a whole-level view. → `docs/minimap.md`
+- **In-Match Settings Popup** — Escape-toggled pause-style popup: SFX/Music/Voice sliders (`AudioManager` category multipliers), Disconnect, offline-only Restart (`RestartOfflineMatch` shuts the runner down and restarts the offline session, reloading the scene). → `docs/in-match-settings.md`
+- **Menu Settings Popup** — MenuScene TopBar Settings: same SFX/Music/Voice `AudioManager` category sliders as in-match, plus Photon region dropdown (`PhotonRegionSettings`): None = find best and save it as the selection until set back to None. → `docs/menu-settings.md`
 - **Loading / Generating Level Screen** — menu-side `LoadingWindow` covers the whole match start (connect→generate→enter), then fades and hands off to `InMatchWindow`. Also the generic transition screen: self-instantiated persistent `LoadingScreen` prefab behind `SceneLoader.Load/Cover` (2s minimum; Game→Menu covers *before* teardown starts and holds until the gameplay scene has unloaded) for Intro→Menu and Game→Menu. → `docs/loading-screen.md`
 
 ## Tooling & testing

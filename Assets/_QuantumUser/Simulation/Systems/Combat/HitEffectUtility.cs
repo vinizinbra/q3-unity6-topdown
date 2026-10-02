@@ -71,7 +71,9 @@ namespace Quantum
         // independently-ticking copies of it scattered at essentially random positions. No-ops
         // without at least one AppliesOncePerBlast effect in the list, so a normal damage/knockback-
         // only Effects list pays nothing extra for this.
-        private static void ApplyBlastLevelEffects(Frame f, List<AssetRef<HitEffectData>> effects, FPVector3 center,
+        // Public so a hand-rolled area hit (GroundAreaDeliveryData's slam/self-destruct blast) can
+        // leave its once-per-blast hazard too, not just ApplyInRadius/ApplyInShape.
+        public static void ApplyBlastLevelEffects(Frame f, List<AssetRef<HitEffectData>> effects, FPVector3 center,
             EntityRef owner, FP damage, DamageSource source, ElementType element, bool isExplosion, FP areaRadius, byte hitIndex)
         {
             bool any = false;

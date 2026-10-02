@@ -73,6 +73,16 @@ namespace Quantum.Editor
                 EditorGUI.PropertyField(rect, shakeImpact);
                 rect.y += lineHeight;
 
+                SerializedProperty alignBody = property.FindPropertyRelative("AlignBodyToDirection");
+                EditorGUI.PropertyField(rect, alignBody);
+                rect.y += lineHeight;
+
+                if (alignBody.boolValue == true)
+                {
+                    EditorGUI.PropertyField(rect, property.FindPropertyRelative("AlignMaxDegrees"));
+                    rect.y += lineHeight;
+                }
+
                 string animationKey = property.propertyPath + ".animation";
                 bool animationExpanded = GetFoldout(AnimationFoldouts, animationKey);
                 animationExpanded = EditorGUI.Foldout(rect, animationExpanded, "Body Animation", true);
@@ -207,6 +217,10 @@ namespace Quantum.Editor
 
             height += lineHeight; // ShakeImpact
 
+            height += lineHeight; // AlignBodyToDirection
+            if (property.FindPropertyRelative("AlignBodyToDirection").boolValue == true)
+                height += lineHeight; // AlignMaxDegrees
+
             height += lineHeight; // "Body Animation" foldout header
 
             string animationKey = property.propertyPath + ".animation";
@@ -275,6 +289,7 @@ namespace Quantum.Editor
                 case AttackAnimationType.ArmSnap:
                 case AttackAnimationType.ArmPunch:
                 case AttackAnimationType.Dive:
+                case AttackAnimationType.HopStrike:
                     return true;
                 default:
                     return false;
@@ -301,6 +316,7 @@ namespace Quantum.Editor
                 case AttackAnimationType.ArmPunch: return "ArmPunch";
                 case AttackAnimationType.Jump: return "Jump";
                 case AttackAnimationType.Dive: return "Dive";
+                case AttackAnimationType.HopStrike: return "HopStrike";
                 default: return null;
             }
         }

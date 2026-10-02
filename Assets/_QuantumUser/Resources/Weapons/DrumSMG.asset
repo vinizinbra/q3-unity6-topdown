@@ -61,7 +61,7 @@ MonoBehaviour:
   - Id:
       Value: 2690515578728962944
   ViewPrefab: {fileID: 8089491252618662435, guid: 03a7f2745ead3494aa81273f2eeb1a0a, type: 3}
-  Description: 'Ice SMG whose fire rate ramps up while shooting.'
+  Description: Ice SMG whose fire rate ramps up while shooting.
   ShakeTier: 0
   ProjectileVisuals:
     ProjectileSprite: {fileID: -1971064935, guid: 8a17d688bdd9e47c68bbdfc6beba17e1, type: 3}

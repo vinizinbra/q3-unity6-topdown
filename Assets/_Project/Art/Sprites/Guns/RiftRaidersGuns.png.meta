@@ -136,7 +136,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: RiftRaidersGuns_0
+      name: RR_Gun_Pistol
       rect:
         serializedVersion: 2
         x: 41
@@ -158,7 +158,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: RiftRaidersGuns_1
+      name: RR_Gun_AssaultRifle
       rect:
         serializedVersion: 2
         x: 483
@@ -202,7 +202,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: RiftRaidersGuns_3
+      name: RR_Gun_Shotgun
       rect:
         serializedVersion: 2
         x: 730
@@ -224,7 +224,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: RiftRaidersGuns_4
+      name: RR_Gun_Sniper
       rect:
         serializedVersion: 2
         x: 970
@@ -246,7 +246,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: RiftRaidersGuns_5
+      name: RR_Gun_GrenadeLauncher
       rect:
         serializedVersion: 2
         x: 1226
@@ -268,7 +268,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: RiftRaidersGuns_6
+      name: RR_Gun_DoubleBarrel
       rect:
         serializedVersion: 2
         x: 19
@@ -290,7 +290,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: RR_Arcshot
+      name: RR_Gun_Arcshot
       rect:
         serializedVersion: 2
         x: 959
@@ -312,7 +312,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: RR_Hellshot
+      name: RR_Gun_Hellshot
       rect:
         serializedVersion: 2
         x: 1214
@@ -334,7 +334,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: RR_Minigun
+      name: RR_Gun_Minigun
       rect:
         serializedVersion: 2
         x: 991
@@ -356,7 +356,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: RR_Slugger
+      name: RR_Gun_Slugger
       rect:
         serializedVersion: 2
         x: 240
@@ -378,7 +378,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: RR_BurstRiffle
+      name: RR_Gun_BurstRifle
       rect:
         serializedVersion: 2
         x: 484
@@ -407,8 +407,8 @@ TextureImporter:
         y: 313
         width: 201
         height: 136
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      alignment: 9
+      pivot: {x: 0.018778786, y: 0.5129309}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -422,7 +422,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: RR_IcePistol
+      name: RR_Gun_FrostRevolver
       rect:
         serializedVersion: 2
         x: 1212
@@ -444,7 +444,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: RR_DisruptorPistol
+      name: RR_Gun_Disruptor
       rect:
         serializedVersion: 2
         x: 509
@@ -466,7 +466,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: RR_Napalm
+      name: RR_Gun_NapalmLauncher
       rect:
         serializedVersion: 2
         x: 34
@@ -488,7 +488,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: RR_ClusterLauncher
+      name: RR_Gun_ClusterLauncher
       rect:
         serializedVersion: 2
         x: 1231
@@ -510,7 +510,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: RR_UZI
+      name: RR_Gun_DualUzi
       rect:
         serializedVersion: 2
         x: 500
@@ -532,7 +532,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: RR_DrumSmgIce
+      name: RR_Gun_DrumSMG
       rect:
         serializedVersion: 2
         x: 730
@@ -557,9 +557,9 @@ TextureImporter:
       name: RiftRaidersGuns_7
       rect:
         serializedVersion: 2
-        x: 253
+        x: 244
         y: 106
-        width: 202
+        width: 246
         height: 136
       alignment: 9
       pivot: {x: 0.025277166, y: 0.40598655}
@@ -597,6 +597,138 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: RR_Gun_FlarePistol_Temp
+      rect:
+        serializedVersion: 2
+        x: 51
+        y: 1040
+        width: 173
+        height: 140
+      alignment: 9
+      pivot: {x: 0.08321112, y: 0.24071248}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a3461743ac2584b46a6199a4d9b66550
+      internalID: 2122956283
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Gun_HellPiercer
+      rect:
+        serializedVersion: 2
+        x: 240
+        y: 876
+        width: 226
+        height: 138
+      alignment: 9
+      pivot: {x: 0.04088498, y: 0.39804962}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bf14d2abe9a154aada0fc365abd942a1
+      internalID: 1941373114
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Gun_StormRifle
+      rect:
+        serializedVersion: 2
+        x: 963
+        y: 114
+        width: 230
+        height: 127
+      alignment: 9
+      pivot: {x: 0.016180713, y: 0.38921925}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0b7963aaa293e4b84af983a9627ac0ea
+      internalID: 1129862680
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Gun_Frostbite
+      rect:
+        serializedVersion: 2
+        x: 1197
+        y: 867
+        width: 237
+        height: 133
+      alignment: 9
+      pivot: {x: 0.039932445, y: 0.43388608}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5158b415c394842f99de6aac6dc25cd1
+      internalID: 1812220742
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Gun_EmberSMG
+      rect:
+        serializedVersion: 2
+        x: 498
+        y: 875
+        width: 188
+        height: 133
+      alignment: 9
+      pivot: {x: 0.0322751, y: 0.5000005}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2ecdc964ab3e4458c9235b184e6c269f
+      internalID: 265432136
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Gun_FlarePistol
+      rect:
+        serializedVersion: 2
+        x: 1230
+        y: 1013
+        width: 186
+        height: 146
+      alignment: 9
+      pivot: {x: 0.26362264, y: 0.16272558}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a52fe73752c8b45318a8e555c19d666d
+      internalID: -839528994
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
@@ -611,25 +743,31 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      RR_Arcshot: -1722915515
       RR_AutoShotgun: 1487257687
-      RR_BurstRiffle: -2004263705
-      RR_ClusterLauncher: 958131526
-      RR_DisruptorPistol: -2011141226
-      RR_DrumSmgIce: -1736590291
-      RR_Hellshot: -1178918995
-      RR_IcePistol: -826440342
-      RR_Minigun: 1806625399
-      RR_Napalm: 1880686327
-      RR_Slugger: 523131066
-      RR_UZI: 803146548
-      RiftRaidersGuns_0: -1381782799
-      RiftRaidersGuns_1: 2077449762
+      RR_Gun_Arcshot: -1722915515
+      RR_Gun_AssaultRifle: 2077449762
+      RR_Gun_BurstRifle: -2004263705
+      RR_Gun_ClusterLauncher: 958131526
+      RR_Gun_Disruptor: -2011141226
+      RR_Gun_DoubleBarrel: -1098942690
+      RR_Gun_DrumSMG: -1736590291
+      RR_Gun_DualUzi: 803146548
+      RR_Gun_EmberSMG: 265432136
+      RR_Gun_FlarePistol: -839528994
+      RR_Gun_FlarePistol_Temp: 2122956283
+      RR_Gun_FrostRevolver: -826440342
+      RR_Gun_Frostbite: 1812220742
+      RR_Gun_GrenadeLauncher: -861589758
+      RR_Gun_HellPiercer: 1941373114
+      RR_Gun_Hellshot: -1178918995
+      RR_Gun_Minigun: 1806625399
+      RR_Gun_NapalmLauncher: 1880686327
+      RR_Gun_Pistol: -1381782799
+      RR_Gun_Shotgun: -1376600512
+      RR_Gun_Slugger: 523131066
+      RR_Gun_Sniper: 332295747
+      RR_Gun_StormRifle: 1129862680
       RiftRaidersGuns_2: -2037809466
-      RiftRaidersGuns_3: -1376600512
-      RiftRaidersGuns_4: 332295747
-      RiftRaidersGuns_5: -861589758
-      RiftRaidersGuns_6: -1098942690
       RiftRaidersGuns_7: -549292626
       RiftRaidersGuns_8: -1374390215
   mipmapLimitGroupName: 

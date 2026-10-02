@@ -61,6 +61,9 @@ namespace Quantum
             // multiplicatively alongside Ice's own slow, same pattern.
             targetSpeed *= StatusEffectUtility.GetTempMoveSpeedMultiplier(frame, entity);
 
+            // Tar puddles (World 2 Tar Launcher) - see StatusEffectUtility.ApplyStickySlow.
+            targetSpeed *= StatusEffectUtility.GetStickySlowMultiplier(frame, entity);
+
             // Weapon Weight (docs/hero-mastery.md) - Light/Heavy weapons nudge move speed ±10%,
             // Medium is neutral. A general weapon property, not Hero Mastery, so it lives in its own
             // utility read straight off the equipped WeaponDataAsset rather than any Mastery component.

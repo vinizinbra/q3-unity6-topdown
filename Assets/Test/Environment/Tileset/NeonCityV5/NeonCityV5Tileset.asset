@@ -17,31 +17,145 @@ MonoBehaviour:
   material: {fileID: 2100000, guid: b2aac995103de4ba290fa7ca74a63d2c, type: 2}
   modelPrefix: NeonCityV5_
   useInnerCorners: 1
-  groundScatter: []
-  groundDensity: 0.06
-  rooftopScatter: []
-  rooftopDensity: 0.3
+  groundScatter:
+  - Model: {fileID: 919132149155446097, guid: 8fa7e3616110f41549698d2203821084, type: 3}
+    Weight: 1
+    ScaleRange: {x: 2.2, y: 2.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 92940410bdb54404caa7755032951072, type: 3}
+    Weight: 0.8
+    ScaleRange: {x: 2.2, y: 2.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 0fdad212d4aa8489181e81976d993d63, type: 3}
+    Weight: 1
+    ScaleRange: {x: 2.2, y: 2.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: ab9deaa1bd2d44e02a201d4f6bdd8cc2, type: 3}
+    Weight: 0.8
+    ScaleRange: {x: 2.2, y: 2.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 196d2d808742b47bab81c8e41a91ae10, type: 3}
+    Weight: 0.6
+    ScaleRange: {x: 2.2, y: 2.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  groundDensity: 0.005
+  rooftopScatter:
+  - Model: {fileID: 919132149155446097, guid: 30c5c866cdb9f4c5f98233b42b0641c5, type: 3}
+    Weight: 3
+    ScaleRange: {x: 1.3, y: 1.7}
+    AnyYaw: 1
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 1
+    PlatformChance: 0.35
+  - Model: {fileID: 919132149155446097, guid: 21b4b530d6fa94d82ae29deff723bace, type: 3}
+    Weight: 1.2
+    ScaleRange: {x: 1.3, y: 1.6}
+    AnyYaw: 1
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 51f80da6545014f38a927d2761e9fe3b, type: 3}
+    Weight: 1
+    ScaleRange: {x: 1.3, y: 1.6}
+    AnyYaw: 1
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 448914875d37d4515b492a98c11d6cb5, type: 3}
+    Weight: 0.8
+    ScaleRange: {x: 1.3, y: 1.6}
+    AnyYaw: 1
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  rooftopDensity: 0.06
   rooftopEdgeProps: []
   rooftopEdgeChance: 0.5
   wallScatter:
-  - Model: {fileID: 919132149155446097, guid: 816ab59adf6004958a1dc33eba97012b, type: 3}
+  - Model: {fileID: 2388569905663088618, guid: 337f27dbdde2e40a0b9c6e528bdb3845, type: 3}
     Weight: 2
     ScaleRange: {x: 1.5, y: 1.7}
     AnyYaw: 0
     Cells: 1
     Foot: 0
-    SideModel: {fileID: 0}
+    SideModel: {fileID: 919132149155446097, guid: 816ab59adf6004958a1dc33eba97012b, type: 3}
     FreeStanding: 0
     FrontOnly: 1
-  - Model: {fileID: 919132149155446097, guid: b5c21e1ee7b664069bd813b2c8655ed0, type: 3}
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 5295695294497854234, guid: 4e93d64780cf744babbf24daf3b1abf3, type: 3}
     Weight: 2
     ScaleRange: {x: 1.5, y: 1.7}
     AnyYaw: 0
     Cells: 1
     Foot: 0
-    SideModel: {fileID: 0}
+    SideModel: {fileID: 919132149155446097, guid: b5c21e1ee7b664069bd813b2c8655ed0, type: 3}
     FreeStanding: 0
     FrontOnly: 1
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
   - Model: {fileID: 919132149155446097, guid: c3175ba6ec10745a9bd20bda0472a084, type: 3}
     Weight: 1.5
     ScaleRange: {x: 1.5, y: 1.7}
@@ -51,15 +165,9 @@ MonoBehaviour:
     SideModel: {fileID: 0}
     FreeStanding: 0
     FrontOnly: 0
-  - Model: {fileID: 919132149155446097, guid: c47c2cf317d1c49869eda3c4e08f2fa5, type: 3}
-    Weight: 1.5
-    ScaleRange: {x: 1.5, y: 1.7}
-    AnyYaw: 0
-    Cells: 1
-    Foot: 0
-    SideModel: {fileID: 0}
-    FreeStanding: 0
-    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
   - Model: {fileID: 919132149155446097, guid: 8b7270a714bcd410eb25cb32109e3059, type: 3}
     Weight: 1
     ScaleRange: {x: 1.5, y: 1.7}
@@ -69,6 +177,9 @@ MonoBehaviour:
     SideModel: {fileID: 0}
     FreeStanding: 0
     FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
   - Model: {fileID: 919132149155446097, guid: df2eabac8bcd64435adcaa9243906315, type: 3}
     Weight: 1.5
     ScaleRange: {x: 1.5, y: 1.7}
@@ -78,6 +189,9 @@ MonoBehaviour:
     SideModel: {fileID: 0}
     FreeStanding: 0
     FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
   - Model: {fileID: 919132149155446097, guid: 3f5a48ecf99fa477cb3f7d33f239db5c, type: 3}
     Weight: 2
     ScaleRange: {x: 1.5, y: 1.7}
@@ -87,6 +201,9 @@ MonoBehaviour:
     SideModel: {fileID: 0}
     FreeStanding: 0
     FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
   - Model: {fileID: 919132149155446097, guid: 6e8e8631ec1a94e298842b170b9f6865, type: 3}
     Weight: 1
     ScaleRange: {x: 1.5, y: 1.7}
@@ -96,6 +213,9 @@ MonoBehaviour:
     SideModel: {fileID: 0}
     FreeStanding: 0
     FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
   - Model: {fileID: 919132149155446097, guid: adf83a2fe3dd94823b6e0adb5a3e4900, type: 3}
     Weight: 1.5
     ScaleRange: {x: 1.5, y: 1.7}
@@ -105,6 +225,9 @@ MonoBehaviour:
     SideModel: {fileID: 0}
     FreeStanding: 0
     FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
   - Model: {fileID: 919132149155446097, guid: 898aba10d4f23435a9725e2f0bcf907b, type: 3}
     Weight: 1.5
     ScaleRange: {x: 1.5, y: 1.7}
@@ -114,6 +237,9 @@ MonoBehaviour:
     SideModel: {fileID: 0}
     FreeStanding: 0
     FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
   - Model: {fileID: 919132149155446097, guid: a5abf62f37df143cc9c0b9a9912a4ace, type: 3}
     Weight: 1.2
     ScaleRange: {x: 1.5, y: 1.7}
@@ -123,15 +249,21 @@ MonoBehaviour:
     SideModel: {fileID: 0}
     FreeStanding: 0
     FrontOnly: 0
-  - Model: {fileID: 919132149155446097, guid: 687298ebe927746d3ae0ecf6b312fa0d, type: 3}
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 4826590249658885156, guid: 7c47e9cbe697a40bb9b396aa340990ff, type: 3}
     Weight: 1.5
     ScaleRange: {x: 1.5, y: 1.7}
     AnyYaw: 0
     Cells: 1
     Foot: 1
-    SideModel: {fileID: 0}
+    SideModel: {fileID: 919132149155446097, guid: 687298ebe927746d3ae0ecf6b312fa0d, type: 3}
     FreeStanding: 0
     FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
   - Model: {fileID: 919132149155446097, guid: d4bd18680005c471c82195d0addc23a7, type: 3}
     Weight: 0.8
     ScaleRange: {x: 1.5, y: 1.7}
@@ -141,6 +273,9 @@ MonoBehaviour:
     SideModel: {fileID: 0}
     FreeStanding: 1
     FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
   - Model: {fileID: 919132149155446097, guid: a5bd07947ec58411fa77bde831b55520, type: 3}
     Weight: 1.2
     ScaleRange: {x: 1.5, y: 1.7}
@@ -150,6 +285,9 @@ MonoBehaviour:
     SideModel: {fileID: 0}
     FreeStanding: 1
     FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
   - Model: {fileID: 919132149155446097, guid: 12be11cc5fc704581bee12b6322ee559, type: 3}
     Weight: 1.5
     ScaleRange: {x: 1.5, y: 1.7}
@@ -159,6 +297,9 @@ MonoBehaviour:
     SideModel: {fileID: 0}
     FreeStanding: 0
     FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
   - Model: {fileID: 919132149155446097, guid: 18656b9ef31274983822479ce6954d00, type: 3}
     Weight: 1.5
     ScaleRange: {x: 1.5, y: 1.7}
@@ -168,6 +309,9 @@ MonoBehaviour:
     SideModel: {fileID: 0}
     FreeStanding: 0
     FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
   - Model: {fileID: 919132149155446097, guid: f894c04b98df3408f9de999d3acb4151, type: 3}
     Weight: 2
     ScaleRange: {x: 1.5, y: 1.7}
@@ -177,6 +321,9 @@ MonoBehaviour:
     SideModel: {fileID: 0}
     FreeStanding: 0
     FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
   - Model: {fileID: 919132149155446097, guid: b76088a036aee4af4bdd25632e816409, type: 3}
     Weight: 2
     ScaleRange: {x: 1.5, y: 1.7}
@@ -186,6 +333,9 @@ MonoBehaviour:
     SideModel: {fileID: 0}
     FreeStanding: 0
     FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
   - Model: {fileID: 919132149155446097, guid: 26294605369c64ab1b0269cb57045d3f, type: 3}
     Weight: 2
     ScaleRange: {x: 1.3, y: 1.6}
@@ -195,6 +345,9 @@ MonoBehaviour:
     SideModel: {fileID: 0}
     FreeStanding: 0
     FrontOnly: 1
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
   - Model: {fileID: 919132149155446097, guid: 85dc42fd067a34bd9ab81041801e03d6, type: 3}
     Weight: 2
     ScaleRange: {x: 1.3, y: 1.6}
@@ -204,6 +357,9 @@ MonoBehaviour:
     SideModel: {fileID: 0}
     FreeStanding: 0
     FrontOnly: 1
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
   - Model: {fileID: 919132149155446097, guid: b496c8bd8220042eaa1babb0d1c79b2a, type: 3}
     Weight: 2
     ScaleRange: {x: 1.3, y: 1.6}
@@ -213,6 +369,9 @@ MonoBehaviour:
     SideModel: {fileID: 0}
     FreeStanding: 0
     FrontOnly: 1
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
   - Model: {fileID: 919132149155446097, guid: 1a23eca32392e436f8edc2fbb2d4373e, type: 3}
     Weight: 2
     ScaleRange: {x: 1.3, y: 1.6}
@@ -222,6 +381,9 @@ MonoBehaviour:
     SideModel: {fileID: 0}
     FreeStanding: 0
     FrontOnly: 1
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
   - Model: {fileID: 919132149155446097, guid: 613fa01a26fb54105b3a9cca64bd9d44, type: 3}
     Weight: 2
     ScaleRange: {x: 1.3, y: 1.6}
@@ -231,6 +393,9 @@ MonoBehaviour:
     SideModel: {fileID: 0}
     FreeStanding: 0
     FrontOnly: 1
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
   - Model: {fileID: 919132149155446097, guid: 44613cdac44e94e6c8c7ca6c3c9ff6dd, type: 3}
     Weight: 2
     ScaleRange: {x: 1.3, y: 1.6}
@@ -240,6 +405,9 @@ MonoBehaviour:
     SideModel: {fileID: 0}
     FreeStanding: 0
     FrontOnly: 1
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
   - Model: {fileID: 919132149155446097, guid: 3eb43ea0b425d4cc79e0a99731722702, type: 3}
     Weight: 2
     ScaleRange: {x: 1.3, y: 1.6}
@@ -249,6 +417,9 @@ MonoBehaviour:
     SideModel: {fileID: 0}
     FreeStanding: 0
     FrontOnly: 1
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
   - Model: {fileID: 919132149155446097, guid: 4cd915280ab7f482bb01c7b8dd9766a0, type: 3}
     Weight: 2
     ScaleRange: {x: 1.3, y: 1.6}
@@ -258,12 +429,457 @@ MonoBehaviour:
     SideModel: {fileID: 0}
     FreeStanding: 0
     FrontOnly: 1
-  wallDensity: 0.55
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 4c393f1faa2304af08665caa1c2ea6e3, type: 3}
+    Weight: 1.2
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: d25fa6d06b26e4504bf71bdbe7f37e4d, type: 3}
+    Weight: 1
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: c6c33a3334db44dd8b3ccc78321b9812, type: 3}
+    Weight: 1
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: a17e76de7759d4122b99e557600a3fc7, type: 3}
+    Weight: 1
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 115ea2859fa454644a865daceb637f93, type: 3}
+    Weight: 0.8
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: a22f625d8305f40169e6ee66f9e30056, type: 3}
+    Weight: 0.8
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 8951603891738978964, guid: f9891bb7dfc8646a498895bb2ee891b8, type: 3}
+    Weight: 1
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 919132149155446097, guid: b761433afa40140498916f55417043f0, type: 3}
+    FreeStanding: 1
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: eff25c246e01049918433e0d406be703, type: 3}
+    Weight: 0.8
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 4e7261310ff1d48a2afb47fda7de38b2, type: 3}
+    Weight: 0.8
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 16123ae0a203542588804538b2cbf1eb, type: 3}
+    Weight: 1.2
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 9c27739f0a2194f06989d967482a943c, type: 3}
+    Weight: 1
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 0de61f53d7571464699148fde9bc64e1, type: 3}
+    Weight: 0.9
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 7e56b3117aad04d1aa0189637cbcb06b, type: 3}
+    Weight: 1.3
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: a900a01118c884231b564ff5e79e8d92, type: 3}
+    Weight: 1.2
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: ccbae1782f3b54b03b716c97a2529f9d, type: 3}
+    Weight: 1
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 3522239969154663145, guid: 4ee0c6f91e14c43f782346fdbdb85385, type: 3}
+    Weight: 2
+    ScaleRange: {x: 1.1, y: 1.3}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 919132149155446097, guid: 1756844a07fba4d89bdccc687f4dc619, type: 3}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 7c27ee12e7e5a46f8a4779d0597d7e7f, type: 3}
+    Weight: 1.2
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 8846ea5e35e834036a9682b6fc7a3564, type: 3}
+    Weight: 1.2
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: e96f0e65f42154df5aa24325e6a24206, type: 3}
+    Weight: 1
+    ScaleRange: {x: 1.3, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: def4809ff3da84601b1b95b3679744af, type: 3}
+    Weight: 0.8
+    ScaleRange: {x: 1.3, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 0c73749032f6c4559923096a9f26a0dc, type: 3}
+    Weight: 0.8
+    ScaleRange: {x: 1.3, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 2632772615573377761, guid: fa5d98a96c2f14c94a3c37eae7173071, type: 3}
+    Weight: 0.8
+    ScaleRange: {x: 1.3, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 919132149155446097, guid: 093dc5b4fb61d429692f0fc4cdf302ea, type: 3}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 6622314863740790060, guid: 361a1fa51ab684ba6bfc4dcde7fb3ff4, type: 3}
+    Weight: 1.2
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 919132149155446097, guid: 0ed1b147e53e54c20ab9d244cbdca4af, type: 3}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 7ab6e8e6491364805935d29a1db76d4a, type: 3}
+    Weight: 1.4
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 20c94f1d79a6545109bc3fa0b9a12032, type: 3}
+    Weight: 1.1
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 9b36ad3614daf4e52a4fdcb7dc596ca3, type: 3}
+    Weight: 1.2
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 121cf768e7fb14e99aff22c5c31ee648, type: 3}
+    Weight: 1.1
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 5cfb90633696c4b27b485f260f48c966, type: 3}
+    Weight: 1.2
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 9236d81e23c1d45b98c78f8ee8b1518c, type: 3}
+    Weight: 1
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: b25d7f02cccb5485c9216562f41c46a4, type: 3}
+    Weight: 0.9
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 3335856392394540238, guid: d3827e547d9db46f3a873986e396499a, type: 3}
+    Weight: 1.2
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 919132149155446097, guid: 8536619cb69094c018328c10d64f30e5, type: 3}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 1335069927878370879, guid: a47ac75f55ad44fd4a0e977c8f3c0dbf, type: 3}
+    Weight: 1.2
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 1
+    SideModel: {fileID: 919132149155446097, guid: e4daaa55d31ef42328ef2083fdd89074, type: 3}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  wallDensity: 0.95
   wallPropAvoidBand: {x: 0.72, y: 1}
   wallPropAvoidMargin: 0.04
   wallPropInset: 0.1
   wallPropSlope: 0
+  groundFeatures: []
   wallRuns:
+  - Name: Fence
+    Straight:
+    - Model: {fileID: 919132149155446097, guid: 8f77d64fce5864039b1ed11292daa335, type: 3}
+      Weight: 1
+      ScaleRange: {x: 1, y: 1}
+      AnyYaw: 0
+      Cells: 1
+      Foot: 0
+      SideModel: {fileID: 919132149155446097, guid: d45cab0f6e62644078d1c645a1c85e81, type: 3}
+      FreeStanding: 0
+      FrontOnly: 0
+      WaterEdge: 0
+      MaxPerPlatform: 0
+      PlatformChance: 0
+    Decorated:
+    - Model: {fileID: 919132149155446097, guid: e1f514feb87a14148a0a574aa09d6725, type: 3}
+      Weight: 1
+      ScaleRange: {x: 1, y: 1}
+      AnyYaw: 0
+      Cells: 1
+      Foot: 0
+      SideModel: {fileID: 919132149155446097, guid: e6c4943f48d234a0fac0bcaf9a40cc11, type: 3}
+      FreeStanding: 0
+      FrontOnly: 0
+      WaterEdge: 0
+      MaxPerPlatform: 0
+      PlatformChance: 0
+    DecoratedChance: 0.35
+    DecoratedSpacing: 2
+    EndWall: {fileID: 919132149155446097, guid: 594eb85810c1443d2ab7cc3a863fa713, type: 3}
+    EndWallSide: {fileID: 919132149155446097, guid: 10e830f6e732d4bdcbfc55c0d2a2dcd4, type: 3}
+    EndWallStart: {fileID: 0}
+    EndDown: {fileID: 0}
+    EndDownSide: {fileID: 0}
+    Drop: {fileID: 0}
+    DropSide: {fileID: 0}
+    DropFoot: {fileID: 0}
+    Corner: {fileID: 919132149155446097, guid: ac65ef8ca94614b50913d5f6c9533ccd, type: 3}
+    CornerXFront: {fileID: 919132149155446097, guid: fb68858f4d22e47e1b1a88af35a72927, type: 3}
+    InnerCorner: {fileID: 919132149155446097, guid: eb0b0fb778ef8488091aea14faa3393a, type: 3}
+    InnerCornerXFront: {fileID: 919132149155446097, guid: 92da8ebfd11344d509cf49ade3058711, type: 3}
+    DropX: 0.3
+    DownEndChance: 0
+    CenterHeight: 0.5
+    BelowTop: 0
+    BandClearance: 0.25
+    OverBand: 1
+    Overlay: 0
+    MinWallHeight: 0.5
+    Chance: 0.4
+    Length: {x: 3, y: 9}
+    MinGap: 2
+    Inset: -0.1
+    Foot: 0
+    FrontOnly: 0
+    AbyssOnly: 1
+    FootReserveHeight: 99
   - Name: Cables
     Straight:
     - Model: {fileID: 919132149155446097, guid: bebb6df43a0de4c04ac3fbd689d8c073, type: 3}
@@ -275,6 +891,9 @@ MonoBehaviour:
       SideModel: {fileID: 919132149155446097, guid: c63a87d9df56d49e8838ed89bb1c6720, type: 3}
       FreeStanding: 0
       FrontOnly: 0
+      WaterEdge: 0
+      MaxPerPlatform: 0
+      PlatformChance: 0
     - Model: {fileID: 919132149155446097, guid: dc03587b15b1b40e4bfcd4cbff333a2d, type: 3}
       Weight: 2
       ScaleRange: {x: 0, y: 0}
@@ -284,6 +903,9 @@ MonoBehaviour:
       SideModel: {fileID: 919132149155446097, guid: 26f8fd1ae75334447afc85c04ae57e59, type: 3}
       FreeStanding: 0
       FrontOnly: 0
+      WaterEdge: 0
+      MaxPerPlatform: 0
+      PlatformChance: 0
     Decorated:
     - Model: {fileID: 919132149155446097, guid: 971a21d6f071f4a1f983a2de7253a072, type: 3}
       Weight: 1.5
@@ -294,6 +916,9 @@ MonoBehaviour:
       SideModel: {fileID: 919132149155446097, guid: a5748effa24f4420781eae114cd5237d, type: 3}
       FreeStanding: 0
       FrontOnly: 0
+      WaterEdge: 0
+      MaxPerPlatform: 0
+      PlatformChance: 0
     - Model: {fileID: 919132149155446097, guid: fd26fc53b6a3c49c284934616f644144, type: 3}
       Weight: 1.5
       ScaleRange: {x: 0, y: 0}
@@ -303,6 +928,9 @@ MonoBehaviour:
       SideModel: {fileID: 919132149155446097, guid: 13bcfc0ac23474a929bc3de1e0da3a33, type: 3}
       FreeStanding: 0
       FrontOnly: 0
+      WaterEdge: 0
+      MaxPerPlatform: 0
+      PlatformChance: 0
     - Model: {fileID: 919132149155446097, guid: 03720fce842e6436fb9f36510e5d372e, type: 3}
       Weight: 1.2
       ScaleRange: {x: 0, y: 0}
@@ -312,10 +940,14 @@ MonoBehaviour:
       SideModel: {fileID: 919132149155446097, guid: a76513b1b880c4ef58edb2610ad6c00e, type: 3}
       FreeStanding: 0
       FrontOnly: 0
+      WaterEdge: 0
+      MaxPerPlatform: 0
+      PlatformChance: 0
     DecoratedChance: 0.25
     DecoratedSpacing: 3
     EndWall: {fileID: 919132149155446097, guid: d9fa2f15c46e9462999eca7554064419, type: 3}
     EndWallSide: {fileID: 919132149155446097, guid: a52b685c904044d06afeb06812e1c060, type: 3}
+    EndWallStart: {fileID: 0}
     EndDown: {fileID: 919132149155446097, guid: 47b93d53fa6ec4cf9818463d0b6a177d, type: 3}
     EndDownSide: {fileID: 919132149155446097, guid: 06ac5e284186844c58954f807a06034e, type: 3}
     Drop: {fileID: 919132149155446097, guid: f35f46187f2e04eb8b295d9b88a6ac99, type: 3}
@@ -330,6 +962,8 @@ MonoBehaviour:
     CenterHeight: 0.45
     BelowTop: 0.5
     BandClearance: 0.25
+    OverBand: 0
+    Overlay: 0
     MinWallHeight: 0.8
     Chance: 0.12
     Length: {x: 3, y: 6}
@@ -337,6 +971,52 @@ MonoBehaviour:
     Inset: 0
     Foot: 0
     FrontOnly: 0
+    AbyssOnly: 0
+    FootReserveHeight: 99
+  - Name: Hazard
+    Straight:
+    - Model: {fileID: 919132149155446097, guid: 2dedf29be732549eb8ea002271b0f52c, type: 3}
+      Weight: 1
+      ScaleRange: {x: 1, y: 1}
+      AnyYaw: 0
+      Cells: 1
+      Foot: 0
+      SideModel: {fileID: 0}
+      FreeStanding: 0
+      FrontOnly: 0
+      WaterEdge: 0
+      MaxPerPlatform: 0
+      PlatformChance: 0
+    Decorated: []
+    DecoratedChance: 0
+    DecoratedSpacing: 2
+    EndWall: {fileID: 919132149155446097, guid: 6aa54391b3e604f6c81f365ace064fe7, type: 3}
+    EndWallSide: {fileID: 0}
+    EndWallStart: {fileID: 919132149155446097, guid: c80fddd4924f24694ab66f94a23e13ab, type: 3}
+    EndDown: {fileID: 0}
+    EndDownSide: {fileID: 0}
+    Drop: {fileID: 0}
+    DropSide: {fileID: 0}
+    DropFoot: {fileID: 0}
+    Corner: {fileID: 919132149155446097, guid: 5a5d581aec16d47ba88a889722bce6ea, type: 3}
+    CornerXFront: {fileID: 919132149155446097, guid: 025111da12418433bb5869114e97e582, type: 3}
+    InnerCorner: {fileID: 919132149155446097, guid: 2d8893ef517bc433f9da78bc421448f5, type: 3}
+    InnerCornerXFront: {fileID: 919132149155446097, guid: c941312e1ac614a86ae6a8b898a83526, type: 3}
+    DropX: 0
+    DownEndChance: 0
+    CenterHeight: 0.5
+    BelowTop: 0
+    BandClearance: 0.1
+    OverBand: 1
+    Overlay: 0
+    MinWallHeight: 0.5
+    Chance: 0.25
+    Length: {x: 2, y: 5}
+    MinGap: 2
+    Inset: -0.1
+    Foot: 0
+    FrontOnly: 0
+    AbyssOnly: 0
     FootReserveHeight: 99
   - Name: NeonPink
     Straight:
@@ -349,11 +1029,15 @@ MonoBehaviour:
       SideModel: {fileID: 0}
       FreeStanding: 0
       FrontOnly: 0
+      WaterEdge: 0
+      MaxPerPlatform: 0
+      PlatformChance: 0
     Decorated: []
     DecoratedChance: 0
     DecoratedSpacing: 0
     EndWall: {fileID: 919132149155446097, guid: 414f674c91c8449f89b37c91c3ff62da, type: 3}
     EndWallSide: {fileID: 0}
+    EndWallStart: {fileID: 0}
     EndDown: {fileID: 0}
     EndDownSide: {fileID: 0}
     Drop: {fileID: 0}
@@ -368,6 +1052,8 @@ MonoBehaviour:
     CenterHeight: 0.12
     BelowTop: 0.1
     BandClearance: 0.1
+    OverBand: 0
+    Overlay: 0
     MinWallHeight: 0.8
     Chance: 0.15
     Length: {x: 3, y: 8}
@@ -375,6 +1061,7 @@ MonoBehaviour:
     Inset: 0
     Foot: 0
     FrontOnly: 0
+    AbyssOnly: 0
     FootReserveHeight: 99
   - Name: NeonCyan
     Straight:
@@ -387,11 +1074,15 @@ MonoBehaviour:
       SideModel: {fileID: 0}
       FreeStanding: 0
       FrontOnly: 0
+      WaterEdge: 0
+      MaxPerPlatform: 0
+      PlatformChance: 0
     Decorated: []
     DecoratedChance: 0
     DecoratedSpacing: 0
     EndWall: {fileID: 919132149155446097, guid: 7dbf9b969242d44a4baadf790976c083, type: 3}
     EndWallSide: {fileID: 0}
+    EndWallStart: {fileID: 0}
     EndDown: {fileID: 0}
     EndDownSide: {fileID: 0}
     Drop: {fileID: 0}
@@ -406,6 +1097,8 @@ MonoBehaviour:
     CenterHeight: 0.12
     BelowTop: 0.1
     BandClearance: 0.1
+    OverBand: 0
+    Overlay: 0
     MinWallHeight: 0.8
     Chance: 0.15
     Length: {x: 3, y: 8}
@@ -413,6 +1106,7 @@ MonoBehaviour:
     Inset: 0
     Foot: 0
     FrontOnly: 0
+    AbyssOnly: 0
     FootReserveHeight: 99
   - Name: StreetLights
     Straight:
@@ -425,20 +1119,27 @@ MonoBehaviour:
       SideModel: {fileID: 0}
       FreeStanding: 0
       FrontOnly: 0
+      WaterEdge: 0
+      MaxPerPlatform: 0
+      PlatformChance: 0
     Decorated:
-    - Model: {fileID: 919132149155446097, guid: 0d892d91de21f4ebbb9b867bfe294fb4, type: 3}
+    - Model: {fileID: 4296281055881265002, guid: 55a999384b41042679f510275e848b08, type: 3}
       Weight: 1
       ScaleRange: {x: 0, y: 0}
       AnyYaw: 0
       Cells: 0
       Foot: 0
-      SideModel: {fileID: 919132149155446097, guid: c5c316d7969174b558edb0a46d3a47f7, type: 3}
+      SideModel: {fileID: 5975061297914686191, guid: 9343fdfa97c5e4fbeae89a388549a589, type: 3}
       FreeStanding: 0
       FrontOnly: 0
+      WaterEdge: 0
+      MaxPerPlatform: 0
+      PlatformChance: 0
     DecoratedChance: 1
     DecoratedSpacing: 3
     EndWall: {fileID: 0}
     EndWallSide: {fileID: 0}
+    EndWallStart: {fileID: 0}
     EndDown: {fileID: 0}
     EndDownSide: {fileID: 0}
     Drop: {fileID: 0}
@@ -453,6 +1154,8 @@ MonoBehaviour:
     CenterHeight: 0
     BelowTop: 0.1
     BandClearance: 0.1
+    OverBand: 0
+    Overlay: 0
     MinWallHeight: 0
     Chance: 0.95
     Length: {x: 3, y: 16}
@@ -460,7 +1163,242 @@ MonoBehaviour:
     Inset: 0
     Foot: 1
     FrontOnly: 0
+    AbyssOnly: 0
     FootReserveHeight: 99
+  facadeScatter:
+  - Model: {fileID: 919132149155446097, guid: c4f4282b14c834041b2176080bec2ca6, type: 3}
+    Weight: 0.8
+    ScaleRange: {x: 1.4, y: 2}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: df2a09c027c39404cb3bbcccb1b20bb3, type: 3}
+    Weight: 0.8
+    ScaleRange: {x: 1.4, y: 2}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 844089e46987f49018b11cdc36396692, type: 3}
+    Weight: 0.8
+    ScaleRange: {x: 1.4, y: 2}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 6cf163a9646c6470ea1cee591f708967, type: 3}
+    Weight: 0.8
+    ScaleRange: {x: 1.4, y: 2}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: cafd847ef6ab54a68920cdcfc9f8cac2, type: 3}
+    Weight: 0.8
+    ScaleRange: {x: 1.4, y: 2}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: bd56e958e5cfe40289290c555c79b449, type: 3}
+    Weight: 0.8
+    ScaleRange: {x: 1.4, y: 2}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: e145748d5a14e464a9982f96dbbfb8d5, type: 3}
+    Weight: 0.4
+    ScaleRange: {x: 1.4, y: 2}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 35aef8b6570054bc6aba30a153a09950, type: 3}
+    Weight: 0.4
+    ScaleRange: {x: 1.4, y: 2}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: bce6362cb3a1d409491ae215052c1efc, type: 3}
+    Weight: 0.5
+    ScaleRange: {x: 1.3, y: 1.8}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: b164106f22a6041b39b51c3868cc2d5c, type: 3}
+    Weight: 0.3
+    ScaleRange: {x: 1.3, y: 1.8}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 408a87d9f55864999923a64156851a0d, type: 3}
+    Weight: 1
+    ScaleRange: {x: 1.3, y: 1.7}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 9e23aa9f06f514bbcb4cc804e7e62c1b, type: 3}
+    Weight: 1
+    ScaleRange: {x: 1.3, y: 1.7}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: df258cb33e14447518d205572ef364e7, type: 3}
+    Weight: 1
+    ScaleRange: {x: 1.3, y: 1.7}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: e3c23c56840eb4a20832ccd7d5f12b2d, type: 3}
+    Weight: 1
+    ScaleRange: {x: 1.3, y: 1.7}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 647bb1c3da4bd46db98089cd5e8e86b6, type: 3}
+    Weight: 1
+    ScaleRange: {x: 1.3, y: 1.7}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: d472b9fb9ac5b41629a021eb78d0ba46, type: 3}
+    Weight: 1
+    ScaleRange: {x: 1.3, y: 1.7}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 3215fe621504a46689c46280a81aca6f, type: 3}
+    Weight: 0.8
+    ScaleRange: {x: 1.3, y: 1.7}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 8eba1e19faf134b3eb5444821d8a9215, type: 3}
+    Weight: 0.8
+    ScaleRange: {x: 1.3, y: 1.7}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 6861cbbb79f824a3e8d178ffab8f593d, type: 3}
+    Weight: 0.8
+    ScaleRange: {x: 1.3, y: 1.7}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  facadeDensity: 0.55
+  facadeTopY: -0.15
+  facadeRowStep: 1.1
+  facadeRows: 1
+  facadeJitter: {x: 0.3, y: 0.35}
   maxEdgeLength: 3
   maxEdgeStretch: 1.5
   pieces:

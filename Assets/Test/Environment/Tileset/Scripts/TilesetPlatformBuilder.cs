@@ -458,6 +458,7 @@ public class TilesetPlatformBuilder : MonoBehaviour
         footCellsTaken.Clear();
         ScatterWallRuns(set, origin, top, parent, template, edges);
         ScatterWalls(set, origin, top, parent, template, edges);
+        ScatterFacade(set, origin, top, parent, template, edges);
 
         var list = mode == SurfaceDecor.Ground ? set.GroundScatter : set.RooftopScatter;
         var density = mode == SurfaceDecor.Ground ? set.GroundDensity : set.RooftopDensity;
@@ -499,12 +500,19 @@ public class TilesetPlatformBuilder : MonoBehaviour
         {
             var sorted = new List<Vector2Int>(platform);
             sorted.Sort((a, b) => a.y != b.y ? a.y.CompareTo(b.y) : a.x.CompareTo(b.x));
+            var perPlatform = new Dictionary<GameObject, int>();   // MaxPerPlatform / PlatformChance bookkeeping
             foreach (var c in sorted)
             {
                 if (used.Contains(c) || !Interior(c) || U(Hash(c, 1)) >= density)
                     continue;
                 if (!TilesetDefinition.PickScatter(list, Hash(c, 2), out var entry))
                     continue;
+                if (entry.PlatformChance > 0f && U(Hash(sorted[0], 11 + StableSalt(entry.Model.name))) >= entry.PlatformChance)
+                    continue;                                    // this platform doesn't get this entry at all
+                perPlatform.TryGetValue(entry.Model, out var count);
+                if (entry.MaxPerPlatform > 0 && count >= entry.MaxPerPlatform)
+                    continue;
+                perPlatform[entry.Model] = count + 1;
 
                 var pos = new Vector2(c.x + 0.5f, c.y + 0.5f);
                 var yaw = 90f * (Hash(c, 3) & 3);
@@ -700,6 +708,60 @@ public class TilesetPlatformBuilder : MonoBehaviour
                 }
 
                 SpawnProp(entry.Model, pos, 90f * e.Rotation + (U(26) - 0.5f) * 20f, scale, parent, template);
+            }
+        }
+    }
+
+    // Deterministic per-name salt (instance IDs change between sessions).
+    private static int StableSalt(string name)
+    {
+        var h = 17;
+        foreach (var ch in name)
+            h = h * 31 + ch;
+        return h & 0xffff;
+    }
+
+    // Facade (sky-building windows): walls dropping below the water line get rows of real-size props below
+    // FacadeTopY, one chance per wall cell per row, centred in the cell (+ FacadeJitter: 0 = neat columns). Walls
+    // facing away from the camera are skipped; the wall's depth gradient fades the lower rows into the sky.
+    private void ScatterFacade(TilesetDefinition set, Vector3 origin, float top, Transform parent, GameObject template,
+        List<(TilesetAutotiler.Placement placement, float bottom)> edges)
+    {
+        if (set.FacadeScatter.Count == 0 || set.FacadeDensity <= 0f)
+            return;
+
+        var view = new Vector3(cameraViewDirection.x, 0f, cameraViewDirection.z).normalized;
+        foreach (var (e, bottom) in edges)
+        {
+            if (bottom >= waterLevelY)
+                continue;
+            var rot = Quaternion.Euler(0f, 90f * e.Rotation, 0f);
+            if (-Vector3.Dot(rot * Vector3.back, view) <= -0.5f)
+                continue;
+            var length = (e.Key == TilesetAutotiler.EdgeLongKey ? 2f : 1f) * (e.Stretch > 0f ? e.Stretch : 1f);
+            var slots = Mathf.Max(1, Mathf.RoundToInt(length));
+            var key = Vector2Int.RoundToInt(e.Position * 2f);
+
+            for (var slot = 0; slot < slots; slot++)
+            for (var row = 0; row < set.FacadeRows; row++)
+            unchecked
+            {
+                var h0 = (key.x + Mathf.RoundToInt(origin.x / cellSize) * 2) * 73856093 ^ (key.y + Mathf.RoundToInt(origin.z / cellSize) * 2) * 19349663 ^ variationSeed * 2654435 ^ slot * 40503 ^ row * 97213;
+                float U(int salt) { var h = h0 ^ salt * 83492791; h ^= h >> 13; h *= 0x5bd1e995; h ^= h >> 15; return (h & 0xffffff) / (float)0x1000000; }
+                if (U(31) >= set.FacadeDensity)
+                    continue;
+                if (!TilesetDefinition.PickScatter(set.FacadeScatter, (int)(U(32) * int.MaxValue), out var entry))
+                    continue;
+                var scale = entry.ScaleRange == Vector2.zero ? 1f : Mathf.Lerp(entry.ScaleRange.x, entry.ScaleRange.y, U(33));
+                var y = set.FacadeTopY - row * set.FacadeRowStep - PropHeight(entry.Model) * scale - U(34) * set.FacadeJitter.y;
+                if (y < bottom + 0.1f)
+                    break;
+                var along = -length * 0.5f + (slot + 0.5f) * (length / slots) + (U(35) - 0.5f) * 2f * set.FacadeJitter.x;
+                var f = Mathf.Clamp01((y - bottom) / Mathf.Max(top - bottom, 0.01f));
+                var inset = 0.02f + set.WallPropSlope * (1f - f) + 0.015f + set.WallPropInset;
+                var pos = new Vector3(origin.x + e.Position.x * cellSize, y, origin.z + e.Position.y * cellSize)
+                          + rot * new Vector3(along * cellSize, 0f, inset * cellSize);
+                SpawnProp(entry.Model, pos, 90f * e.Rotation, scale, parent, template);
             }
         }
     }
@@ -975,7 +1037,7 @@ public class TilesetPlatformBuilder : MonoBehaviour
     private void LayRuns(TilesetDefinition.WallRunSet run, int runIndex, List<RunSlot> slots, float bottom, float top,
         Vector3 origin, int ox, int oz, Transform parent, GameObject template, TilesetDefinition set)
     {
-        if (run.Straight.Count == 0 || top - bottom < run.MinWallHeight)
+        if (run.Straight.Count == 0 || top - bottom < run.MinWallHeight || (run.AbyssOnly && bottom >= waterLevelY) || (run.RaisedOnly && bottom < waterLevelY))
             return;
         float y, inset;
         if (run.Foot)
@@ -989,6 +1051,8 @@ public class TilesetPlatformBuilder : MonoBehaviour
         else
         {
             y = top - run.BelowTop;
+            if (run.OverBand)
+                y += set.TopRaise * (top - bottom);          // on the lip: follow the Y-stretched profile top (coping)
             var avoid = set.WallPropAvoidBand;
             if (avoid.y > avoid.x && !run.OverBand)          // stay under the tileset's keep-out band (cap slab, trim)
                 y = Mathf.Min(y, bottom + (top - bottom) * avoid.x - set.WallPropAvoidMargin - run.BandClearance);
@@ -1033,7 +1097,7 @@ public class TilesetPlatformBuilder : MonoBehaviour
                 }
 
                 var cells = slots.GetRange(cursor, len);
-                if (!run.Foot)
+                if (!run.Foot && !run.Overlay)
                 {
                     var blocked = false;
                     foreach (var cell in cells)
@@ -1100,10 +1164,17 @@ public class TilesetPlatformBuilder : MonoBehaviour
                         }
                         else
                         {
-                            var end = run.EndWall != null
-                                ? TilesetDefinition.WallRunSet.Pick(run.EndWall, run.EndWallSide, side)
-                                : PickRunModule(run.Straight, U(20 + i), side);
-                            SpawnRunPiece(end, pivot, 90f * rotation, new Vector3(mirror, 1f, 1f), parent, template);
+                            if (i == 0 && run.EndWallStart != null)
+                            {
+                                SpawnRunPiece(run.EndWallStart, pivot, 90f * rotation, Vector3.one, parent, template);   // authored start end: no mirror
+                            }
+                            else
+                            {
+                                var end = run.EndWall != null
+                                    ? TilesetDefinition.WallRunSet.Pick(run.EndWall, run.EndWallSide, side)
+                                    : PickRunModule(run.Straight, U(20 + i), side);
+                                SpawnRunPiece(end, pivot, 90f * rotation, new Vector3(mirror, 1f, 1f), parent, template);
+                            }
                         }
                     }
                     else

@@ -200,20 +200,21 @@ namespace Quantum
         // Rift Mutation choice screen - same "closed AND closed a full published tick ago" gate
         // (DebugLevelUpScreenOpenLastTick), since BeginChestScreen's own OpenUpgradeScreen guard would
         // otherwise silently drop it while SetupTestRun's own ChooseWeapon screen (opened the same
-        // tick) is still up. `player` is unused by BeginChestScreen (it always rolls for every
+        // tick) is still up - and the same gate chains several queued mutation screens (Breath 4
+        // queues two) one after another. `player` is unused by BeginChestScreen (it always rolls for every
         // connected player - see that method's own comment), so EntityRef.None is fine here.
         private void TryOpenPendingRiftMutationChoice(Frame f)
         {
-            if (f.Global->DebugPendingRiftMutationChoice == false
+            if (f.Global->DebugPendingRiftMutationChoices <= 0
                 || f.Global->LevelUpScreenOpen == true
                 || f.Global->DebugLevelUpScreenOpenLastTick == true
                 || f.Global->CurrentState == GameState.Boss)
                 return;
 
-            f.Global->DebugPendingRiftMutationChoice = false;
+            f.Global->DebugPendingRiftMutationChoices--;
             LevelUpUtility.BeginChestScreen(f, EntityRef.None, LevelUpCategory.RiftMutation);
 
-            Log.Debug("[Debug] opened deferred debug Rift Mutation choice screen");
+            Log.Debug($"[Debug] opened deferred debug Rift Mutation choice screen ({f.Global->DebugPendingRiftMutationChoices} remaining)");
         }
     }
 }

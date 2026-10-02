@@ -47,7 +47,8 @@ namespace Quantum
                                  // of leaving the level-ups that jump queues to be clicked through one
                                  // at a time, auto-resolves the whole queue synchronously right here;
                                  // also reveals the whole minimap (every Chunk.Discovered = true) and
-                                 // tops the sender up to 5000 coins
+                                 // tops the sender up to 5000 coins, then opens a pickable ChooseWeapon
+                                 // screen followed by 0/0/1/2 Rift Mutation screens for Breath 1-4
         BecomeBot,              // adds BotBrain to the sender's own entity (see
                                  // PlayerSpawnUtility.ConvertToBot) - BotInputSystem takes over its
                                  // Input the very next tick. Sim-only: the sender's camera/HUD/audio
@@ -60,9 +61,14 @@ namespace Quantum
                                  // automatically, so this alone is enough to paint the whole level.
                                  // Same effect SetupTestRun already includes as part of its own combo;
                                  // this is that one piece standalone.
-        ExtendBreathing         // Amount = seconds added to the CURRENT Breathing Break; no-op outside
+        ExtendBreathing,        // Amount = seconds added to the CURRENT Breathing Break; no-op outside
                                  // Breathing. Pulls PhaseTimer back by Amount (may go negative), so the
                                  // Break lasts that much longer from now - see CheatSystem.ExtendBreathing.
+        SpawnEnemy,             // AssetId = EnemyDataAsset guid, Amount = count (<= 0 reads as 1) -
+                                 // spawned in a ring around the sender, see CheatSystem.SpawnEnemy
+        ToggleDirectorSpawns    // flips Global.DebugDirectorSpawnsDisabled - stops the Director's
+                                 // normal purchases AND phase-guaranteed spawns (the run clock keeps
+                                 // running), so cheat-spawned enemies can be tested in isolation
     }
 
     // Generic debug/cheat command. IMPORTANT: this command AND its handler (CheatSystem) compile on

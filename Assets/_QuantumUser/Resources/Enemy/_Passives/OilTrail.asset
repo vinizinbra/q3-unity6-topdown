@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c968c710b65b45caa8ddd94add91e9f, type: 3}
+  m_Name: OilTrail
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.GroundTrailPassiveData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/_Passives/OilTrail
+    Guid:
+      Value: 402105787637493310
+  Prototype:
+    Id:
+      Value: 1443292346199764092
+  SpawnDistance:
+    RawValue: 32768
+  Duration:
+    RawValue: 163840
+  Scale:
+    RawValue: 32768

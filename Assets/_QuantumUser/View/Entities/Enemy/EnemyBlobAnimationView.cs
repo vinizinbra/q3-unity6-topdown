@@ -118,6 +118,13 @@ namespace Quantum
         // UpdatePose. Owned externally (EnemyAttackVisualsView / the debug button below).
         private AttackVisualStep _currentStep;
 
+        // AttackAnimationType.HopStrike's world-flat (XZ) direction toward the target, locked once
+        // at the step's start (resolved on the first QUpdate after PlayAttackStep, since that call
+        // has no frame) so a target moving mid-hop doesn't swing the lunge sideways. Defaults to
+        // plain facing so the no-sim debug preview still hops somewhere sensible.
+        private Vector3 _hopStrikeDir = Vector3.right;
+        private bool _hopStrikeDirPending;
+
         private Vector3 _headBaseScale, _torsoBaseScale;
         private Vector3 _headBaseLocalPos, _torsoBaseLocalPos;
         private Vector3 _rootBaseLocalPos, _rootBaseScale;
@@ -167,6 +174,13 @@ namespace Quantum
 
         private float _stridePhase;
         private float _facingSign = 1f;
+
+        // AttackVisualStep.AlignBodyToDirection - current/target screen-plane tilt (degrees, already
+        // signed for the facing mirror) folded into ApplyPose's tilt. Eased so the aim tilt doesn't snap.
+        private float _alignTilt;
+        private float _alignTiltTarget;
+        [SerializeField, Tooltip("How fast (deg/s) the body eases into/out of an AlignBodyToDirection step's tilt.")]
+        private float alignTiltSpeed = 720f;
         private float _wobbleSeed;
         private float _dieToppleSign = 1f;
 
@@ -286,6 +300,12 @@ namespace Quantum
 
             if (step.AnimationType == AttackAnimationType.Lunge)
                 _squashT = -step.Lunge.Stretch; // instant pop, eased back to neutral in UpdatePose
+
+            if (step.AnimationType == AttackAnimationType.HopStrike)
+            {
+                _hopStrikeDir = new Vector3(_facingSign, 0f, 0f);
+                _hopStrikeDirPending = true;
+            }
 
             UpdatePose(0f); // apply the t=0 pose immediately - don't wait for the next tick to render it
         }
@@ -502,6 +522,12 @@ namespace Quantum
             if (enemyPhase != EnemyActionPhase.Recovery)
                 UpdateFacing(frame, velocity, enemy, hasEnemy);
 
+            if (_hopStrikeDirPending == true && hasEnemy == true)
+            {
+                _hopStrikeDir = ResolveHopStrikeDirection(frame, enemy, _hopStrikeDir);
+                _hopStrikeDirPending = false;
+            }
+
             _stateTimer += dt;
 
             // Independent of _state/_stateTimer above - a step can carry a BodySprite with
@@ -524,6 +550,9 @@ namespace Quantum
             if (triggerStillPlaying == false)
                 _state = DetermineGroundedState(_horizontalSpeed);
 
+            _alignTiltTarget = ResolveAlignTilt(frame, hasEnemy);
+            _alignTilt = Mathf.MoveTowards(_alignTilt, _alignTiltTarget, alignTiltSpeed * dt);
+
             UpdatePose(dt);
         }
 
@@ -536,6 +565,7 @@ namespace Quantum
             float armRotationTarget = 0f;
             float armScaleTarget = 0f;
             float punchScaleTarget = 0f;
+            Vector3 worldOffset = Vector3.zero;
             bool centerPivot = false;
             float pivotHeightOverride = 0f;
 
@@ -780,6 +810,39 @@ namespace Quantum
                             _squashT = Mathf.Lerp(_squashT, 0f, 1f - Mathf.Exp(-squashLerpSpeed * dt));
                             break;
                         }
+
+                        case AttackAnimationType.HopStrike:
+                        {
+                            // Three beats over the step: hop in (0..StrikeAt - ease-out forward,
+                            // sin arc on local Y landing exactly at the strike), a short hold at the
+                            // strike point (Hold), then a grounded ease-in-out slide back to rest.
+                            // The forward offset is world XZ along _hopStrikeDir (see ApplyPose's
+                            // worldOffset), not root-local, so it heads at the real target rather
+                            // than just left/right.
+                            HopStrikeParams hop = step.HopStrike;
+                            float strikeAt = Mathf.Clamp(hop.StrikeAt, 0.01f, 0.99f);
+                            float holdEnd = Mathf.Min(strikeAt + Mathf.Max(hop.Hold, 0f), 0.99f);
+
+                            float forward;
+                            if (t < strikeAt)
+                            {
+                                float inT = t / strikeAt;
+                                forward = 1f - (1f - inT) * (1f - inT);
+                                bobTarget = Mathf.Sin(inT * Mathf.PI) * hop.Height;
+                                _squashT = -hop.Stretch * (1f - inT);
+                            }
+                            else
+                            {
+                                float backT = t <= holdEnd ? 0f : (t - holdEnd) / (1f - holdEnd);
+                                forward = 1f - backT * backT * (3f - 2f * backT);
+                                float landT = (t - strikeAt) / (1f - strikeAt);
+                                _squashT = hop.LandSquash * (1f - landT) * (1f - landT);
+                            }
+
+                            worldOffset = _hopStrikeDir * (hop.Distance * forward);
+                            rockTarget = hop.LeanDegrees * forward * _facingSign;
+                            break;
+                        }
                     }
                     break;
                 }
@@ -851,7 +914,38 @@ namespace Quantum
                 }
             }
 
-            ApplyPose(leanTarget, rockTarget, bobTarget, depthTarget, armRotationTarget, armScaleTarget, punchScaleTarget, centerPivot, pivotHeightOverride);
+            ApplyPose(leanTarget, rockTarget, bobTarget, depthTarget, armRotationTarget, armScaleTarget, punchScaleTarget, centerPivot, pivotHeightOverride, worldOffset);
+        }
+
+        // HopStrike's lunge direction - toward the same anchor EnemyAttackVisualsView's
+        // TryGetAnchorPosition uses (SkillTargetPosition captured at windup, else the live target),
+        // falling back to the Aim.Angle facing if there's no usable target or it sits right on top
+        // of us, and finally to the caller's own fallback (plain left/right facing).
+        private Vector3 ResolveHopStrikeDirection(Frame frame, Enemy enemy, Vector3 fallback)
+        {
+            if (frame.Has<Transform3D>(_entityRef) == true)
+            {
+                FPVector3 targetPosition = enemy.SkillTargetPosition;
+                bool hasTarget = targetPosition != default
+                    || EnemyMovementUtility.TryGetTargetPosition(frame, enemy.Target, out targetPosition) == true;
+
+                if (hasTarget == true)
+                {
+                    Vector3 toTarget = (targetPosition - frame.Get<Transform3D>(_entityRef).Position).ToUnityVector3();
+                    toTarget.y = 0f;
+
+                    if (toTarget.sqrMagnitude > 0.0001f)
+                        return toTarget.normalized;
+                }
+            }
+
+            if (frame.Has<Aim>(_entityRef) == true)
+            {
+                float angleRad = frame.Get<Aim>(_entityRef).Angle.AsFloat * Mathf.Deg2Rad;
+                return new Vector3(Mathf.Sin(angleRad), 0f, Mathf.Cos(angleRad));
+            }
+
+            return fallback;
         }
 
         private State DetermineGroundedState(float horizontalSpeed)
@@ -908,7 +1002,26 @@ namespace Quantum
             }
         }
 
-        private void ApplyPose(float leanDegrees, float rockDegrees, float bobOffset, float depthOffset = 0f, float armRotationDegrees = 0f, float armScaleOffset = 0f, float punchScaleOffset = 0f, bool centerPivot = false, float pivotHeightOverride = 0f)
+        // Screen-plane tilt for an AlignBodyToDirection step: the sprite faces right (+X) and is
+        // mirrored for left, so the tilt is the Aim direction's elevation (world Z is screen-up on this
+        // top-down camera) measured from the facing side, signed by the facing mirror. 0 when no such
+        // step is playing.
+        private float ResolveAlignTilt(Frame frame, bool hasEnemy)
+        {
+            if (_state != State.AttackStep || _currentStep == null || _currentStep.AlignBodyToDirection == false
+                || _stateTimer >= _currentStep.Duration || hasEnemy == false || frame.Has<Aim>(_entityRef) == false)
+                return 0f;
+
+            float angleRad = frame.Get<Aim>(_entityRef).Angle.AsFloat * Mathf.Deg2Rad;
+            float dirX = Mathf.Sin(angleRad);
+            float dirZ = Mathf.Cos(angleRad);
+            float elevation = Mathf.Atan2(dirZ, Mathf.Abs(dirX)) * Mathf.Rad2Deg;
+            float max = Mathf.Abs(_currentStep.AlignMaxDegrees);
+
+            return Mathf.Clamp(elevation, -max, max) * _facingSign;
+        }
+
+        private void ApplyPose(float leanDegrees, float rockDegrees, float bobOffset, float depthOffset = 0f, float armRotationDegrees = 0f, float armScaleOffset = 0f, float punchScaleOffset = 0f, bool centerPivot = false, float pivotHeightOverride = 0f, Vector3 worldOffset = default)
         {
             float verticalMult = Mathf.Clamp(1f - _squashT * volumePreservation, 0.15f, 3f);
             float horizontalMult = Mathf.Clamp(1f / verticalMult, 0.3f, 3f);
@@ -929,7 +1042,10 @@ namespace Quantum
             // have this same problem with, since a brief inverted flash there just reads as part of
             // the squash.
             if (_shadow != null)
+            {
                 _shadow.SetBaseScale(_shadowBaseScale * Mathf.Max(0f, shrinkMult));
+                _shadow.SetFacingSign(_facingSign);
+            }
 
             // AttackAnimationType.PunchScale's own channel - applied uniformly across all axes, on
             // top of (not blended with) the squash/stretch mults above, so it reads as the whole
@@ -975,6 +1091,11 @@ namespace Quantum
                 localPos.y += _bodySpriteOffset.y;
                 localPos.z += _bodySpriteOffset.z;
 
+                // HopStrike's world-space (XZ) lunge offset, converted into root's parent space so
+                // it lands along the real target direction whatever the parent's scale/rotation.
+                if (worldOffset != Vector3.zero)
+                    localPos += root.parent != null ? root.parent.InverseTransformVector(worldOffset) : worldOffset;
+
                 float rootVerticalMult = rootCarriesSquash == true ? verticalMult : 1f;
                 float rootHorizontalMult = rootCarriesSquash == true ? horizontalMult : 1f;
 
@@ -986,7 +1107,7 @@ namespace Quantum
                 scale.y *= rootVerticalMult * shrinkMult * punchScaleMult * (1f + _hitPunchScale.y) * _bodySpriteScale.y;
                 root.localScale = scale;
 
-                float totalTilt = leanDegrees + rockDegrees;
+                float totalTilt = leanDegrees + rockDegrees + _alignTilt;
                 var tiltRotation = Quaternion.Euler(0f, 0f, totalTilt);
 
                 // AttackVisualStep.CenterPivot (only settable on the rotation-producing step types -

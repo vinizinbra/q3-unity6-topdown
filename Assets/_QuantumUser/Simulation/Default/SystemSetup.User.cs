@@ -244,6 +244,8 @@
                 // what actually gets applied, not last tick's - see AlternatingAreaSystem.
                 new AlternatingAreaSystem(),
                 new AreaDamageSystem(),
+                // Drops trail pieces (oil slick, ...) behind moving carriers - see GroundTrail.qtn.
+                new GroundTrailSystem(),
                 // Independent of the area/alternating systems above - no shared state, just needs to run
                 // after ProjectileSystem so a vortex spawned this tick can start pulling immediately.
                 new VortexSystem(),
@@ -395,6 +397,9 @@
                 // DestroyAfterTimeSystem, preserving that system's own "must be last" invariant since
                 // this also calls f.Destroy.
                 new EnemyLifecycleSystem(),
+                // After every system that can flip an enemy's IsKinematic or write its velocity this
+                // tick - re-pins Anchored enemies before the next physics step.
+                new AnchoredSystem(),
                 // Must be last: an entity on its final tick still gets to act (a lingering area deals
                 // its closing damage) before this destroys it - and, for anything carrying
                 // ExplodeOnDestroy (Pixie's Dash Ascension "Leave Explosive Bomb", so far), detonates

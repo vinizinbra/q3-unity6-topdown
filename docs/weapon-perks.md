@@ -43,6 +43,11 @@ Editor authoring is still needed before any of this can drop or be offered at ru
      than one just makes the one shared ramp stronger/faster. Advances by 1 on every
      `ISignalOnWeaponHitLanded` (fired from `DamageUtility.ApplyDamage` on a landed weapon hit),
      decays to 0 once `TimeSinceFireReleased` (already tracked) exceeds `RampDecayGrace`.
+     **Per-shot mode:** a ramp perk with `AdvancePerShot` (only `SuppressiveCycleWeaponPerkData`
+     today, used by Auto Shotgun's signature) sets `WeaponRampState.RampAdvancesPerShot`, which
+     switches the whole shared counter to +1 per real trigger shot (`WeaponSystem.AdvanceRampOnShot`,
+     same two call sites as `ArmChainShot`, so echoes/follow-ups don't count) and makes
+     `OnWeaponHitLanded` skip it - otherwise a multi-pellet weapon gains one stack per pellet.
   3. **Two new combat signals** (`Assets/_QuantumUser/Simulation/QTN/Combat.qtn`) for on-kill/on-crit
      perks: `OnEntityKilled`/`OnCriticalHit`/`OnWeaponHitLanded`, dispatched from
      `DamageUtility.ApplyDamage` alongside its existing View-facing events, consumed by the new
@@ -538,12 +543,13 @@ naming it. Offer cards don't read `Description` yet.
 
 | Weapon | Element / Family | Signature (BaseTraits asset) |
 |---|---|---|
-| Dragon's Breath (`DragonsBreath`) | Fire / Shotgun | Scorching Pellets, +1 Pierce (`DragonsBreathPierce`, a `PiercingRoundsWeaponPerkData`) |
+| Hell Piercer (`HellPiercer`) | Fire / Shotgun | Scorching Pellets, +1 Pierce (`HellPiercerPierce`, a `PiercingRoundsWeaponPerkData`) |
 | Frostbite (`Frostbite`) | Ice / Sniper | Deep Freeze, crit stuns 1s (`FrostbiteCritFreeze`, a `CritStunWeaponPerkData`, mechanically a stun) |
 | Ember SMG (`EmberSMG`) | Fire / SMG | Kindling, +30% vs Burning (`EmberSMGKindling`, **new** `KindlingWeaponPerkData`) |
 | Flare Pistol (`FlarePistol`) | Fire / Pistol | Flare Burst, every 3rd shot explodes for 100% within 2.5m (`FlarePistolBurst`, an `ExplosiveSequenceWeaponPerkData`); Damage 25 (Pistol is 30) so sustained DPS matches Frost Revolver (88) |
 | Napalm Launcher (existing, now pooled) | Fire / Grenade Launcher | Burning ground from its own `NapalmAreaHit` (no perk) |
 | Storm Rifle (`AssaultRifleLightning`, existing, now pooled) | Lightning / Assault Rifle | Storm Chain, every 4th shot +2 ricochets (`StormRifleChain`, **new** `StormChainWeaponPerkData`; the asset's own `BonusBounces` is now 0) |
+| Auto Shotgun (`AutoShotgun`, added 2026-09-30, Neutral) | Neutral / Shotgun | Auto Cycle, +20% fire rate per stack up to 8 stacks, 0.5s decay grace (`AutoShotgunRamp`, a `SuppressiveCycleWeaponPerkData` with **`AdvancePerShot`** - +1 stack per trigger shot, hit or miss, not per landed pellet). Base: 4 dmg x 5 pellets, 3/s, mag 12, 1.2s reload, 25 deg spread |
 
 The first three are stat clones of Shotgun/Sniper/SMG (same ViewPrefab), with projectile colours
 borrowed from Hellshot (fire) / Frost Revolver (ice). Balance isn't tuned yet.

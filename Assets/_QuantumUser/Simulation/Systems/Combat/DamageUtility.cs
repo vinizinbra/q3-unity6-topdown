@@ -354,6 +354,11 @@ namespace Quantum
                 EnemyDataAsset data = f.FindAsset(enemy->EnemyData);
                 FP maxHealth = f.Unsafe.TryGetPointer<Health>(target, out var targetHealth) ? targetHealth->MaxHealth : FP._0;
 
+                // Suicider-style self-destructers still go off when killed - see
+                // GroundAreaDeliveryData.TryDetonateOnKilled. Before either tier branch below
+                // destroys the entity, while its Transform3D is still valid.
+                GroundAreaDeliveryData.TryDetonateOnKilled(f, target, owner, data);
+
                 if (data.Tier == EnemyTier.Filler || data.Tier == EnemyTier.Normal|| data.Tier == EnemyTier.Heavy|| data.Tier == EnemyTier.Specialist)
                 {
                     FireEnemyExploded(f, target, enemy->EnemyData);

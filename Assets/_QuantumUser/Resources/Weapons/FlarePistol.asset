@@ -60,7 +60,7 @@ MonoBehaviour:
   BaseTraits:
   - Id:
       Value: 437565466900730923
-  ViewPrefab: {fileID: 8089491252618662435, guid: 71e454c59b0bb4e6b949d1333a8bcb33, type: 3}
+  ViewPrefab: {fileID: 8089491252618662435, guid: a23f47785ef6e4ff68d25b317af328f8, type: 3}
   Description: Every 3rd shot explodes in a burst of flame.
   ShakeTier: 0
   ProjectileVisuals:
@@ -116,11 +116,11 @@ MonoBehaviour:
     ProjectileDestroyScale: {x: 2, y: 2, z: 2}
     ProjectileExtraParticle: {fileID: 0}
     ProjectileExtraParticleScale: {x: 1, y: 1, z: 1}
-  _dpsPreview: 'Burst DPS: 99
+  _dpsPreview: 'Burst DPS: 110
 
-    Sustained DPS (incl. reload): 79.2
+    Sustained DPS (incl. reload): 88
 
     Damage/min:
-    4752
+    5280
 
-    Crit dmg/shot: 45 (vs 30 normal) @ 20 % chance, x1.5'
+    Crit dmg/shot: 50 (vs 33.3 normal) @ 20 % chance, x1.5'

@@ -36,6 +36,12 @@ Shader "Project/CloudFog"
         _DetailWeight ("Detail Layer Weight", Range(0, 1)) = 0.4
         _WindA ("Large Layer Drift (xy m/s)", Vector) = (0.35, 0.12, 0, 0)
         _WindB ("Detail Layer Drift (xy m/s)", Vector) = (-0.2, 0.3, 0, 0)
+        // Stacked (for a cartoon cloud texture, R = premultiplied shade, G = coverage - see make_cloud_puffs.py):
+        // instead of blending the two reads into noise, the large layer is composited OVER the detail layer,
+        // dimmed (far clouds behind), unrotated so every cloud keeps its lit side up. Pair with a low Band
+        // Sharpness for soft gradients. 0 = the original blended look (grey textures: R = G, unchanged).
+        [Toggle] _Stack ("Stack Layers (cartoon clouds)", Float) = 0
+        _BackDim ("Back Layer Brightness (stacked)", Range(0, 1)) = 0.7
 
         [Header(Toon Bands)]
         _MidThreshold ("Mid From", Range(0, 1)) = 0.42
@@ -103,6 +109,8 @@ Shader "Project/CloudFog"
                 half _TopAlpha;
                 half _EdgeFadeDistance;
                 half _EdgeFadeOpacity;
+                half _Stack;
+                half _BackDim;
             CBUFFER_END
 
             struct Attributes
@@ -135,6 +143,7 @@ Shader "Project/CloudFog"
                 o.cloudUV.xy = (positionWS.xz + _WindA.xy * t) / max(_CloudScale, 0.01);
                 // rotate the detail layer ~37 degrees so the two tilings never line up
                 float2 r = float2(positionWS.x * 0.8 - positionWS.z * 0.6, positionWS.x * 0.6 + positionWS.z * 0.8);
+                r = lerp(r, positionWS.xz, _Stack);                     // stacked: no rotation, lit tops stay up
                 o.cloudUV.zw = (r + _WindB.xy * t) / max(_DetailScale, 0.01);
 
 #if defined(_SHOREFIELD_BILLOW)
@@ -147,9 +156,13 @@ Shader "Project/CloudFog"
 
             half4 Frag(Varyings input) : SV_Target
             {
-                half a = SAMPLE_TEXTURE2D(_CloudTex, sampler_CloudTex, input.cloudUV.xy).r;
-                half b = SAMPLE_TEXTURE2D(_CloudTex, sampler_CloudTex, input.cloudUV.zw).r;
-                half n = lerp(a, b, _DetailWeight);
+                half2 a2 = SAMPLE_TEXTURE2D(_CloudTex, sampler_CloudTex, input.cloudUV.xy).rg;
+                half2 b2 = SAMPLE_TEXTURE2D(_CloudTex, sampler_CloudTex, input.cloudUV.zw).rg;
+                half a = a2.r;
+                half b = b2.r;
+                // stacked (texture R = premultiplied shade, G = soft coverage): the large layer composited OVER the
+                // dimmed back layer, so clouds fade into each other instead of cutting hard
+                half n = lerp(lerp(a, b, _DetailWeight), a + (1.0h - a2.g) * b * _BackDim, _Stack);
 
 #if defined(_SHOREFIELD_BILLOW)
                 half field = SAMPLE_TEXTURE2D(_ShoreField, sampler_ShoreField, input.shore.xy).r;

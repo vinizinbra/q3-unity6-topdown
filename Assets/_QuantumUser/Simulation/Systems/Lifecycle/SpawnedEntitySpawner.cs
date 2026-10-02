@@ -16,7 +16,7 @@ namespace Quantum
         public static EntityRef Spawn(Frame f, EntityRef owner, AssetRef<EntityPrototype> prototype,
             FP duration, FPVector3 position, DamageSource source = DamageSource.None,
             ElementType element = ElementType.Neutral, FP? damageOverride = null,
-            DamageTargetMask? targetMaskOverride = null)
+            DamageTargetMask? targetMaskOverride = null, FP? scale = null)
         {
             if (prototype.IsValid == false)
                 return EntityRef.None;
@@ -31,6 +31,9 @@ namespace Quantum
 
             ConfigureOwnerAndArea(f, entity, owner, source, element, damageOverride, targetMaskOverride);
             ApplyRadiusUpgrade(f, entity, owner);
+
+            if (scale.HasValue == true)
+                ApplySpawnScale(f, entity, scale.Value);
 
             f.AddOrGet<DestroyAfterTime>(entity, out var lifetime);
             lifetime->RemainingTime = ResolveDuration(f, owner, duration, source);
@@ -77,6 +80,43 @@ namespace Quantum
             // live a single tick still fires at all. A telegraphed area can author a nonzero
             // InitialDelay to wait out its own windup instead.
             area->TickTimer = area->InitialDelay;
+        }
+
+        // Per-spawn uniform size, so one prototype serves several sizes (World 2's StickyPuddle: a
+        // big Tar Launcher splash and a small Fuel Runner trail drop). Scales the collider (the
+        // ColliderVisualScaleView on the prefab reads it back for the visual) and GroundOffset.Offset
+        // with it - an offset authored relative to the collider's size (a puddle sunk by -radius so
+        // its sphere centre sits on the ground) must keep that relation at any scale.
+        private static void ApplySpawnScale(Frame f, EntityRef entity, FP scale)
+        {
+            if (scale <= FP._0 || scale == FP._1)
+                return;
+
+            if (f.Unsafe.TryGetPointer<PhysicsCollider3D>(entity, out var collider) == true)
+            {
+                switch (collider->Shape.Type)
+                {
+                    case Shape3DType.Box:
+                        collider->Shape.Box.Extents = collider->Shape.Box.Extents * scale;
+                        break;
+
+                    case Shape3DType.Sphere:
+                        collider->Shape.Sphere.Radius *= scale;
+                        break;
+
+                    case Shape3DType.Capsule:
+                        collider->Shape.Capsule.Radius *= scale;
+                        collider->Shape.Capsule.Extent *= scale;
+                        break;
+
+                    default:
+                        Log.Error($"[Spawn] {entity} has a {collider->Shape.Type} collider - spawn scale only applies to Box, Sphere and Capsule");
+                        break;
+                }
+            }
+
+            if (f.Unsafe.TryGetPointer<GroundOffset>(entity, out var groundOffset) == true)
+                groundOffset->Offset *= scale;
         }
 
         // SpawnRadiusUpgrade (see SpawnRadiusUpSkillAction, one .asset instance per hero) - grows

@@ -307,8 +307,9 @@ namespace Quantum
         // EnemyDecisionUtility.TrySelectAction - empty for a simple single-action enemy (the
         // common case). Capped at 7 (EnemyActionSlots.SkillCooldowns' fixed size) - raise that
         // array's size if a design genuinely needs more concurrent skills than that. An enemy
-        // using this must also carry the optional EnemyActionSlots component on its prototype (see
-        // that component's own comment for why it's separate from Enemy itself).
+        // using this gets the optional EnemyActionSlots component added automatically at spawn
+        // (EnemySystem.SeedActionSlots) - see that component's own comment for why it's separate from
+        // Enemy itself.
         [ExpandableAsset] public List<AssetRef<EnemyActionData>> SkillActions;
     }
 
@@ -349,6 +350,10 @@ namespace Quantum
         public EnemyAIData AI = new EnemyAIData { DetectionRange = 10, LeashRange = 15, DetectionRangeMultiplier = FP._1 };
 
         public EnemyActionsData Actions = new EnemyActionsData { SkillActions = new() };
+
+        // Reusable non-attack behaviours applied once at spawn (oil trail, ...) - see
+        // EnemyPassiveData. Shared assets, so an Elite can reuse a Normal's passive as-is.
+        [ExpandableAsset] public List<AssetRef<EnemyPassiveData>> Passives = new();
 
         public FP DeathLingerTime = 3;
 

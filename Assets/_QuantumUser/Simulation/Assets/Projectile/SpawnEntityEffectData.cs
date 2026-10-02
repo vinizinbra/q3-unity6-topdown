@@ -12,6 +12,10 @@ namespace Quantum
 
         public FP Duration = 3;
 
+        // Uniform size of the spawned prototype (collider + GroundOffset; the visual follows through
+        // ColliderVisualScaleView) - lets one hazard prefab serve several sizes. 1 = as authored.
+        public FP Scale = FP._1;
+
         // 0 (the default) leaves the spawned prototype's own authored AreaDamage.Damage alone - the
         // flat, per-tick value it's always had. Above 0, this is a per-TICK multiplier of the live
         // weapon Damage that hit-triggered this spawn (context.Damage), NOT a total-over-lifetime
@@ -39,7 +43,7 @@ namespace Quantum
             // exactly as before - that's already the real impact point for that path.
             FPVector3 position = context.AreaRadius > FP._0 ? context.AreaCenter : context.Position;
 
-            SpawnedEntitySpawner.Spawn(f, context.Owner, Prototype, Duration, position, context.Source, context.Element, damageOverride);
+            SpawnedEntitySpawner.Spawn(f, context.Owner, Prototype, Duration, position, context.Source, context.Element, damageOverride, scale: Scale);
         }
     }
 }

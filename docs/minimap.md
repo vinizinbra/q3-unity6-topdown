@@ -111,7 +111,7 @@ simulation.
   `cooldownIconTint` is never used for it.
 
   **Edge-pinning active POIs** (2026-09-25, minimap only): `UpdateIconTints` also sets
-  `OverlayPair.PinToEdge` - true whenever the icon is NOT tinted (POI not `Expired`, Traversal not
+  `MapOverlay.PinToEdge` - true whenever the icon is NOT tinted (POI not `Expired`, Traversal not
   `Completed`/`Failed`). `PinActiveIconsToViewportEdge` runs right after `CenterOnLocalPlayer` and
   re-places every Mini icon from its texel spot; a pinned one whose spot is outside the masked
   viewport (`mapRect`'s parent) is scaled back along the viewport-center→icon direction until it
@@ -132,8 +132,8 @@ simulation.
   (`eliteMarkerPrefab`) for every Elite regardless of which `EnemyDataAsset` it is, no per-enemy-type
   sprite - Elites already get special always-relevant/never-retiring treatment from
   `EnemyLifecycleSystem` (see CLAUDE.md's own "Boss Phase Trigger" section), so surfacing them on
-  the map follows the same reasoning. Shares the identical `OverlayPair`/full-map-panel machinery
-  every other overlay here does, so it shows on both map surfaces for free. Shows whatever sprite
+  the map follows the same reasoning. Shares the identical `MapOverlay` pooling every other overlay
+  here does. Shows whatever sprite
   `eliteMarkerPrefab`'s own `Image` is authored with as-is - no per-entity-type sprite override.
   Leave `eliteMarkerPrefab` unassigned to disable Elite markers entirely.
 
@@ -174,42 +174,37 @@ simulation.
   position/size, clips whatever overflows) that defines the actual visible viewport - the standard
   "content pans, mask stays put" technique.
 
-  **Toggle — `FullMapWidget`** (`Hud/Minimap/FullMapWidget.cs`): opening/closing the big map is no
-  longer `MinimapWidget`'s job - it was split out (along with the full map's own `MapInfo` panel,
-  previously nested inside the Tab-hold Hero Info tab) so a quick mid-fight map glance doesn't also
-  bring up the whole stats readout. Same shape as `HeroInfoPopupWidget`: it only owns showing/hiding
-  its `root`, while `MinimapWidget` keeps painting into `fullMapImage`/`fullMapRect` (the shared
-  texture + `OverlayPair` clones). A **toggle**, not a hold, driven by `toggleKey` (default `M`), R2
-  (`OpenMiniMapTrigger` Input Manager axis - the 12th axis on Android pads like the MOGA Pro 2; L2
-  is the 13th), the `OpenMiniMapToggle` gamepad button (unbound by default - Select went to the Hero Info popup), and clicking any of `toggleButtons` (the
-  corner minimap's own `Button`). Shows/hides through `root`'s `JuicyGameobject` if it has one
-  (scale in/out), else a plain `SetActive`. `closeButtons` only ever close it (the `CLOSE` button
-  under `MapInfo`). While open, every `CanvasGroup` in `hideWhileShown` (the corner `MiniMapRoot`)
-  goes to alpha 0 / no raycasts and comes back on close - a `CanvasGroup`, not `SetActive`, because
-  `MinimapWidget` lives under the corner map and also paints the full map, so deactivating it would
-  freeze the big map too. It reads `root`'s live active state (minus a
-  JuicyGameobject mid-hide) rather than tracking a bool. Must sit on an always-active GameObject,
-  never on `root` itself - `QUpdate` doesn't run on an inactive GameObject. Scene: on
-  `Canvas/Windows` next to `HeroInfoPopupWidget`, `root` = `Canvas/Overlay/MapInfo`.
+  **Expand / collapse** (2026-09-29, replaces the old separate `FullMapWidget` + `fullMapImage`
+  second surface): there is ONE map surface with two states. Collapsed is the panned/masked corner
+  minimap above. Expanded resizes `frameRect` (the minimap's outer frame, `MiniMapRoot`) to
+  `expandedSize` (1000x800) while keeping its authored anchors/pivot/position - so the top-right
+  pivoted corner map grows out down-left from its own corner rather than moving to the screen
+  center - and zooms `mapRect` so the generated level's bounding box (measured once in
+  `EnsureCentered` into `_levelWorldSize`) fits the viewport minus `expandedPadding`, centered in the
+  widget instead of on the player - the whole map, not a part of it. `UpdateExpandState` drives it:
+  each toggle restarts a tween (`_tweenP` 0->1 over `expandDuration`, unscaled time so it works while
+  the sim is paused) from the current `_expandAmount` toward the target, eased with **OutBack**
+  (`expandOvershoot`, default 1.70158) - the frame size overshoots and settles both ways. Only the
+  frame size uses the overshooting value; zoom/pan/overlay scale use the clamped `_expandAmount01`,
+  and since the zoom is measured against the viewport's *current* size it already follows the
+  frame's own bounce. While expanded `frameRect` is moved to last sibling so it draws over its HUD
+  neighbours (not over layers above the HUD, e.g. the skill buttons), and goes back to its authored
+  sibling index once fully collapsed. `CenterOnLocalPlayer` blends the pan from "player centered"
+  to "level centered" with the same amount.
 
-  **Full-map panel** (`fullMapImage`, optional): a second surface showing the WHOLE level at once,
-  unpanned/unmasked (e.g. a Tab-key panel). The *texture* is literally shared - both `RawImage`s
-  point at the same `Texture2D`, so every repaint updates both for free - but icons and player
-  markers are real UI objects, not texture content, so each surface gets its own clone of each,
-  held together in an `OverlayPair` (`Mini` under `mapRect`, `Full` under `_fullOverlayRoot`) and
-  driven in lockstep from the same data. The only per-surface differences are the rect positions
-  are computed against (`WorldToMapPosition`/`TexelRectCenterToMapPosition` both take a root rect,
-  since the two surfaces draw the same texture at different UI sizes) and `fullMapOverlayScale`, a
-  uniform scale for the big map's own clones since it's usually drawn much larger. `_fullOverlayRoot`
-  is `fullMapRect` if assigned, else `fullMapImage`'s own `RectTransform` - which is correct as
-  long as that's square and center-pivoted. With `fullMapImage` unassigned, every `Full` is simply
-  `null` and nothing changes.
+  Icons/markers are children of `mapRect`, so its zoom would scale them too - `ApplyOverlayScale`
+  counter-scales every overlay each frame so they keep their authored size, blending to
+  `expandedOverlayScale` when expanded. Edge-pinning keeps running (nothing is off-screen when
+  expanded, so it's a no-op there); its inset accounts for the zoom, and `circularViewport` only
+  applies while collapsed (the expanded frame is rectangular).
 
-  Chunk icons are positioned once at spawn (a chunk never moves), which would strand them if a
-  surface is laid out *later* - the full-map panel is typically inactive, and possibly zero-sized,
-  until first opened. `RefreshIconPositionsIfResized` (polled every `QUpdate`, a no-op unless a
-  surface's own `rect.width` actually changed) re-places them from each pair's cached `TexelRect`.
-  Player markers need none of this - they're repositioned every frame anyway.
+  Toggled by `toggleKey` (default `M`), R2 (`OpenMiniMapTrigger` Input Manager axis - the 12th axis
+  on Android pads like the MOGA Pro 2; L2 is the 13th, rising edge only), the `OpenMiniMapToggle`
+  gamepad button (unbound by default - Select went to the Hero Info popup), and clicking any of
+  `toggleButtons` (the `Button` on `MiniMapMask`). `collapseButtons` only ever collapse (the
+  `CloseButton`, moved under `MiniMapRoot` and listed in `showWhileExpanded`, which is shown only
+  while expanded - through a `JuicyGameobject` if it has one). `IsExpanded`/`SetExpanded`/
+  `ToggleExpanded`/`Collapse` are public. With `frameRect` unassigned only the zoom changes.
 
   **Prefab templates**: `iconPrefab`/`playerMarkerPrefab` are expected to be scene child objects
   under this same widget (not Project-window prefab assets) - `QStart` disables both once so the
@@ -253,18 +248,14 @@ though:
 6. Set `worldExtent`/`worldCenter` to match the actual authored playable world size.
 7. Set `outlineTexels` > 0 (and consider a lower `worldUnitsPerTexel`, e.g. 5, for more texel
    headroom) to enable the level outline; leave at 0 to disable it entirely.
-8. For the full-map panel: assign its `RawImage` to `fullMapImage`. If that `RawImage` is square
-   and center-pivoted, leave `fullMapRect` empty; otherwise nest a square, center-pivoted content
-   layer of the same size over it and assign that instead. Tune `fullMapOverlayScale` so the
-   shared icon/marker templates read at the right size on the bigger surface (they're clones of
-   the same prefabs the minimap uses, so their authored size is minimap-sized).
-9. To open/close the full-map panel: put the panel's root (backdrop + `fullMapImage`/`fullMapRect`,
-   optionally with a `JuicyGameobject` for scale in/out) **inactive** in the scene, add a
-   `FullMapWidget` to an always-active GameObject and assign that root to its `root`. For
-   click-to-toggle, add a `Button` over the minimap's masked viewport (`Image` + `Raycast Target`
-   on) and add it to `FullMapWidget.toggleButtons` - an `EventSystem` must exist in the scene.
+8. For expand/collapse: assign `frameRect` (the minimap's outer frame) and set `expandedSize` - the
+   frame grows from its own authored pivot, so pick a pivot on the corner it's anchored to. Put a `Button` on the masked viewport (`Image` + `Raycast Target` on)
+   into `toggleButtons` - an `EventSystem` must exist in the scene. Optional: a close button (or
+   dim backdrop) in `showWhileExpanded` + `collapseButtons`; tune `expandedPadding`/
+   `expandedOverlayScale`/`expandDuration`/`expandOvershoot`.
 
-Not yet manually verified end-to-end in-Editor.
+Expand/collapse verified in Play mode in `GrasslandOutpostGameScene` (2026-09-30): grows from the
+top-right corner to 1000x800 at the right fit-zoom, level centered in the widget.
 
 ## Explicit non-goals for this pass
 
@@ -272,9 +263,8 @@ Not yet manually verified end-to-end in-Editor.
   now have their own `ChunkType` values (see above) and so CAN get a minimap icon like
   Boss/Merchant, but no sprite is authored for either yet.
 - No secret-room hiding - no "secret" concept exists on `Chunk`.
-- ~~No toggle/zoom/full-map view~~ - superseded: an optional second full-map surface
-  (`fullMapImage`) now shares the texture, icons, and player markers with the panned corner map
-  (see "Full-map panel" above). Zoom itself is still out of scope.
+- ~~No toggle/zoom/full-map view~~ - superseded by the expand/collapse state (see "Expand /
+  collapse" above). Free zoom/pan inside the expanded map is still out of scope.
 - No breathing-window pulse/highlight behavior - belongs to the larger, deferred pacing system.
 
 ## Known simplification (resolved 2026-08-13)

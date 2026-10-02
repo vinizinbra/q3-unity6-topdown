@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.WorldThemeCheatList
   Themes:
   - {fileID: 11400000, guid: 5afca4ff16c4d428f87a809bc63735be, type: 2}
-  - {fileID: 11400000, guid: ecba5001600284cff9e78b22e92e0c74, type: 2}
+  - {fileID: 11400000, guid: c6bb6a97c6a694c258ea6985f33a25fd, type: 2}
   - {fileID: 11400000, guid: 31113c11f16db464595ea212a99f5ac2, type: 2}
   - {fileID: 11400000, guid: 84f20284701d548c58ecabff4865c028, type: 2}
   - {fileID: 11400000, guid: 6f2640c66afce4ec1a61696ec915448b, type: 2}

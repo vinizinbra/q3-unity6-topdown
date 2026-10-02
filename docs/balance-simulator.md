@@ -172,6 +172,10 @@ and steps the run analytically. Nothing in `Assets/_QuantumUser/Simulation` chan
 - Perk procs, elemental reactions, hero passives, Ascension effects and Accessory Guard are not
   modelled beyond the flat knobs above. Hero Mastery's flat damage bonus is modelled; its rank-3
   specials and Fire Mastery's Neutral-weapon-under-Ignition exception are not.
+- Ramp perks (Relentless Fire/Suppressive Cycle/Overcharge Cycle): a per-HIT ramp is credited at half
+  its max stacks (placeholder - hit rate isn't modelled). A per-SHOT ramp (`AdvancePerShot`, Auto
+  Shotgun) is deterministic and averaged exactly over one magazine fired from 0 stacks via
+  `WeaponDataAsset.PerShotRampFactors`, shared with the Inspector DPS preview.
 - Focus-fire: party damage always goes to the lowest-HP enemy first.
 - Rows are keyed on `SurvivalTime`, so a Breathing Break's shopping shows up as the jump between two
   rows. After `DurationMinutes` the run still plays out a trailing Breathing Break so a Boss phase

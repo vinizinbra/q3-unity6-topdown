@@ -99,11 +99,50 @@ namespace Quantum
             SeedChargeHitTracking(f, entity, data);
             SeedSpawnGrace(f, entity);
             SeedLeadVelocitySample(f, entity);
+            SeedActionSlots(f, entity, data);
+            SeedAnchored(f, entity, data);
+            SeedPassives(f, entity, data);
 
             // Here rather than in any one spawner - every spawn route funnels through this method,
             // so an Elite announces regardless of how it entered the world.
             if (data.Tier == EnemyTier.Elite && f.Unsafe.TryGetPointer<Enemy>(entity, out var enemy))
                 f.Events.EliteSpawned(entity, enemy->EnemyData);
+        }
+
+        // See EnemyMovementData.IsKinematic / AnchoredSystem.
+        private static void SeedAnchored(Frame f, EntityRef entity, EnemyDataAsset data)
+        {
+            if (data.Stats.Movement.IsValid == false || f.FindAsset(data.Stats.Movement).IsKinematic == false)
+                return;
+
+            f.AddOrGet<Anchored>(entity, out _);
+
+            if (f.Unsafe.TryGetPointer<PhysicsBody3D>(entity, out var body) == true)
+                body->IsKinematic = true;
+        }
+
+        // Skill cooldowns live on EnemyActionSlots (see that component). Added here for any enemy with
+        // SkillActions instead of requiring it on the prototype: every Director spawn shares ONE generic
+        // prototype that has no such component, and without it SetCooldownRemaining silently no-ops -
+        // a skill never goes on cooldown and keeps winning TrySelectAction over the basic attack.
+        private static void SeedActionSlots(Frame f, EntityRef entity, EnemyDataAsset data)
+        {
+            if (data.Actions.SkillActions == null || data.Actions.SkillActions.Count == 0)
+                return;
+
+            f.AddOrGet<EnemyActionSlots>(entity, out _);
+        }
+
+        // See EnemyPassiveData.
+        private static void SeedPassives(Frame f, EntityRef entity, EnemyDataAsset data)
+        {
+            if (data.Passives == null)
+                return;
+
+            for (int i = 0; i < data.Passives.Count; i++)
+            {
+                EnemyPassiveUtility.Apply(f, entity, data.Passives[i]);
+            }
         }
 
         // See SpawnGraceDuration's own comment. Unconditional - every enemy carries the shared

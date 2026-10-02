@@ -1,0 +1,637 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-499783160989601008
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52edb4eefc1db48109cc7d1ac53b2f13, type: 3}
+  m_Name: MoleRusherTelegraphData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.TelegraphData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/World2/BlackMoles/MoleRusher/W2-MoleRusher|MoleRusherTelegraphData
+    Guid:
+      Value: 744526805002196809
+  Shape: 2
+  StartPhase: 0
+  EndPhase: 1
+  LiveTracking: 1
+  LiveTrackingSmoothing: 15
+  TelegraphPrefab: {fileID: 2468440791896092637, guid: 4f8787fca955742b995eeedd8d55d28c, type: 3}
+  SnapToGround: 1
+  LineLength: 1
+  FixedDistanceValue: 8
+  FromOffset: 0
+  ToOffset: 0
+  Width: 1
+  RadiusMultiplier: 1
+  RotationDegreesPerSecond: 0
+  GrowthDuration: 1
+  FadeInDuration: 0.15
+  FadeOutDuration: 0.3
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04c8957753d4c417e81337f7a383dcc6, type: 3}
+  m_Name: W2-MoleRusher
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.EnemyDataAsset
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/World2/BlackMoles/MoleRusher/W2-MoleRusher
+    Guid:
+      Value: 274318033693868953
+  EnemyName: Mole Rusher
+  Tier: 2
+  Economy:
+    Persistent: 0
+    SpawnProfile:
+      Id:
+        Value: 443472774672561949
+    CostMultiplier:
+      RawValue: 131072
+  Stats:
+    MoveSpeed:
+      RawValue: 262144
+    Height:
+      InitialState: 0
+      FlightHeight:
+        RawValue: 131072
+      HoverCheckInterval:
+        RawValue: 65536
+      HoverSpringFrequency:
+        RawValue: 65536
+      HoverSpringDamping:
+        RawValue: 32768
+      CanFly: 0
+      CanBeLaunched: 0
+      CanBeGrounded: 1
+      ClimbProbeThreshold:
+        RawValue: 13107
+      GapProbeThreshold:
+        RawValue: 32768
+      ArcHeight:
+        RawValue: 65536
+      TraversalJumpSpeedMultiplier:
+        RawValue: 131072
+      CanClimbCliffs: 1
+      CliffHeight:
+        RawValue: 131072
+      AffectedByGroundHazards: 0
+      AffectedByShockwaves: 0
+      TargetableByMelee: 1
+      TargetableByProjectiles: 1
+      CanJumpGaps: 1
+      GapDistance:
+        RawValue: 262144
+      CanFallFromCliff: 1
+      FallHeight:
+        RawValue: 131072
+    Movement:
+      Id:
+        Value: 3283391172210422552
+    Radius:
+      RawValue: 65536
+    ShieldMultiplier:
+      RawValue: 0
+    HealthMultiplier:
+      RawValue: 65536
+    Traits: 
+    FrontalDamageReductionAmount:
+      RawValue: 0
+    FrontalDamageReductionArcDegrees:
+      RawValue: 0
+    AvoidWalls: 0
+    WallAvoidProbeDistance:
+      RawValue: 131072
+    UseWaypointDetour: 0
+    WaypointArrivalDistance:
+      RawValue: 65536
+  AI:
+    Targeting:
+      Id:
+        Value: 2227200805678239736
+    DetectionRange:
+      RawValue: 655360
+    LeashRange:
+      RawValue: 983040
+    StopDistance:
+      RawValue: 0
+    StopSlowdownRange:
+      RawValue: 0
+    DetectionRangeMultiplier:
+      RawValue: 65536
+  Actions:
+    BasicAction:
+      Id:
+        Value: 4156907471994617479
+    SkillActions: []
+  Passives: []
+  DeathLingerTime:
+    RawValue: 196608
+  ChestDrop:
+    Id:
+      Value: 0
+  ChestDropChance:
+    RawValue: 65536
+  Cost:
+    RawValue: 65536
+  Persistent: 0
+  SpawnProfile:
+    Id:
+      Value: 0
+  MoveSpeed:
+    RawValue: 262144
+  Radius:
+    RawValue: 65536
+  MaxHealth:
+    RawValue: 3276800
+  MaxShield:
+    RawValue: 1310720
+  ShieldRechargeDelay:
+    RawValue: 131072
+  ShieldRechargeRate:
+    RawValue: 327680
+  Traits: 
+  FrontalDamageReductionAmount:
+    RawValue: 32768
+  FrontalDamageReductionArcDegrees:
+    RawValue: 7864320
+  Height:
+    InitialState: 0
+    FlightHeight:
+      RawValue: 131072
+    HoverCheckInterval:
+      RawValue: 65536
+    HoverSpringFrequency:
+      RawValue: 65536
+    HoverSpringDamping:
+      RawValue: 32768
+    CanFly: 0
+    CanBeLaunched: 0
+    CanBeGrounded: 1
+    ClimbProbeThreshold:
+      RawValue: 0
+    GapProbeThreshold:
+      RawValue: 0
+    ArcHeight:
+      RawValue: 0
+    TraversalJumpSpeedMultiplier:
+      RawValue: 0
+    CanClimbCliffs: 0
+    CliffHeight:
+      RawValue: 0
+    AffectedByGroundHazards: 0
+    AffectedByShockwaves: 0
+    TargetableByMelee: 1
+    TargetableByProjectiles: 1
+    CanJumpGaps: 0
+    GapDistance:
+      RawValue: 0
+    CanFallFromCliff: 0
+    FallHeight:
+      RawValue: 0
+  Movement:
+    Id:
+      Value: 277519423795209272
+  Targeting:
+    Id:
+      Value: 406735746052846114
+  DetectionRange:
+    RawValue: 655360
+  LeashRange:
+    RawValue: 983040
+  CanBeInterruptedByKnockback: 1
+  KnockbackRecoveryTime:
+    RawValue: 16384
+  BasicAction:
+    Id:
+      Value: 578470124590582232
+  SkillActions: []
+  ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
+  ViewPrefab: {fileID: 664242238683382212, guid: f53497f8ec4994d47883f606cb6e9f07, type: 3}
+  FactionSkins: []
+--- !u!114 &3660401815721977846
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b3ffe095a046457f99f64ffca9d87e9, type: 3}
+  m_Name: MoleRusherEnemyActionData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.EnemyActionData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/World2/BlackMoles/MoleRusher/W2-MoleRusher|MoleRusherEnemyActionData
+    Guid:
+      Value: 4156907471994617479
+  Name: 
+  EngageRange:
+    RawValue: 327680
+  DamageRange:
+    RawValue: 32768
+  Damage:
+    RawValue: 1310720
+  AnticipationTime:
+    RawValue: 45875
+  DirectionTracking: 1
+  IgnoreY: 1
+  Origin: 0
+  DownTime:
+    RawValue: 65536
+  CooldownTime:
+    RawValue: 65536
+  TelegraphStartPercent:
+    RawValue: 32768
+  Trigger:
+    Type: 0
+    Radius:
+      RawValue: 0
+    HealthPercent:
+      RawValue: 0
+  AimLock: 0
+  AimLockPercent:
+    RawValue: 65536
+  SelectionWeight: 1
+  InterruptibleDuringTelegraph: 0
+  InterruptibleDuringActive: 0
+  Delivery:
+    Id:
+      Value: 3802804235510948416
+  Effects:
+  - Id:
+      Value: 440091783757558214
+  - Id:
+      Value: 452814084348607209
+  Telegraph:
+    Id:
+      Value: 744526805002196809
+  AnticipationStep:
+    AnimationType: 3
+    Duration: 0.9
+    BodySprite: {fileID: -989579171, guid: 8b8109968f7934f50a53f8de4020e782, type: 3}
+    BodySpriteOffset: {x: 0, y: 0, z: 0}
+    BodySpriteScale: {x: 1, y: 1, z: 1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
+    ShakeImpact: 0
+    Shake:
+      Frequency: 10
+      RockDegrees: 2
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 20
+      MaxSquash: 0.1
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
+    HopStrike:
+      Distance: 0.4
+      Height: 0.2
+      StrikeAt: 0.35
+      Hold: 0.1
+      LeanDegrees: 12
+      Stretch: 0.25
+      LandSquash: 0.3
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    SnapToGround: 0
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+    AdditionalParticles: []
+  BeginStep:
+    AnimationType: 0
+    Duration: 0.3
+    BodySprite: {fileID: 0}
+    BodySpriteOffset: {x: 0, y: 0, z: 0}
+    BodySpriteScale: {x: 1, y: 1, z: 1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
+    ShakeImpact: 0
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
+    HopStrike:
+      Distance: 0.4
+      Height: 0.2
+      StrikeAt: 0.35
+      Hold: 0.1
+      LeanDegrees: 12
+      Stretch: 0.25
+      LandSquash: 0.3
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    SnapToGround: 0
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+    AdditionalParticles: []
+  OnGoingStep:
+    AnimationType: 1
+    Duration: 0.5
+    BodySprite: {fileID: -2043771626, guid: 8b8109968f7934f50a53f8de4020e782, type: 3}
+    BodySpriteOffset: {x: 0, y: 0.3, z: 0}
+    BodySpriteScale: {x: 1, y: 1, z: 1}
+    AlignBodyToDirection: 1
+    AlignMaxDegrees: 60
+    ShakeImpact: 0
+    Shake:
+      Frequency: 10
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 20
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: -20
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: -360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
+    HopStrike:
+      Distance: 0.4
+      Height: 0.2
+      StrikeAt: 0.35
+      Hold: 0.1
+      LeanDegrees: 12
+      Stretch: 0.25
+      LandSquash: 0.3
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 198859515972689948, guid: 93262d364c08446738e049d1bc44d6e9, type: 3}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    SnapToGround: 0
+    Parented: 1
+    AlignToEnemyDirection: 1
+    RotationOffset: {x: 0, y: 0, z: 90}
+    Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+    AdditionalParticles: []
+  EndStep:
+    AnimationType: 0
+    Duration: 0.3
+    BodySprite: {fileID: 0}
+    BodySpriteOffset: {x: 0, y: 0, z: 0}
+    BodySpriteScale: {x: 1, y: 1, z: 1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
+    ShakeImpact: 0
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      RotateDegrees: 90
+      SinkAmount: 0.3
+    HopStrike:
+      Distance: 0.4
+      Height: 0.2
+      StrikeAt: 0.35
+      Hold: 0.1
+      LeanDegrees: 12
+      Stretch: 0.25
+      LandSquash: 0.3
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    SnapToGround: 0
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+    AdditionalParticles: []
+--- !u!114 &8149526633120986481
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e42b1630280fe433ba56b6883bb17e5b, type: 3}
+  m_Name: MoleRusherDeliveryData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ChargeDeliveryData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/World2/BlackMoles/MoleRusher/W2-MoleRusher|MoleRusherDeliveryData
+    Guid:
+      Value: 3802804235510948416
+  MinRandomOffset:
+    RawValue: 0
+  MaxRandomOffset:
+    RawValue: 0
+  DashSpeed:
+    RawValue: 983040
+  DashDistance:
+    RawValue: 524288
+  DashDuration:
+    RawValue: 65536
+  StopOnHit: 0
+  HitCooldown:
+    RawValue: 13107
+  WallCheckHeight:
+    RawValue: 32768
+  WallCheckDistance:
+    RawValue: 32768
+  WallStunDuration:
+    RawValue: 131072
+  WallExposedDuration:
+    RawValue: 0
+  WallExposedDamageMultiplier:
+    RawValue: 98304

@@ -199,3 +199,25 @@ exactly the wrong instant), the real projectile's simulation-tick flight freezes
 View-side timer keeps counting in real time regardless, so the warning could visually resolve slightly
 out of sync with the actual (paused) impact in that specific edge case. Not fixed here - the same
 tolerance level most of this codebase's other View-side cosmetic timers already accept.
+
+## Tar Launcher (World 2) - sticky-slow puddle (2026-10-01)
+
+A copy of the single-shot `MortarEnemy` whose shell also leaves a tar puddle that slows players.
+Not in any `SurvivalConfig`/group yet - spawn it with `EnemyDataAsset`'s "Spawn Near Local Player"
+Inspector button to test.
+
+- **`Assets/_QuantumUser/Resources/Enemy/World2/DesertSecurity/TarLauncher/W2-TarLauncher.asset`** - cloned Mortar chain
+  (`TarLauncher` → `TarLauncherAction` → `TarLauncherProjectileDelivery` →
+  `TarLauncherProjectileDataAsset` → `TarLauncherAreaHitData`), each with its own Quantum guid, so
+  tuning it never touches the W1 Mortar. Shares the Mortar's movement, telegraph and projectile prefab.
+  `TarLauncherAreaHitData.Effects` adds `TarPuddleSpawn` (`SpawnEntityEffectData`, Duration 5s, Scale 1.5 → `_Hazards/StickyPuddle`) on
+  top of the Mortar's blast effects.
+- **Puddle** - the shared radius-1 `Enemy/_Hazards/StickyPuddle` prefab, sized per spawn; see
+  `docs/enemy-passives.md`.
+- **`StickySlowEffectData`** + `StatusEffects.StickySlowRemaining/StickySlowMultiplier` - a dedicated
+  ground-hazard slow, read in `PlayerMovementProcessor`. Not Ice (no Freeze buildup, no reactions),
+  not `TempMoveSpeed` (can't clobber an Energy Drink). Strongest-wins, no stacking across puddles.
+  Defaults: SpeedMultiplier 0.65, Duration 0.25s (just over the puddle's tick, so it releases fast).
+
+Not done yet: no cap on simultaneous puddles, placeholder visual only. The Fuel Runner drops the same
+StickyPuddle (smaller) as an oil trail - see docs/enemy-passives.md.

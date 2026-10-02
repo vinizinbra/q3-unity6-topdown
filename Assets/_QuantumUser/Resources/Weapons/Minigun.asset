@@ -61,7 +61,7 @@ MonoBehaviour:
   - Id:
       Value: 2125645592162639784
   ViewPrefab: {fileID: 8089491252618662435, guid: b58842e8faadfb6666368d7eb811d35d, type: 3}
-  Description: 'Fire rate ramps up the longer you keep shooting.'
+  Description: Fire rate ramps up the longer you keep shooting.
   ShakeTier: 0
   ProjectileVisuals:
     ProjectileSprite: {fileID: 0}

@@ -55,7 +55,7 @@ namespace QuantumUser.Editor
         private const string ScrapyardJawBossPrefabPath = EntitiesFolder + "/ScrapyardJawBoss.prefab";
         private const string GrasslandBossAssetPath = EnemyResourcesFolder + "/GrasslandOutpostBoss.asset";
         private const string GrasslandBossPrefabPath = EntitiesFolder + "/GrasslandOutpostBoss.prefab";
-        private const string HeavySlammerAssetPath = EnemyResourcesFolder + "/BaseEnemies/HeavySlammer.asset";
+        private const string HeavySlammerAssetPath = EnemyResourcesFolder + "/BaseEnemies/W1-HeavySlammer.asset";
         private const string HeavySlammerViewPrefabPath = "Assets/_Project/Prefabs/View/EnemyView/ScavengerRaider/ScavengerHunt-Slammer.prefab";
 
         [MenuItem("Tools/RiftRaiders/Generate Grassland Outpost Boss (Placeholder)")]

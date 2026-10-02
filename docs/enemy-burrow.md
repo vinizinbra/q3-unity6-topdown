@@ -67,11 +67,58 @@ situation as every other system documented in the project `CLAUDE.md`. To make a
    random reposition; leave it `Cooldown` (the default) for a periodic reposition instead.
 5. Add the `EnemyActionData` into that enemy's `EnemyDataAsset.SkillActions`.
 
-## Known simplification
+## Collision while burrowed (fixed 2026-10-01)
 
-A burrowed/traveling enemy stays a solid `PhysicsBody3D` - a player can still physically bump into it
-mid-relocation even though it's invisible and can't be hit/targeted. Fixing this would mean adding a
-new physics layer (e.g. `BurrowedEnemy`) plus a Unity collision-matrix entry, the same trick
-`EnemySystem.OnEnemyDied` already uses for the `DeadEnemy` layer - that's pure Unity Editor
-project-settings work (Project Settings -> Tags and Layers / Physics), not code, and wasn't done here.
-See `EnemySystem.cs:245-258` for the precedent if this ever needs fixing.
+`Begin()` parks the enemy's collider on the **DeadEnemy** layer (collides with Ground/Obstacle only)
+and stores the original in `Burrowed.PreviousLayer`; the resurface restores it. So a burrowing enemy
+no longer shoves other enemies or players along its travel path, and Enemy|Boss-mask queries skip it.
+No project-settings change needed - the layer already existed with the right matrix row.
+
+## Sandworm Larva (World 2, 2026-10-01) - first real user
+
+Normal-tier (HP 60) Wildlife melee that gap-closes by burrowing. Not in any `SurvivalConfig`/group yet -
+spawn it with `EnemyDataAsset`'s "Spawn Near Local Player" Inspector button.
+
+- `Enemy/World2/Wildlife/SandwormLarva/W2-SandwormLarva.asset` - cloned NormalMelee chain (own guids:
+  `SandwormLarvaBiteAction`/`BiteDelivery`) + cloned elite burrow chain (`SandwormLarvaBurrowAction`/
+  `BurrowDelivery`, which carries the existing `DustTrailWithRocks` OnGoingStep FX and
+  `HitDustExplosion` impact), `Actions.SkillActions = [Burrow]`. MoveSpeed 4 (NormalMelee 4.5).
+- Bite: SelectionWeight 4. Burrow: SelectionWeight 1, EngageRange 6, Cooldown 7s, DownTime 0.5s (punish
+  window), cooldown-triggered. Score math (`EnemyDecisionUtility.TrySelectAction`): weight + up to 2 for
+  range - so in bite range the bite always wins, and out of it only the burrow qualifies.
+- Burrow action uses homing (`UpdateTargetDirectionWhileActive`, set by the user), MaxTravelDuration 2s, ArriveDistance 0.5.
+- Burrow delivery: TowardTarget, resurfaces 1.2-2.2 from the player when not homing, Dive/Resurface 0.25s,
+  BurrowMoveSpeed 5, `RetargetAtPercent` 0.5 (re-aims mid-travel while hidden), `AttackOnResurface` off - the bite
+  after emerging is its own normal telegraphed attack.
+- View: `_Project/Prefabs/View/EnemyView/World2/Wildlife/SandwormLarva.prefab` - Prefab Variant of
+  `ScavengerHunt-Melee` (placeholder art).
+
+**Bug found here - skill cooldowns never applied to Director spawns.** Skill cooldowns live on the
+optional `EnemyActionSlots` component, which was only on the boss prefab; every Director spawn uses
+one generic prototype without it, so `SetCooldownRemaining` silently no-oped and a skill stayed
+permanently off cooldown - it kept winning the selection (repetition penalty aside) and the enemy
+never attacked. `EnemySystem.SeedActionSlots` now adds it at spawn for any enemy with SkillActions.
+No other Director-spawned enemy had SkillActions yet (the World 1 boss carries the component on its own prefab), so the Larva was the first to hit it.
+
+**Travel is speed-based (2026-10-01).** Travel used to be a timed `Lerp(start, destination, t)`, so
+any destination change mid-way snapped the enemy (and its dust trail). It's now real movement: each
+tick it steps toward the sunk destination at **`BurrowMoveSpeed`** (u/s, formerly `TravelSpeed` -
+`FormerlySerializedAs` kept existing values: Larva 5, elite 10) and Travel ends on arrival. Dive and
+Resurface stay timed (`Enemy.StateTimer`). Per-burrow state lives on `Burrowed` (Stage, MoveSpeed,
+TravelElapsed, RetargetAt, Retargeted, PreviousLayer). `TravelDuration` is only a fallback when
+`BurrowMoveSpeed <= 0` (speed = distance / TravelDuration, resolved once at Begin).
+`RetargetAtPercent` = fraction of the first leg's estimated travel time; fires once, underground,
+re-scattering around the target's LIVE position (it used to read `SkillTargetPosition`, which Begin()
+overwrites with the destination - so it scattered around the old landing spot) and just steers there.
+**Homing burrow (`DirectionTracking = UpdateTargetDirectionWhileActive`)** is supported: EnemySystem
+re-points `SkillTargetPosition` at the live target every tick, so the worm steers after the player
+underground (no scatter - it surfaces under them). `MaxTravelDuration` (default 3s, Larva 2s, <= 0 =
+no cap) stops a chase it can't win: on timeout it resurfaces where it is if there's ground, else keeps
+going until there is. The landing point is locked at the start of Resurface (stored in
+`SkillStartPosition`) and snapped to the real ground under it. `ArriveDistance` (default 0, Larva 0.5)
+ends Travel that far (flat) short of the destination on the approach side, so a homing worm surfaces
+beside the target instead of under it. Travel moves flat; height only matters at the landing snap, so the rise doesn't slide after the
+target or end below ground. `RetargetAtPercent` is redundant with homing (the next tick's tracking
+overwrites it).
+
+Not done yet: a ground warning at the resurface point.

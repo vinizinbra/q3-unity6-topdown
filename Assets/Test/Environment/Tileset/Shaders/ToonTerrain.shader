@@ -21,6 +21,7 @@ Shader "RiftRaiders/Test/ToonTerrain"
         [Header(Surface)]
         _SurfaceTex ("Surface Texture (GRAYSCALE: white = Light, black = Dark)", 2D) = "white" {}
         _SurfaceLightColor ("Surface Light Color", Color) = (0.72, 0.76, 0.29, 1)
+        _SurfaceAccentColor ("Surface Accent Color (painted marks = texture B channel; alpha = strength, 0 = off)", Color) = (0.91, 0.71, 0.15, 0)
         _SurfaceDarkColor ("Surface Dark Color", Color) = (0.6, 0.66, 0.22, 1)
         _SurfaceScale ("Surface World Size (m per tile)", Float) = 4
 
@@ -103,6 +104,7 @@ Shader "RiftRaiders/Test/ToonTerrain"
             float4 _SurfaceTex_ST;
             float4 _WallTex_ST;
             half4 _SurfaceLightColor;
+            half4 _SurfaceAccentColor;
             half4 _SurfaceDarkColor;
             half4 _RaisedLightColor;
             half4 _RaisedDarkColor;
@@ -276,6 +278,7 @@ Shader "RiftRaiders/Test/ToonTerrain"
                             surfaceLight = lerp(surfaceLight, _RaisedLightColor.rgb, raised);
                         }
                         half3 surface = lerp(surfaceDark, surfaceLight, surfSample.r);
+                        surface = lerp(surface, _SurfaceAccentColor.rgb, surfSample.b * _SurfaceAccentColor.a);   // painted accent marks (B = mask)
                         half fade = input.data.y;
                         half inward = smoothstep(_EdgeFadeStart, max(_EdgeFadeEnd, _EdgeFadeStart + 1e-3h), fade);
                         terrain = lerp(surface, lerp(_FadeColor.rgb, surface, inward), _FadeColor.a);

@@ -60,7 +60,7 @@ MonoBehaviour:
   BaseTraits:
   - Id:
       Value: 370385610953740730
-  ViewPrefab: {fileID: 8089491252618662435, guid: aa2aaf6af4cc84f7490ce00013f9c47d, type: 3}
+  ViewPrefab: {fileID: 8089491252618662435, guid: cb167cde781164c7881cf54b32394a8b, type: 3}
   Description: Deals bonus damage to Burning enemies.
   ShakeTier: 0
   ProjectileVisuals:
@@ -116,11 +116,11 @@ MonoBehaviour:
     ProjectileDestroyScale: {x: 2, y: 2, z: 2}
     ProjectileExtraParticle: {fileID: 0}
     ProjectileExtraParticleScale: {x: 1, y: 1, z: 1}
-  _dpsPreview: 'Burst DPS: 98.4
+  _dpsPreview: 'Burst DPS: 125
 
-    Sustained DPS (incl. reload): 70.3
+    Sustained DPS (incl. reload): 89.3
 
     Damage/min:
-    4217
+    5356
 
-    Crit dmg/shot: 12 (vs 8 normal) @ 5 % chance, x1.5'
+    Crit dmg/shot: 15.2 (vs 10.2 normal) @ 5 % chance, x1.5'

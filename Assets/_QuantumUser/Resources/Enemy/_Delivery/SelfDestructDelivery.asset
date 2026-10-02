@@ -25,3 +25,5 @@ MonoBehaviour:
   ConeAngleDegrees:
     RawValue: 11796480
   SelfDestructs: 1
+  DetonateWhenKilled: 1
+  KilledDetonationTargets: 0

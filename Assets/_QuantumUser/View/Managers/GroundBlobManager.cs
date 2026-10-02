@@ -213,7 +213,12 @@ namespace QuantumUser.View.Managers
             if (!hasGround) return true; // e.g. falling past the edge of the level - no floor to project onto
 
             Vector3 hitPoint = hit.point;
-            Vector3 offset = new Vector3(config.ShadowOffset.x + blob.Offset.x, config.GroundOffset, config.ShadowOffset.y + blob.Offset.y);
+            // The per-character offset is authored for a right-facing sprite, so its X mirrors with
+            // the sprite: via the target's own scale sign when HasShadow sits on the flipped transform,
+            // or via FacingSign (pushed by EnemyBlobAnimationView) when it sits on an unflipped parent.
+            // config.ShadowOffset is the shared light direction - never mirrored.
+            float facing = Mathf.Sign(blob.Target.lossyScale.x) * blob.FacingSign;
+            Vector3 offset = new Vector3(config.ShadowOffset.x + blob.Offset.x * facing, config.GroundOffset, config.ShadowOffset.y + blob.Offset.y);
             blob.Transform.SetPositionAndRotation(hitPoint + offset, FlatRotation);
 
             float height = Mathf.Max(0f, targetPosition.y - hitPoint.y);
@@ -225,7 +230,8 @@ namespace QuantumUser.View.Managers
             // size-variance/boss-scale feature), so lossyScale.x is folded in too (uniform-scale
             // assumption - same convention EnemyAllyLinkView/TelegraphGrow already use). Shadow-only
             // ShadowScaleMultiplier is a global balance knob on top of that, skipped for lights.
-            float lossyScale = blob.Target.lossyScale.x;
+            // Abs: a mirrored (facing-left) target has a negative X scale, which would flip the blob.
+            float lossyScale = Mathf.Abs(blob.Target.lossyScale.x);
             float shadowMultiplier = blob.IsLight ? 1f : config.ShadowScaleMultiplier;
             float scale = blob.BaseScale * lossyScale * shadowMultiplier * Mathf.Lerp(config.MinScaleMultiplier, 1f, falloff);
             blob.Transform.localScale = new Vector3(scale, scale, scale);
@@ -260,5 +266,6 @@ namespace QuantumUser.View.Managers
         internal bool IsLight;
         internal Vector2 Offset;
         internal float AlphaMultiplier = 1f;
+        internal float FacingSign = 1f;
     }
 }

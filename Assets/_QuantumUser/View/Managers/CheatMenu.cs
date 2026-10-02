@@ -122,6 +122,20 @@ namespace QuantumUser.View
             _enforcer = enforcerGo.AddComponent<CheatMenuTimeScaleEnforcer>();
 
             BuildUi();
+
+            // EnemyDataAsset's own "Spawn Near Local Player" Inspector button (see
+            // EnemyDataAsset.Debug.cs) - routed through here since this host always exists.
+            EnemyDataAssetDebug.OnSpawnRequested += SendSpawnEnemy;
+        }
+
+        private void OnDestroy()
+        {
+            EnemyDataAssetDebug.OnSpawnRequested -= SendSpawnEnemy;
+        }
+
+        private void SendSpawnEnemy(AssetRef<EnemyDataAsset> enemy, int count)
+        {
+            Send(CheatActionKind.SpawnEnemy, enemy.Id.Value, count);
         }
 
         // QuantumGlobalMonoBehaviour requires this - only the hide-toggle hotkey is polled here
@@ -314,13 +328,15 @@ namespace QuantumUser.View
             // to walk the map enemy-free for longer while profiling.
             CreateButton(flow.Next(), "Break +60s", () => Send(CheatActionKind.ExtendBreathing, amount: 60));
 
-            // One-click combo (see CheatActionKind.SetupTestRun): jumps to Breath 4 (Lv20, the last
-            // Breathing phase) same as the button above, but also auto-resolves every level-up
-            // screen that jump queues instead of leaving them to click through, reveals the whole
-            // minimap, grants 5000 coins, and opens a real ChooseWeapon card screen immediately plus
-            // a Rift Mutation one right after it (both actually pickable, not auto-resolved) - a fast
-            // "midgame test setup" instead of assembling it by hand every time.
-            CreateButton(flow.Next(), "Setup Test Run (Ph.4)", () => Send(CheatActionKind.SetupTestRun, amount: 4));
+            // One-click combos (see CheatActionKind.SetupTestRun): same jump as the Breath N buttons
+            // above, but auto-resolves every level-up screen that jump queues instead of leaving them
+            // to click through, reveals the whole minimap, grants 5000 coins, and opens a real
+            // ChooseWeapon card screen plus 0/0/1/2 Rift Mutation ones after it (Breath 1-4, all
+            // actually pickable) - a fast "test setup at breath N" instead of assembling it by hand.
+            SetupBreathButton(flow, "Auto Breath 1 (+Wpn)", 1);
+            SetupBreathButton(flow, "Auto Breath 2 (+Wpn)", 2);
+            SetupBreathButton(flow, "Auto Breath 3 (+Wpn+1 Mut)", 3);
+            SetupBreathButton(flow, "Auto Breath 4 (+Wpn+2 Mut)", 4);
             flow.Close();
 
             // Runtime counterpart to the Editor-only "RiftRaiders/Disable Upgrade Screen Animation"
@@ -383,6 +399,7 @@ namespace QuantumUser.View
         {
             ButtonGrid enemies = new ButtonGrid(rt, GridColumns);
             GridButton(enemies, "Kill All Enemies", CheatActionKind.KillAllEnemies);
+            GridButton(enemies, "Toggle Director Spawns", CheatActionKind.ToggleDirectorSpawns);
             enemies.Close();
         }
 
@@ -587,6 +604,11 @@ namespace QuantumUser.View
         private void BreathingButton(ButtonGrid grid, string label, int n)
         {
             CreateButton(grid.Next(), label, () => Send(CheatActionKind.JumpToBreathing, amount: n));
+        }
+
+        private void SetupBreathButton(ButtonGrid grid, string label, int n)
+        {
+            CreateButton(grid.Next(), label, () => Send(CheatActionKind.SetupTestRun, amount: n));
         }
 
         private void PickerButton(Transform parent, string label, Picker picker)

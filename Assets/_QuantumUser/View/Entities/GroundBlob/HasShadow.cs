@@ -64,6 +64,15 @@ namespace Quantum
                 handle.BaseScale = scale;
         }
 
+        // Left/right facing of the sprite this shadow belongs to (+1 right, -1 left), so shadowOffset.x
+        // mirrors with it - pushed every frame by EnemyBlobAnimationView, since this component sits on
+        // the entity root, which isn't the transform that flips.
+        public void SetFacingSign(float sign)
+        {
+            if (handle != null)
+                handle.FacingSign = sign < 0f ? -1f : 1f;
+        }
+
         // Mirrors SetBaseScale - lets a caller (e.g. a status effect view) drive the alpha
         // multiplier directly on the live handle instead of Release+Reacquire, which would flicker
         // the shadow back through the pool for a frame.

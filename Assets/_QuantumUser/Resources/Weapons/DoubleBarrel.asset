@@ -61,7 +61,7 @@ MonoBehaviour:
   - Id:
       Value: 995703399927807295
   ViewPrefab: {fileID: 8089491252618662435, guid: 18692a6e16a6044c593882a1fb05bd53, type: 3}
-  Description: 'Fires two shotgun blasts back to back.'
+  Description: Fires two shotgun blasts back to back.
   ShakeTier: 2
   ProjectileVisuals:
     ProjectileSprite: {fileID: 0}

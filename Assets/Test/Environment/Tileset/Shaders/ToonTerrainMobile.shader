@@ -23,6 +23,8 @@ Shader "RiftRaiders/Mobile/ToonTerrainMobile"
         [Header(Surface)]
         _SurfaceTex ("Surface Texture (GRAYSCALE: white = Light, black = Dark)", 2D) = "white" {}
         _SurfaceLightColor ("Surface Light Color", Color) = (0.72, 0.76, 0.29, 1)
+        _WallGlowColor ("Wall Glow Color (tile rows with strata T <= -2.5 ADD this x their vertex alpha x Emission; alpha = strength, 0 = off)", Color) = (0.04, 0.6, 0.82, 0)
+        _SurfaceAccentColor ("Surface Accent Color (painted marks = texture B channel; alpha = strength, 0 = off)", Color) = (0.91, 0.71, 0.15, 0)
         _SurfaceDarkColor ("Surface Dark Color", Color) = (0.6, 0.66, 0.22, 1)
         _SurfaceScale ("Surface World Size (m per tile)", Float) = 4
 
@@ -105,6 +107,8 @@ Shader "RiftRaiders/Mobile/ToonTerrainMobile"
             float4 _SurfaceTex_ST;
             float4 _WallTex_ST;
             half4 _SurfaceLightColor;
+            half4 _SurfaceAccentColor;
+            half4 _WallGlowColor;
             half4 _SurfaceDarkColor;
             half4 _RaisedLightColor;
             half4 _RaisedDarkColor;
@@ -254,10 +258,23 @@ Shader "RiftRaiders/Mobile/ToonTerrainMobile"
                     albedo = lerp(albedo, _EmissionOffColor.rgb, (1.0h - above) * isProp * _EmissionOffColor.a);
                 }
 
+                // --- additive wall GLOW (tiles only, strata T <= -2.5, e.g. NeonCityV5's trim halo): _WallGlowColor x vertex
+                // alpha x Emission is ADDED over the normally shaded wall (a lerp towards the glow colour read grey). The
+                // strength rides in light.a, which only surface (grass) pixels read (raised tint) - no extra interpolator.
+                half glow = -1.0h;
+                if (input.uv.x <= -2.5)
+                {
+                    glow = input.color.a * step(_EmissionMinY, P.y);
+                    albedo = 1.0h;
+                    isProp = 0.0h;
+                }
+
                 o.albedo = half4(albedo, isProp);
                 o.light = half4(light, saturate((P.y - _RaisedFromY) * 8.0) * _RaisedStrength);
                 o.hatch = hatch;
                 o.edge = float4(input.uv1, input.uv2);
+                if (glow >= 0.0h)
+                    o.light.a = glow;
                 o.fogFactor = ComputeFogFactor(pos.positionCS.z);
                 return o;
             }
@@ -281,7 +298,8 @@ Shader "RiftRaiders/Mobile/ToonTerrainMobile"
                     half3 terrain;
                     [branch] if (grass > 0.5h)
                     {
-                        half surfaceGray = SAMPLE_TEXTURE2D(_SurfaceTex, sampler_SurfaceTex, input.uv.xy).r;
+                        half3 surfSample = SAMPLE_TEXTURE2D(_SurfaceTex, sampler_SurfaceTex, input.uv.xy).rgb;
+                        half surfaceGray = surfSample.r;
                         half3 surfaceDark = _SurfaceDarkColor.rgb;
                         half3 surfaceLight = _SurfaceLightColor.rgb;
                         [branch] if (_RaisedStrength > 0.0h)
@@ -291,6 +309,7 @@ Shader "RiftRaiders/Mobile/ToonTerrainMobile"
                             surfaceLight = lerp(surfaceLight, _RaisedLightColor.rgb, raised);
                         }
                         half3 surface = lerp(surfaceDark, surfaceLight, surfaceGray);
+                        surface = lerp(surface, _SurfaceAccentColor.rgb, surfSample.b * _SurfaceAccentColor.a);   // painted accent marks (B = mask)
                         half inward = smoothstep(_EdgeFadeStart, max(_EdgeFadeEnd, _EdgeFadeStart + 1e-3h), (half)input.data.y);
                         terrain = lerp(surface, lerp(_FadeColor.rgb, surface, inward), _FadeColor.a);
                     }
@@ -303,6 +322,8 @@ Shader "RiftRaiders/Mobile/ToonTerrainMobile"
                 }
 
                 half3 color = albedo * input.light.rgb;
+                [branch] if (_WallGlowColor.a > 0.0h && grass < 0.5h && isProp < 1.0h)
+                    color += _WallGlowColor.rgb * (input.light.a * _WallGlowColor.a * _EmissionStrength);   // additive wall glow
 
                 // --- hatching: read the ink only on faces whose weights allow any (lit faces skip it).
                 #if defined(_HATCH_SCREENSPACE)

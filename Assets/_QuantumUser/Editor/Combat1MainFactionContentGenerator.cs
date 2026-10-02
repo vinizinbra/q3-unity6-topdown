@@ -296,11 +296,11 @@ namespace QuantumUser.Editor
 
         private static AssetRef<EnemyDataAsset> LoadEnemyRef(string fileName)
         {
-            var asset = AssetDatabase.LoadAssetAtPath<EnemyDataAsset>($"{EnemyFolder}/{fileName}.asset");
+            var asset = AssetDatabase.LoadAssetAtPath<EnemyDataAsset>($"{EnemyFolder}/W1-{fileName}.asset");
 
             if (asset == null)
             {
-                LogHelper.Error("Combat1MainFactionContentGenerator", $"No EnemyDataAsset found at {EnemyFolder}/{fileName}.asset");
+                LogHelper.Error("Combat1MainFactionContentGenerator", $"No EnemyDataAsset found at {EnemyFolder}/W1-{fileName}.asset");
                 return default;
             }
 

@@ -18,9 +18,12 @@ namespace Quantum
     // Dive combines that same hop with a rotate-and-sink second half (rockTarget toward
     // RotateDegrees while depthTarget sinks, same local-Z sink idiom Crouch/Slam/Burrow already
     // use) - reads as diving headfirst into the ground rather than a plain squash; pairs naturally
-    // with BurrowDeliveryData's own Dive sub-phase, authored on BeginStep. Appended at the end so
-    // existing authored assets keep their serialized enum indices.
-    public enum AttackAnimationType { None, Shake, SwingBack, Pulse, Crouch, Inflate, Lunge, Slam, Snap, Chomp, Spin, ArmSwingBack, ArmSnap, PunchScale, ArmPunch, Jump, Dive }
+    // with BurrowDeliveryData's own Dive sub-phase, authored on BeginStep. HopStrike is the only
+    // type that offsets root horizontally - a small hop toward the target (world XZ, direction
+    // locked at the step's start) that lands on the strike, then slides back to the rest spot, for
+    // a melee hit that should read as "jumps in, hits, steps back" while the simulation body itself
+    // stays put. Appended at the end so existing authored assets keep their serialized enum indices.
+    public enum AttackAnimationType { None, Shake, SwingBack, Pulse, Crouch, Inflate, Lunge, Slam, Snap, Chomp, Spin, ArmSwingBack, ArmSnap, PunchScale, ArmPunch, Jump, Dive, HopStrike }
 
     // SkillTargetPosition (not OnTarget - renamed for clarity) resolves via
     // EnemyAttackVisualsView.TryGetAnchorPosition: prefers Enemy.SkillTargetPosition (the anchor
@@ -163,6 +166,18 @@ namespace Quantum
         [Tooltip("How far the body sinks (local Z, not Y - same reasoning as Crouch/Slam's own SinkAmount) by the end of the dive.")] public float SinkAmount = 0.3f;
     }
 
+    [Serializable]
+    public class HopStrikeParams
+    {
+        [Tooltip("World-unit distance the body hops toward the target at the strike, before sliding back. Purely visual - the simulation's own position never moves.")] public float Distance = 0.4f;
+        [Tooltip("Peak local-Y hop height on the way in (lands right at the strike).")] public float Height = 0.2f;
+        [Tooltip("Normalized point in the step (0-1) where the hop lands on the strike - the rest of the step is the slide back. Lower = snappier lunge, longer return.")] public float StrikeAt = 0.35f;
+        [Tooltip("Normalized time (0-1) held at the strike point before sliding back, so the hit lands with a beat.")] public float Hold = 0.1f;
+        [Tooltip("How far the body leans toward its facing direction at the strike.")] public float LeanDegrees = 12f;
+        [Tooltip("Stretch on take-off (decays as the hop lands).")] public float Stretch = 0.25f;
+        [Tooltip("Squash on landing at the strike, decaying across the slide back.")] public float LandSquash = 0.3f;
+    }
+
     // A secondary particle played alongside AttackVisualStep.ParticlePrefab on the same phase - its
     // own fully independent copy of the primary particle's placement config (anchor/offset/parent/
     // alignment/rotation/scale/sorting), so e.g. a muzzle flash and a separate ground-dust burst can
@@ -214,6 +229,11 @@ namespace Quantum
         [Tooltip("Only applied while BodySprite above is showing (same duration/revert window) - multiplies root's own base scale, e.g. for a swapped-in sprite authored at a different reference size than the enemy's normal one. (1,1,1) = unchanged. Reverts to (1,1,1) the instant BodySprite itself reverts, same timer.")]
         public Vector3 BodySpriteScale = Vector3.one;
 
+        [Tooltip("While this step plays, tilts the enemy's whole body sprite in the screen plane so its facing side points along the enemy's Aim direction (a lunge/slam that visibly aims at the target), easing back to upright afterwards. Left/right facing stays a mirror flip as usual; this only adds the up/down tilt on top.")]
+        public bool AlignBodyToDirection;
+        [Tooltip("AlignBodyToDirection only - caps the tilt so a target straight above/below doesn't stand the sprite on its end. 90 = can point fully up/down.")]
+        public float AlignMaxDegrees = 60f;
+
         [Tooltip("0 = no camera shake. Above 0, this step shakes FollowCamera from its own resolved position (self, or the step's own anchor/target if Anchor below is set to SkillTargetPosition) - attenuated by distance from the camera (FollowCamera.stepShakeFalloffRadius) and scaled by this value (FollowCamera.stepShakeAmplitudePerImpact), independent of AnimationType/particle. A distant hit on another part of the map naturally shakes little to nothing.")]
         public float ShakeImpact = 0f;
 
@@ -233,6 +253,7 @@ namespace Quantum
         public ArmPunchParams ArmPunch = new ArmPunchParams();
         public JumpParams Jump = new JumpParams();
         public DiveParams Dive = new DiveParams();
+        public HopStrikeParams HopStrike = new HopStrikeParams();
 
         [Tooltip("Only shown for animation types that rotate the body (Shake/SwingBack/Snap/Spin/ArmSwingBack/ArmSnap). Off (default) rotates around root's own base/ground-contact pivot, same as idle wobble/run rock/die topple - correct for a rock/lean tell. On instead compensates position so the body rotates in place around a centered point, using PivotHeightOverride below (or EnemyBlobAnimationView's own rig-level default/auto height if left at 0) - what a full spin needs to avoid arcing around the feet.")]
         public bool CenterPivot = false;

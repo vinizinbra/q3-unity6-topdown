@@ -68,7 +68,9 @@ component WeaponMagazinePositionPerks
 // WeaponPerkReactionSystem), decays back down once Weapon.TimeSinceFireReleased (already tracked,
 // reset every shot) exceeds RampDecayGrace - ticked in WeaponSystem.Update. Never baked into
 // Weapon.DamageMultiplier/FireCooldownMultiplier; folded in live every shot instead, so there's
-// nothing to revert.
+// nothing to revert. RampAdvancesPerShot (set by a ramp perk's AdvancePerShot, e.g. Auto Shotgun's
+// signature) switches the whole shared counter to +1 per real trigger shot, hit or miss, instead of
+// per landed hit - a multi-pellet weapon would otherwise gain one stack per pellet.
 component WeaponRampState
 {
     Byte RampStacks;
@@ -76,6 +78,7 @@ component WeaponRampState
     FP   RampDamageBonusPerStack;
     FP   RampFireRateBonusPerStack;
     FP   RampDecayGrace;
+    QBoolean RampAdvancesPerShot;
 }
 
 // -- Echo Chamber / Infinite Echo --

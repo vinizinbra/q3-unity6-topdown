@@ -832,6 +832,8 @@ namespace Quantum.Prototypes.Unity {
     public FP BoundRemaining;
     public FP TempMoveSpeedRemaining;
     public FP TempMoveSpeedMultiplier;
+    public FP StickySlowRemaining;
+    public FP StickySlowMultiplier;
     public FP ReviveImmunityRemaining;
     partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.StatusEffectsPrototype prototype);
     public override Quantum.Prototypes.StatusEffectsPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
@@ -900,6 +902,8 @@ namespace Quantum.Prototypes.Unity {
       converter.Convert(this.BoundRemaining, out result.BoundRemaining);
       converter.Convert(this.TempMoveSpeedRemaining, out result.TempMoveSpeedRemaining);
       converter.Convert(this.TempMoveSpeedMultiplier, out result.TempMoveSpeedMultiplier);
+      converter.Convert(this.StickySlowRemaining, out result.StickySlowRemaining);
+      converter.Convert(this.StickySlowMultiplier, out result.StickySlowMultiplier);
       converter.Convert(this.ReviveImmunityRemaining, out result.ReviveImmunityRemaining);
       ConvertUser(converter, ref result);
       return result;
