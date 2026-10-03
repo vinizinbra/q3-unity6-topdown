@@ -683,10 +683,27 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
       Client.OpRaiseEvent((byte)PhotonEventCode.SyncMatchRoom,
          new PhotonHashtable {
             { "room", matchRoomCode }, { "seed", seed }, { "leader", Client.UserId },
-            { "difficulty", (int)RuntimeConfig.Difficulty }, { "nightmare", RuntimeConfig.NightmareLevel }
+            { "difficulty", (int)RuntimeConfig.Difficulty }, { "nightmare", RuntimeConfig.NightmareLevel },
+            { "world", RuntimeConfig.World }
          },
          new RaiseEventArgs { Receivers = ReceiverGroup.All },
          SendOptions.SendReliable);
+   }
+
+   // Writes WorldCatalog's world `index` onto `config` (World, SurvivalConfig, WorldBalance). Index ->
+   // catalog on every client, so the party leader only has to send the index. No catalog/entry =
+   // the config is left as authored.
+   public static void ApplyWorld(RuntimeConfig config, int index)
+   {
+      WorldDefinition world = WorldCatalog.Instance != null ? WorldCatalog.Instance.Get(index) : null;
+
+      if (world == null)
+      {
+         LogHelper.Warn("MatchMaking", $"World index {index} not in WorldCatalog - RuntimeConfig world left unchanged.");
+         return;
+      }
+
+      world.ApplyTo(config, index);
    }
 
    // Called once this client has landed back in the party room (see PartyManager.HandleJoinedOrCreated)
@@ -1273,6 +1290,8 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
             RuntimeConfig.Difficulty = (DifficultyTier)tier;
          if (data.TryGetValue("nightmare", out var nightmare) && nightmare is int nightmareLevel)
             RuntimeConfig.NightmareLevel = nightmareLevel;
+         if (data.TryGetValue("world", out var world) && world is int worldIndex)
+            ApplyWorld(RuntimeConfig, worldIndex);
          MoveToMatchRoomAsync((string)data["room"], (int)data["seed"]);
       }
    }

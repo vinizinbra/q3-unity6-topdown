@@ -367,7 +367,7 @@ namespace Quantum
         public static int ResolveKillTarget(Frame f, ChallengeDefinition definition)
         {
             BalanceConfig balance = f.FindAsset(f.RuntimeConfig.BalanceConfig);
-            FP coopPressure = PlayerClusterDirectorUtility.ResolveCoopPressure(balance, f.PlayerConnectedCount);
+            FP coopPressure = PlayerClusterDirectorUtility.ResolveCoopPressure(f, balance, f.PlayerConnectedCount);
             return FPMath.RoundToInt(definition.KillTarget * coopPressure);
         }
 
@@ -393,14 +393,17 @@ namespace Quantum
             LifecycleConfig lifecycleConfig = f.FindAsset(f.RuntimeConfig.LifecycleConfig);
             BalanceConfig balanceConfig = f.FindAsset(f.RuntimeConfig.BalanceConfig);
 
+            if (TryResolveEnemySourcePhase(f, out SurvivalPhase sourcePhase) == false)
+                return;
+
             SurvivalPhase syntheticPhase = new SurvivalPhase
             {
                 BudgetPerPulse = definition.BudgetPerPulse,
                 PulseInterval = definition.PulseInterval,
                 TargetPressure = definition.TargetPressure,
                 MaxAliveEnemies = definition.MaxAliveEnemies,
-                AllowedGroups = definition.AllowedGroups,
-                AllowedEnemies = definition.AllowedEnemies,
+                AllowedGroups = sourcePhase.AllowedGroups,
+                AllowedEnemies = sourcePhase.AllowedEnemies,
             };
 
             // Snapshot BEFORE the pulse, not an EntityRef/index watermark - EntityRef indices can be
@@ -414,6 +417,118 @@ namespace Quantum
                 &challenge->PulseTimer, &challenge->PulseBudget);
 
             TagNewlySpawnedEnemies(f, poi, before);
+        }
+
+        // Which enemies the challenge spawns: the run's own SurvivalConfig, not a per-challenge list,
+        // so the same ChallengeDefinition works in every world. The pool is the UNION (deduped) of
+        // every Combat phase's AllowedGroups/AllowedEnemies from the start of the run up to the later
+        // of (a) the current phase and (b) the second Breathing phase - so an early challenge still
+        // gets a real mix instead of only the first phase's enemies, and a late one gets everything
+        // unlocked so far. Breathing/Boss/Elite phases contribute nothing. SurvivalTime is frozen
+        // while ChallengeActive, so each group's own Min/MaximumSurvivalTime window still applies.
+        //
+        // Pure function of (asset, end index), so a static cache is safe across frames/rollbacks and
+        // avoids rebuilding the lists on every PulseChallengeEncounter tick.
+        private static SurvivalConfig _poolConfig;
+        private static int _poolEndIndex = -1;
+        private static SurvivalPhase _poolPhase;
+
+        private const int MinimumBreathingsInPool = 2;
+
+        private static bool TryResolveEnemySourcePhase(Frame f, out SurvivalPhase result)
+        {
+            result = default;
+
+            if (f.RuntimeConfig.SurvivalConfig.Id.IsValid == false)
+            {
+                Log.Error("[TeamChallenge] RuntimeConfig.SurvivalConfig not assigned - challenge encounter stays idle");
+                return false;
+            }
+
+            SurvivalConfig survivalConfig = f.FindAsset(f.RuntimeConfig.SurvivalConfig);
+            SurvivalPhase[] phases = survivalConfig?.Phases;
+
+            if (phases == null || phases.Length == 0)
+            {
+                Log.Error("[TeamChallenge] SurvivalConfig has no Phases authored - challenge encounter stays idle");
+                return false;
+            }
+
+            int end = System.Math.Max(0, System.Math.Min(f.Global->CurrentPhaseIndex, phases.Length - 1));
+            int breathings = 0;
+            int minimumEnd = phases.Length - 1; // fewer than two Breathings authored = take everything
+
+            for (int i = 0; i < phases.Length; i++)
+            {
+                if (phases[i].Kind != SurvivalPhaseKind.Breathing)
+                    continue;
+
+                breathings++;
+
+                if (breathings == MinimumBreathingsInPool)
+                {
+                    minimumEnd = i;
+                    break;
+                }
+            }
+
+            end = System.Math.Max(end, minimumEnd);
+
+            if (ReferenceEquals(_poolConfig, survivalConfig) && _poolEndIndex == end)
+            {
+                result = _poolPhase;
+                return true;
+            }
+
+            List<AssetRef<EnemyGroupConfig>> groups = new List<AssetRef<EnemyGroupConfig>>();
+            List<EnemySpawnEntry> enemies = new List<EnemySpawnEntry>();
+
+            for (int i = 0; i <= end; i++)
+            {
+                if (phases[i].Kind != SurvivalPhaseKind.Combat)
+                    continue;
+
+                if (phases[i].AllowedGroups != null)
+                {
+                    foreach (AssetRef<EnemyGroupConfig> group in phases[i].AllowedGroups)
+                    {
+                        if (groups.Contains(group) == false)
+                            groups.Add(group);
+                    }
+                }
+
+                if (phases[i].AllowedEnemies != null)
+                {
+                    foreach (EnemySpawnEntry entry in phases[i].AllowedEnemies)
+                    {
+                        bool duplicate = false;
+
+                        for (int e = 0; e < enemies.Count; e++)
+                        {
+                            if (enemies[e].EnemyData.Equals(entry.EnemyData) && enemies[e].Faction == entry.Faction)
+                            {
+                                duplicate = true;
+                                break;
+                            }
+                        }
+
+                        if (duplicate == false)
+                            enemies.Add(entry);
+                    }
+                }
+            }
+
+            if (groups.Count == 0 && enemies.Count == 0)
+            {
+                Log.Error("[TeamChallenge] SurvivalConfig has no Combat enemies up to the current pool range - challenge encounter stays idle");
+                return false;
+            }
+
+            _poolConfig = survivalConfig;
+            _poolEndIndex = end;
+            _poolPhase = new SurvivalPhase { AllowedGroups = groups, AllowedEnemies = enemies.ToArray() };
+            result = _poolPhase;
+            return true;
         }
 
         private static List<EntityRef> CollectAllDirectorEnemies(Frame f)

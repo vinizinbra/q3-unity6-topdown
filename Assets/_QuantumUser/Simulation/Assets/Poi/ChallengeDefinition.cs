@@ -1,20 +1,22 @@
 namespace Quantum
 {
-    using System.Collections.Generic;
     using Photon.Deterministic;
 
     // One authored Optional Team Challenge objective (Kill Rush / Flawless Hunt / Cursed Survival -
     // see TeamChallenge.qtn's own ChallengeType). Deliberately holds ONLY challenge-specific design
     // data - co-op/difficulty scaling is never duplicated here.
     //
-    // The spawn-facing fields below are DELIBERATELY shaped exactly like SurvivalPhase's own
+    // The pacing fields below are DELIBERATELY shaped exactly like SurvivalPhase's own
     // (see SurvivalConfig.cs) - not a coincidence: TeamChallengeUtility.PulseChallengeEncounter
-    // builds a SurvivalPhase value straight out of these fields, every tick, and feeds it into the
+    // builds a SurvivalPhase value out of these fields, every tick, and feeds it into the
     // EXISTING CombatDirectorUtility.TryPulse - the same budget-accrual/pressure/weighted-purchase
     // algorithm every normal Survival phase already runs through, just paced by this asset instead
-    // of SurvivalConfig.Phases[]. Co-op/difficulty scaling is still applied automatically inside
-    // that same call (EnemyBalanceUtility/BalanceConfig, via GroupSpawnerUtility) - this asset never
-    // touches BalanceConfig directly, and no parallel budget/pacing system is introduced.
+    // of SurvivalConfig.Phases[]. WHICH enemies spawn is NOT authored here: that synthetic phase
+    // borrows AllowedGroups/AllowedEnemies from the run's current SurvivalConfig (see
+    // TeamChallengeUtility.ResolveEnemySourcePhase), so one challenge asset works for every world.
+    // Co-op/difficulty scaling is still applied automatically inside that same call
+    // (EnemyBalanceUtility/BalanceConfig, via GroupSpawnerUtility) - this asset never touches
+    // BalanceConfig directly, and no parallel budget/pacing system is introduced.
     public partial class ChallengeDefinition : AssetObject
     {
         public ChallengeType Type;
@@ -45,7 +47,5 @@ namespace Quantum
         public FP PulseInterval;
         public FP TargetPressure;
         public int MaxAliveEnemies;
-        public List<AssetRef<EnemyGroupConfig>> AllowedGroups;
-        public EnemySpawnEntry[] AllowedEnemies;
     }
 }

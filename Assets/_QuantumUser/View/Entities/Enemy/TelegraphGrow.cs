@@ -88,6 +88,13 @@ namespace Quantum
             if (frame == null)
                 return 1f;
 
+            // Only an Enemy's own windup is scaled by status/boss/difficulty anticipation speed. Callers
+            // with no windup owner (GroundWarningTelegraphManager passes EntityRef.None; Zara's
+            // afterbeat passes a hero) hand in a real-time duration, so applying the difficulty
+            // multiplier there stopped the fill short (Easy's 0.8 = fill ends at ~80%) or finished it early.
+            if (_enemyEntity == EntityRef.None || frame.Has<Enemy>(_enemyEntity) == false)
+                return frame.Global->LevelUpScreenOpen == true ? 0f : 1f;
+
             bool fullyPaused = StatusEffectUtility.IsStaggered(frame, _enemyEntity) == true || frame.Global->LevelUpScreenOpen == true;
             float pauseMultiplier = fullyPaused == true ? 0f : 1f;
             float anticipationMultiplier = StatusEffectUtility.GetAnticipationMultiplier(frame, _enemyEntity).AsFloat

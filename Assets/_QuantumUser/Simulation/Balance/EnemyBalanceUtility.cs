@@ -35,10 +35,14 @@ namespace Quantum
             FP curveDmg = balance.Evaluate(CurveChannel.EnemyDmg, elapsedSeconds);
             FP coopDmg = balance.GetCoopGlobal(CoopGlobalKey.EnemyDamage, playerCount);
 
+            WorldBalanceData world = WorldBalanceData.Get(f);
+            FP worldHp = world != null ? world.EnemyHpMultiplier : FP._1;
+            FP worldDmg = world != null ? world.EnemyDamageMultiplier : FP._1;
+
             return new EnemyRuntimeStats
             {
-                MaxHp = FPMath.RoundToInt(baseHp * curveHp * coopHp),
-                DamageMultiplier = curveDmg * coopDmg,
+                MaxHp = FPMath.RoundToInt(baseHp * curveHp * coopHp * worldHp),
+                DamageMultiplier = curveDmg * coopDmg * worldDmg,
             };
         }
     }

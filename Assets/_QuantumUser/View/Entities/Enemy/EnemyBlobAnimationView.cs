@@ -94,6 +94,14 @@ namespace Quantum
         private AttackVisualStep debugTestStep;
 
         private enum State { Idle, Run, AttackStep, Die, Burrow, Jump }
+
+        // True while the body is not standing on the ground - burrowed/sinking, hopping, dying, falling,
+        // or playing a Jump/Dive attack step. Read by ground props that belong to "the body on the
+        // ground" (GroundAnchoredOverlay) so they can hide and pop back in.
+        public bool IsBodyOffGround =>
+            _state == State.Die || _state == State.Jump || _burrowT > 0.01f || _isFallPending
+            || (_state == State.AttackStep && _currentStep != null && _stateTimer < _currentStep.Duration
+                && (_currentStep.AnimationType == AttackAnimationType.Jump || _currentStep.AnimationType == AttackAnimationType.Dive));
         private State _state = State.Idle;
         private float _stateTimer;
         private float _horizontalSpeed;
@@ -202,6 +210,10 @@ namespace Quantum
         // goes one way. Sits pinned at 1 in between (while Burrowed stays true and the enemy is
         // actually traveling underground) since nothing drives it further until the falling edge.
         private float _burrowT;
+
+        // Current burrow delivery's sim durations (see QUpdate) - < 0 = use the serialized fallback.
+        private float _activeSinkDuration = -1f;
+        private float _activeRiseDuration = -1f;
         private bool _burrowSinking;
 
         // Fall-respawn delay pending (see EnemyFallSystem/LevelConfig.FallRespawnDelay) - polled
@@ -412,7 +424,24 @@ namespace Quantum
             // Burrowed is a plain tag (see BurrowDeliveryData/Burrowed.qtn), not part of
             // EnemyActionPhase - watched the same edge-triggered way as Dead above, just off its
             // own bool instead of a phase value.
-            bool isBurrowed = frame.Has<Burrowed>(_entityRef);
+            // "Burrowed" here means hidden/sinking: the sim keeps the tag (and Invulnerable) through the
+            // whole Resurface stage and removes it on the LAST tick - the same tick AttackOnResurface
+            // damage lands - so waiting for the tag to drop made the enemy only start growing back as
+            // it already hit you. Stage 2 (BurrowDeliveryData.StageResurface) starts the rise instead.
+            const byte resurfaceStage = 2;
+            bool isBurrowed = frame.TryGet(_entityRef, out Burrowed burrowedState) == true
+                && burrowedState.Stage != resurfaceStage;
+
+            // Sink/rise run on the burrow delivery's own DiveDuration/ResurfaceDuration when one is
+            // active, so the body disappears exactly as the sim goes under and reappears exactly over
+            // the sim's rise - the serialized burrowSink/RiseDuration are only the fallback.
+            if (frame.TryGet(_entityRef, out Enemy burrowEnemy) == true
+                && EnemyDecisionUtility.ResolveAction(frame, frame.FindAsset(burrowEnemy.EnemyData), burrowEnemy.CurrentActionSlot) is { } burrowAction
+                && frame.FindAsset(burrowAction.Delivery) is BurrowDeliveryData burrowDelivery)
+            {
+                _activeSinkDuration = burrowDelivery.DiveDuration.AsFloat;
+                _activeRiseDuration = burrowDelivery.ResurfaceDuration.AsFloat;
+            }
 
             if (isBurrowed != _lastBurrowed)
             {
@@ -486,7 +515,9 @@ namespace Quantum
             // stuck at 1 forever whenever that guard wins - the enemy staying invisible/scale-0
             // permanently, since nothing else would ever bring it back down. A no-op once already at
             // its target, same "own independent timer" idiom _bodySpriteTimeRemaining uses above.
-            float burrowRateDuration = _burrowSinking ? burrowSinkDuration : burrowRiseDuration;
+            float burrowRateDuration = _burrowSinking
+                ? (_activeSinkDuration >= 0f ? _activeSinkDuration : burrowSinkDuration)
+                : (_activeRiseDuration >= 0f ? _activeRiseDuration : burrowRiseDuration);
             float burrowRate = burrowRateDuration > 0f ? dt / burrowRateDuration : 1f;
             _burrowT = Mathf.MoveTowards(_burrowT, _burrowSinking ? 1f : 0f, burrowRate);
 
@@ -794,19 +825,18 @@ namespace Quantum
                         case AttackAnimationType.Dive:
                         {
                             // Hop (bobTarget, same peaked-at-the-middle arc as Jump above) and
-                            // rotate-into-the-ground (rockTarget + depthTarget - local Z, not Y, same
-                            // reasoning as Crouch/Slam's own SinkAmount) run CONCURRENTLY across the
+                            // rotate-into-the-ground (rockTarget From->To + a local-Y sink) run CONCURRENTLY across the
                             // whole step, not sequentially - reads as diving headfirst as it leaves
                             // the ground, rather than hopping first and only tipping over afterward.
                             // Rotation/sink ease in toward the end (decay^2, same ramp Slam/Crouch use
                             // for their own impact/sink) while the hop follows its own independent
                             // arc. Pairs with BurrowDeliveryData's own Dive sub-phase, authored on
                             // BeginStep.
-                            bobTarget = Mathf.Sin(t * Mathf.PI) * step.Dive.JumpHeight;
-
+                            // Sink is local Y (down into the ground), stacked on the hop arc - unlike
+                            // Crouch/Slam's depth sink, a dive is meant to visibly go below the ground line.
                             float diveEase = t * t;
-                            rockTarget = step.Dive.RotateDegrees * diveEase * _facingSign;
-                            depthTarget = -step.Dive.SinkAmount * diveEase;
+                            bobTarget = Mathf.Sin(t * Mathf.PI) * step.Dive.JumpHeight - step.Dive.SinkAmount * diveEase;
+                            rockTarget = Mathf.Lerp(step.Dive.FromRotateDegrees, step.Dive.ToRotateDegrees, diveEase) * _facingSign;
                             _squashT = Mathf.Lerp(_squashT, 0f, 1f - Mathf.Exp(-squashLerpSpeed * dt));
                             break;
                         }

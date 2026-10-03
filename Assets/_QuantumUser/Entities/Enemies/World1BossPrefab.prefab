@@ -244,7 +244,7 @@ MonoBehaviour:
     RotationFreeze: 255
     InertiaMode: 0
     Mass:
-      RawValue: 65536
+      RawValue: 655360000
     Drag:
       RawValue: 131072
     AngularDrag:
@@ -467,6 +467,10 @@ MonoBehaviour:
       RawValue: 0
     KnockbackTimer:
       RawValue: 0
+    HitStaggerTimer:
+      RawValue: 0
+    StaggerImmuneTimer:
+      RawValue: 0
     PreKnockbackPosition:
       X:
         RawValue: 0
@@ -509,6 +513,29 @@ MonoBehaviour:
       RawValue: 0
     Faction:
       Value: 0
+    FleeDirection:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+    FleeCommitTimer:
+      RawValue: 0
+    LeadAverageVelocity:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
+    LeadSamplePosition:
+      X:
+        RawValue: 0
+      Y:
+        RawValue: 0
+      Z:
+        RawValue: 0
+    LeadSampleTimer:
+      RawValue: 0
 --- !u!114 &904307809960737103
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -566,14 +593,17 @@ MonoBehaviour:
       RawValue: 0
     BurnTickTimer:
       RawValue: 0
-    BurnDamagePerTick:
-      RawValue: 0
+    BurnStackCount: 0
+    BurnStackDamagePerTick:
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
     BurnOwner: {fileID: 0}
     BurnSource:
       Value: 0
     ElectrifiedRemaining:
-      RawValue: 0
-    ElectrifiedJoltTimer:
       RawValue: 0
     StaggerRemaining:
       RawValue: 0
@@ -610,7 +640,11 @@ MonoBehaviour:
       RawValue: 0
     IceRemaining:
       RawValue: 0
-    IceSpeedMultiplier:
+    IceBuildup:
+      RawValue: 0
+    FreezeRemaining:
+      RawValue: 0
+    FreezeRecoveryRemaining:
       RawValue: 0
     StunRemaining:
       RawValue: 0
@@ -699,6 +733,10 @@ MonoBehaviour:
     TempMoveSpeedRemaining:
       RawValue: 0
     TempMoveSpeedMultiplier:
+      RawValue: 0
+    StickySlowRemaining:
+      RawValue: 0
+    StickySlowMultiplier:
       RawValue: 0
     ReviveImmunityRemaining:
       RawValue: 0
@@ -797,6 +835,8 @@ MonoBehaviour:
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -848,6 +888,14 @@ MonoBehaviour:
       JumpHeight: 0.3
       RotateDegrees: 90
       SinkAmount: 0.3
+    HopStrike:
+      Distance: 0.4
+      Height: 0.2
+      StrikeAt: 0.35
+      Hold: 0.1
+      LeanDegrees: 12
+      Stretch: 0.25
+      LandSquash: 0.3
     CenterPivot: 0
     PivotHeightOverride: 0
     ParticlePrefab: {fileID: 0}
@@ -861,6 +909,7 @@ MonoBehaviour:
     OverrideSortingOrder: 0
     SortingOrder: 0
     AdditionalParticles: []
+  alignTiltSpeed: 720
 --- !u!114 &7213704155496264851
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -903,7 +952,9 @@ MonoBehaviour:
   fireRestTint: {r: 1, g: 0.55, b: 0.2, a: 1}
   iceRestTint: {r: 0.4, g: 0.9, b: 1, a: 1}
   lightningRestTint: {r: 1, g: 0.9, b: 0.3, a: 1}
+  frozenTint: {r: 0.55, g: 0.85, b: 1, a: 1}
   freezeMaterial: {fileID: 2100000, guid: b153b2878790f4feab0589455e95ac70, type: 2}
+  hardFreezeMaterial: {fileID: 0}
 --- !u!114 &1460262746628902169
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1122,6 +1173,10 @@ PrefabInstance:
       objectReference: {fileID: -1822871292, guid: dec25668cd2bb4d09a77f8196c943b34, type: 3}
     - target: {fileID: 736891227221864247, guid: 5f52d98df5a844a60925a5ad01f4a4c7, type: 3}
       propertyPath: m_Color.a
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 736891227221864247, guid: 5f52d98df5a844a60925a5ad01f4a4c7, type: 3}
+      propertyPath: m_WasSpriteAssigned
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 736891227221864247, guid: 5f52d98df5a844a60925a5ad01f4a4c7, type: 3}

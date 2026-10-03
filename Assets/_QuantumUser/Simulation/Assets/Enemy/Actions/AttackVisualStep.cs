@@ -162,8 +162,10 @@ namespace Quantum
     public class DiveParams
     {
         [Tooltip("Peak local-Y hop height across roughly the first half of the step, before the rotate-and-sink.")] public float JumpHeight = 0.3f;
-        [Tooltip("How far the body rotates (toward facing direction) as it dives, ramping in across the second half of the step.")] public float RotateDegrees = 90f;
-        [Tooltip("How far the body sinks (local Z, not Y - same reasoning as Crouch/Slam's own SinkAmount) by the end of the dive.")] public float SinkAmount = 0.3f;
+        [Tooltip("Body rotation at the start of the step (degrees, toward the facing direction).")] public float FromRotateDegrees = 0f;
+        [Tooltip("Body rotation at the end of the step (degrees, toward the facing direction) - eased in from FromRotateDegrees as it dives.")]
+        [UnityEngine.Serialization.FormerlySerializedAs("RotateDegrees")] public float ToRotateDegrees = 90f;
+        [Tooltip("How far the body sinks down (local Y) by the end of the dive - goes into the ground, on top of the hop arc.")] public float SinkAmount = 0.3f;
     }
 
     [Serializable]

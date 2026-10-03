@@ -17,6 +17,14 @@ component GroundTrail
     // Uniform size of each dropped piece - see SpawnedEntitySpawner.ApplySpawnScale.
     FP Scale;
 
+    // 0 SurfaceOnly (default - pauses while Burrowed), 1 BurrowedOnly (only while underground, e.g. the
+    // Dune Leviathan's oil seeping up along its tunnel), 2 Always.
+    Byte Mode;
+
+    // Optional - when set, drops only while the carrier enemy is executing THIS action (Active phase),
+    // e.g. the Dune Leviathan's oil seeps only during its Frenzy burrow. Unset = no action filter.
+    AssetRef<EnemyActionData> OnlyDuringAction;
+
     // Runtime only. HasLastDrop false = first tick just records the position, so a freshly spawned
     // carrier doesn't drop a piece at wherever it was created.
     FPVector3 LastDropPosition;

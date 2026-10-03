@@ -160,7 +160,7 @@ MonoBehaviour:
       Id:
         Value: 440946917374813270
     Radius:
-      RawValue: 78643
+      RawValue: 72090
     ShieldMultiplier:
       RawValue: 0
     HealthMultiplier:
@@ -279,10 +279,7 @@ MonoBehaviour:
   SkillActions: []
   ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
   ViewPrefab: {fileID: 4643335697641966209, guid: d83990f7150584ae791082b29da92cb3, type: 3}
-  FactionSkins:
-  - Faction: 1
-    ViewPrefab: {fileID: 8476845490732343577, guid: 0f9bf80130ec34ffcbfcf4925f927fee, type: 3}
-    ScaleMultiplier: 0
+  FactionSkins: []
 --- !u!114 &4899668339533938794
 MonoBehaviour:
   m_ObjectHideFlags: 0

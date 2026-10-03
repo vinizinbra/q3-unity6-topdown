@@ -10,6 +10,10 @@ namespace Quantum
     // written at runtime.
     public abstract unsafe partial class EnemyDeliveryData : AssetObject
     {
+        // True for deliveries that fire a weapon (a shot leaves the gun/mouth) - the view only plays the
+        // rig's Muzzle flash + recoil (EnemyArmAimView.Fire) for these, not for a burrow/slam/charge.
+        public virtual bool FiresWeapon => false;
+
         // Both 0 (default): no randomization, RandomizeAroundAnchor just returns anchor unchanged -
         // every existing delivery keeps its exact current behavior unless it opts in. A ring, not a
         // filled disc (see EnemyMovementUtility.RandomPositionInRing) - MinOffset > 0 keeps the

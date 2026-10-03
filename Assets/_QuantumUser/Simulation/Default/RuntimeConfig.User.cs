@@ -53,6 +53,15 @@
         // docs/run-curves-coop-scaling.md.
         public AssetRef<BalanceConfig> BalanceConfig;
 
+        [Header("World")]
+        // Which world this match is (index into the menu's WorldCatalog - 0 = World 1). View-side code
+        // (EnvironmentManager) resolves the world's WorldTheme from it; written by the menu's world
+        // picker before CloneConfig, alongside SurvivalConfig/WorldBalance below.
+        public int World;
+
+        // Optional per-world multipliers on top of the global BalanceConfig - see WorldBalanceData.
+        public AssetRef<WorldBalanceData> WorldBalance;
+
         [Header("Difficulty")]
         // Easy/Medium/Hard/Nightmare N - multipliers composed on top of BalanceConfig/co-op/Rift
         // Mutations, resolved once at match init into Global.Difficulty by DifficultySystem. Medium is

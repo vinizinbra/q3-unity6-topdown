@@ -19,6 +19,8 @@ namespace Quantum
     // plain ProjectileDeliveryData instead for an enemy that needs to stand and watch its shot land.
     public unsafe class FanProjectileDeliveryData : EnemyDeliveryData
     {
+        public override bool FiresWeapon => true;
+
         [ExpandableAsset] public AssetRef<ProjectileDataAsset> ProjectileData;
 
         // Per-action "these shots fly faster/slower" (1 = the movement's own authored speed), passed

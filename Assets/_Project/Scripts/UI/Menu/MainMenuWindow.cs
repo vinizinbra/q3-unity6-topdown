@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Playtime.Core;
 using Quantum;
 using Quantum.Demo;
+using QuantumUser.View.Util;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -28,6 +29,13 @@ public class MainMenuWindow : UiWindow
     [Tooltip("Optional - the party panel that owns the room-code field. While a code is typed there and this player isn't already in a party, the Play button becomes Join and joins that room instead of starting a run. Left unassigned, Play behaves exactly as before.")]
     public PartyRoomWidget partyRoom;
 
+    [Header("World")]
+    [Tooltip("Optional - one entry per WorldCatalog world. Writes the chosen WorldDefinition onto MatchMakingConfig.RuntimeConfig (World, SurvivalConfig, WorldBalance); in a party only the leader's pick is used (carried in the match-start event), so it's read-only for everyone else.")]
+    public TMP_Dropdown worldDropdown;
+
+    // WorldCatalog index. Remembered across sessions.
+    private static readonly PlayerPrefInt WorldIndexPref = new PlayerPrefInt("menu_world_index", 0);
+
     [Header("Difficulty")]
     [Tooltip("Optional - Easy/Medium/Hard/Nightmare 1..maxNightmareLevel. Writes MatchMakingConfig.RuntimeConfig.Difficulty/NightmareLevel; in a party only the leader's pick is used (carried in the match-start event), so it's read-only for everyone else.")]
     public TMP_Dropdown difficultyDropdown;
@@ -47,6 +55,7 @@ public class MainMenuWindow : UiWindow
             practiceButton.onClick.AddListener(Practice);
        /* quickPlayButton.onClick.AddListener(QuickPlay);*/
 
+        InitializeWorldDropdown();
         InitializeDifficultyDropdown();
     }
 
@@ -63,6 +72,43 @@ public class MainMenuWindow : UiWindow
 
         if (difficultyDropdown != null)
             difficultyDropdown.onValueChanged.RemoveListener(OnDifficultyChanged);
+
+        if (worldDropdown != null)
+            worldDropdown.onValueChanged.RemoveListener(OnWorldChanged);
+    }
+
+    private void InitializeWorldDropdown()
+    {
+        WorldCatalog catalog = WorldCatalog.Instance;
+
+        if (catalog == null || catalog.Worlds.Count == 0)
+        {
+            LogHelper.Warn("MainMenu", "No WorldCatalog at Resources/Worlds/WorldCatalog - matches use whatever World/SurvivalConfig the RuntimeConfig was authored with.");
+            return;
+        }
+
+        int index = Mathf.Clamp(WorldIndexPref.Value, 0, catalog.Worlds.Count - 1);
+
+        if (worldDropdown != null)
+        {
+            var options = new List<string>();
+            for (int i = 0; i < catalog.Worlds.Count; i++)
+                options.Add(catalog.Worlds[i] != null && string.IsNullOrEmpty(catalog.Worlds[i].DisplayName) == false ? catalog.Worlds[i].DisplayName : $"World {i + 1}");
+
+            worldDropdown.ClearOptions();
+            worldDropdown.AddOptions(options);
+            worldDropdown.onValueChanged.AddListener(OnWorldChanged);
+            worldDropdown.SetValueWithoutNotify(index);
+        }
+
+        // Applied even with no dropdown, so the remembered/default world still drives the match.
+        MatchMakingConfig.ApplyWorld(matchMakingConfig != null ? matchMakingConfig.RuntimeConfig : MatchMakingConfig.Instance.RuntimeConfig, index);
+    }
+
+    private void OnWorldChanged(int index)
+    {
+        WorldIndexPref.Value = index;
+        MatchMakingConfig.ApplyWorld(matchMakingConfig != null ? matchMakingConfig.RuntimeConfig : MatchMakingConfig.Instance.RuntimeConfig, index);
     }
 
     private void InitializeDifficultyDropdown()
@@ -124,12 +170,13 @@ public class MainMenuWindow : UiWindow
 
         // Only the leader's pick is sent with the match start, so a teammate's dropdown would be a
         // control that silently does nothing.
-        if (difficultyDropdown != null)
-        {
-            bool canPickDifficulty = PartyManager.Instance.InParty == false || PartyManager.Instance.IsPartyLeader;
-            if (difficultyDropdown.interactable != canPickDifficulty)
-                difficultyDropdown.interactable = canPickDifficulty;
-        }
+        bool isLeader = PartyManager.Instance.InParty == false || PartyManager.Instance.IsPartyLeader;
+
+        if (difficultyDropdown != null && difficultyDropdown.interactable != isLeader)
+            difficultyDropdown.interactable = isLeader;
+
+        if (worldDropdown != null && worldDropdown.interactable != isLeader)
+            worldDropdown.interactable = isLeader;
 
         if (ShouldOfferJoin)
             playButtonLabel.text = "Join";

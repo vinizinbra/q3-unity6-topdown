@@ -7,6 +7,10 @@ namespace Quantum
 {
     public class EnemyView : CustomQuantumEntityViewComponent
     {
+        // Uniform scale the rig was fit to (collider radius / sprite size), before any body animation -
+        // read by view props that should match the enemy's size but not its squash/flip (GroundAnchoredOverlay).
+        public float FitScale { get; private set; } = 1f;
+
         [SerializeField, Tooltip("Where EnemyDataAsset.ViewPrefab is instantiated as a child - just an anchor point on the generic entity's view. The prefab brings its own EnemyViewRig; EnemyBlobAnimationView/EnemyArmAimView/EnemyAttackVisualsView/HitFeedback live here on the generic prototype instead and get that rig handed to them once it's instantiated (see SpawnSprite). A one-off prototype (e.g. a boss) can instead author its own EnemyViewRig as a REAL CHILD of this transform directly in the Editor - SpawnSprite finds it and uses it as-is, skipping ViewPrefab entirely.")]
         private Transform spriteRoot;
 
@@ -198,7 +202,8 @@ namespace Quantum
             if (bakedRig != null)
             {
                 bakedRig.transform.localPosition = Vector3.down * radius;
-                bakedRig.transform.localScale = Vector3.one * ResolveFitScale(bakedRig, radius + viewRadiusPadding, data);
+                FitScale = ResolveFitScale(bakedRig, radius + viewRadiusPadding, data);
+                bakedRig.transform.localScale = Vector3.one * FitScale;
                 ConnectRig(bakedRig);
                 return bakedRig;
             }
@@ -231,7 +236,8 @@ namespace Quantum
             // here directly - no separate unscaling needed.
             instance.transform.localPosition = Vector3.down * radius;
             instance.transform.localRotation = Quaternion.identity;
-            instance.transform.localScale = Vector3.one * ResolveFitScale(rig, radius + viewRadiusPadding, data) * skinScaleMultiplier;
+            FitScale = ResolveFitScale(rig, radius + viewRadiusPadding, data) * skinScaleMultiplier;
+            instance.transform.localScale = Vector3.one * FitScale;
 
             ConnectRig(rig);
             return rig;

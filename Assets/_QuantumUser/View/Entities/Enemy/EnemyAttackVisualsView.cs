@@ -64,6 +64,11 @@ namespace Quantum
         }
 
         private EnemyActionPhase? _lastEnemyPhase;
+
+        // MortarBarrageDeliveryData with Stagger > 0 fires its shells one at a time from Tick(),
+        // counting them on Enemy.PendingImpactIndex - firedBegin only covers the first, so each later
+        // shell is detected here to give it its own muzzle flash/recoil.
+        private int _lastShellIndex;
         // See QUpdate's windupRestarted check - StateTimer counts down within one windup, so an
         // increase while still sampled as Preparation/Telegraph both times means a brand new windup
         // started without ever being observed as "not winding up" in between.
@@ -253,6 +258,29 @@ namespace Quantum
                 RequestClearAnticipationIcon();
             }
 
+            // Mid-phase, so it must run BEFORE the phase-edge early return below: a staggered
+            // MortarBarrageDeliveryData fires shells 2..N from Tick() inside one unchanged Active
+            // phase, counting them on Enemy.PendingImpactIndex. Each new shell replays exactly what the
+            // first shot did at Begin - the BeginStep (pose/sprite, body animation e.g. a small Shake or
+            // PunchScale, particle, camera ShakeImpact) plus the muzzle - so a barrage reads as N shots.
+            // Telegraph passed as null: replaying Begin must not respawn/clear the action's telegraph.
+            if (enemyPhase == EnemyActionPhase.Active && lastPhase == EnemyActionPhase.Active
+                && enemy.PendingImpactIndex > _lastShellIndex)
+            {
+                EnemyActionData shellAction = EnemyDecisionUtility.ResolveAction(frame, enemyData, enemy.CurrentActionSlot);
+
+                if (shellAction != null && frame.FindAsset(shellAction.Delivery) is MortarBarrageDeliveryData)
+                {
+                    PlayPhase(frame, enemy, enemyData, shellAction.BeginStep, null, shellAction.IgnoreY, shellAction.DamageRange.AsFloat,
+                        shellAction.Origin == EnemyActionOrigin.Self, AttackPhase.Begin);
+
+                    if (armAimView != null)
+                        armAimView.Fire();
+                }
+
+                _lastShellIndex = enemy.PendingImpactIndex;
+            }
+
             if (windupRestarted == false && (lastPhase.HasValue == false || lastPhase == enemyPhase))
                 return; // only react on actual phase changes (or a detected windup restart) - nothing else below needs mid-phase reactions
 
@@ -340,8 +368,11 @@ namespace Quantum
                 // SkillProjectile, so gating Fire() on that condition meant it silently never ran
                 // for the common case. firedBegin fires exactly once per attack regardless of
                 // delivery/WaitForImpact, matching the actual "the gun just went off" moment.
-                if (armAimView != null)
+                // Only a delivery that actually shoots - a burrow/slam/charge Begin is not a shot.
+                if (armAimView != null && frame.FindAsset(actionData.Delivery) is EnemyDeliveryData { FiresWeapon: true })
                     armAimView.Fire();
+
+                _lastShellIndex = enemy.PendingImpactIndex;
             }
 
             if (enteredOnGoing == true)

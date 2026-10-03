@@ -121,4 +121,7 @@ beside the target instead of under it. Travel moves flat; height only matters at
 target or end below ground. `RetargetAtPercent` is redundant with homing (the next tick's tracking
 overwrites it).
 
-Not done yet: a ground warning at the resurface point.
+**Resurface ground warning (2026-10-02).** When `AttackOnResurface` is on, `BeginResurface` fires the generic
+`ProjectileLandingWarning` (owner-bound, radius = action.DamageRange) for the whole `ResurfaceDuration` - the
+same ground circle Mortar shells use - so an eruption is always telegraphed. A non-damaging resurface (the
+Larva) shows none.

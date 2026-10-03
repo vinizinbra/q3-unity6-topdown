@@ -222,13 +222,7 @@ MonoBehaviour:
   SkillActions: []
   ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
   ViewPrefab: {fileID: 6413640882752520801, guid: e0334b585772a4ff588b2ee711619347, type: 3}
-  FactionSkins:
-  - Faction: 1
-    ViewPrefab: {fileID: 8476845490732343577, guid: 3144efe8802be4f9896cb5bb6d48f6fe, type: 3}
-    ScaleMultiplier: 0
-  - Faction: 2
-    ViewPrefab: {fileID: 8476845490732343577, guid: 6639da8f3bb724c61a61b875cb158f25, type: 3}
-    ScaleMultiplier: 0
+  FactionSkins: []
 --- !u!114 &2617763052697868611
 MonoBehaviour:
   m_ObjectHideFlags: 0

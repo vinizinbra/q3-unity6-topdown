@@ -72,7 +72,9 @@ namespace Quantum
         public static FP ResolveCoopCoinGain(Frame f)
         {
             BalanceConfig balance = f.FindAsset(f.RuntimeConfig.BalanceConfig);
-            return balance != null ? balance.GetCoopGlobal(CoopGlobalKey.CoinGain, f.PlayerConnectedCount) : FP._1;
+            WorldBalanceData world = WorldBalanceData.Get(f);
+            FP coop = balance != null ? balance.GetCoopGlobal(CoopGlobalKey.CoinGain, f.PlayerConnectedCount) : FP._1;
+            return coop * (world != null ? world.CoinGainMultiplier : FP._1);
         }
 
         public static void Grant(Frame f, EntityRef player, FP amount)

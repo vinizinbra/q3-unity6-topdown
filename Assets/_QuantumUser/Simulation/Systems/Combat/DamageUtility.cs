@@ -234,7 +234,8 @@ namespace Quantum
                 f.Signals.OnShieldDamageApplied(target, owner, shieldAbsorbed, source, directHit);
             }
 
-            FP healthAfter = health->CurrentHealth - remaining;
+            // Cheat menu God Mode: everything above resolves as normal, Health just never drops.
+            FP healthAfter = f.Has<GodMode>(target) == true ? health->CurrentHealth : health->CurrentHealth - remaining;
 
             // Damage dealt BEYOND what was left - captured here because CheatDeath below rewrites
             // healthAfter to 1, and health->CurrentHealth is clamped to 0 further down, so this is

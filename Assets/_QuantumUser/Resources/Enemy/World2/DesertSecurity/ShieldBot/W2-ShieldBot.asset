@@ -590,7 +590,4 @@ MonoBehaviour:
   SkillActions: []
   ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
   ViewPrefab: {fileID: 4669263682667838074, guid: 7d2a140b006624b6dae0b1e74d7f6e12, type: 3}
-  FactionSkins:
-  - Faction: 1
-    ViewPrefab: {fileID: 8476845490732343577, guid: 50846ef4df13140b2a6065ddc6327ff8, type: 3}
-    ScaleMultiplier: 0
+  FactionSkins: []

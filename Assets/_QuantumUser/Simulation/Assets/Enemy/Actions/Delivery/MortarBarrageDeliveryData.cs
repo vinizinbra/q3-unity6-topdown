@@ -32,6 +32,8 @@ namespace Quantum
     // lob gets the exact same telegraph for free.
     public unsafe class MortarBarrageDeliveryData : EnemyDeliveryData
     {
+        public override bool FiresWeapon => true;
+
         // Same SpawnAnchor/SpawnOffset idiom ProjectileDeliveryData/FanProjectileDeliveryData
         // already use (via ProjectileSpawner.ResolveSpawnOrigin) - lets a shell leave from a muzzle
         // point (offset in aim-relative space) instead of the enemy's own Transform3D pivot. Applied

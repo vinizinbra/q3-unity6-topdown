@@ -10,23 +10,23 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 38fb0a001dd8c4ebdb80572655771283, type: 3}
-  m_Name: MortarShotgunPack
+  m_Name: W2-CrusherLarvaPack
   m_EditorClassIdentifier: Quantum.Simulation::Quantum.EnemyGroupConfig
   Identifier:
-    Path: _QuantumUser/Resources/Director/EnemyGroups/MortarShotgunPack
+    Path: _QuantumUser/Resources/Director/World2/Groups/W2-CrusherLarvaPack
     Guid:
-      Value: 393100762272658277
+      Value: 275015796472089535
   Members:
   - EnemyData:
       Id:
-        Value: 296950194662925891
+        Value: 354459617798626456
     Quantity: 1
-    Faction: 1
+    Faction: 2
   - EnemyData:
       Id:
-        Value: 275775637166140646
-    Quantity: 1
-    Faction: 0
+        Value: 493880594620157359
+    Quantity: 2
+    Faction: 2
   Weight:
     RawValue: 45875
   MinimumSurvivalTime:
@@ -34,7 +34,7 @@ MonoBehaviour:
   MaximumSurvivalTime:
     RawValue: 0
   MaxConcurrent: 1
-  SpawnPattern: 2
+  SpawnPattern: 0
   FormationRadius:
-    RawValue: 393216
+    RawValue: 262144
   AllowsPartialSpawn: 0

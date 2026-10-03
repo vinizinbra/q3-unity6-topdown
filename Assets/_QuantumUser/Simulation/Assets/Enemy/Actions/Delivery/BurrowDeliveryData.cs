@@ -293,7 +293,7 @@ namespace Quantum
         // Landing height comes from the real ground under it, not from the destination's own Y - with
         // UpdateTargetDirectionWhileActive the destination is the raw target position (and with
         // IgnoreY, the enemy's own sunk height), which would end the rise underground.
-        private void BeginResurface(Frame f, ref EnemySystem.Filter filter, Burrowed* burrowed, FPVector3 landing)
+        private void BeginResurface(Frame f, ref EnemySystem.Filter filter, EnemyActionData action, Burrowed* burrowed, FPVector3 landing)
         {
             if (EnemyMovementUtility.TryFindGroundHeight(f, landing, EnemyMovementUtility.GetGroundLayerMask(f), out FP groundY) == true)
                 landing.Y = groundY;
@@ -302,6 +302,11 @@ namespace Quantum
             filter.Transform3D->Position = new FPVector3(landing.X, landing.Y - DiveDepth, landing.Z);
             burrowed->Stage = StageResurface;
             filter.Enemy->StateTimer = ResurfaceDuration;
+
+            // A damaging eruption gets the same ground warning a Mortar shell does, for the whole rise -
+            // the only tell of where it comes up. Owner-bound, so it clears if the enemy is interrupted.
+            if (AttackOnResurface == true && ResurfaceDuration > FP._0 && action.DamageRange > FP._0)
+                f.Events.ProjectileLandingWarning(landing, ResurfaceDuration, action.DamageRange, filter.Entity);
         }
 
         private const byte StageDive = 0;
@@ -373,13 +378,13 @@ namespace Quantum
                     if (EnemyMovementUtility.TryFindGroundHeight(f, here, EnemyMovementUtility.GetGroundLayerMask(f), out FP groundY) == false)
                         return false;
 
-                    BeginResurface(f, ref filter, burrowed, new FPVector3(here.X, groundY, here.Z));
+                    BeginResurface(f, ref filter, action, burrowed, new FPVector3(here.X, groundY, here.Z));
                     return false;
                 }
 
                 // Arrived (or already inside ArriveDistance): land ArriveDistance short, on the approach side.
                 FPVector3 landing = current + direction * FPMath.Max(remaining, FP._0);
-                BeginResurface(f, ref filter, burrowed, new FPVector3(landing.X, destination.Y, landing.Z));
+                BeginResurface(f, ref filter, action, burrowed, new FPVector3(landing.X, destination.Y, landing.Z));
                 return false;
             }
 

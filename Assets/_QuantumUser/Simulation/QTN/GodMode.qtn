@@ -1,0 +1,5 @@
+// Tag - cheat-menu God Mode. Unlike Invulnerable (which drops the hit entirely), DamageUtility lets
+// the hit resolve fully (damage number, hit flash, signals) and just refunds the Health/Shield loss.
+component GodMode
+{
+}

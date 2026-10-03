@@ -16,18 +16,15 @@ namespace QuantumUser.Editor
     // itself - that's authored by hand per POI instance (see the "Editor authoring needed" list in
     // docs/optional-team-challenge.md), same as every other POI in this project.
     //
-    // AllowedGroups/AllowedEnemies are deliberately left EMPTY on every generated
-    // ChallengeDefinition - this tool has no safe way to guess which of the project's existing
-    // EnemyGroupConfig/EnemySpawnEntry assets belong in a given challenge's encounter, and spawning
-    // nothing (logged loud, see CombatDirectorUtility.TrySelectSpawn's own "no AllowedGroups
-    // authored" check) is a safer default than guessing wrong. Assign at least one by hand after
-    // generating - BudgetPerPulse/PulseInterval/TargetPressure/MaxAliveEnemies are seeded with
+    // Which enemies spawn is not authored per challenge - it is read live from the run's current
+    // SurvivalConfig (see TeamChallengeUtility.TryResolveEnemySourcePhase), so these assets work in
+    // every world. BudgetPerPulse/PulseInterval/TargetPressure/MaxAliveEnemies are seeded with
     // decisive placeholders so the challenge's own CombatDirectorUtility.TryPulse pacing (see
     // TeamChallengeUtility.PulseChallengeEncounter) has something reasonable to start from.
     //
     // Rules (see ChallengeDefinition.View.cs) gets its Text seeded per row too, same decisive-
     // placeholder treatment - only each row's Icon is left null (and preserved across re-runs, see
-    // BuildRuleEntries), same "can't guess a sprite asset" reasoning as AllowedGroups above.
+    // BuildRuleEntries), same "can't guess a sprite asset" reasoning.
     public static class TeamChallengeAssetGenerator
     {
         private const string FolderPath = "Assets/_QuantumUser/Resources/Poi/TeamChallenge";
@@ -50,8 +47,7 @@ namespace QuantumUser.Editor
             public int MaxAliveEnemies;
 
             // Rules row TEXT only - see ChallengeDefinition.Rules's own comment. Icon is left null
-            // per row, same "can't guess which asset belongs here" reasoning AllowedGroups/
-            // AllowedEnemies already document below - assign an icon per row by hand.
+            // per row - assign an icon per row by hand.
             public string[] Rules;
         }
 
@@ -118,11 +114,6 @@ namespace QuantumUser.Editor
                 asset.PulseInterval = spec.PulseInterval;
                 asset.TargetPressure = spec.TargetPressure;
                 asset.MaxAliveEnemies = spec.MaxAliveEnemies;
-                // AllowedGroups/AllowedEnemies deliberately untouched on an existing asset (never
-                // cleared/rebuilt) - preserves whatever the user already assigned by hand on a
-                // re-run. Only defaulted to empty the first time this asset is ever created.
-                asset.AllowedGroups ??= new System.Collections.Generic.List<AssetRef<EnemyGroupConfig>>();
-                asset.AllowedEnemies ??= System.Array.Empty<EnemySpawnEntry>();
 
                 // Rules TEXT seeded fresh every run (decisive placeholders, cheap to regenerate) -
                 // Icon is preserved on an existing asset instead of being wiped, since that's the
@@ -147,7 +138,7 @@ namespace QuantumUser.Editor
             GenerateConfig();
 
             LogHelper.Log("TeamChallengeAssetGenerator",
-                $"{created} ChallengeDefinition created, {updated} updated. AllowedGroups/AllowedEnemies were left empty on every newly-created asset - assign at least one before this challenge can spawn anything.");
+                $"{created} ChallengeDefinition created, {updated} updated.");
         }
 
         // Separate pass, after Refresh - a freshly-created ChallengeDefinition has no Guid stamped

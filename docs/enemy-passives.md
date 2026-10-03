@@ -17,8 +17,9 @@ spawn, so every passive is written once as an asset and works on any enemy, Norm
   can read `EnemyPassives` to show an elite's affixes.
 - **`GroundTrailPassiveData`** → **`GroundTrail`** component (`QTN/GroundTrail.qtn`, generic - not
   enemy-only) + **`GroundTrailSystem`** (registered after `AreaDamageSystem`). Drops `Prototype` via
-  `SpawnedEntitySpawner` every `SpawnDistance` of flat travel, each living `Duration`. Pauses while
-  `Burrowed` or dead. Live pieces ≈ speed / SpawnDistance × Duration - keep it modest.
+  `SpawnedEntitySpawner` every `SpawnDistance` of flat travel, each living `Duration`. `Mode` (`GroundTrailPassiveData.TrailMode`): SurfaceOnly (default -
+  pauses while `Burrowed`), BurrowedOnly (Dune Leviathan's oil seep), Always; optional `OnlyDuringAction` (drop only while the enemy's
+  current action is that one, Active phase). Pauses while dead. Live pieces ≈ speed / SpawnDistance × Duration - keep it modest.
 - **`StickySlowEffectData`** - ground-hazard slow on its own `StatusEffects.StickySlow*` slot (not
   Ice: no Freeze/reactions; not TempMoveSpeed: can't clobber an Energy Drink). Strongest-wins, no
   stacking, `OnlyWhenGrounded` (KCC) by default. Read in `PlayerMovementProcessor`.

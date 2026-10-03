@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec13afded7e4448448907ecb08f5b3ef, type: 3}
+  m_Name: W1-GrasslandOutpost
+  m_EditorClassIdentifier: Assembly-CSharp::Quantum.WorldDefinition
+  DisplayName: Grassland Outpost
+  Icon: {fileID: 0}
+  Theme: {fileID: 11400000, guid: 5afca4ff16c4d428f87a809bc63735be, type: 2}
+  SurvivalConfig:
+    Id:
+      Value: 356172470141887835
+  Balance:
+    Id:
+      Value: 350410700275665654

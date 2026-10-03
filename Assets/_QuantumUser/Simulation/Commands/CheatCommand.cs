@@ -29,7 +29,7 @@ namespace Quantum
         GrantCoins,             // Amount = coins granted to the sender
         SpendCoins,             // Amount = coins spent from the sender's own wallet; no-op if the
                                  // sender can't afford it (see CoinUtility.TrySpend)
-        ToggleGodMode,          // add/remove the sender's Invulnerable tag
+        ToggleGodMode,          // add/remove the sender's GodMode tag (hits resolve normally, Health never drops)
         KillAllEnemies,         // credit the sender (drops XP/coins as a normal kill would)
         HealFull,               // sender to full health
         OpenChest,              // open a Chest upgrade screen for the sender
@@ -66,9 +66,12 @@ namespace Quantum
                                  // Break lasts that much longer from now - see CheatSystem.ExtendBreathing.
         SpawnEnemy,             // AssetId = EnemyDataAsset guid, Amount = count (<= 0 reads as 1) -
                                  // spawned in a ring around the sender, see CheatSystem.SpawnEnemy
-        ToggleDirectorSpawns    // flips Global.DebugDirectorSpawnsDisabled - stops the Director's
+        ResetGodMode,           // removes the sender's GodMode tag (no-op if not set)
+        ToggleDirectorSpawns,   // flips Global.DebugDirectorSpawnsDisabled - stops the Director's
                                  // normal purchases AND phase-guaranteed spawns (the run clock keeps
                                  // running), so cheat-spawned enemies can be tested in isolation
+        JumpToBoss              // starts the run if still in the lobby, jumps to the first Boss-kind phase and
+                                // auto-resolves level-ups up to a late-run level - see CheatSystem.JumpToBoss
     }
 
     // Generic debug/cheat command. IMPORTANT: this command AND its handler (CheatSystem) compile on

@@ -98,10 +98,14 @@ namespace Quantum
                     break;
 
                 case CheatActionKind.ToggleGodMode:
-                    if (f.Has<Invulnerable>(player))
-                        f.Remove<Invulnerable>(player);
+                    if (f.Has<GodMode>(player))
+                        f.Remove<GodMode>(player);
                     else
-                        f.Add<Invulnerable>(player);
+                        f.Add<GodMode>(player);
+                    break;
+
+                case CheatActionKind.ResetGodMode:
+                    f.Remove<GodMode>(player);
                     break;
 
                 case CheatActionKind.KillAllEnemies:
@@ -141,6 +145,10 @@ namespace Quantum
 
                 case CheatActionKind.JumpToBreathing:
                     JumpToBreathing(f, cmd.Amount);
+                    break;
+
+                case CheatActionKind.JumpToBoss:
+                    JumpToBoss(f);
                     break;
 
                 case CheatActionKind.SetupTestRun:
@@ -245,7 +253,7 @@ namespace Quantum
         }
 
         // Breath 1-4 map onto the 1st-4th Breathing-kind entry in SurvivalConfig.Phases[] (indices
-        // 7/16/24/31 in the currently-authored SurvivalWorld1Config_Iteration3), paired with the
+        // 7/16/24/31 in the currently-authored W1-SurvivalConfig), paired with the
         // display level a normal run is roughly at by that point - jumping straight there for testing
         // shouldn't also leave the player under-leveled for what the phase expects, so this tops
         // TotalExperience up to (at least) that target in the same command. Never takes levels away
@@ -309,6 +317,47 @@ namespace Quantum
         // Rift Mutation choice screens SetupTestRun queues per breath (index = breathNumber - 1) -
         // mirrors roughly how many a real run has picked by then.
         private static readonly int[] MutationChoicesPerBreath = { 0, 0, 1, 2 };
+
+        // Display level a run is roughly at when the boss arrives (after Breath 4, Lv20).
+        private const int BossTargetDisplayLevel = 24;
+
+        // Straight to the boss: starts the run if the players are still in the lobby, jumps to the first
+        // Boss-kind phase (CombatDirectorSystem.ApplyPhaseGameState then runs BeginBossEncounter off the
+        // changed index next tick - arena seal, teleport, boss spawn), sets the run clock to match, and
+        // levels the party to BossTargetDisplayLevel with every level-up screen auto-resolved, same as
+        // SetupTestRun's drain.
+        private static void JumpToBoss(Frame f)
+        {
+            SurvivalConfig config = f.FindAsset(f.RuntimeConfig.SurvivalConfig);
+            if (config == null || config.Phases == null)
+                return;
+
+            int bossIndex = System.Array.FindIndex(config.Phases, p => p.Kind == SurvivalPhaseKind.Boss);
+            if (bossIndex < 0)
+            {
+                Log.Error("[Cheat] JumpToBoss: the SurvivalConfig has no Boss phase");
+                return;
+            }
+
+            if (f.Global->CurrentState == GameState.Lobby)
+                GameStateUtility.SetState(f, GameState.Survival);
+
+            f.Global->CurrentPhaseIndex = bossIndex;
+            f.Global->PhaseTimer = FP._0;
+            f.Global->PhaseGuaranteedSpawnDone = false;
+            RunPhaseUtility.ClearBreathingGrace(f);
+            f.Global->SurvivalTime = SurvivalTimeAtPhaseStart(config, bossIndex);
+
+            QueuePendingLevelUpsTo(f, BossTargetDisplayLevel);
+
+            while (f.Global->DebugPendingLevelUps > 0)
+            {
+                f.Global->DebugPendingLevelUps--;
+                f.Global->Level++;
+                LevelUpUtility.BeginLevelUpScreen(f);
+                LevelUpUtility.Resolve(f);
+            }
+        }
 
         private static void SetupTestRun(Frame f, EntityRef player, int breathNumber)
         {

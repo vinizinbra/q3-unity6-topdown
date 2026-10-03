@@ -12,6 +12,10 @@ using UnityEngine;
 // two tutorial popups have no such skip yet.
 public class InMatchTutorialManager : QuantumGlobalMonoBehaviour
 {
+    // Debug - set by CheatMenu (Jump to Boss / Skip Tutorials): no tutorial popup opens for the rest of
+    // this app session. Local only; nothing in the sim depends on tutorials.
+    public static bool SkipTutorials;
+
     // Set once each popup's own trigger condition fires, cleared once it's actually opened - kept
     // pending (instead of opening immediately) while GameState.Upgrade is active, so a level-up/
     // Chest Choice Window in progress is never fought over/covered by a tutorial popup. Re-checked
@@ -86,6 +90,13 @@ public class InMatchTutorialManager : QuantumGlobalMonoBehaviour
         // between screens where LevelUpScreenOpen is briefly false and CurrentState briefly
         // reverts to Breathing; without this check FirstBreakPopup could open in that gap and end
         // up stacked on top of the next chained level-up screen.
+        if (SkipTutorials)
+        {
+            _heroIntroPending = _howToPlayPending = _firstBreakPending = false;
+            _firstBreakDelayTimer = 0f;
+            return;
+        }
+
         bool upgradePending = frame.Global->CurrentState == GameState.Upgrade
             || frame.Global->OrbVacuumTimeRemaining.AsFloat > 0f
             || frame.Global->DebugPendingLevelUps > 0;

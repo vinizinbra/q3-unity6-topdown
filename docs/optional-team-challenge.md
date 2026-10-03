@@ -59,8 +59,16 @@ from both `BeginChallengeActive`'s wipe and `DestroyChallengeSpawns`) - they use
   *spawning* is the exception: `CombatDirectorSystem.Update` also holds its pulses while any
   challenge is `Starting` (`TeamChallengeUtility.AnyBannerActive`), because the map is wiped the
   moment the team commits (see below) and the countdown must stay empty.
-- **No co-op scaling of its own.** `ChallengeDefinition.SpawnGroups` references the existing
-  `EnemyGroupConfig` asset type directly and spawns via `GroupSpawnerUtility.TrySpawnGroup` - the
+- **No enemy list of its own - borrowed from the run's `SurvivalConfig`.** `ChallengeDefinition`
+  authors only pacing (`BudgetPerPulse`/`PulseInterval`/`TargetPressure`/`MaxAliveEnemies`).
+  `TeamChallengeUtility.TryResolveEnemySourcePhase` builds the deduped UNION of every `Combat`
+  phase's `AllowedGroups`/`AllowedEnemies` of `RuntimeConfig.SurvivalConfig`, from the start of the
+  run through the later of the current phase and the second Breathing phase (minimum pool = everything
+  until the second breath; cached per config+end index). So one challenge asset works in every world
+  and grows with the run; per-group Min/MaximumSurvivalTime windows still apply (SurvivalTime is
+  frozen during the challenge). Tradeoff: no per-challenge
+  enemy flavor - tune feel through the pacing fields only.
+- **No co-op scaling of its own.** The pulse spawns via `GroupSpawnerUtility.TrySpawnGroup` - the
   exact same call every normal Survival encounter uses, which already resolves final enemy stats
   through `EnemyBalanceUtility.ResolveEnemyStats`/`BalanceConfig`. Zero direct `BalanceConfig` calls
   anywhere in this feature.
@@ -142,7 +150,7 @@ from both `BeginChallengeActive`'s wipe and `DestroyChallengeSpawns`) - they use
 - `Assets/_QuantumUser/Simulation/Default/RuntimeConfig.User.cs` - new
   `Bots.DisableAutoTeamChallengeReady` opt-out.
 - `Assets/_QuantumUser/Simulation/Assets/Poi/ChallengeDefinition.cs` - new asset: `Type`,
-  `DisplayName`, `Duration`, `KillTarget`, `SpawnGroups[]` (references `EnemyGroupConfig`).
+  `DisplayName`, `Duration`, `KillTarget`, pacing fields (no enemy list - borrowed from `SurvivalConfig`).
 - `Assets/_QuantumUser/Simulation/Assets/Poi/ChallengeDefinition.View.cs` - new `partial` split:
   `Rules[]` (`ChallengeRuleEntry{Sprite Icon, string Text}`), the per-type rules breakdown shown in
   `InteractionPromptWidget`'s new rules area (same `.View.cs` convention `CharacterData`/
@@ -217,7 +225,7 @@ from both `BeginChallengeActive`'s wipe and `DestroyChallengeSpawns`) - they use
 - `Assets/_QuantumUser/Editor/TeamChallengeAssetGenerator.cs` - new Editor tool
   (`Tools/RiftRaiders/Poi/Generate Team Challenge Assets`) that scaffolds the 3
   `ChallengeDefinition` assets + 1 `TeamChallengeConfig` asset with decisive placeholder values
-  (`SpawnGroups` deliberately left empty - assign by hand). Mirrors
+  (enemies come from `SurvivalConfig`, nothing to assign). Mirrors
   `RiftMutationAssetGenerator.cs`'s create-or-update shape.
 
 ## Current status
@@ -228,11 +236,11 @@ this index carries - see the root `CLAUDE.md`'s codegen gotcha):
 
 1. Run `Tools/RiftRaiders/Poi/Generate Team Challenge Assets` to scaffold one `TeamChallengeConfig`
    asset and the 3 `ChallengeDefinition` assets under `Assets/_QuantumUser/Resources/Poi/
-   TeamChallenge/` with decisive placeholder values, then assign each `ChallengeDefinition.
-   SpawnGroups[]` by hand (left empty by the generator) and re-tune `TeamChallengeConfig.
+   TeamChallenge/` with decisive placeholder values (enemies come from the run's `SurvivalConfig`,
+   nothing to assign), and re-tune `TeamChallengeConfig.
    ReadyCancelRadius`/`CountdownDuration` once the POI's own `Interactable.Radius` is authored.
    Each `ChallengeDefinition.Rules[]` row also has placeholder Text already seeded - assign each
-   row's `Icon` sprite by hand (left null by the generator, same reasoning as `SpawnGroups`).
+   row's `Icon` sprite by hand (left null by the generator, can't guess a sprite).
 2. Build a POI prefab carrying `Interactable{Kind=TeamChallenge, Radius=<small>}`,
    `QPrototypeTeamChallenge{Availability, Config, ...}`, and `TeamChallengeView` alone - **no
    sibling `PoiView` component**, `TeamChallengeView` now extends `InteractionPromptPoiView`
@@ -271,8 +279,9 @@ three `ChallengeDefinition` fields, not by any challenge-specific code:
 - `MaxAliveEnemies` vs. group size - `SwarmRush` is 8 enemies, so a cap of 10-15 only ever fit ONE
   group at a time and it emptied completely before the next could be bought. Caps are now 32 (Kill
   Rush) / 22 (Flawless Hunt) / 18 (Cursed Survival).
-- `AllowedEnemies` - each definition now also lists a lone `Swarm` (cost 1), so the Director can
-  top up one enemy at a time instead of waiting to afford a whole group.
+- ~~`AllowedEnemies`/`AllowedGroups` per definition~~ - removed: the enemy mix now comes from the
+  current `SurvivalConfig` Combat phase (see "Why this design"). The mix notes below are historical
+  and no longer apply to the assets.
 - **Enemy mix** - every definition now mixes swarm and ranged: groups `SwarmRush`,
   `RangedSkirmish` (3 Gunner + Sniper) and `C1DoubleGunner`, plus a Turret+Swarm pack
   (`I2-R4B-SwarmTurretPack` for Kill Rush/Cursed, `TurretSwarmPack` for Flawless Hunt), and lone
@@ -294,10 +303,8 @@ prompt never reflected the real co-op-scaled target).
 
 ## Known simplifications
 
-- All of a `ChallengeDefinition`'s `SpawnGroups` spawn together, all at once, at `ChallengeActive`
-  start - not staggered into timed waves. Multiple short waves (mentioned as a nice-to-have for
-  Kill Rush) can be approximated today by authoring several `EnemyGroupConfig` entries, but there is
-  no built-in stagger/interval mechanism.
+- The challenge is paced by the continuous Director pulse (see "Encounter density tuning"), not
+  staggered timed waves - there is no built-in wave mechanism.
 - The Ready/Cancel unanimity check and Cursed Survival's own incapacitation check both use
   `PlayerLifeStateUtility.IsIncapacitated` polling every tick - there is no "just entered Downed"
   signal in this codebase, so a poll (same idiom `SurvivalProgressionUtility`/

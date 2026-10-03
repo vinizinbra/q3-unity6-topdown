@@ -10,6 +10,8 @@ namespace Quantum
     // precedent for a directional area hit in this codebase).
     public unsafe class BeamDeliveryData : EnemyDeliveryData
     {
+        public override bool FiresWeapon => true;
+
         public FP BeamLength = 8;
         public FP BeamWidth = 1;
         public FP BeamHeight = 1;

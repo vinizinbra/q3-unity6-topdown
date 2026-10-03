@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 38fb0a001dd8c4ebdb80572655771283, type: 3}
-  m_Name: ChargerDronePack
+  m_Name: W1-ChargerDronePack
   m_EditorClassIdentifier: Quantum.Simulation::Quantum.EnemyGroupConfig
   Identifier:
-    Path: _QuantumUser/Resources/Director/EnemyGroups/ChargerDronePack
+    Path: _QuantumUser/Resources/Director/World1/Groups/W1-ChargerDronePack
     Guid:
       Value: 277181120842021654
   Members:

@@ -10,22 +10,22 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 38fb0a001dd8c4ebdb80572655771283, type: 3}
-  m_Name: SlammerPressurePack
+  m_Name: W1-SwarmChargerPack
   m_EditorClassIdentifier: Quantum.Simulation::Quantum.EnemyGroupConfig
   Identifier:
-    Path: _QuantumUser/Resources/Director/EnemyGroups/SlammerPressurePack
+    Path: _QuantumUser/Resources/Director/World1/Groups/W1-SwarmChargerPack
     Guid:
-      Value: 412413256159103937
+      Value: 424504409457314950
   Members:
-  - EnemyData:
-      Id:
-        Value: 469796245454353813
-    Quantity: 1
-    Faction: 0
   - EnemyData:
       Id:
         Value: 386887899629791929
     Quantity: 3
+    Faction: 2
+  - EnemyData:
+      Id:
+        Value: 477699094528449997
+    Quantity: 1
     Faction: 2
   Weight:
     RawValue: 45875
@@ -34,7 +34,7 @@ MonoBehaviour:
   MaximumSurvivalTime:
     RawValue: 0
   MaxConcurrent: 1
-  SpawnPattern: 0
+  SpawnPattern: 3
   FormationRadius:
     RawValue: 262144
   AllowsPartialSpawn: 0

@@ -69,7 +69,7 @@ namespace Quantum
             FP density = EncounterModifierUtility.ResolveSpawnDensityMultiplier(f);
             // Same co-op cap row BuildAnchors applied to TargetPressure - alive cap and per-pulse
             // purchase count must grow with it or the raised target can never actually be filled.
-            FP coopPressure = PlayerClusterDirectorUtility.ResolveCoopPressure(balance, f.PlayerConnectedCount);
+            FP coopPressure = PlayerClusterDirectorUtility.ResolveCoopPressure(f, balance, f.PlayerConnectedCount);
             int maxAlive = FPMath.RoundToInt(phase.MaxAliveEnemies * coopPressure * splitThreat * density);
             int splitFloor = FPMath.RoundToInt(phase.MaxAliveEnemies * coopPressure * density);
             if (maxAlive < splitFloor)
@@ -233,7 +233,10 @@ namespace Quantum
             // EncounterModifierUtility.
             FP densityMultiplier = EncounterModifierUtility.ResolveSpawnDensityMultiplier(f);
 
-            return curveMultiplier * coopMultiplier * splitMultiplier * densityMultiplier;
+            WorldBalanceData world = WorldBalanceData.Get(f);
+            FP worldMultiplier = world != null ? world.DirectorBudgetMultiplier : FP._1;
+
+            return curveMultiplier * coopMultiplier * splitMultiplier * densityMultiplier * worldMultiplier;
         }
 
         // Refunds a fraction of the enemy's own cost into DirectorBudget, then destroys it. Called

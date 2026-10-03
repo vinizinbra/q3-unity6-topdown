@@ -53,7 +53,7 @@ namespace QuantumUser.Editor.BalanceSimulator
         {
             var a = new BalanceSimAssets
             {
-                Survival = scenario.SurvivalConfig != null ? scenario.SurvivalConfig : FindDefault<SurvivalConfig>("SurvivalWorld1Config_Iteration3"),
+                Survival = scenario.SurvivalConfig != null ? scenario.SurvivalConfig : FindDefault<SurvivalConfig>("W1-SurvivalConfig"),
                 Balance = scenario.BalanceConfig != null ? scenario.BalanceConfig : FindDefault<BalanceConfig>(),
                 Experience = scenario.ExperienceConfig != null ? scenario.ExperienceConfig : FindDefault<ExperienceConfig>(),
                 LevelUp = scenario.LevelUpConfig != null ? scenario.LevelUpConfig : FindDefault<LevelUpConfig>(),

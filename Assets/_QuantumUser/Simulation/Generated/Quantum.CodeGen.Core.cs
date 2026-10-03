@@ -4421,6 +4421,22 @@ namespace Quantum {
     }
   }
   [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct GodMode : Quantum.IComponent {
+    public const Int32 SIZE = 4;
+    public const Int32 ALIGNMENT = 4;
+    [FieldOffset(0)]
+    private fixed Byte _alignment_padding_[4];
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 7019;
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (GodMode*)ptr;
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct GroundOffset : Quantum.IComponent {
     public const Int32 SIZE = 40;
     public const Int32 ALIGNMENT = 8;
@@ -4456,19 +4472,23 @@ namespace Quantum {
   }
   [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct GroundTrail : Quantum.IComponent {
-    public const Int32 SIZE = 64;
+    public const Int32 SIZE = 72;
     public const Int32 ALIGNMENT = 8;
-    [FieldOffset(8)]
-    public AssetRef<EntityPrototype> Prototype;
-    [FieldOffset(32)]
-    public FP SpawnDistance;
     [FieldOffset(16)]
-    public FP Duration;
-    [FieldOffset(24)]
-    public FP Scale;
+    public AssetRef<EntityPrototype> Prototype;
     [FieldOffset(40)]
-    public FPVector3 LastDropPosition;
+    public FP SpawnDistance;
+    [FieldOffset(24)]
+    public FP Duration;
+    [FieldOffset(32)]
+    public FP Scale;
     [FieldOffset(0)]
+    public Byte Mode;
+    [FieldOffset(8)]
+    public AssetRef<EnemyActionData> OnlyDuringAction;
+    [FieldOffset(48)]
+    public FPVector3 LastDropPosition;
+    [FieldOffset(4)]
     public QBoolean HasLastDrop;
     public override readonly Int32 GetHashCode() {
       unchecked { 
@@ -4477,6 +4497,8 @@ namespace Quantum {
         hash = hash * 31 + SpawnDistance.GetHashCode();
         hash = hash * 31 + Duration.GetHashCode();
         hash = hash * 31 + Scale.GetHashCode();
+        hash = hash * 31 + Mode.GetHashCode();
+        hash = hash * 31 + OnlyDuringAction.GetHashCode();
         hash = hash * 31 + LastDropPosition.GetHashCode();
         hash = hash * 31 + HasLastDrop.GetHashCode();
         return hash;
@@ -4484,7 +4506,9 @@ namespace Quantum {
     }
     public static void Serialize(void* ptr, FrameSerializer serializer) {
         var p = (GroundTrail*)ptr;
+        serializer.Stream.Serialize(&p->Mode);
         QBoolean.Serialize(&p->HasLastDrop, serializer);
+        AssetRef.Serialize(&p->OnlyDuringAction, serializer);
         AssetRef.Serialize(&p->Prototype, serializer);
         FP.Serialize(&p->Duration, serializer);
         FP.Serialize(&p->Scale, serializer);
@@ -8982,6 +9006,8 @@ namespace Quantum {
       BuildSignalsArrayOnComponentRemoved<Quantum.FullThrottleUpgrade>();
       BuildSignalsArrayOnComponentAdded<Quantum.GlobalUpgradePicks>();
       BuildSignalsArrayOnComponentRemoved<Quantum.GlobalUpgradePicks>();
+      BuildSignalsArrayOnComponentAdded<Quantum.GodMode>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.GodMode>();
       BuildSignalsArrayOnComponentAdded<Quantum.GroundOffset>();
       BuildSignalsArrayOnComponentRemoved<Quantum.GroundOffset>();
       BuildSignalsArrayOnComponentAdded<Quantum.GroundTrail>();
@@ -9610,6 +9636,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum.GameState), 1);
       typeRegistry.Register(typeof(Quantum.GlobalUpgradePickEntry), Quantum.GlobalUpgradePickEntry.SIZE);
       typeRegistry.Register(typeof(Quantum.GlobalUpgradePicks), Quantum.GlobalUpgradePicks.SIZE);
+      typeRegistry.Register(typeof(Quantum.GodMode), Quantum.GodMode.SIZE);
       typeRegistry.Register(typeof(Quantum.GroundOffset), Quantum.GroundOffset.SIZE);
       typeRegistry.Register(typeof(Quantum.GroundTrail), Quantum.GroundTrail.SIZE);
       typeRegistry.Register(typeof(Quantum.GroundbreakerUpgrade), Quantum.GroundbreakerUpgrade.SIZE);
@@ -9810,7 +9837,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum._globals_), Quantum._globals_.SIZE);
     }
     static partial void InitComponentTypeIdGen() {
-      ComponentTypeId.Reset(ComponentTypeId.BuiltInComponentCount + 187)
+      ComponentTypeId.Reset(ComponentTypeId.BuiltInComponentCount + 188)
         .AddBuiltInComponents()
         .Add<Quantum.AccessoryEmergencyReserve>(Quantum.AccessoryEmergencyReserve.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.AccessoryGuard>(Quantum.AccessoryGuard.Serialize, null, null, ComponentFlags.None)
@@ -9882,6 +9909,7 @@ namespace Quantum {
         .Add<Quantum.ForceMarkOnDetonate>(Quantum.ForceMarkOnDetonate.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.FullThrottleUpgrade>(Quantum.FullThrottleUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.GlobalUpgradePicks>(Quantum.GlobalUpgradePicks.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.GodMode>(Quantum.GodMode.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.GroundOffset>(Quantum.GroundOffset.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.GroundTrail>(Quantum.GroundTrail.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.GroundbreakerUpgrade>(Quantum.GroundbreakerUpgrade.Serialize, null, null, ComponentFlags.None)

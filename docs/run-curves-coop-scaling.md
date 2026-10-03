@@ -301,3 +301,10 @@ project files, not just this doc's own prior claims.
   and actually scales enemy damage per the `EnemyDmg` curve/`EnemyDamage` co-op row.
 - `ExpectedPlayerDps`/`EliteFrequency` channels/rows remain unconsumed - see "Curve
   channels"/"Co-op global multipliers" above for why each is still reserved.
+
+## Per-world balance (2026-10-02)
+
+`BalanceConfig` stays global (run curves + every co-op table). A world can add small tweaks through an
+optional `RuntimeConfig.WorldBalance` (`WorldBalanceData`): EnemyHp, EnemyDamage, DirectorBudget,
+DirectorPressure, XpRequirement and CoinGain multipliers, each applied as a final factor at the same
+consumer as the matching BalanceConfig channel. Unassigned = 1x. See `docs/worlds.md`.

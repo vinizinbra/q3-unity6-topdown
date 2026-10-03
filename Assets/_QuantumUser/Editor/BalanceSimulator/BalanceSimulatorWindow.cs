@@ -363,7 +363,7 @@ namespace QuantumUser.Editor.BalanceSimulator
         {
             Directory.CreateDirectory(ScenarioFolder);
             var created = CreateInstance<BalanceSimScenario>();
-            created.SurvivalConfig = BalanceSimAssets.FindDefault<Quantum.SurvivalConfig>("SurvivalWorld1Config_Iteration3");
+            created.SurvivalConfig = BalanceSimAssets.FindDefault<Quantum.SurvivalConfig>("W1-SurvivalConfig");
             created.BalanceConfig = BalanceSimAssets.FindDefault<Quantum.BalanceConfig>();
             string path = AssetDatabase.GenerateUniqueAssetPath($"{ScenarioFolder}/BalanceSimScenario.asset");
             AssetDatabase.CreateAsset(created, path);

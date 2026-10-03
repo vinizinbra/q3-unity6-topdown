@@ -10,25 +10,25 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 38fb0a001dd8c4ebdb80572655771283, type: 3}
-  m_Name: MortarPressurePack
+  m_Name: W2-SniperShieldPack
   m_EditorClassIdentifier: Quantum.Simulation::Quantum.EnemyGroupConfig
   Identifier:
-    Path: _QuantumUser/Resources/Director/EnemyGroups/MortarPressurePack
+    Path: _QuantumUser/Resources/Director/World2/Groups/W2-SniperShieldPack
     Guid:
-      Value: 297052567016022974
+      Value: 455322908052337184
   Members:
   - EnemyData:
       Id:
-        Value: 296950194662925891
+        Value: 449995113910525232
     Quantity: 1
-    Faction: 1
+    Faction: 0
   - EnemyData:
       Id:
-        Value: 380491306257295384
-    Quantity: 2
-    Faction: 0
+        Value: 514105425618539058
+    Quantity: 1
+    Faction: 1
   Weight:
-    RawValue: 65536
+    RawValue: 45875
   MinimumSurvivalTime:
     RawValue: 0
   MaximumSurvivalTime:
@@ -36,5 +36,5 @@ MonoBehaviour:
   MaxConcurrent: 1
   SpawnPattern: 2
   FormationRadius:
-    RawValue: 327680
+    RawValue: 393216
   AllowsPartialSpawn: 0

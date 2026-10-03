@@ -12,6 +12,8 @@ namespace Quantum
     // list here would run every effect twice.
     public unsafe class ProjectileDeliveryData : EnemyDeliveryData
     {
+        public override bool FiresWeapon => true;
+
         [ExpandableAsset] public AssetRef<ProjectileDataAsset> ProjectileData;
 
         // Per-action "these shots fly faster/slower" (1 = the movement's own authored speed), passed

@@ -19,10 +19,16 @@ namespace Quantum
                 return;
             }
 
-            if (f.Has<Burrowed>(filter.Entity) == true)
+            bool burrowed = f.Has<Burrowed>(filter.Entity);
+            bool active = trail->Mode switch { 1 => burrowed, 2 => true, _ => burrowed == false };
+
+            if (active == true && trail->OnlyDuringAction.IsValid == true)
+                active = IsExecutingAction(f, filter.Entity, trail->OnlyDuringAction);
+
+            if (active == false)
             {
-                // Resume from wherever it resurfaces rather than dropping one piece at the exit point
-                // for the whole underground stretch.
+                // Resume from wherever it becomes active again rather than dropping one piece at that
+                // point for the whole inactive stretch.
                 trail->LastDropPosition = position;
                 return;
             }
@@ -38,6 +44,15 @@ namespace Quantum
 
             trail->LastDropPosition = position;
             SpawnedEntitySpawner.Spawn(f, filter.Entity, trail->Prototype, trail->Duration, position, scale: trail->Scale);
+        }
+
+        private static bool IsExecutingAction(Frame f, EntityRef entity, AssetRef<EnemyActionData> action)
+        {
+            if (f.Unsafe.TryGetPointer<Enemy>(entity, out var enemy) == false || enemy->Phase != EnemyActionPhase.Active)
+                return false;
+
+            EnemyDataAsset data = f.FindAsset(enemy->EnemyData);
+            return data != null && EnemyDecisionUtility.ResolveActionRef(data, enemy->CurrentActionSlot) == action;
         }
 
         public struct Filter

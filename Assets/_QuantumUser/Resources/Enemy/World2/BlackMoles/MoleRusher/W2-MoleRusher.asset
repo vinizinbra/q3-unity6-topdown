@@ -101,7 +101,7 @@ MonoBehaviour:
     Radius:
       RawValue: 65536
     ShieldMultiplier:
-      RawValue: 0
+      RawValue: 65536
     HealthMultiplier:
       RawValue: 65536
     Traits: 

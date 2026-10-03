@@ -221,3 +221,11 @@ Inspector button to test.
 
 Not done yet: no cap on simultaneous puddles, placeholder visual only. The Fuel Runner drops the same
 StickyPuddle (smaller) as an oil trail - see docs/enemy-passives.md.
+
+## Staggered barrage visuals (2026-10-03)
+With `Stagger > 0`, shells 2..N fire from `Tick()` inside one Active phase. `EnemyAttackVisualsView` watches
+`Enemy.PendingImpactIndex` every frame (before its phase-edge early return) and, per new shell, replays the
+action's `BeginStep` (pose/sprite, body animation, particle, camera shake; telegraph untouched) plus the rig
+muzzle. Keep that BeginStep short (e.g. Shake/PunchScale ~0.3s) - it restarts on every shell. The muzzle
+(`EnemyArmAimView.Fire`) only plays for deliveries with `EnemyDeliveryData.FiresWeapon` (Projectile,
+FanProjectile, MortarBarrage, Beam) - never for a burrow/slam/charge.

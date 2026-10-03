@@ -44,8 +44,30 @@ namespace Quantum
         {
             Instance = this;
 
-            if (initialTheme != null)
-                Load(initialTheme);
+            // The match's own world (RuntimeConfig.World -> WorldCatalog) wins; initialTheme is only
+            // the fallback for editing/previewing the scene without a running match.
+            WorldTheme theme = ResolveMatchTheme(QuantumRunner.Default != null ? QuantumRunner.Default.Game : null) ?? initialTheme;
+            if (theme != null)
+                Load(theme);
+
+            // The runner can start after this scene's Awake - apply the world once the game exists.
+            QuantumCallback.Subscribe(this, (CallbackGameStarted callback) => LoadMatchWorld(callback.Game));
+        }
+
+        private void LoadMatchWorld(QuantumGame game)
+        {
+            WorldTheme theme = ResolveMatchTheme(game);
+            if (theme != null && theme != CurrentTheme)
+                Load(theme);
+        }
+
+        private static WorldTheme ResolveMatchTheme(QuantumGame game)
+        {
+            if (game == null || game.Configurations.Runtime == null || WorldCatalog.Instance == null)
+                return null;
+
+            WorldDefinition world = WorldCatalog.Instance.Get(game.Configurations.Runtime.World);
+            return world != null ? world.Theme : null;
         }
 
         // Lets initialTheme be tweaked and reapplied from the Inspector without entering Play Mode.

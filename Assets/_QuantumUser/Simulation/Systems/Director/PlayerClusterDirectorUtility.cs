@@ -205,7 +205,7 @@ namespace Quantum
 
             // Co-op cap scaling (BalanceConfig.CoopGlobalKey.DirectorPressure) - the budget row alone
             // can't raise spawn throughput once the pressure target is the binding limit.
-            FP coopPressure = ResolveCoopPressure(balance, playerCount);
+            FP coopPressure = ResolveCoopPressure(f, balance, playerCount);
             FP targetPressure = phase.TargetPressure * coopPressure;
 
             bool split = f.Global->DirectorSplitActive && playerCount > 1;
@@ -262,8 +262,14 @@ namespace Quantum
 
         // 1x when BalanceConfig is unassigned, same graceful no-op CombatDirectorUtility.
         // ResolveBudgetMultiplier applies for the budget row.
-        public static FP ResolveCoopPressure(BalanceConfig balance, int playerCount)
-            => balance != null ? balance.GetCoopGlobal(CoopGlobalKey.DirectorPressure, playerCount) : FP._1;
+        // Includes the per-world WorldBalanceData.DirectorPressureMultiplier, so every pressure/cap
+        // consumer gets the world tweak through this one helper.
+        public static FP ResolveCoopPressure(Frame f, BalanceConfig balance, int playerCount)
+        {
+            FP coop = balance != null ? balance.GetCoopGlobal(CoopGlobalKey.DirectorPressure, playerCount) : FP._1;
+            WorldBalanceData world = WorldBalanceData.Get(f);
+            return coop * (world != null ? world.DirectorPressureMultiplier : FP._1);
+        }
 
         // Sum of ResolveCost for ALL active Director enemies - used for the single cohesive front so
         // solo/grouped play keeps the Director's exact pre-cluster global-pressure gate.

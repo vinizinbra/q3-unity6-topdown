@@ -80,6 +80,9 @@ namespace Quantum
         // HitFeedback.SetRig reads this to know what to flash without every ViewPrefab needing an
         // extra Inspector-wired array kept in sync with whatever renderers that enemy type happens
         // to have.
-        public SpriteRenderer[] Sprites => GetComponentsInChildren<SpriteRenderer>(true);
+        // Body sprites only - excludes props that own their own look (GroundAnchoredOverlay, e.g. the Dune
+        // Leviathan's sand), so HitFeedback's flash/tint/material swaps never touch them.
+        public SpriteRenderer[] Sprites => System.Array.FindAll(GetComponentsInChildren<SpriteRenderer>(true),
+            r => r.GetComponent<GroundAnchoredOverlay>() == null);
     }
 }

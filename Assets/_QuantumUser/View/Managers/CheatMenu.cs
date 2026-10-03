@@ -337,6 +337,14 @@ namespace QuantumUser.View
             SetupBreathButton(flow, "Auto Breath 2 (+Wpn)", 2);
             SetupBreathButton(flow, "Auto Breath 3 (+Wpn+1 Mut)", 3);
             SetupBreathButton(flow, "Auto Breath 4 (+Wpn+2 Mut)", 4);
+            // Starts the run if needed, jumps to the Boss phase at ~Lv24 and turns off this session's
+            // solo tutorial popups (local, see InMatchTutorialManager.SkipTutorials).
+            CreateButton(flow.Next(), "Jump to Boss (Lv24)", () =>
+            {
+                InMatchTutorialManager.SkipTutorials = true;
+                Send(CheatActionKind.JumpToBoss);
+            });
+            CreateButton(flow.Next(), "Skip Tutorials", () => InMatchTutorialManager.SkipTutorials = true);
             flow.Close();
 
             // Runtime counterpart to the Editor-only "RiftRaiders/Disable Upgrade Screen Animation"
@@ -357,6 +365,7 @@ namespace QuantumUser.View
             GridButton(player, "Buy Accessory", CheatActionKind.BuyAccessory);
             GridButton(player, "Heal Full", CheatActionKind.HealFull);
             GridButton(player, "God Mode", CheatActionKind.ToggleGodMode);
+            GridButton(player, "Reset God Mode", CheatActionKind.ResetGodMode);
             GridButton(player, "Revive All", CheatActionKind.Revive);
             GridButton(player, "Damage = 1", CheatActionKind.SetDamageToOne);
             GridButton(player, "Reset Damage", CheatActionKind.ResetDamage);

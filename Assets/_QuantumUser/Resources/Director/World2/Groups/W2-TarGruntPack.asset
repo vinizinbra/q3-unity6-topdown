@@ -10,31 +10,31 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 38fb0a001dd8c4ebdb80572655771283, type: 3}
-  m_Name: SwarmChargerPack
+  m_Name: W2-TarGruntPack
   m_EditorClassIdentifier: Quantum.Simulation::Quantum.EnemyGroupConfig
   Identifier:
-    Path: _QuantumUser/Resources/Director/EnemyGroups/SwarmChargerPack
+    Path: _QuantumUser/Resources/Director/World2/Groups/W2-TarGruntPack
     Guid:
-      Value: 424504409457314950
+      Value: 360888219156430098
   Members:
   - EnemyData:
       Id:
-        Value: 386887899629791929
-    Quantity: 3
-    Faction: 2
+        Value: 481271118897624665
+    Quantity: 1
+    Faction: 1
   - EnemyData:
       Id:
-        Value: 477699094528449997
-    Quantity: 1
-    Faction: 2
+        Value: 321533584398775548
+    Quantity: 2
+    Faction: 0
   Weight:
-    RawValue: 45875
+    RawValue: 65536
   MinimumSurvivalTime:
     RawValue: 0
   MaximumSurvivalTime:
     RawValue: 0
   MaxConcurrent: 1
-  SpawnPattern: 3
+  SpawnPattern: 2
   FormationRadius:
-    RawValue: 262144
+    RawValue: 327680
   AllowsPartialSpawn: 0

@@ -227,10 +227,10 @@ TextureImporter:
       name: World2FinalEnemies_4
       rect:
         serializedVersion: 2
-        x: 1004
-        y: 378
-        width: 354
-        height: 227
+        x: 895
+        y: 325
+        width: 384
+        height: 295
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -249,10 +249,10 @@ TextureImporter:
       name: World2FinalEnemies_5
       rect:
         serializedVersion: 2
-        x: 579
-        y: 382
-        width: 345
-        height: 232
+        x: 505
+        y: 326
+        width: 381
+        height: 280
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -271,12 +271,12 @@ TextureImporter:
       name: World2FinalEnemies_6
       rect:
         serializedVersion: 2
-        x: 234
-        y: 383
-        width: 255
-        height: 195
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
+        x: 174
+        y: 329
+        width: 318
+        height: 223
+      alignment: 9
+      pivot: {x: 0.42891553, y: 0.00000013685013}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []

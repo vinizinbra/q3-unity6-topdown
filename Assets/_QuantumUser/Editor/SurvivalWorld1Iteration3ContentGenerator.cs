@@ -8,7 +8,7 @@ namespace QuantumUser.Editor
     using UnityEditor;
     using UnityEngine;
 
-    // Authors SurvivalWorld1Config_Iteration3 - a third draft of Grassland Outpost's survival
+    // Authors W1-SurvivalConfig (Director/World1/, formerly SurvivalWorld1Config_Iteration3) - the third draft of Grassland Outpost's survival
     // curriculum, kept as its own asset (Iterations 1/2 both stay untouched for comparison). Same
     // Director architecture as every prior iteration - no engine/system changes, purely a new
     // authored timeline. This pass REMOVES Turret from World 1 entirely and reshuffles the Run 2/3
@@ -99,8 +99,8 @@ namespace QuantumUser.Editor
     public static class SurvivalWorld1Iteration3ContentGenerator
     {
         private const string EnemyFolder = "Assets/_QuantumUser/Resources/Enemy/BaseEnemies";
-        private const string GroupFolderPath = "Assets/_QuantumUser/Resources/Director/EnemyGroups";
-        private const string SurvivalConfigPath = "Assets/_QuantumUser/Resources/Director/SurvivalWorld1Config_Iteration3.asset";
+        private const string GroupFolderPath = "Assets/_QuantumUser/Resources/Director/World1/Groups";
+        private const string SurvivalConfigPath = "Assets/_QuantumUser/Resources/Director/World1/W1-SurvivalConfig.asset";
 
         private static readonly Dictionary<string, string> EnemyPathOverrides = new()
         {
@@ -409,7 +409,7 @@ namespace QuantumUser.Editor
             new PhaseSpec { Name = "World1Boss", Kind = SurvivalPhaseKind.Boss, PauseDuration = 5 },
         };
 
-        [MenuItem("Tools/RiftRaiders/Generate Survival World 1 Content (Iteration 3)")]
+        [MenuItem("Tools/RiftRaiders/Generate Survival World 1 Content (W1-SurvivalConfig)")]
         internal static void Generate()
         {
             if (AssetDatabase.IsValidFolder(GroupFolderPath) == false)
@@ -422,7 +422,7 @@ namespace QuantumUser.Editor
 
             foreach (var spec in GroupSpecs)
             {
-                string path = $"{GroupFolderPath}/{spec.FileName}.asset";
+                string path = $"{GroupFolderPath}/W1-{spec.FileName}.asset";
                 var existing = AssetDatabase.LoadAssetAtPath<EnemyGroupConfig>(path);
                 bool isNew = existing == null;
 
@@ -459,7 +459,7 @@ namespace QuantumUser.Editor
 
             foreach (var spec in GroupSpecs)
             {
-                var group = AssetDatabase.LoadAssetAtPath<EnemyGroupConfig>($"{GroupFolderPath}/{spec.FileName}.asset");
+                var group = AssetDatabase.LoadAssetAtPath<EnemyGroupConfig>($"{GroupFolderPath}/W1-{spec.FileName}.asset");
 
                 if (group == null)
                 {
