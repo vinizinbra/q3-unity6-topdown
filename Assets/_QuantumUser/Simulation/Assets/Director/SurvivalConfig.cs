@@ -96,11 +96,9 @@ namespace Quantum
         // that gate is worse than a missed spawn on an Elite phase specifically -
         // IsEncounterCleared reads "is one currently alive," not "did one ever spawn"). Authoring
         // both GuaranteedGroup and GuaranteedEnemyData on the same phase spawns both, independently
-        // - there's no exclusivity between them. GuaranteedEnemyFaction is read exactly like
-        // EnemySpawnEntry.Faction (a FactionSkins visual resolve only) - it does not need to match
-        // anything already listed in AllowedEnemies/AllowedGroups.
+        // - there's no exclusivity between them. It does not need to match anything already listed
+        // in AllowedEnemies/AllowedGroups.
         public AssetRef<EnemyDataAsset> GuaranteedEnemyData;
-        public EnemyFaction GuaranteedEnemyFaction;
     }
 
     // Drives SurvivalProgressionUtility.Tick. The last entry never expires - once

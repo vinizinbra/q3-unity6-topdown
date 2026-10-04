@@ -32,12 +32,6 @@ namespace Quantum
         // slots before generating offsets, so e.g. {Fighter x3, Shooter x1} occupies 4 of the
         // pattern's slots, not 2.
         public Int32 Quantity;
-
-        // Which world faction this slot's copies visually belong to (see Enemy.Faction/
-        // EnemyDataAsset.FactionSkins) - purely cosmetic, authored per-slot here so encounter
-        // design controls the mix directly (e.g. a "SecurityPatrol" group's Ranged members are
-        // always RobotFaction robots) instead of it being randomized at spawn time.
-        public EnemyFaction Faction;
     }
 
     // A single enemy a phase can purchase directly, alongside AllowedGroups, with no
@@ -55,7 +49,6 @@ namespace Quantum
     public struct EnemySpawnEntry
     {
         public AssetRef<EnemyDataAsset> EnemyData;
-        public EnemyFaction Faction;
         public FP Weight;
         public FP MinimumSurvivalTime;
         public FP MaximumSurvivalTime;

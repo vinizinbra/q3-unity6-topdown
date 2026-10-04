@@ -1,12 +1,12 @@
 # World 2 Enemy Roster (Desert / oil biome)
 
-12 normal enemies in three factions. Every asset is a clone with its OWN Quantum guids (tuning never
-touches World 1) under `Resources/Enemy/World2/<Faction>/<Name>/W2-<Name>.asset`; placeholder views are
-Prefab Variants of the W1 view under `_Project/Prefabs/View/EnemyView/World2/<Faction>/`. None are in a
+12 normal enemies in three folder groups (BlackMoles / DesertSecurity / Wildlife - organizational only; the old per-spawn `EnemyFaction`/`FactionSkins` skin system was removed, each enemy has one `ViewPrefab`). Every asset is a clone with its OWN Quantum guids (tuning never
+touches World 1) under `Resources/Enemy/World2/<Group>/<Name>/W2-<Name>.asset`; placeholder views are
+Prefab Variants of the W1 view under `_Project/Prefabs/View/EnemyView/World2/<Group>/`. None are in a
 `SurvivalConfig`/group yet - spawn with `EnemyDataAsset`'s "Spawn Near Local Player" Inspector button.
 Naming: W1 enemy files are `W1-*`, W2 are `W2-*`; `_Hazards/` and `_Passives/` are shared (no prefix).
 
-| Enemy | Faction | Tier | Built from | Notes |
+| Enemy | Group | Tier | Built from | Notes |
 |---|---|---|---|---|
 | Mole Grunt | BlackMoles | Filler | W1-Filler | own copy of the swarm melee action (W1-Filler borrows W1-Swarm's) |
 | Fuel Runner | BlackMoles | Filler | W1-Suicider | `OilTrail` passive (small puddles while running) + `FuelRunnerOilSplashSpawn` on its blast (StickyPuddle Scale 1.5, 4s) - see `docs/enemy-passives.md` |

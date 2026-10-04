@@ -208,7 +208,7 @@ namespace Quantum
                 return bakedRig;
             }
 
-            GameObject viewPrefab = ResolveViewPrefab(data, enemy.Faction, out float skinScaleMultiplier);
+            GameObject viewPrefab = data.ViewPrefab;
             if (viewPrefab == null)
             {
                 LogHelper.Error("Enemy", $"{_entityRef} EnemyDataAsset {data.name} has no ViewPrefab assigned");
@@ -236,39 +236,11 @@ namespace Quantum
             // here directly - no separate unscaling needed.
             instance.transform.localPosition = Vector3.down * radius;
             instance.transform.localRotation = Quaternion.identity;
-            FitScale = ResolveFitScale(rig, radius + viewRadiusPadding, data) * skinScaleMultiplier;
+            FitScale = ResolveFitScale(rig, radius + viewRadiusPadding, data);
             instance.transform.localScale = Vector3.one * FitScale;
 
             ConnectRig(rig);
             return rig;
-        }
-
-        // Faction is authored explicitly per-slot on whichever EnemyGroupConfig.GroupMemberEntry
-        // spawned this enemy (GroupSpawnerUtility.SpawnMember sets Enemy.Faction directly,
-        // deterministic/networked, not picked here) - this just looks up the matching skin.
-        // Archetypes with no FactionSkins authored (most of them, at least at first - "not every
-        // archetype needs a skin") always fall through to the default ViewPrefab, and so does a
-        // Faction with no matching entry in FactionSkins. scaleMultiplier comes along with the
-        // matched skin (EnemyFactionSkin.ScaleMultiplier) since a reskin's fit scale can want to
-        // differ from the default ViewPrefab's - 1 for the ViewPrefab fallback, which has no
-        // multiplier of its own.
-        private GameObject ResolveViewPrefab(EnemyDataAsset data, EnemyFaction faction, out float scaleMultiplier)
-        {
-            scaleMultiplier = 1f;
-
-            if (data.FactionSkins == null || data.FactionSkins.Count == 0)
-                return data.ViewPrefab;
-
-            foreach (EnemyFactionSkin skin in data.FactionSkins)
-            {
-                if (skin.Faction == faction)
-                {
-                    scaleMultiplier = skin.ScaleMultiplier > 0f ? skin.ScaleMultiplier : 1f;
-                    return skin.ViewPrefab;
-                }
-            }
-
-            return data.ViewPrefab;
         }
 
         // rig.ReferenceSprite.sprite.bounds is already Pixels-Per-Unit-corrected (bounds size =

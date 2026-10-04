@@ -527,7 +527,7 @@ namespace QuantumUser.Editor
                 EnemyGroupConfig asset = isNew ? ScriptableObject.CreateInstance<EnemyGroupConfig>() : existing;
 
                 asset.Members = spec.Members
-                    .Select(m => new GroupMemberEntry { EnemyData = LoadEnemyRef(m.EnemyFileName), Quantity = m.Quantity, Faction = m.Faction })
+                    .Select(m => new GroupMemberEntry { EnemyData = LoadEnemyRef(m.EnemyFileName), Quantity = m.Quantity })
                     .ToArray();
                 asset.Weight = spec.Weight;
                 asset.MinimumSurvivalTime = FP._0;
@@ -598,7 +598,6 @@ namespace QuantumUser.Editor
                     .Select(s => new EnemySpawnEntry
                     {
                         EnemyData = LoadEnemyRef(s.EnemyFileName),
-                        Faction = s.Faction,
                         Weight = s.Weight,
                         MinimumSurvivalTime = FP._0,
                         MaximumSurvivalTime = FP._0,

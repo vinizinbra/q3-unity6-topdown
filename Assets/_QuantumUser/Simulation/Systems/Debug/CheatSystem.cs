@@ -222,7 +222,6 @@ namespace Quantum
                 }
 
                 enemy->EnemyData = enemyDataRef;
-                enemy->Faction = EnemyFaction.MainFaction;
                 f.Unsafe.GetPointer<Transform3D>(entity)->Position = point;
 
                 EnemySystem.SeedFromEnemyData(f, entity, data);

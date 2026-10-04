@@ -56,12 +56,12 @@ namespace Quantum
                     continue; // close in world-space, but not reachable from the nearest player's own chunk
                 }
 
-                if (TryValidateFormation(f, group, memberCount, anchor, anchorGroundY, groundLayerMask, directorConfig, out FPVector3[] memberPositions, out AssetRef<EnemyDataAsset>[] memberData, out EnemyFaction[] memberFaction) == false)
+                if (TryValidateFormation(f, group, memberCount, anchor, anchorGroundY, groundLayerMask, directorConfig, out FPVector3[] memberPositions, out AssetRef<EnemyDataAsset>[] memberData) == false)
                 {
                     continue; // one or more members didn't fit here - discard this whole anchor
                 }
 
-                CreateGroup(f, groupRef, directorConfig, memberPositions, memberData, memberFaction);
+                CreateGroup(f, groupRef, directorConfig, memberPositions, memberData);
                 spawnedCount = memberCount;
                 return true;
             }
@@ -119,7 +119,7 @@ namespace Quantum
                     continue;
                 }
 
-                SpawnMember(f, default, directorConfig, groundedPosition, entry.EnemyData, entry.Faction);
+                SpawnMember(f, default, directorConfig, groundedPosition, entry.EnemyData);
                 return true;
             }
 
@@ -129,11 +129,10 @@ namespace Quantum
         // Flattens every Member's Quantity into individual formation slots (slot 0..memberCount-1,
         // continuous across all Members, not restarted per Member) so GroupFormationUtility sees
         // one coherent shape across the whole group rather than one shape per enemy type.
-        private static bool TryValidateFormation(Frame f, EnemyGroupConfig group, int memberCount, FPVector3 anchor, FP anchorGroundY, int groundLayerMask, DirectorConfig directorConfig, out FPVector3[] memberPositions, out AssetRef<EnemyDataAsset>[] memberData, out EnemyFaction[] memberFaction)
+        private static bool TryValidateFormation(Frame f, EnemyGroupConfig group, int memberCount, FPVector3 anchor, FP anchorGroundY, int groundLayerMask, DirectorConfig directorConfig, out FPVector3[] memberPositions, out AssetRef<EnemyDataAsset>[] memberData)
         {
             memberPositions = new FPVector3[memberCount];
             memberData = new AssetRef<EnemyDataAsset>[memberCount];
-            memberFaction = new EnemyFaction[memberCount];
 
             // Decided once per attempt, shared by every member - the ring only picked WHERE
             // (the anchor point); this independent roll decides the formation's orientation, so
@@ -171,7 +170,6 @@ namespace Quantum
 
                     memberPositions[slot] = groundedPosition;
                     memberData[slot] = member.EnemyData;
-                    memberFaction[slot] = member.Faction;
                     slot++;
                 }
             }
@@ -279,11 +277,11 @@ namespace Quantum
 
         // Called only once TrySpawnGroup already confirmed every member position is valid - never
         // partially applied.
-        private static void CreateGroup(Frame f, AssetRef<EnemyGroupConfig> groupRef, DirectorConfig directorConfig, FPVector3[] memberPositions, AssetRef<EnemyDataAsset>[] memberData, EnemyFaction[] memberFaction)
+        private static void CreateGroup(Frame f, AssetRef<EnemyGroupConfig> groupRef, DirectorConfig directorConfig, FPVector3[] memberPositions, AssetRef<EnemyDataAsset>[] memberData)
         {
             for (int i = 0; i < memberPositions.Length; i++)
             {
-                SpawnMember(f, groupRef, directorConfig, memberPositions[i], memberData[i], memberFaction[i]);
+                SpawnMember(f, groupRef, directorConfig, memberPositions[i], memberData[i]);
             }
         }
 
@@ -295,7 +293,7 @@ namespace Quantum
         // comment) - EnemySystem.SeedFromEnemyData re-runs the same Health/Shield/Radius seeding
         // manually right afterward, so the result is identical to an entity that had EnemyData
         // baked in from the start.
-        private static void SpawnMember(Frame f, AssetRef<EnemyGroupConfig> groupRef, DirectorConfig directorConfig, FPVector3 position, AssetRef<EnemyDataAsset> enemyDataRef, EnemyFaction faction)
+        private static void SpawnMember(Frame f, AssetRef<EnemyGroupConfig> groupRef, DirectorConfig directorConfig, FPVector3 position, AssetRef<EnemyDataAsset> enemyDataRef)
         {
             EntityRef entity = f.Create(directorConfig.EnemyPrototype);
 
@@ -306,7 +304,6 @@ namespace Quantum
             }
 
             enemy->EnemyData = enemyDataRef;
-            enemy->Faction = faction;
             f.Unsafe.GetPointer<Transform3D>(entity)->Position = position;
 
             EnemyDataAsset data = f.FindAsset(enemyDataRef);

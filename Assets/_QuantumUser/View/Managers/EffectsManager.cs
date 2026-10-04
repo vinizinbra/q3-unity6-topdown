@@ -545,7 +545,7 @@ namespace QuantumUser.View.Managers
             // Per-hero override first, generic fallback second - so authoring nothing per hero still
             // gives every accessory a break effect, and a hero only needs its own when a shared puff
             // genuinely doesn't fit (feathers vs. shards). Same default-with-override shape
-            // EnemyDataAsset.ViewPrefab/FactionSkins already uses.
+            // EnemyDataAsset.ViewPrefab already uses.
             ParticleSystem prefab = ResolveAccessoryBrokenEffect(e) ?? accessoryBrokenEffectPrefab;
 
             if (prefab == null)

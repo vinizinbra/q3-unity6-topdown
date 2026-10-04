@@ -340,10 +340,16 @@ namespace Quantum
                 CanBeGrounded = true,
                 ClimbProbeThreshold = FP._0_50,
                 GapProbeThreshold = FP._0_50,
-                ArcHeight = FP._0_50,
+                ArcHeight = FP._1,
                 TraversalJumpSpeedMultiplier = FP._1,
+                CanClimbCliffs = true,
+                CliffHeight = 2,
                 TargetableByMelee = true,
                 TargetableByProjectiles = true,
+                CanJumpGaps = true,
+                GapDistance = 5,
+                CanFallFromCliff = true,
+                FallHeight = 5,
             },
         };
 

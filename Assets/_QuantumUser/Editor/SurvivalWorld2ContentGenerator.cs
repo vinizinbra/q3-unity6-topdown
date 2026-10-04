@@ -237,7 +237,7 @@ namespace QuantumUser.Editor
                     asset = ScriptableObject.CreateInstance<EnemyGroupConfig>();
 
                 asset.Members = spec.Members
-                    .Select(m => new GroupMemberEntry { EnemyData = LoadEnemyRef(m.Enemy), Quantity = m.Quantity, Faction = Factions[m.Enemy] })
+                    .Select(m => new GroupMemberEntry { EnemyData = LoadEnemyRef(m.Enemy), Quantity = m.Quantity })
                     .ToArray();
                 asset.Weight = spec.Weight;
                 asset.MinimumSurvivalTime = FP._0;
@@ -293,14 +293,12 @@ namespace QuantumUser.Editor
                     .Select(s => new EnemySpawnEntry
                     {
                         EnemyData = LoadEnemyRef(s.Enemy),
-                        Faction = Factions[s.Enemy],
                         Weight = s.Weight,
                         MinimumSurvivalTime = FP._0,
                         MaximumSurvivalTime = FP._0,
                         MaxConcurrent = s.MaxConcurrent,
                     }).ToArray(),
                 GuaranteedEnemyData = string.IsNullOrEmpty(p.GuaranteedEnemy) ? default : LoadEnemyRef(p.GuaranteedEnemy),
-                GuaranteedEnemyFaction = string.IsNullOrEmpty(p.GuaranteedEnemy) ? default : Factions[p.GuaranteedEnemy],
                 PauseDuration = p.PauseDuration,
                 BossPrototype = p.Kind == SurvivalPhaseKind.Boss ? bossPrototype : default,
             }).ToArray();

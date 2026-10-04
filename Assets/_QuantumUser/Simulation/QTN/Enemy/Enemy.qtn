@@ -161,13 +161,6 @@ component Enemy
     // works with no separate per-prototype component to remember to add).
     FP LostTimer;
 
-    // Which world faction this enemy visually belongs to (EnemyDataAsset.FactionSkins picks its
-    // ViewPrefab off this) - purely cosmetic, no gameplay effect. Authored explicitly per-slot on
-    // the EnemyGroupConfig.GroupMemberEntry that spawned it (GroupSpawnerUtility.SpawnMember), not
-    // randomized, so the same group composition always reads the same way (e.g. a SecurityPatrol
-    // group's Ranged members are always RobotFaction robots, never a random mix).
-    EnemyFaction Faction;
-
     // SmartFleeMovementData's own hysteresis - the last heading it committed to and how much
     // longer it's held before allowing itself to reconsider. Without this, re-scanning candidate
     // headings fresh every tick from the target's live (slightly jittering) position can flip which
@@ -242,16 +235,4 @@ enum EnemyActionPhase : Byte
 
     Recovery    = 6,
     Dead        = 7
-}
-
-// Deliberately generic labels rather than named lore factions, since the actual visual identity
-// behind each slot is expected to vary per world/map (e.g. MainFaction might be cultists on one map,
-// corp goons on another) while the ROLE stays consistent: MainFaction = the world's main hostile
-// faction, RobotFaction = local security/defense (often robotic), WildLifeFaction = local wildlife. See
-// Enemy.Faction and EnemyDataAsset.FactionSkins.
-enum EnemyFaction : Byte
-{
-    MainFaction = 0,
-    RobotFaction = 1,
-    WildLifeFaction = 2
 }

@@ -1399,7 +1399,6 @@ namespace Quantum.Prototypes {
     public FP FlyingHoverCheckTimer;
     public FP FlyingHoverTargetHeight;
     public FP LostTimer;
-    public Quantum.QEnum8<EnemyFaction> Faction;
     public FPVector2 FleeDirection;
     public FP FleeCommitTimer;
     public FPVector3 LeadAverageVelocity;
@@ -1444,7 +1443,6 @@ namespace Quantum.Prototypes {
         result.FlyingHoverCheckTimer = this.FlyingHoverCheckTimer;
         result.FlyingHoverTargetHeight = this.FlyingHoverTargetHeight;
         result.LostTimer = this.LostTimer;
-        result.Faction = this.Faction;
         result.FleeDirection = this.FleeDirection;
         result.FleeCommitTimer = this.FleeCommitTimer;
         result.LeadAverageVelocity = this.LeadAverageVelocity;

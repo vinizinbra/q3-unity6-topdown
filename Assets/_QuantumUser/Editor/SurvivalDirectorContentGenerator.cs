@@ -238,7 +238,7 @@ namespace QuantumUser.Editor
                 EnemyGroupConfig asset = isNew ? ScriptableObject.CreateInstance<EnemyGroupConfig>() : existing;
 
                 asset.Members = spec.Members
-                    .Select(m => new GroupMemberEntry { EnemyData = LoadEnemyRef(m.EnemyFileName), Quantity = m.Quantity, Faction = m.Faction })
+                    .Select(m => new GroupMemberEntry { EnemyData = LoadEnemyRef(m.EnemyFileName), Quantity = m.Quantity })
                     .ToArray();
                 asset.Weight = spec.Weight;
                 asset.MinimumSurvivalTime = FP._0;
@@ -327,5 +327,15 @@ namespace QuantumUser.Editor
                 current = next;
             }
         }
+    }
+
+    // Editor-only leftover: the sim's EnemyFaction enum and per-member Faction fields were removed
+    // (faction skins are gone), but the legacy content generators' roster tables still tag each
+    // entry with one - this keeps those tables compiling; the value is no longer written anywhere.
+    internal enum EnemyFaction : byte
+    {
+        MainFaction = 0,
+        RobotFaction = 1,
+        WildLifeFaction = 2
     }
 }

@@ -505,7 +505,7 @@ namespace Quantum
 
                         for (int e = 0; e < enemies.Count; e++)
                         {
-                            if (enemies[e].EnemyData.Equals(entry.EnemyData) && enemies[e].Faction == entry.Faction)
+                            if (enemies[e].EnemyData.Equals(entry.EnemyData))
                             {
                                 duplicate = true;
                                 break;

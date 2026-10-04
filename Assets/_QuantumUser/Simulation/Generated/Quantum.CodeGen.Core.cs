@@ -132,11 +132,6 @@ namespace Quantum {
     Recovery = 6,
     Dead = 7,
   }
-  public enum EnemyFaction : byte {
-    MainFaction = 0,
-    RobotFaction = 1,
-    WildLifeFaction = 2,
-  }
   public enum EnemyLifecycleState : byte {
     Active,
     Irrelevant,
@@ -3844,85 +3839,83 @@ namespace Quantum {
   }
   [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct Enemy : Quantum.IComponent {
-    public const Int32 SIZE = 448;
+    public const Int32 SIZE = 440;
     public const Int32 ALIGNMENT = 8;
-    [FieldOffset(16)]
+    [FieldOffset(8)]
     public AssetRef<EnemyDataAsset> EnemyData;
-    [FieldOffset(32)]
+    [FieldOffset(24)]
     public EntityRef Target;
     [FieldOffset(3)]
     public EnemyActionPhase Phase;
-    [FieldOffset(144)]
+    [FieldOffset(136)]
     public FP StateTimer;
-    [FieldOffset(128)]
+    [FieldOffset(120)]
     public FP SpawnGraceRemaining;
-    [FieldOffset(40)]
+    [FieldOffset(32)]
     public FP AttackCooldownRemaining;
     [FieldOffset(0)]
     public Byte CurrentActionSlot;
-    [FieldOffset(352)]
+    [FieldOffset(344)]
     public FPVector3 SkillTargetPosition;
-    [FieldOffset(328)]
+    [FieldOffset(320)]
     public FPVector3 SkillStartPosition;
-    [FieldOffset(400)]
+    [FieldOffset(392)]
     public FPVector3 TraversalJumpOrigin;
-    [FieldOffset(376)]
+    [FieldOffset(368)]
     public FPVector3 TraversalJumpDestination;
-    [FieldOffset(184)]
-    public FP TraversalJumpTimer;
-    [FieldOffset(168)]
-    public FP TraversalJumpDuration;
-    [FieldOffset(160)]
-    public FP TraversalJumpAnticipationTimer;
-    [FieldOffset(424)]
-    public FPVector3 TraversalJumpPendingDestination;
     [FieldOffset(176)]
-    public FP TraversalJumpPendingSpeed;
-    [FieldOffset(88)]
-    public FP KnockbackTimer;
-    [FieldOffset(80)]
-    public FP HitStaggerTimer;
-    [FieldOffset(136)]
-    public FP StaggerImmuneTimer;
-    [FieldOffset(304)]
-    public FPVector3 PreKnockbackPosition;
+    public FP TraversalJumpTimer;
+    [FieldOffset(160)]
+    public FP TraversalJumpDuration;
     [FieldOffset(152)]
+    public FP TraversalJumpAnticipationTimer;
+    [FieldOffset(416)]
+    public FPVector3 TraversalJumpPendingDestination;
+    [FieldOffset(168)]
+    public FP TraversalJumpPendingSpeed;
+    [FieldOffset(80)]
+    public FP KnockbackTimer;
+    [FieldOffset(72)]
+    public FP HitStaggerTimer;
+    [FieldOffset(128)]
+    public FP StaggerImmuneTimer;
+    [FieldOffset(296)]
+    public FPVector3 PreKnockbackPosition;
+    [FieldOffset(144)]
     public FP StuckCheckTimer;
-    [FieldOffset(48)]
+    [FieldOffset(40)]
     public FP FallRespawnTimer;
-    [FieldOffset(208)]
+    [FieldOffset(200)]
     public FPVector3 FallOriginPosition;
-    [FieldOffset(24)]
+    [FieldOffset(16)]
     public EntityRef SkillProjectile;
-    [FieldOffset(280)]
+    [FieldOffset(272)]
     public FPVector3 PendingImpactPoint;
     [FieldOffset(2)]
     public Byte PendingImpactTotal;
     [FieldOffset(1)]
     public Byte PendingImpactIndex;
-    [FieldOffset(8)]
-    public QBoolean PendingImpactAwaitingSpawn;
-    [FieldOffset(120)]
-    public FP RingWaveRadius;
-    [FieldOffset(96)]
-    public FP LaserSpinAngle;
-    [FieldOffset(64)]
-    public FP FlyingHoverCheckTimer;
-    [FieldOffset(72)]
-    public FP FlyingHoverTargetHeight;
-    [FieldOffset(112)]
-    public FP LostTimer;
     [FieldOffset(4)]
-    public EnemyFaction Faction;
-    [FieldOffset(192)]
-    public FPVector2 FleeDirection;
+    public QBoolean PendingImpactAwaitingSpawn;
+    [FieldOffset(112)]
+    public FP RingWaveRadius;
+    [FieldOffset(88)]
+    public FP LaserSpinAngle;
     [FieldOffset(56)]
-    public FP FleeCommitTimer;
-    [FieldOffset(232)]
-    public FPVector3 LeadAverageVelocity;
-    [FieldOffset(256)]
-    public FPVector3 LeadSamplePosition;
+    public FP FlyingHoverCheckTimer;
+    [FieldOffset(64)]
+    public FP FlyingHoverTargetHeight;
     [FieldOffset(104)]
+    public FP LostTimer;
+    [FieldOffset(184)]
+    public FPVector2 FleeDirection;
+    [FieldOffset(48)]
+    public FP FleeCommitTimer;
+    [FieldOffset(224)]
+    public FPVector3 LeadAverageVelocity;
+    [FieldOffset(248)]
+    public FPVector3 LeadSamplePosition;
+    [FieldOffset(96)]
     public FP LeadSampleTimer;
     public override readonly Int32 GetHashCode() {
       unchecked { 
@@ -3960,7 +3953,6 @@ namespace Quantum {
         hash = hash * 31 + FlyingHoverCheckTimer.GetHashCode();
         hash = hash * 31 + FlyingHoverTargetHeight.GetHashCode();
         hash = hash * 31 + LostTimer.GetHashCode();
-        hash = hash * 31 + (Byte)Faction;
         hash = hash * 31 + FleeDirection.GetHashCode();
         hash = hash * 31 + FleeCommitTimer.GetHashCode();
         hash = hash * 31 + LeadAverageVelocity.GetHashCode();
@@ -3975,7 +3967,6 @@ namespace Quantum {
         serializer.Stream.Serialize(&p->PendingImpactIndex);
         serializer.Stream.Serialize(&p->PendingImpactTotal);
         serializer.Stream.Serialize((Byte*)&p->Phase);
-        serializer.Stream.Serialize((Byte*)&p->Faction);
         QBoolean.Serialize(&p->PendingImpactAwaitingSpawn, serializer);
         AssetRef.Serialize(&p->EnemyData, serializer);
         EntityRef.Serialize(&p->SkillProjectile, serializer);
@@ -9604,7 +9595,6 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum.EnemyActionPhase), 1);
       typeRegistry.Register(typeof(Quantum.EnemyActionSlots), Quantum.EnemyActionSlots.SIZE);
       typeRegistry.Register(typeof(Quantum.EnemyCombatModifiers), Quantum.EnemyCombatModifiers.SIZE);
-      typeRegistry.Register(typeof(Quantum.EnemyFaction), 1);
       typeRegistry.Register(typeof(Quantum.EnemyLifecycle), Quantum.EnemyLifecycle.SIZE);
       typeRegistry.Register(typeof(Quantum.EnemyLifecycleState), 1);
       typeRegistry.Register(typeof(Quantum.EnemyPassives), Quantum.EnemyPassives.SIZE);
@@ -10048,7 +10038,6 @@ namespace Quantum {
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.EKCCProcessorSource>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.ElementType>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.EnemyActionPhase>();
-      FramePrinter.EnsurePrimitiveNotStripped<Quantum.EnemyFaction>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.EnemyLifecycleState>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.EntityDespawnReason>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.GameState>();

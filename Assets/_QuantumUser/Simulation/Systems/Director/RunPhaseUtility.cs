@@ -372,7 +372,7 @@ namespace Quantum
             }
 
             bool major = CombatDirectorUtility.EnemyIsMajor(f, phase.GuaranteedEnemyData);
-            var entry = new EnemySpawnEntry { EnemyData = phase.GuaranteedEnemyData, Faction = phase.GuaranteedEnemyFaction };
+            var entry = new EnemySpawnEntry { EnemyData = phase.GuaranteedEnemyData };
 
             if (GroupSpawnerUtility.TrySpawnEnemy(f, entry, plan.GlobalCentroid, major, directorConfig) == false)
             {

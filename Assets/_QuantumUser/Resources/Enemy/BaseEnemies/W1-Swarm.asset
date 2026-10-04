@@ -539,7 +539,7 @@ MonoBehaviour:
     ArcHeight:
       RawValue: 0
     TraversalJumpSpeedMultiplier:
-      RawValue: 0
+      RawValue: 65536
     CanClimbCliffs: 0
     CliffHeight:
       RawValue: 0
@@ -571,7 +571,7 @@ MonoBehaviour:
       Value: 578470124590582232
   SkillActions: []
   ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
-  ViewPrefab: {fileID: 8476845490732343577, guid: f8e0e322414154c5a941e35c6dd113da, type: 3}
+  ViewPrefab: {fileID: 8476845490732343577, guid: 2e4a8f2b5eaf44c0ba7cade36c968ed0, type: 3}
   FactionSkins:
   - Faction: 2
     ViewPrefab: {fileID: 8476845490732343577, guid: 2e4a8f2b5eaf44c0ba7cade36c968ed0, type: 3}

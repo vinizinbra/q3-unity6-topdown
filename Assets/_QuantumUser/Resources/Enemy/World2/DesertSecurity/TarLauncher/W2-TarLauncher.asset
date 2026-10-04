@@ -79,13 +79,13 @@ MonoBehaviour:
       CanBeLaunched: 0
       CanBeGrounded: 1
       ClimbProbeThreshold:
-        RawValue: 13107
+        RawValue: 32768
       GapProbeThreshold:
-        RawValue: 13107
+        RawValue: 32768
       ArcHeight:
         RawValue: 65536
       TraversalJumpSpeedMultiplier:
-        RawValue: 131072
+        RawValue: 65536
       CanClimbCliffs: 1
       CliffHeight:
         RawValue: 131072
@@ -95,10 +95,10 @@ MonoBehaviour:
       TargetableByProjectiles: 1
       CanJumpGaps: 1
       GapDistance:
-        RawValue: 262144
+        RawValue: 327680
       CanFallFromCliff: 1
       FallHeight:
-        RawValue: 196608
+        RawValue: 327680
     Movement:
       Id:
         Value: 328519676567531755
@@ -189,7 +189,7 @@ MonoBehaviour:
     ArcHeight:
       RawValue: 0
     TraversalJumpSpeedMultiplier:
-      RawValue: 0
+      RawValue: 65536
     CanClimbCliffs: 0
     CliffHeight:
       RawValue: 0

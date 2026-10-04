@@ -279,7 +279,7 @@ namespace Quantum
             spriteRenderer.sprite = data.Accessory.CollectibleSprite;
 
             // 0/unset reads as 1, the same "an unset multiplier defaults safely" convention
-            // EnemyFactionSkin.ScaleMultiplier already uses - so a hero authored before this field
+            // EnemyDataAsset.EnemyHeightData.TraversalJumpSpeedMultiplier already uses - so a hero authored before this field
             // existed is unaffected.
             float scale = data.Accessory.CollectibleScale > 0f ? data.Accessory.CollectibleScale : 1f;
             spriteRenderer.transform.localScale = _authoredSpriteScale * scale;

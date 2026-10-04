@@ -531,7 +531,7 @@ Per-hero presentation lives in **two** places, split by what kind of thing it is
 and a mask are rarely drawn at the same source size, so without it that one prefab's scale would have
 to suit every hero at once. It multiplies the prototype's authored scale rather than replacing it,
 and 0/unset reads as 1 - the same "an unset multiplier defaults safely" convention
-`EnemyFactionSkin.ScaleMultiplier` already uses. The EQUIPPED visual needs no equivalent: that one is
+`EnemyDataAsset.EnemyHeightData.TraversalJumpSpeedMultiplier` already uses. The EQUIPPED visual needs no equivalent: that one is
 a hand-placed GameObject on the hero's own view prefab, so it's scaled directly in the Editor.
 
 This follows the project's existing simulation/view split convention exactly - a `.View.cs` partial

@@ -2895,7 +2895,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -3055,8 +3056,6 @@ MonoBehaviour:
       RawValue: 0
     LostTimer:
       RawValue: 0
-    Faction:
-      Value: 0
     FleeDirection:
       X:
         RawValue: 0
@@ -5112,7 +5111,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -5550,8 +5550,6 @@ MonoBehaviour:
       RawValue: 0
     LostTimer:
       RawValue: 0
-    Faction:
-      Value: 0
     FleeDirection:
       X:
         RawValue: 0
@@ -14409,7 +14407,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -14847,8 +14846,6 @@ MonoBehaviour:
       RawValue: 0
     LostTimer:
       RawValue: 0
-    Faction:
-      Value: 0
     FleeDirection:
       X:
         RawValue: 0
@@ -109940,7 +109937,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -110378,8 +110376,6 @@ MonoBehaviour:
       RawValue: 0
     LostTimer:
       RawValue: 0
-    Faction:
-      Value: 0
     FleeDirection:
       X:
         RawValue: 0
@@ -126887,7 +126883,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -127325,8 +127322,6 @@ MonoBehaviour:
       RawValue: 0
     LostTimer:
       RawValue: 0
-    Faction:
-      Value: 0
     FleeDirection:
       X:
         RawValue: 0
@@ -131307,7 +131302,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -131745,8 +131741,6 @@ MonoBehaviour:
       RawValue: 0
     LostTimer:
       RawValue: 0
-    Faction:
-      Value: 0
     FleeDirection:
       X:
         RawValue: 0
@@ -141099,6 +141093,10 @@ MonoBehaviour:
     BalanceConfig:
       Id:
         Value: 503423254243386843
+    World: 0
+    WorldBalance:
+      Id:
+        Value: 0
     Difficulty: 0
     NightmareLevel: 1
     DifficultyConfig:
@@ -141106,7 +141104,7 @@ MonoBehaviour:
         Value: 375077487635899393
     SurvivalConfig:
       Id:
-        Value: 356172470141887835
+        Value: 366431902209181820
     DirectorConfig:
       Id:
         Value: 416415362832844946
@@ -149767,7 +149765,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -150354,8 +150353,6 @@ MonoBehaviour:
       RawValue: 0
     LostTimer:
       RawValue: 0
-    Faction:
-      Value: 0
     FleeDirection:
       X:
         RawValue: 0
@@ -152987,7 +152984,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -153379,8 +153377,6 @@ MonoBehaviour:
       RawValue: 0
     LostTimer:
       RawValue: 0
-    Faction:
-      Value: 0
     FleeDirection:
       X:
         RawValue: 0
@@ -169621,7 +169617,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -170013,8 +170010,6 @@ MonoBehaviour:
       RawValue: 0
     LostTimer:
       RawValue: 0
-    Faction:
-      Value: 0
     FleeDirection:
       X:
         RawValue: 0

@@ -239,8 +239,15 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
                 Rect.gameObject.SetActive(active);
         }
 
+        // Chunk icons only - the tint-resolved color before any edge-pin fade. The pin pass rebuilds
+        // Icon.color from this every tick, so the fade can never compound across ticks (it used to
+        // multiply Icon.color.a in place and relied on UpdateIconTints resetting it first - an icon
+        // UpdateIconTints skipped drifted to alpha 0).
+        public Color BaseColor = Color.white;
+
         public void SetIconColor(Color color)
         {
+            BaseColor = color;
             if (Icon != null)
                 Icon.color = color;
         }
@@ -1195,6 +1202,8 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
 
         var pair = new MapOverlay { TexelRect = texelRect };
         pair.Rect = SpawnIcon(specialSprite, texelRect, out pair.Icon);
+        if (pair.Icon != null)
+            pair.BaseColor = pair.Icon.color;
 
         pair.SetActive(chunk.Discovered);
         _iconOverlays[entity] = pair;
@@ -1387,6 +1396,9 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
             if (pair.Rect == null)
                 continue;
 
+            if (pair.Icon != null)
+                pair.Icon.color = pair.BaseColor;
+
             Vector2 natural = TexelRectCenterToMapPosition(pair.TexelRect);
             if (pinActivePoisToEdge == false || pair.PinToEdge == false || viewport == null)
             {
@@ -1414,11 +1426,11 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
 
             pair.Rect.anchoredPosition = placed;
 
-            // UpdateIconTints rewrites every linked icon's full color earlier this same tick, so
-            // fading on top of it here never compounds and un-fades by itself once unpinned.
+            // Icon.color was just reset to BaseColor above, so this fade never compounds and
+            // un-fades by itself once unpinned.
             if (pinned != inViewport && pair.Icon != null)
             {
-                Color color = pair.Icon.color;
+                Color color = pair.BaseColor;
                 color.a *= edgePinnedAlpha;
                 pair.Icon.color = color;
             }

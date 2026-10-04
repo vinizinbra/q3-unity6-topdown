@@ -48,7 +48,7 @@ MonoBehaviour:
       ArcHeight:
         RawValue: 65536
       TraversalJumpSpeedMultiplier:
-        RawValue: 131072
+        RawValue: 65536
       CanClimbCliffs: 1
       CliffHeight:
         RawValue: 131072
@@ -152,7 +152,7 @@ MonoBehaviour:
     ArcHeight:
       RawValue: 0
     TraversalJumpSpeedMultiplier:
-      RawValue: 0
+      RawValue: 65536
     CanClimbCliffs: 0
     CliffHeight:
       RawValue: 0

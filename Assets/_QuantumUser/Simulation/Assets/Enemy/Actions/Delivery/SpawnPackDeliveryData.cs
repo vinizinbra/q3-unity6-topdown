@@ -67,7 +67,6 @@ namespace Quantum
             DirectorConfig directorConfig = f.FindAsset(f.RuntimeConfig.DirectorConfig);
             FPVector3 anchor = action.Origin == EnemyActionOrigin.Self ? filter.Transform3D->Position : filter.Enemy->SkillTargetPosition;
             int groundLayerMask = EnemyMovementUtility.GetGroundLayerMask(f);
-            EnemyFaction faction = filter.Enemy->Faction;
 
             int maxEnemies = ResolveMaxEnemies(f);
             int fullCycles = maxEnemies / validComposition.Count;
@@ -76,7 +75,7 @@ namespace Quantum
             for (int cycle = 0; cycle < fullCycles; cycle++)
             {
                 for (int i = 0; i < validComposition.Count; i++)
-                    SpawnAtAnchor(f, directorConfig, anchor, groundLayerMask, validComposition[i], faction);
+                    SpawnAtAnchor(f, directorConfig, anchor, groundLayerMask, validComposition[i]);
             }
 
             if (remainder > 0)
@@ -87,13 +86,13 @@ namespace Quantum
 
                 AssetRef<EnemyDataAsset>[] picked = WeightedDrawUtility.Draw(f, candidates, remainder);
                 for (int i = 0; i < picked.Length; i++)
-                    SpawnAtAnchor(f, directorConfig, anchor, groundLayerMask, picked[i], faction);
+                    SpawnAtAnchor(f, directorConfig, anchor, groundLayerMask, picked[i]);
             }
 
             return true;
         }
 
-        private void SpawnAtAnchor(Frame f, DirectorConfig directorConfig, FPVector3 anchor, int groundLayerMask, AssetRef<EnemyDataAsset> enemyDataRef, EnemyFaction faction)
+        private void SpawnAtAnchor(Frame f, DirectorConfig directorConfig, FPVector3 anchor, int groundLayerMask, AssetRef<EnemyDataAsset> enemyDataRef)
         {
             FPVector3 point = RandomizeAroundAnchor(f, anchor);
 
@@ -101,12 +100,12 @@ namespace Quantum
                 ? foundGroundY
                 : point.Y;
 
-            SpawnMember(f, directorConfig, new FPVector3(point.X, groundY, point.Z), enemyDataRef, faction);
+            SpawnMember(f, directorConfig, new FPVector3(point.X, groundY, point.Z), enemyDataRef);
         }
 
         // Mirrors GroupSpawnerUtility.SpawnMember's exact create -> seed sequence, minus the
         // EnemyLifecycle add - see class comment.
-        private static void SpawnMember(Frame f, DirectorConfig directorConfig, FPVector3 position, AssetRef<EnemyDataAsset> enemyDataRef, EnemyFaction faction)
+        private static void SpawnMember(Frame f, DirectorConfig directorConfig, FPVector3 position, AssetRef<EnemyDataAsset> enemyDataRef)
         {
             EntityRef entity = f.Create(directorConfig.EnemyPrototype);
 
@@ -118,7 +117,6 @@ namespace Quantum
             }
 
             enemy->EnemyData = enemyDataRef;
-            enemy->Faction = faction;
             f.Unsafe.GetPointer<Transform3D>(entity)->Position = position;
 
             EnemyDataAsset data = f.FindAsset(enemyDataRef);

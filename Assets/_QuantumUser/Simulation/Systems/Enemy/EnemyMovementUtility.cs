@@ -714,6 +714,11 @@ namespace Quantum
         // see BeginTraversalJump's own comment for why.
         private static readonly FP JumpSpeedScale = FP._2;
 
+        // Baseline pace for TraversalJumpSpeedMultiplier == 1: the authored multiplier is now a
+        // plain relative knob around 1 for every enemy, and this constant keeps 1 playing at the
+        // pace the old, de-facto-standard value of 2 had.
+        private static readonly FP TraversalJumpBaseSpeedScale = FP._2;
+
         // Starts a kinematic hop from this enemy's current position onto destination (found by
         // TryFindClimbLanding/TryFindGapLanding) - duration scales with distance/speed so a slower
         // enemy takes proportionally longer to cross the same gap/cliff, same as it would walking
@@ -757,7 +762,7 @@ namespace Quantum
             // same convention Projectile.qtn's own MaxDistanceMultiplier already uses, so nothing
             // already in the game silently speeds up or stalls the instant this field exists.
             FP speedMultiplier = data.Stats.Height.TraversalJumpSpeedMultiplier <= FP._0 ? FP._1 : data.Stats.Height.TraversalJumpSpeedMultiplier;
-            jumpSpeed *= speedMultiplier;
+            jumpSpeed *= speedMultiplier * TraversalJumpBaseSpeedScale;
 
             FP duration = jumpSpeed > FP._0 ? FPMath.Max(FP._0_10, distance / jumpSpeed) : FP._0_50;
 
