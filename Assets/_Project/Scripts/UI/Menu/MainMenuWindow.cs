@@ -87,7 +87,11 @@ public class MainMenuWindow : UiWindow
             return;
         }
 
-        int index = Mathf.Clamp(WorldIndexPref.Value, 0, catalog.Worlds.Count - 1);
+        RuntimeConfig runtimeConfig = matchMakingConfig != null ? matchMakingConfig.RuntimeConfig : MatchMakingConfig.Instance.RuntimeConfig;
+
+        // No dropdown = nothing to remember: keep the world authored on RuntimeConfig.WorldDefinition.
+        int authored = QuantumUnityDB.TryGetGlobalAsset(runtimeConfig.WorldDefinition, out WorldDefinition authoredWorld) ? catalog.IndexOf(authoredWorld) : -1;
+        int index = worldDropdown == null && authored >= 0 ? authored : Mathf.Clamp(WorldIndexPref.Value, 0, catalog.Worlds.Count - 1);
 
         if (worldDropdown != null)
         {
@@ -101,8 +105,7 @@ public class MainMenuWindow : UiWindow
             worldDropdown.SetValueWithoutNotify(index);
         }
 
-        // Applied even with no dropdown, so the remembered/default world still drives the match.
-        MatchMakingConfig.ApplyWorld(matchMakingConfig != null ? matchMakingConfig.RuntimeConfig : MatchMakingConfig.Instance.RuntimeConfig, index);
+        MatchMakingConfig.ApplyWorld(runtimeConfig, index);
     }
 
     private void OnWorldChanged(int index)

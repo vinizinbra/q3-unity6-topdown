@@ -139,10 +139,10 @@ TextureImporter:
       name: World1FinalEnemies_0
       rect:
         serializedVersion: 2
-        x: 36
-        y: 685
-        width: 281
-        height: 263
+        x: 136
+        y: 731
+        width: 336
+        height: 220
       alignment: 9
       pivot: {x: 0.44142437, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -161,10 +161,10 @@ TextureImporter:
       name: World1FinalEnemies_1
       rect:
         serializedVersion: 2
-        x: 318
-        y: 679
-        width: 382
-        height: 317
+        x: 526
+        y: 728
+        width: 434
+        height: 296
       alignment: 9
       pivot: {x: 0.4370213, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -183,10 +183,10 @@ TextureImporter:
       name: World1FinalEnemies_2
       rect:
         serializedVersion: 2
-        x: 722
-        y: 692
-        width: 354
-        height: 318
+        x: 995
+        y: 728
+        width: 458
+        height: 296
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -205,10 +205,10 @@ TextureImporter:
       name: World1FinalEnemies_3
       rect:
         serializedVersion: 2
-        x: 152
-        y: 364
+        x: 119
+        y: 391
         width: 297
-        height: 234
+        height: 192
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -227,10 +227,10 @@ TextureImporter:
       name: World1FinalEnemies_4
       rect:
         serializedVersion: 2
-        x: 463
-        y: 368
-        width: 286
-        height: 230
+        x: 466
+        y: 385
+        width: 308
+        height: 239
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -249,10 +249,10 @@ TextureImporter:
       name: World1FinalEnemies_5
       rect:
         serializedVersion: 2
-        x: 904
-        y: 367
-        width: 246
-        height: 208
+        x: 849
+        y: 384
+        width: 285
+        height: 192
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -271,10 +271,10 @@ TextureImporter:
       name: World1-ChargerIdle
       rect:
         serializedVersion: 2
-        x: 406
+        x: 456
         y: 75
-        width: 391
-        height: 200
+        width: 444
+        height: 230
       alignment: 9
       pivot: {x: 0.40889725, y: 0.007728303}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -293,10 +293,10 @@ TextureImporter:
       name: World1FinalEnemies_7
       rect:
         serializedVersion: 2
-        x: 106
-        y: 84
-        width: 195
-        height: 121
+        x: 138
+        y: 71
+        width: 213
+        height: 133
       alignment: 9
       pivot: {x: 0.43817475, y: 0.00000022605613}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -315,10 +315,10 @@ TextureImporter:
       name: World1-hargerAction
       rect:
         serializedVersion: 2
-        x: 883
-        y: 68
-        width: 454
-        height: 209
+        x: 918
+        y: 70
+        width: 516
+        height: 248
       alignment: 9
       pivot: {x: 0.4974602, y: 0.0000001503329}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -337,12 +337,12 @@ TextureImporter:
       name: World1FinalEnemies_6
       rect:
         serializedVersion: 2
-        x: 1272
-        y: 369
-        width: 214
-        height: 220
-      alignment: 9
-      pivot: {x: 0.40845355, y: -0.006849809}
+        x: 1214
+        y: 384
+        width: 242
+        height: 234
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []

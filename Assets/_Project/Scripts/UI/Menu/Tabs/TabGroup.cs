@@ -57,9 +57,14 @@ public class TabGroup : MonoBehaviour
         
         ResetTabs();
         button.background.color = tabActive;
-        int index = button.transform.GetSiblingIndex();
+        // Paired with the content list by position in tabButtons, not sibling index: buttons share
+        // their parent with non-button siblings (the logo), which would shift every index.
+        int index = tabButtons.IndexOf(button);
         for (int i = 0; i < tabContent.Count; i++)
         {
+            if (tabContent[i] == null)
+                continue;
+
             if(tabContent[i].gameObject.activeSelf)
                 tabContent[i].Hide();
             
@@ -67,7 +72,8 @@ public class TabGroup : MonoBehaviour
             
         }
 
-        if (tabContent.Count > index)
+        // A button with no content yet (index past the list, or an empty slot) just shows nothing.
+        if (index >= 0 && tabContent.Count > index && tabContent[index] != null)
         {
             tabContent[index].gameObject.SetActive(true);
             selectedTabContent = tabContent[index];

@@ -519,6 +519,34 @@ namespace Quantum.Prototypes.Unity {
     }
   }
   [System.SerializableAttribute()]
+  public unsafe partial class OverloadChainPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.OverloadChainPrototype> {
+    public FP HopTimer;
+    public Byte HopsRemaining;
+    public Quantum.QuantumEntityPrototype Origin;
+    public Quantum.QuantumEntityPrototype Owner;
+    public Quantum.QEnum8<DamageSource> Source;
+    public FPVector3 Position;
+    [ArrayLengthAttribute(8)]
+    public Quantum.QuantumEntityPrototype[] Visited = new Quantum.QuantumEntityPrototype[8];
+    public Byte VisitedCount;
+    public FP CurrentDamage;
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.OverloadChainPrototype prototype);
+    public override Quantum.Prototypes.OverloadChainPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.OverloadChainPrototype();
+      converter.Convert(this.HopTimer, out result.HopTimer);
+      converter.Convert(this.HopsRemaining, out result.HopsRemaining);
+      converter.Convert(this.Origin, out result.Origin);
+      converter.Convert(this.Owner, out result.Owner);
+      converter.Convert(this.Source, out result.Source);
+      converter.Convert(this.Position, out result.Position);
+      converter.Convert(this.Visited, out result.Visited);
+      converter.Convert(this.VisitedCount, out result.VisitedCount);
+      converter.Convert(this.CurrentDamage, out result.CurrentDamage);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
   public unsafe partial class PendingDoubleTapShotPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.PendingDoubleTapShotPrototype> {
     public FP Delay;
     public FPVector3 SpawnPosition;
@@ -774,15 +802,6 @@ namespace Quantum.Prototypes.Unity {
     public FP ThermalShockCooldownRemaining;
     public FP OverloadCooldownRemaining;
     public FP ShatterCooldownRemaining;
-    public FP OverloadChainHopTimer;
-    public Byte OverloadChainHopsRemaining;
-    public Quantum.QuantumEntityPrototype OverloadChainOwner;
-    public Quantum.QEnum8<DamageSource> OverloadChainSource;
-    public FPVector3 OverloadChainPosition;
-    [ArrayLengthAttribute(8)]
-    public Quantum.QuantumEntityPrototype[] OverloadChainVisited = new Quantum.QuantumEntityPrototype[8];
-    public Byte OverloadChainVisitedCount;
-    public FP OverloadChainCurrentDamage;
     public FP IceRemaining;
     public FP IceBuildup;
     public FP FreezeRemaining;
@@ -848,14 +867,6 @@ namespace Quantum.Prototypes.Unity {
       converter.Convert(this.ThermalShockCooldownRemaining, out result.ThermalShockCooldownRemaining);
       converter.Convert(this.OverloadCooldownRemaining, out result.OverloadCooldownRemaining);
       converter.Convert(this.ShatterCooldownRemaining, out result.ShatterCooldownRemaining);
-      converter.Convert(this.OverloadChainHopTimer, out result.OverloadChainHopTimer);
-      converter.Convert(this.OverloadChainHopsRemaining, out result.OverloadChainHopsRemaining);
-      converter.Convert(this.OverloadChainOwner, out result.OverloadChainOwner);
-      converter.Convert(this.OverloadChainSource, out result.OverloadChainSource);
-      converter.Convert(this.OverloadChainPosition, out result.OverloadChainPosition);
-      converter.Convert(this.OverloadChainVisited, out result.OverloadChainVisited);
-      converter.Convert(this.OverloadChainVisitedCount, out result.OverloadChainVisitedCount);
-      converter.Convert(this.OverloadChainCurrentDamage, out result.OverloadChainCurrentDamage);
       converter.Convert(this.IceRemaining, out result.IceRemaining);
       converter.Convert(this.IceBuildup, out result.IceBuildup);
       converter.Convert(this.FreezeRemaining, out result.FreezeRemaining);

@@ -54,13 +54,15 @@
         public AssetRef<BalanceConfig> BalanceConfig;
 
         [Header("World")]
-        // Which world this match is (index into the menu's WorldCatalog - 0 = World 1). View-side code
-        // (EnvironmentManager) resolves the world's WorldTheme from it; written by the menu's world
-        // picker before CloneConfig, alongside SurvivalConfig/WorldBalance below.
-        public int World;
+        // THE world to author: one WorldDefinition bundles Theme + SurvivalConfig + WorldBalance. The menu's
+        // world picker overwrites it per match; MatchMakingConfig.ApplyWorld then derives SurvivalConfig and
+        // WorldBalance below from it before CloneConfig, and EnvironmentManager reads the Theme from it.
+        // Must be listed on WorldCatalog. See docs/worlds.md.
+        public AssetRef<WorldDefinition> WorldDefinition;
 
-        // Optional per-world multipliers on top of the global BalanceConfig - see WorldBalanceData.
-        public AssetRef<WorldBalanceData> WorldBalance;
+        // Derived from WorldDefinition (don't author) - optional per-world multipliers on top of the global
+        // BalanceConfig, see WorldBalanceData.
+        [HideInInspector] public AssetRef<WorldBalanceData> WorldBalance;
 
         [Header("Difficulty")]
         // Easy/Medium/Hard/Nightmare N - multipliers composed on top of BalanceConfig/co-op/Rift
@@ -78,7 +80,8 @@
         [Header("Survival Director")]
         // Survival Director tuning - see SurvivalConfig/DirectorConfig/LifecycleConfig and
         // CombatDirectorSystem/EnemyLifecycleSystem.
-        public AssetRef<SurvivalConfig> SurvivalConfig;
+        // SurvivalConfig is derived from WorldDefinition (don't author).
+        [HideInInspector] public AssetRef<SurvivalConfig> SurvivalConfig;
         public AssetRef<DirectorConfig> DirectorConfig;
         public AssetRef<LifecycleConfig> LifecycleConfig;
 

@@ -17,8 +17,8 @@ namespace QuantumUser.Editor
     // vs 30, max alive 32 vs 28). Cost is never touched here - same EnemyTierStatsConfig costs as W1.
     //
     // CURRICULUM - one NEW mechanic per teaching segment, everything else is a known reskin:
-    //   Run 1 Desert Arrival   - base: Mole Grunt, Scarab Swarm, Security Bot, Mole Rusher.  NEW: Sandworm Larva (burrow).
-    //   Run 2 Desert Security  - NEW: Shield Bot (frontal shield), Tar Launcher (sticky puddles).
+    //   Run 1 Desert Arrival   - base: Mole Grunt, Scarab Swarm, Security Bot.  NEW: Sandworm Larva (burrow).
+    //   Run 2 Desert Security  - NEW: Mole Rusher (charge), then Shield Bot (frontal shield, from 45s) + Tar Launcher (sticky puddles).
     //   Run 3 Mole Arsenal     - NEW: Mole Sniper (long telegraphed shot), Fuel Runner (oil trail + blast). Mole Enforcer (known slam) joins via pack.
     //   Run 4 The Dunes Wake   - NEW: Dune Crusher (cone slam), Scarab Nest (spawner). Final Exam.
     //
@@ -105,7 +105,7 @@ namespace QuantumUser.Editor
                 Weight = FP.FromString("0.8"), MaxConcurrent = 1, SpawnPattern = GroupSpawnPattern.Scatter, FormationRadius = 4 },
             // A wall that shoots back - flank the shield while the gunners cover it.
             new GroupSpec { FileName = "ShieldGunlinePack", Members = new[] { M("ShieldBot", 1), M("SecurityBot", 2) },
-                Weight = 1, MaxConcurrent = 1, SpawnPattern = GroupSpawnPattern.Line, FormationRadius = 5 },
+                Weight = FP.FromString("0.5"), MaxConcurrent = 1, SpawnPattern = GroupSpawnPattern.Line, FormationRadius = 5 },
             // Slam zone plus a swarm that herds you into it.
             new GroupSpec { FileName = "EnforcerScarabPack", Members = new[] { M("MoleEnforcer", 1), M("ScarabSwarm", 3) },
                 Weight = FP.FromString("0.7"), MaxConcurrent = 1, SpawnPattern = GroupSpawnPattern.Cluster, FormationRadius = 4 },
@@ -152,23 +152,22 @@ namespace QuantumUser.Editor
             Combat("R1-C Security Bot (50-85s)", 35, 10, F("2.2"), 16, 12,
                 new() { E("MoleGrunt", 3), E("SandwormLarva", F("1.5"), 2), E("SecurityBot", 2) }),
             Combat("R1-D Desert Practice (85-95s)", 10, 11, 2, 17, 12,
-                new() { E("MoleGrunt", 3), E("SandwormLarva", F("1.5"), 2), E("SecurityBot", 2), E("MoleRusher", 1, 1) }),
+                new() { E("MoleGrunt", 3), E("SandwormLarva", F("1.5"), 2), E("SecurityBot", 2) }),
             Combat("R1-E PreElite (95-105s)", 10, 5, 3, 9, 7,
                 new() { E("MoleGrunt", 3), E("ScarabSwarm", 2) }),
             Combat("R1-F Elite (105-130s) [W1 placeholder]", 25, 3, F("3.5"), 6, 6,
                 new() { E("MoleGrunt", 2), E("ScarabSwarm", 1) }, elite: "EliteFleeEnemy"),
             Combat("R1-G Desert Pressure (130-180s)", 50, 13, F("1.8"), 22, 15,
-                new() { E("MoleGrunt", 3), E("SandwormLarva", 2, 2), E("SecurityBot", 2) },
-                new[] { "ScarabRushPack" }),
+                new() { E("MoleGrunt", 3), E("SandwormLarva", 2, 2), E("SecurityBot", 2), E("ScarabSwarm", 1) }),
             new PhaseSpec { Name = "Breathing 1", Kind = SurvivalPhaseKind.Breathing, Duration = 60, GracePeriodDuration = 30 },
 
             // ===== RUN 2 - DESERT SECURITY (3:00-6:00). NEW Shield Bot, then Tar Launcher. =====
             Combat("R2-A Recap (0-20s)", 20, 13, F("1.8"), 20, 14,
                 new() { E("MoleGrunt", 3), E("SecurityBot", 2), E("SandwormLarva", F("1.5"), 2), E("ScarabSwarm", 1) }),
-            Combat("R2-B Shield Bot Introduction (20-45s)", 25, 13, F("1.8"), 21, 14,
-                new() { E("MoleGrunt", 3), E("SecurityBot", 2), E("ShieldBot", 2, 2) }),
-            Combat("R2-C Tar Launcher Introduction (45-80s)", 35, 15, F("1.7"), 24, 15,
-                new() { E("MoleGrunt", 3), E("SecurityBot", 2), E("ShieldBot", 1, 2), E("TarLauncher", 2, 1) }),
+            Combat("R2-B Mole Rusher Introduction (20-45s)", 25, 13, F("1.8"), 21, 14,
+                new() { E("MoleGrunt", 3), E("SecurityBot", 2), E("MoleRusher", 2, 2) }),
+            Combat("R2-C Shield Bot + Tar Launcher Introduction (45-80s)", 35, 15, F("1.7"), 24, 15,
+                new() { E("MoleGrunt", 3), E("SecurityBot", 2), E("ShieldBot", 1, 1), E("TarLauncher", 2, 1) }),
             Combat("R2-D Security Practice (80-95s)", 15, 15, F("1.7"), 24, 15,
                 new() { E("MoleGrunt", 2), E("SecurityBot", 2), E("SandwormLarva", 1, 2), E("TarLauncher", F("1.5"), 1) }),
             Combat("R2-E PreElite (95-105s)", 10, 6, F("2.8"), 11, 9,
@@ -182,7 +181,7 @@ namespace QuantumUser.Editor
 
             // ===== RUN 3 - MOLE ARSENAL (6:00-9:00). NEW Mole Sniper, then Fuel Runner. =====
             Combat("R3-A Recap (0-25s)", 25, 18, F("1.5"), 26, 17,
-                new() { E("MoleGrunt", 3), E("SecurityBot", 2), E("ScarabSwarm", F("1.5")), E("SandwormLarva", 1, 2), E("ShieldBot", 1, 1) }),
+                new() { E("MoleGrunt", 3), E("SecurityBot", 2), E("ScarabSwarm", F("1.5")), E("SandwormLarva", 1, 2) }),
             Combat("R3-B Mole Sniper Introduction (25-50s)", 25, 16, F("1.6"), 24, 16,
                 new() { E("MoleGrunt", 3), E("ScarabSwarm", 2), E("MoleSniper", 2, 2) }),
             Combat("R3-C Fuel Runner Introduction (50-85s)", 35, 19, F("1.5"), 28, 18,
@@ -195,16 +194,16 @@ namespace QuantumUser.Editor
                 new() { E("MoleGrunt", 3), E("SecurityBot", 2) }, elite: "EliteMortarEnemy"),
             Combat("R3-G Arsenal Combinations (130-180s)", 50, 24, F("1.3"), 36, 21,
                 new() { E("MoleGrunt", 3), E("SecurityBot", 2), E("MoleSniper", 1, 1), E("FuelRunner", 1, 1) },
-                new[] { "EnforcerScarabPack", "TarGruntPack", "ShieldGunlinePack" }),
+                new[] { "EnforcerScarabPack", "TarGruntPack" }),
             new PhaseSpec { Name = "Breathing 3", Kind = SurvivalPhaseKind.Breathing, Duration = 60, GracePeriodDuration = 30 },
 
             // ===== RUN 4 - THE DUNES WAKE (9:00-12:00). NEW Dune Crusher, then Scarab Nest. Final Exam. =====
             Combat("R4-A Full Ecosystem (0-30s)", 30, 25, F("1.3"), 38, 23,
                 new() { E("MoleGrunt", 2), E("SecurityBot", 2), E("ScarabSwarm", 2), E("SandwormLarva", F("1.5"), 2),
-                        E("ShieldBot", 1, 1), E("MoleSniper", 1, 1), E("TarLauncher", 1, 1), E("FuelRunner", 1, 1) }),
+                        E("MoleSniper", 1, 1), E("TarLauncher", 1, 1), E("FuelRunner", 1, 1) }),
             Combat("R4-B Dune Crusher Introduction (30-75s)", 45, 26, F("1.3"), 40, 24,
                 new() { E("MoleGrunt", 2), E("SecurityBot", 2), E("ScarabSwarm", 2), E("DuneCrusher", 2, 1) },
-                new[] { "ShieldGunlinePack", "TarGruntPack" }),
+                new[] { "TarGruntPack" }),
             // Lower alive cap: the nest's hatchlings aren't counted by the Director.
             Combat("R4-C Scarab Nest Introduction (75-95s)", 20, 20, F("1.6"), 28, 18,
                 new() { E("MoleGrunt", 3), E("SecurityBot", 2), E("ScarabNest", 2, 1) }),

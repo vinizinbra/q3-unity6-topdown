@@ -197,7 +197,7 @@ MonoBehaviour:
     - RawValue: 13107
   WeaponLevelDamageBonusPerLevel:
     RawValue: 3277
-  CommonWeight: 100
+  CommonWeight: 60
   RareWeight: 20
-  EpicWeight: 5
-  LegendaryWeight: 1
+  EpicWeight: 18
+  LegendaryWeight: 2

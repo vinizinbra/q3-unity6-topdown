@@ -6,11 +6,11 @@ world and adding one is just authoring assets.
 ## Pieces
 - **`WorldDefinition`** (`View/World/WorldDefinition.cs`, plain ScriptableObject) - DisplayName, Icon,
   `Theme` (WorldTheme - sky/tileset/water/blood, view-only), `SurvivalConfig` (the world's Director
-  timeline), `Balance` (optional `WorldBalanceData`). `ApplyTo(RuntimeConfig, index)` writes
-  `World`, `SurvivalConfig`, `WorldBalance`.
+  timeline), `Balance` (optional `WorldBalanceData`). `ApplyTo(RuntimeConfig)` writes
+  `WorldDefinition`, `SurvivalConfig`, `WorldBalance`.
 - **`WorldCatalog`** (`View/World/WorldCatalog.cs`) at **`Resources/Worlds/WorldCatalog`** - ordered list;
   the index (0 = World 1) is the world's id.
-- **`RuntimeConfig.World`** (int) + **`RuntimeConfig.WorldBalance`** (`AssetRef<WorldBalanceData>`) -
+- **`RuntimeConfig.WorldDefinition`** + derived **`WorldBalance`** (`AssetRef<WorldBalanceData>`) -
   serialized with the rest of RuntimeConfig, so every client (incl. reconnects) knows the world.
 - **`WorldBalanceData`** (`Simulation/Balance/`, AssetObject) - per-world multipliers on top of the GLOBAL
   `BalanceConfig` (which keeps the run curves and every co-op table). Channels and consumers:
@@ -19,6 +19,14 @@ world and adding one is just authoring assets.
   (`PlayerClusterDirectorUtility.ResolveCoopPressure` - TargetPressure, MaxAlive, purchases), XpRequirement
   (`ExperienceUtility.ResolveXpRequirementMultiplier`), CoinGain (`CoinUtility.ResolveCoopCoinGain`).
   Unassigned = all 1x.
+
+## Authoring: one slot
+Fill only **`RuntimeConfig.WorldDefinition`** (MatchMakingConfig's RuntimeConfig in MenuScene) with e.g.
+`W1-GrasslandOutpost` - it must also be listed on `WorldCatalog`. `WorldDefinition` is a Quantum `AssetObject`
+(Theme is view-only, the sim never reads it). `RuntimeConfig.SurvivalConfig`/`WorldBalance` are now hidden,
+**derived** fields: `MatchMakingConfig.Awake` and `ApplyWorld` (menu picker / party sync) fill them via
+`WorldDefinition.ApplyTo` before CloneConfig. `EnvironmentManager` reads the Theme straight from
+`RuntimeConfig.WorldDefinition`. The old `RuntimeConfig.World` int is gone; the party still syncs the catalog index.
 
 ## Flow
 1. Menu (`MainMenuWindow.worldDropdown`, MenuScene `PlayArea/WorldDropdown`) lists the catalog, remembers

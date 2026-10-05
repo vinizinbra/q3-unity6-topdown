@@ -108,6 +108,19 @@ public class CharacterCatalog : ScriptableObject
     {
         color = Color.white;
 
+        if (TryResolveCharacterData(id, out CharacterData data) == false)
+            return false;
+
+        color = data.RingColor;
+        return true;
+    }
+
+    // The hero's CharacterData asset, reached the same way as TryResolveRingColor above: through the
+    // view prefab's CharacterStats prototype and Quantum's global asset DB (no running simulation needed).
+    public bool TryResolveCharacterData(string id, out CharacterData data)
+    {
+        data = null;
+
         GameObject prefab = ResolveViewPrefab(id);
         if (prefab == null)
             return false;
@@ -116,11 +129,7 @@ public class CharacterCatalog : ScriptableObject
         if (stats == null)
             return false;
 
-        if (QuantumUnityDB.TryGetGlobalAsset(stats.Prototype.CharacterData, out CharacterData data) == false || data == null)
-            return false;
-
-        color = data.RingColor;
-        return true;
+        return QuantumUnityDB.TryGetGlobalAsset(stats.Prototype.CharacterData, out data) && data != null;
     }
 
     public bool TryGetDisplayName(string id, out string displayName)

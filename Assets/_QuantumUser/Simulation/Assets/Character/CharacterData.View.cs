@@ -38,6 +38,10 @@ namespace Quantum
     // new presentation fields belong here.
     public partial class CharacterData
     {
+        [Header("Menu")]
+        [Tooltip("Short role line shown under the hero's name on the Heroes tab (\"The Brawler\"). Left empty, the line is hidden.")]
+        public string Title;
+
         [Header("Signature Accessory")]
         [Tooltip("Presentation for this hero's Signature Accessory (Recoverable Accessory Guard - see docs/accessory-guard.md). Purely cosmetic: durability, blocking, dropping, recovery and Merchant pricing are all hero-agnostic and live in AccessoryGuardConfig instead.")]
         public HeroAccessoryPresentation Accessory;

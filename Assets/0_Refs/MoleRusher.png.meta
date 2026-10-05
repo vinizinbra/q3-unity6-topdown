@@ -183,10 +183,10 @@ TextureImporter:
       name: MoleRusher_2
       rect:
         serializedVersion: 2
-        x: 886
-        y: 436
-        width: 503
-        height: 290
+        x: 623
+        y: 768
+        width: 496
+        height: 316
       alignment: 9
       pivot: {x: 0.5723613, y: 0.033589404}
       border: {x: 0, y: 0, z: 0, w: 0}

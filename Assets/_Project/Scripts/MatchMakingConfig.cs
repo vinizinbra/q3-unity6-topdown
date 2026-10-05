@@ -211,6 +211,9 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
    {
       base.Awake();
 
+      // The authored RuntimeConfig.WorldDefinition drives SurvivalConfig/WorldBalance until the menu picks.
+      CurrentWorld?.ApplyTo(RuntimeConfig);
+
       if (NameField == null)
       {
          LogHelper.Error("MatchMaking", "Awake: NameField is not assigned.");
@@ -684,13 +687,17 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
          new PhotonHashtable {
             { "room", matchRoomCode }, { "seed", seed }, { "leader", Client.UserId },
             { "difficulty", (int)RuntimeConfig.Difficulty }, { "nightmare", RuntimeConfig.NightmareLevel },
-            { "world", RuntimeConfig.World }
+            { "world", WorldCatalog.Instance != null ? WorldCatalog.Instance.IndexOf(CurrentWorld) : -1 }
          },
          new RaiseEventArgs { Receivers = ReceiverGroup.All },
          SendOptions.SendReliable);
    }
 
-   // Writes WorldCatalog's world `index` onto `config` (World, SurvivalConfig, WorldBalance). Index ->
+   // The world currently authored/picked on RuntimeConfig (null if unset or not resolvable).
+   private WorldDefinition CurrentWorld =>
+      QuantumUnityDB.TryGetGlobalAsset(RuntimeConfig.WorldDefinition, out WorldDefinition world) ? world : null;
+
+   // Writes WorldCatalog's world `index` onto `config` (WorldDefinition + derived SurvivalConfig/WorldBalance). Index ->
    // catalog on every client, so the party leader only has to send the index. No catalog/entry =
    // the config is left as authored.
    public static void ApplyWorld(RuntimeConfig config, int index)
@@ -703,7 +710,7 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
          return;
       }
 
-      world.ApplyTo(config, index);
+      world.ApplyTo(config);
    }
 
    // Called once this client has landed back in the party room (see PartyManager.HandleJoinedOrCreated)

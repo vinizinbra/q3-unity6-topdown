@@ -18,7 +18,7 @@ MonoBehaviour:
       Value: 393071073715498458
   Description: An aura that intimidates nearby enemies, weakening their damage.
   Icon: {fileID: 1607168006, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
-  DisplayName: 
+  DisplayName: Menacing Presence
   Radius:
     RawValue: 393216
   IntimidateDamageMultiplier:

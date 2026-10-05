@@ -12,6 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ec13afded7e4448448907ecb08f5b3ef, type: 3}
   m_Name: W2-DesertSky
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.WorldDefinition
+  Identifier:
+    Path: _QuantumUser/Resources/Worlds/W2-DesertSky
+    Guid:
+      Value: 419419025356496967
   DisplayName: Desert Sky
   Icon: {fileID: 0}
   Theme: {fileID: 11400000, guid: c6bb6a97c6a694c258ea6985f33a25fd, type: 2}

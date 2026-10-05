@@ -342,6 +342,7 @@
                 // tick, and before ShieldSystem for the same reason ShieldSystem is documented as late
                 // below - a DoT tick landing this frame must hold off shield recharge like any other hit.
                 new StatusEffectSystem(),
+                new OverloadChainSystem(),
                 // Late so a shield never recharges on the same tick a hit landed - DamageUtility has
                 // already reset RechargeTimer by the time this runs.
                 new ShieldSystem(),

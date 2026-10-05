@@ -32,7 +32,7 @@ MonoBehaviour:
     CoinValue:
       RawValue: 327680
     CoinDropChance:
-      RawValue: 32768
+      RawValue: 65536
     Shield:
       RawValue: 0
     ShieldRechargeDelay:
@@ -62,7 +62,7 @@ MonoBehaviour:
     CoinValue:
       RawValue: 655360
     CoinDropChance:
-      RawValue: 32768
+      RawValue: 65536
     Shield:
       RawValue: 1638400
     ShieldRechargeDelay:
@@ -90,7 +90,7 @@ MonoBehaviour:
     RiftShardDropChance:
       RawValue: 65536
     CoinValue:
-      RawValue: 1310720
+      RawValue: 2621440
     CoinDropChance:
       RawValue: 65536
     Shield:
@@ -120,7 +120,7 @@ MonoBehaviour:
     RiftShardDropChance:
       RawValue: 65536
     CoinValue:
-      RawValue: 1966080
+      RawValue: 3276800
     CoinDropChance:
       RawValue: 65536
     Shield:

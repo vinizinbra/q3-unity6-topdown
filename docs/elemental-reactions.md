@@ -332,10 +332,10 @@ crowd around them.
 - `TryTriggerOverload` deals `hitDamage * OverloadInitialDamagePercent` to the origin immediately (a
   percent of the triggering hit's own damage, same DamagePercent-off-the-triggering-hit convention
   Burn/Rupture already use, not a flat number), fires `OverloadTriggered { Origin, OriginPosition }`,
-  then **parks the chain's continuation state** on the origin entity's own `StatusEffects`
-  (`OverloadChainOwner`/`Source`/`Position`/`Visited[8]`/`VisitedCount`/`HopsRemaining`/`HopTimer`/
+  then **parks the chain's continuation state** on its own standalone `OverloadChain` entity
+  (`Origin`/`Owner`/`Source`/`Position`/`Visited[8]`/`VisitedCount`/`HopsRemaining`/`HopTimer`/
   `CurrentDamage`) instead of resolving every hop synchronously in the same frame.
-- `StatusEffectSystem.TickOverloadChain` ticks `OverloadChainHopTimer` down every frame the chain is in
+- `OverloadChainSystem` ticks `HopTimer` down every frame the chain is in
   progress (`HopsRemaining > 0`); on reaching 0 it calls
   `StatusEffectUtility.TryAdvanceOverloadChain`, which finds the nearest not-yet-visited enemy within
   `OverloadChainRadius` of the chain's current logical position (`TryFindNextChainTarget`, adapted from
@@ -349,9 +349,9 @@ crowd around them.
 - **The chain propagates over real simulated time** (`OverloadChainDelay` seconds between hops, not
   instantly in one frame) - so a travel-particle "jump" between enemies reads in sync with when the
   damage actually lands, rather than needing its own disconnected view-side timing. The chain's state
-  lives on the ORIGIN entity even as its logical position moves to other entities each hop - if the
-  origin is destroyed mid-chain, `StatusEffectSystem` simply stops iterating it and the chain quietly
-  stops (an accepted simplification, not a gap to fix).
+  lives on its own entity, NOT the origin: Filler/Normal/Heavy/Specialist enemies are `f.Destroy`'d the
+  instant they die, so when it lived on the origin the chain died with it before its first hop (fixed).
+  The entity is destroyed once `HopsRemaining` hits 0.
 - Chain damage is **raw** - a direct `DamageUtility.ApplyDamage` call that bypasses
   `HitEffectUtility`/element application entirely, so a chained hit can never itself apply a status or
   trigger another reaction (no recursive reaction explosions).

@@ -18,9 +18,6 @@ namespace Quantum
         public static void ApplyToTarget(Frame f, List<AssetRef<HitEffectData>> effects, ref HitEffectContext context, bool multiTarget = false)
         {
             context.Damage = ScaleByEnemyDamageMultiplier(f, context.Owner, context.Damage);
-            StatusEffectUtility.TryApplyElementalStatus(f, context.Target, context.Owner, context.Source, context.Element, context.Damage);
-            StatusEffectUtility.TryApplyInfusedElement(f, context.Target, context.Owner, context.Source, context.PerkElement, context.PerkElementChance, context.Damage);
-
             for (int i = 0; i < effects.Count; i++)
             {
                 if (effects[i].IsValid == false)
@@ -39,14 +36,18 @@ namespace Quantum
                 effect.Apply(f, ref context);
             }
 
+            // AFTER the Effects (the direct damage), same order hitscan already uses: a reaction's own
+            // hit (Overload's initial damage) can kill and f.Destroy a Filler/Normal-tier target, and
+            // running it first made the direct hit land on a destroyed entity - so only the reaction's
+            // number ever showed. If the direct damage itself kills the target, no status/reaction
+            // applies, as with hitscan.
+            StatusEffectUtility.TryApplyElementalStatus(f, context.Target, context.Owner, context.Source, context.Element, context.Damage);
+            StatusEffectUtility.TryApplyInfusedElement(f, context.Target, context.Owner, context.Source, context.PerkElement, context.PerkElementChance, context.Damage);
         }
 
         public static void ApplyToTarget(Frame f, FixedArray<AssetRef<HitEffectData>> effects, ref HitEffectContext context, bool multiTarget = false)
         {
             context.Damage = ScaleByEnemyDamageMultiplier(f, context.Owner, context.Damage);
-            StatusEffectUtility.TryApplyElementalStatus(f, context.Target, context.Owner, context.Source, context.Element, context.Damage);
-            StatusEffectUtility.TryApplyInfusedElement(f, context.Target, context.Owner, context.Source, context.PerkElement, context.PerkElementChance, context.Damage);
-
             for (int i = 0; i < effects.Length; i++)
             {
                 if (effects[i].IsValid == false)
@@ -61,6 +62,13 @@ namespace Quantum
                 effect.Apply(f, ref context);
             }
 
+            // AFTER the Effects (the direct damage), same order hitscan already uses: a reaction's own
+            // hit (Overload's initial damage) can kill and f.Destroy a Filler/Normal-tier target, and
+            // running it first made the direct hit land on a destroyed entity - so only the reaction's
+            // number ever showed. If the direct damage itself kills the target, no status/reaction
+            // applies, as with hitscan.
+            StatusEffectUtility.TryApplyElementalStatus(f, context.Target, context.Owner, context.Source, context.Element, context.Damage);
+            StatusEffectUtility.TryApplyInfusedElement(f, context.Target, context.Owner, context.Source, context.PerkElement, context.PerkElementChance, context.Damage);
         }
 
         // Applies just the AppliesOncePerBlast effects (a spawned lingering hazard) exactly once per

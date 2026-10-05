@@ -2605,31 +2605,6 @@ MonoBehaviour:
       RawValue: 0
     ShatterCooldownRemaining:
       RawValue: 0
-    OverloadChainHopTimer:
-      RawValue: 0
-    OverloadChainHopsRemaining: 0
-    OverloadChainOwner: {fileID: 0}
-    OverloadChainSource:
-      Value: 0
-    OverloadChainPosition:
-      X:
-        RawValue: 0
-      Y:
-        RawValue: 0
-      Z:
-        RawValue: 0
-    OverloadChainVisited:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    OverloadChainVisitedCount: 0
-    OverloadChainCurrentDamage:
-      RawValue: 0
     IceRemaining:
       RawValue: 0
     IceBuildup:
@@ -5229,31 +5204,6 @@ MonoBehaviour:
     OverloadCooldownRemaining:
       RawValue: 0
     ShatterCooldownRemaining:
-      RawValue: 0
-    OverloadChainHopTimer:
-      RawValue: 0
-    OverloadChainHopsRemaining: 0
-    OverloadChainOwner: {fileID: 0}
-    OverloadChainSource:
-      Value: 0
-    OverloadChainPosition:
-      X:
-        RawValue: 0
-      Y:
-        RawValue: 0
-      Z:
-        RawValue: 0
-    OverloadChainVisited:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    OverloadChainVisitedCount: 0
-    OverloadChainCurrentDamage:
       RawValue: 0
     IceRemaining:
       RawValue: 0
@@ -14525,31 +14475,6 @@ MonoBehaviour:
     OverloadCooldownRemaining:
       RawValue: 0
     ShatterCooldownRemaining:
-      RawValue: 0
-    OverloadChainHopTimer:
-      RawValue: 0
-    OverloadChainHopsRemaining: 0
-    OverloadChainOwner: {fileID: 0}
-    OverloadChainSource:
-      Value: 0
-    OverloadChainPosition:
-      X:
-        RawValue: 0
-      Y:
-        RawValue: 0
-      Z:
-        RawValue: 0
-    OverloadChainVisited:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    OverloadChainVisitedCount: 0
-    OverloadChainCurrentDamage:
       RawValue: 0
     IceRemaining:
       RawValue: 0
@@ -75341,10 +75266,10 @@ MonoBehaviour:
   selfRect: {fileID: 1037989994}
   valueText: {fileID: 1037989997}
   canvasGroup: {fileID: 1037989995}
-  launchAngleSpread: 55
-  launchSpeedMin: 350
-  launchSpeedMax: 450
-  drag: 6
+  launchAngleSpread: 65
+  launchSpeedMin: 450
+  launchSpeedMax: 600
+  drag: 8
   initialSpread: 12
   punchFromScale: 0.3
   punchDuration: 0.28
@@ -91924,10 +91849,16 @@ MonoBehaviour:
     Suffix: <sprite name="SHIELD">
   - Kind: 17
     Color: {r: 0, g: 0.8622582, b: 1, a: 1}
-    FontSizeMultiplier: 1.5
-    PunchScaleMultiplier: 1
+    FontSizeMultiplier: 0.7
+    PunchScaleMultiplier: 1.3
     Prefix: +
     Suffix: <sprite name="ICE"><sprite name="FIRE">
+  - Kind: 19
+    Color: {r: 1, g: 0.75650275, b: 0.5613208, a: 1}
+    FontSizeMultiplier: 0.7
+    PunchScaleMultiplier: 1.3
+    Prefix: +
+    Suffix: <sprite name="FIRE"><sprite name="LIGHTNING">
 --- !u!1 &1224349234
 GameObject:
   m_ObjectHideFlags: 0
@@ -109603,7 +109534,7 @@ MonoBehaviour:
   thermalShockEffectScale: 0.5
   thermalShockFallbackColor: {r: 1, g: 0.55, b: 0.15, a: 1}
   overloadOriginParticlePrefab: {fileID: 0}
-  overloadTravelParticlePrefab: {fileID: 9186021651541148684, guid: e2d869d20e6c44ead9bd6dcaf7faf142, type: 3}
+  overloadTravelParticlePrefab: {fileID: 9186021651541148684, guid: c499335cd3b1f42aaa96cbf5a0798825, type: 3}
   overloadChainLinePrefab: {fileID: 0}
   overloadChainLineJitterSegments: 4
   overloadChainLineJitter: 0.2
@@ -110055,31 +109986,6 @@ MonoBehaviour:
     OverloadCooldownRemaining:
       RawValue: 0
     ShatterCooldownRemaining:
-      RawValue: 0
-    OverloadChainHopTimer:
-      RawValue: 0
-    OverloadChainHopsRemaining: 0
-    OverloadChainOwner: {fileID: 0}
-    OverloadChainSource:
-      Value: 0
-    OverloadChainPosition:
-      X:
-        RawValue: 0
-      Y:
-        RawValue: 0
-      Z:
-        RawValue: 0
-    OverloadChainVisited:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    OverloadChainVisitedCount: 0
-    OverloadChainCurrentDamage:
       RawValue: 0
     IceRemaining:
       RawValue: 0
@@ -127002,31 +126908,6 @@ MonoBehaviour:
       RawValue: 0
     ShatterCooldownRemaining:
       RawValue: 0
-    OverloadChainHopTimer:
-      RawValue: 0
-    OverloadChainHopsRemaining: 0
-    OverloadChainOwner: {fileID: 0}
-    OverloadChainSource:
-      Value: 0
-    OverloadChainPosition:
-      X:
-        RawValue: 0
-      Y:
-        RawValue: 0
-      Z:
-        RawValue: 0
-    OverloadChainVisited:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    OverloadChainVisitedCount: 0
-    OverloadChainCurrentDamage:
-      RawValue: 0
     IceRemaining:
       RawValue: 0
     IceBuildup:
@@ -131420,31 +131301,6 @@ MonoBehaviour:
     OverloadCooldownRemaining:
       RawValue: 0
     ShatterCooldownRemaining:
-      RawValue: 0
-    OverloadChainHopTimer:
-      RawValue: 0
-    OverloadChainHopsRemaining: 0
-    OverloadChainOwner: {fileID: 0}
-    OverloadChainSource:
-      Value: 0
-    OverloadChainPosition:
-      X:
-        RawValue: 0
-      Y:
-        RawValue: 0
-      Z:
-        RawValue: 0
-    OverloadChainVisited:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    OverloadChainVisitedCount: 0
-    OverloadChainCurrentDamage:
       RawValue: 0
     IceRemaining:
       RawValue: 0
@@ -141093,10 +140949,12 @@ MonoBehaviour:
     BalanceConfig:
       Id:
         Value: 503423254243386843
-    World: 0
+    WorldDefinition:
+      Id:
+        Value: 419419025356496967
     WorldBalance:
       Id:
-        Value: 0
+        Value: 350410700275665654
     Difficulty: 0
     NightmareLevel: 1
     DifficultyConfig:
@@ -150033,31 +149891,6 @@ MonoBehaviour:
       RawValue: 0
     ShatterCooldownRemaining:
       RawValue: 0
-    OverloadChainHopTimer:
-      RawValue: 0
-    OverloadChainHopsRemaining: 0
-    OverloadChainOwner: {fileID: 0}
-    OverloadChainSource:
-      Value: 0
-    OverloadChainPosition:
-      X:
-        RawValue: 0
-      Y:
-        RawValue: 0
-      Z:
-        RawValue: 0
-    OverloadChainVisited:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    OverloadChainVisitedCount: 0
-    OverloadChainCurrentDamage:
-      RawValue: 0
     IceRemaining:
       RawValue: 0
     IceBuildup:
@@ -153102,31 +152935,6 @@ MonoBehaviour:
     OverloadCooldownRemaining:
       RawValue: 0
     ShatterCooldownRemaining:
-      RawValue: 0
-    OverloadChainHopTimer:
-      RawValue: 0
-    OverloadChainHopsRemaining: 0
-    OverloadChainOwner: {fileID: 0}
-    OverloadChainSource:
-      Value: 0
-    OverloadChainPosition:
-      X:
-        RawValue: 0
-      Y:
-        RawValue: 0
-      Z:
-        RawValue: 0
-    OverloadChainVisited:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    OverloadChainVisitedCount: 0
-    OverloadChainCurrentDamage:
       RawValue: 0
     IceRemaining:
       RawValue: 0
@@ -169735,31 +169543,6 @@ MonoBehaviour:
     OverloadCooldownRemaining:
       RawValue: 0
     ShatterCooldownRemaining:
-      RawValue: 0
-    OverloadChainHopTimer:
-      RawValue: 0
-    OverloadChainHopsRemaining: 0
-    OverloadChainOwner: {fileID: 0}
-    OverloadChainSource:
-      Value: 0
-    OverloadChainPosition:
-      X:
-        RawValue: 0
-      Y:
-        RawValue: 0
-      Z:
-        RawValue: 0
-    OverloadChainVisited:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    OverloadChainVisitedCount: 0
-    OverloadChainCurrentDamage:
       RawValue: 0
     IceRemaining:
       RawValue: 0

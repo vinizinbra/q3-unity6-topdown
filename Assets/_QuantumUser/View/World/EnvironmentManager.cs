@@ -44,7 +44,7 @@ namespace Quantum
         {
             Instance = this;
 
-            // The match's own world (RuntimeConfig.World -> WorldCatalog) wins; initialTheme is only
+            // The match's own world (RuntimeConfig.WorldDefinition) wins; initialTheme is only
             // the fallback for editing/previewing the scene without a running match.
             WorldTheme theme = ResolveMatchTheme(QuantumRunner.Default != null ? QuantumRunner.Default.Game : null) ?? initialTheme;
             if (theme != null)
@@ -63,11 +63,10 @@ namespace Quantum
 
         private static WorldTheme ResolveMatchTheme(QuantumGame game)
         {
-            if (game == null || game.Configurations.Runtime == null || WorldCatalog.Instance == null)
+            if (game == null || game.Configurations.Runtime == null)
                 return null;
 
-            WorldDefinition world = WorldCatalog.Instance.Get(game.Configurations.Runtime.World);
-            return world != null ? world.Theme : null;
+            return QuantumUnityDB.TryGetGlobalAsset(game.Configurations.Runtime.WorldDefinition, out WorldDefinition world) ? world.GetTheme() : null;
         }
 
         // Lets initialTheme be tweaked and reapplied from the Inspector without entering Play Mode.

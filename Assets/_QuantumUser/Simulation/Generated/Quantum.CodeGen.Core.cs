@@ -5443,6 +5443,62 @@ namespace Quantum {
     }
   }
   [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct OverloadChain : Quantum.IComponent {
+    public const Int32 SIZE = 128;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(96)]
+    public FP HopTimer;
+    [FieldOffset(0)]
+    public Byte HopsRemaining;
+    [FieldOffset(8)]
+    public EntityRef Origin;
+    [FieldOffset(16)]
+    public EntityRef Owner;
+    [FieldOffset(2)]
+    public DamageSource Source;
+    [FieldOffset(104)]
+    public FPVector3 Position;
+    [FieldOffset(24)]
+    [FramePrinter.FixedArrayAttribute(typeof(EntityRef), 8)]
+    private fixed Byte _Visited_[64];
+    [FieldOffset(1)]
+    public Byte VisitedCount;
+    [FieldOffset(88)]
+    public FP CurrentDamage;
+    public readonly FixedArray<EntityRef> Visited {
+      get {
+        fixed (byte* p = _Visited_) { return new FixedArray<EntityRef>(p, 8, 8); }
+      }
+    }
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 8171;
+        hash = hash * 31 + HopTimer.GetHashCode();
+        hash = hash * 31 + HopsRemaining.GetHashCode();
+        hash = hash * 31 + Origin.GetHashCode();
+        hash = hash * 31 + Owner.GetHashCode();
+        hash = hash * 31 + (Byte)Source;
+        hash = hash * 31 + Position.GetHashCode();
+        hash = hash * 31 + HashCodeUtils.GetArrayHashCode(Visited);
+        hash = hash * 31 + VisitedCount.GetHashCode();
+        hash = hash * 31 + CurrentDamage.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (OverloadChain*)ptr;
+        serializer.Stream.Serialize(&p->HopsRemaining);
+        serializer.Stream.Serialize(&p->VisitedCount);
+        serializer.Stream.Serialize((Byte*)&p->Source);
+        EntityRef.Serialize(&p->Origin, serializer);
+        EntityRef.Serialize(&p->Owner, serializer);
+        FixedArray.Serialize(p->Visited, serializer, Statics.SerializeEntityRef);
+        FP.Serialize(&p->CurrentDamage, serializer);
+        FP.Serialize(&p->HopTimer, serializer);
+        FPVector3.Serialize(&p->Position, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct PendingDamageEcho : Quantum.IComponent {
     public const Int32 SIZE = 896;
     public const Int32 ALIGNMENT = 8;
@@ -6798,155 +6854,133 @@ namespace Quantum {
   }
   [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct StatusEffects : Quantum.IComponent {
-    public const Int32 SIZE = 672;
+    public const Int32 SIZE = 560;
     public const Int32 ALIGNMENT = 8;
-    [FieldOffset(5)]
+    [FieldOffset(2)]
     public ElementType FirstElementApplied;
-    [FieldOffset(176)]
+    [FieldOffset(104)]
     public FP BurnRemaining;
-    [FieldOffset(224)]
+    [FieldOffset(152)]
     public FP BurnTickTimer;
     [FieldOffset(0)]
     public Byte BurnStackCount;
-    [FieldOffset(184)]
+    [FieldOffset(112)]
     [FramePrinter.FixedArrayAttribute(typeof(FP), 5)]
     private fixed Byte _BurnStackDamagePerTick_[40];
     [FieldOffset(8)]
     public EntityRef BurnOwner;
-    [FieldOffset(3)]
-    public DamageSource BurnSource;
-    [FieldOffset(256)]
-    public FP ElectrifiedRemaining;
-    [FieldOffset(520)]
-    public FP StaggerRemaining;
-    [FieldOffset(624)]
-    public FP ThermalShockCooldownRemaining;
-    [FieldOffset(440)]
-    public FP OverloadCooldownRemaining;
-    [FieldOffset(496)]
-    public FP ShatterCooldownRemaining;
-    [FieldOffset(432)]
-    public FP OverloadChainHopTimer;
     [FieldOffset(1)]
-    public Byte OverloadChainHopsRemaining;
-    [FieldOffset(56)]
-    public EntityRef OverloadChainOwner;
-    [FieldOffset(4)]
-    public DamageSource OverloadChainSource;
-    [FieldOffset(648)]
-    public FPVector3 OverloadChainPosition;
-    [FieldOffset(64)]
-    [FramePrinter.FixedArrayAttribute(typeof(EntityRef), 8)]
-    private fixed Byte _OverloadChainVisited_[64];
-    [FieldOffset(2)]
-    public Byte OverloadChainVisitedCount;
-    [FieldOffset(424)]
-    public FP OverloadChainCurrentDamage;
-    [FieldOffset(368)]
+    public DamageSource BurnSource;
+    [FieldOffset(184)]
+    public FP ElectrifiedRemaining;
+    [FieldOffset(432)]
+    public FP StaggerRemaining;
+    [FieldOffset(536)]
+    public FP ThermalShockCooldownRemaining;
+    [FieldOffset(352)]
+    public FP OverloadCooldownRemaining;
+    [FieldOffset(408)]
+    public FP ShatterCooldownRemaining;
+    [FieldOffset(296)]
     public FP IceRemaining;
-    [FieldOffset(360)]
-    public FP IceBuildup;
     [FieldOffset(288)]
+    public FP IceBuildup;
+    [FieldOffset(216)]
     public FP FreezeRemaining;
-    [FieldOffset(280)]
+    [FieldOffset(208)]
     public FP FreezeRecoveryRemaining;
-    [FieldOffset(552)]
+    [FieldOffset(464)]
     public FP StunRemaining;
-    [FieldOffset(544)]
+    [FieldOffset(456)]
     public FP StunImmunityRemaining;
-    [FieldOffset(376)]
+    [FieldOffset(304)]
     public FP InterruptImmunityRemaining;
-    [FieldOffset(144)]
+    [FieldOffset(72)]
     public FP AnticipationSlowRemaining;
-    [FieldOffset(136)]
+    [FieldOffset(64)]
     public FP AnticipationSlowMultiplier;
-    [FieldOffset(472)]
+    [FieldOffset(384)]
     public FP RootRemaining;
-    [FieldOffset(488)]
+    [FieldOffset(400)]
     public FP RuptureRemaining;
-    [FieldOffset(480)]
+    [FieldOffset(392)]
     public FP RuptureDamageMultiplier;
-    [FieldOffset(328)]
+    [FieldOffset(256)]
     [FramePrinter.FixedArrayAttribute(typeof(FP), 4)]
     private fixed Byte _HasteRemaining_[32];
-    [FieldOffset(296)]
+    [FieldOffset(224)]
     [FramePrinter.FixedArrayAttribute(typeof(FP), 4)]
     private fixed Byte _HasteAttackSpeedMultiplier_[32];
     [FieldOffset(24)]
     [FramePrinter.FixedArrayAttribute(typeof(EntityRef), 4)]
     private fixed Byte _HasteSource_[32];
-    [FieldOffset(512)]
+    [FieldOffset(424)]
     public FP ShieldRegenRemaining;
-    [FieldOffset(504)]
+    [FieldOffset(416)]
     public FP ShieldRegenMultiplier;
-    [FieldOffset(640)]
+    [FieldOffset(552)]
     public FP TimeDilationRemaining;
-    [FieldOffset(632)]
+    [FieldOffset(544)]
     public FP TimeDilationMultiplier;
-    [FieldOffset(248)]
+    [FieldOffset(176)]
     public FP DamageReductionRemaining;
-    [FieldOffset(240)]
+    [FieldOffset(168)]
     public FP DamageReductionAmount;
-    [FieldOffset(160)]
+    [FieldOffset(88)]
     public FP AuraDamageReductionRemaining;
-    [FieldOffset(152)]
+    [FieldOffset(80)]
     public FP AuraDamageReductionAmount;
-    [FieldOffset(600)]
+    [FieldOffset(512)]
     public FP TemporaryDamageReductionRemaining;
-    [FieldOffset(592)]
+    [FieldOffset(504)]
     public FP TemporaryDamageReductionAmount;
-    [FieldOffset(448)]
+    [FieldOffset(360)]
     public FP ReactiveDamageReductionCooldownRemaining;
-    [FieldOffset(128)]
+    [FieldOffset(56)]
     public FP AllyGuardGrantCooldownRemaining;
-    [FieldOffset(272)]
+    [FieldOffset(200)]
     public FP FreeHitGuardRemaining;
     [FieldOffset(16)]
     public EntityRef FreeHitGuardSource;
-    [FieldOffset(264)]
+    [FieldOffset(192)]
     public FP FreeHitGuardDuration;
-    [FieldOffset(584)]
+    [FieldOffset(496)]
     public FP TempOutgoingDamageRemaining;
-    [FieldOffset(576)]
+    [FieldOffset(488)]
     public FP TempOutgoingDamageAmount;
-    [FieldOffset(392)]
+    [FieldOffset(320)]
     public FP IntimidateRemaining;
-    [FieldOffset(384)]
+    [FieldOffset(312)]
     public FP IntimidateDamageMultiplier;
-    [FieldOffset(408)]
+    [FieldOffset(336)]
     public FP KnockbackTakenRemaining;
-    [FieldOffset(400)]
+    [FieldOffset(328)]
     public FP KnockbackTakenMultiplier;
-    [FieldOffset(232)]
+    [FieldOffset(160)]
     public FP CheatDeathImmunityRemaining;
-    [FieldOffset(616)]
-    public FP TemporaryWeaponDamageRemaining;
-    [FieldOffset(608)]
-    public FP TemporaryWeaponDamageAmount;
-    [FieldOffset(456)]
-    public FP RetaliationCooldownRemaining;
-    [FieldOffset(416)]
-    public FP NoAmmoConsumptionRemaining;
-    [FieldOffset(168)]
-    public FP BoundRemaining;
-    [FieldOffset(568)]
-    public FP TempMoveSpeedRemaining;
-    [FieldOffset(560)]
-    public FP TempMoveSpeedMultiplier;
-    [FieldOffset(536)]
-    public FP StickySlowRemaining;
     [FieldOffset(528)]
+    public FP TemporaryWeaponDamageRemaining;
+    [FieldOffset(520)]
+    public FP TemporaryWeaponDamageAmount;
+    [FieldOffset(368)]
+    public FP RetaliationCooldownRemaining;
+    [FieldOffset(344)]
+    public FP NoAmmoConsumptionRemaining;
+    [FieldOffset(96)]
+    public FP BoundRemaining;
+    [FieldOffset(480)]
+    public FP TempMoveSpeedRemaining;
+    [FieldOffset(472)]
+    public FP TempMoveSpeedMultiplier;
+    [FieldOffset(448)]
+    public FP StickySlowRemaining;
+    [FieldOffset(440)]
     public FP StickySlowMultiplier;
-    [FieldOffset(464)]
+    [FieldOffset(376)]
     public FP ReviveImmunityRemaining;
     public readonly FixedArray<FP> BurnStackDamagePerTick {
       get {
         fixed (byte* p = _BurnStackDamagePerTick_) { return new FixedArray<FP>(p, 8, 5); }
-      }
-    }
-    public readonly FixedArray<EntityRef> OverloadChainVisited {
-      get {
-        fixed (byte* p = _OverloadChainVisited_) { return new FixedArray<EntityRef>(p, 8, 8); }
       }
     }
     public readonly FixedArray<FP> HasteRemaining {
@@ -6979,14 +7013,6 @@ namespace Quantum {
         hash = hash * 31 + ThermalShockCooldownRemaining.GetHashCode();
         hash = hash * 31 + OverloadCooldownRemaining.GetHashCode();
         hash = hash * 31 + ShatterCooldownRemaining.GetHashCode();
-        hash = hash * 31 + OverloadChainHopTimer.GetHashCode();
-        hash = hash * 31 + OverloadChainHopsRemaining.GetHashCode();
-        hash = hash * 31 + OverloadChainOwner.GetHashCode();
-        hash = hash * 31 + (Byte)OverloadChainSource;
-        hash = hash * 31 + OverloadChainPosition.GetHashCode();
-        hash = hash * 31 + HashCodeUtils.GetArrayHashCode(OverloadChainVisited);
-        hash = hash * 31 + OverloadChainVisitedCount.GetHashCode();
-        hash = hash * 31 + OverloadChainCurrentDamage.GetHashCode();
         hash = hash * 31 + IceRemaining.GetHashCode();
         hash = hash * 31 + IceBuildup.GetHashCode();
         hash = hash * 31 + FreezeRemaining.GetHashCode();
@@ -7040,16 +7066,11 @@ namespace Quantum {
     public static void Serialize(void* ptr, FrameSerializer serializer) {
         var p = (StatusEffects*)ptr;
         serializer.Stream.Serialize(&p->BurnStackCount);
-        serializer.Stream.Serialize(&p->OverloadChainHopsRemaining);
-        serializer.Stream.Serialize(&p->OverloadChainVisitedCount);
         serializer.Stream.Serialize((Byte*)&p->BurnSource);
-        serializer.Stream.Serialize((Byte*)&p->OverloadChainSource);
         serializer.Stream.Serialize((Byte*)&p->FirstElementApplied);
         EntityRef.Serialize(&p->BurnOwner, serializer);
         EntityRef.Serialize(&p->FreeHitGuardSource, serializer);
         FixedArray.Serialize(p->HasteSource, serializer, Statics.SerializeEntityRef);
-        EntityRef.Serialize(&p->OverloadChainOwner, serializer);
-        FixedArray.Serialize(p->OverloadChainVisited, serializer, Statics.SerializeEntityRef);
         FP.Serialize(&p->AllyGuardGrantCooldownRemaining, serializer);
         FP.Serialize(&p->AnticipationSlowMultiplier, serializer);
         FP.Serialize(&p->AnticipationSlowRemaining, serializer);
@@ -7077,8 +7098,6 @@ namespace Quantum {
         FP.Serialize(&p->KnockbackTakenMultiplier, serializer);
         FP.Serialize(&p->KnockbackTakenRemaining, serializer);
         FP.Serialize(&p->NoAmmoConsumptionRemaining, serializer);
-        FP.Serialize(&p->OverloadChainCurrentDamage, serializer);
-        FP.Serialize(&p->OverloadChainHopTimer, serializer);
         FP.Serialize(&p->OverloadCooldownRemaining, serializer);
         FP.Serialize(&p->ReactiveDamageReductionCooldownRemaining, serializer);
         FP.Serialize(&p->RetaliationCooldownRemaining, serializer);
@@ -7105,7 +7124,6 @@ namespace Quantum {
         FP.Serialize(&p->ThermalShockCooldownRemaining, serializer);
         FP.Serialize(&p->TimeDilationMultiplier, serializer);
         FP.Serialize(&p->TimeDilationRemaining, serializer);
-        FPVector3.Serialize(&p->OverloadChainPosition, serializer);
     }
   }
   [StructLayout(LayoutKind.Explicit)]
@@ -9071,6 +9089,8 @@ namespace Quantum {
       BuildSignalsArrayOnComponentRemoved<Quantum.NeutralWeaponKnockbackBonusUpgrade>();
       BuildSignalsArrayOnComponentAdded<Quantum.OverdriveExtension>();
       BuildSignalsArrayOnComponentRemoved<Quantum.OverdriveExtension>();
+      BuildSignalsArrayOnComponentAdded<Quantum.OverloadChain>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.OverloadChain>();
       BuildSignalsArrayOnComponentAdded<Quantum.PendingDamageEcho>();
       BuildSignalsArrayOnComponentRemoved<Quantum.PendingDamageEcho>();
       BuildSignalsArrayOnComponentAdded<Quantum.PhantomStrikeCharge>();
@@ -9692,6 +9712,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(NullableFPVector3), NullableFPVector3.SIZE);
       typeRegistry.Register(typeof(NullableNonNegativeFP), NullableNonNegativeFP.SIZE);
       typeRegistry.Register(typeof(Quantum.OverdriveExtension), Quantum.OverdriveExtension.SIZE);
+      typeRegistry.Register(typeof(Quantum.OverloadChain), Quantum.OverloadChain.SIZE);
       typeRegistry.Register(typeof(Quantum.PendingDamageEcho), Quantum.PendingDamageEcho.SIZE);
       typeRegistry.Register(typeof(Quantum.PendingDoubleTapShot), Quantum.PendingDoubleTapShot.SIZE);
       typeRegistry.Register(typeof(Quantum.PendingEcho), Quantum.PendingEcho.SIZE);
@@ -9827,7 +9848,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum._globals_), Quantum._globals_.SIZE);
     }
     static partial void InitComponentTypeIdGen() {
-      ComponentTypeId.Reset(ComponentTypeId.BuiltInComponentCount + 188)
+      ComponentTypeId.Reset(ComponentTypeId.BuiltInComponentCount + 189)
         .AddBuiltInComponents()
         .Add<Quantum.AccessoryEmergencyReserve>(Quantum.AccessoryEmergencyReserve.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.AccessoryGuard>(Quantum.AccessoryGuard.Serialize, null, null, ComponentFlags.None)
@@ -9931,6 +9952,7 @@ namespace Quantum {
         .Add<Quantum.MomentumUpgrade>(Quantum.MomentumUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.NeutralWeaponKnockbackBonusUpgrade>(Quantum.NeutralWeaponKnockbackBonusUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.OverdriveExtension>(Quantum.OverdriveExtension.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.OverloadChain>(Quantum.OverloadChain.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.PendingDamageEcho>(Quantum.PendingDamageEcho.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.PhantomStrikeCharge>(Quantum.PhantomStrikeCharge.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.PhantomStrikeUpgrade>(Quantum.PhantomStrikeUpgrade.Serialize, null, null, ComponentFlags.None)

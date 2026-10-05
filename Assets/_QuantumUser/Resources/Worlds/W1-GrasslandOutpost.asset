@@ -12,6 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ec13afded7e4448448907ecb08f5b3ef, type: 3}
   m_Name: W1-GrasslandOutpost
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.WorldDefinition
+  Identifier:
+    Path: _QuantumUser/Resources/Worlds/W1-GrasslandOutpost
+    Guid:
+      Value: 306154358074219271
   DisplayName: Grassland Outpost
   Icon: {fileID: 0}
   Theme: {fileID: 11400000, guid: 5afca4ff16c4d428f87a809bc63735be, type: 2}

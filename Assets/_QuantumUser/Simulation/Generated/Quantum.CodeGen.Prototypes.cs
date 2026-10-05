@@ -2606,6 +2606,38 @@ namespace Quantum.Prototypes {
     }
   }
   [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.OverloadChain))]
+  public unsafe class OverloadChainPrototype : ComponentPrototype<Quantum.OverloadChain> {
+    public FP HopTimer;
+    public Byte HopsRemaining;
+    public MapEntityId Origin;
+    public MapEntityId Owner;
+    public Quantum.QEnum8<DamageSource> Source;
+    public FPVector3 Position;
+    [ArrayLengthAttribute(8)]
+    public MapEntityId[] Visited = new MapEntityId[8];
+    public Byte VisitedCount;
+    public FP CurrentDamage;
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.OverloadChain component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.OverloadChain result, in PrototypeMaterializationContext context = default) {
+        result.HopTimer = this.HopTimer;
+        result.HopsRemaining = this.HopsRemaining;
+        PrototypeValidator.FindMapEntity(this.Origin, in context, out result.Origin);
+        PrototypeValidator.FindMapEntity(this.Owner, in context, out result.Owner);
+        result.Source = this.Source;
+        result.Position = this.Position;
+        for (int i = 0, count = PrototypeValidator.CheckLength(Visited, 8, in context); i < count; ++i) {
+          PrototypeValidator.FindMapEntity(this.Visited[i], in context, out *result.Visited.GetPointer(i));
+        }
+        result.VisitedCount = this.VisitedCount;
+        result.CurrentDamage = this.CurrentDamage;
+    }
+  }
+  [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.PendingDamageEcho))]
   public unsafe partial class PendingDamageEchoPrototype : ComponentPrototype<Quantum.PendingDamageEcho> {
     [ArrayLengthAttribute(16)]
@@ -3648,15 +3680,6 @@ namespace Quantum.Prototypes {
     public FP ThermalShockCooldownRemaining;
     public FP OverloadCooldownRemaining;
     public FP ShatterCooldownRemaining;
-    public FP OverloadChainHopTimer;
-    public Byte OverloadChainHopsRemaining;
-    public MapEntityId OverloadChainOwner;
-    public Quantum.QEnum8<DamageSource> OverloadChainSource;
-    public FPVector3 OverloadChainPosition;
-    [ArrayLengthAttribute(8)]
-    public MapEntityId[] OverloadChainVisited = new MapEntityId[8];
-    public Byte OverloadChainVisitedCount;
-    public FP OverloadChainCurrentDamage;
     public FP IceRemaining;
     public FP IceBuildup;
     public FP FreezeRemaining;
@@ -3727,16 +3750,6 @@ namespace Quantum.Prototypes {
         result.ThermalShockCooldownRemaining = this.ThermalShockCooldownRemaining;
         result.OverloadCooldownRemaining = this.OverloadCooldownRemaining;
         result.ShatterCooldownRemaining = this.ShatterCooldownRemaining;
-        result.OverloadChainHopTimer = this.OverloadChainHopTimer;
-        result.OverloadChainHopsRemaining = this.OverloadChainHopsRemaining;
-        PrototypeValidator.FindMapEntity(this.OverloadChainOwner, in context, out result.OverloadChainOwner);
-        result.OverloadChainSource = this.OverloadChainSource;
-        result.OverloadChainPosition = this.OverloadChainPosition;
-        for (int i = 0, count = PrototypeValidator.CheckLength(OverloadChainVisited, 8, in context); i < count; ++i) {
-          PrototypeValidator.FindMapEntity(this.OverloadChainVisited[i], in context, out *result.OverloadChainVisited.GetPointer(i));
-        }
-        result.OverloadChainVisitedCount = this.OverloadChainVisitedCount;
-        result.OverloadChainCurrentDamage = this.OverloadChainCurrentDamage;
         result.IceRemaining = this.IceRemaining;
         result.IceBuildup = this.IceBuildup;
         result.FreezeRemaining = this.FreezeRemaining;

@@ -139,10 +139,10 @@ TextureImporter:
       name: World2FinalEnemies_0
       rect:
         serializedVersion: 2
-        x: 398
-        y: 97
-        width: 290
-        height: 147
+        x: 375
+        y: 73
+        width: 342
+        height: 167
       alignment: 9
       pivot: {x: 0.510393, y: 0.069431484}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -161,10 +161,10 @@ TextureImporter:
       name: World2FinalEnemies_1
       rect:
         serializedVersion: 2
-        x: 33
-        y: 698
-        width: 243
-        height: 172
+        x: 72
+        y: 714
+        width: 342
+        height: 222
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -183,10 +183,10 @@ TextureImporter:
       name: World2FinalEnemies_2
       rect:
         serializedVersion: 2
-        x: 310
-        y: 696
-        width: 253
-        height: 234
+        x: 423
+        y: 714
+        width: 327
+        height: 278
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -205,10 +205,10 @@ TextureImporter:
       name: World2FinalEnemies_3
       rect:
         serializedVersion: 2
-        x: 598
-        y: 695
-        width: 281
-        height: 197
+        x: 773
+        y: 714
+        width: 363
+        height: 247
       alignment: 9
       pivot: {x: 0.33911133, y: 0.00000030982312}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -227,10 +227,10 @@ TextureImporter:
       name: World2FinalEnemies_4
       rect:
         serializedVersion: 2
-        x: 895
-        y: 325
-        width: 384
-        height: 295
+        x: 1026
+        y: 377
+        width: 343
+        height: 248
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -249,10 +249,10 @@ TextureImporter:
       name: World2FinalEnemies_5
       rect:
         serializedVersion: 2
-        x: 505
-        y: 326
-        width: 381
-        height: 280
+        x: 576
+        y: 377
+        width: 344
+        height: 248
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -271,10 +271,10 @@ TextureImporter:
       name: World2FinalEnemies_6
       rect:
         serializedVersion: 2
-        x: 174
-        y: 329
-        width: 318
-        height: 223
+        x: 192
+        y: 377
+        width: 304
+        height: 200
       alignment: 9
       pivot: {x: 0.42891553, y: 0.00000013685013}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -293,10 +293,10 @@ TextureImporter:
       name: World2FinalEnemies_7
       rect:
         serializedVersion: 2
-        x: 1123
-        y: 87
-        width: 355
-        height: 202
+        x: 1098
+        y: 72
+        width: 378
+        height: 226
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -315,10 +315,10 @@ TextureImporter:
       name: World2FinalEnemies_8
       rect:
         serializedVersion: 2
-        x: 112
-        y: 121
-        width: 208
-        height: 131
+        x: 66
+        y: 68
+        width: 276
+        height: 160
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -337,10 +337,10 @@ TextureImporter:
       name: World2FinalEnemies_9
       rect:
         serializedVersion: 2
-        x: 710
-        y: 108
-        width: 370
-        height: 207
+        x: 727
+        y: 66
+        width: 365
+        height: 234
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}

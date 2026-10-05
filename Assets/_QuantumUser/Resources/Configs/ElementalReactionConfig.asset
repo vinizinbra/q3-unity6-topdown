@@ -56,7 +56,7 @@ MonoBehaviour:
   OverloadChainDamagePercent:
     RawValue: 49152
   OverloadChainRadius:
-    RawValue: 262144
+    RawValue: 393216
   OverloadMaxChainTargets: 3
   OverloadChainDelay:
     RawValue: 6554

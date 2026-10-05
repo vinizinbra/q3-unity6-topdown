@@ -16,7 +16,6 @@ namespace Quantum
         // Per-stage profiler markers (see SimProfilerMarker). Compiled out of Release players.
         private static readonly SimProfilerMarker BurnMarker = new SimProfilerMarker("StatusEffectSystem.Burn");
         private static readonly SimProfilerMarker IceMarker = new SimProfilerMarker("StatusEffectSystem.Ice");
-        private static readonly SimProfilerMarker OverloadChainMarker = new SimProfilerMarker("StatusEffectSystem.OverloadChain");
         private static readonly SimProfilerMarker TimersMarker = new SimProfilerMarker("StatusEffectSystem.Timers");
         private static readonly SimProfilerMarker PlayerTimersMarker = new SimProfilerMarker("StatusEffectSystem.PlayerTimers");
 
@@ -31,10 +30,6 @@ namespace Quantum
             IceMarker.Begin();
             TickIce(f, status);
             IceMarker.End();
-
-            OverloadChainMarker.Begin();
-            TickOverloadChain(f, filter.Entity, status);
-            OverloadChainMarker.End();
 
             TimersMarker.Begin();
             status->ElectrifiedRemaining -= f.DeltaTime;
@@ -101,23 +96,6 @@ namespace Quantum
 
             if (status->IceRemaining <= FP._0)
                 status->IceBuildup = FP._0;
-        }
-
-        // Overload's chain propagates over real simulated time instead of resolving instantly in one
-        // frame - HopsRemaining == 0 means no chain is in progress (set by
-        // StatusEffectUtility.TryTriggerOverload/TryAdvanceOverloadChain). State lives on the chain's
-        // ORIGIN entity regardless of which node the chain's logical position currently sits at.
-        private static void TickOverloadChain(Frame f, EntityRef entity, StatusEffects* status)
-        {
-            if (status->OverloadChainHopsRemaining == 0)
-                return;
-
-            status->OverloadChainHopTimer -= f.DeltaTime;
-
-            if (status->OverloadChainHopTimer > FP._0)
-                return;
-
-            StatusEffectUtility.TryAdvanceOverloadChain(f, entity, status);
         }
 
         // Too Angry to Die's brief post-save immunity (see CheatDeathUtility.TryPreventLethal) -

@@ -30,8 +30,8 @@ Naming: W1 enemy files are `W1-*`, W2 are `W2-*`; `_Hazards/` and `_Passives/` a
   `Editor/SurvivalWorld2ContentGenerator.cs` (Tools/RiftRaiders/Generate Survival World 2 Content) - edit
   the generator, not the asset (re-running overwrites). Same skeleton as W1 (4 Runs x 7 segments, Breathing
   60/60/60/90, Boss last); own curriculum, one new mechanic per teaching segment:
-  Run 1 Desert Arrival (base reskins + **Sandworm Larva**), Run 2 Desert Security (**Shield Bot**,
-  **Tar Launcher**), Run 3 Mole Arsenal (**Mole Sniper**, **Fuel Runner**, Enforcer via pack), Run 4 The
+  Run 1 Desert Arrival (base reskins + **Sandworm Larva**), Run 2 Desert Security (**Mole Rusher** first at 20s,
+  then **Shield Bot** + **Tar Launcher** from 45s; Run 1 has no Rusher), Run 3 Mole Arsenal (**Mole Sniper**, **Fuel Runner**, Enforcer via pack), Run 4 The
   Dunes Wake (**Dune Crusher**, **Scarab Nest**, Final Exam). Pacing opens near W1's Run 1 end-state and the
   Final Exam is ~15% over W1's (budget 34 vs 30, max alive 32 vs 28). 6 packs in `World2/Groups/`:
   ScarabRush, ShieldGunline, EnforcerScarab, TarGrunt, SniperShield, CrusherLarva. Tier C (Rusher, Enforcer,

@@ -1207,7 +1207,7 @@ namespace Quantum
         // Burn + Shock -> Overload. Sequential chain damage (A->B->C->D, never a fan-out) - deals its
         // own initial hit immediately, then PARKS the chain's continuation state on this same entity's
         // StatusEffects (OverloadChain* fields) instead of resolving every hop synchronously in one
-        // frame. StatusEffectSystem.TickOverloadChain/TryAdvanceOverloadChain drive the rest, one hop
+        // frame. OverloadChainSystem/TryAdvanceOverloadChain drive the rest, one hop
         // every OverloadChainDelay real seconds - so a travel-particle "jump" between enemies reads in
         // sync with when the damage actually lands, instead of needing its own disconnected view-side
         // timing. Statuses are PERSISTENT CONDITIONS, not consumed by the reaction - Burn/Electrified
@@ -1230,7 +1230,7 @@ namespace Quantum
             // ResolveEntityCenter, not raw transform->Position - see TryTriggerThermalShock's own
             // comment. Resolved BEFORE ApplyDamage below, since the origin's own hit can itself kill
             // (and f.Destroy) the target - reading its Transform3D afterward would throw instead of
-            // just missing the VFX. The chain's own OverloadChainPosition uses the same center so
+            // just missing the VFX. The chain's own Position uses the same center so
             // every hop's travel-particle segment lines up with each enemy's actual body, not their
             // feet.
             FPVector3 originCenter = EnemyMovementUtility.ResolveEntityCenter(f, target);
@@ -1245,79 +1245,85 @@ namespace Quantum
 
             f.Events.OverloadTriggered(target, originCenter);
 
-            status->OverloadChainOwner = owner;
-            status->OverloadChainSource = source;
-            status->OverloadChainPosition = originCenter;
-            status->OverloadChainVisited[0] = target;
-            status->OverloadChainVisitedCount = 1;
-            status->OverloadChainHopsRemaining = config.OverloadMaxChainTargets;
-            status->OverloadChainHopTimer = config.OverloadChainDelay;
-            status->OverloadChainCurrentDamage = initialDamage;
+            EntityRef chainEntity = f.Create();
+            var chain = new OverloadChain
+            {
+                HopTimer = config.OverloadChainDelay,
+                HopsRemaining = config.OverloadMaxChainTargets,
+                Origin = target,
+                Owner = owner,
+                Source = source,
+                Position = originCenter,
+                VisitedCount = 1,
+                CurrentDamage = initialDamage
+            };
+            f.Add(chainEntity, chain);
+
+            // Visited is a fixed array - seed through the pointer after Add.
+            f.Unsafe.GetPointer<OverloadChain>(chainEntity)->Visited[0] = target;
 
             Log.Debug($"[Status] {target} Burn+Shock triggered Overload - chain begins");
             return true;
         }
 
-        // Advances Overload's chain by exactly one hop - called by StatusEffectSystem.TickOverloadChain
-        // once per elapsed OverloadChainDelay. `status` is the ORIGIN's own (the chain's logical
-        // position is just data on it, OverloadChainPosition/Visited - it never needs to migrate to
-        // whichever node the chain currently sits at). Chain damage is raw (bypasses
+        // Advances Overload's chain by exactly one hop - called by OverloadChainSystem once per
+        // elapsed OverloadChainDelay. The chain is its own entity (OverloadChain component), so it
+        // keeps going even when the origin enemy has already died. Chain damage is raw (bypasses
         // HitEffectUtility/element application entirely) so a chained hit can never itself apply a
-        // status or trigger another reaction. Sets HopsRemaining to 0 (the "no chain in progress"
-        // live-check) once MaxChainTargets is reached, the visited buffer is full, or no further valid
-        // target is found in range - including implicitly if this entity is destroyed mid-chain, since
-        // StatusEffectSystem simply stops iterating it.
-        internal static void TryAdvanceOverloadChain(Frame f, EntityRef origin, StatusEffects* status)
+        // status or trigger another reaction. Sets HopsRemaining to 0 (OverloadChainSystem then
+        // destroys the entity) once MaxChainTargets is reached, the visited buffer is full, or no
+        // further valid target is found in range.
+        internal static void TryAdvanceOverloadChain(Frame f, EntityRef chainEntity, OverloadChain* chain)
         {
             ElementalReactionConfig config = GetElementalReactionConfig(f);
 
-            if (config == null || status->OverloadChainVisitedCount >= 8)
+            if (config == null || chain->VisitedCount >= 8)
             {
-                status->OverloadChainHopsRemaining = 0;
+                chain->HopsRemaining = 0;
                 return;
             }
 
-            if (TryFindNextChainTarget(f, status, config.OverloadChainRadius, out var nextTarget) == false ||
+            if (TryFindNextChainTarget(f, chain, config.OverloadChainRadius, out var nextTarget) == false ||
                 f.Unsafe.TryGetPointer<Transform3D>(nextTarget, out _) == false)
             {
-                status->OverloadChainHopsRemaining = 0;
+                chain->HopsRemaining = 0;
                 return;
             }
 
-            // A percent of whatever damage the PREVIOUS hop dealt (OverloadChainCurrentDamage), not a
-            // flat number and not a percent of the original hit - the chain decays hop over hop. See
+            // A percent of whatever damage the PREVIOUS hop dealt (CurrentDamage), not a flat number
+            // and not a percent of the original hit - the chain decays hop over hop. See
             // ElementalReactionConfig.OverloadChainDamagePercent's own comment.
-            FP hopDamage = status->OverloadChainCurrentDamage * config.OverloadChainDamagePercent;
-            status->OverloadChainCurrentDamage = hopDamage;
+            FP hopDamage = chain->CurrentDamage * config.OverloadChainDamagePercent;
+            chain->CurrentDamage = hopDamage;
 
-            DamageUtility.ApplyDamage(f, nextTarget, hopDamage, status->OverloadChainOwner,
-                status->OverloadChainSource, bypassOutgoingResolution: true, element: ElementType.Lightning, reactionProc: true);
-
-            // ResolveEntityCenter, not raw Transform3D.Position - see TryTriggerThermalShock's own
-            // comment.
+            // Resolved before ApplyDamage: the hop itself can kill (and f.Destroy) the target.
             FPVector3 nextCenter = EnemyMovementUtility.ResolveEntityCenter(f, nextTarget);
-            f.Events.OverloadChainLink(origin, nextTarget, status->OverloadChainPosition, nextCenter,
-                FPVector3.Distance(status->OverloadChainPosition, nextCenter));
 
-            status->OverloadChainVisited[status->OverloadChainVisitedCount] = nextTarget;
-            status->OverloadChainVisitedCount++;
-            status->OverloadChainPosition = nextCenter;
-            status->OverloadChainHopsRemaining--;
+            DamageUtility.ApplyDamage(f, nextTarget, hopDamage, chain->Owner,
+                chain->Source, bypassOutgoingResolution: true, element: ElementType.Lightning, reactionProc: true);
 
-            if (status->OverloadChainHopsRemaining > 0)
-                status->OverloadChainHopTimer = config.OverloadChainDelay;
+            f.Events.OverloadChainLink(chain->Origin, nextTarget, chain->Position, nextCenter,
+                FPVector3.Distance(chain->Position, nextCenter));
+
+            chain->Visited[chain->VisitedCount] = nextTarget;
+            chain->VisitedCount++;
+            chain->Position = nextCenter;
+            chain->HopsRemaining--;
+
+            if (chain->HopsRemaining > 0)
+                chain->HopTimer = config.OverloadChainDelay;
         }
 
-        // Nearest not-yet-visited enemy within radius of the chain's current OverloadChainPosition -
+        // Nearest not-yet-visited enemy within radius of the chain's current Position -
         // adapted from WeaponPerkUtility.TryFindNearestEnemy with an added visited-exclusion list
         // (read off the persisted OverloadChainVisited buffer) and an explicit EntityRef ordinal
         // tie-break for determinism beyond the overlap query's own hit ordering.
-        private static bool TryFindNextChainTarget(Frame f, StatusEffects* status, FP radius, out EntityRef result)
+        private static bool TryFindNextChainTarget(Frame f, OverloadChain* chain, FP radius, out EntityRef result)
         {
             result = EntityRef.None;
 
-            FPVector3 center = status->OverloadChainPosition;
-            int visitedCount = status->OverloadChainVisitedCount;
+            FPVector3 center = chain->Position;
+            int visitedCount = chain->VisitedCount;
 
             Shape3D sphere = Shape3D.CreateSphere(radius);
             var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, EnemyMovementUtility.GetEnemyLayerMask(f), QueryOptions.HitAll);
@@ -1340,7 +1346,7 @@ namespace Quantum
 
                 for (int v = 0; v < visitedCount; v++)
                 {
-                    if (status->OverloadChainVisited[v] == hitEntity)
+                    if (chain->Visited[v] == hitEntity)
                     {
                         alreadyVisited = true;
                         break;

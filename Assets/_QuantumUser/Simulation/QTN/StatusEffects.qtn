@@ -56,27 +56,6 @@ component StatusEffects
     FP OverloadCooldownRemaining;
     FP ShatterCooldownRemaining;
 
-    // Overload's own chain-continuation state - lives on the ORIGIN entity (the one that actually
-    // triggered the reaction) even as the chain's logical position moves node-to-node to OTHER
-    // entities each hop, since this is just data, not something that needs to migrate to whichever
-    // entity the chain currently sits at. Ticked by StatusEffectSystem.TickOverloadChain, advanced by
-    // StatusEffectUtility.TryAdvanceOverloadChain - see docs/elemental-reactions.md. HopsRemaining
-    // == 0 means no chain is in progress (the live-check every other consumer of this state uses).
-    FP OverloadChainHopTimer;
-    Byte OverloadChainHopsRemaining;
-    EntityRef OverloadChainOwner;
-    DamageSource OverloadChainSource;
-    FPVector3 OverloadChainPosition;
-    array<EntityRef>[8] OverloadChainVisited;
-    Byte OverloadChainVisitedCount;
-
-    // The damage the chain is CURRENTLY carrying - seeded from the origin's own hit
-    // (hitDamage * OverloadInitialDamagePercent) and multiplied by OverloadChainDamagePercent every
-    // subsequent hop, so the chain decays hop over hop rather than dealing a flat number
-    // disconnected from how hard the triggering hit landed. See StatusEffectUtility.
-    // TryTriggerOverload/TryAdvanceOverloadChain.
-    FP OverloadChainCurrentDamage;
-
     // Ice/Chill - progressive stacking slow. Every qualifying Ice application adds buildup (see
     // ElementalReactionConfig.IceBuildupPerDamage, scaled off the hit's own damage the same way
     // Burn's potency is, so a fast weak weapon can't out-buildup a slow heavy one just by firing
@@ -337,4 +316,24 @@ component StatusEffects
     // establishes. Just gates when Invulnerable gets removed again - see
     // StatusEffectSystem.TickReviveImmunity.
     FP ReviveImmunityRemaining;
+}
+
+// Overload's chain-continuation state. Lives on its OWN standalone entity (not on the origin enemy):
+// Filler/Normal/Heavy/Specialist enemies are f.Destroy'd the instant they die, and the origin
+// usually dies inside the first OverloadChainDelay, which used to silently kill the chain before
+// its first hop. Ticked by OverloadChainSystem, advanced by StatusEffectUtility.TryAdvanceOverloadChain
+// - see docs/elemental-reactions.md. The entity is destroyed once HopsRemaining reaches 0.
+component OverloadChain
+{
+    FP HopTimer;
+    Byte HopsRemaining;
+    EntityRef Origin;
+    EntityRef Owner;
+    DamageSource Source;
+    FPVector3 Position;
+    array<EntityRef>[8] Visited;
+    Byte VisitedCount;
+    // The damage the chain is CURRENTLY carrying: seeded from hitDamage * OverloadInitialDamagePercent,
+    // multiplied by OverloadChainDamagePercent every hop.
+    FP CurrentDamage;
 }
