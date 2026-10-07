@@ -3,8 +3,8 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>Skill / Passive / Mastery tab strip of the hero info panel; one page visible at a time.</summary>
-public class HeroInfoTabsWidget : MonoBehaviour
+/// <summary>Row of tab buttons, each showing its own page (one visible at a time). Used by the Heroes and Loadout tabs.</summary>
+public class TabStripWidget : MonoBehaviour
 {
     [Serializable]
     private class Entry
@@ -25,6 +25,9 @@ public class HeroInfoTabsWidget : MonoBehaviour
     [SerializeField] private Color idleLabel = new Color(0.45f, 0.47f, 0.53f);
 
     public int SelectedIndex { get; private set; } = -1;
+
+    /// <summary>Raised whenever a tab becomes the selected one.</summary>
+    public event Action<int> Changed;
 
     private void Awake()
     {
@@ -54,5 +57,7 @@ public class HeroInfoTabsWidget : MonoBehaviour
             if (tabs[i].page != null)
                 tabs[i].page.SetActive(active);
         }
+
+        Changed?.Invoke(index);
     }
 }

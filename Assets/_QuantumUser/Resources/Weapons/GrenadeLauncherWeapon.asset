@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/GrenadeLauncherWeapon
     Guid:
       Value: 511120127865671028
-  DisplayName: GrenadeLauncher
+  DisplayName: Grenade Launcher
   FireType: 1
   Damage:
     RawValue: 5242880

@@ -4,8 +4,12 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-/// <summary>One row of the Heroes tab list: portrait, name, status line. Click selects it.</summary>
-public class HeroRowWidget : MonoBehaviour, IPointerClickHandler
+/// <summary>
+/// One row of the Heroes tab list: portrait, name, status line. Click or gamepad focus selects it
+/// (the Button on this object is what makes it navigable).
+/// </summary>
+[RequireComponent(typeof(Button))]
+public class HeroRowWidget : MonoBehaviour, ISelectHandler, ISubmitHandler
 {
     [SerializeField] private Image background;
     [SerializeField] private Image portrait;
@@ -20,7 +24,15 @@ public class HeroRowWidget : MonoBehaviour, IPointerClickHandler
 
     public event Action<HeroRowWidget> Clicked;
 
+    /// <summary>Gamepad/keyboard Submit on this row (not a mouse click) - used to step into the info panel.</summary>
+    public event Action<HeroRowWidget> Submitted;
+
     public int Index { get; private set; }
+
+    private void Awake()
+    {
+        GetComponent<Button>().onClick.AddListener(RaiseClicked);
+    }
 
     /// <param name="icon">Hero portrait; null keeps the prefab's placeholder glyph.</param>
     public void Bind(int index, string heroName, string status, Sprite icon, Color color, HeroListState state)
@@ -50,7 +62,18 @@ public class HeroRowWidget : MonoBehaviour, IPointerClickHandler
         background.color = selected ? selectedColor : idleColor;
     }
 
-    public void OnPointerClick(PointerEventData eventData)
+    // Focus alone views the hero, so moving down the list previews each one.
+    public void OnSelect(BaseEventData eventData)
+    {
+        RaiseClicked();
+    }
+
+    public void OnSubmit(BaseEventData eventData)
+    {
+        Submitted?.Invoke(this);
+    }
+
+    private void RaiseClicked()
     {
         Clicked?.Invoke(this);
     }

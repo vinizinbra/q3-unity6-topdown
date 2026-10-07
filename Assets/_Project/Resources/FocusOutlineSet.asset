@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2aac5b7ed265c4137ac08ce4778e4386, type: 3}
+  m_Name: FocusOutlineSet
+  m_EditorClassIdentifier: Assembly-CSharp::FocusOutlineSet
+  entries:
+  - source: {fileID: -317327699, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
+    focus: {fileID: 21300000, guid: 52eb3efc5c7e4410baff3fdf95ec5e4a, type: 3}
+    padding: 20
+  - source: {fileID: 700219559, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
+    focus: {fileID: 21300000, guid: b7deb56a20cae4c58b0e6d44018e2483, type: 3}
+    padding: 20
+  - source: {fileID: -1530443230, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
+    focus: {fileID: 21300000, guid: a2a8516c2744940aea0a0442746b8944, type: 3}
+    padding: 20
+  - source: {fileID: 7347131725662339710, guid: a02266f6788124f2c81288519716adbe, type: 3}
+    focus: {fileID: 21300000, guid: 28cb961957d5e4df1866bdca51515a68, type: 3}
+    padding: 20
+  - source: {fileID: 3745602612958674481, guid: a02266f6788124f2c81288519716adbe, type: 3}
+    focus: {fileID: 21300000, guid: 117dd14813c1a46749133b8a0a8243a1, type: 3}
+    padding: 20
+  - source: {fileID: 21300000, guid: ae8dfe134fa664781807962841da27bb, type: 3}
+    focus: {fileID: 21300000, guid: f9975734737ac4afba6b76be35a96246, type: 3}
+    padding: 20
+  - source: {fileID: 1642740590, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
+    focus: {fileID: 21300000, guid: 82d2870659311452c8dcc10f241a7cee, type: 3}
+    padding: 20
+  - source: {fileID: 214049660, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
+    focus: {fileID: 21300000, guid: b406c352812ae4182a14b70e6ab2d554, type: 3}
+    padding: 20
+  - source: {fileID: 1150984480, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
+    focus: {fileID: 21300000, guid: 51358f137e2ef43b193dc290dcff1b66, type: 3}
+    padding: 20
+  - source: {fileID: -878071093, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
+    focus: {fileID: 21300000, guid: 358664ad250c5458c8fb78394b7165f4, type: 3}
+    padding: 20
+  - source: {fileID: -343386884, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
+    focus: {fileID: 21300000, guid: 072c3b59db3544ce09a544fdf3d4d6a4, type: 3}
+    padding: 20
+  - source: {fileID: -144143314, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
+    focus: {fileID: 21300000, guid: 50f4cb4eade3a41aa87380d28e8e4883, type: 3}
+    padding: 20
+  - source: {fileID: -80275614, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
+    focus: {fileID: 21300000, guid: 4eccde097a313469fb534816620cf6b8, type: 3}
+    padding: 20

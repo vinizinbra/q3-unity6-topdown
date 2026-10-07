@@ -479,8 +479,6 @@ MonoBehaviour:
       RawValue: 0
     LostTimer:
       RawValue: 0
-    Faction:
-      Value: 0
     FleeDirection:
       X:
         RawValue: 0
@@ -580,31 +578,6 @@ MonoBehaviour:
     OverloadCooldownRemaining:
       RawValue: 0
     ShatterCooldownRemaining:
-      RawValue: 0
-    OverloadChainHopTimer:
-      RawValue: 0
-    OverloadChainHopsRemaining: 0
-    OverloadChainOwner: {fileID: 0}
-    OverloadChainSource:
-      Value: 0
-    OverloadChainPosition:
-      X:
-        RawValue: 0
-      Y:
-        RawValue: 0
-      Z:
-        RawValue: 0
-    OverloadChainVisited:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    OverloadChainVisitedCount: 0
-    OverloadChainCurrentDamage:
       RawValue: 0
     IceRemaining:
       RawValue: 0
@@ -1119,7 +1092,7 @@ MonoBehaviour:
   referenceRenderer: {fileID: 5455826940469007308}
   heightOffset: -1
   horizontalOffset: 0
-  depthOffset: -0.1
+  depthOffset: -0.5
   hideWhileOffGround: 1
   hideDuration: 0.12
   showDuration: 0.25

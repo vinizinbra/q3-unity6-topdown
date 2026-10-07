@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
+using UnityEngine.UI;
 
 public class TabGroup : MonoBehaviour
 {
@@ -46,6 +47,11 @@ public class TabGroup : MonoBehaviour
     
     public void OnTabSelected(TabButton button)
     {
+        OnTabSelected(button, false);
+    }
+
+    public void OnTabSelected(TabButton button, bool focusContent)
+    {
         if (selectedTabButton != null)
         {
             selectedTabButton.Deselect();
@@ -78,7 +84,44 @@ public class TabGroup : MonoBehaviour
             tabContent[index].gameObject.SetActive(true);
             selectedTabContent = tabContent[index];
             tabContent[index].Show();
+
+            if (focusContent)
+                StartCoroutine(FocusContentNextFrame(tabContent[index], button));
         }
+    }
+
+    // Gamepad: after opening a tab by Submit, focus moves into it (its DefaultFocus, else the first
+    // interactable). Deferred a frame so the content's own Show()/layout has settled.
+    private IEnumerator FocusContentNextFrame(TabContent content, TabButton button)
+    {
+        yield return null;
+
+        if (content == null || !content.gameObject.activeInHierarchy)
+            yield break;
+
+        // A tab with a focus scope hands the whole level over (Cancel then returns to this tab's button).
+        FocusScopeWidget scope = content.GetComponent<FocusScopeWidget>();
+        if (scope != null)
+        {
+            scope.Enter(button != null ? button.GetComponent<Selectable>() : null);
+            yield break;
+        }
+
+        Selectable target = content.DefaultFocus;
+        if (target == null || !target.interactable || !target.gameObject.activeInHierarchy)
+        {
+            target = null;
+            foreach (Selectable selectable in content.GetComponentsInChildren<Selectable>(false))
+            {
+                if (selectable.interactable)
+                {
+                    target = selectable;
+                    break;
+                }
+            }
+        }
+
+        UiSelectionUtility.SelectFirstInteractable(target);
     }
     public TabContent SelectTab<T>()
     {

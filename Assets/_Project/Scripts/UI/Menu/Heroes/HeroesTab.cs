@@ -42,11 +42,15 @@ public class HeroesTab : TabContent
     [Tooltip("The same lobby rig the main menu shows. Must have Follow Local Selection OFF - this tab drives it with the hero being viewed, which isn't necessarily the equipped one.")]
     [SerializeField] private CharacterPreviewWidget preview;
 
+    [Header("Navigation")]
+    [Tooltip("The info panel level: Submit on a hero row steps into it, Cancel steps back out.")]
+    [SerializeField] private FocusScopeWidget infoScope;
+
     [Header("Info panel")]
     [SerializeField] private TMP_Text heroNameText;
     [SerializeField] private TMP_Text heroTitleText;
     [SerializeField] private TMP_Text heroDescriptionText;
-    [SerializeField] private HeroInfoTabsWidget infoTabs;
+    [SerializeField] private TabStripWidget infoTabs;
     [SerializeField] private HeroSkillEntryRefs skillEntry;
     [SerializeField] private HeroSkillEntryRefs passiveEntry;
     [SerializeField] private TMP_Text masteryLabel;
@@ -104,6 +108,17 @@ public class HeroesTab : TabContent
             BuildList();
     }
 
+    // The row of the hero being viewed (the equipped one on first open).
+    public override Selectable DefaultFocus
+    {
+        get
+        {
+            if (!built || rows.Count == 0)
+                return null;
+            return rows[Mathf.Clamp(viewedIndex, 0, rows.Count - 1)].GetComponent<Selectable>();
+        }
+    }
+
     protected override void OnShow()
     {
         if (!built)
@@ -137,6 +152,7 @@ public class HeroesTab : TabContent
         foreach (HeroRowWidget row in rows)
         {
             row.Clicked -= OnRowClicked;
+            row.Submitted -= OnRowSubmitted;
             Destroy(row.gameObject);
         }
         rows.Clear();
@@ -155,6 +171,7 @@ public class HeroesTab : TabContent
                 data != null ? data.RingColor : Color.white,
                 HeroListState.Unlocked);
             row.Clicked += OnRowClicked;
+            row.Submitted += OnRowSubmitted;
 
             rows.Add(row);
             ids.Add(entry.id);
@@ -169,6 +186,12 @@ public class HeroesTab : TabContent
         if (data != null && !string.IsNullOrEmpty(data.DisplayName))
             return data.DisplayName;
         return string.IsNullOrEmpty(entry.displayName) ? entry.id : entry.displayName;
+    }
+
+    private void OnRowSubmitted(HeroRowWidget row)
+    {
+        if (infoScope != null)
+            infoScope.Enter(row.GetComponent<Selectable>());
     }
 
     private void OnRowClicked(HeroRowWidget row)
@@ -224,7 +247,7 @@ public class HeroesTab : TabContent
         RefreshSelectButton();
     }
 
-    // The hero's own skill (Dash is the shared generic base and deliberately not listed).
+    // The hero's base skill (Dash is the shared generic base and deliberately not listed).
     private void FillSkill(CharacterData data)
     {
         SkillData skill = null;
@@ -253,10 +276,12 @@ public class HeroesTab : TabContent
         passiveEntry.icon.transform.parent.gameObject.SetActive(passive != null);
         passiveEntry.title.gameObject.SetActive(passive != null);
         passiveEntry.description.gameObject.SetActive(passive != null);
-        if (passiveEntry.cooldown != null)
-            passiveEntry.cooldown.gameObject.SetActive(false);
+        passiveEntry.cooldown.gameObject.SetActive(passive != null);
         if (passive == null)
             return;
+
+        // The right-hand slot that shows a skill's cooldown carries the kind tag instead - a passive has none.
+        passiveEntry.cooldown.text = "PASSIVE";
 
         SetIcon(passiveEntry.icon, passive.Icon);
         passiveEntry.title.text = string.IsNullOrEmpty(passive.DisplayName) ? passive.name : passive.DisplayName;

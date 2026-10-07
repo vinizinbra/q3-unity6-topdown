@@ -72,6 +72,7 @@ public class PartyRoomWidget : MonoBehaviour
 
         PartyManager.Instance.OnPhaseChanged += HandlePhaseChanged;
         PartyManager.Instance.OnRosterChanged += RefreshRoster;
+        PartyManager.Instance.OnLocalCharacterChanged += HandleLocalCharacterChanged;
 
         createButton.onClick.AddListener(CreateClicked);
         joinButton.onClick.AddListener(JoinClicked);
@@ -110,6 +111,7 @@ public class PartyRoomWidget : MonoBehaviour
         if (PartyManager.Instance == null) return;
         PartyManager.Instance.OnPhaseChanged -= HandlePhaseChanged;
         PartyManager.Instance.OnRosterChanged -= RefreshRoster;
+        PartyManager.Instance.OnLocalCharacterChanged -= HandleLocalCharacterChanged;
     }
 
     private void Update()
@@ -179,6 +181,23 @@ public class PartyRoomWidget : MonoBehaviour
 
         characterDropdown.SetValueWithoutNotify(0);
         PartyManager.Instance.SetLocalCharacter(catalog.characters[0].id);
+    }
+
+    // The pick can also change from outside this widget (the Heroes tab's Select button), so the
+    // dropdown follows PartyManager rather than only ever being the source of the change. Without
+    // notify, so syncing it can't bounce back into OnCharacterDropdownChanged.
+    private void HandleLocalCharacterChanged(string characterId)
+    {
+        var catalog = PartyManager.Instance.characterCatalog;
+        if (_dropdownPopulated == false || catalog == null) return;
+
+        for (int i = 0; i < catalog.characters.Length; i++)
+        {
+            if (catalog.characters[i].id != characterId) continue;
+
+            characterDropdown.SetValueWithoutNotify(i);
+            return;
+        }
     }
 
     private void PreviousCharacterClicked() => StepCharacter(-1);

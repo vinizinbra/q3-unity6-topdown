@@ -19,7 +19,7 @@ using UnityEngine.EventSystems;
 public class SelectableScaleWidget : MonoBehaviour, ISelectHandler, IDeselectHandler
 {
     [SerializeField, Tooltip("Target scale while selected, as a multiplier of this Transform's resting localScale (captured right before scaling up, never mid-animation).")]
-    private float selectedScaleMultiplier = 1.1f;
+    private float selectedScaleMultiplier = 1.05f;
     [SerializeField] private float duration = 0.12f;
     [SerializeField] private Ease ease = Ease.OutQuad;
     [SerializeField, Tooltip("If true, the scale tween ignores Time.timeScale - turn on for menus/pauses that freeze the sim but should still animate selection feedback.")]

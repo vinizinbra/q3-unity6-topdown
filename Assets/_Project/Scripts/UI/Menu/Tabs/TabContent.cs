@@ -2,10 +2,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public abstract class TabContent : MonoBehaviour
 {
     public GameObject[] objectsToHide;
+
+    // Where gamepad focus lands when this tab is opened by Submit. Null = the first interactable Selectable.
+    public virtual Selectable DefaultFocus => null;
     public static TabContent Instance;
 
     protected virtual void Awake()

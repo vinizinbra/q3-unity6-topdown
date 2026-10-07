@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56aeceed7fbac46f8ba83ad92cdd34ad, type: 3}
+  m_Name: UnlockRift
+  m_EditorClassIdentifier: Assembly-CSharp::PermanentUpgradeData
+  displayName: Unlock Rift
+  kindLabel: EXPLORATION UPGRADE
+  description: Rifts can now appear during runs.
+  icon: {fileID: -7174493734832725423, guid: 22d281b779f8c49dba31479e82c1cb37, type: 3}
+  accentColor: {r: 0.65, g: 0.3, b: 1, a: 1}
+  category: 1
+  group: 2
+  maxLevel: 3
+  baseCost: 150
+  costStep: 0
+  valuePerLevel: 1
+  valueFormat: Level {0}
+  valueFormatPlural: 
+  talentKey: HasUnlockedRift
+  mockLevel: 0

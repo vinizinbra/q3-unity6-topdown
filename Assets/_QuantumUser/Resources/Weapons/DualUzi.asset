@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/DualUzi
     Guid:
       Value: 469961761980449580
-  DisplayName: SMG
+  DisplayName: Dual Uzi
   FireType: 1
   Damage:
     RawValue: 524288
